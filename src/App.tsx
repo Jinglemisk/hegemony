@@ -37,6 +37,7 @@ type BoardProps = {
     endTurn: () => void;
   };
   playerID: PlayerId;
+  onPlayerIDChange: (playerID: PlayerId) => void;
   isActive: boolean;
 };
 
@@ -56,8 +57,17 @@ const RESOURCE_ICONS: Partial<Record<Resource, typeof Wheat>> = {
   wood: Hammer
 };
 
-function HegemonyBoard({ G, ctx, moves, events, playerID = "0", isActive }: BoardProps) {
+function HegemonyBoard({
+  G,
+  ctx,
+  moves,
+  events,
+  playerID = "0",
+  onPlayerIDChange,
+  isActive
+}: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
+  const [isLogOpen, setIsLogOpen] = useState(false);
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
   const currentPlayer = G.players[currentPlayerId];
@@ -84,40 +94,72 @@ function HegemonyBoard({ G, ctx, moves, events, playerID = "0", isActive }: Boar
   return (
     <main className="shell">
       <header className="topbar">
-        <div>
-          <p className="eyebrow">Hegemony v0.1</p>
-          <h1>Rule Engine Scaffold</h1>
-        </div>
         <div className="turnPlate">
-          <span>{ctx.phase ?? "gameplay"}</span>
+          <span>{phaseLabel(ctx.phase)}</span>
           <strong>{getPlayerName(G, currentPlayerId)}</strong>
+        </div>
+
+        <div className="statusRail" aria-label="Game status">
+          <span>Season {G.season}</span>
+          <span>Turn {ctx.turn}</span>
+          <span>{isActive ? "Active" : "Inspecting"}</span>
+          <span>{isSetup ? "Place settlement" : "Develop realm"}</span>
+        </div>
+
+        <div className="topActions">
+          <div className="seatSwitcher" aria-label="Hotseat player selector">
+            {PLAYER_IDS.map((id) => (
+              <button
+                className={playerID === id ? "selectedSeat" : ""}
+                key={id}
+                onClick={() => onPlayerIDChange(id)}
+                style={{ borderColor: PLAYER_COLORS[id] }}
+              >
+                P{Number(id) + 1}
+              </button>
+            ))}
+          </div>
+          <button className="iconButton" onClick={() => setIsLogOpen(true)}>
+            <ScrollText size={16} />
+            Log
+          </button>
         </div>
       </header>
 
       <section className="workbench">
-        <aside className="panel rosterPanel">
-          <div className="panelTitle">
-            <Hexagon size={18} />
-            <h2>Players</h2>
-          </div>
-          <div className="playerList">
-            {Object.values(G.players).map((player) => (
-              <article
-                className={`playerCard ${player.id === currentPlayerId ? "active" : ""}`}
-                key={player.id}
-                style={{ borderColor: PLAYER_COLORS[player.id] }}
-              >
-                <div>
-                  <strong>{player.name}</strong>
-                  <span>{player.id === viewerId ? "You" : "Observer"}</span>
-                </div>
-                <div className="miniStats">
-                  <span>{player.settlements.length} sites</span>
-                  <span>{player.collectedThisTurn ? "income done" : "income open"}</span>
-                </div>
-              </article>
-            ))}
-          </div>
+        <aside className="sideStack">
+          <section className="panel rosterPanel">
+            <div className="panelTitle">
+              <Hexagon size={18} />
+              <h2>Players</h2>
+            </div>
+            <div className="playerList">
+              {Object.values(G.players).map((player) => (
+                <article
+                  className={`playerCard ${player.id === currentPlayerId ? "active" : ""}`}
+                  key={player.id}
+                  style={{ borderColor: PLAYER_COLORS[player.id] }}
+                >
+                  <div>
+                    <strong>{player.name}</strong>
+                    <span>{player.id === viewerId ? "View" : "Rival"}</span>
+                  </div>
+                  <div className="miniStats">
+                    <span>{player.settlements.length} sites</span>
+                    <span>{player.collectedThisTurn ? "income done" : "income open"}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="panel empirePanel">
+            <div className="panelTitle">
+              <Landmark size={18} />
+              <h2>{viewer.name} Holdings</h2>
+            </div>
+            <SettlementRoster G={G} playerID={viewerId} />
+          </section>
         </aside>
 
         <section className="mapColumn">
@@ -127,10 +169,8 @@ function HegemonyBoard({ G, ctx, moves, events, playerID = "0", isActive }: Boar
             onTileAction={handleTileAction}
           />
           <div className="phaseStrip">
-            <span>Season {G.season}</span>
-            <span>Turn {ctx.turn}</span>
-            <span>{isActive ? "Active seat" : "Waiting"}</span>
-            <span>{isSetup ? "Click a legal hex" : "Run income, build, then end turn"}</span>
+            <span>{phaseHint(ctx.phase)}</span>
+            <span>{isActive ? "Your move" : `${currentPlayer.name}'s move`}</span>
           </div>
         </section>
 
@@ -168,17 +208,35 @@ function HegemonyBoard({ G, ctx, moves, events, playerID = "0", isActive }: Boar
         </aside>
       </section>
 
-      <section className="logBand">
-        <h2>Action Log</h2>
-        <div className="logList">
-          {G.log.slice(-8).map((entry) => (
-            <p key={entry.id}>
-              <span>S{entry.season}</span>
-              {entry.message}
-            </p>
-          ))}
+      {isLogOpen ? (
+        <div className="modalBackdrop" role="presentation" onMouseDown={() => setIsLogOpen(false)}>
+          <section
+            aria-label="Action log"
+            aria-modal="true"
+            className="logModal"
+            onMouseDown={(event) => event.stopPropagation()}
+            role="dialog"
+          >
+            <div className="modalHeader">
+              <h2>Action Log</h2>
+              <button className="iconButton" onClick={() => setIsLogOpen(false)}>
+                Close
+              </button>
+            </div>
+            <div className="logList">
+              {G.log
+                .slice()
+                .reverse()
+                .map((entry) => (
+                  <p key={entry.id}>
+                    <span>S{entry.season}</span>
+                    {entry.message}
+                  </p>
+                ))}
+            </div>
+          </section>
         </div>
-      </section>
+      ) : null}
     </main>
   );
 }
@@ -347,6 +405,91 @@ function TileInspector({
   );
 }
 
+function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: PlayerId }) {
+  const holdings = G.board.tiles
+    .map((tile) => ({
+      tile,
+      settlement: tile.settlements.find((candidate) => candidate.owner === playerID)
+    }))
+    .filter((entry) => entry.settlement);
+
+  if (holdings.length === 0) {
+    return <p className="emptyState">No settlements yet.</p>;
+  }
+
+  return (
+    <div className="settlementRoster">
+      {holdings.map(({ tile, settlement }) => {
+        if (!settlement) {
+          return null;
+        }
+
+        const totalPops = settlement.pops.citizens + settlement.pops.freemen + settlement.pops.slaves;
+        const buildings = settlement.buildings.map((buildingId) => buildingName(buildingId));
+        const capacity = settlement.kind === "capital" ? 20 : settlement.kind === "city" ? 10 : 4;
+        const slots =
+          settlement.kind === "colony" ? 0 : tile.buildingSlots + (settlement.kind === "capital" ? 4 : 2);
+
+        return (
+          <article className="settlementCard" key={`${settlement.owner}-${tile.id}`}>
+            <div className="settlementHeader">
+              <strong>{settlement.kind}</strong>
+              <span>{tile.terrain}</span>
+            </div>
+            <div className="settlementStats">
+              <span>
+                Pops <strong>{totalPops}</strong>/<strong>{capacity}</strong>
+              </span>
+              <span>
+                Slots <strong>{settlement.buildings.length}</strong>/<strong>{slots}</strong>
+              </span>
+              <span>
+                Yield <strong>{tile.resource.amount}</strong> {tile.resource.type}
+              </span>
+            </div>
+            <div className="popGrid">
+              <span>C {settlement.pops.citizens}</span>
+              <span>F {settlement.pops.freemen}</span>
+              <span>S {settlement.pops.slaves}</span>
+            </div>
+            <div className="buildingList">
+              {buildings.length > 0 ? buildings.map((building) => <span key={building}>{building}</span>) : <em>No buildings</em>}
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function buildingName(buildingId: BuildingId) {
+  return BUILDINGS.find((building) => building.id === buildingId)?.name ?? buildingId;
+}
+
+function phaseLabel(phase: Phase) {
+  if (phase === "setupCapital") {
+    return "Capital placement";
+  }
+
+  if (phase === "setupColony") {
+    return "Colony placement";
+  }
+
+  return "Turn actions";
+}
+
+function phaseHint(phase: Phase) {
+  if (phase === "setupCapital") {
+    return "Place a capital on an open hex";
+  }
+
+  if (phase === "setupColony") {
+    return "Place a colony next to your capital";
+  }
+
+  return "Collect income, build, then end turn";
+}
+
 function nextPlayer(playerID: PlayerId): PlayerId {
   const currentIndex = PLAYER_IDS.indexOf(playerID);
   return PLAYER_IDS[(currentIndex + 1) % PLAYER_IDS.length];
@@ -494,24 +637,13 @@ export function App() {
 
   return (
     <>
-      <div className="seatSwitcher" aria-label="Hotseat player selector">
-        {(["0", "1", "2", "3"] as PlayerId[]).map((id) => (
-          <button
-            className={playerID === id ? "selectedSeat" : ""}
-            key={id}
-            onClick={() => setPlayerID(id)}
-            style={{ borderColor: PLAYER_COLORS[id] }}
-          >
-            P{Number(id) + 1}
-          </button>
-        ))}
-      </div>
       <HegemonyBoard
         G={game.G}
         ctx={game.ctx}
         events={events}
         isActive={playerID === game.ctx.currentPlayer}
         moves={moves}
+        onPlayerIDChange={setPlayerID}
         playerID={playerID}
       />
     </>

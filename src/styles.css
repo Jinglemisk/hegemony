@@ -23,6 +23,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  overflow: hidden;
   background:
     linear-gradient(90deg, rgb(38 28 20 / 6%) 1px, transparent 1px),
     linear-gradient(rgb(38 28 20 / 5%) 1px, transparent 1px),
@@ -56,17 +57,20 @@ button:not(:disabled):hover {
 }
 
 .shell {
-  min-height: 100vh;
-  padding: 28px;
+  display: grid;
+  gap: 14px;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100vh;
+  padding: 16px;
 }
 
 .topbar {
-  align-items: end;
+  align-items: stretch;
   display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  margin: 0 auto 22px;
-  max-width: 1420px;
+  gap: 12px;
+  margin: 0 auto;
+  max-width: 1480px;
+  width: 100%;
 }
 
 .eyebrow {
@@ -98,11 +102,12 @@ h2 {
 }
 
 .turnPlate {
+  align-content: center;
   border: 1px solid rgb(38 28 20 / 24%);
   border-radius: 8px;
   box-shadow: var(--shadow);
-  min-width: 230px;
-  padding: 14px 16px;
+  min-width: 210px;
+  padding: 10px 14px;
   background: #f8f0df;
 }
 
@@ -115,19 +120,48 @@ h2 {
 
 .turnPlate strong {
   display: block;
-  font-size: 1.3rem;
+  font-size: 1.15rem;
+}
+
+.statusRail {
+  align-items: stretch;
+  display: grid;
+  flex: 1;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-width: 0;
+}
+
+.statusRail span,
+.phaseStrip span {
+  align-content: center;
+  background: rgb(248 240 223 / 92%);
+  border: 1px solid rgb(38 28 20 / 18%);
+  border-radius: 6px;
+  min-height: 42px;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.topActions {
+  align-items: stretch;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .workbench {
   display: grid;
-  gap: 18px;
-  grid-template-columns: minmax(220px, 280px) minmax(420px, 1fr) minmax(280px, 360px);
+  gap: 12px;
+  grid-template-columns: minmax(250px, 310px) minmax(440px, 1fr) minmax(300px, 360px);
   margin: 0 auto;
-  max-width: 1420px;
+  max-width: 1480px;
+  min-height: 0;
+  width: 100%;
 }
 
 .panel,
-.logBand {
+.logModal {
   background: rgb(248 240 223 / 88%);
   border: 1px solid rgb(38 28 20 / 22%);
   border-radius: 8px;
@@ -135,7 +169,16 @@ h2 {
 }
 
 .panel {
+  min-height: 0;
+  overflow: auto;
   padding: 16px;
+}
+
+.sideStack {
+  display: grid;
+  gap: 12px;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
 }
 
 .panelTitle {
@@ -151,14 +194,14 @@ h2 {
 .actionStack,
 .buildingButtons {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .playerCard {
   background: #fff8e9;
   border: 2px solid;
   border-radius: 8px;
-  padding: 12px;
+  padding: 9px 10px;
 }
 
 .playerCard.active {
@@ -180,11 +223,15 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .mapColumn {
+  display: grid;
+  gap: 10px;
+  grid-template-rows: minmax(0, 1fr) auto;
   min-width: 0;
+  min-height: 0;
 }
 
 .hexMap {
@@ -195,7 +242,8 @@ h2 {
   border-radius: 8px;
   box-shadow: var(--shadow);
   display: block;
-  min-height: 520px;
+  height: 100%;
+  min-height: 0;
   width: 100%;
 }
 
@@ -267,6 +315,10 @@ h2 {
   stroke-width: 2;
 }
 
+.settlementGlyph {
+  pointer-events: none;
+}
+
 .cityGlyph text {
   font-size: 7px;
 }
@@ -278,24 +330,14 @@ h2 {
 .phaseStrip {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: 12px;
-}
-
-.phaseStrip span {
-  background: rgb(248 240 223 / 92%);
-  border: 1px solid rgb(38 28 20 / 18%);
-  border-radius: 6px;
-  min-height: 36px;
-  padding: 8px 10px;
-  text-align: center;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .resourceGrid {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .resourcePill {
@@ -334,8 +376,8 @@ h2 {
 
 .inspector {
   border-top: 1px solid rgb(38 28 20 / 16%);
-  margin-top: 16px;
-  padding-top: 14px;
+  margin-top: 12px;
+  padding-top: 12px;
 }
 
 .inspector p {
@@ -360,15 +402,11 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.logBand {
-  margin: 18px auto 0;
-  max-width: 1420px;
-  padding: 16px;
-}
-
 .logList {
   display: grid;
   gap: 7px;
+  max-height: min(62vh, 620px);
+  overflow: auto;
 }
 
 .logList p {
@@ -389,16 +427,12 @@ h2 {
 .seatSwitcher {
   display: flex;
   gap: 8px;
-  position: fixed;
-  bottom: 18px;
-  right: 18px;
-  z-index: 10;
 }
 
 .seatSwitcher button {
   background: #fff8e9;
   border-width: 2px;
-  min-height: 34px;
+  min-height: 42px;
   min-width: 44px;
   padding: 0 10px;
 }
@@ -406,6 +440,97 @@ h2 {
 .seatSwitcher .selectedSeat {
   background: #261c14;
   color: #fff8e9;
+}
+
+.iconButton {
+  align-items: center;
+  display: inline-flex;
+  gap: 7px;
+  justify-content: center;
+  min-height: 42px;
+}
+
+.settlementRoster {
+  display: grid;
+  gap: 8px;
+}
+
+.settlementCard {
+  background: #fff8e9;
+  border: 1px solid rgb(38 28 20 / 16%);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.settlementHeader {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  text-transform: capitalize;
+}
+
+.settlementHeader span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.settlementStats,
+.popGrid,
+.buildingList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.settlementStats span,
+.popGrid span,
+.buildingList span,
+.buildingList em {
+  background: rgb(38 28 20 / 6%);
+  border: 1px solid rgb(38 28 20 / 10%);
+  border-radius: 5px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-style: normal;
+  padding: 4px 6px;
+}
+
+.emptyState {
+  color: var(--muted);
+  margin: 0;
+}
+
+.actionPanel {
+  min-height: 0;
+}
+
+.modalBackdrop {
+  align-items: center;
+  background: rgb(38 28 20 / 48%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  position: fixed;
+  z-index: 20;
+}
+
+.logModal {
+  max-width: 620px;
+  padding: 16px;
+  width: min(100%, 620px);
+}
+
+.modalHeader {
+  align-items: center;
+  border-bottom: 1px solid rgb(38 28 20 / 16%);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
 }
 
 @media (max-width: 1120px) {
