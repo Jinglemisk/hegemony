@@ -1,4 +1,4 @@
-import { BUILDINGS, EMPTY_RESOURCES, PLAYER_IDS, STARTING_RESOURCES } from "./data";
+import { BUILDINGS, EMPTY_RESOURCES, PLAYER_IDS, SETTLEMENT_RULES, STARTING_RESOURCES } from "./data";
 import { createInitialMap, hexDistance } from "./map";
 import type {
   BuildingId,
@@ -136,7 +136,7 @@ export function buildBuilding(G: HegemonyState, playerID: PlayerId, tileId: stri
     return INVALID_MOVE;
   }
 
-  if (settlement.buildings.length >= buildingSlotCapacity(tile, settlement)) {
+  if (settlement.buildings.length >= settlementBuildingSlots(tile, settlement)) {
     return INVALID_MOVE;
   }
 
@@ -162,7 +162,23 @@ export function startNewSeason(G: HegemonyState) {
   addLog(G, `Season ${G.season} begins.`);
 }
 
-function calculateIncome(G: HegemonyState, playerID: PlayerId): Resources {
+export function totalPops(pops: Pops) {
+  return pops.citizens + pops.freemen + pops.slaves;
+}
+
+export function settlementPopCapacity(kind: Settlement["kind"]) {
+  return SETTLEMENT_RULES[kind].popCapacity;
+}
+
+export function settlementBuildingSlots(tile: HexTile, settlement: Settlement) {
+  if (!SETTLEMENT_RULES[settlement.kind].canBuildBuildings) {
+    return 0;
+  }
+
+  return tile.buildingSlots + SETTLEMENT_RULES[settlement.kind].buildingSlotBonus;
+}
+
+export function calculateIncome(G: HegemonyState, playerID: PlayerId): Resources {
   const income = { ...EMPTY_RESOURCES };
 
   for (const tileId of G.players[playerID].settlements) {
@@ -185,11 +201,7 @@ function calculateIncome(G: HegemonyState, playerID: PlayerId): Resources {
     income.food -= Math.floor(settlement.pops.slaves / 3);
     income.unrest += Math.floor(settlement.pops.slaves / 9);
 
-    for (const buildingId of settlement.buildings) {
-      if (buildingId === "granary") {
-        income.food += 2;
-      }
-    }
+    applyIncomeBuildingEffects(income, settlement);
   }
 
   if (income.food < 0) {
@@ -200,21 +212,25 @@ function calculateIncome(G: HegemonyState, playerID: PlayerId): Resources {
 }
 
 function applyBuildingEffect(settlement: Settlement, buildingId: BuildingId) {
-  if (buildingId === "marketplace") {
-    settlement.pops.freemen += 1;
-  }
+  const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
 
-  if (buildingId === "temple") {
-    settlement.pops.citizens += 1;
-  }
-
-  if (buildingId === "workshop") {
-    settlement.pops.slaves += 2;
+  for (const effect of building?.effects ?? []) {
+    if (effect.type === "addPop") {
+      settlement.pops[effect.pop] += effect.amount;
+    }
   }
 }
 
-function buildingSlotCapacity(tile: HexTile, settlement: Settlement) {
-  return tile.buildingSlots + (settlement.kind === "capital" ? 4 : 2);
+function applyIncomeBuildingEffects(income: Resources, settlement: Settlement) {
+  for (const buildingId of settlement.buildings) {
+    const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+
+    for (const effect of building?.effects ?? []) {
+      if (effect.type === "income") {
+        income[effect.resource] += effect.amount;
+      }
+    }
+  }
 }
 
 function hasFriendlyAdjacentSettlement(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
