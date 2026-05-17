@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hegemony Phase 1 Overview</title>
+    <title>Hegemony Project Overview</title>
     <style>
       :root {
         color: #241910;
@@ -157,6 +157,37 @@
         padding: 12px;
       }
 
+      .link-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 14px 0;
+      }
+
+      .button-link {
+        background: #8b2f18;
+        border-radius: 6px;
+        color: #fff8e9;
+        display: inline-block;
+        padding: 10px 12px;
+        text-decoration: none;
+      }
+
+      .button-link.secondary {
+        background: #fff8e9;
+        border: 1px solid rgb(36 25 16 / 18%);
+        color: #8b2f18;
+      }
+
+      .showcase-frame {
+        background: #181210;
+        border: 1px solid rgb(36 25 16 / 20%);
+        border-radius: 8px;
+        height: min(72vh, 720px);
+        margin-top: 14px;
+        width: 100%;
+      }
+
       @media (max-width: 760px) {
         body {
           padding: 18px;
@@ -171,15 +202,16 @@
   </head>
   <body>
     <main>
-      <h1>Hegemony Phase 1 Overview</h1>
+      <h1>Hegemony Project Overview</h1>
       <p class="lede">
-        This page is a lightweight map of the current project phase: what exists, what is missing,
-        and where the important rules and implementation files live.
+        This page is the living map of the Hegemony project: current status, roadmap, core files,
+        design explorations, implemented systems, and deferred work. Update this document as the
+        project changes.
       </p>
 
       <section class="status" aria-label="Current status">
         <div>
-          <span>Current phase</span>
+          <span>Project stage</span>
           <strong>Phase 1</strong>
         </div>
         <div>
@@ -198,7 +230,7 @@
 
       <section class="grid">
         <article class="card full">
-          <h2>Phase Track</h2>
+          <h2>Project Roadmap</h2>
           <div class="phase-track">
             <div class="phase">
               <strong>Phase 0: Scaffolding and Rules Capture</strong>
@@ -221,6 +253,34 @@
               National ideas, luxury goods, victory conditions, presentation overhaul, and UX refinement.
             </div>
           </div>
+        </article>
+
+        <article class="card full">
+          <h2>Brand and Art Direction</h2>
+          <p>
+            The original brand showcase is the first Kerameikos visual brainstorming artifact. The
+            Codex showcase is the current generated asset direction: two Greek-vase alternatives
+            with hero tableaus, icon atlases, terrain atlases, UI component sheets, and applied HUD
+            examples. The Codex Banana showcase filename is reserved for the follow-up Nano Banana
+            asset generation pass.
+          </p>
+          <div class="link-row">
+            <a class="button-link" href="../codex-showcase.html">Open Codex showcase</a>
+            <a class="button-link secondary" href="../brand-showcase.html" target="_blank" rel="noreferrer">
+              Open original Kerameikos
+            </a>
+            <a class="button-link secondary" href="../codex-banana-showcase.html" target="_blank" rel="noreferrer">
+              Open Codex Banana target
+            </a>
+            <a class="button-link secondary" href="../codex-showcase.html" target="_blank" rel="noreferrer">
+              Open in new tab
+            </a>
+          </div>
+          <iframe
+            class="showcase-frame"
+            src="../codex-showcase.html"
+            title="Hegemony Codex brand showcase"
+          ></iframe>
         </article>
 
         <article class="card">
@@ -305,6 +365,21 @@
                 <td>Visual styling</td>
                 <td><code>src/styles.css</code></td>
                 <td><code>src/styles.css</code></td>
+              </tr>
+              <tr>
+                <td>Brand and art-style exploration</td>
+                <td><a href="../brand-showcase.html">brand-showcase.html</a></td>
+                <td><code>brand-showcase.html</code></td>
+              </tr>
+              <tr>
+                <td>Codex generated Greek-vase showcase and asset atlas reference</td>
+                <td><a href="../codex-showcase.html">codex-showcase.html</a></td>
+                <td><code>codex-showcase.html</code></td>
+              </tr>
+              <tr>
+                <td>Nano Banana showcase target for the next generated asset pass</td>
+                <td><a href="../codex-banana-showcase.html">codex-banana-showcase.html</a></td>
+                <td><code>codex-banana-showcase.html</code></td>
               </tr>
               <tr>
                 <td>Development commands and scope summary</td>
