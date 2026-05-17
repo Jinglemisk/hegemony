@@ -33,7 +33,7 @@ npm run build
 
 - [Project Overview](docs/project-overview.html): living project map, current scope, roadmap, source file guide, and brand showcase links.
 - [Codex Showcase](codex-showcase.html): generated Greek vase design directions and asset atlas reference.
-- [Codex Banana Showcase](codex-banana-showcase.html): reserved Nano Banana showcase target for the next asset pass.
+- [Codex Banana Showcase](codex-banana-showcase.html): Nano Banana generated Greek vase showcase and asset atlas counterpart.
 - [Rules Archive](docs/rules-archive.md): organized manual-style version of the rough PDF rules plus current clarifications.
 - [v0.1 Rules Spec](docs/v0.1-rules-spec.md): current implementation contract for the first playable browser prototype.
 
