@@ -31,6 +31,7 @@ npm run build
 
 ## Important Docs
 
+- [Phase 1 Overview](docs/phase1-overview.html): visual project phase map, current scope, gaps, and source file guide.
 - [Rules Archive](docs/rules-archive.md): organized manual-style version of the rough PDF rules plus current clarifications.
 - [v0.1 Rules Spec](docs/v0.1-rules-spec.md): current implementation contract for the first playable browser prototype.
 

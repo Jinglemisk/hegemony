@@ -28,6 +28,25 @@ export interface Settlement {
   pops: Pops;
 }
 
+export type BuildingEffect =
+  | {
+      type: "addPop";
+      pop: PopType;
+      amount: number;
+    }
+  | {
+      type: "income";
+      resource: Resource;
+      amount: number;
+    };
+
+export interface BuildingDefinition {
+  id: BuildingId;
+  name: string;
+  cost: Partial<Resources>;
+  effects: BuildingEffect[];
+}
+
 export interface HexTile {
   id: string;
   q: number;

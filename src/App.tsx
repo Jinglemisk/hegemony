@@ -1,17 +1,29 @@
 import { useEffect, useState } from "react";
-import { Coins, Hammer, Hexagon, Landmark, ScrollText, Wheat } from "lucide-react";
-import type { BuildingId, HegemonyState, PlayerId, Resource } from "./game/types";
+import { Coins, Hammer, Landmark, ScrollText, Wheat } from "lucide-react";
+import type {
+  BuildingEffect,
+  BuildingId,
+  HegemonyState,
+  PlayerId,
+  PopType,
+  Resource,
+  Resources
+} from "./game/types";
 import { BUILDINGS, PLAYER_COLORS, PLAYER_IDS } from "./game/data";
 import {
   buildBuilding,
+  calculateIncome,
   collectIncome,
   createInitialState,
   getPlayerName,
   INVALID_MOVE,
   placeCapital,
   placeColony,
+  settlementBuildingSlots,
+  settlementPopCapacity,
   startNewSeason,
-  toPlayerId
+  toPlayerId,
+  totalPops
 } from "./game/rules";
 
 type Phase = "setupCapital" | "setupColony" | "gameplay";
@@ -57,6 +69,12 @@ const RESOURCE_ICONS: Partial<Record<Resource, typeof Wheat>> = {
   wood: Hammer
 };
 
+const POP_LABELS: Record<PopType, { singular: string; plural: string }> = {
+  citizens: { singular: "citizen", plural: "citizens" },
+  freemen: { singular: "freeman", plural: "freemen" },
+  slaves: { singular: "slave", plural: "slaves" }
+};
+
 function HegemonyBoard({
   G,
   ctx,
@@ -93,19 +111,7 @@ function HegemonyBoard({
 
   return (
     <main className="shell">
-      <header className="topbar">
-        <div className="turnPlate">
-          <span>{phaseLabel(ctx.phase)}</span>
-          <strong>{getPlayerName(G, currentPlayerId)}</strong>
-        </div>
-
-        <div className="statusRail" aria-label="Game status">
-          <span>Season {G.season}</span>
-          <span>Turn {ctx.turn}</span>
-          <span>{isActive ? "Active" : "Inspecting"}</span>
-          <span>{isSetup ? "Place settlement" : "Develop realm"}</span>
-        </div>
-
+      <header className="topbar controlsBar">
         <div className="topActions">
           <div className="seatSwitcher" aria-label="Hotseat player selector">
             {PLAYER_IDS.map((id) => (
@@ -127,50 +133,32 @@ function HegemonyBoard({
       </header>
 
       <section className="workbench">
-        <aside className="sideStack">
-          <section className="panel rosterPanel">
-            <div className="panelTitle">
-              <Hexagon size={18} />
-              <h2>Players</h2>
-            </div>
-            <div className="playerList">
-              {Object.values(G.players).map((player) => (
-                <article
-                  className={`playerCard ${player.id === currentPlayerId ? "active" : ""}`}
-                  key={player.id}
-                  style={{ borderColor: PLAYER_COLORS[player.id] }}
-                >
-                  <div>
-                    <strong>{player.name}</strong>
-                    <span>{player.id === viewerId ? "View" : "Rival"}</span>
-                  </div>
-                  <div className="miniStats">
-                    <span>{player.settlements.length} sites</span>
-                    <span>{player.collectedThisTurn ? "income done" : "income open"}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="panel empirePanel">
-            <div className="panelTitle">
-              <Landmark size={18} />
-              <h2>{viewer.name} Holdings</h2>
-            </div>
-            <SettlementRoster G={G} playerID={viewerId} />
-          </section>
+        <aside className="panel empirePanel">
+          <div className="panelTitle">
+            <Landmark size={18} />
+            <h2>{viewer.name} Holdings</h2>
+          </div>
+          <PlayerHoldingsSummary G={G} playerID={viewerId} />
+          <SettlementRoster G={G} playerID={viewerId} />
         </aside>
 
         <section className="mapColumn">
-          <HexMap
-            G={G}
-            selectedTileId={selectedTileId}
-            onTileAction={handleTileAction}
-          />
+          <div className="mapFrame">
+            <MapStatusOverlay
+              G={G}
+              ctx={ctx}
+              currentPlayerId={currentPlayerId}
+              isActive={isActive}
+            />
+            <HexMap
+              G={G}
+              selectedTileId={selectedTileId}
+              onTileAction={handleTileAction}
+            />
+          </div>
           <div className="phaseStrip">
             <span>{phaseHint(ctx.phase)}</span>
-            <span>{isActive ? "Your move" : `${currentPlayer.name}'s move`}</span>
+            <span>{isSetup ? "Settlement placement" : "Income and building actions"}</span>
           </div>
         </section>
 
@@ -179,7 +167,6 @@ function HegemonyBoard({
             <ScrollText size={18} />
             <h2>Actions</h2>
           </div>
-          <ResourceGrid resources={viewer.resources} />
 
           <div className="actionStack">
             <button
@@ -238,6 +225,77 @@ function HegemonyBoard({
         </div>
       ) : null}
     </main>
+  );
+}
+
+function MapStatusOverlay({
+  G,
+  ctx,
+  currentPlayerId,
+  isActive
+}: {
+  G: HegemonyState;
+  ctx: LocalContext;
+  currentPlayerId: PlayerId;
+  isActive: boolean;
+}) {
+  return (
+    <div className="mapHud" aria-label="Turn status">
+      <div className="hudCard">
+        <span className="seasonLogo" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <i />
+        </span>
+        <div>
+          <span>Season</span>
+          <strong>{G.season}</strong>
+        </div>
+      </div>
+
+      <div className="hudCard">
+        <span className="hourglassLogo" aria-hidden="true">
+          <i />
+          <i />
+        </span>
+        <div>
+          <span>Turn {ctx.turn}</span>
+          <strong>{phaseLabel(ctx.phase)}</strong>
+        </div>
+      </div>
+
+      <div className="hudCard turnOwner" style={{ borderColor: PLAYER_COLORS[currentPlayerId] }}>
+        <span className="playerSeal" style={{ background: PLAYER_COLORS[currentPlayerId] }} />
+        <div>
+          <span>{isActive ? "Your turn" : "Now acting"}</span>
+          <strong>{getPlayerName(G, currentPlayerId)}'s turn</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayerHoldingsSummary({ G, playerID }: { G: HegemonyState; playerID: PlayerId }) {
+  const player = G.players[playerID];
+  const projectedIncome = calculateIncome(G, playerID);
+
+  return (
+    <section className="holdingsSummary" aria-label={`${player.name} resources and income`}>
+      <div className="holdingsStats">
+        <span>
+          Sites <strong>{player.settlements.length}</strong>
+        </span>
+        <span>
+          Income <strong>{player.collectedThisTurn ? "done" : "open"}</strong>
+        </span>
+      </div>
+      <ResourceGrid resources={player.resources} />
+      <div className="incomePreview">
+        <span>Next income</span>
+        <strong>{formatResourceDelta(projectedIncome)}</strong>
+      </div>
+    </section>
   );
 }
 
@@ -374,8 +432,8 @@ function TileInspector({
     <div className="inspector">
       <h3>{selectedTile.terrain}</h3>
       <p>
-        {selectedTile.resource.amount} {selectedTile.resource.type} income, {selectedTile.buildingSlots} terrain
-        slots.
+        {selectedTile.resource.amount} {RESOURCE_LABELS[selectedTile.resource.type]} income,{" "}
+        {selectedTile.buildingSlots} terrain slots.
       </p>
       <div className="settlementList">
         {selectedTile.settlements.length === 0 ? (
@@ -392,12 +450,15 @@ function TileInspector({
       <div className="buildingButtons">
         {BUILDINGS.map((building) => (
           <button
+            className="buildingButton"
             disabled={!canUseCityActions}
             key={building.id}
             onClick={() => moves.buildBuilding(selectedTile.id, building.id)}
-            title={building.description}
+            title={`Cost: ${formatResourceCost(building.cost)}. Benefit: ${formatBuildingEffects(building.effects)}.`}
           >
-            {building.name}
+            <strong>{building.name}</strong>
+            <span>Cost: {formatResourceCost(building.cost)}</span>
+            <span>Benefit: {formatBuildingEffects(building.effects)}</span>
           </button>
         ))}
       </div>
@@ -424,11 +485,10 @@ function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: PlayerI
           return null;
         }
 
-        const totalPops = settlement.pops.citizens + settlement.pops.freemen + settlement.pops.slaves;
+        const popTotal = totalPops(settlement.pops);
         const buildings = settlement.buildings.map((buildingId) => buildingName(buildingId));
-        const capacity = settlement.kind === "capital" ? 20 : settlement.kind === "city" ? 10 : 4;
-        const slots =
-          settlement.kind === "colony" ? 0 : tile.buildingSlots + (settlement.kind === "capital" ? 4 : 2);
+        const capacity = settlementPopCapacity(settlement.kind);
+        const slots = settlementBuildingSlots(tile, settlement);
 
         return (
           <article className="settlementCard" key={`${settlement.owner}-${tile.id}`}>
@@ -438,7 +498,7 @@ function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: PlayerI
             </div>
             <div className="settlementStats">
               <span>
-                Pops <strong>{totalPops}</strong>/<strong>{capacity}</strong>
+                Pops <strong>{popTotal}</strong>/<strong>{capacity}</strong>
               </span>
               <span>
                 Slots <strong>{settlement.buildings.length}</strong>/<strong>{slots}</strong>
@@ -448,9 +508,11 @@ function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: PlayerI
               </span>
             </div>
             <div className="popGrid">
-              <span>C {settlement.pops.citizens}</span>
-              <span>F {settlement.pops.freemen}</span>
-              <span>S {settlement.pops.slaves}</span>
+              {(Object.entries(settlement.pops) as Array<[PopType, number]>).map(([pop, amount]) => (
+                <span key={pop}>
+                  {formatPopShort(pop)} {amount}
+                </span>
+              ))}
             </div>
             <div className="buildingList">
               {buildings.length > 0 ? buildings.map((building) => <span key={building}>{building}</span>) : <em>No buildings</em>}
@@ -460,6 +522,56 @@ function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: PlayerI
       })}
     </div>
   );
+}
+
+function formatResourceCost(cost: Partial<Resources>) {
+  const entries = (Object.entries(cost) as Array<[Resource, number | undefined]>).filter(
+    ([, amount]) => (amount ?? 0) > 0
+  );
+
+  if (entries.length === 0) {
+    return "Free";
+  }
+
+  return entries
+    .map(([resource, amount]) => `${amount ?? 0} ${RESOURCE_LABELS[resource]}`)
+    .join(", ");
+}
+
+function formatResourceDelta(resources: Resources) {
+  const entries = (Object.entries(resources) as Array<[Resource, number]>).filter(([, amount]) => amount !== 0);
+
+  if (entries.length === 0) {
+    return "none";
+  }
+
+  return entries
+    .map(([resource, amount]) => `${amount > 0 ? "+" : ""}${amount} ${RESOURCE_LABELS[resource]}`)
+    .join(", ");
+}
+
+function formatBuildingEffects(effects: BuildingEffect[]) {
+  if (effects.length === 0) {
+    return "No effect";
+  }
+
+  return effects
+    .map((effect) => {
+      if (effect.type === "addPop") {
+        return `+${effect.amount} ${formatPopLabel(effect.pop, effect.amount)}`;
+      }
+
+      return `+${effect.amount} ${RESOURCE_LABELS[effect.resource]} income`;
+    })
+    .join(", ");
+}
+
+function formatPopLabel(pop: PopType, amount: number) {
+  return amount === 1 ? POP_LABELS[pop].singular : POP_LABELS[pop].plural;
+}
+
+function formatPopShort(pop: PopType) {
+  return POP_LABELS[pop].singular.slice(0, 1).toUpperCase();
 }
 
 function buildingName(buildingId: BuildingId) {

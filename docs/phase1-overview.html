@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hegemony Phase 1 Overview</title>
+    <style>
+      :root {
+        color: #241910;
+        background: #ece2ce;
+        font-family: Georgia, "Times New Roman", serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px;
+      }
+
+      main {
+        margin: 0 auto;
+        max-width: 1120px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        font-size: 2.4rem;
+        line-height: 1;
+        margin-bottom: 10px;
+      }
+
+      h2 {
+        border-bottom: 2px solid #7d6043;
+        font-size: 1.25rem;
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+      }
+
+      a {
+        color: #8b2f18;
+        font-weight: 700;
+      }
+
+      code {
+        background: #fff8e9;
+        border: 1px solid rgb(36 25 16 / 18%);
+        border-radius: 4px;
+        padding: 2px 5px;
+      }
+
+      .lede {
+        color: #5f5144;
+        font-size: 1.1rem;
+        line-height: 1.45;
+        max-width: 780px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 24px;
+      }
+
+      .card {
+        background: rgb(248 240 223 / 86%);
+        border: 1px solid rgb(36 25 16 / 20%);
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .full {
+        grid-column: 1 / -1;
+      }
+
+      .status {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-top: 20px;
+      }
+
+      .status div {
+        background: #fff8e9;
+        border: 1px solid rgb(36 25 16 / 16%);
+        border-radius: 7px;
+        padding: 12px;
+      }
+
+      .status span,
+      table span {
+        color: #6f6254;
+        display: block;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+      }
+
+      ul {
+        line-height: 1.55;
+        margin-bottom: 0;
+        padding-left: 20px;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid rgb(36 25 16 / 14%);
+        padding: 10px 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: #6f6254;
+        font-size: 0.84rem;
+        text-transform: uppercase;
+      }
+
+      .phase-track {
+        display: grid;
+        gap: 10px;
+      }
+
+      .phase {
+        background: #fff8e9;
+        border: 1px solid rgb(36 25 16 / 16%);
+        border-left: 6px solid #9b4f30;
+        border-radius: 7px;
+        padding: 12px;
+      }
+
+      .phase.current {
+        border-left-color: #0f766e;
+      }
+
+      .phase strong {
+        display: block;
+      }
+
+      .note {
+        background: #fff8e9;
+        border-left: 5px solid #8b2f18;
+        margin-top: 14px;
+        padding: 12px;
+      }
+
+      @media (max-width: 760px) {
+        body {
+          padding: 18px;
+        }
+
+        .grid,
+        .status {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Hegemony Phase 1 Overview</h1>
+      <p class="lede">
+        This page is a lightweight map of the current project phase: what exists, what is missing,
+        and where the important rules and implementation files live.
+      </p>
+
+      <section class="status" aria-label="Current status">
+        <div>
+          <span>Current phase</span>
+          <strong>Phase 1</strong>
+        </div>
+        <div>
+          <span>Playable mode</span>
+          <strong>Local hotseat</strong>
+        </div>
+        <div>
+          <span>App type</span>
+          <strong>React + Vite</strong>
+        </div>
+        <div>
+          <span>Networking</span>
+          <strong>Deferred</strong>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card full">
+          <h2>Phase Track</h2>
+          <div class="phase-track">
+            <div class="phase">
+              <strong>Phase 0: Scaffolding and Rules Capture</strong>
+              Project setup, docs, first rules translation, and removal of boardgame.io.
+            </div>
+            <div class="phase current">
+              <strong>Phase 1: Core Playable Prototype</strong>
+              Map, setup flow, turns, income, settlements, pops, buildings, holdings UI, and basic local play.
+            </div>
+            <div class="phase">
+              <strong>Phase 2: Rule Depth</strong>
+              Unrest events, food pressure, city upgrades, assembly voting, richer building effects, and better balance rules.
+            </div>
+            <div class="phase">
+              <strong>Phase 3: Multiplayer Foundation</strong>
+              Server state, rooms, reconnects, turn validation, persistence, and lobby flow.
+            </div>
+            <div class="phase">
+              <strong>Phase 4: Content and Polish</strong>
+              National ideas, luxury goods, victory conditions, presentation overhaul, and UX refinement.
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Implemented Now</h2>
+          <ul>
+            <li>37-tile inland hex map.</li>
+            <li>Four local hotseat players.</li>
+            <li>Capital placement phase.</li>
+            <li>Colony placement phase.</li>
+            <li>Gameplay phase with turn advancement.</li>
+            <li>Season advancement after Player 4.</li>
+            <li>Basic income collection.</li>
+            <li>Resources: wood, stone, gold, food, influence, unrest.</li>
+            <li>Settlement pops: citizens, freemen, slaves.</li>
+            <li>Basic buildings with data-driven costs and effects.</li>
+            <li>Player holdings panel and action log modal.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Missing or Deferred</h2>
+          <ul>
+            <li>Online multiplayer rooms and server authority.</li>
+            <li>Saved games and reconnect flow.</li>
+            <li>Assembly voting and resolutions.</li>
+            <li>National ideas and modifiers.</li>
+            <li>Luxury goods, trade, and advanced economy.</li>
+            <li>City upgrades and conquest edge cases.</li>
+            <li>Unrest event deck and food-loss consequences.</li>
+            <li>Victory conditions and endgame scoring.</li>
+            <li>Full UI art direction and final visual system.</li>
+          </ul>
+        </article>
+
+        <article class="card full">
+          <h2>Where to Read and Edit Critical Information</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Need</th>
+                <th>Read</th>
+                <th>Edit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Current playable rules contract</td>
+                <td><a href="v0.1-rules-spec.md">docs/v0.1-rules-spec.md</a></td>
+                <td><code>docs/v0.1-rules-spec.md</code></td>
+              </tr>
+              <tr>
+                <td>Archived manual-style rules from the PDF</td>
+                <td><a href="rules-archive.md">docs/rules-archive.md</a></td>
+                <td><code>docs/rules-archive.md</code></td>
+              </tr>
+              <tr>
+                <td>Game state shape and core types</td>
+                <td><code>src/game/types.ts</code></td>
+                <td><code>src/game/types.ts</code></td>
+              </tr>
+              <tr>
+                <td>Static game data: players, resources, buildings, terrain deck</td>
+                <td><code>src/game/data.ts</code></td>
+                <td><code>src/game/data.ts</code></td>
+              </tr>
+              <tr>
+                <td>Rules engine: legal moves, income, turns, settlement rules</td>
+                <td><code>src/game/rules.ts</code></td>
+                <td><code>src/game/rules.ts</code></td>
+              </tr>
+              <tr>
+                <td>Map generation and hex math</td>
+                <td><code>src/game/map.ts</code></td>
+                <td><code>src/game/map.ts</code></td>
+              </tr>
+              <tr>
+                <td>React game screen and local hotseat state</td>
+                <td><code>src/App.tsx</code></td>
+                <td><code>src/App.tsx</code></td>
+              </tr>
+              <tr>
+                <td>Visual styling</td>
+                <td><code>src/styles.css</code></td>
+                <td><code>src/styles.css</code></td>
+              </tr>
+              <tr>
+                <td>Development commands and scope summary</td>
+                <td><a href="../README.md">README.md</a></td>
+                <td><code>README.md</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <article class="card">
+          <h2>How to Run</h2>
+          <ul>
+            <li>Install packages with <code>npm install</code>.</li>
+            <li>Start the dev server with <code>npm run dev</code>.</li>
+            <li>Run type checks with <code>npm run check</code>.</li>
+            <li>Run a production build with <code>npm run build</code>.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Current UI Guidance</h2>
+          <p>
+            Raise UI grievances now when they affect comprehension, testing, turn flow, or the ability
+            to inspect rules. Save broad aesthetic overhaul work for after more Phase 1 and Phase 2 mechanics
+            settle, so the final layout is designed around the real game surface.
+          </p>
+          <p class="note">
+            A later dedicated UI overhaul is reasonable. The current UI should stay functional, readable,
+            and easy to modify while the rules are still changing.
+          </p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
