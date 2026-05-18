@@ -1,52 +1,20 @@
+![Hegemony Codex-generated icon](assets/codex-showcase/light-hero-tableau.png)
+
 # Hegemony
 
-Browser prototype for a Catan-inspired, Imperator: Rome-inspired strategy board game.
+Ancient strategy, civic pressure, and hex-board conquest in a hotseat browser prototype.
 
-## Local Development
+Hegemony is a Catan-inspired, Imperator: Rome-inspired strategy board game prototype where players found capitals, expand colonies, collect resources, manage population pressure, and compete for control across a stylized ancient world.
 
-Install dependencies:
-
-```sh
-npm install
-```
-
-Run the hotseat client:
-
-```sh
-npm run dev
-```
-
-Open:
-
-```txt
-http://127.0.0.1:5173/
-```
-
-Run checks:
-
-```sh
-npm run check
-npm run build
-```
-
-## Important Docs
-
-- [Project Overview](docs/project-overview.html): living project map, current scope, roadmap, source file guide, and brand showcase links.
-- [Codex Showcase](codex-showcase.html): generated Greek vase design directions and asset atlas reference.
-- [Codex Banana Showcase](codex-banana-showcase.html): Nano Banana generated Greek vase showcase and asset atlas counterpart.
-- [Rules Archive](docs/rules-archive.md): organized manual-style version of the rough PDF rules plus current clarifications.
-- [v0.1 Rules Spec](docs/v0.1-rules-spec.md): current implementation contract for the first playable browser prototype.
-
-## Current Scope
-
-The current app is a hotseat prototype with:
+## Features
 
 - 37-tile inland hex map.
-- Capital setup phase.
-- Colony setup phase.
-- Basic gameplay phase.
-- Income collection.
-- Four basic buildings.
-- Resource, pop, and unrest tracking foundations.
+- Capital and colony setup phases.
+- Basic hotseat gameplay loop.
+- Income collection and resource tracking.
+- Four buildable structure types.
+- Population and unrest foundations.
 
-Deferred systems include online server architecture, events, assembly voting, politicians, national ideas, luxury goods, trade, and victory conditions.
+## Coming Soon
+
+Online play, events, assembly voting, politicians, national ideas, luxury goods, trade, and victory conditions.
