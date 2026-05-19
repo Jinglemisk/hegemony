@@ -1,20 +1,38 @@
 import { useEffect, useState } from "react";
-import { Coins, Hammer, Hexagon, Landmark, ScrollText, Wheat } from "lucide-react";
-import type { BuildingId, HegemonyState, PlayerId, Resource } from "./game/types";
+import type { CSSProperties } from "react";
+import { ScrollText } from "lucide-react";
+import type {
+  BuildingEffect,
+  BuildingId,
+  HegemonyState,
+  PlayerId,
+  PopType,
+  Resource,
+  Resources,
+  SettlementKind,
+  Terrain
+} from "./game/types";
 import { BUILDINGS, PLAYER_COLORS, PLAYER_IDS } from "./game/data";
 import {
   buildBuilding,
+  calculateIncome,
   collectIncome,
   createInitialState,
   getPlayerName,
   INVALID_MOVE,
   placeCapital,
   placeColony,
+  settlementBuildingSlots,
+  settlementPopCapacity,
   startNewSeason,
-  toPlayerId
+  toPlayerId,
+  totalPops
 } from "./game/rules";
 
 type Phase = "setupCapital" | "setupColony" | "gameplay";
+type GameTheme = "dark" | "light";
+type IconAtlasKey = Resource | PopType | BuildingId | SettlementKind;
+type UiAtlasKey = "seal" | "primaryButton" | "secondaryButton" | "resourcePill" | "hexHalo" | "playerToken" | "meander" | "voteToken" | "seasonMarker";
 
 type LocalContext = {
   currentPlayer: PlayerId;
@@ -38,6 +56,8 @@ type BoardProps = {
   };
   playerID: PlayerId;
   onPlayerIDChange: (playerID: PlayerId) => void;
+  theme: GameTheme;
+  onThemeChange: (theme: GameTheme) => void;
   isActive: boolean;
 };
 
@@ -50,11 +70,48 @@ const RESOURCE_LABELS: Record<Resource, string> = {
   unrest: "Unrest"
 };
 
-const RESOURCE_ICONS: Partial<Record<Resource, typeof Wheat>> = {
-  food: Wheat,
-  gold: Coins,
-  stone: Landmark,
-  wood: Hammer
+const ICON_SPRITE_CLASSES: Record<IconAtlasKey, string> = {
+  wood: "sprite-wood",
+  stone: "sprite-stone",
+  gold: "sprite-gold",
+  food: "sprite-food",
+  influence: "sprite-influence",
+  unrest: "sprite-unrest",
+  citizens: "sprite-citizens",
+  freemen: "sprite-freemen",
+  slaves: "sprite-slaves",
+  marketplace: "sprite-marketplace",
+  temple: "sprite-temple",
+  workshop: "sprite-workshop",
+  granary: "sprite-granary",
+  capital: "sprite-capital",
+  city: "sprite-city",
+  colony: "sprite-colony"
+};
+
+const TERRAIN_SPRITE_CLASSES: Record<Terrain, string> = {
+  mountain: "sprite-terrain-mountain",
+  hill: "sprite-terrain-hill",
+  forest: "sprite-terrain-forest",
+  plains: "sprite-terrain-plains"
+};
+
+const UI_SPRITE_CLASSES: Record<UiAtlasKey, string> = {
+  seal: "sprite-ui-seal",
+  primaryButton: "sprite-ui-primary",
+  secondaryButton: "sprite-ui-secondary",
+  resourcePill: "sprite-ui-resource-pill",
+  hexHalo: "sprite-ui-hex-halo",
+  playerToken: "sprite-ui-player-token",
+  meander: "sprite-ui-meander",
+  voteToken: "sprite-ui-vote-token",
+  seasonMarker: "sprite-ui-season-marker"
+};
+
+const POP_LABELS: Record<PopType, { singular: string; plural: string }> = {
+  citizens: { singular: "citizen", plural: "citizens" },
+  freemen: { singular: "freeman", plural: "freemen" },
+  slaves: { singular: "slave", plural: "slaves" }
 };
 
 function HegemonyBoard({
@@ -64,6 +121,8 @@ function HegemonyBoard({
   events,
   playerID = "0",
   onPlayerIDChange,
+  theme,
+  onThemeChange,
   isActive
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
@@ -73,6 +132,7 @@ function HegemonyBoard({
   const currentPlayer = G.players[currentPlayerId];
   const viewer = G.players[viewerId];
   const isSetup = ctx.phase === "setupCapital" || ctx.phase === "setupColony";
+  const themeLabel = theme === "dark" ? "Obsidian Kiln" : "Red-Figure Agora";
 
   const handleTileAction = (tileId: string) => {
     setSelectedTileId(tileId);
@@ -92,20 +152,15 @@ function HegemonyBoard({
   };
 
   return (
-    <main className="shell">
-      <header className="topbar">
-        <div className="turnPlate">
-          <span>{phaseLabel(ctx.phase)}</span>
-          <strong>{getPlayerName(G, currentPlayerId)}</strong>
+    <main className={`shell theme-${theme}`}>
+      <header className="topbar controlsBar">
+        <div className="brandCluster">
+          <UiSprite item="seal" className="brandSeal" />
+          <div className="brandCopy">
+            <strong>Hegemony</strong>
+            <span>{themeLabel}</span>
+          </div>
         </div>
-
-        <div className="statusRail" aria-label="Game status">
-          <span>Season {G.season}</span>
-          <span>Turn {ctx.turn}</span>
-          <span>{isActive ? "Active" : "Inspecting"}</span>
-          <span>{isSetup ? "Place settlement" : "Develop realm"}</span>
-        </div>
-
         <div className="topActions">
           <div className="seatSwitcher" aria-label="Hotseat player selector">
             {PLAYER_IDS.map((id) => (
@@ -123,63 +178,52 @@ function HegemonyBoard({
             <ScrollText size={16} />
             Log
           </button>
+          <button
+            aria-label={`Switch to ${theme === "dark" ? "Red-Figure Agora" : "Obsidian Kiln"} theme`}
+            aria-pressed={theme === "light"}
+            className="themeToggle"
+            onClick={() => onThemeChange(theme === "dark" ? "light" : "dark")}
+          >
+            {theme === "dark" ? "Agora" : "Kiln"}
+          </button>
         </div>
       </header>
 
       <section className="workbench">
-        <aside className="sideStack">
-          <section className="panel rosterPanel">
-            <div className="panelTitle">
-              <Hexagon size={18} />
-              <h2>Players</h2>
-            </div>
-            <div className="playerList">
-              {Object.values(G.players).map((player) => (
-                <article
-                  className={`playerCard ${player.id === currentPlayerId ? "active" : ""}`}
-                  key={player.id}
-                  style={{ borderColor: PLAYER_COLORS[player.id] }}
-                >
-                  <div>
-                    <strong>{player.name}</strong>
-                    <span>{player.id === viewerId ? "View" : "Rival"}</span>
-                  </div>
-                  <div className="miniStats">
-                    <span>{player.settlements.length} sites</span>
-                    <span>{player.collectedThisTurn ? "income done" : "income open"}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="panel empirePanel">
-            <div className="panelTitle">
-              <Landmark size={18} />
-              <h2>{viewer.name} Holdings</h2>
-            </div>
-            <SettlementRoster G={G} playerID={viewerId} />
-          </section>
+        <aside className="panel empirePanel">
+          <div className="panelTitle">
+            <AtlasIcon icon="capital" className="titleIcon" />
+            <h2>{viewer.name} Holdings</h2>
+          </div>
+          <PlayerHoldingsSummary G={G} playerID={viewerId} />
+          <SettlementRoster G={G} playerID={viewerId} />
         </aside>
 
         <section className="mapColumn">
-          <HexMap
-            G={G}
-            selectedTileId={selectedTileId}
-            onTileAction={handleTileAction}
-          />
+          <div className="mapFrame">
+            <MapStatusOverlay
+              G={G}
+              ctx={ctx}
+              currentPlayerId={currentPlayerId}
+              isActive={isActive}
+            />
+            <HexMap
+              G={G}
+              selectedTileId={selectedTileId}
+              onTileAction={handleTileAction}
+            />
+          </div>
           <div className="phaseStrip">
             <span>{phaseHint(ctx.phase)}</span>
-            <span>{isActive ? "Your move" : `${currentPlayer.name}'s move`}</span>
+            <span>{isSetup ? "Settlement placement" : "Income and building actions"}</span>
           </div>
         </section>
 
         <aside className="panel actionPanel">
           <div className="panelTitle">
-            <ScrollText size={18} />
+            <UiSprite item="voteToken" className="titleIcon" />
             <h2>Actions</h2>
           </div>
-          <ResourceGrid resources={viewer.resources} />
 
           <div className="actionStack">
             <button
@@ -241,6 +285,69 @@ function HegemonyBoard({
   );
 }
 
+function MapStatusOverlay({
+  G,
+  ctx,
+  currentPlayerId,
+  isActive
+}: {
+  G: HegemonyState;
+  ctx: LocalContext;
+  currentPlayerId: PlayerId;
+  isActive: boolean;
+}) {
+  return (
+    <div className="mapHud" aria-label="Turn status">
+      <div className="hudCard">
+        <UiSprite item="seasonMarker" className="hudMedallion" />
+        <div>
+          <span>Season</span>
+          <strong>{G.season}</strong>
+        </div>
+      </div>
+
+      <div className="hudCard">
+        <UiSprite item="meander" className="hudMedallion" />
+        <div>
+          <span>Turn {ctx.turn}</span>
+          <strong>{phaseLabel(ctx.phase)}</strong>
+        </div>
+      </div>
+
+      <div className="hudCard turnOwner" style={{ borderColor: PLAYER_COLORS[currentPlayerId] }}>
+        <span className="playerSeal" style={{ background: PLAYER_COLORS[currentPlayerId] }} />
+        <div>
+          <span>{isActive ? "Your turn" : "Now acting"}</span>
+          <strong>{getPlayerName(G, currentPlayerId)}'s turn</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayerHoldingsSummary({ G, playerID }: { G: HegemonyState; playerID: PlayerId }) {
+  const player = G.players[playerID];
+  const projectedIncome = calculateIncome(G, playerID);
+
+  return (
+    <section className="holdingsSummary" aria-label={`${player.name} resources and income`}>
+      <div className="holdingsStats">
+        <span>
+          Sites <strong>{player.settlements.length}</strong>
+        </span>
+        <span>
+          Income <strong>{player.collectedThisTurn ? "done" : "open"}</strong>
+        </span>
+      </div>
+      <ResourceGrid resources={player.resources} />
+      <div className="incomePreview">
+        <span>Next income</span>
+        <strong>{formatResourceDelta(projectedIncome)}</strong>
+      </div>
+    </section>
+  );
+}
+
 function HexMap({
   G,
   selectedTileId,
@@ -251,6 +358,7 @@ function HexMap({
   onTileAction: (tileId: string) => void;
 }) {
   const size = 45;
+  const tileArtSize = 88;
   const centers = G.board.tiles.map((tile) => ({
     tile,
     x: size * Math.sqrt(3) * (tile.q + tile.r / 2),
@@ -262,8 +370,29 @@ function HexMap({
       {centers.map(({ tile, x, y }) => {
         const city = tile.settlements.find((settlement) => settlement.kind !== "colony");
         const colonies = tile.settlements.filter((settlement) => settlement.kind === "colony");
+        const isSelected = selectedTileId === tile.id;
         return (
           <g key={tile.id} transform={`translate(${x} ${y})`}>
+            {isSelected ? (
+              <foreignObject
+                className="hexHaloObject"
+                height={tileArtSize + 16}
+                width={tileArtSize + 16}
+                x={-(tileArtSize + 16) / 2}
+                y={-(tileArtSize + 16) / 2}
+              >
+                <UiSprite item="hexHalo" className="hexHaloSprite" />
+              </foreignObject>
+            ) : null}
+            <foreignObject
+              className="terrainObject"
+              height={tileArtSize}
+              width={tileArtSize}
+              x={-tileArtSize / 2}
+              y={-tileArtSize / 2}
+            >
+              <TerrainSprite terrain={tile.terrain} className="mapTerrain" />
+            </foreignObject>
             <g
               aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${tile.resource.amount} ${tile.resource.type}`}
               className="svgButton"
@@ -278,9 +407,7 @@ function HexMap({
               tabIndex={0}
             >
               <polygon
-                className={`hexTile terrain-${tile.terrain} ${
-                  selectedTileId === tile.id ? "selected" : ""
-                }`}
+                className={`hexTile terrain-${tile.terrain} ${isSelected ? "selected" : ""}`}
                 points={hexPoints(size - 2)}
               />
             </g>
@@ -291,19 +418,30 @@ function HexMap({
               +{tile.resource.amount} {tile.resource.type}
             </text>
             {city ? (
-              <g className={`settlementGlyph cityGlyph ${city.kind === "capital" ? "capitalGlyph" : ""}`}>
-                <circle r="15" fill={PLAYER_COLORS[city.owner]} />
-                <text y="4">{city.kind === "capital" ? "CAP" : "CITY"}</text>
-              </g>
+              <foreignObject className="settlementObject cityObject" height={42} width={42} x={-21} y={-25}>
+                <div
+                  className={`settlementToken ${city.kind === "capital" ? "capitalToken" : "cityToken"}`}
+                  style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
+                >
+                  <AtlasIcon icon={city.kind} className="settlementTokenIcon" />
+                  <span>{city.kind === "capital" ? "CAP" : "CITY"}</span>
+                </div>
+              </foreignObject>
             ) : null}
             {colonies.map((colony, index) => (
               <g
-                className="settlementGlyph colonyGlyph"
                 transform={`translate(${index === 0 ? -13 : 13} 23)`}
                 key={`${colony.owner}-${index}`}
               >
-                <rect fill={PLAYER_COLORS[colony.owner]} height="14" rx="3" width="22" x="-11" y="-7" />
-                <text y="3">COL</text>
+                <foreignObject className="settlementObject colonyObject" height={30} width={34} x={-17} y={-15}>
+                  <div
+                    className="settlementToken colonyToken"
+                    style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
+                  >
+                    <AtlasIcon icon="colony" className="settlementTokenIcon" />
+                    <span>COL</span>
+                  </div>
+                </foreignObject>
               </g>
             ))}
           </g>
@@ -324,10 +462,9 @@ function ResourceGrid({ resources }: { resources: Record<Resource, number> }) {
   return (
     <div className="resourceGrid">
       {(Object.keys(resources) as Resource[]).map((resource) => {
-        const Icon = RESOURCE_ICONS[resource];
         return (
           <div className={`resourcePill resource-${resource}`} key={resource}>
-            {Icon ? <Icon size={16} /> : <span className="dot" />}
+            <AtlasIcon icon={resource} className="resourceIcon" />
             <span>{RESOURCE_LABELS[resource]}</span>
             <strong>{resources[resource]}</strong>
           </div>
@@ -372,18 +509,24 @@ function TileInspector({
 
   return (
     <div className="inspector">
-      <h3>{selectedTile.terrain}</h3>
-      <p>
-        {selectedTile.resource.amount} {selectedTile.resource.type} income, {selectedTile.buildingSlots} terrain
-        slots.
-      </p>
+      <div className="inspectorTerrainHeader">
+        <TerrainSprite terrain={selectedTile.terrain} className="terrainPreview" />
+        <div>
+          <h3>{selectedTile.terrain}</h3>
+          <p>
+            {selectedTile.resource.amount} {RESOURCE_LABELS[selectedTile.resource.type]} income,{" "}
+            {selectedTile.buildingSlots} terrain slots.
+          </p>
+        </div>
+      </div>
       <div className="settlementList">
         {selectedTile.settlements.length === 0 ? (
           <span>Empty tile</span>
         ) : (
           selectedTile.settlements.map((settlement) => (
             <span key={`${settlement.owner}-${settlement.kind}`}>
-              {G.players[settlement.owner].name}: {settlement.kind}
+              <AtlasIcon icon={settlement.kind} className="miniIcon" />
+              <b>{G.players[settlement.owner].name}</b>: {settlement.kind}
             </span>
           ))
         )}
@@ -392,12 +535,18 @@ function TileInspector({
       <div className="buildingButtons">
         {BUILDINGS.map((building) => (
           <button
+            className="buildingButton"
             disabled={!canUseCityActions}
             key={building.id}
             onClick={() => moves.buildBuilding(selectedTile.id, building.id)}
-            title={building.description}
+            title={`Cost: ${formatResourceCost(building.cost)}. Benefit: ${formatBuildingEffects(building.effects)}.`}
           >
-            {building.name}
+            <AtlasIcon icon={building.id} className="buildingButtonIcon" />
+            <span className="buildingButtonCopy">
+              <strong>{building.name}</strong>
+              <span>Cost: {formatResourceCost(building.cost)}</span>
+              <span>Benefit: {formatBuildingEffects(building.effects)}</span>
+            </span>
           </button>
         ))}
       </div>
@@ -424,21 +573,25 @@ function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: PlayerI
           return null;
         }
 
-        const totalPops = settlement.pops.citizens + settlement.pops.freemen + settlement.pops.slaves;
-        const buildings = settlement.buildings.map((buildingId) => buildingName(buildingId));
-        const capacity = settlement.kind === "capital" ? 20 : settlement.kind === "city" ? 10 : 4;
-        const slots =
-          settlement.kind === "colony" ? 0 : tile.buildingSlots + (settlement.kind === "capital" ? 4 : 2);
+        const popTotal = totalPops(settlement.pops);
+        const capacity = settlementPopCapacity(settlement.kind);
+        const slots = settlementBuildingSlots(tile, settlement);
 
         return (
-          <article className="settlementCard" key={`${settlement.owner}-${tile.id}`}>
+          <article className={`settlementCard settlement-${settlement.kind}`} key={`${settlement.owner}-${tile.id}`}>
             <div className="settlementHeader">
-              <strong>{settlement.kind}</strong>
-              <span>{tile.terrain}</span>
+              <span className="settlementName">
+                <AtlasIcon icon={settlement.kind} className="miniIcon" />
+                <strong>{settlement.kind}</strong>
+              </span>
+              <span className="settlementTerrain">
+                <TerrainSprite terrain={tile.terrain} className="terrainChip" />
+                {tile.terrain}
+              </span>
             </div>
             <div className="settlementStats">
               <span>
-                Pops <strong>{totalPops}</strong>/<strong>{capacity}</strong>
+                Pops <strong>{popTotal}</strong>/<strong>{capacity}</strong>
               </span>
               <span>
                 Slots <strong>{settlement.buildings.length}</strong>/<strong>{slots}</strong>
@@ -448,12 +601,24 @@ function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: PlayerI
               </span>
             </div>
             <div className="popGrid">
-              <span>C {settlement.pops.citizens}</span>
-              <span>F {settlement.pops.freemen}</span>
-              <span>S {settlement.pops.slaves}</span>
+              {(Object.entries(settlement.pops) as Array<[PopType, number]>).map(([pop, amount]) => (
+                <span key={pop}>
+                  <AtlasIcon icon={pop} className="miniIcon" />
+                  {formatPopShort(pop)} {amount}
+                </span>
+              ))}
             </div>
             <div className="buildingList">
-              {buildings.length > 0 ? buildings.map((building) => <span key={building}>{building}</span>) : <em>No buildings</em>}
+              {settlement.buildings.length > 0 ? (
+                settlement.buildings.map((buildingId) => (
+                  <span key={buildingId}>
+                    <AtlasIcon icon={buildingId} className="miniIcon" />
+                    {buildingName(buildingId)}
+                  </span>
+                ))
+              ) : (
+                <em>No buildings</em>
+              )}
             </div>
           </article>
         );
@@ -462,8 +627,75 @@ function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: PlayerI
   );
 }
 
+function formatResourceCost(cost: Partial<Resources>) {
+  const entries = (Object.entries(cost) as Array<[Resource, number | undefined]>).filter(
+    ([, amount]) => (amount ?? 0) > 0
+  );
+
+  if (entries.length === 0) {
+    return "Free";
+  }
+
+  return entries
+    .map(([resource, amount]) => `${amount ?? 0} ${RESOURCE_LABELS[resource]}`)
+    .join(", ");
+}
+
+function formatResourceDelta(resources: Resources) {
+  const entries = (Object.entries(resources) as Array<[Resource, number]>).filter(([, amount]) => amount !== 0);
+
+  if (entries.length === 0) {
+    return "none";
+  }
+
+  return entries
+    .map(([resource, amount]) => `${amount > 0 ? "+" : ""}${amount} ${RESOURCE_LABELS[resource]}`)
+    .join(", ");
+}
+
+function formatBuildingEffects(effects: BuildingEffect[]) {
+  if (effects.length === 0) {
+    return "No effect";
+  }
+
+  return effects
+    .map((effect) => {
+      if (effect.type === "addPop") {
+        return `+${effect.amount} ${formatPopLabel(effect.pop, effect.amount)}`;
+      }
+
+      return `+${effect.amount} ${RESOURCE_LABELS[effect.resource]} income`;
+    })
+    .join(", ");
+}
+
+function formatPopLabel(pop: PopType, amount: number) {
+  return amount === 1 ? POP_LABELS[pop].singular : POP_LABELS[pop].plural;
+}
+
+function formatPopShort(pop: PopType) {
+  return POP_LABELS[pop].singular.slice(0, 1).toUpperCase();
+}
+
 function buildingName(buildingId: BuildingId) {
   return BUILDINGS.find((building) => building.id === buildingId)?.name ?? buildingId;
+}
+
+function AtlasIcon({ icon, className = "" }: { icon: IconAtlasKey; className?: string }) {
+  return <span aria-hidden="true" className={`atlasSprite atlasIcon ${ICON_SPRITE_CLASSES[icon]} ${className}`} />;
+}
+
+function TerrainSprite({ terrain, className = "" }: { terrain: Terrain; className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`atlasSprite atlasTerrain ${TERRAIN_SPRITE_CLASSES[terrain]} ${className}`}
+    />
+  );
+}
+
+function UiSprite({ item, className = "" }: { item: UiAtlasKey; className?: string }) {
+  return <span aria-hidden="true" className={`atlasSprite atlasUi ${UI_SPRITE_CLASSES[item]} ${className}`} />;
 }
 
 function phaseLabel(phase: Phase) {
@@ -517,6 +749,7 @@ function advanceSetupTurn(G: HegemonyState, ctx: LocalContext, count: number, ne
 
 export function App() {
   const [playerID, setPlayerID] = useState<PlayerId>("0");
+  const [theme, setTheme] = useState<GameTheme>("dark");
   const [game, setGame] = useState<{ G: HegemonyState; ctx: LocalContext }>(() => ({
     G: createInitialState(),
     ctx: {
@@ -643,8 +876,10 @@ export function App() {
         events={events}
         isActive={playerID === game.ctx.currentPlayer}
         moves={moves}
+        onThemeChange={setTheme}
         onPlayerIDChange={setPlayerID}
         playerID={playerID}
+        theme={theme}
       />
     </>
   );
