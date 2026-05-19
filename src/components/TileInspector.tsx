@@ -1,6 +1,14 @@
 import type { HegemonyState, PlayerId } from "../game/types";
 import type { GameMoves, Phase } from "../game/controller";
 import { BUILDINGS } from "../game/data";
+import {
+  type ActionStatus,
+  getFoundColonyStatus,
+  getUpgradeColonyToCityStatus,
+  settlementOverCapacity,
+  settlementPopCapacity,
+  totalPops
+} from "../game/rules";
 import { RESOURCE_LABELS, formatBuildingEffects, formatResourceCost } from "../ui/formatters";
 import { AtlasIcon, TerrainSprite } from "./Sprites";
 
@@ -21,6 +29,8 @@ export function TileInspector({
 }) {
   const selectedTile = G.board.tiles.find((tile) => tile.id === selectedTileId);
   const playerSettlement = selectedTile?.settlements.find((settlement) => settlement.owner === playerID);
+  const foundColonyStatus = selectedTile ? getFoundColonyStatus(G, playerID, selectedTile.id) : null;
+  const upgradeCityStatus = selectedTile ? getUpgradeColonyToCityStatus(G, playerID, selectedTile.id) : null;
   const canUseCityActions =
     isActive &&
     phase === "gameplay" &&
@@ -53,13 +63,50 @@ export function TileInspector({
         {selectedTile.settlements.length === 0 ? (
           <span>Empty tile</span>
         ) : (
-          selectedTile.settlements.map((settlement) => (
-            <span key={`${settlement.owner}-${settlement.kind}`}>
-              <AtlasIcon icon={settlement.kind} className="miniIcon" />
-              <b>{G.players[settlement.owner].name}</b>: {settlement.kind}
-            </span>
-          ))
+          selectedTile.settlements.map((settlement) => {
+            const popTotal = totalPops(settlement.pops);
+            const capacity = settlementPopCapacity(settlement.kind);
+            const overCapacity = settlementOverCapacity(settlement);
+
+            return (
+              <span
+                className={overCapacity > 0 ? "overCapacityTile" : undefined}
+                key={`${settlement.owner}-${settlement.kind}`}
+              >
+                <AtlasIcon icon={settlement.kind} className="miniIcon" />
+                <b>{G.players[settlement.owner].name}</b>: {settlement.kind}
+                <em>
+                  {popTotal}/{capacity} pops{overCapacity > 0 ? `, +${overCapacity} unrest` : ""}
+                </em>
+              </span>
+            );
+          })
         )}
+      </div>
+
+      <div className="tileActionButtons">
+        <button
+          disabled={!isActive || phase !== "gameplay" || !foundColonyStatus?.can}
+          onClick={() => moves.foundColony(selectedTile.id)}
+          title={actionTitle("Found Colony", foundColonyStatus, phase)}
+        >
+          <AtlasIcon icon="colony" className="buildingButtonIcon" />
+          <span>
+            <strong>Found Colony</strong>
+            <span>Cost: {formatResourceCost(foundColonyStatus?.cost ?? {})}</span>
+          </span>
+        </button>
+        <button
+          disabled={!isActive || phase !== "gameplay" || !upgradeCityStatus?.can}
+          onClick={() => moves.upgradeColonyToCity(selectedTile.id)}
+          title={actionTitle("Upgrade Colony to City", upgradeCityStatus, phase)}
+        >
+          <AtlasIcon icon="city" className="buildingButtonIcon" />
+          <span>
+            <strong>Upgrade City</strong>
+            <span>Cost: {formatResourceCost(upgradeCityStatus?.cost ?? {})}</span>
+          </span>
+        </button>
       </div>
 
       <div className="buildingButtons">
@@ -82,4 +129,10 @@ export function TileInspector({
       </div>
     </div>
   );
+}
+
+function actionTitle(label: string, status: ActionStatus | null, phase?: Phase) {
+  const requirements = status?.reasons.length ? status.reasons.join(" ") : "Available.";
+  const phaseRequirement = phase === "gameplay" ? "" : " Gameplay only.";
+  return `${label}. Cost: ${formatResourceCost(status?.cost ?? {})}. ${requirements}${phaseRequirement}`;
 }

@@ -6,10 +6,12 @@ import {
   buildBuilding,
   collectIncome,
   createInitialState,
+  foundColony,
   INVALID_MOVE,
   placeCapital,
   placeColony,
-  startNewSeason
+  startNewSeason,
+  upgradeColonyToCity
 } from "./rules";
 
 export type Phase = "setupCapital" | "setupColony" | "gameplay";
@@ -29,6 +31,8 @@ export type GameMoves = {
   placeCapital: (tileId: string) => void;
   placeColony: (tileId: string) => void;
   collectIncome: () => void;
+  foundColony: (tileId: string) => void;
+  upgradeColonyToCity: (tileId: string) => void;
   buildBuilding: (tileId: string, buildingId: BuildingId) => void;
 };
 
@@ -104,10 +108,10 @@ function createMoves(setGame: SetGame): GameMoves {
           return previous;
         }
 
-        return {
-          G,
-          ctx: advanceSetupTurn(G, previous.ctx, 2, "gameplay")
-        };
+        const ctx = advanceSetupTurn(G, previous.ctx, 2, "gameplay");
+        beginGameplayTurn(G, ctx);
+
+        return { G, ctx };
       });
     },
     collectIncome: () => {
@@ -118,6 +122,44 @@ function createMoves(setGame: SetGame): GameMoves {
 
         const G = structuredClone(previous.G);
         const result = collectIncome(G, previous.ctx.currentPlayer);
+
+        if (result === INVALID_MOVE) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          G
+        };
+      });
+    },
+    foundColony: (tileId) => {
+      setGame((previous) => {
+        if (previous.ctx.phase !== "gameplay") {
+          return previous;
+        }
+
+        const G = structuredClone(previous.G);
+        const result = foundColony(G, previous.ctx.currentPlayer, tileId);
+
+        if (result === INVALID_MOVE) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          G
+        };
+      });
+    },
+    upgradeColonyToCity: (tileId) => {
+      setGame((previous) => {
+        if (previous.ctx.phase !== "gameplay") {
+          return previous;
+        }
+
+        const G = structuredClone(previous.G);
+        const result = upgradeColonyToCity(G, previous.ctx.currentPlayer, tileId);
 
         if (result === INVALID_MOVE) {
           return previous;
@@ -166,6 +208,8 @@ function createEvents(setGame: SetGame): GameEvents {
           startNewSeason(G);
         }
 
+        collectIncome(G, next, "automatic");
+
         return {
           G,
           ctx: {
@@ -177,6 +221,12 @@ function createEvents(setGame: SetGame): GameEvents {
       });
     }
   };
+}
+
+function beginGameplayTurn(G: HegemonyState, ctx: LocalContext) {
+  if (ctx.phase === "gameplay") {
+    collectIncome(G, ctx.currentPlayer, "automatic");
+  }
 }
 
 function nextPlayer(playerID: PlayerId): PlayerId {

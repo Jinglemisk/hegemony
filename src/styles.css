@@ -24,6 +24,7 @@ body {
   min-height: 100vh;
   margin: 0;
   overflow: hidden;
+  overflow-x: hidden;
   background: #f4e6c8;
   -webkit-font-smoothing: antialiased;
 }
@@ -150,9 +151,9 @@ button:focus-visible {
 }
 
 .topbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(190px, auto) minmax(360px, 1fr) auto;
   align-items: stretch;
-  justify-content: space-between;
   gap: 12px;
   width: 100%;
   max-width: 1520px;
@@ -220,7 +221,6 @@ button:focus-visible {
   justify-content: flex-end;
   gap: 8px;
   min-width: 0;
-  margin-left: auto;
 }
 
 .seatSwitcher {
@@ -802,6 +802,7 @@ button:focus-visible {
 .incomePreview {
   display: grid;
   gap: 4px;
+  margin: 0;
 }
 
 .incomePreview span {
@@ -821,42 +822,43 @@ button:focus-visible {
   margin-bottom: 12px;
 }
 
+.topResourceGrid {
+  align-self: center;
+  grid-template-columns: repeat(6, minmax(96px, 1fr));
+  gap: 10px;
+  margin-bottom: 0;
+}
+
 .resourcePill {
   position: relative;
   isolation: isolate;
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-columns: 46px auto auto;
   align-items: center;
-  gap: 7px;
-  min-height: 42px;
-  overflow: hidden;
-  padding: 6px 8px;
+  justify-content: start;
+  gap: 10px;
+  min-height: 58px;
+  overflow: visible;
+  padding: 7px 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--panel-soft);
+  background: rgb(255 248 231 / 96%);
 }
 
 .resourcePill::before {
-  content: "";
-  position: absolute;
-  inset: -20% -8%;
-  z-index: -1;
-  background-image: var(--ui-atlas);
-  background-position: 0% 50%;
-  background-repeat: no-repeat;
-  background-size: 300% 300%;
-  opacity: 0.24;
+  content: none;
 }
 
 .resourceIcon {
-  width: 30px;
-  height: 30px;
+  width: 46px;
+  height: 46px;
+  filter: drop-shadow(0 5px 8px rgb(36 25 16 / 22%));
 }
 
-.resourcePill span:not(.atlasSprite) {
+.resourceLabel {
   overflow: hidden;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -864,7 +866,74 @@ button:focus-visible {
 .resourcePill strong {
   color: var(--fg);
   font-family: var(--font-display);
+  font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.resourceDelta {
+  justify-self: end;
+  color: var(--subtle);
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.resourceDelta.positive {
+  color: #2f7d46;
+}
+
+.resourceDelta.negative {
+  color: #b13a28;
+}
+
+.resourceDelta.neutral {
+  color: var(--subtle);
+}
+
+.resourceFlash-increase {
+  border-color: rgb(47 125 70 / 78%);
+  animation: resourceFlashIncrease 2400ms ease-out;
+}
+
+.resourceFlash-decrease {
+  border-color: rgb(177 58 40 / 78%);
+  animation: resourceFlashDecrease 2400ms ease-out;
+}
+
+.resource-unrest.resourceFlash-increase {
+  border-color: rgb(177 58 40 / 78%);
+  animation-name: resourceFlashDecrease;
+}
+
+.resource-unrest.resourceFlash-decrease {
+  border-color: rgb(47 125 70 / 78%);
+  animation-name: resourceFlashIncrease;
+}
+
+@keyframes resourceFlashIncrease {
+  0%,
+  38% {
+    background: rgb(47 125 70 / 24%);
+    box-shadow: 0 0 0 2px rgb(47 125 70 / 28%);
+  }
+  100% {
+    background: var(--panel-soft);
+    box-shadow: none;
+  }
+}
+
+@keyframes resourceFlashDecrease {
+  0%,
+  38% {
+    background: rgb(177 58 40 / 24%);
+    box-shadow: 0 0 0 2px rgb(177 58 40 / 26%);
+  }
+  100% {
+    background: var(--panel-soft);
+    box-shadow: none;
+  }
 }
 
 .resource-influence strong {
@@ -875,8 +944,112 @@ button:focus-visible {
   color: #f07a55;
 }
 
+.resourceTooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 30;
+  display: grid;
+  gap: 8px;
+  width: min(340px, 78vw);
+  max-height: min(420px, 62vh);
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid rgb(36 25 16 / 42%);
+  border-radius: 8px;
+  color: var(--fg);
+  background: rgb(255 248 231 / 99%);
+  box-shadow:
+    0 20px 44px rgb(36 25 16 / 32%),
+    0 0 0 1px rgb(255 248 231 / 80%) inset;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.resourcePill:nth-last-child(-n + 2) .resourceTooltip {
+  right: 0;
+  left: auto;
+}
+
+.resourcePill:hover .resourceTooltip,
+.resourcePill:focus .resourceTooltip,
+.resourcePill:focus-visible .resourceTooltip {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.resourceTooltipHeader,
+.resourceTooltipRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resourceTooltipHeader {
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgb(36 25 16 / 28%);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.resourceTooltipHeader strong,
+.resourceTooltipRow b {
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.resourceTooltipRows {
+  display: grid;
+  gap: 6px;
+}
+
+.resourceTooltipRow {
+  padding: 8px 9px;
+  border: 1px solid rgb(36 25 16 / 24%);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 48%);
+}
+
+.resourceTooltipRow span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.resourceTooltipRow strong {
+  color: var(--fg);
+  font-size: 0.84rem;
+  line-height: 1.2;
+}
+
+.resourceTooltipRow em,
+.resourceTooltip p {
+  margin: 0;
+  color: rgb(36 25 16 / 76%);
+  font-size: 0.8rem;
+  font-style: normal;
+  line-height: 1.25;
+}
+
+.positive {
+  color: #2f7d46;
+}
+
+.negative {
+  color: #b13a28;
+}
+
 .actionStack,
-.buildingButtons {
+.buildingButtons,
+.tileActionButtons {
   display: grid;
   gap: 8px;
 }
@@ -948,6 +1121,7 @@ button:focus-visible {
 
 .settlementList span {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 7px;
   min-width: 0;
@@ -956,6 +1130,56 @@ button:focus-visible {
   border-radius: 6px;
   color: var(--muted);
   background: var(--panel-soft);
+}
+
+.settlementList em {
+  color: var(--subtle);
+  font-size: 0.75rem;
+  font-style: normal;
+}
+
+.settlementList .overCapacityTile {
+  border-color: rgb(177 58 40 / 55%);
+  background: rgb(177 58 40 / 12%);
+}
+
+.tileActionButtons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 10px;
+}
+
+.tileActionButtons button {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 72px;
+  padding: 8px;
+  text-align: left;
+}
+
+.tileActionButtons button > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tileActionButtons strong,
+.tileActionButtons span span {
+  overflow-wrap: anywhere;
+}
+
+.tileActionButtons strong {
+  color: var(--fg);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.tileActionButtons span span {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 400;
 }
 
 .settlementList b {
@@ -1099,6 +1323,28 @@ button:focus-visible {
   color: var(--fg);
 }
 
+.overCapacityCard {
+  border-color: rgb(177 58 40 / 58%);
+  background:
+    linear-gradient(180deg, rgb(177 58 40 / 14%), transparent),
+    var(--panel-soft);
+}
+
+.overCapacityText,
+.overCapacityText strong {
+  color: #b13a28;
+}
+
+.settlementStats .overCapacityText {
+  border-color: rgb(177 58 40 / 52%);
+  background: rgb(177 58 40 / 12%);
+}
+
+.settlementStats em {
+  color: #b13a28;
+  font-style: normal;
+}
+
 .emptyState {
   color: var(--muted);
   margin: 0;
@@ -1162,11 +1408,20 @@ button:focus-visible {
   .workbench {
     grid-template-columns: minmax(250px, 320px) minmax(420px, 1fr) minmax(280px, 330px);
   }
+
+  .topbar {
+    grid-template-columns: minmax(180px, auto) minmax(320px, 1fr) auto;
+  }
+
+  .topResourceGrid {
+    grid-template-columns: repeat(3, minmax(92px, 1fr));
+  }
 }
 
 @media (max-width: 1120px) {
   body {
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .shell {
@@ -1194,7 +1449,7 @@ button:focus-visible {
   }
 
   .topbar {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .brandCluster {
@@ -1204,7 +1459,19 @@ button:focus-visible {
   .topActions {
     flex-wrap: wrap;
     justify-content: stretch;
-    margin-left: 0;
+  }
+
+  .topResourceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .resourceTooltip {
+    position: fixed;
+    top: 92px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: min(430px, calc(100vh - 116px));
   }
 
   .seatSwitcher {
@@ -1239,8 +1506,13 @@ button:focus-visible {
 
   .resourceGrid,
   .buildingButtons,
+  .tileActionButtons,
   .phaseStrip {
     grid-template-columns: 1fr;
+  }
+
+  .topResourceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hexMap {

@@ -1,5 +1,5 @@
 import type { HegemonyState, PlayerId, PopType } from "../game/types";
-import { settlementBuildingSlots, settlementPopCapacity, totalPops } from "../game/rules";
+import { settlementBuildingSlots, settlementOverCapacity, settlementPopCapacity, totalPops } from "../game/rules";
 import { buildingName, formatPopShort } from "../ui/formatters";
 import { AtlasIcon, TerrainSprite } from "./Sprites";
 
@@ -24,10 +24,14 @@ export function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: 
 
         const popTotal = totalPops(settlement.pops);
         const capacity = settlementPopCapacity(settlement.kind);
+        const overCapacity = settlementOverCapacity(settlement);
         const slots = settlementBuildingSlots(tile, settlement);
 
         return (
-          <article className={`settlementCard settlement-${settlement.kind}`} key={`${settlement.owner}-${tile.id}`}>
+          <article
+            className={`settlementCard settlement-${settlement.kind}${overCapacity > 0 ? " overCapacityCard" : ""}`}
+            key={`${settlement.owner}-${tile.id}`}
+          >
             <div className="settlementHeader">
               <span className="settlementName">
                 <AtlasIcon icon={settlement.kind} className="miniIcon" />
@@ -39,11 +43,18 @@ export function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: 
               </span>
             </div>
             <div className="settlementStats">
-              <span>
+              <span className={overCapacity > 0 ? "overCapacityText" : undefined}>
                 Pops <strong>{popTotal}</strong>/<strong>{capacity}</strong>
+                {overCapacity > 0 ? <em>+{overCapacity} unrest</em> : null}
               </span>
               <span>
-                Slots <strong>{settlement.buildings.length}</strong>/<strong>{slots}</strong>
+                {settlement.kind === "colony" ? (
+                  <>No building slots</>
+                ) : (
+                  <>
+                    Slots <strong>{settlement.buildings.length}</strong>/<strong>{slots}</strong>
+                  </>
+                )}
               </span>
               <span>
                 Yield <strong>{tile.resource.amount}</strong> {tile.resource.type}
@@ -59,8 +70,8 @@ export function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: 
             </div>
             <div className="buildingList">
               {settlement.buildings.length > 0 ? (
-                settlement.buildings.map((buildingId) => (
-                  <span key={buildingId}>
+                settlement.buildings.map((buildingId, index) => (
+                  <span key={`${buildingId}-${index}`}>
                     <AtlasIcon icon={buildingId} className="miniIcon" />
                     {buildingName(buildingId)}
                   </span>

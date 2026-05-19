@@ -1,27 +1,27 @@
 import type { HegemonyState, PlayerId } from "../game/types";
-import { calculateIncome } from "../game/rules";
-import { formatResourceDelta } from "../ui/formatters";
-import { ResourceGrid } from "./ResourceGrid";
+import { playerPopulationTotals } from "../game/rules";
 
 export function PlayerHoldingsSummary({ G, playerID }: { G: HegemonyState; playerID: PlayerId }) {
   const player = G.players[playerID];
-  const projectedIncome = calculateIncome(G, playerID);
+  const population = playerPopulationTotals(G, playerID);
+  const overCapacity = Math.max(0, population.pops - population.capacity);
 
   return (
-    <section className="holdingsSummary" aria-label={`${player.name} resources and income`}>
+    <section className="holdingsSummary" aria-label={`${player.name} holdings`}>
       <div className="holdingsStats">
         <span>
           Sites <strong>{player.settlements.length}</strong>
         </span>
         <span>
-          Income <strong>{player.collectedThisTurn ? "done" : "open"}</strong>
+          Pops{" "}
+          <strong className={overCapacity > 0 ? "overCapacityText" : undefined}>
+            {population.pops}/{population.capacity}
+          </strong>
         </span>
       </div>
-      <ResourceGrid resources={player.resources} />
-      <div className="incomePreview">
-        <span>Next income</span>
-        <strong>{formatResourceDelta(projectedIncome)}</strong>
-      </div>
+      <p className="incomePreview">
+        Income is collected automatically at the start of each gameplay turn.
+      </p>
     </section>
   );
 }

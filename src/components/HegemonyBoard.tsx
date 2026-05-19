@@ -2,12 +2,13 @@ import { useState } from "react";
 import type { HegemonyState, PlayerId } from "../game/types";
 import type { GameEvents, GameMoves, LocalContext } from "../game/controller";
 import { PLAYER_COLORS, PLAYER_IDS } from "../game/data";
-import { toPlayerId } from "../game/rules";
+import { calculateIncome, calculateIncomeBreakdown, toPlayerId } from "../game/rules";
 import { phaseHint } from "../ui/formatters";
 import { ActionLogModal } from "./ActionLogModal";
 import { HexMap } from "./HexMap";
 import { MapStatusOverlay } from "./MapStatusOverlay";
 import { PlayerHoldingsSummary } from "./PlayerHoldingsSummary";
+import { ResourceGrid } from "./ResourceGrid";
 import { SettlementRoster } from "./SettlementRoster";
 import { AtlasIcon, UiSprite } from "./Sprites";
 import { TileInspector } from "./TileInspector";
@@ -35,8 +36,9 @@ export function HegemonyBoard({
   const [isLogOpen, setIsLogOpen] = useState(false);
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
-  const currentPlayer = G.players[currentPlayerId];
   const viewer = G.players[viewerId];
+  const projectedIncome = calculateIncome(G, viewerId);
+  const projectedIncomeBreakdown = calculateIncomeBreakdown(G, viewerId);
   const isSetup = ctx.phase === "setupCapital" || ctx.phase === "setupColony";
 
   const handleTileAction = (tileId: string) => {
@@ -66,6 +68,13 @@ export function HegemonyBoard({
             <span>Red-Figure Agora</span>
           </div>
         </div>
+        <ResourceGrid
+          breakdown={projectedIncomeBreakdown}
+          className="topResourceGrid"
+          deltas={projectedIncome}
+          resetKey={viewerId}
+          resources={viewer.resources}
+        />
         <div className="topActions">
           <div className="seatSwitcher" aria-label="Hotseat player selector">
             {PLAYER_IDS.map((id) => (
@@ -125,12 +134,6 @@ export function HegemonyBoard({
           <div className="actionStack">
             <button
               className="primaryButton"
-              disabled={!isActive || ctx.phase !== "gameplay" || currentPlayer.collectedThisTurn}
-              onClick={() => moves.collectIncome()}
-            >
-              Collect income
-            </button>
-            <button
               disabled={!isActive || ctx.phase !== "gameplay"}
               onClick={() => events.endTurn()}
             >

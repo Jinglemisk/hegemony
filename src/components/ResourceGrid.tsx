@@ -1,19 +1,145 @@
-import type { Resource } from "../game/types";
-import { RESOURCE_LABELS } from "../ui/formatters";
+import { useEffect, useRef, useState } from "react";
+import type { Resource, Resources } from "../game/types";
+import type { IncomeContribution } from "../game/rules";
+import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../ui/formatters";
 import { AtlasIcon } from "./Sprites";
 
-export function ResourceGrid({ resources }: { resources: Record<Resource, number> }) {
+type FlashDirection = "increase" | "decrease";
+
+const RESOURCE_ORDER: Resource[] = ["wood", "stone", "gold", "food", "influence", "unrest"];
+
+export function ResourceGrid({
+  resources,
+  deltas,
+  breakdown = [],
+  resetKey,
+  className = ""
+}: {
+  resources: Resources;
+  deltas?: Resources;
+  breakdown?: IncomeContribution[];
+  resetKey?: string;
+  className?: string;
+}) {
+  const previousResourcesByKey = useRef<Record<string, Resources>>({});
+  const [flashes, setFlashes] = useState<Partial<Record<Resource, FlashDirection>>>({});
+
+  useEffect(() => {
+    const resourceKey = resetKey ?? "default";
+    const previous = previousResourcesByKey.current[resourceKey];
+
+    if (!previous) {
+      previousResourcesByKey.current[resourceKey] = { ...resources };
+      return;
+    }
+
+    const nextFlashes: Partial<Record<Resource, FlashDirection>> = {};
+
+    for (const resource of RESOURCE_ORDER) {
+      if (resources[resource] > previous[resource]) {
+        nextFlashes[resource] = "increase";
+      } else if (resources[resource] < previous[resource]) {
+        nextFlashes[resource] = "decrease";
+      }
+    }
+
+    previousResourcesByKey.current[resourceKey] = { ...resources };
+
+    if (Object.keys(nextFlashes).length === 0) {
+      return;
+    }
+
+    setFlashes((current) => ({ ...current, ...nextFlashes }));
+
+    const timeout = window.setTimeout(() => {
+      setFlashes((current) => {
+        const updated = { ...current };
+
+        for (const resource of Object.keys(nextFlashes) as Resource[]) {
+          delete updated[resource];
+        }
+
+        return updated;
+      });
+    }, 2400);
+
+    return () => window.clearTimeout(timeout);
+  }, [resources, resetKey]);
+
   return (
-    <div className="resourceGrid">
-      {(Object.keys(resources) as Resource[]).map((resource) => {
+    <div className={`resourceGrid ${className}`}>
+      {RESOURCE_ORDER.map((resource) => {
+        const delta = deltas?.[resource] ?? 0;
+        const flash = flashes[resource];
+        const deltaClass = getResourceDeltaClass(resource, delta);
+        const resourceBreakdown = breakdown.filter((entry) => entry.resource === resource);
+
         return (
-          <div className={`resourcePill resource-${resource}`} key={resource}>
+          <div
+            className={`resourcePill resource-${resource}${flash ? ` resourceFlash-${flash}` : ""}`}
+            key={resource}
+            tabIndex={0}
+            aria-label={`${RESOURCE_LABELS[resource]} ${formatNumber(resources[resource])}, projected ${formatSignedNumber(delta)} per turn`}
+          >
             <AtlasIcon icon={resource} className="resourceIcon" />
-            <span>{RESOURCE_LABELS[resource]}</span>
-            <strong>{resources[resource]}</strong>
+            <strong>{formatNumber(resources[resource])}</strong>
+            <span className={`resourceDelta ${deltaClass}`}>
+              {formatSignedNumber(delta)}
+            </span>
+            <ResourceBreakdownTooltip
+              resource={resource}
+              delta={delta}
+              entries={resourceBreakdown}
+            />
           </div>
         );
       })}
     </div>
   );
+}
+
+function ResourceBreakdownTooltip({
+  resource,
+  delta,
+  entries
+}: {
+  resource: Resource;
+  delta: number;
+  entries: IncomeContribution[];
+}) {
+  return (
+    <div className="resourceTooltip" role="tooltip">
+      <div className="resourceTooltipHeader">
+        <span>{RESOURCE_LABELS[resource]}</span>
+        <strong className={getResourceDeltaClass(resource, delta)}>{formatSignedNumber(delta)}</strong>
+      </div>
+      {entries.length > 0 ? (
+        <div className="resourceTooltipRows">
+          {entries.map((entry, index) => (
+            <div className="resourceTooltipRow" key={`${entry.resource}-${entry.source}-${entry.detail}-${index}`}>
+              <span>
+                <strong>{entry.source}</strong>
+                <em>{entry.detail}</em>
+              </span>
+              <b className={getResourceDeltaClass(resource, entry.amount)}>{formatSignedNumber(entry.amount)}</b>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No current income or expense.</p>
+      )}
+    </div>
+  );
+}
+
+function getResourceDeltaClass(resource: Resource, amount: number) {
+  if (amount === 0) {
+    return "neutral";
+  }
+
+  if (resource === "unrest") {
+    return amount < 0 ? "positive" : "negative";
+  }
+
+  return amount > 0 ? "positive" : "negative";
 }
