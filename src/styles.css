@@ -1,8 +1,8 @@
 :root {
   --font-display: Copperplate, "Copperplate Gothic Light", "Iowan Old Style", Georgia, serif;
   --font-body: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  color: #f4e6c8;
-  background: #181210;
+  color: #241910;
+  background: #f4e6c8;
   font-family: var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -24,7 +24,7 @@ body {
   min-height: 100vh;
   margin: 0;
   overflow: hidden;
-  background: #181210;
+  background: #f4e6c8;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -101,56 +101,6 @@ button:focus-visible {
   --aegean: #1f6977;
   --stone: #8f8571;
   --accent: var(--clay);
-  --accent-2: var(--ochre);
-  --fg: var(--bone);
-  --muted: rgb(244 230 200 / 68%);
-  --subtle: rgb(244 230 200 / 48%);
-  --panel: rgb(24 18 16 / 76%);
-  --panel-strong: rgb(36 25 21 / 92%);
-  --panel-soft: rgb(255 248 231 / 8%);
-  --line: rgb(244 230 200 / 17%);
-  --line-strong: rgb(192 70 28 / 52%);
-  --button-bg: rgb(24 18 16 / 72%);
-  --button-line: rgb(244 230 200 / 24%);
-  --hex-line: rgb(244 230 200 / 28%);
-  --shadow: 0 22px 58px rgb(0 0 0 / 36%);
-  --lift-shadow: 0 12px 28px rgb(0 0 0 / 24%);
-  --hero-tableau: url("../assets/codex-showcase/dark-hero-tableau.png");
-  --icon-atlas: url("../assets/codex-showcase/dark-icon-atlas.png");
-  --terrain-atlas: url("../assets/codex-showcase/dark-terrain-atlas.png");
-  --ui-atlas: url("../assets/codex-showcase/dark-ui-kit.png");
-  position: relative;
-  isolation: isolate;
-  display: grid;
-  gap: 14px;
-  grid-template-rows: auto minmax(0, 1fr);
-  height: 100svh;
-  overflow: hidden;
-  padding: 16px;
-  color: var(--fg);
-  background:
-    linear-gradient(90deg, rgb(24 18 16 / 96%) 0 28%, rgb(24 18 16 / 78%) 54%, rgb(24 18 16 / 94%)),
-    linear-gradient(0deg, rgb(24 18 16 / 96%) 0, rgb(24 18 16 / 70%) 48%, rgb(24 18 16 / 92%) 100%),
-    var(--hero-tableau) center / cover no-repeat,
-    var(--vase-black);
-}
-
-.shell::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 14% 8%, rgb(192 70 28 / 20%), transparent 32%),
-    radial-gradient(circle at 88% 20%, rgb(217 138 53 / 11%), transparent 30%),
-    linear-gradient(90deg, rgb(244 230 200 / 5%) 1px, transparent 1px),
-    linear-gradient(rgb(244 230 200 / 4%) 1px, transparent 1px);
-  background-size: auto, auto, 34px 34px, 34px 34px;
-}
-
-.shell.theme-light {
-  --accent: var(--clay);
   --accent-2: var(--aegean);
   --fg: #241910;
   --muted: rgb(36 25 16 / 66%);
@@ -165,10 +115,19 @@ button:focus-visible {
   --hex-line: rgb(36 25 16 / 28%);
   --shadow: 0 20px 46px rgb(72 42 21 / 20%);
   --lift-shadow: 0 12px 24px rgb(72 42 21 / 18%);
-  --hero-tableau: url("../assets/codex-showcase/light-hero-tableau.png");
-  --icon-atlas: url("../assets/codex-showcase/light-icon-atlas.png");
-  --terrain-atlas: url("../assets/codex-showcase/light-terrain-atlas.png");
-  --ui-atlas: url("../assets/codex-showcase/light-ui-kit.png");
+  --hero-tableau: url("../assets/codex-banana-showcase/light-hero-tableau.png");
+  --icon-atlas: url("../assets/codex-banana-showcase/light-icon-atlas.png");
+  --terrain-atlas: url("../assets/codex-banana-showcase/light-terrain-atlas.png");
+  --ui-atlas: url("../assets/codex-banana-showcase/light-ui-kit.png");
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: 14px;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100svh;
+  overflow: hidden;
+  padding: 16px;
+  color: var(--fg);
   background:
     linear-gradient(90deg, rgb(255 248 231 / 96%) 0 30%, rgb(255 248 231 / 78%) 60%, rgb(255 248 231 / 94%)),
     linear-gradient(0deg, rgb(244 230 200 / 98%) 0, rgb(255 248 231 / 64%) 48%, rgb(255 248 231 / 88%) 100%),
@@ -176,7 +135,12 @@ button:focus-visible {
     #f4e6c8;
 }
 
-.shell.theme-light::before {
+.shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background:
     radial-gradient(circle at 14% 8%, rgb(31 105 119 / 14%), transparent 30%),
     radial-gradient(circle at 88% 20%, rgb(192 70 28 / 14%), transparent 30%),
@@ -294,8 +258,7 @@ button:focus-visible {
   background: linear-gradient(180deg, var(--clay), var(--clay-deep));
 }
 
-.iconButton,
-.themeToggle {
+.iconButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -303,9 +266,10 @@ button:focus-visible {
   min-height: 44px;
 }
 
-.themeToggle {
-  min-width: 72px;
-  color: var(--accent-2, var(--ochre));
+.buttonIconSprite {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
 }
 
 .workbench {
@@ -367,7 +331,7 @@ button:focus-visible {
   box-shadow: var(--shadow);
 }
 
-.theme-light .hexMap {
+.hexMap {
   background:
     radial-gradient(circle at 50% 50%, rgb(192 70 28 / 13%), transparent 55%),
     linear-gradient(180deg, rgb(255 248 231 / 92%), rgb(244 230 200 / 92%));
@@ -473,7 +437,7 @@ button:focus-visible {
 
 .atlasTerrain {
   background-image: var(--terrain-atlas);
-  background-size: 200% 200%;
+  background-size: 218% 218%;
 }
 
 .atlasUi {
@@ -580,6 +544,26 @@ button:focus-visible {
   --sprite-y: 100%;
 }
 
+.atlasTerrain.sprite-terrain-mountain {
+  --sprite-x: 6%;
+  --sprite-y: 6%;
+}
+
+.atlasTerrain.sprite-terrain-hill {
+  --sprite-x: 94%;
+  --sprite-y: 6%;
+}
+
+.atlasTerrain.sprite-terrain-forest {
+  --sprite-x: 6%;
+  --sprite-y: 94%;
+}
+
+.atlasTerrain.sprite-terrain-plains {
+  --sprite-x: 94%;
+  --sprite-y: 94%;
+}
+
 .sprite-ui-primary {
   --sprite-x: 50%;
   --sprite-y: 0%;
@@ -621,26 +605,47 @@ button:focus-visible {
 }
 
 .terrainObject,
-.hexHaloObject,
 .settlementObject {
   pointer-events: none;
 }
 
 .mapTerrain {
+  position: relative;
+  isolation: isolate;
   display: block;
   width: 100%;
   height: 100%;
   border-radius: 8px;
   clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-  filter: saturate(1.04) contrast(1.04);
+  overflow: hidden;
+  filter: saturate(1.08) contrast(1.05);
 }
 
-.hexHaloSprite {
-  display: block;
-  width: 100%;
-  height: 100%;
-  opacity: 0.82;
-  filter: drop-shadow(0 0 14px rgb(217 138 53 / 46%));
+.mapTerrain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--terrain-tint);
+  mix-blend-mode: color;
+  opacity: 0.58;
+}
+
+.terrainTint-mountain {
+  --terrain-tint: linear-gradient(180deg, #7d8582, #d4d1c3);
+}
+
+.terrainTint-hill {
+  --terrain-tint: linear-gradient(180deg, #8b5a2f, #d09955);
+}
+
+.terrainTint-forest {
+  --terrain-tint: linear-gradient(180deg, #586f3f, #c6bd70);
+}
+
+.terrainTint-plains {
+  --terrain-tint: linear-gradient(180deg, #d69c35, #ffd970);
 }
 
 .svgButton {
@@ -676,48 +681,48 @@ button:focus-visible {
 
 .svgButton:hover .hexTile,
 .svgButton:focus .hexTile {
-  stroke: var(--ochre);
-  stroke-width: 3;
-  filter: drop-shadow(0 0 8px rgb(217 138 53 / 40%));
+  stroke: var(--hex-line);
+  stroke-width: 1.6;
+  filter: none;
 }
 
 .hexTile.selected {
-  stroke: var(--bone);
-  stroke-width: 3.8;
-  filter: drop-shadow(0 0 12px rgb(244 230 200 / 34%));
+  stroke: var(--hex-line);
+  stroke-width: 1.6;
+  filter: none;
 }
 
-.theme-light .hexTile.selected {
-  stroke: var(--clay);
+.tilePlate {
+  pointer-events: none;
 }
 
-.tileLabel,
-.tileYield {
-  fill: var(--bone);
+.tilePlateBg {
+  fill: var(--vase-black);
+  stroke: var(--ochre);
+  stroke-width: 1;
+  filter: drop-shadow(0 1.5px 2px rgb(24 18 16 / 45%));
+}
+
+.tilePlateDivider {
+  stroke: var(--ochre);
+  stroke-width: 1;
+  opacity: 0.68;
+}
+
+.tilePlateStat {
   font-family: var(--font-display);
   font-weight: 700;
-  pointer-events: none;
+  font-size: 11px;
   text-anchor: middle;
-  text-transform: uppercase;
-  paint-order: stroke;
-  stroke: rgb(24 18 16 / 70%);
-  stroke-linejoin: round;
+  pointer-events: none;
 }
 
-.theme-light .tileLabel,
-.theme-light .tileYield {
-  fill: #241910;
-  stroke: rgb(255 248 231 / 76%);
+.tilePlateYield {
+  fill: #ffe7b0;
 }
 
-.tileLabel {
-  font-size: 8px;
-  stroke-width: 2px;
-}
-
-.tileYield {
-  font-size: 7px;
-  stroke-width: 2px;
+.tilePlateSlots {
+  fill: var(--bone);
 }
 
 .settlementToken {
@@ -742,8 +747,9 @@ button:focus-visible {
 }
 
 .settlementTokenIcon {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   opacity: 0.92;
 }
 
@@ -754,10 +760,10 @@ button:focus-visible {
 
 .settlementToken span {
   position: absolute;
-  inset: auto 2px 1px;
+  inset: auto 4px 3px;
   color: var(--ivory);
   font-family: var(--font-display);
-  font-size: 5.8px;
+  font-size: 5.2px;
   font-weight: 700;
   line-height: 1;
   text-align: center;
@@ -1082,10 +1088,10 @@ button:focus-visible {
   font-style: normal;
 }
 
-.theme-light .settlementStats span,
-.theme-light .popGrid span,
-.theme-light .buildingList span,
-.theme-light .buildingList em {
+.settlementStats span,
+.popGrid span,
+.buildingList span,
+.buildingList em {
   background: rgb(36 25 16 / 6%);
 }
 
@@ -1212,8 +1218,7 @@ button:focus-visible {
     min-width: 0;
   }
 
-  .iconButton,
-  .themeToggle {
+  .iconButton {
     flex: 1 1 0;
   }
 
@@ -1242,12 +1247,8 @@ button:focus-visible {
     min-height: 420px;
   }
 
-  .tileLabel {
-    font-size: 7.2px;
-  }
-
-  .tileYield {
-    font-size: 6.6px;
+  .tilePlateStat {
+    font-size: 9.4px;
   }
 }
 

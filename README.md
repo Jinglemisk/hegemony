@@ -1,4 +1,4 @@
-![Hegemony Codex-generated icon](assets/codex-showcase/light-hero-tableau.png)
+![Hegemony Codex Banana-generated interface art](assets/codex-banana-showcase/light-hero-tableau.png)
 
 # Hegemony
 
