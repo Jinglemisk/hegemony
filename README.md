@@ -11,9 +11,10 @@ Hegemony is a Catan-inspired, Imperator: Rome-inspired strategy board game proto
 - 37-tile inland hex map.
 - Capital and colony setup phases.
 - Basic hotseat gameplay loop.
-- Income collection and resource tracking.
+- Automatic turn-start income collection and RTS-style resource tracking.
+- Gameplay colony founding and colony-to-city upgrades.
 - Four buildable structure types.
-- Population and unrest foundations.
+- Population capacity and overcapacity unrest.
 
 ## Coming Soon
 

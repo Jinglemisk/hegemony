@@ -27,6 +27,18 @@ export const EMPTY_RESOURCES: Resources = {
   unrest: 0
 };
 
+export const ACTION_COSTS = {
+  foundColony: {
+    wood: 20,
+    food: 2
+  },
+  upgradeColonyToCity: {
+    wood: 30,
+    stone: 10,
+    food: 5
+  }
+} satisfies Record<string, Partial<Resources>>;
+
 export const SETTLEMENT_RULES: Record<
   SettlementKind,
   {

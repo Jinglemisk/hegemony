@@ -27,7 +27,7 @@ export function formatResourceCost(cost: Partial<Resources>) {
   }
 
   return entries
-    .map(([resource, amount]) => `${amount ?? 0} ${RESOURCE_LABELS[resource]}`)
+    .map(([resource, amount]) => `${formatNumber(amount ?? 0)} ${RESOURCE_LABELS[resource]}`)
     .join(", ");
 }
 
@@ -39,8 +39,17 @@ export function formatResourceDelta(resources: Resources) {
   }
 
   return entries
-    .map(([resource, amount]) => `${amount > 0 ? "+" : ""}${amount} ${RESOURCE_LABELS[resource]}`)
+    .map(([resource, amount]) => `${formatSignedNumber(amount)} ${RESOURCE_LABELS[resource]}`)
     .join(", ");
+}
+
+export function formatSignedNumber(amount: number) {
+  return amount > 0 ? `+${formatNumber(amount)}` : formatNumber(amount);
+}
+
+export function formatNumber(amount: number) {
+  const rounded = Math.round(amount * 100) / 100;
+  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 }
 
 export function formatBuildingEffects(effects: BuildingEffect[]) {
@@ -92,5 +101,5 @@ export function phaseHint(phase: Phase) {
     return "Place a colony next to your capital";
   }
 
-  return "Collect income, build, then end turn";
+  return "Income collects automatically; expand, build, then end turn";
 }
