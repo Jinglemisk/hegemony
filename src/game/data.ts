@@ -1,4 +1,4 @@
-import type { BuildingId, PlayerId, Resources, Terrain, Yield } from "./types";
+import type { BuildingDefinition, PlayerId, Resources, SettlementKind, Terrain, Yield } from "./types";
 
 export const PLAYER_IDS: PlayerId[] = ["0", "1", "2", "3"];
 
@@ -27,35 +27,55 @@ export const EMPTY_RESOURCES: Resources = {
   unrest: 0
 };
 
-export const BUILDINGS: Array<{
-  id: BuildingId;
-  name: string;
-  cost: Partial<Resources>;
-  description: string;
-}> = [
+export const SETTLEMENT_RULES: Record<
+  SettlementKind,
+  {
+    popCapacity: number;
+    buildingSlotBonus: number;
+    canBuildBuildings: boolean;
+  }
+> = {
+  capital: {
+    popCapacity: 20,
+    buildingSlotBonus: 4,
+    canBuildBuildings: true
+  },
+  city: {
+    popCapacity: 10,
+    buildingSlotBonus: 2,
+    canBuildBuildings: true
+  },
+  colony: {
+    popCapacity: 4,
+    buildingSlotBonus: 0,
+    canBuildBuildings: false
+  }
+};
+
+export const BUILDINGS: BuildingDefinition[] = [
   {
     id: "marketplace",
     name: "Marketplace",
     cost: { wood: 12 },
-    description: "Adds 1 freeman to the city."
+    effects: [{ type: "addPop", pop: "freemen", amount: 1 }]
   },
   {
     id: "temple",
     name: "Temple",
     cost: { stone: 6 },
-    description: "Adds 1 citizen to the city."
+    effects: [{ type: "addPop", pop: "citizens", amount: 1 }]
   },
   {
     id: "workshop",
     name: "Workshop",
     cost: { wood: 12 },
-    description: "Adds 2 slaves to the city."
+    effects: [{ type: "addPop", pop: "slaves", amount: 2 }]
   },
   {
     id: "granary",
     name: "Granary",
     cost: { wood: 12, stone: 2 },
-    description: "Adds 2 food income to the city."
+    effects: [{ type: "income", resource: "food", amount: 2 }]
   }
 ];
 
