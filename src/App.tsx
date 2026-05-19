@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
-import { ScrollText } from "lucide-react";
 import type {
   BuildingEffect,
   BuildingId,
@@ -30,7 +29,6 @@ import {
 } from "./game/rules";
 
 type Phase = "setupCapital" | "setupColony" | "gameplay";
-type GameTheme = "dark" | "light";
 type IconAtlasKey = Resource | PopType | BuildingId | SettlementKind;
 type UiAtlasKey = "seal" | "primaryButton" | "secondaryButton" | "resourcePill" | "hexHalo" | "playerToken" | "meander" | "voteToken" | "seasonMarker";
 
@@ -56,8 +54,6 @@ type BoardProps = {
   };
   playerID: PlayerId;
   onPlayerIDChange: (playerID: PlayerId) => void;
-  theme: GameTheme;
-  onThemeChange: (theme: GameTheme) => void;
   isActive: boolean;
 };
 
@@ -121,8 +117,6 @@ function HegemonyBoard({
   events,
   playerID = "0",
   onPlayerIDChange,
-  theme,
-  onThemeChange,
   isActive
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
@@ -132,7 +126,6 @@ function HegemonyBoard({
   const currentPlayer = G.players[currentPlayerId];
   const viewer = G.players[viewerId];
   const isSetup = ctx.phase === "setupCapital" || ctx.phase === "setupColony";
-  const themeLabel = theme === "dark" ? "Obsidian Kiln" : "Red-Figure Agora";
 
   const handleTileAction = (tileId: string) => {
     setSelectedTileId(tileId);
@@ -152,13 +145,13 @@ function HegemonyBoard({
   };
 
   return (
-    <main className={`shell theme-${theme}`}>
+    <main className="shell">
       <header className="topbar controlsBar">
         <div className="brandCluster">
           <UiSprite item="seal" className="brandSeal" />
           <div className="brandCopy">
             <strong>Hegemony</strong>
-            <span>{themeLabel}</span>
+            <span>Red-Figure Agora</span>
           </div>
         </div>
         <div className="topActions">
@@ -175,16 +168,8 @@ function HegemonyBoard({
             ))}
           </div>
           <button className="iconButton" onClick={() => setIsLogOpen(true)}>
-            <ScrollText size={16} />
+            <UiSprite item="meander" className="buttonIconSprite" />
             Log
-          </button>
-          <button
-            aria-label={`Switch to ${theme === "dark" ? "Red-Figure Agora" : "Obsidian Kiln"} theme`}
-            aria-pressed={theme === "light"}
-            className="themeToggle"
-            onClick={() => onThemeChange(theme === "dark" ? "light" : "dark")}
-          >
-            {theme === "dark" ? "Agora" : "Kiln"}
           </button>
         </div>
       </header>
@@ -373,17 +358,6 @@ function HexMap({
         const isSelected = selectedTileId === tile.id;
         return (
           <g key={tile.id} transform={`translate(${x} ${y})`}>
-            {isSelected ? (
-              <foreignObject
-                className="hexHaloObject"
-                height={tileArtSize + 16}
-                width={tileArtSize + 16}
-                x={-(tileArtSize + 16) / 2}
-                y={-(tileArtSize + 16) / 2}
-              >
-                <UiSprite item="hexHalo" className="hexHaloSprite" />
-              </foreignObject>
-            ) : null}
             <foreignObject
               className="terrainObject"
               height={tileArtSize}
@@ -411,14 +385,18 @@ function HexMap({
                 points={hexPoints(size - 2)}
               />
             </g>
-            <text className="tileLabel" y="-8">
-              {tile.terrain}
-            </text>
-            <text className="tileYield" y="10">
-              +{tile.resource.amount} {tile.resource.type}
-            </text>
+            <g className="tilePlate" aria-hidden="true">
+              <rect className="tilePlateBg" x={-29} y={1.5} width={58} height={18} rx={5} />
+              <line className="tilePlateDivider" x1={0} y1={4} x2={0} y2={17} />
+              <text className="tilePlateStat tilePlateYield" x={-14.5} y={14.5}>
+                ◆{tile.resource.amount}
+              </text>
+              <text className="tilePlateStat tilePlateSlots" x={14.5} y={14.5}>
+                ⌂{tile.buildingSlots}
+              </text>
+            </g>
             {city ? (
-              <foreignObject className="settlementObject cityObject" height={42} width={42} x={-21} y={-25}>
+              <foreignObject className="settlementObject cityObject" height={38} width={38} x={-19} y={-19}>
                 <div
                   className={`settlementToken ${city.kind === "capital" ? "capitalToken" : "cityToken"}`}
                   style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
@@ -689,7 +667,7 @@ function TerrainSprite({ terrain, className = "" }: { terrain: Terrain; classNam
   return (
     <span
       aria-hidden="true"
-      className={`atlasSprite atlasTerrain ${TERRAIN_SPRITE_CLASSES[terrain]} ${className}`}
+      className={`atlasSprite atlasTerrain terrainTint-${terrain} ${TERRAIN_SPRITE_CLASSES[terrain]} ${className}`}
     />
   );
 }
@@ -749,7 +727,6 @@ function advanceSetupTurn(G: HegemonyState, ctx: LocalContext, count: number, ne
 
 export function App() {
   const [playerID, setPlayerID] = useState<PlayerId>("0");
-  const [theme, setTheme] = useState<GameTheme>("dark");
   const [game, setGame] = useState<{ G: HegemonyState; ctx: LocalContext }>(() => ({
     G: createInitialState(),
     ctx: {
@@ -876,10 +853,8 @@ export function App() {
         events={events}
         isActive={playerID === game.ctx.currentPlayer}
         moves={moves}
-        onThemeChange={setTheme}
         onPlayerIDChange={setPlayerID}
         playerID={playerID}
-        theme={theme}
       />
     </>
   );
