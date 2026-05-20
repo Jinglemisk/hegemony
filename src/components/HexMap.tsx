@@ -6,10 +6,19 @@ import { AtlasIcon, TerrainSprite } from "./Sprites";
 
 export function HexMap({
   G,
+  confirmation,
+  pendingTileId,
   selectedTileId,
   onTileAction
 }: {
   G: HegemonyState;
+  confirmation: {
+    label: string;
+    tileId: string;
+    onCancel: () => void;
+    onConfirm: () => void;
+  } | null;
+  pendingTileId: string | null;
   selectedTileId: string | null;
   onTileAction: (tileId: string) => void;
 }) {
@@ -27,6 +36,7 @@ export function HexMap({
         const city = tile.settlements.find((settlement) => settlement.kind !== "colony");
         const colonies = tile.settlements.filter((settlement) => settlement.kind === "colony");
         const isSelected = selectedTileId === tile.id;
+        const isPending = pendingTileId === tile.id;
         return (
           <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
             <foreignObject
@@ -52,7 +62,7 @@ export function HexMap({
               tabIndex={0}
             >
               <polygon
-                className={`hexTile terrain-${tile.terrain} ${isSelected ? "selected" : ""}`}
+                className={`hexTile terrain-${tile.terrain} ${isSelected ? "selected" : ""} ${isPending ? "pending" : ""}`}
                 points={hexPoints(size - 2)}
               />
             </g>
@@ -96,6 +106,39 @@ export function HexMap({
           </g>
         );
       })}
+      {confirmation
+        ? centers
+            .filter(({ tile }) => tile.id === confirmation.tileId)
+            .map(({ tile, x, y }) => (
+              <g key={`confirm-${tile.id}`} transform={`translate(${x} ${y})`}>
+                <foreignObject className="tileConfirmObject" height={34} width={152} x={-76} y={49}>
+                  <div className="tileConfirmPrompt" onClick={(event) => event.stopPropagation()}>
+                    <span>{confirmation.label}</span>
+                    <button
+                      aria-label={`Confirm ${confirmation.label}`}
+                      className="tileConfirmButton tileConfirmAccept"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        confirmation.onConfirm();
+                      }}
+                    >
+                      ✓
+                    </button>
+                    <button
+                      aria-label={`Cancel ${confirmation.label}`}
+                      className="tileConfirmButton tileConfirmCancel"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        confirmation.onCancel();
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </foreignObject>
+              </g>
+            ))
+        : null}
     </svg>
   );
 }

@@ -8,7 +8,7 @@ export const RESOURCE_LABELS: Record<Resource, string> = {
   gold: "Gold",
   food: "Food",
   influence: "Influence",
-  unrest: "Unrest"
+  happiness: "Happiness"
 };
 
 const POP_LABELS: Record<PopType, { singular: string; plural: string }> = {
