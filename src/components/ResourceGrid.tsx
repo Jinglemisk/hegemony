@@ -77,11 +77,11 @@ export function ResourceGrid({
           <div
             className={`resourcePill resource-${resource}${flash ? ` resourceFlash-${flash}` : ""}`}
             key={resource}
-            style={resourceCssVars(resource)}
+            style={getResourcePillVars(resource, resources[resource])}
             tabIndex={0}
             aria-label={`${RESOURCE_LABELS[resource]} ${formatNumber(resources[resource])}, projected ${formatSignedNumber(delta)} per turn`}
           >
-            <ResourceIcon resource={resource} className="resourceIcon" />
+            <ResourceIcon resource={resource} value={resources[resource]} className="resourceIcon" />
             <strong>{formatNumber(resources[resource])}</strong>
             <span className={`resourceDelta ${deltaClass}`}>
               {formatSignedNumber(delta)}
@@ -137,9 +137,18 @@ function getResourceDeltaClass(resource: Resource, amount: number) {
     return "neutral";
   }
 
-  if (resource === "unrest") {
-    return amount < 0 ? "positive" : "negative";
+  return amount > 0 ? "positive" : "negative";
+}
+
+function getResourcePillVars(resource: Resource, value: number) {
+  if (resource !== "happiness" || value >= 0) {
+    return resourceCssVars(resource);
   }
 
-  return amount > 0 ? "positive" : "negative";
+  return {
+    "--resource-color": "#b13a28",
+    "--resource-soft": "rgb(177 58 40 / 14%)",
+    "--resource-line": "rgb(177 58 40 / 46%)",
+    "--resource-shadow": "rgb(177 58 40 / 24%)"
+  };
 }

@@ -370,7 +370,7 @@ button:focus-visible {
   border-radius: 8px;
   background: var(--panel-strong);
   box-shadow: 0 12px 24px rgb(0 0 0 / 22%);
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .hudCard span {
@@ -483,7 +483,7 @@ button:focus-visible {
   mask-image: url("../assets/resource-icons/influence-mask.png");
 }
 
-.resourceMask-unrest {
+.resourceMask-happiness {
   -webkit-mask-image: url("../assets/resource-icons/unrest-mask.png");
   mask-image: url("../assets/resource-icons/unrest-mask.png");
 }
@@ -527,7 +527,7 @@ button:focus-visible {
   --sprite-y: 33.333%;
 }
 
-.sprite-unrest {
+.sprite-happiness {
   --sprite-x: 33.333%;
   --sprite-y: 33.333%;
 }
@@ -662,6 +662,11 @@ button:focus-visible {
   pointer-events: none;
 }
 
+.tileConfirmObject {
+  overflow: visible;
+  pointer-events: auto;
+}
+
 .mapTerrain {
   position: relative;
   isolation: isolate;
@@ -738,6 +743,15 @@ button:focus-visible {
   stroke: var(--resource-color, var(--terrain-neutral-line));
   stroke-width: 1.6;
   filter: drop-shadow(0 0 6px var(--resource-shadow, rgb(95 74 53 / 28%)));
+}
+
+.hexTile.pending {
+  stroke: var(--accent);
+  stroke-width: 2.6;
+  stroke-dasharray: 8 5;
+  filter:
+    drop-shadow(0 0 5px rgb(192 70 28 / 48%))
+    drop-shadow(0 0 10px rgb(217 138 53 / 30%));
 }
 
 .tilePlate {
@@ -818,6 +832,57 @@ button:focus-visible {
   text-shadow: 0 1px 2px rgb(0 0 0 / 80%);
 }
 
+.tileConfirmPrompt {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 23px 23px;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 3px 5px 3px 8px;
+  border: 1px solid rgb(36 25 16 / 28%);
+  border-radius: 6px;
+  color: var(--fg);
+  background: rgb(255 248 231 / 96%);
+  box-shadow: 0 8px 18px rgb(36 25 16 / 24%);
+}
+
+.tileConfirmPrompt span {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tileConfirmButton {
+  display: grid;
+  place-items: center;
+  min-width: 23px;
+  min-height: 23px;
+  width: 23px;
+  height: 23px;
+  padding: 0;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.tileConfirmAccept {
+  color: #fff8e7;
+  border-color: rgb(47 125 70 / 78%);
+  background: #2f7d46;
+}
+
+.tileConfirmCancel {
+  color: #fff8e7;
+  border-color: rgb(177 58 40 / 78%);
+  background: #b13a28;
+}
+
 .holdingsSummary {
   display: grid;
   gap: 10px;
@@ -828,7 +893,7 @@ button:focus-visible {
 
 .holdingsStats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -889,10 +954,8 @@ button:focus-visible {
   padding: 7px 12px;
   border: 1px solid var(--resource-line, var(--line));
   border-radius: 6px;
-  background:
-    linear-gradient(90deg, var(--resource-soft, transparent), transparent 42%),
-    rgb(255 248 231 / 96%);
-  box-shadow: 0 6px 14px var(--resource-shadow, rgb(36 25 16 / 10%));
+  background: transparent;
+  box-shadow: none;
 }
 
 .resourcePill:hover,
@@ -909,6 +972,38 @@ button:focus-visible {
   width: 46px;
   height: 46px;
   filter: drop-shadow(0 4px 7px var(--resource-shadow, rgb(36 25 16 / 22%)));
+}
+
+.happinessTheatreIcon {
+  display: inline-block;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 165%;
+  filter: drop-shadow(0 4px 7px var(--resource-shadow, rgb(36 25 16 / 22%)));
+}
+
+.happinessTheatreIcon-neutral {
+  background-image: url("../assets/resource-icons/happiness-neutral.png");
+}
+
+.happinessTheatreIcon-happy {
+  background-image: url("../assets/resource-icons/happiness-happy.png");
+}
+
+.happinessTheatreIcon-veryHappy {
+  background-image: url("../assets/resource-icons/happiness-very-happy.png");
+}
+
+.happinessTheatreIcon-sad {
+  background-image: url("../assets/resource-icons/happiness-sad.png");
+}
+
+.happinessTheatreIcon-veryAngry {
+  background-image: url("../assets/resource-icons/happiness-very-angry.png");
 }
 
 .resourceLabel {
@@ -956,16 +1051,6 @@ button:focus-visible {
 .resourceFlash-decrease {
   border-color: rgb(177 58 40 / 78%);
   animation: resourceFlashDecrease 2400ms ease-out;
-}
-
-.resource-unrest.resourceFlash-increase {
-  border-color: rgb(177 58 40 / 78%);
-  animation-name: resourceFlashDecrease;
-}
-
-.resource-unrest.resourceFlash-decrease {
-  border-color: rgb(47 125 70 / 78%);
-  animation-name: resourceFlashIncrease;
 }
 
 @keyframes resourceFlashIncrease {
@@ -1105,6 +1190,18 @@ button:focus-visible {
 .actionStack > button {
   min-height: 50px;
   text-transform: uppercase;
+}
+
+.actionStack > button:not(.primaryButton) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.buttonInlineIcon {
+  width: 24px;
+  height: 24px;
 }
 
 .actionStack > button::before {
@@ -1429,6 +1526,175 @@ button:focus-visible {
   border-bottom: 1px solid var(--line);
 }
 
+.modalHeader p {
+  max-width: 48ch;
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.3;
+}
+
+.populationModal {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 680px);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+}
+
+.populationStepper,
+.moveFields,
+.transferList {
+  display: grid;
+  gap: 8px;
+}
+
+.moveFields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.popStepperRow,
+.targetTileSummary,
+.selectionSummary,
+.transferList span,
+.transferList em {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-soft);
+}
+
+.popStepperLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.popStepperLabel strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+}
+
+.popStepperLabel em,
+.selectionSummary,
+.transferList em {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-style: normal;
+}
+
+.stepperControls {
+  display: grid;
+  grid-template-columns: 38px 58px 38px;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.stepperControls button {
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.stepperControls input,
+.fieldGroup select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--button-line);
+  border-radius: 6px;
+  color: var(--fg);
+  background: rgb(255 248 231 / 92%);
+  font: inherit;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.stepperControls input {
+  padding: 0 6px;
+  text-align: center;
+}
+
+.fieldGroup {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.fieldGroup select {
+  padding: 0 10px;
+  text-transform: none;
+}
+
+.targetTileSummary {
+  justify-content: flex-start;
+  color: var(--muted);
+}
+
+.targetTileSummary strong {
+  color: var(--fg);
+  text-transform: capitalize;
+}
+
+.popChoiceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.popChoiceGrid button {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 48px;
+  text-align: left;
+  text-transform: capitalize;
+}
+
+.popChoiceGrid button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.popChoiceGrid .selectedChoice {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgb(192 70 28 / 20%);
+}
+
+.transferList h3 {
+  margin: 2px 0 0;
+}
+
+.transferList span,
+.transferList em {
+  justify-content: flex-start;
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.modalActions button {
+  min-width: 118px;
+}
+
 .logList {
   display: grid;
   gap: 7px;
@@ -1555,6 +1821,8 @@ button:focus-visible {
   .resourceGrid,
   .buildingButtons,
   .tileActionButtons,
+  .moveFields,
+  .popChoiceGrid,
   .phaseStrip {
     grid-template-columns: 1fr;
   }
