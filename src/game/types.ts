@@ -2,9 +2,9 @@ export type PlayerId = "0" | "1" | "2" | "3";
 
 export type Terrain = "mountain" | "hill" | "forest" | "plains";
 
-export type Resource = "wood" | "stone" | "gold" | "food" | "influence" | "unrest";
+export type Resource = "wood" | "stone" | "gold" | "food" | "influence" | "happiness";
 
-export type MaterialResource = Exclude<Resource, "influence" | "unrest">;
+export type MaterialResource = Exclude<Resource, "influence" | "happiness">;
 
 export type PopType = "citizens" | "freemen" | "slaves";
 
@@ -69,6 +69,14 @@ export interface PlayerState {
   collectedThisTurn: boolean;
 }
 
+export interface PopulationTransfer {
+  id: string;
+  owner: PlayerId;
+  fromTileId: string;
+  toTileId: string;
+  pops: Pops;
+}
+
 export interface LogEntry {
   id: string;
   season: number;
@@ -78,6 +86,7 @@ export interface LogEntry {
 export interface HegemonyState {
   board: HegemonyBoard;
   players: Record<PlayerId, PlayerState>;
+  transfers: PopulationTransfer[];
   season: number;
   log: LogEntry[];
 }

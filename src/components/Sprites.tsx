@@ -18,7 +18,7 @@ const ICON_SPRITE_CLASSES: Record<IconAtlasKey, string> = {
   gold: "sprite-gold",
   food: "sprite-food",
   influence: "sprite-influence",
-  unrest: "sprite-unrest",
+  happiness: "sprite-happiness",
   citizens: "sprite-citizens",
   freemen: "sprite-freemen",
   slaves: "sprite-slaves",
@@ -56,15 +56,52 @@ const RESOURCE_MASK_CLASSES: Record<Resource, string> = {
   gold: "resourceMask-gold",
   food: "resourceMask-food",
   influence: "resourceMask-influence",
-  unrest: "resourceMask-unrest"
+  happiness: "resourceMask-happiness"
 };
 
 export function AtlasIcon({ icon, className = "" }: { icon: IconAtlasKey; className?: string }) {
   return <span aria-hidden="true" className={`atlasSprite atlasIcon ${ICON_SPRITE_CLASSES[icon]} ${className}`} />;
 }
 
-export function ResourceIcon({ resource, className = "" }: { resource: Resource; className?: string }) {
+export function ResourceIcon({
+  resource,
+  value = 0,
+  className = ""
+}: {
+  resource: Resource;
+  value?: number;
+  className?: string;
+}) {
+  if (resource === "happiness") {
+    return (
+      <span
+        aria-hidden="true"
+        className={`happinessTheatreIcon ${getHappinessTheatreClass(value)} ${className}`}
+      />
+    );
+  }
+
   return <span aria-hidden="true" className={`resourceMaskIcon ${RESOURCE_MASK_CLASSES[resource]} ${className}`} />;
+}
+
+function getHappinessTheatreClass(value: number) {
+  if (value <= -10) {
+    return "happinessTheatreIcon-veryAngry";
+  }
+
+  if (value < 0) {
+    return "happinessTheatreIcon-sad";
+  }
+
+  if (value === 0) {
+    return "happinessTheatreIcon-neutral";
+  }
+
+  if (value >= 10) {
+    return "happinessTheatreIcon-veryHappy";
+  }
+
+  return "happinessTheatreIcon-happy";
 }
 
 export function TerrainSprite({ terrain, className = "" }: { terrain: Terrain; className?: string }) {
