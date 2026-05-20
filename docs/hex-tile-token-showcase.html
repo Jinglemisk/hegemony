@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hegemony Hex Token Showcase</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23181210' d='M16 1 29 8.5v15L16 31 3 23.5v-15z'/%3E%3Cpath fill='%23c0461c' d='m16 7 2.7 5.5 6.1.9-4.4 4.3 1 6-5.4-2.9-5.4 2.9 1-6-4.4-4.3 6.1-.9z'/%3E%3C/svg%3E" />
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  :root {
+    --ink: #181210;
+    --ink-2: #2a1c14;
+    --bone: #f4e6c8;
+    --ivory: #fff8e7;
+    --clay: #c0461c;
+    --ochre: #d98a35;
+    --olive: #5e6e3a;
+    --aegean: #1f6977;
+    --line: rgb(36 25 16 / 18%);
+    --muted: rgb(36 25 16 / 66%);
+    --shadow: 0 20px 48px rgb(57 31 12 / 18%);
+    --font-display: Copperplate, "Copperplate Gothic Light", "Iowan Old Style", Georgia, serif;
+    --font-body: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --terrain-atlas: url("../assets/codex-banana-showcase/light-terrain-atlas.png");
+    --capital-icon: url("../assets/settlement-icons/capital-star-mask.png");
+    --city-icon: url("../assets/settlement-icons/city-gate-mask.png");
+    --colony-icon: url("../assets/settlement-icons/colony-flag-mask.png");
+    color: var(--ink-2);
+    background: var(--bone);
+    font-family: var(--font-body);
+  }
+
+  body {
+    min-width: 320px;
+    margin: 0;
+    background:
+      linear-gradient(90deg, rgb(255 248 231 / 94%), rgb(255 248 231 / 78%) 48%, rgb(244 230 200 / 96%)),
+      linear-gradient(0deg, rgb(36 25 16 / 5%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(36 25 16 / 4%) 1px, transparent 1px),
+      var(--bone);
+    background-size: auto, 34px 34px, 34px 34px, auto;
+    line-height: 1.45;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-top: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  .kicker,
+  .ruleLabel,
+  .tileYield,
+  .tileCapacity,
+  .playerKey span,
+  .scenarioLabel {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .page {
+    width: min(1440px, 100%);
+    margin: 0 auto;
+    padding: 22px;
+  }
+
+  .hero,
+  .boardPanel,
+  .scenarioPanel,
+  .ruleCard {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, rgb(255 248 231 / 90%), rgb(255 248 231 / 78%)),
+      var(--ivory);
+    box-shadow: var(--shadow);
+  }
+
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(520px, 1.08fr);
+    gap: 20px;
+    overflow: hidden;
+    margin-bottom: 18px;
+    padding: 24px;
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 8px;
+    background:
+      linear-gradient(90deg, var(--clay) 0 24%, transparent 24% 28%, var(--aegean) 28% 52%, transparent 52% 56%, var(--olive) 56% 78%, transparent 78% 82%, var(--ochre) 82% 100%);
+  }
+
+  .kicker {
+    margin: 0 0 10px;
+    color: #8f2e13;
+    font-size: 0.78rem;
+  }
+
+  h1 {
+    max-width: 680px;
+    margin-bottom: 14px;
+    color: var(--ink);
+    font-size: clamp(2rem, 4.6vw, 4.8rem);
+    line-height: 0.96;
+  }
+
+  .lede {
+    max-width: 650px;
+    margin-bottom: 20px;
+    color: var(--muted);
+    font-size: clamp(1rem, 1.4vw, 1.18rem);
+  }
+
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .ruleCard {
+    display: grid;
+    gap: 6px;
+    min-height: 96px;
+    padding: 13px;
+    box-shadow: none;
+  }
+
+  .ruleLabel {
+    color: #8f2e13;
+    font-size: 0.72rem;
+  }
+
+  .ruleCard p {
+    margin-bottom: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .tokenSetup {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .tokenCard {
+    display: grid;
+    gap: 8px;
+    min-height: 104px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgb(244 230 200 / 34%);
+  }
+
+  .tokenStage {
+    position: relative;
+    height: 54px;
+    border: 1px solid rgb(36 25 16 / 14%);
+    border-radius: 7px;
+    background:
+      linear-gradient(180deg, rgb(255 248 231 / 70%), rgb(244 230 200 / 34%));
+  }
+
+  .tokenStage.dual .token.colony.left {
+    left: 39%;
+  }
+
+  .tokenStage.dual .token.colony.right {
+    left: 61%;
+  }
+
+  .tokenStage .token.colony:not(.left):not(.right) {
+    left: 50%;
+  }
+
+  .tokenCard p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.25;
+  }
+
+  .boardPanel {
+    padding: 16px;
+  }
+
+  .boardHeader,
+  .scenarioHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h2 {
+    margin-bottom: 0;
+    font-size: 1rem;
+  }
+
+  .playerKey {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .playerKey span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px;
+    border: 1px solid color-mix(in srgb, var(--player) 58%, var(--ink));
+    border-radius: 999px;
+    color: var(--player);
+    background: rgb(255 248 231 / 78%);
+    font-size: 0.66rem;
+  }
+
+  .playerKey i {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--player);
+  }
+
+  .board {
+    position: relative;
+    width: min(100%, 680px);
+    height: 520px;
+    margin: 0 auto;
+    overflow: visible;
+  }
+
+  .hexCell {
+    --resource: #6c8d35;
+    --resource-soft: #d8e8a4;
+    position: absolute;
+    width: 118px;
+    height: 132px;
+    transform: translate(-50%, -50%);
+  }
+
+  .hexFrame,
+  .hexArt {
+    position: absolute;
+    clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  }
+
+  .hexFrame {
+    inset: 0;
+    background: color-mix(in srgb, var(--resource) 64%, var(--ivory));
+    filter:
+      drop-shadow(0 8px 9px rgb(36 25 16 / 17%))
+      drop-shadow(0 0 0.5px rgb(24 18 16 / 44%));
+  }
+
+  .hexArt {
+    inset: 3px;
+    overflow: hidden;
+    background-image:
+      linear-gradient(180deg, rgb(255 248 231 / 18%), rgb(24 18 16 / 8%)),
+      var(--terrain-atlas);
+    background-size: auto, 218% 218%;
+  }
+
+  .hexArt::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, var(--resource), color-mix(in srgb, var(--resource) 38%, var(--ivory)));
+    mix-blend-mode: color;
+    opacity: 0.48;
+  }
+
+  .terrain-mountain .hexArt {
+    background-position: 0 0, 6% 6%;
+  }
+
+  .terrain-hill .hexArt {
+    background-position: 0 0, 94% 6%;
+  }
+
+  .terrain-forest .hexArt {
+    background-position: 0 0, 6% 94%;
+  }
+
+  .terrain-plains .hexArt {
+    background-position: 0 0, 94% 94%;
+  }
+
+  .tileYield,
+  .tileCapacity {
+    position: absolute;
+    z-index: 5;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #0b0705;
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    paint-order: stroke fill;
+    padding: 0 2px;
+    text-align: center;
+    -webkit-text-stroke: 2.1px rgb(255 248 231 / 98%);
+    text-shadow:
+      0 0 1px var(--ivory),
+      0 0 2px var(--ivory),
+      0 0 4px rgb(255 248 231 / 92%),
+      0 2px 0 var(--ivory),
+      2px 0 0 var(--ivory),
+      -2px 0 0 var(--ivory),
+      0 -2px 0 var(--ivory),
+      2px 2px 0 var(--ivory),
+      -2px 2px 0 var(--ivory),
+      2px -2px 0 var(--ivory),
+      -2px -2px 0 var(--ivory),
+      0 1px 0 var(--ivory),
+      1px 0 0 var(--ivory),
+      -1px 0 0 var(--ivory),
+      0 -1px 0 var(--ivory),
+      1px 1px 0 var(--ivory),
+      -1px 1px 0 var(--ivory),
+      1px -1px 0 var(--ivory),
+      -1px -1px 0 var(--ivory),
+      0 5px 7px rgb(24 18 16 / 42%);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .tileYield {
+    top: 13px;
+    font-size: 1.18rem;
+  }
+
+  .tileCapacity {
+    bottom: 13px;
+    font-size: 1rem;
+  }
+
+  .token {
+    --owner: #c2410c;
+    --icon: var(--city-icon);
+    position: absolute;
+    z-index: 4;
+    width: 38px;
+    height: 38px;
+    transform: translate(-50%, -50%);
+    filter:
+      drop-shadow(0 0 1px rgb(255 248 231 / 95%))
+      drop-shadow(0 1px 0 rgb(255 248 231 / 95%))
+      drop-shadow(0 5px 6px rgb(24 18 16 / 30%));
+  }
+
+  .token::before,
+  .token::after,
+  .token i {
+    content: "";
+    position: absolute;
+    inset: 0;
+    display: block;
+    -webkit-mask: var(--icon) center / contain no-repeat;
+    mask: var(--icon) center / contain no-repeat;
+  }
+
+  .token::before {
+    background: #fff8e7;
+    transform: scale(1.24);
+    z-index: 0;
+  }
+
+  .token::after {
+    background: #0b0705;
+    transform: scale(1.1);
+    z-index: 1;
+  }
+
+  .token i {
+    background: var(--owner);
+    transform: scale(0.92);
+    z-index: 2;
+  }
+
+  .token.capital {
+    --icon: var(--capital-icon);
+    top: 54%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+  }
+
+  .token.city {
+    --icon: var(--city-icon);
+    top: 54%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+  }
+
+  .token.colony {
+    --icon: var(--colony-icon);
+    top: 54%;
+    width: 31px;
+    height: 31px;
+  }
+
+  .token.colony.left {
+    left: 37%;
+  }
+
+  .token.colony.right {
+    left: 63%;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+    gap: 18px;
+  }
+
+  .scenarioPanel {
+    padding: 16px;
+  }
+
+  .scenarioGrid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .scenario {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgb(244 230 200 / 34%);
+  }
+
+  .scenario .hexCell {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+  }
+
+  .scenarioLabel {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--ink);
+    font-size: 0.78rem;
+  }
+
+  .scenario p {
+    margin-bottom: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 1080px) {
+    .hero,
+    .layout {
+      grid-template-columns: 1fr;
+    }
+
+    .hero {
+      padding: 20px;
+    }
+
+    .board {
+      height: 500px;
+    }
+
+    .tokenSetup {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 680px) {
+    .page {
+      padding: 12px;
+    }
+
+    .rules,
+    .tokenSetup,
+    .scenario {
+      grid-template-columns: 1fr;
+    }
+
+    .boardHeader,
+    .scenarioHeader {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .board {
+      width: 100%;
+      height: 430px;
+      transform: scale(0.78);
+      transform-origin: top center;
+      margin-bottom: -80px;
+    }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <section class="hero">
+    <div>
+      <p class="kicker">Tile grammar v2</p>
+      <h1>Direct tokens, no dock furniture</h1>
+      <p class="lede">
+        This version removes token plates, rail marks, and text labels. Settlement type is carried by the icon,
+        ownership is carried by hue, and the tile economy is printed directly into the hex.
+      </p>
+      <div class="rules">
+        <div class="ruleCard">
+          <span class="ruleLabel">Top half</span>
+          <p>Resource income is only a signed number: +1, +2, +10.</p>
+        </div>
+        <div class="ruleCard">
+          <span class="ruleLabel">Bottom center</span>
+          <p>Building use is current over capacity: 0/4, 1/3, 2/6.</p>
+        </div>
+        <div class="ruleCard">
+          <span class="ruleLabel">Settlement type</span>
+          <p>Capital is a star, city is the gate icon, colony is a flag.</p>
+        </div>
+        <div class="ruleCard">
+          <span class="ruleLabel">Placement</span>
+          <p>Capital and city are centered. Two colonies sit left and right of center.</p>
+        </div>
+      </div>
+      <div class="tokenSetup" aria-label="Token setup demonstration">
+        <article class="tokenCard">
+          <div class="tokenStage">
+            <span class="token capital" style="--owner:#c2410c"><i></i></span>
+          </div>
+          <p><span class="scenarioLabel">Capital</span> Star, centered.</p>
+        </article>
+        <article class="tokenCard">
+          <div class="tokenStage">
+            <span class="token city" style="--owner:#7c3aed"><i></i></span>
+          </div>
+          <p><span class="scenarioLabel">City</span> Gate, centered.</p>
+        </article>
+        <article class="tokenCard">
+          <div class="tokenStage">
+            <span class="token colony" style="--owner:#0f766e"><i></i></span>
+          </div>
+          <p><span class="scenarioLabel">Colony</span> Flag, player hue.</p>
+        </article>
+        <article class="tokenCard">
+          <div class="tokenStage dual">
+            <span class="token colony left" style="--owner:#0f766e"><i></i></span>
+            <span class="token colony right" style="--owner:#b45309"><i></i></span>
+          </div>
+          <p><span class="scenarioLabel">Shared</span> Two flags, left/right.</p>
+        </article>
+      </div>
+    </div>
+    <section class="boardPanel">
+      <div class="boardHeader">
+        <h2>Map stress sample</h2>
+        <div class="playerKey" id="player-key"></div>
+      </div>
+      <div class="board" id="board" aria-label="Hex tile token showcase board"></div>
+    </section>
+  </section>
+
+  <section class="layout">
+    <section class="boardPanel">
+      <div class="boardHeader">
+        <h2>Readable states</h2>
+        <div class="playerKey" id="state-key"></div>
+      </div>
+      <div class="scenarioGrid" id="scenario-grid"></div>
+    </section>
+    <aside class="scenarioPanel">
+      <div class="scenarioHeader">
+        <h2>Icon contract</h2>
+      </div>
+      <div class="scenarioGrid">
+        <div class="scenario">
+          <div class="hexCell terrain-plains" style="--resource:#6c8d35; --resource-soft:#d8e8a4">
+            <div class="hexFrame"></div>
+            <div class="hexArt"></div>
+            <span class="tileYield">+10</span>
+            <span class="tileCapacity">0/4</span>
+            <span class="token capital" style="--owner:#c2410c"><i></i></span>
+          </div>
+          <p><span class="scenarioLabel">Capital</span> Star at center. No label text or token backing.</p>
+        </div>
+        <div class="scenario">
+          <div class="hexCell terrain-hill" style="--resource:#d98a35; --resource-soft:#f0c27b">
+            <div class="hexFrame"></div>
+            <div class="hexArt"></div>
+            <span class="tileYield">+2</span>
+            <span class="tileCapacity">1/3</span>
+            <span class="token city" style="--owner:#7c3aed"><i></i></span>
+          </div>
+          <p><span class="scenarioLabel">City</span> Gate at center. This inherits the old capital idea.</p>
+        </div>
+        <div class="scenario">
+          <div class="hexCell terrain-forest" style="--resource:#354927; --resource-soft:#c9d4a7">
+            <div class="hexFrame"></div>
+            <div class="hexArt"></div>
+            <span class="tileYield">+4</span>
+            <span class="tileCapacity">0/2</span>
+            <span class="token colony left" style="--owner:#0f766e"><i></i></span>
+            <span class="token colony right" style="--owner:#b45309"><i></i></span>
+          </div>
+          <p><span class="scenarioLabel">Shared colonies</span> Flags use left and right center positions.</p>
+        </div>
+      </div>
+    </aside>
+  </section>
+</main>
+
+<script>
+  const players = {
+    p1: { label: "P1", color: "#c2410c" },
+    p2: { label: "P2", color: "#0f766e" },
+    p3: { label: "P3", color: "#7c3aed" },
+    p4: { label: "P4", color: "#b45309" }
+  };
+
+  const resources = {
+    wood: { color: "#354927", soft: "#c9d4a7" },
+    stone: { color: "#8f8571", soft: "#d8d0bf" },
+    gold: { color: "#d98a35", soft: "#f0c27b" },
+    food: { color: "#6c8d35", soft: "#d8e8a4" }
+  };
+
+  const boardTiles = [
+    { q: -2, r: 0, terrain: "forest", resource: "wood", yield: 4, buildings: 0, slots: 2, settlements: [{ owner: "p1", kind: "capital" }] },
+    { q: -2, r: 1, terrain: "hill", resource: "gold", yield: 2, buildings: 0, slots: 3, settlements: [] },
+    { q: -2, r: 2, terrain: "plains", resource: "food", yield: 8, buildings: 0, slots: 4, settlements: [] },
+    { q: -1, r: -1, terrain: "mountain", resource: "stone", yield: 4, buildings: 0, slots: 2, settlements: [] },
+    { q: -1, r: 0, terrain: "forest", resource: "wood", yield: 3, buildings: 0, slots: 2, settlements: [{ owner: "p2", kind: "colony" }, { owner: "p4", kind: "colony" }] },
+    { q: -1, r: 1, terrain: "hill", resource: "gold", yield: 1, buildings: 0, slots: 2, settlements: [{ owner: "p3", kind: "city" }] },
+    { q: -1, r: 2, terrain: "forest", resource: "wood", yield: 3, buildings: 0, slots: 1, settlements: [] },
+    { q: 0, r: -2, terrain: "plains", resource: "food", yield: 10, buildings: 0, slots: 4, settlements: [{ owner: "p4", kind: "capital" }] },
+    { q: 0, r: -1, terrain: "mountain", resource: "stone", yield: 6, buildings: 0, slots: 2, settlements: [] },
+    { q: 0, r: 0, terrain: "plains", resource: "food", yield: 6, buildings: 2, slots: 6, settlements: [{ owner: "p1", kind: "capital" }] },
+    { q: 0, r: 1, terrain: "forest", resource: "wood", yield: 2, buildings: 0, slots: 2, settlements: [] },
+    { q: 0, r: 2, terrain: "hill", resource: "gold", yield: 1, buildings: 0, slots: 1, settlements: [] },
+    { q: 1, r: -2, terrain: "forest", resource: "wood", yield: 2, buildings: 0, slots: 2, settlements: [] },
+    { q: 1, r: -1, terrain: "hill", resource: "gold", yield: 2, buildings: 1, slots: 4, settlements: [{ owner: "p2", kind: "city" }] },
+    { q: 1, r: 0, terrain: "mountain", resource: "stone", yield: 2, buildings: 0, slots: 2, settlements: [{ owner: "p2", kind: "colony" }, { owner: "p3", kind: "colony" }] },
+    { q: 1, r: 1, terrain: "forest", resource: "wood", yield: 2, buildings: 0, slots: 1, settlements: [] },
+    { q: 2, r: -2, terrain: "hill", resource: "gold", yield: 1, buildings: 0, slots: 1, settlements: [] },
+    { q: 2, r: -1, terrain: "plains", resource: "food", yield: 4, buildings: 0, slots: 2, settlements: [] },
+    { q: 2, r: 0, terrain: "forest", resource: "wood", yield: 1, buildings: 0, slots: 1, settlements: [] }
+  ];
+
+  const scenarioTiles = [
+    { title: "Capital, high yield", note: "Center star leaves top and bottom labels clear.", terrain: "plains", resource: "food", yield: 10, buildings: 0, slots: 4, settlements: [{ owner: "p1", kind: "capital" }] },
+    { title: "City, used slots", note: "Center gate with capacity shown as an exact ratio.", terrain: "hill", resource: "gold", yield: 2, buildings: 1, slots: 3, settlements: [{ owner: "p3", kind: "city" }] },
+    { title: "Two colonies", note: "Flags split the center horizontally without needing docks.", terrain: "forest", resource: "wood", yield: 4, buildings: 0, slots: 2, settlements: [{ owner: "p2", kind: "colony" }, { owner: "p4", kind: "colony" }] },
+    { title: "Empty tile", note: "With no settlement, the tile is just yield and build capacity.", terrain: "mountain", resource: "stone", yield: 6, buildings: 0, slots: 2, settlements: [] }
+  ];
+
+  function playerKeyHtml() {
+    return Object.values(players).map((player) => `
+      <span style="--player:${player.color}"><i></i>${player.label}</span>
+    `).join("");
+  }
+
+  function tokenHtml(settlement, index) {
+    const player = players[settlement.owner];
+    const side = index === 0 ? "left" : "right";
+    const colonyClass = settlement.kind === "colony" ? ` ${side}` : "";
+    return `<span class="token ${settlement.kind}${colonyClass}" style="--owner:${player.color}" aria-label="${player.label} ${settlement.kind}"><i></i></span>`;
+  }
+
+  function tileHtml(tile, inlineStyle = "") {
+    const resource = resources[tile.resource];
+    return `
+      <div class="hexCell terrain-${tile.terrain}" style="--resource:${resource.color}; --resource-soft:${resource.soft}; ${inlineStyle}">
+        <div class="hexFrame"></div>
+        <div class="hexArt"></div>
+        <span class="tileYield">+${tile.yield}</span>
+        <span class="tileCapacity">${tile.buildings}/${tile.slots}</span>
+        ${tile.settlements.map(tokenHtml).join("")}
+      </div>
+    `;
+  }
+
+  function renderBoard() {
+    const board = document.getElementById("board");
+    const hexW = 118;
+    const hexH = 132;
+    const size = 63;
+    const points = boardTiles.map((tile) => ({
+      tile,
+      x: size * Math.sqrt(3) * (tile.q + tile.r / 2),
+      y: size * 1.5 * tile.r
+    }));
+    const minX = Math.min(...points.map((point) => point.x));
+    const maxX = Math.max(...points.map((point) => point.x));
+    const minY = Math.min(...points.map((point) => point.y));
+    const maxY = Math.max(...points.map((point) => point.y));
+    const scale = Math.min(1, (board.clientWidth - hexW) / (maxX - minX + hexW));
+    const offsetX = board.clientWidth / 2 - ((minX + maxX) / 2) * scale;
+    const offsetY = board.clientHeight / 2 - ((minY + maxY) / 2) * scale;
+
+    board.innerHTML = points.map(({ tile, x, y }) => tileHtml(
+      tile,
+      `left:${offsetX + x * scale}px; top:${offsetY + y * scale}px; transform:translate(-50%, -50%) scale(${scale});`
+    )).join("");
+  }
+
+  function renderScenarios() {
+    const grid = document.getElementById("scenario-grid");
+    grid.innerHTML = scenarioTiles.map((tile) => `
+      <article class="scenario">
+        ${tileHtml(tile)}
+        <p><span class="scenarioLabel">${tile.title}</span>${tile.note}</p>
+      </article>
+    `).join("");
+  }
+
+  document.getElementById("player-key").innerHTML = playerKeyHtml();
+  document.getElementById("state-key").innerHTML = playerKeyHtml();
+  renderBoard();
+  renderScenarios();
+  addEventListener("resize", renderBoard);
+</script>
+</body>
+</html>
