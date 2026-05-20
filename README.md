@@ -15,7 +15,28 @@ Hegemony is a Catan-inspired, Imperator: Rome-inspired strategy board game proto
 - Gameplay colony founding and colony-to-city upgrades.
 - Four buildable structure types.
 - Population capacity and overcapacity unrest.
+- Shared colony tiles with split income.
+- Action log, tile inspector, holdings roster, and income preview.
+
+## Current Status
+
+The prototype is in Phase 1: local core gameplay. It proves the loop of placing
+initial settlements, collecting income, expanding colonies, upgrading cities,
+building basic structures, and managing early population pressure.
+
+The next rules milestone is not more raw economy by default. The game needs a
+light pressure-and-scoring layer so expansion and building choices have stakes:
+temporary 10-season scoring, unrest consequences, and a first influence sink.
+
+## Development
+
+- Install packages: `npm install`
+- Start the dev server: `npm run dev`
+- Run type checks: `npm run check`
+- Run a production build: `npm run build`
 
 ## Coming Soon
 
-Online play, events, assembly voting, politicians, national ideas, luxury goods, trade, and victory conditions.
+Temporary scoring, unrest events, influence actions, online play, assembly
+voting, politicians, national ideas, luxury goods, trade, and final victory
+conditions.
