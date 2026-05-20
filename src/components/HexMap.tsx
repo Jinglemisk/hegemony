@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { HegemonyState } from "../game/types";
 import { PLAYER_COLORS } from "../game/data";
+import { resourceCssVars } from "../ui/resourceVisuals";
 import { AtlasIcon, TerrainSprite } from "./Sprites";
 
 export function HexMap({
@@ -27,7 +28,7 @@ export function HexMap({
         const colonies = tile.settlements.filter((settlement) => settlement.kind === "colony");
         const isSelected = selectedTileId === tile.id;
         return (
-          <g key={tile.id} transform={`translate(${x} ${y})`}>
+          <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
             <foreignObject
               className="terrainObject"
               height={tileArtSize}
