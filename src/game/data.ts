@@ -27,6 +27,18 @@ export const EMPTY_RESOURCES: Resources = {
   unrest: 0
 };
 
+export const ACTION_COSTS = {
+  foundColony: {
+    wood: 20,
+    food: 2
+  },
+  upgradeColonyToCity: {
+    wood: 30,
+    stone: 10,
+    food: 5
+  }
+} satisfies Record<string, Partial<Resources>>;
+
 export const SETTLEMENT_RULES: Record<
   SettlementKind,
   {
@@ -80,41 +92,41 @@ export const BUILDINGS: BuildingDefinition[] = [
 ];
 
 export const TERRAIN_DECK: Array<{ terrain: Terrain; buildingSlots: number; resource: Yield }> = [
-  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 6 } },
-  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 4 } },
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 4 } },
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 2 } },
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 2 } },
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 2 } },
-  { terrain: "hill", buildingSlots: 3, resource: { type: "stone", amount: 4 } },
-  { terrain: "hill", buildingSlots: 3, resource: { type: "food", amount: 2 } },
-  { terrain: "hill", buildingSlots: 2, resource: { type: "stone", amount: 1 } },
-  { terrain: "hill", buildingSlots: 2, resource: { type: "stone", amount: 1 } },
-  { terrain: "hill", buildingSlots: 2, resource: { type: "food", amount: 1 } },
-  { terrain: "hill", buildingSlots: 2, resource: { type: "food", amount: 1 } },
-  { terrain: "hill", buildingSlots: 1, resource: { type: "stone", amount: 2 } },
-  { terrain: "hill", buildingSlots: 1, resource: { type: "food", amount: 1 } },
-  { terrain: "hill", buildingSlots: 1, resource: { type: "food", amount: 1 } },
   { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 4 } },
-  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 4 } },
-  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 3 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "food", amount: 1 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "food", amount: 1 } },
-  { terrain: "forest", buildingSlots: 1, resource: { type: "food", amount: 1 } },
+  { terrain: "hill", buildingSlots: 3, resource: { type: "gold", amount: 4 } },
   { terrain: "plains", buildingSlots: 4, resource: { type: "food", amount: 10 } },
+  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 4 } },
   { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 8 } },
+  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 6 } },
+  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 3 } },
+  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 4 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } },
+  { terrain: "hill", buildingSlots: 3, resource: { type: "gold", amount: 2 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } },
   { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 6 } },
+  { terrain: "hill", buildingSlots: 2, resource: { type: "gold", amount: 1 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } },
   { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 4 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } },
+  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 4 } },
+  { terrain: "hill", buildingSlots: 2, resource: { type: "gold", amount: 1 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } },
+  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 2 } },
+  { terrain: "hill", buildingSlots: 2, resource: { type: "gold", amount: 1 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } },
   { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 4 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } },
   { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 4 } },
+  { terrain: "hill", buildingSlots: 2, resource: { type: "gold", amount: 1 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } },
   { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 4 } },
-  { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 4 } }
+  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 2 } },
+  { terrain: "hill", buildingSlots: 1, resource: { type: "gold", amount: 2 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 1 } },
+  { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 4 } },
+  { terrain: "hill", buildingSlots: 1, resource: { type: "gold", amount: 1 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 1 } },
+  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 2 } },
+  { terrain: "hill", buildingSlots: 1, resource: { type: "gold", amount: 1 } },
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 1 } }
 ];
