@@ -15,6 +15,7 @@ export function HexMap({
 }) {
   const size = 45;
   const tileArtSize = 88;
+  const colonyDockPositions = [-21, 21];
   const centers = G.board.tiles.map((tile) => ({
     tile,
     x: size * Math.sqrt(3) * (tile.q + tile.r / 2),
@@ -26,7 +27,10 @@ export function HexMap({
       {centers.map(({ tile, x, y }) => {
         const city = tile.settlements.find((settlement) => settlement.kind !== "colony");
         const colonies = tile.settlements.filter((settlement) => settlement.kind === "colony");
+        const shownColonies = colonies.slice(0, 2);
+        const overflowColonies = Math.max(0, colonies.length - shownColonies.length);
         const isSelected = selectedTileId === tile.id;
+        const cityTokenSize = city?.kind === "capital" ? 40 : 36;
         return (
           <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
             <foreignObject
@@ -57,17 +61,55 @@ export function HexMap({
               />
             </g>
             <g className="tilePlate" aria-hidden="true">
-              <rect className="tilePlateBg" x={-29} y={1.5} width={58} height={18} rx={5} />
-              <line className="tilePlateDivider" x1={0} y1={4} x2={0} y2={17} />
-              <text className="tilePlateStat tilePlateYield" x={-14.5} y={14.5}>
-                ◆{tile.resource.amount}
+              <rect className="tilePlateBg" x={-35} y={-40} width={70} height={21} rx={5} />
+              <circle className="tilePlateResourceDot" cx={-24} cy={-29.5} r={7} />
+              <text className="tilePlateResourceGlyph" x={-24} y={-26.8}>
+                {tile.resource.type.slice(0, 1).toUpperCase()}
               </text>
-              <text className="tilePlateStat tilePlateSlots" x={14.5} y={14.5}>
-                ⌂{tile.buildingSlots}
+              <text className="tilePlateStat tilePlateYield" x={-8.5} y={-25.8}>
+                {tile.resource.amount}
               </text>
+              <line className="tilePlateDivider" x1={1.5} y1={-36} x2={1.5} y2={-23} />
+              {Array.from({ length: 4 }, (_, index) => (
+                <rect
+                  className={`tilePlateSlot ${index < tile.buildingSlots ? "filled" : ""}`}
+                  height={11}
+                  key={index}
+                  rx={1.2}
+                  width={4}
+                  x={8 + index * 5.3}
+                  y={-35}
+                />
+              ))}
+            </g>
+            <g className="colonyDockLayer" aria-hidden="true">
+              {colonyDockPositions.map((dockX, index) => {
+                const colony = shownColonies[index];
+                if (!colony) {
+                  return null;
+                }
+
+                return (
+                  <g
+                    className="colonyDock occupied"
+                    key={dockX}
+                    style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
+                    transform={`translate(${dockX} 31)`}
+                  >
+                    <path className="colonyDockShadow" d="M-15,4 C-10,15 10,15 15,4" />
+                    <rect className="colonyDockSocket" x={-13} y={-10} width={26} height={23} rx={5} />
+                  </g>
+                );
+              })}
             </g>
             {city ? (
-              <foreignObject className="settlementObject cityObject" height={38} width={38} x={-19} y={-19}>
+              <foreignObject
+                className="settlementObject cityObject"
+                height={cityTokenSize}
+                width={cityTokenSize}
+                x={-cityTokenSize / 2}
+                y={7 - cityTokenSize / 2}
+              >
                 <div
                   className={`settlementToken ${city.kind === "capital" ? "capitalToken" : "cityToken"}`}
                   style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
@@ -77,27 +119,38 @@ export function HexMap({
                 </div>
               </foreignObject>
             ) : null}
-            {colonies.map((colony, index) => (
+            {shownColonies.map((colony, index) => (
               <g
-                transform={`translate(${index === 0 ? -13 : 13} 23)`}
+                className="colonyTokenDocked"
+                transform={`translate(${colonyDockPositions[index]} 31)`}
                 key={`${colony.owner}-${index}`}
               >
-                <foreignObject className="settlementObject colonyObject" height={30} width={34} x={-17} y={-15}>
+                <foreignObject className="settlementObject colonyObject" height={26} width={26} x={-13} y={-13}>
                   <div
                     className="settlementToken colonyToken"
                     style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
                   >
                     <AtlasIcon icon="colony" className="settlementTokenIcon" />
-                    <span>COL</span>
+                    <span>{playerLabel(colony.owner)}</span>
                   </div>
                 </foreignObject>
               </g>
             ))}
+            {overflowColonies > 0 ? (
+              <g className="colonyOverflow" transform="translate(0 31)" aria-hidden="true">
+                <circle r={9} />
+                <text y={3.2}>+{overflowColonies}</text>
+              </g>
+            ) : null}
           </g>
         );
       })}
     </svg>
   );
+}
+
+function playerLabel(owner: string) {
+  return `P${Number(owner) + 1}`;
 }
 
 function hexPoints(size: number) {
