@@ -145,11 +145,11 @@ The original PDF uses this event conversion:
 
 - 1 citizen = 2 freemen = 4 slaves.
 
-The latest design discussion is leaning toward:
+Earlier prototype discussion leaned toward this conversion:
 
 - 1 citizen = 2 freemen = 3 slaves.
 
-This conversion applies when an effect says "gain 1 pop" and the player may choose how to receive it. It does not necessarily mean all pop types are equally balanced in production.
+The current v0.2 prototype instead uses normalized pop-level units for income and capacity: 1 citizen pop = 1 freeman pop = 1 slave pop = 1 capacity. The former conversion can still be treated as historical context for event-card wording, but it is not used by current income math.
 
 ### Citizen
 
@@ -166,10 +166,15 @@ Original PDF value:
 - Provides gold.
 - Consumes food.
 
-Original PDF value:
+Original PDF/raw-unit value:
 
 - +2 gold.
 - -1 food.
+
+Per displayed freeman pop in v0.2:
+
+- +4 gold.
+- -2 food.
 
 ### Slave
 
@@ -183,7 +188,11 @@ Original PDF value:
 - -1 food per 2 slaves.
 - +1 unrest per 8 slaves.
 
-The current prototype uses a more conservative 3-slave grouping as a balance placeholder.
+Current normalized v0.2 value per displayed slave pop:
+
+- +1 tile primary resource.
+- -1 food.
+- +0.33 unrest.
 
 ## Buildings
 

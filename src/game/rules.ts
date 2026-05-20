@@ -1,4 +1,4 @@
-import { BUILDINGS, EMPTY_RESOURCES, PLAYER_IDS, SETTLEMENT_RULES, STARTING_RESOURCES } from "./data";
+import { ACTION_COSTS, BUILDINGS, EMPTY_RESOURCES, PLAYER_IDS, SETTLEMENT_RULES, STARTING_RESOURCES } from "./data";
 import { createInitialMap, hexDistance } from "./map";
 import type {
   BuildingId,
@@ -12,6 +12,19 @@ import type {
 } from "./types";
 
 export const INVALID_MOVE = "INVALID_MOVE";
+
+export type ActionStatus = {
+  can: boolean;
+  reasons: string[];
+  cost?: Partial<Resources>;
+};
+
+export type IncomeContribution = {
+  resource: Resource;
+  amount: number;
+  source: string;
+  detail: string;
+};
 
 const STARTING_CAPITAL_POPS: Pops = {
   citizens: 1,
@@ -82,37 +95,66 @@ export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string
   const tile = getTile(G, tileId);
   const player = G.players[playerID];
 
-  if (!tile || player.settlements.length !== 1) {
+  if (!tile || player.settlements.length !== 1 || !canPlaceColonyOnTile(G, playerID, tile).can) {
     return INVALID_MOVE;
   }
 
-  if (tile.settlements.some((settlement) => settlement.kind !== "colony")) {
+  addColony(G, playerID, tile);
+}
+
+export function foundColony(G: HegemonyState, playerID: PlayerId, tileId: string) {
+  const status = getFoundColonyStatus(G, playerID, tileId);
+  const tile = getTile(G, tileId);
+
+  if (!tile || !status.can) {
     return INVALID_MOVE;
   }
 
-  if (tile.settlements.some((settlement) => settlement.owner === playerID) || tile.settlements.length >= 2) {
+  payCost(G.players[playerID].resources, ACTION_COSTS.foundColony);
+  addColony(G, playerID, tile);
+}
+
+export function upgradeColonyToCity(G: HegemonyState, playerID: PlayerId, tileId: string) {
+  const status = getUpgradeColonyToCityStatus(G, playerID, tileId);
+  const tile = getTile(G, tileId);
+  const settlement = tile?.settlements.find(
+    (candidate) => candidate.owner === playerID && candidate.kind === "colony"
+  );
+
+  if (!tile || !settlement || !status.can) {
     return INVALID_MOVE;
   }
 
-  if (!hasFriendlyAdjacentSettlement(G, playerID, tile)) {
-    return INVALID_MOVE;
+  payCost(G.players[playerID].resources, ACTION_COSTS.upgradeColonyToCity);
+  const displacedPlayers = tile.settlements
+    .filter((candidate) => candidate.owner !== playerID && candidate.kind === "colony")
+    .map((candidate) => candidate.owner);
+  tile.settlements = tile.settlements.filter((candidate) => candidate.owner === playerID);
+  settlement.kind = "city";
+
+  for (const displacedPlayer of displacedPlayers) {
+    G.players[displacedPlayer].settlements = G.players[displacedPlayer].settlements.filter((id) => id !== tile.id);
   }
 
-  if (isAdjacentToEnemyCapital(G, playerID, tile)) {
-    return INVALID_MOVE;
-  }
+  const displacementText =
+    displacedPlayers.length > 0
+      ? ` ${displacedPlayers.map((id) => getPlayerName(G, id)).join(", ")} lost a shared colony.`
+      : "";
+  addLog(G, `${getPlayerName(G, playerID)} upgraded a colony to a city on ${tile.terrain}.${displacementText}`);
+}
 
+function addColony(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
   tile.settlements.push({
     owner: playerID,
     kind: "colony",
     buildings: [],
     pops: { ...STARTING_COLONY_POPS }
   });
-  player.settlements.push(tile.id);
+  G.players[playerID].settlements.push(tile.id);
   addLog(G, `${getPlayerName(G, playerID)} founded a colony on ${tile.terrain}.`);
 }
 
-export function collectIncome(G: HegemonyState, playerID: PlayerId) {
+export function collectIncome(G: HegemonyState, playerID: PlayerId, mode: "manual" | "automatic" = "manual") {
   const player = G.players[playerID];
 
   if (player.collectedThisTurn) {
@@ -122,7 +164,10 @@ export function collectIncome(G: HegemonyState, playerID: PlayerId) {
   const income = calculateIncome(G, playerID);
   applyResourceDelta(player.resources, income);
   player.collectedThisTurn = true;
-  addLog(G, `${getPlayerName(G, playerID)} collected income.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} ${mode === "automatic" ? "automatically collected" : "collected"} income (${formatRuleResourceDelta(income)}).`
+  );
 }
 
 export function buildBuilding(G: HegemonyState, playerID: PlayerId, tileId: string, buildingId: BuildingId) {
@@ -170,6 +215,28 @@ export function settlementPopCapacity(kind: Settlement["kind"]) {
   return SETTLEMENT_RULES[kind].popCapacity;
 }
 
+export function settlementOverCapacity(settlement: Settlement) {
+  return Math.max(0, totalPops(settlement.pops) - settlementPopCapacity(settlement.kind));
+}
+
+export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
+  return G.players[playerID].settlements.reduce(
+    (totals, tileId) => {
+      const tile = getTile(G, tileId);
+      const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
+
+      if (!settlement) {
+        return totals;
+      }
+
+      totals.pops += totalPops(settlement.pops);
+      totals.capacity += settlementPopCapacity(settlement.kind);
+      return totals;
+    },
+    { pops: 0, capacity: 0 }
+  );
+}
+
 export function settlementBuildingSlots(tile: HexTile, settlement: Settlement) {
   if (!SETTLEMENT_RULES[settlement.kind].canBuildBuildings) {
     return 0;
@@ -179,6 +246,11 @@ export function settlementBuildingSlots(tile: HexTile, settlement: Settlement) {
 }
 
 export function calculateIncome(G: HegemonyState, playerID: PlayerId): Resources {
+  return summarizeIncome(calculateIncomeBreakdown(G, playerID));
+}
+
+export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): IncomeContribution[] {
+  const contributions: IncomeContribution[] = [];
   const income = { ...EMPTY_RESOURCES };
 
   for (const tileId of G.players[playerID].settlements) {
@@ -191,24 +263,133 @@ export function calculateIncome(G: HegemonyState, playerID: PlayerId): Resources
 
     const share = settlement.kind === "colony" && tile.settlements.length > 1 ? 0.5 : 1;
     const multiplier = settlement.kind === "capital" ? 2 : 1;
-    income[tile.resource.type] += Math.floor(tile.resource.amount * share * multiplier);
+    const settlementLabel = `${capitalize(settlement.kind)} on ${tile.terrain} ${tile.id}`;
+    const tileAmount = Math.floor(tile.resource.amount * share * multiplier);
+    addIncomeContribution(contributions, income, {
+      resource: tile.resource.type,
+      amount: tileAmount,
+      source: settlementLabel,
+      detail: `Tile yield${multiplier > 1 ? " x2 capital" : ""}${share < 1 ? " shared colony" : ""}`
+    });
 
-    income.influence += settlement.pops.citizens;
-    income.gold += settlement.pops.freemen * 2;
-    income.food -= settlement.pops.citizens * 2;
-    income.food -= settlement.pops.freemen;
-    income[tile.resource.type] += Math.floor(settlement.pops.slaves / 3);
-    income.food -= Math.floor(settlement.pops.slaves / 3);
-    income.unrest += Math.floor(settlement.pops.slaves / 9);
+    addIncomeContribution(contributions, income, {
+      resource: "influence",
+      amount: settlement.pops.citizens,
+      source: settlementLabel,
+      detail: `${settlement.pops.citizens} citizens`
+    });
+    addIncomeContribution(contributions, income, {
+      resource: "gold",
+      amount: settlement.pops.freemen * 4,
+      source: settlementLabel,
+      detail: `${settlement.pops.freemen} freeman pops`
+    });
+    addIncomeContribution(contributions, income, {
+      resource: "food",
+      amount: settlement.pops.citizens * -2,
+      source: settlementLabel,
+      detail: `${settlement.pops.citizens} citizens upkeep`
+    });
+    addIncomeContribution(contributions, income, {
+      resource: "food",
+      amount: settlement.pops.freemen * -2,
+      source: settlementLabel,
+      detail: `${settlement.pops.freemen} freeman pops upkeep`
+    });
+    addIncomeContribution(contributions, income, {
+      resource: tile.resource.type,
+      amount: settlement.pops.slaves,
+      source: settlementLabel,
+      detail: `${settlement.pops.slaves} slave pops production`
+    });
+    addIncomeContribution(contributions, income, {
+      resource: "food",
+      amount: settlement.pops.slaves * -1,
+      source: settlementLabel,
+      detail: `${settlement.pops.slaves} slave pops upkeep`
+    });
+    addIncomeContribution(contributions, income, {
+      resource: "unrest",
+      amount: settlement.pops.slaves / 3,
+      source: settlementLabel,
+      detail: `${settlement.pops.slaves} slave pops unrest`
+    });
+    addIncomeContribution(contributions, income, {
+      resource: "unrest",
+      amount: settlementOverCapacity(settlement),
+      source: settlementLabel,
+      detail: "Over capacity"
+    });
 
-    applyIncomeBuildingEffects(income, settlement);
+    applyIncomeBuildingEffects(contributions, income, settlement, settlementLabel);
   }
 
   if (income.food < 0) {
-    income.unrest += Math.abs(income.food);
+    addIncomeContribution(contributions, income, {
+      resource: "unrest",
+      amount: Math.abs(income.food),
+      source: "Food shortage",
+      detail: "Negative food income"
+    });
   }
 
-  return income;
+  return contributions;
+}
+
+export function getFoundColonyStatus(G: HegemonyState, playerID: PlayerId, tileId: string): ActionStatus {
+  const tile = getTile(G, tileId);
+  const status: ActionStatus = {
+    can: false,
+    reasons: [],
+    cost: ACTION_COSTS.foundColony
+  };
+
+  if (!tile) {
+    status.reasons.push("Select a tile.");
+    return status;
+  }
+
+  status.reasons.push(...canPlaceColonyOnTile(G, playerID, tile).reasons);
+
+  if (!canAfford(G.players[playerID].resources, ACTION_COSTS.foundColony)) {
+    status.reasons.push("Not enough resources.");
+  }
+
+  status.can = status.reasons.length === 0;
+  return status;
+}
+
+export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerId, tileId: string): ActionStatus {
+  const tile = getTile(G, tileId);
+  const status: ActionStatus = {
+    can: false,
+    reasons: [],
+    cost: ACTION_COSTS.upgradeColonyToCity
+  };
+
+  if (!tile) {
+    status.reasons.push("Select a tile.");
+    return status;
+  }
+
+  if (!tile.settlements.some((settlement) => settlement.owner === playerID && settlement.kind === "colony")) {
+    status.reasons.push("Requires your colony on this tile.");
+  }
+
+  if (tile.settlements.some((settlement) => settlement.kind !== "colony")) {
+    status.reasons.push("Tile already has a city or capital.");
+  }
+
+  if (isAdjacentToCity(G, tile)) {
+    status.reasons.push("Cities and capitals cannot be adjacent.");
+  }
+
+  if (!canAfford(G.players[playerID].resources, ACTION_COSTS.upgradeColonyToCity)) {
+    status.reasons.push("Not enough resources.");
+  }
+
+  status.can = status.reasons.length === 0;
+  return status;
 }
 
 function applyBuildingEffect(settlement: Settlement, buildingId: BuildingId) {
@@ -221,16 +402,45 @@ function applyBuildingEffect(settlement: Settlement, buildingId: BuildingId) {
   }
 }
 
-function applyIncomeBuildingEffects(income: Resources, settlement: Settlement) {
+function applyIncomeBuildingEffects(
+  contributions: IncomeContribution[],
+  income: Resources,
+  settlement: Settlement,
+  settlementLabel: string
+) {
   for (const buildingId of settlement.buildings) {
     const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
 
     for (const effect of building?.effects ?? []) {
       if (effect.type === "income") {
-        income[effect.resource] += effect.amount;
+        addIncomeContribution(contributions, income, {
+          resource: effect.resource,
+          amount: effect.amount,
+          source: building?.name ?? buildingId,
+          detail: settlementLabel
+        });
       }
     }
   }
+}
+
+function addIncomeContribution(contributions: IncomeContribution[], income: Resources, contribution: IncomeContribution) {
+  if (contribution.amount === 0) {
+    return;
+  }
+
+  contributions.push(contribution);
+  income[contribution.resource] += contribution.amount;
+}
+
+function summarizeIncome(contributions: IncomeContribution[]): Resources {
+  const income = { ...EMPTY_RESOURCES };
+
+  for (const contribution of contributions) {
+    income[contribution.resource] += contribution.amount;
+  }
+
+  return income;
 }
 
 function hasFriendlyAdjacentSettlement(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
@@ -241,6 +451,36 @@ function hasFriendlyAdjacentSettlement(G: HegemonyState, playerID: PlayerId, til
 
     return candidate.settlements.some((settlement) => settlement.owner === playerID);
   });
+}
+
+function canPlaceColonyOnTile(G: HegemonyState, playerID: PlayerId, tile: HexTile): ActionStatus {
+  const status: ActionStatus = {
+    can: false,
+    reasons: []
+  };
+
+  if (tile.settlements.some((settlement) => settlement.kind !== "colony")) {
+    status.reasons.push("Tile already has a city or capital.");
+  }
+
+  if (tile.settlements.some((settlement) => settlement.owner === playerID)) {
+    status.reasons.push("You already have a settlement here.");
+  }
+
+  if (tile.settlements.length >= 2) {
+    status.reasons.push("A tile can hold at most two colonies.");
+  }
+
+  if (!hasFriendlyAdjacentSettlement(G, playerID, tile)) {
+    status.reasons.push("Requires an adjacent friendly settlement.");
+  }
+
+  if (isAdjacentToEnemyCapital(G, playerID, tile)) {
+    status.reasons.push("Cannot found next to an enemy capital.");
+  }
+
+  status.can = status.reasons.length === 0;
+  return status;
 }
 
 function isAdjacentToCity(G: HegemonyState, tile: HexTile) {
@@ -279,6 +519,26 @@ function applyResourceDelta(resources: Resources, delta: Resources) {
   for (const [resource, amount] of Object.entries(delta)) {
     resources[resource as Resource] += amount;
   }
+}
+
+function formatRuleResourceDelta(resources: Resources) {
+  const entries = (Object.entries(resources) as Array<[Resource, number]>).filter(([, amount]) => amount !== 0);
+
+  if (entries.length === 0) {
+    return "no change";
+  }
+
+  return entries.map(([resource, amount]) => `${formatRuleNumber(amount, true)} ${resource}`).join(", ");
+}
+
+function capitalize(value: string) {
+  return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`;
+}
+
+function formatRuleNumber(amount: number, signed = false) {
+  const rounded = Math.round(amount * 100) / 100;
+  const value = Number.isInteger(rounded) ? `${rounded}` : `${rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}`;
+  return signed && rounded > 0 ? `+${value}` : value;
 }
 
 function getTile(G: HegemonyState, tileId: string) {
