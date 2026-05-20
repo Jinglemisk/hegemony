@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hegemony Hex Tile Visual Alternatives</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23181210' d='M16 1 29 8.5v15L16 31 3 23.5v-15z'/%3E%3Cpath fill='%23c0461c' d='M16 6 24 10.5v11L16 26l-8-4.5v-11z'/%3E%3C/svg%3E" />
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  :root {
+    --ink: #181210;
+    --ink-2: #241915;
+    --clay: #c0461c;
+    --clay-dark: #8f2e13;
+    --bone: #f4e6c8;
+    --ivory: #fff8e7;
+    --ochre: #d98a35;
+    --olive: #5e6e3a;
+    --aegean: #1f6977;
+    --violet: #7c3aed;
+    --stone: #8f8571;
+    --paper: #fff7e2;
+    --line: rgb(36 25 16 / 18%);
+    --line-dark: rgb(244 230 200 / 18%);
+    --muted: rgb(36 25 16 / 64%);
+    --shadow: 0 20px 48px rgb(57 31 12 / 18%);
+    --font-display: Copperplate, "Copperplate Gothic Light", "Iowan Old Style", Georgia, serif;
+    --font-body: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    color: var(--ink-2);
+    background: var(--bone);
+    font-family: var(--font-body);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-width: 320px;
+    margin: 0;
+    background:
+      linear-gradient(90deg, rgb(255 248 231 / 94%), rgb(255 248 231 / 76%) 42%, rgb(244 230 200 / 94%)),
+      linear-gradient(0deg, rgb(36 25 16 / 5%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(36 25 16 / 4%) 1px, transparent 1px),
+      var(--bone);
+    background-size: auto, 32px 32px, 32px 32px, auto;
+    line-height: 1.45;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button {
+    font: inherit;
+  }
+
+  .page {
+    width: min(1440px, 100%);
+    margin: 0 auto;
+    padding: 22px;
+  }
+
+  .top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 430px);
+    gap: 18px;
+    align-items: stretch;
+    min-height: 248px;
+    margin-bottom: 18px;
+  }
+
+  .brief,
+  .pattern-panel,
+  .recommendation,
+  .option,
+  .matrix {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, rgb(255 248 231 / 88%), rgb(255 248 231 / 78%)),
+      var(--paper);
+    box-shadow: var(--shadow);
+  }
+
+  .brief {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+    gap: 18px;
+    overflow: hidden;
+    padding: 22px;
+  }
+
+  .brief::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 8px;
+    background:
+      linear-gradient(90deg, var(--clay) 0 18%, transparent 18% 22%, var(--ochre) 22% 42%, transparent 42% 46%, var(--aegean) 46% 68%, transparent 68% 72%, var(--olive) 72% 100%);
+  }
+
+  .kicker,
+  .label,
+  .option h2,
+  .small-title,
+  .tab,
+  .score,
+  .legend span,
+  .matrix th,
+  .matrix td:first-child {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .kicker {
+    margin: 2px 0 10px;
+    color: var(--clay-dark);
+    font-size: 0.78rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-top: 0;
+  }
+
+  h1 {
+    max-width: 820px;
+    margin-bottom: 12px;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.8vw, 5.25rem);
+    line-height: 0.96;
+    text-transform: uppercase;
+  }
+
+  .lede {
+    max-width: 760px;
+    margin-bottom: 18px;
+    color: rgb(36 25 16 / 78%);
+    font-size: clamp(1rem, 1.5vw, 1.18rem);
+  }
+
+  .thesis {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .thesis div {
+    min-height: 86px;
+    padding: 12px;
+    border: 1px solid rgb(36 25 16 / 14%);
+    border-radius: 7px;
+    background: rgb(244 230 200 / 52%);
+  }
+
+  .thesis strong {
+    display: block;
+    margin-bottom: 5px;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+  }
+
+  .thesis p {
+    margin-bottom: 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .current-hex {
+    display: grid;
+    place-items: center;
+    min-height: 260px;
+    border: 1px solid rgb(36 25 16 / 14%);
+    border-radius: 8px;
+    background:
+      radial-gradient(circle at 48% 40%, rgb(192 70 28 / 16%), transparent 34%),
+      radial-gradient(circle at 70% 60%, rgb(31 105 119 / 13%), transparent 30%),
+      rgb(24 18 16 / 92%);
+  }
+
+  .current-hex svg {
+    width: min(320px, 100%);
+    height: auto;
+    overflow: visible;
+  }
+
+  .pattern-panel {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .small-title {
+    margin: 0 0 7px;
+    color: var(--clay-dark);
+    font-size: 0.75rem;
+  }
+
+  .pattern-list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pattern-list li {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 9px 0;
+    border-bottom: 1px solid rgb(36 25 16 / 10%);
+  }
+
+  .pattern-list li:last-child {
+    border-bottom: 0;
+  }
+
+  .pattern-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgb(36 25 16 / 22%);
+    border-radius: 7px;
+    color: var(--ivory);
+    background: var(--ink);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .pattern-list b {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--ink);
+    font-size: 0.94rem;
+  }
+
+  .pattern-list p {
+    margin-bottom: 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .control-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgb(255 248 231 / 88%);
+    box-shadow: 0 10px 30px rgb(57 31 12 / 12%);
+    backdrop-filter: blur(12px);
+  }
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .tab {
+    min-height: 38px;
+    border: 1px solid rgb(36 25 16 / 18%);
+    border-radius: 7px;
+    color: rgb(36 25 16 / 76%);
+    background: rgb(244 230 200 / 56%);
+    cursor: pointer;
+    font-size: 0.72rem;
+    padding: 0 12px;
+  }
+
+  .tab[aria-pressed="true"] {
+    color: var(--ivory);
+    border-color: var(--ink);
+    background: var(--ink);
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    color: var(--muted);
+    font-size: 0.68rem;
+  }
+
+  .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    border: 2px solid var(--ink);
+    background: var(--player);
+  }
+
+  .recommendation {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.86fr) minmax(320px, 1.14fr);
+    gap: 18px;
+    margin-bottom: 18px;
+    padding: 18px;
+    background:
+      linear-gradient(135deg, rgb(24 18 16 / 95%), rgb(36 25 16 / 94%)),
+      var(--ink);
+    color: var(--bone);
+  }
+
+  .recommendation h2 {
+    margin-bottom: 8px;
+    color: var(--ochre);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    text-transform: uppercase;
+  }
+
+  .recommendation p {
+    margin-bottom: 10px;
+    color: rgb(244 230 200 / 82%);
+  }
+
+  .rule-stack {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .rule {
+    min-height: 78px;
+    padding: 11px;
+    border: 1px solid var(--line-dark);
+    border-radius: 7px;
+    background: rgb(255 248 231 / 6%);
+  }
+
+  .rule b {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--ivory);
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+  }
+
+  .rule span {
+    color: rgb(244 230 200 / 72%);
+    font-size: 0.88rem;
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .option {
+    display: grid;
+    grid-template-rows: auto minmax(260px, auto) auto;
+    overflow: hidden;
+  }
+
+  .option-head {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 16px 0;
+  }
+
+  .option h2 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 0.92rem;
+  }
+
+  .option h2 span {
+    color: var(--clay-dark);
+  }
+
+  .score {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 9px;
+    border-radius: 999px;
+    color: var(--ivory);
+    background: var(--ink);
+    font-size: 0.66rem;
+    white-space: nowrap;
+  }
+
+  .option-body {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.86fr) minmax(240px, 1.14fr);
+    gap: 14px;
+    align-items: stretch;
+    padding: 14px 16px 12px;
+  }
+
+  .visual {
+    display: grid;
+    place-items: center;
+    min-height: 240px;
+    border: 1px solid rgb(36 25 16 / 13%);
+    border-radius: 8px;
+    background:
+      radial-gradient(circle at 30% 26%, rgb(31 105 119 / 12%), transparent 34%),
+      radial-gradient(circle at 78% 68%, rgb(192 70 28 / 12%), transparent 30%),
+      rgb(244 230 200 / 54%);
+    overflow: hidden;
+  }
+
+  .visual svg {
+    display: block;
+    width: min(260px, 96%);
+    height: auto;
+    overflow: visible;
+  }
+
+  .copy p {
+    margin-bottom: 10px;
+    color: rgb(36 25 16 / 76%);
+    font-size: 0.94rem;
+  }
+
+  .copy dl {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .copy div {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 9px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgb(36 25 16 / 10%);
+  }
+
+  .copy div:last-child {
+    border-bottom: 0;
+  }
+
+  .copy dt {
+    color: var(--clay-dark);
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .copy dd {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.86rem;
+  }
+
+  .verdict {
+    min-height: 58px;
+    padding: 12px 16px 14px;
+    border-top: 1px solid rgb(36 25 16 / 12%);
+    color: rgb(36 25 16 / 74%);
+    background: rgb(244 230 200 / 46%);
+    font-size: 0.9rem;
+  }
+
+  .verdict b {
+    color: var(--ink);
+    font-family: var(--font-display);
+    text-transform: uppercase;
+  }
+
+  .matrix {
+    margin-top: 18px;
+    overflow: hidden;
+  }
+
+  .matrix-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .matrix h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    text-transform: uppercase;
+  }
+
+  .matrix p {
+    max-width: 720px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.93rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgb(36 25 16 / 10%);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    color: var(--clay-dark);
+    font-size: 0.7rem;
+    background: rgb(244 230 200 / 52%);
+  }
+
+  td {
+    color: rgb(36 25 16 / 72%);
+    font-size: 0.9rem;
+  }
+
+  td:first-child {
+    color: var(--ink);
+    font-size: 0.72rem;
+  }
+
+  .swatch-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .mini-swatch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--player);
+    font-family: var(--font-display);
+    font-size: 0.58rem;
+    font-weight: 700;
+  }
+
+  .inspector-demo {
+    display: grid;
+    grid-template-columns: 118px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    width: min(420px, 94%);
+  }
+
+  .inspector-demo svg {
+    width: 118px;
+  }
+
+  .side-sheet {
+    border: 1px solid rgb(244 230 200 / 20%);
+    border-radius: 8px;
+    color: var(--bone);
+    background: var(--ink);
+    box-shadow: 0 18px 32px rgb(24 18 16 / 20%);
+    overflow: hidden;
+  }
+
+  .side-sheet header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 11px;
+    border-bottom: 1px solid rgb(244 230 200 / 14%);
+  }
+
+  .side-sheet h3 {
+    margin: 0;
+    color: var(--ochre);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+  }
+
+  .side-sheet small {
+    color: rgb(244 230 200 / 66%);
+    font-family: var(--font-display);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+  }
+
+  .sheet-list {
+    display: grid;
+    gap: 7px;
+    padding: 10px;
+  }
+
+  .sheet-row {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    min-height: 30px;
+    color: rgb(244 230 200 / 80%);
+    font-size: 0.78rem;
+  }
+
+  .sheet-row i {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--player);
+  }
+
+  .sheet-row b {
+    color: var(--ivory);
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+  }
+
+  .sheet-row em {
+    color: rgb(244 230 200 / 62%);
+    font-style: normal;
+  }
+
+  @media (max-width: 1180px) {
+    .top,
+    .brief,
+    .recommendation,
+    .options-grid,
+    .option-body {
+      grid-template-columns: 1fr;
+    }
+
+    .pattern-panel {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px) {
+    .page {
+      padding: 12px;
+    }
+
+    .brief,
+    .recommendation,
+    .option-head,
+    .option-body,
+    .matrix-head {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    .thesis,
+    .rule-stack,
+    .pattern-panel,
+    .control-bar {
+      grid-template-columns: 1fr;
+    }
+
+    .legend {
+      justify-content: flex-start;
+    }
+
+    .copy div {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+
+    th,
+    td {
+      padding: 9px;
+      font-size: 0.82rem;
+    }
+
+    .inspector-demo {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <section class="top" aria-labelledby="page-title">
+    <div class="brief">
+      <div>
+        <p class="kicker">Hegemony board UI study</p>
+        <h1 id="page-title">One hex, too many jobs</h1>
+        <p class="lede">
+          The map needs to show terrain, resource type, yield amount, building slot capacity, and settlement ownership on a tiny tile. Other games solve this by refusing to make every detail equally loud.
+        </p>
+        <div class="thesis">
+          <div>
+            <strong>Map first</strong>
+            <p>Answer who is here and what the tile produces at a glance.</p>
+          </div>
+          <div>
+            <strong>Inspector second</strong>
+            <p>Move exact buildings, pops, and split-income math into the selected tile panel.</p>
+          </div>
+          <div>
+            <strong>Fixed grammar</strong>
+            <p>Give each data type a permanent physical zone on the hex.</p>
+          </div>
+        </div>
+      </div>
+      <div class="current-hex" id="hero-hex" aria-label="Current crowded tile stress example"></div>
+    </div>
+
+    <aside class="pattern-panel" aria-label="Patterns from other games">
+      <div>
+        <p class="small-title">How other games solve this</p>
+        <ul class="pattern-list">
+          <li>
+            <span class="pattern-icon">1</span>
+            <p><b>Move pieces off the hex.</b>Catan uses intersections and edges, so the terrain tile can stay mostly economic.</p>
+          </li>
+          <li>
+            <span class="pattern-icon">2</span>
+            <p><b>Make territory ownership the loudest layer.</b>Area-control games let pieces occupy an area, while detailed state lives elsewhere.</p>
+          </li>
+          <li>
+            <span class="pattern-icon">3</span>
+            <p><b>Stack and summarize.</b>Risk-style armies, Eclipse fleets, and large 4X boards often use stacks plus count markers.</p>
+          </li>
+          <li>
+            <span class="pattern-icon">4</span>
+            <p><b>Use printed slots.</b>Worker-placement and city boards reserve spaces, so capacity is visible without text.</p>
+          </li>
+          <li>
+            <span class="pattern-icon">5</span>
+            <p><b>Lean on selection.</b>Digital 4X games keep the map clean and reveal the full tile card only when selected.</p>
+          </li>
+        </ul>
+      </div>
+    </aside>
+  </section>
+
+  <nav class="control-bar" aria-label="Scenario selector">
+    <div class="tabs" id="scenario-tabs"></div>
+    <div class="legend">
+      <span><i class="dot" style="--player:#c2410c"></i>P1</span>
+      <span><i class="dot" style="--player:#0f766e"></i>P2</span>
+      <span><i class="dot" style="--player:#7c3aed"></i>P3</span>
+      <span><i class="dot" style="--player:#b45309"></i>P4</span>
+    </div>
+  </nav>
+
+  <section class="recommendation" aria-labelledby="recommendation-title">
+    <div>
+      <h2 id="recommendation-title">Recommended direction</h2>
+      <p>
+        Use a hybrid of fixed player seats, a hard economy plate, and an expanded selected-tile inspector.
+      </p>
+      <p>
+        In Hegemony terms: city/capital owns the center, colonies occupy reserved player positions or colony docks, yield and slots become small permanent badges, and buildings/pops stop fighting for map space.
+      </p>
+    </div>
+    <div class="rule-stack">
+      <div class="rule">
+        <b>Shape means kind</b>
+        <span>Circle for city/capital, rounded square for colony, tiny squares for building slots.</span>
+      </div>
+      <div class="rule">
+        <b>Color means owner</b>
+        <span>Player color is reserved for ownership only, not for resource or terrain.</span>
+      </div>
+      <div class="rule">
+        <b>Top means economy</b>
+        <span>Resource type and yield live in one fixed plate so players never hunt for it.</span>
+      </div>
+      <div class="rule">
+        <b>Panel means detail</b>
+        <span>Exact buildings, population, split income, and legality belong in the tile inspector.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="options-grid" id="options-grid" aria-label="Visual alternatives"></section>
+
+  <section class="matrix" aria-labelledby="matrix-title">
+    <div class="matrix-head">
+      <div>
+        <p class="small-title">Decision matrix</p>
+        <h2 id="matrix-title">What I would actually ship</h2>
+      </div>
+      <p>For the current rules where a tile can have at most two colonies and cities/capitals exclude colonies, the docked colony layout is the easiest immediate fix. If you expect future multi-presence or more contested states, fixed player seats age better.</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Alternative</th>
+          <th>Best at</th>
+          <th>Weakness</th>
+          <th>Hegemony fit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Fixed player seats</td>
+          <td>Showing exactly which players are present, even in contested tiles.</td>
+          <td>Needs players to learn the seat positions.</td>
+          <td>Best long-term grammar.</td>
+        </tr>
+        <tr>
+          <td>Colony docks</td>
+          <td>Supporting the current max-two-colonies rule with minimal clutter.</td>
+          <td>Breaks if more than two settlements can share a tile later.</td>
+          <td>Best immediate implementation.</td>
+        </tr>
+        <tr>
+          <td>Owner ring</td>
+          <td>Map-scale ownership scanning.</td>
+          <td>Weak at settlement type unless paired with badges.</td>
+          <td>Good secondary layer.</td>
+        </tr>
+        <tr>
+          <td>Stacked totem</td>
+          <td>Many pieces on one territory.</td>
+          <td>Can hide exact ownership under the top chip.</td>
+          <td>Use only if crowding grows beyond current rules.</td>
+        </tr>
+        <tr>
+          <td>Selection blow-up</td>
+          <td>Full detail without overloading the map.</td>
+          <td>Does not solve at-a-glance reading by itself.</td>
+          <td>Should exist no matter which map grammar wins.</td>
+        </tr>
+        <tr>
+          <td>Printed slot sockets</td>
+          <td>Making building capacity obvious without text.</td>
+          <td>Consumes valuable space on low-zoom tiles.</td>
+          <td>Great if buildings become a primary map concern.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+  const players = {
+    p1: { label: "P1", color: "#c2410c" },
+    p2: { label: "P2", color: "#0f766e" },
+    p3: { label: "P3", color: "#7c3aed" },
+    p4: { label: "P4", color: "#b45309" }
+  };
+
+  const resourceVisuals = {
+    wood: { label: "W", name: "wood", color: "#354927", soft: "#c9d4a7" },
+    stone: { label: "S", name: "stone", color: "#8f8571", soft: "#d8d0bf" },
+    gold: { label: "G", name: "gold", color: "#d98a35", soft: "#f0c27b" },
+    food: { label: "F", name: "food", color: "#6c8d35", soft: "#d8e8a4" }
+  };
+
+  const terrainVisuals = {
+    forest: { base: "#8fa45d", shade: "#354927", mark: "leaf" },
+    hill: { base: "#c9914b", shade: "#744822", mark: "ridge" },
+    plains: { base: "#d4d889", shade: "#6c8d35", mark: "field" },
+    mountain: { base: "#aaa08e", shade: "#51483c", mark: "peak" }
+  };
+
+  const scenarios = {
+    shared: {
+      label: "Shared colonies",
+      terrain: "forest",
+      resource: "wood",
+      yield: 4,
+      slots: 2,
+      settlements: [
+        { owner: "p1", kind: "colony" },
+        { owner: "p2", kind: "colony" }
+      ],
+      note: "Two enemy colonies split income on one tile."
+    },
+    city: {
+      label: "City tile",
+      terrain: "hill",
+      resource: "gold",
+      yield: 2,
+      slots: 3,
+      settlements: [
+        { owner: "p3", kind: "city" }
+      ],
+      note: "One city controls the tile and can build."
+    },
+    capital: {
+      label: "Capital tile",
+      terrain: "plains",
+      resource: "food",
+      yield: 10,
+      slots: 4,
+      settlements: [
+        { owner: "p4", kind: "capital" }
+      ],
+      note: "Capital must read as the dominant state."
+    },
+    stress: {
+      label: "Future stress",
+      terrain: "mountain",
+      resource: "stone",
+      yield: 6,
+      slots: 2,
+      settlements: [
+        { owner: "p1", kind: "colony" },
+        { owner: "p2", kind: "colony" },
+        { owner: "p3", kind: "colony" },
+        { owner: "p4", kind: "colony" }
+      ],
+      note: "Hypothetical crowded state if sharing expands later."
+    }
+  };
+
+  const options = [
+    {
+      id: "seats",
+      title: "Fixed player seats",
+      score: "Best long-term",
+      summary: "Each player owns one repeatable position on every hex. Empty seats can stay faint; occupied seats show settlement kind.",
+      pattern: "Borrowed from area-control readability: player color has a stable address, so the eye can scan P1/P2/P3/P4 presence fast.",
+      use: "Use when contested tiles may become common or when future rules might allow more than two colonies.",
+      cost: "Slight learning curve. Players must internalize that top-left is always P1, top-right is P2, and so on.",
+      verdict: "I would choose this if Hegemony is likely to grow beyond the current colony cap."
+    },
+    {
+      id: "docks",
+      title: "Colony docks",
+      score: "Best now",
+      summary: "Keep city/capital in the center. Put colony tokens into two fixed lower docks, because current rules allow at most two colonies.",
+      pattern: "This is the Catan lesson without changing your rules: not intersections, but reserved physical placement sites.",
+      use: "Use for the current prototype because it maps directly to the existing max-two-colonies rule.",
+      cost: "It is a rules-specific solution. If the tile later supports three or four coexisting settlements, the layout needs a redesign.",
+      verdict: "This is the most pragmatic immediate fix for the current code and rules."
+    },
+    {
+      id: "ring",
+      title: "Owner ring",
+      score: "Best scan",
+      summary: "Use colored edge segments to show which players are present, then keep the inside for economy and settlement state.",
+      pattern: "Common in digital strategy maps: border color says control or presence, center icon says the local object.",
+      use: "Use when zoomed-out readability matters more than showing the physical colony token itself.",
+      cost: "A ring alone does not clearly distinguish colony versus city, so it needs a central label or inspector.",
+      verdict: "Strong as a secondary ownership layer, weaker as the only settlement display."
+    },
+    {
+      id: "totem",
+      title: "Stacked totem",
+      score: "Most scalable",
+      summary: "Collapse settlements into a vertical stack of colored chips. Add a count chip when the stack gets too tall.",
+      pattern: "Risk, Eclipse, and large 4X boards often tolerate crowded spaces by stacking pieces and summarizing counts.",
+      use: "Use if Hegemony eventually allows many units, armies, buildings, or temporary markers on a tile.",
+      cost: "The top chip becomes too important. Hidden lower chips are easy to miss without hover or selection.",
+      verdict: "Good insurance for future crowding, but overkill for the current colony rule."
+    },
+    {
+      id: "inspector",
+      title: "Selection blow-up",
+      score: "Best detail",
+      summary: "The map shows only the summary. Selecting a tile opens a nearby tile card with occupants, slots, buildings, and income math.",
+      pattern: "Digital Civilization-style maps do this constantly: map first, panel for exact state.",
+      use: "Use no matter which map option wins, because exact buildings and population do not belong inside a tiny hex.",
+      cost: "It cannot be the only solution because players still need to read contested ownership before selecting.",
+      verdict: "Mandatory support layer, not a full map grammar by itself."
+    },
+    {
+      id: "slots",
+      title: "Printed slot sockets",
+      score: "Best capacity",
+      summary: "Draw building slots as empty sockets on the hex edge. Filled sockets can later become tiny building glyphs.",
+      pattern: "Worker-placement boards and city-building boards make capacity physical instead of textual.",
+      use: "Use if building capacity becomes a central strategic read on the map.",
+      cost: "Slots compete with colonies for interior space, especially on small screens.",
+      verdict: "Use as a small right-edge capacity strip, not as the whole tile layout."
+    }
+  ];
+
+  let activeScenario = "shared";
+
+  function hexPoints(radius = 54) {
+    return Array.from({ length: 6 }, (_, index) => {
+      const angle = (Math.PI / 180) * (60 * index - 30);
+      return {
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius
+      };
+    });
+  }
+
+  function pointString(points) {
+    return points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+  }
+
+  function baseDefs(id, scenario) {
+    const terrain = terrainVisuals[scenario.terrain];
+    return `
+      <defs>
+        <clipPath id="clip-${id}">
+          <polygon points="${pointString(hexPoints())}" />
+        </clipPath>
+        <linearGradient id="terrain-${id}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="${terrain.base}" />
+          <stop offset="1" stop-color="${terrain.shade}" />
+        </linearGradient>
+        <pattern id="grain-${id}" width="14" height="14" patternUnits="userSpaceOnUse">
+          <path d="M0 10 C4 3 8 17 14 5" fill="none" stroke="rgba(255,248,231,0.18)" stroke-width="1" />
+          <circle cx="4" cy="5" r="1.1" fill="rgba(24,18,16,0.18)" />
+        </pattern>
+      </defs>
+    `;
+  }
+
+  function terrainHex(id, scenario) {
+    const points = pointString(hexPoints());
+    return `
+      <g>
+        <polygon points="${points}" fill="url(#terrain-${id})" stroke="rgba(24,18,16,0.55)" stroke-width="2.2" />
+        <polygon points="${points}" fill="url(#grain-${id})" opacity="0.9" clip-path="url(#clip-${id})" />
+        ${terrainMarks(scenario)}
+      </g>
+    `;
+  }
+
+  function terrainMarks(scenario) {
+    if (scenario.terrain === "forest") {
+      return `
+        <g opacity="0.24" fill="#181210">
+          <path d="M-28,2 l10,-24 l10,24 z" />
+          <path d="M-2,14 l13,-32 l13,32 z" />
+          <path d="M24,-2 l9,-22 l9,22 z" />
+        </g>
+      `;
+    }
+    if (scenario.terrain === "hill") {
+      return `
+        <g opacity="0.24" fill="none" stroke="#181210" stroke-width="5" stroke-linecap="round">
+          <path d="M-38,18 C-20,-12 -6,4 10,-18 C22,-34 36,-8 43,11" />
+          <path d="M-30,32 C-12,12 9,22 30,2" />
+        </g>
+      `;
+    }
+    if (scenario.terrain === "plains") {
+      return `
+        <g opacity="0.2" fill="none" stroke="#181210" stroke-width="2">
+          <path d="M-42,-18 H42" />
+          <path d="M-48,-2 H48" />
+          <path d="M-38,14 H38" />
+          <path d="M-24,30 H24" />
+        </g>
+      `;
+    }
+    return `
+      <g opacity="0.22" fill="#181210">
+        <path d="M-38,26 L-20,-18 L-6,12 L8,-30 L38,26 Z" />
+      </g>
+    `;
+  }
+
+  function economyPlate(scenario, x = -38, y = -62) {
+    const resource = resourceVisuals[scenario.resource];
+    return `
+      <g>
+        <rect x="${x}" y="${y}" width="76" height="24" rx="5" fill="#181210" stroke="${resource.color}" stroke-width="1.4" />
+        <circle cx="${x + 14}" cy="${y + 12}" r="8" fill="${resource.color}" />
+        <text x="${x + 14}" y="${y + 15.2}" text-anchor="middle" fill="#fff8e7" font-family="Copperplate, Georgia, serif" font-size="8" font-weight="700">${resource.label}</text>
+        <text x="${x + 29}" y="${y + 15.6}" fill="#fff8e7" font-family="Copperplate, Georgia, serif" font-size="11" font-weight="700">${scenario.yield}</text>
+        <g transform="translate(${x + 45} ${y + 7})">${slotPips(scenario.slots, 0, 0, 4, 5)}</g>
+      </g>
+    `;
+  }
+
+  function slotPips(count, x, y, max = 4, gap = 6) {
+    return Array.from({ length: max }, (_, index) => {
+      const fill = index < count ? "#f4e6c8" : "rgba(244,230,200,0.18)";
+      const stroke = index < count ? "rgba(244,230,200,0.7)" : "rgba(244,230,200,0.26)";
+      return `<rect x="${x + index * gap}" y="${y}" width="4" height="10" rx="1.2" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
+    }).join("");
+  }
+
+  function settlementToken(settlement, x, y, size = 22, labelOverride = "") {
+    const owner = players[settlement.owner];
+    const isColony = settlement.kind === "colony";
+    const label = labelOverride || (settlement.kind === "capital" ? "CAP" : settlement.kind === "city" ? "CTY" : "COL");
+    if (isColony) {
+      return `
+        <g transform="translate(${x} ${y})">
+          <rect x="${-size / 2}" y="${-size / 2}" width="${size}" height="${size}" rx="5" fill="#181210" stroke="${owner.color}" stroke-width="3" />
+          <rect x="${-size / 2 + 3}" y="${-size / 2 + 3}" width="${size - 6}" height="${size - 6}" rx="3" fill="${owner.color}" opacity="0.22" />
+          <text y="3.8" text-anchor="middle" fill="#fff8e7" font-family="Copperplate, Georgia, serif" font-size="${size < 19 ? 6 : 7}" font-weight="700">${label}</text>
+        </g>
+      `;
+    }
+    return `
+      <g transform="translate(${x} ${y})">
+        <circle r="${size / 2}" fill="#181210" stroke="${owner.color}" stroke-width="3" />
+        <circle r="${size / 2 - 5}" fill="${owner.color}" opacity="0.18" />
+        <path d="M-7,5 L0,-8 L7,5 Z" fill="#fff8e7" opacity="0.86" />
+        <text y="${size / 2 - 3}" text-anchor="middle" fill="#fff8e7" font-family="Copperplate, Georgia, serif" font-size="${settlement.kind === "capital" ? 5.8 : 6.4}" font-weight="700">${label}</text>
+      </g>
+    `;
+  }
+
+  function presentSettlement(scenario, owner) {
+    return scenario.settlements.find((settlement) => settlement.owner === owner);
+  }
+
+  function svgShell(id, scenario, body, viewBox = "-76 -76 152 152") {
+    return `
+      <svg viewBox="${viewBox}" role="img" aria-label="${scenario.label}: ${scenario.note}">
+        ${baseDefs(id, scenario)}
+        ${body}
+      </svg>
+    `;
+  }
+
+  function seatsOccupancy(scenario) {
+    const positions = {
+      p1: { x: -31, y: -24 },
+      p2: { x: 31, y: -24 },
+      p3: { x: -31, y: 29 },
+      p4: { x: 31, y: 29 }
+    };
+    const center = scenario.settlements.find((settlement) => settlement.kind !== "colony");
+    const seats = Object.entries(positions).map(([ownerId, pos]) => {
+      const settlement = presentSettlement(scenario, ownerId);
+      const player = players[ownerId];
+      if (settlement && settlement.kind === "colony") {
+        return settlementToken(settlement, pos.x, pos.y, 21, player.label);
+      }
+      return `
+        <g opacity="${settlement ? 1 : 0.2}">
+          <circle cx="${pos.x}" cy="${pos.y}" r="10.5" fill="#181210" stroke="${player.color}" stroke-width="2" />
+          <text x="${pos.x}" y="${pos.y + 3.2}" text-anchor="middle" fill="#fff8e7" font-family="Copperplate, Georgia, serif" font-size="6.4" font-weight="700">${player.label}</text>
+        </g>
+      `;
+    }).join("");
+    const centerToken = center ? settlementToken(center, 0, 6, center.kind === "capital" ? 38 : 34) : "";
+    return `${seats}${centerToken}`;
+  }
+
+  function renderSeats(id, scenario) {
+    return svgShell(id, scenario, `
+      ${terrainHex(id, scenario)}
+      ${economyPlate(scenario)}
+      ${seatsOccupancy(scenario)}
+    `);
+  }
+
+  function dockOccupancy(scenario) {
+    const city = scenario.settlements.find((settlement) => settlement.kind !== "colony");
+    const colonies = scenario.settlements.filter((settlement) => settlement.kind === "colony");
+    const shownColonies = colonies.slice(0, 2);
+    const overflow = colonies.length > 2 ? colonies.length - 2 : 0;
+    const colonyTokens = shownColonies.map((settlement, index) => {
+      const x = index === 0 ? -24 : 24;
+      return `
+        <g>
+          <path d="M${x - 17},36 C${x - 12},51 ${x + 12},51 ${x + 17},36" fill="#181210" opacity="0.28" />
+          ${settlementToken(settlement, x, 37, 24, players[settlement.owner].label)}
+        </g>
+      `;
+    }).join("");
+    const overflowToken = overflow ? `
+      <g transform="translate(0 37)">
+        <circle r="10" fill="#181210" stroke="#f4e6c8" stroke-width="2" />
+        <text y="3.6" text-anchor="middle" fill="#fff8e7" font-family="Copperplate, Georgia, serif" font-size="8" font-weight="700">+${overflow}</text>
+      </g>
+    ` : "";
+    return `
+      <path d="M-40,28 C-24,48 24,48 40,28" fill="none" stroke="rgba(24,18,16,0.35)" stroke-width="2" stroke-dasharray="5 4" />
+      ${city ? settlementToken(city, 0, 8, city.kind === "capital" ? 40 : 34) : ""}
+      ${colonyTokens}
+      ${overflowToken}
+    `;
+  }
+
+  function renderDocks(id, scenario) {
+    return svgShell(id, scenario, `
+      ${terrainHex(id, scenario)}
+      ${economyPlate(scenario)}
+      ${dockOccupancy(scenario)}
+    `);
+  }
+
+  function renderRing(id, scenario) {
+    const points = hexPoints(56);
+    const edgeSegments = scenario.settlements.map((settlement, index) => {
+      const start = points[index % points.length];
+      const end = points[(index + 1) % points.length];
+      return `<line x1="${start.x.toFixed(1)}" y1="${start.y.toFixed(1)}" x2="${end.x.toFixed(1)}" y2="${end.y.toFixed(1)}" stroke="${players[settlement.owner].color}" stroke-width="7" stroke-linecap="round" />`;
+    }).join("");
+    const city = scenario.settlements.find((settlement) => settlement.kind !== "colony");
+    const colonyCount = scenario.settlements.filter((settlement) => settlement.kind === "colony").length;
+    const centerState = city
+      ? settlementToken(city, 0, 9, city.kind === "capital" ? 36 : 32)
+      : `
+        <g transform="translate(0 14)">
+          <rect x="-24" y="-11" width="48" height="22" rx="5" fill="#181210" stroke="rgba(244,230,200,0.55)" />
+          <text y="4" text-anchor="middle" fill="#fff8e7" font-family="Copperplate, Georgia, serif" font-size="8" font-weight="700">${colonyCount} COL</text>
+        </g>
+      `;
+    return svgShell(id, scenario, `
+      ${edgeSegments}
+      ${terrainHex(id, scenario)}
+      ${economyPlate(scenario)}
+      ${centerState}
+    `);
+  }
+
+  function renderTotem(id, scenario) {
+    const city = scenario.settlements.find((settlement) => settlement.kind !== "colony");
+    const settlements = city ? [city] : scenario.settlements;
+    const stack = settlements.slice(0, 3).map((settlement, index) => {
+      const y = -2 + index * 14;
+      const x = index * 4 - 4;
+      return settlementToken(settlement, x, y, settlement.kind === "colony" ? 24 : 32, players[settlement.owner].label);
+    }).join("");
+    const overflow = settlements.length > 3 ? `
+      <g transform="translate(26 35)">
+        <circle r="10" fill="#181210" stroke="#f4e6c8" stroke-width="2" />
+        <text y="3.6" text-anchor="middle" fill="#fff8e7" font-family="Copperplate, Georgia, serif" font-size="8" font-weight="700">+${settlements.length - 3}</text>
+      </g>
+    ` : "";
+    return svgShell(id, scenario, `
+      ${terrainHex(id, scenario)}
+      ${economyPlate(scenario)}
+      <g filter="drop-shadow(0 8px 12px rgba(24,18,16,0.35))">${stack}${overflow}</g>
+    `);
+  }
+
+  function renderSlots(id, scenario) {
+    const city = scenario.settlements.find((settlement) => settlement.kind !== "colony");
+    const colonies = scenario.settlements.filter((settlement) => settlement.kind === "colony").slice(0, 2);
+    const slots = Array.from({ length: 4 }, (_, index) => {
+      const active = index < scenario.slots;
+      return `
+        <g transform="translate(45 ${-20 + index * 14})" opacity="${active ? 1 : 0.26}">
+          <rect x="-7" y="-5" width="14" height="10" rx="2" fill="${active ? "#181210" : "transparent"}" stroke="#fff8e7" stroke-width="1.2" />
+          ${active ? `<rect x="-3" y="-2" width="6" height="4" rx="1" fill="#d98a35" />` : ""}
+        </g>
+      `;
+    }).join("");
+    const colonyTokens = colonies.map((settlement, index) => settlementToken(settlement, index === 0 ? -22 : 16, 35, 22, players[settlement.owner].label)).join("");
+    return svgShell(id, scenario, `
+      ${terrainHex(id, scenario)}
+      ${economyPlate(scenario, -45, -62)}
+      ${slots}
+      ${city ? settlementToken(city, -6, 8, city.kind === "capital" ? 38 : 32) : colonyTokens}
+    `);
+  }
+
+  function renderInspector(id, scenario) {
+    const mini = svgShell(`${id}-mini`, scenario, `
+      ${terrainHex(`${id}-mini`, scenario)}
+      ${economyPlate(scenario, -36, -62)}
+      ${dockOccupancy(scenario)}
+    `);
+    const rows = scenario.settlements.map((settlement) => `
+      <div class="sheet-row">
+        <i style="--player:${players[settlement.owner].color}"></i>
+        <span><b>${players[settlement.owner].label}</b> ${settlement.kind}</span>
+        <em>${settlement.kind === "colony" ? "split" : "build"}</em>
+      </div>
+    `).join("");
+    return `
+      <div class="inspector-demo">
+        ${mini}
+        <div class="side-sheet">
+          <header>
+            <h3>${scenario.terrain} tile</h3>
+            <small>${scenario.yield} ${resourceVisuals[scenario.resource].name} / ${scenario.slots} slots</small>
+          </header>
+          <div class="sheet-list">
+            ${rows}
+            <div class="sheet-row">
+              <i style="--player:${resourceVisuals[scenario.resource].color}"></i>
+              <span><b>Income</b> ${scenario.note}</span>
+              <em>panel</em>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderVisual(option, scenario) {
+    const id = `${option.id}-${activeScenario}`;
+    if (option.id === "seats") return renderSeats(id, scenario);
+    if (option.id === "docks") return renderDocks(id, scenario);
+    if (option.id === "ring") return renderRing(id, scenario);
+    if (option.id === "totem") return renderTotem(id, scenario);
+    if (option.id === "inspector") return renderInspector(id, scenario);
+    if (option.id === "slots") return renderSlots(id, scenario);
+    return renderDocks(id, scenario);
+  }
+
+  function renderHero() {
+    const scenario = scenarios.stress;
+    document.getElementById("hero-hex").innerHTML = svgShell("hero", scenario, `
+      ${terrainHex("hero", scenario)}
+      ${economyPlate(scenario, -41, -64)}
+      ${seatsOccupancy(scenario)}
+      <g transform="translate(0 63)">
+        <rect x="-58" y="-13" width="116" height="26" rx="7" fill="#181210" stroke="rgba(244,230,200,0.28)" />
+        <text y="4" text-anchor="middle" fill="#f4e6c8" font-family="Copperplate, Georgia, serif" font-size="7.5" font-weight="700">TERRAIN + YIELD + SLOTS + OWNERS</text>
+      </g>
+    `, "-86 -82 172 164");
+  }
+
+  function renderTabs() {
+    const tabs = document.getElementById("scenario-tabs");
+    tabs.innerHTML = Object.entries(scenarios).map(([key, scenario]) => `
+      <button class="tab" type="button" data-scenario="${key}" aria-pressed="${activeScenario === key}">
+        ${scenario.label}
+      </button>
+    `).join("");
+    tabs.querySelectorAll("button").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeScenario = button.dataset.scenario;
+        renderTabs();
+        renderOptions();
+      });
+    });
+  }
+
+  function renderOptions() {
+    const scenario = scenarios[activeScenario];
+    const grid = document.getElementById("options-grid");
+    grid.innerHTML = options.map((option, index) => `
+      <article class="option">
+        <header class="option-head">
+          <h2><span>${String(index + 1).padStart(2, "0")}</span> ${option.title}</h2>
+          <span class="score">${option.score}</span>
+        </header>
+        <div class="option-body">
+          <div class="visual">${renderVisual(option, scenario)}</div>
+          <div class="copy">
+            <p>${option.summary}</p>
+            <dl>
+              <div>
+                <dt>Game pattern</dt>
+                <dd>${option.pattern}</dd>
+              </div>
+              <div>
+                <dt>Use when</dt>
+                <dd>${option.use}</dd>
+              </div>
+              <div>
+                <dt>Tradeoff</dt>
+                <dd>${option.cost}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+        <p class="verdict"><b>Verdict:</b> ${option.verdict}</p>
+      </article>
+    `).join("");
+  }
+
+  renderHero();
+  renderTabs();
+  renderOptions();
+</script>
+</body>
+</html>
