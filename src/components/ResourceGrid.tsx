@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import type { Resource, Resources } from "../game/types";
 import type { IncomeContribution } from "../game/rules";
 import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../ui/formatters";
-import { AtlasIcon } from "./Sprites";
+import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
+import { ResourceIcon } from "./Sprites";
 
 type FlashDirection = "increase" | "decrease";
-
-const RESOURCE_ORDER: Resource[] = ["wood", "stone", "gold", "food", "influence", "unrest"];
 
 export function ResourceGrid({
   resources,
@@ -78,10 +77,11 @@ export function ResourceGrid({
           <div
             className={`resourcePill resource-${resource}${flash ? ` resourceFlash-${flash}` : ""}`}
             key={resource}
+            style={resourceCssVars(resource)}
             tabIndex={0}
             aria-label={`${RESOURCE_LABELS[resource]} ${formatNumber(resources[resource])}, projected ${formatSignedNumber(delta)} per turn`}
           >
-            <AtlasIcon icon={resource} className="resourceIcon" />
+            <ResourceIcon resource={resource} className="resourceIcon" />
             <strong>{formatNumber(resources[resource])}</strong>
             <span className={`resourceDelta ${deltaClass}`}>
               {formatSignedNumber(delta)}

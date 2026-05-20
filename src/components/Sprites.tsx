@@ -50,8 +50,21 @@ const UI_SPRITE_CLASSES: Record<UiAtlasKey, string> = {
   seasonMarker: "sprite-ui-season-marker"
 };
 
+const RESOURCE_MASK_CLASSES: Record<Resource, string> = {
+  wood: "resourceMask-wood",
+  stone: "resourceMask-stone",
+  gold: "resourceMask-gold",
+  food: "resourceMask-food",
+  influence: "resourceMask-influence",
+  unrest: "resourceMask-unrest"
+};
+
 export function AtlasIcon({ icon, className = "" }: { icon: IconAtlasKey; className?: string }) {
   return <span aria-hidden="true" className={`atlasSprite atlasIcon ${ICON_SPRITE_CLASSES[icon]} ${className}`} />;
+}
+
+export function ResourceIcon({ resource, className = "" }: { resource: Resource; className?: string }) {
+  return <span aria-hidden="true" className={`resourceMaskIcon ${RESOURCE_MASK_CLASSES[resource]} ${className}`} />;
 }
 
 export function TerrainSprite({ terrain, className = "" }: { terrain: Terrain; className?: string }) {

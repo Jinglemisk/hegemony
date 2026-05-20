@@ -101,6 +101,11 @@ button:focus-visible {
   --olive: #5e6e3a;
   --aegean: #1f6977;
   --stone: #8f8571;
+  --terrain-neutral: #d8c8a8;
+  --terrain-neutral-light: #eee1c4;
+  --terrain-neutral-shade: #9f8e70;
+  --terrain-neutral-line: #5f4a35;
+  --terrain-neutral-soft: rgb(216 200 168 / 17%);
   --accent: var(--clay);
   --accent-2: var(--aegean);
   --fg: #241910;
@@ -151,6 +156,8 @@ button:focus-visible {
 }
 
 .topbar {
+  position: relative;
+  z-index: 60;
   display: grid;
   grid-template-columns: minmax(190px, auto) minmax(360px, 1fr) auto;
   align-items: stretch;
@@ -273,6 +280,8 @@ button:focus-visible {
 }
 
 .workbench {
+  position: relative;
+  z-index: 10;
   display: grid;
   gap: 12px;
   grid-template-columns: minmax(280px, 350px) minmax(470px, 1fr) minmax(300px, 372px);
@@ -433,6 +442,50 @@ button:focus-visible {
   border-radius: 50%;
   background-image: var(--icon-atlas);
   background-size: 400% 400%;
+}
+
+.resourceMaskIcon {
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  background: var(--resource-color, currentColor);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.resourceMask-wood {
+  -webkit-mask-image: url("../assets/resource-icons/wood-mask.png");
+  mask-image: url("../assets/resource-icons/wood-mask.png");
+}
+
+.resourceMask-stone {
+  -webkit-mask-image: url("../assets/resource-icons/stone-mask.png");
+  mask-image: url("../assets/resource-icons/stone-mask.png");
+}
+
+.resourceMask-gold {
+  -webkit-mask-image: url("../assets/resource-icons/gold-mask.png");
+  mask-image: url("../assets/resource-icons/gold-mask.png");
+}
+
+.resourceMask-food {
+  -webkit-mask-image: url("../assets/resource-icons/food-mask.png");
+  mask-image: url("../assets/resource-icons/food-mask.png");
+}
+
+.resourceMask-influence {
+  -webkit-mask-image: url("../assets/resource-icons/influence-mask.png");
+  mask-image: url("../assets/resource-icons/influence-mask.png");
+}
+
+.resourceMask-unrest {
+  -webkit-mask-image: url("../assets/resource-icons/unrest-mask.png");
+  mask-image: url("../assets/resource-icons/unrest-mask.png");
 }
 
 .atlasTerrain {
@@ -618,7 +671,7 @@ button:focus-visible {
   border-radius: 8px;
   clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
   overflow: hidden;
-  filter: saturate(1.08) contrast(1.05);
+  filter: saturate(0.86) contrast(1.08);
 }
 
 .mapTerrain::after {
@@ -629,23 +682,18 @@ button:focus-visible {
   pointer-events: none;
   background: var(--terrain-tint);
   mix-blend-mode: color;
-  opacity: 0.58;
+  opacity: 0.6;
 }
 
-.terrainTint-mountain {
-  --terrain-tint: linear-gradient(180deg, #7d8582, #d4d1c3);
-}
-
-.terrainTint-hill {
-  --terrain-tint: linear-gradient(180deg, #8b5a2f, #d09955);
-}
-
-.terrainTint-forest {
-  --terrain-tint: linear-gradient(180deg, #586f3f, #c6bd70);
-}
-
+.terrainTint-mountain,
+.terrainTint-hill,
+.terrainTint-forest,
 .terrainTint-plains {
-  --terrain-tint: linear-gradient(180deg, #d69c35, #ffd970);
+  --terrain-tint: linear-gradient(
+    180deg,
+    var(--resource-color, var(--terrain-neutral-shade)),
+    color-mix(in srgb, var(--resource-color, var(--terrain-neutral)) 32%, var(--terrain-neutral-light))
+  );
 }
 
 .svgButton {
@@ -654,8 +702,8 @@ button:focus-visible {
 }
 
 .hexTile {
-  fill: rgb(24 18 16 / 4%);
-  stroke: var(--hex-line);
+  fill: var(--resource-soft, var(--terrain-neutral-soft));
+  stroke: var(--resource-line, rgb(95 74 53 / 30%));
   stroke-width: 1.6;
   transition:
     filter 160ms ease,
@@ -664,32 +712,32 @@ button:focus-visible {
 }
 
 .terrain-mountain {
-  fill: rgb(143 133 113 / 10%);
+  fill: var(--resource-soft, rgb(143 133 113 / 16%));
 }
 
 .terrain-hill {
-  fill: rgb(217 138 53 / 8%);
+  fill: var(--resource-soft, rgb(217 138 53 / 16%));
 }
 
 .terrain-forest {
-  fill: rgb(94 110 58 / 8%);
+  fill: var(--resource-soft, rgb(53 73 39 / 17%));
 }
 
 .terrain-plains {
-  fill: rgb(192 70 28 / 8%);
+  fill: var(--resource-soft, rgb(155 191 82 / 17%));
 }
 
 .svgButton:hover .hexTile,
 .svgButton:focus .hexTile {
-  stroke: var(--hex-line);
+  stroke: var(--resource-color, var(--terrain-neutral-line));
   stroke-width: 1.6;
-  filter: none;
+  filter: drop-shadow(0 0 5px var(--resource-shadow, rgb(95 74 53 / 24%)));
 }
 
 .hexTile.selected {
-  stroke: var(--hex-line);
+  stroke: var(--resource-color, var(--terrain-neutral-line));
   stroke-width: 1.6;
-  filter: none;
+  filter: drop-shadow(0 0 6px var(--resource-shadow, rgb(95 74 53 / 28%)));
 }
 
 .tilePlate {
@@ -698,13 +746,13 @@ button:focus-visible {
 
 .tilePlateBg {
   fill: var(--vase-black);
-  stroke: var(--ochre);
+  stroke: var(--resource-color, var(--ochre));
   stroke-width: 1;
   filter: drop-shadow(0 1.5px 2px rgb(24 18 16 / 45%));
 }
 
 .tilePlateDivider {
-  stroke: var(--ochre);
+  stroke: var(--resource-color, var(--ochre));
   stroke-width: 1;
   opacity: 0.68;
 }
@@ -718,7 +766,7 @@ button:focus-visible {
 }
 
 .tilePlateYield {
-  fill: #ffe7b0;
+  fill: var(--resource-color, #ffe7b0);
 }
 
 .tilePlateSlots {
@@ -831,7 +879,6 @@ button:focus-visible {
 
 .resourcePill {
   position: relative;
-  isolation: isolate;
   display: grid;
   grid-template-columns: 46px auto auto;
   align-items: center;
@@ -840,9 +887,18 @@ button:focus-visible {
   min-height: 58px;
   overflow: visible;
   padding: 7px 12px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--resource-line, var(--line));
   border-radius: 6px;
-  background: rgb(255 248 231 / 96%);
+  background:
+    linear-gradient(90deg, var(--resource-soft, transparent), transparent 42%),
+    rgb(255 248 231 / 96%);
+  box-shadow: 0 6px 14px var(--resource-shadow, rgb(36 25 16 / 10%));
+}
+
+.resourcePill:hover,
+.resourcePill:focus,
+.resourcePill:focus-visible {
+  z-index: 70;
 }
 
 .resourcePill::before {
@@ -852,7 +908,7 @@ button:focus-visible {
 .resourceIcon {
   width: 46px;
   height: 46px;
-  filter: drop-shadow(0 5px 8px rgb(36 25 16 / 22%));
+  filter: drop-shadow(0 4px 7px var(--resource-shadow, rgb(36 25 16 / 22%)));
 }
 
 .resourceLabel {
@@ -864,7 +920,7 @@ button:focus-visible {
 }
 
 .resourcePill strong {
-  color: var(--fg);
+  color: var(--resource-color, var(--fg));
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
@@ -936,19 +992,11 @@ button:focus-visible {
   }
 }
 
-.resource-influence strong {
-  color: var(--ochre);
-}
-
-.resource-unrest strong {
-  color: #f07a55;
-}
-
 .resourceTooltip {
   position: absolute;
   top: calc(100% + 10px);
   left: 0;
-  z-index: 30;
+  z-index: 80;
   display: grid;
   gap: 8px;
   width: min(340px, 78vw);
