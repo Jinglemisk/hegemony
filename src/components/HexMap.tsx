@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type WheelEvent as ReactWheelEvent
 } from "react";
@@ -25,11 +26,15 @@ type DragState = {
   startClientX: number;
   startClientY: number;
   startViewBox: ViewBox;
+  hasMoved: boolean;
+  startedOnTile: boolean;
 };
 
 const HEX_SIZE = 45;
 const TILE_ART_SIZE = 88;
 const COLONY_POSITIONS = [-14, 14];
+const DRAG_CLICK_THRESHOLD = 5;
+const TILE_CLICK_SUPPRESS_MS = 160;
 const BASE_VIEW_BOX: ViewBox = { x: -310, y: -270, width: 620, height: 540 };
 const WORLD_VIEW_BOX: ViewBox = {
   x: BASE_VIEW_BOX.x - BASE_VIEW_BOX.width * 0.05,
@@ -69,11 +74,14 @@ export function HexMap({
 }) {
   const [viewBox, setViewBox] = useState(BASE_VIEW_BOX);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const cameraLayerRef = useRef<SVGGElement | null>(null);
   const cameraViewBox = useRef<ViewBox>(BASE_VIEW_BOX);
   const dragState = useRef<DragState | null>(null);
   const pendingAnimationFrame = useRef<number | null>(null);
   const pendingViewBox = useRef<ViewBox | null>(null);
   const wheelCommitTimeout = useRef<number | null>(null);
+  const suppressNextTileClick = useRef(false);
+  const tileClickSuppressTimeout = useRef<number | null>(null);
   const zoomLevel = getZoomLevel(viewBox);
   const centers = useMemo(
     () =>
@@ -104,6 +112,10 @@ export function HexMap({
       if (wheelCommitTimeout.current !== null) {
         window.clearTimeout(wheelCommitTimeout.current);
       }
+
+      if (tileClickSuppressTimeout.current !== null) {
+        window.clearTimeout(tileClickSuppressTimeout.current);
+      }
     };
   }, []);
 
@@ -117,7 +129,7 @@ export function HexMap({
         pendingAnimationFrame.current = null;
 
         if (pendingViewBox.current) {
-          svgRef.current?.setAttribute("viewBox", viewBoxToString(pendingViewBox.current));
+          cameraLayerRef.current?.setAttribute("transform", cameraTransform(pendingViewBox.current));
           pendingViewBox.current = null;
         }
       });
@@ -138,6 +150,19 @@ export function HexMap({
     }
   };
 
+  const suppressTileClickOnce = () => {
+    suppressNextTileClick.current = true;
+
+    if (tileClickSuppressTimeout.current !== null) {
+      window.clearTimeout(tileClickSuppressTimeout.current);
+    }
+
+    tileClickSuppressTimeout.current = window.setTimeout(() => {
+      suppressNextTileClick.current = false;
+      tileClickSuppressTimeout.current = null;
+    }, TILE_CLICK_SUPPRESS_MS);
+  };
+
   const finishCameraInteraction = () => {
     svgRef.current?.classList.remove("isCameraMoving");
     clearWheelCommit();
@@ -145,7 +170,7 @@ export function HexMap({
   };
 
   const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (event.button !== 0 || isInteractiveMapTarget(event.target)) {
+    if (event.button !== 0 || isMapDragBlockedTarget(event.target)) {
       return;
     }
 
@@ -154,10 +179,12 @@ export function HexMap({
       pointerId: event.pointerId,
       startClientX: event.clientX,
       startClientY: event.clientY,
-      startViewBox: cameraViewBox.current
+      startViewBox: cameraViewBox.current,
+      hasMoved: false,
+      startedOnTile: isTileMapTarget(event.target)
     };
     event.currentTarget.setPointerCapture(event.pointerId);
-    event.currentTarget.classList.add("isDraggingSea", "isCameraMoving");
+    event.currentTarget.classList.add("isDraggingSea");
   };
 
   const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
@@ -168,8 +195,20 @@ export function HexMap({
     }
 
     const bounds = event.currentTarget.getBoundingClientRect();
-    const deltaX = ((event.clientX - drag.startClientX) / bounds.width) * drag.startViewBox.width;
-    const deltaY = ((event.clientY - drag.startClientY) / bounds.height) * drag.startViewBox.height;
+    const clientDeltaX = event.clientX - drag.startClientX;
+    const clientDeltaY = event.clientY - drag.startClientY;
+
+    if (!drag.hasMoved) {
+      if (Math.hypot(clientDeltaX, clientDeltaY) < DRAG_CLICK_THRESHOLD) {
+        return;
+      }
+
+      drag.hasMoved = true;
+      event.currentTarget.classList.add("isCameraMoving");
+    }
+
+    const deltaX = (clientDeltaX / bounds.width) * drag.startViewBox.width;
+    const deltaY = (clientDeltaY / bounds.height) * drag.startViewBox.height;
 
     applyCameraViewBox({
       ...drag.startViewBox,
@@ -179,7 +218,13 @@ export function HexMap({
   };
 
   const endDrag = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (dragState.current?.pointerId === event.pointerId) {
+    const drag = dragState.current;
+
+    if (drag?.pointerId === event.pointerId) {
+      if (drag.hasMoved && drag.startedOnTile) {
+        suppressTileClickOnce();
+      }
+
       dragState.current = null;
       event.currentTarget.classList.remove("isDraggingSea");
       finishCameraInteraction();
@@ -212,6 +257,16 @@ export function HexMap({
     commitCameraState();
   };
 
+  const handleTileClick = (tileId: string, event: ReactMouseEvent<SVGGElement>) => {
+    if (suppressNextTileClick.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    onTileAction(tileId);
+  };
+
   return (
     <>
       <div className="mapZoomControls" aria-label="Map zoom controls">
@@ -225,7 +280,7 @@ export function HexMap({
       <svg
         ref={svgRef}
         className="hexMap"
-        viewBox={viewBoxToString(viewBox)}
+        viewBox={viewBoxToString(BASE_VIEW_BOX)}
         role="img"
         aria-label="Hegemony island hex map"
         preserveAspectRatio="xMidYMid slice"
@@ -236,151 +291,159 @@ export function HexMap({
         onLostPointerCapture={endDrag}
         onWheel={handleWheel}
       >
-        <image
-          className="seaBackdrop"
-          href={SEA_BACKDROP_HREF}
-          x={SEA_IMAGE_VIEW_BOX.x}
-          y={SEA_IMAGE_VIEW_BOX.y}
-          width={SEA_IMAGE_VIEW_BOX.width}
-          height={SEA_IMAGE_VIEW_BOX.height}
-          preserveAspectRatio="xMidYMid slice"
-        />
-        <rect
-          className="seaDragPlane"
-          x={WORLD_VIEW_BOX.x}
-          y={WORLD_VIEW_BOX.y}
-          width={WORLD_VIEW_BOX.width}
-          height={WORLD_VIEW_BOX.height}
-        />
-        <g className="shorelineFoam" aria-hidden="true">
-          {shorelineEdges.map(({ x1, y1, x2, y2 }, index) => (
-            <path
-              className={index % 3 === 0 ? "shorelineFoamBreak" : "shorelineFoamLine"}
-              d={`M ${x1.toFixed(2)} ${y1.toFixed(2)} L ${x2.toFixed(2)} ${y2.toFixed(2)}`}
-              key={`${x1}-${y1}-${x2}-${y2}`}
-            />
-          ))}
-        </g>
-        {centers.map(({ tile, x, y }) => {
-          const city = tile.settlements.find((settlement) => settlement.kind !== "colony");
-          const colonies = tile.settlements.filter((settlement) => settlement.kind === "colony");
-          const shownColonies = colonies.slice(0, 2);
-          const overflowColonies = Math.max(0, colonies.length - shownColonies.length);
-          const isSelected = selectedTileId === tile.id;
-          const isPending = pendingTileId === tile.id;
-          const usedBuildingSlots = city?.buildings.length ?? 0;
-          const totalBuildingSlots = city ? settlementBuildingSlots(tile, city) : tile.buildingSlots;
-          return (
-            <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
-              <foreignObject
-                className="terrainObject"
-                height={TILE_ART_SIZE}
-                width={TILE_ART_SIZE}
-                x={-TILE_ART_SIZE / 2}
-                y={-TILE_ART_SIZE / 2}
-              >
-                <TerrainSprite terrain={tile.terrain} className="mapTerrain" />
-              </foreignObject>
-              <g
-                aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${tile.resource.amount} ${tile.resource.type}`}
-                className="svgButton"
-                onClick={() => onTileAction(tile.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    onTileAction(tile.id);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <polygon
-                  className={`hexTile terrain-${tile.terrain} ${isSelected ? "selected" : ""} ${isPending ? "pending" : ""}`}
-                  points={hexPoints(HEX_SIZE - 2)}
-                />
-              </g>
-              <g className="tileMetrics" aria-hidden="true">
-                <text className="tileMetric tileMetricYield" x={0} y={34}>
-                  +{tile.resource.amount}
-                </text>
-                <text className="tileMetric tileMetricCapacity" x={0} y={-28}>
-                  {usedBuildingSlots}/{totalBuildingSlots}
-                </text>
-              </g>
-              {city ? (
+        <g ref={cameraLayerRef} className="mapCameraLayer" transform={cameraTransform(viewBox)}>
+          <image
+            className="seaBackdrop"
+            href={SEA_BACKDROP_HREF}
+            x={SEA_IMAGE_VIEW_BOX.x}
+            y={SEA_IMAGE_VIEW_BOX.y}
+            width={SEA_IMAGE_VIEW_BOX.width}
+            height={SEA_IMAGE_VIEW_BOX.height}
+            preserveAspectRatio="xMidYMid slice"
+          />
+          <rect
+            className="seaDragPlane"
+            x={WORLD_VIEW_BOX.x}
+            y={WORLD_VIEW_BOX.y}
+            width={WORLD_VIEW_BOX.width}
+            height={WORLD_VIEW_BOX.height}
+          />
+          <g className="shorelineFoam" aria-hidden="true">
+            {shorelineEdges.map(({ x1, y1, x2, y2 }, index) => (
+              <path
+                className={index % 3 === 0 ? "shorelineFoamBreak" : "shorelineFoamLine"}
+                d={`M ${x1.toFixed(2)} ${y1.toFixed(2)} L ${x2.toFixed(2)} ${y2.toFixed(2)}`}
+                key={`${x1}-${y1}-${x2}-${y2}`}
+              />
+            ))}
+          </g>
+          {centers.map(({ tile, x, y }) => {
+            const city = tile.settlements.find((settlement) => settlement.kind !== "colony");
+            const colonies = tile.settlements.filter((settlement) => settlement.kind === "colony");
+            const shownColonies = colonies.slice(0, 2);
+            const overflowColonies = Math.max(0, colonies.length - shownColonies.length);
+            const isSelected = selectedTileId === tile.id;
+            const isPending = pendingTileId === tile.id;
+            const usedBuildingSlots = city?.buildings.length ?? 0;
+            const totalBuildingSlots = city ? settlementBuildingSlots(tile, city) : tile.buildingSlots;
+            return (
+              <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
                 <foreignObject
-                  className="settlementObject settlementGlyphObject cityObject"
-                  height={42}
-                  width={42}
-                  x={-21}
-                  y={-17}
+                  className="terrainObject"
+                  height={TILE_ART_SIZE}
+                  width={TILE_ART_SIZE}
+                  x={-TILE_ART_SIZE / 2}
+                  y={-TILE_ART_SIZE / 2}
                 >
-                  <div
-                    className={`settlementGlyph ${city.kind === "capital" ? "capitalGlyph" : "cityGlyph"}`}
-                    style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
-                  >
-                    <i />
-                  </div>
+                  <TerrainSprite terrain={tile.terrain} className="mapTerrain" />
                 </foreignObject>
-              ) : null}
-              {shownColonies.map((colony, index) => (
                 <g
-                  className="colonyGlyphDocked"
-                  transform={`translate(${COLONY_POSITIONS[index]} 4)`}
-                  key={`${colony.owner}-${index}`}
+                  aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${tile.resource.amount} ${tile.resource.type}`}
+                  className="svgButton"
+                  onClick={(event) => handleTileClick(tile.id, event)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onTileAction(tile.id);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
-                  <foreignObject className="settlementObject settlementGlyphObject colonyObject" height={32} width={32} x={-16} y={-16}>
+                  <polygon
+                    className={`hexTile terrain-${tile.terrain} ${isSelected ? "selected" : ""} ${isPending ? "pending" : ""}`}
+                    points={hexPoints(HEX_SIZE - 2)}
+                  />
+                </g>
+                <g className="tileMetrics" aria-hidden="true">
+                  <text className="tileMetric tileMetricYield" x={0} y={34}>
+                    +{tile.resource.amount}
+                  </text>
+                  <text className="tileMetric tileMetricCapacity" x={0} y={-28}>
+                    {usedBuildingSlots}/{totalBuildingSlots}
+                  </text>
+                </g>
+                {city ? (
+                  <foreignObject
+                    className="settlementObject settlementGlyphObject cityObject"
+                    height={42}
+                    width={42}
+                    x={-21}
+                    y={-17}
+                  >
                     <div
-                      className="settlementGlyph colonyGlyph"
-                      style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
+                      className={`settlementGlyph ${city.kind === "capital" ? "capitalGlyph" : "cityGlyph"}`}
+                      style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
                     >
                       <i />
                     </div>
                   </foreignObject>
-                </g>
-              ))}
-              {overflowColonies > 0 ? (
-                <g className="colonyOverflow" transform="translate(0 4)" aria-hidden="true">
-                  <circle r={9} />
-                  <text y={3.2}>+{overflowColonies}</text>
-                </g>
-              ) : null}
-            </g>
-          );
-        })}
-        {confirmation
-          ? centers
-              .filter(({ tile }) => tile.id === confirmation.tileId)
-              .map(({ tile, x, y }) => (
-                <g key={`confirm-${tile.id}`} transform={`translate(${x} ${y})`}>
-                  <foreignObject className="tileConfirmObject" height={34} width={152} x={-76} y={49}>
-                    <div className="tileConfirmPrompt" onClick={(event) => event.stopPropagation()}>
-                      <span>{confirmation.label}</span>
-                      <button
-                        aria-label={`Confirm ${confirmation.label}`}
-                        className="tileConfirmButton tileConfirmAccept"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          confirmation.onConfirm();
-                        }}
+                ) : null}
+                {shownColonies.map((colony, index) => (
+                  <g
+                    className="colonyGlyphDocked"
+                    transform={`translate(${COLONY_POSITIONS[index]} 4)`}
+                    key={`${colony.owner}-${index}`}
+                  >
+                    <foreignObject
+                      className="settlementObject settlementGlyphObject colonyObject"
+                      height={32}
+                      width={32}
+                      x={-16}
+                      y={-16}
+                    >
+                      <div
+                        className="settlementGlyph colonyGlyph"
+                        style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
                       >
-                        ✓
-                      </button>
-                      <button
-                        aria-label={`Cancel ${confirmation.label}`}
-                        className="tileConfirmButton tileConfirmCancel"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          confirmation.onCancel();
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </foreignObject>
-                </g>
-              ))
-          : null}
+                        <i />
+                      </div>
+                    </foreignObject>
+                  </g>
+                ))}
+                {overflowColonies > 0 ? (
+                  <g className="colonyOverflow" transform="translate(0 4)" aria-hidden="true">
+                    <circle r={9} />
+                    <text y={3.2}>+{overflowColonies}</text>
+                  </g>
+                ) : null}
+              </g>
+            );
+          })}
+          {confirmation
+            ? centers
+                .filter(({ tile }) => tile.id === confirmation.tileId)
+                .map(({ tile, x, y }) => (
+                  <g key={`confirm-${tile.id}`} transform={`translate(${x} ${y})`}>
+                    <foreignObject className="tileConfirmObject" height={34} width={152} x={-76} y={49}>
+                      <div className="tileConfirmPrompt" onClick={(event) => event.stopPropagation()}>
+                        <span>{confirmation.label}</span>
+                        <button
+                          aria-label={`Confirm ${confirmation.label}`}
+                          className="tileConfirmButton tileConfirmAccept"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            confirmation.onConfirm();
+                          }}
+                        >
+                          ✓
+                        </button>
+                        <button
+                          aria-label={`Cancel ${confirmation.label}`}
+                          className="tileConfirmButton tileConfirmCancel"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            confirmation.onCancel();
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </foreignObject>
+                  </g>
+                ))
+            : null}
+        </g>
       </svg>
     </>
   );
@@ -399,6 +462,14 @@ function viewBoxToString(viewBox: ViewBox) {
 
 function getZoomLevel(viewBox: ViewBox) {
   return BASE_VIEW_BOX.width / viewBox.width;
+}
+
+function cameraTransform(viewBox: ViewBox) {
+  const scale = BASE_VIEW_BOX.width / viewBox.width;
+  const translateX = BASE_VIEW_BOX.x - viewBox.x * scale;
+  const translateY = BASE_VIEW_BOX.y - viewBox.y * scale;
+
+  return `matrix(${scale} 0 0 ${scale} ${translateX} ${translateY})`;
 }
 
 function zoomViewBox(
@@ -450,8 +521,12 @@ function viewBoxesEqual(a: ViewBox, b: ViewBox) {
   );
 }
 
-function isInteractiveMapTarget(target: EventTarget) {
-  return target instanceof Element && Boolean(target.closest(".svgButton, .tileConfirmPrompt, button"));
+function isMapDragBlockedTarget(target: EventTarget) {
+  return target instanceof Element && Boolean(target.closest(".tileConfirmPrompt, button"));
+}
+
+function isTileMapTarget(target: EventTarget) {
+  return target instanceof Element && Boolean(target.closest(".svgButton"));
 }
 
 function getShorelineEdges(
