@@ -1353,6 +1353,76 @@ button:focus-visible {
   font-weight: 400;
 }
 
+.growPopPanel {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgb(255 248 231 / 48%);
+}
+
+.growPopHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.growPopHeader strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.growPopHeader span {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.growPopButtons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.growPopButtons button {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-height: 58px;
+  padding: 7px;
+  text-align: left;
+}
+
+.growPopButtons button > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.growPopButtons strong {
+  overflow: hidden;
+  color: var(--fg);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.growPopButtons span span {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 400;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
 .settlementList b {
   color: var(--fg);
   font-weight: 700;

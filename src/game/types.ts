@@ -30,13 +30,31 @@ export interface Settlement {
 
 export type BuildingEffect =
   | {
-      type: "addPop";
-      pop: PopType;
+      type: "freemanGoldBonus";
       amount: number;
+      supportedPops: number;
+    }
+  | {
+      type: "citizenInfluenceBonus";
+      amount: number;
+      supportedPops: number;
+    }
+  | {
+      type: "slavePrimaryResourceBonus";
+      amount: number;
+      supportedPops: number;
     }
   | {
       type: "income";
       resource: Resource;
+      amount: number;
+    }
+  | {
+      type: "happiness";
+      amount: number;
+    }
+  | {
+      type: "growPopFoodDiscount";
       amount: number;
     };
 
@@ -67,6 +85,7 @@ export interface PlayerState {
   resources: Resources;
   settlements: string[];
   collectedThisTurn: boolean;
+  grownSettlementsThisTurn: string[];
 }
 
 export interface PopulationTransfer {
