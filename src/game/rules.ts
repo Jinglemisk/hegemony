@@ -5,6 +5,7 @@ import type {
   HegemonyState,
   HexTile,
   PlayerId,
+  PopType,
   Pops,
   Resource,
   Resources,
@@ -26,16 +27,17 @@ export type IncomeContribution = {
   detail: string;
 };
 
-const STARTING_CAPITAL_POPS: Pops = {
-  citizens: 1,
-  freemen: 2,
-  slaves: 3
-};
+export const POP_TYPES: PopType[] = ["citizens", "freemen", "slaves"];
 
-const STARTING_COLONY_POPS: Pops = {
+export const EMPTY_POPS: Pops = {
   citizens: 0,
   freemen: 0,
-  slaves: 3
+  slaves: 0
+};
+
+export const PLACEMENT_POP_COUNTS = {
+  capital: 3,
+  colony: 1
 };
 
 export function createInitialState(): HegemonyState {
@@ -56,6 +58,7 @@ export function createInitialState(): HegemonyState {
       }),
       {} as HegemonyState["players"]
     ),
+    transfers: [],
     season: 1,
     log: [{ id: "start", season: 1, message: "The first season begins." }]
   };
@@ -69,11 +72,16 @@ export function toPlayerId(value: string | null | undefined): PlayerId {
   return PLAYER_IDS.includes(value as PlayerId) ? (value as PlayerId) : "0";
 }
 
-export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: string) {
+export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops) {
   const tile = getTile(G, tileId);
   const player = G.players[playerID];
 
-  if (!tile || player.settlements.length > 0 || tile.settlements.length > 0) {
+  if (
+    !tile ||
+    player.settlements.length > 0 ||
+    tile.settlements.length > 0 ||
+    !isExactPopSelection(pops, PLACEMENT_POP_COUNTS.capital)
+  ) {
     return INVALID_MOVE;
   }
 
@@ -85,36 +93,46 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
     owner: playerID,
     kind: "capital",
     buildings: [],
-    pops: { ...STARTING_CAPITAL_POPS }
+    pops: clonePops(pops)
   });
   player.settlements.push(tile.id);
-  addLog(G, `${getPlayerName(G, playerID)} founded a capital on ${tile.terrain}.`);
+  addLog(G, `${getPlayerName(G, playerID)} founded a capital on ${tile.terrain} with ${formatPops(pops)}.`);
 }
 
-export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string) {
+export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops) {
   const tile = getTile(G, tileId);
   const player = G.players[playerID];
 
-  if (!tile || player.settlements.length !== 1 || !canPlaceColonyOnTile(G, playerID, tile).can) {
+  if (
+    !tile ||
+    player.settlements.length !== 1 ||
+    !canPlaceColonyOnTile(G, playerID, tile).can ||
+    !isExactPopSelection(pops, PLACEMENT_POP_COUNTS.colony)
+  ) {
     return INVALID_MOVE;
   }
 
-  addColony(G, playerID, tile);
+  addColony(G, playerID, tile, pops);
 }
 
-export function foundColony(G: HegemonyState, playerID: PlayerId, tileId: string) {
+export function foundColony(G: HegemonyState, playerID: PlayerId, tileId: string, sourceTileId: string, pop: PopType) {
   const status = getFoundColonyStatus(G, playerID, tileId);
   const tile = getTile(G, tileId);
+  const foundingPops = { ...EMPTY_POPS, [pop]: 1 };
 
-  if (!tile || !status.can) {
+  if (!tile || !status.can || schedulePopulationTransfer(G, playerID, sourceTileId, tileId, foundingPops, false) === INVALID_MOVE) {
     return INVALID_MOVE;
   }
 
   payCost(G.players[playerID].resources, ACTION_COSTS.foundColony);
-  addColony(G, playerID, tile);
+  addColony(G, playerID, tile, EMPTY_POPS);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} sent ${formatPops(foundingPops)} to seed the new colony on ${tile.terrain}.`
+  );
 }
 
-export function upgradeColonyToCity(G: HegemonyState, playerID: PlayerId, tileId: string) {
+export function upgradeColonyToCity(G: HegemonyState, playerID: PlayerId, tileId: string, pops?: Pops) {
   const status = getUpgradeColonyToCityStatus(G, playerID, tileId);
   const tile = getTile(G, tileId);
   const settlement = tile?.settlements.find(
@@ -125,12 +143,17 @@ export function upgradeColonyToCity(G: HegemonyState, playerID: PlayerId, tileId
     return INVALID_MOVE;
   }
 
+  if (pops && !isExactPopSelection(pops, totalPops(settlement.pops))) {
+    return INVALID_MOVE;
+  }
+
   payCost(G.players[playerID].resources, ACTION_COSTS.upgradeColonyToCity);
   const displacedPlayers = tile.settlements
     .filter((candidate) => candidate.owner !== playerID && candidate.kind === "colony")
     .map((candidate) => candidate.owner);
   tile.settlements = tile.settlements.filter((candidate) => candidate.owner === playerID);
   settlement.kind = "city";
+  settlement.pops = pops ? clonePops(pops) : settlement.pops;
 
   for (const displacedPlayer of displacedPlayers) {
     G.players[displacedPlayer].settlements = G.players[displacedPlayer].settlements.filter((id) => id !== tile.id);
@@ -143,15 +166,15 @@ export function upgradeColonyToCity(G: HegemonyState, playerID: PlayerId, tileId
   addLog(G, `${getPlayerName(G, playerID)} upgraded a colony to a city on ${tile.terrain}.${displacementText}`);
 }
 
-function addColony(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
+function addColony(G: HegemonyState, playerID: PlayerId, tile: HexTile, pops: Pops) {
   tile.settlements.push({
     owner: playerID,
     kind: "colony",
     buildings: [],
-    pops: { ...STARTING_COLONY_POPS }
+    pops: clonePops(pops)
   });
   G.players[playerID].settlements.push(tile.id);
-  addLog(G, `${getPlayerName(G, playerID)} founded a colony on ${tile.terrain}.`);
+  addLog(G, `${getPlayerName(G, playerID)} founded a colony on ${tile.terrain} with ${formatPops(pops)}.`);
 }
 
 export function collectIncome(G: HegemonyState, playerID: PlayerId, mode: "manual" | "automatic" = "manual") {
@@ -193,6 +216,49 @@ export function buildBuilding(G: HegemonyState, playerID: PlayerId, tileId: stri
   settlement.buildings.push(building.id);
   applyBuildingEffect(settlement, building.id);
   addLog(G, `${getPlayerName(G, playerID)} built ${building.name}.`);
+}
+
+export function movePops(G: HegemonyState, playerID: PlayerId, sourceTileId: string, targetTileId: string, pops: Pops) {
+  const status = getMovePopsStatus(G, playerID, sourceTileId, targetTileId, pops);
+
+  if (!status.can) {
+    return INVALID_MOVE;
+  }
+
+  return schedulePopulationTransfer(G, playerID, sourceTileId, targetTileId, pops);
+}
+
+export function resolveArrivingPops(G: HegemonyState, playerID: PlayerId) {
+  const arrivals = G.transfers.filter((transfer) => transfer.owner === playerID);
+
+  if (arrivals.length === 0) {
+    return;
+  }
+
+  G.transfers = G.transfers.filter((transfer) => transfer.owner !== playerID);
+
+  for (const transfer of arrivals) {
+    const target = getOwnedSettlement(G, transfer.toTileId, playerID);
+
+    if (target) {
+      addPops(target.pops, transfer.pops);
+      addLog(
+        G,
+        `${getPlayerName(G, playerID)}'s ${formatPops(transfer.pops)} arrived at ${formatTileLabel(G, transfer.toTileId)}.`
+      );
+      continue;
+    }
+
+    const source = getOwnedSettlement(G, transfer.fromTileId, playerID);
+
+    if (source) {
+      addPops(source.pops, transfer.pops);
+      addLog(
+        G,
+        `${getPlayerName(G, playerID)}'s ${formatPops(transfer.pops)} returned to ${formatTileLabel(G, transfer.fromTileId)}.`
+      );
+    }
+  }
 }
 
 export function resetTurnFlags(G: HegemonyState) {
@@ -280,9 +346,9 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
     });
     addIncomeContribution(contributions, income, {
       resource: "gold",
-      amount: settlement.pops.freemen * 4,
+      amount: settlement.pops.citizens * 2,
       source: settlementLabel,
-      detail: `${settlement.pops.freemen} freeman pops`
+      detail: `${settlement.pops.citizens} citizens`
     });
     addIncomeContribution(contributions, income, {
       resource: "food",
@@ -291,8 +357,14 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
       detail: `${settlement.pops.citizens} citizens upkeep`
     });
     addIncomeContribution(contributions, income, {
+      resource: "gold",
+      amount: settlement.pops.freemen * 5,
+      source: settlementLabel,
+      detail: `${settlement.pops.freemen} freeman pops`
+    });
+    addIncomeContribution(contributions, income, {
       resource: "food",
-      amount: settlement.pops.freemen * -2,
+      amount: settlement.pops.freemen * -1,
       source: settlementLabel,
       detail: `${settlement.pops.freemen} freeman pops upkeep`
     });
@@ -309,16 +381,16 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
       detail: `${settlement.pops.slaves} slave pops upkeep`
     });
     addIncomeContribution(contributions, income, {
-      resource: "unrest",
-      amount: settlement.pops.slaves / 3,
+      resource: "happiness",
+      amount: settlement.pops.slaves * -0.5,
       source: settlementLabel,
-      detail: `${settlement.pops.slaves} slave pops unrest`
+      detail: `${settlement.pops.slaves} slave pops pressure`
     });
     addIncomeContribution(contributions, income, {
-      resource: "unrest",
-      amount: settlementOverCapacity(settlement),
+      resource: "happiness",
+      amount: settlementOverCapacity(settlement) * -1,
       source: settlementLabel,
-      detail: "Over capacity"
+      detail: "Over capacity pressure"
     });
 
     applyIncomeBuildingEffects(contributions, income, settlement, settlementLabel);
@@ -326,10 +398,21 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
 
   if (income.food < 0) {
     addIncomeContribution(contributions, income, {
-      resource: "unrest",
-      amount: Math.abs(income.food),
+      resource: "happiness",
+      amount: income.food,
       source: "Food shortage",
-      detail: "Negative food income"
+      detail: "Negative food income pressure"
+    });
+  }
+
+  const foodStockpileHappiness = Math.floor(G.players[playerID].resources.food / 5);
+
+  if (foodStockpileHappiness > 0) {
+    addIncomeContribution(contributions, income, {
+      resource: "happiness",
+      amount: foodStockpileHappiness,
+      source: "Food stockpile",
+      detail: "Every 5 stored food improves happiness"
     });
   }
 
@@ -353,6 +436,10 @@ export function getFoundColonyStatus(G: HegemonyState, playerID: PlayerId, tileI
 
   if (!canAfford(G.players[playerID].resources, ACTION_COSTS.foundColony)) {
     status.reasons.push("Not enough resources.");
+  }
+
+  if (!playerHasMovablePop(G, playerID)) {
+    status.reasons.push("Move one pop from an existing settlement to found a new colony.");
   }
 
   status.can = status.reasons.length === 0;
@@ -386,6 +473,48 @@ export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerI
 
   if (!canAfford(G.players[playerID].resources, ACTION_COSTS.upgradeColonyToCity)) {
     status.reasons.push("Not enough resources.");
+  }
+
+  status.can = status.reasons.length === 0;
+  return status;
+}
+
+export function getMovePopsStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  sourceTileId: string,
+  targetTileId: string,
+  pops: Pops
+): ActionStatus {
+  const status: ActionStatus = {
+    can: false,
+    reasons: []
+  };
+  const sourceSettlement = getOwnedSettlement(G, sourceTileId, playerID);
+  const targetSettlement = getOwnedSettlement(G, targetTileId, playerID);
+
+  if (!sourceTileId) {
+    status.reasons.push("Choose a source settlement.");
+  } else if (!sourceSettlement) {
+    status.reasons.push("Source must be one of your settlements.");
+  }
+
+  if (!targetTileId) {
+    status.reasons.push("Choose a target settlement.");
+  } else if (!targetSettlement) {
+    status.reasons.push("Target must be one of your settlements.");
+  }
+
+  if (sourceTileId && targetTileId && sourceTileId === targetTileId) {
+    status.reasons.push("Source and target must be different.");
+  }
+
+  if (!isPositivePopSelection(pops)) {
+    status.reasons.push("Move at least one pop.");
+  }
+
+  if (sourceSettlement && !hasPops(sourceSettlement.pops, pops)) {
+    status.reasons.push("Source does not have those pops.");
   }
 
   status.can = status.reasons.length === 0;
@@ -519,6 +648,116 @@ function applyResourceDelta(resources: Resources, delta: Resources) {
   for (const [resource, amount] of Object.entries(delta)) {
     resources[resource as Resource] += amount;
   }
+}
+
+function schedulePopulationTransfer(
+  G: HegemonyState,
+  playerID: PlayerId,
+  sourceTileId: string,
+  targetTileId: string,
+  pops: Pops,
+  requireTarget = true
+) {
+  const sourceSettlement = getOwnedSettlement(G, sourceTileId, playerID);
+  const targetSettlement = getOwnedSettlement(G, targetTileId, playerID);
+
+  if (!sourceSettlement || (requireTarget && !targetSettlement) || !isPositivePopSelection(pops)) {
+    return INVALID_MOVE;
+  }
+
+  if (!hasPops(sourceSettlement.pops, pops)) {
+    return INVALID_MOVE;
+  }
+
+  subtractPops(sourceSettlement.pops, pops);
+  G.transfers.push({
+    id: `${G.season}-${G.log.length}-${sourceTileId}-${targetTileId}-${formatPops(pops)}`,
+    owner: playerID,
+    fromTileId: sourceTileId,
+    toTileId: targetTileId,
+    pops: clonePops(pops)
+  });
+
+  if (requireTarget) {
+    addLog(
+      G,
+      `${getPlayerName(G, playerID)} moved ${formatPops(pops)} from ${formatTileLabel(G, sourceTileId)} to ${formatTileLabel(G, targetTileId)}.`
+    );
+  }
+}
+
+function getOwnedSettlement(G: HegemonyState, tileId: string, playerID: PlayerId) {
+  const tile = getTile(G, tileId);
+
+  return tile?.settlements.find((settlement) => settlement.owner === playerID);
+}
+
+function playerHasMovablePop(G: HegemonyState, playerID: PlayerId) {
+  return G.players[playerID].settlements.some((tileId) => {
+    const settlement = getOwnedSettlement(G, tileId, playerID);
+
+    return settlement ? totalPops(settlement.pops) > 0 : false;
+  });
+}
+
+function isExactPopSelection(pops: Pops, requiredTotal: number) {
+  return isValidPopSelection(pops) && totalPops(pops) === requiredTotal;
+}
+
+function isPositivePopSelection(pops: Pops) {
+  return isValidPopSelection(pops) && totalPops(pops) > 0;
+}
+
+function isValidPopSelection(pops: Pops) {
+  return POP_TYPES.every((pop) => Number.isInteger(pops[pop]) && pops[pop] >= 0);
+}
+
+function hasPops(source: Pops, requested: Pops) {
+  return POP_TYPES.every((pop) => source[pop] >= requested[pop]);
+}
+
+function addPops(target: Pops, pops: Pops) {
+  for (const pop of POP_TYPES) {
+    target[pop] += pops[pop];
+  }
+}
+
+function subtractPops(target: Pops, pops: Pops) {
+  for (const pop of POP_TYPES) {
+    target[pop] -= pops[pop];
+  }
+}
+
+export function clonePops(pops: Pops): Pops {
+  return { citizens: pops.citizens, freemen: pops.freemen, slaves: pops.slaves };
+}
+
+export function formatPops(pops: Pops) {
+  const entries = POP_TYPES.filter((pop) => pops[pop] > 0);
+
+  if (entries.length === 0) {
+    return "no pops";
+  }
+
+  return entries.map((pop) => `${pops[pop]} ${formatPopName(pop, pops[pop])}`).join(", ");
+}
+
+function formatPopName(pop: PopType, amount: number) {
+  if (pop === "citizens") {
+    return amount === 1 ? "citizen" : "citizens";
+  }
+
+  if (pop === "freemen") {
+    return amount === 1 ? "freeman" : "freemen";
+  }
+
+  return amount === 1 ? "slave" : "slaves";
+}
+
+function formatTileLabel(G: HegemonyState, tileId: string) {
+  const tile = getTile(G, tileId);
+
+  return tile ? `${tile.terrain} ${tile.id}` : tileId;
 }
 
 function formatRuleResourceDelta(resources: Resources) {

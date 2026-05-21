@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import type { BuildingId, HegemonyState, PlayerId } from "./types";
+import type { BuildingId, HegemonyState, PlayerId, PopType, Pops } from "./types";
 import { PLAYER_IDS } from "./data";
 import {
   buildBuilding,
@@ -8,8 +8,10 @@ import {
   createInitialState,
   foundColony,
   INVALID_MOVE,
+  movePops,
   placeCapital,
   placeColony,
+  resolveArrivingPops,
   startNewSeason,
   upgradeColonyToCity
 } from "./rules";
@@ -28,12 +30,13 @@ export type HegemonyGame = {
 };
 
 export type GameMoves = {
-  placeCapital: (tileId: string) => void;
-  placeColony: (tileId: string) => void;
+  placeCapital: (tileId: string, pops: Pops) => void;
+  placeColony: (tileId: string, pops: Pops) => void;
   collectIncome: () => void;
-  foundColony: (tileId: string) => void;
-  upgradeColonyToCity: (tileId: string) => void;
+  foundColony: (tileId: string, sourceTileId: string, pop: PopType) => void;
+  upgradeColonyToCity: (tileId: string, pops?: Pops) => void;
   buildBuilding: (tileId: string, buildingId: BuildingId) => void;
+  movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
 };
 
 export type GameEvents = {
@@ -76,14 +79,14 @@ export function useHegemonyGame() {
 
 function createMoves(setGame: SetGame): GameMoves {
   return {
-    placeCapital: (tileId) => {
+    placeCapital: (tileId, pops) => {
       setGame((previous) => {
         if (previous.ctx.phase !== "setupCapital") {
           return previous;
         }
 
         const G = structuredClone(previous.G);
-        const result = placeCapital(G, previous.ctx.currentPlayer, tileId);
+        const result = placeCapital(G, previous.ctx.currentPlayer, tileId, pops);
 
         if (result === INVALID_MOVE) {
           return previous;
@@ -95,14 +98,14 @@ function createMoves(setGame: SetGame): GameMoves {
         };
       });
     },
-    placeColony: (tileId) => {
+    placeColony: (tileId, pops) => {
       setGame((previous) => {
         if (previous.ctx.phase !== "setupColony") {
           return previous;
         }
 
         const G = structuredClone(previous.G);
-        const result = placeColony(G, previous.ctx.currentPlayer, tileId);
+        const result = placeColony(G, previous.ctx.currentPlayer, tileId, pops);
 
         if (result === INVALID_MOVE) {
           return previous;
@@ -133,14 +136,14 @@ function createMoves(setGame: SetGame): GameMoves {
         };
       });
     },
-    foundColony: (tileId) => {
+    foundColony: (tileId, sourceTileId, pop) => {
       setGame((previous) => {
         if (previous.ctx.phase !== "gameplay") {
           return previous;
         }
 
         const G = structuredClone(previous.G);
-        const result = foundColony(G, previous.ctx.currentPlayer, tileId);
+        const result = foundColony(G, previous.ctx.currentPlayer, tileId, sourceTileId, pop);
 
         if (result === INVALID_MOVE) {
           return previous;
@@ -152,14 +155,14 @@ function createMoves(setGame: SetGame): GameMoves {
         };
       });
     },
-    upgradeColonyToCity: (tileId) => {
+    upgradeColonyToCity: (tileId, pops) => {
       setGame((previous) => {
         if (previous.ctx.phase !== "gameplay") {
           return previous;
         }
 
         const G = structuredClone(previous.G);
-        const result = upgradeColonyToCity(G, previous.ctx.currentPlayer, tileId);
+        const result = upgradeColonyToCity(G, previous.ctx.currentPlayer, tileId, pops);
 
         if (result === INVALID_MOVE) {
           return previous;
@@ -189,6 +192,25 @@ function createMoves(setGame: SetGame): GameMoves {
           G
         };
       });
+    },
+    movePops: (sourceTileId, targetTileId, pops) => {
+      setGame((previous) => {
+        if (previous.ctx.phase !== "gameplay") {
+          return previous;
+        }
+
+        const G = structuredClone(previous.G);
+        const result = movePops(G, previous.ctx.currentPlayer, sourceTileId, targetTileId, pops);
+
+        if (result === INVALID_MOVE) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          G
+        };
+      });
     }
   };
 }
@@ -208,6 +230,7 @@ function createEvents(setGame: SetGame): GameEvents {
           startNewSeason(G);
         }
 
+        resolveArrivingPops(G, next);
         collectIncome(G, next, "automatic");
 
         return {

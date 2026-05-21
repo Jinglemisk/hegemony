@@ -45,7 +45,7 @@ export function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: 
             <div className="settlementStats">
               <span className={overCapacity > 0 ? "overCapacityText" : undefined}>
                 Pops <strong>{popTotal}</strong>/<strong>{capacity}</strong>
-                {overCapacity > 0 ? <em>+{overCapacity} unrest</em> : null}
+                {overCapacity > 0 ? <em>-{overCapacity} happiness</em> : null}
               </span>
               <span>
                 {settlement.kind === "colony" ? (
