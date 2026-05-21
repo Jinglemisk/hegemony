@@ -1,9 +1,10 @@
-import type { HegemonyState, PlayerId } from "../game/types";
+import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import type { GameMoves, Phase } from "../game/controller";
 import { BUILDINGS } from "../game/data";
 import {
   POP_TYPES,
   type ActionStatus,
+  getBuildBuildingStatus,
   getFoundColonyStatus,
   getGrowPopStatus,
   getUpgradeColonyToCityStatus,
@@ -22,7 +23,8 @@ export function TileInspector({
   phase,
   moves,
   onFoundColonyRequest,
-  onUpgradeCityRequest
+  onUpgradeCityRequest,
+  onBuildBuildingRequest
 }: {
   G: HegemonyState;
   selectedTileId: string | null;
@@ -32,18 +34,12 @@ export function TileInspector({
   moves: GameMoves;
   onFoundColonyRequest: (tileId: string) => void;
   onUpgradeCityRequest: (tileId: string) => void;
+  onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
   const selectedTile = G.board.tiles.find((tile) => tile.id === selectedTileId);
   const playerSettlement = selectedTile?.settlements.find((settlement) => settlement.owner === playerID);
   const foundColonyStatus = selectedTile ? getFoundColonyStatus(G, playerID, selectedTile.id) : null;
   const upgradeCityStatus = selectedTile ? getUpgradeColonyToCityStatus(G, playerID, selectedTile.id) : null;
-  const canUseCityActions =
-    isActive &&
-    phase === "gameplay" &&
-    selectedTile &&
-    playerSettlement &&
-    playerSettlement.kind !== "colony";
-
   if (!selectedTile) {
     return (
       <div className="inspector empty">
@@ -147,22 +143,28 @@ export function TileInspector({
       </div>
 
       <div className="buildingButtons">
-        {BUILDINGS.map((building) => (
-          <button
-            className="buildingButton"
-            disabled={!canUseCityActions}
-            key={building.id}
-            onClick={() => moves.buildBuilding(selectedTile.id, building.id)}
-            title={`Cost: ${formatResourceCost(building.cost)}. Benefit: ${formatBuildingEffects(building.effects)}.`}
-          >
-            <AtlasIcon icon={building.id} className="buildingButtonIcon" />
-            <span className="buildingButtonCopy">
-              <strong>{building.name}</strong>
-              <span>Cost: {formatResourceCost(building.cost)}</span>
-              <span>Benefit: {formatBuildingEffects(building.effects)}</span>
-            </span>
-          </button>
-        ))}
+        {BUILDINGS.map((building) => {
+          const status = getBuildBuildingStatus(G, playerID, selectedTile.id, building.id);
+
+          return (
+            <button
+              className="buildingButton"
+              disabled={!isActive || phase !== "gameplay" || !status.can}
+              key={building.id}
+              onClick={() => onBuildBuildingRequest(selectedTile.id, building.id)}
+              title={`${actionTitle(building.name, status, phase, isActive)} Benefit: ${formatBuildingEffects(
+                building.effects
+              )}.`}
+            >
+              <AtlasIcon icon={building.id} className="buildingButtonIcon" />
+              <span className="buildingButtonCopy">
+                <strong>{building.name}</strong>
+                <span>Cost: {formatResourceCost(building.cost)}</span>
+                <span>Benefit: {formatBuildingEffects(building.effects)}</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

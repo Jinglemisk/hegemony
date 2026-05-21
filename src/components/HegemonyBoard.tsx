@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import type { HegemonyState, PlayerId, SettlementKind } from "../game/types";
 import type { GameEvents, GameMoves, LocalContext } from "../game/controller";
 import { PLAYER_COLORS, PLAYER_IDS } from "../game/data";
-import { PLACEMENT_POP_COUNTS, calculateIncome, calculateIncomeBreakdown, toPlayerId, totalPops } from "../game/rules";
+import {
+  PLACEMENT_POP_COUNTS,
+  calculateEconomyProjection,
+  toPlayerId,
+  totalPops
+} from "../game/rules";
 import { phaseHint } from "../ui/formatters";
 import { ActionLogModal } from "./ActionLogModal";
 import { HexMap } from "./HexMap";
@@ -52,8 +57,9 @@ export function HegemonyBoard({
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
-  const projectedIncome = calculateIncome(G, viewerId);
-  const projectedIncomeBreakdown = calculateIncomeBreakdown(G, viewerId);
+  const projectedEconomy = calculateEconomyProjection(G, viewerId, { resolveTransfers: true });
+  const projectedIncome = projectedEconomy.income;
+  const projectedIncomeBreakdown = projectedEconomy.breakdown;
   const isSetup = ctx.phase === "setupCapital" || ctx.phase === "setupColony";
   const upgradeTile = upgradeTileId ? G.board.tiles.find((tile) => tile.id === upgradeTileId) : null;
   const upgradeSettlement = upgradeTile?.settlements.find(
@@ -228,6 +234,7 @@ export function HegemonyBoard({
               setSelectedTileId(tileId);
               setTileConfirmation({ action: "upgradeCity", label: "Place City?", tileId });
             }}
+            onBuildBuildingRequest={(tileId, buildingId) => moves.buildBuilding(tileId, buildingId)}
           />
         </aside>
       </section>
