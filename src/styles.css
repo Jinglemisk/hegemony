@@ -354,6 +354,11 @@ button:focus-visible {
   pointer-events: none;
 }
 
+.mapCameraLayer {
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
 .seaDragPlane {
   fill: transparent;
   pointer-events: all;
@@ -381,6 +386,14 @@ button:focus-visible {
 
 .hexMap.isCameraMoving .shorelineFoamLine,
 .hexMap.isCameraMoving .shorelineFoamBreak {
+  filter: none;
+}
+
+.hexMap.isCameraMoving .mapTerrain,
+.hexMap.isCameraMoving .tileMetric,
+.hexMap.isCameraMoving .settlementGlyph,
+.hexMap.isCameraMoving .hexTile.selected,
+.hexMap.isCameraMoving .hexTile.pending {
   filter: none;
 }
 
