@@ -2,7 +2,7 @@ DO NOT READ!
 I want to undertake a major UI overhaul. I tneeds to take into consideration the future mechanics that will be implemented as well.
 
 I was thinking of this setup:
-- Left Side: the ledger section.
+- Left Side:
 - three menus: Cities, Buildings, Pops
 CITY SCREEN:
 The player's own holdings, a vertical stack of capital, cities, colonies, etc.
@@ -15,15 +15,29 @@ BUILDINGS SCREEN:
 --- for example, with a marketplace, it will show how mcuh gold it will end up yielding based on the pops present there 
 
 POPS SCREEN:
-- summary of information on pops 
+- summary of information on pops:how much there are, what they produce and consume
+- a few lines of pop summary at the bottom saiyng how many grown, how many via event cads (placeholder for now), how many died, etc.
 
 
 
 - Right Side: The "action" section
 -- This area has a top bar with a few icons: grow pop, move pop, a bunch of placeholders i assume, then an end turn button (bigger icon)
 -- put placeholders for:
---- two card decks: one for event cards, one for seasonal cards, one for resolutions. so hovering over them would revela how much cards are left, etc.
+--- three card decks: one for event cards, one for seasonal cards, one for resolutions. so hovering over them would revela how much cards are left, etc.
 --- 
+
+
+
+- topside
+- remove top left "hegemony" box.
+- this sections verticla height should match that of the two tex-filled boxes under the map; we need to have symmetry
+- at the dead center we should have a cirlce with a number in it, # of season.
+-- at the immediate left, we have the p(placerholder) name of the seasonal effect that is running throughuout that season (based on the season card that will be drawn); immediate right side has the name of the player's event card drawn.
+- the left side of this part should the player's resources
+- the right side should have the players horizontally stacked, displaying key information about them: # of victory points, # of pops. hoverign over them should detail more information incl. their current resource count
+- switchign player ivew action should now beh apening via clickign the player's icon.
+- for player icons, just use their color in a circle. for names, write random one-word greek name.
+instead, put a scoreboard there of p1 p2 p3 p4
 
 
 -----
