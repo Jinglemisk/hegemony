@@ -2,14 +2,16 @@ import type { HegemonyState, PlayerId } from "../game/types";
 import type { GameMoves, Phase } from "../game/controller";
 import { BUILDINGS } from "../game/data";
 import {
+  POP_TYPES,
   type ActionStatus,
   getFoundColonyStatus,
+  getGrowPopStatus,
   getUpgradeColonyToCityStatus,
   settlementOverCapacity,
   settlementPopCapacity,
   totalPops
 } from "../game/rules";
-import { RESOURCE_LABELS, formatBuildingEffects, formatResourceCost } from "../ui/formatters";
+import { RESOURCE_LABELS, formatBuildingEffects, formatPopLabel, formatResourceCost } from "../ui/formatters";
 import { AtlasIcon, TerrainSprite } from "./Sprites";
 
 export function TileInspector({
@@ -92,7 +94,7 @@ export function TileInspector({
         <button
           disabled={!isActive || phase !== "gameplay" || !foundColonyStatus?.can}
           onClick={() => onFoundColonyRequest(selectedTile.id)}
-          title={actionTitle("Found Colony", foundColonyStatus, phase)}
+          title={actionTitle("Found Colony", foundColonyStatus, phase, isActive)}
         >
           <AtlasIcon icon="colony" className="buildingButtonIcon" />
           <span>
@@ -103,7 +105,7 @@ export function TileInspector({
         <button
           disabled={!isActive || phase !== "gameplay" || !upgradeCityStatus?.can}
           onClick={() => onUpgradeCityRequest(selectedTile.id)}
-          title={actionTitle("Upgrade Colony to City", upgradeCityStatus, phase)}
+          title={actionTitle("Upgrade Colony to City", upgradeCityStatus, phase, isActive)}
         >
           <AtlasIcon icon="city" className="buildingButtonIcon" />
           <span>
@@ -111,6 +113,37 @@ export function TileInspector({
             <span>Cost: {formatResourceCost(upgradeCityStatus?.cost ?? {})}</span>
           </span>
         </button>
+      </div>
+
+      <div className="growPopPanel">
+        <div className="growPopHeader">
+          <strong>Grow Pop</strong>
+          <span>
+            {playerSettlement
+              ? `${totalPops(playerSettlement.pops)}/${settlementPopCapacity(playerSettlement.kind)} capacity`
+              : "Requires your settlement"}
+          </span>
+        </div>
+        <div className="growPopButtons">
+          {POP_TYPES.map((pop) => {
+            const status = getGrowPopStatus(G, playerID, selectedTile.id, pop);
+
+            return (
+              <button
+                disabled={!isActive || phase !== "gameplay" || !status.can}
+                key={pop}
+                onClick={() => moves.growPop(selectedTile.id, pop)}
+                title={actionTitle(`Grow ${formatPopLabel(pop, 1)}`, status, phase, isActive)}
+              >
+                <AtlasIcon icon={pop} className="miniIcon" />
+                <span>
+                  <strong>{formatPopLabel(pop, 1)}</strong>
+                  <span>{formatResourceCost(status.cost ?? {})}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="buildingButtons">
@@ -135,8 +168,9 @@ export function TileInspector({
   );
 }
 
-function actionTitle(label: string, status: ActionStatus | null, phase?: Phase) {
+function actionTitle(label: string, status: ActionStatus | null, phase?: Phase, isActive = true) {
   const requirements = status?.reasons.length ? status.reasons.join(" ") : "Available.";
   const phaseRequirement = phase === "gameplay" ? "" : " Gameplay only.";
-  return `${label}. Cost: ${formatResourceCost(status?.cost ?? {})}. ${requirements}${phaseRequirement}`;
+  const activeRequirement = isActive ? "" : " Current player's turn only.";
+  return `${label}. Cost: ${formatResourceCost(status?.cost ?? {})}. ${requirements}${phaseRequirement}${activeRequirement}`;
 }

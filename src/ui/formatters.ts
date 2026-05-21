@@ -59,8 +59,24 @@ export function formatBuildingEffects(effects: BuildingEffect[]) {
 
   return effects
     .map((effect) => {
-      if (effect.type === "addPop") {
-        return `+${effect.amount} ${formatPopLabel(effect.pop, effect.amount)}`;
+      if (effect.type === "freemanGoldBonus") {
+        return `+${effect.amount} Gold per freeman, up to ${effect.supportedPops} ${formatPopLabel("freemen", effect.supportedPops)}`;
+      }
+
+      if (effect.type === "citizenInfluenceBonus") {
+        return `+${effect.amount} Influence per citizen, up to ${effect.supportedPops} ${formatPopLabel("citizens", effect.supportedPops)}`;
+      }
+
+      if (effect.type === "slavePrimaryResourceBonus") {
+        return `+${effect.amount} tile primary resource per slave, up to ${effect.supportedPops} ${formatPopLabel("slaves", effect.supportedPops)}`;
+      }
+
+      if (effect.type === "happiness") {
+        return `+${effect.amount} ${RESOURCE_LABELS.happiness}`;
+      }
+
+      if (effect.type === "growPopFoodDiscount") {
+        return `local Grow Pop costs -${effect.amount} Food`;
       }
 
       return `+${effect.amount} ${RESOURCE_LABELS[effect.resource]} income`;

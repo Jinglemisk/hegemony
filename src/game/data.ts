@@ -1,4 +1,4 @@
-import type { BuildingDefinition, PlayerId, Resources, SettlementKind, Terrain, Yield } from "./types";
+import type { BuildingDefinition, PlayerId, PopType, Resources, SettlementKind, Terrain, Yield } from "./types";
 
 export const PLAYER_IDS: PlayerId[] = ["0", "1", "2", "3"];
 
@@ -39,6 +39,19 @@ export const ACTION_COSTS = {
   }
 } satisfies Record<string, Partial<Resources>>;
 
+export const GROW_POP_COSTS: Record<PopType, Partial<Resources>> = {
+  slaves: {
+    food: 5
+  },
+  freemen: {
+    food: 7
+  },
+  citizens: {
+    food: 9,
+    gold: 2
+  }
+};
+
 export const SETTLEMENT_RULES: Record<
   SettlementKind,
   {
@@ -69,25 +82,31 @@ export const BUILDINGS: BuildingDefinition[] = [
     id: "marketplace",
     name: "Marketplace",
     cost: { wood: 12 },
-    effects: [{ type: "addPop", pop: "freemen", amount: 1 }]
+    effects: [{ type: "freemanGoldBonus", amount: 2, supportedPops: 3 }]
   },
   {
     id: "temple",
     name: "Temple",
     cost: { stone: 6 },
-    effects: [{ type: "addPop", pop: "citizens", amount: 1 }]
+    effects: [
+      { type: "happiness", amount: 1 },
+      { type: "citizenInfluenceBonus", amount: 1, supportedPops: 2 }
+    ]
   },
   {
     id: "workshop",
     name: "Workshop",
     cost: { wood: 12 },
-    effects: [{ type: "addPop", pop: "slaves", amount: 2 }]
+    effects: [{ type: "slavePrimaryResourceBonus", amount: 1, supportedPops: 3 }]
   },
   {
     id: "granary",
     name: "Granary",
     cost: { wood: 12, stone: 2 },
-    effects: [{ type: "income", resource: "food", amount: 2 }]
+    effects: [
+      { type: "income", resource: "food", amount: 2 },
+      { type: "growPopFoodDiscount", amount: 2 }
+    ]
   }
 ];
 

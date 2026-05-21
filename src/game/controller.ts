@@ -7,6 +7,7 @@ import {
   collectIncome,
   createInitialState,
   foundColony,
+  growPop,
   INVALID_MOVE,
   movePops,
   placeCapital,
@@ -36,6 +37,7 @@ export type GameMoves = {
   foundColony: (tileId: string, sourceTileId: string, pop: PopType) => void;
   upgradeColonyToCity: (tileId: string, pops?: Pops) => void;
   buildBuilding: (tileId: string, buildingId: BuildingId) => void;
+  growPop: (tileId: string, pop: PopType) => void;
   movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
 };
 
@@ -182,6 +184,25 @@ function createMoves(setGame: SetGame): GameMoves {
 
         const G = structuredClone(previous.G);
         const result = buildBuilding(G, previous.ctx.currentPlayer, tileId, buildingId);
+
+        if (result === INVALID_MOVE) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          G
+        };
+      });
+    },
+    growPop: (tileId, pop) => {
+      setGame((previous) => {
+        if (previous.ctx.phase !== "gameplay") {
+          return previous;
+        }
+
+        const G = structuredClone(previous.G);
+        const result = growPop(G, previous.ctx.currentPlayer, tileId, pop);
 
         if (result === INVALID_MOVE) {
           return previous;
