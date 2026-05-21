@@ -1,5 +1,11 @@
 import type { HegemonyState, PlayerId, PopType } from "../game/types";
-import { settlementBuildingSlots, settlementOverCapacity, settlementPopCapacity, totalPops } from "../game/rules";
+import {
+  settlementBuildingSlots,
+  settlementOverCapacity,
+  settlementPopCapacity,
+  settlementTileYield,
+  totalPops
+} from "../game/rules";
 import { buildingName, formatPopShort } from "../ui/formatters";
 import { AtlasIcon, TerrainSprite } from "./Sprites";
 
@@ -26,6 +32,7 @@ export function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: 
         const capacity = settlementPopCapacity(settlement.kind);
         const overCapacity = settlementOverCapacity(settlement);
         const slots = settlementBuildingSlots(tile, settlement);
+        const tileYield = settlementTileYield(tile, settlement);
 
         return (
           <article
@@ -57,7 +64,7 @@ export function SettlementRoster({ G, playerID }: { G: HegemonyState; playerID: 
                 )}
               </span>
               <span>
-                Yield <strong>{tile.resource.amount}</strong> {tile.resource.type}
+                Yield <strong>{tileYield}</strong> {tile.resource.type}
               </span>
             </div>
             <div className="popGrid">
