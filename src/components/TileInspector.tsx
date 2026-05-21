@@ -18,7 +18,9 @@ export function TileInspector({
   playerID,
   isActive,
   phase,
-  moves
+  moves,
+  onFoundColonyRequest,
+  onUpgradeCityRequest
 }: {
   G: HegemonyState;
   selectedTileId: string | null;
@@ -26,6 +28,8 @@ export function TileInspector({
   isActive: boolean;
   phase?: Phase;
   moves: GameMoves;
+  onFoundColonyRequest: (tileId: string) => void;
+  onUpgradeCityRequest: (tileId: string) => void;
 }) {
   const selectedTile = G.board.tiles.find((tile) => tile.id === selectedTileId);
   const playerSettlement = selectedTile?.settlements.find((settlement) => settlement.owner === playerID);
@@ -76,7 +80,7 @@ export function TileInspector({
                 <AtlasIcon icon={settlement.kind} className="miniIcon" />
                 <b>{G.players[settlement.owner].name}</b>: {settlement.kind}
                 <em>
-                  {popTotal}/{capacity} pops{overCapacity > 0 ? `, +${overCapacity} unrest` : ""}
+                  {popTotal}/{capacity} pops{overCapacity > 0 ? `, -${overCapacity} happiness` : ""}
                 </em>
               </span>
             );
@@ -87,7 +91,7 @@ export function TileInspector({
       <div className="tileActionButtons">
         <button
           disabled={!isActive || phase !== "gameplay" || !foundColonyStatus?.can}
-          onClick={() => moves.foundColony(selectedTile.id)}
+          onClick={() => onFoundColonyRequest(selectedTile.id)}
           title={actionTitle("Found Colony", foundColonyStatus, phase)}
         >
           <AtlasIcon icon="colony" className="buildingButtonIcon" />
@@ -98,7 +102,7 @@ export function TileInspector({
         </button>
         <button
           disabled={!isActive || phase !== "gameplay" || !upgradeCityStatus?.can}
-          onClick={() => moves.upgradeColonyToCity(selectedTile.id)}
+          onClick={() => onUpgradeCityRequest(selectedTile.id)}
           title={actionTitle("Upgrade Colony to City", upgradeCityStatus, phase)}
         >
           <AtlasIcon icon="city" className="buildingButtonIcon" />

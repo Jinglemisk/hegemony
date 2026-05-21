@@ -15,7 +15,7 @@ export const STARTING_RESOURCES: Resources = {
   gold: 10,
   food: 12,
   influence: 0,
-  unrest: 0
+  happiness: 0
 };
 
 export const EMPTY_RESOURCES: Resources = {
@@ -24,7 +24,7 @@ export const EMPTY_RESOURCES: Resources = {
   gold: 0,
   food: 0,
   influence: 0,
-  unrest: 0
+  happiness: 0
 };
 
 export const ACTION_COSTS = {

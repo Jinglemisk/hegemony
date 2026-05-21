@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import type { Resource } from "../game/types";
 
-export const RESOURCE_ORDER: Resource[] = ["wood", "stone", "gold", "food", "influence", "unrest"];
+export const RESOURCE_ORDER: Resource[] = ["wood", "stone", "gold", "food", "influence", "happiness"];
 
 type ResourceVisual = {
   color: string;
@@ -41,11 +41,11 @@ export const RESOURCE_VISUALS = {
     line: "rgb(31 105 119 / 44%)",
     shadow: "rgb(31 105 119 / 24%)"
   },
-  unrest: {
-    color: "#b13a28",
-    soft: "rgb(177 58 40 / 14%)",
-    line: "rgb(177 58 40 / 46%)",
-    shadow: "rgb(177 58 40 / 24%)"
+  happiness: {
+    color: "#2f7d46",
+    soft: "rgb(47 125 70 / 14%)",
+    line: "rgb(47 125 70 / 46%)",
+    shadow: "rgb(47 125 70 / 24%)"
   }
 } satisfies Record<Resource, ResourceVisual>;
 
