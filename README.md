@@ -18,7 +18,7 @@ Hegemony is a Catan-inspired, Imperator: Rome-inspired strategy board game proto
 - Automatic turn-start income collection and RTS-style resource tracking.
 - Gameplay colony founding and colony-to-city upgrades.
 - Four buildable structure types.
-- Population capacity and overcapacity unrest.
+- Population capacity and overcapacity happiness pressure.
 - Shared colony tiles with split income.
 - Action log, tile inspector, holdings roster, and income preview.
 
@@ -30,7 +30,7 @@ building basic structures, and managing early population pressure.
 
 The next rules milestone is not more raw economy by default. The game needs a
 light pressure-and-scoring layer so expansion and building choices have stakes:
-temporary 10-season scoring, unrest consequences, and a first influence sink.
+temporary 10-season scoring, happiness consequences, and a first influence sink.
 
 ## Development
 
@@ -41,6 +41,6 @@ temporary 10-season scoring, unrest consequences, and a first influence sink.
 
 ## Coming Soon
 
-Temporary scoring, unrest events, influence actions, online play, assembly
+Temporary scoring, happiness events, influence actions, online play, assembly
 voting, politicians, national ideas, luxury goods, trade, and final victory
 conditions.

@@ -85,6 +85,7 @@ export interface PlayerState {
   resources: Resources;
   settlements: string[];
   collectedThisTurn: boolean;
+  hasCollectedGameplayIncome: boolean;
   grownSettlementsThisTurn: string[];
 }
 
