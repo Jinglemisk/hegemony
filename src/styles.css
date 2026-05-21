@@ -125,6 +125,9 @@ button:focus-visible {
   --icon-atlas: url("../assets/codex-banana-showcase/light-icon-atlas.png");
   --terrain-atlas: url("../assets/codex-banana-showcase/light-terrain-atlas.png");
   --ui-atlas: url("../assets/codex-banana-showcase/light-ui-kit.png");
+  --capital-glyph: url("../assets/settlement-icons/capital-star-mask.png");
+  --city-glyph: url("../assets/settlement-icons/city-gate-mask.png");
+  --colony-glyph: url("../assets/settlement-icons/colony-flag-mask.png");
   position: relative;
   isolation: isolate;
   display: grid;
@@ -740,158 +743,87 @@ button:focus-visible {
   filter: drop-shadow(0 0 6px var(--resource-shadow, rgb(95 74 53 / 28%)));
 }
 
-.tilePlate {
-  pointer-events: none;
-  filter: drop-shadow(0 1.5px 2px rgb(24 18 16 / 40%));
-}
-
-.tilePlateBg {
-  fill: var(--vase-black);
-  stroke: var(--resource-color, var(--ochre));
-  stroke-width: 1;
-}
-
-.tilePlateDivider {
-  stroke: var(--resource-color, var(--ochre));
-  stroke-width: 1;
-  opacity: 0.62;
-}
-
-.tilePlateStat {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 11px;
-  text-anchor: middle;
+.tileMetrics {
   pointer-events: none;
 }
 
-.tilePlateYield {
-  fill: var(--ivory);
-  font-size: 10.5px;
-}
-
-.tilePlateResourceDot {
-  fill: var(--resource-color, var(--ochre));
-}
-
-.tilePlateResourceGlyph {
-  fill: var(--ivory);
+.tileMetric {
+  fill: #0b0705;
+  stroke: var(--ivory);
+  stroke-width: 3.8px;
   font-family: var(--font-display);
-  font-size: 6.4px;
-  font-weight: 700;
+  font-weight: 900;
+  paint-order: stroke fill;
   pointer-events: none;
   text-anchor: middle;
+  filter:
+    drop-shadow(0 0 1px rgb(255 248 231 / 96%))
+    drop-shadow(0 2px 2px rgb(24 18 16 / 34%));
 }
 
-.tilePlateSlot {
-  fill: rgb(244 230 200 / 12%);
-  stroke: rgb(244 230 200 / 30%);
-  stroke-width: 0.6;
+.tileMetricYield {
+  font-size: 15.5px;
 }
 
-.tilePlateSlot.filled {
-  fill: var(--bone);
-  stroke: rgb(244 230 200 / 70%);
+.tileMetricCapacity {
+  font-size: 12.1px;
 }
 
-.colonyDockLayer {
+.settlementGlyphObject,
+.colonyGlyphDocked {
   pointer-events: none;
 }
 
-.colonyDockShadow {
-  fill: var(--vase-black);
-  opacity: 0.2;
-}
-
-.colonyDockSocket {
-  fill: rgb(24 18 16 / 15%);
-  stroke: rgb(244 230 200 / 42%);
-  stroke-width: 1;
-}
-
-.colonyDock.occupied .colonyDockShadow {
-  opacity: 0.34;
-}
-
-.colonyDock.occupied .colonyDockSocket {
-  fill: rgb(24 18 16 / 24%);
-  stroke: var(--player-color);
-  stroke-width: 1.4;
-}
-
-.settlementToken {
+.settlementGlyph {
+  --glyph-mask: var(--city-glyph);
   position: relative;
-  display: grid;
-  place-items: center;
   width: 100%;
   height: 100%;
-  border: 2px solid var(--player-color);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 42%, rgb(244 230 200 / 28%), transparent 58%),
-    rgb(24 18 16 / 88%);
-  box-shadow:
-    0 0 0 2px rgb(244 230 200 / 55%),
-    0 8px 16px rgb(0 0 0 / 32%);
-  overflow: hidden;
+  filter:
+    drop-shadow(0 0 1px rgb(255 248 231 / 95%))
+    drop-shadow(0 1px 0 rgb(255 248 231 / 95%))
+    drop-shadow(0 5px 6px rgb(24 18 16 / 30%));
 }
 
-.capitalToken {
-  box-shadow:
-    0 0 0 2px rgb(244 230 200 / 68%),
-    0 0 0 5px rgb(24 18 16 / 16%),
-    0 10px 18px rgb(0 0 0 / 36%);
-}
-
-.cityToken {
-  box-shadow:
-    0 0 0 2px rgb(244 230 200 / 56%),
-    0 8px 16px rgb(0 0 0 / 32%);
-}
-
-.colonyToken {
-  border-radius: 7px;
-  background:
-    linear-gradient(180deg, rgb(255 248 231 / 12%), transparent 44%),
-    radial-gradient(circle at 50% 44%, rgb(244 230 200 / 24%), transparent 58%),
-    rgb(24 18 16 / 90%);
-  box-shadow:
-    0 0 0 1.5px rgb(244 230 200 / 58%),
-    0 8px 14px rgb(0 0 0 / 34%);
-}
-
-.colonyTokenDocked {
-  pointer-events: none;
-  filter: drop-shadow(0 4px 6px rgb(24 18 16 / 32%));
-}
-
-.settlementTokenIcon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  opacity: 0.92;
-}
-
-.colonyToken .settlementTokenIcon {
-  width: 22px;
-  height: 22px;
-}
-
-.settlementToken span {
+.settlementGlyph::before,
+.settlementGlyph::after,
+.settlementGlyph i {
+  content: "";
   position: absolute;
-  inset: auto 4px 3px;
-  color: var(--ivory);
-  font-family: var(--font-display);
-  font-size: 5.2px;
-  font-weight: 700;
-  line-height: 1;
-  text-align: center;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 80%);
+  inset: 0;
+  display: block;
+  -webkit-mask: var(--glyph-mask) center / contain no-repeat;
+  mask: var(--glyph-mask) center / contain no-repeat;
 }
 
-.colonyToken span {
-  inset: auto 3px 2px;
-  font-size: 5.6px;
+.settlementGlyph::before {
+  z-index: 0;
+  background: var(--ivory);
+  transform: scale(1.24);
+}
+
+.settlementGlyph::after {
+  z-index: 1;
+  background: #0b0705;
+  transform: scale(1.1);
+}
+
+.settlementGlyph i {
+  z-index: 2;
+  background: var(--player-color);
+  transform: scale(0.92);
+}
+
+.capitalGlyph {
+  --glyph-mask: var(--capital-glyph);
+}
+
+.cityGlyph {
+  --glyph-mask: var(--city-glyph);
+}
+
+.colonyGlyph {
+  --glyph-mask: var(--colony-glyph);
 }
 
 .colonyOverflow {
@@ -1661,8 +1593,12 @@ button:focus-visible {
     min-height: 420px;
   }
 
-  .tilePlateStat {
-    font-size: 9.4px;
+  .tileMetricYield {
+    font-size: 14px;
+  }
+
+  .tileMetricCapacity {
+    font-size: 11px;
   }
 }
 
