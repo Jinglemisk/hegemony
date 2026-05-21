@@ -114,7 +114,7 @@ export function phaseHint(phase: Phase) {
   }
 
   if (phase === "setupColony") {
-    return "Place a colony next to your capital";
+    return "Place a colony away from enemy capitals";
   }
 
   return "Income collects automatically; expand, build, then end turn";

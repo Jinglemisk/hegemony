@@ -327,6 +327,13 @@ export function settlementBuildingSlots(tile: HexTile, settlement: Settlement) {
   return tile.buildingSlots + SETTLEMENT_RULES[settlement.kind].buildingSlotBonus;
 }
 
+export function settlementTileYield(tile: HexTile, settlement: Settlement) {
+  const share = settlement.kind === "colony" && tile.settlements.length > 1 ? 0.5 : 1;
+  const multiplier = settlement.kind === "capital" ? 2 : 1;
+
+  return Math.floor(tile.resource.amount * share * multiplier);
+}
+
 export function calculateIncome(G: HegemonyState, playerID: PlayerId): Resources {
   return summarizeIncome(calculateIncomeBreakdown(G, playerID));
 }
@@ -343,10 +350,10 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
       continue;
     }
 
-    const share = settlement.kind === "colony" && tile.settlements.length > 1 ? 0.5 : 1;
     const multiplier = settlement.kind === "capital" ? 2 : 1;
+    const share = settlement.kind === "colony" && tile.settlements.length > 1 ? 0.5 : 1;
     const settlementLabel = `${capitalize(settlement.kind)} on ${tile.terrain} ${tile.id}`;
-    const tileAmount = Math.floor(tile.resource.amount * share * multiplier);
+    const tileAmount = settlementTileYield(tile, settlement);
     addIncomeContribution(contributions, income, {
       resource: tile.resource.type,
       amount: tileAmount,
@@ -668,16 +675,6 @@ function summarizeIncome(contributions: IncomeContribution[]): Resources {
   return income;
 }
 
-function hasFriendlyAdjacentSettlement(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
-  return G.board.tiles.some((candidate) => {
-    if (hexDistance(candidate, tile) !== 1) {
-      return false;
-    }
-
-    return candidate.settlements.some((settlement) => settlement.owner === playerID);
-  });
-}
-
 function canPlaceColonyOnTile(G: HegemonyState, playerID: PlayerId, tile: HexTile): ActionStatus {
   const status: ActionStatus = {
     can: false,
@@ -694,10 +691,6 @@ function canPlaceColonyOnTile(G: HegemonyState, playerID: PlayerId, tile: HexTil
 
   if (tile.settlements.length >= 2) {
     status.reasons.push("A tile can hold at most two colonies.");
-  }
-
-  if (!hasFriendlyAdjacentSettlement(G, playerID, tile)) {
-    status.reasons.push("Requires an adjacent friendly settlement.");
   }
 
   if (isAdjacentToEnemyCapital(G, playerID, tile)) {
