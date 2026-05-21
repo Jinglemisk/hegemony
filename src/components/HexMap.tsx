@@ -1,8 +1,9 @@
 import type { CSSProperties } from "react";
 import type { HegemonyState } from "../game/types";
 import { PLAYER_COLORS } from "../game/data";
+import { settlementBuildingSlots } from "../game/rules";
 import { resourceCssVars } from "../ui/resourceVisuals";
-import { AtlasIcon, TerrainSprite } from "./Sprites";
+import { TerrainSprite } from "./Sprites";
 
 export function HexMap({
   G,
@@ -24,6 +25,7 @@ export function HexMap({
 }) {
   const size = 45;
   const tileArtSize = 88;
+  const colonyPositions = [-14, 14];
   const centers = G.board.tiles.map((tile) => ({
     tile,
     x: size * Math.sqrt(3) * (tile.q + tile.r / 2),
@@ -35,8 +37,12 @@ export function HexMap({
       {centers.map(({ tile, x, y }) => {
         const city = tile.settlements.find((settlement) => settlement.kind !== "colony");
         const colonies = tile.settlements.filter((settlement) => settlement.kind === "colony");
+        const shownColonies = colonies.slice(0, 2);
+        const overflowColonies = Math.max(0, colonies.length - shownColonies.length);
         const isSelected = selectedTileId === tile.id;
         const isPending = pendingTileId === tile.id;
+        const usedBuildingSlots = city?.buildings.length ?? 0;
+        const totalBuildingSlots = city ? settlementBuildingSlots(tile, city) : tile.buildingSlots;
         return (
           <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
             <foreignObject
@@ -66,43 +72,52 @@ export function HexMap({
                 points={hexPoints(size - 2)}
               />
             </g>
-            <g className="tilePlate" aria-hidden="true">
-              <rect className="tilePlateBg" x={-29} y={1.5} width={58} height={18} rx={5} />
-              <line className="tilePlateDivider" x1={0} y1={4} x2={0} y2={17} />
-              <text className="tilePlateStat tilePlateYield" x={-14.5} y={14.5}>
-                ◆{tile.resource.amount}
+            <g className="tileMetrics" aria-hidden="true">
+              <text className="tileMetric tileMetricYield" x={0} y={34}>
+                +{tile.resource.amount}
               </text>
-              <text className="tilePlateStat tilePlateSlots" x={14.5} y={14.5}>
-                ⌂{tile.buildingSlots}
+              <text className="tileMetric tileMetricCapacity" x={0} y={-28}>
+                {usedBuildingSlots}/{totalBuildingSlots}
               </text>
             </g>
             {city ? (
-              <foreignObject className="settlementObject cityObject" height={38} width={38} x={-19} y={-19}>
+              <foreignObject
+                className="settlementObject settlementGlyphObject cityObject"
+                height={42}
+                width={42}
+                x={-21}
+                y={-17}
+              >
                 <div
-                  className={`settlementToken ${city.kind === "capital" ? "capitalToken" : "cityToken"}`}
+                  className={`settlementGlyph ${city.kind === "capital" ? "capitalGlyph" : "cityGlyph"}`}
                   style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
                 >
-                  <AtlasIcon icon={city.kind} className="settlementTokenIcon" />
-                  <span>{city.kind === "capital" ? "CAP" : "CITY"}</span>
+                  <i />
                 </div>
               </foreignObject>
             ) : null}
-            {colonies.map((colony, index) => (
+            {shownColonies.map((colony, index) => (
               <g
-                transform={`translate(${index === 0 ? -13 : 13} 23)`}
+                className="colonyGlyphDocked"
+                transform={`translate(${colonyPositions[index]} 4)`}
                 key={`${colony.owner}-${index}`}
               >
-                <foreignObject className="settlementObject colonyObject" height={30} width={34} x={-17} y={-15}>
+                <foreignObject className="settlementObject settlementGlyphObject colonyObject" height={32} width={32} x={-16} y={-16}>
                   <div
-                    className="settlementToken colonyToken"
+                    className="settlementGlyph colonyGlyph"
                     style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
                   >
-                    <AtlasIcon icon="colony" className="settlementTokenIcon" />
-                    <span>COL</span>
+                    <i />
                   </div>
                 </foreignObject>
               </g>
             ))}
+            {overflowColonies > 0 ? (
+              <g className="colonyOverflow" transform="translate(0 4)" aria-hidden="true">
+                <circle r={9} />
+                <text y={3.2}>+{overflowColonies}</text>
+              </g>
+            ) : null}
           </g>
         );
       })}
