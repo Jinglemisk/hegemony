@@ -338,15 +338,86 @@ button:focus-visible {
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
-    radial-gradient(circle at 50% 50%, rgb(192 70 28 / 16%), transparent 55%),
-    linear-gradient(180deg, rgb(24 18 16 / 86%), rgb(36 25 16 / 88%));
+    linear-gradient(180deg, #4b8994, #76aeb2 54%, #2f707e);
   box-shadow: var(--shadow);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
 }
 
-.hexMap {
-  background:
-    radial-gradient(circle at 50% 50%, rgb(192 70 28 / 13%), transparent 55%),
-    linear-gradient(180deg, rgb(255 248 231 / 92%), rgb(244 230 200 / 92%));
+.hexMap.isDraggingSea {
+  cursor: grabbing;
+}
+
+.seaBackdrop,
+.shorelineFoam {
+  pointer-events: none;
+}
+
+.seaDragPlane {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.shorelineFoamLine,
+.shorelineFoamBreak {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shorelineFoamLine {
+  stroke: rgb(255 248 231 / 68%);
+  stroke-width: 3.2;
+  filter: drop-shadow(0 2px 4px rgb(31 105 119 / 28%));
+}
+
+.shorelineFoamBreak {
+  stroke: rgb(255 248 231 / 48%);
+  stroke-width: 5.4;
+  stroke-dasharray: 12 10;
+  filter: drop-shadow(0 2px 5px rgb(31 105 119 / 24%));
+}
+
+.hexMap.isCameraMoving .shorelineFoamLine,
+.hexMap.isCameraMoving .shorelineFoamBreak {
+  filter: none;
+}
+
+.mapZoomControls {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(2, 34px);
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid rgb(255 248 231 / 34%);
+  border-radius: 8px;
+  background: rgb(24 62 70 / 72%);
+  box-shadow: 0 12px 24px rgb(8 22 28 / 28%);
+  backdrop-filter: blur(8px);
+}
+
+.mapZoomControls button {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  min-height: 34px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-color: rgb(255 248 231 / 34%);
+  color: var(--ivory);
+  background: rgb(255 248 231 / 12%);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.mapZoomControls button:not(:disabled):hover {
+  border-color: rgb(255 248 231 / 70%);
+  box-shadow: 0 8px 16px rgb(8 22 28 / 20%);
 }
 
 .mapHud {
