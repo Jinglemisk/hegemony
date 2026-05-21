@@ -24,3 +24,12 @@ POPS SCREEN:
 -- put placeholders for:
 --- two card decks: one for event cards, one for seasonal cards, one for resolutions. so hovering over them would revela how much cards are left, etc.
 --- 
+
+
+-----
+
+alright lets do this: i need a plan for the following:
+- stabilize province: put a button next to grow pops for stabiliez province action 5 infleunce 1 happiness
+- pop removal: if food is negative for more than one turn, the moment that particular turn begins, a modal pops saying the player has to remove a pop. the cities and pops are presented. if they choose to remove a pop from a one-pop city or colony, that place gets destroyed
+- happines consequence: if unreest is -5, remove 1 pop. if unrest is -10, remove 2 pops. so unrest is at -9 you still remove 1 pop for example 
+- seasonal scoring.
