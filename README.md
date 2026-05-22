@@ -4,7 +4,7 @@
 
 # Hegemony
 
-Ancient strategy, civic pressure, and hex-board conquest in a hotseat browser prototype.
+Become the board's hegemon through economy, diplomacy, politics and luck.
 
 </div>
 
