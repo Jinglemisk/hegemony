@@ -121,6 +121,10 @@ button:focus-visible {
   --hex-line: rgb(36 25 16 / 28%);
   --shadow: 0 20px 46px rgb(72 42 21 / 20%);
   --lift-shadow: 0 12px 24px rgb(72 42 21 / 18%);
+  --ledger-rule: rgb(36 25 16 / 14%);
+  --ledger-rule-strong: rgb(36 25 16 / 22%);
+  --ledger-accent: rgb(192 70 28 / 70%);
+  --ledger-hover: rgb(192 70 28 / 8%);
   --hero-tableau: url("../assets/codex-banana-showcase/light-hero-tableau.png");
   --icon-atlas: url("../assets/codex-banana-showcase/light-icon-atlas.png");
   --terrain-atlas: url("../assets/codex-banana-showcase/light-terrain-atlas.png");
@@ -172,9 +176,7 @@ button:focus-visible {
 }
 
 .brandCluster,
-.panel,
-.logModal,
-.phaseStrip span {
+.logModal {
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
@@ -182,6 +184,14 @@ button:focus-visible {
     var(--panel);
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
+}
+
+.panel {
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .brandCluster {
@@ -403,117 +413,62 @@ button:focus-visible {
   bottom: 14px;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(2, 34px);
+  grid-template-columns: repeat(2, 36px);
   gap: 6px;
-  padding: 5px;
-  border: 1px solid rgb(255 248 231 / 34%);
-  border-radius: 8px;
-  background: rgb(24 62 70 / 72%);
-  box-shadow: 0 12px 24px rgb(8 22 28 / 28%);
-  backdrop-filter: blur(8px);
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .mapZoomControls button {
   display: grid;
   place-items: center;
-  min-width: 34px;
-  min-height: 34px;
-  width: 34px;
-  height: 34px;
+  min-width: 36px;
+  min-height: 36px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  border-color: rgb(255 248 231 / 34%);
+  border: 1px solid rgb(255 248 231 / 38%);
+  border-radius: 8px;
   color: var(--ivory);
-  background: rgb(255 248 231 / 12%);
+  background: rgb(24 62 70 / 82%);
+  box-shadow: 0 6px 14px rgb(8 22 28 / 30%);
   font-size: 1.15rem;
   line-height: 1;
 }
 
 .mapZoomControls button:not(:disabled):hover {
-  border-color: rgb(255 248 231 / 70%);
-  box-shadow: 0 8px 16px rgb(8 22 28 / 20%);
+  border-color: rgb(255 248 231 / 78%);
+  background: rgb(31 105 119 / 92%);
+  box-shadow: 0 8px 16px rgb(8 22 28 / 24%);
 }
 
-.mapHud {
+.mapSetupCaption {
   position: absolute;
-  z-index: 3;
-  inset: 12px 12px auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 8px;
-  max-width: calc(100% - 24px);
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 4;
+  padding: 6px 16px;
+  color: var(--ivory);
+  background: rgb(24 62 70 / 82%);
+  border-radius: 999px;
+  box-shadow: 0 6px 14px rgb(8 22 28 / 30%);
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
   pointer-events: none;
 }
 
-.hudCard {
+.resourceBand {
   display: flex;
   align-items: center;
-  gap: 9px;
-  min-width: 116px;
-  min-height: 48px;
-  max-width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel-strong);
-  box-shadow: 0 12px 24px rgb(0 0 0 / 22%);
-  pointer-events: none;
-}
-
-.hudCard span {
-  display: block;
-  color: var(--muted);
-  font-size: 0.76rem;
-  text-transform: uppercase;
-}
-
-.hudCard strong {
-  display: block;
-  overflow-wrap: anywhere;
-  color: var(--fg);
-  font-size: 0.98rem;
-  line-height: 1.05;
-}
-
-.hudMedallion {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-}
-
-.turnOwner {
-  margin-left: auto;
-}
-
-.playerSeal {
-  width: 26px;
-  height: 26px;
-  flex: 0 0 auto;
-  border: 2px solid var(--bone);
-  border-radius: 50%;
-  box-shadow:
-    inset 0 0 0 4px rgb(24 18 16 / 34%),
-    0 0 0 1px var(--line);
-}
-
-.phaseStrip {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.phaseStrip span {
-  display: grid;
-  align-content: center;
-  min-height: 42px;
-  padding: 8px 10px;
-  color: var(--muted);
-  text-align: center;
-}
-
-.phaseStrip span:first-child {
-  color: var(--fg);
+  padding: 8px 4px 2px;
+  border-top: 1px solid var(--line);
 }
 
 .atlasSprite {
@@ -1062,7 +1017,7 @@ button:focus-visible {
   min-height: 58px;
   overflow: visible;
   padding: 7px 12px;
-  border: 1px solid var(--resource-line, var(--line));
+  border: none;
   border-radius: 6px;
   background: transparent;
   box-shadow: none;
@@ -1611,6 +1566,17 @@ button:focus-visible {
   clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
 }
 
+/* Framed icon tiles — clay border + parchment ground (terrain-hex aesthetic, no hue overlay) */
+.miniIcon,
+.buildingButtonIcon,
+.commandIcon,
+.titleIcon {
+  border: 1px solid rgb(143 46 19 / 42%);
+  border-radius: 5px;
+  background-color: var(--bone);
+  box-shadow: 0 1px 2px rgb(72 42 21 / 14%);
+}
+
 .settlementStats,
 .popGrid,
 .buildingList {
@@ -1649,10 +1615,8 @@ button:focus-visible {
 }
 
 .overCapacityCard {
-  border-color: rgb(177 58 40 / 58%);
-  background:
-    linear-gradient(180deg, rgb(177 58 40 / 14%), transparent),
-    var(--panel-soft);
+  border-left-color: rgb(177 58 40 / 82%);
+  background: none;
 }
 
 .overCapacityText,
@@ -1898,6 +1862,1117 @@ button:focus-visible {
   font-size: 0.76rem;
 }
 
+.uiOverhaulShell {
+  gap: 10px;
+  padding: 14px;
+}
+
+.strategyTopbar {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  max-width: 1700px;
+}
+
+.statusPanel {
+  position: relative;
+  min-width: 0;
+  min-height: 64px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.scoreboardPanel {
+  overflow: visible;
+  padding: 6px 2px;
+}
+
+.bandResourceGrid {
+  flex: 1;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-content: center;
+  gap: 10px;
+  height: 100%;
+  margin: 0;
+}
+
+.bandResourceGrid .resourcePill {
+  grid-template-columns: 30px minmax(0, auto) minmax(30px, auto);
+  gap: 7px;
+  min-height: 52px;
+  padding: 6px 10px;
+}
+
+.bandResourceGrid .resourceIcon,
+.bandResourceGrid .happinessTheatreIcon {
+  width: 30px;
+  height: 30px;
+}
+
+.bandResourceGrid .resourcePill strong {
+  font-size: 1.04rem;
+}
+
+.bandResourceGrid .resourceDelta {
+  font-size: 0.74rem;
+}
+
+.effectsCluster {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
+  padding: 6px 4px;
+}
+
+.seasonCenter {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 5px;
+  padding: 4px 0;
+}
+
+.seasonTurnCaption {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  text-align: center;
+}
+
+.seasonTurnCaption span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.seasonTurnCaption strong {
+  color: var(--clay);
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.seasonEventLabel {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.seasonEventLabel span,
+.scoreIdentity em,
+.compactPanelTitle span,
+.deckPlaceholder em,
+.buildingLedgerLead em,
+.popEconomyLead em,
+.selectedTileHeader em,
+.selectedBuildButton em {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-style: normal;
+  line-height: 1.2;
+}
+
+.seasonEventLabel span,
+.compactPanelTitle span,
+.deckPlaceholder em {
+  text-transform: uppercase;
+}
+
+.seasonEventLabel strong {
+  overflow: hidden;
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.seasonEventLabel.alignRight {
+  text-align: right;
+}
+
+.seasonMedallion {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 64px;
+  height: 64px;
+  border: 2px solid rgb(36 25 16 / 34%);
+  border-radius: 50%;
+  color: var(--ivory);
+  background:
+    radial-gradient(circle at 50% 38%, rgb(255 248 231 / 22%), transparent 46%),
+    linear-gradient(180deg, var(--clay), var(--clay-deep));
+  box-shadow:
+    inset 0 0 0 4px rgb(24 18 16 / 18%),
+    0 10px 22px rgb(72 42 21 / 24%);
+}
+
+.seasonMedallion span {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.seasonMedallion strong {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.scoreboardPanel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.scoreboardSeat {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 4px 7px;
+  min-height: 52px;
+  overflow: visible;
+  padding: 6px 7px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  text-align: left;
+}
+
+.scoreboardSeat:not(:disabled):hover {
+  box-shadow: none;
+  transform: none;
+}
+
+.scoreboardSeat:not(.selectedScoreSeat):not(:disabled):hover {
+  background: var(--panel-soft);
+}
+
+.scoreToken {
+  grid-row: 1 / 3;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--ivory);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 4px rgb(24 18 16 / 24%),
+    0 0 0 1px rgb(36 25 16 / 24%);
+}
+
+.scoreIdentity,
+.scoreMetrics {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.scoreIdentity {
+  justify-content: space-between;
+}
+
+.scoreIdentity strong {
+  overflow: hidden;
+  color: var(--fg);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.scoreMetrics {
+  flex-wrap: wrap;
+}
+
+.scoreMetrics b {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.scoreMiniSprite {
+  width: 14px;
+  height: 14px;
+}
+
+.selectedScoreSeat {
+  color: var(--ivory);
+  background: linear-gradient(180deg, rgb(192 70 28 / 92%), rgb(143 46 19 / 92%));
+}
+
+.selectedScoreSeat .scoreIdentity strong,
+.selectedScoreSeat .scoreIdentity em,
+.selectedScoreSeat .scoreMetrics b {
+  color: var(--ivory);
+}
+
+.currentScoreSeat::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgb(255 248 231 / 64%);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.scoreTooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 90;
+  display: grid;
+  gap: 5px;
+  width: 220px;
+  padding: 10px;
+  border: 1px solid rgb(36 25 16 / 38%);
+  border-radius: 8px;
+  color: var(--fg);
+  background: rgb(255 248 231 / 99%);
+  box-shadow: 0 18px 38px rgb(36 25 16 / 28%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.scoreTooltip strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.scoreTooltip span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.scoreTooltip b {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreTooltip em {
+  font-style: normal;
+}
+
+.scoreboardSeat:hover .scoreTooltip,
+.scoreboardSeat:focus .scoreTooltip,
+.scoreboardSeat:focus-visible .scoreTooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.strategyWorkbench {
+  grid-template-columns: minmax(300px, 320px) minmax(640px, 1fr) minmax(300px, 320px);
+  max-width: 1700px;
+}
+
+.intelPanel,
+.commandPanel {
+  position: relative;
+  padding: 12px 10px;
+  border: 20px solid transparent;
+  border-image: url("../assets/codex-banana-showcase/greek-frame.png") 270 round;
+  background-color: rgb(255 248 231 / 26%);
+  background-clip: padding-box;
+  box-shadow: 0 1px 4px rgb(72 42 21 / 8%);
+}
+
+.compactPanelTitle {
+  justify-content: center;
+  margin-bottom: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--ledger-rule);
+  text-align: center;
+}
+
+.compactPanelTitle > div {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.compactPanelTitle h2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empireIntel,
+.commandStack {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+}
+
+.intelTabs {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0 0 8px;
+  background: linear-gradient(180deg, rgb(255 248 231 / 96%), rgb(255 248 231 / 82%));
+}
+
+.intelTabs button {
+  min-height: 36px;
+  padding: 0 8px 7px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--muted);
+  background: none;
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.intelTabs button:not(:disabled):hover {
+  box-shadow: none;
+  transform: none;
+  color: var(--fg);
+}
+
+.intelTabs .activeIntelTab {
+  color: var(--clay);
+  border-bottom-color: var(--clay);
+  background: none;
+}
+
+.intelBody,
+.holdingStack,
+.buildingsLedger,
+.popsLedger {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+}
+
+.selectedTilePanel {
+  border-top: 1px solid var(--ledger-rule);
+}
+
+.holdingMatrix,
+.buildingLedgerRow,
+.popEconomyRow {
+  display: grid;
+  gap: 8px;
+  padding: 9px 2px 11px 12px;
+  border-left: 2px solid var(--ledger-accent);
+}
+
+.holdingStack > .holdingMatrix:not(:last-child),
+.buildingsLedger > .buildingLedgerRow:not(:last-child),
+.popsLedger > .popEconomyRow:not(:last-child) {
+  border-bottom: 1px solid var(--ledger-rule);
+}
+
+.holdingMatrixHeader,
+.holdingCapacityLine,
+.holdingYieldLine,
+.selectedTileHeader,
+.selectedSettlementList span,
+.selectedSettlementList em {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.holdingMatrixHeader {
+  justify-content: space-between;
+}
+
+.holdingCapacityLine {
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.holdingMatrixHeader span,
+.holdingCapacityLine span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.holdingMatrixHeader strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.holdingMatrixHeader em,
+.holdingCapacityLine,
+.holdingYieldLine {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-style: normal;
+}
+
+.holdingMatrixHeader > span:last-child {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.holdingMatrixHeader em {
+  color: var(--subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.holdingCapacityLine strong,
+.holdingYieldLine strong {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.popBuildingMatrix {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.popBuildingColumn {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.popColumnHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 2px 0 6px;
+  border: 0;
+  border-bottom: 1px solid var(--ledger-rule);
+  border-radius: 0;
+  background: none;
+}
+
+.popColumnHeader strong {
+  font-size: 0.92rem;
+}
+
+/* Cities tab — icons + numbers only (labels on hover) */
+.cityIdentity {
+  gap: 7px;
+}
+
+.cityMeter {
+  align-items: center;
+  gap: 6px;
+}
+
+.cityMeter strong {
+  font-size: 0.88rem;
+}
+
+.meterSlash {
+  color: var(--subtle);
+}
+
+.holdingYieldLine strong {
+  font-size: 0.88rem;
+}
+
+.popColumnHeader span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.popColumnHeader strong {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.buildingChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.buildingChip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  cursor: default;
+  overflow: visible;
+}
+
+.buildingChip .miniIcon {
+  width: 27px;
+  height: 27px;
+}
+
+.buildingChipOption {
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.buildingChipOption .miniIcon {
+  border-style: dashed;
+}
+
+.buildingChipOption::after {
+  content: "+";
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--clay);
+  color: var(--ivory);
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  line-height: 1;
+  box-shadow: 0 1px 2px rgb(72 42 21 / 30%);
+}
+
+.buildingChipOption:not(:disabled):hover {
+  opacity: 1;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  background: none;
+}
+
+.buildingChip:disabled {
+  cursor: not-allowed;
+  opacity: 0.28;
+}
+
+.emptyMini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 27px;
+  min-height: 27px;
+  color: var(--subtle);
+  font-size: 0.92rem;
+}
+
+.detailTooltip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  z-index: 100;
+  display: grid;
+  gap: 5px;
+  width: min(260px, 72vw);
+  padding: 9px;
+  border: 1px solid rgb(36 25 16 / 40%);
+  border-radius: 8px;
+  color: var(--fg);
+  background: rgb(255 248 231 / 99%);
+  box-shadow: 0 18px 34px rgb(36 25 16 / 28%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.detailTooltip strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.detailTooltip em {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-style: normal;
+  line-height: 1.25;
+}
+
+.buildingChip:hover .detailTooltip,
+.buildingChip:focus .detailTooltip,
+.buildingChip:focus-visible .detailTooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.holdingYieldLine {
+  justify-content: flex-start;
+  min-height: 22px;
+  padding: 2px 0 0;
+  border: 0;
+  background: none;
+  font-size: 0.78rem;
+}
+
+.holdingYieldLine strong {
+  color: var(--resource-color, var(--fg));
+}
+
+.miniResourceIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.netEconomyPanel {
+  display: grid;
+  gap: 6px;
+  padding: 9px 2px 4px 12px;
+  border-left: 2px solid var(--ledger-accent);
+}
+
+.buildingLedgerLead,
+.popEconomyLead {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.buildingLedgerLead span,
+.popEconomyLead span,
+.selectedBuildButton span,
+.deckPlaceholder span,
+.selectedTileHeader span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.buildingLedgerLead strong,
+.popEconomyLead strong,
+.netEconomyPanel strong,
+.selectedBuildButton strong,
+.deckPlaceholder strong,
+.selectedTileHeader strong {
+  overflow: hidden;
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.buildingLedgerLead em {
+  overflow-wrap: anywhere;
+}
+
+.buildingLedgerCost {
+  margin-top: 1px;
+  color: var(--subtle);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.buildingLedgerCost b {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.netEconomyPanel > strong {
+  overflow: visible;
+  white-space: normal;
+  letter-spacing: 0.04em;
+}
+
+.buildCandidateGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.largeCandidateGrid {
+  max-height: 230px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.candidateButton {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px;
+  min-height: 30px;
+  overflow: hidden;
+  padding: 5px 4px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  text-align: left;
+}
+
+.buildCandidateGrid .candidateButton + .candidateButton {
+  border-top: 1px solid var(--ledger-rule);
+}
+
+.candidateButton:not(:disabled):hover {
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  background: var(--ledger-hover);
+}
+
+.candidateButton:disabled {
+  opacity: 0.5;
+}
+
+.candidateButton span,
+.candidateButton b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidateButton span {
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.candidateButton b {
+  justify-self: stretch;
+  min-width: 0;
+  color: var(--clay);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ledgerEmpty {
+  display: block;
+  padding: 4px 2px;
+  color: var(--subtle);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+.resourceDeltaList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  min-width: 0;
+}
+
+.resourceDeltaList > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--resource-color, var(--fg));
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.resourceDeltaList > span.negative {
+  color: rgb(177 58 40 / 92%);
+}
+
+.resourceDeltaList.neutral {
+  color: var(--subtle);
+  font-size: 0.78rem;
+}
+
+.popSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+}
+
+.popSummaryGrid span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 30px;
+  padding: 6px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--ledger-rule);
+  border-radius: 0;
+  color: var(--muted);
+  background: none;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.popSummaryGrid strong {
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.commandToolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.commandIconButton {
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  min-height: 58px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 5px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--fg);
+  background: none;
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.commandIconButton:not(:disabled):hover {
+  border-color: var(--ledger-accent);
+  box-shadow: none;
+  transform: none;
+  background: var(--panel-soft);
+}
+
+.commandIcon {
+  width: 28px;
+  height: 28px;
+}
+
+.commandEndTurn {
+  display: grid;
+  grid-column: span 3;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 58px;
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--clay), var(--clay-deep));
+  text-transform: uppercase;
+}
+
+.endTurnSprite {
+  width: 34px;
+  height: 34px;
+}
+
+.selectedTilePanel {
+  display: grid;
+  gap: 9px;
+  padding: 12px 2px 4px;
+}
+
+.emptySelectedTile p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.terrainPreviewSmall {
+  width: 42px;
+  height: 42px;
+  border-radius: 7px;
+  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  box-shadow: 0 8px 16px rgb(36 25 16 / 18%);
+}
+
+.selectedSettlementList {
+  display: grid;
+  gap: 5px;
+}
+
+.selectedSettlementList span,
+.selectedSettlementList em {
+  min-height: 28px;
+  padding: 5px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--ledger-rule);
+  border-radius: 0;
+  color: var(--muted);
+  background: none;
+  font-size: 0.74rem;
+  font-style: normal;
+}
+
+.selectedSettlementList b {
+  color: var(--fg);
+}
+
+.selectedBuildGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.selectedBuildButton {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 6px 4px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: none;
+  text-align: left;
+}
+
+.selectedBuildButton:not(:disabled):hover {
+  border-color: var(--ledger-accent);
+  box-shadow: none;
+  transform: none;
+  background: var(--panel-soft);
+}
+
+.selectedBuildButton strong {
+  font-size: 0.72rem;
+}
+
+.deckShelf {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--ledger-rule);
+}
+
+.deckPlaceholder {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  aspect-ratio: 3 / 4;
+  min-height: 0;
+  padding: 12px 6px;
+  border: 1px solid rgb(143 46 19 / 36%);
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--ivory), var(--bone));
+  box-shadow: 0 2px 7px rgb(72 42 21 / 16%);
+}
+
+.deckPlaceholder:not(:disabled):hover {
+  border-color: rgb(143 46 19 / 58%);
+  box-shadow: 0 4px 12px rgb(72 42 21 / 22%);
+}
+
+.deckSprite {
+  width: 40px;
+  height: 40px;
+}
+
+.deckPlaceholder:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+.growPopModal {
+  max-width: 640px;
+}
+
+.growPopChoiceGrid button {
+  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+}
+
+.growPopChoiceGrid .miniIcon {
+  grid-row: 1 / 3;
+}
+
+.growPopChoiceGrid strong {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.growPopBenefitPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(140px, 0.6fr);
+  gap: 8px;
+}
+
+.growPopBenefitPanel > div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-soft);
+}
+
+.growPopBenefitPanel strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.growPopBenefitPanel > div > span:not(.resourceDeltaList) {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 @media (max-width: 1280px) {
   .workbench {
     grid-template-columns: minmax(250px, 320px) minmax(420px, 1fr) minmax(280px, 330px);
@@ -2048,5 +3123,86 @@ button:focus-visible {
   .buildingButtonIcon {
     width: 34px;
     height: 34px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .strategyTopbar {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .strategyWorkbench {
+    grid-template-columns: minmax(280px, 320px) minmax(520px, 1fr) minmax(280px, 320px);
+  }
+
+  .bandResourceGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1120px) {
+  .strategyTopbar,
+  .strategyWorkbench {
+    grid-template-columns: 1fr;
+  }
+
+  .strategyMapColumn {
+    order: -1;
+  }
+
+  .scoreboardPanel {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .bandResourceGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .seasonStatus {
+    grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+  }
+
+  .seasonMedallion {
+    width: 58px;
+    height: 58px;
+  }
+
+  .scoreboardPanel,
+  .popBuildingMatrix,
+  .selectedBuildGrid,
+  .deckShelf {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bandResourceGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .commandToolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .commandEndTurn {
+    grid-column: span 3;
+  }
+
+  .scoreTooltip {
+    position: fixed;
+    top: 88px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+
+@media (max-width: 460px) {
+  .popBuildingMatrix,
+  .selectedBuildGrid,
+  .deckShelf,
+  .growPopBenefitPanel,
+  .popSummary {
+    grid-template-columns: 1fr;
   }
 }
