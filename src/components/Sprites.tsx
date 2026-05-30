@@ -10,7 +10,14 @@ type UiAtlasKey =
   | "playerToken"
   | "meander"
   | "voteToken"
-  | "seasonMarker";
+  | "seasonMarker"
+  | "growAction"
+  | "moveAction"
+  | "endTurn"
+  | "eventDeck"
+  | "seasonDeck"
+  | "resolutionDeck"
+  | "victoryPoint";
 
 const ICON_SPRITE_CLASSES: Record<IconAtlasKey, string> = {
   wood: "sprite-wood",
@@ -47,7 +54,14 @@ const UI_SPRITE_CLASSES: Record<UiAtlasKey, string> = {
   playerToken: "sprite-ui-player-token",
   meander: "sprite-ui-meander",
   voteToken: "sprite-ui-vote-token",
-  seasonMarker: "sprite-ui-season-marker"
+  seasonMarker: "sprite-ui-season-marker",
+  growAction: "sprite-ui-season-marker",
+  moveAction: "sprite-ui-meander",
+  endTurn: "sprite-ui-primary",
+  eventDeck: "sprite-ui-secondary",
+  seasonDeck: "sprite-ui-season-marker",
+  resolutionDeck: "sprite-ui-vote-token",
+  victoryPoint: "sprite-ui-vote-token"
 };
 
 const RESOURCE_MASK_CLASSES: Record<Resource, string> = {

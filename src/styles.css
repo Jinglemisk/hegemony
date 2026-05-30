@@ -1898,6 +1898,912 @@ button:focus-visible {
   font-size: 0.76rem;
 }
 
+.uiOverhaulShell {
+  gap: 10px;
+  padding: 14px;
+}
+
+.strategyTopbar {
+  grid-template-columns: minmax(420px, 1fr) minmax(360px, 0.82fr) minmax(430px, 1.08fr);
+  gap: 10px;
+  max-width: 1640px;
+}
+
+.statusPanel {
+  position: relative;
+  min-width: 0;
+  min-height: 64px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgb(255 248 231 / 8%), rgb(255 248 231 / 2%)),
+    var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.resourceStatusPanel,
+.scoreboardPanel {
+  overflow: visible;
+  padding: 6px;
+}
+
+.compactTopResourceGrid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-content: center;
+  gap: 6px;
+  height: 100%;
+  margin: 0;
+}
+
+.compactTopResourceGrid .resourcePill {
+  grid-template-columns: 26px minmax(0, auto) minmax(30px, auto);
+  gap: 5px;
+  min-height: 50px;
+  padding: 5px 6px;
+}
+
+.compactTopResourceGrid .resourceIcon,
+.compactTopResourceGrid .happinessTheatreIcon {
+  width: 26px;
+  height: 26px;
+}
+
+.compactTopResourceGrid .resourcePill strong {
+  font-size: 0.98rem;
+}
+
+.compactTopResourceGrid .resourceDelta {
+  font-size: 0.72rem;
+}
+
+.seasonStatus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+}
+
+.seasonEventLabel {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.seasonEventLabel span,
+.scoreIdentity em,
+.compactPanelTitle span,
+.deckPlaceholder em,
+.buildingLedgerLead em,
+.popEconomyLead em,
+.selectedTileHeader em,
+.selectedBuildButton em {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-style: normal;
+  line-height: 1.2;
+}
+
+.seasonEventLabel span,
+.compactPanelTitle span,
+.deckPlaceholder em {
+  text-transform: uppercase;
+}
+
+.seasonEventLabel strong {
+  overflow: hidden;
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.seasonEventLabel.alignRight {
+  text-align: right;
+}
+
+.seasonMedallion {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 64px;
+  height: 64px;
+  border: 2px solid rgb(36 25 16 / 34%);
+  border-radius: 50%;
+  color: var(--ivory);
+  background:
+    radial-gradient(circle at 50% 38%, rgb(255 248 231 / 22%), transparent 46%),
+    linear-gradient(180deg, var(--clay), var(--clay-deep));
+  box-shadow:
+    inset 0 0 0 4px rgb(24 18 16 / 18%),
+    0 10px 22px rgb(72 42 21 / 24%);
+}
+
+.seasonMedallion span {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.seasonMedallion strong {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.scoreboardPanel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.scoreboardSeat {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 4px 7px;
+  min-height: 52px;
+  overflow: visible;
+  padding: 6px 7px;
+  text-align: left;
+}
+
+.scoreToken {
+  grid-row: 1 / 3;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--ivory);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 4px rgb(24 18 16 / 24%),
+    0 0 0 1px rgb(36 25 16 / 24%);
+}
+
+.scoreIdentity,
+.scoreMetrics {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.scoreIdentity {
+  justify-content: space-between;
+}
+
+.scoreIdentity strong {
+  overflow: hidden;
+  color: var(--fg);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.scoreMetrics {
+  flex-wrap: wrap;
+}
+
+.scoreMetrics b {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.scoreMiniSprite {
+  width: 14px;
+  height: 14px;
+}
+
+.selectedScoreSeat {
+  color: var(--ivory);
+  background: linear-gradient(180deg, rgb(192 70 28 / 92%), rgb(143 46 19 / 92%));
+}
+
+.selectedScoreSeat .scoreIdentity strong,
+.selectedScoreSeat .scoreIdentity em,
+.selectedScoreSeat .scoreMetrics b {
+  color: var(--ivory);
+}
+
+.currentScoreSeat::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgb(255 248 231 / 64%);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.scoreTooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 90;
+  display: grid;
+  gap: 5px;
+  width: 220px;
+  padding: 10px;
+  border: 1px solid rgb(36 25 16 / 38%);
+  border-radius: 8px;
+  color: var(--fg);
+  background: rgb(255 248 231 / 99%);
+  box-shadow: 0 18px 38px rgb(36 25 16 / 28%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.scoreTooltip strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.scoreTooltip span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.scoreTooltip b {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreTooltip em {
+  font-style: normal;
+}
+
+.scoreboardSeat:hover .scoreTooltip,
+.scoreboardSeat:focus .scoreTooltip,
+.scoreboardSeat:focus-visible .scoreTooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.strategyWorkbench {
+  grid-template-columns: minmax(350px, 405px) minmax(560px, 1fr) minmax(330px, 390px);
+  max-width: 1640px;
+}
+
+.intelPanel,
+.commandPanel {
+  padding: 12px;
+}
+
+.compactPanelTitle {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+}
+
+.compactPanelTitle > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.compactPanelTitle h2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empireIntel,
+.commandStack {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+}
+
+.intelTabs {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0 0 8px;
+  background: linear-gradient(180deg, rgb(255 248 231 / 96%), rgb(255 248 231 / 82%));
+}
+
+.intelTabs button {
+  min-height: 36px;
+  padding: 0 8px;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.intelTabs .activeIntelTab {
+  color: var(--ivory);
+  border-color: rgb(192 70 28 / 72%);
+  background: linear-gradient(180deg, var(--clay), var(--clay-deep));
+}
+
+.intelBody,
+.holdingStack,
+.buildingsLedger,
+.popsLedger {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+}
+
+.holdingMatrix,
+.buildingLedgerRow,
+.popEconomyRow,
+.netEconomyPanel,
+.selectedTilePanel,
+.deckPlaceholder {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgb(255 248 231 / 10%), transparent),
+    var(--panel-soft);
+}
+
+.holdingMatrix {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.holdingMatrixHeader,
+.holdingCapacityLine,
+.holdingYieldLine,
+.selectedTileHeader,
+.selectedSettlementList span,
+.selectedSettlementList em {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.holdingMatrixHeader,
+.holdingCapacityLine {
+  justify-content: space-between;
+}
+
+.holdingMatrixHeader span,
+.holdingCapacityLine span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.holdingMatrixHeader strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.holdingMatrixHeader em,
+.holdingCapacityLine,
+.holdingYieldLine {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-style: normal;
+}
+
+.holdingCapacityLine strong,
+.holdingYieldLine strong {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.popBuildingMatrix {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.popBuildingColumn {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.popColumnHeader {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgb(255 248 231 / 48%);
+}
+
+.popColumnHeader span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.popColumnHeader strong {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.buildingChipRow {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.buildingChip,
+.emptyMini {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  min-width: 0;
+  overflow: visible;
+  padding: 4px 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--muted);
+  background: rgb(36 25 16 / 6%);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: left;
+}
+
+.buildingChip .miniIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.buildingChip span:not(.detailTooltip) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buildingChipBuilt {
+  color: var(--fg);
+  border-color: rgb(192 70 28 / 34%);
+  background: rgb(192 70 28 / 10%);
+}
+
+.buildingChipOption {
+  cursor: pointer;
+}
+
+.mutedChipRow .buildingChipOption {
+  color: var(--muted);
+}
+
+.emptyMini {
+  display: block;
+  color: var(--subtle);
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.detailTooltip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  z-index: 100;
+  display: grid;
+  gap: 5px;
+  width: min(260px, 72vw);
+  padding: 9px;
+  border: 1px solid rgb(36 25 16 / 40%);
+  border-radius: 8px;
+  color: var(--fg);
+  background: rgb(255 248 231 / 99%);
+  box-shadow: 0 18px 34px rgb(36 25 16 / 28%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.detailTooltip strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.detailTooltip em {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-style: normal;
+  line-height: 1.25;
+}
+
+.buildingChip:hover .detailTooltip,
+.buildingChip:focus .detailTooltip,
+.buildingChip:focus-visible .detailTooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.holdingYieldLine {
+  justify-content: flex-start;
+  min-height: 30px;
+  padding: 5px 6px;
+  border: 1px solid var(--resource-line);
+  border-radius: 6px;
+  background: var(--resource-soft);
+}
+
+.miniResourceIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.buildingLedgerRow,
+.popEconomyRow,
+.netEconomyPanel {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.buildingLedgerLead,
+.popEconomyLead {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.buildingLedgerLead span,
+.popEconomyLead span,
+.selectedBuildButton span,
+.deckPlaceholder span,
+.selectedTileHeader span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.buildingLedgerLead strong,
+.popEconomyLead strong,
+.netEconomyPanel strong,
+.selectedBuildButton strong,
+.deckPlaceholder strong,
+.selectedTileHeader strong {
+  overflow: hidden;
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.buildingLedgerLead em {
+  overflow-wrap: anywhere;
+}
+
+.buildCandidateGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.largeCandidateGrid {
+  max-height: 230px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.candidateButton {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  min-height: 46px;
+  overflow: hidden;
+  padding: 6px 7px;
+  text-align: left;
+}
+
+.candidateButton span,
+.candidateButton b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidateButton span {
+  color: var(--fg);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.candidateButton b {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  line-height: 1.15;
+}
+
+.ledgerEmpty {
+  display: block;
+  padding: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.resourceDeltaList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.resourceDeltaList > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 4px 6px;
+  border: 1px solid var(--resource-line, var(--line));
+  border-radius: 5px;
+  background: var(--resource-soft, rgb(36 25 16 / 6%));
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.resourceDeltaList.neutral {
+  color: var(--subtle);
+  font-size: 0.78rem;
+}
+
+.netEconomyPanel {
+  background: rgb(255 248 231 / 52%);
+}
+
+.popSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.popSummaryGrid span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  background: var(--panel-soft);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.popSummaryGrid strong {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.commandToolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.commandIconButton {
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  min-height: 58px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 5px;
+  border: 1px solid var(--button-line);
+  border-radius: 6px;
+  color: var(--fg);
+  background: var(--button-bg);
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.commandIcon {
+  width: 28px;
+  height: 28px;
+}
+
+.commandEndTurn {
+  display: grid;
+  grid-column: span 3;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 58px;
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--clay), var(--clay-deep));
+  text-transform: uppercase;
+}
+
+.endTurnSprite {
+  width: 34px;
+  height: 34px;
+}
+
+.selectedTilePanel {
+  display: grid;
+  gap: 9px;
+  padding: 10px;
+}
+
+.emptySelectedTile p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.terrainPreviewSmall {
+  width: 42px;
+  height: 42px;
+  border-radius: 7px;
+  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  box-shadow: 0 8px 16px rgb(36 25 16 / 18%);
+}
+
+.selectedSettlementList {
+  display: grid;
+  gap: 5px;
+}
+
+.selectedSettlementList span,
+.selectedSettlementList em {
+  min-height: 32px;
+  padding: 5px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  background: rgb(255 248 231 / 44%);
+  font-size: 0.74rem;
+  font-style: normal;
+}
+
+.selectedSettlementList b {
+  color: var(--fg);
+}
+
+.selectedBuildGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.selectedBuildButton {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 6px;
+  text-align: left;
+}
+
+.selectedBuildButton strong {
+  font-size: 0.72rem;
+}
+
+.deckShelf {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.deckPlaceholder {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 5px;
+  min-height: 94px;
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.deckSprite {
+  width: 38px;
+  height: 38px;
+}
+
+.deckPlaceholder:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+.growPopModal {
+  max-width: 640px;
+}
+
+.growPopChoiceGrid button {
+  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+}
+
+.growPopChoiceGrid .miniIcon {
+  grid-row: 1 / 3;
+}
+
+.growPopChoiceGrid strong {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.growPopBenefitPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(140px, 0.6fr);
+  gap: 8px;
+}
+
+.growPopBenefitPanel > div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-soft);
+}
+
+.growPopBenefitPanel strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.growPopBenefitPanel > div > span:not(.resourceDeltaList) {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 @media (max-width: 1280px) {
   .workbench {
     grid-template-columns: minmax(250px, 320px) minmax(420px, 1fr) minmax(280px, 330px);
@@ -2048,5 +2954,88 @@ button:focus-visible {
   .buildingButtonIcon {
     width: 34px;
     height: 34px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .strategyTopbar {
+    grid-template-columns: minmax(360px, 1fr) minmax(330px, 0.9fr) minmax(390px, 1fr);
+  }
+
+  .strategyWorkbench {
+    grid-template-columns: minmax(320px, 370px) minmax(500px, 1fr) minmax(310px, 350px);
+  }
+
+  .compactTopResourceGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1120px) {
+  .strategyTopbar,
+  .strategyWorkbench {
+    grid-template-columns: 1fr;
+  }
+
+  .strategyMapColumn {
+    order: -1;
+  }
+
+  .scoreboardPanel {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .compactTopResourceGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .seasonStatus {
+    grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+  }
+
+  .seasonMedallion {
+    width: 58px;
+    height: 58px;
+  }
+
+  .scoreboardPanel,
+  .popBuildingMatrix,
+  .buildCandidateGrid,
+  .selectedBuildGrid,
+  .deckShelf {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .compactTopResourceGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .commandToolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .commandEndTurn {
+    grid-column: span 3;
+  }
+
+  .scoreTooltip {
+    position: fixed;
+    top: 88px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+
+@media (max-width: 460px) {
+  .popBuildingMatrix,
+  .buildCandidateGrid,
+  .selectedBuildGrid,
+  .deckShelf,
+  .growPopBenefitPanel,
+  .popSummaryGrid {
+    grid-template-columns: 1fr;
   }
 }
