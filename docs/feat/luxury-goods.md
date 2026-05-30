@@ -63,6 +63,7 @@ The player's stored/base Happiness should not permanently increase by `+2` every
 
    - `port`: unlocks adjacent coastal features and consumes a building slot.
    - `luxuryGoodsTrader`: costs `100 Gold`, has a global maximum of 3, and claims one land Luxury Good.
+   - Use ChatGPT image generation tool to create its appropiate icons.
 
    Port cost is not specified in the PDF. A first tunable value could be `20 Wood, 5 Stone, 10 Gold`.
 
@@ -100,24 +101,18 @@ The player's stored/base Happiness should not permanently increase by `+2` every
 
 The initial set should match the PDF structure: 6 coastal goods and 3 land-trader goods.
 
-| Source | Type | Specific Good |
+| Source  | Specific Good |
 | --- | --- | --- |
-| Coastal | Maritime prestige | Murex Purple |
-| Coastal | Maritime treasure | Pearls |
-| Coastal | Maritime sacred/decorative | Coral |
-| Coastal | Artisan trade | Glassware |
-| Coastal | Exotic trade | Incense |
-| Coastal | Textile trade | Fine Linen |
+| Coastal |  Dye |
+| Coastal |  Pearls |
+| Coastal | Coral |
+| Coastal | Glassware |
+| Coastal |  Incense |
+| Coastal | Fine Linen |
 | Land Trader | Stone / monument luxury | Marble |
 | Land Trader | Gold / metal luxury | Silverwork |
 | Land Trader | Food / estate luxury | Wine & Olive Oil |
 
-For a later richer version, land trader choices could depend on city terrain:
-
-- Mountains unlock Marble.
-- Hills unlock Silverwork.
-- Forests unlock Amber or Resins.
-- Plains unlock Wine and Olive Oil.
 
 For the first implementation, keep exactly 9 named goods to match the PDF and avoid overbuilding before ports, events, and happiness consequences are complete.
 

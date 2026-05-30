@@ -27,7 +27,7 @@ type DragState = {
   startClientY: number;
   startViewBox: ViewBox;
   hasMoved: boolean;
-  startedOnTile: boolean;
+  startTileId: string | null;
 };
 
 const HEX_SIZE = 45;
@@ -35,7 +35,7 @@ const TILE_ART_SIZE = 88;
 const COLONY_POSITIONS = [-14, 14];
 const DRAG_CLICK_THRESHOLD = 5;
 const TILE_CLICK_SUPPRESS_MS = 160;
-const BASE_VIEW_BOX: ViewBox = { x: -310, y: -270, width: 620, height: 540 };
+const BASE_VIEW_BOX: ViewBox = { x: -372, y: -270, width: 744, height: 540 };
 const WORLD_VIEW_BOX: ViewBox = {
   x: BASE_VIEW_BOX.x - BASE_VIEW_BOX.width * 0.05,
   y: BASE_VIEW_BOX.y - BASE_VIEW_BOX.height * 0.05,
@@ -181,7 +181,7 @@ export function HexMap({
       startClientY: event.clientY,
       startViewBox: cameraViewBox.current,
       hasMoved: false,
-      startedOnTile: isTileMapTarget(event.target)
+      startTileId: getTileMapTargetId(event.target)
     };
     event.currentTarget.setPointerCapture(event.pointerId);
     event.currentTarget.classList.add("isDraggingSea");
@@ -221,7 +221,10 @@ export function HexMap({
     const drag = dragState.current;
 
     if (drag?.pointerId === event.pointerId) {
-      if (drag.hasMoved && drag.startedOnTile) {
+      if (drag.startTileId && !drag.hasMoved) {
+        suppressTileClickOnce();
+        onTileAction(drag.startTileId);
+      } else if (drag.hasMoved && drag.startTileId) {
         suppressTileClickOnce();
       }
 
@@ -340,6 +343,7 @@ export function HexMap({
                 <g
                   aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${tile.resource.amount} ${tile.resource.type}`}
                   className="svgButton"
+                  data-tile-id={tile.id}
                   onClick={(event) => handleTileClick(tile.id, event)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
@@ -525,8 +529,12 @@ function isMapDragBlockedTarget(target: EventTarget) {
   return target instanceof Element && Boolean(target.closest(".tileConfirmPrompt, button"));
 }
 
-function isTileMapTarget(target: EventTarget) {
-  return target instanceof Element && Boolean(target.closest(".svgButton"));
+function getTileMapTargetId(target: EventTarget) {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  return target.closest<SVGGElement>(".svgButton")?.dataset.tileId ?? null;
 }
 
 function getShorelineEdges(
