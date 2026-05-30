@@ -1928,6 +1928,7 @@ button:focus-visible {
 
 .effectsCluster {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
   gap: 24px;
@@ -1965,11 +1966,30 @@ button:focus-visible {
 
 .seasonEventLabel {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  max-width: 260px;
+}
+
+.seasonEventLabel > div {
+  display: grid;
   gap: 3px;
   min-width: 0;
 }
 
+.eventStatusArt {
+  width: 34px;
+  height: 46px;
+  object-fit: cover;
+  border: 1px solid rgb(143 46 19 / 46%);
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgb(72 42 21 / 16%);
+}
+
 .seasonEventLabel span,
+.seasonEventLabel em,
 .scoreIdentity em,
 .compactPanelTitle span,
 .deckPlaceholder em,
@@ -1998,6 +2018,20 @@ button:focus-visible {
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.seasonEventLabel em {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--subtle);
+  font-style: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  text-transform: none;
+}
+
+.activeEventLabel strong {
+  color: var(--clay);
 }
 
 .seasonEventLabel.alignRight {
@@ -2197,6 +2231,7 @@ button:focus-visible {
 .intelPanel,
 .commandPanel {
   position: relative;
+  overflow: hidden;
   padding: 12px 10px;
   border: 20px solid transparent;
   border-image: url("../assets/codex-banana-showcase/greek-frame.png") 270 round;
@@ -2231,6 +2266,12 @@ button:focus-visible {
   display: grid;
   gap: 10px;
   min-height: 0;
+}
+
+.commandStack {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  overflow: hidden;
 }
 
 .intelTabs {
@@ -2764,7 +2805,7 @@ button:focus-visible {
 
 .commandToolbar {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 7px;
 }
 
@@ -2802,7 +2843,7 @@ button:focus-visible {
 
 .commandEndTurn {
   display: grid;
-  grid-column: span 3;
+  grid-column: span 2;
   grid-template-columns: 34px minmax(0, 1fr);
   align-items: center;
   justify-content: center;
@@ -2816,6 +2857,78 @@ button:focus-visible {
 .endTurnSprite {
   width: 34px;
   height: 34px;
+}
+
+.turnLogPanel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 9px;
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px 2px 4px;
+  border-top: 1px solid var(--ledger-rule);
+}
+
+.turnLogHeader {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.turnLogHeader h3 {
+  margin: 0;
+  color: var(--fg);
+  font-size: 0.82rem;
+}
+
+.turnLogHeader em {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.turnLogList {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 0;
+  overflow: auto;
+  padding: 2px 4px 2px 0;
+  scrollbar-color: var(--clay) transparent;
+}
+
+.turnLogList p {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--ledger-rule);
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.28;
+}
+
+.turnLogList span {
+  align-self: start;
+  justify-self: start;
+  padding: 2px 5px;
+  border: 1px solid rgb(143 46 19 / 38%);
+  border-radius: 4px;
+  color: var(--clay);
+  background: rgb(192 70 28 / 9%);
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.turnLogList b {
+  min-width: 0;
+  color: var(--fg);
+  font-weight: 500;
+  overflow-wrap: anywhere;
 }
 
 .selectedTilePanel {
@@ -2927,6 +3040,213 @@ button:focus-visible {
 .deckPlaceholder:focus-visible {
   outline: 2px solid var(--accent-2);
   outline-offset: 2px;
+}
+
+.eventModalBackdrop {
+  z-index: 90;
+  background:
+    radial-gradient(circle at 50% 28%, rgb(255 248 231 / 26%), transparent 34%),
+    rgb(24 18 16 / 78%);
+}
+
+.eventCardReveal {
+  width: min(390px, calc(100vw - 34px));
+  max-height: min(92vh, 760px);
+  aspect-ratio: 2 / 3;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.eventCardSurface {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto minmax(190px, 39%) minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 2px solid rgb(80 35 18 / 72%);
+  border-radius: 14px;
+  color: var(--fg);
+  background:
+    linear-gradient(90deg, rgb(143 46 19 / 18%) 0 2px, transparent 2px calc(100% - 2px), rgb(143 46 19 / 18%) calc(100% - 2px)),
+    radial-gradient(circle at 50% 12%, rgb(255 248 231 / 90%), transparent 38%),
+    linear-gradient(180deg, #fff4d8, #eed5aa 72%, #d4a05f);
+  box-shadow:
+    0 28px 70px rgb(0 0 0 / 48%),
+    inset 0 0 0 7px rgb(255 248 231 / 48%),
+    inset 0 0 0 11px rgb(143 46 19 / 34%);
+}
+
+.eventCardSurface::before,
+.eventCardSurface::after {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid rgb(143 46 19 / 28%);
+  border-radius: 10px;
+}
+
+.eventCardSurface::after {
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, transparent 0 18px, rgb(143 46 19 / 18%) 18px 20px, transparent 20px calc(100% - 20px), rgb(143 46 19 / 18%) calc(100% - 20px) calc(100% - 18px), transparent calc(100% - 18px)),
+    linear-gradient(0deg, rgb(36 25 16 / 11%), transparent 28%, transparent 72%, rgb(36 25 16 / 10%));
+  mix-blend-mode: multiply;
+}
+
+.eventCardCrest {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 24px 8px;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.eventCardCrest span,
+.eventCardCrest b,
+.eventCardDeckLabel {
+  color: var(--clay-deep);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.eventCardCrest b {
+  overflow: hidden;
+  color: var(--fg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventCardArtFrame {
+  margin: 0 24px 12px;
+  overflow: hidden;
+  border: 1px solid rgb(80 35 18 / 46%);
+  border-radius: 8px;
+  background: #dcc08c;
+  box-shadow:
+    0 10px 20px rgb(72 42 21 / 24%),
+    inset 0 0 0 4px rgb(255 248 231 / 42%);
+}
+
+.eventCardArtFrame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.eventCardBody {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 24px 10px;
+  scrollbar-color: var(--clay) transparent;
+}
+
+.eventCardBody h2 {
+  margin: 0;
+  color: #27150d;
+  font-size: clamp(1.08rem, 4.8vw, 1.42rem);
+  line-height: 1.02;
+  text-align: center;
+}
+
+.eventCardBody p {
+  margin: 0;
+  color: rgb(36 25 16 / 82%);
+  font-size: 0.84rem;
+  line-height: 1.28;
+  text-align: center;
+}
+
+.eventCardDeckLabel {
+  justify-self: center;
+}
+
+.eventChoiceStack {
+  display: grid;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.eventChoiceButton,
+.eventSingleEffect {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  min-height: 58px;
+  padding: 8px 10px;
+  border: 1px solid rgb(143 46 19 / 36%);
+  border-radius: 6px;
+  background: rgb(255 248 231 / 42%);
+  text-align: left;
+}
+
+.eventChoiceButton:not(:disabled):hover {
+  border-color: var(--ledger-accent);
+  box-shadow: none;
+  transform: none;
+  background: var(--panel-soft);
+}
+
+.eventChoiceButton.selectedChoice {
+  border-color: var(--clay);
+  background: rgb(192 70 28 / 16%);
+  box-shadow: inset 0 0 0 1px rgb(255 248 231 / 56%);
+}
+
+.eventChoiceButton strong,
+.eventSingleEffect strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+}
+
+.eventChoiceButton span,
+.eventSingleEffect span,
+.fieldGroup em {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.eventTargetField {
+  margin-top: 2px;
+}
+
+.eventCardFooter {
+  padding: 10px 24px 22px;
+}
+
+.eventResolveButton {
+  width: 100%;
+  min-height: 46px;
+  color: var(--ivory);
+  border-color: rgb(80 35 18 / 62%);
+  background: linear-gradient(180deg, var(--clay), var(--clay-deep));
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 24%),
+    0 8px 16px rgb(72 42 21 / 22%);
+  text-transform: uppercase;
+}
+
+.eventResolveButton:not(:disabled):hover {
+  background: linear-gradient(180deg, #d15225, var(--clay-deep));
 }
 
 .growPopModal {
@@ -3187,11 +3507,11 @@ button:focus-visible {
   }
 
   .commandToolbar {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .commandEndTurn {
-    grid-column: span 3;
+    grid-column: span 2;
   }
 
   .scoreTooltip {
