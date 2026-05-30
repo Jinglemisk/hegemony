@@ -36,16 +36,15 @@ import {
   formatBuildingEffects,
   formatNumber,
   formatPopLabel,
-  formatPopShort,
   formatResourceCost,
   formatResourceDelta,
   formatSignedNumber,
-  phaseHint
+  phaseHint,
+  phaseLabel
 } from "../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
 import { ActionLogModal } from "./ActionLogModal";
 import { HexMap } from "./HexMap";
-import { MapStatusOverlay } from "./MapStatusOverlay";
 import { FoundColonyModal, MovePopsModal, PopulationPickerModal } from "./PopulationModals";
 import { ResourceGrid } from "./ResourceGrid";
 import { AtlasIcon, ResourceIcon, TerrainSprite, UiSprite } from "./Sprites";
@@ -211,17 +210,12 @@ export function HegemonyBoard({
   return (
     <main className="shell uiOverhaulShell">
       <header className="topbar strategyTopbar">
-        <section className="statusPanel resourceStatusPanel" aria-label={`${viewer.name} resources`}>
-          <ResourceGrid
-            breakdown={projectedIncomeBreakdown}
-            className="topResourceGrid compactTopResourceGrid"
-            deltas={projectedIncome}
-            resetKey={viewerId}
-            resources={viewer.resources}
-          />
-        </section>
-
-        <SeasonStatus season={G.season} />
+        <SeasonStatus
+          season={G.season}
+          ctx={ctx}
+          isActive={isActive}
+          currentPlayerId={currentPlayerId}
+        />
 
         <PlayerScoreboard
           G={G}
@@ -248,12 +242,6 @@ export function HegemonyBoard({
 
         <section className="mapColumn strategyMapColumn">
           <div className="mapFrame">
-            <MapStatusOverlay
-              G={G}
-              ctx={ctx}
-              currentPlayerId={currentPlayerId}
-              isActive={isActive}
-            />
             <HexMap
               G={G}
               confirmation={
@@ -270,10 +258,20 @@ export function HegemonyBoard({
               selectedTileId={selectedTileId}
               onTileAction={handleTileAction}
             />
+            {isSetup ? (
+              <div className="mapSetupCaption" role="status">
+                {pendingSetupCopy}
+              </div>
+            ) : null}
           </div>
-          <div className="phaseStrip">
-            <span>{phaseHint(ctx.phase)}</span>
-            <span>{pendingSetupCopy}</span>
+          <div className="resourceBand" aria-label={`${viewer.name} resources`}>
+            <ResourceGrid
+              breakdown={projectedIncomeBreakdown}
+              className="topResourceGrid bandResourceGrid"
+              deltas={projectedIncome}
+              resetKey={viewerId}
+              resources={viewer.resources}
+            />
           </div>
         </section>
 
@@ -369,22 +367,45 @@ export function HegemonyBoard({
   );
 }
 
-function SeasonStatus({ season }: { season: number }) {
+function SeasonStatus({
+  season,
+  ctx,
+  isActive,
+  currentPlayerId
+}: {
+  season: number;
+  ctx: LocalContext;
+  isActive: boolean;
+  currentPlayerId: PlayerId;
+}) {
   return (
-    <section className="statusPanel seasonStatus" aria-label="Season and card status">
-      <div className="seasonEventLabel">
-        <span>Seasonal Effect</span>
-        <strong>Awaiting Card</strong>
+    <>
+      <section className="statusPanel effectsCluster" aria-label="Seasonal effects, player events and passed resolutions">
+        <div className="seasonEventLabel">
+          <span>Seasonal Effect</span>
+          <strong>Awaiting Card</strong>
+        </div>
+        <div className="seasonEventLabel">
+          <span>Player Event</span>
+          <strong>Awaiting Card</strong>
+        </div>
+        <div className="seasonEventLabel">
+          <span>Passed Resolutions</span>
+          <strong>None Yet</strong>
+        </div>
+      </section>
+
+      <div className="seasonCenter">
+        <div className="seasonMedallion" aria-label={`Season ${season}`}>
+          <span>Season</span>
+          <strong>{season}</strong>
+        </div>
+        <div className="seasonTurnCaption" aria-label="Turn status">
+          <span>Turn {ctx.turn} · {phaseLabel(ctx.phase)}</span>
+          <strong>{isActive ? "Your turn" : `${PLAYER_DISPLAY_NAMES[currentPlayerId]} acting`}</strong>
+        </div>
       </div>
-      <div className="seasonMedallion" aria-label={`Season ${season}`}>
-        <span>Season</span>
-        <strong>{season}</strong>
-      </div>
-      <div className="seasonEventLabel alignRight">
-        <span>Player Event</span>
-        <strong>Awaiting Card</strong>
-      </div>
-    </section>
+    </>
   );
 }
 
@@ -482,7 +503,7 @@ function EmpireIntelPanel({
       <div className="panelTitle compactPanelTitle">
         <AtlasIcon icon="capital" className="titleIcon" />
         <div>
-          <h2>{PLAYER_DISPLAY_NAMES[playerID]} Ledger</h2>
+          <h2>Ledger</h2>
           <span>{holdings.length} holdings</span>
         </div>
       </div>
@@ -566,23 +587,30 @@ function CitiesTab({
             key={`${settlement.owner}-${tile.id}`}
           >
             <div className="holdingMatrixHeader">
-              <span>
+              <span className="cityIdentity" title={`${capitalize(settlement.kind)} · ${tile.id}`}>
                 <AtlasIcon icon={settlement.kind} className="miniIcon" />
-                <strong>{capitalize(settlement.kind)}</strong>
                 <em>{tile.id}</em>
               </span>
-              <span>
+              <span className="cityTerrainIcon" title={`${capitalize(tile.terrain)} terrain`}>
                 <TerrainSprite terrain={tile.terrain} className="terrainChip" />
-                {capitalize(tile.terrain)}
               </span>
             </div>
 
             <div className="holdingCapacityLine">
-              <span className={overCapacity > 0 ? "overCapacityText" : undefined}>
-                Pops <strong>{popTotal}</strong>/<strong>{capacity}</strong>
+              <span
+                className={overCapacity > 0 ? "cityMeter overCapacityText" : "cityMeter"}
+                title={`Population ${popTotal} of ${capacity}`}
+              >
+                <AtlasIcon icon="citizens" className="miniIcon" />
+                <strong>{popTotal}</strong>
+                <span className="meterSlash">/</span>
+                <strong>{capacity}</strong>
               </span>
-              <span>
-                Slots <strong>{settlement.buildings.length}</strong>/<strong>{slots}</strong>
+              <span className="cityMeter" title={`Building slots ${settlement.buildings.length} of ${slots}`}>
+                <AtlasIcon icon="temple" className="miniIcon" />
+                <strong>{settlement.buildings.length}</strong>
+                <span className="meterSlash">/</span>
+                <strong>{slots}</strong>
               </span>
             </div>
 
@@ -597,9 +625,11 @@ function CitiesTab({
 
                 return (
                   <div className="popBuildingColumn" key={pop}>
-                    <div className="popColumnHeader">
+                    <div
+                      className="popColumnHeader"
+                      title={`${capitalize(formatPopLabel(pop, settlement.pops[pop]))}: ${settlement.pops[pop]}`}
+                    >
                       <AtlasIcon icon={pop} className="miniIcon" />
-                      <span>{formatPopShort(pop)}</span>
                       <strong>{settlement.pops[pop]}</strong>
                     </div>
                     <div className="buildingChipRow">
@@ -620,7 +650,7 @@ function CitiesTab({
                           ) : null;
                         })
                       ) : (
-                        <span className="emptyMini">none</span>
+                        <span className="emptyMini" title="No buildings of this type">—</span>
                       )}
                     </div>
                     <div className="buildingChipRow mutedChipRow">
@@ -642,7 +672,7 @@ function CitiesTab({
                           );
                         })
                       ) : (
-                        <span className="emptyMini">built</span>
+                        <span className="emptyMini" title="All available buildings built">✓</span>
                       )}
                     </div>
                   </div>
@@ -650,9 +680,13 @@ function CitiesTab({
               })}
             </div>
 
-            <div className="holdingYieldLine" style={resourceCssVars(tile.resource.type)}>
+            <div
+              className="holdingYieldLine"
+              style={resourceCssVars(tile.resource.type)}
+              title={`Extracts ${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]}`}
+            >
               <ResourceIcon resource={tile.resource.type} value={tileYield} className="miniResourceIcon" />
-              Extracts <strong>{formatNumber(tileYield)}</strong> {RESOURCE_LABELS[tile.resource.type]}
+              <strong>{formatNumber(tileYield)}</strong>
             </div>
           </article>
         );
@@ -694,6 +728,9 @@ function BuildingsTab({
             <span>
               <strong>{building.name}</strong>
               <em>{formatBuildingEffects(building.effects)}</em>
+              <span className="buildingLedgerCost">
+                Cost <b>{formatResourceCost(building.cost)}</b>
+              </span>
             </span>
           </div>
           <div className="buildCandidateGrid">
@@ -1034,7 +1071,7 @@ function ActionCommandPanel({
         </button>
 
         <button className="commandIconButton" onClick={onLogOpen} title="Open action log.">
-          <UiSprite item="meander" className="commandIcon" />
+          <UiSprite item="seal" className="commandIcon" />
           <span>Log</span>
         </button>
 
@@ -1204,7 +1241,6 @@ function BuildingChip({
   const content = (
     <>
       <AtlasIcon icon={building.id} className="miniIcon" />
-      <span>{building.name}</span>
       <span className="detailTooltip" role="tooltip">
         <strong>{building.name}</strong>
         {tooltipRows.map((row) => (
@@ -1220,7 +1256,7 @@ function BuildingChip({
         className="buildingChip buildingChipOption"
         disabled={disabled}
         onClick={onClick}
-        title={tooltipRows.join(" ")}
+        title={[building.name, ...tooltipRows].join(" — ")}
         type="button"
       >
         {content}
@@ -1229,7 +1265,7 @@ function BuildingChip({
   }
 
   return (
-    <span className="buildingChip buildingChipBuilt" tabIndex={0}>
+    <span className="buildingChip buildingChipBuilt" tabIndex={0} title={building.name}>
       {content}
     </span>
   );
