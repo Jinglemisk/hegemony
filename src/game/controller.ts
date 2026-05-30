@@ -1,17 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { BuildingId, HegemonyState, PlayerId, PopType, Pops } from "./types";
+import { GAME_CONFIG, TEST_OPENING_SETUP } from "./config";
 import { PLAYER_IDS } from "./data";
 import {
   buildBuilding,
   collectIncome,
   createInitialState,
+  drawSeasonalEvent,
+  expireTurnEventModifiers,
   foundColony,
   growPop,
   INVALID_MOVE,
   movePops,
   placeCapital,
   placeColony,
+  resolvePendingPlayerEvent,
   resolveArrivingPops,
   startNewSeason,
   upgradeColonyToCity
@@ -39,6 +43,7 @@ export type GameMoves = {
   buildBuilding: (tileId: string, buildingId: BuildingId) => void;
   growPop: (tileId: string, pop: PopType) => void;
   movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
+  resolvePendingPlayerEvent: (targetTileId?: string, choiceIndex?: number) => void;
 };
 
 export type GameEvents = {
@@ -48,6 +53,10 @@ export type GameEvents = {
 type SetGame = Dispatch<SetStateAction<HegemonyGame>>;
 
 export function createInitialGame(): HegemonyGame {
+  return GAME_CONFIG.preloadOpeningSetupForTesting ? createPreloadedOpeningSetupGame() : createEmptySetupGame();
+}
+
+function createEmptySetupGame(): HegemonyGame {
   return {
     G: createInitialState(),
     ctx: {
@@ -56,6 +65,44 @@ export function createInitialGame(): HegemonyGame {
       turn: 1
     }
   };
+}
+
+function createPreloadedOpeningSetupGame(): HegemonyGame {
+  const game = createEmptySetupGame();
+
+  for (const placement of TEST_OPENING_SETUP) {
+    assertSetupTurn(game.ctx, placement.playerID, "setupCapital");
+    const result = placeCapital(game.G, placement.playerID, placement.capital.tileId, placement.capital.pops);
+    assertValidSetupMove(result, placement.playerID, "capital", placement.capital.tileId);
+    game.ctx = advanceSetupTurn(game.G, game.ctx, 1, "setupColony");
+  }
+
+  for (const placement of TEST_OPENING_SETUP) {
+    assertSetupTurn(game.ctx, placement.playerID, "setupColony");
+    const result = placeColony(game.G, placement.playerID, placement.colony.tileId, placement.colony.pops);
+    assertValidSetupMove(result, placement.playerID, "colony", placement.colony.tileId);
+    game.ctx = advanceSetupTurn(game.G, game.ctx, 2, "gameplay");
+  }
+
+  beginGameplayTurn(game.G, game.ctx);
+  return game;
+}
+
+function assertSetupTurn(ctx: LocalContext, playerID: PlayerId, phase: Phase) {
+  if (ctx.currentPlayer !== playerID || ctx.phase !== phase) {
+    throw new Error(`Invalid test setup order: expected ${playerID} during ${phase}.`);
+  }
+}
+
+function assertValidSetupMove(
+  result: typeof INVALID_MOVE | void,
+  playerID: PlayerId,
+  settlementKind: "capital" | "colony",
+  tileId: string
+) {
+  if (result === INVALID_MOVE) {
+    throw new Error(`Invalid test setup: ${playerID} cannot place ${settlementKind} on ${tileId}.`);
+  }
 }
 
 export function useHegemonyGame() {
@@ -232,6 +279,25 @@ function createMoves(setGame: SetGame): GameMoves {
           G
         };
       });
+    },
+    resolvePendingPlayerEvent: (targetTileId, choiceIndex) => {
+      setGame((previous) => {
+        if (previous.ctx.phase !== "gameplay") {
+          return previous;
+        }
+
+        const G = structuredClone(previous.G);
+        const result = resolvePendingPlayerEvent(G, previous.ctx.currentPlayer, targetTileId, choiceIndex);
+
+        if (result === INVALID_MOVE) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          G
+        };
+      });
     }
   };
 }
@@ -240,12 +306,14 @@ function createEvents(setGame: SetGame): GameEvents {
   return {
     endTurn: () => {
       setGame((previous) => {
-        if (previous.ctx.phase !== "gameplay") {
+        if (previous.ctx.phase !== "gameplay" || previous.G.pendingPlayerEvent) {
           return previous;
         }
 
         const G = structuredClone(previous.G);
         const next = nextPlayer(previous.ctx.currentPlayer);
+
+        expireTurnEventModifiers(G, previous.ctx.currentPlayer);
 
         if (next === "0") {
           startNewSeason(G);
@@ -269,6 +337,10 @@ function createEvents(setGame: SetGame): GameEvents {
 
 function beginGameplayTurn(G: HegemonyState, ctx: LocalContext) {
   if (ctx.phase === "gameplay") {
+    if (!G.activeSeasonEvent) {
+      drawSeasonalEvent(G);
+    }
+
     collectIncome(G, ctx.currentPlayer, "automatic");
   }
 }

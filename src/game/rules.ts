@@ -1,7 +1,22 @@
-import { ACTION_COSTS, BUILDINGS, EMPTY_RESOURCES, GROW_POP_COSTS, PLAYER_IDS, SETTLEMENT_RULES, STARTING_RESOURCES } from "./data";
+import {
+  ACTION_COSTS,
+  BUILDINGS,
+  EMPTY_RESOURCES,
+  GROW_POP_COSTS,
+  PLAYER_EVENT_CARDS,
+  PLAYER_IDS,
+  PLAYER_NAMES,
+  SEASONAL_EVENT_CARDS,
+  SETTLEMENT_RULES,
+  STARTING_RESOURCES
+} from "./data";
 import { createInitialMap, hexDistance } from "./map";
 import type {
+  ActionCostDiscountTarget,
   BuildingId,
+  EventCard,
+  EventDeckKind,
+  EventEffect,
   HegemonyState,
   HexTile,
   PlayerId,
@@ -102,6 +117,8 @@ export const PLACEMENT_POP_COUNTS = {
   colony: 1
 };
 
+type CostedAction = ActionCostDiscountTarget | "upgradeColonyToCity";
+
 export function createInitialState(): HegemonyState {
   return {
     board: {
@@ -112,17 +129,25 @@ export function createInitialState(): HegemonyState {
         ...players,
         [playerId]: {
           id: playerId,
-          name: `Player ${Number(playerId) + 1}`,
+          name: PLAYER_NAMES[playerId],
           resources: { ...STARTING_RESOURCES },
           settlements: [],
           collectedThisTurn: false,
           hasCollectedGameplayIncome: false,
-          grownSettlementsThisTurn: []
+          grownSettlementsThisTurn: [],
+          actionCostDiscounts: []
         }
       }),
       {} as HegemonyState["players"]
     ),
     transfers: [],
+    seasonalDrawPile: createEventDeck(SEASONAL_EVENT_CARDS),
+    seasonalDiscardPile: [],
+    playerDrawPile: createEventDeck(PLAYER_EVENT_CARDS),
+    playerDiscardPile: [],
+    activeSeasonEvent: null,
+    lastPlayerEvent: null,
+    pendingPlayerEvent: null,
     season: 1,
     log: [{ id: "start", season: 1, message: "The first season begins." }]
   };
@@ -188,7 +213,8 @@ export function foundColony(G: HegemonyState, playerID: PlayerId, tileId: string
     return INVALID_MOVE;
   }
 
-  payCost(G.players[playerID].resources, ACTION_COSTS.foundColony);
+  payCost(G.players[playerID].resources, status.cost ?? ACTION_COSTS.foundColony);
+  consumeActionCostDiscounts(G, playerID, "foundColony");
   addColony(G, playerID, tile, EMPTY_POPS);
   addLog(
     G,
@@ -211,7 +237,7 @@ export function upgradeColonyToCity(G: HegemonyState, playerID: PlayerId, tileId
     return INVALID_MOVE;
   }
 
-  payCost(G.players[playerID].resources, ACTION_COSTS.upgradeColonyToCity);
+  payCost(G.players[playerID].resources, status.cost ?? ACTION_COSTS.upgradeColonyToCity);
   const displacedPlayers = tile.settlements
     .filter((candidate) => candidate.owner !== playerID && candidate.kind === "colony")
     .map((candidate) => candidate.owner);
@@ -244,7 +270,7 @@ function addColony(G: HegemonyState, playerID: PlayerId, tile: HexTile, pops: Po
 export function collectIncome(G: HegemonyState, playerID: PlayerId, mode: "manual" | "automatic" = "manual") {
   const player = G.players[playerID];
 
-  if (player.collectedThisTurn) {
+  if (player.collectedThisTurn || G.pendingPlayerEvent) {
     return INVALID_MOVE;
   }
 
@@ -256,6 +282,7 @@ export function collectIncome(G: HegemonyState, playerID: PlayerId, mode: "manua
     G,
     `${getPlayerName(G, playerID)} ${mode === "automatic" ? "automatically collected" : "collected"} income (${formatRuleResourceDelta(income)}).`
   );
+  drawPlayerEvent(G, playerID);
 }
 
 export function buildBuilding(G: HegemonyState, playerID: PlayerId, tileId: string, buildingId: BuildingId) {
@@ -270,7 +297,8 @@ export function buildBuilding(G: HegemonyState, playerID: PlayerId, tileId: stri
     return INVALID_MOVE;
   }
 
-  payCost(G.players[playerID].resources, building.cost);
+  payCost(G.players[playerID].resources, status.cost ?? building.cost);
+  consumeActionCostDiscounts(G, playerID, "buildBuilding", building.id);
   settlement.buildings.push(building.id);
   addLog(G, `${getPlayerName(G, playerID)} built ${building.name}.`);
 }
@@ -341,9 +369,139 @@ export function resetTurnFlags(G: HegemonyState) {
 }
 
 export function startNewSeason(G: HegemonyState) {
+  if (G.activeSeasonEvent) {
+    G.seasonalDiscardPile.push(G.activeSeasonEvent.card);
+    G.activeSeasonEvent = null;
+  }
+
   G.season += 1;
   resetTurnFlags(G);
   addLog(G, `Season ${G.season} begins.`);
+  drawSeasonalEvent(G);
+}
+
+export function expireTurnEventModifiers(G: HegemonyState, playerID: PlayerId) {
+  const expired = G.players[playerID].actionCostDiscounts;
+
+  if (expired.length === 0) {
+    return;
+  }
+
+  G.players[playerID].actionCostDiscounts = [];
+  addLog(G, `${getPlayerName(G, playerID)}'s unused event discounts expired.`);
+}
+
+export function drawSeasonalEvent(G: HegemonyState) {
+  const card = drawFromEventDeck(G, "seasonal");
+
+  if (!card) {
+    addLog(G, "The Seasonal Event deck is empty.");
+    return;
+  }
+
+  G.activeSeasonEvent = { card, season: G.season };
+  addLog(G, `Seasonal Event revealed: ${card.name}. ${card.text}`);
+
+  if (card.timing === "immediate") {
+    applyEventEffects(G, card, null, card.effects);
+  }
+}
+
+export function drawPlayerEvent(G: HegemonyState, playerID: PlayerId) {
+  const card = drawFromEventDeck(G, "player");
+
+  if (!card) {
+    addLog(G, "The Player Event deck is empty.");
+    return;
+  }
+
+  G.lastPlayerEvent = card;
+  addLog(G, `${getPlayerName(G, playerID)} received Player Event card ${card.name}. ${card.text}`);
+
+  if (!hasResolvablePendingOption(G, playerID, card)) {
+    G.playerDiscardPile.push(card);
+    addLog(G, `${card.name} had no legal resolution and was discarded.`);
+    return;
+  }
+
+  G.pendingPlayerEvent = { card, playerID };
+  addLog(G, `${getPlayerName(G, playerID)} must reveal and resolve ${card.name} before taking normal actions.`);
+}
+
+export function resolvePendingPlayerEvent(
+  G: HegemonyState,
+  playerID: PlayerId,
+  targetTileId?: string,
+  choiceIndex = 0
+) {
+  const pending = G.pendingPlayerEvent;
+
+  if (!pending || pending.playerID !== playerID) {
+    return INVALID_MOVE;
+  }
+
+  const choices = getEventEffectChoices(pending.card);
+  const effects = choices[choiceIndex];
+
+  if (!effects) {
+    return INVALID_MOVE;
+  }
+
+  const popEffect = getAddPopsEffect(effects);
+
+  if (popEffect) {
+    if (!targetTileId || !canAddEventPopsToSettlement(G, playerID, targetTileId, popEffect)) {
+      return INVALID_MOVE;
+    }
+  }
+
+  applyEventEffects(G, pending.card, playerID, effects, targetTileId);
+  G.playerDiscardPile.push(pending.card);
+  G.pendingPlayerEvent = null;
+  addLog(G, `${getPlayerName(G, playerID)} resolved ${pending.card.name}.`);
+}
+
+export function getEventEffectChoices(card: EventCard): EventEffect[][] {
+  const choiceEffect = card.effects.find((effect): effect is Extract<EventEffect, { type: "choice" }> => effect.type === "choice");
+
+  return choiceEffect ? choiceEffect.options : [card.effects];
+}
+
+export function getAddPopsEffect(effects: EventEffect[]) {
+  return effects.find((effect): effect is Extract<EventEffect, { type: "addPops" }> => effect.type === "addPops");
+}
+
+export function getEventPopTargetTileIds(
+  G: HegemonyState,
+  playerID: PlayerId,
+  effect: Extract<EventEffect, { type: "addPops" }>
+) {
+  return G.players[playerID].settlements.filter((tileId) => canAddEventPopsToSettlement(G, playerID, tileId, effect));
+}
+
+export function getAdjustedActionCost(
+  G: HegemonyState,
+  playerID: PlayerId,
+  action: CostedAction,
+  baseCost: Partial<Resources>,
+  buildingId?: BuildingId
+): Partial<Resources> {
+  const adjusted = clonePartialResources(baseCost);
+  const multiplier = getSeasonBuildingCostMultiplier(G, action);
+
+  if (multiplier !== 1) {
+    for (const [resource, amount] of Object.entries(adjusted) as Array<[Resource, number | undefined]>) {
+      adjusted[resource] = Math.ceil((amount ?? 0) * multiplier);
+    }
+  }
+
+  if (action === "buildBuilding" || action === "foundColony") {
+    for (const discount of getMatchingActionCostDiscounts(G, playerID, action, buildingId)) {
+      adjusted[discount.resource] = Math.max(0, (adjusted[discount.resource] ?? 0) - discount.amount);
+    }
+  }
+
+  return adjusted;
 }
 
 export function totalPops(pops: Pops) {
@@ -475,6 +633,8 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
 
     applyIncomeBuildingEffects(contributions, income, settlement, settlementLabel, tile.resource.type);
   }
+
+  applySeasonalIncomeEffects(G, playerID, contributions, income);
 
   const foodShortage = getFoodShortageStatus(G, playerID, income.food);
 
@@ -618,7 +778,7 @@ export function getFoundColonyStatus(G: HegemonyState, playerID: PlayerId, tileI
   const status: ActionStatus = {
     can: false,
     reasons: [],
-    cost: ACTION_COSTS.foundColony
+    cost: getAdjustedActionCost(G, playerID, "foundColony", ACTION_COSTS.foundColony)
   };
 
   if (!tile) {
@@ -626,9 +786,11 @@ export function getFoundColonyStatus(G: HegemonyState, playerID: PlayerId, tileI
     return status;
   }
 
+  addPendingEventReason(G, status);
+
   status.reasons.push(...canPlaceColonyOnTile(G, playerID, tile).reasons);
 
-  if (!canAfford(G.players[playerID].resources, ACTION_COSTS.foundColony)) {
+  if (!canAfford(G.players[playerID].resources, status.cost ?? ACTION_COSTS.foundColony)) {
     status.reasons.push("Not enough resources.");
   }
 
@@ -653,6 +815,8 @@ export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerI
     return status;
   }
 
+  addPendingEventReason(G, status);
+
   if (!tile.settlements.some((settlement) => settlement.owner === playerID && settlement.kind === "colony")) {
     status.reasons.push("Requires your colony on this tile.");
   }
@@ -665,7 +829,7 @@ export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerI
     status.reasons.push("Cities and capitals cannot be adjacent.");
   }
 
-  if (!canAfford(G.players[playerID].resources, ACTION_COSTS.upgradeColonyToCity)) {
+  if (!canAfford(G.players[playerID].resources, status.cost ?? ACTION_COSTS.upgradeColonyToCity)) {
     status.reasons.push("Not enough resources.");
   }
 
@@ -687,7 +851,7 @@ export function getBuildBuildingStatus(
   const status: ActionStatus = {
     can: false,
     reasons: [],
-    cost: building?.cost
+    cost: building ? getAdjustedActionCost(G, playerID, "buildBuilding", building.cost, building.id) : undefined
   };
 
   if (!tile) {
@@ -700,13 +864,15 @@ export function getBuildBuildingStatus(
     return status;
   }
 
+  addPendingEventReason(G, status);
+
   if (!settlement) {
     status.reasons.push("Requires your city or capital on this tile.");
   } else if (settlement.buildings.length >= settlementBuildingSlots(tile, settlement)) {
     status.reasons.push("No building slots available.");
   }
 
-  if (!canAfford(G.players[playerID].resources, building.cost)) {
+  if (!canAfford(G.players[playerID].resources, status.cost ?? building.cost)) {
     status.reasons.push("Not enough resources.");
   }
 
@@ -732,6 +898,8 @@ export function getGrowPopStatus(
     status.cost = GROW_POP_COSTS[pop];
     return status;
   }
+
+  addPendingEventReason(G, status);
 
   if (!settlement) {
     status.reasons.push("Requires your settlement on this tile.");
@@ -770,6 +938,8 @@ export function getMovePopsStatus(
   };
   const sourceSettlement = getOwnedSettlement(G, sourceTileId, playerID);
   const targetSettlement = getOwnedSettlement(G, targetTileId, playerID);
+
+  addPendingEventReason(G, status);
 
   if (!sourceTileId) {
     status.reasons.push("Choose a source settlement.");
@@ -902,6 +1072,216 @@ function createSettlementEconomyPreview(
       inTransitOutDelta: (next?.inTransitOut ?? 0) - (previous?.inTransitOut ?? 0)
     };
   });
+}
+
+function createEventDeck(cards: EventCard[]) {
+  return shuffleCards(cards.flatMap((card) => Array.from({ length: card.count }, () => card)));
+}
+
+function shuffleCards<T>(cards: T[]) {
+  const shuffled = [...cards];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
+}
+
+function drawFromEventDeck(G: HegemonyState, deck: EventDeckKind) {
+  const drawKey = deck === "seasonal" ? "seasonalDrawPile" : "playerDrawPile";
+  const discardKey = deck === "seasonal" ? "seasonalDiscardPile" : "playerDiscardPile";
+
+  if (G[drawKey].length === 0 && G[discardKey].length > 0) {
+    G[drawKey] = shuffleCards(G[discardKey]);
+    G[discardKey] = [];
+    addLog(G, `${capitalize(deck)} Event discard reshuffled into the draw pile.`);
+  }
+
+  return G[drawKey].shift() ?? null;
+}
+
+function hasResolvablePendingOption(G: HegemonyState, playerID: PlayerId, card: EventCard) {
+  return getEventEffectChoices(card).some((effects) => {
+    const popEffect = getAddPopsEffect(effects);
+
+    return !popEffect || getEventPopTargetTileIds(G, playerID, popEffect).length > 0;
+  });
+}
+
+function canAddEventPopsToSettlement(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  effect: Extract<EventEffect, { type: "addPops" }>
+) {
+  const settlement = getOwnedSettlement(G, tileId, playerID);
+
+  return settlement ? totalPops(settlement.pops) + effect.amount <= settlementPopCapacity(settlement.kind) : false;
+}
+
+function applyEventEffects(
+  G: HegemonyState,
+  card: EventCard,
+  activePlayerID: PlayerId | null,
+  effects: EventEffect[],
+  targetTileId?: string
+) {
+  for (const effect of effects) {
+    if (effect.type === "choice") {
+      continue;
+    }
+
+    if (effect.type === "resourceDelta") {
+      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
+        applyEventResourceDelta(G, playerID, createResourceDelta(effect.resource, effect.amount), card.name);
+      }
+    } else if (effect.type === "scaledResourceDelta") {
+      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
+        const amount = scaledByPops(G, playerID, effect.amountPerPops, effect.popStep, effect.minimum);
+        applyEventResourceDelta(G, playerID, createResourceDelta(effect.resource, amount), card.name);
+      }
+    } else if (effect.type === "happinessDelta") {
+      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
+        applyEventResourceDelta(G, playerID, createResourceDelta("happiness", effect.amount), card.name);
+      }
+    } else if (effect.type === "scaledHappinessDelta" && effect.duration !== "season") {
+      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
+        const amount = scaledByPops(G, playerID, effect.amountPerPops, effect.popStep, effect.minimumMagnitude);
+        applyEventResourceDelta(G, playerID, createResourceDelta("happiness", amount), card.name);
+      }
+    } else if (effect.type === "incomeModifier" || effect.type === "buildingCostMultiplier") {
+      addLog(G, `${card.name} modifier is active: ${card.text}`);
+    } else if (effect.type === "addPops") {
+      if (!activePlayerID || !targetTileId) {
+        continue;
+      }
+
+      const settlement = getOwnedSettlement(G, targetTileId, activePlayerID);
+
+      if (!settlement) {
+        continue;
+      }
+
+      settlement.pops[effect.pop] += effect.amount;
+      addLog(
+        G,
+        `${getPlayerName(G, activePlayerID)} added ${effect.amount} ${formatPopName(effect.pop, effect.amount)} to ${formatTileLabel(G, targetTileId)} from ${card.name}.`
+      );
+    } else if (effect.type === "actionCostDiscount") {
+      if (!activePlayerID) {
+        continue;
+      }
+
+      G.players[activePlayerID].actionCostDiscounts.push({
+        id: `${card.id}-${G.season}-${G.log.length}`,
+        sourceCardId: card.id,
+        label: card.name,
+        action: effect.action,
+        buildingId: effect.buildingId,
+        resource: effect.resource,
+        amount: effect.amount,
+        consume: effect.consume
+      });
+      addLog(
+        G,
+        `${getPlayerName(G, activePlayerID)} gained a ${formatRuleNumber(effect.amount)} ${effect.resource} discount from ${card.name}.`
+      );
+    } else if (effect.type === "resourceExchange") {
+      if (!activePlayerID) {
+        continue;
+      }
+
+      const player = G.players[activePlayerID];
+      const exchanged = Math.min(effect.maxAmount, Math.max(0, player.resources[effect.from]));
+      player.resources[effect.from] -= exchanged;
+      player.resources[effect.to] += exchanged * effect.ratio;
+      addLog(
+        G,
+        `${getPlayerName(G, activePlayerID)} exchanged ${formatRuleNumber(exchanged)} ${effect.from} for ${formatRuleNumber(
+          exchanged * effect.ratio
+        )} ${effect.to} from ${card.name}.`
+      );
+    } else if (effect.type === "resourceDeltaPerPop") {
+      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
+        const popCount = countPlayerPopType(G, playerID, effect.pop);
+        const amount = Math.max(effect.minimum, popCount * effect.amountPerPop);
+        applyEventResourceDelta(G, playerID, createResourceDelta(effect.resource, amount), card.name);
+      }
+    }
+  }
+}
+
+function applyEventResourceDelta(G: HegemonyState, playerID: PlayerId, delta: Resources, source: string) {
+  applyResourceDelta(G.players[playerID].resources, delta);
+  addLog(G, `${getPlayerName(G, playerID)} resolved ${source}: ${formatRuleResourceDelta(delta)}.`);
+}
+
+function scopedPlayerIds(scope: "activePlayer" | "allPlayers", activePlayerID: PlayerId | null) {
+  return scope === "allPlayers" ? PLAYER_IDS : activePlayerID ? [activePlayerID] : [];
+}
+
+function scaledByPops(G: HegemonyState, playerID: PlayerId, amountPerPops: number, popStep: number, minimumMagnitude: number) {
+  const { pops } = playerPopulationTotals(G, playerID);
+  const scaled = Math.floor(pops / popStep) * amountPerPops;
+  const sign = amountPerPops < 0 ? -1 : 1;
+
+  return Math.abs(scaled) >= minimumMagnitude ? scaled : sign * minimumMagnitude;
+}
+
+function countPlayerPopType(G: HegemonyState, playerID: PlayerId, pop: PopType) {
+  return G.players[playerID].settlements.reduce((count, tileId) => {
+    const settlement = getOwnedSettlement(G, tileId, playerID);
+
+    return count + (settlement?.pops[pop] ?? 0);
+  }, 0);
+}
+
+function createResourceDelta(resource: Resource, amount: number): Resources {
+  return {
+    ...EMPTY_RESOURCES,
+    [resource]: amount
+  };
+}
+
+function applySeasonalIncomeEffects(
+  G: HegemonyState,
+  playerID: PlayerId,
+  contributions: IncomeContribution[],
+  income: Resources
+) {
+  const card = G.activeSeasonEvent?.card;
+
+  if (!card) {
+    return;
+  }
+
+  for (const effect of card.effects) {
+    if (effect.type === "incomeModifier" && effect.duration === "season" && effectAppliesToPlayer(effect.scope, playerID)) {
+      addIncomeContribution(contributions, income, {
+        resource: effect.resource,
+        amount: effect.amount,
+        source: card.name,
+        detail: "Seasonal event"
+      });
+    } else if (
+      effect.type === "scaledHappinessDelta" &&
+      effect.duration === "season" &&
+      effectAppliesToPlayer(effect.scope, playerID)
+    ) {
+      addIncomeContribution(contributions, income, {
+        resource: "happiness",
+        amount: scaledByPops(G, playerID, effect.amountPerPops, effect.popStep, effect.minimumMagnitude),
+        source: card.name,
+        detail: "Seasonal event"
+      });
+    }
+  }
+}
+
+function effectAppliesToPlayer(scope: "activePlayer" | "allPlayers", playerID: PlayerId) {
+  return scope === "allPlayers" || PLAYER_IDS.includes(playerID);
 }
 
 function applyIncomeBuildingEffects(
@@ -1093,6 +1473,71 @@ function markSettlementGrown(G: HegemonyState, playerID: PlayerId, tileId: strin
   player.grownSettlementsThisTurn = [...(player.grownSettlementsThisTurn ?? []), tileId];
 }
 
+function addPendingEventReason(G: HegemonyState, status: ActionStatus) {
+  if (G.pendingPlayerEvent) {
+    status.reasons.push("Resolve the pending player event first.");
+  }
+}
+
+function getSeasonBuildingCostMultiplier(G: HegemonyState, action: CostedAction) {
+  const card = G.activeSeasonEvent?.card;
+
+  if (!card) {
+    return 1;
+  }
+
+  return card.effects.reduce((multiplier, effect) => {
+    if (effect.type !== "buildingCostMultiplier" || effect.duration !== "season") {
+      return multiplier;
+    }
+
+    if (action === "foundColony" && effect.excludes.includes("foundColony")) {
+      return multiplier;
+    }
+
+    if (action === "upgradeColonyToCity" && effect.excludes.includes("upgradeColonyToCity")) {
+      return multiplier;
+    }
+
+    return multiplier * effect.multiplier;
+  }, 1);
+}
+
+function getMatchingActionCostDiscounts(
+  G: HegemonyState,
+  playerID: PlayerId,
+  action: ActionCostDiscountTarget,
+  buildingId?: BuildingId
+) {
+  return G.players[playerID].actionCostDiscounts.filter(
+    (discount) => discount.action === action && (!discount.buildingId || discount.buildingId === buildingId)
+  );
+}
+
+function consumeActionCostDiscounts(
+  G: HegemonyState,
+  playerID: PlayerId,
+  action: ActionCostDiscountTarget,
+  buildingId?: BuildingId
+) {
+  const matching = getMatchingActionCostDiscounts(G, playerID, action, buildingId);
+
+  if (matching.length === 0) {
+    return;
+  }
+
+  const consumedIds = new Set(matching.map((discount) => discount.id));
+  G.players[playerID].actionCostDiscounts = G.players[playerID].actionCostDiscounts.filter(
+    (discount) => !consumedIds.has(discount.id)
+  );
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} used ${matching.map((discount) => discount.label).join(", ")} event discount${
+      matching.length === 1 ? "" : "s"
+    }.`
+  );
+}
+
 function canAfford(resources: Resources, cost: Partial<Resources>) {
   return Object.entries(cost).every(([resource, amount]) => resources[resource as Resource] >= (amount ?? 0));
 }
@@ -1107,6 +1552,10 @@ function applyResourceDelta(resources: Resources, delta: Resources) {
   for (const [resource, amount] of Object.entries(delta)) {
     resources[resource as Resource] += amount;
   }
+}
+
+function clonePartialResources(resources: Partial<Resources>): Partial<Resources> {
+  return { ...resources };
 }
 
 function schedulePopulationTransfer(

@@ -1,9 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import type { GameEvents, GameMoves, LocalContext, Phase } from "../game/controller";
-import { ACTION_COSTS, BUILDINGS, EMPTY_RESOURCES, PLAYER_COLORS, PLAYER_IDS } from "../game/data";
+import {
+  ACTION_COSTS,
+  BUILDINGS,
+  EMPTY_RESOURCES,
+  PLAYER_COLORS,
+  PLAYER_EVENT_CARDS,
+  PLAYER_IDS,
+  PLAYER_NAMES,
+  SEASONAL_EVENT_CARDS
+} from "../game/data";
 import type {
   BuildingDefinition,
   BuildingId,
+  EventCard,
+  EventEffect,
   HegemonyState,
   HexTile,
   PlayerId,
@@ -17,7 +28,10 @@ import {
   PLACEMENT_POP_COUNTS,
   POP_TYPES,
   calculateEconomyProjection,
+  getAddPopsEffect,
   getBuildBuildingStatus,
+  getEventEffectChoices,
+  getEventPopTargetTileIds,
   getFoundColonyStatus,
   getGrowPopStatus,
   getUpgradeColonyToCityStatus,
@@ -43,7 +57,6 @@ import {
   phaseLabel
 } from "../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
-import { ActionLogModal } from "./ActionLogModal";
 import { HexMap } from "./HexMap";
 import { FoundColonyModal, MovePopsModal, PopulationPickerModal } from "./PopulationModals";
 import { ResourceGrid } from "./ResourceGrid";
@@ -74,12 +87,7 @@ type OwnedHolding = {
 
 type PopEconomy = Record<PopType, Resources>;
 
-const PLAYER_DISPLAY_NAMES: Record<PlayerId, string> = {
-  "0": "Damon",
-  "1": "Nikos",
-  "2": "Theron",
-  "3": "Kyros"
-};
+const PLAYER_DISPLAY_NAMES = PLAYER_NAMES;
 
 const SETTLEMENT_SORT: Record<SettlementKind, number> = {
   capital: 0,
@@ -113,12 +121,11 @@ export function HegemonyBoard({
   const [upgradeTileId, setUpgradeTileId] = useState<string | null>(null);
   const [isGrowPopOpen, setIsGrowPopOpen] = useState(false);
   const [isMovePopsOpen, setIsMovePopsOpen] = useState(false);
-  const [isLogOpen, setIsLogOpen] = useState(false);
   const [activeEmpireTab, setActiveEmpireTab] = useState<EmpireTab>("cities");
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
-  const selectedTile = selectedTileId ? G.board.tiles.find((tile) => tile.id === selectedTileId) ?? null : null;
+  const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent);
   const projectedEconomy = calculateEconomyProjection(G, viewerId, { resolveTransfers: true });
   const projectedIncome = projectedEconomy.income;
   const projectedIncomeBreakdown = projectedEconomy.breakdown;
@@ -142,6 +149,18 @@ export function HegemonyBoard({
     setIsGrowPopOpen(false);
     setIsMovePopsOpen(false);
   }, [ctx.phase, ctx.currentPlayer]);
+
+  useEffect(() => {
+    if (!G.pendingPlayerEvent) {
+      return;
+    }
+
+    setTileConfirmation(null);
+    setFoundingTileId(null);
+    setUpgradeTileId(null);
+    setIsGrowPopOpen(false);
+    setIsMovePopsOpen(false);
+  }, [G.pendingPlayerEvent]);
 
   const handleTileAction = (tileId: string) => {
     setSelectedTileId(tileId);
@@ -186,7 +205,7 @@ export function HegemonyBoard({
   const requestFoundColony = (tileId: string) => {
     setSelectedTileId(tileId);
 
-    if (ctx.phase === "gameplay" && isActive && getFoundColonyStatus(G, viewerId, tileId).can) {
+    if (ctx.phase === "gameplay" && isActive && !hasPendingPlayerEvent && getFoundColonyStatus(G, viewerId, tileId).can) {
       setFoundingTileId(tileId);
     }
   };
@@ -194,7 +213,7 @@ export function HegemonyBoard({
   const requestUpgradeCity = (tileId: string) => {
     setSelectedTileId(tileId);
 
-    if (ctx.phase === "gameplay" && isActive && getUpgradeColonyToCityStatus(G, viewerId, tileId).can) {
+    if (ctx.phase === "gameplay" && isActive && !hasPendingPlayerEvent && getUpgradeColonyToCityStatus(G, viewerId, tileId).can) {
       setUpgradeTileId(tileId);
     }
   };
@@ -202,7 +221,7 @@ export function HegemonyBoard({
   const requestBuildBuilding = (tileId: string, buildingId: BuildingId) => {
     setSelectedTileId(tileId);
 
-    if (ctx.phase === "gameplay" && isActive && getBuildBuildingStatus(G, viewerId, tileId, buildingId).can) {
+    if (ctx.phase === "gameplay" && isActive && !hasPendingPlayerEvent && getBuildBuildingStatus(G, viewerId, tileId, buildingId).can) {
       moves.buildBuilding(tileId, buildingId);
     }
   };
@@ -211,7 +230,7 @@ export function HegemonyBoard({
     <main className="shell uiOverhaulShell">
       <header className="topbar strategyTopbar">
         <SeasonStatus
-          season={G.season}
+          G={G}
           ctx={ctx}
           isActive={isActive}
           currentPlayerId={currentPlayerId}
@@ -280,20 +299,16 @@ export function HegemonyBoard({
             G={G}
             isActive={isActive}
             phase={ctx.phase}
-            playerID={viewerId}
-            selectedTile={selectedTile}
             canGrowPops={viewer.settlements.length > 0}
             canMovePops={viewer.settlements.length >= 2}
-            onBuildBuildingRequest={requestBuildBuilding}
+            hasPendingPlayerEvent={hasPendingPlayerEvent}
             onEndTurn={events.endTurn}
             onGrowPopRequest={() => setIsGrowPopOpen(true)}
-            onLogOpen={() => setIsLogOpen(true)}
             onMovePopsRequest={() => setIsMovePopsOpen(true)}
           />
         </aside>
       </section>
 
-      {isLogOpen ? <ActionLogModal G={G} onClose={() => setIsLogOpen(false)} /> : null}
       {populationPrompt ? (
         <PopulationPickerModal
           title={`Choose ${populationPrompt.kind} pops`}
@@ -363,42 +378,43 @@ export function HegemonyBoard({
           }}
         />
       ) : null}
+      {G.pendingPlayerEvent ? (
+        <PendingPlayerEventModal
+          G={G}
+          isActive={isActive && G.pendingPlayerEvent.playerID === currentPlayerId}
+          moves={moves}
+          playerID={G.pendingPlayerEvent.playerID}
+        />
+      ) : null}
     </main>
   );
 }
 
 function SeasonStatus({
-  season,
+  G,
   ctx,
   isActive,
   currentPlayerId
 }: {
-  season: number;
+  G: HegemonyState;
   ctx: LocalContext;
   isActive: boolean;
   currentPlayerId: PlayerId;
 }) {
+  const seasonalCard = G.activeSeasonEvent?.card ?? null;
+  const playerCard = G.lastPlayerEvent;
+
   return (
     <>
-      <section className="statusPanel effectsCluster" aria-label="Seasonal effects, player events and passed resolutions">
-        <div className="seasonEventLabel">
-          <span>Seasonal Effect</span>
-          <strong>Awaiting Card</strong>
-        </div>
-        <div className="seasonEventLabel">
-          <span>Player Event</span>
-          <strong>Awaiting Card</strong>
-        </div>
-        <div className="seasonEventLabel">
-          <span>Passed Resolutions</span>
-          <strong>None Yet</strong>
-        </div>
+      <section className="statusPanel effectsCluster" aria-label="Seasonal and player events">
+        <EventStatusCard card={seasonalCard} fallback="Awaiting Card" label="Seasonal Event" />
+        <EventStatusCard card={playerCard} fallback="Awaiting Card" label="Player Event" />
       </section>
 
       <div className="seasonCenter">
-        <div className="seasonMedallion" aria-label={`Season ${season}`}>
+        <div className="seasonMedallion" aria-label={`Season ${G.season}`}>
           <span>Season</span>
-          <strong>{season}</strong>
+          <strong>{G.season}</strong>
         </div>
         <div className="seasonTurnCaption" aria-label="Turn status">
           <span>Turn {ctx.turn} · {phaseLabel(ctx.phase)}</span>
@@ -406,6 +422,27 @@ function SeasonStatus({
         </div>
       </div>
     </>
+  );
+}
+
+function EventStatusCard({
+  card,
+  fallback,
+  label
+}: {
+  card: EventCard | null;
+  fallback: string;
+  label: string;
+}) {
+  return (
+    <div className={`seasonEventLabel${card ? " activeEventLabel" : ""}`} title={card ? card.text : fallback}>
+      {card ? <img alt="" className="eventStatusArt" src={eventCardArtUrl(card)} /> : null}
+      <div>
+        <span>{label}</span>
+        <strong>{card?.name ?? fallback}</strong>
+        {card ? <em>{card.text}</em> : null}
+      </div>
+    </div>
   );
 }
 
@@ -568,6 +605,35 @@ function CitiesTab({
   isActive: boolean;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
+  const holdingIds = useMemo(
+    () => holdings.map(({ tile, settlement }) => `${settlement.owner}-${tile.id}`),
+    [holdings]
+  );
+  const [expandedHoldingIds, setExpandedHoldingIds] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    setExpandedHoldingIds((current) => {
+      const visibleHoldings = new Set(holdingIds);
+      const next = new Set([...current].filter((holdingId) => visibleHoldings.has(holdingId)));
+
+      return next.size === current.size ? current : next;
+    });
+  }, [holdingIds]);
+
+  const toggleHolding = (holdingId: string) => {
+    setExpandedHoldingIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(holdingId)) {
+        next.delete(holdingId);
+      } else {
+        next.add(holdingId);
+      }
+
+      return next;
+    });
+  };
+
   if (holdings.length === 0) {
     return <p className="emptyState">No settlements yet.</p>;
   }
@@ -575,118 +641,150 @@ function CitiesTab({
   return (
     <div className="holdingStack">
       {holdings.map(({ tile, settlement }) => {
+        const holdingId = `${settlement.owner}-${tile.id}`;
+        const isExpanded = expandedHoldingIds.has(holdingId);
         const popTotal = totalPops(settlement.pops);
         const capacity = settlementPopCapacity(settlement.kind);
         const overCapacity = settlementOverCapacity(settlement);
         const slots = settlementBuildingSlots(tile, settlement);
         const tileYield = settlementTileYield(tile, settlement);
+        const detailId = `holding-${settlement.owner}-${tile.q}-${tile.r}-details`;
 
         return (
           <article
-            className={`holdingMatrix settlement-${settlement.kind}${overCapacity > 0 ? " overCapacityCard" : ""}`}
-            key={`${settlement.owner}-${tile.id}`}
+            className={`holdingMatrix settlement-${settlement.kind}${overCapacity > 0 ? " overCapacityCard" : ""}${isExpanded ? " expandedHolding" : ""}`}
+            key={holdingId}
           >
-            <div className="holdingMatrixHeader">
-              <span className="cityIdentity" title={`${capitalize(settlement.kind)} · ${tile.id}`}>
-                <AtlasIcon icon={settlement.kind} className="miniIcon" />
-                <em>{tile.id}</em>
-              </span>
-              <span className="cityTerrainIcon" title={`${capitalize(tile.terrain)} terrain`}>
-                <TerrainSprite terrain={tile.terrain} className="terrainChip" />
-              </span>
-            </div>
-
-            <div className="holdingCapacityLine">
-              <span
-                className={overCapacity > 0 ? "cityMeter overCapacityText" : "cityMeter"}
-                title={`Population ${popTotal} of ${capacity}`}
-              >
-                <AtlasIcon icon="citizens" className="miniIcon" />
-                <strong>{popTotal}</strong>
-                <span className="meterSlash">/</span>
-                <strong>{capacity}</strong>
-              </span>
-              <span className="cityMeter" title={`Building slots ${settlement.buildings.length} of ${slots}`}>
-                <AtlasIcon icon="temple" className="miniIcon" />
-                <strong>{settlement.buildings.length}</strong>
-                <span className="meterSlash">/</span>
-                <strong>{slots}</strong>
-              </span>
-            </div>
-
-            <div className="popBuildingMatrix">
-              {POP_TYPES.map((pop) => {
-                const builtBuildings = settlement.buildings.filter(
-                  (buildingId) => BUILDING_AFFINITY[buildingId] === pop
-                );
-                const unbuiltBuildings = BUILDINGS.filter(
-                  (building) => !settlement.buildings.includes(building.id) && BUILDING_AFFINITY[building.id] === pop
-                );
-
-                return (
-                  <div className="popBuildingColumn" key={pop}>
-                    <div
-                      className="popColumnHeader"
-                      title={`${capitalize(formatPopLabel(pop, settlement.pops[pop]))}: ${settlement.pops[pop]}`}
-                    >
-                      <AtlasIcon icon={pop} className="miniIcon" />
-                      <strong>{settlement.pops[pop]}</strong>
-                    </div>
-                    <div className="buildingChipRow">
-                      {builtBuildings.length > 0 ? (
-                        builtBuildings.map((buildingId, index) => {
-                          const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
-
-                          return building ? (
-                            <BuildingChip
-                              building={building}
-                              key={`${buildingId}-${index}`}
-                              mode="built"
-                              tooltipRows={[
-                                "Built in this holding.",
-                                `Benefit: ${formatBuildingEffects(building.effects)}.`
-                              ]}
-                            />
-                          ) : null;
-                        })
-                      ) : (
-                        <span className="emptyMini" title="No buildings of this type">—</span>
-                      )}
-                    </div>
-                    <div className="buildingChipRow mutedChipRow">
-                      {unbuiltBuildings.length > 0 ? (
-                        unbuiltBuildings.map((building) => {
-                          const status = getBuildBuildingStatus(G, playerID, tile.id, building.id);
-                          const benefit = getBuildingBenefitText(G, playerID, tile, settlement, building);
-                          const disabled = !isActive || phase !== "gameplay" || !status.can;
-
-                          return (
-                            <BuildingChip
-                              building={building}
-                              disabled={disabled}
-                              key={building.id}
-                              mode="option"
-                              tooltipRows={buildingTooltipRows(building, status, benefit, phase, isActive)}
-                              onClick={() => onBuildBuildingRequest(tile.id, building.id)}
-                            />
-                          );
-                        })
-                      ) : (
-                        <span className="emptyMini" title="All available buildings built">✓</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div
-              className="holdingYieldLine"
-              style={resourceCssVars(tile.resource.type)}
-              title={`Extracts ${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]}`}
+            <button
+              aria-controls={detailId}
+              aria-expanded={isExpanded}
+              aria-label={`${isExpanded ? "Collapse" : "Expand"} ${capitalize(settlement.kind)} ${tile.id}: ${popTotal} of ${capacity} pops, ${settlement.buildings.length} of ${slots} building slots, ${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]} tile yield.`}
+              className="holdingSummaryButton"
+              onClick={() => toggleHolding(holdingId)}
+              type="button"
             >
-              <ResourceIcon resource={tile.resource.type} value={tileYield} className="miniResourceIcon" />
-              <strong>{formatNumber(tileYield)}</strong>
+              <span className="holdingSummaryLine">
+                <span className="holdingSummaryMain">
+                  <span className="cityIdentity" title={`${capitalize(settlement.kind)} ${tile.id}`}>
+                    <AtlasIcon icon={settlement.kind} className="miniIcon" />
+                    <em>{tile.id}</em>
+                  </span>
+                  <span className="summaryTerrain" title={`${capitalize(tile.terrain)} tile`}>
+                    <TerrainSprite terrain={tile.terrain} className="terrainChip" />
+                  </span>
+                </span>
+                <span className="holdingSummaryMetrics">
+                  <span
+                    className={overCapacity > 0 ? "cityMeter overCapacityText" : "cityMeter"}
+                    title={`Population ${popTotal} of ${capacity}`}
+                  >
+                    <AtlasIcon icon="citizens" className="miniIcon" />
+                    <strong>{popTotal}</strong>
+                    <span className="meterSlash">/</span>
+                    <strong>{capacity}</strong>
+                  </span>
+                  <span className="cityMeter" title={`Building slots ${settlement.buildings.length} of ${slots}`}>
+                    <AtlasIcon icon="temple" className="miniIcon" />
+                    <strong>{settlement.buildings.length}</strong>
+                    <span className="meterSlash">/</span>
+                    <strong>{slots}</strong>
+                  </span>
+                  <span
+                    className="cityMeter summaryYield"
+                    style={resourceCssVars(tile.resource.type)}
+                    title={`Tile yield ${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]}`}
+                  >
+                    <ResourceIcon resource={tile.resource.type} value={tileYield} className="miniResourceIcon" />
+                    <strong>{formatNumber(tileYield)}</strong>
+                  </span>
+                </span>
+              </span>
+              <span className="collapseChevron" aria-hidden="true" />
+            </button>
+
+            <div className="holdingDetail" hidden={!isExpanded} id={detailId}>
+              {overCapacity > 0 ? (
+                <div className="holdingPenaltyLine overCapacityText">
+                  <AtlasIcon icon="happiness" className="miniIcon" />
+                  <strong>-{overCapacity}</strong>
+                  <span>Happiness over capacity</span>
+                </div>
+              ) : null}
+
+              <div className="popBuildingMatrix">
+                {POP_TYPES.map((pop) => {
+                  const builtBuildings = settlement.buildings.filter(
+                    (buildingId) => BUILDING_AFFINITY[buildingId] === pop
+                  );
+                  const unbuiltBuildings = BUILDINGS.filter(
+                    (building) => !settlement.buildings.includes(building.id) && BUILDING_AFFINITY[building.id] === pop
+                  );
+
+                  return (
+                    <div className="popBuildingColumn" key={pop}>
+                      <div
+                        className="popColumnHeader"
+                        title={`${capitalize(formatPopLabel(pop, settlement.pops[pop]))}: ${settlement.pops[pop]}`}
+                      >
+                        <AtlasIcon icon={pop} className="miniIcon" />
+                        <strong>{settlement.pops[pop]}</strong>
+                      </div>
+                      <div className="buildingChipRow">
+                        {builtBuildings.length > 0 ? (
+                          builtBuildings.map((buildingId, index) => {
+                            const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+
+                            return building ? (
+                              <BuildingChip
+                                building={building}
+                                key={`${buildingId}-${index}`}
+                                mode="built"
+                                tooltipRows={[
+                                  "Built in this holding.",
+                                  `Benefit: ${formatBuildingEffects(building.effects)}.`
+                                ]}
+                              />
+                            ) : null;
+                          })
+                        ) : (
+                          <span className="emptyMini" title="No buildings of this type">—</span>
+                        )}
+                      </div>
+                      <div className="buildingChipRow mutedChipRow">
+                        {unbuiltBuildings.length > 0 ? (
+                          unbuiltBuildings.map((building) => {
+                            const status = getBuildBuildingStatus(G, playerID, tile.id, building.id);
+                            const benefit = getBuildingBenefitText(G, playerID, tile, settlement, building);
+                            const disabled = !isActive || phase !== "gameplay" || !status.can;
+
+                            return (
+                              <BuildingChip
+                                building={building}
+                                disabled={disabled}
+                                key={building.id}
+                                mode="option"
+                                tooltipRows={buildingTooltipRows(building, status, benefit, phase, isActive)}
+                                onClick={() => onBuildBuildingRequest(tile.id, building.id)}
+                              />
+                            );
+                          })
+                        ) : (
+                          <span className="emptyMini" title="All available buildings built">✓</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <span
+                className="holdingYieldLine"
+                style={resourceCssVars(tile.resource.type)}
+                title={`Extracts ${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]}`}
+              >
+                <ResourceIcon resource={tile.resource.type} value={tileYield} className="miniResourceIcon" />
+                <strong>{formatNumber(tileYield)}</strong>
+              </span>
             </div>
           </article>
         );
@@ -876,7 +974,7 @@ function PopsTab({
         </span>
         <span>
           Event Cards
-          <strong>0</strong>
+          <strong>{G.playerDrawPile.length}</strong>
         </span>
         <span>
           Deaths
@@ -1012,33 +1110,25 @@ function GrowPopModal({
 
 function ActionCommandPanel({
   G,
-  playerID,
-  selectedTile,
   phase,
   isActive,
   canGrowPops,
   canMovePops,
+  hasPendingPlayerEvent,
   onMovePopsRequest,
   onGrowPopRequest,
-  onBuildBuildingRequest,
-  onLogOpen,
   onEndTurn
 }: {
   G: HegemonyState;
-  playerID: PlayerId;
-  selectedTile: HexTile | null;
   phase: Phase;
   isActive: boolean;
   canGrowPops: boolean;
   canMovePops: boolean;
+  hasPendingPlayerEvent: boolean;
   onMovePopsRequest: () => void;
   onGrowPopRequest: () => void;
-  onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
-  onLogOpen: () => void;
   onEndTurn: () => void;
 }) {
-  const selectedSettlement = selectedTile?.settlements.find((settlement) => settlement.owner === playerID);
-
   return (
     <div className="commandStack">
       <div className="panelTitle compactPanelTitle">
@@ -1052,9 +1142,15 @@ function ActionCommandPanel({
       <div className="commandToolbar" aria-label="Action toolbar">
         <button
           className="commandIconButton"
-          disabled={!isActive || phase !== "gameplay" || !canGrowPops}
+          disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent || !canGrowPops}
           onClick={onGrowPopRequest}
-          title={canGrowPops ? "Choose a holding and pop type to grow." : "Requires an owned holding."}
+          title={
+            hasPendingPlayerEvent
+              ? "Resolve the pending player event first."
+              : canGrowPops
+                ? "Choose a holding and pop type to grow."
+                : "Requires an owned holding."
+          }
         >
           <UiSprite item="growAction" className="commandIcon" />
           <span>Grow</span>
@@ -1062,149 +1158,215 @@ function ActionCommandPanel({
 
         <button
           className="commandIconButton"
-          disabled={!isActive || phase !== "gameplay" || !canMovePops}
+          disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent || !canMovePops}
           onClick={onMovePopsRequest}
-          title={canMovePops ? "Move pops between two owned settlements." : "Requires at least two settlements."}
+          title={
+            hasPendingPlayerEvent
+              ? "Resolve the pending player event first."
+              : canMovePops
+                ? "Move pops between two owned settlements."
+                : "Requires at least two settlements."
+          }
         >
           <UiSprite item="moveAction" className="commandIcon" />
           <span>Move</span>
         </button>
 
-        <button className="commandIconButton" onClick={onLogOpen} title="Open action log.">
-          <UiSprite item="seal" className="commandIcon" />
-          <span>Log</span>
-        </button>
-
         <button
           className="commandEndTurn"
-          disabled={!isActive || phase !== "gameplay"}
+          disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent}
           onClick={onEndTurn}
-          title={isActive ? "End the current player's turn." : "Current player's turn only."}
+          title={
+            hasPendingPlayerEvent
+              ? "Resolve the pending player event first."
+              : isActive
+                ? "End the current player's turn."
+                : "Current player's turn only."
+          }
         >
           <UiSprite item="endTurn" className="endTurnSprite" />
           <span>End Turn</span>
         </button>
       </div>
 
-      <SelectedTilePanel
-        G={G}
-        isActive={isActive}
-        phase={phase}
-        playerID={playerID}
-        selectedSettlement={selectedSettlement}
-        selectedTile={selectedTile}
-        onBuildBuildingRequest={onBuildBuildingRequest}
-      />
+      <ActionLogPanel G={G} />
 
-      <DeckShelf />
+      <DeckShelf G={G} />
     </div>
   );
 }
 
-function SelectedTilePanel({
-  G,
-  playerID,
-  selectedTile,
-  selectedSettlement,
-  phase,
-  isActive,
-  onBuildBuildingRequest
-}: {
-  G: HegemonyState;
-  playerID: PlayerId;
-  selectedTile: HexTile | null;
-  selectedSettlement: Settlement | undefined;
-  phase: Phase;
-  isActive: boolean;
-  onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
-}) {
-  if (!selectedTile) {
-    return (
-      <section className="selectedTilePanel emptySelectedTile">
-        <h3>No Tile Selected</h3>
-        <p>Select a hex to inspect local actions, build options, and settlement pressure.</p>
-      </section>
-    );
-  }
+function ActionLogPanel({ G }: { G: HegemonyState }) {
+  const entries = G.log.slice().reverse();
 
   return (
-    <section className="selectedTilePanel">
-      <div className="selectedTileHeader">
-        <TerrainSprite terrain={selectedTile.terrain} className="terrainPreviewSmall" />
-        <span>
-          <strong>{capitalize(selectedTile.terrain)} {selectedTile.id}</strong>
-          <em>
-            {selectedTile.resource.amount} {RESOURCE_LABELS[selectedTile.resource.type]}, {selectedTile.buildingSlots} base slots
-          </em>
-        </span>
+    <section className="turnLogPanel" aria-label="Action log">
+      <div className="turnLogHeader">
+        <UiSprite item="seal" className="titleIcon" />
+        <div>
+          <h3>Chronicle</h3>
+          <em>{entries.length} entries</em>
+        </div>
       </div>
-
-      <div className="selectedSettlementList">
-        {selectedTile.settlements.length > 0 ? (
-          selectedTile.settlements.map((settlement) => {
-            const popTotal = totalPops(settlement.pops);
-            const capacity = settlementPopCapacity(settlement.kind);
-
-            return (
-              <span key={`${settlement.owner}-${settlement.kind}`}>
-                <AtlasIcon icon={settlement.kind} className="miniIcon" />
-                <b>{PLAYER_DISPLAY_NAMES[settlement.owner]}</b>
-                {capitalize(settlement.kind)}
-                <em>{popTotal}/{capacity} pops</em>
-              </span>
-            );
-          })
-        ) : (
-          <em>Empty tile</em>
-        )}
-      </div>
-
-      <div className="selectedBuildGrid">
-        {BUILDINGS.map((building) => {
-          const status = getBuildBuildingStatus(G, playerID, selectedTile.id, building.id);
-          const disabled = !isActive || phase !== "gameplay" || !status.can;
-          const benefit = selectedSettlement
-            ? getBuildingBenefitText(G, playerID, selectedTile, selectedSettlement, building)
-            : formatBuildingEffects(building.effects);
-
-          return (
-            <button
-              className="selectedBuildButton"
-              disabled={disabled}
-              key={building.id}
-              onClick={() => onBuildBuildingRequest(selectedTile.id, building.id)}
-              title={buildingTooltipRows(building, status, benefit, phase, isActive).join(" ")}
-            >
-              <AtlasIcon icon={building.id} className="miniIcon" />
-              <span>
-                <strong>{building.name}</strong>
-                <em>{formatResourceCost(building.cost)}</em>
-              </span>
-            </button>
-          );
-        })}
+      <div className="turnLogList" tabIndex={0}>
+        {entries.map((entry) => (
+          <p key={entry.id}>
+            <span>S{entry.season}</span>
+            <b>{entry.message}</b>
+          </p>
+        ))}
       </div>
     </section>
   );
 }
 
-function DeckShelf() {
+function PendingPlayerEventModal({
+  G,
+  playerID,
+  isActive,
+  moves
+}: {
+  G: HegemonyState;
+  playerID: PlayerId;
+  isActive: boolean;
+  moves: GameMoves;
+}) {
+  const pending = G.pendingPlayerEvent;
+  const card = pending?.card;
+  const choices = card ? getEventEffectChoices(card) : [];
+  const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);
+  const selectedEffects = choices[selectedChoiceIndex] ?? choices[0] ?? [];
+  const popEffect = getAddPopsEffect(selectedEffects);
+  const targetTileIds = popEffect ? getEventPopTargetTileIds(G, playerID, popEffect) : [];
+  const [targetTileId, setTargetTileId] = useState(targetTileIds[0] ?? "");
+
+  useEffect(() => {
+    setSelectedChoiceIndex(0);
+    setTargetTileId("");
+  }, [card?.id]);
+
+  useEffect(() => {
+    if (!popEffect) {
+      setTargetTileId("");
+      return;
+    }
+
+    if (!targetTileIds.includes(targetTileId)) {
+      setTargetTileId(targetTileIds[0] ?? "");
+    }
+  }, [popEffect, targetTileId, targetTileIds]);
+
+  if (!pending || !card) {
+    return null;
+  }
+
+  const canConfirm = isActive && (!popEffect || targetTileIds.length > 0);
+  const actionLabel = choices.length > 1 ? "Resolve Choice" : popEffect ? "Place Pops" : "Claim Event";
+
+  return (
+    <div className="modalBackdrop eventModalBackdrop" role="presentation">
+      <section className="eventCardReveal" role="dialog" aria-modal="true" aria-labelledby="pending-event-title">
+        <div className="eventCardSurface">
+          <div className="eventCardCrest">
+            <span>Player Event</span>
+            <b>{G.players[playerID].name}</b>
+          </div>
+
+          <div className="eventCardArtFrame">
+            <img alt={`${card.name} card art`} src={eventCardArtUrl(card)} />
+          </div>
+
+          <div className="eventCardBody">
+            <span className="eventCardDeckLabel">Hegemony Event</span>
+            <h2 id="pending-event-title">{card.name}</h2>
+            <p>{card.text}</p>
+
+            {choices.length > 1 ? (
+              <div className="eventChoiceStack" role="group" aria-label="Event choices">
+                {choices.map((effects, index) => {
+                  const optionPopEffect = getAddPopsEffect(effects);
+                  const disabled = Boolean(optionPopEffect && getEventPopTargetTileIds(G, playerID, optionPopEffect).length === 0);
+
+                  return (
+                    <button
+                      className={index === selectedChoiceIndex ? "selectedChoice eventChoiceButton" : "eventChoiceButton"}
+                      disabled={disabled}
+                      key={`${card.id}-${index}`}
+                      onClick={() => setSelectedChoiceIndex(index)}
+                    >
+                      <strong>Option {index + 1}</strong>
+                      <span>{formatEventEffects(effects)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="eventSingleEffect">
+                <strong>Effect</strong>
+                <span>{formatEventEffects(selectedEffects)}</span>
+              </div>
+            )}
+
+            {popEffect ? (
+              <label className="fieldGroup eventTargetField">
+                <span>Settlement target</span>
+                <select value={targetTileId} onChange={(event) => setTargetTileId(event.target.value)}>
+                  {targetTileIds.map((tileId) => {
+                    const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
+                    const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
+
+                    return (
+                      <option value={tileId} key={tileId}>
+                        {tile ? `${capitalize(settlement?.kind ?? "settlement")} ${tile.id} - ${capitalize(tile.terrain)}` : tileId}
+                      </option>
+                    );
+                  })}
+                </select>
+                {targetTileIds.length === 0 ? <em>No owned settlement has enough capacity for this option.</em> : null}
+              </label>
+            ) : null}
+
+            {!isActive ? (
+              <div className="selectionSummary negative">
+                <span>Only the active player can resolve this event.</span>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="eventCardFooter">
+            <button
+              className="primaryButton eventResolveButton"
+              disabled={!canConfirm}
+              onClick={() => moves.resolvePendingPlayerEvent(popEffect ? targetTileId : undefined, selectedChoiceIndex)}
+            >
+              {actionLabel}
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function DeckShelf({ G }: { G: HegemonyState }) {
+  const seasonalTotal = totalCardCount(SEASONAL_EVENT_CARDS);
+  const playerTotal = totalCardCount(PLAYER_EVENT_CARDS);
   const decks: Array<{ label: string; count: string; item: "seasonDeck" | "eventDeck" | "resolutionDeck"; detail: string }> = [
     {
       label: "Seasonal",
-      count: "--",
+      count: `${G.seasonalDrawPile.length}/${seasonalTotal}`,
       item: "seasonDeck",
-      detail: "Seasonal deck placeholder. Card counts wire in with the event-card mechanic."
+      detail: "Seasonal cards remaining."
     },
     {
       label: "Events",
-      count: "--",
+      count: `${G.playerDrawPile.length}/${playerTotal}`,
       item: "eventDeck",
-      detail: "Player event deck placeholder. Draw and discard counts are not wired yet."
+      detail: "Player event cards remaining."
     },
     {
       label: "Resolutions",
-      count: "--",
+      count: "0/0",
       item: "resolutionDeck",
       detail: "Resolution deck placeholder for future assembly mechanics."
     }
@@ -1214,15 +1376,21 @@ function DeckShelf() {
     <section className="deckShelf" aria-label="Future card decks">
       {decks.map((deck) => (
         <div className="deckPlaceholder" key={deck.label} tabIndex={0} title={deck.detail}>
-          <UiSprite item={deck.item} className="deckSprite" />
-          <span>
+          <span className="deckCardFace">
+            <UiSprite item={deck.item} className="deckSprite" />
+          </span>
+          <span className="deckCopy">
             <strong>{deck.label}</strong>
-            <em>{deck.count} cards</em>
+            <em>{deck.count}</em>
           </span>
         </div>
       ))}
     </section>
   );
+}
+
+function totalCardCount(cards: EventCard[]) {
+  return cards.reduce((total, card) => total + card.count, 0);
 }
 
 function BuildingChip({
@@ -1422,7 +1590,7 @@ function buildingTooltipRows(
   isActive: boolean
 ) {
   return [
-    `Cost: ${formatResourceCost(building.cost)}.`,
+    `Cost: ${formatResourceCost(status.cost ?? building.cost)}.`,
     `Benefit: ${benefit}.`,
     actionRequirementText(status, phase, isActive)
   ];
@@ -1457,6 +1625,98 @@ function sortActionCandidates(
 
 function holdingShortLabel(tile: HexTile, settlement: Settlement) {
   return `${capitalize(settlement.kind)} ${tile.id}`;
+}
+
+const EVENT_CARD_ART: Record<string, string> = {
+  "season-drought": new URL("../../assets/event-cards/season-drought.png", import.meta.url).href,
+  "season-bountiful-harvest": new URL("../../assets/event-cards/season-bountiful-harvest.png", import.meta.url).href,
+  "season-timber-levies": new URL("../../assets/event-cards/season-timber-levies.png", import.meta.url).href,
+  "season-quarry-contracts": new URL("../../assets/event-cards/season-quarry-contracts.png", import.meta.url).href,
+  "season-grain-tithe": new URL("../../assets/event-cards/season-grain-tithe.png", import.meta.url).href,
+  "season-civic-anxiety": new URL("../../assets/event-cards/season-civic-anxiety.png", import.meta.url).href,
+  "season-festival-games": new URL("../../assets/event-cards/season-festival-games.png", import.meta.url).href,
+  "season-scarce-labor": new URL("../../assets/event-cards/season-scarce-labor.png", import.meta.url).href,
+  "season-skilled-artisans": new URL("../../assets/event-cards/season-skilled-artisans.png", import.meta.url).href,
+  "season-open-markets": new URL("../../assets/event-cards/season-open-markets.png", import.meta.url).href,
+  "player-new-citizen": new URL("../../assets/event-cards/player-new-citizen.png", import.meta.url).href,
+  "player-free-settlers": new URL("../../assets/event-cards/player-free-settlers.png", import.meta.url).href,
+  "player-captured-laborers": new URL("../../assets/event-cards/player-captured-laborers.png", import.meta.url).href,
+  "player-good-stores": new URL("../../assets/event-cards/player-good-stores.png", import.meta.url).href,
+  "player-timber-windfall": new URL("../../assets/event-cards/player-timber-windfall.png", import.meta.url).href,
+  "player-merchant-profit": new URL("../../assets/event-cards/player-merchant-profit.png", import.meta.url).href,
+  "player-stone-shipment": new URL("../../assets/event-cards/player-stone-shipment.png", import.meta.url).href,
+  "player-local-unrest": new URL("../../assets/event-cards/player-local-unrest.png", import.meta.url).href,
+  "player-public-calm": new URL("../../assets/event-cards/player-public-calm.png", import.meta.url).href,
+  "player-patronage-network": new URL("../../assets/event-cards/player-patronage-network.png", import.meta.url).href,
+  "player-emergency-labor": new URL("../../assets/event-cards/player-emergency-labor.png", import.meta.url).href,
+  "player-granary-surplus": new URL("../../assets/event-cards/player-granary-surplus.png", import.meta.url).href,
+  "player-civic-petition": new URL("../../assets/event-cards/player-civic-petition.png", import.meta.url).href,
+  "player-skilled-mason": new URL("../../assets/event-cards/player-skilled-mason.png", import.meta.url).href,
+  "player-caravan-contacts": new URL("../../assets/event-cards/player-caravan-contacts.png", import.meta.url).href,
+  "player-forest-crews": new URL("../../assets/event-cards/player-forest-crews.png", import.meta.url).href,
+  "player-temple-donation": new URL("../../assets/event-cards/player-temple-donation.png", import.meta.url).href,
+  "player-market-day": new URL("../../assets/event-cards/player-market-day.png", import.meta.url).href
+};
+
+function eventCardArtUrl(card: EventCard) {
+  return EVENT_CARD_ART[card.id] ?? EVENT_CARD_ART["season-drought"];
+}
+
+function formatEventEffects(effects: EventEffect[]) {
+  return effects.map(formatEventEffect).join(" / ");
+}
+
+function formatEventEffect(effect: EventEffect): string {
+  if (effect.type === "resourceDelta") {
+    return `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}`;
+  }
+
+  if (effect.type === "scaledResourceDelta") {
+    return `${formatSignedNumber(effect.amountPerPops)} ${RESOURCE_LABELS[effect.resource]} per ${effect.popStep} pops`;
+  }
+
+  if (effect.type === "happinessDelta") {
+    return `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS.happiness}`;
+  }
+
+  if (effect.type === "scaledHappinessDelta") {
+    return `${formatSignedNumber(effect.amountPerPops)} ${RESOURCE_LABELS.happiness} per ${effect.popStep} pops`;
+  }
+
+  if (effect.type === "incomeModifier") {
+    return `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]} income`;
+  }
+
+  if (effect.type === "buildingCostMultiplier") {
+    return effect.multiplier > 1 ? "Double building costs this season" : "Halve building costs this season";
+  }
+
+  if (effect.type === "addPops") {
+    return `Add ${effect.amount} ${formatPopLabel(effect.pop, effect.amount)}`;
+  }
+
+  if (effect.type === "actionCostDiscount") {
+    const target = effect.buildingId ? buildingNameForEvent(effect.buildingId) : effect.action === "foundColony" ? "colony" : "building";
+
+    return `Next ${target}: -${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}`;
+  }
+
+  if (effect.type === "resourceExchange") {
+    return `Exchange up to ${effect.maxAmount} ${RESOURCE_LABELS[effect.from]} for ${RESOURCE_LABELS[effect.to]}`;
+  }
+
+  if (effect.type === "resourceDeltaPerPop") {
+    return `${formatSignedNumber(effect.amountPerPop)} ${RESOURCE_LABELS[effect.resource]} per ${formatPopLabel(
+      effect.pop,
+      1
+    )}, minimum ${effect.minimum}`;
+  }
+
+  return "Choose one option";
+}
+
+function buildingNameForEvent(buildingId: BuildingId) {
+  return BUILDINGS.find((building) => building.id === buildingId)?.name ?? buildingId;
 }
 
 function createEmptyResources(): Resources {
