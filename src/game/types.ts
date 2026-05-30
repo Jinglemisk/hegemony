@@ -16,6 +16,123 @@ export type Resources = Record<Resource, number>;
 
 export type Pops = Record<PopType, number>;
 
+export type EventDeckKind = "seasonal" | "player";
+
+export type EventTiming = "immediate" | "season" | "pendingChoice" | "turn";
+
+export type EventScope = "activePlayer" | "allPlayers";
+
+export type ActionCostDiscountTarget = "buildBuilding" | "foundColony";
+
+export type EventEffect =
+  | {
+      type: "resourceDelta";
+      scope: EventScope;
+      resource: Resource;
+      amount: number;
+    }
+  | {
+      type: "scaledResourceDelta";
+      scope: EventScope;
+      resource: Resource;
+      amountPerPops: number;
+      popStep: number;
+      minimum: number;
+    }
+  | {
+      type: "happinessDelta";
+      scope: EventScope;
+      amount: number;
+    }
+  | {
+      type: "scaledHappinessDelta";
+      scope: EventScope;
+      amountPerPops: number;
+      popStep: number;
+      minimumMagnitude: number;
+      duration?: "season";
+    }
+  | {
+      type: "incomeModifier";
+      scope: EventScope;
+      resource: Resource;
+      amount: number;
+      duration: "season" | "turn";
+    }
+  | {
+      type: "buildingCostMultiplier";
+      multiplier: number;
+      duration: "season";
+      excludes: Array<"foundColony" | "upgradeColonyToCity">;
+    }
+  | {
+      type: "addPops";
+      pop: PopType;
+      amount: number;
+      target: "ownedSettlementWithCapacity";
+    }
+  | {
+      type: "actionCostDiscount";
+      action: ActionCostDiscountTarget;
+      buildingId?: BuildingId;
+      resource: Resource;
+      amount: number;
+      duration: "turn";
+      consume: "nextMatchingAction";
+    }
+  | {
+      type: "resourceExchange";
+      from: Resource;
+      to: Resource;
+      maxAmount: number;
+      ratio: number;
+    }
+  | {
+      type: "resourceDeltaPerPop";
+      scope: EventScope;
+      resource: Resource;
+      pop: PopType;
+      amountPerPop: number;
+      minimum: number;
+    }
+  | {
+      type: "choice";
+      options: EventEffect[][];
+    };
+
+export interface EventCard {
+  id: string;
+  deck: EventDeckKind;
+  name: string;
+  count: number;
+  text: string;
+  timing: EventTiming;
+  effects: EventEffect[];
+}
+
+export type EventDeck = EventCard[];
+
+export interface ActiveSeasonEvent {
+  card: EventCard;
+  season: number;
+}
+
+export interface PendingPlayerEvent {
+  card: EventCard;
+  playerID: PlayerId;
+}
+
+export interface ActiveActionCostDiscount {
+  id: string;
+  sourceCardId: string;
+  label: string;
+  action: ActionCostDiscountTarget;
+  buildingId?: BuildingId;
+  resource: Resource;
+  amount: number;
+  consume: "nextMatchingAction";
+}
+
 export interface Yield {
   type: MaterialResource;
   amount: number;
@@ -87,6 +204,7 @@ export interface PlayerState {
   collectedThisTurn: boolean;
   hasCollectedGameplayIncome: boolean;
   grownSettlementsThisTurn: string[];
+  actionCostDiscounts: ActiveActionCostDiscount[];
 }
 
 export interface PopulationTransfer {
@@ -107,6 +225,13 @@ export interface HegemonyState {
   board: HegemonyBoard;
   players: Record<PlayerId, PlayerState>;
   transfers: PopulationTransfer[];
+  seasonalDrawPile: EventDeck;
+  seasonalDiscardPile: EventDeck;
+  playerDrawPile: EventDeck;
+  playerDiscardPile: EventDeck;
+  activeSeasonEvent: ActiveSeasonEvent | null;
+  lastPlayerEvent: EventCard | null;
+  pendingPlayerEvent: PendingPlayerEvent | null;
   season: number;
   log: LogEntry[];
 }
