@@ -159,7 +159,7 @@ export function TileInspector({
               <AtlasIcon icon={building.id} className="buildingButtonIcon" />
               <span className="buildingButtonCopy">
                 <strong>{building.name}</strong>
-                <span>Cost: {formatResourceCost(building.cost)}</span>
+                <span>Cost: {formatResourceCost(status.cost ?? building.cost)}</span>
                 <span>Benefit: {formatBuildingEffects(building.effects)}</span>
               </span>
             </button>
