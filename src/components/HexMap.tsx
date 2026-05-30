@@ -35,7 +35,7 @@ const TILE_ART_SIZE = 88;
 const COLONY_POSITIONS = [-14, 14];
 const DRAG_CLICK_THRESHOLD = 5;
 const TILE_CLICK_SUPPRESS_MS = 160;
-const BASE_VIEW_BOX: ViewBox = { x: -310, y: -270, width: 620, height: 540 };
+const BASE_VIEW_BOX: ViewBox = { x: -372, y: -270, width: 744, height: 540 };
 const WORLD_VIEW_BOX: ViewBox = {
   x: BASE_VIEW_BOX.x - BASE_VIEW_BOX.width * 0.05,
   y: BASE_VIEW_BOX.y - BASE_VIEW_BOX.height * 0.05,
