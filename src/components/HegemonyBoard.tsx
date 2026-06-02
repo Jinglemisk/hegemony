@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import type { GameEvents, GameMoves, LocalContext, Phase } from "../game/controller";
 import {
-  ACTION_COSTS,
   BUILDINGS,
   EMPTY_RESOURCES,
   PLAYER_COLORS,
@@ -37,7 +37,6 @@ import {
   getUpgradeColonyToCityStatus,
   playerPopulationTotals,
   previewBuildBuilding,
-  previewUpgradeColonyToCity,
   settlementBuildingSlots,
   settlementOverCapacity,
   settlementPopCapacity,
@@ -58,9 +57,10 @@ import {
 } from "../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
 import { HexMap } from "./HexMap";
-import { FoundColonyModal, MovePopsModal, PopulationPickerModal } from "./PopulationModals";
+import { FoundColonyPopover, MovePopsModal, PopulationPickerModal, UpgradeCityModal } from "./PopulationModals";
 import { ResourceGrid } from "./ResourceGrid";
-import { AtlasIcon, ResourceIcon, TerrainSprite, UiSprite } from "./Sprites";
+import { SettlementSummaryCard } from "./SettlementCard";
+import { AtlasIcon, ResourceIcon, UiSprite } from "./Sprites";
 
 type BoardProps = {
   G: HegemonyState;
@@ -102,6 +102,8 @@ const BUILDING_AFFINITY: Record<BuildingId, PopType> = {
   granary: "citizens"
 };
 
+const DETAIL_TOOLTIP_WIDTH = 260;
+
 export function HegemonyBoard({
   G,
   ctx,
@@ -117,8 +119,9 @@ export function HegemonyBoard({
     kind: Extract<SettlementKind, "capital" | "colony">;
     tileId: string;
   } | null>(null);
-  const [foundingTileId, setFoundingTileId] = useState<string | null>(null);
-  const [upgradeTileId, setUpgradeTileId] = useState<string | null>(null);
+  const [foundColonyMode, setFoundColonyMode] = useState(false);
+  const [foundColonyTarget, setFoundColonyTarget] = useState<{ tileId: string; anchor: DOMRect } | null>(null);
+  const [isUpgradeCityOpen, setIsUpgradeCityOpen] = useState(false);
   const [isGrowPopOpen, setIsGrowPopOpen] = useState(false);
   const [isMovePopsOpen, setIsMovePopsOpen] = useState(false);
   const [activeEmpireTab, setActiveEmpireTab] = useState<EmpireTab>("cities");
@@ -130,9 +133,14 @@ export function HegemonyBoard({
   const projectedIncome = projectedEconomy.income;
   const projectedIncomeBreakdown = projectedEconomy.breakdown;
   const isSetup = ctx.phase === "setupCapital" || ctx.phase === "setupColony";
-  const upgradeTile = upgradeTileId ? G.board.tiles.find((tile) => tile.id === upgradeTileId) : null;
-  const upgradeSettlement = upgradeTile?.settlements.find(
-    (settlement) => settlement.owner === viewerId && settlement.kind === "colony"
+  const canFoundColony = G.board.tiles.some((tile) => getFoundColonyStatus(G, viewerId, tile.id).can);
+  const canUpgradeCity = G.board.tiles.some((tile) => getUpgradeColonyToCityStatus(G, viewerId, tile.id).can);
+  const foundColonyValidTileIds = useMemo(
+    () =>
+      foundColonyMode
+        ? G.board.tiles.filter((tile) => getFoundColonyStatus(G, viewerId, tile.id).can).map((tile) => tile.id)
+        : [],
+    [foundColonyMode, G, viewerId]
   );
   const pendingSetupCopy =
     tileConfirmation && isSetup
@@ -141,11 +149,16 @@ export function HegemonyBoard({
         ? "Select a tile to place the setup settlement"
         : "Income and building actions";
 
+  const exitFoundColonyMode = () => {
+    setFoundColonyMode(false);
+    setFoundColonyTarget(null);
+  };
+
   useEffect(() => {
     setTileConfirmation(null);
     setPopulationPrompt(null);
-    setFoundingTileId(null);
-    setUpgradeTileId(null);
+    exitFoundColonyMode();
+    setIsUpgradeCityOpen(false);
     setIsGrowPopOpen(false);
     setIsMovePopsOpen(false);
   }, [ctx.phase, ctx.currentPlayer]);
@@ -156,14 +169,40 @@ export function HegemonyBoard({
     }
 
     setTileConfirmation(null);
-    setFoundingTileId(null);
-    setUpgradeTileId(null);
+    exitFoundColonyMode();
+    setIsUpgradeCityOpen(false);
     setIsGrowPopOpen(false);
     setIsMovePopsOpen(false);
   }, [G.pendingPlayerEvent]);
 
+  useEffect(() => {
+    if (!foundColonyMode) {
+      return;
+    }
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        exitFoundColonyMode();
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [foundColonyMode]);
+
   const handleTileAction = (tileId: string) => {
     setSelectedTileId(tileId);
+
+    if (foundColonyMode) {
+      if (getFoundColonyStatus(G, viewerId, tileId).can) {
+        const element = typeof document !== "undefined" ? document.querySelector(`[data-tile-id="${tileId}"]`) : null;
+
+        if (element) {
+          setFoundColonyTarget({ tileId, anchor: element.getBoundingClientRect() });
+        }
+      }
+      return;
+    }
 
     if (ctx.phase === "setupCapital") {
       setTileConfirmation(null);
@@ -194,28 +233,12 @@ export function HegemonyBoard({
     } else if (tileConfirmation.action === "setupColony") {
       setPopulationPrompt({ kind: "colony", tileId: tileConfirmation.tileId });
     } else if (tileConfirmation.action === "foundColony") {
-      setFoundingTileId(tileConfirmation.tileId);
+      setFoundColonyMode(true);
     } else {
-      setUpgradeTileId(tileConfirmation.tileId);
+      setIsUpgradeCityOpen(true);
     }
 
     setTileConfirmation(null);
-  };
-
-  const requestFoundColony = (tileId: string) => {
-    setSelectedTileId(tileId);
-
-    if (ctx.phase === "gameplay" && isActive && !hasPendingPlayerEvent && getFoundColonyStatus(G, viewerId, tileId).can) {
-      setFoundingTileId(tileId);
-    }
-  };
-
-  const requestUpgradeCity = (tileId: string) => {
-    setSelectedTileId(tileId);
-
-    if (ctx.phase === "gameplay" && isActive && !hasPendingPlayerEvent && getUpgradeColonyToCityStatus(G, viewerId, tileId).can) {
-      setUpgradeTileId(tileId);
-    }
   };
 
   const requestBuildBuilding = (tileId: string, buildingId: BuildingId) => {
@@ -253,9 +276,7 @@ export function HegemonyBoard({
             phase={ctx.phase}
             playerID={viewerId}
             onBuildBuildingRequest={requestBuildBuilding}
-            onFoundColonyRequest={requestFoundColony}
             onTabChange={setActiveEmpireTab}
-            onUpgradeCityRequest={requestUpgradeCity}
           />
         </aside>
 
@@ -275,11 +296,20 @@ export function HegemonyBoard({
               }
               pendingTileId={tileConfirmation?.tileId ?? null}
               selectedTileId={selectedTileId}
+              highlightTileIds={foundColonyValidTileIds}
+              placementActive={foundColonyMode}
               onTileAction={handleTileAction}
             />
             {isSetup ? (
               <div className="mapSetupCaption" role="status">
                 {pendingSetupCopy}
+              </div>
+            ) : null}
+            {foundColonyMode ? (
+              <div className="mapSetupCaption placementCaption" role="status">
+                {foundColonyValidTileIds.length > 0
+                  ? "Select a glowing tile to found your colony · Esc to cancel"
+                  : "No open tile can host a colony right now · Esc to cancel"}
               </div>
             ) : null}
           </div>
@@ -301,10 +331,19 @@ export function HegemonyBoard({
             phase={ctx.phase}
             canGrowPops={viewer.settlements.length > 0}
             canMovePops={viewer.settlements.length >= 2}
+            canFoundColony={canFoundColony}
+            canUpgradeCity={canUpgradeCity}
+            isFoundColonyActive={foundColonyMode}
             hasPendingPlayerEvent={hasPendingPlayerEvent}
             onEndTurn={events.endTurn}
             onGrowPopRequest={() => setIsGrowPopOpen(true)}
             onMovePopsRequest={() => setIsMovePopsOpen(true)}
+            onFoundColonyRequest={() => {
+              setIsUpgradeCityOpen(false);
+              setFoundColonyTarget(null);
+              setFoundColonyMode((active) => !active);
+            }}
+            onUpgradeCityRequest={() => setIsUpgradeCityOpen(true)}
           />
         </aside>
       </section>
@@ -327,29 +366,27 @@ export function HegemonyBoard({
           }}
         />
       ) : null}
-      {foundingTileId ? (
-        <FoundColonyModal
+      {foundColonyMode && foundColonyTarget ? (
+        <FoundColonyPopover
           G={G}
           playerID={viewerId}
-          targetTileId={foundingTileId}
-          onCancel={() => setFoundingTileId(null)}
+          tileId={foundColonyTarget.tileId}
+          anchor={foundColonyTarget.anchor}
+          onCancel={exitFoundColonyMode}
           onConfirm={(sourceTileId, pop) => {
-            moves.foundColony(foundingTileId, sourceTileId, pop);
-            setFoundingTileId(null);
+            moves.foundColony(foundColonyTarget.tileId, sourceTileId, pop);
+            exitFoundColonyMode();
           }}
         />
       ) : null}
-      {upgradeTileId ? (
-        <PopulationPickerModal
-          title="Choose city pops"
-          description={`Allocate exactly ${totalPops(upgradeSettlement?.pops ?? { citizens: 0, freemen: 0, slaves: 0 })} pops before upgrading this city.`}
-          requiredTotal={totalPops(upgradeSettlement?.pops ?? { citizens: 0, freemen: 0, slaves: 0 })}
-          initialPops={upgradeSettlement?.pops}
-          confirmLabel="Upgrade City"
-          onCancel={() => setUpgradeTileId(null)}
-          onConfirm={(pops) => {
-            moves.upgradeColonyToCity(upgradeTileId, pops);
-            setUpgradeTileId(null);
+      {isUpgradeCityOpen ? (
+        <UpgradeCityModal
+          G={G}
+          playerID={viewerId}
+          onCancel={() => setIsUpgradeCityOpen(false)}
+          onConfirm={(tileId, pops) => {
+            moves.upgradeColonyToCity(tileId, pops);
+            setIsUpgradeCityOpen(false);
           }}
         />
       ) : null}
@@ -514,8 +551,6 @@ function EmpireIntelPanel({
   phase,
   isActive,
   onTabChange,
-  onFoundColonyRequest,
-  onUpgradeCityRequest,
   onBuildBuildingRequest
 }: {
   G: HegemonyState;
@@ -524,8 +559,6 @@ function EmpireIntelPanel({
   phase: Phase;
   isActive: boolean;
   onTabChange: (tab: EmpireTab) => void;
-  onFoundColonyRequest: (tileId: string) => void;
-  onUpgradeCityRequest: (tileId: string) => void;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
   const holdings = useMemo(() => getOwnedHoldings(G, playerID), [G, playerID]);
@@ -578,8 +611,6 @@ function EmpireIntelPanel({
             phase={phase}
             playerID={playerID}
             onBuildBuildingRequest={onBuildBuildingRequest}
-            onFoundColonyRequest={onFoundColonyRequest}
-            onUpgradeCityRequest={onUpgradeCityRequest}
           />
         ) : null}
         {activeTab === "pops" ? (
@@ -648,6 +679,8 @@ function CitiesTab({
         const overCapacity = settlementOverCapacity(settlement);
         const slots = settlementBuildingSlots(tile, settlement);
         const tileYield = settlementTileYield(tile, settlement);
+        const supplementalYield = calculateSettlementSupplementalYield(tile, settlement);
+        const netYield = settlementNetYield(tile, tileYield, supplementalYield);
         const detailId = `holding-${settlement.owner}-${tile.q}-${tile.r}-details`;
 
         return (
@@ -663,42 +696,7 @@ function CitiesTab({
               onClick={() => toggleHolding(holdingId)}
               type="button"
             >
-              <span className="holdingSummaryLine">
-                <span className="holdingSummaryMain">
-                  <span className="cityIdentity" title={`${capitalize(settlement.kind)} ${tile.id}`}>
-                    <AtlasIcon icon={settlement.kind} className="miniIcon" />
-                    <em>{tile.id}</em>
-                  </span>
-                  <span className="summaryTerrain" title={`${capitalize(tile.terrain)} tile`}>
-                    <TerrainSprite terrain={tile.terrain} className="terrainChip" />
-                  </span>
-                </span>
-                <span className="holdingSummaryMetrics">
-                  <span
-                    className={overCapacity > 0 ? "cityMeter overCapacityText" : "cityMeter"}
-                    title={`Population ${popTotal} of ${capacity}`}
-                  >
-                    <AtlasIcon icon="citizens" className="miniIcon" />
-                    <strong>{popTotal}</strong>
-                    <span className="meterSlash">/</span>
-                    <strong>{capacity}</strong>
-                  </span>
-                  <span className="cityMeter" title={`Building slots ${settlement.buildings.length} of ${slots}`}>
-                    <AtlasIcon icon="temple" className="miniIcon" />
-                    <strong>{settlement.buildings.length}</strong>
-                    <span className="meterSlash">/</span>
-                    <strong>{slots}</strong>
-                  </span>
-                  <span
-                    className="cityMeter summaryYield"
-                    style={resourceCssVars(tile.resource.type)}
-                    title={`Tile yield ${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]}`}
-                  >
-                    <ResourceIcon resource={tile.resource.type} value={tileYield} className="miniResourceIcon" />
-                    <strong>{formatNumber(tileYield)}</strong>
-                  </span>
-                </span>
-              </span>
+              <SettlementSummaryCard netYield={netYield} settlement={settlement} tile={tile} />
               <span className="collapseChevron" aria-hidden="true" />
             </button>
 
@@ -776,15 +774,6 @@ function CitiesTab({
                   );
                 })}
               </div>
-
-              <span
-                className="holdingYieldLine"
-                style={resourceCssVars(tile.resource.type)}
-                title={`Extracts ${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]}`}
-              >
-                <ResourceIcon resource={tile.resource.type} value={tileYield} className="miniResourceIcon" />
-                <strong>{formatNumber(tileYield)}</strong>
-              </span>
             </div>
           </article>
         );
@@ -793,14 +782,50 @@ function CitiesTab({
   );
 }
 
+function settlementNetYield(tile: HexTile, tileYield: number, supplementalYield: Resources): Resources {
+  const net: Resources = { ...supplementalYield };
+  net[tile.resource.type] += tileYield;
+  return net;
+}
+
+function calculateSettlementSupplementalYield(tile: HexTile, settlement: Settlement): Resources {
+  const resources = createEmptyResources();
+
+  resources.influence += settlement.pops.citizens;
+  resources.gold += settlement.pops.citizens * 2;
+  resources.food -= settlement.pops.citizens * 2;
+
+  resources.gold += settlement.pops.freemen * 2;
+  resources.food -= settlement.pops.freemen;
+
+  resources[tile.resource.type] += settlement.pops.slaves;
+  resources.food -= settlement.pops.slaves;
+  resources.happiness -= settlement.pops.slaves * 0.5;
+  resources.happiness -= settlementOverCapacity(settlement);
+
+  for (const buildingId of settlement.buildings) {
+    const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+
+    if (building) {
+      addResources(resources, estimateBuildingIncomeDelta(tile, settlement, building));
+    }
+  }
+
+  return resources;
+}
+
+function addResources(target: Resources, delta: Resources) {
+  for (const resource of RESOURCE_ORDER) {
+    target[resource] += delta[resource];
+  }
+}
+
 function BuildingsTab({
   G,
   holdings,
   playerID,
   phase,
   isActive,
-  onFoundColonyRequest,
-  onUpgradeCityRequest,
   onBuildBuildingRequest
 }: {
   G: HegemonyState;
@@ -808,15 +833,8 @@ function BuildingsTab({
   playerID: PlayerId;
   phase: Phase;
   isActive: boolean;
-  onFoundColonyRequest: (tileId: string) => void;
-  onUpgradeCityRequest: (tileId: string) => void;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
-  const colonyCandidates = G.board.tiles
-    .map((tile) => ({ tile, status: getFoundColonyStatus(G, playerID, tile.id) }))
-    .sort(sortActionCandidates);
-  const upgradeCandidates = holdings.filter(({ settlement }) => settlement.kind === "colony");
-
   return (
     <div className="buildingsLedger">
       {BUILDINGS.map((building) => (
@@ -853,69 +871,6 @@ function BuildingsTab({
           </div>
         </section>
       ))}
-
-      <section className="buildingLedgerRow actionLedgerRow">
-        <div className="buildingLedgerLead">
-          <AtlasIcon icon="colony" className="buildingButtonIcon" />
-          <span>
-            <strong>Found Colony</strong>
-            <em>Cost: {formatResourceCost(ACTION_COSTS.foundColony)}. Choose a source pop after selecting a tile.</em>
-          </span>
-        </div>
-        <div className="buildCandidateGrid largeCandidateGrid">
-          {colonyCandidates.map(({ tile, status }) => {
-            const disabled = !isActive || phase !== "gameplay" || !status.can;
-
-            return (
-              <button
-                className="candidateButton"
-                disabled={disabled}
-                key={`found-${tile.id}`}
-                onClick={() => onFoundColonyRequest(tile.id)}
-                title={actionTitle("Found Colony", status, phase, isActive)}
-              >
-                <span>{capitalize(tile.terrain)} {tile.id}</span>
-                <b>{status.can ? "Open" : status.reasons[0] ?? "Blocked"}</b>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="buildingLedgerRow actionLedgerRow">
-        <div className="buildingLedgerLead">
-          <AtlasIcon icon="city" className="buildingButtonIcon" />
-          <span>
-            <strong>Upgrade City</strong>
-            <em>Cost: {formatResourceCost(ACTION_COSTS.upgradeColonyToCity)}. Converts a colony into a city.</em>
-          </span>
-        </div>
-        <div className="buildCandidateGrid">
-          {upgradeCandidates.length > 0 ? (
-            upgradeCandidates.map(({ tile, settlement }) => {
-              const status = getUpgradeColonyToCityStatus(G, playerID, tile.id);
-              const preview = previewUpgradeColonyToCity(G, playerID, tile.id, settlement.pops);
-              const benefit = preview ? formatResourceDelta(preview.incomeDelta) : "City capacity";
-              const disabled = !isActive || phase !== "gameplay" || !status.can;
-
-              return (
-                <button
-                  className="candidateButton"
-                  disabled={disabled}
-                  key={`upgrade-${tile.id}`}
-                  onClick={() => onUpgradeCityRequest(tile.id)}
-                  title={`${actionTitle("Upgrade City", status, phase, isActive)} Projected income: ${benefit}.`}
-                >
-                  <span>{holdingShortLabel(tile, settlement)}</span>
-                  <b>{benefit}</b>
-                </button>
-              );
-            })
-          ) : (
-            <span className="ledgerEmpty">No colonies to upgrade.</span>
-          )}
-        </div>
-      </section>
     </div>
   );
 }
@@ -1114,9 +1069,14 @@ function ActionCommandPanel({
   isActive,
   canGrowPops,
   canMovePops,
+  canFoundColony,
+  canUpgradeCity,
+  isFoundColonyActive,
   hasPendingPlayerEvent,
   onMovePopsRequest,
   onGrowPopRequest,
+  onFoundColonyRequest,
+  onUpgradeCityRequest,
   onEndTurn
 }: {
   G: HegemonyState;
@@ -1124,9 +1084,14 @@ function ActionCommandPanel({
   isActive: boolean;
   canGrowPops: boolean;
   canMovePops: boolean;
+  canFoundColony: boolean;
+  canUpgradeCity: boolean;
+  isFoundColonyActive: boolean;
   hasPendingPlayerEvent: boolean;
   onMovePopsRequest: () => void;
   onGrowPopRequest: () => void;
+  onFoundColonyRequest: () => void;
+  onUpgradeCityRequest: () => void;
   onEndTurn: () => void;
 }) {
   return (
@@ -1173,6 +1138,41 @@ function ActionCommandPanel({
         </button>
 
         <button
+          aria-pressed={isFoundColonyActive}
+          className={isFoundColonyActive ? "commandIconButton commandIconActive" : "commandIconButton"}
+          disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent || (!canFoundColony && !isFoundColonyActive)}
+          onClick={onFoundColonyRequest}
+          title={
+            hasPendingPlayerEvent
+              ? "Resolve the pending player event first."
+              : isFoundColonyActive
+                ? "Pick a glowing tile on the map, or click again to cancel."
+                : canFoundColony
+                  ? "Send a pop from an existing settlement to found a new colony."
+                  : "Requires an open tile, a spare pop, and enough resources."
+          }
+        >
+          <AtlasIcon icon="colony" className="commandIcon commandAtlasIcon" />
+          <span>Found</span>
+        </button>
+
+        <button
+          className="commandIconButton"
+          disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent || !canUpgradeCity}
+          onClick={onUpgradeCityRequest}
+          title={
+            hasPendingPlayerEvent
+              ? "Resolve the pending player event first."
+              : canUpgradeCity
+                ? "Upgrade one of your colonies into a city."
+                : "Requires an upgradeable colony and enough resources."
+          }
+        >
+          <AtlasIcon icon="city" className="commandIcon commandAtlasIcon" />
+          <span>Upgrade</span>
+        </button>
+
+        <button
           className="commandEndTurn"
           disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent}
           onClick={onEndTurn}
@@ -1189,9 +1189,9 @@ function ActionCommandPanel({
         </button>
       </div>
 
-      <ActionLogPanel G={G} />
-
       <DeckShelf G={G} />
+
+      <ActionLogPanel G={G} />
     </div>
   );
 }
@@ -1406,36 +1406,102 @@ function BuildingChip({
   disabled?: boolean;
   onClick?: () => void;
 }) {
+  const tooltipId = useId();
+  const tooltipLabel = [building.name, ...tooltipRows].join(". ");
+  const [tooltipPosition, setTooltipPosition] = useState<{
+    left: number;
+    top: number;
+    placement: "above" | "below";
+  } | null>(null);
+
+  const showTooltip = (target: HTMLElement) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const gutter = 10;
+    const tooltipWidth = Math.min(DETAIL_TOOLTIP_WIDTH, window.innerWidth - gutter * 2);
+    const centeredLeft = rect.left + rect.width / 2 - tooltipWidth / 2;
+    const left = Math.min(
+      Math.max(gutter, centeredLeft),
+      Math.max(gutter, window.innerWidth - tooltipWidth - gutter)
+    );
+    const placement = rect.top < 150 ? "below" : "above";
+
+    setTooltipPosition({
+      left,
+      top: placement === "below" ? rect.bottom : rect.top,
+      placement
+    });
+  };
+
+  const hideTooltip = () => setTooltipPosition(null);
+
   const content = (
     <>
       <AtlasIcon icon={building.id} className="miniIcon" />
-      <span className="detailTooltip" role="tooltip">
-        <strong>{building.name}</strong>
-        {tooltipRows.map((row) => (
-          <em key={row}>{row}</em>
-        ))}
-      </span>
     </>
   );
 
+  const tooltip =
+    tooltipPosition && typeof document !== "undefined"
+      ? createPortal(
+          <span
+            className={`detailTooltip floatingDetailTooltip${
+              tooltipPosition.placement === "below" ? " detailTooltipBelow" : ""
+            }`}
+            id={tooltipId}
+            role="tooltip"
+            style={{ left: tooltipPosition.left, top: tooltipPosition.top }}
+          >
+            <strong>{building.name}</strong>
+            {tooltipRows.map((row) => (
+              <em key={row}>{row}</em>
+            ))}
+          </span>,
+          document.body
+        )
+      : null;
+
   if (mode === "option") {
     return (
-      <button
-        className="buildingChip buildingChipOption"
-        disabled={disabled}
-        onClick={onClick}
-        title={[building.name, ...tooltipRows].join(" — ")}
-        type="button"
-      >
-        {content}
-      </button>
+      <>
+        <button
+          aria-describedby={tooltipPosition ? tooltipId : undefined}
+          aria-disabled={disabled}
+          aria-label={tooltipLabel}
+          className="buildingChip buildingChipOption"
+          onBlur={hideTooltip}
+          onClick={disabled ? undefined : onClick}
+          onFocus={(event) => showTooltip(event.currentTarget)}
+          onMouseEnter={(event) => showTooltip(event.currentTarget)}
+          onMouseLeave={hideTooltip}
+          type="button"
+        >
+          {content}
+        </button>
+        {tooltip}
+      </>
     );
   }
 
   return (
-    <span className="buildingChip buildingChipBuilt" tabIndex={0} title={building.name}>
-      {content}
-    </span>
+    <>
+      <span
+        aria-describedby={tooltipPosition ? tooltipId : undefined}
+        aria-label={tooltipLabel}
+        className="buildingChip buildingChipBuilt"
+        onBlur={hideTooltip}
+        onFocus={(event) => showTooltip(event.currentTarget)}
+        onMouseEnter={(event) => showTooltip(event.currentTarget)}
+        onMouseLeave={hideTooltip}
+        tabIndex={0}
+      >
+        {content}
+      </span>
+      {tooltip}
+    </>
   );
 }
 
@@ -1610,17 +1676,6 @@ function actionRequirementText(status: ActionStatus | null, phase?: Phase, isAct
   }
 
   return status?.reasons.length ? status.reasons.join(" ") : "Available.";
-}
-
-function sortActionCandidates(
-  left: { tile: HexTile; status: ActionStatus },
-  right: { tile: HexTile; status: ActionStatus }
-) {
-  if (left.status.can !== right.status.can) {
-    return left.status.can ? -1 : 1;
-  }
-
-  return left.tile.id.localeCompare(right.tile.id);
 }
 
 function holdingShortLabel(tile: HexTile, settlement: Settlement) {
