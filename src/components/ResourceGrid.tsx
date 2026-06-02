@@ -82,9 +82,11 @@ export function ResourceGrid({
             aria-label={`${RESOURCE_LABELS[resource]} ${formatNumber(resources[resource])}, projected ${formatSignedNumber(delta)} per turn`}
           >
             <ResourceIcon resource={resource} value={resources[resource]} className="resourceIcon" />
-            <strong>{formatNumber(resources[resource])}</strong>
-            <span className={`resourceDelta ${deltaClass}`}>
-              {formatSignedNumber(delta)}
+            <span className="resourceValue">
+              <strong>{formatNumber(resources[resource])}</strong>
+              <span className={`resourceDelta ${deltaClass}`}>
+                ({formatSignedNumber(delta)})
+              </span>
             </span>
             <ResourceBreakdownTooltip
               resource={resource}
@@ -107,8 +109,14 @@ function ResourceBreakdownTooltip({
   delta: number;
   entries: IncomeContribution[];
 }) {
+  const isCompact = entries.length >= 5;
+
   return (
-    <div className="resourceTooltip" role="tooltip">
+    <div
+      className={`resourceTooltip${isCompact ? " compactResourceTooltip" : ""}`}
+      data-entry-count={entries.length}
+      role="tooltip"
+    >
       <div className="resourceTooltipHeader">
         <span>{RESOURCE_LABELS[resource]}</span>
         <strong className={getResourceDeltaClass(resource, delta)}>{formatSignedNumber(delta)}</strong>
