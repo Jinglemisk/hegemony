@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Terrain color map mode">
+  <defs>
+    <linearGradient id="frame" x1="14" y1="8" x2="82" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff8e7"/>
+      <stop offset="0.36" stop-color="#d98a35"/>
+      <stop offset="1" stop-color="#722420"/>
+    </linearGradient>
+    <filter id="shadow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#181210" flood-opacity="0.34"/>
+    </filter>
+    <clipPath id="hexClip">
+      <path d="M48 14 77.44 31v34L48 82 18.56 65V31Z"/>
+    </clipPath>
+  </defs>
+  <rect width="96" height="96" rx="18" fill="#181210"/>
+  <rect x="5" y="5" width="86" height="86" rx="14" fill="#f4e6c8" stroke="url(#frame)" stroke-width="3"/>
+  <path d="M48 14 77.44 31v34L48 82 18.56 65V31Z" fill="#241910" filter="url(#shadow)" opacity="0.96"/>
+  <g clip-path="url(#hexClip)">
+    <path d="M18 31 48 14v34H18Z" fill="#354927"/>
+    <path d="M48 14 78 31 48 48Z" fill="#8f8571"/>
+    <path d="M18 31v34l30-17Z" fill="#9bbf52"/>
+    <path d="M78 31v34L48 48Z" fill="#d98a35"/>
+    <path d="M18 65 48 82V48Z" fill="#5e6e3a"/>
+    <path d="M78 65 48 82V48Z" fill="#1f6977"/>
+    <path d="M48 14v68M18.56 31 77.44 65M77.44 31 18.56 65" stroke="#fff8e7" stroke-opacity="0.28" stroke-width="1.7"/>
+  </g>
+  <path d="M48 14 77.44 31v34L48 82 18.56 65V31Z" fill="none" stroke="#fff8e7" stroke-opacity="0.76" stroke-width="1.6"/>
+  <path d="M36 52 46 31l13 22-9-5-6 12Z" fill="#fff8e7" stroke="#241910" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="61" cy="59" r="6" fill="#c0461c" stroke="#fff8e7" stroke-width="2"/>
+  <path d="M20 22h9m38 52h9" stroke="#8f2e13" stroke-width="3" stroke-linecap="round"/>
+</svg>

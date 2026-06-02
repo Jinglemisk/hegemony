@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Illustrated map mode">
+  <defs>
+    <linearGradient id="sea" x1="18" y1="8" x2="78" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#79b8bb"/>
+      <stop offset="0.58" stop-color="#2d7884"/>
+      <stop offset="1" stop-color="#183e46"/>
+    </linearGradient>
+    <linearGradient id="tile" x1="28" y1="19" x2="68" y2="78" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f4e6c8"/>
+      <stop offset="0.34" stop-color="#d98a35"/>
+      <stop offset="0.68" stop-color="#5e6e3a"/>
+      <stop offset="1" stop-color="#354927"/>
+    </linearGradient>
+    <linearGradient id="ridge" x1="33" y1="30" x2="66" y2="65" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff8e7"/>
+      <stop offset="1" stop-color="#8f2e13"/>
+    </linearGradient>
+    <filter id="shadow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#181210" flood-opacity="0.34"/>
+    </filter>
+    <clipPath id="hexClip">
+      <path d="M48 14 77.44 31v34L48 82 18.56 65V31Z"/>
+    </clipPath>
+  </defs>
+  <rect width="96" height="96" rx="18" fill="#181210"/>
+  <rect x="5" y="5" width="86" height="86" rx="14" fill="url(#sea)" stroke="#fff8e7" stroke-opacity="0.32" stroke-width="2"/>
+  <path d="M14 68c12-6 22-2 34 2s23 4 35-3" fill="none" stroke="#fff8e7" stroke-opacity="0.42" stroke-width="3" stroke-linecap="round"/>
+  <path d="M48 14 77.44 31v34L48 82 18.56 65V31Z" fill="url(#tile)" stroke="#241910" stroke-width="3" filter="url(#shadow)"/>
+  <g clip-path="url(#hexClip)">
+    <path d="M19 61c10-8 18-9 29-1 11 8 19 5 30-4v30H19Z" fill="#354927" opacity="0.62"/>
+    <path d="M15 43c10-5 18-5 28 0 12 6 22 1 36-9v20c-11 9-24 15-39 5-8-5-17-4-25 2Z" fill="#9bbf52" opacity="0.55"/>
+    <path d="M19 30c11 7 18 8 30 2 10-5 19-7 30-1v19c-13-8-21-4-31 1-11 6-20 4-29-2Z" fill="#d98a35" opacity="0.58"/>
+    <path d="M34 57 47 29l16 30-12-7-8 14Z" fill="url(#ridge)" opacity="0.86"/>
+    <path d="M40 45 47 29l9 17-8-4Z" fill="#fff8e7" opacity="0.76"/>
+    <path d="M24 34c9 7 15 8 24 3 9-4 17-7 28 0" fill="none" stroke="#241910" stroke-opacity="0.28" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <path d="M48 14 77.44 31v34L48 82 18.56 65V31Z" fill="none" stroke="#fff8e7" stroke-opacity="0.7" stroke-width="1.4"/>
+  <path d="M24 25 48 11l24 14" fill="none" stroke="#c0461c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

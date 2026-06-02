@@ -30,6 +30,8 @@ type DragState = {
   startTileId: string | null;
 };
 
+type MapMode = "current" | "terrain";
+
 const HEX_SIZE = 45;
 const TILE_ART_SIZE = 88;
 const COLONY_POSITIONS = [-14, 14];
@@ -53,12 +55,26 @@ const MIN_ZOOM = BASE_VIEW_BOX.width / WORLD_VIEW_BOX.width;
 const MAX_ZOOM = 1.18;
 const ZOOM_STEP = 0.08;
 const SEA_BACKDROP_HREF = new URL("../../assets/map/aegean-sea-board.png", import.meta.url).href;
+const MAP_MODE_OPTIONS: Array<{ mode: MapMode; label: string; iconHref: string }> = [
+  {
+    mode: "current",
+    label: "Current",
+    iconHref: new URL("../../assets/map-modes/current-map-mode.svg", import.meta.url).href
+  },
+  {
+    mode: "terrain",
+    label: "Terrain",
+    iconHref: new URL("../../assets/map-modes/terrain-map-mode.svg", import.meta.url).href
+  }
+];
 
 export function HexMap({
   G,
   confirmation,
   pendingTileId,
   selectedTileId,
+  highlightTileIds,
+  placementActive = false,
   onTileAction
 }: {
   G: HegemonyState;
@@ -70,12 +86,16 @@ export function HexMap({
   } | null;
   pendingTileId: string | null;
   selectedTileId: string | null;
+  highlightTileIds?: readonly string[];
+  placementActive?: boolean;
   onTileAction: (tileId: string) => void;
 }) {
-  const [viewBox, setViewBox] = useState(BASE_VIEW_BOX);
+  const [mapMode, setMapMode] = useState<MapMode>("current");
+  const highlightSet = useMemo(() => new Set(highlightTileIds ?? []), [highlightTileIds]);
+  const [viewBox, setViewBox] = useState(WORLD_VIEW_BOX);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const cameraLayerRef = useRef<SVGGElement | null>(null);
-  const cameraViewBox = useRef<ViewBox>(BASE_VIEW_BOX);
+  const cameraViewBox = useRef<ViewBox>(WORLD_VIEW_BOX);
   const dragState = useRef<DragState | null>(null);
   const pendingAnimationFrame = useRef<number | null>(null);
   const pendingViewBox = useRef<ViewBox | null>(null);
@@ -83,6 +103,8 @@ export function HexMap({
   const suppressNextTileClick = useRef(false);
   const tileClickSuppressTimeout = useRef<number | null>(null);
   const zoomLevel = getZoomLevel(viewBox);
+  const activeMapModeLabel = MAP_MODE_OPTIONS.find((option) => option.mode === mapMode)?.label ?? "Current";
+  const isTerrainMapMode = mapMode === "terrain";
   const centers = useMemo(
     () =>
       G.board.tiles.map((tile) => ({
@@ -272,6 +294,20 @@ export function HexMap({
 
   return (
     <>
+      <div className="mapModeControls" aria-label="Map mode controls">
+        {MAP_MODE_OPTIONS.map((option) => (
+          <button
+            aria-label={`${option.label} map mode`}
+            aria-pressed={mapMode === option.mode}
+            className={mapMode === option.mode ? "activeMapModeButton" : ""}
+            key={option.mode}
+            onClick={() => setMapMode(option.mode)}
+            title={`${option.label} map mode`}
+          >
+            <img alt="" src={option.iconHref} />
+          </button>
+        ))}
+      </div>
       <div className="mapZoomControls" aria-label="Map zoom controls">
         <button aria-label="Zoom in" disabled={!canZoomIn} onClick={() => zoomBy(ZOOM_STEP)}>
           +
@@ -282,10 +318,10 @@ export function HexMap({
       </div>
       <svg
         ref={svgRef}
-        className="hexMap"
+        className={`hexMap ${isTerrainMapMode ? "terrainMapMode" : "currentMapMode"}${placementActive ? " placementMode" : ""}`}
         viewBox={viewBoxToString(BASE_VIEW_BOX)}
         role="img"
-        aria-label="Hegemony island hex map"
+        aria-label={`Hegemony island hex map, ${activeMapModeLabel} mode`}
         preserveAspectRatio="xMidYMid slice"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -327,19 +363,23 @@ export function HexMap({
             const overflowColonies = Math.max(0, colonies.length - shownColonies.length);
             const isSelected = selectedTileId === tile.id;
             const isPending = pendingTileId === tile.id;
+            const isPlacementCandidate = placementActive && highlightSet.has(tile.id);
             const usedBuildingSlots = city?.buildings.length ?? 0;
             const totalBuildingSlots = city ? settlementBuildingSlots(tile, city) : tile.buildingSlots;
+            const terrainArt = (
+              <foreignObject
+                className="terrainObject"
+                height={TILE_ART_SIZE}
+                width={TILE_ART_SIZE}
+                x={-TILE_ART_SIZE / 2}
+                y={-TILE_ART_SIZE / 2}
+              >
+                <TerrainSprite terrain={tile.terrain} className="mapTerrain" />
+              </foreignObject>
+            );
             return (
               <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
-                <foreignObject
-                  className="terrainObject"
-                  height={TILE_ART_SIZE}
-                  width={TILE_ART_SIZE}
-                  x={-TILE_ART_SIZE / 2}
-                  y={-TILE_ART_SIZE / 2}
-                >
-                  <TerrainSprite terrain={tile.terrain} className="mapTerrain" />
-                </foreignObject>
+                {!isTerrainMapMode ? terrainArt : null}
                 <g
                   aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${tile.resource.amount} ${tile.resource.type}`}
                   className="svgButton"
@@ -355,7 +395,7 @@ export function HexMap({
                   tabIndex={0}
                 >
                   <polygon
-                    className={`hexTile terrain-${tile.terrain} ${isSelected ? "selected" : ""} ${isPending ? "pending" : ""}`}
+                    className={`hexTile terrain-${tile.terrain} ${isSelected ? "selected" : ""} ${isPending ? "pending" : ""} ${isPlacementCandidate ? "placementCandidate" : ""}`}
                     points={hexPoints(HEX_SIZE - 2)}
                   />
                 </g>
