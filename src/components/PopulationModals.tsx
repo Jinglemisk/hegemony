@@ -1,15 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
-import type { HexTile, HegemonyState, PlayerId, PopType, Pops } from "../game/types";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import type { HexTile, HegemonyState, PlayerId, PopType, Pops, Resource, Resources, Settlement } from "../game/types";
 import {
   EMPTY_POPS,
   POP_TYPES,
   clonePops,
   formatPops,
+  getFoundColonyStatus,
   getMovePopsStatus,
+  getUpgradeColonyToCityStatus,
+  previewUpgradeColonyToCity,
+  settlementNetYield,
+  settlementPopCapacity,
   totalPops
 } from "../game/rules";
-import { formatPopLabel } from "../ui/formatters";
-import { AtlasIcon, TerrainSprite } from "./Sprites";
+import { ACTION_COSTS } from "../game/data";
+import { formatPopLabel, formatResourceDelta } from "../ui/formatters";
+import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
+import { SettlementSummaryCard } from "./SettlementCard";
+import { AtlasIcon, ResourceIcon } from "./Sprites";
 
 type SettlementEntry = {
   tile: HexTile;
@@ -83,83 +92,143 @@ export function PopulationPickerModal({
   );
 }
 
-export function FoundColonyModal({
+type PopoverPosition = { top: number; left: number; arrowLeft: number; placement: "above" | "below" };
+
+/**
+ * Map-anchored founding flow. The target tile is already chosen on the map; this
+ * floating panel pops just above or below that tile (whichever fits the viewport)
+ * so the board stays visible while the player picks a source pop and confirms.
+ */
+export function FoundColonyPopover({
   G,
   playerID,
-  targetTileId,
+  tileId,
+  anchor,
   onCancel,
   onConfirm
 }: {
   G: HegemonyState;
   playerID: PlayerId;
-  targetTileId: string;
+  tileId: string;
+  anchor: DOMRect;
   onCancel: () => void;
   onConfirm: (sourceTileId: string, pop: PopType) => void;
 }) {
-  const holdings = useMemo(() => getSettlementEntries(G, playerID).filter((entry) => totalPops(entry.pops) > 0), [
-    G,
-    playerID
-  ]);
-  const targetTile = G.board.tiles.find((tile) => tile.id === targetTileId);
-  const [sourceTileId, setSourceTileId] = useState(() => holdings[0]?.tile.id ?? "");
-  const source = holdings.find((entry) => entry.tile.id === sourceTileId) ?? holdings[0];
-  const availablePop = POP_TYPES.find((pop) => (source?.pops[pop] ?? 0) > 0) ?? "citizens";
-  const [pop, setPop] = useState<PopType>(availablePop);
+  const targetTile = G.board.tiles.find((tile) => tile.id === tileId);
+  const sources = useMemo(
+    () => getSettlementEntries(G, playerID).filter((entry) => totalPops(entry.pops) > 0),
+    [G, playerID]
+  );
+
+  const [sourceTileId, setSourceTileId] = useState(() => sources[0]?.tile.id ?? "");
+  const source = sources.find((entry) => entry.tile.id === sourceTileId) ?? sources[0];
+  const [pop, setPop] = useState<PopType>(() => firstAvailablePop(source?.pops));
 
   useEffect(() => {
-    if (!source) {
-      return;
-    }
-
-    if (source.pops[pop] <= 0) {
-      setPop(POP_TYPES.find((candidate) => source.pops[candidate] > 0) ?? "citizens");
+    if (source && source.pops[pop] <= 0) {
+      setPop(firstAvailablePop(source.pops));
     }
   }, [pop, source]);
 
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [position, setPosition] = useState<PopoverPosition | null>(null);
+
+  useLayoutEffect(() => {
+    const element = ref.current;
+
+    if (!element) {
+      return;
+    }
+
+    const { width, height } = element.getBoundingClientRect();
+    const margin = 12;
+    const gap = 12;
+    const viewportHeight = window.innerHeight;
+    const centerX = anchor.left + anchor.width / 2;
+    const left = Math.max(margin, Math.min(centerX - width / 2, window.innerWidth - width - margin));
+    const spaceBelow = viewportHeight - anchor.bottom;
+    const spaceAbove = anchor.top;
+    const placement: "above" | "below" =
+      spaceBelow >= height + gap + margin
+        ? "below"
+        : spaceAbove >= height + gap + margin
+          ? "above"
+          : spaceBelow >= spaceAbove
+            ? "below"
+            : "above";
+    const rawTop = placement === "below" ? anchor.bottom + gap : anchor.top - height - gap;
+    const top = Math.max(margin, Math.min(rawTop, viewportHeight - height - margin));
+    const arrowLeft = Math.max(18, Math.min(centerX - left, width - 18));
+
+    setPosition({ top, left, arrowLeft, placement });
+  }, [anchor, sources.length, sourceTileId, pop]);
+
+  if (!targetTile) {
+    return null;
+  }
+
+  const previewSettlement: Settlement = {
+    owner: playerID,
+    kind: "colony",
+    buildings: [],
+    pops: { ...EMPTY_POPS, [pop]: 1 }
+  };
+  const previewYield = settlementNetYield(targetTile, previewSettlement);
+  const cost = getFoundColonyStatus(G, playerID, targetTile.id).cost ?? ACTION_COSTS.foundColony;
   const canConfirm = Boolean(source && source.pops[pop] > 0);
 
+  const style: CSSProperties = position
+    ? { top: position.top, left: position.left, opacity: 1 }
+    : { top: anchor.bottom + 12, left: anchor.left, opacity: 0 };
+
   return (
-    <div className="modalBackdrop" role="presentation">
-      <section className="logModal populationModal" role="dialog" aria-modal="true" aria-labelledby="found-colony-title">
-        <div className="modalHeader">
-          <div>
-            <h2 id="found-colony-title">Found Colony</h2>
-            <p>Choose one existing pop to travel to the new colony and arrive next turn.</p>
-          </div>
-          <button className="iconButton" onClick={onCancel}>
-            Close
-          </button>
-        </div>
+    <div
+      aria-label="Found colony"
+      className={`foundColonyPopover${position ? ` placement-${position.placement}` : ""}`}
+      ref={ref}
+      role="dialog"
+      style={style}
+    >
+      <span
+        aria-hidden="true"
+        className="foundColonyArrow"
+        style={{ left: position ? position.arrowLeft : "50%" }}
+      />
 
-        {targetTile ? (
-          <div className="targetTileSummary">
-            <TerrainSprite terrain={targetTile.terrain} className="terrainChip" />
-            <span>
-              Target <strong>{targetTile.terrain}</strong>, {targetTile.resource.amount} {targetTile.resource.type}
-            </span>
-          </div>
-        ) : null}
+      <header className="foundColonyHeader">
+        <span className="placementPreviewTag">Found Colony</span>
+        <button aria-label="Cancel" className="foundColonyClose" onClick={onCancel} type="button">
+          ×
+        </button>
+      </header>
 
-        {holdings.length > 0 ? (
-          <>
-            <label className="fieldGroup">
-              <span>Source settlement</span>
+      {sources.length === 0 ? (
+        <p className="placementEmptyState">No settlement has a pop to spare for a new colony.</p>
+      ) : (
+        <>
+          <article className="placementPreviewCard settlement-colony foundColonyPreview">
+            <SettlementSummaryCard netYield={previewYield} settlement={previewSettlement} tile={targetTile} />
+          </article>
+
+          <section className="placementSection">
+            <span className="placementSectionLabel">Send a pop from</span>
+            <label className="fieldGroup placementField">
               <select value={source?.tile.id ?? ""} onChange={(event) => setSourceTileId(event.target.value)}>
-                {holdings.map((entry) => (
+                {sources.map((entry) => (
                   <option value={entry.tile.id} key={entry.tile.id}>
-                    {entry.tile.terrain} {entry.tile.id} - {formatPops(entry.pops)}
+                    {capitalize(entry.tile.terrain)} {entry.tile.id} — {formatPops(entry.pops)}
                   </option>
                 ))}
               </select>
             </label>
-
-            <div className="popChoiceGrid" role="group" aria-label="Founding pop type">
+            <div className="popChoiceGrid foundColonyPopGrid" role="group" aria-label="Founding pop type">
               {POP_TYPES.map((candidate) => (
                 <button
                   className={candidate === pop ? "selectedChoice" : ""}
                   disabled={(source?.pops[candidate] ?? 0) <= 0}
                   key={candidate}
                   onClick={() => setPop(candidate)}
+                  type="button"
                 >
                   <AtlasIcon icon={candidate} className="miniIcon" />
                   <span>{formatPopLabel(candidate, 1)}</span>
@@ -167,27 +236,166 @@ export function FoundColonyModal({
                 </button>
               ))}
             </div>
-          </>
-        ) : (
-          <p className="emptyState">No available pops can travel to seed a colony.</p>
-        )}
+          </section>
 
-        <div className="modalActions">
-          <button onClick={onCancel}>Cancel</button>
-          <button
-            className="primaryButton"
-            disabled={!canConfirm}
-            onClick={() => {
-              if (source) {
-                onConfirm(source.tile.id, pop);
-              }
-            }}
-          >
-            Confirm Colony
-          </button>
-        </div>
-      </section>
+          <CostRow cost={cost} note="Arrives next turn." />
+
+          <div className="foundColonyActions">
+            <button className="placementCancelButton" onClick={onCancel} type="button">
+              Cancel
+            </button>
+            <button
+              className="primaryButton eventResolveButton"
+              disabled={!canConfirm}
+              onClick={() => {
+                if (source) {
+                  onConfirm(source.tile.id, pop);
+                }
+              }}
+              type="button"
+            >
+              Found Colony
+            </button>
+          </div>
+        </>
+      )}
     </div>
+  );
+}
+
+export function UpgradeCityModal({
+  G,
+  playerID,
+  onCancel,
+  onConfirm
+}: {
+  G: HegemonyState;
+  playerID: PlayerId;
+  onCancel: () => void;
+  onConfirm: (tileId: string, pops: Pops) => void;
+}) {
+  const candidates = useMemo(() => {
+    const entries: Array<{ tile: HexTile; settlement: Settlement }> = [];
+
+    for (const tile of G.board.tiles) {
+      const settlement = tile.settlements.find(
+        (candidate) => candidate.owner === playerID && candidate.kind === "colony"
+      );
+
+      if (settlement && getUpgradeColonyToCityStatus(G, playerID, tile.id).can) {
+        entries.push({ tile, settlement });
+      }
+    }
+
+    return entries;
+  }, [G, playerID]);
+
+  const [tileId, setTileId] = useState(() => candidates[0]?.tile.id ?? "");
+  const selected = candidates.find((entry) => entry.tile.id === tileId) ?? candidates[0];
+  const [pops, setPops] = useState<Pops>(() => clonePops(selected?.settlement.pops ?? EMPTY_POPS));
+
+  useEffect(() => {
+    setPops(clonePops(selected?.settlement.pops ?? EMPTY_POPS));
+  }, [selected?.tile.id]);
+
+  const requiredTotal = selected ? totalPops(selected.settlement.pops) : 0;
+  const selectedTotal = totalPops(pops);
+  const remaining = requiredTotal - selectedTotal;
+  const colonyYield = selected ? settlementNetYield(selected.tile, selected.settlement) : null;
+  const preview = selected ? previewUpgradeColonyToCity(G, playerID, selected.tile.id, pops) : null;
+  const cost = (selected && getUpgradeColonyToCityStatus(G, playerID, selected.tile.id).cost) ?? ACTION_COSTS.upgradeColonyToCity;
+  const canConfirm = Boolean(selected) && remaining === 0;
+
+  return (
+    <PlacementModalShell
+      kicker="Upgrade to City"
+      title={`Player ${G.players[playerID].name}`}
+      labelledBy="upgrade-city-title"
+      confirmLabel="Upgrade City"
+      canConfirm={canConfirm}
+      onCancel={onCancel}
+      onConfirm={() => {
+        if (selected) {
+          onConfirm(selected.tile.id, clonePops(pops));
+        }
+      }}
+    >
+      {candidates.length === 0 ? (
+        <p className="placementEmptyState">No colony can be upgraded into a city right now.</p>
+      ) : (
+        <>
+          {candidates.length > 1 ? (
+            <section className="placementSection">
+              <span className="placementSectionLabel">Choose a colony</span>
+              <div className="placementPickerGrid" role="group" aria-label="Colony to upgrade">
+                {candidates.map(({ tile, settlement }) => (
+                  <button
+                    className={tile.id === selected?.tile.id ? "placementPickerChip selectedChoice" : "placementPickerChip"}
+                    key={tile.id}
+                    onClick={() => setTileId(tile.id)}
+                    type="button"
+                  >
+                    <AtlasIcon icon="colony" className="miniIcon" />
+                    <span className="placementChipText">
+                      <strong>{capitalize(tile.terrain)}</strong>
+                      <em>
+                        {tile.id} · {totalPops(settlement.pops)}/{settlementPopCapacity("colony")}
+                      </em>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {selected && colonyYield ? (
+            <article className="placementPreviewCard settlement-colony">
+              <span className="placementPreviewTag">Upgrading this colony</span>
+              <SettlementSummaryCard netYield={colonyYield} settlement={selected.settlement} tile={selected.tile} />
+            </article>
+          ) : null}
+
+          <div className="placementUpgradeArrow" aria-hidden="true">
+            <AtlasIcon icon="colony" className="miniIcon" />
+            <span>becomes</span>
+            <AtlasIcon icon="city" className="miniIcon" />
+          </div>
+
+          <div className="placementCityPreview">
+            <span className="placementUpgradeStat">
+              <em>Capacity</em>
+              <strong>
+                {settlementPopCapacity("colony")} <span className="meterSlash">→</span> {settlementPopCapacity("city")}
+              </strong>
+            </span>
+            <span className="placementUpgradeStat">
+              <em>Projected income</em>
+              <strong>{preview ? formatResourceDelta(preview.incomeDelta) : "—"}</strong>
+            </span>
+          </div>
+
+          <section className="placementSection">
+            <span className="placementSectionLabel">City population</span>
+            <PopulationStepper
+              pops={pops}
+              maxByPop={{ citizens: requiredTotal, freemen: requiredTotal, slaves: requiredTotal }}
+              onChange={setPops}
+              totalLimit={requiredTotal}
+            />
+            <div className="selectionSummary">
+              <span>
+                Allocated <strong>{selectedTotal}</strong>/<strong>{requiredTotal}</strong>
+              </span>
+              <span className={remaining === 0 ? "positive" : "negative"}>
+                {remaining === 0 ? "Ready" : `${Math.abs(remaining)} ${remaining > 0 ? "left" : "too many"}`}
+              </span>
+            </div>
+          </section>
+
+          <CostRow cost={cost} />
+        </>
+      )}
+    </PlacementModalShell>
   );
 }
 
@@ -311,6 +519,84 @@ export function MovePopsModal({
   );
 }
 
+/**
+ * Shared event-card-grade shell for placement actions (found colony, upgrade city).
+ * Mirrors the PendingPlayerEventModal surface but with auto height + scrollable body.
+ */
+function PlacementModalShell({
+  kicker,
+  title,
+  labelledBy,
+  confirmLabel,
+  canConfirm,
+  onCancel,
+  onConfirm,
+  children
+}: {
+  kicker: string;
+  title: string;
+  labelledBy: string;
+  confirmLabel: string;
+  canConfirm: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="modalBackdrop eventModalBackdrop placementModalBackdrop" role="presentation">
+      <section className="placementCardReveal" role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
+        <div className="placementCardSurface">
+          <div className="eventCardCrest">
+            <span>{kicker}</span>
+            <b>{title}</b>
+          </div>
+
+          <div className="placementCardBody" id={labelledBy}>
+            {children}
+          </div>
+
+          <div className="placementCardFooter">
+            <button className="placementCancelButton" onClick={onCancel} type="button">
+              Cancel
+            </button>
+            <button
+              className="primaryButton eventResolveButton"
+              disabled={!canConfirm}
+              onClick={onConfirm}
+              type="button"
+            >
+              {confirmLabel}
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function CostRow({ cost, note }: { cost: Partial<Resources>; note?: string }) {
+  const entries = RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) !== 0);
+
+  return (
+    <div className="placementCostRow">
+      <span className="placementSectionLabel">Cost</span>
+      <span className="placementCostChips">
+        {entries.length > 0 ? (
+          entries.map((resource) => (
+            <span className="placementCostChip" key={resource} style={resourceCssVars(resource as Resource)}>
+              <ResourceIcon resource={resource as Resource} className="miniResourceIcon" />
+              <strong>{cost[resource]}</strong>
+            </span>
+          ))
+        ) : (
+          <em>Free</em>
+        )}
+      </span>
+      {note ? <span className="placementCostNote">{note}</span> : null}
+    </div>
+  );
+}
+
 function PopulationStepper({
   pops,
   maxByPop,
@@ -375,12 +661,24 @@ function getSettlementEntries(G: HegemonyState, playerID: PlayerId): SettlementE
     .filter((entry): entry is SettlementEntry => Boolean(entry));
 }
 
+function firstAvailablePop(pops?: Pops): PopType {
+  if (!pops) {
+    return "citizens";
+  }
+
+  return POP_TYPES.find((candidate) => pops[candidate] > 0) ?? "citizens";
+}
+
 function createDefaultSelection(requiredTotal: number): Pops {
   return {
     citizens: requiredTotal > 0 ? 1 : 0,
     freemen: Math.max(0, requiredTotal - 1),
     slaves: 0
   };
+}
+
+function capitalize(value: string) {
+  return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`;
 }
 
 function formatTileName(G: HegemonyState, tileId: string) {

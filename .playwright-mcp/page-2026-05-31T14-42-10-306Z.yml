@@ -1,0 +1,653 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - region "Seasonal and player events" [ref=e5]:
+      - generic "Each player gains 2 Food per 6 pops, minimum 4 Food." [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: Seasonal Event
+          - strong [ref=e9]: Grain Tithe
+          - emphasis [ref=e10]: Each player gains 2 Food per 6 pops, minimum 4 Food.
+      - generic "Gain 2 Influence, or gain 2 Happiness." [ref=e11]:
+        - generic [ref=e12]:
+          - generic [ref=e13]: Player Event
+          - strong [ref=e14]: Civic Petition
+          - emphasis [ref=e15]: Gain 2 Influence, or gain 2 Happiness.
+    - generic [ref=e16]:
+      - generic "Season 1" [ref=e17]:
+        - generic [ref=e18]: Season
+        - strong [ref=e19]: "1"
+      - generic "Turn status" [ref=e20]:
+        - generic [ref=e21]: Turn 9 · Turn actions
+        - strong [ref=e22]: Your turn
+    - region "Player scoreboard" [ref=e23]:
+      - button "Damon Acting VP -- 4 Pops Damon Resources Wood 24 +4 Stone 10 0 Gold 14 +4 Food 32 +16 Influence 1 +1 Happiness 2 +5" [pressed] [ref=e24] [cursor=pointer]:
+        - generic [ref=e26]:
+          - strong [ref=e27]: Damon
+          - emphasis [ref=e28]: Acting
+        - generic [ref=e29]:
+          - generic [ref=e30]: VP --
+          - generic [ref=e32]: 4 Pops
+        - tooltip "Damon Resources Wood 24 +4 Stone 10 0 Gold 14 +4 Food 32 +16 Influence 1 +1 Happiness 2 +5":
+          - strong: Damon Resources
+          - generic:
+            - text: Wood
+            - generic:
+              - text: "24"
+              - emphasis: "+4"
+          - generic:
+            - text: Stone
+            - generic:
+              - text: "10"
+              - emphasis: "0"
+          - generic:
+            - text: Gold
+            - generic:
+              - text: "14"
+              - emphasis: "+4"
+          - generic:
+            - text: Food
+            - generic:
+              - text: "32"
+              - emphasis: "+16"
+          - generic:
+            - text: Influence
+            - generic:
+              - text: "1"
+              - emphasis: "+1"
+          - generic:
+            - text: Happiness
+            - generic:
+              - text: "2"
+              - emphasis: "+5"
+      - button "Nikos Watching VP -- 4 Pops Nikos Resources Wood 20 0 Stone 10 +4 Gold 10 +12 Food 16 -5 Influence 0 +1 Happiness 0 +3" [ref=e33] [cursor=pointer]:
+        - generic [ref=e35]:
+          - strong [ref=e36]: Nikos
+          - emphasis [ref=e37]: Watching
+        - generic [ref=e38]:
+          - generic [ref=e39]: VP --
+          - generic [ref=e41]: 4 Pops
+        - tooltip "Nikos Resources Wood 20 0 Stone 10 +4 Gold 10 +12 Food 16 -5 Influence 0 +1 Happiness 0 +3":
+          - strong: Nikos Resources
+          - generic:
+            - text: Wood
+            - generic:
+              - text: "20"
+              - emphasis: "0"
+          - generic:
+            - text: Stone
+            - generic:
+              - text: "10"
+              - emphasis: "+4"
+          - generic:
+            - text: Gold
+            - generic:
+              - text: "10"
+              - emphasis: "+12"
+          - generic:
+            - text: Food
+            - generic:
+              - text: "16"
+              - emphasis: "-5"
+          - generic:
+            - text: Influence
+            - generic:
+              - text: "0"
+              - emphasis: "+1"
+          - generic:
+            - text: Happiness
+            - generic:
+              - text: "0"
+              - emphasis: "+3"
+      - button "Theron Watching VP -- 4 Pops Theron Resources Wood 20 0 Stone 10 0 Gold 10 +4 Food 16 +6 Influence 0 0 Happiness 0 +1.5" [ref=e42] [cursor=pointer]:
+        - generic [ref=e44]:
+          - strong [ref=e45]: Theron
+          - emphasis [ref=e46]: Watching
+        - generic [ref=e47]:
+          - generic [ref=e48]: VP --
+          - generic [ref=e50]: 4 Pops
+        - tooltip "Theron Resources Wood 20 0 Stone 10 0 Gold 10 +4 Food 16 +6 Influence 0 0 Happiness 0 +1.5":
+          - strong: Theron Resources
+          - generic:
+            - text: Wood
+            - generic:
+              - text: "20"
+              - emphasis: "0"
+          - generic:
+            - text: Stone
+            - generic:
+              - text: "10"
+              - emphasis: "0"
+          - generic:
+            - text: Gold
+            - generic:
+              - text: "10"
+              - emphasis: "+4"
+          - generic:
+            - text: Food
+            - generic:
+              - text: "16"
+              - emphasis: "+6"
+          - generic:
+            - text: Influence
+            - generic:
+              - text: "0"
+              - emphasis: "0"
+          - generic:
+            - text: Happiness
+            - generic:
+              - text: "0"
+              - emphasis: "+1.5"
+      - button "Kyros Watching VP -- 4 Pops Kyros Resources Wood 20 +1 Stone 10 0 Gold 10 +9 Food 16 -7 Influence 0 +3 Happiness 0 +2.5" [ref=e51] [cursor=pointer]:
+        - generic [ref=e53]:
+          - strong [ref=e54]: Kyros
+          - emphasis [ref=e55]: Watching
+        - generic [ref=e56]:
+          - generic [ref=e57]: VP --
+          - generic [ref=e59]: 4 Pops
+        - tooltip "Kyros Resources Wood 20 +1 Stone 10 0 Gold 10 +9 Food 16 -7 Influence 0 +3 Happiness 0 +2.5":
+          - strong: Kyros Resources
+          - generic:
+            - text: Wood
+            - generic:
+              - text: "20"
+              - emphasis: "+1"
+          - generic:
+            - text: Stone
+            - generic:
+              - text: "10"
+              - emphasis: "0"
+          - generic:
+            - text: Gold
+            - generic:
+              - text: "10"
+              - emphasis: "+9"
+          - generic:
+            - text: Food
+            - generic:
+              - text: "16"
+              - emphasis: "-7"
+          - generic:
+            - text: Influence
+            - generic:
+              - text: "0"
+              - emphasis: "+3"
+          - generic:
+            - text: Happiness
+            - generic:
+              - text: "0"
+              - emphasis: "+2.5"
+  - generic [ref=e60]:
+    - complementary [ref=e61]:
+      - generic [ref=e62]:
+        - generic [ref=e65]:
+          - heading "Ledger" [level=2] [ref=e66]
+          - generic [ref=e67]: 2 holdings
+        - tablist "Empire information" [ref=e68]:
+          - tab "Cities" [selected] [ref=e69] [cursor=pointer]
+          - tab "Buildings" [ref=e70] [cursor=pointer]
+          - tab "Pops" [ref=e71] [cursor=pointer]
+        - generic [ref=e73]:
+          - article [ref=e74]:
+            - 'button "Expand Capital -3,2: 3 of 20 pops, 0 of 8 building slots, 20 Food tile yield." [ref=e75] [cursor=pointer]':
+              - generic [ref=e76]:
+                - generic "Capital -3,2" [ref=e78]:
+                  - generic [ref=e80]:
+                    - strong [ref=e81]: Capital
+                    - emphasis [ref=e82]: "-3,2"
+                - generic "Plains tile yield +20 Food" [ref=e83]
+                - generic [ref=e86]:
+                  - generic "Population 3 of 20" [ref=e87]:
+                    - generic [ref=e89]:
+                      - emphasis [ref=e90]: Pops
+                      - strong [ref=e91]: 3/20
+                  - generic "Building slots 0 of 8" [ref=e92]:
+                    - generic [ref=e94]:
+                      - emphasis [ref=e95]: Slots
+                      - strong [ref=e96]: 0/8
+                - 'generic "Net income: +4 Gold, +17 Food, +1 Influence, -0.5 Happiness" [ref=e97]':
+                  - strong [ref=e100]: "+4"
+                  - strong [ref=e103]: "+17"
+                  - strong [ref=e106]: "+1"
+                  - strong [ref=e109]: "-0.5"
+            - text: + + + +
+          - article [ref=e111]:
+            - 'button "Expand Colony -2,1: 1 of 4 pops, 0 of 0 building slots, 3 Wood tile yield." [ref=e112] [cursor=pointer]':
+              - generic [ref=e113]:
+                - generic "Colony -2,1" [ref=e115]:
+                  - generic [ref=e117]:
+                    - strong [ref=e118]: Colony
+                    - emphasis [ref=e119]: "-2,1"
+                - generic "Forest tile yield +3 Wood" [ref=e120]
+                - generic [ref=e123]:
+                  - generic "Population 1 of 4" [ref=e124]:
+                    - generic [ref=e126]:
+                      - emphasis [ref=e127]: Pops
+                      - strong [ref=e128]: 1/4
+                  - generic "Building slots 0 of 0" [ref=e129]:
+                    - generic [ref=e131]:
+                      - emphasis [ref=e132]: Slots
+                      - strong [ref=e133]: 0/0
+                - 'generic "Net income: +4 Wood, -1 Food, -0.5 Happiness" [ref=e134]':
+                  - strong [ref=e137]: "+4"
+                  - strong [ref=e140]: "-1"
+                  - strong [ref=e143]: "-0.5"
+            - text: + + + +
+    - generic [ref=e145]:
+      - generic [ref=e146]:
+        - generic "Map mode controls" [ref=e147]:
+          - button "Current map mode" [pressed] [ref=e148] [cursor=pointer]
+          - button "Terrain map mode" [ref=e149] [cursor=pointer]
+        - generic "Map zoom controls" [ref=e150]:
+          - button "Zoom in" [ref=e151] [cursor=pointer]: +
+          - button "Zoom out" [disabled] [ref=e152]: "-"
+        - img "Hegemony island hex map, Current mode" [ref=e153]:
+          - generic [ref=e154]:
+            - generic [ref=e156]:
+              - button "Hex -3,0, forest tile, 4 wood" [ref=e157] [cursor=pointer]
+              - generic:
+                - generic: "+4"
+                - generic: 0/2
+            - generic [ref=e159]:
+              - button "Hex -3,1, hill tile, 4 gold" [ref=e160] [cursor=pointer]
+              - generic:
+                - generic: "+4"
+                - generic: 0/3
+            - generic [ref=e162]:
+              - button "Hex -3,2, plains tile, 10 food" [ref=e163] [cursor=pointer]
+              - generic:
+                - generic: "+10"
+                - generic: 0/8
+            - generic [ref=e165]:
+              - button "Hex -3,3, forest tile, 4 wood" [ref=e166] [cursor=pointer]
+              - generic:
+                - generic: "+4"
+                - generic: 0/2
+            - generic [ref=e168]:
+              - button "Hex -2,-1, plains tile, 8 food" [ref=e169] [cursor=pointer]
+              - generic:
+                - generic: "+8"
+                - generic: 0/3
+            - generic [ref=e171]:
+              - button "Hex -2,0, mountain tile, 6 stone" [ref=e172] [cursor=pointer]
+              - generic:
+                - generic: "+6"
+                - generic: 0/2
+            - generic [ref=e174]:
+              - button "Hex -2,1, forest tile, 3 wood" [ref=e175] [cursor=pointer]
+              - generic:
+                - generic: "+3"
+                - generic: 0/2
+            - generic [ref=e177]:
+              - button "Hex -2,2, mountain tile, 4 stone" [ref=e178] [cursor=pointer]
+              - generic:
+                - generic: "+4"
+                - generic: 0/2
+            - generic [ref=e180]:
+              - button "Hex -2,3, forest tile, 3 wood" [ref=e181] [cursor=pointer]
+              - generic:
+                - generic: "+3"
+                - generic: 0/1
+            - generic [ref=e183]:
+              - button "Hex -1,-2, hill tile, 2 gold" [ref=e184] [cursor=pointer]
+              - generic:
+                - generic: "+2"
+                - generic: 0/7
+            - generic [ref=e186]:
+              - button "Hex -1,-1, forest tile, 3 wood" [ref=e187] [cursor=pointer]
+              - generic:
+                - generic: "+3"
+                - generic: 0/1
+            - generic [ref=e189]:
+              - button "Hex -1,0, plains tile, 6 food" [ref=e190] [cursor=pointer]
+              - generic:
+                - generic: "+6"
+                - generic: 0/3
+            - generic [ref=e192]:
+              - button "Hex -1,1, hill tile, 1 gold" [ref=e193] [cursor=pointer]
+              - generic:
+                - generic: "+1"
+                - generic: 0/2
+            - generic [ref=e195]:
+              - button "Hex -1,2, forest tile, 3 wood" [ref=e196] [cursor=pointer]
+              - generic:
+                - generic: "+3"
+                - generic: 0/1
+            - generic [ref=e198]:
+              - button "Hex -1,3, plains tile, 4 food" [ref=e199] [cursor=pointer]
+              - generic:
+                - generic: "+4"
+                - generic: 0/2
+            - generic [ref=e201]:
+              - button "Hex 0,-3, forest tile, 2 wood" [ref=e202] [cursor=pointer]
+              - generic:
+                - generic: "+2"
+                - generic: 0/1
+            - generic [ref=e204]:
+              - button "Hex 0,-2, mountain tile, 4 stone" [ref=e205] [cursor=pointer]
+              - generic:
+                - generic: "+4"
+                - generic: 0/1
+            - generic [ref=e207]:
+              - button "Hex 0,-1, hill tile, 1 gold" [ref=e208] [cursor=pointer]
+              - generic:
+                - generic: "+1"
+                - generic: 0/2
+            - generic [ref=e210]:
+              - button "Hex 0,0, forest tile, 2 wood" [ref=e211] [cursor=pointer]
+              - generic:
+                - generic: "+2"
+                - generic: 0/1
+            - generic [ref=e213]:
+              - button "Hex 0,1, mountain tile, 2 stone" [ref=e214] [cursor=pointer]
+              - generic:
+                - generic: "+2"
+                - generic: 0/1
+            - generic [ref=e216]:
+              - button "Hex 0,2, hill tile, 1 gold" [ref=e217] [cursor=pointer]
+              - generic:
+                - generic: "+1"
+                - generic: 0/2
+            - generic [ref=e219]:
+              - button "Hex 0,3, forest tile, 2 wood" [ref=e220] [cursor=pointer]
+              - generic:
+                - generic: "+2"
+                - generic: 0/1
+            - generic [ref=e222]:
+              - button "Hex 1,-3, plains tile, 4 food" [ref=e223] [cursor=pointer]
+              - generic:
+                - generic: "+4"
+                - generic: 0/2
+            - generic [ref=e225]:
+              - button "Hex 1,-2, forest tile, 2 wood" [ref=e226] [cursor=pointer]
+              - generic:
+                - generic: "+2"
+                - generic: 0/1
+            - generic [ref=e228]:
+              - button "Hex 1,-1, plains tile, 4 food" [ref=e229] [cursor=pointer]
+              - generic:
+                - generic: "+4"
+                - generic: 0/2
+            - generic [ref=e231]:
+              - button "Hex 1,0, hill tile, 1 gold" [ref=e232] [cursor=pointer]
+              - generic:
+                - generic: "+1"
+                - generic: 0/2
+            - generic [ref=e234]:
+              - button "Hex 1,1, forest tile, 2 wood" [ref=e235] [cursor=pointer]
+              - generic:
+                - generic: "+2"
+                - generic: 0/1
+            - generic [ref=e237]:
+              - button "Hex 1,2, plains tile, 4 food" [ref=e238] [cursor=pointer]
+              - generic:
+                - generic: "+4"
+                - generic: 0/6
+            - generic [ref=e240]:
+              - button "Hex 2,-3, mountain tile, 2 stone" [ref=e241] [cursor=pointer]
+              - generic:
+                - generic: "+2"
+                - generic: 0/1
+            - generic [ref=e243]:
+              - button "Hex 2,-2, hill tile, 2 gold" [ref=e244] [cursor=pointer]
+              - generic:
+                - generic: "+2"
+                - generic: 0/1
+            - generic [ref=e246]:
+              - button "Hex 2,-1, forest tile, 1 wood" [ref=e247] [cursor=pointer]
+              - generic:
+                - generic: "+1"
+                - generic: 0/1
+            - generic [ref=e249]:
+              - button "Hex 2,0, plains tile, 4 food" [ref=e250] [cursor=pointer]
+              - generic:
+                - generic: "+4"
+                - generic: 0/2
+            - generic [ref=e252]:
+              - button "Hex 2,1, hill tile, 1 gold" [ref=e253] [cursor=pointer]
+              - generic:
+                - generic: "+1"
+                - generic: 0/1
+            - generic [ref=e255]:
+              - button "Hex 3,-3, forest tile, 1 wood" [ref=e256] [cursor=pointer]
+              - generic:
+                - generic: "+1"
+                - generic: 0/1
+            - generic [ref=e258]:
+              - button "Hex 3,-2, mountain tile, 2 stone" [ref=e259] [cursor=pointer]
+              - generic:
+                - generic: "+2"
+                - generic: 0/1
+            - generic [ref=e261]:
+              - button "Hex 3,-1, hill tile, 1 gold" [ref=e262] [cursor=pointer]
+              - generic:
+                - generic: "+1"
+                - generic: 0/5
+            - generic [ref=e264]:
+              - button "Hex 3,0, forest tile, 1 wood" [ref=e265] [cursor=pointer]
+              - generic:
+                - generic: "+1"
+                - generic: 0/1
+      - generic "Damon resources" [ref=e267]:
+        - generic [ref=e268]:
+          - generic "Wood 24, projected +4 per turn" [ref=e269]:
+            - generic [ref=e271]:
+              - strong [ref=e272]: "24"
+              - generic [ref=e273]: (+4)
+            - tooltip "Wood +4 Colony on forest -2,1 Tile yield +3 Colony on forest -2,1 1 slave pops production +1":
+              - generic:
+                - generic: Wood
+                - strong: "+4"
+              - generic:
+                - generic:
+                  - generic:
+                    - strong: Colony on forest -2,1
+                    - emphasis: Tile yield
+                  - generic: "+3"
+                - generic:
+                  - generic:
+                    - strong: Colony on forest -2,1
+                    - emphasis: 1 slave pops production
+                  - generic: "+1"
+          - generic "Stone 10, projected 0 per turn" [ref=e274]:
+            - generic [ref=e276]:
+              - strong [ref=e277]: "10"
+              - generic [ref=e278]: (0)
+            - tooltip "Stone 0 No current income or expense.":
+              - generic:
+                - generic: Stone
+                - strong: "0"
+              - paragraph: No current income or expense.
+          - generic "Gold 14, projected +4 per turn" [ref=e279]:
+            - generic [ref=e281]:
+              - strong [ref=e282]: "14"
+              - generic [ref=e283]: (+4)
+            - tooltip "Gold +4 Capital on plains -3,2 1 citizens +2 Capital on plains -3,2 1 freeman pops +2":
+              - generic:
+                - generic: Gold
+                - strong: "+4"
+              - generic:
+                - generic:
+                  - generic:
+                    - strong: Capital on plains -3,2
+                    - emphasis: 1 citizens
+                  - generic: "+2"
+                - generic:
+                  - generic:
+                    - strong: Capital on plains -3,2
+                    - emphasis: 1 freeman pops
+                  - generic: "+2"
+          - generic "Food 32, projected +16 per turn" [ref=e284]:
+            - generic [ref=e286]:
+              - strong [ref=e287]: "32"
+              - generic [ref=e288]: (+16)
+            - tooltip "Food +16 Capital on plains -3,2 Tile yield x2 capital +20 Capital on plains -3,2 1 citizens upkeep -2 Capital on plains -3,2 1 freeman pops upkeep -1 Capital on plains -3,2 1 slave pops production +1 Capital on plains -3,2 1 slave pops upkeep -1 Colony on forest -2,1 1 slave pops upkeep -1":
+              - generic:
+                - generic: Food
+                - strong: "+16"
+              - generic:
+                - generic:
+                  - generic:
+                    - strong: Capital on plains -3,2
+                    - emphasis: Tile yield x2 capital
+                  - generic: "+20"
+                - generic:
+                  - generic:
+                    - strong: Capital on plains -3,2
+                    - emphasis: 1 citizens upkeep
+                  - generic: "-2"
+                - generic:
+                  - generic:
+                    - strong: Capital on plains -3,2
+                    - emphasis: 1 freeman pops upkeep
+                  - generic: "-1"
+                - generic:
+                  - generic:
+                    - strong: Capital on plains -3,2
+                    - emphasis: 1 slave pops production
+                  - generic: "+1"
+                - generic:
+                  - generic:
+                    - strong: Capital on plains -3,2
+                    - emphasis: 1 slave pops upkeep
+                  - generic: "-1"
+                - generic:
+                  - generic:
+                    - strong: Colony on forest -2,1
+                    - emphasis: 1 slave pops upkeep
+                  - generic: "-1"
+          - generic "Influence 1, projected +1 per turn" [ref=e289]:
+            - generic [ref=e291]:
+              - strong [ref=e292]: "1"
+              - generic [ref=e293]: (+1)
+            - tooltip "Influence +1 Capital on plains -3,2 1 citizens +1":
+              - generic:
+                - generic: Influence
+                - strong: "+1"
+              - generic:
+                - generic:
+                  - generic:
+                    - strong: Capital on plains -3,2
+                    - emphasis: 1 citizens
+                  - generic: "+1"
+          - generic "Happiness 2, projected +5 per turn" [ref=e294]:
+            - generic [ref=e296]:
+              - strong [ref=e297]: "2"
+              - generic [ref=e298]: (+5)
+            - tooltip "Happiness +5 Capital on plains -3,2 1 slave pops pressure -0.5 Colony on forest -2,1 1 slave pops pressure -0.5 Food stockpile Every 5 stored food improves happiness +6":
+              - generic:
+                - generic: Happiness
+                - strong: "+5"
+              - generic:
+                - generic:
+                  - generic:
+                    - strong: Capital on plains -3,2
+                    - emphasis: 1 slave pops pressure
+                  - generic: "-0.5"
+                - generic:
+                  - generic:
+                    - strong: Colony on forest -2,1
+                    - emphasis: 1 slave pops pressure
+                  - generic: "-0.5"
+                - generic:
+                  - generic:
+                    - strong: Food stockpile
+                    - emphasis: Every 5 stored food improves happiness
+                  - generic: "+6"
+    - complementary [ref=e299]:
+      - generic [ref=e300]:
+        - generic [ref=e303]:
+          - heading "Actions" [level=2] [ref=e304]
+          - generic [ref=e305]: Command surface
+        - generic "Action toolbar" [ref=e306]:
+          - button "Grow" [disabled] [ref=e307]:
+            - generic [ref=e309]: Grow
+          - button "Move" [disabled] [ref=e310]:
+            - generic [ref=e312]: Move
+          - button "End Turn" [disabled] [ref=e313]:
+            - generic [ref=e315]: End Turn
+        - region "Future card decks" [ref=e316]:
+          - generic "Seasonal cards remaining." [ref=e317]:
+            - generic [ref=e320]:
+              - strong [ref=e321]: Seasonal
+              - emphasis [ref=e322]: 26/27
+          - generic "Player event cards remaining." [ref=e323]:
+            - generic [ref=e326]:
+              - strong [ref=e327]: Events
+              - emphasis [ref=e328]: 71/72
+          - generic "Resolution deck placeholder for future assembly mechanics." [ref=e329]:
+            - generic [ref=e332]:
+              - strong [ref=e333]: Resolutions
+              - emphasis [ref=e334]: 0/0
+        - region "Action log" [ref=e335]:
+          - generic [ref=e338]:
+            - heading "Chronicle" [level=3] [ref=e339]
+            - emphasis [ref=e340]: 17 entries
+          - generic [ref=e341]:
+            - paragraph [ref=e342]:
+              - generic [ref=e343]: S1
+              - generic [ref=e344]: Damon must reveal and resolve Civic Petition before taking normal actions.
+            - paragraph [ref=e345]:
+              - generic [ref=e346]: S1
+              - generic [ref=e347]: Damon received Player Event card Civic Petition. Gain 2 Influence, or gain 2 Happiness.
+            - paragraph [ref=e348]:
+              - generic [ref=e349]: S1
+              - generic [ref=e350]: Damon automatically collected income (+4 wood, +4 gold, +16 food, +1 influence, +2 happiness).
+            - paragraph [ref=e351]:
+              - generic [ref=e352]: S1
+              - generic [ref=e353]: "Kyros resolved Grain Tithe: +4 food."
+            - paragraph [ref=e354]:
+              - generic [ref=e355]: S1
+              - generic [ref=e356]: "Theron resolved Grain Tithe: +4 food."
+            - paragraph [ref=e357]:
+              - generic [ref=e358]: S1
+              - generic [ref=e359]: "Nikos resolved Grain Tithe: +4 food."
+            - paragraph [ref=e360]:
+              - generic [ref=e361]: S1
+              - generic [ref=e362]: "Damon resolved Grain Tithe: +4 food."
+            - paragraph [ref=e363]:
+              - generic [ref=e364]: S1
+              - generic [ref=e365]: "Seasonal Event revealed: Grain Tithe. Each player gains 2 Food per 6 pops, minimum 4 Food."
+            - paragraph [ref=e366]:
+              - generic [ref=e367]: S1
+              - generic [ref=e368]: Kyros founded a colony on forest with 1 citizen.
+            - paragraph [ref=e369]:
+              - generic [ref=e370]: S1
+              - generic [ref=e371]: Theron founded a colony on hill with 1 slave.
+            - paragraph [ref=e372]:
+              - generic [ref=e373]: S1
+              - generic [ref=e374]: Nikos founded a colony on mountain with 1 freeman.
+            - paragraph [ref=e375]:
+              - generic [ref=e376]: S1
+              - generic [ref=e377]: Damon founded a colony on forest with 1 slave.
+            - paragraph [ref=e378]:
+              - generic [ref=e379]: S1
+              - generic [ref=e380]: Kyros founded a capital on hill with 2 citizens, 1 slave.
+            - paragraph [ref=e381]:
+              - generic [ref=e382]: S1
+              - generic [ref=e383]: Theron founded a capital on plains with 1 freeman, 2 slaves.
+            - paragraph [ref=e384]:
+              - generic [ref=e385]: S1
+              - generic [ref=e386]: Nikos founded a capital on hill with 1 citizen, 2 freemen.
+            - paragraph [ref=e387]:
+              - generic [ref=e388]: S1
+              - generic [ref=e389]: Damon founded a capital on plains with 1 citizen, 1 freeman, 1 slave.
+            - paragraph [ref=e390]:
+              - generic [ref=e391]: S1
+              - generic [ref=e392]: The first season begins.
+  - dialog "Civic Petition" [ref=e393]:
+    - generic [ref=e394]:
+      - generic [ref=e395]:
+        - generic [ref=e396]: Player Event
+        - generic [ref=e397]: Damon
+      - img "Civic Petition card art" [ref=e399]
+      - generic [ref=e400]:
+        - generic [ref=e401]: Hegemony Event
+        - heading "Civic Petition" [level=2] [ref=e402]
+        - paragraph [ref=e403]: Gain 2 Influence, or gain 2 Happiness.
+        - group "Event choices" [ref=e404]:
+          - button "Option 1 +2 Influence" [ref=e405] [cursor=pointer]:
+            - strong [ref=e406]: Option 1
+            - generic [ref=e407]: +2 Influence
+          - button "Option 2 +2 Happiness" [ref=e408] [cursor=pointer]:
+            - strong [ref=e409]: Option 2
+            - generic [ref=e410]: +2 Happiness
+      - button "Resolve Choice" [ref=e412] [cursor=pointer]
