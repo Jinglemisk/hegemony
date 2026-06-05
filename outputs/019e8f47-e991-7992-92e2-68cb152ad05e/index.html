@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vanity Sales Stats Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%2316161A'/%3E%3Cpath d='M3 10.5h10M4 8.5l2-2 2 1 4-4' fill='none' stroke='%23CDA4CC' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --pink: #CDA4CC;
+      --pink-50: #FAF1F9;
+      --pink-100: #F2E0F0;
+      --pink-200: #E6C9E4;
+      --pink-500: #B486B3;
+      --pink-700: #8B5F8A;
+      --pink-900: #5C3E5B;
+      --peach: #F2D8C8;
+      --sage: #C8D4C0;
+      --slate: #C9D2DC;
+      --lavender: #D8C8E0;
+      --coral: #F2C8C0;
+      --ink: #16161A;
+      --gray-50: #FAFAFA;
+      --gray-100: #F5F5F6;
+      --gray-200: #ECECEE;
+      --gray-300: #D8D8DC;
+      --gray-500: #6B6B72;
+      --gray-700: #3B3B41;
+      --panel: #FFFFFF;
+      --line: var(--gray-200);
+      --line-strong: var(--gray-300);
+      --muted: var(--gray-500);
+      --success: #1A7F4D;
+      --success-bg: #EEF7F1;
+      --danger: #A03B3B;
+      --danger-bg: #F9EEEE;
+      --shadow: 0 18px 44px rgba(22, 22, 26, 0.07);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background: #fff;
+      font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: 0;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0 0 auto;
+      height: 178px;
+      background: var(--pink-50);
+      border-bottom: 1px solid var(--gray-200);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid var(--pink-200);
+      outline-offset: 2px;
+    }
+
+    .shell {
+      width: min(1460px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 26px 0 34px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 22px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .brand-lockup img {
+      width: auto;
+      height: 24px;
+      display: block;
+    }
+
+    .brand-lockup span {
+      color: var(--gray-500);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--pink-700);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 820px;
+      font-size: 38px;
+      line-height: 1.08;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .period-card {
+      display: grid;
+      gap: 3px;
+      min-width: 240px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--pink);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow);
+    }
+
+    .period-card strong {
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .period-card span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: var(--shadow);
+    }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .segmented {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--gray-100);
+    }
+
+    .segmented button,
+    .ghost-button,
+    .export-button {
+      min-height: 36px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .segmented button {
+      padding: 0 12px;
+    }
+
+    .segmented button.active,
+    .ghost-button.active {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .ghost-button,
+    .export-button {
+      padding: 0 12px;
+      border-color: var(--line);
+      background: #fff;
+    }
+
+    .ghost-button:hover,
+    .export-button:hover,
+    .segmented button:hover {
+      border-color: var(--line-strong);
+      background: var(--pink-50);
+    }
+
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: min(360px, 100%);
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .search-wrap svg {
+      width: 17px;
+      height: 17px;
+      color: var(--muted);
+      flex: 0 0 auto;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      height: 38px;
+      border: 0;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0 0;
+      border-bottom: 1px solid var(--gray-300);
+    }
+
+    .tab-button {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      border-radius: 8px 8px 0 0;
+      background: var(--gray-100);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .tab-button.active {
+      background: #fff;
+      color: var(--ink);
+      border-color: var(--gray-300);
+      border-top: 3px solid var(--pink);
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-top: 0;
+      border-radius: 0 0 var(--radius) var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-strip {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--pink-50);
+    }
+
+    .panel-strip h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+
+    .panel-strip p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: calc(100vh - 330px);
+      min-height: 380px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 1320px;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: var(--ink);
+      color: #fff;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    th button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      width: 100%;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font-size: inherit;
+      font-weight: 700;
+      text-transform: inherit;
+    }
+
+    th:first-child,
+    td:first-child,
+    th:nth-child(2),
+    td:nth-child(2) {
+      text-align: left;
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--gray-50);
+    }
+
+    tbody tr:hover {
+      background: var(--pink-50);
+    }
+
+    .rank-cell {
+      width: 54px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .name-cell {
+      min-width: 210px;
+      font-weight: 700;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag.top {
+      color: var(--ink);
+      background: var(--sage);
+      border-color: #B7C5AF;
+    }
+
+    .tag.bottom {
+      color: var(--ink);
+      background: var(--coral);
+      border-color: #E8B8B0;
+    }
+
+    .num {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .positive {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .negative {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .neutral {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .bar-track {
+      position: relative;
+      width: 112px;
+      height: 8px;
+      margin-left: auto;
+      border-radius: 999px;
+      background: var(--gray-200);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--bar-width);
+      border-radius: inherit;
+      background: var(--pink-700);
+    }
+
+    .note {
+      padding: 10px 14px 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      background: var(--gray-50);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .empty {
+      padding: 38px 18px;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 980px) {
+      .topbar,
+      .toolbar,
+      .panel-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .period-card {
+        min-width: 0;
+      }
+
+      .control-row {
+        align-items: stretch;
+      }
+
+      .segmented,
+      .search-wrap,
+      .ghost-button,
+      .export-button {
+        width: 100%;
+      }
+
+      .segmented button {
+        flex: 1 1 auto;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .shell {
+        width: min(100% - 18px, 1460px);
+        padding-top: 14px;
+      }
+
+      h1 {
+        font-size: 27px;
+      }
+
+      .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .tab-button {
+        padding: 0 8px;
+      }
+
+      .table-wrap {
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <div class="brand-lockup">
+          <img src="vanity-logo.png" alt="Vanity">
+          <span>Sales Operations</span>
+        </div>
+        <p class="eyebrow">January to April performance</p>
+        <h1>Kapora and conversion priority systems</h1>
+      </div>
+      <aside class="period-card" aria-live="polite">
+        <span>Selected period</span>
+        <strong id="periodTitle">All Months</strong>
+        <span id="periodMeta">4 months combined</span>
+      </aside>
+    </header>
+
+    <section class="toolbar" aria-label="Dashboard controls">
+      <div class="control-row">
+        <div class="segmented" aria-label="Month selector" id="monthControls">
+          <button type="button" class="active" data-month="all" aria-pressed="true">All Months</button>
+          <button type="button" data-month="Ocak" aria-pressed="false">Ocak</button>
+          <button type="button" data-month="Şubat" aria-pressed="false">Şubat</button>
+          <button type="button" data-month="Mart" aria-pressed="false">Mart</button>
+          <button type="button" data-month="Nisan" aria-pressed="false">Nisan</button>
+        </div>
+        <label class="search-wrap">
+          <span class="sr-only">Search salesman</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+            <path d="m21 21-5.2-5.2m2.2-5.3a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input id="searchInput" type="search" placeholder="Search salesman">
+        </label>
+      </div>
+      <div class="control-row" id="quickFilters" aria-label="View filters">
+        <button type="button" class="ghost-button active" data-filter="all">All</button>
+        <button type="button" class="ghost-button" data-filter="top">Top 5</button>
+        <button type="button" class="ghost-button" data-filter="bottom">Lowest 5</button>
+        <button type="button" class="export-button" id="exportButton" title="Download the current table as CSV">Export CSV</button>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="Dashboard tabs">
+      <button type="button" class="tab-button active" data-pane="kapora">Kapora</button>
+      <button type="button" class="tab-button" data-pane="conversion">Conversion</button>
+    </nav>
+
+    <section class="panel">
+      <div class="panel-strip">
+        <div>
+          <h2 id="panelTitle">Actual salesman performance</h2>
+          <p id="panelSubtitle">Ranked by total kapora.</p>
+        </div>
+        <div class="tag" id="rowCount">0 rows</div>
+      </div>
+      <div class="table-wrap" id="tableWrap">
+        <table>
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="note" id="methodNote">
+        Time filter applies globally. Kapora and conversion are modeled separately from the same selected-period source rows.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const RAW_CSV = `month,month_number,days_in_table,salesman,total_leads,total_kapora,daily_avg_leads,conversion_rate_pct,source_rows
+Ocak,1,31,Ahmet Ayaz,142,9.00,4.58,6.34,1
+Ocak,1,31,Ayşe Nur Berberoğlu,403,11.00,13.00,2.73,1
+Ocak,1,31,Azra Çil,340,16.00,10.97,4.71,2
+Ocak,1,31,Bahar Yavuzsüslü,10,2.00,0.32,20.00,1
+Ocak,1,31,Berivan Barca,245,11.25,7.90,4.59,1
+Ocak,1,31,Berk Gökşar,422,12.00,13.61,2.84,1
+Ocak,1,31,Büşra Asyalı,190,9.00,6.13,4.74,1
+Ocak,1,31,Ceren İrem Çakır,272,20.00,8.77,7.35,1
+Ocak,1,31,Cihan Öztürk,348,9.00,11.23,2.59,1
+Ocak,1,31,Ece Bakırtaş,265,12.00,8.55,4.53,1
+Ocak,1,31,Gizem Oslu,275,13.00,8.87,4.73,1
+Ocak,1,31,Hazal Varol,211,13.00,6.81,6.16,1
+Ocak,1,31,Kerem Saçaklı,289,17.00,9.32,5.88,1
+Ocak,1,31,Mohi Bayati,303,16.00,9.77,5.28,2
+Ocak,1,31,Onur Mert,364,22.00,11.74,6.04,1
+Ocak,1,31,Oğuzhan Ünal,115,1.00,3.71,0.87,1
+Ocak,1,31,Sefa Üzgül,303,20.00,9.77,6.60,1
+Ocak,1,31,Selvi Acar,135,11.00,4.35,8.15,1
+Ocak,1,31,Sevcan Erol,161,16.00,5.19,9.94,1
+Ocak,1,31,Simay Cemre Aydoğan,302,16.00,9.74,5.30,1
+Ocak,1,31,Umut Durmaz,324,20.00,10.45,6.17,1
+Ocak,1,31,Zeynep Kapucu,255,8.00,8.23,3.14,1
+Ocak,1,31,Ümmühan Karagöz,100,2.00,3.23,2.00,1
+Ocak,1,31,İsa Bahadır Adak,165,3.00,5.32,1.82,1
+Şubat,2,28,Ahmet Ayaz,157,7.00,5.61,4.46,1
+Şubat,2,28,Ayşe Nur Berberoğlu,254,11.00,9.07,4.33,1
+Şubat,2,28,Azra Çil,338,19.00,12.07,5.62,2
+Şubat,2,28,Bahar Yavuzsüslü,41,3.00,1.46,7.32,1
+Şubat,2,28,Berivan Barca,277,7.00,9.89,2.53,1
+Şubat,2,28,Berk Gökşar,320,17.00,11.43,5.31,1
+Şubat,2,28,Büşra Asyalı,170,6.00,6.07,3.53,1
+Şubat,2,28,Ceren İrem Çakır,237,10.00,8.46,4.22,1
+Şubat,2,28,Cihan Öztürk,300,11.00,10.71,3.67,1
+Şubat,2,28,Ece Bakırtaş,257,11.00,9.18,4.28,1
+Şubat,2,28,Hazal Varol,258,11.00,9.21,4.26,1
+Şubat,2,28,Kerem Saçaklı,237,11.00,8.46,4.64,1
+Şubat,2,28,Mohi Bayati,330,19.00,11.79,5.76,2
+Şubat,2,28,Onur Mert,404,22.00,14.43,5.45,1
+Şubat,2,28,Oğuzhan Ünal,85,8.00,3.04,9.41,1
+Şubat,2,28,Sebahat Özbey,114,0.00,4.07,0.00,1
+Şubat,2,28,Sefa Üzgül,326,23.00,11.64,7.06,1
+Şubat,2,28,Selvi Acar,203,14.00,7.25,6.90,1
+Şubat,2,28,Sevcan Erol,209,10.00,7.46,4.78,1
+Şubat,2,28,Simay Cemre Aydoğan,247,10.00,8.82,4.05,1
+Şubat,2,28,Umut Durmaz,374,20.00,13.36,5.35,1
+Şubat,2,28,Zeynep Kapucu,317,13.00,11.32,4.10,1
+Şubat,2,28,Ümmühan Karagöz,83,2.00,2.96,2.41,1
+Şubat,2,28,İsa Bahadır Adak,243,5.75,8.68,2.37,1
+Mart,3,29,Ahmet Ayaz,81,4.00,2.79,4.94,1
+Mart,3,29,Ayşe Nur Berberoğlu,268,22.00,9.24,8.21,1
+Mart,3,29,Azra Çil,338,13.00,11.66,3.85,2
+Mart,3,29,Bahar Yavuzsüslü,25,1.00,0.86,4.00,1
+Mart,3,29,Berk Gökşar,335,11.00,11.55,3.28,1
+Mart,3,29,Büşra Asyalı,317,10.00,10.93,3.15,1
+Mart,3,29,Ceren İrem Çakır,237,24.00,8.17,10.13,1
+Mart,3,29,Cihan Öztürk,391,16.00,13.48,4.09,1
+Mart,3,29,Ece Bakırtaş,238,10.00,8.21,4.20,1
+Mart,3,29,Gurbet Bozkuş,205,3.00,7.07,1.46,1
+Mart,3,29,Hazal Varol,265,12.00,9.14,4.53,1
+Mart,3,29,Kerem Saçaklı,252,10.00,8.69,3.97,1
+Mart,3,29,Mohi Bayati,268,4.00,9.24,1.49,2
+Mart,3,29,Nadin Dari,165,4.00,5.69,2.42,1
+Mart,3,29,Onur Mert,250,19.00,8.62,7.60,1
+Mart,3,29,Oğuzhan Ünal,129,5.00,4.45,3.88,1
+Mart,3,29,Sebahat Özbey,73,3.00,2.52,4.11,1
+Mart,3,29,Sefa Üzgül,247,16.00,8.52,6.48,1
+Mart,3,29,Selvi Acar,239,7.00,8.24,2.93,1
+Mart,3,29,Sevcan Erol,208,9.00,7.17,4.33,1
+Mart,3,29,Simay Cemre Aydoğan,325,9.00,11.21,2.77,1
+Mart,3,29,Umut Durmaz,327,12.00,11.28,3.67,1
+Mart,3,29,Zeynep Kapucu,275,13.00,9.48,4.73,1
+Mart,3,29,Ümmühan Karagöz,125,6.00,4.31,4.80,1
+Nisan,4,30,Ahmet Ayaz,169,0.00,5.63,0.00,1
+Nisan,4,30,Ayşe Nur Berberoğlu,316,8.00,10.53,2.53,1
+Nisan,4,30,Azra Çil,382,25.00,12.73,6.54,2
+Nisan,4,30,Bahar Yavuzsüslü,48,1.00,1.60,2.08,1
+Nisan,4,30,Berk Gökşar,265,13.00,8.83,4.91,1
+Nisan,4,30,Berk Nacar,234,5.00,7.80,2.14,1
+Nisan,4,30,Büşra Asyalı,304,13.00,10.13,4.28,1
+Nisan,4,30,Ceren İrem Çakır,204,15.00,6.80,7.35,1
+Nisan,4,30,Cihan Öztürk,428,19.00,14.27,4.44,1
+Nisan,4,30,Ece Bakırtaş,295,9.00,9.83,3.05,1
+Nisan,4,30,Gurbet Bozkuş,258,2.00,8.60,0.78,1
+Nisan,4,30,Hazal Varol,229,8.00,7.63,3.49,1
+Nisan,4,30,Kerem Saçaklı,316,11.00,10.53,3.48,1
+Nisan,4,30,Mohi Bayati,366,13.00,12.20,3.55,2
+Nisan,4,30,Nadin Dari,309,9.00,10.30,2.91,1
+Nisan,4,30,Onur Mert,325,19.00,10.83,5.85,1
+Nisan,4,30,Oğuzhan Ünal,175,7.00,5.83,4.00,1
+Nisan,4,30,Sebahat Özbey,96,5.00,3.20,5.21,1
+Nisan,4,30,Sefa Üzgül,257,19.00,8.57,7.39,1
+Nisan,4,30,Selvi Acar,275,7.00,9.17,2.55,1
+Nisan,4,30,Sevcan Erol,209,14.00,6.97,6.70,1
+Nisan,4,30,Simay Cemre Aydoğan,280,9.00,9.33,3.21,1
+Nisan,4,30,Umut Durmaz,341,14.00,11.37,4.11,1
+Nisan,4,30,Zeynep Kapucu,324,16.00,10.80,4.94,1
+Nisan,4,30,Ümmühan Karagöz,109,4.00,3.63,3.67,1`;
+
+    const monthOrder = ["Ocak", "Şubat", "Mart", "Nisan"];
+    const MODEL_PRIOR_LEADS = 500;
+    const numericColumns = new Set([
+      "month_number",
+      "days_in_table",
+      "total_leads",
+      "total_kapora",
+      "daily_avg_leads",
+      "conversion_rate_pct",
+      "source_rows",
+    ]);
+
+    const state = {
+      activePane: "kapora",
+      selectedMonth: "all",
+      quickFilter: "all",
+      search: "",
+      sortKey: "totalKapora",
+      sortDir: "desc",
+    };
+
+    const kaporaColumns = [
+      { key: "rank", label: "Rank", sortable: false },
+      { key: "salesman", label: "Salesman" },
+      { key: "totalLeads", label: "Actual Leads" },
+      { key: "totalKapora", label: "Kapora" },
+      { key: "expectedPresentKapora", label: "Model Present" },
+      { key: "scenarioLeads", label: "Scen. Leads" },
+      { key: "scenarioKapora", label: "Scen. Kapora" },
+      { key: "kaporaDelta", label: "Kapora Delta" },
+      { key: "conversionRate", label: "Raw Conv." },
+      { key: "modelRate", label: "Model Conv." },
+      { key: "reliability", label: "Sample" },
+    ];
+
+    const conversionColumns = [
+      { key: "rank", label: "Rank", sortable: false },
+      { key: "salesman", label: "Salesman" },
+      { key: "totalLeads", label: "Actual Leads" },
+      { key: "totalKapora", label: "Kapora" },
+      { key: "conversionRate", label: "Raw Conv." },
+      { key: "modelRate", label: "Model Conv." },
+      { key: "reliability", label: "Sample" },
+      { key: "leadShare", label: "Lead Share" },
+      { key: "scenarioLeadShare", label: "Scen. Share" },
+      { key: "shareDelta", label: "Share Delta" },
+      { key: "scenarioLeads", label: "Scen. Leads" },
+      { key: "scenarioKapora", label: "Exp. Kapora" },
+    ];
+
+    const sourceRows = parseCsv(RAW_CSV).map((row) => {
+      const normalized = { ...row };
+      numericColumns.forEach((key) => {
+        normalized[key] = Number(normalized[key]);
+      });
+      return normalized;
+    });
+
+    function parseCsv(text) {
+      const lines = text.trim().split(/\r?\n/);
+      const headers = lines.shift().split(",");
+      return lines.map((line) => {
+        const values = parseCsvLine(line);
+        return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""]));
+      });
+    }
+
+    function parseCsvLine(line) {
+      const values = [];
+      let current = "";
+      let inQuotes = false;
+      for (let index = 0; index < line.length; index += 1) {
+        const char = line[index];
+        const next = line[index + 1];
+        if (char === '"' && next === '"') {
+          current += '"';
+          index += 1;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === "," && !inQuotes) {
+          values.push(current);
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+      values.push(current);
+      return values;
+    }
+
+    function selectedMonths() {
+      return state.selectedMonth === "all" ? monthOrder : [state.selectedMonth];
+    }
+
+    function aggregateRows() {
+      const months = selectedMonths();
+      const monthSet = new Set(months);
+      const daysByMonth = new Map();
+      const grouped = new Map();
+
+      sourceRows.forEach((row) => {
+        if (!monthSet.has(row.month)) return;
+        daysByMonth.set(row.month, row.days_in_table);
+        if (!grouped.has(row.salesman)) {
+          grouped.set(row.salesman, {
+            salesman: row.salesman,
+            totalLeads: 0,
+            totalKapora: 0,
+            sourceRows: 0,
+            months: new Set(),
+          });
+        }
+        const item = grouped.get(row.salesman);
+        item.totalLeads += row.total_leads;
+        item.totalKapora += row.total_kapora;
+        item.sourceRows += row.source_rows;
+        item.months.add(row.month);
+      });
+
+      const totalDays = [...daysByMonth.values()].reduce((sum, value) => sum + value, 0);
+      const rows = [...grouped.values()].map((row) => ({
+        ...row,
+        totalDays,
+        monthsPresent: row.months.size,
+        monthsLabel: [...row.months].sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b)).join(", "),
+        dailyAvg: totalDays ? row.totalLeads / totalDays : 0,
+        conversionRate: row.totalLeads ? row.totalKapora / row.totalLeads : 0,
+      }));
+
+      const totals = rows.reduce((acc, row) => {
+        acc.totalLeads += row.totalLeads;
+        acc.totalKapora += row.totalKapora;
+        return acc;
+      }, { totalLeads: 0, totalKapora: 0 });
+
+      rows.forEach((row) => {
+        row.leadShare = totals.totalLeads ? row.totalLeads / totals.totalLeads : 0;
+        row.kaporaShare = totals.totalKapora ? row.totalKapora / totals.totalKapora : 0;
+      });
+
+      return { rows, totals, totalDays, months };
+    }
+
+    function withScenario(baseRows, totals) {
+      const actualRanked = [...baseRows].sort(compareBy("totalKapora", "desc"));
+      const actualRankByName = new Map(actualRanked.map((row, index) => [row.salesman, index + 1]));
+      const periodRate = totals.totalLeads ? totals.totalKapora / totals.totalLeads : 0;
+      const modelRows = baseRows.map((row) => {
+        const modelRate = robustRate(row, periodRate);
+        return {
+          ...row,
+          modelRate,
+          reliability: reliabilityScore(row),
+          expectedPresentKapora: row.totalLeads * modelRate,
+        };
+      });
+      const modelRateSum = modelRows.reduce((sum, row) => sum + row.modelRate, 0);
+      const equalShare = modelRows.length ? totals.totalLeads / modelRows.length : 0;
+
+      const scenarioRows = modelRows.map((row) => {
+        const scenarioLeads = modelRateSum > 0
+          ? totals.totalLeads * (row.modelRate / modelRateSum)
+          : equalShare;
+        const scenarioKapora = scenarioLeads * row.modelRate;
+        return {
+          ...row,
+          actualRank: actualRankByName.get(row.salesman),
+          scenarioLeads,
+          scenarioLeadShare: totals.totalLeads ? scenarioLeads / totals.totalLeads : 0,
+          scenarioKapora,
+          shareDelta: (totals.totalLeads ? scenarioLeads / totals.totalLeads : 0) - row.leadShare,
+          leadDelta: scenarioLeads - row.totalLeads,
+          kaporaDelta: scenarioKapora - row.expectedPresentKapora,
+        };
+      });
+
+      const scenarioRanked = [...scenarioRows].sort(compareBy("scenarioKapora", "desc"));
+      const scenarioRankByName = new Map(scenarioRanked.map((row, index) => [row.salesman, index + 1]));
+      scenarioRows.forEach((row) => {
+        row.scenarioRank = scenarioRankByName.get(row.salesman);
+        row.rankChange = row.actualRank - row.scenarioRank;
+      });
+      return scenarioRows;
+    }
+
+    function robustRate(row, periodRate) {
+      const adjustedSuccesses = row.totalKapora + periodRate * MODEL_PRIOR_LEADS;
+      const adjustedLeads = row.totalLeads + MODEL_PRIOR_LEADS;
+      return adjustedLeads ? adjustedSuccesses / adjustedLeads : 0;
+    }
+
+    function reliabilityScore(row) {
+      return row.totalLeads / (row.totalLeads + MODEL_PRIOR_LEADS);
+    }
+
+    function compareBy(key, direction) {
+      return (a, b) => {
+        const left = a[key];
+        const right = b[key];
+        let result;
+        if (typeof left === "string" || typeof right === "string") {
+          result = String(left).localeCompare(String(right), "tr", { sensitivity: "base" });
+        } else {
+          result = (left ?? 0) - (right ?? 0);
+        }
+        return direction === "asc" ? result : -result;
+      };
+    }
+
+    function getDisplayRows() {
+      const { rows, totals, totalDays, months } = aggregateRows();
+      const scenarioRows = withScenario(rows, totals);
+      const workingRows = scenarioRows;
+      const searched = workingRows.filter((row) => normalize(row.salesman).includes(normalize(state.search)));
+      const primaryKey = state.activePane === "conversion" ? "modelRate" : "totalKapora";
+      const topNames = new Set([...workingRows].sort(compareBy(primaryKey, "desc")).slice(0, 5).map((row) => row.salesman));
+      const bottomNames = new Set([...workingRows].sort(compareBy(primaryKey, "asc")).slice(0, 5).map((row) => row.salesman));
+      let filtered = [...searched];
+
+      if (state.quickFilter === "top") {
+        filtered = [...searched].sort(compareBy(primaryKey, "desc")).slice(0, 5);
+      } else if (state.quickFilter === "bottom") {
+        filtered = [...searched].sort(compareBy(primaryKey, "asc")).slice(0, 5);
+      }
+
+      const sorted = filtered.sort(compareBy(state.sortKey, state.sortDir));
+      const scenarioTotals = scenarioRows.reduce((acc, row) => {
+        acc.scenarioLeads += row.scenarioLeads;
+        acc.scenarioKapora += row.scenarioKapora;
+        acc.expectedPresentKapora += row.expectedPresentKapora;
+        return acc;
+      }, { scenarioLeads: 0, scenarioKapora: 0, expectedPresentKapora: 0 });
+
+      return {
+        rows: sorted,
+        totals,
+        totalDays,
+        months,
+        activeSalesmen: rows.length,
+        scenarioTotals,
+        topNames,
+        bottomNames,
+      };
+    }
+
+    function normalize(value) {
+      return String(value).toLocaleLowerCase("tr-TR").normalize("NFC");
+    }
+
+    function fmtNumber(value, digits = 0) {
+      return new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      }).format(value);
+    }
+
+    function fmtSigned(value, digits = 2) {
+      const sign = value > 0 ? "+" : "";
+      return `${sign}${fmtNumber(value, digits)}`;
+    }
+
+    function fmtPct(value, digits = 2) {
+      return `${fmtNumber(value * 100, digits)}%`;
+    }
+
+    function deltaClass(value) {
+      if (value > 0.004) return "positive";
+      if (value < -0.004) return "negative";
+      return "neutral";
+    }
+
+    function render() {
+      const view = getDisplayRows();
+      renderPeriod(view);
+      renderPanel(view);
+      renderTable(view.rows, view);
+      updateControls();
+    }
+
+    function renderPeriod(view) {
+      const title = state.selectedMonth === "all" ? "All Months" : state.selectedMonth;
+      const monthText = view.months.length === 1 ? "1 month" : `${view.months.length} months combined`;
+      document.getElementById("periodTitle").textContent = title;
+      document.getElementById("periodMeta").textContent = `${monthText} · ${view.totalDays} table days`;
+    }
+
+    function renderPanel(view) {
+      const scenarioRate = view.totals.totalLeads ? view.scenarioTotals.scenarioKapora / view.totals.totalLeads : 0;
+      const modelPresentRate = view.totals.totalLeads ? view.scenarioTotals.expectedPresentKapora / view.totals.totalLeads : 0;
+      const title = state.activePane === "conversion" ? "Conversion-rate priority system" : "Kapora priority system";
+      const subtitle = state.activePane === "conversion"
+        ? `Ranked by robust conversion rate. Scenario conversion: ${fmtPct(scenarioRate)} vs model-present ${fmtPct(modelPresentRate)}.`
+        : `Ranked by actual kapora. Scenario kapora: ${fmtNumber(view.scenarioTotals.scenarioKapora, 2)} vs model-present ${fmtNumber(view.scenarioTotals.expectedPresentKapora, 2)}.`;
+      document.getElementById("panelTitle").textContent = title;
+      document.getElementById("panelSubtitle").textContent = subtitle;
+      document.getElementById("rowCount").textContent = `${view.rows.length} row${view.rows.length === 1 ? "" : "s"}`;
+      document.getElementById("methodNote").textContent = state.activePane === "conversion"
+        ? `Conversion system uses robust conversion rate with a ${MODEL_PRIOR_LEADS}-lead prior, then reallocates leads toward higher model conversion.`
+        : `Kapora system uses the same robust model, but keeps the primary ordering on actual kapora and measures deposit impact against model-present kapora.`;
+    }
+
+    function renderTable(rows, view) {
+      const columns = state.activePane === "conversion" ? conversionColumns : kaporaColumns;
+      document.getElementById("tableHead").innerHTML = `
+        <tr>
+          ${columns.map((column) => `
+            <th scope="col">
+              ${column.sortable === false
+                ? column.label
+                : `<button type="button" data-sort="${column.key}">${column.label}<span>${sortGlyph(column.key)}</span></button>`}
+            </th>
+          `).join("")}
+        </tr>
+      `;
+
+      const body = document.getElementById("tableBody");
+      if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="${columns.length}"><div class="empty">No matching salesmen</div></td></tr>`;
+        return;
+      }
+
+      body.innerHTML = rows.map((row, index) => {
+        const rankTag = view.topNames.has(row.salesman) ? `<span class="tag top">Top</span>` : view.bottomNames.has(row.salesman) ? `<span class="tag bottom">Lowest</span>` : "";
+        if (state.activePane === "conversion") {
+          return `
+            <tr>
+              <td class="rank-cell num">${index + 1}</td>
+              <td class="name-cell">${row.salesman} ${rankTag}</td>
+              <td class="num">${fmtNumber(row.totalLeads)}</td>
+              <td class="num">${fmtNumber(row.totalKapora, 2)}</td>
+              <td class="num">${fmtPct(row.conversionRate)}</td>
+              <td class="num">${fmtPct(row.modelRate)}</td>
+              <td class="num">${fmtPct(row.reliability, 0)}</td>
+              <td class="num">${fmtPct(row.leadShare, 1)}</td>
+              <td class="num">${fmtPct(row.scenarioLeadShare, 1)}</td>
+              <td class="num ${deltaClass(row.shareDelta)}">${fmtSigned(row.shareDelta * 100, 1)} pp</td>
+              <td class="num">${fmtNumber(row.scenarioLeads, 1)}</td>
+              <td class="num">${fmtNumber(row.scenarioKapora, 2)}</td>
+            </tr>
+          `;
+        }
+
+        return `
+          <tr>
+            <td class="rank-cell num">${index + 1}</td>
+            <td class="name-cell">${row.salesman} ${rankTag}</td>
+            <td class="num">${fmtNumber(row.totalLeads)}</td>
+            <td class="num">${fmtNumber(row.totalKapora, 2)}</td>
+            <td class="num">${fmtNumber(row.expectedPresentKapora, 2)}</td>
+            <td class="num">${fmtNumber(row.scenarioLeads, 1)}</td>
+            <td class="num">${fmtNumber(row.scenarioKapora, 2)}</td>
+            <td class="num ${deltaClass(row.kaporaDelta)}">${fmtSigned(row.kaporaDelta, 2)}</td>
+            <td class="num">${fmtPct(row.conversionRate)}</td>
+            <td class="num">${fmtPct(row.modelRate)}</td>
+            <td class="num">${fmtPct(row.reliability, 0)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function sortGlyph(key) {
+      if (state.sortKey !== key) return "↕";
+      return state.sortDir === "asc" ? "↑" : "↓";
+    }
+
+    function updateControls() {
+      document.querySelectorAll("[data-month]").forEach((button) => {
+        const active = button.dataset.month === state.selectedMonth;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+
+      document.querySelectorAll("[data-pane]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.pane === state.activePane);
+      });
+
+      document.querySelectorAll("[data-filter]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.filter === state.quickFilter);
+      });
+
+    }
+
+    function setDefaultSortForPane(pane) {
+      state.sortKey = pane === "conversion" ? "modelRate" : "totalKapora";
+      state.sortDir = "desc";
+    }
+
+    function exportCurrentView() {
+      const view = getDisplayRows();
+      const columns = state.activePane === "conversion" ? conversionColumns : kaporaColumns;
+      const exportableColumns = columns.filter((column) => column.key !== "rank");
+      const csvRows = [
+        exportableColumns.map((column) => quoteCsv(column.label)).join(","),
+        ...view.rows.map((row) => exportableColumns.map((column) => quoteCsv(exportValue(row, column.key))).join(",")),
+      ];
+      const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `sales-${state.activePane}-${state.selectedMonth}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function exportValue(row, key) {
+      if (key === "leadShare" || key === "kaporaShare" || key === "scenarioLeadShare" || key === "conversionRate" || key === "modelRate" || key === "reliability") return fmtPct(row[key]);
+      if (key === "shareDelta") return `${fmtSigned(row[key] * 100, 1)} pp`;
+      if (key === "leadDelta") return fmtSigned(row[key], 1);
+      if (key === "kaporaDelta") return fmtSigned(row[key], 2);
+      if (key === "scenarioLeads") return fmtNumber(row[key], 1);
+      if (key === "scenarioKapora" || key === "expectedPresentKapora" || key === "totalKapora" || key === "dailyAvg") return fmtNumber(row[key], 2);
+      return row[key];
+    }
+
+    function quoteCsv(value) {
+      const text = String(value ?? "");
+      return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+    }
+
+    document.getElementById("monthControls").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-month]");
+      if (!button) return;
+      state.selectedMonth = button.dataset.month;
+      state.quickFilter = "all";
+      render();
+    });
+
+    document.querySelector(".tabs").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-pane]");
+      if (!button) return;
+      state.activePane = button.dataset.pane;
+      state.quickFilter = "all";
+      setDefaultSortForPane(state.activePane);
+      render();
+    });
+
+    document.getElementById("quickFilters").addEventListener("click", (event) => {
+      const filterButton = event.target.closest("[data-filter]");
+      if (filterButton) {
+        state.quickFilter = filterButton.dataset.filter;
+        render();
+        return;
+      }
+      if (event.target.closest("#exportButton")) {
+        exportCurrentView();
+      }
+    });
+
+    document.getElementById("searchInput").addEventListener("input", (event) => {
+      state.search = event.target.value;
+      render();
+    });
+
+    document.getElementById("tableHead").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-sort]");
+      if (!button) return;
+      const key = button.dataset.sort;
+      if (state.sortKey === key) {
+        state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+      } else {
+        state.sortKey = key;
+        state.sortDir = key === "salesman" ? "asc" : "desc";
+      }
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

@@ -113,6 +113,7 @@ export const EMPTY_POPS: Pops = {
 };
 
 export const PLACEMENT_POP_COUNTS = {
+  city: 3,
   capital: 3,
   colony: 1
 };
@@ -169,7 +170,7 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
     !tile ||
     player.settlements.length > 0 ||
     tile.settlements.length > 0 ||
-    !isExactPopSelection(pops, PLACEMENT_POP_COUNTS.capital)
+    !isExactPopSelection(pops, PLACEMENT_POP_COUNTS.city)
   ) {
     return INVALID_MOVE;
   }
@@ -180,12 +181,12 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
 
   tile.settlements.push({
     owner: playerID,
-    kind: "capital",
+    kind: "city",
     buildings: [],
     pops: clonePops(pops)
   });
   player.settlements.push(tile.id);
-  addLog(G, `${getPlayerName(G, playerID)} founded a capital on ${tile.terrain} with ${formatPops(pops)}.`);
+  addLog(G, `${getPlayerName(G, playerID)} founded a city on ${tile.terrain} with ${formatPops(pops)}.`);
 }
 
 export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops) {
@@ -544,9 +545,8 @@ export function settlementBuildingSlots(tile: HexTile, settlement: Settlement) {
 
 export function settlementTileYield(tile: HexTile, settlement: Settlement) {
   const share = settlement.kind === "colony" && tile.settlements.length > 1 ? 0.5 : 1;
-  const multiplier = settlement.kind === "capital" ? 2 : 1;
 
-  return Math.floor(tile.resource.amount * share * multiplier);
+  return Math.floor(tile.resource.amount * share);
 }
 
 /**
@@ -590,7 +590,6 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
       continue;
     }
 
-    const multiplier = settlement.kind === "capital" ? 2 : 1;
     const share = settlement.kind === "colony" && tile.settlements.length > 1 ? 0.5 : 1;
     const settlementLabel = settlementIncomeSource(tile, settlement);
     const tileAmount = settlementTileYield(tile, settlement);
@@ -598,7 +597,7 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
       resource: tile.resource.type,
       amount: tileAmount,
       source: settlementLabel,
-      detail: `Tile yield${multiplier > 1 ? " x2 capital" : ""}${share < 1 ? " shared colony" : ""}`
+      detail: `Tile yield${share < 1 ? " shared colony" : ""}`
     });
 
     addIncomeContribution(contributions, income, {
@@ -741,12 +740,14 @@ export function calculateEconomyProjection(
 export function previewPlaceSettlement(
   G: HegemonyState,
   playerID: PlayerId,
-  kind: Extract<Settlement["kind"], "capital" | "colony">,
+  kind: Extract<Settlement["kind"], "city" | "capital" | "colony">,
   tileId: string,
   pops: Pops
 ): EconomyPreview | null {
-  return previewEconomyAction(G, playerID, `Place ${kind}`, (draft) =>
-    kind === "capital" ? placeCapital(draft, playerID, tileId, pops) : placeColony(draft, playerID, tileId, pops)
+  const placementKind = kind === "capital" ? "city" : kind;
+
+  return previewEconomyAction(G, playerID, `Place ${placementKind}`, (draft) =>
+    placementKind === "city" ? placeCapital(draft, playerID, tileId, pops) : placeColony(draft, playerID, tileId, pops)
   );
 }
 
@@ -847,11 +848,11 @@ export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerI
   }
 
   if (tile.settlements.some((settlement) => settlement.kind !== "colony")) {
-    status.reasons.push("Tile already has a city or capital.");
+    status.reasons.push("Tile already has a city.");
   }
 
   if (isAdjacentToCity(G, tile)) {
-    status.reasons.push("Cities and capitals cannot be adjacent.");
+    status.reasons.push("Cities cannot be adjacent.");
   }
 
   if (!canAfford(G.players[playerID].resources, status.cost ?? ACTION_COSTS.upgradeColonyToCity)) {
@@ -892,7 +893,7 @@ export function getBuildBuildingStatus(
   addPendingEventReason(G, status);
 
   if (!settlement) {
-    status.reasons.push("Requires your city or capital on this tile.");
+    status.reasons.push("Requires your city on this tile.");
   } else if (settlement.buildings.length >= settlementBuildingSlots(tile, settlement)) {
     status.reasons.push("No building slots available.");
   }
@@ -1422,7 +1423,7 @@ function canPlaceColonyOnTile(G: HegemonyState, playerID: PlayerId, tile: HexTil
   };
 
   if (tile.settlements.some((settlement) => settlement.kind !== "colony")) {
-    status.reasons.push("Tile already has a city or capital.");
+    status.reasons.push("Tile already has a city.");
   }
 
   if (tile.settlements.some((settlement) => settlement.owner === playerID)) {
@@ -1431,10 +1432,6 @@ function canPlaceColonyOnTile(G: HegemonyState, playerID: PlayerId, tile: HexTil
 
   if (tile.settlements.length >= 2) {
     status.reasons.push("A tile can hold at most two colonies.");
-  }
-
-  if (isAdjacentToEnemyCapital(G, playerID, tile)) {
-    status.reasons.push("Cannot found next to an enemy capital.");
   }
 
   status.can = status.reasons.length === 0;
@@ -1448,18 +1445,6 @@ function isAdjacentToCity(G: HegemonyState, tile: HexTile) {
     }
 
     return candidate.settlements.some((settlement) => settlement.kind !== "colony");
-  });
-}
-
-function isAdjacentToEnemyCapital(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
-  return G.board.tiles.some((candidate) => {
-    if (hexDistance(candidate, tile) !== 1) {
-      return false;
-    }
-
-    return candidate.settlements.some(
-      (settlement) => settlement.kind === "capital" && settlement.owner !== playerID
-    );
   });
 }
 

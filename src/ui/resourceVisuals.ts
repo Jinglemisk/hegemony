@@ -13,39 +13,39 @@ type ResourceVisual = {
 export const RESOURCE_VISUALS = {
   wood: {
     color: "#354927",
-    soft: "rgb(53 73 39 / 17%)",
-    line: "rgb(53 73 39 / 48%)",
-    shadow: "rgb(53 73 39 / 26%)"
+    soft: "rgb(53 73 39 / 18%)",
+    line: "rgb(53 73 39 / 56%)",
+    shadow: "rgb(53 73 39 / 30%)"
   },
   stone: {
     color: "#8f8571",
-    soft: "rgb(143 133 113 / 16%)",
-    line: "rgb(143 133 113 / 48%)",
-    shadow: "rgb(143 133 113 / 24%)"
+    soft: "rgb(143 133 113 / 18%)",
+    line: "rgb(143 133 113 / 56%)",
+    shadow: "rgb(143 133 113 / 28%)"
   },
   gold: {
     color: "#d98a35",
-    soft: "rgb(217 138 53 / 15%)",
-    line: "rgb(217 138 53 / 46%)",
-    shadow: "rgb(217 138 53 / 24%)"
+    soft: "rgb(217 138 53 / 17%)",
+    line: "rgb(217 138 53 / 54%)",
+    shadow: "rgb(217 138 53 / 28%)"
   },
   food: {
     color: "#9bbf52",
-    soft: "rgb(155 191 82 / 17%)",
-    line: "rgb(155 191 82 / 46%)",
-    shadow: "rgb(155 191 82 / 24%)"
+    soft: "rgb(155 191 82 / 19%)",
+    line: "rgb(155 191 82 / 56%)",
+    shadow: "rgb(155 191 82 / 28%)"
   },
   influence: {
     color: "#1f6977",
-    soft: "rgb(31 105 119 / 14%)",
-    line: "rgb(31 105 119 / 44%)",
-    shadow: "rgb(31 105 119 / 24%)"
+    soft: "rgb(31 105 119 / 15%)",
+    line: "rgb(31 105 119 / 48%)",
+    shadow: "rgb(31 105 119 / 26%)"
   },
   happiness: {
     color: "#2f7d46",
-    soft: "rgb(47 125 70 / 14%)",
-    line: "rgb(47 125 70 / 46%)",
-    shadow: "rgb(47 125 70 / 24%)"
+    soft: "rgb(47 125 70 / 15%)",
+    line: "rgb(47 125 70 / 50%)",
+    shadow: "rgb(47 125 70 / 26%)"
   }
 } satisfies Record<Resource, ResourceVisual>;
 
