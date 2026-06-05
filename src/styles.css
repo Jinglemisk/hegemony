@@ -398,8 +398,10 @@ button:focus-visible {
 }
 
 .hexMap.isCameraMoving .mapTerrain,
-.hexMap.isCameraMoving .tileMetric,
+.hexMap.isCameraMoving .buildingSlotPips,
+.hexMap.isCameraMoving .resourceYieldPips,
 .hexMap.isCameraMoving .settlementGlyph,
+.hexMap.isCameraMoving .settlementShape,
 .hexMap.isCameraMoving .hexTile.selected,
 .hexMap.isCameraMoving .hexTile.pending {
   filter: none;
@@ -747,6 +749,7 @@ button:focus-visible {
   border-radius: 8px;
   clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
   overflow: hidden;
+  opacity: 0.9;
   filter: saturate(0.86) contrast(1.08);
 }
 
@@ -771,30 +774,30 @@ button:focus-visible {
 .terrainTint-hill,
 .terrainTint-forest,
 .terrainTint-plains {
-  --terrain-tint: linear-gradient(
-    180deg,
-    var(--resource-color, var(--terrain-neutral-shade)),
-    color-mix(in srgb, var(--resource-color, var(--terrain-neutral)) 32%, var(--terrain-neutral-light))
-  );
+  --terrain-tint: linear-gradient(180deg, var(--terrain-hue), var(--terrain-hue-light));
 }
 
 .terrainTint-mountain {
-  --terrain-hue: #8f8571;
+  --terrain-hue: #7d8582;
+  --terrain-hue-light: #d4d1c3;
   --terrain-hue-soft: rgb(143 133 113 / 42%);
 }
 
 .terrainTint-hill {
-  --terrain-hue: #d98a35;
+  --terrain-hue: #8b5a2f;
+  --terrain-hue-light: #d09955;
   --terrain-hue-soft: rgb(217 138 53 / 42%);
 }
 
 .terrainTint-forest {
-  --terrain-hue: #5e6e3a;
+  --terrain-hue: #586f3f;
+  --terrain-hue-light: #c6bd70;
   --terrain-hue-soft: rgb(94 110 58 / 42%);
 }
 
 .terrainTint-plains {
-  --terrain-hue: #9bbf52;
+  --terrain-hue: #d69c35;
+  --terrain-hue-light: #ffd970;
   --terrain-hue-soft: rgb(155 191 82 / 42%);
 }
 
@@ -814,19 +817,19 @@ button:focus-visible {
 }
 
 .terrain-mountain {
-  fill: var(--resource-soft, rgb(143 133 113 / 16%));
+  fill: var(--resource-soft, rgb(143 133 113 / 18%));
 }
 
 .terrain-hill {
-  fill: var(--resource-soft, rgb(217 138 53 / 16%));
+  fill: var(--resource-soft, rgb(217 138 53 / 17%));
 }
 
 .terrain-forest {
-  fill: var(--resource-soft, rgb(53 73 39 / 17%));
+  fill: var(--resource-soft, rgb(53 73 39 / 18%));
 }
 
 .terrain-plains {
-  fill: var(--resource-soft, rgb(155 191 82 / 17%));
+  fill: var(--resource-soft, rgb(155 191 82 / 19%));
 }
 
 .svgButton:hover .hexTile,
@@ -853,6 +856,41 @@ button:focus-visible {
 
 .tileMetrics {
   pointer-events: none;
+}
+
+.buildingSlotPips,
+.resourceYieldPips {
+  filter:
+    drop-shadow(0 0 1px rgb(255 248 231 / 92%))
+    drop-shadow(0 0 2px rgb(24 18 16 / 82%))
+    drop-shadow(0 2px 3px rgb(24 18 16 / 38%));
+}
+
+.buildingSlotPip,
+.resourceYieldPip {
+  vector-effect: non-scaling-stroke;
+}
+
+.buildingSlotPip {
+  stroke-linejoin: round;
+}
+
+.filledSlotPip {
+  fill: var(--vase-black);
+  stroke: var(--ivory);
+  stroke-width: 1.35;
+}
+
+.hollowSlotPip {
+  fill: rgb(255 248 231 / 82%);
+  stroke: rgb(24 18 16 / 74%);
+  stroke-width: 1.25;
+}
+
+.resourceYieldPip {
+  fill: var(--resource-color, var(--terrain-neutral-line));
+  stroke: var(--ivory);
+  stroke-width: 1.45;
 }
 
 .tileMetric {
@@ -895,8 +933,28 @@ button:focus-visible {
 }
 
 .settlementGlyphObject,
-.colonyGlyphDocked {
+.colonyGlyphDocked,
+.settlementShape,
+.colonyShapeDocked {
   pointer-events: none;
+}
+
+.settlementShape {
+  fill: var(--player-color);
+  stroke: var(--ivory);
+  stroke-linejoin: round;
+  stroke-width: 3;
+  filter:
+    drop-shadow(0 0 1px rgb(24 18 16 / 92%))
+    drop-shadow(0 1px 0 rgb(255 248 231 / 84%))
+    drop-shadow(0 2px 3px rgb(24 18 16 / 34%));
+  paint-order: stroke fill;
+  vector-effect: non-scaling-stroke;
+}
+
+.cityShape rect,
+.colonyShape path {
+  vector-effect: non-scaling-stroke;
 }
 
 .settlementGlyph {
@@ -935,7 +993,7 @@ button:focus-visible {
 
 .settlementGlyph i {
   z-index: 2;
-  background: var(--player-color);
+  background: color-mix(in srgb, var(--player-color) 92%, var(--ivory) 8%);
   transform: scale(0.92);
 }
 

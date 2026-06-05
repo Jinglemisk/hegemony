@@ -10,8 +10,8 @@ export const PLAYER_NAMES: Record<PlayerId, string> = {
 };
 
 export const PLAYER_COLORS: Record<PlayerId, string> = {
-  "0": "#c2410c",
-  "1": "#0f766e",
+  "0": "#0f766e",
+  "1": "#c2410c",
   "2": "#7c3aed",
   "3": "#b45309"
 };
@@ -68,8 +68,8 @@ export const SETTLEMENT_RULES: Record<
   }
 > = {
   capital: {
-    popCapacity: 20,
-    buildingSlotBonus: 4,
+    popCapacity: 10,
+    buildingSlotBonus: 2,
     canBuildBuildings: true
   },
   city: {

@@ -8,7 +8,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type WheelEvent as ReactWheelEvent
 } from "react";
-import type { HegemonyState } from "../game/types";
+import type { HegemonyState, MaterialResource } from "../game/types";
 import { PLAYER_COLORS } from "../game/data";
 import { settlementBuildingSlots } from "../game/rules";
 import { resourceCssVars } from "../ui/resourceVisuals";
@@ -34,7 +34,14 @@ type MapMode = "current" | "terrain";
 
 const HEX_SIZE = 45;
 const TILE_ART_SIZE = 88;
-const COLONY_POSITIONS = [-14, 14];
+const CITY_ICON_SIZE = 36;
+const CITY_ICON_CENTER_Y = 4;
+const COLONY_ICON_SIZE = 27;
+const BUILDING_SLOT_PIP_RADIUS = 3.65;
+const RESOURCE_YIELD_PIP_RADIUS = 4.15;
+const BUILDING_SLOT_PIP_Y = -30;
+const RESOURCE_YIELD_PIP_Y = 34.5;
+const TWO_COLONY_POSITIONS = [-14, 14];
 const DRAG_CLICK_THRESHOLD = 5;
 const TILE_CLICK_SUPPRESS_MS = 160;
 const BASE_VIEW_BOX: ViewBox = { x: -372, y: -270, width: 744, height: 540 };
@@ -360,12 +367,15 @@ export function HexMap({
             const city = tile.settlements.find((settlement) => settlement.kind !== "colony");
             const colonies = tile.settlements.filter((settlement) => settlement.kind === "colony");
             const shownColonies = colonies.slice(0, 2);
+            const colonyXPositions = getColonyXPositions(shownColonies.length);
             const overflowColonies = Math.max(0, colonies.length - shownColonies.length);
             const isSelected = selectedTileId === tile.id;
             const isPending = pendingTileId === tile.id;
             const isPlacementCandidate = placementActive && highlightSet.has(tile.id);
             const usedBuildingSlots = city?.buildings.length ?? 0;
             const totalBuildingSlots = city ? settlementBuildingSlots(tile, city) : tile.buildingSlots;
+            const buildingSlotPips = getBuildingSlotPips(totalBuildingSlots, usedBuildingSlots);
+            const resourceYieldPips = getResourceYieldPipPositions(getResourceYieldPipCount(tile.resource));
             const terrainArt = (
               <foreignObject
                 className="terrainObject"
@@ -400,49 +410,85 @@ export function HexMap({
                   />
                 </g>
                 <g className="tileMetrics" aria-hidden="true">
-                  <text className="tileMetric tileMetricYield" x={0} y={34}>
-                    +{tile.resource.amount}
-                  </text>
-                  <text className="tileMetric tileMetricCapacity" x={0} y={-28}>
-                    {usedBuildingSlots}/{totalBuildingSlots}
-                  </text>
+                  <g className="buildingSlotPips" transform={`translate(0 ${BUILDING_SLOT_PIP_Y})`}>
+                    {buildingSlotPips.map((pip) => (
+                      <circle
+                        className={pip.filled ? "buildingSlotPip filledSlotPip" : "buildingSlotPip hollowSlotPip"}
+                        cx={pip.x}
+                        cy={0}
+                        key={`slot-${pip.index}`}
+                        r={BUILDING_SLOT_PIP_RADIUS}
+                      />
+                    ))}
+                  </g>
+                  <g className="resourceYieldPips" transform={`translate(0 ${RESOURCE_YIELD_PIP_Y})`}>
+                    {resourceYieldPips.map((pip, index) => (
+                      <circle
+                        className="resourceYieldPip"
+                        cx={pip.x}
+                        cy={pip.y}
+                        key={`yield-${index}`}
+                        r={RESOURCE_YIELD_PIP_RADIUS}
+                      />
+                    ))}
+                  </g>
                 </g>
                 {city ? (
-                  <foreignObject
-                    className="settlementObject settlementGlyphObject cityObject"
-                    height={42}
-                    width={42}
-                    x={-21}
-                    y={-17}
-                  >
-                    <div
-                      className={`settlementGlyph ${city.kind === "capital" ? "capitalGlyph" : "cityGlyph"}`}
+                  isTerrainMapMode ? (
+                    <g
+                      className="settlementShape cityShape"
                       style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
+                      transform={`translate(0 ${CITY_ICON_CENTER_Y}) scale(0.85)`}
                     >
-                      <i />
-                    </div>
-                  </foreignObject>
-                ) : null}
-                {shownColonies.map((colony, index) => (
-                  <g
-                    className="colonyGlyphDocked"
-                    transform={`translate(${COLONY_POSITIONS[index]} 4)`}
-                    key={`${colony.owner}-${index}`}
-                  >
+                      <rect height={20} rx={2} width={20} x={-10} y={-10} />
+                    </g>
+                  ) : (
                     <foreignObject
-                      className="settlementObject settlementGlyphObject colonyObject"
-                      height={32}
-                      width={32}
-                      x={-16}
-                      y={-16}
+                      className="settlementObject settlementGlyphObject cityObject"
+                      height={CITY_ICON_SIZE}
+                      width={CITY_ICON_SIZE}
+                      x={-CITY_ICON_SIZE / 2}
+                      y={CITY_ICON_CENTER_Y - CITY_ICON_SIZE / 2}
                     >
                       <div
-                        className="settlementGlyph colonyGlyph"
-                        style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
+                        className="settlementGlyph cityGlyph"
+                        style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
                       >
                         <i />
                       </div>
                     </foreignObject>
+                  )
+                ) : null}
+                {shownColonies.map((colony, index) => (
+                  <g
+                    className={isTerrainMapMode ? "colonyShapeDocked" : "colonyGlyphDocked"}
+                    transform={`translate(${colonyXPositions[index]} 4)`}
+                    key={`${colony.owner}-${index}`}
+                  >
+                    {isTerrainMapMode ? (
+                      <g
+                        className="settlementShape colonyShape"
+                        style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
+                        transform="scale(0.85)"
+                      >
+                        <path d="M 0 -11 L 10 8 L -10 8 Z" />
+                      </g>
+                    ) : (
+                      <foreignObject
+                        className="settlementObject settlementGlyphObject colonyObject"
+                        height={COLONY_ICON_SIZE}
+                        width={COLONY_ICON_SIZE}
+                        x={-COLONY_ICON_SIZE / 2}
+                        y={-COLONY_ICON_SIZE / 2}
+                      >
+                        <div
+                          className="settlementGlyph colonyGlyph"
+                          style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
+                        >
+                          <i />
+                        </div>
+                      </foreignObject>
+                    )}
                   </g>
                 ))}
                 {overflowColonies > 0 ? (
@@ -498,6 +544,62 @@ function hexPoints(size: number) {
     const angle = (Math.PI / 180) * (60 * index - 30);
     return `${Math.cos(angle) * size},${Math.sin(angle) * size}`;
   }).join(" ");
+}
+
+function getColonyXPositions(count: number) {
+  if (count <= 1) {
+    return [0];
+  }
+
+  return TWO_COLONY_POSITIONS;
+}
+
+function getBuildingSlotPips(total: number, used: number) {
+  const count = Math.max(0, Math.min(8, Math.round(total)));
+  const filledCount = Math.max(0, Math.min(count, Math.round(used)));
+  const gap = 8.9;
+  const startX = -((count - 1) * gap) / 2;
+
+  return Array.from({ length: count }, (_, index) => ({
+    index,
+    x: startX + index * gap,
+    filled: index < filledCount
+  }));
+}
+
+function getResourceYieldPipCount(yieldValue: { type: MaterialResource; amount: number }) {
+  const tiers: Record<MaterialResource, number[]> = {
+    wood: [1, 2, 3, 4],
+    stone: [2, 4, 6, 8],
+    gold: [1, 2, 3, 4],
+    food: [4, 6, 8, 10]
+  };
+  const thresholdIndex = tiers[yieldValue.type].findIndex((threshold) => yieldValue.amount <= threshold);
+
+  return thresholdIndex === -1 ? 4 : thresholdIndex + 1;
+}
+
+function getResourceYieldPipPositions(count: number) {
+  const layouts: Record<number, Array<{ x: number; y: number }>> = {
+    1: [{ x: 0, y: 0 }],
+    2: [
+      { x: -6.2, y: 0 },
+      { x: 6.2, y: 0 }
+    ],
+    3: [
+      { x: 0, y: -6 },
+      { x: -6.4, y: 4.9 },
+      { x: 6.4, y: 4.9 }
+    ],
+    4: [
+      { x: -6.1, y: -5.6 },
+      { x: 6.1, y: -5.6 },
+      { x: -6.1, y: 5.6 },
+      { x: 6.1, y: 5.6 }
+    ]
+  };
+
+  return layouts[Math.max(1, Math.min(4, Math.round(count)))];
 }
 
 function viewBoxToString(viewBox: ViewBox) {

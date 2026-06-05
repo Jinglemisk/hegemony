@@ -90,7 +90,7 @@ type PopEconomy = Record<PopType, Resources>;
 const PLAYER_DISPLAY_NAMES = PLAYER_NAMES;
 
 const SETTLEMENT_SORT: Record<SettlementKind, number> = {
-  capital: 0,
+  capital: 1,
   city: 1,
   colony: 2
 };
@@ -116,7 +116,7 @@ export function HegemonyBoard({
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   const [tileConfirmation, setTileConfirmation] = useState<PendingTileConfirmation | null>(null);
   const [populationPrompt, setPopulationPrompt] = useState<{
-    kind: Extract<SettlementKind, "capital" | "colony">;
+    kind: Extract<SettlementKind, "city" | "colony">;
     tileId: string;
   } | null>(null);
   const [foundColonyMode, setFoundColonyMode] = useState(false);
@@ -206,7 +206,7 @@ export function HegemonyBoard({
 
     if (ctx.phase === "setupCapital") {
       setTileConfirmation(null);
-      setPopulationPrompt({ kind: "capital", tileId });
+      setPopulationPrompt({ kind: "city", tileId });
       return;
     }
 
@@ -229,7 +229,7 @@ export function HegemonyBoard({
     }
 
     if (tileConfirmation.action === "setupCapital") {
-      setPopulationPrompt({ kind: "capital", tileId: tileConfirmation.tileId });
+      setPopulationPrompt({ kind: "city", tileId: tileConfirmation.tileId });
     } else if (tileConfirmation.action === "setupColony") {
       setPopulationPrompt({ kind: "colony", tileId: tileConfirmation.tileId });
     } else if (tileConfirmation.action === "foundColony") {
@@ -350,15 +350,15 @@ export function HegemonyBoard({
 
       {populationPrompt ? (
         <PopulationPickerModal
-          title={`Choose ${populationPrompt.kind} pops`}
+          title={`Choose ${placementKindLabel(populationPrompt.kind)} pops`}
           description={`Allocate exactly ${PLACEMENT_POP_COUNTS[populationPrompt.kind]} starting ${
             PLACEMENT_POP_COUNTS[populationPrompt.kind] === 1 ? "pop" : "pops"
-          } before placing this ${populationPrompt.kind}.`}
+          } before placing this ${placementKindLabel(populationPrompt.kind)}.`}
           requiredTotal={PLACEMENT_POP_COUNTS[populationPrompt.kind]}
-          confirmLabel={`Place ${populationPrompt.kind}`}
+          confirmLabel={`Place ${placementKindLabel(populationPrompt.kind)}`}
           onCancel={() => setPopulationPrompt(null)}
           onConfirm={(pops) => {
-            if (populationPrompt.kind === "capital") {
+            if (populationPrompt.kind === "city") {
               moves.placeCapital(populationPrompt.tileId, pops);
             } else {
               moves.placeColony(populationPrompt.tileId, pops);
@@ -571,7 +571,7 @@ function EmpireIntelPanel({
   return (
     <div className="empireIntel">
       <div className="panelTitle compactPanelTitle">
-        <AtlasIcon icon="capital" className="titleIcon" />
+        <AtlasIcon icon="city" className="titleIcon" />
         <div>
           <h2>Ledger</h2>
           <span>{holdings.length} holdings</span>
@@ -1680,6 +1680,10 @@ function actionRequirementText(status: ActionStatus | null, phase?: Phase, isAct
 
 function holdingShortLabel(tile: HexTile, settlement: Settlement) {
   return `${capitalize(settlement.kind)} ${tile.id}`;
+}
+
+function placementKindLabel(kind: Extract<SettlementKind, "city" | "colony">) {
+  return kind === "city" ? "city" : "colony";
 }
 
 const EVENT_CARD_ART: Record<string, string> = {
