@@ -37,10 +37,16 @@ const TILE_ART_SIZE = 88;
 const CITY_ICON_SIZE = 36;
 const CITY_ICON_CENTER_Y = 4;
 const COLONY_ICON_SIZE = 27;
-const BUILDING_SLOT_PIP_RADIUS = 3.65;
-const RESOURCE_YIELD_PIP_RADIUS = 4.15;
-const BUILDING_SLOT_PIP_Y = -30;
-const RESOURCE_YIELD_PIP_Y = 34.5;
+const BUILDING_SLOT_PIP_SIZE = 7.2;
+const BUILDING_SLOT_PIP_GAP = 9.6;
+const BUILDING_SLOT_ROW_MAX_WIDTH = 60;
+const RESOURCE_YIELD_PIP_RADIUS = 4.4;
+const RESOURCE_YIELD_PIP_HALO = 1.8;
+const RESOURCE_YIELD_PIP_GAP = 12.4;
+const BUILDING_SLOT_PIP_Y = -22;
+const RESOURCE_YIELD_PIP_Y = 27;
+const PIP_GROOVE_PADDING = 4;
+const PIP_GROOVE_MAX_HALF_WIDTH = 36;
 const TWO_COLONY_POSITIONS = [-14, 14];
 const DRAG_CLICK_THRESHOLD = 5;
 const TILE_CLICK_SUPPRESS_MS = 160;
@@ -376,6 +382,17 @@ export function HexMap({
             const totalBuildingSlots = city ? settlementBuildingSlots(tile, city) : tile.buildingSlots;
             const buildingSlotPips = getBuildingSlotPips(totalBuildingSlots, usedBuildingSlots);
             const resourceYieldPips = getResourceYieldPipPositions(getResourceYieldPipCount(tile.resource));
+            const slotGrooveHalfWidth = buildingSlotPips.length
+              ? Math.min(
+                  PIP_GROOVE_MAX_HALF_WIDTH,
+                  Math.abs(buildingSlotPips[0].x) + BUILDING_SLOT_PIP_SIZE / 2 + PIP_GROOVE_PADDING
+                )
+              : 0;
+            const yieldGrooveHalfWidth =
+              Math.abs(resourceYieldPips[0].x) +
+              RESOURCE_YIELD_PIP_RADIUS +
+              RESOURCE_YIELD_PIP_HALO +
+              PIP_GROOVE_PADDING;
             const terrainArt = (
               <foreignObject
                 className="terrainObject"
@@ -410,26 +427,34 @@ export function HexMap({
                   />
                 </g>
                 <g className="tileMetrics" aria-hidden="true">
-                  <g className="buildingSlotPips" transform={`translate(0 ${BUILDING_SLOT_PIP_Y})`}>
-                    {buildingSlotPips.map((pip) => (
-                      <circle
-                        className={pip.filled ? "buildingSlotPip filledSlotPip" : "buildingSlotPip hollowSlotPip"}
-                        cx={pip.x}
-                        cy={0}
-                        key={`slot-${pip.index}`}
-                        r={BUILDING_SLOT_PIP_RADIUS}
-                      />
-                    ))}
-                  </g>
+                  {buildingSlotPips.length > 0 ? (
+                    <g className="buildingSlotPips" transform={`translate(0 ${BUILDING_SLOT_PIP_Y})`}>
+                      <PipGroove halfWidth={slotGrooveHalfWidth} />
+                      {buildingSlotPips.map((pip) => (
+                        <rect
+                          className={pip.filled ? "buildingSlotPip filledSlotPip" : "buildingSlotPip hollowSlotPip"}
+                          height={BUILDING_SLOT_PIP_SIZE}
+                          key={`slot-${pip.index}`}
+                          rx={1.8}
+                          width={BUILDING_SLOT_PIP_SIZE}
+                          x={pip.x - BUILDING_SLOT_PIP_SIZE / 2}
+                          y={-BUILDING_SLOT_PIP_SIZE / 2}
+                        />
+                      ))}
+                    </g>
+                  ) : null}
                   <g className="resourceYieldPips" transform={`translate(0 ${RESOURCE_YIELD_PIP_Y})`}>
+                    <PipGroove halfWidth={yieldGrooveHalfWidth} />
                     {resourceYieldPips.map((pip, index) => (
-                      <circle
-                        className="resourceYieldPip"
-                        cx={pip.x}
-                        cy={pip.y}
-                        key={`yield-${index}`}
-                        r={RESOURCE_YIELD_PIP_RADIUS}
-                      />
+                      <g key={`yield-${index}`}>
+                        <circle
+                          className="resourceYieldPipHalo"
+                          cx={pip.x}
+                          cy={pip.y}
+                          r={RESOURCE_YIELD_PIP_RADIUS + RESOURCE_YIELD_PIP_HALO}
+                        />
+                        <circle className="resourceYieldPip" cx={pip.x} cy={pip.y} r={RESOURCE_YIELD_PIP_RADIUS} />
+                      </g>
                     ))}
                   </g>
                 </g>
@@ -539,6 +564,15 @@ export function HexMap({
   );
 }
 
+function PipGroove({ halfWidth }: { halfWidth: number }) {
+  return (
+    <g className="pipGroove">
+      <line className="pipGrooveShadow" x1={-halfWidth} x2={halfWidth} y1={-0.6} y2={-0.6} />
+      <line className="pipGrooveHighlight" x1={-halfWidth} x2={halfWidth} y1={1.1} y2={1.1} />
+    </g>
+  );
+}
+
 function hexPoints(size: number) {
   return Array.from({ length: 6 }, (_, index) => {
     const angle = (Math.PI / 180) * (60 * index - 30);
@@ -557,7 +591,7 @@ function getColonyXPositions(count: number) {
 function getBuildingSlotPips(total: number, used: number) {
   const count = Math.max(0, Math.min(8, Math.round(total)));
   const filledCount = Math.max(0, Math.min(count, Math.round(used)));
-  const gap = 8.9;
+  const gap = count > 1 ? Math.min(BUILDING_SLOT_PIP_GAP, BUILDING_SLOT_ROW_MAX_WIDTH / (count - 1)) : 0;
   const startX = -((count - 1) * gap) / 2;
 
   return Array.from({ length: count }, (_, index) => ({
@@ -580,26 +614,13 @@ function getResourceYieldPipCount(yieldValue: { type: MaterialResource; amount: 
 }
 
 function getResourceYieldPipPositions(count: number) {
-  const layouts: Record<number, Array<{ x: number; y: number }>> = {
-    1: [{ x: 0, y: 0 }],
-    2: [
-      { x: -6.2, y: 0 },
-      { x: 6.2, y: 0 }
-    ],
-    3: [
-      { x: 0, y: -6 },
-      { x: -6.4, y: 4.9 },
-      { x: 6.4, y: 4.9 }
-    ],
-    4: [
-      { x: -6.1, y: -5.6 },
-      { x: 6.1, y: -5.6 },
-      { x: -6.1, y: 5.6 },
-      { x: 6.1, y: 5.6 }
-    ]
-  };
+  const clamped = Math.max(1, Math.min(4, Math.round(count)));
+  const startX = -((clamped - 1) * RESOURCE_YIELD_PIP_GAP) / 2;
 
-  return layouts[Math.max(1, Math.min(4, Math.round(count)))];
+  return Array.from({ length: clamped }, (_, index) => ({
+    x: startX + index * RESOURCE_YIELD_PIP_GAP,
+    y: 0
+  }));
 }
 
 function viewBoxToString(viewBox: ViewBox) {

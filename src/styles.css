@@ -398,8 +398,6 @@ button:focus-visible {
 }
 
 .hexMap.isCameraMoving .mapTerrain,
-.hexMap.isCameraMoving .buildingSlotPips,
-.hexMap.isCameraMoving .resourceYieldPips,
 .hexMap.isCameraMoving .settlementGlyph,
 .hexMap.isCameraMoving .settlementShape,
 .hexMap.isCameraMoving .hexTile.selected,
@@ -858,12 +856,19 @@ button:focus-visible {
   pointer-events: none;
 }
 
-.buildingSlotPips,
-.resourceYieldPips {
-  filter:
-    drop-shadow(0 0 1px rgb(255 248 231 / 92%))
-    drop-shadow(0 0 2px rgb(24 18 16 / 82%))
-    drop-shadow(0 2px 3px rgb(24 18 16 / 38%));
+.pipGrooveShadow,
+.pipGrooveHighlight {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 2.4;
+}
+
+.pipGrooveShadow {
+  stroke: rgb(24 18 16 / 30%);
+}
+
+.pipGrooveHighlight {
+  stroke: rgb(255 248 231 / 58%);
 }
 
 .buildingSlotPip,
@@ -878,19 +883,23 @@ button:focus-visible {
 .filledSlotPip {
   fill: var(--vase-black);
   stroke: var(--ivory);
-  stroke-width: 1.35;
+  stroke-width: 1.4;
 }
 
 .hollowSlotPip {
-  fill: rgb(255 248 231 / 82%);
-  stroke: rgb(24 18 16 / 74%);
-  stroke-width: 1.25;
+  fill: rgb(255 248 231 / 92%);
+  stroke: rgb(24 18 16 / 85%);
+  stroke-width: 1.4;
+}
+
+.resourceYieldPipHalo {
+  fill: rgb(255 248 231 / 88%);
 }
 
 .resourceYieldPip {
   fill: var(--resource-color, var(--terrain-neutral-line));
-  stroke: var(--ivory);
-  stroke-width: 1.45;
+  stroke: rgb(24 18 16 / 88%);
+  stroke-width: 1.4;
 }
 
 .tileMetric {
