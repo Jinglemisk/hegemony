@@ -10,10 +10,10 @@ export const PLAYER_NAMES: Record<PlayerId, string> = {
 };
 
 export const PLAYER_COLORS: Record<PlayerId, string> = {
-  "0": "#0f766e",
-  "1": "#c2410c",
+  "0": "#1e3a8a",
+  "1": "#eab308",
   "2": "#7c3aed",
-  "3": "#b45309"
+  "3": "#c1121f"
 };
 
 export const STARTING_RESOURCES: Resources = {

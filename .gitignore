@@ -3,3 +3,5 @@ dist/
 .server-build/
 *.tsbuildinfo
 .DS_Store
+
+.playwright-mcp/

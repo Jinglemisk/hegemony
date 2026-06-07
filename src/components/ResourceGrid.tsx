@@ -155,6 +155,7 @@ function getResourcePillVars(resource: Resource, value: number) {
 
   return {
     "--resource-color": "#b13a28",
+    "--resource-tile": "#b13a28",
     "--resource-soft": "rgb(177 58 40 / 14%)",
     "--resource-line": "rgb(177 58 40 / 46%)",
     "--resource-shadow": "rgb(177 58 40 / 24%)"
