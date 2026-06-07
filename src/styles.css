@@ -397,8 +397,6 @@ button:focus-visible {
   filter: none;
 }
 
-.hexMap.isCameraMoving .mapTerrain,
-.hexMap.isCameraMoving .settlementGlyph,
 .hexMap.isCameraMoving .settlementShape,
 .hexMap.isCameraMoving .hexTile.selected,
 .hexMap.isCameraMoving .hexTile.pending {
@@ -728,38 +726,9 @@ button:focus-visible {
   --sprite-y: 100%;
 }
 
-.terrainObject,
-.settlementObject {
-  pointer-events: none;
-}
-
 .tileConfirmObject {
   overflow: visible;
   pointer-events: auto;
-}
-
-.mapTerrain {
-  position: relative;
-  isolation: isolate;
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-  overflow: hidden;
-  opacity: 0.9;
-  filter: saturate(0.86) contrast(1.08);
-}
-
-.mapTerrain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: var(--terrain-tint);
-  mix-blend-mode: color;
-  opacity: 0.6;
 }
 
 .terrainMapMode .hexTile {
@@ -805,8 +774,8 @@ button:focus-visible {
 }
 
 .hexTile {
-  fill: var(--resource-soft, var(--terrain-neutral-soft));
-  stroke: var(--resource-line, rgb(95 74 53 / 30%));
+  fill: var(--resource-tile, var(--terrain-neutral-soft));
+  stroke: color-mix(in srgb, var(--resource-tile, var(--terrain-neutral-line)) 62%, #241910 38%);
   stroke-width: 1.6;
   transition:
     filter 160ms ease,
@@ -814,32 +783,16 @@ button:focus-visible {
     stroke-width 160ms ease;
 }
 
-.terrain-mountain {
-  fill: var(--resource-soft, rgb(143 133 113 / 18%));
-}
-
-.terrain-hill {
-  fill: var(--resource-soft, rgb(217 138 53 / 17%));
-}
-
-.terrain-forest {
-  fill: var(--resource-soft, rgb(53 73 39 / 18%));
-}
-
-.terrain-plains {
-  fill: var(--resource-soft, rgb(155 191 82 / 19%));
-}
-
 .svgButton:hover .hexTile,
 .svgButton:focus .hexTile {
-  stroke: var(--resource-color, var(--terrain-neutral-line));
-  stroke-width: 1.6;
+  stroke: var(--ivory);
+  stroke-width: 2;
   filter: drop-shadow(0 0 5px var(--resource-shadow, rgb(95 74 53 / 24%)));
 }
 
 .hexTile.selected {
-  stroke: var(--resource-color, var(--terrain-neutral-line));
-  stroke-width: 1.6;
+  stroke: var(--ivory);
+  stroke-width: 2.2;
   filter: drop-shadow(0 0 6px var(--resource-shadow, rgb(95 74 53 / 28%)));
 }
 
@@ -854,21 +807,6 @@ button:focus-visible {
 
 .tileMetrics {
   pointer-events: none;
-}
-
-.pipGrooveShadow,
-.pipGrooveHighlight {
-  fill: none;
-  stroke-linecap: round;
-  stroke-width: 2.4;
-}
-
-.pipGrooveShadow {
-  stroke: rgb(24 18 16 / 30%);
-}
-
-.pipGrooveHighlight {
-  stroke: rgb(255 248 231 / 58%);
 }
 
 .buildingSlotPip,
@@ -897,9 +835,13 @@ button:focus-visible {
 }
 
 .resourceYieldPip {
-  fill: var(--resource-color, var(--terrain-neutral-line));
+  fill: color-mix(in srgb, var(--resource-tile, var(--terrain-neutral-line)) 58%, #241910 42%);
   stroke: rgb(24 18 16 / 88%);
   stroke-width: 1.4;
+}
+
+.resourceYieldPipDot {
+  fill: var(--ivory);
 }
 
 .tileMetric {
@@ -941,8 +883,6 @@ button:focus-visible {
   font-size: 15px;
 }
 
-.settlementGlyphObject,
-.colonyGlyphDocked,
 .settlementShape,
 .colonyShapeDocked {
   pointer-events: none;
@@ -964,60 +904,6 @@ button:focus-visible {
 .cityShape rect,
 .colonyShape path {
   vector-effect: non-scaling-stroke;
-}
-
-.settlementGlyph {
-  --glyph-mask: var(--city-glyph);
-  position: relative;
-  width: 100%;
-  height: 100%;
-  filter:
-    drop-shadow(0 0 1px rgb(255 248 231 / 95%))
-    drop-shadow(0 1px 0 rgb(255 248 231 / 95%))
-    drop-shadow(0 5px 6px rgb(24 18 16 / 30%));
-}
-
-.settlementGlyph::before,
-.settlementGlyph::after,
-.settlementGlyph i {
-  content: "";
-  position: absolute;
-  inset: 0;
-  display: block;
-  -webkit-mask: var(--glyph-mask) center / contain no-repeat;
-  mask: var(--glyph-mask) center / contain no-repeat;
-}
-
-.settlementGlyph::before {
-  z-index: 0;
-  background: var(--ivory);
-  transform: scale(1.24);
-}
-
-.settlementGlyph::after {
-  z-index: 1;
-  background: #0b0705;
-  transform: scale(1.1);
-}
-
-.settlementGlyph i {
-  z-index: 2;
-  background: color-mix(in srgb, var(--player-color) 92%, var(--ivory) 8%);
-  transform: scale(0.92);
-}
-
-.capitalGlyph {
-  --glyph-mask: var(--capital-glyph);
-  transform: scale(0.95);
-  transform-origin: center;
-}
-
-.cityGlyph {
-  --glyph-mask: var(--city-glyph);
-}
-
-.colonyGlyph {
-  --glyph-mask: var(--colony-glyph);
 }
 
 .colonyOverflow {
@@ -2635,7 +2521,7 @@ button:focus-visible {
 .holdingMatrix {
   gap: 0;
   position: relative;
-  padding: 10px 8px 11px 11px;
+  padding: 10px 6px 11px 9px;
   background:
     linear-gradient(90deg, rgb(192 70 28 / 4%), transparent 48%),
     rgb(255 248 231 / 16%);
@@ -2665,10 +2551,10 @@ button:focus-visible {
 
 .holdingSummaryButton {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 20px;
+  grid-template-columns: minmax(0, 1fr) 16px;
   align-items: center;
   align-self: start;
-  gap: 8px;
+  gap: 5px;
   width: 100%;
   min-height: 60px;
   min-width: 0;
@@ -2692,20 +2578,19 @@ button:focus-visible {
   transform: none;
 }
 
-/* Re-tiered so the three info clusters stop fighting for one ~210px line.
-   Row 1: identity (name + coords) with the tile hex pinned top-right.
-   Row 2: the slot/pop meters get the full width to themselves.
-   Row 3: the net-income strip. Previously identity + meters + hex shared one
-   row, crushing the name to "C" and overflowing coords onto the first meter. */
+/* Two-tier layout.
+   Row 1: identity (name + coords), the slot/pop meters, and the tile hex all
+   share the top line. Only the name column flexes (and ellipsizes first);
+   meters and hex keep fixed compact widths so they never wrap.
+   Row 2: the net-income strip gets the full width to itself (unchanged). */
 .holdingSummaryRows {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   grid-template-areas:
-    "holdingIdentity holdingYield"
-    "holdingMetrics  holdingMetrics"
-    "holdingTotals   holdingTotals";
+    "holdingIdentity holdingMetrics holdingYield"
+    "holdingTotals   holdingTotals  holdingTotals";
   align-items: center;
-  gap: 7px 12px;
+  gap: 7px 5px;
   min-width: 0;
 }
 
@@ -2730,7 +2615,7 @@ button:focus-visible {
 
 .cityIdentity {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -2746,7 +2631,7 @@ button:focus-visible {
   overflow: hidden;
   color: var(--fg);
   font-family: var(--font-display);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   line-height: 1;
   text-overflow: ellipsis;
   text-transform: uppercase;
@@ -2767,8 +2652,8 @@ button:focus-visible {
 .settlementIdentityIcon {
   --settlement-mask: var(--city-glyph);
   position: relative;
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   overflow: hidden;
   border-color: rgb(143 46 19 / 46%);
   border-radius: 6px;
@@ -2783,7 +2668,7 @@ button:focus-visible {
 .settlementIdentityIcon::after {
   content: "";
   position: absolute;
-  inset: 5px;
+  inset: 4px;
   display: block;
   background: var(--clay-deep);
   -webkit-mask: var(--settlement-mask) center / contain no-repeat;
@@ -2833,19 +2718,27 @@ button:focus-visible {
   display: flex;
   grid-area: holdingMetrics;
   align-items: center;
-  justify-self: start;
-  gap: 18px;
-  /* Indent to line up under the settlement name (34px icon + 8px gap) so the
-     meters read as a sub-line of the identity rather than a stray row. */
-  padding-left: 42px;
+  justify-self: end;
+  gap: 6px;
   color: var(--muted);
   font-size: 0.72rem;
   white-space: nowrap;
 }
 
 .holdingSummaryMetrics .miniIcon {
-  width: 17px;
-  height: 17px;
+  width: 14px;
+  height: 14px;
+}
+
+/* Tighter spacing and numerals than the detail meters — the pair shares the
+   top line with the settlement name and the tile hex. */
+.holdingSummaryMetrics .cityMeter {
+  gap: 3px;
+}
+
+.holdingSummaryMetrics .cityMeterText strong {
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
 .holdingSummaryMetrics .miniResourceIcon {
@@ -2861,15 +2754,15 @@ button:focus-visible {
   justify-self: end;
 }
 
-/* Tile glyph matched to the 34px settlement icon so the row reads as a set */
+/* Tile glyph matched to the 28px settlement icon so the row reads as a set */
 .holdingTileBadge .terrainChip {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
 }
 
-/* Third summary line — net income per resource, flat, fixed columns so the
+/* Second summary line — net income per resource, flat, fixed columns so the
    same resource lines up across every settlement row (wood…happiness order).
-   Stretched right (-28px = the 8px button gap + 20px chevron column) so the
+   Stretched right (-21px = the 5px button gap + 16px chevron column) so the
    strip runs to the right edge of the chevron sitting above it. */
 .holdingNetYields {
   grid-area: holdingTotals;
@@ -2878,7 +2771,7 @@ button:focus-visible {
   align-items: center;
   gap: 2px 8px;
   margin-top: 0;
-  margin-right: -28px;
+  margin-right: -21px;
   min-width: 0;
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
@@ -3013,8 +2906,8 @@ button:focus-visible {
 .collapseChevron {
   position: relative;
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border: 1px solid var(--ledger-rule-strong);
   border-radius: 50%;
 }

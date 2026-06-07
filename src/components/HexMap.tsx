@@ -12,7 +12,6 @@ import type { HegemonyState, MaterialResource } from "../game/types";
 import { PLAYER_COLORS } from "../game/data";
 import { settlementBuildingSlots } from "../game/rules";
 import { resourceCssVars } from "../ui/resourceVisuals";
-import { TerrainSprite } from "./Sprites";
 
 type ViewBox = {
   x: number;
@@ -33,20 +32,16 @@ type DragState = {
 type MapMode = "current" | "terrain";
 
 const HEX_SIZE = 45;
-const TILE_ART_SIZE = 88;
-const CITY_ICON_SIZE = 36;
 const CITY_ICON_CENTER_Y = 4;
-const COLONY_ICON_SIZE = 27;
 const BUILDING_SLOT_PIP_SIZE = 7.2;
 const BUILDING_SLOT_PIP_GAP = 9.6;
 const BUILDING_SLOT_ROW_MAX_WIDTH = 60;
 const RESOURCE_YIELD_PIP_RADIUS = 4.4;
 const RESOURCE_YIELD_PIP_HALO = 1.8;
+const RESOURCE_YIELD_PIP_DOT_RADIUS = 1.5;
 const RESOURCE_YIELD_PIP_GAP = 12.4;
 const BUILDING_SLOT_PIP_Y = -22;
 const RESOURCE_YIELD_PIP_Y = 27;
-const PIP_GROOVE_PADDING = 4;
-const PIP_GROOVE_MAX_HALF_WIDTH = 36;
 const TWO_COLONY_POSITIONS = [-14, 14];
 const DRAG_CLICK_THRESHOLD = 5;
 const TILE_CLICK_SUPPRESS_MS = 160;
@@ -382,31 +377,8 @@ export function HexMap({
             const totalBuildingSlots = city ? settlementBuildingSlots(tile, city) : tile.buildingSlots;
             const buildingSlotPips = getBuildingSlotPips(totalBuildingSlots, usedBuildingSlots);
             const resourceYieldPips = getResourceYieldPipPositions(getResourceYieldPipCount(tile.resource));
-            const slotGrooveHalfWidth = buildingSlotPips.length
-              ? Math.min(
-                  PIP_GROOVE_MAX_HALF_WIDTH,
-                  Math.abs(buildingSlotPips[0].x) + BUILDING_SLOT_PIP_SIZE / 2 + PIP_GROOVE_PADDING
-                )
-              : 0;
-            const yieldGrooveHalfWidth =
-              Math.abs(resourceYieldPips[0].x) +
-              RESOURCE_YIELD_PIP_RADIUS +
-              RESOURCE_YIELD_PIP_HALO +
-              PIP_GROOVE_PADDING;
-            const terrainArt = (
-              <foreignObject
-                className="terrainObject"
-                height={TILE_ART_SIZE}
-                width={TILE_ART_SIZE}
-                x={-TILE_ART_SIZE / 2}
-                y={-TILE_ART_SIZE / 2}
-              >
-                <TerrainSprite terrain={tile.terrain} className="mapTerrain" />
-              </foreignObject>
-            );
             return (
               <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
-                {!isTerrainMapMode ? terrainArt : null}
                 <g
                   aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${tile.resource.amount} ${tile.resource.type}`}
                   className="svgButton"
@@ -429,7 +401,6 @@ export function HexMap({
                 <g className="tileMetrics" aria-hidden="true">
                   {buildingSlotPips.length > 0 ? (
                     <g className="buildingSlotPips" transform={`translate(0 ${BUILDING_SLOT_PIP_Y})`}>
-                      <PipGroove halfWidth={slotGrooveHalfWidth} />
                       {buildingSlotPips.map((pip) => (
                         <rect
                           className={pip.filled ? "buildingSlotPip filledSlotPip" : "buildingSlotPip hollowSlotPip"}
@@ -444,7 +415,6 @@ export function HexMap({
                     </g>
                   ) : null}
                   <g className="resourceYieldPips" transform={`translate(0 ${RESOURCE_YIELD_PIP_Y})`}>
-                    <PipGroove halfWidth={yieldGrooveHalfWidth} />
                     {resourceYieldPips.map((pip, index) => (
                       <g key={`yield-${index}`}>
                         <circle
@@ -454,66 +424,38 @@ export function HexMap({
                           r={RESOURCE_YIELD_PIP_RADIUS + RESOURCE_YIELD_PIP_HALO}
                         />
                         <circle className="resourceYieldPip" cx={pip.x} cy={pip.y} r={RESOURCE_YIELD_PIP_RADIUS} />
+                        <circle
+                          className="resourceYieldPipDot"
+                          cx={pip.x}
+                          cy={pip.y}
+                          r={RESOURCE_YIELD_PIP_DOT_RADIUS}
+                        />
                       </g>
                     ))}
                   </g>
                 </g>
                 {city ? (
-                  isTerrainMapMode ? (
-                    <g
-                      className="settlementShape cityShape"
-                      style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
-                      transform={`translate(0 ${CITY_ICON_CENTER_Y}) scale(0.85)`}
-                    >
-                      <rect height={20} rx={2} width={20} x={-10} y={-10} />
-                    </g>
-                  ) : (
-                    <foreignObject
-                      className="settlementObject settlementGlyphObject cityObject"
-                      height={CITY_ICON_SIZE}
-                      width={CITY_ICON_SIZE}
-                      x={-CITY_ICON_SIZE / 2}
-                      y={CITY_ICON_CENTER_Y - CITY_ICON_SIZE / 2}
-                    >
-                      <div
-                        className="settlementGlyph cityGlyph"
-                        style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
-                      >
-                        <i />
-                      </div>
-                    </foreignObject>
-                  )
+                  <g
+                    className="settlementShape cityShape"
+                    style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
+                    transform={`translate(0 ${CITY_ICON_CENTER_Y}) scale(0.85)`}
+                  >
+                    <rect height={20} rx={2} width={20} x={-10} y={-10} />
+                  </g>
                 ) : null}
                 {shownColonies.map((colony, index) => (
                   <g
-                    className={isTerrainMapMode ? "colonyShapeDocked" : "colonyGlyphDocked"}
+                    className="colonyShapeDocked"
                     transform={`translate(${colonyXPositions[index]} 4)`}
                     key={`${colony.owner}-${index}`}
                   >
-                    {isTerrainMapMode ? (
-                      <g
-                        className="settlementShape colonyShape"
-                        style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
-                        transform="scale(0.85)"
-                      >
-                        <path d="M 0 -11 L 10 8 L -10 8 Z" />
-                      </g>
-                    ) : (
-                      <foreignObject
-                        className="settlementObject settlementGlyphObject colonyObject"
-                        height={COLONY_ICON_SIZE}
-                        width={COLONY_ICON_SIZE}
-                        x={-COLONY_ICON_SIZE / 2}
-                        y={-COLONY_ICON_SIZE / 2}
-                      >
-                        <div
-                          className="settlementGlyph colonyGlyph"
-                          style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
-                        >
-                          <i />
-                        </div>
-                      </foreignObject>
-                    )}
+                    <g
+                      className="settlementShape colonyShape"
+                      style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
+                      transform="scale(0.85)"
+                    >
+                      <path d="M 0 -11 L 10 8 L -10 8 Z" />
+                    </g>
                   </g>
                 ))}
                 {overflowColonies > 0 ? (
@@ -561,15 +503,6 @@ export function HexMap({
         </g>
       </svg>
     </>
-  );
-}
-
-function PipGroove({ halfWidth }: { halfWidth: number }) {
-  return (
-    <g className="pipGroove">
-      <line className="pipGrooveShadow" x1={-halfWidth} x2={halfWidth} y1={-0.6} y2={-0.6} />
-      <line className="pipGrooveHighlight" x1={-halfWidth} x2={halfWidth} y1={1.1} y2={1.1} />
-    </g>
   );
 }
 
