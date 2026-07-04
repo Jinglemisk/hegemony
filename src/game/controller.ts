@@ -11,7 +11,6 @@ import {
   expireTurnEventModifiers,
   foundColony,
   growPop,
-  INVALID_MOVE,
   movePops,
   placeCapital,
   placeColony,
@@ -20,6 +19,7 @@ import {
   startNewSeason,
   upgradeColonyToCity
 } from "./rules";
+import type { MoveResult } from "./rules";
 
 export type Phase = "setupCapital" | "setupColony" | "gameplay";
 
@@ -95,12 +95,12 @@ function assertSetupTurn(ctx: LocalContext, playerID: PlayerId, phase: Phase) {
 }
 
 function assertValidSetupMove(
-  result: typeof INVALID_MOVE | void,
+  result: MoveResult,
   playerID: PlayerId,
   settlementKind: "city" | "colony",
   tileId: string
 ) {
-  if (result === INVALID_MOVE) {
+  if (!result.ok) {
     throw new Error(`Invalid test setup: ${playerID} cannot place ${settlementKind} on ${tileId}.`);
   }
 }
@@ -137,7 +137,7 @@ function createMoves(setGame: SetGame): GameMoves {
         const G = structuredClone(previous.G);
         const result = placeCapital(G, previous.ctx.currentPlayer, tileId, pops);
 
-        if (result === INVALID_MOVE) {
+        if (!result.ok) {
           return previous;
         }
 
@@ -156,7 +156,7 @@ function createMoves(setGame: SetGame): GameMoves {
         const G = structuredClone(previous.G);
         const result = placeColony(G, previous.ctx.currentPlayer, tileId, pops);
 
-        if (result === INVALID_MOVE) {
+        if (!result.ok) {
           return previous;
         }
 
@@ -175,7 +175,7 @@ function createMoves(setGame: SetGame): GameMoves {
         const G = structuredClone(previous.G);
         const result = collectIncome(G, previous.ctx.currentPlayer);
 
-        if (result === INVALID_MOVE) {
+        if (!result.ok) {
           return previous;
         }
 
@@ -194,7 +194,7 @@ function createMoves(setGame: SetGame): GameMoves {
         const G = structuredClone(previous.G);
         const result = foundColony(G, previous.ctx.currentPlayer, tileId, sourceTileId, pop);
 
-        if (result === INVALID_MOVE) {
+        if (!result.ok) {
           return previous;
         }
 
@@ -213,7 +213,7 @@ function createMoves(setGame: SetGame): GameMoves {
         const G = structuredClone(previous.G);
         const result = upgradeColonyToCity(G, previous.ctx.currentPlayer, tileId, pops);
 
-        if (result === INVALID_MOVE) {
+        if (!result.ok) {
           return previous;
         }
 
@@ -232,7 +232,7 @@ function createMoves(setGame: SetGame): GameMoves {
         const G = structuredClone(previous.G);
         const result = buildBuilding(G, previous.ctx.currentPlayer, tileId, buildingId);
 
-        if (result === INVALID_MOVE) {
+        if (!result.ok) {
           return previous;
         }
 
@@ -251,7 +251,7 @@ function createMoves(setGame: SetGame): GameMoves {
         const G = structuredClone(previous.G);
         const result = growPop(G, previous.ctx.currentPlayer, tileId, pop);
 
-        if (result === INVALID_MOVE) {
+        if (!result.ok) {
           return previous;
         }
 
@@ -270,7 +270,7 @@ function createMoves(setGame: SetGame): GameMoves {
         const G = structuredClone(previous.G);
         const result = movePops(G, previous.ctx.currentPlayer, sourceTileId, targetTileId, pops);
 
-        if (result === INVALID_MOVE) {
+        if (!result.ok) {
           return previous;
         }
 
@@ -289,7 +289,7 @@ function createMoves(setGame: SetGame): GameMoves {
         const G = structuredClone(previous.G);
         const result = resolvePendingPlayerEvent(G, previous.ctx.currentPlayer, targetTileId, choiceIndex);
 
-        if (result === INVALID_MOVE) {
+        if (!result.ok) {
           return previous;
         }
 
