@@ -1,0 +1,7 @@
+dist/
+node_modules/
+coverage/
+assets/
+package-lock.json
+*.html
+Hegemony.pdf

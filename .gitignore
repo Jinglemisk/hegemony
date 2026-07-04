@@ -4,4 +4,8 @@ dist/
 *.tsbuildinfo
 .DS_Store
 
+# Playwright / debug scratch output
 .playwright-mcp/
+.playwright-cli/
+output/
+outputs/
