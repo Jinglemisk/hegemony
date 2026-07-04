@@ -1,37 +1,6 @@
 /* resources — Income preview, resource pills/values/tooltips, resource-flash keyframes, action & building buttons
    Split from styles.css (Phase 2e); original source order preserved. */
 
-.holdingsStats span,
-.incomePreview {
-  padding: 8px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--muted);
-  background: var(--panel-soft);
-  font-size: 0.8rem;
-}
-
-.holdingsStats strong,
-.incomePreview strong {
-  color: var(--fg);
-}
-
-.incomePreview {
-  display: grid;
-  gap: 4px;
-  margin: 0;
-}
-
-.incomePreview span {
-  text-transform: uppercase;
-}
-
-.incomePreview strong {
-  font-size: 0.78rem;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
 .resourceGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -111,14 +80,6 @@
 
 .happinessTheatreIcon-veryAngry {
   background-image: url("../assets/resource-icons/happiness-very-angry.png");
-}
-
-.resourceLabel {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 0.78rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .resourceValue {
@@ -346,42 +307,6 @@
 
 .negative {
   color: #b13a28;
-}
-
-.actionStack,
-.buildingButtons,
-.tileActionButtons {
-  display: grid;
-  gap: 8px;
-}
-
-.actionStack > button {
-  min-height: 50px;
-  text-transform: uppercase;
-}
-
-.actionStack > button:not(.primaryButton) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.buttonInlineIcon {
-  width: 24px;
-  height: 24px;
-}
-
-.actionStack > button::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-image: var(--ui-atlas);
-  background-position: 100% 0%;
-  background-repeat: no-repeat;
-  background-size: 300% 300%;
-  opacity: 0.82;
 }
 
 .primaryButton {

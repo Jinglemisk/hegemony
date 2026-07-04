@@ -1,43 +1,6 @@
 /* ledger — Settlement stats, pop/building grids, population & transfer (move) modals, strategy topbar / status & scoreboard panels, season status
    Split from styles.css (Phase 2e); original source order preserved. */
 
-.settlementStats,
-.popGrid,
-.buildingList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.settlementStats span,
-.popGrid span,
-.buildingList span,
-.buildingList em {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-width: 0;
-  padding: 4px 6px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  color: var(--muted);
-  background: rgb(24 18 16 / 14%);
-  font-size: 0.76rem;
-  font-style: normal;
-}
-
-.settlementStats span,
-.popGrid span,
-.buildingList span,
-.buildingList em {
-  background: rgb(36 25 16 / 6%);
-}
-
-.settlementStats strong {
-  color: var(--fg);
-}
-
 .overCapacityCard {
   border-left-color: rgb(177 58 40 / 82%);
   background: none;
@@ -46,16 +9,6 @@
 .overCapacityText,
 .overCapacityText strong {
   color: #b13a28;
-}
-
-.settlementStats .overCapacityText {
-  border-color: rgb(177 58 40 / 52%);
-  background: rgb(177 58 40 / 12%);
-}
-
-.settlementStats em {
-  color: #b13a28;
-  font-style: normal;
 }
 
 .emptyState {
@@ -122,7 +75,6 @@
 }
 
 .popStepperRow,
-.targetTileSummary,
 .selectionSummary,
 .transferList span,
 .transferList em {
@@ -204,16 +156,6 @@
   text-transform: none;
 }
 
-.targetTileSummary {
-  justify-content: flex-start;
-  color: var(--muted);
-}
-
-.targetTileSummary strong {
-  color: var(--fg);
-  text-transform: capitalize;
-}
-
 .popChoiceGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -261,29 +203,6 @@
 
 .modalActions button {
   min-width: 118px;
-}
-
-.logList {
-  display: grid;
-  gap: 7px;
-  max-height: min(62vh, 620px);
-  overflow: auto;
-}
-
-.logList p {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  color: var(--muted);
-}
-
-.logList span {
-  padding: 3px 6px;
-  border-radius: 4px;
-  color: var(--ivory);
-  background: var(--clay-deep);
-  font-size: 0.76rem;
 }
 
 .uiOverhaulShell {

@@ -175,7 +175,6 @@ button:focus-visible {
   margin: 0 auto;
 }
 
-.brandCluster,
 .logModal {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -194,102 +193,12 @@ button:focus-visible {
   backdrop-filter: none;
 }
 
-.brandCluster {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  min-width: 0;
-  min-height: 58px;
-  padding: 8px 13px;
-}
-
-.brandSeal {
-  width: 42px;
-  height: 42px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  filter: drop-shadow(0 6px 12px rgb(0 0 0 / 30%));
-}
-
-.brandCopy {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.brandCopy strong {
-  overflow: hidden;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  line-height: 1;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.brandCopy span {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 0.78rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.topActions {
-  display: flex;
-  align-items: stretch;
-  justify-content: flex-end;
-  gap: 8px;
-  min-width: 0;
-}
-
-.seatSwitcher {
-  display: flex;
-  gap: 8px;
-  min-width: 0;
-}
-
-.seatSwitcher button {
-  min-width: 44px;
-  min-height: 44px;
-  border-width: 2px;
-  color: var(--fg);
-  background:
-    radial-gradient(circle at 50% 42%, rgb(244 230 200 / 12%), transparent 58%),
-    var(--button-bg);
-  padding: 0 10px;
-}
-
-.seatSwitcher button::before {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  z-index: -1;
-  border-radius: 50%;
-  background-image: var(--ui-atlas);
-  background-position: 100% 50%;
-  background-repeat: no-repeat;
-  background-size: 300% 300%;
-  opacity: 0.34;
-}
-
-.seatSwitcher .selectedSeat {
-  color: var(--ivory);
-  background: linear-gradient(180deg, var(--clay), var(--clay-deep));
-}
-
 .iconButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
   min-height: 44px;
-}
-
-.buttonIconSprite {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
 }
 
 .workbench {
