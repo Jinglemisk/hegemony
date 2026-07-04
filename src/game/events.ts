@@ -129,7 +129,7 @@ function canAddEventPopsToSettlement(
 ) {
   const settlement = getOwnedSettlement(G, tileId, playerID);
 
-  return settlement ? totalPops(settlement.pops) + effect.amount <= settlementPopCapacity(settlement.kind) : false;
+  return settlement ? totalPops(settlement.pops) + effect.amount <= settlementPopCapacity(settlement.kind, G.ruleset) : false;
 }
 
 function applyEventEffects(

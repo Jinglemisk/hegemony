@@ -1,7 +1,9 @@
-import { BUILDINGS, GROW_POP_COSTS } from "../data";
+import { BUILDINGS } from "../data";
 import type { ActionCostDiscountTarget, BuildingId, HegemonyState, PlayerId, PopType, Resource, Resources, Settlement } from "../types";
 import { addLog, getPlayerName } from "../core/query";
 import { clonePartialResources } from "../core/resources";
+import { DEFAULT_RULESET } from "../ruleset";
+import type { Ruleset } from "../ruleset";
 
 /** Actions whose base cost can be modified by seasonal multipliers or event discounts. */
 export type CostedAction = ActionCostDiscountTarget | "upgradeColonyToCity";
@@ -31,8 +33,12 @@ export function getAdjustedActionCost(
   return adjusted;
 }
 
-export function getGrowPopCost(settlement: Settlement, pop: PopType): Partial<Resources> {
-  const baseCost = GROW_POP_COSTS[pop];
+export function getGrowPopCost(
+  settlement: Settlement,
+  pop: PopType,
+  ruleset: Ruleset = DEFAULT_RULESET
+): Partial<Resources> {
+  const baseCost = ruleset.growPopCosts[pop];
   const discountedFood = Math.max(0, (baseCost.food ?? 0) - getGrowPopFoodDiscount(settlement));
 
   return {

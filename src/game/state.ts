@@ -1,9 +1,11 @@
-import { PLAYER_EVENT_CARDS, PLAYER_IDS, PLAYER_NAMES, SEASONAL_EVENT_CARDS, STARTING_RESOURCES } from "./data";
+import { PLAYER_EVENT_CARDS, PLAYER_IDS, PLAYER_NAMES, SEASONAL_EVENT_CARDS } from "./data";
 import { createInitialMap } from "./map";
 import type { HegemonyState } from "./types";
 import { createSeed, expandDeck, shuffleWithSeed } from "./core/rng";
+import { DEFAULT_RULESET } from "./ruleset";
+import type { Ruleset } from "./ruleset";
 
-export function createInitialState(seed = createSeed()): HegemonyState {
+export function createInitialState(seed = createSeed(), ruleset: Ruleset = DEFAULT_RULESET): HegemonyState {
   let rng = seed >>> 0;
   const seasonal = shuffleWithSeed(expandDeck(SEASONAL_EVENT_CARDS), rng);
   rng = seasonal.state;
@@ -14,6 +16,7 @@ export function createInitialState(seed = createSeed()): HegemonyState {
     phase: "setupCapital",
     currentPlayer: "0",
     turn: 1,
+    ruleset,
     board: {
       tiles: createInitialMap()
     },
@@ -23,7 +26,7 @@ export function createInitialState(seed = createSeed()): HegemonyState {
         [playerId]: {
           id: playerId,
           name: PLAYER_NAMES[playerId],
-          resources: { ...STARTING_RESOURCES },
+          resources: { ...ruleset.startingResources },
           settlements: [],
           collectedThisTurn: false,
           hasCollectedGameplayIncome: false,

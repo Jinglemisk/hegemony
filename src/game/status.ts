@@ -1,4 +1,4 @@
-import { ACTION_COSTS, BUILDINGS, GROW_POP_COSTS } from "./data";
+import { BUILDINGS } from "./data";
 import type { BuildingId, HegemonyState, PlayerId, PopType, Pops } from "./types";
 import { hasPops, isPositivePopSelection, totalPops } from "./core/pops";
 import { getOwnedSettlement, getGrownSettlementsThisTurn, getTile } from "./core/query";
@@ -18,7 +18,7 @@ export function getFoundColonyStatus(G: HegemonyState, playerID: PlayerId, tileI
   const status: ActionStatus = {
     can: false,
     reasons: [],
-    cost: getAdjustedActionCost(G, playerID, "foundColony", ACTION_COSTS.foundColony)
+    cost: getAdjustedActionCost(G, playerID, "foundColony", G.ruleset.actionCosts.foundColony)
   };
 
   if (!tile) {
@@ -30,7 +30,7 @@ export function getFoundColonyStatus(G: HegemonyState, playerID: PlayerId, tileI
 
   status.reasons.push(...canPlaceColonyOnTile(G, playerID, tile).reasons);
 
-  if (!canAfford(G.players[playerID].resources, status.cost ?? ACTION_COSTS.foundColony)) {
+  if (!canAfford(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.foundColony)) {
     status.reasons.push("Not enough resources.");
   }
 
@@ -47,7 +47,7 @@ export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerI
   const status: ActionStatus = {
     can: false,
     reasons: [],
-    cost: ACTION_COSTS.upgradeColonyToCity
+    cost: G.ruleset.actionCosts.upgradeColonyToCity
   };
 
   if (!tile) {
@@ -69,7 +69,7 @@ export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerI
     status.reasons.push("Cities cannot be adjacent.");
   }
 
-  if (!canAfford(G.players[playerID].resources, status.cost ?? ACTION_COSTS.upgradeColonyToCity)) {
+  if (!canAfford(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.upgradeColonyToCity)) {
     status.reasons.push("Not enough resources.");
   }
 
@@ -108,7 +108,7 @@ export function getBuildBuildingStatus(
 
   if (!settlement) {
     status.reasons.push("Requires your city on this tile.");
-  } else if (settlement.buildings.length >= settlementBuildingSlots(tile, settlement)) {
+  } else if (settlement.buildings.length >= settlementBuildingSlots(tile, settlement, G.ruleset)) {
     status.reasons.push("No building slots available.");
   }
 
@@ -135,7 +135,7 @@ export function getGrowPopStatus(
 
   if (!tile) {
     status.reasons.push("Select a settlement.");
-    status.cost = GROW_POP_COSTS[pop];
+    status.cost = G.ruleset.growPopCosts[pop];
     return status;
   }
 
@@ -143,17 +143,17 @@ export function getGrowPopStatus(
 
   if (!settlement) {
     status.reasons.push("Requires your settlement on this tile.");
-    status.cost = GROW_POP_COSTS[pop];
+    status.cost = G.ruleset.growPopCosts[pop];
     return status;
   }
 
-  status.cost = getGrowPopCost(settlement, pop);
+  status.cost = getGrowPopCost(settlement, pop, G.ruleset);
 
   if (getGrownSettlementsThisTurn(G, playerID).includes(tileId)) {
     status.reasons.push("Already grew a pop here this turn.");
   }
 
-  if (totalPops(settlement.pops) + 1 > settlementPopCapacity(settlement.kind)) {
+  if (totalPops(settlement.pops) + 1 > settlementPopCapacity(settlement.kind, G.ruleset)) {
     status.reasons.push("Settlement is at population capacity.");
   }
 

@@ -9,6 +9,8 @@ import {
   settlementOverCapacity,
   settlementTileYield
 } from "../settlement";
+import { DEFAULT_RULESET } from "../ruleset";
+import type { Ruleset } from "../ruleset";
 
 export type IncomeContribution = {
   resource: Resource;
@@ -30,24 +32,22 @@ export type FoodShortageStatus = {
 /**
  * Base income produced by `count` pops of a single type, before building effects
  * and over-capacity pressure. This is the ONE definition of the per-pop yield
- * formula, shared by {@link settlementNetYield} and the UI's pop / grow-pop
- * projections so the engine and UI can never drift.
+ * formula, driven by {@link Ruleset.popIncome} and shared by {@link settlementNetYield}
+ * and the UI's pop / grow-pop projections so the engine and UI can never drift.
  */
-export function popIncome(pop: PopType, count: number, primaryResource: Resource): Resources {
+export function popIncome(
+  pop: PopType,
+  count: number,
+  primaryResource: Resource,
+  ruleset: Ruleset = DEFAULT_RULESET
+): Resources {
   const income: Resources = { ...EMPTY_RESOURCES };
+  const rule = ruleset.popIncome[pop];
 
-  if (pop === "citizens") {
-    income.influence += count;
-    income.gold += count * 2;
-    income.food -= count * 2;
-  } else if (pop === "freemen") {
-    income.gold += count * 2;
-    income.food -= count;
-  } else {
-    income[primaryResource] += count;
-    income.food -= count;
-    income.happiness -= count * 0.5;
+  for (const [resource, perPop] of Object.entries(rule.flat) as Array<[Resource, number]>) {
+    income[resource] += perPop * count;
   }
+  income[primaryResource] += rule.primaryResource * count;
 
   return income;
 }
@@ -58,14 +58,14 @@ export function popIncome(pop: PopType, count: number, primaryResource: Resource
  * without the player-level seasonal / food-shortage adjustments. Used to render the
  * settlement summary card.
  */
-export function settlementNetYield(tile: HexTile, settlement: Settlement): Resources {
+export function settlementNetYield(tile: HexTile, settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET): Resources {
   const income: Resources = { ...EMPTY_RESOURCES };
 
-  income[tile.resource.type] += settlementTileYield(tile, settlement);
-  applyResourceDelta(income, popIncome("citizens", settlement.pops.citizens, tile.resource.type));
-  applyResourceDelta(income, popIncome("freemen", settlement.pops.freemen, tile.resource.type));
-  applyResourceDelta(income, popIncome("slaves", settlement.pops.slaves, tile.resource.type));
-  income.happiness -= settlementOverCapacity(settlement);
+  income[tile.resource.type] += settlementTileYield(tile, settlement, ruleset);
+  applyResourceDelta(income, popIncome("citizens", settlement.pops.citizens, tile.resource.type, ruleset));
+  applyResourceDelta(income, popIncome("freemen", settlement.pops.freemen, tile.resource.type, ruleset));
+  applyResourceDelta(income, popIncome("slaves", settlement.pops.slaves, tile.resource.type, ruleset));
+  income.happiness -= settlementOverCapacity(settlement, ruleset) * ruleset.economy.overCapacityHappinessPerPop;
 
   applyIncomeBuildingEffects([], income, settlement, settlementIncomeSource(tile, settlement), tile.resource.type);
 
@@ -79,6 +79,8 @@ export function calculateIncome(G: HegemonyState, playerID: PlayerId): Resources
 export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): IncomeContribution[] {
   const contributions: IncomeContribution[] = [];
   const income = { ...EMPTY_RESOURCES };
+  const ruleset = G.ruleset;
+  const coeff = (pop: PopType, resource: Resource) => ruleset.popIncome[pop].flat[resource] ?? 0;
 
   for (const tileId of G.players[playerID].settlements) {
     const tile = getTile(G, tileId);
@@ -88,9 +90,10 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
       continue;
     }
 
-    const share = settlement.kind === "colony" && tile.settlements.length > 1 ? 0.5 : 1;
+    const share =
+      settlement.kind === "colony" && tile.settlements.length > 1 ? ruleset.economy.colonySharedTileYieldShare : 1;
     const settlementLabel = settlementIncomeSource(tile, settlement);
-    const tileAmount = settlementTileYield(tile, settlement);
+    const tileAmount = settlementTileYield(tile, settlement, ruleset);
     addIncomeContribution(contributions, income, {
       resource: tile.resource.type,
       amount: tileAmount,
@@ -100,55 +103,55 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
 
     addIncomeContribution(contributions, income, {
       resource: "influence",
-      amount: settlement.pops.citizens,
+      amount: settlement.pops.citizens * coeff("citizens", "influence"),
       source: settlementLabel,
       detail: `${settlement.pops.citizens} citizens`
     });
     addIncomeContribution(contributions, income, {
       resource: "gold",
-      amount: settlement.pops.citizens * 2,
+      amount: settlement.pops.citizens * coeff("citizens", "gold"),
       source: settlementLabel,
       detail: `${settlement.pops.citizens} citizens`
     });
     addIncomeContribution(contributions, income, {
       resource: "food",
-      amount: settlement.pops.citizens * -2,
+      amount: settlement.pops.citizens * coeff("citizens", "food"),
       source: settlementLabel,
       detail: `${settlement.pops.citizens} citizens upkeep`
     });
     addIncomeContribution(contributions, income, {
       resource: "gold",
-      amount: settlement.pops.freemen * 2,
+      amount: settlement.pops.freemen * coeff("freemen", "gold"),
       source: settlementLabel,
       detail: `${settlement.pops.freemen} freeman pops`
     });
     addIncomeContribution(contributions, income, {
       resource: "food",
-      amount: settlement.pops.freemen * -1,
+      amount: settlement.pops.freemen * coeff("freemen", "food"),
       source: settlementLabel,
       detail: `${settlement.pops.freemen} freeman pops upkeep`
     });
     addIncomeContribution(contributions, income, {
       resource: tile.resource.type,
-      amount: settlement.pops.slaves,
+      amount: settlement.pops.slaves * ruleset.popIncome.slaves.primaryResource,
       source: settlementLabel,
       detail: `${settlement.pops.slaves} slave pops production`
     });
     addIncomeContribution(contributions, income, {
       resource: "food",
-      amount: settlement.pops.slaves * -1,
+      amount: settlement.pops.slaves * coeff("slaves", "food"),
       source: settlementLabel,
       detail: `${settlement.pops.slaves} slave pops upkeep`
     });
     addIncomeContribution(contributions, income, {
       resource: "happiness",
-      amount: settlement.pops.slaves * -0.5,
+      amount: settlement.pops.slaves * coeff("slaves", "happiness"),
       source: settlementLabel,
       detail: `${settlement.pops.slaves} slave pops pressure`
     });
     addIncomeContribution(contributions, income, {
       resource: "happiness",
-      amount: settlementOverCapacity(settlement) * -1,
+      amount: settlementOverCapacity(settlement, ruleset) * -ruleset.economy.overCapacityHappinessPerPop,
       source: settlementLabel,
       detail: "Over capacity pressure"
     });
@@ -169,14 +172,15 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
     });
   }
 
-  const foodStockpileHappiness = Math.floor(G.players[playerID].resources.food / 5);
+  const divisor = ruleset.economy.foodStockpileHappinessDivisor;
+  const foodStockpileHappiness = divisor > 0 ? Math.floor(G.players[playerID].resources.food / divisor) : 0;
 
   if (foodStockpileHappiness > 0) {
     addIncomeContribution(contributions, income, {
       resource: "happiness",
       amount: foodStockpileHappiness,
       source: "Food stockpile",
-      detail: "Every 5 stored food improves happiness"
+      detail: `Every ${divisor} stored food improves happiness`
     });
   }
 
@@ -187,7 +191,8 @@ export function getFoodShortageStatus(G: HegemonyState, playerID: PlayerId, food
   const stockpile = G.players[playerID].resources.food;
   const projectedStockpile = stockpile + foodIncome;
   const rawPressure = projectedStockpile < 0 ? projectedStockpile : 0;
-  const firstTurnGraceActive = !G.players[playerID].hasCollectedGameplayIncome;
+  const firstTurnGraceActive =
+    G.ruleset.economy.firstIncomeFoodGrace && !G.players[playerID].hasCollectedGameplayIncome;
   const appliedPressure = firstTurnGraceActive ? 0 : rawPressure;
 
   return {

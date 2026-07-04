@@ -1,17 +1,18 @@
-import { SETTLEMENT_RULES } from "./data";
 import { hexDistance } from "./map";
 import type { HegemonyState, HexTile, PlayerId, PopType, Settlement } from "./types";
 import { capitalize } from "./core/format";
 import { totalPops } from "./core/pops";
 import { getOwnedSettlement, getTile } from "./core/query";
 import type { ActionStatus } from "./core/results";
+import { DEFAULT_RULESET } from "./ruleset";
+import type { Ruleset } from "./ruleset";
 
-export function settlementPopCapacity(kind: Settlement["kind"]) {
-  return SETTLEMENT_RULES[kind].popCapacity;
+export function settlementPopCapacity(kind: Settlement["kind"], ruleset: Ruleset = DEFAULT_RULESET) {
+  return ruleset.settlements[kind].popCapacity;
 }
 
-export function settlementOverCapacity(settlement: Settlement) {
-  return Math.max(0, totalPops(settlement.pops) - settlementPopCapacity(settlement.kind));
+export function settlementOverCapacity(settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
+  return Math.max(0, totalPops(settlement.pops) - settlementPopCapacity(settlement.kind, ruleset));
 }
 
 export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
@@ -25,23 +26,26 @@ export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
       }
 
       totals.pops += totalPops(settlement.pops);
-      totals.capacity += settlementPopCapacity(settlement.kind);
+      totals.capacity += settlementPopCapacity(settlement.kind, G.ruleset);
       return totals;
     },
     { pops: 0, capacity: 0 }
   );
 }
 
-export function settlementBuildingSlots(tile: HexTile, settlement: Settlement) {
-  if (!SETTLEMENT_RULES[settlement.kind].canBuildBuildings) {
+export function settlementBuildingSlots(tile: HexTile, settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
+  const rule = ruleset.settlements[settlement.kind];
+
+  if (!rule.canBuildBuildings) {
     return 0;
   }
 
-  return tile.buildingSlots + SETTLEMENT_RULES[settlement.kind].buildingSlotBonus;
+  return tile.buildingSlots + rule.buildingSlotBonus;
 }
 
-export function settlementTileYield(tile: HexTile, settlement: Settlement) {
-  const share = settlement.kind === "colony" && tile.settlements.length > 1 ? 0.5 : 1;
+export function settlementTileYield(tile: HexTile, settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
+  const share =
+    settlement.kind === "colony" && tile.settlements.length > 1 ? ruleset.economy.colonySharedTileYieldShare : 1;
 
   return Math.floor(tile.resource.amount * share);
 }
