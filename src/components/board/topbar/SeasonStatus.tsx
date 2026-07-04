@@ -1,10 +1,11 @@
+import { memo } from "react";
 import type { LocalContext } from "../../../game/controller";
 import type { EventCard, HegemonyState, PlayerId } from "../../../game/types";
 import { phaseLabel } from "../../../ui/formatters";
 import { PLAYER_DISPLAY_NAMES } from "../constants";
 import { eventCardArtUrl } from "../events";
 
-export function SeasonStatus({
+function SeasonStatusComponent({
   G,
   ctx,
   isActive,
@@ -59,3 +60,5 @@ function EventStatusCard({
     </div>
   );
 }
+
+export const SeasonStatus = memo(SeasonStatusComponent);

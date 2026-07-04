@@ -1,4 +1,5 @@
 import {
+  memo,
   useEffect,
   useMemo,
   useRef,
@@ -76,7 +77,7 @@ const MAP_MODE_OPTIONS: Array<{ mode: MapMode; label: string; iconHref: string }
   }
 ];
 
-export function HexMap({
+function HexMapComponent({
   G,
   confirmation,
   pendingTileId,
@@ -682,3 +683,5 @@ function getNeighborCoordinate(q: number, r: number, sideIndex: number) {
 function coordinateKey(q: number, r: number) {
   return `${q},${r}`;
 }
+
+export const HexMap = memo(HexMapComponent);

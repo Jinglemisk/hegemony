@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GameEvents, GameMoves, LocalContext } from "../game/controller";
 import {
   PLACEMENT_POP_COUNTS,
@@ -62,7 +62,10 @@ export function HegemonyBoard({
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
   const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent);
-  const projectedEconomy = calculateEconomyProjection(G, viewerId, { resolveTransfers: true });
+  const projectedEconomy = useMemo(
+    () => calculateEconomyProjection(G, viewerId, { resolveTransfers: true }),
+    [G, viewerId]
+  );
   const projectedIncome = projectedEconomy.income;
   const projectedIncomeBreakdown = projectedEconomy.breakdown;
   const isSetup = ctx.phase === "setupCapital" || ctx.phase === "setupColony";
@@ -123,40 +126,43 @@ export function HegemonyBoard({
     return () => window.removeEventListener("keydown", handleKey);
   }, [foundColonyMode]);
 
-  const handleTileAction = (tileId: string) => {
-    setSelectedTileId(tileId);
+  const handleTileAction = useCallback(
+    (tileId: string) => {
+      setSelectedTileId(tileId);
 
-    if (foundColonyMode) {
-      if (getFoundColonyStatus(G, viewerId, tileId).can) {
-        const element = typeof document !== "undefined" ? document.querySelector(`[data-tile-id="${tileId}"]`) : null;
+      if (foundColonyMode) {
+        if (getFoundColonyStatus(G, viewerId, tileId).can) {
+          const element = typeof document !== "undefined" ? document.querySelector(`[data-tile-id="${tileId}"]`) : null;
 
-        if (element) {
-          setFoundColonyTarget({ tileId, anchor: element.getBoundingClientRect() });
+          if (element) {
+            setFoundColonyTarget({ tileId, anchor: element.getBoundingClientRect() });
+          }
         }
+        return;
       }
-      return;
-    }
 
-    if (ctx.phase === "setupCapital") {
+      if (ctx.phase === "setupCapital") {
+        setTileConfirmation(null);
+        setPopulationPrompt({ kind: "city", tileId });
+        return;
+      }
+
+      if (ctx.phase === "setupColony") {
+        setTileConfirmation(null);
+        setPopulationPrompt({ kind: "colony", tileId });
+        return;
+      }
+
+      if (!isActive) {
+        return;
+      }
+
       setTileConfirmation(null);
-      setPopulationPrompt({ kind: "city", tileId });
-      return;
-    }
+    },
+    [foundColonyMode, G, viewerId, ctx.phase, isActive]
+  );
 
-    if (ctx.phase === "setupColony") {
-      setTileConfirmation(null);
-      setPopulationPrompt({ kind: "colony", tileId });
-      return;
-    }
-
-    if (!isActive) {
-      return;
-    }
-
-    setTileConfirmation(null);
-  };
-
-  const confirmTileAction = () => {
+  const confirmTileAction = useCallback(() => {
     if (!tileConfirmation) {
       return;
     }
@@ -172,15 +178,31 @@ export function HegemonyBoard({
     }
 
     setTileConfirmation(null);
-  };
+  }, [tileConfirmation]);
 
-  const requestBuildBuilding = (tileId: string, buildingId: BuildingId) => {
-    setSelectedTileId(tileId);
+  const requestBuildBuilding = useCallback(
+    (tileId: string, buildingId: BuildingId) => {
+      setSelectedTileId(tileId);
 
-    if (ctx.phase === "gameplay" && isActive && !hasPendingPlayerEvent && getBuildBuildingStatus(G, viewerId, tileId, buildingId).can) {
-      moves.buildBuilding(tileId, buildingId);
-    }
-  };
+      if (ctx.phase === "gameplay" && isActive && !hasPendingPlayerEvent && getBuildBuildingStatus(G, viewerId, tileId, buildingId).can) {
+        moves.buildBuilding(tileId, buildingId);
+      }
+    },
+    [ctx.phase, isActive, hasPendingPlayerEvent, G, viewerId, moves]
+  );
+
+  const confirmation = useMemo(
+    () =>
+      tileConfirmation
+        ? {
+            label: tileConfirmation.label,
+            tileId: tileConfirmation.tileId,
+            onCancel: () => setTileConfirmation(null),
+            onConfirm: confirmTileAction
+          }
+        : null,
+    [tileConfirmation, confirmTileAction]
+  );
 
   return (
     <main className="shell uiOverhaulShell">
@@ -217,16 +239,7 @@ export function HegemonyBoard({
           <div className="mapFrame">
             <HexMap
               G={G}
-              confirmation={
-                tileConfirmation
-                  ? {
-                      label: tileConfirmation.label,
-                      tileId: tileConfirmation.tileId,
-                      onCancel: () => setTileConfirmation(null),
-                      onConfirm: confirmTileAction
-                    }
-                  : null
-              }
+              confirmation={confirmation}
               pendingTileId={tileConfirmation?.tileId ?? null}
               selectedTileId={selectedTileId}
               highlightTileIds={foundColonyValidTileIds}

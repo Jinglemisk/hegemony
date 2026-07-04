@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import type { Phase } from "../../../game/controller";
 import type { BuildingId, HegemonyState, PlayerId } from "../../../game/types";
 import { AtlasIcon } from "../../Sprites";
@@ -8,7 +8,7 @@ import { BuildingsTab } from "./BuildingsTab";
 import { CitiesTab } from "./CitiesTab";
 import { PopsTab } from "./PopsTab";
 
-export function EmpireIntelPanel({
+function EmpireIntelPanelComponent({
   G,
   playerID,
   activeTab,
@@ -84,3 +84,5 @@ export function EmpireIntelPanel({
     </div>
   );
 }
+
+export const EmpireIntelPanel = memo(EmpireIntelPanelComponent);
