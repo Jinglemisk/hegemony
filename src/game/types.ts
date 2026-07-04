@@ -233,5 +233,7 @@ export interface HegemonyState {
   lastPlayerEvent: EventCard | null;
   pendingPlayerEvent: PendingPlayerEvent | null;
   season: number;
+  /** Serialized mulberry32 PRNG state; advanced on each deck shuffle so draws are reproducible from the initial seed. */
+  rng: number;
   log: LogEntry[];
 }

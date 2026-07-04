@@ -120,7 +120,13 @@ export const PLACEMENT_POP_COUNTS = {
 
 type CostedAction = ActionCostDiscountTarget | "upgradeColonyToCity";
 
-export function createInitialState(): HegemonyState {
+export function createInitialState(seed = createSeed()): HegemonyState {
+  let rng = seed >>> 0;
+  const seasonal = shuffleWithSeed(expandDeck(SEASONAL_EVENT_CARDS), rng);
+  rng = seasonal.state;
+  const player = shuffleWithSeed(expandDeck(PLAYER_EVENT_CARDS), rng);
+  rng = player.state;
+
   return {
     board: {
       tiles: createInitialMap()
@@ -142,14 +148,15 @@ export function createInitialState(): HegemonyState {
       {} as HegemonyState["players"]
     ),
     transfers: [],
-    seasonalDrawPile: createEventDeck(SEASONAL_EVENT_CARDS),
+    seasonalDrawPile: seasonal.cards,
     seasonalDiscardPile: [],
-    playerDrawPile: createEventDeck(PLAYER_EVENT_CARDS),
+    playerDrawPile: player.cards,
     playerDiscardPile: [],
     activeSeasonEvent: null,
     lastPlayerEvent: null,
     pendingPlayerEvent: null,
     season: 1,
+    rng,
     log: [{ id: "start", season: 1, message: "The first season begins." }]
   };
 }
@@ -1100,19 +1107,36 @@ function createSettlementEconomyPreview(
   });
 }
 
-function createEventDeck(cards: EventCard[]) {
-  return shuffleCards(cards.flatMap((card) => Array.from({ length: card.count }, () => card)));
+function expandDeck(cards: EventCard[]): EventCard[] {
+  return cards.flatMap((card) => Array.from({ length: card.count }, () => card));
 }
 
-function shuffleCards<T>(cards: T[]) {
-  const shuffled = [...cards];
+function createSeed(): number {
+  return Math.floor(Math.random() * 0x1_0000_0000);
+}
 
+/**
+ * Deterministic Fisher-Yates shuffle driven by a mulberry32 PRNG. Returns the
+ * shuffled copy plus the advanced PRNG state so the caller can persist it on
+ * {@link HegemonyState.rng} and keep later reshuffles reproducible from the
+ * game's initial seed.
+ */
+function shuffleWithSeed<T>(cards: T[], seedState: number): { cards: T[]; state: number } {
+  let state = seedState >>> 0;
+  const nextUnit = () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+  };
+
+  const shuffled = [...cards];
   for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
+    const swapIndex = Math.floor(nextUnit() * (index + 1));
     [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
   }
 
-  return shuffled;
+  return { cards: shuffled, state: state >>> 0 };
 }
 
 function drawFromEventDeck(G: HegemonyState, deck: EventDeckKind) {
@@ -1120,7 +1144,9 @@ function drawFromEventDeck(G: HegemonyState, deck: EventDeckKind) {
   const discardKey = deck === "seasonal" ? "seasonalDiscardPile" : "playerDiscardPile";
 
   if (G[drawKey].length === 0 && G[discardKey].length > 0) {
-    G[drawKey] = shuffleCards(G[discardKey]);
+    const reshuffled = shuffleWithSeed(G[discardKey], G.rng);
+    G[drawKey] = reshuffled.cards;
+    G.rng = reshuffled.state;
     G[discardKey] = [];
     addLog(G, `${capitalize(deck)} Event discard reshuffled into the draw pile.`);
   }
