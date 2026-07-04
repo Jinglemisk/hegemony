@@ -1,0 +1,343 @@
+/* base — Reset, CSS variables, base typography, buttons, app shell & workbench layout, map-column frame
+   Split from styles.css (Phase 2e); original source order preserved. */
+
+:root {
+  --font-display: Copperplate, "Copperplate Gothic Light", "Iowan Old Style", Georgia, serif;
+  --font-body: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  color: #241910;
+  background: #f4e6c8;
+  font-family: var(--font-body);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+  letter-spacing: 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  overflow-x: hidden;
+  background: #f4e6c8;
+  -webkit-font-smoothing: antialiased;
+}
+
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+h3 {
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+button {
+  position: relative;
+  min-height: 40px;
+  min-width: 0;
+  border: 1px solid var(--button-line);
+  border-radius: 6px;
+  color: var(--fg);
+  background: var(--button-bg);
+  cursor: pointer;
+  font: inherit;
+  font-family: var(--font-display);
+  font-weight: 700;
+  overflow: hidden;
+  padding: 0 12px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+button:not(:disabled):hover {
+  border-color: var(--accent);
+  box-shadow: var(--lift-shadow);
+  transform: translateY(-1px);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+.shell {
+  --vase-black: #181210;
+  --ink-2: #241915;
+  --clay: #c0461c;
+  --clay-deep: #8f2e13;
+  --ochre: #d98a35;
+  --bone: #f4e6c8;
+  --ivory: #fff8e7;
+  --oxblood: #722420;
+  --olive: #5e6e3a;
+  --aegean: #1f6977;
+  --stone: #8f8571;
+  --terrain-neutral: #d8c8a8;
+  --terrain-neutral-light: #eee1c4;
+  --terrain-neutral-shade: #9f8e70;
+  --terrain-neutral-line: #5f4a35;
+  --terrain-neutral-soft: rgb(216 200 168 / 17%);
+  --accent: var(--clay);
+  --accent-2: var(--aegean);
+  --fg: #241910;
+  --muted: rgb(36 25 16 / 66%);
+  --subtle: rgb(36 25 16 / 48%);
+  --panel: rgb(255 248 231 / 78%);
+  --panel-strong: rgb(255 248 231 / 94%);
+  --panel-soft: rgb(192 70 28 / 10%);
+  --line: rgb(36 25 16 / 18%);
+  --line-strong: rgb(192 70 28 / 48%);
+  --button-bg: rgb(255 248 231 / 86%);
+  --button-line: rgb(36 25 16 / 24%);
+  --hex-line: rgb(36 25 16 / 28%);
+  --shadow: 0 20px 46px rgb(72 42 21 / 20%);
+  --lift-shadow: 0 12px 24px rgb(72 42 21 / 18%);
+  --ledger-rule: rgb(36 25 16 / 14%);
+  --ledger-rule-strong: rgb(36 25 16 / 22%);
+  --ledger-accent: rgb(192 70 28 / 70%);
+  --ledger-hover: rgb(192 70 28 / 8%);
+  --hero-tableau: url("../assets/codex-banana-showcase/light-hero-tableau.png");
+  --icon-atlas: url("../assets/codex-banana-showcase/light-icon-atlas.png");
+  --terrain-atlas: url("../assets/codex-banana-showcase/light-terrain-atlas.png");
+  --ui-atlas: url("../assets/codex-banana-showcase/light-ui-kit.png");
+  --capital-glyph: url("../assets/settlement-icons/capital-star-mask.png");
+  --city-glyph: url("../assets/settlement-icons/city-gate-mask.png");
+  --colony-glyph: url("../assets/settlement-icons/colony-flag-mask.png");
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: 14px;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100svh;
+  overflow: hidden;
+  padding: 16px;
+  color: var(--fg);
+  background:
+    linear-gradient(90deg, rgb(255 248 231 / 96%) 0 30%, rgb(255 248 231 / 78%) 60%, rgb(255 248 231 / 94%)),
+    linear-gradient(0deg, rgb(244 230 200 / 98%) 0, rgb(255 248 231 / 64%) 48%, rgb(255 248 231 / 88%) 100%),
+    var(--hero-tableau) center / cover no-repeat,
+    #f4e6c8;
+}
+
+.shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 8%, rgb(31 105 119 / 14%), transparent 30%),
+    radial-gradient(circle at 88% 20%, rgb(192 70 28 / 14%), transparent 30%);
+}
+
+.topbar {
+  position: relative;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: minmax(190px, auto) minmax(360px, 1fr) auto;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  max-width: 1520px;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.brandCluster,
+.logModal {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgb(255 248 231 / 7%), rgb(255 248 231 / 3%)),
+    var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.panel {
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.brandCluster {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  min-height: 58px;
+  padding: 8px 13px;
+}
+
+.brandSeal {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  filter: drop-shadow(0 6px 12px rgb(0 0 0 / 30%));
+}
+
+.brandCopy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.brandCopy strong {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.brandCopy span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topActions {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.seatSwitcher {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.seatSwitcher button {
+  min-width: 44px;
+  min-height: 44px;
+  border-width: 2px;
+  color: var(--fg);
+  background:
+    radial-gradient(circle at 50% 42%, rgb(244 230 200 / 12%), transparent 58%),
+    var(--button-bg);
+  padding: 0 10px;
+}
+
+.seatSwitcher button::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  z-index: -1;
+  border-radius: 50%;
+  background-image: var(--ui-atlas);
+  background-position: 100% 50%;
+  background-repeat: no-repeat;
+  background-size: 300% 300%;
+  opacity: 0.34;
+}
+
+.seatSwitcher .selectedSeat {
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--clay), var(--clay-deep));
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+}
+
+.buttonIconSprite {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.workbench {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(280px, 350px) minmax(470px, 1fr) minmax(300px, 372px);
+  width: 100%;
+  max-width: 1520px;
+  min-height: 0;
+  margin: 0 auto;
+}
+
+.panel {
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  scrollbar-color: var(--clay) transparent;
+}
+
+.panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.titleIcon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+}
+
+.mapColumn {
+  display: grid;
+  gap: 10px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  z-index: 1;
+}
+
+.mapFrame {
+  position: relative;
+  min-height: 0;
+  border-radius: 8px;
+}
+
