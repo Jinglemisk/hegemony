@@ -36,8 +36,10 @@ import {
   getGrowPopStatus,
   getUpgradeColonyToCityStatus,
   playerPopulationTotals,
+  popIncome,
   previewBuildBuilding,
   settlementBuildingSlots,
+  settlementNetYield,
   settlementOverCapacity,
   settlementPopCapacity,
   settlementTileYield,
@@ -679,8 +681,7 @@ function CitiesTab({
         const overCapacity = settlementOverCapacity(settlement);
         const slots = settlementBuildingSlots(tile, settlement);
         const tileYield = settlementTileYield(tile, settlement);
-        const supplementalYield = calculateSettlementSupplementalYield(tile, settlement);
-        const netYield = settlementNetYield(tile, tileYield, supplementalYield);
+        const netYield = settlementNetYield(tile, settlement);
         const detailId = `holding-${settlement.owner}-${tile.q}-${tile.r}-details`;
 
         return (
@@ -780,38 +781,6 @@ function CitiesTab({
       })}
     </div>
   );
-}
-
-function settlementNetYield(tile: HexTile, tileYield: number, supplementalYield: Resources): Resources {
-  const net: Resources = { ...supplementalYield };
-  net[tile.resource.type] += tileYield;
-  return net;
-}
-
-function calculateSettlementSupplementalYield(tile: HexTile, settlement: Settlement): Resources {
-  const resources = createEmptyResources();
-
-  resources.influence += settlement.pops.citizens;
-  resources.gold += settlement.pops.citizens * 2;
-  resources.food -= settlement.pops.citizens * 2;
-
-  resources.gold += settlement.pops.freemen * 2;
-  resources.food -= settlement.pops.freemen;
-
-  resources[tile.resource.type] += settlement.pops.slaves;
-  resources.food -= settlement.pops.slaves;
-  resources.happiness -= settlement.pops.slaves * 0.5;
-  resources.happiness -= settlementOverCapacity(settlement);
-
-  for (const buildingId of settlement.buildings) {
-    const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
-
-    if (building) {
-      addResources(resources, estimateBuildingIncomeDelta(tile, settlement, building));
-    }
-  }
-
-  return resources;
 }
 
 function addResources(target: Resources, delta: Resources) {
@@ -1551,39 +1520,19 @@ function calculatePopEconomy(holdings: OwnedHolding[]): PopEconomy {
   };
 
   for (const { tile, settlement } of holdings) {
-    economy.citizens.influence += settlement.pops.citizens;
-    economy.citizens.gold += settlement.pops.citizens * 2;
-    economy.citizens.food -= settlement.pops.citizens * 2;
-
-    economy.freemen.gold += settlement.pops.freemen * 2;
-    economy.freemen.food -= settlement.pops.freemen;
-
-    economy.slaves[tile.resource.type] += settlement.pops.slaves;
-    economy.slaves.food -= settlement.pops.slaves;
-    economy.slaves.happiness -= settlement.pops.slaves * 0.5;
+    for (const pop of POP_TYPES) {
+      addResources(economy[pop], popIncome(pop, settlement.pops[pop], tile.resource.type));
+    }
   }
 
   return economy;
 }
 
 function estimateGrowPopIncomeDelta(tile: HexTile, settlement: Settlement, pop: PopType): Resources {
-  const delta = createEmptyResources();
-
-  if (pop === "citizens") {
-    delta.influence += 1;
-    delta.gold += 2;
-    delta.food -= 2;
-    addSupportedPopBonus(delta, settlement, "citizens", "influence");
-  } else if (pop === "freemen") {
-    delta.gold += 2;
-    delta.food -= 1;
-    addSupportedPopBonus(delta, settlement, "freemen", "gold");
-  } else {
-    delta[tile.resource.type] += 1;
-    delta.food -= 1;
-    delta.happiness -= 0.5;
-    addSupportedPopBonus(delta, settlement, "slaves", tile.resource.type);
-  }
+  const delta = popIncome(pop, 1, tile.resource.type);
+  const bonusResource: keyof Resources =
+    pop === "citizens" ? "influence" : pop === "freemen" ? "gold" : tile.resource.type;
+  addSupportedPopBonus(delta, settlement, pop, bonusResource);
 
   return delta;
 }
