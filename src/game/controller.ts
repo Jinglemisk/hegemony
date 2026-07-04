@@ -72,8 +72,8 @@ function createPreloadedOpeningSetupGame(): HegemonyGame {
 
   for (const placement of TEST_OPENING_SETUP) {
     assertSetupTurn(game.ctx, placement.playerID, "setupCapital");
-    const result = placeCapital(game.G, placement.playerID, placement.capital.tileId, placement.capital.pops);
-    assertValidSetupMove(result, placement.playerID, "capital", placement.capital.tileId);
+    const result = placeCapital(game.G, placement.playerID, placement.city.tileId, placement.city.pops);
+    assertValidSetupMove(result, placement.playerID, "city", placement.city.tileId);
     game.ctx = advanceSetupTurn(game.G, game.ctx, 1, "setupColony");
   }
 
@@ -97,7 +97,7 @@ function assertSetupTurn(ctx: LocalContext, playerID: PlayerId, phase: Phase) {
 function assertValidSetupMove(
   result: typeof INVALID_MOVE | void,
   playerID: PlayerId,
-  settlementKind: "capital" | "colony",
+  settlementKind: "city" | "colony",
   tileId: string
 ) {
   if (result === INVALID_MOVE) {
