@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import { produce } from "immer";
 import type { BuildingId, HegemonyState, Phase, PlayerId, PopType, Pops } from "./types";
 import {
   buildBuilding,
@@ -72,8 +73,11 @@ export function useHegemonyGame() {
 }
 
 /**
- * Each move clones the current state, runs a pure engine mutator, and commits the
- * clone only on success — keeping React state immutable while the engine mutates.
+ * Each move runs a pure engine mutator inside an Immer `produce`, committing the
+ * result only on success. Immer gives structural sharing — unchanged subtrees keep
+ * their identity across moves (so memoized components can skip re-rendering) — and
+ * freezes the result, hardening the engine/UI immutability boundary. On failure we
+ * discard the draft and return the previous reference unchanged, so no re-render fires.
  */
 function createMoves(setG: SetState): GameMoves {
   return {
@@ -83,14 +87,16 @@ function createMoves(setG: SetState): GameMoves {
           return previous;
         }
 
-        const G = structuredClone(previous);
+        let ok = false;
+        const next = produce(previous, (draft) => {
+          if (!placeCapital(draft, draft.currentPlayer, tileId, pops).ok) {
+            return;
+          }
 
-        if (!placeCapital(G, G.currentPlayer, tileId, pops).ok) {
-          return previous;
-        }
-
-        advanceSetupTurn(G, 1, "setupColony");
-        return G;
+          advanceSetupTurn(draft, 1, "setupColony");
+          ok = true;
+        });
+        return ok ? next : previous;
       });
     },
     placeColony: (tileId, pops) => {
@@ -99,15 +105,17 @@ function createMoves(setG: SetState): GameMoves {
           return previous;
         }
 
-        const G = structuredClone(previous);
+        let ok = false;
+        const next = produce(previous, (draft) => {
+          if (!placeColony(draft, draft.currentPlayer, tileId, pops).ok) {
+            return;
+          }
 
-        if (!placeColony(G, G.currentPlayer, tileId, pops).ok) {
-          return previous;
-        }
-
-        advanceSetupTurn(G, 2, "gameplay");
-        beginGameplayTurn(G);
-        return G;
+          advanceSetupTurn(draft, 2, "gameplay");
+          beginGameplayTurn(draft);
+          ok = true;
+        });
+        return ok ? next : previous;
       });
     },
     collectIncome: () => {
@@ -140,7 +148,7 @@ function createMoves(setG: SetState): GameMoves {
   };
 }
 
-/** Clone, run a gameplay-phase mutator, and commit only if the phase was valid and the move succeeded. */
+/** Run a gameplay-phase mutator inside `produce`, committing only if the phase was valid and the move succeeded. */
 function commitGameplayMove(
   previous: HegemonyState,
   mutate: (G: HegemonyState) => { ok: boolean },
@@ -149,16 +157,22 @@ function commitGameplayMove(
     return previous;
   }
 
-  const G = structuredClone(previous);
-  return mutate(G).ok ? G : previous;
+  let ok = false;
+  const next = produce(previous, (draft) => {
+    ok = mutate(draft).ok;
+  });
+  return ok ? next : previous;
 }
 
 function createEvents(setG: SetState): GameEvents {
   return {
     endTurn: () => {
       setG((previous) => {
-        const G = structuredClone(previous);
-        return endTurn(G).ok ? G : previous;
+        let ok = false;
+        const next = produce(previous, (draft) => {
+          ok = endTurn(draft).ok;
+        });
+        return ok ? next : previous;
       });
     },
   };
