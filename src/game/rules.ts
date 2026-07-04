@@ -557,6 +557,31 @@ export function settlementTileYield(tile: HexTile, settlement: Settlement) {
 }
 
 /**
+ * Base income produced by `count` pops of a single type, before building effects
+ * and over-capacity pressure. This is the ONE definition of the per-pop yield
+ * formula, shared by {@link settlementNetYield} and the UI's pop / grow-pop
+ * projections so the engine and UI can never drift.
+ */
+export function popIncome(pop: PopType, count: number, primaryResource: Resource): Resources {
+  const income: Resources = { ...EMPTY_RESOURCES };
+
+  if (pop === "citizens") {
+    income.influence += count;
+    income.gold += count * 2;
+    income.food -= count * 2;
+  } else if (pop === "freemen") {
+    income.gold += count * 2;
+    income.food -= count;
+  } else {
+    income[primaryResource] += count;
+    income.food -= count;
+    income.happiness -= count * 0.5;
+  }
+
+  return income;
+}
+
+/**
  * Net resource income produced by a single settlement: tile yield + pop yields +
  * building effects. Mirrors the per-settlement portion of {@link calculateIncomeBreakdown}
  * without the player-level seasonal / food-shortage adjustments. Used to render the
@@ -566,14 +591,9 @@ export function settlementNetYield(tile: HexTile, settlement: Settlement): Resou
   const income: Resources = { ...EMPTY_RESOURCES };
 
   income[tile.resource.type] += settlementTileYield(tile, settlement);
-  income.influence += settlement.pops.citizens;
-  income.gold += settlement.pops.citizens * 2;
-  income.food -= settlement.pops.citizens * 2;
-  income.gold += settlement.pops.freemen * 2;
-  income.food -= settlement.pops.freemen;
-  income[tile.resource.type] += settlement.pops.slaves;
-  income.food -= settlement.pops.slaves;
-  income.happiness -= settlement.pops.slaves * 0.5;
+  applyResourceDelta(income, popIncome("citizens", settlement.pops.citizens, tile.resource.type));
+  applyResourceDelta(income, popIncome("freemen", settlement.pops.freemen, tile.resource.type));
+  applyResourceDelta(income, popIncome("slaves", settlement.pops.slaves, tile.resource.type));
   income.happiness -= settlementOverCapacity(settlement);
 
   applyIncomeBuildingEffects([], income, settlement, settlementIncomeSource(tile, settlement), tile.resource.type);
