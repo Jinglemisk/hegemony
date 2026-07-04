@@ -27,7 +27,18 @@ import type {
   Settlement
 } from "./types";
 
-export const INVALID_MOVE = "INVALID_MOVE";
+/**
+ * Result of a mutating move. `ok: false` carries the same human-readable
+ * reasons the matching `get*Status` validator produces, so failures can be
+ * surfaced without re-deriving them.
+ */
+export type MoveResult = { ok: true } | { ok: false; reasons: string[] };
+
+const MOVE_OK: MoveResult = { ok: true };
+
+function invalid(...reasons: string[]): MoveResult {
+  return { ok: false, reasons };
+}
 
 export type ActionStatus = {
   can: boolean;
@@ -169,7 +180,7 @@ export function toPlayerId(value: string | null | undefined): PlayerId {
   return PLAYER_IDS.includes(value as PlayerId) ? (value as PlayerId) : "0";
 }
 
-export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops) {
+export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops): MoveResult {
   const tile = getTile(G, tileId);
   const player = G.players[playerID];
 
@@ -179,11 +190,11 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
     tile.settlements.length > 0 ||
     !isExactPopSelection(pops, PLACEMENT_POP_COUNTS.city)
   ) {
-    return INVALID_MOVE;
+    return invalid();
   }
 
   if (isAdjacentToCity(G, tile)) {
-    return INVALID_MOVE;
+    return invalid("Capitals cannot be adjacent to another city.");
   }
 
   tile.settlements.push({
@@ -194,9 +205,10 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
   });
   player.settlements.push(tile.id);
   addLog(G, `${getPlayerName(G, playerID)} founded a city on ${tile.terrain} with ${formatPops(pops)}.`);
+  return MOVE_OK;
 }
 
-export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops) {
+export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops): MoveResult {
   const tile = getTile(G, tileId);
   const player = G.players[playerID];
 
@@ -206,19 +218,32 @@ export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string
     !canPlaceColonyOnTile(G, playerID, tile).can ||
     !isExactPopSelection(pops, PLACEMENT_POP_COUNTS.colony)
   ) {
-    return INVALID_MOVE;
+    return invalid();
   }
 
   addColony(G, playerID, tile, pops);
+  return MOVE_OK;
 }
 
-export function foundColony(G: HegemonyState, playerID: PlayerId, tileId: string, sourceTileId: string, pop: PopType) {
+export function foundColony(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  sourceTileId: string,
+  pop: PopType
+): MoveResult {
   const status = getFoundColonyStatus(G, playerID, tileId);
   const tile = getTile(G, tileId);
   const foundingPops = { ...EMPTY_POPS, [pop]: 1 };
 
-  if (!tile || !status.can || schedulePopulationTransfer(G, playerID, sourceTileId, tileId, foundingPops, false) === INVALID_MOVE) {
-    return INVALID_MOVE;
+  if (!tile || !status.can) {
+    return invalid(...status.reasons);
+  }
+
+  const transfer = schedulePopulationTransfer(G, playerID, sourceTileId, tileId, foundingPops, false);
+
+  if (!transfer.ok) {
+    return transfer;
   }
 
   payCost(G.players[playerID].resources, status.cost ?? ACTION_COSTS.foundColony);
@@ -228,9 +253,15 @@ export function foundColony(G: HegemonyState, playerID: PlayerId, tileId: string
     G,
     `${getPlayerName(G, playerID)} sent ${formatPops(foundingPops)} to seed the new colony on ${tile.terrain}.`
   );
+  return MOVE_OK;
 }
 
-export function upgradeColonyToCity(G: HegemonyState, playerID: PlayerId, tileId: string, pops?: Pops) {
+export function upgradeColonyToCity(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  pops?: Pops
+): MoveResult {
   const status = getUpgradeColonyToCityStatus(G, playerID, tileId);
   const tile = getTile(G, tileId);
   const settlement = tile?.settlements.find(
@@ -238,11 +269,11 @@ export function upgradeColonyToCity(G: HegemonyState, playerID: PlayerId, tileId
   );
 
   if (!tile || !settlement || !status.can) {
-    return INVALID_MOVE;
+    return invalid(...status.reasons);
   }
 
   if (pops && !isExactPopSelection(pops, totalPops(settlement.pops))) {
-    return INVALID_MOVE;
+    return invalid();
   }
 
   payCost(G.players[playerID].resources, status.cost ?? ACTION_COSTS.upgradeColonyToCity);
@@ -262,6 +293,7 @@ export function upgradeColonyToCity(G: HegemonyState, playerID: PlayerId, tileId
       ? ` ${displacedPlayers.map((id) => getPlayerName(G, id)).join(", ")} lost a shared colony.`
       : "";
   addLog(G, `${getPlayerName(G, playerID)} upgraded a colony to a city on ${tile.terrain}.${displacementText}`);
+  return MOVE_OK;
 }
 
 function addColony(G: HegemonyState, playerID: PlayerId, tile: HexTile, pops: Pops) {
@@ -275,11 +307,15 @@ function addColony(G: HegemonyState, playerID: PlayerId, tile: HexTile, pops: Po
   addLog(G, `${getPlayerName(G, playerID)} founded a colony on ${tile.terrain} with ${formatPops(pops)}.`);
 }
 
-export function collectIncome(G: HegemonyState, playerID: PlayerId, mode: "manual" | "automatic" = "manual") {
+export function collectIncome(
+  G: HegemonyState,
+  playerID: PlayerId,
+  mode: "manual" | "automatic" = "manual"
+): MoveResult {
   const player = G.players[playerID];
 
   if (player.collectedThisTurn || G.pendingPlayerEvent) {
-    return INVALID_MOVE;
+    return invalid();
   }
 
   const income = calculateIncome(G, playerID);
@@ -291,9 +327,15 @@ export function collectIncome(G: HegemonyState, playerID: PlayerId, mode: "manua
     `${getPlayerName(G, playerID)} ${mode === "automatic" ? "automatically collected" : "collected"} income (${formatRuleResourceDelta(income)}).`
   );
   drawPlayerEvent(G, playerID);
+  return MOVE_OK;
 }
 
-export function buildBuilding(G: HegemonyState, playerID: PlayerId, tileId: string, buildingId: BuildingId) {
+export function buildBuilding(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  buildingId: BuildingId
+): MoveResult {
   const tile = getTile(G, tileId);
   const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
   const settlement = tile?.settlements.find(
@@ -302,35 +344,43 @@ export function buildBuilding(G: HegemonyState, playerID: PlayerId, tileId: stri
   const status = getBuildBuildingStatus(G, playerID, tileId, buildingId);
 
   if (!tile || !building || !settlement || !status.can) {
-    return INVALID_MOVE;
+    return invalid(...status.reasons);
   }
 
   payCost(G.players[playerID].resources, status.cost ?? building.cost);
   consumeActionCostDiscounts(G, playerID, "buildBuilding", building.id);
   settlement.buildings.push(building.id);
   addLog(G, `${getPlayerName(G, playerID)} built ${building.name}.`);
+  return MOVE_OK;
 }
 
-export function growPop(G: HegemonyState, playerID: PlayerId, tileId: string, pop: PopType) {
+export function growPop(G: HegemonyState, playerID: PlayerId, tileId: string, pop: PopType): MoveResult {
   const status = getGrowPopStatus(G, playerID, tileId, pop);
   const tile = getTile(G, tileId);
   const settlement = getOwnedSettlement(G, tileId, playerID);
 
   if (!tile || !settlement || !status.can || !status.cost) {
-    return INVALID_MOVE;
+    return invalid(...status.reasons);
   }
 
   payCost(G.players[playerID].resources, status.cost);
   settlement.pops[pop] += 1;
   markSettlementGrown(G, playerID, tileId);
   addLog(G, `${getPlayerName(G, playerID)} grew 1 ${formatPopName(pop, 1)} in ${settlement.kind} on ${tile.terrain}.`);
+  return MOVE_OK;
 }
 
-export function movePops(G: HegemonyState, playerID: PlayerId, sourceTileId: string, targetTileId: string, pops: Pops) {
+export function movePops(
+  G: HegemonyState,
+  playerID: PlayerId,
+  sourceTileId: string,
+  targetTileId: string,
+  pops: Pops
+): MoveResult {
   const status = getMovePopsStatus(G, playerID, sourceTileId, targetTileId, pops);
 
   if (!status.can) {
-    return INVALID_MOVE;
+    return invalid(...status.reasons);
   }
 
   return schedulePopulationTransfer(G, playerID, sourceTileId, targetTileId, pops);
@@ -441,25 +491,25 @@ export function resolvePendingPlayerEvent(
   playerID: PlayerId,
   targetTileId?: string,
   choiceIndex = 0
-) {
+): MoveResult {
   const pending = G.pendingPlayerEvent;
 
   if (!pending || pending.playerID !== playerID) {
-    return INVALID_MOVE;
+    return invalid();
   }
 
   const choices = getEventEffectChoices(pending.card);
   const effects = choices[choiceIndex];
 
   if (!effects) {
-    return INVALID_MOVE;
+    return invalid();
   }
 
   const popEffect = getAddPopsEffect(effects);
 
   if (popEffect) {
     if (!targetTileId || !canAddEventPopsToSettlement(G, playerID, targetTileId, popEffect)) {
-      return INVALID_MOVE;
+      return invalid();
     }
   }
 
@@ -467,6 +517,7 @@ export function resolvePendingPlayerEvent(
   G.playerDiscardPile.push(pending.card);
   G.pendingPlayerEvent = null;
   addLog(G, `${getPlayerName(G, playerID)} resolved ${pending.card.name}.`);
+  return MOVE_OK;
 }
 
 export function getEventEffectChoices(card: EventCard): EventEffect[][] {
@@ -1026,13 +1077,13 @@ function previewEconomyAction(
   G: HegemonyState,
   playerID: PlayerId,
   title: string,
-  applyAction: (draft: HegemonyState) => typeof INVALID_MOVE | void
+  applyAction: (draft: HegemonyState) => MoveResult
 ): EconomyPreview | null {
   const before = calculateEconomyProjection(G, playerID, { resolveTransfers: true });
   const draft = structuredClone(G);
   const result = applyAction(draft);
 
-  if (result === INVALID_MOVE) {
+  if (!result.ok) {
     return null;
   }
 
@@ -1621,16 +1672,16 @@ function schedulePopulationTransfer(
   targetTileId: string,
   pops: Pops,
   requireTarget = true
-) {
+): MoveResult {
   const sourceSettlement = getOwnedSettlement(G, sourceTileId, playerID);
   const targetSettlement = getOwnedSettlement(G, targetTileId, playerID);
 
   if (!sourceSettlement || (requireTarget && !targetSettlement) || !isPositivePopSelection(pops)) {
-    return INVALID_MOVE;
+    return invalid();
   }
 
   if (!hasPops(sourceSettlement.pops, pops)) {
-    return INVALID_MOVE;
+    return invalid();
   }
 
   subtractPops(sourceSettlement.pops, pops);
@@ -1648,6 +1699,8 @@ function schedulePopulationTransfer(
       `${getPlayerName(G, playerID)} moved ${formatPops(pops)} from ${formatTileLabel(G, sourceTileId)} to ${formatTileLabel(G, targetTileId)}.`
     );
   }
+
+  return MOVE_OK;
 }
 
 function getOwnedSettlement(G: HegemonyState, tileId: string, playerID: PlayerId) {

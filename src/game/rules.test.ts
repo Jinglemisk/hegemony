@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  INVALID_MOVE,
   buildBuilding,
   calculateIncome,
   createInitialState,
@@ -61,7 +60,7 @@ describe("setup placement", () => {
     const state = fresh();
     const result = placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
 
-    expect(result).not.toBe(INVALID_MOVE);
+    expect(result.ok).toBe(true);
     const settlement = owned(state, "0,0", "0");
     expect(settlement.kind).toBe("city");
     expect(settlement.pops).toEqual({ citizens: 1, freemen: 1, slaves: 1 });
@@ -70,20 +69,20 @@ describe("setup placement", () => {
 
   it("rejects a capital with the wrong starting pop count", () => {
     const state = fresh();
-    expect(placeCapital(state, "0", "0,0", { citizens: 1, freemen: 0, slaves: 0 })).toBe(INVALID_MOVE);
+    expect(placeCapital(state, "0", "0,0", { citizens: 1, freemen: 0, slaves: 0 }).ok).toBe(false);
   });
 
   it("rejects a capital on an occupied tile", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
-    expect(placeCapital(state, "1", "0,0", { citizens: 1, freemen: 1, slaves: 1 })).toBe(INVALID_MOVE);
+    expect(placeCapital(state, "1", "0,0", { citizens: 1, freemen: 1, slaves: 1 }).ok).toBe(false);
   });
 
   it("rejects a capital adjacent to an existing city", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
     // "1,0" is one hex from "0,0".
-    expect(placeCapital(state, "1", "1,0", { citizens: 1, freemen: 1, slaves: 1 })).toBe(INVALID_MOVE);
+    expect(placeCapital(state, "1", "1,0", { citizens: 1, freemen: 1, slaves: 1 }).ok).toBe(false);
   });
 
   it("places a colony after the capital and rejects a colony on a city tile", () => {
@@ -91,11 +90,11 @@ describe("setup placement", () => {
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
     placeCapital(state, "1", "-3,0", { citizens: 1, freemen: 1, slaves: 1 });
 
-    expect(placeColony(state, "0", "3,0", { citizens: 0, freemen: 0, slaves: 1 })).not.toBe(INVALID_MOVE);
+    expect(placeColony(state, "0", "3,0", { citizens: 0, freemen: 0, slaves: 1 }).ok).toBe(true);
     expect(owned(state, "3,0", "0").kind).toBe("colony");
 
     // "0,0" already holds a city, so a colony there is illegal.
-    expect(placeColony(state, "1", "0,0", { citizens: 0, freemen: 0, slaves: 1 })).toBe(INVALID_MOVE);
+    expect(placeColony(state, "1", "0,0", { citizens: 0, freemen: 0, slaves: 1 }).ok).toBe(false);
   });
 });
 
@@ -222,7 +221,7 @@ describe("city upgrade", () => {
     const before = { ...state.players["0"].resources };
 
     const result = upgradeColonyToCity(state, "0", "3,0");
-    expect(result).not.toBe(INVALID_MOVE);
+    expect(result.ok).toBe(true);
 
     const upgraded = tile(state, "3,0");
     expect(upgraded.settlements).toHaveLength(1);
@@ -239,7 +238,7 @@ describe("city upgrade", () => {
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
     wealthy(state, "0");
     // "0,0" holds a city, not a colony.
-    expect(upgradeColonyToCity(state, "0", "0,0")).toBe(INVALID_MOVE);
+    expect(upgradeColonyToCity(state, "0", "0,0").ok).toBe(false);
   });
 });
 
@@ -250,7 +249,7 @@ describe("buildings", () => {
     const beforeWood = state.players["0"].resources.wood;
 
     const result = buildBuilding(state, "0", "0,0", "marketplace");
-    expect(result).not.toBe(INVALID_MOVE);
+    expect(result.ok).toBe(true);
     expect(owned(state, "0,0", "0").buildings).toContain("marketplace");
     expect(state.players["0"].resources.wood).toBe(beforeWood - 12);
   });
@@ -259,7 +258,7 @@ describe("buildings", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
     placeColony(state, "0", "3,0", { citizens: 0, freemen: 0, slaves: 1 });
-    expect(buildBuilding(state, "0", "3,0", "marketplace")).toBe(INVALID_MOVE);
+    expect(buildBuilding(state, "0", "3,0", "marketplace").ok).toBe(false);
   });
 });
 
@@ -270,19 +269,19 @@ describe("grow pop", () => {
     const beforeFood = state.players["0"].resources.food;
 
     const result = growPop(state, "0", "0,0", "slaves");
-    expect(result).not.toBe(INVALID_MOVE);
+    expect(result.ok).toBe(true);
     expect(owned(state, "0,0", "0").pops.slaves).toBe(2);
     expect(state.players["0"].resources.food).toBe(beforeFood - 5);
 
     // Second grow on the same settlement this turn is rejected.
-    expect(growPop(state, "0", "0,0", "slaves")).toBe(INVALID_MOVE);
+    expect(growPop(state, "0", "0,0", "slaves").ok).toBe(false);
   });
 
   it("rejects growth at population capacity", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
     owned(state, "0,0", "0").pops = { citizens: 10, freemen: 0, slaves: 0 };
-    expect(growPop(state, "0", "0,0", "citizens")).toBe(INVALID_MOVE);
+    expect(growPop(state, "0", "0,0", "citizens").ok).toBe(false);
   });
 });
 
@@ -308,7 +307,7 @@ describe("found colony & population transfers", () => {
     wealthy(state, "0");
 
     const result = foundColony(state, "0", "3,0", "0,0", "slaves");
-    expect(result).not.toBe(INVALID_MOVE);
+    expect(result.ok).toBe(true);
 
     // Colony exists but its seed pop is still in transit from the capital.
     expect(owned(state, "3,0", "0").kind).toBe("colony");
