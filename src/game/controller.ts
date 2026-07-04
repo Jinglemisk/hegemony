@@ -61,9 +61,11 @@ export function useHegemonyGame() {
 
   const moves = useMemo(() => createMoves(setG), []);
   const events = useMemo(() => createEvents(setG), []);
+  // Stable while G is unchanged, so memoized panels that read the turn context don't re-render on unrelated UI state.
+  const ctx = useMemo(() => deriveContext(G), [G]);
 
   return {
-    game: { G, ctx: deriveContext(G) },
+    game: { G, ctx },
     playerID,
     setPlayerID,
     moves,

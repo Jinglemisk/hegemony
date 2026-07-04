@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
 import { calculateEconomyProjection, playerPopulationTotals } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
@@ -6,7 +7,7 @@ import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { UiSprite } from "../../Sprites";
 import { PLAYER_DISPLAY_NAMES } from "../constants";
 
-export function PlayerScoreboard({
+function PlayerScoreboardComponent({
   G,
   currentPlayerId,
   viewerId,
@@ -66,3 +67,5 @@ export function PlayerScoreboard({
     </section>
   );
 }
+
+export const PlayerScoreboard = memo(PlayerScoreboardComponent);
