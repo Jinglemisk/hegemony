@@ -8,11 +8,10 @@ import {
   type PointerEvent as ReactPointerEvent,
   type WheelEvent as ReactWheelEvent
 } from "react";
-import type { HegemonyState } from "../game/types";
+import type { HegemonyState, MaterialResource } from "../game/types";
 import { PLAYER_COLORS } from "../game/data";
 import { settlementBuildingSlots } from "../game/rules";
 import { resourceCssVars } from "../ui/resourceVisuals";
-import { TerrainSprite } from "./Sprites";
 
 type ViewBox = {
   x: number;
@@ -33,8 +32,17 @@ type DragState = {
 type MapMode = "current" | "terrain";
 
 const HEX_SIZE = 45;
-const TILE_ART_SIZE = 88;
-const COLONY_POSITIONS = [-14, 14];
+const CITY_ICON_CENTER_Y = 4;
+const BUILDING_SLOT_PIP_SIZE = 7.2;
+const BUILDING_SLOT_PIP_GAP = 9.6;
+const BUILDING_SLOT_ROW_MAX_WIDTH = 60;
+const RESOURCE_YIELD_PIP_RADIUS = 4.4;
+const RESOURCE_YIELD_PIP_HALO = 1.8;
+const RESOURCE_YIELD_PIP_DOT_RADIUS = 1.5;
+const RESOURCE_YIELD_PIP_GAP = 12.4;
+const BUILDING_SLOT_PIP_Y = -22;
+const RESOURCE_YIELD_PIP_Y = 27;
+const TWO_COLONY_POSITIONS = [-14, 14];
 const DRAG_CLICK_THRESHOLD = 5;
 const TILE_CLICK_SUPPRESS_MS = 160;
 const BASE_VIEW_BOX: ViewBox = { x: -372, y: -270, width: 744, height: 540 };
@@ -360,26 +368,17 @@ export function HexMap({
             const city = tile.settlements.find((settlement) => settlement.kind !== "colony");
             const colonies = tile.settlements.filter((settlement) => settlement.kind === "colony");
             const shownColonies = colonies.slice(0, 2);
+            const colonyXPositions = getColonyXPositions(shownColonies.length);
             const overflowColonies = Math.max(0, colonies.length - shownColonies.length);
             const isSelected = selectedTileId === tile.id;
             const isPending = pendingTileId === tile.id;
             const isPlacementCandidate = placementActive && highlightSet.has(tile.id);
             const usedBuildingSlots = city?.buildings.length ?? 0;
             const totalBuildingSlots = city ? settlementBuildingSlots(tile, city) : tile.buildingSlots;
-            const terrainArt = (
-              <foreignObject
-                className="terrainObject"
-                height={TILE_ART_SIZE}
-                width={TILE_ART_SIZE}
-                x={-TILE_ART_SIZE / 2}
-                y={-TILE_ART_SIZE / 2}
-              >
-                <TerrainSprite terrain={tile.terrain} className="mapTerrain" />
-              </foreignObject>
-            );
+            const buildingSlotPips = getBuildingSlotPips(totalBuildingSlots, usedBuildingSlots);
+            const resourceYieldPips = getResourceYieldPipPositions(getResourceYieldPipCount(tile.resource));
             return (
               <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
-                {!isTerrainMapMode ? terrainArt : null}
                 <g
                   aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${tile.resource.amount} ${tile.resource.type}`}
                   className="svgButton"
@@ -400,49 +399,63 @@ export function HexMap({
                   />
                 </g>
                 <g className="tileMetrics" aria-hidden="true">
-                  <text className="tileMetric tileMetricYield" x={0} y={34}>
-                    +{tile.resource.amount}
-                  </text>
-                  <text className="tileMetric tileMetricCapacity" x={0} y={-28}>
-                    {usedBuildingSlots}/{totalBuildingSlots}
-                  </text>
+                  {buildingSlotPips.length > 0 ? (
+                    <g className="buildingSlotPips" transform={`translate(0 ${BUILDING_SLOT_PIP_Y})`}>
+                      {buildingSlotPips.map((pip) => (
+                        <rect
+                          className={pip.filled ? "buildingSlotPip filledSlotPip" : "buildingSlotPip hollowSlotPip"}
+                          height={BUILDING_SLOT_PIP_SIZE}
+                          key={`slot-${pip.index}`}
+                          rx={1.8}
+                          width={BUILDING_SLOT_PIP_SIZE}
+                          x={pip.x - BUILDING_SLOT_PIP_SIZE / 2}
+                          y={-BUILDING_SLOT_PIP_SIZE / 2}
+                        />
+                      ))}
+                    </g>
+                  ) : null}
+                  <g className="resourceYieldPips" transform={`translate(0 ${RESOURCE_YIELD_PIP_Y})`}>
+                    {resourceYieldPips.map((pip, index) => (
+                      <g key={`yield-${index}`}>
+                        <circle
+                          className="resourceYieldPipHalo"
+                          cx={pip.x}
+                          cy={pip.y}
+                          r={RESOURCE_YIELD_PIP_RADIUS + RESOURCE_YIELD_PIP_HALO}
+                        />
+                        <circle className="resourceYieldPip" cx={pip.x} cy={pip.y} r={RESOURCE_YIELD_PIP_RADIUS} />
+                        <circle
+                          className="resourceYieldPipDot"
+                          cx={pip.x}
+                          cy={pip.y}
+                          r={RESOURCE_YIELD_PIP_DOT_RADIUS}
+                        />
+                      </g>
+                    ))}
+                  </g>
                 </g>
                 {city ? (
-                  <foreignObject
-                    className="settlementObject settlementGlyphObject cityObject"
-                    height={42}
-                    width={42}
-                    x={-21}
-                    y={-17}
+                  <g
+                    className="settlementShape cityShape"
+                    style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
+                    transform={`translate(0 ${CITY_ICON_CENTER_Y}) scale(0.85)`}
                   >
-                    <div
-                      className={`settlementGlyph ${city.kind === "capital" ? "capitalGlyph" : "cityGlyph"}`}
-                      style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
-                    >
-                      <i />
-                    </div>
-                  </foreignObject>
+                    <rect height={20} rx={2} width={20} x={-10} y={-10} />
+                  </g>
                 ) : null}
                 {shownColonies.map((colony, index) => (
                   <g
-                    className="colonyGlyphDocked"
-                    transform={`translate(${COLONY_POSITIONS[index]} 4)`}
+                    className="colonyShapeDocked"
+                    transform={`translate(${colonyXPositions[index]} 4)`}
                     key={`${colony.owner}-${index}`}
                   >
-                    <foreignObject
-                      className="settlementObject settlementGlyphObject colonyObject"
-                      height={32}
-                      width={32}
-                      x={-16}
-                      y={-16}
+                    <g
+                      className="settlementShape colonyShape"
+                      style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
+                      transform="scale(0.85)"
                     >
-                      <div
-                        className="settlementGlyph colonyGlyph"
-                        style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
-                      >
-                        <i />
-                      </div>
-                    </foreignObject>
+                      <path d="M 0 -11 L 10 8 L -10 8 Z" />
+                    </g>
                   </g>
                 ))}
                 {overflowColonies > 0 ? (
@@ -498,6 +511,49 @@ function hexPoints(size: number) {
     const angle = (Math.PI / 180) * (60 * index - 30);
     return `${Math.cos(angle) * size},${Math.sin(angle) * size}`;
   }).join(" ");
+}
+
+function getColonyXPositions(count: number) {
+  if (count <= 1) {
+    return [0];
+  }
+
+  return TWO_COLONY_POSITIONS;
+}
+
+function getBuildingSlotPips(total: number, used: number) {
+  const count = Math.max(0, Math.min(8, Math.round(total)));
+  const filledCount = Math.max(0, Math.min(count, Math.round(used)));
+  const gap = count > 1 ? Math.min(BUILDING_SLOT_PIP_GAP, BUILDING_SLOT_ROW_MAX_WIDTH / (count - 1)) : 0;
+  const startX = -((count - 1) * gap) / 2;
+
+  return Array.from({ length: count }, (_, index) => ({
+    index,
+    x: startX + index * gap,
+    filled: index < filledCount
+  }));
+}
+
+function getResourceYieldPipCount(yieldValue: { type: MaterialResource; amount: number }) {
+  const tiers: Record<MaterialResource, number[]> = {
+    wood: [1, 2, 3, 4],
+    stone: [2, 4, 6, 8],
+    gold: [1, 2, 3, 4],
+    food: [4, 6, 8, 10]
+  };
+  const thresholdIndex = tiers[yieldValue.type].findIndex((threshold) => yieldValue.amount <= threshold);
+
+  return thresholdIndex === -1 ? 4 : thresholdIndex + 1;
+}
+
+function getResourceYieldPipPositions(count: number) {
+  const clamped = Math.max(1, Math.min(4, Math.round(count)));
+  const startX = -((clamped - 1) * RESOURCE_YIELD_PIP_GAP) / 2;
+
+  return Array.from({ length: clamped }, (_, index) => ({
+    x: startX + index * RESOURCE_YIELD_PIP_GAP,
+    y: 0
+  }));
 }
 
 function viewBoxToString(viewBox: ViewBox) {

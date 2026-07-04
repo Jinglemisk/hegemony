@@ -7,7 +7,7 @@ export const GAME_CONFIG = {
 
 export type OpeningSetupPlacement = {
   playerID: PlayerId;
-  capital: {
+  city: {
     tileId: string;
     pops: Pops;
   };
@@ -20,7 +20,7 @@ export type OpeningSetupPlacement = {
 export const TEST_OPENING_SETUP: OpeningSetupPlacement[] = [
   {
     playerID: "0",
-    capital: {
+    city: {
       tileId: "-3,2",
       pops: { citizens: 1, freemen: 1, slaves: 1 }
     },
@@ -31,7 +31,7 @@ export const TEST_OPENING_SETUP: OpeningSetupPlacement[] = [
   },
   {
     playerID: "1",
-    capital: {
+    city: {
       tileId: "-1,-2",
       pops: { citizens: 1, freemen: 2, slaves: 0 }
     },
@@ -42,7 +42,7 @@ export const TEST_OPENING_SETUP: OpeningSetupPlacement[] = [
   },
   {
     playerID: "2",
-    capital: {
+    city: {
       tileId: "1,2",
       pops: { citizens: 0, freemen: 1, slaves: 2 }
     },
@@ -53,7 +53,7 @@ export const TEST_OPENING_SETUP: OpeningSetupPlacement[] = [
   },
   {
     playerID: "3",
-    capital: {
+    city: {
       tileId: "3,-1",
       pops: { citizens: 2, freemen: 0, slaves: 1 }
     },

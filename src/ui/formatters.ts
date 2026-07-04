@@ -98,7 +98,7 @@ export function buildingName(buildingId: BuildingId) {
 
 export function phaseLabel(phase: Phase) {
   if (phase === "setupCapital") {
-    return "Capital placement";
+    return "City placement";
   }
 
   if (phase === "setupColony") {
@@ -110,11 +110,11 @@ export function phaseLabel(phase: Phase) {
 
 export function phaseHint(phase: Phase) {
   if (phase === "setupCapital") {
-    return "Place a capital on an open hex";
+    return "Place a starting city on an open hex";
   }
 
   if (phase === "setupColony") {
-    return "Place a colony away from enemy capitals";
+    return "Place a colony on an open colony site";
   }
 
   return "Income collects automatically; expand, build, then end turn";
