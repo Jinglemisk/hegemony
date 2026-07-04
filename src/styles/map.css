@@ -1,0 +1,234 @@
+/* map — Hex map canvas: sea backdrop, camera/drag layer, zoom & map-mode controls, resource band, atlas sprites
+   Split from styles.css (Phase 2e); original source order preserved. */
+
+.hexMap {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, #4b8994, #76aeb2 54%, #2f707e);
+  box-shadow: var(--shadow);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.hexMap.isDraggingSea {
+  cursor: grabbing;
+}
+
+.seaBackdrop,
+.shorelineFoam {
+  pointer-events: none;
+}
+
+.mapCameraLayer {
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.seaDragPlane {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.shorelineFoamLine,
+.shorelineFoamBreak {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shorelineFoamLine {
+  stroke: rgb(255 248 231 / 68%);
+  stroke-width: 3.2;
+  filter: drop-shadow(0 2px 4px rgb(31 105 119 / 28%));
+}
+
+.shorelineFoamBreak {
+  stroke: rgb(255 248 231 / 48%);
+  stroke-width: 5.4;
+  stroke-dasharray: 12 10;
+  filter: drop-shadow(0 2px 5px rgb(31 105 119 / 24%));
+}
+
+.hexMap.isCameraMoving .shorelineFoamLine,
+.hexMap.isCameraMoving .shorelineFoamBreak {
+  filter: none;
+}
+
+.hexMap.isCameraMoving .settlementShape,
+.hexMap.isCameraMoving .hexTile.selected,
+.hexMap.isCameraMoving .hexTile.pending {
+  filter: none;
+}
+
+.mapZoomControls,
+.mapModeControls {
+  position: absolute;
+  bottom: 14px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(2, 36px);
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.mapZoomControls {
+  right: 14px;
+}
+
+.mapModeControls {
+  left: 14px;
+}
+
+.mapZoomControls button,
+.mapModeControls button {
+  display: grid;
+  place-items: center;
+  min-width: 36px;
+  min-height: 36px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgb(255 248 231 / 38%);
+  border-radius: 8px;
+  color: var(--ivory);
+  background: rgb(24 62 70 / 82%);
+  box-shadow: 0 6px 14px rgb(8 22 28 / 30%);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.mapZoomControls button:not(:disabled):hover,
+.mapModeControls button:not(:disabled):hover {
+  border-color: rgb(255 248 231 / 78%);
+  background: rgb(31 105 119 / 92%);
+  box-shadow: 0 8px 16px rgb(8 22 28 / 24%);
+}
+
+.mapModeControls button {
+  padding: 3px;
+}
+
+.mapModeControls img {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  pointer-events: none;
+  filter: saturate(0.92) contrast(1.05) drop-shadow(0 1px 2px rgb(8 22 28 / 30%));
+}
+
+.mapModeControls button[aria-pressed="true"] {
+  border-color: rgb(255 248 231 / 86%);
+  background: rgb(192 70 28 / 88%);
+  box-shadow:
+    inset 0 0 0 1px rgb(24 18 16 / 24%),
+    0 8px 17px rgb(8 22 28 / 28%);
+}
+
+.mapSetupCaption {
+  position: absolute;
+  left: 50%;
+  bottom: 60px;
+  transform: translateX(-50%);
+  z-index: 4;
+  padding: 6px 16px;
+  color: var(--ivory);
+  background: rgb(24 62 70 / 82%);
+  border-radius: 999px;
+  box-shadow: 0 6px 14px rgb(8 22 28 / 30%);
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.resourceBand {
+  display: flex;
+  align-items: center;
+  padding: 8px 4px 2px;
+  border-top: 1px solid var(--line);
+}
+
+.atlasSprite {
+  display: inline-block;
+  background-position: var(--sprite-x) var(--sprite-y);
+  background-repeat: no-repeat;
+  flex: 0 0 auto;
+}
+
+.atlasIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-image: var(--icon-atlas);
+  background-size: 400% 400%;
+}
+
+.resourceMaskIcon {
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  background: var(--resource-color, currentColor);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.resourceMask-wood {
+  -webkit-mask-image: url("../assets/resource-icons/wood-mask.png");
+  mask-image: url("../assets/resource-icons/wood-mask.png");
+}
+
+.resourceMask-stone {
+  -webkit-mask-image: url("../assets/resource-icons/stone-mask.png");
+  mask-image: url("../assets/resource-icons/stone-mask.png");
+}
+
+.resourceMask-gold {
+  -webkit-mask-image: url("../assets/resource-icons/gold-mask.png");
+  mask-image: url("../assets/resource-icons/gold-mask.png");
+}
+
+.resourceMask-food {
+  -webkit-mask-image: url("../assets/resource-icons/food-mask.png");
+  mask-image: url("../assets/resource-icons/food-mask.png");
+}
+
+.resourceMask-influence {
+  -webkit-mask-image: url("../assets/resource-icons/influence-mask.png");
+  mask-image: url("../assets/resource-icons/influence-mask.png");
+}
+
+.resourceMask-happiness {
+  -webkit-mask-image: url("../assets/resource-icons/unrest-mask.png");
+  mask-image: url("../assets/resource-icons/unrest-mask.png");
+}
+
+.atlasTerrain {
+  background-image: var(--terrain-atlas);
+  background-size: 218% 218%;
+}
+
+.atlasUi {
+  width: 40px;
+  height: 40px;
+  background-image: var(--ui-atlas);
+  background-size: 300% 300%;
+}
+

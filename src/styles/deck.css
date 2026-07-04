@@ -1,0 +1,89 @@
+/* deck — Shared inline-label rules, deck placeholder / shelf lead-ins, selected-tile build button, event/season labels
+   Split from styles.css (Phase 2e); original source order preserved. */
+
+.seasonEventLabel span,
+.seasonEventLabel em,
+.scoreIdentity em,
+.compactPanelTitle span,
+.deckPlaceholder em,
+.buildingLedgerLead em,
+.popEconomyLead em,
+.selectedTileHeader em,
+.selectedBuildButton em {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-style: normal;
+  line-height: 1.08;
+}
+
+.seasonEventLabel span,
+.compactPanelTitle span,
+.deckPlaceholder em {
+  text-transform: uppercase;
+}
+
+.seasonEventLabel strong {
+  overflow: hidden;
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.seasonEventLabel em {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--subtle);
+  font-style: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  text-transform: none;
+}
+
+.activeEventLabel strong {
+  color: var(--clay);
+}
+
+.seasonEventLabel.alignRight {
+  text-align: right;
+}
+
+.seasonMedallion {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgb(36 25 16 / 34%);
+  border-radius: 50%;
+  color: var(--ivory);
+  background:
+    radial-gradient(circle at 50% 38%, rgb(255 248 231 / 22%), transparent 46%),
+    linear-gradient(180deg, var(--clay), var(--clay-deep));
+  box-shadow:
+    inset 0 0 0 3px rgb(24 18 16 / 18%),
+    0 7px 15px rgb(72 42 21 / 22%);
+}
+
+.seasonMedallion span {
+  font-size: 0.46rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.seasonMedallion strong {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.scoreboardPanel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
