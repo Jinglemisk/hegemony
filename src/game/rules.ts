@@ -139,6 +139,9 @@ export function createInitialState(seed = createSeed()): HegemonyState {
   rng = player.state;
 
   return {
+    phase: "setupCapital",
+    currentPlayer: "0",
+    turn: 1,
     board: {
       tiles: createInitialMap()
     },

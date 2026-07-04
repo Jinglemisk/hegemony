@@ -10,6 +10,8 @@ export type PopType = "citizens" | "freemen" | "slaves";
 
 export type SettlementKind = "capital" | "city" | "colony";
 
+export type Phase = "setupCapital" | "setupColony" | "gameplay";
+
 export type BuildingId = "marketplace" | "temple" | "workshop" | "granary";
 
 export type Resources = Record<Resource, number>;
@@ -222,6 +224,9 @@ export interface LogEntry {
 }
 
 export interface HegemonyState {
+  phase: Phase;
+  currentPlayer: PlayerId;
+  turn: number;
   board: HegemonyBoard;
   players: Record<PlayerId, PlayerState>;
   transfers: PopulationTransfer[];
