@@ -133,10 +133,6 @@
   scrollbar-gutter: stable;
 }
 
-.selectedTilePanel {
-  border-top: 1px solid var(--ledger-rule);
-}
-
 .holdingMatrix,
 .buildingLedgerRow,
 .popEconomyRow {
@@ -159,22 +155,6 @@
 .buildingsLedger > .buildingLedgerRow:not(:last-child),
 .popsLedger > .popEconomyRow:not(:last-child) {
   border-bottom: 1px solid var(--ledger-rule);
-}
-
-.holdingMatrixHeader,
-.holdingCapacityLine,
-.holdingYieldLine,
-.selectedTileHeader,
-.selectedSettlementList span,
-.selectedSettlementList em {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-}
-
-.holdingMatrixHeader {
-  justify-content: space-between;
 }
 
 .holdingSummaryButton {
@@ -447,90 +427,6 @@
   opacity: 0.55;
 }
 
-.cityYieldChip,
-.holdingYieldStack {
-  justify-self: stretch;
-}
-
-.cityYieldChip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 2px;
-  min-width: 0;
-  color: var(--resource-color, var(--fg));
-  font-family: var(--font-display);
-  font-size: 0.66rem;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.cityYieldChip .miniResourceIcon {
-  width: 12px;
-  height: 12px;
-}
-
-.cityYieldChip.negative {
-  color: #b13a28;
-}
-
-.holdingYieldStack {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-content: start;
-  justify-items: end;
-  gap: 3px 4px;
-  width: 100%;
-  min-width: 0;
-  min-height: 23px;
-  padding: 2px 5px;
-  border: 1px solid var(--ledger-rule);
-  border-radius: 4px;
-  background: rgb(255 248 231 / 34%);
-}
-
-.holdingDetailYield {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
-  padding: 7px;
-  border: 1px solid var(--ledger-rule);
-  border-radius: 4px;
-  background: rgb(255 248 231 / 32%);
-}
-
-.holdingDetailYield .holdingYieldStack {
-  padding: 0;
-  border: 0;
-  background: none;
-}
-
-.holdingDetailLabel {
-  color: var(--muted);
-  font-family: var(--font-display);
-  font-size: 0.62rem;
-  line-height: 1;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.holdingYieldStack .cityYieldChip {
-  width: 100%;
-}
-
-.emptyHoldingYield em {
-  color: var(--subtle);
-  font-family: var(--font-display);
-  font-size: 0.64rem;
-  font-style: normal;
-  line-height: 1;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
 .collapseChevron {
   position: relative;
   display: block;
@@ -578,51 +474,6 @@
 
 .holdingPenaltyLine span {
   color: var(--muted);
-}
-
-.holdingCapacityLine {
-  gap: 20px;
-  justify-content: flex-start;
-}
-
-.holdingMatrixHeader span,
-.holdingCapacityLine span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.holdingMatrixHeader strong {
-  color: var(--fg);
-  font-family: var(--font-display);
-  font-size: 0.86rem;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.holdingMatrixHeader em,
-.holdingCapacityLine,
-.holdingYieldLine {
-  color: var(--muted);
-  font-size: 0.76rem;
-  font-style: normal;
-}
-
-.holdingMatrixHeader > span:last-child {
-  color: var(--muted);
-  font-size: 0.74rem;
-}
-
-.holdingMatrixHeader em {
-  color: var(--subtle);
-  font-variant-numeric: tabular-nums;
-}
-
-.holdingCapacityLine strong,
-.holdingYieldLine strong {
-  color: var(--fg);
-  font-variant-numeric: tabular-nums;
 }
 
 .popBuildingMatrix {

@@ -49,15 +49,6 @@
     grid-template-columns: 1fr;
   }
 
-  .brandCluster {
-    min-height: 54px;
-  }
-
-  .topActions {
-    flex-wrap: wrap;
-    justify-content: stretch;
-  }
-
   .topResourceGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -71,42 +62,13 @@
     max-height: min(430px, calc(100vh - 116px));
   }
 
-  .seatSwitcher {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    flex: 1 1 100%;
-    width: 100%;
-  }
-
-  .seatSwitcher button {
-    min-width: 0;
-  }
-
   .iconButton {
     flex: 1 1 0;
   }
 
-  .mapHud {
-    inset: 8px;
-    gap: 6px;
-    max-width: calc(100% - 16px);
-  }
-
-  .hudCard {
-    min-width: min(100%, 112px);
-    padding: 7px 8px;
-  }
-
-  .turnOwner {
-    margin-left: 0;
-  }
-
   .resourceGrid,
-  .buildingButtons,
-  .tileActionButtons,
   .moveFields,
-  .popChoiceGrid,
-  .phaseStrip {
+  .popChoiceGrid {
     grid-template-columns: 1fr;
   }
 
@@ -117,24 +79,9 @@
   .hexMap {
     min-height: 420px;
   }
-
-  .tileMetricYield {
-    font-size: 14px;
-  }
-
-  .tileMetricCapacity {
-    font-size: 11px;
-  }
 }
 
 @media (max-width: 460px) {
-  .brandCopy strong {
-    font-size: 0.92rem;
-  }
-
-  .brandCopy span {
-    font-size: 0.72rem;
-  }
 
   .workbench {
     gap: 10px;
@@ -192,9 +139,6 @@
 }
 
 @media (max-width: 760px) {
-  .seasonStatus {
-    grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
-  }
 
   .seasonMedallion {
     width: 46px;
@@ -202,7 +146,6 @@
   }
 
   .popBuildingMatrix,
-  .selectedBuildGrid,
   .deckShelf {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -234,7 +177,6 @@
 
 @media (max-width: 460px) {
   .popBuildingMatrix,
-  .selectedBuildGrid,
   .deckShelf,
   .growPopBenefitPanel,
   .popSummary {

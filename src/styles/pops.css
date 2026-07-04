@@ -52,10 +52,6 @@
   color: var(--subtle);
 }
 
-.holdingYieldLine strong {
-  font-size: 0.88rem;
-}
-
 .popColumnHeader span {
   color: var(--muted);
   font-size: 0.72rem;
@@ -198,19 +194,6 @@
   line-height: 1.25;
 }
 
-.holdingYieldLine {
-  justify-content: flex-start;
-  min-height: 22px;
-  padding: 2px 0 0;
-  border: 0;
-  background: none;
-  font-size: 0.78rem;
-}
-
-.holdingYieldLine strong {
-  color: var(--resource-color, var(--fg));
-}
-
 .miniResourceIcon {
   width: 18px;
   height: 18px;
@@ -234,9 +217,7 @@
 
 .buildingLedgerLead span,
 .popEconomyLead span,
-.selectedBuildButton span,
-.deckPlaceholder span,
-.selectedTileHeader span {
+.deckPlaceholder span {
   display: grid;
   gap: 2px;
   min-width: 0;
@@ -245,9 +226,7 @@
 .buildingLedgerLead strong,
 .popEconomyLead strong,
 .netEconomyPanel strong,
-.selectedBuildButton strong,
-.deckPlaceholder strong,
-.selectedTileHeader strong {
+.deckPlaceholder strong {
   overflow: hidden;
   color: var(--fg);
   font-family: var(--font-display);
@@ -286,11 +265,5 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 0;
-}
-
-.largeCandidateGrid {
-  max-height: 230px;
-  overflow: auto;
-  padding-right: 2px;
 }
 

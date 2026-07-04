@@ -7,9 +7,7 @@
 .compactPanelTitle span,
 .deckPlaceholder em,
 .buildingLedgerLead em,
-.popEconomyLead em,
-.selectedTileHeader em,
-.selectedBuildButton em {
+.popEconomyLead em {
   color: var(--muted);
   font-size: 0.66rem;
   font-style: normal;
@@ -45,10 +43,6 @@
 
 .activeEventLabel strong {
   color: var(--clay);
-}
-
-.seasonEventLabel.alignRight {
-  text-align: right;
 }
 
 .seasonMedallion {

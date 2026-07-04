@@ -122,14 +122,6 @@
     drop-shadow(0 2px 2px rgb(24 18 16 / 34%));
 }
 
-.tileMetricYield {
-  font-size: 15.5px;
-}
-
-.tileMetricCapacity {
-  font-size: 12.1px;
-}
-
 .terrainMapMode .tileMetric {
   fill: #181210;
   stroke: #fff8e7;
@@ -137,14 +129,6 @@
   filter:
     drop-shadow(0 0 2px rgb(255 248 231 / 94%))
     drop-shadow(0 3px 3px rgb(24 18 16 / 38%));
-}
-
-.terrainMapMode .tileMetricYield {
-  font-size: 20px;
-}
-
-.terrainMapMode .tileMetricCapacity {
-  font-size: 15px;
 }
 
 .settlementShape,
@@ -237,19 +221,5 @@
   color: #fff8e7;
   border-color: rgb(177 58 40 / 78%);
   background: #b13a28;
-}
-
-.holdingsSummary {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--line);
-}
-
-.holdingsStats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
 }
 

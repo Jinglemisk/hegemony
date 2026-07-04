@@ -12,7 +12,7 @@
 @import "./styles/sprites.css";
 @import "./styles/tiles.css";
 @import "./styles/resources.css";
-@import "./styles/inspector.css";
+@import "./styles/shared.css";
 @import "./styles/ledger.css";
 @import "./styles/deck.css";
 @import "./styles/scoreboard.css";

@@ -55,14 +55,6 @@
   text-align: right;
 }
 
-.ledgerEmpty {
-  display: block;
-  padding: 4px 2px;
-  color: var(--subtle);
-  font-size: 0.78rem;
-  font-style: italic;
-}
-
 .resourceDeltaList {
   display: flex;
   flex-wrap: wrap;
@@ -259,79 +251,6 @@
   color: var(--fg);
   font-weight: 500;
   overflow-wrap: anywhere;
-}
-
-.selectedTilePanel {
-  display: grid;
-  gap: 9px;
-  padding: 12px 2px 4px;
-}
-
-.emptySelectedTile p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.3;
-}
-
-.terrainPreviewSmall {
-  width: 42px;
-  height: 42px;
-  border-radius: 7px;
-  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-  box-shadow: 0 8px 16px rgb(36 25 16 / 18%);
-}
-
-.selectedSettlementList {
-  display: grid;
-  gap: 5px;
-}
-
-.selectedSettlementList span,
-.selectedSettlementList em {
-  min-height: 28px;
-  padding: 5px 2px;
-  border: 0;
-  border-bottom: 1px solid var(--ledger-rule);
-  border-radius: 0;
-  color: var(--muted);
-  background: none;
-  font-size: 0.74rem;
-  font-style: normal;
-}
-
-.selectedSettlementList b {
-  color: var(--fg);
-}
-
-.selectedBuildGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.selectedBuildButton {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 6px 4px;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  background: none;
-  text-align: left;
-}
-
-.selectedBuildButton:not(:disabled):hover {
-  border-color: var(--ledger-accent);
-  box-shadow: none;
-  transform: none;
-  background: var(--panel-soft);
-}
-
-.selectedBuildButton strong {
-  font-size: 0.72rem;
 }
 
 .deckShelf {
