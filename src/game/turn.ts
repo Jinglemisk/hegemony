@@ -11,6 +11,7 @@ import {
   startNewSeason,
 } from "./rules";
 import type { MoveResult } from "./rules";
+import type { Ruleset } from "./ruleset";
 import type { HegemonyState, Phase, PlayerId } from "./types";
 
 /**
@@ -20,8 +21,8 @@ import type { HegemonyState, Phase, PlayerId } from "./types";
  */
 
 /** Create a new game. When the test-opening flag is on, run the scripted 4-player setup. */
-export function createGame(seed?: number): HegemonyState {
-  const G = createInitialState(seed);
+export function createGame(seed?: number, ruleset?: Ruleset): HegemonyState {
+  const G = createInitialState(seed, ruleset);
 
   if (GAME_CONFIG.preloadOpeningSetupForTesting) {
     preloadOpeningSetup(G);

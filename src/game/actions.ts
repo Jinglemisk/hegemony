@@ -1,9 +1,8 @@
-import { ACTION_COSTS, BUILDINGS } from "./data";
+import { BUILDINGS } from "./data";
 import type { BuildingId, HegemonyState, HexTile, PlayerId, PopType, Pops } from "./types";
 import { formatPopName, formatPops, formatRuleResourceDelta, formatTileLabel } from "./core/format";
 import {
   EMPTY_POPS,
-  PLACEMENT_POP_COUNTS,
   addPops,
   clonePops,
   hasPops,
@@ -36,7 +35,7 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
     !tile ||
     player.settlements.length > 0 ||
     tile.settlements.length > 0 ||
-    !isExactPopSelection(pops, PLACEMENT_POP_COUNTS.city)
+    !isExactPopSelection(pops, G.ruleset.placementPopCounts.city)
   ) {
     return invalid();
   }
@@ -64,7 +63,7 @@ export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string
     !tile ||
     player.settlements.length !== 1 ||
     !canPlaceColonyOnTile(G, playerID, tile).can ||
-    !isExactPopSelection(pops, PLACEMENT_POP_COUNTS.colony)
+    !isExactPopSelection(pops, G.ruleset.placementPopCounts.colony)
   ) {
     return invalid();
   }
@@ -94,7 +93,7 @@ export function foundColony(
     return transfer;
   }
 
-  payCost(G.players[playerID].resources, status.cost ?? ACTION_COSTS.foundColony);
+  payCost(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.foundColony);
   consumeActionCostDiscounts(G, playerID, "foundColony");
   addColony(G, playerID, tile, EMPTY_POPS);
   addLog(
@@ -124,7 +123,7 @@ export function upgradeColonyToCity(
     return invalid();
   }
 
-  payCost(G.players[playerID].resources, status.cost ?? ACTION_COSTS.upgradeColonyToCity);
+  payCost(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.upgradeColonyToCity);
   const displacedPlayers = tile.settlements
     .filter((candidate) => candidate.owner !== playerID && candidate.kind === "colony")
     .map((candidate) => candidate.owner);

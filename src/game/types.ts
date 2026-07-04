@@ -1,3 +1,5 @@
+import type { Ruleset } from "./ruleset";
+
 export type PlayerId = "0" | "1" | "2" | "3";
 
 export type Terrain = "mountain" | "hill" | "forest" | "plains";
@@ -227,6 +229,8 @@ export interface HegemonyState {
   phase: Phase;
   currentPlayer: PlayerId;
   turn: number;
+  /** Tunable balance values for this game (difficulty / handicaps / modules). */
+  ruleset: Ruleset;
   board: HegemonyBoard;
   players: Record<PlayerId, PlayerState>;
   transfers: PopulationTransfer[];
