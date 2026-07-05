@@ -4,7 +4,6 @@ import { calculateEconomyProjection, playerPopulationTotals } from "../../../gam
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../../../ui/formatters";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
-import { UiSprite } from "../../Sprites";
 import { PLAYER_DISPLAY_NAMES } from "../constants";
 
 function PlayerScoreboardComponent({
@@ -19,7 +18,7 @@ function PlayerScoreboardComponent({
   onPlayerIDChange: (playerID: PlayerId) => void;
 }) {
   return (
-    <section className="statusPanel scoreboardPanel" aria-label="Player scoreboard">
+    <section className="scoreboardPanel" aria-label="Player roster">
       {PLAYER_IDS.map((id) => {
         const player = G.players[id];
         const population = playerPopulationTotals(G, id);
@@ -30,22 +29,19 @@ function PlayerScoreboardComponent({
         return (
           <button
             aria-pressed={isViewer}
-            className={`scoreboardSeat${isViewer ? " selectedScoreSeat" : ""}${isCurrent ? " currentScoreSeat" : ""}`}
+            className={`rosterSeat${isCurrent ? " actingSeat" : ""}${isViewer ? " viewingSeat" : ""}`}
             key={id}
             onClick={() => onPlayerIDChange(id)}
-            style={{ borderColor: PLAYER_COLORS[id] }}
+            title={`View ${PLAYER_DISPLAY_NAMES[id]}'s empire`}
           >
-            <span className="scoreToken" style={{ backgroundColor: PLAYER_COLORS[id] }} />
-            <span className="scoreIdentity">
+            <span className="rosterDot" style={{ backgroundColor: PLAYER_COLORS[id] }} />
+            <span className="rosterWho">
               <strong>{PLAYER_DISPLAY_NAMES[id]}</strong>
-              <em>{isCurrent ? "Acting" : "Watching"}</em>
+              <em>{isCurrent ? "Acting" : "Idle"}</em>
             </span>
-            <span className="scoreMetrics">
-              <b>
-                <UiSprite item="victoryPoint" className="scoreMiniSprite" />
-                VP --
-              </b>
-              <b>{population.pops} Pops</b>
+            <span className="rosterPops">
+              {population.pops}
+              <span className="rosterPopsUnit">pop</span>
             </span>
             <span className="scoreTooltip" role="tooltip">
               <strong>{PLAYER_DISPLAY_NAMES[id]} Resources</strong>

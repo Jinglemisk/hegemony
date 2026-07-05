@@ -65,13 +65,15 @@
 }
 
 .empireIntel {
-  grid-template-rows: auto auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   height: 100%;
   overflow: hidden;
 }
 
 .commandStack {
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   height: 100%;
   overflow: hidden;
 }
@@ -123,6 +125,7 @@
 }
 
 .intelBody {
+  flex: 1;
   min-height: 0;
   margin-right: -4px;
   overflow-x: hidden;
@@ -140,6 +143,66 @@
   gap: 8px;
   padding: 9px 2px 11px 12px;
   border-left: 2px solid var(--ledger-accent);
+}
+
+/* Empire summary — a compact rollup above the tabs (kept flat, no box). */
+.empireSummary {
+  display: flex;
+  gap: 20px;
+  padding: 0 2px 2px;
+}
+
+.empireStat {
+  display: grid;
+  gap: 1px;
+  line-height: 1;
+}
+
+.empireStat strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 1.22rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.empireStatCap {
+  color: var(--subtle);
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.empireStat em {
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Column legend — resource icons aligned over the per-holding net-income columns. */
+/* Column caption over the holdings: names the left (identity) and right (net
+   income) halves of every row. The per-value resource icons in each row do the
+   per-column labeling. */
+.holdingLegend {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 9px 7px;
+  border-bottom: 1px solid var(--ledger-rule-strong);
+}
+
+.holdingLegendCaption {
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.holdingLegendYieldCaption {
+  color: var(--subtle);
 }
 
 .holdingMatrix {
