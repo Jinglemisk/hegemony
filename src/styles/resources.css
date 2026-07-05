@@ -63,23 +63,23 @@
 }
 
 .happinessTheatreIcon-neutral {
-  background-image: url("../assets/resource-icons/happiness-neutral.png");
+  background-image: url("../../assets/resource-icons/happiness-neutral.png");
 }
 
 .happinessTheatreIcon-happy {
-  background-image: url("../assets/resource-icons/happiness-happy.png");
+  background-image: url("../../assets/resource-icons/happiness-happy.png");
 }
 
 .happinessTheatreIcon-veryHappy {
-  background-image: url("../assets/resource-icons/happiness-very-happy.png");
+  background-image: url("../../assets/resource-icons/happiness-very-happy.png");
 }
 
 .happinessTheatreIcon-sad {
-  background-image: url("../assets/resource-icons/happiness-sad.png");
+  background-image: url("../../assets/resource-icons/happiness-sad.png");
 }
 
 .happinessTheatreIcon-veryAngry {
-  background-image: url("../assets/resource-icons/happiness-very-angry.png");
+  background-image: url("../../assets/resource-icons/happiness-very-angry.png");
 }
 
 .resourceValue {

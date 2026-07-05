@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hegemony - Codex Banana Showcase</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23181210'/%3E%3Ccircle cx='16' cy='16' r='10' fill='%23c0461c'/%3E%3Cpath d='M16 6v20M7 16h18' stroke='%23f4e6c8' stroke-width='3'/%3E%3C/svg%3E" />
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  :root {
+    --ink: #181210;
+    --ink-2: #241915;
+    --clay: #c0461c;
+    --clay-deep: #8f2e13;
+    --ochre: #d98a35;
+    --bone: #f4e6c8;
+    --ivory: #fff8e7;
+    --oxblood: #722420;
+    --olive: #5e6e3a;
+    --aegean: #1f6977;
+    --stone: #8f8571;
+    --line-dark: rgb(244 230 200 / 18%);
+    --line-light: rgb(36 25 16 / 18%);
+    --shadow-dark: 0 28px 80px rgb(0 0 0 / 42%);
+    --shadow-light: 0 24px 58px rgb(72 42 21 / 18%);
+    color: var(--bone);
+    background: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    background:
+      linear-gradient(180deg, rgb(24 18 16 / 96%), rgb(36 25 16 / 100%) 45%, #fbefdc 45%, #fbefdc 100%);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  button,
+  a {
+    font: inherit;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  .topbar {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 14px 30px;
+    color: var(--bone);
+    background: linear-gradient(180deg, rgb(15 10 8 / 78%), rgb(15 10 8 / 24));
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgb(244 230 200 / 12%);
+  }
+
+  .brand-mini {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    text-decoration: none;
+  }
+
+  .brand-mini::before {
+    content: "";
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 50% 42%, var(--ochre) 0 16%, transparent 17%),
+      radial-gradient(circle, var(--clay) 0 58%, var(--ink) 59% 66%, var(--clay) 67% 100%);
+    box-shadow: inset 0 0 0 2px rgb(244 230 200 / 20%);
+  }
+
+  .brand-mini span {
+    overflow: hidden;
+    color: var(--bone);
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 0.83rem;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .navlinks {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .navlinks a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: 1px solid rgb(244 230 200 / 18%);
+    border-radius: 999px;
+    color: rgb(244 230 200 / 84%);
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-decoration: none;
+    text-transform: uppercase;
+    background: rgb(24 18 16 / 30%);
+  }
+
+  .hero {
+    position: relative;
+    min-height: 88svh;
+    display: grid;
+    align-items: end;
+    padding: 112px 30px 60px;
+    overflow: hidden;
+    isolation: isolate;
+    background: #181210;
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background:
+      linear-gradient(90deg, rgb(24 18 16 / 92%) 0 30%, rgb(24 18 16 / 34%) 62%, rgb(24 18 16 / 72%)),
+      linear-gradient(0deg, rgb(24 18 16 / 96%) 0, rgb(24 18 16 / 22%) 42%, rgb(24 18 16 / 64%) 100%),
+      url("assets/codex-banana-showcase/dark-hero-tableau.png") center / cover no-repeat;
+  }
+
+  .hero::after,
+  .meander-strip::before,
+  .direction.dark .section-head::after,
+  .direction.light .section-head::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    background-image:
+      linear-gradient(90deg, currentColor 0 12px, transparent 12px 18px, currentColor 18px 30px, transparent 30px 36px),
+      linear-gradient(90deg, transparent 0 6px, currentColor 6px 12px, transparent 12px 24px, currentColor 24px 30px, transparent 30px 36px);
+    background-size: 36px 8px, 36px 8px;
+    background-position: 0 0, 0 12px;
+    background-repeat: repeat-x;
+  }
+
+  .hero::after {
+    inset: auto 0 0;
+    height: 26px;
+    color: var(--clay);
+    opacity: 0.82;
+  }
+
+  .hero-content {
+    width: min(920px, 100%);
+    margin-left: max(0px, calc((100vw - 1220px) / 2));
+  }
+
+  .kicker,
+  .deck-label,
+  .micro-label,
+  .asset-path,
+  .section-number {
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .kicker {
+    margin: 0 0 20px;
+    color: var(--ochre);
+    font-size: 0.8rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-top: 0;
+  }
+
+  h1 {
+    margin-bottom: 18px;
+    color: var(--bone);
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 6.5rem;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-shadow: 0 20px 58px rgb(0 0 0 / 52%);
+  }
+
+  h1 span {
+    color: var(--clay);
+  }
+
+  .hero-lede {
+    width: min(700px, 100%);
+    margin-bottom: 32px;
+    color: rgb(244 230 200 / 82%);
+    font-size: 1.24rem;
+  }
+
+  .hero-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .hero-facts span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 1px solid rgb(217 138 53 / 38%);
+    border-radius: 999px;
+    color: rgb(244 230 200 / 86%);
+    background: rgb(24 18 16 / 58%);
+    box-shadow: inset 0 0 0 1px rgb(244 230 200 / 5%);
+  }
+
+  .overview {
+    position: relative;
+    padding: 58px 30px 64px;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 12% 12%, rgb(192 70 28 / 13%), transparent 30%),
+      linear-gradient(180deg, #fbefdc, #f4e6c8);
+  }
+
+  .wrap {
+    width: min(1220px, 100%);
+    margin: 0 auto;
+  }
+
+  .brief-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+    gap: 26px;
+    align-items: start;
+  }
+
+  .brief-copy h2,
+  .direction-title,
+  .section-head h2 {
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .brief-copy h2 {
+    margin-bottom: 14px;
+    color: var(--ink);
+    font-size: 2.35rem;
+    line-height: 1;
+    letter-spacing: 0.08em;
+  }
+
+  .brief-copy p {
+    max-width: 760px;
+    color: rgb(36 25 16 / 74%);
+    font-size: 1.08rem;
+  }
+
+  .doc-points {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 26px;
+  }
+
+  .doc-points div,
+  .proof-card,
+  .asset-card,
+  .palette-chip,
+  .icon-card,
+  .terrain-card,
+  .component-card,
+  .sample-panel,
+  .manifest-card {
+    border-radius: 8px;
+  }
+
+  .doc-points div {
+    min-height: 86px;
+    padding: 14px;
+    border: 1px solid var(--line-light);
+    background: rgb(255 248 231 / 54%);
+  }
+
+  .doc-points b {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--clay-deep);
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .proof-card {
+    padding: 18px;
+    border: 1px solid rgb(36 25 16 / 18%);
+    background: #181210;
+    color: var(--bone);
+    box-shadow: var(--shadow-light);
+  }
+
+  .proof-card .thumb {
+    overflow: hidden;
+    aspect-ratio: 3 / 2;
+    border-radius: 6px;
+    border: 1px solid rgb(244 230 200 / 16%);
+    background: #000;
+  }
+
+  .proof-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .proof-card p {
+    margin: 14px 0 0;
+    color: rgb(244 230 200 / 72%);
+  }
+
+  .direction {
+    --bg: var(--ink);
+    --fg: var(--bone);
+    --muted: rgb(244 230 200 / 70%);
+    --line: var(--line-dark);
+    --accent: var(--clay);
+    --accent-2: var(--ochre);
+    --panel: rgb(255 248 231 / 6%);
+    --panel-strong: rgb(192 70 28 / 12%);
+    --icon-atlas: url("assets/codex-banana-showcase/dark-icon-atlas.png");
+    --terrain-atlas: url("assets/codex-banana-showcase/dark-terrain-atlas.png");
+    --ui-atlas: url("assets/codex-banana-showcase/dark-ui-kit.png");
+    color: var(--fg);
+    background:
+      radial-gradient(circle at 12% 0%, rgb(192 70 28 / 18%), transparent 32%),
+      radial-gradient(circle at 90% 22%, rgb(217 138 53 / 9%), transparent 34%),
+      var(--bg);
+  }
+
+  .direction.light {
+    --bg: #fff8e7;
+    --fg: #241910;
+    --muted: rgb(36 25 16 / 66%);
+    --line: var(--line-light);
+    --accent: #b83f1b;
+    --accent-2: #1f6977;
+    --panel: rgb(255 255 255 / 58%);
+    --panel-strong: rgb(192 70 28 / 10%);
+    --icon-atlas: url("../../assets/codex-banana-showcase/light-icon-atlas.png");
+    --terrain-atlas: url("../../assets/codex-banana-showcase/light-terrain-atlas.png");
+    --ui-atlas: url("../../assets/codex-banana-showcase/light-ui-kit.png");
+    background:
+      radial-gradient(circle at 12% 0%, rgb(31 105 119 / 13%), transparent 31%),
+      radial-gradient(circle at 86% 18%, rgb(192 70 28 / 13%), transparent 34%),
+      linear-gradient(180deg, #fff8e7, #f2dfbc);
+  }
+
+  .direction-hero {
+    position: relative;
+    min-height: 72svh;
+    display: grid;
+    align-items: end;
+    overflow: hidden;
+    padding: 92px 30px 58px;
+    isolation: isolate;
+    border-top: 1px solid var(--line);
+  }
+
+  .direction-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background: var(--hero-img) center / cover no-repeat;
+  }
+
+  .direction-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--hero-grade);
+  }
+
+  .direction.dark .direction-hero {
+    --hero-img: url("assets/codex-banana-showcase/dark-hero-tableau.png");
+    --hero-grade:
+      linear-gradient(90deg, rgb(24 18 16 / 92%) 0 34%, rgb(24 18 16 / 28%) 67%, rgb(24 18 16 / 86%)),
+      linear-gradient(0deg, rgb(24 18 16 / 96%) 0, rgb(24 18 16 / 28%) 48%, rgb(24 18 16 / 58%) 100%);
+  }
+
+  .direction.light .direction-hero {
+    --hero-img: url("../../assets/codex-banana-showcase/light-hero-tableau.png");
+    --hero-grade:
+      linear-gradient(90deg, rgb(255 248 231 / 92%) 0 32%, rgb(255 248 231 / 26%) 66%, rgb(255 248 231 / 86%)),
+      linear-gradient(0deg, rgb(255 248 231 / 96%) 0, rgb(255 248 231 / 22%) 48%, rgb(255 248 231 / 42%) 100%);
+  }
+
+  .direction-title {
+    max-width: 760px;
+    margin-bottom: 14px;
+    color: var(--fg);
+    font-size: 4.8rem;
+    line-height: 1;
+    letter-spacing: 0.06em;
+  }
+
+  .direction-title span {
+    color: var(--accent);
+  }
+
+  .deck-label {
+    margin-bottom: 14px;
+    color: var(--accent-2);
+    font-size: 0.78rem;
+  }
+
+  .direction-copy {
+    max-width: 660px;
+    margin-bottom: 24px;
+    color: var(--muted);
+    font-size: 1.12rem;
+  }
+
+  .asset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .asset-path {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 7px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    background: var(--panel);
+    font-size: 0.62rem;
+  }
+
+  .direction-section {
+    position: relative;
+    padding: 74px 30px;
+    border-top: 1px solid var(--line);
+  }
+
+  .direction-section.alt {
+    background: var(--panel-strong);
+  }
+
+  .section-head {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(280px, 1.2fr);
+    gap: 26px;
+    align-items: end;
+    margin-bottom: 34px;
+    padding-bottom: 24px;
+  }
+
+  .direction .section-head::after {
+    inset: auto 0 0;
+    height: 20px;
+    color: var(--accent);
+    opacity: 0.58;
+  }
+
+  .section-number {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--accent-2);
+    font-size: 0.72rem;
+  }
+
+  .section-head h2 {
+    margin-bottom: 0;
+    color: var(--fg);
+    font-size: 2.2rem;
+    line-height: 1.04;
+    letter-spacing: 0.06em;
+  }
+
+  .section-head p {
+    margin-bottom: 0;
+    color: var(--muted);
+    font-size: 1.02rem;
+  }
+
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .palette-chip {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 14px;
+    border: 1px solid var(--line);
+    color: var(--chip-fg, var(--fg));
+    background: var(--chip);
+  }
+
+  .palette-chip b {
+    display: block;
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .palette-chip span {
+    opacity: 0.72;
+  }
+
+  .type-band {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+    gap: 18px;
+  }
+
+  .type-panel {
+    min-height: 220px;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+  }
+
+  .type-display {
+    margin: 0 0 14px;
+    color: var(--fg);
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 3rem;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .type-body {
+    max-width: 660px;
+    color: var(--muted);
+    font-size: 1.05rem;
+  }
+
+  .micro-label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--accent-2);
+    font-size: 0.66rem;
+  }
+
+  .asset-showcase {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .asset-card {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    box-shadow: var(--asset-shadow, none);
+  }
+
+  .direction.light .asset-card,
+  .direction.light .icon-card,
+  .direction.light .terrain-card,
+  .direction.light .component-card,
+  .direction.light .sample-panel {
+    --asset-shadow: var(--shadow-light);
+  }
+
+  .atlas-frame {
+    padding: 10px;
+    background: rgb(0 0 0 / 18%);
+  }
+
+  .direction.light .atlas-frame {
+    background: rgb(36 25 16 / 6%);
+  }
+
+  .asset-card img {
+    width: 100%;
+    border-radius: 5px;
+  }
+
+  .asset-card .caption,
+  .manifest-card p,
+  .icon-card small,
+  .terrain-card small,
+  .component-card small {
+    color: var(--muted);
+  }
+
+  .asset-card .caption {
+    padding: 14px 16px 16px;
+  }
+
+  .icon-groups {
+    display: grid;
+    gap: 24px;
+  }
+
+  .group-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 12px;
+    color: var(--accent-2);
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 0.74rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .group-title::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: 0.5;
+  }
+
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .icon-card,
+  .terrain-card,
+  .component-card,
+  .sample-panel {
+    border: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  .icon-card {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 13px;
+  }
+
+  .sprite {
+    flex: 0 0 auto;
+    background-repeat: no-repeat;
+    background-position: var(--x) var(--y);
+  }
+
+  .sprite.icon {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    background-image: var(--icon-atlas);
+    background-size: 400% 400%;
+  }
+
+  .sprite.terrain {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    background-image: var(--terrain-atlas);
+    background-size: 200% 200%;
+  }
+
+  .sprite.ui {
+    background-image: var(--ui-atlas);
+    background-size: 300% 300%;
+  }
+
+  .icon-card strong,
+  .terrain-card strong,
+  .component-card strong {
+    color: var(--fg);
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .icon-card small,
+  .terrain-card small,
+  .component-card small {
+    display: block;
+    font-size: 0.86rem;
+    text-align: center;
+  }
+
+  .terrain-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .terrain-card {
+    padding: 12px;
+  }
+
+  .terrain-card strong {
+    display: block;
+    margin-top: 10px;
+  }
+
+  .terrain-card small {
+    margin-top: 2px;
+  }
+
+  .component-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .component-card {
+    min-height: 192px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .component-card .ui-cell {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 6px;
+  }
+
+  .component-card strong {
+    display: block;
+  }
+
+  .sample-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.78fr);
+    gap: 22px;
+    align-items: start;
+  }
+
+  .sample-panel {
+    overflow: hidden;
+  }
+
+  .hud-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px;
+    border-bottom: 1px solid var(--line);
+    background: rgb(0 0 0 / 20%);
+  }
+
+  .direction.light .hud-bar {
+    background: rgb(255 255 255 / 48%);
+  }
+
+  .hud-brand {
+    min-width: 136px;
+    color: var(--accent);
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .resource-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--fg);
+    background: var(--panel);
+  }
+
+  .resource-pill .sprite.icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .resource-pill b {
+    color: var(--accent-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sample-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.7fr);
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .mini-map {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .mini-map .sprite.terrain {
+    min-width: 0;
+  }
+
+  .turn-card {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgb(0 0 0 / 18%);
+  }
+
+  .direction.light .turn-card {
+    background: rgb(255 255 255 / 52%);
+  }
+
+  .turn-card h3 {
+    margin-bottom: 8px;
+    color: var(--fg);
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 1.04rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .turn-card p {
+    margin-bottom: 14px;
+    color: var(--muted);
+  }
+
+  .generated-button {
+    position: relative;
+    min-height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 9px;
+    padding: 12px 16px;
+    border: 0;
+    color: var(--button-fg, var(--fg));
+    background: none;
+    cursor: default;
+    isolation: isolate;
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .generated-button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 8px;
+    background-image: var(--ui-atlas);
+    background-size: 300% 300%;
+    background-position: var(--button-x) var(--button-y);
+    filter: saturate(1.05);
+  }
+
+  .generated-button.primary {
+    --button-x: 50%;
+    --button-y: 0%;
+    --button-fg: var(--bone);
+  }
+
+  .direction.light .generated-button.primary {
+    --button-fg: #fff8e7;
+  }
+
+  .generated-button.secondary {
+    --button-x: 100%;
+    --button-y: 0%;
+    color: var(--accent);
+  }
+
+  .notes-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .notes-list div {
+    padding: 14px 16px;
+    border-left: 4px solid var(--accent);
+    color: var(--muted);
+    background: var(--panel);
+  }
+
+  .manifest {
+    padding: 72px 30px 80px;
+    color: var(--ink);
+    background: #fbefdc;
+    border-top: 1px solid rgb(36 25 16 / 14%);
+  }
+
+  .manifest h2 {
+    margin-bottom: 10px;
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 2.25rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .manifest > .wrap > p {
+    max-width: 780px;
+    margin-bottom: 28px;
+    color: rgb(36 25 16 / 72%);
+  }
+
+  .manifest-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .manifest-card {
+    padding: 14px;
+    border: 1px solid var(--line-light);
+    background: rgb(255 248 231 / 70%);
+  }
+
+  .manifest-card b {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--clay-deep);
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 0.76rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .manifest-card code {
+    display: block;
+    overflow-wrap: anywhere;
+    color: rgb(36 25 16 / 76%);
+    font-size: 0.84rem;
+  }
+
+  .meander-strip {
+    position: relative;
+    height: 24px;
+    color: var(--accent);
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .meander-strip::before {
+    inset: 0;
+    opacity: 0.7;
+  }
+
+  .x0 { --x: 0%; }
+  .x1 { --x: 33.333%; }
+  .x2 { --x: 66.667%; }
+  .x3 { --x: 100%; }
+  .y0 { --y: 0%; }
+  .y1 { --y: 33.333%; }
+  .y2 { --y: 66.667%; }
+  .y3 { --y: 100%; }
+  .tx0 { --x: 0%; }
+  .tx1 { --x: 100%; }
+  .ty0 { --y: 0%; }
+  .ty1 { --y: 100%; }
+  .ux0 { --x: 0%; }
+  .ux1 { --x: 50%; }
+  .ux2 { --x: 100%; }
+  .uy0 { --y: 0%; }
+  .uy1 { --y: 50%; }
+  .uy2 { --y: 100%; }
+
+  @media (max-width: 1040px) {
+    h1 {
+      font-size: 4.7rem;
+    }
+
+    .direction-title {
+      font-size: 3.6rem;
+    }
+
+    .brief-grid,
+    .asset-showcase,
+    .sample-grid,
+    .type-band {
+      grid-template-columns: 1fr;
+    }
+
+    .palette,
+    .manifest-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .icon-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .topbar {
+      position: sticky;
+      padding: 10px 14px;
+    }
+
+    .brand-mini span {
+      letter-spacing: 0.16em;
+    }
+
+    .navlinks {
+      gap: 5px;
+    }
+
+    .navlinks a {
+      min-height: 32px;
+      padding: 7px 9px;
+      font-size: 0.58rem;
+      letter-spacing: 0.09em;
+    }
+
+    .hero,
+    .direction-hero {
+      min-height: 76svh;
+      padding: 72px 18px 42px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      letter-spacing: 0.04em;
+    }
+
+    .hero-lede,
+    .direction-copy {
+      font-size: 1rem;
+    }
+
+    .overview,
+    .direction-section,
+    .manifest {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .brief-copy h2,
+    .manifest h2 {
+      font-size: 1.8rem;
+    }
+
+    .direction-title {
+      font-size: 2.55rem;
+      letter-spacing: 0.03em;
+    }
+
+    .section-head {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .doc-points,
+    .palette,
+    .icon-grid,
+    .terrain-grid,
+    .component-grid,
+    .sample-body,
+    .manifest-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .component-card {
+      min-height: 0;
+    }
+
+    .component-card .ui-cell {
+      max-width: 220px;
+      margin: 0 auto;
+    }
+  }
+</style>
+</head>
+<body>
+  <nav class="topbar" aria-label="Showcase navigation">
+    <a class="brand-mini" href="#top"><span>Hegemony</span></a>
+    <div class="navlinks">
+      <a href="#dark">Dark</a>
+      <a href="#light">Light</a>
+      <a href="#manifest">Assets</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="hero-content">
+      <p class="kicker">Nano Banana generated brand and asset direction</p>
+      <h1>Hege<span>m</span>ony</h1>
+      <p class="hero-lede">
+        Two Greek vase systems for the strategy board game: one black-figure dark mode and one red-figure light mode,
+        both rebuilt around generated raster assets instead of the flat placeholder SVG glyphs in the earlier Kerameikos draft.
+      </p>
+      <div class="hero-facts" aria-label="Game facts reflected in the showcase">
+        <span>37 inland hex tiles</span>
+        <span>4 hotseat seats</span>
+        <span>6 tracked resources</span>
+        <span>3 pop classes</span>
+        <span>4 v0.1 buildings</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="overview">
+    <div class="wrap brief-grid">
+      <div class="brief-copy">
+        <h2>From Rules To Art System</h2>
+        <p>
+          The showcase is grounded in the v0.1 rules contract: players place capitals and colonies, collect wood,
+          stone, gold, food, influence, and happiness, then spend basic resources on buildings that shift population
+          and income. The deferred political layer still appears as a visual direction for assembly tokens, influence,
+          laurel marks, and season markers.
+        </p>
+        <div class="doc-points">
+          <div><b>Settlements</b>Capital, city, and colony assets are treated as board pieces rather than abstract line icons.</div>
+          <div><b>Economy</b>Resource marks use tactile pottery tokens for the HUD, the map, and component cards.</div>
+          <div><b>Population</b>Citizen, freeman, and slave icons become social-class portrait medallions.</div>
+          <div><b>Board</b>Mountain, hill, forest, and plains tiles are generated as ceramic hex components.</div>
+        </div>
+      </div>
+      <aside class="proof-card" aria-label="Generated image proof">
+        <div class="thumb">
+          <img src="../../assets/codex-banana-showcase/light-icon-atlas.png" alt="Generated light-mode Hegemony icon atlas" />
+        </div>
+        <p>
+          Every major visual family below is backed by project-local PNG output from the Nano Banana pro image endpoint:
+          hero tableaus, icon atlases, terrain atlases, and UI component sheets.
+        </p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="direction dark" id="dark">
+    <div class="direction-hero">
+      <div class="wrap">
+        <p class="deck-label">Alternative I - Dark Mode</p>
+        <h2 class="direction-title">Obsidian <span>Kiln</span></h2>
+        <p class="direction-copy">
+          A severe black-figure interface: clay silhouettes cut into a black-glazed board, ideal for a tense
+          political strategy game where the resource rail and map read like marks fired onto amphora walls.
+        </p>
+        <div class="asset-row">
+          <span class="asset-path">dark-hero-tableau.png</span>
+          <span class="asset-path">dark-icon-atlas.png</span>
+          <span class="asset-path">dark-terrain-atlas.png</span>
+          <span class="asset-path">dark-ui-kit.png</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="meander-strip"></div>
+
+    <section class="direction-section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-number">01 - Palette and Type</span>
+            <h2>Black Glaze, Attic Clay</h2>
+          </div>
+          <p>
+            The dark direction keeps the useful Kerameikos color memory but raises contrast and gives each UI state
+            a fired-material role: black for the board, clay for action, ochre for politics, bone for incised detail.
+          </p>
+        </div>
+        <div class="palette">
+          <div class="palette-chip" style="--chip:#181210;--chip-fg:#f4e6c8"><b>Vase Black</b><span>#181210</span></div>
+          <div class="palette-chip" style="--chip:#c0461c;--chip-fg:#181210"><b>Attic Clay</b><span>#C0461C</span></div>
+          <div class="palette-chip" style="--chip:#8f2e13;--chip-fg:#f4e6c8"><b>Fired Clay</b><span>#8F2E13</span></div>
+          <div class="palette-chip" style="--chip:#d98a35;--chip-fg:#181210"><b>Ochre Vote</b><span>#D98A35</span></div>
+          <div class="palette-chip" style="--chip:#f4e6c8;--chip-fg:#181210"><b>Bone Slip</b><span>#F4E6C8</span></div>
+          <div class="palette-chip" style="--chip:#5e6e3a;--chip-fg:#fff8e7"><b>Olive Yield</b><span>#5E6E3A</span></div>
+        </div>
+        <div class="type-band" style="margin-top:18px">
+          <div class="type-panel">
+            <span class="micro-label">Display voice</span>
+            <p class="type-display">Hegemony</p>
+            <p class="type-body">Copperplate-like inscriptional capitals give the interface a stamped ceramic rim without relying on remote font loading.</p>
+          </div>
+          <div class="type-panel">
+            <span class="micro-label">Rules voice</span>
+            <p class="type-body">
+              Spectral warmth from the old showcase becomes a broader bookish serif stack. Body copy stays readable for
+              turn logs, build costs, and legal placement feedback while still feeling historical.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="direction-section alt">
+      <div class="wrap asset-showcase">
+        <div class="asset-card">
+          <div class="atlas-frame">
+            <img src="assets/codex-banana-showcase/dark-icon-atlas.png" alt="Generated dark-mode Hegemony icon atlas" />
+          </div>
+          <div class="caption">
+            <span class="micro-label">Generated icon atlas</span>
+            Raster output is cropped into every resource, pop, building, and settlement mark below.
+          </div>
+        </div>
+        <div>
+          <div class="section-head" style="grid-template-columns:1fr;margin-bottom:22px">
+            <div>
+              <span class="section-number">02 - Icon Canon</span>
+              <h2>Clay Medallions For Every Core Item</h2>
+            </div>
+            <p>
+              Sixteen generated cells replace the old inline SVG glyphs. The names map directly to the current rules data.
+            </p>
+          </div>
+          <div class="icon-groups">
+            <div>
+              <h3 class="group-title">Resources</h3>
+              <div class="icon-grid">
+                <article class="icon-card"><span class="sprite icon x0 y0"></span><strong>Wood</strong><small>Building timber</small></article>
+                <article class="icon-card"><span class="sprite icon x1 y0"></span><strong>Stone</strong><small>Temples and upgrades</small></article>
+                <article class="icon-card"><span class="sprite icon x2 y0"></span><strong>Gold</strong><small>Trade pressure</small></article>
+                <article class="icon-card"><span class="sprite icon x3 y0"></span><strong>Food</strong><small>Population upkeep</small></article>
+                <article class="icon-card"><span class="sprite icon x0 y1"></span><strong>Influence</strong><small>Assembly power</small></article>
+                <article class="icon-card"><span class="sprite icon x1 y1"></span><strong>Happiness</strong><small>Pressure track</small></article>
+              </div>
+            </div>
+            <div>
+              <h3 class="group-title">Population</h3>
+              <div class="icon-grid">
+                <article class="icon-card"><span class="sprite icon x2 y1"></span><strong>Citizens</strong><small>Influence class</small></article>
+                <article class="icon-card"><span class="sprite icon x3 y1"></span><strong>Freemen</strong><small>Gold producers</small></article>
+                <article class="icon-card"><span class="sprite icon x0 y2"></span><strong>Slaves</strong><small>Resource labor</small></article>
+              </div>
+            </div>
+            <div>
+              <h3 class="group-title">Buildings</h3>
+              <div class="icon-grid">
+                <article class="icon-card"><span class="sprite icon x1 y2"></span><strong>Marketplace</strong><small>Adds freemen</small></article>
+                <article class="icon-card"><span class="sprite icon x2 y2"></span><strong>Temple</strong><small>Adds citizens</small></article>
+                <article class="icon-card"><span class="sprite icon x3 y2"></span><strong>Workshop</strong><small>Adds slaves</small></article>
+                <article class="icon-card"><span class="sprite icon x0 y3"></span><strong>Granary</strong><small>Adds food income</small></article>
+              </div>
+            </div>
+            <div>
+              <h3 class="group-title">Settlements</h3>
+              <div class="icon-grid">
+                <article class="icon-card"><span class="sprite icon x1 y3"></span><strong>Capital</strong><small>Double yield city</small></article>
+                <article class="icon-card"><span class="sprite icon x2 y3"></span><strong>City</strong><small>Upgrade target</small></article>
+                <article class="icon-card"><span class="sprite icon x3 y3"></span><strong>Colony</strong><small>Setup expansion</small></article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="direction-section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-number">03 - Board And Interface</span>
+            <h2>Hexes, Buttons, Turn Control</h2>
+          </div>
+          <p>
+            The board tiles and UI kit are separate generated sheets so production can tune them independently:
+            terrain remains high contrast, while buttons and markers can be overlaid with live HTML text.
+          </p>
+        </div>
+        <div class="asset-showcase">
+          <div class="asset-card">
+            <div class="atlas-frame">
+              <img src="assets/codex-banana-showcase/dark-terrain-atlas.png" alt="Generated dark-mode terrain atlas" />
+            </div>
+            <div class="caption"><span class="micro-label">Generated terrain atlas</span>Mountain, hill, forest, and plains as pottery hex tiles.</div>
+          </div>
+          <div>
+            <h3 class="group-title">Terrain Cells</h3>
+            <div class="terrain-grid">
+              <article class="terrain-card"><span class="sprite terrain tx0 ty0"></span><strong>Mountain</strong><small>Stone yield</small></article>
+              <article class="terrain-card"><span class="sprite terrain tx1 ty0"></span><strong>Hill</strong><small>Mixed yield</small></article>
+              <article class="terrain-card"><span class="sprite terrain tx0 ty1"></span><strong>Forest</strong><small>Wood yield</small></article>
+              <article class="terrain-card"><span class="sprite terrain tx1 ty1"></span><strong>Plains</strong><small>Food yield</small></article>
+            </div>
+          </div>
+        </div>
+        <div class="asset-showcase" style="margin-top:24px">
+          <div class="asset-card">
+            <div class="atlas-frame">
+              <img src="assets/codex-banana-showcase/dark-ui-kit.png" alt="Generated dark-mode UI component sheet" />
+            </div>
+            <div class="caption"><span class="micro-label">Generated UI sheet</span>Seals, blank button plates, resource pills, selection markers, borders, vote, and season tokens.</div>
+          </div>
+          <div>
+            <h3 class="group-title">Component Cells</h3>
+            <div class="component-grid">
+              <article class="component-card"><span class="sprite ui ui-cell ux0 uy0"></span><strong>Brand Seal</strong><small>Header and loading mark</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux1 uy0"></span><strong>Primary Button</strong><small>Collect income</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux2 uy0"></span><strong>Secondary Button</strong><small>Found colony</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux0 uy1"></span><strong>Resource Pill</strong><small>HUD surface</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux1 uy1"></span><strong>Hex Halo</strong><small>Selected tile</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux2 uy1"></span><strong>Player Token</strong><small>Seat control</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux0 uy2"></span><strong>Meander</strong><small>Section border</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux1 uy2"></span><strong>Vote Token</strong><small>Assembly layer</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux2 uy2"></span><strong>Season Mark</strong><small>Turn cycle</small></article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="direction-section alt">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-number">04 - Applied Screen Slice</span>
+            <h2>Prototype HUD Treatment</h2>
+          </div>
+          <p>
+            A compact application mock shows how the generated assets behave when they carry actual v0.1 game state:
+            resource counts, tile selection, and the three core turn actions.
+          </p>
+        </div>
+        <div class="sample-grid">
+          <div class="sample-panel">
+            <div class="hud-bar">
+              <span class="hud-brand">Hegemony</span>
+              <span class="resource-pill"><span class="sprite icon x0 y0"></span>Wood <b>20</b></span>
+              <span class="resource-pill"><span class="sprite icon x1 y0"></span>Stone <b>10</b></span>
+              <span class="resource-pill"><span class="sprite icon x2 y0"></span>Gold <b>10</b></span>
+              <span class="resource-pill"><span class="sprite icon x3 y0"></span>Food <b>12</b></span>
+              <span class="resource-pill"><span class="sprite icon x0 y1"></span>Influence <b>0</b></span>
+              <span class="resource-pill"><span class="sprite icon x1 y1"></span>Happiness <b>-2</b></span>
+            </div>
+            <div class="sample-body">
+              <div class="mini-map">
+                <span class="sprite terrain tx0 ty0"></span>
+                <span class="sprite terrain tx1 ty0"></span>
+                <span class="sprite terrain tx0 ty1"></span>
+                <span class="sprite terrain tx1 ty1"></span>
+                <span class="sprite terrain tx0 ty0"></span>
+                <span class="sprite terrain tx1 ty1"></span>
+              </div>
+              <div class="turn-card">
+                <h3>Season 1</h3>
+                <p>Player 1 has placed a capital and can collect income once before building.</p>
+                <button class="generated-button primary">Collect Income</button>
+                <button class="generated-button secondary">Found Colony</button>
+                <button class="generated-button secondary">End Turn</button>
+              </div>
+            </div>
+          </div>
+          <div class="notes-list">
+            <div>Use clay-filled generated buttons only for irreversible or high-value actions.</div>
+            <div>Keep terrain labels outside the generated tile so the same art works at board and inspector sizes.</div>
+            <div>Reserve ochre for political and turn-state feedback: influence, assembly votes, and season changes.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <section class="direction light" id="light">
+    <div class="direction-hero">
+      <div class="wrap">
+        <p class="deck-label">Alternative II - Light Mode</p>
+        <h2 class="direction-title">Red-Figure <span>Agora</span></h2>
+        <p class="direction-copy">
+          A brighter vase system: red-figure ceramics on warm slip, clearer for long teaching sessions and table projection
+          while keeping Hegemony rooted in Greek material language.
+        </p>
+        <div class="asset-row">
+          <span class="asset-path">light-hero-tableau.png</span>
+          <span class="asset-path">light-icon-atlas.png</span>
+          <span class="asset-path">light-terrain-atlas.png</span>
+          <span class="asset-path">light-ui-kit.png</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="meander-strip"></div>
+
+    <section class="direction-section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-number">01 - Palette and Type</span>
+            <h2>Bone Slip, Red Figure</h2>
+          </div>
+          <p>
+            The light direction takes the same vase premise but reverses the figure-ground relationship. It keeps
+            terracotta as the main figure color and uses Aegean blue only for navigational and political contrast.
+          </p>
+        </div>
+        <div class="palette">
+          <div class="palette-chip" style="--chip:#fff8e7;--chip-fg:#241910"><b>Ivory Slip</b><span>#FFF8E7</span></div>
+          <div class="palette-chip" style="--chip:#f4e6c8;--chip-fg:#241910"><b>Bone Ground</b><span>#F4E6C8</span></div>
+          <div class="palette-chip" style="--chip:#c0461c;--chip-fg:#fff8e7"><b>Red Figure</b><span>#C0461C</span></div>
+          <div class="palette-chip" style="--chip:#722420;--chip-fg:#fff8e7"><b>Oxblood Line</b><span>#722420</span></div>
+          <div class="palette-chip" style="--chip:#d98a35;--chip-fg:#241910"><b>Honey Ochre</b><span>#D98A35</span></div>
+          <div class="palette-chip" style="--chip:#1f6977;--chip-fg:#fff8e7"><b>Aegean Vote</b><span>#1F6977</span></div>
+        </div>
+        <div class="type-band" style="margin-top:18px">
+          <div class="type-panel">
+            <span class="micro-label">Display voice</span>
+            <p class="type-display">Found A City</p>
+            <p class="type-body">The same inscriptional title style is softened by the brighter ground and lower contrast borders.</p>
+          </div>
+          <div class="type-panel">
+            <span class="micro-label">Rules voice</span>
+            <p class="type-body">
+              This mode is the practical teaching-table option: stronger white space, larger hit targets, visible terrain art,
+              and a warmer page rhythm for players learning the economy loop.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="direction-section alt">
+      <div class="wrap asset-showcase">
+        <div class="asset-card">
+          <div class="atlas-frame">
+            <img src="../../assets/codex-banana-showcase/light-icon-atlas.png" alt="Generated light-mode Hegemony icon atlas" />
+          </div>
+          <div class="caption">
+            <span class="micro-label">Generated icon atlas</span>
+            The same sixteen game concepts, regenerated as red-figure ceramic tokens for the light interface.
+          </div>
+        </div>
+        <div>
+          <div class="section-head" style="grid-template-columns:1fr;margin-bottom:22px">
+            <div>
+              <span class="section-number">02 - Icon Canon</span>
+              <h2>Readable Tokens For Teaching Play</h2>
+            </div>
+            <p>
+              Each cell keeps the same sprite position as the dark atlas, making theme switching a file swap rather than a data rewrite.
+            </p>
+          </div>
+          <div class="icon-groups">
+            <div>
+              <h3 class="group-title">Resources</h3>
+              <div class="icon-grid">
+                <article class="icon-card"><span class="sprite icon x0 y0"></span><strong>Wood</strong><small>Building timber</small></article>
+                <article class="icon-card"><span class="sprite icon x1 y0"></span><strong>Stone</strong><small>Temples and upgrades</small></article>
+                <article class="icon-card"><span class="sprite icon x2 y0"></span><strong>Gold</strong><small>Trade pressure</small></article>
+                <article class="icon-card"><span class="sprite icon x3 y0"></span><strong>Food</strong><small>Population upkeep</small></article>
+                <article class="icon-card"><span class="sprite icon x0 y1"></span><strong>Influence</strong><small>Assembly power</small></article>
+                <article class="icon-card"><span class="sprite icon x1 y1"></span><strong>Happiness</strong><small>Pressure track</small></article>
+              </div>
+            </div>
+            <div>
+              <h3 class="group-title">Population</h3>
+              <div class="icon-grid">
+                <article class="icon-card"><span class="sprite icon x2 y1"></span><strong>Citizens</strong><small>Influence class</small></article>
+                <article class="icon-card"><span class="sprite icon x3 y1"></span><strong>Freemen</strong><small>Gold producers</small></article>
+                <article class="icon-card"><span class="sprite icon x0 y2"></span><strong>Slaves</strong><small>Resource labor</small></article>
+              </div>
+            </div>
+            <div>
+              <h3 class="group-title">Buildings</h3>
+              <div class="icon-grid">
+                <article class="icon-card"><span class="sprite icon x1 y2"></span><strong>Marketplace</strong><small>Adds freemen</small></article>
+                <article class="icon-card"><span class="sprite icon x2 y2"></span><strong>Temple</strong><small>Adds citizens</small></article>
+                <article class="icon-card"><span class="sprite icon x3 y2"></span><strong>Workshop</strong><small>Adds slaves</small></article>
+                <article class="icon-card"><span class="sprite icon x0 y3"></span><strong>Granary</strong><small>Adds food income</small></article>
+              </div>
+            </div>
+            <div>
+              <h3 class="group-title">Settlements</h3>
+              <div class="icon-grid">
+                <article class="icon-card"><span class="sprite icon x1 y3"></span><strong>Capital</strong><small>Double yield city</small></article>
+                <article class="icon-card"><span class="sprite icon x2 y3"></span><strong>City</strong><small>Upgrade target</small></article>
+                <article class="icon-card"><span class="sprite icon x3 y3"></span><strong>Colony</strong><small>Setup expansion</small></article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="direction-section">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-number">03 - Board And Interface</span>
+            <h2>Ceramic Components On A Bright Table</h2>
+          </div>
+          <p>
+            The generated light sheets lean into tactile component clarity: the tiles are more inspectable, and UI
+            plaques leave cleaner centers for live action text.
+          </p>
+        </div>
+        <div class="asset-showcase">
+          <div class="asset-card">
+            <div class="atlas-frame">
+              <img src="../../assets/codex-banana-showcase/light-terrain-atlas.png" alt="Generated light-mode terrain atlas" />
+            </div>
+            <div class="caption"><span class="micro-label">Generated terrain atlas</span>Terrain categories remain in the exact same sprite order as the dark sheet.</div>
+          </div>
+          <div>
+            <h3 class="group-title">Terrain Cells</h3>
+            <div class="terrain-grid">
+              <article class="terrain-card"><span class="sprite terrain tx0 ty0"></span><strong>Mountain</strong><small>Stone yield</small></article>
+              <article class="terrain-card"><span class="sprite terrain tx1 ty0"></span><strong>Hill</strong><small>Mixed yield</small></article>
+              <article class="terrain-card"><span class="sprite terrain tx0 ty1"></span><strong>Forest</strong><small>Wood yield</small></article>
+              <article class="terrain-card"><span class="sprite terrain tx1 ty1"></span><strong>Plains</strong><small>Food yield</small></article>
+            </div>
+          </div>
+        </div>
+        <div class="asset-showcase" style="margin-top:24px">
+          <div class="asset-card">
+            <div class="atlas-frame">
+              <img src="../../assets/codex-banana-showcase/light-ui-kit.png" alt="Generated light-mode UI component sheet" />
+            </div>
+            <div class="caption"><span class="micro-label">Generated UI sheet</span>The same nine UI component roles, with bright red-figure ceramic surfaces.</div>
+          </div>
+          <div>
+            <h3 class="group-title">Component Cells</h3>
+            <div class="component-grid">
+              <article class="component-card"><span class="sprite ui ui-cell ux0 uy0"></span><strong>Brand Seal</strong><small>Header and loading mark</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux1 uy0"></span><strong>Primary Button</strong><small>Collect income</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux2 uy0"></span><strong>Secondary Button</strong><small>Found colony</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux0 uy1"></span><strong>Resource Pill</strong><small>HUD surface</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux1 uy1"></span><strong>Hex Halo</strong><small>Selected tile</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux2 uy1"></span><strong>Player Token</strong><small>Seat control</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux0 uy2"></span><strong>Meander</strong><small>Section border</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux1 uy2"></span><strong>Vote Token</strong><small>Assembly layer</small></article>
+              <article class="component-card"><span class="sprite ui ui-cell ux2 uy2"></span><strong>Season Mark</strong><small>Turn cycle</small></article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="direction-section alt">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-number">04 - Applied Screen Slice</span>
+            <h2>Teaching Table Treatment</h2>
+          </div>
+          <p>
+            The same live concepts as the dark mode, but with larger visual pauses and brighter component surfaces for
+            easier parsing during early hotseat tests.
+          </p>
+        </div>
+        <div class="sample-grid">
+          <div class="sample-panel">
+            <div class="hud-bar">
+              <span class="hud-brand">Hegemony</span>
+              <span class="resource-pill"><span class="sprite icon x0 y0"></span>Wood <b>20</b></span>
+              <span class="resource-pill"><span class="sprite icon x1 y0"></span>Stone <b>10</b></span>
+              <span class="resource-pill"><span class="sprite icon x2 y0"></span>Gold <b>10</b></span>
+              <span class="resource-pill"><span class="sprite icon x3 y0"></span>Food <b>12</b></span>
+              <span class="resource-pill"><span class="sprite icon x0 y1"></span>Influence <b>0</b></span>
+              <span class="resource-pill"><span class="sprite icon x1 y1"></span>Happiness <b>-2</b></span>
+            </div>
+            <div class="sample-body">
+              <div class="mini-map">
+                <span class="sprite terrain tx0 ty0"></span>
+                <span class="sprite terrain tx1 ty0"></span>
+                <span class="sprite terrain tx0 ty1"></span>
+                <span class="sprite terrain tx1 ty1"></span>
+                <span class="sprite terrain tx0 ty0"></span>
+                <span class="sprite terrain tx1 ty1"></span>
+              </div>
+              <div class="turn-card">
+                <h3>Season 1</h3>
+                <p>Player 1 has placed a capital and can collect income once before building.</p>
+                <button class="generated-button primary">Collect Income</button>
+                <button class="generated-button secondary">Found Colony</button>
+                <button class="generated-button secondary">End Turn</button>
+              </div>
+            </div>
+          </div>
+          <div class="notes-list">
+            <div>Use the light mode when the board needs to be projected, taught, or inspected over a long session.</div>
+            <div>Keep Aegean blue rare so it can mean political attention instead of becoming a general decoration color.</div>
+            <div>The light icon atlas can share the same component data keys as the dark mode: only the CSS asset variables change.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <section class="manifest" id="manifest">
+    <div class="wrap">
+      <h2>Nano Banana Asset Manifest</h2>
+      <p>
+        These eight project-bound PNGs were generated with the Nano Banana pro image endpoint and copied into the workspace.
+        They are intentionally atlas-based: production can crop them into individual UI pieces or replace any cell later
+        without changing the semantic resource, population, building, settlement, terrain, or component mapping.
+      </p>
+      <div class="manifest-grid">
+        <article class="manifest-card"><b>Dark hero</b><code>assets/codex-banana-showcase/dark-hero-tableau.png</code></article>
+        <article class="manifest-card"><b>Dark icons</b><code>assets/codex-banana-showcase/dark-icon-atlas.png</code></article>
+        <article class="manifest-card"><b>Dark terrain</b><code>assets/codex-banana-showcase/dark-terrain-atlas.png</code></article>
+        <article class="manifest-card"><b>Dark UI kit</b><code>assets/codex-banana-showcase/dark-ui-kit.png</code></article>
+        <article class="manifest-card"><b>Light hero</b><code>assets/codex-banana-showcase/light-hero-tableau.png</code></article>
+        <article class="manifest-card"><b>Light icons</b><code>assets/codex-banana-showcase/light-icon-atlas.png</code></article>
+        <article class="manifest-card"><b>Light terrain</b><code>assets/codex-banana-showcase/light-terrain-atlas.png</code></article>
+        <article class="manifest-card"><b>Light UI kit</b><code>assets/codex-banana-showcase/light-ui-kit.png</code></article>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

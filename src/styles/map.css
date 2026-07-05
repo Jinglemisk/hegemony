@@ -191,33 +191,33 @@
 }
 
 .resourceMask-wood {
-  -webkit-mask-image: url("../assets/resource-icons/wood-mask.png");
-  mask-image: url("../assets/resource-icons/wood-mask.png");
+  -webkit-mask-image: url("../../assets/resource-icons/wood-mask.png");
+  mask-image: url("../../assets/resource-icons/wood-mask.png");
 }
 
 .resourceMask-stone {
-  -webkit-mask-image: url("../assets/resource-icons/stone-mask.png");
-  mask-image: url("../assets/resource-icons/stone-mask.png");
+  -webkit-mask-image: url("../../assets/resource-icons/stone-mask.png");
+  mask-image: url("../../assets/resource-icons/stone-mask.png");
 }
 
 .resourceMask-gold {
-  -webkit-mask-image: url("../assets/resource-icons/gold-mask.png");
-  mask-image: url("../assets/resource-icons/gold-mask.png");
+  -webkit-mask-image: url("../../assets/resource-icons/gold-mask.png");
+  mask-image: url("../../assets/resource-icons/gold-mask.png");
 }
 
 .resourceMask-food {
-  -webkit-mask-image: url("../assets/resource-icons/food-mask.png");
-  mask-image: url("../assets/resource-icons/food-mask.png");
+  -webkit-mask-image: url("../../assets/resource-icons/food-mask.png");
+  mask-image: url("../../assets/resource-icons/food-mask.png");
 }
 
 .resourceMask-influence {
-  -webkit-mask-image: url("../assets/resource-icons/influence-mask.png");
-  mask-image: url("../assets/resource-icons/influence-mask.png");
+  -webkit-mask-image: url("../../assets/resource-icons/influence-mask.png");
+  mask-image: url("../../assets/resource-icons/influence-mask.png");
 }
 
 .resourceMask-happiness {
-  -webkit-mask-image: url("../assets/resource-icons/unrest-mask.png");
-  mask-image: url("../assets/resource-icons/unrest-mask.png");
+  -webkit-mask-image: url("../../assets/resource-icons/unrest-mask.png");
+  mask-image: url("../../assets/resource-icons/unrest-mask.png");
 }
 
 .atlasTerrain {
