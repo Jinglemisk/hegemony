@@ -1,28 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import type { BuildingId, HegemonyState, PlayerId, PopType, Pops } from "./types";
-import { GAME_CONFIG, TEST_OPENING_SETUP } from "./config";
-import { PLAYER_IDS } from "./data";
+import { produce } from "immer";
+import type { BuildingId, HegemonyState, Phase, PlayerId, PopType, Pops } from "./types";
 import {
   buildBuilding,
   collectIncome,
-  createInitialState,
-  drawSeasonalEvent,
-  expireTurnEventModifiers,
   foundColony,
   growPop,
-  INVALID_MOVE,
   movePops,
   placeCapital,
   placeColony,
   resolvePendingPlayerEvent,
-  resolveArrivingPops,
-  startNewSeason,
-  upgradeColonyToCity
+  upgradeColonyToCity,
 } from "./rules";
+import { advanceSetupTurn, beginGameplayTurn, createGame, endTurn } from "./turn";
+import { setupCapitalCount } from "./ruleset";
 
-export type Phase = "setupCapital" | "setupColony" | "gameplay";
+export type { Phase } from "./types";
 
+/** Read-only projection of the turn fields now living on {@link HegemonyState}, kept for the UI's convenience. */
 export type LocalContext = {
   currentPlayer: PlayerId;
   phase: Phase;
@@ -50,322 +46,137 @@ export type GameEvents = {
   endTurn: () => void;
 };
 
-type SetGame = Dispatch<SetStateAction<HegemonyGame>>;
+type SetState = Dispatch<SetStateAction<HegemonyState>>;
 
-export function createInitialGame(): HegemonyGame {
-  return GAME_CONFIG.preloadOpeningSetupForTesting ? createPreloadedOpeningSetupGame() : createEmptySetupGame();
-}
-
-function createEmptySetupGame(): HegemonyGame {
-  return {
-    G: createInitialState(),
-    ctx: {
-      currentPlayer: "0",
-      phase: "setupCapital",
-      turn: 1
-    }
-  };
-}
-
-function createPreloadedOpeningSetupGame(): HegemonyGame {
-  const game = createEmptySetupGame();
-
-  for (const placement of TEST_OPENING_SETUP) {
-    assertSetupTurn(game.ctx, placement.playerID, "setupCapital");
-    const result = placeCapital(game.G, placement.playerID, placement.city.tileId, placement.city.pops);
-    assertValidSetupMove(result, placement.playerID, "city", placement.city.tileId);
-    game.ctx = advanceSetupTurn(game.G, game.ctx, 1, "setupColony");
-  }
-
-  for (const placement of TEST_OPENING_SETUP) {
-    assertSetupTurn(game.ctx, placement.playerID, "setupColony");
-    const result = placeColony(game.G, placement.playerID, placement.colony.tileId, placement.colony.pops);
-    assertValidSetupMove(result, placement.playerID, "colony", placement.colony.tileId);
-    game.ctx = advanceSetupTurn(game.G, game.ctx, 2, "gameplay");
-  }
-
-  beginGameplayTurn(game.G, game.ctx);
-  return game;
-}
-
-function assertSetupTurn(ctx: LocalContext, playerID: PlayerId, phase: Phase) {
-  if (ctx.currentPlayer !== playerID || ctx.phase !== phase) {
-    throw new Error(`Invalid test setup order: expected ${playerID} during ${phase}.`);
-  }
-}
-
-function assertValidSetupMove(
-  result: typeof INVALID_MOVE | void,
-  playerID: PlayerId,
-  settlementKind: "city" | "colony",
-  tileId: string
-) {
-  if (result === INVALID_MOVE) {
-    throw new Error(`Invalid test setup: ${playerID} cannot place ${settlementKind} on ${tileId}.`);
-  }
+function deriveContext(G: HegemonyState): LocalContext {
+  return { currentPlayer: G.currentPlayer, phase: G.phase, turn: G.turn };
 }
 
 export function useHegemonyGame() {
   const [playerID, setPlayerID] = useState<PlayerId>("0");
-  const [game, setGame] = useState<HegemonyGame>(createInitialGame);
+  const [G, setG] = useState<HegemonyState>(createGame);
 
   useEffect(() => {
-    setPlayerID(game.ctx.currentPlayer);
-  }, [game.ctx.currentPlayer]);
+    setPlayerID(G.currentPlayer);
+  }, [G.currentPlayer]);
 
-  const moves = useMemo(() => createMoves(setGame), []);
-  const events = useMemo(() => createEvents(setGame), []);
+  const moves = useMemo(() => createMoves(setG), []);
+  const events = useMemo(() => createEvents(setG), []);
+  // Stable while G is unchanged, so memoized panels that read the turn context don't re-render on unrelated UI state.
+  const ctx = useMemo(() => deriveContext(G), [G]);
 
   return {
-    game,
+    game: { G, ctx },
     playerID,
     setPlayerID,
     moves,
     events,
-    isActive: playerID === game.ctx.currentPlayer
+    isActive: playerID === G.currentPlayer,
   };
 }
 
-function createMoves(setGame: SetGame): GameMoves {
+/**
+ * Each move runs a pure engine mutator inside an Immer `produce`, committing the
+ * result only on success. Immer gives structural sharing — unchanged subtrees keep
+ * their identity across moves (so memoized components can skip re-rendering) — and
+ * freezes the result, hardening the engine/UI immutability boundary. On failure we
+ * discard the draft and return the previous reference unchanged, so no re-render fires.
+ */
+function createMoves(setG: SetState): GameMoves {
   return {
     placeCapital: (tileId, pops) => {
-      setGame((previous) => {
-        if (previous.ctx.phase !== "setupCapital") {
+      setG((previous) => {
+        if (previous.phase !== "setupCapital") {
           return previous;
         }
 
-        const G = structuredClone(previous.G);
-        const result = placeCapital(G, previous.ctx.currentPlayer, tileId, pops);
+        let ok = false;
+        const next = produce(previous, (draft) => {
+          if (!placeCapital(draft, draft.currentPlayer, tileId, pops).ok) {
+            return;
+          }
 
-        if (result === INVALID_MOVE) {
-          return previous;
-        }
-
-        return {
-          G,
-          ctx: advanceSetupTurn(G, previous.ctx, 1, "setupColony")
-        };
+          advanceSetupTurn(draft, setupCapitalCount(draft.ruleset), "setupColony");
+          ok = true;
+        });
+        return ok ? next : previous;
       });
     },
     placeColony: (tileId, pops) => {
-      setGame((previous) => {
-        if (previous.ctx.phase !== "setupColony") {
+      setG((previous) => {
+        if (previous.phase !== "setupColony") {
           return previous;
         }
 
-        const G = structuredClone(previous.G);
-        const result = placeColony(G, previous.ctx.currentPlayer, tileId, pops);
+        let ok = false;
+        const next = produce(previous, (draft) => {
+          if (!placeColony(draft, draft.currentPlayer, tileId, pops).ok) {
+            return;
+          }
 
-        if (result === INVALID_MOVE) {
-          return previous;
-        }
-
-        const ctx = advanceSetupTurn(G, previous.ctx, 2, "gameplay");
-        beginGameplayTurn(G, ctx);
-
-        return { G, ctx };
+          advanceSetupTurn(draft, draft.ruleset.setup.length, "gameplay");
+          beginGameplayTurn(draft);
+          ok = true;
+        });
+        return ok ? next : previous;
       });
     },
     collectIncome: () => {
-      setGame((previous) => {
-        if (previous.ctx.phase !== "gameplay") {
-          return previous;
-        }
-
-        const G = structuredClone(previous.G);
-        const result = collectIncome(G, previous.ctx.currentPlayer);
-
-        if (result === INVALID_MOVE) {
-          return previous;
-        }
-
-        return {
-          ...previous,
-          G
-        };
-      });
+      setG((previous) => commitGameplayMove(previous, (G) => collectIncome(G, G.currentPlayer)));
     },
     foundColony: (tileId, sourceTileId, pop) => {
-      setGame((previous) => {
-        if (previous.ctx.phase !== "gameplay") {
-          return previous;
-        }
-
-        const G = structuredClone(previous.G);
-        const result = foundColony(G, previous.ctx.currentPlayer, tileId, sourceTileId, pop);
-
-        if (result === INVALID_MOVE) {
-          return previous;
-        }
-
-        return {
-          ...previous,
-          G
-        };
-      });
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => foundColony(G, G.currentPlayer, tileId, sourceTileId, pop)),
+      );
     },
     upgradeColonyToCity: (tileId, pops) => {
-      setGame((previous) => {
-        if (previous.ctx.phase !== "gameplay") {
-          return previous;
-        }
-
-        const G = structuredClone(previous.G);
-        const result = upgradeColonyToCity(G, previous.ctx.currentPlayer, tileId, pops);
-
-        if (result === INVALID_MOVE) {
-          return previous;
-        }
-
-        return {
-          ...previous,
-          G
-        };
-      });
+      setG((previous) => commitGameplayMove(previous, (G) => upgradeColonyToCity(G, G.currentPlayer, tileId, pops)));
     },
     buildBuilding: (tileId, buildingId) => {
-      setGame((previous) => {
-        if (previous.ctx.phase !== "gameplay") {
-          return previous;
-        }
-
-        const G = structuredClone(previous.G);
-        const result = buildBuilding(G, previous.ctx.currentPlayer, tileId, buildingId);
-
-        if (result === INVALID_MOVE) {
-          return previous;
-        }
-
-        return {
-          ...previous,
-          G
-        };
-      });
+      setG((previous) => commitGameplayMove(previous, (G) => buildBuilding(G, G.currentPlayer, tileId, buildingId)));
     },
     growPop: (tileId, pop) => {
-      setGame((previous) => {
-        if (previous.ctx.phase !== "gameplay") {
-          return previous;
-        }
-
-        const G = structuredClone(previous.G);
-        const result = growPop(G, previous.ctx.currentPlayer, tileId, pop);
-
-        if (result === INVALID_MOVE) {
-          return previous;
-        }
-
-        return {
-          ...previous,
-          G
-        };
-      });
+      setG((previous) => commitGameplayMove(previous, (G) => growPop(G, G.currentPlayer, tileId, pop)));
     },
     movePops: (sourceTileId, targetTileId, pops) => {
-      setGame((previous) => {
-        if (previous.ctx.phase !== "gameplay") {
-          return previous;
-        }
-
-        const G = structuredClone(previous.G);
-        const result = movePops(G, previous.ctx.currentPlayer, sourceTileId, targetTileId, pops);
-
-        if (result === INVALID_MOVE) {
-          return previous;
-        }
-
-        return {
-          ...previous,
-          G
-        };
-      });
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => movePops(G, G.currentPlayer, sourceTileId, targetTileId, pops)),
+      );
     },
     resolvePendingPlayerEvent: (targetTileId, choiceIndex) => {
-      setGame((previous) => {
-        if (previous.ctx.phase !== "gameplay") {
-          return previous;
-        }
-
-        const G = structuredClone(previous.G);
-        const result = resolvePendingPlayerEvent(G, previous.ctx.currentPlayer, targetTileId, choiceIndex);
-
-        if (result === INVALID_MOVE) {
-          return previous;
-        }
-
-        return {
-          ...previous,
-          G
-        };
-      });
-    }
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => resolvePendingPlayerEvent(G, G.currentPlayer, targetTileId, choiceIndex)),
+      );
+    },
   };
 }
 
-function createEvents(setGame: SetGame): GameEvents {
+/** Run a gameplay-phase mutator inside `produce`, committing only if the phase was valid and the move succeeded. */
+function commitGameplayMove(
+  previous: HegemonyState,
+  mutate: (G: HegemonyState) => { ok: boolean },
+): HegemonyState {
+  if (previous.phase !== "gameplay") {
+    return previous;
+  }
+
+  let ok = false;
+  const next = produce(previous, (draft) => {
+    ok = mutate(draft).ok;
+  });
+  return ok ? next : previous;
+}
+
+function createEvents(setG: SetState): GameEvents {
   return {
     endTurn: () => {
-      setGame((previous) => {
-        if (previous.ctx.phase !== "gameplay" || previous.G.pendingPlayerEvent) {
-          return previous;
-        }
-
-        const G = structuredClone(previous.G);
-        const next = nextPlayer(previous.ctx.currentPlayer);
-
-        expireTurnEventModifiers(G, previous.ctx.currentPlayer);
-
-        if (next === "0") {
-          startNewSeason(G);
-        }
-
-        resolveArrivingPops(G, next);
-        collectIncome(G, next, "automatic");
-
-        return {
-          G,
-          ctx: {
-            ...previous.ctx,
-            currentPlayer: next,
-            turn: previous.ctx.turn + 1
-          }
-        };
+      setG((previous) => {
+        let ok = false;
+        const next = produce(previous, (draft) => {
+          ok = endTurn(draft).ok;
+        });
+        return ok ? next : previous;
       });
-    }
-  };
-}
-
-function beginGameplayTurn(G: HegemonyState, ctx: LocalContext) {
-  if (ctx.phase === "gameplay") {
-    if (!G.activeSeasonEvent) {
-      drawSeasonalEvent(G);
-    }
-
-    collectIncome(G, ctx.currentPlayer, "automatic");
-  }
-}
-
-function nextPlayer(playerID: PlayerId): PlayerId {
-  const currentIndex = PLAYER_IDS.indexOf(playerID);
-  return PLAYER_IDS[(currentIndex + 1) % PLAYER_IDS.length];
-}
-
-function allPlayersHaveSettlementCount(G: HegemonyState, count: number) {
-  return Object.values(G.players).every((player) => player.settlements.length >= count);
-}
-
-function advanceSetupTurn(G: HegemonyState, ctx: LocalContext, count: number, nextPhase: Phase): LocalContext {
-  if (allPlayersHaveSettlementCount(G, count)) {
-    return {
-      currentPlayer: "0",
-      phase: nextPhase,
-      turn: ctx.turn + 1
-    };
-  }
-
-  return {
-    ...ctx,
-    currentPlayer: nextPlayer(ctx.currentPlayer),
-    turn: ctx.turn + 1
+    },
   };
 }

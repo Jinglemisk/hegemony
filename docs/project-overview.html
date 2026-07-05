@@ -212,7 +212,7 @@
       <section class="status" aria-label="Current status">
         <div>
           <span>Project stage</span>
-          <strong>Phase 1</strong>
+          <strong>Phase 2</strong>
         </div>
         <div>
           <span>Playable mode</span>
@@ -233,15 +233,17 @@
           <h2>Project Roadmap</h2>
           <div class="phase-track">
             <div class="phase">
-              <strong>Phase 0: Scaffolding and Rules Capture</strong>
+              <strong>Phase 0: Scaffolding and Rules Capture &mdash; done</strong>
               Project setup, docs, first rules translation, and removal of boardgame.io.
             </div>
-            <div class="phase current">
-              <strong>Phase 1: Core Playable Prototype</strong>
-              Map, setup flow, turns, income, expansion, city upgrades, pops, buildings, holdings UI, and basic local play.
-            </div>
             <div class="phase">
-              <strong>Phase 2: Rule Depth</strong>
+              <strong>Phase 1: Core Playable Prototype &mdash; done</strong>
+              Map, setup flow, turns, income, expansion, city upgrades, pops, buildings, holdings UI, and basic local play.
+              Since hardened: a serializable engine with a deterministic RNG, a pure turn machine, a tunable
+              <code>Ruleset</code> seam, event-card decks, an automated test suite + CI, and a memoized UI.
+            </div>
+            <div class="phase current">
+              <strong>Phase 2: Rule Depth &mdash; in progress</strong>
               Happiness events, food pressure, scoring pressure, assembly voting, richer building effects, and better balance rules.
             </div>
             <div class="phase">
@@ -294,6 +296,11 @@
             <li>Shared colony tiles with split income.</li>
             <li>Basic buildings with data-driven costs and effects.</li>
             <li>Player holdings panel and action log modal.</li>
+            <li>Seasonal and per-player event-card decks with an effect interpreter.</li>
+            <li>Deterministic seeded RNG, so a game is reproducible from its seed.</li>
+            <li>A serializable game state + pure turn machine (multiplayer-ready shape).</li>
+            <li>A tunable <code>Ruleset</code> and game-mode registry (standard / fast-start / deathmatch).</li>
+            <li>Automated test suite (Vitest) + ESLint/Prettier + GitHub Actions CI.</li>
           </ul>
         </article>
 
@@ -350,9 +357,19 @@
                 <td><code>src/game/data.ts</code></td>
               </tr>
               <tr>
-                <td>Rules engine: legal moves, income, turns, settlement rules</td>
-                <td><code>src/game/rules.ts</code></td>
-                <td><code>src/game/rules.ts</code></td>
+                <td>Rules engine: legal moves, income, settlement rules</td>
+                <td><code>src/game/rules.ts</code> (a barrel over cohesive modules: <code>core/</code>, <code>economy/</code>, <code>actions.ts</code>, <code>settlement.ts</code>, <code>status.ts</code>, <code>events.ts</code>, <code>season.ts</code>, <code>state.ts</code>)</td>
+                <td>the specific module under <code>src/game/</code></td>
+              </tr>
+              <tr>
+                <td>Turn / phase machine (setup, income, end-turn)</td>
+                <td><code>src/game/turn.ts</code></td>
+                <td><code>src/game/turn.ts</code></td>
+              </tr>
+              <tr>
+                <td>Tunable balance values &amp; game modes (Ruleset, GAME_MODES)</td>
+                <td><code>src/game/ruleset.ts</code> · mode selected in <code>src/game/config.ts</code></td>
+                <td><code>src/game/ruleset.ts</code></td>
               </tr>
               <tr>
                 <td>Map generation and hex math</td>
@@ -360,14 +377,19 @@
                 <td><code>src/game/map.ts</code></td>
               </tr>
               <tr>
-                <td>React game screen and local hotseat state</td>
-                <td><code>src/App.tsx</code></td>
-                <td><code>src/App.tsx</code></td>
+                <td>Local hotseat state seam (React ↔ engine)</td>
+                <td><code>src/game/controller.ts</code> (<code>useHegemonyGame</code>); <code>src/App.tsx</code> is a thin wrapper</td>
+                <td><code>src/game/controller.ts</code></td>
+              </tr>
+              <tr>
+                <td>Board UI (topbar, ledger, command, map, modals)</td>
+                <td><code>src/components/HegemonyBoard.tsx</code> + <code>src/components/board/</code></td>
+                <td><code>src/components/board/</code></td>
               </tr>
               <tr>
                 <td>Visual styling</td>
-                <td><code>src/styles.css</code></td>
-                <td><code>src/styles.css</code></td>
+                <td><code>src/styles.css</code> (a barrel of <code>@import</code>s) over slices in <code>src/styles/</code></td>
+                <td>the relevant slice under <code>src/styles/</code></td>
               </tr>
               <tr>
                 <td>Brand and art-style exploration</td>
@@ -399,6 +421,8 @@
             <li>Install packages with <code>npm install</code>.</li>
             <li>Start the dev server with <code>npm run dev</code>.</li>
             <li>Run type checks with <code>npm run check</code>.</li>
+            <li>Lint with <code>npm run lint</code> and format with <code>npm run format</code>.</li>
+            <li>Run the test suite with <code>npm run test</code> (watch) or <code>npm run test:run</code> (once).</li>
             <li>Run a production build with <code>npm run build</code>.</li>
           </ul>
         </article>

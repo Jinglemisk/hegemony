@@ -1,0 +1,185 @@
+/* responsive — Responsive overrides (@media breakpoints). MUST load LAST — these override earlier rules by cascade order
+   Split from styles.css (Phase 2e); original source order preserved. */
+
+@media (max-width: 1280px) {
+  .workbench {
+    grid-template-columns: minmax(250px, 320px) minmax(420px, 1fr) minmax(280px, 330px);
+  }
+
+  .topbar {
+    grid-template-columns: minmax(180px, auto) minmax(320px, 1fr) auto;
+  }
+
+  .topResourceGrid {
+    grid-template-columns: repeat(3, minmax(92px, 1fr));
+  }
+}
+
+@media (max-width: 1120px) {
+  body {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .shell {
+    min-height: 100svh;
+    height: auto;
+    overflow: visible;
+  }
+
+  .workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    overflow: visible;
+  }
+
+  .hexMap {
+    min-height: 460px;
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    padding: 12px;
+  }
+
+  .topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .topResourceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .resourceTooltip {
+    position: fixed;
+    top: 92px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: min(430px, calc(100vh - 116px));
+  }
+
+  .iconButton {
+    flex: 1 1 0;
+  }
+
+  .resourceGrid,
+  .moveFields,
+  .popChoiceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .topResourceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hexMap {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 460px) {
+
+  .workbench {
+    gap: 10px;
+  }
+
+  .panel {
+    padding: 12px;
+  }
+
+  .buildingButton {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .buildingButtonIcon {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .strategyTopbar {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .strategyWorkbench {
+    grid-template-columns: minmax(280px, 320px) minmax(520px, 1fr) minmax(280px, 320px);
+  }
+
+  .bandResourceGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1120px) {
+  .strategyTopbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .strategyWorkbench {
+    grid-template-columns: 1fr;
+  }
+
+  .strategyMapColumn {
+    order: -1;
+  }
+
+  .scoreboardPanel {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .bandResourceGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+
+  .seasonMedallion {
+    width: 46px;
+    height: 46px;
+  }
+
+  .popBuildingMatrix,
+  .deckShelf {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scoreboardPanel {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .bandResourceGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .commandToolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .commandEndTurn {
+    grid-column: span 2;
+  }
+
+  .scoreTooltip {
+    position: fixed;
+    top: 88px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+
+@media (max-width: 460px) {
+  .popBuildingMatrix,
+  .deckShelf,
+  .growPopBenefitPanel,
+  .popSummary {
+    grid-template-columns: 1fr;
+  }
+}

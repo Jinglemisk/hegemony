@@ -1,3 +1,5 @@
+import type { Ruleset } from "./ruleset";
+
 export type PlayerId = "0" | "1" | "2" | "3";
 
 export type Terrain = "mountain" | "hill" | "forest" | "plains";
@@ -9,6 +11,8 @@ export type MaterialResource = Exclude<Resource, "influence" | "happiness">;
 export type PopType = "citizens" | "freemen" | "slaves";
 
 export type SettlementKind = "capital" | "city" | "colony";
+
+export type Phase = "setupCapital" | "setupColony" | "gameplay";
 
 export type BuildingId = "marketplace" | "temple" | "workshop" | "granary";
 
@@ -222,6 +226,11 @@ export interface LogEntry {
 }
 
 export interface HegemonyState {
+  phase: Phase;
+  currentPlayer: PlayerId;
+  turn: number;
+  /** Tunable balance values for this game (difficulty / handicaps / modules). */
+  ruleset: Ruleset;
   board: HegemonyBoard;
   players: Record<PlayerId, PlayerState>;
   transfers: PopulationTransfer[];
@@ -233,5 +242,7 @@ export interface HegemonyState {
   lastPlayerEvent: EventCard | null;
   pendingPlayerEvent: PendingPlayerEvent | null;
   season: number;
+  /** Serialized mulberry32 PRNG state; advanced on each deck shuffle so draws are reproducible from the initial seed. */
+  rng: number;
   log: LogEntry[];
 }

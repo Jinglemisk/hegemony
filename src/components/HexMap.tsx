@@ -1,4 +1,5 @@
 import {
+  memo,
   useEffect,
   useMemo,
   useRef,
@@ -76,7 +77,7 @@ const MAP_MODE_OPTIONS: Array<{ mode: MapMode; label: string; iconHref: string }
   }
 ];
 
-export function HexMap({
+function HexMapComponent({
   G,
   confirmation,
   pendingTileId,
@@ -374,7 +375,7 @@ export function HexMap({
             const isPending = pendingTileId === tile.id;
             const isPlacementCandidate = placementActive && highlightSet.has(tile.id);
             const usedBuildingSlots = city?.buildings.length ?? 0;
-            const totalBuildingSlots = city ? settlementBuildingSlots(tile, city) : tile.buildingSlots;
+            const totalBuildingSlots = city ? settlementBuildingSlots(tile, city, G.ruleset) : tile.buildingSlots;
             const buildingSlotPips = getBuildingSlotPips(totalBuildingSlots, usedBuildingSlots);
             const resourceYieldPips = getResourceYieldPipPositions(getResourceYieldPipCount(tile.resource));
             return (
@@ -682,3 +683,5 @@ function getNeighborCoordinate(q: number, r: number, sideIndex: number) {
 function coordinateKey(q: number, r: number) {
   return `${q},${r}`;
 }
+
+export const HexMap = memo(HexMapComponent);
