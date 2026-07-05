@@ -211,9 +211,9 @@
 }
 
 .strategyTopbar {
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 16px;
   max-width: 1700px;
 }
 
@@ -316,72 +316,62 @@
   color: #0b0705;
 }
 
-.effectsCluster {
+/* Turn clock — season pill + whose-turn headline (top bar, left) */
+.turnClock {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
   gap: 14px;
-  padding: 2px;
-}
-
-.seasonCenter {
-  display: grid;
-  grid-template-columns: 48px minmax(0, auto);
-  align-items: center;
-  justify-items: start;
-  align-content: center;
-  gap: 8px;
   min-height: 52px;
-  padding: 0;
+  padding: 0 2px;
 }
 
-.seasonTurnCaption {
-  display: grid;
-  justify-items: start;
-  gap: 0;
-  min-width: 0;
-  text-align: left;
-}
-
-.seasonTurnCaption span {
-  color: var(--muted);
-  font-size: 0.58rem;
-  line-height: 1.05;
-  text-transform: uppercase;
-}
-
-.seasonTurnCaption strong {
-  color: var(--clay);
-  font-family: var(--font-display);
-  font-size: 0.62rem;
-  font-weight: 700;
-  line-height: 1.05;
-  text-transform: uppercase;
+.seasonPill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--clay), var(--clay-deep));
+  box-shadow: 0 4px 11px rgb(72 42 21 / 24%);
   white-space: nowrap;
 }
 
-.seasonEventLabel {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  max-width: 232px;
+.seasonPillYear {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.82;
 }
 
-.seasonEventLabel > div {
+.seasonPill b {
+  font-family: var(--font-display);
+  font-size: 1.04rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.turnHeadline {
   display: grid;
-  gap: 3px;
+  gap: 1px;
   min-width: 0;
 }
 
-.eventStatusArt {
-  width: 28px;
-  height: 38px;
-  object-fit: cover;
-  border: 1px solid rgb(143 46 19 / 46%);
-  border-radius: 5px;
-  box-shadow: 0 3px 6px rgb(72 42 21 / 14%);
+.turnMeta {
+  color: var(--muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.07em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.turnWhose {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 1.04rem;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 

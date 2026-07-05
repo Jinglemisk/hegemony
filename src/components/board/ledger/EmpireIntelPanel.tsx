@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react";
 import type { Phase } from "../../../game/controller";
+import { settlementPopCapacity, totalPops } from "../../../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../../../game/types";
 import { AtlasIcon } from "../../Sprites";
 import { getOwnedHoldings } from "../helpers";
@@ -26,6 +27,13 @@ function EmpireIntelPanelComponent({
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
   const holdings = useMemo(() => getOwnedHoldings(G, playerID), [G, playerID]);
+  const cityCount = holdings.filter(({ settlement }) => settlement.kind !== "colony").length;
+  const colonyCount = holdings.length - cityCount;
+  const popsUsed = holdings.reduce((sum, { settlement }) => sum + totalPops(settlement.pops), 0);
+  const popsCapacity = holdings.reduce(
+    (sum, { settlement }) => sum + settlementPopCapacity(settlement.kind, G.ruleset),
+    0
+  );
   const tabs: Array<{ id: EmpireTab; label: string }> = [
     { id: "cities", label: "Cities" },
     { id: "buildings", label: "Buildings" },
@@ -40,6 +48,24 @@ function EmpireIntelPanelComponent({
           <h2>Ledger</h2>
           <span>{holdings.length} holdings</span>
         </div>
+      </div>
+
+      <div className="empireSummary" aria-label="Empire summary">
+        <span className="empireStat">
+          <strong>{cityCount}</strong>
+          <em>{cityCount === 1 ? "City" : "Cities"}</em>
+        </span>
+        <span className="empireStat">
+          <strong>{colonyCount}</strong>
+          <em>{colonyCount === 1 ? "Colony" : "Colonies"}</em>
+        </span>
+        <span className="empireStat">
+          <strong>
+            {popsUsed}
+            <span className="empireStatCap">/{popsCapacity}</span>
+          </strong>
+          <em>Pops</em>
+        </span>
       </div>
 
       <div className="intelTabs" role="tablist" aria-label="Empire information">

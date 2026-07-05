@@ -70,6 +70,11 @@ export function CitiesTab({
 
   return (
     <div className="holdingStack">
+      <div className="holdingLegend">
+        <span className="holdingLegendCaption">Holding</span>
+        <span className="holdingLegendCaption holdingLegendYieldCaption">Net income / turn →</span>
+      </div>
+
       {holdings.map(({ tile, settlement }) => {
         const holdingId = `${settlement.owner}-${tile.id}`;
         const isExpanded = expandedHoldingIds.has(holdingId);
