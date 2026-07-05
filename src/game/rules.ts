@@ -11,6 +11,7 @@
  *   core/query     — board / player / log accessors
  *   core/rng       — deterministic PRNG + deck helpers
  *   core/format    — human-readable rule strings
+ *   core/calendar  — season-name / year derivation from the season counter
  *   settlement     — settlement + population domain queries
  *   economy/income — the income engine (single source of the per-pop yield formula)
  *   economy/cost   — action cost + seasonal multiplier + event discount subsystem
@@ -30,6 +31,7 @@ export * from "./core/resources";
 export * from "./core/query";
 export * from "./core/rng";
 export * from "./core/format";
+export * from "./core/calendar";
 export * from "./settlement";
 export * from "./economy/income";
 export * from "./economy/cost";
