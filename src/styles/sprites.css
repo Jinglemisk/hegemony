@@ -1,0 +1,171 @@
+/* sprites — Sprite-sheet icon positioning (atlas) + terrain map-mode swatches
+   Split from styles.css (Phase 2e); original source order preserved. */
+
+.sprite-wood,
+.sprite-terrain-mountain,
+.sprite-ui-seal {
+  --sprite-x: 0%;
+  --sprite-y: 0%;
+}
+
+.sprite-stone {
+  --sprite-x: 33.333%;
+  --sprite-y: 0%;
+}
+
+.sprite-gold {
+  --sprite-x: 66.667%;
+  --sprite-y: 0%;
+}
+
+.sprite-food {
+  --sprite-x: 100%;
+  --sprite-y: 0%;
+}
+
+.sprite-influence {
+  --sprite-x: 0%;
+  --sprite-y: 33.333%;
+}
+
+.sprite-happiness {
+  --sprite-x: 33.333%;
+  --sprite-y: 33.333%;
+}
+
+.sprite-citizens {
+  --sprite-x: 66.667%;
+  --sprite-y: 33.333%;
+}
+
+.sprite-freemen {
+  --sprite-x: 100%;
+  --sprite-y: 33.333%;
+}
+
+.sprite-slaves {
+  --sprite-x: 0%;
+  --sprite-y: 66.667%;
+}
+
+.sprite-marketplace {
+  --sprite-x: 33.333%;
+  --sprite-y: 66.667%;
+}
+
+.sprite-temple {
+  --sprite-x: 66.667%;
+  --sprite-y: 66.667%;
+}
+
+.sprite-workshop {
+  --sprite-x: 100%;
+  --sprite-y: 66.667%;
+}
+
+.sprite-granary {
+  --sprite-x: 0%;
+  --sprite-y: 100%;
+}
+
+.sprite-capital {
+  --sprite-x: 33.333%;
+  --sprite-y: 100%;
+}
+
+.sprite-city {
+  --sprite-x: 66.667%;
+  --sprite-y: 100%;
+}
+
+.sprite-colony {
+  --sprite-x: 100%;
+  --sprite-y: 100%;
+}
+
+.sprite-terrain-hill {
+  --sprite-x: 100%;
+  --sprite-y: 0%;
+}
+
+.sprite-terrain-forest {
+  --sprite-x: 0%;
+  --sprite-y: 100%;
+}
+
+.sprite-terrain-plains {
+  --sprite-x: 100%;
+  --sprite-y: 100%;
+}
+
+.atlasTerrain.sprite-terrain-mountain {
+  --sprite-x: 6%;
+  --sprite-y: 6%;
+}
+
+.atlasTerrain.sprite-terrain-hill {
+  --sprite-x: 94%;
+  --sprite-y: 6%;
+}
+
+.atlasTerrain.sprite-terrain-forest {
+  --sprite-x: 6%;
+  --sprite-y: 94%;
+}
+
+.atlasTerrain.sprite-terrain-plains {
+  --sprite-x: 94%;
+  --sprite-y: 94%;
+}
+
+.sprite-ui-primary {
+  --sprite-x: 50%;
+  --sprite-y: 0%;
+}
+
+.sprite-ui-secondary {
+  --sprite-x: 100%;
+  --sprite-y: 0%;
+}
+
+.sprite-ui-resource-pill {
+  --sprite-x: 0%;
+  --sprite-y: 50%;
+}
+
+.sprite-ui-hex-halo {
+  --sprite-x: 50%;
+  --sprite-y: 50%;
+}
+
+.sprite-ui-player-token {
+  --sprite-x: 100%;
+  --sprite-y: 50%;
+}
+
+.sprite-ui-meander {
+  --sprite-x: 0%;
+  --sprite-y: 100%;
+}
+
+.sprite-ui-vote-token {
+  --sprite-x: 50%;
+  --sprite-y: 100%;
+}
+
+.sprite-ui-season-marker {
+  --sprite-x: 100%;
+  --sprite-y: 100%;
+}
+
+.tileConfirmObject {
+  overflow: visible;
+  pointer-events: auto;
+}
+
+.terrainMapMode .hexTile {
+  fill: color-mix(in srgb, var(--resource-color, var(--terrain-neutral)) 58%, var(--ivory) 22%);
+  stroke: color-mix(in srgb, var(--resource-color, var(--terrain-neutral-line)) 72%, #241910 28%);
+  stroke-width: 1.8;
+}
+

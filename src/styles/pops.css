@@ -1,0 +1,269 @@
+/* pops — Pops tab: pop column header, city meters, building chips, detail tooltips, net-economy panel, build-candidate grid
+   Split from styles.css (Phase 2e); original source order preserved. */
+
+.popColumnHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 2px 0 6px;
+  border: 0;
+  border-bottom: 1px solid var(--ledger-rule);
+  border-radius: 0;
+  background: none;
+}
+
+.popColumnHeader strong {
+  font-size: 0.92rem;
+}
+
+/* Cities tab — icons + numbers only (labels on hover) */
+.cityIdentity {
+  gap: 5px;
+}
+
+.cityMeter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+}
+
+.cityMeter .miniIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.cityMeterText {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+/* Pop / building-slot numbers share the same size as the resource numbers below */
+.cityMeterText strong {
+  color: var(--fg);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.meterSlash {
+  color: var(--subtle);
+}
+
+.popColumnHeader span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.popColumnHeader strong {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.buildingChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.buildingChip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  cursor: default;
+  overflow: visible;
+}
+
+.buildingChip .miniIcon {
+  width: 27px;
+  height: 27px;
+}
+
+.buildingChipOption {
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.buildingChipOption .miniIcon {
+  border-style: dashed;
+}
+
+.buildingChipOption::after {
+  content: "+";
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--clay);
+  color: var(--ivory);
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  line-height: 1;
+  box-shadow: 0 1px 2px rgb(72 42 21 / 30%);
+}
+
+.buildingChipOption:not([aria-disabled="true"]):hover {
+  opacity: 1;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  background: none;
+}
+
+.buildingChip[aria-disabled="true"],
+.buildingChip:disabled {
+  cursor: not-allowed;
+  opacity: 0.28;
+}
+
+.buildingChipOption[aria-disabled="true"]:hover {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.emptyMini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 27px;
+  min-height: 27px;
+  color: var(--subtle);
+  font-size: 0.92rem;
+}
+
+.detailTooltip {
+  position: fixed;
+  z-index: 1000;
+  display: grid;
+  gap: 5px;
+  width: min(260px, calc(100vw - 20px));
+  padding: 9px;
+  border: 1px solid rgb(36 25 16 / 40%);
+  border-radius: 8px;
+  color: var(--fg);
+  background: rgb(255 248 231 / 99%);
+  box-shadow: 0 18px 34px rgb(36 25 16 / 28%);
+  pointer-events: none;
+  transform: translateY(calc(-100% - 8px));
+  animation: detailTooltipIn 120ms ease-out;
+}
+
+.detailTooltipBelow {
+  transform: translateY(8px);
+}
+
+@keyframes detailTooltipIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.detailTooltip strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.detailTooltip em {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-style: normal;
+  line-height: 1.25;
+}
+
+.miniResourceIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.netEconomyPanel {
+  display: grid;
+  gap: 6px;
+  padding: 9px 2px 4px 12px;
+  border-left: 2px solid var(--ledger-accent);
+}
+
+.buildingLedgerLead,
+.popEconomyLead {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.buildingLedgerLead span,
+.popEconomyLead span,
+.deckPlaceholder span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.buildingLedgerLead strong,
+.popEconomyLead strong,
+.netEconomyPanel strong,
+.deckPlaceholder strong {
+  overflow: hidden;
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.buildingLedgerLead em {
+  overflow-wrap: anywhere;
+}
+
+.buildingLedgerCost {
+  margin-top: 1px;
+  color: var(--subtle);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.buildingLedgerCost b {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.netEconomyPanel > strong {
+  overflow: visible;
+  white-space: normal;
+  letter-spacing: 0.04em;
+}
+
+.buildCandidateGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+

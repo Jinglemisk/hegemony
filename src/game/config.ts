@@ -1,8 +1,12 @@
+import type { GameModeId } from "./ruleset";
 import type { PlayerId, Pops } from "./types";
 
 export const GAME_CONFIG = {
   // Flip to false to start from the normal empty setup flow.
-  preloadOpeningSetupForTesting: true
+  preloadOpeningSetupForTesting: true,
+  // Which game mode a new game starts in (see GAME_MODES). The seam a future mode
+  // picker plugs into; the scripted preload only fits the two-settlement "standard".
+  mode: "standard" as GameModeId
 };
 
 export type OpeningSetupPlacement = {

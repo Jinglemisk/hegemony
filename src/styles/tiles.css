@@ -1,0 +1,225 @@
+/* tiles — Hex tile tokens: terrain tints, tile metrics, building/yield pips, settlement/city/colony shapes, tile-confirm prompt
+   Split from styles.css (Phase 2e); original source order preserved. */
+
+.terrainTint-mountain,
+.terrainTint-hill,
+.terrainTint-forest,
+.terrainTint-plains {
+  --terrain-tint: linear-gradient(180deg, var(--terrain-hue), var(--terrain-hue-light));
+}
+
+.terrainTint-mountain {
+  --terrain-hue: #7d8582;
+  --terrain-hue-light: #d4d1c3;
+  --terrain-hue-soft: rgb(143 133 113 / 42%);
+}
+
+.terrainTint-hill {
+  --terrain-hue: #8b5a2f;
+  --terrain-hue-light: #d09955;
+  --terrain-hue-soft: rgb(217 138 53 / 42%);
+}
+
+.terrainTint-forest {
+  --terrain-hue: #586f3f;
+  --terrain-hue-light: #c6bd70;
+  --terrain-hue-soft: rgb(94 110 58 / 42%);
+}
+
+.terrainTint-plains {
+  --terrain-hue: #d69c35;
+  --terrain-hue-light: #ffd970;
+  --terrain-hue-soft: rgb(155 191 82 / 42%);
+}
+
+.svgButton {
+  cursor: pointer;
+  outline: none;
+}
+
+.hexTile {
+  fill: var(--resource-tile, var(--terrain-neutral-soft));
+  stroke: color-mix(in srgb, var(--resource-tile, var(--terrain-neutral-line)) 62%, #241910 38%);
+  stroke-width: 1.6;
+  transition:
+    filter 160ms ease,
+    stroke 160ms ease,
+    stroke-width 160ms ease;
+}
+
+.svgButton:hover .hexTile,
+.svgButton:focus .hexTile {
+  stroke: var(--ivory);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 5px var(--resource-shadow, rgb(95 74 53 / 24%)));
+}
+
+.hexTile.selected {
+  stroke: var(--ivory);
+  stroke-width: 2.2;
+  filter: drop-shadow(0 0 6px var(--resource-shadow, rgb(95 74 53 / 28%)));
+}
+
+.hexTile.pending {
+  stroke: var(--accent);
+  stroke-width: 2.6;
+  stroke-dasharray: 8 5;
+  filter:
+    drop-shadow(0 0 5px rgb(192 70 28 / 48%))
+    drop-shadow(0 0 10px rgb(217 138 53 / 30%));
+}
+
+.tileMetrics {
+  pointer-events: none;
+}
+
+.buildingSlotPip,
+.resourceYieldPip {
+  vector-effect: non-scaling-stroke;
+}
+
+.buildingSlotPip {
+  stroke-linejoin: round;
+}
+
+.filledSlotPip {
+  fill: var(--vase-black);
+  stroke: var(--ivory);
+  stroke-width: 1.4;
+}
+
+.hollowSlotPip {
+  fill: rgb(255 248 231 / 92%);
+  stroke: rgb(24 18 16 / 85%);
+  stroke-width: 1.4;
+}
+
+.resourceYieldPipHalo {
+  fill: rgb(255 248 231 / 88%);
+}
+
+.resourceYieldPip {
+  fill: color-mix(in srgb, var(--resource-tile, var(--terrain-neutral-line)) 58%, #241910 42%);
+  stroke: rgb(24 18 16 / 88%);
+  stroke-width: 1.4;
+}
+
+.resourceYieldPipDot {
+  fill: var(--ivory);
+}
+
+.tileMetric {
+  fill: #0b0705;
+  stroke: var(--ivory);
+  stroke-width: 3.8px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  paint-order: stroke fill;
+  pointer-events: none;
+  text-anchor: middle;
+  filter:
+    drop-shadow(0 0 1px rgb(255 248 231 / 96%))
+    drop-shadow(0 2px 2px rgb(24 18 16 / 34%));
+}
+
+.terrainMapMode .tileMetric {
+  fill: #181210;
+  stroke: #fff8e7;
+  stroke-width: 5.4px;
+  filter:
+    drop-shadow(0 0 2px rgb(255 248 231 / 94%))
+    drop-shadow(0 3px 3px rgb(24 18 16 / 38%));
+}
+
+.settlementShape,
+.colonyShapeDocked {
+  pointer-events: none;
+}
+
+.settlementShape {
+  fill: var(--player-color);
+  stroke: var(--ivory);
+  stroke-linejoin: round;
+  stroke-width: 3;
+  filter:
+    drop-shadow(0 0 1px rgb(24 18 16 / 92%))
+    drop-shadow(0 1px 0 rgb(255 248 231 / 84%))
+    drop-shadow(0 2px 3px rgb(24 18 16 / 34%));
+  paint-order: stroke fill;
+  vector-effect: non-scaling-stroke;
+}
+
+.cityShape rect,
+.colonyShape path {
+  vector-effect: non-scaling-stroke;
+}
+
+.colonyOverflow {
+  pointer-events: none;
+}
+
+.colonyOverflow circle {
+  fill: var(--vase-black);
+  stroke: var(--bone);
+  stroke-width: 1.6;
+}
+
+.colonyOverflow text {
+  fill: var(--ivory);
+  font-family: var(--font-display);
+  font-size: 7.2px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.tileConfirmPrompt {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 23px 23px;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 3px 5px 3px 8px;
+  border: 1px solid rgb(36 25 16 / 28%);
+  border-radius: 6px;
+  color: var(--fg);
+  background: rgb(255 248 231 / 96%);
+  box-shadow: 0 8px 18px rgb(36 25 16 / 24%);
+}
+
+.tileConfirmPrompt span {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tileConfirmButton {
+  display: grid;
+  place-items: center;
+  min-width: 23px;
+  min-height: 23px;
+  width: 23px;
+  height: 23px;
+  padding: 0;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.tileConfirmAccept {
+  color: #fff8e7;
+  border-color: rgb(47 125 70 / 78%);
+  background: #2f7d46;
+}
+
+.tileConfirmCancel {
+  color: #fff8e7;
+  border-color: rgb(177 58 40 / 78%);
+  background: #b13a28;
+}
+

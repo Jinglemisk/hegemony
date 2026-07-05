@@ -173,7 +173,7 @@ export function FoundColonyPopover({
     buildings: [],
     pops: { ...EMPTY_POPS, [pop]: 1 }
   };
-  const previewYield = settlementNetYield(targetTile, previewSettlement);
+  const previewYield = settlementNetYield(targetTile, previewSettlement, G.ruleset);
   const cost = getFoundColonyStatus(G, playerID, targetTile.id).cost ?? ACTION_COSTS.foundColony;
   const canConfirm = Boolean(source && source.pops[pop] > 0);
 
@@ -207,7 +207,7 @@ export function FoundColonyPopover({
       ) : (
         <>
           <article className="placementPreviewCard settlement-colony foundColonyPreview">
-            <SettlementSummaryCard netYield={previewYield} settlement={previewSettlement} tile={targetTile} />
+            <SettlementSummaryCard netYield={previewYield} ruleset={G.ruleset} settlement={previewSettlement} tile={targetTile} />
           </article>
 
           <section className="placementSection">
@@ -301,7 +301,7 @@ export function UpgradeCityModal({
   const requiredTotal = selected ? totalPops(selected.settlement.pops) : 0;
   const selectedTotal = totalPops(pops);
   const remaining = requiredTotal - selectedTotal;
-  const colonyYield = selected ? settlementNetYield(selected.tile, selected.settlement) : null;
+  const colonyYield = selected ? settlementNetYield(selected.tile, selected.settlement, G.ruleset) : null;
   const preview = selected ? previewUpgradeColonyToCity(G, playerID, selected.tile.id, pops) : null;
   const cost = (selected && getUpgradeColonyToCityStatus(G, playerID, selected.tile.id).cost) ?? ACTION_COSTS.upgradeColonyToCity;
   const canConfirm = Boolean(selected) && remaining === 0;
@@ -339,7 +339,7 @@ export function UpgradeCityModal({
                     <span className="placementChipText">
                       <strong>{capitalize(tile.terrain)}</strong>
                       <em>
-                        {tile.id} · {totalPops(settlement.pops)}/{settlementPopCapacity("colony")}
+                        {tile.id} · {totalPops(settlement.pops)}/{settlementPopCapacity("colony", G.ruleset)}
                       </em>
                     </span>
                   </button>
@@ -351,7 +351,7 @@ export function UpgradeCityModal({
           {selected && colonyYield ? (
             <article className="placementPreviewCard settlement-colony">
               <span className="placementPreviewTag">Upgrading this colony</span>
-              <SettlementSummaryCard netYield={colonyYield} settlement={selected.settlement} tile={selected.tile} />
+              <SettlementSummaryCard netYield={colonyYield} ruleset={G.ruleset} settlement={selected.settlement} tile={selected.tile} />
             </article>
           ) : null}
 
@@ -365,7 +365,7 @@ export function UpgradeCityModal({
             <span className="placementUpgradeStat">
               <em>Capacity</em>
               <strong>
-                {settlementPopCapacity("colony")} <span className="meterSlash">→</span> {settlementPopCapacity("city")}
+                {settlementPopCapacity("colony", G.ruleset)} <span className="meterSlash">→</span> {settlementPopCapacity("city", G.ruleset)}
               </strong>
             </span>
             <span className="placementUpgradeStat">
