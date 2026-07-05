@@ -15,6 +15,27 @@ out done items with ~~strikethrough~~.
 
 ---
 
+## Implemented so far (2026-07-05)
+
+- ~~Slice 1 — named time model.~~ DONE.
+-- `core/calendar.ts` derives season-name + year from the existing `G.season`
+   counter (no new state field — the counter already ticks once per season, so
+   season/year can't desync). `seasonName`, `yearOf`, `isNewYear`.
+-- UI: the medallion shows "Year N / Spring…Winter"; the chronicle tags read
+   "Y1·Sp"; engine log lines read "Spring of Year 1 begins."
+- ~~Slice 2 — seasons give the deck character (via card weighting, NOT fixed
+  modifiers).~~ DONE for season cards.
+-- Each seasonal card is tagged with the seasons it can surface in
+   (`EventCard.seasons`). The seasonal draw prefers cards that suit the current
+   season, so tags only *weight* the deck — winter draws MORE harsh cards but
+   never a guaranteed one (per the design steer). See `drawSeasonalCard`.
+-- Decision recorded: we did NOT add deterministic per-season modifiers (the old
+   "Spring cheap growth / Winter upkeep up" idea below). Season character comes
+   from the deck's distribution instead. That layer can still be added later if
+   the cards alone feel too flat.
+
+---
+
 ## Time model
 
 - Time runs in YEARS; each year has 4 SEASONS in order: Spring, Summer, Autumn, Winter.
@@ -33,10 +54,13 @@ out done items with ~~strikethrough~~.
 
 - Three kinds of card, each its own deck and flavor.
 
-- Season cards.
+- Season cards. ~~mechanism built~~ — now season-tagged + drawn by affinity (Slice 2).
 -- One per season, shared by everyone, drawn as the season begins.
 -- Themed to the season: crop yield, shortages, weather — cyclical / agrarian stuff.
 -- e.g. good harvest (+food this season), drought (-food), hard winter (upkeep up).
+-- Built: the 10 existing cards are tagged with their seasons; winter's pool leans
+   harsh (Drought/Civic Anxiety/Scarce Labor) but still holds neutral cards, so
+   winter = *more* bad cards, never auto-bad. Tags + counts are the tuning knobs.
 
 - Player cards.
 -- Four per season — one per player, on their own turn.
@@ -51,8 +75,11 @@ out done items with ~~strikethrough~~.
 
 ---
 
-## Season flavor (the predictable cycle modifier)
+## Season flavor (the predictable cycle modifier) — NOT built; superseded by deck weighting
 
+- SUPERSEDED: we chose to express season character through the season deck's
+  distribution (Slice 2) rather than fixed deterministic modifiers. Kept here as
+  a possible future layer if the cards alone feel too flat.
 - Each season also applies a fixed, recurring modifier — separate from the random
   season card — so players plan against a known rhythm, not just luck:
 -- Spring (sowing): pop growth cheaper — the season to grow population.
@@ -94,20 +121,26 @@ out done items with ~~strikethrough~~.
 
 ## Open questions
 
-- First-Spring assembly + yearly card, yes or no? (see Time model)
+- First-Spring assembly + yearly card, yes or no? (see Time model — deferred with the Assembly.)
 - How long is a game — how many years, how big are the decks?
-- Do season cards persist for the whole season, or resolve once and stop?
 - How do yearly cards interact with season cards — stack, or override the season?
-- Are the season flavor modifiers fixed, or should they vary / be drawn too?
+- ~~Do season cards persist for the whole season, or resolve once and stop?~~
+  RESOLVED (unchanged): each card keeps its existing timing — `season`-timed
+  cards apply their modifier all season, `immediate` cards resolve once on reveal.
+- ~~Are the season flavor modifiers fixed, or should they vary / be drawn too?~~
+  RESOLVED: no fixed modifiers; season character is drawn (deck weighted by season).
 
 ---
 
 ## Build notes (implementation seams)
 
+- ~~Season *type* + year counter~~ — DONE: derived in `src/game/core/calendar.ts`
+  from the `G.season` counter (no new state field). `isNewYear` is the ready-made
+  hook for yearly cards / the Assembly when we build them.
 - Season handling lives in src/game/season.ts (`startNewSeason`) + turn.ts.
-- Seasonal draws are in src/game/events.ts; decks reshuffle in `drawFromEventDeck`
-  (this is what to change for a finite clock).
-- Season is a plain number on HegemonyState today; we'll need a season *type*
-  (spring/summer/autumn/winter) + a year counter, both serializable + testable.
-- Add yearly-card and (later) resolution decks alongside the existing seasonal /
-  player decks in HegemonyState + data.ts.
+- Seasonal draws are in src/game/events.ts; `drawSeasonalCard` now picks a card
+  that suits the current season. `drawFromEventDeck` still reshuffles forever —
+  this is what to change for a finite clock / endgame.
+- Still to add: yearly-card and (later) resolution decks alongside the existing
+  seasonal / player decks in HegemonyState + data.ts; the end-of-season reckoning
+  step; and (deferred) the Assembly on new years.

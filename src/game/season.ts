@@ -1,4 +1,6 @@
 import type { HegemonyState, PlayerId } from "./types";
+import { seasonName, yearOf } from "./core/calendar";
+import { capitalize } from "./core/format";
 import { addLog, getPlayerName } from "./core/query";
 import { drawSeasonalEvent } from "./events";
 
@@ -17,7 +19,7 @@ export function startNewSeason(G: HegemonyState) {
 
   G.season += 1;
   resetTurnFlags(G);
-  addLog(G, `Season ${G.season} begins.`);
+  addLog(G, `${capitalize(seasonName(G.season))} of Year ${yearOf(G.season)} begins.`);
   drawSeasonalEvent(G);
 }
 
