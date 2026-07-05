@@ -17,9 +17,10 @@
 -- Happiness accrues but does nothing yet — it is a meter with no teeth.
 -- Simple thresholds to start: -5 warning, -10 lose 1 gold/turn, -15 cannot found colonies, -20 lose a pop from your largest settlement then happiness +5.
 
-- Deepen seasonal mechanics.
--- Seasonal event cards exist, but the season itself is just a counter that flips after all four players move.
--- e.g. season-long modifiers, seasonal cadence for certain actions, an end-of-season resolution step.
+- Deepen seasonal mechanics. (in progress on feat/seasons — see seasons.md)
+-- ~~The season is just a bare counter.~~ DONE: it now reads as Year N / Spring–Winter (derived in core/calendar.ts), shown on the medallion + chronicle.
+-- ~~Season cards have no seasonal character.~~ DONE: the seasonal deck is weighted by season — winter draws more harsh cards, spring more growth, etc. (tags, not deterministic penalties).
+-- Still open: an end-of-season resolution step (where happiness bites), yearly cards on each new year, and the finite-deck endgame clock.
 
 - Add more start setups / game modes.
 -- The mode seam already works (standard / fast-start / deathmatch), selected in code by GAME_CONFIG.mode — a mode is just a ruleset patch.

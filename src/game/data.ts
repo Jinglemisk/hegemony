@@ -164,6 +164,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Drought",
     count: 4,
     text: "All players get -2 Food income this season.",
+    seasons: ["autumn", "winter"],
     timing: "season",
     effects: [{ type: "incomeModifier", scope: "allPlayers", resource: "food", amount: -2, duration: "season" }]
   },
@@ -173,6 +174,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Bountiful Harvest",
     count: 4,
     text: "All players get +2 Food income this season.",
+    seasons: ["summer", "autumn"],
     timing: "season",
     effects: [{ type: "incomeModifier", scope: "allPlayers", resource: "food", amount: 2, duration: "season" }]
   },
@@ -182,6 +184,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Timber Levies",
     count: 3,
     text: "Each player gains 2 Wood per 6 pops, minimum 4 Wood.",
+    seasons: ["spring", "summer", "winter"],
     timing: "immediate",
     effects: [
       { type: "scaledResourceDelta", scope: "allPlayers", resource: "wood", amountPerPops: 2, popStep: 6, minimum: 4 }
@@ -193,6 +196,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Quarry Contracts",
     count: 3,
     text: "Each player gains 2 Stone per 6 pops, minimum 4 Stone.",
+    seasons: ["summer", "autumn"],
     timing: "immediate",
     effects: [
       { type: "scaledResourceDelta", scope: "allPlayers", resource: "stone", amountPerPops: 2, popStep: 6, minimum: 4 }
@@ -204,6 +208,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Grain Tithe",
     count: 3,
     text: "Each player gains 2 Food per 6 pops, minimum 4 Food.",
+    seasons: ["spring", "autumn", "winter"],
     timing: "immediate",
     effects: [
       { type: "scaledResourceDelta", scope: "allPlayers", resource: "food", amountPerPops: 2, popStep: 6, minimum: 4 }
@@ -215,6 +220,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Civic Anxiety",
     count: 2,
     text: "Each player suffers -2 Happiness per 10 pops, minimum -2, during income collection this season.",
+    seasons: ["winter"],
     timing: "season",
     effects: [
       {
@@ -233,6 +239,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Festival Games",
     count: 2,
     text: "Each player gains 2 Happiness per 10 pops, minimum 2 Happiness.",
+    seasons: ["spring", "summer"],
     timing: "immediate",
     effects: [
       { type: "scaledHappinessDelta", scope: "allPlayers", amountPerPops: 2, popStep: 10, minimumMagnitude: 2 }
@@ -244,6 +251,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Scarce Labor",
     count: 2,
     text: "Building costs, excluding colony founding and city upgrades, are doubled this season.",
+    seasons: ["autumn", "winter"],
     timing: "season",
     effects: [
       {
@@ -260,6 +268,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Skilled Artisans",
     count: 2,
     text: "Building costs, excluding colony founding and city upgrades, are halved this season, rounded up.",
+    seasons: ["spring", "summer"],
     timing: "season",
     effects: [
       {
@@ -276,6 +285,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Open Markets",
     count: 2,
     text: "All players get +2 Gold income this season.",
+    seasons: ["summer", "autumn"],
     timing: "season",
     effects: [{ type: "incomeModifier", scope: "allPlayers", resource: "gold", amount: 2, duration: "season" }]
   }

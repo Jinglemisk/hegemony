@@ -99,7 +99,12 @@ Play passes around the table. On your turn:
 4. **End your turn.**
 
 Once all four players have taken a turn, a new **season** begins and a fresh
-seasonal event is revealed.
+seasonal event is revealed. Play runs through the year in order — **Spring,
+Summer, Autumn, Winter** — and then a new year opens on Spring again. Each season
+has its own mood: Spring and Summer tend to be kind (growth, building, trade),
+Autumn is the mixed harvest, and Winter leans harsh. That is a *tendency*, not a
+rule — Winter simply deals more hard-luck cards, so a mild Winter is still
+possible, and no season is ever guaranteed good or bad.
 
 ## Buildings
 
@@ -132,7 +137,9 @@ Happiness is your civilization's stability. It moves each turn:
 Two decks of event cards bring swings of fortune:
 
 - **Seasonal events** are revealed at the start of each season and affect
-  everyone — for example, "all players gain 2 food this season."
+  everyone — for example, "all players gain 2 food this season." The season
+  shapes which of these come up: a good harvest is far likelier in Autumn than a
+  drought is, while Winter tips the odds the other way.
 - **Player events** are drawn for the active player and must be resolved before
   you take your normal actions. Some are a straight gain; others give you a
   choice — for example, "gain 6 wood and lose 1 happiness, or gain 2 wood with no

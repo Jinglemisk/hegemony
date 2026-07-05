@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { LocalContext } from "../../../game/controller";
 import type { EventCard, HegemonyState, PlayerId } from "../../../game/types";
-import { phaseLabel } from "../../../ui/formatters";
+import { phaseLabel, seasonLabel, yearLabel } from "../../../ui/formatters";
 import { PLAYER_DISPLAY_NAMES } from "../constants";
 import { eventCardArtUrl } from "../events";
 
@@ -27,9 +27,9 @@ function SeasonStatusComponent({
       </section>
 
       <div className="seasonCenter">
-        <div className="seasonMedallion" aria-label={`Season ${G.season}`}>
-          <span>Season</span>
-          <strong>{G.season}</strong>
+        <div className="seasonMedallion" aria-label={`${seasonLabel(G.season)}, ${yearLabel(G.season)}`}>
+          <span>{yearLabel(G.season)}</span>
+          <strong>{seasonLabel(G.season)}</strong>
         </div>
         <div className="seasonTurnCaption" aria-label="Turn status">
           <span>Turn {ctx.turn} · {phaseLabel(ctx.phase)}</span>

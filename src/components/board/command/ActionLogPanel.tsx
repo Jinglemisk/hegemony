@@ -1,4 +1,5 @@
 import type { HegemonyState } from "../../../game/types";
+import { seasonLabel, seasonTag, yearLabel } from "../../../ui/formatters";
 import { UiSprite } from "../../Sprites";
 
 export function ActionLogPanel({ G }: { G: HegemonyState }) {
@@ -16,7 +17,7 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
       <div className="turnLogList" tabIndex={0}>
         {entries.map((entry) => (
           <p key={entry.id}>
-            <span>S{entry.season}</span>
+            <span title={`${seasonLabel(entry.season)}, ${yearLabel(entry.season)}`}>{seasonTag(entry.season)}</span>
             <b>{entry.message}</b>
           </p>
         ))}

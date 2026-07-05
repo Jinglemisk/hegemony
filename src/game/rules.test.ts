@@ -4,11 +4,13 @@ import {
   buildBuilding,
   calculateIncome,
   createInitialState,
+  drawSeasonalEvent,
   foundColony,
   growPop,
   placeCapital,
   placeColony,
   resolveArrivingPops,
+  seasonName,
   settlementNetYield,
   startNewSeason,
   upgradeColonyToCity,
@@ -297,6 +299,31 @@ describe("season rollover", () => {
     expect(state.season).toBe(seasonBefore + 1);
     expect(state.players["0"].collectedThisTurn).toBe(false);
     expect(state.players["0"].grownSettlementsThisTurn).toEqual([]);
+  });
+
+  it("draws a seasonal event that suits the current season, in every season", () => {
+    // Walk a couple of full years and assert each revealed card is legal for its season.
+    for (let season = 1; season <= 8; season += 1) {
+      const state = fresh();
+      state.season = season;
+
+      drawSeasonalEvent(state);
+
+      const card = state.activeSeasonEvent?.card;
+      expect(card).toBeTruthy();
+      const suits = !card?.seasons || card.seasons.length === 0 || card.seasons.includes(seasonName(season));
+      expect(suits).toBe(true);
+    }
+  });
+
+  it("never surfaces a winter-only card outside winter", () => {
+    // Civic Anxiety is tagged winter-only; a spring draw must not reveal it.
+    const state = fresh();
+    state.season = 1; // spring
+
+    drawSeasonalEvent(state);
+
+    expect(state.activeSeasonEvent?.card.id).not.toBe("season-civic-anxiety");
   });
 });
 

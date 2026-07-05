@@ -1,5 +1,6 @@
 import { BUILDINGS } from "../game/data";
-import type { BuildingEffect, BuildingId, PopType, Resource, Resources } from "../game/types";
+import { seasonName, yearOf } from "../game/core/calendar";
+import type { BuildingEffect, BuildingId, PopType, Resource, Resources, SeasonName } from "../game/types";
 import type { Phase } from "../game/controller";
 
 export const RESOURCE_LABELS: Record<Resource, string> = {
@@ -10,6 +11,28 @@ export const RESOURCE_LABELS: Record<Resource, string> = {
   influence: "Influence",
   happiness: "Happiness"
 };
+
+export const SEASON_LABELS: Record<SeasonName, string> = {
+  spring: "Spring",
+  summer: "Summer",
+  autumn: "Autumn",
+  winter: "Winter"
+};
+
+/** "Spring" — the season a given season index falls in. */
+export function seasonLabel(seasonIndex: number) {
+  return SEASON_LABELS[seasonName(seasonIndex)];
+}
+
+/** "Year 1" — the year a given season index falls in. */
+export function yearLabel(seasonIndex: number) {
+  return `Year ${yearOf(seasonIndex)}`;
+}
+
+/** Compact chronicle tag, e.g. "Y1·Sp". */
+export function seasonTag(seasonIndex: number) {
+  return `Y${yearOf(seasonIndex)}·${SEASON_LABELS[seasonName(seasonIndex)].slice(0, 2)}`;
+}
 
 const POP_LABELS: Record<PopType, { singular: string; plural: string }> = {
   citizens: { singular: "citizen", plural: "citizens" },
