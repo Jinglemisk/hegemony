@@ -14,6 +14,9 @@ export type SettlementKind = "capital" | "city" | "colony";
 
 export type Phase = "setupCapital" | "setupColony" | "gameplay";
 
+/** The four seasons, in the order they cycle each year (a year always opens on spring). */
+export type SeasonName = "spring" | "summer" | "autumn" | "winter";
+
 export type BuildingId = "marketplace" | "temple" | "workshop" | "granary";
 
 export type Resources = Record<Resource, number>;
@@ -112,6 +115,13 @@ export interface EventCard {
   text: string;
   timing: EventTiming;
   effects: EventEffect[];
+  /**
+   * Seasons this card may surface in (seasonal deck only). The seasonal draw
+   * prefers cards that suit the current season, so tagging weights the deck —
+   * e.g. tagging the harsh cards to winter makes winter draw *more* of them
+   * without ever guaranteeing them. Omitted / empty means "any season".
+   */
+  seasons?: SeasonName[];
 }
 
 export type EventDeck = EventCard[];

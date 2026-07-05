@@ -1,5 +1,6 @@
 import { PLAYER_IDS } from "./data";
-import type { EventCard, EventDeckKind, EventEffect, HegemonyState, PlayerId, Resources } from "./types";
+import type { EventCard, EventDeckKind, EventEffect, HegemonyState, PlayerId, Resources, SeasonName } from "./types";
+import { seasonName } from "./core/calendar";
 import { capitalize, formatPopName, formatRuleNumber, formatRuleResourceDelta, formatTileLabel } from "./core/format";
 import { totalPops } from "./core/pops";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
@@ -10,7 +11,7 @@ import { shuffleWithSeed } from "./core/rng";
 import { countPlayerPopType, scaledByPops, settlementPopCapacity } from "./settlement";
 
 export function drawSeasonalEvent(G: HegemonyState) {
-  const card = drawFromEventDeck(G, "seasonal");
+  const card = drawSeasonalCard(G, seasonName(G.season));
 
   if (!card) {
     addLog(G, "The Seasonal Event deck is empty.");
@@ -111,6 +112,40 @@ function drawFromEventDeck(G: HegemonyState, deck: EventDeckKind) {
   }
 
   return G[drawKey].shift() ?? null;
+}
+
+/**
+ * Draw a seasonal card that suits the current season. The pile is pre-shuffled,
+ * so taking the first suited card is a uniform random pick among suited cards —
+ * season tags therefore only weight the deck, never force an outcome. Falls back
+ * to reshuffling the discard, then to any card, so a draw is always possible.
+ */
+function drawSeasonalCard(G: HegemonyState, season: SeasonName): EventCard | null {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const index = G.seasonalDrawPile.findIndex((card) => cardSuitsSeason(card, season));
+
+    if (index !== -1) {
+      return G.seasonalDrawPile.splice(index, 1)[0];
+    }
+
+    // No suited card left in the draw pile — fold the discard back in and retry once.
+    if (G.seasonalDiscardPile.length === 0) {
+      break;
+    }
+
+    const reshuffled = shuffleWithSeed([...G.seasonalDrawPile, ...G.seasonalDiscardPile], G.rng);
+    G.seasonalDrawPile = reshuffled.cards;
+    G.rng = reshuffled.state;
+    G.seasonalDiscardPile = [];
+    addLog(G, "Seasonal Event discard reshuffled into the draw pile.");
+  }
+
+  // Nothing suits this season anywhere; take whatever is on top rather than stall.
+  return G.seasonalDrawPile.shift() ?? null;
+}
+
+function cardSuitsSeason(card: EventCard, season: SeasonName): boolean {
+  return !card.seasons || card.seasons.length === 0 || card.seasons.includes(season);
 }
 
 function hasResolvablePendingOption(G: HegemonyState, playerID: PlayerId, card: EventCard) {

@@ -46,6 +46,6 @@ export function createInitialState(seed = createSeed(), ruleset: Ruleset = DEFAU
     pendingPlayerEvent: null,
     season: 1,
     rng,
-    log: [{ id: "start", season: 1, message: "The first season begins." }]
+    log: [{ id: "start", season: 1, message: "Spring of Year 1 begins." }]
   };
 }
