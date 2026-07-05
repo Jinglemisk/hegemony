@@ -1,24 +1,21 @@
 # Hegemony — To-Do
 
-Working backlog. `-` is a task; the `--` lines under it say what's wrong, how to
-fix, or give context. Cross out finished items with ~~strikethrough~~ instead of
-deleting them, so the history stays visible. `---` divides sections.
+!!! If you have made changes to code due to todo.md, or if something needs to be updated later and remembered, edit this document !!! 
+
+!!! If the user has made an addition, it will be marked with *** and it must be rehabilitated into the document.
 
 ---
 
 ## Gameplay & mechanics
 
-- Add a 10-season end condition and prototype scoring.
--- The game never ends and every player shows "VP --", so there is no reason to play well.
--- Suggested end-of-season-10 score: +5 per city, +3 per colony, +1 per citizen, +1 per freeman, +1 per 10 material resources (rounded down), -1 per point of negative happiness.
+- Add an end condition and scoring.
+-- The game never ends — the event decks reshuffle their discard piles forever — and every player shows "VP --", so there is no reason to play well.
+-- Direction (user's idea): make the event deck a finite clock. Stop the reshuffle; when all event cards are spent, the game ends and "victory cards" resolve, awarding for categories like most resource points, most pops, most cities, most X. The deck length becomes the game length.
+-- Interim/fallback: a fixed end-of-season-10 tally — +5 per city, +3 per colony, +1 per citizen, +1 per freeman, +1 per 10 material resources (rounded down), -1 per point of negative happiness.
 
 - Give happiness real consequences.
 -- Happiness accrues but does nothing yet — it is a meter with no teeth.
 -- Simple thresholds to start: -5 warning, -10 lose 1 gold/turn, -15 cannot found colonies, -20 lose a pop from your largest settlement then happiness +5.
-
-- Add an influence sink ("Stabilize Province").
--- Influence has no use yet, so citizens have no strategic payoff.
--- One action: spend 4 influence to gain 3 happiness.
 
 - Deepen seasonal mechanics.
 -- Seasonal event cards exist, but the season itself is just a counter that flips after all four players move.
@@ -35,21 +32,20 @@ deleting them, so the history stays visible. `---` divides sections.
 - Build the Assembly / resolutions system.
 -- The Resolutions deck is a "0/0" placeholder in the command panel.
 -- Players vote on resolutions that affect some or all of them (rivalry mechanics).
-
----
-
-## Content & scope
+-- This is where players will spend Influence primarily
 
 - Luxury goods and trade.
 -- Deferred design; see docs/feat/luxury-goods.md.
 
 - National ideas / player identities.
 -- Per-player modifiers so the four seats play asymmetrically.
+-- They pick these after initial colony placement to further bolster their playstyle.
 
 - Coastal tiles and ports.
 -- The map is inland-only right now — no coast, ports, or naval movement.
 
 ---
+
 
 ## Tech debt & polish
 
