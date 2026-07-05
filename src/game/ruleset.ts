@@ -53,6 +53,13 @@ export interface Ruleset {
   growPopCosts: Record<PopType, Partial<Resources>>;
   popIncome: Record<PopType, PopIncomeRule>;
   economy: EconomyRules;
+  /**
+   * The settlements each player places during setup, in round order — capitals
+   * first, then colonies. Length = settlements per player before gameplay begins.
+   * Standard is one capital then one colony; a deathmatch mode makes it three
+   * colonies. The turn machine derives the setup phase targets from this list.
+   */
+  setup: SettlementKind[];
 }
 
 /**
@@ -77,5 +84,74 @@ export const DEFAULT_RULESET: Ruleset = {
     overCapacityHappinessPerPop: 1,
     foodStockpileHappinessDivisor: 5,
     firstIncomeFoodGrace: true
+  },
+  setup: ["capital", "colony"]
+};
+
+/** Recursively merge a partial patch onto a base value; arrays and primitives replace, plain objects merge. */
+type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends readonly unknown[] ? T[K] : T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function deepMerge<T>(base: T, patch: unknown): T {
+  if (!isPlainObject(base) || !isPlainObject(patch)) {
+    return (patch === undefined ? base : patch) as T;
+  }
+
+  const out: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === undefined) {
+      continue;
+    }
+    out[key] = deepMerge((base as Record<string, unknown>)[key], value);
+  }
+  return out as T;
+}
+
+/**
+ * Author a game mode as `standard + a small patch`, instead of restating the whole
+ * ruleset. `deriveRuleset(DEFAULT_RULESET, { startingResources: { wood: 40 } })`
+ * keeps every other value and overrides only what the patch names.
+ */
+export function deriveRuleset(base: Ruleset, patch: DeepPartial<Ruleset>): Ruleset {
+  return deepMerge(base, patch);
+}
+
+/** How many capitals lead the setup sequence — the settlement count that ends the setupCapital phase. */
+export function setupCapitalCount(ruleset: Ruleset): number {
+  return ruleset.setup.filter((kind) => kind === "capital").length;
+}
+
+export type GameModeId = "standard" | "fastStart" | "deathmatch";
+
+/**
+ * The mode registry: each entry is a ruleset (usually a {@link deriveRuleset} patch
+ * over {@link DEFAULT_RULESET}) plus display copy. Adding a mode is a new entry here;
+ * `createGame` selects one via {@link ./config.GAME_CONFIG.mode}. This is the "tracks"
+ * for difficulty / handicaps / future modules — no plugin loader, just data.
+ */
+export const GAME_MODES: Record<GameModeId, { label: string; description: string; ruleset: Ruleset }> = {
+  standard: {
+    label: "Standard",
+    description: "The baseline economy: one capital and one colony to start.",
+    ruleset: DEFAULT_RULESET
+  },
+  fastStart: {
+    label: "Fast Start",
+    description: "Open with a richer treasury so expansion comes sooner.",
+    ruleset: deriveRuleset(DEFAULT_RULESET, {
+      startingResources: { wood: 40, stone: 20, gold: 20, food: 30 }
+    })
+  },
+  deathmatch: {
+    label: "Deathmatch",
+    description: "Each player founds three colonies at setup instead of one.",
+    ruleset: deriveRuleset(DEFAULT_RULESET, {
+      setup: ["capital", "colony", "colony", "colony"]
+    })
   }
 };

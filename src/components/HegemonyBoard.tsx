@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GameEvents, GameMoves, LocalContext } from "../game/controller";
 import {
-  PLACEMENT_POP_COUNTS,
   calculateEconomyProjection,
   getBuildBuildingStatus,
   getFoundColonyStatus,
@@ -297,10 +296,10 @@ export function HegemonyBoard({
       {populationPrompt ? (
         <PopulationPickerModal
           title={`Choose ${placementKindLabel(populationPrompt.kind)} pops`}
-          description={`Allocate exactly ${PLACEMENT_POP_COUNTS[populationPrompt.kind]} starting ${
-            PLACEMENT_POP_COUNTS[populationPrompt.kind] === 1 ? "pop" : "pops"
+          description={`Allocate exactly ${G.ruleset.placementPopCounts[populationPrompt.kind]} starting ${
+            G.ruleset.placementPopCounts[populationPrompt.kind] === 1 ? "pop" : "pops"
           } before placing this ${placementKindLabel(populationPrompt.kind)}.`}
-          requiredTotal={PLACEMENT_POP_COUNTS[populationPrompt.kind]}
+          requiredTotal={G.ruleset.placementPopCounts[populationPrompt.kind]}
           confirmLabel={`Place ${placementKindLabel(populationPrompt.kind)}`}
           onCancel={() => setPopulationPrompt(null)}
           onConfirm={(pops) => {

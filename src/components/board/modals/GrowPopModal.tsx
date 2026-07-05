@@ -67,7 +67,7 @@ export function GrowPopModal({
               <select value={holding?.tile.id ?? ""} onChange={(event) => setTileId(event.target.value)}>
                 {holdings.map(({ tile, settlement }) => (
                   <option value={tile.id} key={tile.id}>
-                    {capitalize(settlement.kind)} {tile.id} - {capitalize(tile.terrain)} - {totalPops(settlement.pops)}/{settlementPopCapacity(settlement.kind)} pops
+                    {capitalize(settlement.kind)} {tile.id} - {capitalize(tile.terrain)} - {totalPops(settlement.pops)}/{settlementPopCapacity(settlement.kind, G.ruleset)} pops
                   </option>
                 ))}
               </select>

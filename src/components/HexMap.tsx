@@ -375,7 +375,7 @@ function HexMapComponent({
             const isPending = pendingTileId === tile.id;
             const isPlacementCandidate = placementActive && highlightSet.has(tile.id);
             const usedBuildingSlots = city?.buildings.length ?? 0;
-            const totalBuildingSlots = city ? settlementBuildingSlots(tile, city) : tile.buildingSlots;
+            const totalBuildingSlots = city ? settlementBuildingSlots(tile, city, G.ruleset) : tile.buildingSlots;
             const buildingSlotPips = getBuildingSlotPips(totalBuildingSlots, usedBuildingSlots);
             const resourceYieldPips = getResourceYieldPipPositions(getResourceYieldPipCount(tile.resource));
             return (
