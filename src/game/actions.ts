@@ -16,6 +16,7 @@ import { applyResourceDelta, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
+import { setupCapitalCount } from "./ruleset";
 import { calculateIncome } from "./economy/income";
 import { consumeActionCostDiscounts } from "./economy/cost";
 import {
@@ -59,9 +60,14 @@ export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string
   const tile = getTile(G, tileId);
   const player = G.players[playerID];
 
+  // Valid during setup once the capital is down and while the player still owes
+  // colonies (setup = one capital + N colonies, so N can exceed 1 in e.g. deathmatch).
+  const placed = player.settlements.length;
+  const owesColony = placed >= setupCapitalCount(G.ruleset) && placed < G.ruleset.setup.length;
+
   if (
     !tile ||
-    player.settlements.length !== 1 ||
+    !owesColony ||
     !canPlaceColonyOnTile(G, playerID, tile).can ||
     !isExactPopSelection(pops, G.ruleset.placementPopCounts.colony)
   ) {

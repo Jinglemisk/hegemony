@@ -14,6 +14,7 @@ import {
   upgradeColonyToCity,
 } from "./rules";
 import { advanceSetupTurn, beginGameplayTurn, createGame, endTurn } from "./turn";
+import { setupCapitalCount } from "./ruleset";
 
 export type { Phase } from "./types";
 
@@ -95,7 +96,7 @@ function createMoves(setG: SetState): GameMoves {
             return;
           }
 
-          advanceSetupTurn(draft, 1, "setupColony");
+          advanceSetupTurn(draft, setupCapitalCount(draft.ruleset), "setupColony");
           ok = true;
         });
         return ok ? next : previous;
@@ -113,7 +114,7 @@ function createMoves(setG: SetState): GameMoves {
             return;
           }
 
-          advanceSetupTurn(draft, 2, "gameplay");
+          advanceSetupTurn(draft, draft.ruleset.setup.length, "gameplay");
           beginGameplayTurn(draft);
           ok = true;
         });

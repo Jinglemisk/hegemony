@@ -74,11 +74,11 @@ export function CitiesTab({
         const holdingId = `${settlement.owner}-${tile.id}`;
         const isExpanded = expandedHoldingIds.has(holdingId);
         const popTotal = totalPops(settlement.pops);
-        const capacity = settlementPopCapacity(settlement.kind);
-        const overCapacity = settlementOverCapacity(settlement);
-        const slots = settlementBuildingSlots(tile, settlement);
-        const tileYield = settlementTileYield(tile, settlement);
-        const netYield = settlementNetYield(tile, settlement);
+        const capacity = settlementPopCapacity(settlement.kind, G.ruleset);
+        const overCapacity = settlementOverCapacity(settlement, G.ruleset);
+        const slots = settlementBuildingSlots(tile, settlement, G.ruleset);
+        const tileYield = settlementTileYield(tile, settlement, G.ruleset);
+        const netYield = settlementNetYield(tile, settlement, G.ruleset);
         const detailId = `holding-${settlement.owner}-${tile.q}-${tile.r}-details`;
 
         return (
@@ -94,7 +94,7 @@ export function CitiesTab({
               onClick={() => toggleHolding(holdingId)}
               type="button"
             >
-              <SettlementSummaryCard netYield={netYield} settlement={settlement} tile={tile} />
+              <SettlementSummaryCard netYield={netYield} ruleset={G.ruleset} settlement={settlement} tile={tile} />
               <span className="collapseChevron" aria-hidden="true" />
             </button>
 
