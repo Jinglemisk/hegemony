@@ -1,9 +1,24 @@
 import type { Phase } from "../../../game/controller";
-import type { HegemonyState } from "../../../game/types";
+import { POP_TYPES } from "../../../game/rules";
+import type { HegemonyState, Resources } from "../../../game/types";
 import { phaseHint } from "../../../ui/formatters";
-import { AtlasIcon, UiSprite } from "../../Sprites";
+import { RESOURCE_ORDER, resourceCssVars } from "../../../ui/resourceVisuals";
+import { AtlasIcon, ResourceIcon, UiSprite } from "../../Sprites";
 import { ActionLogPanel } from "./ActionLogPanel";
 import { DeckShelf } from "./DeckShelf";
+
+function ResourceCost({ cost }: { cost: Partial<Resources> }) {
+  return (
+    <span className="commandVerbCost">
+      {RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) > 0).map((resource) => (
+        <span className="commandVerbCostItem" key={resource} style={resourceCssVars(resource)}>
+          <ResourceIcon resource={resource} className="commandVerbCostIcon" />
+          {cost[resource]}
+        </span>
+      ))}
+    </span>
+  );
+}
 
 export function ActionCommandPanel({
   G,
@@ -36,6 +51,12 @@ export function ActionCommandPanel({
   onUpgradeCityRequest: () => void;
   onEndTurn: () => void;
 }) {
+  const foundCost = G.ruleset.actionCosts.foundColony;
+  const upgradeCost = G.ruleset.actionCosts.upgradeColonyToCity;
+  const minGrowFood = Math.min(
+    ...POP_TYPES.map((pop) => G.ruleset.growPopCosts[pop].food ?? Number.POSITIVE_INFINITY)
+  );
+
   return (
     <div className="commandStack">
       <div className="panelTitle compactPanelTitle">
@@ -48,7 +69,7 @@ export function ActionCommandPanel({
 
       <div className="commandToolbar" aria-label="Action toolbar">
         <button
-          className="commandIconButton"
+          className="commandVerb"
           disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent || !canGrowPops}
           onClick={onGrowPopRequest}
           title={
@@ -60,11 +81,20 @@ export function ActionCommandPanel({
           }
         >
           <UiSprite item="growAction" className="commandIcon" />
-          <span>Grow</span>
+          <span className="commandVerbBody">
+            <strong>Grow</strong>
+            <span className="commandVerbCost">
+              <em>from</em>
+              <span className="commandVerbCostItem" style={resourceCssVars("food")}>
+                <ResourceIcon resource="food" className="commandVerbCostIcon" />
+                {minGrowFood}
+              </span>
+            </span>
+          </span>
         </button>
 
         <button
-          className="commandIconButton"
+          className="commandVerb"
           disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent || !canMovePops}
           onClick={onMovePopsRequest}
           title={
@@ -76,12 +106,17 @@ export function ActionCommandPanel({
           }
         >
           <UiSprite item="moveAction" className="commandIcon" />
-          <span>Move</span>
+          <span className="commandVerbBody">
+            <strong>Move</strong>
+            <span className="commandVerbCost">
+              <em>free</em>
+            </span>
+          </span>
         </button>
 
         <button
           aria-pressed={isFoundColonyActive}
-          className={isFoundColonyActive ? "commandIconButton commandIconActive" : "commandIconButton"}
+          className={isFoundColonyActive ? "commandVerb commandIconActive" : "commandVerb"}
           disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent || (!canFoundColony && !isFoundColonyActive)}
           onClick={onFoundColonyRequest}
           title={
@@ -95,11 +130,14 @@ export function ActionCommandPanel({
           }
         >
           <AtlasIcon icon="colony" className="commandIcon commandAtlasIcon" />
-          <span>Found</span>
+          <span className="commandVerbBody">
+            <strong>Found</strong>
+            <ResourceCost cost={foundCost} />
+          </span>
         </button>
 
         <button
-          className="commandIconButton"
+          className="commandVerb"
           disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent || !canUpgradeCity}
           onClick={onUpgradeCityRequest}
           title={
@@ -111,7 +149,10 @@ export function ActionCommandPanel({
           }
         >
           <AtlasIcon icon="city" className="commandIcon commandAtlasIcon" />
-          <span>Upgrade</span>
+          <span className="commandVerbBody">
+            <strong>Upgrade</strong>
+            <ResourceCost cost={upgradeCost} />
+          </span>
         </button>
 
         <button
