@@ -1,34 +1,31 @@
 import { memo } from "react";
-import type { LocalContext } from "../../../game/controller";
+import { yearOf } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
-import { phaseLabel, seasonLabel, yearLabel } from "../../../ui/formatters";
 import { PLAYER_DISPLAY_NAMES } from "../constants";
+import { SeasonDial } from "./SeasonDial";
 
 function SeasonStatusComponent({
   G,
-  ctx,
   isActive,
   currentPlayerId
 }: {
   G: HegemonyState;
-  ctx: LocalContext;
   isActive: boolean;
   currentPlayerId: PlayerId;
 }) {
   return (
-    <div className="turnClock" aria-label={`${seasonLabel(G.season)}, ${yearLabel(G.season)}`}>
-      <span className="seasonPill">
-        <span className="seasonPillYear">{yearLabel(G.season)}</span>
-        <b>{seasonLabel(G.season)}</b>
-      </span>
-      <span className="turnHeadline">
-        <span className="turnMeta">
-          Turn {ctx.turn} · {phaseLabel(ctx.phase)}
-        </span>
-        <strong className="turnWhose">
-          {isActive ? "Your turn" : `${PLAYER_DISPLAY_NAMES[currentPlayerId]} acting`}
-        </strong>
-      </span>
+    <div className="turnClock">
+      <div className="turnYear">
+        <span className="turnClockLabel">Year</span>
+        <strong>{yearOf(G.season)}</strong>
+      </div>
+
+      <SeasonDial seasonIndex={G.season} />
+
+      <div className="turnActor">
+        <span className="turnClockLabel">{isActive ? "Your turn" : "Now acting"}</span>
+        <strong>{PLAYER_DISPLAY_NAMES[currentPlayerId]}</strong>
+      </div>
     </div>
   );
 }

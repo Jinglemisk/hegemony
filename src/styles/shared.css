@@ -52,3 +52,15 @@
   box-shadow: 0 1px 2px rgb(72 42 21 / 14%);
 }
 
+/* Inline icons appended to resource / pop / building words in prose (AnnotatedText) */
+.richToken {
+  white-space: nowrap;
+}
+
+.richIcon {
+  width: 1.08em;
+  height: 1.08em;
+  margin: 0 0.04em 0 0.18em;
+  vertical-align: -0.22em;
+}
+

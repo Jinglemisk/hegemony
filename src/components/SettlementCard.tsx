@@ -96,19 +96,19 @@ export function HoldingNetYields({ resources }: { resources: Resources }) {
     >
       {RESOURCE_ORDER.map((resource) => {
         const value = resources[resource];
+        const isZero = value === 0;
 
-        if (value === 0) {
-          return (
-            <span className="holdingNetYield emptyNetYield" key={resource} aria-hidden="true">
-              <span className="netYieldDash">–</span>
-            </span>
-          );
-        }
-
+        // Always show every resource's icon so the columns read as a fixed set;
+        // a zero just dims to an icon + dash instead of vanishing.
         return (
-          <span className="holdingNetYield" key={resource} style={resourceCssVars(resource)}>
+          <span
+            className={`holdingNetYield${isZero ? " emptyNetYield" : ""}`}
+            key={resource}
+            style={resourceCssVars(resource)}
+            title={`${RESOURCE_LABELS[resource]}: ${isZero ? "no change" : formatSignedNumber(value)}`}
+          >
             <ResourceIcon resource={resource} value={value} className="miniResourceIcon" />
-            <strong>{formatSignedNumber(value)}</strong>
+            <strong>{isZero ? "–" : formatSignedNumber(value)}</strong>
           </span>
         );
       })}

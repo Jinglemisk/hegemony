@@ -1,9 +1,10 @@
 import { memo } from "react";
 import { PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
-import { calculateEconomyProjection, playerPopulationTotals } from "../../../game/rules";
+import { calculateEconomyProjection, playerStandings } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../../../ui/formatters";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
+import { AtlasIcon, UiSprite } from "../../Sprites";
 import { PLAYER_DISPLAY_NAMES } from "../constants";
 
 function PlayerScoreboardComponent({
@@ -21,7 +22,7 @@ function PlayerScoreboardComponent({
     <section className="scoreboardPanel" aria-label="Player roster">
       {PLAYER_IDS.map((id) => {
         const player = G.players[id];
-        const population = playerPopulationTotals(G, id);
+        const standings = playerStandings(G, id);
         const projected = calculateEconomyProjection(G, id, { resolveTransfers: true });
         const isViewer = id === viewerId;
         const isCurrent = id === currentPlayerId;
@@ -34,14 +35,28 @@ function PlayerScoreboardComponent({
             onClick={() => onPlayerIDChange(id)}
             title={`View ${PLAYER_DISPLAY_NAMES[id]}'s empire`}
           >
-            <span className="rosterDot" style={{ backgroundColor: PLAYER_COLORS[id] }} />
-            <span className="rosterWho">
-              <strong>{PLAYER_DISPLAY_NAMES[id]}</strong>
-              <em>{isCurrent ? "Acting" : "Idle"}</em>
+            <span className="rosterHead">
+              <span className="rosterDot" style={{ backgroundColor: PLAYER_COLORS[id] }} />
+              <strong className="rosterName">{PLAYER_DISPLAY_NAMES[id]}</strong>
+              {isCurrent ? <span className="rosterActingTag">Acting</span> : null}
             </span>
-            <span className="rosterPops">
-              {population.pops}
-              <span className="rosterPopsUnit">pop</span>
+            <span className="rosterStats">
+              <span className="rosterStat" title={`${standings.cities} cities`}>
+                <AtlasIcon icon="city" className="rosterStatIcon" />
+                {standings.cities}
+              </span>
+              <span className="rosterStat" title={`${standings.colonies} colonies`}>
+                <AtlasIcon icon="colony" className="rosterStatIcon" />
+                {standings.colonies}
+              </span>
+              <span className="rosterStat" title={`${standings.pops} population`}>
+                <AtlasIcon icon="citizens" className="rosterStatIcon" />
+                {standings.pops}
+              </span>
+              <span className="rosterStat rosterVp" title="Victory points (provisional)">
+                <UiSprite item="victoryPoint" className="rosterStatIcon" />
+                {standings.victoryPoints}
+              </span>
             </span>
             <span className="scoreTooltip" role="tooltip">
               <strong>{PLAYER_DISPLAY_NAMES[id]} Resources</strong>

@@ -18,6 +18,7 @@ import { GrowPopModal } from "./board/modals/GrowPopModal";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
 import { SeasonStatus } from "./board/topbar/SeasonStatus";
+import { TopbarEvents } from "./board/topbar/TopbarEvents";
 import type { EmpireTab } from "./board/types";
 
 type BoardProps = {
@@ -206,12 +207,9 @@ export function HegemonyBoard({
   return (
     <main className="shell uiOverhaulShell">
       <header className="topbar strategyTopbar">
-        <SeasonStatus
-          G={G}
-          ctx={ctx}
-          isActive={isActive}
-          currentPlayerId={currentPlayerId}
-        />
+        <TopbarEvents G={G} />
+
+        <SeasonStatus G={G} isActive={isActive} currentPlayerId={currentPlayerId} />
 
         <PlayerScoreboard
           G={G}

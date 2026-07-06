@@ -46,25 +46,24 @@ function EmpireIntelPanelComponent({
         <AtlasIcon icon="city" className="titleIcon" />
         <div>
           <h2>Ledger</h2>
-          <span>{holdings.length} holdings</span>
         </div>
       </div>
 
       <div className="empireSummary" aria-label="Empire summary">
-        <span className="empireStat">
+        <span className="empireStat" title={`${cityCount} ${cityCount === 1 ? "city" : "cities"}`}>
+          <AtlasIcon icon="city" className="empireStatIcon" />
           <strong>{cityCount}</strong>
-          <em>{cityCount === 1 ? "City" : "Cities"}</em>
         </span>
-        <span className="empireStat">
+        <span className="empireStat" title={`${colonyCount} ${colonyCount === 1 ? "colony" : "colonies"}`}>
+          <AtlasIcon icon="colony" className="empireStatIcon" />
           <strong>{colonyCount}</strong>
-          <em>{colonyCount === 1 ? "Colony" : "Colonies"}</em>
         </span>
-        <span className="empireStat">
+        <span className="empireStat" title={`${popsUsed} of ${popsCapacity} population`}>
+          <AtlasIcon icon="citizens" className="empireStatIcon" />
           <strong>
             {popsUsed}
             <span className="empireStatCap">/{popsCapacity}</span>
           </strong>
-          <em>Pops</em>
         </span>
       </div>
 

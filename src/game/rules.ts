@@ -40,4 +40,5 @@ export * from "./status";
 export * from "./events";
 export * from "./actions";
 export * from "./season";
+export * from "./score";
 export * from "./state";

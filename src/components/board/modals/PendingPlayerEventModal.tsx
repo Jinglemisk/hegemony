@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { GameMoves } from "../../../game/controller";
 import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
+import { AnnotatedText } from "../../AnnotatedText";
 import { eventCardArtUrl, formatEventEffects } from "../events";
 import { capitalize } from "../helpers";
 
@@ -64,7 +65,9 @@ export function PendingPlayerEventModal({
           <div className="eventCardBody">
             <span className="eventCardDeckLabel">Hegemony Event</span>
             <h2 id="pending-event-title">{card.name}</h2>
-            <p>{card.text}</p>
+            <p>
+              <AnnotatedText text={card.text} />
+            </p>
 
             {choices.length > 1 ? (
               <div className="eventChoiceStack" role="group" aria-label="Event choices">
@@ -80,7 +83,9 @@ export function PendingPlayerEventModal({
                       onClick={() => setSelectedChoiceIndex(index)}
                     >
                       <strong>Option {index + 1}</strong>
-                      <span>{formatEventEffects(effects)}</span>
+                      <span>
+                        <AnnotatedText text={formatEventEffects(effects)} />
+                      </span>
                     </button>
                   );
                 })}
@@ -88,7 +93,9 @@ export function PendingPlayerEventModal({
             ) : (
               <div className="eventSingleEffect">
                 <strong>Effect</strong>
-                <span>{formatEventEffects(selectedEffects)}</span>
+                <span>
+                  <AnnotatedText text={formatEventEffects(selectedEffects)} />
+                </span>
               </div>
             )}
 
