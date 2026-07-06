@@ -3,6 +3,7 @@ import type { Phase } from "../../../game/controller";
 import { getBuildBuildingStatus } from "../../../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../../../game/types";
 import { formatBuildingEffects, formatResourceCost } from "../../../ui/formatters";
+import { AnnotatedText } from "../../AnnotatedText";
 import { AtlasIcon } from "../../Sprites";
 import { buildingTooltipRows, getBuildingBenefitText, holdingShortLabel } from "../helpers";
 import type { OwnedHolding } from "../types";
@@ -30,9 +31,14 @@ export function BuildingsTab({
             <AtlasIcon icon={building.id} className="buildingButtonIcon" />
             <span>
               <strong>{building.name}</strong>
-              <em>{formatBuildingEffects(building.effects)}</em>
+              <em>
+                <AnnotatedText text={formatBuildingEffects(building.effects)} />
+              </em>
               <span className="buildingLedgerCost">
-                Cost <b>{formatResourceCost(building.cost)}</b>
+                Cost{" "}
+                <b>
+                  <AnnotatedText text={formatResourceCost(building.cost)} />
+                </b>
               </span>
             </span>
           </div>
@@ -51,7 +57,9 @@ export function BuildingsTab({
                   title={buildingTooltipRows(building, status, benefit, phase, isActive).join(" ")}
                 >
                   <span>{holdingShortLabel(tile, settlement)}</span>
-                  <b>{benefit}</b>
+                  <b>
+                    <AnnotatedText text={benefit} />
+                  </b>
                 </button>
               );
             })}

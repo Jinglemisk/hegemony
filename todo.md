@@ -52,8 +52,8 @@
 
 - Finish the interface overhaul (started from the UI audit).
 -- DONE so far: the top bar is re-gridded — a central season dial with hand-painted Greek season art (tree / sun / bare tree / snowflake), Year + acting player either side, and a uniform four-seat roster showing each player's city / colony / pop counts and a provisional VP. Events moved back to the top-left as cards with an inline-icon effect summary + full-text hover tooltip. Ledger gained an empire summary (icon + count) and always shows every resource icon (dimmed dash when zero). Decks collapsed to a slim tray (dead "Resolutions" placeholder removed). A universal inline resource/pop/building icon system (AnnotatedText) now runs across cards, modals, and the chronicle.
--- Still open: promote the action verbs (show each one's cost, grey out only when unaffordable); group the chronicle by turn; demote the heavy Greek-key panel frame to a hairline; give the Buildings and Pops tabs the same table/alignment pass the Cities tab got.
--- Minor: autumn season icon has a faint cutout haze on its thinnest top twigs (only visible at large zoom).
+-- ~~Also done: action verbs are now 2x2 buttons showing each action's cost (greyed when unavailable/unaffordable); the chronicle is folded under one sticky heading per season; the heavy Greek-key panel frame is demoted to a hairline; the Buildings tab gained the inline-icon system (the Pops tab was already aligned).~~
+-- Still open: nothing major from the audit. Optional — regenerate the autumn season icon to kill its faint cutout haze (only visible at large zoom).
 
 - Provisional victory points are shown but scoring is not real yet.
 -- The roster and ledger display an interim VP tally (src/game/score.ts) using the fallback formula from the scoring item above. Replace it once the real end-condition scoring lands.

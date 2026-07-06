@@ -12,12 +12,10 @@
 .commandPanel {
   position: relative;
   min-height: 0;
-  padding: 12px 10px;
-  border: 20px solid transparent;
-  border-image: url("../../assets/codex-banana-showcase/greek-frame.png") 270 round;
-  background-color: rgb(255 248 231 / 26%);
-  background-clip: padding-box;
-  box-shadow: 0 1px 4px rgb(72 42 21 / 8%);
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background-color: rgb(255 248 231 / 22%);
 }
 
 .commandPanel {
