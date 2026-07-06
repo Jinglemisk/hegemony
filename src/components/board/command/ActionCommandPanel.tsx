@@ -3,7 +3,6 @@ import type { HegemonyState } from "../../../game/types";
 import { phaseHint } from "../../../ui/formatters";
 import { AtlasIcon, UiSprite } from "../../Sprites";
 import { ActionLogPanel } from "./ActionLogPanel";
-import { CurrentEvents } from "./CurrentEvents";
 import { DeckShelf } from "./DeckShelf";
 
 export function ActionCommandPanel({
@@ -39,8 +38,6 @@ export function ActionCommandPanel({
 }) {
   return (
     <div className="commandStack">
-      <CurrentEvents G={G} />
-
       <div className="panelTitle compactPanelTitle">
         <UiSprite item="voteToken" className="titleIcon" />
         <div>

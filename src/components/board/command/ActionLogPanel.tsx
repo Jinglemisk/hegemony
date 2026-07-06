@@ -1,5 +1,6 @@
 import type { HegemonyState } from "../../../game/types";
 import { seasonLabel, seasonTag, yearLabel } from "../../../ui/formatters";
+import { AnnotatedText } from "../../AnnotatedText";
 import { UiSprite } from "../../Sprites";
 
 export function ActionLogPanel({ G }: { G: HegemonyState }) {
@@ -18,7 +19,9 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
         {entries.map((entry) => (
           <p key={entry.id}>
             <span title={`${seasonLabel(entry.season)}, ${yearLabel(entry.season)}`}>{seasonTag(entry.season)}</span>
-            <b>{entry.message}</b>
+            <b>
+              <AnnotatedText text={entry.message} />
+            </b>
           </p>
         ))}
       </div>

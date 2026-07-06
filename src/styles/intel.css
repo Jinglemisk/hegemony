@@ -145,16 +145,18 @@
   border-left: 2px solid var(--ledger-accent);
 }
 
-/* Empire summary — a compact rollup above the tabs (kept flat, no box). */
+/* Empire summary — a compact rollup above the tabs (icon + count, centred). */
 .empireSummary {
   display: flex;
-  gap: 20px;
+  justify-content: center;
+  gap: 22px;
   padding: 0 2px 2px;
 }
 
 .empireStat {
-  display: grid;
-  gap: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   line-height: 1;
 }
 
@@ -172,39 +174,13 @@
   font-weight: 400;
 }
 
-.empireStat em {
-  color: var(--muted);
-  font-size: 0.56rem;
-  font-style: normal;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.empireStatIcon {
+  flex: none;
+  width: 22px;
+  height: 22px;
 }
 
 /* Column legend — resource icons aligned over the per-holding net-income columns. */
-/* Column caption over the holdings: names the left (identity) and right (net
-   income) halves of every row. The per-value resource icons in each row do the
-   per-column labeling. */
-.holdingLegend {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 2px 9px 7px;
-  border-bottom: 1px solid var(--ledger-rule-strong);
-}
-
-.holdingLegendCaption {
-  color: var(--muted);
-  font-size: 0.56rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.holdingLegendYieldCaption {
-  color: var(--subtle);
-}
-
 .holdingMatrix {
   gap: 0;
   position: relative;
@@ -482,12 +458,16 @@
   font-weight: 700;
 }
 
-/* Empty resource slots render a faint dash so each row reads as the same
-   aligned ledger (capital and colony line up column-for-column) */
-.netYieldDash {
+/* Zero-income slots keep the resource icon (dimmed) so every row shows the full
+   set of resources; only the value collapses to a faint dash. */
+.emptyNetYield .miniResourceIcon {
+  opacity: 0.34;
+}
+
+.emptyNetYield strong {
   color: var(--subtle);
-  font-size: 0.8rem;
-  opacity: 0.55;
+  font-weight: 500;
+  opacity: 0.75;
 }
 
 .collapseChevron {
