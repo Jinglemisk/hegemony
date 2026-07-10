@@ -40,6 +40,27 @@ export interface EconomyRules {
   foodStockpileHappinessDivisor: number;
   /** Suppress food-shortage happiness pressure until a player's first gameplay income. */
   firstIncomeFoodGrace: boolean;
+  /** Unrest thresholds & penalties (mapped from the rulebook's positive "Unrest N"
+   *  onto negative happiness). All evaluated in the start-of-turn unrest upkeep. */
+  unrest: UnrestRules;
+}
+
+/** Tunables for the unrest (negative-happiness) consequence system. */
+export interface UnrestRules {
+  /** Happiness at/below this removes `popLossCount` pops each turn (no rebound). */
+  popLossThreshold: number;
+  popLossCount: number;
+  /** Happiness at/below this removes `severePopLossCount` pops, then happiness is
+   *  reset to `severeRebound`. Checked before the milder threshold. */
+  severeThreshold: number;
+  severePopLossCount: number;
+  severeRebound: number;
+  /** Net food income at/below this counts as a deficit turn. */
+  foodDeficitThreshold: number;
+  /** Consecutive deficit turns that trigger a starvation pop loss (then the counter resets). */
+  foodDeficitTurnsToStarve: number;
+  /** Pops removed when the starvation counter fires. */
+  foodDeficitStarvePopLoss: number;
 }
 
 export interface Ruleset {
@@ -83,7 +104,17 @@ export const DEFAULT_RULESET: Ruleset = {
     colonySharedTileYieldShare: 0.5,
     overCapacityHappinessPerPop: 1,
     foodStockpileHappinessDivisor: 5,
-    firstIncomeFoodGrace: true
+    firstIncomeFoodGrace: true,
+    unrest: {
+      popLossThreshold: -5,
+      popLossCount: 2,
+      severeThreshold: -10,
+      severePopLossCount: 4,
+      severeRebound: -4,
+      foodDeficitThreshold: -2,
+      foodDeficitTurnsToStarve: 2,
+      foodDeficitStarvePopLoss: 1
+    }
   },
   setup: ["capital", "colony"]
 };

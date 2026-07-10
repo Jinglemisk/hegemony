@@ -13,9 +13,14 @@
 -- Direction (user's idea): make the event deck a finite clock. Stop the reshuffle; when all event cards are spent, the game ends and "victory cards" resolve, awarding for categories like most resource points, most pops, most cities, most X. The deck length becomes the game length.
 -- Interim/fallback: a fixed end-of-season-10 tally — +5 per city, +3 per colony, +1 per citizen, +1 per freeman, +1 per 10 material resources (rounded down), -1 per point of negative happiness.
 
-- Give happiness real consequences.
--- Happiness accrues but does nothing yet — it is a meter with no teeth.
--- Simple thresholds to start: -5 warning, -10 lose 1 gold/turn, -15 cannot found colonies, -20 lose a pop from your largest settlement then happiness +5.
+- ~~Give happiness real consequences.~~ DONE (feat/unrest-consequences — see unrest.md).
+-- ~~Happiness accrues but does nothing yet — it is a meter with no teeth.~~
+-- Shipped the rulebook's Unrest system mapped onto negative happiness: a start-of-turn
+   upkeep removes 2 pops at happiness ≤ -5, 4 pops + rebound to -4 at ≤ -10 (random,
+   via the seeded RNG); two consecutive -2 food turns starve a pop; and a new
+   `timedHappinessDelta` event effect drives multi-turn unrest ("Civil Discord", "Plague").
+-- No passive drift (deliberate). Still open: Luxury Goods relief (needs coasts), the
+   rulebook's exact -2/-4/-6 → 1/2/3 food-unrest magnitudes, player-choice pop removal.
 
 - Deepen seasonal mechanics. (in progress on feat/seasons — see seasons.md)
 -- ~~The season is just a bare counter.~~ DONE: it now reads as Year N / Spring–Winter (derived in core/calendar.ts), shown on the medallion + chronicle.

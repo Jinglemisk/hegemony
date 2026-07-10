@@ -1,13 +1,35 @@
 import { memo, useMemo } from "react";
 import type { Phase } from "../../../game/controller";
-import { settlementPopCapacity, totalPops } from "../../../game/rules";
+import { settlementPopCapacity, totalPops, unrestStatus } from "../../../game/rules";
+import type { UnrestStatus } from "../../../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../../../game/types";
+import { formatNumber } from "../../../ui/formatters";
+import { AnnotatedText } from "../../AnnotatedText";
 import { AtlasIcon } from "../../Sprites";
 import { getOwnedHoldings } from "../helpers";
 import type { EmpireTab } from "../types";
 import { BuildingsTab } from "./BuildingsTab";
 import { CitiesTab } from "./CitiesTab";
 import { PopsTab } from "./PopsTab";
+
+const UNREST_TITLES: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
+  discontent: "Discontent",
+  unrest: "Unrest",
+  revolt: "Revolt"
+};
+
+/** Player-facing sentence for the ledger's unrest banner. Uses the status numbers +
+ *  the ruleset threshold so the warning never disagrees with the engine. */
+function unrestMessage(status: UnrestStatus, popLossThreshold: number): string {
+  const happiness = formatNumber(status.happiness);
+
+  if (status.tier === "revolt" || status.tier === "unrest") {
+    return `Happiness ${happiness} — losing ${status.popsAtRisk} pops every turn until it recovers.`;
+  }
+
+  // discontent
+  return `Happiness ${happiness} — pops start dying at ${popLossThreshold} happiness.`;
+}
 
 function EmpireIntelPanelComponent({
   G,
@@ -34,6 +56,7 @@ function EmpireIntelPanelComponent({
     (sum, { settlement }) => sum + settlementPopCapacity(settlement.kind, G.ruleset),
     0
   );
+  const unrest = unrestStatus(G, playerID);
   const tabs: Array<{ id: EmpireTab; label: string }> = [
     { id: "cities", label: "Cities" },
     { id: "buildings", label: "Buildings" },
@@ -66,6 +89,25 @@ function EmpireIntelPanelComponent({
           </strong>
         </span>
       </div>
+
+      {unrest.tier !== "calm" ? (
+        <div
+          className={`unrestBanner unrestBanner-${unrest.tier}`}
+          role="status"
+          title={
+            [
+              unrest.deficitTurns > 0 ? `${unrest.deficitTurns} turn(s) of food deficit` : null,
+              unrest.timedModifiers > 0 ? `${unrest.timedModifiers} lingering unrest effect(s)` : null,
+              unrest.totalDeaths > 0 ? `${unrest.totalDeaths} pops lost so far` : null
+            ]
+              .filter(Boolean)
+              .join(" · ") || undefined
+          }
+        >
+          <span className="unrestBannerTag">{UNREST_TITLES[unrest.tier]}</span>
+          <AnnotatedText text={unrestMessage(unrest, G.ruleset.economy.unrest.popLossThreshold)} />
+        </div>
+      ) : null}
 
       <div className="intelTabs" role="tablist" aria-label="Empire information">
         {tabs.map((tab) => (

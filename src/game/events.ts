@@ -197,6 +197,18 @@ function applyEventEffects(
         const amount = scaledByPops(G, playerID, effect.amountPerPops, effect.popStep, effect.minimumMagnitude);
         applyEventResourceDelta(G, playerID, createResourceDelta("happiness", amount), card.name);
       }
+    } else if (effect.type === "timedHappinessDelta") {
+      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
+        G.players[playerID].timedHappinessModifiers.push({
+          amountPerTurn: effect.amountPerTurn,
+          turnsRemaining: effect.turns,
+          source: card.name
+        });
+        addLog(
+          G,
+          `${getPlayerName(G, playerID)} will feel ${formatRuleNumber(effect.amountPerTurn)} happiness per turn from ${card.name} for ${effect.turns} turns.`
+        );
+      }
     } else if (effect.type === "incomeModifier" || effect.type === "buildingCostMultiplier") {
       addLog(G, `${card.name} modifier is active: ${card.text}`);
     } else if (effect.type === "addPops") {
