@@ -58,11 +58,17 @@ export function PopsTab({
           In Transit
           <strong>{inTransit}</strong>
         </span>
-        <span>
-          Event Cards
-          <strong>{G.playerDrawPile.length}</strong>
+        <span
+          className={player.popsGainedFromEvents > 0 ? "popSummaryGain" : undefined}
+          title="Pops gained from event cards"
+        >
+          Gained
+          <strong>{player.popsGainedFromEvents}</strong>
         </span>
-        <span className={player.popsLostToUnrest > 0 ? "popSummaryAlarm" : undefined}>
+        <span
+          className={player.popsLostToUnrest > 0 ? "popSummaryAlarm" : undefined}
+          title="Pops lost to unrest & starvation"
+        >
           Deaths
           <strong>{player.popsLostToUnrest}</strong>
         </span>

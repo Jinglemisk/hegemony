@@ -34,7 +34,8 @@ export function createInitialState(seed = createSeed(), ruleset: Ruleset = DEFAU
           actionCostDiscounts: [],
           consecutiveFoodDeficitTurns: 0,
           timedHappinessModifiers: [],
-          popsLostToUnrest: 0
+          popsLostToUnrest: 0,
+          popsGainedFromEvents: 0
         }
       }),
       {} as HegemonyState["players"]

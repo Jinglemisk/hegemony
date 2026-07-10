@@ -117,11 +117,14 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Deaths accrued to unrest/starvation — call it out in clay when it climbs above 0. */
-.popSummaryAlarm {
-  color: var(--clay);
+/* Pops gained from cards (olive) vs lost to unrest (clay) — a paired call-out
+   once either climbs above 0. */
+.popSummaryGain,
+.popSummaryGain strong {
+  color: var(--olive);
 }
 
+.popSummaryAlarm,
 .popSummaryAlarm strong {
   color: var(--clay);
 }

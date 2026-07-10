@@ -58,7 +58,9 @@ Unrest is surfaced in the viewer's **Ledger** (`EmpireIntelPanel`):
   effects, and total deaths. Text runs through `AnnotatedText` for the inline happiness icon.
 - The **Pops tab "Deaths" stat** is now wired to a real per-player counter
   (`PlayerState.popsLostToUnrest`, incremented in the upkeep) and turns clay once it
-  climbs above 0 (previously a hardcoded `0`).
+  climbs above 0 (previously a hardcoded `0`). It is paired with a **"Gained"** stat
+  (`popsGainedFromEvents`, incremented on the `addPops` event effect) that turns olive
+  — this replaced a dead "Event Cards" field (already shown in the deck tray).
 - The **Chronicle** already logs each removal / rebound / lingering-unrest tick.
 
 ## Tunables

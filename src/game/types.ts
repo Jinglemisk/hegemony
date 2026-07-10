@@ -247,6 +247,9 @@ export interface PlayerState {
   timedHappinessModifiers: TimedHappinessModifier[];
   /** Running total of pops lost to unrest & starvation — surfaced in the ledger. */
   popsLostToUnrest: number;
+  /** Running total of pops gained inorganically from event cards (the `addPops`
+   *  effect) — the ledger's "Gained" stat, paired with deaths. */
+  popsGainedFromEvents: number;
 }
 
 export interface PopulationTransfer {

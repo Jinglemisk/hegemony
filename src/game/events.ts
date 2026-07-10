@@ -223,6 +223,7 @@ function applyEventEffects(
       }
 
       settlement.pops[effect.pop] += effect.amount;
+      G.players[activePlayerID].popsGainedFromEvents += effect.amount;
       addLog(
         G,
         `${getPlayerName(G, activePlayerID)} added ${effect.amount} ${formatPopName(effect.pop, effect.amount)} to ${formatTileLabel(G, targetTileId)} from ${card.name}.`
