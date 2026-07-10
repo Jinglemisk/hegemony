@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { applyUnrestUpkeep, calculateIncome, totalPops, unrestStatus } from "./rules";
+import {
+  applyUnrestUpkeep,
+  calculateIncome,
+  drawPlayerEvent,
+  getAddPopsEffect,
+  getEventPopTargetTileIds,
+  resolvePendingPlayerEvent,
+  totalPops,
+  unrestStatus
+} from "./rules";
+import { PLAYER_EVENT_CARDS } from "./data";
 import { createGame } from "./turn";
 import type { HegemonyState, PlayerId, Pops, Settlement } from "./types";
 
@@ -153,5 +163,24 @@ describe("unrest status (ledger warning)", () => {
 
     G.players["0"].resources.happiness = -10;
     expect(unrestStatus(G, "0")).toMatchObject({ tier: "revolt", popsAtRisk: 4 });
+  });
+});
+
+describe("pops gained from events (ledger tally)", () => {
+  it("counts inorganic pops added by an addPops card", () => {
+    const G = createGame(SEED);
+    const card = PLAYER_EVENT_CARDS.find((candidate) => candidate.id === "player-free-settlers")!;
+    G.playerDrawPile.unshift(card);
+    G.pendingPlayerEvent = null;
+
+    drawPlayerEvent(G, "0");
+    const effect = getAddPopsEffect(card.effects)!;
+    const target = getEventPopTargetTileIds(G, "0", effect)[0];
+    const before = G.players["0"].popsGainedFromEvents;
+
+    const result = resolvePendingPlayerEvent(G, "0", target);
+
+    expect(result.ok).toBe(true);
+    expect(G.players["0"].popsGainedFromEvents).toBe(before + effect.amount);
   });
 });
