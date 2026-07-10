@@ -61,6 +61,10 @@ function formatEventEffect(effect: EventEffect): string {
     return `${formatSignedNumber(effect.amountPerPops)} ${RESOURCE_LABELS.happiness} per ${effect.popStep} pops`;
   }
 
+  if (effect.type === "timedHappinessDelta") {
+    return `${formatSignedNumber(effect.amountPerTurn)} ${RESOURCE_LABELS.happiness} per turn for ${effect.turns} turns`;
+  }
+
   if (effect.type === "incomeModifier") {
     return `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]} income`;
   }

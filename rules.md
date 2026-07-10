@@ -132,6 +132,22 @@ Happiness is your civilization's stability. It moves each turn:
   taken straight out of happiness. (Your very first income after setup is
   forgiven this.)
 
+When happiness turns **negative** it reads as unrest, and unrest has teeth. At the
+start of your turn — before you collect income:
+
+- **Happiness at −5 or lower:** a mob costs you **2 pops**, chosen at random from
+  across your settlements. This repeats every turn until you climb back above −5.
+- **Happiness at −10 or lower:** a full revolt costs you **4 pops**, and happiness
+  then settles back to −4.
+- **Starvation:** if your food income is −2 or worse for **two turns running**, you
+  lose **1 pop**.
+- Some events sow **lingering unrest** — a penalty like "−2 happiness per turn for
+  3 turns" that bites at the start of each of your next few turns before fading.
+
+Happiness never drifts back up on its own — you climb out of unrest by fixing its
+causes (feed your people, ease overcrowding, build Temples). Losing pops does at
+least shrink those causes, so a collapse tends to bottom out rather than spiral.
+
 ## Events
 
 Two decks of event cards bring swings of fortune:
