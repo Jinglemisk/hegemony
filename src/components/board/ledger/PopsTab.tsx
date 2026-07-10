@@ -62,9 +62,9 @@ export function PopsTab({
           Event Cards
           <strong>{G.playerDrawPile.length}</strong>
         </span>
-        <span>
+        <span className={player.popsLostToUnrest > 0 ? "popSummaryAlarm" : undefined}>
           Deaths
-          <strong>0</strong>
+          <strong>{player.popsLostToUnrest}</strong>
         </span>
       </div>
     </div>

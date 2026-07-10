@@ -60,6 +60,18 @@ export type EventEffect =
       duration?: "season";
     }
   | {
+      /**
+       * Unrest that bites for a fixed number of the affected player's turns: it
+       * pushes `amountPerTurn` onto happiness during each of that player's next
+       * `turns` upkeeps, then expires. Stored as a {@link TimedHappinessModifier}
+       * on the player and ticked in the unrest upkeep — see `game/unrest.ts`.
+       */
+      type: "timedHappinessDelta";
+      scope: EventScope;
+      amountPerTurn: number;
+      turns: number;
+    }
+  | {
       type: "incomeModifier";
       scope: EventScope;
       resource: Resource;
@@ -210,6 +222,15 @@ export interface HegemonyBoard {
   tiles: HexTile[];
 }
 
+/** A happiness penalty (or bonus) that applies for a fixed number of the owning
+ *  player's turns, then expires. Created by the `timedHappinessDelta` event
+ *  effect and ticked down in the unrest upkeep. */
+export interface TimedHappinessModifier {
+  amountPerTurn: number;
+  turnsRemaining: number;
+  source: string;
+}
+
 export interface PlayerState {
   id: PlayerId;
   name: string;
@@ -219,6 +240,13 @@ export interface PlayerState {
   hasCollectedGameplayIncome: boolean;
   grownSettlementsThisTurn: string[];
   actionCostDiscounts: ActiveActionCostDiscount[];
+  /** Consecutive turns this player has collected income at or below the food-deficit
+   *  threshold; drives the starvation pop-loss in the unrest upkeep. */
+  consecutiveFoodDeficitTurns: number;
+  /** Active timed happiness penalties/bonuses, ticked down each of the player's turns. */
+  timedHappinessModifiers: TimedHappinessModifier[];
+  /** Running total of pops lost to unrest & starvation — surfaced in the ledger. */
+  popsLostToUnrest: number;
 }
 
 export interface PopulationTransfer {
