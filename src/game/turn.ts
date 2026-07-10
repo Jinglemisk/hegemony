@@ -1,6 +1,7 @@
 import { GAME_CONFIG, TEST_OPENING_SETUP } from "./config";
 import { PLAYER_IDS } from "./data";
 import {
+  applyUnrestUpkeep,
   collectIncome,
   createInitialState,
   drawSeasonalEvent,
@@ -60,6 +61,7 @@ export function beginGameplayTurn(G: HegemonyState) {
     drawSeasonalEvent(G);
   }
 
+  applyUnrestUpkeep(G, G.currentPlayer);
   collectIncome(G, G.currentPlayer, "automatic");
 }
 
@@ -79,6 +81,7 @@ export function endTurn(G: HegemonyState): MoveResult {
   }
 
   resolveArrivingPops(G, next);
+  applyUnrestUpkeep(G, next);
   collectIncome(G, next, "automatic");
 
   G.currentPlayer = next;

@@ -288,6 +288,16 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     seasons: ["summer", "autumn"],
     timing: "season",
     effects: [{ type: "incomeModifier", scope: "allPlayers", resource: "gold", amount: 2, duration: "season" }]
+  },
+  {
+    id: "season-plague",
+    deck: "seasonal",
+    name: "Plague",
+    count: 2,
+    text: "Sickness spreads: every player loses 2 Happiness at the start of each of their next 3 turns.",
+    seasons: ["autumn", "winter"],
+    timing: "immediate",
+    effects: [{ type: "timedHappinessDelta", scope: "allPlayers", amountPerTurn: -2, turns: 3 }]
   }
 ];
 
@@ -372,6 +382,15 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     text: "Gain 2 Happiness.",
     timing: "immediate",
     effects: [{ type: "happinessDelta", scope: "activePlayer", amount: 2 }]
+  },
+  {
+    id: "player-civil-discord",
+    deck: "player",
+    name: "Civil Discord",
+    count: 2,
+    text: "Lose 2 Happiness at the start of each of your next 3 turns.",
+    timing: "immediate",
+    effects: [{ type: "timedHappinessDelta", scope: "activePlayer", amountPerTurn: -2, turns: 3 }]
   },
   {
     id: "player-patronage-network",
