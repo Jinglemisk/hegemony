@@ -66,7 +66,9 @@ export function playTurn(G: HegemonyState, policy: Policy, rng: SimRng, hooks: S
 
     hooks.onMove?.(G, player, move);
 
-    if (G.phase === "gameOver" || G.turn !== startTurn) {
+    // applyMove may have ended the game (victory race / deck exhaustion) — TS can't
+    // see the mutation through the narrowed union, hence the widening read.
+    if ((G.phase as HegemonyState["phase"]) === "gameOver" || G.turn !== startTurn) {
       hooks.onTurnEnd?.(G);
       return;
     }

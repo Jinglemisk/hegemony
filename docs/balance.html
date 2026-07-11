@@ -750,6 +750,16 @@
   <h2><span class="numeral">VIII</span>Scoring</h2>
   <p class="section-lede">The provisional VP formula is a placeholder — but players optimize whatever is on the scoreboard, so its distortions are already the de-facto strategy guide.</p>
 
+  <div class="rule-note idea">
+    <span class="tag">Superseded — 2026-07-12</span>
+    <p>The provisional formula analyzed below was <strong>replaced by the victory race</strong>
+    (appendix D1, feat/phase0-victory-race): 5 public "Most X, min Y" cards, sole leader holds,
+    3 at your own turn start wins; the seasonal deck is the finite clock. This section stays as
+    the record of why the formula had to go. The race's own balance questions (are the five
+    minimums reachable at comparable speed? does Demos still over-reward width?) belong to the
+    minimum-tuning sim campaign.</p>
+  </div>
+
   <div class="formula">VP = 5·cities + 3·colonies + 1·citizen + 1·freeman + floor(banked material / 10) − max(0, −happiness)</div>
 
   <div class="table-scroll">
@@ -902,13 +912,13 @@
   <table>
     <thead><tr><th>#</th><th>Priority</th><th>Issue</th><th>Section</th><th>Suggested direction</th></tr></thead>
     <tbody>
-      <tr><td>1</td><td><span class="prio p0">P0</span></td><td>No end condition — decks reshuffle forever, VP is provisional, nothing concludes</td><td><a href="#scoring">§VIII</a></td><td>Finite decks as the clock + victory cards (already the chosen direction in todo.md)</td></tr>
+      <tr><td>1</td><td><span class="prio p0">P0</span></td><td><s>No end condition — decks reshuffle forever, VP is provisional, nothing concludes</s></td><td><a href="#scoring">§VIII</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): victory race — 5 public "Most X, min Y" cards, hold 3 at own turn start; seasonal deck is the finite clock. Minimum-tuning campaign owed.</td></tr>
       <tr><td>2</td><td><span class="prio p0">P0</span></td><td>Influence has zero sinks; gold has one 2-gold sink</td><td><a href="#resources">§II</a></td><td>Interim: Stabilize Province (4 inf → 3 hap) + 1:6 bank exchange; real fix arrives with Assembly/Trader</td></tr>
-      <tr><td>3</td><td><span class="prio p1">P1</span></td><td>Colony contiguity &amp; capital protection radius documented but unimplemented — colonies teleport</td><td><a href="#placement">§V</a></td><td>Decided (appendix Q3, 2026-07-11): enforce radius-1 contiguity (colonies chain as sources); capital ring <strong>dropped</strong> — delete the claim from rules.md/spec instead</td></tr>
-      <tr><td>4</td><td><span class="prio p1">P1</span></td><td>Food-stockpile happiness is uncapped — hoards buy unrest immunity and double-dip with banked-material VP</td><td><a href="#unrest">§VII</a></td><td>Decided (appendix Q4, 2026-07-11): stockpile-based, capped at +2</td></tr>
+      <tr><td>3</td><td><span class="prio p1">P1</span></td><td><s>Colony contiguity &amp; capital protection radius documented but unimplemented — colonies teleport</s></td><td><a href="#placement">§V</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): radius-1 contiguity enforced (colonies chain); ring claim deleted from rules.md/spec</td></tr>
+      <tr><td>4</td><td><span class="prio p1">P1</span></td><td><s>Food-stockpile happiness is uncapped — hoards buy unrest immunity and double-dip with banked-material VP</s></td><td><a href="#unrest">§VII</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): capped at +2 (ruleset tunable)</td></tr>
       <tr><td>5</td><td><span class="prio p1">P1</span></td><td>Player event deck: 92% upside, 30% free pops, EV ≈ +5/turn — outearns tiles, huge private variance</td><td><a href="#cards">§VI</a></td><td>Reduce free-pop copies to discounts; target EV ≈ +2 and ~25% harm</td></tr>
-      <tr><td>6</td><td><span class="prio p1">P1</span></td><td>Colony+freeman spam is ~3× more VP-efficient than cities under the provisional formula</td><td><a href="#scoring">§VIII</a></td><td>Interim: colony 2 VP / city 6 VP; real fix is victory cards. Contiguity (issue 3) also constrains it</td></tr>
-      <tr><td>7</td><td><span class="prio p1">P1</span></td><td>Fixed map + fixed 0→3 setup order + permanent first-actor = compounding player-0 advantage</td><td><a href="#placement">§V</a></td><td>Shuffle terrain deck (seeded), snake the setup, rotate first player each year</td></tr>
+      <tr><td>6</td><td><span class="prio p1">P1</span></td><td><s>Colony+freeman spam is ~3× more VP-efficient than cities under the provisional formula</s></td><td><a href="#scoring">§VIII</a></td><td><strong>RESOLVED structurally</strong> (feat/phase0-victory-race): the provisional formula is gone — the race has no per-colony score, and contiguity bounds spam. Watch: the Demos card (most pops) may still reward width; revisit in the minimum-tuning campaign.</td></tr>
+      <tr><td>7</td><td><span class="prio p1">P1</span></td><td><s>Fixed map + fixed 0→3 setup order + permanent first-actor = compounding player-0 advantage</s></td><td><a href="#placement">§V</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): snake setup, yearly opener rotation, Shuffled board option (Classic remains default preset)</td></tr>
       <tr><td>8</td><td><span class="prio p1">P1</span></td><td>City upgrade evicts a sharing colony and destroys its pops with no counterplay</td><td><a href="#placement">§V</a></td><td>Displaced pops walk home as a transfer; keep the settlement loss</td></tr>
       <tr><td>9</td><td><span class="prio p2">P2</span></td><td>Citizen is a strictly-dominated freeman (and flips to strictly-dominant once votes exist); +2 gold is spec drift</td><td><a href="#pops">§III</a></td><td>Pick the citizen's identity now: politics-only (revert gold) or priced elite</td></tr>
       <tr><td>10</td><td><span class="prio p2">P2</span></td><td>Spring and Summer seasonal pools contain zero harmful cards — the year's first half is auto-safe</td><td><a href="#cards">§VI</a></td><td>One thematic harm per season (floods, wildfire)</td></tr>
@@ -916,7 +926,7 @@
       <tr><td>12</td><td><span class="prio p2">P2</span></td><td>Dominated options on choice cards (Caravan Contacts, Skilled Mason, Temple Donation)</td><td><a href="#cards">§VI</a></td><td>Reprice the losing options until they're situational</td></tr>
       <tr><td>13</td><td><span class="prio p2">P2</span></td><td>Capital has no identity — engine-identical to a city</td><td><a href="#state">§I</a></td><td>Decide: restore a PDF perk (extra slots? small yield bonus?) or officially flatten the concept</td></tr>
       <tr><td>14</td><td><span class="prio p2">P2</span></td><td>Random unrest removal makes punishment severity a lottery</td><td><a href="#unrest">§VII</a></td><td>Adopt PDF's player-choice sacrifice (1c / 2f / 4s) once UI allows</td></tr>
-      <tr><td>15</td><td><span class="prio p2">P2</span></td><td><code>preloadOpeningSetupForTesting: true</code> ships a scripted opening; stale analysis docs (initial-round-balance.md)</td><td><a href="#state">§I</a></td><td>Flag off before playtests; archive or recompute stale docs</td></tr>
+      <tr><td>15</td><td><span class="prio p2">P2</span></td><td><s><code>preloadOpeningSetupForTesting: true</code> ships a scripted opening</s>; stale analysis docs (initial-round-balance.md)</td><td><a href="#state">§I</a></td><td>Flag <strong>RESOLVED</strong> (off by default; ?dev=preload). Stale docs still to archive/recompute — now including the pre-two-city opening analysis.</td></tr>
     </tbody>
   </table>
   </div>
@@ -974,6 +984,15 @@
   <table>
     <thead><tr><th>Date</th><th>Engine ref</th><th>Entry</th></tr></thead>
     <tbody>
+      <tr>
+        <td>2026-07-12</td>
+        <td><code>feat/phase0-victory-race</code></td>
+        <td>Phase 0 shipped: victory race + finite clock (issue 1 resolved), colony contiguity
+        without the capital ring (issue 3), stockpile happiness cap +2 (issue 4), provisional-VP
+        colony-spam distortion removed structurally (issue 6), snake setup + yearly rotation +
+        Shuffled board option (issue 7), preload flag off (issue 15 part). Standard setup is now
+        TWO CITIES. Sim: full greedy game ends at season 30; 6-game batch seat wins 33/33/17/17.</td>
+      </tr>
       <tr>
         <td>2026-07-11</td>
         <td><code>feat/unrest-consequences @ 5583263</code></td>

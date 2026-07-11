@@ -572,3 +572,78 @@
   min-width: 0;
 }
 
+
+/* ---- victory tab ---- */
+
+.victoryTab {
+  display: grid;
+  gap: 0;
+}
+
+.victoryRule {
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  margin: 0 0 8px;
+}
+
+.victoryCardRow {
+  border-top: 1px solid var(--line);
+  padding: 8px 0;
+}
+
+.victoryCardHead {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.victoryCardName {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+}
+
+.victoryHolder {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.victoryUnheld {
+  color: var(--muted);
+  font-weight: 500;
+  font-style: italic;
+}
+
+.victoryCardCondition {
+  color: var(--muted);
+  font-size: 0.68rem;
+  margin: 2px 0 6px;
+}
+
+.victoryValues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.victoryValue {
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 1px;
+}
+
+.victoryValue.victoryLeader {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.victoryValue.victoryViewer {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
