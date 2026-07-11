@@ -104,10 +104,10 @@ describe("pending-event enumeration", () => {
     expect(G.pendingPlayerEvent?.card.id).toBe("player-new-citizen");
     const moves = expectSound(G, "0");
 
-    // Player 0 owns a capital (3/10 pops) and colony (1/4) — both have capacity.
+    // Player 0 owns two cities (3/10 pops each) — both have capacity.
     expect(moves).toEqual([
       { type: "resolveEvent", choiceIndex: 0, targetTileId: "-3,2" },
-      { type: "resolveEvent", choiceIndex: 0, targetTileId: "-2,1" },
+      { type: "resolveEvent", choiceIndex: 0, targetTileId: "-1,3" },
     ]);
   });
 
@@ -127,7 +127,7 @@ describe("pending-event enumeration", () => {
     const G = scenario()
       .stackPlayerEvent("player-captured-laborers") // +2 slaves, needs 2 free capacity
       .opening()
-      .setPops("0", "-2,1", { citizens: 0, freemen: 0, slaves: 3 }) // colony 3/4: only 1 free
+      .setPops("0", "-1,3", { citizens: 0, freemen: 0, slaves: 9 }) // city 9/10: only 1 free
       .build();
 
     const moves = enumerateLegalMoves(G, "0");

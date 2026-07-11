@@ -109,7 +109,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
 
   const lines = [
     `Player ${playerID} ${player.name}${marker}`,
-    `  VP ${formatNumber(standings.victoryPoints)} · ${standings.cities} cities, ${standings.colonies} colonies · ` +
+    `  victory cards ${formatNumber(standings.victoryCards)}/${G.ruleset.victory.cardsToWin} · ${standings.cities} cities, ${standings.colonies} colonies · ` +
       `pops ${projection.population.pops}/${projection.population.capacity}` +
       (projection.population.inTransit > 0 ? ` (+${projection.population.inTransit} in transit)` : "") +
       ` · ${unrest.tier}${unrest.popsAtRisk > 0 ? ` (${unrest.popsAtRisk} pops at risk)` : ""}`,
@@ -192,11 +192,11 @@ function hasResourceDelta(resources: Resources): boolean {
 export function renderBatchReport(report: BatchReport): string {
   const lines = [
     `Batch: ${report.meta.games} games × ${report.meta.turns} turns, ${report.meta.policy} policy, ${report.meta.mode} mode (base seed ${report.meta.baseSeed})`,
-    `Final VP: mean ${formatNumber(report.finalVpDistribution.mean)} · ` +
-      `p10 ${formatNumber(report.finalVpDistribution.p10)} · median ${formatNumber(report.finalVpDistribution.median)} · ` +
-      `p90 ${formatNumber(report.finalVpDistribution.p90)}`,
+    `Final victory cards: mean ${formatNumber(report.finalCardsDistribution.mean)} · ` +
+      `p10 ${formatNumber(report.finalCardsDistribution.p10)} · median ${formatNumber(report.finalCardsDistribution.median)} · ` +
+      `p90 ${formatNumber(report.finalCardsDistribution.p90)}`,
     `Seats: ${Object.entries(report.perSeat)
-      .map(([seat, stats]) => `P${seat} win ${(stats.winRate * 100).toFixed(0)}% (VP ${formatNumber(stats.meanFinalVP)})`)
+      .map(([seat, stats]) => `P${seat} win ${(stats.winRate * 100).toFixed(0)}% (cards ${formatNumber(stats.meanFinalCards)})`)
       .join(" · ")}`,
   ];
 

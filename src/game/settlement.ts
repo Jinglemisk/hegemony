@@ -64,6 +64,15 @@ export function isAdjacentToCity(G: HegemonyState, tile: HexTile) {
   });
 }
 
+/** Colony contiguity (roadmap-appendix D3): a new colony must border one of the
+ *  player's settlements — colonies count as sources, so expansion chains. */
+export function isContiguousForPlayer(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
+  return G.players[playerID].settlements.some((tileId) => {
+    const owned = getTile(G, tileId);
+    return owned ? hexDistance(owned, tile) === 1 : false;
+  });
+}
+
 export function canPlaceColonyOnTile(G: HegemonyState, playerID: PlayerId, tile: HexTile): ActionStatus {
   const status: ActionStatus = {
     can: false,
@@ -80,6 +89,10 @@ export function canPlaceColonyOnTile(G: HegemonyState, playerID: PlayerId, tile:
 
   if (tile.settlements.length >= 2) {
     status.reasons.push("A tile can hold at most two colonies.");
+  }
+
+  if (G.players[playerID].settlements.length > 0 && !isContiguousForPlayer(G, playerID, tile)) {
+    status.reasons.push("Must border one of your settlements.");
   }
 
   status.can = status.reasons.length === 0;

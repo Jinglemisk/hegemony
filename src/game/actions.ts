@@ -56,6 +56,38 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
   return MOVE_OK;
 }
 
+/** Setup placement of the second city (standard mode's snake round two). Same rules
+ *  as the capital — empty tile, never adjacent to any city — placed freely anywhere,
+ *  Catan-style: the two starting cities are the player's expansion poles. */
+export function placeCity(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops): MoveResult {
+  const tile = getTile(G, tileId);
+  const player = G.players[playerID];
+  const owesCity = G.ruleset.setup[player.settlements.length] === "city";
+
+  if (
+    !tile ||
+    !owesCity ||
+    tile.settlements.length > 0 ||
+    !isExactPopSelection(pops, G.ruleset.placementPopCounts.city)
+  ) {
+    return invalid();
+  }
+
+  if (isAdjacentToCity(G, tile)) {
+    return invalid("Cities cannot be adjacent to another city.");
+  }
+
+  tile.settlements.push({
+    owner: playerID,
+    kind: "city",
+    buildings: [],
+    pops: clonePops(pops)
+  });
+  player.settlements.push(tile.id);
+  addLog(G, `${getPlayerName(G, playerID)} founded their second city on ${tile.terrain} with ${formatPops(pops)}.`);
+  return MOVE_OK;
+}
+
 export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops): MoveResult {
   const tile = getTile(G, tileId);
   const player = G.players[playerID];
@@ -63,7 +95,8 @@ export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string
   // Valid during setup once the capital is down and while the player still owes
   // colonies (setup = one capital + N colonies, so N can exceed 1 in e.g. deathmatch).
   const placed = player.settlements.length;
-  const owesColony = placed >= setupCapitalCount(G.ruleset) && placed < G.ruleset.setup.length;
+  const owesColony =
+    placed >= setupCapitalCount(G.ruleset) && placed < G.ruleset.setup.length && G.ruleset.setup[placed] === "colony";
 
   if (
     !tile ||

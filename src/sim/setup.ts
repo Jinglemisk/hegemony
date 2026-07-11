@@ -34,15 +34,27 @@ export function buildNewGame({ seed, mode, patch, opening, simRng, onMove }: New
   }
 
   if (opening === "fixed") {
-    if (G.ruleset.setup.length !== 2) {
-      throw new Error(`--opening fixed only fits the capital+colony setup (mode ${mode} has ${G.ruleset.setup.length} placements)`);
+    if (G.ruleset.setup.join() !== "capital,city") {
+      throw new Error(`--opening fixed only fits the capital+city standard setup (mode ${mode})`);
     }
 
-    for (const placement of TEST_OPENING_SETUP) {
-      applyRecorded(G, { type: "placeCapital", tileId: placement.city.tileId, pops: placement.city.pops }, onMove);
-    }
-    for (const placement of TEST_OPENING_SETUP) {
-      applyRecorded(G, { type: "placeColony", tileId: placement.colony.tileId, pops: placement.colony.pops }, onMove);
+    // The setup machine runs snake order; follow whoever it says is up.
+    let guard = 0;
+    while (G.phase !== "gameplay") {
+      if (guard++ > 16) {
+        throw new Error(`fixed opening did not converge (mode ${mode})`);
+      }
+
+      const placement = TEST_OPENING_SETUP.find((candidate) => candidate.playerID === G.currentPlayer);
+      if (!placement) {
+        throw new Error(`fixed opening: no placement for player ${G.currentPlayer}`);
+      }
+
+      const move: LegalMove =
+        G.phase === "setupCapital"
+          ? { type: "placeCapital", tileId: placement.capital.tileId, pops: placement.capital.pops }
+          : { type: "placeCity", tileId: placement.secondCity.tileId, pops: placement.secondCity.pops };
+      applyRecorded(G, move, onMove);
     }
 
     return G;

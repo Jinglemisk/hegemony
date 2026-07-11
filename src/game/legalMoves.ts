@@ -4,6 +4,7 @@ import {
   growPop,
   movePops,
   placeCapital,
+  placeCity,
   placeColony,
   upgradeColonyToCity,
 } from "./actions";
@@ -43,6 +44,7 @@ import type { BuildingId, HegemonyState, PlayerId, PopType, Pops, Resources } fr
 
 export type LegalMove =
   | { type: "placeCapital"; tileId: string; pops: Pops }
+  | { type: "placeCity"; tileId: string; pops: Pops }
   | { type: "placeColony"; tileId: string; pops: Pops }
   | { type: "foundColony"; tileId: string; sourceTileId: string; pop: PopType; cost: Partial<Resources> }
   | { type: "upgradeColonyToCity"; tileId: string; cost: Partial<Resources> }
@@ -70,10 +72,14 @@ export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): Legal
   switch (G.phase) {
     case "setupCapital":
       return enumerateCapitalPlacements(G, playerID);
+    case "setupCity":
+      return enumerateCityPlacements(G, playerID);
     case "setupColony":
       return enumerateColonyPlacements(G, playerID);
     case "gameplay":
       return enumerateGameplayMoves(G, playerID);
+    case "gameOver":
+      return [];
   }
 }
 
@@ -84,17 +90,13 @@ export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): Legal
  */
 export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove): MoveResult {
   switch (move.type) {
-    case "placeCapital": {
-      const result = placeCapital(G, playerID, move.tileId, move.pops);
-      if (result.ok) {
-        advanceSetupTurn(G, setupCapitalCount(G.ruleset), "setupColony");
-      }
-      return result;
-    }
+    case "placeCapital":
+    case "placeCity":
     case "placeColony": {
-      const result = placeColony(G, playerID, move.tileId, move.pops);
+      const place = move.type === "placeCapital" ? placeCapital : move.type === "placeCity" ? placeCity : placeColony;
+      const result = place(G, playerID, move.tileId, move.pops);
       if (result.ok) {
-        advanceSetupTurn(G, G.ruleset.setup.length, "gameplay");
+        advanceSetupTurn(G);
         if (G.phase === "gameplay") {
           beginGameplayTurn(G);
         }
@@ -122,6 +124,8 @@ export function describeMove(move: LegalMove): string {
   switch (move.type) {
     case "placeCapital":
       return `place capital on ${move.tileId} (${formatPops(move.pops)})`;
+    case "placeCity":
+      return `place second city on ${move.tileId} (${formatPops(move.pops)})`;
     case "placeColony":
       return `place colony on ${move.tileId} (${formatPops(move.pops)})`;
     case "foundColony":
@@ -194,9 +198,31 @@ function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): Legal
   return moves;
 }
 
+function enumerateCityPlacements(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+  if (G.ruleset.setup[G.players[playerID].settlements.length] !== "city") {
+    return [];
+  }
+
+  const compositions = popCompositions(G.ruleset.placementPopCounts.city);
+  const moves: LegalMove[] = [];
+
+  for (const tile of G.board.tiles) {
+    if (tile.settlements.length > 0 || isAdjacentToCity(G, tile)) {
+      continue;
+    }
+
+    for (const pops of compositions) {
+      moves.push({ type: "placeCity", tileId: tile.id, pops });
+    }
+  }
+
+  return moves;
+}
+
 function enumerateColonyPlacements(G: HegemonyState, playerID: PlayerId): LegalMove[] {
   const placed = G.players[playerID].settlements.length;
-  const owesColony = placed >= setupCapitalCount(G.ruleset) && placed < G.ruleset.setup.length;
+  const owesColony =
+    placed >= setupCapitalCount(G.ruleset) && placed < G.ruleset.setup.length && G.ruleset.setup[placed] === "colony";
 
   if (!owesColony) {
     return [];

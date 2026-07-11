@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { PLAYER_IDS } from "./data";
-import { createInitialState, placeCapital, placeColony } from "./rules";
+import { createInitialState, placeCapital, placeCity, placeColony } from "./rules";
 import { DEFAULT_RULESET, GAME_MODES, deriveRuleset, setupCapitalCount } from "./ruleset";
 import { advanceSetupTurn } from "./turn";
 import type { HegemonyState, PlayerId, Pops, SettlementKind } from "./types";
@@ -11,11 +11,10 @@ import type { HegemonyState, PlayerId, Pops, SettlementKind } from "./types";
 function placeAny(G: HegemonyState, playerID: PlayerId, kind: SettlementKind): boolean {
   const pops: Pops =
     kind === "colony" ? { citizens: 0, freemen: 0, slaves: 1 } : { citizens: 1, freemen: 1, slaves: 1 };
+  const place = kind === "colony" ? placeColony : kind === "city" ? placeCity : placeCapital;
 
   for (const tile of G.board.tiles) {
-    const result =
-      kind === "colony" ? placeColony(G, playerID, tile.id, pops) : placeCapital(G, playerID, tile.id, pops);
-    if (result.ok) {
+    if (place(G, playerID, tile.id, pops).ok) {
       return true;
     }
   }
@@ -29,12 +28,7 @@ function runSetup(G: HegemonyState) {
     const player = G.currentPlayer;
     const kind = G.ruleset.setup[G.players[player].settlements.length];
     expect(placeAny(G, player, kind)).toBe(true);
-
-    if (G.phase === "setupCapital") {
-      advanceSetupTurn(G, setupCapitalCount(G.ruleset), "setupColony");
-    } else {
-      advanceSetupTurn(G, G.ruleset.setup.length, "gameplay");
-    }
+    advanceSetupTurn(G);
   }
 }
 
@@ -50,14 +44,14 @@ describe("game modes / ruleset seam", () => {
   });
 
   it("registers standard, fast-start, and deathmatch modes", () => {
-    expect(GAME_MODES.standard.ruleset.setup).toEqual(["capital", "colony"]);
+    expect(GAME_MODES.standard.ruleset.setup).toEqual(["capital", "city"]);
     expect(GAME_MODES.fastStart.ruleset.startingResources.wood).toBe(40);
-    expect(GAME_MODES.fastStart.ruleset.setup).toEqual(["capital", "colony"]);
+    expect(GAME_MODES.fastStart.ruleset.setup).toEqual(["capital", "city"]);
     expect(GAME_MODES.deathmatch.ruleset.setup).toEqual(["capital", "colony", "colony", "colony"]);
     expect(setupCapitalCount(GAME_MODES.deathmatch.ruleset)).toBe(1);
   });
 
-  it("standard setup: each player places one capital and one colony, then gameplay begins", () => {
+  it("standard setup: each player places two cities, then gameplay begins", () => {
     const G = createInitialState(1, GAME_MODES.standard.ruleset);
     runSetup(G);
 

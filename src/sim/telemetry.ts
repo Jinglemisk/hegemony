@@ -17,7 +17,7 @@ import type { HegemonyState, PlayerId, Resources } from "../game/types";
  */
 
 export type PlayerSnapshot = {
-  vp: number;
+  victoryCards: number;
   cities: number;
   colonies: number;
   pops: number;
@@ -53,7 +53,7 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       .reduce((total, transfer) => total + totalPops(transfer.pops), 0);
 
     players[playerID] = {
-      vp: standings.victoryPoints,
+      victoryCards: standings.victoryCards,
       cities: standings.cities,
       colonies: standings.colonies,
       pops: standings.pops,
@@ -105,7 +105,7 @@ export type SeasonRow = {
   seasonName: string;
   year: number;
   games: number;
-  vp: Percentiles;
+  victoryCards: Percentiles;
   pops: Percentiles;
   food: Percentiles;
   happiness: Percentiles;
@@ -118,7 +118,7 @@ export type GameRow = {
   turnsPlayed: number;
   finalSeason: number;
   winner: PlayerId;
-  finalVP: Record<PlayerId, number>;
+  finalCards: Record<PlayerId, number>;
   popsLostToUnrest: Record<PlayerId, number>;
 };
 
@@ -135,7 +135,7 @@ export type BatchReport = {
   };
   perGame: GameRow[];
   perSeason: SeasonRow[];
-  perSeat: Record<PlayerId, { winRate: number; meanFinalVP: number }>;
+  perSeat: Record<PlayerId, { winRate: number; meanFinalCards: number }>;
   buildings: Record<string, { built: number; perGame: number }>;
   events: {
     player: Record<string, number>;
@@ -143,7 +143,7 @@ export type BatchReport = {
     /** For choice cards: how often each option index was picked. */
     choicePicks: Record<string, number[]>;
   };
-  finalVpDistribution: Percentiles;
+  finalCardsDistribution: Percentiles;
 };
 
 export class Aggregator {
@@ -196,18 +196,27 @@ export class Aggregator {
   }
 
   endGame(G: HegemonyState) {
-    const finalVP = {} as Record<PlayerId, number>;
+    const finalCards = {} as Record<PlayerId, number>;
     const popsLostToUnrest = {} as Record<PlayerId, number>;
-    let winner: PlayerId = "0";
 
     for (const playerID of PLAYER_IDS) {
-      finalVP[playerID] = playerStandings(G, playerID).victoryPoints;
+      finalCards[playerID] = playerStandings(G, playerID).victoryCards;
       popsLostToUnrest[playerID] = G.players[playerID].popsLostToUnrest;
-
-      if (finalVP[playerID] > finalVP[winner]) {
-        winner = playerID;
-      }
     }
+
+    // A finished game names its own winner; turn-capped games fall back to the
+    // deck-exhaustion ranking (cards, then happiness, then pops, then seat).
+    const winner =
+      G.winner ??
+      [...PLAYER_IDS].sort((a, b) => {
+        const cards = finalCards[b] - finalCards[a];
+        if (cards !== 0) return cards;
+        const happiness = G.players[b].resources.happiness - G.players[a].resources.happiness;
+        if (happiness !== 0) return happiness;
+        const pops = playerStandings(G, b).pops - playerStandings(G, a).pops;
+        if (pops !== 0) return pops;
+        return PLAYER_IDS.indexOf(a) - PLAYER_IDS.indexOf(b);
+      })[0];
 
     this.games.push({
       game: this.game,
@@ -215,7 +224,7 @@ export class Aggregator {
       turnsPlayed: G.turn - this.startTurn,
       finalSeason: G.season,
       winner,
-      finalVP,
+      finalCards,
       popsLostToUnrest,
     });
   }
@@ -258,7 +267,7 @@ export class Aggregator {
           seasonName: snapshots[0].seasonName,
           year: snapshots[0].year,
           games: snapshots.length,
-          vp: percentiles(values((player) => player.vp)),
+          victoryCards: percentiles(values((player) => player.victoryCards)),
           pops: percentiles(values((player) => player.pops + player.inTransit)),
           food: percentiles(values((player) => player.resources.food)),
           happiness: percentiles(values((player) => player.resources.happiness)),
@@ -269,10 +278,10 @@ export class Aggregator {
     const perSeat = {} as BatchReport["perSeat"];
     for (const playerID of PLAYER_IDS) {
       const wins = this.games.filter((game) => game.winner === playerID).length;
-      const vps = this.games.map((game) => game.finalVP[playerID]);
+      const cards = this.games.map((game) => game.finalCards[playerID]);
       perSeat[playerID] = {
         winRate: this.games.length > 0 ? wins / this.games.length : 0,
-        meanFinalVP: percentiles(vps).mean,
+        meanFinalCards: percentiles(cards).mean,
       };
     }
 
@@ -292,7 +301,7 @@ export class Aggregator {
         seasonal: this.seasonalEvents,
         choicePicks: this.choicePicks,
       },
-      finalVpDistribution: percentiles(this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalVP[playerID]))),
+      finalCardsDistribution: percentiles(this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalCards[playerID]))),
     };
   }
 
@@ -321,7 +330,7 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
     "seasonName",
     "year",
     "player",
-    "vp",
+    "victoryCards",
     "cities",
     "colonies",
     "pops",
@@ -356,7 +365,7 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
         snapshot.seasonName,
         snapshot.year,
         playerID,
-        player.vp,
+        player.victoryCards,
         player.cities,
         player.colonies,
         player.pops,

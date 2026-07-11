@@ -12,7 +12,16 @@ export type PopType = "citizens" | "freemen" | "slaves";
 
 export type SettlementKind = "capital" | "city" | "colony";
 
-export type Phase = "setupCapital" | "setupColony" | "gameplay";
+export type Phase = "setupCapital" | "setupCity" | "setupColony" | "gameplay" | "gameOver";
+
+/** How the terrain deck is laid onto the board: the fixed authored layout, or a seeded shuffle. */
+export type BoardLayout = "classic" | "shuffled";
+
+/** The scoreboard metrics victory cards race on (see game/victory.ts). */
+export type VictoryMetric = "cities" | "pops" | "citizens" | "stockpile" | "happiness";
+
+/** Why the game ended: a player held enough victory cards, or the seasonal deck (the clock) ran out. */
+export type GameOverReason = "victoryRace" | "deckExhausted";
 
 /** The four seasons, in the order they cycle each year (a year always opens on spring). */
 export type SeasonName = "spring" | "summer" | "autumn" | "winter";
@@ -270,6 +279,13 @@ export interface HegemonyState {
   phase: Phase;
   currentPlayer: PlayerId;
   turn: number;
+  /** The player who opens the current season; rotates one seat every new year (spring). */
+  seasonOpener: PlayerId;
+  /** Set when the game ends — the victor of the race, or the exhaustion tally. */
+  winner: PlayerId | null;
+  gameOverReason: GameOverReason | null;
+  /** How the board was generated, so the UI can say so. */
+  boardLayout: BoardLayout;
   /** Tunable balance values for this game (difficulty / handicaps / modules). */
   ruleset: Ruleset;
   board: HegemonyBoard;
