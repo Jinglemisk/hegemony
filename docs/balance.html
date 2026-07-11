@@ -583,6 +583,16 @@
   and hills are... nine tiles of nearly nothing (see §II — gold). With ~9 tiles per player, tile
   quality variance between players' reachable areas is the single biggest setup swing.</p>
 
+  <div class="rule-note idea">
+    <span class="tag">Direction settled — 2026-07-11</span>
+    <p>The terrain rework is planned in <code>docs/feat/terrain-economy.md</code>: wood/food/stone are
+    first-order resources (from tiles), gold/influence are second-order (from pops, trade, buildings) —
+    <strong>gold tiles are removed</strong>, and hills become the slot-rich, yield-poor "acropolis" terrain.
+    That plan also pins the building pricing grammar, the landmark-tile principle with constrained shuffling,
+    the trade-before-stone-sinks sequencing rule, and luxury goods as the capped, diminishing, tradeable
+    happiness tier. The tallies above describe the <em>current</em> deck and stay until the rework ships.</p>
+  </div>
+
   <h3>The two missing rules <span class="chip bug">Drift</span></h3>
   <ul>
     <li><strong>No colony contiguity.</strong> The PDF requires colonies within 1 tile of a friendly settlement;
@@ -894,8 +904,8 @@
     <tbody>
       <tr><td>1</td><td><span class="prio p0">P0</span></td><td>No end condition — decks reshuffle forever, VP is provisional, nothing concludes</td><td><a href="#scoring">§VIII</a></td><td>Finite decks as the clock + victory cards (already the chosen direction in todo.md)</td></tr>
       <tr><td>2</td><td><span class="prio p0">P0</span></td><td>Influence has zero sinks; gold has one 2-gold sink</td><td><a href="#resources">§II</a></td><td>Interim: Stabilize Province (4 inf → 3 hap) + 1:6 bank exchange; real fix arrives with Assembly/Trader</td></tr>
-      <tr><td>3</td><td><span class="prio p1">P1</span></td><td>Colony contiguity &amp; capital protection radius documented but unimplemented — colonies teleport</td><td><a href="#placement">§V</a></td><td>Enforce radius-1 founding + capital exclusion ring; this is a bug-fix, not a redesign</td></tr>
-      <tr><td>4</td><td><span class="prio p1">P1</span></td><td>Food-stockpile happiness is uncapped — hoards buy unrest immunity and double-dip with banked-material VP</td><td><a href="#unrest">§VII</a></td><td>Cap at +2, or derive from food <em>income</em> instead of stockpile</td></tr>
+      <tr><td>3</td><td><span class="prio p1">P1</span></td><td>Colony contiguity &amp; capital protection radius documented but unimplemented — colonies teleport</td><td><a href="#placement">§V</a></td><td>Decided (appendix Q3, 2026-07-11): enforce radius-1 contiguity (colonies chain as sources); capital ring <strong>dropped</strong> — delete the claim from rules.md/spec instead</td></tr>
+      <tr><td>4</td><td><span class="prio p1">P1</span></td><td>Food-stockpile happiness is uncapped — hoards buy unrest immunity and double-dip with banked-material VP</td><td><a href="#unrest">§VII</a></td><td>Decided (appendix Q4, 2026-07-11): stockpile-based, capped at +2</td></tr>
       <tr><td>5</td><td><span class="prio p1">P1</span></td><td>Player event deck: 92% upside, 30% free pops, EV ≈ +5/turn — outearns tiles, huge private variance</td><td><a href="#cards">§VI</a></td><td>Reduce free-pop copies to discounts; target EV ≈ +2 and ~25% harm</td></tr>
       <tr><td>6</td><td><span class="prio p1">P1</span></td><td>Colony+freeman spam is ~3× more VP-efficient than cities under the provisional formula</td><td><a href="#scoring">§VIII</a></td><td>Interim: colony 2 VP / city 6 VP; real fix is victory cards. Contiguity (issue 3) also constrains it</td></tr>
       <tr><td>7</td><td><span class="prio p1">P1</span></td><td>Fixed map + fixed 0→3 setup order + permanent first-actor = compounding player-0 advantage</td><td><a href="#placement">§V</a></td><td>Shuffle terrain deck (seeded), snake the setup, rotate first player each year</td></tr>
@@ -964,6 +974,31 @@
   <table>
     <thead><tr><th>Date</th><th>Engine ref</th><th>Entry</th></tr></thead>
     <tbody>
+      <tr>
+        <td>2026-07-11</td>
+        <td><code>feat/unrest-consequences @ 5583263</code></td>
+        <td>Roadmap Q&amp;A round 2: victory race locked (5 public "Most X, min Y" cards, sole leader holds,
+        3 at own turn start wins; seasonal deck = failsafe ceiling) — supersedes the §VIII provisional-VP
+        analysis once built. Setup changes to two cities (no setup colony) with radius-1 colony contiguity.
+        Bank exchange fully locked (appendix D6): static gold-mediated market whose rates bracket future
+        player trade; rates provisional (3:1 sell / 2 gold buy) as ruleset tunables.</td>
+      </tr>
+      <tr>
+        <td>2026-07-11</td>
+        <td><code>feat/unrest-consequences @ 5583263</code></td>
+        <td>Roadmap Q&amp;A round 1 (docs/roadmap-appendix.md): capital ring dropped in favor of contiguity-only
+        (issue 3 direction changed); stockpile happiness capped +2 (issue 4); victory model moving to a
+        threshold race (Q1, in discussion); bank exchange becoming gold-mediated (Q6); riot table + ventures
+        + promote/demote costs locked. No per-PR sim gate (Q11).</td>
+      </tr>
+      <tr>
+        <td>2026-07-11</td>
+        <td><code>feat/unrest-consequences @ 5583263</code></td>
+        <td>Terrain economy direction settled (§V note): first-order (wood/food/stone from tiles) vs
+        second-order (gold/influence from pops/trade) resources; gold tiles removed, hills → acropolis
+        terrain; building pricing grammar; luxury goods capped &amp; diminishing. Full plan in
+        <code>docs/feat/terrain-economy.md</code>.</td>
+      </tr>
       <tr>
         <td>2026-07-11</td>
         <td><code>feat/unrest-consequences @ 5583263</code></td>
