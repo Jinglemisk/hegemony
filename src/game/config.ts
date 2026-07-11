@@ -11,8 +11,18 @@ export const GAME_CONFIG = {
   mode: "standard" as GameModeId,
   // "classic" = the authored fixed board; "shuffled" = seeded random layout
   // (roadmap-appendix D3e). The UI overrides via the ?board= URL param.
-  boardLayout: "classic" as BoardLayout
+  boardLayout: "classic" as BoardLayout,
+  // Dev testing default: auto-play the opening (seed-driven legal placements) so a
+  // reload lands straight in gameplay. ?setup=manual restores hand placement.
+  autoOpeningForDev: true
 };
+
+/**
+ * Ten premade seeds the dev auto-opening rotates through — each reload advances to
+ * the next (tracked in localStorage), so repeated testing sees varied openings
+ * without hand-placing towns. ?seed=N pins one instead.
+ */
+export const DEV_ROTATION_SEEDS = [11, 42, 77, 101, 137, 202, 314, 555, 777, 909];
 
 export type OpeningSetupPlacement = {
   playerID: PlayerId;

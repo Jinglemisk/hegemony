@@ -27,6 +27,7 @@ export function createInitialState(
     phase: "setupCapital",
     currentPlayer: "0",
     turn: 1,
+    seed: seed >>> 0,
     seasonOpener: "0",
     winner: null,
     gameOverReason: null,

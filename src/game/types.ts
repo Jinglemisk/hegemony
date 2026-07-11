@@ -279,6 +279,8 @@ export interface HegemonyState {
   phase: Phase;
   currentPlayer: PlayerId;
   turn: number;
+  /** The seed this game was created from — shown in the UI, embedded in bug reports. */
+  seed: number;
   /** The player who opens the current season; rotates one seat every new year (spring). */
   seasonOpener: PlayerId;
   /** Set when the game ends — the victor of the race, or the exhaustion tally. */

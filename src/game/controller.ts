@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { produce } from "immer";
-import { GAME_CONFIG } from "./config";
+import { DEV_ROTATION_SEEDS, GAME_CONFIG } from "./config";
+import { mulberry32 } from "./core/rng";
+import { applyMove, enumerateLegalMoves } from "./legalMoves";
 import type { BoardLayout, BuildingId, HegemonyState, Phase, PlayerId, PopType, Pops } from "./types";
 import {
   buildBuilding,
@@ -22,8 +24,12 @@ export type { Phase } from "./types";
 
 /**
  * URL-driven game options, so a browser session can pick the board and seed without a
- * lobby: `?board=shuffled&seed=42` for a randomized layout, `?dev=preload` to replay
- * the scripted opening (the old testing flag, now opt-in).
+ * lobby: `?board=shuffled&seed=42` for a randomized layout, `?setup=manual` to place
+ * the opening towns by hand, `?dev=preload` to replay the fixed scripted opening.
+ *
+ * Default dev behavior: the opening is auto-played with seed-driven legal placements,
+ * and the seed rotates through {@link DEV_ROTATION_SEEDS} on every reload — testing
+ * never starts at "place your capital" unless asked to.
  */
 function createGameFromUrl(): HegemonyState {
   const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
@@ -31,10 +37,68 @@ function createGameFromUrl(): HegemonyState {
   const boardLayout: BoardLayout =
     boardParam === "shuffled" || boardParam === "classic" ? boardParam : GAME_CONFIG.boardLayout;
   const seedParam = Number(params?.get("seed"));
-  const seed = Number.isFinite(seedParam) && params?.get("seed") ? seedParam >>> 0 : undefined;
+  const pinnedSeed = Number.isFinite(seedParam) && params?.get("seed") ? seedParam >>> 0 : undefined;
+  const manualSetup = params?.get("setup") === "manual";
   const preload = params?.get("dev") === "preload" || GAME_CONFIG.preloadOpeningSetupForTesting;
 
-  return createGame(seed, GAME_MODES[GAME_CONFIG.mode].ruleset, boardLayout, preload);
+  if (preload) {
+    // The scripted opening only fits the classic board's tiles.
+    return createGame(pinnedSeed, GAME_MODES[GAME_CONFIG.mode].ruleset, "classic", true);
+  }
+
+  const seed = pinnedSeed ?? (GAME_CONFIG.autoOpeningForDev && !manualSetup ? nextRotationSeed() : undefined);
+  const G = createGame(seed, GAME_MODES[GAME_CONFIG.mode].ruleset, boardLayout, false);
+
+  if (!manualSetup && GAME_CONFIG.autoOpeningForDev) {
+    autoPlayOpening(G);
+  }
+
+  return G;
+}
+
+/** Next seed from the dev rotation — a localStorage cursor advances it once per page
+ *  load (memoized so StrictMode's double state-initialization doesn't skip seeds). */
+let rotationSeedThisLoad: number | null = null;
+
+function nextRotationSeed(): number {
+  if (rotationSeedThisLoad !== null) {
+    return rotationSeedThisLoad;
+  }
+
+  const key = "hegemony-dev-opening-index";
+  let index = 0;
+
+  try {
+    index = Number(window.localStorage.getItem(key) ?? 0) || 0;
+    window.localStorage.setItem(key, String((index + 1) % DEV_ROTATION_SEEDS.length));
+  } catch {
+    // Storage unavailable (private mode etc.) — a fixed first seed is fine.
+  }
+
+  rotationSeedThisLoad = DEV_ROTATION_SEEDS[index % DEV_ROTATION_SEEDS.length];
+  return rotationSeedThisLoad;
+}
+
+/** Play the opening with seed-driven legal placements (the sim's "random" opening,
+ *  driven by the game's own seed so it is reproducible), landing in gameplay. */
+function autoPlayOpening(G: HegemonyState) {
+  let rngState = G.seed ^ 0x9e3779b9;
+  let guard = 0;
+
+  while (G.phase !== "gameplay" && guard++ < 64) {
+    const moves = enumerateLegalMoves(G, G.currentPlayer);
+
+    if (moves.length === 0) {
+      return; // leave whatever remains to manual play rather than crash
+    }
+
+    const step = mulberry32(rngState);
+    rngState = step.state;
+
+    if (!applyMove(G, G.currentPlayer, moves[Math.floor(step.value * moves.length)]).ok) {
+      return;
+    }
+  }
 }
 
 /** Read-only projection of the turn fields now living on {@link HegemonyState}, kept for the UI's convenience. */
