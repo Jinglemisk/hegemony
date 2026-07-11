@@ -9,7 +9,7 @@ import {
 } from "./actions";
 import { BUILDINGS } from "./data";
 import { EMPTY_POPS, POP_TYPES } from "./core/pops";
-import { formatPops } from "./core/format";
+import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement } from "./core/query";
 import type { MoveResult } from "./core/results";
 import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds, resolvePendingPlayerEvent } from "./events";
@@ -125,20 +125,28 @@ export function describeMove(move: LegalMove): string {
     case "placeColony":
       return `place colony on ${move.tileId} (${formatPops(move.pops)})`;
     case "foundColony":
-      return `found colony on ${move.tileId}, sending 1 ${move.pop.slice(0, -1)} from ${move.sourceTileId}${formatCost(move.cost)}`;
+      return `found colony on ${move.tileId}, sending 1 ${formatPopName(move.pop, 1)} from ${move.sourceTileId}${formatCost(move.cost)}`;
     case "upgradeColonyToCity":
       return `upgrade colony to city on ${move.tileId}${formatCost(move.cost)}`;
     case "buildBuilding":
       return `build ${move.buildingId} on ${move.tileId}${formatCost(move.cost)}`;
     case "growPop":
-      return `grow 1 ${move.pop.slice(0, -1)} on ${move.tileId}${formatCost(move.cost)}`;
+      return `grow 1 ${formatPopName(move.pop, 1)} on ${move.tileId}${formatCost(move.cost)}`;
     case "movePops":
       return `move ${formatPops(move.pops)} from ${move.sourceTileId} to ${move.targetTileId}`;
     case "resolveEvent":
-      return `resolve pending event, option ${move.choiceIndex + 1}${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
+      return `resolve pending event (choice ${move.choiceIndex})${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
     case "endTurn":
       return "end turn";
   }
+}
+
+function formatCost(cost: Partial<Resources>): string {
+  const parts = Object.entries(cost)
+    .filter(([, amount]) => (amount ?? 0) !== 0)
+    .map(([resource, amount]) => `${resource} ${amount}`);
+
+  return parts.length > 0 ? ` — costs ${parts.join(", ")}` : "";
 }
 
 function enumerateEventResolutions(G: HegemonyState, playerID: PlayerId): LegalMove[] {
