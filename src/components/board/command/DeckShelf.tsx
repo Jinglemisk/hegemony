@@ -30,7 +30,11 @@ export function DeckShelf({ G }: { G: HegemonyState }) {
           className="deckTrayItem"
           key={deck.label}
           tabIndex={0}
-          title={`${deck.label} deck: ${deck.remaining} of ${deck.total} cards remaining`}
+          title={
+            deck.item === "seasonDeck"
+              ? `Seasonal deck — the game clock: ${deck.remaining} of ${deck.total} seasons remain; it never reshuffles, and the age ends when it runs out.`
+              : `${deck.label} deck: ${deck.remaining} of ${deck.total} cards remaining (reshuffles when empty)`
+          }
         >
           <UiSprite item={deck.item} className="deckTrayIcon" />
           <span className="deckTrayLabel">{deck.label}</span>
@@ -40,6 +44,17 @@ export function DeckShelf({ G }: { G: HegemonyState }) {
           </span>
         </div>
       ))}
+      <div
+        className="deckTrayItem deckTrayBoard"
+        tabIndex={0}
+        title={
+          G.boardLayout === "classic"
+            ? "Classic board — the fixed authored layout. Start with ?board=shuffled for a randomized island."
+            : "Shuffled board — seeded random layout. Start with ?board=classic for the authored island."
+        }
+      >
+        <span className="deckTrayLabel">{G.boardLayout === "classic" ? "Classic board" : "Shuffled board"}</span>
+      </div>
     </section>
   );
 }

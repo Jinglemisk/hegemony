@@ -19,7 +19,7 @@ starts; answers get folded into feat plans and code; the decision log keeps the 
 
 ## Phase 0 — "Make it a game" · final specs
 
-### D1 · Victory race — `LOCKED`
+### D1 · Victory race — `DONE (feat/phase0-victory-race)`
 
 - **5 public victory cards**, visible from game start. Each reads **"Most X, minimum Y"**
   — held only by the *sole* leader in X who also meets the minimum. Ties, or leading
@@ -47,7 +47,7 @@ starts; answers get folded into feat plans and code; the decision log keeps the 
 Economy (Phase 2) before politics (Phase 3). The Resolutions/Politicians design session
 happens during Phase 2 so Phase 3 starts specced.
 
-### D3 · Placement & setup pack — `LOCKED`
+### D3 · Placement & setup pack — `DONE (feat/phase0-victory-race)`
 
 - **Two-city setup** (user call, and it pairs naturally with contiguity): each player
   places their **capital**, then a **second city** — snake order (capitals 0→3, second
@@ -64,11 +64,11 @@ happens during Phase 2 so Phase 3 starts specced.
 - Open ripple (tracked, not blocking): the capital is now one of two starting cities —
   its identity question (balance ledger issue 13) gets sharper.
 
-### D4 · Food-stockpile happiness — `LOCKED`
+### D4 · Food-stockpile happiness — `DONE (feat/phase0-victory-race)`
 
 Stockpile-based, capped at +2: `min(floor(food/5), 2)`.
 
-### D5 · Dev preload flag — `LOCKED`
+### D5 · Dev preload flag — `DONE (feat/phase0-victory-race)`
 
 Default off; kept as a dev convenience (env flag or `dev` mode entry).
 
@@ -160,4 +160,4 @@ spitball tests, planned campaigns (e.g. D1 minimum tuning), and phase-exit check
 
 | Date | Branch / commit | What shipped | Phase |
 | --- | --- | --- | --- |
-| — | — | — | — |
+| 2026-07-12 | `feat/phase0-victory-race` | **Phase 0 complete (engine + UI + tests).** Victory race (D1: 5 public cards, minimums as ruleset tunables, turn-start win check, finite seasonal deck + exhaustion tally); two-city snake setup, colony contiguity, no capital ring (D3); yearly opener rotation (D3d); Classic/Shuffled boards + ?board/?seed/?dev URL params (D3e/D5); stockpile happiness cap +2 (D4). UI: ledger Victory tab, roster card badges, seasons-left + opener in the top bar, board chip in the deck tray, game-over screen. 108 tests; sim verified: full greedy game ends at season 30 (deck ceiling); 6-game batch win rates 33/33/17/17. **Owed:** victory-minimum tuning sim campaign; playtest the exit gate. |

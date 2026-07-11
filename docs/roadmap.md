@@ -28,6 +28,9 @@ Last updated: 2026-07-11.
 ## Phases
 
 Each phase ends in a playable, sim-verified milestone.
+**Status:** Phase 0 built on `feat/phase0-victory-race` (see the appendix execution
+log); its exit gate (flat seat win rates in a planned batch + the minimum-tuning
+campaign) is still to be run before Phase 1 starts.
 
 | Phase | Theme | Contents | Gate to exit |
 | --- | --- | --- | --- |

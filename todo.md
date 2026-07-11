@@ -27,11 +27,12 @@
 - Keep the balance ledger current (docs/balance.html).
 -- Living balance document: outstanding issues (ranked P0–P2), deck/economy analysis, playtest scenarios. Update it in the same commit as any change to ruleset.ts, data.ts, or the event decks; log the change in its changelog.
 
-- Add an end condition and scoring.
--- The game never ends — the event decks reshuffle their discard piles forever — and every player shows "VP --", so there is no reason to play well.
+- ~~Add an end condition and scoring.~~ DONE (feat/phase0-victory-race — victory race per roadmap-appendix D1).
+-- ~~The game never ends — the event decks reshuffle their discard piles forever — and every player shows "VP --", so there is no reason to play well.~~
+-- Shipped: 5 public "Most X, min Y" victory cards (sole leader holds; 3 at your own turn start wins); seasonal deck is the finite clock (~29 seasons); exhaustion resolves most-cards-held. Minimums are ruleset tunables — the tuning sim campaign is still owed.
 -- Direction (user's idea): make the event deck a finite clock. Stop the reshuffle; when all event cards are spent, the game ends and "victory cards" resolve, awarding for categories like most resource points, most pops, most cities, most X. The deck length becomes the game length.
 -- Interim/fallback: a fixed end-of-season-10 tally — +5 per city, +3 per colony, +1 per citizen, +1 per freeman, +1 per 10 material resources (rounded down), -1 per point of negative happiness.
--- SETTLED (roadmap-appendix D1): victory RACE — 5 public victory cards, each "Most X, minimum Y" (sole leader above the floor holds it; ties hold nothing); hold any 3 at the start of your own turn to win. Seasonal deck stops reshuffling and is only the failsafe ceiling (~7 years; most cards held wins on exhaustion, tiebreak happiness then pops). Skip the interim tally; replaces provisional VP everywhere.
+-- ~~SETTLED (roadmap-appendix D1)~~ BUILT: victory RACE — 5 public victory cards, each "Most X, minimum Y" (sole leader above the floor holds it; ties hold nothing); hold any 3 at the start of your own turn to win. Seasonal deck stops reshuffling and is only the failsafe ceiling (~7 years; most cards held wins on exhaustion, tiebreak happiness then pops). Provisional VP replaced everywhere (ledger Victory tab, roster badges, game-over screen).
 
 - ~~Give happiness real consequences.~~ DONE (feat/unrest-consequences — see unrest.md).
 -- ~~Happiness accrues but does nothing yet — it is a meter with no teeth.~~
@@ -49,7 +50,7 @@
 
 - Add more start setups / game modes.
 -- The mode seam already works (standard / fast-start / deathmatch), selected in code by GAME_CONFIG.mode — a mode is just a ruleset patch.
--- SETTLED (roadmap-appendix D3): the standard setup becomes TWO CITIES — capital + second city, snake order, no setup colony, 3 pops each. Colonies are all player-founded, chained by radius-1 contiguity.
+-- ~~SETTLED (roadmap-appendix D3)~~ BUILT: the standard setup is TWO CITIES — capital + second city, snake order, no setup colony, 3 pops each. Colonies are all player-founded, chained by radius-1 contiguity. Board setting shipped as ?board=classic|shuffled (+ ?seed=N, ?dev=preload).
 -- Add more modes as data; an in-game mode picker is lobby scope (deferred).
 
 - Add a second tier of buildings.
@@ -88,8 +89,8 @@
 -- ~~Also done: action verbs are now 2x2 buttons showing each action's cost (greyed when unavailable/unaffordable); the chronicle is folded under one sticky heading per season; the heavy Greek-key panel frame is demoted to a hairline; the Buildings tab gained the inline-icon system (the Pops tab was already aligned).~~
 -- Still open: nothing major from the audit. Optional — regenerate the autumn season icon to kill its faint cutout haze (only visible at large zoom).
 
-- Provisional victory points are shown but scoring is not real yet.
--- The roster and ledger display an interim VP tally (src/game/score.ts) using the fallback formula from the scoring item above. Replace it once the real end-condition scoring lands.
+- ~~Provisional victory points are shown but scoring is not real yet.~~ DONE (feat/phase0-victory-race).
+-- The roster shows victory cards held (n/3), the ledger gained a Victory tab (all five cards, holders, per-player values vs minimums), the top bar shows seasons-remaining and the year's opener, and a game-over screen names the winner.
 
 ---
 

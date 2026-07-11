@@ -66,16 +66,22 @@ its pops produce.
 
 ## Setting up
 
-Players take turns placing their opening settlements:
+Players place **two starting cities** each, in **snake order** — capitals go around
+the table one way (first player to last), second cities come back the other way, so
+whoever picked last picks first in the second round:
 
-1. Each player places their **capital** on an empty tile — not next to another
-   city or capital — and splits **3 starting pops** across citizens, freemen, and
+1. Each player places their **capital** on an empty tile — never adjacent to
+   another city — and splits **3 starting pops** across citizens, freemen, and
    slaves.
-2. Each player places one **colony** — not on, or next to, an enemy capital — and
-   places **1 starting pop**.
+2. In reverse order, each player places their **second city** the same way: any
+   empty tile, never adjacent to a city, 3 starting pops.
 
-Then the game begins. (Some modes change the opening — for example a *deathmatch*
-setup gives each player three colonies instead of one.)
+Then the game begins. Your two cities are your expansion poles — every colony you
+ever found must chain outward from them. (Some modes change the opening — for
+example a *deathmatch* setup places colonies instead of a second city.)
+
+By default the island uses the classic authored layout; start the game with
+`?board=shuffled` in the address bar for a randomized (seeded) island.
 
 ## Taking a turn
 
@@ -87,7 +93,8 @@ Play passes around the table. On your turn:
    must do this before anything else.
 3. **Take actions**, in any order you can afford:
    - **Found a colony** — 20 wood and 2 food. Sends one pop out to settle a new
-     tile.
+     tile, which must **border one of your settlements** (colonies count, so your
+     frontier chains outward tile by tile).
    - **Upgrade a colony into a city** — 30 wood, 10 stone, and 5 food. The city
      keeps the colony's pops and buildings, and drives off any enemy colony
      sharing that tile.
@@ -100,7 +107,8 @@ Play passes around the table. On your turn:
 
 Once all four players have taken a turn, a new **season** begins and a fresh
 seasonal event is revealed. Play runs through the year in order — **Spring,
-Summer, Autumn, Winter** — and then a new year opens on Spring again. Each season
+Summer, Autumn, Winter** — and then a new year opens on Spring again, with the
+**first player rotating one seat** (the year turns, the order turns). Each season
 has its own mood: Spring and Summer tend to be kind (growth, building, trade),
 Autumn is the mixed harvest, and Winter leans harsh. That is a *tendency*, not a
 rule — Winter simply deals more hard-luck cards, so a mild Winter is still
@@ -125,7 +133,8 @@ Happiness is your civilization's stability. It moves each turn:
 
 - Every **slave** lowers it a little.
 - **Temples** raise it, and stored **food** helps — for every 5 food you are
-  holding, you gain +1 happiness when income is collected.
+  holding, you gain +1 happiness when income is collected, **up to +2** (full
+  granaries calm the city; hoarding beyond that does not).
 - **Overcrowding** costs you: every pop over a settlement's capacity is -1
   happiness per turn.
 - **Hunger** costs you: if your food would fall below zero, the shortfall is
@@ -161,9 +170,26 @@ Two decks of event cards bring swings of fortune:
   choice — for example, "gain 6 wood and lose 1 happiness, or gain 2 wood with no
   penalty."
 
-## Winning
+## Winning — the victory race
 
-Final victory conditions are still being designed. The near-term plan is a scored
-finish after ten seasons — rewarding cities, colonies, population, and stockpiled
-resources, and punishing unhappiness. For now, the goal is to build the broadest,
-happiest, most productive empire on the island.
+Five **victory cards** sit face-up from the first turn. Each reads **"Most X,
+minimum Y"** and belongs to the *sole leader* in that category who also meets the
+minimum — ties, or leading below the minimum, leave the card unheld:
+
+| Card | Condition | Minimum |
+| --- | --- | ---: |
+| Polis Builder | most cities standing | 3 |
+| Demos | most total pops | 16 |
+| Civic Elite | most citizens | 6 |
+| Treasurer | largest banked material stockpile | 40 |
+| Beloved of the People | highest happiness | +5 |
+
+**Hold any 3 cards at the start of your own turn and you win on the spot.** The
+check happens at your turn start, so the table always gets one full round to see
+you sitting at three and break a card off you.
+
+The **seasonal deck is the game's clock**: it never reshuffles, and one card
+leaves it every season. If it runs out before anyone wins the race, the age ends
+and **most victory cards held** takes the game (ties break on happiness, then
+population). Track the race in the ledger's **Victory** tab; the top bar shows how
+many seasons remain.

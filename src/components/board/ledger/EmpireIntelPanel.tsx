@@ -11,6 +11,9 @@ import type { EmpireTab } from "../types";
 import { BuildingsTab } from "./BuildingsTab";
 import { CitiesTab } from "./CitiesTab";
 import { PopsTab } from "./PopsTab";
+import { VictoryTab } from "./VictoryTab";
+import { victoryCardsHeld } from "../../../game/victory";
+import { UiSprite } from "../../Sprites";
 
 const UNREST_TITLES: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
   discontent: "Discontent",
@@ -57,10 +60,12 @@ function EmpireIntelPanelComponent({
     0
   );
   const unrest = unrestStatus(G, playerID);
+  const cardsHeld = victoryCardsHeld(G, playerID);
   const tabs: Array<{ id: EmpireTab; label: string }> = [
     { id: "cities", label: "Cities" },
     { id: "buildings", label: "Buildings" },
-    { id: "pops", label: "Pops" }
+    { id: "pops", label: "Pops" },
+    { id: "victory", label: "Victory" }
   ];
 
   return (
@@ -86,6 +91,16 @@ function EmpireIntelPanelComponent({
           <strong>
             {popsUsed}
             <span className="empireStatCap">/{popsCapacity}</span>
+          </strong>
+        </span>
+        <span
+          className="empireStat"
+          title={`${cardsHeld} of ${G.ruleset.victory.cardsToWin} victory cards — hold ${G.ruleset.victory.cardsToWin} at the start of your turn to win`}
+        >
+          <UiSprite item="victoryPoint" className="empireStatIcon" />
+          <strong>
+            {cardsHeld}
+            <span className="empireStatCap">/{G.ruleset.victory.cardsToWin}</span>
           </strong>
         </span>
       </div>
@@ -147,6 +162,7 @@ function EmpireIntelPanelComponent({
         {activeTab === "pops" ? (
           <PopsTab G={G} holdings={holdings} playerID={playerID} />
         ) : null}
+        {activeTab === "victory" ? <VictoryTab G={G} playerID={playerID} /> : null}
       </div>
     </div>
   );

@@ -366,3 +366,10 @@
   font-size: 0.66rem;
 }
 
+
+/* ---- board layout indicator in the deck tray ---- */
+
+.deckTrayBoard .deckTrayLabel {
+  color: var(--muted);
+  font-style: italic;
+}
