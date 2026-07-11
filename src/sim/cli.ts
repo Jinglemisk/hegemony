@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import process from "node:process";
 
 import { createSeed } from "../game/core/rng";
@@ -15,10 +16,14 @@ import type { LegalMove } from "../game/legalMoves";
 import { GAME_MODES } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
 import type { BuildingId, PopType, Pops } from "../game/types";
-import { renderLegal, renderLog, renderPreview, renderProjection, renderShow } from "./format";
+import { renderHeader, renderLegal, renderLog, renderPreview, renderProjection, renderShow } from "./format";
 import { DEFAULT_SAVE_PATH, loadGame, saveGame } from "./io";
 import type { MoveRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
+import { resolvePolicy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
+import { runTurns } from "./runner";
+import { replayScript, scriptFromSave } from "./script";
+import type { ScriptFile } from "./script";
 import { buildNewGame } from "./setup";
 
 /**
@@ -375,6 +380,70 @@ function previewLegalMove(save: SaveFile, move: LegalMove): EconomyPreview | nul
   }
 }
 
+function cmdAuto(flags: Flags, file: string) {
+  const save = loadGame(file);
+  const turns = flags.turns !== undefined ? requireInt(flags.turns, "--turns") : 40;
+  const policy = resolvePolicy(typeof flags.policy === "string" ? flags.policy : "random");
+  // Continue the save's bot stream by default so command sequences stay reproducible.
+  const botSeed = flags["bot-seed"] !== undefined ? requireInt(flags["bot-seed"], "--bot-seed") : save.botRngState;
+  const rng = createSimRng(botSeed);
+  const quiet = Boolean(flags.quiet);
+
+  runTurns(save.state, policy, rng, turns, {
+    onMove: (player, move) => {
+      save.history.push({ player, move });
+      if (!quiet) {
+        console.log(`player ${player}: ${describeMove(move)}`);
+      }
+    },
+  });
+
+  save.botRngState = rng.state();
+  saveGame(file, save);
+
+  if (typeof flags.record === "string") {
+    writeJson(flags.record, scriptFromSave(save));
+    console.log(`Recorded ${save.history.length} moves to ${flags.record}.`);
+  }
+
+  console.log(`\nPlayed ${turns} turns with the ${policy.name} policy — saved to ${file}.`);
+  console.log(renderHeader(save.state));
+}
+
+function cmdReplay(flags: Flags, file: string) {
+  if (typeof flags.script !== "string") {
+    fail("replay needs --script <path> (record one with: auto --record s.json)");
+  }
+
+  const script = JSON.parse(readFileSync(flags.script, "utf8")) as ScriptFile;
+  const state = replayScript(script);
+
+  console.log(`Replayed ${script.moves.length} moves cleanly (seed ${script.seed}, mode ${script.mode}).`);
+  console.log(renderHeader(state));
+
+  const out = typeof flags.out === "string" ? flags.out : flags.out === true ? file : undefined;
+
+  if (out) {
+    const save: SaveFile = {
+      version: 1,
+      seed: script.seed,
+      mode: script.mode,
+      rulesetPatch: script.rulesetPatch,
+      opening: script.opening,
+      botRngState: deriveBotSeed(script.seed),
+      history: script.moves,
+      state,
+    };
+    saveGame(out, save);
+    console.log(`Saved the replayed game to ${out}.`);
+  }
+}
+
+function writeJson(path: string, value: unknown) {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify(value, null, 2));
+}
+
 const HELP = `Hegemony headless sim — usage: npm run sim -- <command> [args] [--file path]
 
 Save file defaults to ${DEFAULT_SAVE_PATH}.
@@ -397,7 +466,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              resolve [choiceIndex] [targetTile]
              index <N>                     apply the Nth move from \`legal\`
   end-turn
-  auto       [--turns N] [--policy random|greedy] [--quiet]
+  auto       [--turns N] [--policy random|greedy] [--record s.json] [--quiet]
   batch      --games N [--turns N] [--policy p] [--seed N] [--report r.json] [--csv t.csv]
   replay     --script s.json [--out save.json]
 
@@ -423,6 +492,10 @@ function main() {
       return cmdEndTurn(file);
     case "preview":
       return cmdPreview(positionals, flags, file);
+    case "auto":
+      return cmdAuto(flags, file);
+    case "replay":
+      return cmdReplay(flags, file);
     case "help":
     case undefined:
       console.log(HELP);
