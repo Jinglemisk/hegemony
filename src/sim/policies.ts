@@ -2,6 +2,7 @@ import { calculateIncome } from "../game/economy/income";
 import type { LegalMove } from "../game/legalMoves";
 import { applyMove } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
+import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId } from "../game/types";
 import type { SimRng } from "./rng";
 
@@ -89,14 +90,18 @@ export const greedyPolicy: Policy = {
 const INCOME_HORIZON = 6;
 
 /**
- * Positional score for the greedy bot: VP evaluated on resources projected
- * INCOME_HORIZON turns ahead, plus a happiness term.
+ * Positional score for the greedy bot, evaluated on resources projected
+ * INCOME_HORIZON turns ahead.
+ *
+ * The old provisional-VP formula lives on here as the bot's private heuristic —
+ * a smooth gradient (cities, colonies, pops, banked material) the one-ply search
+ * can climb — now topped with a large victory-card term so the bot actually
+ * chases the race (game/victory.ts), and a happiness term because the unrest
+ * thresholds (-5/-10) delete pops nonlinearly.
  *
  * The projection runs through calculateIncome — the engine's own formula — so
  * the score sees food-shortage pressure, the stockpile happiness bonus,
  * building income, and seasonal modifiers without duplicating any of them.
- * Happiness gets extra weight beyond VP's own penalty because the unrest
- * thresholds (-5/-10) delete pops nonlinearly, which VP cannot see.
  */
 function evaluate(G: HegemonyState, playerID: PlayerId): number {
   const player = G.players[playerID];
@@ -107,11 +112,19 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
     player.resources[resource] += income[resource] * INCOME_HORIZON;
   }
 
-  const vp = playerStandings(G, playerID).victoryPoints;
+  const standings = playerStandings(G, playerID);
+  const material =
+    player.resources.wood + player.resources.stone + player.resources.gold + player.resources.food;
+  const heuristic =
+    5 * standings.cities +
+    3 * standings.colonies +
+    standings.pops +
+    Math.floor(material / 10) -
+    Math.max(0, -player.resources.happiness);
   const projectedHappiness = player.resources.happiness;
   player.resources = saved;
 
-  return 10 * vp + 2 * projectedHappiness + player.resources.influence;
+  return 100 * victoryCardsHeld(G, playerID) + 10 * heuristic + 2 * projectedHappiness + player.resources.influence;
 }
 
 export const POLICIES: Record<PolicyId, Policy> = {

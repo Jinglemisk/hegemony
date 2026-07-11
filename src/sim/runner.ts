@@ -13,7 +13,8 @@ import { buildNewGame } from "./setup";
  * (a gameplay player-turn, or one setup placement — both bump `G.turn`), so
  * `runTurns(G, ..., n)` is always "n turns forward" regardless of phase.
  *
- * The engine has no end condition yet, so turn caps are the sim's game-over.
+ * Games end for real now (victory race / deck exhaustion → phase "gameOver");
+ * the turn cap remains as a ceiling for truncated experiments.
  */
 
 export const MAX_ACTIONS_PER_TURN = 30;
@@ -42,6 +43,10 @@ export function playTurn(G: HegemonyState, policy: Policy, rng: SimRng, hooks: S
   const maxActions = options.maxActions ?? MAX_ACTIONS_PER_TURN;
   const startTurn = G.turn;
 
+  if (G.phase === "gameOver") {
+    return;
+  }
+
   for (let action = 0; action < maxActions; action += 1) {
     const player = G.currentPlayer;
     const moves = enumerateLegalMoves(G, player);
@@ -61,7 +66,7 @@ export function playTurn(G: HegemonyState, policy: Policy, rng: SimRng, hooks: S
 
     hooks.onMove?.(G, player, move);
 
-    if (G.turn !== startTurn) {
+    if (G.phase === "gameOver" || G.turn !== startTurn) {
       hooks.onTurnEnd?.(G);
       return;
     }
@@ -113,7 +118,7 @@ export function runTurns(
 ) {
   const stopAt = G.turn + turns;
 
-  while (G.turn < stopAt) {
+  while (G.turn < stopAt && G.phase !== "gameOver") {
     playTurn(G, policy, rng, hooks, options);
 
     if (options.trimLogTo !== undefined && G.log.length > options.trimLogTo) {

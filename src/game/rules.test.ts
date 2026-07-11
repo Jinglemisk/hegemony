@@ -8,6 +8,7 @@ import {
   foundColony,
   growPop,
   placeCapital,
+  placeCity,
   placeColony,
   resolveArrivingPops,
   seasonName,
@@ -15,13 +16,26 @@ import {
   startNewSeason,
   upgradeColonyToCity,
 } from "./rules";
-import type { HegemonyState, HexTile, PlayerId, Settlement } from "./types";
+import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
+import type { HegemonyState, HexTile, PlayerId, Pops, Settlement, SettlementKind } from "./types";
 
 // Fixed seed so any deck draws triggered during a test are reproducible.
 const SEED = 0xc0ffee;
 
 function fresh(): HegemonyState {
   return createInitialState(SEED);
+}
+
+/** A game whose setup list still owes colonies, for exercising placeColony. */
+function freshColonySetup(): HegemonyState {
+  return createInitialState(SEED, deriveRuleset(DEFAULT_RULESET, { setup: ["capital", "colony"] }));
+}
+
+/** Drop a settlement straight onto the board (no placement legality) — for tests
+ *  whose subject is downstream of placement (yields, upgrades, buildings). */
+function poke(state: HegemonyState, owner: PlayerId, tileId: string, kind: SettlementKind, pops: Pops) {
+  tile(state, tileId).settlements.push({ owner, kind, buildings: [], pops: { ...pops } });
+  state.players[owner].settlements.push(tileId);
 }
 
 function tile(state: HegemonyState, id: string): HexTile {
@@ -87,16 +101,30 @@ describe("setup placement", () => {
     expect(placeCapital(state, "1", "1,0", { citizens: 1, freemen: 1, slaves: 1 }).ok).toBe(false);
   });
 
-  it("places a colony after the capital and rejects a colony on a city tile", () => {
-    const state = fresh();
+  it("places a colony after the capital, requiring contiguity, and rejects a colony on a city tile", () => {
+    const state = freshColonySetup();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
     placeCapital(state, "1", "-3,0", { citizens: 1, freemen: 1, slaves: 1 });
 
-    expect(placeColony(state, "0", "3,0", { citizens: 0, freemen: 0, slaves: 1 }).ok).toBe(true);
-    expect(owned(state, "3,0", "0").kind).toBe("colony");
+    // "3,0" is three hexes from the capital — colonies must border an owned settlement.
+    expect(placeColony(state, "0", "3,0", { citizens: 0, freemen: 0, slaves: 1 }).ok).toBe(false);
+    // "1,0" borders the capital.
+    expect(placeColony(state, "0", "1,0", { citizens: 0, freemen: 0, slaves: 1 }).ok).toBe(true);
+    expect(owned(state, "1,0", "0").kind).toBe("colony");
 
     // "0,0" already holds a city, so a colony there is illegal.
     expect(placeColony(state, "1", "0,0", { citizens: 0, freemen: 0, slaves: 1 }).ok).toBe(false);
+  });
+
+  it("places the second city anywhere legal — never adjacent to a city", () => {
+    const state = fresh();
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
+
+    // Adjacent to the capital is illegal for a city…
+    expect(placeCity(state, "0", "1,0", { citizens: 1, freemen: 1, slaves: 1 }).ok).toBe(false);
+    // …but a far tile is fine (no contiguity for the starting cities).
+    expect(placeCity(state, "0", "3,0", { citizens: 1, freemen: 1, slaves: 1 }).ok).toBe(true);
+    expect(owned(state, "3,0", "0").kind).toBe("city");
   });
 });
 
@@ -167,16 +195,12 @@ describe("per-settlement income (settlementNetYield)", () => {
 
   it("halves colony tile yield when the tile is shared", () => {
     const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
-    placeCapital(state, "1", "-3,0", { citizens: 1, freemen: 1, slaves: 1 });
-    // Setup colonies require exactly one starting pop; zero them afterwards so
-    // only the (halved) tile yield remains under test.
-    placeColony(state, "0", "3,0", { citizens: 0, freemen: 0, slaves: 1 });
-    placeColony(state, "1", "3,0", { citizens: 0, freemen: 0, slaves: 1 });
+    const none = { citizens: 0, freemen: 0, slaves: 0 };
+    poke(state, "0", "3,0", "colony", none);
+    poke(state, "1", "3,0", "colony", none);
 
     const shared = tile(state, "3,0");
     const colony = owned(state, "3,0", "0");
-    colony.pops = { citizens: 0, freemen: 0, slaves: 0 };
     expect(shared.settlements).toHaveLength(2);
     expect(settlementNetYield(shared, colony)[shared.resource.type]).toBe(
       Math.floor(shared.resource.amount * 0.5),
@@ -217,8 +241,9 @@ describe("city upgrade", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
     placeCapital(state, "1", "-3,0", { citizens: 1, freemen: 1, slaves: 1 });
-    placeColony(state, "0", "3,0", { citizens: 0, freemen: 0, slaves: 1 });
-    placeColony(state, "1", "3,0", { citizens: 0, freemen: 0, slaves: 1 });
+    const slave = { citizens: 0, freemen: 0, slaves: 1 };
+    poke(state, "0", "3,0", "colony", slave);
+    poke(state, "1", "3,0", "colony", slave);
     wealthy(state, "0");
     const before = { ...state.players["0"].resources };
 
@@ -259,7 +284,7 @@ describe("buildings", () => {
   it("cannot build on a colony (no building slots)", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
-    placeColony(state, "0", "3,0", { citizens: 0, freemen: 0, slaves: 1 });
+    poke(state, "0", "3,0", "colony", { citizens: 0, freemen: 0, slaves: 1 });
     expect(buildBuilding(state, "0", "3,0", "marketplace").ok).toBe(false);
   });
 });
@@ -333,16 +358,19 @@ describe("found colony & population transfers", () => {
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
     wealthy(state, "0");
 
-    const result = foundColony(state, "0", "3,0", "0,0", "slaves");
+    // Non-contiguous founding is rejected outright (roadmap-appendix D3).
+    expect(foundColony(state, "0", "3,0", "0,0", "slaves").ok).toBe(false);
+
+    const result = foundColony(state, "0", "1,0", "0,0", "slaves");
     expect(result.ok).toBe(true);
 
     // Colony exists but its seed pop is still in transit from the capital.
-    expect(owned(state, "3,0", "0").kind).toBe("colony");
+    expect(owned(state, "1,0", "0").kind).toBe("colony");
     expect(owned(state, "0,0", "0").pops.slaves).toBe(0);
     expect(state.transfers).toHaveLength(1);
 
     resolveArrivingPops(state, "0");
-    expect(owned(state, "3,0", "0").pops.slaves).toBe(1);
+    expect(owned(state, "1,0", "0").pops.slaves).toBe(1);
     expect(state.transfers).toHaveLength(0);
   });
 });

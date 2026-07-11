@@ -14,9 +14,10 @@ import { PLAYER_EVENT_CARDS } from "./data";
 import { createGame } from "./turn";
 import type { HegemonyState, PlayerId, Pops, Settlement } from "./types";
 
-// createGame runs the scripted 4-player opening (GAME_CONFIG.preloadOpeningSetupForTesting),
-// so every player starts in gameplay with a capital + colony already placed.
+// Opt into the scripted 4-player two-city opening (dev preload, off by default), so
+// every player starts in gameplay with two cities already placed.
 const SEED = 0xc0ffee;
+const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", true);
 
 function ownedSettlements(G: HegemonyState, id: PlayerId): Settlement[] {
   return G.players[id].settlements.map((tileId) => {
@@ -31,7 +32,7 @@ function playerPopTotal(G: HegemonyState, id: PlayerId): number {
   return ownedSettlements(G, id).reduce((sum, settlement) => sum + totalPops(settlement.pops), 0);
 }
 
-/** Overwrite a player's two settlements' pops (capital first, then colony). */
+/** Overwrite a player's two settlements' pops (capital first, then second city). */
 function setPops(G: HegemonyState, id: PlayerId, capital: Pops, colony: Pops) {
   const [first, second] = ownedSettlements(G, id);
   first.pops = { ...capital };
@@ -42,7 +43,7 @@ const NONE: Pops = { citizens: 0, freemen: 0, slaves: 0 };
 
 describe("unrest upkeep", () => {
   it("removes 2 pops at the -5 happiness threshold, with no rebound", () => {
-    const G = createGame(SEED);
+    const G = preloadedGame(SEED);
     // Grace on -> the food-deficit path is skipped, isolating the threshold.
     G.players["0"].hasCollectedGameplayIncome = false;
     setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
@@ -56,7 +57,7 @@ describe("unrest upkeep", () => {
   });
 
   it("removes 4 pops and rebounds happiness to -4 at the -10 threshold", () => {
-    const G = createGame(SEED);
+    const G = preloadedGame(SEED);
     G.players["0"].hasCollectedGameplayIncome = false;
     setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
     G.players["0"].resources.happiness = -12;
@@ -72,7 +73,7 @@ describe("unrest upkeep", () => {
 
   it("removes pops deterministically for a fixed seed", () => {
     const build = () => {
-      const G = createGame(SEED);
+      const G = preloadedGame(SEED);
       G.players["0"].hasCollectedGameplayIncome = false;
       setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
       G.players["0"].resources.happiness = -12;
@@ -85,7 +86,7 @@ describe("unrest upkeep", () => {
   });
 
   it("starves a pop after two consecutive food-deficit turns, then resets the counter", () => {
-    const G = createGame(SEED);
+    const G = preloadedGame(SEED);
     // Grace off; huge citizen upkeep guarantees a deep food deficit regardless of tiles.
     G.players["0"].hasCollectedGameplayIncome = true;
     G.players["0"].resources.happiness = 0; // keep thresholds out of it
@@ -101,7 +102,7 @@ describe("unrest upkeep", () => {
   });
 
   it("resets the deficit counter on a non-deficit turn (no pop lost)", () => {
-    const G = createGame(SEED);
+    const G = preloadedGame(SEED);
     G.players["0"].hasCollectedGameplayIncome = true;
     G.players["0"].resources.happiness = 0;
     setPops(G, "0", { citizens: 0, freemen: 1, slaves: 0 }, NONE); // -1 food > -2 threshold
@@ -116,7 +117,7 @@ describe("unrest upkeep", () => {
   });
 
   it("applies a timed happiness modifier each turn, then expires it", () => {
-    const G = createGame(SEED);
+    const G = preloadedGame(SEED);
     G.players["0"].hasCollectedGameplayIncome = false; // isolate from the food path
     setPops(G, "0", { citizens: 3, freemen: 0, slaves: 0 }, NONE);
     G.players["0"].resources.happiness = 0;
@@ -137,7 +138,7 @@ describe("unrest upkeep", () => {
   });
 
   it("does not drift happiness toward zero on its own", () => {
-    const G = createGame(SEED);
+    const G = preloadedGame(SEED);
     G.players["0"].hasCollectedGameplayIncome = false;
     setPops(G, "0", { citizens: 1, freemen: 0, slaves: 0 }, NONE);
     G.players["0"].resources.happiness = -3; // above the -5 threshold, no active cause
@@ -150,7 +151,7 @@ describe("unrest upkeep", () => {
 
 describe("unrest status (ledger warning)", () => {
   it("classifies the happiness tier and pops-at-risk", () => {
-    const G = createGame(SEED);
+    const G = preloadedGame(SEED);
 
     G.players["0"].resources.happiness = 3;
     expect(unrestStatus(G, "0").tier).toBe("calm");
@@ -168,7 +169,7 @@ describe("unrest status (ledger warning)", () => {
 
 describe("pops gained from events (ledger tally)", () => {
   it("counts inorganic pops added by an addPops card", () => {
-    const G = createGame(SEED);
+    const G = preloadedGame(SEED);
     const card = PLAYER_EVENT_CARDS.find((candidate) => candidate.id === "player-free-settlers")!;
     G.playerDrawPile.unshift(card);
     G.pendingPlayerEvent = null;

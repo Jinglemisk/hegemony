@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { createGame, endTurn, nextPlayer } from "./turn";
 import type { HegemonyState } from "./types";
 
-// createGame runs the scripted 4-player opening (GAME_CONFIG.preloadOpeningSetupForTesting = true).
+// Opt into the scripted 4-player two-city opening (dev preload, off by default).
+const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", true);
 
 // A player event drawn during income collection blocks endTurn; clear it first to
 // exercise the turn transition itself (as resolving the event would in the UI).
@@ -14,7 +15,7 @@ function advanceTurn(G: HegemonyState) {
 
 describe("turn machine", () => {
   it("boots the preloaded opening into gameplay for player 0", () => {
-    const G = createGame(1);
+    const G = preloadedGame(1);
     expect(G.phase).toBe("gameplay");
     expect(G.currentPlayer).toBe("0");
     for (const id of ["0", "1", "2", "3"] as const) {
@@ -31,7 +32,7 @@ describe("turn machine", () => {
   });
 
   it("ends a turn: advances to the next player and increments the turn counter", () => {
-    const G = createGame(1);
+    const G = preloadedGame(1);
     const turnBefore = G.turn;
 
     const result = advanceTurn(G);
@@ -42,7 +43,7 @@ describe("turn machine", () => {
   });
 
   it("starts a new season when play wraps back to player 0", () => {
-    const G = createGame(1);
+    const G = preloadedGame(1);
     const seasonBefore = G.season;
 
     advanceTurn(G); // 0 -> 1
@@ -55,7 +56,7 @@ describe("turn machine", () => {
   });
 
   it("refuses to end a turn while a player event is pending", () => {
-    const G = createGame(1);
+    const G = preloadedGame(1);
     G.pendingPlayerEvent = { card: G.playerDrawPile[0], playerID: "0" };
     expect(endTurn(G).ok).toBe(false);
   });

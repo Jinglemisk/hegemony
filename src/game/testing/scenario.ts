@@ -1,10 +1,10 @@
 import { TEST_OPENING_SETUP } from "../config";
 import { PLAYER_EVENT_CARDS, SEASONAL_EVENT_CARDS } from "../data";
-import { placeCapital, placeColony } from "../actions";
+import { placeCapital, placeCity } from "../actions";
 import { clonePops } from "../core/pops";
 import type { MoveResult } from "../core/results";
 import { createInitialState } from "../state";
-import { GAME_MODES, deriveRuleset, setupCapitalCount } from "../ruleset";
+import { GAME_MODES, deriveRuleset } from "../ruleset";
 import type { GameModeId } from "../ruleset";
 import { advanceSetupTurn, beginGameplayTurn } from "../turn";
 import type {
@@ -74,26 +74,36 @@ export class ScenarioBuilder {
   }
 
   /**
-   * Replay the scripted 4-player opening through the real mutators, landing in
-   * gameplay with player 0's first turn already bootstrapped (upkeep + income +
-   * event draw — so a pending event may be waiting). Stack any deck riggings
-   * BEFORE calling this if they should influence that first draw.
+   * Replay the scripted 4-player two-city opening through the real mutators (snake
+   * order, driven by the setup machine), landing in gameplay with the opener's first
+   * turn already bootstrapped (upkeep + income + event draw — so a pending event may
+   * be waiting). Stack any deck riggings BEFORE calling this if they should influence
+   * that first draw.
    */
   opening(): this {
     const { G } = this;
 
-    if (G.ruleset.setup.length !== 2) {
-      throw new Error("The scripted opening only fits the capital+colony setup.");
+    if (G.ruleset.setup.join() !== "capital,city") {
+      throw new Error("The scripted opening only fits the capital+city standard setup.");
     }
 
-    for (const placement of TEST_OPENING_SETUP) {
-      assertOk(placeCapital(G, placement.playerID, placement.city.tileId, placement.city.pops), placement.playerID, placement.city.tileId);
-      advanceSetupTurn(G, setupCapitalCount(G.ruleset), "setupColony");
-    }
+    let guard = 0;
 
-    for (const placement of TEST_OPENING_SETUP) {
-      assertOk(placeColony(G, placement.playerID, placement.colony.tileId, placement.colony.pops), placement.playerID, placement.colony.tileId);
-      advanceSetupTurn(G, G.ruleset.setup.length, "gameplay");
+    while (G.phase !== "gameplay") {
+      if (guard++ > 16) {
+        throw new Error("scenario opening: setup did not converge");
+      }
+
+      const placement = TEST_OPENING_SETUP.find((candidate) => candidate.playerID === G.currentPlayer);
+
+      if (!placement) {
+        throw new Error(`scenario opening: no placement for player ${G.currentPlayer}`);
+      }
+
+      const target = G.phase === "setupCapital" ? placement.capital : placement.secondCity;
+      const place = G.phase === "setupCapital" ? placeCapital : placeCity;
+      assertOk(place(G, placement.playerID, target.tileId, target.pops), placement.playerID, target.tileId);
+      advanceSetupTurn(G);
     }
 
     beginGameplayTurn(G);

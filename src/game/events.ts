@@ -117,30 +117,18 @@ function drawFromEventDeck(G: HegemonyState, deck: EventDeckKind) {
 /**
  * Draw a seasonal card that suits the current season. The pile is pre-shuffled,
  * so taking the first suited card is a uniform random pick among suited cards —
- * season tags therefore only weight the deck, never force an outcome. Falls back
- * to reshuffling the discard, then to any card, so a draw is always possible.
+ * season tags therefore only weight the deck, never force an outcome. The seasonal
+ * deck NEVER reshuffles: it is the game's finite clock (roadmap-appendix D1) —
+ * exactly one card leaves per season, and an empty pile ends the age.
  */
 function drawSeasonalCard(G: HegemonyState, season: SeasonName): EventCard | null {
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const index = G.seasonalDrawPile.findIndex((card) => cardSuitsSeason(card, season));
+  const index = G.seasonalDrawPile.findIndex((card) => cardSuitsSeason(card, season));
 
-    if (index !== -1) {
-      return G.seasonalDrawPile.splice(index, 1)[0];
-    }
-
-    // No suited card left in the draw pile — fold the discard back in and retry once.
-    if (G.seasonalDiscardPile.length === 0) {
-      break;
-    }
-
-    const reshuffled = shuffleWithSeed([...G.seasonalDrawPile, ...G.seasonalDiscardPile], G.rng);
-    G.seasonalDrawPile = reshuffled.cards;
-    G.rng = reshuffled.state;
-    G.seasonalDiscardPile = [];
-    addLog(G, "Seasonal Event discard reshuffled into the draw pile.");
+  if (index !== -1) {
+    return G.seasonalDrawPile.splice(index, 1)[0];
   }
 
-  // Nothing suits this season anywhere; take whatever is on top rather than stall.
+  // Nothing left suits this season; take whatever is on top rather than stall the clock.
   return G.seasonalDrawPile.shift() ?? null;
 }
 
