@@ -5,17 +5,6 @@
 !!! If the user has made an addition, it will be marked with *** and it must be rehabilitated into the document.
 
 
-*** Promote Slave->Freeman with Resources, Freeman->Citizen with Gold, Demote Citizen -> Freeman with Influence, Freeman->Slave with Influence
-
-*** Event tables — dice + lookup table as a reusable resolution pattern. Start with a riot table for unrest pop-loss determination (d6: 1-2 lose food, 3-4 lose a pop, 5-6 a building is disabled / pay a ransom, etc. — keep expected severity constant, vary the texture). Influence can be utilized here: spend influence to shift the roll. Possible extension: player event cards become a d20 roll on an event table (yearly/seasonal events stay as drawn cards).
-
-*** Opt-in gambles (ventures) — burn resources on dice rolls: pay a stake (gold/wood), roll a d6 for windfall / break-even / lost stake. If you can't trade resources away, you might as well stake them. Doubles as a gold sink; feel-bad-free because the risk is chosen.
-
-*** Riot-table refinements (settled in the dice spitball):
-1. Demotion during a riot is FREE — the mob forces the concession. Voluntary peacetime demotion still costs influence per the ladder above (no double-charging the influence path).
-2. Deliberate riots are a legitimate play: a player may WANT unrest so they can demote for free — citizen->freeman keeps the gold but eats less, freeman->slave trades gold for raw tile resources. Guard: expected riot cost must stay above the demotion's market value (cap at one free demotion per riot), or torching your own city becomes a free pop-respec.
-3. Riot mitigation is PRE-ROLL ONLY — insurance, not bribery. Bread, concessions, and influence spends are committed before the die is cast; no post-roll fixes. Braced-and-lucky means you wasted the stake; unbraced-and-unlucky hurts. That's the game.
-
 *** 
 
 
@@ -24,6 +13,17 @@
 
 ## Gameplay & mechanics
 
+- Follow the roadmap (docs/roadmap.md) and drive work through its Q&A workbench (docs/roadmap-appendix.md).
+-- Phases 0–5 with exit gates; the appendix holds per-phase questions, the decision log, and the execution log. Start each session there.
+
+- Event tables — dice + lookup table as a reusable, data-driven component (never hardcoded; shared engine seam + UI modal). (settled — roadmap-appendix Q9/Q10)
+-- Riot table replaces random unrest pop removal at ≤ −5: d6 for the mob's demand (lose pops / building shuttered / grain sacked / ransom / disperses), severity ≈ constant, texture varies; severe tier rolls at −2 with doubled pop losses.
+-- Pre-roll insurance only (max +2): bread dole 4 food, free concession-demotion, 3 influence patronage.
+-- Ventures ("Fund an Expedition"): stake 5 gold / 8 wood, d6 for lost / break-even / win 9 — ~−7% EV, the catch-up casino. Another event table + Actions-tab entry.
+
+- Promote / demote pop ladder. (costs settled — roadmap-appendix Q8)
+-- Promote: slave→freeman 4 food, freeman→citizen 4 gold. Demote: citizen→freeman 2 influence, freeman→slave 3 influence −1 happiness. One ladder move per player per turn; demotion is free during a riot (the mob forces it).
+
 - Keep the balance ledger current (docs/balance.html).
 -- Living balance document: outstanding issues (ranked P0–P2), deck/economy analysis, playtest scenarios. Update it in the same commit as any change to ruleset.ts, data.ts, or the event decks; log the change in its changelog.
 
@@ -31,6 +31,7 @@
 -- The game never ends — the event decks reshuffle their discard piles forever — and every player shows "VP --", so there is no reason to play well.
 -- Direction (user's idea): make the event deck a finite clock. Stop the reshuffle; when all event cards are spent, the game ends and "victory cards" resolve, awarding for categories like most resource points, most pops, most cities, most X. The deck length becomes the game length.
 -- Interim/fallback: a fixed end-of-season-10 tally — +5 per city, +3 per colony, +1 per citizen, +1 per freeman, +1 per 10 material resources (rounded down), -1 per point of negative happiness.
+-- SETTLED (roadmap-appendix D1): victory RACE — 5 public victory cards, each "Most X, minimum Y" (sole leader above the floor holds it; ties hold nothing); hold any 3 at the start of your own turn to win. Seasonal deck stops reshuffling and is only the failsafe ceiling (~7 years; most cards held wins on exhaustion, tiebreak happiness then pops). Skip the interim tally; replaces provisional VP everywhere.
 
 - ~~Give happiness real consequences.~~ DONE (feat/unrest-consequences — see unrest.md).
 -- ~~Happiness accrues but does nothing yet — it is a meter with no teeth.~~
@@ -48,14 +49,8 @@
 
 - Add more start setups / game modes.
 -- The mode seam already works (standard / fast-start / deathmatch), selected in code by GAME_CONFIG.mode — a mode is just a ruleset patch.
+-- SETTLED (roadmap-appendix D3): the standard setup becomes TWO CITIES — capital + second city, snake order, no setup colony, 3 pops each. Colonies are all player-founded, chained by radius-1 contiguity.
 -- Add more modes as data; an in-game mode picker is lobby scope (deferred).
-
-- Temple stacking looks dominant (sim finding, 2026-07-11).
--- 6 stone for +1 happiness/turn with no diminishing returns: projection bots fill every
-   slot with temples (11/game) and happiness runs away (+19 by season 7). Consider a
-   per-settlement cap, scaling cost, or diminishing returns — dovetails with the terrain
-   rework's stone-as-civic pricing. Reproduce:
-   `npm run sim -- batch --games 10 --turns 24 --policy greedy --seed 100`.
 
 - Add a second tier of buildings.
 -- Only four basic buildings exist; economic paths barely differ.
@@ -66,10 +61,12 @@
 -- Players vote on resolutions that affect some or all of them (rivalry mechanics).
 -- This is where players will spend Influence primarily
 
-- Terrain & resource economy rework. (planned — see docs/feat/terrain-economy.md)
--- Settled 2026-07-11: wood/food/stone are first-order (from tiles); gold/influence are second-order (from pops/trade/buildings) — gold tiles removed, hills become the slot-rich "acropolis" terrain (token stone/food yields).
--- Also pinned there: the building pricing grammar (wood=economic, stone=civic, gold=commerce, food=pops-only), the landmark-tile principle + constrained shuffle, trade-before-stone-sinks sequencing, and luxury goods as the capped, diminishing, tradeable happiness tier.
--- Ship the hill rework together with the second building tier (slots must have something to bind against).
+- Terrain & resource economy rework. (planned — see docs/feat/terrain-economy.md; ships with building tier 2, roadmap Phase 2)
+-- Settled: wood/food/stone are first-order (from tiles); gold/influence are second-order (from pops/trade/buildings) — gold tiles removed, hills become the slot-rich "acropolis" terrain.
+-- Also pinned there: building pricing grammar, landmark-tile principle + constrained shuffle, trade-before-stone-sinks sequencing.
+
+- Bank exchange via gold as the medium. (SETTLED — roadmap-appendix D6; rates provisional)
+-- Sell any material 3:1 for gold, buy any material for 2 gold — never direct barter; gold is the unit of account (user's Age-of-Empires model). Static bank: its rates bracket future player trade. Rates are ruleset tunables expected to move with playtesting.
 
 - Luxury goods and trade.
 -- Deferred design; see docs/feat/luxury-goods.md — amended by docs/feat/terrain-economy.md (distinct goods, diminishing duplicates, ~3 active per player cap).
@@ -99,22 +96,14 @@
 ## Tooling & testing
 
 - ~~Headless sim CLI + legal-move enumeration + bots + batch telemetry.~~ DONE (feat/sim-cli — see docs/simulation.md).
--- `npm run sim` drives the pure engine from the terminal: play move-by-move, auto-play
-   with random/greedy bots, run seeded batches with an aggregated balance report + CSV,
-   and record/replay games as a rules-regression net. `scenario()` builder
-   (src/game/testing/scenario.ts) constructs mid-game states for tests.
+-- `npm run sim` drives the pure engine from the terminal: play move-by-move, auto-play with bots, run seeded batches with an aggregated balance report + CSV, record/replay games. `scenario()` builder (src/game/testing/scenario.ts) constructs mid-game states for tests.
 
-- Grow the greedy bot into a credible baseline player / CPU opponents. (parked — see docs/ai.md)
--- ~~One-ply score underrated delayed payoffs (zero granaries/temples in 10 games → death spiral).~~
-   DONE: the score now projects income 6 turns ahead through calculateIncome; same seeds went
-   from happiness -5.4 / half the seats in unrest to +19 / 80% calm.
--- Remaining (deliberately not now): multi-move sequencing (2-ply / in-turn beam), spatial
-   strategy, opponent modeling, difficulty tiers + personalities. docs/ai.md has the
-   architecture, the determinism contract, and the ladder to CPU players.
+- Grow the greedy bot into a credible baseline player.
+-- Current heuristic is one-ply VP-anchored; batch results underrate delayed payoffs (buildings). A 2-ply or turn-level rollout would make balance reports read closer to human play. Needed for the Q1 victory-threshold tuning campaign.
 
-- Wire a batch smoke run into CI.
--- e.g. `sim batch --games 5 --turns 16` after tests, so rules regressions that only
-   surface in full games get caught.
+- ~~Wire a batch smoke run into CI.~~ DECLINED (roadmap-appendix Q11): no per-PR sim gate — sims are for ad-hoc hypothesis tests, planned campaigns, and phase-exit checks. PR gate stays `npm run check` + tests.
+
+---
 
 ## Tech debt & polish
 
