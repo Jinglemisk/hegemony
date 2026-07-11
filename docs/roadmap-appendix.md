@@ -71,6 +71,11 @@ Stockpile-based, capped at +2: `min(floor(food/5), 2)`.
 ### D5 · Dev preload flag — `DONE (feat/phase0-victory-race)`
 
 Default off; kept as a dev convenience (env flag or `dev` mode entry).
+**Extended 2026-07-12 (user request):** the dev default is now an **auto-played opening**
+that rotates through 10 premade seeds, one per reload (localStorage cursor) — testing
+never starts at "place your capital". `?setup=manual` restores hand placement,
+`?seed=N` pins a seed, `?dev=preload` replays the fixed scripted opening. The active
+seed shows in the deck tray ("Classic board · #77").
 
 ---
 

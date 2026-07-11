@@ -53,7 +53,9 @@ export function DeckShelf({ G }: { G: HegemonyState }) {
             : "Shuffled board — seeded random layout. Start with ?board=classic for the authored island."
         }
       >
-        <span className="deckTrayLabel">{G.boardLayout === "classic" ? "Classic board" : "Shuffled board"}</span>
+        <span className="deckTrayLabel">
+          {G.boardLayout === "classic" ? "Classic board" : "Shuffled board"} · #{G.seed}
+        </span>
       </div>
     </section>
   );
