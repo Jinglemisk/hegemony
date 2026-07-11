@@ -16,7 +16,7 @@ export type NewGameOptions = {
   /** Decides random-opening placements; unused for fixed/manual openings. */
   simRng: SimRng;
   /** Called once per applied setup move, for history recording. */
-  onMove?: (player: PlayerId, move: LegalMove) => void;
+  onMove?: (G: HegemonyState, player: PlayerId, move: LegalMove) => void;
 };
 
 /**
@@ -68,7 +68,11 @@ export function buildNewGame({ seed, mode, patch, opening, simRng, onMove }: New
   return G;
 }
 
-function applyRecorded(G: HegemonyState, move: LegalMove, onMove?: (player: PlayerId, move: LegalMove) => void) {
+function applyRecorded(
+  G: HegemonyState,
+  move: LegalMove,
+  onMove?: (G: HegemonyState, player: PlayerId, move: LegalMove) => void,
+) {
   const player = G.currentPlayer;
   const result = applyMove(G, player, move);
 
@@ -76,5 +80,5 @@ function applyRecorded(G: HegemonyState, move: LegalMove, onMove?: (player: Play
     throw new Error(`setup move rejected: ${JSON.stringify(move)}`);
   }
 
-  onMove?.(player, move);
+  onMove?.(G, player, move);
 }
