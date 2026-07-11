@@ -13,7 +13,7 @@ describe("record/replay", () => {
       mode: "standard",
       policy: randomPolicy,
       turns: 20,
-      hooks: { onMove: (player, move) => moves.push({ player, move }) },
+      hooks: { onMove: (_G, player, move) => moves.push({ player, move }) },
     });
 
     const replayed = replayScript({
@@ -35,7 +35,7 @@ describe("record/replay", () => {
       mode: "standard",
       policy: randomPolicy,
       turns: 4,
-      hooks: { onMove: (player, move) => moves.push({ player, move }) },
+      hooks: { onMove: (_G, player, move) => moves.push({ player, move }) },
     });
 
     // Wrong seed → different decks/board draws → the recorded moves stop fitting.

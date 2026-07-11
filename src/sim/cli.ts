@@ -16,15 +16,16 @@ import type { LegalMove } from "../game/legalMoves";
 import { GAME_MODES } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
 import type { BuildingId, PopType, Pops } from "../game/types";
-import { renderHeader, renderLegal, renderLog, renderPreview, renderProjection, renderShow } from "./format";
+import { renderBatchReport, renderHeader, renderLegal, renderLog, renderPreview, renderProjection, renderShow } from "./format";
 import { DEFAULT_SAVE_PATH, loadGame, saveGame } from "./io";
 import type { MoveRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
 import { resolvePolicy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
-import { runTurns } from "./runner";
+import { runGame, runTurns } from "./runner";
 import { replayScript, scriptFromSave } from "./script";
 import type { ScriptFile } from "./script";
 import { buildNewGame } from "./setup";
+import { Aggregator, snapshotsToCsv } from "./telemetry";
 
 /**
  * Headless driver for the Hegemony engine. Commands operate on a JSON save file
@@ -136,19 +137,28 @@ function requireTileId(value: string | undefined, name: string): string {
 // Commands
 // ---------------------------------------------------------------------------
 
-function cmdNew(flags: Flags, file: string) {
-  const seed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createSeed();
+function parseMode(flags: Flags): GameModeId {
   const mode = (typeof flags.mode === "string" ? flags.mode : "standard") as GameModeId;
 
   if (!GAME_MODES[mode]) {
     fail(`unknown mode "${mode}" — expected one of: ${Object.keys(GAME_MODES).join(", ")}`);
   }
 
-  let patch: RulesetPatch | null = null;
+  return mode;
+}
 
-  if (typeof flags["ruleset-patch"] === "string") {
-    patch = JSON.parse(readFileSync(flags["ruleset-patch"], "utf8")) as RulesetPatch;
+function parsePatch(flags: Flags): RulesetPatch | null {
+  if (typeof flags["ruleset-patch"] !== "string") {
+    return null;
   }
+
+  return JSON.parse(readFileSync(flags["ruleset-patch"], "utf8")) as RulesetPatch;
+}
+
+function cmdNew(flags: Flags, file: string) {
+  const seed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createSeed();
+  const mode = parseMode(flags);
+  const patch = parsePatch(flags);
 
   const opening: OpeningKind = flags["manual-setup"]
     ? "manual"
@@ -168,7 +178,7 @@ function cmdNew(flags: Flags, file: string) {
     patch,
     opening,
     simRng,
-    onMove: (player, move) => history.push({ player, move }),
+    onMove: (_G, player, move) => history.push({ player, move }),
   });
 
   const save: SaveFile = {
@@ -390,7 +400,7 @@ function cmdAuto(flags: Flags, file: string) {
   const quiet = Boolean(flags.quiet);
 
   runTurns(save.state, policy, rng, turns, {
-    onMove: (player, move) => {
+    onMove: (_G, player, move) => {
       save.history.push({ player, move });
       if (!quiet) {
         console.log(`player ${player}: ${describeMove(move)}`);
@@ -442,6 +452,70 @@ function cmdReplay(flags: Flags, file: string) {
 function writeJson(path: string, value: unknown) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(value, null, 2));
+}
+
+function cmdBatch(flags: Flags) {
+  if (flags.games === undefined) {
+    fail("batch needs --games <N>");
+  }
+
+  const games = requireInt(flags.games, "--games");
+  const turns = flags.turns !== undefined ? requireInt(flags.turns, "--turns") : 40;
+  const policy = resolvePolicy(typeof flags.policy === "string" ? flags.policy : "random");
+  const mode = parseMode(flags);
+  const patch = parsePatch(flags);
+  const baseSeed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createSeed();
+  const reportPath = typeof flags.report === "string" ? flags.report : ".sim/report.json";
+  const csvPath = typeof flags.csv === "string" ? flags.csv : undefined;
+
+  const aggregator = new Aggregator();
+  const logEvery = games <= 20 ? 1 : 10;
+
+  for (let game = 0; game < games; game += 1) {
+    const seed = (baseSeed + game) >>> 0;
+
+    const G = runGame({
+      seed,
+      mode,
+      patch,
+      policy,
+      turns,
+      trimLogTo: 200,
+      hooks: {
+        onGameStart: (state) => aggregator.beginGame(game, seed, state),
+        onMove: (state, player, move) => aggregator.onMove(state, player, move),
+        onTurnEnd: (state) => aggregator.onTurnEnd(state),
+      },
+    });
+
+    aggregator.endGame(G);
+
+    if ((game + 1) % logEvery === 0) {
+      console.log(`game ${game + 1}/${games} done (seed ${seed})`);
+    }
+  }
+
+  const report = aggregator.buildReport({
+    games,
+    turns,
+    policy: policy.name,
+    mode,
+    baseSeed,
+    botSeedRule: "seed ^ 0x9e3779b9",
+    rulesetPatch: patch,
+    generatedAt: new Date().toISOString(),
+  });
+
+  writeJson(reportPath, report);
+  console.log(`\nReport written to ${reportPath}.`);
+
+  if (csvPath) {
+    mkdirSync(dirname(csvPath), { recursive: true });
+    writeFileSync(csvPath, snapshotsToCsv(aggregator.allSnapshots()));
+    console.log(`Turn snapshots written to ${csvPath}.`);
+  }
+
+  console.log("\n" + renderBatchReport(report));
 }
 
 const HELP = `Hegemony headless sim — usage: npm run sim -- <command> [args] [--file path]
@@ -496,6 +570,8 @@ function main() {
       return cmdAuto(flags, file);
     case "replay":
       return cmdReplay(flags, file);
+    case "batch":
+      return cmdBatch(flags);
     case "help":
     case undefined:
       console.log(HELP);

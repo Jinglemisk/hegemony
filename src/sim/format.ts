@@ -7,6 +7,7 @@ import { playerStandings } from "../game/score";
 import { settlementPopCapacity } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import type { HegemonyState, PlayerId, Resources } from "../game/types";
+import type { BatchReport } from "./telemetry";
 
 /** Fractional values (happiness, VP) render with one decimal; integers stay bare. */
 export function formatNumber(value: number): string {
@@ -185,4 +186,41 @@ export function renderPreview(preview: EconomyPreview): string {
 
 function hasResourceDelta(resources: Resources): boolean {
   return Object.values(resources).some((amount) => amount !== 0);
+}
+
+/** Terminal digest of a batch report — the full data lives in the JSON. */
+export function renderBatchReport(report: BatchReport): string {
+  const lines = [
+    `Batch: ${report.meta.games} games × ${report.meta.turns} turns, ${report.meta.policy} policy, ${report.meta.mode} mode (base seed ${report.meta.baseSeed})`,
+    `Final VP: mean ${formatNumber(report.finalVpDistribution.mean)} · ` +
+      `p10 ${formatNumber(report.finalVpDistribution.p10)} · median ${formatNumber(report.finalVpDistribution.median)} · ` +
+      `p90 ${formatNumber(report.finalVpDistribution.p90)}`,
+    `Seats: ${Object.entries(report.perSeat)
+      .map(([seat, stats]) => `P${seat} win ${(stats.winRate * 100).toFixed(0)}% (VP ${formatNumber(stats.meanFinalVP)})`)
+      .join(" · ")}`,
+  ];
+
+  const lastSeason = report.perSeason[report.perSeason.length - 1];
+  if (lastSeason) {
+    lines.push(
+      `Season ${lastSeason.season} (${lastSeason.seasonName} y${lastSeason.year}): ` +
+        `pops mean ${formatNumber(lastSeason.pops.mean)} · food mean ${formatNumber(lastSeason.food.mean)} · ` +
+        `happiness mean ${formatNumber(lastSeason.happiness.mean)} · ` +
+        `unrest shares calm ${(lastSeason.unrestTierShares.calm * 100).toFixed(0)}% / ` +
+        `discontent ${(lastSeason.unrestTierShares.discontent * 100).toFixed(0)}% / ` +
+        `unrest ${(lastSeason.unrestTierShares.unrest * 100).toFixed(0)}% / ` +
+        `revolt ${(lastSeason.unrestTierShares.revolt * 100).toFixed(0)}%`,
+    );
+  }
+
+  const buildings = Object.entries(report.buildings)
+    .sort(([, a], [, b]) => b.built - a.built)
+    .map(([buildingId, stats]) => `${buildingId} ${formatNumber(stats.perGame)}/game`)
+    .join(" · ");
+
+  if (buildings) {
+    lines.push(`Buildings: ${buildings}`);
+  }
+
+  return lines.join("\n");
 }

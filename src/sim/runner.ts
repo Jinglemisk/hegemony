@@ -25,7 +25,10 @@ export class SimDeadlockError extends Error {}
 export class SimEnumerationError extends Error {}
 
 export type SimHooks = {
-  onMove?: (player: PlayerId, move: LegalMove) => void;
+  /** Fires right after the game is built, before the first turn — the telemetry baseline point. */
+  onGameStart?: (G: HegemonyState) => void;
+  /** Fires after each applied move. NOTE: the move has already mutated G. */
+  onMove?: (G: HegemonyState, player: PlayerId, move: LegalMove) => void;
   /** Fires after each completed turn — the telemetry snapshot point. */
   onTurnEnd?: (G: HegemonyState) => void;
 };
@@ -56,7 +59,7 @@ export function playTurn(G: HegemonyState, policy: Policy, rng: SimRng, hooks: S
       );
     }
 
-    hooks.onMove?.(player, move);
+    hooks.onMove?.(G, player, move);
 
     if (G.turn !== startTurn) {
       hooks.onTurnEnd?.(G);
@@ -81,7 +84,7 @@ function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
       throw new SimEnumerationError(`forced event resolution failed: ${JSON.stringify(resolutions[0])}`);
     }
 
-    hooks.onMove?.(player, resolutions[0]);
+    hooks.onMove?.(G, player, resolutions[0]);
   }
 
   const player = G.currentPlayer;
@@ -91,7 +94,7 @@ function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
     throw new SimEnumerationError(`forced endTurn failed on turn ${G.turn} (phase ${G.phase})`);
   }
 
-  hooks.onMove?.(player, endTurn);
+  hooks.onMove?.(G, player, endTurn);
   hooks.onTurnEnd?.(G);
 }
 
@@ -137,6 +140,7 @@ export function runGame({ seed, mode, patch, opening = "random", policy, botSeed
   const rng = createSimRng(botSeed ?? deriveBotSeed(seed));
   const G = buildNewGame({ seed, mode, patch, opening, simRng: rng, onMove: hooks.onMove });
 
+  hooks.onGameStart?.(G);
   runTurns(G, policy, rng, turns, hooks, { trimLogTo });
   return G;
 }
