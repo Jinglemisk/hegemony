@@ -102,7 +102,11 @@ Works from any phase — bots will finish a manual setup too. Policies:
 
 - `random` — uniform by move type, then within type (keeps big move families
   from dominating; turns always self-terminate).
-- `greedy` — one-ply lookahead over a VP-anchored score. Deterministic.
+- `greedy` — one-ply lookahead over a VP-anchored score with a 6-turn income
+  projection. Deterministic.
+
+How the bots work, their limitations, and the path to CPU opponents with
+difficulty settings: **docs/ai.md**.
 
 Bot decisions use their own PRNG stream (persisted on the save as
 `botRngState`), never the game's deck RNG — changing policy never changes
