@@ -4,9 +4,28 @@
 
 !!! If the user has made an addition, it will be marked with *** and it must be rehabilitated into the document.
 
+
+*** Promote Slave->Freeman with Resources, Freeman->Citizen with Gold, Demote Citizen -> Freeman with Influence, Freeman->Slave with Influence
+
+*** Event tables — dice + lookup table as a reusable resolution pattern. Start with a riot table for unrest pop-loss determination (d6: 1-2 lose food, 3-4 lose a pop, 5-6 a building is disabled / pay a ransom, etc. — keep expected severity constant, vary the texture). Influence can be utilized here: spend influence to shift the roll. Possible extension: player event cards become a d20 roll on an event table (yearly/seasonal events stay as drawn cards).
+
+*** Opt-in gambles (ventures) — burn resources on dice rolls: pay a stake (gold/wood), roll a d6 for windfall / break-even / lost stake. If you can't trade resources away, you might as well stake them. Doubles as a gold sink; feel-bad-free because the risk is chosen.
+
+*** Riot-table refinements (settled in the dice spitball):
+1. Demotion during a riot is FREE — the mob forces the concession. Voluntary peacetime demotion still costs influence per the ladder above (no double-charging the influence path).
+2. Deliberate riots are a legitimate play: a player may WANT unrest so they can demote for free — citizen->freeman keeps the gold but eats less, freeman->slave trades gold for raw tile resources. Guard: expected riot cost must stay above the demotion's market value (cap at one free demotion per riot), or torching your own city becomes a free pop-respec.
+3. Riot mitigation is PRE-ROLL ONLY — insurance, not bribery. Bread, concessions, and influence spends are committed before the die is cast; no post-roll fixes. Braced-and-lucky means you wasted the stake; unbraced-and-unlucky hurts. That's the game.
+
+*** 
+
+
+
 ---
 
 ## Gameplay & mechanics
+
+- Keep the balance ledger current (docs/balance.html).
+-- Living balance document: outstanding issues (ranked P0–P2), deck/economy analysis, playtest scenarios. Update it in the same commit as any change to ruleset.ts, data.ts, or the event decks; log the change in its changelog.
 
 - Add an end condition and scoring.
 -- The game never ends — the event decks reshuffle their discard piles forever — and every player shows "VP --", so there is no reason to play well.
@@ -64,6 +83,23 @@
 -- The roster and ledger display an interim VP tally (src/game/score.ts) using the fallback formula from the scoring item above. Replace it once the real end-condition scoring lands.
 
 ---
+
+## Tooling & testing
+
+- ~~Headless sim CLI + legal-move enumeration + bots + batch telemetry.~~ DONE (feat/sim-cli — see docs/simulation.md).
+-- `npm run sim` drives the pure engine from the terminal: play move-by-move, auto-play
+   with random/greedy bots, run seeded batches with an aggregated balance report + CSV,
+   and record/replay games as a rules-regression net. `scenario()` builder
+   (src/game/testing/scenario.ts) constructs mid-game states for tests.
+
+- Grow the greedy bot into a credible baseline player.
+-- Current heuristic is one-ply VP-anchored; batch results underrate strategies with
+   delayed payoffs (buildings). A 2-ply or turn-level rollout would make balance
+   reports read closer to human play.
+
+- Wire a batch smoke run into CI.
+-- e.g. `sim batch --games 5 --turns 16` after tests, so rules regressions that only
+   surface in full games get caught.
 
 ## Tech debt & polish
 

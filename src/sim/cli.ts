@@ -33,6 +33,14 @@ import { Aggregator, snapshotsToCsv } from "./telemetry";
  * See docs/simulation.md for the full reference.
  */
 
+// Piping into head/grep closes stdout early; exit quietly instead of crashing.
+process.stdout.on("error", (error: NodeJS.ErrnoException) => {
+  if (error.code === "EPIPE") {
+    process.exit(0);
+  }
+  throw error;
+});
+
 const BOOLEAN_FLAGS = new Set(["json", "quiet", "manual-setup", "help"]);
 
 type Flags = Record<string, string | boolean>;
