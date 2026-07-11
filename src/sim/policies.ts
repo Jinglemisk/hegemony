@@ -82,19 +82,36 @@ export const greedyPolicy: Policy = {
   },
 };
 
+/** How many turns of income the greedy score projects forward. The horizon is
+ *  what lets one-ply search see delayed payoffs: a granary's +2 food/turn or a
+ *  temple's +1 happiness/turn are invisible at the moment of purchase and only
+ *  become worth their cost when multiplied out. */
+const INCOME_HORIZON = 6;
+
 /**
- * Positional score for the greedy bot. VP is the spine (it already counts
- * cities, colonies, free pops, banked material, and negative happiness);
- * the extra terms reward material income (future VP) and happiness headroom
- * so the bot doesn't strip-mine its own mood.
+ * Positional score for the greedy bot: VP evaluated on resources projected
+ * INCOME_HORIZON turns ahead, plus a happiness term.
+ *
+ * The projection runs through calculateIncome — the engine's own formula — so
+ * the score sees food-shortage pressure, the stockpile happiness bonus,
+ * building income, and seasonal modifiers without duplicating any of them.
+ * Happiness gets extra weight beyond VP's own penalty because the unrest
+ * thresholds (-5/-10) delete pops nonlinearly, which VP cannot see.
  */
 function evaluate(G: HegemonyState, playerID: PlayerId): number {
-  const standings = playerStandings(G, playerID);
-  const resources = G.players[playerID].resources;
+  const player = G.players[playerID];
   const income = calculateIncome(G, playerID);
-  const materialIncome = income.wood + income.stone + income.gold + income.food;
+  const saved = { ...player.resources };
 
-  return 10 * standings.victoryPoints + 0.5 * materialIncome + 2 * resources.happiness + resources.influence;
+  for (const resource of Object.keys(income) as (keyof typeof income)[]) {
+    player.resources[resource] += income[resource] * INCOME_HORIZON;
+  }
+
+  const vp = playerStandings(G, playerID).victoryPoints;
+  const projectedHappiness = player.resources.happiness;
+  player.resources = saved;
+
+  return 10 * vp + 2 * projectedHappiness + player.resources.influence;
 }
 
 export const POLICIES: Record<PolicyId, Policy> = {

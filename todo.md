@@ -50,6 +50,13 @@
 -- The mode seam already works (standard / fast-start / deathmatch), selected in code by GAME_CONFIG.mode — a mode is just a ruleset patch.
 -- Add more modes as data; an in-game mode picker is lobby scope (deferred).
 
+- Temple stacking looks dominant (sim finding, 2026-07-11).
+-- 6 stone for +1 happiness/turn with no diminishing returns: projection bots fill every
+   slot with temples (11/game) and happiness runs away (+19 by season 7). Consider a
+   per-settlement cap, scaling cost, or diminishing returns — dovetails with the terrain
+   rework's stone-as-civic pricing. Reproduce:
+   `npm run sim -- batch --games 10 --turns 24 --policy greedy --seed 100`.
+
 - Add a second tier of buildings.
 -- Only four basic buildings exist; economic paths barely differ.
 -- Candidates once scoring/happiness matter: Aqueduct (+4 capacity), Forum (+2 influence), Barracks (military placeholder / +1 score), Warehouse (+1 tile material income).
@@ -59,8 +66,13 @@
 -- Players vote on resolutions that affect some or all of them (rivalry mechanics).
 -- This is where players will spend Influence primarily
 
+- Terrain & resource economy rework. (planned — see docs/feat/terrain-economy.md)
+-- Settled 2026-07-11: wood/food/stone are first-order (from tiles); gold/influence are second-order (from pops/trade/buildings) — gold tiles removed, hills become the slot-rich "acropolis" terrain (token stone/food yields).
+-- Also pinned there: the building pricing grammar (wood=economic, stone=civic, gold=commerce, food=pops-only), the landmark-tile principle + constrained shuffle, trade-before-stone-sinks sequencing, and luxury goods as the capped, diminishing, tradeable happiness tier.
+-- Ship the hill rework together with the second building tier (slots must have something to bind against).
+
 - Luxury goods and trade.
--- Deferred design; see docs/feat/luxury-goods.md.
+-- Deferred design; see docs/feat/luxury-goods.md — amended by docs/feat/terrain-economy.md (distinct goods, diminishing duplicates, ~3 active per player cap).
 
 - National ideas / player identities.
 -- Per-player modifiers so the four seats play asymmetrically.
@@ -92,10 +104,13 @@
    and record/replay games as a rules-regression net. `scenario()` builder
    (src/game/testing/scenario.ts) constructs mid-game states for tests.
 
-- Grow the greedy bot into a credible baseline player.
--- Current heuristic is one-ply VP-anchored; batch results underrate strategies with
-   delayed payoffs (buildings). A 2-ply or turn-level rollout would make balance
-   reports read closer to human play.
+- Grow the greedy bot into a credible baseline player / CPU opponents. (parked — see docs/ai.md)
+-- ~~One-ply score underrated delayed payoffs (zero granaries/temples in 10 games → death spiral).~~
+   DONE: the score now projects income 6 turns ahead through calculateIncome; same seeds went
+   from happiness -5.4 / half the seats in unrest to +19 / 80% calm.
+-- Remaining (deliberately not now): multi-move sequencing (2-ply / in-turn beam), spatial
+   strategy, opponent modeling, difficulty tiers + personalities. docs/ai.md has the
+   architecture, the determinism contract, and the ladder to CPU players.
 
 - Wire a batch smoke run into CI.
 -- e.g. `sim batch --games 5 --turns 16` after tests, so rules regressions that only
