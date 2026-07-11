@@ -4,6 +4,9 @@ dist/
 *.tsbuildinfo
 .DS_Store
 
+# Headless sim save files / reports
+.sim/
+
 # Playwright / debug scratch output
 .playwright-mcp/
 .playwright-cli/
