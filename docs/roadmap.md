@@ -5,7 +5,7 @@ sequence (what happens when, and why). Questions, answers, and execution state l
 the companion workbench: **`docs/roadmap-appendix.md`** — that is where this plan gets
 interrogated, refined, and driven.
 
-Last updated: 2026-07-11.
+Last updated: 2026-07-12.
 
 ## First principles (re-derive the order from these when things change)
 
@@ -28,11 +28,12 @@ Last updated: 2026-07-11.
 ## Phases
 
 Each phase ends in a playable, sim-verified milestone.
-**Status:** Phase 0 built on `feat/phase0-victory-race`; setup superseded once by Q12
-(metropolis + coastal founding colony + leapfrog). Exit gate run 2026-07-12: every game
-ends ✓; race wins land at mean year 4.8 (on target) ✓; minimums confirmed at
-3/16/8/80/+10; seat fairness carries one watch item (a +2.8σ seat-3 lean under greedy
-bots — see appendix D1). Remaining before Phase 1: user playtest sign-off.
+**Status:** Phase 0 **DONE — merged to main via PR #20 (2026-07-12)**. Exit gate: every
+game ends ✓; race wins land at mean year 4.8 (on target) ✓; minimums confirmed at
+3/16/8/80/+10; one watch item (+2.8σ seat-3 lean under greedy bots — appendix decision
+log). Phase 1 executing on `feat/phase1-currencies`: event-tables feat plan first, then
+bank exchange (D6, priority), then riot/civic-calm/ladder/ventures. Open questions
+Q13b–Q16 in the appendix.
 
 | Phase | Theme | Contents | Gate to exit |
 | --- | --- | --- | --- |

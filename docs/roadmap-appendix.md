@@ -15,94 +15,22 @@ starts; answers get folded into feat plans and code; the decision log keeps the 
 4. **New questions get filed** as the next phase approaches.
 5. Skim the **Decision log** and **Execution log** to catch up after time away.
 
----
-
-## Phase 0 — "Make it a game" · final specs
-
-### D1 · Victory race — `DONE (feat/phase0-victory-race)`
-
-- **5 public victory cards**, visible from game start. Each reads **"Most X, minimum Y"**
-  — held only by the *sole* leader in X who also meets the minimum. Ties, or leading
-  below the minimum, leave the card unheld (so a turn-one pop lead holds nothing).
-- **Win:** hold any 3 cards **at the start of your own turn** (not mid-turn — the table
-  sees you at 3 and gets one round to break a card off you).
-- **Draft cards** (minimums are tuning targets for a planned sim campaign):
-
-  | Card | Condition | Minimum |
-  | --- | --- | ---: |
-  | Polis Builder | most cities | 3 |
-  | Demos | most total pops | 16 |
-  | Civic Elite | most citizens | 8 |
-  | Treasurer | largest banked material stockpile | 80 |
-  | Beloved of the People | highest happiness | +10 |
-
-- **Minimums rule (2026-07-12, user):** no card may be holdable at game start or on
-  the first turn — every minimum must exceed anything a legal setup plus one lucky
-  opening turn can produce (start: 2 cities, 6 pops, ≤6 citizens, 52 banked, 0
-  happiness). Raised citizens 6→8, stockpile 40→80, happiness +5→+10 accordingly;
-  the tuning campaign refines from here.
-- **Minimum-tuning campaign (2026-07-12, Phase 0 exit gate, on the metropolis setup):**
-  three configs × 30 games + a 60-game confirmation (greedy, seeds 9000/12000).
-  Current minimums (3/16/8/80/+10): races close in 33–45% of bot games, and when they
-  close they end at **mean year 4.8 — exactly the D1 target** (median s18–22). Lower
-  (3/14/7/65/+8): 40% close, y4.6 — no real gain. Higher (4/20/10/100/+14): 13% close —
-  everything hits the ceiling. **Verdict: keep current minimums.** Greedy bots don't
-  pursue card combinations deliberately, so the bot close-rate understates humans;
-  tuning minimums down to inflate it would overshoot for real play.
-  **Watch item:** seat 3 won 34/90 games (38%, +2.8σ) at current minimums across two
-  seed bases — possibly the snake turnaround (last metropolis pick + first founding-
-  colony pick with full information). Flipped to a trough in one config, so not yet
-  conclusive; re-examine with a stronger bot or human playtests before calling it.
-
-- **Failsafe ceiling:** the seasonal deck stops reshuffling (29 cards ≈ 7 years). If it
-  empties before anyone wins, most cards held wins; tiebreak highest happiness, then
-  most pops. Expected real length ~year 4–5, set by the minimums, not the deck.
-- Later spice (not v1): a hidden "omen" condition revealed via the event-table system.
-- Replaces the provisional VP tally everywhere (roster, ledger, score.ts).
-
-### D2 · Phase order — `LOCKED`
-
-Economy (Phase 2) before politics (Phase 3). The Resolutions/Politicians design session
-happens during Phase 2 so Phase 3 starts specced.
-
-### D3 · Placement & setup pack — `DONE (feat/phase0-victory-race)`
-
-- **Two-city setup** (user call, and it pairs naturally with contiguity): each player
-  places their **capital**, then a **second city** — snake order (capitals 0→3, second
-  cities 3→0). Both on empty tiles, non-adjacent to any city. **No setup colony** — every
-  colony in play was founded by choice. Starting pops: 3 per city (6 total; tune later).
-- **Colony contiguity:** gameplay colonies must be within radius 1 of *any* owned
-  settlement — colonies chain, so expansion snakes from either city.
-- **No capital protection ring** (PDF overruled): contiguity kills the doorstep rush on
-  its own. Delete the unenforced ring claim from `rules.md` and the spec. Soft
-  border-tension levers can come later via politics if needed.
-- **First-player rotation:** the season's opening player advances each new year.
-- **Board setting:** "Classic" (current fixed layout) vs "Shuffled" (seeded); landmark
-  constraints join the Shuffled option with the Phase 2 terrain rework.
-- **Capital privilege ban (2026-07-12, user):** capitals are flattened *by design* —
-  a mechanically privileged capital multiplies the value of its tile (the PDF's
-  double-yield capital on a food-8 plains = 16 food/turn = the placement lottery
-  decides the game). If "capital" ever returns as a rules word (politics targets,
-  national ideas), it must be **additive or liability-shaped** — +1 slot, +1 vote,
-  blockade/quarantine target — **never a tile-yield multiplier**. The word survives
-  only as flavor for the first city.
-
-### D4 · Food-stockpile happiness — `DONE (feat/phase0-victory-race)`
-
-Stockpile-based, capped at +2: `min(floor(food/5), 2)`.
-
-### D5 · Dev preload flag — `DONE (feat/phase0-victory-race)`
-
-Default off; kept as a dev convenience (env flag or `dev` mode entry).
-**Extended 2026-07-12 (user request):** the dev default is now an **auto-played opening**
-that rotates through 10 premade seeds, one per reload (localStorage cursor) — testing
-never starts at "place your capital". `?setup=manual` restores hand placement,
-`?seed=N` pins a seed, `?dev=preload` replays the fixed scripted opening. The active
-seed shows in the deck tray ("Classic board · #77").
+> **Phase 0 is DONE — merged to main via PR #20 (2026-07-12).** Its specs (D1–D5,
+> Q12, Q13a) are pruned from this file; the decision log below keeps the trail, and
+> the shipped rules live in `docs/v0.1-rules-spec.md` / `rules.md`. Standing design
+> rules that survive Phase 0: **victory minimums must beat the opening** (no card
+> holdable at game start — enforced by a regression test) and the **capital-privilege
+> ban** (capital may only ever be additive/liability-shaped, never a tile-yield
+> multiplier — detailed in `docs/balance.html`).
 
 ---
 
-## Phase 1 — "Every currency gets a job"
+## Phase 1 — "Every currency gets a job" · `EXECUTING (feat/phase1-currencies)`
+
+Build order (locked): **`docs/feat/event-tables.md` first** (the reusable dice-table
+component is a hard engineering requirement), then **bank exchange (D6)** — priority
+raised by the wood-bottleneck sim finding — then riot table (D9), civic calm (D7),
+promote/demote ladder (D8), ventures (D10).
 
 ### D6 · Bank exchange — `LOCKED (rates provisional)`
 
@@ -118,6 +46,9 @@ seed shows in the deck tray ("Classic board · #77").
   sell side).
 - Watch flags for the ledger at ship time: a freeman's +2 gold/turn = 1 flexible
   material/turn (vs slave); gold→food means the rich never starve.
+- **Treasurer interaction (checked 2026-07-12):** the stockpile card counts
+  wood+stone+gold+food, and both trade directions destroy net value (3→1, 2→1) — so
+  every bank trade *shrinks* your Treasurer score. No exploit; a pleasant tension.
 
 ### D7 · Civic calm actions — `LOCKED`
 
@@ -155,6 +86,10 @@ seam (seeded RNG), one shared UI modal rendering rows + roll + insurance slots. 
 ventures, and future omen/yearly tables are all instances. Gets `docs/feat/event-tables.md`
 at Phase 1 start.
 
+**Replaces** the current random pop removal in `src/game/unrest.ts` (thresholds −5/−10,
+flat 2/4-pop losses, severe rebound −4) — the thresholds and rebound stay; the flat
+losses become the table.
+
 ### D10 · Ventures — `LOCKED`
 
 "Fund an Expedition": stake **5 gold** or **8 wood**, once per turn. d6: 1–2 stake lost ·
@@ -170,78 +105,80 @@ spitball tests, planned campaigns (e.g. D1 minimum tuning), and phase-exit check
 
 ## Open questions
 
-### Q12 · The metropolis fork — `DONE (feat/phase0-victory-race, 2026-07-12)`
+### Q13b · Colony repricing (wood/gold mix) — `OPEN (awaiting your playtest read)`
 
-**Context.** "Metropolis" as flavor on one of two identical cities feels hollow; a real
-metropolis+colony setup felt like it conflicted with colony contiguity (clump fear).
+**Context.** The contiguity campaign showed wood, not geometry, is the expansion
+bottleneck. Simmed (2026-07-12): foundColony at **14 wood + 6 gold + 2 food** vs
+baseline 20w+2f, 30 games, same seeds — mid-game expansion **+32%** (s17: 6.37 vs 4.81
+tiles/player), final +0.85 paired. Gold's dead pile becomes expansion fuel — a real
+gold sink AND wood relief. Knock-on: **revolt share tripled** (5%→18%) — faster
+expansion outruns the food base; wants Phase 1's civic-calm/riot tools alongside it.
+Caution: wood-as-bottleneck is also the designed tempo brake — 70% map utilization by
+game end is healthy. Fix the *feel* in playtest, not every number.
 
-**RESOLVED — user picked option 1 (Claude's rec), built same day:** metropolis
-(4 pops, first placement, special by structure — no bonus rules, capital-privilege ban
-intact) + founding colony (2 pops) on **any coastal tile** or beside the metropolis;
-snake order kept. The coastal-leapfrog rule (Q13a) shipped with it: holding any coastal
-settlement lets you found colonies on any coastal tile in gameplay. UI: "metropolis" /
-"founding colony" copy, legal-tile glow during the colony round. First greedy sim on
-the new setup ended at season 20 by an actual race win — the leaner start races harder.
-
-**Options that were on the table:**
-1. **Metropolis + founding colony (Claude's rec):** one city + one colony placed
-   *anywhere* (setup exception, historically the apoikia pattern — Corinth→Syracuse);
-   contiguity applies from turn 1 on. Metropolis is special by *structure* (only city
-   at start), no bonus rules — the capital-privilege ban is untouched. Rebalance
-   starting pops (e.g. metropolis 4 + colony 2). Restores the first colony→city
-   upgrade as an early milestone.
-2. **Two cities, designate one** as metropolis (flavor now, politics address later).
-3. **Two cities, drop the word** entirely.
-
-**Sim campaign (2026-07-12, 30 games × ~30 seasons per variant, greedy, seeds 9000+):**
-
-| Variant | Boxed-in rate | Avg open frontier | Final tiles/player |
-| --- | ---: | ---: | ---: |
-| Two-city + contiguity (current) | **0.0%** | ~9 all game | 6.35 |
-| Two-city, contiguity OFF | 0.0% | 28→19 | 6.50 (+0.15 paired) |
-| Metropolis + *contiguous* colony (clump worst case) | **0.0%** | 6.4–7.8 | 7.12 |
-
-**Findings:** contiguity never boxes anyone in — not one player-turn in 90 games, even
-in the clump-start worst case. Expansion is wood-limited, not geometry-limited; deleting
-the rule changes final territory by +0.15 tiles. The fork can be decided purely on
-identity/economy/feel. Caveats: greedy bots don't play deliberate denial (humans might
-wall a rival, though 6–9-wide frontiers make that expensive), and the clump variant
-showed a wider seat-win spread (10–37%, n=30 — retest whichever variant wins).
+**Recommendation:** hold at 20w+2f until you've playtested merged Phase 0 AND the D6
+bank has shipped (the bank alone already converts dead gold into wood at 2g/wood —
+that may be all the relief expansion needs). Re-run the expansion campaign after D6;
+reprice only if the sim still shows the wood wall *and* your playtest feels cramped.
+Same trigger re-opens the Phase 2 gold-tile-removal check (noted in
+`feat/terrain-economy.md`).
 
 **Your answer:**
 
-### Q13 · Coastal leapfrog + the wood/gold two-birds — `13a LOCKED (build later) · 13b OPEN`
+### Q14 · Bank exchange — scope details — `OPEN`
 
-**Context (user, 2026-07-12).** (a) Allow founding colonies on unconnected coastline
-tiles once you hold at least one coastal settlement; (b) the contiguity campaign showed
-wood is the real expansion bottleneck — can fixing it also fix the useless gold hills?
+**Context.** D6 locks the model and rates; three small holes to close before building.
 
-**Coastal leapfrog — LOCKED 2026-07-12 (user): adopted in principle, implement with
-the Q12 setup resolution or at latest with Phase 4 ports.** Implementable now: the island's 18 rim tiles ARE the coastline.
-Rule sketch: *own any settlement on a coastal tile → you may found colonies on any
-coastal tile; interior colonies still chain.* Preserves contiguity's purpose (the sea is
-"connected" — sailing, not teleporting), creates a mid-game "reach the sea" unlock arc,
-gives the rim strategic identity before Phase 4 ports (which later upgrade it), and
-dovetails with Q12: the metropolis's founding colony could be "any coastal tile" —
-historically exact (apoikiai were coastal foundations). Tuning knob: sea-founded
-colonies +2 food (voyage provisions).
+1. **What counts as a "material"?** Wood, stone, and **food**, both directions?
+   Gold→food is the "rich never starve" flag — already accepted as intended (it's a
+   gold sink and a starvation escape hatch priced at 2g/food). Influence and happiness
+   stay off the bank entirely (they're civic, not commodities — D7 is where influence
+   buys calm).
+   **Rec:** yes — wood/stone/food, both directions, one uniform rate. Uniform keeps
+   the corridor readable; ports and the Phase 2 terrain rework can differentiate later.
+2. **Throughput** — unlimited exchanges per turn, or a cap?
+   **Rec:** unlimited. The 6:1 round-trip spread is already the tax, and every trade
+   shrinks your Treasurer stockpile — friction is built in. A cap is bookkeeping
+   without a proven problem; watch sims for degenerate turns instead.
+3. **UI home?**
+   **Rec:** a "Market" verb in the Actions tab opening a compact exchange row (pick
+   material, sell 3→1g / buy 2g→1, repeatable) — flat, no modal ceremony, rates always
+   visible so the corridor teaches itself.
 
-**Two birds (wood bottleneck × dead gold).** Three layers, compatible:
-1. **Already locked:** the D6 gold-mediated market makes gold hills wood-convertible
-   (a 4-gold hill ≈ 2 wood/turn at the 2g buy rate). This finding raises D6's priority —
-   ship the market early in Phase 1.
-2. **Mixed colony pricing (simmed 2026-07-12):** foundColony at **14 wood + 6 gold +
-   2 food** vs baseline 20w+2f, 30 games, same seeds: mid-game expansion +32%
-   (s17: 6.37 vs 4.81 tiles/player), final +0.85 paired. Gold's dead pile becomes
-   expansion fuel — a real gold sink AND wood relief. Knock-on: revolt share tripled
-   (5%→18%) — faster expansion outruns the food base; wants Phase 1's civic-calm/riot
-   tools alongside it.
-3. **Caution:** wood-as-bottleneck is also the designed tempo brake — 70% map
-   utilization by game end is healthy. Fix the *feel* in playtest, not every number.
+**Your answer:**
 
-**Terrain-rework interaction:** once the market exists, tile gold = flexible material
-income (an AoE gold mine) — re-run this campaign after D6 ships before executing the
-Phase 2 gold-tile removal (note added to feat/terrain-economy.md).
+### Q15 · Riot flow — digital-table details — `OPEN`
+
+**Context.** D9 locks the table, insurance menu, and tiers. The engine currently fires
+unrest at start of turn *before* income (`applyUnrestUpkeep`); the riot roll replaces
+the flat pop loss in that same slot. Remaining calls:
+
+1. **Insurance stacking** — spec says "max +2 total", each option gives +1.
+   **Rec:** each option purchasable once per riot, any two of the three (dole +
+   concession + patronage capped at +2). The concession's free demote uses the D8
+   riot-demote rule.
+2. **Who picks the lost pops?** Roll outcomes say "lose N pops".
+   **Rec:** random via the existing seeded `removeRandomPops` — the mob chooses, not
+   the player; the player's lever is insurance and the free demote. Keeps riots scary.
+3. **Roll 2's "building shuttered next turn"** — which building?
+   **Rec:** random owned building (seeded); shuttered = yields nothing on your next
+   turn. If the player owns no buildings, the roll downgrades to roll 3 (lose 1 pop
+   only).
+4. **Mild-tier rebound** — currently only severe unrest rebounds happiness (to −4);
+   the mild tier leaves happiness where it sits.
+   **Rec:** keep exactly that. A mild riot that doesn't move happiness means it can
+   re-fire next turn — that's the pressure that makes D7's civic calm worth paying for.
+
+**Your answer:**
+
+### Q16 · Ventures — availability — `OPEN`
+
+**Context.** D10 locks stake/payout. One call: gated or open?
+
+**Rec:** available to everyone from turn 1, no building prerequisite — the catch-up
+casino only works if the player who's behind can always reach it. A Phase 4 port can
+later improve the odds (tunable), which also gives the coast one more identity hook.
+Payout is always gold regardless of which stake (5g or 8w) was posted.
 
 **Your answer:**
 
@@ -252,22 +189,28 @@ Phase 2 gold-tile removal (note added to feat/terrain-economy.md).
 | # | Question | Decision | Date | Folded into |
 | --- | --- | --- | --- | --- |
 | D1 | Victory model | Race: 5 public "Most X, min Y" cards, sole leader holds, 3 at own turn start → win; seasonal deck = failsafe ceiling (~7 yrs); interim tally skipped | 2026-07-11 | roadmap.md Phase 0; todo.md |
+| D1b | Victory minimums | Must beat the opening (no card holdable at game start / turn 1): 3 cities / 16 pops / 8 citizens / 80 stockpile / +10 happiness; confirmed by tuning campaign (race wins ~year 4.8; higher minimums kill the race) | 2026-07-12 | ruleset.ts; victory.test.ts regression |
 | D2 | Phase order | Economy before politics; Politicians design session during Phase 2 | 2026-07-11 | roadmap.md |
-| D3 | Placement & setup | Two-city setup (snake, no setup colony, 3+3 pops); colony contiguity radius 1 (colonies chain); **no** capital ring — delete doc claim; yearly first-player rotation; Classic/Shuffled board setting | 2026-07-11 | roadmap.md Phase 0; rules.md/spec cleanup |
+| D3 | Placement & setup | Two-city setup (snake, no setup colony); colony contiguity radius 1 (colonies chain); **no** capital ring; yearly first-player rotation; Classic/Shuffled board setting | 2026-07-11 | roadmap.md Phase 0; rules.md/spec |
+| D3b | Capital privilege ban | Capitals flattened by design — if "capital" returns as a rules word it must be additive/liability-shaped (+1 slot, +1 vote, blockade target), **never** a tile-yield multiplier | 2026-07-12 | balance.html; design rule |
 | D4 | Stockpile happiness | Stockpile-based, capped +2 | 2026-07-11 | Phase 0 scope; ledger issue 4 |
-| D5 | Preload flag | Default off; dev convenience | 2026-07-11 | Phase 0 scope |
+| D5 | Preload flag | Default off; dev = auto-played openings rotating 10 seeds/reload (`?setup=manual`, `?seed=N`, `?board=`, `?dev=preload`) | 2026-07-11 | Phase 0 scope |
 | D6 | Bank exchange | Gold-mediated static market (corridor brackets player pricing); rates PROVISIONAL (3:1 sell / 2g buy) as ruleset tunables; drift deferred to Phase 4 review | 2026-07-11 | Phase 1 scope |
 | D7 | Civic calm | 4 inf → +3 hap or 6 gold → +3 hap; shared once/turn limit | 2026-07-11 | Phase 1 scope |
 | D8 | Promote/demote | s→f 4f · f→c 4g · c→f 2inf · f→s 3inf −1hap; one move/turn; free demote in riots | 2026-07-11 | Phase 1 scope |
 | D9 | Riot table | As specced; event tables = reusable data-driven component | 2026-07-11 | Phase 1 scope; feat/event-tables.md |
 | D10 | Ventures | As specced (~−7% EV catch-up casino) | 2026-07-11 | Phase 1 scope |
 | D11 | Sim usage | No per-PR gate; ad-hoc + campaigns + phase exits | 2026-07-11 | roadmap.md principle 6 |
-| Q12 | Metropolis fork | Metropolis (4 pops) + founding colony (2 pops, any coastal tile or adjacent); snake kept; capital-privilege ban intact | 2026-07-12 | engine + rules.md; Q13a shipped alongside |
+| Q12 | Metropolis fork | Metropolis (4 pops) + founding colony (2 pops, any coastal tile or adjacent); snake kept; capital-privilege ban intact; contiguity campaign: geometry never boxes anyone in (0% / 90 games) | 2026-07-12 | engine + rules.md; Q13a shipped alongside |
 | Q13a | Coastal leapfrog | Hold any coastal settlement → found on any coastal tile; interior chains by contiguity | 2026-07-12 | engine + rules.md |
+
+**Standing watch items:** seat-3 win lean (+2.8σ under greedy bots — possible snake
+turnaround edge; recheck with stronger bots/humans) · re-run the expansion campaign
+after D6 ships, before Phase 2's gold-tile removal · Phase 4 revisits bank-rate drift.
 
 ## Execution log
 
 | Date | Branch / commit | What shipped | Phase |
 | --- | --- | --- | --- |
-| 2026-07-12 | `feat/phase0-victory-race` | **Q12 + Q13a + exit gate.** Setup reworked to metropolis (4 pops) + founding colony (2 pops, any coastal tile); coastal-leapfrog founding shipped; victory minimums raised to beat the opening (3/16/8/80/+10) and confirmed by the tuning campaign (race wins land at mean year 4.8; higher minimums kill the race). Contiguity A/B campaign: geometry never boxes anyone in (0% across 90 games); frontierTiles telemetry + placement knobs added. Dev QoL: auto-played openings rotating through 10 seeds per reload. Watch item: +2.8σ seat-3 win lean under greedy bots. |
-| 2026-07-12 | `feat/phase0-victory-race` | **Phase 0 complete (engine + UI + tests).** Victory race (D1: 5 public cards, minimums as ruleset tunables, turn-start win check, finite seasonal deck + exhaustion tally); two-city snake setup, colony contiguity, no capital ring (D3); yearly opener rotation (D3d); Classic/Shuffled boards + ?board/?seed/?dev URL params (D3e/D5); stockpile happiness cap +2 (D4). UI: ledger Victory tab, roster card badges, seasons-left + opener in the top bar, board chip in the deck tray, game-over screen. 108 tests; sim verified: full greedy game ends at season 30 (deck ceiling); 6-game batch win rates 33/33/17/17. **Owed:** victory-minimum tuning sim campaign; playtest the exit gate. |
+| 2026-07-12 | **PR #20 → main** | **Phase 0 merged.** Victory race (5 public cards, tunable minimums, turn-start win check, finite seasonal deck + exhaustion tally); metropolis (4 pops) + coastal founding colony (2 pops) snake setup; colony contiguity + coastal leapfrog; yearly opener rotation; Classic/Shuffled boards + URL params; stockpile-happiness cap +2; full UI (Victory tab, roster badges, seasons-left, board chip, game-over screen); dev auto-openings rotating 10 seeds; sim-CLI telemetry (victoryCards, frontierTiles). 109 tests. Campaigns: contiguity A/B (geometry never binds), minimum tuning (race wins land ~year 4.8), mixed colony pricing (Q13b data). | 0 |
+| 2026-07-12 | `feat/phase1-currencies` | Branch opened; appendix pruned to Phase 1; Q14–Q16 filed. | 1 |
