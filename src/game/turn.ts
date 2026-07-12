@@ -77,7 +77,8 @@ export function advanceSetupTurn(G: HegemonyState) {
 }
 
 /** Start-of-turn automation for the current gameplay player: reveal a seasonal event,
- *  check the victory race, then upkeep + income. */
+ *  check the victory race, then upkeep + income. When the upkeep starts a riot the
+ *  income is DEFERRED — resolveRiot collects it once the table has spoken. */
 export function beginGameplayTurn(G: HegemonyState) {
   if (G.phase !== "gameplay") {
     return;
@@ -94,7 +95,10 @@ export function beginGameplayTurn(G: HegemonyState) {
   }
 
   applyUnrestUpkeep(G, G.currentPlayer);
-  collectIncome(G, G.currentPlayer, "automatic");
+
+  if (!G.pendingRiot) {
+    collectIncome(G, G.currentPlayer, "automatic");
+  }
 }
 
 /**
@@ -103,7 +107,7 @@ export function beginGameplayTurn(G: HegemonyState) {
  * arrivals, the victory-race check, unrest upkeep, income.
  */
 export function endTurn(G: HegemonyState): MoveResult {
-  if (G.phase !== "gameplay" || G.pendingPlayerEvent) {
+  if (G.phase !== "gameplay" || G.pendingPlayerEvent || G.pendingRiot) {
     return { ok: false, reasons: [] };
   }
 
@@ -136,7 +140,10 @@ export function endTurn(G: HegemonyState): MoveResult {
   }
 
   applyUnrestUpkeep(G, next);
-  collectIncome(G, next, "automatic");
+
+  if (!G.pendingRiot) {
+    collectIncome(G, next, "automatic");
+  }
 
   return { ok: true };
 }

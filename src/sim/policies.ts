@@ -45,8 +45,47 @@ export const greedyPolicy: Policy = {
   name: "greedy",
   choose(G, moves) {
     const playerID = G.currentPlayer;
+
+    // A pending riot is a forced menu with a stochastic resolution — one-ply
+    // lookahead would "peek" the seeded die through the clone, so play it by rule
+    // instead: declare the resource-priced insurances (cheap certainty), skip the
+    // concession (bots shouldn't reason about which pop to sacrifice), then roll.
+    const resolveRiot = moves.find((move) => move.type === "resolveRiot");
+    if (resolveRiot) {
+      const insurance = moves.find(
+        (move) => move.type === "buyRiotInsurance" && move.optionId !== "concession"
+      );
+      return insurance ?? resolveRiot;
+    }
+
+    // Ventures are stochastic too — the same peek problem — so gamble by rule: a
+    // gold-rich bot funds one expedition a turn (season-cycled so sims exercise all
+    // three tables), and never lets the lookahead see the roll.
+    const goldVentures = moves.filter(
+      (move): move is Extract<LegalMove, { type: "fundExpedition" }> =>
+        move.type === "fundExpedition" && move.stake === "gold"
+    );
+    if (goldVentures.length > 0 && G.players[playerID].resources.gold >= 15) {
+      return goldVentures[G.season % goldVentures.length];
+    }
+
+    // Bank chains (sell surplus → buy the missing colony wood) are invisible to
+    // one-ply search, so trade by rule: hoarded food beyond the happiness cap gets
+    // sold; a wood-starved, gold-rich empire buys wood.
+    const foodSell = moves.find((move) => move.type === "bankSell" && move.material === "food");
+    if (foodSell && G.players[playerID].resources.food > 60) {
+      return foodSell;
+    }
+
+    const woodBuy = moves.find((move) => move.type === "bankBuy" && move.material === "wood");
+    if (woodBuy && G.players[playerID].resources.wood < 20 && G.players[playerID].resources.gold >= 20) {
+      return woodBuy;
+    }
+
     const endTurn = moves.find((move) => move.type === "endTurn");
-    const candidates = moves.filter((move) => move.type !== "endTurn");
+    const candidates = moves.filter(
+      (move) => move.type !== "endTurn" && move.type !== "fundExpedition"
+    );
 
     if (candidates.length === 0 && endTurn) {
       return endTurn;

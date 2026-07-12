@@ -112,7 +112,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
     `  victory cards ${formatNumber(standings.victoryCards)}/${G.ruleset.victory.cardsToWin} · ${standings.cities} cities, ${standings.colonies} colonies · ` +
       `pops ${projection.population.pops}/${projection.population.capacity}` +
       (projection.population.inTransit > 0 ? ` (+${projection.population.inTransit} in transit)` : "") +
-      ` · ${unrest.tier}${unrest.popsAtRisk > 0 ? ` (${unrest.popsAtRisk} pops at risk)` : ""}`,
+      ` · ${unrest.tier}${unrest.riotAtRisk ? " (riot table at next upkeep)" : ""}`,
     `  resources: ${Object.entries(player.resources)
       .map(([resource, amount]) => `${resource} ${formatNumber(amount)}`)
       .join(" · ")}`,

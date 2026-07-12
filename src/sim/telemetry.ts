@@ -29,7 +29,8 @@ export type PlayerSnapshot = {
   resources: Resources;
   income: Resources;
   unrestTier: UnrestTier;
-  popsAtRisk: number;
+  /** 1 when the current happiness puts the player on the riot table next upkeep. */
+  riotAtRisk: number;
   deficitTurns: number;
   popsLostToUnrest: number;
   popsGainedFromEvents: number;
@@ -66,7 +67,7 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       resources: { ...player.resources },
       income: calculateIncome(G, playerID),
       unrestTier: unrest.tier,
-      popsAtRisk: unrest.popsAtRisk,
+      riotAtRisk: unrest.riotAtRisk ? 1 : 0,
       deficitTurns: player.consecutiveFoodDeficitTurns,
       popsLostToUnrest: player.popsLostToUnrest,
       popsGainedFromEvents: player.popsGainedFromEvents,
@@ -354,7 +355,7 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
     "incomeInfluence",
     "incomeHappiness",
     "unrestTier",
-    "popsAtRisk",
+    "riotAtRisk",
     "deficitTurns",
     "popsLostToUnrest",
     "popsGainedFromEvents",
@@ -390,7 +391,7 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
         player.income.influence,
         player.income.happiness,
         player.unrestTier,
-        player.popsAtRisk,
+        player.riotAtRisk,
         player.deficitTurns,
         player.popsLostToUnrest,
         player.popsGainedFromEvents,

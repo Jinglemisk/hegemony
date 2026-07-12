@@ -11,6 +11,9 @@ const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", t
 
 function clearPending(G: HegemonyState) {
   G.pendingPlayerEvent = null;
+  // These turn-structure tests cycle whole years; a bot-less player can riot along
+  // the way (D9) — dismiss it, the riot flow has its own suite (riot.test.ts).
+  G.pendingRiot = null;
 }
 
 describe("victory card standings", () => {
