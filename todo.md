@@ -94,6 +94,22 @@
 
 ## Presentation & UI
 
+- *** UI refactor: one ledger, vertical tabs, relocated action bar. (user, 2026-07-12)
+-- The right sidebar's Actions panel and the left Ledger should collapse into ONE ledger; its tabs become
+   vertical buttons (the 5-up horizontal row is already cramped and will not survive more tabs).
+-- The everyday action verbs (Grow / Move / Found / Upgrade / Calm / Venture / End Turn) move to a dedicated
+   home — a bottom bar, or a strip under the top bar — so the board gains width and the verbs stop living
+   inside a side panel.
+-- Scope this WITH the game-reference compendium below (same navigation rethink); flat AAA look throughout.
+
+- *** Game-reference compendium behind the season icon. (user, 2026-07-12)
+-- Pressing the seasonal icon button (top bar) opens a modal of categorized game info players can study to
+   plan ahead: the victory-card roster, every event table (riot + the three expeditions — read-only render,
+   no roll button; the shared EventTableModal component already carries this), bank rates, deck contents /
+   season weighting, costs cheat-sheet.
+-- Everything rollable or drawable should be *viewable* before it happens — tables are public information,
+   that is the point of "decks for economy, dice for drama".
+
 - Finish the interface overhaul (started from the UI audit).
 -- DONE so far: the top bar is re-gridded — a central season dial with hand-painted Greek season art (tree / sun / bare tree / snowflake), Year + acting player either side, and a uniform four-seat roster showing each player's city / colony / pop counts and a provisional VP. Events moved back to the top-left as cards with an inline-icon effect summary + full-text hover tooltip. Ledger gained an empire summary (icon + count) and always shows every resource icon (dimmed dash when zero). Decks collapsed to a slim tray (dead "Resolutions" placeholder removed). A universal inline resource/pop/building icon system (AnnotatedText) now runs across cards, modals, and the chronicle.
 -- ~~Also done: action verbs are now 2x2 buttons showing each action's cost (greyed when unavailable/unaffordable); the chronicle is folded under one sticky heading per season; the heavy Greek-key panel frame is demoted to a hairline; the Buildings tab gained the inline-icon system (the Pops tab was already aligned).~~
