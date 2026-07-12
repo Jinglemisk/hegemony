@@ -45,8 +45,7 @@ function EmpireIntelPanelComponent({
   onBuildBuildingRequest,
   onBankSell,
   onBankBuy,
-  onPromotePop,
-  onDemotePop
+  onLadderRequest
 }: {
   G: HegemonyState;
   playerID: PlayerId;
@@ -57,8 +56,7 @@ function EmpireIntelPanelComponent({
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
-  onPromotePop: (tileId: string, from: PopType) => void;
-  onDemotePop: (tileId: string, from: PopType) => void;
+  onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
 }) {
   const holdings = useMemo(() => getOwnedHoldings(G, playerID), [G, playerID]);
   const cityCount = holdings.filter(({ settlement }) => settlement.kind !== "colony").length;
@@ -176,8 +174,7 @@ function EmpireIntelPanelComponent({
             playerID={playerID}
             isActive={isActive}
             phase={phase}
-            onPromote={onPromotePop}
-            onDemote={onDemotePop}
+            onLadderRequest={onLadderRequest}
           />
         ) : null}
         {activeTab === "market" ? (

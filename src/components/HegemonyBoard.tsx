@@ -18,6 +18,8 @@ import { GameOverModal } from "./board/modals/GameOverModal";
 import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
 import { GrowPopModal } from "./board/modals/GrowPopModal";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
+import { LadderModal } from "./board/modals/LadderModal";
+import type { LadderRequest } from "./board/modals/LadderModal";
 import { RiotModal } from "./board/modals/RiotModal";
 import { VentureModal } from "./board/modals/VentureModal";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
@@ -72,6 +74,7 @@ export function HegemonyBoard({
   const [isMovePopsOpen, setIsMovePopsOpen] = useState(false);
   const [isCalmOpen, setIsCalmOpen] = useState(false);
   const [isVentureOpen, setIsVentureOpen] = useState(false);
+  const [ladderRequest, setLadderRequest] = useState<LadderRequest | null>(null);
   // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
   const [riotResultOpen, setRiotResultOpen] = useState(false);
   const [activeEmpireTab, setActiveEmpireTab] = useState<EmpireTab>("cities");
@@ -126,6 +129,7 @@ export function HegemonyBoard({
     setIsMovePopsOpen(false);
     setIsCalmOpen(false);
     setIsVentureOpen(false);
+    setLadderRequest(null);
     setRiotResultOpen(false);
   }, [ctx.phase, ctx.currentPlayer]);
 
@@ -253,8 +257,7 @@ export function HegemonyBoard({
             onTabChange={setActiveEmpireTab}
             onBankSell={moves.bankSell}
             onBankBuy={moves.bankBuy}
-            onPromotePop={moves.promotePop}
-            onDemotePop={moves.demotePop}
+            onLadderRequest={setLadderRequest}
           />
         </aside>
 
@@ -392,6 +395,24 @@ export function HegemonyBoard({
       ) : null}
       {isCalmOpen ? (
         <CalmModal G={G} playerID={viewerId} isActive={isActive} moves={moves} onClose={() => setIsCalmOpen(false)} />
+      ) : null}
+      {ladderRequest ? (
+        <LadderModal
+          G={G}
+          playerID={viewerId}
+          request={ladderRequest}
+          phase={ctx.phase}
+          isActive={isActive}
+          onCancel={() => setLadderRequest(null)}
+          onConfirm={(tileId, from, kind) => {
+            if (kind === "promote") {
+              moves.promotePop(tileId, from);
+            } else {
+              moves.demotePop(tileId, from);
+            }
+            setLadderRequest(null);
+          }}
+        />
       ) : null}
       {isVentureOpen ? (
         <VentureModal

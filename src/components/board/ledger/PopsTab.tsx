@@ -29,16 +29,14 @@ export function PopsTab({
   playerID,
   isActive,
   phase,
-  onPromote,
-  onDemote
+  onLadderRequest
 }: {
   G: HegemonyState;
   holdings: OwnedHolding[];
   playerID: PlayerId;
   isActive: boolean;
   phase: Phase;
-  onPromote: (tileId: string, from: PopType) => void;
-  onDemote: (tileId: string, from: PopType) => void;
+  onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
 }) {
   const player = G.players[playerID];
   const economyByPop = calculatePopEconomy(holdings);
@@ -68,30 +66,23 @@ export function PopsTab({
           <ResourceDeltaList resources={economyByPop[pop]} />
           <span className="ladderControls" aria-label={`${pop} ladder moves`}>
             {(LADDER_MOVES[pop] ?? []).map((move) => {
-              // One ladder move per turn (D8); the button acts on the first
-              // settlement that can legally pay it and names it in the tooltip.
+              // One ladder move per turn (D8). The button opens the targeting
+              // modal — the PLAYER picks which settlement pays (a slave's yield
+              // depends on its tile, so the town is the decision).
               const getStatus = move.kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
-              const target = holdings.find(({ tile }) => getStatus(G, playerID, tile.id, pop).can);
-              const status = target ? getStatus(G, playerID, target.tile.id, pop) : null;
-              const costText = status?.cost
-                ? Object.entries(status.cost)
-                    .map(([resource, amount]) => `${amount} ${resource}`)
-                    .join(", ") || "free"
-                : "";
+              const possible = holdings.some(({ tile }) => getStatus(G, playerID, tile.id, pop).can);
 
               return (
                 <button
                   className="ladderButton"
-                  disabled={!isActive || phase !== "gameplay" || !target}
+                  disabled={!isActive || phase !== "gameplay" || !possible}
                   key={move.kind}
                   title={
-                    target
-                      ? `${move.kind === "promote" ? "Promote" : "Demote"} to ${move.to} (${costText}) — ${target.tile.terrain} ${target.tile.id}`
+                    possible
+                      ? `${move.kind === "promote" ? "Promote" : "Demote"} a ${formatPopLabel(pop, 1)} to ${move.to} — choose the settlement.`
                       : `No legal ${move.kind} right now (one ladder move per turn).`
                   }
-                  onClick={() =>
-                    target && (move.kind === "promote" ? onPromote(target.tile.id, pop) : onDemote(target.tile.id, pop))
-                  }
+                  onClick={() => onLadderRequest({ kind: move.kind, from: pop })}
                 >
                   {move.label}
                 </button>

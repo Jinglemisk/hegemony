@@ -142,12 +142,16 @@ bottleneck. Simmed (2026-07-12, pre-bank): foundColony at **14 wood + 6 gold + 2
 vs baseline 20w+2f — mid-game expansion **+32%**, revolt share tripled (5%→18%).
 Caution: wood-as-bottleneck is also the designed tempo brake.
 
-**Protocol (user, 2026-07-12): sim first, save it, then compare.** No repricing until:
-(1) the D6 bank ships (it already converts dead gold to wood — may be all the relief
-needed); (2) a fresh **baseline campaign at 20w+2f is run and saved** (checked in
-under `docs/sim/`, seeds + summaries); (3) the 14w+6g variant runs on the *same seeds*
-and the comparison is put in front of the user with their Phase 0 playtest read.
-The same comparison re-opens the Phase 2 gold-tile-removal check.
+**Protocol (user, 2026-07-12): sim first, save it, then compare — RUN (post-bank,
+docs/sim/2026-07-12-colony-repricing-q13b.md).** Same seeds (9000–9019), 20 games/arm:
+repricing now buys only **+10% mid-game expansion** (was +32% pre-bank — the D6 bank
+absorbed the wood bottleneck; baseline expansion roughly doubled vs the pre-bank era)
+while riots rise **3.2 → 5.7/game** and the seat spread worsens. **Claude's rec: HOLD
+20w+2f** — the gold-sink + wood-relief goal is delivered by the bank alone. New
+counter-watch: post-bank expansion may now be too *loose* (the tempo brake softened);
+fold into the Phase 2 gold-tile-removal re-check.
+
+**Your answer (approve/reject the repricing after your playtest):**
 
 ---
 
