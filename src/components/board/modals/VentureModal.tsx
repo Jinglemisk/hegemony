@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { AnnotatedText } from "../../AnnotatedText";
+import { RESOURCE_LABELS } from "../../../ui/formatters";
 import type { GameMoves } from "../../../game/controller";
 import { getFundExpeditionStatus } from "../../../game/rules";
 import type { VentureStake } from "../../../game/rules";
@@ -83,7 +85,7 @@ export function VentureModal({
             {(Object.keys(G.ruleset.ventureStakes) as VentureStake[]).map((candidate) => {
               const cost = G.ruleset.ventureStakes[candidate];
               const label = Object.entries(cost)
-                .map(([resource, amount]) => `${amount} ${resource}`)
+                .map(([resource, amount]) => `-${amount} ${RESOURCE_LABELS[resource as keyof typeof RESOURCE_LABELS] ?? resource}`)
                 .join(" + ");
 
               return (
@@ -92,7 +94,9 @@ export function VentureModal({
                   key={candidate}
                   onClick={() => setStake(candidate)}
                 >
-                  <strong>Stake {label}</strong>
+                  <strong>
+                    Stake · <AnnotatedText text={label} />
+                  </strong>
                 </button>
               );
             })}

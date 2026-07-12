@@ -4,6 +4,7 @@ import { DEMOTE_FROM, getBuyRiotInsuranceStatus, getDemotePopStatus } from "../.
 import { RIOT_TABLE } from "../../../game/data";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
+import { AnnotatedText } from "../../AnnotatedText";
 import { EventTableModal } from "./EventTableModal";
 import { capitalize, settlementPickerLabel } from "../helpers";
 
@@ -81,7 +82,7 @@ export function RiotModal({
             const costText = option.demotesPop
               ? "demote 1 pop (free — the mob demands it)"
               : Object.entries(option.cost)
-                  .map(([resource, amount]) => `${amount} ${resource}`)
+                  .map(([resource, amount]) => `-${amount} ${resource}`)
                   .join(", ");
 
             if (option.demotesPop && !bought) {
@@ -95,7 +96,9 @@ export function RiotModal({
                     onClick={() => target && moves.buyRiotInsurance(option.id, target)}
                   >
                     <strong>{option.label}</strong>
-                    <span>{costText}</span>
+                    <span>
+                      <AnnotatedText text={costText} />
+                    </span>
                   </button>
                   <select
                     aria-label="Pop to demote"
@@ -129,7 +132,9 @@ export function RiotModal({
                   {option.label}
                   {bought ? " — declared" : ""}
                 </strong>
-                <span>{costText}</span>
+                <span>
+                  <AnnotatedText text={costText} />
+                </span>
               </button>
             );
           })}
