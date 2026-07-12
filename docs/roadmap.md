@@ -5,7 +5,7 @@ sequence (what happens when, and why). Questions, answers, and execution state l
 the companion workbench: **`docs/roadmap-appendix.md`** — that is where this plan gets
 interrogated, refined, and driven.
 
-Last updated: 2026-07-12.
+Last updated: 2026-07-13.
 
 ## First principles (re-derive the order from these when things change)
 
@@ -38,6 +38,13 @@ Next: **Phase 1.5, the interface refit**, executing on `feat/ui-refit` — slott
 converting them twice. Open questions Q17–Q19 in the appendix. Q13b (colony
 repricing) awaits the user's verdict — comparison run, rec is HOLD 20w+2f
 (docs/sim/2026-07-12-colony-repricing-q13b.md).
+
+A **wholesale-execution battery (Q20–Q35)** is filed in the appendix: the run
+charter (stop-line, merge policy, decision authority, gate substitution) plus every
+design fork Phases 2–5 need locked — including the Politicians design session as
+questions. Answer the battery (blanks fall to Claude's recommendations if the Q22
+rule is confirmed) and the roadmap becomes executable end-to-end in one unattended
+run.
 
 | Phase | Theme | Contents | Gate to exit |
 | --- | --- | --- | --- |

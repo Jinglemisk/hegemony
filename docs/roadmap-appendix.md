@@ -119,6 +119,274 @@ the live narration entirely, which the chronicle exists to provide.
 
 ---
 
+## The wholesale-execution battery — Q20–Q35 · `OPEN`
+
+Filed 2026-07-13 at the user's request: every decision needed to run the roadmap
+end-to-end (Phase 1.5 → 5) as one unattended, subagent-driven build run. Answer the
+**run charter first** (Q20–Q23 — it defines how the run behaves); the phase blocks
+after it are the design forks each phase needs locked before it can build. Q13b and
+Q17–Q19 above are part of the battery — answer them too, or leave them to the Q22
+blank-slot rule (Q13b blank = HOLD 20w+2f per its rec).
+
+**Preconditions (mechanics, not questions):** the machine must stay awake all night
+(`caffeinate -dims` or equivalent — sleep kills the run); the session needs a
+permission mode that won't stall on edits/tests/commits; plan/usage limits are the
+hard budget ceiling. Phase 3's block below doubles as the Politicians design session
+the roadmap requires — answering it satisfies principle 5.
+
+**— The run charter —**
+
+### Q20 · Stop-line — how far does the run go? — `OPEN`
+
+**Context.** Phases 4–5 stack undesigned surface (coasts, trade, ideas, multiplayer)
+onto foundations no human has playtested. Every phase built past the last playtest
+compounds the cost of a morning "this feels wrong."
+
+**Rec:** **build through Phase 3, prep 4–5** — Phases 1.5 → 3 built end-to-end;
+Phase 4's feat plans finalized + its sims run; Phase 5 reduced to a design brief.
+The morning playtest then ratifies three phases, not five. "Build everything
+answered below" is the aggressive alternative — the machinery handles it; the risk
+is five phases of compounding on an unratified base.
+
+**Your answer:**
+
+### Q21 · Merge policy for unattended phases — `OPEN`
+
+**Context.** Phases build on each other, so the run needs a rule for what "done"
+means overnight. (a) **Stacked branches** — `feat/ui-refit` → `feat/phase2-terrain`
+→ …, one PR per phase, all left open; you playtest the stack in the morning and
+merge in order. (b) **Self-merge** — each phase merges to main once its Q23
+automated gate passes; the morning playtest audits the merged whole, reverts are
+the safety valve.
+
+**Rec:** **(a) stacked PRs — nothing merges itself.** Cost: if the playtest changes
+Phase 1.5, the stack above it rebases; acceptable. Unreviewed self-merges are how a
+bad overnight assumption becomes load-bearing.
+
+**Your answer:**
+
+### Q22 · Decision authority mid-run (the blank-slot rule) — `OPEN`
+
+**Context.** Unforeseen forks WILL surface mid-build — Q14/Q15/Q16 were all filed
+mid-phase and answered same-day; overnight there is no same-day.
+
+**Rec:** the **blank-slot rule**: any battery question left unanswered, and any fork
+that surfaces mid-run, resolves to Claude's recommendation, executes, and is logged
+in the decision log as `PROVISIONAL (overnight)` — plus a morning-report block
+prepended to this file listing every provisional call for re-opening. Alternative:
+an unanswered fork halts its phase and the run skips to independent work — safer,
+but one early blocker can dead-end the whole night.
+
+**Your answer:**
+
+### Q23 · What substitutes for the playtest gates? — `OPEN`
+
+**Context.** The exit gates for 1.5 ("a new player can find any rule reference…")
+and 3 ("a runaway leader gets checked in playtest") are human playtests; no
+overnight run can pass them.
+
+**Rec:** each phase exits **provisionally** on: `npm run check` + full test suite
+green · the phase-exit sim campaign from the roadmap table, saved to `docs/sim/` ·
+for UI-heavy phases, a scripted Playwright walkthrough exercising every new surface,
+screenshots saved for morning review. The roadmap-table gates remain the ratifying
+gates — checked by you at the morning playtest; the execution log marks each phase
+`pending ratification` until then.
+
+**Your answer:**
+
+**— Phase 1.5 · the interface refit —** already filed above: Q17 (verb-bar home),
+Q18 (compendium contents), Q19 (Chronicle/deck-tray homes), plus Q13b (repricing
+verdict). Answer them there, or leave them to the Q22 rule.
+
+**— Phase 2 · the land repriced —**
+
+### Q24 · Gold-tile removal — commit, conditional, or soften? — `OPEN`
+
+**Context.** `docs/feat/terrain-economy.md` removes all tile gold (first-order/
+second-order principle). The standing watch item requires re-running the expansion
+campaign post-bank first: the D6 market partially rehabilitates gold hills (a 4-gold
+hill ≈ 2 flexible materials/turn at the buy rate), and Q13b's counter-watch already
+suspects post-bank expansion is too loose.
+
+**Rec:** **conditional commit**: run the campaign first; if hill starts merely level
+out, remove gold tiles per the plan; if the report shows the economy leaning hard on
+tile gold, fall back to the plan's recorded rejected variant (1–2 "silver mine"
+landmark hills at 3–4 gold, the rest converted) and log it provisional.
+
+**Your answer:**
+
+### Q25 · Tier-2 roster & the upgrade grammar — `OPEN`
+
+**Context.** Four buildings exist (marketplace, temple, workshop, granary). todo.md
+candidates: Aqueduct (+4 capacity), Forum (+2 influence), Warehouse (+1 tile
+material income), Barracks (military placeholder). The pricing grammar is settled
+(wood = economic, stone = civic, gold = commerce; food/influence never buy
+buildings), and the riot table's roll-1 "building destroyed → downgraded once tiers
+exist" needs tiers to mean something.
+
+**Rec:** four **standalone** tier-2 buildings (each takes a slot; tier is a
+property — no upgrade-in-place mechanic in v1): **Warehouse** (economic, wood) +1
+material income on its tile · **Forum** (civic, stone) +2 influence/turn ·
+**Aqueduct** (civic, stone) +4 pop capacity · **Emporion** (commerce, gold)
+improves the bank sell rate one step for its owner. Barracks stays parked with
+military. Exact costs priced by sim against Phase-1 income curves (grammar fixed,
+numbers as ruleset tunables). Riot roll-1 destroys the highest-tier building
+present (tier 2 before tier 1).
+
+**Your answer:**
+
+### Q26 · Hill redistribution — ship the draft numbers? — `OPEN`
+
+**Context.** terrain-economy.md drafts the 9 hill rows: acropolis 4-slot landmark,
+quarries, terraces — map totals go gold 14→0, stone 20→26, food 44→48, and hills
+become the slot king (17→21).
+
+**Rec:** ship the draft table as the starting values (they're ruleset data; sims
+tune from there). Sub-forks, all per the plan's leanings: **no founding restriction
+on the acropolis** (colony-squatting it is denial-play — interesting; watch it) ·
+forest trim (14 → 12–13) deferred until map shuffling lands · the hill art/label
+re-theme (`resourceVisuals.ts` still reads hills as gold) ships in the same PR.
+
+**Your answer:**
+
+**— Phase 3 · the rivalry layer —** *(this block IS the Politicians design session
+the roadmap requires before Phase 3 can start)*
+
+### Q27 · Assembly cadence, votes, and flow — `OPEN`
+
+**Context.** Archive rules: convenes at fixed intervals, unskippable, 2 resolutions
+drawn, yay/nay, simple majority, passed → active in the center. seasons.md leans
+first assembly at year 2 (none on the opening spring). Archive votes: 1 base per
+player; the PDF's +1 per 10 citizens never binds at prototype pop counts.
+
+**Rec:** assembly every new-year Spring **from year 2** (the `isNewYear` hook in
+`core/calendar.ts` is ready-made), resolved before the opener's turn. Votes:
+**1 base + 1 per 4 citizens** (the PDF ratio rescaled so citizens are politically
+valuable without being crowned), ties FAIL. Two drawn resolutions per assembly;
+passed resolutions persist until repealed.
+
+**Your answer:**
+
+### Q28 · Resolution deck v1 — contents & influence verbs — `OPEN`
+
+**Context.** This is influence's primary job (todo.md). Archive influence verbs:
+draw / exchange / play-from-hand / propose-repeal / veto.
+
+**Rec:** **12 resolutions as data** (the event-table law applies: content in
+`data.ts`, one engine seam, one UI surface), 3 per politician, every effect built
+from levers the engine already has (yields, ladder prices, bank rates, colony cost,
+calm cost, happiness deltas) — no new mechanics smuggled in on cards. Influence
+verbs v1: draw 2 · play-from-hand 3 · veto 5 (once per assembly) · propose-repeal 4;
+exchange is cut from v1 (draw covers it).
+
+**Your answer:**
+
+### Q29 · Politicians v1 — how thin is the layer? — `OPEN`
+
+**Context.** The four archive politicians (Stratokles Stratoklid the Cunning
+Populist = the leader-check, Catan-robber pattern; Demosthenes agriculture;
+Perdiccas urban; Kleistophenes expansion). Design intent: passed resolutions empower
+their politician; control grants buffs; influence-heavy builds are politically
+strong, economically fragile.
+
+**Rec:** v1 = **power track + patron buff + the leader-check, nothing else**. Each
+passed resolution gives +1 power to its politician; the top contributor is its
+patron and holds a small standing buff themed per politician (e.g. Demosthenes:
+ladder food costs −1). Stratokles differs: his resolutions **target the current
+victory-card leader** (pooled-resource neutralization — every player pays into a pot
+that hits the leader), so the leader-check emerges from votes, not automation. No
+politician victory conditions, no danger track in v1.
+
+**Your answer:**
+
+### Q30 · Yearly cards / d20 omen table — ride along with Phase 3? — `OPEN`
+
+**Context.** Design-queue item, slot flexible (Phase 1 or 3); Phase 1 shipped
+without it. The assembly and the yearly draw share the same new-year hook.
+
+**Rec:** **ride along with Phase 3**: a d20 omen table as another
+`EventTableDefinition` (the component's law), drawn each new year right before the
+assembly — year-scale weather for the political season. Contents drafted from
+seasons.md's yearly-card notes; all effects on existing levers.
+
+**Your answer:**
+
+**— Phase 4 · the wider world —**
+
+### Q31 · Coastal geometry — feature ring or real tiles? — `OPEN`
+
+**Context.** luxury-goods.md proposes lightweight `CoastalTile` records attached to
+edge hexes; terrain-economy.md leans "pure feature tiles" (not settleable, no
+slots). The 18 rim tiles already serve as the coastline for leapfrog.
+
+**Rec:** **pure feature ring**: 12 coastal features attached to rim edges, never
+settleable, no slots — a port in a city adjacent to that edge claims the feature.
+Cheapest to build, matches the PDF, keeps naval anything out of scope.
+
+**Your answer:**
+
+### Q32 · Luxury roster, caps, and port pricing — `OPEN`
+
+**Context.** luxury-goods.md as amended by terrain-economy.md: 9 named goods
+(6 coastal + 3 via the 100-gold Trader, global Trader cap 3), +2 standing happiness
+each (effective-happiness accounting, never banked), diminishing duplicates (second
+copy of the same good +1), ~3 active per player, denial left as a seam for
+resolutions. Port cost provisional: 20 wood / 5 stone / 10 gold.
+
+**Rec:** approve the amended plan as written, every number a ruleset tunable; port
+cost per the provisional. (Luxury art via the banana pipeline — the plan's "ChatGPT
+image generation" line is stale.)
+
+**Your answer:**
+
+### Q33 · Player trade v1 — what shape? — `OPEN`
+
+**Context.** D6's corridor philosophy: bank rates bracket player pricing; player
+trade is the scarcity market inside the corridor. Q14 precedent: influence and
+happiness are never tradable.
+
+**Rec:** **structured offers, no negotiation UI**: on your turn, offer a bundle
+(wood/stone/food/gold, plus claimed luxuries — they're the monopoly currency) to a
+named player; they accept/decline; no counter-offers in v1 (a counter is just a new
+offer back). Bank-rate drift stays dead unless the phase-exit sims show player trade
+failing to carry the scarcity feel (the D6 watch item).
+
+**Your answer:**
+
+**— Phase 5 · asymmetry & frame —**
+
+### Q34 · National ideas v1 — draft shape & catalog — `OPEN`
+
+**Context.** todo.md: per-seat modifiers picked after initial placement, so seats
+play asymmetrically. Archive examples: a free discard-after-use veto,
+start-with-Trader.
+
+**Rec:** **8 ideas as ruleset patches** (pure data), snake-drafted immediately after
+setup placement in reverse placement order (last placer picks first), one per
+player, public. Catalog drafted from existing levers: colony discount · ladder
+discount · +1 assembly vote · one bank-rate step · venture odds · calm discount ·
++1 metropolis slot · extra starting resources; start-with-Trader only if Phase 4
+shipped. Draft-evenness checked by the Phase 5 gate sim (no auto-picks).
+
+**Your answer:**
+
+### Q35 · Mode picker & the multiplayer track — in or out? — `OPEN`
+
+**Context.** Modes are already ruleset patches behind `GAME_CONFIG.mode` + URL
+params; an in-game picker is lobby scope. Networked multiplayer is an architecture
+project (sessions, sync, lobby), and 2–3 player support needs a map/deck-scaling
+design pass (parked until Phase 5 by the roadmap).
+
+**Rec:** **in**: a pre-game setup screen (mode, board classic/shuffled, seed, player
+count/names) replacing the URL-param-only flow. **Out of the wholesale run,
+explicitly**: networked multiplayer and 2–3 player scaling — both deserve their own
+design pass with you awake, whatever Q20 says about the rest.
+
+**Your answer:**
+
+
+---
+
 ## Decision log
 
 | # | Question | Decision | Date | Folded into |
@@ -157,3 +425,4 @@ after D6 ships, before Phase 2's gold-tile removal · Phase 4 revisits bank-rate
 | 2026-07-12 | `feat/phase1-currencies` | **Phase 1 built end-to-end (engine + UI + sims + tests).** Event-table component (docs/feat/event-tables.md) with riot + 3 expeditions as data; bank exchange with board-derived per-material rates (scarcity default confirmed by 20+20-game A/B, docs/sim/2026-07-12-bank-rates-ab.md — also the saved Q13b baseline); civic calm; ladder; blocking riot flow with deferred income; ventures. UI: Market tab (5-up ledger), Calm/Venture verbs, shared EventTableModal (riot insurance incl. concession target picker), ladder ↑/↓ on Pops tab. Sims: all 8 currency verbs alive, riots ~3/game, race close-rate 50–55% (up from Phase 0's 33–45%). 143 tests. Exit gate met pending user playtest. | 1 |
 | 2026-07-13 | **PR #21 → main** | **Phase 1 merged.** Post-review additions rode along: ladder targeting modal with tile-art picker cards, settlement pickers name their tile + shared-colony status, Q13b post-bank comparison (rec: hold 20w+2f), the two selection rules pinned. | 1 |
 | 2026-07-13 | `feat/ui-refit` | Branch opened; Phase 1.5 slotted before Phase 2 (D12); Q17–Q19 filed. | 1.5 |
+| 2026-07-13 | `feat/ui-refit` | **Wholesale-execution battery filed (Q20–Q35)** at the user's request: run charter (stop-line, merge policy, blank-slot rule, gate substitution) + every design fork Phases 2–5 need locked, incl. the Phase 3 Politicians design session as questions. Answered battery = the roadmap runs end-to-end unattended. | all |
