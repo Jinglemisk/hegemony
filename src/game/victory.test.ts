@@ -32,26 +32,35 @@ describe("victory card standings", () => {
   });
 
   it("leading below the minimum holds nothing", () => {
-    const G = scenario().opening().withHappiness("2", 4).build();
+    const G = scenario().opening().withHappiness("2", 9).build();
 
-    // Player 2 leads happiness outright, but the minimum is +5.
+    // Player 2 leads happiness outright, but the minimum is +10.
     const happiness = victoryStandings(G).find((standing) => standing.card.metric === "happiness");
-    expect(happiness?.values["2"]).toBe(4);
+    expect(happiness?.values["2"]).toBe(9);
     expect(happiness?.holder).toBeNull();
 
-    G.players["2"].resources.happiness = 5;
+    G.players["2"].resources.happiness = 10;
     const after = victoryStandings(G).find((standing) => standing.card.metric === "happiness");
     expect(after?.holder).toBe("2");
+  });
+
+  it("no card is holdable from the opening position (design rule: minimums beat the start)", () => {
+    const G = scenario().opening().build();
+
+    // Player 0's bootstrap income has already collected — even so, nothing is held.
+    for (const standing of victoryStandings(G)) {
+      expect(standing.holder, standing.card.id).toBeNull();
+    }
   });
 
   it("ends the game at the start of a turn when the player holds three cards", () => {
     const G = scenario()
       .opening()
       .withSettlement("0", "0,-3", "city", { citizens: 6, freemen: 4, slaves: 0 })
-      .withHappiness("0", 9)
+      .withHappiness("0", 12)
       .build();
 
-    // Player 0: 3 cities (min 3) · 6 citizens+… pops lead · happiness 9 (min 5).
+    // Player 0: 3 cities (min 3) · 16 pops (min 16, sole lead) · happiness 12 (min 10).
     expect(victoryCardsHeld(G, "0")).toBeGreaterThanOrEqual(3);
 
     checkVictoryAtTurnStart(G);
@@ -83,9 +92,8 @@ describe("the seasonal deck is a finite clock", () => {
   });
 
   it("resolves the exhaustion tally when the deck runs out: most cards, then happiness", () => {
-    // Player 0's bootstrap income makes them sole stockpile leader → holds Treasurer.
-    // Give player 3 a third city (holds Polis Builder) and far higher happiness, so
-    // the card counts tie at 1 and happiness decides.
+    // Player 3 holds Polis Builder (third city) and towers on happiness — the
+    // exhaustion tally ranks by cards held first, then happiness.
     const G = scenario()
       .opening()
       .withSettlement("3", "0,-3", "city", { citizens: 0, freemen: 0, slaves: 0 })

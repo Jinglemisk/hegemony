@@ -32,9 +32,15 @@ starts; answers get folded into feat plans and code; the decision log keeps the 
   | --- | --- | ---: |
   | Polis Builder | most cities | 3 |
   | Demos | most total pops | 16 |
-  | Civic Elite | most citizens | 6 |
-  | Treasurer | largest banked material stockpile | 40 |
-  | Beloved of the People | highest happiness | +5 |
+  | Civic Elite | most citizens | 8 |
+  | Treasurer | largest banked material stockpile | 80 |
+  | Beloved of the People | highest happiness | +10 |
+
+- **Minimums rule (2026-07-12, user):** no card may be holdable at game start or on
+  the first turn — every minimum must exceed anything a legal setup plus one lucky
+  opening turn can produce (start: 2 cities, 6 pops, ≤6 citizens, 52 banked, 0
+  happiness). Raised citizens 6→8, stockpile 40→80, happiness +5→+10 accordingly;
+  the tuning campaign refines from here.
 
 - **Failsafe ceiling:** the seasonal deck stops reshuffling (29 cards ≈ 7 years). If it
   empties before anyone wins, most cards held wins; tiebreak highest happiness, then
