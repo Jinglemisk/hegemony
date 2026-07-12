@@ -232,11 +232,14 @@ Two decks of event cards bring swings of fortune:
 - **Seasonal events** are revealed at the start of each season and affect
   everyone — for example, "all players gain 2 food this season." The season
   shapes which of these come up: a good harvest is far likelier in Autumn than a
-  drought is, while Winter tips the odds the other way.
+  drought is, while Winter tips the odds the other way. No season is ever
+  entirely safe — spring can flood, summer can burn.
 - **Player events** are drawn for the active player and must be resolved before
-  you take your normal actions. Some are a straight gain; others give you a
-  choice — for example, "gain 6 wood and lose 1 happiness, or gain 2 wood with no
-  penalty."
+  you take your normal actions. Roughly three draws in four are good news —
+  windfalls, a choice like "gain 6 wood and lose 1 happiness, or gain 2 wood with
+  no penalty," or a **grow coupon** that makes your next pop of a given type
+  cheap **this turn only**. The fourth is a bite: rats in the granary, bandits on
+  the roads, a warehouse fire. A loss can never take more than you have.
 
 ## Winning — the victory race
 

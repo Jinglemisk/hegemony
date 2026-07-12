@@ -920,14 +920,14 @@
       <tr><td>2</td><td><span class="prio p0">P0</span></td><td><s>Influence has zero sinks; gold has one 2-gold sink</s></td><td><a href="#resources">§II</a></td><td><strong>RESOLVED</strong> (feat/phase1-currencies): influence buys civic calm (4→+3 hap), demotions (2/3 inf), and riot patronage; gold buys calm (6), promotions (4), venture stakes (5), and any material at the bank. The Assembly remains influence's <em>primary</em> sink (Phase 3).</td></tr>
       <tr><td>3</td><td><span class="prio p1">P1</span></td><td><s>Colony contiguity &amp; capital protection radius documented but unimplemented — colonies teleport</s></td><td><a href="#placement">§V</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): radius-1 contiguity enforced (colonies chain); ring claim deleted from rules.md/spec</td></tr>
       <tr><td>4</td><td><span class="prio p1">P1</span></td><td><s>Food-stockpile happiness is uncapped — hoards buy unrest immunity and double-dip with banked-material VP</s></td><td><a href="#unrest">§VII</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): capped at +2 (ruleset tunable)</td></tr>
-      <tr><td>5</td><td><span class="prio p1">P1</span></td><td>Player event deck: 92% upside, 30% free pops, EV ≈ +5/turn — outearns tiles, huge private variance</td><td><a href="#cards">§VI</a></td><td>Reduce free-pop copies to discounts; target EV ≈ +2 and ~25% harm</td></tr>
+      <tr><td>5</td><td><span class="prio p1">P1</span></td><td><s>Player event deck: 92% upside, 30% free pops, EV ≈ +5/turn — outearns tiles, huge private variance</s></td><td><a href="#cards">§VI</a></td><td><strong>RESOLVED</strong> (feat/ui-refit, deck overhaul 2026-07-13): free-pop copies halved into half-cost grow coupons (<code>growPop</code> discount target); windfalls shrunk to +3; EV +2.2, harm 25.3% — both guarded by <code>deck.test.ts</code>. A/B on seeds 9000–9019: pops −11%, revolts 3%→0%, leader race pace within noise (docs/sim/2026-07-13-deck-overhaul-ab.md).</td></tr>
       <tr><td>6</td><td><span class="prio p1">P1</span></td><td><s>Colony+freeman spam is ~3× more VP-efficient than cities under the provisional formula</s></td><td><a href="#scoring">§VIII</a></td><td><strong>RESOLVED structurally</strong> (feat/phase0-victory-race): the provisional formula is gone — the race has no per-colony score, and contiguity bounds spam. Watch: the Demos card (most pops) may still reward width; revisit in the minimum-tuning campaign.</td></tr>
       <tr><td>7</td><td><span class="prio p1">P1</span></td><td><s>Fixed map + fixed 0→3 setup order + permanent first-actor = compounding player-0 advantage</s></td><td><a href="#placement">§V</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): snake setup, yearly opener rotation, Shuffled board option (Classic remains default preset)</td></tr>
       <tr><td>8</td><td><span class="prio p1">P1</span></td><td>City upgrade evicts a sharing colony and destroys its pops with no counterplay</td><td><a href="#placement">§V</a></td><td>Displaced pops walk home as a transfer; keep the settlement loss</td></tr>
       <tr><td>9</td><td><span class="prio p2">P2</span></td><td>Citizen is a strictly-dominated freeman (and flips to strictly-dominant once votes exist); +2 gold is spec drift</td><td><a href="#pops">§III</a></td><td>Pick the citizen's identity now: politics-only (revert gold) or priced elite</td></tr>
-      <tr><td>10</td><td><span class="prio p2">P2</span></td><td>Spring and Summer seasonal pools contain zero harmful cards — the year's first half is auto-safe</td><td><a href="#cards">§VI</a></td><td>One thematic harm per season (floods, wildfire)</td></tr>
+      <tr><td>10</td><td><span class="prio p2">P2</span></td><td><s>Spring and Summer seasonal pools contain zero harmful cards — the year's first half is auto-safe</s></td><td><a href="#cards">§VI</a></td><td><strong>RESOLVED</strong> (feat/ui-refit, 2026-07-13): Spring Floods ×2 (all lose 3 food) and Wildfire ×2 (−2 wood income for the summer). Every season's pool now holds harm — guarded by <code>deck.test.ts</code>.</td></tr>
       <tr><td>11</td><td><span class="prio p2">P2</span></td><td>Granary strictly dominates the first-build decision in every city</td><td><a href="#buildings">§IV</a></td><td>Trim to +1 food or drop the grow discount to −1; revisit alongside tier 2</td></tr>
-      <tr><td>12</td><td><span class="prio p2">P2</span></td><td>Dominated options on choice cards (Caravan Contacts, Skilled Mason, Temple Donation)</td><td><a href="#cards">§VI</a></td><td>Reprice the losing options until they're situational</td></tr>
+      <tr><td>12</td><td><span class="prio p2">P2</span></td><td><s>Dominated options on choice cards (Caravan Contacts, Skilled Mason, Temple Donation)</s></td><td><a href="#cards">§VI</a></td><td><strong>RESOLVED</strong> (feat/ui-refit, 2026-07-13): Caravan B → 4 wood→6 gold; Mason/Temple discounts → −5 stone (beat the flat pick when a stone build is planned); Forest Crews → −6 wood. A dominance tripwire in <code>deck.test.ts</code> keeps every option within a third of the best.</td></tr>
       <tr><td>13</td><td><span class="prio p2">P2</span></td><td><s>Capital has no identity — engine-identical to a city</s></td><td><a href="#state">§I</a></td><td><strong>RESOLVED by decision</strong> (2026-07-12): flattened on purpose — a privileged capital multiplies tile quality and turns placement into the game. Future capital identity must be additive or liability-shaped (slots, votes, blockade target), never a yield multiplier.</td></tr>
       <tr><td>14</td><td><span class="prio p2">P2</span></td><td><s>Random unrest removal makes punishment severity a lottery</s></td><td><a href="#unrest">§VII</a></td><td><strong>RESOLVED</strong> (feat/phase1-currencies, D9/Q15): the riot table replaces flat removal — who dies stays random (the mob decides) but the player now holds the levers: pre-roll insurance ×3 (max +3 turns catastrophe into taxation) and the free concession-demotion IS the PDF's choose-your-sacrifice, priced into the insurance slot.</td></tr>
       <tr><td>15</td><td><span class="prio p2">P2</span></td><td><s><code>preloadOpeningSetupForTesting: true</code> ships a scripted opening</s>; stale analysis docs (initial-round-balance.md)</td><td><a href="#state">§I</a></td><td>Flag <strong>RESOLVED</strong> (off by default; ?dev=preload). Stale docs still to archive/recompute — now including the pre-two-city opening analysis.</td></tr>
@@ -988,6 +988,21 @@
   <table>
     <thead><tr><th>Date</th><th>Engine ref</th><th>Entry</th></tr></thead>
     <tbody>
+      <tr>
+        <td>2026-07-13</td>
+        <td><code>feat/ui-refit</code></td>
+        <td><strong>Deck overhaul</strong> (issues 5/10/12) — the player deck stops being a slot machine:
+        free-pop copies halved into end-of-turn <em>grow coupons</em> (Citizenship Rolls −5f−1g citizen ·
+        Willing Hands −4f freeman · Slave Auction −3f slave; new <code>growPop</code> discount target),
+        windfalls trimmed to +3, four new harm cards (Granary Rats ×5 −3f · Warehouse Fire ×4 −5w ·
+        Banditry ×3 −4g · Quarry Collapse ×2 −3s−1h; losses clamp at zero), Civil Discord ×3. EV per draw
+        +4.9 → <strong>+2.2</strong>, harm 8% → <strong>25.3%</strong> — both bands guarded by
+        <code>deck.test.ts</code>. Dominated choices repriced (Caravan 4w→6g · Mason/Temple −5s ·
+        Forest Crews −6w) with a dominance tripwire. Seasonal deck: Spring Floods ×2 + Wildfire ×2 —
+        no auto-safe season, also guarded. A/B seeds 9000–9019: pops −11%, food +0.8, revolts 3%→0%,
+        race pace within noise (docs/sim/2026-07-13-deck-overhaul-ab.md). WATCH: victory-card minimums
+        were tuned against the richer deck — retune minimums, not the deck, if playtests grind.</td>
+      </tr>
       <tr>
         <td>2026-07-12</td>
         <td><code>feat/phase1-currencies</code></td>

@@ -42,7 +42,7 @@ export type EventTiming = "immediate" | "season" | "pendingChoice" | "turn";
 
 export type EventScope = "activePlayer" | "allPlayers";
 
-export type ActionCostDiscountTarget = "buildBuilding" | "foundColony";
+export type ActionCostDiscountTarget = "buildBuilding" | "foundColony" | "growPop";
 
 export type EventEffect =
   | {
@@ -107,6 +107,8 @@ export type EventEffect =
       type: "actionCostDiscount";
       action: ActionCostDiscountTarget;
       buildingId?: BuildingId;
+      /** For `growPop` discounts: only grows of this pop type match (grow coupons). */
+      pop?: PopType;
       resource: Resource;
       amount: number;
       duration: "turn";
@@ -167,6 +169,7 @@ export interface ActiveActionCostDiscount {
   label: string;
   action: ActionCostDiscountTarget;
   buildingId?: BuildingId;
+  pop?: PopType;
   resource: Resource;
   amount: number;
   consume: "nextMatchingAction";
