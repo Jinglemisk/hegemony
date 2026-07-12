@@ -4,7 +4,7 @@ import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds } fro
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { AnnotatedText } from "../../AnnotatedText";
 import { eventCardArtUrl, formatEventEffects } from "../events";
-import { capitalize } from "../helpers";
+import { settlementPickerLabel } from "../helpers";
 
 export function PendingPlayerEventModal({
   G,
@@ -105,11 +105,10 @@ export function PendingPlayerEventModal({
                 <select value={targetTileId} onChange={(event) => setTargetTileId(event.target.value)}>
                   {targetTileIds.map((tileId) => {
                     const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
-                    const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
 
                     return (
                       <option value={tileId} key={tileId}>
-                        {tile ? `${capitalize(settlement?.kind ?? "settlement")} ${tile.id} - ${capitalize(tile.terrain)}` : tileId}
+                        {tile ? settlementPickerLabel(G, tile, playerID) : tileId}
                       </option>
                     );
                   })}
