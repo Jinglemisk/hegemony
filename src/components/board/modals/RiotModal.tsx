@@ -5,7 +5,7 @@ import { RIOT_TABLE } from "../../../game/data";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { EventTableModal } from "./EventTableModal";
-import { capitalize } from "../helpers";
+import { capitalize, settlementPickerLabel } from "../helpers";
 
 /**
  * The riot instance of the shared event-table modal (D9). Blocking: it mounts while
@@ -103,11 +103,16 @@ export function RiotModal({
                     value={demoteChoice}
                     onChange={(event) => setDemoteChoice(Number(event.target.value))}
                   >
-                    {demoteTargets.map((candidate, index) => (
-                      <option key={`${candidate.tileId}-${candidate.from}`} value={index}>
-                        {capitalize(formatPopLabel(candidate.from, 1))} · {candidate.tileId}
-                      </option>
-                    ))}
+                    {demoteTargets.map((candidate, index) => {
+                      const tile = G.board.tiles.find((entry) => entry.id === candidate.tileId);
+
+                      return (
+                        <option key={`${candidate.tileId}-${candidate.from}`} value={index}>
+                          {capitalize(formatPopLabel(candidate.from, 1))} ·{" "}
+                          {tile ? settlementPickerLabel(G, tile, playerID) : candidate.tileId}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               );

@@ -11,7 +11,13 @@ import {
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
 import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { AtlasIcon } from "../../Sprites";
-import { actionRequirementText, actionTitle, capitalize, getOwnedHoldings, holdingShortLabel } from "../helpers";
+import {
+  actionRequirementText,
+  actionTitle,
+  getOwnedHoldings,
+  holdingShortLabel,
+  settlementPickerLabel
+} from "../helpers";
 
 export type LadderRequest = { kind: "promote" | "demote"; from: PopType };
 
@@ -82,9 +88,7 @@ export function LadderModal({
                     title={actionTitle(`${verb} on ${tile.id}`, candidateStatus, phase, isActive)}
                   >
                     <AtlasIcon icon={settlement.kind === "colony" ? "colony" : "city"} className="miniIcon" />
-                    <span>
-                      {capitalize(settlement.kind)} {tile.id} · {capitalize(tile.terrain)}
-                    </span>
+                    <span>{settlementPickerLabel(G, tile, playerID)}</span>
                     <strong>
                       {settlement.pops[from]} {formatPopLabel(from, settlement.pops[from])} · {totalPops(settlement.pops)}/
                       {settlementPopCapacity(settlement.kind, G.ruleset)}

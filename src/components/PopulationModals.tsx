@@ -18,6 +18,7 @@ import { ACTION_COSTS } from "../game/data";
 import { formatPopLabel, formatResourceDelta } from "../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
 import { SettlementSummaryCard } from "./SettlementCard";
+import { settlementPickerLabel } from "./board/helpers";
 import { AtlasIcon, ResourceIcon } from "./Sprites";
 
 type SettlementEntry = {
@@ -216,7 +217,7 @@ export function FoundColonyPopover({
               <select value={source?.tile.id ?? ""} onChange={(event) => setSourceTileId(event.target.value)}>
                 {sources.map((entry) => (
                   <option value={entry.tile.id} key={entry.tile.id}>
-                    {capitalize(entry.tile.terrain)} {entry.tile.id} — {formatPops(entry.pops)}
+                    {settlementPickerLabel(G, entry.tile, playerID)} — {formatPops(entry.pops)}
                   </option>
                 ))}
               </select>
@@ -328,22 +329,32 @@ export function UpgradeCityModal({
             <section className="placementSection">
               <span className="placementSectionLabel">Choose a colony</span>
               <div className="placementPickerGrid" role="group" aria-label="Colony to upgrade">
-                {candidates.map(({ tile, settlement }) => (
+                {candidates.map(({ tile, settlement }) => {
+                  const rivals = tile.settlements.filter((candidate) => candidate.owner !== playerID);
+
+                  return (
                   <button
                     className={tile.id === selected?.tile.id ? "placementPickerChip selectedChoice" : "placementPickerChip"}
                     key={tile.id}
                     onClick={() => setTileId(tile.id)}
+                    title={settlementPickerLabel(G, tile, playerID)}
                     type="button"
                   >
                     <AtlasIcon icon="colony" className="miniIcon" />
                     <span className="placementChipText">
-                      <strong>{capitalize(tile.terrain)}</strong>
+                      <strong>
+                        {capitalize(tile.terrain)} +{tile.resource.amount} {tile.resource.type}
+                      </strong>
                       <em>
                         {tile.id} · {totalPops(settlement.pops)}/{settlementPopCapacity("colony", G.ruleset)}
+                        {rivals.length > 0
+                          ? ` · evicts ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
+                          : ""}
                       </em>
                     </span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </section>
           ) : null}
@@ -451,7 +462,7 @@ export function MovePopsModal({
                 <select value={sourceTileId} onChange={(event) => setSourceTileId(event.target.value)}>
                   {holdings.map((entry) => (
                     <option value={entry.tile.id} key={entry.tile.id}>
-                      {entry.tile.terrain} {entry.tile.id} - {formatPops(entry.pops)}
+                      {settlementPickerLabel(G, entry.tile, playerID)} — {formatPops(entry.pops)}
                     </option>
                   ))}
                 </select>
@@ -463,7 +474,7 @@ export function MovePopsModal({
                     .filter((entry) => entry.tile.id !== sourceTileId)
                     .map((entry) => (
                       <option value={entry.tile.id} key={entry.tile.id}>
-                        {entry.tile.terrain} {entry.tile.id} - {formatPops(entry.pops)}
+                        {settlementPickerLabel(G, entry.tile, playerID)} — {formatPops(entry.pops)}
                       </option>
                     ))}
                 </select>
