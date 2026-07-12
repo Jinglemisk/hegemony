@@ -101,6 +101,9 @@
    home — a bottom bar, or a strip under the top bar — so the board gains width and the verbs stop living
    inside a side panel.
 -- Scope this WITH the game-reference compendium below (same navigation rethink); flat AAA look throughout.
+-- Roll the settlement-picker CARD pattern (terrain art + coords + yield + shared-tile note, shipped for the
+   ladder modal 2026-07-13) out to the remaining pickers: Grow Pop, Move Pops, Found Colony source, event
+   pop-target, riot concession — they are HTML selects today (text labels only; selects cannot hold images).
 
 - *** Game-reference compendium behind the season icon. (user, 2026-07-12)
 -- Pressing the seasonal icon button (top bar) opens a modal of categorized game info players can study to
