@@ -28,12 +28,13 @@ Last updated: 2026-07-12.
 ## Phases
 
 Each phase ends in a playable, sim-verified milestone.
-**Status:** Phase 0 **DONE — merged to main via PR #20 (2026-07-12)**. Exit gate: every
-game ends ✓; race wins land at mean year 4.8 (on target) ✓; minimums confirmed at
-3/16/8/80/+10; one watch item (+2.8σ seat-3 lean under greedy bots — appendix decision
-log). Phase 1 executing on `feat/phase1-currencies`: event-tables feat plan first, then
-bank exchange (D6, priority), then riot/civic-calm/ladder/ventures. Open questions
-Q13b–Q16 in the appendix.
+**Status:** Phase 0 **DONE — merged via PR #20**. Phase 1 **built end-to-end on
+`feat/phase1-currencies` (2026-07-12)**: event-table component, bank exchange
+(board-derived rates, scarcity default via A/B — docs/sim/), civic calm, ladder,
+blocking riot table, three ventures — engine + UI + 143 tests. Exit gate readings:
+no dead currencies (all 8 verbs fire in sims), riot table replaced random pop removal,
+race close-rate rose to 50–55%. Awaiting user playtest sign-off; Q13b stays open
+(saved baseline ready, compare after playtest).
 
 | Phase | Theme | Contents | Gate to exit |
 | --- | --- | --- | --- |

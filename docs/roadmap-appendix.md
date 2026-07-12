@@ -32,7 +32,7 @@ component is a hard engineering requirement), then **bank exchange (D6)** — pr
 raised by the wood-bottleneck sim finding — then riot table (D9), civic calm (D7),
 promote/demote ladder (D8), ventures (D10).
 
-### D6 · Bank exchange — `LOCKED (rates provisional)`
+### D6 · Bank exchange — `DONE (feat/phase1-currencies; rates provisional)`
 
 - **Model:** gold-mediated market (Age-of-Empires style) — sell materials for gold, buy
   materials with gold; never direct barter. Gold is the unit of account.
@@ -59,20 +59,20 @@ promote/demote ladder (D8), ventures (D10).
   and `scarcity` derivations built as ruleset knobs; a sim A/B picks the default.
   UI home: a **Market tab in the right sidebar**, rates always visible.
 
-### D7 · Civic calm actions — `LOCKED`
+### D7 · Civic calm actions — `DONE (feat/phase1-currencies)`
 
 One civic-calm action per player per turn (shared limit — calm must not stack), payable
 two ways: **Stabilize Province** 4 influence → +3 happiness, or **Bread & Circuses**
 6 gold → +3 happiness. One `civicCalm` seam in code with two payment options.
 
-### D8 · Promote / demote ladder — `LOCKED`
+### D8 · Promote / demote ladder — `DONE (feat/phase1-currencies)`
 
 Promote: slave→freeman **4 food** · freeman→citizen **4 gold**. Demote: citizen→freeman
 **2 influence** · freeman→slave **3 influence, −1 happiness**. One ladder move per
 player per turn, separate from the grow-pop throttle. Demotion is **free during a riot**
 (the mob forces it).
 
-### D9 · Riot table & the event-table component — `LOCKED`
+### D9 · Riot table & the event-table component — `DONE (feat/phase1-currencies)`
 
 At happiness ≤ −5, start of turn (before income) — pre-roll insurance only, declared
 before the die. **All three options may each be bought once per riot (user, 2026-07-12
@@ -107,7 +107,7 @@ at Phase 1 start.
 flat 2/4-pop losses, severe rebound −4) — the thresholds and rebound stay; the flat
 losses become the table.
 
-### D10 · Ventures — `LOCKED (payouts widened per user, 2026-07-12)`
+### D10 · Ventures — `DONE (feat/phase1-currencies; payouts widened per user)`
 
 "Fund an Expedition": stake **5 gold** or **8 wood**, one venture per player per turn,
 available from turn 1 (no building prerequisite — a catch-up casino must be reachable
@@ -185,3 +185,4 @@ after D6 ships, before Phase 2's gold-tile removal · Phase 4 revisits bank-rate
 | --- | --- | --- | --- |
 | 2026-07-12 | **PR #20 → main** | **Phase 0 merged.** Victory race (5 public cards, tunable minimums, turn-start win check, finite seasonal deck + exhaustion tally); metropolis (4 pops) + coastal founding colony (2 pops) snake setup; colony contiguity + coastal leapfrog; yearly opener rotation; Classic/Shuffled boards + URL params; stockpile-happiness cap +2; full UI (Victory tab, roster badges, seasons-left, board chip, game-over screen); dev auto-openings rotating 10 seeds; sim-CLI telemetry (victoryCards, frontierTiles). 109 tests. Campaigns: contiguity A/B (geometry never binds), minimum tuning (race wins land ~year 4.8), mixed colony pricing (Q13b data). | 0 |
 | 2026-07-12 | `feat/phase1-currencies` | Branch opened; appendix pruned to Phase 1; Q14–Q16 filed. | 1 |
+| 2026-07-12 | `feat/phase1-currencies` | **Phase 1 built end-to-end (engine + UI + sims + tests).** Event-table component (docs/feat/event-tables.md) with riot + 3 expeditions as data; bank exchange with board-derived per-material rates (scarcity default confirmed by 20+20-game A/B, docs/sim/2026-07-12-bank-rates-ab.md — also the saved Q13b baseline); civic calm; ladder; blocking riot flow with deferred income; ventures. UI: Market tab (5-up ledger), Calm/Venture verbs, shared EventTableModal (riot insurance incl. concession target picker), ladder ↑/↓ on Pops tab. Sims: all 8 currency verbs alive, riots ~3/game, race close-rate 50–55% (up from Phase 0's 33–45%). 143 tests. Exit gate met pending user playtest. | 1 |

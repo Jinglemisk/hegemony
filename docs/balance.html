@@ -440,11 +440,14 @@
     <strong>Market exchange</strong> (from the PDF): bank trade at 1:6 (coastal ports later improve to 1:4). Even at a brutal rate this un-deadens gold and stone surpluses and softens dead-tile starts.</p>
   </div>
 
-  <h3>No trade means no relief valve</h3>
-  <p>There is no player trade and no bank exchange, so a player whose tiles mismatch their needs (a hill/mountain
-  start hunting for wood) has <em>no</em> conversion path except event luck — the exact situation market
-  exchange exists to solve in the PDF. Until some exchange lands, tile draw at setup is close to destiny,
-  which puts extra weight on the placement-order problems in <a href="#placement">§V</a>.</p>
+  <h3><s>No trade means no relief valve</s> <span class="chip strong">Resolved</span></h3>
+  <p><s>There is no player trade and no bank exchange, so a player whose tiles mismatch their needs (a hill/mountain
+  start hunting for wood) has <em>no</em> conversion path except event luck.</s>
+  <strong>Resolved (feat/phase1-currencies, D6/Q14):</strong> the bank now converts any material through gold —
+  rates set per-material from the board's own tile supply at game creation (classic: wood 4→1g/2g, stone
+  2→1g/3g, food 3→1g/2g) and static all game, so the bank stays a corridor for the player trade still to come
+  (Phase 4). A mismatched start now has a priced escape route; the mixed-pricing question for colonies
+  themselves stays open as Q13b (sim first, saved baseline: docs/sim/2026-07-12-bank-rates-ab.md).</p>
 </section>
 
 <!-- ============================================================ -->
@@ -729,13 +732,14 @@
   don't), or make it a one-shot when crossing thresholds. Keep <em>some</em> version — "full granaries calm the
   city" is good theme — just not an uncapped per-turn flow.</p>
 
-  <h3>Random removal: the punishment lottery <span class="chip watch">Watch</span></h3>
-  <p>Unrest removes pops uniformly at random across all settlements and classes. Losing 2 slaves at −5 is a slap
-  (it even reduces your unrest causes); losing 2 citizens is ~22 resources and your influence base. Same
-  trigger, wildly different sentence. The PDF instead lets the player choose what to sacrifice at a fixed
-  exchange (1 citizen or 2 freemen or 4 slaves) — costlier in <em>choice</em> (you must keep slaves to burn),
-  which is more interesting than costlier in <em>luck</em>. Worth adopting once the unrest UI can carry a
-  choice modal; random removal is the right v1.</p>
+  <h3><s>Random removal: the punishment lottery</s> <span class="chip strong">Resolved</span></h3>
+  <p><s>Unrest removes pops uniformly at random across all settlements and classes.</s>
+  <strong>Resolved (feat/phase1-currencies, D9/Q15):</strong> the riot table replaces flat removal. Who dies is
+  still random — the mob decides, deliberately — but severity is no longer a pure lottery: pre-roll insurance
+  (three options, once each, +1 apiece) lets a prepared player shift the whole distribution, and full insurance
+  makes a mild riot pop-proof (worst case −6 food or −6 gold — catastrophe converted into taxation). The PDF's
+  choose-your-sacrifice survives as the <em>concession</em>: demote one pop of your choice, free, for +1 on the
+  die. The severe tier (−2, pops ×2) still bites through everything, as it should.</p>
 
   <h3>Remaining gaps</h3>
   <ul>
@@ -913,7 +917,7 @@
     <thead><tr><th>#</th><th>Priority</th><th>Issue</th><th>Section</th><th>Suggested direction</th></tr></thead>
     <tbody>
       <tr><td>1</td><td><span class="prio p0">P0</span></td><td><s>No end condition — decks reshuffle forever, VP is provisional, nothing concludes</s></td><td><a href="#scoring">§VIII</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): victory race — 5 public "Most X, min Y" cards, hold 3 at own turn start; seasonal deck is the finite clock. Minimum-tuning campaign owed.</td></tr>
-      <tr><td>2</td><td><span class="prio p0">P0</span></td><td>Influence has zero sinks; gold has one 2-gold sink</td><td><a href="#resources">§II</a></td><td>Interim: Stabilize Province (4 inf → 3 hap) + 1:6 bank exchange; real fix arrives with Assembly/Trader</td></tr>
+      <tr><td>2</td><td><span class="prio p0">P0</span></td><td><s>Influence has zero sinks; gold has one 2-gold sink</s></td><td><a href="#resources">§II</a></td><td><strong>RESOLVED</strong> (feat/phase1-currencies): influence buys civic calm (4→+3 hap), demotions (2/3 inf), and riot patronage; gold buys calm (6), promotions (4), venture stakes (5), and any material at the bank. The Assembly remains influence's <em>primary</em> sink (Phase 3).</td></tr>
       <tr><td>3</td><td><span class="prio p1">P1</span></td><td><s>Colony contiguity &amp; capital protection radius documented but unimplemented — colonies teleport</s></td><td><a href="#placement">§V</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): radius-1 contiguity enforced (colonies chain); ring claim deleted from rules.md/spec</td></tr>
       <tr><td>4</td><td><span class="prio p1">P1</span></td><td><s>Food-stockpile happiness is uncapped — hoards buy unrest immunity and double-dip with banked-material VP</s></td><td><a href="#unrest">§VII</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): capped at +2 (ruleset tunable)</td></tr>
       <tr><td>5</td><td><span class="prio p1">P1</span></td><td>Player event deck: 92% upside, 30% free pops, EV ≈ +5/turn — outearns tiles, huge private variance</td><td><a href="#cards">§VI</a></td><td>Reduce free-pop copies to discounts; target EV ≈ +2 and ~25% harm</td></tr>
@@ -925,7 +929,7 @@
       <tr><td>11</td><td><span class="prio p2">P2</span></td><td>Granary strictly dominates the first-build decision in every city</td><td><a href="#buildings">§IV</a></td><td>Trim to +1 food or drop the grow discount to −1; revisit alongside tier 2</td></tr>
       <tr><td>12</td><td><span class="prio p2">P2</span></td><td>Dominated options on choice cards (Caravan Contacts, Skilled Mason, Temple Donation)</td><td><a href="#cards">§VI</a></td><td>Reprice the losing options until they're situational</td></tr>
       <tr><td>13</td><td><span class="prio p2">P2</span></td><td><s>Capital has no identity — engine-identical to a city</s></td><td><a href="#state">§I</a></td><td><strong>RESOLVED by decision</strong> (2026-07-12): flattened on purpose — a privileged capital multiplies tile quality and turns placement into the game. Future capital identity must be additive or liability-shaped (slots, votes, blockade target), never a yield multiplier.</td></tr>
-      <tr><td>14</td><td><span class="prio p2">P2</span></td><td>Random unrest removal makes punishment severity a lottery</td><td><a href="#unrest">§VII</a></td><td>Adopt PDF's player-choice sacrifice (1c / 2f / 4s) once UI allows</td></tr>
+      <tr><td>14</td><td><span class="prio p2">P2</span></td><td><s>Random unrest removal makes punishment severity a lottery</s></td><td><a href="#unrest">§VII</a></td><td><strong>RESOLVED</strong> (feat/phase1-currencies, D9/Q15): the riot table replaces flat removal — who dies stays random (the mob decides) but the player now holds the levers: pre-roll insurance ×3 (max +3 turns catastrophe into taxation) and the free concession-demotion IS the PDF's choose-your-sacrifice, priced into the insurance slot.</td></tr>
       <tr><td>15</td><td><span class="prio p2">P2</span></td><td><s><code>preloadOpeningSetupForTesting: true</code> ships a scripted opening</s>; stale analysis docs (initial-round-balance.md)</td><td><a href="#state">§I</a></td><td>Flag <strong>RESOLVED</strong> (off by default; ?dev=preload). Stale docs still to archive/recompute — now including the pre-two-city opening analysis.</td></tr>
     </tbody>
   </table>
@@ -984,6 +988,22 @@
   <table>
     <thead><tr><th>Date</th><th>Engine ref</th><th>Entry</th></tr></thead>
     <tbody>
+      <tr>
+        <td>2026-07-12</td>
+        <td><code>feat/phase1-currencies</code></td>
+        <td><strong>Phase 1 built end-to-end</strong> — every currency gets a job. Event tables shipped as
+        the reusable data-driven component (riot + three expeditions are the first instances). Bank
+        exchange (D6/Q14): per-material rates derived once from board tile counts — classic prices
+        wood 4→1g/2g · stone 2→1g/3g · food 3→1g/2g; derivation A/B (20 games/arm, same seeds) showed
+        no measurable difference, <em>scarcity</em> kept as default for board texture
+        (docs/sim/2026-07-12-bank-rates-ab.md). Civic calm (D7), ladder (D8), riot table with
+        all-three insurance and building destruction on the 1 (D9/Q15), three ventures (D10/Q16).
+        Exit-gate readings: all 8 currency verbs alive in sims; riots roll ~3/game; race close-rate
+        rose to 50–55% (from 33–45%) — the leaner currencies race harder. NEW WATCH FLAGS: venture
+        wood-stake (8w) is strictly cheaper than the 5g stake at bank prices (thematic, but monitor);
+        a freeman's +2 gold/turn now equals ~1 flexible material/turn vs a slave; gold→food means the
+        rich never starve (accepted, D6).</td>
+      </tr>
       <tr>
         <td>2026-07-12</td>
         <td><code>feat/phase0-victory-race</code></td>
