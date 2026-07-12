@@ -67,8 +67,13 @@ happens during Phase 2 so Phase 3 starts specced.
 - **First-player rotation:** the season's opening player advances each new year.
 - **Board setting:** "Classic" (current fixed layout) vs "Shuffled" (seeded); landmark
   constraints join the Shuffled option with the Phase 2 terrain rework.
-- Open ripple (tracked, not blocking): the capital is now one of two starting cities —
-  its identity question (balance ledger issue 13) gets sharper.
+- **Capital privilege ban (2026-07-12, user):** capitals are flattened *by design* —
+  a mechanically privileged capital multiplies the value of its tile (the PDF's
+  double-yield capital on a food-8 plains = 16 food/turn = the placement lottery
+  decides the game). If "capital" ever returns as a rules word (politics targets,
+  national ideas), it must be **additive or liability-shaped** — +1 slot, +1 vote,
+  blockade/quarantine target — **never a tile-yield multiplier**. The word survives
+  only as flavor for the first city.
 
 ### D4 · Food-stockpile happiness — `DONE (feat/phase0-victory-race)`
 
