@@ -156,6 +156,42 @@ spitball tests, planned campaigns (e.g. D1 minimum tuning), and phase-exit check
 
 ---
 
+## Open questions
+
+### Q12 · The metropolis fork — `OPEN (sim campaign complete, awaiting call)`
+
+**Context.** "Metropolis" as flavor on one of two identical cities feels hollow; a real
+metropolis+colony setup felt like it conflicted with colony contiguity (clump fear).
+
+**Options on the table:**
+1. **Metropolis + founding colony (Claude's rec):** one city + one colony placed
+   *anywhere* (setup exception, historically the apoikia pattern — Corinth→Syracuse);
+   contiguity applies from turn 1 on. Metropolis is special by *structure* (only city
+   at start), no bonus rules — the capital-privilege ban is untouched. Rebalance
+   starting pops (e.g. metropolis 4 + colony 2). Restores the first colony→city
+   upgrade as an early milestone.
+2. **Two cities, designate one** as metropolis (flavor now, politics address later).
+3. **Two cities, drop the word** entirely.
+
+**Sim campaign (2026-07-12, 30 games × ~30 seasons per variant, greedy, seeds 9000+):**
+
+| Variant | Boxed-in rate | Avg open frontier | Final tiles/player |
+| --- | ---: | ---: | ---: |
+| Two-city + contiguity (current) | **0.0%** | ~9 all game | 6.35 |
+| Two-city, contiguity OFF | 0.0% | 28→19 | 6.50 (+0.15 paired) |
+| Metropolis + *contiguous* colony (clump worst case) | **0.0%** | 6.4–7.8 | 7.12 |
+
+**Findings:** contiguity never boxes anyone in — not one player-turn in 90 games, even
+in the clump-start worst case. Expansion is wood-limited, not geometry-limited; deleting
+the rule changes final territory by +0.15 tiles. The fork can be decided purely on
+identity/economy/feel. Caveats: greedy bots don't play deliberate denial (humans might
+wall a rival, though 6–9-wide frontiers make that expensive), and the clump variant
+showed a wider seat-win spread (10–37%, n=30 — retest whichever variant wins).
+
+**Your answer:**
+
+---
+
 ## Decision log
 
 | # | Question | Decision | Date | Folded into |

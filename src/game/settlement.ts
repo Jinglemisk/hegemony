@@ -91,7 +91,11 @@ export function canPlaceColonyOnTile(G: HegemonyState, playerID: PlayerId, tile:
     status.reasons.push("A tile can hold at most two colonies.");
   }
 
-  if (G.players[playerID].settlements.length > 0 && !isContiguousForPlayer(G, playerID, tile)) {
+  if (
+    G.ruleset.placement.colonyContiguity &&
+    G.players[playerID].settlements.length > 0 &&
+    !isContiguousForPlayer(G, playerID, tile)
+  ) {
     status.reasons.push("Must border one of your settlements.");
   }
 
