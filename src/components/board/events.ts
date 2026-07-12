@@ -1,5 +1,5 @@
 import { BUILDINGS } from "../../game/data";
-import type { BuildingId, EventCard, EventEffect } from "../../game/types";
+import type { BuildingId, EventCard, EventEffect, TableEffect } from "../../game/types";
 import { RESOURCE_LABELS, formatNumber, formatPopLabel, formatSignedNumber } from "../../ui/formatters";
 
 // NOTE: new URL(..., import.meta.url) resolves relative to THIS file. This module
@@ -42,6 +42,31 @@ export function eventCardArtUrl(card: EventCard) {
 
 export function formatEventEffects(effects: EventEffect[]) {
   return effects.map(formatEventEffect).join(" / ");
+}
+
+/** One card-style chip per table-row effect (docs/feat/event-tables.md): signed
+ *  number + token word that AnnotatedText turns into an icon, plus a tone so the
+ *  UI can color-signal gain vs loss at a glance. */
+export function formatTableEffect(effect: TableEffect): { text: string; tone: "positive" | "negative" | "muted" } {
+  switch (effect.type) {
+    case "none":
+      return { text: "—", tone: "muted" };
+    case "losePops":
+      return { text: `-${formatNumber(effect.count)} ${effect.count === 1 ? "pop" : "pops"}`, tone: "negative" };
+    case "loseResource":
+      return {
+        text:
+          `-${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}` +
+          (effect.popLossIfShort ? ` (short: -${formatNumber(effect.popLossIfShort)} pop)` : ""),
+        tone: "negative"
+      };
+    case "destroyBuilding":
+      return { text: "-1 building", tone: "negative" };
+    case "gainResource":
+      return { text: `+${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}`, tone: "positive" };
+    case "gainPop":
+      return { text: `+1 ${formatPopLabel(effect.pop, 1)}`, tone: "positive" };
+  }
 }
 
 function formatEventEffect(effect: EventEffect): string {

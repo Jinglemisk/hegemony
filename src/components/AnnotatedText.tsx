@@ -28,6 +28,12 @@ const TOKEN_MAP: Record<string, Token> = {
   freemen: { type: "pop", key: "freemen" },
   slave: { type: "pop", key: "slaves" },
   slaves: { type: "pop", key: "slaves" },
+  // Generic pops get the roster's population glyph; a generic "building" reads as
+  // the workshop (tools) — both so table rows and chronicle lines can be chip-only.
+  pop: { type: "pop", key: "citizens" },
+  pops: { type: "pop", key: "citizens" },
+  building: { type: "building", key: "workshop" },
+  buildings: { type: "building", key: "workshop" },
   marketplace: { type: "building", key: "marketplace" },
   marketplaces: { type: "building", key: "marketplace" },
   temple: { type: "building", key: "temple" },

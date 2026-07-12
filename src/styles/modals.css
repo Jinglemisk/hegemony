@@ -877,3 +877,34 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Table-row effect chips — card-style icon+number summaries with gain/loss color
+   signaling (user request 2026-07-13), rendered from the same effect data the
+   engine executes so they can never drift. */
+.eventTableRow {
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+}
+
+.eventTableRowEffects {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  justify-content: flex-end;
+}
+
+.eventTableEffect {
+  font-size: 0.76rem;
+  font-style: normal;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.eventTableEffect.muted {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.eventTableEffect .richIcon {
+  width: 14px;
+  height: 14px;
+}
