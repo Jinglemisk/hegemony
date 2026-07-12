@@ -112,6 +112,13 @@ Run before/after batches with the headless sim (`npm run sim` batch mode — com
 
 ## Open Questions
 
+- **Re-check the gold-tile removal after the bank exchange ships (added 2026-07-12):**
+  the D6 gold-mediated market makes tile gold a flexible material income (a 4-gold hill
+  ≈ 2 wood/turn at the 2-gold buy rate), which partially rehabilitates gold hills. The
+  first-order/second-order principle may still win, but re-run the contiguity/expansion
+  sim campaign with the market live before executing the hill rework (see
+  roadmap-appendix Q13).
+
 - Exact hill art/theming for the acropolis identity (flat-vase style, per design vision).
 - Do coastal tiles (when they land) also carry slots, or are they pure feature tiles
   (luxury/fishing/exchange-rate) as the PDF implies? Leaning pure feature tiles.
