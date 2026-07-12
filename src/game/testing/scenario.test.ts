@@ -57,8 +57,8 @@ describe("scenario builder", () => {
     expect(G.ruleset.placementPopCounts.city).toBe(3);
   });
 
-  it("rejects the scripted opening outside the two-city setup", () => {
-    expect(() => scenario({ mode: "deathmatch" }).opening()).toThrow(/capital\+city/);
+  it("rejects the scripted opening outside the standard setup", () => {
+    expect(() => scenario({ mode: "deathmatch" }).opening()).toThrow(/capital\+colony/);
   });
 
   it("helpers throw on missing entities", () => {

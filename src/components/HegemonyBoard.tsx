@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GameEvents, GameMoves, LocalContext } from "../game/controller";
 import {
   calculateEconomyProjection,
+  canPlaceColonyOnTile,
   getBuildBuildingStatus,
   getFoundColonyStatus,
   getUpgradeColonyToCityStatus,
@@ -40,9 +41,9 @@ type PendingTileConfirmation = {
 type SetupPlacement = "capital" | "city" | "colony";
 
 const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
-  capital: "capital",
+  capital: "metropolis",
   city: "second city",
-  colony: "colony"
+  colony: "founding colony"
 };
 
 export function HegemonyBoard({
@@ -87,13 +88,21 @@ export function HegemonyBoard({
         : [],
     [foundColonyMode, G, viewerId]
   );
+  // During the founding-colony round, glow every legal tile (coast or beside the metropolis).
+  const setupColonyValidTileIds = useMemo(
+    () =>
+      ctx.phase === "setupColony"
+        ? G.board.tiles.filter((tile) => canPlaceColonyOnTile(G, currentPlayerId, tile, "setup").can).map((tile) => tile.id)
+        : [],
+    [ctx.phase, G, currentPlayerId]
+  );
   const pendingSetupCopy =
     ctx.phase === "setupCapital"
-      ? "Select a tile for your capital — never adjacent to another city"
+      ? "Select a tile for your metropolis — never adjacent to another city"
       : ctx.phase === "setupCity"
         ? "Select a tile for your second city — never adjacent to another city"
         : ctx.phase === "setupColony"
-          ? "Select a tile bordering your settlements for this colony"
+          ? "Select a glowing tile for your founding colony — any coast, or beside your metropolis"
           : "Income and building actions";
 
   const exitFoundColonyMode = () => {
@@ -242,8 +251,8 @@ export function HegemonyBoard({
               confirmation={confirmation}
               pendingTileId={tileConfirmation?.tileId ?? null}
               selectedTileId={selectedTileId}
-              highlightTileIds={foundColonyValidTileIds}
-              placementActive={foundColonyMode}
+              highlightTileIds={foundColonyMode ? foundColonyValidTileIds : setupColonyValidTileIds}
+              placementActive={foundColonyMode || ctx.phase === "setupColony"}
               onTileAction={handleTileAction}
             />
             {isSetup ? (

@@ -36,13 +36,13 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
     !tile ||
     player.settlements.length > 0 ||
     tile.settlements.length > 0 ||
-    !isExactPopSelection(pops, G.ruleset.placementPopCounts.city)
+    !isExactPopSelection(pops, G.ruleset.placementPopCounts.capital)
   ) {
     return invalid();
   }
 
   if (isAdjacentToCity(G, tile)) {
-    return invalid("Capitals cannot be adjacent to another city.");
+    return invalid("The metropolis cannot be adjacent to another city.");
   }
 
   tile.settlements.push({
@@ -52,7 +52,7 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
     pops: clonePops(pops)
   });
   player.settlements.push(tile.id);
-  addLog(G, `${getPlayerName(G, playerID)} founded a city on ${tile.terrain} with ${formatPops(pops)}.`);
+  addLog(G, `${getPlayerName(G, playerID)} founded their metropolis on ${tile.terrain} with ${formatPops(pops)}.`);
   return MOVE_OK;
 }
 
@@ -101,7 +101,7 @@ export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string
   if (
     !tile ||
     !owesColony ||
-    !canPlaceColonyOnTile(G, playerID, tile).can ||
+    !canPlaceColonyOnTile(G, playerID, tile, "setup").can ||
     !isExactPopSelection(pops, G.ruleset.placementPopCounts.colony)
   ) {
     return invalid();

@@ -26,7 +26,7 @@ function fresh(): HegemonyState {
   return createInitialState(SEED);
 }
 
-/** A game whose setup list still owes colonies, for exercising placeColony. */
+/** The standard metropolis+colony setup (explicit for readability). */
 function freshColonySetup(): HegemonyState {
   return createInitialState(SEED, deriveRuleset(DEFAULT_RULESET, { setup: ["capital", "colony"] }));
 }
@@ -74,12 +74,12 @@ function wealthy(state: HegemonyState, playerID: PlayerId) {
 describe("setup placement", () => {
   it("places a capital as a city and indexes it on the player", () => {
     const state = fresh();
-    const result = placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
+    const result = placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
 
     expect(result.ok).toBe(true);
     const settlement = owned(state, "0,0", "0");
     expect(settlement.kind).toBe("city");
-    expect(settlement.pops).toEqual({ citizens: 1, freemen: 1, slaves: 1 });
+    expect(settlement.pops).toEqual({ citizens: 1, freemen: 2, slaves: 1 });
     expect(state.players["0"].settlements).toEqual(["0,0"]);
   });
 
@@ -90,35 +90,35 @@ describe("setup placement", () => {
 
   it("rejects a capital on an occupied tile", () => {
     const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
-    expect(placeCapital(state, "1", "0,0", { citizens: 1, freemen: 1, slaves: 1 }).ok).toBe(false);
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
+    expect(placeCapital(state, "1", "0,0", { citizens: 1, freemen: 2, slaves: 1 }).ok).toBe(false);
   });
 
   it("rejects a capital adjacent to an existing city", () => {
     const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     // "1,0" is one hex from "0,0".
-    expect(placeCapital(state, "1", "1,0", { citizens: 1, freemen: 1, slaves: 1 }).ok).toBe(false);
+    expect(placeCapital(state, "1", "1,0", { citizens: 1, freemen: 2, slaves: 1 }).ok).toBe(false);
   });
 
-  it("places a colony after the capital, requiring contiguity, and rejects a colony on a city tile", () => {
+  it("founding colony: coastal voyage or beside the metropolis, never on a city tile", () => {
     const state = freshColonySetup();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
-    placeCapital(state, "1", "-3,0", { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
+    placeCapital(state, "1", "-3,0", { citizens: 1, freemen: 2, slaves: 1 });
 
-    // "3,0" is three hexes from the capital — colonies must border an owned settlement.
-    expect(placeColony(state, "0", "3,0", { citizens: 0, freemen: 0, slaves: 1 }).ok).toBe(false);
-    // "1,0" borders the capital.
-    expect(placeColony(state, "0", "1,0", { citizens: 0, freemen: 0, slaves: 1 }).ok).toBe(true);
-    expect(owned(state, "1,0", "0").kind).toBe("colony");
+    // "1,1" is interior and non-adjacent — neither coast nor contiguity allows it.
+    expect(placeColony(state, "0", "1,1", { citizens: 0, freemen: 0, slaves: 2 }).ok).toBe(false);
+    // "3,0" is far away but COASTAL — the founding voyage (roadmap-appendix Q12).
+    expect(placeColony(state, "0", "3,0", { citizens: 0, freemen: 0, slaves: 2 }).ok).toBe(true);
+    expect(owned(state, "3,0", "0").kind).toBe("colony");
 
     // "0,0" already holds a city, so a colony there is illegal.
-    expect(placeColony(state, "1", "0,0", { citizens: 0, freemen: 0, slaves: 1 }).ok).toBe(false);
+    expect(placeColony(state, "1", "0,0", { citizens: 0, freemen: 0, slaves: 2 }).ok).toBe(false);
   });
 
-  it("places the second city anywhere legal — never adjacent to a city", () => {
-    const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
+  it("places the second city anywhere legal — never adjacent to a city (two-city mode)", () => {
+    const state = createInitialState(SEED, deriveRuleset(DEFAULT_RULESET, { setup: ["capital", "city"] }));
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
 
     // Adjacent to the capital is illegal for a city…
     expect(placeCity(state, "0", "1,0", { citizens: 1, freemen: 1, slaves: 1 }).ok).toBe(false);
@@ -132,7 +132,7 @@ describe("per-settlement income (settlementNetYield)", () => {
   it("sums citizen yields: +1 influence, +2 gold, -2 food each", () => {
     const state = fresh();
     const mat = materialTile(state);
-    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
     const settlement = owned(state, mat.id, "0");
     settlement.pops = { citizens: 3, freemen: 0, slaves: 0 };
 
@@ -147,7 +147,7 @@ describe("per-settlement income (settlementNetYield)", () => {
   it("sums slave yields: +1 tile resource, -1 food, -0.5 happiness each", () => {
     const state = fresh();
     const mat = materialTile(state);
-    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
     const settlement = owned(state, mat.id, "0");
     settlement.pops = { citizens: 0, freemen: 0, slaves: 2 };
 
@@ -160,7 +160,7 @@ describe("per-settlement income (settlementNetYield)", () => {
   it("applies a -1 happiness penalty per pop over capacity", () => {
     const state = fresh();
     const mat = materialTile(state);
-    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
     const settlement = owned(state, mat.id, "0");
     // Capital capacity is 10; 12 citizens => 2 over capacity.
     settlement.pops = { citizens: 12, freemen: 0, slaves: 0 };
@@ -171,7 +171,7 @@ describe("per-settlement income (settlementNetYield)", () => {
   it("Marketplace adds +2 gold per supported freeman (max 3)", () => {
     const state = fresh();
     const mat = materialTile(state);
-    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
     const settlement = owned(state, mat.id, "0");
     settlement.pops = { citizens: 0, freemen: 5, slaves: 0 };
     settlement.buildings = ["marketplace"];
@@ -183,7 +183,7 @@ describe("per-settlement income (settlementNetYield)", () => {
   it("Temple adds +1 flat happiness and +1 influence per supported citizen (max 2)", () => {
     const state = fresh();
     const mat = materialTile(state);
-    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
     const settlement = owned(state, mat.id, "0");
     settlement.pops = { citizens: 3, freemen: 0, slaves: 0 };
     settlement.buildings = ["temple"];
@@ -212,7 +212,7 @@ describe("player income & happiness (calculateIncome)", () => {
   it("adds +1 happiness per 5 stored food", () => {
     const state = fresh();
     const mat = materialTile(state);
-    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
     owned(state, mat.id, "0").pops = { citizens: 0, freemen: 0, slaves: 0 };
 
     // Starting food is 12 => floor(12 / 5) = 2 happiness.
@@ -222,7 +222,7 @@ describe("player income & happiness (calculateIncome)", () => {
   it("grants first-income grace against food-shortage happiness pressure", () => {
     const state = fresh();
     const mat = materialTile(state);
-    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
     // 8 citizens => -16 food income; stockpile 12 => projected -4.
     owned(state, mat.id, "0").pops = { citizens: 8, freemen: 0, slaves: 0 };
 
@@ -239,8 +239,8 @@ describe("player income & happiness (calculateIncome)", () => {
 describe("city upgrade", () => {
   it("upgrades a colony to a city, pays the cost, and displaces a shared enemy colony", () => {
     const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
-    placeCapital(state, "1", "-3,0", { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
+    placeCapital(state, "1", "-3,0", { citizens: 1, freemen: 2, slaves: 1 });
     const slave = { citizens: 0, freemen: 0, slaves: 1 };
     poke(state, "0", "3,0", "colony", slave);
     poke(state, "1", "3,0", "colony", slave);
@@ -262,7 +262,7 @@ describe("city upgrade", () => {
 
   it("rejects an upgrade on a tile without the player's colony", () => {
     const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     wealthy(state, "0");
     // "0,0" holds a city, not a colony.
     expect(upgradeColonyToCity(state, "0", "0,0").ok).toBe(false);
@@ -272,7 +272,7 @@ describe("city upgrade", () => {
 describe("buildings", () => {
   it("builds a Marketplace on a city, paying its cost and consuming a slot", () => {
     const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     const beforeWood = state.players["0"].resources.wood;
 
     const result = buildBuilding(state, "0", "0,0", "marketplace");
@@ -283,7 +283,7 @@ describe("buildings", () => {
 
   it("cannot build on a colony (no building slots)", () => {
     const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     poke(state, "0", "3,0", "colony", { citizens: 0, freemen: 0, slaves: 1 });
     expect(buildBuilding(state, "0", "3,0", "marketplace").ok).toBe(false);
   });
@@ -292,7 +292,7 @@ describe("buildings", () => {
 describe("grow pop", () => {
   it("grows a slave for food and only once per settlement per turn", () => {
     const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     const beforeFood = state.players["0"].resources.food;
 
     const result = growPop(state, "0", "0,0", "slaves");
@@ -306,7 +306,7 @@ describe("grow pop", () => {
 
   it("rejects growth at population capacity", () => {
     const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     owned(state, "0,0", "0").pops = { citizens: 10, freemen: 0, slaves: 0 };
     expect(growPop(state, "0", "0,0", "citizens").ok).toBe(false);
   });
@@ -355,7 +355,7 @@ describe("season rollover", () => {
 describe("found colony & population transfers", () => {
   it("founds a colony, sends a pop in transit, and deposits it on arrival", () => {
     const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 1, slaves: 1 });
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     wealthy(state, "0");
 
     // Non-contiguous founding is rejected outright (roadmap-appendix D3).

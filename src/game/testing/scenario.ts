@@ -1,6 +1,6 @@
 import { TEST_OPENING_SETUP } from "../config";
 import { PLAYER_EVENT_CARDS, SEASONAL_EVENT_CARDS } from "../data";
-import { placeCapital, placeCity } from "../actions";
+import { placeCapital, placeColony } from "../actions";
 import { clonePops } from "../core/pops";
 import type { MoveResult } from "../core/results";
 import { createInitialState } from "../state";
@@ -74,17 +74,17 @@ export class ScenarioBuilder {
   }
 
   /**
-   * Replay the scripted 4-player two-city opening through the real mutators (snake
-   * order, driven by the setup machine), landing in gameplay with the opener's first
-   * turn already bootstrapped (upkeep + income + event draw — so a pending event may
-   * be waiting). Stack any deck riggings BEFORE calling this if they should influence
-   * that first draw.
+   * Replay the scripted 4-player metropolis+colony opening through the real mutators
+   * (snake order, driven by the setup machine), landing in gameplay with the opener's
+   * first turn already bootstrapped (upkeep + income + event draw — so a pending event
+   * may be waiting). Stack any deck riggings BEFORE calling this if they should
+   * influence that first draw.
    */
   opening(): this {
     const { G } = this;
 
-    if (G.ruleset.setup.join() !== "capital,city") {
-      throw new Error("The scripted opening only fits the capital+city standard setup.");
+    if (G.ruleset.setup.join() !== "capital,colony") {
+      throw new Error("The scripted opening only fits the capital+colony standard setup.");
     }
 
     let guard = 0;
@@ -100,8 +100,8 @@ export class ScenarioBuilder {
         throw new Error(`scenario opening: no placement for player ${G.currentPlayer}`);
       }
 
-      const target = G.phase === "setupCapital" ? placement.capital : placement.secondCity;
-      const place = G.phase === "setupCapital" ? placeCapital : placeCity;
+      const target = G.phase === "setupCapital" ? placement.capital : placement.colony;
+      const place = G.phase === "setupCapital" ? placeCapital : placeColony;
       assertOk(place(G, placement.playerID, target.tileId, target.pops), placement.playerID, target.tileId);
       advanceSetupTurn(G);
     }

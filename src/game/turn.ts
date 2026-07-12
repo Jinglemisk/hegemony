@@ -7,7 +7,7 @@ import {
   drawSeasonalEvent,
   expireTurnEventModifiers,
   placeCapital,
-  placeCity,
+  placeColony,
   resolveArrivingPops,
   startNewSeason,
 } from "./rules";
@@ -141,12 +141,12 @@ export function endTurn(G: HegemonyState): MoveResult {
   return { ok: true };
 }
 
-/** Replay the scripted two-city opening through the real machine (dev preload). */
+/** Replay the scripted metropolis+colony opening through the real machine (dev preload). */
 function runPreloadOpeningSetup(G: HegemonyState) {
-  // The scripted opening only supplies one capital + one second city per player, so it
-  // fits the two-city "standard" setup; other modes start from the empty flow.
-  if (G.ruleset.setup.join() !== "capital,city") {
-    throw new Error("The scripted preload only fits the capital+city standard setup.");
+  // The scripted opening supplies one metropolis + one founding colony per player, so
+  // it fits the standard setup; other modes start from the empty flow.
+  if (G.ruleset.setup.join() !== "capital,colony") {
+    throw new Error("The scripted preload only fits the capital+colony standard setup.");
   }
 
   let guard = 0;
@@ -165,7 +165,7 @@ function runPreloadOpeningSetup(G: HegemonyState) {
     const result =
       G.phase === "setupCapital"
         ? placeCapital(G, placement.playerID, placement.capital.tileId, placement.capital.pops)
-        : placeCity(G, placement.playerID, placement.secondCity.tileId, placement.secondCity.pops);
+        : placeColony(G, placement.playerID, placement.colony.tileId, placement.colony.pops);
 
     if (!result.ok) {
       throw new Error(`Invalid test setup: ${placement.playerID} cannot place during ${G.phase}.`);

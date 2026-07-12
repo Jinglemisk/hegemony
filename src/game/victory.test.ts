@@ -17,15 +17,16 @@ describe("victory card standings", () => {
   it("a card is held only by the sole leader at or above the minimum", () => {
     const G = scenario().opening().build();
 
-    // Everyone starts with 2 cities — tied, so Polis Builder is unheld even
-    // though nobody meets the minimum anyway.
+    // Everyone starts with 1 city (the metropolis) — tied, so Polis Builder is unheld.
     const cities = victoryStandings(G).find((standing) => standing.card.metric === "cities");
     expect(cities?.holder).toBeNull();
 
-    // Give player 1 a third city (meets the minimum of 3, sole leader).
+    // Give player 1 two more cities (meets the minimum of 3, sole leader).
+    const none = { citizens: 0, freemen: 0, slaves: 0 };
     const G2 = scenario()
       .opening()
-      .withSettlement("1", "0,-3", "city", { citizens: 0, freemen: 0, slaves: 0 })
+      .withSettlement("1", "0,0", "city", none)
+      .withSettlement("1", "1,-2", "city", none)
       .build();
     const cities2 = victoryStandings(G2).find((standing) => standing.card.metric === "cities");
     expect(cities2?.holder).toBe("1");
@@ -56,7 +57,8 @@ describe("victory card standings", () => {
   it("ends the game at the start of a turn when the player holds three cards", () => {
     const G = scenario()
       .opening()
-      .withSettlement("0", "0,-3", "city", { citizens: 6, freemen: 4, slaves: 0 })
+      .withSettlement("0", "0,0", "city", { citizens: 6, freemen: 4, slaves: 0 })
+      .withSettlement("0", "1,-2", "city", { citizens: 0, freemen: 0, slaves: 0 })
       .withHappiness("0", 12)
       .build();
 
@@ -91,14 +93,10 @@ describe("the seasonal deck is a finite clock", () => {
     expect(G.seasonalDiscardPile.length).toBeGreaterThan(0);
   });
 
-  it("resolves the exhaustion tally when the deck runs out: most cards, then happiness", () => {
-    // Player 3 holds Polis Builder (third city) and towers on happiness — the
-    // exhaustion tally ranks by cards held first, then happiness.
-    const G = scenario()
-      .opening()
-      .withSettlement("3", "0,-3", "city", { citizens: 0, freemen: 0, slaves: 0 })
-      .withHappiness("3", 40)
-      .build();
+  it("resolves the exhaustion tally when the deck runs out: cards tie at zero, happiness decides", () => {
+    // Nobody reaches a minimum from the opening, so cards tie at 0 and the tally
+    // falls through to the happiness tiebreak.
+    const G = scenario().opening().withHappiness("3", 40).build();
     G.seasonalDrawPile = [];
 
     startNewSeason(G);

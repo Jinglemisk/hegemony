@@ -10,7 +10,11 @@ import type { HegemonyState, PlayerId, Pops, SettlementKind } from "./types";
 // validate fully before mutating, so a rejected attempt leaves the state untouched.
 function placeAny(G: HegemonyState, playerID: PlayerId, kind: SettlementKind): boolean {
   const pops: Pops =
-    kind === "colony" ? { citizens: 0, freemen: 0, slaves: 1 } : { citizens: 1, freemen: 1, slaves: 1 };
+    kind === "colony"
+      ? { citizens: 0, freemen: 0, slaves: 2 }
+      : kind === "capital"
+        ? { citizens: 1, freemen: 2, slaves: 1 }
+        : { citizens: 1, freemen: 1, slaves: 1 };
   const place = kind === "colony" ? placeColony : kind === "city" ? placeCity : placeCapital;
 
   for (const tile of G.board.tiles) {
@@ -44,14 +48,14 @@ describe("game modes / ruleset seam", () => {
   });
 
   it("registers standard, fast-start, and deathmatch modes", () => {
-    expect(GAME_MODES.standard.ruleset.setup).toEqual(["capital", "city"]);
+    expect(GAME_MODES.standard.ruleset.setup).toEqual(["capital", "colony"]);
     expect(GAME_MODES.fastStart.ruleset.startingResources.wood).toBe(40);
-    expect(GAME_MODES.fastStart.ruleset.setup).toEqual(["capital", "city"]);
+    expect(GAME_MODES.fastStart.ruleset.setup).toEqual(["capital", "colony"]);
     expect(GAME_MODES.deathmatch.ruleset.setup).toEqual(["capital", "colony", "colony", "colony"]);
     expect(setupCapitalCount(GAME_MODES.deathmatch.ruleset)).toBe(1);
   });
 
-  it("standard setup: each player places two cities, then gameplay begins", () => {
+  it("standard setup: each player places a metropolis and a founding colony, then gameplay begins", () => {
     const G = createInitialState(1, GAME_MODES.standard.ruleset);
     runSetup(G);
 

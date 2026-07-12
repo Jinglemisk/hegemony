@@ -1,4 +1,4 @@
-import { hexDistance } from "./map";
+import { hexDistance, isCoastalTile } from "./map";
 import type { HegemonyState, HexTile, PlayerId, PopType, Settlement } from "./types";
 import { capitalize } from "./core/format";
 import { totalPops } from "./core/pops";
@@ -73,7 +73,28 @@ export function isContiguousForPlayer(G: HegemonyState, playerID: PlayerId, tile
   });
 }
 
-export function canPlaceColonyOnTile(G: HegemonyState, playerID: PlayerId, tile: HexTile): ActionStatus {
+/** Whether the player holds any settlement on the island's shoreline — the gate for
+ *  the coastal-leapfrog rule (sailing along the coast, roadmap-appendix Q13a). */
+export function playerHoldsCoast(G: HegemonyState, playerID: PlayerId) {
+  return G.players[playerID].settlements.some((tileId) => {
+    const owned = getTile(G, tileId);
+    return owned ? isCoastalTile(owned) : false;
+  });
+}
+
+/**
+ * Colony placement legality. `context` picks the geometry rule:
+ * - "gameplay" (founding): border your realm, OR sail — a coastal target is legal
+ *   while you hold any coastal settlement (leapfrog, Q13a).
+ * - "setup" (the founding voyage, Q12): border your metropolis, OR any coastal tile —
+ *   apoikiai were coastal foundations; no prior coastal holding required.
+ */
+export function canPlaceColonyOnTile(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tile: HexTile,
+  context: "gameplay" | "setup" = "gameplay"
+): ActionStatus {
   const status: ActionStatus = {
     can: false,
     reasons: []
@@ -91,12 +112,20 @@ export function canPlaceColonyOnTile(G: HegemonyState, playerID: PlayerId, tile:
     status.reasons.push("A tile can hold at most two colonies.");
   }
 
-  if (
-    G.ruleset.placement.colonyContiguity &&
-    G.players[playerID].settlements.length > 0 &&
-    !isContiguousForPlayer(G, playerID, tile)
-  ) {
-    status.reasons.push("Must border one of your settlements.");
+  if (G.ruleset.placement.colonyContiguity && G.players[playerID].settlements.length > 0) {
+    const contiguous = isContiguousForPlayer(G, playerID, tile);
+    const bySea =
+      context === "setup"
+        ? isCoastalTile(tile)
+        : G.ruleset.placement.coastalLeapfrog && isCoastalTile(tile) && playerHoldsCoast(G, playerID);
+
+    if (!contiguous && !bySea) {
+      status.reasons.push(
+        context === "setup"
+          ? "The founding colony must border your metropolis or lie on the coast."
+          : "Must border one of your settlements — or be a coastal tile while you hold the coast."
+      );
+    }
   }
 
   status.can = status.reasons.length === 0;

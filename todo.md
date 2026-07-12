@@ -21,7 +21,7 @@
 -- Pre-roll insurance only (max +2): bread dole 4 food, free concession-demotion, 3 influence patronage.
 -- Ventures ("Fund an Expedition"): stake 5 gold / 8 wood, d6 for lost / break-even / win 9 — ~−7% EV, the catch-up casino. Another event table + Actions-tab entry.
 
-- Coastal leapfrog placement rule. (settled in principle — roadmap-appendix Q13a; implement with the Q12 setup resolution or with Phase 4 ports)
+- ~~Coastal leapfrog placement rule.~~ DONE (feat/phase0-victory-race, with the Q12 metropolis setup).
 -- The island's 18 rim tiles are the coastline. Hold any settlement on a coastal tile → you may found colonies on any other coastal tile (sailing, not teleporting); interior colonies still chain by contiguity. Tuning knob: +2 food voyage cost for sea-founded colonies.
 -- Dovetails with the metropolis fork (Q12): the founding colony could be "any coastal tile" — the apoikia pattern.
 
@@ -54,7 +54,7 @@
 
 - Add more start setups / game modes.
 -- The mode seam already works (standard / fast-start / deathmatch), selected in code by GAME_CONFIG.mode — a mode is just a ruleset patch.
--- ~~SETTLED (roadmap-appendix D3)~~ BUILT: the standard setup is TWO CITIES — capital + second city, snake order, no setup colony, 3 pops each. Colonies are all player-founded, chained by radius-1 contiguity. Board setting shipped as ?board=classic|shuffled (+ ?seed=N, ?dev=preload).
+-- ~~SETTLED (roadmap-appendix D3)~~ SUPERSEDED by Q12 (2026-07-12): the standard setup is now METROPOLIS (4 pops) + FOUNDING COLONY (2 pops, any coastal tile or beside the metropolis), snake order. Gameplay colonies chain by contiguity or sail coast-to-coast (leapfrog). Board setting: ?board=classic|shuffled (+ ?seed=N, ?dev=preload, ?setup=manual).
 -- Add more modes as data; an in-game mode picker is lobby scope (deferred).
 
 - Add a second tier of buildings.

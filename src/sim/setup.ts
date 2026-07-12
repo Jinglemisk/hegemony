@@ -34,8 +34,8 @@ export function buildNewGame({ seed, mode, patch, opening, simRng, onMove }: New
   }
 
   if (opening === "fixed") {
-    if (G.ruleset.setup.join() !== "capital,city") {
-      throw new Error(`--opening fixed only fits the capital+city standard setup (mode ${mode})`);
+    if (G.ruleset.setup.join() !== "capital,colony") {
+      throw new Error(`--opening fixed only fits the capital+colony standard setup (mode ${mode})`);
     }
 
     // The setup machine runs snake order; follow whoever it says is up.
@@ -53,7 +53,7 @@ export function buildNewGame({ seed, mode, patch, opening, simRng, onMove }: New
       const move: LegalMove =
         G.phase === "setupCapital"
           ? { type: "placeCapital", tileId: placement.capital.tileId, pops: placement.capital.pops }
-          : { type: "placeCity", tileId: placement.secondCity.tileId, pops: placement.secondCity.pops };
+          : { type: "placeColony", tileId: placement.colony.tileId, pops: placement.colony.pops };
       applyRecorded(G, move, onMove);
     }
 
