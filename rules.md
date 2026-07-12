@@ -180,9 +180,13 @@ minimum — ties, or leading below the minimum, leave the card unheld:
 | --- | --- | ---: |
 | Polis Builder | most cities standing | 3 |
 | Demos | most total pops | 16 |
-| Civic Elite | most citizens | 6 |
-| Treasurer | largest banked material stockpile | 40 |
-| Beloved of the People | highest happiness | +5 |
+| Civic Elite | most citizens | 8 |
+| Treasurer | largest banked material stockpile | 80 |
+| Beloved of the People | highest happiness | +10 |
+
+No card can be held at the start of the game — every minimum sits above anything
+your setup and first turn can produce. Holding a card is an achievement, never a
+starting condition.
 
 **Hold any 3 cards at the start of your own turn and you win on the spot.** The
 check happens at your turn start, so the table always gets one full round to see

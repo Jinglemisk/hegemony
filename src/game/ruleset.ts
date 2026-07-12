@@ -106,8 +106,12 @@ export const DEFAULT_RULESET: Ruleset = {
   placementPopCounts: PLACEMENT_POP_COUNTS,
   settlements: SETTLEMENT_RULES,
   victory: {
+    // Design rule (roadmap-appendix D1, 2026-07-12): no card may be holdable at game
+    // start or on the first turn — every minimum sits above anything a legal setup
+    // plus one lucky opening turn can produce (start: 2 cities, 6 pops, ≤6 citizens,
+    // 52 banked materials, 0 happiness).
     cardsToWin: 3,
-    minimums: { cities: 3, pops: 16, citizens: 6, stockpile: 40, happiness: 5 }
+    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 10 }
   },
   actionCosts: ACTION_COSTS,
   growPopCosts: GROW_POP_COSTS,
