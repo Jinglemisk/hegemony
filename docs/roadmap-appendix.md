@@ -41,6 +41,18 @@ starts; answers get folded into feat plans and code; the decision log keeps the 
   opening turn can produce (start: 2 cities, 6 pops, ≤6 citizens, 52 banked, 0
   happiness). Raised citizens 6→8, stockpile 40→80, happiness +5→+10 accordingly;
   the tuning campaign refines from here.
+- **Minimum-tuning campaign (2026-07-12, Phase 0 exit gate, on the metropolis setup):**
+  three configs × 30 games + a 60-game confirmation (greedy, seeds 9000/12000).
+  Current minimums (3/16/8/80/+10): races close in 33–45% of bot games, and when they
+  close they end at **mean year 4.8 — exactly the D1 target** (median s18–22). Lower
+  (3/14/7/65/+8): 40% close, y4.6 — no real gain. Higher (4/20/10/100/+14): 13% close —
+  everything hits the ceiling. **Verdict: keep current minimums.** Greedy bots don't
+  pursue card combinations deliberately, so the bot close-rate understates humans;
+  tuning minimums down to inflate it would overshoot for real play.
+  **Watch item:** seat 3 won 34/90 games (38%, +2.8σ) at current minimums across two
+  seed bases — possibly the snake turnaround (last metropolis pick + first founding-
+  colony pick with full information). Flipped to a trough in one config, so not yet
+  conclusive; re-examine with a stronger bot or human playtests before calling it.
 
 - **Failsafe ceiling:** the seasonal deck stops reshuffling (29 cards ≈ 7 years). If it
   empties before anyone wins, most cards held wins; tiebreak highest happiness, then

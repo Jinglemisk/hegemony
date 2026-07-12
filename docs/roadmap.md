@@ -28,9 +28,11 @@ Last updated: 2026-07-11.
 ## Phases
 
 Each phase ends in a playable, sim-verified milestone.
-**Status:** Phase 0 built on `feat/phase0-victory-race` (see the appendix execution
-log); its exit gate (flat seat win rates in a planned batch + the minimum-tuning
-campaign) is still to be run before Phase 1 starts.
+**Status:** Phase 0 built on `feat/phase0-victory-race`; setup superseded once by Q12
+(metropolis + coastal founding colony + leapfrog). Exit gate run 2026-07-12: every game
+ends ✓; race wins land at mean year 4.8 (on target) ✓; minimums confirmed at
+3/16/8/80/+10; seat fairness carries one watch item (a +2.8σ seat-3 lean under greedy
+bots — see appendix D1). Remaining before Phase 1: user playtest sign-off.
 
 | Phase | Theme | Contents | Gate to exit |
 | --- | --- | --- | --- |
@@ -48,7 +50,7 @@ table above reflects Claude's recommendation.
 
 - **Politicians** — PDF sketches four, incl. Stratokles as the leader-check
   (Catan-robber pattern, pooled-resource neutralization). Blocks Phase 3.
-- ~~**Victory cards**~~ — designed (appendix D1): 5 public "Most X, min Y" cards, race to hold 3. Minimum-tuning sim campaign still owed.
+- ~~**Victory cards**~~ — designed and tuned (appendix D1): 5 public "Most X, min Y" cards, race to hold 3; minimums confirmed by the 2026-07-12 campaign.
 - **Yearly cards / d20 omen table** — from `seasons.md`; slot flexible (Phase 1 or 3).
 - **Military** — Barracks placeholder only. Explicitly parked: not designed, not
   scheduled.
