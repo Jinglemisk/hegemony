@@ -47,6 +47,26 @@ export function getGrowPopCost(
   };
 }
 
+/**
+ * Grow cost after event grow-coupons (deck overhaul, ledger issue 5) on top of the
+ * building discount. Grow coupons never ride the seasonal building-cost multiplier —
+ * that lever prices construction, not mouths.
+ */
+export function getDiscountedGrowPopCost(
+  G: HegemonyState,
+  playerID: PlayerId,
+  settlement: Settlement,
+  pop: PopType
+): Partial<Resources> {
+  const adjusted = clonePartialResources(getGrowPopCost(settlement, pop, G.ruleset));
+
+  for (const discount of getMatchingActionCostDiscounts(G, playerID, "growPop", undefined, pop)) {
+    adjusted[discount.resource] = Math.max(0, (adjusted[discount.resource] ?? 0) - discount.amount);
+  }
+
+  return adjusted;
+}
+
 function getGrowPopFoodDiscount(settlement: Settlement) {
   return settlement.buildings.reduce((discount, buildingId) => {
     const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
@@ -90,10 +110,14 @@ function getMatchingActionCostDiscounts(
   G: HegemonyState,
   playerID: PlayerId,
   action: ActionCostDiscountTarget,
-  buildingId?: BuildingId
+  buildingId?: BuildingId,
+  pop?: PopType
 ) {
   return G.players[playerID].actionCostDiscounts.filter(
-    (discount) => discount.action === action && (!discount.buildingId || discount.buildingId === buildingId)
+    (discount) =>
+      discount.action === action &&
+      (!discount.buildingId || discount.buildingId === buildingId) &&
+      (!discount.pop || discount.pop === pop)
   );
 }
 
@@ -101,9 +125,10 @@ export function consumeActionCostDiscounts(
   G: HegemonyState,
   playerID: PlayerId,
   action: ActionCostDiscountTarget,
-  buildingId?: BuildingId
+  buildingId?: BuildingId,
+  pop?: PopType
 ) {
-  const matching = getMatchingActionCostDiscounts(G, playerID, action, buildingId);
+  const matching = getMatchingActionCostDiscounts(G, playerID, action, buildingId, pop);
 
   if (matching.length === 0) {
     return;

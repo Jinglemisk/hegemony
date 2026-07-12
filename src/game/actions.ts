@@ -252,6 +252,7 @@ export function growPop(G: HegemonyState, playerID: PlayerId, tileId: string, po
   }
 
   payCost(G.players[playerID].resources, status.cost);
+  consumeActionCostDiscounts(G, playerID, "growPop", undefined, pop);
   settlement.pops[pop] += 1;
   markSettlementGrown(G, playerID, tileId);
   addLog(G, `${getPlayerName(G, playerID)} grew 1 ${formatPopName(pop, 1)} in ${settlement.kind} on ${tile.terrain}.`);

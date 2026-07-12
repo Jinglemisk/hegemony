@@ -406,15 +406,44 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     seasons: ["autumn", "winter"],
     timing: "immediate",
     effects: [{ type: "timedHappinessDelta", scope: "allPlayers", amountPerTurn: -2, turns: 3 }]
+  },
+  {
+    // Ledger issue 10: no season is auto-safe. Spring keeps its boon tendency — this
+    // is the one cloud in it.
+    id: "season-spring-floods",
+    deck: "seasonal",
+    name: "Spring Floods",
+    count: 2,
+    text: "The rivers burst their banks: all players lose 3 Food.",
+    seasons: ["spring"],
+    timing: "immediate",
+    effects: [{ type: "resourceDelta", scope: "allPlayers", resource: "food", amount: -3 }]
+  },
+  {
+    id: "season-wildfire",
+    deck: "seasonal",
+    name: "Wildfire",
+    count: 2,
+    text: "Tinder-dry groves burn: all players get -2 Wood income this season.",
+    seasons: ["summer"],
+    timing: "season",
+    effects: [{ type: "incomeModifier", scope: "allPlayers", resource: "wood", amount: -2, duration: "season" }]
   }
 ];
+
+// ── Player deck (deck overhaul, ledger issues 5/10/12) ──────────────────────────────
+//
+// Tuning contract, guarded by src/game/deck.test.ts: EV ≈ +2 resource-equivalents
+// per draw and ~25% harm copies. Free-pop copies were halved into grow coupons
+// (half-cost `actionCostDiscount` on growPop) so windfall population re-couples to
+// food and capacity instead of bypassing both.
 
 export const PLAYER_EVENT_CARDS: EventCard[] = [
   {
     id: "player-new-citizen",
     deck: "player",
     name: "New Citizen",
-    count: 8,
+    count: 4,
     text: "Add 1 citizen to one owned settlement with available capacity.",
     timing: "pendingChoice",
     effects: [{ type: "addPops", pop: "citizens", amount: 1, target: "ownedSettlementWithCapacity" }]
@@ -423,7 +452,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     id: "player-free-settlers",
     deck: "player",
     name: "Free Settlers",
-    count: 8,
+    count: 4,
     text: "Add 1 freeman to one owned settlement with available capacity.",
     timing: "pendingChoice",
     effects: [{ type: "addPops", pop: "freemen", amount: 1, target: "ownedSettlementWithCapacity" }]
@@ -432,16 +461,82 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     id: "player-captured-laborers",
     deck: "player",
     name: "Captured Laborers",
-    count: 6,
+    count: 3,
     text: "Add 2 slaves to one owned settlement with available capacity.",
     timing: "pendingChoice",
     effects: [{ type: "addPops", pop: "slaves", amount: 2, target: "ownedSettlementWithCapacity" }]
   },
   {
+    id: "player-citizenship-rolls",
+    deck: "player",
+    name: "Citizenship Rolls",
+    count: 4,
+    text: "The archon opens the rolls: the next citizen grown this turn costs -5 Food and -1 Gold.",
+    timing: "immediate",
+    effects: [
+      {
+        type: "actionCostDiscount",
+        action: "growPop",
+        pop: "citizens",
+        resource: "food",
+        amount: 5,
+        duration: "turn",
+        consume: "nextMatchingAction"
+      },
+      {
+        type: "actionCostDiscount",
+        action: "growPop",
+        pop: "citizens",
+        resource: "gold",
+        amount: 1,
+        duration: "turn",
+        consume: "nextMatchingAction"
+      }
+    ]
+  },
+  {
+    id: "player-willing-hands",
+    deck: "player",
+    name: "Willing Hands",
+    count: 4,
+    text: "Landless families seek a plot: the next freeman grown this turn costs -4 Food.",
+    timing: "immediate",
+    effects: [
+      {
+        type: "actionCostDiscount",
+        action: "growPop",
+        pop: "freemen",
+        resource: "food",
+        amount: 4,
+        duration: "turn",
+        consume: "nextMatchingAction"
+      }
+    ]
+  },
+  {
+    id: "player-slave-auction",
+    deck: "player",
+    name: "Slave Auction",
+    count: 3,
+    text: "The block clears cheap: the next slave grown this turn costs -3 Food.",
+    timing: "immediate",
+    effects: [
+      {
+        type: "actionCostDiscount",
+        action: "growPop",
+        pop: "slaves",
+        resource: "food",
+        amount: 3,
+        duration: "turn",
+        consume: "nextMatchingAction"
+      }
+    ]
+  },
+  {
     id: "player-good-stores",
     deck: "player",
     name: "Good Stores",
-    count: 6,
+    count: 4,
     text: "Gain 3 Food.",
     timing: "immediate",
     effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "food", amount: 3 }]
@@ -450,28 +545,28 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     id: "player-timber-windfall",
     deck: "player",
     name: "Timber Windfall",
-    count: 6,
-    text: "Gain 5 Wood.",
+    count: 4,
+    text: "Gain 3 Wood.",
     timing: "immediate",
-    effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "wood", amount: 5 }]
+    effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "wood", amount: 3 }]
   },
   {
     id: "player-merchant-profit",
     deck: "player",
     name: "Merchant Profit",
-    count: 5,
-    text: "Gain 5 Gold.",
+    count: 4,
+    text: "Gain 3 Gold.",
     timing: "immediate",
-    effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "gold", amount: 5 }]
+    effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "gold", amount: 3 }]
   },
   {
     id: "player-stone-shipment",
     deck: "player",
     name: "Stone Shipment",
-    count: 5,
-    text: "Gain 5 Stone.",
+    count: 4,
+    text: "Gain 3 Stone.",
     timing: "immediate",
-    effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "stone", amount: 5 }]
+    effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "stone", amount: 3 }]
   },
   {
     id: "player-local-unrest",
@@ -495,10 +590,49 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     id: "player-civil-discord",
     deck: "player",
     name: "Civil Discord",
-    count: 2,
+    count: 3,
     text: "Lose 2 Happiness at the start of each of your next 3 turns.",
     timing: "immediate",
     effects: [{ type: "timedHappinessDelta", scope: "activePlayer", amountPerTurn: -2, turns: 3 }]
+  },
+  {
+    id: "player-granary-rats",
+    deck: "player",
+    name: "Granary Rats",
+    count: 5,
+    text: "Rats find the grain stores. Lose 3 Food.",
+    timing: "immediate",
+    effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "food", amount: -3 }]
+  },
+  {
+    id: "player-banditry",
+    deck: "player",
+    name: "Banditry",
+    count: 3,
+    text: "Bandits prey on the mountain roads. Lose 4 Gold.",
+    timing: "immediate",
+    effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "gold", amount: -4 }]
+  },
+  {
+    id: "player-warehouse-fire",
+    deck: "player",
+    name: "Warehouse Fire",
+    count: 4,
+    text: "Fire guts a waterfront warehouse. Lose 5 Wood.",
+    timing: "immediate",
+    effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "wood", amount: -5 }]
+  },
+  {
+    id: "player-quarry-collapse",
+    deck: "player",
+    name: "Quarry Collapse",
+    count: 2,
+    text: "A gallery falls in. Lose 3 Stone and 1 Happiness.",
+    timing: "immediate",
+    effects: [
+      { type: "resourceDelta", scope: "activePlayer", resource: "stone", amount: -3 },
+      { type: "happinessDelta", scope: "activePlayer", amount: -1 }
+    ]
   },
   {
     id: "player-patronage-network",
@@ -568,7 +702,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Skilled Mason",
     count: 2,
-    text: "Gain 4 Stone, or the next building built this turn costs -3 Stone.",
+    text: "Gain 4 Stone, or the next building built this turn costs -5 Stone.",
     timing: "pendingChoice",
     effects: [
       {
@@ -580,7 +714,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
               type: "actionCostDiscount",
               action: "buildBuilding",
               resource: "stone",
-              amount: 3,
+              amount: 5,
               duration: "turn",
               consume: "nextMatchingAction"
             }
@@ -594,14 +728,14 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Caravan Contacts",
     count: 2,
-    text: "Gain 4 Gold, or exchange up to 4 Wood for 4 Gold.",
+    text: "Gain 4 Gold, or exchange up to 4 Wood for 6 Gold.",
     timing: "pendingChoice",
     effects: [
       {
         type: "choice",
         options: [
           [{ type: "resourceDelta", scope: "activePlayer", resource: "gold", amount: 4 }],
-          [{ type: "resourceExchange", from: "wood", to: "gold", maxAmount: 4, ratio: 1 }]
+          [{ type: "resourceExchange", from: "wood", to: "gold", maxAmount: 4, ratio: 1.5 }]
         ]
       }
     ]
@@ -611,7 +745,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Forest Crews",
     count: 2,
-    text: "Gain 4 Wood, or the next colony founded this turn costs -4 Wood.",
+    text: "Gain 4 Wood, or the next colony founded this turn costs -6 Wood.",
     timing: "pendingChoice",
     effects: [
       {
@@ -623,7 +757,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
               type: "actionCostDiscount",
               action: "foundColony",
               resource: "wood",
-              amount: 4,
+              amount: 6,
               duration: "turn",
               consume: "nextMatchingAction"
             }
@@ -637,7 +771,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Temple Donation",
     count: 1,
-    text: "Gain 3 Happiness, or the next Temple built this turn costs -3 Stone.",
+    text: "Gain 3 Happiness, or the next Temple built this turn costs -5 Stone.",
     timing: "pendingChoice",
     effects: [
       {
@@ -650,7 +784,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
               action: "buildBuilding",
               buildingId: "temple",
               resource: "stone",
-              amount: 3,
+              amount: 5,
               duration: "turn",
               consume: "nextMatchingAction"
             }

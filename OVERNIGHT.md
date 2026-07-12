@@ -84,4 +84,8 @@ run the rest overnight.
 
 ## Morning questions (Claude appends during the night)
 
-- (none yet)
+- **Victory minimums vs the thinner deck** (from item 1's A/B): the race minimums
+  (citizens 8, stockpile 80, happiness +10) were tuned against the old +4.9-EV deck.
+  With the deck at +2.2 EV, 60-turn close events dipped 3/20 → 1/20 (leader progress
+  within noise — 1.85 → 1.75 cards). If morning playtests feel grindy, the lever is
+  **retune the minimums down**, not re-fatten the deck. No change made tonight.
