@@ -1,4 +1,14 @@
-import type { BuildingDefinition, EventCard, PlayerId, PopType, Resources, SettlementKind, Terrain, Yield } from "./types";
+import type {
+  BuildingDefinition,
+  EventCard,
+  EventTableDefinition,
+  PlayerId,
+  PopType,
+  Resources,
+  SettlementKind,
+  Terrain,
+  Yield
+} from "./types";
 
 export const PLAYER_IDS: PlayerId[] = ["0", "1", "2", "3"];
 
@@ -82,6 +92,104 @@ export const SETTLEMENT_RULES: Record<
     buildingSlotBonus: 0,
     canBuildBuildings: false
   }
+};
+
+// ── Event tables (docs/feat/event-tables.md) ────────────────────────────────────────
+//
+// Content data for the dice-table component. Adding a table here (plus a trigger)
+// is the whole cost of a new one — the engine seam and the modal are shared.
+
+/** The riot table (roadmap-appendix D9, rows 1–2 swapped per Q15 so severity falls
+ *  monotonically — building destruction is worse than two pops, so it sits on the 1). */
+export const RIOT_TABLE: EventTableDefinition = {
+  id: "riot",
+  name: "Riot",
+  flavor: "The agora fills with angry voices. Declare your concessions before the dice decide.",
+  rows: [
+    {
+      roll: 1,
+      label: "The mob torches the works",
+      effects: [
+        { type: "losePops", count: 1 },
+        { type: "destroyBuilding", popLossFallback: 1 }
+      ]
+    },
+    { roll: 2, label: "Revolt spreads", effects: [{ type: "losePops", count: 2 }] },
+    { roll: 3, label: "Blood in the streets", effects: [{ type: "losePops", count: 1 }] },
+    { roll: 4, label: "Granary sacked", effects: [{ type: "loseResource", resource: "food", amount: 6 }] },
+    {
+      roll: 5,
+      label: "Bribe demanded",
+      effects: [{ type: "loseResource", resource: "gold", amount: 6, popLossIfShort: 1 }]
+    },
+    { roll: 6, label: "The mob disperses", effects: [{ type: "none" }] }
+  ],
+  // All three may each be bought once per riot (Q15) — full insurance shifts every
+  // mild-tier roll to 4+, converting catastrophe into taxation. Severe (−2) still bites.
+  insurance: [
+    { id: "breadDole", label: "Bread dole", cost: { food: 4 }, modifier: 1 },
+    { id: "concession", label: "Concession", cost: {}, demotesPop: true, modifier: 1 },
+    { id: "patronage", label: "Patronage", cost: { influence: 3 }, modifier: 1 }
+  ]
+};
+
+/** The three expeditions (D10/Q16): player picks one per venture, each ~−7% EV in
+ *  gold-equivalents. The Colonists' pop payout is deliberately a jackpot (a 6 only) —
+ *  it is a second pop faucet around the grow-pop throttle, so it must stay rare. */
+export const EXPEDITION_TABLES: EventTableDefinition[] = [
+  {
+    id: "merchantConvoy",
+    name: "Merchant Convoy",
+    flavor: "Amphorae for the Tyrrhenian markets — if the sea allows.",
+    rows: [
+      { roll: 1, label: "Lost at sea", effects: [{ type: "none" }] },
+      { roll: 2, label: "Pirates take the cargo", effects: [{ type: "none" }] },
+      { roll: 3, label: "Modest profits", effects: [{ type: "gainResource", resource: "gold", amount: 5 }] },
+      { roll: 4, label: "Modest profits", effects: [{ type: "gainResource", resource: "gold", amount: 5 }] },
+      { roll: 5, label: "Rich cargo returns", effects: [{ type: "gainResource", resource: "gold", amount: 9 }] },
+      { roll: 6, label: "Rich cargo returns", effects: [{ type: "gainResource", resource: "gold", amount: 9 }] }
+    ]
+  },
+  {
+    id: "grandEmbassy",
+    name: "Grand Embassy",
+    flavor: "Envoys and gifts to a distant court.",
+    rows: [
+      { roll: 1, label: "Rebuffed at court", effects: [{ type: "none" }] },
+      { roll: 2, label: "Rebuffed at court", effects: [{ type: "none" }] },
+      { roll: 3, label: "A polite hearing", effects: [{ type: "gainResource", resource: "influence", amount: 3 }] },
+      { roll: 4, label: "A polite hearing", effects: [{ type: "gainResource", resource: "influence", amount: 3 }] },
+      { roll: 5, label: "An alliance of guest-friendship", effects: [{ type: "gainResource", resource: "influence", amount: 6 }] },
+      { roll: 6, label: "An alliance of guest-friendship", effects: [{ type: "gainResource", resource: "influence", amount: 6 }] }
+    ]
+  },
+  {
+    id: "colonistsVoyage",
+    name: "Colonists' Voyage",
+    flavor: "Families and seed-grain aboard — seeking a kinder shore.",
+    rows: [
+      { roll: 1, label: "Storms scatter the ships", effects: [{ type: "none" }] },
+      { roll: 2, label: "Storms scatter the ships", effects: [{ type: "none" }] },
+      { roll: 3, label: "Provisions salvaged", effects: [{ type: "gainResource", resource: "food", amount: 5 }] },
+      { roll: 4, label: "Provisions salvaged", effects: [{ type: "gainResource", resource: "food", amount: 5 }] },
+      { roll: 5, label: "A bountiful landfall", effects: [{ type: "gainResource", resource: "food", amount: 8 }] },
+      {
+        roll: 6,
+        label: "Settlers arrive",
+        effects: [
+          { type: "gainPop", pop: "freemen", foodFallback: 2 },
+          { type: "gainResource", resource: "food", amount: 2 }
+        ]
+      }
+    ]
+  }
+];
+
+/** Either stake funds any expedition (D10). Gold-rich players pay more for the same
+ *  lottery — that asymmetry IS the catch-up mechanism, watch it in the ledger. */
+export const VENTURE_STAKES: Record<"gold" | "wood", Partial<Resources>> = {
+  gold: { gold: 5 },
+  wood: { wood: 8 }
 };
 
 export const BUILDINGS: BuildingDefinition[] = [

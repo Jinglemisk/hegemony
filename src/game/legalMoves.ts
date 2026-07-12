@@ -8,7 +8,22 @@ import {
   placeColony,
   upgradeColonyToCity,
 } from "./actions";
-import { BUILDINGS } from "./data";
+import { TRADABLE_MATERIALS, bankBuy, bankSell, getBankBuyStatus, getBankSellStatus } from "./bank";
+import {
+  DEMOTE_FROM,
+  PROMOTE_FROM,
+  civicCalm,
+  demotePop,
+  getCivicCalmStatus,
+  getDemotePopStatus,
+  getPromotePopStatus,
+  promotePop,
+} from "./civic";
+import type { CivicCalmPayment } from "./civic";
+import { buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
+import { fundExpedition, getFundExpeditionStatus } from "./ventures";
+import type { VentureStake } from "./ventures";
+import { BUILDINGS, EXPEDITION_TABLES, RIOT_TABLE } from "./data";
 import { EMPTY_POPS, POP_TYPES } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement } from "./core/query";
@@ -24,7 +39,17 @@ import {
   getUpgradeColonyToCityStatus,
 } from "./status";
 import { advanceSetupTurn, beginGameplayTurn, endTurn } from "./turn";
-import type { BuildingId, HegemonyState, PlayerId, PopType, Pops, Resources } from "./types";
+import type {
+  BuildingId,
+  EventTableId,
+  HegemonyState,
+  PlayerId,
+  PopType,
+  Pops,
+  Resources,
+  RiotInsuranceId,
+  TradableMaterial,
+} from "./types";
 
 /**
  * Legal-move enumeration + a uniform dispatcher over the engine's mutators, so a
@@ -52,6 +77,14 @@ export type LegalMove =
   | { type: "growPop"; tileId: string; pop: PopType; cost: Partial<Resources> }
   | { type: "movePops"; sourceTileId: string; targetTileId: string; pops: Pops }
   | { type: "resolveEvent"; choiceIndex: number; targetTileId?: string }
+  | { type: "bankSell"; material: TradableMaterial; cost: Partial<Resources> }
+  | { type: "bankBuy"; material: TradableMaterial; cost: Partial<Resources> }
+  | { type: "civicCalm"; payment: CivicCalmPayment; cost: Partial<Resources> }
+  | { type: "promotePop"; tileId: string; from: PopType; cost: Partial<Resources> }
+  | { type: "demotePop"; tileId: string; from: PopType; cost: Partial<Resources> }
+  | { type: "fundExpedition"; expeditionId: EventTableId; stake: VentureStake; cost: Partial<Resources> }
+  | { type: "buyRiotInsurance"; optionId: RiotInsuranceId; demoteTarget?: { tileId: string; from: PopType } }
+  | { type: "resolveRiot" }
   | { type: "endTurn" };
 
 /**
@@ -67,6 +100,11 @@ export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): Legal
 
   if (G.pendingPlayerEvent) {
     return G.pendingPlayerEvent.playerID === playerID ? enumerateEventResolutions(G, playerID) : [];
+  }
+
+  // A pending riot blocks the turn on the table: declare insurance or roll.
+  if (G.pendingRiot) {
+    return G.pendingRiot.playerID === playerID ? enumerateRiotMoves(G, playerID) : [];
   }
 
   switch (G.phase) {
@@ -115,6 +153,22 @@ export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove)
       return movePops(G, playerID, move.sourceTileId, move.targetTileId, move.pops);
     case "resolveEvent":
       return resolvePendingPlayerEvent(G, playerID, move.targetTileId, move.choiceIndex);
+    case "bankSell":
+      return bankSell(G, playerID, move.material);
+    case "bankBuy":
+      return bankBuy(G, playerID, move.material);
+    case "civicCalm":
+      return civicCalm(G, playerID, move.payment);
+    case "promotePop":
+      return promotePop(G, playerID, move.tileId, move.from);
+    case "demotePop":
+      return demotePop(G, playerID, move.tileId, move.from);
+    case "fundExpedition":
+      return fundExpedition(G, playerID, move.expeditionId, move.stake);
+    case "buyRiotInsurance":
+      return buyRiotInsurance(G, playerID, move.optionId, move.demoteTarget);
+    case "resolveRiot":
+      return resolveRiot(G, playerID);
     case "endTurn":
       return endTurn(G);
   }
@@ -140,6 +194,22 @@ export function describeMove(move: LegalMove): string {
       return `move ${formatPops(move.pops)} from ${move.sourceTileId} to ${move.targetTileId}`;
     case "resolveEvent":
       return `resolve pending event (choice ${move.choiceIndex})${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
+    case "bankSell":
+      return `sell ${Object.values(move.cost)[0]} ${move.material} to the bank for 1 gold`;
+    case "bankBuy":
+      return `buy 1 ${move.material} from the bank${formatCost(move.cost)}`;
+    case "civicCalm":
+      return `${move.payment === "influence" ? "stabilize province" : "bread & circuses"}${formatCost(move.cost)}`;
+    case "promotePop":
+      return `promote a ${formatPopName(move.from, 1)} on ${move.tileId}${formatCost(move.cost)}`;
+    case "demotePop":
+      return `demote a ${formatPopName(move.from, 1)} on ${move.tileId}${formatCost(move.cost)}`;
+    case "fundExpedition":
+      return `fund the ${move.expeditionId} staking ${move.stake}${formatCost(move.cost)}`;
+    case "buyRiotInsurance":
+      return `declare riot insurance: ${move.optionId}${move.demoteTarget ? ` (demoting a ${formatPopName(move.demoteTarget.from, 1)} on ${move.demoteTarget.tileId})` : ""}`;
+    case "resolveRiot":
+      return "face the riot table";
     case "endTurn":
       return "end turn";
   }
@@ -151,6 +221,34 @@ function formatCost(cost: Partial<Resources>): string {
     .map(([resource, amount]) => `${resource} ${amount}`);
 
   return parts.length > 0 ? ` — costs ${parts.join(", ")}` : "";
+}
+
+/** The riot's forced menu: each unbought, affordable insurance (the concession once
+ *  per legal demote target), and always the roll itself. */
+function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+  const moves: LegalMove[] = [];
+
+  for (const option of RIOT_TABLE.insurance ?? []) {
+    if (!getBuyRiotInsuranceStatus(G, playerID, option.id).can) {
+      continue;
+    }
+
+    if (!option.demotesPop) {
+      moves.push({ type: "buyRiotInsurance", optionId: option.id });
+      continue;
+    }
+
+    for (const tileId of G.players[playerID].settlements) {
+      for (const from of DEMOTE_FROM) {
+        if (getDemotePopStatus(G, playerID, tileId, from).can) {
+          moves.push({ type: "buyRiotInsurance", optionId: option.id, demoteTarget: { tileId, from } });
+        }
+      }
+    }
+  }
+
+  moves.push({ type: "resolveRiot" });
+  return moves;
 }
 
 function enumerateEventResolutions(G: HegemonyState, playerID: PlayerId): LegalMove[] {
@@ -306,6 +404,52 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): LegalMove
         if (getMovePopsStatus(G, playerID, sourceTileId, targetTileId, pops).can) {
           moves.push({ type: "movePops", sourceTileId, targetTileId, pops });
         }
+      }
+    }
+  }
+
+  // Bank trades are enumerated one unit at a time — a driver repeats the move to
+  // trade in bulk (there is no per-turn cap).
+  for (const material of TRADABLE_MATERIALS) {
+    const sell = getBankSellStatus(G, playerID, material);
+    if (sell.can) {
+      moves.push({ type: "bankSell", material, cost: sell.cost ?? {} });
+    }
+
+    const buy = getBankBuyStatus(G, playerID, material);
+    if (buy.can) {
+      moves.push({ type: "bankBuy", material, cost: buy.cost ?? {} });
+    }
+  }
+
+  for (const payment of ["influence", "gold"] as const) {
+    const status = getCivicCalmStatus(G, playerID, payment);
+    if (status.can) {
+      moves.push({ type: "civicCalm", payment, cost: status.cost ?? {} });
+    }
+  }
+
+  for (const tileId of ownedTileIds) {
+    for (const from of PROMOTE_FROM) {
+      const status = getPromotePopStatus(G, playerID, tileId, from);
+      if (status.can) {
+        moves.push({ type: "promotePop", tileId, from, cost: status.cost ?? {} });
+      }
+    }
+
+    for (const from of DEMOTE_FROM) {
+      const status = getDemotePopStatus(G, playerID, tileId, from);
+      if (status.can) {
+        moves.push({ type: "demotePop", tileId, from, cost: status.cost ?? {} });
+      }
+    }
+  }
+
+  for (const table of EXPEDITION_TABLES) {
+    for (const stake of ["gold", "wood"] as const) {
+      const status = getFundExpeditionStatus(G, playerID, table.id, stake);
+      if (status.can) {
+        moves.push({ type: "fundExpedition", expeditionId: table.id, stake, cost: status.cost ?? {} });
       }
     }
   }

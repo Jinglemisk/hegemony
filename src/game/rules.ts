@@ -25,6 +25,8 @@
  * This file re-exports the public surface so existing `./rules` imports keep working.
  * New code is free to import directly from the module it needs.
  */
+export * from "./bank";
+export * from "./civic";
 export * from "./core/results";
 export * from "./core/pops";
 export * from "./core/resources";
@@ -39,8 +41,11 @@ export * from "./economy/preview";
 export * from "./status";
 export * from "./events";
 export * from "./actions";
+export * from "./riot";
 export * from "./season";
+export * from "./tables";
 export * from "./unrest";
+export * from "./ventures";
 export * from "./score";
 export * from "./victory";
 export * from "./state";
