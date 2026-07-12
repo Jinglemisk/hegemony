@@ -190,6 +190,40 @@ showed a wider seat-win spread (10–37%, n=30 — retest whichever variant wins
 
 **Your answer:**
 
+### Q13 · Coastal leapfrog + the wood/gold two-birds — `OPEN (sims attached)`
+
+**Context (user, 2026-07-12).** (a) Allow founding colonies on unconnected coastline
+tiles once you hold at least one coastal settlement; (b) the contiguity campaign showed
+wood is the real expansion bottleneck — can fixing it also fix the useless gold hills?
+
+**Coastal leapfrog.** Implementable now: the island's 18 rim tiles ARE the coastline.
+Rule sketch: *own any settlement on a coastal tile → you may found colonies on any
+coastal tile; interior colonies still chain.* Preserves contiguity's purpose (the sea is
+"connected" — sailing, not teleporting), creates a mid-game "reach the sea" unlock arc,
+gives the rim strategic identity before Phase 4 ports (which later upgrade it), and
+dovetails with Q12: the metropolis's founding colony could be "any coastal tile" —
+historically exact (apoikiai were coastal foundations). Tuning knob: sea-founded
+colonies +2 food (voyage provisions).
+
+**Two birds (wood bottleneck × dead gold).** Three layers, compatible:
+1. **Already locked:** the D6 gold-mediated market makes gold hills wood-convertible
+   (a 4-gold hill ≈ 2 wood/turn at the 2g buy rate). This finding raises D6's priority —
+   ship the market early in Phase 1.
+2. **Mixed colony pricing (simmed 2026-07-12):** foundColony at **14 wood + 6 gold +
+   2 food** vs baseline 20w+2f, 30 games, same seeds: mid-game expansion +32%
+   (s17: 6.37 vs 4.81 tiles/player), final +0.85 paired. Gold's dead pile becomes
+   expansion fuel — a real gold sink AND wood relief. Knock-on: revolt share tripled
+   (5%→18%) — faster expansion outruns the food base; wants Phase 1's civic-calm/riot
+   tools alongside it.
+3. **Caution:** wood-as-bottleneck is also the designed tempo brake — 70% map
+   utilization by game end is healthy. Fix the *feel* in playtest, not every number.
+
+**Terrain-rework interaction:** once the market exists, tile gold = flexible material
+income (an AoE gold mine) — re-run this campaign after D6 ships before executing the
+Phase 2 gold-tile removal (note added to feat/terrain-economy.md).
+
+**Your answer:**
+
 ---
 
 ## Decision log
