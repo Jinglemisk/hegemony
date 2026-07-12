@@ -4,6 +4,7 @@ import { calculateIncome } from "../game/economy/income";
 import type { LegalMove } from "../game/legalMoves";
 import { PLAYER_IDS } from "../game/data";
 import { playerStandings } from "../game/score";
+import { canPlaceColonyOnTile } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import type { UnrestTier } from "../game/unrest";
 import type { HegemonyState, PlayerId, Resources } from "../game/types";
@@ -21,6 +22,9 @@ export type PlayerSnapshot = {
   cities: number;
   colonies: number;
   pops: number;
+  /** Tiles where this player could legally found a colony right now (geometry only,
+   *  cost ignored) — 0 means contiguity has boxed them in. */
+  frontierTiles: number;
   inTransit: number;
   resources: Resources;
   income: Resources;
@@ -57,6 +61,7 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       cities: standings.cities,
       colonies: standings.colonies,
       pops: standings.pops,
+      frontierTiles: G.board.tiles.filter((tile) => canPlaceColonyOnTile(G, playerID, tile).can).length,
       inTransit,
       resources: { ...player.resources },
       income: calculateIncome(G, playerID),
@@ -334,6 +339,7 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
     "cities",
     "colonies",
     "pops",
+    "frontierTiles",
     "inTransit",
     "wood",
     "stone",
@@ -369,6 +375,7 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
         player.cities,
         player.colonies,
         player.pops,
+        player.frontierTiles,
         player.inTransit,
         player.resources.wood,
         player.resources.stone,

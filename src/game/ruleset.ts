@@ -74,10 +74,17 @@ export interface VictoryRules {
   minimums: Record<VictoryMetric, number>;
 }
 
+export interface PlacementRules {
+  /** Colonies must border an owned settlement (roadmap-appendix D3). Off = colonies
+   *  may be founded anywhere — kept as a knob so sims can A/B the geometry. */
+  colonyContiguity: boolean;
+}
+
 export interface Ruleset {
   startingResources: Resources;
   placementPopCounts: Record<"city" | "capital" | "colony", number>;
   settlements: Record<SettlementKind, SettlementRule>;
+  placement: PlacementRules;
   victory: VictoryRules;
   actionCosts: {
     foundColony: Partial<Resources>;
@@ -105,6 +112,7 @@ export const DEFAULT_RULESET: Ruleset = {
   startingResources: STARTING_RESOURCES,
   placementPopCounts: PLACEMENT_POP_COUNTS,
   settlements: SETTLEMENT_RULES,
+  placement: { colonyContiguity: true },
   victory: {
     // Design rule (roadmap-appendix D1, 2026-07-12): no card may be holdable at game
     // start or on the first turn — every minimum sits above anything a legal setup
