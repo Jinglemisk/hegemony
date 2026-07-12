@@ -78,6 +78,9 @@ export interface PlacementRules {
   /** Colonies must border an owned settlement (roadmap-appendix D3). Off = colonies
    *  may be founded anywhere — kept as a knob so sims can A/B the geometry. */
   colonyContiguity: boolean;
+  /** Coastal leapfrog (roadmap-appendix Q13a): holding any settlement on a coastal
+   *  tile lets you found colonies on any other coastal tile — sailing, not teleporting. */
+  coastalLeapfrog: boolean;
 }
 
 export interface Ruleset {
@@ -112,12 +115,12 @@ export const DEFAULT_RULESET: Ruleset = {
   startingResources: STARTING_RESOURCES,
   placementPopCounts: PLACEMENT_POP_COUNTS,
   settlements: SETTLEMENT_RULES,
-  placement: { colonyContiguity: true },
+  placement: { colonyContiguity: true, coastalLeapfrog: true },
   victory: {
     // Design rule (roadmap-appendix D1, 2026-07-12): no card may be holdable at game
     // start or on the first turn — every minimum sits above anything a legal setup
-    // plus one lucky opening turn can produce (start: 2 cities, 6 pops, ≤6 citizens,
-    // 52 banked materials, 0 happiness).
+    // plus one lucky opening turn can produce (start: 1 city + 1 colony, 6 pops,
+    // ≤6 citizens, 52 banked materials, 0 happiness).
     cardsToWin: 3,
     minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 10 }
   },
@@ -145,7 +148,7 @@ export const DEFAULT_RULESET: Ruleset = {
       foodDeficitStarvePopLoss: 1
     }
   },
-  setup: ["capital", "city"]
+  setup: ["capital", "colony"]
 };
 
 /** Recursively merge a partial patch onto a base value; arrays and primitives replace, plain objects merge. */
@@ -197,7 +200,7 @@ export type GameModeId = "standard" | "fastStart" | "deathmatch";
 export const GAME_MODES: Record<GameModeId, { label: string; description: string; ruleset: Ruleset }> = {
   standard: {
     label: "Standard",
-    description: "The baseline economy: two starting cities (capital first), snake order.",
+    description: "The baseline: a metropolis, then a founding colony on any coast — snake order.",
     ruleset: DEFAULT_RULESET
   },
   fastStart: {

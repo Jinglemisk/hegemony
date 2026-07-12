@@ -10,8 +10,8 @@ export const EMPTY_POPS: Pops = {
 
 export const PLACEMENT_POP_COUNTS = {
   city: 3,
-  capital: 3,
-  colony: 1
+  capital: 4,
+  colony: 2
 };
 
 export function totalPops(pops: Pops) {

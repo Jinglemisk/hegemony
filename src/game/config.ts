@@ -30,36 +30,37 @@ export type OpeningSetupPlacement = {
     tileId: string;
     pops: Pops;
   };
-  secondCity: {
+  colony: {
     tileId: string;
     pops: Pops;
   };
 };
 
 /**
- * A legal scripted two-city opening for the CLASSIC board (dev preload + tests + sim
- * "fixed" opening). All eight tiles are pairwise non-adjacent, so every placement
- * passes the city-adjacency rule regardless of snake order.
+ * A legal scripted metropolis+founding-colony opening for the CLASSIC board (dev
+ * preload + tests + sim "fixed" opening). Metropolis tiles are pairwise non-adjacent
+ * (city rule); founding colonies sit on the coastal rim, so they are legal regardless
+ * of distance (the founding voyage, roadmap-appendix Q12).
  */
 export const TEST_OPENING_SETUP: OpeningSetupPlacement[] = [
   {
     playerID: "0",
-    capital: { tileId: "-3,2", pops: { citizens: 1, freemen: 1, slaves: 1 } },
-    secondCity: { tileId: "-1,3", pops: { citizens: 0, freemen: 1, slaves: 2 } }
+    capital: { tileId: "-2,0", pops: { citizens: 1, freemen: 2, slaves: 1 } },
+    colony: { tileId: "3,0", pops: { citizens: 0, freemen: 1, slaves: 1 } }
   },
   {
     playerID: "1",
-    capital: { tileId: "-1,-2", pops: { citizens: 1, freemen: 2, slaves: 0 } },
-    secondCity: { tileId: "-3,0", pops: { citizens: 0, freemen: 2, slaves: 1 } }
+    capital: { tileId: "0,-2", pops: { citizens: 1, freemen: 1, slaves: 2 } },
+    colony: { tileId: "0,3", pops: { citizens: 0, freemen: 1, slaves: 1 } }
   },
   {
     playerID: "2",
-    capital: { tileId: "1,2", pops: { citizens: 0, freemen: 1, slaves: 2 } },
-    secondCity: { tileId: "0,0", pops: { citizens: 1, freemen: 1, slaves: 1 } }
+    capital: { tileId: "2,0", pops: { citizens: 0, freemen: 2, slaves: 2 } },
+    colony: { tileId: "-3,0", pops: { citizens: 1, freemen: 1, slaves: 0 } }
   },
   {
     playerID: "3",
-    capital: { tileId: "3,-1", pops: { citizens: 2, freemen: 0, slaves: 1 } },
-    secondCity: { tileId: "1,-3", pops: { citizens: 1, freemen: 1, slaves: 1 } }
+    capital: { tileId: "0,2", pops: { citizens: 2, freemen: 1, slaves: 1 } },
+    colony: { tileId: "0,-3", pops: { citizens: 0, freemen: 2, slaves: 0 } }
   }
 ];

@@ -66,19 +66,22 @@ its pops produce.
 
 ## Setting up
 
-Players place **two starting cities** each, in **snake order** — capitals go around
-the table one way (first player to last), second cities come back the other way, so
-whoever picked last picks first in the second round:
+Players place a **metropolis** and a **founding colony**, in **snake order** —
+metropolises go around the table one way (first player to last), founding colonies
+come back the other way, so whoever picked last picks first in the second round:
 
-1. Each player places their **capital** on an empty tile — never adjacent to
-   another city — and splits **3 starting pops** across citizens, freemen, and
-   slaves.
-2. In reverse order, each player places their **second city** the same way: any
-   empty tile, never adjacent to a city, 3 starting pops.
+1. Each player places their **metropolis** — their mother city — on an empty tile,
+   never adjacent to another city, and splits **4 starting pops** across citizens,
+   freemen, and slaves.
+2. In reverse order, each player places their **founding colony** (2 pops) — on
+   **any coastal tile** (the great colonization: your settlers sail), or on a tile
+   beside your metropolis.
 
-Then the game begins. Your two cities are your expansion poles — every colony you
-ever found must chain outward from them. (Some modes change the opening — for
-example a *deathmatch* setup places colonies instead of a second city.)
+Then the game begins. Your metropolis is your only city at the start — your seat of
+building and population; it carries no special bonuses, only its head start. The
+founding colony is your second pole, waiting to be grown or upgraded into your
+first daughter city. (Some modes change the opening — *deathmatch* places three
+colonies.)
 
 By default the island uses the classic authored layout; start the game with
 `?board=shuffled` in the address bar for a randomized (seeded) island.
@@ -94,7 +97,9 @@ Play passes around the table. On your turn:
 3. **Take actions**, in any order you can afford:
    - **Found a colony** — 20 wood and 2 food. Sends one pop out to settle a new
      tile, which must **border one of your settlements** (colonies count, so your
-     frontier chains outward tile by tile).
+     frontier chains outward tile by tile) — **or lie on the coast, if you already
+     hold any coastal settlement**: the sea connects every shore, so a coastal
+     power may sail to found colonies anywhere along the rim.
    - **Upgrade a colony into a city** — 30 wood, 10 stone, and 5 food. The city
      keeps the colony's pops and buildings, and drives off any enemy colony
      sharing that tile.
@@ -186,7 +191,8 @@ minimum — ties, or leading below the minimum, leave the card unheld:
 
 No card can be held at the start of the game — every minimum sits above anything
 your setup and first turn can produce. Holding a card is an achievement, never a
-starting condition.
+starting condition. (With one starting city, Polis Builder now takes two colony
+upgrades — the race to your third city is the long game.)
 
 **Hold any 3 cards at the start of your own turn and you win on the spot.** The
 check happens at your turn start, so the table always gets one full round to see

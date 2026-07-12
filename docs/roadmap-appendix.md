@@ -158,12 +158,20 @@ spitball tests, planned campaigns (e.g. D1 minimum tuning), and phase-exit check
 
 ## Open questions
 
-### Q12 · The metropolis fork — `OPEN (sim campaign complete, awaiting call)`
+### Q12 · The metropolis fork — `DONE (feat/phase0-victory-race, 2026-07-12)`
 
 **Context.** "Metropolis" as flavor on one of two identical cities feels hollow; a real
 metropolis+colony setup felt like it conflicted with colony contiguity (clump fear).
 
-**Options on the table:**
+**RESOLVED — user picked option 1 (Claude's rec), built same day:** metropolis
+(4 pops, first placement, special by structure — no bonus rules, capital-privilege ban
+intact) + founding colony (2 pops) on **any coastal tile** or beside the metropolis;
+snake order kept. The coastal-leapfrog rule (Q13a) shipped with it: holding any coastal
+settlement lets you found colonies on any coastal tile in gameplay. UI: "metropolis" /
+"founding colony" copy, legal-tile glow during the colony round. First greedy sim on
+the new setup ended at season 20 by an actual race win — the leaner start races harder.
+
+**Options that were on the table:**
 1. **Metropolis + founding colony (Claude's rec):** one city + one colony placed
    *anywhere* (setup exception, historically the apoikia pattern — Corinth→Syracuse);
    contiguity applies from turn 1 on. Metropolis is special by *structure* (only city
@@ -242,6 +250,8 @@ Phase 2 gold-tile removal (note added to feat/terrain-economy.md).
 | D9 | Riot table | As specced; event tables = reusable data-driven component | 2026-07-11 | Phase 1 scope; feat/event-tables.md |
 | D10 | Ventures | As specced (~−7% EV catch-up casino) | 2026-07-11 | Phase 1 scope |
 | D11 | Sim usage | No per-PR gate; ad-hoc + campaigns + phase exits | 2026-07-11 | roadmap.md principle 6 |
+| Q12 | Metropolis fork | Metropolis (4 pops) + founding colony (2 pops, any coastal tile or adjacent); snake kept; capital-privilege ban intact | 2026-07-12 | engine + rules.md; Q13a shipped alongside |
+| Q13a | Coastal leapfrog | Hold any coastal settlement → found on any coastal tile; interior chains by contiguity | 2026-07-12 | engine + rules.md |
 
 ## Execution log
 

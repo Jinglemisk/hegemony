@@ -8,12 +8,13 @@ import type { HegemonyState } from "./types";
 // Fixed seed so any deck draws during setup are reproducible.
 const SEED = 0xc0ffee;
 
-/** Place a 3-citizen capital on the first wood tile and return the state. */
+/** Place a metropolis of 3 citizens + 1 slave on the first wood tile. The slave's
+ *  yield lands in wood, so the gold column stays a pure citizen readout. */
 function capitalOfThreeCitizens(ruleset?: Ruleset): { G: HegemonyState; tileId: string } {
   const G = createInitialState(SEED, ruleset);
   const tile = G.board.tiles.find((candidate) => candidate.resource.type === "wood");
   if (!tile) throw new Error("no wood tile on the board");
-  const result = placeCapital(G, "0", tile.id, { citizens: 3, freemen: 0, slaves: 0 });
+  const result = placeCapital(G, "0", tile.id, { citizens: 3, freemen: 0, slaves: 1 });
   expect(result.ok).toBe(true);
   return { G, tileId: tile.id };
 }

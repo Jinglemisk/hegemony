@@ -46,23 +46,23 @@ describe("setup enumeration", () => {
     const G = scenario().build();
     const moves = expectSound(G, "0");
 
-    // Empty board: all 37 tiles are legal, 10 pop splits each.
-    expect(moves).toHaveLength(370);
+    // Empty board: all 37 tiles are legal, 15 four-pop splits each.
+    expect(moves).toHaveLength(555);
     expect(moves.every((move) => move.type === "placeCapital")).toBe(true);
   });
 
   it("excludes tiles adjacent to an existing capital", () => {
     const G = scenario().build();
-    expect(applyMove(G, "0", { type: "placeCapital", tileId: "0,0", pops: { citizens: 1, freemen: 1, slaves: 1 } }).ok).toBe(true);
+    expect(applyMove(G, "0", { type: "placeCapital", tileId: "0,0", pops: { citizens: 1, freemen: 2, slaves: 1 } }).ok).toBe(true);
 
     const moves = enumerateLegalMoves(G, "1");
     const offeredTiles = new Set(moves.map((move) => (move.type === "placeCapital" ? move.tileId : "")));
 
-    // 0,0 and its 6 neighbors are gone: 30 tiles * 10 compositions.
+    // 0,0 and its 6 neighbors are gone: 30 tiles * 15 compositions.
     expect(offeredTiles.has("0,0")).toBe(false);
     expect(offeredTiles.has("1,0")).toBe(false);
     expect(offeredTiles.has("-1,1")).toBe(false);
-    expect(moves).toHaveLength(300);
+    expect(moves).toHaveLength(450);
   });
 
   it("returns an empty list for off-turn players", () => {
@@ -90,9 +90,9 @@ describe("setup enumeration", () => {
 
     const moves = expectSound(G, G.currentPlayer);
     expect(moves.every((move) => move.type === "placeColony")).toBe(true);
-    // Colony placements carry exactly one pop.
+    // Colony placements carry exactly two pops.
     for (const move of moves) {
-      if (move.type === "placeColony") expect(totalPops(move.pops)).toBe(1);
+      if (move.type === "placeColony") expect(totalPops(move.pops)).toBe(2);
     }
   });
 });
@@ -104,10 +104,10 @@ describe("pending-event enumeration", () => {
     expect(G.pendingPlayerEvent?.card.id).toBe("player-new-citizen");
     const moves = expectSound(G, "0");
 
-    // Player 0 owns two cities (3/10 pops each) — both have capacity.
+    // Player 0 owns the metropolis (4/10) and founding colony (2/4) — both have capacity.
     expect(moves).toEqual([
-      { type: "resolveEvent", choiceIndex: 0, targetTileId: "-3,2" },
-      { type: "resolveEvent", choiceIndex: 0, targetTileId: "-1,3" },
+      { type: "resolveEvent", choiceIndex: 0, targetTileId: "-2,0" },
+      { type: "resolveEvent", choiceIndex: 0, targetTileId: "3,0" },
     ]);
   });
 
@@ -127,11 +127,11 @@ describe("pending-event enumeration", () => {
     const G = scenario()
       .stackPlayerEvent("player-captured-laborers") // +2 slaves, needs 2 free capacity
       .opening()
-      .setPops("0", "-1,3", { citizens: 0, freemen: 0, slaves: 9 }) // city 9/10: only 1 free
+      .setPops("0", "3,0", { citizens: 0, freemen: 0, slaves: 3 }) // colony 3/4: only 1 free
       .build();
 
     const moves = enumerateLegalMoves(G, "0");
-    expect(moves).toEqual([{ type: "resolveEvent", choiceIndex: 0, targetTileId: "-3,2" }]);
+    expect(moves).toEqual([{ type: "resolveEvent", choiceIndex: 0, targetTileId: "-2,0" }]);
   });
 });
 

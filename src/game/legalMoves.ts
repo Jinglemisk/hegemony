@@ -182,7 +182,7 @@ function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): Legal
     return [];
   }
 
-  const compositions = popCompositions(G.ruleset.placementPopCounts.city);
+  const compositions = popCompositions(G.ruleset.placementPopCounts.capital);
   const moves: LegalMove[] = [];
 
   for (const tile of G.board.tiles) {
@@ -232,7 +232,7 @@ function enumerateColonyPlacements(G: HegemonyState, playerID: PlayerId): LegalM
   const moves: LegalMove[] = [];
 
   for (const tile of G.board.tiles) {
-    if (!canPlaceColonyOnTile(G, playerID, tile).can) {
+    if (!canPlaceColonyOnTile(G, playerID, tile, "setup").can) {
       continue;
     }
 

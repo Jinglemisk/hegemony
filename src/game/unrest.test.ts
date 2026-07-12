@@ -32,7 +32,7 @@ function playerPopTotal(G: HegemonyState, id: PlayerId): number {
   return ownedSettlements(G, id).reduce((sum, settlement) => sum + totalPops(settlement.pops), 0);
 }
 
-/** Overwrite a player's two settlements' pops (capital first, then second city). */
+/** Overwrite a player's two settlements' pops (metropolis first, then founding colony). */
 function setPops(G: HegemonyState, id: PlayerId, capital: Pops, colony: Pops) {
   const [first, second] = ownedSettlements(G, id);
   first.pops = { ...capital };
