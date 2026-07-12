@@ -13,10 +13,15 @@ import { HexMap } from "./HexMap";
 import { FoundColonyPopover, MovePopsModal, PopulationPickerModal, UpgradeCityModal } from "./PopulationModals";
 import { ResourceGrid } from "./ResourceGrid";
 import { ActionCommandPanel } from "./board/command/ActionCommandPanel";
+import { CalmModal } from "./board/modals/CalmModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
 import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
 import { GrowPopModal } from "./board/modals/GrowPopModal";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
+import { LadderModal } from "./board/modals/LadderModal";
+import type { LadderRequest } from "./board/modals/LadderModal";
+import { RiotModal } from "./board/modals/RiotModal";
+import { VentureModal } from "./board/modals/VentureModal";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
 import { SeasonStatus } from "./board/topbar/SeasonStatus";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
@@ -67,6 +72,11 @@ export function HegemonyBoard({
   const [isUpgradeCityOpen, setIsUpgradeCityOpen] = useState(false);
   const [isGrowPopOpen, setIsGrowPopOpen] = useState(false);
   const [isMovePopsOpen, setIsMovePopsOpen] = useState(false);
+  const [isCalmOpen, setIsCalmOpen] = useState(false);
+  const [isVentureOpen, setIsVentureOpen] = useState(false);
+  const [ladderRequest, setLadderRequest] = useState<LadderRequest | null>(null);
+  // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
+  const [riotResultOpen, setRiotResultOpen] = useState(false);
   const [activeEmpireTab, setActiveEmpireTab] = useState<EmpireTab>("cities");
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
@@ -117,6 +127,10 @@ export function HegemonyBoard({
     setIsUpgradeCityOpen(false);
     setIsGrowPopOpen(false);
     setIsMovePopsOpen(false);
+    setIsCalmOpen(false);
+    setIsVentureOpen(false);
+    setLadderRequest(null);
+    setRiotResultOpen(false);
   }, [ctx.phase, ctx.currentPlayer]);
 
   useEffect(() => {
@@ -241,6 +255,9 @@ export function HegemonyBoard({
             playerID={viewerId}
             onBuildBuildingRequest={requestBuildBuilding}
             onTabChange={setActiveEmpireTab}
+            onBankSell={moves.bankSell}
+            onBankBuy={moves.bankBuy}
+            onLadderRequest={setLadderRequest}
           />
         </aside>
 
@@ -290,9 +307,13 @@ export function HegemonyBoard({
             canUpgradeCity={canUpgradeCity}
             isFoundColonyActive={foundColonyMode}
             hasPendingPlayerEvent={hasPendingPlayerEvent}
+            calmUsed={viewer.civicCalmUsedThisTurn}
+            ventureUsed={viewer.ventureUsedThisTurn}
             onEndTurn={events.endTurn}
             onGrowPopRequest={() => setIsGrowPopOpen(true)}
             onMovePopsRequest={() => setIsMovePopsOpen(true)}
+            onCalmRequest={() => setIsCalmOpen(true)}
+            onVentureRequest={() => setIsVentureOpen(true)}
             onFoundColonyRequest={() => {
               setIsUpgradeCityOpen(false);
               setFoundColonyTarget(null);
@@ -370,6 +391,46 @@ export function HegemonyBoard({
             moves.movePops(sourceTileId, targetTileId, pops);
             setIsMovePopsOpen(false);
           }}
+        />
+      ) : null}
+      {isCalmOpen ? (
+        <CalmModal G={G} playerID={viewerId} isActive={isActive} moves={moves} onClose={() => setIsCalmOpen(false)} />
+      ) : null}
+      {ladderRequest ? (
+        <LadderModal
+          G={G}
+          playerID={viewerId}
+          request={ladderRequest}
+          phase={ctx.phase}
+          isActive={isActive}
+          onCancel={() => setLadderRequest(null)}
+          onConfirm={(tileId, from, kind) => {
+            if (kind === "promote") {
+              moves.promotePop(tileId, from);
+            } else {
+              moves.demotePop(tileId, from);
+            }
+            setLadderRequest(null);
+          }}
+        />
+      ) : null}
+      {isVentureOpen ? (
+        <VentureModal
+          G={G}
+          playerID={viewerId}
+          isActive={isActive}
+          moves={moves}
+          onClose={() => setIsVentureOpen(false)}
+        />
+      ) : null}
+      {G.pendingRiot || riotResultOpen ? (
+        <RiotModal
+          G={G}
+          playerID={G.pendingRiot?.playerID ?? currentPlayerId}
+          isActive={isActive && (G.pendingRiot?.playerID ?? currentPlayerId) === currentPlayerId}
+          moves={moves}
+          onRolled={() => setRiotResultOpen(true)}
+          onDismissResult={() => setRiotResultOpen(false)}
         />
       ) : null}
       {ctx.phase === "gameOver" && !gameOverDismissed ? (

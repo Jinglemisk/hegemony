@@ -88,22 +88,22 @@
   top: 0;
   z-index: 12;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 3px;
   padding: 0 0 8px;
   background: linear-gradient(180deg, rgb(255 248 231 / 96%), rgb(255 248 231 / 82%));
 }
 
 .intelTabs button {
   min-height: 36px;
-  padding: 0 4px 7px;
+  padding: 0 3px 7px;
   border: none;
   border-bottom: 2px solid transparent;
   border-radius: 0;
   color: var(--muted);
   background: none;
-  font-size: 0.68rem;
-  letter-spacing: 0.02em;
+  font-size: 0.64rem;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -650,4 +650,130 @@
 .victoryValue.victoryViewer {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Market tab — the bank exchange (D6/Q14). Flat rows on the ledger accent, rates
+   always on display so the corridor teaches itself. */
+.marketLedger {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-width: 0;
+}
+
+.marketIntro,
+.marketFooter em {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.marketRow {
+  display: grid;
+  gap: 8px;
+  padding: 9px 2px 11px 12px;
+  border-left: 2px solid var(--ledger-accent);
+}
+
+.marketRowLead {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+}
+
+.marketRowLead > span {
+  display: grid;
+  gap: 2px;
+}
+
+.marketRowLead strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  line-height: 1.1;
+}
+
+.marketRowLead em {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-style: normal;
+}
+
+.marketRowIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.marketRowActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.marketTradeButton {
+  min-height: 30px;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--fg);
+  background: var(--panel);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.marketTradeButton:not(:disabled):hover {
+  border-color: var(--ledger-accent);
+  background: var(--panel-strong);
+  box-shadow: none;
+  transform: none;
+}
+
+.marketTradeButton:disabled {
+  opacity: 0.42;
+}
+
+.marketArrow {
+  color: var(--muted);
+}
+
+.marketFooter {
+  display: grid;
+  gap: 3px;
+  padding: 2px 2px 0;
+  font-size: 0.72rem;
+}
+
+.marketFooter strong {
+  color: var(--fg);
+}
+
+/* Social ladder (D8) — inline promote/demote on the pop rows. */
+.ladderControls {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.ladderButton {
+  width: 26px;
+  min-height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--fg);
+  background: var(--panel);
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.ladderButton:not(:disabled):hover {
+  border-color: var(--ledger-accent);
+  background: var(--panel-strong);
+  box-shadow: none;
+  transform: none;
+}
+
+.ladderButton:disabled {
+  opacity: 0.34;
 }

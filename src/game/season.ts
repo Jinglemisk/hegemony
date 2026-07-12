@@ -10,6 +10,9 @@ export function resetTurnFlags(G: HegemonyState) {
   for (const player of Object.values(G.players)) {
     player.collectedThisTurn = false;
     player.grownSettlementsThisTurn = [];
+    player.civicCalmUsedThisTurn = false;
+    player.ladderUsedThisTurn = false;
+    player.ventureUsedThisTurn = false;
   }
 }
 

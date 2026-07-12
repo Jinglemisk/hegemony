@@ -157,6 +157,21 @@ export function holdingShortLabel(tile: HexTile, settlement: Settlement) {
   return `${capitalize(settlement.kind)} ${tile.id}`;
 }
 
+/** One consistent line for every settlement picker (user request 2026-07-13): names
+ *  the tile the settlement stands on — kind, coords, terrain + yield — and whether
+ *  the tile is shared with another player's colony (shared yields are halved, and an
+ *  upgrade would evict the rival). */
+export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: PlayerId): string {
+  const own = tile.settlements.find((candidate) => candidate.owner === ownerID);
+  const kind = own ? capitalize(own.kind) : "Settlement";
+  const rivals = tile.settlements.filter((candidate) => candidate.owner !== ownerID);
+  const shared = rivals.length
+    ? ` · shares tile with ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
+    : "";
+
+  return `${kind} ${tile.id} · ${capitalize(tile.terrain)} +${tile.resource.amount} ${tile.resource.type}${shared}`;
+}
+
 export function placementKindLabel(kind: Extract<SettlementKind, "city" | "colony">) {
   return kind === "city" ? "city" : "colony";
 }

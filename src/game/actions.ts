@@ -200,7 +200,9 @@ export function collectIncome(
 ): MoveResult {
   const player = G.players[playerID];
 
-  if (player.collectedThisTurn || G.pendingPlayerEvent) {
+  // A pending riot defers income (the rulebook removes pops before collection) —
+  // resolveRiot calls back in here once the table has spoken.
+  if (player.collectedThisTurn || G.pendingPlayerEvent || G.pendingRiot) {
     return invalid();
   }
 

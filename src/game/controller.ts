@@ -4,19 +4,39 @@ import { produce } from "immer";
 import { DEV_ROTATION_SEEDS, GAME_CONFIG } from "./config";
 import { mulberry32 } from "./core/rng";
 import { applyMove, enumerateLegalMoves } from "./legalMoves";
-import type { BoardLayout, BuildingId, HegemonyState, Phase, PlayerId, PopType, Pops } from "./types";
+import type {
+  BoardLayout,
+  BuildingId,
+  EventTableId,
+  HegemonyState,
+  Phase,
+  PlayerId,
+  PopType,
+  Pops,
+  RiotInsuranceId,
+  TradableMaterial,
+} from "./types";
 import {
+  bankBuy,
+  bankSell,
   buildBuilding,
+  buyRiotInsurance,
+  civicCalm,
   collectIncome,
+  demotePop,
   foundColony,
+  fundExpedition,
   growPop,
   movePops,
   placeCapital,
   placeCity,
   placeColony,
+  promotePop,
   resolvePendingPlayerEvent,
+  resolveRiot,
   upgradeColonyToCity,
 } from "./rules";
+import type { CivicCalmPayment, VentureStake } from "./rules";
 import { advanceSetupTurn, beginGameplayTurn, createGame, endTurn } from "./turn";
 import { GAME_MODES } from "./ruleset";
 
@@ -124,6 +144,14 @@ export type GameMoves = {
   growPop: (tileId: string, pop: PopType) => void;
   movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
   resolvePendingPlayerEvent: (targetTileId?: string, choiceIndex?: number) => void;
+  bankSell: (material: TradableMaterial) => void;
+  bankBuy: (material: TradableMaterial) => void;
+  civicCalm: (payment: CivicCalmPayment) => void;
+  promotePop: (tileId: string, from: PopType) => void;
+  demotePop: (tileId: string, from: PopType) => void;
+  fundExpedition: (expeditionId: EventTableId, stake: VentureStake) => void;
+  buyRiotInsurance: (optionId: RiotInsuranceId, demoteTarget?: { tileId: string; from: PopType }) => void;
+  resolveRiot: () => void;
 };
 
 export type GameEvents = {
@@ -203,6 +231,32 @@ function createMoves(setG: SetState): GameMoves {
       setG((previous) =>
         commitGameplayMove(previous, (G) => resolvePendingPlayerEvent(G, G.currentPlayer, targetTileId, choiceIndex)),
       );
+    },
+    bankSell: (material) => {
+      setG((previous) => commitGameplayMove(previous, (G) => bankSell(G, G.currentPlayer, material)));
+    },
+    bankBuy: (material) => {
+      setG((previous) => commitGameplayMove(previous, (G) => bankBuy(G, G.currentPlayer, material)));
+    },
+    civicCalm: (payment) => {
+      setG((previous) => commitGameplayMove(previous, (G) => civicCalm(G, G.currentPlayer, payment)));
+    },
+    promotePop: (tileId, from) => {
+      setG((previous) => commitGameplayMove(previous, (G) => promotePop(G, G.currentPlayer, tileId, from)));
+    },
+    demotePop: (tileId, from) => {
+      setG((previous) => commitGameplayMove(previous, (G) => demotePop(G, G.currentPlayer, tileId, from)));
+    },
+    fundExpedition: (expeditionId, stake) => {
+      setG((previous) => commitGameplayMove(previous, (G) => fundExpedition(G, G.currentPlayer, expeditionId, stake)));
+    },
+    buyRiotInsurance: (optionId, demoteTarget) => {
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => buyRiotInsurance(G, G.currentPlayer, optionId, demoteTarget)),
+      );
+    },
+    resolveRiot: () => {
+      setG((previous) => commitGameplayMove(previous, (G) => resolveRiot(G, G.currentPlayer)));
     },
   };
 }
