@@ -816,3 +816,64 @@
   box-shadow: none;
   transform: none;
 }
+
+/* Settlement picker cards — a settlement choice always shows the TILE it stands on:
+   painted terrain art, coords, yield, shared-tile status (user request 2026-07-13). */
+.settlementPickGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.settlementPickCard {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--fg);
+  background: var(--panel);
+  text-align: left;
+  text-transform: none;
+}
+
+.settlementPickCard:not(:disabled):hover {
+  border-color: var(--ledger-accent);
+  background: var(--panel-strong);
+  box-shadow: none;
+  transform: none;
+}
+
+.settlementPickCard.selectedChoice {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgb(192 70 28 / 20%);
+}
+
+.settlementPickTerrain {
+  width: 52px;
+  height: 52px;
+}
+
+.settlementPickBody {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settlementPickBody strong {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  line-height: 1.15;
+}
+
+.settlementPickBody em {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-style: normal;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -10,14 +10,8 @@ import {
 } from "../../../game/rules";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
 import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
-import { AtlasIcon } from "../../Sprites";
-import {
-  actionRequirementText,
-  actionTitle,
-  getOwnedHoldings,
-  holdingShortLabel,
-  settlementPickerLabel
-} from "../helpers";
+import { TerrainSprite } from "../../Sprites";
+import { actionRequirementText, actionTitle, capitalize, getOwnedHoldings, holdingShortLabel } from "../helpers";
 
 export type LadderRequest = { kind: "promote" | "demote"; from: PopType };
 
@@ -76,23 +70,36 @@ export function LadderModal({
 
         {holdings.length > 0 ? (
           <>
-            <div className="popChoiceGrid" role="group" aria-label="Settlement">
+            <div className="settlementPickGrid" role="group" aria-label="Settlement">
               {holdings.map(({ tile, settlement }) => {
                 const candidateStatus = getStatus(G, playerID, tile.id, from);
+                const rivals = tile.settlements.filter((candidate) => candidate.owner !== playerID);
 
                 return (
                   <button
-                    className={holding?.tile.id === tile.id ? "selectedChoice" : ""}
+                    className={
+                      holding?.tile.id === tile.id ? "settlementPickCard selectedChoice" : "settlementPickCard"
+                    }
                     key={tile.id}
                     onClick={() => setTileId(tile.id)}
                     title={actionTitle(`${verb} on ${tile.id}`, candidateStatus, phase, isActive)}
                   >
-                    <AtlasIcon icon={settlement.kind === "colony" ? "colony" : "city"} className="miniIcon" />
-                    <span>{settlementPickerLabel(G, tile, playerID)}</span>
-                    <strong>
-                      {settlement.pops[from]} {formatPopLabel(from, settlement.pops[from])} · {totalPops(settlement.pops)}/
-                      {settlementPopCapacity(settlement.kind, G.ruleset)}
-                    </strong>
+                    <TerrainSprite terrain={tile.terrain} className="settlementPickTerrain" />
+                    <span className="settlementPickBody">
+                      <strong>
+                        {capitalize(settlement.kind)} {tile.id}
+                      </strong>
+                      <em>
+                        {capitalize(tile.terrain)} · +{tile.resource.amount} {tile.resource.type}
+                        {rivals.length > 0
+                          ? ` · shares tile with ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
+                          : ""}
+                      </em>
+                      <em>
+                        {settlement.pops[from]} {formatPopLabel(from, settlement.pops[from])} here ·{" "}
+                        {totalPops(settlement.pops)}/{settlementPopCapacity(settlement.kind, G.ruleset)} pops
+                      </em>
+                    </span>
                   </button>
                 );
               })}
