@@ -190,13 +190,14 @@ showed a wider seat-win spread (10–37%, n=30 — retest whichever variant wins
 
 **Your answer:**
 
-### Q13 · Coastal leapfrog + the wood/gold two-birds — `OPEN (sims attached)`
+### Q13 · Coastal leapfrog + the wood/gold two-birds — `13a LOCKED (build later) · 13b OPEN`
 
 **Context (user, 2026-07-12).** (a) Allow founding colonies on unconnected coastline
 tiles once you hold at least one coastal settlement; (b) the contiguity campaign showed
 wood is the real expansion bottleneck — can fixing it also fix the useless gold hills?
 
-**Coastal leapfrog.** Implementable now: the island's 18 rim tiles ARE the coastline.
+**Coastal leapfrog — LOCKED 2026-07-12 (user): adopted in principle, implement with
+the Q12 setup resolution or at latest with Phase 4 ports.** Implementable now: the island's 18 rim tiles ARE the coastline.
 Rule sketch: *own any settlement on a coastal tile → you may found colonies on any
 coastal tile; interior colonies still chain.* Preserves contiguity's purpose (the sea is
 "connected" — sailing, not teleporting), creates a mid-game "reach the sea" unlock arc,

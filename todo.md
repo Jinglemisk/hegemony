@@ -21,6 +21,10 @@
 -- Pre-roll insurance only (max +2): bread dole 4 food, free concession-demotion, 3 influence patronage.
 -- Ventures ("Fund an Expedition"): stake 5 gold / 8 wood, d6 for lost / break-even / win 9 — ~−7% EV, the catch-up casino. Another event table + Actions-tab entry.
 
+- Coastal leapfrog placement rule. (settled in principle — roadmap-appendix Q13a; implement with the Q12 setup resolution or with Phase 4 ports)
+-- The island's 18 rim tiles are the coastline. Hold any settlement on a coastal tile → you may found colonies on any other coastal tile (sailing, not teleporting); interior colonies still chain by contiguity. Tuning knob: +2 food voyage cost for sea-founded colonies.
+-- Dovetails with the metropolis fork (Q12): the founding colony could be "any coastal tile" — the apoikia pattern.
+
 - Promote / demote pop ladder. (costs settled — roadmap-appendix Q8)
 -- Promote: slave→freeman 4 food, freeman→citizen 4 gold. Demote: citizen→freeman 2 influence, freeman→slave 3 influence −1 happiness. One ladder move per player per turn; demotion is free during a riot (the mob forces it).
 
