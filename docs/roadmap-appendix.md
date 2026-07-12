@@ -15,121 +15,42 @@ starts; answers get folded into feat plans and code; the decision log keeps the 
 4. **New questions get filed** as the next phase approaches.
 5. Skim the **Decision log** and **Execution log** to catch up after time away.
 
-> **Phase 0 is DONE — merged to main via PR #20 (2026-07-12).** Its specs (D1–D5,
-> Q12, Q13a) are pruned from this file; the decision log below keeps the trail, and
-> the shipped rules live in `docs/v0.1-rules-spec.md` / `rules.md`. Standing design
-> rules that survive Phase 0: **victory minimums must beat the opening** (no card
-> holdable at game start — enforced by a regression test) and the **capital-privilege
-> ban** (capital may only ever be additive/liability-shaped, never a tile-yield
-> multiplier — detailed in `docs/balance.html`).
+> **Phases 0 and 1 are DONE — merged via PR #20 and PR #21 (2026-07-13).** Their
+> specs (D1–D11, Q12–Q16) are pruned from this file; the decision log keeps the
+> trail, and the shipped rules live in `docs/v0.1-rules-spec.md` / `rules.md`.
+> Standing design rules: **victory minimums must beat the opening** (regression-
+> tested), the **capital-privilege ban** (additive/liability identity only, never a
+> yield multiplier — balance.html), and the **event-table law** (every dice table is
+> data + the one `rollOnTable` seam + the one shared modal — docs/feat/event-tables.md).
 
 ---
 
-## Phase 1 — "Every currency gets a job" · `EXECUTING (feat/phase1-currencies)`
+## Phase 1.5 — "The interface refit" · `EXECUTING (feat/ui-refit)`
 
-Build order (locked): **`docs/feat/event-tables.md` first** (the reusable dice-table
-component is a hard engineering requirement), then **bank exchange (D6)** — priority
-raised by the wood-bottleneck sim finding — then riot table (D9), civic calm (D7),
-promote/demote ladder (D8), ventures (D10).
+Slotted **before Phase 2** on purpose: terrain rework, tier-2 buildings, and the
+assembly all *add* UI surface — building them into the old layout means converting
+them twice, and the Phase 1 playtest kept tripping over the same interaction debt.
+(Principle 2 is intact: features still ship their own UI; the refit fixes how the
+existing ones are reached.)
 
-### D6 · Bank exchange — `DONE (feat/phase1-currencies; rates provisional)`
+**Locked scope (user, 2026-07-12/13 — full text in todo.md):**
 
-- **Model:** gold-mediated market (Age-of-Empires style) — sell materials for gold, buy
-  materials with gold; never direct barter. Gold is the unit of account.
-- **Philosophy:** the bank is **static** and *brackets* player pricing — its rates are
-  the corridor walls; all player-negotiated trade (Phase 4) happens inside them, priced
-  by in-the-moment scarcity. No dynamic price drift in v1; revisit drift in Phase 4 only
-  if player trade fails to carry the scarcity feel (watch item).
-- **Rates — provisional starting values, expected to move with playtest/sim** (build
-  them as ruleset tunables, not constants): sell any material **3:1 → 1 gold** · buy any
-  material for **2 gold** (effective material→material 6:1; ports later improve the
-  sell side).
-- Watch flags for the ledger at ship time: a freeman's +2 gold/turn = 1 flexible
-  material/turn (vs slave); gold→food means the rich never starve.
-- **Treasurer interaction (checked 2026-07-12):** the stockpile card counts
-  wood+stone+gold+food, and both trade directions destroy net value (3→1, 2→1) — so
-  every bank trade *shrinks* your Treasurer score. No exploit; a pleasant tension.
-- **Q14 resolutions (user + Claude, 2026-07-12):** materials = wood/stone/**food**,
-  both directions, influence/happiness never bankable. **No cap** on trades per turn
-  (the round-trip spread is the tax). Rates are **per-material and board-derived**
-  (user: supply comes from the tile layout): computed once at game creation from the
-  board's tile counts — scarcest material sells better and costs more, most abundant
-  the reverse, one step off baseline — then **static all game** (the corridor
-  philosophy survives; Shuffled boards get their own price texture). Both `uniform`
-  and `scarcity` derivations built as ruleset knobs; a sim A/B picks the default.
-  UI home: a **Market tab in the right sidebar**, rates always visible.
+1. **One ledger.** The Actions side panel folds into the Ledger; tabs become
+   vertical buttons (the 5-up horizontal row is at capacity).
+2. **A dedicated verb bar** for Grow / Move / Found / Upgrade / Calm / Venture /
+   End Turn (placement = Q17).
+3. **The map is the picker** (selection rule 1): the Found Colony pattern — eligible
+   tiles glow, the clicked tile gets the active ring, an anchored popover carries
+   yield/pops/shared-status + confirm — rolled out to the ladder, Grow Pop, Move Pops
+   (source then target), event pop-placement, and the riot concession. No backdrop
+   modal may cover the board during a selection.
+4. **No native `<select>` anywhere** (selection rule 2): one custom listbox whose row
+   template is the tile-art picker card, used only where a list genuinely beats the
+   map (e.g. inside the deliberately-blocking riot modal).
+5. **The game-reference compendium** behind the season icon (contents = Q18):
+   everything rollable or drawable is viewable — players plan around public tables.
 
-### D7 · Civic calm actions — `DONE (feat/phase1-currencies)`
-
-One civic-calm action per player per turn (shared limit — calm must not stack), payable
-two ways: **Stabilize Province** 4 influence → +3 happiness, or **Bread & Circuses**
-6 gold → +3 happiness. One `civicCalm` seam in code with two payment options.
-
-### D8 · Promote / demote ladder — `DONE (feat/phase1-currencies)`
-
-Promote: slave→freeman **4 food** · freeman→citizen **4 gold**. Demote: citizen→freeman
-**2 influence** · freeman→slave **3 influence, −1 happiness**. One ladder move per
-player per turn, separate from the grow-pop throttle. Demotion is **free during a riot**
-(the mob forces it).
-
-### D9 · Riot table & the event-table component — `DONE (feat/phase1-currencies)`
-
-At happiness ≤ −5, start of turn (before income) — pre-roll insurance only, declared
-before the die. **All three options may each be bought once per riot (user, 2026-07-12
-— the old any-2/max-+2 cap is dropped; max modifier +3):** bread dole 4 food (+1) ·
-concession = demote 1 pop free (+1) · patronage 3 influence (+1). Full insurance in a
-mild riot makes pop loss impossible (worst case −6 food or −6 gold) — intended: it
-converts catastrophe into taxation. The severe tier still reaches pop losses through it.
-
-| Roll | Outcome |
-| ---: | --- |
-| 1 | Mob torches the works — lose 1 pop; one building destroyed (downgraded once tiers exist; no building → lose 2 pops instead) |
-| 2 | Revolt spreads — lose 2 pops |
-| 3 | Lose 1 pop |
-| 4 | Granary sacked — lose 6 food |
-| 5 | Bribe demanded — lose 6 gold (lose 1 pop if you can't pay) |
-| 6 | The mob disperses — no loss |
-
-(Rows 1–2 swapped from the draft, user's building-destruction change (2026-07-12):
-destruction is worse than 2 pops, so it sits on the 1. Lost pops are chosen at random
-— the mob decides, the player's levers are insurance and the free demote.)
-
-Severe tier (≤ −10): roll at −2, pop losses doubled, rebound to −4 unchanged; mild
-tier never rebounds (it can re-fire — that is what civic calm is for).
-
-**Engineering requirement (user):** event tables are a reusable **data-driven
-component** — `EventTable` definitions in content data, one generic `rollOnTable` engine
-seam (seeded RNG), one shared UI modal rendering rows + roll + insurance slots. Riot,
-ventures, and future omen/yearly tables are all instances. Gets `docs/feat/event-tables.md`
-at Phase 1 start.
-
-**Replaces** the current random pop removal in `src/game/unrest.ts` (thresholds −5/−10,
-flat 2/4-pop losses, severe rebound −4) — the thresholds and rebound stay; the flat
-losses become the table.
-
-### D10 · Ventures — `DONE (feat/phase1-currencies; payouts widened per user)`
-
-"Fund an Expedition": stake **5 gold** or **8 wood**, one venture per player per turn,
-available from turn 1 (no building prerequisite — a catch-up casino must be reachable
-by the player who's behind). The player **chooses the expedition**; each is its own
-event table at ~−7% EV (the bank's rates give the common unit; civic calm implies
-1 influence ≈ 1.5 gold):
-
-- **Merchant Convoy** (the D10 original): 1–2 stake lost · 3–4 return 5 gold ·
-  5–6 return 9 gold.
-- **Grand Embassy**: 1–2 stake lost · 3–4 return 3 influence · 5–6 return 6 influence.
-- **Colonists' Voyage**: 1–2 stake lost · 3–4 return 5 food · 5 return 8 food ·
-  6 settlers arrive — +1 freeman in a settlement with room (+2 food alongside).
-  Pop payout deliberately rare (a 6 only) — it is a second pop faucet running around
-  the grow-pop throttle, so it stays a jackpot, never a strategy.
-
-Phase 4 ports may later improve odds (tunable). Payout resources are thematic per
-table; the stake is always gold-or-wood.
-
-### D11 · Sim usage — `LOCKED (rec overruled)`
-
-No per-PR sim gate. PR gate = `npm run check` + tests. Sims are an instrument: ad-hoc
-spitball tests, planned campaigns (e.g. D1 minimum tuning), and phase-exit checks.
+Gets `docs/feat/ui-refit.md` once Q17–Q19 are answered; build follows that plan.
 
 ---
 
@@ -153,6 +74,49 @@ fold into the Phase 2 gold-tile-removal re-check.
 
 **Your answer (approve/reject the repricing after your playtest):**
 
+### Q17 · Where does the verb bar live? — `OPEN`
+
+**Context.** The verbs leave the side panel (refit scope 2). Two candidate homes.
+
+**Rec:** a **bottom command bar fused with the resource band** — resources left,
+verbs center, End Turn anchored right. Classic RTS grammar (eyes drop from board to
+hands), it reclaims the full right column for nothing (the panel disappears
+entirely), and the verbs sit next to the resources they spend. The alternative
+(strip under the top bar) crowds the events/roster row and separates verbs from
+costs. Mock both only if the bottom bar feels wrong in the first build.
+
+**Your answer:**
+
+### Q18 · Compendium v1 — contents & entry points — `OPEN`
+
+**Context.** Refit scope 5. What ships in the first compendium, and how it opens.
+
+**Rec:** five sections, all read-only, all data-driven from the ruleset/content
+tables so they can never drift from the engine: (1) victory cards with LIVE
+standings per player; (2) the four event tables (riot + three expeditions) rendered
+by the shared component, no roll button; (3) this board's bank rates + the corridor
+explainer; (4) deck composition — seasonal card list with season-weighting notes,
+player-deck list (aggregate counts, never draw order); (5) a costs cheat-sheet
+(actions, buildings, ladder, calm, stakes). Entry: the season icon, plus the `?`
+key. Later phases append sections (politicians, resolutions) instead of new modals.
+
+**Your answer:**
+
+### Q19 · Homes for the Chronicle and the deck tray — `OPEN`
+
+**Context.** "One ledger only" evicts the right panel — the Chronicle (action log)
+and DeckShelf (deck counts + board chip) need homes.
+
+**Rec:** deck counts + board/seed chip move into the **top bar** beside the
+season dial (the seasonal count already half-lives there as "28 left"). The
+Chronicle becomes a **collapsible drawer on the right edge** — a slim tab that
+slides over the map when opened, with the latest entry always visible as a
+one-line ticker in the bottom command bar. A ledger tab would work too but hides
+the live narration entirely, which the chronicle exists to provide.
+
+**Your answer:**
+
+
 ---
 
 ## Decision log
@@ -172,6 +136,7 @@ fold into the Phase 2 gold-tile-removal re-check.
 | D9 | Riot table | As specced; event tables = reusable data-driven component | 2026-07-11 | Phase 1 scope; feat/event-tables.md |
 | D10 | Ventures | As specced (~−7% EV catch-up casino) | 2026-07-11 | Phase 1 scope |
 | D11 | Sim usage | No per-PR gate; ad-hoc + campaigns + phase exits | 2026-07-11 | roadmap.md principle 6 |
+| D12 | Phase 1.5 slot | Interface refit lands NOW, before Phase 2 (terrain/tier-2/assembly all add UI surface — build once, not twice); scope: one ledger, verb bar, map-first selection, no native selects, compendium | 2026-07-13 | roadmap.md Phase 1.5; todo.md |
 | Q12 | Metropolis fork | Metropolis (4 pops) + founding colony (2 pops, any coastal tile or adjacent); snake kept; capital-privilege ban intact; contiguity campaign: geometry never boxes anyone in (0% / 90 games) | 2026-07-12 | engine + rules.md; Q13a shipped alongside |
 | Q13a | Coastal leapfrog | Hold any coastal settlement → found on any coastal tile; interior chains by contiguity | 2026-07-12 | engine + rules.md |
 | Q13b | Colony repricing protocol | User: sim first (saved baseline), compare after D6 ships; repricing itself NOT approved | 2026-07-12 | watch items; docs/sim/ |
@@ -190,3 +155,5 @@ after D6 ships, before Phase 2's gold-tile removal · Phase 4 revisits bank-rate
 | 2026-07-12 | **PR #20 → main** | **Phase 0 merged.** Victory race (5 public cards, tunable minimums, turn-start win check, finite seasonal deck + exhaustion tally); metropolis (4 pops) + coastal founding colony (2 pops) snake setup; colony contiguity + coastal leapfrog; yearly opener rotation; Classic/Shuffled boards + URL params; stockpile-happiness cap +2; full UI (Victory tab, roster badges, seasons-left, board chip, game-over screen); dev auto-openings rotating 10 seeds; sim-CLI telemetry (victoryCards, frontierTiles). 109 tests. Campaigns: contiguity A/B (geometry never binds), minimum tuning (race wins land ~year 4.8), mixed colony pricing (Q13b data). | 0 |
 | 2026-07-12 | `feat/phase1-currencies` | Branch opened; appendix pruned to Phase 1; Q14–Q16 filed. | 1 |
 | 2026-07-12 | `feat/phase1-currencies` | **Phase 1 built end-to-end (engine + UI + sims + tests).** Event-table component (docs/feat/event-tables.md) with riot + 3 expeditions as data; bank exchange with board-derived per-material rates (scarcity default confirmed by 20+20-game A/B, docs/sim/2026-07-12-bank-rates-ab.md — also the saved Q13b baseline); civic calm; ladder; blocking riot flow with deferred income; ventures. UI: Market tab (5-up ledger), Calm/Venture verbs, shared EventTableModal (riot insurance incl. concession target picker), ladder ↑/↓ on Pops tab. Sims: all 8 currency verbs alive, riots ~3/game, race close-rate 50–55% (up from Phase 0's 33–45%). 143 tests. Exit gate met pending user playtest. | 1 |
+| 2026-07-13 | **PR #21 → main** | **Phase 1 merged.** Post-review additions rode along: ladder targeting modal with tile-art picker cards, settlement pickers name their tile + shared-colony status, Q13b post-bank comparison (rec: hold 20w+2f), the two selection rules pinned. | 1 |
+| 2026-07-13 | `feat/ui-refit` | Branch opened; Phase 1.5 slotted before Phase 2 (D12); Q17–Q19 filed. | 1.5 |

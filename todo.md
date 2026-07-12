@@ -94,7 +94,7 @@
 
 ## Presentation & UI
 
-- *** UI refactor: one ledger, vertical tabs, relocated action bar, map-first selection. (user, 2026-07-12/13)
+- *** UI refactor: one ledger, vertical tabs, relocated action bar, map-first selection. (user, 2026-07-12/13 — SCHEDULED: roadmap Phase 1.5, executing on feat/ui-refit)
 -- The right sidebar's Actions panel and the left Ledger should collapse into ONE ledger; its tabs become
    vertical buttons (the 5-up horizontal row is already cramped and will not survive more tabs).
 -- The everyday action verbs (Grow / Move / Found / Upgrade / Calm / Venture / End Turn) move to a dedicated
@@ -112,7 +112,7 @@
    inside the deliberately-blocking riot modal).
 -- Scope this WITH the game-reference compendium below (same navigation rethink); flat AAA look throughout.
 
-- *** Game-reference compendium behind the season icon. (user, 2026-07-12)
+- *** Game-reference compendium behind the season icon. (user, 2026-07-12 — SCHEDULED: roadmap Phase 1.5, contents = appendix Q18)
 -- Pressing the seasonal icon button (top bar) opens a modal of categorized game info players can study to
    plan ahead: the victory-card roster, every event table (riot + the three expeditions — read-only render,
    no roll button; the shared EventTableModal component already carries this), bank rates, deck contents /

@@ -13,7 +13,10 @@ Last updated: 2026-07-12.
    playtest and sim batch measures the wrong game.
 2. **Sinks before sources; systems before content; content before polish.** Never add a
    currency source before its sink; never add content into a system that creates no
-   decisions yet; UI ships *with* each feature, never as its own phase.
+   decisions yet; UI ships *with* each feature, never as its own phase. (Paying down
+   *interaction debt* the playtest keeps tripping over — Phase 1.5 — is not a "UI
+   phase" in this sense: features still ship their own UI, the refit fixes how
+   existing ones are reached.)
 3. **Ship map changes with the systems that price them** (hills rework travels with
    building tier 2).
 4. **Rivalry systems outrank solitaire systems.** When in doubt, prioritize interaction
@@ -28,18 +31,19 @@ Last updated: 2026-07-12.
 ## Phases
 
 Each phase ends in a playable, sim-verified milestone.
-**Status:** Phase 0 **DONE — merged via PR #20**. Phase 1 **built end-to-end on
-`feat/phase1-currencies` (2026-07-12)**: event-table component, bank exchange
-(board-derived rates, scarcity default via A/B — docs/sim/), civic calm, ladder,
-blocking riot table, three ventures — engine + UI + 143 tests. Exit gate readings:
-no dead currencies (all 8 verbs fire in sims), riot table replaced random pop removal,
-race close-rate rose to 50–55%. Awaiting user playtest sign-off; Q13b stays open
-(saved baseline ready, compare after playtest).
+**Status:** Phases 0 and 1 **DONE — merged via PR #20 and PR #21 (2026-07-13)**.
+Next: **Phase 1.5, the interface refit**, executing on `feat/ui-refit` — slotted
+*before* Phase 2 deliberately: Phase 2 (terrain + tier-2 buildings) and Phase 3
+(assembly panels) both add UI surface, and building them into the old layout means
+converting them twice. Open questions Q17–Q19 in the appendix. Q13b (colony
+repricing) awaits the user's verdict — comparison run, rec is HOLD 20w+2f
+(docs/sim/2026-07-12-colony-repricing-q13b.md).
 
 | Phase | Theme | Contents | Gate to exit |
 | --- | --- | --- | --- |
 | **0** | Make it a game | Victory race (5 public "Most X, min Y" cards, sole leader holds; 3 at your own turn start → win; seasonal deck = failsafe ceiling); **metropolis + founding colony setup** (Q12: metropolis 4 pops; colony 2 pops on any coast or adjacent; snake order) + **coastal leapfrog** (Q13a); colony contiguity (radius 1, colonies chain); **no** capital ring — delete the unenforced claim from rules.md/spec; board setting Classic/Shuffled (seeded); yearly first-player rotation; stockpile happiness capped +2; preload flag off | A 4-seat game ends with a winner; seat-win rates in a planned sim batch are roughly flat |
 | **1** | Every currency gets a job | Bank exchange; Stabilize Province; promote/demote ladder; riot table + pre-roll insurance (event-table seam); ventures | No dead currencies in the sim report; riot table replaces random pop removal |
+| **1.5** | The interface refit | **One ledger** (Actions panel folds in; vertical tab buttons); action verbs move to a dedicated bar (bottom / under-top-bar — Q17); **map-first selection** (the Found Colony pattern — glow → active ring → anchored popover — rolled out to ladder, Grow, Move, event placement, riot concession); **no native selects** — one custom listbox with tile-art card rows; **game-reference compendium** behind the season icon (victory cards, event tables, bank rates, decks — everything rollable is viewable) | Playtest: every tile/settlement choice happens on the board or in an art-card list; zero OS dropdowns; a new player can find any rule reference without leaving the game |
 | **2** | The land repriced | Terrain rework (`docs/feat/terrain-economy.md`) + building tier 2, shipped together | Hill starts stop underperforming; bot build orders diverge by terrain |
 | **3** | The rivalry layer | Assembly + resolutions + Politicians v1 (needs design session first) | Influence is spent most turns; a runaway leader gets checked in playtest |
 | **4** | The wider world | Coasts, ports, luxury goods, player trade | Luxury/happiness economy holds at the ledger's caps; trade actually occurs |
