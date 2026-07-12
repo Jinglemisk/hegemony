@@ -30,10 +30,14 @@ export function ActionCommandPanel({
   canUpgradeCity,
   isFoundColonyActive,
   hasPendingPlayerEvent,
+  calmUsed,
+  ventureUsed,
   onMovePopsRequest,
   onGrowPopRequest,
   onFoundColonyRequest,
   onUpgradeCityRequest,
+  onCalmRequest,
+  onVentureRequest,
   onEndTurn
 }: {
   G: HegemonyState;
@@ -45,10 +49,14 @@ export function ActionCommandPanel({
   canUpgradeCity: boolean;
   isFoundColonyActive: boolean;
   hasPendingPlayerEvent: boolean;
+  calmUsed: boolean;
+  ventureUsed: boolean;
   onMovePopsRequest: () => void;
   onGrowPopRequest: () => void;
   onFoundColonyRequest: () => void;
   onUpgradeCityRequest: () => void;
+  onCalmRequest: () => void;
+  onVentureRequest: () => void;
   onEndTurn: () => void;
 }) {
   const foundCost = G.ruleset.actionCosts.foundColony;
@@ -152,6 +160,56 @@ export function ActionCommandPanel({
           <span className="commandVerbBody">
             <strong>Upgrade</strong>
             <ResourceCost cost={upgradeCost} />
+          </span>
+        </button>
+
+        <button
+          className="commandVerb"
+          disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent || calmUsed}
+          onClick={onCalmRequest}
+          title={
+            hasPendingPlayerEvent
+              ? "Resolve the pending player event first."
+              : calmUsed
+                ? "One civic-calm action per turn — already used."
+                : "Buy happiness: influence or gold, once per turn."
+          }
+        >
+          <UiSprite item="voteToken" className="commandIcon" />
+          <span className="commandVerbBody">
+            <strong>Calm</strong>
+            <span className="commandVerbCost">
+              <em>from</em>
+              <span className="commandVerbCostItem" style={resourceCssVars("influence")}>
+                <ResourceIcon resource="influence" className="commandVerbCostIcon" />
+                {G.ruleset.civicCalm.influenceCost}
+              </span>
+            </span>
+          </span>
+        </button>
+
+        <button
+          className="commandVerb"
+          disabled={!isActive || phase !== "gameplay" || hasPendingPlayerEvent || ventureUsed}
+          onClick={onVentureRequest}
+          title={
+            hasPendingPlayerEvent
+              ? "Resolve the pending player event first."
+              : ventureUsed
+                ? "One venture per turn — the ships are already out."
+                : "Fund an expedition: stake gold or wood, roll the table."
+          }
+        >
+          <UiSprite item="seal" className="commandIcon" />
+          <span className="commandVerbBody">
+            <strong>Venture</strong>
+            <span className="commandVerbCost">
+              <em>stake</em>
+              <span className="commandVerbCostItem" style={resourceCssVars("gold")}>
+                <ResourceIcon resource="gold" className="commandVerbCostIcon" />
+                {G.ruleset.ventureStakes.gold.gold}
+              </span>
+            </span>
           </span>
         </button>
 

@@ -663,3 +663,156 @@
   font-size: 0.82rem;
 }
 
+
+/* Event-table modal — the ONE shared surface for every dice table
+   (docs/feat/event-tables.md): riot, expeditions, future omens. */
+.eventTableModal {
+  display: grid;
+  gap: 12px;
+  width: min(430px, calc(100vw - 34px));
+  max-height: min(92vh, 720px);
+  padding: 18px 18px 16px;
+  overflow-y: auto;
+  border: 2px solid rgb(80 35 18 / 72%);
+  border-radius: 14px;
+  color: var(--fg);
+  background:
+    radial-gradient(circle at 50% 8%, rgb(255 248 231 / 90%), transparent 42%),
+    linear-gradient(180deg, #fff4d8, #eed5aa 78%, #e0b87e);
+  box-shadow:
+    0 28px 70px rgb(0 0 0 / 48%),
+    inset 0 0 0 6px rgb(255 248 231 / 48%),
+    inset 0 0 0 9px rgb(143 46 19 / 30%);
+}
+
+.eventTableHeader {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.eventTableHeader h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eventTableHeader p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.eventTableRows {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eventTableRow {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 5px 8px;
+  border-left: 2px solid rgb(143 46 19 / 26%);
+  font-size: 0.78rem;
+}
+
+.eventTableRowLanded {
+  border-left-color: var(--clay);
+  background: rgb(143 46 19 / 10%);
+  font-weight: 600;
+}
+
+.eventTableDie {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgb(80 35 18 / 55%);
+  border-radius: 5px;
+  background: rgb(255 248 231 / 72%);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+}
+
+.eventTableModifier,
+.eventTableOutcome {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--clay);
+  background: rgb(255 248 231 / 62%);
+  font-size: 0.78rem;
+}
+
+.eventTableOutcome strong {
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+}
+
+.eventTableFooter {
+  display: grid;
+}
+
+.eventTableFooterRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+}
+
+.riotInsuranceStack,
+.ventureControls {
+  display: grid;
+  gap: 7px;
+}
+
+.riotInsuranceTitle {
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.riotInsuranceRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 46%);
+  gap: 6px;
+  align-items: stretch;
+}
+
+.riotInsuranceRow select {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+  font-size: 0.72rem;
+}
+
+.ventureStakeRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.ghostButton {
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: none;
+  font-size: 0.78rem;
+}
+
+.ghostButton:not(:disabled):hover {
+  border-color: var(--ledger-accent);
+  color: var(--fg);
+  box-shadow: none;
+  transform: none;
+}
