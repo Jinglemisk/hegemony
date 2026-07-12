@@ -49,6 +49,15 @@ promote/demote ladder (D8), ventures (D10).
 - **Treasurer interaction (checked 2026-07-12):** the stockpile card counts
   wood+stone+gold+food, and both trade directions destroy net value (3→1, 2→1) — so
   every bank trade *shrinks* your Treasurer score. No exploit; a pleasant tension.
+- **Q14 resolutions (user + Claude, 2026-07-12):** materials = wood/stone/**food**,
+  both directions, influence/happiness never bankable. **No cap** on trades per turn
+  (the round-trip spread is the tax). Rates are **per-material and board-derived**
+  (user: supply comes from the tile layout): computed once at game creation from the
+  board's tile counts — scarcest material sells better and costs more, most abundant
+  the reverse, one step off baseline — then **static all game** (the corridor
+  philosophy survives; Shuffled boards get their own price texture). Both `uniform`
+  and `scarcity` derivations built as ruleset knobs; a sim A/B picks the default.
+  UI home: a **Market tab in the right sidebar**, rates always visible.
 
 ### D7 · Civic calm actions — `LOCKED`
 
@@ -65,20 +74,28 @@ player per turn, separate from the grow-pop throttle. Demotion is **free during 
 
 ### D9 · Riot table & the event-table component — `LOCKED`
 
-At happiness ≤ −5, start of turn — pre-roll insurance only (declared before the die,
-max +2 total): bread dole 4 food (+1) · concession = demote 1 pop free (+1) · patronage
-3 influence (+1).
+At happiness ≤ −5, start of turn (before income) — pre-roll insurance only, declared
+before the die. **All three options may each be bought once per riot (user, 2026-07-12
+— the old any-2/max-+2 cap is dropped; max modifier +3):** bread dole 4 food (+1) ·
+concession = demote 1 pop free (+1) · patronage 3 influence (+1). Full insurance in a
+mild riot makes pop loss impossible (worst case −6 food or −6 gold) — intended: it
+converts catastrophe into taxation. The severe tier still reaches pop losses through it.
 
 | Roll | Outcome |
 | ---: | --- |
-| 1 | Revolt spreads — lose 2 pops |
-| 2 | Lose 1 pop; one building shuttered next turn |
+| 1 | Mob torches the works — lose 1 pop; one building destroyed (downgraded once tiers exist; no building → lose 2 pops instead) |
+| 2 | Revolt spreads — lose 2 pops |
 | 3 | Lose 1 pop |
 | 4 | Granary sacked — lose 6 food |
 | 5 | Bribe demanded — lose 6 gold (lose 1 pop if you can't pay) |
 | 6 | The mob disperses — no loss |
 
-Severe tier (≤ −10): roll at −2, pop losses doubled, rebound to −4 unchanged.
+(Rows 1–2 swapped from the draft, user's building-destruction change (2026-07-12):
+destruction is worse than 2 pops, so it sits on the 1. Lost pops are chosen at random
+— the mob decides, the player's levers are insurance and the free demote.)
+
+Severe tier (≤ −10): roll at −2, pop losses doubled, rebound to −4 unchanged; mild
+tier never rebounds (it can re-fire — that is what civic calm is for).
 
 **Engineering requirement (user):** event tables are a reusable **data-driven
 component** — `EventTable` definitions in content data, one generic `rollOnTable` engine
@@ -90,11 +107,24 @@ at Phase 1 start.
 flat 2/4-pop losses, severe rebound −4) — the thresholds and rebound stay; the flat
 losses become the table.
 
-### D10 · Ventures — `LOCKED`
+### D10 · Ventures — `LOCKED (payouts widened per user, 2026-07-12)`
 
-"Fund an Expedition": stake **5 gold** or **8 wood**, once per turn. d6: 1–2 stake lost ·
-3–4 return 5 gold · 5–6 return 9 gold. ~−7% EV — the self-selecting catch-up casino.
-Another event table + an Actions-tab entry.
+"Fund an Expedition": stake **5 gold** or **8 wood**, one venture per player per turn,
+available from turn 1 (no building prerequisite — a catch-up casino must be reachable
+by the player who's behind). The player **chooses the expedition**; each is its own
+event table at ~−7% EV (the bank's rates give the common unit; civic calm implies
+1 influence ≈ 1.5 gold):
+
+- **Merchant Convoy** (the D10 original): 1–2 stake lost · 3–4 return 5 gold ·
+  5–6 return 9 gold.
+- **Grand Embassy**: 1–2 stake lost · 3–4 return 3 influence · 5–6 return 6 influence.
+- **Colonists' Voyage**: 1–2 stake lost · 3–4 return 5 food · 5 return 8 food ·
+  6 settlers arrive — +1 freeman in a settlement with room (+2 food alongside).
+  Pop payout deliberately rare (a 6 only) — it is a second pop faucet running around
+  the grow-pop throttle, so it stays a jackpot, never a strategy.
+
+Phase 4 ports may later improve odds (tunable). Payout resources are thematic per
+table; the stake is always gold-or-wood.
 
 ### D11 · Sim usage — `LOCKED (rec overruled)`
 
@@ -105,82 +135,19 @@ spitball tests, planned campaigns (e.g. D1 minimum tuning), and phase-exit check
 
 ## Open questions
 
-### Q13b · Colony repricing (wood/gold mix) — `OPEN (awaiting your playtest read)`
+### Q13b · Colony repricing (wood/gold mix) — `OPEN (protocol locked, change not approved)`
 
 **Context.** The contiguity campaign showed wood, not geometry, is the expansion
-bottleneck. Simmed (2026-07-12): foundColony at **14 wood + 6 gold + 2 food** vs
-baseline 20w+2f, 30 games, same seeds — mid-game expansion **+32%** (s17: 6.37 vs 4.81
-tiles/player), final +0.85 paired. Gold's dead pile becomes expansion fuel — a real
-gold sink AND wood relief. Knock-on: **revolt share tripled** (5%→18%) — faster
-expansion outruns the food base; wants Phase 1's civic-calm/riot tools alongside it.
-Caution: wood-as-bottleneck is also the designed tempo brake — 70% map utilization by
-game end is healthy. Fix the *feel* in playtest, not every number.
+bottleneck. Simmed (2026-07-12, pre-bank): foundColony at **14 wood + 6 gold + 2 food**
+vs baseline 20w+2f — mid-game expansion **+32%**, revolt share tripled (5%→18%).
+Caution: wood-as-bottleneck is also the designed tempo brake.
 
-**Recommendation:** hold at 20w+2f until you've playtested merged Phase 0 AND the D6
-bank has shipped (the bank alone already converts dead gold into wood at 2g/wood —
-that may be all the relief expansion needs). Re-run the expansion campaign after D6;
-reprice only if the sim still shows the wood wall *and* your playtest feels cramped.
-Same trigger re-opens the Phase 2 gold-tile-removal check (noted in
-`feat/terrain-economy.md`).
-
-**Your answer:**
-
-### Q14 · Bank exchange — scope details — `OPEN`
-
-**Context.** D6 locks the model and rates; three small holes to close before building.
-
-1. **What counts as a "material"?** Wood, stone, and **food**, both directions?
-   Gold→food is the "rich never starve" flag — already accepted as intended (it's a
-   gold sink and a starvation escape hatch priced at 2g/food). Influence and happiness
-   stay off the bank entirely (they're civic, not commodities — D7 is where influence
-   buys calm).
-   **Rec:** yes — wood/stone/food, both directions, one uniform rate. Uniform keeps
-   the corridor readable; ports and the Phase 2 terrain rework can differentiate later.
-2. **Throughput** — unlimited exchanges per turn, or a cap?
-   **Rec:** unlimited. The 6:1 round-trip spread is already the tax, and every trade
-   shrinks your Treasurer stockpile — friction is built in. A cap is bookkeeping
-   without a proven problem; watch sims for degenerate turns instead.
-3. **UI home?**
-   **Rec:** a "Market" verb in the Actions tab opening a compact exchange row (pick
-   material, sell 3→1g / buy 2g→1, repeatable) — flat, no modal ceremony, rates always
-   visible so the corridor teaches itself.
-
-**Your answer:**
-
-### Q15 · Riot flow — digital-table details — `OPEN`
-
-**Context.** D9 locks the table, insurance menu, and tiers. The engine currently fires
-unrest at start of turn *before* income (`applyUnrestUpkeep`); the riot roll replaces
-the flat pop loss in that same slot. Remaining calls:
-
-1. **Insurance stacking** — spec says "max +2 total", each option gives +1.
-   **Rec:** each option purchasable once per riot, any two of the three (dole +
-   concession + patronage capped at +2). The concession's free demote uses the D8
-   riot-demote rule.
-2. **Who picks the lost pops?** Roll outcomes say "lose N pops".
-   **Rec:** random via the existing seeded `removeRandomPops` — the mob chooses, not
-   the player; the player's lever is insurance and the free demote. Keeps riots scary.
-3. **Roll 2's "building shuttered next turn"** — which building?
-   **Rec:** random owned building (seeded); shuttered = yields nothing on your next
-   turn. If the player owns no buildings, the roll downgrades to roll 3 (lose 1 pop
-   only).
-4. **Mild-tier rebound** — currently only severe unrest rebounds happiness (to −4);
-   the mild tier leaves happiness where it sits.
-   **Rec:** keep exactly that. A mild riot that doesn't move happiness means it can
-   re-fire next turn — that's the pressure that makes D7's civic calm worth paying for.
-
-**Your answer:**
-
-### Q16 · Ventures — availability — `OPEN`
-
-**Context.** D10 locks stake/payout. One call: gated or open?
-
-**Rec:** available to everyone from turn 1, no building prerequisite — the catch-up
-casino only works if the player who's behind can always reach it. A Phase 4 port can
-later improve the odds (tunable), which also gives the coast one more identity hook.
-Payout is always gold regardless of which stake (5g or 8w) was posted.
-
-**Your answer:**
+**Protocol (user, 2026-07-12): sim first, save it, then compare.** No repricing until:
+(1) the D6 bank ships (it already converts dead gold to wood — may be all the relief
+needed); (2) a fresh **baseline campaign at 20w+2f is run and saved** (checked in
+under `docs/sim/`, seeds + summaries); (3) the 14w+6g variant runs on the *same seeds*
+and the comparison is put in front of the user with their Phase 0 playtest read.
+The same comparison re-opens the Phase 2 gold-tile-removal check.
 
 ---
 
@@ -203,6 +170,10 @@ Payout is always gold regardless of which stake (5g or 8w) was posted.
 | D11 | Sim usage | No per-PR gate; ad-hoc + campaigns + phase exits | 2026-07-11 | roadmap.md principle 6 |
 | Q12 | Metropolis fork | Metropolis (4 pops) + founding colony (2 pops, any coastal tile or adjacent); snake kept; capital-privilege ban intact; contiguity campaign: geometry never boxes anyone in (0% / 90 games) | 2026-07-12 | engine + rules.md; Q13a shipped alongside |
 | Q13a | Coastal leapfrog | Hold any coastal settlement → found on any coastal tile; interior chains by contiguity | 2026-07-12 | engine + rules.md |
+| Q13b | Colony repricing protocol | User: sim first (saved baseline), compare after D6 ships; repricing itself NOT approved | 2026-07-12 | watch items; docs/sim/ |
+| Q14 | Bank scope | Materials = wood/stone/food both ways; no trade cap; per-material rates derived once from board tile counts (scarcity classes), static all game; uniform-vs-scarcity default picked by sim A/B; Market tab in right sidebar | 2026-07-12 | D6 spec; Phase 1 build |
+| Q15 | Riot digital flow | All 3 insurances buyable (once each, max +3); random pop losses; rows 1–2 swapped — roll 1 = 1 pop + building destroyed (downgrade once tiers exist; no building → 2 pops); mild tier never rebounds | 2026-07-12 | D9 spec; Phase 1 build |
+| Q16 | Venture payouts | Three expeditions, player's choice, each own table ~−7% EV: Merchant (gold), Embassy (influence), Colonists (food, +1 freeman on a 6 only); open from turn 1, no prereq | 2026-07-12 | D10 spec; Phase 1 build |
 
 **Standing watch items:** seat-3 win lean (+2.8σ under greedy bots — possible snake
 turnaround edge; recheck with stronger bots/humans) · re-run the expansion campaign
