@@ -77,9 +77,10 @@ export function playTurn(G: HegemonyState, policy: Policy, rng: SimRng, hooks: S
   forceEndTurn(G, hooks);
 }
 
-/** Action cap hit: resolve any pending event with the first option, then end the turn. */
+/** Action cap hit: resolve any pending event (first option) or pending riot (roll,
+ *  no more insurance), then end the turn. */
 function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
-  if (G.pendingPlayerEvent) {
+  for (let guard = 0; (G.pendingPlayerEvent || G.pendingRiot) && guard < 4; guard += 1) {
     const player = G.currentPlayer;
     const resolutions = enumerateLegalMoves(G, player);
 
@@ -87,11 +88,14 @@ function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
       throw new SimDeadlockError(deadlockMessage(G, player));
     }
 
-    if (!applyMove(G, player, resolutions[0]).ok) {
-      throw new SimEnumerationError(`forced event resolution failed: ${JSON.stringify(resolutions[0])}`);
+    // Riot enumeration lists insurance first and the roll last — forced turns roll.
+    const forced = resolutions.find((move) => move.type === "resolveRiot") ?? resolutions[0];
+
+    if (!applyMove(G, player, forced).ok) {
+      throw new SimEnumerationError(`forced resolution failed: ${JSON.stringify(forced)}`);
     }
 
-    hooks.onMove?.(G, player, resolutions[0]);
+    hooks.onMove?.(G, player, forced);
   }
 
   const player = G.currentPlayer;

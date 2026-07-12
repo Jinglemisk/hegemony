@@ -29,10 +29,12 @@ settlement on that tile can hold.
 You keep track of six resources:
 
 - **Wood, Stone, Gold, Food** — the material goods you spend to expand and build.
-- **Influence** — a political currency earned by your citizens (its uses are
-  growing as the game develops).
-- **Happiness** — the mood of your people. It is lifted by temples and stored
-  food, and dragged down by overcrowding and hunger.
+  Gold doubles as the **unit of account at the bank** (see The bank, below).
+- **Influence** — a political currency earned by your citizens. It stabilizes the
+  province (civic calm), pays for demotions on the social ladder, and buys riot
+  insurance — with the Assembly still to come.
+- **Happiness** — the mood of your people. It is lifted by temples, stored food,
+  and civic calm, and dragged down by overcrowding and hunger.
 
 You begin each game with **20 wood, 10 stone, 10 gold, 12 food**, and 0
 influence and happiness.
@@ -108,6 +110,17 @@ Play passes around the table. On your turn:
      settlement can grow once per turn.
    - **Move pops** — shift pops between your own settlements.
    - **Build** — raise a building in a city or capital that has a free slot.
+   - **Trade at the bank** — sell materials for gold or buy them with gold, as
+     often as you like (see The bank).
+   - **Civic calm** (once per turn) — **Stabilize Province** for 4 influence, or
+     stage **Bread & Circuses** for 6 gold. Either way: **+3 happiness**. One calm
+     action per turn — contentment cannot be stacked by decree.
+   - **The social ladder** (one move per turn) — promote a slave to freeman for
+     **4 food**, or a freeman to citizen for **4 gold**. Demote a citizen to
+     freeman for **2 influence**, or a freeman to slave for **3 influence and −1
+     happiness**. (During a riot, demotion is free — the mob forces it.)
+   - **Fund an expedition** (once per turn) — stake **5 gold or 8 wood** and roll
+     on an expedition table (see Ventures).
 4. **End your turn.**
 
 Once all four players have taken a turn, a new **season** begins and a fresh
@@ -118,6 +131,36 @@ has its own mood: Spring and Summer tend to be kind (growth, building, trade),
 Autumn is the mixed harvest, and Winter leans harsh. That is a *tendency*, not a
 rule — Winter simply deals more hard-luck cards, so a mild Winter is still
 possible, and no season is ever guaranteed good or bad.
+
+## The bank
+
+The bank trades materials against gold — never material for material. Its rates
+are set by **this board's supply** when the game begins and never move: on the
+classic island, plentiful wood sells 4-for-1-gold, scarce stone sells 2-for-1 and
+costs 3 gold to buy, and food sits at the baseline 3-for-1 / 2 gold. (A shuffled
+board prices itself.) Find it in the ledger's **Market** tab.
+
+- **Sell**: hand over the sell-rate of a material, take 1 gold.
+- **Buy**: pay the buy-rate in gold, take 1 of the material.
+- **No limit** on trades per turn — but every round trip pays the spread, so
+  trading always shrinks your total stockpile (the Treasurer card counts gold
+  too; the bank never inflates it).
+
+The bank is a corridor, not a merchant — its fixed rates are the walls that
+player-to-player trade (a later phase) will negotiate inside.
+
+## Ventures — Fund an Expedition
+
+Once per turn, stake **5 gold or 8 wood**, choose an expedition, and roll a d6.
+The stake is spent win or lose; the low rolls simply return nothing:
+
+- **Merchant Convoy** — 3–4: 5 gold · 5–6: 9 gold.
+- **Grand Embassy** — 3–4: 3 influence · 5–6: 6 influence.
+- **Colonists' Voyage** — 3–4: 5 food · 5: 8 food · **6: settlers arrive** (+1
+  freeman in a settlement with room, +2 food).
+
+Every table pays out slightly less than it costs on average — the expedition is
+a gamble, and it is *meant* for whoever is behind and needs the swing.
 
 ## Buildings
 
@@ -147,20 +190,40 @@ Happiness is your civilization's stability. It moves each turn:
   forgiven this.)
 
 When happiness turns **negative** it reads as unrest, and unrest has teeth. At the
-start of your turn — before you collect income:
+start of your turn — before you collect income — **happiness at −5 or lower puts
+you on the riot table**. Your turn stops until the die is rolled:
 
-- **Happiness at −5 or lower:** a mob costs you **2 pops**, chosen at random from
-  across your settlements. This repeats every turn until you climb back above −5.
-- **Happiness at −10 or lower:** a full revolt costs you **4 pops**, and happiness
-  then settles back to −4.
+| Roll | Outcome |
+| ---: | --- |
+| 1 | The mob torches the works — lose 1 pop **and** a building (no building? lose 2 pops) |
+| 2 | Revolt spreads — lose 2 pops |
+| 3 | Blood in the streets — lose 1 pop |
+| 4 | Granary sacked — lose 6 food |
+| 5 | Bribe demanded — lose 6 gold (lose 1 pop if you can't pay in full) |
+| 6 | The mob disperses — no loss |
+
+Before rolling you may **declare insurance** — each option once per riot, each
+adding **+1 to your roll**: a **bread dole** (4 food), a **concession** (demote
+one pop, free), or **patronage** (3 influence). Declare all three and a plain
+riot can no longer cost you pops — you have converted catastrophe into taxation.
+
+**At −10 or lower the riot is a revolt:** the roll takes a **−2** penalty, all pop
+losses are **doubled**, and after the dust settles happiness rebounds to **−4**.
+A plain riot never rebounds — it will fire again next turn unless you fix the
+cause (civic calm exists for exactly this).
+
+Lost pops are always chosen at random across your settlements — the mob decides,
+not you. Two other pressures round out the misery:
+
 - **Starvation:** if your food income is −2 or worse for **two turns running**, you
   lose **1 pop**.
 - Some events sow **lingering unrest** — a penalty like "−2 happiness per turn for
   3 turns" that bites at the start of each of your next few turns before fading.
 
 Happiness never drifts back up on its own — you climb out of unrest by fixing its
-causes (feed your people, ease overcrowding, build Temples). Losing pops does at
-least shrink those causes, so a collapse tends to bottom out rather than spiral.
+causes (feed your people, ease overcrowding, build Temples, buy calm). Losing pops
+does at least shrink those causes, so a collapse tends to bottom out rather than
+spiral.
 
 ## Events
 

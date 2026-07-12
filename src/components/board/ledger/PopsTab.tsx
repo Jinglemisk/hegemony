@@ -1,4 +1,11 @@
-import { POP_TYPES, calculateEconomyProjection, totalPops } from "../../../game/rules";
+import type { Phase } from "../../../game/controller";
+import {
+  POP_TYPES,
+  calculateEconomyProjection,
+  getDemotePopStatus,
+  getPromotePopStatus,
+  totalPops
+} from "../../../game/rules";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { AtlasIcon } from "../../Sprites";
@@ -6,14 +13,30 @@ import { ResourceDeltaList } from "../ResourceDeltaList";
 import { calculatePopEconomy } from "../helpers";
 import type { OwnedHolding } from "../types";
 
+/** The social ladder's two directions per pop row (D8). */
+const LADDER_MOVES: Partial<Record<PopType, Array<{ kind: "promote" | "demote"; label: string; to: string }>>> = {
+  citizens: [{ kind: "demote", label: "↓", to: "freeman" }],
+  freemen: [
+    { kind: "promote", label: "↑", to: "citizen" },
+    { kind: "demote", label: "↓", to: "slave" }
+  ],
+  slaves: [{ kind: "promote", label: "↑", to: "freeman" }]
+};
+
 export function PopsTab({
   G,
   holdings,
-  playerID
+  playerID,
+  isActive,
+  phase,
+  onLadderRequest
 }: {
   G: HegemonyState;
   holdings: OwnedHolding[];
   playerID: PlayerId;
+  isActive: boolean;
+  phase: Phase;
+  onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
 }) {
   const player = G.players[playerID];
   const economyByPop = calculatePopEconomy(holdings);
@@ -41,6 +64,31 @@ export function PopsTab({
             </span>
           </div>
           <ResourceDeltaList resources={economyByPop[pop]} />
+          <span className="ladderControls" aria-label={`${pop} ladder moves`}>
+            {(LADDER_MOVES[pop] ?? []).map((move) => {
+              // One ladder move per turn (D8). The button opens the targeting
+              // modal — the PLAYER picks which settlement pays (a slave's yield
+              // depends on its tile, so the town is the decision).
+              const getStatus = move.kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
+              const possible = holdings.some(({ tile }) => getStatus(G, playerID, tile.id, pop).can);
+
+              return (
+                <button
+                  className="ladderButton"
+                  disabled={!isActive || phase !== "gameplay" || !possible}
+                  key={move.kind}
+                  title={
+                    possible
+                      ? `${move.kind === "promote" ? "Promote" : "Demote"} a ${formatPopLabel(pop, 1)} to ${move.to} — choose the settlement.`
+                      : `No legal ${move.kind} right now (one ladder move per turn).`
+                  }
+                  onClick={() => onLadderRequest({ kind: move.kind, from: pop })}
+                >
+                  {move.label}
+                </button>
+              );
+            })}
+          </span>
         </section>
       ))}
 

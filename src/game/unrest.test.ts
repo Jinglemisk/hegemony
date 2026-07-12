@@ -42,7 +42,7 @@ function setPops(G: HegemonyState, id: PlayerId, capital: Pops, colony: Pops) {
 const NONE: Pops = { citizens: 0, freemen: 0, slaves: 0 };
 
 describe("unrest upkeep", () => {
-  it("removes 2 pops at the -5 happiness threshold, with no rebound", () => {
+  it("parks a mild riot at the -5 threshold instead of removing pops (D9)", () => {
     const G = preloadedGame(SEED);
     // Grace on -> the food-deficit path is skipped, isolating the threshold.
     G.players["0"].hasCollectedGameplayIncome = false;
@@ -52,37 +52,22 @@ describe("unrest upkeep", () => {
     const before = playerPopTotal(G, "0");
     applyUnrestUpkeep(G, "0");
 
-    expect(playerPopTotal(G, "0")).toBe(before - 2);
+    // The riot table replaces the old flat removal: nothing is lost until the roll.
+    expect(G.pendingRiot).toMatchObject({ playerID: "0", tier: "unrest", boughtInsurance: [] });
+    expect(playerPopTotal(G, "0")).toBe(before);
     expect(G.players["0"].resources.happiness).toBe(-5);
   });
 
-  it("removes 4 pops and rebounds happiness to -4 at the -10 threshold", () => {
+  it("parks a severe riot (revolt) at the -10 threshold — the rebound waits for the roll", () => {
     const G = preloadedGame(SEED);
     G.players["0"].hasCollectedGameplayIncome = false;
     setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
     G.players["0"].resources.happiness = -12;
 
-    const before = playerPopTotal(G, "0");
     applyUnrestUpkeep(G, "0");
 
-    expect(playerPopTotal(G, "0")).toBe(before - 4);
-    expect(G.players["0"].resources.happiness).toBe(-4);
-    // Deaths are tallied for the ledger's "Deaths" stat.
-    expect(G.players["0"].popsLostToUnrest).toBe(4);
-  });
-
-  it("removes pops deterministically for a fixed seed", () => {
-    const build = () => {
-      const G = preloadedGame(SEED);
-      G.players["0"].hasCollectedGameplayIncome = false;
-      setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
-      G.players["0"].resources.happiness = -12;
-      applyUnrestUpkeep(G, "0");
-      return ownedSettlements(G, "0").map((settlement) => ({ ...settlement.pops }));
-    };
-
-    // Same seed + same board + same mutations => identical random removal.
-    expect(build()).toEqual(build());
+    expect(G.pendingRiot).toMatchObject({ playerID: "0", tier: "revolt" });
+    expect(G.players["0"].resources.happiness).toBe(-12);
   });
 
   it("starves a pop after two consecutive food-deficit turns, then resets the counter", () => {
@@ -150,20 +135,20 @@ describe("unrest upkeep", () => {
 });
 
 describe("unrest status (ledger warning)", () => {
-  it("classifies the happiness tier and pops-at-risk", () => {
+  it("classifies the happiness tier and riot risk", () => {
     const G = preloadedGame(SEED);
 
     G.players["0"].resources.happiness = 3;
     expect(unrestStatus(G, "0").tier).toBe("calm");
 
     G.players["0"].resources.happiness = -2;
-    expect(unrestStatus(G, "0")).toMatchObject({ tier: "discontent", popsAtRisk: 0 });
+    expect(unrestStatus(G, "0")).toMatchObject({ tier: "discontent", riotAtRisk: false });
 
     G.players["0"].resources.happiness = -5;
-    expect(unrestStatus(G, "0")).toMatchObject({ tier: "unrest", popsAtRisk: 2 });
+    expect(unrestStatus(G, "0")).toMatchObject({ tier: "unrest", riotAtRisk: true });
 
     G.players["0"].resources.happiness = -10;
-    expect(unrestStatus(G, "0")).toMatchObject({ tier: "revolt", popsAtRisk: 4 });
+    expect(unrestStatus(G, "0")).toMatchObject({ tier: "revolt", riotAtRisk: true });
   });
 });
 

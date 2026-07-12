@@ -2,7 +2,7 @@ import { memo, useMemo } from "react";
 import type { Phase } from "../../../game/controller";
 import { settlementPopCapacity, totalPops, unrestStatus } from "../../../game/rules";
 import type { UnrestStatus } from "../../../game/rules";
-import type { BuildingId, HegemonyState, PlayerId } from "../../../game/types";
+import type { BuildingId, HegemonyState, PlayerId, PopType, TradableMaterial } from "../../../game/types";
 import { formatNumber } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { AtlasIcon } from "../../Sprites";
@@ -10,6 +10,7 @@ import { getOwnedHoldings } from "../helpers";
 import type { EmpireTab } from "../types";
 import { BuildingsTab } from "./BuildingsTab";
 import { CitiesTab } from "./CitiesTab";
+import { MarketTab } from "./MarketTab";
 import { PopsTab } from "./PopsTab";
 import { VictoryTab } from "./VictoryTab";
 import { victoryCardsHeld } from "../../../game/victory";
@@ -27,7 +28,7 @@ function unrestMessage(status: UnrestStatus, popLossThreshold: number): string {
   const happiness = formatNumber(status.happiness);
 
   if (status.tier === "revolt" || status.tier === "unrest") {
-    return `Happiness ${happiness} — losing ${status.popsAtRisk} pops every turn until it recovers.`;
+    return `Happiness ${happiness} — facing the ${status.tier === "revolt" ? "severe " : ""}riot table every turn until it recovers.`;
   }
 
   // discontent
@@ -41,7 +42,10 @@ function EmpireIntelPanelComponent({
   phase,
   isActive,
   onTabChange,
-  onBuildBuildingRequest
+  onBuildBuildingRequest,
+  onBankSell,
+  onBankBuy,
+  onLadderRequest
 }: {
   G: HegemonyState;
   playerID: PlayerId;
@@ -50,6 +54,9 @@ function EmpireIntelPanelComponent({
   isActive: boolean;
   onTabChange: (tab: EmpireTab) => void;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
+  onBankSell: (material: TradableMaterial) => void;
+  onBankBuy: (material: TradableMaterial) => void;
+  onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
 }) {
   const holdings = useMemo(() => getOwnedHoldings(G, playerID), [G, playerID]);
   const cityCount = holdings.filter(({ settlement }) => settlement.kind !== "colony").length;
@@ -63,8 +70,9 @@ function EmpireIntelPanelComponent({
   const cardsHeld = victoryCardsHeld(G, playerID);
   const tabs: Array<{ id: EmpireTab; label: string }> = [
     { id: "cities", label: "Cities" },
-    { id: "buildings", label: "Buildings" },
+    { id: "buildings", label: "Build" },
     { id: "pops", label: "Pops" },
+    { id: "market", label: "Market" },
     { id: "victory", label: "Victory" }
   ];
 
@@ -160,7 +168,24 @@ function EmpireIntelPanelComponent({
           />
         ) : null}
         {activeTab === "pops" ? (
-          <PopsTab G={G} holdings={holdings} playerID={playerID} />
+          <PopsTab
+            G={G}
+            holdings={holdings}
+            playerID={playerID}
+            isActive={isActive}
+            phase={phase}
+            onLadderRequest={onLadderRequest}
+          />
+        ) : null}
+        {activeTab === "market" ? (
+          <MarketTab
+            G={G}
+            playerID={playerID}
+            isActive={isActive}
+            phase={phase}
+            onBankSell={onBankSell}
+            onBankBuy={onBankBuy}
+          />
         ) : null}
         {activeTab === "victory" ? <VictoryTab G={G} playerID={playerID} /> : null}
       </div>

@@ -5,7 +5,7 @@ sequence (what happens when, and why). Questions, answers, and execution state l
 the companion workbench: **`docs/roadmap-appendix.md`** — that is where this plan gets
 interrogated, refined, and driven.
 
-Last updated: 2026-07-11.
+Last updated: 2026-07-12.
 
 ## First principles (re-derive the order from these when things change)
 
@@ -28,11 +28,13 @@ Last updated: 2026-07-11.
 ## Phases
 
 Each phase ends in a playable, sim-verified milestone.
-**Status:** Phase 0 built on `feat/phase0-victory-race`; setup superseded once by Q12
-(metropolis + coastal founding colony + leapfrog). Exit gate run 2026-07-12: every game
-ends ✓; race wins land at mean year 4.8 (on target) ✓; minimums confirmed at
-3/16/8/80/+10; seat fairness carries one watch item (a +2.8σ seat-3 lean under greedy
-bots — see appendix D1). Remaining before Phase 1: user playtest sign-off.
+**Status:** Phase 0 **DONE — merged via PR #20**. Phase 1 **built end-to-end on
+`feat/phase1-currencies` (2026-07-12)**: event-table component, bank exchange
+(board-derived rates, scarcity default via A/B — docs/sim/), civic calm, ladder,
+blocking riot table, three ventures — engine + UI + 143 tests. Exit gate readings:
+no dead currencies (all 8 verbs fire in sims), riot table replaced random pop removal,
+race close-rate rose to 50–55%. Awaiting user playtest sign-off; Q13b stays open
+(saved baseline ready, compare after playtest).
 
 | Phase | Theme | Contents | Gate to exit |
 | --- | --- | --- | --- |

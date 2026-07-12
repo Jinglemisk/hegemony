@@ -1,6 +1,40 @@
-import { ACTION_COSTS, GROW_POP_COSTS, SETTLEMENT_RULES, STARTING_RESOURCES } from "./data";
+import { ACTION_COSTS, GROW_POP_COSTS, SETTLEMENT_RULES, STARTING_RESOURCES, VENTURE_STAKES } from "./data";
 import { PLACEMENT_POP_COUNTS } from "./core/pops";
 import type { PopType, Resource, Resources, SettlementKind, VictoryMetric } from "./types";
+
+/** One bank rate pair: `sell` materials buy 1 gold; 1 material costs `buy` gold. */
+export interface BankRatePair {
+  sell: number;
+  buy: number;
+}
+
+/** Bank exchange tunables (roadmap-appendix D6/Q14). Rates are PROVISIONAL and
+ *  expected to move with playtest/sim — that is why they live here, not in code. */
+export interface BankRules {
+  /** How per-material rates are derived from the board at game creation.
+   *  `uniform` prices everything at baseline; `scarcity` classes materials by tile
+   *  count (strictly rarest = scarce, strictly most common = abundant). The default
+   *  is picked by a sim A/B — both stay available as knobs. */
+  derivation: "uniform" | "scarcity";
+  baseline: BankRatePair;
+  abundant: BankRatePair;
+  scarce: BankRatePair;
+}
+
+/** Civic calm (D7): one action per turn, two payments, same +happiness. */
+export interface CivicCalmRules {
+  happiness: number;
+  influenceCost: number;
+  goldCost: number;
+}
+
+/** The social ladder (D8): promote up with food/gold, demote down with influence. */
+export interface LadderRules {
+  promoteCosts: Record<"slaves" | "freemen", Partial<Resources>>;
+  demoteCosts: Record<"citizens" | "freemen", Partial<Resources>>;
+  /** Happiness lost on a paid demotion, per source pop (riot demotions skip this). */
+  demoteHappinessPenalty: Record<"citizens" | "freemen", number>;
+}
 
 /**
  * The Ruleset is every tunable balance value for a single game, gathered into one
@@ -46,17 +80,22 @@ export interface EconomyRules {
   /** Unrest thresholds & penalties (mapped from the rulebook's positive "Unrest N"
    *  onto negative happiness). All evaluated in the start-of-turn unrest upkeep. */
   unrest: UnrestRules;
+  /** Bank exchange rates & derivation (D6/Q14). */
+  bank: BankRules;
 }
 
-/** Tunables for the unrest (negative-happiness) consequence system. */
+/** Tunables for the unrest (negative-happiness) consequence system. Since D9 the
+ *  thresholds trigger the riot TABLE (game/riot.ts) rather than flat pop removal;
+ *  the old popLossCount/severePopLossCount fields fell away with that change. */
 export interface UnrestRules {
-  /** Happiness at/below this removes `popLossCount` pops each turn (no rebound). */
+  /** Happiness at/below this starts a mild riot at the player's next upkeep (no rebound). */
   popLossThreshold: number;
-  popLossCount: number;
-  /** Happiness at/below this removes `severePopLossCount` pops, then happiness is
+  /** Happiness at/below this starts a severe riot instead: the roll takes
+   *  `severeRollModifier`, pop losses ×`severePopLossMultiplier`, then happiness is
    *  reset to `severeRebound`. Checked before the milder threshold. */
   severeThreshold: number;
-  severePopLossCount: number;
+  severeRollModifier: number;
+  severePopLossMultiplier: number;
   severeRebound: number;
   /** Net food income at/below this counts as a deficit turn. */
   foodDeficitThreshold: number;
@@ -96,6 +135,10 @@ export interface Ruleset {
   growPopCosts: Record<PopType, Partial<Resources>>;
   popIncome: Record<PopType, PopIncomeRule>;
   economy: EconomyRules;
+  civicCalm: CivicCalmRules;
+  ladder: LadderRules;
+  /** Venture stakes (D10) — either posts any expedition. */
+  ventureStakes: Record<"gold" | "wood", Partial<Resources>>;
   /**
    * The settlements each player places during setup, in round order — capitals
    * first, then colonies. Length = settlements per player before gameplay begins.
@@ -139,15 +182,30 @@ export const DEFAULT_RULESET: Ruleset = {
     firstIncomeFoodGrace: true,
     unrest: {
       popLossThreshold: -5,
-      popLossCount: 2,
       severeThreshold: -10,
-      severePopLossCount: 4,
+      severeRollModifier: -2,
+      severePopLossMultiplier: 2,
       severeRebound: -4,
       foodDeficitThreshold: -2,
       foodDeficitTurnsToStarve: 2,
       foodDeficitStarvePopLoss: 1
+    },
+    bank: {
+      // PROVISIONAL rates (D6): baseline sell 3:1 / buy 2g; scarcity classes sit one
+      // step off. The derivation default is the sim A/B's pick (docs/sim/).
+      derivation: "scarcity",
+      baseline: { sell: 3, buy: 2 },
+      abundant: { sell: 4, buy: 2 },
+      scarce: { sell: 2, buy: 3 }
     }
   },
+  civicCalm: { happiness: 3, influenceCost: 4, goldCost: 6 },
+  ladder: {
+    promoteCosts: { slaves: { food: 4 }, freemen: { gold: 4 } },
+    demoteCosts: { citizens: { influence: 2 }, freemen: { influence: 3 } },
+    demoteHappinessPenalty: { citizens: 0, freemen: 1 }
+  },
+  ventureStakes: VENTURE_STAKES,
   setup: ["capital", "colony"]
 };
 

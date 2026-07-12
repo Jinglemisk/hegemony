@@ -8,6 +8,10 @@ export type Resource = "wood" | "stone" | "gold" | "food" | "influence" | "happi
 
 export type MaterialResource = Exclude<Resource, "influence" | "happiness">;
 
+/** What the bank exchanges against gold (roadmap-appendix D6/Q14): the tile-yield
+ *  materials. Gold is the unit of account, influence/happiness are civic — never traded. */
+export type TradableMaterial = Exclude<MaterialResource, "gold">;
+
 export type PopType = "citizens" | "freemen" | "slaves";
 
 export type SettlementKind = "capital" | "city" | "colony";
@@ -173,6 +177,83 @@ export interface Yield {
   amount: number;
 }
 
+// ── Event tables (roadmap-appendix D9/D10 · docs/feat/event-tables.md) ─────────────
+//
+// Dice-and-table as one reusable, data-driven component: a table is content data,
+// `rollOnTable` (game/tables.ts) is the only engine seam, and every instance — riot,
+// the expeditions, future omens — shares the same UI modal.
+
+export type EventTableId = "riot" | "merchantConvoy" | "grandEmbassy" | "colonistsVoyage";
+
+/** The closed effect vocabulary a table row may apply. Each effect with an impossible
+ *  happy path carries its explicit fallback (no building → pops, no room → food). */
+export type TableEffect =
+  | { type: "losePops"; count: number }
+  | { type: "loseResource"; resource: Resource; amount: number; popLossIfShort?: number }
+  | { type: "destroyBuilding"; popLossFallback: number }
+  | { type: "gainResource"; resource: Resource; amount: number }
+  | { type: "gainPop"; pop: PopType; foodFallback: number }
+  | { type: "none" };
+
+export interface EventTableRow {
+  /** The die face this row answers to (1–6; modified rolls clamp into this range). */
+  roll: number;
+  label: string;
+  effects: TableEffect[];
+}
+
+export type RiotInsuranceId = "breadDole" | "concession" | "patronage";
+
+/** A pre-roll insurance slot: pay the cost before the die, add +1 to the roll.
+ *  The concession is special — its price is a forced demotion, not resources. */
+export interface TableInsuranceOption {
+  id: RiotInsuranceId;
+  label: string;
+  cost: Partial<Resources>;
+  /** The concession: buying it demotes one pop (free — the mob forces it). */
+  demotesPop?: boolean;
+  modifier: number;
+}
+
+export interface EventTableDefinition {
+  id: EventTableId;
+  name: string;
+  flavor: string;
+  rows: EventTableRow[];
+  insurance?: TableInsuranceOption[];
+}
+
+/** Escalation tier of a pending riot — maps the unrest thresholds (≤ −5 / ≤ −10). */
+export type RiotTier = "unrest" | "revolt";
+
+/** A riot waiting on the table: blocks the turn (income deferred, endTurn illegal)
+ *  until the player rolls. Insurance is declared here, before the die. */
+export interface PendingRiot {
+  playerID: PlayerId;
+  tier: RiotTier;
+  boughtInsurance: RiotInsuranceId[];
+}
+
+/** The last table roll, kept on state so the UI can show the outcome after the move
+ *  resolves (moves are synchronous — the modal reads this, never re-rolls). */
+export interface TableRollRecord {
+  tableId: EventTableId;
+  playerID: PlayerId;
+  /** Natural d6. */
+  roll: number;
+  /** After insurance/tier modifiers, clamped to 1–6 — the row that landed. */
+  modified: number;
+  modifier: number;
+  rowLabel: string;
+  /** Human-readable lines for each applied effect. */
+  outcomes: string[];
+  season: number;
+}
+
+/** Per-material bank rates: `sell` materials buy 1 gold; 1 material costs `buy` gold.
+ *  Derived once at game creation (roadmap-appendix Q14) and static all game. */
+export type BankRates = Record<TradableMaterial, { sell: number; buy: number }>;
+
 export interface Settlement {
   owner: PlayerId;
   kind: SettlementKind;
@@ -259,6 +340,11 @@ export interface PlayerState {
   /** Running total of pops gained inorganically from event cards (the `addPops`
    *  effect) — the ledger's "Gained" stat, paired with deaths. */
   popsGainedFromEvents: number;
+  /** Once-per-turn throttles for the Phase 1 currency verbs (roadmap-appendix D7/D8/D10):
+   *  one civic-calm action, one ladder move, one venture. Reset with the turn flags. */
+  civicCalmUsedThisTurn: boolean;
+  ladderUsedThisTurn: boolean;
+  ventureUsedThisTurn: boolean;
 }
 
 export interface PopulationTransfer {
@@ -300,6 +386,12 @@ export interface HegemonyState {
   activeSeasonEvent: ActiveSeasonEvent | null;
   lastPlayerEvent: EventCard | null;
   pendingPlayerEvent: PendingPlayerEvent | null;
+  /** A riot blocking the current turn (income deferred until it resolves). */
+  pendingRiot: PendingRiot | null;
+  /** The most recent event-table roll, for the UI's outcome display. */
+  lastTableRoll: TableRollRecord | null;
+  /** This game's bank rates — derived from the board at creation, static after. */
+  bank: BankRates;
   season: number;
   /** Serialized mulberry32 PRNG state; advanced on each deck shuffle so draws are reproducible from the initial seed. */
   rng: number;

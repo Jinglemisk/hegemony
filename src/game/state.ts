@@ -1,4 +1,5 @@
 import { PLAYER_EVENT_CARDS, PLAYER_IDS, PLAYER_NAMES, SEASONAL_EVENT_CARDS, TERRAIN_DECK } from "./data";
+import { deriveBankRates } from "./bank";
 import { createInitialMap } from "./map";
 import type { BoardLayout, HegemonyState } from "./types";
 import { createSeed, expandDeck, shuffleWithSeed } from "./core/rng";
@@ -23,6 +24,8 @@ export function createInitialState(
     rng = shuffled.state;
   }
 
+  const tiles = createInitialMap(terrainDeck);
+
   return {
     phase: "setupCapital",
     currentPlayer: "0",
@@ -33,9 +36,7 @@ export function createInitialState(
     gameOverReason: null,
     boardLayout,
     ruleset,
-    board: {
-      tiles: createInitialMap(terrainDeck)
-    },
+    board: { tiles },
     players: PLAYER_IDS.reduce(
       (players, playerId) => ({
         ...players,
@@ -51,7 +52,10 @@ export function createInitialState(
           consecutiveFoodDeficitTurns: 0,
           timedHappinessModifiers: [],
           popsLostToUnrest: 0,
-          popsGainedFromEvents: 0
+          popsGainedFromEvents: 0,
+          civicCalmUsedThisTurn: false,
+          ladderUsedThisTurn: false,
+          ventureUsedThisTurn: false
         }
       }),
       {} as HegemonyState["players"]
@@ -64,6 +68,11 @@ export function createInitialState(
     activeSeasonEvent: null,
     lastPlayerEvent: null,
     pendingPlayerEvent: null,
+    pendingRiot: null,
+    lastTableRoll: null,
+    // The bank's per-material rates are a function of THIS board (Q14) — derived
+    // once here, static for the whole game.
+    bank: deriveBankRates(tiles, ruleset.economy.bank),
     season: 1,
     rng,
     log: [{ id: "start", season: 1, message: "Spring of Year 1 begins." }]

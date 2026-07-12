@@ -1,6 +1,6 @@
 import type { HexTile, PopType, Resources, Settlement } from "../../game/types";
 
-export type EmpireTab = "cities" | "buildings" | "pops" | "victory";
+export type EmpireTab = "cities" | "buildings" | "pops" | "market" | "victory";
 
 export type OwnedHolding = {
   tile: HexTile;

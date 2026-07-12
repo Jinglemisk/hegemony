@@ -16,17 +16,21 @@
 - Follow the roadmap (docs/roadmap.md) and drive work through its Q&A workbench (docs/roadmap-appendix.md).
 -- Phases 0–5 with exit gates; the appendix holds per-phase questions, the decision log, and the execution log. Start each session there.
 
-- Event tables — dice + lookup table as a reusable, data-driven component (never hardcoded; shared engine seam + UI modal). (settled — roadmap-appendix Q9/Q10)
--- Riot table replaces random unrest pop removal at ≤ −5: d6 for the mob's demand (lose pops / building shuttered / grain sacked / ransom / disperses), severity ≈ constant, texture varies; severe tier rolls at −2 with doubled pop losses.
--- Pre-roll insurance only (max +2): bread dole 4 food, free concession-demotion, 3 influence patronage.
--- Ventures ("Fund an Expedition"): stake 5 gold / 8 wood, d6 for lost / break-even / win 9 — ~−7% EV, the catch-up casino. Another event table + Actions-tab entry.
+- ~~Event tables — dice + lookup table as a reusable, data-driven component (never hardcoded; shared engine seam + UI modal).~~ DONE (feat/phase1-currencies — docs/feat/event-tables.md; tables in data.ts, `rollOnTable` seam in game/tables.ts, one shared EventTableModal).
+-- ~~Riot table replaces random unrest pop removal at ≤ −5~~ SHIPPED: d6 with building destruction on the 1 (rows 1–2 swapped per Q15 for monotonic severity), pop losses random (the mob decides); severe tier (≤ −10) rolls at −2 with doubled pop losses, rebound −4; the riot blocks the turn and defers income until the roll.
+-- ~~Pre-roll insurance~~ SHIPPED (amended per Q15: all THREE may be bought, once each, max +3): bread dole 4 food, free concession-demotion, 3 influence patronage. Full insurance makes a mild riot pop-proof by design.
+-- ~~Ventures ("Fund an Expedition")~~ SHIPPED (widened per Q16): three expeditions, player's choice, each ~−7% EV — Merchant Convoy (gold), Grand Embassy (influence), Colonists' Voyage (food; +1 freeman on a 6 only). Stake 5 gold / 8 wood, once per turn, open from turn 1.
+-- Still open: the yearly/omen d20 table (design queue) lands on the same component.
 
 - ~~Coastal leapfrog placement rule.~~ DONE (feat/phase0-victory-race, with the Q12 metropolis setup).
 -- The island's 18 rim tiles are the coastline. Hold any settlement on a coastal tile → you may found colonies on any other coastal tile (sailing, not teleporting); interior colonies still chain by contiguity. Tuning knob: +2 food voyage cost for sea-founded colonies.
 -- Dovetails with the metropolis fork (Q12): the founding colony could be "any coastal tile" — the apoikia pattern.
 
-- Promote / demote pop ladder. (costs settled — roadmap-appendix Q8)
--- Promote: slave→freeman 4 food, freeman→citizen 4 gold. Demote: citizen→freeman 2 influence, freeman→slave 3 influence −1 happiness. One ladder move per player per turn; demotion is free during a riot (the mob forces it).
+- ~~Promote / demote pop ladder.~~ DONE (feat/phase1-currencies — D8).
+-- Promote: slave→freeman 4 food, freeman→citizen 4 gold. Demote: citizen→freeman 2 influence, freeman→slave 3 influence −1 happiness. One ladder move per player per turn; demotion is free (and throttle-exempt) during a riot. UI: ↑/↓ on the ledger's Pops tab.
+
+- ~~Civic calm actions.~~ DONE (feat/phase1-currencies — D7).
+-- Stabilize Province 4 influence or Bread & Circuses 6 gold → +3 happiness; one shared calm per turn. Calm verb in the Actions toolbar.
 
 - Keep the balance ledger current (docs/balance.html).
 -- Living balance document: outstanding issues (ranked P0–P2), deck/economy analysis, playtest scenarios. Update it in the same commit as any change to ruleset.ts, data.ts, or the event decks; log the change in its changelog.
@@ -40,12 +44,13 @@
 
 - ~~Give happiness real consequences.~~ DONE (feat/unrest-consequences — see unrest.md).
 -- ~~Happiness accrues but does nothing yet — it is a meter with no teeth.~~
--- Shipped the rulebook's Unrest system mapped onto negative happiness: a start-of-turn
-   upkeep removes 2 pops at happiness ≤ -5, 4 pops + rebound to -4 at ≤ -10 (random,
-   via the seeded RNG); two consecutive -2 food turns starve a pop; and a new
-   `timedHappinessDelta` event effect drives multi-turn unrest ("Civil Discord", "Plague").
+-- Shipped the rulebook's Unrest system mapped onto negative happiness; SUPERSEDED at the
+   thresholds by the riot TABLE (feat/phase1-currencies, D9): ≤ -5 parks a blocking riot
+   roll instead of flat removal; ≤ -10 is the severe tier. Starvation (two -2 food turns
+   → 1 pop) and `timedHappinessDelta` multi-turn unrest carry over unchanged.
 -- No passive drift (deliberate). Still open: Luxury Goods relief (needs coasts), the
-   rulebook's exact -2/-4/-6 → 1/2/3 food-unrest magnitudes, player-choice pop removal.
+   rulebook's exact -2/-4/-6 → 1/2/3 food-unrest magnitudes. (Player-choice pop removal
+   resolved by Q15: the mob chooses — random; the player's levers are insurance + demote.)
 
 - Deepen seasonal mechanics. (in progress on feat/seasons — see seasons.md)
 -- ~~The season is just a bare counter.~~ DONE: it now reads as Year N / Spring–Winter (derived in core/calendar.ts), shown on the medallion + chronicle.
@@ -70,8 +75,9 @@
 -- Settled: wood/food/stone are first-order (from tiles); gold/influence are second-order (from pops/trade/buildings) — gold tiles removed, hills become the slot-rich "acropolis" terrain.
 -- Also pinned there: building pricing grammar, landmark-tile principle + constrained shuffle, trade-before-stone-sinks sequencing.
 
-- Bank exchange via gold as the medium. (SETTLED — roadmap-appendix D6; rates provisional)
--- Sell any material 3:1 for gold, buy any material for 2 gold — never direct barter; gold is the unit of account (user's Age-of-Empires model). Static bank: its rates bracket future player trade. Rates are ruleset tunables expected to move with playtesting.
+- ~~Bank exchange via gold as the medium.~~ DONE (feat/phase1-currencies — D6/Q14; rates provisional)
+-- Never direct barter; gold is the unit of account. Rates are PER-MATERIAL and board-derived (Q14, user's call): tile-count scarcity classes computed once at game creation, static all game — classic prices wood 4→1g/2g, stone 2→1g/3g, food 3→1g/2g. `uniform` derivation stays a ruleset knob (A/B verdict 2026-07-12: no measurable difference; scarcity kept for board texture — docs/sim/2026-07-12-bank-rates-ab.md). No trade cap. UI: ledger Market tab.
+-- Watch (ledger): venture wood-stake is strictly cheaper than the gold stake at bank prices; bankBuy churn in sims is a bot artifact.
 
 - Luxury goods and trade.
 -- Deferred design; see docs/feat/luxury-goods.md — amended by docs/feat/terrain-economy.md (distinct goods, diminishing duplicates, ~3 active per player cap).
@@ -87,6 +93,32 @@
 
 
 ## Presentation & UI
+
+- *** UI refactor: one ledger, vertical tabs, relocated action bar, map-first selection. (user, 2026-07-12/13)
+-- The right sidebar's Actions panel and the left Ledger should collapse into ONE ledger; its tabs become
+   vertical buttons (the 5-up horizontal row is already cramped and will not survive more tabs).
+-- The everyday action verbs (Grow / Move / Found / Upgrade / Calm / Venture / End Turn) move to a dedicated
+   home — a bottom bar, or a strip under the top bar — so the board gains width and the verbs stop living
+   inside a side panel.
+-- **Selection rule 1 — the map IS the picker.** Anything that targets a tile/settlement uses the Found
+   Colony pattern (the only picker that already does it right): verb → eligible tiles GLOW on the real board
+   → clicking gives the tile the active ring → an anchored popover carries the info (yield, pops, shared-tile
+   status) + confirm. Apply to: ladder promote/demote, Grow Pop, Move Pops (source then target — two glowing
+   clicks), event pop-placement, riot concession target. Backdrop modals must never cover the board during a
+   selection — selection screens become popovers/side-sheets.
+-- **Selection rule 2 — no native <select>, ever.** OS/browser dropdowns cannot hold images. Build ONE custom
+   listbox component whose row template is the tile-art picker card (terrain sprite + kind/coords + yield +
+   shared note, shipped for the ladder modal 2026-07-13), used wherever a list genuinely beats the map (e.g.
+   inside the deliberately-blocking riot modal).
+-- Scope this WITH the game-reference compendium below (same navigation rethink); flat AAA look throughout.
+
+- *** Game-reference compendium behind the season icon. (user, 2026-07-12)
+-- Pressing the seasonal icon button (top bar) opens a modal of categorized game info players can study to
+   plan ahead: the victory-card roster, every event table (riot + the three expeditions — read-only render,
+   no roll button; the shared EventTableModal component already carries this), bank rates, deck contents /
+   season weighting, costs cheat-sheet.
+-- Everything rollable or drawable should be *viewable* before it happens — tables are public information,
+   that is the point of "decks for economy, dice for drama".
 
 - Finish the interface overhaul (started from the UI audit).
 -- DONE so far: the top bar is re-gridded — a central season dial with hand-painted Greek season art (tree / sun / bare tree / snowflake), Year + acting player either side, and a uniform four-seat roster showing each player's city / colony / pop counts and a provisional VP. Events moved back to the top-left as cards with an inline-icon effect summary + full-text hover tooltip. Ledger gained an empire summary (icon + count) and always shows every resource icon (dimmed dash when zero). Decks collapsed to a slim tray (dead "Resolutions" placeholder removed). A universal inline resource/pop/building icon system (AnnotatedText) now runs across cards, modals, and the chronicle.

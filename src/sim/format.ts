@@ -112,7 +112,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
     `  victory cards ${formatNumber(standings.victoryCards)}/${G.ruleset.victory.cardsToWin} · ${standings.cities} cities, ${standings.colonies} colonies · ` +
       `pops ${projection.population.pops}/${projection.population.capacity}` +
       (projection.population.inTransit > 0 ? ` (+${projection.population.inTransit} in transit)` : "") +
-      ` · ${unrest.tier}${unrest.popsAtRisk > 0 ? ` (${unrest.popsAtRisk} pops at risk)` : ""}`,
+      ` · ${unrest.tier}${unrest.riotAtRisk ? " (riot table at next upkeep)" : ""}`,
     `  resources: ${Object.entries(player.resources)
       .map(([resource, amount]) => `${resource} ${formatNumber(amount)}`)
       .join(" · ")}`,
@@ -220,6 +220,15 @@ export function renderBatchReport(report: BatchReport): string {
 
   if (buildings) {
     lines.push(`Buildings: ${buildings}`);
+  }
+
+  // The Phase 1 exit-gate line: a verb at 0/game is a dead currency talking.
+  const verbs = Object.entries(report.currencyVerbs ?? {})
+    .map(([verb, stats]) => `${verb} ${formatNumber(stats.perGame)}`)
+    .join(" · ");
+
+  if (verbs) {
+    lines.push(`Currency verbs (per game): ${verbs}`);
   }
 
   return lines.join("\n");
