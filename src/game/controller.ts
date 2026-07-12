@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { produce } from "immer";
-import type { BuildingId, HegemonyState, Phase, PlayerId, PopType, Pops } from "./types";
+import { DEV_ROTATION_SEEDS, GAME_CONFIG } from "./config";
+import { mulberry32 } from "./core/rng";
+import { applyMove, enumerateLegalMoves } from "./legalMoves";
+import type { BoardLayout, BuildingId, HegemonyState, Phase, PlayerId, PopType, Pops } from "./types";
 import {
   buildBuilding,
   collectIncome,
@@ -9,14 +12,94 @@ import {
   growPop,
   movePops,
   placeCapital,
+  placeCity,
   placeColony,
   resolvePendingPlayerEvent,
   upgradeColonyToCity,
 } from "./rules";
 import { advanceSetupTurn, beginGameplayTurn, createGame, endTurn } from "./turn";
-import { setupCapitalCount } from "./ruleset";
+import { GAME_MODES } from "./ruleset";
 
 export type { Phase } from "./types";
+
+/**
+ * URL-driven game options, so a browser session can pick the board and seed without a
+ * lobby: `?board=shuffled&seed=42` for a randomized layout, `?setup=manual` to place
+ * the opening towns by hand, `?dev=preload` to replay the fixed scripted opening.
+ *
+ * Default dev behavior: the opening is auto-played with seed-driven legal placements,
+ * and the seed rotates through {@link DEV_ROTATION_SEEDS} on every reload — testing
+ * never starts at "place your capital" unless asked to.
+ */
+function createGameFromUrl(): HegemonyState {
+  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const boardParam = params?.get("board");
+  const boardLayout: BoardLayout =
+    boardParam === "shuffled" || boardParam === "classic" ? boardParam : GAME_CONFIG.boardLayout;
+  const seedParam = Number(params?.get("seed"));
+  const pinnedSeed = Number.isFinite(seedParam) && params?.get("seed") ? seedParam >>> 0 : undefined;
+  const manualSetup = params?.get("setup") === "manual";
+  const preload = params?.get("dev") === "preload" || GAME_CONFIG.preloadOpeningSetupForTesting;
+
+  if (preload) {
+    // The scripted opening only fits the classic board's tiles.
+    return createGame(pinnedSeed, GAME_MODES[GAME_CONFIG.mode].ruleset, "classic", true);
+  }
+
+  const seed = pinnedSeed ?? (GAME_CONFIG.autoOpeningForDev && !manualSetup ? nextRotationSeed() : undefined);
+  const G = createGame(seed, GAME_MODES[GAME_CONFIG.mode].ruleset, boardLayout, false);
+
+  if (!manualSetup && GAME_CONFIG.autoOpeningForDev) {
+    autoPlayOpening(G);
+  }
+
+  return G;
+}
+
+/** Next seed from the dev rotation — a localStorage cursor advances it once per page
+ *  load (memoized so StrictMode's double state-initialization doesn't skip seeds). */
+let rotationSeedThisLoad: number | null = null;
+
+function nextRotationSeed(): number {
+  if (rotationSeedThisLoad !== null) {
+    return rotationSeedThisLoad;
+  }
+
+  const key = "hegemony-dev-opening-index";
+  let index = 0;
+
+  try {
+    index = Number(window.localStorage.getItem(key) ?? 0) || 0;
+    window.localStorage.setItem(key, String((index + 1) % DEV_ROTATION_SEEDS.length));
+  } catch {
+    // Storage unavailable (private mode etc.) — a fixed first seed is fine.
+  }
+
+  rotationSeedThisLoad = DEV_ROTATION_SEEDS[index % DEV_ROTATION_SEEDS.length];
+  return rotationSeedThisLoad;
+}
+
+/** Play the opening with seed-driven legal placements (the sim's "random" opening,
+ *  driven by the game's own seed so it is reproducible), landing in gameplay. */
+function autoPlayOpening(G: HegemonyState) {
+  let rngState = G.seed ^ 0x9e3779b9;
+  let guard = 0;
+
+  while (G.phase !== "gameplay" && guard++ < 64) {
+    const moves = enumerateLegalMoves(G, G.currentPlayer);
+
+    if (moves.length === 0) {
+      return; // leave whatever remains to manual play rather than crash
+    }
+
+    const step = mulberry32(rngState);
+    rngState = step.state;
+
+    if (!applyMove(G, G.currentPlayer, moves[Math.floor(step.value * moves.length)]).ok) {
+      return;
+    }
+  }
+}
 
 /** Read-only projection of the turn fields now living on {@link HegemonyState}, kept for the UI's convenience. */
 export type LocalContext = {
@@ -32,6 +115,7 @@ export type HegemonyGame = {
 
 export type GameMoves = {
   placeCapital: (tileId: string, pops: Pops) => void;
+  placeCity: (tileId: string, pops: Pops) => void;
   placeColony: (tileId: string, pops: Pops) => void;
   collectIncome: () => void;
   foundColony: (tileId: string, sourceTileId: string, pop: PopType) => void;
@@ -54,7 +138,7 @@ function deriveContext(G: HegemonyState): LocalContext {
 
 export function useHegemonyGame() {
   const [playerID, setPlayerID] = useState<PlayerId>("0");
-  const [G, setG] = useState<HegemonyState>(createGame);
+  const [G, setG] = useState<HegemonyState>(createGameFromUrl);
 
   useEffect(() => {
     setPlayerID(G.currentPlayer);
@@ -85,41 +169,13 @@ export function useHegemonyGame() {
 function createMoves(setG: SetState): GameMoves {
   return {
     placeCapital: (tileId, pops) => {
-      setG((previous) => {
-        if (previous.phase !== "setupCapital") {
-          return previous;
-        }
-
-        let ok = false;
-        const next = produce(previous, (draft) => {
-          if (!placeCapital(draft, draft.currentPlayer, tileId, pops).ok) {
-            return;
-          }
-
-          advanceSetupTurn(draft, setupCapitalCount(draft.ruleset), "setupColony");
-          ok = true;
-        });
-        return ok ? next : previous;
-      });
+      setG((previous) => commitSetupPlacement(previous, "setupCapital", (G) => placeCapital(G, G.currentPlayer, tileId, pops)));
+    },
+    placeCity: (tileId, pops) => {
+      setG((previous) => commitSetupPlacement(previous, "setupCity", (G) => placeCity(G, G.currentPlayer, tileId, pops)));
     },
     placeColony: (tileId, pops) => {
-      setG((previous) => {
-        if (previous.phase !== "setupColony") {
-          return previous;
-        }
-
-        let ok = false;
-        const next = produce(previous, (draft) => {
-          if (!placeColony(draft, draft.currentPlayer, tileId, pops).ok) {
-            return;
-          }
-
-          advanceSetupTurn(draft, draft.ruleset.setup.length, "gameplay");
-          beginGameplayTurn(draft);
-          ok = true;
-        });
-        return ok ? next : previous;
-      });
+      setG((previous) => commitSetupPlacement(previous, "setupColony", (G) => placeColony(G, G.currentPlayer, tileId, pops)));
     },
     collectIncome: () => {
       setG((previous) => commitGameplayMove(previous, (G) => collectIncome(G, G.currentPlayer)));
@@ -149,6 +205,34 @@ function createMoves(setG: SetState): GameMoves {
       );
     },
   };
+}
+
+/** Run a setup placement inside `produce`; on success the setup machine advances (and
+ *  bootstraps gameplay after the final placement). */
+function commitSetupPlacement(
+  previous: HegemonyState,
+  phase: Phase,
+  mutate: (G: HegemonyState) => { ok: boolean },
+): HegemonyState {
+  if (previous.phase !== phase) {
+    return previous;
+  }
+
+  let ok = false;
+  const next = produce(previous, (draft) => {
+    if (!mutate(draft).ok) {
+      return;
+    }
+
+    advanceSetupTurn(draft);
+
+    if (draft.phase === "gameplay") {
+      beginGameplayTurn(draft);
+    }
+
+    ok = true;
+  });
+  return ok ? next : previous;
 }
 
 /** Run a gameplay-phase mutator inside `produce`, committing only if the phase was valid and the move succeeded. */

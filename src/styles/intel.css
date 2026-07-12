@@ -71,6 +71,9 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  /* clip, not hidden, on the x-axis: the intelBody's -4px scrollbar-gutter trick makes
+     the panel 4px scrollable, and scroll-on-focus then clips the first character. */
+  overflow-x: clip;
 }
 
 .commandStack {
@@ -85,23 +88,24 @@
   top: 0;
   z-index: 12;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
   padding: 0 0 8px;
   background: linear-gradient(180deg, rgb(255 248 231 / 96%), rgb(255 248 231 / 82%));
 }
 
 .intelTabs button {
   min-height: 36px;
-  padding: 0 8px 7px;
+  padding: 0 4px 7px;
   border: none;
   border-bottom: 2px solid transparent;
   border-radius: 0;
   color: var(--muted);
   background: none;
-  font-size: 0.76rem;
-  letter-spacing: 0.03em;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .intelTabs button:not(:disabled):hover {
@@ -572,3 +576,78 @@
   min-width: 0;
 }
 
+
+/* ---- victory tab ---- */
+
+.victoryTab {
+  display: grid;
+  gap: 0;
+}
+
+.victoryRule {
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  margin: 0 0 8px;
+}
+
+.victoryCardRow {
+  border-top: 1px solid var(--line);
+  padding: 8px 0;
+}
+
+.victoryCardHead {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.victoryCardName {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+}
+
+.victoryHolder {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.victoryUnheld {
+  color: var(--muted);
+  font-weight: 500;
+  font-style: italic;
+}
+
+.victoryCardCondition {
+  color: var(--muted);
+  font-size: 0.68rem;
+  margin: 2px 0 6px;
+}
+
+.victoryValues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.victoryValue {
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 1px;
+}
+
+.victoryValue.victoryLeader {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.victoryValue.victoryViewer {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

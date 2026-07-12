@@ -1,6 +1,6 @@
 import { ACTION_COSTS, GROW_POP_COSTS, SETTLEMENT_RULES, STARTING_RESOURCES } from "./data";
 import { PLACEMENT_POP_COUNTS } from "./core/pops";
-import type { PopType, Resource, Resources, SettlementKind } from "./types";
+import type { PopType, Resource, Resources, SettlementKind, VictoryMetric } from "./types";
 
 /**
  * The Ruleset is every tunable balance value for a single game, gathered into one
@@ -38,6 +38,9 @@ export interface EconomyRules {
   overCapacityHappinessPerPop: number;
   /** Every N stored food grants +1 happiness at income time (0 disables). */
   foodStockpileHappinessDivisor: number;
+  /** Ceiling on the food-stockpile happiness bonus, so hoards can't buy unlimited calm
+   *  (roadmap-appendix D4). 0 disables the bonus outright. */
+  foodStockpileHappinessCap: number;
   /** Suppress food-shortage happiness pressure until a player's first gameplay income. */
   firstIncomeFoodGrace: boolean;
   /** Unrest thresholds & penalties (mapped from the rulebook's positive "Unrest N"
@@ -63,10 +66,29 @@ export interface UnrestRules {
   foodDeficitStarvePopLoss: number;
 }
 
+/** The victory race (roadmap-appendix D1): five public "Most X, minimum Y" cards; the
+ *  sole leader above the minimum holds a card, and holding `cardsToWin` at the start of
+ *  your own turn wins the game. Minimums are the game-length dial. */
+export interface VictoryRules {
+  cardsToWin: number;
+  minimums: Record<VictoryMetric, number>;
+}
+
+export interface PlacementRules {
+  /** Colonies must border an owned settlement (roadmap-appendix D3). Off = colonies
+   *  may be founded anywhere — kept as a knob so sims can A/B the geometry. */
+  colonyContiguity: boolean;
+  /** Coastal leapfrog (roadmap-appendix Q13a): holding any settlement on a coastal
+   *  tile lets you found colonies on any other coastal tile — sailing, not teleporting. */
+  coastalLeapfrog: boolean;
+}
+
 export interface Ruleset {
   startingResources: Resources;
   placementPopCounts: Record<"city" | "capital" | "colony", number>;
   settlements: Record<SettlementKind, SettlementRule>;
+  placement: PlacementRules;
+  victory: VictoryRules;
   actionCosts: {
     foundColony: Partial<Resources>;
     upgradeColonyToCity: Partial<Resources>;
@@ -93,6 +115,15 @@ export const DEFAULT_RULESET: Ruleset = {
   startingResources: STARTING_RESOURCES,
   placementPopCounts: PLACEMENT_POP_COUNTS,
   settlements: SETTLEMENT_RULES,
+  placement: { colonyContiguity: true, coastalLeapfrog: true },
+  victory: {
+    // Design rule (roadmap-appendix D1, 2026-07-12): no card may be holdable at game
+    // start or on the first turn — every minimum sits above anything a legal setup
+    // plus one lucky opening turn can produce (start: 1 city + 1 colony, 6 pops,
+    // ≤6 citizens, 52 banked materials, 0 happiness).
+    cardsToWin: 3,
+    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 10 }
+  },
   actionCosts: ACTION_COSTS,
   growPopCosts: GROW_POP_COSTS,
   popIncome: {
@@ -104,6 +135,7 @@ export const DEFAULT_RULESET: Ruleset = {
     colonySharedTileYieldShare: 0.5,
     overCapacityHappinessPerPop: 1,
     foodStockpileHappinessDivisor: 5,
+    foodStockpileHappinessCap: 2,
     firstIncomeFoodGrace: true,
     unrest: {
       popLossThreshold: -5,
@@ -168,7 +200,7 @@ export type GameModeId = "standard" | "fastStart" | "deathmatch";
 export const GAME_MODES: Record<GameModeId, { label: string; description: string; ruleset: Ruleset }> = {
   standard: {
     label: "Standard",
-    description: "The baseline economy: one capital and one colony to start.",
+    description: "The baseline: a metropolis, then a founding colony on any coast — snake order.",
     ruleset: DEFAULT_RULESET
   },
   fastStart: {

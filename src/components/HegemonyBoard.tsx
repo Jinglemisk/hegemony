@@ -2,17 +2,18 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GameEvents, GameMoves, LocalContext } from "../game/controller";
 import {
   calculateEconomyProjection,
+  canPlaceColonyOnTile,
   getBuildBuildingStatus,
   getFoundColonyStatus,
   getUpgradeColonyToCityStatus,
   toPlayerId
 } from "../game/rules";
-import type { BuildingId, HegemonyState, PlayerId, SettlementKind } from "../game/types";
+import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { HexMap } from "./HexMap";
 import { FoundColonyPopover, MovePopsModal, PopulationPickerModal, UpgradeCityModal } from "./PopulationModals";
 import { ResourceGrid } from "./ResourceGrid";
 import { ActionCommandPanel } from "./board/command/ActionCommandPanel";
-import { placementKindLabel } from "./board/helpers";
+import { GameOverModal } from "./board/modals/GameOverModal";
 import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
 import { GrowPopModal } from "./board/modals/GrowPopModal";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
@@ -32,9 +33,17 @@ type BoardProps = {
 };
 
 type PendingTileConfirmation = {
-  action: "setupCapital" | "setupColony" | "foundColony" | "upgradeCity";
+  action: "foundColony" | "upgradeCity";
   label: string;
   tileId: string;
+};
+
+type SetupPlacement = "capital" | "city" | "colony";
+
+const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
+  capital: "metropolis",
+  city: "second city",
+  colony: "founding colony"
 };
 
 export function HegemonyBoard({
@@ -49,9 +58,10 @@ export function HegemonyBoard({
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   const [tileConfirmation, setTileConfirmation] = useState<PendingTileConfirmation | null>(null);
   const [populationPrompt, setPopulationPrompt] = useState<{
-    kind: Extract<SettlementKind, "city" | "colony">;
+    placement: SetupPlacement;
     tileId: string;
   } | null>(null);
+  const [gameOverDismissed, setGameOverDismissed] = useState(false);
   const [foundColonyMode, setFoundColonyMode] = useState(false);
   const [foundColonyTarget, setFoundColonyTarget] = useState<{ tileId: string; anchor: DOMRect } | null>(null);
   const [isUpgradeCityOpen, setIsUpgradeCityOpen] = useState(false);
@@ -68,7 +78,7 @@ export function HegemonyBoard({
   );
   const projectedIncome = projectedEconomy.income;
   const projectedIncomeBreakdown = projectedEconomy.breakdown;
-  const isSetup = ctx.phase === "setupCapital" || ctx.phase === "setupColony";
+  const isSetup = ctx.phase === "setupCapital" || ctx.phase === "setupCity" || ctx.phase === "setupColony";
   const canFoundColony = G.board.tiles.some((tile) => getFoundColonyStatus(G, viewerId, tile.id).can);
   const canUpgradeCity = G.board.tiles.some((tile) => getUpgradeColonyToCityStatus(G, viewerId, tile.id).can);
   const foundColonyValidTileIds = useMemo(
@@ -78,12 +88,22 @@ export function HegemonyBoard({
         : [],
     [foundColonyMode, G, viewerId]
   );
+  // During the founding-colony round, glow every legal tile (coast or beside the metropolis).
+  const setupColonyValidTileIds = useMemo(
+    () =>
+      ctx.phase === "setupColony"
+        ? G.board.tiles.filter((tile) => canPlaceColonyOnTile(G, currentPlayerId, tile, "setup").can).map((tile) => tile.id)
+        : [],
+    [ctx.phase, G, currentPlayerId]
+  );
   const pendingSetupCopy =
-    tileConfirmation && isSetup
-      ? "Choose pops to place this settlement"
-      : isSetup
-        ? "Select a tile to place the setup settlement"
-        : "Income and building actions";
+    ctx.phase === "setupCapital"
+      ? "Select a tile for your metropolis — never adjacent to another city"
+      : ctx.phase === "setupCity"
+        ? "Select a tile for your second city — never adjacent to another city"
+        : ctx.phase === "setupColony"
+          ? "Select a glowing tile for your founding colony — any coast, or beside your metropolis"
+          : "Income and building actions";
 
   const exitFoundColonyMode = () => {
     setFoundColonyMode(false);
@@ -141,15 +161,11 @@ export function HegemonyBoard({
         return;
       }
 
-      if (ctx.phase === "setupCapital") {
+      if (ctx.phase === "setupCapital" || ctx.phase === "setupCity" || ctx.phase === "setupColony") {
+        const placement: SetupPlacement =
+          ctx.phase === "setupCapital" ? "capital" : ctx.phase === "setupCity" ? "city" : "colony";
         setTileConfirmation(null);
-        setPopulationPrompt({ kind: "city", tileId });
-        return;
-      }
-
-      if (ctx.phase === "setupColony") {
-        setTileConfirmation(null);
-        setPopulationPrompt({ kind: "colony", tileId });
+        setPopulationPrompt({ placement, tileId });
         return;
       }
 
@@ -167,11 +183,7 @@ export function HegemonyBoard({
       return;
     }
 
-    if (tileConfirmation.action === "setupCapital") {
-      setPopulationPrompt({ kind: "city", tileId: tileConfirmation.tileId });
-    } else if (tileConfirmation.action === "setupColony") {
-      setPopulationPrompt({ kind: "colony", tileId: tileConfirmation.tileId });
-    } else if (tileConfirmation.action === "foundColony") {
+    if (tileConfirmation.action === "foundColony") {
       setFoundColonyMode(true);
     } else {
       setIsUpgradeCityOpen(true);
@@ -239,8 +251,8 @@ export function HegemonyBoard({
               confirmation={confirmation}
               pendingTileId={tileConfirmation?.tileId ?? null}
               selectedTileId={selectedTileId}
-              highlightTileIds={foundColonyValidTileIds}
-              placementActive={foundColonyMode}
+              highlightTileIds={foundColonyMode ? foundColonyValidTileIds : setupColonyValidTileIds}
+              placementActive={foundColonyMode || ctx.phase === "setupColony"}
               onTileAction={handleTileAction}
             />
             {isSetup ? (
@@ -293,16 +305,18 @@ export function HegemonyBoard({
 
       {populationPrompt ? (
         <PopulationPickerModal
-          title={`Choose ${placementKindLabel(populationPrompt.kind)} pops`}
-          description={`Allocate exactly ${G.ruleset.placementPopCounts[populationPrompt.kind]} starting ${
-            G.ruleset.placementPopCounts[populationPrompt.kind] === 1 ? "pop" : "pops"
-          } before placing this ${placementKindLabel(populationPrompt.kind)}.`}
-          requiredTotal={G.ruleset.placementPopCounts[populationPrompt.kind]}
-          confirmLabel={`Place ${placementKindLabel(populationPrompt.kind)}`}
+          title={`Choose ${PLACEMENT_LABELS[populationPrompt.placement]} pops`}
+          description={`Allocate exactly ${G.ruleset.placementPopCounts[populationPrompt.placement]} starting ${
+            G.ruleset.placementPopCounts[populationPrompt.placement] === 1 ? "pop" : "pops"
+          } before placing this ${PLACEMENT_LABELS[populationPrompt.placement]}.`}
+          requiredTotal={G.ruleset.placementPopCounts[populationPrompt.placement]}
+          confirmLabel={`Place ${PLACEMENT_LABELS[populationPrompt.placement]}`}
           onCancel={() => setPopulationPrompt(null)}
           onConfirm={(pops) => {
-            if (populationPrompt.kind === "city") {
+            if (populationPrompt.placement === "capital") {
               moves.placeCapital(populationPrompt.tileId, pops);
+            } else if (populationPrompt.placement === "city") {
+              moves.placeCity(populationPrompt.tileId, pops);
             } else {
               moves.placeColony(populationPrompt.tileId, pops);
             }
@@ -357,6 +371,9 @@ export function HegemonyBoard({
             setIsMovePopsOpen(false);
           }}
         />
+      ) : null}
+      {ctx.phase === "gameOver" && !gameOverDismissed ? (
+        <GameOverModal G={G} onInspectBoard={() => setGameOverDismissed(true)} />
       ) : null}
       {G.pendingPlayerEvent ? (
         <PendingPlayerEventModal

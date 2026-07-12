@@ -42,4 +42,5 @@ export * from "./actions";
 export * from "./season";
 export * from "./unrest";
 export * from "./score";
+export * from "./victory";
 export * from "./state";

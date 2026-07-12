@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hegemony — Balance Ledger</title>
+<style>
+  :root {
+    --parchment: #f4ebd6;
+    --parchment-deep: #ecdfc2;
+    --ink: #292014;
+    --ink-soft: #5d4e3a;
+    --clay: #a5402d;
+    --clay-deep: #7e2f21;
+    --ochre: #b07c2e;
+    --olive: #5f6b35;
+    --hairline: rgba(78, 58, 34, 0.28);
+    --hairline-soft: rgba(78, 58, 34, 0.14);
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.62;
+    border-top: 4px solid var(--clay);
+  }
+
+  a { color: var(--clay); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    color: var(--clay-deep);
+    background: none;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 900px);
+    gap: 56px;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 32px 120px;
+  }
+
+  /* ---------------- nav ---------------- */
+  nav {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 44px 0 44px 4px;
+    font-size: 13px;
+    border-right: 1px solid var(--hairline-soft);
+  }
+  nav .kicker {
+    font-family: var(--serif);
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--clay);
+    margin-bottom: 4px;
+  }
+  nav .sub { color: var(--ink-soft); font-size: 11.5px; margin-bottom: 24px; }
+  nav ol { list-style: none; margin: 0; padding: 0; }
+  nav li { margin: 0; }
+  nav a {
+    display: block;
+    padding: 5px 12px 5px 0;
+    color: var(--ink-soft);
+    border-left: 2px solid transparent;
+    padding-left: 12px;
+    line-height: 1.35;
+  }
+  nav a:hover { color: var(--clay); text-decoration: none; }
+  nav a.active { color: var(--clay-deep); border-left-color: var(--clay); font-weight: 600; }
+  nav .numeral { font-family: var(--serif); display: inline-block; width: 2.2em; color: var(--ochre); }
+
+  /* ---------------- content ---------------- */
+  main { padding-top: 44px; min-width: 0; }
+
+  header.doc-head { margin-bottom: 40px; }
+  header.doc-head .kicker {
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ochre);
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: 44px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    margin: 6px 0 10px;
+  }
+  header.doc-head p.lede {
+    font-size: 17px;
+    color: var(--ink-soft);
+    max-width: 64ch;
+    margin: 0 0 14px;
+  }
+  .meta-line {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    padding: 8px 0;
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .meta-line strong { color: var(--ink); font-weight: 600; }
+
+  section { margin-top: 72px; }
+  section > h2 {
+    font-family: var(--serif);
+    font-size: 29px;
+    font-weight: 500;
+    margin: 0 0 4px;
+    padding-top: 10px;
+    border-top: 2px solid var(--ink);
+  }
+  section > h2 .numeral { color: var(--clay); margin-right: 12px; }
+  .section-lede { color: var(--ink-soft); margin: 2px 0 26px; font-size: 15px; max-width: 70ch; }
+
+  h3 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 34px 0 8px;
+  }
+  h4 {
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 26px 0 6px;
+  }
+  p { max-width: 74ch; margin: 0 0 14px; }
+  ul, ol { max-width: 74ch; padding-left: 22px; margin: 0 0 14px; }
+  li { margin-bottom: 6px; }
+  li::marker { color: var(--ochre); }
+
+  /* verdict chips — flat, text-only */
+  .chip {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .chip::before { content: "◆ "; font-size: 9px; }
+  .chip.strong { color: var(--olive); }
+  .chip.weak { color: var(--clay); }
+  .chip.watch { color: var(--ochre); }
+  .chip.bug { color: var(--clay-deep); }
+
+  /* tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 24px;
+    font-size: 13.5px;
+  }
+  caption {
+    caption-side: top;
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding-bottom: 6px;
+  }
+  th {
+    text-align: left;
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+    border-bottom: 2px solid var(--ink);
+    padding: 6px 14px 6px 0;
+  }
+  td {
+    border-bottom: 1px solid var(--hairline-soft);
+    padding: 7px 14px 7px 0;
+    vertical-align: top;
+  }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.total td { border-top: 2px solid var(--hairline); font-weight: 600; }
+  .table-scroll { overflow-x: auto; }
+
+  /* callouts — hairline rule, no boxes */
+  .rule-note {
+    border-left: 3px solid var(--clay);
+    padding: 2px 0 2px 16px;
+    margin: 18px 0 22px;
+    max-width: 72ch;
+  }
+  .rule-note .tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--clay);
+  }
+  .rule-note p { margin: 4px 0 0; }
+  .rule-note.idea { border-left-color: var(--olive); }
+  .rule-note.idea .tag { color: var(--olive); }
+  .rule-note.open { border-left-color: var(--ochre); }
+  .rule-note.open .tag { color: var(--ochre); }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--clay-deep);
+    padding: 10px 0;
+    margin: 12px 0 18px;
+    border-top: 1px solid var(--hairline-soft);
+    border-bottom: 1px solid var(--hairline-soft);
+    overflow-x: auto;
+    white-space: pre;
+    max-width: 74ch;
+  }
+
+  .prio { font-family: var(--serif); font-weight: 700; }
+  .prio.p0 { color: var(--clay-deep); }
+  .prio.p1 { color: var(--clay); }
+  .prio.p2 { color: var(--ochre); }
+
+  footer {
+    margin-top: 90px;
+    padding-top: 16px;
+    border-top: 2px solid var(--ink);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; gap: 0; padding: 0 20px 80px; }
+    nav {
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--hairline);
+      padding: 24px 0 16px;
+    }
+    nav ol { column-count: 2; column-gap: 24px; }
+    h1 { font-size: 34px; }
+  }
+
+  @media print {
+    nav { display: none; }
+    .layout { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav aria-label="Contents">
+  <div class="kicker">Hegemony</div>
+  <div class="sub">Balance Ledger — a living document</div>
+  <ol>
+    <li><a href="#preamble"><span class="numeral">·</span>How to use this ledger</a></li>
+    <li><a href="#state"><span class="numeral">I</span>State of play</a></li>
+    <li><a href="#resources"><span class="numeral">II</span>The resource web</a></li>
+    <li><a href="#pops"><span class="numeral">III</span>Pops</a></li>
+    <li><a href="#buildings"><span class="numeral">IV</span>Buildings</a></li>
+    <li><a href="#placement"><span class="numeral">V</span>Map &amp; placement</a></li>
+    <li><a href="#cards"><span class="numeral">VI</span>Cards &amp; events</a></li>
+    <li><a href="#unrest"><span class="numeral">VII</span>Happiness &amp; unrest</a></li>
+    <li><a href="#scoring"><span class="numeral">VIII</span>Scoring</a></li>
+    <li><a href="#randomness"><span class="numeral">IX</span>Randomness &amp; dice</a></li>
+    <li><a href="#vision"><span class="numeral">X</span>The vision gap</a></li>
+    <li><a href="#issues"><span class="numeral">XI</span>Outstanding issues</a></li>
+    <li><a href="#scenarios"><span class="numeral">XII</span>Playtest scenarios</a></li>
+    <li><a href="#changelog"><span class="numeral">·</span>Changelog</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="doc-head">
+  <div class="kicker">Design Ledger · Living Document</div>
+  <h1>Balance Ledger</h1>
+  <p class="lede">
+    Everything we know about how Hegemony's numbers behave — where the economy is sound, where it is
+    exploitable, and which knobs to turn next. Companion to <code>rules.md</code> (how to play),
+    <code>todo.md</code> (what to build), and <code>Hegemony.pdf</code> (where the design is going).
+  </p>
+  <div class="meta-line">
+    <span>Last audit: <strong>2026-07-10</strong></span>
+    <span>Engine: <strong>feat/unrest-consequences @ 5583263</strong></span>
+    <span>Truth source: <strong>src/game/ (ruleset.ts, data.ts)</strong></span>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<section id="preamble">
+  <h2>How to use this ledger</h2>
+  <p class="section-lede">Conventions, so the document stays useful as the game changes.</p>
+  <ul>
+    <li><strong>Update it with the numbers.</strong> Any change to <code>src/game/ruleset.ts</code>, <code>src/game/data.ts</code>, or the event decks should touch this file in the same commit — re-run the affected analysis, don't just edit prose.</li>
+    <li><strong>Verdicts</strong> are marked inline: <span class="chip strong">Strong</span> (working as intended, protect it), <span class="chip weak">Weak</span> (unbalanced or degenerate), <span class="chip watch">Watch</span> (fine today, fragile as systems land), <span class="chip bug">Drift</span> (docs and engine disagree).</li>
+    <li><strong>Issues are ranked</strong> in <a href="#issues">§XI</a>: P0 breaks the play loop, P1 is a dominant strategy or exploit, P2 is tuning and polish.</li>
+    <li><strong>Resolved items stay</strong>, struck through with a one-line note on what fixed them — the history of why a number is what it is <em>is</em> the value of this document.</li>
+    <li><strong>Scenario seeds</strong> in <a href="#scenarios">§XII</a> are the playtest backlog. Add a scenario whenever an analysis here makes a testable prediction.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="state">
+  <h2><span class="numeral">I</span>State of play</h2>
+  <p class="section-lede">A one-screen snapshot of the implemented ruleset, and where the written docs have drifted from the engine.</p>
+
+  <div class="table-scroll">
+  <table>
+    <caption>Core constants (DEFAULT_RULESET)</caption>
+    <thead><tr><th>Lever</th><th>Value</th><th>Lever</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Starting resources</td><td>20 wood · 10 stone · 10 gold · 12 food</td><td>Found colony</td><td>20 wood + 2 food + move 1 pop (arrives next turn)</td></tr>
+      <tr><td>Capital / City capacity</td><td>10 pops, tile slots +2</td><td>Upgrade colony → city</td><td>30 wood + 10 stone + 5 food</td></tr>
+      <tr><td>Colony capacity</td><td>4 pops, no buildings</td><td>Grow slave / freeman / citizen</td><td>5f / 7f / 9f+2g, one per settlement per turn</td></tr>
+      <tr><td>Setup pops</td><td>capital 3, colony 1 (player's split)</td><td>Shared colony tile</td><td>each colony keeps 50% of tile yield (floor)</td></tr>
+      <tr><td>Unrest thresholds</td><td>≤−5: lose 2 pops · ≤−10: lose 4, rebound to −4</td><td>Starvation</td><td>food income ≤−2 twice running: lose 1 pop</td></tr>
+      <tr><td>Food-stockpile happiness</td><td>+1 per 5 stored food, per income, uncapped</td><td>Over-capacity</td><td>−1 happiness per pop over cap, per income</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Doc drift — engine is truth, these documents are stale</h3>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>Claim in docs</th><th>What the engine does</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>rules.md</code> &amp; <code>v0.1-rules-spec.md</code>: setup colony "cannot be placed adjacent to an enemy capital"</td>
+        <td><code>canPlaceColonyOnTile</code> (settlement.ts) never checks capital adjacency — colonies can sit on a capital's doorstep, in setup and in play</td>
+        <td><span class="chip bug">Drift</span> — decide: enforce the rule, or delete it from the docs. See <a href="#placement">§V</a>.</td>
+      </tr>
+      <tr>
+        <td>PDF: colonies must be within a 1-tile radius of a friendly colony/city</td>
+        <td>No contiguity check anywhere — <code>foundColony</code> accepts any legal tile on the map</td>
+        <td><span class="chip bug">Drift</span> — biggest placement-scheme divergence from the vision. See <a href="#placement">§V</a>.</td>
+      </tr>
+      <tr>
+        <td><code>v0.1-rules-spec.md</code>: citizens give +1 influence, −2 food</td>
+        <td><code>ruleset.ts popIncome</code>: citizens give +1 influence, <strong>+2 gold</strong>, −2 food</td>
+        <td><span class="chip bug">Drift</span> — the +2 gold radically changes citizen/freeman balance. See <a href="#pops">§III</a>.</td>
+      </tr>
+      <tr>
+        <td><code>docs/initial-round-balance.md</code>: capital tile yield doubled; colony must be adjacent</td>
+        <td>No capital doubling (<code>settlementTileYield</code>); no adjacency — that doc's T-level tables no longer describe the game</td>
+        <td><span class="chip bug">Drift</span> — mark it archived or recompute it.</td>
+      </tr>
+      <tr>
+        <td>Implicit everywhere: the map is drawn from a terrain deck</td>
+        <td><code>createInitialMap</code> lays <code>TERRAIN_DECK</code> onto coordinates in fixed authoring order — <strong>every game is the same board</strong>; only event decks are seed-shuffled. <code>GAME_CONFIG.preloadOpeningSetupForTesting</code> is also still <code>true</code>.</td>
+        <td><span class="chip watch">Watch</span> — fine for prototyping; must shuffle before any real balance read. See <a href="#placement">§V</a>.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="resources">
+  <h2><span class="numeral">II</span>The resource web</h2>
+  <p class="section-lede">Six resources, but only two of them are a real economy today. Food is the master currency; wood is the expansion currency; gold and influence are printed into a void.</p>
+
+  <div class="table-scroll">
+  <table>
+    <caption>Sources vs. sinks — the whole economy on one grid</caption>
+    <thead><tr><th>Resource</th><th>Sources (per turn unless noted)</th><th>Sinks</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Food</strong></td>
+        <td>Plains tiles (4–10, map total 44) · Granary +2 · slaves on plains · event cards</td>
+        <td>Pop upkeep (−1/−1/−2) · every grow-pop · colony +2 · city +5 · <em>and</em> the stockpile prints happiness</td>
+        <td><span class="chip strong">Strong</span> — most contested resource; nearly every decision prices in food. This is the economy working.</td>
+      </tr>
+      <tr>
+        <td><strong>Wood</strong></td>
+        <td>Forest tiles (1–4, map total 33) · slaves on forest · events</td>
+        <td>Colony 20 · city 30 · Marketplace/Workshop 12 · Granary 12</td>
+        <td><span class="chip strong">Strong</span> — the tempo currency. Expansion speed ≈ wood income; forests are genuinely valuable.</td>
+      </tr>
+      <tr>
+        <td><strong>Stone</strong></td>
+        <td>Mountain tiles (2–6, map total 20) · events</td>
+        <td>City upgrade 10 · Temple 6 · Granary 2</td>
+        <td><span class="chip watch">Watch</span> — thin but real. One mountain covers a whole game's stone needs; extra mountains are dead weight until Embassy/Library-class sinks (PDF: 50 and 20 stone) land.</td>
+      </tr>
+      <tr>
+        <td><strong>Gold</strong></td>
+        <td>Freemen +2 · citizens +2 · hill tiles (1–4, map total 14) · events</td>
+        <td>Grow citizen: 2 gold. <em>That is the entire sink.</em></td>
+        <td><span class="chip weak">Weak</span> — pops out-print the whole map (3 freemen &gt; the best hill), and there is nothing to buy. Hills are trap tiles today.</td>
+      </tr>
+      <tr>
+        <td><strong>Influence</strong></td>
+        <td>Citizens +1 · Temple bonus · Patronage/Civic Petition events</td>
+        <td>None.</td>
+        <td><span class="chip weak">Weak</span> — a score that buys nothing. Every influence design decision is on hold until the Assembly (PDF sinks: 5 draw / 10 exchange / 20 veto).</td>
+      </tr>
+      <tr>
+        <td><strong>Happiness</strong></td>
+        <td>Temples +1 · food stockpile +1/5 · events</td>
+        <td>Slaves −0.5 · overcrowding −1 · food shortage · events → unrest pop-loss thresholds</td>
+        <td><span class="chip strong">Strong</span> shape / <span class="chip weak">Weak</span> tuning — the stock-not-flow model is elegant (see <a href="#unrest">§VII</a>) but the food-stockpile faucet is uncapped.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="rule-note">
+    <span class="tag">Core imbalance</span>
+    <p>Gold and influence are <em>faucet-only</em> resources. Both were designed against sinks that live in the
+    unimplemented half of the PDF — Luxury Goods' Trader (100 gold), Embassy (50 stone + 50 gold), Resolution
+    draws (5–20 influence). Do <strong>not</strong> nerf freeman gold or citizen influence yet; the fix is
+    adding a small interim sink, not weakening the faucet you'll need later.</p>
+  </div>
+
+  <div class="rule-note idea">
+    <span class="tag">Candidate interim sinks</span>
+    <p><strong>Stabilize Province</strong> (from <code>docs/next-mechanics.md</code>): spend 4 influence → +3 happiness. One action, gives citizens a job before the Assembly exists.
+    <strong>Market exchange</strong> (from the PDF): bank trade at 1:6 (coastal ports later improve to 1:4). Even at a brutal rate this un-deadens gold and stone surpluses and softens dead-tile starts.</p>
+  </div>
+
+  <h3>No trade means no relief valve</h3>
+  <p>There is no player trade and no bank exchange, so a player whose tiles mismatch their needs (a hill/mountain
+  start hunting for wood) has <em>no</em> conversion path except event luck — the exact situation market
+  exchange exists to solve in the PDF. Until some exchange lands, tile draw at setup is close to destiny,
+  which puts extra weight on the placement-order problems in <a href="#placement">§V</a>.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="pops">
+  <h2><span class="numeral">III</span>Pops</h2>
+  <p class="section-lede">The three-class pop system is the game's best idea. Its internal pricing is close — but citizen vs. freeman collapses without an influence sink, and slaves have a hidden spatial rule that is genuinely elegant.</p>
+
+  <div class="table-scroll">
+  <table>
+    <caption>Per-pop economics (engine values)</caption>
+    <thead><tr><th>Pop</th><th class="num">Grow cost</th><th>Yield / turn</th><th>Upkeep / turn</th><th class="num">VP</th><th>Nominal payback</th></tr></thead>
+    <tbody>
+      <tr><td>Slave</td><td class="num">5 food</td><td>+1 tile resource (+1 more under a Workshop)</td><td>−1 food, −0.5 happiness</td><td class="num">0</td><td>~5 turns; ~2.5 with Workshop</td></tr>
+      <tr><td>Freeman</td><td class="num">7 food</td><td>+2 gold (+2 more under a Marketplace)</td><td>−1 food</td><td class="num">1</td><td>3.5 turns — <em>in a currency with no sink</em></td></tr>
+      <tr><td>Citizen</td><td class="num">9 food + 2 gold</td><td>+2 gold, +1 influence (+1 inf under a Temple)</td><td>−2 food</td><td class="num">1</td><td>n/a — pays in two dead currencies</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Citizen vs. freeman: one food apart, one class redundant <span class="chip weak">Weak</span></h3>
+  <p>As implemented, a citizen is <em>exactly</em> a freeman plus 1 influence, minus 1 extra food of upkeep, for
+  a steeper grow cost. Two consequences:</p>
+  <ul>
+    <li><strong>Today</strong> (influence worthless): the citizen is strictly dominated. Never grow one except for taste.</li>
+    <li><strong>Later</strong> (Assembly live, votes per-citizen as in the PDF): the citizen becomes a freeman-plus-votes and will likely strictly dominate instead — the author's own margin note in the PDF already worries that influence builds are OP.</li>
+  </ul>
+  <div class="rule-note open">
+    <span class="tag">Design question</span>
+    <p>The +2 gold on citizens is engine drift from the spec (which gives citizens influence only). Decide the
+    citizen's identity <em>before</em> the Assembly lands: either the PDF's split — freeman = money, citizen =
+    politics only (revert the +2 gold) — or lean in and make the citizen the expensive do-everything elite,
+    priced accordingly (raise grow cost / food upkeep). The current halfway point guarantees one of the two
+    classes is redundant in every era of the game.</p>
+  </div>
+
+  <h3>The slave placement rule nobody wrote down <span class="chip strong">Strong</span></h3>
+  <p>A slave yields +1 of the <em>tile's own resource</em> and eats 1 food. On a plains tile that's +1 food −1
+  food = <strong>zero</strong>. Slaves are worthless on farmland (until a Workshop makes them +1 net) and best
+  on high-yield forest, mountain, and hill tiles — while freemen and citizens, who don't touch the tile, are
+  the natural farm population. The engine quietly created real spatial specialization: <em>work camps on the
+  resource tiles, free populations on the breadbasket.</em> This is emergent, thematic, and worth protecting
+  when retuning — and worth teaching in <code>rules.md</code>, because it is invisible until someone does the arithmetic.</p>
+
+  <h3>Slave equilibrium</h3>
+  <p>Happiness is a stock, so any steady negative flow eventually hits the −5 unrest threshold. A slave economy
+  is sustainable only while happiness income ≥ 0:</p>
+  <div class="formula">sustainable slaves ≤ 2 × (temples + floor(stored food / 5) + net event luck)</div>
+  <p>Each Temple (6 stone) carries two slaves forever — a good, legible price. The problem is the second term:
+  a 25-food stockpile carries <em>ten</em> slaves, and stockpiles only grow. See <a href="#unrest">§VII</a>.</p>
+
+  <h3>Other pop notes</h3>
+  <ul>
+    <li><strong>No voluntary pop removal.</strong> You can't disband or resettle-away a pop. Combined with random unrest removal, a player over the slave line has no lever except "stop growing and wait for the mob". Probably fine — but note the PDF's pop-removal choice rule (1 citizen = 2 freemen = 4 slaves) would double as a disband mechanic.</li>
+    <li><strong>Growth is once per settlement per turn</strong> — a clean anti-snowball throttle that also makes wide (many settlements) scale growth faster than tall. Intentional? It pairs oddly with colony-spam VP dominance (<a href="#scoring">§VIII</a>).</li>
+    <li><strong>The PDF's 1 citizen = 2 freemen = 4 slaves ratio</strong> (different capacity weights) was normalized to 1:1:1 in the prototype. That's a simplification with real balance content — under PDF rules 16 slaves fit where 4 citizens do, which is exactly the "+8 resources every turn" scenario the margin notes flag as broken. The 1:1:1 choice is <em>safer</em>; revisit only with the unrest system fully priced.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="buildings">
+  <h2><span class="numeral">IV</span>Buildings</h2>
+  <p class="section-lede">Four buildings, one dominant opening. The support-cap design (buildings support N pops) is excellent; the roster is too small for paths to diverge.</p>
+
+  <div class="table-scroll">
+  <table>
+    <caption>Building ROI (engine values)</caption>
+    <thead><tr><th>Building</th><th>Cost</th><th>Effect</th><th class="num">Best-case payback</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Granary</td><td>12 wood + 2 stone</td>
+        <td>+2 food/turn · grow-pop food cost −2 here</td>
+        <td class="num">~3 turns</td>
+        <td><span class="chip weak">Weak</span> (too good) — +2 of the master currency <em>plus</em> a discount you use every turn (slave drops 5→3 food). Always the correct first build; homogenizes every city's opening.</td>
+      </tr>
+      <tr>
+        <td>Temple</td><td>6 stone</td>
+        <td>+1 happiness/turn · +1 influence per citizen (≤2)</td>
+        <td class="num">n/a (buys stability)</td>
+        <td><span class="chip strong">Strong</span> — the only repeatable happiness income; cleanly prices slavery at "one temple per two slaves". Cheap on purpose, in a resource with few other uses.</td>
+      </tr>
+      <tr>
+        <td>Workshop</td><td>12 wood</td>
+        <td>+1 tile resource per slave (≤3)</td>
+        <td class="num">~4 turns (needs 3 slaves)</td>
+        <td><span class="chip strong">Strong</span> — turns a mountain/forest city into an engine and gives plains slaves a reason to exist. Correctly demands setup (slaves in place) before it pays.</td>
+      </tr>
+      <tr>
+        <td>Marketplace</td><td>12 wood</td>
+        <td>+2 gold per freeman (≤3)</td>
+        <td class="num">2 turns — nominally</td>
+        <td><span class="chip weak">Weak</span> — best payback in the game, into a currency with a 2-gold sink. Instantly becomes the best building the day gold matters. A pre-positioned landmine: retune it <em>when</em> the gold sink lands, not before.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Slots are not a constraint yet</h3>
+  <p>Cities get tile slots +2 (so 3–6 slots) and there are only four buildings. Nobody ever faces a real slot
+  decision. The map's slot spread (plains 2–4, hills up to 3, forests mostly 1) is <em>designed</em> to be a
+  second axis of tile value — it only starts paying rent once the second building tier exists and a city
+  meaningfully can't hold everything. Until then, treat slot counts as unvalidated numbers.</p>
+
+  <div class="rule-note idea">
+    <span class="tag">Second tier — design against the gaps, not the theme</span>
+    <p>The candidates in <code>todo.md</code> (Aqueduct +4 capacity, Forum +2 influence, Barracks, Warehouse +1
+    tile income) are fine, but each new building should be judged by which §-problem it solves:
+    an influence <em>sink</em> building beats an influence <em>source</em> (Forum adds supply to a resource with
+    no demand); Aqueduct interacts with over-capacity unrest (good tension); Warehouse must be priced against
+    Workshop (both are "+tile income"). The PDF's Library (grants National Ideas, −2 food upkeep — the game's
+    only upkeep building) is the most interesting shape: a building that costs food every turn is a real
+    decision in a food-driven economy.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="placement">
+  <h2><span class="numeral">V</span>Map &amp; placement</h2>
+  <p class="section-lede">The placement scheme has good bones — spaced city cores with colony filler — but the engine currently drops the two rules that make geography matter, and the setup sequence hands player 0 a solved opening.</p>
+
+  <h3>What the map is worth</h3>
+  <div class="table-scroll">
+  <table>
+    <caption>Terrain deck tallies (37 tiles, radius-3 hex)</caption>
+    <thead><tr><th>Terrain</th><th class="num">Tiles</th><th class="num">Total yield</th><th class="num">Avg / tile</th><th class="num">Best tile</th><th class="num">Total slots</th></tr></thead>
+    <tbody>
+      <tr><td>Plains → food</td><td class="num">8</td><td class="num">44</td><td class="num">5.5</td><td class="num">10</td><td class="num">20</td></tr>
+      <tr><td>Forest → wood</td><td class="num">14</td><td class="num">33</td><td class="num">2.4</td><td class="num">4</td><td class="num">17</td></tr>
+      <tr><td>Mountain → stone</td><td class="num">6</td><td class="num">20</td><td class="num">3.3</td><td class="num">6</td><td class="num">8</td></tr>
+      <tr><td>Hill → gold</td><td class="num">9</td><td class="num">14</td><td class="num">1.6</td><td class="num">4</td><td class="num">17</td></tr>
+      <tr class="total"><td>Whole island</td><td class="num">37</td><td class="num">111</td><td class="num">3.0</td><td class="num">—</td><td class="num">62</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>The spread is deliberate and mostly right: food is plentiful but concentrated (one food-10 crown jewel,
+  one food-8), wood is everywhere but thin (expansion is slow without forest focus), stone is scarce-but-sufficient,
+  and hills are... nine tiles of nearly nothing (see §II — gold). With ~9 tiles per player, tile
+  quality variance between players' reachable areas is the single biggest setup swing.</p>
+
+  <div class="rule-note idea">
+    <span class="tag">Direction settled — 2026-07-11</span>
+    <p>The terrain rework is planned in <code>docs/feat/terrain-economy.md</code>: wood/food/stone are
+    first-order resources (from tiles), gold/influence are second-order (from pops, trade, buildings) —
+    <strong>gold tiles are removed</strong>, and hills become the slot-rich, yield-poor "acropolis" terrain.
+    That plan also pins the building pricing grammar, the landmark-tile principle with constrained shuffling,
+    the trade-before-stone-sinks sequencing rule, and luxury goods as the capped, diminishing, tradeable
+    happiness tier. The tallies above describe the <em>current</em> deck and stay until the rework ships.</p>
+  </div>
+
+  <h3>The two missing rules <span class="chip bug">Drift</span></h3>
+  <ul>
+    <li><strong>No colony contiguity.</strong> The PDF requires colonies within 1 tile of a friendly settlement;
+    the engine lets you found a colony on <em>any</em> legal tile. Consequences: the food-10 tile is
+    reachable by everyone from turn 1 (pure wood race), blocking and corridor play don't exist, and "your part
+    of the island" is a fiction. This one rule change would do more for map play than any retune.
+    Consider enforcing radius-1 from any owned settlement, with a possible later "overseas" exception via ports.</li>
+    <li><strong>No capital protection radius.</strong> Both <code>rules.md</code> and the spec promise colonies
+    can't sit adjacent to an enemy capital; the engine never checks. Combined with no contiguity, a rival can
+    legally ring your capital with colonies on turn one. Either enforce it (the PDF is explicit: "Other players
+    cannot erect Colonies in the 1-tile radius of a player's Capital!") or consciously delete the promise.</li>
+  </ul>
+
+  <h3>Setup order: fixed map + fixed order = solved opening <span class="chip weak">Weak</span></h3>
+  <p>Setup runs 0→1→2→3 for capitals, then 0→1→2→3 again for colonies (<code>turn.ts</code>), and player 0 also
+  acts first every season. On today's <em>identical-every-game</em> board, player 0's optimal capital is a
+  memorizable fact, and last-in-order players eat the leftovers twice. Three cheap fixes, stackable:</p>
+  <ul>
+    <li><strong>Shuffle the terrain deck</strong> at game creation (seeded, like the event decks) — turns the memorized opening back into an evaluation problem.</li>
+    <li><strong>Snake the setup</strong> (0→3 capitals, then 3→0 colonies) — the standard fix; last capital picker gets first colony pick.</li>
+    <li><strong>Rotate the season's first player</strong> each year — removes the permanent first-actor advantage on contested tiles and is thematically free (the year turns, the order turns).</li>
+  </ul>
+
+  <h3>Shared tiles and the eviction hammer <span class="chip watch">Watch</span></h3>
+  <p>Two colonies may share a tile at 50% yield each (floor — a food-9 tile shared gives 4 each, one food
+  evaporates). Upgrading your colony to a city <strong>evicts the sharer outright: settlement, its pops, and
+  the 20-wood investment are destroyed with no compensation</strong> (<code>upgradeColonyToCity</code> filters
+  the other settlement away, pops included). As the only direct aggression in the game it deserves to be scary
+  — but destroyed <em>pops</em> is probably over the line: the victim loses up to ~40+ resources of value to a
+  move they cannot see coming or answer. Options short of removing the threat: displaced pops walk to the
+  owner's nearest settlement (arriving like a normal transfer), or eviction refunds the base colony cost. Keep
+  the tempo hit; delete the uncounterable pop kill.</p>
+
+  <h3>What's already right <span class="chip strong">Strong</span></h3>
+  <ul>
+    <li><strong>City non-adjacency</strong> (no city next to any other city, capitals included) spaces the map into at most a handful of city cores with colony webbing between — it caps density organically, keeps the vase-grammar readable, and makes "where can a city ever exist" a real long-term planning layer. Note the corollary: your own colonies adjacent to your capital can never become cities, so careless early colonies permanently cap your city count.</li>
+    <li><strong>Colony founding requires escorting a pop</strong> that spends a round in transit (arrives at your next turn) — expansion costs tempo and board presence, not just wood. Subtle and good.</li>
+    <li><strong>Max two colonies per tile</strong> keeps the sharing rule bounded.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="cards">
+  <h2><span class="numeral">VI</span>Cards &amp; events</h2>
+  <p class="section-lede">Two decks: a seasonal deck that gives the year a mood, and a player deck that is currently a mandatory +5-resources-a-turn slot machine.</p>
+
+  <h3>Seasonal deck (29 cards, season-weighted draw)</h3>
+  <p>Cards carry season tags; the draw takes the first tag-suited card from the shuffled pile, so seasons
+  <em>weight</em> the odds without forcing outcomes — a genuinely nice mechanism (<code>drawSeasonalCard</code>).
+  But look at the pools:</p>
+  <div class="table-scroll">
+  <table>
+    <caption>Eligible cards per season (count × copies)</caption>
+    <thead><tr><th>Season</th><th>Boons</th><th>Harms</th><th class="num">Harm share</th></tr></thead>
+    <tbody>
+      <tr><td>Spring</td><td>Timber Levies 3 · Grain Tithe 3 · Festival Games 2 · Skilled Artisans 2</td><td>—</td><td class="num">0 of 10 · 0%</td></tr>
+      <tr><td>Summer</td><td>Bountiful 4 · Timber 3 · Quarry 3 · Festival 2 · Artisans 2 · Open Markets 2</td><td>—</td><td class="num">0 of 16 · 0%</td></tr>
+      <tr><td>Autumn</td><td>Bountiful 4 · Quarry 3 · Grain 3 · Open Markets 2</td><td>Drought 4 · Scarce Labor 2 · Plague 2</td><td class="num">8 of 20 · 40%</td></tr>
+      <tr><td>Winter</td><td>Timber 3 · Grain 3</td><td>Drought 4 · Civic Anxiety 2 · Scarce Labor 2 · Plague 2</td><td class="num">10 of 16 · 63%</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="rule-note">
+    <span class="tag">Finding</span>
+    <p>Spring and Summer are <strong>literally incapable of harm</strong> — the year's first half is a guaranteed
+    boon parade, and all tension is back-loaded into Autumn/Winter. <code>rules.md</code> even sells this as
+    "a tendency, not a rule", which the numbers contradict. Give Spring and Summer one thematic harm each
+    (spring floods; summer wildfire that hits forest yields) so no season is ever <em>auto</em>-safe — the
+    tendency stays, the certainty goes.</p>
+  </div>
+  <ul>
+    <li><strong>All seasonal cards are symmetric</strong> (hit all players), so they mostly shift the whole table rather than relative standing. The per-pop scaled cards ("2 per 6 pops, min 4") are the exception: they pay leaders more absolutely, but the minimum floor pays trailing players more per pop — a mild, well-hidden catch-up mechanism. <span class="chip strong">Strong</span></li>
+    <li><strong>Plague + Winter stacking</strong>: Plague (−2 happiness × 3 turns, everyone) drawn in Winter alongside Civic Anxiety can shove a table already carrying slave pressure straight through the −5 threshold. Symmetric in theory; in practice it executes whoever was managing happiness closest to the line. Watch in playtests whether that reads as drama or as random execution.</li>
+    <li><strong>Scarce Labor / Skilled Artisans</strong> (build costs ×2 / ×½ for a season, colony &amp; city upgrade exempt) are the best cards in the deck — they create a real "when do I build" tempo game around a public, shared modifier.</li>
+  </ul>
+
+  <h3>The player deck is an untuned income stream <span class="chip weak">Weak</span></h3>
+  <p>Every player draws one card per turn, mandatorily, on income collection. The deck is 74 cards:</p>
+  <ul>
+    <li><strong>~92% upside.</strong> Only Local Unrest ×4 and Civil Discord ×2 are negative — 6 of 74 cards (8%).</li>
+    <li><strong>30% free pops.</strong> New Citizen ×8, Free Settlers ×8, Captured Laborers ×6 (+ Granary Surplus's freeman option ×3). A free citizen is ~11 resources of grow cost that also bypasses the once-per-settlement growth throttle; Captured Laborers is 2 slaves (10 food of value) for a manageable −1 happiness/turn.</li>
+    <li><strong>Expected value ≈ +4.8 resource-equivalents per draw</strong> (valuing free pops at grow cost, influence near zero). That means the card slot out-earns most tiles on the island, every turn, for everyone — with a variance band from +11 (New Citizen) to −6 (Civil Discord). Over a 10-season game each player draws ~10 cards; a two-draw luck gap between players is ~±15 resources, or most of a city.</li>
+  </ul>
+  <div class="rule-note idea">
+    <span class="tag">Tuning directions (pick one, not all)</span>
+    <p>(a) Cut free-pop copies roughly in half and convert them to "grow at half cost" coupons — keeps the theme,
+    re-couples the windfall to food and capacity;
+    (b) rebalance toward ~25% harm so a draw is a moment of tension rather than guaranteed income;
+    (c) make the draw <em>optional</em> (press-your-luck) so passing is a real choice;
+    (d) shrink amounts so the EV lands near +2, below an average tile.
+    The PDF's own card table (Gain 1 Citizen ×6 in a much smaller deck) had roughly the same free-pop density —
+    this is inherited, not accidental, and worth a deliberate decision.</p>
+  </div>
+
+  <h3>Dominated choices on choice cards</h3>
+  <p>Several pendingChoice cards have one option that's near-strictly better, which wastes the design:</p>
+  <ul>
+    <li><strong>Caravan Contacts</strong>: "gain 4 gold" vs. "exchange up to 4 wood for 4 gold 1:1" — option B is option A <em>plus you also pay wood</em>. Never correct. Make B a better rate (4 wood → 6 gold) or drop it.</li>
+    <li><strong>Skilled Mason / Temple Donation</strong>: the flat resource option (4 stone / 3 happiness) beats the −3-stone discount in almost every state, since only Temple (6s) and Granary (2s) even cost stone. Discounts need to exceed the flat option's value to tempt.</li>
+    <li><strong>Granary Surplus</strong>: "4 food or a free freeman (worth 7 food + VP)" — the freeman wins whenever capacity exists. Fine-ish (capacity is a real condition), but it's really a 7-value card wearing a 4-value option.</li>
+    <li><strong>Emergency Labor</strong> (6 wood − 1 happiness vs. 2 wood) is the model: the right pick genuinely depends on your happiness ledger. More of this shape.</li>
+  </ul>
+
+  <h3>Decks reshuffle forever <span class="chip watch">Watch</span></h3>
+  <p>Both discard piles reshuffle endlessly, so the game has no clock and card scarcity never bites. The planned
+  fix (finite decks; when the last card is drawn the game ends and victory cards resolve) makes <em>deck size
+  the game-length dial</em> and is the single most important unbuilt mechanic — nearly every issue in
+  <a href="#scoring">§VIII</a> is downstream of "there is no ending".</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="unrest">
+  <h2><span class="numeral">VII</span>Happiness &amp; unrest</h2>
+  <p class="section-lede">The newest system (feat/unrest-consequences) and structurally the best: a stock-based meter with real teeth. One faucet undermines it.</p>
+
+  <h3>The model, briefly</h3>
+  <p>Happiness is a running stock; income applies flows (temples, slaves, overcrowding, shortage). At the start
+  of each turn, before income: timed modifiers tick, then thresholds fire — ≤−5 loses 2 random pops (repeats
+  every turn until you climb), ≤−10 loses 4 and rebounds to −4; separately, food income ≤−2 on two consecutive
+  turns starves 1 pop. No passive drift in either direction; losing pops shrinks the causes, so collapses
+  bottom out instead of spiraling. <span class="chip strong">Strong</span> — legible thresholds, deterministic
+  seeded removal, self-damping.</p>
+
+  <h3>The food-stockpile faucet breaks the system <span class="chip weak">Weak</span></h3>
+  <p>+1 happiness per 5 stored food, per income collection, uncapped (<code>foodStockpileHappinessDivisor: 5</code>).
+  This is the only unbounded happiness income in the game, and it converts the master currency directly into
+  unrest immunity:</p>
+  <div class="formula">30 hoarded food  →  +6 happiness/turn  →  sustains 12 slaves forever
+(and the same hoard is also scoring +3 VP as banked material — see §VIII)</div>
+  <p>The hoard never depletes from providing this, so the correct line is: bank food early, then run the largest
+  slave economy on the island with zero unrest risk. It also inverts the intended texture — food <em>hoarding</em>
+  should be the famine hedge, not the happiness engine. Fixes, mildest first: cap the bonus (+2, i.e. "granaries
+  full" as a binary comfort), tie it to <em>income</em> rather than stockpile (surplus feeds festivals, hoards
+  don't), or make it a one-shot when crossing thresholds. Keep <em>some</em> version — "full granaries calm the
+  city" is good theme — just not an uncapped per-turn flow.</p>
+
+  <h3>Random removal: the punishment lottery <span class="chip watch">Watch</span></h3>
+  <p>Unrest removes pops uniformly at random across all settlements and classes. Losing 2 slaves at −5 is a slap
+  (it even reduces your unrest causes); losing 2 citizens is ~22 resources and your influence base. Same
+  trigger, wildly different sentence. The PDF instead lets the player choose what to sacrifice at a fixed
+  exchange (1 citizen or 2 freemen or 4 slaves) — costlier in <em>choice</em> (you must keep slaves to burn),
+  which is more interesting than costlier in <em>luck</em>. Worth adopting once the unrest UI can carry a
+  choice modal; random removal is the right v1.</p>
+
+  <h3>Remaining gaps</h3>
+  <ul>
+    <li>The rulebook's graded food-deficit unrest (−2/−4/−6 income → 1/2/3 unrest per turn) is deliberately not reproduced; the flat shortage-pressure + starvation counter stands in. Fine — revisit when tuning famine severity.</li>
+    <li>Positive happiness does nothing except buffer distance to the thresholds (and 0 VP). That's acceptable, but a small reward for high happiness (a growth discount? a VP trickle?) would make the meter a two-sided investment instead of pure insurance. The PDF's Luxury Goods (each a permanent −2 unrest ≈ +2 happiness flow) will eventually pour into the same bucket — leave headroom.</li>
+    <li>Fractional flows (−0.5/slave) render as half-points on the meter. Cosmetic, but a board-game-feel target argues for whole numbers (e.g. −1 per 2 slaves, rounded up).</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="scoring">
+  <h2><span class="numeral">VIII</span>Scoring</h2>
+  <p class="section-lede">The provisional VP formula is a placeholder — but players optimize whatever is on the scoreboard, so its distortions are already the de-facto strategy guide.</p>
+
+  <div class="rule-note idea">
+    <span class="tag">Superseded — 2026-07-12</span>
+    <p>The provisional formula analyzed below was <strong>replaced by the victory race</strong>
+    (appendix D1, feat/phase0-victory-race): 5 public "Most X, min Y" cards, sole leader holds,
+    3 at your own turn start wins; the seasonal deck is the finite clock. This section stays as
+    the record of why the formula had to go. The race's own balance questions (are the five
+    minimums reachable at comparable speed? does Demos still over-reward width?) belong to the
+    minimum-tuning sim campaign.</p>
+  </div>
+
+  <div class="formula">VP = 5·cities + 3·colonies + 1·citizen + 1·freeman + floor(banked material / 10) − max(0, −happiness)</div>
+
+  <div class="table-scroll">
+  <table>
+    <caption>Resource cost per victory point (ignoring income side-effects)</caption>
+    <thead><tr><th>Purchase</th><th class="num">All-in cost</th><th class="num">VP</th><th class="num">Cost / VP</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Freeman</td><td class="num">7</td><td class="num">1</td><td class="num">7.0</td><td>…and it pays gold income</td></tr>
+      <tr><td>Colony</td><td class="num">22</td><td class="num">3</td><td class="num">7.3</td><td>…and it claims a tile's yield</td></tr>
+      <tr><td>Banked pile</td><td class="num">10</td><td class="num">1</td><td class="num">10.0</td><td>zero risk, zero effort</td></tr>
+      <tr><td>Citizen</td><td class="num">11</td><td class="num">1</td><td class="num">11.0</td><td>strictly worse than freeman today</td></tr>
+      <tr><td>Colony → city upgrade</td><td class="num">45</td><td class="num">+2</td><td class="num">22.5</td><td>must also stand non-adjacent to every city</td></tr>
+      <tr><td>Slave</td><td class="num">5</td><td class="num">0</td><td class="num">∞</td><td>pure economy, invisible to the score</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <ul>
+    <li><strong>Colony + freeman spam is ~3× more score-efficient than city-building.</strong> Cities must earn their premium through building income compounding over remaining turns — which means the shorter the game, the more degenerate colony spam gets. With no contiguity rule (§V), colony spam isn't even geographically constrained. <span class="chip weak">Weak</span></li>
+    <li><strong>Hoarding double-dips:</strong> banked material scores VP <em>and</em> banked food prints happiness (§VII). Two systems independently reward sitting on resources; together they reward it twice. At minimum, exclude food from "banked material", or score only non-food materials.</li>
+    <li><strong>Slaves score zero</strong> — defensible (they're infrastructure, not society), and it neatly means a slave economy must <em>convert</em> its output into scoring assets before game end. Keep, but be aware it interacts with the endgame trigger card "Apollo: least pops wins" from the PDF, where slaves become a liability.</li>
+    <li><strong>Only negative happiness scores.</strong> +20 happiness and +1 happiness are identical on the scoreboard. Combined with the rebound-to-−4 at revolt, a calculated "controlled burn" (let the revolt fire, rebound, finish above water) is occasionally correct. Niche, but worth knowing it exists.</li>
+  </ul>
+
+  <div class="rule-note open">
+    <span class="tag">Design direction</span>
+    <p>The intended fix is already chosen in <code>todo.md</code>: finite event decks as the game clock, with
+    <strong>victory cards</strong> (most resources / most pops / most cities / most votes…) resolving at
+    exhaustion. That structure is inherently better than a static formula — objectives revealed over the game
+    reward flexibility instead of a single memorized build order. The PDF's endgame triggers (Athena: most
+    votes; Poseidon: most resources; Apollo: <em>least</em> pops) show the intended spread: note that Apollo is
+    a designed hedge that punishes pure width, the exact counterweight the current formula lacks.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="randomness">
+  <h2><span class="numeral">IX</span>Randomness &amp; dice</h2>
+  <p class="section-lede">Where luck lives today, and where it should (and should not) live tomorrow. The PDF's component list ships a d6 and a d20 that no rule currently uses.</p>
+
+  <h3>The current randomness surface</h3>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>System</th><th>Randomness</th><th>Assessment</th></tr></thead>
+    <tbody>
+      <tr><td>Map layout</td><td><strong>None</strong> — fixed authoring order</td><td>Must become a seeded shuffle for real play (§V); consider light constraints (don't cluster all plains) rather than pure shuffle.</td></tr>
+      <tr><td>Seasonal deck</td><td>Seeded shuffle + season-tag weighting</td><td><span class="chip strong">Strong</span> mechanism, mis-tuned pools (§VI).</td></tr>
+      <tr><td>Player deck</td><td>Seeded shuffle, mandatory draw</td><td>Highest-variance system in the game; EV too high (§VI).</td></tr>
+      <tr><td>Unrest pop removal</td><td>Seeded uniform pick</td><td>Punishment severity is a lottery (§VII); PDF's player-choice rule is the better home for this decision.</td></tr>
+      <tr><td>Everything else</td><td>Deterministic</td><td>Incomes, costs, thresholds all exact — players can plan. Protect this.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>A house philosophy for luck</h3>
+  <p>Worth writing down as policy, because every future mechanic will ask the question:</p>
+  <ul>
+    <li><strong>Cards for <em>situations</em>, determinism for <em>consequences</em>.</strong> The engine's strength is that everything downstream of a revealed card is exactly calculable — Scarce Labor is fun precisely because the modifier is public and the response is skill. Keep randomness at the <em>input</em> edge (what the world throws at you), never at the <em>output</em> edge (whether your paid-for action works). Dice-to-succeed on economic actions would fight the whole design.</li>
+    <li><strong>Shared randomness &gt; private randomness.</strong> Seasonal cards (everyone suffers the drought together) create table talk and fairness; private player draws create silent inequality. The current game has the ratio backwards — the private deck is ~5× the swing of the shared one. Rebalancing the player deck (§VI) matters more than any dice question.</li>
+    <li><strong>Where the d6 could honestly live</strong>: (a) <em>unrest flavor</em> — at the −5 threshold, roll for the mob's demand (lose pops / lose a building's use for a turn / pay a ransom), keeping severity fixed but texture varied; (b) <em>tie-breaking and turn-order lotteries</em>; (c) the eventual <em>military layer</em> the Barracks placeholder implies — combat is the one domain where output randomness is genre-expected. The d20 really only makes sense for a big event table (roll on the omen table at each new year), which could replace or season the yearly-card idea in <code>seasons.md</code>.</li>
+    <li><strong>Catch-up should be structural, not random.</strong> The existing minimum-floors on scaled events quietly help trailing players; the PDF's Stratokles politician (at power 5, targets whoever controls him — the Catan-robber pattern, per the margin notes) is the designed leader-check. Prefer those shapes over rubber-band luck.</li>
+  </ul>
+
+  <div class="rule-note idea">
+    <span class="tag">Adopted policy — 2026-07-11</span>
+    <p><strong>Decks for the economy, dice for drama.</strong> Decisions from the dice spitball (now in
+    <code>todo.md</code> as *** items):
+    (1) <strong>Event tables</strong> as a reusable pattern — dice + lookup table, starting with a d6
+    <em>riot table</em> for unrest resolution: expected severity stays constant, the roll varies the texture
+    (lose food / lose a pop / building disabled / ransom). Influence spends modify the odds — the first
+    universal influence sink. Possible extension: the player-event <em>card</em> draw becomes a d20 roll on an
+    event table; yearly/seasonal events stay card-shaped.
+    (2) <strong>Opt-in gambles (ventures)</strong> — stake resources on a d6 for windfall / break-even / loss;
+    chosen risk, so no feel-bad; doubles as a gold sink.
+    (3) <strong>Payout dice rejected</strong> — a shared per-turn "market die" bonus roll was considered and
+    turned down; base tile income stays fully deterministic. Upkeep and thresholds must never depend on a roll.
+    (4) <strong>Riot mitigation is pre-roll only</strong> — bread, concessions, and influence are committed
+    before the die is cast (insurance, not bribery); no post-roll fixes.
+    (5) <strong>Riot demotion is free</strong> (the mob forces it; voluntary demotion costs influence), and
+    engineering a riot to demote cheaply is an accepted emergent play — guarded by keeping expected riot cost
+    above demotion value and capping it at one free demotion per riot.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="vision">
+  <h2><span class="numeral">X</span>The vision gap</h2>
+  <p class="section-lede">What Hegemony.pdf promises that the prototype doesn't play yet — and which of today's imbalances are really just holes where those systems will sit.</p>
+
+  <div class="table-scroll">
+  <table>
+    <caption>Unimplemented systems and the balance work they're holding</caption>
+    <thead><tr><th>PDF system</th><th>Sketch</th><th>Balance hole it fills / creates</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Assembly &amp; Resolutions</strong></td>
+        <td>Every 5th season; 2 resolution cards voted up/down; influence spends: 5 draw a card, 10 exchange, 20 veto; votes = 1 + per-10-citizens + Embassy</td>
+        <td>The influence sink (§II) and the citizen's whole identity (§III). Also the game's main rivalry channel — today players barely interact. Highest-leverage unbuilt system.</td>
+      </tr>
+      <tr>
+        <td><strong>Politicians</strong></td>
+        <td>Four named politicians gain power as their resolutions pass; Stratokles at power 5 turns on his controller (leader check); others grant controller buffs</td>
+        <td>The designed anti-snowball mechanism. Nothing in the current game checks a leader. The margin notes explicitly design a pooled-resource counter — players jointly paying to neutralize him. Keep that; it forces table politics.</td>
+      </tr>
+      <tr>
+        <td><strong>Coastal tiles, ports, Luxury Goods</strong></td>
+        <td>12 coastal rim tiles; ports unlock them; 6 luxury goods on coasts + 3 via a 100-gold Trader; each = permanent −2 unrest; coastal market rate 1:4 vs. 1:6</td>
+        <td>The gold sink (§II), the big unrest relief valve (§VII), and a second map axis (coast vs. interior). Note: −2 unrest ≈ +2 happiness flow <em>each</em> — nine of them exist; budget the happiness economy around that ceiling now, or luxury stacking will trivialize slavery exactly like the food hoard does.</td>
+      </tr>
+      <tr>
+        <td><strong>National Ideas</strong></td>
+        <td>Pick 2 at start; 12 listed, from "+2 food per 5 pops" to "start with 20 gold" to "one free veto"</td>
+        <td>Player asymmetry. The listed twelve are wildly uneven — a scaling permanent (+2 food/5 pops grows all game) vs. a one-shot 20 gold is not a choice; "pops consume gold instead of food" could be degenerate with freeman gold printing. When these land: cost-tier them, or draft them (pick order = balance valve), and playtest the gold-upkeep idea against a freeman economy first.</td>
+      </tr>
+      <tr>
+        <td><strong>Finite decks + endgame trigger cards</strong></td>
+        <td>Public event deck runs dry → endgame cards (Athena: most votes; Poseidon: most resources; Apollo: least pops) end the game</td>
+        <td>The clock (§VI) and the scoring correction (§VIII). Apollo — <em>least</em> pops wins — is a brilliant hedge against pure width; keep at least one inverted-objective card in the final set.</td>
+      </tr>
+      <tr>
+        <td><strong>PDF pop ratios &amp; gold upkeep</strong></td>
+        <td>1 citizen = 2 freemen = 4 slaves capacity weighting; gold used for upkeep</td>
+        <td>Deliberately simplified to 1:1:1 in the prototype (§III) — the safer call. Revisit only if pop identity still feels flat after buildings tier 2; the ×4 slave density is exactly the OP scenario the author's own notes flag.</td>
+      </tr>
+      <tr>
+        <td><strong>Trade (player ↔ player, bank)</strong></td>
+        <td>Free-form player trade + 1:6 bank rate</td>
+        <td>The relief valve for dead tiles and dead currencies (§II). Player trade also multiplies the value of every symmetric event (surpluses become negotiable). Cheap to implement in hotseat; disproportionate balance payoff.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="rule-note">
+    <span class="tag">The one-line reading</span>
+    <p>Most of today's "broken" resources aren't broken — they're <em>waiting</em>. Gold waits for the Trader and
+    Embassy; influence waits for the Assembly; citizens wait for votes; hills wait for all three. The balance
+    risk is sequencing: every season the prototype is played without those sinks teaches players that freemen
+    and hills are traps, and hardens the granary-first, colony-spam meta. Interim sinks (§II) are cheap
+    insurance while the big systems are built.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="issues">
+  <h2><span class="numeral">XI</span>Outstanding issues</h2>
+  <p class="section-lede">The ranked worklist. P0 breaks the loop, P1 is a dominant strategy or exploit, P2 is tuning. Strike items out when resolved; note the fix.</p>
+
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>#</th><th>Priority</th><th>Issue</th><th>Section</th><th>Suggested direction</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><span class="prio p0">P0</span></td><td><s>No end condition — decks reshuffle forever, VP is provisional, nothing concludes</s></td><td><a href="#scoring">§VIII</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): victory race — 5 public "Most X, min Y" cards, hold 3 at own turn start; seasonal deck is the finite clock. Minimum-tuning campaign owed.</td></tr>
+      <tr><td>2</td><td><span class="prio p0">P0</span></td><td>Influence has zero sinks; gold has one 2-gold sink</td><td><a href="#resources">§II</a></td><td>Interim: Stabilize Province (4 inf → 3 hap) + 1:6 bank exchange; real fix arrives with Assembly/Trader</td></tr>
+      <tr><td>3</td><td><span class="prio p1">P1</span></td><td><s>Colony contiguity &amp; capital protection radius documented but unimplemented — colonies teleport</s></td><td><a href="#placement">§V</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): radius-1 contiguity enforced (colonies chain); ring claim deleted from rules.md/spec</td></tr>
+      <tr><td>4</td><td><span class="prio p1">P1</span></td><td><s>Food-stockpile happiness is uncapped — hoards buy unrest immunity and double-dip with banked-material VP</s></td><td><a href="#unrest">§VII</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): capped at +2 (ruleset tunable)</td></tr>
+      <tr><td>5</td><td><span class="prio p1">P1</span></td><td>Player event deck: 92% upside, 30% free pops, EV ≈ +5/turn — outearns tiles, huge private variance</td><td><a href="#cards">§VI</a></td><td>Reduce free-pop copies to discounts; target EV ≈ +2 and ~25% harm</td></tr>
+      <tr><td>6</td><td><span class="prio p1">P1</span></td><td><s>Colony+freeman spam is ~3× more VP-efficient than cities under the provisional formula</s></td><td><a href="#scoring">§VIII</a></td><td><strong>RESOLVED structurally</strong> (feat/phase0-victory-race): the provisional formula is gone — the race has no per-colony score, and contiguity bounds spam. Watch: the Demos card (most pops) may still reward width; revisit in the minimum-tuning campaign.</td></tr>
+      <tr><td>7</td><td><span class="prio p1">P1</span></td><td><s>Fixed map + fixed 0→3 setup order + permanent first-actor = compounding player-0 advantage</s></td><td><a href="#placement">§V</a></td><td><strong>RESOLVED</strong> (feat/phase0-victory-race): snake setup, yearly opener rotation, Shuffled board option (Classic remains default preset)</td></tr>
+      <tr><td>8</td><td><span class="prio p1">P1</span></td><td>City upgrade evicts a sharing colony and destroys its pops with no counterplay</td><td><a href="#placement">§V</a></td><td>Displaced pops walk home as a transfer; keep the settlement loss</td></tr>
+      <tr><td>9</td><td><span class="prio p2">P2</span></td><td>Citizen is a strictly-dominated freeman (and flips to strictly-dominant once votes exist); +2 gold is spec drift</td><td><a href="#pops">§III</a></td><td>Pick the citizen's identity now: politics-only (revert gold) or priced elite</td></tr>
+      <tr><td>10</td><td><span class="prio p2">P2</span></td><td>Spring and Summer seasonal pools contain zero harmful cards — the year's first half is auto-safe</td><td><a href="#cards">§VI</a></td><td>One thematic harm per season (floods, wildfire)</td></tr>
+      <tr><td>11</td><td><span class="prio p2">P2</span></td><td>Granary strictly dominates the first-build decision in every city</td><td><a href="#buildings">§IV</a></td><td>Trim to +1 food or drop the grow discount to −1; revisit alongside tier 2</td></tr>
+      <tr><td>12</td><td><span class="prio p2">P2</span></td><td>Dominated options on choice cards (Caravan Contacts, Skilled Mason, Temple Donation)</td><td><a href="#cards">§VI</a></td><td>Reprice the losing options until they're situational</td></tr>
+      <tr><td>13</td><td><span class="prio p2">P2</span></td><td><s>Capital has no identity — engine-identical to a city</s></td><td><a href="#state">§I</a></td><td><strong>RESOLVED by decision</strong> (2026-07-12): flattened on purpose — a privileged capital multiplies tile quality and turns placement into the game. Future capital identity must be additive or liability-shaped (slots, votes, blockade target), never a yield multiplier.</td></tr>
+      <tr><td>14</td><td><span class="prio p2">P2</span></td><td>Random unrest removal makes punishment severity a lottery</td><td><a href="#unrest">§VII</a></td><td>Adopt PDF's player-choice sacrifice (1c / 2f / 4s) once UI allows</td></tr>
+      <tr><td>15</td><td><span class="prio p2">P2</span></td><td><s><code>preloadOpeningSetupForTesting: true</code> ships a scripted opening</s>; stale analysis docs (initial-round-balance.md)</td><td><a href="#state">§I</a></td><td>Flag <strong>RESOLVED</strong> (off by default; ?dev=preload). Stale docs still to archive/recompute — now including the pre-two-city opening analysis.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="scenarios">
+  <h2><span class="numeral">XII</span>Playtest scenarios</h2>
+  <p class="section-lede">Testable predictions from the analysis above. Play them; record whether the prediction held; feed results back into §XI. Add new scenarios whenever a section makes a claim.</p>
+
+  <ol>
+    <li>
+      <strong>The Hoarder.</strong> One player banks every spare food from turn 1, grows only slaves, builds
+      Workshops. <em>Prediction (§VII):</em> by year 2 they run 8+ slaves at positive happiness with zero temples,
+      out-producing everyone, and the banked pile is also scoring VP. If the table can't punish it, issue 4 is confirmed P1.
+    </li>
+    <li>
+      <strong>The Colony Spammer.</strong> One player never upgrades; every 22 resources becomes a new colony
+      (anywhere on the map — no contiguity), plus freemen. <em>Prediction (§VIII):</em> wins the provisional score
+      by a wide margin over a two-city builder. Compare final VP; if the gap is &gt;30%, issue 6 stands.
+    </li>
+    <li>
+      <strong>The Doorstep Rush.</strong> Player B founds their setup colony adjacent to player A's capital, on
+      A's best expansion tile (legal today, contra the docs). <em>Prediction (§V):</em> A has no recourse and is
+      permanently down a ring tile; the table calls it unfair. Confirms issue 3's priority.
+    </li>
+    <li>
+      <strong>The Eviction.</strong> Two players share a food tile; one quietly saves 30 wood + 10 stone and
+      upgrades. <em>Prediction (§V):</em> the victim loses colony + pops (~40 resources swing) with no warning
+      sign visible in the UI. Measure how far behind they finish; gauge feel-bad at the table.
+    </li>
+    <li>
+      <strong>Card-luck spread.</strong> Log every player-event draw for a full game; sum resource-equivalent
+      value per player. <em>Prediction (§VI):</em> best-to-worst draw luck differs by ≥15 resources — roughly a
+      free colony — with no decision involved.
+    </li>
+    <li>
+      <strong>The Slave Line.</strong> A player rides exactly at the temple-sustained slave cap (2 per temple),
+      then Winter deals Plague + Civic Anxiety. <em>Prediction (§VI/§VII):</em> threshold breach, 2-pop mob loss,
+      and the loss lands mostly on non-slaves about half the time (the lottery). Note whether it read as drama
+      or as arbitrary execution.
+    </li>
+    <li>
+      <strong>Turn-order mirror.</strong> Same seed, two games, seat order reversed. <em>Prediction (§V):</em>
+      on the fixed map the seat that picks first wins both games' setups; if outcomes track seat rather than
+      player, issue 7 is confirmed.
+    </li>
+  </ol>
+</section>
+
+<!-- ============================================================ -->
+<section id="changelog">
+  <h2>Changelog</h2>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>Date</th><th>Engine ref</th><th>Entry</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>2026-07-12</td>
+        <td><code>feat/phase0-victory-race</code></td>
+        <td>Minimum-tuning campaign (Phase 0 exit gate): current minimums confirmed — race wins land at
+        mean year 4.8 (target); lower minimums gain nothing, higher ones kill the race (13% close).
+        Watch item: +2.8σ seat-3 win lean under greedy bots (possible snake-turnaround edge) — recheck
+        with stronger bots or humans.</td>
+      </tr>
+      <tr>
+        <td>2026-07-12</td>
+        <td><code>feat/phase0-victory-race</code></td>
+        <td>Q12 resolved and built: setup is now metropolis (4 pops, structurally special, zero bonus
+        rules) + founding colony (2 pops, any coastal tile — the apoikia voyage); coastal leapfrog (Q13a)
+        shipped with it (hold the coast → found along any coast). Two-city setup superseded. First greedy
+        sim on the new setup ended season 20 by race win — leaner starts race harder; tuning campaign next.</td>
+      </tr>
+      <tr>
+        <td>2026-07-12</td>
+        <td><code>feat/phase0-victory-race</code></td>
+        <td>Victory minimums raised after user playtest caught turn-one card holding (Treasurer's 40
+        sat below the 52-material start; an all-citizen setup reached Civic Elite's 6): citizens 6→8,
+        stockpile 40→80, happiness +5→+10, and a new design rule — no card may be holdable at game
+        start or on turn one (regression-tested).</td>
+      </tr>
+      <tr>
+        <td>2026-07-12</td>
+        <td><code>feat/phase0-victory-race</code></td>
+        <td>Phase 0 shipped: victory race + finite clock (issue 1 resolved), colony contiguity
+        without the capital ring (issue 3), stockpile happiness cap +2 (issue 4), provisional-VP
+        colony-spam distortion removed structurally (issue 6), snake setup + yearly rotation +
+        Shuffled board option (issue 7), preload flag off (issue 15 part). Standard setup is now
+        TWO CITIES. Sim: full greedy game ends at season 30; 6-game batch seat wins 33/33/17/17.</td>
+      </tr>
+      <tr>
+        <td>2026-07-11</td>
+        <td><code>feat/unrest-consequences @ 5583263</code></td>
+        <td>Roadmap Q&amp;A round 2: victory race locked (5 public "Most X, min Y" cards, sole leader holds,
+        3 at own turn start wins; seasonal deck = failsafe ceiling) — supersedes the §VIII provisional-VP
+        analysis once built. Setup changes to two cities (no setup colony) with radius-1 colony contiguity.
+        Bank exchange fully locked (appendix D6): static gold-mediated market whose rates bracket future
+        player trade; rates provisional (3:1 sell / 2 gold buy) as ruleset tunables.</td>
+      </tr>
+      <tr>
+        <td>2026-07-11</td>
+        <td><code>feat/unrest-consequences @ 5583263</code></td>
+        <td>Roadmap Q&amp;A round 1 (docs/roadmap-appendix.md): capital ring dropped in favor of contiguity-only
+        (issue 3 direction changed); stockpile happiness capped +2 (issue 4); victory model moving to a
+        threshold race (Q1, in discussion); bank exchange becoming gold-mediated (Q6); riot table + ventures
+        + promote/demote costs locked. No per-PR sim gate (Q11).</td>
+      </tr>
+      <tr>
+        <td>2026-07-11</td>
+        <td><code>feat/unrest-consequences @ 5583263</code></td>
+        <td>Terrain economy direction settled (§V note): first-order (wood/food/stone from tiles) vs
+        second-order (gold/influence from pops/trade) resources; gold tiles removed, hills → acropolis
+        terrain; building pricing grammar; luxury goods capped &amp; diminishing. Full plan in
+        <code>docs/feat/terrain-economy.md</code>.</td>
+      </tr>
+      <tr>
+        <td>2026-07-11</td>
+        <td><code>feat/unrest-consequences @ 5583263</code></td>
+        <td>Dice direction settled (§IX): event tables + influence-shifted rolls and opt-in ventures adopted;
+        payout dice (market die) rejected. Filed as *** items in todo.md alongside the pop
+        promotion/demotion ladder idea.</td>
+      </tr>
+      <tr>
+        <td>2026-07-10</td>
+        <td><code>feat/unrest-consequences @ 5583263</code></td>
+        <td>Initial audit: full pass over ruleset, decks, map, unrest system, provisional scoring, and the
+        Hegemony.pdf vision set. 15 issues filed (2×P0, 6×P1, 7×P2); 7 playtest scenarios seeded.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<footer>
+  Hegemony Balance Ledger · lives at <code>docs/balance.html</code> · engine truth in <code>src/game/</code> ·
+  update in the same commit as any change to <code>ruleset.ts</code>, <code>data.ts</code>, or the decks.
+</footer>
+
+</main>
+</div>
+
+<script>
+  // Scrollspy: highlight the nav entry for the section in view.
+  const links = Array.from(document.querySelectorAll("nav a"));
+  const byId = Object.fromEntries(links.map((a) => [a.getAttribute("href").slice(1), a]));
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          links.forEach((a) => a.classList.remove("active"));
+          byId[entry.target.id]?.classList.add("active");
+        }
+      }
+    },
+    { rootMargin: "-10% 0px -80% 0px" }
+  );
+  document.querySelectorAll("main section").forEach((s) => observer.observe(s));
+</script>
+</body>
+</html>
