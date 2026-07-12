@@ -1,17 +1,32 @@
 import type { GameModeId } from "./ruleset";
-import type { PlayerId, Pops } from "./types";
+import type { BoardLayout, PlayerId, Pops } from "./types";
 
 export const GAME_CONFIG = {
-  // Flip to false to start from the normal empty setup flow.
-  preloadOpeningSetupForTesting: true,
+  // Dev convenience only: replay the scripted opening below instead of the normal
+  // setup flow. OFF for real games (roadmap-appendix D5); the UI re-enables it via
+  // the ?dev=preload URL param.
+  preloadOpeningSetupForTesting: false,
   // Which game mode a new game starts in (see GAME_MODES). The seam a future mode
-  // picker plugs into; the scripted preload only fits the two-settlement "standard".
-  mode: "standard" as GameModeId
+  // picker plugs into; the scripted preload only fits the two-city "standard".
+  mode: "standard" as GameModeId,
+  // "classic" = the authored fixed board; "shuffled" = seeded random layout
+  // (roadmap-appendix D3e). The UI overrides via the ?board= URL param.
+  boardLayout: "classic" as BoardLayout,
+  // Dev testing default: auto-play the opening (seed-driven legal placements) so a
+  // reload lands straight in gameplay. ?setup=manual restores hand placement.
+  autoOpeningForDev: true
 };
+
+/**
+ * Ten premade seeds the dev auto-opening rotates through — each reload advances to
+ * the next (tracked in localStorage), so repeated testing sees varied openings
+ * without hand-placing towns. ?seed=N pins one instead.
+ */
+export const DEV_ROTATION_SEEDS = [11, 42, 77, 101, 137, 202, 314, 555, 777, 909];
 
 export type OpeningSetupPlacement = {
   playerID: PlayerId;
-  city: {
+  capital: {
     tileId: string;
     pops: Pops;
   };
@@ -21,49 +36,31 @@ export type OpeningSetupPlacement = {
   };
 };
 
+/**
+ * A legal scripted metropolis+founding-colony opening for the CLASSIC board (dev
+ * preload + tests + sim "fixed" opening). Metropolis tiles are pairwise non-adjacent
+ * (city rule); founding colonies sit on the coastal rim, so they are legal regardless
+ * of distance (the founding voyage, roadmap-appendix Q12).
+ */
 export const TEST_OPENING_SETUP: OpeningSetupPlacement[] = [
   {
     playerID: "0",
-    city: {
-      tileId: "-3,2",
-      pops: { citizens: 1, freemen: 1, slaves: 1 }
-    },
-    colony: {
-      tileId: "-2,1",
-      pops: { citizens: 0, freemen: 0, slaves: 1 }
-    }
+    capital: { tileId: "-2,0", pops: { citizens: 1, freemen: 2, slaves: 1 } },
+    colony: { tileId: "3,0", pops: { citizens: 0, freemen: 1, slaves: 1 } }
   },
   {
     playerID: "1",
-    city: {
-      tileId: "-1,-2",
-      pops: { citizens: 1, freemen: 2, slaves: 0 }
-    },
-    colony: {
-      tileId: "0,-2",
-      pops: { citizens: 0, freemen: 1, slaves: 0 }
-    }
+    capital: { tileId: "0,-2", pops: { citizens: 1, freemen: 1, slaves: 2 } },
+    colony: { tileId: "0,3", pops: { citizens: 0, freemen: 1, slaves: 1 } }
   },
   {
     playerID: "2",
-    city: {
-      tileId: "1,2",
-      pops: { citizens: 0, freemen: 1, slaves: 2 }
-    },
-    colony: {
-      tileId: "0,2",
-      pops: { citizens: 0, freemen: 0, slaves: 1 }
-    }
+    capital: { tileId: "2,0", pops: { citizens: 0, freemen: 2, slaves: 2 } },
+    colony: { tileId: "-3,0", pops: { citizens: 1, freemen: 1, slaves: 0 } }
   },
   {
     playerID: "3",
-    city: {
-      tileId: "3,-1",
-      pops: { citizens: 2, freemen: 0, slaves: 1 }
-    },
-    colony: {
-      tileId: "2,-1",
-      pops: { citizens: 1, freemen: 0, slaves: 0 }
-    }
+    capital: { tileId: "0,2", pops: { citizens: 2, freemen: 1, slaves: 1 } },
+    colony: { tileId: "0,-3", pops: { citizens: 0, freemen: 2, slaves: 0 } }
   }
 ];

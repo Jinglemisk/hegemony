@@ -12,9 +12,10 @@ import {
   startNewSeason,
 } from "./rules";
 import type { MoveResult } from "./rules";
-import { GAME_MODES, setupCapitalCount } from "./ruleset";
+import { checkVictoryAtTurnStart } from "./victory";
+import { GAME_MODES } from "./ruleset";
 import type { Ruleset } from "./ruleset";
-import type { HegemonyState, Phase, PlayerId } from "./types";
+import type { BoardLayout, HegemonyState, Phase, PlayerId, SettlementKind } from "./types";
 
 /**
  * The pure turn machine. It owns phase / currentPlayer / turn transitions on
@@ -22,12 +23,17 @@ import type { HegemonyState, Phase, PlayerId } from "./types";
  * single serializable value and the turn flow can be tested without React.
  */
 
-/** Create a new game in the configured mode. When the test-opening flag is on, run the scripted 4-player setup. */
-export function createGame(seed?: number, ruleset: Ruleset = GAME_MODES[GAME_CONFIG.mode].ruleset): HegemonyState {
-  const G = createInitialState(seed, ruleset);
+/** Create a new game in the configured mode. When the dev preload flag is on, run the scripted 4-player setup. */
+export function createGame(
+  seed?: number,
+  ruleset: Ruleset = GAME_MODES[GAME_CONFIG.mode].ruleset,
+  boardLayout: BoardLayout = GAME_CONFIG.boardLayout,
+  preloadOpeningSetup: boolean = GAME_CONFIG.preloadOpeningSetupForTesting
+): HegemonyState {
+  const G = createInitialState(seed, ruleset, boardLayout);
 
-  if (GAME_CONFIG.preloadOpeningSetupForTesting) {
-    preloadOpeningSetup(G);
+  if (preloadOpeningSetup) {
+    runPreloadOpeningSetup(G);
   }
 
   return G;
@@ -38,20 +44,40 @@ export function nextPlayer(playerID: PlayerId): PlayerId {
   return PLAYER_IDS[(index + 1) % PLAYER_IDS.length];
 }
 
-/** Advance one setup placement; once every player owns `count` settlements, move to `nextPhase`. */
-export function advanceSetupTurn(G: HegemonyState, count: number, nextPhase: Phase) {
-  G.turn += 1;
-
-  if (allPlayersHaveSettlementCount(G, count)) {
-    G.currentPlayer = "0";
-    G.phase = nextPhase;
-    return;
-  }
-
-  G.currentPlayer = nextPlayer(G.currentPlayer);
+function setupPhaseFor(kind: SettlementKind): Phase {
+  return kind === "capital" ? "setupCapital" : kind === "city" ? "setupCity" : "setupColony";
 }
 
-/** Start-of-turn automation for the current gameplay player: reveal a seasonal event, auto-collect income. */
+/**
+ * Advance the setup machine one placement. Setup runs in SNAKE order
+ * (roadmap-appendix D3c): round 0 goes 0→3, round 1 goes 3→0, and so on — the
+ * player who picks last in one round picks first in the next. Once every player
+ * has placed everything the ruleset's setup list owes, gameplay begins with the
+ * season opener.
+ */
+export function advanceSetupTurn(G: HegemonyState) {
+  G.turn += 1;
+
+  const totalRounds = G.ruleset.setup.length;
+
+  for (let round = 0; round < totalRounds; round += 1) {
+    const order = round % 2 === 0 ? PLAYER_IDS : [...PLAYER_IDS].reverse();
+
+    for (const playerID of order) {
+      if (G.players[playerID].settlements.length <= round) {
+        G.currentPlayer = playerID;
+        G.phase = setupPhaseFor(G.ruleset.setup[round]);
+        return;
+      }
+    }
+  }
+
+  G.phase = "gameplay";
+  G.currentPlayer = G.seasonOpener;
+}
+
+/** Start-of-turn automation for the current gameplay player: reveal a seasonal event,
+ *  check the victory race, then upkeep + income. */
 export function beginGameplayTurn(G: HegemonyState) {
   if (G.phase !== "gameplay") {
     return;
@@ -61,80 +87,92 @@ export function beginGameplayTurn(G: HegemonyState) {
     drawSeasonalEvent(G);
   }
 
+  checkVictoryAtTurnStart(G);
+
+  if (G.phase !== "gameplay") {
+    return;
+  }
+
   applyUnrestUpkeep(G, G.currentPlayer);
   collectIncome(G, G.currentPlayer, "automatic");
 }
 
-/** End the current gameplay turn: expire discounts, roll the season on wrap to player 0, then begin the next turn. */
+/**
+ * End the current gameplay turn: expire discounts, roll the season when play returns
+ * to the season opener (rotating the opener each new year), then begin the next turn —
+ * arrivals, the victory-race check, unrest upkeep, income.
+ */
 export function endTurn(G: HegemonyState): MoveResult {
   if (G.phase !== "gameplay" || G.pendingPlayerEvent) {
     return { ok: false, reasons: [] };
   }
 
   const current = G.currentPlayer;
-  const next = nextPlayer(current);
+  let next = nextPlayer(current);
 
   expireTurnEventModifiers(G, current);
 
-  if (next === "0") {
+  if (next === G.seasonOpener) {
     startNewSeason(G);
-  }
 
-  resolveArrivingPops(G, next);
-  applyUnrestUpkeep(G, next);
-  collectIncome(G, next, "automatic");
+    if (G.phase !== "gameplay") {
+      // The seasonal deck (the clock) ran out — the exhaustion tally ended the game.
+      return { ok: true };
+    }
+
+    // A new year rotates the opener (handled in startNewSeason); the new opener
+    // leads the season, and everyone still plays exactly once per season.
+    next = G.seasonOpener;
+  }
 
   G.currentPlayer = next;
   G.turn += 1;
 
+  resolveArrivingPops(G, next);
+  checkVictoryAtTurnStart(G);
+
+  if (G.phase !== "gameplay") {
+    return { ok: true };
+  }
+
+  applyUnrestUpkeep(G, next);
+  collectIncome(G, next, "automatic");
+
   return { ok: true };
 }
 
-function allPlayersHaveSettlementCount(G: HegemonyState, count: number) {
-  return Object.values(G.players).every((player) => player.settlements.length >= count);
-}
-
-function preloadOpeningSetup(G: HegemonyState) {
-  // The scripted opening only supplies one capital + one colony per player, so it
-  // fits the two-settlement "standard" setup; other modes start from the empty flow.
-  for (const placement of TEST_OPENING_SETUP) {
-    assertSetupTurn(G, placement.playerID, "setupCapital");
-    assertValidSetupMove(
-      placeCapital(G, placement.playerID, placement.city.tileId, placement.city.pops),
-      placement.playerID,
-      "city",
-      placement.city.tileId,
-    );
-    advanceSetupTurn(G, setupCapitalCount(G.ruleset), "setupColony");
+/** Replay the scripted metropolis+colony opening through the real machine (dev preload). */
+function runPreloadOpeningSetup(G: HegemonyState) {
+  // The scripted opening supplies one metropolis + one founding colony per player, so
+  // it fits the standard setup; other modes start from the empty flow.
+  if (G.ruleset.setup.join() !== "capital,colony") {
+    throw new Error("The scripted preload only fits the capital+colony standard setup.");
   }
 
-  for (const placement of TEST_OPENING_SETUP) {
-    assertSetupTurn(G, placement.playerID, "setupColony");
-    assertValidSetupMove(
-      placeColony(G, placement.playerID, placement.colony.tileId, placement.colony.pops),
-      placement.playerID,
-      "colony",
-      placement.colony.tileId,
-    );
-    advanceSetupTurn(G, G.ruleset.setup.length, "gameplay");
+  let guard = 0;
+
+  while (G.phase !== "gameplay") {
+    if (guard++ > 16) {
+      throw new Error("Invalid test setup: setup did not converge.");
+    }
+
+    const placement = TEST_OPENING_SETUP.find((candidate) => candidate.playerID === G.currentPlayer);
+
+    if (!placement) {
+      throw new Error(`Invalid test setup: no placement for player ${G.currentPlayer}.`);
+    }
+
+    const result =
+      G.phase === "setupCapital"
+        ? placeCapital(G, placement.playerID, placement.capital.tileId, placement.capital.pops)
+        : placeColony(G, placement.playerID, placement.colony.tileId, placement.colony.pops);
+
+    if (!result.ok) {
+      throw new Error(`Invalid test setup: ${placement.playerID} cannot place during ${G.phase}.`);
+    }
+
+    advanceSetupTurn(G);
   }
 
   beginGameplayTurn(G);
-}
-
-function assertSetupTurn(G: HegemonyState, playerID: PlayerId, phase: Phase) {
-  if (G.currentPlayer !== playerID || G.phase !== phase) {
-    throw new Error(`Invalid test setup order: expected ${playerID} during ${phase}.`);
-  }
-}
-
-function assertValidSetupMove(
-  result: MoveResult,
-  playerID: PlayerId,
-  kind: "city" | "colony",
-  tileId: string,
-) {
-  if (!result.ok) {
-    throw new Error(`Invalid test setup: ${playerID} cannot place ${kind} on ${tileId}.`);
-  }
 }

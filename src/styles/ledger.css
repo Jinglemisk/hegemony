@@ -523,3 +523,81 @@
   line-height: 1.35;
 }
 
+
+/* ---- season clock sub-labels (deck clock + opener) ---- */
+
+.turnClockSub {
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+/* ---- game over ---- */
+
+.gameOverModal {
+  max-width: 420px;
+}
+
+.gameOverKicker {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gameOverModal h2 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  margin: 2px 0 0;
+}
+
+.gameOverReason {
+  color: var(--fg);
+  font-size: 0.82rem;
+  margin: 10px 0 14px;
+}
+
+.gameOverStandings {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.gameOverSeat {
+  align-items: baseline;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 2px 10px;
+  grid-template-columns: 10px minmax(64px, auto) auto 1fr;
+  padding: 8px 0;
+}
+
+.gameOverSeat.gameOverWinner strong {
+  color: var(--clay);
+}
+
+.gameOverDot {
+  border-radius: 50%;
+  height: 9px;
+  width: 9px;
+}
+
+.gameOverCards {
+  color: var(--fg);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.gameOverHeld {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-align: right;
+}
+
+.gameOverModal .modalActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}

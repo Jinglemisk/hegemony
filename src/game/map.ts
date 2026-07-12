@@ -1,11 +1,13 @@
 import { TERRAIN_DECK } from "./data";
 import type { HexTile } from "./types";
 
-export function createInitialMap(): HexTile[] {
+/** Lay a terrain deck onto the radius-3 board. Defaults to the authored "classic"
+ *  order; pass a shuffled copy of {@link TERRAIN_DECK} for a randomized board. */
+export function createInitialMap(deck: typeof TERRAIN_DECK = TERRAIN_DECK): HexTile[] {
   const coordinates = axialRadius(3);
 
   return coordinates.map(({ q, r }, index) => {
-    const terrain = TERRAIN_DECK[index];
+    const terrain = deck[index];
     return {
       id: `${q},${r}`,
       q,
@@ -31,6 +33,13 @@ export function axialRadius(radius: number) {
   }
 
   return coordinates;
+}
+
+/** The island's shoreline: the outermost ring of the radius-3 board. Coastal tiles
+ *  are connected by sea — the coastal-leapfrog placement rule (roadmap-appendix Q13a)
+ *  and the founding colony's voyage (Q12) both read this. */
+export function isCoastalTile(tile: { q: number; r: number }) {
+  return Math.max(Math.abs(tile.q), Math.abs(tile.r), Math.abs(tile.q + tile.r)) === 3;
 }
 
 export function hexDistance(a: { q: number; r: number }, b: { q: number; r: number }) {

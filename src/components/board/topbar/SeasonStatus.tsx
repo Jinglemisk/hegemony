@@ -13,18 +13,28 @@ function SeasonStatusComponent({
   isActive: boolean;
   currentPlayerId: PlayerId;
 }) {
+  const seasonsLeft = G.seasonalDrawPile.length;
+
   return (
     <div className="turnClock">
-      <div className="turnYear">
+      <div
+        className="turnYear"
+        title={`The seasonal deck is the game clock: ${seasonsLeft} season${seasonsLeft === 1 ? "" : "s"} remain. When it runs out, most victory cards held wins.`}
+      >
         <span className="turnClockLabel">Year</span>
         <strong>{yearOf(G.season)}</strong>
+        <span className="turnClockSub">{seasonsLeft} left</span>
       </div>
 
       <SeasonDial seasonIndex={G.season} />
 
-      <div className="turnActor">
+      <div
+        className="turnActor"
+        title={`${PLAYER_DISPLAY_NAMES[G.seasonOpener]} opens each season this year — the opener rotates every new year.`}
+      >
         <span className="turnClockLabel">{isActive ? "Your turn" : "Now acting"}</span>
         <strong>{PLAYER_DISPLAY_NAMES[currentPlayerId]}</strong>
+        <span className="turnClockSub">{PLAYER_DISPLAY_NAMES[G.seasonOpener]} opens</span>
       </div>
     </div>
   );

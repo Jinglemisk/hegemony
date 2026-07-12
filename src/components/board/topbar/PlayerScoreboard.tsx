@@ -53,9 +53,12 @@ function PlayerScoreboardComponent({
                 <AtlasIcon icon="citizens" className="rosterStatIcon" />
                 {standings.pops}
               </span>
-              <span className="rosterStat rosterVp" title="Victory points (provisional)">
+              <span
+                className="rosterStat rosterVp"
+                title={`Victory cards held — first to hold ${G.ruleset.victory.cardsToWin} at the start of their turn wins`}
+              >
                 <UiSprite item="victoryPoint" className="rosterStatIcon" />
-                {standings.victoryPoints}
+                {standings.victoryCards}/{G.ruleset.victory.cardsToWin}
               </span>
             </span>
             <span className="scoreTooltip" role="tooltip">

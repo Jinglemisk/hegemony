@@ -313,6 +313,7 @@
 
 .deckTray {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 2px 0 6px;
   padding-top: 10px;
@@ -366,3 +367,15 @@
   font-size: 0.66rem;
 }
 
+
+/* ---- board layout indicator in the deck tray ---- */
+
+.deckTrayBoard {
+  flex: 1 1 100%;
+  justify-content: center;
+}
+
+.deckTrayBoard .deckTrayLabel {
+  color: var(--muted);
+  font-style: italic;
+}

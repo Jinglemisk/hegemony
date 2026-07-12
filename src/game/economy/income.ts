@@ -173,14 +173,20 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
   }
 
   const divisor = ruleset.economy.foodStockpileHappinessDivisor;
-  const foodStockpileHappiness = divisor > 0 ? Math.floor(G.players[playerID].resources.food / divisor) : 0;
+  const cap = ruleset.economy.foodStockpileHappinessCap;
+  const uncapped = divisor > 0 ? Math.floor(G.players[playerID].resources.food / divisor) : 0;
+  // Capped so hoarded food can't buy unlimited calm (roadmap-appendix D4).
+  const foodStockpileHappiness = Math.min(uncapped, cap);
 
   if (foodStockpileHappiness > 0) {
     addIncomeContribution(contributions, income, {
       resource: "happiness",
       amount: foodStockpileHappiness,
       source: "Food stockpile",
-      detail: `Every ${divisor} stored food improves happiness`
+      detail:
+        uncapped > cap
+          ? `Every ${divisor} stored food improves happiness (capped at +${cap})`
+          : `Every ${divisor} stored food improves happiness (up to +${cap})`
     });
   }
 

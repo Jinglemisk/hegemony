@@ -9,6 +9,18 @@ export function createSeed(): number {
 }
 
 /**
+ * One mulberry32 step: advance the 32-bit state and yield a unit float in [0, 1).
+ * The returned state is what callers persist (e.g. on {@link HegemonyState.rng})
+ * to keep every later draw reproducible from the game's initial seed.
+ */
+export function mulberry32(seedState: number): { state: number; value: number } {
+  const state = ((seedState >>> 0) + 0x6d2b79f5) | 0;
+  let t = Math.imul(state ^ (state >>> 15), 1 | state);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return { state: state >>> 0, value: ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296 };
+}
+
+/**
  * Deterministic Fisher-Yates shuffle driven by a mulberry32 PRNG. Returns the
  * shuffled copy plus the advanced PRNG state so the caller can persist it on
  * {@link HegemonyState.rng} and keep later reshuffles reproducible from the
@@ -17,10 +29,9 @@ export function createSeed(): number {
 export function shuffleWithSeed<T>(cards: T[], seedState: number): { cards: T[]; state: number } {
   let state = seedState >>> 0;
   const nextUnit = () => {
-    state = (state + 0x6d2b79f5) | 0;
-    let t = Math.imul(state ^ (state >>> 15), 1 | state);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+    const step = mulberry32(state);
+    state = step.state;
+    return step.value;
   };
 
   const shuffled = [...cards];
