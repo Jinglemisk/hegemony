@@ -94,16 +94,23 @@
 
 ## Presentation & UI
 
-- *** UI refactor: one ledger, vertical tabs, relocated action bar. (user, 2026-07-12)
+- *** UI refactor: one ledger, vertical tabs, relocated action bar, map-first selection. (user, 2026-07-12/13)
 -- The right sidebar's Actions panel and the left Ledger should collapse into ONE ledger; its tabs become
    vertical buttons (the 5-up horizontal row is already cramped and will not survive more tabs).
 -- The everyday action verbs (Grow / Move / Found / Upgrade / Calm / Venture / End Turn) move to a dedicated
    home — a bottom bar, or a strip under the top bar — so the board gains width and the verbs stop living
    inside a side panel.
+-- **Selection rule 1 — the map IS the picker.** Anything that targets a tile/settlement uses the Found
+   Colony pattern (the only picker that already does it right): verb → eligible tiles GLOW on the real board
+   → clicking gives the tile the active ring → an anchored popover carries the info (yield, pops, shared-tile
+   status) + confirm. Apply to: ladder promote/demote, Grow Pop, Move Pops (source then target — two glowing
+   clicks), event pop-placement, riot concession target. Backdrop modals must never cover the board during a
+   selection — selection screens become popovers/side-sheets.
+-- **Selection rule 2 — no native <select>, ever.** OS/browser dropdowns cannot hold images. Build ONE custom
+   listbox component whose row template is the tile-art picker card (terrain sprite + kind/coords + yield +
+   shared note, shipped for the ladder modal 2026-07-13), used wherever a list genuinely beats the map (e.g.
+   inside the deliberately-blocking riot modal).
 -- Scope this WITH the game-reference compendium below (same navigation rethink); flat AAA look throughout.
--- Roll the settlement-picker CARD pattern (terrain art + coords + yield + shared-tile note, shipped for the
-   ladder modal 2026-07-13) out to the remaining pickers: Grow Pop, Move Pops, Found Colony source, event
-   pop-target, riot concession — they are HTML selects today (text labels only; selects cannot hold images).
 
 - *** Game-reference compendium behind the season icon. (user, 2026-07-12)
 -- Pressing the seasonal icon button (top bar) opens a modal of categorized game info players can study to
