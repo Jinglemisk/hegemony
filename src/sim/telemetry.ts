@@ -149,8 +149,23 @@ export type BatchReport = {
     /** For choice cards: how often each option index was picked. */
     choicePicks: Record<string, number[]>;
   };
+  /** Phase 1 exit-gate instrument: how often each currency verb fired (total and
+   *  per game) — a verb at ~0 per game is a dead currency talking. */
+  currencyVerbs: Record<string, { count: number; perGame: number }>;
   finalCardsDistribution: Percentiles;
 };
+
+/** The Phase 1 currency verbs, in report order. */
+const CURRENCY_VERBS = [
+  "bankSell",
+  "bankBuy",
+  "civicCalm",
+  "promotePop",
+  "demotePop",
+  "fundExpedition",
+  "buyRiotInsurance",
+  "resolveRiot",
+] as const;
 
 export class Aggregator {
   private snapshots: TurnSnapshot[] = [];
@@ -159,6 +174,7 @@ export class Aggregator {
   private playerEvents: Record<string, number> = {};
   private seasonalEvents: Record<string, number> = {};
   private choicePicks: Record<string, number[]> = {};
+  private currencyVerbs: Record<string, number> = {};
 
   private game = -1;
   private seed = 0;
@@ -179,6 +195,10 @@ export class Aggregator {
   onMove(G: HegemonyState, _player: PlayerId, move: LegalMove) {
     if (move.type === "buildBuilding") {
       this.buildings[move.buildingId] = (this.buildings[move.buildingId] ?? 0) + 1;
+    }
+
+    if ((CURRENCY_VERBS as readonly string[]).includes(move.type)) {
+      this.currencyVerbs[move.type] = (this.currencyVerbs[move.type] ?? 0) + 1;
     }
 
     // The resolved card is still on lastPlayerEvent (nothing draws between
@@ -307,6 +327,12 @@ export class Aggregator {
         seasonal: this.seasonalEvents,
         choicePicks: this.choicePicks,
       },
+      currencyVerbs: Object.fromEntries(
+        CURRENCY_VERBS.map((verb) => {
+          const count = this.currencyVerbs[verb] ?? 0;
+          return [verb, { count, perGame: this.games.length > 0 ? count / this.games.length : 0 }];
+        })
+      ),
       finalCardsDistribution: percentiles(this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalCards[playerID]))),
     };
   }

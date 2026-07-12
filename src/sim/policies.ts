@@ -65,16 +65,18 @@ export const greedyPolicy: Policy = {
       (move): move is Extract<LegalMove, { type: "fundExpedition" }> =>
         move.type === "fundExpedition" && move.stake === "gold"
     );
-    if (goldVentures.length > 0 && G.players[playerID].resources.gold >= 15) {
+    if (goldVentures.length > 0 && G.players[playerID].resources.gold >= 25) {
       return goldVentures[G.season % goldVentures.length];
     }
 
     // Bank chains (sell surplus → buy the missing colony wood) are invisible to
-    // one-ply search, so trade by rule: hoarded food beyond the happiness cap gets
-    // sold; a wood-starved, gold-rich empire buys wood.
-    const foodSell = moves.find((move) => move.type === "bankSell" && move.material === "food");
-    if (foodSell && G.players[playerID].resources.food > 60) {
-      return foodSell;
+    // one-ply search, so trade by rule: a material hoard gets sold when the coffers
+    // run dry; a wood-starved, gold-rich empire buys wood.
+    for (const material of ["stone", "wood", "food"] as const) {
+      const sell = moves.find((move) => move.type === "bankSell" && move.material === material);
+      if (sell && G.players[playerID].resources[material] > 40 && G.players[playerID].resources.gold < 10) {
+        return sell;
+      }
     }
 
     const woodBuy = moves.find((move) => move.type === "bankBuy" && move.material === "wood");
@@ -160,7 +162,10 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
     standings.pops +
     Math.floor(material / 10) -
     Math.max(0, -player.resources.happiness);
-  const projectedHappiness = player.resources.happiness;
+  // Cap the happiness reward: below the cap it prices riot avoidance and the
+  // Beloved card (min +10); past it, more calm is wasted coin — an uncapped term
+  // had greedy bots pumping civic calm to +95 happiness.
+  const projectedHappiness = Math.min(player.resources.happiness, 15);
   player.resources = saved;
 
   return 100 * victoryCardsHeld(G, playerID) + 10 * heuristic + 2 * projectedHappiness + player.resources.influence;
