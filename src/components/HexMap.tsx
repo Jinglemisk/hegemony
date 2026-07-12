@@ -34,15 +34,8 @@ type MapMode = "current" | "terrain";
 
 const HEX_SIZE = 45;
 const CITY_ICON_CENTER_Y = 4;
-const BUILDING_SLOT_PIP_SIZE = 7.2;
-const BUILDING_SLOT_PIP_GAP = 9.6;
-const BUILDING_SLOT_ROW_MAX_WIDTH = 60;
-const RESOURCE_YIELD_PIP_RADIUS = 4.4;
-const RESOURCE_YIELD_PIP_HALO = 1.8;
-const RESOURCE_YIELD_PIP_DOT_RADIUS = 1.5;
-const RESOURCE_YIELD_PIP_GAP = 12.4;
-const BUILDING_SLOT_PIP_Y = -22;
-const RESOURCE_YIELD_PIP_Y = 27;
+const SLOT_GLYPH_Y = -22;
+const YIELD_GLYPH_Y = 23;
 const TWO_COLONY_POSITIONS = [-14, 14];
 const DRAG_CLICK_THRESHOLD = 5;
 const TILE_CLICK_SUPPRESS_MS = 160;
@@ -376,8 +369,11 @@ function HexMapComponent({
             const isPlacementCandidate = placementActive && highlightSet.has(tile.id);
             const usedBuildingSlots = city?.buildings.length ?? 0;
             const totalBuildingSlots = city ? settlementBuildingSlots(tile, city, G.ruleset) : tile.buildingSlots;
-            const buildingSlotPips = getBuildingSlotPips(totalBuildingSlots, usedBuildingSlots);
-            const resourceYieldPips = getResourceYieldPipPositions(getResourceYieldPipCount(tile.resource));
+            // Text glyphs (user, 2026-07-13): slots read "used/available" up top, the
+            // yield reads "+n" below — both white, both growing with their number so a
+            // fat plains shouts and a lean hill whispers.
+            const slotGlyphSize = 11 + Math.min(8, totalBuildingSlots) * 1.2;
+            const yieldGlyphSize = 13 + Math.min(10, tile.resource.amount) * 1.7;
             return (
               <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
                 <g
@@ -400,40 +396,24 @@ function HexMapComponent({
                   />
                 </g>
                 <g className="tileMetrics" aria-hidden="true">
-                  {buildingSlotPips.length > 0 ? (
-                    <g className="buildingSlotPips" transform={`translate(0 ${BUILDING_SLOT_PIP_Y})`}>
-                      {buildingSlotPips.map((pip) => (
-                        <rect
-                          className={pip.filled ? "buildingSlotPip filledSlotPip" : "buildingSlotPip hollowSlotPip"}
-                          height={BUILDING_SLOT_PIP_SIZE}
-                          key={`slot-${pip.index}`}
-                          rx={1.8}
-                          width={BUILDING_SLOT_PIP_SIZE}
-                          x={pip.x - BUILDING_SLOT_PIP_SIZE / 2}
-                          y={-BUILDING_SLOT_PIP_SIZE / 2}
-                        />
-                      ))}
-                    </g>
+                  {totalBuildingSlots > 0 ? (
+                    <text
+                      className="tileSlotsGlyph"
+                      fontSize={slotGlyphSize}
+                      textAnchor="middle"
+                      y={SLOT_GLYPH_Y + slotGlyphSize * 0.36}
+                    >
+                      {usedBuildingSlots}/{totalBuildingSlots}
+                    </text>
                   ) : null}
-                  <g className="resourceYieldPips" transform={`translate(0 ${RESOURCE_YIELD_PIP_Y})`}>
-                    {resourceYieldPips.map((pip, index) => (
-                      <g key={`yield-${index}`}>
-                        <circle
-                          className="resourceYieldPipHalo"
-                          cx={pip.x}
-                          cy={pip.y}
-                          r={RESOURCE_YIELD_PIP_RADIUS + RESOURCE_YIELD_PIP_HALO}
-                        />
-                        <circle className="resourceYieldPip" cx={pip.x} cy={pip.y} r={RESOURCE_YIELD_PIP_RADIUS} />
-                        <circle
-                          className="resourceYieldPipDot"
-                          cx={pip.x}
-                          cy={pip.y}
-                          r={RESOURCE_YIELD_PIP_DOT_RADIUS}
-                        />
-                      </g>
-                    ))}
-                  </g>
+                  <text
+                    className="tileYieldGlyph"
+                    fontSize={yieldGlyphSize}
+                    textAnchor="middle"
+                    y={YIELD_GLYPH_Y + yieldGlyphSize * 0.36}
+                  >
+                    {tile.resource.amount}
+                  </text>
                 </g>
                 {city ? (
                   <g
@@ -520,41 +500,6 @@ function getColonyXPositions(count: number) {
   }
 
   return TWO_COLONY_POSITIONS;
-}
-
-function getBuildingSlotPips(total: number, used: number) {
-  const count = Math.max(0, Math.min(8, Math.round(total)));
-  const filledCount = Math.max(0, Math.min(count, Math.round(used)));
-  const gap = count > 1 ? Math.min(BUILDING_SLOT_PIP_GAP, BUILDING_SLOT_ROW_MAX_WIDTH / (count - 1)) : 0;
-  const startX = -((count - 1) * gap) / 2;
-
-  return Array.from({ length: count }, (_, index) => ({
-    index,
-    x: startX + index * gap,
-    filled: index < filledCount
-  }));
-}
-
-function getResourceYieldPipCount(yieldValue: { type: MaterialResource; amount: number }) {
-  const tiers: Record<MaterialResource, number[]> = {
-    wood: [1, 2, 3, 4],
-    stone: [2, 4, 6, 8],
-    gold: [1, 2, 3, 4],
-    food: [4, 6, 8, 10]
-  };
-  const thresholdIndex = tiers[yieldValue.type].findIndex((threshold) => yieldValue.amount <= threshold);
-
-  return thresholdIndex === -1 ? 4 : thresholdIndex + 1;
-}
-
-function getResourceYieldPipPositions(count: number) {
-  const clamped = Math.max(1, Math.min(4, Math.round(count)));
-  const startX = -((clamped - 1) * RESOURCE_YIELD_PIP_GAP) / 2;
-
-  return Array.from({ length: clamped }, (_, index) => ({
-    x: startX + index * RESOURCE_YIELD_PIP_GAP,
-    y: 0
-  }));
 }
 
 function viewBoxToString(viewBox: ViewBox) {
