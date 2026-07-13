@@ -249,8 +249,9 @@ Two decks of event cards bring swings of fortune:
 
 Each spring the year's opener also rolls the **yearly omen** in public: one d6
 sign — kind rains, silent mines, a golden age — that adds or takes **1 of one
-resource from every player's income** until the year turns. It hangs beneath
-the season dial all year; everyone plays under the same sky.
+resource from every player's income** until the year turns. It sits in the
+top-left event row beside the season and player cards all year; everyone plays
+under the same sky.
 
 Nothing here is secret except the shuffle: click the **season dial** (or press
 `?`) to open the **Compendium** — victory standings, every dice table (the

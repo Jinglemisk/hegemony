@@ -1114,35 +1114,3 @@
   transform: scale(1.04);
 }
 
-/* The standing yearly omen — a small banner pinned under the season dial. */
-.seasonDialButton {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-}
-
-.omenChip {
-  max-width: 110px;
-  overflow: hidden;
-  padding: 1px 8px;
-  border: 1px solid rgb(80 35 18 / 45%);
-  border-radius: 999px;
-  background: rgb(255 248 231 / 78%);
-  font-family: var(--font-display);
-  font-size: 0.58rem;
-  letter-spacing: 0.05em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.omenChip.omenIll {
-  border-color: rgb(143 46 19 / 65%);
-  color: var(--clay);
-}
-
-.omenChip.omenFair {
-  border-color: rgb(74 84 38 / 65%);
-  color: var(--olive);
-}

@@ -36,6 +36,27 @@ const EVENT_CARD_ART: Record<string, string> = {
   "player-market-day": new URL("../../../assets/event-cards/player-market-day.webp", import.meta.url).href
 };
 
+// The 2026-07-13 deck-overhaul cards borrow their nearest kin's art until they get
+// their own (OVERNIGHT.md morning questions) — better a grain jar for Granary Rats
+// than everything falling back to the drought plate.
+Object.assign(EVENT_CARD_ART, {
+  "player-citizenship-rolls": EVENT_CARD_ART["player-new-citizen"],
+  "player-willing-hands": EVENT_CARD_ART["player-free-settlers"],
+  "player-slave-auction": EVENT_CARD_ART["player-captured-laborers"],
+  "player-granary-rats": EVENT_CARD_ART["player-good-stores"],
+  "player-banditry": EVENT_CARD_ART["player-merchant-profit"],
+  "player-warehouse-fire": EVENT_CARD_ART["player-timber-windfall"],
+  "player-quarry-collapse": EVENT_CARD_ART["player-stone-shipment"],
+  "season-spring-floods": EVENT_CARD_ART["season-drought"],
+  "season-wildfire": EVENT_CARD_ART["season-timber-levies"]
+});
+
+/** Art for the yearly omen's top-bar card: festive plate for fair signs, the
+ *  anxious one for ill — placeholders until the omen gets its own art. */
+export function omenArtUrl(tone: "fair" | "ill") {
+  return tone === "fair" ? EVENT_CARD_ART["season-festival-games"] : EVENT_CARD_ART["season-civic-anxiety"];
+}
+
 export function eventCardArtUrl(card: EventCard) {
   return EVENT_CARD_ART[card.id] ?? EVENT_CARD_ART["season-drought"];
 }
@@ -108,13 +129,21 @@ function formatEventEffect(effect: EventEffect): string {
   }
 
   if (effect.type === "actionCostDiscount") {
-    const target = effect.buildingId ? buildingNameForEvent(effect.buildingId) : effect.action === "foundColony" ? "colony" : "building";
+    const target = effect.buildingId
+      ? buildingNameForEvent(effect.buildingId)
+      : effect.action === "foundColony"
+        ? "colony"
+        : effect.action === "growPop"
+          ? `${effect.pop ? formatPopLabel(effect.pop, 1) : "pop"} grown`
+          : "building";
 
     return `Next ${target}: -${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}`;
   }
 
   if (effect.type === "resourceExchange") {
-    return `Exchange up to ${effect.maxAmount} ${RESOURCE_LABELS[effect.from]} for ${RESOURCE_LABELS[effect.to]}`;
+    return `Exchange up to ${effect.maxAmount} ${RESOURCE_LABELS[effect.from]} for ${Math.floor(
+      effect.maxAmount * effect.ratio
+    )} ${RESOURCE_LABELS[effect.to]}`;
   }
 
   if (effect.type === "resourceDeltaPerPop") {

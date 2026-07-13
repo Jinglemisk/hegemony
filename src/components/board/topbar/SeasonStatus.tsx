@@ -2,7 +2,6 @@ import { memo } from "react";
 import { yearOf } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { PLAYER_DISPLAY_NAMES } from "../constants";
-import { formatTableEffect } from "../events";
 import { SeasonDial } from "./SeasonDial";
 
 function SeasonStatusComponent({
@@ -36,16 +35,6 @@ function SeasonStatusComponent({
         onClick={onOpenCompendium}
       >
         <SeasonDial seasonIndex={G.season} />
-        {G.yearOmen ? (
-          <span
-            className={`omenChip ${G.yearOmen.effects.some((effect) => formatTableEffect(effect).tone === "negative") ? "omenIll" : "omenFair"}`}
-            title={`The year's omen — ${G.yearOmen.label}: ${G.yearOmen.effects
-              .map((effect) => formatTableEffect(effect).text)
-              .join(", ")}. Rolled by the year's opener; a new omen comes each spring.`}
-          >
-            {G.yearOmen.label}
-          </span>
-        ) : null}
       </button>
 
       <div
