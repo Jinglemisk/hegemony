@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BUILDINGS, EXPEDITION_TABLES, PLAYER_EVENT_CARDS, RIOT_TABLE, SEASONAL_EVENT_CARDS } from "../../../game/data";
+import { BUILDINGS, EXPEDITION_TABLES, OMEN_TABLE, PLAYER_EVENT_CARDS, RIOT_TABLE, SEASONAL_EVENT_CARDS } from "../../../game/data";
 import { TRADABLE_MATERIALS } from "../../../game/rules";
 import type { EventCard, HegemonyState, PlayerId, PopType } from "../../../game/types";
 import { RESOURCE_LABELS, formatBuildingEffects, formatPopLabel, formatResourceCost } from "../../../ui/formatters";
@@ -100,6 +100,15 @@ function TablesSection() {
       <p className="compendiumNote">
         Ventures: one per turn, stake paid win or lose — post gold or wood (see Costs) and pick any expedition.
       </p>
+
+      <article className="compendiumEntry">
+        <h3>{OMEN_TABLE.name}</h3>
+        <p className="compendiumFlavor">{OMEN_TABLE.flavor}</p>
+        <EventTableRows table={OMEN_TABLE} result={null} />
+        <p className="compendiumNote">
+          Rolled publicly by the year's opener each spring; the sign stands over every polis until the year turns.
+        </p>
+      </article>
     </div>
   );
 }

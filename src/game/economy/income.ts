@@ -160,6 +160,7 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
   }
 
   applySeasonalIncomeEffects(G, playerID, contributions, income);
+  applyYearOmenIncomeEffects(G, contributions, income);
 
   const foodShortage = getFoodShortageStatus(G, playerID, income.food);
 
@@ -210,6 +211,20 @@ export function getFoodShortageStatus(G: HegemonyState, playerID: PlayerId, food
     gracePreventedPressure: firstTurnGraceActive ? rawPressure : 0,
     firstTurnGraceActive
   };
+}
+
+/** The standing yearly omen (always symmetric — every player collects under it). */
+function applyYearOmenIncomeEffects(G: HegemonyState, contributions: IncomeContribution[], income: Resources) {
+  for (const effect of G.yearOmen?.effects ?? []) {
+    if (effect.type === "yearIncomeModifier") {
+      addIncomeContribution(contributions, income, {
+        resource: effect.resource,
+        amount: effect.amount,
+        source: `Omen: ${G.yearOmen?.label}`,
+        detail: "Yearly omen"
+      });
+    }
+  }
 }
 
 function applySeasonalIncomeEffects(

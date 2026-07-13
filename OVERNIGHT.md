@@ -84,6 +84,13 @@ run the rest overnight.
 
 ## Morning questions (Claude appends during the night)
 
+- **Omen numbers (item 3, PROVISIONAL by design):** shipped as ±1 of one resource
+  per income, table-wide, for the whole year (three ill / three fair, table EV 0).
+  A ±1 income modifier over a 4-season year ≈ 16 resources per player — real texture,
+  zero relative swing (symmetric). If that feels too loud in playtest, halve the
+  duration (omen expires at autumn) rather than the amount; ±0 vs ±1 is the whole
+  drama. Also: the omen consumes seeded rolls, so sim baselines across this commit
+  are not seed-comparable.
 - **Victory minimums vs the thinner deck** (from item 1's A/B): the race minimums
   (citizens 8, stockpile 80, happiness +10) were tuned against the old +4.9-EV deck.
   With the deck at +2.2 EV, 60-turn close events dipped 3/20 → 1/20 (leader progress

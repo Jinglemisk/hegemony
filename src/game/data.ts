@@ -192,6 +192,25 @@ export const VENTURE_STAKES: Record<"gold" | "wood", Partial<Resources>> = {
   wood: { wood: 8 }
 };
 
+/** The yearly omen (PROVISIONAL, 2026-07-13 — numbers await the user's eyes): rolled
+ *  publicly by the year's opener each spring. Symmetric, modest, year-long: ±1 of one
+ *  resource per income, all players — drama and table texture, never a swing. Three
+ *  ill signs, three fair, so the table EV sits at ~0. */
+export const OMEN_TABLE: EventTableDefinition = {
+  id: "omen",
+  name: "Yearly Omen",
+  flavor: "At the year's first light the auspices are taken — one sign hangs over every polis until winter's end.",
+  die: 6,
+  rows: [
+    { roll: 1, label: "Lean kine", effects: [{ type: "yearIncomeModifier", resource: "food", amount: -1 }] },
+    { roll: 2, label: "Silent mines", effects: [{ type: "yearIncomeModifier", resource: "gold", amount: -1 }] },
+    { roll: 3, label: "Blighted groves", effects: [{ type: "yearIncomeModifier", resource: "wood", amount: -1 }] },
+    { roll: 4, label: "Kind rains", effects: [{ type: "yearIncomeModifier", resource: "food", amount: 1 }] },
+    { roll: 5, label: "Rich seams", effects: [{ type: "yearIncomeModifier", resource: "stone", amount: 1 }] },
+    { roll: 6, label: "A golden age", effects: [{ type: "yearIncomeModifier", resource: "gold", amount: 1 }] }
+  ]
+};
+
 export const BUILDINGS: BuildingDefinition[] = [
   {
     id: "marketplace",

@@ -66,6 +66,11 @@ export function formatTableEffect(effect: TableEffect): { text: string; tone: "p
       return { text: `+${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}`, tone: "positive" };
     case "gainPop":
       return { text: `+1 ${formatPopLabel(effect.pop, 1)}`, tone: "positive" };
+    case "yearIncomeModifier":
+      return {
+        text: `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]} income, all year`,
+        tone: effect.amount >= 0 ? "positive" : "negative"
+      };
   }
 }
 
