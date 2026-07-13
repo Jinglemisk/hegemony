@@ -174,6 +174,12 @@ build more than one of a kind, their bonuses stack:
   3 slaves.
 - **Granary** (12 wood, 2 stone) — +2 food each turn, and makes growing pops in
   that settlement cost 2 less food.
+- **Forum** (4 stone, 8 wood) — +2 influence each turn, no citizens required.
+- **Aqueduct** (12 stone) — the settlement holds **4 more pops**.
+- **Odeon** (8 stone, 4 wood) — +2 happiness each turn.
+
+The last three are new civic ports (prices provisional until the Phase 2
+terrain rework).
 
 ## Happiness and food
 
@@ -232,11 +238,25 @@ Two decks of event cards bring swings of fortune:
 - **Seasonal events** are revealed at the start of each season and affect
   everyone — for example, "all players gain 2 food this season." The season
   shapes which of these come up: a good harvest is far likelier in Autumn than a
-  drought is, while Winter tips the odds the other way.
+  drought is, while Winter tips the odds the other way. No season is ever
+  entirely safe — spring can flood, summer can burn.
 - **Player events** are drawn for the active player and must be resolved before
-  you take your normal actions. Some are a straight gain; others give you a
-  choice — for example, "gain 6 wood and lose 1 happiness, or gain 2 wood with no
-  penalty."
+  you take your normal actions. Roughly three draws in four are good news —
+  windfalls, a choice like "gain 6 wood and lose 1 happiness, or gain 2 wood with
+  no penalty," or a **grow coupon** that makes your next pop of a given type
+  cheap **this turn only**. The fourth is a bite: rats in the granary, bandits on
+  the roads, a warehouse fire. A loss can never take more than you have.
+
+Each spring the year's opener also rolls the **yearly omen** in public: one d6
+sign — kind rains, silent mines, a golden age — that adds or takes **1 of one
+resource from every player's income** until the year turns. It sits in the
+top-left event row beside the season and player cards all year; everyone plays
+under the same sky.
+
+Nothing here is secret except the shuffle: click the **season dial** (or press
+`?`) to open the **Compendium** — victory standings, every dice table (the
+omen included), this board's bank rates, both decks' full composition, and a
+costs cheat-sheet.
 
 ## Winning — the victory race
 

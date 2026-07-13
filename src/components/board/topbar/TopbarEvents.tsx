@@ -1,7 +1,8 @@
 import { getEventEffectChoices } from "../../../game/rules";
+import { OMEN_TABLE } from "../../../game/data";
 import type { EventCard, HegemonyState } from "../../../game/types";
 import { AnnotatedText } from "../../AnnotatedText";
-import { eventCardArtUrl, formatEventEffects } from "../events";
+import { eventCardArtUrl, formatEventEffects, formatTableEffect, omenArtUrl } from "../events";
 
 /** A concise mechanical summary of a card's effect (choice cards join with "·"). */
 function effectSummary(card: EventCard): string {
@@ -16,48 +17,86 @@ function effectSummary(card: EventCard): string {
 
 /**
  * The live event cards in the top-left corner: the seasonal card (everyone, this
- * season) and the acting player's last card. Each shows its art, name, and an
- * inline-icon summary of its effect, with the full description on hover. Yearly
- * cards will slot in here once they exist.
+ * season), the acting player's last card, and the year's standing omen. Each shows
+ * its art, name, and an inline-icon summary of its effect, with the full
+ * description on hover.
  */
 export function TopbarEvents({ G }: { G: HegemonyState }) {
   const seasonal = G.activeSeasonEvent?.card ?? null;
   const player = G.lastPlayerEvent;
+  const omen = G.yearOmen;
+  const omenTone = omen?.effects.some((effect) => formatTableEffect(effect).tone === "negative") ? "ill" : "fair";
 
+  // Longest-standing first: the omen rules the year, the season card the season,
+  // the player card just this turn.
   return (
     <section className="topbarEvents" aria-label="Current event cards">
-      <TopbarEventCard card={seasonal} label="Season" fallback="No seasonal event" />
-      <TopbarEventCard card={player} label="Player" fallback="No player event" />
+      <TopbarEventSlot
+        label="Omen"
+        name={omen?.label ?? null}
+        summary={omen ? omen.effects.map((effect) => formatTableEffect(effect).text).join("  ·  ") : null}
+        tooltip={
+          omen
+            ? `${OMEN_TABLE.flavor} Rolled by Year ${omen.year}'s opener; a new sign comes each spring.`
+            : null
+        }
+        artUrl={omen ? omenArtUrl(omenTone) : null}
+        fallback="No omen yet"
+      />
+      <TopbarEventSlot
+        label="Season"
+        name={seasonal?.name ?? null}
+        summary={seasonal ? effectSummary(seasonal) : null}
+        tooltip={seasonal?.text ?? null}
+        artUrl={seasonal ? eventCardArtUrl(seasonal) : null}
+        fallback="No seasonal event"
+      />
+      <TopbarEventSlot
+        label="Player"
+        name={player?.name ?? null}
+        summary={player ? effectSummary(player) : null}
+        tooltip={player?.text ?? null}
+        artUrl={player ? eventCardArtUrl(player) : null}
+        fallback="No player event"
+      />
     </section>
   );
 }
 
-function TopbarEventCard({
-  card,
+function TopbarEventSlot({
   label,
+  name,
+  summary,
+  tooltip,
+  artUrl,
   fallback
 }: {
-  card: EventCard | null;
   label: string;
+  name: string | null;
+  summary: string | null;
+  tooltip: string | null;
+  artUrl: string | null;
   fallback: string;
 }) {
+  const active = name !== null;
+
   return (
-    <div className={`topbarEventCard${card ? " topbarEventActive" : ""}`} tabIndex={card ? 0 : undefined}>
-      {card ? (
-        <img alt="" className="topbarEventArt" src={eventCardArtUrl(card)} />
+    <div className={`topbarEventCard${active ? " topbarEventActive" : ""}`} tabIndex={active ? 0 : undefined}>
+      {artUrl ? (
+        <img alt="" className="topbarEventArt" src={artUrl} />
       ) : (
         <span className="topbarEventArt topbarEventArtEmpty" aria-hidden="true" />
       )}
       <div className="topbarEventBody">
         <span className="topbarEventLabel">{label}</span>
-        <strong className="topbarEventName">{card?.name ?? fallback}</strong>
-        {card ? <AnnotatedText text={effectSummary(card)} className="topbarEventEffect" /> : null}
+        <strong className="topbarEventName">{name ?? fallback}</strong>
+        {summary ? <AnnotatedText text={summary} className="topbarEventEffect" /> : null}
       </div>
-      {card ? (
+      {active && tooltip ? (
         <div className="topbarEventTooltip" role="tooltip">
           <span className="topbarEventTooltipLabel">{label} event</span>
-          <strong>{card.name}</strong>
-          <AnnotatedText text={card.text} className="topbarEventTooltipText" />
+          <strong>{name}</strong>
+          <AnnotatedText text={tooltip} className="topbarEventTooltipText" />
         </div>
       ) : null}
     </div>

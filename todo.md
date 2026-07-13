@@ -55,7 +55,8 @@
 - Deepen seasonal mechanics. (in progress on feat/seasons — see seasons.md)
 -- ~~The season is just a bare counter.~~ DONE: it now reads as Year N / Spring–Winter (derived in core/calendar.ts), shown on the medallion + chronicle.
 -- ~~Season cards have no seasonal character.~~ DONE: the seasonal deck is weighted by season — winter draws more harsh cards, spring more growth, etc. (tags, not deterministic penalties).
--- Still open: an end-of-season resolution step (where happiness bites), yearly cards on each new year, and the finite-deck endgame clock.
+-- ~~yearly cards on each new year~~ SHIPPED as the **yearly omen** (2026-07-13 overnight, PROVISIONAL): the year's opener publicly rolls a d6 each spring — one ±1-income sign over the whole table until the year turns; top-bar chip + announcement modal + compendium listing. Numbers await review.
+-- Still open: an end-of-season resolution step (where happiness bites); ~~the finite-deck endgame clock~~ (shipped with the victory race — the seasonal deck is the clock).
 
 - Add more start setups / game modes.
 -- The mode seam already works (standard / fast-start / deathmatch), selected in code by GAME_CONFIG.mode — a mode is just a ruleset patch.
@@ -63,8 +64,8 @@
 -- Add more modes as data; an in-game mode picker is lobby scope (deferred).
 
 - Add a second tier of buildings.
--- Only four basic buildings exist; economic paths barely differ.
--- Candidates once scoring/happiness matter: Aqueduct (+4 capacity), Forum (+2 influence), Barracks (military placeholder / +1 score), Warehouse (+1 tile material income).
+-- ~~Only four basic buildings exist; economic paths barely differ.~~ Seven now (2026-07-13 overnight): ~~Aqueduct (+4 capacity)~~, ~~Forum (+2 influence)~~ SHIPPED (Forum at the PDF's own 4s+8w; Aqueduct 12s provisional), plus Odeon (+2 happiness, 8s+4w provisional).
+-- Still candidates: Barracks (military placeholder / +1 score — waits for a military design), Warehouse (+1 tile material income — needs a new flat-primary-resource effect; see OVERNIGHT.md morning questions). PDF's Library/Embassy/Luxury Trader wait on National Ideas / Assembly / luxuries.
 
 - Build the Assembly / resolutions system.
 -- The Resolutions deck is a "0/0" placeholder in the command panel.
@@ -94,7 +95,7 @@
 
 ## Presentation & UI
 
-- *** UI refactor: one ledger, vertical tabs, relocated action bar, map-first selection. (user, 2026-07-12/13)
+- *** UI refactor: one ledger, vertical tabs, relocated action bar, map-first selection. (user, 2026-07-12/13 — SCHEDULED: roadmap Phase 1.5, executing on feat/ui-refit)
 -- The right sidebar's Actions panel and the left Ledger should collapse into ONE ledger; its tabs become
    vertical buttons (the 5-up horizontal row is already cramped and will not survive more tabs).
 -- The everyday action verbs (Grow / Move / Found / Upgrade / Calm / Venture / End Turn) move to a dedicated
@@ -112,11 +113,10 @@
    inside the deliberately-blocking riot modal).
 -- Scope this WITH the game-reference compendium below (same navigation rethink); flat AAA look throughout.
 
-- *** Game-reference compendium behind the season icon. (user, 2026-07-12)
--- Pressing the seasonal icon button (top bar) opens a modal of categorized game info players can study to
-   plan ahead: the victory-card roster, every event table (riot + the three expeditions — read-only render,
-   no roll button; the shared EventTableModal component already carries this), bank rates, deck contents /
-   season weighting, costs cheat-sheet.
+- ~~*** Game-reference compendium behind the season icon. (user, 2026-07-12)~~ SHIPPED (2026-07-13 overnight, Q18
+  answered-by-default): season dial click or `?` opens five read-only data-driven sections — victory cards with
+  live standings, all four event tables via the shared `EventTableRows` render (no roll button), bank rates +
+  corridor explainer, both deck lists (aggregate counts, never draw order), costs cheat-sheet.
 -- Everything rollable or drawable should be *viewable* before it happens — tables are public information,
    that is the point of "decks for economy, dice for drama".
 

@@ -7,7 +7,7 @@ import {
   settlementBuildingSlots,
   settlementNetYield,
   settlementOverCapacity,
-  settlementPopCapacity,
+  settlementCapacity,
   settlementTileYield,
   totalPops
 } from "../../../game/rules";
@@ -74,7 +74,7 @@ export function CitiesTab({
         const holdingId = `${settlement.owner}-${tile.id}`;
         const isExpanded = expandedHoldingIds.has(holdingId);
         const popTotal = totalPops(settlement.pops);
-        const capacity = settlementPopCapacity(settlement.kind, G.ruleset);
+        const capacity = settlementCapacity(settlement, G.ruleset);
         const overCapacity = settlementOverCapacity(settlement, G.ruleset);
         const slots = settlementBuildingSlots(tile, settlement, G.ruleset);
         const tileYield = settlementTileYield(tile, settlement, G.ruleset);

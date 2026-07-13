@@ -5,7 +5,7 @@ import {
   getDemotePopStatus,
   getPromotePopStatus,
   promotionTarget,
-  settlementPopCapacity,
+  settlementCapacity,
   totalPops
 } from "../../../game/rules";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
@@ -97,7 +97,7 @@ export function LadderModal({
                       </em>
                       <em>
                         {settlement.pops[from]} {formatPopLabel(from, settlement.pops[from])} here ·{" "}
-                        {totalPops(settlement.pops)}/{settlementPopCapacity(settlement.kind, G.ruleset)} pops
+                        {totalPops(settlement.pops)}/{settlementCapacity(settlement, G.ruleset)} pops
                       </em>
                     </span>
                   </button>

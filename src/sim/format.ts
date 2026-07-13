@@ -4,7 +4,7 @@ import { calculateEconomyProjection } from "../game/economy/preview";
 import type { EconomyPreview } from "../game/economy/preview";
 import { describeMove, enumerateLegalMoves } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
-import { settlementPopCapacity } from "../game/settlement";
+import { settlementCapacity } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import type { HegemonyState, PlayerId, Resources } from "../game/types";
 import type { BatchReport } from "./telemetry";
@@ -130,7 +130,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
     const buildings = settlement.buildings.length > 0 ? ` · buildings: ${settlement.buildings.join(", ")}` : "";
     lines.push(
       `  ${tileId} ${settlement.kind} on ${tile.terrain} (${tile.resource.type} ${tile.resource.amount}) — ` +
-        `pops ${totalPops(settlement.pops)}/${settlementPopCapacity(settlement.kind, G.ruleset)} ` +
+        `pops ${totalPops(settlement.pops)}/${settlementCapacity(settlement, G.ruleset)} ` +
         `(c${settlement.pops.citizens} f${settlement.pops.freemen} s${settlement.pops.slaves})${buildings}`,
     );
   }

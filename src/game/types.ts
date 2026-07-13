@@ -30,7 +30,7 @@ export type GameOverReason = "victoryRace" | "deckExhausted";
 /** The four seasons, in the order they cycle each year (a year always opens on spring). */
 export type SeasonName = "spring" | "summer" | "autumn" | "winter";
 
-export type BuildingId = "marketplace" | "temple" | "workshop" | "granary";
+export type BuildingId = "marketplace" | "temple" | "workshop" | "granary" | "forum" | "aqueduct" | "odeon";
 
 export type Resources = Record<Resource, number>;
 
@@ -42,7 +42,7 @@ export type EventTiming = "immediate" | "season" | "pendingChoice" | "turn";
 
 export type EventScope = "activePlayer" | "allPlayers";
 
-export type ActionCostDiscountTarget = "buildBuilding" | "foundColony";
+export type ActionCostDiscountTarget = "buildBuilding" | "foundColony" | "growPop";
 
 export type EventEffect =
   | {
@@ -107,6 +107,8 @@ export type EventEffect =
       type: "actionCostDiscount";
       action: ActionCostDiscountTarget;
       buildingId?: BuildingId;
+      /** For `growPop` discounts: only grows of this pop type match (grow coupons). */
+      pop?: PopType;
       resource: Resource;
       amount: number;
       duration: "turn";
@@ -167,6 +169,7 @@ export interface ActiveActionCostDiscount {
   label: string;
   action: ActionCostDiscountTarget;
   buildingId?: BuildingId;
+  pop?: PopType;
   resource: Resource;
   amount: number;
   consume: "nextMatchingAction";
@@ -183,7 +186,7 @@ export interface Yield {
 // `rollOnTable` (game/tables.ts) is the only engine seam, and every instance — riot,
 // the expeditions, future omens — shares the same UI modal.
 
-export type EventTableId = "riot" | "merchantConvoy" | "grandEmbassy" | "colonistsVoyage";
+export type EventTableId = "riot" | "merchantConvoy" | "grandEmbassy" | "colonistsVoyage" | "omen";
 
 /** The closed effect vocabulary a table row may apply. Each effect with an impossible
  *  happy path carries its explicit fallback (no building → pops, no room → food). */
@@ -193,6 +196,9 @@ export type TableEffect =
   | { type: "destroyBuilding"; popLossFallback: number }
   | { type: "gainResource"; resource: Resource; amount: number }
   | { type: "gainPop"; pop: PopType; foodFallback: number }
+  /** Year-long, table-wide income modifier — the omen's vocabulary. Applying the
+   *  effect is a no-op at roll time; the income engine reads it off G.yearOmen. */
+  | { type: "yearIncomeModifier"; resource: Resource; amount: number }
   | { type: "none" };
 
 export interface EventTableRow {
@@ -219,6 +225,8 @@ export interface EventTableDefinition {
   id: EventTableId;
   name: string;
   flavor: string;
+  /** Die size — table data, defaulting to 6. Modified rolls clamp into 1..die. */
+  die?: number;
   rows: EventTableRow[];
   insurance?: TableInsuranceOption[];
 }
@@ -254,6 +262,16 @@ export interface TableRollRecord {
  *  Derived once at game creation (roadmap-appendix Q14) and static all game. */
 export type BankRates = Record<TradableMaterial, { sell: number; buy: number }>;
 
+/** The year's standing omen (PROVISIONAL, 2026-07-13): rolled publicly by the year's
+ *  opener each spring, one modest symmetric modifier hanging over the whole table
+ *  until the year turns. The record keeps the roll for the announcement modal. */
+export interface YearOmen {
+  record: TableRollRecord;
+  label: string;
+  year: number;
+  effects: TableEffect[];
+}
+
 export interface Settlement {
   owner: PlayerId;
   kind: SettlementKind;
@@ -288,6 +306,11 @@ export type BuildingEffect =
     }
   | {
       type: "growPopFoodDiscount";
+      amount: number;
+    }
+  | {
+      /** Raises the settlement's pop capacity (the Aqueduct). */
+      type: "popCapacityBonus";
       amount: number;
     };
 
@@ -390,6 +413,8 @@ export interface HegemonyState {
   pendingRiot: PendingRiot | null;
   /** The most recent event-table roll, for the UI's outcome display. */
   lastTableRoll: TableRollRecord | null;
+  /** The standing yearly omen — rolled each spring, cleared by the next roll. */
+  yearOmen: YearOmen | null;
   /** This game's bank rates — derived from the board at creation, static after. */
   bank: BankRates;
   season: number;
