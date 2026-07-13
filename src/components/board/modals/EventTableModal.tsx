@@ -1,5 +1,40 @@
 import type { ReactNode } from "react";
 import type { EventTableDefinition, TableRollRecord } from "../../../game/types";
+import { AnnotatedText } from "../../AnnotatedText";
+import { formatTableEffect } from "../events";
+
+/**
+ * The rows of a dice table — the one render path for table content, shared by the
+ * rolling modal below and the compendium's read-only listings. Pass `result: null`
+ * for a reference render with no landed row.
+ */
+export function EventTableRows({ table, result }: { table: EventTableDefinition; result: TableRollRecord | null }) {
+  return (
+    <ol className="eventTableRows">
+      {table.rows.map((row) => {
+        const landed = result?.tableId === table.id && result.modified === row.roll;
+
+        return (
+          <li className={landed ? "eventTableRow eventTableRowLanded" : "eventTableRow"} key={row.roll}>
+            <span className="eventTableDie">{row.roll}</span>
+            <span className="eventTableRowLabel">{row.label}</span>
+            <span className="eventTableRowEffects">
+              {row.effects.map((effect, index) => {
+                const chip = formatTableEffect(effect);
+
+                return (
+                  <em className={`eventTableEffect ${chip.tone}`} key={index}>
+                    <AnnotatedText text={chip.text} />
+                  </em>
+                );
+              })}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 /**
  * The one shared surface for every dice table (docs/feat/event-tables.md): six rows,
@@ -33,18 +68,7 @@ export function EventTableModal({
           <p>{subtitle ?? table.flavor}</p>
         </header>
 
-        <ol className="eventTableRows">
-          {table.rows.map((row) => {
-            const landed = result?.tableId === table.id && result.modified === row.roll;
-
-            return (
-              <li className={landed ? "eventTableRow eventTableRowLanded" : "eventTableRow"} key={row.roll}>
-                <span className="eventTableDie">{row.roll}</span>
-                <span className="eventTableRowLabel">{row.label}</span>
-              </li>
-            );
-          })}
-        </ol>
+        <EventTableRows table={table} result={result} />
 
         {result && result.tableId === table.id ? (
           <div className="eventTableOutcome" role="status">

@@ -102,6 +102,10 @@ export function formatBuildingEffects(effects: BuildingEffect[]) {
         return `local Grow Pop costs -${effect.amount} Food`;
       }
 
+      if (effect.type === "popCapacityBonus") {
+        return `+${effect.amount} pop capacity`;
+      }
+
       return `+${effect.amount} ${RESOURCE_LABELS[effect.resource]} income`;
     })
     .join(", ");

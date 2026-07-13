@@ -1,5 +1,5 @@
 import { PLAYER_IDS } from "./data";
-import type { EventCard, EventDeckKind, EventEffect, HegemonyState, PlayerId, Resources, SeasonName } from "./types";
+import type { EventCard, EventDeckKind, EventEffect, HegemonyState, PlayerId, Resource, Resources, SeasonName } from "./types";
 import { seasonName } from "./core/calendar";
 import { capitalize, formatPopName, formatRuleNumber, formatRuleResourceDelta, formatTileLabel } from "./core/format";
 import { totalPops } from "./core/pops";
@@ -8,7 +8,7 @@ import { applyResourceDelta, createResourceDelta } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { shuffleWithSeed } from "./core/rng";
-import { countPlayerPopType, scaledByPops, settlementPopCapacity } from "./settlement";
+import { countPlayerPopType, scaledByPops, settlementCapacity } from "./settlement";
 
 export function drawSeasonalEvent(G: HegemonyState) {
   const card = drawSeasonalCard(G, seasonName(G.season));
@@ -152,7 +152,7 @@ function canAddEventPopsToSettlement(
 ) {
   const settlement = getOwnedSettlement(G, tileId, playerID);
 
-  return settlement ? totalPops(settlement.pops) + effect.amount <= settlementPopCapacity(settlement.kind, G.ruleset) : false;
+  return settlement ? totalPops(settlement.pops) + effect.amount <= settlementCapacity(settlement, G.ruleset) : false;
 }
 
 function applyEventEffects(
@@ -227,6 +227,7 @@ function applyEventEffects(
         label: card.name,
         action: effect.action,
         buildingId: effect.buildingId,
+        pop: effect.pop,
         resource: effect.resource,
         amount: effect.amount,
         consume: effect.consume
@@ -242,12 +243,14 @@ function applyEventEffects(
 
       const player = G.players[activePlayerID];
       const exchanged = Math.min(effect.maxAmount, Math.max(0, player.resources[effect.from]));
+      // Non-integer ratios round the payout down — a short-stocked trade never mints fractions.
+      const received = Math.floor(exchanged * effect.ratio);
       player.resources[effect.from] -= exchanged;
-      player.resources[effect.to] += exchanged * effect.ratio;
+      player.resources[effect.to] += received;
       addLog(
         G,
         `${getPlayerName(G, activePlayerID)} exchanged ${formatRuleNumber(exchanged)} ${effect.from} for ${formatRuleNumber(
-          exchanged * effect.ratio
+          received
         )} ${effect.to} from ${card.name}.`
       );
     } else if (effect.type === "resourceDeltaPerPop") {
@@ -261,7 +264,17 @@ function applyEventEffects(
 }
 
 function applyEventResourceDelta(G: HegemonyState, playerID: PlayerId, delta: Resources, source: string) {
-  applyResourceDelta(G.players[playerID].resources, delta);
+  const resources = G.players[playerID].resources;
+
+  // Harm cards can't take what isn't there: stocks clamp at zero. Happiness is the
+  // exception — it is a ledger that goes negative by design (unrest).
+  for (const [resource, amount] of Object.entries(delta) as Array<[Resource, number]>) {
+    if (resource !== "happiness" && amount < 0) {
+      delta[resource] = -Math.min(-amount, Math.max(0, resources[resource]));
+    }
+  }
+
+  applyResourceDelta(resources, delta);
   addLog(G, `${getPlayerName(G, playerID)} resolved ${source}: ${formatRuleResourceDelta(delta)}.`);
 }
 

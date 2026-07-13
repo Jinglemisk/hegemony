@@ -9,11 +9,14 @@ import {
   toPlayerId
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
+import { OMEN_TABLE } from "../game/data";
 import { HexMap } from "./HexMap";
 import { FoundColonyPopover, MovePopsModal, PopulationPickerModal, UpgradeCityModal } from "./PopulationModals";
 import { ResourceGrid } from "./ResourceGrid";
 import { ActionCommandPanel } from "./board/command/ActionCommandPanel";
 import { CalmModal } from "./board/modals/CalmModal";
+import { CompendiumModal } from "./board/modals/CompendiumModal";
+import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
 import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
 import { GrowPopModal } from "./board/modals/GrowPopModal";
@@ -25,6 +28,7 @@ import { VentureModal } from "./board/modals/VentureModal";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
 import { SeasonStatus } from "./board/topbar/SeasonStatus";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
+import { PLAYER_DISPLAY_NAMES } from "./board/constants";
 import type { EmpireTab } from "./board/types";
 
 type BoardProps = {
@@ -77,6 +81,9 @@ export function HegemonyBoard({
   const [ladderRequest, setLadderRequest] = useState<LadderRequest | null>(null);
   // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
   const [riotResultOpen, setRiotResultOpen] = useState(false);
+  const [isCompendiumOpen, setIsCompendiumOpen] = useState(false);
+  // Initialized to the omen standing at mount so a reload never re-announces it.
+  const [seenOmenYear, setSeenOmenYear] = useState<number | null>(() => G.yearOmen?.year ?? null);
   const [activeEmpireTab, setActiveEmpireTab] = useState<EmpireTab>("cities");
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
@@ -160,6 +167,26 @@ export function HegemonyBoard({
     return () => window.removeEventListener("keydown", handleKey);
   }, [foundColonyMode]);
 
+  // `?` opens the compendium from anywhere; Escape closes it.
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")) {
+        return;
+      }
+
+      if (event.key === "?") {
+        setIsCompendiumOpen((open) => !open);
+      } else if (event.key === "Escape") {
+        setIsCompendiumOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
   const handleTileAction = useCallback(
     (tileId: string) => {
       setSelectedTileId(tileId);
@@ -235,7 +262,12 @@ export function HegemonyBoard({
       <header className="topbar strategyTopbar">
         <TopbarEvents G={G} />
 
-        <SeasonStatus G={G} isActive={isActive} currentPlayerId={currentPlayerId} />
+        <SeasonStatus
+          G={G}
+          isActive={isActive}
+          currentPlayerId={currentPlayerId}
+          onOpenCompendium={() => setIsCompendiumOpen(true)}
+        />
 
         <PlayerScoreboard
           G={G}
@@ -443,6 +475,22 @@ export function HegemonyBoard({
           moves={moves}
           playerID={G.pendingPlayerEvent.playerID}
         />
+      ) : null}
+      {G.yearOmen && G.yearOmen.year !== seenOmenYear && !G.pendingRiot && !G.pendingPlayerEvent ? (
+        <EventTableModal
+          table={OMEN_TABLE}
+          modifier={0}
+          result={G.yearOmen.record}
+          subtitle={`${PLAYER_DISPLAY_NAMES[G.seasonOpener]} takes the auspices for Year ${G.yearOmen.year} — the sign stands over every polis until spring.`}
+          footer={
+            <button className="primaryButton eventResolveButton" onClick={() => setSeenOmenYear(G.yearOmen?.year ?? null)}>
+              So Be It
+            </button>
+          }
+        />
+      ) : null}
+      {isCompendiumOpen ? (
+        <CompendiumModal G={G} playerID={viewerId} onClose={() => setIsCompendiumOpen(false)} />
       ) : null}
     </main>
   );

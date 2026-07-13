@@ -73,39 +73,27 @@
   pointer-events: none;
 }
 
-.buildingSlotPip,
-.resourceYieldPip {
-  vector-effect: non-scaling-stroke;
-}
-
-.buildingSlotPip {
+/* Tile glyphs (user, 2026-07-13): slots read "used/available" up top, yield reads
+   "+n" below — white, halo-stroked + soft shadow so they stand on any terrain, and
+   sized by their number so big tiles shout. */
+.tileSlotsGlyph,
+.tileYieldGlyph {
+  fill: #fff;
+  paint-order: stroke;
+  stroke: rgb(24 16 10 / 62%);
+  stroke-width: 4px;
   stroke-linejoin: round;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
-.filledSlotPip {
-  fill: var(--vase-black);
-  stroke: var(--ivory);
-  stroke-width: 1.4;
+.tileYieldGlyph {
+  filter: drop-shadow(0 1.5px 2.5px rgb(0 0 0 / 45%));
 }
 
-.hollowSlotPip {
-  fill: rgb(255 248 231 / 92%);
-  stroke: rgb(24 18 16 / 85%);
-  stroke-width: 1.4;
-}
-
-.resourceYieldPipHalo {
-  fill: rgb(255 248 231 / 88%);
-}
-
-.resourceYieldPip {
-  fill: color-mix(in srgb, var(--resource-tile, var(--terrain-neutral-line)) 58%, #241910 42%);
-  stroke: rgb(24 18 16 / 88%);
-  stroke-width: 1.4;
-}
-
-.resourceYieldPipDot {
-  fill: var(--ivory);
+.tileSlotsGlyph {
+  opacity: 0.94;
 }
 
 .tileMetric {

@@ -1,5 +1,7 @@
-import { BUILDINGS } from "./data";
+import { BUILDINGS, OMEN_TABLE } from "./data";
+import { yearOf } from "./core/calendar";
 import { POP_TYPES, totalPops } from "./core/pops";
+import { settlementCapacity } from "./settlement";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { mulberry32, shuffleWithSeed } from "./core/rng";
@@ -34,11 +36,17 @@ export interface RollResult {
   popsRemoved: number;
 }
 
-/** One d6 through the game's seeded PRNG state. */
-export function rollD6(G: HegemonyState): number {
+/** One die of any size through the game's seeded PRNG state — the die size is table
+ *  data ({@link EventTableDefinition.die}), so a d8 or d12 table is a data edit. */
+export function rollDie(G: HegemonyState, sides: number): number {
   const step = mulberry32(G.rng);
   G.rng = step.state;
-  return 1 + Math.floor(step.value * 6);
+  return 1 + Math.floor(step.value * sides);
+}
+
+/** One d6 through the game's seeded PRNG state. */
+export function rollD6(G: HegemonyState): number {
+  return rollDie(G, 6);
 }
 
 /**
@@ -53,8 +61,9 @@ export function rollOnTable(
   table: EventTableDefinition,
   { modifier = 0, popLossMultiplier = 1 }: RollOptions = {}
 ): RollResult {
-  const roll = rollD6(G);
-  const modified = Math.min(6, Math.max(1, roll + modifier));
+  const die = table.die ?? 6;
+  const roll = rollDie(G, die);
+  const modified = Math.min(die, Math.max(1, roll + modifier));
   const row = table.rows.find((candidate) => candidate.roll === modified) ?? table.rows[table.rows.length - 1];
 
   const modifierText = modifier === 0 ? "" : ` ${modifier > 0 ? "+" : ""}${modifier} → ${modified}`;
@@ -162,7 +171,29 @@ function applyTableEffect(
       addLog(G, `${name} — ${text}`);
       return { outcomes: [text], popsRemoved: 0 };
     }
+
+    case "yearIncomeModifier": {
+      // Persistent, not immediate: the income engine reads it off G.yearOmen while
+      // the omen stands. Rolling only announces it.
+      const sign = effect.amount > 0 ? "+" : "";
+      const text = `All players: ${sign}${effect.amount} ${effect.resource} income while the omen stands.`;
+      return { outcomes: [text], popsRemoved: 0 };
+    }
   }
+}
+
+/**
+ * The year's opener takes the auspices (PROVISIONAL): one public roll on the omen
+ * table, standing over every polis until the next spring replaces it. Called at
+ * gameplay start (year 1) and on each new year's season turn.
+ */
+export function rollYearOmen(G: HegemonyState) {
+  const { record } = rollOnTable(G, G.seasonOpener, OMEN_TABLE);
+  const row =
+    OMEN_TABLE.rows.find((candidate) => candidate.roll === record.modified) ?? OMEN_TABLE.rows[OMEN_TABLE.rows.length - 1];
+
+  G.yearOmen = { record, label: row.label, year: yearOf(G.season), effects: row.effects };
+  addLog(G, `The omen for Year ${yearOf(G.season)}: ${row.label}.`);
 }
 
 type RemovalSummary = { total: number; byType: Record<PopType, number> };
@@ -257,7 +288,7 @@ function addPopToSettlementWithRoom(G: HegemonyState, playerID: PlayerId, pop: P
   for (const tileId of G.players[playerID].settlements) {
     const settlement = getOwnedSettlement(G, tileId, playerID);
 
-    if (settlement && totalPops(settlement.pops) < G.ruleset.settlements[settlement.kind].popCapacity) {
+    if (settlement && totalPops(settlement.pops) < settlementCapacity(settlement, G.ruleset)) {
       candidates.push(settlement);
     }
   }

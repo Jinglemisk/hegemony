@@ -13,7 +13,10 @@ export const BUILDING_AFFINITY: Record<BuildingId, PopType> = {
   marketplace: "freemen",
   temple: "citizens",
   workshop: "slaves",
-  granary: "citizens"
+  granary: "citizens",
+  forum: "citizens",
+  aqueduct: "freemen",
+  odeon: "citizens"
 };
 
 export const DETAIL_TOOLTIP_WIDTH = 260;

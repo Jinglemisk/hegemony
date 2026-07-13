@@ -9,9 +9,9 @@ import {
   isAdjacentToCity,
   playerHasMovablePop,
   settlementBuildingSlots,
-  settlementPopCapacity
+  settlementCapacity
 } from "./settlement";
-import { getAdjustedActionCost, getGrowPopCost } from "./economy/cost";
+import { getAdjustedActionCost, getDiscountedGrowPopCost } from "./economy/cost";
 
 export function getFoundColonyStatus(G: HegemonyState, playerID: PlayerId, tileId: string): ActionStatus {
   const tile = getTile(G, tileId);
@@ -147,13 +147,13 @@ export function getGrowPopStatus(
     return status;
   }
 
-  status.cost = getGrowPopCost(settlement, pop, G.ruleset);
+  status.cost = getDiscountedGrowPopCost(G, playerID, settlement, pop);
 
   if (getGrownSettlementsThisTurn(G, playerID).includes(tileId)) {
     status.reasons.push("Already grew a pop here this turn.");
   }
 
-  if (totalPops(settlement.pops) + 1 > settlementPopCapacity(settlement.kind, G.ruleset)) {
+  if (totalPops(settlement.pops) + 1 > settlementCapacity(settlement, G.ruleset)) {
     status.reasons.push("Settlement is at population capacity.");
   }
 
