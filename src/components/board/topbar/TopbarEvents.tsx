@@ -27,8 +27,22 @@ export function TopbarEvents({ G }: { G: HegemonyState }) {
   const omen = G.yearOmen;
   const omenTone = omen?.effects.some((effect) => formatTableEffect(effect).tone === "negative") ? "ill" : "fair";
 
+  // Longest-standing first: the omen rules the year, the season card the season,
+  // the player card just this turn.
   return (
     <section className="topbarEvents" aria-label="Current event cards">
+      <TopbarEventSlot
+        label="Omen"
+        name={omen?.label ?? null}
+        summary={omen ? omen.effects.map((effect) => formatTableEffect(effect).text).join("  ·  ") : null}
+        tooltip={
+          omen
+            ? `${OMEN_TABLE.flavor} Rolled by Year ${omen.year}'s opener; a new sign comes each spring.`
+            : null
+        }
+        artUrl={omen ? omenArtUrl(omenTone) : null}
+        fallback="No omen yet"
+      />
       <TopbarEventSlot
         label="Season"
         name={seasonal?.name ?? null}
@@ -44,18 +58,6 @@ export function TopbarEvents({ G }: { G: HegemonyState }) {
         tooltip={player?.text ?? null}
         artUrl={player ? eventCardArtUrl(player) : null}
         fallback="No player event"
-      />
-      <TopbarEventSlot
-        label="Omen"
-        name={omen?.label ?? null}
-        summary={omen ? omen.effects.map((effect) => formatTableEffect(effect).text).join("  ·  ") : null}
-        tooltip={
-          omen
-            ? `${OMEN_TABLE.flavor} Rolled by Year ${omen.year}'s opener; a new sign comes each spring.`
-            : null
-        }
-        artUrl={omen ? omenArtUrl(omenTone) : null}
-        fallback="No omen yet"
       />
     </section>
   );
