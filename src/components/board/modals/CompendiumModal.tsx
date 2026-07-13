@@ -61,7 +61,7 @@ export function CompendiumModal({ G, playerID, onClose }: { G: HegemonyState; pl
 
         <div className="compendiumBody">
           {section === "victory" ? <VictoryTab G={G} playerID={playerID} /> : null}
-          {section === "tables" ? <TablesSection /> : null}
+          {section === "tables" ? <TablesSection G={G} /> : null}
           {section === "bank" ? <BankSection G={G} /> : null}
           {section === "decks" ? <DecksSection /> : null}
           {section === "costs" ? <CostsSection G={G} /> : null}
@@ -71,10 +71,22 @@ export function CompendiumModal({ G, playerID, onClose }: { G: HegemonyState; pl
   );
 }
 
-/** Every dice table in the game, through the same render path the live modals use. */
-function TablesSection() {
+/** Every dice table in the game, through the same render path the live modals use.
+ *  Longest-standing first: the omen (with this year's landed sign highlighted),
+ *  then the riot, then the expeditions. */
+function TablesSection({ G }: { G: HegemonyState }) {
   return (
     <div className="compendiumStack">
+      <article className="compendiumEntry">
+        <h3>{OMEN_TABLE.name}</h3>
+        <p className="compendiumFlavor">{OMEN_TABLE.flavor}</p>
+        <EventTableRows table={OMEN_TABLE} result={G.yearOmen?.record ?? null} />
+        <p className="compendiumNote">
+          Rolled publicly by the year's opener each spring; the sign stands over every polis until the year turns.
+          {G.yearOmen ? ` This year's sign: ${G.yearOmen.label}.` : ""}
+        </p>
+      </article>
+
       <article className="compendiumEntry">
         <h3>{RIOT_TABLE.name}</h3>
         <p className="compendiumFlavor">{RIOT_TABLE.flavor}</p>
@@ -100,15 +112,6 @@ function TablesSection() {
       <p className="compendiumNote">
         Ventures: one per turn, stake paid win or lose — post gold or wood (see Costs) and pick any expedition.
       </p>
-
-      <article className="compendiumEntry">
-        <h3>{OMEN_TABLE.name}</h3>
-        <p className="compendiumFlavor">{OMEN_TABLE.flavor}</p>
-        <EventTableRows table={OMEN_TABLE} result={null} />
-        <p className="compendiumNote">
-          Rolled publicly by the year's opener each spring; the sign stands over every polis until the year turns.
-        </p>
-      </article>
     </div>
   );
 }
