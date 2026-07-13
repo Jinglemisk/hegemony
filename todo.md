@@ -64,8 +64,8 @@
 -- Add more modes as data; an in-game mode picker is lobby scope (deferred).
 
 - Add a second tier of buildings.
--- Only four basic buildings exist; economic paths barely differ.
--- Candidates once scoring/happiness matter: Aqueduct (+4 capacity), Forum (+2 influence), Barracks (military placeholder / +1 score), Warehouse (+1 tile material income).
+-- ~~Only four basic buildings exist; economic paths barely differ.~~ Seven now (2026-07-13 overnight): ~~Aqueduct (+4 capacity)~~, ~~Forum (+2 influence)~~ SHIPPED (Forum at the PDF's own 4s+8w; Aqueduct 12s provisional), plus Odeon (+2 happiness, 8s+4w provisional).
+-- Still candidates: Barracks (military placeholder / +1 score — waits for a military design), Warehouse (+1 tile material income — needs a new flat-primary-resource effect; see OVERNIGHT.md morning questions). PDF's Library/Embassy/Luxury Trader wait on National Ideas / Assembly / luxuries.
 
 - Build the Assembly / resolutions system.
 -- The Resolutions deck is a "0/0" placeholder in the command panel.

@@ -8,7 +8,7 @@ import {
   playerPopulationTotals,
   settlementIncomeSource,
   settlementOverCapacity,
-  settlementPopCapacity
+  settlementCapacity
 } from "../settlement";
 import {
   calculateIncomeBreakdown,
@@ -239,7 +239,7 @@ function createSettlementEconomyProjections(
         kind: settlement.kind,
         income: summarizeIncome(settlementBreakdown),
         pops: totalPops(settlement.pops),
-        capacity: settlementPopCapacity(settlement.kind, incomeState.ruleset),
+        capacity: settlementCapacity(settlement, incomeState.ruleset),
         overCapacity: settlementOverCapacity(settlement, incomeState.ruleset),
         inTransitIn,
         inTransitOut

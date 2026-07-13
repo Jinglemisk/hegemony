@@ -174,6 +174,12 @@ build more than one of a kind, their bonuses stack:
   3 slaves.
 - **Granary** (12 wood, 2 stone) — +2 food each turn, and makes growing pops in
   that settlement cost 2 less food.
+- **Forum** (4 stone, 8 wood) — +2 influence each turn, no citizens required.
+- **Aqueduct** (12 stone) — the settlement holds **4 more pops**.
+- **Odeon** (8 stone, 4 wood) — +2 happiness each turn.
+
+The last three are new civic ports (prices provisional until the Phase 2
+terrain rework).
 
 ## Happiness and food
 

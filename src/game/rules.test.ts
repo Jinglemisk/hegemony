@@ -289,6 +289,44 @@ describe("buildings", () => {
   });
 });
 
+describe("civic buildings (2026-07-13 port — Forum from the PDF, Aqueduct/Odeon from the todo sketch)", () => {
+  it("Forum pays +2 flat influence income", () => {
+    const state = fresh();
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
+    wealthy(state, "0");
+
+    expect(buildBuilding(state, "0", "0,0", "forum").ok).toBe(true);
+
+    const yieldWithForum = settlementNetYield(tile(state, "0,0"), owned(state, "0,0", "0"), state.ruleset);
+    expect(yieldWithForum.influence).toBe(1 + 2); // 1 citizen + the Forum's flat 2
+  });
+
+  it("Aqueduct raises the settlement's pop capacity by 4", () => {
+    const state = fresh();
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
+    wealthy(state, "0");
+    owned(state, "0,0", "0").pops = { citizens: 10, freemen: 0, slaves: 0 };
+
+    // At the kind's cap of 10 growth is blocked — until the Aqueduct flows.
+    expect(growPop(state, "0", "0,0", "citizens").ok).toBe(false);
+    expect(buildBuilding(state, "0", "0,0", "aqueduct").ok).toBe(true);
+    expect(growPop(state, "0", "0,0", "citizens").ok).toBe(true);
+    expect(owned(state, "0,0", "0").pops.citizens).toBe(11);
+  });
+
+  it("Odeon pays +2 flat happiness", () => {
+    const state = fresh();
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
+    wealthy(state, "0");
+
+    const before = settlementNetYield(tile(state, "0,0"), owned(state, "0,0", "0"), state.ruleset).happiness;
+    expect(buildBuilding(state, "0", "0,0", "odeon").ok).toBe(true);
+    const after = settlementNetYield(tile(state, "0,0"), owned(state, "0,0", "0"), state.ruleset).happiness;
+
+    expect(after - before).toBe(2);
+  });
+});
+
 describe("grow pop", () => {
   it("grows a slave for food and only once per settlement per turn", () => {
     const state = fresh();

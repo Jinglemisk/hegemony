@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Phase } from "../../../game/controller";
-import { POP_TYPES, getGrowPopStatus, settlementPopCapacity, totalPops } from "../../../game/rules";
+import { POP_TYPES, getGrowPopStatus, settlementCapacity, totalPops } from "../../../game/rules";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
 import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { AtlasIcon } from "../../Sprites";
@@ -67,7 +67,7 @@ export function GrowPopModal({
               <select value={holding?.tile.id ?? ""} onChange={(event) => setTileId(event.target.value)}>
                 {holdings.map(({ tile, settlement }) => (
                   <option value={tile.id} key={tile.id}>
-                    {settlementPickerLabel(G, tile, playerID)} · {totalPops(settlement.pops)}/{settlementPopCapacity(settlement.kind, G.ruleset)} pops
+                    {settlementPickerLabel(G, tile, playerID)} · {totalPops(settlement.pops)}/{settlementCapacity(settlement, G.ruleset)} pops
                   </option>
                 ))}
               </select>

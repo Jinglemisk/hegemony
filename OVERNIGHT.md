@@ -84,6 +84,14 @@ run the rest overnight.
 
 ## Morning questions (Claude appends during the night)
 
+- **Civic buildings (item 4) — three notes:** (a) **Warehouse** (+1 tile material
+  income, your todo sketch) was NOT built — it needs a new flat-primary-resource
+  effect type, and the night rule was to extend the vocabulary only where sanctioned;
+  say the word and it's a 20-minute add. (b) The three new buildings **borrow atlas
+  icons** (Forum→marketplace, Aqueduct→granary, Odeon→temple) until the sprite sheet
+  gains their own art — a banana-generation task if you want it. (c) Greedy bots
+  build Odeon (2.1/game) but never Forum/Aqueduct — they don't value influence stock
+  or capacity headroom in evaluate(); bot work, not necessarily balance work.
 - **Omen numbers (item 3, PROVISIONAL by design):** shipped as ±1 of one resource
   per income, table-wide, for the whole year (three ill / three fair, table EV 0).
   A ±1 income modifier over a 4-season year ≈ 16 resources per player — real texture,

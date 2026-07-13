@@ -1,6 +1,7 @@
 import { BUILDINGS, OMEN_TABLE } from "./data";
 import { yearOf } from "./core/calendar";
 import { POP_TYPES, totalPops } from "./core/pops";
+import { settlementCapacity } from "./settlement";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { mulberry32, shuffleWithSeed } from "./core/rng";
@@ -287,7 +288,7 @@ function addPopToSettlementWithRoom(G: HegemonyState, playerID: PlayerId, pop: P
   for (const tileId of G.players[playerID].settlements) {
     const settlement = getOwnedSettlement(G, tileId, playerID);
 
-    if (settlement && totalPops(settlement.pops) < G.ruleset.settlements[settlement.kind].popCapacity) {
+    if (settlement && totalPops(settlement.pops) < settlementCapacity(settlement, G.ruleset)) {
       candidates.push(settlement);
     }
   }

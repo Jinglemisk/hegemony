@@ -30,7 +30,7 @@ export type GameOverReason = "victoryRace" | "deckExhausted";
 /** The four seasons, in the order they cycle each year (a year always opens on spring). */
 export type SeasonName = "spring" | "summer" | "autumn" | "winter";
 
-export type BuildingId = "marketplace" | "temple" | "workshop" | "granary";
+export type BuildingId = "marketplace" | "temple" | "workshop" | "granary" | "forum" | "aqueduct" | "odeon";
 
 export type Resources = Record<Resource, number>;
 
@@ -306,6 +306,11 @@ export type BuildingEffect =
     }
   | {
       type: "growPopFoodDiscount";
+      amount: number;
+    }
+  | {
+      /** Raises the settlement's pop capacity (the Aqueduct). */
+      type: "popCapacityBonus";
       amount: number;
     };
 

@@ -1,3 +1,4 @@
+import { BUILDINGS } from "./data";
 import { hexDistance, isCoastalTile } from "./map";
 import type { HegemonyState, HexTile, PlayerId, PopType, Settlement } from "./types";
 import { capitalize } from "./core/format";
@@ -7,12 +8,32 @@ import type { ActionStatus } from "./core/results";
 import { DEFAULT_RULESET } from "./ruleset";
 import type { Ruleset } from "./ruleset";
 
+/** The kind's baseline capacity — use for previews of a settlement that doesn't
+ *  exist yet (upgrade meters). Real settlements go through {@link settlementCapacity}
+ *  so building bonuses (Aqueduct) count. */
 export function settlementPopCapacity(kind: Settlement["kind"], ruleset: Ruleset = DEFAULT_RULESET) {
   return ruleset.settlements[kind].popCapacity;
 }
 
+/** A real settlement's capacity: the kind's baseline plus building bonuses. */
+export function settlementCapacity(settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
+  const bonus = settlement.buildings.reduce((sum, buildingId) => {
+    const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+
+    return (
+      sum +
+      (building?.effects ?? []).reduce(
+        (effectSum, effect) => (effect.type === "popCapacityBonus" ? effectSum + effect.amount : effectSum),
+        0
+      )
+    );
+  }, 0);
+
+  return settlementPopCapacity(settlement.kind, ruleset) + bonus;
+}
+
 export function settlementOverCapacity(settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
-  return Math.max(0, totalPops(settlement.pops) - settlementPopCapacity(settlement.kind, ruleset));
+  return Math.max(0, totalPops(settlement.pops) - settlementCapacity(settlement, ruleset));
 }
 
 export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
@@ -26,7 +47,7 @@ export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
       }
 
       totals.pops += totalPops(settlement.pops);
-      totals.capacity += settlementPopCapacity(settlement.kind, G.ruleset);
+      totals.capacity += settlementCapacity(settlement, G.ruleset);
       return totals;
     },
     { pops: 0, capacity: 0 }

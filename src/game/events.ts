@@ -8,7 +8,7 @@ import { applyResourceDelta, createResourceDelta } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { shuffleWithSeed } from "./core/rng";
-import { countPlayerPopType, scaledByPops, settlementPopCapacity } from "./settlement";
+import { countPlayerPopType, scaledByPops, settlementCapacity } from "./settlement";
 
 export function drawSeasonalEvent(G: HegemonyState) {
   const card = drawSeasonalCard(G, seasonName(G.season));
@@ -152,7 +152,7 @@ function canAddEventPopsToSettlement(
 ) {
   const settlement = getOwnedSettlement(G, tileId, playerID);
 
-  return settlement ? totalPops(settlement.pops) + effect.amount <= settlementPopCapacity(settlement.kind, G.ruleset) : false;
+  return settlement ? totalPops(settlement.pops) + effect.amount <= settlementCapacity(settlement, G.ruleset) : false;
 }
 
 function applyEventEffects(
