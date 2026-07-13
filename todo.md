@@ -112,11 +112,10 @@
    inside the deliberately-blocking riot modal).
 -- Scope this WITH the game-reference compendium below (same navigation rethink); flat AAA look throughout.
 
-- *** Game-reference compendium behind the season icon. (user, 2026-07-12 — SCHEDULED: roadmap Phase 1.5, contents = appendix Q18)
--- Pressing the seasonal icon button (top bar) opens a modal of categorized game info players can study to
-   plan ahead: the victory-card roster, every event table (riot + the three expeditions — read-only render,
-   no roll button; the shared EventTableModal component already carries this), bank rates, deck contents /
-   season weighting, costs cheat-sheet.
+- ~~*** Game-reference compendium behind the season icon. (user, 2026-07-12)~~ SHIPPED (2026-07-13 overnight, Q18
+  answered-by-default): season dial click or `?` opens five read-only data-driven sections — victory cards with
+  live standings, all four event tables via the shared `EventTableRows` render (no roll button), bank rates +
+  corridor explainer, both deck lists (aggregate counts, never draw order), costs cheat-sheet.
 -- Everything rollable or drawable should be *viewable* before it happens — tables are public information,
    that is the point of "decks for economy, dice for drama".
 

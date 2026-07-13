@@ -7,11 +7,13 @@ import { SeasonDial } from "./SeasonDial";
 function SeasonStatusComponent({
   G,
   isActive,
-  currentPlayerId
+  currentPlayerId,
+  onOpenCompendium
 }: {
   G: HegemonyState;
   isActive: boolean;
   currentPlayerId: PlayerId;
+  onOpenCompendium: () => void;
 }) {
   const seasonsLeft = G.seasonalDrawPile.length;
 
@@ -26,7 +28,14 @@ function SeasonStatusComponent({
         <span className="turnClockSub">{seasonsLeft} left</span>
       </div>
 
-      <SeasonDial seasonIndex={G.season} />
+      <button
+        className="seasonDialButton"
+        title="Open the compendium (?)"
+        aria-label="Open the compendium"
+        onClick={onOpenCompendium}
+      >
+        <SeasonDial seasonIndex={G.season} />
+      </button>
 
       <div
         className="turnActor"

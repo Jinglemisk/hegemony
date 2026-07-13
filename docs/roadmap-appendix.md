@@ -87,20 +87,23 @@ costs. Mock both only if the bottom bar feels wrong in the first build.
 
 **Your answer:**
 
-### Q18 · Compendium v1 — contents & entry points — `OPEN`
+### Q18 · Compendium v1 — contents & entry points — `ANSWERED BY DEFAULT` (built 2026-07-13)
 
 **Context.** Refit scope 5. What ships in the first compendium, and how it opens.
 
-**Rec:** five sections, all read-only, all data-driven from the ruleset/content
-tables so they can never drift from the engine: (1) victory cards with LIVE
-standings per player; (2) the four event tables (riot + three expeditions) rendered
-by the shared component, no roll button; (3) this board's bank rates + the corridor
-explainer; (4) deck composition — seasonal card list with season-weighting notes,
-player-deck list (aggregate counts, never draw order); (5) a costs cheat-sheet
-(actions, buildings, ladder, calm, stakes). Entry: the season icon, plus the `?`
-key. Later phases append sections (politicians, resolutions) instead of new modals.
+**Rec (BUILT as recommended — the overnight-menu approval covered this):** five
+sections, all read-only, all data-driven from the ruleset/content tables so they
+can never drift from the engine: (1) victory cards with LIVE standings per player
+(mounts the ledger's VictoryTab); (2) the four event tables (riot + three
+expeditions) rendered by the shared `EventTableRows` path, no roll button; (3) this
+board's bank rates + the corridor explainer; (4) deck composition — seasonal card
+list with season-weighting notes, player-deck list (aggregate counts, never draw
+order); (5) a costs cheat-sheet (expansion, grow, buildings, ladder, calm, stakes,
+riot insurance). Entry: the season dial button, plus the `?` key (Escape closes).
+Later phases append sections (politicians, resolutions) instead of new modals.
 
-**Your answer:**
+**Your answer:** answered-by-default per the 2026-07-13 overnight approval; refit
+restyles freely — the content and data-driven rule survive.
 
 ### Q19 · Homes for the Chronicle and the deck tray — `OPEN`
 
