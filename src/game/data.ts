@@ -241,6 +241,27 @@ export const BUILDINGS: BuildingDefinition[] = [
       { type: "income", resource: "food", amount: 2 },
       { type: "growPopFoodDiscount", amount: 2 }
     ]
+  },
+  // ── Civic buildings ported 2026-07-13 (overnight item 4, Hegemony.pdf + todo
+  //    sketch). Prices PROVISIONAL except the Forum's, which is the PDF's own —
+  //    Phase 2's terrain rework reprices the whole roster.
+  {
+    id: "forum",
+    name: "Forum",
+    cost: { stone: 4, wood: 8 },
+    effects: [{ type: "income", resource: "influence", amount: 2 }]
+  },
+  {
+    id: "aqueduct",
+    name: "Aqueduct",
+    cost: { stone: 12 },
+    effects: [{ type: "popCapacityBonus", amount: 4 }]
+  },
+  {
+    id: "odeon",
+    name: "Odeon",
+    cost: { stone: 8, wood: 4 },
+    effects: [{ type: "happiness", amount: 2 }]
   }
 ];
 

@@ -9,7 +9,7 @@ import {
   isAdjacentToCity,
   playerHasMovablePop,
   settlementBuildingSlots,
-  settlementPopCapacity
+  settlementCapacity
 } from "./settlement";
 import { getAdjustedActionCost, getDiscountedGrowPopCost } from "./economy/cost";
 
@@ -153,7 +153,7 @@ export function getGrowPopStatus(
     status.reasons.push("Already grew a pop here this turn.");
   }
 
-  if (totalPops(settlement.pops) + 1 > settlementPopCapacity(settlement.kind, G.ruleset)) {
+  if (totalPops(settlement.pops) + 1 > settlementCapacity(settlement, G.ruleset)) {
     status.reasons.push("Settlement is at population capacity.");
   }
 

@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 import type { Phase } from "../../../game/controller";
-import { settlementPopCapacity, totalPops, unrestStatus } from "../../../game/rules";
+import { settlementCapacity, totalPops, unrestStatus } from "../../../game/rules";
 import type { UnrestStatus } from "../../../game/rules";
 import type { BuildingId, HegemonyState, PlayerId, PopType, TradableMaterial } from "../../../game/types";
 import { formatNumber } from "../../../ui/formatters";
@@ -63,7 +63,7 @@ function EmpireIntelPanelComponent({
   const colonyCount = holdings.length - cityCount;
   const popsUsed = holdings.reduce((sum, { settlement }) => sum + totalPops(settlement.pops), 0);
   const popsCapacity = holdings.reduce(
-    (sum, { settlement }) => sum + settlementPopCapacity(settlement.kind, G.ruleset),
+    (sum, { settlement }) => sum + settlementCapacity(settlement, G.ruleset),
     0
   );
   const unrest = unrestStatus(G, playerID);
