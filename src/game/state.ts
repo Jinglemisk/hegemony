@@ -70,6 +70,7 @@ export function createInitialState(
     pendingPlayerEvent: null,
     pendingRiot: null,
     lastTableRoll: null,
+    yearOmen: null,
     // The bank's per-material rates are a function of THIS board (Q14) — derived
     // once here, static for the whole game.
     bank: deriveBankRates(tiles, ruleset.economy.bank),

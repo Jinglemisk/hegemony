@@ -9,6 +9,7 @@ import {
   placeCapital,
   placeColony,
   resolveArrivingPops,
+  rollYearOmen,
   startNewSeason,
 } from "./rules";
 import type { MoveResult } from "./rules";
@@ -86,6 +87,12 @@ export function beginGameplayTurn(G: HegemonyState) {
 
   if (!G.activeSeasonEvent) {
     drawSeasonalEvent(G);
+  }
+
+  // Year 1's omen: the game opens in spring, so the first opener takes the auspices
+  // the moment gameplay begins. Later years roll theirs in startNewSeason.
+  if (!G.yearOmen) {
+    rollYearOmen(G);
   }
 
   checkVictoryAtTurnStart(G);

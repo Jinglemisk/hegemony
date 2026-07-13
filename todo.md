@@ -55,7 +55,8 @@
 - Deepen seasonal mechanics. (in progress on feat/seasons — see seasons.md)
 -- ~~The season is just a bare counter.~~ DONE: it now reads as Year N / Spring–Winter (derived in core/calendar.ts), shown on the medallion + chronicle.
 -- ~~Season cards have no seasonal character.~~ DONE: the seasonal deck is weighted by season — winter draws more harsh cards, spring more growth, etc. (tags, not deterministic penalties).
--- Still open: an end-of-season resolution step (where happiness bites), yearly cards on each new year, and the finite-deck endgame clock.
+-- ~~yearly cards on each new year~~ SHIPPED as the **yearly omen** (2026-07-13 overnight, PROVISIONAL): the year's opener publicly rolls a d6 each spring — one ±1-income sign over the whole table until the year turns; top-bar chip + announcement modal + compendium listing. Numbers await review.
+-- Still open: an end-of-season resolution step (where happiness bites); ~~the finite-deck endgame clock~~ (shipped with the victory race — the seasonal deck is the clock).
 
 - Add more start setups / game modes.
 -- The mode seam already works (standard / fast-start / deathmatch), selected in code by GAME_CONFIG.mode — a mode is just a ruleset patch.

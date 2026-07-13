@@ -4,6 +4,7 @@ import { isNewYear, seasonName, yearOf } from "./core/calendar";
 import { capitalize } from "./core/format";
 import { addLog, getPlayerName } from "./core/query";
 import { drawSeasonalEvent } from "./events";
+import { rollYearOmen } from "./tables";
 import { resolveDeckExhaustion } from "./victory";
 
 export function resetTurnFlags(G: HegemonyState) {
@@ -31,6 +32,8 @@ export function startNewSeason(G: HegemonyState) {
     const index = PLAYER_IDS.indexOf(G.seasonOpener);
     G.seasonOpener = PLAYER_IDS[(index + 1) % PLAYER_IDS.length];
     addLog(G, `${getPlayerName(G, G.seasonOpener)} opens the new year.`);
+    // The new opener takes the auspices — the omen replaces last year's.
+    rollYearOmen(G);
   }
 
   addLog(G, `${capitalize(seasonName(G.season))} of Year ${yearOf(G.season)} begins.`);
