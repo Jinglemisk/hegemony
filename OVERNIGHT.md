@@ -5,6 +5,29 @@ gets reviewed in the morning. Branch: `feat/ui-refit` (continues; nothing here
 collides with the refit's open questions Q17–Q19). **One commit per item** so any
 single item can be reverted without touching the rest. One PR at the end.
 
+## ☀️ MORNING SUMMARY — all four items shipped, one commit each
+
+| # | Item | Commit | The one-line verdict |
+| --- | --- | --- | --- |
+| 0 | Tile glyphs (approved gate) | `5b64593` | slots `n/y` + value-scaled yield numbers, no `+` signs |
+| 1 | Deck overhaul | `fec2688` | EV +4.9→**+2.2**, harm 8%→**25.3%**, grow coupons live; A/B says pops −11%, revolts 3%→0%, race pace within noise |
+| 2 | Compendium v1 | `8f7a169` | season dial / `?` opens five data-driven sections; Q18 answered-by-default |
+| 3 | Yearly omen | `666b939` | PROVISIONAL — spring d6, ±1 income table-wide for the year; chip under the dial |
+| 4 | Civic buildings | `e952725` | Forum (PDF price) + Aqueduct (+4 capacity) + Odeon (+2 hap); Library/Embassy/Luxury Trader correctly blocked on undesigned systems |
+
+**Gates:** every commit passed `npm run check` + full vitest (final count **158
+tests**, was 143). Sims: deck A/B 20+20 games saved to `docs/sim/`, omen + civic
+smokes ran clean. All UI verified in-browser via Playwright before committing.
+
+**How to review fast:** play a game at `?seed=42` — you'll hit a Warehouse Fire
+draw on turn 1 (new harm), see the SILENT MINES omen chip under the season dial,
+press `?` for the compendium, and find Forum/Aqueduct/Odeon in the Build tab.
+Then read "Morning questions" below — three carry decisions, none block merge.
+
+**Also on the branch (pre-run):** the Q20–Q35 wholesale-execution battery got its
+own docs commit (`0b6df02`) — it was sitting uncommitted from your parallel
+session; nothing in tonight's run acts on it.
+
 ## Step 0 — GATE (awake): map tile glyphs — **needs user approval before the night run**
 
 Current: white/black squares = building slots, dark circles/pips = resource yield.
