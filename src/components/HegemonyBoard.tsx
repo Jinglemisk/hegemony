@@ -14,6 +14,7 @@ import { FoundColonyPopover, MovePopsModal, PopulationPickerModal, UpgradeCityMo
 import { ResourceGrid } from "./ResourceGrid";
 import { ActionCommandPanel } from "./board/command/ActionCommandPanel";
 import { CalmModal } from "./board/modals/CalmModal";
+import { CompendiumModal } from "./board/modals/CompendiumModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
 import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
 import { GrowPopModal } from "./board/modals/GrowPopModal";
@@ -77,6 +78,7 @@ export function HegemonyBoard({
   const [ladderRequest, setLadderRequest] = useState<LadderRequest | null>(null);
   // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
   const [riotResultOpen, setRiotResultOpen] = useState(false);
+  const [isCompendiumOpen, setIsCompendiumOpen] = useState(false);
   const [activeEmpireTab, setActiveEmpireTab] = useState<EmpireTab>("cities");
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
@@ -160,6 +162,26 @@ export function HegemonyBoard({
     return () => window.removeEventListener("keydown", handleKey);
   }, [foundColonyMode]);
 
+  // `?` opens the compendium from anywhere; Escape closes it.
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")) {
+        return;
+      }
+
+      if (event.key === "?") {
+        setIsCompendiumOpen((open) => !open);
+      } else if (event.key === "Escape") {
+        setIsCompendiumOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
   const handleTileAction = useCallback(
     (tileId: string) => {
       setSelectedTileId(tileId);
@@ -235,7 +257,12 @@ export function HegemonyBoard({
       <header className="topbar strategyTopbar">
         <TopbarEvents G={G} />
 
-        <SeasonStatus G={G} isActive={isActive} currentPlayerId={currentPlayerId} />
+        <SeasonStatus
+          G={G}
+          isActive={isActive}
+          currentPlayerId={currentPlayerId}
+          onOpenCompendium={() => setIsCompendiumOpen(true)}
+        />
 
         <PlayerScoreboard
           G={G}
@@ -443,6 +470,9 @@ export function HegemonyBoard({
           moves={moves}
           playerID={G.pendingPlayerEvent.playerID}
         />
+      ) : null}
+      {isCompendiumOpen ? (
+        <CompendiumModal G={G} playerID={viewerId} onClose={() => setIsCompendiumOpen(false)} />
       ) : null}
     </main>
   );

@@ -241,6 +241,10 @@ Two decks of event cards bring swings of fortune:
   cheap **this turn only**. The fourth is a bite: rats in the granary, bandits on
   the roads, a warehouse fire. A loss can never take more than you have.
 
+Nothing here is secret except the shuffle: click the **season dial** (or press
+`?`) to open the **Compendium** — victory standings, every dice table, this
+board's bank rates, both decks' full composition, and a costs cheat-sheet.
+
 ## Winning — the victory race
 
 Five **victory cards** sit face-up from the first turn. Each reads **"Most X,

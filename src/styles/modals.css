@@ -908,3 +908,208 @@
   width: 14px;
   height: 14px;
 }
+
+/* Compendium (Q18) — the read-only rule reference behind the season dial / `?`.
+   Every section renders from ruleset or content data; nothing is hand-written. */
+.compendiumModal {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 12px;
+  width: min(640px, calc(100vw - 34px));
+  height: min(88vh, 760px);
+  padding: 18px 18px 16px;
+  border: 2px solid rgb(80 35 18 / 72%);
+  border-radius: 14px;
+  color: var(--fg);
+  background:
+    radial-gradient(circle at 50% 8%, rgb(255 248 231 / 90%), transparent 42%),
+    linear-gradient(180deg, #fff4d8, #eed5aa 78%, #e0b87e);
+  box-shadow:
+    0 28px 70px rgb(0 0 0 / 48%),
+    inset 0 0 0 6px rgb(255 248 231 / 48%),
+    inset 0 0 0 9px rgb(143 46 19 / 30%);
+}
+
+.compendiumHeader {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.compendiumHeader h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.compendiumHeader p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.compendiumClose {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  padding: 4px 9px;
+  font-size: 0.8rem;
+}
+
+.compendiumTabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.compendiumTab {
+  padding: 6px 4px;
+  border: 1px solid rgb(80 35 18 / 40%);
+  border-radius: 8px;
+  background: rgb(255 248 231 / 55%);
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.compendiumTabActive {
+  border-color: var(--clay);
+  background: rgb(143 46 19 / 14%);
+  font-weight: 700;
+}
+
+.compendiumBody {
+  min-height: 0;
+  padding-right: 6px;
+  overflow-y: auto;
+}
+
+.compendiumStack {
+  display: grid;
+  gap: 14px;
+}
+
+.compendiumEntry {
+  display: grid;
+  gap: 6px;
+}
+
+.compendiumEntry h3 {
+  margin: 0;
+  padding-bottom: 3px;
+  border-bottom: 1px solid rgb(143 46 19 / 30%);
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.compendiumFlavor {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-style: italic;
+}
+
+.compendiumNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.compendiumBankRow {
+  display: grid;
+  grid-template-columns: 22px auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  padding: 6px 8px;
+  border-left: 2px solid rgb(143 46 19 / 26%);
+  font-size: 0.8rem;
+}
+
+.compendiumBankRow span {
+  color: var(--muted);
+}
+
+.compendiumCardList,
+.compendiumCostList {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compendiumCardRow {
+  display: grid;
+  gap: 1px;
+  padding: 4px 8px;
+  border-left: 2px solid rgb(143 46 19 / 26%);
+  font-size: 0.76rem;
+}
+
+.compendiumCardName {
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+}
+
+.compendiumCardName em {
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.compendiumSeasons {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.compendiumCardText {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.compendiumCostRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  align-items: baseline;
+  padding: 4px 8px;
+  border-left: 2px solid rgb(143 46 19 / 26%);
+  font-size: 0.78rem;
+}
+
+.compendiumCostValue {
+  font-weight: 700;
+  text-align: right;
+}
+
+.compendiumCostNote {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.seasonDialButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.seasonDialButton:hover .seasonDial,
+.seasonDialButton:focus-visible .seasonDial {
+  filter: brightness(1.08);
+  transform: scale(1.04);
+}
