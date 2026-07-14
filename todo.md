@@ -73,7 +73,7 @@
 -- This is where players will spend Influence primarily
 
 - Terrain & resource economy rework. (planned — see docs/feat/terrain-economy.md; ships with building tier 2, roadmap Phase 2)
--- Settled: wood/food/stone are first-order (from tiles); gold/influence are second-order (from pops/trade/buildings) — gold tiles removed, hills become the slot-rich "acropolis" terrain.
+-- Settled: wood/food/stone are first-order (from tiles); gold/influence are second-order (from pops/trade/buildings) — gold tiles removed, hills become the slot-rich, yield-less building terrain.
 -- Also pinned there: building pricing grammar, landmark-tile principle + constrained shuffle, trade-before-stone-sinks sequencing.
 
 - ~~Bank exchange via gold as the medium.~~ DONE (feat/phase1-currencies — D6/Q14; rates provisional)
