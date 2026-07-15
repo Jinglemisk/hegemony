@@ -209,6 +209,12 @@
   gap: 2px;
 }
 
+/* ResourceChips emits <strong> around every value so the markup is one shape;
+   the verb bar wants the number at the rail's own weight, as it read before. */
+.commandVerbCostItem strong {
+  font-weight: inherit;
+}
+
 .commandVerbCostIcon {
   flex: none;
   width: 11px;

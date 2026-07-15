@@ -16,11 +16,11 @@ import {
 } from "../game/rules";
 import { ACTION_COSTS } from "../game/data";
 import { formatPopLabel, formatResourceDelta } from "../ui/formatters";
-import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
 import { SettlementSummaryCard } from "./SettlementCard";
 import { settlementPickerLabel } from "./board/helpers";
-import { AtlasIcon, ResourceIcon } from "./Sprites";
+import { AtlasIcon } from "./Sprites";
 import { ModalShell } from "./board/modals/ModalShell";
+import { ResourceChips } from "./board/ResourceChips";
 
 type SettlementEntry = {
   tile: HexTile;
@@ -586,23 +586,20 @@ function PlacementModalShell({
 }
 
 function CostRow({ cost, note }: { cost: Partial<Resources>; note?: string }) {
-  const entries = RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) !== 0);
-
   return (
     <div className="placementCostRow">
       <span className="placementSectionLabel">Cost</span>
-      <span className="placementCostChips">
-        {entries.length > 0 ? (
-          entries.map((resource) => (
-            <span className="placementCostChip" key={resource} style={resourceCssVars(resource as Resource)}>
-              <ResourceIcon resource={resource as Resource} className="miniResourceIcon" />
-              <strong>{cost[resource]}</strong>
-            </span>
-          ))
-        ) : (
-          <em>Free</em>
-        )}
-      </span>
+      <ResourceChips
+        resources={cost}
+        variant="cost"
+        className="placementCostChips"
+        chipClassName="placementCostChip"
+        empty={
+          <span className="placementCostChips">
+            <em>Free</em>
+          </span>
+        }
+      />
       {note ? <span className="placementCostNote">{note}</span> : null}
     </div>
   );

@@ -9,7 +9,8 @@ import {
 } from "../game/rules";
 import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
-import { AtlasIcon, ResourceIcon, TerrainSprite } from "./Sprites";
+import { AtlasIcon, TerrainSprite } from "./Sprites";
+import { ResourceChips } from "./board/ResourceChips";
 
 /**
  * Collapsed-summary view of a settlement, identical to the holding card shown in
@@ -86,33 +87,19 @@ export function SettlementSummaryCard({
   );
 }
 
+/** Every resource always shown so the columns read as a fixed set — a zero dims to
+ *  an icon + dash rather than vanishing (the `yield` variant's whole job). */
 export function HoldingNetYields({ resources }: { resources: Resources }) {
   const hasYield = RESOURCE_ORDER.some((resource) => resources[resource] !== 0);
 
   return (
-    <span
+    <ResourceChips
+      resources={resources}
+      variant="yield"
       className="holdingNetYields"
+      chipClassName="holdingNetYield"
       title={hasYield ? `Net income: ${formatResourceDelta(resources)}` : "No net income from this settlement"}
-    >
-      {RESOURCE_ORDER.map((resource) => {
-        const value = resources[resource];
-        const isZero = value === 0;
-
-        // Always show every resource's icon so the columns read as a fixed set;
-        // a zero just dims to an icon + dash instead of vanishing.
-        return (
-          <span
-            className={`holdingNetYield${isZero ? " emptyNetYield" : ""}`}
-            key={resource}
-            style={resourceCssVars(resource)}
-            title={`${RESOURCE_LABELS[resource]}: ${isZero ? "no change" : formatSignedNumber(value)}`}
-          >
-            <ResourceIcon resource={resource} value={value} className="miniResourceIcon" />
-            <strong>{isZero ? "–" : formatSignedNumber(value)}</strong>
-          </span>
-        );
-      })}
-    </span>
+    />
   );
 }
 
