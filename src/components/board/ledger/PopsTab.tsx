@@ -33,7 +33,7 @@ export function PopsTab({
 }) {
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const player = G.players[playerID];
-  const economyByPop = calculatePopEconomy(holdings);
+  const economyByPop = calculatePopEconomy(holdings, G.ruleset);
   const projection = calculateEconomyProjection(G, playerID, { resolveTransfers: true });
   const inTransit = G.transfers
     .filter((transfer) => transfer.owner === playerID)

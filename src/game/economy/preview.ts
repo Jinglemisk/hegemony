@@ -1,7 +1,7 @@
 import { BUILDINGS, EMPTY_RESOURCES } from "../data";
 import type { BuildingId, HegemonyState, PlayerId, PopType, Pops, Resources, Settlement } from "../types";
 import { totalPops } from "../core/pops";
-import { getTile } from "../core/query";
+import { getOwnedSettlement, getTile } from "../core/query";
 import { applyResourceDelta, cloneResources, diffResources } from "../core/resources";
 import type { MoveResult } from "../core/results";
 import {
@@ -277,4 +277,65 @@ function createSettlementEconomyPreview(
       inTransitOutDelta: (next?.inTransitOut ?? 0) - (previous?.inTransitOut ?? 0)
     };
   });
+}
+
+/**
+ * What this pop WOULD add to income, whether or not the player can afford it
+ * (ladder rung R7).
+ *
+ * The UI needs to answer "what does a freeman get me here?" on a button the
+ * player cannot yet press — and `previewGrowPop` cannot, because the real move
+ * refuses when the cost is unmet, returning null. That gap is why the UI grew its
+ * own copy of the income maths, which then drifted: it called `popIncome` without
+ * a ruleset, so it silently read DEFAULT_RULESET while the engine paid out
+ * `G.ruleset` (see `deriveRuleset` — sim campaigns run patched rulesets).
+ *
+ * So: drop the pop onto a draft directly, skipping the cost gate, and diff income
+ * through the engine's own path. The answer can never disagree with what income
+ * actually pays, because it IS what income pays.
+ */
+export function previewGrowPopIncomeDelta(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  pop: PopType
+): Resources {
+  const draft = structuredClone(G);
+  const settlement = getOwnedSettlement(draft, tileId, playerID);
+
+  if (!settlement) {
+    return { ...EMPTY_RESOURCES };
+  }
+
+  const before = calculateEconomyProjection(G, playerID, { resolveTransfers: true });
+  settlement.pops[pop] += 1;
+  const after = calculateEconomyProjection(draft, playerID, { resolveTransfers: true });
+
+  return diffResources(after.income, before.income);
+}
+
+/**
+ * What this building WOULD add to income, ignoring cost and slot limits — the
+ * same "show me the benefit on a button I can't press yet" case as above.
+ * Prefer `previewBuildBuilding` when the action is actually legal; this exists
+ * for the disabled state.
+ */
+export function previewBuildingIncomeDelta(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  buildingId: BuildingId
+): Resources {
+  const draft = structuredClone(G);
+  const settlement = getOwnedSettlement(draft, tileId, playerID);
+
+  if (!settlement) {
+    return { ...EMPTY_RESOURCES };
+  }
+
+  const before = calculateEconomyProjection(G, playerID, { resolveTransfers: true });
+  settlement.buildings.push(buildingId);
+  const after = calculateEconomyProjection(draft, playerID, { resolveTransfers: true });
+
+  return diffResources(after.income, before.income);
 }

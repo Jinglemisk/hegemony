@@ -144,7 +144,7 @@ export function CitiesTab({
                         {unbuiltBuildings.length > 0 ? (
                           unbuiltBuildings.map((building) => {
                             const status = getBuildBuildingStatus(G, playerID, tile.id, building.id);
-                            const benefit = getBuildingBenefitText(G, playerID, tile, settlement, building);
+                            const benefit = getBuildingBenefitText(G, playerID, tile, building);
                             const disabled = !isActive || phase !== "gameplay" || !status.can;
 
                             return (

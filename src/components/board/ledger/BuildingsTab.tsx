@@ -39,7 +39,7 @@ export function BuildingsTab({
           <div className="buildCandidateGrid">
             {holdings.map(({ tile, settlement }) => {
               const status = getBuildBuildingStatus(G, playerID, tile.id, building.id);
-              const benefit = getBuildingBenefitText(G, playerID, tile, settlement, building);
+              const benefit = getBuildingBenefitText(G, playerID, tile, building);
               const disabled = !isActive || phase !== "gameplay" || !status.can;
 
               return (

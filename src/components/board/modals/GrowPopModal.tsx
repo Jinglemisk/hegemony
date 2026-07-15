@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Phase } from "../../../game/controller";
-import { POP_TYPES, getGrowPopStatus, settlementCapacity, totalPops } from "../../../game/rules";
+import {
+  POP_TYPES,
+  getGrowPopStatus,
+  previewGrowPopIncomeDelta,
+  settlementCapacity,
+  totalPops
+} from "../../../game/rules";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
 import { ModalShell } from "./ModalShell";
 import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
@@ -11,7 +17,6 @@ import {
   actionRequirementText,
   actionTitle,
   createEmptyResources,
-  estimateGrowPopIncomeDelta,
   getOwnedHoldings,
   holdingShortLabel,
   settlementPickerLabel
@@ -34,7 +39,12 @@ export function GrowPopModal({
   const holding = holdings.find(({ tile }) => tile.id === tileId) ?? holdings[0];
   const status = holding ? getGrowPopStatus(G, playerID, holding.tile.id, pop) : null;
   const disabled = !holding || !isActive || phase !== "gameplay" || !status?.can;
-  const benefit = holding ? estimateGrowPopIncomeDelta(holding.tile, holding.settlement, pop) : createEmptyResources();
+  // From the engine, not a UI copy (R7) — and memoized, because the preview clones
+  // the state to measure against it.
+  const benefit = useMemo(
+    () => (holding ? previewGrowPopIncomeDelta(G, playerID, holding.tile.id, pop) : createEmptyResources()),
+    [G, playerID, holding, pop]
+  );
 
   useEffect(() => {
     if (!holding && holdings[0]) {
