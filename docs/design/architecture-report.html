@@ -1,0 +1,335 @@
+<title>Hegemony — Frontend Architecture Report</title>
+<style>
+  :root {
+    --ground: #f7efdd;
+    --ground-2: #f0e5cc;
+    --ink: #241910;
+    --ink-soft: rgb(36 25 16 / 72%);
+    --ink-faint: rgb(36 25 16 / 45%);
+    --line: rgb(36 25 16 / 16%);
+    --line-strong: rgb(36 25 16 / 34%);
+    --clay: #b0431c;
+    --clay-deep: #8f2e13;
+    --olive: #5e6e3a;
+    --aegean: #1f6977;
+    --ochre: #b97a26;
+    --card: rgb(255 250 238 / 72%);
+    --code-bg: rgb(36 25 16 / 6%);
+    --pass: #4c6b34;
+    --warn: #b97a26;
+    --fail: #a03520;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #191210;
+      --ground-2: #201713;
+      --ink: #ecdfc4;
+      --ink-soft: rgb(236 223 196 / 74%);
+      --ink-faint: rgb(236 223 196 / 46%);
+      --line: rgb(236 223 196 / 16%);
+      --line-strong: rgb(236 223 196 / 36%);
+      --clay: #d96a3a;
+      --clay-deep: #e08a5c;
+      --olive: #97a86a;
+      --aegean: #6db3bf;
+      --ochre: #d9a24e;
+      --card: rgb(255 248 231 / 5%);
+      --code-bg: rgb(236 223 196 / 8%);
+      --pass: #8fae6a;
+      --warn: #d9a24e;
+      --fail: #e0765c;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #f7efdd; --ground-2: #f0e5cc; --ink: #241910;
+    --ink-soft: rgb(36 25 16 / 72%); --ink-faint: rgb(36 25 16 / 45%);
+    --line: rgb(36 25 16 / 16%); --line-strong: rgb(36 25 16 / 34%);
+    --clay: #b0431c; --clay-deep: #8f2e13; --olive: #5e6e3a; --aegean: #1f6977; --ochre: #b97a26;
+    --card: rgb(255 250 238 / 72%); --code-bg: rgb(36 25 16 / 6%);
+    --pass: #4c6b34; --warn: #b97a26; --fail: #a03520;
+  }
+  :root[data-theme="dark"] {
+    --ground: #191210; --ground-2: #201713; --ink: #ecdfc4;
+    --ink-soft: rgb(236 223 196 / 74%); --ink-faint: rgb(236 223 196 / 46%);
+    --line: rgb(236 223 196 / 16%); --line-strong: rgb(236 223 196 / 36%);
+    --clay: #d96a3a; --clay-deep: #e08a5c; --olive: #97a86a; --aegean: #6db3bf; --ochre: #d9a24e;
+    --card: rgb(255 248 231 / 5%); --code-bg: rgb(236 223 196 / 8%);
+    --pass: #8fae6a; --warn: #d9a24e; --fail: #e0765c;
+  }
+  html { background: var(--ground); }
+  body {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 500px at 70% -10%, var(--ground-2), transparent 70%),
+      var(--ground);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 56px 28px 120px; }
+  .eyebrow {
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    font-size: 12px; color: var(--clay); font-weight: 700;
+  }
+  h1 {
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: clamp(30px, 4.5vw, 44px); line-height: 1.08;
+    margin: 10px 0 6px; letter-spacing: 0.02em; text-wrap: balance;
+  }
+  .subtitle { color: var(--ink-soft); font-size: 17px; max-width: 62ch; margin: 0; }
+  .meta { color: var(--ink-faint); font-size: 13px; margin-top: 14px; }
+  h2 {
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-size: 21px; letter-spacing: 0.05em; text-transform: uppercase;
+    margin: 64px 0 4px; padding-top: 22px; border-top: 1px solid var(--line-strong);
+  }
+  h2 .sec { color: var(--clay); margin-right: 10px; }
+  h3 { font-size: 17px; margin: 28px 0 8px; font-weight: 700; }
+  p { max-width: 70ch; }
+  .lead { font-size: 17px; }
+  code, pre {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.85em;
+  }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 14px 16px; overflow-x: auto; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  .tablewrap { overflow-x: auto; margin: 18px 0; }
+  th {
+    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    text-transform: uppercase; letter-spacing: 0.08em; font-size: 11.5px;
+    text-align: left; color: var(--ink-soft); font-weight: 700;
+    padding: 8px 12px 6px 0; border-bottom: 1px solid var(--line-strong);
+  }
+  td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { white-space: nowrap; }
+  .verdict {
+    display: inline-block; font-family: Copperplate, Georgia, serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 9px 1px; border-radius: 999px; border: 1.5px solid currentColor;
+  }
+  .v-pass { color: var(--pass); }
+  .v-warn { color: var(--warn); }
+  .v-fail { color: var(--fail); }
+  .effort {
+    display: inline-block; min-width: 1.4em; text-align: center;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 700;
+    border: 1px solid var(--line-strong); border-radius: 5px; padding: 1px 5px;
+    color: var(--ink-soft);
+  }
+  ul { padding-left: 1.2em; }
+  li { margin: 6px 0; max-width: 70ch; }
+  .callout {
+    border-left: 3px solid var(--clay); background: var(--card);
+    padding: 14px 18px; border-radius: 0 10px 10px 0; margin: 22px 0; max-width: 74ch;
+  }
+  .callout p { margin: 6px 0; }
+  .quiet { color: var(--ink-soft); }
+  .diagram { margin: 26px 0; overflow-x: auto; }
+  .diagram svg { display: block; min-width: 640px; width: 100%; height: auto; }
+  .stage {
+    display: grid; grid-template-columns: 100px 1fr; gap: 6px 22px;
+    padding: 18px 0; border-bottom: 1px solid var(--line);
+  }
+  .stage:last-child { border-bottom: none; }
+  .stage-id {
+    font-family: Copperplate, Georgia, serif; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--clay); font-size: 15px; text-transform: uppercase;
+  }
+  .stage-cost { grid-column: 1; color: var(--ink-faint); font-size: 13px; }
+  .stage-body { grid-column: 2; grid-row: 1 / span 2; }
+  .stage-body p { margin: 0 0 8px; }
+  .footnote { color: var(--ink-faint); font-size: 13.5px; border-top: 1px solid var(--line); margin-top: 70px; padding-top: 16px; }
+  @media (max-width: 640px) {
+    .stage { grid-template-columns: 1fr; }
+    .stage-body { grid-column: 1; grid-row: auto; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Hegemony · Engineering Review · July 2026</div>
+    <h1>Frontend Architecture Report</h1>
+    <p class="subtitle">Component health, the engine/UI boundary, and the road to an online game — audited on <code>feat/phase1-currencies</code> @ <code>8d609f8</code>, ~4,950 LOC of UI across 24 component files, 4,502 lines of CSS.</p>
+    <p class="meta">Companion to the <em>Hegemony Brandbook v0.1</em> — the refactor order below is sequenced so the visual reskin lands on shared components instead of nine copies of everything.</p>
+  </header>
+
+  <h2><span class="sec">I</span>The Verdict</h2>
+  <p class="lead">Your instincts were right on all four counts, but the news is better than the hunch. The UI code is <em>messier than it should be</em> — nine hand-copied modal scaffolds, a 17-prop component, four implementations of the same resource chip — yet the <em>architecture underneath is already the one an online game needs</em>. The engine is pure, serializable, deterministic, and drivable through a data-only move protocol that could travel over a websocket today. The gap between here and multiplayer is organizational, not structural.</p>
+  <div class="callout">
+    <p><strong>One number that summarizes the audit:</strong> exactly <strong>one</strong> file in <code>src/game</code> is impure — <code>controller.ts</code>, the React hook layer, which merely lives in the wrong directory. Evicting it is the only semantic change the whole frontend/backend separation requires. Everything else is mechanical renames.</p>
+  </div>
+
+  <h2><span class="sec">II</span>Dependency Reality</h2>
+  <p>Measured from every import statement in <code>src/</code> — no back-edges exist anywhere. The layering you'd design on a whiteboard is already the layering on disk, with one tenant on the wrong floor:</p>
+  <div class="diagram">
+    <svg viewBox="0 0 760 300" role="img" aria-label="Dependency graph: components and ui depend on game; sim depends on game; controller.ts sits inside game but belongs in ui">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-soft)"/>
+        </marker>
+        <marker id="arrbad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--fail)"/>
+        </marker>
+      </defs>
+      <g font-family="SF Mono, ui-monospace, Menlo, monospace" font-size="13">
+        <rect x="30" y="30" width="200" height="64" rx="10" fill="none" stroke="var(--line-strong)" stroke-width="1.5"/>
+        <text x="130" y="57" text-anchor="middle" fill="var(--ink)">src/components</text>
+        <text x="130" y="76" text-anchor="middle" fill="var(--ink-faint)" font-size="11">React · 24 files</text>
+
+        <rect x="30" y="130" width="200" height="64" rx="10" fill="none" stroke="var(--line-strong)" stroke-width="1.5"/>
+        <text x="130" y="157" text-anchor="middle" fill="var(--ink)">src/ui</text>
+        <text x="130" y="176" text-anchor="middle" fill="var(--ink-faint)" font-size="11">formatters · visuals</text>
+
+        <rect x="30" y="230" width="200" height="52" rx="10" fill="none" stroke="var(--line-strong)" stroke-width="1.5"/>
+        <text x="130" y="252" text-anchor="middle" fill="var(--ink)">src/sim</text>
+        <text x="130" y="270" text-anchor="middle" fill="var(--ink-faint)" font-size="11">headless CLI · bots</text>
+
+        <rect x="480" y="90" width="250" height="150" rx="10" fill="none" stroke="var(--olive)" stroke-width="2"/>
+        <text x="605" y="118" text-anchor="middle" fill="var(--ink)">src/game</text>
+        <text x="605" y="137" text-anchor="middle" fill="var(--olive)" font-size="11">pure · JSON state · seeded RNG</text>
+        <rect x="500" y="152" width="210" height="40" rx="8" fill="none" stroke="var(--fail)" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="605" y="171" text-anchor="middle" fill="var(--fail)">controller.ts</text>
+        <text x="605" y="186" text-anchor="middle" fill="var(--fail)" font-size="10.5">React + window + localStorage</text>
+
+        <line x1="230" y1="62" x2="474" y2="120" stroke="var(--ink-soft)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="230" y1="162" x2="474" y2="162" stroke="var(--ink-soft)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="230" y1="252" x2="474" y2="210" stroke="var(--ink-soft)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="130" y1="94" x2="130" y2="124" stroke="var(--ink-soft)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="350" y="52" text-anchor="middle" fill="var(--ink-faint)" font-size="11">types ×34 · rules ×26 · controller ×14</text>
+        <text x="350" y="243" text-anchor="middle" fill="var(--ink-faint)" font-size="11">LegalMove protocol only — no React, no Immer</text>
+      </g>
+    </svg>
+  </div>
+  <ul>
+    <li><strong><code>src/sim</code> is the proof of portability.</strong> It plays entire games with <code>enumerateLegalMoves → applyMove → endTurn</code> and node builtins alone. It is, functionally, the prototype of your future authoritative server loop.</li>
+    <li><strong>Assets are the only other fragile coupling:</strong> three files reference art via depth-relative <code>new URL("../../../assets/…")</code> — a pattern that already broke once (there's an apology comment in <code>board/events.ts</code>). Move to <code>public/</code> + absolute paths before any restructure.</li>
+    <li><strong>All 18 test files are node-environment engine/sim tests.</strong> Extraction won't disturb them beyond an include-glob.</li>
+  </ul>
+
+  <h2><span class="sec">III</span>UI Code Health</h2>
+  <p>Your hunch — "components not marked properly, reused where appropriate" — confirmed. The pattern isn't chaos; it's <em>copy-paste at the moment a shared component should have been born</em>, nine times over. The top findings, ranked by how much the reskin multiplies through them:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Finding</th><th>Evidence</th><th>Why it matters for the reskin</th></tr>
+    <tr>
+      <td><span class="verdict v-fail">×9</span> Modal scaffold copy-pasted</td>
+      <td>Two families: <code>logModal</code> (PopulationModals ×2, GrowPop, Ladder, GameOver) and <code>eventModal</code> (EventTable, Calm, PendingEvent, PlacementShell). No shared <code>&lt;ModalShell&gt;</code>.</td>
+      <td>This is why you have three modal grammars on screen. One shell = one place to theme, one place to fix Escape-close (currently broken) and the aria-labelledby bugs.</td>
+    </tr>
+    <tr>
+      <td><span class="verdict v-fail">×7</span> Verb buttons hand-unrolled</td>
+      <td><code>ActionCommandPanel.tsx:79-230</code> — the disabled predicate and the literal string "Resolve the pending player event first." each appear 7×.</td>
+      <td>The brandbook's verb bar becomes a data array + one <code>&lt;CommandVerb&gt;</code>; adding Phase-2 verbs becomes a data edit.</td>
+    </tr>
+    <tr>
+      <td><span class="verdict v-fail">×4</span> Resource chip re-implemented</td>
+      <td><code>CostRow</code>, <code>ResourceCost</code>, <code>ResourceDeltaList</code>, <code>HoldingNetYields</code> — near-identical markup.</td>
+      <td>Chips are the single most repeated visual atom in the game. Four implementations = four things to restyle per iteration.</td>
+    </tr>
+    <tr>
+      <td><span class="verdict v-warn">×25</span> Whole game state prop-drilled</td>
+      <td>Raw <code>G: HegemonyState</code> reaches 25 of 27 components; prop bags up to 17 props; 3-level drilling for callbacks.</td>
+      <td>A <code>GameUiContext</code> collapses the bags and creates the seam where a networked client will later swap in.</td>
+    </tr>
+    <tr>
+      <td><span class="verdict v-warn">2×688</span> Two legacy monoliths</td>
+      <td><code>PopulationModals.tsx</code> (4 modals + private shell/helpers shadowing shared ones) and <code>HexMap.tsx</code> (camera engine + hex geometry + tile JSX in one file).</td>
+      <td>HexMap's split (<code>useMapCamera</code> + <code>hexGeometry.ts</code> + <code>TileGroup</code>) is prerequisite to the brandbook's board-token redesign.</td>
+    </tr>
+    <tr>
+      <td><span class="verdict v-warn">drift</span> Rule math leaked into UI</td>
+      <td><code>board/helpers.ts:57-124</code> re-implements the per-pop income + building-bonus formulas — twice, with <em>mutually inconsistent gating</em>; <code>PopulationModals</code> shows static <code>ACTION_COSTS</code> instead of <code>G.ruleset.actionCosts</code>.</td>
+      <td>Direct violation of your stated invariant. Displayed costs can lie under any ruleset patch. Move the estimates into <code>game/economy/preview.ts</code>.</td>
+    </tr>
+    <tr>
+      <td><span class="verdict v-pass">clean</span> What's already good</td>
+      <td>Engine selector layer (<code>get*Status</code>, previews, <code>victoryStandings</code>) used consistently for legality; zero <code>!important</code>; disciplined CSS-variable bridge for resource colors; VictoryTab reuses the exact win-check function.</td>
+      <td>The bones are right. The reskin rides on them.</td>
+    </tr>
+  </table></div>
+  <p class="quiet">Confirmed dead code, safe to delete: <code>formatPopShort</code>, <code>phaseLabel</code>, <code>seasonTag</code>, <code>formatters.buildingName</code>, <code>placementKindLabel</code>, the <code>PLAYER_DISPLAY_NAMES</code> alias, unused tokens <code>--ink-2</code>/<code>--oxblood</code>/<code>--hex-line</code>, ~2.7 MB of unused full-color settlement PNGs and ~1.6 MB of <code>*-source.png</code> intermediates.</p>
+
+  <h3>The refactor ladder (do in this order)</h3>
+  <p>Each rung is independently shippable; the order front-loads the pieces the visual overhaul needs most.</p>
+  <div class="tablewrap"><table>
+    <tr><th>#</th><th>Refactor</th><th>Effort</th><th>Unlocks</th></tr>
+    <tr><td>R1</td><td><code>&lt;ModalShell&gt;</code> + <code>&lt;SelectionStatus&gt;</code>; port all 9 dialogs; single <code>activeModal</code> union replaces 11 booleans</td><td><span class="effort">M</span></td><td>One modal grammar; Escape/backdrop fixed once; the brandbook's "ceremony dial"</td></tr>
+    <tr><td>R2</td><td>One <code>&lt;ResourceChips&gt;</code> replaces the 4 chip implementations</td><td><span class="effort">S</span></td><td>Restyle every cost/delta/yield in one file</td></tr>
+    <tr><td>R3</td><td>Data-driven <code>VERBS</code> array + one <code>&lt;CommandVerb&gt;</code></td><td><span class="effort">S</span></td><td>The verb bar relocation in your todo becomes trivial</td></tr>
+    <tr><td>R4</td><td><code>GameUiContext</code> (G, viewer, phase, isActive, moves)</td><td><span class="effort">M</span></td><td>Kills 17-prop bags; the future network-client seam</td></tr>
+    <tr><td>R5</td><td>Split <code>PopulationModals.tsx</code> into <code>board/modals/</code>; promote its private shell/stepper; delete shadowed helpers</td><td><span class="effort">M</span></td><td>Ends the split-brain file layout</td></tr>
+    <tr><td>R6</td><td>Split <code>HexMap.tsx</code> → <code>useMapCamera</code> + <code>hexGeometry.ts</code> + <code>&lt;TileGroup&gt;</code></td><td><span class="effort">L</span></td><td>Board-token redesign; geometry becomes unit-testable</td></tr>
+    <tr><td>R7</td><td>Move UI-side economy estimates into <code>game/economy/preview.ts</code>; fix <code>ACTION_COSTS</code> fallbacks; memoize hot projections</td><td><span class="effort">M</span></td><td>Restores the "UI never duplicates formulas" invariant</td></tr>
+    <tr><td>R8</td><td>Hygiene: dead exports, <code>useAnchoredPopover</code> consolidation, <code>tileById</code> selector, magic numbers to constants</td><td><span class="effort">S</span></td><td>Keeps helpers honest</td></tr>
+  </table></div>
+
+  <h2><span class="sec">IV</span>Multiplayer Readiness</h2>
+  <p>Scored against what a server-authoritative online game with optimistic client prediction actually requires:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Requirement</th><th>Status</th><th>Detail</th></tr>
+    <tr><td>Serializable state</td><td><span class="verdict v-pass">Pass</span></td><td><code>HegemonyState</code> is pure JSON — no functions, classes, Maps, Dates. Survives <code>JSON.parse(JSON.stringify(G))</code> losslessly. RNG state is a number on the state object.</td></tr>
+    <tr><td>Deterministic replay</td><td><span class="verdict v-pass">Pass</span></td><td>mulberry32 with explicit state threading; the only <code>Math.random()</code> is <code>createSeed()</code> — the entropy source a server would own. Same seed + same moves = same state.</td></tr>
+    <tr><td>Wire-ready move protocol</td><td><span class="verdict v-warn">Exists, unused by UI</span></td><td><code>LegalMove</code> is a plain discriminated union; <code>applyMove(G, playerID, move)</code> is the uniform dispatcher. The sim and bots use it. The React UI bypasses it via direct mutator closures — converging the UI on <code>applyMove</code> is the single biggest step toward networking.</td></tr>
+    <tr><td>Authoritative loop</td><td><span class="verdict v-pass">Proven</span></td><td><code>sim/runner.ts</code> already runs validate → apply → telemetry headlessly. The server is a transliteration, not an invention.</td></tr>
+    <tr><td>Optimistic rollback shape</td><td><span class="verdict v-pass">Accidental pass</span></td><td>The controller's Immer commit-on-ok pattern (keep <code>previous</code> on rejection) is exactly optimistic-apply-with-rollback, waiting for a server ack to slot in.</td></tr>
+    <tr><td>Hidden information</td><td><span class="verdict v-fail">Missing</span></td><td>All four draw piles sit ordered inside the one state object every client would receive — full deck order leaks. Needs a per-player <code>playerView</code> redaction (or server-held decks, clients see counts + discards).</td></tr>
+    <tr><td>Move authorization</td><td><span class="verdict v-fail">Missing</span></td><td>Moves bake in <code>G.currentPlayer</code>; any seat can drive any seat (hot-seat feature, online bug). <code>applyMove</code> already takes an explicit <code>playerID</code>, so only the controller side needs auth.</td></tr>
+  </table></div>
+
+  <h2><span class="sec">V</span>Repo Structure — the mprocs Question</h2>
+  <p>Three end-states were compared: <strong>(A)</strong> single package with enforced boundaries, <strong>(B)</strong> npm-workspaces monorepo (<code>engine / client / server / sim</code>), <strong>(C)</strong> two separate repos with a published engine.</p>
+  <div class="callout">
+    <p><strong>Recommendation: B — the workspaces monorepo — reached in four stages, where Stage 0 is all of A's value.</strong> Not C: a published-package cycle inserts commit → publish → bump → sync into the sim-driven balance loop you run daily (<code>npm run sim</code> against live engine source), and that is the most expensive thing you could do to yourself mid-balancing. Separate repos are for separate teams; you are one person with one lockfile.</p>
+  </div>
+  <div class="stage">
+    <div class="stage-id">Stage 0</div>
+    <div class="stage-cost">hours · do now</div>
+    <div class="stage-body">
+      <p><strong>Purity lock-in.</strong> Move <code>src/game/controller.ts</code> → <code>src/ui/controller.ts</code> (18 mechanical import updates — the only semantic change in the entire migration). Add eslint boundary rules (game may not import react/ui/components) and a <code>tsconfig.engine.json</code> with <em>no DOM lib</em> over game+sim as a CI gate — compiler-guaranteed purity, catching what lint can't.</p>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="stage-id">Stage 1</div>
+    <div class="stage-cost">half a day</div>
+    <div class="stage-body">
+      <p><strong>De-fragilize.</strong> Path aliases (<code>@game/*</code>, <code>@ui/*</code>) replace the three-deep relative imports; <code>assets/</code> moves to <code>public/</code> with absolute URLs (3 files). After this, moving files stops breaking things — which matters, because the reskin will move files.</p>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="stage-id">Stage 2</div>
+    <div class="stage-cost">~1 day</div>
+    <div class="stage-body">
+      <p><strong>Workspaces.</strong> <code>packages/engine</code> (pure TS, source-level exports, no build step — <code>moduleResolution: "Bundler"</code> resolves .ts directly for vite/tsx/vitest), <code>packages/sim</code>, <code>packages/client</code>. The sim doubles as the extraction acceptance test: <code>npm run sim</code> must reproduce the saved Q13b baselines byte-identical. Engine's package.json carries no react and no immer — purity enforced by the package manager itself.</p>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="stage-id">Stage 3</div>
+    <div class="stage-cost">when multiplayer starts</div>
+    <div class="stage-body">
+      <p><strong>Server + mprocs.</strong> <code>packages/server</code>: websocket transport around the sim-runner loop — <code>produce(G, draft =&gt; applyMove(draft, player, move))</code>, validate against <code>G.currentPlayer</code>, redact draw piles per client, broadcast. Your <code>GameMoves</code> vocabulary is already the wire protocol, verbatim.</p>
+<pre><code># mprocs.yaml
+procs:
+  client:  { shell: "npm -w @hegemony/client run dev" }
+  server:  { shell: "npm -w @hegemony/server run dev" }
+  check:   { shell: "npm run -ws check -- --watch" }
+  sim:     { shell: "npm -w @hegemony/sim run sim -- --watch" }</code></pre>
+    </div>
+  </div>
+  <p>Every stage leaves <code>dev</code>, <code>test:run</code>, <code>sim</code>, and <code>build</code> green — you can stop at any rung if priorities shift, and nothing is thrown away by the next rung.</p>
+
+  <h2><span class="sec">VI</span>How This Meets the Brandbook</h2>
+  <p>The two workstreams interlock rather than queue. The efficient sequence:</p>
+  <ul>
+    <li><strong>First R1–R3 + Stage 0–1</strong> (a weekend of work): one modal shell, one chip, one verb component, purity gates, stable paths. Now the surface area of "what must be themed" has collapsed from ~30 call sites to ~6 components.</li>
+    <li><strong>Then the brandbook's token migration</strong> (tokens to <code>:root</code>, alpha-literals derived from tokens, the 8-role type scale) lands once, on the consolidated components — instead of being re-applied nine times.</li>
+    <li><strong>Then the asset regeneration batch</strong> (one icon language, Phase-1 gaps filled) slots into the existing mask-tint pipeline, which survives untouched.</li>
+    <li><strong>Stage 2–3 wait</strong> until the reskin has shipped and multiplayer work actually begins — the monorepo is a day of renames whenever you want it.</li>
+  </ul>
+
+  <p class="footnote">Sources: six-agent audit over src/components, src/styles, assets/, src/game, src/sim, docs/ — plus live-app screenshots at 1440×900 and 1280×800. File:line citations verified against <code>feat/phase1-currencies</code> @ <code>8d609f8</code>. Full audit transcripts retained in the session scratchpad.</p>
+</div>

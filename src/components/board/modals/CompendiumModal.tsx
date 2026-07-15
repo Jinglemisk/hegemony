@@ -9,6 +9,7 @@ import { ResourceIcon } from "../../Sprites";
 import { VictoryTab } from "../ledger/VictoryTab";
 import { capitalize } from "../helpers";
 import { EventTableRows } from "./EventTableModal";
+import { ModalShell } from "./ModalShell";
 
 /**
  * The compendium (Q18): every rule reference a player might want mid-game, in one
@@ -31,14 +32,12 @@ export function CompendiumModal({ G, playerID, onClose }: { G: HegemonyState; pl
   const [section, setSection] = useState<SectionId>("victory");
 
   return (
-    <div className="modalBackdrop eventModalBackdrop" role="presentation" onClick={onClose}>
-      <section
-        className="compendiumModal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="compendium-title"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <ModalShell
+      backdropClassName="eventModalBackdrop"
+      className="compendiumModal"
+      labelledBy="compendium-title"
+      onDismiss={onClose}
+    >
         <header className="compendiumHeader">
           <h2 id="compendium-title">Compendium</h2>
           <p>The table's open book — rules, rates, and decks as this board plays them.</p>
@@ -61,20 +60,31 @@ export function CompendiumModal({ G, playerID, onClose }: { G: HegemonyState; pl
 
         <div className="compendiumBody">
           {section === "victory" ? <VictoryTab G={G} playerID={playerID} /> : null}
-          {section === "tables" ? <TablesSection /> : null}
+          {section === "tables" ? <TablesSection G={G} /> : null}
           {section === "bank" ? <BankSection G={G} /> : null}
           {section === "decks" ? <DecksSection /> : null}
           {section === "costs" ? <CostsSection G={G} /> : null}
         </div>
-      </section>
-    </div>
+    </ModalShell>
   );
 }
 
-/** Every dice table in the game, through the same render path the live modals use. */
-function TablesSection() {
+/** Every dice table in the game, through the same render path the live modals use.
+ *  Longest-standing first: the omen (with this year's landed sign highlighted),
+ *  then the riot, then the expeditions. */
+function TablesSection({ G }: { G: HegemonyState }) {
   return (
     <div className="compendiumStack">
+      <article className="compendiumEntry">
+        <h3>{OMEN_TABLE.name}</h3>
+        <p className="compendiumFlavor">{OMEN_TABLE.flavor}</p>
+        <EventTableRows table={OMEN_TABLE} result={G.yearOmen?.record ?? null} />
+        <p className="compendiumNote">
+          Rolled publicly by the year's opener each spring; the sign stands over every polis until the year turns.
+          {G.yearOmen ? ` This year's sign: ${G.yearOmen.label}.` : ""}
+        </p>
+      </article>
+
       <article className="compendiumEntry">
         <h3>{RIOT_TABLE.name}</h3>
         <p className="compendiumFlavor">{RIOT_TABLE.flavor}</p>
@@ -100,15 +110,6 @@ function TablesSection() {
       <p className="compendiumNote">
         Ventures: one per turn, stake paid win or lose — post gold or wood (see Costs) and pick any expedition.
       </p>
-
-      <article className="compendiumEntry">
-        <h3>{OMEN_TABLE.name}</h3>
-        <p className="compendiumFlavor">{OMEN_TABLE.flavor}</p>
-        <EventTableRows table={OMEN_TABLE} result={null} />
-        <p className="compendiumNote">
-          Rolled publicly by the year's opener each spring; the sign stands over every polis until the year turns.
-        </p>
-      </article>
     </div>
   );
 }
