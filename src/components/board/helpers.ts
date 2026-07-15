@@ -1,7 +1,8 @@
 import { BUILDINGS, EMPTY_RESOURCES } from "../../game/data";
 import type { Phase } from "../../game/controller";
 import type { ActionStatus } from "../../game/rules";
-import { POP_TYPES, popIncome, previewBuildBuilding } from "../../game/rules";
+import type { Ruleset } from "../../game/ruleset";
+import { POP_TYPES, popIncome, previewBuildBuilding, previewBuildingIncomeDelta } from "../../game/rules";
 import type {
   BuildingDefinition,
   HegemonyState,
@@ -33,7 +34,14 @@ export function getOwnedHoldings(G: HegemonyState, playerID: PlayerId): OwnedHol
     });
 }
 
-export function calculatePopEconomy(holdings: OwnedHolding[]): PopEconomy {
+/**
+ * Income split by pop class, for the ledger's Pops tab.
+ *
+ * Takes the ruleset explicitly. It previously omitted it, and `popIncome`'s
+ * default parameter quietly substituted DEFAULT_RULESET — so under a patched
+ * ruleset this tab reported numbers the engine never paid (R7).
+ */
+export function calculatePopEconomy(holdings: OwnedHolding[], ruleset: Ruleset): PopEconomy {
   const economy: PopEconomy = {
     citizens: createEmptyResources(),
     freemen: createEmptyResources(),
@@ -42,7 +50,7 @@ export function calculatePopEconomy(holdings: OwnedHolding[]): PopEconomy {
 
   for (const { tile, settlement } of holdings) {
     for (const pop of POP_TYPES) {
-      addResources(economy[pop], popIncome(pop, settlement.pops[pop], tile.resource.type));
+      addResources(economy[pop], popIncome(pop, settlement.pops[pop], tile.resource.type, ruleset));
     }
   }
 
@@ -55,73 +63,24 @@ function addResources(target: Resources, delta: Resources) {
   }
 }
 
-export function estimateGrowPopIncomeDelta(tile: HexTile, settlement: Settlement, pop: PopType): Resources {
-  const delta = popIncome(pop, 1, tile.resource.type);
-  const bonusResource: keyof Resources =
-    pop === "citizens" ? "influence" : pop === "freemen" ? "gold" : tile.resource.type;
-  addSupportedPopBonus(delta, settlement, pop, bonusResource);
-
-  return delta;
-}
-
-function addSupportedPopBonus(resources: Resources, settlement: Settlement, pop: PopType, resource: keyof Resources) {
-  const support = settlement.buildings.reduce(
-    (summary, buildingId) => {
-      const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
-
-      for (const effect of building?.effects ?? []) {
-        if (
-          (pop === "citizens" && effect.type === "citizenInfluenceBonus") ||
-          (pop === "freemen" && effect.type === "freemanGoldBonus") ||
-          (pop === "slaves" && effect.type === "slavePrimaryResourceBonus")
-        ) {
-          summary.supportedPops += effect.supportedPops;
-          summary.amount = effect.amount;
-        }
-      }
-
-      return summary;
-    },
-    { supportedPops: 0, amount: 0 }
-  );
-
-  if (settlement.pops[pop] < support.supportedPops) {
-    resources[resource] += support.amount;
-  }
-}
-
+/**
+ * What a building would add, as text. Prefers the real preview (which refuses
+ * illegal builds) and falls back to the engine's unaffordable-case preview, so a
+ * disabled Build button still explains itself. Neither path is UI maths: R7
+ * deleted the two hand-rolled estimators that used to live here, one of which
+ * silently read DEFAULT_RULESET.
+ */
 export function getBuildingBenefitText(
   G: HegemonyState,
   playerID: PlayerId,
   tile: HexTile,
-  settlement: Settlement,
   building: BuildingDefinition
 ) {
   const preview = previewBuildBuilding(G, playerID, tile.id, building.id);
-  const projected = preview?.incomeDelta ?? estimateBuildingIncomeDelta(tile, settlement, building);
+  const projected = preview?.incomeDelta ?? previewBuildingIncomeDelta(G, playerID, tile.id, building.id);
   const deltaText = formatResourceDelta(projected);
 
   return deltaText === "none" ? formatBuildingEffects(building.effects) : deltaText;
-}
-
-function estimateBuildingIncomeDelta(tile: HexTile, settlement: Settlement, building: BuildingDefinition): Resources {
-  const delta = createEmptyResources();
-
-  for (const effect of building.effects) {
-    if (effect.type === "income") {
-      delta[effect.resource] += effect.amount;
-    } else if (effect.type === "happiness") {
-      delta.happiness += effect.amount;
-    } else if (effect.type === "freemanGoldBonus") {
-      delta.gold += Math.min(settlement.pops.freemen, effect.supportedPops) * effect.amount;
-    } else if (effect.type === "citizenInfluenceBonus") {
-      delta.influence += Math.min(settlement.pops.citizens, effect.supportedPops) * effect.amount;
-    } else if (effect.type === "slavePrimaryResourceBonus") {
-      delta[tile.resource.type] += Math.min(settlement.pops.slaves, effect.supportedPops) * effect.amount;
-    }
-  }
-
-  return delta;
 }
 
 export function buildingTooltipRows(

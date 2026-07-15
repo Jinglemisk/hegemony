@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { ACTION_COSTS } from "../../../game/data";
 import {
   EMPTY_POPS,
   POP_TYPES,
@@ -97,7 +96,10 @@ export function FoundColonyPopover({
     pops: { ...EMPTY_POPS, [pop]: 1 }
   };
   const previewYield = settlementNetYield(targetTile, previewSettlement, G.ruleset);
-  const cost = getFoundColonyStatus(G, playerID, targetTile.id).cost ?? ACTION_COSTS.foundColony;
+  // Fall back to the LIVE ruleset, never the ACTION_COSTS default: the status cost
+  // has season multipliers and discounts already applied, and the ruleset itself is
+  // patchable (R7). This branch is defensive — the status always carries a cost.
+  const cost = getFoundColonyStatus(G, playerID, targetTile.id).cost ?? G.ruleset.actionCosts.foundColony;
   const canConfirm = Boolean(source && source.pops[pop] > 0);
 
   const style: CSSProperties = position

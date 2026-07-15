@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { ACTION_COSTS } from "../../../game/data";
 import {
   EMPTY_POPS,
   clonePops,
@@ -56,7 +55,10 @@ export function UpgradeCityModal({
   const remaining = requiredTotal - selectedTotal;
   const colonyYield = selected ? settlementNetYield(selected.tile, selected.settlement, G.ruleset) : null;
   const preview = selected ? previewUpgradeColonyToCity(G, playerID, selected.tile.id, pops) : null;
-  const cost = (selected && getUpgradeColonyToCityStatus(G, playerID, selected.tile.id).cost) ?? ACTION_COSTS.upgradeColonyToCity;
+  // Live ruleset, not the ACTION_COSTS default — see FoundColonyPopover (R7).
+  const cost =
+    (selected && getUpgradeColonyToCityStatus(G, playerID, selected.tile.id).cost) ??
+    G.ruleset.actionCosts.upgradeColonyToCity;
   const canConfirm = Boolean(selected) && remaining === 0;
 
   return (
