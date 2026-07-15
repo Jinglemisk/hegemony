@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Phase } from "../../../game/controller";
 import { POP_TYPES, getGrowPopStatus, settlementCapacity, totalPops } from "../../../game/rules";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
+import { ModalShell } from "./ModalShell";
 import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { AtlasIcon } from "../../Sprites";
 import { ResourceDeltaList } from "../ResourceDeltaList";
@@ -48,8 +49,7 @@ export function GrowPopModal({
   }, [holding, holdings]);
 
   return (
-    <div className="modalBackdrop" role="presentation">
-      <section className="logModal populationModal growPopModal" role="dialog" aria-modal="true" aria-labelledby="grow-pop-title">
+    <ModalShell className="populationModal growPopModal" labelledBy="grow-pop-title" onDismiss={onCancel}>
         <div className="modalHeader">
           <div>
             <h2 id="grow-pop-title">Grow Pop</h2>
@@ -133,7 +133,6 @@ export function GrowPopModal({
             Grow Pop
           </button>
         </div>
-      </section>
-    </div>
+    </ModalShell>
   );
 }

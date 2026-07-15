@@ -41,6 +41,7 @@ export function VentureModal({
       modifier={0}
       result={result}
       subtitle={rolled ? undefined : "Stake it, sail, and let the table speak — one venture per turn."}
+      onDismiss={onClose}
       footer={
         rolled ? (
           <button className="primaryButton eventResolveButton" onClick={onClose}>
