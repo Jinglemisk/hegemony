@@ -1,61 +1,26 @@
+import { memo, useMemo, useState } from "react";
+import type { HegemonyState } from "../game/types";
 import {
-  memo,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type MouseEvent as ReactMouseEvent,
-  type PointerEvent as ReactPointerEvent,
-  type WheelEvent as ReactWheelEvent
-} from "react";
-import type { HegemonyState, MaterialResource } from "../game/types";
-import { PLAYER_COLORS } from "../game/data";
-import { settlementBuildingSlots } from "../game/rules";
-import { resourceCssVars } from "../ui/resourceVisuals";
+  BASE_VIEW_BOX,
+  HEX_SIZE,
+  SEA_IMAGE_VIEW_BOX,
+  WORLD_VIEW_BOX,
+  ZOOM_STEP,
+  cameraTransform,
+  getShorelineEdges,
+  viewBoxToString
+} from "../ui/hexGeometry";
+import { TileGroup } from "./board/map/TileGroup";
+import { useMapCamera } from "./board/map/useMapCamera";
 
-type ViewBox = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-type DragState = {
-  pointerId: number;
-  startClientX: number;
-  startClientY: number;
-  startViewBox: ViewBox;
-  hasMoved: boolean;
-  startTileId: string | null;
-};
+/**
+ * The board. After R6 this file composes three pieces rather than being all of
+ * them: `useMapCamera` owns pan/zoom, `hexGeometry` owns the maths (and is
+ * unit-tested), `TileGroup` owns what stands on a tile.
+ */
 
 type MapMode = "current" | "terrain";
 
-const HEX_SIZE = 45;
-const CITY_ICON_CENTER_Y = 4;
-const SLOT_GLYPH_Y = -22;
-const YIELD_GLYPH_Y = 23;
-const TWO_COLONY_POSITIONS = [-14, 14];
-const DRAG_CLICK_THRESHOLD = 5;
-const TILE_CLICK_SUPPRESS_MS = 160;
-const BASE_VIEW_BOX: ViewBox = { x: -372, y: -270, width: 744, height: 540 };
-const WORLD_VIEW_BOX: ViewBox = {
-  x: BASE_VIEW_BOX.x - BASE_VIEW_BOX.width * 0.05,
-  y: BASE_VIEW_BOX.y - BASE_VIEW_BOX.height * 0.05,
-  width: BASE_VIEW_BOX.width * 1.1,
-  height: BASE_VIEW_BOX.height * 1.1
-};
-const SEA_IMAGE_BLEED = 28;
-const SEA_IMAGE_VIEW_BOX: ViewBox = {
-  x: WORLD_VIEW_BOX.x - SEA_IMAGE_BLEED,
-  y: WORLD_VIEW_BOX.y - SEA_IMAGE_BLEED,
-  width: WORLD_VIEW_BOX.width + SEA_IMAGE_BLEED * 2,
-  height: WORLD_VIEW_BOX.height + SEA_IMAGE_BLEED * 2
-};
-const MIN_ZOOM = BASE_VIEW_BOX.width / WORLD_VIEW_BOX.width;
-const MAX_ZOOM = 1.18;
-const ZOOM_STEP = 0.08;
 const SEA_BACKDROP_HREF = new URL("../../assets/map/aegean-sea-board.png", import.meta.url).href;
 const MAP_MODE_OPTIONS: Array<{ mode: MapMode; label: string; iconHref: string }> = [
   {
@@ -94,198 +59,29 @@ function HexMapComponent({
 }) {
   const [mapMode, setMapMode] = useState<MapMode>("current");
   const highlightSet = useMemo(() => new Set(highlightTileIds ?? []), [highlightTileIds]);
-  const [viewBox, setViewBox] = useState(WORLD_VIEW_BOX);
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const cameraLayerRef = useRef<SVGGElement | null>(null);
-  const cameraViewBox = useRef<ViewBox>(WORLD_VIEW_BOX);
-  const dragState = useRef<DragState | null>(null);
-  const pendingAnimationFrame = useRef<number | null>(null);
-  const pendingViewBox = useRef<ViewBox | null>(null);
-  const wheelCommitTimeout = useRef<number | null>(null);
-  const suppressNextTileClick = useRef(false);
-  const tileClickSuppressTimeout = useRef<number | null>(null);
-  const zoomLevel = getZoomLevel(viewBox);
-  const activeMapModeLabel = MAP_MODE_OPTIONS.find((option) => option.mode === mapMode)?.label ?? "Current";
-  const isTerrainMapMode = mapMode === "terrain";
+  const { viewBox, svgRef, cameraLayerRef, canZoomIn, canZoomOut, zoomBy, shouldSuppressTileClick, cameraHandlers } =
+    useMapCamera({ onTileAction });
+
   const centers = useMemo(
     () =>
       G.board.tiles.map((tile) => ({
         tile,
-        x: HEX_SIZE * Math.sqrt(3) * (tile.q + tile.r / 2),
-        y: HEX_SIZE * 1.5 * tile.r
+        q: tile.q,
+        r: tile.r,
+        x: HEX_SIZE * 1.5 * tile.q,
+        y: HEX_SIZE * Math.sqrt(3) * (tile.r + tile.q / 2)
       })),
     [G.board.tiles]
   );
-  const shorelineEdges = useMemo(
-    () =>
-      getShorelineEdges(
-        centers.map(({ tile, x, y }) => ({ q: tile.q, r: tile.r, x, y })),
-        HEX_SIZE + 3
-      ),
-    [centers]
-  );
-  const canZoomIn = zoomLevel < MAX_ZOOM - 0.01;
-  const canZoomOut = zoomLevel > MIN_ZOOM + 0.01;
+  const shorelineEdges = useMemo(() => getShorelineEdges(centers, HEX_SIZE), [centers]);
 
-  useEffect(() => {
-    return () => {
-      if (pendingAnimationFrame.current !== null) {
-        window.cancelAnimationFrame(pendingAnimationFrame.current);
-      }
+  const isTerrainMapMode = mapMode === "terrain";
+  const activeMapModeLabel = MAP_MODE_OPTIONS.find((option) => option.mode === mapMode)?.label ?? "Current";
 
-      if (wheelCommitTimeout.current !== null) {
-        window.clearTimeout(wheelCommitTimeout.current);
-      }
-
-      if (tileClickSuppressTimeout.current !== null) {
-        window.clearTimeout(tileClickSuppressTimeout.current);
-      }
-    };
-  }, []);
-
-  const applyCameraViewBox = (nextViewBox: ViewBox) => {
-    const next = clampViewBox(nextViewBox);
-    cameraViewBox.current = next;
-    pendingViewBox.current = next;
-
-    if (pendingAnimationFrame.current === null) {
-      pendingAnimationFrame.current = window.requestAnimationFrame(() => {
-        pendingAnimationFrame.current = null;
-
-        if (pendingViewBox.current) {
-          cameraLayerRef.current?.setAttribute("transform", cameraTransform(pendingViewBox.current));
-          pendingViewBox.current = null;
-        }
-      });
-    }
-
-    return next;
-  };
-
-  const commitCameraState = () => {
-    const next = cameraViewBox.current;
-    setViewBox((current) => (viewBoxesEqual(current, next) ? current : next));
-  };
-
-  const clearWheelCommit = () => {
-    if (wheelCommitTimeout.current !== null) {
-      window.clearTimeout(wheelCommitTimeout.current);
-      wheelCommitTimeout.current = null;
-    }
-  };
-
-  const suppressTileClickOnce = () => {
-    suppressNextTileClick.current = true;
-
-    if (tileClickSuppressTimeout.current !== null) {
-      window.clearTimeout(tileClickSuppressTimeout.current);
-    }
-
-    tileClickSuppressTimeout.current = window.setTimeout(() => {
-      suppressNextTileClick.current = false;
-      tileClickSuppressTimeout.current = null;
-    }, TILE_CLICK_SUPPRESS_MS);
-  };
-
-  const finishCameraInteraction = () => {
-    svgRef.current?.classList.remove("isCameraMoving");
-    clearWheelCommit();
-    commitCameraState();
-  };
-
-  const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (event.button !== 0 || isMapDragBlockedTarget(event.target)) {
-      return;
-    }
-
-    clearWheelCommit();
-    dragState.current = {
-      pointerId: event.pointerId,
-      startClientX: event.clientX,
-      startClientY: event.clientY,
-      startViewBox: cameraViewBox.current,
-      hasMoved: false,
-      startTileId: getTileMapTargetId(event.target)
-    };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    event.currentTarget.classList.add("isDraggingSea");
-  };
-
-  const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
-    const drag = dragState.current;
-
-    if (!drag || drag.pointerId !== event.pointerId) {
-      return;
-    }
-
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const clientDeltaX = event.clientX - drag.startClientX;
-    const clientDeltaY = event.clientY - drag.startClientY;
-
-    if (!drag.hasMoved) {
-      if (Math.hypot(clientDeltaX, clientDeltaY) < DRAG_CLICK_THRESHOLD) {
-        return;
-      }
-
-      drag.hasMoved = true;
-      event.currentTarget.classList.add("isCameraMoving");
-    }
-
-    const deltaX = (clientDeltaX / bounds.width) * drag.startViewBox.width;
-    const deltaY = (clientDeltaY / bounds.height) * drag.startViewBox.height;
-
-    applyCameraViewBox({
-      ...drag.startViewBox,
-      x: drag.startViewBox.x - deltaX,
-      y: drag.startViewBox.y - deltaY
-    });
-  };
-
-  const endDrag = (event: ReactPointerEvent<SVGSVGElement>) => {
-    const drag = dragState.current;
-
-    if (drag?.pointerId === event.pointerId) {
-      if (drag.startTileId && !drag.hasMoved) {
-        suppressTileClickOnce();
-        onTileAction(drag.startTileId);
-      } else if (drag.hasMoved && drag.startTileId) {
-        suppressTileClickOnce();
-      }
-
-      dragState.current = null;
-      event.currentTarget.classList.remove("isDraggingSea");
-      finishCameraInteraction();
-    }
-  };
-
-  const handleWheel = (event: ReactWheelEvent<SVGSVGElement>) => {
-    event.preventDefault();
-
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const ratioX = (event.clientX - bounds.left) / bounds.width;
-    const ratioY = (event.clientY - bounds.top) / bounds.height;
-    const current = cameraViewBox.current;
-    const focus = {
-      x: current.x + current.width * ratioX,
-      y: current.y + current.height * ratioY,
-      ratioX,
-      ratioY
-    };
-    const direction = event.deltaY > 0 ? -1 : 1;
-    event.currentTarget.classList.add("isCameraMoving");
-    applyCameraViewBox(zoomViewBox(current, getZoomLevel(current) + direction * ZOOM_STEP, focus));
-    clearWheelCommit();
-    wheelCommitTimeout.current = window.setTimeout(finishCameraInteraction, 90);
-  };
-
-  const zoomBy = (delta: number) => {
-    clearWheelCommit();
-    applyCameraViewBox(zoomViewBox(cameraViewBox.current, getZoomLevel(cameraViewBox.current) + delta));
-    commitCameraState();
-  };
-
-  const handleTileClick = (tileId: string, event: ReactMouseEvent<SVGGElement>) => {
-    if (suppressNextTileClick.current) {
+  const handleTileClick = (tileId: string, event: React.MouseEvent<SVGGElement>) => {
+    // The camera already fired this tile's action on pointer-up; swallow the
+    // click the browser sends afterwards so a press never counts twice.
+    if (shouldSuppressTileClick()) {
       event.preventDefault();
       event.stopPropagation();
       return;
@@ -310,6 +106,7 @@ function HexMapComponent({
           </button>
         ))}
       </div>
+
       <div className="mapZoomControls" aria-label="Map zoom controls">
         <button aria-label="Zoom in" disabled={!canZoomIn} onClick={() => zoomBy(ZOOM_STEP)}>
           +
@@ -318,19 +115,16 @@ function HexMapComponent({
           -
         </button>
       </div>
+
       <svg
         ref={svgRef}
         className={`hexMap ${isTerrainMapMode ? "terrainMapMode" : "currentMapMode"}${placementActive ? " placementMode" : ""}`}
+        // The viewBox is fixed; the camera moves via a transform on the layer below.
         viewBox={viewBoxToString(BASE_VIEW_BOX)}
         role="img"
         aria-label={`Hegemony island hex map, ${activeMapModeLabel} mode`}
         preserveAspectRatio="xMidYMid slice"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onLostPointerCapture={endDrag}
-        onWheel={handleWheel}
+        {...cameraHandlers}
       >
         <g ref={cameraLayerRef} className="mapCameraLayer" transform={cameraTransform(viewBox)}>
           <image
@@ -349,6 +143,7 @@ function HexMapComponent({
             width={WORLD_VIEW_BOX.width}
             height={WORLD_VIEW_BOX.height}
           />
+
           <g className="shorelineFoam" aria-hidden="true">
             {shorelineEdges.map(({ x1, y1, x2, y2 }, index) => (
               <path
@@ -358,96 +153,22 @@ function HexMapComponent({
               />
             ))}
           </g>
-          {centers.map(({ tile, x, y }) => {
-            const city = tile.settlements.find((settlement) => settlement.kind !== "colony");
-            const colonies = tile.settlements.filter((settlement) => settlement.kind === "colony");
-            const shownColonies = colonies.slice(0, 2);
-            const colonyXPositions = getColonyXPositions(shownColonies.length);
-            const overflowColonies = Math.max(0, colonies.length - shownColonies.length);
-            const isSelected = selectedTileId === tile.id;
-            const isPending = pendingTileId === tile.id;
-            const isPlacementCandidate = placementActive && highlightSet.has(tile.id);
-            const usedBuildingSlots = city?.buildings.length ?? 0;
-            const totalBuildingSlots = city ? settlementBuildingSlots(tile, city, G.ruleset) : tile.buildingSlots;
-            // Text glyphs (user, 2026-07-13): slots read "used/available" up top, the
-            // yield reads "+n" below — both white, both growing with their number so a
-            // fat plains shouts and a lean hill whispers.
-            const slotGlyphSize = 11 + Math.min(8, totalBuildingSlots) * 1.2;
-            const yieldGlyphSize = 13 + Math.min(10, tile.resource.amount) * 1.7;
-            return (
-              <g key={tile.id} style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
-                <g
-                  aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${tile.resource.amount} ${tile.resource.type}`}
-                  className="svgButton"
-                  data-tile-id={tile.id}
-                  onClick={(event) => handleTileClick(tile.id, event)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      onTileAction(tile.id);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <polygon
-                    className={`hexTile terrain-${tile.terrain} ${isSelected ? "selected" : ""} ${isPending ? "pending" : ""} ${isPlacementCandidate ? "placementCandidate" : ""}`}
-                    points={hexPoints(HEX_SIZE - 2)}
-                  />
-                </g>
-                <g className="tileMetrics" aria-hidden="true">
-                  {totalBuildingSlots > 0 ? (
-                    <text
-                      className="tileSlotsGlyph"
-                      fontSize={slotGlyphSize}
-                      textAnchor="middle"
-                      y={SLOT_GLYPH_Y + slotGlyphSize * 0.36}
-                    >
-                      {usedBuildingSlots}/{totalBuildingSlots}
-                    </text>
-                  ) : null}
-                  <text
-                    className="tileYieldGlyph"
-                    fontSize={yieldGlyphSize}
-                    textAnchor="middle"
-                    y={YIELD_GLYPH_Y + yieldGlyphSize * 0.36}
-                  >
-                    {tile.resource.amount}
-                  </text>
-                </g>
-                {city ? (
-                  <g
-                    className="settlementShape cityShape"
-                    style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
-                    transform={`translate(0 ${CITY_ICON_CENTER_Y}) scale(0.85)`}
-                  >
-                    <rect height={20} rx={2} width={20} x={-10} y={-10} />
-                  </g>
-                ) : null}
-                {shownColonies.map((colony, index) => (
-                  <g
-                    className="colonyShapeDocked"
-                    transform={`translate(${colonyXPositions[index]} 4)`}
-                    key={`${colony.owner}-${index}`}
-                  >
-                    <g
-                      className="settlementShape colonyShape"
-                      style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
-                      transform="scale(0.85)"
-                    >
-                      <path d="M 0 -11 L 10 8 L -10 8 Z" />
-                    </g>
-                  </g>
-                ))}
-                {overflowColonies > 0 ? (
-                  <g className="colonyOverflow" transform="translate(0 4)" aria-hidden="true">
-                    <circle r={9} />
-                    <text y={3.2}>+{overflowColonies}</text>
-                  </g>
-                ) : null}
-              </g>
-            );
-          })}
+
+          {centers.map(({ tile, x, y }) => (
+            <TileGroup
+              isPending={pendingTileId === tile.id}
+              isPlacementCandidate={placementActive && highlightSet.has(tile.id)}
+              isSelected={selectedTileId === tile.id}
+              key={tile.id}
+              onTileAction={onTileAction}
+              onTileClick={handleTileClick}
+              ruleset={G.ruleset}
+              tile={tile}
+              x={x}
+              y={y}
+            />
+          ))}
+
           {confirmation
             ? centers
                 .filter(({ tile }) => tile.id === confirmation.tileId)
@@ -485,148 +206,6 @@ function HexMapComponent({
       </svg>
     </>
   );
-}
-
-function hexPoints(size: number) {
-  return Array.from({ length: 6 }, (_, index) => {
-    const angle = (Math.PI / 180) * (60 * index - 30);
-    return `${Math.cos(angle) * size},${Math.sin(angle) * size}`;
-  }).join(" ");
-}
-
-function getColonyXPositions(count: number) {
-  if (count <= 1) {
-    return [0];
-  }
-
-  return TWO_COLONY_POSITIONS;
-}
-
-function viewBoxToString(viewBox: ViewBox) {
-  return `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`;
-}
-
-function getZoomLevel(viewBox: ViewBox) {
-  return BASE_VIEW_BOX.width / viewBox.width;
-}
-
-function cameraTransform(viewBox: ViewBox) {
-  const scale = BASE_VIEW_BOX.width / viewBox.width;
-  const translateX = BASE_VIEW_BOX.x - viewBox.x * scale;
-  const translateY = BASE_VIEW_BOX.y - viewBox.y * scale;
-
-  return `matrix(${scale} 0 0 ${scale} ${translateX} ${translateY})`;
-}
-
-function zoomViewBox(
-  current: ViewBox,
-  zoomLevel: number,
-  focus: { x: number; y: number; ratioX: number; ratioY: number } = {
-    x: current.x + current.width / 2,
-    y: current.y + current.height / 2,
-    ratioX: 0.5,
-    ratioY: 0.5
-  }
-) {
-  const nextZoom = clamp(zoomLevel, MIN_ZOOM, MAX_ZOOM);
-  const nextWidth = BASE_VIEW_BOX.width / nextZoom;
-  const nextHeight = BASE_VIEW_BOX.height / nextZoom;
-
-  return clampViewBox({
-    x: focus.x - nextWidth * focus.ratioX,
-    y: focus.y - nextHeight * focus.ratioY,
-    width: nextWidth,
-    height: nextHeight
-  });
-}
-
-function clampViewBox(viewBox: ViewBox): ViewBox {
-  const width = Math.min(viewBox.width, WORLD_VIEW_BOX.width);
-  const height = Math.min(viewBox.height, WORLD_VIEW_BOX.height);
-  const maxX = WORLD_VIEW_BOX.x + WORLD_VIEW_BOX.width - width;
-  const maxY = WORLD_VIEW_BOX.y + WORLD_VIEW_BOX.height - height;
-
-  return {
-    x: clamp(viewBox.x, WORLD_VIEW_BOX.x, maxX),
-    y: clamp(viewBox.y, WORLD_VIEW_BOX.y, maxY),
-    width,
-    height
-  };
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function viewBoxesEqual(a: ViewBox, b: ViewBox) {
-  return (
-    Math.abs(a.x - b.x) < 0.001 &&
-    Math.abs(a.y - b.y) < 0.001 &&
-    Math.abs(a.width - b.width) < 0.001 &&
-    Math.abs(a.height - b.height) < 0.001
-  );
-}
-
-function isMapDragBlockedTarget(target: EventTarget) {
-  return target instanceof Element && Boolean(target.closest(".tileConfirmPrompt, button"));
-}
-
-function getTileMapTargetId(target: EventTarget) {
-  if (!(target instanceof Element)) {
-    return null;
-  }
-
-  return target.closest<SVGGElement>(".svgButton")?.dataset.tileId ?? null;
-}
-
-function getShorelineEdges(
-  centers: Array<{ q: number; r: number; x: number; y: number }>,
-  size: number
-) {
-  const occupied = new Set(centers.map(({ q, r }) => coordinateKey(q, r)));
-  const edges: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
-
-  centers.forEach(({ q, r, x, y }) => {
-    getHexCorners(x, y, size).forEach((corner, index, corners) => {
-      const [neighborQ, neighborR] = getNeighborCoordinate(q, r, index);
-
-      if (!occupied.has(coordinateKey(neighborQ, neighborR))) {
-        const nextCorner = corners[(index + 1) % corners.length];
-        edges.push({ x1: corner.x, y1: corner.y, x2: nextCorner.x, y2: nextCorner.y });
-      }
-    });
-  });
-
-  return edges;
-}
-
-function getHexCorners(x: number, y: number, size: number) {
-  return Array.from({ length: 6 }, (_, index) => {
-    const angle = (Math.PI / 180) * (60 * index - 30);
-
-    return {
-      x: x + Math.cos(angle) * size,
-      y: y + Math.sin(angle) * size
-    };
-  });
-}
-
-function getNeighborCoordinate(q: number, r: number, sideIndex: number) {
-  const directions = [
-    [1, 0],
-    [0, 1],
-    [-1, 1],
-    [-1, 0],
-    [0, -1],
-    [1, -1]
-  ];
-  const [deltaQ, deltaR] = directions[sideIndex];
-
-  return [q + deltaQ, r + deltaR];
-}
-
-function coordinateKey(q: number, r: number) {
-  return `${q},${r}`;
 }
 
 export const HexMap = memo(HexMapComponent);
