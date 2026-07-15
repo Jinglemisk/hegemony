@@ -136,7 +136,9 @@ button:focus-visible {
   isolation: isolate;
   display: grid;
   gap: 14px;
-  grid-template-rows: auto minmax(0, 1fr);
+  /* topbar · workbench · command bar — the bar spans the whole shell, not the
+     map column: an RTS command bar runs the width of the screen (Q17). */
+  grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100svh;
   overflow: hidden;
   padding: 16px;
@@ -203,7 +205,9 @@ button:focus-visible {
   z-index: 10;
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(280px, 350px) minmax(470px, 1fr) minmax(300px, 372px);
+  /* Two columns since the refit: the verbs moved to the bottom bar and took the
+     right panel with them, so the map gets the room back. */
+  grid-template-columns: minmax(280px, 350px) minmax(470px, 1fr);
   width: 100%;
   max-width: 1520px;
   min-height: 0;
@@ -235,7 +239,7 @@ button:focus-visible {
 .mapColumn {
   display: grid;
   gap: 10px;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
   z-index: 1;

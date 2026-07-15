@@ -2,8 +2,9 @@
    Split from styles.css (Phase 2e); original source order preserved. */
 
 @media (max-width: 1280px) {
+  /* Two columns since the refit — the third panel is gone. */
   .workbench {
-    grid-template-columns: minmax(250px, 320px) minmax(420px, 1fr) minmax(280px, 330px);
+    grid-template-columns: minmax(250px, 320px) minmax(420px, 1fr);
   }
 
   .topbar {
@@ -12,6 +13,29 @@
 
   .topResourceGrid {
     grid-template-columns: repeat(3, minmax(92px, 1fr));
+  }
+
+  /* Resources · verbs · End Turn need ~1360px to sit on one line. Below that the
+     resources take their own row rather than crushing the verbs to "GR…". The
+     grammar survives: hands still sit under the board, just two rows deep. */
+  .commandBar {
+    grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+    grid-template-areas:
+      "resources resources"
+      "verbs     end";
+  }
+
+  .commandBarResources {
+    grid-area: resources;
+  }
+
+  .commandBarVerbs {
+    grid-area: verbs;
+    justify-content: flex-start;
+  }
+
+  .commandBarEnd {
+    grid-area: end;
   }
 }
 

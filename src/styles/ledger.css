@@ -235,7 +235,11 @@
 
 .bandResourceGrid {
   flex: 1;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  /* A floor, not just a share: in the old full-width band `1fr` always resolved
+     to ~87px, but in the command bar the pills share the row with six verbs and
+     collapsed to unreadable slivers. 100px is measured, not guessed — icon (36) +
+     gap (6) + the widest value + padding (12). */
+  grid-template-columns: repeat(6, minmax(100px, 1fr));
   align-content: center;
   gap: 4px;
   height: 100%;
