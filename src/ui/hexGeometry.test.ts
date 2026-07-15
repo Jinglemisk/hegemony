@@ -8,7 +8,9 @@ import {
   cameraTransform,
   clampViewBox,
   getColonyXPositions,
+  SHORELINE_RADIUS,
   getHexCorners,
+  hexCenter,
   getNeighborCoordinate,
   getShorelineEdges,
   getZoomLevel,
@@ -40,6 +42,44 @@ describe("hex shape", () => {
 
     expect(angleOf(first)).toBeCloseTo(-30, 6);
     expect(angleOf(second) - angleOf(first)).toBeCloseTo(60, 6);
+  });
+});
+
+describe("layout agrees with the outline", () => {
+  // The pairing R6 broke: the outline stayed pointy-top while the layout was
+  // rewritten flat-top, so every tile overlapped its neighbours. Note that BOTH
+  // layouts put centres √3·size apart — they are the same tiling rotated 90° —
+  // so a distance check passes either way and proves nothing. The bug is the
+  // MISMATCH, so each test below measures the layout against the outline's own
+  // bounding box rather than against a remembered constant.
+
+  const corners = getHexCorners(0, 0, HEX_SIZE);
+  const outlineWidth = Math.max(...corners.map((c) => c.x)) - Math.min(...corners.map((c) => c.x));
+  const outlineHeight = Math.max(...corners.map((c) => c.y)) - Math.min(...corners.map((c) => c.y));
+
+  it("spaces columns by the outline's real width", () => {
+    // Flat-top spacing steps 1.5·size while a pointy-top outline is √3·size
+    // wide — a 13% overlap on every tile, which is what the board looked like.
+    const columnStep = hexCenter(1, 0, HEX_SIZE).x - hexCenter(0, 0, HEX_SIZE).x;
+
+    expect(columnStep).toBeCloseTo(outlineWidth, 6);
+  });
+
+  it("keeps same-row neighbours level", () => {
+    // Pointy-top hexes in one row share a y. Flat-top spacing shears them.
+    expect(hexCenter(1, 0, HEX_SIZE).y).toBeCloseTo(0, 6);
+  });
+
+  it("spaces rows by three-quarters of the outline's height", () => {
+    // Rows interlock: each drops 3/4 of a hex so the points nest between.
+    const rowStep = hexCenter(0, 1, HEX_SIZE).y - hexCenter(0, 0, HEX_SIZE).y;
+
+    expect(rowStep).toBeCloseTo(outlineHeight * 0.75, 6);
+    expect(hexCenter(0, 1, HEX_SIZE).x).toBeCloseTo(outlineWidth / 2, 6);
+  });
+
+  it("draws foam outside the tile, not through it", () => {
+    expect(SHORELINE_RADIUS).toBeGreaterThan(HEX_SIZE);
   });
 });
 
