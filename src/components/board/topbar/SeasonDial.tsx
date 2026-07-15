@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { SEASONS, seasonName } from "../../../game/rules";
 import type { SeasonName } from "../../../game/types";
+import { capitalize } from "../helpers";
 
 /** Hand-painted, Greek vase-style season emblems (background-removed webp). */
 const SEASON_ART: Record<SeasonName, string> = {
@@ -34,6 +35,3 @@ export function SeasonDial({ seasonIndex }: { seasonIndex: number }) {
   );
 }
 
-function capitalize(value: string) {
-  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
-}

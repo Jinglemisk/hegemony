@@ -8,6 +8,7 @@ import type {
   HexTile,
   PlayerId,
   PopType,
+  Pops,
   Resources,
   Settlement,
   SettlementKind
@@ -15,7 +16,7 @@ import type {
 import { formatBuildingEffects, formatResourceCost, formatResourceDelta } from "../../ui/formatters";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
 import { SETTLEMENT_SORT } from "./constants";
-import type { OwnedHolding, PopEconomy } from "./types";
+import type { OwnedHolding, PopEconomy, SettlementEntry } from "./types";
 
 export function getOwnedHoldings(G: HegemonyState, playerID: PlayerId): OwnedHolding[] {
   return G.board.tiles
@@ -182,4 +183,31 @@ export function createEmptyResources(): Resources {
 
 export function capitalize(value: string) {
   return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`;
+}
+
+/** Every tile this player has a settlement on, with that settlement's pops. The
+ *  shared source for the source/target pickers (found colony, move pops). */
+export function getSettlementEntries(G: HegemonyState, playerID: PlayerId): SettlementEntry[] {
+  return G.board.tiles
+    .map((tile) => {
+      const settlement = tile.settlements.find((candidate) => candidate.owner === playerID);
+
+      return settlement ? { tile, pops: settlement.pops } : null;
+    })
+    .filter((entry): entry is SettlementEntry => Boolean(entry));
+}
+
+/** First pop type with a body to spare — the default selection for pop pickers. */
+export function firstAvailablePop(pops?: Pops): PopType {
+  if (!pops) {
+    return "citizens";
+  }
+
+  return POP_TYPES.find((candidate) => pops[candidate] > 0) ?? "citizens";
+}
+
+export function formatTileName(G: HegemonyState, tileId: string) {
+  const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
+
+  return tile ? `${tile.terrain} ${tile.id}` : tileId;
 }
