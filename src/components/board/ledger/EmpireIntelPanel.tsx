@@ -15,6 +15,7 @@ import { PopsTab } from "./PopsTab";
 import { VictoryTab } from "./VictoryTab";
 import { victoryCardsHeld } from "../../../game/victory";
 import { UiSprite } from "../../Sprites";
+import { useGameUi } from "../GameUiContext";
 
 const UNREST_TITLES: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
   discontent: "Discontent",
@@ -36,28 +37,21 @@ function unrestMessage(status: UnrestStatus, popLossThreshold: number): string {
 }
 
 function EmpireIntelPanelComponent({
-  G,
-  playerID,
   activeTab,
-  phase,
-  isActive,
   onTabChange,
   onBuildBuildingRequest,
   onBankSell,
   onBankBuy,
   onLadderRequest
 }: {
-  G: HegemonyState;
-  playerID: PlayerId;
   activeTab: EmpireTab;
-  phase: Phase;
-  isActive: boolean;
   onTabChange: (tab: EmpireTab) => void;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
   onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
 }) {
+  const { G, viewerId: playerID } = useGameUi();
   const holdings = useMemo(() => getOwnedHoldings(G, playerID), [G, playerID]);
   const cityCount = holdings.filter(({ settlement }) => settlement.kind !== "colony").length;
   const colonyCount = holdings.length - cityCount;
@@ -149,40 +143,24 @@ function EmpireIntelPanelComponent({
       <div className="intelBody">
         {activeTab === "cities" ? (
           <CitiesTab
-            G={G}
             holdings={holdings}
-            isActive={isActive}
-            phase={phase}
-            playerID={playerID}
             onBuildBuildingRequest={onBuildBuildingRequest}
           />
         ) : null}
         {activeTab === "buildings" ? (
           <BuildingsTab
-            G={G}
             holdings={holdings}
-            isActive={isActive}
-            phase={phase}
-            playerID={playerID}
             onBuildBuildingRequest={onBuildBuildingRequest}
           />
         ) : null}
         {activeTab === "pops" ? (
           <PopsTab
-            G={G}
             holdings={holdings}
-            playerID={playerID}
-            isActive={isActive}
-            phase={phase}
             onLadderRequest={onLadderRequest}
           />
         ) : null}
         {activeTab === "market" ? (
           <MarketTab
-            G={G}
-            playerID={playerID}
-            isActive={isActive}
-            phase={phase}
             onBankSell={onBankSell}
             onBankBuy={onBankBuy}
           />

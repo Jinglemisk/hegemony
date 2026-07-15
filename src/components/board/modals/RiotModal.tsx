@@ -7,6 +7,7 @@ import { formatPopLabel } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { EventTableModal } from "./EventTableModal";
 import { capitalize, settlementPickerLabel } from "../helpers";
+import { useGameUi } from "../GameUiContext";
 
 /**
  * The riot instance of the shared event-table modal (D9). Blocking: it mounts while
@@ -15,20 +16,19 @@ import { capitalize, settlementPickerLabel } from "../helpers";
  * `resultOpen` / `onDismissResult`.
  */
 export function RiotModal({
-  G,
-  playerID,
-  isActive,
-  moves,
   onRolled,
   onDismissResult
 }: {
-  G: HegemonyState;
-  playerID: PlayerId;
-  isActive: boolean;
-  moves: GameMoves;
   onRolled: () => void;
   onDismissResult: () => void;
 }) {
+  const { G, currentPlayerId, isActive: viewerCanAct, moves } = useGameUi();
+  // A riot belongs to the seat that triggered it, not to whoever is being viewed —
+  // so this modal derives its own owner and its own right-to-act rather than taking
+  // the viewer's. Falls back to the current seat for the result beat, after
+  // `pendingRiot` has already cleared.
+  const playerID = G.pendingRiot?.playerID ?? currentPlayerId;
+  const isActive = viewerCanAct && playerID === currentPlayerId;
   const pending = G.pendingRiot;
   const severe = pending?.tier === "revolt";
   const tierModifier = severe ? G.ruleset.economy.unrest.severeRollModifier : 0;

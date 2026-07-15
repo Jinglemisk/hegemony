@@ -4,6 +4,7 @@ import type { HegemonyState, PlayerId, TradableMaterial } from "../../../game/ty
 import { resourceCssVars } from "../../../ui/resourceVisuals";
 import { ResourceIcon } from "../../Sprites";
 import { capitalize } from "../helpers";
+import { useGameUi } from "../GameUiContext";
 
 /**
  * The bank exchange (D6/Q14): sell a material for 1 gold, buy one for gold, rates
@@ -11,20 +12,13 @@ import { capitalize } from "../helpers";
  * board at game creation and never move; no cap on trades per turn.
  */
 export function MarketTab({
-  G,
-  playerID,
-  isActive,
-  phase,
   onBankSell,
   onBankBuy
 }: {
-  G: HegemonyState;
-  playerID: PlayerId;
-  isActive: boolean;
-  phase: Phase;
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
 }) {
+  const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const gold = G.players[playerID].resources.gold;
   const tradingOpen = isActive && phase === "gameplay";
 

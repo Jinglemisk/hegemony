@@ -6,19 +6,15 @@ import { AnnotatedText } from "../../AnnotatedText";
 import { eventCardArtUrl, formatEventEffects } from "../events";
 import { settlementPickerLabel } from "../helpers";
 import { ModalShell } from "./ModalShell";
+import { useGameUi } from "../GameUiContext";
 
-export function PendingPlayerEventModal({
-  G,
-  playerID,
-  isActive,
-  moves
-}: {
-  G: HegemonyState;
-  playerID: PlayerId;
-  isActive: boolean;
-  moves: GameMoves;
-}) {
+export function PendingPlayerEventModal() {
+  const { G, currentPlayerId, isActive: viewerCanAct, moves } = useGameUi();
   const pending = G.pendingPlayerEvent;
+  // The card belongs to the seat that drew it. Deriving the owner here (rather than
+  // taking it as a prop) keeps "who may resolve this" in one place.
+  const playerID = pending?.playerID ?? currentPlayerId;
+  const isActive = viewerCanAct && playerID === currentPlayerId;
   const card = pending?.card;
   const choices = card ? getEventEffectChoices(card) : [];
   const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);

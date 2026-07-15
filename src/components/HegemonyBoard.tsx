@@ -29,6 +29,7 @@ import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
 import { SeasonStatus } from "./board/topbar/SeasonStatus";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
 import { PLAYER_DISPLAY_NAMES } from "./board/constants";
+import { GameUiProvider, type GameUi } from "./board/GameUiContext";
 import type { EmpireTab } from "./board/types";
 
 type BoardProps = {
@@ -97,6 +98,20 @@ export function HegemonyBoard({
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
   const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent);
+  const gameUi = useMemo<GameUi>(
+    () => ({
+      G,
+      viewerId,
+      viewer,
+      currentPlayerId,
+      phase: ctx.phase,
+      isActive,
+      hasPendingPlayerEvent,
+      moves,
+      events
+    }),
+    [G, viewerId, viewer, currentPlayerId, ctx.phase, isActive, hasPendingPlayerEvent, moves, events]
+  );
   const projectedEconomy = useMemo(
     () => calculateEconomyProjection(G, viewerId, { resolveTransfers: true }),
     [G, viewerId]
@@ -263,6 +278,7 @@ export function HegemonyBoard({
   );
 
   return (
+    <GameUiProvider value={gameUi}>
     <main className="shell uiOverhaulShell">
       <header className="topbar strategyTopbar">
         <TopbarEvents G={G} />
@@ -285,11 +301,7 @@ export function HegemonyBoard({
       <section className="workbench strategyWorkbench">
         <aside className="panel empirePanel intelPanel">
           <EmpireIntelPanel
-            G={G}
             activeTab={activeEmpireTab}
-            isActive={isActive}
-            phase={ctx.phase}
-            playerID={viewerId}
             onBuildBuildingRequest={requestBuildBuilding}
             onTabChange={setActiveEmpireTab}
             onBankSell={moves.bankSell}
@@ -409,11 +421,7 @@ export function HegemonyBoard({
       ) : null}
       {activeModal?.kind === "growPop" ? (
         <GrowPopModal
-          G={G}
           initialTileId={selectedTileId}
-          isActive={isActive}
-          phase={ctx.phase}
-          playerID={viewerId}
           onCancel={closeModal}
           onConfirm={(tileId, pop) => {
             moves.growPop(tileId, pop);
@@ -433,15 +441,11 @@ export function HegemonyBoard({
         />
       ) : null}
       {activeModal?.kind === "calm" ? (
-        <CalmModal G={G} playerID={viewerId} isActive={isActive} moves={moves} onClose={closeModal} />
+        <CalmModal onClose={closeModal} />
       ) : null}
       {activeModal?.kind === "ladder" ? (
         <LadderModal
-          G={G}
-          playerID={viewerId}
           request={activeModal.request}
-          phase={ctx.phase}
-          isActive={isActive}
           onCancel={closeModal}
           onConfirm={(tileId, from, kind) => {
             if (kind === "promote") {
@@ -454,14 +458,10 @@ export function HegemonyBoard({
         />
       ) : null}
       {activeModal?.kind === "venture" ? (
-        <VentureModal G={G} playerID={viewerId} isActive={isActive} moves={moves} onClose={closeModal} />
+        <VentureModal onClose={closeModal} />
       ) : null}
       {G.pendingRiot || riotResultOpen ? (
         <RiotModal
-          G={G}
-          playerID={G.pendingRiot?.playerID ?? currentPlayerId}
-          isActive={isActive && (G.pendingRiot?.playerID ?? currentPlayerId) === currentPlayerId}
-          moves={moves}
           onRolled={() => setRiotResultOpen(true)}
           onDismissResult={() => setRiotResultOpen(false)}
         />
@@ -470,12 +470,7 @@ export function HegemonyBoard({
         <GameOverModal G={G} onInspectBoard={() => setGameOverDismissed(true)} />
       ) : null}
       {G.pendingPlayerEvent ? (
-        <PendingPlayerEventModal
-          G={G}
-          isActive={isActive && G.pendingPlayerEvent.playerID === currentPlayerId}
-          moves={moves}
-          playerID={G.pendingPlayerEvent.playerID}
-        />
+        <PendingPlayerEventModal />
       ) : null}
       {G.yearOmen && G.yearOmen.year !== seenOmenYear && !G.pendingRiot && !G.pendingPlayerEvent ? (
         <EventTableModal
@@ -495,5 +490,6 @@ export function HegemonyBoard({
         <CompendiumModal G={G} playerID={viewerId} onClose={closeModal} />
       ) : null}
     </main>
+    </GameUiProvider>
   );
 }
