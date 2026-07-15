@@ -2,21 +2,20 @@ import type { Phase } from "../../../game/controller";
 import { POP_TYPES } from "../../../game/rules";
 import type { HegemonyState, Resources } from "../../../game/types";
 import { phaseHint } from "../../../ui/formatters";
-import { RESOURCE_ORDER, resourceCssVars } from "../../../ui/resourceVisuals";
-import { AtlasIcon, ResourceIcon, UiSprite } from "../../Sprites";
+import { AtlasIcon, UiSprite } from "../../Sprites";
 import { ActionLogPanel } from "./ActionLogPanel";
 import { DeckShelf } from "./DeckShelf";
+import { ResourceChips } from "../ResourceChips";
 
 function ResourceCost({ cost }: { cost: Partial<Resources> }) {
   return (
-    <span className="commandVerbCost">
-      {RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) > 0).map((resource) => (
-        <span className="commandVerbCostItem" key={resource} style={resourceCssVars(resource)}>
-          <ResourceIcon resource={resource} className="commandVerbCostIcon" />
-          {cost[resource]}
-        </span>
-      ))}
-    </span>
+    <ResourceChips
+      resources={cost}
+      variant="cost"
+      className="commandVerbCost"
+      chipClassName="commandVerbCostItem"
+      iconClassName="commandVerbCostIcon"
+    />
   );
 }
 
@@ -93,10 +92,12 @@ export function ActionCommandPanel({
             <strong>Grow</strong>
             <span className="commandVerbCost">
               <em>from</em>
-              <span className="commandVerbCostItem" style={resourceCssVars("food")}>
-                <ResourceIcon resource="food" className="commandVerbCostIcon" />
-                {minGrowFood}
-              </span>
+              <ResourceChips
+                resources={{ food: minGrowFood }}
+                variant="cost"
+                chipClassName="commandVerbCostItem"
+                iconClassName="commandVerbCostIcon"
+              />
             </span>
           </span>
         </button>
@@ -180,10 +181,12 @@ export function ActionCommandPanel({
             <strong>Calm</strong>
             <span className="commandVerbCost">
               <em>from</em>
-              <span className="commandVerbCostItem" style={resourceCssVars("influence")}>
-                <ResourceIcon resource="influence" className="commandVerbCostIcon" />
-                {G.ruleset.civicCalm.influenceCost}
-              </span>
+              <ResourceChips
+                resources={{ influence: G.ruleset.civicCalm.influenceCost }}
+                variant="cost"
+                chipClassName="commandVerbCostItem"
+                iconClassName="commandVerbCostIcon"
+              />
             </span>
           </span>
         </button>
@@ -205,10 +208,12 @@ export function ActionCommandPanel({
             <strong>Venture</strong>
             <span className="commandVerbCost">
               <em>stake</em>
-              <span className="commandVerbCostItem" style={resourceCssVars("gold")}>
-                <ResourceIcon resource="gold" className="commandVerbCostIcon" />
-                {G.ruleset.ventureStakes.gold.gold}
-              </span>
+              <ResourceChips
+                resources={{ gold: G.ruleset.ventureStakes.gold.gold }}
+                variant="cost"
+                chipClassName="commandVerbCostItem"
+                iconClassName="commandVerbCostIcon"
+              />
             </span>
           </span>
         </button>
