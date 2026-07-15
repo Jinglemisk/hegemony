@@ -9,6 +9,7 @@ import {
   totalPops
 } from "../../../game/rules";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
+import { ModalShell } from "./ModalShell";
 import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { TerrainSprite } from "../../Sprites";
 import { actionRequirementText, actionTitle, capitalize, getOwnedHoldings, holdingShortLabel } from "../helpers";
@@ -54,8 +55,7 @@ export function LadderModal({
   const verb = kind === "promote" ? "Promote" : "Demote";
 
   return (
-    <div className="modalBackdrop" role="presentation">
-      <section className="logModal populationModal" role="dialog" aria-modal="true" aria-labelledby="ladder-title">
+    <ModalShell className="populationModal" labelledBy="ladder-title" onDismiss={onCancel}>
         <div className="modalHeader">
           <div>
             <h2 id="ladder-title">
@@ -145,7 +145,6 @@ export function LadderModal({
             {verb}
           </button>
         </div>
-      </section>
-    </div>
+    </ModalShell>
   );
 }

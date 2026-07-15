@@ -36,7 +36,7 @@ open questions.
    | Food | Pops, only ever pops — never buildings | Plains stay the life currency |
    | Influence | Political acts only — never buildings | — |
 
-3. **Hills get a new job: the acropolis terrain.** Slot-rich, yield-poor — token stone
+3. **Hills get a new job: slot-rich, yield-less building terrain.** Slot-rich, yield-poor — token stone
    or food yields (matching the PDF's hill list), but the best building-slot counts on
    the map. The map then asks a real question: settle the breadbasket (pops, few slots)
    or the hilltop (buildings, little food)?
@@ -63,42 +63,98 @@ open questions.
    production heartland vs. coastal trade power — which National Ideas can later hook
    into ("start with a Luxury Goods' Trader" already presumes it).
 
-## Draft Hill Redistribution
+## Hill Redistribution — LOCKED 2026-07-15
 
-A starting point for the 9 hill rows in `TERRAIN_DECK` — tune in playtest:
+> Supersedes this plan's earlier 9-row draft (kept in git history). The owner's ruling
+> and the full reasoning are in `docs/roadmap-appendix.md` Q24/Q25; this section is the
+> build contract.
 
-| Count | Slots | Yield | Role |
-| ---: | ---: | --- | --- |
-| 1 | 4 | none | "The Acropolis" — pure building landmark |
-| 2 | 3 | +1 stone | civic sites |
-| 2 | 3 | +1 food | terraced hillsides |
-| 2 | 2 | +2 stone | lesser quarries |
-| 2 | 2 | +1 food | filler |
+**Hills drop 9 → 5 and yield *nothing*.** The 4 freed tiles become **+2 mountain, +1
+forest** (and the 4th is the new Oracle, below). Hills carry the map's best slot counts
+and no resource at all:
 
-Net effect on map totals: gold 14 → 0 (by design), stone 20 → 26, food 44 → 48, and
-hills go from worst-yield-per-tile to best-slots-per-tile (17 → 21 while plains stay
-at 20 across 8 tiles). Plains stop double-dipping as both the yield **and** slot king.
+| Count | Slots | Yield |
+| ---: | ---: | --- |
+| 1 | 4 | none |
+| 4 | 3 | none |
 
-**Rejected variant, recorded for the record:** keeping 1–2 landmark "silver mine" hills
-(3–4 gold, thematically Laurion, worked by slaves via Workshop). Rejected because the
-first-order/second-order principle is cleaner absolute; revisit only if pop-gold plus
-trade proves insufficient once the 100-gold Trader lands.
+**Plus one `oracle` tile** — a distinct terrain: **no resource, 0 slots, and it cannot
+be settled at all.** It is a deliberate hole (Catan's desert). Because it can never host
+a settlement it can never be a link in a colony-contiguity chain, so it permanently
+splits the map and forces expansion to route around it. It has no other mechanic.
+
+Final map — **37 tiles / 65 slots**:
+
+| terrain | tiles | slots | avg | yield |
+| --- | ---: | ---: | ---: | --- |
+| forest | 15 | 18 | 1.20 | wood 36 |
+| mountain | 8 | 11 | 1.38 | stone 26 |
+| plains | 8 | 20 | 2.50 | food 44 |
+| hill | 5 | 16 | **3.20** | none |
+| oracle | 1 | 0 | — | none, unsettleable |
+
+Ordering: forest 1.20 < mountain 1.38 < plains 2.50 < **hill 3.20**. Gold on the map:
+**0**. Stone still lands at 26 — the figure the original draft protected — because the
+freed hills became mountains. Plains stop double-dipping as both the yield **and** slot
+king.
+
+**Why yield-less hills need no compensating mechanic.** Verified in
+`economy/income.ts`: citizens (→ influence + gold) and freemen (→ gold) never read the
+tile; only **slaves** multiply `tile.resource.type`. And `PlayerState.resources` is one
+player-wide pool. So a yield-less hill is already a coherent city: **citizens and
+freemen** live there — the pops that produce without land — fed from the pool the plains
+fill, while slaves work the yielding country. Gold reaches the hills via **freemen**, not
+tiles, which is the first/second-order principle (§1) expressing itself. Slaves being
+inert on hills is a **feature**: it prices the big hills as elite terrain with no cheap
+4:1 pops.
+
+> **⚠ Implementation precondition.** Slave income is `slaves × ruleset coefficient` of
+> `tile.resource.type` — scaled by a **coefficient, not by the tile's amount**. A hill
+> authored as `{ type: "stone", amount: 0 }` would therefore leave slaves producing stone
+> at full rate and silently break the above. "Yield-less" **must** mean no resource type:
+> `HexTile.resource: Yield | null`, with null-handling in `economy/income.ts` and
+> `ui/resourceVisuals.ts`.
+
+**Terrain-gated buildings are banned** (owner ruling, 2026-07-15): gating one building to
+a terrain invites one per terrain, and those become positive feedback loops (plains → food
+building → more food) where terrain dictates the build instead of posing a question. Build
+divergence comes from tile yield instead — Villa and Workshop are worthless on a
+yield-less hill; stone civics are indifferent to it.
+
+**Rejected variants, recorded for the record:**
+- 1–2 landmark "silver mine" hills (3–4 gold, thematically Laurion, worked by slaves via
+  Workshop). Rejected because the first-order/second-order principle is cleaner absolute.
+  **Re-raised and re-rejected 2026-07-15** in two fresh disguises — "2–3 mint tiles" and
+  "4 hills, all gold, no slots" — both are tile gold renamed.
+- **Metallon**, a hill-only slave-worked gold *building* (proposed 2026-07-15). Principled
+  on gold (buildings are a legitimate second-order source) but withdrawn: terrain-gated
+  buildings are banned, and the hole it filled — inert slaves on hills — turned out to be
+  a feature, not a bug.
 
 ## Knock-On Effects To Check
 
-- **Slaves on hills now yield stone/food** (slave yield follows `tile.resource.type`
-  automatically) — a slave-worked quarry hill is a real archetype; no engine change
-  needed, but verify Workshop-on-hill math.
+- **Slaves are inert on hills** — deliberate (see above). Hills are citizen/freeman
+  terrain; slaves work the yielding country. Verify no code path assumes every tile has
+  a resource once `resource` goes nullable.
 - **Gold supply shifts entirely to pops**: a 4-freeman economy prints 8 gold/turn where
   the whole map used to print 14. Late-game gold sinks (Trader 100) are priced against
   pop counts, which scale — this is fine, but recheck when ventures (opt-in gambles,
   see todo.md) land, since they also burn gold.
 - **Provisional VP** counts banked gold as material — unchanged, no action.
 - **UI**: hill tile art/labels and `src/ui/resourceVisuals.ts` currently read hills as
-  gold; both need the re-theme (stone/food yields, slot-forward presentation).
-- **Slot pressure only bites once tier-2 buildings exist.** Ship the hill rework
-  together with (or just before) the second building tier, not long before — slot-rich
-  hills with only four buildable buildings are landmark tiles with nothing to landmark.
+  gold; both need the re-theme (yield-less, slot-forward presentation). The Oracle needs
+  its own treatment — it must read as a hole, not as a poor tile.
+- **Slot pressure only bites once the new buildings exist.** Ship the hill rework
+  together with (or just before) Villa + Gymnasion, not long before — slot-rich hills
+  with only four buildable buildings are big tiles with nothing to put on them.
+- **Building levels must cap** (owner ruling 2026-07-15, appendix Q25). `buildBuilding`
+  has **no duplicate check** today — the only gate is `buildings.length >= slots`, so
+  flat-effect buildings (Granary, Forum, Aqueduct, Odeon) stack linearly without bound.
+  Slot-rich hills make that worse, so `maxLevel` on `BuildingDefinition` ships **with**
+  this rework, not after it. Note "level" = copies in one settlement; there is **no
+  player-facing tier concept**.
+- **Setup/legality must reject `oracle`**: founding, upgrades, and the snake draft must
+  never offer it, or the opening can hand a player a dead capital.
 
 ## Validation
 
@@ -112,21 +168,22 @@ Run before/after batches with the headless sim (`npm run sim` batch mode — com
 
 ## Open Questions
 
-- **Re-check the gold-tile removal after the bank exchange ships (added 2026-07-12):**
-  the D6 gold-mediated market makes tile gold a flexible material income (a 4-gold hill
-  ≈ 2 wood/turn at the 2-gold buy rate), which partially rehabilitates gold hills. The
-  first-order/second-order principle may still win, but re-run the contiguity/expansion
-  sim campaign with the market live before executing the hill rework (see
-  roadmap-appendix Q13).
+- ~~**Re-check the gold-tile removal after the bank exchange ships**~~ — **CLOSED
+  2026-07-15 (appendix Q24): gold-tile removal COMMITTED.** The owner ruled hills
+  yield-less outright; the market's partial rehabilitation of gold hills doesn't change
+  it, and both revival attempts ("mint tiles", "4 gold hills") were rejected as tile gold
+  renamed. Q13b settled alongside: colony price **holds at 20w+2f**, re-look deferred to
+  a later balance talk (standing watch item).
 
-- Exact hill art/theming for the acropolis identity (flat-vase style, per design vision).
+- Exact hill art/theming for the yield-less building-terrain identity (flat-vase style,
+  per design vision). The Oracle tile needs its own treatment.
 - Do coastal tiles (when they land) also carry slots, or are they pure feature tiles
   (luxury/fishing/exchange-rate) as the PDF implies? Leaning pure feature tiles.
-- Does the acropolis 4-slot landmark need a founding restriction (e.g. cities only) so
-  a throwaway colony can't squat the best building site it can never use? (Colonies
-  can't build — squatting one there is pure denial. Maybe that's fine and interesting.)
-- Forest count (14 tiles) is high for a low-yield terrain; consider trimming to 12–13
-  in the same pass if the map feels wood-flooded after shuffling lands.
+- ~~Does the 4-slot hill need a founding restriction?~~ — **answered by default
+  (appendix Q26, Q22 rule): no restriction.** Colony-squatting the best building site is
+  denial-play, which is interesting. Standing watch item.
+- ~~Forest trim (14 → 12–13)~~ — **deferred** until map shuffling lands (appendix Q26).
+  Note the locked spec moves forest to **15**, so revisit the trim question then.
 - Where exactly diminishing luxury duplicates and the 3-per-player cap live in state —
   extend the `LuxuryGoodDefinition` plan in `docs/feat/luxury-goods.md` when built.
 

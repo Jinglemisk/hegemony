@@ -55,6 +55,24 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
   colony: "founding colony"
 };
 
+/**
+ * Exactly one dialog owns the screen at a time — the union makes that a type
+ * invariant instead of a rule six independent booleans could break. The
+ * self-mounting dialogs are deliberately NOT here: riot, pending event, game
+ * over and the omen mount off engine state (G.pendingRiot, G.pendingPlayerEvent,
+ * ctx.phase), so they cannot be opened or closed by a click and must not be
+ * modelled as UI intent.
+ */
+type ActiveModal =
+  | { kind: "populationPrompt"; placement: SetupPlacement; tileId: string }
+  | { kind: "upgradeCity" }
+  | { kind: "growPop" }
+  | { kind: "movePops" }
+  | { kind: "calm" }
+  | { kind: "venture" }
+  | { kind: "ladder"; request: LadderRequest }
+  | { kind: "compendium" };
+
 export function HegemonyBoard({
   G,
   ctx,
@@ -66,22 +84,12 @@ export function HegemonyBoard({
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   const [tileConfirmation, setTileConfirmation] = useState<PendingTileConfirmation | null>(null);
-  const [populationPrompt, setPopulationPrompt] = useState<{
-    placement: SetupPlacement;
-    tileId: string;
-  } | null>(null);
+  const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
   const [gameOverDismissed, setGameOverDismissed] = useState(false);
   const [foundColonyMode, setFoundColonyMode] = useState(false);
   const [foundColonyTarget, setFoundColonyTarget] = useState<{ tileId: string; anchor: DOMRect } | null>(null);
-  const [isUpgradeCityOpen, setIsUpgradeCityOpen] = useState(false);
-  const [isGrowPopOpen, setIsGrowPopOpen] = useState(false);
-  const [isMovePopsOpen, setIsMovePopsOpen] = useState(false);
-  const [isCalmOpen, setIsCalmOpen] = useState(false);
-  const [isVentureOpen, setIsVentureOpen] = useState(false);
-  const [ladderRequest, setLadderRequest] = useState<LadderRequest | null>(null);
   // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
   const [riotResultOpen, setRiotResultOpen] = useState(false);
-  const [isCompendiumOpen, setIsCompendiumOpen] = useState(false);
   // Initialized to the omen standing at mount so a reload never re-announces it.
   const [seenOmenYear, setSeenOmenYear] = useState<number | null>(() => G.yearOmen?.year ?? null);
   const [activeEmpireTab, setActiveEmpireTab] = useState<EmpireTab>("cities");
@@ -127,19 +135,19 @@ export function HegemonyBoard({
     setFoundColonyTarget(null);
   };
 
+  const closeModal = useCallback(() => setActiveModal(null), []);
+
+  // Handing the turn over closes everything the previous seat had open.
   useEffect(() => {
     setTileConfirmation(null);
-    setPopulationPrompt(null);
+    setActiveModal(null);
     exitFoundColonyMode();
-    setIsUpgradeCityOpen(false);
-    setIsGrowPopOpen(false);
-    setIsMovePopsOpen(false);
-    setIsCalmOpen(false);
-    setIsVentureOpen(false);
-    setLadderRequest(null);
     setRiotResultOpen(false);
   }, [ctx.phase, ctx.currentPlayer]);
 
+  // A drawn event takes the screen: dismiss the player's own dialogs behind it.
+  // The compendium is exempt — it is reference, and reading a rule mid-event is
+  // exactly when a player needs it.
   useEffect(() => {
     if (!G.pendingPlayerEvent) {
       return;
@@ -147,9 +155,7 @@ export function HegemonyBoard({
 
     setTileConfirmation(null);
     exitFoundColonyMode();
-    setIsUpgradeCityOpen(false);
-    setIsGrowPopOpen(false);
-    setIsMovePopsOpen(false);
+    setActiveModal((current) => (current?.kind === "compendium" ? current : null));
   }, [G.pendingPlayerEvent]);
 
   useEffect(() => {
@@ -177,10 +183,9 @@ export function HegemonyBoard({
       }
 
       if (event.key === "?") {
-        setIsCompendiumOpen((open) => !open);
-      } else if (event.key === "Escape") {
-        setIsCompendiumOpen(false);
+        setActiveModal((current) => (current?.kind === "compendium" ? null : { kind: "compendium" }));
       }
+      // Escape is ModalShell's job — every dialog gets it from the one place.
     };
 
     window.addEventListener("keydown", handleKey);
@@ -206,7 +211,7 @@ export function HegemonyBoard({
         const placement: SetupPlacement =
           ctx.phase === "setupCapital" ? "capital" : ctx.phase === "setupCity" ? "city" : "colony";
         setTileConfirmation(null);
-        setPopulationPrompt({ placement, tileId });
+        setActiveModal({ kind: "populationPrompt", placement, tileId });
         return;
       }
 
@@ -227,7 +232,7 @@ export function HegemonyBoard({
     if (tileConfirmation.action === "foundColony") {
       setFoundColonyMode(true);
     } else {
-      setIsUpgradeCityOpen(true);
+      setActiveModal({ kind: "upgradeCity" });
     }
 
     setTileConfirmation(null);
@@ -266,7 +271,7 @@ export function HegemonyBoard({
           G={G}
           isActive={isActive}
           currentPlayerId={currentPlayerId}
-          onOpenCompendium={() => setIsCompendiumOpen(true)}
+          onOpenCompendium={() => setActiveModal({ kind: "compendium" })}
         />
 
         <PlayerScoreboard
@@ -289,7 +294,7 @@ export function HegemonyBoard({
             onTabChange={setActiveEmpireTab}
             onBankSell={moves.bankSell}
             onBankBuy={moves.bankBuy}
-            onLadderRequest={setLadderRequest}
+            onLadderRequest={(request) => setActiveModal({ kind: "ladder", request })}
           />
         </aside>
 
@@ -342,36 +347,38 @@ export function HegemonyBoard({
             calmUsed={viewer.civicCalmUsedThisTurn}
             ventureUsed={viewer.ventureUsedThisTurn}
             onEndTurn={events.endTurn}
-            onGrowPopRequest={() => setIsGrowPopOpen(true)}
-            onMovePopsRequest={() => setIsMovePopsOpen(true)}
-            onCalmRequest={() => setIsCalmOpen(true)}
-            onVentureRequest={() => setIsVentureOpen(true)}
+            onGrowPopRequest={() => setActiveModal({ kind: "growPop" })}
+            onMovePopsRequest={() => setActiveModal({ kind: "movePops" })}
+            onCalmRequest={() => setActiveModal({ kind: "calm" })}
+            onVentureRequest={() => setActiveModal({ kind: "venture" })}
             onFoundColonyRequest={() => {
-              setIsUpgradeCityOpen(false);
+              // Found-colony is a map mode, not a dialog: it clears any open dialog
+              // so the board is never covered during a selection (refit rule 1).
+              setActiveModal(null);
               setFoundColonyTarget(null);
               setFoundColonyMode((active) => !active);
             }}
-            onUpgradeCityRequest={() => setIsUpgradeCityOpen(true)}
+            onUpgradeCityRequest={() => setActiveModal({ kind: "upgradeCity" })}
           />
         </aside>
       </section>
 
-      {populationPrompt ? (
+      {activeModal?.kind === "populationPrompt" ? (
         <PopulationPickerModal
-          title={`Choose ${PLACEMENT_LABELS[populationPrompt.placement]} pops`}
-          description={`Allocate exactly ${G.ruleset.placementPopCounts[populationPrompt.placement]} starting ${
-            G.ruleset.placementPopCounts[populationPrompt.placement] === 1 ? "pop" : "pops"
-          } before placing this ${PLACEMENT_LABELS[populationPrompt.placement]}.`}
-          requiredTotal={G.ruleset.placementPopCounts[populationPrompt.placement]}
-          confirmLabel={`Place ${PLACEMENT_LABELS[populationPrompt.placement]}`}
-          onCancel={() => setPopulationPrompt(null)}
+          title={`Choose ${PLACEMENT_LABELS[activeModal.placement]} pops`}
+          description={`Allocate exactly ${G.ruleset.placementPopCounts[activeModal.placement]} starting ${
+            G.ruleset.placementPopCounts[activeModal.placement] === 1 ? "pop" : "pops"
+          } before placing this ${PLACEMENT_LABELS[activeModal.placement]}.`}
+          requiredTotal={G.ruleset.placementPopCounts[activeModal.placement]}
+          confirmLabel={`Place ${PLACEMENT_LABELS[activeModal.placement]}`}
+          onCancel={() => setActiveModal(null)}
           onConfirm={(pops) => {
-            if (populationPrompt.placement === "capital") {
-              moves.placeCapital(populationPrompt.tileId, pops);
-            } else if (populationPrompt.placement === "city") {
-              moves.placeCity(populationPrompt.tileId, pops);
+            if (activeModal.placement === "capital") {
+              moves.placeCapital(activeModal.tileId, pops);
+            } else if (activeModal.placement === "city") {
+              moves.placeCity(activeModal.tileId, pops);
             } else {
-              moves.placeColony(populationPrompt.tileId, pops);
+              moves.placeColony(activeModal.tileId, pops);
             }
           }}
         />
@@ -389,71 +396,65 @@ export function HegemonyBoard({
           }}
         />
       ) : null}
-      {isUpgradeCityOpen ? (
+      {activeModal?.kind === "upgradeCity" ? (
         <UpgradeCityModal
           G={G}
           playerID={viewerId}
-          onCancel={() => setIsUpgradeCityOpen(false)}
+          onCancel={closeModal}
           onConfirm={(tileId, pops) => {
             moves.upgradeColonyToCity(tileId, pops);
-            setIsUpgradeCityOpen(false);
+            closeModal();
           }}
         />
       ) : null}
-      {isGrowPopOpen ? (
+      {activeModal?.kind === "growPop" ? (
         <GrowPopModal
           G={G}
           initialTileId={selectedTileId}
           isActive={isActive}
           phase={ctx.phase}
           playerID={viewerId}
-          onCancel={() => setIsGrowPopOpen(false)}
+          onCancel={closeModal}
           onConfirm={(tileId, pop) => {
             moves.growPop(tileId, pop);
-            setIsGrowPopOpen(false);
+            closeModal();
           }}
         />
       ) : null}
-      {isMovePopsOpen ? (
+      {activeModal?.kind === "movePops" ? (
         <MovePopsModal
           G={G}
           playerID={viewerId}
-          onCancel={() => setIsMovePopsOpen(false)}
+          onCancel={closeModal}
           onConfirm={(sourceTileId, targetTileId, pops) => {
             moves.movePops(sourceTileId, targetTileId, pops);
-            setIsMovePopsOpen(false);
+            closeModal();
           }}
         />
       ) : null}
-      {isCalmOpen ? (
-        <CalmModal G={G} playerID={viewerId} isActive={isActive} moves={moves} onClose={() => setIsCalmOpen(false)} />
+      {activeModal?.kind === "calm" ? (
+        <CalmModal G={G} playerID={viewerId} isActive={isActive} moves={moves} onClose={closeModal} />
       ) : null}
-      {ladderRequest ? (
+      {activeModal?.kind === "ladder" ? (
         <LadderModal
           G={G}
           playerID={viewerId}
-          request={ladderRequest}
+          request={activeModal.request}
           phase={ctx.phase}
           isActive={isActive}
-          onCancel={() => setLadderRequest(null)}
+          onCancel={closeModal}
           onConfirm={(tileId, from, kind) => {
             if (kind === "promote") {
               moves.promotePop(tileId, from);
             } else {
               moves.demotePop(tileId, from);
             }
-            setLadderRequest(null);
+            closeModal();
           }}
         />
       ) : null}
-      {isVentureOpen ? (
-        <VentureModal
-          G={G}
-          playerID={viewerId}
-          isActive={isActive}
-          moves={moves}
-          onClose={() => setIsVentureOpen(false)}
-        />
+      {activeModal?.kind === "venture" ? (
+        <VentureModal G={G} playerID={viewerId} isActive={isActive} moves={moves} onClose={closeModal} />
       ) : null}
       {G.pendingRiot || riotResultOpen ? (
         <RiotModal
@@ -482,6 +483,7 @@ export function HegemonyBoard({
           modifier={0}
           result={G.yearOmen.record}
           subtitle={`${PLAYER_DISPLAY_NAMES[G.seasonOpener]} takes the auspices for Year ${G.yearOmen.year} — the sign stands over every polis until spring.`}
+          onDismiss={() => setSeenOmenYear(G.yearOmen?.year ?? null)}
           footer={
             <button className="primaryButton eventResolveButton" onClick={() => setSeenOmenYear(G.yearOmen?.year ?? null)}>
               So Be It
@@ -489,8 +491,8 @@ export function HegemonyBoard({
           }
         />
       ) : null}
-      {isCompendiumOpen ? (
-        <CompendiumModal G={G} playerID={viewerId} onClose={() => setIsCompendiumOpen(false)} />
+      {activeModal?.kind === "compendium" ? (
+        <CompendiumModal G={G} playerID={viewerId} onClose={closeModal} />
       ) : null}
     </main>
   );
