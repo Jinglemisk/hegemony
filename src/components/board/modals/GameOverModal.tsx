@@ -1,7 +1,6 @@
-import { PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
+import { PLAYER_NAMES, PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
 import { victoryCardsHeld, victoryStandings } from "../../../game/victory";
 import type { HegemonyState } from "../../../game/types";
-import { PLAYER_DISPLAY_NAMES } from "../constants";
 import { ModalShell } from "./ModalShell";
 
 /**
@@ -29,22 +28,22 @@ export function GameOverModal({ G, onInspectBoard }: { G: HegemonyState; onInspe
               {G.gameOverReason === "victoryRace" ? "The race is won" : "The age has ended"}
             </span>
             <h2 id="game-over-title" style={{ color: PLAYER_COLORS[winner] }}>
-              {PLAYER_DISPLAY_NAMES[winner]} rules the Hegemony
+              {PLAYER_NAMES[winner]} rules the Hegemony
             </h2>
           </div>
         </div>
 
         <p className="gameOverReason">
           {G.gameOverReason === "victoryRace"
-            ? `${PLAYER_DISPLAY_NAMES[winner]} opened their turn holding ${G.ruleset.victory.cardsToWin} victory cards.`
-            : `The seasonal deck ran out — ${PLAYER_DISPLAY_NAMES[winner]} held the most victory cards as the age closed.`}
+            ? `${PLAYER_NAMES[winner]} opened their turn holding ${G.ruleset.victory.cardsToWin} victory cards.`
+            : `The seasonal deck ran out — ${PLAYER_NAMES[winner]} held the most victory cards as the age closed.`}
         </p>
 
         <div className="gameOverStandings">
           {ranked.map((id) => (
             <div className={`gameOverSeat${id === winner ? " gameOverWinner" : ""}`} key={id}>
               <span className="gameOverDot" style={{ backgroundColor: PLAYER_COLORS[id] }} />
-              <strong>{PLAYER_DISPLAY_NAMES[id]}</strong>
+              <strong>{PLAYER_NAMES[id]}</strong>
               <span className="gameOverCards">
                 {victoryCardsHeld(G, id)} card{victoryCardsHeld(G, id) === 1 ? "" : "s"}
               </span>

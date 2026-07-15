@@ -9,7 +9,7 @@ import {
   toPlayerId
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
-import { OMEN_TABLE } from "../game/data";
+import { PLAYER_NAMES, OMEN_TABLE } from "../game/data";
 import { HexMap } from "./HexMap";
 import { FoundColonyPopover } from "./board/modals/FoundColonyPopover";
 import { MovePopsModal } from "./board/modals/MovePopsModal";
@@ -31,7 +31,6 @@ import { VentureModal } from "./board/modals/VentureModal";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
 import { SeasonStatus } from "./board/topbar/SeasonStatus";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
-import { PLAYER_DISPLAY_NAMES } from "./board/constants";
 import { GameUiProvider, type GameUi } from "./board/GameUiContext";
 import type { EmpireTab } from "./board/types";
 
@@ -474,7 +473,7 @@ export function HegemonyBoard({
           table={OMEN_TABLE}
           modifier={0}
           result={G.yearOmen.record}
-          subtitle={`${PLAYER_DISPLAY_NAMES[G.seasonOpener]} takes the auspices for Year ${G.yearOmen.year} — the sign stands over every polis until spring.`}
+          subtitle={`${PLAYER_NAMES[G.seasonOpener]} takes the auspices for Year ${G.yearOmen.year} — the sign stands over every polis until spring.`}
           onDismiss={() => setSeenOmenYear(G.yearOmen?.year ?? null)}
           footer={
             <button className="primaryButton eventResolveButton" onClick={() => setSeenOmenYear(G.yearOmen?.year ?? null)}>

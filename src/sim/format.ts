@@ -1,3 +1,4 @@
+import { getTile } from "../game/rules";
 import { seasonName, yearOf } from "../game/core/calendar";
 import { totalPops } from "../game/core/pops";
 import { calculateEconomyProjection } from "../game/economy/preview";
@@ -120,7 +121,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
   ];
 
   for (const tileId of player.settlements) {
-    const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
+    const tile = getTile(G, tileId);
     const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
 
     if (!tile || !settlement) {

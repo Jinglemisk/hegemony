@@ -1,8 +1,7 @@
-import { PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
+import { PLAYER_NAMES, PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { formatNumber } from "../../../ui/formatters";
-import { PLAYER_DISPLAY_NAMES } from "../constants";
 
 /**
  * The victory race, always visible: the five public cards, who holds each, and every
@@ -27,7 +26,7 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
             <strong className="victoryCardName">{card.name}</strong>
             {holder ? (
               <span className="victoryHolder" style={{ color: PLAYER_COLORS[holder] }}>
-                ◈ {PLAYER_DISPLAY_NAMES[holder]}
+                ◈ {PLAYER_NAMES[holder]}
               </span>
             ) : (
               <span className="victoryHolder victoryUnheld">unheld</span>
@@ -42,9 +41,9 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
                 className={`victoryValue${holder === id ? " victoryLeader" : ""}${id === playerID ? " victoryViewer" : ""}`}
                 key={id}
                 style={{ borderBottomColor: PLAYER_COLORS[id] }}
-                title={`${PLAYER_DISPLAY_NAMES[id]}: ${formatNumber(values[id])} (needs ${minimum})`}
+                title={`${PLAYER_NAMES[id]}: ${formatNumber(values[id])} (needs ${minimum})`}
               >
-                {PLAYER_DISPLAY_NAMES[id].slice(0, 2)} {formatNumber(values[id])}
+                {PLAYER_NAMES[id].slice(0, 2)} {formatNumber(values[id])}
               </span>
             ))}
           </div>

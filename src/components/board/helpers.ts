@@ -2,7 +2,7 @@ import { BUILDINGS, EMPTY_RESOURCES } from "../../game/data";
 import type { Phase } from "../../game/controller";
 import type { ActionStatus } from "../../game/rules";
 import type { Ruleset } from "../../game/ruleset";
-import { POP_TYPES, popIncome, previewBuildBuilding, previewBuildingIncomeDelta } from "../../game/rules";
+import { POP_TYPES, getTile, popIncome, previewBuildBuilding, previewBuildingIncomeDelta } from "../../game/rules";
 import type {
   BuildingDefinition,
   HegemonyState,
@@ -132,10 +132,6 @@ export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: 
   return `${kind} ${tile.id} · ${capitalize(tile.terrain)} +${tile.resource.amount} ${tile.resource.type}${shared}`;
 }
 
-export function placementKindLabel(kind: Extract<SettlementKind, "city" | "colony">) {
-  return kind === "city" ? "city" : "colony";
-}
-
 export function createEmptyResources(): Resources {
   return { ...EMPTY_RESOURCES };
 }
@@ -166,7 +162,7 @@ export function firstAvailablePop(pops?: Pops): PopType {
 }
 
 export function formatTileName(G: HegemonyState, tileId: string) {
-  const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
+  const tile = getTile(G, tileId);
 
   return tile ? `${tile.terrain} ${tile.id}` : tileId;
 }

@@ -1,11 +1,10 @@
 import { memo } from "react";
-import { PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
+import { PLAYER_NAMES, PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
 import { calculateEconomyProjection, playerStandings } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../../../ui/formatters";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { AtlasIcon, UiSprite } from "../../Sprites";
-import { PLAYER_DISPLAY_NAMES } from "../constants";
 
 function PlayerScoreboardComponent({
   G,
@@ -33,11 +32,11 @@ function PlayerScoreboardComponent({
             className={`rosterSeat${isCurrent ? " actingSeat" : ""}${isViewer ? " viewingSeat" : ""}`}
             key={id}
             onClick={() => onPlayerIDChange(id)}
-            title={`View ${PLAYER_DISPLAY_NAMES[id]}'s empire`}
+            title={`View ${PLAYER_NAMES[id]}'s empire`}
           >
             <span className="rosterHead">
               <span className="rosterDot" style={{ backgroundColor: PLAYER_COLORS[id] }} />
-              <strong className="rosterName">{PLAYER_DISPLAY_NAMES[id]}</strong>
+              <strong className="rosterName">{PLAYER_NAMES[id]}</strong>
               {isCurrent ? <span className="rosterActingTag">Acting</span> : null}
             </span>
             <span className="rosterStats">
@@ -62,7 +61,7 @@ function PlayerScoreboardComponent({
               </span>
             </span>
             <span className="scoreTooltip" role="tooltip">
-              <strong>{PLAYER_DISPLAY_NAMES[id]} Resources</strong>
+              <strong>{PLAYER_NAMES[id]} Resources</strong>
               {RESOURCE_ORDER.map((resource) => (
                 <span key={resource}>
                   {RESOURCE_LABELS[resource]}
