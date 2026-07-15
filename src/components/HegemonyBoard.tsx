@@ -482,6 +482,7 @@ export function HegemonyBoard({
           modifier={0}
           result={G.yearOmen.record}
           subtitle={`${PLAYER_DISPLAY_NAMES[G.seasonOpener]} takes the auspices for Year ${G.yearOmen.year} — the sign stands over every polis until spring.`}
+          onDismiss={() => setSeenOmenYear(G.yearOmen?.year ?? null)}
           footer={
             <button className="primaryButton eventResolveButton" onClick={() => setSeenOmenYear(G.yearOmen?.year ?? null)}>
               So Be It

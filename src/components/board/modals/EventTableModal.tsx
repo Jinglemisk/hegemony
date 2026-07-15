@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { EventTableDefinition, TableRollRecord } from "../../../game/types";
 import { AnnotatedText } from "../../AnnotatedText";
 import { formatTableEffect } from "../events";
+import { ModalShell } from "./ModalShell";
 
 /**
  * The rows of a dice table — the one render path for table content, shared by the
@@ -48,7 +49,8 @@ export function EventTableModal({
   result,
   children,
   footer,
-  subtitle
+  subtitle,
+  onDismiss
 }: {
   table: EventTableDefinition;
   /** Net roll modifier already declared (insurance − tier), shown before the roll. */
@@ -59,40 +61,48 @@ export function EventTableModal({
   children?: ReactNode;
   footer: ReactNode;
   subtitle?: string;
+  /**
+   * Escape/backdrop route out. Omit for tables the player must resolve — the riot
+   * mounts blocking on purpose (Q15), so it passes nothing.
+   */
+  onDismiss?: () => void;
 }) {
   return (
-    <div className="modalBackdrop eventModalBackdrop" role="presentation">
-      <section className="eventTableModal" role="dialog" aria-modal="true" aria-labelledby="event-table-title">
-        <header className="eventTableHeader">
-          <h2 id="event-table-title">{table.name}</h2>
-          <p>{subtitle ?? table.flavor}</p>
-        </header>
+    <ModalShell
+      backdropClassName="eventModalBackdrop"
+      className="eventTableModal"
+      labelledBy="event-table-title"
+      onDismiss={onDismiss}
+    >
+      <header className="eventTableHeader">
+        <h2 id="event-table-title">{table.name}</h2>
+        <p>{subtitle ?? table.flavor}</p>
+      </header>
 
-        <EventTableRows table={table} result={result} />
+      <EventTableRows table={table} result={result} />
 
-        {result && result.tableId === table.id ? (
-          <div className="eventTableOutcome" role="status">
-            <strong>
-              Rolled {result.roll}
-              {result.modifier !== 0
-                ? ` ${result.modifier > 0 ? "+" : ""}${result.modifier} → ${result.modified}`
-                : ""}
-            </strong>
-            {result.outcomes.map((line, index) => (
-              <span key={index}>{line}</span>
-            ))}
-          </div>
-        ) : modifier !== 0 ? (
-          <div className="eventTableModifier" role="status">
-            Roll modifier: {modifier > 0 ? "+" : ""}
-            {modifier}
-          </div>
-        ) : null}
+      {result && result.tableId === table.id ? (
+        <div className="eventTableOutcome" role="status">
+          <strong>
+            Rolled {result.roll}
+            {result.modifier !== 0
+              ? ` ${result.modifier > 0 ? "+" : ""}${result.modifier} → ${result.modified}`
+              : ""}
+          </strong>
+          {result.outcomes.map((line, index) => (
+            <span key={index}>{line}</span>
+          ))}
+        </div>
+      ) : modifier !== 0 ? (
+        <div className="eventTableModifier" role="status">
+          Roll modifier: {modifier > 0 ? "+" : ""}
+          {modifier}
+        </div>
+      ) : null}
 
-        {children}
+      {children}
 
-        <footer className="eventTableFooter">{footer}</footer>
-      </section>
-    </div>
+      <footer className="eventTableFooter">{footer}</footer>
+    </ModalShell>
   );
 }

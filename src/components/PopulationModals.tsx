@@ -20,6 +20,7 @@ import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
 import { SettlementSummaryCard } from "./SettlementCard";
 import { settlementPickerLabel } from "./board/helpers";
 import { AtlasIcon, ResourceIcon } from "./Sprites";
+import { ModalShell } from "./board/modals/ModalShell";
 
 type SettlementEntry = {
   tile: HexTile;
@@ -50,8 +51,7 @@ export function PopulationPickerModal({
   const remaining = requiredTotal - selectedTotal;
 
   return (
-    <div className="modalBackdrop" role="presentation">
-      <section className="logModal populationModal" role="dialog" aria-modal="true" aria-labelledby="population-picker-title">
+    <ModalShell className="populationModal" labelledBy="population-picker-title" onDismiss={onCancel}>
         <div className="modalHeader">
           <div>
             <h2 id="population-picker-title">{title}</h2>
@@ -88,8 +88,7 @@ export function PopulationPickerModal({
             {confirmLabel}
           </button>
         </div>
-      </section>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -442,8 +441,7 @@ export function MovePopsModal({
   }, [holdings, sourceTileId, targetTileId]);
 
   return (
-    <div className="modalBackdrop" role="presentation">
-      <section className="logModal populationModal" role="dialog" aria-modal="true" aria-labelledby="move-pops-title">
+    <ModalShell className="populationModal" labelledBy="move-pops-title" onDismiss={onCancel}>
         <div className="modalHeader">
           <div>
             <h2 id="move-pops-title">Move Pops</h2>
@@ -525,8 +523,7 @@ export function MovePopsModal({
             Send Pops
           </button>
         </div>
-      </section>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -554,34 +551,37 @@ function PlacementModalShell({
   children: ReactNode;
 }) {
   return (
-    <div className="modalBackdrop eventModalBackdrop placementModalBackdrop" role="presentation">
-      <section className="placementCardReveal" role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
-        <div className="placementCardSurface">
-          <div className="eventCardCrest">
-            <span>{kicker}</span>
-            <b>{title}</b>
-          </div>
-
-          <div className="placementCardBody" id={labelledBy}>
-            {children}
-          </div>
-
-          <div className="placementCardFooter">
-            <button className="placementCancelButton" onClick={onCancel} type="button">
-              Cancel
-            </button>
-            <button
-              className="primaryButton eventResolveButton"
-              disabled={!canConfirm}
-              onClick={onConfirm}
-              type="button"
-            >
-              {confirmLabel}
-            </button>
-          </div>
+    <ModalShell
+      backdropClassName="eventModalBackdrop placementModalBackdrop"
+      className="placementCardReveal"
+      labelledBy={labelledBy}
+      onDismiss={onCancel}
+    >
+      <div className="placementCardSurface">
+        <div className="eventCardCrest">
+          <span>{kicker}</span>
+          <b>{title}</b>
         </div>
-      </section>
-    </div>
+
+        <div className="placementCardBody" id={labelledBy}>
+          {children}
+        </div>
+
+        <div className="placementCardFooter">
+          <button className="placementCancelButton" onClick={onCancel} type="button">
+            Cancel
+          </button>
+          <button
+            className="primaryButton eventResolveButton"
+            disabled={!canConfirm}
+            onClick={onConfirm}
+            type="button"
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </ModalShell>
   );
 }
 

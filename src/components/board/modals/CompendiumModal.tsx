@@ -9,6 +9,7 @@ import { ResourceIcon } from "../../Sprites";
 import { VictoryTab } from "../ledger/VictoryTab";
 import { capitalize } from "../helpers";
 import { EventTableRows } from "./EventTableModal";
+import { ModalShell } from "./ModalShell";
 
 /**
  * The compendium (Q18): every rule reference a player might want mid-game, in one
@@ -31,14 +32,12 @@ export function CompendiumModal({ G, playerID, onClose }: { G: HegemonyState; pl
   const [section, setSection] = useState<SectionId>("victory");
 
   return (
-    <div className="modalBackdrop eventModalBackdrop" role="presentation" onClick={onClose}>
-      <section
-        className="compendiumModal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="compendium-title"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <ModalShell
+      backdropClassName="eventModalBackdrop"
+      className="compendiumModal"
+      labelledBy="compendium-title"
+      onDismiss={onClose}
+    >
         <header className="compendiumHeader">
           <h2 id="compendium-title">Compendium</h2>
           <p>The table's open book — rules, rates, and decks as this board plays them.</p>
@@ -66,8 +65,7 @@ export function CompendiumModal({ G, playerID, onClose }: { G: HegemonyState; pl
           {section === "decks" ? <DecksSection /> : null}
           {section === "costs" ? <CostsSection G={G} /> : null}
         </div>
-      </section>
-    </div>
+    </ModalShell>
   );
 }
 

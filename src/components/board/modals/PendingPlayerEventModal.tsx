@@ -5,6 +5,7 @@ import type { HegemonyState, PlayerId } from "../../../game/types";
 import { AnnotatedText } from "../../AnnotatedText";
 import { eventCardArtUrl, formatEventEffects } from "../events";
 import { settlementPickerLabel } from "../helpers";
+import { ModalShell } from "./ModalShell";
 
 export function PendingPlayerEventModal({
   G,
@@ -50,8 +51,8 @@ export function PendingPlayerEventModal({
   const actionLabel = choices.length > 1 ? "Resolve Choice" : popEffect ? "Place Pops" : "Claim Event";
 
   return (
-    <div className="modalBackdrop eventModalBackdrop" role="presentation">
-      <section className="eventCardReveal" role="dialog" aria-modal="true" aria-labelledby="pending-event-title">
+    // Blocking on purpose: a drawn event must be resolved, never dismissed.
+    <ModalShell backdropClassName="eventModalBackdrop" className="eventCardReveal" labelledBy="pending-event-title">
         <div className="eventCardSurface">
           <div className="eventCardCrest">
             <span>Player Event</span>
@@ -134,7 +135,6 @@ export function PendingPlayerEventModal({
             </button>
           </div>
         </div>
-      </section>
-    </div>
+    </ModalShell>
   );
 }

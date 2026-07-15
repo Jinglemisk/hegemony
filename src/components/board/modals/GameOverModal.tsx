@@ -2,6 +2,7 @@ import { PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
 import { victoryCardsHeld, victoryStandings } from "../../../game/victory";
 import type { HegemonyState } from "../../../game/types";
 import { PLAYER_DISPLAY_NAMES } from "../constants";
+import { ModalShell } from "./ModalShell";
 
 /**
  * The end of the game. Shown when the engine reaches phase "gameOver" — either a
@@ -20,8 +21,8 @@ export function GameOverModal({ G, onInspectBoard }: { G: HegemonyState; onInspe
   const ranked = [...PLAYER_IDS].sort((a, b) => victoryCardsHeld(G, b) - victoryCardsHeld(G, a));
 
   return (
-    <div className="modalBackdrop" role="presentation">
-      <section className="logModal gameOverModal" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
+    // Blocking on purpose: the result is ceremony — it leaves via "Inspect the board".
+    <ModalShell className="gameOverModal" labelledBy="game-over-title">
         <div className="modalHeader">
           <div>
             <span className="gameOverKicker">
@@ -62,7 +63,6 @@ export function GameOverModal({ G, onInspectBoard }: { G: HegemonyState; onInspe
             Inspect the final board
           </button>
         </div>
-      </section>
-    </div>
+    </ModalShell>
   );
 }
