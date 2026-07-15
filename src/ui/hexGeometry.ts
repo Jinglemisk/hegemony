@@ -1,0 +1,185 @@
+/**
+ * Hex and camera maths, with no React and no game state (ladder rung R6). This
+ * was buried in the bottom third of a 632-line component, which meant the
+ * board's geometry — the part most likely to be wrong and easiest to prove —
+ * could only be exercised by rendering the whole map.
+ *
+ * Everything here is a pure function of its arguments. See `hexGeometry.test.ts`.
+ */
+
+export type ViewBox = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type HexCenter = { q: number; r: number; x: number; y: number };
+export type ShorelineEdge = { x1: number; y1: number; x2: number; y2: number };
+
+export const HEX_SIZE = 45;
+
+/** The board at rest: the frame every zoom level is expressed relative to. */
+export const BASE_VIEW_BOX: ViewBox = { x: -372, y: -270, width: 744, height: 540 };
+
+/** The furthest you may pull back — base plus a 5% margin of sea on every side. */
+export const WORLD_VIEW_BOX: ViewBox = {
+  x: BASE_VIEW_BOX.x - BASE_VIEW_BOX.width * 0.05,
+  y: BASE_VIEW_BOX.y - BASE_VIEW_BOX.height * 0.05,
+  width: BASE_VIEW_BOX.width * 1.1,
+  height: BASE_VIEW_BOX.height * 1.1
+};
+
+/** The sea image overhangs the world box so no pan ever reveals its edge. */
+const SEA_IMAGE_BLEED = 28;
+export const SEA_IMAGE_VIEW_BOX: ViewBox = {
+  x: WORLD_VIEW_BOX.x - SEA_IMAGE_BLEED,
+  y: WORLD_VIEW_BOX.y - SEA_IMAGE_BLEED,
+  width: WORLD_VIEW_BOX.width + SEA_IMAGE_BLEED * 2,
+  height: WORLD_VIEW_BOX.height + SEA_IMAGE_BLEED * 2
+};
+
+export const MIN_ZOOM = BASE_VIEW_BOX.width / WORLD_VIEW_BOX.width;
+export const MAX_ZOOM = 1.18;
+export const ZOOM_STEP = 0.08;
+
+/** Two colonies on one tile sit either side of centre; one sits on it. */
+const TWO_COLONY_POSITIONS = [-14, 14];
+
+export function getColonyXPositions(count: number) {
+  if (count <= 1) {
+    return [0];
+  }
+
+  return TWO_COLONY_POSITIONS;
+}
+
+/** Flat-top hex outline, as an SVG `points` string. */
+export function hexPoints(size: number) {
+  return Array.from({ length: 6 }, (_, index) => {
+    const angle = (Math.PI / 180) * (60 * index - 30);
+    return `${Math.cos(angle) * size},${Math.sin(angle) * size}`;
+  }).join(" ");
+}
+
+export function getHexCorners(x: number, y: number, size: number) {
+  return Array.from({ length: 6 }, (_, index) => {
+    const angle = (Math.PI / 180) * (60 * index - 30);
+
+    return {
+      x: x + Math.cos(angle) * size,
+      y: y + Math.sin(angle) * size
+    };
+  });
+}
+
+/** Axial neighbour, indexed to match the corner order of {@link getHexCorners}. */
+export function getNeighborCoordinate(q: number, r: number, sideIndex: number) {
+  const directions = [
+    [1, 0],
+    [0, 1],
+    [-1, 1],
+    [-1, 0],
+    [0, -1],
+    [1, -1]
+  ];
+  const [deltaQ, deltaR] = directions[sideIndex];
+
+  return [q + deltaQ, r + deltaR];
+}
+
+export function coordinateKey(q: number, r: number) {
+  return `${q},${r}`;
+}
+
+/** Every hex edge with no neighbour behind it — i.e. where the land meets the sea. */
+export function getShorelineEdges(centers: HexCenter[], size: number): ShorelineEdge[] {
+  const occupied = new Set(centers.map(({ q, r }) => coordinateKey(q, r)));
+  const edges: ShorelineEdge[] = [];
+
+  centers.forEach(({ q, r, x, y }) => {
+    getHexCorners(x, y, size).forEach((corner, index, corners) => {
+      const [neighborQ, neighborR] = getNeighborCoordinate(q, r, index);
+
+      if (!occupied.has(coordinateKey(neighborQ, neighborR))) {
+        const nextCorner = corners[(index + 1) % corners.length];
+        edges.push({ x1: corner.x, y1: corner.y, x2: nextCorner.x, y2: nextCorner.y });
+      }
+    });
+  });
+
+  return edges;
+}
+
+export function viewBoxToString(viewBox: ViewBox) {
+  return `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`;
+}
+
+export function getZoomLevel(viewBox: ViewBox) {
+  return BASE_VIEW_BOX.width / viewBox.width;
+}
+
+/**
+ * The camera is a CSS transform on a static viewBox rather than a live viewBox
+ * swap — the browser can composite a matrix without re-rasterising the SVG, so
+ * panning stays smooth.
+ */
+export function cameraTransform(viewBox: ViewBox) {
+  const scale = BASE_VIEW_BOX.width / viewBox.width;
+  const translateX = BASE_VIEW_BOX.x - viewBox.x * scale;
+  const translateY = BASE_VIEW_BOX.y - viewBox.y * scale;
+
+  return `matrix(${scale} 0 0 ${scale} ${translateX} ${translateY})`;
+}
+
+/** Zoom about a focus point, keeping whatever is under it pinned there. */
+export function zoomViewBox(
+  current: ViewBox,
+  zoomLevel: number,
+  focus: { x: number; y: number; ratioX: number; ratioY: number } = {
+    x: current.x + current.width / 2,
+    y: current.y + current.height / 2,
+    ratioX: 0.5,
+    ratioY: 0.5
+  }
+) {
+  const nextZoom = clamp(zoomLevel, MIN_ZOOM, MAX_ZOOM);
+  const nextWidth = BASE_VIEW_BOX.width / nextZoom;
+  const nextHeight = BASE_VIEW_BOX.height / nextZoom;
+
+  return clampViewBox({
+    x: focus.x - nextWidth * focus.ratioX,
+    y: focus.y - nextHeight * focus.ratioY,
+    width: nextWidth,
+    height: nextHeight
+  });
+}
+
+/** Keeps the camera inside the world — no pan or zoom can show past the sea. */
+export function clampViewBox(viewBox: ViewBox): ViewBox {
+  const width = Math.min(viewBox.width, WORLD_VIEW_BOX.width);
+  const height = Math.min(viewBox.height, WORLD_VIEW_BOX.height);
+  const maxX = WORLD_VIEW_BOX.x + WORLD_VIEW_BOX.width - width;
+  const maxY = WORLD_VIEW_BOX.y + WORLD_VIEW_BOX.height - height;
+
+  return {
+    x: clamp(viewBox.x, WORLD_VIEW_BOX.x, maxX),
+    y: clamp(viewBox.y, WORLD_VIEW_BOX.y, maxY),
+    width,
+    height
+  };
+}
+
+export function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+/** Sub-thousandth differences are float noise, not a camera move. */
+export function viewBoxesEqual(a: ViewBox, b: ViewBox) {
+  return (
+    Math.abs(a.x - b.x) < 0.001 &&
+    Math.abs(a.y - b.y) < 0.001 &&
+    Math.abs(a.width - b.width) < 0.001 &&
+    Math.abs(a.height - b.height) < 0.001
+  );
+}
