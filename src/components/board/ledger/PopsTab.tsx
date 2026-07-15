@@ -12,6 +12,7 @@ import { AtlasIcon } from "../../Sprites";
 import { ResourceDeltaList } from "../ResourceDeltaList";
 import { calculatePopEconomy } from "../helpers";
 import type { OwnedHolding } from "../types";
+import { useGameUi } from "../GameUiContext";
 
 /** The social ladder's two directions per pop row (D8). */
 const LADDER_MOVES: Partial<Record<PopType, Array<{ kind: "promote" | "demote"; label: string; to: string }>>> = {
@@ -24,20 +25,13 @@ const LADDER_MOVES: Partial<Record<PopType, Array<{ kind: "promote" | "demote"; 
 };
 
 export function PopsTab({
-  G,
   holdings,
-  playerID,
-  isActive,
-  phase,
   onLadderRequest
 }: {
-  G: HegemonyState;
   holdings: OwnedHolding[];
-  playerID: PlayerId;
-  isActive: boolean;
-  phase: Phase;
   onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
 }) {
+  const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const player = G.players[playerID];
   const economyByPop = calculatePopEconomy(holdings);
   const projection = calculateEconomyProjection(G, playerID, { resolveTransfers: true });

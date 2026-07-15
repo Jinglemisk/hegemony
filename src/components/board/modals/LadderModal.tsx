@@ -13,6 +13,7 @@ import { ModalShell } from "./ModalShell";
 import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { TerrainSprite } from "../../Sprites";
 import { actionRequirementText, actionTitle, capitalize, getOwnedHoldings, holdingShortLabel } from "../helpers";
+import { useGameUi } from "../GameUiContext";
 
 export type LadderRequest = { kind: "promote" | "demote"; from: PopType };
 
@@ -22,22 +23,15 @@ export type LadderRequest = { kind: "promote" | "demote"; from: PopType };
  * (Within a town, pops of a type are identical; there is no "which slave".)
  */
 export function LadderModal({
-  G,
-  playerID,
   request,
-  phase,
-  isActive,
   onCancel,
   onConfirm
 }: {
-  G: HegemonyState;
-  playerID: PlayerId;
   request: LadderRequest;
-  phase: Phase;
-  isActive: boolean;
   onCancel: () => void;
   onConfirm: (tileId: string, from: PopType, kind: "promote" | "demote") => void;
 }) {
+  const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const { kind, from } = request;
   const getStatus = kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
   const to = kind === "promote" ? promotionTarget(from) : demotionTarget(from);

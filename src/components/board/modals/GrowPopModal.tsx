@@ -6,6 +6,7 @@ import { ModalShell } from "./ModalShell";
 import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { AtlasIcon } from "../../Sprites";
 import { ResourceDeltaList } from "../ResourceDeltaList";
+import { useGameUi } from "../GameUiContext";
 import {
   actionRequirementText,
   actionTitle,
@@ -17,22 +18,15 @@ import {
 } from "../helpers";
 
 export function GrowPopModal({
-  G,
-  playerID,
   initialTileId,
-  phase,
-  isActive,
   onCancel,
   onConfirm
 }: {
-  G: HegemonyState;
-  playerID: PlayerId;
   initialTileId: string | null;
-  phase: Phase;
-  isActive: boolean;
   onCancel: () => void;
   onConfirm: (tileId: string, pop: PopType) => void;
 }) {
+  const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const holdings = useMemo(() => getOwnedHoldings(G, playerID), [G, playerID]);
   const initialHolding = holdings.find(({ tile }) => tile.id === initialTileId) ?? holdings[0];
   const [tileId, setTileId] = useState(initialHolding?.tile.id ?? "");

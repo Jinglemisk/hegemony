@@ -3,24 +3,18 @@ import { getCivicCalmStatus } from "../../../game/rules";
 import type { CivicCalmPayment } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { ModalShell } from "./ModalShell";
+import { useGameUi } from "../GameUiContext";
 
 /**
  * Civic calm (D7): one action per turn, two prices, same +happiness. A single
  * `civicCalm` seam in the engine — this modal is just the payment picker.
  */
 export function CalmModal({
-  G,
-  playerID,
-  isActive,
-  moves,
   onClose
 }: {
-  G: HegemonyState;
-  playerID: PlayerId;
-  isActive: boolean;
-  moves: GameMoves;
   onClose: () => void;
 }) {
+  const { G, viewerId: playerID, isActive, moves } = useGameUi();
   const rules = G.ruleset.civicCalm;
   const options: Array<{ payment: CivicCalmPayment; name: string; price: string; blurb: string }> = [
     {
