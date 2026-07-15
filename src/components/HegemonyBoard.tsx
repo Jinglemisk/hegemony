@@ -11,7 +11,10 @@ import {
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { OMEN_TABLE } from "../game/data";
 import { HexMap } from "./HexMap";
-import { FoundColonyPopover, MovePopsModal, PopulationPickerModal, UpgradeCityModal } from "./PopulationModals";
+import { FoundColonyPopover } from "./board/modals/FoundColonyPopover";
+import { MovePopsModal } from "./board/modals/MovePopsModal";
+import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
+import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
 import { ResourceGrid } from "./ResourceGrid";
 import { ActionCommandPanel } from "./board/command/ActionCommandPanel";
 import { CalmModal } from "./board/modals/CalmModal";
@@ -397,8 +400,6 @@ export function HegemonyBoard({
       ) : null}
       {foundColonyMode && foundColonyTarget ? (
         <FoundColonyPopover
-          G={G}
-          playerID={viewerId}
           tileId={foundColonyTarget.tileId}
           anchor={foundColonyTarget.anchor}
           onCancel={exitFoundColonyMode}
@@ -410,8 +411,6 @@ export function HegemonyBoard({
       ) : null}
       {activeModal?.kind === "upgradeCity" ? (
         <UpgradeCityModal
-          G={G}
-          playerID={viewerId}
           onCancel={closeModal}
           onConfirm={(tileId, pops) => {
             moves.upgradeColonyToCity(tileId, pops);
@@ -431,8 +430,6 @@ export function HegemonyBoard({
       ) : null}
       {activeModal?.kind === "movePops" ? (
         <MovePopsModal
-          G={G}
-          playerID={viewerId}
           onCancel={closeModal}
           onConfirm={(sourceTileId, targetTileId, pops) => {
             moves.movePops(sourceTileId, targetTileId, pops);

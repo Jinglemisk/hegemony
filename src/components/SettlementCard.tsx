@@ -11,6 +11,7 @@ import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/
 import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
 import { AtlasIcon, TerrainSprite } from "./Sprites";
 import { ResourceChips } from "./board/ResourceChips";
+import { capitalize } from "./board/helpers";
 
 /**
  * Collapsed-summary view of a settlement, identical to the holding card shown in
@@ -107,6 +108,3 @@ export function formatTileCoordinates(tile: HexTile) {
   return `${tile.q},${tile.r}`;
 }
 
-function capitalize(value: string) {
-  return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`;
-}
