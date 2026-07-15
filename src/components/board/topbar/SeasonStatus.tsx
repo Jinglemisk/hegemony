@@ -2,6 +2,7 @@ import { PLAYER_NAMES } from "../../../game/data";
 import { memo } from "react";
 import { yearOf } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
+import { DeckShelf } from "../command/DeckShelf";
 import { SeasonDial } from "./SeasonDial";
 
 function SeasonStatusComponent({
@@ -45,6 +46,10 @@ function SeasonStatusComponent({
         <strong>{PLAYER_NAMES[currentPlayerId]}</strong>
         <span className="turnClockSub">{PLAYER_NAMES[G.seasonOpener]} opens</span>
       </div>
+
+      {/* Q19: the deck counts and the board chip follow the season clock here —
+          the seasonal count already half-lived in this bar as "N left". */}
+      <DeckShelf G={G} />
     </div>
   );
 }

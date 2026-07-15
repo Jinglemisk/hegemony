@@ -135,6 +135,70 @@
   gap: 8px;
 }
 
+/* ── The bottom command bar (refit scope 2 / Q17) ────────────────────────────
+   Resources left, verbs centre, End Turn right. The verbs used to sit in a side
+   panel a screen away from the resources they spend; fusing them into one band
+   puts cost and action in the same glance and frees the whole right column. */
+.commandBar {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.commandBarResources {
+  /* Sizes to its content — the pills have a floor now and must not be squeezed. */
+  min-width: max-content;
+}
+
+.commandBarVerbs {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Each verb takes the width of its own content rather than an equal share:
+   forcing MOVE as wide as UPGRADE wastes ~90px across the row and truncates the
+   long ones to "UPG…".
+   `max-content` is load-bearing. The card is a grid whose body column would
+   otherwise be measured from the COST line — so "Move" (label 36px, cost "free"
+   30px) sized itself to 30 and clipped its own label. */
+.commandBarVerbs .commandVerb {
+  flex: 0 0 auto;
+  min-width: max-content;
+}
+
+.commandBarEnd {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  min-width: 0;
+}
+
+.commandBarEnd .commandEndTurn {
+  grid-column: auto;
+  min-width: 150px;
+  min-height: 52px;
+}
+
+/* The chronicle's newest line, so the drawer's contents are never fully hidden.
+   Capped tight on purpose: this column is sized by its widest child, so a long
+   log line would silently steal the width the verbs need and truncate THEM. The
+   full text is one hover (title) or one click (the drawer) away. */
+.commandBarTicker {
+  overflow: hidden;
+  margin: 0;
+  max-width: 170px;
+  color: var(--subtle);
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .commandVerb {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
@@ -384,4 +448,69 @@
 .deckTrayBoard .deckTrayLabel {
   color: var(--muted);
   font-style: italic;
+}
+
+/* ── The chronicle drawer (refit scope 1 / Q19) ──────────────────────────────
+   "One ledger" evicted the right panel. The chronicle could not just become a
+   ledger tab — a running narration exists to be seen, and a tab hides it — so it
+   parks as a slim tab on the right edge and slides over the map when opened. */
+.chronicleDrawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 12;
+  display: flex;
+  align-items: flex-start;
+  height: 100%;
+  pointer-events: none;
+}
+
+.chronicleDrawer > * {
+  pointer-events: auto;
+}
+
+.chronicleTab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-right: 0;
+  border-radius: 8px 0 0 8px;
+  background: var(--parchment, #f6efdd);
+  cursor: pointer;
+  writing-mode: vertical-rl;
+}
+
+.chronicleTabIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.chronicleTabLabel {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chronicleTabCount {
+  color: var(--subtle);
+  font-size: 0.65rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chronicleDrawerBody {
+  display: flex;
+  overflow: auto;
+  width: min(360px, 40vw);
+  height: 100%;
+  padding: 12px;
+  border-left: 1px solid var(--line);
+  background: var(--parchment, #f6efdd);
+  box-shadow: -8px 0 24px rgb(24 18 16 / 18%);
+}
+
+.chronicleDrawerBody .turnLogPanel {
+  width: 100%;
 }

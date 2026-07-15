@@ -15,8 +15,8 @@ import { FoundColonyPopover } from "./board/modals/FoundColonyPopover";
 import { MovePopsModal } from "./board/modals/MovePopsModal";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
 import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
-import { ResourceGrid } from "./ResourceGrid";
-import { ActionCommandPanel } from "./board/command/ActionCommandPanel";
+import { ChronicleDrawer } from "./board/command/ChronicleDrawer";
+import { CommandBar } from "./board/command/CommandBar";
 import { CalmModal } from "./board/modals/CalmModal";
 import { CompendiumModal } from "./board/modals/CompendiumModal";
 import { EventTableModal } from "./board/modals/EventTableModal";
@@ -153,6 +153,9 @@ export function HegemonyBoard({
   };
 
   const closeModal = useCallback(() => setActiveModal(null), []);
+  // The chronicle lives in a drawer now (Q19); its newest line rides the command
+  // bar so the narration is never fully hidden.
+  const latestChronicleLine = G.log.length > 0 ? G.log[G.log.length - 1].message : null;
 
   // Handing the turn over closes everything the previous seat had open.
   useEffect(() => {
@@ -300,6 +303,8 @@ export function HegemonyBoard({
         />
       </header>
 
+      {/* Two columns now, not three: the verbs left for the bottom bar and the
+          right panel went with them (refit scope 1/2). */}
       <section className="workbench strategyWorkbench">
         <aside className="panel empirePanel intelPanel">
           <EmpireIntelPanel
@@ -336,46 +341,34 @@ export function HegemonyBoard({
               </div>
             ) : null}
           </div>
-          <div className="resourceBand" aria-label={`${viewer.name} resources`}>
-            <ResourceGrid
-              breakdown={projectedIncomeBreakdown}
-              className="topResourceGrid bandResourceGrid"
-              deltas={projectedIncome}
-              resetKey={viewerId}
-              resources={viewer.resources}
-            />
-          </div>
         </section>
 
-        <aside className="panel actionPanel commandPanel">
-          <ActionCommandPanel
-            G={G}
-            isActive={isActive}
-            phase={ctx.phase}
-            canGrowPops={viewer.settlements.length > 0}
-            canMovePops={viewer.settlements.length >= 2}
-            canFoundColony={canFoundColony}
-            canUpgradeCity={canUpgradeCity}
-            isFoundColonyActive={foundColonyMode}
-            hasPendingPlayerEvent={hasPendingPlayerEvent}
-            calmUsed={viewer.civicCalmUsedThisTurn}
-            ventureUsed={viewer.ventureUsedThisTurn}
-            onEndTurn={events.endTurn}
-            onGrowPopRequest={() => setActiveModal({ kind: "growPop" })}
-            onMovePopsRequest={() => setActiveModal({ kind: "movePops" })}
-            onCalmRequest={() => setActiveModal({ kind: "calm" })}
-            onVentureRequest={() => setActiveModal({ kind: "venture" })}
-            onFoundColonyRequest={() => {
-              // Found-colony is a map mode, not a dialog: it clears any open dialog
-              // so the board is never covered during a selection (refit rule 1).
-              setActiveModal(null);
-              setFoundColonyTarget(null);
-              setFoundColonyMode((active) => !active);
-            }}
-            onUpgradeCityRequest={() => setActiveModal({ kind: "upgradeCity" })}
-          />
-        </aside>
+        <ChronicleDrawer />
       </section>
+
+      <CommandBar
+        projectedIncome={projectedIncome}
+        projectedIncomeBreakdown={projectedIncomeBreakdown}
+        canGrowPops={viewer.settlements.length > 0}
+        canMovePops={viewer.settlements.length >= 2}
+        canFoundColony={canFoundColony}
+        canUpgradeCity={canUpgradeCity}
+        isFoundColonyActive={foundColonyMode}
+        chronicleTicker={latestChronicleLine}
+        onEndTurn={events.endTurn}
+        onGrowPopRequest={() => setActiveModal({ kind: "growPop" })}
+        onMovePopsRequest={() => setActiveModal({ kind: "movePops" })}
+        onCalmRequest={() => setActiveModal({ kind: "calm" })}
+        onVentureRequest={() => setActiveModal({ kind: "venture" })}
+        onFoundColonyRequest={() => {
+          // Found-colony is a map mode, not a dialog: it clears any open dialog
+          // so the board is never covered during a selection (refit rule 1).
+          setActiveModal(null);
+          setFoundColonyTarget(null);
+          setFoundColonyMode((active) => !active);
+        }}
+        onUpgradeCityRequest={() => setActiveModal({ kind: "upgradeCity" })}
+      />
 
       {activeModal?.kind === "populationPrompt" ? (
         <PopulationPickerModal
