@@ -54,13 +54,37 @@ export function getColonyXPositions(count: number) {
   return TWO_COLONY_POSITIONS;
 }
 
-/** Flat-top hex outline, as an SVG `points` string. */
+/**
+ * POINTY-TOP hex outline, as an SVG `points` string: corners at −30° + 60°·i put
+ * vertices straight up and down, and flats on the left and right.
+ *
+ * The orientation here and the spacing in {@link hexCenter} are one decision, not
+ * two — mixing a pointy-top outline with flat-top spacing overlaps every tile.
+ */
 export function hexPoints(size: number) {
   return Array.from({ length: 6 }, (_, index) => {
     const angle = (Math.PI / 180) * (60 * index - 30);
     return `${Math.cos(angle) * size},${Math.sin(angle) * size}`;
   }).join(" ");
 }
+
+/**
+ * Axial (q, r) → pixel centre, for the POINTY-TOP layout that {@link hexPoints}
+ * draws. Columns step by the hex's width (√3·size) with a half-step of shear per
+ * row; rows step by three-quarters of its height (1.5·size).
+ *
+ * Transposing these two — 1.5·size on x, √3·size on y — is the flat-top layout,
+ * and silently produces a board of overlapping tiles.
+ */
+export function hexCenter(q: number, r: number, size: number) {
+  return {
+    x: size * Math.sqrt(3) * (q + r / 2),
+    y: size * 1.5 * r
+  };
+}
+
+/** The foam is drawn just OUTSIDE the tile, which is itself inset from HEX_SIZE. */
+export const SHORELINE_RADIUS = HEX_SIZE + 3;
 
 export function getHexCorners(x: number, y: number, size: number) {
   return Array.from({ length: 6 }, (_, index) => {

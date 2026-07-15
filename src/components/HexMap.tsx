@@ -4,10 +4,12 @@ import {
   BASE_VIEW_BOX,
   HEX_SIZE,
   SEA_IMAGE_VIEW_BOX,
+  SHORELINE_RADIUS,
   WORLD_VIEW_BOX,
   ZOOM_STEP,
   cameraTransform,
   getShorelineEdges,
+  hexCenter,
   viewBoxToString
 } from "../ui/hexGeometry";
 import { TileGroup } from "./board/map/TileGroup";
@@ -63,17 +65,12 @@ function HexMapComponent({
     useMapCamera({ onTileAction });
 
   const centers = useMemo(
-    () =>
-      G.board.tiles.map((tile) => ({
-        tile,
-        q: tile.q,
-        r: tile.r,
-        x: HEX_SIZE * 1.5 * tile.q,
-        y: HEX_SIZE * Math.sqrt(3) * (tile.r + tile.q / 2)
-      })),
+    () => G.board.tiles.map((tile) => ({ tile, q: tile.q, r: tile.r, ...hexCenter(tile.q, tile.r, HEX_SIZE) })),
     [G.board.tiles]
   );
-  const shorelineEdges = useMemo(() => getShorelineEdges(centers, HEX_SIZE), [centers]);
+  // SHORELINE_RADIUS overhangs the tile so the foam reads as surf against the
+  // land rather than a line drawn through it.
+  const shorelineEdges = useMemo(() => getShorelineEdges(centers, SHORELINE_RADIUS), [centers]);
 
   const isTerrainMapMode = mapMode === "terrain";
   const activeMapModeLabel = MAP_MODE_OPTIONS.find((option) => option.mode === mapMode)?.label ?? "Current";
