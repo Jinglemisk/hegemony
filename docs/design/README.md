@@ -16,7 +16,9 @@ Phase 1.5 interface refit (`docs/roadmap-appendix.md`).
 
 ## showcases/ — full-screen mockups (1440×900 stage, real 37-tile classic board)
 
-All five render the **same canonical mid-game scene** so comparisons isolate one variable.
+All six render the **same canonical mid-game scene** so comparisons isolate one variable.
+The first five are static 1440×900 stages; `DECIDED-UI-LAYOUT.html` reuses their board data verbatim but
+**fits the viewport at any size** and is the only interactive one — pan/zoom, open/close panels, live A/B/C switch.
 Board state in all: polychrome kind-glazes (wheat/olive/sienna/grey), bone yield chits,
 slots visible on every tile, pops as class-glyph + numeral, keylined owner rims.
 
@@ -27,6 +29,7 @@ slots visible on every tile, pops as class-glyph + numeral, keylined owner rims.
 | `katalogos-plain.html` | Icon A/B counter-arm — zero pictorial icons; text/numerals/color/geometry only | Archive — proves a text-only fallback exists (future accessibility mode is cheap) |
 | `painted-table.html` | Second-place direction — material tabletop, vase-black rail (its rail + board grammar were grafted into the verdict) | Archive |
 | `strategos.html` | Third-place direction — dark command HUD (its tooltips, receipts-table method, turn banner were grafted) | Archive |
+| `DECIDED-UI-LAYOUT.html` (direction name: **KYKLOS**) | **The chosen layout (2026-07-15)** — drawn to the owner's own brief, not the agent bake-off; supersedes the five arms above as the interface KYKLOS ships. Discs are always *threaded on an edge* with ~3/5 spilling onto the sea; never a panel behind them. Round verb discs (name+cost beneath), one square hourglass End Turn, permanent left rail of menu discs opening collapsible slabs, fully-collapsible chronicle, free-floating map clamped by its **centre**. Top: cards left · season medallion dead centre · players right; whose-turn above End Turn. Fits the viewport exactly at any size — the only showcase that never scrolls. **Light-mode parchment** throughout, per ruling 1 below — bone-glass chrome, ivory discs with ink glyphs, and the black glaze kept only as the ceremony register (tooltips, key chips, the commit). The teal sea is the one dark value left, so anything floating on it (season, whose-turn, zoom) stays ivory. Carries a live **three-arm switch**: **A** straight spines; **B** elliptical **domes** (footer + sidebar) with the resource row across the dome floor and the verbs fanned — apex centre, lower at the rim; **C** domes with resources split wood/stone/food · medallion · gold/influence/happiness. A and C share the split resources and differ *only* in the chrome's shape, so the switch isolates one variable at a time. Measured, not guessed: a true circle cannot carry the fan (7 verbs need ~630px of span; a circle only reaches that at its equator, where the arc runs vertical), and the fan (744px with labels) — **not** the resource row (446px) — is what sizes the dome. Dead space under the apex = `ry − 73`, so each arm tunes depth: B `ry 105` (carries the row), C `ry 96, cyOff −8` (carries nothing, hugs the fan). | **Decided — this is the layout.** Two things are still open *inside* it: (1) the A/B/C arm (chrome shape + resource placement); (2) its verb/resource/menu glyphs are placeholder line-drawings for silhouette only — the ratified **stylized** pictograms (ruling 4) still govern iconography and have not been cut into this file. |
 
 ## audits/ — the ground-truth reports the work was built on
 

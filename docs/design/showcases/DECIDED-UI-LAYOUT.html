@@ -1,0 +1,830 @@
+<title>KYKLOS — Hegemony Art Direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ivory:#fff8e7; --bone:#f4e6c8; --slip:#d8c8a8;
+  --vase:#181210; --ink:#241910;
+  --ink-66:rgb(36 25 16/66%); --ink-48:rgb(36 25 16/48%); --ink-30:rgb(36 25 16/30%);
+  --ink-12:rgb(36 25 16/12%); --ink-07:rgb(36 25 16/7%);
+  --clay:#c0461c; --clay-deep:#8f2e13; --ochre:#d98a35; --ochre-ink:#b06a1d;
+  --olive:#5e6e3a; --aegean:#1f6977;
+  --p1:#2f5d9e; --p2:#a83226; --p3:#dfa437; --p4:#55673a;
+  --disp:'Marcellus', Copperplate, Georgia, serif;
+  --body:'Source Serif 4','Iowan Old Style', Georgia, serif;
+  --hexclip:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+
+  /* ---- LIGHT MODE (owner ruling: the game is light-mode parchment;
+         black glaze survives only as the ceremony register — tooltips, the commit) ---- */
+  --glass:rgb(244 230 200/93%);        /* the bars and domes: bone glass */
+  --disc:#fff8e7;                      /* discs are the lighter plate, so they read ON the bone */
+  --disc-hi:#fffdf6;
+  --ring:rgb(36 25 16/22%);            /* every disc keeps a keyline — it must survive the sea too */
+  --lift:0 2px 8px rgb(24 18 16/20%);
+  --lift-hi:0 5px 14px rgb(24 18 16/26%);
+  --line:rgb(36 25 16/13%);
+  --float:0 10px 30px rgb(24 18 16/26%);
+  /* text that floats ON THE SEA stays light — the sea is the one dark value left */
+  --on-sea:#fff8e7; --on-sea-dim:rgb(255 248 231/72%);
+  --sea-shadow:0 1px 3px rgb(10 34 41/55%);
+
+  --rail-w:30px; --bub:46px; --bub-out:28px;
+  --top-h:48px; --bot-h:64px; --vb:54px; --vb-out:32px;
+  --panel-w:308px; --chron-w:292px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bone);color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased}
+svg{display:block}
+
+/* ============ slim showcase strip (NOT part of the game) ============ */
+.showbar{height:42px;display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--bone);
+  border-bottom:1px solid var(--ink-12)}
+.sb-t{font-family:var(--disp);font-size:14px;letter-spacing:.06em;white-space:nowrap;color:var(--ink)}
+.sb-t b{color:var(--clay);font-weight:400}
+.sb-sp{flex:1 1 auto}
+.sb-lab{font-family:var(--disp);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-48)}
+.seg{display:flex;border:1px solid var(--ink-30);border-radius:999px;padding:2px;background:var(--ivory)}
+.seg button{appearance:none;border:0;cursor:pointer;background:transparent;color:var(--ink-66);
+  font-family:var(--disp);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:999px;transition:.25s;white-space:nowrap}
+.seg button.on{background:var(--clay);color:var(--ivory)}
+.qb{width:26px;height:26px;border-radius:50%;border:1px solid var(--ink-30);background:transparent;cursor:pointer;
+  color:var(--ink-66);font-family:var(--disp);font-size:12px;display:grid;place-items:center;transition:.2s;flex:none}
+.qb:hover,.qb.on{background:var(--ink);color:var(--ivory);border-color:var(--ink)}
+.notes{position:fixed;left:0;right:0;top:42px;z-index:200;background:var(--ivory);
+  border-bottom:1px solid var(--ink-12);padding:18px 22px 20px;box-shadow:0 12px 30px rgb(24 18 16/14%);
+  display:grid;grid-template-columns:repeat(4,1fr);gap:20px;
+  transform:translateY(calc(-100% - 44px));transition:transform .3s cubic-bezier(.22,.61,.36,1)}
+.notes.show{transform:none}
+.note h4{font-family:var(--disp);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--clay);font-weight:400;margin-bottom:5px}
+.note p{font-size:12px;color:var(--ink-66);line-height:1.5}
+.note p b{color:var(--ink);font-weight:600}
+
+/* ============ the stage — always exactly the viewport ============ */
+.stage{position:relative;width:100vw;height:calc(100vh - 42px);overflow:hidden;
+  background:radial-gradient(900px 620px at 62% 34%, #2e8a9a 0%, #206e7c 46%, #17505c 100%);
+  cursor:grab;user-select:none}
+.stage.dragging{cursor:grabbing}
+.sea-tex{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(104deg, rgb(255 248 231/2.5%) 0 2px, transparent 2px 90px),
+             repeating-linear-gradient(8deg, rgb(12 40 48/4%) 0 3px, transparent 3px 120px)}
+
+/* --- the free-floating world --- */
+.world{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
+.world.glide{transition:transform .42s cubic-bezier(.22,.61,.36,1)}
+.hex{position:absolute}
+.lyr{position:absolute;inset:0;clip-path:var(--hexclip)}
+.chit{position:absolute;left:50%;top:13px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;
+  background:#f7ecd2;border-radius:9px;padding:2px 7px 2px 5px;box-shadow:0 0 0 1px rgb(24 18 16/82%),0 1px 1.5px rgb(24 18 16/28%)}
+.chit b{font-size:12px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.chit svg{opacity:.72}
+.sk{position:absolute;left:0;right:0;display:flex;justify-content:center;gap:3px}
+.sk i{width:11px;height:11px;border-radius:2px;background:rgb(24 18 16/22%);
+  box-shadow:inset 0 1px 1.5px rgb(24 18 16/35%),0 0 0 1px rgb(247 236 210/55%)}
+.sk i.b{background:var(--bone);box-shadow:0 0 0 1px var(--vase);display:grid;place-items:center}
+.sk.inert i{opacity:.55}
+.settle{position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;display:grid;place-items:center;
+  box-shadow:0 0 0 1.5px var(--ivory),0 0 0 2.5px var(--vase)}
+.blz{position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);width:11px;height:11px;border-radius:50%;
+  background:inherit;display:grid;place-items:center;box-shadow:0 0 0 1px var(--ivory)}
+.pp{position:absolute;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:7px}
+.pp .g{display:flex;align-items:center;gap:3px}
+.pp .g b{font-size:11.5px;font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.bead{border-radius:50%;flex:none}
+.bead.cit{width:9px;height:9px;box-shadow:0 0 0 1px var(--ivory),0 0 0 2px var(--vase)}
+.bead.fre{width:9px;height:9px;background:var(--bone);box-shadow:0 0 0 1px var(--ivory),0 0 0 2px var(--vase);position:relative}
+.bead.fre::after{content:"";position:absolute;inset:1px;border-radius:50%;border:2px solid currentColor}
+.bead.slv{width:7px;height:7px;background:var(--vase);box-shadow:0 0 0 1px var(--ivory)}
+.anchor{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;opacity:0;transition:opacity .3s;z-index:2}
+.stage.dragging .anchor,.anchor.pinned{opacity:1}
+.anchor i{position:absolute;left:-27px;top:-27px;width:54px;height:54px;border-radius:50%;border:1.5px dashed rgb(255 248 231/55%)}
+.anchor i::after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:var(--ivory)}
+.anchor.pinned i{border-color:var(--clay);border-style:solid;box-shadow:0 0 14px rgb(192 70 28/55%)}
+/* no scrims: the chrome is opaque light shapes now, so nothing needs the sea darkened behind it */
+
+/* ============ chrome: spines (A) or domes (B/C) ============ */
+.bar{position:absolute;background:var(--glass);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);z-index:20}
+.bar.top{left:0;right:0;top:0;height:var(--top-h);border-bottom:1px solid var(--line)}
+.bar.bot{left:0;right:0;bottom:0;height:var(--bot-h);border-top:1px solid var(--line)}
+.bar.rail{left:0;top:var(--top-h);bottom:var(--bot-h);width:var(--rail-w);border-right:1px solid var(--line)}
+/* the rounded shape: an ellipse. one diameter is pinned by the section it carries,
+   the other is free — that is what lets the discs fan without leaving the arc. */
+.dome{position:absolute;border-radius:50%;background:var(--glass);
+  backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+  box-shadow:inset 0 0 0 1px var(--line);z-index:20;
+  /* the shape must travel with the discs threaded on it, or the two come apart mid-move */
+  transition:left .3s cubic-bezier(.22,.61,.36,1),top .3s cubic-bezier(.22,.61,.36,1),
+             width .3s cubic-bezier(.22,.61,.36,1),height .3s cubic-bezier(.22,.61,.36,1)}
+.mode-A .dome{display:none}
+.mode-B .bar.bot,.mode-B .bar.rail,.mode-C .bar.bot,.mode-C .bar.rail{display:none}
+
+/* ---- discs (absolutely placed by JS in every mode) ---- */
+.bubs,.verbs{position:absolute;inset:0;pointer-events:none;z-index:40}
+.verbs{z-index:25}
+.bub{position:absolute;width:var(--bub);height:var(--bub);border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  pointer-events:auto;transform:translate(-50%,-50%);
+  background:var(--disc);box-shadow:0 0 0 1px var(--ring),var(--lift);color:var(--ink);
+  transition:background .2s,color .2s,box-shadow .2s,left .3s cubic-bezier(.22,.61,.36,1),top .3s cubic-bezier(.22,.61,.36,1)}
+.bub:hover{background:var(--disc-hi);box-shadow:0 0 0 1px var(--ink-30),var(--lift-hi)}
+.bub.on{background:var(--clay);color:var(--ivory);box-shadow:0 0 0 1px rgb(143 46 19/55%),0 4px 14px rgb(192 70 28/38%)}
+/* tooltips keep the black glaze — the ceremony register */
+.bub .tip{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%) translateX(-4px);opacity:0;pointer-events:none;
+  background:var(--vase);color:var(--bone);font-family:var(--disp);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  padding:6px 10px;border-radius:5px;white-space:nowrap;transition:opacity .18s,transform .18s;z-index:3}
+.bub:hover .tip{opacity:1;transform:translateY(-50%) translateX(0)}
+.bub .cnt{position:absolute;top:-2px;right:-2px;min-width:15px;height:15px;border-radius:8px;background:var(--ochre);
+  color:var(--vase);font-size:9.5px;font-weight:700;display:grid;place-items:center;padding:0 3px;
+  font-variant-numeric:tabular-nums;box-shadow:0 0 0 1.5px var(--ivory)}
+
+/* ============ TOP ============ */
+.cards{position:absolute;left:calc(var(--rail-w) + var(--bub-out) + 14px);top:0;height:var(--top-h);z-index:25;
+  display:flex;align-items:center;gap:6px;transition:left .3s cubic-bezier(.22,.61,.36,1)}
+.mode-B .cards,.mode-C .cards{left:128px}
+/* flat: no plate behind a card chip until you reach for it */
+.ev{display:flex;align-items:center;gap:7px;padding:5px 9px 5px 6px;border-radius:8px;background:transparent;cursor:pointer;transition:.18s}
+.ev:hover{background:var(--ink-07)}
+.ev .th{width:17px;height:21px;flex:none;background:var(--ivory);border-radius:2px;position:relative;box-shadow:0 0 0 1px rgb(36 25 16/45%)}
+.ev .th::after{content:"";position:absolute;left:3px;right:3px;top:6px;height:1px;background:rgb(36 25 16/45%);box-shadow:0 3px 0 rgb(36 25 16/35%)}
+.ev .tt{display:flex;flex-direction:column;gap:1px}
+.ev .k{font-family:var(--disp);font-size:7.5px;letter-spacing:.16em;color:var(--ink-48)}
+.ev .n{font-size:11.5px;color:var(--ink);white-space:nowrap}
+.ev .ck{width:11px;height:11px;color:var(--olive);flex:none}
+
+.sun{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:25;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.sun>*{pointer-events:auto}
+.sun-row{margin-top:calc(var(--top-h) - 40px);display:flex;align-items:center;gap:26px}
+.medal{width:64px;height:64px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:var(--disc);color:var(--ink);box-shadow:0 0 0 1px var(--ring),var(--lift)}
+/* this text hangs below the bar, onto the sea — so it is light, and carries no plate behind it */
+.sun .s1{font-family:var(--disp);font-size:11.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--on-sea);
+  margin-top:9px;white-space:nowrap;text-shadow:var(--sea-shadow)}
+.sun .s2{font-size:10.5px;color:var(--on-sea-dim);margin-top:2px;white-space:nowrap;text-shadow:var(--sea-shadow)}
+
+.roster{position:absolute;right:14px;top:0;height:var(--top-h);z-index:25;display:flex;align-items:center;gap:4px}
+.st8{display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:7px;background:transparent;position:relative}
+.st8 .disc{width:17px;height:17px;border-radius:50%;flex:none;display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1px rgb(255 248 231/62%),0 0 0 1px rgb(36 25 16/38%)}
+.st8 .disc i{font-style:normal;font-family:var(--disp);font-size:8px;color:var(--ivory)}
+.st8 .nm{font-size:12px;color:var(--ink-66)}
+.st8 .pv{font-size:10.5px;color:var(--ink-48);font-variant-numeric:tabular-nums}
+.st8.acting{box-shadow:inset 0 -2px 0 var(--clay)}
+.st8.acting .nm{color:var(--ink);font-weight:600}
+
+/* ============ panel ============ */
+.panel{position:absolute;left:calc(var(--rail-w) + var(--bub-out) + 14px);top:calc(var(--top-h) + 12px);width:var(--panel-w);z-index:30;
+  background:var(--ivory);border-radius:12px;padding:14px 15px 15px;box-shadow:var(--float);
+  max-height:calc(100vh - 42px - var(--top-h) - var(--bot-h) - 60px);overflow:auto;
+  transform-origin:0 24px;transition:opacity .2s,transform .24s cubic-bezier(.22,.61,.36,1),left .3s cubic-bezier(.22,.61,.36,1)}
+.mode-B .panel,.mode-C .panel{left:130px}
+.panel.hide{opacity:0;transform:translateX(-14px) scale(.97);pointer-events:none}
+.panel::-webkit-scrollbar{width:0}
+.p-head{display:flex;align-items:center;gap:9px;padding-bottom:9px;border-bottom:1px solid var(--ink-12)}
+.p-head .pt{font-family:var(--disp);font-size:15px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink);flex:1}
+.px{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;cursor:pointer;color:var(--ink-48);background:transparent;border:0;transition:.18s}
+.px:hover{background:var(--ink-12);color:var(--ink)}
+.p-sum{padding:9px 0 0;font-size:12.5px;color:var(--ink-66);font-variant-numeric:tabular-nums}
+.p-sum b{color:var(--ink);font-weight:700}
+.pwarn{margin-top:11px;padding:8px 10px 9px 12px;position:relative;background:rgb(217 138 53/12%);border-radius:0 5px 5px 0}
+.pwarn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ochre);border-radius:2px}
+.pwarn .k{font-family:var(--disp);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ochre-ink)}
+.pwarn .c{color:var(--ink);font-size:12.5px;margin-top:2px}
+.city{margin-top:13px;padding-top:11px;border-top:1px solid var(--ink-12)}
+.ch{display:flex;align-items:center;gap:9px}
+.ch .md{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;box-shadow:0 0 0 1.5px var(--ivory),0 0 0 2.5px var(--vase)}
+.ch .cn{font-family:var(--disp);font-size:13.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);line-height:1.15}
+.ch .cc{font-size:11.5px;color:var(--ink-66)}
+.ch .pf{margin-left:auto;font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.ch .pf span{font-size:12px;font-weight:400;color:var(--ink-66)}
+.crow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:7px 0 6px;border-top:1px solid var(--ink-12);margin-top:8px}
+.crow .k{font-family:var(--disp);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-66);flex:none;padding-top:2px}
+.crow .v{font-size:12.5px;text-align:right;color:var(--ink);line-height:1.35}
+.crow .v .dim{color:var(--ink-48)}
+.slots{display:inline-flex;gap:3px;vertical-align:-2px;margin-left:6px}
+.slots i{width:10px;height:10px;border-radius:2px;background:rgb(36 25 16/6%);box-shadow:inset 0 1px 1px rgb(36 25 16/15%)}
+.slots i.b{background:var(--bone);box-shadow:0 0 0 1px var(--vase)}
+.net{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 0 2px;border-top:1px solid var(--ink-12);margin-top:8px}
+.net .n{display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.net .n svg{opacity:.55}
+.net .pos{color:var(--olive)}
+.net .neg{color:var(--clay-deep)}
+
+/* ============ chronicle ============ */
+.chron{position:absolute;right:14px;top:calc(var(--top-h) + 12px);width:var(--chron-w);z-index:30;
+  background:var(--ivory);border-radius:12px;box-shadow:var(--float);padding:12px 14px 14px;
+  max-height:calc(100vh - 42px - var(--top-h) - var(--bot-h) - 60px);overflow:auto;
+  transform-origin:100% 24px;transition:opacity .2s,transform .24s cubic-bezier(.22,.61,.36,1)}
+.chron.hide{opacity:0;transform:translateX(16px) scale(.97);pointer-events:none}
+.chron::-webkit-scrollbar{width:0}
+.c-head{display:flex;align-items:center;gap:8px;padding-bottom:9px;border-bottom:1px solid var(--ink-12)}
+.c-head .ct{font-family:var(--disp);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);flex:1}
+.c-head .cs{font-family:var(--disp);font-size:8.5px;letter-spacing:.16em;color:var(--ink-48)}
+.cx{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink-48);background:transparent;border:0;flex:none;transition:.18s}
+.cx:hover{background:var(--ink-12);color:var(--ink)}
+.log{padding:8px 0 0}
+.li{padding:7px 0;border-bottom:1px solid var(--ink-12);font-size:12.5px;color:var(--ink-66);line-height:1.45}
+.li:last-child{border-bottom:0}
+.li b{color:var(--ink);font-weight:600}
+.li .pos{color:var(--olive);font-weight:600}
+.li .neg{color:var(--clay-deep);font-weight:600}
+.c-tab{position:absolute;right:-16px;top:calc(var(--top-h) + 14px);z-index:31;
+  width:var(--bub);height:var(--bub);border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  background:var(--disc);box-shadow:0 0 0 1px var(--ring),var(--lift);color:var(--ink);
+  opacity:0;transform:translateX(10px);pointer-events:none;transition:.24s}
+.c-tab.show{opacity:1;transform:none;pointer-events:auto}
+.c-tab:hover{background:var(--disc-hi);transform:translateX(-3px)}
+.c-tab .cnt{position:absolute;top:-2px;left:-2px;min-width:15px;height:15px;border-radius:8px;background:var(--clay);color:var(--ivory);
+  font-size:9.5px;font-weight:700;display:grid;place-items:center;padding:0 3px;font-variant-numeric:tabular-nums;box-shadow:0 0 0 1.5px var(--ivory)}
+.c-tab svg{margin-left:-14px}
+
+/* ============ verbs ============ */
+.verb{position:absolute;width:86px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;background:none;border:0;padding:0;
+  font-family:inherit;pointer-events:auto;transform:translateX(-50%);
+  transition:left .3s cubic-bezier(.22,.61,.36,1),top .3s cubic-bezier(.22,.61,.36,1)}
+.vb{width:var(--vb);height:var(--vb);border-radius:50%;display:grid;place-items:center;position:relative;flex:none;
+  background:var(--disc);box-shadow:0 0 0 1px var(--ring),var(--lift);color:var(--ink);
+  transition:background .18s,transform .18s,box-shadow .18s}
+.verb:hover .vb{background:var(--disc-hi);transform:translateY(-3px);box-shadow:0 0 0 1px var(--ink-30),var(--lift-hi)}
+.verb.armed .vb{background:var(--clay);color:var(--ivory);box-shadow:0 0 0 1px rgb(143 46 19/55%),0 6px 18px rgb(192 70 28/42%)}
+.verb.armed .vn{color:var(--clay-deep)}
+.verb.off{cursor:not-allowed}
+.verb.off .vb{background:rgb(255 248 231/55%);color:var(--ink-30);box-shadow:0 0 0 1px var(--ink-12)}
+.verb.off:hover .vb{transform:none;background:rgb(255 248 231/55%);box-shadow:0 0 0 1px var(--ink-12)}
+.verb.off .vn,.verb.off .vc{color:var(--ink-30)}
+.vn{font-family:var(--disp);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);line-height:1}
+.vc{font-size:10px;color:var(--ink-48);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1;margin-top:-3px}
+.verb.armed .vc{color:var(--ink-66)}
+/* the key hint keeps the black glaze — a tiny inscribed chip */
+.kbd{position:absolute;top:-2px;right:-2px;width:15px;height:15px;border-radius:50%;background:var(--vase);
+  color:rgb(244 230 200/80%);font-size:8.5px;font-weight:700;display:grid;place-items:center;font-family:var(--body);
+  box-shadow:0 0 0 1.5px var(--ivory)}
+
+/* whose turn — floats on the sea, above the commit */
+.turnbox{position:absolute;right:16px;bottom:102px;z-index:25;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.turnbox .lbl{font-family:var(--disp);font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--on-sea-dim);text-shadow:var(--sea-shadow)}
+.turnbox .who{font-family:var(--disp);font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-sea);
+  padding-bottom:3px;border-bottom:2px solid var(--p1);text-shadow:var(--sea-shadow)}
+/* the commit keeps the black-glaze weight: the one square, the one dark mass */
+.endturn{position:absolute;right:16px;bottom:14px;z-index:26;width:76px;height:76px;border-radius:5px;cursor:pointer;border:0;
+  background:var(--clay-deep);color:var(--ivory);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  box-shadow:0 6px 20px rgb(143 46 19/40%),0 0 0 1px rgb(36 25 16/30%);transition:.18s;font-family:inherit}
+.endturn:hover{background:#a8371a;transform:translateY(-3px)}
+.endturn .et{font-family:var(--disp);font-size:8px;letter-spacing:.13em;text-transform:uppercase;line-height:1.15;text-align:center}
+
+/* ============ resources — flat, never a plate ============ */
+.r{display:flex;flex-direction:column;gap:2px}
+.r .rt{display:flex;align-items:center;gap:5px}
+.r .rv{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.r .rv.lo{color:var(--ochre-ink)}
+.r svg{opacity:.72;flex:none}
+.r .rd{font-size:10.5px;font-variant-numeric:tabular-nums;line-height:1;padding-left:21px}
+.rd.up{color:var(--olive)}.rd.dn{color:var(--clay-deep)}.rd.z{color:var(--ink-30)}
+.r .rk{display:none}
+/* B — a row across the floor of the footer dome */
+#resFoot{position:absolute;left:50%;transform:translateX(-50%);z-index:26;display:flex;align-items:flex-start;justify-content:center;gap:34px}
+#resFoot .rv{font-size:14px}
+/* A and C — split, flanking the season medallion, riding the top bar.
+   flex-start, NOT centred on the medallion: the medallion spills below the bar by design, and
+   centring on it dropped the deltas onto the sea where ink-coloured text has no contrast. */
+#resL,#resR{display:flex;align-items:flex-start;align-self:flex-start;gap:16px}
+#resL .rv,#resR .rv{font-size:13.5px}
+#resL .rd,#resR .rd{font-size:9.5px}
+.hidden{display:none !important}
+
+.zoom{position:absolute;left:calc(var(--rail-w) + var(--bub-out) + 16px);z-index:25;display:flex;align-items:center;gap:6px;
+  transition:top .24s cubic-bezier(.22,.61,.36,1),left .3s cubic-bezier(.22,.61,.36,1)}
+.mode-B .zoom,.mode-C .zoom{left:130px}
+.zb{width:28px;height:28px;border-radius:50%;border:0;cursor:pointer;background:var(--disc);color:var(--ink);
+  display:grid;place-items:center;font-size:15px;font-family:var(--body);box-shadow:0 0 0 1px var(--ring),var(--lift);transition:.16s}
+.zb:hover{background:var(--disc-hi)}
+.zlv{font-size:11px;color:var(--on-sea-dim);font-variant-numeric:tabular-nums;min-width:34px;text-align:center;text-shadow:var(--sea-shadow)}
+</style>
+
+<div class="showbar">
+  <span class="sb-t">KYKLOS · <b>The Circle Command</b></span>
+  <span class="sb-sp"></span>
+  <span class="sb-lab">Alt</span>
+  <div class="seg">
+    <button id="segA" class="on">A · Spines</button>
+    <button id="segB">B · Domes · res under verbs</button>
+    <button id="segC">C · Domes · res split</button>
+  </div>
+  <button class="qb" id="qb" title="What am I looking at?">?</button>
+</div>
+
+<div class="notes" id="notes">
+  <div class="note"><h4>The circle law</h4><p>Discs are verbs and menus — things you <b>press, repeatedly</b>. The one
+    square ends the turn. Shape carries the grammar, so the commit can never be misfired for a verb.</p></div>
+  <div class="note"><h4>Light-mode parchment</h4><p>Per the standing ruling the game is <b>light parchment</b>; the
+    black glaze survives only as the <b>ceremony register</b> — tooltips, key chips, and the commit. The sea is now the
+    one dark value, so anything floating on it (season, whose-turn) stays ivory.</p></div>
+  <div class="note"><h4>Spines (A) vs domes (B/C)</h4><p>Discs are always <b>threaded on an edge, ~3/5 out over the
+    sea</b>. In A that edge is a straight 30px spine; in B/C it is the arc of an <b>ellipse</b>, so the verbs fan —
+    apex at centre, lower at the rim. A and C differ <i>only</i> in that shape.</p></div>
+  <div class="note"><h4>Why an ellipse, not a circle</h4><p>Seven verbs need ~630px of span; a true circle only
+    reaches that at its equator, where the arc runs vertical — the fan is <b>geometrically impossible</b>. And the fan
+    is <b>744px wide with its labels vs the row's 446</b>: the verbs size the dome, not the resources. Dead space under
+    the apex is exactly <b>ry − 73</b>, so depth is the only dial.</p></div>
+</div>
+
+<div class="stage mode-A" id="stage">
+  <div class="sea-tex"></div>
+  <div class="world" id="world"></div>
+  <div class="anchor" id="anchor"><i></i></div>
+
+  <!-- A: straight spines -->
+  <div class="bar top"></div>
+  <div class="bar bot"></div>
+  <div class="bar rail"></div>
+  <!-- B/C: the rounded shapes -->
+  <div class="dome" id="domeFoot"></div>
+  <div class="dome" id="domeLeft"></div>
+
+  <div class="bubs" id="bubs"></div>
+
+  <div class="cards">
+    <div class="ev"><div class="th"></div><div class="tt"><div class="k">SEASON</div><div class="n">Timber Levies</div></div></div>
+    <div class="ev"><div class="th"></div><div class="tt"><div class="k">PLAYER</div><div class="n">New Citizen</div></div>
+      <svg class="ck" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 10.5l4 4 8-9"/></svg></div>
+  </div>
+
+  <div class="sun">
+    <div class="sun-row">
+      <div id="resL"></div>
+      <div class="medal">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21V9.6M12 14.4c0-4-3.1-7.2-7-7.2 0 4 3.1 7.2 7 7.2zM12 11.8c0-3.5 2.8-6.4 6.4-6.4 0 3.5-2.8 6.4-6.4 6.4z"/>
+        </svg>
+      </div>
+      <div id="resR"></div>
+    </div>
+    <div class="s1">Spring · Year 1</div>
+    <div class="s2">28 seasons remain</div>
+  </div>
+
+  <div class="roster" id="roster"></div>
+  <div class="panel hide" id="panel"></div>
+
+  <div class="chron" id="chron">
+    <div class="c-head">
+      <div class="ct">Chronicle</div><div class="cs">Spring · Yr 1</div>
+      <button class="cx" id="chronX" title="Collapse">
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l10 10M15 5L5 15"/></svg>
+      </button>
+    </div>
+    <div class="log">
+      <div class="li"><b>Damon</b> collected income: <span class="pos">+8</span> stone, <span class="pos">+2</span> gold, <span class="pos">+2</span> food, <span class="pos">+1</span> influence, <span class="neg">−0.5</span> happiness.</div>
+      <div class="li"><b>Kyros</b> resolved <b>Timber Levies</b>: <span class="pos">+4</span> wood.</div>
+      <div class="li"><b>Damon</b> added 1 citizen to Metropolis <b>−1,0</b>.</div>
+      <div class="li"><b>Damon</b> resolved <b>New Citizen</b>.</div>
+      <div class="li"><b>Theron</b> founded a colony at <b>2,−2</b>.</div>
+      <div class="li"><b>Nikos</b> built a <b>Granary</b> in <b>0,−1</b>.</div>
+      <div class="li"><b>Nikos</b> ventured and lost <span class="neg">−5</span> gold.</div>
+    </div>
+  </div>
+  <div class="c-tab" id="chronTab" title="Chronicle (C)">
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3h8a2 2 0 0 1 2 2v12l-3-2-3 2-3-2-3 2V5a2 2 0 0 1 2-2z"/><path d="M7.5 7h6M7.5 10h6"/></svg>
+    <span class="cnt">7</span>
+  </div>
+
+  <div class="zoom" id="zoomCtl">
+    <button class="zb" id="zOut">−</button>
+    <span class="zlv" id="zLv">0.80×</span>
+    <button class="zb" id="zIn">+</button>
+    <button class="zb" id="zHome" title="Recentre">
+      <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="6.2"/><path d="M10 1.6v3M10 15.4v3M1.6 10h3M15.4 10h3"/></svg>
+    </button>
+  </div>
+
+  <div class="verbs" id="verbs"></div>
+  <div id="resFoot" class="hidden"></div>
+
+  <div class="turnbox"><span class="lbl">Your turn</span><span class="who">Damon</span></div>
+  <button class="endturn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M6 2h12M6 22h12"/><path d="M7 2c0 5 10 5 10 0M7 22c0-5 10-5 10 0"/>
+      <path d="M8.4 6.6c1.2 2 6 2 7.2 0M8.4 17.4c1.2-2 6-2 7.2 0" opacity=".55"/><path d="M12 9.6v4.8"/>
+    </svg>
+    <span class="et">End turn</span>
+  </button>
+</div>
+
+<script>
+/* ---------------- canonical board data (shared with the other showcases) ---------------- */
+var T=[{"id":"-3,0","q":-3,"r":0,"terrain":"forest","slots":2,"yield":4},{"id":"-3,1","q":-3,"r":1,"terrain":"hill","slots":3,"yield":4},{"id":"-3,2","q":-3,"r":2,"terrain":"plains","slots":4,"yield":10},{"id":"-3,3","q":-3,"r":3,"terrain":"forest","slots":2,"yield":4},{"id":"-2,-1","q":-2,"r":-1,"terrain":"plains","slots":3,"yield":8},{"id":"-2,0","q":-2,"r":0,"terrain":"mountain","slots":2,"yield":6},{"id":"-2,1","q":-2,"r":1,"terrain":"forest","slots":2,"yield":3},{"id":"-2,2","q":-2,"r":2,"terrain":"mountain","slots":2,"yield":4},{"id":"-2,3","q":-2,"r":3,"terrain":"forest","slots":1,"yield":3},{"id":"-1,-2","q":-1,"r":-2,"terrain":"hill","slots":3,"yield":2},{"id":"-1,-1","q":-1,"r":-1,"terrain":"forest","slots":1,"yield":3},{"id":"-1,0","q":-1,"r":0,"terrain":"plains","slots":3,"yield":6},{"id":"-1,1","q":-1,"r":1,"terrain":"hill","slots":2,"yield":1},{"id":"-1,2","q":-1,"r":2,"terrain":"forest","slots":1,"yield":3},{"id":"-1,3","q":-1,"r":3,"terrain":"plains","slots":2,"yield":4},{"id":"0,-3","q":0,"r":-3,"terrain":"forest","slots":1,"yield":2},{"id":"0,-2","q":0,"r":-2,"terrain":"mountain","slots":1,"yield":4},{"id":"0,-1","q":0,"r":-1,"terrain":"hill","slots":2,"yield":1},{"id":"0,0","q":0,"r":0,"terrain":"forest","slots":1,"yield":2},{"id":"0,1","q":0,"r":1,"terrain":"mountain","slots":1,"yield":2},{"id":"0,2","q":0,"r":2,"terrain":"hill","slots":2,"yield":1},{"id":"0,3","q":0,"r":3,"terrain":"forest","slots":1,"yield":2},{"id":"1,-3","q":1,"r":-3,"terrain":"plains","slots":2,"yield":4},{"id":"1,-2","q":1,"r":-2,"terrain":"forest","slots":1,"yield":2},{"id":"1,-1","q":1,"r":-1,"terrain":"plains","slots":2,"yield":4},{"id":"1,0","q":1,"r":0,"terrain":"hill","slots":2,"yield":1},{"id":"1,1","q":1,"r":1,"terrain":"forest","slots":1,"yield":2},{"id":"1,2","q":1,"r":2,"terrain":"plains","slots":2,"yield":4},{"id":"2,-3","q":2,"r":-3,"terrain":"mountain","slots":1,"yield":2},{"id":"2,-2","q":2,"r":-2,"terrain":"hill","slots":1,"yield":2},{"id":"2,-1","q":2,"r":-1,"terrain":"forest","slots":1,"yield":1},{"id":"2,0","q":2,"r":0,"terrain":"plains","slots":2,"yield":4},{"id":"2,1","q":2,"r":1,"terrain":"hill","slots":1,"yield":1},{"id":"3,-3","q":3,"r":-3,"terrain":"forest","slots":1,"yield":1},{"id":"3,-2","q":3,"r":-2,"terrain":"mountain","slots":1,"yield":2},{"id":"3,-1","q":3,"r":-1,"terrain":"hill","slots":1,"yield":1},{"id":"3,0","q":3,"r":0,"terrain":"forest","slots":1,"yield":1}];
+var ST={
+ "-1,0":{own:"p1",kind:"metro",sock:5,built:["temple","market"],pops:[["cit",2],["fre",1],["slv",2]],sel:1},
+ "-2,0":{own:"p1",kind:"colony",pops:[["slv",2]]},
+ "0,-1":{own:"p2",kind:"city",sock:4,built:["granary"],pops:[["cit",1],["fre",2],["slv",1]]},
+ "1,-1":{hov:1},
+ "0,3":{leg:1},
+ "1,2":{leg:1}
+};
+var GND={plains:"#DCBF69",forest:"#758542",hill:"#C68038",mountain:"#A8A290"};
+var GLEG={plains:"#C6B56B",forest:"#6B8149",hill:"#B27D40",mountain:"#989B8D"};
+var PC={p1:"#2f5d9e",p2:"#a83226",p3:"#dfa437",p4:"#55673a"};
+var EMB={
+ plains:'<path d="M11 19V5M11 8L7 5m4 3l4-3M11 12L7 9m4 3l4-3M11 16l-4-3m4 3l4-3"/>',
+ forest:'<path d="M11 3L5 13h12L11 3zM11 13v6"/>',
+ hill:'<path d="M1 17a6 6 0 0 1 12 0M9 17a6 6 0 0 1 12 0"/>',
+ mountain:'<path d="M2 18L8.5 5l4.5 8 2.5-4L21 18H2z"/>'
+};
+var BG={
+ temple:'<path d="M2 4.4L6 1.8l4 2.6M2 4.4h8M3.4 4.4v4.2M6 4.4v4.2M8.6 4.4v4.2M2 8.6h8"/>',
+ market:'<path d="M2 3.5h8M2 3.5l1 3h6l1-3M6 6.5V10M3.6 10h4.8"/>',
+ granary:'<path d="M2.2 5.6L6 2.2l3.8 3.4V10H2.2zM2.2 7.4h7.6"/>'
+};
+var SG={
+ metro:'<svg width="16" height="16" viewBox="0 0 20 20"><path d="M10 2.6l2 4.6 4.8.4-3.7 3.2 1.1 4.8L10 13l-4.2 2.6 1.1-4.8L3.2 7.6 8 7.2z" fill="#fff8e7"/></svg>',
+ city:'<svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4 16.5V8M16 16.5V8M2.8 8L10 3.6 17.2 8M7.4 16.5v-4.4a2.6 2.6 0 0 1 5.2 0v4.4M3 16.5h14" stroke="#fff8e7" stroke-width="1.7"/></svg>',
+ colony:'<svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M7 17V3M7 4.4h7.4L12 7l2.4 2.6H7" stroke="#fff8e7" stroke-width="1.8"/></svg>'
+};
+var BLZ={
+ p1:'<svg width="7" height="7" viewBox="0 0 20 20" fill="none"><path d="M4 17L10 3l6 14M6.4 12h7.2" stroke="#fff8e7" stroke-width="2.4"/></svg>',
+ p2:'<svg width="7" height="7" viewBox="0 0 20 20" fill="none"><path d="M5 3v14M5 3h5.4a3.2 3.2 0 0 1 0 6.4H5M5 9.4h6a3.4 3.4 0 0 1 0 7.6H5" stroke="#fff8e7" stroke-width="2.2"/></svg>'
+};
+var DSC={metro:30,city:26,colony:22};
+
+function ico(v,d,sw){return '<svg width="'+(v||20)+'" height="'+(v||20)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(sw||1.6)+'" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';}
+var MENU=[
+ {k:'cities', n:'Cities',   d:'<path d="M5 20V9.6M19 20V9.6M3.4 9.6L12 4.4l8.6 5.2M9 20v-5.2a3 3 0 0 1 6 0V20M3.6 20h16.8"/>'},
+ {k:'pops',   n:'Pops',     d:'<circle cx="12" cy="7.4" r="3.4"/><path d="M5 20.4c0-3.9 3.1-7 7-7s7 3.1 7 7"/>', cnt:'7'},
+ {k:'build',  n:'Build',    d:'<path d="M6 20V8.6h12V20M6 20h12M4.6 8.6h14.8L12 3.6 4.6 8.6zM9.4 20v-4.4h5.2V20"/>'},
+ {k:'market', n:'Market',   d:'<path d="M12 4v16M5.4 7.4h13.2M4 20.4h16M6.6 7.4L3.4 14h6.4L6.6 7.4zM17.4 7.4L14.2 14h6.4l-3.2-6.6z"/>'},
+ {k:'victory',n:'Victory',  d:'<path d="M12 3.4l2.5 5.4 5.9.6-4.4 4 1.3 5.8L12 16.2 6.7 19.2 8 13.4 3.6 9.4l5.9-.6z"/>', cnt:'0/3'},
+ {k:'codex',  n:'Codex',    d:'<path d="M4.4 4.6h5.2A2.4 2.4 0 0 1 12 7v13a2.4 2.4 0 0 0-2.4-2.4H4.4zM19.6 4.6h-5.2A2.4 2.4 0 0 0 12 7v13a2.4 2.4 0 0 1 2.4-2.4h5.2z"/>'}
+];
+var VERBS=[
+ {n:'Grow',    c:'from 5 food',      k:'Q', d:'<path d="M12 21V10.4M12 15.2c0-4-3.1-7.2-7-7.2 0 4 3.1 7.2 7 7.2zM12 12.6c0-3.5 2.8-6.4 6.4-6.4 0 3.5-2.8 6.4-6.4 6.4z"/>'},
+ {n:'Move',    c:'free',             k:'W', d:'<path d="M12 3.6v16.8M3.6 12h16.8M12 3.6L9.2 6.4M12 3.6l2.8 2.8M12 20.4l-2.8-2.8M12 20.4l2.8-2.8M3.6 12l2.8-2.8M3.6 12l2.8 2.8M20.4 12l-2.8-2.8M20.4 12l-2.8 2.8"/>'},
+ {n:'Found',   c:'20 wood · 2 pops', k:'E', armed:1, d:'<path d="M4 20.4h16M6.4 20.4V9.4L12 5.2l5.6 4.2v11M10 20.4v-5.6h4v5.6"/>'},
+ {n:'Upgrade', c:'need 30 stone',    k:'R', off:1,   d:'<path d="M5 8.4h14M5 8.4l2.2-3.2h9.6L19 8.4M8.4 8.4v9.2M15.6 8.4v9.2M6 20.4h12M6 17.6h12"/>'},
+ {n:'Build',   c:'varies',           k:'T', d:'<path d="M14.4 6.2l3.4 3.4M12.4 8.2l-8 8 2 2 8-8M13.2 3.4l7.4 7.4-2.6 2.6-7.4-7.4z"/>'},
+ {n:'Calm',    c:'4 influence',      k:'Y', d:'<path d="M5 8.4h14a7 7 0 0 1-14 0zM12 15.4v4M8.6 19.4h6.8M4.4 9.2c-1.2 1 0 3.2 1.8 3.4M19.6 9.2c1.2 1 0 3.2-1.8 3.4"/>'},
+ {n:'Venture', c:'stake 5',          k:'U', d:'<path d="M3.4 16.2h17.2l-2.8 4.2H6.2l-2.8-4.2zM12 16.2V3.8M12 3.8l5.4 3.6L12 10.6"/>'}
+];
+var RES=[
+ {k:'stone',     v:'24',   d:'±0',  s:'z', i:'<path d="M12 3.2l7.6 4.4v8.8L12 20.8l-7.6-4.4V7.6z"/><path d="M4.4 7.6L12 12l7.6-4.4M12 12v8.8"/>'},
+ {k:'wood',      v:'18',   d:'+6',  s:'up',i:'<path d="M12 3.4L6 13.4h12L12 3.4zM12 13.4v5.4M8.6 18.8h6.8"/>'},
+ {k:'gold',      v:'12',   d:'+4',  s:'up',i:'<circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="2.8"/>'},
+ {k:'food',      v:'14',   d:'−2',  s:'dn',i:'<path d="M12 20.6V7.2M12 9.6L8 6.8M12 9.6l4-2.8M12 14L8 11.2M12 14l4-2.8M12 5.4L9.2 3.2M12 5.4l2.8-2.2"/>'},
+ {k:'influence', v:'1',    d:'+2',  s:'up',i:'<path d="M9.4 3.4h5.2M10.6 3.4v2.2M13.4 3.4v2.2M12 5.6c-3.4 0-5.2 3-5.2 6s1.8 8.4 5.2 8.4 5.2-5.4 5.2-8.4-1.8-6-5.2-6zM6.9 8c-2.1.6-2.1 3.6-.3 4.2M17.1 8c2.1.6 2.1 3.6.3 4.2"/>'},
+ {k:'happiness', v:'−0.5', d:'−0.5',s:'dn',lo:1,i:'<circle cx="12" cy="12" r="8.4"/><path d="M9 10.2v.01M15 10.2v.01M8.6 15.2c1.2 1.4 5.6 1.4 6.8 0"/>'}
+];
+var SEATS=[{n:'Damon',c:'p1',b:'Α',pv:'0/3',act:1},{n:'Nikos',c:'p2',b:'Β',pv:'0/3'},{n:'Theron',c:'p3',b:'Γ',pv:'1/3'},{n:'Kyros',c:'p4',b:'Δ',pv:'0/3'}];
+
+/* ---------------- board ---------------- */
+var S=63, SP=65.8, W=Math.sqrt(3)*S, H=2*S;
+(function(){
+  var h='';
+  T.forEach(function(t){
+    var st=ST[t.id]||{};
+    var x=Math.sqrt(3)*SP*(t.q+t.r/2)-W/2, y=1.5*SP*t.r-H/2;
+    var g=st.leg?GLEG[t.terrain]:GND[t.terrain];
+    var seed=(((t.q*5+t.r*7)%3)+3)%3, hs=['42% 36%','58% 44%','48% 56%'][seed];
+    h+='<div class="hex" style="left:'+x.toFixed(1)+'px;top:'+y.toFixed(1)+'px;width:'+W.toFixed(1)+'px;height:'+H+'px">';
+    h+='<div class="lyr" style="background:radial-gradient(70px 70px at '+hs+', rgb(255 255 255/8%), transparent 65%),'+g+'"></div>';
+    h+='<div class="lyr" style="box-shadow:inset 0 0 0 1.5px rgb(24 18 16/26%)"></div>';
+    if(st.own) h+='<div class="lyr" style="box-shadow:inset 0 0 0 3px '+PC[st.own]+'"></div>';
+    if(st.leg) h+='<div class="lyr" style="box-shadow:inset 0 0 0 2px rgb(255 248 231/58%)"></div>';
+    h+='<div class="chit"><svg width="13" height="13" viewBox="0 0 22 22" fill="none" stroke="#241910" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+EMB[t.terrain]+'</svg><b>'+t.yield+'</b></div>';
+    var ns=st.sock||t.slots, built=st.built||[];
+    var sy=st.own?(H/2+4):(H/2-4);
+    h+='<div class="sk'+(st.own?'':' inert')+'" style="top:'+sy+'px">';
+    for(var i=0;i<ns;i++){
+      if(built[i]) h+='<i class="b"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#181210" stroke-width="1.3" stroke-linecap="round">'+BG[built[i]]+'</svg></i>';
+      else h+='<i></i>';
+    }
+    h+='</div>';
+    if(st.kind){
+      var d=DSC[st.kind];
+      h+='<div class="settle" style="top:'+(H/2-d/2-14)+'px;width:'+d+'px;height:'+d+'px;background:'+PC[st.own]+'">'+SG[st.kind];
+      if(BLZ[st.own]) h+='<div class="blz">'+BLZ[st.own]+'</div>';
+      h+='</div>';
+    }
+    if(st.pops){
+      var p='';
+      st.pops.forEach(function(pr){
+        p+='<div class="g" style="color:'+PC[st.own]+'"><span class="bead '+pr[0]+'" style="'+(pr[0]=='cit'?'background:'+PC[st.own]:'')+'"></span><b>'+pr[1]+'</b></div>';
+      });
+      h+='<div class="pp" style="top:'+(H/2+22)+'px">'+p+'</div>';
+    }
+    h+='</div>';
+  });
+  document.getElementById('world').innerHTML=h;
+})();
+
+/* ---------------- chrome ---------------- */
+function resHtml(keys){
+  return (keys||RES.map(function(x){return x.k;})).map(function(k){
+    var x=RES.filter(function(y){return y.k===k;})[0];
+    return '<div class="r"><div class="rt">'+ico(17,x.i,1.6)+'<span class="rv'+(x.lo?' lo':'')+'">'+x.v+'</span></div>'+
+           '<div class="rd '+x.s+'">'+x.d+'</div><div class="rk">'+x.k+'</div></div>';
+  }).join('');
+}
+(function(){
+  document.getElementById('bubs').innerHTML=MENU.map(function(m,i){
+    return '<button class="bub'+(i===0?' on':'')+'" data-k="'+m.k+'">'+ico(21,m.d)+
+      (m.cnt?'<span class="cnt">'+m.cnt+'</span>':'')+'<span class="tip">'+m.n+'</span></button>';
+  }).join('');
+  document.getElementById('verbs').innerHTML=VERBS.map(function(b){
+    return '<button class="verb'+(b.armed?' armed':'')+(b.off?' off':'')+'"><span class="vb">'+ico(24,b.d)+
+      '<span class="kbd">'+b.k+'</span></span><span class="vn">'+b.n+'</span><span class="vc">'+b.c+'</span></button>';
+  }).join('');
+  document.getElementById('resFoot').innerHTML=resHtml();
+  document.getElementById('resL').innerHTML=resHtml(['wood','stone','food']);
+  document.getElementById('resR').innerHTML=resHtml(['gold','influence','happiness']);
+  document.getElementById('roster').innerHTML=SEATS.map(function(s){
+    return '<div class="st8'+(s.act?' acting':'')+'"><span class="disc" style="background:'+PC[s.c]+'"><i>'+s.b+'</i></span>'+
+           '<span class="nm">'+s.n+'</span><span class="pv">'+s.pv+'</span></div>';
+  }).join('');
+})();
+
+/* ---------------- panels ---------------- */
+var PANELS={
+  cities:{t:'Cities', sum:'<b>1</b> metropolis · <b>1</b> colony · <b>7</b>/14 pops · <b>0</b>/3 victory cards',
+    warn:['Discontent','Happiness <b>−0.5</b> — pops start dying at <b>−5</b>.'],
+    body:[
+      {n:'Metropolis',c:'−1,0 · Plains',own:'p1',k:'metro',pf:'5',pfs:'/10 pops',
+       rows:[['Pops','2 citizens · 1 freeman · 2 slaves'],['Buildings','Temple · Marketplace <span class="dim">2/5</span>']],
+       slots:[1,1,0,0,0],
+       net:[['+4','gold','pos'],['+2','food','pos'],['+2','influence','pos'],['−1.5','happiness','neg']]},
+      {n:'Colony',c:'−2,0 · Mountain',own:'p1',k:'colony',pf:'2',pfs:'/4 pops',
+       rows:[['Pops','2 slaves'],['Buildings','<span class="dim">None — colonies cannot build</span>']],
+       slots:[0,0],
+       net:[['+8','stone','pos'],['−2','food','neg'],['−1','happiness','neg']]}
+    ]},
+  pops:{t:'Pops', sum:'<b>7</b>/14 pops · 3 citizens · 1 freeman · 3 slaves',
+    warn:['Unfed','Food net <b>+0</b> — a bad season starves <b>2</b> pops.'],
+    body:[{n:'By class',c:'across 2 settlements',own:'p1',k:'metro',pf:'7',pfs:'/14',
+      rows:[['Citizens','3 <span class="dim">· vote · 1 gold upkeep</span>'],['Freemen','1 <span class="dim">· works any slot</span>'],['Slaves','3 <span class="dim">· no vote · unrest +0.5</span>']],
+      net:[['+2','food','pos'],['−0.5','happiness','neg']]}]},
+  build:{t:'Build', sum:'<b>2</b>/7 slots built · 3 free in Metropolis',
+    body:[{n:'Available',c:'Metropolis −1,0',own:'p1',k:'metro',pf:'3',pfs:' free',
+      rows:[['Granary','12 wood <span class="dim">· +2 food</span>'],['Barracks','18 stone <span class="dim">· +1 order</span>'],['Shrine','10 stone · 4 gold <span class="dim">· +1 influence</span>']],
+      slots:[1,1,0,0,0]}]},
+  market:{t:'Market', sum:'Rates drift <b>±1</b> each season · you are a <b>net seller</b>',
+    body:[{n:'Rates',c:'Spring · Year 1',own:'p1',k:'city',pf:'12',pfs:' gold',
+      rows:[['Wood','sell 2 <span class="dim">· buy 3</span>'],['Stone','sell 2 <span class="dim">· buy 4</span>'],['Food','sell 3 <span class="dim">· buy 3</span>']],
+      net:[['+6','gold','pos']]}]},
+  victory:{t:'Victory', sum:'<b>0</b>/3 cards · 28 seasons remain',
+    warn:['Behind','<b>Theron</b> holds 1 card. First to <b>3</b> wins.'],
+    body:[{n:'Tracks',c:'your standing',own:'p1',k:'metro',pf:'0',pfs:'/3',
+      rows:[['Hegemon','2 metropoleis <span class="dim">· you have 1</span>'],['Oikoumene','12 pops <span class="dim">· you have 7</span>'],['Thalassa','4 coastal colonies <span class="dim">· you have 0</span>']]}]},
+  codex:{t:'Codex', sum:'Rules · icons · the season deck',
+    body:[{n:'This season',c:'Timber Levies',own:'p1',k:'city',pf:'28',pfs:' left',
+      rows:[['Effect','+2 wood per 6 pops'],['Deck','29 seasonal · 74 events'],['Next','drawn at end of turn']]}]}
+};
+function panelHtml(p){
+  var h='<div class="p-head"><div class="pt">'+p.t+'</div><button class="px" id="panelX">'+
+    '<svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l10 10M15 5L5 15"/></svg></button></div>';
+  h+='<div class="p-sum">'+p.sum+'</div>';
+  if(p.warn) h+='<div class="pwarn"><div class="k">'+p.warn[0]+'</div><div class="c">'+p.warn[1]+'</div></div>';
+  p.body.forEach(function(c){
+    h+='<div class="city"><div class="ch"><span class="md" style="background:'+PC[c.own]+'">'+SG[c.k]+'</span>'+
+       '<div><div class="cn">'+c.n+'</div><div class="cc">'+c.c+'</div></div>'+
+       '<div class="pf">'+c.pf+'<span>'+c.pfs+'</span></div></div>';
+    c.rows.forEach(function(rw,i){
+      var extra='';
+      if(c.slots&&i===1) extra='<span class="slots">'+c.slots.map(function(s){return '<i class="'+(s?'b':'')+'"></i>';}).join('')+'</span>';
+      h+='<div class="crow"><span class="k">'+rw[0]+'</span><span class="v">'+rw[1]+extra+'</span></div>';
+    });
+    if(c.net) h+='<div class="net">'+c.net.map(function(n){
+      var r=RES.filter(function(x){return x.k===n[1];})[0];
+      return '<span class="n '+n[2]+'">'+ico(13,r?r.i:'',1.6)+n[0]+'</span>';
+    }).join('')+'</div>';
+    h+='</div>';
+  });
+  return h;
+}
+
+/* ---------------- geometry ---------------- */
+var stage=document.getElementById('stage'), world=document.getElementById('world'),
+    panel=document.getElementById('panel'), chron=document.getElementById('chron'),
+    chronTab=document.getElementById('chronTab'), anchor=document.getElementById('anchor'),
+    zoomCtl=document.getElementById('zoomCtl'),
+    domeFoot=document.getElementById('domeFoot'), domeLeft=document.getElementById('domeLeft');
+var RAIL=30, BUB=46, BUB_OUT=28, TOP_H=48, BOT_H=64, VB=54, VB_OUT=32, PANEL_W=308, CHRON_W=292;
+var SPILL_V=VB_OUT-VB/2, SPILL_B=BUB_OUT-BUB/2;   /* 5px: how far a disc's centre sits outside the edge */
+
+/* THE FOOTER ELLIPSE.
+   ry had to be free: 7 verbs need ~630px of span, which a TRUE circle of the resource row's
+   diameter can only give at its equator, where the arc runs vertical and no fan exists.
+   Measured afterwards: the fan is 744px wide with its labels, the resource row only 446 — so
+   the FAN, not the row, is what actually sets rx. The row rides the floor; it never binds.
+   Dead space under the apex = ry - 73 exactly, so ry is the only dial that tightens it.
+   B carries the row on its floor and needs the depth; C carries nothing and hugs the fan. */
+var FOOT_B={rx:340, ry:105, cyOff:-20};  /* lens = 32px, fan drop 47px */
+var FOOT_C={rx:355, ry:96,  cyOff:-8};   /* no row to clear -> shallower, floor nearly gone */
+function FOOT(){ return mode==='C' ? FOOT_C : FOOT_B; }
+var VERB_DX=94;                          /* verb spacing along the x axis */
+/* THE LEFT ELLIPSE — same law, rotated: ry is pinned by the menu stack (6 discs, 376 tall),
+   rx (the bulge onto the sea) is the free one. */
+var LEFT={rx:90, ry:188, cx:0};
+
+var SW=0, SH=0;
+var panelOpen=true, chronOpen=true, curKey='cities', mode='A';
+var z=0.8, px=0, py=0, dragging=false;
+
+function measure(){ var r=stage.getBoundingClientRect(); SW=r.width; SH=r.height; }
+function footC(){ return {x:SW/2, y:SH+FOOT().cyOff}; }
+function leftC(){ return {x:LEFT.cx, y:TOP_H+(SH-TOP_H)/2}; }
+
+/* place every disc: straight edge in A, elliptical arc in B/C */
+function layout(){
+  var bubs=document.querySelectorAll('.bub'), verbs=document.querySelectorAll('.verb'), i;
+  if(mode==='A'){
+    for(i=0;i<bubs.length;i++){
+      bubs[i].style.left=(RAIL+BUB_OUT-BUB/2)+'px';
+      bubs[i].style.top=(TOP_H+40+i*55)+'px';
+    }
+    for(i=0;i<verbs.length;i++){
+      var x=SW/2+(i-(verbs.length-1)/2)*91;
+      verbs[i].style.left=x+'px';
+      verbs[i].style.top=(SH-BOT_H-VB_OUT)+'px';
+    }
+    document.getElementById('resFoot').style.top='';
+  }else{
+    var lc=leftC(), n=bubs.length;
+    for(i=0;i<n;i++){
+      var dy=(i-(n-1)/2)*64;
+      /* disc centres ride an ellipse 5px larger than the shape -> ~3/5 of the disc spills */
+      var bx=lc.x+(LEFT.rx+SPILL_B)*Math.sqrt(Math.max(0,1-Math.pow(dy/(LEFT.ry+SPILL_B),2)));
+      bubs[i].style.left=bx+'px';
+      bubs[i].style.top=(lc.y+dy)+'px';
+    }
+    var fc=footC(), m=verbs.length, F=FOOT();
+    for(i=0;i<m;i++){
+      var dx=(i-(m-1)/2)*VERB_DX;
+      var vy=fc.y-(F.ry+SPILL_V)*Math.sqrt(Math.max(0,1-Math.pow(dx/(F.rx+SPILL_V),2)));
+      verbs[i].style.left=(fc.x+dx)+'px';
+      verbs[i].style.top=(vy-VB/2)+'px';
+    }
+    document.getElementById('resFoot').style.top=(SH-40)+'px';
+  }
+  /* the shapes themselves (set each property — cssText += would grow without bound on resize) */
+  place(domeFoot, footC(), FOOT());
+  place(domeLeft, leftC(), LEFT);
+  function place(el,c,e){
+    el.style.width=(2*e.rx)+'px'; el.style.height=(2*e.ry)+'px';
+    el.style.left=(c.x-e.rx)+'px'; el.style.top=(c.y-e.ry)+'px';
+  }
+}
+
+/* the live area = what the player can actually SEE of the map right now */
+function live(){
+  var railEdge = (mode==='A') ? RAIL+BUB_OUT : LEFT.rx+SPILL_B+BUB/2;
+  return {
+    l: panelOpen ? (mode==='A'?railEdge+14:130)+PANEL_W : railEdge+12,
+    r: SW - (chronOpen ? 14+CHRON_W : 46),
+    t: TOP_H+14,
+    b: (mode==='A') ? SH-BOT_H-VB_OUT-6 : SH-46
+  };
+}
+/* the resting frame: also clear of the season cluster hanging top-centre (identical in all
+   three arms now that A carries C's split resources) and of the dome's apex in B/C */
+function comfort(){
+  var L=live();
+  L.t += 56;
+  if(mode!=='A') L.b = SH+FOOT().cyOff-FOOT().ry-SPILL_V-VB/2-6;  /* above the dome's apex */
+  return L;
+}
+/* push the board's centre out of an ellipse it must never hide inside */
+function pushOut(cx,cy,rx,ry){
+  var dx=(px-cx)/rx, dy=(py-cy)/ry, d=Math.sqrt(dx*dx+dy*dy);
+  if(d>=1) return;
+  if(d===0){ py=cy-ry; return; }
+  px=cx+(px-cx)/d; py=cy+(py-cy)/d;
+}
+function clamp(){
+  var L=live(), m=46;
+  var lo=L.l+m, hi=L.r-m; px = lo>hi ? (L.l+L.r)/2 : Math.min(Math.max(px,lo),hi);
+  var to=L.t+m, bo=L.b-m; py = to>bo ? (L.t+L.b)/2 : Math.min(Math.max(py,to),bo);
+  if(mode!=='A'){
+    var fc=footC(), lc=leftC(), F=FOOT();
+    pushOut(fc.x,fc.y,F.rx+m,F.ry+m);
+    pushOut(lc.x,lc.y,LEFT.rx+m,LEFT.ry+m);
+    /* the push may have shoved it back past a straight edge — re-seat it */
+    px=lo>hi?(L.l+L.r)/2:Math.min(Math.max(px,lo),hi);
+    py=to>bo?(L.t+L.b)/2:Math.min(Math.max(py,to),bo);
+  }
+}
+function atLimit(){
+  var L=live(), m=46, e=1.2;
+  if(px<=L.l+m+e || px>=L.r-m-e || py<=L.t+m+e || py>=L.b-m-e) return true;
+  if(mode!=='A'){
+    var fc=footC(), F=FOOT(), dx=(px-fc.x)/(F.rx+m), dy=(py-fc.y)/(F.ry+m);
+    if(Math.sqrt(dx*dx+dy*dy)<1.02) return true;
+    var lc=leftC(); dx=(px-lc.x)/(LEFT.rx+m); dy=(py-lc.y)/(LEFT.ry+m);
+    if(Math.sqrt(dx*dx+dy*dy)<1.02) return true;
+  }
+  return false;
+}
+function paint(){
+  world.style.transform='translate('+px+'px,'+py+'px) scale('+z+')';
+  anchor.style.transform='translate('+px+'px,'+py+'px)';
+  document.getElementById('zLv').textContent=z.toFixed(2)+'×';
+  anchor.classList.toggle('pinned', dragging && atLimit());
+}
+function glide(f){
+  world.classList.add('glide'); anchor.style.transition='transform .42s cubic-bezier(.22,.61,.36,1)';
+  f(); clamp(); paint();
+  setTimeout(function(){world.classList.remove('glide'); anchor.style.transition='';},440);
+}
+function boardBox(){
+  var xs=[],ys=[];
+  T.forEach(function(t){ xs.push(Math.sqrt(3)*SP*(t.q+t.r/2)); ys.push(1.5*SP*t.r); });
+  return {w:Math.max.apply(null,xs)-Math.min.apply(null,xs)+W, h:Math.max.apply(null,ys)-Math.min.apply(null,ys)+H};
+}
+function fit(){
+  var L=comfort(), b=boardBox(), pad=44;
+  z=Math.min((L.r-L.l-pad)/b.w, (L.b-L.t-pad)/b.h);
+  /* legibility floor: rather let the board overflow and be panned than shrink the chits to mush */
+  z=Math.min(Math.max(z,0.72),1.15);
+}
+function recentre(){ var L=comfort(); glide(function(){ px=(L.l+L.r)/2; py=(L.t+L.b)/2; }); }
+function reflow(){
+  zoomCtl.style.top=(panelOpen ? TOP_H+12+panel.offsetHeight+12 : TOP_H+14)+'px';
+  glide(function(){});
+}
+
+/* ---------------- interaction ---------------- */
+stage.addEventListener('mousedown',function(e){
+  if(e.target.closest('.bar,.dome,.bub,.panel,.chron,.c-tab,.verb,.endturn,.zoom,.cards,.sun,.roster,.turnbox,#resFoot')) return;
+  dragging=true; var sx=e.clientX, sy=e.clientY, spx=px, spy=py;
+  stage.classList.add('dragging');
+  function mv(ev){ px=spx+(ev.clientX-sx); py=spy+(ev.clientY-sy); clamp(); paint(); }
+  function up(){ dragging=false; stage.classList.remove('dragging'); paint();
+    window.removeEventListener('mousemove',mv); window.removeEventListener('mouseup',up); }
+  window.addEventListener('mousemove',mv); window.addEventListener('mouseup',up);
+  e.preventDefault();
+});
+stage.addEventListener('wheel',function(e){
+  if(e.target.closest('.panel,.chron')) return;
+  e.preventDefault();
+  var r=stage.getBoundingClientRect();
+  zoomAt(e.clientX-r.left, e.clientY-r.top, z*(e.deltaY<0?1.12:1/1.12));
+},{passive:false});
+function zoomAt(cx,cy,nz){
+  nz=Math.min(Math.max(nz,0.45),2.0);
+  var wx=(cx-px)/z, wy=(cy-py)/z;
+  z=nz; px=cx-wx*z; py=cy-wy*z;
+  clamp(); paint();
+}
+document.getElementById('zIn').onclick=function(){var L=live();glide(function(){zoomAt((L.l+L.r)/2,(L.t+L.b)/2,z*1.2);});};
+document.getElementById('zOut').onclick=function(){var L=live();glide(function(){zoomAt((L.l+L.r)/2,(L.t+L.b)/2,z/1.2);});};
+document.getElementById('zHome').onclick=function(){ fit(); recentre(); };
+
+function openPanel(k){
+  curKey=k; panelOpen=true;
+  panel.innerHTML=panelHtml(PANELS[k]);
+  panel.classList.remove('hide');
+  document.getElementById('panelX').onclick=closePanel;
+  [].forEach.call(document.querySelectorAll('.bub'),function(b){b.classList.toggle('on', b.dataset.k===k);});
+  reflow();
+}
+function closePanel(){
+  panelOpen=false; panel.classList.add('hide');
+  [].forEach.call(document.querySelectorAll('.bub'),function(b){b.classList.remove('on');});
+  reflow();
+}
+[].forEach.call(document.querySelectorAll('.bub'),function(b){
+  b.onclick=function(){ (panelOpen && b.dataset.k===curKey) ? closePanel() : openPanel(b.dataset.k); };
+});
+function setChron(o){
+  chronOpen=o; chron.classList.toggle('hide',!o); chronTab.classList.toggle('show',!o); glide(function(){});
+}
+document.getElementById('chronX').onclick=function(){setChron(false);};
+chronTab.onclick=function(){setChron(true);};
+window.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&panelOpen) closePanel();
+  if(e.key==='c'||e.key==='C') setChron(!chronOpen);
+});
+
+/* ---------------- the A/B/C switch ---------------- */
+var segs={A:document.getElementById('segA'),B:document.getElementById('segB'),C:document.getElementById('segC')};
+function setMode(m,reframe){
+  mode=m;
+  for(var k in segs) segs[k].classList.toggle('on',k===m);
+  stage.className='stage mode-'+m;
+  /* A and C share the split resources; only B moves them to the dome floor */
+  document.getElementById('resFoot').classList.toggle('hidden',m!=='B');
+  document.getElementById('resL').classList.toggle('hidden',m==='B');
+  document.getElementById('resR').classList.toggle('hidden',m==='B');
+  layout();
+  if(reframe){ fit(); recentre(); }
+}
+segs.A.onclick=function(){setMode('A',1);};
+segs.B.onclick=function(){setMode('B',1);};
+segs.C.onclick=function(){setMode('C',1);};
+var qb=document.getElementById('qb'), notes=document.getElementById('notes');
+qb.onclick=function(){ notes.classList.toggle('show'); qb.classList.toggle('on'); };
+
+window.addEventListener('resize',function(){ measure(); layout(); clamp(); paint(); reflow(); });
+
+/* boot */
+measure();
+openPanel('cities');
+setMode('A');
+fit(); recentre();
+</script>
