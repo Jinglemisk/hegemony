@@ -7,6 +7,7 @@ import { eventCardArtUrl, formatEventEffects } from "../events";
 import { settlementPickerLabel } from "../helpers";
 import { ModalShell } from "./ModalShell";
 import { useGameUi } from "../GameUiContext";
+import { TileListbox } from "../TileListbox";
 
 export function PendingPlayerEventModal() {
   const { G, currentPlayerId, isActive: viewerCanAct, moves } = useGameUi();
@@ -97,21 +98,31 @@ export function PendingPlayerEventModal() {
             )}
 
             {popEffect ? (
-              <label className="fieldGroup eventTargetField">
+              <div className="fieldGroup eventTargetField">
                 <span>Settlement target</span>
-                <select value={targetTileId} onChange={(event) => setTargetTileId(event.target.value)}>
-                  {targetTileIds.map((tileId) => {
+                {/* A list, not the map: this dialog blocks by design (a drawn card
+                    must be resolved), so the board behind it cannot be the picker
+                    — exactly scope 4's carve-out. */}
+                <TileListbox
+                  ariaLabel="Settlement target"
+                  onChange={setTargetTileId}
+                  options={targetTileIds.map((tileId) => {
                     const tile = getTile(G, tileId);
+                    const where = tile ? settlementPickerLabel(G, tile, playerID) : tileId;
 
-                    return (
-                      <option value={tileId} key={tileId}>
-                        {tile ? settlementPickerLabel(G, tile, playerID) : tileId}
-                      </option>
-                    );
+                    return {
+                      value: tileId,
+                      icon: tile?.settlements.some((s) => s.owner === playerID && s.kind !== "colony")
+                        ? ("city" as const)
+                        : ("colony" as const),
+                      title: where,
+                      label: `Place the pops in ${where}.`
+                    };
                   })}
-                </select>
+                  value={targetTileId || null}
+                />
                 {targetTileIds.length === 0 ? <em>No owned settlement has enough capacity for this option.</em> : null}
-              </label>
+              </div>
             ) : null}
 
             {!isActive ? (

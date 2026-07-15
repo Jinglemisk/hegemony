@@ -15,6 +15,7 @@ import { SettlementSummaryCard } from "../../SettlementCard";
 import { AtlasIcon } from "../../Sprites";
 import { ANCHOR_MARGIN, clampAnchoredLeft } from "../../../ui/anchoring";
 import { useGameUi } from "../GameUiContext";
+import { TileListbox } from "../TileListbox";
 import { firstAvailablePop, getSettlementEntries, settlementPickerLabel } from "../helpers";
 import { CostRow } from "./PlacementModalShell";
 import { PopulationStepper } from "./PopulationStepper";
@@ -145,16 +146,24 @@ export function FoundColonyPopover({
 
           <section className="placementSection">
             <span className="placementSectionLabel">Send a pop from</span>
-            <label className="fieldGroup placementField">
-              <select value={source?.tile.id ?? ""} onChange={(event) => setSourceTileId(event.target.value)}>
-                {sources.map((entry) => (
-                  <option value={entry.tile.id} key={entry.tile.id}>
-                    {settlementPickerLabel(G, entry.tile, playerID)} — {formatPops(entry.pops)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="popChoiceGrid foundColonyPopGrid" role="group" aria-label="Founding pop type">
+            {/* The TARGET was picked on the map; the SOURCE is a list because the
+                popover is already open over the board — a second map pick would
+                fight the first. Scope 4's listbox, not a native select. */}
+            <TileListbox
+              ariaLabel="Settlement the pop leaves from"
+              onChange={setSourceTileId}
+              options={sources.map((entry) => ({
+                value: entry.tile.id,
+                icon: entry.tile.settlements.some((s) => s.owner === playerID && s.kind !== "colony") ? "city" : "colony",
+                title: settlementPickerLabel(G, entry.tile, playerID),
+                detail: formatPops(entry.pops),
+                label: `Send a pop from ${settlementPickerLabel(G, entry.tile, playerID)} — holds ${formatPops(entry.pops)}.`
+              }))}
+              value={source?.tile.id ?? null}
+            />
+            {/* Stacked, not 3-up: in a 312px popover the columns clipped "Citizen" to
+                  "C." — same squeeze the Grow popover hit. */}
+              <div className="popChoiceGrid foundColonyPopGrid popoverChoiceStack" role="group" aria-label="Founding pop type">
               {POP_TYPES.map((candidate) => (
                 <button
                   className={candidate === pop ? "selectedChoice" : ""}
