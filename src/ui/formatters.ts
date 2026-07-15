@@ -30,10 +30,6 @@ export function yearLabel(seasonIndex: number) {
 }
 
 /** Compact chronicle tag, e.g. "Y1·Sp". */
-export function seasonTag(seasonIndex: number) {
-  return `Y${yearOf(seasonIndex)}·${SEASON_LABELS[seasonName(seasonIndex)].slice(0, 2)}`;
-}
-
 const POP_LABELS: Record<PopType, { singular: string; plural: string }> = {
   citizens: { singular: "citizen", plural: "citizens" },
   freemen: { singular: "freeman", plural: "freemen" },
@@ -115,24 +111,8 @@ export function formatPopLabel(pop: PopType, amount: number) {
   return amount === 1 ? POP_LABELS[pop].singular : POP_LABELS[pop].plural;
 }
 
-export function formatPopShort(pop: PopType) {
-  return POP_LABELS[pop].singular.slice(0, 1).toUpperCase();
-}
-
 export function buildingName(buildingId: BuildingId) {
   return BUILDINGS.find((building) => building.id === buildingId)?.name ?? buildingId;
-}
-
-export function phaseLabel(phase: Phase) {
-  if (phase === "setupCapital") {
-    return "City placement";
-  }
-
-  if (phase === "setupColony") {
-    return "Colony placement";
-  }
-
-  return "Turn actions";
 }
 
 export function phaseHint(phase: Phase) {

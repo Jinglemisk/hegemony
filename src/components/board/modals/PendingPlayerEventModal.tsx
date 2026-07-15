@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { GameMoves } from "../../../game/controller";
-import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds } from "../../../game/rules";
+import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds, getTile } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { AnnotatedText } from "../../AnnotatedText";
 import { eventCardArtUrl, formatEventEffects } from "../events";
@@ -101,7 +101,7 @@ export function PendingPlayerEventModal() {
                 <span>Settlement target</span>
                 <select value={targetTileId} onChange={(event) => setTargetTileId(event.target.value)}>
                   {targetTileIds.map((tileId) => {
-                    const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
+                    const tile = getTile(G, tileId);
 
                     return (
                       <option value={tileId} key={tileId}>

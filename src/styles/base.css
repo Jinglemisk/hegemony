@@ -94,13 +94,11 @@ button:focus-visible {
 
 .shell {
   --vase-black: #181210;
-  --ink-2: #241915;
   --clay: #c0461c;
   --clay-deep: #8f2e13;
   --ochre: #d98a35;
   --bone: #f4e6c8;
   --ivory: #fff8e7;
-  --oxblood: #722420;
   --olive: #5e6e3a;
   --aegean: #1f6977;
   --stone: #8f8571;
@@ -121,7 +119,6 @@ button:focus-visible {
   --line-strong: rgb(192 70 28 / 48%);
   --button-bg: rgb(255 248 231 / 86%);
   --button-line: rgb(36 25 16 / 24%);
-  --hex-line: rgb(36 25 16 / 28%);
   --shadow: 0 20px 46px rgb(72 42 21 / 20%);
   --lift-shadow: 0 12px 24px rgb(72 42 21 / 18%);
   --ledger-rule: rgb(36 25 16 / 14%);

@@ -5,6 +5,7 @@ import {
   POP_TYPES,
   formatPops,
   getFoundColonyStatus,
+  getTile,
   settlementNetYield,
   totalPops
 } from "../../../game/rules";
@@ -12,12 +13,18 @@ import type { PopType, Settlement } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { SettlementSummaryCard } from "../../SettlementCard";
 import { AtlasIcon } from "../../Sprites";
+import { ANCHOR_MARGIN, clampAnchoredLeft } from "../../../ui/anchoring";
 import { useGameUi } from "../GameUiContext";
 import { firstAvailablePop, getSettlementEntries, settlementPickerLabel } from "../helpers";
 import { CostRow } from "./PlacementModalShell";
 import { PopulationStepper } from "./PopulationStepper";
 
 type PopoverPosition = { top: number; left: number; arrowLeft: number; placement: "above" | "below" };
+
+/** Breathing room between the popover and the tile it points at. */
+const POPOVER_GAP = 12;
+/** Keeps the arrow inside the popover's rounded corners. */
+const ARROW_INSET = 18;
 
 /**
  * Map-anchored founding flow. The target tile is already chosen on the map; this
@@ -36,7 +43,7 @@ export function FoundColonyPopover({
   onConfirm: (sourceTileId: string, pop: PopType) => void;
 }) {
   const { G, viewerId: playerID } = useGameUi();
-  const targetTile = G.board.tiles.find((tile) => tile.id === tileId);
+  const targetTile = getTile(G, tileId);
   const sources = useMemo(
     () => getSettlementEntries(G, playerID).filter((entry) => totalPops(entry.pops) > 0),
     [G, playerID]
@@ -63,24 +70,25 @@ export function FoundColonyPopover({
     }
 
     const { width, height } = element.getBoundingClientRect();
-    const margin = 12;
-    const gap = 12;
+    const margin = ANCHOR_MARGIN;
     const viewportHeight = window.innerHeight;
     const centerX = anchor.left + anchor.width / 2;
-    const left = Math.max(margin, Math.min(centerX - width / 2, window.innerWidth - width - margin));
+    const left = clampAnchoredLeft(centerX, width, margin);
+    // Unlike the building tooltip, this measures itself and takes whichever side
+    // actually has room for it.
     const spaceBelow = viewportHeight - anchor.bottom;
     const spaceAbove = anchor.top;
     const placement: "above" | "below" =
-      spaceBelow >= height + gap + margin
+      spaceBelow >= height + POPOVER_GAP + margin
         ? "below"
-        : spaceAbove >= height + gap + margin
+        : spaceAbove >= height + POPOVER_GAP + margin
           ? "above"
           : spaceBelow >= spaceAbove
             ? "below"
             : "above";
-    const rawTop = placement === "below" ? anchor.bottom + gap : anchor.top - height - gap;
+    const rawTop = placement === "below" ? anchor.bottom + POPOVER_GAP : anchor.top - height - POPOVER_GAP;
     const top = Math.max(margin, Math.min(rawTop, viewportHeight - height - margin));
-    const arrowLeft = Math.max(18, Math.min(centerX - left, width - 18));
+    const arrowLeft = Math.max(ARROW_INSET, Math.min(centerX - left, width - ARROW_INSET));
 
     setPosition({ top, left, arrowLeft, placement });
   }, [anchor, sources.length, sourceTileId, pop]);

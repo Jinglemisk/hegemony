@@ -1,7 +1,4 @@
-import { PLAYER_NAMES } from "../../game/data";
 import type { BuildingId, PopType, SettlementKind } from "../../game/types";
-
-export const PLAYER_DISPLAY_NAMES = PLAYER_NAMES;
 
 export const SETTLEMENT_SORT: Record<SettlementKind, number> = {
   capital: 1,

@@ -1,7 +1,7 @@
 import { PLAYER_IDS } from "./data";
 import type { HegemonyState, GameOverReason, PlayerId, VictoryMetric } from "./types";
 import { totalPops } from "./core/pops";
-import { addLog, getPlayerName } from "./core/query";
+import { addLog, getPlayerName, getTile } from "./core/query";
 
 /**
  * The victory race (roadmap-appendix D1). Five public victory cards, each "Most X,
@@ -51,7 +51,7 @@ export function victoryMetricValue(G: HegemonyState, playerID: PlayerId, metric:
       let citizens = 0;
 
       for (const tileId of player.settlements) {
-        const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
+        const tile = getTile(G, tileId);
         const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
 
         if (!settlement) {
