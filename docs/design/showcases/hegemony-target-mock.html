@@ -1,0 +1,471 @@
+<title>Hegemony &mdash; post-refit target screen (rough)</title>
+<style>
+  :root{
+    --ivory:#fff8e7; --bone:#f4e6c8; --glass:rgb(244 230 200/93%);
+    --vase:#181210; --ink:#241910; --ink-66:rgb(36 25 16/66%); --ink-48:rgb(36 25 16/48%);
+    --line:rgb(36 25 16/13%); --ring:rgb(36 25 16/22%); --disc:#fff8e7;
+    --clay:#c0461c; --clay-deep:#8f2e13; --ochre:#d98a35; --ochre-ink:#b06a1d; --olive:#5e6e3a;
+    --lift:0 2px 8px rgb(24 18 16/20%); --float:0 10px 30px rgb(24 18 16/26%);
+    --diag:#ff2f86;
+    --disp:Copperplate,"Iowan Old Style",Georgia,serif;
+    --body:"Iowan Old Style",Palatino,Georgia,serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  .wrap{font-family:var(--body);color:var(--ink);background:#0e1c20;min-height:100vh;
+    padding:20px clamp(12px,3.5vw,38px) 56px}
+
+  /* ---- header (not the game) ---- */
+  .hd{max-width:1240px;margin:0 auto 16px}
+  .hd h1{font-family:var(--disp);font-weight:700;font-size:clamp(17px,2.3vw,22px);letter-spacing:.04em;
+    color:#f6ecd4;margin:0 0 4px;text-wrap:balance}
+  .hd h1 b{color:var(--clay);font-weight:700}
+  .hd .sub{font-size:12.5px;color:#a9bcc0;line-height:1.5;max-width:88ch}
+  .hd .bar2{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:12px}
+  .chk{display:flex;flex-wrap:wrap;gap:6px}
+  .chk span{font-size:11px;color:#cbd6d8;background:rgb(255 248 231/6%);border:1px solid rgb(255 248 231/10%);
+    border-radius:999px;padding:4px 10px;white-space:nowrap}
+  .chk span b{color:#ffd7a8;font-weight:700}
+  .toggle{display:inline-flex;align-items:center;gap:8px;margin-left:auto;flex:none}
+  .toggle label{font-family:var(--disp);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#a9bcc0}
+  .sw{width:44px;height:24px;border-radius:999px;border:1px solid rgb(255 248 231/24%);background:rgb(255 248 231/8%);
+    position:relative;cursor:pointer;transition:.2s}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+    background:#cbd6d8;transition:.2s}
+  .sw.on{background:var(--diag);border-color:var(--diag)}
+  .sw.on::after{left:22px;background:#fff}
+
+  .stageScroll{max-width:1240px;margin:0 auto;overflow-x:auto;border-radius:14px}
+  .stage{position:relative;width:1180px;height:648px;overflow:hidden;border-radius:12px;
+    background:radial-gradient(960px 640px at 60% 36%,#2e8a9a 0%,#206e7c 46%,#17505c 100%);font-family:var(--body)}
+  .sea-tex{position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(104deg,rgb(255 248 231/2.5%) 0 2px,transparent 2px 90px),
+               repeating-linear-gradient(8deg,rgb(12 40 48/4%) 0 3px,transparent 3px 120px)}
+
+  /* ---- the hex world ---- */
+  .world{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0}
+  .hex{position:absolute}
+  .lyr{position:absolute;inset:0;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
+  .chit{position:absolute;left:50%;top:13px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;
+    background:#f7ecd2;border-radius:9px;padding:2px 7px 2px 5px;box-shadow:0 0 0 1px rgb(24 18 16/82%),0 1px 1.5px rgb(24 18 16/28%)}
+  .chit b{font-size:12px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+  .sk{position:absolute;left:0;right:0;display:flex;justify-content:center;gap:3px}
+  .sk i{width:11px;height:11px;border-radius:2px;background:rgb(24 18 16/22%);box-shadow:inset 0 1px 1.5px rgb(24 18 16/35%),0 0 0 1px rgb(247 236 210/55%)}
+  .sk i.b{background:var(--bone);box-shadow:0 0 0 1px var(--vase);display:grid;place-items:center}
+  .sk.inert i{opacity:.55}
+  .settle{position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;display:grid;place-items:center;
+    box-shadow:0 0 0 1.5px var(--ivory),0 0 0 2.5px var(--vase)}
+  .pp{position:absolute;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:7px}
+  .pp .g{display:flex;align-items:center;gap:3px}
+  .pp .g b{font-size:11px;font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+  .bead{border-radius:50%;flex:none}
+  .bead.cit{width:9px;height:9px;box-shadow:0 0 0 1px var(--ivory),0 0 0 2px var(--vase)}
+  .bead.fre{width:9px;height:9px;background:var(--bone);box-shadow:0 0 0 1px var(--ivory),0 0 0 2px var(--vase)}
+  .bead.slv{width:7px;height:7px;background:var(--vase);box-shadow:0 0 0 1px var(--ivory)}
+
+  /* ---- chrome (KYKLOS mode A, as drawn / approved) ---- */
+  .bar{position:absolute;background:var(--glass);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);z-index:20}
+  .bar.top{left:0;right:0;top:0;height:48px;border-bottom:1px solid var(--line)}
+  .bar.bot{left:0;right:0;bottom:0;height:64px;border-top:1px solid var(--line)}
+  .bar.rail{left:0;top:48px;bottom:64px;width:30px;border-right:1px solid var(--line)}
+
+  .bub{position:absolute;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
+    transform:translate(-50%,-50%);background:var(--disc);color:var(--ink);z-index:40;box-shadow:0 0 0 1px var(--ring),var(--lift)}
+  .bub svg{width:20px;height:20px}
+  .bub.on{background:var(--clay);color:var(--ivory);box-shadow:0 0 0 1px rgb(143 46 19/55%),0 4px 14px rgb(192 70 28/38%)}
+  .bub .cnt{position:absolute;top:-2px;right:-2px;min-width:15px;height:15px;border-radius:8px;background:var(--ochre);
+    color:var(--vase);font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 3px;box-shadow:0 0 0 1.5px var(--ivory)}
+
+  .panel{position:absolute;left:72px;top:60px;width:314px;z-index:30;background:var(--ivory);
+    border-radius:12px;padding:13px 15px 15px;box-shadow:var(--float);max-height:512px;overflow:auto}
+  .panel::-webkit-scrollbar{width:0}
+
+  .verb{position:absolute;display:flex;flex-direction:column;align-items:center;gap:5px;
+    transform:translate(-50%,-50%);background:none;border:0;cursor:pointer;font-family:inherit;z-index:25}
+  .vb{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--disc);color:var(--ink);
+    box-shadow:0 0 0 1px var(--ring),var(--lift);position:relative}
+  .vb svg{width:23px;height:23px}
+  .vn{font-family:var(--disp);font-size:9px;letter-spacing:.13em;text-transform:uppercase}
+  .vc{font-size:9.5px;color:var(--ink-48);font-variant-numeric:tabular-nums}
+  .verb.armed .vb{background:var(--clay);color:var(--ivory);box-shadow:0 0 0 1px rgb(143 46 19/55%),0 6px 18px rgb(192 70 28/42%)}
+  .verb.armed .vn{color:var(--clay-deep)}
+  .verb.off{cursor:not-allowed}
+  .verb.off .vb{background:rgb(255 248 231/55%);color:var(--ink-48);box-shadow:0 0 0 1px var(--line)}
+  .verb.off .vn,.verb.off .vc{color:rgb(36 25 16/34%)}
+  .kbd{position:absolute;top:-2px;right:-2px;width:15px;height:15px;border-radius:50%;background:var(--vase);
+    color:rgb(244 230 200/80%);font-size:8px;font-weight:700;display:grid;place-items:center;font-family:var(--body);box-shadow:0 0 0 1.5px var(--ivory)}
+
+  .endturn{position:absolute;right:16px;bottom:14px;width:76px;height:76px;border-radius:5px;cursor:pointer;border:0;
+    background:var(--clay-deep);color:var(--ivory);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;z-index:26;
+    font-family:inherit;box-shadow:0 6px 20px rgb(143 46 19/40%),0 0 0 1px rgb(36 25 16/30%)}
+  .endturn .et{font-family:var(--disp);font-size:8px;letter-spacing:.12em;text-transform:uppercase;text-align:center}
+  .endturn svg{width:23px;height:23px}
+
+  /* whose turn &mdash; floats on the sea */
+  .turnbox{position:absolute;right:16px;bottom:100px;z-index:25;text-align:right}
+  .turnbox .lbl{font-family:var(--disp);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:rgb(255 248 231/72%);text-shadow:0 1px 3px rgb(10 34 41/55%);display:block}
+  .turnbox .who{font-family:var(--disp);font-size:15px;letter-spacing:.09em;text-transform:uppercase;color:#fff8e7;
+    text-shadow:0 1px 3px rgb(10 34 41/55%);border-bottom:2px solid #2f5d9e;padding-bottom:2px;display:inline-block}
+
+  /* the chronicle ticker (RECONCILED: Q19 keeps it &mdash; bottom-left of the spine) */
+  .ticker{position:absolute;left:46px;bottom:22px;z-index:26;max-width:360px;display:flex;align-items:center;gap:8px}
+  .ticker .tk{font-family:var(--disp);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-48);flex:none}
+  .ticker .tv{font-size:12px;color:var(--ink-66);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+  .ticker .tv b{color:var(--ink)}.ticker .tv .pos{color:var(--olive);font-weight:700}
+
+  /* zoom control */
+  .zoom{position:absolute;left:44px;bottom:78px;z-index:25;display:flex;align-items:center;gap:6px}
+  .zb{width:26px;height:26px;border-radius:50%;border:0;cursor:pointer;background:var(--disc);color:var(--ink);
+    display:grid;place-items:center;font-size:14px;font-family:var(--body);box-shadow:0 0 0 1px var(--ring),var(--lift)}
+  .zlv{font-size:10.5px;color:rgb(255 248 231/72%);font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgb(10 34 41/55%);min-width:32px;text-align:center}
+
+  /* top-bar contents */
+  .cards{position:absolute;left:72px;top:0;height:48px;z-index:25;display:flex;align-items:center;gap:6px}
+  .ev{display:flex;align-items:center;gap:7px;padding:5px 9px 5px 6px;border-radius:8px;background:transparent}
+  .ev .th{width:16px;height:20px;flex:none;background:var(--ivory);border-radius:2px;box-shadow:0 0 0 1px rgb(36 25 16/45%);position:relative}
+  .ev .th::after{content:"";position:absolute;left:3px;right:3px;top:6px;height:1px;background:rgb(36 25 16/45%);box-shadow:0 3px 0 rgb(36 25 16/35%)}
+  .ev .tt{display:flex;flex-direction:column;gap:1px}
+  .ev .k{font-family:var(--disp);font-size:7px;letter-spacing:.15em;color:var(--ink-48)}
+  .ev .n{font-size:11px;color:var(--ink);white-space:nowrap}
+  .ev .ck{width:11px;height:11px;color:var(--olive);flex:none}
+
+  .topmid{position:absolute;left:0;right:0;top:0;height:48px;display:flex;align-items:center;justify-content:center;gap:24px;z-index:24;pointer-events:none}
+  .medal{width:62px;height:62px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--disc);color:var(--ink);
+    box-shadow:0 0 0 1px var(--ring),var(--lift);margin-top:26px}
+  .medal svg{width:29px;height:29px}
+  .resgrp{display:flex;gap:15px}
+  .r{display:flex;flex-direction:column;gap:1px;line-height:1;align-items:flex-start}
+  .r .rt{display:flex;align-items:center;gap:4px}
+  .r .rt svg{width:14px;height:14px;opacity:.72}
+  .r .rv{font-size:13px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .r .rv.lo{color:var(--ochre-ink)}
+  .r .rd{font-size:9px;font-variant-numeric:tabular-nums;padding-left:18px}
+  .rd.up{color:var(--olive)}.rd.dn{color:var(--clay-deep)}.rd.z{color:rgb(36 25 16/30%)}
+  .season{position:absolute;top:54px;left:50%;transform:translateX(-50%);text-align:center;z-index:25;
+    font-family:var(--disp);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:#fff8e7;text-shadow:0 1px 3px rgb(10 34 41/55%)}
+  .season small{display:block;font-family:var(--body);font-size:9.5px;letter-spacing:0;text-transform:none;color:rgb(255 248 231/72%);margin-top:2px}
+
+  /* deck counts (RECONCILED: Q19 keeps them in the TOP BAR, not Codex) */
+  .roster{position:absolute;right:14px;top:0;height:48px;display:flex;align-items:center;gap:3px;z-index:25}
+  .seasondecks{margin-top:5px;display:flex;gap:14px;justify-content:center;font-family:var(--body);font-size:9.5px;color:rgb(255 248 231/64%);text-shadow:0 1px 3px rgb(10 34 41/55%)}
+  .seasondecks b{color:#fff8e7;font-weight:700}
+  .st8{display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:7px;position:relative}
+  .st8 .pd{width:16px;height:16px;border-radius:50%;flex:none;display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgb(255 248 231/62%),0 0 0 1px rgb(36 25 16/38%)}
+  .st8 .pd i{font-style:normal;font-family:var(--disp);font-size:7.5px;color:var(--ivory)}
+  .st8 .nm{font-size:11px;color:var(--ink-66)}
+  .st8 .pv{font-size:10px;color:var(--ink-48);font-variant-numeric:tabular-nums}
+  .st8.acting{box-shadow:inset 0 -2px 0 var(--clay)}
+  .st8.acting .nm{color:var(--ink);font-weight:600}
+
+  /* chronicle &mdash; CLOSED by default (RECONCILED: Q19). Just the disc tab shows. */
+  .c-tab{position:absolute;right:14px;top:62px;z-index:31;width:46px;height:46px;border-radius:50%;cursor:pointer;
+    display:grid;place-items:center;background:var(--disc);box-shadow:0 0 0 1px var(--ring),var(--lift);color:var(--ink)}
+  .c-tab svg{width:20px;height:20px}
+  .c-tab .cnt{position:absolute;top:-2px;left:-2px;min-width:15px;height:15px;border-radius:8px;background:var(--clay);color:var(--ivory);
+    font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 3px;box-shadow:0 0 0 1.5px var(--ivory)}
+
+  /* ---- panel content ---- */
+  .p-head{display:flex;align-items:center;gap:8px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+  .p-head .pi{width:18px;height:18px;color:var(--ink)}
+  .pt{font-family:var(--disp);font-size:15px;letter-spacing:.08em;text-transform:uppercase;flex:1}
+  .px{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:var(--ink-48);background:transparent;border:0;cursor:pointer}
+  .p-sum{padding:9px 0 0;font-size:12px;color:var(--ink-66);font-variant-numeric:tabular-nums}
+  .p-sum b{color:var(--ink);font-weight:700}
+  .pwarn{margin-top:10px;padding:7px 10px 8px 12px;position:relative;background:rgb(217 138 53/12%);border-radius:0 5px 5px 0}
+  .pwarn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ochre);border-radius:2px}
+  .pwarn .k{display:block;font-family:var(--disp);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ochre-ink)}
+  .pwarn .c{font-size:11.5px;margin-top:2px}
+  .city{margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
+  .ch{display:flex;align-items:center;gap:9px;cursor:pointer}
+  .ch .md{width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;box-shadow:0 0 0 1.5px var(--ivory),0 0 0 2.5px var(--vase)}
+  .ch .md svg{width:14px;height:14px}
+  .ch .cn{font-family:var(--disp);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;line-height:1.1}
+  .ch .cc{font-size:11px;color:var(--ink-66)}
+  .ch .pf{margin-left:auto;font-size:15px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ch .pf span{font-size:11px;font-weight:400;color:var(--ink-66)}
+  .ch .chev{margin-left:6px;width:9px;height:9px;border-right:1.5px solid var(--ink-48);border-bottom:1.5px solid var(--ink-48);transform:rotate(45deg);flex:none;transition:.2s}
+  .city.closed .chev{transform:rotate(-45deg)}
+  .city.closed .cbody{display:none}
+  .crow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 0 5px;border-top:1px solid var(--line);margin-top:8px}
+  .crow .k{font-family:var(--disp);font-size:8.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-66);flex:none;padding-top:2px}
+  .crow .v{font-size:12px;text-align:right;color:var(--ink);line-height:1.3}
+  .crow .v .dim{color:var(--ink-48)}
+  .slots{display:inline-flex;gap:3px;vertical-align:-1px;margin-left:6px}
+  .slots i{width:9px;height:9px;border-radius:2px;background:rgb(36 25 16/6%);box-shadow:inset 0 1px 1px rgb(36 25 16/15%)}
+  .slots i.b{background:var(--bone);box-shadow:0 0 0 1px var(--vase)}
+  .net{display:flex;flex-wrap:wrap;gap:4px 12px;padding:7px 0 2px;border-top:1px solid var(--line);margin-top:8px;font-size:12px;font-variant-numeric:tabular-nums}
+  .net .n{font-weight:700}.net .pos{color:var(--olive)}.net .neg{color:var(--clay-deep)}
+  /* the build affordance kept in-panel (affinity + benefit preview) */
+  .builds{margin-top:9px;padding-top:8px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:5px}
+  .builds .bl{font-family:var(--disp);font-size:8px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-48)}
+  .bchip{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;background:rgb(36 25 16/4%);cursor:pointer;font-size:11.5px}
+  .bchip:hover{background:rgb(36 25 16/8%)}
+  .bchip .bn{font-weight:700;color:var(--ink)}
+  .bchip .bc{color:var(--ink-66);font-variant-numeric:tabular-nums}
+  .bchip .bb{margin-left:auto;color:var(--olive);font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* the map-first anchored popover (RECONCILED: scope 3 &mdash; map is the picker) */
+  .pop{position:absolute;z-index:45;width:196px;background:var(--ivory);border-radius:10px;box-shadow:var(--float);padding:11px 12px 12px;transform:translate(-50%,-100%)}
+  .pop::after{content:"";position:absolute;left:50%;bottom:-7px;width:14px;height:14px;background:var(--ivory);transform:translateX(-50%) rotate(45deg);box-shadow:var(--float)}
+  .pop .ph{font-family:var(--disp);font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--clay-deep)}
+  .pop .pn{font-family:var(--disp);font-size:13px;letter-spacing:.05em;text-transform:uppercase;margin-top:2px}
+  .pop .pc{font-size:11.5px;color:var(--ink-66);margin-top:4px;font-variant-numeric:tabular-nums}
+  .pop .pa{display:flex;gap:8px;margin-top:10px}
+  .pop .pa button{flex:1;border:0;border-radius:5px;cursor:pointer;font-family:var(--disp);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:8px 0}
+  .pop .pa .ok{background:var(--clay);color:var(--ivory)}
+  .pop .pa .no{background:transparent;color:var(--ink-48)}
+
+  /* ---- annotation tags ---- */
+  .tag{position:absolute;z-index:60;font-family:var(--disp);font-size:8.5px;letter-spacing:.06em;
+    background:var(--diag);color:#fff;padding:4px 8px;border-radius:6px;white-space:nowrap;display:none;
+    box-shadow:0 3px 10px rgb(0 0 0/35%);text-transform:uppercase}
+  .tag::after{content:"";position:absolute;width:8px;height:8px;background:var(--diag);transform:rotate(45deg)}
+  .annot .tag{display:block}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="hd">
+    <h1>Hegemony &mdash; the screen after the <b>layout PR</b> <span style="color:#7f9296;font-weight:400;font-size:.8em">&middot; rough target, not final art</span></h1>
+    <p class="sub">KYKLOS mode A, built with our reconciled decisions &mdash; our hex board on the full-bleed sea, the as-drawn glass/shadow chrome you approved, and every place we chose our ratified answers over the mock. Flip the switch to label what we reconciled.</p>
+    <div class="bar2">
+      <div class="chk">
+        <span>menu-disc <b>rail</b></span>
+        <span><b>7</b> verbs incl. Build</span>
+        <span>End Turn <b>square</b></span>
+        <span>resources split <b>top</b></span>
+        <span>decks in <b>top bar</b></span>
+        <span>chronicle <b>closed</b> + ticker</span>
+        <span><b>map-first</b> Found</span>
+        <span>as-drawn <b>glass</b> chrome</span>
+      </div>
+      <div class="toggle">
+        <label for="annotSw">Annotate reconciliations</label>
+        <div class="sw" id="annotSw" role="switch" aria-checked="false" tabindex="0"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="stageScroll">
+    <div class="stage" id="stage">
+      <div class="sea-tex"></div>
+      <div class="world" id="world"></div>
+
+      <!-- spines -->
+      <div class="bar top"></div>
+      <div class="bar bot"></div>
+      <div class="bar rail"></div>
+
+      <!-- top bar -->
+      <div class="cards">
+        <div class="ev"><div class="th"></div><div class="tt"><div class="k">SEASON</div><div class="n">Timber Levies</div></div></div>
+        <div class="ev"><div class="th"></div><div class="tt"><div class="k">PLAYER</div><div class="n">New Citizen</div></div>
+          <svg class="ck" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 10.5l4 4 8-9"/></svg></div>
+      </div>
+
+      <div class="topmid">
+        <div class="resgrp">
+          <div class="r"><div class="rt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3.4L6 13.4h12L12 3.4zM12 13.4v5.4"/></svg><span class="rv">18</span></div><div class="rd up">+6</div></div>
+          <div class="r"><div class="rt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3.2l7.6 4.4v8.8L12 20.8l-7.6-4.4V7.6z"/></svg><span class="rv">24</span></div><div class="rd z">&plusmn;0</div></div>
+          <div class="r"><div class="rt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20.6V7.2M12 9.6L8 6.8M12 9.6l4-2.8"/></svg><span class="rv lo">14</span></div><div class="rd dn">&minus;2</div></div>
+        </div>
+        <div class="medal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9.6M12 14.4c0-4-3.1-7.2-7-7.2 0 4 3.1 7.2 7 7.2zM12 11.8c0-3.5 2.8-6.4 6.4-6.4 0 3.5-2.8 6.4-6.4 6.4z"/></svg>
+        </div>
+        <div class="resgrp">
+          <div class="r"><div class="rt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="2.8"/></svg><span class="rv">12</span></div><div class="rd up">+4</div></div>
+          <div class="r"><div class="rt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5.6c-3.4 0-5.2 3-5.2 6s1.8 8.4 5.2 8.4 5.2-5.4 5.2-8.4-1.8-6-5.2-6zM9.4 3.4h5.2"/></svg><span class="rv">1</span></div><div class="rd up">+2</div></div>
+          <div class="r"><div class="rt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8.4"/><path d="M9 10.2v.01M15 10.2v.01M8.6 15.2c1.2 1.4 5.6 1.4 6.8 0"/></svg><span class="rv lo">&minus;0.5</span></div><div class="rd dn">&minus;0.5</div></div>
+        </div>
+      </div>
+      <div class="season">Spring &middot; Year 1<small>28 seasons remain</small><div class="seasondecks"><span>Seasonal <b>28</b>/29</span><span>Events <b>73</b>/74</span></div></div>
+
+      <div class="roster">
+        <div class="st8 acting"><span class="pd" style="background:#2f5d9e"><i>&#913;</i></span><span class="nm">Damon</span><span class="pv">0/3</span></div>
+        <div class="st8"><span class="pd" style="background:#a83226"><i>&#914;</i></span><span class="nm">Nikos</span><span class="pv">0/3</span></div>
+        <div class="st8"><span class="pd" style="background:#dfa437"><i>&#915;</i></span><span class="nm">Theron</span><span class="pv">1/3</span></div>
+        <div class="st8"><span class="pd" style="background:#55673a"><i>&#916;</i></span><span class="nm">Kyros</span><span class="pv">0/3</span></div>
+      </div>
+
+      <!-- menu discs -->
+      <div class="bub on" style="left:35px;top:88px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V9.6M19 20V9.6M3.4 9.6L12 4.4l8.6 5.2M9 20v-5.2a3 3 0 0 1 6 0V20M3.6 20h16.8"/></svg></div>
+      <div class="bub" style="left:35px;top:143px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.4" r="3.4"/><path d="M5 20.4c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg><span class="cnt">7</span></div>
+      <div class="bub" style="left:35px;top:198px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V8.6h12V20M6 20h12M4.6 8.6h14.8L12 3.6 4.6 8.6z"/></svg></div>
+      <div class="bub" style="left:35px;top:253px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M5.4 7.4h13.2M4 20.4h16"/></svg></div>
+      <div class="bub" style="left:35px;top:308px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4l2.5 5.4 5.9.6-4.4 4 1.3 5.8L12 16.2 6.7 19.2 8 13.4 3.6 9.4l5.9-.6z"/></svg><span class="cnt">0/3</span></div>
+      <div class="bub" style="left:35px;top:363px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 4.6h5.2A2.4 2.4 0 0 1 12 7v13a2.4 2.4 0 0 0-2.4-2.4H4.4zM19.6 4.6h-5.2A2.4 2.4 0 0 0 12 7v13a2.4 2.4 0 0 1 2.4-2.4h5.2z"/></svg></div>
+
+      <!-- ledger panel (Cities, our substance) -->
+      <div class="panel">
+        <div class="p-head">
+          <svg class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V9.6M19 20V9.6M3.4 9.6L12 4.4l8.6 5.2M9 20v-5.2a3 3 0 0 1 6 0V20M3.6 20h16.8"/></svg>
+          <span class="pt">Cities</span>
+          <button class="px" aria-label="Close">&#10005;</button>
+        </div>
+        <div class="p-sum"><b>1</b> metropolis &middot; <b>1</b> colony &middot; <b>7</b>/14 pops &middot; <b>0</b>/3 victory cards</div>
+        <div class="pwarn"><span class="k">Discontent</span><span class="c">Happiness <b>&minus;0.5</b> &mdash; pops start dying at &minus;5.</span></div>
+
+        <div class="city" id="cityA">
+          <div class="ch" data-city="cityA">
+            <span class="md" style="background:#2f5d9e"><svg viewBox="0 0 20 20"><path d="M10 2.6l2 4.6 4.8.4-3.7 3.2 1.1 4.8L10 13l-4.2 2.6 1.1-4.8L3.2 7.6 8 7.2z" fill="#fff8e7"/></svg></span>
+            <div><div class="cn">Metropolis</div><div class="cc">&minus;1,0 &middot; Plains</div></div>
+            <div class="pf">5<span>/10</span></div><span class="chev"></span>
+          </div>
+          <div class="cbody">
+            <div class="crow"><span class="k">Pops</span><span class="v">2 citizens &middot; 1 freeman &middot; 2 slaves</span></div>
+            <div class="crow"><span class="k">Buildings</span><span class="v">Temple &middot; Marketplace <span class="dim">2/5</span><span class="slots"><i class="b"></i><i class="b"></i><i></i><i></i><i></i></span></span></div>
+            <div class="net"><span class="n pos">+4 gold</span><span class="n pos">+2 food</span><span class="n pos">+2 influence</span><span class="n neg">&minus;1.5 happiness</span></div>
+            <div class="builds">
+              <span class="bl">Buildable here &mdash; 3 slots free</span>
+              <div class="bchip"><span class="bn">Granary</span><span class="bc">12 wood</span><span class="bb">+2 food</span></div>
+              <div class="bchip"><span class="bn">Shrine</span><span class="bc">10 stone &middot; 4 gold</span><span class="bb">+1 influence</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="city closed" id="cityB">
+          <div class="ch" data-city="cityB">
+            <span class="md" style="background:#2f5d9e"><svg viewBox="0 0 20 20" fill="none"><path d="M7 17V3M7 4.4h7.4L12 7l2.4 2.6H7" stroke="#fff8e7" stroke-width="1.8"/></svg></span>
+            <div><div class="cn">Colony</div><div class="cc">&minus;2,0 &middot; Mountain</div></div>
+            <div class="pf">2<span>/4</span></div><span class="chev"></span>
+          </div>
+          <div class="cbody">
+            <div class="crow"><span class="k">Pops</span><span class="v">2 slaves</span></div>
+            <div class="crow"><span class="k">Buildings</span><span class="v"><span class="dim">None &mdash; colonies cannot build</span></span></div>
+            <div class="net"><span class="n pos">+8 stone</span><span class="n neg">&minus;2 food</span><span class="n neg">&minus;1 happiness</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- verb spine: 7 verbs incl. Build (net-new), Found armed -->
+      <div id="verbs"></div>
+
+      <!-- the one square -->
+      <button class="endturn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 2h12M6 22h12"/><path d="M7 2c0 5 10 5 10 0M7 22c0-5 10-5 10 0"/><path d="M12 9.6v4.8"/></svg>
+        <span class="et">End turn</span>
+      </button>
+
+      <div class="turnbox"><span class="lbl">Your turn</span><span class="who">Damon</span></div>
+
+      <!-- ticker (Q19 kept) -->
+      <div class="ticker"><span class="tk">Chronicle</span><span class="tv"><b>Nikos</b> ventured and lost <span class="pos" style="color:var(--clay-deep)">&minus;5</span> gold.</span></div>
+
+      <!-- zoom -->
+      <div class="zoom"><button class="zb" id="zo">&minus;</button><span class="zlv">0.82&times;</span><button class="zb" id="zi">+</button></div>
+
+      <!-- chronicle closed &rarr; disc tab -->
+      <div class="c-tab" id="cTab" title="Chronicle (C)">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3h8a2 2 0 0 1 2 2v12l-3-2-3 2-3-2-3 2V5a2 2 0 0 1 2-2z"/><path d="M7.5 7h6M7.5 10h6"/></svg>
+        <span class="cnt">7</span>
+      </div>
+
+      <!-- map-first popover (scope 3), positioned by JS onto a glowing tile -->
+      <div class="pop" id="foundPop">
+        <div class="ph">Found Colony</div>
+        <div class="pn">0,3 &middot; Forest</div>
+        <div class="pc">Costs <b>20 wood &middot; 2 pops</b> &middot; yields <b>+2 wood</b></div>
+        <div class="pa"><button class="no">Cancel</button><button class="ok">Found</button></div>
+      </div>
+
+      <!-- annotation tags -->
+      <div class="tag" id="tagDecks" style="left:556px;top:120px">Q19 &middot; decks beside the season dial<span></span></div>
+      <div class="tag" id="tagChron" style="right:66px;top:74px">Q19 &middot; chronicle boots CLOSED<span style="right:-4px;top:12px"></span></div>
+      <div class="tag" id="tagTicker" style="left:46px;bottom:48px">Q19 &middot; newest line kept as a ticker<span style="left:24px;bottom:-4px"></span></div>
+      <div class="tag" id="tagBuild" style="top:452px">Net-new 7th verb &mdash; arms the map<span style="left:24px;bottom:-4px"></span></div>
+      <div class="tag" id="tagPop" style="top:150px;left:560px">Scope 3 &middot; the map is the picker<span style="left:24px;bottom:-4px"></span></div>
+      <div class="tag" id="tagRail" style="left:70px;top:250px">Ledger tabs &rarr; vertical disc rail<span style="left:-4px;top:12px"></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var T=[{"id":"-3,0","q":-3,"r":0,"terrain":"forest","slots":2,"yield":4},{"id":"-3,1","q":-3,"r":1,"terrain":"hill","slots":3,"yield":4},{"id":"-3,2","q":-3,"r":2,"terrain":"plains","slots":4,"yield":10},{"id":"-3,3","q":-3,"r":3,"terrain":"forest","slots":2,"yield":4},{"id":"-2,-1","q":-2,"r":-1,"terrain":"plains","slots":3,"yield":8},{"id":"-2,0","q":-2,"r":0,"terrain":"mountain","slots":2,"yield":6},{"id":"-2,1","q":-2,"r":1,"terrain":"forest","slots":2,"yield":3},{"id":"-2,2","q":-2,"r":2,"terrain":"mountain","slots":2,"yield":4},{"id":"-2,3","q":-2,"r":3,"terrain":"forest","slots":1,"yield":3},{"id":"-1,-2","q":-1,"r":-2,"terrain":"hill","slots":3,"yield":2},{"id":"-1,-1","q":-1,"r":-1,"terrain":"forest","slots":1,"yield":3},{"id":"-1,0","q":-1,"r":0,"terrain":"plains","slots":3,"yield":6},{"id":"-1,1","q":-1,"r":1,"terrain":"hill","slots":2,"yield":1},{"id":"-1,2","q":-1,"r":2,"terrain":"forest","slots":1,"yield":3},{"id":"-1,3","q":-1,"r":3,"terrain":"plains","slots":2,"yield":4},{"id":"0,-3","q":0,"r":-3,"terrain":"forest","slots":1,"yield":2},{"id":"0,-2","q":0,"r":-2,"terrain":"mountain","slots":1,"yield":4},{"id":"0,-1","q":0,"r":-1,"terrain":"hill","slots":2,"yield":1},{"id":"0,0","q":0,"r":0,"terrain":"forest","slots":1,"yield":2},{"id":"0,1","q":0,"r":1,"terrain":"mountain","slots":1,"yield":2},{"id":"0,2","q":0,"r":2,"terrain":"hill","slots":2,"yield":1},{"id":"0,3","q":0,"r":3,"terrain":"forest","slots":1,"yield":2},{"id":"1,-3","q":1,"r":-3,"terrain":"plains","slots":2,"yield":4},{"id":"1,-2","q":1,"r":-2,"terrain":"forest","slots":1,"yield":2},{"id":"1,-1","q":1,"r":-1,"terrain":"plains","slots":2,"yield":4},{"id":"1,0","q":1,"r":0,"terrain":"hill","slots":2,"yield":1},{"id":"1,1","q":1,"r":1,"terrain":"forest","slots":1,"yield":2},{"id":"1,2","q":1,"r":2,"terrain":"plains","slots":2,"yield":4},{"id":"2,-3","q":2,"r":-3,"terrain":"mountain","slots":1,"yield":2},{"id":"2,-2","q":2,"r":-2,"terrain":"hill","slots":1,"yield":2},{"id":"2,-1","q":2,"r":-1,"terrain":"forest","slots":1,"yield":1},{"id":"2,0","q":2,"r":0,"terrain":"plains","slots":2,"yield":4},{"id":"2,1","q":2,"r":1,"terrain":"hill","slots":1,"yield":1},{"id":"3,-3","q":3,"r":-3,"terrain":"forest","slots":1,"yield":1},{"id":"3,-2","q":3,"r":-2,"terrain":"mountain","slots":1,"yield":2},{"id":"3,-1","q":3,"r":-1,"terrain":"hill","slots":1,"yield":1},{"id":"3,0","q":3,"r":0,"terrain":"forest","slots":1,"yield":1}];
+  var ST={
+    "-1,0":{own:"p1",kind:"metro",sock:5,built:["temple","market"],pops:[["cit",2],["fre",1],["slv",2]]},
+    "-2,0":{own:"p1",kind:"colony",pops:[["slv",2]]},
+    "0,-1":{own:"p2",kind:"city",sock:4,built:["granary"],pops:[["cit",1],["fre",2],["slv",1]]},
+    "0,3":{leg:1},"1,2":{leg:1}
+  };
+  var GND={plains:"#DCBF69",forest:"#758542",hill:"#C68038",mountain:"#A8A290"};
+  var GLEG={plains:"#C6B56B",forest:"#6B8149",hill:"#B27D40",mountain:"#989B8D"};
+  var PC={p1:"#2f5d9e",p2:"#a83226",p3:"#dfa437",p4:"#55673a"};
+  var EMB={plains:'<path d="M11 19V5M11 8L7 5m4 3l4-3M11 12L7 9m4 3l4-3M11 16l-4-3m4 3l4-3"/>',forest:'<path d="M11 3L5 13h12L11 3zM11 13v6"/>',hill:'<path d="M1 17a6 6 0 0 1 12 0M9 17a6 6 0 0 1 12 0"/>',mountain:'<path d="M2 18L8.5 5l4.5 8 2.5-4L21 18H2z"/>'};
+  var SG={metro:'<svg width="15" height="15" viewBox="0 0 20 20"><path d="M10 2.6l2 4.6 4.8.4-3.7 3.2 1.1 4.8L10 13l-4.2 2.6 1.1-4.8L3.2 7.6 8 7.2z" fill="#fff8e7"/></svg>',city:'<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M4 16.5V8M16 16.5V8M2.8 8L10 3.6 17.2 8M7.4 16.5v-4.4a2.6 2.6 0 0 1 5.2 0v4.4M3 16.5h14" stroke="#fff8e7" stroke-width="1.7"/></svg>',colony:'<svg width="11" height="11" viewBox="0 0 20 20" fill="none"><path d="M7 17V3M7 4.4h7.4L12 7l2.4 2.6H7" stroke="#fff8e7" stroke-width="1.8"/></svg>'};
+  var BG={temple:'<path d="M2 4.4L6 1.8l4 2.6M2 4.4h8M3.4 4.4v4.2M6 4.4v4.2M8.6 4.4v4.2M2 8.6h8"/>',market:'<path d="M2 3.5h8M2 3.5l1 3h6l1-3M6 6.5V10M3.6 10h4.8"/>',granary:'<path d="M2.2 5.6L6 2.2l3.8 3.4V10H2.2zM2.2 7.4h7.6"/>'};
+  var DSC={metro:28,city:24,colony:20};
+
+  var S=63, SP=65.8, W=Math.sqrt(3)*S, H=2*S;
+  function wx(t){return Math.sqrt(3)*SP*(t.q+t.r/2)-W/2;}
+  function wy(t){return 1.5*SP*t.r-H/2;}
+
+  var h='';
+  T.forEach(function(t){
+    var st=ST[t.id]||{}, x=wx(t), y=wy(t);
+    var g=st.leg?GLEG[t.terrain]:GND[t.terrain];
+    var seed=(((t.q*5+t.r*7)%3)+3)%3, hs=['42% 36%','58% 44%','48% 56%'][seed];
+    h+='<div class="hex" style="left:'+x.toFixed(1)+'px;top:'+y.toFixed(1)+'px;width:'+W.toFixed(1)+'px;height:'+H+'px">';
+    h+='<div class="lyr" style="background:radial-gradient(70px 70px at '+hs+', rgb(255 255 255/8%), transparent 65%),'+g+'"></div>';
+    h+='<div class="lyr" style="box-shadow:inset 0 0 0 1.5px rgb(24 18 16/26%)"></div>';
+    if(st.own) h+='<div class="lyr" style="box-shadow:inset 0 0 0 3px '+PC[st.own]+'"></div>';
+    if(st.leg) h+='<div class="lyr" style="box-shadow:inset 0 0 0 2px rgb(255 248 231/62%)"></div>';
+    h+='<div class="chit"><svg width="12" height="12" viewBox="0 0 22 22" fill="none" stroke="#241910" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+EMB[t.terrain]+'</svg><b>'+t.yield+'</b></div>';
+    var ns=st.sock||t.slots, built=st.built||[], sy=st.own?(H/2+4):(H/2-4);
+    h+='<div class="sk'+(st.own?'':' inert')+'" style="top:'+sy+'px">';
+    for(var i=0;i<ns;i++){ h+= built[i] ? '<i class="b"><svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#181210" stroke-width="1.3" stroke-linecap="round">'+BG[built[i]]+'</svg></i>' : '<i></i>'; }
+    h+='</div>';
+    if(st.kind){ var d=DSC[st.kind]; h+='<div class="settle" style="top:'+(H/2-d/2-14)+'px;width:'+d+'px;height:'+d+'px;background:'+PC[st.own]+'">'+SG[st.kind]+'</div>'; }
+    if(st.pops){ var p=''; st.pops.forEach(function(pr){ p+='<div class="g" style="color:'+PC[st.own]+'"><span class="bead '+pr[0]+'" style="'+(pr[0]=='cit'?'background:'+PC[st.own]:'')+'"></span><b>'+pr[1]+'</b></div>'; }); h+='<div class="pp" style="top:'+(H/2+22)+'px">'+p+'</div>'; }
+    h+='</div>';
+  });
+  document.getElementById('world').innerHTML=h;
+
+  // centre the board in the visible sea (right of the panel)
+  var xs=T.map(wx), ys=T.map(wy);
+  var bcx=(Math.min.apply(null,xs)+Math.max.apply(null,xs)+W)/2;
+  var bcy=(Math.min.apply(null,ys)+Math.max.apply(null,ys)+H)/2;
+  var z=0.82, cx=762, cy=316;
+  var tx=cx-bcx*z, ty=cy-bcy*z;
+  document.getElementById('world').style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+z+')';
+
+  // verbs
+  var VERBS=[
+    {n:'Grow',c:'from 5 food',k:'Q',d:'<path d="M12 21V10.4M12 15.2c0-4-3.1-7.2-7-7.2 0 4 3.1 7.2 7 7.2zM12 12.6c0-3.5 2.8-6.4 6.4-6.4 0 3.5-2.8 6.4-6.4 6.4z"/>'},
+    {n:'Move',c:'free',k:'W',d:'<path d="M12 3.6v16.8M3.6 12h16.8M12 3.6L9.2 6.4M12 3.6l2.8 2.8M3.6 12l2.8-2.8M20.4 12l-2.8-2.8"/>'},
+    {n:'Found',c:'20 wood &middot; 2 pops',k:'E',armed:1,d:'<path d="M4 20.4h16M6.4 20.4V9.4L12 5.2l5.6 4.2v11M10 20.4v-5.6h4v5.6"/>'},
+    {n:'Upgrade',c:'need 30 stone',k:'R',off:1,d:'<path d="M5 8.4h14M5 8.4l2.2-3.2h9.6L19 8.4M8.4 8.4v9.2M15.6 8.4v9.2M6 20.4h12"/>'},
+    {n:'Build',c:'varies',k:'T',d:'<path d="M14.4 6.2l3.4 3.4M12.4 8.2l-8 8 2 2 8-8M13.2 3.4l7.4 7.4-2.6 2.6-7.4-7.4z"/>'},
+    {n:'Calm',c:'4 influence',k:'Y',d:'<path d="M5 8.4h14a7 7 0 0 1-14 0zM12 15.4v4M8.6 19.4h6.8"/>'},
+    {n:'Venture',c:'stake 5',k:'U',d:'<path d="M3.4 16.2h17.2l-2.8 4.2H6.2l-2.8-4.2zM12 16.2V3.8M12 3.8l5.4 3.6L12 10.6"/>'}
+  ];
+  var vhtml='', VX0=308, VDX=94, VY=560;
+  VERBS.forEach(function(b,i){
+    var x=VX0+i*VDX;
+    vhtml+='<button class="verb'+(b.armed?' armed':'')+(b.off?' off':'')+'" style="left:'+x+'px;top:'+VY+'px">'+
+      '<span class="vb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+b.d+'</svg><span class="kbd">'+b.k+'</span></span>'+
+      '<span class="vn">'+b.n+'</span><span class="vc">'+b.c+'</span></button>';
+  });
+  document.getElementById('verbs').innerHTML=vhtml;
+  // anchor the Build annotation tag under the Build disc
+  document.getElementById('tagBuild').style.left=(VX0+4*VDX-58)+'px';
+
+  // place the found popover above the glowing 0,3 tile
+  var legal=T.filter(function(t){return t.id==='0,3';})[0];
+  var sxp=wx(legal)*z+tx+ (W*z)/2, syp=wy(legal)*z+ty;
+  var pop=document.getElementById('foundPop');
+  pop.style.left=sxp.toFixed(0)+'px'; pop.style.top=(syp-10).toFixed(0)+'px';
+  document.getElementById('tagPop').style.left=(sxp+30).toFixed(0)+'px';
+  document.getElementById('tagPop').style.top=(syp-70).toFixed(0)+'px';
+
+  // interactions: expand/collapse cities, annotate toggle, chronicle tab
+  [].forEach.call(document.querySelectorAll('.ch'),function(ch){
+    ch.onclick=function(){ document.getElementById(ch.dataset.city).classList.toggle('closed'); };
+  });
+  var sw=document.getElementById('annotSw'), stage=document.getElementById('stage');
+  function toggleAnnot(){ var on=stage.classList.toggle('annot'); sw.classList.toggle('on',on); sw.setAttribute('aria-checked',String(on)); }
+  sw.onclick=toggleAnnot;
+  sw.onkeydown=function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleAnnot(); } };
+})();
+</script>
