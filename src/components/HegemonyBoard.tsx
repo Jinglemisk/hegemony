@@ -296,6 +296,31 @@ export function HegemonyBoard({
   return (
     <GameUiProvider value={gameUi}>
     <main className="shell uiOverhaulShell">
+      {/* The map is the stage now, not a grid cell: a full-bleed sea the chrome
+          floats over (ui-refit Step 1). The captions ride the stage so they stay
+          pinned to the sea, not to a docked frame. */}
+      <div className="mapStage">
+        <HexMap
+          G={G}
+          confirmation={confirmation}
+          pendingTileId={tileConfirmation?.tileId ?? null}
+          selectedTileId={selectedTileId}
+          highlightTileIds={mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds}
+          placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
+          onTileAction={handleTileAction}
+        />
+        {isSetup ? (
+          <div className="mapSetupCaption" role="status">
+            {pendingSetupCopy}
+          </div>
+        ) : null}
+        {mapSelection.selection ? (
+          <div className="mapSetupCaption placementCaption" role="status">
+            {selectionCaption(mapSelection.selection.mode, mapSelection.candidateTileIds.length)}
+          </div>
+        ) : null}
+      </div>
+
       <header className="topbar strategyTopbar">
         <TopbarEvents G={G} />
 
@@ -314,8 +339,8 @@ export function HegemonyBoard({
         />
       </header>
 
-      {/* Two columns now, not three: the verbs left for the bottom bar and the
-          right panel went with them (refit scope 1/2). */}
+      {/* The ledger floats over the sea at its left home; the map went full-bleed
+          behind it (ui-refit Step 1 — the rail + floating card arrive in Step 2). */}
       <section className="workbench strategyWorkbench">
         <aside className="panel empirePanel intelPanel">
           <EmpireIntelPanel
@@ -327,30 +352,6 @@ export function HegemonyBoard({
             onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
           />
         </aside>
-
-        <section className="mapColumn strategyMapColumn">
-          <div className="mapFrame">
-            <HexMap
-              G={G}
-              confirmation={confirmation}
-              pendingTileId={tileConfirmation?.tileId ?? null}
-              selectedTileId={selectedTileId}
-              highlightTileIds={mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds}
-              placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
-              onTileAction={handleTileAction}
-            />
-            {isSetup ? (
-              <div className="mapSetupCaption" role="status">
-                {pendingSetupCopy}
-              </div>
-            ) : null}
-            {mapSelection.selection ? (
-              <div className="mapSetupCaption placementCaption" role="status">
-                {selectionCaption(mapSelection.selection.mode, mapSelection.candidateTileIds.length)}
-              </div>
-            ) : null}
-          </div>
-        </section>
 
         <ChronicleDrawer />
       </section>

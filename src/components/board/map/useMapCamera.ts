@@ -3,14 +3,15 @@ import {
   BASE_VIEW_BOX,
   MAX_ZOOM,
   MIN_ZOOM,
-  WORLD_VIEW_BOX,
   ZOOM_STEP,
   cameraTransform,
   clampViewBox,
   getZoomLevel,
+  seatViewBox,
   viewBoxesEqual,
   zoomViewBox,
-  type ViewBox
+  type ViewBox,
+  type WorldInset
 } from "../../../ui/hexGeometry";
 
 /**
@@ -45,6 +46,16 @@ const TILE_CLICK_SUPPRESS_MS = 160;
 /** Idle gap after the last wheel tick before the zoom is committed to state. */
 const WHEEL_COMMIT_MS = 90;
 
+/**
+ * How far the floating chrome reaches in over the sea, in CSS pixels — the ledger
+ * panel on the left, the two glass spines top and bottom, a slim right margin.
+ * These are *provisional*: Step 1 seats the board against the chrome as it floats
+ * today; when the rail, verb spine and final panel land (Steps 2–3) these numbers
+ * are re-measured. They exist so the resting board clears the panel now, not so
+ * they are exact. See `docs/feat/ui-refit.md` §"The camera".
+ */
+const CHROME_INSET_PX = { top: 92, right: 48, bottom: 96, left: 380 };
+
 /** Buttons and the confirm prompt own their own pointers — never pan under them. */
 function isMapDragBlockedTarget(target: EventTarget) {
   return target instanceof Element && Boolean(target.closest(".tileConfirmPrompt, button"));
@@ -59,10 +70,14 @@ function getTileMapTargetId(target: EventTarget) {
 }
 
 export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) => void }) {
-  const [viewBox, setViewBox] = useState(WORLD_VIEW_BOX);
+  // Rest at the base frame (zoom 1.0), not fully pulled back — the reseat below
+  // then slides it clear of the chrome. Starting at BASE means the very first
+  // paint is already board-sized, so there is no zoom-out flash before the seat.
+  const [viewBox, setViewBox] = useState(BASE_VIEW_BOX);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const cameraLayerRef = useRef<SVGGElement | null>(null);
-  const cameraViewBox = useRef<ViewBox>(WORLD_VIEW_BOX);
+  const cameraViewBox = useRef<ViewBox>(BASE_VIEW_BOX);
+  const hasSeated = useRef(false);
   const dragState = useRef<DragState | null>(null);
   const pendingAnimationFrame = useRef<number | null>(null);
   const pendingViewBox = useRef<ViewBox | null>(null);
@@ -88,6 +103,83 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
         window.clearTimeout(tileClickSuppressTimeout.current);
       }
     };
+  }, []);
+
+  /**
+   * Convert the fixed CSS-pixel chrome inset into world units for the current zoom
+   * and stage size. Under `preserveAspectRatio="… slice"` a screen pixel is a
+   * fixed slice of world along each axis, so the shown window's size over the
+   * stage's size is the world-per-pixel scale.
+   */
+  const worldInsetFor = (shown: ViewBox, stage: { width: number; height: number }): WorldInset => {
+    const worldPerPxX = shown.width / stage.width;
+    const worldPerPxY = shown.height / stage.height;
+
+    return {
+      top: CHROME_INSET_PX.top * worldPerPxY,
+      bottom: CHROME_INSET_PX.bottom * worldPerPxY,
+      left: CHROME_INSET_PX.left * worldPerPxX,
+      right: CHROME_INSET_PX.right * worldPerPxX
+    };
+  };
+
+  /**
+   * Seat the resting board in the live area — the sea the chrome does not cover.
+   * Keeps the current zoom, recentres a window of that size on the board, then
+   * lets {@link seatViewBox} slide it clear of the panel and bars. Runs once, when
+   * the stage first has a real size; a later manual pan is the player's to keep.
+   */
+  const reseatToLive = () => {
+    const svg = svgRef.current;
+
+    if (!svg) {
+      return;
+    }
+
+    const bounds = svg.getBoundingClientRect();
+
+    if (bounds.width === 0 || bounds.height === 0) {
+      return;
+    }
+
+    const current = cameraViewBox.current;
+    const centered: ViewBox = {
+      width: current.width,
+      height: current.height,
+      x: BASE_VIEW_BOX.x + (BASE_VIEW_BOX.width - current.width) / 2,
+      y: BASE_VIEW_BOX.y + (BASE_VIEW_BOX.height - current.height) / 2
+    };
+    const seated = seatViewBox(centered, worldInsetFor(current, bounds));
+
+    hasSeated.current = true;
+    cameraViewBox.current = seated;
+    cameraLayerRef.current?.setAttribute("transform", cameraTransform(seated));
+    setViewBox(seated);
+  };
+
+  // Seat the board clear of the chrome as soon as the stage has a real size. The
+  // observer covers the first layout pass reporting 0×0; once seated it stops, so
+  // a later manual pan is never yanked back.
+  useEffect(() => {
+    const svg = svgRef.current;
+
+    if (!svg || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const seatOnce = () => {
+      if (!hasSeated.current) {
+        reseatToLive();
+      }
+    };
+
+    seatOnce();
+
+    const observer = new ResizeObserver(seatOnce);
+    observer.observe(svg);
+
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const applyCameraViewBox = (nextViewBox: ViewBox) => {

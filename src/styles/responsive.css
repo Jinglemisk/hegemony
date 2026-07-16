@@ -58,10 +58,6 @@
   .panel {
     overflow: visible;
   }
-
-  .hexMap {
-    min-height: 460px;
-  }
 }
 
 @media (max-width: 760px) {
@@ -98,10 +94,6 @@
 
   .topResourceGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .hexMap {
-    min-height: 420px;
   }
 }
 
@@ -142,10 +134,6 @@
 
   .strategyWorkbench {
     grid-template-columns: 1fr;
-  }
-
-  .strategyMapColumn {
-    order: -1;
   }
 
   .scoreboardPanel {

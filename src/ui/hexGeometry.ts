@@ -17,17 +17,33 @@ export type ViewBox = {
 export type HexCenter = { q: number; r: number; x: number; y: number };
 export type ShorelineEdge = { x1: number; y1: number; x2: number; y2: number };
 
+/**
+ * How much of each edge of the shown window is hidden behind floating chrome,
+ * in world units — the KYKLOS `live()` idea (the area the player can actually
+ * *see* of the sea) ported into the camera's own coordinate space. A left-heavy
+ * inset (the ledger panel) means the resting board must sit to the right of the
+ * window's centre so nothing important hides under the panel.
+ */
+export type WorldInset = { top: number; right: number; bottom: number; left: number };
+
 export const HEX_SIZE = 45;
 
 /** The board at rest: the frame every zoom level is expressed relative to. */
 export const BASE_VIEW_BOX: ViewBox = { x: -372, y: -270, width: 744, height: 540 };
 
-/** The furthest you may pull back — base plus a 5% margin of sea on every side. */
+/**
+ * The furthest you may pull back — base plus a margin of sea on every side. The
+ * board is now full-bleed against the sea, and the margin does double duty: it is
+ * still the pan/zoom-out limit, and it is the room the live-area reseat pans into
+ * to lift the board clear of the floating chrome (see {@link seatViewBox}). Too
+ * tight a margin and the reseat has nowhere to go.
+ */
+const WORLD_MARGIN = 0.15;
 export const WORLD_VIEW_BOX: ViewBox = {
-  x: BASE_VIEW_BOX.x - BASE_VIEW_BOX.width * 0.05,
-  y: BASE_VIEW_BOX.y - BASE_VIEW_BOX.height * 0.05,
-  width: BASE_VIEW_BOX.width * 1.1,
-  height: BASE_VIEW_BOX.height * 1.1
+  x: BASE_VIEW_BOX.x - BASE_VIEW_BOX.width * WORLD_MARGIN,
+  y: BASE_VIEW_BOX.y - BASE_VIEW_BOX.height * WORLD_MARGIN,
+  width: BASE_VIEW_BOX.width * (1 + WORLD_MARGIN * 2),
+  height: BASE_VIEW_BOX.height * (1 + WORLD_MARGIN * 2)
 };
 
 /** The sea image overhangs the world box so no pan ever reveals its edge. */
@@ -192,6 +208,26 @@ export function clampViewBox(viewBox: ViewBox): ViewBox {
     width,
     height
   };
+}
+
+/**
+ * The resting seat of the camera: take a window centred on the board and slide it
+ * so the board centre lands at the centre of the *live* area rather than the raw
+ * window. Chrome on the left (the ledger) pushes the window left so the board
+ * shows to its right; a heavier bottom bar lifts it up. The result is clamped to
+ * the world, so a reseat can never expose a non-sea edge — if the world margin is
+ * too small to honour the full shift the board simply gets as clear as it can.
+ *
+ * This is a resting move only. Panning and zooming still use {@link clampViewBox}
+ * directly, so a drag's feel is unchanged and the player can pull any corner out
+ * from under the chrome by hand.
+ */
+export function seatViewBox(rest: ViewBox, inset: WorldInset): ViewBox {
+  return clampViewBox({
+    ...rest,
+    x: rest.x + (inset.right - inset.left) / 2,
+    y: rest.y + (inset.bottom - inset.top) / 2
+  });
 }
 
 export function clamp(value: number, min: number, max: number) {

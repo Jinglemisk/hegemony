@@ -15,9 +15,13 @@ import {
   getShorelineEdges,
   getZoomLevel,
   hexPoints,
+  seatViewBox,
   viewBoxesEqual,
-  zoomViewBox
+  zoomViewBox,
+  type WorldInset
 } from "./hexGeometry";
+
+const NO_INSET: WorldInset = { top: 0, right: 0, bottom: 0, left: 0 };
 
 /** Geometry only became testable when R6 pulled it out of the 632-line component. */
 
@@ -172,6 +176,44 @@ describe("camera", () => {
   it("treats float noise as no movement", () => {
     expect(viewBoxesEqual(BASE_VIEW_BOX, { ...BASE_VIEW_BOX, x: BASE_VIEW_BOX.x + 0.0001 })).toBe(true);
     expect(viewBoxesEqual(BASE_VIEW_BOX, { ...BASE_VIEW_BOX, x: BASE_VIEW_BOX.x + 1 })).toBe(false);
+  });
+});
+
+describe("live-area seat", () => {
+  it("is a plain world-clamp when no chrome covers the sea", () => {
+    expect(seatViewBox(BASE_VIEW_BOX, NO_INSET)).toEqual(clampViewBox(BASE_VIEW_BOX));
+  });
+
+  it("does not move when the chrome is symmetric", () => {
+    const even: WorldInset = { top: 80, right: 80, bottom: 80, left: 80 };
+
+    expect(seatViewBox(BASE_VIEW_BOX, even)).toEqual(clampViewBox(BASE_VIEW_BOX));
+  });
+
+  it("slides the window left so a left-side panel never hides the board", () => {
+    // The ledger reaches in from the left, so the resting window moves left and
+    // the board shows to its right.
+    const panel: WorldInset = { top: 0, right: 20, bottom: 0, left: 200 };
+    const seated = seatViewBox(BASE_VIEW_BOX, panel);
+
+    expect(seated.x).toBeLessThan(clampViewBox(BASE_VIEW_BOX).x);
+    expect(seated.x).toBeGreaterThanOrEqual(WORLD_VIEW_BOX.x);
+  });
+
+  it("lifts the board above a heavier bottom bar", () => {
+    const bars: WorldInset = { top: 40, right: 0, bottom: 140, left: 0 };
+    const seated = seatViewBox(BASE_VIEW_BOX, bars);
+
+    expect(seated.y).toBeGreaterThan(clampViewBox(BASE_VIEW_BOX).y);
+    expect(seated.y + seated.height).toBeLessThanOrEqual(WORLD_VIEW_BOX.y + WORLD_VIEW_BOX.height + 0.001);
+  });
+
+  it("never seats past the sea, however deep the chrome reaches", () => {
+    const swallowing: WorldInset = { top: 0, right: 0, bottom: 0, left: 9999 };
+    const seated = seatViewBox(BASE_VIEW_BOX, swallowing);
+
+    expect(seated.x).toBeGreaterThanOrEqual(WORLD_VIEW_BOX.x);
+    expect(seated.x + seated.width).toBeLessThanOrEqual(WORLD_VIEW_BOX.x + WORLD_VIEW_BOX.width + 0.001);
   });
 });
 
