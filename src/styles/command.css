@@ -140,12 +140,21 @@
    panel a screen away from the resources they spend; fusing them into one band
    puts cost and action in the same glance and frees the whole right column. */
 .commandBar {
+  position: relative;
+  /* Above the full-bleed map (z 0); below the top bar (z 60). Without a z-index a
+     static bar paints under the fixed map and vanishes. */
+  z-index: 40;
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
   align-items: center;
   gap: 14px;
-  padding: 8px 12px;
-  border-top: 1px solid var(--line);
+  padding: 8px 14px;
+  /* A bone-glass spine on the sea (interim). Step 3 splits it into the verb spine,
+     the End Turn square and the bottom-left ticker; for now it keeps its grammar. */
+  border-radius: 14px;
+  background: var(--glass);
+  box-shadow: var(--float);
+  backdrop-filter: blur(9px);
 }
 
 .commandBarResources {

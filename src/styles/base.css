@@ -121,6 +121,12 @@ button:focus-visible {
   --button-line: rgb(36 25 16 / 24%);
   --shadow: 0 20px 46px rgb(72 42 21 / 20%);
   --lift-shadow: 0 12px 24px rgb(72 42 21 / 18%);
+  /* The chrome floats on the sea now (ui-refit): bone glass for the spines and
+     cards, a soft drop for lift, ivory text where anything sits on the water. */
+  --glass: rgb(244 230 200 / 93%);
+  --float: 0 10px 30px rgb(24 18 16 / 26%);
+  --on-sea: #fff8e7;
+  --sea-shadow: 0 1px 3px rgb(10 34 41 / 55%);
   --ledger-rule: rgb(36 25 16 / 14%);
   --ledger-rule-strong: rgb(36 25 16 / 22%);
   --ledger-accent: rgb(192 70 28 / 70%);
@@ -143,22 +149,19 @@ button:focus-visible {
   overflow: hidden;
   padding: 16px;
   color: var(--fg);
-  background:
-    linear-gradient(90deg, rgb(255 248 231 / 96%) 0 30%, rgb(255 248 231 / 78%) 60%, rgb(255 248 231 / 94%)),
-    linear-gradient(0deg, rgb(244 230 200 / 98%) 0, rgb(255 248 231 / 64%) 48%, rgb(255 248 231 / 88%) 100%),
-    var(--hero-tableau) center / cover no-repeat,
-    #f4e6c8;
+  /* The sea is the field now. The full-bleed map (.mapStage) paints over this, so
+     the gradient only shows in the instant before the board mounts — but it keeps
+     that first frame sea-coloured, never a flash of parchment. */
+  background: radial-gradient(900px 620px at 62% 34%, #2e8a9a 0%, #206e7c 46%, #17505c 100%), #17505c;
 }
 
-.shell::before {
-  content: "";
+/* The board, promoted to the page background. Fixed to the viewport so it bleeds
+   under every floating spine and card; the chrome above carries its own z-index. */
+.mapStage {
   position: fixed;
   inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 14% 8%, rgb(31 105 119 / 14%), transparent 30%),
-    radial-gradient(circle at 88% 20%, rgb(192 70 28 / 14%), transparent 30%);
+  z-index: 0;
+  overflow: hidden;
 }
 
 .topbar {
@@ -172,6 +175,13 @@ button:focus-visible {
   max-width: 1520px;
   min-width: 0;
   margin: 0 auto;
+  /* A bone-glass spine so the events, season line and roster stay legible over
+     the sea. Interim: Step 3 splits this into the resource halves + medallion. */
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: var(--glass);
+  box-shadow: var(--float);
+  backdrop-filter: blur(9px);
 }
 
 .logModal {
@@ -205,13 +215,15 @@ button:focus-visible {
   z-index: 10;
   display: grid;
   gap: 12px;
-  /* Two columns since the refit: the verbs moved to the bottom bar and took the
-     right panel with them, so the map gets the room back. */
+  /* The map left the grid — it is the stage behind everything now. This band is
+     just the ledger's home; its empty half is transparent so the sea reads
+     through and stays pannable (hence pointer-events: none, re-enabled per card). */
   grid-template-columns: minmax(280px, 350px) minmax(470px, 1fr);
   width: 100%;
   max-width: 1520px;
   min-height: 0;
   margin: 0 auto;
+  pointer-events: none;
 }
 
 .panel {
@@ -219,6 +231,17 @@ button:focus-visible {
   overflow: auto;
   padding: 16px;
   scrollbar-color: var(--clay) transparent;
+}
+
+/* The ledger, floating over the sea. A bone-glass card (approved as-drawn) so its
+   hairline rows stay flat inside but legible on the water. Interim surface: Step 2
+   turns it into the disc-rail's floating panel; the substance does not change. */
+.empirePanel.intelPanel {
+  pointer-events: auto;
+  border-radius: 14px;
+  background: var(--glass);
+  box-shadow: var(--float);
+  backdrop-filter: blur(9px);
 }
 
 .panelTitle {
@@ -236,18 +259,4 @@ button:focus-visible {
   flex: 0 0 auto;
 }
 
-.mapColumn {
-  display: grid;
-  gap: 10px;
-  grid-template-rows: minmax(0, 1fr);
-  min-width: 0;
-  min-height: 0;
-  z-index: 1;
-}
-
-.mapFrame {
-  position: relative;
-  min-height: 0;
-  border-radius: 8px;
-}
 
