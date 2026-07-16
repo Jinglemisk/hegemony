@@ -8,13 +8,11 @@ import { SeasonDial } from "./SeasonDial";
 function SeasonStatusComponent({
   G,
   isActive,
-  currentPlayerId,
-  onOpenCompendium
+  currentPlayerId
 }: {
   G: HegemonyState;
   isActive: boolean;
   currentPlayerId: PlayerId;
-  onOpenCompendium: () => void;
 }) {
   const seasonsLeft = G.seasonalDrawPile.length;
 
@@ -29,14 +27,11 @@ function SeasonStatusComponent({
         <span className="turnClockSub">{seasonsLeft} left</span>
       </div>
 
-      <button
-        className="seasonDialButton"
-        title="Open the compendium (?)"
-        aria-label="Open the compendium"
-        onClick={onOpenCompendium}
-      >
+      {/* The dial is the season emblem now; the compendium moved to the Codex rail
+          disc (ui-refit Step 2). The `?` shortcut still opens it. */}
+      <div className="seasonDialFrame">
         <SeasonDial seasonIndex={G.season} />
-      </button>
+      </div>
 
       <div
         className="turnActor"

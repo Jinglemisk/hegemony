@@ -1,36 +1,35 @@
 /* intel — Strategy workbench: intel & command panels, empire-intel tabs, holding matrix, buildings/pops ledger tabs (Phase 2d)
    Split from styles.css (Phase 2e); original source order preserved. */
 
+/* The workbench stopped being a grid of docked columns — the rail, ledger card
+   and chronicle all float now (ui-refit Step 2). It survives only as the middle
+   shell row that keeps the command bar pinned to the bottom. */
 .strategyWorkbench {
-  grid-template-columns: minmax(300px, 320px) minmax(640px, 1fr) minmax(300px, 320px);
-  align-items: stretch;
-  height: 100%;
-  max-width: 1700px;
+  max-width: none;
 }
 
-.intelPanel,
-.commandPanel {
-  position: relative;
-  min-height: 0;
-  padding: 13px 11px;
-  /* Original painted Greek-key frame, slimmed from 20px → 8px so it costs far
-     less space while keeping the same look. */
-  border: 8px solid transparent;
-  border-image: url("../../assets/codex-banana-showcase/greek-frame.png") 270 round;
-  background-color: rgb(255 248 231 / 24%);
-  background-clip: padding-box;
-  box-shadow: 0 1px 4px rgb(72 42 21 / 8%);
-}
-
-.commandPanel {
-  overflow: hidden;
-}
-
+/* The ledger card: KYKLOS's floating ivory panel (ui-refit Step 2). Fixed to the
+   viewport's left edge so it hugs it on any width, in the band between the top bar
+   and the command bar. The painted Greek-key frame retires with the docked
+   layout; the reskin (Q36) revisits the card's surface, not this PR. */
 .intelPanel {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr);
-  overflow: visible;
-  z-index: 20;
+  position: fixed;
+  left: var(--rail-gap, 74px);
+  top: var(--chrome-top, 96px);
+  /* Sizes to its content, capped to the band — the body scrolls, the card does
+     not grow past the sea it floats on. */
+  max-height: calc(100vh - var(--chrome-top, 96px) - var(--chrome-bot, 100px));
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: 316px;
+  padding: 14px 15px 15px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ivory);
+  box-shadow: var(--float);
+  overflow: hidden;
+  pointer-events: auto;
 }
 
 .intelPanel:focus-within,
@@ -38,25 +37,40 @@
   z-index: 80;
 }
 
-.compactPanelTitle {
-  justify-content: center;
+.ledgerCardTitle {
   margin-bottom: 10px;
   padding-bottom: 9px;
   border-bottom: 1px solid var(--ledger-rule);
-  text-align: center;
 }
 
-.compactPanelTitle > div {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  min-width: 0;
-}
-
-.compactPanelTitle h2 {
+.ledgerCardTitle h2 {
+  flex: 1;
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ledgerCloseButton {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  min-height: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--muted);
+  background: transparent;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.ledgerCloseButton:not(:disabled):hover {
+  color: var(--fg);
+  background: var(--ledger-hover);
+  box-shadow: none;
+  transform: none;
 }
 
 .empireIntel,
@@ -68,8 +82,9 @@
 
 .empireIntel {
   display: flex;
+  flex: 1;
+  min-height: 0;
   flex-direction: column;
-  height: 100%;
   overflow: hidden;
   /* clip, not hidden, on the x-axis: the intelBody's -4px scrollbar-gutter trick makes
      the panel 4px scrollable, and scroll-on-focus then clips the first character. */
@@ -83,41 +98,104 @@
   overflow: hidden;
 }
 
-.intelTabs {
-  position: sticky;
+/* ── The left disc rail (ui-refit Step 2) ────────────────────────────────────
+   A thin glass spine with the menu discs threaded on its right edge, overhanging
+   the sea. Fixed to the viewport in the same band as the ledger card. The discs
+   are circles because you press them repeatedly; the one square stays End Turn. */
+.ledgerRail {
+  position: fixed;
+  left: 8px;
+  top: var(--chrome-top, 96px);
+  bottom: var(--chrome-bot, 100px);
+  z-index: 30;
+  width: 60px;
+  pointer-events: none;
+}
+
+.ledgerRailSpine {
+  position: absolute;
+  left: 0;
   top: 0;
-  z-index: 12;
+  bottom: 0;
+  width: 30px;
+  border-radius: 0 14px 14px 0;
+  background: var(--glass);
+  box-shadow: var(--float);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  pointer-events: auto;
+}
+
+.ledgerRailDiscs {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 9px;
+  /* disc centre sits on the spine's right edge (30px): 7 + 46/2 = 30 */
+  padding-left: 7px;
+  pointer-events: none;
+}
+
+.railDisc {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 3px;
-  padding: 0 0 8px;
-  background: linear-gradient(180deg, rgb(255 248 231 / 96%), rgb(255 248 231 / 82%));
-}
-
-.intelTabs button {
-  min-height: 36px;
-  padding: 0 3px 7px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  color: var(--muted);
-  background: none;
-  font-size: 0.64rem;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.intelTabs button:not(:disabled):hover {
-  box-shadow: none;
-  transform: none;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
   color: var(--fg);
+  background: var(--ivory);
+  box-shadow: 0 0 0 1px rgb(36 25 16 / 22%), 0 2px 8px rgb(24 18 16 / 20%);
+  pointer-events: auto;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.intelTabs .activeIntelTab {
-  color: var(--clay);
-  border-bottom-color: var(--clay);
-  background: none;
+.railDisc:not(:disabled):hover {
+  background: #fffdf6;
+  box-shadow: 0 0 0 1px rgb(36 25 16 / 30%), 0 5px 14px rgb(24 18 16 / 26%);
+  transform: none;
+}
+
+.railDiscActive,
+.railDiscActive:not(:disabled):hover {
+  color: var(--ivory);
+  background: var(--clay);
+  box-shadow: 0 0 0 1px rgb(143 46 19 / 55%), 0 4px 14px rgb(192 70 28 / 38%);
+}
+
+.railDiscIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.railDiscBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  display: grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: var(--ochre);
+  color: #181210;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 1.5px var(--ivory);
+}
+
+/* Reference, not a ledger tab — a hair of separation from the five above. */
+.railDiscCodex {
+  margin-top: 4px;
 }
 
 .intelBody,

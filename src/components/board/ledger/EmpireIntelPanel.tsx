@@ -1,8 +1,7 @@
 import { memo, useMemo } from "react";
-import type { Phase } from "../../../game/controller";
 import { settlementCapacity, totalPops, unrestStatus } from "../../../game/rules";
 import type { UnrestStatus } from "../../../game/rules";
-import type { BuildingId, HegemonyState, PlayerId, PopType, TradableMaterial } from "../../../game/types";
+import type { BuildingId, PopType, TradableMaterial } from "../../../game/types";
 import { formatNumber } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { AtlasIcon } from "../../Sprites";
@@ -38,14 +37,14 @@ function unrestMessage(status: UnrestStatus, popLossThreshold: number): string {
 
 function EmpireIntelPanelComponent({
   activeTab,
-  onTabChange,
+  onClose,
   onBuildBuildingRequest,
   onBankSell,
   onBankBuy,
   onLadderRequest
 }: {
   activeTab: EmpireTab;
-  onTabChange: (tab: EmpireTab) => void;
+  onClose: () => void;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
@@ -62,21 +61,15 @@ function EmpireIntelPanelComponent({
   );
   const unrest = unrestStatus(G, playerID);
   const cardsHeld = victoryCardsHeld(G, playerID);
-  const tabs: Array<{ id: EmpireTab; label: string }> = [
-    { id: "cities", label: "Cities" },
-    { id: "buildings", label: "Build" },
-    { id: "pops", label: "Pops" },
-    { id: "market", label: "Market" },
-    { id: "victory", label: "Victory" }
-  ];
 
   return (
     <div className="empireIntel">
-      <div className="panelTitle compactPanelTitle">
+      <div className="panelTitle ledgerCardTitle">
         <AtlasIcon icon="city" className="titleIcon" />
-        <div>
-          <h2>Ledger</h2>
-        </div>
+        <h2>Ledger</h2>
+        <button className="ledgerCloseButton" onClick={onClose} aria-label="Close the ledger" title="Close the ledger" type="button">
+          ×
+        </button>
       </div>
 
       <div className="empireSummary" aria-label="Empire summary">
@@ -125,20 +118,6 @@ function EmpireIntelPanelComponent({
           <AnnotatedText text={unrestMessage(unrest, G.ruleset.economy.unrest.popLossThreshold)} />
         </div>
       ) : null}
-
-      <div className="intelTabs" role="tablist" aria-label="Empire information">
-        {tabs.map((tab) => (
-          <button
-            aria-selected={activeTab === tab.id}
-            className={activeTab === tab.id ? "activeIntelTab" : ""}
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            role="tab"
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
 
       <div className="intelBody">
         {activeTab === "cities" ? (

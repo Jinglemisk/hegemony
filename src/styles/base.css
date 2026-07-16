@@ -127,6 +127,12 @@ button:focus-visible {
   --float: 0 10px 30px rgb(24 18 16 / 26%);
   --on-sea: #fff8e7;
   --sea-shadow: 0 1px 3px rgb(10 34 41 / 55%);
+  /* The band the floating left rail + ledger card live in — clear of the top bar
+     and the command bar. Provisional (re-measured when Step 3 rebuilds the bars);
+     the rail, card and camera all read them so they stay in agreement. */
+  --chrome-top: 96px;
+  --chrome-bot: 100px;
+  --rail-gap: 74px;
   --ledger-rule: rgb(36 25 16 / 14%);
   --ledger-rule-strong: rgb(36 25 16 / 22%);
   --ledger-accent: rgb(192 70 28 / 70%);
@@ -231,17 +237,6 @@ button:focus-visible {
   overflow: auto;
   padding: 16px;
   scrollbar-color: var(--clay) transparent;
-}
-
-/* The ledger, floating over the sea. A bone-glass card (approved as-drawn) so its
-   hairline rows stay flat inside but legible on the water. Interim surface: Step 2
-   turns it into the disc-rail's floating panel; the substance does not change. */
-.empirePanel.intelPanel {
-  pointer-events: auto;
-  border-radius: 14px;
-  background: var(--glass);
-  box-shadow: var(--float);
-  backdrop-filter: blur(9px);
 }
 
 .panelTitle {
