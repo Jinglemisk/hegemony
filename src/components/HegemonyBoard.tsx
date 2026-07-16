@@ -29,6 +29,7 @@ import { CompendiumModal } from "./board/modals/CompendiumModal";
 import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
 import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
+import { LedgerRail } from "./board/ledger/LedgerRail";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
 import type { LadderRequest } from "./board/map/LadderPopover";
 import { RiotModal } from "./board/modals/RiotModal";
@@ -97,6 +98,9 @@ export function HegemonyBoard({
   // Initialized to the omen standing at mount so a reload never re-announces it.
   const [seenOmenYear, setSeenOmenYear] = useState<number | null>(() => G.yearOmen?.year ?? null);
   const [activeEmpireTab, setActiveEmpireTab] = useState<EmpireTab>("cities");
+  // The ledger boots open on Cities (ui-refit Step 2); a rail disc toggles it, its
+  // own × closes it, so the sea can be read whole when the ledger isn't needed.
+  const [isLedgerOpen, setLedgerOpen] = useState(true);
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
@@ -324,12 +328,7 @@ export function HegemonyBoard({
       <header className="topbar strategyTopbar">
         <TopbarEvents G={G} />
 
-        <SeasonStatus
-          G={G}
-          isActive={isActive}
-          currentPlayerId={currentPlayerId}
-          onOpenCompendium={() => setActiveModal({ kind: "compendium" })}
-        />
+        <SeasonStatus G={G} isActive={isActive} currentPlayerId={currentPlayerId} />
 
         <PlayerScoreboard
           G={G}
@@ -339,19 +338,33 @@ export function HegemonyBoard({
         />
       </header>
 
-      {/* The ledger floats over the sea at its left home; the map went full-bleed
-          behind it (ui-refit Step 1 — the rail + floating card arrive in Step 2). */}
+      {/* The KYKLOS ledger (ui-refit Step 2): a disc rail threaded on the left
+          spine, and the tab contents in a floating ivory card the rail opens. */}
       <section className="workbench strategyWorkbench">
-        <aside className="panel empirePanel intelPanel">
-          <EmpireIntelPanel
-            activeTab={activeEmpireTab}
-            onBuildBuildingRequest={requestBuildBuilding}
-            onTabChange={setActiveEmpireTab}
-            onBankSell={moves.bankSell}
-            onBankBuy={moves.bankBuy}
-            onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
-          />
-        </aside>
+        <LedgerRail
+          activeTab={activeEmpireTab}
+          isOpen={isLedgerOpen}
+          onSelectTab={(tab) => {
+            // A disc opens the ledger to its tab; pressing the tab already showing
+            // closes it. So the same disc both reveals and dismisses.
+            setLedgerOpen((open) => !(open && tab === activeEmpireTab));
+            setActiveEmpireTab(tab);
+          }}
+          onOpenCodex={() => setActiveModal({ kind: "compendium" })}
+        />
+
+        {isLedgerOpen ? (
+          <aside className="panel empirePanel intelPanel">
+            <EmpireIntelPanel
+              activeTab={activeEmpireTab}
+              onBuildBuildingRequest={requestBuildBuilding}
+              onClose={() => setLedgerOpen(false)}
+              onBankSell={moves.bankSell}
+              onBankBuy={moves.bankBuy}
+              onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
+            />
+          </aside>
+        ) : null}
 
         <ChronicleDrawer />
       </section>
