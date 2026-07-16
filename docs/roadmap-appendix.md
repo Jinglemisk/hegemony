@@ -102,6 +102,12 @@ costs. Mock both only if the bottom bar feels wrong in the first build.
 
 **Your answer:** Bottom bar for sure. 
 
+**Superseded on arrangement (2026-07-17 — KYKLOS mode A):** the ratified "bottom
+bar" survives — verbs on the bottom spine, End Turn anchored right. But the
+`DECIDED-UI-LAYOUT.html` layout the owner ratified drops the *fused resource band*:
+resources move to the **top**, split left/right around the season medallion, and End
+Turn becomes the one **square** (the circle law). See `docs/feat/ui-refit.md`.
+
 ### P1.5 · Q18 · Compendium v1 — contents & entry points — `ANSWERED BY DEFAULT` (built 2026-07-13)
 
 **Context.** Refit scope 5. What ships in the first compendium, and how it opens.
@@ -133,6 +139,14 @@ one-line ticker in the bottom command bar. A ledger tab would work too but hides
 the live narration entirely, which the chronicle exists to provide.
 
 **Your answer:** This works great. 
+
+**Reconciled with the layout (2026-07-17 — KYKLOS mode A):** the *information homes*
+in this answer win over the showcase — deck counts stay in the **top bar** (KYKLOS
+tucked them into Codex; we don't), and the newest chronicle line still **tickers**
+bottom-left of the verb spine (KYKLOS has no ticker; we keep it). Only the
+chronicle's *shape* takes the KYKLOS arrangement: a floating ivory card that
+collapses to a disc tab with an unread count, still closed by default. See
+`docs/feat/ui-refit.md`.
 
 ### P1.5 · Q36 · Reskin ratification — keep/park, one word per element — `ANSWERED (2026-07-13 — KEEP ×5)`
 
