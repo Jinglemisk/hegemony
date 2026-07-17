@@ -3,7 +3,6 @@ import type { HegemonyState } from "../game/types";
 import {
   BASE_VIEW_BOX,
   HEX_SIZE,
-  SEA_IMAGE_VIEW_BOX,
   SHORELINE_RADIUS,
   WORLD_VIEW_BOX,
   ZOOM_STEP,
@@ -23,7 +22,6 @@ import { useMapCamera } from "./board/map/useMapCamera";
 
 type MapMode = "current" | "terrain";
 
-const SEA_BACKDROP_HREF = new URL("../../assets/map/aegean-sea-board.png", import.meta.url).href;
 const MAP_MODE_OPTIONS: Array<{ mode: MapMode; label: string; iconHref: string }> = [
   {
     mode: "current",
@@ -123,16 +121,11 @@ function HexMapComponent({
         preserveAspectRatio="xMidYMid slice"
         {...cameraHandlers}
       >
+        {/* No sea image: KYKLOS paints the water as a static gradient + texture on
+            .hexMap itself. A backdrop inside this layer would pan and zoom with the
+            board, which is what dragged the old chart's frame and sea-monsters
+            across the screen. Only the world moves. */}
         <g ref={cameraLayerRef} className="mapCameraLayer" transform={cameraTransform(viewBox)}>
-          <image
-            className="seaBackdrop"
-            href={SEA_BACKDROP_HREF}
-            x={SEA_IMAGE_VIEW_BOX.x}
-            y={SEA_IMAGE_VIEW_BOX.y}
-            width={SEA_IMAGE_VIEW_BOX.width}
-            height={SEA_IMAGE_VIEW_BOX.height}
-            preserveAspectRatio="xMidYMid slice"
-          />
           <rect
             className="seaDragPlane"
             x={WORLD_VIEW_BOX.x}

@@ -48,15 +48,6 @@ export const WORLD_VIEW_BOX: ViewBox = {
   height: BASE_VIEW_BOX.height * (1 + WORLD_MARGIN * 2)
 };
 
-/** The sea image overhangs the world box so no pan ever reveals its edge. */
-const SEA_IMAGE_BLEED = 28;
-export const SEA_IMAGE_VIEW_BOX: ViewBox = {
-  x: WORLD_VIEW_BOX.x - SEA_IMAGE_BLEED,
-  y: WORLD_VIEW_BOX.y - SEA_IMAGE_BLEED,
-  width: WORLD_VIEW_BOX.width + SEA_IMAGE_BLEED * 2,
-  height: WORLD_VIEW_BOX.height + SEA_IMAGE_BLEED * 2
-};
-
 export const MIN_ZOOM = BASE_VIEW_BOX.width / WORLD_VIEW_BOX.width;
 export const MAX_ZOOM = 1.18;
 export const ZOOM_STEP = 0.08;

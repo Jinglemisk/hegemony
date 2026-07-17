@@ -184,7 +184,11 @@ button:focus-visible {
   /* The band the floating left rail + ledger card live in — clear of the flush top
      spine and the bottom dock. The rail, card and camera all read them so they
      stay in agreement. */
-  --chrome-top: 62px;
+  /* The top bar's real measured height. It exceeds the mock's --top-h (48px)
+     because it still renders the old card thumbnails rather than the mock's flat
+     chips; re-skinning it should collapse this to var(--top-h). Kept in sync by
+     the topbar's own `height` below — measure before changing either. */
+  --chrome-top: 73px;
   /* Derived, not guessed: the dock is the spine plus the discs' overhang above
      it. Hard-coding this drifted from the real dock height once already. */
   --chrome-bot: calc(var(--bot-h) + var(--vb-out));
