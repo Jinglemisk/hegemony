@@ -25,7 +25,9 @@ export type VerbContext = {
   canMovePops: boolean;
   canFoundColony: boolean;
   canUpgradeCity: boolean;
+  canBuild: boolean;
   isFoundColonyActive: boolean;
+  isBuildActive: boolean;
   calmUsed: boolean;
   ventureUsed: boolean;
 };
@@ -35,12 +37,13 @@ export type VerbHandlers = {
   onMovePopsRequest: () => void;
   onFoundColonyRequest: () => void;
   onUpgradeCityRequest: () => void;
+  onBuildRequest: () => void;
   onCalmRequest: () => void;
   onVentureRequest: () => void;
   onEndTurn: () => void;
 };
 
-export type VerbId = "grow" | "move" | "found" | "upgrade" | "calm" | "venture" | "endTurn";
+export type VerbId = "grow" | "move" | "found" | "upgrade" | "build" | "calm" | "venture" | "endTurn";
 
 type VerbIcon =
   | { kind: "ui"; item: UiAtlasKey }
@@ -119,6 +122,22 @@ export const VERBS: VerbSpec[] = [
     hint: "Upgrade one of your colonies into a city.",
     blockedHint: "Requires an upgradeable colony and enough resources.",
     select: (handlers) => handlers.onUpgradeCityRequest()
+  },
+  {
+    id: "build",
+    label: "Build",
+    icon: { kind: "atlas", icon: "workshop" },
+    iconClassName: "commandAtlasIcon",
+    // The cost varies by building; the popover shows each. Stays clickable while
+    // armed so the same button cancels the map mode (like Found).
+    available: ({ canBuild, isBuildActive }) => canBuild || isBuildActive,
+    pressed: ({ isBuildActive }) => isBuildActive,
+    hint: ({ isBuildActive }) =>
+      isBuildActive
+        ? "Pick a glowing settlement on the map, or click again to cancel."
+        : "Raise a building in one of your settlements.",
+    blockedHint: "Requires a settlement with an open slot and enough resources.",
+    select: (handlers) => handlers.onBuildRequest()
   },
   {
     id: "calm",
