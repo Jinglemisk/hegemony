@@ -228,6 +228,10 @@
 }
 
 .scoreboardPanel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
   overflow: visible;
   padding: 2px 0;
 }
