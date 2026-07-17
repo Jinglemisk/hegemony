@@ -135,186 +135,241 @@
   gap: 8px;
 }
 
-/* ── The bottom command bar (refit scope 2 / Q17) ────────────────────────────
-   Resources left, verbs centre, End Turn right. The verbs used to sit in a side
-   panel a screen away from the resources they spend; fusing them into one band
-   puts cost and action in the same glance and frees the whole right column. */
-.commandBar {
+/* ── The bottom dock (ui-refit Step 3 / Q17) ─────────────────────────────────
+   The fused bar splits into placed pieces: verb discs threaded across the centre,
+   the chronicle ticker bottom-left, the whose-turn box over the End Turn square
+   bottom-right. Resources left this band for the top bar. Every verb is a disc
+   because you press it repeatedly; the one square is the commit. */
+.commandDock {
   position: relative;
-  /* Above the full-bleed map (z 0); below the top bar (z 60). Without a z-index a
-     static bar paints under the fixed map and vanishes. */
+  /* Above the full-bleed map (z 0), below the top bar (z 60). */
   z-index: 40;
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 14px;
-  padding: 8px 14px;
-  /* A bone-glass spine on the sea (interim). Step 3 splits it into the verb spine,
-     the End Turn square and the bottom-left ticker; for now it keeps its grammar. */
-  border-radius: 14px;
+  gap: 12px;
+  padding: 7px 16px;
+  border-radius: 16px;
   background: var(--glass);
   box-shadow: var(--float);
   backdrop-filter: blur(9px);
 }
 
-.commandBarResources {
-  /* Sizes to its content — the pills have a floor now and must not be squeezed. */
-  min-width: max-content;
-}
-
-.commandBarVerbs {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  gap: 8px;
+/* The chronicle's newest line, bottom-left. Capped so a long line never steals
+   the verbs' room; the full text is one hover or the drawer away. */
+.dockTicker {
+  justify-self: start;
   min-width: 0;
+  max-width: 230px;
 }
 
-/* Each verb takes the width of its own content rather than an equal share:
-   forcing MOVE as wide as UPGRADE wastes ~90px across the row and truncates the
-   long ones to "UPG…".
-   `max-content` is load-bearing. The card is a grid whose body column would
-   otherwise be measured from the COST line — so "Move" (label 36px, cost "free"
-   30px) sized itself to 30 and clipped its own label. */
-.commandBarVerbs .commandVerb {
-  flex: 0 0 auto;
-  min-width: max-content;
-}
-
-.commandBarEnd {
-  display: grid;
-  gap: 4px;
-  justify-items: end;
-  min-width: 0;
-}
-
-.commandBarEnd .commandEndTurn {
-  grid-column: auto;
-  min-width: 150px;
-  min-height: 52px;
-}
-
-/* The chronicle's newest line, so the drawer's contents are never fully hidden.
-   Capped tight on purpose: this column is sized by its widest child, so a long
-   log line would silently steal the width the verbs need and truncate THEM. The
-   full text is one hover (title) or one click (the drawer) away. */
-.commandBarTicker {
+.dockTicker p {
   overflow: hidden;
   margin: 0;
-  max-width: 170px;
   color: var(--subtle);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.commandVerb {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
+/* The verb spine — the discs, centred. */
+.verbSpine {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+}
+
+.verbDisc {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
   align-items: center;
-  gap: 7px;
-  min-height: 52px;
-  min-width: 0;
-  padding: 6px 8px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--fg);
-  background: var(--panel);
-  text-align: left;
+  gap: 5px;
+  width: 76px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  text-align: center;
 }
 
-.commandVerb:not(:disabled):hover {
-  border-color: var(--ledger-accent);
-  box-shadow: none;
-  transform: none;
-  background: var(--panel-strong);
+.verbDisc:disabled {
+  /* The dimmed look comes from .verbDiscOff, not a blanket opacity. */
+  opacity: 1;
+  cursor: not-allowed;
 }
 
-.commandVerb:disabled {
-  opacity: 0.44;
-}
-
-.commandIconActive {
-  border-color: var(--clay);
-  background: var(--panel-soft);
-}
-
-.commandVerbBody {
+.verbKnob {
   display: grid;
-  gap: 3px;
-  min-width: 0;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  color: var(--fg);
+  background: var(--ivory);
+  box-shadow: 0 0 0 1px rgb(36 25 16 / 22%), 0 2px 8px rgb(24 18 16 / 20%);
+  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
-.commandVerbBody strong {
-  overflow: hidden;
+.verbDisc:not(:disabled):hover .verbKnob {
+  background: #fffdf6;
+  box-shadow: 0 0 0 1px rgb(36 25 16 / 30%), 0 5px 14px rgb(24 18 16 / 26%);
+  transform: translateY(-2px);
+}
+
+.verbDiscArmed .verbKnob {
+  color: var(--ivory);
+  background: var(--clay);
+  box-shadow: 0 0 0 1px rgb(143 46 19 / 55%), 0 6px 18px rgb(192 70 28 / 42%);
+}
+
+.verbDiscOff .verbKnob {
+  color: var(--subtle);
+  background: rgb(255 248 231 / 55%);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.verbIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.verbLabel {
+  color: var(--fg);
   font-family: var(--font-display);
-  font-size: 0.76rem;
+  font-size: 0.64rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.08em;
   line-height: 1;
-  text-overflow: ellipsis;
   text-transform: uppercase;
-  white-space: nowrap;
 }
 
-.commandVerbCost {
+.verbDiscArmed .verbLabel {
+  color: var(--clay-deep);
+}
+
+.verbDiscOff .verbLabel,
+.verbDiscOff .verbCost {
+  color: var(--subtle);
+}
+
+.verbCost {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 0;
+  justify-content: center;
+  gap: 4px;
+  min-height: 11px;
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.6rem;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
   white-space: nowrap;
 }
 
-.commandVerbCost em {
+.verbCost em {
   color: var(--subtle);
-  font-size: 0.58rem;
+  font-size: 0.56rem;
   font-style: normal;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.commandVerbCostItem {
+.verbCostItem {
   display: inline-flex;
   align-items: center;
   gap: 2px;
 }
 
-/* ResourceChips emits <strong> around every value so the markup is one shape;
-   the verb bar wants the number at the rail's own weight, as it read before. */
-.commandVerbCostItem strong {
+/* ResourceChips wraps every value in <strong>; the disc wants it at label weight. */
+.verbCostItem strong {
   font-weight: inherit;
 }
 
-.commandVerbCostIcon {
+.verbCostIcon {
   flex: none;
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
 }
 
-.commandIcon {
-  width: 24px;
-  height: 24px;
+/* The commit — whose-turn over the one dark-red square. */
+.dockCommit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-self: end;
+  gap: 5px;
 }
 
-.commandEndTurn {
-  display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: 34px minmax(0, 1fr);
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 58px;
-  color: var(--ivory);
-  background: linear-gradient(180deg, var(--clay), var(--clay-deep));
+.turnbox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  line-height: 1.05;
+}
+
+.turnboxLabel {
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
-.endTurnSprite {
-  width: 34px;
-  height: 34px;
+.turnbox strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* The one square, the one dark-red mass — the commit can never be a verb. */
+.endTurnSquare {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 66px;
+  height: 66px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ivory);
+  background: var(--clay-deep);
+  box-shadow: 0 6px 20px rgb(143 46 19 / 40%), 0 0 0 1px rgb(36 25 16 / 30%);
+}
+
+.endTurnSquare:not(:disabled):hover {
+  background: #a8371a;
+  box-shadow: 0 8px 22px rgb(143 46 19 / 46%), 0 0 0 1px rgb(36 25 16 / 30%);
+  transform: translateY(-2px);
+}
+
+.endTurnSquare:disabled {
+  opacity: 0.5;
+}
+
+.endTurnSquare span {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.endTurnSquareIcon {
+  width: 26px;
+  height: 26px;
 }
 
 .turnLogPanel {

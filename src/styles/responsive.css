@@ -10,33 +10,6 @@
   .topbar {
     grid-template-columns: minmax(180px, auto) minmax(320px, 1fr) auto;
   }
-
-  .topResourceGrid {
-    grid-template-columns: repeat(3, minmax(92px, 1fr));
-  }
-
-  /* Resources · verbs · End Turn need ~1360px to sit on one line. Below that the
-     resources take their own row rather than crushing the verbs to "GR…". The
-     grammar survives: hands still sit under the board, just two rows deep. */
-  .commandBar {
-    grid-template-columns: minmax(0, 1fr) minmax(0, auto);
-    grid-template-areas:
-      "resources resources"
-      "verbs     end";
-  }
-
-  .commandBarResources {
-    grid-area: resources;
-  }
-
-  .commandBarVerbs {
-    grid-area: verbs;
-    justify-content: flex-start;
-  }
-
-  .commandBarEnd {
-    grid-area: end;
-  }
 }
 
 @media (max-width: 1120px) {
@@ -69,10 +42,6 @@
     grid-template-columns: 1fr;
   }
 
-  .topResourceGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .resourceTooltip {
     position: fixed;
     top: 92px;
@@ -90,10 +59,6 @@
   .moveFields,
   .popChoiceGrid {
     grid-template-columns: 1fr;
-  }
-
-  .topResourceGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -117,32 +82,14 @@
   }
 }
 
-@media (max-width: 1280px) {
-  .strategyWorkbench {
-    grid-template-columns: minmax(280px, 320px) minmax(520px, 1fr) minmax(280px, 320px);
-  }
-
-  .bandResourceGrid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 1120px) {
   .strategyTopbar {
-    grid-template-columns: 1fr;
-  }
-
-  .strategyWorkbench {
     grid-template-columns: 1fr;
   }
 
   .scoreboardPanel {
     grid-column: 1 / -1;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .bandResourceGrid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
 
@@ -153,18 +100,6 @@
 
   .scoreboardPanel {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .bandResourceGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .commandToolbar {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .commandEndTurn {
-    grid-column: span 2;
   }
 
   .scoreTooltip {
