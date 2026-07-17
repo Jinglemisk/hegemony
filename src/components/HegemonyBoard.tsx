@@ -12,8 +12,9 @@ import {
   totalPops
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
-import { PLAYER_NAMES, OMEN_TABLE } from "../game/data";
+import { PLAYER_NAMES, OMEN_TABLE, BUILDINGS } from "../game/data";
 import { HexMap } from "./HexMap";
+import { BuildPopover } from "./board/map/BuildPopover";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
 import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
 import { ChronicleDrawer } from "./board/command/ChronicleDrawer";
@@ -143,6 +144,15 @@ export function HegemonyBoard({
 
     return holdings.length >= 2 && holdings.some(({ settlement }) => totalPops(settlement.pops) > 0);
   }, [G, viewerId]);
+  // Build is live when some settlement could raise some building — the same engine
+  // check the glow and the popover use, so the verb never offers an empty map.
+  const canBuild = useMemo(
+    () =>
+      getOwnedHoldings(G, viewerId).some(({ tile }) =>
+        BUILDINGS.some((building) => getBuildBuildingStatus(G, viewerId, tile.id, building.id).can)
+      ),
+    [G, viewerId]
+  );
   // The map is the picker (refit scope 3): every "which settlement?" flow arms a
   // mode here, the board glows its legal tiles, and a popover confirms on the
   // spot — no dialog is laid over the answer.
@@ -376,14 +386,17 @@ export function HegemonyBoard({
         canMovePops={canMovePops}
         canFoundColony={canFoundColony}
         canUpgradeCity={canUpgradeCity}
+        canBuild={canBuild}
         isFoundColonyActive={mapSelection.selection?.mode.kind === "foundColony"}
+        isBuildActive={mapSelection.selection?.mode.kind === "build"}
         chronicleTicker={latestChronicleLine}
         onEndTurn={events.endTurn}
-        // Grow / Move / Found are map modes, not dialogs (refit scope 3): each
-        // arms the board and clears any open dialog, so nothing covers the answer.
+        // Grow / Move / Found / Build are map modes, not dialogs (refit scope 3):
+        // each arms the board and clears any open dialog, so nothing covers the answer.
         onGrowPopRequest={() => armSelection({ kind: "growPop" })}
         onMovePopsRequest={() => armSelection({ kind: "movePops" })}
         onFoundColonyRequest={() => armSelection({ kind: "foundColony" })}
+        onBuildRequest={() => armSelection({ kind: "build" })}
         // Calm and Venture ask no "which tile?" question — they stay dialogs.
         onCalmRequest={() => setActiveModal({ kind: "calm" })}
         onVentureRequest={() => setActiveModal({ kind: "venture" })}
@@ -439,6 +452,20 @@ export function HegemonyBoard({
                   onCancel={mapSelection.clear}
                   onConfirm={(target, pop) => {
                     moves.growPop(target, pop);
+                    mapSelection.clear();
+                  }}
+                  tileId={tileId}
+                />
+              );
+            }
+
+            if (mode.kind === "build") {
+              return (
+                <BuildPopover
+                  anchor={anchor}
+                  onCancel={mapSelection.clear}
+                  onConfirm={(target, buildingId) => {
+                    requestBuildBuilding(target, buildingId);
                     mapSelection.clear();
                   }}
                   tileId={tileId}

@@ -32,7 +32,9 @@ export function CommandBar({
   canMovePops,
   canFoundColony,
   canUpgradeCity,
+  canBuild,
   isFoundColonyActive,
+  isBuildActive,
   chronicleTicker,
   ...handlers
 }: {
@@ -42,7 +44,9 @@ export function CommandBar({
   canMovePops: boolean;
   canFoundColony: boolean;
   canUpgradeCity: boolean;
+  canBuild: boolean;
   isFoundColonyActive: boolean;
+  isBuildActive: boolean;
   /** Latest chronicle line — the drawer's contents at a glance (Q19). */
   chronicleTicker: string | null;
 } & VerbHandlers) {
@@ -57,7 +61,9 @@ export function CommandBar({
     canMovePops,
     canFoundColony,
     canUpgradeCity,
+    canBuild,
     isFoundColonyActive,
+    isBuildActive,
     calmUsed: viewer.civicCalmUsedThisTurn,
     ventureUsed: viewer.ventureUsedThisTurn
   };

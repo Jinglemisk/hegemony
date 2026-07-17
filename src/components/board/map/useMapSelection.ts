@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   POP_TYPES,
+  getBuildBuildingStatus,
   getDemotePopStatus,
   getFoundColonyStatus,
   getGrowPopStatus,
   getPromotePopStatus,
   totalPops
 } from "../../../game/rules";
+import { BUILDINGS } from "../../../game/data";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { getOwnedHoldings } from "../helpers";
 import type { MapSelection, MapSelectionMode } from "./mapSelection";
@@ -92,6 +94,12 @@ export function useMapSelection({
           : // Step one: only settlements with a body to spare.
             holdings.filter(({ settlement }) => totalPops(settlement.pops) > 0).map(({ tile }) => tile.id);
       }
+
+      case "build":
+        // Any building being buildable is enough to offer the settlement.
+        return holdings
+          .filter(({ tile }) => BUILDINGS.some((building) => getBuildBuildingStatus(G, playerID, tile.id, building.id).can))
+          .map(({ tile }) => tile.id);
 
       case "ladder": {
         const { kind, from } = selection.mode.request;

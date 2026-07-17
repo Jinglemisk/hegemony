@@ -29,6 +29,8 @@ export type MapSelectionMode =
   | { kind: "growPop" }
   /** Two-step: source settlement, then destination (refit scope 3). */
   | { kind: "movePops"; sourceTileId?: string }
+  /** Which settlement raises a building? The popover picks which building. */
+  | { kind: "build" }
   /** Which settlement pays for the promote/demote. */
   | { kind: "ladder"; request: { kind: "promote" | "demote"; from: PopType } };
 
@@ -57,6 +59,8 @@ function promptCopy(mode: MapSelectionMode): string {
       return mode.sourceTileId
         ? "Select the settlement the pops travel to"
         : "Select the settlement the pops leave from";
+    case "build":
+      return "Select a settlement to build in";
     case "ladder":
       return `Select the settlement that ${mode.request.kind === "promote" ? "promotes" : "demotes"} a pop`;
   }
@@ -70,6 +74,8 @@ function emptyCopy(mode: MapSelectionMode): string {
       return "No settlement of yours can grow right now";
     case "movePops":
       return mode.sourceTileId ? "No other settlement can receive these pops" : "No settlement has a pop to spare";
+    case "build":
+      return "No settlement of yours can build right now";
     case "ladder":
       return "No settlement can make that ladder move right now";
   }
