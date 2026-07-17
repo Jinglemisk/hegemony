@@ -202,12 +202,15 @@ button:focus-visible {
   --ledger-accent: rgb(192 70 28 / 70%);
   --ledger-hover: rgb(192 70 28 / 8%);
   --hero-tableau: url("../../assets/codex-banana-showcase/light-hero-tableau.png");
-  --icon-atlas: url("../../assets/codex-banana-showcase/light-icon-atlas.png");
+  /* Alpha-keyed atlases: the painted originals bake each glyph onto an opaque,
+     stained parchment square, which no amount of CSS can crop out of a circle.
+     These carry the glyph in the alpha channel only, so they are used as MASKS
+     and take their colour from `currentColor` — which is also what lets a glyph
+     flip to ivory on the clay active disc. Regenerate with tools/key-atlas.py;
+     the painted originals are kept beside them. */
+  --icon-atlas: url("../../assets/codex-banana-showcase/light-icon-atlas-keyed.png");
   --terrain-atlas: url("../../assets/codex-banana-showcase/light-terrain-atlas.png");
-  --ui-atlas: url("../../assets/codex-banana-showcase/light-ui-kit.png");
-  --capital-glyph: url("../../assets/settlement-icons/capital-star-mask.png");
-  --city-glyph: url("../../assets/settlement-icons/city-gate-mask.png");
-  --colony-glyph: url("../../assets/settlement-icons/colony-flag-mask.png");
+  --ui-atlas: url("../../assets/codex-banana-showcase/light-ui-kit-keyed.png");
   position: relative;
   isolation: isolate;
   display: grid;

@@ -163,19 +163,26 @@
   border-top: 1px solid var(--line);
 }
 
+/* The atlases are masks, not images: the glyph lives in the alpha channel and
+   the ink comes from `currentColor`, so an icon inherits whatever colour its
+   disc sets — ink on bone, ivory on clay. --sprite-x/y pick the cell. */
 .atlasSprite {
   display: inline-block;
-  background-position: var(--sprite-x) var(--sprite-y);
-  background-repeat: no-repeat;
   flex: 0 0 auto;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: var(--sprite-x) var(--sprite-y);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: var(--sprite-x) var(--sprite-y);
 }
 
 .atlasIcon {
   width: 34px;
   height: 34px;
-  border-radius: 50%;
-  background-image: var(--icon-atlas);
-  background-size: 400% 400%;
+  mask-image: var(--icon-atlas);
+  mask-size: 400% 400%;
+  -webkit-mask-image: var(--icon-atlas);
+  -webkit-mask-size: 400% 400%;
 }
 
 .resourceMaskIcon {
@@ -230,7 +237,9 @@
 .atlasUi {
   width: 40px;
   height: 40px;
-  background-image: var(--ui-atlas);
-  background-size: 300% 300%;
+  mask-image: var(--ui-atlas);
+  mask-size: 300% 300%;
+  -webkit-mask-image: var(--ui-atlas);
+  -webkit-mask-size: 300% 300%;
 }
 
