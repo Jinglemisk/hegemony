@@ -120,6 +120,27 @@
 -- Everything rollable or drawable should be *viewable* before it happens — tables are public information,
    that is the point of "decks for economy, dice for drama".
 
+- *** Two-panel UI: left rail *acts* (Cities/Pops/Build/Market), a new right rail *consults*
+  (Chronicle/Codex/Players/Victory). (user, 2026-07-17 — designed, docs/feat/two-panel.md, roadmap Phase 3)
+-- **The law:** left is what you act on, right is what you consult. Codex + Victory move to the right;
+   Chronicle becomes a right disc (retiring ChronicleDrawer — safe now that the dock ticker keeps the latest
+   line permanently visible, which reverses Q19). The right rail mirrors `.bar.rail`, discs overhanging inward.
+-- **Deep-links:** the term IS the link — `AnnotatedText` already types every resource/pop/building word, so
+   clicking "Happiness" in any card/chronicle/modal opens the codex there. No (?) sprinkles. Address by data id,
+   never a hand-kept registry (keeps the codex rendering FROM the ruleset).
+-- **Player dossier:** click a roster player → the right panel shows their cities/pops/buildings — the same
+   ledger tabs aimed elsewhere via an explicit `ownerId` + read-only flag (reuse, never fork — forks drift).
+-- **Per-panel back-stack:** pages become `{view, entry, scroll}` with a history stack; each frame restores its
+   scroll offset on "back" (the scrolled-down-buildings-comes-back-scrolled ask). Model the route now, add the
+   stack when deep-links create a second level.
+-- **Responsive uniform-scale (user, 2026-07-17):** chrome scales down proportionally in smaller viewports
+   (identical layout, only smaller) via one `--ui-scale` / rem-root pass — cheap because the KYKLOS token table
+   already centralises every dimension. Per-element minimums are a later pass. Sweep the stale docked-layout
+   `responsive.css` breakpoints. This is what makes the two-panel safe at small widths (both panels float over
+   the sea; the board is covered, never reflowed).
+-- Pull-forward-able ahead of Phase 3: the rail split, the route model, the uniform-scale. Waits for Phase 3:
+   deep-links + the dossier (rivalry-native).
+
 - Finish the interface overhaul (started from the UI audit).
 -- DONE so far: the top bar is re-gridded — a central season dial with hand-painted Greek season art (tree / sun / bare tree / snowflake), Year + acting player either side, and a uniform four-seat roster showing each player's city / colony / pop counts and a provisional VP. Events moved back to the top-left as cards with an inline-icon effect summary + full-text hover tooltip. Ledger gained an empire summary (icon + count) and always shows every resource icon (dimmed dash when zero). Decks collapsed to a slim tray (dead "Resolutions" placeholder removed). A universal inline resource/pop/building icon system (AnnotatedText) now runs across cards, modals, and the chronicle.
 -- ~~Also done: action verbs are now 2x2 buttons showing each action's cost (greyed when unavailable/unaffordable); the chronicle is folded under one sticky heading per season; the heavy Greek-key panel frame is demoted to a hairline; the Buildings tab gained the inline-icon system (the Pops tab was already aligned).~~
