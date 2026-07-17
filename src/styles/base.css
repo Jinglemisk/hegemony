@@ -10,6 +10,10 @@
   --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
   --font-display: var(--disp);
   --font-body: var(--body);
+  /* Board numerals only. Marcellus's lining figures blur at tile size — its 0
+     reads as an O against a 1 — so the numbers on the map keep the old
+     Copperplate face, which stays legible small. Chrome text uses --disp. */
+  --font-map: Copperplate, "Copperplate Gothic Light", "Iowan Old Style", Georgia, serif;
   color: #241910;
   background: #f4e6c8;
   font-family: var(--font-body);

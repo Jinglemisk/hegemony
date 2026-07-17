@@ -440,42 +440,6 @@
   transform: translateY(6px);
 }
 
-.seasonClusterText {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  white-space: nowrap;
-  text-align: center;
-  pointer-events: none;
-}
-
-.seasonClusterYear {
-  color: var(--on-sea);
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-shadow: var(--sea-shadow);
-}
-
-.seasonClusterSub {
-  color: var(--on-sea-dim);
-  font-size: 0.64rem;
-  text-shadow: var(--sea-shadow);
-}
-
-.seasonClusterDecks {
-  color: var(--on-sea-dim);
-  font-size: 0.58rem;
-  font-variant-numeric: tabular-nums;
-  text-shadow: var(--sea-shadow);
-}
-
 /* Season dial — a round indicator framing the current season's painted emblem. */
 .seasonDial {
   display: grid;
