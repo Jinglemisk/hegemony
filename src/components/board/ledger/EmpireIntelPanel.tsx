@@ -9,9 +9,11 @@ import { getOwnedHoldings } from "../helpers";
 import type { EmpireTab } from "../types";
 import { BuildingsTab } from "./BuildingsTab";
 import { CitiesTab } from "./CitiesTab";
+import { CodexTab } from "./CodexTab";
 import { MarketTab } from "./MarketTab";
 import { PopsTab } from "./PopsTab";
 import { VictoryTab } from "./VictoryTab";
+import { LEDGER_TABS, ledgerTabLabel } from "./tabs";
 import { victoryCardsHeld } from "../../../game/victory";
 import { UiSprite } from "../../Sprites";
 import { useGameUi } from "../GameUiContext";
@@ -62,12 +64,18 @@ function EmpireIntelPanelComponent({
   const unrest = unrestStatus(G, playerID);
   const cardsHeld = victoryCardsHeld(G, playerID);
 
+  const title = ledgerTabLabel(activeTab);
+  const titleIcon = LEDGER_TABS.find(({ tab }) => tab === activeTab)?.icon;
+
   return (
     <div className="empireIntel">
+      {/* The card is titled by the page it is showing, not by the furniture. */}
       <div className="panelTitle ledgerCardTitle">
-        <AtlasIcon icon="city" className="titleIcon" />
-        <h2>Ledger</h2>
-        <button className="ledgerCloseButton" onClick={onClose} aria-label="Close the ledger" title="Close the ledger" type="button">
+        <span className="titleIcon" aria-hidden="true">
+          {titleIcon}
+        </span>
+        <h2>{title}</h2>
+        <button className="ledgerCloseButton" onClick={onClose} aria-label={`Close the ${title} page`} title="Close" type="button">
           ×
         </button>
       </div>
@@ -145,6 +153,7 @@ function EmpireIntelPanelComponent({
           />
         ) : null}
         {activeTab === "victory" ? <VictoryTab G={G} playerID={playerID} /> : null}
+        {activeTab === "codex" ? <CodexTab G={G} playerID={playerID} /> : null}
       </div>
     </div>
   );
