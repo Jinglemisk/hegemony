@@ -205,17 +205,15 @@
   min-width: 118px;
 }
 
-.uiOverhaulShell {
-  gap: 10px;
-  padding: 14px;
-}
-
 .strategyTopbar {
   /* events (1fr) | season cluster (auto, dead-centre) | roster (1fr). Full-width
      and flush — no max-width, or the spine leaves a gap at the screen's edge. */
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 14px;
+  /* Pinned, not content-sized: the left rail starts at --chrome-top, so if this
+     bar can grow past it the rail tucks underneath. One value, both edges. */
+  height: var(--chrome-top);
 }
 
 .statusPanel {
