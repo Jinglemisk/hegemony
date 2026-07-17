@@ -87,9 +87,7 @@ export function ResourceGrid({
             <ResourceIcon resource={resource} value={resources[resource]} className="resourceIcon" />
             <span className="resourceValue">
               <strong>{formatNumber(resources[resource])}</strong>
-              <span className={`resourceDelta ${deltaClass}`}>
-                ({formatSignedNumber(delta)})
-              </span>
+              <span className={`resourceDelta ${deltaClass}`}>{formatSignedNumber(delta)}</span>
             </span>
             <ResourceBreakdownTooltip
               resource={resource}

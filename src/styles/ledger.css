@@ -386,10 +386,13 @@
   padding: 2px 0 0;
 }
 
+/* A vertical stack, not a row: icon over stockpile over income. Every resource
+   reads down the same three registers, so the six line up across the bar. */
 .topResourceHalf .resourcePill {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 3px;
   min-height: 0;
   padding: 0;
   border: 0;
@@ -399,19 +402,20 @@
 }
 
 .topResourceHalf .resourceIcon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .topResourceHalf .resourceValue {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .topResourceHalf .resourceValue strong {
-  color: var(--fg);
-  font-family: var(--font-display);
+  color: var(--ink);
+  font-family: var(--disp);
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -420,11 +424,12 @@
 .topResourceHalf .resourceDelta {
   font-size: 0.62rem;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
-/* The season cluster: the medallion hangs at centre and its text drops BELOW it
-   onto the sea (KYKLOS), so the disc stays compact and the resources tuck close
-   on either side instead of being shoved out by the caption. */
+/* The season cluster: the medallion at centre. Its caption reads from the bottom
+   spine now, so the disc stays compact and the resources tuck close on either
+   side instead of being shoved out by a caption. */
 .seasonCluster {
   position: relative;
   display: flex;
