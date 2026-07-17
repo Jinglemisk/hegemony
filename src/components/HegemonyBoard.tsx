@@ -368,7 +368,6 @@ export function HegemonyBoard({
         </div>
 
         <PlayerScoreboard
-          G={G}
           currentPlayerId={currentPlayerId}
           onPlayerIDChange={onPlayerIDChange}
           viewerId={viewerId}
