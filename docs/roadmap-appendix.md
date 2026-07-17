@@ -679,6 +679,15 @@ art/label re-theme (`resourceVisuals.ts` still paints hills gold) ships in the s
 **— Phase 3 · the rivalry layer —** *(this block IS the Politicians design session
 the roadmap requires before Phase 3 can start)*
 
+> **Two-panel UI rides with Phase 3** (user, 2026-07-17) — DESIGNED, not a question:
+> `docs/feat/two-panel.md`. Left rail *acts* (Cities/Pops/Build/Market), a new right rail
+> *consults* (Chronicle/Codex/Players/Victory), with per-panel back-stacks, prose
+> deep-links (the `AnnotatedText` term is the link), and the **player dossier** (the
+> ledger tabs aimed at a rival via `ownerId` + read-only). The dossier is rivalry-native,
+> hence the Phase 3 slot; the **rail split, route model, and responsive uniform-scale**
+> are pull-forward-able earlier. Reverses Q19 (chronicle-as-drawer) — safe now the dock
+> ticker keeps the latest line permanently visible.
+
 ### P3 · Q27 · Assembly cadence, votes, and flow — `OPEN`
 
 **Context.** Archive rules: convenes at fixed intervals, unskippable, 2 resolutions
