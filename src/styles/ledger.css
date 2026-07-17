@@ -441,8 +441,8 @@
 .seasonDialFrame {
   flex: none;
   line-height: 0;
-  /* nudge the medallion down so it protrudes below the flush spine, onto the sea */
-  transform: translateY(6px);
+  /* Centred in the bar — the grid's align-items:center does it; no nudge. The old
+     translateY(6px) shoved it low (12px of air above, 1px below). */
 }
 
 /* Season dial — a round indicator framing the current season's painted emblem. */

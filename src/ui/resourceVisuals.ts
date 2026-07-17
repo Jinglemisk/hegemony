@@ -11,31 +11,35 @@ type ResourceVisual = {
   shadow: string;
 };
 
+// Tile fills soften to the KYKLOS terrain palette (DECIDED-UI-LAYOUT.html GND):
+// forest→wood, mountain→stone, hill→gold, plains→food. Only `tile` (the hex
+// fill) changes — `color` etc. still drive the top-bar pills/glyphs, which the
+// user keeps. Tiles only ever carry these four resources (data.ts TERRAIN_DECK).
 export const RESOURCE_VISUALS = {
   wood: {
     color: "#354927",
-    tile: "#52703a",
+    tile: "#758542",
     soft: "rgb(53 73 39 / 18%)",
     line: "rgb(53 73 39 / 56%)",
     shadow: "rgb(53 73 39 / 30%)"
   },
   stone: {
     color: "#8f8571",
-    tile: "#8f8571",
+    tile: "#a8a290",
     soft: "rgb(143 133 113 / 18%)",
     line: "rgb(143 133 113 / 56%)",
     shadow: "rgb(143 133 113 / 28%)"
   },
   gold: {
     color: "#d98a35",
-    tile: "#d98a35",
+    tile: "#c68038",
     soft: "rgb(217 138 53 / 17%)",
     line: "rgb(217 138 53 / 54%)",
     shadow: "rgb(217 138 53 / 28%)"
   },
   food: {
     color: "#9bbf52",
-    tile: "#9bbf52",
+    tile: "#dcbf69",
     soft: "rgb(155 191 82 / 19%)",
     line: "rgb(155 191 82 / 56%)",
     shadow: "rgb(155 191 82 / 28%)"
