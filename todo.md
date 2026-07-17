@@ -95,7 +95,7 @@
 
 ## Presentation & UI
 
-- *** UI refactor: one ledger, vertical tabs, relocated action bar, map-first selection. (user, 2026-07-12/13 — SCHEDULED: roadmap Phase 1.5, executing on feat/ui-refit)
+- ~~*** UI refactor: one ledger, vertical tabs, relocated action bar, map-first selection. (user, 2026-07-12/13)~~ SHIPPED (2026-07-17, feat/ui-refit — KYKLOS mode A, docs/feat/ui-refit.md): full-bleed map stage + live-area camera (Step 1); left disc rail + floating ledger card, Codex disc opens the compendium (Step 2); bottom verb-disc spine + the one End Turn square + resources split around the top medallion + the net-new Build verb, map-first (Step 3). The reskin (Q36 keep ×5) is the follow-up PR.
 -- The right sidebar's Actions panel and the left Ledger should collapse into ONE ledger; its tabs become
    vertical buttons (the 5-up horizontal row is already cramped and will not survive more tabs).
 -- The everyday action verbs (Grow / Move / Found / Upgrade / Calm / Venture / End Turn) move to a dedicated
