@@ -211,10 +211,11 @@
 }
 
 .strategyTopbar {
+  /* events (1fr) | season cluster (auto, dead-centre) | roster (1fr). Full-width
+     and flush — no max-width, or the spine leaves a gap at the screen's edge. */
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 14px;
-  max-width: 1700px;
 }
 
 .statusPanel {
@@ -423,46 +424,58 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* The season cluster: medallion + year + a compact deck caption beside it (Q19). */
+/* The season cluster: the medallion hangs at centre and its text drops BELOW it
+   onto the sea (KYKLOS), so the disc stays compact and the resources tuck close
+   on either side instead of being shoved out by the caption. */
 .seasonCluster {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
   min-width: 0;
 }
 
 .seasonDialFrame {
   flex: none;
   line-height: 0;
+  /* nudge the medallion down so it protrudes below the flush spine, onto the sea */
+  transform: translateY(6px);
 }
 
 .seasonClusterText {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1px;
-  min-width: 0;
+  white-space: nowrap;
+  text-align: center;
+  pointer-events: none;
 }
 
 .seasonClusterYear {
-  color: var(--fg);
+  color: var(--on-sea);
   font-family: var(--font-display);
-  font-size: 0.92rem;
-  letter-spacing: 0.05em;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  white-space: nowrap;
+  text-shadow: var(--sea-shadow);
 }
 
 .seasonClusterSub {
-  color: var(--muted);
-  font-size: 0.66rem;
-  white-space: nowrap;
+  color: var(--on-sea-dim);
+  font-size: 0.64rem;
+  text-shadow: var(--sea-shadow);
 }
 
 .seasonClusterDecks {
-  color: var(--subtle);
-  font-size: 0.6rem;
+  color: var(--on-sea-dim);
+  font-size: 0.58rem;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  text-shadow: var(--sea-shadow);
 }
 
 /* Season dial — a round indicator framing the current season's painted emblem. */
