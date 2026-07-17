@@ -11,9 +11,10 @@ import {
   toPlayerId,
   totalPops
 } from "../game/rules";
-import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
+import type { BuildingId, HegemonyState, PlayerId, Resource } from "../game/types";
 import { PLAYER_NAMES, OMEN_TABLE, BUILDINGS } from "../game/data";
 import { HexMap } from "./HexMap";
+import { ResourceGrid } from "./ResourceGrid";
 import { BuildPopover } from "./board/map/BuildPopover";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
 import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
@@ -24,7 +25,7 @@ import { LadderPopover } from "./board/map/LadderPopover";
 import { MovePopsSourcePopover, MovePopsTargetPopover } from "./board/map/MovePopsPopover";
 import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelection";
 import { useMapSelection } from "./board/map/useMapSelection";
-import { CommandBar } from "./board/command/CommandBar";
+import { CommandDock } from "./board/command/CommandDock";
 import { CalmModal } from "./board/modals/CalmModal";
 import { CompendiumModal } from "./board/modals/CompendiumModal";
 import { EventTableModal } from "./board/modals/EventTableModal";
@@ -65,6 +66,11 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
   city: "second city",
   colony: "founding colony"
 };
+
+// Resources ride the top bar now (ui-refit Step 3 / Q17), split around the season
+// medallion: raw materials on the left, the softer economy on the right.
+const TOP_RESOURCES_LEFT: Resource[] = ["wood", "stone", "food"];
+const TOP_RESOURCES_RIGHT: Resource[] = ["gold", "influence", "happiness"];
 
 /**
  * Exactly one dialog owns the screen at a time — the union makes that a type
@@ -338,7 +344,28 @@ export function HegemonyBoard({
       <header className="topbar strategyTopbar">
         <TopbarEvents G={G} />
 
-        <SeasonStatus G={G} isActive={isActive} currentPlayerId={currentPlayerId} />
+        {/* Resources split around the season medallion (Q17 · KYKLOS arrangement). */}
+        <div className="seasonBanner">
+          <ResourceGrid
+            className="topResourceHalf topResourceLeft"
+            order={TOP_RESOURCES_LEFT}
+            resources={viewer.resources}
+            deltas={projectedIncome}
+            breakdown={projectedIncomeBreakdown}
+            resetKey={`resL-${viewerId}`}
+          />
+
+          <SeasonStatus G={G} />
+
+          <ResourceGrid
+            className="topResourceHalf topResourceRight"
+            order={TOP_RESOURCES_RIGHT}
+            resources={viewer.resources}
+            deltas={projectedIncome}
+            breakdown={projectedIncomeBreakdown}
+            resetKey={`resR-${viewerId}`}
+          />
+        </div>
 
         <PlayerScoreboard
           G={G}
@@ -379,9 +406,7 @@ export function HegemonyBoard({
         <ChronicleDrawer />
       </section>
 
-      <CommandBar
-        projectedIncome={projectedIncome}
-        projectedIncomeBreakdown={projectedIncomeBreakdown}
+      <CommandDock
         canGrowPops={canGrowPops}
         canMovePops={canMovePops}
         canFoundColony={canFoundColony}

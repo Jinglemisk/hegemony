@@ -204,7 +204,9 @@ export function VerbIconGlyph({ icon, className }: { icon: VerbIcon; className: 
   );
 }
 
-/** One verb button. The bar is `VERBS.map(...)` over this. */
+/** One verb, as a disc threaded on the bottom spine (ui-refit Step 3): a round
+ *  knob with the label and cost hung below it. The bar is `VERBS.map(...)` over
+ *  this. Armed verbs (Found / Build arm a map mode) glow clay. */
 export function CommandVerb({
   verb,
   context,
@@ -215,34 +217,35 @@ export function CommandVerb({
   handlers: VerbHandlers;
 }) {
   const pressed = verb.pressed?.(context) ?? false;
+  const enabled = isVerbEnabled(verb, context);
 
   return (
     <button
       aria-pressed={verb.pressed ? pressed : undefined}
-      className={pressed ? "commandVerb commandIconActive" : "commandVerb"}
-      disabled={!isVerbEnabled(verb, context)}
+      className={`verbDisc${pressed ? " verbDiscArmed" : ""}${enabled ? "" : " verbDiscOff"}`}
+      disabled={!enabled}
       onClick={() => verb.select(handlers)}
       title={verbTitle(verb, context)}
     >
-      <VerbIconGlyph icon={verb.icon} className={`commandIcon ${verb.iconClassName ?? ""}`.trim()} />
-      <span className="commandVerbBody">
-        <strong>{verb.label}</strong>
-        {verb.cost ? <VerbCostSlot cost={verb.cost} context={context} /> : null}
+      <span className="verbKnob">
+        <VerbIconGlyph icon={verb.icon} className={`verbIcon ${verb.iconClassName ?? ""}`.trim()} />
       </span>
+      <span className="verbLabel">{verb.label}</span>
+      {verb.cost ? <VerbCostSlot cost={verb.cost} context={context} /> : null}
     </button>
   );
 }
 
 function VerbCostSlot({ cost, context }: { cost: VerbCost; context: VerbContext }) {
   return (
-    <span className="commandVerbCost">
+    <span className="verbCost">
       {cost.lead ? <em>{cost.lead}</em> : null}
       {cost.cost ? (
         <ResourceChips
           resources={cost.cost(context)}
           variant="cost"
-          chipClassName="commandVerbCostItem"
-          iconClassName="commandVerbCostIcon"
+          chipClassName="verbCostItem"
+          iconClassName="verbCostIcon"
         />
       ) : null}
     </span>

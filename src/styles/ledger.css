@@ -370,6 +370,101 @@
   white-space: nowrap;
 }
 
+/* ── Top bar: resources split around the season medallion (ui-refit Step 3) ──── */
+.seasonBanner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+/* Resources go flat on the top bar — never a plate — icon over value + delta. */
+.topResourceHalf {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 2px 0 0;
+}
+
+.topResourceHalf .resourcePill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.topResourceHalf .resourceIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.topResourceHalf .resourceValue {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.topResourceHalf .resourceValue strong {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.topResourceHalf .resourceDelta {
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The season cluster: medallion + year + a compact deck caption beside it (Q19). */
+.seasonCluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.seasonDialFrame {
+  flex: none;
+  line-height: 0;
+}
+
+.seasonClusterText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.seasonClusterYear {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.seasonClusterSub {
+  color: var(--muted);
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+.seasonClusterDecks {
+  color: var(--subtle);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* Season dial — a round indicator framing the current season's painted emblem. */
 .seasonDial {
   display: grid;
