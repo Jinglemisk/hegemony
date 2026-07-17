@@ -27,7 +27,6 @@ import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelectio
 import { useMapSelection } from "./board/map/useMapSelection";
 import { CommandDock } from "./board/command/CommandDock";
 import { CalmModal } from "./board/modals/CalmModal";
-import { CompendiumModal } from "./board/modals/CompendiumModal";
 import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
 import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
@@ -85,7 +84,6 @@ type ActiveModal =
   | { kind: "upgradeCity" }
   | { kind: "calm" }
   | { kind: "venture" }
-  | { kind: "compendium" };
 
 export function HegemonyBoard({
   G,
@@ -205,8 +203,8 @@ export function HegemonyBoard({
   }, [ctx.phase, ctx.currentPlayer]);
 
   // A drawn event takes the screen: dismiss the player's own dialogs behind it.
-  // The compendium is exempt — it is reference, and reading a rule mid-event is
-  // exactly when a player needs it.
+  // The ledger is left alone — the codex lives there now, and reading a rule
+  // mid-event is exactly when a player needs it.
   useEffect(() => {
     if (!G.pendingPlayerEvent) {
       return;
@@ -214,10 +212,11 @@ export function HegemonyBoard({
 
     setTileConfirmation(null);
     mapSelection.clear();
-    setActiveModal((current) => (current?.kind === "compendium" ? current : null));
+    setActiveModal(null);
   }, [G.pendingPlayerEvent]);
 
-  // `?` opens the compendium from anywhere; Escape closes it.
+  // `?` toggles the codex from anywhere — it is a ledger page, so this is the
+  // same act as pressing its rail disc.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -227,14 +226,15 @@ export function HegemonyBoard({
       }
 
       if (event.key === "?") {
-        setActiveModal((current) => (current?.kind === "compendium" ? null : { kind: "compendium" }));
+        setLedgerOpen((open) => !(open && activeEmpireTab === "codex"));
+        setActiveEmpireTab("codex");
       }
       // Escape is ModalShell's job — every dialog gets it from the one place.
     };
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, []);
+  }, [activeEmpireTab]);
 
   const handleTileAction = useCallback(
     (tileId: string) => {
@@ -387,7 +387,6 @@ export function HegemonyBoard({
             setLedgerOpen((open) => !(open && tab === activeEmpireTab));
             setActiveEmpireTab(tab);
           }}
-          onOpenCodex={() => setActiveModal({ kind: "compendium" })}
         />
 
         {isLedgerOpen ? (
@@ -587,9 +586,6 @@ export function HegemonyBoard({
             </button>
           }
         />
-      ) : null}
-      {activeModal?.kind === "compendium" ? (
-        <CompendiumModal G={G} playerID={viewerId} onClose={closeModal} />
       ) : null}
     </main>
     </GameUiProvider>
