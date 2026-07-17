@@ -1,5 +1,6 @@
 import { UiSprite } from "../../Sprites";
 import { PLAYER_NAMES } from "../../../game/data";
+import { yearOf } from "../../../game/rules";
 import { useGameUi } from "../GameUiContext";
 import {
   CommandVerb,
@@ -60,10 +61,20 @@ export function CommandDock({
     ventureUsed: viewer.ventureUsedThisTurn
   };
 
+  const seasonsLeft = G.seasonalDrawPile.length;
+  const boardLabel = G.boardLayout === "classic" ? "Classic" : "Shuffled";
+
   return (
     <div className="commandDock">
-      <div className="dockTicker">
-        {chronicleTicker ? <p title={chronicleTicker}>{chronicleTicker}</p> : null}
+      {/* The clock reads from the spine's left end, on bone. */}
+      <div className="dockSeason">
+        <span className="dockSeasonYear">Year {yearOf(G.season)}</span>
+        <span className="dockSeasonSub">
+          {seasonsLeft} season{seasonsLeft === 1 ? "" : "s"} remain
+        </span>
+        <span className="dockSeasonDecks">
+          Seasonal {seasonsLeft} · Events {G.playerDrawPile.length} · {boardLabel} #{G.seed}
+        </span>
       </div>
 
       <div className="verbSpine" aria-label="Action toolbar">
@@ -73,19 +84,26 @@ export function CommandDock({
       </div>
 
       <div className="dockCommit">
-        <div className="turnbox">
-          <span className="turnboxLabel">{isActive ? "Your turn" : "Now acting"}</span>
-          <strong>{PLAYER_NAMES[currentPlayerId]}</strong>
+        {/* The narration sits between the verbs and the commit. */}
+        <div className="dockTicker">
+          {chronicleTicker ? <p title={chronicleTicker}>{chronicleTicker}</p> : null}
         </div>
-        <button
-          className="endTurnSquare"
-          disabled={!isVerbEnabled(END_TURN_VERB, context)}
-          onClick={() => END_TURN_VERB.select(handlers)}
-          title={verbTitle(END_TURN_VERB, context)}
-        >
-          <UiSprite item="endTurn" className="endTurnSquareIcon" />
-          <span>End Turn</span>
-        </button>
+
+        <div className="dockCommitStack">
+          <div className="turnbox">
+            <span className="turnboxLabel">{isActive ? "Your turn" : "Now acting"}</span>
+            <strong>{PLAYER_NAMES[currentPlayerId]}</strong>
+          </div>
+          <button
+            className="endTurnSquare"
+            disabled={!isVerbEnabled(END_TURN_VERB, context)}
+            onClick={() => END_TURN_VERB.select(handlers)}
+            title={verbTitle(END_TURN_VERB, context)}
+          >
+            <UiSprite item="endTurn" className="endTurnSquareIcon" />
+            <span>End Turn</span>
+          </button>
+        </div>
       </div>
     </div>
   );
