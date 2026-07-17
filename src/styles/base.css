@@ -65,20 +65,26 @@ h3 {
   margin-bottom: 6px;
 }
 
+/* Buttons are BARE by default — no border, fill, min-height or clip. The chunky
+   chip look is opt-in (.appButton, or the surviving self-styled classes that
+   re-declare it). This inverts the old rule that dressed every button as a
+   bordered chip and forced every KYKLOS disc/square to fight it back off — the
+   source of three separate clip/ghost-box bugs. Chrome that overhangs (a hover
+   lift, a badge) can never be clipped by a button that no longer sets overflow. */
 button {
   position: relative;
-  min-height: 40px;
   min-width: 0;
-  border: 1px solid var(--button-line);
-  border-radius: 6px;
+  /* Bare SURFACE — no border, fill, min-height or clip. Typography stays
+     (display face, bold, ink) because it never caused the disc bugs and text
+     buttons rely on it; only the chip surface is opt-in below. */
+  border: 0;
   color: var(--fg);
-  background: var(--button-bg);
+  background: none;
   cursor: pointer;
   font: inherit;
-  font-family: var(--font-display);
+  font-family: var(--disp);
   font-weight: 700;
-  overflow: hidden;
-  padding: 0 12px;
+  padding: 0;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -88,18 +94,63 @@ button {
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.45;
-}
-
-button:not(:disabled):hover {
-  border-color: var(--accent);
-  box-shadow: var(--lift-shadow);
-  transform: translateY(-1px);
 }
 
 button:focus-visible {
   outline: 2px solid var(--accent-2);
   outline-offset: 2px;
+}
+
+/* The chunky chip. `.appButton` is the opt-in; the four legacy classes that
+   still lean on it for their surface are listed so no JSX has to change. Layout
+   (grid, min-height, padding) stays on each specific class and wins by order. */
+.appButton,
+.primaryButton,
+.iconButton,
+.buildingButton {
+  min-height: 40px;
+  border: 1px solid var(--button-line);
+  border-radius: 6px;
+  color: var(--fg);
+  background: var(--button-bg);
+  font-family: var(--disp);
+  font-weight: 700;
+  overflow: hidden;
+  padding: 0 12px;
+}
+
+.appButton:disabled,
+.primaryButton:disabled,
+.iconButton:disabled,
+.buildingButton:disabled {
+  opacity: 0.45;
+}
+
+.appButton:not(:disabled):hover,
+.primaryButton:not(:disabled):hover,
+.iconButton:not(:disabled):hover,
+.buildingButton:not(:disabled):hover {
+  border-color: var(--accent);
+  box-shadow: var(--lift-shadow);
+  transform: translateY(-1px);
+}
+
+/* eventResolveButton brings its own clay fill but only a border-COLOUR, so it
+   needs the width/style back — plus the disabled/hover feedback the global used
+   to give it. */
+.eventResolveButton {
+  border: 1px solid;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.eventResolveButton:disabled {
+  opacity: 0.45;
+}
+
+.eventResolveButton:not(:disabled):hover {
+  box-shadow: var(--lift-shadow);
+  transform: translateY(-1px);
 }
 
 .shell {
