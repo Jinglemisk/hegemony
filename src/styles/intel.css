@@ -104,21 +104,23 @@
    are circles because you press them repeatedly; the one square stays End Turn. */
 .ledgerRail {
   position: fixed;
-  left: 8px;
-  top: var(--chrome-top, 96px);
-  bottom: var(--chrome-bot, 100px);
+  left: 0;
+  top: var(--chrome-top, 62px);
+  bottom: var(--chrome-bot, 98px);
   z-index: 30;
-  width: 60px;
+  width: 62px;
   pointer-events: none;
 }
 
+/* A thin spine flush to the screen's left edge; the discs thread on it and
+   overhang onto the sea (KYKLOS's second law). */
 .ledgerRailSpine {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 30px;
-  border-radius: 0 14px 14px 0;
+  width: 24px;
+  border-radius: 0 12px 12px 0;
   background: var(--glass);
   box-shadow: var(--float);
   backdrop-filter: blur(9px);
@@ -134,8 +136,9 @@
   align-items: flex-start;
   justify-content: center;
   gap: 9px;
-  /* disc centre sits on the spine's right edge (30px): 7 + 46/2 = 30 */
-  padding-left: 7px;
+  /* disc centre sits ~3px past the spine's right edge (24px): the disc overhangs
+     ~⅔ onto the sea, ⅓ over the spine. */
+  padding-left: 4px;
   pointer-events: none;
 }
 

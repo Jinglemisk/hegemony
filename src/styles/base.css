@@ -127,12 +127,12 @@ button:focus-visible {
   --float: 0 10px 30px rgb(24 18 16 / 26%);
   --on-sea: #fff8e7;
   --sea-shadow: 0 1px 3px rgb(10 34 41 / 55%);
-  /* The band the floating left rail + ledger card live in — clear of the top bar
-     and the command bar. Provisional (re-measured when Step 3 rebuilds the bars);
-     the rail, card and camera all read them so they stay in agreement. */
-  --chrome-top: 96px;
-  --chrome-bot: 100px;
-  --rail-gap: 74px;
+  /* The band the floating left rail + ledger card live in — clear of the flush top
+     spine and the bottom dock. The rail, card and camera all read them so they
+     stay in agreement. */
+  --chrome-top: 62px;
+  --chrome-bot: 98px;
+  --rail-gap: 70px;
   --ledger-rule: rgb(36 25 16 / 14%);
   --ledger-rule-strong: rgb(36 25 16 / 22%);
   --ledger-accent: rgb(192 70 28 / 70%);
@@ -147,13 +147,13 @@ button:focus-visible {
   position: relative;
   isolation: isolate;
   display: grid;
-  gap: 14px;
-  /* topbar · workbench · command bar — the bar spans the whole shell, not the
-     map column: an RTS command bar runs the width of the screen (Q17). */
+  gap: 0;
+  /* topbar · workbench · command dock — flush to the edges now (ui-refit Step 4):
+     the top spine runs the full width, the dock hangs off the bottom, no margins. */
   grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100svh;
   overflow: hidden;
-  padding: 16px;
+  padding: 0;
   color: var(--fg);
   /* The sea is the field now. The full-bleed map (.mapStage) paints over this, so
      the gradient only shows in the instant before the board mounts — but it keeps
@@ -174,20 +174,18 @@ button:focus-visible {
   position: relative;
   z-index: 60;
   display: grid;
-  grid-template-columns: minmax(190px, auto) minmax(360px, 1fr) auto;
-  align-items: stretch;
-  gap: 12px;
+  grid-template-columns: minmax(180px, auto) minmax(360px, 1fr) auto;
+  align-items: center;
+  gap: 14px;
   width: 100%;
-  max-width: 1520px;
   min-width: 0;
-  margin: 0 auto;
-  /* A bone-glass spine so the events, season line and roster stay legible over
-     the sea. Interim: Step 3 splits this into the resource halves + medallion. */
-  padding: 8px 14px;
-  border-radius: 14px;
+  /* A flush bone-glass spine, edge to edge, so the season medallion can hang
+     below it onto the sea (KYKLOS). overflow:visible lets it protrude. */
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--line);
   background: var(--glass);
-  box-shadow: var(--float);
   backdrop-filter: blur(9px);
+  overflow: visible;
 }
 
 .logModal {
