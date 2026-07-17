@@ -105,24 +105,27 @@
 .ledgerRail {
   position: fixed;
   left: 0;
+  /* Runs between the two spines and meets them: from the top bar's underside
+     down to the bottom spine's top edge (--bot-h), not to --chrome-bot (which
+     includes the discs' overhang and would leave the rail hanging in mid-air). */
   top: var(--chrome-top, 62px);
-  bottom: var(--chrome-bot, 98px);
+  bottom: var(--bot-h);
   z-index: 30;
   width: 62px;
   pointer-events: none;
 }
 
-/* A thin spine flush to the screen's left edge; the discs thread on it and
-   overhang onto the sea (KYKLOS's second law). */
+/* The mock's `.bar.rail`: a flush plate — square corners, a hairline right edge,
+   no drop shadow. It butts into the top and bottom spines so the chrome reads as
+   one continuous frame rather than a floating card. */
 .ledgerRailSpine {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 24px;
-  border-radius: 0 12px 12px 0;
+  width: var(--rail-w);
+  border-right: 1px solid var(--line);
   background: var(--glass);
-  box-shadow: var(--float);
   backdrop-filter: blur(9px);
   -webkit-backdrop-filter: blur(9px);
   pointer-events: auto;
@@ -136,9 +139,11 @@
   align-items: flex-start;
   justify-content: center;
   gap: 9px;
-  /* disc centre sits ~3px past the spine's right edge (24px): the disc overhangs
-     ~⅔ onto the sea, ⅓ over the spine. */
-  padding-left: 4px;
+  /* The mock's SPILL_B: the disc's CENTRE rides 5px past the spine's right edge
+     (RAIL 30 + BUB_OUT 28 − BUB/2 23 = 35). With a 46px disc that puts its left
+     edge at 12px, so it covers 18px of bone and overhangs 28px onto the sea —
+     the same 5px spill the verb discs use against the bottom spine. */
+  padding-left: calc(var(--rail-w) + var(--bub-out) - var(--bub));
   pointer-events: none;
 }
 
@@ -146,22 +151,22 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
+  width: var(--bub);
+  height: var(--bub);
   min-height: 0;
   padding: 0;
   border: 0;
   border-radius: 50%;
-  color: var(--fg);
-  background: var(--ivory);
-  box-shadow: 0 0 0 1px rgb(36 25 16 / 22%), 0 2px 8px rgb(24 18 16 / 20%);
+  color: var(--ink);
+  background: var(--disc);
+  box-shadow: 0 0 0 1px var(--ring), var(--lift);
   pointer-events: auto;
   transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .railDisc:not(:disabled):hover {
-  background: #fffdf6;
-  box-shadow: 0 0 0 1px rgb(36 25 16 / 30%), 0 5px 14px rgb(24 18 16 / 26%);
+  background: var(--disc-hi);
+  box-shadow: 0 0 0 1px var(--ink-30), var(--lift-hi);
   transform: none;
 }
 

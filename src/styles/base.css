@@ -2,8 +2,14 @@
    Split from styles.css (Phase 2e); original source order preserved. */
 
 :root {
-  --font-display: Copperplate, "Copperplate Gothic Light", "Iowan Old Style", Georgia, serif;
-  --font-body: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  /* KYKLOS typefaces — Marcellus for the display register, Source Serif 4 for
+     body. Loaded in index.html. These ARE the mock's --disp/--body; the older
+     --font-display/--font-body names stay as aliases so the ~200 existing call
+     sites keep working. Copperplate survives only as a fallback. */
+  --disp: "Marcellus", Copperplate, Georgia, serif;
+  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-display: var(--disp);
+  --font-body: var(--body);
   color: #241910;
   background: #f4e6c8;
   font-family: var(--font-body);
@@ -115,7 +121,9 @@ button:focus-visible {
   --panel: rgb(255 248 231 / 78%);
   --panel-strong: rgb(255 248 231 / 94%);
   --panel-soft: rgb(192 70 28 / 10%);
-  --line: rgb(36 25 16 / 18%);
+  /* 13%, per the mock's table — the app had drifted to 18%, which is why every
+     keyline and rule reads heavier here than in DECIDED-UI-LAYOUT.html. */
+  --line: rgb(36 25 16 / 13%);
   --line-strong: rgb(192 70 28 / 48%);
   --button-bg: rgb(255 248 231 / 86%);
   --button-line: rgb(36 25 16 / 24%);
@@ -127,11 +135,59 @@ button:focus-visible {
   --float: 0 10px 30px rgb(24 18 16 / 26%);
   --on-sea: #fff8e7;
   --sea-shadow: 0 1px 3px rgb(10 34 41 / 55%);
+
+  /* ── KYKLOS token table ─────────────────────────────────────────────────────
+     Ported verbatim from the contract, docs/design/showcases/DECIDED-UI-LAYOUT.html.
+     Values are the mock's, not paraphrases: change them there first. */
+
+  /* the clay body and its slips */
+  --slip: #d8c8a8;
+  --vase: #181210;
+  --ochre-ink: #b06a1d;
+
+  /* the ink ramp — every text weight in the UI comes off this one hue */
+  --ink: #241910;
+  --ink-66: rgb(36 25 16 / 66%);
+  --ink-48: rgb(36 25 16 / 48%);
+  --ink-30: rgb(36 25 16 / 30%);
+  --ink-12: rgb(36 25 16 / 12%);
+  --ink-07: rgb(36 25 16 / 7%);
+
+  /* the disc vocabulary — discs are the lighter plate so they read ON the bone;
+     every disc keeps a keyline, because it must survive the sea behind it too */
+  --disc: #fff8e7;
+  --disc-hi: #fffdf6;
+  --ring: rgb(36 25 16 / 22%);
+  --lift: 0 2px 8px rgb(24 18 16 / 20%);
+  --lift-hi: 0 5px 14px rgb(24 18 16 / 26%);
+
+  /* text floating ON THE SEA stays light — the sea is the one dark value left */
+  --on-sea-dim: rgb(255 248 231 / 72%);
+
+  /* player colours */
+  --p1: #2f5d9e;
+  --p2: #a83226;
+  --p3: #dfa437;
+  --p4: #55673a;
+
+  /* chrome geometry — the bars, the discs threaded on them, the cards */
+  --rail-w: 30px;
+  --top-h: 48px;
+  --bot-h: 64px;
+  --bub: 46px;
+  --bub-out: 28px;
+  --vb: 54px;
+  --vb-out: 32px;
+  --panel-w: 308px;
+  --chron-w: 292px;
+  --hexclip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   /* The band the floating left rail + ledger card live in — clear of the flush top
      spine and the bottom dock. The rail, card and camera all read them so they
      stay in agreement. */
   --chrome-top: 62px;
-  --chrome-bot: 98px;
+  /* Derived, not guessed: the dock is the spine plus the discs' overhang above
+     it. Hard-coding this drifted from the real dock height once already. */
+  --chrome-bot: calc(var(--bot-h) + var(--vb-out));
   --rail-gap: 70px;
   --ledger-rule: rgb(36 25 16 / 14%);
   --ledger-rule-strong: rgb(36 25 16 / 22%);
