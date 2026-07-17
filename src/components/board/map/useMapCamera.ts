@@ -3,8 +3,10 @@ import {
   BASE_VIEW_BOX,
   MAX_ZOOM,
   MIN_ZOOM,
+  WORLD_VIEW_BOX,
   ZOOM_STEP,
   cameraTransform,
+  clamp,
   clampViewBox,
   getZoomLevel,
   seatViewBox,
@@ -54,7 +56,7 @@ const WHEEL_COMMIT_MS = 90;
  * are re-measured. They exist so the resting board clears the panel now, not so
  * they are exact. See `docs/feat/ui-refit.md` §"The camera".
  */
-const CHROME_INSET_PX = { top: 92, right: 48, bottom: 96, left: 380 };
+const CHROME_INSET_PX = { top: 96, right: 70, bottom: 100, left: 210 };
 
 /** Buttons and the confirm prompt own their own pointers — never pan under them. */
 function isMapDragBlockedTarget(target: EventTarget) {
@@ -124,10 +126,15 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
   };
 
   /**
-   * Seat the resting board in the live area — the sea the chrome does not cover.
-   * Keeps the current zoom, recentres a window of that size on the board, then
-   * lets {@link seatViewBox} slide it clear of the panel and bars. Runs once, when
-   * the stage first has a real size; a later manual pan is the player's to keep.
+   * Seat the resting board in the live area — the sea the chrome does not cover —
+   * *fitting the whole board there* (KYKLOS `fit()`). The map SVG covers the stage
+   * (`preserveAspectRatio="… slice"`), so a screen pixel is `(BASE.w/vbW)·s` world
+   * units where `s = max(stageW/BASE.w, stageH/BASE.h)`. Choosing the window width
+   * `vbW = BASE.w·s / kFit`, with `kFit` the px-per-world that fits BASE into the
+   * live rectangle, zooms the board out until it fits (on a wide monitor `slice`
+   * would otherwise blow it up to cover the width). Then {@link seatViewBox} slides
+   * that window so the board sits centred in the live area, not under the chrome.
+   * Runs once, when the stage first has a real size; a later manual pan is kept.
    */
   const reseatToLive = () => {
     const svg = svgRef.current;
@@ -142,19 +149,30 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
       return;
     }
 
-    const current = cameraViewBox.current;
+    const liveWidth = Math.max(120, bounds.width - CHROME_INSET_PX.left - CHROME_INSET_PX.right);
+    const liveHeight = Math.max(120, bounds.height - CHROME_INSET_PX.top - CHROME_INSET_PX.bottom);
+    const pad = 28;
+    const sliceScale = Math.max(bounds.width / BASE_VIEW_BOX.width, bounds.height / BASE_VIEW_BOX.height);
+    const fitScale = Math.min(
+      (liveWidth - 2 * pad) / BASE_VIEW_BOX.width,
+      (liveHeight - 2 * pad) / BASE_VIEW_BOX.height
+    );
+    // vbW in [BASE.w, WORLD.w] → zoom in [MIN_ZOOM, 1.0]: never zoom past the base
+    // frame at rest, never past the sea.
+    const fitWidth = clamp((BASE_VIEW_BOX.width * sliceScale) / fitScale, BASE_VIEW_BOX.width, WORLD_VIEW_BOX.width);
+    const fitHeight = fitWidth * (BASE_VIEW_BOX.height / BASE_VIEW_BOX.width);
     const centered: ViewBox = {
-      width: current.width,
-      height: current.height,
-      x: BASE_VIEW_BOX.x + (BASE_VIEW_BOX.width - current.width) / 2,
-      y: BASE_VIEW_BOX.y + (BASE_VIEW_BOX.height - current.height) / 2
+      width: fitWidth,
+      height: fitHeight,
+      x: BASE_VIEW_BOX.x + (BASE_VIEW_BOX.width - fitWidth) / 2,
+      y: BASE_VIEW_BOX.y + (BASE_VIEW_BOX.height - fitHeight) / 2
     };
-    const seated = seatViewBox(centered, worldInsetFor(current, bounds));
+    const seated = seatViewBox(centered, worldInsetFor(centered, bounds));
 
     hasSeated.current = true;
     cameraViewBox.current = seated;
-    cameraLayerRef.current?.setAttribute("transform", cameraTransform(seated));
     setViewBox(seated);
+    cameraLayerRef.current?.setAttribute("transform", cameraTransform(seated));
   };
 
   // Seat the board clear of the chrome as soon as the stage has a real size. The
