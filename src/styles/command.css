@@ -274,6 +274,13 @@
   transform: none;
 }
 
+/* The knob is flush with this button's top edge and its hover lifts it 3px, so
+   a clipping parent shaves those 3px off against a 12px-radius rectangle —
+   squaring off the top of the circle. Nothing here should ever clip. */
+.verbDisc {
+  overflow: visible;
+}
+
 .verbKnob {
   display: grid;
   place-items: center;

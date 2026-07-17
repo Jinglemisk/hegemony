@@ -157,6 +157,9 @@
   width: var(--bub);
   height: var(--bub);
   min-height: 0;
+  /* The badge overhangs this disc by 2px on both top and right; a clipping
+     parent cuts its corner off. */
+  overflow: visible;
   padding: 0;
   border: 0;
   border-radius: 50%;
