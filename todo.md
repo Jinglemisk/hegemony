@@ -63,18 +63,31 @@
 -- ~~SETTLED (roadmap-appendix D3)~~ SUPERSEDED by Q12 (2026-07-12): the standard setup is now METROPOLIS (4 pops) + FOUNDING COLONY (2 pops, any coastal tile or beside the metropolis), snake order. Gameplay colonies chain by contiguity or sail coast-to-coast (leapfrog). Board setting: ?board=classic|shuffled (+ ?seed=N, ?dev=preload, ?setup=manual).
 -- Add more modes as data; an in-game mode picker is lobby scope (deferred).
 
-- Add a second tier of buildings.
--- ~~Only four basic buildings exist; economic paths barely differ.~~ Seven now (2026-07-13 overnight): ~~Aqueduct (+4 capacity)~~, ~~Forum (+2 influence)~~ SHIPPED (Forum at the PDF's own 4s+8w; Aqueduct 12s provisional), plus Odeon (+2 happiness, 8s+4w provisional).
--- Still candidates: Barracks (military placeholder / +1 score — waits for a military design), Warehouse (+1 tile material income — needs a new flat-primary-resource effect; see OVERNIGHT.md morning questions). PDF's Library/Embassy/Luxury Trader wait on National Ideas / Assembly / luxuries.
+- ~~Add a second tier of buildings.~~ SHIPPED (feat/phase2-terrain, 2026-07-18): the
+  Warehouse idea became **Villa** (12w+4g, +2 tile material/level, dead on hills — new
+  `tilePrimaryResourceBonus` effect) and **Gymnasion** (12s+4w, −2 ladder-promote cost
+  in its settlement — new `promoteCostReduction` effect). Nine buildings now; **every**
+  building carries a `maxLevel` cap (owner ruling: no flat effect scales forever). No
+  player-facing "tier" vocabulary — they are just mid-game buildings.
+-- Seven earlier (2026-07-13 overnight): ~~Aqueduct (+4 capacity)~~, ~~Forum (+2 influence)~~, Odeon (+2 happiness).
+-- Still candidates: Barracks (military placeholder — waits for a military design). PDF's Library/Embassy/Luxury Trader wait on National Ideas / Assembly / luxuries.
 
 - Build the Assembly / resolutions system.
 -- The Resolutions deck is a "0/0" placeholder in the command panel.
 -- Players vote on resolutions that affect some or all of them (rivalry mechanics).
 -- This is where players will spend Influence primarily
 
-- Terrain & resource economy rework. (planned — see docs/feat/terrain-economy.md; ships with building tier 2, roadmap Phase 2)
--- Settled: wood/food/stone are first-order (from tiles); gold/influence are second-order (from pops/trade/buildings) — gold tiles removed, hills become the slot-rich, yield-less building terrain.
--- Also pinned there: building pricing grammar, landmark-tile principle + constrained shuffle, trade-before-stone-sinks sequencing.
+- ~~Terrain & resource economy rework.~~ SHIPPED (feat/phase2-terrain, 2026-07-18 —
+  docs/feat/terrain-economy.md). 37 tiles / 65 slots: forest 15 < mountain 8 < plains 8
+  < hill 5 (yield-less, slot-king) + 1 unsettleable oracle. **All tile-gold removed** —
+  gold is now pop/event/trade only. `HexTile.resource: Yield | null`; slaves are inert on
+  yield-less tiles. Villa + Gymnasion + `maxLevel` caps shipped alongside (above).
+-- Still pinned in the feat doc for later: the **constrained shuffle** (landmarks never
+   adjacent / not clustered / breadbasket off-rim — the classic board is authored fair
+   by hand for now), and **trade-before-stone-sinks** sequencing for the civic tier.
+-- Watch (2026-07-18): greedy bots under-build Villa (they value banked wood/stone only
+   at material/10) and never touch the Gymnasion (they barely promote) — both need a
+   human or smarter-bot read. Seat spread P1 35% / P3 17% over 60 games (small sample).
 
 - ~~Bank exchange via gold as the medium.~~ DONE (feat/phase1-currencies — D6/Q14; rates provisional)
 -- Never direct barter; gold is the unit of account. Rates are PER-MATERIAL and board-derived (Q14, user's call): tile-count scarcity classes computed once at game creation, static all game — classic prices wood 4→1g/2g, stone 2→1g/3g, food 3→1g/2g. `uniform` derivation stays a ruleset knob (A/B verdict 2026-07-12: no measurable difference; scarcity kept for board texture — docs/sim/2026-07-12-bank-rates-ab.md). No trade cap. UI: ledger Market tab.

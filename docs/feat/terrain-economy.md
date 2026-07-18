@@ -1,3 +1,11 @@
+> **✅ SHIPPED on `feat/phase2-terrain` (2026-07-18).** The rework below is implemented:
+> new TERRAIN_DECK, `HexTile.resource: Yield | null`, unsettleable oracle (at (0,1) — see
+> the appendix execution log for why not dead-centre), Villa + Gymnasion, `maxLevel` caps.
+> 199 tests green, browser-verified. **Per the Post-Implementation Cleanup Requirement at
+> the foot of this file, the owner still needs to decide whether to delete this doc or fold
+> its settled principles into `v0.1-rules-spec.md` + the balance ledger — left for sign-off.**
+> Still deferred (not this phase): the constrained map shuffle, and trade-before-stone-sinks.
+
 # Terrain & Resource Economy Rework Plan
 
 Pins down the terrain/tile-distribution direction settled in the balance spitball of
