@@ -989,6 +989,22 @@
     <thead><tr><th>Date</th><th>Engine ref</th><th>Entry</th></tr></thead>
     <tbody>
       <tr>
+        <td>2026-07-18</td>
+        <td><code>feat/phase2-terrain</code></td>
+        <td><strong>Phase 2 "The land repriced."</strong> The land now yields only <strong>wood / stone / food</strong>;
+        <strong>all tile-gold is removed</strong> — gold is second-order (pops, events, trade). New terrain deck (37 tiles /
+        65 slots, verified): forest 15 &lt; mountain 8 &lt; plains 8 &lt; <strong>hill 5 (yield-less, slot-king)</strong> +
+        1 unsettleable <strong>oracle</strong>. Hills are elite building terrain — slaves go inert there (they only work the
+        land), citizens/freemen live fed from the shared pool. Two buildings: <strong>Villa</strong> (+2 of the tile's own
+        material/level, dead on hills; sim-tuned up from the spec sketch +1, which never paid back) and <strong>Gymnasion</strong>
+        (−2 ladder-promote cost in its settlement). <strong>Every building now has a <code>maxLevel</code> cap</strong> — the flat
+        effects (Granary/Forum/Aqueduct/Odeon) no longer stack without bound, so a slot-rich hill must diversify. Bank side-effect:
+        stone shifts <em>scarce → baseline</em> (8 stone now ties 8 food, so neither is strictly rarest). 60-game greedy batch
+        (<code>docs/sim/2026-07-18-phase2-terrain.json</code>): no crashes, caps binding, unrest calm 92%; greedy under-builds the
+        Villa (it prices banked wood/stone at only material/10) and never touches the Gymnasion (it barely promotes) — both a bot
+        blind spot, awaiting a human read, not a balance verdict.</td>
+      </tr>
+      <tr>
         <td>2026-07-13</td>
         <td><code>feat/ui-refit</code></td>
         <td><strong>Civic buildings ported</strong> (overnight item 4 — Hegemony.pdf + the todo sketch): <strong>Forum</strong>

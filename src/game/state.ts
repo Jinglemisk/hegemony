@@ -1,4 +1,5 @@
-import { PLAYER_EVENT_CARDS, PLAYER_IDS, PLAYER_NAMES, SEASONAL_EVENT_CARDS, TERRAIN_DECK } from "./data";
+import { PLAYER_EVENT_CARDS, PLAYER_IDS, PLAYER_NAMES, SEASONAL_EVENT_CARDS } from "./data";
+import { getTerrainDeck } from "./content";
 import { deriveBankRates } from "./bank";
 import { createInitialMap } from "./map";
 import type { BoardLayout, HegemonyState } from "./types";
@@ -17,9 +18,10 @@ export function createInitialState(
   const player = shuffleWithSeed(expandDeck(PLAYER_EVENT_CARDS), rng);
   rng = player.state;
 
-  let terrainDeck = TERRAIN_DECK;
+  const baseTerrainDeck = getTerrainDeck();
+  let terrainDeck = baseTerrainDeck;
   if (boardLayout === "shuffled") {
-    const shuffled = shuffleWithSeed(TERRAIN_DECK, rng);
+    const shuffled = shuffleWithSeed(baseTerrainDeck, rng);
     terrainDeck = shuffled.cards;
     rng = shuffled.state;
   }

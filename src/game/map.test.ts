@@ -14,12 +14,27 @@ describe("hex map", () => {
     expect(ids.size).toBe(tiles.length);
   });
 
-  it("lays out the spec terrain deck (6 mountain / 9 hill / 14 forest / 8 plains)", () => {
+  it("lays out the Phase 2 terrain deck (15 forest / 8 mountain / 8 plains / 5 hill / 1 oracle)", () => {
     const counts = createInitialMap().reduce<Record<string, number>>((acc, tile) => {
       acc[tile.terrain] = (acc[tile.terrain] ?? 0) + 1;
       return acc;
     }, {});
-    expect(counts).toEqual({ mountain: 6, hill: 9, forest: 14, plains: 8 });
+    expect(counts).toEqual({ forest: 15, mountain: 8, plains: 8, hill: 5, oracle: 1 });
+  });
+
+  it("makes hills and the oracle yield-less, and puts no gold on the map", () => {
+    const tiles = createInitialMap();
+    for (const tile of tiles) {
+      if (tile.terrain === "hill" || tile.terrain === "oracle") {
+        expect(tile.resource).toBeNull();
+      }
+      expect(tile.resource?.type).not.toBe("gold");
+    }
+    // The oracle is a single unsettleable hole beside the board's centre.
+    const oracle = tiles.filter((tile) => tile.terrain === "oracle");
+    expect(oracle).toHaveLength(1);
+    expect(oracle[0].id).toBe("0,1");
+    expect(oracle[0].buildingSlots).toBe(0);
   });
 
   it("measures hex distance symmetrically from the center", () => {

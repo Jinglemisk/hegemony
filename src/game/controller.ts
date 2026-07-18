@@ -39,6 +39,7 @@ import {
 import type { CivicCalmPayment, VentureStake } from "./rules";
 import { advanceSetupTurn, beginGameplayTurn, createGame, endTurn } from "./turn";
 import { GAME_MODES } from "./ruleset";
+import { resolveTunedRuleset } from "../dev/tuning";
 
 export type { Phase } from "./types";
 
@@ -61,13 +62,17 @@ function createGameFromUrl(): HegemonyState {
   const manualSetup = params?.get("setup") === "manual";
   const preload = params?.get("dev") === "preload" || GAME_CONFIG.preloadOpeningSetupForTesting;
 
+  // Fold any dev tuning overrides (localStorage) onto the mode's ruleset and install the
+  // building content override. A no-op in production or when nothing is being tuned.
+  const ruleset = resolveTunedRuleset(GAME_MODES[GAME_CONFIG.mode].ruleset);
+
   if (preload) {
     // The scripted opening only fits the classic board's tiles.
-    return createGame(pinnedSeed, GAME_MODES[GAME_CONFIG.mode].ruleset, "classic", true);
+    return createGame(pinnedSeed, ruleset, "classic", true);
   }
 
   const seed = pinnedSeed ?? (GAME_CONFIG.autoOpeningForDev && !manualSetup ? nextRotationSeed() : undefined);
-  const G = createGame(seed, GAME_MODES[GAME_CONFIG.mode].ruleset, boardLayout, false);
+  const G = createGame(seed, ruleset, boardLayout, false);
 
   if (!manualSetup && GAME_CONFIG.autoOpeningForDev) {
     autoPlayOpening(G);
@@ -174,6 +179,9 @@ export function useHegemonyGame() {
 
   const moves = useMemo(() => createMoves(setG), []);
   const events = useMemo(() => createEvents(setG), []);
+  // Rebuild the whole game from URL + current dev tuning overrides. Reuses this page
+  // load's rotation seed, so a re-tune re-rolls the SAME board with new params (clean A/B).
+  const resetGame = useMemo(() => () => setG(createGameFromUrl()), []);
   // Stable while G is unchanged, so memoized panels that read the turn context don't re-render on unrelated UI state.
   const ctx = useMemo(() => deriveContext(G), [G]);
 
@@ -183,6 +191,7 @@ export function useHegemonyGame() {
     setPlayerID,
     moves,
     events,
+    resetGame,
     isActive: playerID === G.currentPlayer,
   };
 }

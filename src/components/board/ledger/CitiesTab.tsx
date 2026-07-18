@@ -83,7 +83,7 @@ export function CitiesTab({
             <button
               aria-controls={detailId}
               aria-expanded={isExpanded}
-              aria-label={`${isExpanded ? "Collapse" : "Expand"} ${capitalize(settlement.kind)} ${tile.id}: ${popTotal} of ${capacity} pops, ${settlement.buildings.length} of ${slots} building slots, ${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]} tile yield.`}
+              aria-label={`${isExpanded ? "Collapse" : "Expand"} ${capitalize(settlement.kind)} ${tile.id}: ${popTotal} of ${capacity} pops, ${settlement.buildings.length} of ${slots} building slots, ${tile.resource ? `${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]} tile yield` : "no tile yield"}.`}
               className="holdingSummaryButton"
               onClick={() => toggleHolding(holdingId)}
               type="button"

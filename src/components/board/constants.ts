@@ -13,7 +13,10 @@ export const BUILDING_AFFINITY: Record<BuildingId, PopType> = {
   granary: "citizens",
   forum: "citizens",
   aqueduct: "freemen",
-  odeon: "citizens"
+  odeon: "citizens",
+  // Villa enriches the land the slaves work; the Gymnasion manufactures citizens.
+  villa: "slaves",
+  gymnasion: "citizens"
 };
 
 export const DETAIL_TOOLTIP_WIDTH = 260;

@@ -17,7 +17,7 @@ import {
   upgradeColonyToCity,
 } from "./rules";
 import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
-import type { HegemonyState, HexTile, PlayerId, Pops, Settlement, SettlementKind } from "./types";
+import type { HegemonyState, HexTile, PlayerId, Pops, Settlement, SettlementKind, Yield } from "./types";
 
 // Fixed seed so any deck draws triggered during a test are reproducible.
 const SEED = 0xc0ffee;
@@ -52,12 +52,12 @@ function owned(state: HegemonyState, tileId: string, owner: PlayerId): Settlemen
 
 // A material-resource tile (wood/stone) so tile yield never collides with the
 // gold/food/influence/happiness columns the pop formulas write to.
-function materialTile(state: HegemonyState): HexTile {
+function materialTile(state: HegemonyState): HexTile & { resource: Yield } {
   const found = state.board.tiles.find(
-    (candidate) => candidate.resource.type === "wood" || candidate.resource.type === "stone",
+    (candidate) => candidate.resource?.type === "wood" || candidate.resource?.type === "stone",
   );
-  if (!found) throw new Error("no material tile on the board");
-  return found;
+  if (!found?.resource) throw new Error("no material tile on the board");
+  return found as HexTile & { resource: Yield };
 }
 
 function wealthy(state: HegemonyState, playerID: PlayerId) {
@@ -202,6 +202,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     const shared = tile(state, "3,0");
     const colony = owned(state, "3,0", "0");
     expect(shared.settlements).toHaveLength(2);
+    if (!shared.resource) throw new Error("expected a yielding tile at 3,0");
     expect(settlementNetYield(shared, colony, DEFAULT_RULESET)[shared.resource.type]).toBe(
       Math.floor(shared.resource.amount * 0.5),
     );
