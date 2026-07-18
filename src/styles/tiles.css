@@ -4,7 +4,8 @@
 .terrainTint-mountain,
 .terrainTint-hill,
 .terrainTint-forest,
-.terrainTint-plains {
+.terrainTint-plains,
+.terrainTint-oracle {
   --terrain-tint: linear-gradient(180deg, var(--terrain-hue), var(--terrain-hue-light));
 }
 
@@ -14,10 +15,11 @@
   --terrain-hue-soft: rgb(143 133 113 / 42%);
 }
 
+/* Phase 2: hills lost their gold and became bare, sun-baked building land. */
 .terrainTint-hill {
-  --terrain-hue: #8b5a2f;
-  --terrain-hue-light: #d09955;
-  --terrain-hue-soft: rgb(217 138 53 / 42%);
+  --terrain-hue: #8a6f42;
+  --terrain-hue-light: #c2a878;
+  --terrain-hue-soft: rgb(138 111 66 / 42%);
 }
 
 .terrainTint-forest {
@@ -30,6 +32,13 @@
   --terrain-hue: #d69c35;
   --terrain-hue-light: #ffd970;
   --terrain-hue-soft: rgb(155 191 82 / 42%);
+}
+
+/* The oracle: a cool marble hole, sacred and off-limits — reads unlike any yield tile. */
+.terrainTint-oracle {
+  --terrain-hue: #6f6c86;
+  --terrain-hue-light: #c8cbd4;
+  --terrain-hue-soft: rgb(111 108 134 / 42%);
 }
 
 .svgButton {
@@ -71,6 +80,19 @@
 
 .tileMetrics {
   pointer-events: none;
+}
+
+/* The oracle's omphalos: a ringed navel-stone at the tile centre, marking the hole
+   the map must route around. No yield/slot numerals ever draw here. */
+.oracleMark circle {
+  fill: none;
+  stroke: rgb(255 248 231 / 66%);
+  stroke-width: 2;
+}
+
+.oracleMark circle:last-child {
+  fill: rgb(58 52 74 / 62%);
+  stroke: none;
 }
 
 /* Tile glyphs (user, 2026-07-13): slots read "used/available" up top, yield reads

@@ -8,7 +8,7 @@ import {
   totalPops
 } from "../game/rules";
 import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
-import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
+import { RESOURCE_ORDER, tileCssVars } from "../ui/resourceVisuals";
 import { AtlasIcon, TerrainSprite } from "./Sprites";
 import { ResourceChips } from "./board/ResourceChips";
 import { capitalize } from "./board/helpers";
@@ -75,8 +75,12 @@ export function SettlementSummaryCard({
 
       <span
         className="holdingTileBadge"
-        style={resourceCssVars(tile.resource.type)}
-        title={`${capitalize(tile.terrain)} tile yield ${formatSignedNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]}`}
+        style={tileCssVars(tile)}
+        title={
+          tile.resource
+            ? `${capitalize(tile.terrain)} tile yield ${formatSignedNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]}`
+            : `${capitalize(tile.terrain)} — no tile yield`
+        }
       >
         <span className="summaryTerrain" aria-hidden="true">
           <TerrainSprite terrain={tile.terrain} className="terrainChip" />

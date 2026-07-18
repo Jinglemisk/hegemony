@@ -65,6 +65,10 @@ export function settlementBuildingSlots(tile: HexTile, settlement: Settlement, r
 }
 
 export function settlementTileYield(tile: HexTile, settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
+  if (!tile.resource) {
+    return 0;
+  }
+
   const share =
     settlement.kind === "colony" && tile.settlements.length > 1 ? ruleset.economy.colonySharedTileYieldShare : 1;
 
@@ -120,6 +124,10 @@ export function canPlaceColonyOnTile(
     can: false,
     reasons: []
   };
+
+  if (tile.terrain === "oracle") {
+    status.reasons.push("The oracle cannot be settled.");
+  }
 
   if (tile.settlements.some((settlement) => settlement.kind !== "colony")) {
     status.reasons.push("Tile already has a city.");

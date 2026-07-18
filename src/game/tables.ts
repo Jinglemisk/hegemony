@@ -256,8 +256,9 @@ export function describeRemoval(summary: RemovalSummary): string {
 }
 
 /** Burn one random owned building (seeded). Returns its display name, or null if the
- *  player owns none. Once building tiers exist (Phase 2) this becomes a downgrade
- *  for tier-2+ buildings — today everything is tier 1, so destruction is the rule. */
+ *  player owns none. Because a settlement's `buildings` are copies (levels), splicing
+ *  one out already IS the downgrade — a level-3 Granary drops to level 2 rather than
+ *  vanishing, only the last copy is truly destroyed (Phase 2 level model). */
 function destroyRandomBuilding(G: HegemonyState, playerID: PlayerId): string | null {
   const owned: Array<{ settlement: Settlement; index: number }> = [];
 

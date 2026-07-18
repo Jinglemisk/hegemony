@@ -12,7 +12,7 @@ const SEED = 0xc0ffee;
  *  yield lands in wood, so the gold column stays a pure citizen readout. */
 function capitalOfThreeCitizens(ruleset?: Ruleset): { G: HegemonyState; tileId: string } {
   const G = createInitialState(SEED, ruleset);
-  const tile = G.board.tiles.find((candidate) => candidate.resource.type === "wood");
+  const tile = G.board.tiles.find((candidate) => candidate.resource?.type === "wood");
   if (!tile) throw new Error("no wood tile on the board");
   const result = placeCapital(G, "0", tile.id, { citizens: 3, freemen: 0, slaves: 1 });
   expect(result.ok).toBe(true);
