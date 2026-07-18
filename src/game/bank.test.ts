@@ -11,12 +11,13 @@ const clearPending = (draft: HegemonyState) => {
 };
 
 describe("bank rate derivation (D6/Q14)", () => {
-  it("classes the classic board by tile supply: wood abundant, stone scarce, food baseline", () => {
+  it("classes the classic board by tile supply: wood abundant, stone & food baseline", () => {
     const G = scenario().opening().mutate(clearPending).build();
 
-    // Classic composition: 14 wood tiles, 8 food, 6 stone.
+    // Phase 2 composition: 15 wood tiles, 8 stone, 8 food. Wood is strictly most common
+    // (abundant); stone and food tie at 8, so neither is strictly rarest → both baseline.
     expect(G.bank.wood).toEqual(DEFAULT_RULESET.economy.bank.abundant);
-    expect(G.bank.stone).toEqual(DEFAULT_RULESET.economy.bank.scarce);
+    expect(G.bank.stone).toEqual(DEFAULT_RULESET.economy.bank.baseline);
     expect(G.bank.food).toEqual(DEFAULT_RULESET.economy.bank.baseline);
   });
 

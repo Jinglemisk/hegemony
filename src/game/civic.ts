@@ -1,9 +1,10 @@
+import { getBuildings } from "./content";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName, getTile } from "./core/query";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
-import type { HegemonyState, PlayerId, PopType } from "./types";
+import type { HegemonyState, PlayerId, PopType, Resource, Resources, Settlement } from "./types";
 
 /**
  * The civic verbs (roadmap-appendix D7/D8): calm the province, or move a pop up and
@@ -60,10 +61,40 @@ export function civicCalm(G: HegemonyState, playerID: PlayerId, payment: CivicCa
   return MOVE_OK;
 }
 
+/** Total promotion-cost reduction from a settlement's buildings (the Gymnasion) — the
+ *  civic counterpart to the Granary's grow-pop food discount (economy/cost.ts). */
+function settlementPromoteDiscount(settlement: Settlement): number {
+  return settlement.buildings.reduce((sum, buildingId) => {
+    const building = getBuildings().find((candidate) => candidate.id === buildingId);
+
+    return (
+      sum +
+      (building?.effects ?? []).reduce(
+        (effectSum, effect) => (effect.type === "promoteCostReduction" ? effectSum + effect.amount : effectSum),
+        0
+      )
+    );
+  }, 0);
+}
+
+/** Cut `discount` off whichever resource(s) a promotion costs, floored at zero. */
+function discountPromoteCost(cost: Partial<Resources>, discount: number): Partial<Resources> {
+  if (discount <= 0) {
+    return { ...cost };
+  }
+
+  const out: Partial<Resources> = {};
+  for (const [resource, amount] of Object.entries(cost) as Array<[Resource, number]>) {
+    out[resource] = Math.max(0, amount - discount);
+  }
+  return out;
+}
+
 export function getPromotePopStatus(G: HegemonyState, playerID: PlayerId, tileId: string, from: PopType): ActionStatus {
-  const cost = G.ruleset.ladder.promoteCosts[from as "slaves" | "freemen"] ?? {};
-  const reasons: string[] = [];
   const settlement = getOwnedSettlement(G, tileId, playerID);
+  const baseCost = G.ruleset.ladder.promoteCosts[from as "slaves" | "freemen"] ?? {};
+  const cost = discountPromoteCost(baseCost, settlement ? settlementPromoteDiscount(settlement) : 0);
+  const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("The ladder is a gameplay action.");
   if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");

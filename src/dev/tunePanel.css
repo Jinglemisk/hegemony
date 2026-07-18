@@ -1,0 +1,286 @@
+/* DEV parameter dashboard. Deliberately utilitarian — a tool, not game chrome —
+   but tinted to the Kerameikos palette so it doesn't clash with the board. */
+
+.tune-fab {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 9999;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 7px 11px;
+  color: #f3e9d8;
+  background: #2b2622;
+  border: 1px solid #7a4a2b;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.tune-fab:hover {
+  background: #3a332c;
+  border-color: #c96a3a;
+}
+
+.tune-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 9999;
+  width: 380px;
+  max-width: 92vw;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 12px 12px 40px;
+  box-sizing: border-box;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #ece3d3;
+  background: rgba(24, 21, 18, 0.97);
+  border-left: 1px solid #4a3d2e;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.45);
+}
+
+.tune-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #4a3d2e;
+}
+.tune-title {
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #e0a15e;
+}
+.tune-sub {
+  flex: 1;
+  color: #8f8574;
+  font-size: 10px;
+}
+.tune-x {
+  background: none;
+  border: none;
+  color: #b9ad98;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.tune-x:hover {
+  color: #fff;
+}
+
+.tune-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+.tune-btn {
+  font-family: inherit;
+  font-size: 11px;
+  padding: 5px 9px;
+  color: #ece3d3;
+  background: #2f2a24;
+  border: 1px solid #574733;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.tune-btn:hover:not(:disabled) {
+  border-color: #c96a3a;
+}
+.tune-btn.primary {
+  background: #7a3f1e;
+  border-color: #c96a3a;
+  color: #fff2e2;
+}
+.tune-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.tune-badge {
+  margin-left: auto;
+  font-size: 10px;
+  color: #8f8574;
+}
+.tune-badge.on {
+  color: #e0a15e;
+}
+
+.tune-hint {
+  margin: 8px 0 4px;
+  font-size: 10px;
+  color: #8f8574;
+}
+
+.tune-section {
+  margin-top: 10px;
+  border: 1px solid #3a3227;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.tune-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  width: 100%;
+  padding: 7px 9px;
+  background: #241f1a;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+}
+.tune-caret {
+  color: #8f8574;
+}
+.tune-section-title {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #d8c9ac;
+}
+.tune-section-sub {
+  color: #7a7060;
+  font-size: 10px;
+}
+.tune-section-body {
+  padding: 8px 9px 10px;
+}
+
+.tune-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.tune-table th {
+  text-align: right;
+  color: #8f8574;
+  font-weight: 500;
+  padding: 2px 5px;
+  border-bottom: 1px solid #3a3227;
+}
+.tune-table th:first-child {
+  text-align: left;
+}
+.tune-table td {
+  text-align: right;
+  padding: 2px 5px;
+}
+.tune-table td:first-child {
+  text-align: left;
+  color: #d8c9ac;
+}
+.tune-totals {
+  margin-top: 6px;
+  font-size: 10px;
+  color: #8f8574;
+}
+
+.tune-building + .tune-building {
+  margin-top: 2px;
+}
+.tune-building-head {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+}
+.tune-building-name {
+  color: #e0a15e;
+  font-weight: 700;
+}
+.tune-building-eff {
+  color: #9c9280;
+  font-size: 10px;
+}
+.tune-rule {
+  border: none;
+  border-top: 1px dashed #3a3227;
+  margin: 9px 0;
+}
+
+.tune-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.tune-subtree {
+  margin: 2px 0 2px 2px;
+  padding-left: 8px;
+  border-left: 1px solid #3a3227;
+}
+.tune-subtree-toggle {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  width: 100%;
+  padding: 3px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+}
+.tune-subtree-toggle:hover .tune-subtree-label {
+  color: #e0a15e;
+}
+.tune-subtree-label {
+  color: #b9ad98;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+}
+.tune-subtree-body {
+  margin: 1px 0 3px;
+}
+
+.tune-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tune-label {
+  flex: 1;
+  color: #b9ad98;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tune-input {
+  width: 62px;
+  font-family: inherit;
+  font-size: 11px;
+  text-align: right;
+  color: #ece3d3;
+  background: #17130f;
+  border: 1px solid #4a3d2e;
+  border-radius: 4px;
+  padding: 2px 5px;
+}
+.tune-input:focus {
+  outline: none;
+  border-color: #c96a3a;
+}
+.tune-field.overridden .tune-input {
+  border-color: #e0a15e;
+  color: #ffd9a8;
+  background: #241a10;
+}
+.tune-field.overridden .tune-label {
+  color: #e0a15e;
+}
+.tune-revert {
+  font-family: inherit;
+  font-size: 10px;
+  color: #e0a15e;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.tune-field.readonly .tune-ro {
+  color: #8f8574;
+  font-size: 10px;
+}

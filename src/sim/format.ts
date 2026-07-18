@@ -130,7 +130,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
 
     const buildings = settlement.buildings.length > 0 ? ` · buildings: ${settlement.buildings.join(", ")}` : "";
     lines.push(
-      `  ${tileId} ${settlement.kind} on ${tile.terrain} (${tile.resource.type} ${tile.resource.amount}) — ` +
+      `  ${tileId} ${settlement.kind} on ${tile.terrain} (${tile.resource ? `${tile.resource.type} ${tile.resource.amount}` : "no yield"}) — ` +
         `pops ${totalPops(settlement.pops)}/${settlementCapacity(settlement, G.ruleset)} ` +
         `(c${settlement.pops.citizens} f${settlement.pops.freemen} s${settlement.pops.slaves})${buildings}`,
     );

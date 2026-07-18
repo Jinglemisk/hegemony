@@ -50,7 +50,7 @@ export function calculatePopEconomy(holdings: OwnedHolding[], ruleset: Ruleset):
 
   for (const { tile, settlement } of holdings) {
     for (const pop of POP_TYPES) {
-      addResources(economy[pop], popIncome(pop, settlement.pops[pop], tile.resource.type, ruleset));
+      addResources(economy[pop], popIncome(pop, settlement.pops[pop], tile.resource?.type ?? null, ruleset));
     }
   }
 
@@ -129,7 +129,9 @@ export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: 
     ? ` · shares tile with ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
     : "";
 
-  return `${kind} ${tile.id} · ${capitalize(tile.terrain)} +${tile.resource.amount} ${tile.resource.type}${shared}`;
+  const yieldText = tile.resource ? `+${tile.resource.amount} ${tile.resource.type}` : "no yield";
+
+  return `${kind} ${tile.id} · ${capitalize(tile.terrain)} ${yieldText}${shared}`;
 }
 
 export function createEmptyResources(): Resources {

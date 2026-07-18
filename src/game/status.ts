@@ -1,4 +1,4 @@
-import { BUILDINGS } from "./data";
+import { getBuildings } from "./content";
 import type { BuildingId, HegemonyState, PlayerId, PopType, Pops } from "./types";
 import { hasPops, isPositivePopSelection, totalPops } from "./core/pops";
 import { getOwnedSettlement, getGrownSettlementsThisTurn, getTile } from "./core/query";
@@ -84,7 +84,7 @@ export function getBuildBuildingStatus(
   buildingId: BuildingId
 ): ActionStatus {
   const tile = getTile(G, tileId);
-  const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+  const building = getBuildings().find((candidate) => candidate.id === buildingId);
   const settlement = tile?.settlements.find(
     (candidate) => candidate.owner === playerID && candidate.kind !== "colony"
   );
@@ -110,6 +110,16 @@ export function getBuildBuildingStatus(
     status.reasons.push("Requires your city on this tile.");
   } else if (settlement.buildings.length >= settlementBuildingSlots(tile, settlement, G.ruleset)) {
     status.reasons.push("No building slots available.");
+  } else if (
+    settlement.buildings.filter((existing) => existing === building.id).length >= building.maxLevel
+  ) {
+    // Every building is capped (owner ruling): a slot-rich hill must diversify, not
+    // stack one flat effect. Level = copies here; the cap bites before the slot cap.
+    status.reasons.push(
+      building.maxLevel === 1
+        ? `${building.name} is already built here.`
+        : `${building.name} is at its maximum level (${building.maxLevel}).`
+    );
   }
 
   if (!canAfford(G.players[playerID].resources, status.cost ?? building.cost)) {

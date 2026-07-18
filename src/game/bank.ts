@@ -36,7 +36,7 @@ export function deriveBankRates(tiles: HexTile[], rules: BankRules): BankRates {
   }
 
   const counts = TRADABLE_MATERIALS.map(
-    (material) => [material, tiles.filter((tile) => tile.resource.type === material).length] as const
+    (material) => [material, tiles.filter((tile) => tile.resource?.type === material).length] as const
   );
   const most = Math.max(...counts.map(([, count]) => count));
   const least = Math.min(...counts.map(([, count]) => count));

@@ -13,16 +13,26 @@ out-produce your rivals.
 
 ## The board
 
-The island is a grid of 37 hex tiles. Every tile has a terrain that produces one
-resource, and the amount is printed on the tile:
+The island is a grid of 37 hex tiles. Most tiles have a terrain that produces one
+resource from the land, and the amount is printed on the tile:
 
 - **Forest** → Wood
-- **Hill** → Gold
 - **Mountain** → Stone
-- **Plains** → Food
+- **Plains** → Food (the life currency — the breadbasket is the richest tile on the map)
+- **Hill** → *nothing.* Hills yield no resource at all, but carry the **best building
+  slots** on the board. They are elite building terrain: your citizens and freemen live
+  there fed from your shared food, while your slaves — who only work the land — sit idle.
+  The map's single 4-slot tile is a hill, at the contested centre.
+- **Oracle** → a single sacred hole. It yields nothing, has no building slots, and
+  **can never be settled** — a permanent gap that colony chains must route around.
+
+Gold is **never** printed on a tile. It comes only from your people (freemen and
+citizens), events, and trade — the wealth of a civilization, not of the land.
 
 Tiles also have a number of **building slots**, which limit how many buildings a
-settlement on that tile can hold.
+settlement on that tile can hold. This makes the map a real question: settle the rich
+**breadbasket** (great food, few slots) or the yield-less **hilltop** (great building
+room, no food of its own)?
 
 ## Resources
 
@@ -136,9 +146,9 @@ possible, and no season is ever guaranteed good or bad.
 
 The bank trades materials against gold — never material for material. Its rates
 are set by **this board's supply** when the game begins and never move: on the
-classic island, plentiful wood sells 4-for-1-gold, scarce stone sells 2-for-1 and
-costs 3 gold to buy, and food sits at the baseline 3-for-1 / 2 gold. (A shuffled
-board prices itself.) Find it in the ledger's **Market** tab.
+classic island, plentiful wood (the most common tile) sells 4-for-1-gold, while
+stone and food sit at the baseline 3-for-1 / 2 gold. (A shuffled board prices
+itself.) Find it in the ledger's **Market** tab.
 
 - **Sell**: hand over the sell-rate of a material, take 1 gold.
 - **Buy**: pay the buy-rate in gold, take 1 of the material.
@@ -164,22 +174,31 @@ a gamble, and it is *meant* for whoever is behind and needs the swing.
 
 ## Buildings
 
-Buildings are raised in a city or capital (colonies cannot hold them). If you
-build more than one of a kind, their bonuses stack:
+Buildings are raised in a city or capital (colonies cannot hold them). Building more
+than one of a kind stacks its bonus, but **every building has a level cap** — you can
+hold only so many copies of it in one settlement (shown as, e.g., "Granary 2/3"). No
+single flat bonus scales forever, so a slot-rich hill must **diversify** rather than
+stack four of the same thing.
+
+The pricing follows a grammar: **wood** raises economic buildings, **stone** raises
+civic ones, and **gold** the rare commercial extras. Food and influence never buy
+buildings.
 
 - **Marketplace** (12 wood) — +2 gold per freeman, supporting up to 3 freemen.
 - **Temple** (6 stone) — +1 happiness, and +1 influence per citizen, supporting
   up to 2 citizens.
 - **Workshop** (12 wood) — +1 of the tile's resource per slave, supporting up to
-  3 slaves.
+  3 slaves. (Worthless on a yield-less hill — the slaves have nothing to work.)
 - **Granary** (12 wood, 2 stone) — +2 food each turn, and makes growing pops in
-  that settlement cost 2 less food.
+  that settlement cost 2 less food. Up to 3 levels.
 - **Forum** (4 stone, 8 wood) — +2 influence each turn, no citizens required.
 - **Aqueduct** (12 stone) — the settlement holds **4 more pops**.
 - **Odeon** (8 stone, 4 wood) — +2 happiness each turn.
-
-The last three are new civic ports (prices provisional until the Phase 2
-terrain rework).
+- **Villa** (12 wood, 4 gold) — **+2 of the tile's own resource** each turn, up to 2
+  levels. A direct investment in the land — strong on a landmark tile, useless on a
+  yield-less hill.
+- **Gymnasion** (12 stone, 4 wood) — **promotions on the social ladder cost 2 less** in
+  this settlement, the building that makes a citizen-heavy hill city affordable.
 
 ## Happiness and food
 

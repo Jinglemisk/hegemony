@@ -1,4 +1,5 @@
-import { BUILDINGS, OMEN_TABLE } from "./data";
+import { OMEN_TABLE } from "./data";
+import { getBuildings } from "./content";
 import { yearOf } from "./core/calendar";
 import { POP_TYPES, totalPops } from "./core/pops";
 import { settlementCapacity } from "./settlement";
@@ -256,8 +257,9 @@ export function describeRemoval(summary: RemovalSummary): string {
 }
 
 /** Burn one random owned building (seeded). Returns its display name, or null if the
- *  player owns none. Once building tiers exist (Phase 2) this becomes a downgrade
- *  for tier-2+ buildings — today everything is tier 1, so destruction is the rule. */
+ *  player owns none. Because a settlement's `buildings` are copies (levels), splicing
+ *  one out already IS the downgrade — a level-3 Granary drops to level 2 rather than
+ *  vanishing, only the last copy is truly destroyed (Phase 2 level model). */
 function destroyRandomBuilding(G: HegemonyState, playerID: PlayerId): string | null {
   const owned: Array<{ settlement: Settlement; index: number }> = [];
 
@@ -277,7 +279,7 @@ function destroyRandomBuilding(G: HegemonyState, playerID: PlayerId): string | n
   G.rng = step.state;
   const target = owned[Math.floor(step.value * owned.length)];
   const [removed] = target.settlement.buildings.splice(target.index, 1);
-  return BUILDINGS.find((building) => building.id === removed)?.name ?? removed;
+  return getBuildings().find((building) => building.id === removed)?.name ?? removed;
 }
 
 /** Add one pop to a random owned settlement with spare capacity (seeded). Returns a

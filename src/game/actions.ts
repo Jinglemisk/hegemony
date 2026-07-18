@@ -1,4 +1,4 @@
-import { BUILDINGS } from "./data";
+import { getBuildings } from "./content";
 import type { BuildingId, HegemonyState, HexTile, PlayerId, PopType, Pops } from "./types";
 import { formatPopName, formatPops, formatRuleResourceDelta, formatTileLabel } from "./core/format";
 import {
@@ -41,6 +41,10 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
     return invalid();
   }
 
+  if (tile.terrain === "oracle") {
+    return invalid("The oracle cannot be settled.");
+  }
+
   if (isAdjacentToCity(G, tile)) {
     return invalid("The metropolis cannot be adjacent to another city.");
   }
@@ -71,6 +75,10 @@ export function placeCity(G: HegemonyState, playerID: PlayerId, tileId: string, 
     !isExactPopSelection(pops, G.ruleset.placementPopCounts.city)
   ) {
     return invalid();
+  }
+
+  if (tile.terrain === "oracle") {
+    return invalid("The oracle cannot be settled.");
   }
 
   if (isAdjacentToCity(G, tile)) {
@@ -225,7 +233,7 @@ export function buildBuilding(
   buildingId: BuildingId
 ): MoveResult {
   const tile = getTile(G, tileId);
-  const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+  const building = getBuildings().find((candidate) => candidate.id === buildingId);
   const settlement = tile?.settlements.find(
     (candidate) => candidate.owner === playerID && candidate.kind !== "colony"
   );

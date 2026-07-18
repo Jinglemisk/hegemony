@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { Resource } from "../game/types";
+import type { Resource, Terrain, Yield } from "../game/types";
 
 export const RESOURCE_ORDER: Resource[] = ["wood", "stone", "gold", "food", "influence", "happiness"];
 
@@ -18,10 +18,11 @@ type ResourceVisual = {
 export const RESOURCE_VISUALS = {
   wood: {
     color: "#354927",
-    tile: "#758542",
-    soft: "rgb(53 73 39 / 18%)",
-    line: "rgb(53 73 39 / 56%)",
-    shadow: "rgb(53 73 39 / 30%)"
+    // Forests read as timber-brown on the map (was olive-green — too close to plains).
+    tile: "#8c6a3e",
+    soft: "rgb(140 106 62 / 18%)",
+    line: "rgb(140 106 62 / 54%)",
+    shadow: "rgb(140 106 62 / 30%)"
   },
   stone: {
     color: "#8f8571",
@@ -39,10 +40,12 @@ export const RESOURCE_VISUALS = {
   },
   food: {
     color: "#9bbf52",
-    tile: "#dcbf69",
-    soft: "rgb(155 191 82 / 19%)",
-    line: "rgb(155 191 82 / 56%)",
-    shadow: "rgb(155 191 82 / 28%)"
+    // Plains read as field-green on the map (was wheat-gold — now that wood is brown,
+    // food takes the green the two used to share).
+    tile: "#9fbb55",
+    soft: "rgb(159 187 85 / 19%)",
+    line: "rgb(159 187 85 / 56%)",
+    shadow: "rgb(159 187 85 / 28%)"
   },
   influence: {
     color: "#1f6977",
@@ -60,6 +63,26 @@ export const RESOURCE_VISUALS = {
   }
 } satisfies Record<Resource, ResourceVisual>;
 
+// Yield-less terrains (Phase 2) have no resource to colour by, so they carry their own
+// palette. Hills read as bare, sun-baked building land (warm ochre-clay); the oracle
+// reads as a cool marble hole — sacred and off-limits, never a poor tile.
+const TERRAIN_VISUALS = {
+  hill: {
+    color: "#8a6f42",
+    tile: "#c2a878",
+    soft: "rgb(138 111 66 / 18%)",
+    line: "rgb(138 111 66 / 52%)",
+    shadow: "rgb(138 111 66 / 28%)"
+  },
+  oracle: {
+    color: "#6f6c86",
+    tile: "#c8cbd4",
+    soft: "rgb(111 108 134 / 16%)",
+    line: "rgb(111 108 134 / 48%)",
+    shadow: "rgb(111 108 134 / 26%)"
+  }
+} satisfies Partial<Record<Terrain, ResourceVisual>>;
+
 export type ResourceCssVars = CSSProperties & {
   "--resource-color": string;
   "--resource-tile": string;
@@ -68,9 +91,7 @@ export type ResourceCssVars = CSSProperties & {
   "--resource-shadow": string;
 };
 
-export function resourceCssVars(resource: Resource): ResourceCssVars {
-  const visual = RESOURCE_VISUALS[resource];
-
+function toCssVars(visual: ResourceVisual): ResourceCssVars {
   return {
     "--resource-color": visual.color,
     "--resource-tile": visual.tile,
@@ -78,4 +99,19 @@ export function resourceCssVars(resource: Resource): ResourceCssVars {
     "--resource-line": visual.line,
     "--resource-shadow": visual.shadow
   };
+}
+
+export function resourceCssVars(resource: Resource): ResourceCssVars {
+  return toCssVars(RESOURCE_VISUALS[resource]);
+}
+
+/** The right palette for a tile: its resource's if it yields, else its terrain's
+ *  (hill / oracle). One code path so the map fill and the ledger chips never diverge. */
+export function tileCssVars(tile: { terrain: Terrain; resource: Yield | null }): ResourceCssVars {
+  if (tile.resource) {
+    return resourceCssVars(tile.resource.type);
+  }
+
+  const terrainVisual = (TERRAIN_VISUALS as Partial<Record<Terrain, ResourceVisual>>)[tile.terrain];
+  return toCssVars(terrainVisual ?? TERRAIN_VISUALS.hill);
 }
