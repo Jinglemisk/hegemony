@@ -183,6 +183,11 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
    chips + per-line accent); Codex dropped the live Victory section (Victory has its own tab now —
    victory returns to the codex only *qua rule* with the full rulebook); both panels extended down to
    balance top/bottom air.
+-- Also SHIPPED (same branch): Codex is now navigable — a sticky two-tier header (section chips +
+   a sub-entry jump strip with scroll-spy) so the many chapters/sub-chapters are reachable without
+   hunting; the Decks section shows the cards' actual painted faces (assets/event-cards) two-up
+   instead of text rows. (Chose a sticky TOP nav over the plan's left-hand index — the panel is too
+   narrow for a side column.)
 
 - Codex → the whole in-game rulebook (owner ask 2026-07-19; plan `docs/feat/codex-rules.md`).
 -- Grow the Codex from a numbers reference (Dice Tables/Bank/Decks/Costs) into the complete rules,
