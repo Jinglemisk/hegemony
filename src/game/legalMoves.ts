@@ -28,6 +28,7 @@ import { getBuildings } from "./content";
 import { EMPTY_POPS, POP_TYPES } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement } from "./core/query";
+import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds, resolvePendingPlayerEvent } from "./events";
 import { setupCapitalCount } from "./ruleset";
@@ -122,12 +123,69 @@ export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): Legal
   }
 }
 
+type MoveCategory = "setup" | "riotResolution" | "eventResolution" | "gameplay";
+
+const SETUP_PHASES: ReadonlySet<HegemonyState["phase"]> = new Set(["setupCapital", "setupCity", "setupColony"]);
+
+function categorizeMove(type: LegalMove["type"]): MoveCategory {
+  switch (type) {
+    case "placeCapital":
+    case "placeCity":
+    case "placeColony":
+      return "setup";
+    case "buyRiotInsurance":
+    case "resolveRiot":
+      return "riotResolution";
+    case "resolveEvent":
+      return "eventResolution";
+    default:
+      return "gameplay";
+  }
+}
+
+/**
+ * The authoritative turn/phase/pending gate for {@link applyMove}. Enumeration
+ * already refuses to LIST an illegal move, but applyMove is the engine's public
+ * dispatcher — a driver (or a future off-turn caller) could hand it any move — so
+ * the boundary is re-checked here rather than trusted. Mirrors the same
+ * currentPlayer / phase / pending conditions {@link enumerateLegalMoves} gates on,
+ * so it never rejects a legitimately enumerated move.
+ */
+function checkMoveAllowed(G: HegemonyState, playerID: PlayerId, move: LegalMove): MoveResult {
+  if (G.currentPlayer !== playerID) {
+    return invalid("It is not this player's turn.");
+  }
+
+  switch (categorizeMove(move.type)) {
+    case "riotResolution":
+      return G.pendingRiot?.playerID === playerID ? MOVE_OK : invalid("No riot is pending resolution.");
+    case "eventResolution":
+      return G.pendingPlayerEvent?.playerID === playerID ? MOVE_OK : invalid("No pending event to resolve.");
+    case "setup":
+      return SETUP_PHASES.has(G.phase) && !G.pendingPlayerEvent && !G.pendingRiot
+        ? MOVE_OK
+        : invalid("Setup placements are only legal during setup.");
+    case "gameplay":
+      return G.phase === "gameplay" && !G.pendingPlayerEvent && !G.pendingRiot
+        ? MOVE_OK
+        : invalid("That move is not available right now.");
+  }
+}
+
 /**
  * Apply an enumerated move through the engine's own mutators. Setup placements
  * also advance the setup turn machine (and bootstrap gameplay on the final
  * placement), so a driver can run the whole game through this one entry point.
+ * The boundary guard runs first, so an off-turn move or a move made during the
+ * wrong phase / a pending event or riot is rejected authoritatively — not left
+ * to the individual mutators' partial checks.
  */
 export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove): MoveResult {
+  const allowed = checkMoveAllowed(G, playerID, move);
+  if (!allowed.ok) {
+    return allowed;
+  }
+
   switch (move.type) {
     case "placeCapital":
     case "placeCity":

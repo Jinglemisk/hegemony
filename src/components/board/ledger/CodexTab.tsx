@@ -309,46 +309,45 @@ function DecksSection() {
           One card leaves the deck each season and never returns. Season tags weight the draw toward suited cards — a
           tendency, never a guarantee.
         </p>
-        <ul className="codexCardList">
+        <div className="codexCardGrid">
           {SEASONAL_EVENT_CARDS.map((card) => (
             <CodexCard card={card} key={card.id} showSeasons />
           ))}
-        </ul>
+        </div>
       </article>
 
       <article className="compendiumEntry" id={deckAnchor("player")}>
         <h3>Player deck · {countCopies(PLAYER_EVENT_CARDS)} cards, drawn every income</h3>
         <p className="compendiumNote">Aggregate composition only — the shuffle keeps its secrets.</p>
-        <ul className="codexCardList">
+        <div className="codexCardGrid">
           {PLAYER_EVENT_CARDS.map((card) => (
             <CodexCard card={card} key={card.id} />
           ))}
-        </ul>
+        </div>
       </article>
     </div>
   );
 }
 
-/** One card as a compact row: a small painted-face thumbnail (topbar-card sized) on
- *  the left, then the name, copy count, season tags, and effect. Many rows to a
- *  screen — the art gives quick recognition, the caption carries the rule. */
+/** One card in the deck grid: its painted face, a stack badge for copies, then the
+ *  name, season tags, and effect text — the art alone carries no rules. */
 function CodexCard({ card, showSeasons = false }: { card: EventCard; showSeasons?: boolean }) {
   return (
-    <li className="codexCard">
-      <img alt="" className="codexCardImage" loading="lazy" src={eventCardArtUrl(card)} />
-      <div className="codexCardCaption">
-        <span className="codexCardName">
-          <strong>{card.name}</strong>
-          {card.count > 1 ? <em className="codexCardCount">×{card.count}</em> : null}
-          {showSeasons && card.seasons && card.seasons.length > 0 ? (
-            <span className="codexCardSeasons">{card.seasons.map(capitalize).join(" · ")}</span>
-          ) : null}
-        </span>
+    <figure className="codexCard">
+      <div className="codexCardArt">
+        <img alt="" className="codexCardImage" loading="lazy" src={eventCardArtUrl(card)} />
+        {card.count > 1 ? <span className="codexCardCount">×{card.count}</span> : null}
+      </div>
+      <figcaption className="codexCardCaption">
+        <strong className="codexCardName">{card.name}</strong>
+        {showSeasons && card.seasons && card.seasons.length > 0 ? (
+          <span className="codexCardSeasons">{card.seasons.map(capitalize).join(" · ")}</span>
+        ) : null}
         <span className="codexCardText">
           <AnnotatedText text={card.text} />
         </span>
-      </div>
-    </li>
+      </figcaption>
+    </figure>
   );
 }
 
