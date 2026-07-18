@@ -448,7 +448,9 @@ function cmdReplay(flags: Flags, file: string) {
       mode: script.mode,
       rulesetPatch: script.rulesetPatch,
       opening: script.opening,
-      botRngState: deriveBotSeed(script.seed),
+      // Resume the original bot stream where it was parked; legacy scripts without
+      // the field fall back to the derived start (the pre-fix behavior).
+      botRngState: script.botRngState ?? deriveBotSeed(script.seed),
       history: script.moves,
       state,
     };

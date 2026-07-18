@@ -17,6 +17,10 @@ export type ScriptFile = {
   mode: GameModeId;
   rulesetPatch: RulesetPatch | null;
   opening: OpeningKind;
+  /** Where the bot decision stream is parked after the recorded moves. Optional so
+   *  pre-existing scripts still parse; carried through so a CONTINUED replay resumes
+   *  the same bot stream as the original save instead of restarting it. */
+  botRngState?: number;
   moves: MoveRecord[];
 };
 
@@ -27,6 +31,7 @@ export function scriptFromSave(save: SaveFile): ScriptFile {
     mode: save.mode,
     rulesetPatch: save.rulesetPatch,
     opening: save.opening,
+    botRngState: save.botRngState,
     moves: save.history,
   };
 }
