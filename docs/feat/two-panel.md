@@ -1,9 +1,13 @@
 # Two-panel — the left/right rail split, deep-links, and the player dossier
 
-**Status: GREENLIT / IN PROGRESS on `feat/two-panel` (owner call 2026-07-18).** Building the
-three **pull-forward** pieces now (Sequencing 1–3: rail split, route model, responsive
-uniform-scale). The two rivalry-native pieces (4 deep-links, 5 player dossier) still **wait
-for Phase 3** — the dossier is a rivalry surface and deep-links want a second nav level.
+**Status: pull-forward pieces SHIPPED on `feat/two-panel` (2026-07-18).** All three
+Sequencing 1–3 pieces are built + browser-verified: (1) rail split — the right consult rail
+(Chronicle/Codex/Victory), ChronicleDrawer retired, both panels open side by side; (2) route
+model — pages are `{view, entry?, scroll?}`, one frame deep; (3) responsive uniform-scale —
+one `--ui-scale` dial shrinks the chrome proportionally, stale docked breakpoints swept. The
+two rivalry-native pieces (4 deep-links, 5 player dossier) still **wait for Phase 3** — the
+dossier is a rivalry surface and deep-links want a second nav level (the route model is laid
+so they widen it, not retrofit an enum).
 
 **Clarifications answered (owner, 2026-07-18):** (1) **Both panels open side by side** — the
 left ledger and the right consult panel float independently; opening one never closes the
