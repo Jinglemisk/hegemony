@@ -177,8 +177,19 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
    already centralises every dimension. Per-element minimums are a later pass. Sweep the stale docked-layout
    `responsive.css` breakpoints. This is what makes the two-panel safe at small widths (both panels float over
    the sea; the board is covered, never reflowed).
--- Pull-forward-able ahead of Phase 3: the rail split, the route model, the uniform-scale. Waits for Phase 3:
-   deep-links + the dossier (rivalry-native).
+-- ~~Pull-forward-able ahead of Phase 3: the rail split, the route model, the uniform-scale.~~ SHIPPED
+   & MERGED (PR #27, 2026-07-19). Waits for Phase 3: deep-links + the dossier (rivalry-native).
+-- Consult-side polish SHIPPED (feat/consult-polish, 2026-07-19): Chronicle player filters (colour
+   chips + per-line accent); Codex dropped the live Victory section (Victory has its own tab now —
+   victory returns to the codex only *qua rule* with the full rulebook); both panels extended down to
+   balance top/bottom air.
+
+- Codex → the whole in-game rulebook (owner ask 2026-07-19; plan `docs/feat/codex-rules.md`).
+-- Grow the Codex from a numbers reference (Dice Tables/Bank/Decks/Costs) into the complete rules,
+   rendered FROM the ruleset so it can't drift. Narrative head (How to win / board / resources / pops /
+   settlements / turn / ladder / buildings / unrest / seasons) over the 4 current sections as the
+   reference tail. Victory-qua-rule returns here. Deep-link destinations for two-panel piece 4. Later:
+   generate rules.md from the same source so the guide + game can't diverge.
 
 - Finish the interface overhaul (started from the UI audit).
 -- DONE so far: the top bar is re-gridded — a central season dial with hand-painted Greek season art (tree / sun / bare tree / snowflake), Year + acting player either side, and a uniform four-seat roster showing each player's city / colony / pop counts and a provisional VP. Events moved back to the top-left as cards with an inline-icon effect summary + full-text hover tooltip. Ledger gained an empire summary (icon + count) and always shows every resource icon (dimmed dash when zero). Decks collapsed to a slim tray (dead "Resolutions" placeholder removed). A universal inline resource/pop/building icon system (AnnotatedText) now runs across cards, modals, and the chronicle.
