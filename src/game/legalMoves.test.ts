@@ -165,14 +165,36 @@ describe("gameplay enumeration", () => {
     expect(types.has("movePops")).toBe(true);
   });
 
-  it("never offers collectIncome and keeps movePops single-pop", () => {
+  it("never offers collectIncome and keeps movePops bundles non-empty and bounded", () => {
     const G = openingInGameplay({ wealthy: true });
     const moves = enumerateLegalMoves(G, "0");
 
     for (const move of moves) {
       expect(move.type).not.toBe("collectIncome");
-      if (move.type === "movePops") expect(totalPops(move.pops)).toBe(1);
+      // Bundles are always a positive selection (never an empty transfer).
+      if (move.type === "movePops") expect(totalPops(move.pops)).toBeGreaterThan(0);
     }
+  });
+
+  it("offers multi-pop movePops bundles that apply cleanly", () => {
+    const G = scenario()
+      .stackPlayerEvent("player-good-stores")
+      .opening()
+      .setPops("0", "-2,0", { citizens: 1, freemen: 0, slaves: 3 }) // metropolis: a 3-slave surplus
+      .setPops("0", "3,0", { citizens: 0, freemen: 0, slaves: 1 }) // colony: room for 3 more
+      .build();
+    expect(applyMove(G, "0", { type: "resolveEvent", choiceIndex: 0 }).ok).toBe(true);
+
+    // The whole slave stack (3) is a single enumerated move — previously three actions.
+    const bundle = enumerateLegalMoves(G, "0").find(
+      (move) =>
+        move.type === "movePops" &&
+        move.sourceTileId === "-2,0" &&
+        move.targetTileId === "3,0" &&
+        totalPops(move.pops) === 3,
+    );
+    expect(bundle).toBeDefined();
+    expect(applyMove(structuredClone(G), "0", bundle!).ok).toBe(true);
   });
 
   it("drops every costed move when the player cannot afford anything", () => {
