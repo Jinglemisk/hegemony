@@ -307,54 +307,58 @@ export const BUILDINGS: BuildingDefinition[] = [
 // — the slot-king ordering the rework is built around. Gold is now second-order only
 // (pops, events, trade), never the land.
 //
-// Yield-less hills (`resource: null`) are elite building terrain: citizens/freemen live
-// there fed from the shared pool, slaves are inert (no `resource.type` to work). The
-// single `oracle` (0 slots, unsettleable) sits just off-centre at (0,1) — a permanent
-// hole beside the map's heart that contiguity chains must route around. The 4-slot hill
-// takes the exact centre (0,0) as the map's single most valuable, most contested tile.
+// ANTI-PROPORTIONAL within each terrain (owner call 2026-07-18): yield and building
+// slots trade off — a rich tile is CRAMPED (extract it, can't build a metropolis on it),
+// a poor tile is ROOMY (cheap land to develop). So the breadbasket (food 10) has only 2
+// slots and the quarry (stone 6) only 1, while a food-2 or wood-1 tile gets 3/2. Every
+// tile now has a niche; none is strong-on-both ("2x-valued") or weak-on-both ("double-
+// doomed"). Verified: yield↔slot correlation is negative per terrain (forest −0.46,
+// mountain −0.75, plains −0.83). Per-terrain totals are unchanged (still the locked spec).
 //
-// Landmarks are neutral, contested, and pairwise non-adjacent: the food-10 breadbasket
-// (1,0), the 6-stone quarry (2,-2), two 4-wood old-growth forests (-2,2)/(0,-1). The
-// four opening capitals split into two stone starts and two food starts for identity.
-// This authored layout is the fair "classic" board; the constrained shuffle is deferred.
+// Yield-less hills (`resource: null`) are the anti-proportional extreme: 0 yield, most
+// slots. The single `oracle` (0 slots, unsettleable) sits just off-centre at (0,1) — a
+// permanent hole contiguity chains must route around; the 4-slot hill takes the exact
+// centre (0,0). Landmarks (breadbasket, quarry, two old-growth forests) are neutral and
+// pairwise non-adjacent. This authored layout is the "classic" board — the live game now
+// shuffles by default (GAME_CONFIG), and the constrained shuffle is deferred.
 export const TERRAIN_DECK: Array<{ terrain: Terrain; buildingSlots: number; resource: Yield | null }> = [
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (-3,0)
+  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 2 } }, // (-3,0)
   { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (-3,1)
-  { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 2 } }, // (-3,2)
+  { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 2 } }, // (-3,2)
   { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (-3,3)
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 2 } }, // (-2,-1)
-  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 4 } }, // (-2,0)
-  { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 8 } }, // (-2,1)
-  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 4 } }, // (-2,2) old-growth
+  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 2 } }, // (-2,-1)
+  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 4 } }, // (-2,0)
+  { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 8 } }, // (-2,1)
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 4 } }, // (-2,2) old-growth
   { terrain: "hill", buildingSlots: 3, resource: null }, // (-2,3)
   { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (-1,-2)
   { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } }, // (-1,-1)
   { terrain: "hill", buildingSlots: 3, resource: null }, // (-1,0)
   { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } }, // (-1,1)
   { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 3 } }, // (-1,2)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 1 } }, // (-1,3)
+  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 1 } }, // (-1,3)
   { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 4 } }, // (0,-3)
   { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 6 } }, // (0,-2)
-  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 4 } }, // (0,-1) old-growth
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 4 } }, // (0,-1) old-growth
   { terrain: "hill", buildingSlots: 4, resource: null }, // (0,0) — the 4-slot hill, contested centre
   { terrain: "oracle", buildingSlots: 0, resource: null }, // (0,1) — the oracle, unsettleable
-  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 4 } }, // (0,2)
+  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 4 } }, // (0,2)
   { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 4 } }, // (0,3)
   { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (1,-3)
   { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 3 } }, // (1,-2)
   { terrain: "hill", buildingSlots: 3, resource: null }, // (1,-1)
-  { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 10 } }, // (1,0) breadbasket
+  { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 10 } }, // (1,0) breadbasket — cramped
   { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (1,1)
   { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (1,2)
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 2 } }, // (2,-3)
-  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 6 } }, // (2,-2) quarry
-  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 3 } }, // (2,-1)
+  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 2 } }, // (2,-3)
+  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 6 } }, // (2,-2) quarry — cramped
+  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } }, // (2,-1)
   { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 6 } }, // (2,0)
   { terrain: "hill", buildingSlots: 3, resource: null }, // (2,1)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (3,-3)
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 2 } }, // (3,-2)
+  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 2 } }, // (3,-3)
+  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 2 } }, // (3,-2)
   { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (3,-1)
-  { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 4 } } // (3,0)
+  { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 4 } } // (3,0)
 ];
 
 export const SEASONAL_EVENT_CARDS: EventCard[] = [
