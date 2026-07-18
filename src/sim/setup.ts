@@ -4,7 +4,7 @@ import type { LegalMove } from "../game/legalMoves";
 import { GAME_MODES, deriveRuleset } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
 import { createInitialState } from "../game/state";
-import type { HegemonyState, PlayerId } from "../game/types";
+import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
 import type { OpeningKind, RulesetPatch } from "./io";
 import type { SimRng } from "./rng";
 
@@ -13,6 +13,9 @@ export type NewGameOptions = {
   mode: GameModeId;
   patch?: RulesetPatch | null;
   opening: OpeningKind;
+  /** Terrain layout. Defaults to "classic" so historical balance runs stay
+   *  reproducible; realistic runs pass "shuffled" to match the live game. */
+  boardLayout?: BoardLayout;
   /** Decides random-opening placements; unused for fixed/manual openings. */
   simRng: SimRng;
   /** Called once per applied setup move, for history recording. */
@@ -25,9 +28,9 @@ export type NewGameOptions = {
  * replays the scripted UI opening, `manual` stops in setupCapital so placements
  * can be made move-by-move.
  */
-export function buildNewGame({ seed, mode, patch, opening, simRng, onMove }: NewGameOptions): HegemonyState {
+export function buildNewGame({ seed, mode, patch, opening, boardLayout, simRng, onMove }: NewGameOptions): HegemonyState {
   const base = GAME_MODES[mode].ruleset;
-  const G = createInitialState(seed, patch ? deriveRuleset(base, patch) : base);
+  const G = createInitialState(seed, patch ? deriveRuleset(base, patch) : base, boardLayout);
 
   if (opening === "manual") {
     return G;

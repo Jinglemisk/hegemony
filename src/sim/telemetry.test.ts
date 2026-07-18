@@ -30,6 +30,7 @@ function runAggregated(games: number, turns: number) {
     turns,
     policy: "random",
     mode: "standard",
+    boardLayout: "classic",
     baseSeed: 500,
     botSeedRule: "seed ^ 0x9e3779b9",
     rulesetPatch: null,
@@ -123,6 +124,7 @@ describe("Aggregator", () => {
       turns: 6,
       policy: "random",
       mode: "standard",
+      boardLayout: "classic",
       baseSeed: seed,
       botSeedRule: "seed ^ 0x9e3779b9",
       rulesetPatch: null,
@@ -136,6 +138,36 @@ describe("Aggregator", () => {
     expect(report.perSeat["0"].winRate).toBe(1);
     expect(report.perSeat["1"].winRate).toBe(0);
     expect(report.perSeat["0"].capLeaderRate).toBe(0);
+  });
+
+  it("credits a finished game's win to the winning seat's policy (winsByPolicy)", () => {
+    const aggregator = new Aggregator();
+    const seed = 900;
+    const G = runGame({ seed, mode: "standard", policy: randomPolicy, turns: 6 });
+    const seatPolicies = { "0": "greedy", "1": "smart", "2": "smart", "3": "smart" } as const;
+    aggregator.beginGame(0, seed, G, { ...seatPolicies });
+
+    G.phase = "gameOver";
+    G.gameOverReason = "victoryRace";
+    G.winner = "0";
+    aggregator.endGame(G);
+
+    const report = aggregator.buildReport({
+      games: 1,
+      turns: 6,
+      policy: "mixed",
+      mode: "standard",
+      boardLayout: "classic",
+      seatPolicies: { ...seatPolicies },
+      baseSeed: seed,
+      botSeedRule: "seed ^ 0x9e3779b9",
+      rulesetPatch: null,
+      generatedAt: "test",
+    });
+
+    // greedy held one seat and won it; smart held three seats and won none.
+    expect(report.winsByPolicy.greedy).toEqual({ games: 1, wins: 1, winRate: 1 });
+    expect(report.winsByPolicy.smart).toEqual({ games: 3, wins: 0, winRate: 0 });
   });
 
   it("keeps turnsPlayed equal to the snapshot count through a natural end (no duplicate turns)", () => {
@@ -159,6 +191,7 @@ describe("Aggregator", () => {
       turns: 400,
       policy: "random",
       mode: "standard",
+      boardLayout: "classic",
       baseSeed: seed,
       botSeedRule: "seed ^ 0x9e3779b9",
       rulesetPatch: null,

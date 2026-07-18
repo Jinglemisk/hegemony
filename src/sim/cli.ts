@@ -13,13 +13,18 @@ import {
 import type { EconomyPreview } from "../game/economy/preview";
 import { applyMove, describeMove, enumerateLegalMoves } from "../game/legalMoves";
 import type { LegalMove } from "../game/legalMoves";
-import { GAME_MODES } from "../game/ruleset";
+import { setContentOverrides } from "../game/content";
+import { BUILDINGS, PLAYER_IDS } from "../game/data";
+import { GAME_MODES, mergeRulesetPatches } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
-import type { BuildingId, PopType, Pops } from "../game/types";
+import { applyBuildingOverrides, rulesetPatchFromOverrides } from "../dev/tuning";
+import type { OverrideMap } from "../dev/tuning";
+import type { BoardLayout, BuildingId, PlayerId, PopType, Pops } from "../game/types";
 import { renderBatchReport, renderHeader, renderLegal, renderLog, renderPreview, renderProjection, renderShow } from "./format";
 import { DEFAULT_SAVE_PATH, loadGame, saveGame } from "./io";
 import type { MoveRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
 import { resolvePolicy } from "./policies";
+import type { Policy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
 import { runGame, runTurns } from "./runner";
 import { replayScript, scriptFromSave } from "./script";
@@ -41,7 +46,7 @@ process.stdout.on("error", (error: NodeJS.ErrnoException) => {
   throw error;
 });
 
-const BOOLEAN_FLAGS = new Set(["json", "quiet", "manual-setup", "help"]);
+const BOOLEAN_FLAGS = new Set(["json", "quiet", "manual-setup", "help", "rotate"]);
 
 type Flags = Record<string, string | boolean>;
 
@@ -81,6 +86,16 @@ function requireInt(value: string | boolean | undefined, name: string): number {
 
   if (!Number.isInteger(parsed)) {
     fail(`${name} must be an integer (got ${String(value)})`);
+  }
+
+  return parsed;
+}
+
+function requirePositiveInt(value: string | boolean | undefined, name: string): number {
+  const parsed = requireInt(value, name);
+
+  if (parsed < 1) {
+    fail(`${name} must be at least 1 (got ${parsed})`);
   }
 
   return parsed;
@@ -155,6 +170,48 @@ function parseMode(flags: Flags): GameModeId {
   return mode;
 }
 
+function parseBoard(flags: Flags): BoardLayout {
+  const board = typeof flags.board === "string" ? flags.board : "classic";
+
+  if (board !== "classic" && board !== "shuffled") {
+    fail(`unknown board "${board}" — expected classic or shuffled`);
+  }
+
+  return board;
+}
+
+/** `--seats greedy,smart,smart,smart` → a policy per seat, plus the display names. */
+function parseSeats(flags: Flags): { policies: Record<PlayerId, Policy>; names: Record<PlayerId, string> } | null {
+  if (typeof flags.seats !== "string") {
+    return null;
+  }
+
+  const parts = flags.seats.split(",").map((entry) => entry.trim());
+
+  if (parts.length !== PLAYER_IDS.length) {
+    fail(`--seats needs ${PLAYER_IDS.length} comma-separated policies (got ${parts.length}: "${flags.seats}")`);
+  }
+
+  const policies = {} as Record<PlayerId, Policy>;
+  const names = {} as Record<PlayerId, string>;
+  PLAYER_IDS.forEach((id, index) => {
+    policies[id] = resolvePolicy(parts[index]);
+    names[id] = policies[id].name;
+  });
+
+  return { policies, names };
+}
+
+/** Rotate a per-seat map by `r` seats — seat i takes what sat `r` seats later, so
+ *  running r=0..3 sends each policy through every seat exactly once. */
+function rotateSeats<T>(base: Record<PlayerId, T>, r: number): Record<PlayerId, T> {
+  const out = {} as Record<PlayerId, T>;
+  PLAYER_IDS.forEach((id, index) => {
+    out[id] = base[PLAYER_IDS[(index + r) % PLAYER_IDS.length]];
+  });
+  return out;
+}
+
 function parsePatch(flags: Flags): RulesetPatch | null {
   if (typeof flags["ruleset-patch"] !== "string") {
     return null;
@@ -163,10 +220,32 @@ function parsePatch(flags: Flags): RulesetPatch | null {
   return JSON.parse(readFileSync(flags["ruleset-patch"], "utf8")) as RulesetPatch;
 }
 
+/** `--tune-patch p.json` reads the dev tune-panel override map (dot-path → value),
+ *  so a batch can A/B building content (Villa/Gymnasion strength, costs, level caps)
+ *  and ruleset scalars in the same shape the panel's "Copy patch" produces. */
+function parseTune(flags: Flags): OverrideMap | null {
+  if (typeof flags["tune-patch"] !== "string") {
+    return null;
+  }
+
+  return JSON.parse(readFileSync(flags["tune-patch"], "utf8")) as OverrideMap;
+}
+
+/** A stable fingerprint of a tune map for the report, so a run's content is identifiable. */
+function hashTune(map: OverrideMap): string {
+  const canonical = JSON.stringify(Object.fromEntries(Object.entries(map).sort(([a], [b]) => a.localeCompare(b))));
+  let hash = 5381;
+  for (let index = 0; index < canonical.length; index += 1) {
+    hash = ((hash << 5) + hash + canonical.charCodeAt(index)) >>> 0;
+  }
+  return hash.toString(16);
+}
+
 function cmdNew(flags: Flags, file: string) {
   const seed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createSeed();
   const mode = parseMode(flags);
   const patch = parsePatch(flags);
+  const boardLayout = parseBoard(flags);
 
   const opening: OpeningKind = flags["manual-setup"]
     ? "manual"
@@ -185,6 +264,7 @@ function cmdNew(flags: Flags, file: string) {
     mode,
     patch,
     opening,
+    boardLayout,
     simRng,
     onMove: (_G, player, move) => history.push({ player, move }),
   });
@@ -469,51 +549,91 @@ function cmdBatch(flags: Flags) {
     fail("batch needs --games <N>");
   }
 
-  const games = requireInt(flags.games, "--games");
-  const turns = flags.turns !== undefined ? requireInt(flags.turns, "--turns") : 40;
+  const games = requirePositiveInt(flags.games, "--games");
+  const turns = flags.turns !== undefined ? requirePositiveInt(flags.turns, "--turns") : 40;
   const policy = resolvePolicy(typeof flags.policy === "string" ? flags.policy : "random");
+  const seats = parseSeats(flags);
+  const rotate = Boolean(flags.rotate);
+
+  if (rotate && !seats) {
+    fail("--rotate needs --seats <p0,p1,p2,p3> (there is nothing to rotate without per-seat policies)");
+  }
+
   const mode = parseMode(flags);
   const patch = parsePatch(flags);
+  const boardLayout = parseBoard(flags);
+  const tune = parseTune(flags);
+  // Install the tune-panel content override (buildings) for the whole run, and fold its
+  // ruleset scalars into the ruleset patch. Set once before the loop — fixed for the run.
+  if (tune) {
+    setContentOverrides({ buildings: applyBuildingOverrides(BUILDINGS, tune) });
+  }
+  const effectivePatch = mergeRulesetPatches(
+    patch,
+    tune ? (rulesetPatchFromOverrides(tune) as RulesetPatch | null) : null,
+  ) as RulesetPatch | null;
   const baseSeed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createSeed();
   const reportPath = typeof flags.report === "string" ? flags.report : ".sim/report.json";
   const csvPath = typeof flags.csv === "string" ? flags.csv : undefined;
 
   const aggregator = new Aggregator();
   const logEvery = games <= 20 ? 1 : 10;
+  // Rotation reseats each policy through every seat on the SAME seed to cancel
+  // first-player advantage; without it, one game per base seed.
+  const rotations = seats && rotate ? PLAYER_IDS.length : 1;
 
-  for (let game = 0; game < games; game += 1) {
-    const seed = (baseSeed + game) >>> 0;
+  let gameIndex = 0;
+  for (let base = 0; base < games; base += 1) {
+    const seed = (baseSeed + base) >>> 0;
 
-    const G = runGame({
-      seed,
-      mode,
-      patch,
-      policy,
-      turns,
-      trimLogTo: 200,
-      hooks: {
-        onGameStart: (state) => aggregator.beginGame(game, seed, state),
-        onMove: (state, player, move) => aggregator.onMove(state, player, move),
-        onTurnEnd: (state) => aggregator.onTurnEnd(state),
-        onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
-      },
-    });
+    for (let r = 0; r < rotations; r += 1) {
+      const seatPolicies = seats ? rotateSeats(seats.policies, r) : undefined;
+      const seatNames = seats ? rotateSeats(seats.names, r) : undefined;
+      const currentGame = gameIndex;
 
-    aggregator.endGame(G);
+      const G = runGame({
+        seed,
+        mode,
+        patch: effectivePatch,
+        boardLayout,
+        policy,
+        seatPolicies,
+        turns,
+        trimLogTo: 200,
+        hooks: {
+          onGameStart: (state) => aggregator.beginGame(currentGame, seed, state, seatNames),
+          onMove: (state, player, move) => aggregator.onMove(state, player, move),
+          onTurnEnd: (state) => aggregator.onTurnEnd(state),
+          onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
+        },
+      });
 
-    if ((game + 1) % logEvery === 0) {
-      console.log(`game ${game + 1}/${games} done (seed ${seed})`);
+      aggregator.endGame(G);
+      gameIndex += 1;
+    }
+
+    if ((base + 1) % logEvery === 0) {
+      console.log(`seed ${base + 1}/${games} done (${rotations > 1 ? `${rotations} rotations, ` : ""}seed ${seed})`);
     }
   }
 
+  // Clear the global content override now the run is done (report build doesn't need it).
+  if (tune) {
+    setContentOverrides({ buildings: null });
+  }
+
   const report = aggregator.buildReport({
-    games,
+    games: gameIndex,
     turns,
-    policy: policy.name,
+    policy: seats ? "mixed" : policy.name,
     mode,
+    boardLayout,
+    seatPolicies: seats ? seats.names : null,
     baseSeed,
     botSeedRule: "seed ^ 0x9e3779b9",
-    rulesetPatch: patch,
+    rulesetPatch: effectivePatch,
+    tunePatch: tune ?? null,
+    tunePatchHash: tune ? hashTune(tune) : null,
     generatedAt: new Date().toISOString(),
   });
 

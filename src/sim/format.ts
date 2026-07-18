@@ -192,7 +192,7 @@ function hasResourceDelta(resources: Resources): boolean {
 /** Terminal digest of a batch report — the full data lives in the JSON. */
 export function renderBatchReport(report: BatchReport): string {
   const lines = [
-    `Batch: ${report.meta.games} games × ${report.meta.turns} turns, ${report.meta.policy} policy, ${report.meta.mode} mode (base seed ${report.meta.baseSeed})`,
+    `Batch: ${report.meta.games} games × ${report.meta.turns} turns, ${report.meta.policy} policy, ${report.meta.mode} mode, ${report.meta.boardLayout} board (base seed ${report.meta.baseSeed})`,
     `Final victory cards: mean ${formatNumber(report.finalCardsDistribution.mean)} · ` +
       `p10 ${formatNumber(report.finalCardsDistribution.p10)} · median ${formatNumber(report.finalCardsDistribution.median)} · ` +
       `p90 ${formatNumber(report.finalCardsDistribution.p90)}`,
@@ -204,6 +204,27 @@ export function renderBatchReport(report: BatchReport): string {
       )
       .join(" · ")}`,
   ];
+
+  if (report.meta.tunePatchHash) {
+    lines.push(`Content patch: ${report.meta.tunePatchHash}`);
+  }
+
+  if (report.meta.seatPolicies) {
+    lines.push(
+      `Seat policies: ${Object.entries(report.meta.seatPolicies)
+        .map(([seat, name]) => `P${seat} ${name}`)
+        .join(" · ")}`,
+    );
+  }
+
+  const byPolicy = Object.entries(report.winsByPolicy ?? {});
+  if (byPolicy.length > 0) {
+    lines.push(
+      `Win by policy (finished games): ${byPolicy
+        .map(([name, stats]) => `${name} ${(stats.winRate * 100).toFixed(0)}% (${stats.wins}/${stats.games})`)
+        .join(" · ")}`,
+    );
+  }
 
   const lastSeason = report.perSeason[report.perSeason.length - 1];
   if (lastSeason) {

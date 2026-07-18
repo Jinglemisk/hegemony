@@ -106,8 +106,10 @@ export function pruneToChanges(map: OverrideMap): OverrideMap {
 
 // ── Applying overrides ─────────────────────────────────────────────────────────────
 
-/** Build a {@link Ruleset} patch from the `ruleset.*` overrides and derive it onto `base`. */
-export function applyRulesetOverrides(base: Ruleset, map: OverrideMap): Ruleset {
+/** The ruleset PATCH implied by the `ruleset.*` overrides (the input to deriveRuleset),
+ *  or null when the map touches no ruleset paths. Exposed so the headless sim can fold a
+ *  tune-panel patch into its own ruleset-patch pipeline. */
+export function rulesetPatchFromOverrides(map: OverrideMap): Record<string, unknown> | null {
   const patch: Record<string, unknown> = {};
   let touched = false;
   for (const [path, value] of Object.entries(map)) {
@@ -118,7 +120,13 @@ export function applyRulesetOverrides(base: Ruleset, map: OverrideMap): Ruleset 
     setByPath(patch, segments.slice(1), value);
     touched = true;
   }
-  return touched ? deriveRuleset(base, patch as never) : base;
+  return touched ? patch : null;
+}
+
+/** Build a {@link Ruleset} patch from the `ruleset.*` overrides and derive it onto `base`. */
+export function applyRulesetOverrides(base: Ruleset, map: OverrideMap): Ruleset {
+  const patch = rulesetPatchFromOverrides(map);
+  return patch ? deriveRuleset(base, patch as never) : base;
 }
 
 function cloneBuildings(base: BuildingDefinition[]): BuildingDefinition[] {
