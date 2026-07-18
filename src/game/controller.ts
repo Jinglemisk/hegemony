@@ -144,7 +144,7 @@ export type GameMoves = {
   placeColony: (tileId: string, pops: Pops) => void;
   collectIncome: () => void;
   foundColony: (tileId: string, sourceTileId: string, pop: PopType) => void;
-  upgradeColonyToCity: (tileId: string, pops?: Pops) => void;
+  upgradeColonyToCity: (tileId: string) => void;
   buildBuilding: (tileId: string, buildingId: BuildingId) => void;
   growPop: (tileId: string, pop: PopType) => void;
   movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
@@ -222,8 +222,8 @@ function createMoves(setG: SetState): GameMoves {
         commitGameplayMove(previous, (G) => foundColony(G, G.currentPlayer, tileId, sourceTileId, pop)),
       );
     },
-    upgradeColonyToCity: (tileId, pops) => {
-      setG((previous) => commitGameplayMove(previous, (G) => upgradeColonyToCity(G, G.currentPlayer, tileId, pops)));
+    upgradeColonyToCity: (tileId) => {
+      setG((previous) => commitGameplayMove(previous, (G) => upgradeColonyToCity(G, G.currentPlayer, tileId)));
     },
     buildBuilding: (tileId, buildingId) => {
       setG((previous) => commitGameplayMove(previous, (G) => buildBuilding(G, G.currentPlayer, tileId, buildingId)));

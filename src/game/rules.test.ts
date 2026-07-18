@@ -268,6 +268,23 @@ describe("city upgrade", () => {
     // "0,0" holds a city, not a colony.
     expect(upgradeColonyToCity(state, "0", "0,0").ok).toBe(false);
   });
+
+  it("preserves the colony's exact pop composition (no reclassification)", () => {
+    const state = fresh();
+    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
+    // A mostly-slave colony: the old modal path could launder these into citizens
+    // during the upgrade, dodging promotion cost / Gymnasion / the ladder limit.
+    const composition = { citizens: 0, freemen: 1, slaves: 2 };
+    poke(state, "0", "3,0", "colony", composition);
+    wealthy(state, "0");
+
+    const result = upgradeColonyToCity(state, "0", "3,0");
+    expect(result.ok).toBe(true);
+
+    const upgraded = owned(state, "3,0", "0");
+    expect(upgraded.kind).toBe("city");
+    expect(upgraded.pops).toEqual(composition);
+  });
 });
 
 describe("buildings", () => {

@@ -8,8 +8,7 @@ import {
   hasPops,
   isExactPopSelection,
   isPositivePopSelection,
-  subtractPops,
-  totalPops
+  subtractPops
 } from "./core/pops";
 import { addLog, getOwnedSettlement, getPlayerName, getTile, markSettlementGrown } from "./core/query";
 import { applyResourceDelta, payCost } from "./core/resources";
@@ -153,8 +152,7 @@ export function foundColony(
 export function upgradeColonyToCity(
   G: HegemonyState,
   playerID: PlayerId,
-  tileId: string,
-  pops?: Pops
+  tileId: string
 ): MoveResult {
   const status = getUpgradeColonyToCityStatus(G, playerID, tileId);
   const tile = getTile(G, tileId);
@@ -166,17 +164,12 @@ export function upgradeColonyToCity(
     return invalid(...status.reasons);
   }
 
-  if (pops && !isExactPopSelection(pops, totalPops(settlement.pops))) {
-    return invalid();
-  }
-
   payCost(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.upgradeColonyToCity);
   const displacedPlayers = tile.settlements
     .filter((candidate) => candidate.owner !== playerID && candidate.kind === "colony")
     .map((candidate) => candidate.owner);
   tile.settlements = tile.settlements.filter((candidate) => candidate.owner === playerID);
   settlement.kind = "city";
-  settlement.pops = pops ? clonePops(pops) : settlement.pops;
 
   for (const displacedPlayer of displacedPlayers) {
     G.players[displacedPlayer].settlements = G.players[displacedPlayer].settlements.filter((id) => id !== tile.id);
