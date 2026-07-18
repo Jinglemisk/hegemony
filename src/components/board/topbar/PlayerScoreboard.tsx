@@ -1,81 +1,39 @@
 import { memo } from "react";
-import { PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
-import { calculateEconomyProjection, playerStandings } from "../../../game/rules";
-import type { HegemonyState, PlayerId } from "../../../game/types";
-import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../../../ui/formatters";
-import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
-import { AtlasIcon, UiSprite } from "../../Sprites";
-import { PLAYER_DISPLAY_NAMES } from "../constants";
+import { PLAYER_NAMES, PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
+import type { PlayerId } from "../../../game/types";
 
+/**
+ * The seat switcher — a playtest tool, not a scoreboard. Four squares in each
+ * player's colour; clicking one views that empire. The acting seat gets a ring,
+ * the seat you are viewing gets a filled outline. Names/standings lived here once
+ * but forced the roster wide enough to shove the season medallion off-centre;
+ * per-empire detail belongs in the coming player dossier (docs/feat/two-panel.md).
+ */
 function PlayerScoreboardComponent({
-  G,
   currentPlayerId,
   viewerId,
   onPlayerIDChange
 }: {
-  G: HegemonyState;
   currentPlayerId: PlayerId;
   viewerId: PlayerId;
   onPlayerIDChange: (playerID: PlayerId) => void;
 }) {
   return (
-    <section className="scoreboardPanel" aria-label="Player roster">
+    <section className="scoreboardPanel" aria-label="Switch player view">
       {PLAYER_IDS.map((id) => {
-        const player = G.players[id];
-        const standings = playerStandings(G, id);
-        const projected = calculateEconomyProjection(G, id, { resolveTransfers: true });
         const isViewer = id === viewerId;
         const isCurrent = id === currentPlayerId;
 
         return (
           <button
             aria-pressed={isViewer}
-            className={`rosterSeat${isCurrent ? " actingSeat" : ""}${isViewer ? " viewingSeat" : ""}`}
+            className={`seatSwatch${isCurrent ? " seatSwatchActing" : ""}${isViewer ? " seatSwatchViewing" : ""}`}
             key={id}
             onClick={() => onPlayerIDChange(id)}
-            title={`View ${PLAYER_DISPLAY_NAMES[id]}'s empire`}
-          >
-            <span className="rosterHead">
-              <span className="rosterDot" style={{ backgroundColor: PLAYER_COLORS[id] }} />
-              <strong className="rosterName">{PLAYER_DISPLAY_NAMES[id]}</strong>
-              {isCurrent ? <span className="rosterActingTag">Acting</span> : null}
-            </span>
-            <span className="rosterStats">
-              <span className="rosterStat" title={`${standings.cities} cities`}>
-                <AtlasIcon icon="city" className="rosterStatIcon" />
-                {standings.cities}
-              </span>
-              <span className="rosterStat" title={`${standings.colonies} colonies`}>
-                <AtlasIcon icon="colony" className="rosterStatIcon" />
-                {standings.colonies}
-              </span>
-              <span className="rosterStat" title={`${standings.pops} population`}>
-                <AtlasIcon icon="citizens" className="rosterStatIcon" />
-                {standings.pops}
-              </span>
-              <span
-                className="rosterStat rosterVp"
-                title={`Victory cards held — first to hold ${G.ruleset.victory.cardsToWin} at the start of their turn wins`}
-              >
-                <UiSprite item="victoryPoint" className="rosterStatIcon" />
-                {standings.victoryCards}/{G.ruleset.victory.cardsToWin}
-              </span>
-            </span>
-            <span className="scoreTooltip" role="tooltip">
-              <strong>{PLAYER_DISPLAY_NAMES[id]} Resources</strong>
-              {RESOURCE_ORDER.map((resource) => (
-                <span key={resource}>
-                  {RESOURCE_LABELS[resource]}
-                  <b>
-                    {formatNumber(player.resources[resource])}{" "}
-                    <em className={projected.income[resource] > 0 ? "positive" : projected.income[resource] < 0 ? "negative" : ""}>
-                      {formatSignedNumber(projected.income[resource])}
-                    </em>
-                  </b>
-                </span>
-              ))}
-            </span>
-          </button>
+            style={{ backgroundColor: PLAYER_COLORS[id] }}
+            title={`View ${PLAYER_NAMES[id]}${isCurrent ? " — acting" : ""}`}
+            type="button"
+          />
         );
       })}
     </section>

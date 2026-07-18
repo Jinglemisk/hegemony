@@ -35,11 +35,17 @@ export type FoodShortageStatus = {
  * formula, driven by {@link Ruleset.popIncome} and shared by {@link settlementNetYield}
  * and the UI's pop / grow-pop projections so the engine and UI can never drift.
  */
+/**
+ * `ruleset` is REQUIRED. It used to default to DEFAULT_RULESET, which silently
+ * decoupled callers from `G.ruleset` — the UI omitted it and reported 2 gold per
+ * freeman while a patched engine paid 4 (R7). A missing ruleset is now a type
+ * error rather than a wrong number on screen.
+ */
 export function popIncome(
   pop: PopType,
   count: number,
   primaryResource: Resource,
-  ruleset: Ruleset = DEFAULT_RULESET
+  ruleset: Ruleset
 ): Resources {
   const income: Resources = { ...EMPTY_RESOURCES };
   const rule = ruleset.popIncome[pop];
@@ -58,7 +64,9 @@ export function popIncome(
  * without the player-level seasonal / food-shortage adjustments. Used to render the
  * settlement summary card.
  */
-export function settlementNetYield(tile: HexTile, settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET): Resources {
+/** `ruleset` is REQUIRED for the same reason as {@link popIncome}: a default here
+ *  lets a caller silently read the wrong ruleset. */
+export function settlementNetYield(tile: HexTile, settlement: Settlement, ruleset: Ruleset): Resources {
   const income: Resources = { ...EMPTY_RESOURCES };
 
   income[tile.resource.type] += settlementTileYield(tile, settlement, ruleset);

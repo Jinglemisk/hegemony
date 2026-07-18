@@ -12,13 +12,16 @@ export function ResourceGrid({
   deltas,
   breakdown = [],
   resetKey,
-  className = ""
+  className = "",
+  order = RESOURCE_ORDER
 }: {
   resources: Resources;
   deltas?: Resources;
   breakdown?: IncomeContribution[];
   resetKey?: string;
   className?: string;
+  /** Which resources to render, in order — lets the top bar split into two halves. */
+  order?: Resource[];
 }) {
   const previousResourcesByKey = useRef<Record<string, Resources>>({});
   const [flashes, setFlashes] = useState<Partial<Record<Resource, FlashDirection>>>({});
@@ -67,7 +70,7 @@ export function ResourceGrid({
 
   return (
     <div className={`resourceGrid ${className}`}>
-      {RESOURCE_ORDER.map((resource) => {
+      {order.map((resource) => {
         const delta = deltas?.[resource] ?? 0;
         const flash = flashes[resource];
         const deltaClass = getResourceDeltaClass(resource, delta);
@@ -84,9 +87,7 @@ export function ResourceGrid({
             <ResourceIcon resource={resource} value={resources[resource]} className="resourceIcon" />
             <span className="resourceValue">
               <strong>{formatNumber(resources[resource])}</strong>
-              <span className={`resourceDelta ${deltaClass}`}>
-                ({formatSignedNumber(delta)})
-              </span>
+              <span className={`resourceDelta ${deltaClass}`}>{formatSignedNumber(delta)}</span>
             </span>
             <ResourceBreakdownTooltip
               resource={resource}

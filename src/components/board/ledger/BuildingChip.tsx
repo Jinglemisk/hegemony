@@ -3,6 +3,12 @@ import { createPortal } from "react-dom";
 import type { BuildingDefinition } from "../../../game/types";
 import { AtlasIcon } from "../../Sprites";
 import { DETAIL_TOOLTIP_WIDTH } from "../constants";
+import { clampAnchoredLeft } from "../../../ui/anchoring";
+
+/** Gap kept between the tooltip and the viewport edge. */
+const TOOLTIP_GUTTER = 10;
+/** Anchors nearer the top than this open downward, clear of the top bar. */
+const TOOLTIP_FLIP_BELOW_Y = 150;
 
 export function BuildingChip({
   building,
@@ -31,14 +37,11 @@ export function BuildingChip({
     }
 
     const rect = target.getBoundingClientRect();
-    const gutter = 10;
-    const tooltipWidth = Math.min(DETAIL_TOOLTIP_WIDTH, window.innerWidth - gutter * 2);
-    const centeredLeft = rect.left + rect.width / 2 - tooltipWidth / 2;
-    const left = Math.min(
-      Math.max(gutter, centeredLeft),
-      Math.max(gutter, window.innerWidth - tooltipWidth - gutter)
-    );
-    const placement = rect.top < 150 ? "below" : "above";
+    const tooltipWidth = Math.min(DETAIL_TOOLTIP_WIDTH, window.innerWidth - TOOLTIP_GUTTER * 2);
+    const left = clampAnchoredLeft(rect.left + rect.width / 2, tooltipWidth, TOOLTIP_GUTTER);
+    // Unlike the found-colony popover, the tooltip does not measure itself — it
+    // just avoids opening upward into the top bar.
+    const placement = rect.top < TOOLTIP_FLIP_BELOW_Y ? "below" : "above";
 
     setTooltipPosition({
       left,

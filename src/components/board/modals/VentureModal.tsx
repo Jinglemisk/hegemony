@@ -7,6 +7,7 @@ import type { VentureStake } from "../../../game/rules";
 import { EXPEDITION_TABLES } from "../../../game/data";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { EventTableModal } from "./EventTableModal";
+import { useGameUi } from "../GameUiContext";
 
 /**
  * The venture instance of the shared event-table modal (D10/Q16): pick an
@@ -14,18 +15,11 @@ import { EventTableModal } from "./EventTableModal";
  * or lose — rows 1–2 ARE "stake lost".
  */
 export function VentureModal({
-  G,
-  playerID,
-  isActive,
-  moves,
   onClose
 }: {
-  G: HegemonyState;
-  playerID: PlayerId;
-  isActive: boolean;
-  moves: GameMoves;
   onClose: () => void;
 }) {
+  const { G, viewerId: playerID, isActive, moves } = useGameUi();
   const [expeditionIndex, setExpeditionIndex] = useState(0);
   const [stake, setStake] = useState<VentureStake>("gold");
   const [rolled, setRolled] = useState(false);
