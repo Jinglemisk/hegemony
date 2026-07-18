@@ -571,8 +571,8 @@ export function HegemonyBoard({
       {activeModal?.kind === "upgradeCity" ? (
         <UpgradeCityModal
           onCancel={closeModal}
-          onConfirm={(tileId, pops) => {
-            moves.upgradeColonyToCity(tileId, pops);
+          onConfirm={(tileId) => {
+            moves.upgradeColonyToCity(tileId);
             closeModal();
           }}
         />
