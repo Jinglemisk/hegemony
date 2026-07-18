@@ -8,6 +8,22 @@
 *** 
 
 
+## ⭐ Final quality passes — DO AT THE VERY END OF THE WHOLE PHASES RUN (owner, 2026-07-18)
+
+These are deliberately deferred to a polish sweep once all phases have shipped — do
+NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest read:
+
+- **Buildings pass** — revisit the whole roster, especially **Villa** (+2 tile
+  material/level — sim-tuned, greedy bots under-build it) and **Gymnasion** (−2 promote
+  cost — greedy bots never exercise it). Re-check every building's cost, effect size, and
+  `maxLevel` cap once the full system (assembly, luxuries, ideas — whatever ships) is in
+  and there's a smarter bot or human data. Prices were set for the mid-game in isolation.
+- **Market / bank pass** — revisit the bank exchange as a whole: the per-material
+  scarcity classes (stone drifted scarce→baseline in Phase 2), the sell/buy spreads, the
+  `uniform` vs `scarcity` derivation knob, and the bankBuy churn the greedy bots show
+  (~190/game — likely a bot artifact, but confirm it isn't a real exploit). The rates
+  have been "PROVISIONAL" since Phase 1; this is where they get finalized.
+
 
 ---
 
