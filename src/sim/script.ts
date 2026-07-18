@@ -2,7 +2,7 @@ import { applyMove } from "../game/legalMoves";
 import { GAME_MODES, deriveRuleset } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
 import { createInitialState } from "../game/state";
-import type { HegemonyState } from "../game/types";
+import type { BoardLayout, HegemonyState } from "../game/types";
 import type { MoveRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
 
 /**
@@ -17,6 +17,9 @@ export type ScriptFile = {
   mode: GameModeId;
   rulesetPatch: RulesetPatch | null;
   opening: OpeningKind;
+  /** Terrain layout to rebuild from. Optional so pre-existing scripts still parse
+   *  (they fall back to the classic default). */
+  boardLayout?: BoardLayout;
   /** Where the bot decision stream is parked after the recorded moves. Optional so
    *  pre-existing scripts still parse; carried through so a CONTINUED replay resumes
    *  the same bot stream as the original save instead of restarting it. */
@@ -31,6 +34,7 @@ export function scriptFromSave(save: SaveFile): ScriptFile {
     mode: save.mode,
     rulesetPatch: save.rulesetPatch,
     opening: save.opening,
+    boardLayout: save.state.boardLayout,
     botRngState: save.botRngState,
     moves: save.history,
   };
@@ -47,7 +51,11 @@ export function replayScript(script: ScriptFile): HegemonyState {
     throw new Error(`script names unknown mode "${script.mode}"`);
   }
 
-  const G = createInitialState(script.seed, script.rulesetPatch ? deriveRuleset(base, script.rulesetPatch) : base);
+  const G = createInitialState(
+    script.seed,
+    script.rulesetPatch ? deriveRuleset(base, script.rulesetPatch) : base,
+    script.boardLayout,
+  );
 
   script.moves.forEach(({ player, move }, index) => {
     if (G.currentPlayer !== player) {

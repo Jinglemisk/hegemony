@@ -7,7 +7,7 @@ import { playerStandings } from "../game/score";
 import { canPlaceColonyOnTile } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import type { UnrestTier } from "../game/unrest";
-import type { GameOverReason, HegemonyState, PlayerId, Resources } from "../game/types";
+import type { BoardLayout, GameOverReason, HegemonyState, PlayerId, Resources } from "../game/types";
 
 /**
  * Balance instrumentation for batch runs. One TurnSnapshot per player-turn;
@@ -132,6 +132,8 @@ export type GameRow = {
   winner: PlayerId | null;
   /** Heuristic leader when the game was cut off at the cap; null for finished games. */
   leaderAtCap: PlayerId | null;
+  /** Which policy sat in each seat this game (mixed-policy tables); absent for uniform runs. */
+  seatPolicies?: Record<PlayerId, string>;
   finalCards: Record<PlayerId, number>;
   popsLostToUnrest: Record<PlayerId, number>;
 };
@@ -142,14 +144,26 @@ export type BatchReport = {
     turns: number;
     policy: string;
     mode: string;
+    boardLayout: BoardLayout;
     baseSeed: number;
     botSeedRule: string;
     rulesetPatch: unknown;
+    /** The dev tune-panel override map applied to content/ruleset for this run (null when
+     *  none), plus a stable fingerprint — so a batch's content is identifiable and A/B-able. */
+    tunePatch?: unknown;
+    tunePatchHash?: string | null;
+    /** Base seat→policy assignment for a mixed-policy batch (null for a uniform run).
+     *  With --rotate the per-game assignment varies; see perGame[].seatPolicies. */
+    seatPolicies?: Record<PlayerId, string> | null;
     generatedAt: string;
   };
   perGame: GameRow[];
   perSeason: SeasonRow[];
   perSeat: Record<PlayerId, { winRate: number; capLeaderRate: number; meanFinalCards: number }>;
+  /** Wins credited to the POLICY that held each seat, over finished games — the
+   *  seat-independent measure a rotated mixed-policy batch produces. Empty for a
+   *  uniform batch (no seat policies recorded). */
+  winsByPolicy: Record<string, { games: number; wins: number; winRate: number }>;
   buildings: Record<string, { built: number; perGame: number }>;
   events: {
     player: Record<string, number>;
@@ -198,12 +212,14 @@ export class Aggregator {
   private seed = 0;
   private startTurn = 1;
   private lastSeason = 0;
+  private gameSeatPolicies: Record<PlayerId, string> | null = null;
 
-  beginGame(game: number, seed: number, G: HegemonyState) {
+  beginGame(game: number, seed: number, G: HegemonyState, seatPolicies?: Record<PlayerId, string>) {
     this.game = game;
     this.seed = seed;
     this.startTurn = G.turn;
     this.lastSeason = G.season;
+    this.gameSeatPolicies = seatPolicies ?? null;
 
     // The opening already revealed season 1's card and player 0's first draw.
     this.countSeasonal(G);
@@ -280,6 +296,7 @@ export class Aggregator {
       termination,
       winner: finished ? G.winner : null,
       leaderAtCap: finished ? null : this.leaderByTiebreak(G, finalCards),
+      seatPolicies: this.gameSeatPolicies ?? undefined,
       finalCards,
       popsLostToUnrest,
     });
@@ -366,6 +383,22 @@ export class Aggregator {
       terminations[game.termination] += 1;
     }
 
+    // Credit each finished game's win to the POLICY that held the winning seat, and
+    // count every seat a policy occupied as one participation. Over rotated seats this
+    // is a seat-independent win rate; empty when no seat policies were recorded.
+    const winsByPolicy: BatchReport["winsByPolicy"] = {};
+    for (const game of finishedGames) {
+      if (!game.seatPolicies) continue;
+      for (const [seat, policyName] of Object.entries(game.seatPolicies)) {
+        const entry = (winsByPolicy[policyName] ??= { games: 0, wins: 0, winRate: 0 });
+        entry.games += 1;
+        if (game.winner === seat) entry.wins += 1;
+      }
+    }
+    for (const entry of Object.values(winsByPolicy)) {
+      entry.winRate = entry.games > 0 ? entry.wins / entry.games : 0;
+    }
+
     const buildings: BatchReport["buildings"] = {};
     for (const [buildingId, built] of Object.entries(this.buildings)) {
       buildings[buildingId] = { built, perGame: this.games.length > 0 ? built / this.games.length : 0 };
@@ -389,6 +422,7 @@ export class Aggregator {
         })
       ),
       finalCardsDistribution: percentiles(this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalCards[playerID]))),
+      winsByPolicy,
       terminations,
       forced: {
         actionCapHits: this.actionCapHits,
