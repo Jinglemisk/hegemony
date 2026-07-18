@@ -1120,64 +1120,66 @@
   font-weight: 700;
 }
 
-/* Decks section: one card per row — a small painted-face thumbnail (sized to the
-   top-bar event cards) beside the name, copy count, season tags, and effect, so many
-   cards fit the viewport at once. The art gives recognition; the caption the rule. */
-.codexCardList {
+/* Decks section: the painted card faces themselves, two-up in the narrow panel.
+   The art carries the mood; the caption carries the rule (name, copies, effect). */
+.codexCardGrid {
   display: grid;
-  gap: 5px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  /* 96px min keeps the deck two-up even at the narrowest ui-scale, so it reads as a
+     spread you scan rather than one giant card per row. */
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
 }
 
 .codexCard {
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
-  gap: 9px;
-  align-items: start;
-  padding: 4px 6px;
-  border-left: 2px solid rgb(143 46 19 / 26%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+.codexCardArt {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--ink-07);
+  box-shadow: 0 1px 4px rgb(36 25 16 / 20%);
+  aspect-ratio: 2 / 3;
 }
 
 .codexCardImage {
   display: block;
-  width: 30px;
-  height: 40px;
-  border: 1px solid rgb(143 46 19 / 40%);
-  border-radius: 4px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+}
+
+.codexCardCount {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgb(36 25 16 / 66%);
+  color: var(--ivory);
+  font-family: var(--disp);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .codexCardCaption {
   display: grid;
-  gap: 1px;
-  min-width: 0;
+  gap: 2px;
 }
 
 .codexCardName {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  align-items: baseline;
-}
-
-.codexCardName strong {
   font-family: var(--font-display);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   line-height: 1.2;
   letter-spacing: 0.01em;
 }
 
-.codexCardCount {
-  color: var(--muted);
-  font-style: normal;
-  font-weight: 700;
-  font-size: 0.7rem;
-}
-
 .codexCardSeasons {
-  margin-left: auto;
   color: var(--muted);
   font-size: 0.6rem;
   letter-spacing: 0.04em;
