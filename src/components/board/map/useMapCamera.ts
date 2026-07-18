@@ -49,14 +49,20 @@ const TILE_CLICK_SUPPRESS_MS = 160;
 const WHEEL_COMMIT_MS = 90;
 
 /**
- * How far the floating chrome reaches in over the sea, in CSS pixels — the ledger
- * panel on the left, the two glass spines top and bottom, a slim right margin.
- * These are *provisional*: Step 1 seats the board against the chrome as it floats
- * today; when the rail, verb spine and final panel land (Steps 2–3) these numbers
- * are re-measured. They exist so the resting board clears the panel now, not so
- * they are exact. See `docs/feat/ui-refit.md` §"The camera".
+ * How far the resting board is held clear of the chrome, in CSS pixels.
+ *
+ * Left/right are SYMMETRIC so the board centres on the viewport — and therefore
+ * sits under the centred season medallion. Only the left rail (~62px) is
+ * permanent chrome on the sides, so 70 clears it with air to spare; the ledger
+ * card and chronicle are toggleable and float OVER the board's edge by design
+ * (KYKLOS: full-bleed board, chrome on top), so the board never reflows when
+ * they open. Left used to be 210 (reserving the open ledger's width), which
+ * shoved the board 70px right of centre — the "map is off" bug.
+ *
+ * Top/bottom stay larger and clear the two opaque full-width spines, so the
+ * board sits between them rather than under them.
  */
-const CHROME_INSET_PX = { top: 96, right: 70, bottom: 100, left: 210 };
+const CHROME_INSET_PX = { top: 96, right: 70, bottom: 100, left: 70 };
 
 /** Buttons and the confirm prompt own their own pointers — never pan under them. */
 function isMapDragBlockedTarget(target: EventTarget) {
