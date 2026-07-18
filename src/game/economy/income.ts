@@ -44,7 +44,7 @@ export type FoodShortageStatus = {
 export function popIncome(
   pop: PopType,
   count: number,
-  primaryResource: Resource,
+  primaryResource: Resource | null,
   ruleset: Ruleset
 ): Resources {
   const income: Resources = { ...EMPTY_RESOURCES };
@@ -53,7 +53,11 @@ export function popIncome(
   for (const [resource, perPop] of Object.entries(rule.flat) as Array<[Resource, number]>) {
     income[resource] += perPop * count;
   }
-  income[primaryResource] += rule.primaryResource * count;
+  // Yield-less tiles (hills, oracle) have no primary resource — slaves are inert there
+  // (terrain-economy.md); citizens/freemen still produce (their primaryResource is 0).
+  if (primaryResource) {
+    income[primaryResource] += rule.primaryResource * count;
+  }
 
   return income;
 }
@@ -68,14 +72,17 @@ export function popIncome(
  *  lets a caller silently read the wrong ruleset. */
 export function settlementNetYield(tile: HexTile, settlement: Settlement, ruleset: Ruleset): Resources {
   const income: Resources = { ...EMPTY_RESOURCES };
+  const primary = tile.resource?.type ?? null;
 
-  income[tile.resource.type] += settlementTileYield(tile, settlement, ruleset);
-  applyResourceDelta(income, popIncome("citizens", settlement.pops.citizens, tile.resource.type, ruleset));
-  applyResourceDelta(income, popIncome("freemen", settlement.pops.freemen, tile.resource.type, ruleset));
-  applyResourceDelta(income, popIncome("slaves", settlement.pops.slaves, tile.resource.type, ruleset));
+  if (primary) {
+    income[primary] += settlementTileYield(tile, settlement, ruleset);
+  }
+  applyResourceDelta(income, popIncome("citizens", settlement.pops.citizens, primary, ruleset));
+  applyResourceDelta(income, popIncome("freemen", settlement.pops.freemen, primary, ruleset));
+  applyResourceDelta(income, popIncome("slaves", settlement.pops.slaves, primary, ruleset));
   income.happiness -= settlementOverCapacity(settlement, ruleset) * ruleset.economy.overCapacityHappinessPerPop;
 
-  applyIncomeBuildingEffects([], income, settlement, settlementIncomeSource(tile, settlement), tile.resource.type);
+  applyIncomeBuildingEffects([], income, settlement, settlementIncomeSource(tile, settlement), primary);
 
   return income;
 }
@@ -101,13 +108,18 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
     const share =
       settlement.kind === "colony" && tile.settlements.length > 1 ? ruleset.economy.colonySharedTileYieldShare : 1;
     const settlementLabel = settlementIncomeSource(tile, settlement);
-    const tileAmount = settlementTileYield(tile, settlement, ruleset);
-    addIncomeContribution(contributions, income, {
-      resource: tile.resource.type,
-      amount: tileAmount,
-      source: settlementLabel,
-      detail: `Tile yield${share < 1 ? " shared colony" : ""}`
-    });
+    const primary = tile.resource?.type ?? null;
+
+    // Yield-less tiles (hills, oracle) contribute no tile yield and no slave production —
+    // slaves are inert there; citizens/freemen produce regardless (terrain-economy.md).
+    if (primary) {
+      addIncomeContribution(contributions, income, {
+        resource: primary,
+        amount: settlementTileYield(tile, settlement, ruleset),
+        source: settlementLabel,
+        detail: `Tile yield${share < 1 ? " shared colony" : ""}`
+      });
+    }
 
     addIncomeContribution(contributions, income, {
       resource: "influence",
@@ -139,12 +151,14 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
       source: settlementLabel,
       detail: `${settlement.pops.freemen} freeman pops upkeep`
     });
-    addIncomeContribution(contributions, income, {
-      resource: tile.resource.type,
-      amount: settlement.pops.slaves * ruleset.popIncome.slaves.primaryResource,
-      source: settlementLabel,
-      detail: `${settlement.pops.slaves} slave pops production`
-    });
+    if (primary) {
+      addIncomeContribution(contributions, income, {
+        resource: primary,
+        amount: settlement.pops.slaves * ruleset.popIncome.slaves.primaryResource,
+        source: settlementLabel,
+        detail: `${settlement.pops.slaves} slave pops production`
+      });
+    }
     addIncomeContribution(contributions, income, {
       resource: "food",
       amount: settlement.pops.slaves * coeff("slaves", "food"),
@@ -164,7 +178,7 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
       detail: "Over capacity pressure"
     });
 
-    applyIncomeBuildingEffects(contributions, income, settlement, settlementLabel, tile.resource.type);
+    applyIncomeBuildingEffects(contributions, income, settlement, settlementLabel, primary);
   }
 
   applySeasonalIncomeEffects(G, playerID, contributions, income);
@@ -279,13 +293,16 @@ function applyIncomeBuildingEffects(
   income: Resources,
   settlement: Settlement,
   settlementLabel: string,
-  primaryResource: Resource
+  primaryResource: Resource | null
 ) {
   const popBonusSupport = {
     freemen: { supportedPops: 0, amount: 0 },
     citizens: { supportedPops: 0, amount: 0 },
     slaves: { supportedPops: 0, amount: 0 }
   };
+  // The Villa's flat boost to the tile's own material — accumulated across copies
+  // (levels), paid only when the tile actually yields (dead on hills/oracle).
+  let tilePrimaryBonus = 0;
 
   for (const buildingId of settlement.buildings) {
     const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
@@ -314,8 +331,19 @@ function applyIncomeBuildingEffects(
       } else if (effect.type === "slavePrimaryResourceBonus") {
         popBonusSupport.slaves.supportedPops += effect.supportedPops;
         popBonusSupport.slaves.amount = effect.amount;
+      } else if (effect.type === "tilePrimaryResourceBonus") {
+        tilePrimaryBonus += effect.amount;
       }
     }
+  }
+
+  if (primaryResource && tilePrimaryBonus > 0) {
+    addIncomeContribution(contributions, income, {
+      resource: primaryResource,
+      amount: tilePrimaryBonus,
+      source: settlementLabel,
+      detail: "Villa"
+    });
   }
 
   const supportedFreemen = Math.min(settlement.pops.freemen, popBonusSupport.freemen.supportedPops);
@@ -334,13 +362,17 @@ function applyIncomeBuildingEffects(
     detail: `Temple supports ${supportedCitizens} ${formatPopName("citizens", supportedCitizens)}`
   });
 
-  const supportedSlaves = Math.min(settlement.pops.slaves, popBonusSupport.slaves.supportedPops);
-  addIncomeContribution(contributions, income, {
-    resource: primaryResource,
-    amount: supportedSlaves * popBonusSupport.slaves.amount,
-    source: settlementLabel,
-    detail: `Workshop supports ${supportedSlaves} ${formatPopName("slaves", supportedSlaves)}`
-  });
+  // The Workshop's slave bonus pays into the tile's material — a no-op on a yield-less
+  // tile (nothing for the slaves to work), so it only lands where there's a resource.
+  if (primaryResource) {
+    const supportedSlaves = Math.min(settlement.pops.slaves, popBonusSupport.slaves.supportedPops);
+    addIncomeContribution(contributions, income, {
+      resource: primaryResource,
+      amount: supportedSlaves * popBonusSupport.slaves.amount,
+      source: settlementLabel,
+      detail: `Workshop supports ${supportedSlaves} ${formatPopName("slaves", supportedSlaves)}`
+    });
+  }
 }
 
 export function addIncomeContribution(

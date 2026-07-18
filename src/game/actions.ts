@@ -41,6 +41,10 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
     return invalid();
   }
 
+  if (tile.terrain === "oracle") {
+    return invalid("The oracle cannot be settled.");
+  }
+
   if (isAdjacentToCity(G, tile)) {
     return invalid("The metropolis cannot be adjacent to another city.");
   }
@@ -71,6 +75,10 @@ export function placeCity(G: HegemonyState, playerID: PlayerId, tileId: string, 
     !isExactPopSelection(pops, G.ruleset.placementPopCounts.city)
   ) {
     return invalid();
+  }
+
+  if (tile.terrain === "oracle") {
+    return invalid("The oracle cannot be settled.");
   }
 
   if (isAdjacentToCity(G, tile)) {

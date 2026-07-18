@@ -2,7 +2,10 @@ import type { Ruleset } from "./ruleset";
 
 export type PlayerId = "0" | "1" | "2" | "3";
 
-export type Terrain = "mountain" | "hill" | "forest" | "plains";
+/** `oracle` is a cosmetic hole in the map (Delphi): no resource, 0 slots, and it can
+ *  never host a settlement, so it can never be a contiguity link — a permanent split
+ *  that expansion must route around (Phase 2, terrain-economy.md). */
+export type Terrain = "mountain" | "hill" | "forest" | "plains" | "oracle";
 
 export type Resource = "wood" | "stone" | "gold" | "food" | "influence" | "happiness";
 
@@ -30,7 +33,16 @@ export type GameOverReason = "victoryRace" | "deckExhausted";
 /** The four seasons, in the order they cycle each year (a year always opens on spring). */
 export type SeasonName = "spring" | "summer" | "autumn" | "winter";
 
-export type BuildingId = "marketplace" | "temple" | "workshop" | "granary" | "forum" | "aqueduct" | "odeon";
+export type BuildingId =
+  | "marketplace"
+  | "temple"
+  | "workshop"
+  | "granary"
+  | "forum"
+  | "aqueduct"
+  | "odeon"
+  | "villa"
+  | "gymnasion";
 
 export type Resources = Record<Resource, number>;
 
@@ -312,6 +324,18 @@ export type BuildingEffect =
       /** Raises the settlement's pop capacity (the Aqueduct). */
       type: "popCapacityBonus";
       amount: number;
+    }
+  | {
+      /** Flat bonus to the settlement tile's own material income (the Villa). Null on a
+       *  yield-less tile — worthless on a hill/oracle, which is the intended divergence. */
+      type: "tilePrimaryResourceBonus";
+      amount: number;
+    }
+  | {
+      /** Cuts the cost of a social-ladder promotion made in this settlement (the
+       *  Gymnasion): −`amount` off whichever resource the promotion costs. */
+      type: "promoteCostReduction";
+      amount: number;
     };
 
 export interface BuildingDefinition {
@@ -319,6 +343,10 @@ export interface BuildingDefinition {
   name: string;
   cost: Partial<Resources>;
   effects: BuildingEffect[];
+  /** Cap on copies (levels) of this building in one settlement — every building is
+   *  capped (owner ruling 2026-07-15: "they cant scale forever"). Level = copies, each
+   *  eats a slot; a 4-slot hill must diversify rather than stack one flat effect. */
+  maxLevel: number;
 }
 
 export interface HexTile {
@@ -327,7 +355,11 @@ export interface HexTile {
   r: number;
   terrain: Terrain;
   buildingSlots: number;
-  resource: Yield;
+  /** The land's first-order yield, or `null` for yield-less terrain (hills, oracle).
+   *  Null MUST mean no resource type — slave income multiplies `resource.type` by a
+   *  ruleset coefficient (not the amount), so `{ type, amount: 0 }` would leave slaves
+   *  productive and break the yield-less hill (terrain-economy.md precondition). */
+  resource: Yield | null;
   settlements: Settlement[];
 }
 

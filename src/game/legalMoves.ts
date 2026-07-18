@@ -284,7 +284,7 @@ function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): Legal
   const moves: LegalMove[] = [];
 
   for (const tile of G.board.tiles) {
-    if (tile.settlements.length > 0 || isAdjacentToCity(G, tile)) {
+    if (tile.terrain === "oracle" || tile.settlements.length > 0 || isAdjacentToCity(G, tile)) {
       continue;
     }
 
@@ -305,7 +305,7 @@ function enumerateCityPlacements(G: HegemonyState, playerID: PlayerId): LegalMov
   const moves: LegalMove[] = [];
 
   for (const tile of G.board.tiles) {
-    if (tile.settlements.length > 0 || isAdjacentToCity(G, tile)) {
+    if (tile.terrain === "oracle" || tile.settlements.length > 0 || isAdjacentToCity(G, tile)) {
       continue;
     }
 

@@ -46,8 +46,9 @@ describe("setup enumeration", () => {
     const G = scenario().build();
     const moves = expectSound(G, "0");
 
-    // Empty board: all 37 tiles are legal, 15 four-pop splits each.
-    expect(moves).toHaveLength(555);
+    // Empty board: all 36 non-oracle tiles are legal, 15 four-pop splits each
+    // (the oracle at 0,1 can never host a settlement).
+    expect(moves).toHaveLength(540);
     expect(moves.every((move) => move.type === "placeCapital")).toBe(true);
   });
 

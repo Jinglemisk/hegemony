@@ -102,6 +102,14 @@ export function formatBuildingEffects(effects: BuildingEffect[]) {
         return `+${effect.amount} pop capacity`;
       }
 
+      if (effect.type === "tilePrimaryResourceBonus") {
+        return `+${effect.amount} tile yield`;
+      }
+
+      if (effect.type === "promoteCostReduction") {
+        return `promotions here cost -${effect.amount}`;
+      }
+
       return `+${effect.amount} ${RESOURCE_LABELS[effect.resource]} income`;
     })
     .join(", ");

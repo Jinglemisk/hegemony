@@ -97,7 +97,8 @@ export function UpgradeCityModal({
                     <AtlasIcon icon="colony" className="miniIcon" />
                     <span className="placementChipText">
                       <strong>
-                        {capitalize(tile.terrain)} +{tile.resource.amount} {tile.resource.type}
+                        {capitalize(tile.terrain)}
+                        {tile.resource ? ` +${tile.resource.amount} ${tile.resource.type}` : " · no yield"}
                       </strong>
                       <em>
                         {tile.id} · {totalPops(settlement.pops)}/{settlementPopCapacity("colony", G.ruleset)}

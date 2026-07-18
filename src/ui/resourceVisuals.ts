@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { Resource } from "../game/types";
+import type { Resource, Terrain, Yield } from "../game/types";
 
 export const RESOURCE_ORDER: Resource[] = ["wood", "stone", "gold", "food", "influence", "happiness"];
 
@@ -60,6 +60,26 @@ export const RESOURCE_VISUALS = {
   }
 } satisfies Record<Resource, ResourceVisual>;
 
+// Yield-less terrains (Phase 2) have no resource to colour by, so they carry their own
+// palette. Hills read as bare, sun-baked building land (warm ochre-clay); the oracle
+// reads as a cool marble hole — sacred and off-limits, never a poor tile.
+const TERRAIN_VISUALS = {
+  hill: {
+    color: "#8a6f42",
+    tile: "#c2a878",
+    soft: "rgb(138 111 66 / 18%)",
+    line: "rgb(138 111 66 / 52%)",
+    shadow: "rgb(138 111 66 / 28%)"
+  },
+  oracle: {
+    color: "#6f6c86",
+    tile: "#c8cbd4",
+    soft: "rgb(111 108 134 / 16%)",
+    line: "rgb(111 108 134 / 48%)",
+    shadow: "rgb(111 108 134 / 26%)"
+  }
+} satisfies Partial<Record<Terrain, ResourceVisual>>;
+
 export type ResourceCssVars = CSSProperties & {
   "--resource-color": string;
   "--resource-tile": string;
@@ -68,9 +88,7 @@ export type ResourceCssVars = CSSProperties & {
   "--resource-shadow": string;
 };
 
-export function resourceCssVars(resource: Resource): ResourceCssVars {
-  const visual = RESOURCE_VISUALS[resource];
-
+function toCssVars(visual: ResourceVisual): ResourceCssVars {
   return {
     "--resource-color": visual.color,
     "--resource-tile": visual.tile,
@@ -78,4 +96,19 @@ export function resourceCssVars(resource: Resource): ResourceCssVars {
     "--resource-line": visual.line,
     "--resource-shadow": visual.shadow
   };
+}
+
+export function resourceCssVars(resource: Resource): ResourceCssVars {
+  return toCssVars(RESOURCE_VISUALS[resource]);
+}
+
+/** The right palette for a tile: its resource's if it yields, else its terrain's
+ *  (hill / oracle). One code path so the map fill and the ledger chips never diverge. */
+export function tileCssVars(tile: { terrain: Terrain; resource: Yield | null }): ResourceCssVars {
+  if (tile.resource) {
+    return resourceCssVars(tile.resource.type);
+  }
+
+  const terrainVisual = (TERRAIN_VISUALS as Partial<Record<Terrain, ResourceVisual>>)[tile.terrain];
+  return toCssVars(terrainVisual ?? TERRAIN_VISUALS.hill);
 }

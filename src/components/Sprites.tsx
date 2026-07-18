@@ -33,11 +33,13 @@ const ICON_SPRITE_CLASSES: Record<IconAtlasKey, string> = {
   temple: "sprite-temple",
   workshop: "sprite-workshop",
   granary: "sprite-granary",
-  // New civic buildings (2026-07-13) borrow the nearest atlas art until the
-  // sprite sheet gains their own — see OVERNIGHT.md morning questions.
+  // New civic buildings (2026-07-13) + the Phase 2 roster (villa/gymnasion) borrow the
+  // nearest atlas art until the sprite sheet gains their own — see OVERNIGHT.md.
   forum: "sprite-marketplace",
   aqueduct: "sprite-granary",
   odeon: "sprite-temple",
+  villa: "sprite-granary",
+  gymnasion: "sprite-temple",
   capital: "sprite-capital",
   city: "sprite-city",
   colony: "sprite-colony"
@@ -47,7 +49,10 @@ const TERRAIN_SPRITE_CLASSES: Record<Terrain, string> = {
   mountain: "sprite-terrain-mountain",
   hill: "sprite-terrain-hill",
   forest: "sprite-terrain-forest",
-  plains: "sprite-terrain-plains"
+  plains: "sprite-terrain-plains",
+  // The oracle has no atlas cell yet; the bare hill art is the nearest read (rock, no
+  // yield). The map polygon carries the oracle's real, distinct colour.
+  oracle: "sprite-terrain-hill"
 };
 
 const UI_SPRITE_CLASSES: Record<UiAtlasKey, string> = {

@@ -4,7 +4,7 @@ import { settlementBuildingSlots } from "../../../game/rules";
 import type { Ruleset } from "../../../game/ruleset";
 import type { HexTile } from "../../../game/types";
 import { HEX_SIZE, getColonyXPositions, hexPoints } from "../../../ui/hexGeometry";
-import { resourceCssVars } from "../../../ui/resourceVisuals";
+import { tileCssVars } from "../../../ui/resourceVisuals";
 
 /**
  * One tile and everything standing on it (ladder rung R6): the hex, its glyphs,
@@ -52,12 +52,16 @@ export function TileGroup({
   // reads "+n" below — both white, both growing with their number so a fat plains
   // shouts and a lean hill whispers.
   const slotGlyphSize = 11 + Math.min(8, totalBuildingSlots) * 1.2;
-  const yieldGlyphSize = 13 + Math.min(10, tile.resource.amount) * 1.7;
+  // Yield-less tiles (hills, oracle) show no yield numeral — the number is the yield,
+  // and its absence is the tile's whole point (slot-forward hill, empty oracle).
+  const yieldAmount = tile.resource?.amount ?? null;
+  const yieldGlyphSize = 13 + Math.min(10, yieldAmount ?? 0) * 1.7;
+  const yieldLabel = tile.resource ? `${tile.resource.amount} ${tile.resource.type}` : "no yield";
 
   return (
-    <g style={resourceCssVars(tile.resource.type)} transform={`translate(${x} ${y})`}>
+    <g style={tileCssVars(tile)} transform={`translate(${x} ${y})`}>
       <g
-        aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${tile.resource.amount} ${tile.resource.type}`}
+        aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${yieldLabel}`}
         className="svgButton"
         data-tile-id={tile.id}
         onClick={(event) => onTileClick(tile.id, event)}
@@ -87,14 +91,22 @@ export function TileGroup({
             {usedBuildingSlots}/{totalBuildingSlots}
           </text>
         ) : null}
-        <text
-          className="tileYieldGlyph"
-          fontSize={yieldGlyphSize}
-          textAnchor="middle"
-          y={YIELD_GLYPH_Y + yieldGlyphSize * 0.36}
-        >
-          {tile.resource.amount}
-        </text>
+        {yieldAmount !== null ? (
+          <text
+            className="tileYieldGlyph"
+            fontSize={yieldGlyphSize}
+            textAnchor="middle"
+            y={YIELD_GLYPH_Y + yieldGlyphSize * 0.36}
+          >
+            {yieldAmount}
+          </text>
+        ) : null}
+        {tile.terrain === "oracle" ? (
+          <g className="oracleMark" aria-hidden="true">
+            <circle r={8} />
+            <circle r={3.4} />
+          </g>
+        ) : null}
       </g>
 
       {city ? (
