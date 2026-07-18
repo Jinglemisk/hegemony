@@ -1,42 +1,16 @@
 /* responsive — Responsive overrides (@media breakpoints). MUST load LAST — these override earlier rules by cascade order
    Split from styles.css (Phase 2e); original source order preserved. */
 
-/* The old ≤1280 docked-layout overrides (.workbench / .topbar grids) were
-   removed: they targeted classes the KYKLOS layout still carries on its elements,
-   so `.topbar`'s asymmetric 3-col grid was overriding strategyTopbar's symmetric
-   `1fr auto 1fr` and shoving the season medallion off-centre. The uniform-scale
-   pass (docs/feat/two-panel.md) will sweep the rest of this file. */
-
-@media (max-width: 1120px) {
-  body {
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-
-  .shell {
-    min-height: 100svh;
-    height: auto;
-    overflow: visible;
-  }
-
-  .workbench {
-    grid-template-columns: 1fr;
-  }
-
-  .panel {
-    overflow: visible;
-  }
-}
+/* Swept for the uniform-scale pass (two-panel.md, 2026-07-18). The KYKLOS chrome now
+   scales DOWN proportionally as the viewport narrows (one --ui-scale dial in base.css)
+   — identical layout, only smaller. The old docked-layout breakpoints REFLOWED the
+   shell/workbench/topbar to single-column at ≤1120px, which contradicts that, so they
+   are gone. What remains is narrow-screen content niceties (tooltip placement, mobile
+   grid columns) that don't fight the scale. Per-element minimums — a floor below which
+   a disc or card stops shrinking — are a later pass; below ~1024px the scale simply
+   holds at its 0.82 floor and the panels float over the (never-reflowed) sea. */
 
 @media (max-width: 760px) {
-  .shell {
-    padding: 12px;
-  }
-
-  .topbar {
-    grid-template-columns: 1fr;
-  }
-
   .resourceTooltip {
     position: fixed;
     top: 92px;
@@ -46,27 +20,18 @@
     max-height: min(430px, calc(100vh - 116px));
   }
 
-  .iconButton {
-    flex: 1 1 0;
-  }
-
   .resourceGrid,
   .moveFields,
   .popChoiceGrid {
     grid-template-columns: 1fr;
   }
+
+  .popBuildingMatrix {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 460px) {
-
-  .workbench {
-    gap: 10px;
-  }
-
-  .panel {
-    padding: 12px;
-  }
-
   .buildingButton {
     grid-template-columns: 36px minmax(0, 1fr);
   }
@@ -75,21 +40,7 @@
     width: 34px;
     height: 34px;
   }
-}
 
-@media (max-width: 1120px) {
-  .strategyTopbar {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 760px) {
-  .popBuildingMatrix {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 460px) {
   .popBuildingMatrix,
   .deckShelf,
   .growPopBenefitPanel,
