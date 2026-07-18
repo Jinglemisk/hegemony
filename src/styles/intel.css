@@ -21,7 +21,10 @@
   /* A FIXED height, not max-height: every page fills the band and the body
      scrolls inside it, so switching pages never resizes the card. Sizing to
      content made the box jump between Cities and Market. */
-  height: calc(100vh - var(--chrome-top) - var(--chrome-bot) - 24px);
+  /* Reserve only the dock SPINE at the bottom, not the verb-disc overhang (--vb-out):
+     the discs are centred, so at the panel's edge there is nothing to clear. This
+     extends both cards down ~a disc-overhang's worth, balancing the top/bottom air. */
+  height: calc(100vh - var(--chrome-top) - var(--bot-h) - 24px);
   z-index: 30;
   display: flex;
   flex-direction: column;
@@ -256,7 +259,10 @@
   position: fixed;
   right: calc(var(--rail-w) + var(--bub-out) + 14px);
   top: calc(var(--chrome-top) + 12px);
-  height: calc(100vh - var(--chrome-top) - var(--chrome-bot) - 24px);
+  /* Reserve only the dock SPINE at the bottom, not the verb-disc overhang (--vb-out):
+     the discs are centred, so at the panel's edge there is nothing to clear. This
+     extends both cards down ~a disc-overhang's worth, balancing the top/bottom air. */
+  height: calc(100vh - var(--chrome-top) - var(--bot-h) - 24px);
   z-index: 30;
   display: flex;
   flex-direction: column;

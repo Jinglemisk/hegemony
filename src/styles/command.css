@@ -471,12 +471,69 @@
 .turnLogPanel {
   display: grid;
   flex: 1;
-  grid-template-rows: auto minmax(0, 1fr);
+  /* header · filter chips · the scrolling log */
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 9px;
   min-height: 0;
   overflow: hidden;
   padding: 12px 2px 4px;
   border-top: 1px solid var(--ledger-rule);
+}
+
+/* ── Chronicle player filters ────────────────────────────────────────────────── */
+.chronicleFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.chronicleFilter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 0;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--button-bg);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.chronicleFilter:not(:disabled):hover {
+  color: var(--fg);
+  background: var(--ledger-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+.chronicleFilterActive,
+.chronicleFilterActive:not(:disabled):hover {
+  color: var(--ivory);
+  border-color: transparent;
+  background: var(--filter-color, var(--clay));
+}
+
+.chronicleFilterSwatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--filter-color, var(--clay));
+  box-shadow: 0 0 0 1px rgb(36 25 16 / 22%);
+}
+
+.chronicleFilterActive .chronicleFilterSwatch {
+  box-shadow: 0 0 0 1px rgb(255 248 231 / 70%);
+}
+
+.chronicleEmpty {
+  margin: 0;
+  padding: 8px 2px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-style: italic;
 }
 
 .turnLogHeader {
@@ -539,6 +596,11 @@
   font-size: 0.78rem;
   line-height: 1.3;
   overflow-wrap: anywhere;
+}
+
+/* A line's left accent takes its actor's colour, so the log reads by player. */
+.chronicleLinePlayer {
+  border-left-color: var(--line-color, var(--ledger-rule));
 }
 
 .deckTray {
