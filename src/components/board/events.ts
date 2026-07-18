@@ -1,6 +1,5 @@
-import { BUILDINGS } from "../../game/data";
 import type { BuildingId, EventCard, EventEffect, TableEffect } from "../../game/types";
-import { RESOURCE_LABELS, formatNumber, formatPopLabel, formatSignedNumber } from "../../ui/formatters";
+import { RESOURCE_LABELS, buildingName, formatNumber, formatPopLabel, formatSignedNumber } from "../../ui/formatters";
 
 // NOTE: new URL(..., import.meta.url) resolves relative to THIS file. This module
 // sits one directory deeper than the old HegemonyBoard.tsx, so the asset paths are
@@ -130,7 +129,7 @@ function formatEventEffect(effect: EventEffect): string {
 
   if (effect.type === "actionCostDiscount") {
     const target = effect.buildingId
-      ? buildingNameForEvent(effect.buildingId)
+      ? buildingName(effect.buildingId)
       : effect.action === "foundColony"
         ? "colony"
         : effect.action === "growPop"
@@ -156,6 +155,3 @@ function formatEventEffect(effect: EventEffect): string {
   return "Choose one option";
 }
 
-function buildingNameForEvent(buildingId: BuildingId) {
-  return BUILDINGS.find((building) => building.id === buildingId)?.name ?? buildingId;
-}

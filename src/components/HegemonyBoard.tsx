@@ -1,34 +1,45 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GameEvents, GameMoves, LocalContext } from "../game/controller";
 import {
+  POP_TYPES,
   calculateEconomyProjection,
   canPlaceColonyOnTile,
   getBuildBuildingStatus,
   getFoundColonyStatus,
+  getGrowPopStatus,
   getUpgradeColonyToCityStatus,
-  toPlayerId
+  toPlayerId,
+  totalPops
 } from "../game/rules";
-import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
-import { OMEN_TABLE } from "../game/data";
+import type { BuildingId, HegemonyState, PlayerId, Resource } from "../game/types";
+import { PLAYER_NAMES, OMEN_TABLE, BUILDINGS } from "../game/data";
 import { HexMap } from "./HexMap";
-import { FoundColonyPopover, MovePopsModal, PopulationPickerModal, UpgradeCityModal } from "./PopulationModals";
 import { ResourceGrid } from "./ResourceGrid";
-import { ActionCommandPanel } from "./board/command/ActionCommandPanel";
+import { BuildPopover } from "./board/map/BuildPopover";
+import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
+import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
+import { ChronicleDrawer } from "./board/command/ChronicleDrawer";
+import { FoundColonyPopover } from "./board/modals/FoundColonyPopover";
+import { GrowPopPopover } from "./board/map/GrowPopPopover";
+import { LadderPopover } from "./board/map/LadderPopover";
+import { MovePopsSourcePopover, MovePopsTargetPopover } from "./board/map/MovePopsPopover";
+import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelection";
+import { useMapSelection } from "./board/map/useMapSelection";
+import { CommandDock } from "./board/command/CommandDock";
 import { CalmModal } from "./board/modals/CalmModal";
-import { CompendiumModal } from "./board/modals/CompendiumModal";
 import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
 import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
-import { GrowPopModal } from "./board/modals/GrowPopModal";
+import { LedgerRail } from "./board/ledger/LedgerRail";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
-import { LadderModal } from "./board/modals/LadderModal";
-import type { LadderRequest } from "./board/modals/LadderModal";
+import type { LadderRequest } from "./board/map/LadderPopover";
 import { RiotModal } from "./board/modals/RiotModal";
 import { VentureModal } from "./board/modals/VentureModal";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
 import { SeasonStatus } from "./board/topbar/SeasonStatus";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
-import { PLAYER_DISPLAY_NAMES } from "./board/constants";
+import { GameUiProvider, type GameUi } from "./board/GameUiContext";
+import { getOwnedHoldings } from "./board/helpers";
 import type { EmpireTab } from "./board/types";
 
 type BoardProps = {
@@ -55,6 +66,11 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
   colony: "founding colony"
 };
 
+// Resources ride the top bar now (ui-refit Step 3 / Q17), split around the season
+// medallion: raw materials on the left, the softer economy on the right.
+const TOP_RESOURCES_LEFT: Resource[] = ["wood", "stone", "food"];
+const TOP_RESOURCES_RIGHT: Resource[] = ["gold", "influence", "happiness"];
+
 /**
  * Exactly one dialog owns the screen at a time — the union makes that a type
  * invariant instead of a rule six independent booleans could break. The
@@ -66,12 +82,8 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
 type ActiveModal =
   | { kind: "populationPrompt"; placement: SetupPlacement; tileId: string }
   | { kind: "upgradeCity" }
-  | { kind: "growPop" }
-  | { kind: "movePops" }
   | { kind: "calm" }
   | { kind: "venture" }
-  | { kind: "ladder"; request: LadderRequest }
-  | { kind: "compendium" };
 
 export function HegemonyBoard({
   G,
@@ -86,17 +98,32 @@ export function HegemonyBoard({
   const [tileConfirmation, setTileConfirmation] = useState<PendingTileConfirmation | null>(null);
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
   const [gameOverDismissed, setGameOverDismissed] = useState(false);
-  const [foundColonyMode, setFoundColonyMode] = useState(false);
-  const [foundColonyTarget, setFoundColonyTarget] = useState<{ tileId: string; anchor: DOMRect } | null>(null);
   // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
   const [riotResultOpen, setRiotResultOpen] = useState(false);
   // Initialized to the omen standing at mount so a reload never re-announces it.
   const [seenOmenYear, setSeenOmenYear] = useState<number | null>(() => G.yearOmen?.year ?? null);
   const [activeEmpireTab, setActiveEmpireTab] = useState<EmpireTab>("cities");
+  // The ledger boots open on Cities (ui-refit Step 2); a rail disc toggles it, its
+  // own × closes it, so the sea can be read whole when the ledger isn't needed.
+  const [isLedgerOpen, setLedgerOpen] = useState(true);
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
   const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent);
+  const gameUi = useMemo<GameUi>(
+    () => ({
+      G,
+      viewerId,
+      viewer,
+      currentPlayerId,
+      phase: ctx.phase,
+      isActive,
+      hasPendingPlayerEvent,
+      moves,
+      events
+    }),
+    [G, viewerId, viewer, currentPlayerId, ctx.phase, isActive, hasPendingPlayerEvent, moves, events]
+  );
   const projectedEconomy = useMemo(
     () => calculateEconomyProjection(G, viewerId, { resolveTransfers: true }),
     [G, viewerId]
@@ -106,13 +133,34 @@ export function HegemonyBoard({
   const isSetup = ctx.phase === "setupCapital" || ctx.phase === "setupCity" || ctx.phase === "setupColony";
   const canFoundColony = G.board.tiles.some((tile) => getFoundColonyStatus(G, viewerId, tile.id).can);
   const canUpgradeCity = G.board.tiles.some((tile) => getUpgradeColonyToCityStatus(G, viewerId, tile.id).can);
-  const foundColonyValidTileIds = useMemo(
+  // A verb must never offer a mode the board can't answer. These ask the engine the
+  // same question the glow does, so "Grow" is live exactly when some settlement can
+  // actually grow — not merely when the player owns one.
+  const canGrowPops = useMemo(
     () =>
-      foundColonyMode
-        ? G.board.tiles.filter((tile) => getFoundColonyStatus(G, viewerId, tile.id).can).map((tile) => tile.id)
-        : [],
-    [foundColonyMode, G, viewerId]
+      getOwnedHoldings(G, viewerId).some(({ tile }) =>
+        POP_TYPES.some((pop) => getGrowPopStatus(G, viewerId, tile.id, pop).can)
+      ),
+    [G, viewerId]
   );
+  const canMovePops = useMemo(() => {
+    const holdings = getOwnedHoldings(G, viewerId);
+
+    return holdings.length >= 2 && holdings.some(({ settlement }) => totalPops(settlement.pops) > 0);
+  }, [G, viewerId]);
+  // Build is live when some settlement could raise some building — the same engine
+  // check the glow and the popover use, so the verb never offers an empty map.
+  const canBuild = useMemo(
+    () =>
+      getOwnedHoldings(G, viewerId).some(({ tile }) =>
+        BUILDINGS.some((building) => getBuildBuildingStatus(G, viewerId, tile.id, building.id).can)
+      ),
+    [G, viewerId]
+  );
+  // The map is the picker (refit scope 3): every "which settlement?" flow arms a
+  // mode here, the board glows its legal tiles, and a popover confirms on the
+  // spot — no dialog is laid over the answer.
+  const mapSelection = useMapSelection({ G, playerID: viewerId, isActive });
   // During the founding-colony round, glow every legal tile (coast or beside the metropolis).
   const setupColonyValidTileIds = useMemo(
     () =>
@@ -130,50 +178,45 @@ export function HegemonyBoard({
           ? "Select a glowing tile for your founding colony — any coast, or beside your metropolis"
           : "Income and building actions";
 
-  const exitFoundColonyMode = () => {
-    setFoundColonyMode(false);
-    setFoundColonyTarget(null);
-  };
-
   const closeModal = useCallback(() => setActiveModal(null), []);
+
+  /** Arming a map mode always clears dialogs: the board must never be covered
+   *  while it is being asked a question (refit scope 3, selection rule 1). */
+  const armSelection = useCallback(
+    (mode: MapSelectionMode) => {
+      setActiveModal(null);
+      setTileConfirmation(null);
+      mapSelection.arm(mode);
+    },
+    [mapSelection]
+  );
+  // The chronicle lives in a drawer now (Q19); its newest line rides the command
+  // bar so the narration is never fully hidden.
+  const latestChronicleLine = G.log.length > 0 ? G.log[G.log.length - 1].message : null;
 
   // Handing the turn over closes everything the previous seat had open.
   useEffect(() => {
     setTileConfirmation(null);
     setActiveModal(null);
-    exitFoundColonyMode();
+    mapSelection.clear();
     setRiotResultOpen(false);
   }, [ctx.phase, ctx.currentPlayer]);
 
   // A drawn event takes the screen: dismiss the player's own dialogs behind it.
-  // The compendium is exempt — it is reference, and reading a rule mid-event is
-  // exactly when a player needs it.
+  // The ledger is left alone — the codex lives there now, and reading a rule
+  // mid-event is exactly when a player needs it.
   useEffect(() => {
     if (!G.pendingPlayerEvent) {
       return;
     }
 
     setTileConfirmation(null);
-    exitFoundColonyMode();
-    setActiveModal((current) => (current?.kind === "compendium" ? current : null));
+    mapSelection.clear();
+    setActiveModal(null);
   }, [G.pendingPlayerEvent]);
 
-  useEffect(() => {
-    if (!foundColonyMode) {
-      return;
-    }
-
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        exitFoundColonyMode();
-      }
-    };
-
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [foundColonyMode]);
-
-  // `?` opens the compendium from anywhere; Escape closes it.
+  // `?` toggles the codex from anywhere — it is a ledger page, so this is the
+  // same act as pressing its rail disc.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -183,27 +226,35 @@ export function HegemonyBoard({
       }
 
       if (event.key === "?") {
-        setActiveModal((current) => (current?.kind === "compendium" ? null : { kind: "compendium" }));
+        setLedgerOpen((open) => !(open && activeEmpireTab === "codex"));
+        setActiveEmpireTab("codex");
       }
       // Escape is ModalShell's job — every dialog gets it from the one place.
     };
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, []);
+  }, [activeEmpireTab]);
 
   const handleTileAction = useCallback(
     (tileId: string) => {
       setSelectedTileId(tileId);
 
-      if (foundColonyMode) {
-        if (getFoundColonyStatus(G, viewerId, tileId).can) {
-          const element = typeof document !== "undefined" ? document.querySelector(`[data-tile-id="${tileId}"]`) : null;
-
-          if (element) {
-            setFoundColonyTarget({ tileId, anchor: element.getBoundingClientRect() });
-          }
+      // A mode is armed: the click IS the answer (refit scope 3).
+      if (mapSelection.selection) {
+        if (!mapSelection.candidateTileIds.includes(tileId)) {
+          // Clicking a tile the rules would refuse does nothing — the glow is the
+          // contract, and it comes from the engine's own status checks.
+          return;
         }
+
+        const element = typeof document !== "undefined" ? document.querySelector(`[data-tile-id="${tileId}"]`) : null;
+
+        if (!element) {
+          return;
+        }
+
+        mapSelection.setTarget({ tileId, anchor: element.getBoundingClientRect() });
         return;
       }
 
@@ -221,7 +272,7 @@ export function HegemonyBoard({
 
       setTileConfirmation(null);
     },
-    [foundColonyMode, G, viewerId, ctx.phase, isActive]
+    [mapSelection, ctx.phase, isActive]
   );
 
   const confirmTileAction = useCallback(() => {
@@ -230,13 +281,13 @@ export function HegemonyBoard({
     }
 
     if (tileConfirmation.action === "foundColony") {
-      setFoundColonyMode(true);
+      mapSelection.arm({ kind: "foundColony" });
     } else {
       setActiveModal({ kind: "upgradeCity" });
     }
 
     setTileConfirmation(null);
-  }, [tileConfirmation]);
+  }, [tileConfirmation, mapSelection]);
 
   const requestBuildBuilding = useCallback(
     (tileId: string, buildingId: BuildingId) => {
@@ -263,105 +314,117 @@ export function HegemonyBoard({
   );
 
   return (
+    <GameUiProvider value={gameUi}>
     <main className="shell uiOverhaulShell">
+      {/* The map is the stage now, not a grid cell: a full-bleed sea the chrome
+          floats over (ui-refit Step 1). The captions ride the stage so they stay
+          pinned to the sea, not to a docked frame. */}
+      <div className="mapStage">
+        <HexMap
+          G={G}
+          confirmation={confirmation}
+          pendingTileId={tileConfirmation?.tileId ?? null}
+          selectedTileId={selectedTileId}
+          highlightTileIds={mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds}
+          placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
+          onTileAction={handleTileAction}
+        />
+        {isSetup ? (
+          <div className="mapSetupCaption" role="status">
+            {pendingSetupCopy}
+          </div>
+        ) : null}
+        {mapSelection.selection ? (
+          <div className="mapSetupCaption placementCaption" role="status">
+            {selectionCaption(mapSelection.selection.mode, mapSelection.candidateTileIds.length)}
+          </div>
+        ) : null}
+      </div>
+
       <header className="topbar strategyTopbar">
         <TopbarEvents G={G} />
 
-        <SeasonStatus
-          G={G}
-          isActive={isActive}
-          currentPlayerId={currentPlayerId}
-          onOpenCompendium={() => setActiveModal({ kind: "compendium" })}
-        />
+        {/* Resources split around the season medallion (Q17 · KYKLOS arrangement). */}
+        <div className="seasonBanner">
+          <ResourceGrid
+            className="topResourceHalf topResourceLeft"
+            order={TOP_RESOURCES_LEFT}
+            resources={viewer.resources}
+            deltas={projectedIncome}
+            breakdown={projectedIncomeBreakdown}
+            resetKey={`resL-${viewerId}`}
+          />
+
+          <SeasonStatus G={G} />
+
+          <ResourceGrid
+            className="topResourceHalf topResourceRight"
+            order={TOP_RESOURCES_RIGHT}
+            resources={viewer.resources}
+            deltas={projectedIncome}
+            breakdown={projectedIncomeBreakdown}
+            resetKey={`resR-${viewerId}`}
+          />
+        </div>
 
         <PlayerScoreboard
-          G={G}
           currentPlayerId={currentPlayerId}
           onPlayerIDChange={onPlayerIDChange}
           viewerId={viewerId}
         />
       </header>
 
+      {/* The KYKLOS ledger (ui-refit Step 2): a disc rail threaded on the left
+          spine, and the tab contents in a floating ivory card the rail opens. */}
       <section className="workbench strategyWorkbench">
-        <aside className="panel empirePanel intelPanel">
-          <EmpireIntelPanel
-            G={G}
-            activeTab={activeEmpireTab}
-            isActive={isActive}
-            phase={ctx.phase}
-            playerID={viewerId}
-            onBuildBuildingRequest={requestBuildBuilding}
-            onTabChange={setActiveEmpireTab}
-            onBankSell={moves.bankSell}
-            onBankBuy={moves.bankBuy}
-            onLadderRequest={(request) => setActiveModal({ kind: "ladder", request })}
-          />
-        </aside>
+        <LedgerRail
+          activeTab={activeEmpireTab}
+          isOpen={isLedgerOpen}
+          onSelectTab={(tab) => {
+            // A disc opens the ledger to its tab; pressing the tab already showing
+            // closes it. So the same disc both reveals and dismisses.
+            setLedgerOpen((open) => !(open && tab === activeEmpireTab));
+            setActiveEmpireTab(tab);
+          }}
+        />
 
-        <section className="mapColumn strategyMapColumn">
-          <div className="mapFrame">
-            <HexMap
-              G={G}
-              confirmation={confirmation}
-              pendingTileId={tileConfirmation?.tileId ?? null}
-              selectedTileId={selectedTileId}
-              highlightTileIds={foundColonyMode ? foundColonyValidTileIds : setupColonyValidTileIds}
-              placementActive={foundColonyMode || ctx.phase === "setupColony"}
-              onTileAction={handleTileAction}
+        {isLedgerOpen ? (
+          <aside className="panel empirePanel intelPanel">
+            <EmpireIntelPanel
+              activeTab={activeEmpireTab}
+              onBuildBuildingRequest={requestBuildBuilding}
+              onClose={() => setLedgerOpen(false)}
+              onBankSell={moves.bankSell}
+              onBankBuy={moves.bankBuy}
+              onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
             />
-            {isSetup ? (
-              <div className="mapSetupCaption" role="status">
-                {pendingSetupCopy}
-              </div>
-            ) : null}
-            {foundColonyMode ? (
-              <div className="mapSetupCaption placementCaption" role="status">
-                {foundColonyValidTileIds.length > 0
-                  ? "Select a glowing tile to found your colony · Esc to cancel"
-                  : "No open tile can host a colony right now · Esc to cancel"}
-              </div>
-            ) : null}
-          </div>
-          <div className="resourceBand" aria-label={`${viewer.name} resources`}>
-            <ResourceGrid
-              breakdown={projectedIncomeBreakdown}
-              className="topResourceGrid bandResourceGrid"
-              deltas={projectedIncome}
-              resetKey={viewerId}
-              resources={viewer.resources}
-            />
-          </div>
-        </section>
+          </aside>
+        ) : null}
 
-        <aside className="panel actionPanel commandPanel">
-          <ActionCommandPanel
-            G={G}
-            isActive={isActive}
-            phase={ctx.phase}
-            canGrowPops={viewer.settlements.length > 0}
-            canMovePops={viewer.settlements.length >= 2}
-            canFoundColony={canFoundColony}
-            canUpgradeCity={canUpgradeCity}
-            isFoundColonyActive={foundColonyMode}
-            hasPendingPlayerEvent={hasPendingPlayerEvent}
-            calmUsed={viewer.civicCalmUsedThisTurn}
-            ventureUsed={viewer.ventureUsedThisTurn}
-            onEndTurn={events.endTurn}
-            onGrowPopRequest={() => setActiveModal({ kind: "growPop" })}
-            onMovePopsRequest={() => setActiveModal({ kind: "movePops" })}
-            onCalmRequest={() => setActiveModal({ kind: "calm" })}
-            onVentureRequest={() => setActiveModal({ kind: "venture" })}
-            onFoundColonyRequest={() => {
-              // Found-colony is a map mode, not a dialog: it clears any open dialog
-              // so the board is never covered during a selection (refit rule 1).
-              setActiveModal(null);
-              setFoundColonyTarget(null);
-              setFoundColonyMode((active) => !active);
-            }}
-            onUpgradeCityRequest={() => setActiveModal({ kind: "upgradeCity" })}
-          />
-        </aside>
+        <ChronicleDrawer />
       </section>
+
+      <CommandDock
+        canGrowPops={canGrowPops}
+        canMovePops={canMovePops}
+        canFoundColony={canFoundColony}
+        canUpgradeCity={canUpgradeCity}
+        canBuild={canBuild}
+        isFoundColonyActive={mapSelection.selection?.mode.kind === "foundColony"}
+        isBuildActive={mapSelection.selection?.mode.kind === "build"}
+        chronicleTicker={latestChronicleLine}
+        onEndTurn={events.endTurn}
+        // Grow / Move / Found / Build are map modes, not dialogs (refit scope 3):
+        // each arms the board and clears any open dialog, so nothing covers the answer.
+        onGrowPopRequest={() => armSelection({ kind: "growPop" })}
+        onMovePopsRequest={() => armSelection({ kind: "movePops" })}
+        onFoundColonyRequest={() => armSelection({ kind: "foundColony" })}
+        onBuildRequest={() => armSelection({ kind: "build" })}
+        // Calm and Venture ask no "which tile?" question — they stay dialogs.
+        onCalmRequest={() => setActiveModal({ kind: "calm" })}
+        onVentureRequest={() => setActiveModal({ kind: "venture" })}
+        onUpgradeCityRequest={() => setActiveModal({ kind: "upgradeCity" })}
+      />
 
       {activeModal?.kind === "populationPrompt" ? (
         <PopulationPickerModal
@@ -383,23 +446,107 @@ export function HegemonyBoard({
           }}
         />
       ) : null}
-      {foundColonyMode && foundColonyTarget ? (
-        <FoundColonyPopover
-          G={G}
-          playerID={viewerId}
-          tileId={foundColonyTarget.tileId}
-          anchor={foundColonyTarget.anchor}
-          onCancel={exitFoundColonyMode}
-          onConfirm={(sourceTileId, pop) => {
-            moves.foundColony(foundColonyTarget.tileId, sourceTileId, pop);
-            exitFoundColonyMode();
-          }}
-        />
-      ) : null}
+      {/* Map-first selection (refit scope 3): the mode is armed, the board has
+          answered, and the popover pins to the tile the player clicked. One
+          router — every flow shares the anchoring and the Escape route. */}
+      {mapSelection.selection?.target
+        ? (() => {
+            const { mode } = mapSelection.selection!;
+            const { tileId, anchor } = mapSelection.selection!.target!;
+
+            if (mode.kind === "foundColony") {
+              return (
+                <FoundColonyPopover
+                  anchor={anchor}
+                  onCancel={mapSelection.clear}
+                  onConfirm={(sourceTileId, pop) => {
+                    moves.foundColony(tileId, sourceTileId, pop);
+                    mapSelection.clear();
+                  }}
+                  tileId={tileId}
+                />
+              );
+            }
+
+            if (mode.kind === "growPop") {
+              return (
+                <GrowPopPopover
+                  anchor={anchor}
+                  onCancel={mapSelection.clear}
+                  onConfirm={(target, pop) => {
+                    moves.growPop(target, pop);
+                    mapSelection.clear();
+                  }}
+                  tileId={tileId}
+                />
+              );
+            }
+
+            if (mode.kind === "build") {
+              return (
+                <BuildPopover
+                  anchor={anchor}
+                  onCancel={mapSelection.clear}
+                  onConfirm={(target, buildingId) => {
+                    requestBuildBuilding(target, buildingId);
+                    mapSelection.clear();
+                  }}
+                  tileId={tileId}
+                />
+              );
+            }
+
+            if (mode.kind === "ladder") {
+              return (
+                <LadderPopover
+                  anchor={anchor}
+                  onCancel={mapSelection.clear}
+                  onConfirm={(target, from, kind) => {
+                    if (kind === "promote") {
+                      moves.promotePop(target, from);
+                    } else {
+                      moves.demotePop(target, from);
+                    }
+                    mapSelection.clear();
+                  }}
+                  request={mode.request}
+                  tileId={tileId}
+                />
+              );
+            }
+
+            // Move is the two-step flow: the source click re-arms for the target.
+            if (mode.kind === "movePops" && !mode.sourceTileId) {
+              return (
+                <MovePopsSourcePopover
+                  anchor={anchor}
+                  onCancel={mapSelection.clear}
+                  onConfirm={mapSelection.advanceToTarget}
+                  tileId={tileId}
+                />
+              );
+            }
+
+            if (mode.kind === "movePops" && mode.sourceTileId) {
+              return (
+                <MovePopsTargetPopover
+                  anchor={anchor}
+                  onCancel={mapSelection.clear}
+                  onConfirm={(source, target, pops) => {
+                    moves.movePops(source, target, pops);
+                    mapSelection.clear();
+                  }}
+                  sourceTileId={mode.sourceTileId}
+                  tileId={tileId}
+                />
+              );
+            }
+
+            return null;
+          })()
+        : null}
       {activeModal?.kind === "upgradeCity" ? (
         <UpgradeCityModal
-          G={G}
-          playerID={viewerId}
           onCancel={closeModal}
           onConfirm={(tileId, pops) => {
             moves.upgradeColonyToCity(tileId, pops);
@@ -407,61 +554,14 @@ export function HegemonyBoard({
           }}
         />
       ) : null}
-      {activeModal?.kind === "growPop" ? (
-        <GrowPopModal
-          G={G}
-          initialTileId={selectedTileId}
-          isActive={isActive}
-          phase={ctx.phase}
-          playerID={viewerId}
-          onCancel={closeModal}
-          onConfirm={(tileId, pop) => {
-            moves.growPop(tileId, pop);
-            closeModal();
-          }}
-        />
-      ) : null}
-      {activeModal?.kind === "movePops" ? (
-        <MovePopsModal
-          G={G}
-          playerID={viewerId}
-          onCancel={closeModal}
-          onConfirm={(sourceTileId, targetTileId, pops) => {
-            moves.movePops(sourceTileId, targetTileId, pops);
-            closeModal();
-          }}
-        />
-      ) : null}
       {activeModal?.kind === "calm" ? (
-        <CalmModal G={G} playerID={viewerId} isActive={isActive} moves={moves} onClose={closeModal} />
-      ) : null}
-      {activeModal?.kind === "ladder" ? (
-        <LadderModal
-          G={G}
-          playerID={viewerId}
-          request={activeModal.request}
-          phase={ctx.phase}
-          isActive={isActive}
-          onCancel={closeModal}
-          onConfirm={(tileId, from, kind) => {
-            if (kind === "promote") {
-              moves.promotePop(tileId, from);
-            } else {
-              moves.demotePop(tileId, from);
-            }
-            closeModal();
-          }}
-        />
+        <CalmModal onClose={closeModal} />
       ) : null}
       {activeModal?.kind === "venture" ? (
-        <VentureModal G={G} playerID={viewerId} isActive={isActive} moves={moves} onClose={closeModal} />
+        <VentureModal onClose={closeModal} />
       ) : null}
       {G.pendingRiot || riotResultOpen ? (
         <RiotModal
-          G={G}
-          playerID={G.pendingRiot?.playerID ?? currentPlayerId}
-          isActive={isActive && (G.pendingRiot?.playerID ?? currentPlayerId) === currentPlayerId}
-          moves={moves}
           onRolled={() => setRiotResultOpen(true)}
           onDismissResult={() => setRiotResultOpen(false)}
         />
@@ -470,19 +570,14 @@ export function HegemonyBoard({
         <GameOverModal G={G} onInspectBoard={() => setGameOverDismissed(true)} />
       ) : null}
       {G.pendingPlayerEvent ? (
-        <PendingPlayerEventModal
-          G={G}
-          isActive={isActive && G.pendingPlayerEvent.playerID === currentPlayerId}
-          moves={moves}
-          playerID={G.pendingPlayerEvent.playerID}
-        />
+        <PendingPlayerEventModal />
       ) : null}
       {G.yearOmen && G.yearOmen.year !== seenOmenYear && !G.pendingRiot && !G.pendingPlayerEvent ? (
         <EventTableModal
           table={OMEN_TABLE}
           modifier={0}
           result={G.yearOmen.record}
-          subtitle={`${PLAYER_DISPLAY_NAMES[G.seasonOpener]} takes the auspices for Year ${G.yearOmen.year} — the sign stands over every polis until spring.`}
+          subtitle={`${PLAYER_NAMES[G.seasonOpener]} takes the auspices for Year ${G.yearOmen.year} — the sign stands over every polis until spring.`}
           onDismiss={() => setSeenOmenYear(G.yearOmen?.year ?? null)}
           footer={
             <button className="primaryButton eventResolveButton" onClick={() => setSeenOmenYear(G.yearOmen?.year ?? null)}>
@@ -491,9 +586,7 @@ export function HegemonyBoard({
           }
         />
       ) : null}
-      {activeModal?.kind === "compendium" ? (
-        <CompendiumModal G={G} playerID={viewerId} onClose={closeModal} />
-      ) : null}
     </main>
+    </GameUiProvider>
   );
 }

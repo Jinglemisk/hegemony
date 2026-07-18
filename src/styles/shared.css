@@ -1,4 +1,4 @@
-/* shared — small shared component styles: build-action button, framed icon tiles
+/* shared — small shared component styles: build-action button, icon sizing
    (miniIcon / buildingButtonIcon / commandIcon / titleIcon), terrain chip.
    Was inspector.css; the legacy settlement inspector it held was removed as dead
    CSS (Phase 2e audit) and these shared survivors kept in original source order. */
@@ -41,15 +41,14 @@
   clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
 }
 
-/* Framed icon tiles — clay border + parchment ground (terrain-hex aesthetic, no hue overlay) */
+/* No frames. These are bare glyphs: the atlas mask draws them and `currentColor`
+   inks them, so a plate here would both re-introduce the box and hijack the ink
+   (the mask clips the element's own background, painting the glyph in it). */
 .miniIcon,
 .buildingButtonIcon,
 .commandIcon,
 .titleIcon {
-  border: 1px solid rgb(143 46 19 / 42%);
-  border-radius: 5px;
-  background-color: var(--bone);
-  box-shadow: 0 1px 2px rgb(72 42 21 / 14%);
+  color: var(--clay-deep);
 }
 
 /* Inline icons appended to resource / pop / building words in prose (AnnotatedText) */

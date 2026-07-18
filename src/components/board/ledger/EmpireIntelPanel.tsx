@@ -1,8 +1,7 @@
 import { memo, useMemo } from "react";
-import type { Phase } from "../../../game/controller";
 import { settlementCapacity, totalPops, unrestStatus } from "../../../game/rules";
 import type { UnrestStatus } from "../../../game/rules";
-import type { BuildingId, HegemonyState, PlayerId, PopType, TradableMaterial } from "../../../game/types";
+import type { BuildingId, PopType, TradableMaterial } from "../../../game/types";
 import { formatNumber } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { AtlasIcon } from "../../Sprites";
@@ -10,11 +9,14 @@ import { getOwnedHoldings } from "../helpers";
 import type { EmpireTab } from "../types";
 import { BuildingsTab } from "./BuildingsTab";
 import { CitiesTab } from "./CitiesTab";
+import { CodexTab } from "./CodexTab";
 import { MarketTab } from "./MarketTab";
 import { PopsTab } from "./PopsTab";
 import { VictoryTab } from "./VictoryTab";
+import { LEDGER_TABS, ledgerTabLabel } from "./tabs";
 import { victoryCardsHeld } from "../../../game/victory";
 import { UiSprite } from "../../Sprites";
+import { useGameUi } from "../GameUiContext";
 
 const UNREST_TITLES: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
   discontent: "Discontent",
@@ -36,28 +38,21 @@ function unrestMessage(status: UnrestStatus, popLossThreshold: number): string {
 }
 
 function EmpireIntelPanelComponent({
-  G,
-  playerID,
   activeTab,
-  phase,
-  isActive,
-  onTabChange,
+  onClose,
   onBuildBuildingRequest,
   onBankSell,
   onBankBuy,
   onLadderRequest
 }: {
-  G: HegemonyState;
-  playerID: PlayerId;
   activeTab: EmpireTab;
-  phase: Phase;
-  isActive: boolean;
-  onTabChange: (tab: EmpireTab) => void;
+  onClose: () => void;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
   onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
 }) {
+  const { G, viewerId: playerID } = useGameUi();
   const holdings = useMemo(() => getOwnedHoldings(G, playerID), [G, playerID]);
   const cityCount = holdings.filter(({ settlement }) => settlement.kind !== "colony").length;
   const colonyCount = holdings.length - cityCount;
@@ -68,21 +63,21 @@ function EmpireIntelPanelComponent({
   );
   const unrest = unrestStatus(G, playerID);
   const cardsHeld = victoryCardsHeld(G, playerID);
-  const tabs: Array<{ id: EmpireTab; label: string }> = [
-    { id: "cities", label: "Cities" },
-    { id: "buildings", label: "Build" },
-    { id: "pops", label: "Pops" },
-    { id: "market", label: "Market" },
-    { id: "victory", label: "Victory" }
-  ];
+
+  const title = ledgerTabLabel(activeTab);
+  const titleIcon = LEDGER_TABS.find(({ tab }) => tab === activeTab)?.icon;
 
   return (
     <div className="empireIntel">
-      <div className="panelTitle compactPanelTitle">
-        <AtlasIcon icon="city" className="titleIcon" />
-        <div>
-          <h2>Ledger</h2>
-        </div>
+      {/* The card is titled by the page it is showing, not by the furniture. */}
+      <div className="panelTitle ledgerCardTitle">
+        <span className="titleIcon" aria-hidden="true">
+          {titleIcon}
+        </span>
+        <h2>{title}</h2>
+        <button className="ledgerCloseButton" onClick={onClose} aria-label={`Close the ${title} page`} title="Close" type="button">
+          ×
+        </button>
       </div>
 
       <div className="empireSummary" aria-label="Empire summary">
@@ -132,62 +127,33 @@ function EmpireIntelPanelComponent({
         </div>
       ) : null}
 
-      <div className="intelTabs" role="tablist" aria-label="Empire information">
-        {tabs.map((tab) => (
-          <button
-            aria-selected={activeTab === tab.id}
-            className={activeTab === tab.id ? "activeIntelTab" : ""}
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            role="tab"
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
       <div className="intelBody">
         {activeTab === "cities" ? (
           <CitiesTab
-            G={G}
             holdings={holdings}
-            isActive={isActive}
-            phase={phase}
-            playerID={playerID}
             onBuildBuildingRequest={onBuildBuildingRequest}
           />
         ) : null}
         {activeTab === "buildings" ? (
           <BuildingsTab
-            G={G}
             holdings={holdings}
-            isActive={isActive}
-            phase={phase}
-            playerID={playerID}
             onBuildBuildingRequest={onBuildBuildingRequest}
           />
         ) : null}
         {activeTab === "pops" ? (
           <PopsTab
-            G={G}
             holdings={holdings}
-            playerID={playerID}
-            isActive={isActive}
-            phase={phase}
             onLadderRequest={onLadderRequest}
           />
         ) : null}
         {activeTab === "market" ? (
           <MarketTab
-            G={G}
-            playerID={playerID}
-            isActive={isActive}
-            phase={phase}
             onBankSell={onBankSell}
             onBankBuy={onBankBuy}
           />
         ) : null}
         {activeTab === "victory" ? <VictoryTab G={G} playerID={playerID} /> : null}
+        {activeTab === "codex" ? <CodexTab G={G} playerID={playerID} /> : null}
       </div>
     </div>
   );

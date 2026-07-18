@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import type { GameMoves } from "../../../game/controller";
-import { DEMOTE_FROM, getBuyRiotInsuranceStatus, getDemotePopStatus } from "../../../game/rules";
+import { DEMOTE_FROM, getBuyRiotInsuranceStatus, getDemotePopStatus, getTile } from "../../../game/rules";
 import { RIOT_TABLE } from "../../../game/data";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { EventTableModal } from "./EventTableModal";
 import { capitalize, settlementPickerLabel } from "../helpers";
+import { useGameUi } from "../GameUiContext";
+import { TileListbox } from "../TileListbox";
 
 /**
  * The riot instance of the shared event-table modal (D9). Blocking: it mounts while
@@ -15,20 +17,19 @@ import { capitalize, settlementPickerLabel } from "../helpers";
  * `resultOpen` / `onDismissResult`.
  */
 export function RiotModal({
-  G,
-  playerID,
-  isActive,
-  moves,
   onRolled,
   onDismissResult
 }: {
-  G: HegemonyState;
-  playerID: PlayerId;
-  isActive: boolean;
-  moves: GameMoves;
   onRolled: () => void;
   onDismissResult: () => void;
 }) {
+  const { G, currentPlayerId, isActive: viewerCanAct, moves } = useGameUi();
+  // A riot belongs to the seat that triggered it, not to whoever is being viewed —
+  // so this modal derives its own owner and its own right-to-act rather than taking
+  // the viewer's. Falls back to the current seat for the result beat, after
+  // `pendingRiot` has already cleared.
+  const playerID = G.pendingRiot?.playerID ?? currentPlayerId;
+  const isActive = viewerCanAct && playerID === currentPlayerId;
   const pending = G.pendingRiot;
   const severe = pending?.tier === "revolt";
   const tierModifier = severe ? G.ruleset.economy.unrest.severeRollModifier : 0;
@@ -100,23 +101,27 @@ export function RiotModal({
                       <AnnotatedText text={costText} />
                     </span>
                   </button>
-                  <select
-                    aria-label="Pop to demote"
-                    disabled={demoteTargets.length === 0}
-                    value={demoteChoice}
-                    onChange={(event) => setDemoteChoice(Number(event.target.value))}
-                  >
-                    {demoteTargets.map((candidate, index) => {
-                      const tile = G.board.tiles.find((entry) => entry.id === candidate.tileId);
+                  {/* The one place a list genuinely beats the map (scope 4): the
+                      riot blocks by design (Q15), so the board it covers cannot
+                      be the picker. */}
+                  <TileListbox
+                    ariaLabel="Pop to demote"
+                    className="riotConcessionList"
+                    onChange={(value) => setDemoteChoice(Number(value))}
+                    options={demoteTargets.map((candidate, index) => {
+                      const tile = getTile(G, candidate.tileId);
+                      const where = tile ? settlementPickerLabel(G, tile, playerID) : candidate.tileId;
 
-                      return (
-                        <option key={`${candidate.tileId}-${candidate.from}`} value={index}>
-                          {capitalize(formatPopLabel(candidate.from, 1))} ·{" "}
-                          {tile ? settlementPickerLabel(G, tile, playerID) : candidate.tileId}
-                        </option>
-                      );
+                      return {
+                        value: String(index),
+                        icon: candidate.from,
+                        title: capitalize(formatPopLabel(candidate.from, 1)),
+                        detail: where,
+                        label: `Demote a ${formatPopLabel(candidate.from, 1)} in ${where}.`
+                      };
                     })}
-                  </select>
+                    value={String(Math.min(demoteChoice, Math.max(0, demoteTargets.length - 1)))}
+                  />
                 </div>
               );
             }

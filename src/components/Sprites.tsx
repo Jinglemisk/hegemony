@@ -1,7 +1,7 @@
 import type { BuildingId, PopType, Resource, SettlementKind, Terrain } from "../game/types";
 
-type IconAtlasKey = Resource | PopType | BuildingId | SettlementKind;
-type UiAtlasKey =
+export type IconAtlasKey = Resource | PopType | BuildingId | SettlementKind;
+export type UiAtlasKey =
   | "seal"
   | "primaryButton"
   | "secondaryButton"

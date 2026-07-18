@@ -6,16 +6,17 @@ import { RESOURCE_LABELS, formatBuildingEffects, formatPopLabel, formatResourceC
 import { resourceCssVars } from "../../../ui/resourceVisuals";
 import { AnnotatedText } from "../../AnnotatedText";
 import { ResourceIcon } from "../../Sprites";
-import { VictoryTab } from "../ledger/VictoryTab";
+import { VictoryTab } from "./VictoryTab";
 import { capitalize } from "../helpers";
-import { EventTableRows } from "./EventTableModal";
-import { ModalShell } from "./ModalShell";
+import { EventTableRows } from "../modals/EventTableModal";
 
 /**
- * The compendium (Q18): every rule reference a player might want mid-game, in one
- * read-only surface — opened from the season dial or the `?` key. Nothing here is
- * hand-written: every section renders FROM the ruleset / content data it documents,
- * so the compendium can never disagree with the engine.
+ * The codex (Q18): every rule reference a player might want mid-game, in one
+ * read-only surface. It is a ledger page like any other — reached from its rail
+ * disc, titled and closed by the ledger card — not a modal, because reading the
+ * rules should never take the board away from you. Nothing here is hand-written:
+ * every section renders FROM the ruleset / content data it documents, so the
+ * codex can never disagree with the engine.
  */
 
 const SECTIONS = [
@@ -28,44 +29,34 @@ const SECTIONS = [
 
 type SectionId = (typeof SECTIONS)[number]["id"];
 
-export function CompendiumModal({ G, playerID, onClose }: { G: HegemonyState; playerID: PlayerId; onClose: () => void }) {
+export function CodexTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId }) {
   const [section, setSection] = useState<SectionId>("victory");
 
   return (
-    <ModalShell
-      backdropClassName="eventModalBackdrop"
-      className="compendiumModal"
-      labelledBy="compendium-title"
-      onDismiss={onClose}
-    >
-        <header className="compendiumHeader">
-          <h2 id="compendium-title">Compendium</h2>
-          <p>The table's open book — rules, rates, and decks as this board plays them.</p>
-          <button className="ghostButton compendiumClose" onClick={onClose} aria-label="Close compendium">
-            ✕
+    <>
+      <p className="codexLede">The table's open book — rules, rates, and decks as this board plays them.</p>
+
+      <nav className="compendiumTabs" aria-label="Codex sections">
+        {SECTIONS.map((candidate) => (
+          <button
+            className={candidate.id === section ? "compendiumTab compendiumTabActive" : "compendiumTab"}
+            key={candidate.id}
+            onClick={() => setSection(candidate.id)}
+            type="button"
+          >
+            {candidate.label}
           </button>
-        </header>
+        ))}
+      </nav>
 
-        <nav className="compendiumTabs" aria-label="Compendium sections">
-          {SECTIONS.map((candidate) => (
-            <button
-              className={candidate.id === section ? "compendiumTab compendiumTabActive" : "compendiumTab"}
-              key={candidate.id}
-              onClick={() => setSection(candidate.id)}
-            >
-              {candidate.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="compendiumBody">
-          {section === "victory" ? <VictoryTab G={G} playerID={playerID} /> : null}
-          {section === "tables" ? <TablesSection G={G} /> : null}
-          {section === "bank" ? <BankSection G={G} /> : null}
-          {section === "decks" ? <DecksSection /> : null}
-          {section === "costs" ? <CostsSection G={G} /> : null}
-        </div>
-    </ModalShell>
+      <div className="compendiumBody">
+        {section === "victory" ? <VictoryTab G={G} playerID={playerID} /> : null}
+        {section === "tables" ? <TablesSection G={G} /> : null}
+        {section === "bank" ? <BankSection G={G} /> : null}
+        {section === "decks" ? <DecksSection /> : null}
+        {section === "costs" ? <CostsSection G={G} /> : null}
+      </div>
+    </>
   );
 }
 

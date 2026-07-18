@@ -136,7 +136,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     const settlement = owned(state, mat.id, "0");
     settlement.pops = { citizens: 3, freemen: 0, slaves: 0 };
 
-    const income = settlementNetYield(mat, settlement);
+    const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
     expect(income.influence).toBe(3);
     expect(income.gold).toBe(6);
     expect(income.food).toBe(-6);
@@ -151,7 +151,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     const settlement = owned(state, mat.id, "0");
     settlement.pops = { citizens: 0, freemen: 0, slaves: 2 };
 
-    const income = settlementNetYield(mat, settlement);
+    const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
     expect(income[mat.resource.type]).toBe(mat.resource.amount + 2);
     expect(income.food).toBe(-2);
     expect(income.happiness).toBe(-1);
@@ -165,7 +165,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     // Capital capacity is 10; 12 citizens => 2 over capacity.
     settlement.pops = { citizens: 12, freemen: 0, slaves: 0 };
 
-    expect(settlementNetYield(mat, settlement).happiness).toBe(-2);
+    expect(settlementNetYield(mat, settlement, DEFAULT_RULESET).happiness).toBe(-2);
   });
 
   it("Marketplace adds +2 gold per supported freeman (max 3)", () => {
@@ -177,7 +177,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     settlement.buildings = ["marketplace"];
 
     // Base 5 freemen * 2 gold + Marketplace supports 3 * 2 gold = 10 + 6.
-    expect(settlementNetYield(mat, settlement).gold).toBe(16);
+    expect(settlementNetYield(mat, settlement, DEFAULT_RULESET).gold).toBe(16);
   });
 
   it("Temple adds +1 flat happiness and +1 influence per supported citizen (max 2)", () => {
@@ -188,7 +188,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     settlement.pops = { citizens: 3, freemen: 0, slaves: 0 };
     settlement.buildings = ["temple"];
 
-    const income = settlementNetYield(mat, settlement);
+    const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
     expect(income.influence).toBe(3 + 2);
     expect(income.happiness).toBe(1);
   });
@@ -202,7 +202,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     const shared = tile(state, "3,0");
     const colony = owned(state, "3,0", "0");
     expect(shared.settlements).toHaveLength(2);
-    expect(settlementNetYield(shared, colony)[shared.resource.type]).toBe(
+    expect(settlementNetYield(shared, colony, DEFAULT_RULESET)[shared.resource.type]).toBe(
       Math.floor(shared.resource.amount * 0.5),
     );
   });

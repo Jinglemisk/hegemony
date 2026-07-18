@@ -253,8 +253,8 @@ resource from every player's income** until the year turns. It sits in the
 top-left event row beside the season and player cards all year; everyone plays
 under the same sky.
 
-Nothing here is secret except the shuffle: click the **season dial** (or press
-`?`) to open the **Compendium** — victory standings, every dice table (the
+Nothing here is secret except the shuffle: press the **Codex** disc on the left
+rail (or press `?`) to open the **Compendium** — victory standings, every dice table (the
 omen included), this board's bank rates, both decks' full composition, and a
 costs cheat-sheet.
 

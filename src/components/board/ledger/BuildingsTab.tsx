@@ -7,22 +7,16 @@ import { AnnotatedText } from "../../AnnotatedText";
 import { AtlasIcon } from "../../Sprites";
 import { buildingTooltipRows, getBuildingBenefitText, holdingShortLabel } from "../helpers";
 import type { OwnedHolding } from "../types";
+import { useGameUi } from "../GameUiContext";
 
 export function BuildingsTab({
-  G,
   holdings,
-  playerID,
-  phase,
-  isActive,
   onBuildBuildingRequest
 }: {
-  G: HegemonyState;
   holdings: OwnedHolding[];
-  playerID: PlayerId;
-  phase: Phase;
-  isActive: boolean;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
+  const { G, viewerId: playerID, phase, isActive } = useGameUi();
   return (
     <div className="buildingsLedger">
       {BUILDINGS.map((building) => (
@@ -45,7 +39,7 @@ export function BuildingsTab({
           <div className="buildCandidateGrid">
             {holdings.map(({ tile, settlement }) => {
               const status = getBuildBuildingStatus(G, playerID, tile.id, building.id);
-              const benefit = getBuildingBenefitText(G, playerID, tile, settlement, building);
+              const benefit = getBuildingBenefitText(G, playerID, tile, building);
               const disabled = !isActive || phase !== "gameplay" || !status.can;
 
               return (

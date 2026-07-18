@@ -1,3 +1,4 @@
+import { getTile } from "./core/query";
 import { totalPops } from "./core/pops";
 import { victoryCardsHeld } from "./victory";
 import type { HegemonyState, PlayerId } from "./types";
@@ -23,7 +24,7 @@ export function playerStandings(G: HegemonyState, playerID: PlayerId): PlayerSta
   let pops = 0;
 
   for (const tileId of player.settlements) {
-    const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
+    const tile = getTile(G, tileId);
     const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
 
     if (!settlement) {

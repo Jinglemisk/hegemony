@@ -909,85 +909,53 @@
   height: 14px;
 }
 
-/* Compendium (Q18) — the read-only rule reference behind the season dial / `?`.
+/* Codex (Q18) — the read-only rule reference. It is a ledger page now, not a
+   modal, so it inherits the card's surface and carries no plate of its own.
    Every section renders from ruleset or content data; nothing is hand-written. */
-.compendiumModal {
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 12px;
-  width: min(640px, calc(100vw - 34px));
-  height: min(88vh, 760px);
-  padding: 18px 18px 16px;
-  border: 2px solid rgb(80 35 18 / 72%);
-  border-radius: 14px;
-  color: var(--fg);
-  background:
-    radial-gradient(circle at 50% 8%, rgb(255 248 231 / 90%), transparent 42%),
-    linear-gradient(180deg, #fff4d8, #eed5aa 78%, #e0b87e);
-  box-shadow:
-    0 28px 70px rgb(0 0 0 / 48%),
-    inset 0 0 0 6px rgb(255 248 231 / 48%),
-    inset 0 0 0 9px rgb(143 46 19 / 30%);
-}
-
-.compendiumHeader {
-  position: relative;
-  display: grid;
-  gap: 4px;
-  text-align: center;
-}
-
-.compendiumHeader h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.2rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.compendiumHeader p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.76rem;
-}
-
-.compendiumClose {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  padding: 4px 9px;
-  font-size: 0.8rem;
+.codexLede {
+  margin: 0 0 10px;
+  color: var(--ink-66);
+  font-size: 0.74rem;
+  line-height: 1.4;
 }
 
 .compendiumTabs {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
 }
 
 .compendiumTab {
-  padding: 6px 4px;
-  border: 1px solid rgb(80 35 18 / 40%);
-  border-radius: 8px;
-  background: rgb(255 248 231 / 55%);
-  color: var(--fg);
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
+  min-height: 0;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-66);
+  font-family: var(--disp);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
 }
 
-.compendiumTabActive {
-  border-color: var(--clay);
-  background: rgb(143 46 19 / 14%);
-  font-weight: 700;
+.compendiumTab:not(:disabled):hover {
+  box-shadow: none;
+  transform: none;
+  background: var(--ink-07);
+  color: var(--ink);
+}
+
+.compendiumTabActive,
+.compendiumTabActive:not(:disabled):hover {
+  background: var(--clay);
+  color: var(--ivory);
 }
 
 .compendiumBody {
   min-height: 0;
-  padding-right: 6px;
-  overflow-y: auto;
 }
 
 .compendiumStack {
@@ -1114,3 +1082,84 @@
   transform: scale(1.04);
 }
 
+
+/* ── The one custom listbox (refit scope 4 / selection rule 2) ───────────────
+   Replaces every native <select>: an OS menu can't show tile art, reads as a form
+   control in a game about a painted board, and on macOS opens a system popup over
+   the map. Rows are the tile-art picker card. */
+.tileListbox {
+  display: grid;
+  gap: 4px;
+  max-height: 168px;
+  overflow-y: auto;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgb(255 248 231 / 46%);
+  scrollbar-color: var(--clay) transparent;
+}
+
+.tileListbox:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 1px;
+}
+
+.tileListboxRow {
+  width: 100%;
+  text-align: left;
+}
+
+.tileListboxRow[aria-selected="true"] {
+  border-color: var(--clay);
+  background: var(--panel-soft);
+}
+
+/* The riot's concession list sits beside its button, so it stays short. */
+.riotConcessionList {
+  max-height: 116px;
+}
+
+/* Map-first popovers name their target tile up top — the board already shows
+   WHICH tile, this confirms the player and the board agree. */
+.placementTargetName {
+  margin: 0 0 8px;
+  color: var(--fg);
+  font-size: 0.78rem;
+}
+
+.ladderMoveRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+}
+
+/* Three pop choices side by side fitted a 620px modal; in a 312px popover each
+   button gets ~92px and "Citizen" clipped to "C…". One per row instead — the
+   popover has height to spare and the board does not care. */
+.popoverChoiceStack {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.popoverChoiceStack button {
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  grid-template-rows: auto;
+  text-align: left;
+}
+
+.popoverChoiceStack .miniIcon {
+  grid-row: auto;
+}
+
+.popoverChoiceStack strong {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+/* Popovers whose content genuinely needs more than the default 312px — the move
+   stepper is three rows of label · available · − · n · +. */
+.foundColonyPopover.widePopover {
+  width: min(392px, calc(100vw - 24px));
+}

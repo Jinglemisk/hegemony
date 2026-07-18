@@ -205,16 +205,15 @@
   min-width: 118px;
 }
 
-.uiOverhaulShell {
-  gap: 10px;
-  padding: 14px;
-}
-
 .strategyTopbar {
+  /* events (1fr) | season cluster (auto, dead-centre) | roster (1fr). Full-width
+     and flush — no max-width, or the spine leaves a gap at the screen's edge. */
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 14px;
-  max-width: 1700px;
+  /* Pinned, not content-sized: the left rail starts at --chrome-top, so if this
+     bar can grow past it the rail tucks underneath. One value, both edges. */
+  height: var(--chrome-top);
 }
 
 .statusPanel {
@@ -229,13 +228,21 @@
 }
 
 .scoreboardPanel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
   overflow: visible;
   padding: 2px 0;
 }
 
 .bandResourceGrid {
   flex: 1;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  /* A floor, not just a share: in the old full-width band `1fr` always resolved
+     to ~87px, but in the command bar the pills share the row with six verbs and
+     collapsed to unreadable slivers. 100px is measured, not guessed — icon (36) +
+     gap (6) + the widest value + padding (12). */
+  grid-template-columns: repeat(6, minmax(100px, 1fr));
   align-content: center;
   gap: 4px;
   height: 100%;
@@ -364,6 +371,82 @@
   font-size: 1.06rem;
   line-height: 1;
   white-space: nowrap;
+}
+
+/* ── Top bar: resources split around the season medallion (ui-refit Step 3) ──── */
+.seasonBanner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+/* Resources go flat on the top bar — never a plate — icon over value + delta. */
+.topResourceHalf {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 2px 0 0;
+}
+
+/* A vertical stack, not a row: icon over stockpile over income. Every resource
+   reads down the same three registers, so the six line up across the bar. */
+.topResourceHalf .resourcePill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.topResourceHalf .resourceIcon {
+  width: 22px;
+  height: 22px;
+}
+
+.topResourceHalf .resourceValue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.topResourceHalf .resourceValue strong {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.topResourceHalf .resourceDelta {
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* The season cluster: the medallion at centre. Its caption reads from the bottom
+   spine now, so the disc stays compact and the resources tuck close on either
+   side instead of being shoved out by a caption. */
+.seasonCluster {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.seasonDialFrame {
+  flex: none;
+  line-height: 0;
+  /* Centred in the bar — the grid's align-items:center does it; no nudge. The old
+     translateY(6px) shoved it low (12px of air above, 1px below). */
 }
 
 /* Season dial — a round indicator framing the current season's painted emblem. */

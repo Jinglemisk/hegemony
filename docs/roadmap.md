@@ -64,7 +64,7 @@ with it.
 | **1** | Every currency gets a job | Bank exchange; Stabilize Province; promote/demote ladder; riot table + pre-roll insurance (event-table seam); ventures | No dead currencies in the sim report; riot table replaces random pop removal |
 | **1.5** | The interface refit | **One ledger** (Actions panel folds in; vertical tab buttons); action verbs move to a dedicated bar (bottom / under-top-bar — Q17); **map-first selection** (the Found Colony pattern — glow → active ring → anchored popover — rolled out to ladder, Grow, Move, event placement, riot concession); **no native selects** — one custom listbox with tile-art card rows; **game-reference compendium** behind the season icon (victory cards, event tables, bank rates, decks — everything rollable is viewable); **refactor ladder R1–R8** in order (front-loads what the reskin needs; monorepo/multiplayer staging explicitly out — Phase 5); **reskin = owner-kept brandbook elements only** (Q36 — answered: KEEP ×5, full reskin) | Playtest: every tile/settlement choice happens on the board or in an art-card list; zero OS dropdowns; a new player can find any rule reference without leaving the game |
 | **2** | The land repriced | Terrain rework + new mid-game buildings, shipped together (`docs/feat/terrain-economy.md`; **spec locked 2026-07-15 in appendix Q24/Q25**). Hills 9→5 **zero-yield / slot-king** (3.20 slots/tile) + 1 unsettleable **Oracle** terrain (Catan's desert — the hole disrupts contiguity); freed tiles → +2 mountain, +1 forest; **all tile gold removed** (gold is pop-borne). Two buildings: **Villa** · **Gymnasion**. `maxLevel` caps every building's stack. **"Tier 2" is this row's label only — no player-facing tier concept** | Hill starts stop underperforming; bot build orders diverge by terrain |
-| **3** | The rivalry layer | Assembly + resolutions + Politicians v1 (needs design session first) | Influence is spent most turns; a runaway leader gets checked in playtest |
+| **3** | The rivalry layer | Assembly + resolutions + Politicians v1 (needs design session first); **two-panel UI** — left rail *acts* (Cities/Pops/Build/Market), a new right rail *consults* (Chronicle/Codex/Players/Victory), with per-panel back-stacks, prose deep-links, and the player dossier (`docs/feat/two-panel.md`; rail split + route model + responsive uniform-scale are pull-forward-able ahead of this phase) | Influence is spent most turns; a runaway leader gets checked in playtest; you can open any rival's cities/pops/buildings and jump from any card term to its rule |
 | **4** | The wider world | Coasts, ports, luxury goods, player trade | Luxury/happiness economy holds at the ledger's caps; trade actually occurs |
 | **5** | Asymmetry & frame | National ideas; mode picker; then the multiplayer track | Ideas draft evenly (no auto-picks) in playtest |
 
@@ -77,6 +77,9 @@ table above reflects Claude's recommendation.
   (Catan-robber pattern, pooled-resource neutralization). Blocks Phase 3.
 - ~~**Victory cards**~~ — designed and tuned (appendix D1): 5 public "Most X, min Y" cards, race to hold 3; minimums confirmed by the 2026-07-12 campaign.
 - **Yearly cards / d20 omen table** — from `seasons.md`; slot flexible (Phase 1 or 3).
+- ~~**Two-panel UI** (left/right rail split, deep-links, player dossier)~~ — designed:
+  `docs/feat/two-panel.md`. Slotted Phase 3 (dossier is rivalry-native); rail split +
+  route model + responsive uniform-scale are pull-forward-able earlier.
 - **Military** — Barracks placeholder only. Explicitly parked: not designed, not
   scheduled.
 - **2–3 player support** — rules exist per spec intent; needs a design pass on map size

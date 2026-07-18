@@ -83,7 +83,7 @@
   stroke: rgb(24 16 10 / 62%);
   stroke-width: 4px;
   stroke-linejoin: round;
-  font-family: var(--font-display);
+  font-family: var(--font-map);
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -100,7 +100,7 @@
   fill: #0b0705;
   stroke: var(--ivory);
   stroke-width: 3.8px;
-  font-family: var(--font-display);
+  font-family: var(--font-map);
   font-weight: 900;
   paint-order: stroke fill;
   pointer-events: none;
@@ -154,7 +154,7 @@
 
 .colonyOverflow text {
   fill: var(--ivory);
-  font-family: var(--font-display);
+  font-family: var(--font-map);
   font-size: 7.2px;
   font-weight: 700;
   text-anchor: middle;

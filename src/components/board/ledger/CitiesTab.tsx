@@ -19,22 +19,16 @@ import { BUILDING_AFFINITY } from "../constants";
 import { buildingTooltipRows, capitalize, getBuildingBenefitText } from "../helpers";
 import type { OwnedHolding } from "../types";
 import { BuildingChip } from "./BuildingChip";
+import { useGameUi } from "../GameUiContext";
 
 export function CitiesTab({
-  G,
   holdings,
-  playerID,
-  phase,
-  isActive,
   onBuildBuildingRequest
 }: {
-  G: HegemonyState;
   holdings: OwnedHolding[];
-  playerID: PlayerId;
-  phase: Phase;
-  isActive: boolean;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
+  const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const holdingIds = useMemo(
     () => holdings.map(({ tile, settlement }) => `${settlement.owner}-${tile.id}`),
     [holdings]
@@ -150,7 +144,7 @@ export function CitiesTab({
                         {unbuiltBuildings.length > 0 ? (
                           unbuiltBuildings.map((building) => {
                             const status = getBuildBuildingStatus(G, playerID, tile.id, building.id);
-                            const benefit = getBuildingBenefitText(G, playerID, tile, settlement, building);
+                            const benefit = getBuildingBenefitText(G, playerID, tile, building);
                             const disabled = !isActive || phase !== "gameplay" || !status.can;
 
                             return (
