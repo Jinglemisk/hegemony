@@ -93,7 +93,7 @@ must be resolved (`move resolve`) before anything else.
 ### `auto` — bot play
 
 ```bash
-npm run sim -- auto [--turns 40] [--policy random|greedy]
+npm run sim -- auto [--turns 40] [--policy random|greedy|smart]
                     [--bot-seed N] [--record script.json] [--quiet]
 ```
 
@@ -103,7 +103,13 @@ Works from any phase — bots will finish a manual setup too. Policies:
 - `random` — uniform by move type, then within type (keeps big move families
   from dominating; turns always self-terminate).
 - `greedy` — one-ply lookahead over a VP-anchored score with a 6-turn income
-  projection. Deterministic.
+  projection. Deterministic. Blind to Phase 2's strategic layer: it values pops
+  tier-blind and materials flat, so it never promotes and never builds Villa/Gymnasion.
+- `smart` — same one-ply search, but the score weights pops BY TIER (a citizen is
+  worth far more than a slave), materials by role, building room, and the Gymnasion's
+  promotion synergy. So it climbs the social ladder, builds the Phase 2 buildings, and
+  favours slot-rich cities — the bot that actually exercises the terrain rework.
+  Deterministic.
 
 How the bots work, their limitations, and the path to CPU opponents with
 difficulty settings: **docs/ai.md**.
@@ -115,7 +121,7 @@ which cards come up.
 ### `batch` — balance simulation
 
 ```bash
-npm run sim -- batch --games 50 [--turns 40] [--policy greedy]
+npm run sim -- batch --games 50 [--turns 40] [--policy greedy|smart]
                      [--mode …] [--ruleset-patch p.json] [--seed 1000]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
 ```
