@@ -10,6 +10,17 @@
   --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
   --font-display: var(--disp);
   --font-body: var(--body);
+
+  /* ── Responsive uniform-scale (two-panel.md, piece 3) ────────────────────────
+     One dial: the whole KYKLOS chrome shrinks PROPORTIONALLY as the viewport
+     narrows — identical layout, only smaller — so 600px of left+right chrome stays
+     in proportion and never reflows (the board is covered, never reshaped). Full
+     size at ≥1440px, floored at 0.82 by ≤1024px, linear between. Two axes ride this
+     one factor: rem text (via the scaled root font-size just below) and the chrome
+     geometry tokens (each `calc(px * --ui-scale)` in .shell). The map is SVG in its
+     own viewBox, so it is untouched. Per-element minimums are a later pass. */
+  --ui-scale: clamp(0.82, calc(0.82 + (100vw - 1024px) * 0.18 / 416px), 1);
+  font-size: calc(16px * var(--ui-scale));
   /* Board numerals only. Marcellus's lining figures blur at tile size — its 0
      reads as an O against a 1 — so the numbers on the map keep the old
      Copperplate face, which stays legible small. Chrome text uses --disp. */
@@ -225,16 +236,17 @@ button:focus-visible {
   --p3: #dfa437;
   --p4: #55673a;
 
-  /* chrome geometry — the bars, the discs threaded on them, the cards */
-  --rail-w: 30px;
-  --top-h: 48px;
-  --bot-h: 64px;
-  --bub: 46px;
-  --bub-out: 28px;
-  --vb: 54px;
-  --vb-out: 32px;
-  --panel-w: 308px;
-  --chron-w: 292px;
+  /* chrome geometry — the bars, the discs threaded on them, the cards. Each rides
+     --ui-scale so the whole frame shrinks together at narrow viewports (two-panel.md). */
+  --rail-w: calc(30px * var(--ui-scale));
+  --top-h: calc(48px * var(--ui-scale));
+  --bot-h: calc(64px * var(--ui-scale));
+  --bub: calc(46px * var(--ui-scale));
+  --bub-out: calc(28px * var(--ui-scale));
+  --vb: calc(54px * var(--ui-scale));
+  --vb-out: calc(32px * var(--ui-scale));
+  --panel-w: calc(308px * var(--ui-scale));
+  --chron-w: calc(292px * var(--ui-scale));
   --hexclip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   /* The band the floating left rail + ledger card live in — clear of the flush top
      spine and the bottom dock. The rail, card and camera all read them so they
@@ -243,11 +255,12 @@ button:focus-visible {
      because it still renders the old card thumbnails rather than the mock's flat
      chips; re-skinning it should collapse this to var(--top-h). Kept in sync by
      the topbar's own `height` below — measure before changing either. */
-  --chrome-top: 73px;
+  --chrome-top: calc(73px * var(--ui-scale));
   /* Derived, not guessed: the dock is the spine plus the discs' overhang above
-     it. Hard-coding this drifted from the real dock height once already. */
+     it. Hard-coding this drifted from the real dock height once already. Scales
+     for free — --bot-h and --vb-out already ride --ui-scale. */
   --chrome-bot: calc(var(--bot-h) + var(--vb-out));
-  --rail-gap: 70px;
+  --rail-gap: calc(70px * var(--ui-scale));
   --ledger-rule: rgb(36 25 16 / 14%);
   --ledger-rule-strong: rgb(36 25 16 / 22%);
   --ledger-accent: rgb(192 70 28 / 70%);
