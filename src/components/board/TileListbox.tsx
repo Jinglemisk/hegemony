@@ -73,10 +73,15 @@ export function TileListbox<T extends string>({
       move(-1);
     } else if (event.key === "Home") {
       event.preventDefault();
-      selectable[0] && onChange(selectable[0].value);
+      if (selectable[0]) {
+        onChange(selectable[0].value);
+      }
     } else if (event.key === "End") {
       event.preventDefault();
-      selectable[selectable.length - 1] && onChange(selectable[selectable.length - 1].value);
+      const last = selectable[selectable.length - 1];
+      if (last) {
+        onChange(last.value);
+      }
     }
   };
 
