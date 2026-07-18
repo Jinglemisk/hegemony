@@ -119,8 +119,8 @@ describe("the Villa (Phase 2)", () => {
     const oneVilla = settlementNetYield(stoneTile, city(pops, ["villa"]), DEFAULT_RULESET).stone;
     const twoVillas = settlementNetYield(stoneTile, city(pops, ["villa", "villa"]), DEFAULT_RULESET).stone;
 
-    expect(oneVilla).toBe(base + 1);
-    expect(twoVillas).toBe(base + 2);
+    expect(oneVilla).toBe(base + 2);
+    expect(twoVillas).toBe(base + 4);
   });
 
   it("caps at two copies via maxLevel", () => {

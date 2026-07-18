@@ -283,8 +283,11 @@ export const BUILDINGS: BuildingDefinition[] = [
   {
     id: "villa",
     name: "Villa",
+    // +2/level (sim-tuned up from the spec's sketch "+1", which never paid back its
+    // wood+gold within a reasonable horizon — a dead building). Two copies = +4 on a
+    // landmark tile: a real investment in the land, competitive with the Granary.
     cost: { wood: 12, gold: 4 },
-    effects: [{ type: "tilePrimaryResourceBonus", amount: 1 }],
+    effects: [{ type: "tilePrimaryResourceBonus", amount: 2 }],
     maxLevel: 2
   },
   {
