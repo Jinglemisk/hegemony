@@ -5,6 +5,13 @@ three **pull-forward** pieces now (Sequencing 1–3: rail split, route model, re
 uniform-scale). The two rivalry-native pieces (4 deep-links, 5 player dossier) still **wait
 for Phase 3** — the dossier is a rivalry surface and deep-links want a second nav level.
 
+**Clarifications answered (owner, 2026-07-18):** (1) **Both panels open side by side** — the
+left ledger and the right consult panel float independently; opening one never closes the
+other. (2) **Right rail = Chronicle · Codex · Victory only** — the Players/dossier disc is
+omitted until Phase 3 (no disabled placeholder). (3) **Uniform scale-down** via a single
+`--ui-scale` dial (owner left the mechanism to me; identical layout, only smaller as the
+viewport shrinks). (4) **All three pull-forward pieces, then one review/PR.**
+
 **Why this order (owner, 2026-07-18):** Phase 3's *rivalry mechanics* (Assembly / resolutions
 / Politicians) come **after** we've playtested them, and the influence-aware AI comes after
 *that*. The greedy-vs-smart sim (`docs/sim/2026-07-18-greedy-vs-smart.md`) showed the
