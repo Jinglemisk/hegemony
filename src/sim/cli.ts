@@ -19,11 +19,11 @@ import { GAME_MODES, mergeRulesetPatches } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
 import { applyBuildingOverrides, rulesetPatchFromOverrides } from "../dev/tuning";
 import type { OverrideMap } from "../dev/tuning";
-import type { BoardLayout, BuildingId, PlayerId, PopType, Pops } from "../game/types";
+import type { BoardLayout, BuildingId, HegemonyState, PlayerId, PopType, Pops } from "../game/types";
 import { renderBatchReport, renderHeader, renderLegal, renderLog, renderPreview, renderProjection, renderShow } from "./format";
 import { DEFAULT_SAVE_PATH, loadGame, saveGame } from "./io";
 import type { MoveRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
-import { resolvePolicy } from "./policies";
+import { POLICIES, resolvePolicy } from "./policies";
 import type { Policy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
 import { runGame, runTurns } from "./runner";
@@ -337,6 +337,19 @@ function applyAndSave(save: SaveFile, file: string, move: LegalMove, quiet = fal
   }
 }
 
+/** Pick the current player's enumerated move matching `predicate` — lets named commands
+ *  for payload-heavy actions (bank/civic/venture/riot) reuse the validated move instead
+ *  of hand-building its cost/option fields. */
+function findLegal(G: HegemonyState, predicate: (move: LegalMove) => boolean, description: string): LegalMove {
+  const match = enumerateLegalMoves(G, G.currentPlayer).find(predicate);
+
+  if (!match) {
+    fail(`no legal ${description} right now (see: legal)`);
+  }
+
+  return match;
+}
+
 function cmdMove(positionals: string[], file: string) {
   const save = loadGame(file);
   const [sub, ...args] = positionals;
@@ -377,6 +390,32 @@ function cmdMove(positionals: string[], file: string) {
         const targetTileId = args[1] !== undefined ? requireTileId(args[1], "target tile") : undefined;
         return { type: "resolveEvent", choiceIndex, targetTileId };
       }
+      case "bank-sell":
+        return findLegal(save.state, (move) => move.type === "bankSell" && move.material === args[0], `bank-sell ${args[0] ?? "<material>"}`);
+      case "bank-buy":
+        return findLegal(save.state, (move) => move.type === "bankBuy" && move.material === args[0], `bank-buy ${args[0] ?? "<material>"}`);
+      case "promote": {
+        const tileId = requireTileId(args[0], "tile");
+        const from = parsePopType(args[1]);
+        return findLegal(save.state, (move) => move.type === "promotePop" && move.tileId === tileId && move.from === from, "promote");
+      }
+      case "demote": {
+        const tileId = requireTileId(args[0], "tile");
+        const from = parsePopType(args[1]);
+        return findLegal(save.state, (move) => move.type === "demotePop" && move.tileId === tileId && move.from === from, "demote");
+      }
+      case "calm":
+        return findLegal(save.state, (move) => move.type === "civicCalm", "civic calm");
+      case "venture":
+        return findLegal(save.state, (move) => move.type === "fundExpedition" && move.stake === args[0], `venture ${args[0] ?? "<gold|wood>"}`);
+      case "insure":
+        return findLegal(
+          save.state,
+          (move) => move.type === "buyRiotInsurance" && (args[0] === undefined || move.optionId === args[0]),
+          "riot insurance",
+        );
+      case "resolve-riot":
+        return findLegal(save.state, (move) => move.type === "resolveRiot", "resolve riot");
       case "index": {
         const moves = enumerateLegalMoves(save.state, save.state.currentPlayer);
         const index = requireInt(args[0], "move index");
@@ -411,18 +450,29 @@ function cmdPreview(positionals: string[], flags: Flags, file: string) {
     return;
   }
 
-  const preview = ((): EconomyPreview | null => {
-    if (flags.index !== undefined) {
-      const moves = enumerateLegalMoves(G, playerID);
-      const index = requireInt(flags.index, "--index");
+  // `--index N` previews the Nth legal move. Many move types have no economy preview;
+  // that is reported cleanly (exit 0), not treated as an error.
+  if (flags.index !== undefined) {
+    const moves = enumerateLegalMoves(G, playerID);
+    const index = requireInt(flags.index, "--index");
 
-      if (index < 0 || index >= moves.length) {
-        fail(`move index ${index} out of range — legal moves: 0..${moves.length - 1}`);
-      }
-
-      return previewLegalMove(save, moves[index]);
+    if (index < 0 || index >= moves.length) {
+      fail(`move index ${index} out of range — legal moves: 0..${moves.length - 1}`);
     }
 
+    const move = moves[index];
+    const preview = previewLegalMove(save, move);
+
+    if (!preview) {
+      console.log(`No economy preview for "${move.type}" moves — this action has no resource projection.`);
+      return;
+    }
+
+    console.log(renderPreview(preview));
+    return;
+  }
+
+  const preview = ((): EconomyPreview | null => {
     switch (sub) {
       case "build":
         return previewBuildBuilding(G, playerID, requireTileId(args[0], "tile"), args[1] as BuildingId);
@@ -474,13 +524,15 @@ function previewLegalMove(save: SaveFile, move: LegalMove): EconomyPreview | nul
     case "placeColony":
       return previewPlaceSettlement(G, playerID, "colony", move.tileId, move.pops);
     default:
-      fail(`no economy preview exists for "${move.type}" moves`);
+      // Many moves (grow, bank, civic, venture, endTurn…) have no economy projection —
+      // that is not an error; the caller reports it and exits cleanly.
+      return null;
   }
 }
 
 function cmdAuto(flags: Flags, file: string) {
   const save = loadGame(file);
-  const turns = flags.turns !== undefined ? requireInt(flags.turns, "--turns") : 40;
+  const turns = flags.turns !== undefined ? requirePositiveInt(flags.turns, "--turns") : 40;
   const policy = resolvePolicy(typeof flags.policy === "string" ? flags.policy : "random");
   // Continue the save's bot stream by default so command sequences stay reproducible.
   const botSeed = flags["bot-seed"] !== undefined ? requireInt(flags["bot-seed"], "--bot-seed") : save.botRngState;
@@ -649,30 +701,38 @@ function cmdBatch(flags: Flags) {
   console.log("\n" + renderBatchReport(report));
 }
 
+const BUILDING_IDS = BUILDINGS.map((building) => building.id).join("|");
+const POLICY_IDS = Object.keys(POLICIES).join("|");
+
 const HELP = `Hegemony headless sim — usage: npm run sim -- <command> [args] [--file path]
 
 Save file defaults to ${DEFAULT_SAVE_PATH}.
 
   new        --seed N [--mode standard|fastStart|deathmatch] [--ruleset-patch p.json]
-             [--manual-setup | --opening random|fixed] [--bot-seed N]
+             [--manual-setup | --opening random|fixed] [--bot-seed N] [--board classic|shuffled]
   show       [--json] [--player 0..3]
   log        [--tail N]
   legal      [--json]                      list this player's legal moves, indexed
   preview                                  income projection for the current player
   preview    build <tile> <building> | found <tile> <src> <pop> | upgrade <tile>
-             | pops <src> <dst> <popSpec> | --index N
-  move       build <tile> <building>       building: marketplace|temple|workshop|granary
+             | pops <src> <dst> <popSpec> | --index N   (--index previews any legal move)
+  move       build <tile> <building>       building: ${BUILDING_IDS}
              found <tile> <srcTile> <pop>
              upgrade <tile>
              grow <tile> <pop>
              pops <srcTile> <dstTile> <popSpec>     popSpec: citizens=1,slaves=2 (or c=1,s=2)
+             promote <tile> <pop> | demote <tile> <pop>
+             bank-sell <material> | bank-buy <material>
+             calm | venture <gold|wood> | insure [optionId] | resolve-riot
              place-capital <tile> <popSpec>
              place-colony <tile> <popSpec>
              resolve [choiceIndex] [targetTile]
              index <N>                     apply the Nth move from \`legal\`
   end-turn
-  auto       [--turns N] [--policy random|greedy] [--record s.json] [--quiet]
-  batch      --games N [--turns N] [--policy p] [--seed N] [--report r.json] [--csv t.csv]
+  auto       [--turns N] [--policy ${POLICY_IDS}] [--record s.json] [--quiet]
+  batch      --games N [--turns N] [--policy ${POLICY_IDS}] [--seed N] [--board classic|shuffled]
+             [--ruleset-patch p.json] [--tune-patch p.json] [--seats ${POLICY_IDS}×4] [--rotate]
+             [--report r.json] [--csv t.csv]
   replay     --script s.json [--out save.json]
 
 Tile ids are axial "q,r" coords, e.g. 0,0 or -2,1.`;
