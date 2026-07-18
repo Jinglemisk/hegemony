@@ -23,7 +23,8 @@ import type { CivicCalmPayment } from "./civic";
 import { buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
 import { fundExpedition, getFundExpeditionStatus } from "./ventures";
 import type { VentureStake } from "./ventures";
-import { BUILDINGS, EXPEDITION_TABLES, RIOT_TABLE } from "./data";
+import { EXPEDITION_TABLES, RIOT_TABLE } from "./data";
+import { getBuildings } from "./content";
 import { EMPTY_POPS, POP_TYPES } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement } from "./core/query";
@@ -373,7 +374,7 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): LegalMove
   }
 
   for (const tileId of ownedTileIds) {
-    for (const building of BUILDINGS) {
+    for (const building of getBuildings()) {
       const status = getBuildBuildingStatus(G, playerID, tileId, building.id);
 
       if (status.can) {

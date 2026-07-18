@@ -1,4 +1,4 @@
-import { BUILDINGS } from "./data";
+import { getBuildings } from "./content";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName, getTile } from "./core/query";
 import { canAfford, payCost } from "./core/resources";
@@ -65,7 +65,7 @@ export function civicCalm(G: HegemonyState, playerID: PlayerId, payment: CivicCa
  *  civic counterpart to the Granary's grow-pop food discount (economy/cost.ts). */
 function settlementPromoteDiscount(settlement: Settlement): number {
   return settlement.buildings.reduce((sum, buildingId) => {
-    const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+    const building = getBuildings().find((candidate) => candidate.id === buildingId);
 
     return (
       sum +

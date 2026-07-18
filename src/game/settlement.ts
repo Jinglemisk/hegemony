@@ -1,4 +1,4 @@
-import { BUILDINGS } from "./data";
+import { getBuildings } from "./content";
 import { hexDistance, isCoastalTile } from "./map";
 import type { HegemonyState, HexTile, PlayerId, PopType, Settlement } from "./types";
 import { capitalize } from "./core/format";
@@ -18,7 +18,7 @@ export function settlementPopCapacity(kind: Settlement["kind"], ruleset: Ruleset
 /** A real settlement's capacity: the kind's baseline plus building bonuses. */
 export function settlementCapacity(settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
   const bonus = settlement.buildings.reduce((sum, buildingId) => {
-    const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+    const building = getBuildings().find((candidate) => candidate.id === buildingId);
 
     return (
       sum +

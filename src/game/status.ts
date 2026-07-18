@@ -1,4 +1,4 @@
-import { BUILDINGS } from "./data";
+import { getBuildings } from "./content";
 import type { BuildingId, HegemonyState, PlayerId, PopType, Pops } from "./types";
 import { hasPops, isPositivePopSelection, totalPops } from "./core/pops";
 import { getOwnedSettlement, getGrownSettlementsThisTurn, getTile } from "./core/query";
@@ -84,7 +84,7 @@ export function getBuildBuildingStatus(
   buildingId: BuildingId
 ): ActionStatus {
   const tile = getTile(G, tileId);
-  const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+  const building = getBuildings().find((candidate) => candidate.id === buildingId);
   const settlement = tile?.settlements.find(
     (candidate) => candidate.owner === playerID && candidate.kind !== "colony"
   );

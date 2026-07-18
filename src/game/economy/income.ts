@@ -1,4 +1,5 @@
-import { BUILDINGS, EMPTY_RESOURCES, PLAYER_IDS } from "../data";
+import { EMPTY_RESOURCES, PLAYER_IDS } from "../data";
+import { getBuildings } from "../content";
 import type { HegemonyState, HexTile, PlayerId, PopType, Resource, Resources, Settlement } from "../types";
 import { formatPopName, formatRuleNumber } from "../core/format";
 import { getTile } from "../core/query";
@@ -305,7 +306,7 @@ function applyIncomeBuildingEffects(
   let tilePrimaryBonus = 0;
 
   for (const buildingId of settlement.buildings) {
-    const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+    const building = getBuildings().find((candidate) => candidate.id === buildingId);
 
     for (const effect of building?.effects ?? []) {
       if (effect.type === "income") {
