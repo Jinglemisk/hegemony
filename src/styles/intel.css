@@ -212,6 +212,69 @@
   margin-top: 4px;
 }
 
+/* ── The right consult rail + card (two-panel.md) ────────────────────────────
+   A mirror of the left ledger rail on the far edge: the spine hugs the right, its
+   discs overhang inward (leftward) onto the sea, and its floating card opens to its
+   left. Same disc grammar (.railDisc*), flipped geometry. Both panels may be open at
+   once, so this is an independent fixed layer alongside the ledger. */
+.consultRail {
+  position: fixed;
+  right: 0;
+  top: var(--chrome-top, 62px);
+  bottom: var(--bot-h);
+  z-index: 30;
+  width: 62px;
+  pointer-events: none;
+}
+
+.consultRailSpine {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--rail-w);
+  border-left: 1px solid var(--line);
+  background: var(--glass);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  pointer-events: auto;
+}
+
+.consultRailDiscs {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 9px;
+  padding-right: calc(var(--rail-w) + var(--bub-out) - var(--bub));
+  pointer-events: none;
+}
+
+.consultPanel {
+  position: fixed;
+  right: calc(var(--rail-w) + var(--bub-out) + 14px);
+  top: calc(var(--chrome-top) + 12px);
+  height: calc(100vh - var(--chrome-top) - var(--chrome-bot) - 24px);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: var(--chron-w);
+  padding: 14px 15px 15px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ivory);
+  box-shadow: var(--float);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.consultPanel:focus-within,
+.consultPanel:hover {
+  z-index: 80;
+}
+
 .intelBody,
 .holdingStack,
 .buildingsLedger,
