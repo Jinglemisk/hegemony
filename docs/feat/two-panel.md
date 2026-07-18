@@ -1,9 +1,29 @@
 # Two-panel — the left/right rail split, deep-links, and the player dossier
 
-**Status:** planned. Primary slot **Phase 3** (the rivalry layer), because the player
-dossier — sizing up a rival's cities, pops and buildings — is a rivalry surface. Three
-pieces are cheap and self-contained and may be **pulled forward** ahead of Phase 3 (see
-Sequencing): the rail split, the route model, and the responsive uniform-scale.
+**Status: pull-forward pieces SHIPPED on `feat/two-panel` (2026-07-18).** All three
+Sequencing 1–3 pieces are built + browser-verified: (1) rail split — the right consult rail
+(Chronicle/Codex/Victory), ChronicleDrawer retired, both panels open side by side; (2) route
+model — pages are `{view, entry?, scroll?}`, one frame deep; (3) responsive uniform-scale —
+one `--ui-scale` dial shrinks the chrome proportionally, stale docked breakpoints swept. The
+two rivalry-native pieces (4 deep-links, 5 player dossier) still **wait for Phase 3** — the
+dossier is a rivalry surface and deep-links want a second nav level (the route model is laid
+so they widen it, not retrofit an enum).
+
+**Clarifications answered (owner, 2026-07-18):** (1) **Both panels open side by side** — the
+left ledger and the right consult panel float independently; opening one never closes the
+other. (2) **Right rail = Chronicle · Codex · Victory only** — the Players/dossier disc is
+omitted until Phase 3 (no disabled placeholder). (3) **Uniform scale-down** via a single
+`--ui-scale` dial (owner left the mechanism to me; identical layout, only smaller as the
+viewport shrinks). (4) **All three pull-forward pieces, then one review/PR.**
+
+**Why this order (owner, 2026-07-18):** Phase 3's *rivalry mechanics* (Assembly / resolutions
+/ Politicians) come **after** we've playtested them, and the influence-aware AI comes after
+*that*. The greedy-vs-smart sim (`docs/sim/2026-07-18-greedy-vs-smart.md`) showed the
+citizen/ladder line builds a big influence economy but **loses** — because influence has
+almost no sink until the Assembly exists. So tuning the AI to be influence-aware now would be
+premature; build the UI, ship the rivalry mechanics, playtest them by hand, *then* teach the
+bot what to spend influence on. This doc's pull-forward pieces are pure UI and don't depend on
+any of that.
 
 Grows out of the KYKLOS refit (`docs/feat/ui-refit.md`) — same grammar (full-bleed sea,
 flush glass spines, discs threaded on them, floating cards), extended to the right edge.

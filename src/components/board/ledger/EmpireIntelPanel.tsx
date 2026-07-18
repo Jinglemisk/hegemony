@@ -6,13 +6,11 @@ import { formatNumber } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { AtlasIcon } from "../../Sprites";
 import { getOwnedHoldings } from "../helpers";
-import type { EmpireTab } from "../types";
+import type { LedgerTab } from "../types";
 import { BuildingsTab } from "./BuildingsTab";
 import { CitiesTab } from "./CitiesTab";
-import { CodexTab } from "./CodexTab";
 import { MarketTab } from "./MarketTab";
 import { PopsTab } from "./PopsTab";
-import { VictoryTab } from "./VictoryTab";
 import { LEDGER_TABS, ledgerTabLabel } from "./tabs";
 import { victoryCardsHeld } from "../../../game/victory";
 import { UiSprite } from "../../Sprites";
@@ -45,7 +43,7 @@ function EmpireIntelPanelComponent({
   onBankBuy,
   onLadderRequest
 }: {
-  activeTab: EmpireTab;
+  activeTab: LedgerTab;
   onClose: () => void;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
   onBankSell: (material: TradableMaterial) => void;
@@ -152,8 +150,6 @@ function EmpireIntelPanelComponent({
             onBankBuy={onBankBuy}
           />
         ) : null}
-        {activeTab === "victory" ? <VictoryTab G={G} playerID={playerID} /> : null}
-        {activeTab === "codex" ? <CodexTab G={G} playerID={playerID} /> : null}
       </div>
     </div>
   );
