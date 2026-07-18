@@ -102,9 +102,9 @@ Works from any phase — bots will finish a manual setup too. Policies:
 
 - `random` — uniform by move type, then within type (keeps big move families
   from dominating; turns always self-terminate).
-- `greedy` — one-ply lookahead over a VP-anchored score with a 6-turn income
-  projection. Deterministic. Blind to Phase 2's strategic layer: it values pops
-  tier-blind and materials flat, so it never promotes and never builds Villa/Gymnasion.
+- `greedy` — one-ply lookahead over a card-anchored positional score with a
+  6-turn income projection. Deterministic. Blind to Phase 2's strategic layer: it
+  values pops tier-blind and materials flat, so it never promotes and never builds Villa/Gymnasion.
 - `smart` — same one-ply search, but the score weights pops BY TIER (a citizen is
   worth far more than a slave), materials by role, building room, and the Gymnasion's
   promotion synergy. So it climbs the social ladder, builds the Phase 2 buildings, and
@@ -121,22 +121,39 @@ which cards come up.
 ### `batch` — balance simulation
 
 ```bash
-npm run sim -- batch --games 50 [--turns 40] [--policy greedy|smart]
-                     [--mode …] [--ruleset-patch p.json] [--seed 1000]
+npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart]
+                     [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
+                     [--tune-patch p.json] [--seats p0,p1,p2,p3] [--rotate] [--seed 1000]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
 ```
 
 Runs `--games` self-contained games (game *i* uses seed `base+i`), aggregates,
 and writes a JSON report plus optional per-turn CSV (one row per
-game/turn/player — pivot-table ready). The report contains:
+game/turn/player — pivot-table ready).
 
-- `perGame` — seed, winner, final VP, pops lost per player
-- `perSeason` — end-of-season VP/pops/food/happiness percentiles (mean, p10,
-  median, p90) pooled across games and seats, plus unrest-tier shares
-- `perSeat` — win rate and mean final VP per seat (first-player advantage check)
+- `--board` — `classic` (default, reproducible) or `shuffled` (seeded random terrain,
+  as the live game defaults to). Recorded in the report and in saves/scripts.
+- `--tune-patch` — a dev tune-panel override map (the panel's "Copy patch" output):
+  A/Bs building content (Villa/Gymnasion strength, costs, level caps) and ruleset
+  scalars in one run. The resolved patch + a hash land in `meta`.
+- `--seats p0,p1,p2,p3` — a policy per seat for mixed-policy tables. `--rotate` runs
+  each seed through every seat permutation, cancelling first-player advantage.
+
+The report contains:
+
+- `perGame` — seed, `termination` (victoryRace|deckExhausted|turnCap), `winner`
+  (null for turn-capped games), `leaderAtCap`, final cards + pops lost per player,
+  and the seat→policy map for mixed runs
+- `perSeason` — end-of-season victory-card/pops/food/happiness percentiles (mean,
+  p10, median, p90) pooled across games and seats, plus unrest-tier shares
+- `perSeat` — real `winRate` (finished games only), `capLeaderRate` (turn-capped
+  games), and mean final cards per seat (first-player advantage check)
+- `terminations` — how games ended (the winRate denominator context)
+- `forced` — action-cap hits / forced resolutions / forced end-turns (previously hidden)
+- `winsByPolicy` — wins credited to each policy over finished games (mixed/rotated runs)
 - `buildings` — build counts and per-game rates
 - `events` — draw counts by card id, and per-option pick counts for choice cards
-- `finalVpDistribution`
+- `finalCardsDistribution`
 
 Identical inputs produce byte-identical reports (minus `meta.generatedAt`).
 Compare two patches by running two batches with the same `--seed` and diffing
@@ -197,7 +214,10 @@ balance scenarios.
 - Pass an explicit `--seed`; only the unseeded default uses `Math.random`.
 - Game RNG (`state.rng`) and bot RNG (`botRngState`) are independent mulberry32
   streams; both are persisted, so any command sequence is reproducible.
-- The engine has no end condition yet — turn caps are the sim's game-over.
+- The engine ends games for real: the victory race (hold enough cards at your
+  turn start) or deck exhaustion set `phase: "gameOver"` with a `gameOverReason`.
+  The `--turns` cap is only a ceiling for truncated experiments — a turn-capped
+  game is recorded as `termination: "turnCap"` and is NOT counted as a win.
 - `batch` trims each game's log to 200 entries (transfer/discount ids embed the
   log length, so trimmed and untrimmed runs differ in those cosmetic ids —
   never in rules outcomes). `auto` and manual play never trim, so saves stay
