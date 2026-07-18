@@ -196,8 +196,12 @@ export function renderBatchReport(report: BatchReport): string {
     `Final victory cards: mean ${formatNumber(report.finalCardsDistribution.mean)} · ` +
       `p10 ${formatNumber(report.finalCardsDistribution.p10)} · median ${formatNumber(report.finalCardsDistribution.median)} · ` +
       `p90 ${formatNumber(report.finalCardsDistribution.p90)}`,
+    `Terminations: victoryRace ${report.terminations.victoryRace} · deckExhausted ${report.terminations.deckExhausted} · turnCap ${report.terminations.turnCap} (win rate is over finished games only)`,
     `Seats: ${Object.entries(report.perSeat)
-      .map(([seat, stats]) => `P${seat} win ${(stats.winRate * 100).toFixed(0)}% (cards ${formatNumber(stats.meanFinalCards)})`)
+      .map(
+        ([seat, stats]) =>
+          `P${seat} win ${(stats.winRate * 100).toFixed(0)}% · lead@cap ${(stats.capLeaderRate * 100).toFixed(0)}% (cards ${formatNumber(stats.meanFinalCards)})`,
+      )
       .join(" · ")}`,
   ];
 
@@ -230,6 +234,13 @@ export function renderBatchReport(report: BatchReport): string {
 
   if (verbs) {
     lines.push(`Currency verbs (per game): ${verbs}`);
+  }
+
+  if (report.forced && report.forced.actionCapHits > 0) {
+    lines.push(
+      `Force-ended turns: ${report.forced.actionCapHits} (${formatNumber(report.forced.perGame)}/game) · ` +
+        `forced resolutions ${report.forced.forcedResolutions}`,
+    );
   }
 
   return lines.join("\n");

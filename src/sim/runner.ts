@@ -32,6 +32,9 @@ export type SimHooks = {
   onMove?: (G: HegemonyState, player: PlayerId, move: LegalMove) => void;
   /** Fires after each completed turn — the telemetry snapshot point. */
   onTurnEnd?: (G: HegemonyState) => void;
+  /** Fires once when a turn hits the action cap and is force-ended; forcedResolutions
+   *  = pending events/riots that had to be force-resolved first. */
+  onForceEndTurn?: (G: HegemonyState, forcedResolutions: number) => void;
 };
 
 export type PlayTurnOptions = {
@@ -80,6 +83,8 @@ export function playTurn(G: HegemonyState, policy: Policy, rng: SimRng, hooks: S
 /** Action cap hit: resolve any pending event (first option) or pending riot (roll,
  *  no more insurance), then end the turn. */
 function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
+  let forcedResolutions = 0;
+
   for (let guard = 0; (G.pendingPlayerEvent || G.pendingRiot) && guard < 4; guard += 1) {
     const player = G.currentPlayer;
     const resolutions = enumerateLegalMoves(G, player);
@@ -95,6 +100,7 @@ function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
       throw new SimEnumerationError(`forced resolution failed: ${JSON.stringify(forced)}`);
     }
 
+    forcedResolutions += 1;
     hooks.onMove?.(G, player, forced);
   }
 
@@ -105,6 +111,7 @@ function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
     throw new SimEnumerationError(`forced endTurn failed on turn ${G.turn} (phase ${G.phase})`);
   }
 
+  hooks.onForceEndTurn?.(G, forcedResolutions);
   hooks.onMove?.(G, player, endTurn);
   hooks.onTurnEnd?.(G);
 }

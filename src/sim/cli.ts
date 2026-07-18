@@ -493,6 +493,7 @@ function cmdBatch(flags: Flags) {
         onGameStart: (state) => aggregator.beginGame(game, seed, state),
         onMove: (state, player, move) => aggregator.onMove(state, player, move),
         onTurnEnd: (state) => aggregator.onTurnEnd(state),
+        onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
       },
     });
 
