@@ -32,6 +32,7 @@ import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
 import { LedgerRail } from "./board/ledger/LedgerRail";
 import { ConsultRail } from "./board/ledger/ConsultRail";
 import { ConsultPanel } from "./board/ledger/ConsultPanel";
+import { routeTo, type ConsultRoute, type LedgerRoute } from "./board/ledger/route";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
 import type { LadderRequest } from "./board/map/LadderPopover";
 import { RiotModal } from "./board/modals/RiotModal";
@@ -41,7 +42,6 @@ import { SeasonStatus } from "./board/topbar/SeasonStatus";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
 import { GameUiProvider, type GameUi } from "./board/GameUiContext";
 import { getOwnedHoldings } from "./board/helpers";
-import type { ConsultTab, LedgerTab } from "./board/types";
 
 type BoardProps = {
   G: HegemonyState;
@@ -103,14 +103,16 @@ export function HegemonyBoard({
   const [riotResultOpen, setRiotResultOpen] = useState(false);
   // Initialized to the omen standing at mount so a reload never re-announces it.
   const [seenOmenYear, setSeenOmenYear] = useState<number | null>(() => G.yearOmen?.year ?? null);
-  const [activeEmpireTab, setActiveEmpireTab] = useState<LedgerTab>("cities");
-  // The ledger boots open on Cities (ui-refit Step 2); a rail disc toggles it, its
-  // own × closes it, so the sea can be read whole when the ledger isn't needed.
+  // Each panel's page is a ROUTE ({view, entry?, scroll?}), not a bare tab enum
+  // (two-panel.md) — one frame deep for now, so Phase 3's deep-links/history widen it
+  // rather than retrofit an enum. The ledger boots open on Cities (ui-refit Step 2); a
+  // rail disc toggles it, its own × closes it, so the sea can be read whole.
+  const [ledgerRoute, setLedgerRoute] = useState<LedgerRoute>({ view: "cities" });
   const [isLedgerOpen, setLedgerOpen] = useState(true);
   // The right consult rail (two-panel.md): Chronicle/Codex/Victory. Independent of the
   // left ledger — both can be open at once (owner, 2026-07-18). Boots closed; the sea
   // outranks reference, and the dock ticker keeps the latest chronicle line visible.
-  const [activeConsultTab, setActiveConsultTab] = useState<ConsultTab>("chronicle");
+  const [consultRoute, setConsultRoute] = useState<ConsultRoute>({ view: "chronicle" });
   const [isConsultOpen, setConsultOpen] = useState(false);
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
@@ -232,15 +234,15 @@ export function HegemonyBoard({
       }
 
       if (event.key === "?") {
-        setConsultOpen((open) => !(open && activeConsultTab === "codex"));
-        setActiveConsultTab("codex");
+        setConsultOpen((open) => !(open && consultRoute.view === "codex"));
+        setConsultRoute(routeTo("codex"));
       }
       // Escape is ModalShell's job — every dialog gets it from the one place.
     };
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [activeConsultTab]);
+  }, [consultRoute.view]);
 
   const handleTileAction = useCallback(
     (tileId: string) => {
@@ -384,20 +386,20 @@ export function HegemonyBoard({
           spine, and the tab contents in a floating ivory card the rail opens. */}
       <section className="workbench strategyWorkbench">
         <LedgerRail
-          activeTab={activeEmpireTab}
+          activeTab={ledgerRoute.view}
           isOpen={isLedgerOpen}
           onSelectTab={(tab) => {
             // A disc opens the ledger to its tab; pressing the tab already showing
             // closes it. So the same disc both reveals and dismisses.
-            setLedgerOpen((open) => !(open && tab === activeEmpireTab));
-            setActiveEmpireTab(tab);
+            setLedgerOpen((open) => !(open && tab === ledgerRoute.view));
+            setLedgerRoute(routeTo(tab));
           }}
         />
 
         {isLedgerOpen ? (
           <aside className="panel empirePanel intelPanel">
             <EmpireIntelPanel
-              activeTab={activeEmpireTab}
+              activeTab={ledgerRoute.view}
               onBuildBuildingRequest={requestBuildBuilding}
               onClose={() => setLedgerOpen(false)}
               onBankSell={moves.bankSell}
@@ -410,17 +412,17 @@ export function HegemonyBoard({
         {/* The right consult rail + its floating card, mirroring the left ledger on the
             far edge (two-panel.md). Independent of the ledger — both may be open. */}
         <ConsultRail
-          activeTab={activeConsultTab}
+          activeTab={consultRoute.view}
           isOpen={isConsultOpen}
           onSelectTab={(tab) => {
-            setConsultOpen((open) => !(open && tab === activeConsultTab));
-            setActiveConsultTab(tab);
+            setConsultOpen((open) => !(open && tab === consultRoute.view));
+            setConsultRoute(routeTo(tab));
           }}
         />
 
         {isConsultOpen ? (
           <aside className="panel consultPanel">
-            <ConsultPanel activeTab={activeConsultTab} onClose={() => setConsultOpen(false)} />
+            <ConsultPanel activeTab={consultRoute.view} onClose={() => setConsultOpen(false)} />
           </aside>
         ) : null}
       </section>
