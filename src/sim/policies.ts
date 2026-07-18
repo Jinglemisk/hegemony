@@ -1,4 +1,6 @@
 import { calculateIncome } from "../game/economy/income";
+import { getTile } from "../game/core/query";
+import { settlementBuildingSlots } from "../game/settlement";
 import type { LegalMove } from "../game/legalMoves";
 import { applyMove } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
@@ -6,7 +8,7 @@ import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId } from "../game/types";
 import type { SimRng } from "./rng";
 
-export type PolicyId = "random" | "greedy";
+export type PolicyId = "random" | "greedy" | "smart";
 
 export type Policy = {
   name: PolicyId;
@@ -37,90 +39,109 @@ export const randomPolicy: Policy = {
 };
 
 /**
- * One-ply lookahead: apply each candidate to a clone and keep the best score
- * delta. Ends the turn when nothing improves the position. Deterministic —
- * ties keep the first (enumeration-ordered) candidate.
+ * One-ply lookahead shared by the greedy and smart bots: apply each candidate to a
+ * clone and keep the best score delta under `score`. Ends the turn when nothing
+ * improves the position. Deterministic — ties keep the first (enumeration-ordered)
+ * candidate. The two bots differ ONLY in the `score` function, so a greedy-vs-smart
+ * comparison isolates the evaluation, not the search.
  */
+function onePlyLookahead(G: HegemonyState, moves: LegalMove[], score: (g: HegemonyState, p: PlayerId) => number): LegalMove {
+  const playerID = G.currentPlayer;
+
+  // A pending riot is a forced menu with a stochastic resolution — one-ply
+  // lookahead would "peek" the seeded die through the clone, so play it by rule
+  // instead: declare the resource-priced insurances (cheap certainty), skip the
+  // concession (bots shouldn't reason about which pop to sacrifice), then roll.
+  const resolveRiot = moves.find((move) => move.type === "resolveRiot");
+  if (resolveRiot) {
+    const insurance = moves.find(
+      (move) => move.type === "buyRiotInsurance" && move.optionId !== "concession"
+    );
+    return insurance ?? resolveRiot;
+  }
+
+  // Ventures are stochastic too — the same peek problem — so gamble by rule: a
+  // gold-rich bot funds one expedition a turn (season-cycled so sims exercise all
+  // three tables), and never lets the lookahead see the roll.
+  const goldVentures = moves.filter(
+    (move): move is Extract<LegalMove, { type: "fundExpedition" }> =>
+      move.type === "fundExpedition" && move.stake === "gold"
+  );
+  if (goldVentures.length > 0 && G.players[playerID].resources.gold >= 25) {
+    return goldVentures[G.season % goldVentures.length];
+  }
+
+  // Bank chains (sell surplus → buy the missing colony wood) are invisible to
+  // one-ply search, so trade by rule: a material hoard gets sold when the coffers
+  // run dry; a wood-starved, gold-rich empire buys wood.
+  for (const material of ["stone", "wood", "food"] as const) {
+    const sell = moves.find((move) => move.type === "bankSell" && move.material === material);
+    if (sell && G.players[playerID].resources[material] > 40 && G.players[playerID].resources.gold < 10) {
+      return sell;
+    }
+  }
+
+  const woodBuy = moves.find((move) => move.type === "bankBuy" && move.material === "wood");
+  if (woodBuy && G.players[playerID].resources.wood < 20 && G.players[playerID].resources.gold >= 20) {
+    return woodBuy;
+  }
+
+  const endTurn = moves.find((move) => move.type === "endTurn");
+  const candidates = moves.filter(
+    (move) => move.type !== "endTurn" && move.type !== "fundExpedition"
+  );
+
+  if (candidates.length === 0 && endTurn) {
+    return endTurn;
+  }
+
+  const before = score(G, playerID);
+  let best: LegalMove | null = null;
+  let bestDelta = -Infinity;
+
+  for (const move of candidates) {
+    const draft = structuredClone(G);
+
+    if (!applyMove(draft, playerID, move).ok) {
+      continue;
+    }
+
+    const delta = score(draft, playerID) - before;
+
+    if (delta > bestDelta) {
+      bestDelta = delta;
+      best = move;
+    }
+  }
+
+  // Forced situations (a pending event) have no endTurn — take the best resolution.
+  if (!endTurn) {
+    if (!best) {
+      throw new Error("policy found no applicable move");
+    }
+    return best;
+  }
+
+  return best && bestDelta > 0 ? best : endTurn;
+}
+
 export const greedyPolicy: Policy = {
   name: "greedy",
   choose(G, moves) {
-    const playerID = G.currentPlayer;
+    return onePlyLookahead(G, moves, evaluate);
+  },
+};
 
-    // A pending riot is a forced menu with a stochastic resolution — one-ply
-    // lookahead would "peek" the seeded die through the clone, so play it by rule
-    // instead: declare the resource-priced insurances (cheap certainty), skip the
-    // concession (bots shouldn't reason about which pop to sacrifice), then roll.
-    const resolveRiot = moves.find((move) => move.type === "resolveRiot");
-    if (resolveRiot) {
-      const insurance = moves.find(
-        (move) => move.type === "buyRiotInsurance" && move.optionId !== "concession"
-      );
-      return insurance ?? resolveRiot;
-    }
-
-    // Ventures are stochastic too — the same peek problem — so gamble by rule: a
-    // gold-rich bot funds one expedition a turn (season-cycled so sims exercise all
-    // three tables), and never lets the lookahead see the roll.
-    const goldVentures = moves.filter(
-      (move): move is Extract<LegalMove, { type: "fundExpedition" }> =>
-        move.type === "fundExpedition" && move.stake === "gold"
-    );
-    if (goldVentures.length > 0 && G.players[playerID].resources.gold >= 25) {
-      return goldVentures[G.season % goldVentures.length];
-    }
-
-    // Bank chains (sell surplus → buy the missing colony wood) are invisible to
-    // one-ply search, so trade by rule: a material hoard gets sold when the coffers
-    // run dry; a wood-starved, gold-rich empire buys wood.
-    for (const material of ["stone", "wood", "food"] as const) {
-      const sell = moves.find((move) => move.type === "bankSell" && move.material === material);
-      if (sell && G.players[playerID].resources[material] > 40 && G.players[playerID].resources.gold < 10) {
-        return sell;
-      }
-    }
-
-    const woodBuy = moves.find((move) => move.type === "bankBuy" && move.material === "wood");
-    if (woodBuy && G.players[playerID].resources.wood < 20 && G.players[playerID].resources.gold >= 20) {
-      return woodBuy;
-    }
-
-    const endTurn = moves.find((move) => move.type === "endTurn");
-    const candidates = moves.filter(
-      (move) => move.type !== "endTurn" && move.type !== "fundExpedition"
-    );
-
-    if (candidates.length === 0 && endTurn) {
-      return endTurn;
-    }
-
-    const before = evaluate(G, playerID);
-    let best: LegalMove | null = null;
-    let bestDelta = -Infinity;
-
-    for (const move of candidates) {
-      const draft = structuredClone(G);
-
-      if (!applyMove(draft, playerID, move).ok) {
-        continue;
-      }
-
-      const delta = evaluate(draft, playerID) - before;
-
-      if (delta > bestDelta) {
-        bestDelta = delta;
-        best = move;
-      }
-    }
-
-    // Forced situations (a pending event) have no endTurn — take the best resolution.
-    if (!endTurn) {
-      if (!best) {
-        throw new Error("greedy policy found no applicable move");
-      }
-      return best;
-    }
-
-    return best && bestDelta > 0 ? best : endTurn;
+/**
+ * The slot- and promotion-aware bot (2026-07-18). Same search as greedy, but its
+ * evaluation actually values Phase 2's strategic layer — so sims exercise the
+ * mechanics greedy is blind to: it climbs the social ladder, builds the Villa and
+ * Gymnasion, and prefers slot-rich cities. See {@link evaluateSmart}.
+ */
+export const smartPolicy: Policy = {
+  name: "smart",
+  choose(G, moves) {
+    return onePlyLookahead(G, moves, evaluateSmart);
   },
 };
 
@@ -171,9 +192,82 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
   return 100 * victoryCardsHeld(G, playerID) + 10 * heuristic + 2 * projectedHappiness + player.resources.influence;
 }
 
+// The smart bot values what greedy flattens away. Pops are weighted BY TIER (a
+// citizen is worth far more than a slave — income + the Civic Elite card), so a
+// promotion is score-positive and the one-ply search will climb the ladder. Materials
+// are weighted by role (gold liquid, stone the scarce civic currency, food the
+// consumed one) instead of greedy's flat material/10, so wood/stone boosters (the
+// Villa) and stone civics register. And it prices building room + the Gymnasion's
+// promotion synergy, so slot-rich cities and the ladder building get built.
+const SMART_POP_WEIGHT = { citizens: 3, freemen: 2, slaves: 1.2 };
+const SMART_MATERIAL_WEIGHT = { food: 0.4, wood: 0.6, stone: 0.85, gold: 1 };
+
+function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
+  const player = G.players[playerID];
+  const income = calculateIncome(G, playerID);
+  const saved = { ...player.resources };
+
+  for (const resource of Object.keys(income) as (keyof typeof income)[]) {
+    player.resources[resource] += income[resource] * INCOME_HORIZON;
+  }
+
+  let cities = 0;
+  let colonies = 0;
+  let weightedPops = 0;
+  let citySlots = 0;
+  let gymSynergy = 0;
+
+  for (const tileId of player.settlements) {
+    const tile = getTile(G, tileId);
+    const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
+    if (!tile || !settlement) {
+      continue;
+    }
+
+    weightedPops +=
+      SMART_POP_WEIGHT.citizens * settlement.pops.citizens +
+      SMART_POP_WEIGHT.freemen * settlement.pops.freemen +
+      SMART_POP_WEIGHT.slaves * settlement.pops.slaves;
+
+    if (settlement.kind === "colony") {
+      colonies += 1;
+    } else {
+      cities += 1;
+      // Latent build capacity — rewards upgrading colonies onto slot-rich tiles.
+      citySlots += settlementBuildingSlots(tile, settlement, G.ruleset);
+      // The Gymnasion only pays off if there are pops to promote; rewarding the
+      // pairing is what makes one-ply build it (its discount is otherwise invisible).
+      if (settlement.buildings.includes("gymnasion") && settlement.pops.slaves + settlement.pops.freemen > 0) {
+        gymSynergy += 1;
+      }
+    }
+  }
+
+  const material =
+    SMART_MATERIAL_WEIGHT.food * player.resources.food +
+    SMART_MATERIAL_WEIGHT.wood * player.resources.wood +
+    SMART_MATERIAL_WEIGHT.stone * player.resources.stone +
+    SMART_MATERIAL_WEIGHT.gold * player.resources.gold;
+
+  const heuristic =
+    6 * cities +
+    3 * colonies +
+    weightedPops +
+    material / 8 +
+    0.4 * citySlots +
+    3 * gymSynergy -
+    Math.max(0, -player.resources.happiness);
+
+  const projectedHappiness = Math.min(player.resources.happiness, 15);
+  player.resources = saved;
+
+  return 120 * victoryCardsHeld(G, playerID) + 10 * heuristic + 2 * projectedHappiness + 2 * player.resources.influence;
+}
+
 export const POLICIES: Record<PolicyId, Policy> = {
   random: randomPolicy,
   greedy: greedyPolicy,
+  smart: smartPolicy,
 };
 
 export function resolvePolicy(id: string): Policy {
