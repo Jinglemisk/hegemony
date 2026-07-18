@@ -4,6 +4,19 @@
 (Dice Tables / Bank / Decks / Costs) into the **complete in-game rulebook**, so a player
 never has to leave the board — or open `rules.md` — to learn or check how the game works.
 
+**Shipped 2026-07-19 (feat/consult-polish), ahead of the rulebook content:**
+- **Navigation** — the header is now two tiers: the section chips, then a *sticky
+  sub-entry jump strip* for the active section, tracked by a scroll-spy. This is the
+  navigation the sections below need; it landed early because the four current sections
+  already had unreachable sub-chapters (Costs alone has seven). NOTE: implemented as a
+  **sticky top nav**, not the "left-hand section index" sketched below — the consult
+  panel is only ~240–290px wide, so a persistent side column would starve the content.
+  When the section list grows toward a dozen, revisit whether the tier-1 chips need to
+  become a collapsible outline; the jump strip already scales (it only ever lists the
+  active section's entries).
+- **Deck faces** — the Decks section renders the cards' painted art
+  (`assets/event-cards/*.webp`) two-up, replacing the text-only rows.
+
 Companion to the two-panel work: the Codex is the **destination** for the prose deep-links
 (two-panel.md piece 4). Build the rulebook, and every rule term in every card, chronicle
 line and modal becomes a link into it.
@@ -32,8 +45,10 @@ the engine doesn't actually use.** The rulebook must keep that law as it grows:
 
 ## Structure — sections, in learn-order then reference-order
 
-A left-hand section index inside the Codex card (the horizontal tab row doesn't scale to a
-dozen sections). Proposed sections, each a data-aware page:
+A navigable index inside the Codex card (the flat horizontal tab row doesn't scale to a
+dozen sections). *Shipped as a sticky two-tier top nav — section chips + a scroll-spy'd
+sub-entry jump strip — rather than a left-hand column, which the ~240–290px panel is too
+narrow to afford (see Status).* Proposed sections, each a data-aware page:
 
 1. **How to win** — the victory race qua *rule* (the 5 cards, `ruleset.victory.minimums`,
    "hold N at your turn start", the deck-exhaustion failsafe). This is the entry removed
@@ -78,9 +93,12 @@ that to **concept ids** for the narrative sections (`concept:unrest`, `concept:l
 **Buildable now (independent of Phase 3):**
 1. **Content module** — a `rulesContent` structure: ordered sections, each a title + id +
    templated prose with `{sourced}` slots resolved against `G.ruleset`/data at render time.
-2. **Section index + the narrative pages** — render the module in the Codex with a left
-   index; fold the four existing sections in as the reference tail. Ship **How to win**
-   first (it closes the "victory qua rule" loop the owner opened).
+2. **Section index + the narrative pages** — ~~render the module in the Codex with a left
+   index~~ the navigation shipped 2026-07-19 (sticky top nav, see Status); this step is now
+   just *rendering the narrative content module through it* and folding the four existing
+   sections in as the reference tail. Ship **How to win** first (it closes the "victory qua
+   rule" loop the owner opened). The jump strip already reads its entries from data, so each
+   new section becomes navigable for free.
 
 **Lands with Phase 3 / two-panel piece 4:**
 3. **Deep-link arrival** — concept ids in `TOKEN_MAP`, open-to-entry + scroll-highlight via
