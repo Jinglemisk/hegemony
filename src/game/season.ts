@@ -23,6 +23,18 @@ export function startNewSeason(G: HegemonyState) {
     G.activeSeasonEvent = null;
   }
 
+  // The seasonal deck is the game's finite clock — if it is spent, the age ends and
+  // the victory-card tally resolves (roadmap-appendix D1) BEFORE we advance anything.
+  // Ending here (rather than after G.season++/opener rotation) keeps the game-over
+  // state on the last season actually played: no phantom season, and endTurn never
+  // leaves G.turn/G.season inconsistent for telemetry. The seasonal deck never
+  // reshuffles, so an empty draw pile is the exact exhaustion condition
+  // (see drawSeasonalCard in events.ts).
+  if (G.seasonalDrawPile.length === 0) {
+    resolveDeckExhaustion(G);
+    return;
+  }
+
   G.season += 1;
   resetTurnFlags(G);
 
@@ -38,12 +50,6 @@ export function startNewSeason(G: HegemonyState) {
 
   addLog(G, `${capitalize(seasonName(G.season))} of Year ${yearOf(G.season)} begins.`);
   drawSeasonalEvent(G);
-
-  // The seasonal deck is the game's finite clock — no card left means the age ends
-  // and the victory-card tally resolves (roadmap-appendix D1).
-  if (!G.activeSeasonEvent) {
-    resolveDeckExhaustion(G);
-  }
 }
 
 export function expireTurnEventModifiers(G: HegemonyState, playerID: PlayerId) {

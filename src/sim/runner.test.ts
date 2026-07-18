@@ -67,10 +67,14 @@ describe("action cap", () => {
     const G = runGame({ seed: 9, mode: "standard", policy: randomPolicy, turns: 4 });
     const before = G.turn;
 
+    const forced: number[] = [];
     // A tiny action cap guarantees the force path runs even while moves remain.
-    playTurn(G, stubborn, createSimRng(1), {}, { maxActions: 2 });
+    playTurn(G, stubborn, createSimRng(1), { onForceEndTurn: (_G, resolutions) => forced.push(resolutions) }, { maxActions: 2 });
 
     expect(G.turn).toBe(before + 1);
+    // The intervention is surfaced (previously hidden): exactly one force-end fired.
+    expect(forced).toHaveLength(1);
+    expect(forced[0]).toBeGreaterThanOrEqual(0);
     // Any pending event now belongs to the NEXT player (drawn by their
     // begin-of-turn income) — the stuck player's own pending was force-resolved.
     if (G.pendingPlayerEvent) {
