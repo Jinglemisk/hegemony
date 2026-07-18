@@ -44,7 +44,7 @@ function ConsultPanelComponent({
 
       <div className="intelBody">
         {activeTab === "chronicle" ? <ActionLogPanel G={G} /> : null}
-        {activeTab === "codex" ? <CodexTab G={G} playerID={viewerId} /> : null}
+        {activeTab === "codex" ? <CodexTab G={G} /> : null}
         {activeTab === "victory" ? <VictoryTab G={G} playerID={viewerId} /> : null}
       </div>
     </div>
