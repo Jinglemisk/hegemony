@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { BUILDINGS, EXPEDITION_TABLES, OMEN_TABLE, PLAYER_EVENT_CARDS, RIOT_TABLE, SEASONAL_EVENT_CARDS } from "../../../game/data";
 import { TRADABLE_MATERIALS } from "../../../game/rules";
-import type { EventCard, HegemonyState, PlayerId, PopType } from "../../../game/types";
+import type { EventCard, HegemonyState, PopType } from "../../../game/types";
 import { RESOURCE_LABELS, formatBuildingEffects, formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { resourceCssVars } from "../../../ui/resourceVisuals";
 import { AnnotatedText } from "../../AnnotatedText";
 import { ResourceIcon } from "../../Sprites";
-import { VictoryTab } from "./VictoryTab";
 import { capitalize } from "../helpers";
 import { EventTableRows } from "../modals/EventTableModal";
 
@@ -19,8 +18,10 @@ import { EventTableRows } from "../modals/EventTableModal";
  * codex can never disagree with the engine.
  */
 
+// Victory has its own consult tab now (two-panel.md), so it is NOT a codex section —
+// the codex is rules reference, not a live standings readout. A victory *rules* entry
+// returns when the whole-rules plan lands (docs/feat/codex-rules.md).
 const SECTIONS = [
-  { id: "victory", label: "Victory" },
   { id: "tables", label: "Dice Tables" },
   { id: "bank", label: "Bank" },
   { id: "decks", label: "Decks" },
@@ -29,8 +30,8 @@ const SECTIONS = [
 
 type SectionId = (typeof SECTIONS)[number]["id"];
 
-export function CodexTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId }) {
-  const [section, setSection] = useState<SectionId>("victory");
+export function CodexTab({ G }: { G: HegemonyState }) {
+  const [section, setSection] = useState<SectionId>("tables");
 
   return (
     <>
@@ -50,7 +51,6 @@ export function CodexTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId
       </nav>
 
       <div className="compendiumBody">
-        {section === "victory" ? <VictoryTab G={G} playerID={playerID} /> : null}
         {section === "tables" ? <TablesSection G={G} /> : null}
         {section === "bank" ? <BankSection G={G} /> : null}
         {section === "decks" ? <DecksSection /> : null}
