@@ -1,4 +1,5 @@
-import { BUILDINGS, OMEN_TABLE } from "./data";
+import { OMEN_TABLE } from "./data";
+import { getBuildings } from "./content";
 import { yearOf } from "./core/calendar";
 import { POP_TYPES, totalPops } from "./core/pops";
 import { settlementCapacity } from "./settlement";
@@ -278,7 +279,7 @@ function destroyRandomBuilding(G: HegemonyState, playerID: PlayerId): string | n
   G.rng = step.state;
   const target = owned[Math.floor(step.value * owned.length)];
   const [removed] = target.settlement.buildings.splice(target.index, 1);
-  return BUILDINGS.find((building) => building.id === removed)?.name ?? removed;
+  return getBuildings().find((building) => building.id === removed)?.name ?? removed;
 }
 
 /** Add one pop to a random owned settlement with spare capacity (seeded). Returns a

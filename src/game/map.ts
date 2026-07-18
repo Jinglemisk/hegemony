@@ -1,9 +1,10 @@
-import { TERRAIN_DECK } from "./data";
+import { getTerrainDeck } from "./content";
+import type { TerrainDeck } from "./content";
 import type { HexTile } from "./types";
 
-/** Lay a terrain deck onto the radius-3 board. Defaults to the authored "classic"
- *  order; pass a shuffled copy of {@link TERRAIN_DECK} for a randomized board. */
-export function createInitialMap(deck: typeof TERRAIN_DECK = TERRAIN_DECK): HexTile[] {
+/** Lay a terrain deck onto the radius-3 board. Defaults to the terrain deck in effect
+ *  (the authored order, or a dev override); pass a shuffled copy for a randomized board. */
+export function createInitialMap(deck: TerrainDeck = getTerrainDeck()): HexTile[] {
   const coordinates = axialRadius(3);
 
   return coordinates.map(({ q, r }, index) => {
