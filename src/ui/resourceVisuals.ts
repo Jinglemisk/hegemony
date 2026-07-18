@@ -18,10 +18,11 @@ type ResourceVisual = {
 export const RESOURCE_VISUALS = {
   wood: {
     color: "#354927",
-    tile: "#758542",
-    soft: "rgb(53 73 39 / 18%)",
-    line: "rgb(53 73 39 / 56%)",
-    shadow: "rgb(53 73 39 / 30%)"
+    // Forests read as timber-brown on the map (was olive-green — too close to plains).
+    tile: "#8c6a3e",
+    soft: "rgb(140 106 62 / 18%)",
+    line: "rgb(140 106 62 / 54%)",
+    shadow: "rgb(140 106 62 / 30%)"
   },
   stone: {
     color: "#8f8571",
@@ -39,10 +40,12 @@ export const RESOURCE_VISUALS = {
   },
   food: {
     color: "#9bbf52",
-    tile: "#dcbf69",
-    soft: "rgb(155 191 82 / 19%)",
-    line: "rgb(155 191 82 / 56%)",
-    shadow: "rgb(155 191 82 / 28%)"
+    // Plains read as field-green on the map (was wheat-gold — now that wood is brown,
+    // food takes the green the two used to share).
+    tile: "#9fbb55",
+    soft: "rgb(159 187 85 / 19%)",
+    line: "rgb(159 187 85 / 56%)",
+    shadow: "rgb(159 187 85 / 28%)"
   },
   influence: {
     color: "#1f6977",
