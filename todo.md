@@ -88,10 +88,18 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
 -- Seven earlier (2026-07-13 overnight): ~~Aqueduct (+4 capacity)~~, ~~Forum (+2 influence)~~, Odeon (+2 happiness).
 -- Still candidates: Barracks (military placeholder — waits for a military design). PDF's Library/Embassy/Luxury Trader wait on National Ideas / Assembly / luxuries.
 
-- Build the Assembly / resolutions system.
+- Build the Assembly / resolutions system.  **(Phase 3-B — AFTER the two-panel UI; needs the
+  owner design session first, appendix Q27–Q29. Then hand-playtest before any AI work.)**
 -- The Resolutions deck is a "0/0" placeholder in the command panel.
 -- Players vote on resolutions that affect some or all of them (rivalry mechanics).
--- This is where players will spend Influence primarily
+-- This is where players will spend Influence primarily.
+-- **Why this is the linchpin (proven 2026-07-18):** the greedy-vs-smart sim
+   (docs/sim/2026-07-18-greedy-vs-smart.md) showed the citizen/ladder line builds a huge
+   influence economy (52 banked, 42% citizens) but LOSES to colony sprawl — influence has
+   almost no sink until the Assembly exists. So the ladder can't pay until this ships, and the
+   influence-aware AI (--policy smart follow-up) must wait until this exists + is playtested.
+-- Balance watch surfaced by the same sim: NEITHER bot upgrades colony→city (the whole
+   colony→city path is dead) — check colony/upgrade pricing in the end-of-run market pass.
 
 - ~~Terrain & resource economy rework.~~ SHIPPED (feat/phase2-terrain, 2026-07-18 —
   docs/feat/terrain-economy.md). 37 tiles / 65 slots: forest 15 < mountain 8 < plains 8
@@ -150,7 +158,9 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
    that is the point of "decks for economy, dice for drama".
 
 - *** Two-panel UI: left rail *acts* (Cities/Pops/Build/Market), a new right rail *consults*
-  (Chronicle/Codex/Players/Victory). (user, 2026-07-17 — designed, docs/feat/two-panel.md, roadmap Phase 3)
+  (Chronicle/Codex/Players/Victory). **GREENLIT / BUILDING NOW on `feat/two-panel` (owner,
+  2026-07-18) — the three pull-forward pieces (rail split, route model, responsive
+  uniform-scale); deep-links + dossier wait for Phase 3-B.** (designed, docs/feat/two-panel.md)
 -- **The law:** left is what you act on, right is what you consult. Codex + Victory move to the right;
    Chronicle becomes a right disc (retiring ChronicleDrawer — safe now that the dock ticker keeps the latest
    line permanently visible, which reverses Q19). The right rail mirrors `.bar.rail`, discs overhanging inward.

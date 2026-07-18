@@ -1,9 +1,18 @@
 # Two-panel — the left/right rail split, deep-links, and the player dossier
 
-**Status:** planned. Primary slot **Phase 3** (the rivalry layer), because the player
-dossier — sizing up a rival's cities, pops and buildings — is a rivalry surface. Three
-pieces are cheap and self-contained and may be **pulled forward** ahead of Phase 3 (see
-Sequencing): the rail split, the route model, and the responsive uniform-scale.
+**Status: GREENLIT / IN PROGRESS on `feat/two-panel` (owner call 2026-07-18).** Building the
+three **pull-forward** pieces now (Sequencing 1–3: rail split, route model, responsive
+uniform-scale). The two rivalry-native pieces (4 deep-links, 5 player dossier) still **wait
+for Phase 3** — the dossier is a rivalry surface and deep-links want a second nav level.
+
+**Why this order (owner, 2026-07-18):** Phase 3's *rivalry mechanics* (Assembly / resolutions
+/ Politicians) come **after** we've playtested them, and the influence-aware AI comes after
+*that*. The greedy-vs-smart sim (`docs/sim/2026-07-18-greedy-vs-smart.md`) showed the
+citizen/ladder line builds a big influence economy but **loses** — because influence has
+almost no sink until the Assembly exists. So tuning the AI to be influence-aware now would be
+premature; build the UI, ship the rivalry mechanics, playtest them by hand, *then* teach the
+bot what to spend influence on. This doc's pull-forward pieces are pure UI and don't depend on
+any of that.
 
 Grows out of the KYKLOS refit (`docs/feat/ui-refit.md`) — same grammar (full-bleed sea,
 flush glass spines, discs threaded on them, floating cards), extended to the right edge.
