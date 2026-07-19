@@ -153,12 +153,22 @@ function useCodexNav(section: SectionId, entries: NavEntry[]) {
   return { navRef, activeId, jumpTo };
 }
 
-export function CodexTab({ G }: { G: HegemonyState }) {
+export function CodexTab({ G, target }: { G: HegemonyState; target?: { chapter: string; nonce: number } | null }) {
   const [section, setSection] = useState<SectionId>(SECTIONS[0].id);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const entries = useMemo(() => sectionEntries(section), [section]);
   const { navRef, activeId, jumpTo } = useCodexNav(section, entries);
+
+  // A deep-link (an AnnotatedText term clicked anywhere) opens the codex to a chapter.
+  // The nonce changes on every click, so the same term re-navigates even if you'd
+  // scrolled away within that chapter.
+  useEffect(() => {
+    if (target && RULEBOOK.some((chapter) => chapter.id === target.chapter)) {
+      setSection(target.chapter);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target?.nonce]);
   const results = useMemo(() => searchRulebook(query), [query]);
   const chapter = RULEBOOK.find((candidate) => candidate.id === section) ?? RULEBOOK[0];
 
