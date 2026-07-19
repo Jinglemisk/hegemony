@@ -25,9 +25,10 @@ import { fundExpedition, getFundExpeditionStatus } from "./ventures";
 import type { VentureStake } from "./ventures";
 import { EXPEDITION_TABLES, RIOT_TABLE } from "./data";
 import { getBuildings } from "./content";
-import { EMPTY_POPS, POP_TYPES } from "./core/pops";
+import { EMPTY_POPS, POP_TYPES, totalPops } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement } from "./core/query";
+import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds, resolvePendingPlayerEvent } from "./events";
 import { setupCapitalCount } from "./ruleset";
@@ -62,9 +63,11 @@ import type {
  * Import it directly as ./legalMoves.
  *
  * Enumeration reuses the get*Status validators — the same predicates the moves
- * themselves re-check — so an enumerated move always applies cleanly. Two
- * deliberate bounds keep the list small: movePops is enumerated as single-pop
- * transfers only, and collectIncome is never enumerated (it happens
+ * themselves re-check — so an enumerated move always applies cleanly. movePops is
+ * enumerated as a bounded set of strategically meaningful bundles per source→target
+ * pair (a single pop of each type, the whole stack of each type, and the entire
+ * settlement — deduplicated), so a bot can relocate a garrison or seed a colony in
+ * one action instead of several. collectIncome is never enumerated (it happens
  * automatically at the start of every gameplay turn).
  */
 
@@ -122,12 +125,69 @@ export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): Legal
   }
 }
 
+type MoveCategory = "setup" | "riotResolution" | "eventResolution" | "gameplay";
+
+const SETUP_PHASES: ReadonlySet<HegemonyState["phase"]> = new Set(["setupCapital", "setupCity", "setupColony"]);
+
+function categorizeMove(type: LegalMove["type"]): MoveCategory {
+  switch (type) {
+    case "placeCapital":
+    case "placeCity":
+    case "placeColony":
+      return "setup";
+    case "buyRiotInsurance":
+    case "resolveRiot":
+      return "riotResolution";
+    case "resolveEvent":
+      return "eventResolution";
+    default:
+      return "gameplay";
+  }
+}
+
+/**
+ * The authoritative turn/phase/pending gate for {@link applyMove}. Enumeration
+ * already refuses to LIST an illegal move, but applyMove is the engine's public
+ * dispatcher — a driver (or a future off-turn caller) could hand it any move — so
+ * the boundary is re-checked here rather than trusted. Mirrors the same
+ * currentPlayer / phase / pending conditions {@link enumerateLegalMoves} gates on,
+ * so it never rejects a legitimately enumerated move.
+ */
+function checkMoveAllowed(G: HegemonyState, playerID: PlayerId, move: LegalMove): MoveResult {
+  if (G.currentPlayer !== playerID) {
+    return invalid("It is not this player's turn.");
+  }
+
+  switch (categorizeMove(move.type)) {
+    case "riotResolution":
+      return G.pendingRiot?.playerID === playerID ? MOVE_OK : invalid("No riot is pending resolution.");
+    case "eventResolution":
+      return G.pendingPlayerEvent?.playerID === playerID ? MOVE_OK : invalid("No pending event to resolve.");
+    case "setup":
+      return SETUP_PHASES.has(G.phase) && !G.pendingPlayerEvent && !G.pendingRiot
+        ? MOVE_OK
+        : invalid("Setup placements are only legal during setup.");
+    case "gameplay":
+      return G.phase === "gameplay" && !G.pendingPlayerEvent && !G.pendingRiot
+        ? MOVE_OK
+        : invalid("That move is not available right now.");
+  }
+}
+
 /**
  * Apply an enumerated move through the engine's own mutators. Setup placements
  * also advance the setup turn machine (and bootstrap gameplay on the final
  * placement), so a driver can run the whole game through this one entry point.
+ * The boundary guard runs first, so an off-turn move or a move made during the
+ * wrong phase / a pending event or riot is rejected authoritatively — not left
+ * to the individual mutators' partial checks.
  */
 export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove): MoveResult {
+  const allowed = checkMoveAllowed(G, playerID, move);
+  if (!allowed.ok) {
+    return allowed;
+  }
+
   switch (move.type) {
     case "placeCapital":
     case "placeCity":
@@ -394,14 +454,17 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): LegalMove
   }
 
   for (const sourceTileId of ownedTileIds) {
+    const source = getOwnedSettlement(G, sourceTileId, playerID);
+    if (!source) {
+      continue;
+    }
+
     for (const targetTileId of ownedTileIds) {
       if (sourceTileId === targetTileId) {
         continue;
       }
 
-      for (const pop of POP_TYPES) {
-        const pops = { ...EMPTY_POPS, [pop]: 1 };
-
+      for (const pops of movePopsBundles(source.pops)) {
         if (getMovePopsStatus(G, playerID, sourceTileId, targetTileId, pops).can) {
           moves.push({ type: "movePops", sourceTileId, targetTileId, pops });
         }
@@ -457,6 +520,42 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): LegalMove
 
   moves.push({ type: "endTurn" });
   return moves;
+}
+
+/**
+ * The bounded set of movePops selections offered from a source settlement: a single pop
+ * of each present type (fine control), the whole stack of each type (relocate one class),
+ * and the entire population (seed a colony / abandon). Deduplicated, so a source holding a
+ * single pop yields exactly one move. getMovePopsStatus still gates each selection on
+ * target capacity, so overflowing bundles are dropped by the caller.
+ */
+function movePopsBundles(sourcePops: Pops): Pops[] {
+  const bundles: Pops[] = [];
+  const seen = new Set<string>();
+
+  const add = (pops: Pops) => {
+    if (totalPops(pops) === 0) {
+      return;
+    }
+    const key = `${pops.citizens},${pops.freemen},${pops.slaves}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      bundles.push(pops);
+    }
+  };
+
+  // A single pop of each present type — the old single-pop behaviour, kept for fine control.
+  for (const pop of POP_TYPES) {
+    if (sourcePops[pop] > 0) add({ ...EMPTY_POPS, [pop]: 1 });
+  }
+  // The whole stack of each type — relocate a class in one action.
+  for (const pop of POP_TYPES) {
+    if (sourcePops[pop] > 0) add({ ...EMPTY_POPS, [pop]: sourcePops[pop] });
+  }
+  // The entire settlement — seed a colony or abandon in one action.
+  add({ ...sourcePops });
+
+  return bundles;
 }
 
 /**

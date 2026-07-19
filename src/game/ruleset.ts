@@ -242,6 +242,17 @@ export function deriveRuleset(base: Ruleset, patch: DeepPartial<Ruleset>): Rules
   return deepMerge(base, patch);
 }
 
+/** Combine two ruleset patches (b wins on conflicts); null when both are absent. Used to
+ *  fold a tune-panel patch into a `--ruleset-patch` file in the headless sim. */
+export function mergeRulesetPatches(
+  a: DeepPartial<Ruleset> | null,
+  b: DeepPartial<Ruleset> | null,
+): DeepPartial<Ruleset> | null {
+  if (!a) return b;
+  if (!b) return a;
+  return deepMerge(a, b);
+}
+
 /** How many capitals lead the setup sequence — the settlement count that ends the setupCapital phase. */
 export function setupCapitalCount(ruleset: Ruleset): number {
   return ruleset.setup.filter((kind) => kind === "capital").length;

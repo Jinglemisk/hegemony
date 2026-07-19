@@ -1,7 +1,7 @@
 import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
 import type { LegalMove } from "../game/legalMoves";
 import type { GameModeId } from "../game/ruleset";
-import type { HegemonyState, PlayerId } from "../game/types";
+import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
 import type { OpeningKind, RulesetPatch } from "./io";
 import type { Policy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
@@ -32,6 +32,9 @@ export type SimHooks = {
   onMove?: (G: HegemonyState, player: PlayerId, move: LegalMove) => void;
   /** Fires after each completed turn — the telemetry snapshot point. */
   onTurnEnd?: (G: HegemonyState) => void;
+  /** Fires once when a turn hits the action cap and is force-ended; forcedResolutions
+   *  = pending events/riots that had to be force-resolved first. */
+  onForceEndTurn?: (G: HegemonyState, forcedResolutions: number) => void;
 };
 
 export type PlayTurnOptions = {
@@ -80,6 +83,8 @@ export function playTurn(G: HegemonyState, policy: Policy, rng: SimRng, hooks: S
 /** Action cap hit: resolve any pending event (first option) or pending riot (roll,
  *  no more insurance), then end the turn. */
 function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
+  let forcedResolutions = 0;
+
   for (let guard = 0; (G.pendingPlayerEvent || G.pendingRiot) && guard < 4; guard += 1) {
     const player = G.currentPlayer;
     const resolutions = enumerateLegalMoves(G, player);
@@ -95,6 +100,7 @@ function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
       throw new SimEnumerationError(`forced resolution failed: ${JSON.stringify(forced)}`);
     }
 
+    forcedResolutions += 1;
     hooks.onMove?.(G, player, forced);
   }
 
@@ -105,6 +111,7 @@ function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
     throw new SimEnumerationError(`forced endTurn failed on turn ${G.turn} (phase ${G.phase})`);
   }
 
+  hooks.onForceEndTurn?.(G, forcedResolutions);
   hooks.onMove?.(G, player, endTurn);
   hooks.onTurnEnd?.(G);
 }
@@ -112,6 +119,9 @@ function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
 export type RunTurnsOptions = PlayTurnOptions & {
   /** Keep only the last N log entries after each turn (batch mode); omit to keep everything. */
   trimLogTo?: number;
+  /** Per-seat policy override for mixed-policy tables; the uniform `policy` arg is the
+   *  fallback for any seat not named here. */
+  seatPolicies?: Partial<Record<PlayerId, Policy>>;
 };
 
 export function runTurns(
@@ -125,7 +135,9 @@ export function runTurns(
   const stopAt = G.turn + turns;
 
   while (G.turn < stopAt && G.phase !== "gameOver") {
-    playTurn(G, policy, rng, hooks, options);
+    // A single playTurn is one seat's turn, so pick that seat's policy (mixed tables).
+    const active = options.seatPolicies?.[G.currentPlayer] ?? policy;
+    playTurn(G, active, rng, hooks, options);
 
     if (options.trimLogTo !== undefined && G.log.length > options.trimLogTo) {
       G.log.splice(0, G.log.length - options.trimLogTo);
@@ -138,7 +150,10 @@ export type RunGameOptions = {
   mode: GameModeId;
   patch?: RulesetPatch | null;
   opening?: OpeningKind;
+  boardLayout?: BoardLayout;
   policy: Policy;
+  /** Per-seat policy override for mixed-policy tables; `policy` is the fallback. */
+  seatPolicies?: Partial<Record<PlayerId, Policy>>;
   botSeed?: number;
   /** Player-turns to play after setup (4 players → 4 turns per round). */
   turns: number;
@@ -147,12 +162,12 @@ export type RunGameOptions = {
 };
 
 /** One self-contained bot game: build (setup counts as turns played too), then run to the cap. */
-export function runGame({ seed, mode, patch, opening = "random", policy, botSeed, turns, hooks = {}, trimLogTo }: RunGameOptions): HegemonyState {
+export function runGame({ seed, mode, patch, opening = "random", boardLayout, policy, seatPolicies, botSeed, turns, hooks = {}, trimLogTo }: RunGameOptions): HegemonyState {
   const rng = createSimRng(botSeed ?? deriveBotSeed(seed));
-  const G = buildNewGame({ seed, mode, patch, opening, simRng: rng, onMove: hooks.onMove });
+  const G = buildNewGame({ seed, mode, patch, opening, boardLayout, simRng: rng, onMove: hooks.onMove });
 
   hooks.onGameStart?.(G);
-  runTurns(G, policy, rng, turns, hooks, { trimLogTo });
+  runTurns(G, policy, rng, turns, hooks, { trimLogTo, seatPolicies });
   return G;
 }
 

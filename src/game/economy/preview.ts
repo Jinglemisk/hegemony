@@ -141,11 +141,10 @@ export function previewFoundColony(
 export function previewUpgradeColonyToCity(
   G: HegemonyState,
   playerID: PlayerId,
-  tileId: string,
-  pops?: Pops
+  tileId: string
 ): EconomyPreview | null {
   return previewEconomyAction(G, playerID, "Upgrade City", (draft) =>
-    upgradeColonyToCity(draft, playerID, tileId, pops)
+    upgradeColonyToCity(draft, playerID, tileId)
   );
 }
 

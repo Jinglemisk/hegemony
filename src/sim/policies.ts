@@ -168,26 +168,27 @@ const INCOME_HORIZON = 6;
 function evaluate(G: HegemonyState, playerID: PlayerId): number {
   const player = G.players[playerID];
   const income = calculateIncome(G, playerID);
-  const saved = { ...player.resources };
-
+  // Project income forward on a COPY — the evaluator must never mutate G. onePlyLookahead
+  // scores the raw G as its baseline, and that G may be the UI's immer-committed (frozen)
+  // state where any write throws. The income-sensitive terms read `projected`; everything
+  // else reads the player's live resources, exactly as before.
+  const projected = { ...player.resources };
   for (const resource of Object.keys(income) as (keyof typeof income)[]) {
-    player.resources[resource] += income[resource] * INCOME_HORIZON;
+    projected[resource] += income[resource] * INCOME_HORIZON;
   }
 
   const standings = playerStandings(G, playerID);
-  const material =
-    player.resources.wood + player.resources.stone + player.resources.gold + player.resources.food;
+  const material = projected.wood + projected.stone + projected.gold + projected.food;
   const heuristic =
     5 * standings.cities +
     3 * standings.colonies +
     standings.pops +
     Math.floor(material / 10) -
-    Math.max(0, -player.resources.happiness);
+    Math.max(0, -projected.happiness);
   // Cap the happiness reward: below the cap it prices riot avoidance and the
   // Beloved card (min +10); past it, more calm is wasted coin — an uncapped term
   // had greedy bots pumping civic calm to +95 happiness.
-  const projectedHappiness = Math.min(player.resources.happiness, 15);
-  player.resources = saved;
+  const projectedHappiness = Math.min(projected.happiness, 15);
 
   return 100 * victoryCardsHeld(G, playerID) + 10 * heuristic + 2 * projectedHappiness + player.resources.influence;
 }
@@ -205,10 +206,11 @@ const SMART_MATERIAL_WEIGHT = { food: 0.4, wood: 0.6, stone: 0.85, gold: 1 };
 function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
   const player = G.players[playerID];
   const income = calculateIncome(G, playerID);
-  const saved = { ...player.resources };
-
+  // Project onto a COPY — never mutate G (see evaluate). Income-sensitive terms read
+  // `projected`; settlement counts and the influence term read the live state as before.
+  const projected = { ...player.resources };
   for (const resource of Object.keys(income) as (keyof typeof income)[]) {
-    player.resources[resource] += income[resource] * INCOME_HORIZON;
+    projected[resource] += income[resource] * INCOME_HORIZON;
   }
 
   let cities = 0;
@@ -244,10 +246,10 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
   }
 
   const material =
-    SMART_MATERIAL_WEIGHT.food * player.resources.food +
-    SMART_MATERIAL_WEIGHT.wood * player.resources.wood +
-    SMART_MATERIAL_WEIGHT.stone * player.resources.stone +
-    SMART_MATERIAL_WEIGHT.gold * player.resources.gold;
+    SMART_MATERIAL_WEIGHT.food * projected.food +
+    SMART_MATERIAL_WEIGHT.wood * projected.wood +
+    SMART_MATERIAL_WEIGHT.stone * projected.stone +
+    SMART_MATERIAL_WEIGHT.gold * projected.gold;
 
   const heuristic =
     6 * cities +
@@ -256,10 +258,9 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
     material / 8 +
     0.4 * citySlots +
     3 * gymSynergy -
-    Math.max(0, -player.resources.happiness);
+    Math.max(0, -projected.happiness);
 
-  const projectedHappiness = Math.min(player.resources.happiness, 15);
-  player.resources = saved;
+  const projectedHappiness = Math.min(projected.happiness, 15);
 
   return 120 * victoryCardsHeld(G, playerID) + 10 * heuristic + 2 * projectedHappiness + 2 * player.resources.influence;
 }
