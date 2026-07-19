@@ -42,7 +42,17 @@ const TOKEN_MAP: Record<string, Token> = {
   workshop: { type: "building", key: "workshop" },
   workshops: { type: "building", key: "workshop" },
   granary: { type: "building", key: "granary" },
-  granaries: { type: "building", key: "granary" }
+  granaries: { type: "building", key: "granary" },
+  forum: { type: "building", key: "forum" },
+  forums: { type: "building", key: "forum" },
+  aqueduct: { type: "building", key: "aqueduct" },
+  aqueducts: { type: "building", key: "aqueduct" },
+  odeon: { type: "building", key: "odeon" },
+  odeons: { type: "building", key: "odeon" },
+  villa: { type: "building", key: "villa" },
+  villas: { type: "building", key: "villa" },
+  gymnasion: { type: "building", key: "gymnasion" },
+  gymnasions: { type: "building", key: "gymnasion" }
 };
 
 // Longer words first so "citizens" wins over "citizen", etc.
@@ -91,25 +101,43 @@ export function AnnotatedText({ text, className }: { text: string; className?: s
 
     const style = token.type === "resource" ? resourceCssVars(token.key) : undefined;
     const key = `${match.index}-${word}`;
+    // Terminology is a proper noun (RPG style): Title-Case it however the source
+    // wrote it — "gain 3 freemen" reads "gain 3 Freemen".
+    const label = word.charAt(0).toUpperCase() + word.slice(1);
 
-    // With a Codex link in context, the term IS the link — click it to open the
-    // rulebook at its chapter. Without one, it stays a plain chip (isolation / tests).
+    // With a Codex link in context, the term IS the link — one shared keyword colour
+    // (CSS) invites the click, and it opens the rulebook at the term's chapter. Rendered
+    // as a role=button SPAN, not a <button>: prose often sits INSIDE a button (a build
+    // candidate's benefit text), and a nested <button> is invalid HTML. stopPropagation
+    // keeps the term's click from also firing that outer button. Without a link it stays
+    // a plain (still Title-Cased) chip — isolation / tests.
     nodes.push(
       codexLink ? (
-        <button
+        <span
           className="richToken richTokenLink"
           key={key}
-          onClick={() => codexLink.openCodexTo(tokenChapter(token))}
+          role="button"
+          tabIndex={0}
+          onClick={(event) => {
+            event.stopPropagation();
+            codexLink.openCodexTo(tokenChapter(token));
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              event.stopPropagation();
+              codexLink.openCodexTo(tokenChapter(token));
+            }
+          }}
           style={style}
-          title={`Open the rulebook: ${word}`}
-          type="button"
+          title={`Open the rulebook: ${label}`}
         >
-          {word}
+          {label}
           {tokenIcon(token)}
-        </button>
+        </span>
       ) : (
         <span className="richToken" key={key} style={style}>
-          {word}
+          {label}
           {tokenIcon(token)}
         </span>
       )

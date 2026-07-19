@@ -8,9 +8,10 @@ import {
 } from "../../../game/rules";
 import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
+import { CodexTermLink } from "../../codexLink";
 import { AtlasIcon } from "../../Sprites";
 import { ResourceDeltaList } from "../ResourceDeltaList";
-import { calculatePopEconomy } from "../helpers";
+import { calculatePopEconomy, capitalize } from "../helpers";
 import type { OwnedHolding } from "../types";
 import { useGameUi } from "../GameUiContext";
 
@@ -53,7 +54,9 @@ export function PopsTab({
           <div className="popEconomyLead">
             <AtlasIcon icon={pop} className="buildingButtonIcon" />
             <span>
-              <strong>{formatPopLabel(pop, totals[pop])}</strong>
+              <strong>
+                <CodexTermLink chapter="population">{capitalize(formatPopLabel(pop, totals[pop]))}</CodexTermLink>
+              </strong>
               <em>{totals[pop]} total</em>
             </span>
           </div>

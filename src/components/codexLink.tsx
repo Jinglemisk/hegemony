@@ -1,4 +1,7 @@
-import { createContext, useContext } from "react";
+/* A context + its hook + a couple of tiny link components, deliberately together —
+   Fast Refresh's one-kind-of-export rule doesn't apply to this wiring module. */
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, type ReactNode } from "react";
 
 /**
  * Deep-links into the Codex rulebook (two-panel.md piece 4). Any prose rendered
@@ -21,4 +24,21 @@ export const CodexLinkProvider = CodexLinkContext.Provider;
 
 export function useCodexLink(): CodexLink | null {
   return useContext(CodexLinkContext);
+}
+
+/**
+ * A text-only Codex link (no appended icon) for terminology already shown beside its
+ * own glyph — a building or pop name in the ledger. Same clay keyword styling as an
+ * AnnotatedText term; degrades to plain text when no provider is mounted.
+ */
+export function CodexTermLink({ chapter, children }: { chapter: string; children: ReactNode }) {
+  const link = useCodexLink();
+  if (!link) {
+    return <>{children}</>;
+  }
+  return (
+    <button className="richTokenLink" onClick={() => link.openCodexTo(chapter)} type="button">
+      {children}
+    </button>
+  );
 }
