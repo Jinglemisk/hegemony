@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { enumerateLegalMoves } from "../game/legalMoves";
-import { greedyPolicy, smartPolicy } from "./policies";
+import { beamPolicy, greedyPolicy, smartPolicy } from "./policies";
 import { createSimRng } from "./rng";
 import { runGame } from "./runner";
 
@@ -29,5 +29,38 @@ describe("policy evaluation is side-effect-free", () => {
     // which throws on frozen state. The projection now runs on a copy.
     expect(() => greedyPolicy.choose(G, moves, rng)).not.toThrow();
     expect(() => smartPolicy.choose(G, moves, rng)).not.toThrow();
+    // The beam searches on clones only, so a frozen committed state is safe too.
+    expect(() => beamPolicy.choose(G, moves, rng)).not.toThrow();
   });
+});
+
+// The beam search is compute-heavy, so these run short games and lift vitest's default
+// 5s per-test timeout (they can exceed it on slower CI hardware).
+describe("beam policy", () => {
+  it("is deterministic: same seed twice → byte-identical game", () => {
+    const a = runGame({ seed: 13, mode: "standard", policy: beamPolicy, turns: 8 });
+    const b = runGame({ seed: 13, mode: "standard", policy: beamPolicy, turns: 8 });
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  }, 30000);
+
+  it("consumes no game RNG and never mutates the passed state (anti-peek)", () => {
+    const G = runGame({ seed: 8, mode: "standard", policy: beamPolicy, turns: 5 });
+    const moves = enumerateLegalMoves(G, G.currentPlayer);
+    if (moves.length === 0) return; // gameOver — nothing to choose
+
+    const rngBefore = G.rng;
+    const snapshot = JSON.stringify(G);
+    beamPolicy.choose(G, moves, createSimRng(1));
+
+    // The seeded stream never advanced, and the search ran only on clones.
+    expect(G.rng).toBe(rngBefore);
+    expect(JSON.stringify(G)).toBe(snapshot);
+  }, 30000);
+
+  it("plays complete turns across seeds without tripping the anti-peek assertion", () => {
+    for (const seed of [1, 2, 3]) {
+      const G = runGame({ seed, mode: "standard", policy: beamPolicy, turns: 5 });
+      expect(["gameplay", "gameOver"]).toContain(G.phase);
+    }
+  }, 30000);
 });

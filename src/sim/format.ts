@@ -257,6 +257,10 @@ export function renderBatchReport(report: BatchReport): string {
     lines.push(`Currency verbs (per game): ${verbs}`);
   }
 
+  if (report.upgrades) {
+    lines.push(`Colony→city upgrades: ${formatNumber(report.upgrades.perGame)}/game (${report.upgrades.count} total)`);
+  }
+
   if (report.forced && report.forced.actionCapHits > 0) {
     lines.push(
       `Force-ended turns: ${report.forced.actionCapHits} (${formatNumber(report.forced.perGame)}/game) · ` +

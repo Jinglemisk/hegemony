@@ -93,7 +93,7 @@ must be resolved (`move resolve`) before anything else.
 ### `auto` — bot play
 
 ```bash
-npm run sim -- auto [--turns 40] [--policy random|greedy|smart]
+npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam]
                     [--bot-seed N] [--record script.json] [--quiet]
 ```
 
@@ -110,6 +110,13 @@ Works from any phase — bots will finish a manual setup too. Policies:
   promotion synergy. So it climbs the social ladder, builds the Phase 2 buildings, and
   favours slot-rich cities — the bot that actually exercises the terrain rework.
   Deterministic.
+- `beam` — a within-turn **beam search** over the same `smart` score, so it values the
+  multi-step plays one-ply misses (build-then-promote, save-then-upgrade, bank chains).
+  Branches only on RNG-free moves — it never reads the seeded die/deck, so it stays
+  deterministic (record→replay is byte-identical, proving zero game RNG consumed) and
+  plays the stochastic families (riot/venture/bank) by the same hard-coded rules as
+  one-ply. Stronger but slower — a `smart`-vs-`beam` A/B isolates search depth from
+  evaluation. See docs/ai.md and docs/sim/ for the head-to-head.
 
 How the bots work, their limitations, and the path to CPU opponents with
 difficulty settings: **docs/ai.md**.
@@ -121,7 +128,7 @@ which cards come up.
 ### `batch` — balance simulation
 
 ```bash
-npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart]
+npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart|beam]
                      [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
                      [--tune-patch p.json] [--seats p0,p1,p2,p3] [--rotate] [--seed 1000]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
