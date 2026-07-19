@@ -11,6 +11,10 @@ npm run sim -- <command> [args] [--file path]
 All commands operate on a JSON save file (default `.sim/game.json`, gitignored).
 `--file` targets a different save so several games can run side by side.
 
+**See also:** [docs/sim/](sim/) — the experiment log (dated campaign writeups + their
+reports) and [docs/sim/plan.md](sim/plan.md), the forward balance/tuning plan. How the bots
+work: [docs/ai.md](ai.md).
+
 ## Quick start
 
 ```bash
