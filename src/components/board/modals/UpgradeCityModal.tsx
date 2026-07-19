@@ -1,14 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  EMPTY_POPS,
-  clonePops,
   getUpgradeColonyToCityStatus,
   previewUpgradeColonyToCity,
   settlementNetYield,
   settlementPopCapacity,
   totalPops
 } from "../../../game/rules";
-import type { HexTile, Pops, Settlement } from "../../../game/types";
+import type { HexTile, Settlement } from "../../../game/types";
 import { formatResourceDelta } from "../../../ui/formatters";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { SettlementSummaryCard } from "../../SettlementCard";
@@ -16,14 +14,13 @@ import { AtlasIcon } from "../../Sprites";
 import { useGameUi } from "../GameUiContext";
 import { capitalize, settlementPickerLabel } from "../helpers";
 import { CostRow, PlacementModalShell } from "./PlacementModalShell";
-import { PopulationStepper } from "./PopulationStepper";
 
 export function UpgradeCityModal({
   onCancel,
   onConfirm
 }: {
   onCancel: () => void;
-  onConfirm: (tileId: string, pops: Pops) => void;
+  onConfirm: (tileId: string) => void;
 }) {
   const { G, viewerId: playerID } = useGameUi();
   const candidates = useMemo(() => {
@@ -44,22 +41,16 @@ export function UpgradeCityModal({
 
   const [tileId, setTileId] = useState(() => candidates[0]?.tile.id ?? "");
   const selected = candidates.find((entry) => entry.tile.id === tileId) ?? candidates[0];
-  const [pops, setPops] = useState<Pops>(() => clonePops(selected?.settlement.pops ?? EMPTY_POPS));
 
-  useEffect(() => {
-    setPops(clonePops(selected?.settlement.pops ?? EMPTY_POPS));
-  }, [selected?.tile.id]);
-
-  const requiredTotal = selected ? totalPops(selected.settlement.pops) : 0;
-  const selectedTotal = totalPops(pops);
-  const remaining = requiredTotal - selectedTotal;
   const colonyYield = selected ? settlementNetYield(selected.tile, selected.settlement, G.ruleset) : null;
-  const preview = selected ? previewUpgradeColonyToCity(G, playerID, selected.tile.id, pops) : null;
+  const preview = selected ? previewUpgradeColonyToCity(G, playerID, selected.tile.id) : null;
   // Live ruleset, not the ACTION_COSTS default — see FoundColonyPopover (R7).
   const cost =
     (selected && getUpgradeColonyToCityStatus(G, playerID, selected.tile.id).cost) ??
     G.ruleset.actionCosts.upgradeColonyToCity;
-  const canConfirm = Boolean(selected) && remaining === 0;
+  // An upgrade preserves the colony's exact pop composition (spec v0.1 §City upgrade);
+  // there is nothing for the player to reallocate, so this is a confirm-only modal.
+  const canConfirm = Boolean(selected);
 
   return (
     <PlacementModalShell
@@ -71,7 +62,7 @@ export function UpgradeCityModal({
       onCancel={onCancel}
       onConfirm={() => {
         if (selected) {
-          onConfirm(selected.tile.id, clonePops(pops));
+          onConfirm(selected.tile.id);
         }
       }}
     >
@@ -140,23 +131,7 @@ export function UpgradeCityModal({
             </span>
           </div>
 
-          <section className="placementSection">
-            <span className="placementSectionLabel">City population</span>
-            <PopulationStepper
-              pops={pops}
-              maxByPop={{ citizens: requiredTotal, freemen: requiredTotal, slaves: requiredTotal }}
-              onChange={setPops}
-              totalLimit={requiredTotal}
-            />
-            <div className="selectionSummary">
-              <span>
-                Allocated <strong>{selectedTotal}</strong>/<strong>{requiredTotal}</strong>
-              </span>
-              <span className={remaining === 0 ? "positive" : "negative"}>
-                {remaining === 0 ? "Ready" : `${Math.abs(remaining)} ${remaining > 0 ? "left" : "too many"}`}
-              </span>
-            </div>
-          </section>
+          <p className="placementCostNote">The city keeps the colony's current population; only its capacity and yield grow.</p>
 
           <CostRow cost={cost} />
         </>

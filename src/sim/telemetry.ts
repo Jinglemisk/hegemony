@@ -7,7 +7,7 @@ import { playerStandings } from "../game/score";
 import { canPlaceColonyOnTile } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import type { UnrestTier } from "../game/unrest";
-import type { HegemonyState, PlayerId, Resources } from "../game/types";
+import type { BoardLayout, GameOverReason, HegemonyState, PlayerId, Resources } from "../game/types";
 
 /**
  * Balance instrumentation for batch runs. One TurnSnapshot per player-turn;
@@ -118,12 +118,22 @@ export type SeasonRow = {
   unrestTierShares: Record<UnrestTier, number>;
 };
 
+/** How a game ended. A real result (victoryRace/deckExhausted) names a winner; a
+ *  game stopped at the turn cap has no winner — only a leaderAtCap heuristic. */
+export type GameTermination = GameOverReason | "turnCap";
+
 export type GameRow = {
   game: number;
   seed: number;
   turnsPlayed: number;
   finalSeason: number;
-  winner: PlayerId;
+  termination: GameTermination;
+  /** The real winner — null for turn-capped (unfinished) games. */
+  winner: PlayerId | null;
+  /** Heuristic leader when the game was cut off at the cap; null for finished games. */
+  leaderAtCap: PlayerId | null;
+  /** Which policy sat in each seat this game (mixed-policy tables); absent for uniform runs. */
+  seatPolicies?: Record<PlayerId, string>;
   finalCards: Record<PlayerId, number>;
   popsLostToUnrest: Record<PlayerId, number>;
 };
@@ -134,14 +144,26 @@ export type BatchReport = {
     turns: number;
     policy: string;
     mode: string;
+    boardLayout: BoardLayout;
     baseSeed: number;
     botSeedRule: string;
     rulesetPatch: unknown;
+    /** The dev tune-panel override map applied to content/ruleset for this run (null when
+     *  none), plus a stable fingerprint — so a batch's content is identifiable and A/B-able. */
+    tunePatch?: unknown;
+    tunePatchHash?: string | null;
+    /** Base seat→policy assignment for a mixed-policy batch (null for a uniform run).
+     *  With --rotate the per-game assignment varies; see perGame[].seatPolicies. */
+    seatPolicies?: Record<PlayerId, string> | null;
     generatedAt: string;
   };
   perGame: GameRow[];
   perSeason: SeasonRow[];
-  perSeat: Record<PlayerId, { winRate: number; meanFinalCards: number }>;
+  perSeat: Record<PlayerId, { winRate: number; capLeaderRate: number; meanFinalCards: number }>;
+  /** Wins credited to the POLICY that held each seat, over finished games — the
+   *  seat-independent measure a rotated mixed-policy batch produces. Empty for a
+   *  uniform batch (no seat policies recorded). */
+  winsByPolicy: Record<string, { games: number; wins: number; winRate: number }>;
   buildings: Record<string, { built: number; perGame: number }>;
   events: {
     player: Record<string, number>;
@@ -153,6 +175,13 @@ export type BatchReport = {
    *  per game) — a verb at ~0 per game is a dead currency talking. */
   currencyVerbs: Record<string, { count: number; perGame: number }>;
   finalCardsDistribution: Percentiles;
+  /** How games terminated — the denominator context for winRate (finished games only)
+   *  vs capLeaderRate (turn-capped games). */
+  terminations: Record<GameTermination, number>;
+  /** Turns the runner had to force-end at the per-turn action cap — previously
+   *  invisible. actionCapHits == forcedEndTurns; forcedResolutions counts pending
+   *  events/riots that had to be force-resolved first. */
+  forced: { actionCapHits: number; forcedResolutions: number; forcedEndTurns: number; perGame: number };
 };
 
 /** The Phase 1 currency verbs, in report order. */
@@ -175,17 +204,22 @@ export class Aggregator {
   private seasonalEvents: Record<string, number> = {};
   private choicePicks: Record<string, number[]> = {};
   private currencyVerbs: Record<string, number> = {};
+  private actionCapHits = 0;
+  private forcedResolutions = 0;
+  private forcedEndTurns = 0;
 
   private game = -1;
   private seed = 0;
   private startTurn = 1;
   private lastSeason = 0;
+  private gameSeatPolicies: Record<PlayerId, string> | null = null;
 
-  beginGame(game: number, seed: number, G: HegemonyState) {
+  beginGame(game: number, seed: number, G: HegemonyState, seatPolicies?: Record<PlayerId, string>) {
     this.game = game;
     this.seed = seed;
     this.startTurn = G.turn;
     this.lastSeason = G.season;
+    this.gameSeatPolicies = seatPolicies ?? null;
 
     // The opening already revealed season 1's card and player 0's first draw.
     this.countSeasonal(G);
@@ -209,14 +243,32 @@ export class Aggregator {
     }
   }
 
+  /** The runner hit the per-turn action cap and force-ended the turn. Previously
+   *  silent; surfaced so balance runs can see how often bots stall out. */
+  onForceEndTurn(_G: HegemonyState, forcedResolutions: number) {
+    this.actionCapHits += 1;
+    this.forcedResolutions += forcedResolutions;
+    this.forcedEndTurns += 1;
+  }
+
   onTurnEnd(G: HegemonyState) {
+    // Deck exhaustion ends the game mid-endTurn WITHOUT advancing turn/season (see
+    // startNewSeason): no new player-turn happened here, so recording one would
+    // duplicate the final turn, undercount turnsPlayed, and re-count the prior draw.
+    if (G.phase === "gameOver" && G.gameOverReason === "deckExhausted") {
+      return;
+    }
+
     if (G.season !== this.lastSeason) {
       this.lastSeason = G.season;
       this.countSeasonal(G);
     }
 
-    // Each gameplay turn ends by bootstrapping the next player's income + draw.
-    this.countPlayerDraw(G);
+    // A terminal victory-race turn advanced the turn (a real snapshot) but ended
+    // before income/draw, so there is no fresh player event to count here.
+    if (G.phase !== "gameOver") {
+      this.countPlayerDraw(G);
+    }
 
     this.snapshots.push(snapshotTurn(G, this.game, this.seed));
   }
@@ -230,29 +282,38 @@ export class Aggregator {
       popsLostToUnrest[playerID] = G.players[playerID].popsLostToUnrest;
     }
 
-    // A finished game names its own winner; turn-capped games fall back to the
-    // deck-exhaustion ranking (cards, then happiness, then pops, then seat).
-    const winner =
-      G.winner ??
-      [...PLAYER_IDS].sort((a, b) => {
-        const cards = finalCards[b] - finalCards[a];
-        if (cards !== 0) return cards;
-        const happiness = G.players[b].resources.happiness - G.players[a].resources.happiness;
-        if (happiness !== 0) return happiness;
-        const pops = playerStandings(G, b).pops - playerStandings(G, a).pops;
-        if (pops !== 0) return pops;
-        return PLAYER_IDS.indexOf(a) - PLAYER_IDS.indexOf(b);
-      })[0];
+    // A finished game (victory race / deck exhaustion) names a real winner. A game
+    // stopped at the turn cap has NOT been won — record only a heuristic leaderAtCap
+    // (cards → happiness → pops → seat) so it never inflates the real win rate.
+    const finished = G.phase === "gameOver";
+    const termination: GameTermination = finished ? (G.gameOverReason as GameOverReason) : "turnCap";
 
     this.games.push({
       game: this.game,
       seed: this.seed,
       turnsPlayed: G.turn - this.startTurn,
       finalSeason: G.season,
-      winner,
+      termination,
+      winner: finished ? G.winner : null,
+      leaderAtCap: finished ? null : this.leaderByTiebreak(G, finalCards),
+      seatPolicies: this.gameSeatPolicies ?? undefined,
       finalCards,
       popsLostToUnrest,
     });
+  }
+
+  /** The deck-exhaustion tiebreak (cards → happiness → pops → seat), reused to name a
+   *  cut-off game's leaderAtCap without counting it as a win. */
+  private leaderByTiebreak(G: HegemonyState, finalCards: Record<PlayerId, number>): PlayerId {
+    return [...PLAYER_IDS].sort((a, b) => {
+      const cards = finalCards[b] - finalCards[a];
+      if (cards !== 0) return cards;
+      const happiness = G.players[b].resources.happiness - G.players[a].resources.happiness;
+      if (happiness !== 0) return happiness;
+      const pops = playerStandings(G, b).pops - playerStandings(G, a).pops;
+      if (pops !== 0) return pops;
+      return PLAYER_IDS.indexOf(a) - PLAYER_IDS.indexOf(b);
+    })[0];
   }
 
   allSnapshots(): TurnSnapshot[] {
@@ -301,14 +362,41 @@ export class Aggregator {
         };
       });
 
+    // Real win rate is over FINISHED games only; a turn-capped game is not a win.
+    const finishedGames = this.games.filter((game) => game.termination !== "turnCap");
+    const cappedGames = this.games.filter((game) => game.termination === "turnCap");
+
     const perSeat = {} as BatchReport["perSeat"];
     for (const playerID of PLAYER_IDS) {
-      const wins = this.games.filter((game) => game.winner === playerID).length;
+      const wins = finishedGames.filter((game) => game.winner === playerID).length;
+      const capLeads = cappedGames.filter((game) => game.leaderAtCap === playerID).length;
       const cards = this.games.map((game) => game.finalCards[playerID]);
       perSeat[playerID] = {
-        winRate: this.games.length > 0 ? wins / this.games.length : 0,
+        winRate: finishedGames.length > 0 ? wins / finishedGames.length : 0,
+        capLeaderRate: cappedGames.length > 0 ? capLeads / cappedGames.length : 0,
         meanFinalCards: percentiles(cards).mean,
       };
+    }
+
+    const terminations: Record<GameTermination, number> = { victoryRace: 0, deckExhausted: 0, turnCap: 0 };
+    for (const game of this.games) {
+      terminations[game.termination] += 1;
+    }
+
+    // Credit each finished game's win to the POLICY that held the winning seat, and
+    // count every seat a policy occupied as one participation. Over rotated seats this
+    // is a seat-independent win rate; empty when no seat policies were recorded.
+    const winsByPolicy: BatchReport["winsByPolicy"] = {};
+    for (const game of finishedGames) {
+      if (!game.seatPolicies) continue;
+      for (const [seat, policyName] of Object.entries(game.seatPolicies)) {
+        const entry = (winsByPolicy[policyName] ??= { games: 0, wins: 0, winRate: 0 });
+        entry.games += 1;
+        if (game.winner === seat) entry.wins += 1;
+      }
+    }
+    for (const entry of Object.values(winsByPolicy)) {
+      entry.winRate = entry.games > 0 ? entry.wins / entry.games : 0;
     }
 
     const buildings: BatchReport["buildings"] = {};
@@ -334,6 +422,14 @@ export class Aggregator {
         })
       ),
       finalCardsDistribution: percentiles(this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalCards[playerID]))),
+      winsByPolicy,
+      terminations,
+      forced: {
+        actionCapHits: this.actionCapHits,
+        forcedResolutions: this.forcedResolutions,
+        forcedEndTurns: this.forcedEndTurns,
+        perGame: this.games.length > 0 ? this.actionCapHits / this.games.length : 0,
+      },
     };
   }
 

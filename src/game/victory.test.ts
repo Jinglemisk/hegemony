@@ -101,12 +101,16 @@ describe("the seasonal deck is a finite clock", () => {
     // falls through to the happiness tiebreak.
     const G = scenario().opening().withHappiness("3", 40).build();
     G.seasonalDrawPile = [];
+    const seasonBefore = G.season;
 
     startNewSeason(G);
 
     expect(G.phase).toBe("gameOver");
     expect(G.gameOverReason).toBe("deckExhausted");
     expect(G.winner).toBe("3");
+    // The clock stops on the last season actually played — no phantom increment,
+    // which is what kept the sim's turn/season telemetry off by one.
+    expect(G.season).toBe(seasonBefore);
   });
 });
 

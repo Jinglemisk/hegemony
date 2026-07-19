@@ -211,8 +211,10 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
 - ~~Headless sim CLI + legal-move enumeration + bots + batch telemetry.~~ DONE (feat/sim-cli — see docs/simulation.md).
 -- `npm run sim` drives the pure engine from the terminal: play move-by-move, auto-play with bots, run seeded batches with an aggregated balance report + CSV, record/replay games. `scenario()` builder (src/game/testing/scenario.ts) constructs mid-game states for tests.
 
+- ~~AI-sim audit fixes (fix/sim-audit).~~ DONE. Closed the city-upgrade pop-laundering exploit; fixed the deck-exhaustion turn/season off-by-one (engine) so telemetry stops duplicating the final turn / miscounting `turnsPlayed`; win rate now counts FINISHED games only (termination model: victoryRace|deckExhausted|turnCap + leaderAtCap); surfaced force-ended turns; persisted bot RNG through replay; made policy evaluation immutable; enforced the legal-move boundary in `applyMove`. Sim parity: `--board classic|shuffled`, `--tune-patch` content A/B, `--seats`/`--rotate` mixed-policy tables, multi-pop transfer bundles. CLI: named commands for every verb, honest help, graceful `preview --index`, arg validation.
+
 - Grow the greedy bot into a credible baseline player.
--- Current heuristic is one-ply VP-anchored; batch results underrate delayed payoffs (buildings). A 2-ply or turn-level rollout would make balance reports read closer to human play. Needed for the Q1 victory-threshold tuning campaign.
+-- Current heuristic is one-ply over a card-anchored score; batch results underrate delayed payoffs (buildings, colony→city). The turn-level **beam search** is planned as its own PR (feat/beam-bot) on top of the audit fixes — reuses the new `--seats`/`--rotate` harness + finished-game win rate to prove it's stronger. Needed for the victory-threshold tuning campaign.
 
 - ~~Wire a batch smoke run into CI.~~ DECLINED (roadmap-appendix Q11): no per-PR sim gate — sims are for ad-hoc hypothesis tests, planned campaigns, and phase-exit checks. PR gate stays `npm run check` + tests.
 

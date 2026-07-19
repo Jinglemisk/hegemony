@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { applyMove, enumerateLegalMoves, popCompositions } from "./legalMoves";
 import { totalPops } from "./core/pops";
 import { scenario } from "./testing/scenario";
+import { applyUnrestUpkeep } from "./unrest";
 import type { HegemonyState, PlayerId } from "./types";
 
 /** Every enumerated move must apply cleanly — the load-bearing invariant. */
@@ -164,14 +165,36 @@ describe("gameplay enumeration", () => {
     expect(types.has("movePops")).toBe(true);
   });
 
-  it("never offers collectIncome and keeps movePops single-pop", () => {
+  it("never offers collectIncome and keeps movePops bundles non-empty and bounded", () => {
     const G = openingInGameplay({ wealthy: true });
     const moves = enumerateLegalMoves(G, "0");
 
     for (const move of moves) {
       expect(move.type).not.toBe("collectIncome");
-      if (move.type === "movePops") expect(totalPops(move.pops)).toBe(1);
+      // Bundles are always a positive selection (never an empty transfer).
+      if (move.type === "movePops") expect(totalPops(move.pops)).toBeGreaterThan(0);
     }
+  });
+
+  it("offers multi-pop movePops bundles that apply cleanly", () => {
+    const G = scenario()
+      .stackPlayerEvent("player-good-stores")
+      .opening()
+      .setPops("0", "-2,0", { citizens: 1, freemen: 0, slaves: 3 }) // metropolis: a 3-slave surplus
+      .setPops("0", "3,0", { citizens: 0, freemen: 0, slaves: 1 }) // colony: room for 3 more
+      .build();
+    expect(applyMove(G, "0", { type: "resolveEvent", choiceIndex: 0 }).ok).toBe(true);
+
+    // The whole slave stack (3) is a single enumerated move — previously three actions.
+    const bundle = enumerateLegalMoves(G, "0").find(
+      (move) =>
+        move.type === "movePops" &&
+        move.sourceTileId === "-2,0" &&
+        move.targetTileId === "3,0" &&
+        totalPops(move.pops) === 3,
+    );
+    expect(bundle).toBeDefined();
+    expect(applyMove(structuredClone(G), "0", bundle!).ok).toBe(true);
   });
 
   it("drops every costed move when the player cannot afford anything", () => {
@@ -203,5 +226,58 @@ describe("gameplay enumeration", () => {
 
     expect(G.turn).toBe(startTurn + 4);
     expect(G.phase).toBe("gameplay");
+  });
+});
+
+describe("applyMove boundary guard", () => {
+  /** A clean gameplay position for player 0 — no pending event or riot. */
+  function cleanGameplay() {
+    return scenario()
+      .opening()
+      .mutate((draft) => {
+        draft.pendingPlayerEvent = null;
+      })
+      .build();
+  }
+
+  it("rejects an off-turn move (not the current player)", () => {
+    const G = cleanGameplay();
+    expect(G.currentPlayer).toBe("0");
+    // The engine's public dispatcher must refuse a move from a seat that is not up.
+    expect(applyMove(structuredClone(G), "1", { type: "endTurn" }).ok).toBe(false);
+    // ...but the seat that IS up can act — the guard never over-rejects.
+    expect(applyMove(structuredClone(G), "0", { type: "endTurn" }).ok).toBe(true);
+  });
+
+  it("blocks normal moves during a pending riot but allows resolving it", () => {
+    const G = scenario()
+      .opening()
+      .mutate((draft) => {
+        draft.pendingPlayerEvent = null;
+        draft.players["0"].resources.happiness = -8;
+      })
+      .build();
+    applyUnrestUpkeep(G, "0");
+    expect(G.pendingRiot?.playerID).toBe("0");
+
+    expect(applyMove(structuredClone(G), "0", { type: "endTurn" }).ok).toBe(false);
+    expect(applyMove(structuredClone(G), "0", { type: "resolveRiot" }).ok).toBe(true);
+  });
+
+  it("blocks normal moves during a pending event but allows resolving it", () => {
+    const G = scenario().stackPlayerEvent("player-emergency-labor").opening().build();
+    expect(G.pendingPlayerEvent?.playerID).toBe("0");
+
+    expect(applyMove(structuredClone(G), "0", { type: "endTurn" }).ok).toBe(false);
+    expect(applyMove(structuredClone(G), "0", { type: "resolveEvent", choiceIndex: 0 }).ok).toBe(true);
+  });
+
+  it("refuses a gameplay move in setup and a setup move in gameplay", () => {
+    const setup = scenario().build(); // setupCapital phase
+    expect(applyMove(structuredClone(setup), "0", { type: "endTurn" }).ok).toBe(false);
+
+    const play = cleanGameplay();
+    const stray = { type: "placeCapital" as const, tileId: "2,0", pops: { citizens: 1, freemen: 2, slaves: 1 } };
+    expect(applyMove(structuredClone(play), "0", stray).ok).toBe(false);
   });
 });

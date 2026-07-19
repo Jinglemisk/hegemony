@@ -53,3 +53,7 @@ that the ladder pays.
 ## Caveats
 One-ply heuristic bots, not skilled play; classic board only; single seed family (9000); pop-composition
 from 4 fixed-opening games/policy vs the 100-game random-opening batches. Read as directional.
+
+The pop-tier mix and banked-influence/material figures above come from the separate 4-fixed-opening
+run, NOT the two stored 100-game `.json` batches — those reports don't carry per-tier composition or
+influence fields, so those specific numbers can't be regenerated from them alone.
