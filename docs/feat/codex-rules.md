@@ -1,8 +1,25 @@
 # Codex — the whole rulebook, in the game
 
-**Status:** planned (owner ask, 2026-07-18). Grows the Codex from a numbers reference
-(Dice Tables / Bank / Decks / Costs) into the **complete in-game rulebook**, so a player
-never has to leave the board — or open `rules.md` — to learn or check how the game works.
+**Status:** SHIPPED 2026-07-19 (feat/codex-rulebook) — the rulebook itself now lives in
+the Codex. Grew the Codex from a numbers reference (Dice Tables / Bank / Decks / Costs)
+into the **complete in-game rulebook**, so a player never has to leave the board — or
+open `rules.md` — to learn or check how the game works.
+
+**Shipped 2026-07-19 (feat/codex-rulebook) — the rulebook:**
+- **`rulebook.tsx`** — a chapter registry, twelve chapters in learn-order (How to Win →
+  The Board → Resources → Population → Settlements → The Turn → Growing & the Ladder →
+  Buildings → Happiness & Unrest → Seasons & Omens → The Bank → Ventures). Every number
+  renders FROM `G.ruleset` / the content tables (victory minimums, popIncome, unrest
+  thresholds, ladder & grow costs, settlement caps, building roster, bank rates, omen/riot/
+  expedition tables, decks), so a ruleset patch rewrites the rulebook and it can never
+  quote a value the engine doesn't use. Prose holds no numbers.
+- **Search** (owner ask) — a box in the sticky header; ≥2 letters lists matching topics
+  (chapters + sub-headings) in an emergent dropdown; picking one switches chapter and
+  scrolls to the sub-heading (a settle-loop re-aligns as tables render; `scroll-margin-top`
+  clears the sticky header). The old four data sections are folded into the chapters.
+- **Chapter chips** scroll horizontally (a dozen don't wrap); the sub-entry jump strip +
+  scroll-spy from #28 carry over. `.codexNav { min-width: 0 }` so the nowrap chip row can't
+  force the grid panel wider than itself.
 
 **Shipped 2026-07-19 (feat/consult-polish), ahead of the rulebook content:**
 - **Navigation** — the header is now two tiers: the section chips, then a *sticky
