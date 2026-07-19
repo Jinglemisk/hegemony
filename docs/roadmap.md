@@ -5,7 +5,7 @@ sequence (what happens when, and why). Questions, answers, and execution state l
 the companion workbench: **`docs/roadmap-appendix.md`** — that is where this plan gets
 interrogated, refined, and driven.
 
-Last updated: 2026-07-13.
+Last updated: 2026-07-20.
 
 ## First principles (re-derive the order from these when things change)
 
@@ -58,13 +58,25 @@ resolutions, Politicians) is the owner's own design and waits for his session;
 building it from Claude's recs would mean inventing it. Phases 4–5 prep is dropped
 with it.
 
+**Post-sprint consolidation (added 2026-07-20):** the autopilot sprint ran past its
+stop-line through PRs #24–#35 (two-panel rails, Codex rulebook, deep-links, terrain
+economy, three bot policies, sim CLI — ~19.8k lines across 101 files, all self-merged
+with zero reviews). A four-way audit of that window
+(`docs/design/audits/post-sprint-debt.md`) found the engine/UI invariant **intact** —
+the UI never recomputes engine formulas — but ~525 lines of dead code, one live bug on
+the dev tuning path, and five balance knobs leaking outside `DEFAULT_RULESET`. That
+becomes **Phase 2.5, the debt sweep**, slotted immediately before Phase 3 rather than
+folded into it: Phase 3 is where the owner's own design work lands, and it should not be
+built on top of scaffolding the audit already flagged as duplicated.
+
 | Phase | Theme | Contents | Gate to exit |
 | --- | --- | --- | --- |
 | **0** | Make it a game | Victory race (5 public "Most X, min Y" cards, sole leader holds; 3 at your own turn start → win; seasonal deck = failsafe ceiling); **metropolis + founding colony setup** (Q12: metropolis 4 pops; colony 2 pops on any coast or adjacent; snake order) + **coastal leapfrog** (Q13a); colony contiguity (radius 1, colonies chain); **no** capital ring — delete the unenforced claim from rules.md/spec; board setting Classic/Shuffled (seeded); yearly first-player rotation; stockpile happiness capped +2; preload flag off | A 4-seat game ends with a winner; seat-win rates in a planned sim batch are roughly flat |
 | **1** | Every currency gets a job | Bank exchange; Stabilize Province; promote/demote ladder; riot table + pre-roll insurance (event-table seam); ventures | No dead currencies in the sim report; riot table replaces random pop removal |
 | **1.5** | The interface refit | **One ledger** (Actions panel folds in; vertical tab buttons); action verbs move to a dedicated bar (bottom / under-top-bar — Q17); **map-first selection** (the Found Colony pattern — glow → active ring → anchored popover — rolled out to ladder, Grow, Move, event placement, riot concession); **no native selects** — one custom listbox with tile-art card rows; **game-reference compendium** behind the season icon (victory cards, event tables, bank rates, decks — everything rollable is viewable); **refactor ladder R1–R8** in order (front-loads what the reskin needs; monorepo/multiplayer staging explicitly out — Phase 5); **reskin = owner-kept brandbook elements only** (Q36 — answered: KEEP ×5, full reskin) | Playtest: every tile/settlement choice happens on the board or in an art-card list; zero OS dropdowns; a new player can find any rule reference without leaving the game |
 | **2** ✅ | The land repriced | **BUILT on `feat/phase2-terrain` (2026-07-18) — awaiting owner sign-off + merge.** Terrain rework + new mid-game buildings, shipped together (`docs/feat/terrain-economy.md`; **spec locked 2026-07-15 in appendix Q24/Q25**). Hills 9→5 **zero-yield / slot-king** (3.20 slots/tile) + 1 unsettleable **Oracle** terrain (Catan's desert — the hole, now at (0,1)); freed tiles → +2 mountain, +1 forest; **all tile gold removed** (gold is pop-borne). Two buildings: **Villa** · **Gymnasion**. `maxLevel` caps every building's stack. **"Tier 2" is this row's label only — no player-facing tier concept.** 199 tests green, browser-verified. | Hill starts stop underperforming; bot build orders diverge by terrain — *engine enforces the divergence (Villa/Workshop dead on hills), but the greedy bot is blind to it; needs a human read* |
-| **3** | The rivalry layer | **Owner-ordered 2026-07-18: two-panel UI FIRST, rivalry mechanics after a playtest, influence-aware AI last.** **(A) two-panel UI** — pull-forward pieces building NOW on `feat/two-panel` (rail split: right rail *consults* Chronicle/Codex/Players/Victory; route model `{view,entry,scroll}`; responsive uniform-scale) — `docs/feat/two-panel.md`. **(B) Assembly + resolutions + Politicians v1** — the rivalry mechanics + Influence's main sink; **needs the owner design session first** (appendix Q27–Q29 blank on purpose), then hand-playtest. **(C) influence-aware AI** — deferred until (B) exists: the greedy-vs-smart sim proved the citizen/ladder line loses *because* influence has no sink yet, so tuning the bot now is premature (`docs/sim/2026-07-18-greedy-vs-smart.md`). Deep-links + player dossier (two-panel pieces 4–5) land with (B). | Influence is spent most turns; a runaway leader gets checked in playtest; you can open any rival's cities/pops/buildings and jump from any card term to its rule |
+| **2.5** | The debt sweep | **Consolidation pass over the 2026-07-18/19 sprint (PRs #24–#35, ~19.8k lines / 101 files) — full findings in `docs/design/audits/post-sprint-debt.md`.** Slotted here for the same reason 1.5 preceded 2: Phase 3 adds the largest UI surface yet (assembly panels, resolution cards, Politician dossiers) on top of the popover/ledger scaffolding this sprint left duplicated, and leans hard on `status.ts` — the most load-bearing untested engine module. Sweeping first means building Phase 3 once. **Ordered contents (audit §7):** (1) `cost.ts`/`preview.ts` → `getBuildings()` — TunePanel currently accepts Granary edits and ignores them; (2) `key` on `HegemonyBoard` — live bug, stale `seenOmenYear` survives `resetGame` and suppresses omens in the next A/B game; (3) `BOARD_RADIUS` constant; (4) sweep ~525 dead lines (`DeckShelf`, 51 CSS classes, 31 unused imports, 7 dead exports); (5) **`status.ts` test suite**; (6) wire terrain + event tables into TunePanel; (7) move `controller.ts` → `src/app/` (a React hook currently lives in the pure-engine dir); (8–10) `riot.ts` `option.modifier`, formatter/popover unification, shared popover primitives. Sim/CLI splits explicitly **out** — no Phase 3 surface. | `npm run lint` at 0 warnings; TunePanel edits provably reach the engine (terrain + event tables included); `status.ts` covered; `src/game/` imports no React |
+| **3** | The rivalry layer | **Owner-ordered 2026-07-18: two-panel UI FIRST, rivalry mechanics after a playtest, influence-aware AI last.** **(A) two-panel UI** ✅ **shipped** (rail split: right rail *consults* Chronicle/Codex/Players/Victory; route model `{view,entry,scroll}`; responsive uniform-scale; deep-links landed with PR #35) — `docs/feat/two-panel.md`. **(B) Assembly + resolutions + Politicians v1** — the rivalry mechanics + Influence's main sink. **Design session DONE 2026-07-20 — converged v1 in `docs/feat/assembly-politicians.md`**: persistent-**Law** effect model, board-derived power/patronage, political victory card, Stratokles, 31-card starter deck. Q28/Q29 resolved there; Q27 corrected — **first assembly is Spring of YEAR 2**, not 3. The *shape* is locked; numbers want the `?tune` panel + sim, and the build wants a **hand-playtest** before any AI work. **(C) influence-aware AI** — deferred until (B) exists: the greedy-vs-smart sim proved the citizen/ladder line loses *because* influence has no sink yet, so tuning the bot now is premature (`docs/sim/2026-07-18-greedy-vs-smart.md`). Deep-links + player dossier (two-panel pieces 4–5) land with (B). | Influence is spent most turns; a runaway leader gets checked in playtest; you can open any rival's cities/pops/buildings and jump from any card term to its rule |
 | **4** | The wider world | Coasts, ports, luxury goods, player trade | Luxury/happiness economy holds at the ledger's caps; trade actually occurs |
 | **5** | Asymmetry & frame | National ideas; mode picker; then the multiplayer track | Ideas draft evenly (no auto-picks) in playtest |
 
@@ -73,8 +85,10 @@ table above reflects Claude's recommendation.
 
 ## Design queue (known but not yet designed — needs a spitball + feat plan)
 
-- **Politicians** — PDF sketches four, incl. Stratokles as the leader-check
-  (Catan-robber pattern, pooled-resource neutralization). Blocks Phase 3.
+- ~~**Politicians**~~ — designed 2026-07-20: `docs/feat/assembly-politicians.md`. Keeps
+  the four politicians and the power/patron/Stratokles spine from the PDF (Stratokles as
+  the leader-check, Catan-robber pattern), now as trade-off **Laws** enacted through a
+  pick-a-politician → draw → propose flow. **No longer blocks Phase 3.**
 - ~~**Victory cards**~~ — designed and tuned (appendix D1): 5 public "Most X, min Y" cards, race to hold 3; minimums confirmed by the 2026-07-12 campaign.
 - **Yearly cards / d20 omen table** — from `seasons.md`; slot flexible (Phase 1 or 3).
 - ~~**Two-panel UI** (left/right rail split, deep-links, player dossier)~~ — designed:
@@ -93,4 +107,6 @@ table above reflects Claude's recommendation.
   execution log. **The active surface — start here each session.**
 - `docs/balance.html` — the balance ledger; analysis, ranked issues, playtest scenarios.
 - `docs/feat/*.md` — per-feature design plans.
+- `docs/design/audits/*.md` — point-in-time code audits.
+  **`post-sprint-debt.md`** is the live one: it *is* Phase 2.5's work order.
 - `docs/simulation.md` — the sim CLI; how phases get verified.
