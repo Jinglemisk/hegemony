@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { Resource, Resources } from "../game/types";
 import type { IncomeContribution } from "../game/rules";
 import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../ui/formatters";
@@ -7,7 +7,7 @@ import { ResourceIcon } from "./Sprites";
 
 type FlashDirection = "increase" | "decrease";
 
-export function ResourceGrid({
+function ResourceGridComponent({
   resources,
   deltas,
   breakdown = [],
@@ -162,3 +162,7 @@ function getResourcePillVars(resource: Resource, value: number) {
     "--resource-shadow": "rgb(177 58 40 / 24%)"
   };
 }
+
+/** Memoized (render-perf pass): the top bar's two resource grids only re-render when
+ *  their own props change, not on every board state tick. */
+export const ResourceGrid = memo(ResourceGridComponent);
