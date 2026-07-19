@@ -4,6 +4,7 @@ import { getBuildBuildingStatus } from "../../../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../../../game/types";
 import { formatBuildingEffects, formatResourceCost } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
+import { CodexTermLink } from "../../codexLink";
 import { AtlasIcon } from "../../Sprites";
 import { buildingTooltipRows, getBuildingBenefitText, holdingShortLabel } from "../helpers";
 import type { OwnedHolding } from "../types";
@@ -24,7 +25,9 @@ export function BuildingsTab({
           <div className="buildingLedgerLead">
             <AtlasIcon icon={building.id} className="buildingButtonIcon" />
             <span>
-              <strong>{building.name}</strong>
+              <strong>
+                <CodexTermLink chapter="buildings">{building.name}</CodexTermLink>
+              </strong>
               <em>
                 <AnnotatedText text={formatBuildingEffects(building.effects)} />
               </em>
