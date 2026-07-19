@@ -49,20 +49,58 @@ const TILE_CLICK_SUPPRESS_MS = 160;
 const WHEEL_COMMIT_MS = 90;
 
 /**
- * How far the resting board is held clear of the chrome, in CSS pixels.
- *
- * Left/right are SYMMETRIC so the board centres on the viewport — and therefore
- * sits under the centred season medallion. Only the left rail (~62px) is
- * permanent chrome on the sides, so 70 clears it with air to spare; the ledger
- * card and chronicle are toggleable and float OVER the board's edge by design
- * (KYKLOS: full-bleed board, chrome on top), so the board never reflows when
- * they open. Left used to be 210 (reserving the open ledger's width), which
- * shoved the board 70px right of centre — the "map is off" bug.
- *
- * Top/bottom stay larger and clear the two opaque full-width spines, so the
- * board sits between them rather than under them.
+ * Top/bottom clearance held under the two opaque full-width spines, in CSS px.
+ * Left/right are NOT fixed — they are measured per-seat from the live ledger-card
+ * widths (see {@link sideInsetPx}), so the board tracks --ui-scale automatically.
  */
-const CHROME_INSET_PX = { top: 96, right: 70, bottom: 100, left: 70 };
+const CHROME_INSET_TB = { top: 96, bottom: 100 };
+
+/**
+ * How far to pull the side inset IN from each ledger card's full reach, in CSS px
+ * at ui-scale 1. The seat fits the whole BASE_VIEW_BOX (744 wide) into the live
+ * area, but the tile cluster is ~540 wide, so the frame carries ~100px/side of its
+ * own sea margin. Reserving the card's full reach therefore over-clears (board too
+ * small, dead sea); pulling in ~84 lets that built-in margin sit under the card
+ * instead, landing the tiles ~40px clear of the card at a laptop width. Wider
+ * monitors go height-bound and clear by more — never less.
+ */
+const PANEL_CLEAR_PULL_PX = 84;
+
+/** Resolve a CSS length expression (a var/calc) to CSS pixels by measuring a probe.
+ *  Custom properties don't resolve through getComputedStyle, so we measure. The
+ *  chrome tokens (--panel-w, --rail-w, …) live on `.shell`, NOT :root, so the probe
+ *  MUST be hosted inside `.shell` to inherit them — on document.body they read 0. */
+function measureCssLength(expression: string): number {
+  const host = document.querySelector(".shell") ?? document.body;
+  const probe = document.createElement("div");
+  probe.style.cssText = `position:absolute;left:-9999px;top:0;visibility:hidden;width:${expression}`;
+  host.appendChild(probe);
+  const width = probe.getBoundingClientRect().width;
+  probe.remove();
+  return width;
+}
+
+/**
+ * The resting board sits in the sea BETWEEN the two ledger cards (2026-07-19, owner
+ * ask — the cards widened toward the centre to reclaim the empty sea they used to
+ * float over). Each side reserves a card's reach — its edge offset plus its width —
+ * less a sea overlap, so the board fills the gap and clears each card by a small
+ * margin. Left/right stay SYMMETRIC so the board centres on the viewport, under the
+ * medallion (an asymmetric left of 210 once shoved it 70px right — the old "map is
+ * off" bug). Reads the live CSS tokens, so it follows --ui-scale and any --panel-w
+ * change with no second source of truth.
+ */
+function sideInsetPx() {
+  const cardOffset = measureCssLength("calc(var(--rail-w) + var(--bub-out) + 14px)");
+  const leftCard = measureCssLength("var(--panel-w)");
+  const rightCard = measureCssLength("var(--chron-w)");
+  const pull = PANEL_CLEAR_PULL_PX * (leftCard / 360 || 1);
+
+  return {
+    left: Math.max(70, cardOffset + leftCard - pull),
+    right: Math.max(70, cardOffset + rightCard - pull)
+  };
+}
 
 /** Buttons and the confirm prompt own their own pointers — never pan under them. */
 function isMapDragBlockedTarget(target: EventTarget) {
@@ -119,15 +157,19 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
    * fixed slice of world along each axis, so the shown window's size over the
    * stage's size is the world-per-pixel scale.
    */
-  const worldInsetFor = (shown: ViewBox, stage: { width: number; height: number }): WorldInset => {
+  const worldInsetFor = (
+    shown: ViewBox,
+    stage: { width: number; height: number },
+    inset: { top: number; bottom: number; left: number; right: number }
+  ): WorldInset => {
     const worldPerPxX = shown.width / stage.width;
     const worldPerPxY = shown.height / stage.height;
 
     return {
-      top: CHROME_INSET_PX.top * worldPerPxY,
-      bottom: CHROME_INSET_PX.bottom * worldPerPxY,
-      left: CHROME_INSET_PX.left * worldPerPxX,
-      right: CHROME_INSET_PX.right * worldPerPxX
+      top: inset.top * worldPerPxY,
+      bottom: inset.bottom * worldPerPxY,
+      left: inset.left * worldPerPxX,
+      right: inset.right * worldPerPxX
     };
   };
 
@@ -155,8 +197,10 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
       return;
     }
 
-    const liveWidth = Math.max(120, bounds.width - CHROME_INSET_PX.left - CHROME_INSET_PX.right);
-    const liveHeight = Math.max(120, bounds.height - CHROME_INSET_PX.top - CHROME_INSET_PX.bottom);
+    const side = sideInsetPx();
+    const inset = { top: CHROME_INSET_TB.top, bottom: CHROME_INSET_TB.bottom, left: side.left, right: side.right };
+    const liveWidth = Math.max(120, bounds.width - inset.left - inset.right);
+    const liveHeight = Math.max(120, bounds.height - inset.top - inset.bottom);
     const pad = 28;
     const sliceScale = Math.max(bounds.width / BASE_VIEW_BOX.width, bounds.height / BASE_VIEW_BOX.height);
     const fitScale = Math.min(
@@ -173,7 +217,7 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
       x: BASE_VIEW_BOX.x + (BASE_VIEW_BOX.width - fitWidth) / 2,
       y: BASE_VIEW_BOX.y + (BASE_VIEW_BOX.height - fitHeight) / 2
     };
-    const seated = seatViewBox(centered, worldInsetFor(centered, bounds));
+    const seated = seatViewBox(centered, worldInsetFor(centered, bounds, inset));
 
     hasSeated.current = true;
     cameraViewBox.current = seated;

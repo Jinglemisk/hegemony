@@ -40,7 +40,11 @@ export const BASE_VIEW_BOX: ViewBox = { x: -372, y: -270, width: 744, height: 54
  * wants ~0.45×) — the headroom that zoom needs. Generous on purpose; the resting
  * fit never reaches the floor, it only needs the room to exist.
  */
-const WORLD_MARGIN = 0.7;
+// 1.0 (was 0.7): the between-panels reseat (2026-07-19) fits the WHOLE board into
+// the narrower sea BETWEEN the two widened ledger cards, which on a laptop wants to
+// zoom out past the old 0.7 floor. The extra headroom only enables that resting
+// zoom-out (and a little more manual pan-out); wide monitors never reach the floor.
+const WORLD_MARGIN = 1.0;
 export const WORLD_VIEW_BOX: ViewBox = {
   x: BASE_VIEW_BOX.x - BASE_VIEW_BOX.width * WORLD_MARGIN,
   y: BASE_VIEW_BOX.y - BASE_VIEW_BOX.height * WORLD_MARGIN,
