@@ -245,8 +245,12 @@ button:focus-visible {
   --bub-out: calc(28px * var(--ui-scale));
   --vb: calc(54px * var(--ui-scale));
   --vb-out: calc(32px * var(--ui-scale));
-  --panel-w: calc(308px * var(--ui-scale));
-  --chron-w: calc(292px * var(--ui-scale));
+  /* Widened toward centre (2026-07-19): the board no longer sits under the panels
+     (the camera now reserves their width symmetrically — see useMapCamera's
+     CHROME_INSET_PX), so both ledger cards can claim the sea they used to float
+     over. Kept equal so the two flanks are symmetric around the centred board. */
+  --panel-w: calc(360px * var(--ui-scale));
+  --chron-w: calc(360px * var(--ui-scale));
   --hexclip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   /* The band the floating left rail + ledger card live in — clear of the flush top
      spine and the bottom dock. The rail, card and camera all read them so they
