@@ -182,6 +182,9 @@ export type BatchReport = {
    *  invisible. actionCapHits == forcedEndTurns; forcedResolutions counts pending
    *  events/riots that had to be force-resolved first. */
   forced: { actionCapHits: number; forcedResolutions: number; forcedEndTurns: number; perGame: number };
+  /** Colony→city upgrades performed across the batch (total + per game) — a bot that
+   *  never saves for them reads ~0/game here. */
+  upgrades: { count: number; perGame: number };
 };
 
 /** The Phase 1 currency verbs, in report order. */
@@ -204,6 +207,7 @@ export class Aggregator {
   private seasonalEvents: Record<string, number> = {};
   private choicePicks: Record<string, number[]> = {};
   private currencyVerbs: Record<string, number> = {};
+  private upgrades = 0;
   private actionCapHits = 0;
   private forcedResolutions = 0;
   private forcedEndTurns = 0;
@@ -233,6 +237,12 @@ export class Aggregator {
 
     if ((CURRENCY_VERBS as readonly string[]).includes(move.type)) {
       this.currencyVerbs[move.type] = (this.currencyVerbs[move.type] ?? 0) + 1;
+    }
+
+    // Colony→city upgrades are the sharpest one-ply blind spot (bots rarely save for
+    // them); track them so a deeper search shows up in the report.
+    if (move.type === "upgradeColonyToCity") {
+      this.upgrades += 1;
     }
 
     // The resolved card is still on lastPlayerEvent (nothing draws between
@@ -429,6 +439,10 @@ export class Aggregator {
         forcedResolutions: this.forcedResolutions,
         forcedEndTurns: this.forcedEndTurns,
         perGame: this.games.length > 0 ? this.actionCapHits / this.games.length : 0,
+      },
+      upgrades: {
+        count: this.upgrades,
+        perGame: this.games.length > 0 ? this.upgrades / this.games.length : 0,
       },
     };
   }

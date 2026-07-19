@@ -2,13 +2,13 @@ import { calculateIncome } from "../game/economy/income";
 import { getTile } from "../game/core/query";
 import { settlementBuildingSlots } from "../game/settlement";
 import type { LegalMove } from "../game/legalMoves";
-import { applyMove } from "../game/legalMoves";
+import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
 import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId } from "../game/types";
 import type { SimRng } from "./rng";
 
-export type PolicyId = "random" | "greedy" | "smart";
+export type PolicyId = "random" | "greedy" | "smart" | "beam";
 
 export type Policy = {
   name: PolicyId;
@@ -38,31 +38,34 @@ export const randomPolicy: Policy = {
   },
 };
 
+/** Move types whose resolution consumes the game's seeded RNG. A lookahead that cloned
+ *  and applied one of these would "peek" the die/deck through the clone, so every search
+ *  branches ONLY on the RNG-free complement and plays these by rule. If a future move type
+ *  starts consuming G.rng, add it here (the beam asserts no branch advances the RNG). */
+const STOCHASTIC_MOVE_TYPES: ReadonlySet<LegalMove["type"]> = new Set([
+  "fundExpedition",
+  "resolveRiot",
+  "buyRiotInsurance",
+]);
+
 /**
- * One-ply lookahead shared by the greedy and smart bots: apply each candidate to a
- * clone and keep the best score delta under `score`. Ends the turn when nothing
- * improves the position. Deterministic — ties keep the first (enumeration-ordered)
- * candidate. The two bots differ ONLY in the `score` function, so a greedy-vs-smart
- * comparison isolates the evaluation, not the search.
+ * The hard-coded rules for the stochastic move families (riot / venture / bank chains),
+ * shared by the one-ply and beam searches so the anti-peek policy lives in one place.
+ * Returns the move to play by rule, or null when none applies and the search proceeds.
  */
-function onePlyLookahead(G: HegemonyState, moves: LegalMove[], score: (g: HegemonyState, p: PlayerId) => number): LegalMove {
+function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMove | null {
   const playerID = G.currentPlayer;
 
-  // A pending riot is a forced menu with a stochastic resolution — one-ply
-  // lookahead would "peek" the seeded die through the clone, so play it by rule
-  // instead: declare the resource-priced insurances (cheap certainty), skip the
-  // concession (bots shouldn't reason about which pop to sacrifice), then roll.
+  // A pending riot is a forced menu with a stochastic resolution — declare the
+  // resource-priced insurances (cheap certainty), skip the concession, then roll.
   const resolveRiot = moves.find((move) => move.type === "resolveRiot");
   if (resolveRiot) {
-    const insurance = moves.find(
-      (move) => move.type === "buyRiotInsurance" && move.optionId !== "concession"
-    );
+    const insurance = moves.find((move) => move.type === "buyRiotInsurance" && move.optionId !== "concession");
     return insurance ?? resolveRiot;
   }
 
-  // Ventures are stochastic too — the same peek problem — so gamble by rule: a
-  // gold-rich bot funds one expedition a turn (season-cycled so sims exercise all
-  // three tables), and never lets the lookahead see the roll.
+  // Ventures are stochastic too — a gold-rich bot funds one expedition a turn
+  // (season-cycled so sims exercise all three tables), never peeking the roll.
   const goldVentures = moves.filter(
     (move): move is Extract<LegalMove, { type: "fundExpedition" }> =>
       move.type === "fundExpedition" && move.stake === "gold"
@@ -71,9 +74,8 @@ function onePlyLookahead(G: HegemonyState, moves: LegalMove[], score: (g: Hegemo
     return goldVentures[G.season % goldVentures.length];
   }
 
-  // Bank chains (sell surplus → buy the missing colony wood) are invisible to
-  // one-ply search, so trade by rule: a material hoard gets sold when the coffers
-  // run dry; a wood-starved, gold-rich empire buys wood.
+  // Bank chains (sell surplus → buy the missing colony wood) are invisible to one-ply
+  // search: sell a hoard when the coffers run dry; buy wood when wood-starved, gold-rich.
   for (const material of ["stone", "wood", "food"] as const) {
     const sell = moves.find((move) => move.type === "bankSell" && move.material === material);
     if (sell && G.players[playerID].resources[material] > 40 && G.players[playerID].resources.gold < 10) {
@@ -86,9 +88,27 @@ function onePlyLookahead(G: HegemonyState, moves: LegalMove[], score: (g: Hegemo
     return woodBuy;
   }
 
+  return null;
+}
+
+/**
+ * One-ply lookahead shared by the greedy and smart bots: apply each candidate to a
+ * clone and keep the best score delta under `score`. Ends the turn when nothing
+ * improves the position. Deterministic — ties keep the first (enumeration-ordered)
+ * candidate. The two bots differ ONLY in the `score` function, so a greedy-vs-smart
+ * comparison isolates the evaluation, not the search.
+ */
+function onePlyLookahead(G: HegemonyState, moves: LegalMove[], score: (g: HegemonyState, p: PlayerId) => number): LegalMove {
+  const playerID = G.currentPlayer;
+
+  const byRule = resolveStochasticByRule(G, moves);
+  if (byRule) {
+    return byRule;
+  }
+
   const endTurn = moves.find((move) => move.type === "endTurn");
   const candidates = moves.filter(
-    (move) => move.type !== "endTurn" && move.type !== "fundExpedition"
+    (move) => !STOCHASTIC_MOVE_TYPES.has(move.type) && move.type !== "endTurn"
   );
 
   if (candidates.length === 0 && endTurn) {
@@ -265,10 +285,129 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
   return 120 * victoryCardsHeld(G, playerID) + 10 * heuristic + 2 * projectedHappiness + 2 * player.resources.influence;
 }
 
+/** Tunables for the within-turn beam search. Kept small so batch runtime stays sane; the
+ *  top-W frontier + depth cap bound the clones per decision. */
+const BEAM_WIDTH = 3;
+const BEAM_DEPTH = 4;
+
+/**
+ * A cheap clone for search: deep-copies only what the RNG-free gameplay mutators touch
+ * (players, board, transfers, and the rest of the small state) while SHARING the large
+ * static structures — the ruleset and both event decks — by reference, and resetting the
+ * log to a fresh array (mutators push to it; a shared array would be corrupted). Because
+ * the beam never applies a stochastic or deck-drawing move, none of the shared structures
+ * are mutated, so this is safe and roughly an order of magnitude lighter than cloning G.
+ */
+function cloneForSearch(G: HegemonyState): HegemonyState {
+  // `log` is destructured only to omit it from `rest` (a fresh array is used below).
+  const { ruleset, seasonalDrawPile, seasonalDiscardPile, playerDrawPile, playerDiscardPile, log: _log, ...rest } = G;
+  return {
+    ...structuredClone(rest),
+    ruleset,
+    seasonalDrawPile,
+    seasonalDiscardPile,
+    playerDrawPile,
+    playerDiscardPile,
+    log: [],
+  };
+}
+
+/**
+ * Within-turn beam search over the current player's RNG-free action sequence. Expands each
+ * frontier node by every branchable move, scores the resulting state with `score`, keeps the
+ * best W nodes per depth, and tracks the highest-scoring state reachable within BEAM_DEPTH
+ * actions. Commits the FIRST action of the best sequence (the bot re-plans next ply), or ends
+ * the turn when nothing beats the current position. Deterministic: no game RNG is read — the
+ * anti-peek invariant is asserted per branch — and ties break on enumeration order via a
+ * stable score sort.
+ */
+function beamPlan(G: HegemonyState, moves: LegalMove[], score: (g: HegemonyState, p: PlayerId) => number): LegalMove {
+  const playerID = G.currentPlayer;
+
+  // Stochastic families are played by rule (shared with one-ply), never searched.
+  const byRule = resolveStochasticByRule(G, moves);
+  if (byRule) {
+    return byRule;
+  }
+
+  const endTurn = moves.find((move) => move.type === "endTurn");
+
+  // A forced position (a pending event: no endTurn) is a single required choice — fall back
+  // to one-ply rather than beam-plan past a resolution whose effects may be stochastic.
+  if (!endTurn) {
+    return onePlyLookahead(G, moves, score);
+  }
+
+  const branchable = (list: LegalMove[]) =>
+    list.filter((move) => !STOCHASTIC_MOVE_TYPES.has(move.type) && move.type !== "endTurn");
+
+  const rootMoves = branchable(moves);
+  if (rootMoves.length === 0) {
+    return endTurn;
+  }
+
+  const rootScore = score(G, playerID);
+  const rngBefore = G.rng;
+
+  type Node = { state: HegemonyState; firstMove: LegalMove | null; score: number };
+  let frontier: Node[] = [{ state: G, firstMove: null, score: rootScore }];
+  // The best terminal reachable so far; the baseline is "end the turn now" (do nothing).
+  let best: { firstMove: LegalMove | null; score: number } = { firstMove: null, score: rootScore };
+
+  for (let depth = 0; depth < BEAM_DEPTH; depth += 1) {
+    const children: Node[] = [];
+
+    for (const node of frontier) {
+      const candidateMoves = depth === 0 ? rootMoves : branchable(enumerateLegalMoves(node.state, playerID));
+
+      for (const move of candidateMoves) {
+        const draft = cloneForSearch(node.state);
+        if (!applyMove(draft, playerID, move).ok) {
+          continue;
+        }
+        // Anti-peek invariant: an RNG-free branch must never advance the seeded stream.
+        if (draft.rng !== rngBefore) {
+          throw new Error(`beam branched on a stochastic move "${move.type}" — add it to STOCHASTIC_MOVE_TYPES`);
+        }
+
+        const firstMove = node.firstMove ?? move;
+        const nextScore = score(draft, playerID);
+        children.push({ state: draft, firstMove, score: nextScore });
+        if (nextScore > best.score) {
+          best = { firstMove, score: nextScore };
+        }
+      }
+    }
+
+    if (children.length === 0) {
+      break;
+    }
+
+    // Stable sort by score desc keeps enumeration order on ties → deterministic plans.
+    children.sort((a, b) => b.score - a.score);
+    frontier = children.slice(0, BEAM_WIDTH);
+  }
+
+  return best.firstMove && best.score > rootScore ? best.firstMove : endTurn;
+}
+
+/**
+ * The turn-planning bot: a within-turn beam search over {@link evaluateSmart}, so it values
+ * the multi-step plays one-ply misses (build-then-promote, save-then-upgrade, bank chains).
+ * Same scoring as `smart`, deeper search — so a smart-vs-beam A/B isolates search depth.
+ */
+export const beamPolicy: Policy = {
+  name: "beam",
+  choose(G, moves) {
+    return beamPlan(G, moves, evaluateSmart);
+  },
+};
+
 export const POLICIES: Record<PolicyId, Policy> = {
   random: randomPolicy,
   greedy: greedyPolicy,
   smart: smartPolicy,
+  beam: beamPolicy,
 };
 
 export function resolvePolicy(id: string): Policy {

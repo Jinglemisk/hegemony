@@ -42,6 +42,28 @@ the state, apply the move, score the result, keep the best; end the turn when
 nothing scores above the status quo. Forced situations (pending event) pick the
 best-scoring resolution.
 
+**`smart`** — the same one-ply search, but a richer score (pops by tier, materials
+by role, building room, Gymnasion synergy). See `evaluateSmart`.
+
+**`beam`** — a within-turn **beam search** over the `smart` score. A "decision" in
+Hegemony is not one move but a *sequence* ending in endTurn (turns run up to 30
+actions), and one-ply is greedy per step — it can't value a locally-worse first move
+that unlocks a much better second (build-then-promote, save-then-upgrade,
+sell-then-buy-then-build). The beam expands each frontier node by every branchable
+move, scores the resulting state, keeps the best `W` (=3) nodes per depth up to `D`
+(=4), and commits the FIRST action of the best sequence found, re-planning each ply.
+Same evaluation as smart, so a smart-vs-beam A/B isolates search depth from scoring.
+
+*Determinism / anti-peek (the crux):* the game RNG lives inside state (`G.rng`), so
+applying a stochastic move in a clone would reveal *this game's* seeded roll. The beam
+branches ONLY on the RNG-free move set — it excludes fundExpedition / riot / bank
+(played by the shared `resolveStochasticByRule` rules) and endTurn — so no clone ever
+advances `G.rng`. Non-peeking is therefore structural, not a patch: it's asserted per
+branch (`draft.rng === rngBefore`) and proven end-to-end by record→replay being
+byte-identical. `cloneForSearch` shares the ruleset + event decks by reference and
+resets the log, so each clone is ~an order of magnitude lighter than a full
+`structuredClone`.
+
 ### The evaluation function (the part worth tuning)
 
 ```
@@ -88,10 +110,9 @@ Difficulty = a `POLICIES` registry entry. The natural ladder, cheapest first:
 1. **Easy** — `random`, or "noisy greedy": score as greedy, pick uniformly
    among the top-N moves (N is the difficulty dial).
 2. **Medium** — `greedy` as-is.
-3. **Hard** — deeper search: 2-ply (candidate move + best reply to own next
-   move), beam search over the action *sequence within a turn* (turns are
-   multi-action, which one-ply ignores), or short rollouts reusing `runTurns`
-   with a cheap policy as the playout.
+3. **Hard** — `beam` (shipped): a within-turn beam search over the action
+   *sequence* (turns are multi-action, which one-ply ignores). Room to go further
+   still: 2-ply opponent replies, or short rollouts reusing `runTurns` as the playout.
 4. **Personalities** — same evaluate, different weight vectors (expander:
    pops/colonies up; builder: income up; zealot: happiness/influence up).
    Cheap asymmetry, pairs well with the national-ideas roadmap item.
