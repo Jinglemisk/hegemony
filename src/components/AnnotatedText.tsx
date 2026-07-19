@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { BuildingId, PopType, Resource } from "../game/types";
+import type { BuildingId, PopType, Resource, SettlementKind } from "../game/types";
 import { resourceCssVars } from "../ui/resourceVisuals";
 import { useCodexLink } from "./codexLink";
 import { AtlasIcon, ResourceIcon } from "./Sprites";
@@ -14,7 +14,10 @@ import { AtlasIcon, ResourceIcon } from "./Sprites";
 type Token =
   | { type: "resource"; key: Resource }
   | { type: "pop"; key: PopType }
-  | { type: "building"; key: BuildingId };
+  | { type: "building"; key: BuildingId }
+  | { type: "settlement"; key: SettlementKind }
+  // Concept terms have no glyph in the atlas — they carry their rulebook chapter directly.
+  | { type: "concept"; chapter: string };
 
 const TOKEN_MAP: Record<string, Token> = {
   wood: { type: "resource", key: "wood" },
@@ -52,7 +55,36 @@ const TOKEN_MAP: Record<string, Token> = {
   villa: { type: "building", key: "villa" },
   villas: { type: "building", key: "villa" },
   gymnasion: { type: "building", key: "gymnasion" },
-  gymnasions: { type: "building", key: "gymnasion" }
+  gymnasions: { type: "building", key: "gymnasion" },
+  // Settlements — their own atlas glyph, link to the Settlements chapter.
+  capital: { type: "settlement", key: "capital" },
+  capitals: { type: "settlement", key: "capital" },
+  metropolis: { type: "settlement", key: "capital" },
+  city: { type: "settlement", key: "city" },
+  cities: { type: "settlement", key: "city" },
+  colony: { type: "settlement", key: "colony" },
+  colonies: { type: "settlement", key: "colony" },
+  settlement: { type: "settlement", key: "city" },
+  settlements: { type: "settlement", key: "city" },
+  // Concept terms — no glyph, just a clay keyword that opens its chapter.
+  card: { type: "concept", chapter: "seasons" },
+  cards: { type: "concept", chapter: "seasons" },
+  event: { type: "concept", chapter: "seasons" },
+  events: { type: "concept", chapter: "seasons" },
+  season: { type: "concept", chapter: "seasons" },
+  seasons: { type: "concept", chapter: "seasons" },
+  omen: { type: "concept", chapter: "seasons" },
+  omens: { type: "concept", chapter: "seasons" },
+  venture: { type: "concept", chapter: "ventures" },
+  ventures: { type: "concept", chapter: "ventures" },
+  expedition: { type: "concept", chapter: "ventures" },
+  expeditions: { type: "concept", chapter: "ventures" },
+  riot: { type: "concept", chapter: "unrest" },
+  riots: { type: "concept", chapter: "unrest" },
+  revolt: { type: "concept", chapter: "unrest" },
+  unrest: { type: "concept", chapter: "unrest" },
+  victory: { type: "concept", chapter: "victory" },
+  bank: { type: "concept", chapter: "bank" }
 };
 
 // Longer words first so "citizens" wins over "citizen", etc.
@@ -64,10 +96,15 @@ const TOKEN_PATTERN = new RegExp(
 );
 
 function tokenIcon(token: Token) {
+  if (token.type === "concept") {
+    return null;
+  }
+
   if (token.type === "resource") {
     return <ResourceIcon resource={token.key} className="richIcon" />;
   }
 
+  // AtlasIcon's key space covers pops, buildings and settlement kinds.
   return <AtlasIcon icon={token.key} className="richIcon" />;
 }
 
@@ -80,6 +117,10 @@ function tokenChapter(token: Token): string {
       return "population";
     case "building":
       return "buildings";
+    case "settlement":
+      return "settlements";
+    case "concept":
+      return token.chapter;
   }
 }
 
