@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Assembly &amp; Politicians — Brainstorm Surface</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23181210'/%3E%3Cpath d='M9 13h14l-1.5 10a2 2 0 0 1-2 1.7h-7a2 2 0 0 1-2-1.7Z' fill='%231d4e6b'/%3E%3Ccircle cx='13' cy='17' r='1.5' fill='%23f4ebd6'/%3E%3Ccircle cx='19' cy='19' r='1.5' fill='%23f4ebd6'/%3E%3Ccircle cx='16' cy='15' r='1.5' fill='%23b5502e'/%3E%3C/svg%3E" />
+<style>
+  /* ────────────────────────────────────────────────────────────────────────
+     Greek-vase / Kerameikos ceramic. LIGHT = red-figure on parchment.
+     DARK  = black-figure inversion: dark slip ground, terracotta/parchment
+     figures. Aegean blue is RESERVED for politics/navigation — this whole
+     system IS politics, so it is the accent throughout.
+     No external webfonts, no CDN, no libraries. Single self-contained file.
+     ──────────────────────────────────────────────────────────────────────── */
+
+  :root {
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+
+    /* LIGHT — red-figure on parchment */
+    --bg:            #f4ebd6;
+    --bg-2:          #efe2c4;
+    --panel:         rgb(255 250 238 / 55%);
+    --ink:           #1c1a17;
+    --terracotta:    #b5502e;
+    --terracotta-dp: #8f3d22;
+    --ochre:         #a5691f;
+    --aegean:        #1d4e6b;
+    --aegean-soft:   rgb(29 78 107 / 12%);
+    --line:          rgb(28 26 23 / 15%);
+    --line-2:        rgb(28 26 23 / 8%);
+    --line-clay:     rgb(181 80 46 / 40%);
+    --muted:         rgb(28 26 23 / 62%);
+    --subtle:        rgb(28 26 23 / 44%);
+    --field-bg:      rgb(255 250 238 / 72%);
+    --field-line:    rgb(28 26 23 / 22%);
+    --open:          #b5502e;   /* terracotta = OPEN / undecided */
+    --locked:        #1d4e6b;   /* aegean = LOCKED / decided */
+
+    /* politician chips — muted ceramic, never neon */
+    --pol-strat:  #9c3a2e;  /* Stratokles — wary crimson */
+    --pol-demo:   #7a7333;  /* Demosthenes — olive / wheat */
+    --pol-perd:   #5f7385;  /* Perdiccas — stone / urban grey-blue */
+    --pol-kleis:  #4a6b45;  /* Kleistophenes — frontier green */
+
+    color: var(--ink);
+    background: var(--bg);
+    font-family: var(--serif);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-synthesis: none;
+  }
+
+  /* DARK — black-figure inversion */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:            #181210;
+      --bg-2:          #211812;
+      --panel:         rgb(240 227 198 / 4%);
+      --ink:           #efe1c2;
+      --terracotta:    #d0673f;
+      --terracotta-dp: #b5502e;
+      --ochre:         #d1912f;
+      --aegean:        #5aa3c9;
+      --aegean-soft:   rgb(90 163 201 / 16%);
+      --line:          rgb(240 227 198 / 16%);
+      --line-2:        rgb(240 227 198 / 8%);
+      --line-clay:     rgb(208 103 63 / 44%);
+      --muted:         rgb(240 227 198 / 60%);
+      --subtle:        rgb(240 227 198 / 40%);
+      --field-bg:      rgb(240 227 198 / 5%);
+      --field-line:    rgb(240 227 198 / 22%);
+      --open:          #d0673f;
+      --locked:        #5aa3c9;
+
+      --pol-strat:  #c65c48;
+      --pol-demo:   #b3a24d;
+      --pol-perd:   #8ba3b5;
+      --pol-kleis:  #7ba070;
+    }
+  }
+  /* manual override wins in both directions */
+  :root[data-theme="dark"] {
+    --bg:            #181210;
+    --bg-2:          #211812;
+    --panel:         rgb(240 227 198 / 4%);
+    --ink:           #efe1c2;
+    --terracotta:    #d0673f;
+    --terracotta-dp: #b5502e;
+    --ochre:         #d1912f;
+    --aegean:        #5aa3c9;
+    --aegean-soft:   rgb(90 163 201 / 16%);
+    --line:          rgb(240 227 198 / 16%);
+    --line-2:        rgb(240 227 198 / 8%);
+    --line-clay:     rgb(208 103 63 / 44%);
+    --muted:         rgb(240 227 198 / 60%);
+    --subtle:        rgb(240 227 198 / 40%);
+    --field-bg:      rgb(240 227 198 / 5%);
+    --field-line:    rgb(240 227 198 / 22%);
+    --open:          #d0673f;
+    --locked:        #5aa3c9;
+    --pol-strat:  #c65c48;
+    --pol-demo:   #b3a24d;
+    --pol-perd:   #8ba3b5;
+    --pol-kleis:  #7ba070;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background: var(--bg);
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 clamp(18px, 4vw, 48px) 96px;
+  }
+
+  /* ── inscriptional headings ─────────────────────────────────────────────── */
+  .kicker {
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--aegean);
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 4.4vw, 3rem);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+    line-height: 1.08;
+    margin: 0 0 14px;
+  }
+  h2 {
+    font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 0;
+  }
+  h3 {
+    font-size: 0.98rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  p { margin: 0 0 10px; }
+  a { color: var(--aegean); }
+
+  .lede { color: var(--muted); font-size: 1.02rem; max-width: 62ch; }
+
+  /* section shell — hairline frame only, no nested boxes, no shadows */
+  section { margin-top: 64px; }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-clay);
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .sec-no {
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    color: var(--terracotta);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .sec-sub { color: var(--subtle); font-size: 0.88rem; letter-spacing: 0.02em; }
+
+  /* ── header + top action bar ────────────────────────────────────────────── */
+  header { padding-top: 44px; }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 20px; flex-wrap: wrap;
+  }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    font-family: var(--serif);
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--field-line);
+    border-radius: 2px;
+    padding: 9px 15px;
+    cursor: pointer;
+    transition: border-color .16s ease, color .16s ease, background .16s ease;
+  }
+  .btn:hover { border-color: var(--aegean); color: var(--aegean); }
+  .btn.danger:hover { border-color: var(--terracotta); color: var(--terracotta); }
+  .btn.primary { border-color: var(--aegean); color: var(--aegean); }
+
+  /* status strip — LOCKED vs OPEN */
+  .status-strip {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0;
+    border: 1px solid var(--line);
+  }
+  .status-cell { padding: 18px 20px; border-right: 1px solid var(--line); }
+  .status-cell:last-child { border-right: 0; }
+  .status-cell .qid { font-size: 0.74rem; letter-spacing: 0.16em; color: var(--subtle); text-transform: uppercase; }
+  .status-cell .qwhat { font-size: 1rem; margin: 4px 0 10px; letter-spacing: 0.02em; }
+  .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 2px;
+    border: 1px solid;
+  }
+  .tag.locked  { color: var(--locked); border-color: var(--locked); }
+  .tag.partly  { color: var(--ochre);  border-color: var(--ochre); }
+  .tag.open    { color: var(--open);   border-color: var(--open); }
+
+  .linchpin {
+    margin-top: 22px;
+    padding: 16px 20px;
+    border-left: 3px solid var(--terracotta);
+    color: var(--ink);
+  }
+  .linchpin b { color: var(--terracotta); }
+
+  .locked-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .chip {
+    font-size: 0.82rem;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--locked);
+    padding: 8px 12px;
+    letter-spacing: 0.01em;
+  }
+  .chip small { display: block; color: var(--subtle); letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.64rem; margin-bottom: 2px; }
+
+  /* generic wide-scroll container */
+  .scroll-x { overflow-x: auto; padding-bottom: 6px; }
+
+  /* ── loop diagram ───────────────────────────────────────────────────────── */
+  .loop-svg { width: 100%; min-width: 720px; height: auto; display: block; }
+  .loop-note {
+    margin-top: 18px; color: var(--muted); font-size: 0.92rem; max-width: 74ch;
+  }
+  .loop-note b { color: var(--terracotta); }
+
+  /* ── politician cards ───────────────────────────────────────────────────── */
+  .pol-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(238px, 1fr));
+    gap: 20px;
+  }
+  .pol-card {
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--chip);
+    padding: 18px 18px 16px;
+    display: flex; flex-direction: column;
+  }
+  .pol-card .pol-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--chip); font-weight: 600; margin-bottom: 10px;
+  }
+  .pol-chip .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--chip); }
+  .pol-card .pol-name { font-size: 1.08rem; letter-spacing: 0.03em; font-weight: 600; }
+  .pol-card .pol-epi  { font-style: italic; color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; }
+  .pol-card .pol-role { font-size: 0.88rem; color: var(--ink); margin-bottom: 14px; }
+  .pol-card .pol-role .lead-flag {
+    display: inline-block; margin-top: 8px; font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--terracotta); border: 1px solid var(--line-clay);
+    padding: 2px 7px; border-radius: 2px;
+  }
+  .field-label {
+    font-size: 0.66rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--subtle); margin: 0 0 5px;
+  }
+  textarea {
+    width: 100%;
+    font-family: var(--serif);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--field-bg);
+    border: 1px solid var(--field-line);
+    border-radius: 2px;
+    padding: 9px 11px;
+    resize: vertical;
+    margin-top: auto;
+  }
+  textarea:focus { outline: 2px solid var(--aegean); outline-offset: 1px; }
+  textarea::placeholder { color: var(--subtle); font-style: italic; }
+  .pol-card textarea { min-height: 92px; }
+
+  /* ── flow strip ─────────────────────────────────────────────────────────── */
+  .flow { display: flex; align-items: stretch; gap: 0; min-width: 900px; }
+  .flow-step {
+    flex: 1; min-width: 148px;
+    border: 1px solid var(--line);
+    border-right: 0;
+    padding: 16px 15px;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .flow-step:last-child { border-right: 1px solid var(--line); }
+  .flow-step::after {
+    content: "›";
+    position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
+    font-size: 1.3rem; color: var(--subtle); z-index: 2;
+    background: var(--bg); line-height: 1; padding: 2px 0;
+  }
+  .flow-step:last-child::after { content: none; }
+  .flow-step .step-n { font-size: 0.66rem; letter-spacing: 0.16em; color: var(--subtle); }
+  .flow-step .step-t { font-size: 0.9rem; letter-spacing: 0.02em; margin: 5px 0 9px; font-weight: 600; }
+  .flow-step .step-d { font-size: 0.8rem; color: var(--muted); }
+  .flow-step.is-open { border-top: 3px solid var(--open); }
+  .flow-step.is-locked { border-top: 3px solid var(--locked); }
+
+  /* ── tunables playground ────────────────────────────────────────────────── */
+  .tune-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 26px 34px;
+  }
+  .tune {
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+  .tune .tune-name { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .tune .tune-name h3 { margin: 0; }
+  .tune .tune-val { font-size: 0.76rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--aegean); font-weight: 600; }
+  .tune .imp {
+    margin-top: 10px; font-size: 0.86rem; color: var(--muted); line-height: 1.5;
+    border-left: 2px solid var(--line-clay); padding-left: 12px; min-height: 3em;
+  }
+
+  .seg {
+    display: inline-flex; flex-wrap: wrap; gap: 0;
+    border: 1px solid var(--line); border-radius: 2px; overflow: hidden;
+    margin-top: 12px;
+  }
+  .seg button {
+    font-family: var(--serif); font-size: 0.78rem; letter-spacing: 0.03em;
+    color: var(--muted); background: transparent; border: 0;
+    border-right: 1px solid var(--line);
+    padding: 8px 13px; cursor: pointer;
+    transition: background .14s ease, color .14s ease;
+  }
+  .seg button:last-child { border-right: 0; }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"] {
+    background: var(--aegean-soft); color: var(--aegean); font-weight: 600;
+    box-shadow: inset 0 -2px 0 var(--aegean);
+  }
+
+  input[type="range"] {
+    width: 100%; margin: 16px 0 0; accent-color: var(--aegean);
+    background: transparent;
+  }
+  .range-scale { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--subtle); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+
+  /* ── open questions ─────────────────────────────────────────────────────── */
+  .q-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+  .q-card { border: 1px solid var(--line); border-left: 3px solid var(--aegean); padding: 16px 17px; display: flex; flex-direction: column; }
+  .q-card .q-n { font-size: 0.68rem; letter-spacing: 0.16em; color: var(--aegean); text-transform: uppercase; }
+  .q-card .q-t { font-size: 0.96rem; margin: 6px 0 8px; font-weight: 600; letter-spacing: 0.01em; }
+  .q-card .q-d { font-size: 0.84rem; color: var(--muted); margin-bottom: 12px; }
+  .q-card .lean-row { margin-bottom: 12px; }
+  .q-card textarea { min-height: 74px; }
+
+  /* ── pros & cons ────────────────────────────────────────────────────────── */
+  .pc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); }
+  .pc-col { padding: 22px 24px; }
+  .pc-col.pros { border-right: 1px solid var(--line); }
+  .pc-col h3 { margin-bottom: 14px; }
+  .pc-col.pros h3 { color: var(--aegean); }
+  .pc-col.cons h3 { color: var(--terracotta); }
+  .pc-col ul { list-style: none; margin: 0; padding: 0; }
+  .pc-col li { font-size: 0.88rem; color: var(--ink); padding: 9px 0; border-top: 1px solid var(--line-2); }
+  .pc-col li:first-child { border-top: 0; }
+  .pc-col li b { color: var(--ink); }
+
+  /* ── scratchpad + export ────────────────────────────────────────────────── */
+  #scratch { min-height: 160px; }
+  #exportBox { min-height: 220px; margin-top: 14px; font-size: 0.82rem; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; display: none; }
+  .export-hint { font-size: 0.82rem; color: var(--muted); margin-top: 10px; }
+
+  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--subtle); }
+
+  /* responsive */
+  @media (max-width: 720px) {
+    .pc-grid { grid-template-columns: 1fr; }
+    .pc-col.pros { border-right: 0; border-bottom: 1px solid var(--line); }
+    .status-cell { border-right: 0; border-bottom: 1px solid var(--line); }
+    .status-cell:last-child { border-bottom: 0; }
+  }
+  .toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--aegean); color: var(--bg); padding: 10px 20px; border-radius: 2px;
+    font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+    opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ═══ HEADER + STATUS STRIP ═══════════════════════════════════════════ -->
+  <header>
+    <div class="topbar">
+      <div>
+        <p class="kicker">Hegemony · Phase 3-B · Politics Pillar</p>
+        <h1>The Assembly &amp;<br>Politicians</h1>
+        <p class="lede">A working surface to visualise and brainstorm the not-yet-designed political layer. Everything here is drawn from the research doc — no new game facts invented. Jot, lean, tune, then export your notes back to Claude.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" id="themeBtn" title="Toggle light / dark">◐ Theme</button>
+        <button class="btn primary" id="exportBtn">Export notes</button>
+        <button class="btn danger" id="resetBtn">Reset</button>
+      </div>
+    </div>
+
+    <div class="status-strip">
+      <div class="status-cell">
+        <div class="qid">Q27 · Cadence &amp; core model</div>
+        <div class="qwhat">When &amp; how the Assembly convenes</div>
+        <span class="tag partly">Partly locked</span>
+      </div>
+      <div class="status-cell">
+        <div class="qid">Q28 · Resolution deck &amp; verbs</div>
+        <div class="qwhat">The cards and the influence sinks</div>
+        <span class="tag open">Open · blank</span>
+      </div>
+      <div class="status-cell">
+        <div class="qid">Q29 · Politicians layer</div>
+        <div class="qwhat">Power track, patrons, leader-check</div>
+        <span class="tag open">Open · blank</span>
+      </div>
+    </div>
+
+    <div class="linchpin">
+      <p style="margin:0"><b>Why this is the linchpin.</b> Influence has almost no sink until the Assembly exists. The greedy-vs-smart sim proved the hole: the citizen line banks <b>52 influence</b> (4.1/turn, 42% citizens) and <b>loses</b> the race to naive colony sprawl — because there is nothing to spend influence on. The Assembly is Influence's primary job.</p>
+    </div>
+
+    <div class="locked-chips">
+      <div class="chip"><small>Q27 locked · 1</small>First Assembly = <b>Spring of Year 3</b> (none on the opening spring)</div>
+      <div class="chip"><small>Q27 locked · 2</small>Players <b>CHOOSE</b> resolutions — they don't draw them</div>
+      <div class="chip"><small>Q27 locked · 3</small>A <b>mode that pops over the map</b>, toggleable — shows all 4 politicians' cards</div>
+    </div>
+  </header>
+
+  <!-- ═══ 2 · THE INFLUENCE-SINK LOOP ═════════════════════════════════════ -->
+  <section id="loop">
+    <div class="sec-head">
+      <span class="sec-no">02</span>
+      <h2>The Influence-Sink Loop</h2>
+      <span class="sec-sub">citizens → influence → political power → resolutions → back to the citizen line</span>
+    </div>
+
+    <div class="scroll-x">
+      <svg class="loop-svg" viewBox="0 0 920 400" role="img" aria-label="The influence-sink loop diagram">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="var(--aegean)"/>
+          </marker>
+          <marker id="ahc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="var(--terracotta)"/>
+          </marker>
+        </defs>
+
+        <!-- nodes -->
+        <g font-family="var(--serif)" text-anchor="middle">
+          <!-- Citizens -->
+          <rect x="70" y="46" width="200" height="70" fill="none" stroke="var(--line-clay)"/>
+          <text x="170" y="78" fill="var(--ink)" font-size="17" letter-spacing="1.5" font-weight="600">CITIZENS</text>
+          <text x="170" y="99" fill="var(--muted)" font-size="12">the tier-2 / ladder line</text>
+
+          <!-- Influence -->
+          <rect x="650" y="46" width="200" height="70" fill="none" stroke="var(--line-clay)"/>
+          <text x="750" y="78" fill="var(--ink)" font-size="17" letter-spacing="1.5" font-weight="600">INFLUENCE</text>
+          <text x="750" y="99" fill="var(--muted)" font-size="12">+1 per citizen · never bankable</text>
+
+          <!-- Political power -->
+          <rect x="650" y="284" width="200" height="70" fill="none" stroke="var(--line-clay)"/>
+          <text x="750" y="316" fill="var(--ink)" font-size="17" letter-spacing="1.5" font-weight="600">POLITICAL POWER</text>
+          <text x="750" y="337" fill="var(--muted)" font-size="12">votes · patrons · power track</text>
+
+          <!-- Resolutions -->
+          <rect x="70" y="284" width="200" height="70" fill="none" stroke="var(--line-clay)"/>
+          <text x="170" y="316" fill="var(--ink)" font-size="17" letter-spacing="1.5" font-weight="600">RESOLUTIONS</text>
+          <text x="170" y="337" fill="var(--muted)" font-size="12">Ruleset patches, active on the board</text>
+        </g>
+
+        <!-- edges -->
+        <g font-family="var(--serif)" fill="var(--muted)" font-size="12" text-anchor="middle">
+          <!-- Citizens -> Influence (top) -->
+          <line x1="270" y1="81" x2="642" y2="81" stroke="var(--aegean)" stroke-width="1.6" marker-end="url(#ah)"/>
+          <text x="456" y="70" fill="var(--aegean)">earn influence</text>
+
+          <!-- Influence -> Political Power (right, the SINK) -->
+          <line x1="750" y1="116" x2="750" y2="278" stroke="var(--terracotta)" stroke-width="2" marker-end="url(#ahc)"/>
+          <text x="884" y="196" fill="var(--terracotta)" text-anchor="middle" font-weight="600" transform="rotate(90 884 196)">SPEND AT THE ASSEMBLY · the missing sink</text>
+
+          <!-- Political Power -> Resolutions (bottom) -->
+          <line x1="650" y1="319" x2="278" y2="319" stroke="var(--aegean)" stroke-width="1.6" marker-end="url(#ah)"/>
+          <text x="464" y="340" fill="var(--aegean)">choose · vote · enact</text>
+
+          <!-- Resolutions -> Citizens (left) -->
+          <line x1="170" y1="284" x2="170" y2="122" stroke="var(--aegean)" stroke-width="1.6" marker-end="url(#ah)"/>
+          <text x="36" y="204" fill="var(--aegean)" text-anchor="middle" transform="rotate(-90 36 204)">bend the economy back</text>
+        </g>
+
+        <!-- today marker -->
+        <g>
+          <line x1="620" y1="200" x2="720" y2="200" stroke="var(--terracotta)" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="614" y="192" fill="var(--terracotta)" font-family="var(--serif)" font-size="11.5" text-anchor="end" font-style="italic">TODAY: this edge barely exists —</text>
+          <text x="614" y="208" fill="var(--terracotta)" font-family="var(--serif)" font-size="11.5" text-anchor="end" font-style="italic">52 influence banked, nowhere to go.</text>
+        </g>
+      </svg>
+    </div>
+
+    <p class="loop-note"><b>Read it as one motion:</b> citizens generate influence; the Assembly is the one place that influence is <em>spent</em> to buy political power; that power enacts resolutions; resolutions bend the economy back toward the citizen line — which makes more citizens. The whole point of the Assembly is to close the terracotta edge. Until it ships, the citizen line can't pay, and the smart bot has nothing to spend on.</p>
+  </section>
+
+  <!-- ═══ 3 · THE FOUR POLITICIANS ════════════════════════════════════════ -->
+  <section id="politicians">
+    <div class="sec-head">
+      <span class="sec-no">03</span>
+      <h2>The Four Politicians</h2>
+      <span class="sec-sub">every resolution belongs to one · controlling a politician grants a patron buff</span>
+    </div>
+
+    <div class="pol-grid">
+      <!-- Stratokles -->
+      <div class="pol-card" style="--chip: var(--pol-strat);">
+        <span class="pol-chip"><span class="dot"></span>Cunning Populist</span>
+        <div class="pol-name">Stratokles Stratoklid</div>
+        <div class="pol-epi">the ostracism theme</div>
+        <div class="pol-role">The <b>leader-check</b> (the Catan-robber pattern). His resolutions target the current victory-card leader — a pooled pot every player pays into that hits whoever's ahead. The anti-runaway valve emerges from votes, not automation.
+          <span class="lead-flag">★ Anti-runaway · fires by consent</span>
+        </div>
+        <p class="field-label">Resolution ideas</p>
+        <textarea data-persist="pol-strat-notes" data-label="Stratokles — notes" placeholder="e.g. Ostracism: pool 1 influence/player → strip the leader of a standing buff…"></textarea>
+      </div>
+
+      <!-- Demosthenes -->
+      <div class="pol-card" style="--chip: var(--pol-demo);">
+        <span class="pol-chip"><span class="dot"></span>Agricultural Reformer</span>
+        <div class="pol-name">Demosthenes Archimenid</div>
+        <div class="pol-epi">olive &amp; wheat</div>
+        <div class="pol-role">The farm agenda. Resolutions bend yields, food and the ladder's food costs. Recommended patron buff: <b>ladder food costs −1</b> for whoever controls him. Rewards commitment to the agricultural line.</div>
+        <p class="field-label">Resolution ideas</p>
+        <textarea data-persist="pol-demo-notes" data-label="Demosthenes — notes" placeholder="e.g. Land Reform: +1 food yield on all farms for one year…"></textarea>
+      </div>
+
+      <!-- Perdiccas -->
+      <div class="pol-card" style="--chip: var(--pol-perd);">
+        <span class="pol-chip"><span class="dot"></span>Urban Planner</span>
+        <div class="pol-name">Perdiccas Tyrpanid</div>
+        <div class="pol-epi">stone &amp; the polis</div>
+        <div class="pol-role">The city agenda. Resolutions touch upgrade costs, bank rates, building costs and the happiness/unrest structure. His patron buff should reward the city-and-commerce build on existing levers.</div>
+        <p class="field-label">Resolution ideas</p>
+        <textarea data-persist="pol-perd-notes" data-label="Perdiccas — notes" placeholder="e.g. Public Works: colony→city upgrade cost −1 while active…"></textarea>
+      </div>
+
+      <!-- Kleistophenes -->
+      <div class="pol-card" style="--chip: var(--pol-kleis);">
+        <span class="pol-chip"><span class="dot"></span>Rural Expansionist</span>
+        <div class="pol-name">Kleistophenes Hippaid</div>
+        <div class="pol-epi">the frontier</div>
+        <div class="pol-role">The expansion agenda. Resolutions bend colony cost, calm cost and frontier yields — the pull toward sprawl the sim showed already wins. A chance to make expansion a <em>political</em> choice, not a default.</div>
+        <p class="field-label">Resolution ideas</p>
+        <textarea data-persist="pol-kleis-notes" data-label="Kleistophenes — notes" placeholder="e.g. Settlement Act: colony cost −1, calm cost +1 (cheap land, restless)…"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 4 · THE ASSEMBLY FLOW ═══════════════════════════════════════════ -->
+  <section id="flow">
+    <div class="sec-head">
+      <span class="sec-no">04</span>
+      <h2>The Assembly Flow</h2>
+      <span class="sec-sub">the owner's model · aegean steps are locked, terracotta steps are still OPEN</span>
+    </div>
+
+    <div class="scroll-x">
+      <div class="flow">
+        <div class="flow-step is-locked">
+          <span class="step-n">01 · Locked</span>
+          <span class="step-t">New year</span>
+          <span class="step-d">Spring, Year 3. Shares the <em>isNewYear</em> hook with the yearly omen — resolves before the opener's turn.</span>
+        </div>
+        <div class="flow-step is-locked">
+          <span class="step-n">02 · Locked</span>
+          <span class="step-t">Mode pops over map</span>
+          <span class="step-d">A full surface you toggle into — not a modal squeezed into the airy grid. The sanctioned density valve.</span>
+        </div>
+        <div class="flow-step is-locked">
+          <span class="step-n">03 · Locked</span>
+          <span class="step-t">4 politicians shown</span>
+          <span class="step-d">Players are shown each of the four politicians' resolution cards, laid open. Full information.</span>
+        </div>
+        <div class="flow-step is-locked">
+          <span class="step-n">04 · Locked</span>
+          <span class="step-t">Players CHOOSE</span>
+          <span class="step-d">Selection replaces the draw. Political outcome becomes agency, not luck of the shuffle.</span>
+        </div>
+        <div class="flow-step is-open">
+          <span class="step-n">05 · OPEN</span>
+          <span class="step-t">Vote? · what verbs?</span>
+          <span class="step-d">Does a yay/nay vote still happen on top of the pick, or is choosing == enacting, gated only by influence cost? Undecided — and it decides whether votes even matter (Q1, Q2).</span>
+        </div>
+        <div class="flow-step is-open">
+          <span class="step-n">06 · Semi-open</span>
+          <span class="step-t">Resolutions persist</span>
+          <span class="step-d">Passed resolutions become active in the "center of the board" and stand until repealed — accumulating standing modifiers to keep legible.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 5 · TUNABLES PLAYGROUND ═════════════════════════════════════════ -->
+  <section id="tunables">
+    <div class="sec-head">
+      <span class="sec-no">05</span>
+      <h2>Tunables Playground</h2>
+      <span class="sec-sub">feel out the §4 dials · every one is a Ruleset tunable or data edit, no engine surgery</span>
+    </div>
+
+    <div class="tune-grid">
+      <!-- Cadence -->
+      <div class="tune">
+        <div class="tune-name"><h3>Cadence</h3></div>
+        <div class="seg" data-toggle-group data-persist="play-cadence" data-default="Year 3, every spring" data-label="Cadence">
+          <button data-val="Year 3, every spring">Yr 3 · yearly</button>
+          <button data-val="Year 2, every spring">Yr 2 · yearly</button>
+          <button data-val="Year 3, every other year">Yr 3 · biennial</button>
+        </div>
+        <div class="imp" data-imp="play-cadence"></div>
+      </div>
+
+      <!-- Vote formula -->
+      <div class="tune">
+        <div class="tune-name"><h3>Vote formula</h3></div>
+        <div class="seg" data-toggle-group data-persist="play-vote" data-default="1 + 1 per 4 citizens" data-label="Vote formula">
+          <button data-val="Flat 1 / player">Flat</button>
+          <button data-val="1 + 1 per 4 citizens">1 + 1/4 cit.</button>
+          <button data-val="Soft-cap curve">Soft cap</button>
+        </div>
+        <div class="imp" data-imp="play-vote"></div>
+      </div>
+
+      <!-- Tie handling -->
+      <div class="tune">
+        <div class="tune-name"><h3>Tie handling</h3></div>
+        <div class="seg" data-toggle-group data-persist="play-tie" data-default="Ties FAIL" data-label="Tie handling">
+          <button data-val="Ties FAIL">Fail</button>
+          <button data-val="Ties PASS">Pass</button>
+          <button data-val="Status quo holds">Status quo</button>
+        </div>
+        <div class="imp" data-imp="play-tie"></div>
+      </div>
+
+      <!-- Influence verb cost -->
+      <div class="tune">
+        <div class="tune-name"><h3>Influence verb cost</h3><span class="tune-val" data-val-out="play-infcost"></span></div>
+        <input type="range" min="1" max="5" step="1" value="3" data-persist="play-infcost" data-label="Influence verb cost (sink depth)" />
+        <div class="range-scale"><span>Cheap</span><span>The sink depth</span><span>Expensive</span></div>
+        <div class="imp" data-imp="play-infcost"></div>
+      </div>
+
+      <!-- Stratokles severity -->
+      <div class="tune">
+        <div class="tune-name"><h3>Stratokles severity</h3><span class="tune-val" data-val-out="play-strat"></span></div>
+        <input type="range" min="1" max="5" step="1" value="3" data-persist="play-strat" data-label="Stratokles severity" />
+        <div class="range-scale"><span>Gentle</span><span>Anti-runaway knob</span><span>Brutal</span></div>
+        <div class="imp" data-imp="play-strat"></div>
+      </div>
+
+      <!-- Political victory -->
+      <div class="tune">
+        <div class="tune-name"><h3>Political victory</h3></div>
+        <div class="seg" data-toggle-group data-persist="play-polvictory" data-default="Off (v1)" data-label="Political victory">
+          <button data-val="Off (v1)">Off</button>
+          <button data-val="On">On · double votes</button>
+        </div>
+        <div class="imp" data-imp="play-polvictory"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 6 · THE EIGHT OPEN QUESTIONS ════════════════════════════════════ -->
+  <section id="questions">
+    <div class="sec-head">
+      <span class="sec-no">06</span>
+      <h2>The Eight Open Questions</h2>
+      <span class="sec-sub">§5 · the actual decision list · lean and jot on each</span>
+    </div>
+
+    <div class="q-grid">
+      <!-- Q1 -->
+      <div class="q-card">
+        <span class="q-n">Q1 · Flow</span>
+        <div class="q-t">The moment-to-moment flow under choose-not-draw?</div>
+        <div class="q-d">Do all players see the 4 menus and propose/select one (paying influence), then the Assembly <em>votes</em> on the set? Or does selecting == enacting, gated purely by cost — no yay/nay? This decides whether "votes" even matter.</div>
+        <div class="lean-row">
+          <p class="field-label">Lean</p>
+          <div class="seg" data-toggle-group data-persist="q1-lean" data-label="Q1 lean">
+            <button data-val="Vote on top">Vote on top</button>
+            <button data-val="Undecided">Undecided</button>
+            <button data-val="Select = enact">Select = enact</button>
+          </div>
+        </div>
+        <textarea data-persist="q1-notes" data-label="Q1 notes" placeholder="Your answer…"></textarea>
+      </div>
+
+      <!-- Q2 -->
+      <div class="q-card">
+        <span class="q-n">Q2 · Verbs</span>
+        <div class="q-t">So what are the influence verbs now?</div>
+        <div class="q-d">Draw / play / exchange are stale — they presume a drawn hand. Candidate choose-model verbs: <b>propose</b> onto the ballot · <b>add votes</b> (weight your yay/nay) · <b>veto</b> (once) · <b>propose-repeal</b>. Pin the set and its costs — that IS the sink.</div>
+        <div class="lean-row">
+          <p class="field-label">Lean</p>
+          <div class="seg" data-toggle-group data-persist="q2-lean" data-label="Q2 lean">
+            <button data-val="Rich verb set">Rich set</button>
+            <button data-val="Undecided">Undecided</button>
+            <button data-val="Minimal (cost-gated pick)">Minimal</button>
+          </div>
+        </div>
+        <textarea data-persist="q2-notes" data-label="Q2 notes" placeholder="Your answer…"></textarea>
+      </div>
+
+      <!-- Q3 -->
+      <div class="q-card">
+        <span class="q-n">Q3 · Politician layer</span>
+        <div class="q-t">How thin is the politician layer in v1?</div>
+        <div class="q-d">Ratify or amend the rec: power track + patron buff + leader-check; <em>no</em> politician victory, <em>no</em> danger track. Each passed resolution → +1 power to its politician; top contributor is patron. Define each patron buff on existing levers.</div>
+        <div class="lean-row">
+          <p class="field-label">Lean</p>
+          <div class="seg" data-toggle-group data-persist="q3-lean" data-label="Q3 lean">
+            <button data-val="Thin (as rec)">Thin</button>
+            <button data-val="Undecided">Undecided</button>
+            <button data-val="Richer">Richer</button>
+          </div>
+        </div>
+        <textarea data-persist="q3-notes" data-label="Q3 notes" placeholder="Your answer…"></textarea>
+      </div>
+
+      <!-- Q4 -->
+      <div class="q-card">
+        <span class="q-n">Q4 · Stratokles</span>
+        <div class="q-t">How does Stratokles's leader-check fire and resolve?</div>
+        <div class="q-d">Pot mechanics: who pays, how much hits the leader, how often it can appear. This is the anti-runaway valve — get it right or it reads as bash-the-leader. The victory-card leader is already computed (tie→null) for it to target.</div>
+        <div class="lean-row">
+          <p class="field-label">Lean</p>
+          <div class="seg" data-toggle-group data-persist="q4-lean" data-label="Q4 lean">
+            <button data-val="Pooled-pot ostracism">Pooled pot</button>
+            <button data-val="Undecided">Undecided</button>
+            <button data-val="Different mechanic">Rework</button>
+          </div>
+        </div>
+        <textarea data-persist="q4-notes" data-label="Q4 notes" placeholder="Your answer…"></textarea>
+      </div>
+
+      <!-- Q5 -->
+      <div class="q-card">
+        <span class="q-n">Q5 · Runaway</span>
+        <div class="q-t">Vote scaling &amp; political runaway.</div>
+        <div class="q-d">If votes scale with citizens, the economic leader is <em>also</em> the political leader. Decide the vote curve / cap, and whether political victory ("double everyone's votes") ships in v1 at all — it could snowball.</div>
+        <div class="lean-row">
+          <p class="field-label">Lean</p>
+          <div class="seg" data-toggle-group data-persist="q5-lean" data-label="Q5 lean">
+            <button data-val="Soft-cap, no pol-victory">Soft cap</button>
+            <button data-val="Undecided">Undecided</button>
+            <button data-val="Raw scaling + pol-victory">Raw + win</button>
+          </div>
+        </div>
+        <textarea data-persist="q5-notes" data-label="Q5 notes" placeholder="Your answer…"></textarea>
+      </div>
+
+      <!-- Q6 -->
+      <div class="q-card">
+        <span class="q-n">Q6 · Cadence sanity</span>
+        <div class="q-t">Is the Year-3 slow burn intended?</div>
+        <div class="q-d">First Assembly at Year 3 means ~half a typical game (race wins land ~yr 4.8–5) has <em>no</em> political layer. Confirm the slow burn is correct, or pull it to Year 2 so the payoff doesn't feel bolted-on.</div>
+        <div class="lean-row">
+          <p class="field-label">Lean</p>
+          <div class="seg" data-toggle-group data-persist="q6-lean" data-label="Q6 lean">
+            <button data-val="Year 3 slow burn">Year 3</button>
+            <button data-val="Undecided">Undecided</button>
+            <button data-val="Pull to Year 2">Year 2</button>
+          </div>
+        </div>
+        <textarea data-persist="q6-notes" data-label="Q6 notes" placeholder="Your answer…"></textarea>
+      </div>
+
+      <!-- Q7 -->
+      <div class="q-card">
+        <span class="q-n">Q7 · Surface</span>
+        <div class="q-t">How is the "mode over the map" mounted?</div>
+        <div class="q-d">Full-screen surface: engine-state mount (like the omen, on a year≠seen gate) or player-triggered (an ActiveModal kind)? Confirm it rides the ModalShell dial + route model, and lands the deferred dossier / deep-links with it.</div>
+        <div class="lean-row">
+          <p class="field-label">Lean</p>
+          <div class="seg" data-toggle-group data-persist="q7-lean" data-label="Q7 lean">
+            <button data-val="Engine-state mount">Engine mount</button>
+            <button data-val="Undecided">Undecided</button>
+            <button data-val="Player-triggered modal">Player-triggered</button>
+          </div>
+        </div>
+        <textarea data-persist="q7-notes" data-label="Q7 notes" placeholder="Your answer…"></textarea>
+      </div>
+
+      <!-- Q8 -->
+      <div class="q-card">
+        <span class="q-n">Q8 · Bot voting</span>
+        <div class="q-t">Where does bot voting land?</div>
+        <div class="q-d">v1 is hand-playtested — bots have no notion of influence value, votes or resolution utility. The eventual influence-aware bot (Phase 3-C) needs voting/bidding logic. Note it as the follow-on so v1's design doesn't make it impossible.</div>
+        <div class="lean-row">
+          <p class="field-label">Lean</p>
+          <div class="seg" data-toggle-group data-persist="q8-lean" data-label="Q8 lean">
+            <button data-val="Defer to Phase 3-C">Defer to 3-C</button>
+            <button data-val="Undecided">Undecided</button>
+            <button data-val="Design now">Design now</button>
+          </div>
+        </div>
+        <textarea data-persist="q8-notes" data-label="Q8 notes" placeholder="Your answer…"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 7 · PROS & CONS ═════════════════════════════════════════════════ -->
+  <section id="proscons">
+    <div class="sec-head">
+      <span class="sec-no">07</span>
+      <h2>Pros &amp; Cons</h2>
+      <span class="sec-sub">§3 · the trade-off ledger, verbatim in substance</span>
+    </div>
+
+    <div class="pc-grid">
+      <div class="pc-col pros">
+        <h3>Pros</h3>
+        <ul>
+          <li><b>Fills a proven balance hole</b> — the sink the citizen line needs to pay, not a speculative one.</li>
+          <li><b>Rivalry-native</b> — the first mechanic where players directly contest each other; checks runaway leaders through play.</li>
+          <li><b>Thin engine layer by construction</b> — resolutions are data over the event-table law; effects are Ruleset patches; the new-year hook, leader query and pop-scaling helper all already exist.</li>
+          <li><b>High agency / low variance</b> (choose-not-draw) — rewards skill, dodges bad-draw complaints, legible for deep-links.</li>
+          <li><b>Rich thematic payoff</b> — the Athenian ecclesia, named politicians, ostracism-as-leader-check; fully aligned with the Greek frame and reserved Aegean-blue politics language.</li>
+          <li><b>Unlocks the deferred UI</b> — the dossier, deep-links (two-panel 4–5) and the drawn urn icon finally get a home.</li>
+        </ul>
+      </div>
+      <div class="pc-col cons">
+        <h3>Cons &amp; risks</h3>
+        <ul>
+          <li><b>Deterministic menus are a balance minefield</b> — no shuffle, so the strongest resolution gets picked every game; balance rests entirely on friction.</li>
+          <li><b>The pivot orphans the drafted verbs</b> — draw / play / exchange presume a hand; the verb set must be re-derived under choose-from-menus.</li>
+          <li><b>Vote–citizen coupling can create a second runaway</b> — if votes scale with citizens, the economic leader is the political leader too; a political-victory threshold could snowball.</li>
+          <li><b>The AI can't validate it yet</b> — bots have no notion of influence value or votes; v1 must be hand-playtested before the sim can speak.</li>
+          <li><b>Persistent state accumulates</b> — "active until repealed" resolutions + a growing power track = more standing modifiers to surface and keep legible.</li>
+          <li><b>Leader-bashing feel</b> — Stratokles's pooled pot can read as punishing whoever's ahead if it fires too easily or hits too hard.</li>
+          <li><b>UI density</b> stays the flat grammar's weak point; the full-screen mode is the answer on paper but genuinely new surface to get right.</li>
+          <li><b>Cadence delay</b> — Year-3 first Assembly means half a game with no political layer: correct slow burn, or bolted-on?</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 8 · SCRATCHPAD ══════════════════════════════════════════════════ -->
+  <section id="scratchpad">
+    <div class="sec-head">
+      <span class="sec-no">08</span>
+      <h2>Free Scratchpad</h2>
+      <span class="sec-sub">anything that doesn't fit a box above</span>
+    </div>
+    <textarea id="scratch" data-persist="scratch" data-label="Free scratchpad" placeholder="Loose thoughts, resolution names, questions for Claude, the shape of the vote UI…"></textarea>
+
+    <p class="export-hint">Everything on this page auto-saves to your browser. <b>Export notes</b> gathers it all into Markdown, copies it to your clipboard, and shows it below to paste back to Claude.</p>
+    <textarea id="exportBox" readonly aria-label="Exported notes"></textarea>
+  </section>
+
+  <footer>
+    Single self-contained file · works offline over file:// · no external requests, no libraries. Content spine: <code>docs/feat/assembly-politicians.md</code>. Nothing here is a decided game fact — the open questions are the decision list.
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  var LS = "hegemony.assembly.brainstorm.v1.";
+
+  function lsSave(k, v) { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch (e) {} }
+  function lsLoad(k) {
+    try { var v = localStorage.getItem(LS + k); return v == null ? null : JSON.parse(v); }
+    catch (e) { return null; }
+  }
+
+  /* ── implication copy (hardcoded, one per setting) ───────────────────────── */
+  var IMP = {
+    "play-cadence": {
+      "Year 3, every spring": "Politics starts mid-game and recurs each year. About half the game (race finishes ~yr 5) has a political layer — the owner's stated lean, the slow burn.",
+      "Year 2, every spring": "Politics arrives early, more assemblies per game, more influence drained — but risks front-loading a system the citizen line can't yet fund.",
+      "Year 3, every other year": "Rare, high-stakes assemblies. Fewer sinks per game, so the citizen line may still not find enough to pay — but each one lands heavier."
+    },
+    "play-vote": {
+      "Flat 1 / player": "Equal say regardless of size. No economic→political runaway, but citizens buy no political weight — which undercuts the whole influence-sink premise.",
+      "1 + 1 per 4 citizens": "The rescaled PDF ratio. Citizens convert to votes, honouring the sink loop — but the economic leader becomes the political leader too. Watch for a second runaway.",
+      "Soft-cap curve": "Citizens still buy votes, but with diminishing returns or a ceiling — blunts the economic→political snowball while keeping citizens meaningful, and leans on Stratokles less."
+    },
+    "play-tie": {
+      "Ties FAIL": "A resolution needs a real majority to enact — conservative, biased toward the status quo. Claude's recommendation.",
+      "Ties PASS": "Deadlocks resolve into change — more churn, and more active resolutions piling onto the board.",
+      "Status quo holds": "On a tie, standing resolutions persist and nothing new enacts — frames the deadlock around the board that already exists."
+    },
+    "play-polvictory": {
+      "Off (v1)": "No political win condition in v1. The Assembly bends the economy but doesn't itself end the game — safer, dodges the vote-runaway snowball. Claude's v1 lean.",
+      "On": "A player holding double the sum of all others' votes wins (archive rule). A whole new victory axis — but couples with vote-scaling into a political snowball, so it needs the soft-cap curve."
+    }
+  };
+  var RANGE_IMP = {
+    "play-infcost": [null,
+      "Shallow sink. Assembly actions barely touch influence — the citizen line keeps banking, and the balance hole the sim exposed stays wide open.",
+      "Light sink. Some influence drains each year, but the ladder still hoards. Probably not enough to make the citizen line finally pay.",
+      "Moderate sink. Influence meaningfully leaves the bank each assembly. A plausible starting point — the single most important A/B in the whole system.",
+      "Deep sink. Political action is expensive; the citizen line spends most of what it earns. Risk: influence starts to feel punishing to accumulate.",
+      "Very deep sink. Only committed influence builds can act politically. Strong drain, but may starve casual participation and make the Assembly feel gated."
+    ],
+    "play-strat": [null,
+      "The leader-check barely stings. Ostracism is symbolic and a runaway leader shrugs it off — the anti-runaway valve is too weak.",
+      "Mild pressure. The leader feels a nudge but keeps the lead. Safe against feel-bad, but may not actually catch runaways.",
+      "Balanced. The pooled pot meaningfully dents the leader when the table votes it — a real check that still requires consent.",
+      "Sharp. Getting ahead paints a target; the leader can lose their edge in a single assembly. Tense — verging on bash-the-leader.",
+      "Brutal. Leading is dangerous and the pot can gut a front-runner. Strong catch-up, but risks demoralising whoever's ahead."
+    ]
+  };
+  var RANGE_LABEL = {
+    "play-infcost": ["", "Cheap", "Light", "Moderate", "Deep", "Very deep"],
+    "play-strat":   ["", "Gentle", "Mild", "Balanced", "Sharp", "Brutal"]
+  };
+
+  function setImp(key, val) {
+    var box = document.querySelector('[data-imp="' + key + '"]');
+    if (!box) return;
+    if (IMP[key] && IMP[key][val] != null) box.textContent = IMP[key][val];
+  }
+  function setRange(el) {
+    var key = el.dataset.persist, n = +el.value;
+    var out = document.querySelector('[data-val-out="' + key + '"]');
+    if (out && RANGE_LABEL[key]) out.textContent = RANGE_LABEL[key][n] + " · " + n + "/5";
+    var box = document.querySelector('[data-imp="' + key + '"]');
+    if (box && RANGE_IMP[key]) box.textContent = RANGE_IMP[key][n];
+  }
+
+  /* ── text fields ──────────────────────────────────────────────────────── */
+  document.querySelectorAll('textarea[data-persist]').forEach(function (el) {
+    var key = el.dataset.persist, s = lsLoad(key);
+    if (s != null) el.value = s;
+    el.addEventListener("input", function () { lsSave(key, el.value); });
+  });
+
+  /* ── range sliders ────────────────────────────────────────────────────── */
+  document.querySelectorAll('input[type="range"][data-persist]').forEach(function (el) {
+    var key = el.dataset.persist, s = lsLoad(key);
+    if (s != null) el.value = s;
+    setRange(el);
+    el.addEventListener("input", function () { lsSave(key, el.value); setRange(el); });
+  });
+
+  /* ── toggle / lean groups ─────────────────────────────────────────────── */
+  document.querySelectorAll('[data-toggle-group]').forEach(function (group) {
+    var key = group.dataset.persist;
+    var btns = group.querySelectorAll("button[data-val]");
+    function select(val, doSave) {
+      btns.forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.val === val ? "true" : "false"); });
+      if (doSave) lsSave(key, val);
+      setImp(key, val);
+    }
+    btns.forEach(function (b) {
+      b.addEventListener("click", function () { select(b.dataset.val, true); });
+    });
+    var s = lsLoad(key);
+    if (s != null) select(s, false);
+    else if (group.dataset.default) select(group.dataset.default, false);
+    else setImp(key, ""); // no-op; leaves lean groups blank until chosen
+  });
+
+  /* ── export ───────────────────────────────────────────────────────────── */
+  function segVal(key) {
+    var g = document.querySelector('[data-toggle-group][data-persist="' + key + '"]');
+    if (!g) return "(none)";
+    var b = g.querySelector('button[aria-pressed="true"]');
+    return b ? b.dataset.val : "(undecided)";
+  }
+  function txtVal(key) {
+    var el = document.querySelector('textarea[data-persist="' + key + '"]');
+    return el ? (el.value || "").trim() : "";
+  }
+  function rangeVal(key) {
+    var el = document.querySelector('input[type="range"][data-persist="' + key + '"]');
+    if (!el) return "";
+    var n = +el.value;
+    return RANGE_LABEL[key][n] + " (" + n + "/5)";
+  }
+
+  var POLS = [
+    ["pol-strat-notes", "Stratokles Stratoklid — Cunning Populist / leader-check"],
+    ["pol-demo-notes",  "Demosthenes Archimenid — Agricultural Reformer"],
+    ["pol-perd-notes",  "Perdiccas Tyrpanid — Urban Planner"],
+    ["pol-kleis-notes", "Kleistophenes Hippaid — Rural Expansionist"]
+  ];
+  var QS = [
+    ["q1", "Q1 — Flow under choose-not-draw"],
+    ["q2", "Q2 — The influence verbs now"],
+    ["q3", "Q3 — How thin the politician layer is"],
+    ["q4", "Q4 — How Stratokles fires"],
+    ["q5", "Q5 — Vote scaling & political runaway"],
+    ["q6", "Q6 — Cadence sanity"],
+    ["q7", "Q7 — The Assembly surface"],
+    ["q8", "Q8 — Bot voting"]
+  ];
+
+  function buildMarkdown() {
+    var L = [];
+    L.push("# Assembly & Politicians — brainstorm export");
+    L.push("");
+    L.push("_Exported " + new Date().toISOString() + " · source: docs/feat/assembly-politicians.md_");
+    L.push("");
+    L.push("## Tunables playground (current settings)");
+    L.push("- **Cadence:** " + segVal("play-cadence"));
+    L.push("- **Vote formula:** " + segVal("play-vote"));
+    L.push("- **Tie handling:** " + segVal("play-tie"));
+    L.push("- **Influence verb cost (sink depth):** " + rangeVal("play-infcost"));
+    L.push("- **Stratokles severity:** " + rangeVal("play-strat"));
+    L.push("- **Political victory:** " + segVal("play-polvictory"));
+    L.push("");
+    L.push("## Politician resolution ideas");
+    POLS.forEach(function (p) {
+      var v = txtVal(p[0]);
+      L.push("### " + p[1]);
+      L.push(v ? v : "_(blank)_");
+      L.push("");
+    });
+    L.push("## The eight open questions");
+    QS.forEach(function (q) {
+      var notes = txtVal(q[0] + "-notes");
+      L.push("### " + q[1]);
+      L.push("- **Lean:** " + segVal(q[0] + "-lean"));
+      L.push("- **Notes:** " + (notes ? notes : "_(blank)_"));
+      L.push("");
+    });
+    L.push("## Free scratchpad");
+    L.push(txtVal("scratch") || "_(blank)_");
+    L.push("");
+    return L.join("\n");
+  }
+
+  var toast = document.getElementById("toast"), toastTimer;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2200);
+  }
+
+  var exportBox = document.getElementById("exportBox");
+  document.getElementById("exportBtn").addEventListener("click", function () {
+    var md = buildMarkdown();
+    exportBox.style.display = "block";
+    exportBox.value = md;
+    var copied = false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(md).then(
+        function () { showToast("Copied to clipboard"); },
+        function () { fallbackCopy(); }
+      );
+      copied = true;
+    }
+    if (!copied) fallbackCopy();
+    function fallbackCopy() {
+      exportBox.focus(); exportBox.select();
+      try { document.execCommand("copy"); showToast("Copied to clipboard"); }
+      catch (e) { showToast("Select the text below to copy"); }
+    }
+    exportBox.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  /* ── reset ────────────────────────────────────────────────────────────── */
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    if (!confirm("Clear ALL brainstorm notes, leans and tuner settings? This cannot be undone.")) return;
+    try {
+      var kill = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf(LS) === 0) kill.push(k);
+      }
+      kill.forEach(function (k) { localStorage.removeItem(k); });
+    } catch (e) {}
+    location.reload();
+  });
+
+  /* ── theme toggle (persisted; defaults to system prefers-color-scheme) ──── */
+  var themeKey = "theme";
+  var savedTheme = lsLoad(themeKey);
+  if (savedTheme === "dark" || savedTheme === "light") {
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var isDark;
+    if (cur === "dark") isDark = true;
+    else if (cur === "light") isDark = false;
+    else isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    lsSave(themeKey, next);
+  });
+})();
+</script>
+</body>
+</html>
