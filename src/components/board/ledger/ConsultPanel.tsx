@@ -15,9 +15,12 @@ import { CONSULT_TABS, ledgerTabLabel } from "./tabs";
  */
 function ConsultPanelComponent({
   activeTab,
+  codexTarget,
   onClose
 }: {
   activeTab: ConsultTab;
+  /** A deep-link destination for the Codex (a rulebook chapter + nonce), or null. */
+  codexTarget?: { chapter: string; nonce: number } | null;
   onClose: () => void;
 }) {
   const { G, viewerId } = useGameUi();
@@ -44,7 +47,7 @@ function ConsultPanelComponent({
 
       <div className="intelBody">
         {activeTab === "chronicle" ? <ActionLogPanel G={G} /> : null}
-        {activeTab === "codex" ? <CodexTab G={G} /> : null}
+        {activeTab === "codex" ? <CodexTab G={G} target={codexTarget} /> : null}
         {activeTab === "victory" ? <VictoryTab G={G} playerID={viewerId} /> : null}
       </div>
     </div>

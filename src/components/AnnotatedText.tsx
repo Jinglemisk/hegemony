@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { BuildingId, PopType, Resource } from "../game/types";
 import { resourceCssVars } from "../ui/resourceVisuals";
+import { useCodexLink } from "./codexLink";
 import { AtlasIcon, ResourceIcon } from "./Sprites";
 
 /**
@@ -60,7 +61,20 @@ function tokenIcon(token: Token) {
   return <AtlasIcon icon={token.key} className="richIcon" />;
 }
 
+/** The rulebook chapter (rulebook.tsx id) a token deep-links to. */
+function tokenChapter(token: Token): string {
+  switch (token.type) {
+    case "resource":
+      return "resources";
+    case "pop":
+      return "population";
+    case "building":
+      return "buildings";
+  }
+}
+
 export function AnnotatedText({ text, className }: { text: string; className?: string }) {
+  const codexLink = useCodexLink();
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -75,15 +89,30 @@ export function AnnotatedText({ text, className }: { text: string; className?: s
       nodes.push(text.slice(lastIndex, match.index));
     }
 
+    const style = token.type === "resource" ? resourceCssVars(token.key) : undefined;
+    const key = `${match.index}-${word}`;
+
+    // With a Codex link in context, the term IS the link — click it to open the
+    // rulebook at its chapter. Without one, it stays a plain chip (isolation / tests).
     nodes.push(
-      <span
-        className="richToken"
-        key={`${match.index}-${word}`}
-        style={token.type === "resource" ? resourceCssVars(token.key) : undefined}
-      >
-        {word}
-        {tokenIcon(token)}
-      </span>
+      codexLink ? (
+        <button
+          className="richToken richTokenLink"
+          key={key}
+          onClick={() => codexLink.openCodexTo(tokenChapter(token))}
+          style={style}
+          title={`Open the rulebook: ${word}`}
+          type="button"
+        >
+          {word}
+          {tokenIcon(token)}
+        </button>
+      ) : (
+        <span className="richToken" key={key} style={style}>
+          {word}
+          {tokenIcon(token)}
+        </span>
+      )
     );
 
     lastIndex = match.index + word.length;

@@ -41,6 +41,7 @@ import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
 import { SeasonStatus } from "./board/topbar/SeasonStatus";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
 import { GameUiProvider, type GameUi } from "./board/GameUiContext";
+import { CodexLinkProvider } from "./codexLink";
 import { getOwnedHoldings } from "./board/helpers";
 
 type BoardProps = {
@@ -114,6 +115,16 @@ export function HegemonyBoard({
   // outranks reference, and the dock ticker keeps the latest chronicle line visible.
   const [consultRoute, setConsultRoute] = useState<ConsultRoute>({ view: "chronicle" });
   const [isConsultOpen, setConsultOpen] = useState(false);
+  // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
+  // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
+  // the target chapter is unchanged (you clicked away and clicked the link again).
+  const [codexTarget, setCodexTarget] = useState<{ chapter: string; nonce: number } | null>(null);
+  const openCodexTo = useCallback((chapter: string) => {
+    setCodexTarget((current) => ({ chapter, nonce: (current?.nonce ?? 0) + 1 }));
+    setConsultRoute(routeTo("codex"));
+    setConsultOpen(true);
+  }, []);
+  const codexLink = useMemo(() => ({ openCodexTo }), [openCodexTo]);
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
@@ -323,6 +334,7 @@ export function HegemonyBoard({
 
   return (
     <GameUiProvider value={gameUi}>
+    <CodexLinkProvider value={codexLink}>
     <main className="shell uiOverhaulShell">
       {/* The map is the stage now, not a grid cell: a full-bleed sea the chrome
           floats over (ui-refit Step 1). The captions ride the stage so they stay
@@ -422,7 +434,7 @@ export function HegemonyBoard({
 
         {isConsultOpen ? (
           <aside className="panel consultPanel">
-            <ConsultPanel activeTab={consultRoute.view} onClose={() => setConsultOpen(false)} />
+            <ConsultPanel activeTab={consultRoute.view} codexTarget={codexTarget} onClose={() => setConsultOpen(false)} />
           </aside>
         ) : null}
       </section>
@@ -610,6 +622,7 @@ export function HegemonyBoard({
         />
       ) : null}
     </main>
+    </CodexLinkProvider>
     </GameUiProvider>
   );
 }
