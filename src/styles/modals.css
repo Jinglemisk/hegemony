@@ -966,6 +966,9 @@
 .compendiumEntry {
   display: grid;
   gap: 6px;
+  /* Clears the Codex's sticky header (search + chapter tabs + jump strip) when a
+     jump or search result scrolls this entry to the top of the panel. */
+  scroll-margin-top: 96px;
 }
 
 .compendiumEntry h3 {
@@ -1076,6 +1079,10 @@
   position: sticky;
   top: 0;
   z-index: 2;
+  /* The panel body is a GRID; without this the nowrap chapter-tab row's min-content
+     forces the whole track (and every note) wider than the panel. min-width:0 lets
+     the track stay panel-width and the tabs scroll inside it. */
+  min-width: 0;
   margin-bottom: 10px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--ledger-rule);
@@ -1187,6 +1194,207 @@
 }
 
 .codexCardText {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+/* Rulebook (2026-07-19): the whole ruleset in the Codex, chapters in learn-order,
+   with a search that jumps to any topic. Search box + dropdown live in the sticky
+   codexNav; the chapter chips scroll horizontally so a dozen fit one row. */
+.codexSearch {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.codexSearchInput {
+  width: 100%;
+  min-height: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--ledger-rule-strong, rgb(36 25 16 / 22%));
+  border-radius: 8px;
+  background: var(--ink-07);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 0.78rem;
+}
+
+.codexSearchInput:focus {
+  outline: none;
+  border-color: var(--clay);
+  background: var(--ivory);
+}
+
+.codexSearchResults {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: calc(100% + 3px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--ledger-rule);
+  border-radius: 8px;
+  background: var(--ivory);
+  box-shadow: var(--float);
+}
+
+.codexSearchHit {
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: 6px;
+  text-align: left;
+  background: none;
+  cursor: pointer;
+}
+
+.codexSearchHit:not(:disabled):hover {
+  box-shadow: none;
+  transform: none;
+  background: var(--ink-07);
+}
+
+.codexSearchHitLabel {
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  letter-spacing: 0.01em;
+}
+
+.codexSearchHitContext {
+  color: var(--muted);
+  font-family: var(--body);
+  font-size: 0.64rem;
+  font-weight: 400;
+}
+
+.codexSearchEmpty {
+  padding: 6px 8px;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+/* The chapter chips: one scrolling row rather than a tall wrap of a dozen. */
+.codexChapterTabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.codexChapterTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.codexChapterTabs .compendiumTab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* A defined-term list — a rule name and its sourced value/description. */
+.ruleDefList {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ruleDefRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 38%) minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: baseline;
+  padding: 3px 8px;
+  border-left: 2px solid rgb(143 46 19 / 26%);
+  font-size: 0.78rem;
+}
+
+.ruleDefTerm {
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  letter-spacing: 0.01em;
+}
+
+.ruleResTerm {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ruleDefBody {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.ruleDim {
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.ruleDeckLabel {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.66rem;
+}
+
+.ruleVenture {
+  display: grid;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+/* The deck gallery inside the Seasons chapter: compact one-per-row card faces. */
+.codexCardGallery {
+  display: grid;
+  gap: 6px;
+}
+
+.codexGalleryCard {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  margin: 0;
+  padding: 4px 6px;
+  border-left: 2px solid rgb(143 46 19 / 26%);
+}
+
+.codexGalleryArt {
+  display: block;
+  width: 30px;
+  height: 40px;
+  border: 1px solid rgb(143 46 19 / 40%);
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.codexGalleryCard figcaption {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.codexGalleryCard strong {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.codexGallerySeasons {
+  color: var(--muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.codexGalleryText {
   color: var(--muted);
   font-size: 0.68rem;
   line-height: 1.35;
