@@ -703,6 +703,12 @@ passed resolutions persist until repealed.
 
 **Your answer:** Spring of YEAR 3 it should be. Players shouldn't draw cards. Instead players choose themselves, Hegemony Assembly is something that pops over the map (you can toggle between modes), and they are shown the cards belonging to 4 politicans; 
 
+> **[Owner correction, 2026-07-19]** First assembly = **Spring of YEAR 2**, not 3. Three
+> assemblies in a race-decided game (~Year 5 finish, first at Year 3) is too thin a runway for
+> the political layer; Year 2 adds one, and twice-yearly cadence (spring + autumn) is under
+> consideration. The choose-not-draw model and the rest of the design are worked out in
+> `docs/feat/assembly-politicians.md`.
+
 ### P3 · Q28 · Resolution deck v1 — contents & influence verbs — `OPEN`
 
 **Context.** This is influence's primary job (todo.md). Archive influence verbs:
