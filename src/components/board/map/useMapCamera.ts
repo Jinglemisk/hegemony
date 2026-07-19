@@ -4,7 +4,6 @@ import {
   MAX_ZOOM,
   MIN_ZOOM,
   WORLD_VIEW_BOX,
-  ZOOM_STEP,
   cameraTransform,
   clamp,
   clampViewBox,
@@ -47,6 +46,9 @@ const DRAG_CLICK_THRESHOLD = 5;
 const TILE_CLICK_SUPPRESS_MS = 160;
 /** Idle gap after the last wheel tick before the zoom is committed to state. */
 const WHEEL_COMMIT_MS = 90;
+/** Zoom per wheel tick — smaller than the +/- buttons' ZOOM_STEP because a trackpad
+ *  fires many ticks per gesture, so the full button step feels hyper-sensitive. */
+const WHEEL_ZOOM_STEP = 0.03;
 
 /**
  * Top/bottom clearance held under the two opaque full-width spines, in CSS px.
@@ -384,7 +386,7 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
     };
     const direction = event.deltaY > 0 ? -1 : 1;
     event.currentTarget.classList.add("isCameraMoving");
-    applyCameraViewBox(zoomViewBox(current, getZoomLevel(current) + direction * ZOOM_STEP, focus));
+    applyCameraViewBox(zoomViewBox(current, getZoomLevel(current) + direction * WHEEL_ZOOM_STEP, focus));
     clearWheelCommit();
     wheelCommitTimeout.current = window.setTimeout(finishCameraInteraction, WHEEL_COMMIT_MS);
   };
