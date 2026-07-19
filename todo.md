@@ -164,9 +164,12 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
 -- **The law:** left is what you act on, right is what you consult. Codex + Victory move to the right;
    Chronicle becomes a right disc (retiring ChronicleDrawer — safe now that the dock ticker keeps the latest
    line permanently visible, which reverses Q19). The right rail mirrors `.bar.rail`, discs overhanging inward.
--- **Deep-links:** the term IS the link — `AnnotatedText` already types every resource/pop/building word, so
-   clicking "Happiness" in any card/chronicle/modal opens the codex there. No (?) sprinkles. Address by data id,
-   never a hand-kept registry (keeps the codex rendering FROM the ruleset).
+-- ~~**Deep-links:** the term IS the link — `AnnotatedText` already types every resource/pop/building word, so
+   clicking "Happiness" in any card/chronicle/modal opens the codex there. No (?) sprinkles.~~ SHIPPED
+   (feat/codex-deeplinks, 2026-07-19): a `codexLink` context provides `openCodexTo(chapter)`; AnnotatedText
+   tokens become prose-styled link buttons (resource→Resources, pop→Population, building→Buildings); the
+   codex navigates to the chapter (nonce-keyed so a re-click re-navigates). Follow-up: finer targets
+   (a specific building/entry, not just the chapter) once concept-ids are added.
 -- **Player dossier:** click a roster player → the right panel shows their cities/pops/buildings — the same
    ledger tabs aimed elsewhere via an explicit `ownerId` + read-only flag (reuse, never fork — forks drift).
 -- **Per-panel back-stack:** pages become `{view, entry, scroll}` with a history stack; each frame restores its
@@ -224,7 +227,9 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
 ## Tech debt & polish
 
 - Memoize the last two panels (ActionCommandPanel, ResourceGrid).
--- The render-perf pass memoized the heavy panels; these two were left out (cheap, same pattern).
+-- ResourceGrid memoized (feat/codex-deeplinks, 2026-07-19). The old ActionCommandPanel is now
+   `CommandDock`, which reads game state via `useGameUi()` context — `memo` can't skip context-driven
+   re-renders, so it was left as-is (memo there would be cargo-cult with no benefit).
 
 - Shrink the .git history (~129 MB).
 -- Bloated by old/replaced binary art still living in past commits.

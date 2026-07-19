@@ -56,6 +56,32 @@
   white-space: nowrap;
 }
 
+/* A deep-link term (RPG-style keyword): one shared clay colour for every clickable
+   term so the eye learns "these are pressable", the term's own icon beside it, and a
+   hover underline. font: inherit drops the bold display-font button default; only the
+   colour and pointer set it apart from prose. The term IS the link — no (?) sprinkles. */
+.richTokenLink {
+  display: inline;
+  padding: 0;
+  border: 0;
+  margin: 0;
+  background: none;
+  color: var(--clay);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.richTokenLink:hover,
+.richTokenLink:focus-visible {
+  box-shadow: none;
+  transform: none;
+  color: var(--clay-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .richIcon {
   width: 1.08em;
   height: 1.08em;
