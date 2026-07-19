@@ -189,12 +189,12 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
    instead of text rows. (Chose a sticky TOP nav over the plan's left-hand index — the panel is too
    narrow for a side column.)
 
-- Codex → the whole in-game rulebook (owner ask 2026-07-19; plan `docs/feat/codex-rules.md`).
--- Grow the Codex from a numbers reference (Dice Tables/Bank/Decks/Costs) into the complete rules,
-   rendered FROM the ruleset so it can't drift. Narrative head (How to win / board / resources / pops /
-   settlements / turn / ladder / buildings / unrest / seasons) over the 4 current sections as the
-   reference tail. Victory-qua-rule returns here. Deep-link destinations for two-panel piece 4. Later:
-   generate rules.md from the same source so the guide + game can't diverge.
+- ~~Codex → the whole in-game rulebook (owner ask 2026-07-19; plan `docs/feat/codex-rules.md`).~~
+  SHIPPED (feat/codex-rulebook, 2026-07-19): `rulebook.tsx` — 12 chapters in learn-order (How to win /
+  board / resources / pops / settlements / turn / ladder / buildings / unrest / seasons / bank / ventures),
+  every number rendered FROM the ruleset/content so it can't drift; the 4 data sections folded in;
+  victory-qua-rule returned; a **search** (≥2 letters → topic dropdown → jump). Deep-link destinations for
+  two-panel piece 4 are the remaining follow-up. Still later: generate rules.md from the same source.
 
 - Finish the interface overhaul (started from the UI audit).
 -- DONE so far: the top bar is re-gridded — a central season dial with hand-painted Greek season art (tree / sun / bare tree / snowflake), Year + acting player either side, and a uniform four-seat roster showing each player's city / colony / pop counts and a provisional VP. Events moved back to the top-left as cards with an inline-icon effect summary + full-text hover tooltip. Ledger gained an empire summary (icon + count) and always shows every resource icon (dimmed dash when zero). Decks collapsed to a slim tray (dead "Resolutions" placeholder removed). A universal inline resource/pop/building icon system (AnnotatedText) now runs across cards, modals, and the chronicle.
