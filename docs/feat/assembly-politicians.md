@@ -280,6 +280,23 @@ returns without opening the opener's turn; `closeAssembly` opens it. `G.currentP
 assembly's actor, which is why every existing turn gate — the move enumerator, the dispatcher, the
 UI's `isActive`, the scoreboard highlight — works unchanged.
 
+### Owner playtest revisions (2026-07-20, after the first build)
+- **Proposal is asynchronous, not reverse-turn-order.** The first build ran proposal
+  sequentially (one active proposer at a time); the playtest found that switching
+  seats to act as another player did nothing, because only the active seat was live.
+  Now every seat draws, proposes, discards and passes independently and in secret, and
+  the round ends when all have finalized — then the ballot is assembled (house first,
+  then each seat's proposal in turn order) and voted sequentially. This retires the
+  §1.3 reverse-turn-order fairness caveat entirely: with simultaneous secret draws,
+  order is moot.
+- **Drawing is per-politician.** The footer's single draw-with-dropdown became a Draw
+  button under each politician's column — you pick the politician by their pillar.
+- **The drawn card shows in full** (politician, effect gain/cost, trade-off), not just
+  its name, in the bema's left column.
+- **The panel fills the ledger's full height**, giving the drawn card room.
+- **`coupThreshold` 3 → 5** — with only 7 Directives and permanent monuments, 5 makes
+  the coup a genuine late-game reach rather than a mid-game swing.
+
 ### Deliberate departures from §1 and Appendix A
 1. **Land Rush** reads "first colony/year free of **wood**", not "of stone & gold". Founding costs
    neither stone nor gold since the Phase-2 repricing (`wood 20 + food 2`), so the line as written was
