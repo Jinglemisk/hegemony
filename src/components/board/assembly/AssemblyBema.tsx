@@ -7,7 +7,7 @@ import {
   POLITICIANS_BY_ID
 } from "../../../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../../../game/assembly";
-import type { HegemonyState, PlayerId } from "../../../game/types";
+import type { HegemonyState } from "../../../game/types";
 import { NayMark, SealIcon, WaitMark, YeaMark } from "./AssemblyIcons";
 
 /**
@@ -28,7 +28,7 @@ export function AssemblyBema({ G, session }: { G: HegemonyState; session: Assemb
   return (
     <div className="band">
       <span className="band-k">{label}</span>
-      {session.phase === "proposal" ? <ProposalView G={G} session={session} /> : null}
+      {session.phase === "proposal" ? <ProposalView session={session} /> : null}
       {session.phase === "voting" ? <VotingView G={G} session={session} /> : null}
       {session.phase === "closing" ? <ClosingView G={G} session={session} /> : null}
     </div>
@@ -37,7 +37,7 @@ export function AssemblyBema({ G, session }: { G: HegemonyState; session: Assemb
 
 // ── ① Proposal ─────────────────────────────────────────────────────────────────────
 
-function ProposalView({ G, session }: { G: HegemonyState; session: AssemblySession }) {
+function ProposalView({ session }: { session: AssemblySession }) {
   return (
     <div className="brow">
       <div className="bhalf">
@@ -104,7 +104,7 @@ function VotingView({ G, session }: { G: HegemonyState; session: AssemblySession
   return (
     <div className="brow">
       <div className="bcard">
-        <BallotFace G={G} item={item} position={session.ballotIndex + 1} of={session.ballot.length} />
+        <BallotFace item={item} position={session.ballotIndex + 1} of={session.ballot.length} />
       </div>
 
       <div className="polls">
@@ -259,12 +259,10 @@ function ballotKey(item: BallotItem): string {
 /** The card under vote, as the bema shows it: an aegean eyebrow naming the politician,
  *  the title, and the effect with its trade-off split into gain and cost. */
 export function BallotFace({
-  G,
   item,
   position,
   of
 }: {
-  G: HegemonyState;
   item: BallotItem;
   position: number;
   of: number;
@@ -328,8 +326,4 @@ export function ResolutionEffect({ card }: { card: ResolutionCard }) {
       <span className="cost">{split[1].replace(/\.$/, "")}</span>.
     </div>
   );
-}
-
-export function playerVoteWeight(G: HegemonyState, session: AssemblySession, playerID: PlayerId): number {
-  return baseVoteWeight(G, playerID) + session.bribesUsed[playerID];
 }

@@ -1244,3 +1244,316 @@
     display: none;
   }
 }
+
+/* ==========================================================================
+ * The Agora — the Assembly's standing record, as a right-rail consult page.
+ *
+ * Deliberately NOT the panel's visual language: the panel is a surface you act on
+ * and gets the full aegean treatment, this is a reference page and reads like the
+ * ledger's other pages, with aegean used only to mark what is political.
+ * ========================================================================== */
+
+.agoraPage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.agoraSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.agoraSummaryRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.agoraKey {
+  color: var(--ink-48);
+  font-family: var(--disp);
+  font-size: 8px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.agoraValue {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.agoraOf {
+  color: var(--ink-48);
+  font-size: 10px;
+}
+
+.agoraVoice {
+  color: var(--aegean);
+  font-size: 11.5px;
+}
+
+.agoraDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px var(--ivory),
+    0 0 0 1.5px var(--vase);
+}
+
+.agoraNote {
+  margin: 0;
+  color: var(--ink-66);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.agoraPolitician {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.agoraHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agoraPower {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--aegean);
+  background: var(--aeg-tint);
+  box-shadow: inset 0 0 0 1px var(--aeg-30);
+  font-family: var(--disp);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.agoraHead.strat .agoraPower {
+  color: var(--clay);
+  background: rgb(192 70 28 / 8%);
+  box-shadow: inset 0 0 0 1px rgb(192 70 28 / 34%);
+}
+
+.agoraName {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.agoraName em {
+  color: var(--aegean);
+  font-size: 7.5px;
+  font-style: normal;
+  letter-spacing: 0.12em;
+}
+
+.agoraHead.strat .agoraName em {
+  color: var(--clay);
+}
+
+.agoraCreed {
+  margin: 0;
+  color: var(--ink-48);
+  font-size: 10.5px;
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.agoraPatron {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+  color: var(--ink-66);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.agoraPatron strong {
+  color: var(--ink);
+}
+
+.agoraPatron em {
+  color: var(--aegean);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.agoraLaws {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agoraLaws li {
+  display: flex;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  /* The same tombstone silhouette the panel's stelae use, so a Law reads as the
+     same object in both places. */
+  border-radius: 6px 6px 2px 2px;
+  background: rgb(255 248 231 / 70%);
+}
+
+.agoraLaws .agoraDot {
+  margin-top: 4px;
+}
+
+.agoraLawBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.agoraLawBody strong {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 11px;
+}
+
+.agoraLawText {
+  color: var(--ink-66);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.agoraLawMeta {
+  color: var(--ink-48);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.agoraCoup {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  background: rgb(192 70 28 / 8%);
+  box-shadow: inset 0 0 0 1px rgb(192 70 28 / 22%);
+}
+
+.agoraCoup .agoraKey {
+  color: var(--clay-deep);
+}
+
+.agoraCoupPips {
+  display: flex;
+  gap: 3px;
+}
+
+.agoraCoupPips i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.2px var(--clay-deep);
+}
+
+.agoraCoupPips i.f {
+  background: var(--clay-deep);
+}
+
+.agoraCoupText {
+  flex: 1 1 100%;
+  color: var(--ink-66);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+/* The Codex's Assembly chapter — the politician roster and its card lists. */
+.rulePolitician {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.rulePolitician:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.rulePolitician h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 0 3px;
+}
+
+.rulePolitician h3 em {
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 8px;
+  font-style: normal;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ruleCardList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ruleCardList li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px 6px 2px 2px;
+  background: rgb(255 248 231 / 70%);
+}
+
+.ruleCardList li strong {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 10.5px;
+}
+
+.ruleCardList li span {
+  color: var(--ink-66);
+  font-size: 10.5px;
+  line-height: 1.45;
+}

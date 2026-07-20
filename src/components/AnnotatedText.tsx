@@ -84,7 +84,26 @@ const TOKEN_MAP: Record<string, Token> = {
   revolt: { type: "concept", chapter: "unrest" },
   unrest: { type: "concept", chapter: "unrest" },
   victory: { type: "concept", chapter: "victory" },
-  bank: { type: "concept", chapter: "bank" }
+  bank: { type: "concept", chapter: "bank" },
+  // The Assembly's vocabulary. Card text, the chronicle and the Agora page all lean
+  // on these nouns, and every one of them is a rule a player will want to look up
+  // mid-vote — which is exactly when leaving the game to find it is worst.
+  assembly: { type: "concept", chapter: "assembly" },
+  politician: { type: "concept", chapter: "assembly" },
+  politicians: { type: "concept", chapter: "assembly" },
+  resolution: { type: "concept", chapter: "assembly" },
+  resolutions: { type: "concept", chapter: "assembly" },
+  law: { type: "concept", chapter: "assembly" },
+  laws: { type: "concept", chapter: "assembly" },
+  directive: { type: "concept", chapter: "assembly" },
+  directives: { type: "concept", chapter: "assembly" },
+  stele: { type: "concept", chapter: "assembly" },
+  stelae: { type: "concept", chapter: "assembly" },
+  patron: { type: "concept", chapter: "assembly" },
+  patronage: { type: "concept", chapter: "assembly" },
+  repeal: { type: "concept", chapter: "assembly" },
+  veto: { type: "concept", chapter: "assembly" },
+  agora: { type: "concept", chapter: "assembly" }
 };
 
 // Longer words first so "citizens" wins over "citizen", etc.

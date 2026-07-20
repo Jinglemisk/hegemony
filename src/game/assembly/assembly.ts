@@ -104,7 +104,16 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
     proposalIndex: 0,
     heldCard: null,
     drawsThisTurn: 0,
-    ballot: houseCard ? [{ kind: "enact", card: houseCard, proposer: null }] : [],
+    ballot: houseCard
+      ? [
+          {
+            kind: "enact",
+            card: houseCard,
+            proposer: null,
+            replaces: houseCard.kind === "law" ? houseReplacementTarget(G) : undefined
+          }
+        ]
+      : [],
     ballotIndex: 0,
     votes: [],
     voteOrder: order,
@@ -134,14 +143,52 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
   syncAssemblyActor(G);
 }
 
-/** The house card: a random politician's top card, drawn with the game's own PRNG so
- *  the assembly is reproducible from the seed like every other draw. */
+/**
+ * The house card: a random politician's top card, drawn with the game's own PRNG so
+ * the assembly is reproducible from the seed like every other draw.
+ *
+ * It must clear the SAME gate a proposed card clears. Nothing about being unauthored
+ * exempts it: a house Law that duplicates a standing one would put the same stele on
+ * the board twice — doubling its effects and its politician's power off a single card
+ * — and one that ignores the cap would quietly take the board past its own ceiling.
+ * A duplicate is discarded and redrawn; the cap is handled at the ballot, where the
+ * house names its replacement like anyone else.
+ */
 function drawHouseCard(G: HegemonyState): ResolutionCard | null {
-  const step = mulberry32(G.rng);
-  G.rng = step.state;
-  const politician = POLITICIANS[Math.floor(step.value * POLITICIANS.length)].id;
+  const standing = activeLawIds(G);
 
-  return drawFromPoliticianDeck(G, politician) ?? drawFromAnyDeck(G);
+  // Bounded: with 24 Laws and a cap of ~6 a clean draw is near-certain, but a rigged
+  // or heavily-drained deck must not spin here.
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const step = mulberry32(G.rng);
+    G.rng = step.state;
+    const politician = POLITICIANS[Math.floor(step.value * POLITICIANS.length)].id;
+    const card = drawFromPoliticianDeck(G, politician) ?? drawFromAnyDeck(G);
+
+    if (!card) {
+      return null;
+    }
+
+    if (card.kind === "directive" || !standing.includes(card.id)) {
+      return card;
+    }
+
+    // Already inscribed in the agora — back to the pile, and try again.
+    discardCard(G, card);
+  }
+
+  return null;
+}
+
+/** The stele a house Law displaces when the board is already full. The OLDEST standing
+ *  Law: with no author to make the choice, the house defers to age rather than picking
+ *  a side, and the board self-manages instead of deadlocking. */
+function houseReplacementTarget(G: HegemonyState): string | undefined {
+  if (!isAtLawCap(G)) {
+    return undefined;
+  }
+
+  return [...G.activeLaws].sort((a, b) => a.order - b.order)[0]?.cardId;
 }
 
 function drawFromAnyDeck(G: HegemonyState): ResolutionCard | null {
@@ -579,7 +626,7 @@ function enact(G: HegemonyState, item: BallotItem) {
     // repealed, which is exactly why Stratokles's track only ever rises.
     G.tallyMonuments.push({
       cardId: item.card.id,
-      author: item.proposer ?? G.seasonOpener,
+      author: item.proposer,
       enactedSeason: G.season,
       order: G.lawOrder++
     });
@@ -593,7 +640,7 @@ function enact(G: HegemonyState, item: BallotItem) {
 
   G.activeLaws.push({
     cardId: item.card.id,
-    author: item.proposer ?? G.seasonOpener,
+    author: item.proposer,
     enactedSeason: G.season,
     order: G.lawOrder++
   });

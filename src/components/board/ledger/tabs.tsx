@@ -19,7 +19,10 @@ export const LEDGER_TABS: Array<{ tab: LedgerTab; label: string; icon: ReactNode
 export const CONSULT_TABS: Array<{ tab: ConsultTab; label: string; icon: ReactNode }> = [
   { tab: "chronicle", label: "Chronicle", icon: <UiSprite item="meander" className="railDiscIcon" /> },
   { tab: "codex", label: "Codex", icon: <UiSprite item="seal" className="railDiscIcon" /> },
-  { tab: "victory", label: "Victory", icon: <UiSprite item="victoryPoint" className="railDiscIcon" /> }
+  { tab: "victory", label: "Victory", icon: <UiSprite item="victoryPoint" className="railDiscIcon" /> },
+  // The Agora is a consult page, not an act page: the Assembly panel is where you
+  // act on politics, this is where you read what it left standing.
+  { tab: "agora", label: "Agora", icon: <UiSprite item="resolutionDeck" className="railDiscIcon" /> }
 ];
 
 const LABELS = new Map<EmpireTab, string>(

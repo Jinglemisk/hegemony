@@ -14,6 +14,7 @@ import {
   TERRAIN_DECK
 } from "../../../game/data";
 import { TRADABLE_MATERIALS } from "../../../game/rules";
+import { POLITICIANS, RESOLUTION_DECKS } from "../../../game/assembly";
 import type { EventCard, HegemonyState, PopType, Resource, SettlementKind, Terrain } from "../../../game/types";
 import { RESOURCE_LABELS, formatBuildingEffects, formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../../../ui/resourceVisuals";
@@ -162,9 +163,11 @@ const victory: RuleChapter = {
       <div className="compendiumStack">
         <Entry id={anchor("victory", "race")} title="The race">
           <Note>
-            There are five public victory cards, each awarded to the sole leader in one measure. Hold{" "}
+            There are six public victory cards, each awarded to the sole leader in one measure. Hold{" "}
             <strong>{victory.cardsToWin}</strong> of them at the <em>start of your own turn</em> and you win at once.
-            Ties award nothing — a card is held only by a clear sole leader who also clears its minimum.
+            Ties award nothing — a card is held only by a clear sole leader who also clears its minimum. Five measure
+            what you have built; the sixth, Voice of the Assembly, measures the agora (see{" "}
+            <AnnotatedText text="Assembly" />).
           </Note>
           <Note>
             The seasonal deck is the game's clock (see <AnnotatedText text="Seasons" />). If it runs out before anyone
@@ -627,6 +630,190 @@ const ventures: RuleChapter = {
   )
 };
 
+const assembly: RuleChapter = {
+  id: "assembly",
+  title: "The Assembly",
+  blurb: "The agora: politicians, resolutions, voting, and the laws that stand.",
+  keywords: [
+    "assembly",
+    "politician",
+    "politicians",
+    "resolution",
+    "law",
+    "laws",
+    "directive",
+    "stele",
+    "stelae",
+    "vote",
+    "voting",
+    "ballot",
+    "bribe",
+    "bribery",
+    "veto",
+    "repeal",
+    "patron",
+    "patronage",
+    "agora",
+    "coup",
+    "demosthenes",
+    "perdiccas",
+    "kleistophenes",
+    "stratokles"
+  ],
+  entries: [
+    { id: anchor("assembly", "when"), label: "When it convenes" },
+    { id: anchor("assembly", "propose"), label: "Proposing" },
+    { id: anchor("assembly", "vote"), label: "Voting" },
+    { id: anchor("assembly", "laws"), label: "Laws & Directives" },
+    { id: anchor("assembly", "power"), label: "Power & patrons" },
+    { id: anchor("assembly", "politicians"), label: "The four politicians" }
+  ],
+  Body: ({ G }) => {
+    const rules = G.ruleset.assembly;
+
+    return (
+      <div className="compendiumStack">
+        <Entry id={anchor("assembly", "when")} title="When it convenes">
+          <Note>
+            The Assembly meets every spring from Year <strong>{rules.firstYear}</strong>, before the year's opener takes
+            their turn. Nothing else happens while it sits — the whole table proposes and votes, then play resumes.
+          </Note>
+          <Note>
+            This is what <AnnotatedText text="Influence" /> is for. Everything the Assembly asks of you — drawing,
+            proposing, bribing, vetoing, repealing — is paid in influence, and nothing else in the game spends it at
+            this scale.
+          </Note>
+        </Entry>
+
+        <Entry id={anchor("assembly", "propose")} title="Proposing">
+          <Note>
+            One house resolution drops onto the ballot on its own. Then, in <em>reverse</em> turn order, each player may
+            put one more there.
+          </Note>
+          <DefList>
+            <DefRow term="Draw">
+              Pay <strong>{rules.drawCost}</strong> influence to draw from a politician <em>you choose</em>. The
+              politician is your pick; the card is not. You see it in secret.
+            </DefRow>
+            <DefRow term="Fish again">
+              Set the card aside and draw another for <strong>{rules.redrawCost}</strong> influence, as often as you can
+              afford.
+            </DefRow>
+            <DefRow term="Propose">
+              Lay the card on the bema for everyone to see. One card per player per assembly.
+            </DefRow>
+            <DefRow term="Repeal">
+              For <strong>{rules.repealCost}</strong> influence, move to strike a standing Law instead. It is voted like
+              any other resolution — undoing a law is as political as passing one.
+            </DefRow>
+            <DefRow term="Pass">Say nothing. Always available, whatever your influence.</DefRow>
+          </DefList>
+        </Entry>
+
+        <Entry id={anchor("assembly", "vote")} title="Voting">
+          <Note>
+            The ballot is voted one resolution at a time, in turn order, <strong>openly</strong> — every vote is visible
+            as it lands, so the last seat to speak on a close card is a kingmaker.
+          </Note>
+          <DefList>
+            <DefRow term="Your votes">
+              One per <AnnotatedText text="citizen" /> you hold. Nothing else on the board grants a vote.
+            </DefRow>
+            <DefRow term="Majority">
+              More yea than nay carries. {rules.tiesPass ? "A tie carries." : "A tie fails."}
+            </DefRow>
+            <DefRow term="Bribe">
+              <strong>{rules.briberyCost}</strong> influence buys one extra vote, up to{" "}
+              <strong>{rules.briberyCap}</strong> per player per assembly. The cap is what stops a hoard from simply
+              buying the outcome.
+            </DefRow>
+            <DefRow term="Veto">
+              <strong>{rules.vetoCost}</strong> influence strikes the resolution outright,{" "}
+              {rules.vetoesPerAssembly === 1 ? "once" : `${rules.vetoesPerAssembly} times`} per assembly. It costs you
+              your own vote on it.
+            </DefRow>
+          </DefList>
+        </Entry>
+
+        <Entry id={anchor("assembly", "laws")} title="Laws & Directives">
+          <Note>
+            A resolution is not a one-year buff — it changes how the game is played. Three of the four politicians deal
+            in <strong>Laws</strong>: table-wide rules that stand until repealed, each carrying a trade-off, so a vote
+            is a referendum on which strategy the table backs.
+          </Note>
+          <Note>
+            The fourth, Stratokles, deals in <strong>Directives</strong>: one-time upheavals that hit everyone at once
+            and then leave a permanent monument on his stack.
+          </Note>
+          <DefList>
+            <DefRow term="The cap">
+              <strong>{rules.lawCap}</strong> Laws may stand at once. At the cap, a new Law must name the one it
+              replaces. Stratokles's monuments take no slot — they are not rules.
+            </DefRow>
+            <DefRow term="Uniqueness">A Law already standing cannot be enacted again.</DefRow>
+            <DefRow term="Removal">Only a repeal, or a replacement at the cap, takes a Law off the board.</DefRow>
+          </DefList>
+        </Entry>
+
+        <Entry id={anchor("assembly", "power")} title="Power & patrons">
+          <Note>
+            Nothing here is tracked — it is all read off the board. A politician's <strong>power</strong> is the number
+            of their stelae standing; their <strong>patron</strong> is whoever authored the most of them. A tie leaves
+            them unpatroned.
+          </Note>
+          <DefList>
+            <DefRow term="Dominance">
+              At <strong>{rules.dominanceThreshold}</strong> stelae the patron gains that politician's standing buff.
+            </DefRow>
+            <DefRow term="Voice of the Assembly">
+              A sixth <AnnotatedText text="victory" /> card, held by whoever is patron of the most politicians —
+              minimum <strong>{G.ruleset.victory.minimums.voice}</strong>. Like the other five it recomputes every turn
+              and can change hands.
+            </DefRow>
+            <DefRow term="The coup">
+              Stratokles's monuments never repeal, so his track only rises. If he leads the agora with{" "}
+              <strong>{rules.coupThreshold}</strong> monuments, he seizes the city and <em>his patron wins the game</em>
+              . The only brake is voting his Directives down.
+            </DefRow>
+          </DefList>
+        </Entry>
+
+        <Entry id={anchor("assembly", "politicians")} title="The four politicians">
+          <div className="ruleDefList">
+            {POLITICIANS.map((politician) => {
+              const deck = RESOLUTION_DECKS[politician.id];
+
+              return (
+                <div className="rulePolitician" key={politician.id}>
+                  <h3>
+                    {politician.name}
+                    <em>{politician.epithet}</em>
+                  </h3>
+                  <p className="compendiumFlavor">{politician.creed}</p>
+                  <Note>
+                    {deck.length} {politician.kind === "law" ? "Laws" : "Directives"} · patron's buff:{" "}
+                    <strong>{politician.patronBuff.label}</strong>
+                  </Note>
+                  <ul className="ruleCardList">
+                    {deck.map((card) => (
+                      <li key={card.id}>
+                        <strong>{card.name}</strong>
+                        <span>
+                          <AnnotatedText text={card.text} />
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </Entry>
+      </div>
+    );
+  }
+};
+
 /** A card in the rulebook's deck gallery: painted face + name + copies + effect. */
 function RulebookCard({ card, showSeasons = false }: { card: EventCard; showSeasons?: boolean }) {
   return (
@@ -666,5 +853,8 @@ export const RULEBOOK: RuleChapter[] = [
   unrest,
   seasons,
   bank,
-  ventures
+  ventures,
+  // Last in learn-order: the Assembly reshapes every rule above it, so it only makes
+  // sense once you know what it is reshaping.
+  assembly
 ];

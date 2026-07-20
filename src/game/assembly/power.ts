@@ -21,7 +21,7 @@ import type { PoliticianId, PoliticianStanding } from "./types";
 
 /** Stelae standing for one politician: active Laws for the three regulars, permanent
  *  tally monuments for Stratokles. */
-function steleAuthors(G: HegemonyState, politician: PoliticianId): PlayerId[] {
+function steleAuthors(G: HegemonyState, politician: PoliticianId): Array<PlayerId | null> {
   if (politician === "stratokles") {
     return G.tallyMonuments.map((monument) => monument.author);
   }
@@ -49,6 +49,8 @@ export function politicianStandings(G: HegemonyState): PoliticianStanding[] {
   const threshold = G.ruleset.assembly.dominanceThreshold;
 
   return POLITICIANS.map((politician) => {
+    // `authors` may contain nulls (the house resolution). Those count toward POWER —
+    // the stele is standing — but toward nobody's patronage.
     const authors = steleAuthors(G, politician.id);
     const authored = PLAYER_IDS.reduce(
       (all, playerID) => ({ ...all, [playerID]: authors.filter((author) => author === playerID).length }),
