@@ -297,6 +297,22 @@ UI's `isActive`, the scoreboard highlight — works unchanged.
 - **`coupThreshold` 3 → 5** — with only 7 Directives and permanent monuments, 5 makes
   the coup a genuine late-game reach rather than a mid-game swing.
 
+### Owner playtest revisions (2026-07-21, second pass)
+- **The bema mirrors the colonnade** — a vertical column per house + player, each with
+  its card, its effect and the actions for it directly beneath (propose/discard while
+  proposing; yea/nay and a red **Veto · cost** button under the card under vote).
+  Per-seat vote marks in the column headers replaced the pebble row; the footer keeps
+  only Repeal/Pass (proposal) and Bribe (voting). The columns stretch to fill the tall
+  panel.
+- **A transient "Passed / Failed / Vetoed" banner** holds for ~2.6s under the vote bar
+  after each card resolves — the engine advances instantly, so there was otherwise no
+  beat to read the outcome. It lives on the always-mounted panel to survive the last
+  card's phase → closing cut.
+- **The coup indicator left the agora.** The Assembly panel and the Agora page now show
+  Stratokles's danger through colour and his stack of monuments alone; the counter
+  itself sits atop the **Victory ledger** as a threat row (not a holdable card) with
+  monument glyphs filling toward the coup and its patron.
+
 ### Deliberate departures from §1 and Appendix A
 1. **Land Rush** reads "first colony/year free of **wood**", not "of stone & gold". Founding costs
    neither stone nor gold since the Phase-2 repricing (`wood 20 + food 2`), so the line as written was
