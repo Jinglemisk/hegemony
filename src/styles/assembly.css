@@ -1,0 +1,1246 @@
+/* ==========================================================================
+ * The Assembly (Phase 3-B) — docs/feat/assembly-politicians.md §1.2
+ *
+ * Transcribed from the OWNER-APPROVED reference,
+ * docs/design/showcases/assembly-mode-showcase.html (2026-07-20). Where this file
+ * departs from that reference it is because the reference is a static mock and the
+ * real panel has states it never drew (casting a vote, an empty stack, a picker
+ * menu); each such departure is commented.
+ *
+ * The register: AEGEAN is politics and appears nowhere else in the game, so the
+ * moment a player sees it they know they are in the agora. Clay stays "your action /
+ * armed", olive stays "yea / gain", clay-deep stays "nay / cost".
+ *
+ * Motion: the reference has NO @keyframes and NO animation — every transition is a
+ * .16s hover or the .3s slot slide. State ① → ② is a hard cut, deliberately. This
+ * file does not add motion beyond it.
+ * ========================================================================== */
+
+/* ── The slot: the sea gap the panel is sized to ──────────────────────────────
+   The insets are computed from the SAME chrome tokens the ledger and consult
+   panels use, so the panel tracks them at every --ui-scale instead of hard-coding
+   the reference's 392px. When a side panel is open the slot pulls in past it —
+   the Assembly must never be covered by the chrome it deliberately left live. */
+.asmSlot {
+  position: fixed;
+  top: calc(var(--chrome-top) + 12px);
+  bottom: calc(var(--bot-h) + 12px);
+  left: calc(var(--rail-w) + var(--bub-out) + 14px);
+  right: calc(var(--rail-w) + var(--bub-out) + 14px);
+  z-index: 34;
+  display: grid;
+  place-items: center;
+  /* The gutters fall through to the map, so the board stays pannable around the
+     agora. Only the panel itself takes pointer events. */
+  pointer-events: none;
+  transition:
+    left 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+    right 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.asmSlot[data-ledger-open="true"] {
+  left: calc(var(--rail-w) + var(--bub-out) + 14px + var(--panel-w) + 12px);
+}
+
+.asmSlot[data-consult-open="true"] {
+  right: calc(var(--rail-w) + var(--bub-out) + 14px + var(--chron-w) + 12px);
+}
+
+/* A light veil so the board reads as *behind* the agora without disappearing —
+   you are meant to be able to glance at your cities while you vote. */
+.asmSlot::before {
+  position: fixed;
+  z-index: -1;
+  content: "";
+  inset: 0;
+  background: rgb(8 22 26 / 22%);
+  pointer-events: none;
+}
+
+/* The panel HUGS its content and only caps at 560 — it must never leave dead space. */
+.assembly {
+  display: flex;
+  flex-direction: column;
+  width: min(900px, 100%);
+  max-height: min(560px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--ivory);
+  box-shadow:
+    var(--float),
+    0 0 0 1px var(--aeg-12),
+    0 22px 56px rgb(6 20 24 / 42%);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+/* ── Head ───────────────────────────────────────────────────────────────────── */
+
+.asm-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 13px;
+  border-bottom: 1px solid var(--line);
+  background: var(--glass);
+}
+
+.asm-urn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--aegean);
+  background: var(--aeg-tint);
+  box-shadow: inset 0 0 0 1px var(--aeg-30);
+}
+
+.asm-t {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 12.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.asm-t span {
+  margin-left: 7px;
+  color: var(--ink-48);
+  font-family: var(--body);
+  font-size: 10.5px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.asm-steps {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0 auto;
+}
+
+.asmStepWrap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.astep {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.astep .d {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  color: var(--ink-48);
+  font-family: var(--disp);
+  font-size: 8px;
+  box-shadow: inset 0 0 0 1px var(--ink-30);
+}
+
+.astep .l {
+  color: var(--ink-48);
+  font-family: var(--disp);
+  font-size: 8px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.astep.on {
+  background: var(--aeg-tint);
+}
+
+.astep.on .d {
+  color: var(--ivory);
+  background: var(--aegean);
+  box-shadow: 0 0 0 1px var(--aeg-30);
+}
+
+.astep.on .l {
+  color: var(--aegean);
+}
+
+.asm-steps .arw {
+  color: var(--ink-30);
+  font-size: 9px;
+}
+
+.asm-voice {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--aeg-tint);
+  box-shadow: inset 0 0 0 1px var(--aeg-30);
+  white-space: nowrap;
+}
+
+.asm-voice .k {
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.asm-voice .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px var(--ivory),
+    0 0 0 2px var(--vase);
+}
+
+.asm-voice .n {
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.asmVoiceNone {
+  color: var(--ink-48);
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* ── Body ───────────────────────────────────────────────────────────────────── */
+
+.asm-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 11px 13px 13px;
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+.asm-body::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── The colonnade ──────────────────────────────────────────────────────────── */
+
+.colonnade {
+  display: grid;
+  /* minmax(0,1fr) with min-width:0 below is load-bearing: it is what lets a long
+     Law name ellipsis inside its column instead of blowing the grid out. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.acol {
+  min-width: 0;
+  padding: 0 11px;
+  border-left: 1px solid var(--ink-12);
+}
+
+.acol:first-child {
+  padding-left: 2px;
+  border-left: 0;
+}
+
+.acol:last-child {
+  padding-right: 2px;
+}
+
+.ahead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.apow {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  color: var(--aegean);
+  background: var(--aeg-tint);
+  box-shadow: inset 0 0 0 1px var(--aeg-30);
+  font-family: var(--disp);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stratokles is the only clay column: he is not a wing of the politics, he is the
+   thing the politics is holding back. */
+.acol.strat .apow {
+  color: var(--clay);
+  background: rgb(192 70 28 / 8%);
+  box-shadow: inset 0 0 0 1px rgb(192 70 28 / 34%);
+}
+
+.aname {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 11.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* flex-basis:100% forces the epithet onto its own line in EVERY column. The
+   reference let it wrap naturally, which reads fine in a mock with one name length
+   but leaves the four live columns at ragged heights — and since stack height is the
+   power reading, the header above it has to be a flat baseline. */
+.aep {
+  flex-basis: 100%;
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.acol.strat .aep {
+  color: var(--clay);
+}
+
+.ameta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  color: var(--ink-48);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.ameta .dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px var(--ivory),
+    0 0 0 2px var(--vase);
+}
+
+.ameta b {
+  color: var(--ink-66);
+  font-weight: 600;
+}
+
+.ametaNone {
+  font-style: italic;
+}
+
+/* ── The stelae ─────────────────────────────────────────────────────────────── */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+/* The tombstone silhouette — rounded at the top, near-square at the foot. That
+   asymmetric radius is the whole conceit: a law inscribed on standing stone. */
+.stele {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px 6px 2px 2px;
+  background: rgb(255 248 231 / 70%);
+}
+
+.stele .sd {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px var(--ivory),
+    0 0 0 1.5px var(--vase);
+}
+
+.stele .sn {
+  color: var(--ink);
+  font-size: 10.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Stratokles's monuments: dashed and clay, with three scratched tallies where a
+   Law would carry its author's bead. Momentum, not a rule. */
+.tally {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px 4px 8px;
+  border: 1px dashed rgb(192 70 28 / 38%);
+  border-radius: 6px 6px 2px 2px;
+  background: rgb(192 70 28 / 5%);
+}
+
+.tally .tk {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+.tally .tk i {
+  width: 2px;
+  height: 10px;
+  border-radius: 1px;
+  background: var(--clay-deep);
+}
+
+.tally .tn {
+  color: var(--ink-48);
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* NOT in the reference — it only ever drew populated stacks. An empty column has to
+   read as "nothing stands here yet" rather than as a rendering failure. */
+.steleEmpty {
+  padding: 4px 0;
+  color: var(--ink-30);
+  font-size: 10px;
+  font-style: italic;
+}
+
+.coup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: rgb(192 70 28 / 8%);
+  box-shadow: inset 0 0 0 1px rgb(192 70 28 / 22%);
+}
+
+.coup .ck {
+  color: var(--clay-deep);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.coup .bd {
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.coup .bd i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.2px var(--clay-deep);
+}
+
+.coup .bd i.f {
+  background: var(--clay-deep);
+}
+
+.coup .cn {
+  color: var(--clay-deep);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The bema ───────────────────────────────────────────────────────────────── */
+
+.band {
+  position: relative;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid var(--aeg-20);
+}
+
+/* A notch label: it straddles the aegean rule and paints it out behind itself. */
+.band-k {
+  position: absolute;
+  top: -6px;
+  left: 0;
+  padding-right: 8px;
+  background: var(--ivory);
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.brow {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 7px;
+}
+
+.bcard,
+.bhalf {
+  flex: 1 1 300px;
+  min-width: 250px;
+}
+
+.polls {
+  flex: 1 1 300px;
+  min-width: 260px;
+}
+
+.blab {
+  margin-bottom: 5px;
+  color: var(--ink-48);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bpol {
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bname {
+  margin-top: 2px;
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+
+.bfx {
+  margin-top: 3px;
+  color: var(--ink-66);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* The trade-off, inked in two colours: what you win against what it costs. Seeing
+   both at a glance is what makes the vote an argument instead of a formality. */
+.gain {
+  color: var(--olive);
+  font-weight: 600;
+}
+
+.cost {
+  color: var(--clay-deep);
+  font-weight: 600;
+}
+
+.but {
+  padding: 0 4px;
+  color: var(--ink-48);
+  font-style: italic;
+}
+
+/* NOT in the reference: it never showed a Law/Directive badge because its single
+   mock card was a Law. The distinction is load-bearing — one stands forever, the
+   other resolves once — so the card has to say which it is. */
+.bkind {
+  margin-top: 5px;
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bkind.strat {
+  color: var(--clay);
+}
+
+/* ── Voting ─────────────────────────────────────────────────────────────────── */
+
+.pebs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* The pebble IS the player and its number IS their vote weight — the old separate
+   player strip folded into the thing it was describing. */
+.peb {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px 3px 4px;
+  border-radius: 999px;
+  background: rgb(255 248 231 / 70%);
+  box-shadow: inset 0 0 0 1px var(--ink-12);
+}
+
+.peb .pd {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  color: var(--ivory);
+  font-family: var(--disp);
+  font-size: 8px;
+  box-shadow: inset 0 0 0 1px rgb(255 248 231 / 50%);
+}
+
+.peb .pn {
+  color: var(--ink);
+  font-size: 10.5px;
+}
+
+.peb .pw {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.peb .pm {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+
+.peb.yay {
+  background: rgb(94 110 58 / 12%);
+  box-shadow: inset 0 0 0 1px rgb(94 110 58 / 28%);
+}
+
+.peb.yay .pm {
+  color: var(--olive);
+}
+
+.peb.nay {
+  background: rgb(143 46 19 / 9%);
+  box-shadow: inset 0 0 0 1px rgb(143 46 19 / 26%);
+}
+
+.peb.nay .pm {
+  color: var(--clay-deep);
+}
+
+.peb.wait {
+  opacity: 0.7;
+}
+
+.peb.wait .pm {
+  color: var(--ink-30);
+}
+
+.talline {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+.talline .yv {
+  color: var(--olive);
+  font-family: var(--disp);
+  font-size: 13px;
+}
+
+.talline .nv {
+  color: var(--clay-deep);
+  font-family: var(--disp);
+  font-size: 13px;
+}
+
+.talline .u {
+  font-size: 8px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+/* Named .tbar, never .bar — `.bar` is the chrome's absolutely-positioned spine and
+   the collision throws this into the page corner. The reference warns about it. */
+.talline .tbar {
+  display: flex;
+  flex: 1 1 60px;
+  height: 6px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--ink-12);
+  overflow: hidden;
+}
+
+.talline .tbar .y {
+  background: var(--olive);
+}
+
+/* Pending sits BETWEEN yea and nay, so the bar reads as a chamber filling from both
+   ends toward the seats that have not spoken. */
+.talline .tbar .p {
+  background: var(--ink-12);
+}
+
+.talline .tbar .n {
+  background: var(--clay-deep);
+}
+
+.talline .note {
+  color: var(--aegean);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.talline .note b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* ── Proposal chips ─────────────────────────────────────────────────────────── */
+
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgb(255 248 231 / 70%);
+  color: var(--ink-66);
+  font-size: 10.5px;
+}
+
+.chip .ck2 {
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chip .cn2 {
+  color: var(--ink);
+}
+
+/* Dashed = secret, the same language the tally monument uses for "not a standing rule". */
+.chip.seal {
+  border-style: dashed;
+  color: var(--ink-48);
+}
+
+.chip .pd2 {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  color: var(--ivory);
+  font-family: var(--disp);
+  font-size: 7.5px;
+}
+
+.chip.you {
+  border-color: var(--clay);
+  background: rgb(192 70 28 / 6%);
+}
+
+.chip.you .cn2 {
+  color: var(--clay-deep);
+  font-weight: 600;
+}
+
+.chip .st2 {
+  color: var(--ink-48);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── Standings & the closing recap ──────────────────────────────────────────── */
+
+.vrowline {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 0;
+  border-top: 1px solid var(--ink-12);
+  font-size: 10.5px;
+}
+
+.vrowline:first-of-type {
+  border-top: 0;
+}
+
+.vrowline .sd2 {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px var(--ivory),
+    0 0 0 1.5px var(--vase);
+}
+
+.vrowline .sn2 {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+}
+
+.vrowNote {
+  color: var(--ink-48);
+}
+
+.vrowline .sv2 {
+  color: var(--ink-48);
+  white-space: nowrap;
+}
+
+.vrowline .sv2 b {
+  color: var(--aegean);
+  font-weight: 700;
+}
+
+.asmResults {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.asmResults li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+  border-top: 1px solid var(--ink-12);
+  color: var(--ink-66);
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.asmResults li:first-child {
+  border-top: 0;
+}
+
+.asmResults li.passed {
+  color: var(--ink);
+}
+
+.asmResults li.failed {
+  color: var(--ink-48);
+}
+
+.asmResultTally {
+  margin-left: auto;
+  font-family: var(--disp);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.asmCapNote {
+  margin-top: 8px;
+}
+
+/* ── The action dock ────────────────────────────────────────────────────────── */
+
+.asm-foot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
+  background: var(--glass);
+}
+
+.av {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 4px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.av:hover:not(:disabled) {
+  background: var(--ink-07);
+}
+
+/* The same disc recipe as the dock and rail verbs, so a panel verb and a chrome
+   verb read as one family rather than two vocabularies. */
+.av .ad {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--disc);
+  box-shadow:
+    0 0 0 1px var(--ring),
+    var(--lift);
+}
+
+.av .atx {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.av .al {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.15;
+}
+
+.av .ac {
+  color: var(--ink-48);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.av.armed .ad {
+  color: var(--ivory);
+  background: var(--clay);
+  box-shadow:
+    0 0 0 1px rgb(143 46 19 / 55%),
+    0 3px 10px rgb(192 70 28 / 38%);
+}
+
+.av.armed .al {
+  color: var(--clay-deep);
+}
+
+.av.off {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.av.off:hover {
+  background: transparent;
+}
+
+.amap {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 6px 10px;
+  border: 1px solid var(--aeg-30);
+  border-radius: 999px;
+  background: var(--aeg-tint);
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 8.5px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+/* The one element that inverts to a solid aegean fill — the strongest note in the
+   register, saved for the act of leaving the agora. */
+.amap:hover {
+  border-color: var(--aegean);
+  background: var(--aegean);
+  color: var(--ivory);
+}
+
+.asmFootNote {
+  color: var(--ink-48);
+  font-size: 10.5px;
+  font-style: italic;
+}
+
+/* The held card / the ballot widget. */
+.adraw {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 5px 4px 8px;
+  border: 1px solid var(--clay);
+  border-radius: 9px;
+  background: rgb(192 70 28 / 5%);
+  white-space: nowrap;
+}
+
+.adraw .dk {
+  color: var(--clay);
+  font-family: var(--disp);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.adraw .dn {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 11px;
+  line-height: 1.1;
+}
+
+.adraw .db {
+  display: flex;
+  gap: 4px;
+}
+
+.mb {
+  padding: 5px 7px;
+  border: 0;
+  border-radius: 6px;
+  font-family: var(--disp);
+  font-size: 8px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.mb.go {
+  background: var(--clay);
+  color: var(--ivory);
+}
+
+.mb.go:hover {
+  background: #a8371a;
+}
+
+.mb.gh {
+  background: transparent;
+  color: var(--ink-66);
+  box-shadow: inset 0 0 0 1px var(--ink-30);
+}
+
+.mb.gh:hover {
+  background: var(--ink-07);
+  color: var(--ink);
+}
+
+/* Casting: olive for yea, clay-deep for nay — the same two inks the tally bar and
+   the pebbles use, so the button and its consequence match. */
+.mb.yea {
+  background: var(--olive);
+  color: var(--ivory);
+}
+
+.mb.yea:hover {
+  background: #4c5a2e;
+}
+
+.mb.nay {
+  background: var(--clay-deep);
+  color: var(--ivory);
+}
+
+.mb.nay:hover {
+  background: #77250f;
+}
+
+.asmCast {
+  border-color: var(--aeg-30);
+  background: var(--aeg-tint);
+}
+
+.asmCast .dk {
+  color: var(--aegean);
+}
+
+.asmBlocked {
+  padding: 5px 7px;
+  color: var(--clay-deep);
+  font-family: var(--disp);
+  font-size: 8px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+/* ── Pickers ────────────────────────────────────────────────────────────────── */
+
+/* Not in the reference: its deck selector was a static chip with no menu behind it.
+   The real thing has to let you choose a politician, a Law to repeal, and a Law to
+   replace at the cap — three decisions the mock could leave implied. */
+.asmSelectWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.asel {
+  flex: none;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--aeg-tint);
+  box-shadow: inset 0 0 0 1px var(--aeg-30);
+  color: var(--aegean);
+  font-family: inherit;
+  font-size: 8.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.asel:hover:not(:disabled),
+.asel.open {
+  background: rgb(31 105 119 / 14%);
+}
+
+.asel:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.asmMenu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: 320px;
+  margin: 0;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--ivory);
+  box-shadow: var(--float);
+  list-style: none;
+}
+
+.asmMenuHead {
+  padding: 4px 7px 6px;
+  color: var(--ink-48);
+  font-family: var(--disp);
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.asmMenu li button {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 5px 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.asmMenu li button:hover:not(:disabled) {
+  background: var(--ledger-hover);
+}
+
+.asmMenu li button.on {
+  background: var(--aeg-tint);
+}
+
+.asmMenu li button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.asmMenuName {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 10.5px;
+}
+
+.asmMenuMeta {
+  color: var(--ink-48);
+  font-size: 9.5px;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+/* ── Narrow viewports ───────────────────────────────────────────────────────── */
+
+/* Below the two-panel breakpoint the sea gap is too tight for four columns beside
+   a two-up band; the colonnade halves and the band stacks. The panel still never
+   scrolls the page horizontally — only its own body scrolls. */
+@media (max-width: 1180px) {
+  .colonnade {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 0;
+  }
+
+  .acol:nth-child(3) {
+    padding-left: 2px;
+    border-left: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .asmSlot {
+    left: calc(var(--rail-w) + 8px);
+    right: calc(var(--rail-w) + 8px);
+  }
+
+  /* A side panel and the agora cannot both fit; the agora wins the sea and the
+     panel simply overlaps it rather than squeezing the Assembly to nothing. */
+  .asmSlot[data-ledger-open="true"],
+  .asmSlot[data-consult-open="true"] {
+    left: calc(var(--rail-w) + 8px);
+    right: calc(var(--rail-w) + 8px);
+  }
+
+  .colonnade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .acol {
+    padding: 0 2px;
+    border-left: 0;
+  }
+
+  .asm-steps {
+    display: none;
+  }
+}

@@ -181,6 +181,15 @@ button:focus-visible {
   --terrain-neutral-soft: rgb(216 200 168 / 17%);
   --accent: var(--clay);
   --accent-2: var(--aegean);
+  /* The POLITICS register (assembly-mode-showcase.html). Aegean is reserved for the
+     Assembly: it never appears on the board or in the ledger, so the moment it shows
+     up the player knows they are looking at the agora. Clay stays "your action /
+     armed", olive stays "yea / gain", clay-deep stays "nay / cost". */
+  --aeg-tint: rgb(31 105 119 / 7%);
+  --aeg-12: rgb(31 105 119 / 12%);
+  --aeg-20: rgb(31 105 119 / 20%);
+  /* Named for the register's step, not the alpha — the showcase's own value is 34%. */
+  --aeg-30: rgb(31 105 119 / 34%);
   --fg: #241910;
   --muted: rgb(36 25 16 / 66%);
   --subtle: rgb(36 25 16 / 48%);

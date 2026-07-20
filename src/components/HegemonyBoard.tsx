@@ -40,6 +40,7 @@ import { VentureModal } from "./board/modals/VentureModal";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
 import { SeasonStatus } from "./board/topbar/SeasonStatus";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
+import { AssemblyPanel } from "./board/assembly/AssemblyPanel";
 import { GameUiProvider, type GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
 import { getOwnedHoldings } from "./board/helpers";
@@ -607,7 +608,12 @@ export function HegemonyBoard({
       {G.pendingPlayerEvent ? (
         <PendingPlayerEventModal />
       ) : null}
-      {G.yearOmen && G.yearOmen.year !== seenOmenYear && !G.pendingRiot && !G.pendingPlayerEvent ? (
+      {/* The Assembly owns the sea from spring of Year 2 (assembly-politicians.md
+          §1.2). It mounts off engine state like the omen, and it deliberately leaves
+          the top bar, both rails and the dock live around it — you want to read your
+          cities, pops and market before you vote. */}
+      {G.assembly ? <AssemblyPanel consultOpen={isConsultOpen} ledgerOpen={isLedgerOpen} /> : null}
+      {G.yearOmen && G.yearOmen.year !== seenOmenYear && !G.pendingRiot && !G.pendingPlayerEvent && !G.assembly ? (
         <EventTableModal
           table={OMEN_TABLE}
           modifier={0}
