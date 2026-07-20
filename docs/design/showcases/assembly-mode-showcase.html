@@ -1,0 +1,1092 @@
+<title>THE ASSEMBLY — Hegemony Design Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   Tokens + chrome lifted WHOLESALE from docs/design/showcases/DECIDED-UI-LAYOUT.html
+   (arm A — straight spines). The Assembly is NOT a full-screen takeover: it is a
+   floating panel sized to the SEA, inside the normal float insets. The top bar,
+   left rail, open ledger, chronicle tab, bottom dock and the board stay live
+   around it — so the panel never re-states anything the chrome already shows.
+   ============================================================================ */
+:root{
+  --ivory:#fff8e7; --bone:#f4e6c8; --slip:#d8c8a8;
+  --vase:#181210; --ink:#241910;
+  --ink-66:rgb(36 25 16/66%); --ink-48:rgb(36 25 16/48%); --ink-30:rgb(36 25 16/30%);
+  --ink-12:rgb(36 25 16/12%); --ink-07:rgb(36 25 16/7%);
+  --clay:#c0461c; --clay-deep:#8f2e13; --ochre:#d98a35; --ochre-ink:#b06a1d;
+  --olive:#5e6e3a; --aegean:#1f6977;
+  --p1:#2f5d9e; --p2:#a83226; --p3:#dfa437; --p4:#55673a;
+  --disp:'Marcellus', Copperplate, Georgia, serif;
+  --body:'Source Serif 4','Iowan Old Style', Georgia, serif;
+  --hexclip:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+
+  --glass:rgb(244 230 200/93%);
+  --disc:#fff8e7;
+  --disc-hi:#fffdf6;
+  --ring:rgb(36 25 16/22%);
+  --lift:0 2px 8px rgb(24 18 16/20%);
+  --lift-hi:0 5px 14px rgb(24 18 16/26%);
+  --line:rgb(36 25 16/13%);
+  --float:0 10px 30px rgb(24 18 16/26%);
+  --on-sea:#fff8e7; --on-sea-dim:rgb(255 248 231/72%);
+  --sea-shadow:0 1px 3px rgb(10 34 41/55%);
+
+  /* the politics register — aegean tints derived from --aegean */
+  --aeg-12:rgb(31 105 119/12%); --aeg-20:rgb(31 105 119/20%); --aeg-30:rgb(31 105 119/34%);
+  --aeg-tint:rgb(31 105 119/7%);
+
+  --rail-w:30px; --bub:46px; --bub-out:28px;
+  --top-h:48px; --bot-h:64px; --vb:54px; --vb-out:32px;
+  --panel-w:308px; --chron-w:292px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bone);color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased}
+svg{display:block}
+
+/* ============ slim showcase strip (NOT part of the game) ============ */
+.showbar{height:42px;display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--bone);
+  border-bottom:1px solid var(--ink-12)}
+.sb-t{font-family:var(--disp);font-size:14px;letter-spacing:.06em;white-space:nowrap;color:var(--ink)}
+.sb-t b{color:var(--clay);font-weight:400}
+.sb-sp{flex:1 1 auto}
+.sb-lab{font-family:var(--disp);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-48)}
+.seg{display:flex;border:1px solid var(--ink-30);border-radius:999px;padding:2px;background:var(--ivory)}
+.seg button{appearance:none;border:0;cursor:pointer;background:transparent;color:var(--ink-66);
+  font-family:var(--disp);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:999px;transition:.25s;white-space:nowrap}
+.seg button.on{background:var(--clay);color:var(--ivory)}
+.qb{width:26px;height:26px;border-radius:50%;border:1px solid var(--ink-30);background:transparent;cursor:pointer;
+  color:var(--ink-66);font-family:var(--disp);font-size:12px;display:grid;place-items:center;transition:.2s;flex:none}
+.qb:hover,.qb.on{background:var(--ink);color:var(--ivory);border-color:var(--ink)}
+.notes{position:fixed;left:0;right:0;top:42px;z-index:200;background:var(--ivory);
+  border-bottom:1px solid var(--ink-12);padding:18px 22px 20px;box-shadow:0 12px 30px rgb(24 18 16/14%);
+  display:grid;grid-template-columns:repeat(4,1fr);gap:20px;
+  transform:translateY(calc(-100% - 44px));transition:transform .3s cubic-bezier(.22,.61,.36,1)}
+.notes.show{transform:none}
+.note h4{font-family:var(--disp);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--clay);font-weight:400;margin-bottom:5px}
+.note p{font-size:12px;color:var(--ink-66);line-height:1.5}
+.note p b{color:var(--ink);font-weight:600}
+.note p i{color:var(--aegean);font-style:normal;font-weight:600}
+
+/* ============ the stage — exactly the viewport ============ */
+.stage{position:relative;width:100vw;height:calc(100vh - 42px);overflow:hidden;
+  background:radial-gradient(900px 620px at 62% 34%, #2e8a9a 0%, #206e7c 46%, #17505c 100%);
+  cursor:grab;user-select:none}
+.stage.dragging{cursor:grabbing}
+.sea-tex{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(104deg, rgb(255 248 231/2.5%) 0 2px, transparent 2px 90px),
+             repeating-linear-gradient(8deg, rgb(12 40 48/4%) 0 3px, transparent 3px 120px)}
+/* a light veil under the assembly: the board must stay recognisably there */
+.sea-dim{position:absolute;inset:0;z-index:10;pointer-events:none;background:rgb(8 22 26/22%);
+  opacity:0;transition:opacity .3s}
+.stage.assembling .sea-dim{opacity:1}
+
+.world{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
+.world.glide{transition:transform .42s cubic-bezier(.22,.61,.36,1)}
+.hex{position:absolute}
+.lyr{position:absolute;inset:0;clip-path:var(--hexclip)}
+.chit{position:absolute;left:50%;top:13px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;
+  background:#f7ecd2;border-radius:9px;padding:2px 7px 2px 5px;box-shadow:0 0 0 1px rgb(24 18 16/82%),0 1px 1.5px rgb(24 18 16/28%)}
+.chit b{font-size:12px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.sk{position:absolute;left:0;right:0;display:flex;justify-content:center;gap:3px}
+.sk i{width:11px;height:11px;border-radius:2px;background:rgb(24 18 16/22%);
+  box-shadow:inset 0 1px 1.5px rgb(24 18 16/35%),0 0 0 1px rgb(247 236 210/55%)}
+.sk i.b{background:var(--bone);box-shadow:0 0 0 1px var(--vase);display:grid;place-items:center}
+.sk.inert i{opacity:.55}
+.settle{position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;display:grid;place-items:center;
+  box-shadow:0 0 0 1.5px var(--ivory),0 0 0 2.5px var(--vase)}
+.blz{position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);width:11px;height:11px;border-radius:50%;
+  background:inherit;display:grid;place-items:center;box-shadow:0 0 0 1px var(--ivory)}
+.pp{position:absolute;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:7px}
+.pp .g{display:flex;align-items:center;gap:3px}
+.pp .g b{font-size:11.5px;font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.bead{border-radius:50%;flex:none}
+.bead.cit{width:9px;height:9px;box-shadow:0 0 0 1px var(--ivory),0 0 0 2px var(--vase)}
+.bead.fre{width:9px;height:9px;background:var(--bone);box-shadow:0 0 0 1px var(--ivory),0 0 0 2px var(--vase);position:relative}
+.bead.fre::after{content:"";position:absolute;inset:1px;border-radius:50%;border:2px solid currentColor}
+.bead.slv{width:7px;height:7px;background:var(--vase);box-shadow:0 0 0 1px var(--ivory)}
+
+/* ============ chrome: the straight spines ============ */
+.bar{position:absolute;background:var(--glass);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);z-index:20}
+.bar.top{left:0;right:0;top:0;height:var(--top-h);border-bottom:1px solid var(--line)}
+.bar.bot{left:0;right:0;bottom:0;height:var(--bot-h);border-top:1px solid var(--line)}
+.bar.rail{left:0;top:var(--top-h);bottom:var(--bot-h);width:var(--rail-w);border-right:1px solid var(--line)}
+.bubs,.verbs{position:absolute;inset:0;pointer-events:none;z-index:40}
+.verbs{z-index:25}
+.bub{position:absolute;width:var(--bub);height:var(--bub);border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  pointer-events:auto;transform:translate(-50%,-50%);
+  background:var(--disc);box-shadow:0 0 0 1px var(--ring),var(--lift);color:var(--ink);
+  transition:background .2s,color .2s,box-shadow .2s,left .3s cubic-bezier(.22,.61,.36,1),top .3s cubic-bezier(.22,.61,.36,1)}
+.bub:hover{background:var(--disc-hi);box-shadow:0 0 0 1px var(--ink-30),var(--lift-hi)}
+.bub.on{background:var(--clay);color:var(--ivory);box-shadow:0 0 0 1px rgb(143 46 19/55%),0 4px 14px rgb(192 70 28/38%)}
+.bub .tip{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%) translateX(-4px);opacity:0;pointer-events:none;
+  background:var(--vase);color:var(--bone);font-family:var(--disp);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  padding:6px 10px;border-radius:5px;white-space:nowrap;transition:opacity .18s,transform .18s;z-index:3}
+.bub:hover .tip{opacity:1;transform:translateY(-50%) translateX(0)}
+.bub .cnt{position:absolute;top:-2px;right:-2px;min-width:15px;height:15px;border-radius:8px;background:var(--ochre);
+  color:var(--vase);font-size:9.5px;font-weight:700;display:grid;place-items:center;padding:0 3px;
+  font-variant-numeric:tabular-nums;box-shadow:0 0 0 1.5px var(--ivory)}
+
+/* ---- TOP ---- */
+.cards{position:absolute;left:calc(var(--rail-w) + var(--bub-out) + 14px);top:0;height:var(--top-h);z-index:25;
+  display:flex;align-items:center;gap:6px}
+.ev{display:flex;align-items:center;gap:7px;padding:5px 9px 5px 6px;border-radius:8px;background:transparent;cursor:pointer;transition:.18s}
+.ev:hover{background:var(--ink-07)}
+.ev .th{width:17px;height:21px;flex:none;background:var(--ivory);border-radius:2px;position:relative;box-shadow:0 0 0 1px rgb(36 25 16/45%)}
+.ev .th::after{content:"";position:absolute;left:3px;right:3px;top:6px;height:1px;background:rgb(36 25 16/45%);box-shadow:0 3px 0 rgb(36 25 16/35%)}
+.ev .tt{display:flex;flex-direction:column;gap:1px}
+.ev .k{font-family:var(--disp);font-size:7.5px;letter-spacing:.16em;color:var(--ink-48)}
+.ev .n{font-size:11.5px;color:var(--ink);white-space:nowrap}
+.ev .ck{width:11px;height:11px;color:var(--olive);flex:none}
+.sun{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:25;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.sun>*{pointer-events:auto}
+.sun-row{margin-top:calc(var(--top-h) - 40px);display:flex;align-items:center;gap:26px}
+.medal{width:64px;height:64px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:var(--disc);color:var(--ink);box-shadow:0 0 0 1px var(--ring),var(--lift)}
+.sun .s1{font-family:var(--disp);font-size:11.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--on-sea);
+  margin-top:9px;white-space:nowrap;text-shadow:var(--sea-shadow)}
+.sun .s2{font-size:10.5px;color:var(--on-sea-dim);margin-top:2px;white-space:nowrap;text-shadow:var(--sea-shadow)}
+.roster{position:absolute;right:14px;top:0;height:var(--top-h);z-index:25;display:flex;align-items:center;gap:4px}
+.st8{display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:7px;background:transparent;position:relative}
+.st8 .disc{width:17px;height:17px;border-radius:50%;flex:none;display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1px rgb(255 248 231/62%),0 0 0 1px rgb(36 25 16/38%)}
+.st8 .disc i{font-style:normal;font-family:var(--disp);font-size:8px;color:var(--ivory)}
+.st8 .nm{font-size:12px;color:var(--ink-66)}
+.st8 .pv{font-size:10.5px;color:var(--ink-48);font-variant-numeric:tabular-nums}
+.st8.acting{box-shadow:inset 0 -2px 0 var(--clay)}
+.st8.acting .nm{color:var(--ink);font-weight:600}
+
+/* ---- the ledger panel (stays open and readable) ---- */
+.panel{position:absolute;left:calc(var(--rail-w) + var(--bub-out) + 14px);top:calc(var(--top-h) + 12px);width:var(--panel-w);z-index:30;
+  background:var(--ivory);border-radius:12px;padding:14px 15px 15px;box-shadow:var(--float);
+  max-height:calc(100vh - 42px - var(--top-h) - var(--bot-h) - 60px);overflow:auto;
+  transform-origin:0 24px;transition:opacity .2s,transform .24s cubic-bezier(.22,.61,.36,1)}
+.panel.hide{opacity:0;transform:translateX(-14px) scale(.97);pointer-events:none}
+.panel::-webkit-scrollbar{width:0}
+.p-head{display:flex;align-items:center;gap:9px;padding-bottom:9px;border-bottom:1px solid var(--ink-12)}
+.p-head .pt{font-family:var(--disp);font-size:15px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink);flex:1}
+.px{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;cursor:pointer;color:var(--ink-48);background:transparent;border:0;transition:.18s}
+.px:hover{background:var(--ink-12);color:var(--ink)}
+.p-sum{padding:9px 0 0;font-size:12.5px;color:var(--ink-66);font-variant-numeric:tabular-nums}
+.p-sum b{color:var(--ink);font-weight:700}
+.pwarn{margin-top:11px;padding:8px 10px 9px 12px;position:relative;background:rgb(217 138 53/12%);border-radius:0 5px 5px 0}
+.pwarn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ochre);border-radius:2px}
+.pwarn .k{font-family:var(--disp);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ochre-ink)}
+.pwarn .c{color:var(--ink);font-size:12.5px;margin-top:2px}
+.city{margin-top:13px;padding-top:11px;border-top:1px solid var(--ink-12)}
+.ch{display:flex;align-items:center;gap:9px}
+.ch .md{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;box-shadow:0 0 0 1.5px var(--ivory),0 0 0 2.5px var(--vase)}
+.ch .cn{font-family:var(--disp);font-size:13.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);line-height:1.15}
+.ch .cc{font-size:11.5px;color:var(--ink-66)}
+.ch .pf{margin-left:auto;font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.ch .pf span{font-size:12px;font-weight:400;color:var(--ink-66)}
+.crow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:7px 0 6px;border-top:1px solid var(--ink-12);margin-top:8px}
+.crow .k{font-family:var(--disp);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-66);flex:none;padding-top:2px}
+.crow .v{font-size:12.5px;text-align:right;color:var(--ink);line-height:1.35}
+.crow .v .dim{color:var(--ink-48)}
+.slots{display:inline-flex;gap:3px;vertical-align:-2px;margin-left:6px}
+.slots i{width:10px;height:10px;border-radius:2px;background:rgb(36 25 16/6%);box-shadow:inset 0 1px 1px rgb(36 25 16/15%)}
+.slots i.b{background:var(--bone);box-shadow:0 0 0 1px var(--vase)}
+.net{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 0 2px;border-top:1px solid var(--ink-12);margin-top:8px}
+.net .n{display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.net .pos{color:var(--olive)}
+.net .neg{color:var(--clay-deep)}
+
+/* ---- chronicle: collapsed to its tab, so the assembly gets the room ---- */
+.chron{position:absolute;right:14px;top:calc(var(--top-h) + 12px);width:var(--chron-w);z-index:30;
+  background:var(--ivory);border-radius:12px;box-shadow:var(--float);padding:12px 14px 14px;
+  max-height:calc(100vh - 42px - var(--top-h) - var(--bot-h) - 60px);overflow:auto;
+  transform-origin:100% 24px;transition:opacity .2s,transform .24s cubic-bezier(.22,.61,.36,1)}
+.chron.hide{opacity:0;transform:translateX(16px) scale(.97);pointer-events:none}
+.chron::-webkit-scrollbar{width:0}
+.c-head{display:flex;align-items:center;gap:8px;padding-bottom:9px;border-bottom:1px solid var(--ink-12)}
+.c-head .ct{font-family:var(--disp);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);flex:1}
+.c-head .cs{font-family:var(--disp);font-size:8.5px;letter-spacing:.16em;color:var(--ink-48)}
+.cx{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink-48);background:transparent;border:0;flex:none;transition:.18s}
+.cx:hover{background:var(--ink-12);color:var(--ink)}
+.log{padding:8px 0 0}
+.li{padding:7px 0;border-bottom:1px solid var(--ink-12);font-size:12.5px;color:var(--ink-66);line-height:1.45}
+.li:last-child{border-bottom:0}
+.li b{color:var(--ink);font-weight:600}
+.li .pos{color:var(--olive);font-weight:600}
+.li .neg{color:var(--clay-deep);font-weight:600}
+.c-tab{position:absolute;right:-16px;top:calc(var(--top-h) + 14px);z-index:31;
+  width:var(--bub);height:var(--bub);border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  background:var(--disc);box-shadow:0 0 0 1px var(--ring),var(--lift);color:var(--ink);
+  opacity:0;transform:translateX(10px);pointer-events:none;transition:.24s}
+.c-tab.show{opacity:1;transform:none;pointer-events:auto}
+.c-tab:hover{background:var(--disc-hi);transform:translateX(-3px)}
+.c-tab .cnt{position:absolute;top:-2px;left:-2px;min-width:15px;height:15px;border-radius:8px;background:var(--clay);color:var(--ivory);
+  font-size:9.5px;font-weight:700;display:grid;place-items:center;padding:0 3px;font-variant-numeric:tabular-nums;box-shadow:0 0 0 1.5px var(--ivory)}
+.c-tab svg{margin-left:-14px}
+
+/* ---- the bottom dock: verb discs + the square commit ---- */
+.verb{position:absolute;width:86px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;background:none;border:0;padding:0;
+  font-family:inherit;pointer-events:auto;transform:translateX(-50%)}
+.vb{width:var(--vb);height:var(--vb);border-radius:50%;display:grid;place-items:center;position:relative;flex:none;
+  background:var(--disc);box-shadow:0 0 0 1px var(--ring),var(--lift);color:var(--ink);
+  transition:background .18s,transform .18s,box-shadow .18s}
+.verb:hover .vb{background:var(--disc-hi);transform:translateY(-3px);box-shadow:0 0 0 1px var(--ink-30),var(--lift-hi)}
+.verb.off{cursor:not-allowed}
+.verb.off .vb{background:rgb(255 248 231/55%);color:var(--ink-30);box-shadow:0 0 0 1px var(--ink-12)}
+.verb.off:hover .vb{transform:none;background:rgb(255 248 231/55%);box-shadow:0 0 0 1px var(--ink-12)}
+.verb.off .vn,.verb.off .vc{color:var(--ink-30)}
+.vn{font-family:var(--disp);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);line-height:1}
+.vc{font-size:10px;color:var(--ink-48);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1;margin-top:-3px}
+.kbd{position:absolute;top:-2px;right:-2px;width:15px;height:15px;border-radius:50%;background:var(--vase);
+  color:rgb(244 230 200/80%);font-size:8.5px;font-weight:700;display:grid;place-items:center;font-family:var(--body);
+  box-shadow:0 0 0 1.5px var(--ivory)}
+.turnbox{position:absolute;right:16px;bottom:102px;z-index:25;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.turnbox .lbl{font-family:var(--disp);font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--on-sea-dim);text-shadow:var(--sea-shadow)}
+.turnbox .who{font-family:var(--disp);font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-sea);
+  padding-bottom:3px;border-bottom:2px solid var(--p1);text-shadow:var(--sea-shadow)}
+.endturn{position:absolute;right:16px;bottom:14px;z-index:26;width:76px;height:76px;border-radius:5px;cursor:pointer;border:0;
+  background:var(--clay-deep);color:var(--ivory);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  box-shadow:0 6px 20px rgb(143 46 19/40%),0 0 0 1px rgb(36 25 16/30%);transition:.18s;font-family:inherit}
+.endturn:hover{background:#a8371a;transform:translateY(-3px)}
+.endturn .et{font-family:var(--disp);font-size:8px;letter-spacing:.13em;text-transform:uppercase;line-height:1.15;text-align:center}
+
+/* ---- resources (flat, never a plate) ---- */
+.r{display:flex;flex-direction:column;gap:2px}
+.r .rt{display:flex;align-items:center;gap:5px}
+.r .rv{font-size:13.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.r .rv.lo{color:var(--ochre-ink)}
+.r svg{opacity:.72;flex:none}
+.r .rd{font-size:9.5px;font-variant-numeric:tabular-nums;line-height:1;padding-left:21px}
+.rd.up{color:var(--olive)}.rd.dn{color:var(--clay-deep)}.rd.z{color:var(--ink-30)}
+#resL,#resR{display:flex;align-items:flex-start;align-self:flex-start;gap:16px}
+.zoom{position:absolute;left:calc(var(--rail-w) + var(--bub-out) + 16px);z-index:25;display:flex;align-items:center;gap:6px;
+  transition:top .24s cubic-bezier(.22,.61,.36,1)}
+.zb{width:28px;height:28px;border-radius:50%;border:0;cursor:pointer;background:var(--disc);color:var(--ink);
+  display:grid;place-items:center;font-size:15px;font-family:var(--body);box-shadow:0 0 0 1px var(--ring),var(--lift);transition:.16s}
+.zb:hover{background:var(--disc-hi)}
+.zlv{font-size:11px;color:var(--on-sea-dim);font-variant-numeric:tabular-nums;min-width:34px;text-align:center;text-shadow:var(--sea-shadow)}
+
+/* ============================================================================
+   THE ASSEMBLY — a floating panel sized to the SEA GAP.
+   left  = past the open ledger (rail 30 + bub-out 28 + 14 + panel 308 = 380)
+   right = clear of the chronicle tab
+   top   = below the season cluster that hangs off the top bar
+   bottom= above the verb fan and the whose-turn / commit corner
+   ============================================================================ */
+.asm-slot{position:absolute;left:392px;right:56px;top:120px;bottom:150px;z-index:34;
+  display:grid;place-items:center;pointer-events:none;
+  transition:left .3s cubic-bezier(.22,.61,.36,1)}
+.stage.noledger .asm-slot{left:88px}
+/* the panel HUGS its content and only caps at 560 — it must never leave dead space */
+.assembly{pointer-events:auto;width:min(900px,100%);max-height:min(560px,100%);
+  background:var(--ivory);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--float),0 0 0 1px var(--aeg-12),0 22px 56px rgb(6 20 24/42%);
+  display:flex;flex-direction:column;overflow:hidden}
+
+/* ---- panel head: title, phase steps, the Voice card. Nothing the chrome shows. ---- */
+.asm-head{flex:none;display:flex;align-items:center;gap:12px;padding:8px 13px;
+  border-bottom:1px solid var(--line);background:var(--glass)}
+.asm-urn{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;
+  color:var(--aegean);background:var(--aeg-tint);box-shadow:inset 0 0 0 1px var(--aeg-30)}
+.asm-t{font-family:var(--disp);font-size:12.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+.asm-t span{font-family:var(--body);font-size:10.5px;letter-spacing:0;text-transform:none;color:var(--ink-48);margin-left:7px}
+.asm-steps{display:flex;align-items:center;gap:3px;margin:0 auto}
+.astep{display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px}
+.astep .d{width:14px;height:14px;border-radius:50%;display:grid;place-items:center;font-family:var(--disp);
+  font-size:8px;color:var(--ink-48);box-shadow:inset 0 0 0 1px var(--ink-30)}
+.astep .l{font-family:var(--disp);font-size:8px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-48);white-space:nowrap}
+.astep.on{background:var(--aeg-tint)}
+.astep.on .d{background:var(--aegean);color:var(--ivory);box-shadow:0 0 0 1px var(--aeg-30)}
+.astep.on .l{color:var(--aegean)}
+.asm-steps .arw{color:var(--ink-30);font-size:9px}
+.asm-voice{flex:none;display:flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;
+  background:var(--aeg-tint);box-shadow:inset 0 0 0 1px var(--aeg-30);white-space:nowrap}
+.asm-voice .k{font-family:var(--disp);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--aegean)}
+.asm-voice .dot{width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 1px var(--ivory),0 0 0 2px var(--vase)}
+.asm-voice .n{font-size:11px;color:var(--ink);font-weight:600}
+
+.asm-body{flex:1 1 auto;min-height:0;overflow:auto;padding:11px 13px 12px}
+.asm-body::-webkit-scrollbar{width:0}
+
+/* ---- 1. the colonnade, condensed: four narrow columns of stelae ---- */
+.colonnade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.acol{padding:0 11px;border-left:1px solid var(--ink-12);min-width:0}
+.acol:first-child{border-left:0;padding-left:2px}
+.acol:last-child{padding-right:2px}
+.ahead{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.apow{width:19px;height:19px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-family:var(--disp);font-size:10px;color:var(--aegean);background:var(--aeg-tint);
+  box-shadow:inset 0 0 0 1px var(--aeg-30);font-variant-numeric:tabular-nums}
+.acol.strat .apow{color:var(--clay);background:rgb(192 70 28/8%);box-shadow:inset 0 0 0 1px rgb(192 70 28/34%)}
+.aname{font-family:var(--disp);font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);line-height:1}
+.aep{font-family:var(--disp);font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--aegean);line-height:1}
+.acol.strat .aep{color:var(--clay)}
+.ameta{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:10px;color:var(--ink-48);line-height:1.3}
+.ameta .dot{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:0 0 0 1px var(--ivory),0 0 0 2px var(--vase)}
+.ameta b{color:var(--ink-66);font-weight:600}
+/* the stelae — one-line hairline tiles. Stack height = power, dominant dot = patron. */
+.stack{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.stele{display:flex;align-items:center;gap:6px;padding:4px 7px 4px 8px;
+  border:1px solid var(--line);border-radius:6px 6px 2px 2px;background:rgb(255 248 231/70%)}
+.stele .sd{width:7px;height:7px;border-radius:50%;flex:none;box-shadow:0 0 0 1px var(--ivory),0 0 0 1.5px var(--vase)}
+.stele .sn{font-size:10.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tally{display:flex;align-items:center;gap:6px;padding:4px 7px 4px 8px;
+  border:1px dashed rgb(192 70 28/38%);border-radius:6px 6px 2px 2px;background:rgb(192 70 28/5%)}
+.tally .tk{display:flex;gap:2px;flex:none}
+.tally .tk i{width:2px;height:10px;background:var(--clay-deep);border-radius:1px}
+.tally .tn{font-size:10px;color:var(--ink-48);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.coup{margin-top:6px;display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:5px;
+  background:rgb(192 70 28/8%);box-shadow:inset 0 0 0 1px rgb(192 70 28/22%)}
+.coup .ck{font-family:var(--disp);font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--clay-deep)}
+.coup .bd{display:flex;gap:3px;margin-left:auto}
+.coup .bd i{width:8px;height:8px;border-radius:50%;box-shadow:inset 0 0 0 1.2px var(--clay-deep)}
+.coup .bd i.f{background:var(--clay-deep)}
+.coup .cn{font-size:10px;color:var(--clay-deep);font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ---- 2. the bema: a horizontal BAND, not a big centred card ---- */
+.band{margin-top:11px;padding-top:10px;border-top:1px solid var(--aeg-20);position:relative}
+.band-k{position:absolute;left:0;top:-6px;background:var(--ivory);padding-right:8px;
+  font-family:var(--disp);font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--aegean)}
+.bview{display:none}
+.bview.on{display:block}
+.brow{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-top:7px}
+.bcard{flex:1 1 300px;min-width:250px}
+.bpol{font-family:var(--disp);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--aegean)}
+.bname{font-family:var(--disp);font-size:15px;letter-spacing:.03em;color:var(--ink);line-height:1.1;margin-top:2px}
+.bfx{font-size:11px;color:var(--ink-66);line-height:1.45;margin-top:3px}
+.gain{color:var(--olive);font-weight:600}
+.cost{color:var(--clay-deep);font-weight:600}
+.but{color:var(--ink-48);font-style:italic;padding:0 2px}
+/* the vote pebbles + tally, inline on the band — this replaces the old player strip:
+   the pebble IS the player, its number IS their citizen count. */
+.polls{flex:1 1 300px;min-width:260px}
+.pebs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.peb{display:flex;align-items:center;gap:5px;padding:3px 8px 3px 4px;border-radius:999px;
+  box-shadow:inset 0 0 0 1px var(--ink-12);background:rgb(255 248 231/70%)}
+.peb .pd{width:16px;height:16px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-family:var(--disp);font-size:8px;color:var(--ivory);box-shadow:inset 0 0 0 1px rgb(255 248 231/50%)}
+.peb .pn{font-size:10.5px;color:var(--ink)}
+.peb .pw{font-family:var(--disp);font-size:11px;color:var(--ink);font-variant-numeric:tabular-nums}
+.peb .pm{width:12px;height:12px;flex:none}
+.peb.yay{background:rgb(94 110 58/12%);box-shadow:inset 0 0 0 1px rgb(94 110 58/28%)}
+.peb.yay .pm{color:var(--olive)}
+.peb.nay{background:rgb(143 46 19/9%);box-shadow:inset 0 0 0 1px rgb(143 46 19/26%)}
+.peb.nay .pm{color:var(--clay-deep)}
+.peb.wait{opacity:.7}
+.peb.wait .pm{color:var(--ink-30)}
+.talline{display:flex;align-items:center;gap:9px;margin-top:7px;font-variant-numeric:tabular-nums}
+.talline .yv{font-family:var(--disp);font-size:13px;color:var(--olive)}
+.talline .nv{font-family:var(--disp);font-size:13px;color:var(--clay-deep)}
+.talline .u{font-size:8px;letter-spacing:.13em;text-transform:uppercase}
+/* NOTE: must NOT be called .bar — that class is the chrome's absolutely-positioned spine */
+.talline .tbar{flex:1 1 60px;height:6px;border-radius:3px;display:flex;overflow:hidden;box-shadow:inset 0 0 0 1px var(--ink-12)}
+.talline .tbar .y{background:var(--olive)}
+.talline .tbar .n{background:var(--clay-deep)}
+.talline .tbar .p{background:var(--ink-12)}
+.talline .note{font-size:10px;color:var(--aegean);line-height:1.4}
+.talline .note b{color:var(--ink);font-weight:700}
+/* proposal-state chips */
+.chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:6px;padding:4px 9px;border-radius:7px;
+  border:1px solid var(--line);background:rgb(255 248 231/70%);font-size:10.5px;color:var(--ink-66)}
+.chip .ck2{font-family:var(--disp);font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--aegean)}
+.chip .cn2{color:var(--ink)}
+.chip.seal{border-style:dashed;color:var(--ink-48)}
+.chip .pd2{width:14px;height:14px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-family:var(--disp);font-size:7.5px;color:var(--ivory)}
+.chip.you{border-color:var(--clay);background:rgb(192 70 28/6%)}
+.chip.you .cn2{color:var(--clay-deep);font-weight:600}
+.chip .st2{font-family:var(--disp);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-48)}
+.blab{font-family:var(--disp);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-48);margin-bottom:5px}
+/* board-state inline standings */
+.vrowline{display:flex;align-items:center;gap:7px;padding:4px 0;border-top:1px solid var(--ink-12);font-size:10.5px}
+.vrowline:first-of-type{border-top:0}
+.vrowline .sd2{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:0 0 0 1px var(--ivory),0 0 0 1.5px var(--vase)}
+.vrowline .sn2{flex:1;color:var(--ink)}
+.vrowline .sv2{color:var(--ink-48)}
+.vrowline .sv2 b{color:var(--aegean);font-weight:700}
+
+/* ---- 3. the compact action row ---- */
+/* one tight row at full width; wraps rather than clipping when the sea gap narrows */
+.asm-foot{flex:none;border-top:1px solid var(--line);background:var(--glass);
+  padding:8px 10px;display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.av{flex:none;display:flex;align-items:center;gap:6px;padding:5px 8px 5px 4px;border-radius:999px;
+  cursor:pointer;border:0;background:transparent;font-family:inherit;transition:.16s;white-space:nowrap}
+.av:hover{background:var(--ink-07)}
+.av .ad{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:var(--disc);color:var(--ink);box-shadow:0 0 0 1px var(--ring),var(--lift)}
+.av .al{font-family:var(--disp);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);line-height:1.15}
+.av .ac{font-size:9px;color:var(--ink-48);font-variant-numeric:tabular-nums;line-height:1.15}
+.av .atx{display:flex;flex-direction:column;gap:1px;align-items:flex-start}
+.av.armed .ad{background:var(--clay);color:var(--ivory);box-shadow:0 0 0 1px rgb(143 46 19/55%),0 3px 10px rgb(192 70 28/38%)}
+.av.armed .al{color:var(--clay-deep)}
+.av.off{cursor:not-allowed;opacity:.45}
+.av.off:hover{background:transparent}
+.asel{flex:none;font-size:8.5px;color:var(--aegean);padding:2px 6px;border-radius:999px;
+  box-shadow:inset 0 0 0 1px var(--aeg-30);background:var(--aeg-tint);white-space:nowrap}
+.adraw{flex:none;display:flex;align-items:center;gap:6px;padding:4px 5px 4px 8px;border-radius:9px;
+  border:1px solid var(--clay);background:rgb(192 70 28/5%);white-space:nowrap}
+.adraw .dk{font-family:var(--disp);font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:var(--clay)}
+.adraw .dn{font-family:var(--disp);font-size:11px;color:var(--ink);line-height:1.1}
+.adraw .db{display:flex;gap:4px}
+.mb{font-family:var(--disp);font-size:8px;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;
+  border:0;padding:5px 7px;border-radius:6px;transition:.16s}
+.mb.go{background:var(--clay);color:var(--ivory)}
+.mb.go:hover{background:#a8371a}
+.mb.gh{background:transparent;color:var(--ink-66);box-shadow:inset 0 0 0 1px var(--ink-30)}
+.mb.gh:hover{background:var(--ink-07);color:var(--ink)}
+.amap{flex:none;margin-left:auto;display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--aeg-30);background:var(--aeg-tint);color:var(--aegean);
+  font-family:var(--disp);font-size:8.5px;letter-spacing:.11em;text-transform:uppercase;transition:.16s;white-space:nowrap}
+.amap:hover{background:var(--aegean);color:var(--ivory);border-color:var(--aegean)}
+.hidden{display:none!important}
+</style>
+
+<div class="showbar">
+  <span class="sb-t">THE ASSEMBLY — <b>Hegemony · design showcase</b></span>
+  <span class="sb-sp"></span>
+  <span class="sb-lab">Phase</span>
+  <div class="seg">
+    <button id="seg1" class="on">① Proposal</button>
+    <button id="seg2">② Voting</button>
+    <button id="seg3">③ The board</button>
+  </div>
+  <button class="qb" id="qb" title="What am I looking at?">?</button>
+</div>
+
+<div class="notes" id="notes">
+  <div class="note"><h4>Sized to the sea</h4><p>The Assembly is <b>not</b> a full-screen takeover — it floats in the
+    <b>sea gap</b> between the ledger and the right edge. The top bar, rail, ledger, dock and the board all stay
+    <i>live around it</i>, so the panel never re-states resources, influence, the roster or the season.</p></div>
+  <div class="note"><h4>Laws are stelae</h4><p>Every passed Law is inscribed on a <b>stele</b> stacked beneath its
+    politician. <b>Stack height = power</b>; the <b>dominant author colour = the patron.</b> No hidden counters — the
+    board <i>is</i> the scoreboard.</p></div>
+  <div class="note"><h4>Votes cost economy</h4><p>Each pebble on the band <i>is</i> a player: its number is their
+    <b>citizen count</b>, which is their vote weight. Citizens cost upkeep and happiness, so the loudest voice is
+    rarely the richest. Influence buys <b>draws, bribes, vetoes, repeals.</b></p></div>
+  <div class="note"><h4>Stratokles &amp; the coup</h4><p>His cards are <b>one-time populist Directives</b> — riots that
+    hit the whole table. Each leaves a <b>tally monument</b>; at <b>3</b> the demagogue <i>seizes the city</i> and his
+    patron wins.</p></div>
+</div>
+
+<div class="stage assembling" id="stage">
+  <div class="sea-tex"></div>
+  <div class="world" id="world"></div>
+  <div class="sea-dim"></div>
+
+  <div class="bar top"></div>
+  <div class="bar bot"></div>
+  <div class="bar rail"></div>
+  <div class="bubs" id="bubs"></div>
+
+  <div class="cards">
+    <div class="ev"><div class="th"></div><div class="tt"><div class="k">SEASON</div><div class="n">Timber Levies</div></div></div>
+    <div class="ev"><div class="th"></div><div class="tt"><div class="k">PLAYER</div><div class="n">New Citizen</div></div>
+      <svg class="ck" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 10.5l4 4 8-9"/></svg></div>
+  </div>
+
+  <div class="sun">
+    <div class="sun-row">
+      <div id="resL"></div>
+      <div class="medal">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21V9.6M12 14.4c0-4-3.1-7.2-7-7.2 0 4 3.1 7.2 7 7.2zM12 11.8c0-3.5 2.8-6.4 6.4-6.4 0 3.5-2.8 6.4-6.4 6.4z"/>
+        </svg>
+      </div>
+      <div id="resR"></div>
+    </div>
+    <div class="s1">Spring · Year 3</div>
+    <div class="s2">The Assembly sits</div>
+  </div>
+
+  <div class="roster" id="roster"></div>
+  <div class="panel" id="panel"></div>
+
+  <div class="chron hide" id="chron">
+    <div class="c-head">
+      <div class="ct">Chronicle</div><div class="cs">Spring · Yr 3</div>
+      <button class="cx" id="chronX" title="Collapse">
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l10 10M15 5L5 15"/></svg>
+      </button>
+    </div>
+    <div class="log">
+      <div class="li"><b>Nikos</b> proposed <b>Public Works</b> to the Assembly.</div>
+      <div class="li"><b>Kyros</b> drew from <b>Stratokles</b> — the card is sealed.</div>
+      <div class="li"><b>Theron</b> discarded a drawn Law <span class="neg">−2</span> influence.</div>
+      <div class="li"><b>Damon</b> collected income: <span class="pos">+8</span> stone, <span class="pos">+2</span> gold.</div>
+      <div class="li"><b>Census Rolls</b> is now standing — Perdiccas gains power.</div>
+    </div>
+  </div>
+  <div class="c-tab show" id="chronTab" title="Chronicle (C)">
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3h8a2 2 0 0 1 2 2v12l-3-2-3 2-3-2-3 2V5a2 2 0 0 1 2-2z"/><path d="M7.5 7h6M7.5 10h6"/></svg>
+    <span class="cnt">5</span>
+  </div>
+
+  <div class="zoom" id="zoomCtl">
+    <button class="zb" id="zOut">−</button>
+    <span class="zlv" id="zLv">0.80×</span>
+    <button class="zb" id="zIn">+</button>
+    <button class="zb" id="zHome" title="Recentre">
+      <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="6.2"/><path d="M10 1.6v3M10 15.4v3M1.6 10h3M15.4 10h3"/></svg>
+    </button>
+  </div>
+
+  <div class="verbs" id="verbs"></div>
+
+  <div class="turnbox"><span class="lbl">Your turn</span><span class="who">Damon</span></div>
+  <button class="endturn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M6 2h12M6 22h12"/><path d="M7 2c0 5 10 5 10 0M7 22c0-5 10-5 10 0"/>
+      <path d="M8.4 6.6c1.2 2 6 2 7.2 0M8.4 17.4c1.2-2 6-2 7.2 0" opacity=".55"/><path d="M12 9.6v4.8"/>
+    </svg>
+    <span class="et">End turn</span>
+  </button>
+
+  <!-- ============ the Assembly, floating in the sea gap ============ -->
+  <div class="asm-slot">
+    <div class="assembly">
+
+      <div class="asm-head">
+        <div class="asm-urn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 4h10M8.6 4l.9 3.2M15.4 4l-.9 3.2M9.5 7.2c-3.1 1.4-3.4 9.8 2.5 13 5.9-3.2 5.6-11.6 2.5-13M6.2 20.4h11.6"/>
+          </svg>
+        </div>
+        <div class="asm-t">The Assembly<span>2nd of the game</span></div>
+        <div class="asm-steps">
+          <div class="astep" data-s="1"><span class="d">Ⅰ</span><span class="l">Proposal</span></div>
+          <span class="arw">→</span>
+          <div class="astep" data-s="2"><span class="d">Ⅱ</span><span class="l">Voting</span></div>
+          <span class="arw">→</span>
+          <div class="astep" data-s="3"><span class="d">Ⅲ</span><span class="l">Standing</span></div>
+        </div>
+        <div class="asm-voice"><span class="k">Voice</span><span class="dot" style="background:var(--p1)"></span><span class="n">Damon</span></div>
+      </div>
+
+      <div class="asm-body">
+        <div class="colonnade" id="colonnade"></div>
+
+        <div class="band">
+          <span class="band-k" id="bandK">The Bema</span>
+
+          <!-- ① proposal -->
+          <div class="bview" id="bv1">
+            <div class="brow">
+              <div style="flex:1 1 280px;min-width:250px">
+                <div class="blab">The ballot, forming</div>
+                <div class="chips">
+                  <div class="chip"><span class="ck2">House</span><span class="cn2">Public Works</span></div>
+                  <div class="chip seal">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 11V8a6 6 0 0 1 12 0v3M5 11h14v9H5z"/></svg>
+                    Kyros · sealed
+                  </div>
+                </div>
+              </div>
+              <div style="flex:1 1 280px;min-width:250px">
+                <div class="blab">Draw &amp; propose · reverse turn order</div>
+                <div class="chips" id="queue"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ② voting -->
+          <div class="bview" id="bv2">
+            <div class="brow">
+              <div class="bcard">
+                <div class="bpol">Perdiccas · Urban Planner · card 1 of 3</div>
+                <div class="bname">Public Works</div>
+                <div class="bfx"><span class="gain">Buildings cost −3 wood &amp; stone</span><span class="but">but</span><span class="cost">+1 unhappiness per city</span>.</div>
+              </div>
+              <div class="polls">
+                <div class="blab">Open vote · cast in turn · a tie fails</div>
+                <div class="pebs" id="pebs"></div>
+                <div class="talline">
+                  <span class="yv">7<span class="u"> yay</span></span>
+                  <span class="tbar"><span class="y" style="width:50%"></span><span class="p" style="width:14.3%"></span><span class="n" style="width:35.7%"></span></span>
+                  <span class="nv"><span class="u">nay </span>5</span>
+                </div>
+                <div class="talline"><span class="note"><b>Kyros</b> holds the last 2 seats — nay ties it, and a tie fails. Or he buys the swing.</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ③ the board -->
+          <div class="bview" id="bv3">
+            <div class="brow">
+              <div class="bcard">
+                <div class="bpol">6th victory card · a live metric</div>
+                <div class="bname">Voice of the Assembly</div>
+                <div class="bfx">Held by the <b>patron of the most politicians</b> — recomputed every turn from the board, and it flips hands like the other five. <b>5 of 6</b> stelae planted: one slot of headroom before a new Law must name one to replace.</div>
+              </div>
+              <div class="polls">
+                <div class="blab">Patronage standings</div>
+                <div id="standings"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="asm-foot">
+        <button class="av" id="avDraw">
+          <span class="ad"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.4h9l4 4v11.2H5zM14 4.4V8.4h4M8 12.4h7M8 15.6h7"/></svg></span>
+          <span class="atx"><span class="al">Draw</span><span class="ac">3 inf</span></span>
+        </button>
+        <span class="asel">Kleistophenes ▾</span>
+
+        <div class="adraw" id="avCard">
+          <div><div class="dk">Your draw · secret</div><div class="dn">Rural Bloc</div></div>
+          <div class="db"><button class="mb go">Propose</button><button class="mb gh">Discard</button></div>
+        </div>
+
+        <button class="av" id="avBribe">
+          <span class="ad"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="6.6"/><path d="M12 8.4v7.2M10.2 10.2h2.9a1.4 1.4 0 0 1 0 2.8h-1.8a1.4 1.4 0 0 0 0 2.8H14"/></svg></span>
+          <span class="atx"><span class="al">Bribe</span><span class="ac">+1 · 10 inf · cap 2</span></span>
+        </button>
+
+        <button class="av" id="avVeto">
+          <span class="ad"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.2"/><path d="M6.2 6.2l11.6 11.6"/></svg></span>
+          <span class="atx"><span class="al">Veto</span><span class="ac">5 inf · once</span></span>
+        </button>
+
+        <button class="av" id="avRepeal">
+          <span class="ad"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.4H6.4A2.4 2.4 0 0 0 4 7.8v9.6a2.4 2.4 0 0 0 2.4 2.4h11.2a2.4 2.4 0 0 0 2.4-2.4V7.8a2.4 2.4 0 0 0-2.4-2.4H15"/><path d="M9.4 12.4h5.2M9 4.2l3 3-3 3"/></svg></span>
+          <span class="atx"><span class="al">Repeal</span><span class="ac">a standing Law ▾</span></span>
+        </button>
+
+        <button class="amap" title="back to the map">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l4-2 8 4 4-2v10l-4 2-8-4-4 2zM8 6v10M16 8v10"/></svg>
+          ⇄ Map
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= canonical board data (shared with the other showcases) ================= */
+var T=[{"id":"-3,0","q":-3,"r":0,"terrain":"forest","slots":2,"yield":4},{"id":"-3,1","q":-3,"r":1,"terrain":"hill","slots":3,"yield":4},{"id":"-3,2","q":-3,"r":2,"terrain":"plains","slots":4,"yield":10},{"id":"-3,3","q":-3,"r":3,"terrain":"forest","slots":2,"yield":4},{"id":"-2,-1","q":-2,"r":-1,"terrain":"plains","slots":3,"yield":8},{"id":"-2,0","q":-2,"r":0,"terrain":"mountain","slots":2,"yield":6},{"id":"-2,1","q":-2,"r":1,"terrain":"forest","slots":2,"yield":3},{"id":"-2,2","q":-2,"r":2,"terrain":"mountain","slots":2,"yield":4},{"id":"-2,3","q":-2,"r":3,"terrain":"forest","slots":1,"yield":3},{"id":"-1,-2","q":-1,"r":-2,"terrain":"hill","slots":3,"yield":2},{"id":"-1,-1","q":-1,"r":-1,"terrain":"forest","slots":1,"yield":3},{"id":"-1,0","q":-1,"r":0,"terrain":"plains","slots":3,"yield":6},{"id":"-1,1","q":-1,"r":1,"terrain":"hill","slots":2,"yield":1},{"id":"-1,2","q":-1,"r":2,"terrain":"forest","slots":1,"yield":3},{"id":"-1,3","q":-1,"r":3,"terrain":"plains","slots":2,"yield":4},{"id":"0,-3","q":0,"r":-3,"terrain":"forest","slots":1,"yield":2},{"id":"0,-2","q":0,"r":-2,"terrain":"mountain","slots":1,"yield":4},{"id":"0,-1","q":0,"r":-1,"terrain":"hill","slots":2,"yield":1},{"id":"0,0","q":0,"r":0,"terrain":"forest","slots":1,"yield":2},{"id":"0,1","q":0,"r":1,"terrain":"mountain","slots":1,"yield":2},{"id":"0,2","q":0,"r":2,"terrain":"hill","slots":2,"yield":1},{"id":"0,3","q":0,"r":3,"terrain":"forest","slots":1,"yield":2},{"id":"1,-3","q":1,"r":-3,"terrain":"plains","slots":2,"yield":4},{"id":"1,-2","q":1,"r":-2,"terrain":"forest","slots":1,"yield":2},{"id":"1,-1","q":1,"r":-1,"terrain":"plains","slots":2,"yield":4},{"id":"1,0","q":1,"r":0,"terrain":"hill","slots":2,"yield":1},{"id":"1,1","q":1,"r":1,"terrain":"forest","slots":1,"yield":2},{"id":"1,2","q":1,"r":2,"terrain":"plains","slots":2,"yield":4},{"id":"2,-3","q":2,"r":-3,"terrain":"mountain","slots":1,"yield":2},{"id":"2,-2","q":2,"r":-2,"terrain":"hill","slots":1,"yield":2},{"id":"2,-1","q":2,"r":-1,"terrain":"forest","slots":1,"yield":1},{"id":"2,0","q":2,"r":0,"terrain":"plains","slots":2,"yield":4},{"id":"2,1","q":2,"r":1,"terrain":"hill","slots":1,"yield":1},{"id":"3,-3","q":3,"r":-3,"terrain":"forest","slots":1,"yield":1},{"id":"3,-2","q":3,"r":-2,"terrain":"mountain","slots":1,"yield":2},{"id":"3,-1","q":3,"r":-1,"terrain":"hill","slots":1,"yield":1},{"id":"3,0","q":3,"r":0,"terrain":"forest","slots":1,"yield":1}];
+var ST={
+ "-1,0":{own:"p1",kind:"metro",sock:5,built:["temple","market"],pops:[["cit",2],["fre",1],["slv",2]],sel:1},
+ "-2,0":{own:"p1",kind:"colony",pops:[["slv",2]]},
+ "0,-1":{own:"p2",kind:"city",sock:4,built:["granary"],pops:[["cit",1],["fre",2],["slv",1]]},
+ "1,-1":{hov:1},"0,3":{leg:1},"1,2":{leg:1}
+};
+var GND={plains:"#DCBF69",forest:"#758542",hill:"#C68038",mountain:"#A8A290"};
+var GLEG={plains:"#C6B56B",forest:"#6B8149",hill:"#B27D40",mountain:"#989B8D"};
+var PC={p1:"#2f5d9e",p2:"#a83226",p3:"#dfa437",p4:"#55673a"};
+var EMB={
+ plains:'<path d="M11 19V5M11 8L7 5m4 3l4-3M11 12L7 9m4 3l4-3M11 16l-4-3m4 3l4-3"/>',
+ forest:'<path d="M11 3L5 13h12L11 3zM11 13v6"/>',
+ hill:'<path d="M1 17a6 6 0 0 1 12 0M9 17a6 6 0 0 1 12 0"/>',
+ mountain:'<path d="M2 18L8.5 5l4.5 8 2.5-4L21 18H2z"/>'
+};
+var BG={
+ temple:'<path d="M2 4.4L6 1.8l4 2.6M2 4.4h8M3.4 4.4v4.2M6 4.4v4.2M8.6 4.4v4.2M2 8.6h8"/>',
+ market:'<path d="M2 3.5h8M2 3.5l1 3h6l1-3M6 6.5V10M3.6 10h4.8"/>',
+ granary:'<path d="M2.2 5.6L6 2.2l3.8 3.4V10H2.2zM2.2 7.4h7.6"/>'
+};
+var SG={
+ metro:'<svg width="16" height="16" viewBox="0 0 20 20"><path d="M10 2.6l2 4.6 4.8.4-3.7 3.2 1.1 4.8L10 13l-4.2 2.6 1.1-4.8L3.2 7.6 8 7.2z" fill="#fff8e7"/></svg>',
+ city:'<svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4 16.5V8M16 16.5V8M2.8 8L10 3.6 17.2 8M7.4 16.5v-4.4a2.6 2.6 0 0 1 5.2 0v4.4M3 16.5h14" stroke="#fff8e7" stroke-width="1.7"/></svg>',
+ colony:'<svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M7 17V3M7 4.4h7.4L12 7l2.4 2.6H7" stroke="#fff8e7" stroke-width="1.8"/></svg>'
+};
+var BLZ={
+ p1:'<svg width="7" height="7" viewBox="0 0 20 20" fill="none"><path d="M4 17L10 3l6 14M6.4 12h7.2" stroke="#fff8e7" stroke-width="2.4"/></svg>',
+ p2:'<svg width="7" height="7" viewBox="0 0 20 20" fill="none"><path d="M5 3v14M5 3h5.4a3.2 3.2 0 0 1 0 6.4H5M5 9.4h6a3.4 3.4 0 0 1 0 7.6H5" stroke="#fff8e7" stroke-width="2.2"/></svg>'
+};
+var DSC={metro:30,city:26,colony:22};
+function ico(v,d,sw){return '<svg width="'+(v||20)+'" height="'+(v||20)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(sw||1.6)+'" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';}
+var MENU=[
+ {k:'cities', n:'Cities',   d:'<path d="M5 20V9.6M19 20V9.6M3.4 9.6L12 4.4l8.6 5.2M9 20v-5.2a3 3 0 0 1 6 0V20M3.6 20h16.8"/>'},
+ {k:'pops',   n:'Pops',     d:'<circle cx="12" cy="7.4" r="3.4"/><path d="M5 20.4c0-3.9 3.1-7 7-7s7 3.1 7 7"/>', cnt:'7'},
+ {k:'build',  n:'Build',    d:'<path d="M6 20V8.6h12V20M6 20h12M4.6 8.6h14.8L12 3.6 4.6 8.6zM9.4 20v-4.4h5.2V20"/>'},
+ {k:'market', n:'Market',   d:'<path d="M12 4v16M5.4 7.4h13.2M4 20.4h16M6.6 7.4L3.4 14h6.4L6.6 7.4zM17.4 7.4L14.2 14h6.4l-3.2-6.6z"/>'},
+ {k:'victory',n:'Victory',  d:'<path d="M12 3.4l2.5 5.4 5.9.6-4.4 4 1.3 5.8L12 16.2 6.7 19.2 8 13.4 3.6 9.4l5.9-.6z"/>', cnt:'1/3'},
+ {k:'codex',  n:'Codex',    d:'<path d="M4.4 4.6h5.2A2.4 2.4 0 0 1 12 7v13a2.4 2.4 0 0 0-2.4-2.4H4.4zM19.6 4.6h-5.2A2.4 2.4 0 0 0 12 7v13a2.4 2.4 0 0 1 2.4-2.4h5.2z"/>'}
+];
+var VERBS=[
+ {n:'Grow',    c:'from 5 food',      k:'Q', d:'<path d="M12 21V10.4M12 15.2c0-4-3.1-7.2-7-7.2 0 4 3.1 7.2 7 7.2zM12 12.6c0-3.5 2.8-6.4 6.4-6.4 0 3.5-2.8 6.4-6.4 6.4z"/>'},
+ {n:'Move',    c:'free',             k:'W', d:'<path d="M12 3.6v16.8M3.6 12h16.8M12 3.6L9.2 6.4M12 3.6l2.8 2.8M12 20.4l-2.8-2.8M12 20.4l2.8-2.8M3.6 12l2.8-2.8M3.6 12l2.8 2.8M20.4 12l-2.8-2.8M20.4 12l-2.8 2.8"/>'},
+ {n:'Found',   c:'20 wood · 2 pops', k:'E', d:'<path d="M4 20.4h16M6.4 20.4V9.4L12 5.2l5.6 4.2v11M10 20.4v-5.6h4v5.6"/>'},
+ {n:'Upgrade', c:'need 30 stone',    k:'R', off:1,   d:'<path d="M5 8.4h14M5 8.4l2.2-3.2h9.6L19 8.4M8.4 8.4v9.2M15.6 8.4v9.2M6 20.4h12M6 17.6h12"/>'},
+ {n:'Build',   c:'varies',           k:'T', d:'<path d="M14.4 6.2l3.4 3.4M12.4 8.2l-8 8 2 2 8-8M13.2 3.4l7.4 7.4-2.6 2.6-7.4-7.4z"/>'},
+ {n:'Calm',    c:'4 influence',      k:'Y', d:'<path d="M5 8.4h14a7 7 0 0 1-14 0zM12 15.4v4M8.6 19.4h6.8M4.4 9.2c-1.2 1 0 3.2 1.8 3.4M19.6 9.2c1.2 1 0 3.2-1.8 3.4"/>'},
+ {n:'Venture', c:'stake 5',          k:'U', d:'<path d="M3.4 16.2h17.2l-2.8 4.2H6.2l-2.8-4.2zM12 16.2V3.8M12 3.8l5.4 3.6L12 10.6"/>'}
+];
+var RES=[
+ {k:'stone',     v:'24',   d:'±0',  s:'z', i:'<path d="M12 3.2l7.6 4.4v8.8L12 20.8l-7.6-4.4V7.6z"/><path d="M4.4 7.6L12 12l7.6-4.4M12 12v8.8"/>'},
+ {k:'wood',      v:'18',   d:'+6',  s:'up',i:'<path d="M12 3.4L6 13.4h12L12 3.4zM12 13.4v5.4M8.6 18.8h6.8"/>'},
+ {k:'gold',      v:'12',   d:'+4',  s:'up',i:'<circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="2.8"/>'},
+ {k:'food',      v:'14',   d:'−2',  s:'dn',i:'<path d="M12 20.6V7.2M12 9.6L8 6.8M12 9.6l4-2.8M12 14L8 11.2M12 14l4-2.8M12 5.4L9.2 3.2M12 5.4l2.8-2.2"/>'},
+ {k:'influence', v:'12',   d:'+2',  s:'up',i:'<path d="M9.4 3.4h5.2M10.6 3.4v2.2M13.4 3.4v2.2M12 5.6c-3.4 0-5.2 3-5.2 6s1.8 8.4 5.2 8.4 5.2-5.4 5.2-8.4-1.8-6-5.2-6zM6.9 8c-2.1.6-2.1 3.6-.3 4.2M17.1 8c2.1.6 2.1 3.6.3 4.2"/>'},
+ {k:'happiness', v:'−0.5', d:'−0.5',s:'dn',lo:1,i:'<circle cx="12" cy="12" r="8.4"/><path d="M9 10.2v.01M15 10.2v.01M8.6 15.2c1.2 1.4 5.6 1.4 6.8 0"/>'}
+];
+var SEATS=[{n:'Damon',c:'p1',b:'Α',pv:'1/3',act:1},{n:'Nikos',c:'p2',b:'Β',pv:'0/3'},{n:'Theron',c:'p3',b:'Γ',pv:'1/3'},{n:'Kyros',c:'p4',b:'Δ',pv:'0/3'}];
+
+/* ================= the board ================= */
+var S=63, SP=65.8, W=Math.sqrt(3)*S, H=2*S;
+(function(){
+  var h='';
+  T.forEach(function(t){
+    var st=ST[t.id]||{};
+    var x=Math.sqrt(3)*SP*(t.q+t.r/2)-W/2, y=1.5*SP*t.r-H/2;
+    var g=st.leg?GLEG[t.terrain]:GND[t.terrain];
+    var seed=(((t.q*5+t.r*7)%3)+3)%3, hs=['42% 36%','58% 44%','48% 56%'][seed];
+    h+='<div class="hex" style="left:'+x.toFixed(1)+'px;top:'+y.toFixed(1)+'px;width:'+W.toFixed(1)+'px;height:'+H+'px">';
+    h+='<div class="lyr" style="background:radial-gradient(70px 70px at '+hs+', rgb(255 255 255/8%), transparent 65%),'+g+'"></div>';
+    h+='<div class="lyr" style="box-shadow:inset 0 0 0 1.5px rgb(24 18 16/26%)"></div>';
+    if(st.own) h+='<div class="lyr" style="box-shadow:inset 0 0 0 3px '+PC[st.own]+'"></div>';
+    if(st.leg) h+='<div class="lyr" style="box-shadow:inset 0 0 0 2px rgb(255 248 231/58%)"></div>';
+    h+='<div class="chit"><svg width="13" height="13" viewBox="0 0 22 22" fill="none" stroke="#241910" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+EMB[t.terrain]+'</svg><b>'+t.yield+'</b></div>';
+    var ns=st.sock||t.slots, built=st.built||[];
+    var sy=st.own?(H/2+4):(H/2-4);
+    h+='<div class="sk'+(st.own?'':' inert')+'" style="top:'+sy+'px">';
+    for(var i=0;i<ns;i++){
+      if(built[i]) h+='<i class="b"><svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#181210" stroke-width="1.3" stroke-linecap="round">'+BG[built[i]]+'</svg></i>';
+      else h+='<i></i>';
+    }
+    h+='</div>';
+    if(st.kind){
+      var d=DSC[st.kind];
+      h+='<div class="settle" style="top:'+(H/2-d/2-14)+'px;width:'+d+'px;height:'+d+'px;background:'+PC[st.own]+'">'+SG[st.kind];
+      if(BLZ[st.own]) h+='<div class="blz">'+BLZ[st.own]+'</div>';
+      h+='</div>';
+    }
+    if(st.pops){
+      var p='';
+      st.pops.forEach(function(pr){
+        p+='<div class="g" style="color:'+PC[st.own]+'"><span class="bead '+pr[0]+'" style="'+(pr[0]=='cit'?'background:'+PC[st.own]:'')+'"></span><b>'+pr[1]+'</b></div>';
+      });
+      h+='<div class="pp" style="top:'+(H/2+22)+'px">'+p+'</div>';
+    }
+    h+='</div>';
+  });
+  document.getElementById('world').innerHTML=h;
+})();
+
+/* ================= chrome render ================= */
+function resHtml(keys){
+  return (keys||RES.map(function(x){return x.k;})).map(function(k){
+    var x=RES.filter(function(y){return y.k===k;})[0];
+    return '<div class="r"><div class="rt">'+ico(17,x.i,1.6)+'<span class="rv'+(x.lo?' lo':'')+'">'+x.v+'</span></div>'+
+           '<div class="rd '+x.s+'">'+x.d+'</div></div>';
+  }).join('');
+}
+(function(){
+  document.getElementById('bubs').innerHTML=MENU.map(function(m,i){
+    return '<button class="bub'+(i===0?' on':'')+'" data-k="'+m.k+'">'+ico(21,m.d)+
+      (m.cnt?'<span class="cnt">'+m.cnt+'</span>':'')+'<span class="tip">'+m.n+'</span></button>';
+  }).join('');
+  document.getElementById('verbs').innerHTML=VERBS.map(function(b){
+    return '<button class="verb'+(b.off?' off':'')+'"><span class="vb">'+ico(24,b.d)+
+      '<span class="kbd">'+b.k+'</span></span><span class="vn">'+b.n+'</span><span class="vc">'+b.c+'</span></button>';
+  }).join('');
+  document.getElementById('resL').innerHTML=resHtml(['wood','stone','food']);
+  document.getElementById('resR').innerHTML=resHtml(['gold','influence','happiness']);
+  document.getElementById('roster').innerHTML=SEATS.map(function(s){
+    return '<div class="st8'+(s.act?' acting':'')+'"><span class="disc" style="background:'+PC[s.c]+'"><i>'+s.b+'</i></span>'+
+           '<span class="nm">'+s.n+'</span><span class="pv">'+s.pv+'</span></div>';
+  }).join('');
+})();
+
+/* ================= ledger panels ================= */
+var PANELS={
+  cities:{t:'Cities', sum:'<b>1</b> metropolis · <b>1</b> colony · <b>7</b>/14 pops · <b>1</b>/3 victory cards',
+    warn:['Discontent','Happiness <b>−0.5</b> — pops start dying at <b>−5</b>.'],
+    body:[
+      {n:'Metropolis',c:'−1,0 · Plains',own:'p1',k:'metro',pf:'5',pfs:'/10 pops',
+       rows:[['Pops','2 citizens · 1 freeman · 2 slaves'],['Buildings','Temple · Marketplace <span class="dim">2/5</span>']],
+       slots:[1,1,0,0,0],
+       net:[['+4','gold','pos'],['+2','food','pos'],['+2','influence','pos'],['−1.5','happiness','neg']]},
+      {n:'Colony',c:'−2,0 · Mountain',own:'p1',k:'colony',pf:'2',pfs:'/4 pops',
+       rows:[['Pops','2 slaves'],['Buildings','<span class="dim">None — colonies cannot build</span>']],
+       slots:[0,0],
+       net:[['+8','stone','pos'],['−2','food','neg'],['−1','happiness','neg']]}
+    ]},
+  pops:{t:'Pops', sum:'<b>7</b>/14 pops · 4 citizens · 1 freeman · 2 slaves',
+    warn:['Your votes','<b>4 citizens = 4 votes</b> in the Assembly.'],
+    body:[{n:'By class',c:'across 2 settlements',own:'p1',k:'metro',pf:'7',pfs:'/14',
+      rows:[['Citizens','4 <span class="dim">· vote · 1 gold upkeep</span>'],['Freemen','1 <span class="dim">· works any slot</span>'],['Slaves','2 <span class="dim">· no vote · unrest +0.5</span>']],
+      net:[['+2','food','pos'],['−0.5','happiness','neg']]}]},
+  build:{t:'Build', sum:'<b>2</b>/7 slots built · 3 free in Metropolis',
+    body:[{n:'Available',c:'Metropolis −1,0',own:'p1',k:'metro',pf:'3',pfs:' free',
+      rows:[['Granary','12 wood <span class="dim">· +2 food</span>'],['Barracks','18 stone <span class="dim">· +1 order</span>'],['Shrine','10 stone · 4 gold <span class="dim">· +1 influence</span>']],
+      slots:[1,1,0,0,0]}]},
+  market:{t:'Market', sum:'Rates drift <b>±1</b> each season · you are a <b>net seller</b>',
+    body:[{n:'Rates',c:'Spring · Year 3',own:'p1',k:'city',pf:'12',pfs:' gold',
+      rows:[['Wood','sell 2 <span class="dim">· buy 3</span>'],['Stone','sell 2 <span class="dim">· buy 4</span>'],['Food','sell 3 <span class="dim">· buy 3</span>']],
+      net:[['+6','gold','pos']]}]},
+  victory:{t:'Victory', sum:'<b>1</b>/3 cards · Voice of the Assembly held',
+    warn:['Contested','Hold <b>2</b> more to win. Theron holds 1.'],
+    body:[{n:'Tracks',c:'your standing',own:'p1',k:'metro',pf:'1',pfs:'/3',
+      rows:[['Voice of the Assembly','patron of 2 <span class="dim">· held</span>'],['Hegemon','2 metropoleis <span class="dim">· you have 1</span>'],['Oikoumene','12 pops <span class="dim">· you have 7</span>']]}]},
+  codex:{t:'Codex', sum:'Rules · icons · the season deck',
+    body:[{n:'This season',c:'Timber Levies',own:'p1',k:'city',pf:'21',pfs:' left',
+      rows:[['Effect','+2 wood per 6 pops'],['Assembly','each spring, before the opener'],['Active laws','5 of 6 standing']]}]}
+};
+function panelHtml(p){
+  var h='<div class="p-head"><div class="pt">'+p.t+'</div><button class="px" id="panelX">'+
+    '<svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l10 10M15 5L5 15"/></svg></button></div>';
+  h+='<div class="p-sum">'+p.sum+'</div>';
+  if(p.warn) h+='<div class="pwarn"><div class="k">'+p.warn[0]+'</div><div class="c">'+p.warn[1]+'</div></div>';
+  p.body.forEach(function(c){
+    h+='<div class="city"><div class="ch"><span class="md" style="background:'+PC[c.own]+'">'+SG[c.k]+'</span>'+
+       '<div><div class="cn">'+c.n+'</div><div class="cc">'+c.c+'</div></div>'+
+       '<div class="pf">'+c.pf+'<span>'+c.pfs+'</span></div></div>';
+    c.rows.forEach(function(rw,i){
+      var extra='';
+      if(c.slots&&i===1) extra='<span class="slots">'+c.slots.map(function(s){return '<i class="'+(s?'b':'')+'"></i>';}).join('')+'</span>';
+      h+='<div class="crow"><span class="k">'+rw[0]+'</span><span class="v">'+rw[1]+extra+'</span></div>';
+    });
+    if(c.net) h+='<div class="net">'+c.net.map(function(n){
+      var r=RES.filter(function(x){return x.k===n[1];})[0];
+      return '<span class="n '+n[2]+'">'+ico(13,r?r.i:'',1.6)+n[0]+'</span>';
+    }).join('')+'</div>';
+    h+='</div>';
+  });
+  return h;
+}
+
+/* ================= geometry (arm A — straight spines only) ================= */
+var stage=document.getElementById('stage'), world=document.getElementById('world'),
+    panel=document.getElementById('panel'), chron=document.getElementById('chron'),
+    chronTab=document.getElementById('chronTab'), zoomCtl=document.getElementById('zoomCtl');
+var RAIL=30, BUB=46, BUB_OUT=28, TOP_H=48, BOT_H=64, VB=54, VB_OUT=32, PANEL_W=308, CHRON_W=292;
+var SW=0, SH=0, panelOpen=true, chronOpen=false, curKey='cities';
+var z=0.8, px=0, py=0, dragging=false;
+
+function measure(){ var r=stage.getBoundingClientRect(); SW=r.width; SH=r.height; }
+function layout(){
+  var bubs=document.querySelectorAll('.bub'), verbs=document.querySelectorAll('.verb'), i;
+  for(i=0;i<bubs.length;i++){
+    bubs[i].style.left=(RAIL+BUB_OUT-BUB/2)+'px';
+    bubs[i].style.top=(TOP_H+40+i*55)+'px';
+  }
+  for(i=0;i<verbs.length;i++){
+    verbs[i].style.left=(SW/2+(i-(verbs.length-1)/2)*91)+'px';
+    verbs[i].style.top=(SH-BOT_H-VB_OUT)+'px';
+  }
+}
+/* the live sea = what the player can still see of the map around the assembly */
+function live(){
+  var railEdge=RAIL+BUB_OUT;
+  return {
+    l: panelOpen ? railEdge+14+PANEL_W : railEdge+12,
+    r: SW-(chronOpen ? 14+CHRON_W : 46),
+    t: TOP_H+14,
+    b: SH-BOT_H-VB_OUT-6
+  };
+}
+function comfort(){ var L=live(); L.t+=56; return L; }
+function clamp(){
+  var L=live(), m=46;
+  var lo=L.l+m, hi=L.r-m; px = lo>hi ? (L.l+L.r)/2 : Math.min(Math.max(px,lo),hi);
+  var to=L.t+m, bo=L.b-m; py = to>bo ? (L.t+L.b)/2 : Math.min(Math.max(py,to),bo);
+}
+function paint(){
+  world.style.transform='translate('+px+'px,'+py+'px) scale('+z+')';
+  document.getElementById('zLv').textContent=z.toFixed(2)+'×';
+}
+function glide(f){
+  world.classList.add('glide'); f(); clamp(); paint();
+  setTimeout(function(){world.classList.remove('glide');},440);
+}
+function boardBox(){
+  var xs=[],ys=[];
+  T.forEach(function(t){ xs.push(Math.sqrt(3)*SP*(t.q+t.r/2)); ys.push(1.5*SP*t.r); });
+  return {w:Math.max.apply(null,xs)-Math.min.apply(null,xs)+W, h:Math.max.apply(null,ys)-Math.min.apply(null,ys)+H};
+}
+function fit(){
+  var L=comfort(), b=boardBox(), pad=44;
+  z=Math.min((L.r-L.l-pad)/b.w,(L.b-L.t-pad)/b.h);
+  z=Math.min(Math.max(z,0.72),1.15);
+}
+function recentre(){ var L=comfort(); glide(function(){ px=(L.l+L.r)/2; py=(L.t+L.b)/2; }); }
+function reflow(){
+  zoomCtl.style.top=(panelOpen ? TOP_H+12+panel.offsetHeight+12 : TOP_H+14)+'px';
+  glide(function(){});
+}
+
+/* drag + wheel zoom — the map stays live around the assembly */
+stage.addEventListener('mousedown',function(e){
+  if(e.target.closest('.bar,.bub,.panel,.chron,.c-tab,.verb,.endturn,.zoom,.cards,.sun,.roster,.turnbox,.assembly')) return;
+  dragging=true; var sx=e.clientX, sy=e.clientY, spx=px, spy=py;
+  stage.classList.add('dragging');
+  function mv(ev){ px=spx+(ev.clientX-sx); py=spy+(ev.clientY-sy); clamp(); paint(); }
+  function up(){ dragging=false; stage.classList.remove('dragging'); paint();
+    window.removeEventListener('mousemove',mv); window.removeEventListener('mouseup',up); }
+  window.addEventListener('mousemove',mv); window.addEventListener('mouseup',up);
+  e.preventDefault();
+});
+stage.addEventListener('wheel',function(e){
+  if(e.target.closest('.panel,.chron,.assembly')) return;
+  e.preventDefault();
+  var r=stage.getBoundingClientRect();
+  zoomAt(e.clientX-r.left,e.clientY-r.top,z*(e.deltaY<0?1.12:1/1.12));
+},{passive:false});
+function zoomAt(cx,cy,nz){
+  nz=Math.min(Math.max(nz,0.45),2.0);
+  var wx=(cx-px)/z, wy=(cy-py)/z;
+  z=nz; px=cx-wx*z; py=cy-wy*z; clamp(); paint();
+}
+document.getElementById('zIn').onclick=function(){var L=live();glide(function(){zoomAt((L.l+L.r)/2,(L.t+L.b)/2,z*1.2);});};
+document.getElementById('zOut').onclick=function(){var L=live();glide(function(){zoomAt((L.l+L.r)/2,(L.t+L.b)/2,z/1.2);});};
+document.getElementById('zHome').onclick=function(){ fit(); recentre(); };
+
+function openPanel(k){
+  curKey=k; panelOpen=true;
+  panel.innerHTML=panelHtml(PANELS[k]);
+  panel.classList.remove('hide');
+  stage.classList.remove('noledger');
+  document.getElementById('panelX').onclick=closePanel;
+  [].forEach.call(document.querySelectorAll('.bub'),function(b){b.classList.toggle('on',b.dataset.k===k);});
+  reflow();
+}
+function closePanel(){
+  panelOpen=false; panel.classList.add('hide');
+  stage.classList.add('noledger');
+  [].forEach.call(document.querySelectorAll('.bub'),function(b){b.classList.remove('on');});
+  reflow();
+}
+[].forEach.call(document.querySelectorAll('.bub'),function(b){
+  b.onclick=function(){ (panelOpen && b.dataset.k===curKey) ? closePanel() : openPanel(b.dataset.k); };
+});
+function setChron(o){
+  chronOpen=o; chron.classList.toggle('hide',!o); chronTab.classList.toggle('show',!o); glide(function(){});
+}
+document.getElementById('chronX').onclick=function(){setChron(false);};
+chronTab.onclick=function(){setChron(true);};
+
+/* ================= the Assembly's own data ================= */
+/* Standing board: Grain Dole / Sacred Fields / Land Reform / Census Rolls / Homestead Act (5 of 6).
+   Public Works & Rural Bloc are this year's fresh proposals, so no Law is ever enacted twice. */
+var POLS=[
+ {cls:'',name:'Demosthenes',ep:'Agricultural Reformer',buff:'+1 food income',patron:'p1',
+  laws:[{n:'Grain Dole',by:'p1'},{n:'Sacred Fields',by:'p1'},{n:'Land Reform',by:'p2'}]},
+ {cls:'',name:'Perdiccas',ep:'Urban Planner',buff:'buildings −1 stone',patron:'p1',
+  laws:[{n:'Census Rolls',by:'p1'}]},
+ {cls:'',name:'Kleistophenes',ep:'Rural Expansionist',buff:'colonies −5 wood',patron:'p3',
+  laws:[{n:'Homestead Act',by:'p3'}]},
+ {cls:'strat',name:'Stratokles',ep:'Cunning Populist',buff:'every Directive feeds the mob',
+  tally:2,coup:2,coupMax:3,feeder:'p4'}
+];
+var PNAME={p1:'Damon',p2:'Nikos',p3:'Theron',p4:'Kyros'};
+/* reverse turn order: Kyros → Theron → Nikos → Damon */
+var QUEUE=[
+ {id:'p4',st:'sealed'},{id:'p3',st:'discarded'},{id:'p2',st:'waiting'},{id:'p1',st:'you · drawing'}
+];
+/* the open vote on Public Works — the pebble IS the player, its number IS their citizens */
+var VOTES=[
+ {id:'p1',w:4,c:'yay'},{id:'p2',w:3,c:'yay'},{id:'p3',w:5,c:'nay'},{id:'p4',w:2,c:'wait'}
+];
+var STAND=[
+ {id:'p1',v:2,note:'Demosthenes · Perdiccas'},
+ {id:'p3',v:1,note:'Kleistophenes'},
+ {id:'p2',v:0,note:'authored 1 stele'},
+ {id:'p4',v:0,note:'feeding Stratokles'}
+];
+
+/* colonnade */
+(function(){
+  var h='';
+  POLS.forEach(function(p){
+    var power=p.laws?p.laws.length:p.tally;
+    h+='<div class="acol '+p.cls+'">';
+    h+='<div class="ahead"><span class="apow">'+power+'</span><span class="aname">'+p.name+'</span><span class="aep">'+p.ep+'</span></div>';
+    if(p.laws){
+      h+='<div class="ameta"><span class="dot" style="background:'+PC[p.patron]+'"></span><b>'+PNAME[p.patron]+'</b> · '+p.buff+'</div>';
+      h+='<div class="stack">';
+      p.laws.forEach(function(l){
+        h+='<div class="stele"><span class="sd" style="background:'+PC[l.by]+'"></span><span class="sn">'+l.n+'</span></div>';
+      });
+      h+='</div>';
+    }else{
+      h+='<div class="ameta"><span class="dot" style="background:'+PC[p.feeder]+'"></span><b>'+PNAME[p.feeder]+'</b> · '+p.buff+'</div>';
+      h+='<div class="stack">';
+      for(var i=0;i<p.tally;i++) h+='<div class="tally"><span class="tk"><i></i><i></i><i></i></span><span class="tn">Directive resolved</span></div>';
+      h+='</div>';
+      var b='';
+      for(var j=0;j<p.coupMax;j++) b+='<i class="'+(j<p.coup?'f':'')+'"></i>';
+      h+='<div class="coup"><span class="ck">Coup</span><span class="bd">'+b+'</span><span class="cn">'+p.coup+'/'+p.coupMax+'</span></div>';
+    }
+    h+='</div>';
+  });
+  document.getElementById('colonnade').innerHTML=h;
+})();
+
+/* proposal queue chips */
+(function(){
+  var h='';
+  QUEUE.forEach(function(q){
+    var you=q.st.indexOf('you')===0;
+    h+='<div class="chip'+(you?' you':'')+'"><span class="pd2" style="background:'+PC[q.id]+'">'+PNAME[q.id].charAt(0)+'</span>'+
+       '<span class="cn2">'+PNAME[q.id]+'</span><span class="st2">'+q.st+'</span></div>';
+  });
+  document.getElementById('queue').innerHTML=h;
+})();
+
+/* vote pebbles — the folded-in player strip */
+(function(){
+  var YAY='<svg class="pm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M4 10.5l4 4 8-9"/></svg>';
+  var NAY='<svg class="pm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 5l10 10M15 5L5 15"/></svg>';
+  var WAIT='<svg class="pm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="10" cy="10" r="6" stroke-dasharray="3 3"/></svg>';
+  var h='';
+  VOTES.forEach(function(v){
+    h+='<span class="peb '+v.c+'"><span class="pd" style="background:'+PC[v.id]+'">'+PNAME[v.id].charAt(0)+'</span>'+
+       '<span class="pn">'+PNAME[v.id]+'</span><span class="pw">'+v.w+'</span>'+
+       (v.c==='yay'?YAY:v.c==='nay'?NAY:WAIT)+'</span>';
+  });
+  document.getElementById('pebs').innerHTML=h;
+})();
+
+/* patronage standings */
+(function(){
+  var h='';
+  STAND.forEach(function(s){
+    h+='<div class="vrowline"><span class="sd2" style="background:'+PC[s.id]+'"></span>'+
+       '<span class="sn2">'+PNAME[s.id]+' <span style="color:var(--ink-48)">· '+s.note+'</span></span>'+
+       '<span class="sv2"><b>'+s.v+'</b> patron'+(s.v===1?'':'s')+'</span></div>';
+  });
+  document.getElementById('standings').innerHTML=h;
+})();
+
+/* ================= the three-state switch ================= */
+var segs={1:document.getElementById('seg1'),2:document.getElementById('seg2'),3:document.getElementById('seg3')};
+var bviews={1:document.getElementById('bv1'),2:document.getElementById('bv2'),3:document.getElementById('bv3')};
+var bandK=document.getElementById('bandK');
+var TAGS={1:'The Bema · reverse turn order',2:'The Bema · the card under vote',3:'The Bema · the political victory card'};
+var ACTS={
+  1:{armed:['avDraw'],           off:['avBribe','avVeto','avRepeal'], card:true },
+  2:{armed:['avBribe','avVeto'], off:['avDraw','avRepeal'],           card:false},
+  3:{armed:['avRepeal'],         off:['avDraw','avBribe','avVeto'],   card:false}
+};
+function setState(n){
+  for(var k in segs) segs[k].classList.toggle('on',+k===n);
+  for(var v in bviews) bviews[v].classList.toggle('on',+v===n);
+  [].forEach.call(document.querySelectorAll('.astep'),function(el){ el.classList.toggle('on',+el.dataset.s===n); });
+  bandK.textContent=TAGS[n];
+  var a=ACTS[n];
+  ['avDraw','avBribe','avVeto','avRepeal'].forEach(function(id){
+    document.getElementById(id).classList.remove('armed','off');
+  });
+  a.armed.forEach(function(id){document.getElementById(id).classList.add('armed');});
+  a.off.forEach(function(id){document.getElementById(id).classList.add('off');});
+  document.getElementById('avCard').classList.toggle('hidden',!a.card);
+}
+segs[1].onclick=function(){setState(1);};
+segs[2].onclick=function(){setState(2);};
+segs[3].onclick=function(){setState(3);};
+
+var qb=document.getElementById('qb'), notes=document.getElementById('notes');
+qb.onclick=function(){ notes.classList.toggle('show'); qb.classList.toggle('on'); };
+window.addEventListener('keydown',function(e){ if(e.key==='c'||e.key==='C') setChron(!chronOpen); });
+window.addEventListener('resize',function(){ measure(); layout(); clamp(); paint(); reflow(); });
+
+/* boot — honour a #s1/#s2/#s3 deep-link */
+measure();
+openPanel('cities');
+layout();
+fit(); recentre();
+setState(({s1:1,s2:2,s3:3})[(location.hash||'').replace('#','')]||1);
+window.addEventListener('hashchange',function(){ setState(({s1:1,s2:2,s3:3})[location.hash.replace('#','')]||1); });
+</script>

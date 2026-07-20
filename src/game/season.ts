@@ -46,6 +46,12 @@ export function startNewSeason(G: HegemonyState) {
     addLog(G, `${getPlayerName(G, G.seasonOpener)} opens the new year.`);
     // The new opener takes the auspices — the omen replaces last year's.
     rollYearOmen(G);
+
+    // Once-a-year coupons from standing Laws (Monumental Code's free building, Land
+    // Rush's free colony) refresh with the year that granted them.
+    for (const player of Object.values(G.players)) {
+      player.lawFreeActionsUsedThisYear = [];
+    }
   }
 
   addLog(G, `${capitalize(seasonName(G.season))} of Year ${yearOf(G.season)} begins.`);

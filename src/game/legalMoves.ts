@@ -40,7 +40,23 @@ import {
   getMovePopsStatus,
   getUpgradeColonyToCityStatus,
 } from "./status";
-import { advanceSetupTurn, beginGameplayTurn, endTurn } from "./turn";
+import { advanceSetupTurn, beginGameplayTurn, closeAssembly, endTurn } from "./turn";
+import {
+  activeLawIds,
+  assemblyBribe,
+  assemblyDiscardHeld,
+  assemblyDraw,
+  assemblyPass,
+  assemblyPropose,
+  assemblyProposeRepeal,
+  assemblyVeto,
+  assemblyVote,
+  getResolutionCard,
+  isAtLawCap,
+  nextDrawCost,
+  POLITICIANS,
+} from "./assembly";
+import type { PoliticianId } from "./assembly";
 import type {
   BuildingId,
   EventTableId,
@@ -89,6 +105,18 @@ export type LegalMove =
   | { type: "fundExpedition"; expeditionId: EventTableId; stake: VentureStake; cost: Partial<Resources> }
   | { type: "buyRiotInsurance"; optionId: RiotInsuranceId; demoteTarget?: { tileId: string; from: PopType } }
   | { type: "resolveRiot" }
+  // ── The Assembly (Phase 3-B). While a session is open these are the ONLY legal
+  //    moves: the agora suspends the turn machine, so every gameplay verb is shut
+  //    off until the house rises.
+  | { type: "assemblyDraw"; politician: PoliticianId; cost: Partial<Resources> }
+  | { type: "assemblyDiscardHeld" }
+  | { type: "assemblyPropose"; replaces?: string }
+  | { type: "assemblyProposeRepeal"; cardId: string; cost: Partial<Resources> }
+  | { type: "assemblyPass" }
+  | { type: "assemblyBribe"; cost: Partial<Resources> }
+  | { type: "assemblyVote"; yea: boolean }
+  | { type: "assemblyVeto"; cost: Partial<Resources> }
+  | { type: "assemblyClose" }
   | { type: "endTurn" };
 
 /**
@@ -111,6 +139,11 @@ export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): Legal
     return G.pendingRiot.playerID === playerID ? enumerateRiotMoves(G, playerID) : [];
   }
 
+  // The Assembly outranks everything: while it sits, the only moves are its own.
+  if (G.assembly) {
+    return enumerateAssemblyMoves(G, playerID);
+  }
+
   switch (G.phase) {
     case "setupCapital":
       return enumerateCapitalPlacements(G, playerID);
@@ -125,7 +158,7 @@ export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): Legal
   }
 }
 
-type MoveCategory = "setup" | "riotResolution" | "eventResolution" | "gameplay";
+type MoveCategory = "setup" | "riotResolution" | "eventResolution" | "assembly" | "gameplay";
 
 const SETUP_PHASES: ReadonlySet<HegemonyState["phase"]> = new Set(["setupCapital", "setupCity", "setupColony"]);
 
@@ -140,6 +173,16 @@ function categorizeMove(type: LegalMove["type"]): MoveCategory {
       return "riotResolution";
     case "resolveEvent":
       return "eventResolution";
+    case "assemblyDraw":
+    case "assemblyDiscardHeld":
+    case "assemblyPropose":
+    case "assemblyProposeRepeal":
+    case "assemblyPass":
+    case "assemblyBribe":
+    case "assemblyVote":
+    case "assemblyVeto":
+    case "assemblyClose":
+      return "assembly";
     default:
       return "gameplay";
   }
@@ -167,8 +210,10 @@ function checkMoveAllowed(G: HegemonyState, playerID: PlayerId, move: LegalMove)
       return SETUP_PHASES.has(G.phase) && !G.pendingPlayerEvent && !G.pendingRiot
         ? MOVE_OK
         : invalid("Setup placements are only legal during setup.");
+    case "assembly":
+      return G.assembly ? MOVE_OK : invalid("The Assembly is not in session.");
     case "gameplay":
-      return G.phase === "gameplay" && !G.pendingPlayerEvent && !G.pendingRiot
+      return G.phase === "gameplay" && !G.pendingPlayerEvent && !G.pendingRiot && !G.assembly
         ? MOVE_OK
         : invalid("That move is not available right now.");
   }
@@ -230,9 +275,117 @@ export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove)
       return buyRiotInsurance(G, playerID, move.optionId, move.demoteTarget);
     case "resolveRiot":
       return resolveRiot(G, playerID);
+    case "assemblyDraw":
+      return assemblyDraw(G, playerID, move.politician);
+    case "assemblyDiscardHeld":
+      return assemblyDiscardHeld(G, playerID);
+    case "assemblyPropose":
+      return assemblyPropose(G, playerID, move.replaces);
+    case "assemblyProposeRepeal":
+      return assemblyProposeRepeal(G, playerID, move.cardId);
+    case "assemblyPass":
+      return assemblyPass(G, playerID);
+    case "assemblyBribe":
+      return assemblyBribe(G, playerID);
+    case "assemblyVote":
+      return assemblyVote(G, playerID, move.yea);
+    case "assemblyVeto":
+      return assemblyVeto(G, playerID);
+    case "assemblyClose":
+      return closeAssembly(G);
     case "endTurn":
       return endTurn(G);
   }
+}
+
+/**
+ * The Assembly's moves for whoever the house is waiting on. Every branch is
+ * guaranteed to return at least one move for the acting seat — pass in the proposal
+ * round, a vote in the ballot, close at the end — so a headless driver can always
+ * make progress and the agora can never deadlock a game.
+ */
+function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+  const session = G.assembly;
+
+  if (!session) {
+    return [];
+  }
+
+  const moves: LegalMove[] = [];
+  const rules = G.ruleset.assembly;
+  const influence = G.players[playerID].resources.influence;
+
+  if (session.phase === "closing") {
+    // Closing is single-actor: only the seat play returns to may dismiss the recap.
+    return session.activePlayer === playerID ? [{ type: "assemblyClose" }] : [];
+  }
+
+  if (session.phase === "voting") {
+    // Voting is sequential — only the seat whose turn it is to cast has moves.
+    if (session.voteOrder[session.voteIndex] !== playerID) {
+      return [];
+    }
+
+    if (session.bribesUsed[playerID] < rules.briberyCap && influence >= rules.briberyCost) {
+      moves.push({ type: "assemblyBribe", cost: { influence: rules.briberyCost } });
+    }
+
+    moves.push({ type: "assemblyVote", yea: true });
+    moves.push({ type: "assemblyVote", yea: false });
+
+    if (session.vetoUsed[playerID] < rules.vetoesPerAssembly && influence >= rules.vetoCost) {
+      moves.push({ type: "assemblyVeto", cost: { influence: rules.vetoCost } });
+    }
+
+    return moves;
+  }
+
+  // Proposal is ASYNC: any seat that has not yet finalized has moves. (A headless
+  // driver only ever calls this for `currentPlayer`, which syncAssemblyActor parks on
+  // the first undecided seat, so the sim still steps one seat at a time.)
+  if (session.proposalDone[playerID]) {
+    return [];
+  }
+
+  const held = session.held[playerID];
+
+  if (held) {
+    const card = held.card;
+    const standing = activeLawIds(G);
+
+    if (card.kind === "directive" || !standing.includes(card.id)) {
+      if (card.kind === "law" && isAtLawCap(G)) {
+        // At the cap a proposal must name its casualty — one move per candidate, so
+        // the choice of what to tear down is itself an enumerated decision.
+        for (const cardId of standing) {
+          moves.push({ type: "assemblyPropose", replaces: cardId });
+        }
+      } else {
+        moves.push({ type: "assemblyPropose" });
+      }
+    }
+
+    moves.push({ type: "assemblyDiscardHeld" });
+  } else {
+    const drawCost = nextDrawCost(G, playerID);
+
+    if (influence >= drawCost) {
+      for (const politician of POLITICIANS) {
+        if (G.politicianDecks[politician.id].length > 0 || G.politicianDiscards[politician.id].length > 0) {
+          moves.push({ type: "assemblyDraw", politician: politician.id, cost: { influence: drawCost } });
+        }
+      }
+    }
+
+    if (influence >= rules.repealCost) {
+      for (const cardId of activeLawIds(G)) {
+        moves.push({ type: "assemblyProposeRepeal", cardId, cost: { influence: rules.repealCost } });
+      }
+    }
+  }
+
+  moves.push({ type: "assemblyPass" });
+  return moves;
 }
 
 export function describeMove(move: LegalMove): string {
@@ -271,6 +424,24 @@ export function describeMove(move: LegalMove): string {
       return `declare riot insurance: ${move.optionId}${move.demoteTarget ? ` (demoting a ${formatPopName(move.demoteTarget.from, 1)} on ${move.demoteTarget.tileId})` : ""}`;
     case "resolveRiot":
       return "face the riot table";
+    case "assemblyDraw":
+      return `sound out ${move.politician}${formatCost(move.cost)}`;
+    case "assemblyDiscardHeld":
+      return "set the drawn resolution aside";
+    case "assemblyPropose":
+      return `propose the drawn resolution${move.replaces ? ` in place of ${move.replaces}` : ""}`;
+    case "assemblyProposeRepeal":
+      return `move to repeal ${getResolutionCard(move.cardId)?.name ?? move.cardId}${formatCost(move.cost)}`;
+    case "assemblyPass":
+      return "hold your peace";
+    case "assemblyBribe":
+      return `buy a vote${formatCost(move.cost)}`;
+    case "assemblyVote":
+      return `vote ${move.yea ? "yea" : "nay"}`;
+    case "assemblyVeto":
+      return `veto the resolution${formatCost(move.cost)}`;
+    case "assemblyClose":
+      return "rise from the Assembly";
     case "endTurn":
       return "end turn";
   }

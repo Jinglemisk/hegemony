@@ -37,7 +37,18 @@ import {
   upgradeColonyToCity,
 } from "./rules";
 import type { CivicCalmPayment, VentureStake } from "./rules";
-import { advanceSetupTurn, beginGameplayTurn, createGame, endTurn } from "./turn";
+import { advanceSetupTurn, beginGameplayTurn, closeAssembly, createGame, endTurn } from "./turn";
+import {
+  assemblyBribe,
+  assemblyDiscardHeld,
+  assemblyDraw,
+  assemblyPass,
+  assemblyPropose,
+  assemblyProposeRepeal,
+  assemblyVeto,
+  assemblyVote,
+} from "./assembly";
+import type { PoliticianId } from "./assembly";
 import { GAME_MODES } from "./ruleset";
 import { resolveTunedRuleset } from "../dev/tuning";
 
@@ -78,7 +89,41 @@ function createGameFromUrl(): HegemonyState {
     autoPlayOpening(G);
   }
 
+  // `?dev=assembly` fast-forwards to the first Assembly. The agora sits in the spring
+  // of Year 2 — sixteen turns in — and neither a playtest nor a browser check should
+  // have to click through a whole year to reach the feature under test.
+  if (params?.get("dev") === "assembly") {
+    fastForwardToAssembly(G);
+  }
+
   return G;
+}
+
+/** Play seed-driven legal moves until the Assembly convenes (or the game ends). Uses
+ *  the same enumerate→apply path the sim does, so events and riots along the way
+ *  resolve through the real engine rather than being skipped. */
+function fastForwardToAssembly(G: HegemonyState) {
+  let rngState = G.seed ^ 0x5bf03635;
+  let guard = 0;
+
+  while (!G.assembly && G.phase === "gameplay" && guard++ < 4000) {
+    const moves = enumerateLegalMoves(G, G.currentPlayer);
+
+    if (moves.length === 0) {
+      return;
+    }
+
+    const step = mulberry32(rngState);
+    rngState = step.state;
+    // Bias hard toward ending the turn: the point is to reach spring of Year 2, not
+    // to play a good game on the way there.
+    const endTurnMove = moves.find((move) => move.type === "endTurn");
+    const move = endTurnMove && step.value < 0.7 ? endTurnMove : moves[Math.floor(step.value * moves.length)];
+
+    if (!applyMove(G, G.currentPlayer, move).ok) {
+      return;
+    }
+  }
 }
 
 /** Next seed from the dev rotation — a localStorage cursor advances it once per page
@@ -157,6 +202,17 @@ export type GameMoves = {
   fundExpedition: (expeditionId: EventTableId, stake: VentureStake) => void;
   buyRiotInsurance: (optionId: RiotInsuranceId, demoteTarget?: { tileId: string; from: PopType }) => void;
   resolveRiot: () => void;
+  // The Assembly (Phase 3-B). These are the only moves available while the agora
+  // sits — the engine refuses every other verb until the house rises.
+  assemblyDraw: (playerID: PlayerId, politician: PoliticianId) => void;
+  assemblyDiscardHeld: (playerID: PlayerId) => void;
+  assemblyPropose: (playerID: PlayerId, replaces?: string) => void;
+  assemblyProposeRepeal: (playerID: PlayerId, cardId: string) => void;
+  assemblyPass: (playerID: PlayerId) => void;
+  assemblyBribe: (playerID: PlayerId) => void;
+  assemblyVote: (playerID: PlayerId, yea: boolean) => void;
+  assemblyVeto: (playerID: PlayerId) => void;
+  assemblyClose: () => void;
 };
 
 export type GameEvents = {
@@ -174,8 +230,14 @@ export function useHegemonyGame() {
   const [G, setG] = useState<HegemonyState>(createGameFromUrl);
 
   useEffect(() => {
+    // The async assembly proposal lets every seat act at once, so the viewer stays put
+    // and switches by hand; snapping it to currentPlayer would fight that. Every other
+    // phase is single-actor, so the viewer follows the turn as before.
+    if (G.assembly?.phase === "proposal") {
+      return;
+    }
     setPlayerID(G.currentPlayer);
-  }, [G.currentPlayer]);
+  }, [G.currentPlayer, G.assembly?.phase]);
 
   const moves = useMemo(() => createMoves(setG), []);
   const events = useMemo(() => createEvents(setG), []);
@@ -266,6 +328,33 @@ function createMoves(setG: SetState): GameMoves {
     },
     resolveRiot: () => {
       setG((previous) => commitGameplayMove(previous, (G) => resolveRiot(G, G.currentPlayer)));
+    },
+    assemblyDraw: (playerID, politician) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyDraw(G, playerID, politician)));
+    },
+    assemblyDiscardHeld: (playerID) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyDiscardHeld(G, playerID)));
+    },
+    assemblyPropose: (playerID, replaces) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyPropose(G, playerID, replaces)));
+    },
+    assemblyProposeRepeal: (playerID, cardId) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyProposeRepeal(G, playerID, cardId)));
+    },
+    assemblyPass: (playerID) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyPass(G, playerID)));
+    },
+    assemblyBribe: (playerID) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyBribe(G, playerID)));
+    },
+    assemblyVote: (playerID, yea) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyVote(G, playerID, yea)));
+    },
+    assemblyVeto: (playerID) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyVeto(G, playerID)));
+    },
+    assemblyClose: () => {
+      setG((previous) => commitGameplayMove(previous, closeAssembly));
     },
   };
 }

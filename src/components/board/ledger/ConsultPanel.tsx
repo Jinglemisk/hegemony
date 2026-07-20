@@ -2,6 +2,7 @@ import { memo } from "react";
 import type { ConsultTab } from "../types";
 import { useGameUi } from "../GameUiContext";
 import { ActionLogPanel } from "../command/ActionLogPanel";
+import { AgoraTab } from "./AgoraTab";
 import { CodexTab } from "./CodexTab";
 import { VictoryTab } from "./VictoryTab";
 import { CONSULT_TABS, ledgerTabLabel } from "./tabs";
@@ -9,8 +10,8 @@ import { CONSULT_TABS, ledgerTabLabel } from "./tabs";
 /**
  * The right consult panel (docs/feat/two-panel.md): a floating card that mirrors the
  * left ledger card on the far edge, showing what you *consult* — the Chronicle (the
- * running log, formerly the edge drawer), the Codex (rules reference), and Victory
- * (the race table). No empire summary or unrest banner — those are act-side, on the
+ * running log, formerly the edge drawer), the Codex (rules reference), Victory
+ * (the race table) and the Agora (the Assembly's standing record). No empire summary or unrest banner — those are act-side, on the
  * left. Titled by the page it shows, like the ledger.
  */
 function ConsultPanelComponent({
@@ -49,6 +50,7 @@ function ConsultPanelComponent({
         {activeTab === "chronicle" ? <ActionLogPanel G={G} /> : null}
         {activeTab === "codex" ? <CodexTab G={G} target={codexTarget} /> : null}
         {activeTab === "victory" ? <VictoryTab G={G} playerID={viewerId} /> : null}
+        {activeTab === "agora" ? <AgoraTab G={G} /> : null}
       </div>
     </div>
   );
