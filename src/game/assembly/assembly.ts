@@ -52,15 +52,25 @@ function turnOrder(G: HegemonyState): PlayerId[] {
   return PLAYER_IDS.map((_, index) => PLAYER_IDS[(start + index) % PLAYER_IDS.length]);
 }
 
+/** The first seat still to finalize its proposal, in turn order; null when all are done. */
+function firstUndecided(G: HegemonyState): PlayerId | null {
+  const session = G.assembly!;
+  return turnOrder(G).find((seat) => !session.proposalDone[seat]) ?? null;
+}
+
 /**
  * Keep `G.currentPlayer` pointed at whoever the Assembly is waiting on.
  *
- * The agora runs on its own order — reverse turn order to propose, turn order to
- * vote — which is NOT the seat whose turn was suspended. Rather than teach every
- * existing turn gate about a second notion of "who is acting", we move the one the
- * engine already has. Every `currentPlayer !== playerID` check in the move
- * enumerator, the dispatcher and the UI's `isActive` then works unchanged, and the
- * scoreboard highlights the right seat for free.
+ * In VOTING and CLOSING there is one such seat, and moving `currentPlayer` onto it
+ * means every existing turn gate — the enumerator, the dispatcher, the UI's
+ * `isActive`, the scoreboard highlight — works unchanged.
+ *
+ * PROPOSAL is asynchronous (owner ruling, 2026-07-20), so there is no single actor:
+ * every undecided seat may act at once. We still park `currentPlayer` on the first
+ * undecided seat so a headless driver has someone to play, but the UI does NOT gate on
+ * it — it gates on {@link AssemblySession.proposalDone} for the viewer — and the
+ * controller stops yanking the viewer to `currentPlayer` while the proposal round is
+ * open, so the hotseat player can switch seats freely.
  */
 function syncAssemblyActor(G: HegemonyState) {
   const session = G.assembly;
@@ -71,7 +81,7 @@ function syncAssemblyActor(G: HegemonyState) {
 
   session.activePlayer =
     session.phase === "proposal"
-      ? session.proposalOrder[session.proposalIndex]
+      ? firstUndecided(G) ?? session.resumePlayer
       : session.phase === "voting"
         ? session.voteOrder[session.voteIndex]
         : session.resumePlayer;
@@ -93,33 +103,33 @@ export function assemblyActor(G: HegemonyState): PlayerId | null {
 export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
   const order = turnOrder(G);
   const houseCard = drawHouseCard(G);
-  const zero = PLAYER_IDS.reduce((all, id) => ({ ...all, [id]: 0 }), {} as Record<PlayerId, number>);
+  const perSeat = <T,>(value: T) =>
+    PLAYER_IDS.reduce((all, id) => ({ ...all, [id]: value }), {} as Record<PlayerId, T>);
 
   G.assembly = {
     year: yearOf(G.season),
     season: G.season,
     phase: "proposal",
-    activePlayer: [...order].reverse()[0],
-    proposalOrder: [...order].reverse(),
-    proposalIndex: 0,
-    heldCard: null,
-    drawsThisTurn: 0,
-    ballot: houseCard
-      ? [
-          {
-            kind: "enact",
-            card: houseCard,
-            proposer: null,
-            replaces: houseCard.kind === "law" ? houseReplacementTarget(G) : undefined
-          }
-        ]
-      : [],
+    activePlayer: order[0],
+    houseItem: houseCard
+      ? {
+          kind: "enact",
+          card: houseCard,
+          proposer: null,
+          replaces: houseCard.kind === "law" ? houseReplacementTarget(G) : undefined
+        }
+      : null,
+    held: perSeat(null),
+    draws: perSeat(0),
+    proposals: perSeat<BallotItem | null>(null),
+    proposalDone: perSeat(false),
+    ballot: [],
     ballotIndex: 0,
     votes: [],
     voteOrder: order,
     voteIndex: 0,
-    bribesUsed: { ...zero },
-    vetoUsed: { ...zero },
+    bribesUsed: perSeat(0),
+    vetoUsed: perSeat(0),
     results: [],
     // Isonomia's legacy, set by a Directive passed at the PREVIOUS assembly and
     // consumed here — the demos got its equal vote exactly once.
@@ -225,11 +235,22 @@ function discardCard(G: HegemonyState, card: ResolutionCard) {
   G.politicianDiscards[card.politician].push(card.id);
 }
 
-// ── Proposal phase ────────────────────────────────────────────────────────────────
+// ── Proposal phase (async) ──────────────────────────────────────────────────────────
+//
+// Every seat acts independently and in secret. A seat may act as long as the phase is
+// proposal and it has not yet finalized (proposalDone). There is no turn order here —
+// the fairness the reverse-turn-order design guarded is now moot, because every seat
+// draws simultaneously and nobody sees anyone else's card until the vote.
 
-/** What the active proposer would pay for their next fish: the opening draw, then the
- *  redraw price for every card after it. The escalating sink is the point (§1.4). */
-export function nextDrawCost(G: HegemonyState): number {
+/** True when this seat may still draw/propose/pass this proposal round. */
+function canAct(G: HegemonyState, playerID: PlayerId): boolean {
+  const session = G.assembly;
+  return Boolean(session && session.phase === "proposal" && !session.proposalDone[playerID]);
+}
+
+/** What a seat would pay for its next fish: the opening draw, then the redraw price for
+ *  every card after it — the escalating sink is per-seat (§1.4). */
+export function nextDrawCost(G: HegemonyState, playerID: PlayerId): number {
   const session = G.assembly;
 
   if (!session) {
@@ -237,7 +258,7 @@ export function nextDrawCost(G: HegemonyState): number {
   }
 
   const rules = G.ruleset.assembly;
-  return session.drawsThisTurn === 0 ? rules.drawCost : rules.redrawCost;
+  return session.draws[playerID] === 0 ? rules.drawCost : rules.redrawCost;
 }
 
 /**
@@ -248,15 +269,15 @@ export function nextDrawCost(G: HegemonyState): number {
 export function assemblyDraw(G: HegemonyState, playerID: PlayerId, politician: PoliticianId): MoveResult {
   const session = G.assembly;
 
-  if (!session || session.phase !== "proposal" || session.activePlayer !== playerID) {
-    return invalid("It is not your turn to propose.");
+  if (!canAct(G, playerID)) {
+    return invalid("You have already spoken this assembly.");
   }
 
-  if (session.heldCard) {
+  if (session!.held[playerID]) {
     return invalid("Discard or propose the card you are holding first.");
   }
 
-  const cost = nextDrawCost(G);
+  const cost = nextDrawCost(G, playerID);
 
   if (G.players[playerID].resources.influence < cost) {
     return invalid(`Drawing costs ${cost} influence.`);
@@ -269,12 +290,9 @@ export function assemblyDraw(G: HegemonyState, playerID: PlayerId, politician: P
   }
 
   G.players[playerID].resources.influence -= cost;
-  session.drawsThisTurn += 1;
-  session.heldCard = { card, drawnBy: playerID, draws: session.drawsThisTurn };
-  addLog(
-    G,
-    `${getPlayerName(G, playerID)} paid ${cost} influence to sound out ${politicianName(politician)}.`
-  );
+  session!.draws[playerID] += 1;
+  session!.held[playerID] = { card, draws: session!.draws[playerID] };
+  addLog(G, `${getPlayerName(G, playerID)} paid ${cost} influence to sound out ${politicianName(politician)}.`);
   return MOVE_OK;
 }
 
@@ -282,12 +300,12 @@ export function assemblyDraw(G: HegemonyState, playerID: PlayerId, politician: P
 export function assemblyDiscardHeld(G: HegemonyState, playerID: PlayerId): MoveResult {
   const session = G.assembly;
 
-  if (!session || session.phase !== "proposal" || session.activePlayer !== playerID || !session.heldCard) {
+  if (!canAct(G, playerID) || !session!.held[playerID]) {
     return invalid();
   }
 
-  discardCard(G, session.heldCard.card);
-  session.heldCard = null;
+  discardCard(G, session!.held[playerID]!.card);
+  session!.held[playerID] = null;
   addLog(G, `${getPlayerName(G, playerID)} set the drawn resolution aside.`);
   return MOVE_OK;
 }
@@ -313,11 +331,11 @@ export function activeLawIds(G: HegemonyState): string[] {
 export function assemblyPropose(G: HegemonyState, playerID: PlayerId, replaces?: string): MoveResult {
   const session = G.assembly;
 
-  if (!session || session.phase !== "proposal" || session.activePlayer !== playerID || !session.heldCard) {
+  if (!canAct(G, playerID) || !session!.held[playerID]) {
     return invalid();
   }
 
-  const card = session.heldCard.card;
+  const card = session!.held[playerID]!.card;
 
   if (card.kind === "law" && activeLawIds(G).includes(card.id)) {
     return invalid(`${card.name} already stands on the board.`);
@@ -329,15 +347,15 @@ export function assemblyPropose(G: HegemonyState, playerID: PlayerId, replaces?:
     }
   }
 
-  session.ballot.push({
+  session!.proposals[playerID] = {
     kind: "enact",
     card,
     proposer: playerID,
     replaces: card.kind === "law" && isAtLawCap(G) ? replaces : undefined
-  });
-  session.heldCard = null;
-  addLog(G, `${getPlayerName(G, playerID)} lays ${card.name} before the Assembly.`);
-  advanceProposal(G);
+  };
+  session!.held[playerID] = null;
+  addLog(G, `${getPlayerName(G, playerID)} seals a resolution to lay before the Assembly.`);
+  finalizeProposal(G, playerID);
   return MOVE_OK;
 }
 
@@ -349,16 +367,12 @@ export function assemblyPropose(G: HegemonyState, playerID: PlayerId, replaces?:
 export function assemblyProposeRepeal(G: HegemonyState, playerID: PlayerId, cardId: string): MoveResult {
   const session = G.assembly;
 
-  if (!session || session.phase !== "proposal" || session.activePlayer !== playerID) {
+  if (!canAct(G, playerID)) {
     return invalid();
   }
 
   if (!activeLawIds(G).includes(cardId)) {
     return invalid("That Law is not standing.");
-  }
-
-  if (session.ballot.some((item) => item.kind === "repeal" && item.cardId === cardId)) {
-    return invalid("A repeal of that Law is already on the ballot.");
   }
 
   const cost = G.ruleset.assembly.repealCost;
@@ -369,17 +383,14 @@ export function assemblyProposeRepeal(G: HegemonyState, playerID: PlayerId, card
 
   G.players[playerID].resources.influence -= cost;
 
-  if (session.heldCard) {
-    discardCard(G, session.heldCard.card);
-    session.heldCard = null;
+  if (session!.held[playerID]) {
+    discardCard(G, session!.held[playerID]!.card);
+    session!.held[playerID] = null;
   }
 
-  session.ballot.push({ kind: "repeal", cardId, proposer: playerID });
-  addLog(
-    G,
-    `${getPlayerName(G, playerID)} moves to strike ${getResolutionCard(cardId)?.name ?? cardId} from the record.`
-  );
-  advanceProposal(G);
+  session!.proposals[playerID] = { kind: "repeal", cardId, proposer: playerID };
+  addLog(G, `${getPlayerName(G, playerID)} moves to strike ${getResolutionCard(cardId)?.name ?? cardId} from the record.`);
+  finalizeProposal(G, playerID);
   return MOVE_OK;
 }
 
@@ -388,26 +399,27 @@ export function assemblyProposeRepeal(G: HegemonyState, playerID: PlayerId, card
 export function assemblyPass(G: HegemonyState, playerID: PlayerId): MoveResult {
   const session = G.assembly;
 
-  if (!session || session.phase !== "proposal" || session.activePlayer !== playerID) {
+  if (!canAct(G, playerID)) {
     return invalid();
   }
 
-  if (session.heldCard) {
-    discardCard(G, session.heldCard.card);
-    session.heldCard = null;
+  if (session!.held[playerID]) {
+    discardCard(G, session!.held[playerID]!.card);
+    session!.held[playerID] = null;
   }
 
+  session!.proposals[playerID] = null;
   addLog(G, `${getPlayerName(G, playerID)} holds their peace.`);
-  advanceProposal(G);
+  finalizeProposal(G, playerID);
   return MOVE_OK;
 }
 
-function advanceProposal(G: HegemonyState) {
+/** Mark a seat done. When the last seat finalizes, the round closes and voting opens. */
+function finalizeProposal(G: HegemonyState, playerID: PlayerId) {
   const session = G.assembly!;
-  session.proposalIndex += 1;
-  session.drawsThisTurn = 0;
+  session.proposalDone[playerID] = true;
 
-  if (session.proposalIndex >= session.proposalOrder.length) {
+  if (turnOrder(G).every((seat) => session.proposalDone[seat])) {
     beginVoting(G);
     return;
   }
@@ -417,8 +429,19 @@ function advanceProposal(G: HegemonyState) {
 
 // ── Voting phase ──────────────────────────────────────────────────────────────────
 
+/**
+ * Assemble the ballot and open the vote. The proposals were secret and arrived in
+ * whatever real-time order the seats acted; the ballot orders them deterministically —
+ * the house card first, then each seat's proposal in turn order — so the vote sequence
+ * never depends on who happened to click first.
+ */
 function beginVoting(G: HegemonyState) {
   const session = G.assembly!;
+
+  session.ballot = [
+    ...(session.houseItem ? [session.houseItem] : []),
+    ...session.voteOrder.map((seat) => session.proposals[seat]).filter((item): item is BallotItem => item !== null)
+  ];
 
   if (session.ballot.length === 0) {
     // Nothing was laid before the house — the agora rises without a vote.
@@ -432,7 +455,10 @@ function beginVoting(G: HegemonyState) {
   session.ballotIndex = 0;
   session.votes = [];
   session.voteIndex = 0;
-  addLog(G, `The Assembly turns to the ballot — ${session.ballot.length} resolution${session.ballot.length === 1 ? "" : "s"}, voted in turn.`);
+  addLog(
+    G,
+    `The Assembly turns to the ballot — ${session.ballot.length} resolution${session.ballot.length === 1 ? "" : "s"}, voted in turn.`
+  );
   syncAssemblyActor(G);
 }
 

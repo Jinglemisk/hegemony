@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
 import { victoryStandings } from "../../../game/victory";
-import type { PoliticianId } from "../../../game/assembly";
 import { useGameUi } from "../GameUiContext";
 import { AssemblyBema } from "./AssemblyBema";
 import { AssemblyColonnade } from "./AssemblyColonnade";
@@ -35,16 +34,15 @@ export function AssemblyPanel({
   ledgerOpen: boolean;
   consultOpen: boolean;
 }) {
-  const { G } = useGameUi();
+  const { G, viewerId } = useGameUi();
   const session = G.assembly;
   const [menu, setMenu] = useState<AssemblyMenu>(null);
-  const [politician, setPolitician] = useState<PoliticianId>("demosthenes");
 
-  // Any change of hands closes an open picker: a menu left hanging across seats would
-  // let one player's half-made choice land in the next player's turn.
+  // Any change of hands or of viewer closes an open picker: a menu left hanging across
+  // seats would let one player's half-made choice land in the next player's turn.
   useEffect(() => {
     setMenu(null);
-  }, [session?.activePlayer, session?.phase, session?.ballotIndex]);
+  }, [session?.activePlayer, session?.phase, session?.ballotIndex, viewerId]);
 
   if (!session) {
     return null;
@@ -99,14 +97,7 @@ export function AssemblyPanel({
           <AssemblyBema G={G} session={session} />
         </div>
 
-        <AssemblyFoot
-          G={G}
-          menu={menu}
-          onMenu={setMenu}
-          onPolitician={setPolitician}
-          politician={politician}
-          session={session}
-        />
+        <AssemblyFoot G={G} menu={menu} onMenu={setMenu} session={session} />
       </section>
     </div>
   );

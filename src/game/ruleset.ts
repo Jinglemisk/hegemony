@@ -255,7 +255,10 @@ export const DEFAULT_RULESET: Ruleset = {
     firstYear: 2,
     lawCap: 6,
     dominanceThreshold: 3,
-    coupThreshold: 3,
+    // Raised 3→5 (owner playtest, 2026-07-20): with only 7 Directives and monuments
+    // that never repeal, 5 makes the coup a genuine late-game reach rather than a
+    // mid-game swing, and gives the table more assemblies to vote his Directives down.
+    coupThreshold: 5,
     drawCost: 3,
     redrawCost: 3,
     repealCost: 6,

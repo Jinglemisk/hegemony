@@ -208,7 +208,16 @@ export interface AssemblyResult {
   summary: string;
 }
 
-/** Proposal first (reverse turn order), then the ballot is voted one card at a time. */
+/** A card a seat is holding during the proposal round — secret to every other seat. */
+export type HeldCard = { card: ResolutionCard; draws: number };
+
+/**
+ * The two phases (§1.3). Proposal is now **asynchronous** (owner ruling, 2026-07-20):
+ * every seat draws, proposes or passes *independently and in secret* — the hotseat
+ * player switches perspective and acts as each in any order. Only once every seat has
+ * finalized are the proposals revealed and voted one at a time. Voting stays strictly
+ * sequential, which is what keeps the open-vote kingmaker dynamic (§1.3).
+ */
 export type AssemblyPhase = "proposal" | "voting" | "closing";
 
 /**
@@ -221,16 +230,26 @@ export interface AssemblySession {
   year: number;
   season: number;
   phase: AssemblyPhase;
-  /** Proposal phase: whose turn to fish/propose. Voting phase: whose turn to vote. */
+  /** During voting: whose turn to cast. During proposal it tracks the first seat still
+   *  to decide, purely so a headless driver has someone to play — the UI lets ANY
+   *  undecided seat act, gated on {@link proposalDone}, not on this. During closing:
+   *  the seat play returns to. */
   activePlayer: PlayerId;
-  /** Seats owed a proposal, in reverse turn order (§1.3, fairness). */
-  proposalOrder: PlayerId[];
-  proposalIndex: number;
-  /** The card the active proposer is holding — hidden from every other seat until
-   *  proposed, which is what makes fishing a real gamble. */
-  heldCard: { card: ResolutionCard; drawnBy: PlayerId; draws: number } | null;
-  /** Influence already sunk into the current seat's fishing, for the cost display. */
-  drawsThisTurn: number;
+
+  // ── Proposal (async) ──────────────────────────────────────────────────────────
+  /** The house resolution — public on the bema from the start (no seat authored it). */
+  houseItem: BallotItem | null;
+  /** Each seat's secret drawn card, or null. Hidden from everyone else until proposed. */
+  held: Record<PlayerId, HeldCard | null>;
+  /** Draws each seat has made this assembly — the escalating fishing sink is per-seat. */
+  draws: Record<PlayerId, number>;
+  /** Each seat's finalized proposal (an enact or a repeal), or null if they passed —
+   *  kept secret until voting, then folded into {@link ballot} in turn order. */
+  proposals: Record<PlayerId, BallotItem | null>;
+  /** Whether each seat has finalized its proposal decision. All true → voting begins. */
+  proposalDone: Record<PlayerId, boolean>;
+
+  // ── Voting (sequential) ───────────────────────────────────────────────────────
   ballot: BallotItem[];
   ballotIndex: number;
   /** Votes cast on the ballot item under consideration, in the order they landed. */

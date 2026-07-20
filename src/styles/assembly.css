@@ -29,7 +29,11 @@
   right: calc(var(--rail-w) + var(--bub-out) + 14px);
   z-index: 34;
   display: grid;
-  place-items: center;
+  /* Stretch to the ledger's full height (owner ask, 2026-07-20) rather than hug the
+     content and float mid-sea — the extra height is what the drawn-card display and
+     the four stele stacks want. Width still caps and centres. */
+  align-items: stretch;
+  justify-items: center;
   /* The gutters fall through to the map, so the board stays pannable around the
      agora. Only the panel itself takes pointer events. */
   pointer-events: none;
@@ -57,12 +61,14 @@
   pointer-events: none;
 }
 
-/* The panel HUGS its content and only caps at 560 — it must never leave dead space. */
+/* Fills the slot's height (the ledger band) and caps its width. Short content leaves
+   the body scrolling inside a fixed frame, exactly like the ledger card. */
 .assembly {
   display: flex;
   flex-direction: column;
   width: min(900px, 100%);
-  max-height: min(560px, 100%);
+  height: 100%;
+  max-height: 100%;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--ivory);
@@ -1556,4 +1562,111 @@
   color: var(--ink-66);
   font-size: 10.5px;
   line-height: 1.45;
+}
+
+/* ── Async proposal: the per-column draw button + the held-card display ──────────
+   New for the 2026-07-20 rework. The reference mock had a single footer draw with a
+   dropdown; the owner asked for a draw button under each politician instead, and for
+   the drawn card to show its full effect rather than just its name. */
+
+.acolDraw {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  margin-top: 7px;
+  padding: 4px 8px;
+  border: 1px solid var(--clay);
+  border-radius: 7px;
+  background: rgb(192 70 28 / 6%);
+  color: var(--clay-deep);
+  font-family: var(--disp);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.acolDraw:hover:not(:disabled) {
+  background: var(--clay);
+  color: var(--ivory);
+}
+
+.acolDraw:disabled {
+  border-color: var(--ink-12);
+  background: transparent;
+  color: var(--ink-30);
+  cursor: not-allowed;
+}
+
+.acolDrawLabel {
+  flex: 1;
+  text-align: left;
+}
+
+.acolDrawCost {
+  font-family: var(--body);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.acolDraw:not(:disabled) .acolDrawCost::before {
+  content: "";
+}
+
+/* The drawn card lives in the bema's left column now, shown in full via the shared
+   ResolutionCardFace — so a card reads the same whether held or under vote. */
+.asmHeldActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.asmDrawPrompt,
+.asmDecided {
+  padding: 2px 0;
+}
+
+.asmDrawPrompt .bfx,
+.asmDecided .bfx {
+  margin-top: 4px;
+}
+
+/* An inline replace menu (at the law cap) that opens upward from the Propose button,
+   built on the native <details> so it needs no extra state. */
+.asmReplace {
+  position: relative;
+}
+
+.asmReplace > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.asmReplace > summary::-webkit-details-marker {
+  display: none;
+}
+
+.asmMenuInline {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+}
+
+.asmProposalHint,
+.asmFootHint {
+  color: var(--ink-48);
+  font-size: 9.5px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.asmProposalHint {
+  margin-top: 8px;
+}
+
+.asmFootHint {
+  margin-left: 6px;
 }
