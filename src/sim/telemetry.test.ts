@@ -134,7 +134,7 @@ describe("Aggregator", () => {
     expect(report.perGame[0].termination).toBe("victoryRace");
     expect(report.perGame[0].winner).toBe("0");
     expect(report.perGame[0].leaderAtCap).toBeNull();
-    expect(report.terminations).toEqual({ victoryRace: 1, deckExhausted: 0, turnCap: 0 });
+    expect(report.terminations).toEqual({ victoryRace: 1, deckExhausted: 0, stratoklesCoup: 0, turnCap: 0 });
     expect(report.perSeat["0"].winRate).toBe(1);
     expect(report.perSeat["1"].winRate).toBe(0);
     expect(report.perSeat["0"].capLeaderRate).toBe(0);

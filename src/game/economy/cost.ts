@@ -4,6 +4,7 @@ import { addLog, getPlayerName } from "../core/query";
 import { clonePartialResources } from "../core/resources";
 import { DEFAULT_RULESET } from "../ruleset";
 import type { Ruleset } from "../ruleset";
+import { applyLawActionCost } from "../assembly/laws";
 
 /** Actions whose base cost can be modified by seasonal multipliers or event discounts. */
 export type CostedAction = ActionCostDiscountTarget | "upgradeColonyToCity";
@@ -30,7 +31,9 @@ export function getAdjustedActionCost(
     }
   }
 
-  return adjusted;
+  // Standing Laws reprice last, over the seasonal multiplier and event discounts —
+  // a Law is the most permanent modifier in the game, so it gets the final word.
+  return applyLawActionCost(G, playerID, action, adjusted, { buildingId });
 }
 
 export function getGrowPopCost(
@@ -64,7 +67,12 @@ export function getDiscountedGrowPopCost(
     adjusted[discount.resource] = Math.max(0, (adjusted[discount.resource] ?? 0) - discount.amount);
   }
 
-  return adjusted;
+  // Several Laws price growth differently in cities and colonies (Guild Charter,
+  // Manifest Destiny), so the settlement's own kind is part of the question.
+  return applyLawActionCost(G, playerID, "growPop", adjusted, {
+    scope: settlement.kind === "colony" ? "colony" : "city",
+    pop
+  });
 }
 
 function getGrowPopFoodDiscount(settlement: Settlement) {

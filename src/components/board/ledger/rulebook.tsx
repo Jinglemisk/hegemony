@@ -155,7 +155,8 @@ const victory: RuleChapter = {
       pops: { title: "The Populous", of: "the most population" },
       citizens: { title: "The Republic", of: "the most citizens" },
       stockpile: { title: "The Treasury", of: "the largest stockpile of materials" },
-      happiness: { title: "The Beloved", of: "the highest happiness" }
+      happiness: { title: "The Beloved", of: "the highest happiness" },
+      voice: { title: "Voice of the Assembly", of: "patronage of the most politicians" }
     };
     return (
       <div className="compendiumStack">

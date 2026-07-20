@@ -1,4 +1,11 @@
 import type { Ruleset } from "./ruleset";
+import type {
+  ActiveLaw,
+  AssemblySession,
+  LawCostedAction,
+  PoliticianId,
+  TallyMonument
+} from "./assembly/types";
 
 export type PlayerId = "0" | "1" | "2" | "3";
 
@@ -24,11 +31,13 @@ export type Phase = "setupCapital" | "setupCity" | "setupColony" | "gameplay" | 
 /** How the terrain deck is laid onto the board: the fixed authored layout, or a seeded shuffle. */
 export type BoardLayout = "classic" | "shuffled";
 
-/** The scoreboard metrics victory cards race on (see game/victory.ts). */
-export type VictoryMetric = "cities" | "pops" | "citizens" | "stockpile" | "happiness";
+/** The scoreboard metrics victory cards race on (see game/victory.ts). `voice` is the
+ *  Assembly's political card — patron of the most politicians (assembly/power.ts). */
+export type VictoryMetric = "cities" | "pops" | "citizens" | "stockpile" | "happiness" | "voice";
 
-/** Why the game ended: a player held enough victory cards, or the seasonal deck (the clock) ran out. */
-export type GameOverReason = "victoryRace" | "deckExhausted";
+/** Why the game ended: a player held enough victory cards, the seasonal deck (the
+ *  clock) ran out, or Stratokles's tally track reached the coup and crowned his patron. */
+export type GameOverReason = "victoryRace" | "deckExhausted" | "stratoklesCoup";
 
 /** The four seasons, in the order they cycle each year (a year always opens on spring). */
 export type SeasonName = "spring" | "summer" | "autumn" | "winter";
@@ -400,6 +409,12 @@ export interface PlayerState {
   civicCalmUsedThisTurn: boolean;
   ladderUsedThisTurn: boolean;
   ventureUsedThisTurn: boolean;
+  /** Free-action coupons a standing Law grants once a year (Monumental Code, Land
+   *  Rush) that this player has already spent. Cleared when the year turns. */
+  lawFreeActionsUsedThisYear: LawCostedAction[];
+  /** Turns of income Stratokles's General Strike has taken away. Decremented at the
+   *  moment income would have been collected, so the strike costs exactly one turn. */
+  incomeSuppressedTurns: number;
 }
 
 export interface PopulationTransfer {
@@ -453,4 +468,31 @@ export interface HegemonyState {
   /** Serialized mulberry32 PRNG state; advanced on each deck shuffle so draws are reproducible from the initial seed. */
   rng: number;
   log: LogEntry[];
+
+  // ── The Assembly (Phase 3-B · docs/feat/assembly-politicians.md) ────────────────
+  //
+  // The whole rivalry layer is these seven fields. Note what is NOT here: no power
+  // counters, no patron table, no decay timers. Power and patronage are READ OFF
+  // `activeLaws` / `tallyMonuments` on demand (assembly/power.ts), so the stele
+  // stacks the panel draws are the scoreboard rather than a view of one.
+
+  /** The Assembly in session. Non-null SUSPENDS the turn machine — the same
+   *  engine-state gate the yearly omen uses, so no click can open or dismiss it. */
+  assembly: AssemblySession | null;
+  /** Standing Laws — the stelae in the agora. Consulted by the income, cost, bank and
+   *  happiness pipelines through `assembly/laws.ts`. */
+  activeLaws: ActiveLaw[];
+  /** Stratokles's permanent monuments: momentum, never rules. They take no Law-cap
+   *  slot and can never be repealed, so his track only ever rises. */
+  tallyMonuments: TallyMonument[];
+  /** Each politician's undrawn cards and their discards, by card id. */
+  politicianDecks: Record<PoliticianId, string[]>;
+  politicianDiscards: Record<PoliticianId, string[]>;
+  /** Monotonic enactment counter, so "the most recently enacted Law" is exact even
+   *  when two pass in the same assembly. */
+  lawOrder: number;
+  /** Set by a passed Isonomia; consumed when the NEXT assembly convenes. */
+  pendingIsonomia: boolean;
+  /** How many assemblies have convened — the panel's "Nth of the game" subtitle. */
+  assembliesHeld: number;
 }

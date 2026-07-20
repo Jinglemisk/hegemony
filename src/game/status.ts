@@ -47,7 +47,15 @@ export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerI
   const status: ActionStatus = {
     can: false,
     reasons: [],
-    cost: G.ruleset.actionCosts.upgradeColonyToCity
+    // Routed through the cost pipeline like every other action so the Assembly's
+    // Laws can reach it — Colonial Charter taxes the upgrade and Enfranchise the
+    // Colonies halves it, and both must show in the preview the player reads.
+    cost: getAdjustedActionCost(
+      G,
+      playerID,
+      "upgradeColonyToCity",
+      G.ruleset.actionCosts.upgradeColonyToCity
+    )
   };
 
   if (!tile) {

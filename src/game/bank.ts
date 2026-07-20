@@ -3,6 +3,7 @@ import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
 import type { BankRules } from "./ruleset";
 import type { BankRates, HegemonyState, HexTile, PlayerId, TradableMaterial } from "./types";
+import { applyLawBankRate } from "./assembly/laws";
 
 /**
  * The bank exchange (roadmap-appendix D6/Q14): a gold-mediated static market. Sell
@@ -57,9 +58,20 @@ export function deriveBankRates(tiles: HexTile[], rules: BankRules): BankRates {
   return rates;
 }
 
+/**
+ * The rate THIS player trades at. The board-derived rate is still static all game;
+ * what moves it is a standing Law (Aqueduct Levy shifts stone one step) or a patron
+ * buff, both of which are per-player rather than per-board. Every read of a rate goes
+ * through here so the preview, the status check and the trade itself can never
+ * disagree about what an exchange costs.
+ */
+export function getPlayerBankRate(G: HegemonyState, playerID: PlayerId, material: TradableMaterial) {
+  return applyLawBankRate(G, playerID, material, G.bank[material]);
+}
+
 export function getBankSellStatus(G: HegemonyState, playerID: PlayerId, material: TradableMaterial): ActionStatus {
   const reasons: string[] = [];
-  const rate = G.bank[material];
+  const rate = getPlayerBankRate(G, playerID, material);
 
   if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
   if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
@@ -72,7 +84,7 @@ export function getBankSellStatus(G: HegemonyState, playerID: PlayerId, material
 
 export function getBankBuyStatus(G: HegemonyState, playerID: PlayerId, material: TradableMaterial): ActionStatus {
   const reasons: string[] = [];
-  const rate = G.bank[material];
+  const rate = getPlayerBankRate(G, playerID, material);
 
   if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
   if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
@@ -91,7 +103,7 @@ export function bankSell(G: HegemonyState, playerID: PlayerId, material: Tradabl
     return invalid(...status.reasons);
   }
 
-  const rate = G.bank[material];
+  const rate = getPlayerBankRate(G, playerID, material);
   const resources = G.players[playerID].resources;
   resources[material] -= rate.sell;
   resources.gold += 1;
@@ -107,7 +119,7 @@ export function bankBuy(G: HegemonyState, playerID: PlayerId, material: Tradable
     return invalid(...status.reasons);
   }
 
-  const rate = G.bank[material];
+  const rate = getPlayerBankRate(G, playerID, material);
   const resources = G.players[playerID].resources;
   resources.gold -= rate.buy;
   resources[material] += 1;

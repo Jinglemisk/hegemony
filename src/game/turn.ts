@@ -13,7 +13,8 @@ import {
   startNewSeason,
 } from "./rules";
 import type { MoveResult } from "./rules";
-import { checkVictoryAtTurnStart } from "./victory";
+import { checkStratoklesCoup, checkVictoryAtTurnStart } from "./victory";
+import { openAssembly, shouldOpenAssembly } from "./assembly/assembly";
 import { GAME_MODES } from "./ruleset";
 import type { Ruleset } from "./ruleset";
 import type { BoardLayout, HegemonyState, Phase, PlayerId, SettlementKind } from "./types";
@@ -114,7 +115,7 @@ export function beginGameplayTurn(G: HegemonyState) {
  * arrivals, the victory-race check, unrest upkeep, income.
  */
 export function endTurn(G: HegemonyState): MoveResult {
-  if (G.phase !== "gameplay" || G.pendingPlayerEvent || G.pendingRiot) {
+  if (G.phase !== "gameplay" || G.pendingPlayerEvent || G.pendingRiot || G.assembly) {
     return { ok: false, reasons: [] };
   }
 
@@ -134,24 +135,66 @@ export function endTurn(G: HegemonyState): MoveResult {
     // A new year rotates the opener (handled in startNewSeason); the new opener
     // leads the season, and everyone still plays exactly once per season.
     next = G.seasonOpener;
+
+    // Spring of Year 2 onward, the Assembly sits BEFORE the opener plays (§1.1). It
+    // suspends the turn machine rather than sharing it: we hand control to the agora
+    // and remember whose turn we owe, and `closeAssembly` opens that turn for real.
+    if (shouldOpenAssembly(G)) {
+      openAssembly(G, next);
+      return { ok: true };
+    }
   }
 
-  G.currentPlayer = next;
+  beginTurnFor(G, next);
+  return { ok: true };
+}
+
+/**
+ * Open one player's turn: arrivals, the victory-race check, unrest upkeep, income.
+ * Extracted from {@link endTurn} because the Assembly suspends play *between* the
+ * season roll and the opener's turn — so `closeAssembly` needs to run exactly this
+ * sequence, and there must be only one copy of it.
+ */
+export function beginTurnFor(G: HegemonyState, playerID: PlayerId) {
+  G.currentPlayer = playerID;
   G.turn += 1;
 
-  resolveArrivingPops(G, next);
+  resolveArrivingPops(G, playerID);
   checkVictoryAtTurnStart(G);
+
+  if (G.phase !== "gameplay") {
+    return;
+  }
+
+  applyUnrestUpkeep(G, playerID);
+
+  if (!G.pendingRiot) {
+    collectIncome(G, playerID, "automatic");
+  }
+}
+
+/**
+ * Dismiss the Assembly's closing recap and hand play back to the season opener. The
+ * coup is checked here — a Directive passed this session may have just crowned
+ * Stratokles's patron, and that must resolve before anyone takes another turn.
+ */
+export function closeAssembly(G: HegemonyState): MoveResult {
+  const session = G.assembly;
+
+  if (!session || session.phase !== "closing") {
+    return { ok: false, reasons: [] };
+  }
+
+  const resume = session.resumePlayer;
+  G.assembly = null;
+
+  checkStratoklesCoup(G);
 
   if (G.phase !== "gameplay") {
     return { ok: true };
   }
 
-  applyUnrestUpkeep(G, next);
-
-  if (!G.pendingRiot) {
-    collectIncome(G, next, "automatic");
-  }
-
+  beginTurnFor(G, resume);
   return { ok: true };
 }
 
