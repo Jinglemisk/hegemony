@@ -307,7 +307,7 @@ export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove)
 function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
   const session = G.assembly;
 
-  if (!session || session.activePlayer !== playerID) {
+  if (!session) {
     return [];
   }
 
@@ -316,10 +316,16 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove
   const influence = G.players[playerID].resources.influence;
 
   if (session.phase === "closing") {
-    return [{ type: "assemblyClose" }];
+    // Closing is single-actor: only the seat play returns to may dismiss the recap.
+    return session.activePlayer === playerID ? [{ type: "assemblyClose" }] : [];
   }
 
   if (session.phase === "voting") {
+    // Voting is sequential — only the seat whose turn it is to cast has moves.
+    if (session.voteOrder[session.voteIndex] !== playerID) {
+      return [];
+    }
+
     if (session.bribesUsed[playerID] < rules.briberyCap && influence >= rules.briberyCost) {
       moves.push({ type: "assemblyBribe", cost: { influence: rules.briberyCost } });
     }
@@ -334,8 +340,17 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove
     return moves;
   }
 
-  if (session.heldCard) {
-    const card = session.heldCard.card;
+  // Proposal is ASYNC: any seat that has not yet finalized has moves. (A headless
+  // driver only ever calls this for `currentPlayer`, which syncAssemblyActor parks on
+  // the first undecided seat, so the sim still steps one seat at a time.)
+  if (session.proposalDone[playerID]) {
+    return [];
+  }
+
+  const held = session.held[playerID];
+
+  if (held) {
+    const card = held.card;
     const standing = activeLawIds(G);
 
     if (card.kind === "directive" || !standing.includes(card.id)) {
@@ -352,7 +367,7 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove
 
     moves.push({ type: "assemblyDiscardHeld" });
   } else {
-    const drawCost = nextDrawCost(G);
+    const drawCost = nextDrawCost(G, playerID);
 
     if (influence >= drawCost) {
       for (const politician of POLITICIANS) {
@@ -364,9 +379,7 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove
 
     if (influence >= rules.repealCost) {
       for (const cardId of activeLawIds(G)) {
-        if (!session.ballot.some((item) => item.kind === "repeal" && item.cardId === cardId)) {
-          moves.push({ type: "assemblyProposeRepeal", cardId, cost: { influence: rules.repealCost } });
-        }
+        moves.push({ type: "assemblyProposeRepeal", cardId, cost: { influence: rules.repealCost } });
       }
     }
   }

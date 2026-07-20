@@ -1,14 +1,17 @@
 import { PLAYER_COLORS, PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
 import {
+  activeLawIds,
   baseVoteWeight,
   getResolutionCard,
+  isAtLawCap,
   patronCount,
   politicianStandings,
   POLITICIANS_BY_ID
 } from "../../../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../../../game/assembly";
-import type { HegemonyState } from "../../../game/types";
-import { NayMark, SealIcon, WaitMark, YeaMark } from "./AssemblyIcons";
+import type { HegemonyState, PlayerId } from "../../../game/types";
+import { useGameUi } from "../GameUiContext";
+import { NayMark, WaitMark, YeaMark } from "./AssemblyIcons";
 
 /**
  * The bema — the speaker's floor. A horizontal BAND rather than a big centred card
@@ -20,7 +23,7 @@ import { NayMark, SealIcon, WaitMark, YeaMark } from "./AssemblyIcons";
 export function AssemblyBema({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const label =
     session.phase === "proposal"
-      ? "The Bema · reverse turn order"
+      ? "The Bema · draw and propose in secret"
       : session.phase === "voting"
         ? "The Bema · the card under vote"
         : "The Bema · what the Assembly decided";
@@ -28,58 +31,140 @@ export function AssemblyBema({ G, session }: { G: HegemonyState; session: Assemb
   return (
     <div className="band">
       <span className="band-k">{label}</span>
-      {session.phase === "proposal" ? <ProposalView session={session} /> : null}
+      {session.phase === "proposal" ? <ProposalView G={G} session={session} /> : null}
       {session.phase === "voting" ? <VotingView G={G} session={session} /> : null}
       {session.phase === "closing" ? <ClosingView G={G} session={session} /> : null}
     </div>
   );
 }
 
-// ── ① Proposal ─────────────────────────────────────────────────────────────────────
+// ── ① Proposal (async) ───────────────────────────────────────────────────────────
 
-function ProposalView({ session }: { session: AssemblySession }) {
+/**
+ * Every seat draws and decides on its own, in secret. The bema therefore shows two
+ * things: on the left, the VIEWER's own drawn card in full (nobody else's is visible),
+ * with what they can do with it; on the right, the public house card and each seat's
+ * decision status — sealed / passed / still deciding — so you can see how close the
+ * round is to closing without seeing what anyone chose.
+ */
+function ProposalView({ G, session }: { G: HegemonyState; session: AssemblySession }) {
+  const { viewerId } = useGameUi();
+  const held = session.held[viewerId];
+  const done = session.proposalDone[viewerId];
+  const proposal = session.proposals[viewerId];
+
   return (
     <div className="brow">
-      <div className="bhalf">
-        <div className="blab">The ballot, forming</div>
-        <div className="chips">
-          {session.ballot.map((item, index) => (
-            <div className="chip" key={`${ballotKey(item)}-${index}`}>
-              <span className="ck2">{item.proposer === null ? "House" : PLAYER_NAMES[item.proposer]}</span>
-              <span className="cn2">{ballotName(item)}</span>
+      <div className="bcard">
+        {held ? (
+          <>
+            <ResolutionCardFace card={held.card} eyebrow="Your draw · seen only by you" />
+            <HeldCardActions card={held.card} G={G} viewerId={viewerId} />
+          </>
+        ) : done ? (
+          <div className="asmDecided">
+            <div className="bpol">You have spoken</div>
+            <div className="bfx">
+              {proposal
+                ? proposal.kind === "repeal"
+                  ? `You moved to strike ${getResolutionCard(proposal.cardId)?.name ?? proposal.cardId}.`
+                  : `You sealed ${proposal.card.name} — it stays secret until the vote.`
+                : "You held your peace."}{" "}
+              Waiting for the other seats to decide.
             </div>
-          ))}
-          {session.heldCard ? (
-            <div className="chip seal" title="A drawn card is secret until it is proposed.">
-              <SealIcon />
-              {PLAYER_NAMES[session.heldCard.drawnBy]} · sealed
+          </div>
+        ) : (
+          <div className="asmDrawPrompt">
+            <div className="bpol">Your move</div>
+            <div className="bfx">
+              Draw from a politician above to see a resolution in secret, then propose it or fish again. Or hold your
+              peace below — the house card alone still goes to the vote.
             </div>
-          ) : null}
-          {session.ballot.length === 0 && !session.heldCard ? (
-            <div className="chip seal">Nothing laid before the house yet</div>
-          ) : null}
-        </div>
+          </div>
+        )}
       </div>
 
-      <div className="bhalf">
-        <div className="blab">Draw &amp; propose · reverse turn order</div>
+      <div className="polls">
+        <div className="blab">The bema, forming</div>
         <div className="chips">
-          {session.proposalOrder.map((playerID, index) => {
-            const done = index < session.proposalIndex;
-            const acting = index === session.proposalIndex;
+          {session.houseItem ? (
+            <div className="chip" title="The house resolution — laid openly, authored by no seat.">
+              <span className="ck2">House</span>
+              <span className="cn2">{ballotName(session.houseItem)}</span>
+            </div>
+          ) : null}
+          {session.voteOrder.map((playerID) => {
+            const seatDone = session.proposalDone[playerID];
+            const seatHolding = Boolean(session.held[playerID]);
+            const status = seatDone
+              ? session.proposals[playerID]
+                ? "sealed"
+                : "passed"
+              : seatHolding
+                ? "deciding"
+                : "drawing";
 
             return (
-              <div className={`chip${acting ? " you" : ""}`} key={playerID}>
+              <div className={`chip${playerID === viewerId ? " you" : ""}`} key={playerID}>
                 <span className="pd2" style={{ background: PLAYER_COLORS[playerID] }}>
                   {PLAYER_NAMES[playerID].charAt(0)}
                 </span>
                 <span className="cn2">{PLAYER_NAMES[playerID]}</span>
-                <span className="st2">{done ? "spoken" : acting ? "speaking" : "waiting"}</span>
+                <span className="st2">{status}</span>
               </div>
             );
           })}
         </div>
+        <div className="asmProposalHint">
+          Switch seats with the roster top-right to take each player's turn — every seat draws at once.
+        </div>
       </div>
+    </div>
+  );
+}
+
+/** Propose / Discard for the held card. Propose needs a replacement menu at the cap. */
+function HeldCardActions({ G, viewerId, card }: { G: HegemonyState; viewerId: PlayerId; card: ResolutionCard }) {
+  const { moves } = useGameUi();
+  const alreadyStanding = card.kind === "law" && activeLawIds(G).includes(card.id);
+  const needsReplacement = card.kind === "law" && isAtLawCap(G);
+
+  if (alreadyStanding) {
+    return (
+      <div className="asmHeldActions">
+        <span className="asmBlocked">Already standing — it cannot be enacted twice</span>
+        <button className="mb gh" onClick={() => moves.assemblyDiscardHeld(viewerId)} type="button">
+          Discard
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="asmHeldActions">
+      {needsReplacement ? (
+        <details className="asmReplace">
+          <summary className="mb go">Propose ▾</summary>
+          <ul className="asmMenu asmMenuInline">
+            <li className="asmMenuHead">The board is full — name the Law to replace</li>
+            {activeLawIds(G).map((cardId) => (
+              <li key={cardId}>
+                <button onClick={() => moves.assemblyPropose(viewerId, cardId)} type="button">
+                  <span className="asmMenuName">{getResolutionCard(cardId)?.name ?? cardId}</span>
+                  <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : (
+        <button className="mb go" onClick={() => moves.assemblyPropose(viewerId)} type="button">
+          Propose
+        </button>
+      )}
+      <button className="mb gh" onClick={() => moves.assemblyDiscardHeld(viewerId)} type="button">
+        Discard
+      </button>
     </div>
   );
 }
@@ -198,9 +283,7 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
             {session.results.map((result, index) => (
               <li className={result.passed ? "passed" : "failed"} key={index}>
                 {result.summary}
-                <span className="asmResultTally">
-                  {result.vetoedBy ? "vetoed" : `${result.yea}–${result.nay}`}
-                </span>
+                <span className="asmResultTally">{result.vetoedBy ? "vetoed" : `${result.yea}–${result.nay}`}</span>
               </li>
             ))}
           </ul>
@@ -252,21 +335,9 @@ function ballotName(item: BallotItem): string {
     : item.card.name;
 }
 
-function ballotKey(item: BallotItem): string {
-  return item.kind === "repeal" ? `repeal-${item.cardId}` : item.card.id;
-}
-
 /** The card under vote, as the bema shows it: an aegean eyebrow naming the politician,
  *  the title, and the effect with its trade-off split into gain and cost. */
-export function BallotFace({
-  item,
-  position,
-  of
-}: {
-  item: BallotItem;
-  position: number;
-  of: number;
-}) {
+export function BallotFace({ item, position, of }: { item: BallotItem; position: number; of: number }) {
   if (item.kind === "repeal") {
     const card = getResolutionCard(item.cardId);
 
@@ -284,20 +355,36 @@ export function BallotFace({
     );
   }
 
-  const card = item.card;
+  return <ResolutionCardFace card={item.card} eyebrow={`card ${position} of ${of}`} replaces={item.replaces} />;
+}
+
+/**
+ * A resolution card's face — the politician eyebrow, the title, the effect split into
+ * gain and cost, and the kind badge. Used for the card under vote AND for the held
+ * card during proposal, so a card reads identically wherever it appears.
+ */
+export function ResolutionCardFace({
+  card,
+  eyebrow,
+  replaces
+}: {
+  card: ResolutionCard;
+  eyebrow: string;
+  replaces?: string;
+}) {
   const politician = POLITICIANS_BY_ID[card.politician];
 
   return (
     <>
       <div className="bpol">
-        {politician.name} · {politician.epithet} · card {position} of {of}
+        {politician.name} · {politician.epithet} · {eyebrow}
       </div>
       <div className="bname">{card.name}</div>
       <ResolutionEffect card={card} />
       {card.kind === "law" ? (
         <div className="bkind">
-          Standing Law — it holds until repealed
-          {item.replaces ? ` · replaces ${getResolutionCard(item.replaces)?.name ?? item.replaces}` : ""}
+          {card.tradeOff} · standing Law
+          {replaces ? ` · replaces ${getResolutionCard(replaces)?.name ?? replaces}` : ""}
         </div>
       ) : (
         <div className="bkind strat">One-time Directive — it hits every player, then leaves a monument</div>

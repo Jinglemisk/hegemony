@@ -172,8 +172,9 @@ describe("Stratokles's coup", () => {
     const G = scenario().opening().build();
     plantMonuments(G, G.ruleset.assembly.coupThreshold, "2");
 
+    const threshold = G.ruleset.assembly.coupThreshold;
     const status = stratoklesCoupStatus(G);
-    expect(status).toMatchObject({ tallies: 3, threshold: 3, leads: true, patron: "2", triggered: true });
+    expect(status).toMatchObject({ tallies: threshold, threshold, leads: true, patron: "2", triggered: true });
 
     checkStratoklesCoup(G);
 

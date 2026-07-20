@@ -204,14 +204,14 @@ export type GameMoves = {
   resolveRiot: () => void;
   // The Assembly (Phase 3-B). These are the only moves available while the agora
   // sits — the engine refuses every other verb until the house rises.
-  assemblyDraw: (politician: PoliticianId) => void;
-  assemblyDiscardHeld: () => void;
-  assemblyPropose: (replaces?: string) => void;
-  assemblyProposeRepeal: (cardId: string) => void;
-  assemblyPass: () => void;
-  assemblyBribe: () => void;
-  assemblyVote: (yea: boolean) => void;
-  assemblyVeto: () => void;
+  assemblyDraw: (playerID: PlayerId, politician: PoliticianId) => void;
+  assemblyDiscardHeld: (playerID: PlayerId) => void;
+  assemblyPropose: (playerID: PlayerId, replaces?: string) => void;
+  assemblyProposeRepeal: (playerID: PlayerId, cardId: string) => void;
+  assemblyPass: (playerID: PlayerId) => void;
+  assemblyBribe: (playerID: PlayerId) => void;
+  assemblyVote: (playerID: PlayerId, yea: boolean) => void;
+  assemblyVeto: (playerID: PlayerId) => void;
   assemblyClose: () => void;
 };
 
@@ -230,8 +230,14 @@ export function useHegemonyGame() {
   const [G, setG] = useState<HegemonyState>(createGameFromUrl);
 
   useEffect(() => {
+    // The async assembly proposal lets every seat act at once, so the viewer stays put
+    // and switches by hand; snapping it to currentPlayer would fight that. Every other
+    // phase is single-actor, so the viewer follows the turn as before.
+    if (G.assembly?.phase === "proposal") {
+      return;
+    }
     setPlayerID(G.currentPlayer);
-  }, [G.currentPlayer]);
+  }, [G.currentPlayer, G.assembly?.phase]);
 
   const moves = useMemo(() => createMoves(setG), []);
   const events = useMemo(() => createEvents(setG), []);
@@ -323,29 +329,29 @@ function createMoves(setG: SetState): GameMoves {
     resolveRiot: () => {
       setG((previous) => commitGameplayMove(previous, (G) => resolveRiot(G, G.currentPlayer)));
     },
-    assemblyDraw: (politician) => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyDraw(G, G.currentPlayer, politician)));
+    assemblyDraw: (playerID, politician) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyDraw(G, playerID, politician)));
     },
-    assemblyDiscardHeld: () => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyDiscardHeld(G, G.currentPlayer)));
+    assemblyDiscardHeld: (playerID) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyDiscardHeld(G, playerID)));
     },
-    assemblyPropose: (replaces) => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyPropose(G, G.currentPlayer, replaces)));
+    assemblyPropose: (playerID, replaces) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyPropose(G, playerID, replaces)));
     },
-    assemblyProposeRepeal: (cardId) => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyProposeRepeal(G, G.currentPlayer, cardId)));
+    assemblyProposeRepeal: (playerID, cardId) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyProposeRepeal(G, playerID, cardId)));
     },
-    assemblyPass: () => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyPass(G, G.currentPlayer)));
+    assemblyPass: (playerID) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyPass(G, playerID)));
     },
-    assemblyBribe: () => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyBribe(G, G.currentPlayer)));
+    assemblyBribe: (playerID) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyBribe(G, playerID)));
     },
-    assemblyVote: (yea) => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyVote(G, G.currentPlayer, yea)));
+    assemblyVote: (playerID, yea) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyVote(G, playerID, yea)));
     },
-    assemblyVeto: () => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyVeto(G, G.currentPlayer)));
+    assemblyVeto: (playerID) => {
+      setG((previous) => commitGameplayMove(previous, (G) => assemblyVeto(G, playerID)));
     },
     assemblyClose: () => {
       setG((previous) => commitGameplayMove(previous, closeAssembly));
