@@ -1,5 +1,4 @@
 import type { HegemonyState, PlayerId, PopType, Resource, Resources, SettlementKind } from "../types";
-import type { Ruleset } from "../ruleset";
 import { getTile } from "../core/query";
 import { getResolutionCard, POLITICIANS } from "./deck";
 import { politicianStandings } from "./power";
@@ -60,14 +59,8 @@ export function getStandingEffects(G: HegemonyState, playerID: PlayerId): LawEff
   return effects;
 }
 
-/** True when any Law is standing or any patron buff is live — lets callers skip the
- *  whole layer in the common early-game case where the Assembly has not yet met. */
-export function hasStandingEffects(G: HegemonyState, playerID: PlayerId): boolean {
-  return G.activeLaws.length > 0 || getStandingEffects(G, playerID).length > 0;
-}
-
 /** How many of the player's settlements answer to a scope. */
-export function countSettlementsInScope(G: HegemonyState, playerID: PlayerId, scope: SettlementScope): number {
+function countSettlementsInScope(G: HegemonyState, playerID: PlayerId, scope: SettlementScope): number {
   let count = 0;
 
   for (const tileId of G.players[playerID].settlements) {
@@ -283,6 +276,15 @@ export function applyLawActionCost(
       continue;
     }
 
+    // A reduction against a resource this action does not cost is simply a no-op.
+    // Writing the clamped 0 in would put a phantom "0 food" line in the player's
+    // cost preview (Grain Dole discounts food; the freeman promotion costs gold).
+    // A positive delta may legitimately introduce a new cost (Tenant Rights adds
+    // gold to a food-priced grow), so only the negative case is skipped.
+    if (adjusted[effect.resource] === undefined && effect.amount < 0) {
+      continue;
+    }
+
     adjusted[effect.resource] = Math.max(0, (adjusted[effect.resource] ?? 0) + effect.amount);
   }
 
@@ -374,10 +376,4 @@ export function getFoundColonyRiders(G: HegemonyState, playerID: PlayerId) {
   }
 
   return riders;
-}
-
-/** The Law cap the board is currently under — a `?tune` dial, read through the ruleset
- *  so a mode can widen or narrow the agora. */
-export function lawCap(ruleset: Ruleset): number {
-  return ruleset.assembly.lawCap;
 }

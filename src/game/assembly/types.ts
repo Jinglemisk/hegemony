@@ -153,7 +153,12 @@ export interface Politician {
  */
 export interface ActiveLaw {
   cardId: string;
-  author: PlayerId;
+  /** The seat that enacted it — the stele's colour and the unit patronage counts in.
+   *  NULL for the house resolution, which no seat authored: it still gives its
+   *  politician power, but it hands nobody patronage. Crediting it to the season
+   *  opener would have paid them free Voice-card progress (and, for a house
+   *  Directive, free progress on Stratokles's coup clock) for doing nothing. */
+  author: PlayerId | null;
   enactedSeason: number;
   order: number;
 }
@@ -165,7 +170,8 @@ export interface ActiveLaw {
  */
 export interface TallyMonument {
   cardId: string;
-  author: PlayerId;
+  /** Null for a house Directive — see {@link ActiveLaw.author}. */
+  author: PlayerId | null;
   enactedSeason: number;
   order: number;
 }

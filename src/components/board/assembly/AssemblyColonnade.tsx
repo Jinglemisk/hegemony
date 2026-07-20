@@ -1,4 +1,5 @@
 import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
+import type { PlayerId } from "../../../game/types";
 import { getResolutionCard, politicianStandings, stratoklesCoupStatus } from "../../../game/assembly";
 import type { ActiveLaw, PoliticianStanding, TallyMonument } from "../../../game/assembly";
 import type { HegemonyState } from "../../../game/types";
@@ -87,7 +88,7 @@ function PoliticianColumn({
               <div
                 className="tally"
                 key={`${stele.cardId}-${stele.order}`}
-                title={`${getResolutionCard(stele.cardId)?.name ?? stele.cardId} — carried by ${PLAYER_NAMES[stele.author]}. A monument never repeals.`}
+                title={`${getResolutionCard(stele.cardId)?.name ?? stele.cardId} — carried by ${authorName(stele.author)}. A monument never repeals.`}
               >
                 <span className="tk">
                   <i />
@@ -100,9 +101,9 @@ function PoliticianColumn({
               <div
                 className="stele"
                 key={stele.cardId}
-                title={`${getResolutionCard(stele.cardId)?.name ?? stele.cardId} — enacted by ${PLAYER_NAMES[stele.author]}. ${getResolutionCard(stele.cardId)?.text ?? ""}`}
+                title={`${getResolutionCard(stele.cardId)?.name ?? stele.cardId} — enacted by ${authorName(stele.author)}. ${getResolutionCard(stele.cardId)?.text ?? ""}`}
               >
-                <span className="sd" style={{ background: PLAYER_COLORS[stele.author] }} />
+                <span className="sd" style={{ background: authorColor(stele.author) }} />
                 <span className="sn">{getResolutionCard(stele.cardId)?.name ?? stele.cardId}</span>
               </div>
             )
@@ -128,4 +129,14 @@ function PoliticianColumn({
       ) : null}
     </div>
   );
+}
+
+/** The house resolution has no author, so its bead is stone rather than a seat colour —
+ *  it stands in the agora and lends its politician power, but it is nobody's stele. */
+function authorColor(author: PlayerId | null): string {
+  return author ? PLAYER_COLORS[author] : "var(--stone)";
+}
+
+function authorName(author: PlayerId | null): string {
+  return author ? PLAYER_NAMES[author] : "the house";
 }
