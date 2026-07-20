@@ -506,9 +506,10 @@ export function assemblyVote(G: HegemonyState, playerID: PlayerId, yea: boolean)
     weight: baseVoteWeight(G, playerID) + bribed,
     bribed
   });
+  const weight = baseVoteWeight(G, playerID) + bribed;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} votes ${yea ? "yea" : "nay"} with ${baseVoteWeight(G, playerID) + bribed} votes.`
+    `${getPlayerName(G, playerID)} votes ${yea ? "yea" : "nay"} with ${weight} vote${weight === 1 ? "" : "s"}.`
   );
   session.voteIndex += 1;
 

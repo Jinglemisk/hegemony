@@ -261,6 +261,31 @@ export function renderBatchReport(report: BatchReport): string {
     lines.push(`Colony→city upgrades: ${formatNumber(report.upgrades.perGame)}/game (${report.upgrades.count} total)`);
   }
 
+  // The Assembly line is the instrument for the design's most important A/B: whether
+  // influence's main sink is deep enough and whether anything reaches the board.
+  // Assembly verbs at ~0 means the bots are ignoring the agora, which is the expected
+  // reading until the influence-aware AI of Phase 3-C lands.
+  if (report.assembly) {
+    const { assembly } = report;
+    lines.push(
+      `Assembly: ${formatNumber(assembly.held.perGame)} held/game · ` +
+        `laws enacted ${formatNumber(assembly.lawsEnacted.perGame)}/game · ` +
+        `removed ${formatNumber(assembly.lawsRemoved.perGame)}/game · ` +
+        `standing at end ${formatNumber(assembly.lawsStanding)} · ` +
+        `directives ${formatNumber(assembly.directivesPassed.perGame)}/game · ` +
+        `influence sunk ${formatNumber(assembly.influenceSpent.perGame)}/game`,
+    );
+
+    const assemblyVerbs = Object.entries(assembly.verbs)
+      .filter(([, value]) => value.count > 0)
+      .map(([verb, value]) => `${verb.replace("assembly", "").toLowerCase()} ${formatNumber(value.perGame)}`)
+      .join(" · ");
+
+    if (assemblyVerbs) {
+      lines.push(`Assembly verbs (per game): ${assemblyVerbs}`);
+    }
+  }
+
   if (report.forced && report.forced.actionCapHits > 0) {
     lines.push(
       `Force-ended turns: ${report.forced.actionCapHits} (${formatNumber(report.forced.perGame)}/game) · ` +
