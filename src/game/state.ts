@@ -6,6 +6,7 @@ import type { BoardLayout, HegemonyState } from "./types";
 import { createSeed, expandDeck, shuffleWithSeed } from "./core/rng";
 import { DEFAULT_RULESET } from "./ruleset";
 import type { Ruleset } from "./ruleset";
+import { createPoliticianDecks } from "./assembly/assembly";
 
 export function createInitialState(
   seed = createSeed(),
@@ -27,6 +28,11 @@ export function createInitialState(
   }
 
   const tiles = createInitialMap(terrainDeck);
+
+  // Each politician's deck is shuffled from the same seed chain as the event decks, so
+  // an assembly four years away is still reproducible from the game's seed alone.
+  const politicians = createPoliticianDecks(rng);
+  rng = politicians.rng;
 
   return {
     phase: "setupCapital",
@@ -57,7 +63,9 @@ export function createInitialState(
           popsGainedFromEvents: 0,
           civicCalmUsedThisTurn: false,
           ladderUsedThisTurn: false,
-          ventureUsedThisTurn: false
+          ventureUsedThisTurn: false,
+          lawFreeActionsUsedThisYear: [],
+          incomeSuppressedTurns: 0
         }
       }),
       {} as HegemonyState["players"]
@@ -78,6 +86,14 @@ export function createInitialState(
     bank: deriveBankRates(tiles, ruleset.economy.bank),
     season: 1,
     rng,
-    log: [{ id: "start", season: 1, message: "Spring of Year 1 begins." }]
+    log: [{ id: "start", season: 1, message: "Spring of Year 1 begins." }],
+    assembly: null,
+    activeLaws: [],
+    tallyMonuments: [],
+    politicianDecks: politicians.decks,
+    politicianDiscards: politicians.discards,
+    lawOrder: 0,
+    pendingIsonomia: false,
+    assembliesHeld: 0
   };
 }

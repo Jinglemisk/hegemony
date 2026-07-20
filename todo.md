@@ -88,11 +88,29 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
 -- Seven earlier (2026-07-13 overnight): ~~Aqueduct (+4 capacity)~~, ~~Forum (+2 influence)~~, Odeon (+2 happiness).
 -- Still candidates: Barracks (military placeholder — waits for a military design). PDF's Library/Embassy/Luxury Trader wait on National Ideas / Assembly / luxuries.
 
-- Build the Assembly / resolutions system.  **(Phase 3-B — AFTER the two-panel UI; needs the
-  owner design session first, appendix Q27–Q29. Then hand-playtest before any AI work.)**
--- The Resolutions deck is a "0/0" placeholder in the command panel.
--- Players vote on resolutions that affect some or all of them (rivalry mechanics).
--- This is where players will spend Influence primarily.
+- ~~Build the Assembly / resolutions system.~~  **(Phase 3-B — BUILT 2026-07-20. Spec + build record:
+  `docs/feat/assembly-politicians.md`. STILL OWED: the hand-playtest, then the tuning pass, then the
+  influence-aware AI of Phase 3-C.)**
+-- **Design locked:** persistent-**Law** effects (standing until repealed, each carrying a trade-off);
+   pick-a-politician → pay to draw → propose-or-discard (secret until proposed); votes = citizens +
+   capped influence bribery; proposal in reverse turn order, then open one-by-one voting;
+   board-derived power (stele stacks = power/patron); "Voice of the Assembly" victory card;
+   31-card starter deck. First assembly **Spring of Year 2**.
+-- **Surface:** a floating panel sized to the **sea gap — NOT full-screen**; the top bar, rails,
+   ledger and dock stay live around it. Approved visual reference:
+   `docs/design/showcases/assembly-mode-showcase.html`.
+-- **Stratokles:** targets nobody. Seven **one-time, table-wide Directives** (riots/strikes/doles +
+   two assembly-disruptors), each planting a permanent **tally monument** — his track only rises, and
+   the coup crowns his patron.
+-- **Built:** the standing-modifier layer (`src/game/assembly/laws.ts`) that the income, cost, ladder
+   and bank pipelines consult; the panel, the Agora consult page, a Codex chapter, sim telemetry.
+-- **Still open:** the hand-playtest; the tuning numbers (`?tune` + sim); bot voting logic (Phase 3-C).
+-- ~~The Resolutions deck is a "0/0" placeholder in the command panel.~~ It is live: four politician
+   decks, 31 cards, back in the deck shelf with its real remaining count.
+-- ~~Players vote on resolutions that affect some or all of them (rivalry mechanics).~~ Open,
+   sequential, in turn order; votes are citizens plus capped bribery; a tie fails.
+-- ~~This is where players will spend Influence primarily.~~ Draw, fish, propose, repeal, bribe, veto
+   — all influence. Whether it is *deep enough* is the tuning question the playtest answers.
 -- **Why this is the linchpin (proven 2026-07-18):** the greedy-vs-smart sim
    (docs/sim/2026-07-18-greedy-vs-smart.md) showed the citizen/ladder line builds a huge
    influence economy (52 banked, 42% citizens) but LOSES to colony sprawl — influence has

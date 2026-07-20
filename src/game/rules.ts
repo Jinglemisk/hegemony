@@ -49,3 +49,4 @@ export * from "./ventures";
 export * from "./score";
 export * from "./victory";
 export * from "./state";
+export * from "./assembly";

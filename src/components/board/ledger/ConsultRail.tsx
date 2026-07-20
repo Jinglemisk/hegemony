@@ -7,8 +7,8 @@ import { CONSULT_TABS } from "./tabs";
 
 /**
  * The right disc rail (docs/feat/two-panel.md) — the *consult* rail, mirroring the
- * left `.ledgerRail` on the far edge with discs overhanging inward. Chronicle, Codex
- * and Victory: pages you read, not act on. The player dossier disc joins in Phase 3.
+ * left `.ledgerRail` on the far edge with discs overhanging inward. Chronicle, Codex,
+ * Victory and the Agora: pages you read, not act on. The player dossier disc joins in Phase 3.
  */
 function ConsultRailComponent({
   activeTab,
@@ -29,14 +29,16 @@ function ConsultRailComponent({
       activeTab={activeTab}
       isOpen={isOpen}
       onSelectTab={onSelectTab}
-      badges={{ victory: cardsHeld, chronicle: G.log.length }}
+      badges={{ victory: cardsHeld, chronicle: G.log.length, agora: G.activeLaws.length }}
       ariaLabel="Consult menu"
       discTitle={(tab) =>
         tab === "codex"
           ? "Codex — rules & reference (?)"
           : tab === "chronicle"
             ? `Chronicle — ${G.log.length} entries`
-            : "Victory"
+            : tab === "agora"
+              ? `Agora — ${G.activeLaws.length} standing law${G.activeLaws.length === 1 ? "" : "s"}`
+              : "Victory"
       }
     />
   );

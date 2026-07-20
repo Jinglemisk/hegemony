@@ -122,6 +122,42 @@ export interface PlacementRules {
   coastalLeapfrog: boolean;
 }
 
+/**
+ * The Assembly's dials (docs/feat/assembly-politicians.md §5). Every number the
+ * rivalry layer turns on lives here, because the design's own note is that the
+ * *shape* is locked and the *numbers* want the `?tune` panel and the sim — the sink
+ * depth in particular is called out as "the most important A/B".
+ *
+ * The costs reproduce the approved visual reference's own figures
+ * (docs/design/showcases/assembly-mode-showcase.html): draw 3, bribe 10 capped at 2,
+ * veto 5.
+ */
+export interface AssemblyRules {
+  /** Assemblies convene each spring from this year. **0 disables the subsystem**,
+   *  which is how the headless sim and the pre-Assembly fixtures keep running. */
+  firstYear: number;
+  /** Standing Laws the board holds before a new one must name one to replace (§1.5). */
+  lawCap: number;
+  /** Stelae that make a politician dominant — the patron's buff switches on here. */
+  dominanceThreshold: number;
+  /** Tally monuments that trigger Stratokles's coup: his patron wins outright. */
+  coupThreshold: number;
+  /** Influence for the first draw of your proposal turn. */
+  drawCost: number;
+  /** Influence for every draw after it — the fishing sink (§1.4). */
+  redrawCost: number;
+  /** Influence to put a repeal of a standing Law on the ballot. */
+  repealCost: number;
+  /** Influence per bought vote, and the per-player ceiling for one assembly. */
+  briberyCost: number;
+  briberyCap: number;
+  /** Influence to strike the resolution under vote. */
+  vetoCost: number;
+  vetoesPerAssembly: number;
+  /** Whether a tied vote carries. The design's default is that ties FAIL. */
+  tiesPass: boolean;
+}
+
 export interface Ruleset {
   startingResources: Resources;
   placementPopCounts: Record<"city" | "capital" | "colony", number>;
@@ -139,6 +175,8 @@ export interface Ruleset {
   ladder: LadderRules;
   /** Venture stakes (D10) — either posts any expedition. */
   ventureStakes: Record<"gold" | "wood", Partial<Resources>>;
+  /** The Assembly & Politicians layer (Phase 3-B). */
+  assembly: AssemblyRules;
   /**
    * The settlements each player places during setup, in round order — capitals
    * first, then colonies. Length = settlements per player before gameplay begins.
@@ -165,7 +203,11 @@ export const DEFAULT_RULESET: Ruleset = {
     // plus one lucky opening turn can produce (start: 1 city + 1 colony, 6 pops,
     // ≤6 citizens, 52 banked materials, 0 happiness).
     cardsToWin: 3,
-    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 10 }
+    // `voice` is the Assembly's 6th card (§1.7): patron of the most politicians, a
+    // live metric that flips hands like the other five. The minimum of 2 keeps it
+    // genuinely contested — patronising a single politician is not a claim on the
+    // Assembly, and with four politicians and four seats, two is a real bloc.
+    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 10, voice: 2 }
   },
   actionCosts: ACTION_COSTS,
   growPopCosts: GROW_POP_COSTS,
@@ -206,6 +248,26 @@ export const DEFAULT_RULESET: Ruleset = {
     demoteHappinessPenalty: { citizens: 0, freemen: 1 }
   },
   ventureStakes: VENTURE_STAKES,
+  assembly: {
+    // Spring of YEAR 2 (appendix Q27, corrected 2026-07-20 — not Year 3). The
+    // seasonal deck holds ~8 years and race wins land around Year 5, so a
+    // race-decided game sees ~4 assemblies and a grind to exhaustion up to ~7.
+    firstYear: 2,
+    lawCap: 6,
+    dominanceThreshold: 3,
+    // Raised 3→5 (owner playtest, 2026-07-20): with only 7 Directives and monuments
+    // that never repeal, 5 makes the coup a genuine late-game reach rather than a
+    // mid-game swing, and gives the table more assemblies to vote his Directives down.
+    coupThreshold: 5,
+    drawCost: 3,
+    redrawCost: 3,
+    repealCost: 6,
+    briberyCost: 10,
+    briberyCap: 2,
+    vetoCost: 5,
+    vetoesPerAssembly: 1,
+    tiesPass: false
+  },
   setup: ["capital", "colony"]
 };
 
