@@ -388,7 +388,12 @@ export class Aggregator {
       };
     }
 
-    const terminations: Record<GameTermination, number> = { victoryRace: 0, deckExhausted: 0, turnCap: 0 };
+    const terminations: Record<GameTermination, number> = {
+      victoryRace: 0,
+      deckExhausted: 0,
+      stratoklesCoup: 0,
+      turnCap: 0
+    };
     for (const game of this.games) {
       terminations[game.termination] += 1;
     }

@@ -12,6 +12,7 @@ import {
 } from "../settlement";
 import { DEFAULT_RULESET } from "../ruleset";
 import type { Ruleset } from "../ruleset";
+import { getLawIncomeContributions } from "../assembly/laws";
 
 export type IncomeContribution = {
   resource: Resource;
@@ -184,6 +185,10 @@ export function calculateIncomeBreakdown(G: HegemonyState, playerID: PlayerId): 
 
   applySeasonalIncomeEffects(G, playerID, contributions, income);
   applyYearOmenIncomeEffects(G, contributions, income);
+  // Standing Laws land AFTER the settlement, building, seasonal and omen passes: a
+  // Law is a patch over the ruleset, and the surplus-conversion effect (a tariff on
+  // the harvest) can only be assessed once the harvest is known.
+  applyStandingLawIncomeEffects(G, playerID, contributions, income);
 
   const foodShortage = getFoodShortageStatus(G, playerID, income.food);
 
@@ -234,6 +239,27 @@ export function getFoodShortageStatus(G: HegemonyState, playerID: PlayerId, food
     gracePreventedPressure: firstTurnGraceActive ? rawPressure : 0,
     firstTurnGraceActive
   };
+}
+
+/**
+ * The Assembly's standing Laws and any patron buff the player has earned. Each lands
+ * as its own breakdown line named after the Law that caused it, so a player who
+ * wonders where a number came from can always trace it back to a stele in the agora.
+ */
+function applyStandingLawIncomeEffects(
+  G: HegemonyState,
+  playerID: PlayerId,
+  contributions: IncomeContribution[],
+  income: Resources
+) {
+  for (const contribution of getLawIncomeContributions(G, playerID, income)) {
+    addIncomeContribution(contributions, income, {
+      resource: contribution.resource,
+      amount: contribution.amount,
+      source: contribution.label,
+      detail: "Standing law"
+    });
+  }
 }
 
 /** The standing yearly omen (always symmetric — every player collects under it). */

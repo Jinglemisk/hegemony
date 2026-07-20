@@ -5,6 +5,7 @@ import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
 import type { HegemonyState, PlayerId, PopType, Resource, Resources, Settlement } from "./types";
+import { applyLawActionCost } from "./assembly/laws";
 
 /**
  * The civic verbs (roadmap-appendix D7/D8): calm the province, or move a pop up and
@@ -93,7 +94,15 @@ function discountPromoteCost(cost: Partial<Resources>, discount: number): Partia
 export function getPromotePopStatus(G: HegemonyState, playerID: PlayerId, tileId: string, from: PopType): ActionStatus {
   const settlement = getOwnedSettlement(G, tileId, playerID);
   const baseCost = G.ruleset.ladder.promoteCosts[from as "slaves" | "freemen"] ?? {};
-  const cost = discountPromoteCost(baseCost, settlement ? settlementPromoteDiscount(settlement) : 0);
+  // Buildings discount first (the Gymnasion), then the Assembly's standing Laws —
+  // Grain Dole cheapens every promotion, Manumission Law only the slave's.
+  const cost = applyLawActionCost(
+    G,
+    playerID,
+    "promotePop",
+    discountPromoteCost(baseCost, settlement ? settlementPromoteDiscount(settlement) : 0),
+    { pop: from }
+  );
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("The ladder is a gameplay action.");
@@ -110,7 +119,15 @@ export function getDemotePopStatus(G: HegemonyState, playerID: PlayerId, tileId:
   // Demotion is FREE during your own riot (D8 — the mob forces it), and doesn't
   // burn the ladder throttle: the concession insurance rides on this rule.
   const duringOwnRiot = G.pendingRiot?.playerID === playerID;
-  const cost = duringOwnRiot ? {} : (G.ruleset.ladder.demoteCosts[from as "citizens" | "freemen"] ?? {});
+  const cost = duringOwnRiot
+    ? {}
+    : applyLawActionCost(
+        G,
+        playerID,
+        "demotePop",
+        G.ruleset.ladder.demoteCosts[from as "citizens" | "freemen"] ?? {},
+        { pop: from }
+      );
   const reasons: string[] = [];
   const settlement = getOwnedSettlement(G, tileId, playerID);
 

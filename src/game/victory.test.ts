@@ -3,11 +3,23 @@ import { describe, expect, it } from "vitest";
 import { calculateIncome, createInitialState, startNewSeason } from "./rules";
 import { scenario } from "./testing/scenario";
 import { createGame, endTurn } from "./turn";
+import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
 import { checkVictoryAtTurnStart, victoryCardsHeld, victoryStandings } from "./victory";
 import type { HegemonyState } from "./types";
 
 const SEED = 0xc0ffee;
 const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", true);
+
+/**
+ * These turn-structure tests cycle whole years to assert the season/opener machine.
+ * From spring of Year 2 the Assembly legitimately SUSPENDS that machine between the
+ * season roll and the opener's turn, so running them under the default ruleset would
+ * be measuring the agora, not the calendar. `firstYear: 0` disables the subsystem so
+ * they keep testing exactly what they were written to test — the Assembly's own
+ * cadence has its own suite in assembly/assembly.test.ts.
+ */
+const assemblyFreeGame = (seed: number) =>
+  createGame(seed, deriveRuleset(DEFAULT_RULESET, { assembly: { firstYear: 0 } }), "classic", true);
 
 function clearPending(G: HegemonyState) {
   G.pendingPlayerEvent = null;
@@ -126,7 +138,7 @@ describe("phase-0 turn structure", () => {
   });
 
   it("rotates the season opener each new year", () => {
-    const G = preloadedGame(SEED);
+    const G = assemblyFreeGame(SEED);
     expect(G.seasonOpener).toBe("0");
 
     // Play through year 1 (4 seasons × 4 turns). Season 5 is spring of year 2.
@@ -142,7 +154,7 @@ describe("phase-0 turn structure", () => {
   });
 
   it("keeps four turns per season across the rotation boundary", () => {
-    const G = preloadedGame(SEED);
+    const G = assemblyFreeGame(SEED);
     const seasonTurns = new Map<number, number>();
     seasonTurns.set(G.season, 1);
 

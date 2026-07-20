@@ -26,6 +26,7 @@ import {
   getUpgradeColonyToCityStatus
 } from "./status";
 import { drawPlayerEvent } from "./events";
+import { consumeLawFreeAction, getFoundColonyRiders } from "./assembly/laws";
 
 export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops): MoveResult {
   const tile = getTile(G, tileId);
@@ -141,12 +142,39 @@ export function foundColony(
 
   payCost(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.foundColony);
   consumeActionCostDiscounts(G, playerID, "foundColony");
+  // Spend the year's free-colony coupon (Land Rush) only now the move has committed —
+  // a refused founding must never burn it.
+  consumeLawFreeAction(G, playerID, "foundColony");
   addColony(G, playerID, tile, EMPTY_POPS);
+  applyFoundColonyRiders(G, playerID, tile);
   addLog(
     G,
     `${getPlayerName(G, playerID)} sent ${formatPops(foundingPops)} to seed the new colony on ${tile.terrain}.`
   );
   return MOVE_OK;
+}
+
+/** Standing Laws that hang a rider on founding (Frontier Spirit: a freeman comes with
+ *  the charter, and the city pays for it in happiness). */
+function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
+  for (const rider of getFoundColonyRiders(G, playerID)) {
+    if (rider.grantPop) {
+      const settlement = getOwnedSettlement(G, tile.id, playerID);
+
+      if (settlement) {
+        settlement.pops[rider.grantPop] += 1;
+        addLog(
+          G,
+          `${rider.label}: a ${formatPopName(rider.grantPop, 1)} sails with the colonists.`
+        );
+      }
+    }
+
+    if (rider.happiness) {
+      G.players[playerID].resources.happiness += rider.happiness;
+      addLog(G, `${rider.label}: the parting costs ${Math.abs(rider.happiness)} happiness.`);
+    }
+  }
 }
 
 export function upgradeColonyToCity(
@@ -207,6 +235,18 @@ export function collectIncome(
     return invalid();
   }
 
+  // Stratokles's General Strike: the work stops. The turn still passes — the strike
+  // costs exactly the income, not the tempo — and the counter burns down here rather
+  // than in the upkeep so a deferred (riot-blocked) collection still loses its turn.
+  if (player.incomeSuppressedTurns > 0) {
+    player.incomeSuppressedTurns -= 1;
+    player.collectedThisTurn = true;
+    player.hasCollectedGameplayIncome = true;
+    addLog(G, `${getPlayerName(G, playerID)} collects nothing — the city is on strike.`);
+    drawPlayerEvent(G, playerID);
+    return MOVE_OK;
+  }
+
   const income = calculateIncome(G, playerID);
   applyResourceDelta(player.resources, income);
   player.collectedThisTurn = true;
@@ -238,6 +278,7 @@ export function buildBuilding(
 
   payCost(G.players[playerID].resources, status.cost ?? building.cost);
   consumeActionCostDiscounts(G, playerID, "buildBuilding", building.id);
+  consumeLawFreeAction(G, playerID, "buildBuilding");
   settlement.buildings.push(building.id);
   addLog(G, `${getPlayerName(G, playerID)} built ${building.name}.`);
   return MOVE_OK;
