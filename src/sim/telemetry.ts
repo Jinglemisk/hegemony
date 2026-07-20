@@ -185,7 +185,40 @@ export type BatchReport = {
   /** Colony→city upgrades performed across the batch (total + per game) — a bot that
    *  never saves for them reads ~0/game here. */
   upgrades: { count: number; perGame: number };
+  /**
+   * The Assembly (Phase 3-B) — Influence's main sink, so this is the instrument for
+   * the balance question the design flags as the most important A/B: is the sink
+   * deep enough, and is anything actually passing?
+   *
+   * `verbs` counting near zero means the bots are ignoring the agora entirely (which
+   * is expected until the influence-aware AI of Phase 3-C lands), and `lawsStanding`
+   * near zero means the sink exists but nothing it buys ever reaches the board.
+   */
+  assembly: {
+    held: { count: number; perGame: number };
+    lawsEnacted: { count: number; perGame: number };
+    directivesPassed: { count: number; perGame: number };
+    /** Laws that LEFT the board — repealed, replaced at the cap, or torn down by
+     *  Stratokles. Derived (enacted − still standing), so it needs no counter. */
+    lawsRemoved: { count: number; perGame: number };
+    /** Laws still standing when each game ended — mean across the batch. */
+    lawsStanding: number;
+    /** Influence spent on assembly verbs across the batch. */
+    influenceSpent: { count: number; perGame: number };
+    verbs: Record<string, { count: number; perGame: number }>;
+  };
 };
+
+/** The Assembly's verbs, in report order. */
+const ASSEMBLY_VERBS = [
+  "assemblyDraw",
+  "assemblyPropose",
+  "assemblyProposeRepeal",
+  "assemblyPass",
+  "assemblyBribe",
+  "assemblyVote",
+  "assemblyVeto",
+] as const;
 
 /** The Phase 1 currency verbs, in report order. */
 const CURRENCY_VERBS = [
@@ -207,6 +240,13 @@ export class Aggregator {
   private seasonalEvents: Record<string, number> = {};
   private choicePicks: Record<string, number[]> = {};
   private currencyVerbs: Record<string, number> = {};
+  private assemblyVerbs: Record<string, number> = {};
+  private assemblyInfluence = 0;
+  private assembliesHeld = 0;
+  private lawsEnacted = 0;
+  private directivesPassed = 0;
+  private lawsRemoved = 0;
+  private lawsStandingAtEnd: number[] = [];
   private upgrades = 0;
   private actionCapHits = 0;
   private forcedResolutions = 0;
@@ -237,6 +277,15 @@ export class Aggregator {
 
     if ((CURRENCY_VERBS as readonly string[]).includes(move.type)) {
       this.currencyVerbs[move.type] = (this.currencyVerbs[move.type] ?? 0) + 1;
+    }
+
+    if ((ASSEMBLY_VERBS as readonly string[]).includes(move.type)) {
+      this.assemblyVerbs[move.type] = (this.assemblyVerbs[move.type] ?? 0) + 1;
+      // The enumerated move carries its own price, so the sink is measured from what
+      // was actually paid rather than re-derived from the ruleset.
+      if ("cost" in move && move.cost) {
+        this.assemblyInfluence += move.cost.influence ?? 0;
+      }
     }
 
     // Colony→city upgrades are the sharpest one-ply blind spot (bots rarely save for
@@ -283,7 +332,24 @@ export class Aggregator {
     this.snapshots.push(snapshotTurn(G, this.game, this.seed));
   }
 
+  /** total + per-finished-game, the shape every count in this report uses. */
+  private perGameCount(count: number) {
+    return { count, perGame: this.games.length > 0 ? count / this.games.length : 0 };
+  }
+
   endGame(G: HegemonyState) {
+    // The agora's outcome is read off the board at the end, the same way the engine
+    // reads power and patronage — no running counter to drift from it.
+    this.assembliesHeld += G.assembliesHeld;
+    this.lawsStandingAtEnd.push(G.activeLaws.length);
+    this.directivesPassed += G.tallyMonuments.length;
+    // `lawOrder` ticks once per enacted resolution of either kind, so the Laws are
+    // simply the ones that were not monuments — and whatever is no longer standing
+    // was repealed, replaced at the cap, or thrown down by Stratokles.
+    const enacted = G.lawOrder - G.tallyMonuments.length;
+    this.lawsEnacted += enacted;
+    this.lawsRemoved += enacted - G.activeLaws.length;
+
     const finalCards = {} as Record<PlayerId, number>;
     const popsLostToUnrest = {} as Record<PlayerId, number>;
 
@@ -436,6 +502,20 @@ export class Aggregator {
           return [verb, { count, perGame: this.games.length > 0 ? count / this.games.length : 0 }];
         })
       ),
+      assembly: {
+        held: this.perGameCount(this.assembliesHeld),
+        lawsEnacted: this.perGameCount(this.lawsEnacted),
+        directivesPassed: this.perGameCount(this.directivesPassed),
+        lawsRemoved: this.perGameCount(this.lawsRemoved),
+        lawsStanding: percentiles(this.lawsStandingAtEnd).mean,
+        influenceSpent: this.perGameCount(this.assemblyInfluence),
+        verbs: Object.fromEntries(
+          ASSEMBLY_VERBS.map((verb) => {
+            const count = this.assemblyVerbs[verb] ?? 0;
+            return [verb, { count, perGame: this.games.length > 0 ? count / this.games.length : 0 }];
+          })
+        ),
+      },
       finalCardsDistribution: percentiles(this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalCards[playerID]))),
       winsByPolicy,
       terminations,
