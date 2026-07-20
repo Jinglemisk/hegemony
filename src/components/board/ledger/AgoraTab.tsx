@@ -1,6 +1,6 @@
 import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
 import { yearOf } from "../../../game/core/calendar";
-import { getResolutionCard, politicianStandings, stratoklesCoupStatus } from "../../../game/assembly";
+import { getResolutionCard, politicianStandings } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { AnnotatedText } from "../../AnnotatedText";
@@ -10,13 +10,13 @@ import { AnnotatedText } from "../../AnnotatedText";
  *
  * The Assembly panel itself only exists while the house sits, but its consequences
  * last all game: between assemblies a player still needs to know which Laws are
- * biting them, who is patron of what, and how close Stratokles is to the coup. This
+ * biting them, and who is patron of what. Stratokles's danger reads through colour and
+ * his stack of monuments alone — the coup COUNTER lives in the Victory ledger. This
  * page is that record, and it reads from exactly the same board-derived standings the
  * panel does, so the two can never tell different stories.
  */
 export function AgoraTab({ G }: { G: HegemonyState }) {
   const standings = politicianStandings(G);
-  const coup = stratoklesCoupStatus(G);
   const voice = victoryStandings(G).find((standing) => standing.card.metric === "voice");
   const rules = G.ruleset.assembly;
   const nextYear = Math.max(rules.firstYear, yearOf(G.season) + (G.assembly ? 1 : 0));
@@ -130,22 +130,6 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
                     );
                   })}
               </ul>
-            ) : null}
-
-            {isStratokles ? (
-              <div className="agoraCoup">
-                <span className="agoraKey">Coup</span>
-                <span className="agoraCoupPips">
-                  {Array.from({ length: coup.threshold }, (_, index) => (
-                    <i className={index < coup.tallies ? "f" : undefined} key={index} />
-                  ))}
-                </span>
-                <span className="agoraCoupText">
-                  {coup.triggered
-                    ? "The demagogue has the city."
-                    : `At ${coup.threshold} monuments — while he leads the agora — Stratokles seizes the city and his patron wins. Monuments never repeal; the only brake is voting his Directives down.`}
-                </span>
-              </div>
             ) : null}
           </section>
         );

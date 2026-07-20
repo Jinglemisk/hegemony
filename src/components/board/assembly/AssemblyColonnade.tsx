@@ -1,10 +1,5 @@
 import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
-import {
-  getResolutionCard,
-  nextDrawCost,
-  politicianStandings,
-  stratoklesCoupStatus
-} from "../../../game/assembly";
+import { getResolutionCard, nextDrawCost, politicianStandings } from "../../../game/assembly";
 import type { ActiveLaw, Politician, PoliticianStanding, TallyMonument } from "../../../game/assembly";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { useGameUi } from "../GameUiContext";
@@ -14,11 +9,13 @@ import { DrawIcon } from "./AssemblyIcons";
  * The colonnade — four narrow columns, each politician standing over their own stack
  * of stelae.
  *
- * This one drawing does quadruple duty (design §1.2): stack height is POWER, the
- * colour that dominates a stack is the PATRON, who owns the most stacks is the
- * Voice-of-the-Assembly race, and Stratokles's stack nearing the threshold is the COUP
- * clock. Because every one of those is read off `G.activeLaws` / `G.tallyMonuments`
- * rather than tracked, the picture can never disagree with the board.
+ * This one drawing does triple duty (design §1.2): stack height is POWER, the colour
+ * that dominates a stack is the PATRON, and who owns the most stacks is the
+ * Voice-of-the-Assembly race. Stratokles's danger is read the same way — his stack of
+ * monuments and his clay colour — with no explicit "coup" meter here (owner ruling,
+ * 2026-07-21: colour grading in the agora, the counter in the Victory ledger). Because
+ * every one of these is read off `G.activeLaws` / `G.tallyMonuments` rather than
+ * tracked, the picture can never disagree with the board.
  *
  * During the async proposal round each column also carries a **Draw** button — you
  * draw from a politician by reaching up to their pillar, which makes the "pick the
@@ -26,7 +23,6 @@ import { DrawIcon } from "./AssemblyIcons";
  */
 export function AssemblyColonnade({ G }: { G: HegemonyState }) {
   const standings = politicianStandings(G);
-  const coup = stratoklesCoupStatus(G);
   const { viewerId } = useGameUi();
   const session = G.assembly;
 
@@ -41,7 +37,6 @@ export function AssemblyColonnade({ G }: { G: HegemonyState }) {
       {standings.map((standing) => (
         <PoliticianColumn
           canDraw={Boolean(proposing) && !holding && G.players[viewerId].resources.influence >= drawCost}
-          coup={standing.politician.id === "stratokles" ? coup : null}
           drawArmed={Boolean(proposing)}
           drawCost={drawCost}
           G={G}
@@ -56,14 +51,12 @@ export function AssemblyColonnade({ G }: { G: HegemonyState }) {
 function PoliticianColumn({
   G,
   standing,
-  coup,
   drawArmed,
   canDraw,
   drawCost
 }: {
   G: HegemonyState;
   standing: PoliticianStanding;
-  coup: ReturnType<typeof stratoklesCoupStatus> | null;
   drawArmed: boolean;
   canDraw: boolean;
   drawCost: number;
@@ -149,23 +142,6 @@ function PoliticianColumn({
           )}
         {stelae.length === 0 ? <div className="steleEmpty">No stelae stand.</div> : null}
       </div>
-
-      {coup ? (
-        <div
-          className="coup"
-          title={`Stratokles seizes the city — and his patron wins — at ${coup.threshold} monuments while he leads the agora. The only brake is voting his Directives down.`}
-        >
-          <span className="ck">Coup</span>
-          <span className="bd">
-            {Array.from({ length: coup.threshold }, (_, index) => (
-              <i className={index < coup.tallies ? "f" : undefined} key={index} />
-            ))}
-          </span>
-          <span className="cn">
-            {Math.min(coup.tallies, coup.threshold)}/{coup.threshold}
-          </span>
-        </div>
-      ) : null}
     </div>
   );
 }
