@@ -2,7 +2,8 @@ import { useState } from "react";
 import { EMPTY_POPS, clonePops, formatPops, getMovePopsStatus, totalPops } from "../../../game/rules";
 import type { Pops } from "../../../game/types";
 import { useGameUi } from "../GameUiContext";
-import { actionRequirementText, settlementPickerLabel } from "../helpers";
+import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
+import { PopoverActions } from "../PopoverActions";
 import { PopulationStepper } from "../modals/PopulationStepper";
 import { TilePopover } from "./TilePopover";
 
@@ -43,19 +44,12 @@ export function MovePopsSourcePopover({
       <p className="placementSectionLabel placementTargetName">{settlementPickerLabel(G, tile, playerID)}</p>
       <p className="placementCostNote">Holds {formatPops(settlement.pops)}.</p>
 
-      <div className="foundColonyActions">
-        <button className="placementCancelButton" onClick={onCancel} type="button">
-          Cancel
-        </button>
-        <button
-          className="primaryButton eventResolveButton"
-          disabled={totalPops(settlement.pops) === 0}
-          onClick={() => onConfirm(tileId)}
-          type="button"
-        >
-          Move From Here
-        </button>
-      </div>
+      <PopoverActions
+        confirmLabel="Move From Here"
+        disabled={totalPops(settlement.pops) === 0}
+        onCancel={onCancel}
+        onConfirm={() => onConfirm(tileId)}
+      />
     </TilePopover>
   );
 }
@@ -107,20 +101,13 @@ export function MovePopsTargetPopover({
         <PopulationStepper maxByPop={source.pops} onChange={setPops} pops={pops} />
       </section>
 
-      <div className="foundColonyActions">
-        <button className="placementCancelButton" onClick={onCancel} type="button">
-          Cancel
-        </button>
-        <button
-          className="primaryButton eventResolveButton"
-          disabled={!status.can || totalPops(pops) === 0 || !isActive || phase !== "gameplay"}
-          onClick={() => onConfirm(sourceTileId, tileId, clonePops(pops))}
-          title={actionRequirementText(status, phase, isActive)}
-          type="button"
-        >
-          Send {totalPops(pops) > 0 ? formatPops(pops) : "Pops"}
-        </button>
-      </div>
+      <PopoverActions
+        confirmLabel={`Send ${totalPops(pops) > 0 ? formatPops(pops) : "Pops"}`}
+        disabled={gameplayActionDisabled(status, phase, isActive) || totalPops(pops) === 0}
+        title={actionRequirementText(status, phase, isActive)}
+        onCancel={onCancel}
+        onConfirm={() => onConfirm(sourceTileId, tileId, clonePops(pops))}
+      />
     </TilePopover>
   );
 }

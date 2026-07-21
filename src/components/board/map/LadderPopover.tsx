@@ -8,7 +8,8 @@ import type { PopType } from "../../../game/types";
 import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { AtlasIcon } from "../../Sprites";
 import { useGameUi } from "../GameUiContext";
-import { actionRequirementText, settlementPickerLabel } from "../helpers";
+import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
+import { PopoverActions } from "../PopoverActions";
 import { TilePopover } from "./TilePopover";
 
 export type LadderRequest = { kind: "promote" | "demote"; from: PopType };
@@ -65,20 +66,13 @@ export function LadderPopover({
         <span>{formatResourceCost(status.cost ?? {}) || "Free"}</span>
       </div>
 
-      <div className="foundColonyActions">
-        <button className="placementCancelButton" onClick={onCancel} type="button">
-          Cancel
-        </button>
-        <button
-          className="primaryButton eventResolveButton"
-          disabled={!status.can || !isActive || phase !== "gameplay"}
-          onClick={() => onConfirm(tileId, from, kind)}
-          title={actionRequirementText(status, phase, isActive)}
-          type="button"
-        >
-          {kind === "promote" ? "Promote" : "Demote"}
-        </button>
-      </div>
+      <PopoverActions
+        confirmLabel={kind === "promote" ? "Promote" : "Demote"}
+        disabled={gameplayActionDisabled(status, phase, isActive)}
+        title={actionRequirementText(status, phase, isActive)}
+        onCancel={onCancel}
+        onConfirm={() => onConfirm(tileId, from, kind)}
+      />
     </TilePopover>
   );
 }

@@ -4,6 +4,7 @@ import { useGameUi } from "../GameUiContext";
 import { ActionLogPanel } from "../command/ActionLogPanel";
 import { AgoraTab } from "./AgoraTab";
 import { CodexTab } from "./CodexTab";
+import { LedgerPanelHeader } from "./LedgerPanelHeader";
 import { VictoryTab } from "./VictoryTab";
 import { CONSULT_TABS, ledgerTabLabel } from "./tabs";
 
@@ -30,21 +31,7 @@ function ConsultPanelComponent({
 
   return (
     <div className="empireIntel">
-      <div className="panelTitle ledgerCardTitle">
-        <span className="titleIcon" aria-hidden="true">
-          {titleIcon}
-        </span>
-        <h2>{title}</h2>
-        <button
-          className="ledgerCloseButton"
-          onClick={onClose}
-          aria-label={`Close the ${title} page`}
-          title="Close"
-          type="button"
-        >
-          ×
-        </button>
-      </div>
+      <LedgerPanelHeader title={title} icon={titleIcon} onClose={onClose} />
 
       <div className="intelBody">
         {activeTab === "chronicle" ? <ActionLogPanel G={G} /> : null}
