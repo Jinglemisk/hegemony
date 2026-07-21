@@ -19,6 +19,17 @@ import { buildNewGame } from "./setup";
 
 export const MAX_ACTIONS_PER_TURN = 30;
 
+/**
+ * An Assembly runs entirely inside the season opener's turn (turn.ts): `endTurn` opens it
+ * and returns *before* `G.turn` advances, and `closeAssembly` does the increment — so all
+ * four seats fish, propose and vote at one constant `G.turn`, inside a single {@link playTurn}.
+ * A fully-engaged agora (draws, bribes, a vote on every ballot item × four seats) far
+ * exceeds a lone gameplay turn's budget, and force-ending mid-assembly is illegal anyway
+ * (`endTurn` is rejected while `G.assembly` stands). This is the loop guard used while the
+ * agora is open — high enough for any real assembly, low enough to still catch a stuck bot.
+ */
+export const MAX_ACTIONS_PER_ASSEMBLY = 500;
+
 /** Enumeration returned nothing — a rules invariant broke; the state is in the message. */
 export class SimDeadlockError extends Error {}
 
@@ -50,7 +61,9 @@ export function playTurn(G: HegemonyState, policy: Policy, rng: SimRng, hooks: S
     return;
   }
 
-  for (let action = 0; action < maxActions; action += 1) {
+  // While the agora is open the turn is really a bounded multi-seat sub-process, not one
+  // seat's gameplay turn — give it room rather than force-ending (which is illegal mid-assembly).
+  for (let action = 0; action < (G.assembly ? MAX_ACTIONS_PER_ASSEMBLY : maxActions); action += 1) {
     const player = G.currentPlayer;
     const moves = enumerateLegalMoves(G, player);
 
