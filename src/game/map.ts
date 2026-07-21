@@ -2,10 +2,16 @@ import { getTerrainDeck } from "./content";
 import type { TerrainDeck } from "./content";
 import type { HexTile } from "./types";
 
-/** Lay a terrain deck onto the radius-3 board. Defaults to the terrain deck in effect
+/** The board is a hex of this radius. Both the tile layout ({@link createInitialMap}) and
+ *  the shoreline test ({@link isCoastalTile}) read it, so changing the board size stays a
+ *  one-line edit — writing the two independently once silently made every tile coastal or
+ *  none of them, breaking coastal leapfrog and the founding voyage (post-sprint-debt §2.4). */
+export const BOARD_RADIUS = 3;
+
+/** Lay a terrain deck onto the board. Defaults to the terrain deck in effect
  *  (the authored order, or a dev override); pass a shuffled copy for a randomized board. */
 export function createInitialMap(deck: TerrainDeck = getTerrainDeck()): HexTile[] {
-  const coordinates = axialRadius(3);
+  const coordinates = axialRadius(BOARD_RADIUS);
 
   return coordinates.map(({ q, r }, index) => {
     const terrain = deck[index];
@@ -36,11 +42,11 @@ export function axialRadius(radius: number) {
   return coordinates;
 }
 
-/** The island's shoreline: the outermost ring of the radius-3 board. Coastal tiles
+/** The island's shoreline: the outermost ring of the board. Coastal tiles
  *  are connected by sea — the coastal-leapfrog placement rule (roadmap-appendix Q13a)
  *  and the founding colony's voyage (Q12) both read this. */
 export function isCoastalTile(tile: { q: number; r: number }) {
-  return Math.max(Math.abs(tile.q), Math.abs(tile.r), Math.abs(tile.q + tile.r)) === 3;
+  return Math.max(Math.abs(tile.q), Math.abs(tile.r), Math.abs(tile.q + tile.r)) === BOARD_RADIUS;
 }
 
 export function hexDistance(a: { q: number; r: number }, b: { q: number; r: number }) {

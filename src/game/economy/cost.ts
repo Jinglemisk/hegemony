@@ -1,4 +1,4 @@
-import { BUILDINGS } from "../data";
+import { getBuildings } from "../content";
 import type { ActionCostDiscountTarget, BuildingId, HegemonyState, PlayerId, PopType, Resource, Resources, Settlement } from "../types";
 import { addLog, getPlayerName } from "../core/query";
 import { clonePartialResources } from "../core/resources";
@@ -77,7 +77,7 @@ export function getDiscountedGrowPopCost(
 
 function getGrowPopFoodDiscount(settlement: Settlement) {
   return settlement.buildings.reduce((discount, buildingId) => {
-    const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+    const building = getBuildings().find((candidate) => candidate.id === buildingId);
 
     return (
       discount +
