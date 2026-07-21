@@ -227,7 +227,9 @@
 /* ── Body ───────────────────────────────────────────────────────────────────── */
 
 .asm-body {
+  display: flex;
   flex: 1 1 auto;
+  flex-direction: column;
   min-height: 0;
   padding: 11px 13px 13px;
   overflow: auto;
@@ -429,53 +431,16 @@
   font-style: italic;
 }
 
-.coup {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  padding: 4px 8px;
-  border-radius: 5px;
-  background: rgb(192 70 28 / 8%);
-  box-shadow: inset 0 0 0 1px rgb(192 70 28 / 22%);
-}
-
-.coup .ck {
-  color: var(--clay-deep);
-  font-family: var(--disp);
-  font-size: 7.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.coup .bd {
-  display: flex;
-  gap: 3px;
-  margin-left: auto;
-}
-
-.coup .bd i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.2px var(--clay-deep);
-}
-
-.coup .bd i.f {
-  background: var(--clay-deep);
-}
-
-.coup .cn {
-  color: var(--clay-deep);
-  font-size: 10px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
 /* ── The bema ───────────────────────────────────────────────────────────────── */
 
+/* The bema takes the height the colonnade leaves, and its columns stretch to fill it
+   — so the tall panel reads as a table of cards rather than a short strip over a void. */
 .band {
   position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
   margin-top: 11px;
   padding-top: 10px;
   border-top: 1px solid var(--aeg-20);
@@ -503,8 +468,7 @@
   margin-top: 7px;
 }
 
-.bcard,
-.bhalf {
+.bcard {
   flex: 1 1 300px;
   min-width: 250px;
 }
@@ -529,15 +493,6 @@
   font-size: 7.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-}
-
-.bname {
-  margin-top: 2px;
-  color: var(--ink);
-  font-family: var(--disp);
-  font-size: 15px;
-  letter-spacing: 0.03em;
-  line-height: 1.1;
 }
 
 .bfx {
@@ -568,96 +523,11 @@
 /* NOT in the reference: it never showed a Law/Directive badge because its single
    mock card was a Law. The distinction is load-bearing — one stands forever, the
    other resolves once — so the card has to say which it is. */
-.bkind {
-  margin-top: 5px;
-  color: var(--aegean);
-  font-family: var(--disp);
-  font-size: 7.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.bkind.strat {
-  color: var(--clay);
-}
 
 /* ── Voting ─────────────────────────────────────────────────────────────────── */
 
-.pebs {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
 /* The pebble IS the player and its number IS their vote weight — the old separate
    player strip folded into the thing it was describing. */
-.peb {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px 3px 4px;
-  border-radius: 999px;
-  background: rgb(255 248 231 / 70%);
-  box-shadow: inset 0 0 0 1px var(--ink-12);
-}
-
-.peb .pd {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  color: var(--ivory);
-  font-family: var(--disp);
-  font-size: 8px;
-  box-shadow: inset 0 0 0 1px rgb(255 248 231 / 50%);
-}
-
-.peb .pn {
-  color: var(--ink);
-  font-size: 10.5px;
-}
-
-.peb .pw {
-  color: var(--ink);
-  font-family: var(--disp);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.peb .pm {
-  flex: none;
-  width: 12px;
-  height: 12px;
-}
-
-.peb.yay {
-  background: rgb(94 110 58 / 12%);
-  box-shadow: inset 0 0 0 1px rgb(94 110 58 / 28%);
-}
-
-.peb.yay .pm {
-  color: var(--olive);
-}
-
-.peb.nay {
-  background: rgb(143 46 19 / 9%);
-  box-shadow: inset 0 0 0 1px rgb(143 46 19 / 26%);
-}
-
-.peb.nay .pm {
-  color: var(--clay-deep);
-}
-
-.peb.wait {
-  opacity: 0.7;
-}
-
-.peb.wait .pm {
-  color: var(--ink-30);
-}
 
 .talline {
   display: flex;
@@ -723,72 +593,7 @@
 
 /* ── Proposal chips ─────────────────────────────────────────────────────────── */
 
-.chips {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 9px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: rgb(255 248 231 / 70%);
-  color: var(--ink-66);
-  font-size: 10.5px;
-}
-
-.chip .ck2 {
-  color: var(--aegean);
-  font-family: var(--disp);
-  font-size: 7.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.chip .cn2 {
-  color: var(--ink);
-}
-
 /* Dashed = secret, the same language the tally monument uses for "not a standing rule". */
-.chip.seal {
-  border-style: dashed;
-  color: var(--ink-48);
-}
-
-.chip .pd2 {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  color: var(--ivory);
-  font-family: var(--disp);
-  font-size: 7.5px;
-}
-
-.chip.you {
-  border-color: var(--clay);
-  background: rgb(192 70 28 / 6%);
-}
-
-.chip.you .cn2 {
-  color: var(--clay-deep);
-  font-weight: 600;
-}
-
-.chip .st2 {
-  color: var(--ink-48);
-  font-family: var(--disp);
-  font-size: 7.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
 
 /* ── Standings & the closing recap ──────────────────────────────────────────── */
 
@@ -1003,37 +808,6 @@
 }
 
 /* The held card / the ballot widget. */
-.adraw {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 5px 4px 8px;
-  border: 1px solid var(--clay);
-  border-radius: 9px;
-  background: rgb(192 70 28 / 5%);
-  white-space: nowrap;
-}
-
-.adraw .dk {
-  color: var(--clay);
-  font-family: var(--disp);
-  font-size: 7px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.adraw .dn {
-  color: var(--ink);
-  font-family: var(--disp);
-  font-size: 11px;
-  line-height: 1.1;
-}
-
-.adraw .db {
-  display: flex;
-  gap: 4px;
-}
 
 .mb {
   padding: 5px 7px;
@@ -1087,15 +861,6 @@
   background: #77250f;
 }
 
-.asmCast {
-  border-color: var(--aeg-30);
-  background: var(--aeg-tint);
-}
-
-.asmCast .dk {
-  color: var(--aegean);
-}
-
 .asmBlocked {
   padding: 5px 7px;
   color: var(--clay-deep);
@@ -1114,31 +879,6 @@
   position: relative;
   display: flex;
   align-items: center;
-}
-
-.asel {
-  flex: none;
-  padding: 2px 6px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--aeg-tint);
-  box-shadow: inset 0 0 0 1px var(--aeg-30);
-  color: var(--aegean);
-  font-family: inherit;
-  font-size: 8.5px;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: 0.16s;
-}
-
-.asel:hover:not(:disabled),
-.asel.open {
-  background: rgb(31 105 119 / 14%);
-}
-
-.asel:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
 }
 
 .asmMenu {
@@ -1466,45 +1206,6 @@
   text-transform: uppercase;
 }
 
-.agoraCoup {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 2px;
-  padding: 7px 8px;
-  border-radius: 6px;
-  background: rgb(192 70 28 / 8%);
-  box-shadow: inset 0 0 0 1px rgb(192 70 28 / 22%);
-}
-
-.agoraCoup .agoraKey {
-  color: var(--clay-deep);
-}
-
-.agoraCoupPips {
-  display: flex;
-  gap: 3px;
-}
-
-.agoraCoupPips i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.2px var(--clay-deep);
-}
-
-.agoraCoupPips i.f {
-  background: var(--clay-deep);
-}
-
-.agoraCoupText {
-  flex: 1 1 100%;
-  color: var(--ink-66);
-  font-size: 10px;
-  line-height: 1.45;
-}
-
 /* The Codex's Assembly chapter — the politician roster and its card lists. */
 .rulePolitician {
   padding-top: 10px;
@@ -1617,22 +1318,6 @@
 
 /* The drawn card lives in the bema's left column now, shown in full via the shared
    ResolutionCardFace — so a card reads the same whether held or under vote. */
-.asmHeldActions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.asmDrawPrompt,
-.asmDecided {
-  padding: 2px 0;
-}
-
-.asmDrawPrompt .bfx,
-.asmDecided .bfx {
-  margin-top: 4px;
-}
 
 /* An inline replace menu (at the law cap) that opens upward from the Propose button,
    built on the native <details> so it needs no extra state. */
@@ -1669,4 +1354,359 @@
 
 .asmFootHint {
   margin-left: 6px;
+}
+
+/* ==========================================================================
+ * The columnar bema (owner ruling, 2026-07-21) — the lower half mirrors the
+ * colonnade: a column per house + player, each with its card, effect and the
+ * actions for it directly beneath.
+ * ========================================================================== */
+
+.bemaCols {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  /* One row, stretched to the bema's height so the columns fill the tall panel. */
+  grid-template-rows: minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.bemaCol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px 8px 3px 3px;
+  background: rgb(255 248 231 / 55%);
+}
+
+/* The card under vote — the aegean politics highlight, so the eye lands on it. */
+.bemaCol.current {
+  background: var(--aeg-tint);
+  box-shadow: inset 0 0 0 1px var(--aeg-30);
+}
+
+/* Your own seat gets a clay hairline, the same "this is you" marker the roster uses. */
+.bemaCol.you {
+  border-color: var(--clay);
+}
+
+.bemaColHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bemaColDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px var(--ivory),
+    0 0 0 2px var(--vase);
+}
+
+.bemaColName {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bemaVoteBadge {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.bemaVoteBadge.yay {
+  color: var(--olive);
+}
+
+.bemaVoteBadge.nay {
+  color: var(--clay-deep);
+}
+
+.bemaVoteBadge.wait {
+  color: var(--ink-30);
+}
+
+.bemaCard {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bemaCardPol {
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bemaCardName {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: 12px;
+  line-height: 1.12;
+}
+
+.bemaCard .bfx {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.bemaCardKind {
+  margin-top: 3px;
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bemaCardKind.strat {
+  color: var(--clay);
+}
+
+.bemaCardRepeal .bemaCardName {
+  color: var(--clay-deep);
+}
+
+/* A column with no visible card — a passer, a sealed rival, or your own prompt. */
+.bemaColEmpty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-height: 46px;
+  color: var(--ink-48);
+  font-size: 10px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* Two horizontal buttons under the card — propose/discard, or yea/nay. */
+.bemaColActions {
+  display: flex;
+  gap: 5px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.bemaColActions .mb {
+  flex: 1;
+  text-align: center;
+}
+
+.bemaColVote {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.bemaColVote .bemaColActions {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* The red, rectangular veto — under the yea/nay, with its cost, only on your turn. */
+.bemaVeto {
+  padding: 5px 6px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--clay-deep);
+  color: var(--ivory);
+  font-family: var(--disp);
+  font-size: 8px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.bemaVeto:hover:not(:disabled) {
+  background: #77250f;
+}
+
+.bemaVeto:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bemaColWaiting {
+  margin-top: auto;
+  padding-top: 4px;
+  color: var(--ink-48);
+  font-size: 9px;
+  font-style: italic;
+}
+
+/* The tally, beneath the columns. */
+.voteTally {
+  margin-top: 11px;
+  padding-top: 9px;
+  border-top: 1px solid var(--aeg-20);
+}
+
+/* The transient verdict banner — pinned above the dock, not in the scrolling body. */
+.asmResultFlash {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--bot-h) + 4px);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 15px;
+  border-radius: 999px;
+  box-shadow: var(--float);
+  font-family: var(--disp);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.asmResultFlash.passed {
+  background: var(--olive);
+  color: var(--ivory);
+}
+
+.asmResultFlash.failed {
+  background: var(--clay-deep);
+  color: var(--ivory);
+}
+
+.asmResultFlash.vetoed {
+  background: var(--vase);
+  color: var(--ivory);
+}
+
+.asmResultFlashName {
+  font-size: 11.5px;
+}
+
+.asmResultFlashVerdict {
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  opacity: 0.92;
+}
+
+.asmResultFlashTally {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+/* The panel must be the flash's positioning context. */
+.assembly {
+  position: relative;
+}
+
+/* Narrow sea gap: the 5 columns wrap to a scrollable strip rather than crushing. */
+@media (max-width: 1180px) {
+  .bemaCols {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .bemaCols {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
+/* ── The Stratokles threat, atop the Victory ledger (owner ruling 2026-07-21) ────
+   Not a card you can hold — a shared clock that ends the game. The coup counter
+   that used to live in the agora lives here now. */
+
+.stratoklesThreat {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgb(192 70 28 / 34%);
+  border-radius: 10px;
+  background: rgb(192 70 28 / 7%);
+}
+
+.stratoklesThreat.triggered {
+  background: rgb(192 70 28 / 16%);
+  box-shadow: inset 0 0 0 1px var(--clay);
+}
+
+.stratoklesThreatHead {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stratoklesThreatName {
+  color: var(--clay-deep);
+  font-family: var(--disp);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stratoklesThreatEp {
+  color: var(--ink-48);
+  font-size: 9px;
+  font-style: italic;
+}
+
+.stratoklesThreatPatron {
+  margin-left: auto;
+  font-family: var(--disp);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.stratoklesThreatUnfed {
+  color: var(--ink-30);
+}
+
+.stratoklesThreatPips {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stratoklesThreatPips i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--clay-deep);
+}
+
+.stratoklesThreatPips i.f {
+  background: var(--clay-deep);
+}
+
+.stratoklesThreatCount {
+  margin-left: 6px;
+  color: var(--clay-deep);
+  font-family: var(--disp);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }

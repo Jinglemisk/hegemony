@@ -1,16 +1,11 @@
 /* deck — Shared inline-label rules, deck placeholder / shelf lead-ins, selected-tile build button, event/season labels
    Split from styles.css (Phase 2e); original source order preserved. */
 
-.compactPanelTitle span,
 .buildingLedgerLead em,
 .popEconomyLead em {
   color: var(--muted);
   font-size: 0.66rem;
   font-style: normal;
   line-height: 1.08;
-}
-
-.compactPanelTitle span {
-  text-transform: uppercase;
 }
 

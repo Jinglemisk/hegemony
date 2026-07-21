@@ -1,7 +1,7 @@
 import { BUILDINGS } from "../game/data";
 import { seasonName, yearOf } from "../game/core/calendar";
+import { formatPopName, formatRuleNumber } from "../game/core/format";
 import type { BuildingEffect, BuildingId, PopType, Resource, Resources, SeasonName } from "../game/types";
-import type { Phase } from "../game/controller";
 
 export const RESOURCE_LABELS: Record<Resource, string> = {
   wood: "Wood",
@@ -28,13 +28,6 @@ export function seasonLabel(seasonIndex: number) {
 export function yearLabel(seasonIndex: number) {
   return `Year ${yearOf(seasonIndex)}`;
 }
-
-/** Compact chronicle tag, e.g. "Y1·Sp". */
-const POP_LABELS: Record<PopType, { singular: string; plural: string }> = {
-  citizens: { singular: "citizen", plural: "citizens" },
-  freemen: { singular: "freeman", plural: "freemen" },
-  slaves: { singular: "slave", plural: "slaves" }
-};
 
 export function formatResourceCost(cost: Partial<Resources>) {
   const entries = (Object.entries(cost) as Array<[Resource, number | undefined]>).filter(
@@ -66,9 +59,11 @@ export function formatSignedNumber(amount: number) {
   return amount > 0 ? `+${formatNumber(amount)}` : formatNumber(amount);
 }
 
+/** UI-facing alias for the engine's numeric formatter — one rounding/trim rule for the
+ *  whole app (post-sprint-debt §5.2). Title-Case labels are this module's job; the
+ *  arithmetic is not, so it delegates. */
 export function formatNumber(amount: number) {
-  const rounded = Math.round(amount * 100) / 100;
-  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+  return formatRuleNumber(amount);
 }
 
 export function formatBuildingEffects(effects: BuildingEffect[]) {
@@ -116,21 +111,10 @@ export function formatBuildingEffects(effects: BuildingEffect[]) {
 }
 
 export function formatPopLabel(pop: PopType, amount: number) {
-  return amount === 1 ? POP_LABELS[pop].singular : POP_LABELS[pop].plural;
+  return formatPopName(pop, amount);
 }
 
 export function buildingName(buildingId: BuildingId) {
   return BUILDINGS.find((building) => building.id === buildingId)?.name ?? buildingId;
 }
 
-export function phaseHint(phase: Phase) {
-  if (phase === "setupCapital") {
-    return "Place a starting city on an open hex";
-  }
-
-  if (phase === "setupColony") {
-    return "Place a colony on an open colony site";
-  }
-
-  return "Income collects automatically; expand, build, then end turn";
-}

@@ -1,8 +1,9 @@
-import { BUILDINGS, EMPTY_RESOURCES } from "../../game/data";
+import { EMPTY_RESOURCES } from "../../game/data";
+import { capitalize } from "../../game/core/format";
 import type { Phase } from "../../game/controller";
 import type { ActionStatus } from "../../game/rules";
 import type { Ruleset } from "../../game/ruleset";
-import { POP_TYPES, getTile, popIncome, previewBuildBuilding, previewBuildingIncomeDelta } from "../../game/rules";
+import { POP_TYPES, popIncome, previewBuildBuilding, previewBuildingIncomeDelta } from "../../game/rules";
 import type {
   BuildingDefinition,
   HegemonyState,
@@ -11,8 +12,7 @@ import type {
   PopType,
   Pops,
   Resources,
-  Settlement,
-  SettlementKind
+  Settlement
 } from "../../game/types";
 import { formatBuildingEffects, formatResourceCost, formatResourceDelta } from "../../ui/formatters";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
@@ -97,10 +97,6 @@ export function buildingTooltipRows(
   ];
 }
 
-export function actionTitle(label: string, status: ActionStatus | null, phase?: Phase, isActive = true) {
-  return `${label}. ${actionRequirementText(status, phase, isActive)}`;
-}
-
 export function actionRequirementText(status: ActionStatus | null, phase?: Phase, isActive = true) {
   if (!isActive) {
     return "Current player's turn only.";
@@ -111,6 +107,13 @@ export function actionRequirementText(status: ActionStatus | null, phase?: Phase
   }
 
   return status?.reasons.length ? status.reasons.join(" ") : "Available.";
+}
+
+/** The shared "can this act fire right now" gate for the map popovers' confirm buttons:
+ *  the action is legal, it is the viewer's turn, and we are in gameplay. Was restated
+ *  verbatim at four call sites (post-sprint-debt §5.4). */
+export function gameplayActionDisabled(status: ActionStatus | null, phase?: Phase, isActive = true) {
+  return !status?.can || !isActive || phase !== "gameplay";
 }
 
 export function holdingShortLabel(tile: HexTile, settlement: Settlement) {
@@ -138,9 +141,9 @@ export function createEmptyResources(): Resources {
   return { ...EMPTY_RESOURCES };
 }
 
-export function capitalize(value: string) {
-  return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`;
-}
+// Re-exported from the engine's core formatter so the UI keeps one importable
+// `capitalize` and the string logic lives in exactly one place (post-sprint-debt §5.2).
+export { capitalize };
 
 /** Every tile this player has a settlement on, with that settlement's pops. The
  *  shared source for the source/target pickers (found colony, move pops). */
@@ -161,10 +164,4 @@ export function firstAvailablePop(pops?: Pops): PopType {
   }
 
   return POP_TYPES.find((candidate) => pops[candidate] > 0) ?? "citizens";
-}
-
-export function formatTileName(G: HegemonyState, tileId: string) {
-  const tile = getTile(G, tileId);
-
-  return tile ? `${tile.terrain} ${tile.id}` : tileId;
 }

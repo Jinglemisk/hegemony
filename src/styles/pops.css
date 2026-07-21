@@ -216,8 +216,7 @@
 }
 
 .buildingLedgerLead > span,
-.popEconomyLead > span,
-.deckPlaceholder > span {
+.popEconomyLead > span {
   display: grid;
   gap: 2px;
   min-width: 0;
@@ -225,8 +224,7 @@
 
 .buildingLedgerLead strong,
 .popEconomyLead strong,
-.netEconomyPanel strong,
-.deckPlaceholder strong {
+.netEconomyPanel strong {
   overflow: hidden;
   color: var(--fg);
   font-family: var(--font-display);

@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import type { GameMoves } from "../../../game/controller";
-import { DEMOTE_FROM, getBuyRiotInsuranceStatus, getDemotePopStatus, getTile } from "../../../game/rules";
+import { DEMOTE_FROM, getBuyRiotInsuranceStatus, getDemotePopStatus, getTile, insuranceRollBonus } from "../../../game/rules";
 import { RIOT_TABLE } from "../../../game/data";
-import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
+import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { EventTableModal } from "./EventTableModal";
@@ -33,7 +32,7 @@ export function RiotModal({
   const pending = G.pendingRiot;
   const severe = pending?.tier === "revolt";
   const tierModifier = severe ? G.ruleset.economy.unrest.severeRollModifier : 0;
-  const modifier = (pending?.boughtInsurance.length ?? 0) + tierModifier;
+  const modifier = insuranceRollBonus(pending?.boughtInsurance ?? []) + tierModifier;
 
   // Concession targets: every owned settlement × demotable pop with a body to spare.
   const demoteTargets = useMemo(() => {

@@ -8,7 +8,6 @@ import {
 } from "../../../game/rules";
 import type { HexTile, Settlement } from "../../../game/types";
 import { formatResourceDelta } from "../../../ui/formatters";
-import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { SettlementSummaryCard } from "../../SettlementCard";
 import { AtlasIcon } from "../../Sprites";
 import { useGameUi } from "../GameUiContext";

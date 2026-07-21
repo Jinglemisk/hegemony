@@ -120,6 +120,12 @@ export interface PlacementRules {
   /** Coastal leapfrog (roadmap-appendix Q13a): holding any settlement on a coastal
    *  tile lets you found colonies on any other coastal tile — sailing, not teleporting. */
   coastalLeapfrog: boolean;
+  /** A tile holds at most this many colonies (and no city may share). Two colonies may
+   *  work one chora; the third is refused (post-sprint-debt §2.6 — was inline `>= 2`). */
+  maxColoniesPerTile: number;
+  /** Cities repel other cities within this hex distance — 1 means no two cities may sit
+   *  adjacent. Both the upgrade and the founding-voyage paths read it (was inline `> 1`). */
+  cityExclusionRadius: number;
 }
 
 /**
@@ -196,7 +202,7 @@ export const DEFAULT_RULESET: Ruleset = {
   startingResources: STARTING_RESOURCES,
   placementPopCounts: PLACEMENT_POP_COUNTS,
   settlements: SETTLEMENT_RULES,
-  placement: { colonyContiguity: true, coastalLeapfrog: true },
+  placement: { colonyContiguity: true, coastalLeapfrog: true, maxColoniesPerTile: 2, cityExclusionRadius: 1 },
   victory: {
     // Design rule (roadmap-appendix D1, 2026-07-12): no card may be holdable at game
     // start or on the first turn — every minimum sits above anything a legal setup

@@ -51,10 +51,14 @@ export function fundExpedition(
   const player = G.players[playerID];
   payCost(player.resources, status.cost ?? {});
   player.ventureUsedThisTurn = true;
-  addLog(
-    G,
-    `${getPlayerName(G, playerID)} stakes ${stake === "gold" ? "5 gold" : "8 wood"} to fund the ${table.name}.`
-  );
+  // Read the stake back off the actual cost, not a literal — the amounts live in
+  // ruleset.ventureStakes, and a hardcoded "5 gold" would drift the moment they change
+  // (post-sprint-debt §2.6).
+  const stakeText = Object.entries(status.cost ?? {})
+    .filter(([, amount]) => amount)
+    .map(([resource, amount]) => `${amount} ${resource}`)
+    .join(", ");
+  addLog(G, `${getPlayerName(G, playerID)} stakes ${stakeText} to fund the ${table.name}.`);
   rollOnTable(G, playerID, table);
   return MOVE_OK;
 }

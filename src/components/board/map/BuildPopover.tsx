@@ -6,7 +6,14 @@ import { formatResourceCost } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { AtlasIcon } from "../../Sprites";
 import { useGameUi } from "../GameUiContext";
-import { actionRequirementText, buildingTooltipRows, getBuildingBenefitText, settlementPickerLabel } from "../helpers";
+import {
+  actionRequirementText,
+  buildingTooltipRows,
+  gameplayActionDisabled,
+  getBuildingBenefitText,
+  settlementPickerLabel
+} from "../helpers";
+import { PopoverActions } from "../PopoverActions";
 import { TilePopover } from "./TilePopover";
 
 /**
@@ -76,20 +83,13 @@ export function BuildPopover({
         </div>
       </div>
 
-      <div className="foundColonyActions">
-        <button className="placementCancelButton" onClick={onCancel} type="button">
-          Cancel
-        </button>
-        <button
-          className="primaryButton eventResolveButton"
-          disabled={!status.can || !isActive || phase !== "gameplay"}
-          onClick={() => onConfirm(tileId, buildingId)}
-          title={actionRequirementText(status, phase, isActive)}
-          type="button"
-        >
-          Build {building.name}
-        </button>
-      </div>
+      <PopoverActions
+        confirmLabel={`Build ${building.name}`}
+        disabled={gameplayActionDisabled(status, phase, isActive)}
+        title={actionRequirementText(status, phase, isActive)}
+        onCancel={onCancel}
+        onConfirm={() => onConfirm(tileId, buildingId)}
+      />
     </TilePopover>
   );
 }

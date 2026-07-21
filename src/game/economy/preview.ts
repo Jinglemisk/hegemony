@@ -1,4 +1,5 @@
-import { BUILDINGS, EMPTY_RESOURCES } from "../data";
+import { EMPTY_RESOURCES } from "../data";
+import { getBuildings } from "../content";
 import type { BuildingId, HegemonyState, PlayerId, PopType, Pops, Resources, Settlement } from "../types";
 import { totalPops } from "../core/pops";
 import { getOwnedSettlement, getTile } from "../core/query";
@@ -154,7 +155,7 @@ export function previewBuildBuilding(
   tileId: string,
   buildingId: BuildingId
 ): EconomyPreview | null {
-  const buildingName = BUILDINGS.find((building) => building.id === buildingId)?.name ?? "Building";
+  const buildingName = getBuildings().find((building) => building.id === buildingId)?.name ?? "Building";
 
   return previewEconomyAction(G, playerID, `Build ${buildingName}`, (draft) =>
     buildBuilding(draft, playerID, tileId, buildingId)

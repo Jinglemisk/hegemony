@@ -1,4 +1,4 @@
-import type { BuildingDefinition, BuildingEffect, Resources, Terrain } from "../game/types";
+import type { BuildingDefinition, BuildingEffect, Terrain } from "../game/types";
 import type { TerrainDeck } from "../game/content";
 
 /**
@@ -89,13 +89,6 @@ export function describeBuildingEffect(effect: BuildingEffect): string {
     case "promoteCostReduction":
       return `−${effect.amount} off social-ladder promotions`;
   }
-}
-
-export function describeCost(cost: Partial<Resources>): string {
-  const parts = Object.entries(cost)
-    .filter(([, amount]) => amount)
-    .map(([resource, amount]) => `${amount} ${resource}`);
-  return parts.length > 0 ? parts.join(" · ") : "free";
 }
 
 export function buildingSummary(building: BuildingDefinition): string {

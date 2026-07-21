@@ -1,4 +1,3 @@
-import type { Phase } from "../../../game/controller";
 import {
   POP_TYPES,
   calculateEconomyProjection,
@@ -6,7 +5,7 @@ import {
   getPromotePopStatus,
   totalPops
 } from "../../../game/rules";
-import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
+import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { CodexTermLink } from "../../codexLink";
 import { AtlasIcon } from "../../Sprites";

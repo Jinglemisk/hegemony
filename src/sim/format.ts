@@ -20,15 +20,6 @@ export function formatDelta(value: number): string {
   return value < 0 ? `-${rendered}` : `+${rendered}`;
 }
 
-/** "wood 20, food 2" — skips zero entries. */
-export function formatPartialResources(resources: Partial<Resources>): string {
-  const parts = Object.entries(resources)
-    .filter(([, amount]) => (amount ?? 0) !== 0)
-    .map(([resource, amount]) => `${resource} ${formatNumber(amount ?? 0)}`);
-
-  return parts.length > 0 ? parts.join(", ") : "free";
-}
-
 /** "wood +2, food -1" — skips zero entries. */
 export function formatResourceDelta(resources: Resources): string {
   const parts = Object.entries(resources)
