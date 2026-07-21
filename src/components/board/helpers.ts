@@ -1,4 +1,5 @@
 import { EMPTY_RESOURCES } from "../../game/data";
+import { capitalize } from "../../game/core/format";
 import type { Phase } from "../../game/controller";
 import type { ActionStatus } from "../../game/rules";
 import type { Ruleset } from "../../game/ruleset";
@@ -108,6 +109,13 @@ export function actionRequirementText(status: ActionStatus | null, phase?: Phase
   return status?.reasons.length ? status.reasons.join(" ") : "Available.";
 }
 
+/** The shared "can this act fire right now" gate for the map popovers' confirm buttons:
+ *  the action is legal, it is the viewer's turn, and we are in gameplay. Was restated
+ *  verbatim at four call sites (post-sprint-debt §5.4). */
+export function gameplayActionDisabled(status: ActionStatus | null, phase?: Phase, isActive = true) {
+  return !status?.can || !isActive || phase !== "gameplay";
+}
+
 export function holdingShortLabel(tile: HexTile, settlement: Settlement) {
   return `${capitalize(settlement.kind)} ${tile.id}`;
 }
@@ -133,9 +141,9 @@ export function createEmptyResources(): Resources {
   return { ...EMPTY_RESOURCES };
 }
 
-export function capitalize(value: string) {
-  return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`;
-}
+// Re-exported from the engine's core formatter so the UI keeps one importable
+// `capitalize` and the string logic lives in exactly one place (post-sprint-debt §5.2).
+export { capitalize };
 
 /** Every tile this player has a settlement on, with that settlement's pops. The
  *  shared source for the source/target pickers (found colony, move pops). */
