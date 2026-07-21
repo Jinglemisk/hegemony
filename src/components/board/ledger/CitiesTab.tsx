@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { BUILDINGS } from "../../../game/data";
-import type { Phase } from "../../../game/controller";
 import {
   POP_TYPES,
   getBuildBuildingStatus,
@@ -11,7 +10,7 @@ import {
   settlementTileYield,
   totalPops
 } from "../../../game/rules";
-import type { BuildingId, HegemonyState, PlayerId } from "../../../game/types";
+import type { BuildingId } from "../../../game/types";
 import { RESOURCE_LABELS, formatBuildingEffects, formatNumber, formatPopLabel } from "../../../ui/formatters";
 import { SettlementSummaryCard } from "../../SettlementCard";
 import { AtlasIcon } from "../../Sprites";

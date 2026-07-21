@@ -34,7 +34,6 @@ import { ConsultRail } from "./board/ledger/ConsultRail";
 import { ConsultPanel } from "./board/ledger/ConsultPanel";
 import { routeTo, type ConsultRoute, type LedgerRoute } from "./board/ledger/route";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
-import type { LadderRequest } from "./board/map/LadderPopover";
 import { RiotModal } from "./board/modals/RiotModal";
 import { VentureModal } from "./board/modals/VentureModal";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";

@@ -18,7 +18,6 @@ import { useGameUi } from "../GameUiContext";
 import { TileListbox } from "../TileListbox";
 import { firstAvailablePop, getSettlementEntries, settlementPickerLabel } from "../helpers";
 import { CostRow } from "./PlacementModalShell";
-import { PopulationStepper } from "./PopulationStepper";
 
 type PopoverPosition = { top: number; left: number; arrowLeft: number; placement: "above" | "below" };
 

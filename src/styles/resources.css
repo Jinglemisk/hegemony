@@ -8,13 +8,6 @@
   margin-bottom: 12px;
 }
 
-.topResourceGrid {
-  align-self: center;
-  grid-template-columns: repeat(6, minmax(96px, 1fr));
-  gap: 10px;
-  margin-bottom: 0;
-}
-
 .resourcePill {
   position: relative;
   display: grid;
@@ -188,19 +181,6 @@
 .resourcePill:nth-last-child(-n + 2) .resourceTooltip {
   right: 0;
   left: auto;
-}
-
-.resourceBand .resourceTooltip {
-  top: auto;
-  bottom: calc(100% + 10px);
-  max-height: min(440px, calc(100vh - 170px));
-  transform: translateY(4px);
-}
-
-.resourceBand .compactResourceTooltip {
-  gap: 6px;
-  width: min(330px, 78vw);
-  padding: 10px;
 }
 
 .resourcePill:hover .resourceTooltip,

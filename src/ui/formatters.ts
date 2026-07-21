@@ -1,7 +1,6 @@
 import { BUILDINGS } from "../game/data";
 import { seasonName, yearOf } from "../game/core/calendar";
 import type { BuildingEffect, BuildingId, PopType, Resource, Resources, SeasonName } from "../game/types";
-import type { Phase } from "../game/controller";
 
 export const RESOURCE_LABELS: Record<Resource, string> = {
   wood: "Wood",
@@ -123,14 +122,3 @@ export function buildingName(buildingId: BuildingId) {
   return BUILDINGS.find((building) => building.id === buildingId)?.name ?? buildingId;
 }
 
-export function phaseHint(phase: Phase) {
-  if (phase === "setupCapital") {
-    return "Place a starting city on an open hex";
-  }
-
-  if (phase === "setupColony") {
-    return "Place a colony on an open colony site";
-  }
-
-  return "Income collects automatically; expand, build, then end turn";
-}

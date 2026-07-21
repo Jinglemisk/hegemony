@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { AnnotatedText } from "../../AnnotatedText";
 import { RESOURCE_LABELS } from "../../../ui/formatters";
-import type { GameMoves } from "../../../game/controller";
 import { getFundExpeditionStatus } from "../../../game/rules";
 import type { VentureStake } from "../../../game/rules";
 import { EXPEDITION_TABLES } from "../../../game/data";
-import type { HegemonyState, PlayerId } from "../../../game/types";
 import { EventTableModal } from "./EventTableModal";
 import { useGameUi } from "../GameUiContext";
 

@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import type { GameMoves } from "../../../game/controller";
 import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds, getTile } from "../../../game/rules";
-import type { HegemonyState, PlayerId } from "../../../game/types";
 import { AnnotatedText } from "../../AnnotatedText";
 import { eventCardArtUrl, formatEventEffects } from "../events";
 import { settlementPickerLabel } from "../helpers";

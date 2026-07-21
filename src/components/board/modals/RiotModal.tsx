@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import type { GameMoves } from "../../../game/controller";
 import { DEMOTE_FROM, getBuyRiotInsuranceStatus, getDemotePopStatus, getTile } from "../../../game/rules";
 import { RIOT_TABLE } from "../../../game/data";
-import type { HegemonyState, PlayerId, PopType } from "../../../game/types";
+import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { EventTableModal } from "./EventTableModal";
