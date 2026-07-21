@@ -1,7 +1,5 @@
-import type { GameMoves } from "../../../game/controller";
 import { getCivicCalmStatus } from "../../../game/rules";
 import type { CivicCalmPayment } from "../../../game/rules";
-import type { HegemonyState, PlayerId } from "../../../game/types";
 import { ModalShell } from "./ModalShell";
 import { useGameUi } from "../GameUiContext";
 

@@ -21,7 +21,6 @@
   }
 
   .resourceGrid,
-  .moveFields,
   .popChoiceGrid {
     grid-template-columns: 1fr;
   }
@@ -42,7 +41,6 @@
   }
 
   .popBuildingMatrix,
-  .deckShelf,
   .growPopBenefitPanel,
   .popSummary {
     grid-template-columns: 1fr;

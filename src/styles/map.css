@@ -22,7 +22,6 @@
   cursor: grabbing;
 }
 
-.seaBackdrop,
 .shorelineFoam {
   pointer-events: none;
 }
@@ -154,13 +153,6 @@
   text-transform: uppercase;
   white-space: nowrap;
   pointer-events: none;
-}
-
-.resourceBand {
-  display: flex;
-  align-items: center;
-  padding: 8px 4px 2px;
-  border-top: 1px solid var(--line);
 }
 
 /* The atlases are masks, not images: the glyph lives in the alpha channel and

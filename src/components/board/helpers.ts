@@ -1,8 +1,8 @@
-import { BUILDINGS, EMPTY_RESOURCES } from "../../game/data";
+import { EMPTY_RESOURCES } from "../../game/data";
 import type { Phase } from "../../game/controller";
 import type { ActionStatus } from "../../game/rules";
 import type { Ruleset } from "../../game/ruleset";
-import { POP_TYPES, getTile, popIncome, previewBuildBuilding, previewBuildingIncomeDelta } from "../../game/rules";
+import { POP_TYPES, popIncome, previewBuildBuilding, previewBuildingIncomeDelta } from "../../game/rules";
 import type {
   BuildingDefinition,
   HegemonyState,
@@ -11,8 +11,7 @@ import type {
   PopType,
   Pops,
   Resources,
-  Settlement,
-  SettlementKind
+  Settlement
 } from "../../game/types";
 import { formatBuildingEffects, formatResourceCost, formatResourceDelta } from "../../ui/formatters";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
@@ -97,10 +96,6 @@ export function buildingTooltipRows(
   ];
 }
 
-export function actionTitle(label: string, status: ActionStatus | null, phase?: Phase, isActive = true) {
-  return `${label}. ${actionRequirementText(status, phase, isActive)}`;
-}
-
 export function actionRequirementText(status: ActionStatus | null, phase?: Phase, isActive = true) {
   if (!isActive) {
     return "Current player's turn only.";
@@ -161,10 +156,4 @@ export function firstAvailablePop(pops?: Pops): PopType {
   }
 
   return POP_TYPES.find((candidate) => pops[candidate] > 0) ?? "citizens";
-}
-
-export function formatTileName(G: HegemonyState, tileId: string) {
-  const tile = getTile(G, tileId);
-
-  return tile ? `${tile.terrain} ${tile.id}` : tileId;
 }

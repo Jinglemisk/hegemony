@@ -1,4 +1,4 @@
-import type { BuildingId, EventCard, EventEffect, TableEffect } from "../../game/types";
+import type { EventCard, EventEffect, TableEffect } from "../../game/types";
 import { RESOURCE_LABELS, buildingName, formatNumber, formatPopLabel, formatSignedNumber } from "../../ui/formatters";
 
 // NOTE: new URL(..., import.meta.url) resolves relative to THIS file. This module

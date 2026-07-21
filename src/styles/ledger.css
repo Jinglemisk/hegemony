@@ -16,10 +16,6 @@
   margin: 0;
 }
 
-.actionPanel {
-  min-height: 0;
-}
-
 .modalBackdrop {
   position: fixed;
   inset: 0;
@@ -63,21 +59,13 @@
   overflow: auto;
 }
 
-.populationStepper,
-.moveFields,
-.transferList {
+.populationStepper {
   display: grid;
   gap: 8px;
 }
 
-.moveFields {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .popStepperRow,
-.selectionSummary,
-.transferList span,
-.transferList em {
+.selectionSummary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -103,8 +91,7 @@
 }
 
 .popStepperLabel em,
-.selectionSummary,
-.transferList em {
+.selectionSummary {
   color: var(--muted);
   font-size: 0.8rem;
   font-style: normal;
@@ -183,17 +170,6 @@
   box-shadow: 0 0 0 2px rgb(192 70 28 / 20%);
 }
 
-.transferList h3 {
-  margin: 2px 0 0;
-}
-
-.transferList span,
-.transferList em {
-  justify-content: flex-start;
-  font-size: 0.8rem;
-  line-height: 1.25;
-}
-
 .modalActions {
   display: flex;
   justify-content: flex-end;
@@ -216,17 +192,6 @@
   height: var(--chrome-top);
 }
 
-.statusPanel {
-  position: relative;
-  min-width: 0;
-  min-height: 52px;
-  border: none;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
 .scoreboardPanel {
   display: flex;
   align-items: center;
@@ -234,143 +199,6 @@
   gap: 8px;
   overflow: visible;
   padding: 2px 0;
-}
-
-.bandResourceGrid {
-  flex: 1;
-  /* A floor, not just a share: in the old full-width band `1fr` always resolved
-     to ~87px, but in the command bar the pills share the row with six verbs and
-     collapsed to unreadable slivers. 100px is measured, not guessed — icon (36) +
-     gap (6) + the widest value + padding (12). */
-  grid-template-columns: repeat(6, minmax(100px, 1fr));
-  align-content: center;
-  gap: 4px;
-  height: 100%;
-  margin: 0;
-}
-
-.bandResourceGrid .resourcePill {
-  container-type: inline-size;
-  grid-template-columns: 36px minmax(0, max-content);
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 52px;
-  padding: 5px 6px;
-}
-
-.bandResourceGrid .resourceIcon,
-.bandResourceGrid .happinessTheatreIcon {
-  justify-self: center;
-  width: 36px;
-  height: 36px;
-}
-
-.bandResourceGrid .resourceValue {
-  display: grid;
-  grid-template-columns: minmax(1.9ch, max-content) minmax(4ch, max-content);
-  align-items: center;
-  justify-content: center;
-  justify-self: center;
-  gap: 3px;
-  width: auto;
-}
-
-.bandResourceGrid .resourceValue > strong {
-  justify-self: end;
-  color: #0b0705;
-  font-size: 1.18rem;
-  text-align: right;
-}
-
-.bandResourceGrid .resourceDelta {
-  justify-self: start;
-  color: #0b0705;
-  font-size: 0.944rem;
-  text-align: left;
-}
-
-@container (max-width: 112px) {
-  .bandResourceGrid .resourcePill {
-    grid-template-columns: 28px minmax(0, max-content);
-    gap: 2px;
-    padding-right: 4px;
-    padding-left: 4px;
-  }
-
-  .bandResourceGrid .resourceIcon,
-  .bandResourceGrid .happinessTheatreIcon {
-    width: 28px;
-    height: 28px;
-  }
-
-  .bandResourceGrid .resourceValue {
-    gap: 1px;
-  }
-
-  .bandResourceGrid .resourceValue > strong {
-    font-size: 1rem;
-  }
-
-  .bandResourceGrid .resourceDelta {
-    font-size: 0.8rem;
-  }
-}
-
-.bandResourceGrid .resourceDelta.positive,
-.bandResourceGrid .resourceDelta.negative,
-.bandResourceGrid .resourceDelta.neutral {
-  color: #0b0705;
-}
-
-/* Turn clock — Year · season dial · current player (top bar, centre) */
-.turnClock {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  min-height: 58px;
-}
-
-.turnYear,
-.turnActor {
-  display: grid;
-  gap: 2px;
-  line-height: 1.05;
-}
-
-.turnYear {
-  justify-items: end;
-  text-align: right;
-}
-
-.turnActor {
-  justify-items: start;
-  text-align: left;
-}
-
-.turnClockLabel {
-  color: var(--muted);
-  font-size: 0.54rem;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-
-.turnYear strong {
-  color: var(--fg);
-  font-family: var(--font-display);
-  font-size: 1.32rem;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.turnActor strong {
-  color: var(--clay);
-  font-family: var(--font-display);
-  font-size: 1.06rem;
-  line-height: 1;
-  white-space: nowrap;
 }
 
 /* ── Top bar: resources split around the season medallion (ui-refit Step 3) ──── */
@@ -604,16 +432,6 @@
   color: var(--fg);
   font-size: 0.78rem;
   line-height: 1.35;
-}
-
-
-/* ---- season clock sub-labels (deck clock + opener) ---- */
-
-.turnClockSub {
-  color: var(--muted);
-  font-size: 0.56rem;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
 }
 
 /* ---- game over ---- */

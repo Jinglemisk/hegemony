@@ -45,11 +45,6 @@ export function rollDie(G: HegemonyState, sides: number): number {
   return 1 + Math.floor(step.value * sides);
 }
 
-/** One d6 through the game's seeded PRNG state. */
-export function rollD6(G: HegemonyState): number {
-  return rollDie(G, 6);
-}
-
 /**
  * Roll on a table for `playerID` and apply the landed row's effects. The natural d6
  * plus the modifier clamps into 1–6 — a table can never be rolled off. The record is

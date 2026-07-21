@@ -46,7 +46,6 @@
    (the mask clips the element's own background, painting the glyph in it). */
 .miniIcon,
 .buildingButtonIcon,
-.commandIcon,
 .titleIcon {
   color: var(--clay-deep);
 }
