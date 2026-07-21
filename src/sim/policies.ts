@@ -1,6 +1,6 @@
 import { calculateIncome } from "../game/economy/income";
 import { getTile } from "../game/core/query";
-import { settlementBuildingSlots } from "../game/settlement";
+import { canPlaceColonyOnTile, settlementBuildingSlots } from "../game/settlement";
 import { enactForEval, politicianStandings } from "../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../game/assembly";
 import type { LegalMove } from "../game/legalMoves";
@@ -10,7 +10,7 @@ import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId } from "../game/types";
 import type { SimRng } from "./rng";
 
-export type PolicyId = "random" | "greedy" | "smart" | "beam" | "political";
+export type PolicyId = "random" | "greedy" | "smart" | "beam" | "political" | "settler";
 
 export type Policy = {
   name: PolicyId;
@@ -645,12 +645,61 @@ export const politicalPolicy: Policy = {
   }
 };
 
+// ── Map / expansion foresight — the "settler" bot ─────────────────────────────────────
+//
+// Every bot is board-STATIC: it values a colony for its own count + tile yield, but not
+// for the EXPANSION it unlocks ("found HERE and I can chain to that rich cluster two turns
+// on"). Expansion is the heart of the game, so `settler` prices it: a term for the
+// reachable, unclaimed, yielding frontier, so the one-ply search prefers placements that
+// OPEN expansion, not just the fattest single tile. Same smart spine, so a settler-vs-smart
+// A/B isolates map foresight from everything else. See docs/feat/map-foresight.md.
+
+/**
+ * The expansion frontier: total yield of every tile this player could legally found a
+ * colony on NEXT — reachability only (contiguity or coastal leapfrog, unclaimed, not the
+ * oracle). Cost and a spare pop are deliberately ignored: this prices the POTENTIAL a
+ * position holds, not whether this exact turn can afford it. Founding a colony spends one
+ * frontier tile but opens its neighbours, so a placement toward a cluster nets more
+ * frontier than a dead-end one — and the one-ply search can finally see that.
+ */
+function frontierValue(G: HegemonyState, playerID: PlayerId): number {
+  let value = 0;
+  for (const tile of G.board.tiles) {
+    if (!canPlaceColonyOnTile(G, playerID, tile).can) {
+      continue;
+    }
+    value += tile.resource?.amount ?? 0;
+  }
+  return value;
+}
+
+/**
+ * How much the reachable frontier weighs. Kept LOW after the A/B (docs/sim): at weight 2
+ * the term is win-neutral (the 6-turn income projection already values a colony's tile
+ * yield, so explicit frontier value is largely redundant); at weight 6 it turns HARMFUL —
+ * it overrides the economic evaluation and the bot over-expands into colonies it cannot
+ * feed. So the frontier only nudges *which* reachable tile, never *how many*.
+ */
+const FRONTIER_WEIGHT = 2;
+
+function evaluateSettler(G: HegemonyState, playerID: PlayerId): number {
+  return evaluateSmart(G, playerID) + FRONTIER_WEIGHT * frontierValue(G, playerID);
+}
+
+export const settlerPolicy: Policy = {
+  name: "settler",
+  choose(G, moves) {
+    return onePlyLookahead(G, moves, evaluateSettler);
+  }
+};
+
 export const POLICIES: Record<PolicyId, Policy> = {
   random: randomPolicy,
   greedy: greedyPolicy,
   smart: smartPolicy,
   beam: beamPolicy,
   political: politicalPolicy,
+  settler: settlerPolicy,
 };
 
 export function resolvePolicy(id: string): Policy {

@@ -1,0 +1,2429 @@
+{
+  "meta": {
+    "games": 24,
+    "turns": 280,
+    "policy": "mixed",
+    "mode": "standard",
+    "boardLayout": "classic",
+    "seatPolicies": {
+      "0": "settler",
+      "1": "smart",
+      "2": "smart",
+      "3": "smart"
+    },
+    "baseSeed": 9000,
+    "botSeedRule": "seed ^ 0x9e3779b9",
+    "rulesetPatch": null,
+    "tunePatch": null,
+    "tunePatchHash": null,
+    "generatedAt": "2026-07-21T19:40:58.258Z"
+  },
+  "perGame": [
+    {
+      "game": 0,
+      "seed": 9000,
+      "turnsPlayed": 100,
+      "finalSeason": 26,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "settler",
+        "1": "smart",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 1,
+        "2": 3,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 4,
+        "1": 7,
+        "2": 3,
+        "3": 5
+      }
+    },
+    {
+      "game": 1,
+      "seed": 9000,
+      "turnsPlayed": 123,
+      "finalSeason": 31,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "smart",
+        "3": "settler"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 3,
+        "3": 1
+      },
+      "popsLostToUnrest": {
+        "0": 5,
+        "1": 9,
+        "2": 5,
+        "3": 6
+      }
+    },
+    {
+      "game": 2,
+      "seed": 9000,
+      "turnsPlayed": 81,
+      "finalSeason": 21,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "settler",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 3,
+        "3": 1
+      },
+      "popsLostToUnrest": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4
+      }
+    },
+    {
+      "game": 3,
+      "seed": 9000,
+      "turnsPlayed": 74,
+      "finalSeason": 19,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "settler",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 3,
+        "3": 1
+      },
+      "popsLostToUnrest": {
+        "0": 5,
+        "1": 2,
+        "2": 2,
+        "3": 9
+      }
+    },
+    {
+      "game": 4,
+      "seed": 9001,
+      "turnsPlayed": 90,
+      "finalSeason": 23,
+      "termination": "victoryRace",
+      "winner": "3",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "settler",
+        "1": "smart",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 3
+      },
+      "popsLostToUnrest": {
+        "0": 6,
+        "1": 12,
+        "2": 5,
+        "3": 2
+      }
+    },
+    {
+      "game": 5,
+      "seed": 9001,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "2",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "smart",
+        "3": "settler"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 3,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 13,
+        "1": 12,
+        "2": 7,
+        "3": 9
+      }
+    },
+    {
+      "game": 6,
+      "seed": 9001,
+      "turnsPlayed": 82,
+      "finalSeason": 21,
+      "termination": "victoryRace",
+      "winner": "3",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "settler",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 1,
+        "2": 0,
+        "3": 3
+      },
+      "popsLostToUnrest": {
+        "0": 8,
+        "1": 7,
+        "2": 6,
+        "3": 3
+      }
+    },
+    {
+      "game": 7,
+      "seed": 9001,
+      "turnsPlayed": 82,
+      "finalSeason": 21,
+      "termination": "victoryRace",
+      "winner": "3",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "settler",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 4
+      },
+      "popsLostToUnrest": {
+        "0": 13,
+        "1": 8,
+        "2": 7,
+        "3": 1
+      }
+    },
+    {
+      "game": 8,
+      "seed": 9002,
+      "turnsPlayed": 61,
+      "finalSeason": 16,
+      "termination": "victoryRace",
+      "winner": "0",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "settler",
+        "1": "smart",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 3,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 2,
+        "1": 6,
+        "2": 3,
+        "3": 8
+      }
+    },
+    {
+      "game": 9,
+      "seed": 9002,
+      "turnsPlayed": 89,
+      "finalSeason": 23,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "smart",
+        "3": "settler"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 3,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 14,
+        "1": 6,
+        "2": 2,
+        "3": 11
+      }
+    },
+    {
+      "game": 10,
+      "seed": 9002,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "settler",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 1,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 11,
+        "1": 8,
+        "2": 11,
+        "3": 17
+      }
+    },
+    {
+      "game": 11,
+      "seed": 9002,
+      "turnsPlayed": 66,
+      "finalSeason": 17,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "settler",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 3,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 7,
+        "1": 6,
+        "2": 2,
+        "3": 7
+      }
+    },
+    {
+      "game": 12,
+      "seed": 9003,
+      "turnsPlayed": 58,
+      "finalSeason": 15,
+      "termination": "victoryRace",
+      "winner": "1",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "settler",
+        "1": "smart",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 3,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 1,
+        "2": 6,
+        "3": 8
+      }
+    },
+    {
+      "game": 13,
+      "seed": 9003,
+      "turnsPlayed": 58,
+      "finalSeason": 15,
+      "termination": "victoryRace",
+      "winner": "1",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "smart",
+        "3": "settler"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 3,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 1,
+        "2": 6,
+        "3": 8
+      }
+    },
+    {
+      "game": 14,
+      "seed": 9003,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "3",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "settler",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 1,
+        "2": 1,
+        "3": 2
+      },
+      "popsLostToUnrest": {
+        "0": 10,
+        "1": 8,
+        "2": 9,
+        "3": 10
+      }
+    },
+    {
+      "game": 15,
+      "seed": 9003,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "settler",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 5,
+        "1": 14,
+        "2": 14,
+        "3": 17
+      }
+    },
+    {
+      "game": 16,
+      "seed": 9004,
+      "turnsPlayed": 115,
+      "finalSeason": 29,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "settler",
+        "1": "smart",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 3,
+        "3": 1
+      },
+      "popsLostToUnrest": {
+        "0": 10,
+        "1": 12,
+        "2": 8,
+        "3": 12
+      }
+    },
+    {
+      "game": 17,
+      "seed": 9004,
+      "turnsPlayed": 102,
+      "finalSeason": 26,
+      "termination": "victoryRace",
+      "winner": "0",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "smart",
+        "3": "settler"
+      },
+      "finalCards": {
+        "0": 3,
+        "1": 0,
+        "2": 0,
+        "3": 1
+      },
+      "popsLostToUnrest": {
+        "0": 6,
+        "1": 13,
+        "2": 10,
+        "3": 12
+      }
+    },
+    {
+      "game": 18,
+      "seed": 9004,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "settler",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 2,
+        "2": 0,
+        "3": 1
+      },
+      "popsLostToUnrest": {
+        "0": 11,
+        "1": 14,
+        "2": 12,
+        "3": 11
+      }
+    },
+    {
+      "game": 19,
+      "seed": 9004,
+      "turnsPlayed": 120,
+      "finalSeason": 31,
+      "termination": "victoryRace",
+      "winner": "3",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "settler",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 1,
+        "3": 3
+      },
+      "popsLostToUnrest": {
+        "0": 11,
+        "1": 17,
+        "2": 12,
+        "3": 6
+      }
+    },
+    {
+      "game": 20,
+      "seed": 9005,
+      "turnsPlayed": 107,
+      "finalSeason": 27,
+      "termination": "victoryRace",
+      "winner": "1",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "settler",
+        "1": "smart",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 0,
+        "1": 3,
+        "2": 1,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 14,
+        "1": 4,
+        "2": 8,
+        "3": 13
+      }
+    },
+    {
+      "game": 21,
+      "seed": 9005,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "2",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "smart",
+        "3": "settler"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 1,
+        "3": 0
+      },
+      "popsLostToUnrest": {
+        "0": 13,
+        "1": 11,
+        "2": 8,
+        "3": 16
+      }
+    },
+    {
+      "game": 22,
+      "seed": 9005,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "3",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "smart",
+        "2": "settler",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 2
+      },
+      "popsLostToUnrest": {
+        "0": 24,
+        "1": 10,
+        "2": 13,
+        "3": 9
+      }
+    },
+    {
+      "game": 23,
+      "seed": 9005,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "3",
+      "leaderAtCap": null,
+      "seatPolicies": {
+        "0": "smart",
+        "1": "settler",
+        "2": "smart",
+        "3": "smart"
+      },
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 1,
+        "3": 2
+      },
+      "popsLostToUnrest": {
+        "0": 17,
+        "1": 11,
+        "2": 10,
+        "3": 9
+      }
+    }
+  ],
+  "perSeason": [
+    {
+      "season": 1,
+      "seasonName": "spring",
+      "year": 1,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0,
+        "p10": 0,
+        "median": 0,
+        "p90": 0,
+        "min": 0,
+        "max": 0
+      },
+      "pops": {
+        "mean": 6.114583333333333,
+        "p10": 6,
+        "median": 6,
+        "p90": 7,
+        "min": 6,
+        "max": 7
+      },
+      "food": {
+        "mean": 4.677083333333333,
+        "p10": 0,
+        "median": 5,
+        "p90": 9,
+        "min": 0,
+        "max": 12
+      },
+      "happiness": {
+        "mean": 0.9375,
+        "p10": -0.5,
+        "median": 1,
+        "p90": 2,
+        "min": -2,
+        "max": 2.5
+      },
+      "unrestTierShares": {
+        "calm": 0.874999999999999,
+        "discontent": 0.125,
+        "unrest": 0,
+        "revolt": 0
+      }
+    },
+    {
+      "season": 2,
+      "seasonName": "summer",
+      "year": 1,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0,
+        "p10": 0,
+        "median": 0,
+        "p90": 0,
+        "min": 0,
+        "max": 0
+      },
+      "pops": {
+        "mean": 6.5,
+        "p10": 6,
+        "median": 6,
+        "p90": 8,
+        "min": 6,
+        "max": 8
+      },
+      "food": {
+        "mean": 1.4479166666666667,
+        "p10": -2,
+        "median": 1,
+        "p90": 5,
+        "min": -5,
+        "max": 7
+      },
+      "happiness": {
+        "mean": 1.2135416666666667,
+        "p10": -4,
+        "median": 2,
+        "p90": 4.5,
+        "min": -7,
+        "max": 6.5
+      },
+      "unrestTierShares": {
+        "calm": 0.7812499999999993,
+        "discontent": 0.13541666666666666,
+        "unrest": 0.08333333333333333,
+        "revolt": 0
+      }
+    },
+    {
+      "season": 3,
+      "seasonName": "autumn",
+      "year": 1,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.052083333333333336,
+        "p10": 0,
+        "median": 0,
+        "p90": 0,
+        "min": 0,
+        "max": 1
+      },
+      "pops": {
+        "mean": 6.104166666666667,
+        "p10": 5,
+        "median": 6,
+        "p90": 8,
+        "min": 3,
+        "max": 9
+      },
+      "food": {
+        "mean": 1.21875,
+        "p10": -4,
+        "median": 2,
+        "p90": 4,
+        "min": -11,
+        "max": 5
+      },
+      "happiness": {
+        "mean": 1.1614583333333333,
+        "p10": -7.5,
+        "median": 2,
+        "p90": 6,
+        "min": -9,
+        "max": 12
+      },
+      "unrestTierShares": {
+        "calm": 0.6562499999999998,
+        "discontent": 0.1770833333333333,
+        "unrest": 0.16666666666666663,
+        "revolt": 0
+      }
+    },
+    {
+      "season": 4,
+      "seasonName": "winter",
+      "year": 1,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.125,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 1
+      },
+      "pops": {
+        "mean": 6.25,
+        "p10": 5,
+        "median": 6,
+        "p90": 8,
+        "min": 3,
+        "max": 9
+      },
+      "food": {
+        "mean": -0.3541666666666667,
+        "p10": -5,
+        "median": -1,
+        "p90": 2,
+        "min": -7,
+        "max": 10
+      },
+      "happiness": {
+        "mean": 0.7447916666666666,
+        "p10": -9.5,
+        "median": 1,
+        "p90": 10.5,
+        "min": -13,
+        "max": 14.5
+      },
+      "unrestTierShares": {
+        "calm": 0.59375,
+        "discontent": 0.21874999999999992,
+        "unrest": 0.09375,
+        "revolt": 0.09375
+      }
+    },
+    {
+      "season": 5,
+      "seasonName": "spring",
+      "year": 2,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.15625,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 1
+      },
+      "pops": {
+        "mean": 5.885416666666667,
+        "p10": 4,
+        "median": 6,
+        "p90": 8,
+        "min": 2,
+        "max": 9
+      },
+      "food": {
+        "mean": -0.5416666666666666,
+        "p10": -5,
+        "median": 0,
+        "p90": 3,
+        "min": -8,
+        "max": 10
+      },
+      "happiness": {
+        "mean": 1.078125,
+        "p10": -10,
+        "median": 4,
+        "p90": 12.5,
+        "min": -15,
+        "max": 16
+      },
+      "unrestTierShares": {
+        "calm": 0.5625000000000001,
+        "discontent": 0.05208333333333333,
+        "unrest": 0.2604166666666666,
+        "revolt": 0.125
+      }
+    },
+    {
+      "season": 6,
+      "seasonName": "summer",
+      "year": 2,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.20833333333333334,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 5.666666666666667,
+        "p10": 2,
+        "median": 6,
+        "p90": 9,
+        "min": 0,
+        "max": 10
+      },
+      "food": {
+        "mean": -1.1666666666666667,
+        "p10": -6,
+        "median": -1,
+        "p90": 2,
+        "min": -10,
+        "max": 7
+      },
+      "happiness": {
+        "mean": 1.4791666666666667,
+        "p10": -11,
+        "median": 2.5,
+        "p90": 13.5,
+        "min": -18,
+        "max": 19.5
+      },
+      "unrestTierShares": {
+        "calm": 0.5729166666666667,
+        "discontent": 0.041666666666666664,
+        "unrest": 0.21874999999999992,
+        "revolt": 0.16666666666666663
+      }
+    },
+    {
+      "season": 7,
+      "seasonName": "autumn",
+      "year": 2,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.2916666666666667,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 5,
+        "p10": 1,
+        "median": 5,
+        "p90": 9,
+        "min": 0,
+        "max": 11
+      },
+      "food": {
+        "mean": -0.3958333333333333,
+        "p10": -4,
+        "median": 0,
+        "p90": 3,
+        "min": -7,
+        "max": 12
+      },
+      "happiness": {
+        "mean": 2.828125,
+        "p10": -9,
+        "median": 2,
+        "p90": 15.5,
+        "min": -15,
+        "max": 24
+      },
+      "unrestTierShares": {
+        "calm": 0.5416666666666669,
+        "discontent": 0.20833333333333326,
+        "unrest": 0.18749999999999994,
+        "revolt": 0.06249999999999999
+      }
+    },
+    {
+      "season": 8,
+      "seasonName": "winter",
+      "year": 2,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.34375,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 5.03125,
+        "p10": 1,
+        "median": 5,
+        "p90": 9,
+        "min": 0,
+        "max": 12
+      },
+      "food": {
+        "mean": -0.375,
+        "p10": -5,
+        "median": 0,
+        "p90": 3,
+        "min": -10,
+        "max": 9
+      },
+      "happiness": {
+        "mean": 2.75,
+        "p10": -9,
+        "median": 0.5,
+        "p90": 17.5,
+        "min": -13.5,
+        "max": 25.5
+      },
+      "unrestTierShares": {
+        "calm": 0.5208333333333336,
+        "discontent": 0.20833333333333326,
+        "unrest": 0.22916666666666657,
+        "revolt": 0.041666666666666664
+      }
+    },
+    {
+      "season": 9,
+      "seasonName": "spring",
+      "year": 3,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.3645833333333333,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 4.958333333333333,
+        "p10": 1,
+        "median": 5,
+        "p90": 10,
+        "min": 0,
+        "max": 12
+      },
+      "food": {
+        "mean": 0.3854166666666667,
+        "p10": -3,
+        "median": 0,
+        "p90": 5,
+        "min": -7,
+        "max": 12
+      },
+      "happiness": {
+        "mean": 4.3125,
+        "p10": -7,
+        "median": 3,
+        "p90": 18,
+        "min": -15.5,
+        "max": 27
+      },
+      "unrestTierShares": {
+        "calm": 0.6145833333333333,
+        "discontent": 0.20833333333333326,
+        "unrest": 0.13541666666666666,
+        "revolt": 0.041666666666666664
+      }
+    },
+    {
+      "season": 10,
+      "seasonName": "summer",
+      "year": 3,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.4375,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 5.145833333333333,
+        "p10": 0,
+        "median": 5,
+        "p90": 10,
+        "min": 0,
+        "max": 13
+      },
+      "food": {
+        "mean": -0.3229166666666667,
+        "p10": -2,
+        "median": 0,
+        "p90": 1,
+        "min": -10,
+        "max": 6
+      },
+      "happiness": {
+        "mean": 5.171875,
+        "p10": -6,
+        "median": 3,
+        "p90": 19,
+        "min": -8.5,
+        "max": 28.5
+      },
+      "unrestTierShares": {
+        "calm": 0.6458333333333331,
+        "discontent": 0.18749999999999994,
+        "unrest": 0.16666666666666663,
+        "revolt": 0
+      }
+    },
+    {
+      "season": 11,
+      "seasonName": "autumn",
+      "year": 3,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.46875,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 5.166666666666667,
+        "p10": 0,
+        "median": 5,
+        "p90": 10,
+        "min": 0,
+        "max": 13
+      },
+      "food": {
+        "mean": 0.6041666666666666,
+        "p10": -3,
+        "median": 1,
+        "p90": 4,
+        "min": -8,
+        "max": 17
+      },
+      "happiness": {
+        "mean": 5.822916666666667,
+        "p10": -4,
+        "median": 4.5,
+        "p90": 17.5,
+        "min": -10,
+        "max": 30
+      },
+      "unrestTierShares": {
+        "calm": 0.677083333333333,
+        "discontent": 0.2499999999999999,
+        "unrest": 0.06249999999999999,
+        "revolt": 0.010416666666666666
+      }
+    },
+    {
+      "season": 12,
+      "seasonName": "winter",
+      "year": 3,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.4791666666666667,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 5.3125,
+        "p10": 0,
+        "median": 5,
+        "p90": 11,
+        "min": 0,
+        "max": 14
+      },
+      "food": {
+        "mean": 0.3958333333333333,
+        "p10": -3,
+        "median": 1,
+        "p90": 3,
+        "min": -8,
+        "max": 8
+      },
+      "happiness": {
+        "mean": 6.098958333333333,
+        "p10": -4,
+        "median": 5,
+        "p90": 16.5,
+        "min": -9.5,
+        "max": 27.5
+      },
+      "unrestTierShares": {
+        "calm": 0.7499999999999994,
+        "discontent": 0.1770833333333333,
+        "unrest": 0.07291666666666666,
+        "revolt": 0
+      }
+    },
+    {
+      "season": 13,
+      "seasonName": "spring",
+      "year": 4,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.4895833333333333,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 5.510416666666667,
+        "p10": 1,
+        "median": 5,
+        "p90": 11,
+        "min": 0,
+        "max": 16
+      },
+      "food": {
+        "mean": 0.46875,
+        "p10": -3,
+        "median": 1,
+        "p90": 3,
+        "min": -10,
+        "max": 11
+      },
+      "happiness": {
+        "mean": 7.682291666666667,
+        "p10": -2,
+        "median": 6,
+        "p90": 19.5,
+        "min": -18.5,
+        "max": 28
+      },
+      "unrestTierShares": {
+        "calm": 0.8229166666666659,
+        "discontent": 0.13541666666666666,
+        "unrest": 0.03125,
+        "revolt": 0.010416666666666666
+      }
+    },
+    {
+      "season": 14,
+      "seasonName": "summer",
+      "year": 4,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.5520833333333334,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 5.9375,
+        "p10": 1,
+        "median": 6,
+        "p90": 11,
+        "min": 0,
+        "max": 17
+      },
+      "food": {
+        "mean": 0.6354166666666666,
+        "p10": -2,
+        "median": 1,
+        "p90": 4,
+        "min": -8,
+        "max": 10
+      },
+      "happiness": {
+        "mean": 7.8125,
+        "p10": -3,
+        "median": 6,
+        "p90": 20.5,
+        "min": -10.5,
+        "max": 30
+      },
+      "unrestTierShares": {
+        "calm": 0.7812499999999993,
+        "discontent": 0.16666666666666663,
+        "unrest": 0.041666666666666664,
+        "revolt": 0.010416666666666666
+      }
+    },
+    {
+      "season": 15,
+      "seasonName": "autumn",
+      "year": 4,
+      "games": 24,
+      "victoryCards": {
+        "mean": 0.5625,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 6.385416666666667,
+        "p10": 1,
+        "median": 6,
+        "p90": 12,
+        "min": 0,
+        "max": 17
+      },
+      "food": {
+        "mean": 0.3541666666666667,
+        "p10": -3,
+        "median": 0,
+        "p90": 4,
+        "min": -10,
+        "max": 11
+      },
+      "happiness": {
+        "mean": 8.359375,
+        "p10": -4.5,
+        "median": 7,
+        "p90": 23,
+        "min": -12,
+        "max": 31
+      },
+      "unrestTierShares": {
+        "calm": 0.7604166666666661,
+        "discontent": 0.14583333333333331,
+        "unrest": 0.07291666666666666,
+        "revolt": 0.020833333333333332
+      }
+    },
+    {
+      "season": 16,
+      "seasonName": "winter",
+      "year": 4,
+      "games": 22,
+      "victoryCards": {
+        "mean": 0.5113636363636364,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 6.204545454545454,
+        "p10": 1,
+        "median": 6,
+        "p90": 12,
+        "min": 0,
+        "max": 17
+      },
+      "food": {
+        "mean": -0.20454545454545456,
+        "p10": -5,
+        "median": 0,
+        "p90": 4,
+        "min": -9,
+        "max": 12
+      },
+      "happiness": {
+        "mean": 7.7102272727272725,
+        "p10": -7,
+        "median": 6.5,
+        "p90": 25.5,
+        "min": -15,
+        "max": 33
+      },
+      "unrestTierShares": {
+        "calm": 0.7272727272727268,
+        "discontent": 0.11363636363636366,
+        "unrest": 0.09090909090909093,
+        "revolt": 0.06818181818181819
+      }
+    },
+    {
+      "season": 17,
+      "seasonName": "spring",
+      "year": 5,
+      "games": 21,
+      "victoryCards": {
+        "mean": 0.5357142857142857,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 6.607142857142857,
+        "p10": 2,
+        "median": 6,
+        "p90": 12,
+        "min": 0,
+        "max": 19
+      },
+      "food": {
+        "mean": 0.8809523809523809,
+        "p10": -3,
+        "median": 1,
+        "p90": 5,
+        "min": -8,
+        "max": 12
+      },
+      "happiness": {
+        "mean": 7.565476190476191,
+        "p10": -5,
+        "median": 6,
+        "p90": 27.5,
+        "min": -21,
+        "max": 39
+      },
+      "unrestTierShares": {
+        "calm": 0.6785714285714283,
+        "discontent": 0.14285714285714285,
+        "unrest": 0.13095238095238093,
+        "revolt": 0.047619047619047616
+      }
+    },
+    {
+      "season": 18,
+      "seasonName": "summer",
+      "year": 5,
+      "games": 20,
+      "victoryCards": {
+        "mean": 0.5875,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 6.7,
+        "p10": 1,
+        "median": 7,
+        "p90": 12,
+        "min": 0,
+        "max": 20
+      },
+      "food": {
+        "mean": 0.7125,
+        "p10": -2,
+        "median": 0,
+        "p90": 3,
+        "min": -7,
+        "max": 12
+      },
+      "happiness": {
+        "mean": 9.4,
+        "p10": -6,
+        "median": 8,
+        "p90": 30.5,
+        "min": -12.5,
+        "max": 42
+      },
+      "unrestTierShares": {
+        "calm": 0.7124999999999995,
+        "discontent": 0.13749999999999998,
+        "unrest": 0.13749999999999998,
+        "revolt": 0.0125
+      }
+    },
+    {
+      "season": 19,
+      "seasonName": "autumn",
+      "year": 5,
+      "games": 20,
+      "victoryCards": {
+        "mean": 0.625,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 6.7625,
+        "p10": 1,
+        "median": 6,
+        "p90": 12,
+        "min": 0,
+        "max": 21
+      },
+      "food": {
+        "mean": 0.225,
+        "p10": -3,
+        "median": 0,
+        "p90": 2,
+        "min": -5,
+        "max": 16
+      },
+      "happiness": {
+        "mean": 9.85625,
+        "p10": -5,
+        "median": 8,
+        "p90": 31.5,
+        "min": -11,
+        "max": 44
+      },
+      "unrestTierShares": {
+        "calm": 0.7499999999999993,
+        "discontent": 0.15,
+        "unrest": 0.0875,
+        "revolt": 0.0125
+      }
+    },
+    {
+      "season": 20,
+      "seasonName": "winter",
+      "year": 5,
+      "games": 19,
+      "victoryCards": {
+        "mean": 0.631578947368421,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 6.921052631578948,
+        "p10": 1,
+        "median": 6,
+        "p90": 13,
+        "min": 0,
+        "max": 21
+      },
+      "food": {
+        "mean": 1.0526315789473684,
+        "p10": -2,
+        "median": 1,
+        "p90": 5,
+        "min": -7,
+        "max": 12
+      },
+      "happiness": {
+        "mean": 8.881578947368421,
+        "p10": -6,
+        "median": 6.5,
+        "p90": 30,
+        "min": -11.5,
+        "max": 45.5
+      },
+      "unrestTierShares": {
+        "calm": 0.7500000000000003,
+        "discontent": 0.10526315789473684,
+        "unrest": 0.11842105263157894,
+        "revolt": 0.02631578947368421
+      }
+    },
+    {
+      "season": 21,
+      "seasonName": "spring",
+      "year": 6,
+      "games": 19,
+      "victoryCards": {
+        "mean": 0.6842105263157895,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 4
+      },
+      "pops": {
+        "mean": 7.144736842105263,
+        "p10": 1,
+        "median": 6,
+        "p90": 14,
+        "min": 0,
+        "max": 21
+      },
+      "food": {
+        "mean": 0.6447368421052632,
+        "p10": -2,
+        "median": 0,
+        "p90": 4,
+        "min": -8,
+        "max": 14
+      },
+      "happiness": {
+        "mean": 9.927631578947368,
+        "p10": -4.5,
+        "median": 7,
+        "p90": 32.5,
+        "min": -11,
+        "max": 47.5
+      },
+      "unrestTierShares": {
+        "calm": 0.7368421052631582,
+        "discontent": 0.18421052631578944,
+        "unrest": 0.06578947368421052,
+        "revolt": 0.013157894736842105
+      }
+    },
+    {
+      "season": 22,
+      "seasonName": "summer",
+      "year": 6,
+      "games": 16,
+      "victoryCards": {
+        "mean": 0.640625,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 7,
+        "p10": 1,
+        "median": 6,
+        "p90": 13,
+        "min": 0,
+        "max": 22
+      },
+      "food": {
+        "mean": 0.515625,
+        "p10": -1,
+        "median": 0,
+        "p90": 3,
+        "min": -8,
+        "max": 11
+      },
+      "happiness": {
+        "mean": 9.296875,
+        "p10": -6,
+        "median": 6.5,
+        "p90": 28,
+        "min": -10,
+        "max": 50.5
+      },
+      "unrestTierShares": {
+        "calm": 0.71875,
+        "discontent": 0.15625,
+        "unrest": 0.109375,
+        "revolt": 0.015625
+      }
+    },
+    {
+      "season": 23,
+      "seasonName": "autumn",
+      "year": 6,
+      "games": 16,
+      "victoryCards": {
+        "mean": 0.6875,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 7.53125,
+        "p10": 1,
+        "median": 7,
+        "p90": 15,
+        "min": 0,
+        "max": 22
+      },
+      "food": {
+        "mean": 0.234375,
+        "p10": -2,
+        "median": 0,
+        "p90": 2,
+        "min": -6,
+        "max": 5
+      },
+      "happiness": {
+        "mean": 9.2890625,
+        "p10": -5,
+        "median": 6.5,
+        "p90": 31.5,
+        "min": -13,
+        "max": 53.5
+      },
+      "unrestTierShares": {
+        "calm": 0.71875,
+        "discontent": 0.15625,
+        "unrest": 0.078125,
+        "revolt": 0.046875
+      }
+    },
+    {
+      "season": 24,
+      "seasonName": "winter",
+      "year": 6,
+      "games": 14,
+      "victoryCards": {
+        "mean": 0.6785714285714286,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 7.410714285714286,
+        "p10": 1,
+        "median": 7,
+        "p90": 15,
+        "min": 0,
+        "max": 19
+      },
+      "food": {
+        "mean": 0.5,
+        "p10": -3,
+        "median": 0,
+        "p90": 5,
+        "min": -6,
+        "max": 8
+      },
+      "happiness": {
+        "mean": 9.866071428571429,
+        "p10": -6,
+        "median": 7,
+        "p90": 34,
+        "min": -10,
+        "max": 55.5
+      },
+      "unrestTierShares": {
+        "calm": 0.7321428571428575,
+        "discontent": 0.12499999999999997,
+        "unrest": 0.12499999999999997,
+        "revolt": 0.017857142857142856
+      }
+    },
+    {
+      "season": 25,
+      "seasonName": "spring",
+      "year": 7,
+      "games": 14,
+      "victoryCards": {
+        "mean": 0.7142857142857143,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 7.857142857142857,
+        "p10": 1,
+        "median": 8,
+        "p90": 16,
+        "min": 0,
+        "max": 20
+      },
+      "food": {
+        "mean": 1.2142857142857142,
+        "p10": -1,
+        "median": 0,
+        "p90": 6,
+        "min": -5,
+        "max": 17
+      },
+      "happiness": {
+        "mean": 10.946428571428571,
+        "p10": -6,
+        "median": 8,
+        "p90": 38.5,
+        "min": -10,
+        "max": 57.5
+      },
+      "unrestTierShares": {
+        "calm": 0.7142857142857146,
+        "discontent": 0.14285714285714282,
+        "unrest": 0.12499999999999997,
+        "revolt": 0.017857142857142856
+      }
+    },
+    {
+      "season": 26,
+      "seasonName": "summer",
+      "year": 7,
+      "games": 14,
+      "victoryCards": {
+        "mean": 0.7857142857142857,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 8.5,
+        "p10": 1,
+        "median": 8,
+        "p90": 17,
+        "min": 0,
+        "max": 20
+      },
+      "food": {
+        "mean": 1.7142857142857142,
+        "p10": -1,
+        "median": 1,
+        "p90": 6,
+        "min": -5,
+        "max": 19
+      },
+      "happiness": {
+        "mean": 11.625,
+        "p10": -6,
+        "median": 8.5,
+        "p90": 36.5,
+        "min": -11,
+        "max": 57.5
+      },
+      "unrestTierShares": {
+        "calm": 0.7500000000000004,
+        "discontent": 0.10714285714285712,
+        "unrest": 0.12499999999999997,
+        "revolt": 0.017857142857142856
+      }
+    },
+    {
+      "season": 27,
+      "seasonName": "autumn",
+      "year": 7,
+      "games": 12,
+      "victoryCards": {
+        "mean": 0.7291666666666666,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 8.895833333333334,
+        "p10": 2,
+        "median": 8,
+        "p90": 17,
+        "min": 0,
+        "max": 24
+      },
+      "food": {
+        "mean": -0.041666666666666664,
+        "p10": -3,
+        "median": 0,
+        "p90": 4,
+        "min": -8,
+        "max": 15
+      },
+      "happiness": {
+        "mean": 10.427083333333334,
+        "p10": -6,
+        "median": 6.5,
+        "p90": 32.5,
+        "min": -8,
+        "max": 52
+      },
+      "unrestTierShares": {
+        "calm": 0.7291666666666669,
+        "discontent": 0.10416666666666666,
+        "unrest": 0.16666666666666666,
+        "revolt": 0
+      }
+    },
+    {
+      "season": 28,
+      "seasonName": "winter",
+      "year": 7,
+      "games": 11,
+      "victoryCards": {
+        "mean": 0.7727272727272727,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 8.909090909090908,
+        "p10": 1,
+        "median": 8,
+        "p90": 17,
+        "min": 1,
+        "max": 26
+      },
+      "food": {
+        "mean": -1.3863636363636365,
+        "p10": -8,
+        "median": 0,
+        "p90": 1,
+        "min": -9,
+        "max": 15
+      },
+      "happiness": {
+        "mean": 7.681818181818182,
+        "p10": -8,
+        "median": 4.5,
+        "p90": 26,
+        "min": -21,
+        "max": 40.5
+      },
+      "unrestTierShares": {
+        "calm": 0.727272727272727,
+        "discontent": 0.11363636363636365,
+        "unrest": 0.11363636363636365,
+        "revolt": 0.045454545454545456
+      }
+    },
+    {
+      "season": 29,
+      "seasonName": "spring",
+      "year": 8,
+      "games": 11,
+      "victoryCards": {
+        "mean": 0.7727272727272727,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 9.272727272727273,
+        "p10": 2,
+        "median": 8,
+        "p90": 17,
+        "min": 1,
+        "max": 26
+      },
+      "food": {
+        "mean": -0.22727272727272727,
+        "p10": -6,
+        "median": 0,
+        "p90": 3,
+        "min": -11,
+        "max": 26
+      },
+      "happiness": {
+        "mean": 5.818181818181818,
+        "p10": -9,
+        "median": 4,
+        "p90": 21,
+        "min": -18.5,
+        "max": 44.5
+      },
+      "unrestTierShares": {
+        "calm": 0.6136363636363634,
+        "discontent": 0.18181818181818185,
+        "unrest": 0.11363636363636365,
+        "revolt": 0.09090909090909091
+      }
+    },
+    {
+      "season": 30,
+      "seasonName": "summer",
+      "year": 8,
+      "games": 10,
+      "victoryCards": {
+        "mean": 0.775,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 9.4,
+        "p10": 2,
+        "median": 9,
+        "p90": 16,
+        "min": 0,
+        "max": 31
+      },
+      "food": {
+        "mean": -0.65,
+        "p10": -5,
+        "median": 0,
+        "p90": 5,
+        "min": -11,
+        "max": 11
+      },
+      "happiness": {
+        "mean": 5.8375,
+        "p10": -9.5,
+        "median": 3,
+        "p90": 21,
+        "min": -12.5,
+        "max": 51
+      },
+      "unrestTierShares": {
+        "calm": 0.6000000000000002,
+        "discontent": 0.175,
+        "unrest": 0.15,
+        "revolt": 0.07500000000000001
+      }
+    },
+    {
+      "season": 31,
+      "seasonName": "autumn",
+      "year": 8,
+      "games": 10,
+      "victoryCards": {
+        "mean": 0.8,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 9.6,
+        "p10": 2,
+        "median": 9,
+        "p90": 16,
+        "min": 0,
+        "max": 32
+      },
+      "food": {
+        "mean": -1.175,
+        "p10": -7,
+        "median": 0,
+        "p90": 4,
+        "min": -10,
+        "max": 9
+      },
+      "happiness": {
+        "mean": 5.05,
+        "p10": -13,
+        "median": 4,
+        "p90": 19,
+        "min": -18.5,
+        "max": 57
+      },
+      "unrestTierShares": {
+        "calm": 0.6500000000000002,
+        "discontent": 0.1,
+        "unrest": 0.1,
+        "revolt": 0.15
+      }
+    },
+    {
+      "season": 32,
+      "seasonName": "winter",
+      "year": 8,
+      "games": 8,
+      "victoryCards": {
+        "mean": 0.6875,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 8.84375,
+        "p10": 2,
+        "median": 9,
+        "p90": 15,
+        "min": 1,
+        "max": 24
+      },
+      "food": {
+        "mean": -0.5625,
+        "p10": -6,
+        "median": 0,
+        "p90": 5,
+        "min": -8,
+        "max": 12
+      },
+      "happiness": {
+        "mean": 3.578125,
+        "p10": -12,
+        "median": 2,
+        "p90": 16.5,
+        "min": -17,
+        "max": 59
+      },
+      "unrestTierShares": {
+        "calm": 0.59375,
+        "discontent": 0.0625,
+        "unrest": 0.1875,
+        "revolt": 0.15625
+      }
+    },
+    {
+      "season": 33,
+      "seasonName": "spring",
+      "year": 9,
+      "games": 8,
+      "victoryCards": {
+        "mean": 0.625,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 8.75,
+        "p10": 1,
+        "median": 8,
+        "p90": 15,
+        "min": 0,
+        "max": 24
+      },
+      "food": {
+        "mean": -1.375,
+        "p10": -8,
+        "median": -1,
+        "p90": 6,
+        "min": -11,
+        "max": 13
+      },
+      "happiness": {
+        "mean": 2.421875,
+        "p10": -11.5,
+        "median": -0.5,
+        "p90": 13.5,
+        "min": -27,
+        "max": 54
+      },
+      "unrestTierShares": {
+        "calm": 0.5,
+        "discontent": 0.25,
+        "unrest": 0.125,
+        "revolt": 0.125
+      }
+    }
+  ],
+  "perSeat": {
+    "0": {
+      "winRate": 0.125,
+      "capLeaderRate": 0,
+      "meanFinalCards": 0.7083333333333334
+    },
+    "1": {
+      "winRate": 0.20833333333333334,
+      "capLeaderRate": 0,
+      "meanFinalCards": 0.625
+    },
+    "2": {
+      "winRate": 0.375,
+      "capLeaderRate": 0,
+      "meanFinalCards": 1.2083333333333333
+    },
+    "3": {
+      "winRate": 0.2916666666666667,
+      "capLeaderRate": 0,
+      "meanFinalCards": 1.0416666666666667
+    }
+  },
+  "buildings": {
+    "odeon": {
+      "built": 129,
+      "perGame": 5.375
+    },
+    "marketplace": {
+      "built": 77,
+      "perGame": 3.2083333333333335
+    },
+    "temple": {
+      "built": 87,
+      "perGame": 3.625
+    },
+    "workshop": {
+      "built": 3,
+      "perGame": 0.125
+    },
+    "granary": {
+      "built": 90,
+      "perGame": 3.75
+    },
+    "gymnasion": {
+      "built": 29,
+      "perGame": 1.2083333333333333
+    },
+    "villa": {
+      "built": 17,
+      "perGame": 0.7083333333333334
+    }
+  },
+  "events": {
+    "player": {
+      "player-market-day": 20,
+      "player-civil-discord": 91,
+      "player-willing-hands": 125,
+      "player-forest-crews": 58,
+      "player-granary-rats": 142,
+      "player-slave-auction": 89,
+      "player-warehouse-fire": 126,
+      "player-captured-laborers": 92,
+      "player-civic-petition": 82,
+      "player-stone-shipment": 126,
+      "player-banditry": 100,
+      "player-caravan-contacts": 54,
+      "player-new-citizen": 114,
+      "player-patronage-network": 85,
+      "player-citizenship-rolls": 101,
+      "player-public-calm": 119,
+      "player-free-settlers": 119,
+      "player-merchant-profit": 117,
+      "player-timber-windfall": 132,
+      "player-granary-surplus": 86,
+      "player-emergency-labor": 92,
+      "player-local-unrest": 123,
+      "player-quarry-collapse": 59,
+      "player-good-stores": 129,
+      "player-skilled-mason": 58,
+      "player-temple-donation": 27
+    },
+    "seasonal": {
+      "season-timber-levies": 59,
+      "season-bountiful-harvest": 73,
+      "season-grain-tithe": 65,
+      "season-drought": 80,
+      "season-spring-floods": 34,
+      "season-quarry-contracts": 54,
+      "season-plague": 33,
+      "season-festival-games": 46,
+      "season-scarce-labor": 43,
+      "season-open-markets": 38,
+      "season-skilled-artisans": 33,
+      "season-wildfire": 34,
+      "season-civic-anxiety": 33
+    },
+    "choicePicks": {
+      "player-market-day": [
+        23,
+        2
+      ],
+      "player-civil-discord": [
+        91
+      ],
+      "player-willing-hands": [
+        125
+      ],
+      "player-forest-crews": [
+        59
+      ],
+      "player-granary-rats": [
+        142
+      ],
+      "player-slave-auction": [
+        89
+      ],
+      "player-warehouse-fire": [
+        123
+      ],
+      "player-captured-laborers": [
+        87
+      ],
+      "player-civic-petition": [
+        36,
+        52
+      ],
+      "player-stone-shipment": [
+        122
+      ],
+      "player-banditry": [
+        88
+      ],
+      "player-caravan-contacts": [
+        56
+      ],
+      "player-new-citizen": [
+        119
+      ],
+      "player-patronage-network": [
+        91
+      ],
+      "player-good-stores": [
+        121
+      ],
+      "player-citizenship-rolls": [
+        121
+      ],
+      "player-emergency-labor": [
+        32,
+        53
+      ],
+      "player-public-calm": [
+        117
+      ],
+      "player-free-settlers": [
+        123
+      ],
+      "player-merchant-profit": [
+        115
+      ],
+      "player-timber-windfall": [
+        127
+      ],
+      "player-granary-surplus": [
+        37,
+        48
+      ],
+      "player-temple-donation": [
+        32
+      ],
+      "player-local-unrest": [
+        115
+      ],
+      "player-quarry-collapse": [
+        57
+      ],
+      "player-skilled-mason": [
+        61
+      ]
+    }
+  },
+  "currencyVerbs": {
+    "bankSell": {
+      "count": 686,
+      "perGame": 28.583333333333332
+    },
+    "bankBuy": {
+      "count": 5629,
+      "perGame": 234.54166666666666
+    },
+    "civicCalm": {
+      "count": 417,
+      "perGame": 17.375
+    },
+    "promotePop": {
+      "count": 610,
+      "perGame": 25.416666666666668
+    },
+    "demotePop": {
+      "count": 104,
+      "perGame": 4.333333333333333
+    },
+    "fundExpedition": {
+      "count": 1427,
+      "perGame": 59.458333333333336
+    },
+    "buyRiotInsurance": {
+      "count": 346,
+      "perGame": 14.416666666666666
+    },
+    "resolveRiot": {
+      "count": 408,
+      "perGame": 17
+    }
+  },
+  "assembly": {
+    "held": {
+      "count": 145,
+      "perGame": 6.041666666666667
+    },
+    "lawsEnacted": {
+      "count": 87,
+      "perGame": 3.625
+    },
+    "directivesPassed": {
+      "count": 31,
+      "perGame": 1.2916666666666667
+    },
+    "lawsRemoved": {
+      "count": 4,
+      "perGame": 0.16666666666666666
+    },
+    "lawsStanding": 3.4583333333333335,
+    "influenceSpent": {
+      "count": 85,
+      "perGame": 3.5416666666666665
+    },
+    "verbs": {
+      "assemblyDraw": {
+        "count": 0,
+        "perGame": 0
+      },
+      "assemblyPropose": {
+        "count": 0,
+        "perGame": 0
+      },
+      "assemblyProposeRepeal": {
+        "count": 0,
+        "perGame": 0
+      },
+      "assemblyPass": {
+        "count": 580,
+        "perGame": 24.166666666666668
+      },
+      "assemblyBribe": {
+        "count": 0,
+        "perGame": 0
+      },
+      "assemblyVote": {
+        "count": 563,
+        "perGame": 23.458333333333332
+      },
+      "assemblyVeto": {
+        "count": 17,
+        "perGame": 0.7083333333333334
+      }
+    }
+  },
+  "finalCardsDistribution": {
+    "mean": 0.8958333333333334,
+    "p10": 0,
+    "median": 0,
+    "p90": 3,
+    "min": 0,
+    "max": 4
+  },
+  "winsByPolicy": {
+    "settler": {
+      "games": 24,
+      "wins": 2,
+      "winRate": 0.08333333333333333
+    },
+    "smart": {
+      "games": 72,
+      "wins": 22,
+      "winRate": 0.3055555555555556
+    }
+  },
+  "terminations": {
+    "victoryRace": 16,
+    "deckExhausted": 8,
+    "stratoklesCoup": 0,
+    "turnCap": 0
+  },
+  "forced": {
+    "actionCapHits": 12,
+    "forcedResolutions": 0,
+    "forcedEndTurns": 12,
+    "perGame": 0.5
+  },
+  "upgrades": {
+    "count": 18,
+    "perGame": 0.75
+  }
+}
