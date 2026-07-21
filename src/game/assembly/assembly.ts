@@ -89,11 +89,6 @@ function syncAssemblyActor(G: HegemonyState) {
   G.currentPlayer = session.activePlayer;
 }
 
-/** Whose input the Assembly is waiting on, or null when it is not in session. */
-export function assemblyActor(G: HegemonyState): PlayerId | null {
-  return G.assembly?.activePlayer ?? null;
-}
-
 /**
  * Convene. One house card drops from a random politician's deck onto the ballot with
  * no author, so every assembly has something to argue about even if every seat passes;
@@ -785,13 +780,6 @@ function loseFromLargestSettlement(G: HegemonyState, playerID: PlayerId, count: 
     G.players[playerID].popsLostToUnrest += 1;
     addLog(G, `${source}: ${getPlayerName(G, playerID)} loses a ${pop === "slaves" ? "slave" : pop === "freemen" ? "freeman" : "citizen"} to the mob.`);
   }
-}
-
-// ── Closing ───────────────────────────────────────────────────────────────────────
-
-/** True once every ballot item has been resolved and the recap is on screen. */
-export function isAssemblyClosing(G: HegemonyState): boolean {
-  return G.assembly?.phase === "closing";
 }
 
 function politicianName(politician: PoliticianId): string {
