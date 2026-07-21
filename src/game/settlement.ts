@@ -5,18 +5,17 @@ import { capitalize } from "./core/format";
 import { totalPops } from "./core/pops";
 import { getOwnedSettlement, getTile } from "./core/query";
 import type { ActionStatus } from "./core/results";
-import { DEFAULT_RULESET } from "./ruleset";
 import type { Ruleset } from "./ruleset";
 
 /** The kind's baseline capacity — use for previews of a settlement that doesn't
  *  exist yet (upgrade meters). Real settlements go through {@link settlementCapacity}
  *  so building bonuses (Aqueduct) count. */
-export function settlementPopCapacity(kind: Settlement["kind"], ruleset: Ruleset = DEFAULT_RULESET) {
+export function settlementPopCapacity(kind: Settlement["kind"], ruleset: Ruleset) {
   return ruleset.settlements[kind].popCapacity;
 }
 
 /** A real settlement's capacity: the kind's baseline plus building bonuses. */
-export function settlementCapacity(settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
+export function settlementCapacity(settlement: Settlement, ruleset: Ruleset) {
   const bonus = settlement.buildings.reduce((sum, buildingId) => {
     const building = getBuildings().find((candidate) => candidate.id === buildingId);
 
@@ -32,7 +31,7 @@ export function settlementCapacity(settlement: Settlement, ruleset: Ruleset = DE
   return settlementPopCapacity(settlement.kind, ruleset) + bonus;
 }
 
-export function settlementOverCapacity(settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
+export function settlementOverCapacity(settlement: Settlement, ruleset: Ruleset) {
   return Math.max(0, totalPops(settlement.pops) - settlementCapacity(settlement, ruleset));
 }
 
@@ -54,7 +53,7 @@ export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
   );
 }
 
-export function settlementBuildingSlots(tile: HexTile, settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
+export function settlementBuildingSlots(tile: HexTile, settlement: Settlement, ruleset: Ruleset) {
   const rule = ruleset.settlements[settlement.kind];
 
   if (!rule.canBuildBuildings) {
@@ -64,7 +63,7 @@ export function settlementBuildingSlots(tile: HexTile, settlement: Settlement, r
   return tile.buildingSlots + rule.buildingSlotBonus;
 }
 
-export function settlementTileYield(tile: HexTile, settlement: Settlement, ruleset: Ruleset = DEFAULT_RULESET) {
+export function settlementTileYield(tile: HexTile, settlement: Settlement, ruleset: Ruleset) {
   if (!tile.resource) {
     return 0;
   }
@@ -81,7 +80,7 @@ export function settlementIncomeSource(tile: HexTile, settlement: Settlement) {
 
 export function isAdjacentToCity(G: HegemonyState, tile: HexTile) {
   return G.board.tiles.some((candidate) => {
-    if (hexDistance(candidate, tile) > 1) {
+    if (hexDistance(candidate, tile) > G.ruleset.placement.cityExclusionRadius) {
       return false;
     }
 
@@ -137,7 +136,7 @@ export function canPlaceColonyOnTile(
     status.reasons.push("You already have a settlement here.");
   }
 
-  if (tile.settlements.length >= 2) {
+  if (tile.settlements.length >= G.ruleset.placement.maxColoniesPerTile) {
     status.reasons.push("A tile can hold at most two colonies.");
   }
 

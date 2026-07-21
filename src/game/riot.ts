@@ -91,6 +91,20 @@ export function getResolveRiotStatus(G: HegemonyState, playerID: PlayerId): Acti
 }
 
 /**
+ * The roll bonus banked from declared insurance: the SUM of each bought option's
+ * `modifier`, so the bonus is data-defined — set an option's modifier to 2 and it is
+ * worth 2 on the die. All three ship at +1, so a full house is +3, but nothing
+ * hardcodes that count. Shared with the RiotModal so the preview the player reads and
+ * the roll that resolves can never disagree (post-sprint-debt §2.3).
+ */
+export function insuranceRollBonus(boughtInsurance: RiotInsuranceId[]): number {
+  return boughtInsurance.reduce((bonus, optionId) => {
+    const option = RIOT_TABLE.insurance?.find((candidate) => candidate.id === optionId);
+    return bonus + (option?.modifier ?? 0);
+  }, 0);
+}
+
+/**
  * Face the table: roll with insurance (+1 each) and the tier (revolt: −2, pop losses
  * doubled, happiness rebounds to the ruleset's severeRebound; a mild riot never
  * rebounds — it can re-fire, which is what civic calm is for). Resolving unblocks the
@@ -107,7 +121,7 @@ export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
   const severe = pending.tier === "revolt";
   const unrest = G.ruleset.economy.unrest;
   const { popsRemoved } = rollOnTable(G, playerID, RIOT_TABLE, {
-    modifier: pending.boughtInsurance.length + (severe ? unrest.severeRollModifier : 0),
+    modifier: insuranceRollBonus(pending.boughtInsurance) + (severe ? unrest.severeRollModifier : 0),
     popLossMultiplier: severe ? unrest.severePopLossMultiplier : 1
   });
 
