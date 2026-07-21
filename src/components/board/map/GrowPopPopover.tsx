@@ -5,7 +5,8 @@ import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { AtlasIcon } from "../../Sprites";
 import { useGameUi } from "../GameUiContext";
 import { ResourceDeltaList } from "../ResourceDeltaList";
-import { actionRequirementText, settlementPickerLabel } from "../helpers";
+import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
+import { PopoverActions } from "../PopoverActions";
 import { TilePopover } from "./TilePopover";
 
 /**
@@ -80,20 +81,13 @@ export function GrowPopPopover({
         </div>
       </div>
 
-      <div className="foundColonyActions">
-        <button className="placementCancelButton" onClick={onCancel} type="button">
-          Cancel
-        </button>
-        <button
-          className="primaryButton eventResolveButton"
-          disabled={!status.can || !isActive || phase !== "gameplay"}
-          onClick={() => onConfirm(tileId, pop)}
-          title={actionRequirementText(status, phase, isActive)}
-          type="button"
-        >
-          Grow {formatPopLabel(pop, 1)}
-        </button>
-      </div>
+      <PopoverActions
+        confirmLabel={`Grow ${formatPopLabel(pop, 1)}`}
+        disabled={gameplayActionDisabled(status, phase, isActive)}
+        title={actionRequirementText(status, phase, isActive)}
+        onCancel={onCancel}
+        onConfirm={() => onConfirm(tileId, pop)}
+      />
     </TilePopover>
   );
 }

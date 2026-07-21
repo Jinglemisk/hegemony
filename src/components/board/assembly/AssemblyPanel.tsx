@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
+import { getResolutionCard } from "../../../game/assembly";
+import type { AssemblyResult } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
 import { useGameUi } from "../GameUiContext";
 import { AssemblyBema } from "./AssemblyBema";
@@ -43,6 +45,30 @@ export function AssemblyPanel({
   useEffect(() => {
     setMenu(null);
   }, [session?.activePlayer, session?.phase, session?.ballotIndex, viewerId]);
+
+  // The engine advances to the next ballot card the instant a vote resolves, so there
+  // was no beat to read the outcome. This holds the just-decided result on screen for
+  // a couple of seconds — the "passed / failed / vetoed" feedback the playtest wanted.
+  // Keyed by the results length so each new verdict re-triggers it, and it survives the
+  // last card's phase → closing transition because it lives on the always-mounted panel.
+  const resultCount = session?.results.length ?? 0;
+  const [flash, setFlash] = useState<{ result: AssemblyResult; key: number } | null>(null);
+  const seenResults = useRef(resultCount);
+
+  useEffect(() => {
+    if (resultCount > seenResults.current && session) {
+      setFlash({ result: session.results[resultCount - 1], key: resultCount });
+    }
+    seenResults.current = resultCount;
+  }, [resultCount, session]);
+
+  useEffect(() => {
+    if (!flash) {
+      return;
+    }
+    const timer = window.setTimeout(() => setFlash((current) => (current?.key === flash.key ? null : current)), 2600);
+    return () => window.clearTimeout(timer);
+  }, [flash]);
 
   if (!session) {
     return null;
@@ -97,8 +123,33 @@ export function AssemblyPanel({
           <AssemblyBema G={G} session={session} />
         </div>
 
+        {/* Anchored to the panel, not the (scrolling) body, so it sits just above the
+            dock and survives the last card's phase → closing transition. */}
+        {flash ? <ResultFlash result={flash.result} /> : null}
+
         <AssemblyFoot G={G} menu={menu} onMenu={setMenu} session={session} />
       </section>
+    </div>
+  );
+}
+
+/** The transient verdict banner shown under the vote bar for ~2.5s after a card resolves. */
+function ResultFlash({ result }: { result: AssemblyResult }) {
+  const name =
+    result.item.kind === "repeal"
+      ? `Repeal ${getResolutionCard(result.item.cardId)?.name ?? result.item.cardId}`
+      : result.item.card.name;
+  const verdict = result.vetoedBy ? "vetoed" : result.passed ? "passed" : "failed";
+
+  return (
+    <div className={`asmResultFlash ${verdict}`} role="status">
+      <span className="asmResultFlashName">{name}</span>
+      <span className="asmResultFlashVerdict">{verdict}</span>
+      {result.vetoedBy ? null : (
+        <span className="asmResultFlashTally">
+          {result.yea}–{result.nay}
+        </span>
+      )}
     </div>
   );
 }

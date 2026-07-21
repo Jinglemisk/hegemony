@@ -1,7 +1,6 @@
 import { BUILDINGS } from "../../../game/data";
-import type { Phase } from "../../../game/controller";
 import { getBuildBuildingStatus } from "../../../game/rules";
-import type { BuildingId, HegemonyState, PlayerId } from "../../../game/types";
+import type { BuildingId } from "../../../game/types";
 import { formatBuildingEffects, formatResourceCost } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { CodexTermLink } from "../../codexLink";

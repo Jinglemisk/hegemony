@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { capitalize } from "../game/core/format";
 import type { BuildingId, PopType, Resource, SettlementKind } from "../game/types";
 import { resourceCssVars } from "../ui/resourceVisuals";
 import { useCodexLink } from "./codexLink";
@@ -163,7 +164,7 @@ export function AnnotatedText({ text, className }: { text: string; className?: s
     const key = `${match.index}-${word}`;
     // Terminology is a proper noun (RPG style): Title-Case it however the source
     // wrote it — "gain 3 freemen" reads "gain 3 Freemen".
-    const label = word.charAt(0).toUpperCase() + word.slice(1);
+    const label = capitalize(word);
 
     // With a Codex link in context, the term IS the link — one shared keyword colour
     // (CSS) invites the click, and it opens the rulebook at the term's chapter. Rendered

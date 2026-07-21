@@ -79,8 +79,7 @@
   transform: none;
 }
 
-.empireIntel,
-.commandStack {
+.empireIntel {
   display: grid;
   gap: 10px;
   min-height: 0;
@@ -95,13 +94,6 @@
   /* clip, not hidden, on the x-axis: the intelBody's -4px scrollbar-gutter trick makes
      the panel 4px scrollable, and scroll-on-focus then clips the first character. */
   overflow-x: clip;
-}
-
-.commandStack {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
 }
 
 /* ── The left disc rail (ui-refit Step 2) ────────────────────────────────────
@@ -208,11 +200,6 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   box-shadow: 0 0 0 1.5px var(--ivory);
-}
-
-/* Reference, not a ledger tab — a hair of separation from the five above. */
-.railDiscCodex {
-  margin-top: 4px;
 }
 
 /* ── The right consult rail + card (two-panel.md) ────────────────────────────

@@ -9,6 +9,7 @@ import { getOwnedHoldings } from "../helpers";
 import type { LedgerTab } from "../types";
 import { BuildingsTab } from "./BuildingsTab";
 import { CitiesTab } from "./CitiesTab";
+import { LedgerPanelHeader } from "./LedgerPanelHeader";
 import { MarketTab } from "./MarketTab";
 import { PopsTab } from "./PopsTab";
 import { LEDGER_TABS, ledgerTabLabel } from "./tabs";
@@ -68,15 +69,7 @@ function EmpireIntelPanelComponent({
   return (
     <div className="empireIntel">
       {/* The card is titled by the page it is showing, not by the furniture. */}
-      <div className="panelTitle ledgerCardTitle">
-        <span className="titleIcon" aria-hidden="true">
-          {titleIcon}
-        </span>
-        <h2>{title}</h2>
-        <button className="ledgerCloseButton" onClick={onClose} aria-label={`Close the ${title} page`} title="Close" type="button">
-          ×
-        </button>
-      </div>
+      <LedgerPanelHeader title={title} icon={titleIcon} onClose={onClose} />
 
       <div className="empireSummary" aria-label="Empire summary">
         <span className="empireStat" title={`${cityCount} ${cityCount === 1 ? "city" : "cities"}`}>

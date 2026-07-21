@@ -14,125 +14,204 @@ import { useGameUi } from "../GameUiContext";
 import { NayMark, WaitMark, YeaMark } from "./AssemblyIcons";
 
 /**
- * The bema — the speaker's floor. A horizontal BAND rather than a big centred card
- * (the approved reference is explicit about this): the panel is sized to the sea gap,
- * so space spent on a card frame is space the colonnade loses.
- *
- * One band, three faces. The stepper in the head names which one is showing.
+ * The bema — the speaker's floor. Owner ruling (2026-07-21): it MIRRORS the colonnade
+ * above it — a vertical column for the house and for each player, each showing that
+ * seat's card, its effect, and the actions for it directly beneath (propose/discard
+ * while proposing, yea/nay + veto while voting). So the whole agora reads top-to-bottom
+ * as two rows of columns: politicians over their stelae, seats over their resolutions.
  */
 export function AssemblyBema({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const label =
     session.phase === "proposal"
-      ? "The Bema · draw and propose in secret"
+      ? "The Bema · draw and decide in secret"
       : session.phase === "voting"
-        ? "The Bema · the card under vote"
+        ? "The Bema · the ballot, voted in turn"
         : "The Bema · what the Assembly decided";
 
   return (
     <div className="band">
       <span className="band-k">{label}</span>
-      {session.phase === "proposal" ? <ProposalView G={G} session={session} /> : null}
-      {session.phase === "voting" ? <VotingView G={G} session={session} /> : null}
-      {session.phase === "closing" ? <ClosingView G={G} session={session} /> : null}
+      {session.phase === "closing" ? (
+        <ClosingView G={G} session={session} />
+      ) : (
+        <BemaColumns G={G} session={session} />
+      )}
     </div>
   );
 }
 
-// ── ① Proposal (async) ───────────────────────────────────────────────────────────
+// ── The columns (proposal + voting share the layout) ────────────────────────────────
 
-/**
- * Every seat draws and decides on its own, in secret. The bema therefore shows two
- * things: on the left, the VIEWER's own drawn card in full (nobody else's is visible),
- * with what they can do with it; on the right, the public house card and each seat's
- * decision status — sealed / passed / still deciding — so you can see how close the
- * round is to closing without seeing what anyone chose.
- */
-function ProposalView({ G, session }: { G: HegemonyState; session: AssemblySession }) {
+type Cell = {
+  owner: PlayerId | null; // null = the house
+  card: ResolutionCard | null;
+  /** The ballot item this column stands for (voting), for repeal display + current-match. */
+  item: BallotItem | null;
+  /** A status line for a column with no visible card (a sealed rival, a passer, a prompt). */
+  status: string | null;
+  actions: "proposeDiscard" | "vote" | null;
+  voteMark: "yay" | "nay" | "wait" | null;
+  isCurrent: boolean;
+  isViewer: boolean;
+};
+
+function BemaColumns({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const { viewerId } = useGameUi();
-  const held = session.held[viewerId];
-  const done = session.proposalDone[viewerId];
-  const proposal = session.proposals[viewerId];
+  const voting = session.phase === "voting";
+  const currentItem = voting ? session.ballot[session.ballotIndex] : null;
+
+  const cells: Cell[] = [houseCell(session, currentItem), ...PLAYER_IDS.map((id) => playerCell(G, session, id, viewerId, currentItem))];
 
   return (
-    <div className="brow">
-      <div className="bcard">
-        {held ? (
-          <>
-            <ResolutionCardFace card={held.card} eyebrow="Your draw · seen only by you" />
-            <HeldCardActions card={held.card} G={G} viewerId={viewerId} />
-          </>
-        ) : done ? (
-          <div className="asmDecided">
-            <div className="bpol">You have spoken</div>
-            <div className="bfx">
-              {proposal
-                ? proposal.kind === "repeal"
-                  ? `You moved to strike ${getResolutionCard(proposal.cardId)?.name ?? proposal.cardId}.`
-                  : `You sealed ${proposal.card.name} — it stays secret until the vote.`
-                : "You held your peace."}{" "}
-              Waiting for the other seats to decide.
-            </div>
-          </div>
-        ) : (
-          <div className="asmDrawPrompt">
-            <div className="bpol">Your move</div>
-            <div className="bfx">
-              Draw from a politician above to see a resolution in secret, then propose it or fish again. Or hold your
-              peace below — the house card alone still goes to the vote.
-            </div>
-          </div>
-        )}
+    <>
+      <div className="bemaCols">
+        {cells.map((cell) => (
+          <BemaColumn G={G} cell={cell} key={cell.owner ?? "house"} session={session} />
+        ))}
+      </div>
+      {voting ? <VoteTally G={G} session={session} /> : <ProposalHint />}
+    </>
+  );
+}
+
+function houseCell(session: AssemblySession, currentItem: BallotItem | null): Cell {
+  const item = session.houseItem;
+
+  return {
+    owner: null,
+    card: item?.kind === "enact" ? item.card : null,
+    item,
+    status: item ? null : "no house resolution",
+    actions: session.phase === "voting" && item !== null && item === currentItem ? "vote" : null,
+    voteMark: null,
+    isCurrent: item !== null && item === currentItem,
+    isViewer: false
+  };
+}
+
+function playerCell(
+  G: HegemonyState,
+  session: AssemblySession,
+  owner: PlayerId,
+  viewerId: PlayerId,
+  currentItem: BallotItem | null
+): Cell {
+  const isViewer = owner === viewerId;
+
+  if (session.phase === "voting") {
+    const item = session.proposals[owner];
+    const vote = session.votes.find((v) => v.playerID === owner);
+
+    return {
+      owner,
+      card: item?.kind === "enact" ? item.card : null,
+      item,
+      status: item ? null : "held their peace",
+      actions: item !== null && item === currentItem ? "vote" : null,
+      voteMark: vote ? (vote.yea ? "yay" : "nay") : "wait",
+      isCurrent: item !== null && item === currentItem,
+      isViewer
+    };
+  }
+
+  // Proposal. Every seat's card is secret to everyone else — you see only your own.
+  const held = session.held[owner];
+  const proposal = session.proposals[owner];
+
+  if (isViewer) {
+    if (held) {
+      return { owner, card: held.card, item: null, status: null, actions: "proposeDiscard", voteMark: null, isCurrent: false, isViewer };
+    }
+    if (session.proposalDone[owner]) {
+      return {
+        owner,
+        card: proposal?.kind === "enact" ? proposal.card : null,
+        item: proposal,
+        status: proposal ? null : "you held your peace",
+        actions: null,
+        voteMark: null,
+        isCurrent: false,
+        isViewer
+      };
+    }
+    return { owner, card: null, item: null, status: "your move — draw a card above", actions: null, voteMark: null, isCurrent: false, isViewer };
+  }
+
+  // A rival, mid-proposal: only their state of mind is visible, never their card.
+  const status = session.proposalDone[owner]
+    ? proposal
+      ? "sealed a resolution"
+      : "held their peace"
+    : held
+      ? "deciding"
+      : "drawing";
+
+  return { owner, card: null, item: null, status, actions: null, voteMark: null, isCurrent: false, isViewer };
+}
+
+function BemaColumn({ G, session, cell }: { G: HegemonyState; session: AssemblySession; cell: Cell }) {
+  const isHouse = cell.owner === null;
+
+  return (
+    <div className={`bemaCol${cell.isCurrent ? " current" : ""}${cell.isViewer ? " you" : ""}${isHouse ? " house" : ""}`}>
+      <div className="bemaColHead">
+        <span className="bemaColDot" style={{ background: isHouse ? "var(--stone)" : PLAYER_COLORS[cell.owner!] }} />
+        <span className="bemaColName">{isHouse ? "House" : PLAYER_NAMES[cell.owner!]}</span>
+        {cell.voteMark ? <VoteBadge mark={cell.voteMark} /> : null}
       </div>
 
-      <div className="polls">
-        <div className="blab">The bema, forming</div>
-        <div className="chips">
-          {session.houseItem ? (
-            <div className="chip" title="The house resolution — laid openly, authored by no seat.">
-              <span className="ck2">House</span>
-              <span className="cn2">{ballotName(session.houseItem)}</span>
-            </div>
-          ) : null}
-          {session.voteOrder.map((playerID) => {
-            const seatDone = session.proposalDone[playerID];
-            const seatHolding = Boolean(session.held[playerID]);
-            const status = seatDone
-              ? session.proposals[playerID]
-                ? "sealed"
-                : "passed"
-              : seatHolding
-                ? "deciding"
-                : "drawing";
+      {cell.item?.kind === "repeal" ? (
+        <RepealCard cardId={cell.item.cardId} />
+      ) : cell.card ? (
+        <ColumnCard card={cell.card} />
+      ) : (
+        <div className="bemaColEmpty">{cell.status}</div>
+      )}
 
-            return (
-              <div className={`chip${playerID === viewerId ? " you" : ""}`} key={playerID}>
-                <span className="pd2" style={{ background: PLAYER_COLORS[playerID] }}>
-                  {PLAYER_NAMES[playerID].charAt(0)}
-                </span>
-                <span className="cn2">{PLAYER_NAMES[playerID]}</span>
-                <span className="st2">{status}</span>
-              </div>
-            );
-          })}
-        </div>
-        <div className="asmProposalHint">
-          Switch seats with the roster top-right to take each player's turn — every seat draws at once.
-        </div>
+      {cell.actions === "proposeDiscard" && cell.card ? <ProposeDiscard G={G} card={cell.card} /> : null}
+      {cell.actions === "vote" ? <VoteActions G={G} session={session} /> : null}
+    </div>
+  );
+}
+
+function ColumnCard({ card }: { card: ResolutionCard }) {
+  const politician = POLITICIANS_BY_ID[card.politician];
+
+  return (
+    <div className="bemaCard">
+      <div className="bemaCardPol">{politician.name}</div>
+      <div className="bemaCardName">{card.name}</div>
+      <ResolutionEffect card={card} />
+      <div className={`bemaCardKind${card.kind === "directive" ? " strat" : ""}`}>
+        {card.kind === "law" ? "Standing Law" : "One-time Directive"}
       </div>
     </div>
   );
 }
 
-/** Propose / Discard for the held card. Propose needs a replacement menu at the cap. */
-function HeldCardActions({ G, viewerId, card }: { G: HegemonyState; viewerId: PlayerId; card: ResolutionCard }) {
-  const { moves } = useGameUi();
+function RepealCard({ cardId }: { cardId: string }) {
+  const card = getResolutionCard(cardId);
+
+  return (
+    <div className="bemaCard bemaCardRepeal">
+      <div className="bemaCardPol">A motion to repeal</div>
+      <div className="bemaCardName">Repeal {card?.name ?? cardId}</div>
+      <div className="bfx">Strike this standing Law from the record. {card ? <em>{card.text}</em> : null}</div>
+    </div>
+  );
+}
+
+// ── Actions, directly under the card they concern ───────────────────────────────────
+
+function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard }) {
+  const { moves, viewerId } = useGameUi();
   const alreadyStanding = card.kind === "law" && activeLawIds(G).includes(card.id);
   const needsReplacement = card.kind === "law" && isAtLawCap(G);
 
   if (alreadyStanding) {
     return (
-      <div className="asmHeldActions">
-        <span className="asmBlocked">Already standing — it cannot be enacted twice</span>
+      <div className="bemaColActions">
+        <span className="asmBlocked">Already stands</span>
         <button className="mb gh" onClick={() => moves.assemblyDiscardHeld(viewerId)} type="button">
           Discard
         </button>
@@ -141,7 +220,7 @@ function HeldCardActions({ G, viewerId, card }: { G: HegemonyState; viewerId: Pl
   }
 
   return (
-    <div className="asmHeldActions">
+    <div className="bemaColActions">
       {needsReplacement ? (
         <details className="asmReplace">
           <summary className="mb go">Propose ▾</summary>
@@ -169,104 +248,110 @@ function HeldCardActions({ G, viewerId, card }: { G: HegemonyState; viewerId: Pl
   );
 }
 
-// ── ② Voting ───────────────────────────────────────────────────────────────────────
+function VoteActions({ G, session }: { G: HegemonyState; session: AssemblySession }) {
+  const { moves, viewerId } = useGameUi();
+  const rules = G.ruleset.assembly;
+  const yourTurn = session.voteOrder[session.voteIndex] === viewerId;
+  const canVeto = yourTurn && session.vetoUsed[viewerId] < rules.vetoesPerAssembly && G.players[viewerId].resources.influence >= rules.vetoCost;
 
-function VotingView({ G, session }: { G: HegemonyState; session: AssemblySession }) {
-  const item = session.ballot[session.ballotIndex];
-
-  if (!item) {
-    return null;
+  if (!yourTurn) {
+    return <div className="bemaColActions bemaColWaiting">{PLAYER_NAMES[session.voteOrder[session.voteIndex]]} is casting…</div>;
   }
 
-  const yea = session.votes.filter((vote) => vote.yea).reduce((total, vote) => total + vote.weight, 0);
-  const nay = session.votes.filter((vote) => !vote.yea).reduce((total, vote) => total + vote.weight, 0);
-  const pending = PLAYER_IDS.filter((id) => !session.votes.some((vote) => vote.playerID === id)).reduce(
+  return (
+    <div className="bemaColVote">
+      <div className="bemaColActions">
+        <button className="mb yea" onClick={() => moves.assemblyVote(viewerId, true)} type="button">
+          Yea
+        </button>
+        <button className="mb nay" onClick={() => moves.assemblyVote(viewerId, false)} type="button">
+          Nay
+        </button>
+      </div>
+      <button
+        className="bemaVeto"
+        disabled={!canVeto}
+        onClick={() => moves.assemblyVeto(viewerId)}
+        title="Strike this resolution outright — once per assembly. It costs your own vote on it."
+        type="button"
+      >
+        Veto · {rules.vetoCost} inf
+      </button>
+    </div>
+  );
+}
+
+function VoteBadge({ mark }: { mark: "yay" | "nay" | "wait" }) {
+  return (
+    <span className={`bemaVoteBadge ${mark}`}>
+      {mark === "yay" ? <YeaMark className="pm" /> : mark === "nay" ? <NayMark className="pm" /> : <WaitMark className="pm" />}
+    </span>
+  );
+}
+
+// ── The tally, beneath the columns ──────────────────────────────────────────────────
+
+function VoteTally({ G, session }: { G: HegemonyState; session: AssemblySession }) {
+  const yea = session.votes.filter((v) => v.yea).reduce((total, v) => total + v.weight, 0);
+  const nay = session.votes.filter((v) => !v.yea).reduce((total, v) => total + v.weight, 0);
+  const pending = PLAYER_IDS.filter((id) => !session.votes.some((v) => v.playerID === id)).reduce(
     (total, id) => total + baseVoteWeight(G, id) + session.bribesUsed[id],
     0
   );
   const total = Math.max(1, yea + nay + pending);
 
   return (
-    <div className="brow">
-      <div className="bcard">
-        <BallotFace item={item} position={session.ballotIndex + 1} of={session.ballot.length} />
+    <div className="voteTally">
+      <div className="talline">
+        <span className="yv">
+          {yea}
+          <span className="u"> yay</span>
+        </span>
+        <span className="tbar">
+          <span className="y" style={{ width: `${(yea / total) * 100}%` }} />
+          <span className="p" style={{ width: `${(pending / total) * 100}%` }} />
+          <span className="n" style={{ width: `${(nay / total) * 100}%` }} />
+        </span>
+        <span className="nv">
+          <span className="u">nay </span>
+          {nay}
+        </span>
       </div>
-
-      <div className="polls">
-        <div className="blab">
-          Open vote · cast in turn · {G.ruleset.assembly.tiesPass ? "a tie carries" : "a tie fails"}
-          {session.equalVotes ? " · Isonomia: one vote each" : ""}
-        </div>
-
-        <div className="pebs">
-          {session.voteOrder.map((playerID) => {
-            const cast = session.votes.find((vote) => vote.playerID === playerID);
-            const weight = cast ? cast.weight : baseVoteWeight(G, playerID) + session.bribesUsed[playerID];
-            const state = cast ? (cast.yea ? "yay" : "nay") : "wait";
-
-            return (
-              <span
-                className={`peb ${state}`}
-                key={playerID}
-                title={
-                  cast
-                    ? `${PLAYER_NAMES[playerID]} voted ${cast.yea ? "yea" : "nay"} with ${cast.weight} votes${cast.bribed > 0 ? ` (${cast.bribed} bought)` : ""}.`
-                    : `${PLAYER_NAMES[playerID]} has ${weight} votes and has not spoken.`
-                }
-              >
-                <span className="pd" style={{ background: PLAYER_COLORS[playerID] }}>
-                  {PLAYER_NAMES[playerID].charAt(0)}
-                </span>
-                <span className="pn">{PLAYER_NAMES[playerID]}</span>
-                <span className="pw">{weight}</span>
-                {cast ? cast.yea ? <YeaMark className="pm" /> : <NayMark className="pm" /> : <WaitMark className="pm" />}
-              </span>
-            );
-          })}
-        </div>
-
-        <div className="talline">
-          <span className="yv">
-            {yea}
-            <span className="u"> yay</span>
-          </span>
-          <span className="tbar">
-            <span className="y" style={{ width: `${(yea / total) * 100}%` }} />
-            <span className="p" style={{ width: `${(pending / total) * 100}%` }} />
-            <span className="n" style={{ width: `${(nay / total) * 100}%` }} />
-          </span>
-          <span className="nv">
-            <span className="u">nay </span>
-            {nay}
-          </span>
-        </div>
-
-        <div className="talline">
-          <span className="note">{voteNote(G, session, yea, nay, pending)}</span>
-        </div>
+      <div className="talline">
+        <span className="note">
+          Card {session.ballotIndex + 1} of {session.ballot.length} · {voteNote(G, session, yea, nay, pending)}
+        </span>
       </div>
     </div>
   );
 }
 
-/** The running read on a close card — the thing a player would otherwise have to
- *  compute in their head before deciding whether to spend a bribe or a veto. */
+/** The running read on a close card — the thing a player would otherwise compute in
+ *  their head before deciding whether to spend a bribe or a veto. */
 function voteNote(G: HegemonyState, session: AssemblySession, yea: number, nay: number, pending: number): string {
   if (pending === 0) {
-    return yea > nay ? "It carries." : yea === nay ? "Tied — and a tie fails." : "It is voted down.";
+    return yea > nay ? "it carries" : yea === nay ? "tied — a tie fails" : "it is voted down";
   }
 
-  const waiting = session.voteOrder.filter((id) => !session.votes.some((vote) => vote.playerID === id));
-  const next = waiting[0];
+  const next = session.voteOrder.filter((id) => !session.votes.some((v) => v.playerID === id))[0];
 
   if (pending >= Math.abs(yea - nay)) {
-    return `${PLAYER_NAMES[next]} speaks next and the ${pending} votes still to come can still swing this.`;
+    return `${PLAYER_NAMES[next]} speaks next; the ${pending} votes to come can still swing it`;
   }
 
-  return yea > nay ? "The remaining seats cannot stop it." : "The remaining seats cannot save it.";
+  return yea > nay ? "the rest cannot stop it" : "the rest cannot save it";
 }
 
-// ── ③ Standing ─────────────────────────────────────────────────────────────────────
+function ProposalHint() {
+  return (
+    <div className="asmProposalHint">
+      Every seat draws at once. Switch seats with the roster top-right to take each player's turn; the round moves to the
+      vote once all four have decided.
+    </div>
+  );
+}
+
+// ── Closing recap (unchanged in shape) ──────────────────────────────────────────────
 
 function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const standings = politicianStandings(G);
@@ -311,9 +396,7 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
                 {PLAYER_NAMES[playerID]}{" "}
                 <span className="vrowNote">
                   ·{" "}
-                  {patronOf.length > 0
-                    ? patronOf.map((standing) => standing.politician.name).join(" · ")
-                    : "no patronage"}
+                  {patronOf.length > 0 ? patronOf.map((standing) => standing.politician.name).join(" · ") : "no patronage"}
                 </span>
               </span>
               <span className="sv2">
@@ -324,72 +407,6 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
         })}
       </div>
     </div>
-  );
-}
-
-// ── Shared ─────────────────────────────────────────────────────────────────────────
-
-function ballotName(item: BallotItem): string {
-  return item.kind === "repeal"
-    ? `Repeal ${getResolutionCard(item.cardId)?.name ?? item.cardId}`
-    : item.card.name;
-}
-
-/** The card under vote, as the bema shows it: an aegean eyebrow naming the politician,
- *  the title, and the effect with its trade-off split into gain and cost. */
-export function BallotFace({ item, position, of }: { item: BallotItem; position: number; of: number }) {
-  if (item.kind === "repeal") {
-    const card = getResolutionCard(item.cardId);
-
-    return (
-      <>
-        <div className="bpol">
-          A motion to repeal · card {position} of {of}
-        </div>
-        <div className="bname">Repeal {card?.name ?? item.cardId}</div>
-        <div className="bfx">
-          Strike this standing Law from the record. It leaves the board at once and its politician's power falls with
-          it. {card ? <em>{card.text}</em> : null}
-        </div>
-      </>
-    );
-  }
-
-  return <ResolutionCardFace card={item.card} eyebrow={`card ${position} of ${of}`} replaces={item.replaces} />;
-}
-
-/**
- * A resolution card's face — the politician eyebrow, the title, the effect split into
- * gain and cost, and the kind badge. Used for the card under vote AND for the held
- * card during proposal, so a card reads identically wherever it appears.
- */
-export function ResolutionCardFace({
-  card,
-  eyebrow,
-  replaces
-}: {
-  card: ResolutionCard;
-  eyebrow: string;
-  replaces?: string;
-}) {
-  const politician = POLITICIANS_BY_ID[card.politician];
-
-  return (
-    <>
-      <div className="bpol">
-        {politician.name} · {politician.epithet} · {eyebrow}
-      </div>
-      <div className="bname">{card.name}</div>
-      <ResolutionEffect card={card} />
-      {card.kind === "law" ? (
-        <div className="bkind">
-          {card.tradeOff} · standing Law
-          {replaces ? ` · replaces ${getResolutionCard(replaces)?.name ?? replaces}` : ""}
-        </div>
-      ) : (
-        <div className="bkind strat">One-time Directive — it hits every player, then leaves a monument</div>
-      )}
-    </>
   );
 }
 

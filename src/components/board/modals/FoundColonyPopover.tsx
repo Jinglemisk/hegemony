@@ -17,8 +17,8 @@ import { ANCHOR_MARGIN, clampAnchoredLeft } from "../../../ui/anchoring";
 import { useGameUi } from "../GameUiContext";
 import { TileListbox } from "../TileListbox";
 import { firstAvailablePop, getSettlementEntries, settlementPickerLabel } from "../helpers";
+import { PopoverActions } from "../PopoverActions";
 import { CostRow } from "./PlacementModalShell";
-import { PopulationStepper } from "./PopulationStepper";
 
 type PopoverPosition = { top: number; left: number; arrowLeft: number; placement: "above" | "below" };
 
@@ -113,7 +113,7 @@ export function FoundColonyPopover({
 
   const style: CSSProperties = position
     ? { top: position.top, left: position.left, opacity: 1 }
-    : { top: anchor.bottom + 12, left: anchor.left, opacity: 0 };
+    : { top: anchor.bottom + POPOVER_GAP, left: anchor.left, opacity: 0 };
 
   return (
     <div
@@ -182,23 +182,16 @@ export function FoundColonyPopover({
 
           <CostRow cost={cost} note="Arrives next turn." />
 
-          <div className="foundColonyActions">
-            <button className="placementCancelButton" onClick={onCancel} type="button">
-              Cancel
-            </button>
-            <button
-              className="primaryButton eventResolveButton"
-              disabled={!canConfirm}
-              onClick={() => {
-                if (source) {
-                  onConfirm(source.tile.id, pop);
-                }
-              }}
-              type="button"
-            >
-              Found Colony
-            </button>
-          </div>
+          <PopoverActions
+            confirmLabel="Found Colony"
+            disabled={!canConfirm}
+            onCancel={onCancel}
+            onConfirm={() => {
+              if (source) {
+                onConfirm(source.tile.id, pop);
+              }
+            }}
+          />
         </>
       )}
     </div>

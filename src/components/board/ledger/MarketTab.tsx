@@ -1,6 +1,5 @@
-import type { Phase } from "../../../game/controller";
 import { TRADABLE_MATERIALS, getBankBuyStatus, getBankSellStatus } from "../../../game/rules";
-import type { HegemonyState, PlayerId, TradableMaterial } from "../../../game/types";
+import type { TradableMaterial } from "../../../game/types";
 import { resourceCssVars } from "../../../ui/resourceVisuals";
 import { ResourceIcon } from "../../Sprites";
 import { capitalize } from "../helpers";

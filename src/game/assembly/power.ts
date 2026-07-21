@@ -96,17 +96,6 @@ export function authoredSteleCount(G: HegemonyState, playerID: PlayerId): number
   );
 }
 
-/** Stratokles's standing, which several call sites want directly. */
-export function stratoklesStanding(G: HegemonyState): PoliticianStanding {
-  const standing = politicianStandings(G).find((candidate) => candidate.politician.id === "stratokles");
-
-  if (!standing) {
-    throw new Error("Stratokles is missing from the politician registry.");
-  }
-
-  return standing;
-}
-
 /**
  * The coup (§1.8): when Stratokles holds the MOST stelae *and* has reached the tally
  * threshold, the demagogue seizes the city and **his patron wins outright**.

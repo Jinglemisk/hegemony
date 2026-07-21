@@ -10,7 +10,6 @@ import {
   settlementOverCapacity,
   settlementTileYield
 } from "../settlement";
-import { DEFAULT_RULESET } from "../ruleset";
 import type { Ruleset } from "../ruleset";
 import { getLawIncomeContributions } from "../assembly/laws";
 
