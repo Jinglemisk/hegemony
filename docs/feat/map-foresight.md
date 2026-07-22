@@ -34,23 +34,32 @@ the evaluation. It is deliberately kept off the assembly (it passes there like `
 the two foresight layers — the agora (`political`) and the map (`settler`) — stay
 independently measurable; a future bot can carry both.
 
-## Result — a negative finding worth having
+## Result — a rigorous negative finding
 
-Measured, and honest ([full write-up](../sim/2026-07-21-settler-vs-smart.md)): **map
-foresight as a frontier term is win-neutral** (settler 25% vs smart 25% at weight 2), and
-**harmful if emphasised** (8% vs 31% at weight 6 — the bot over-expands into colonies it
-can't feed). The reason: the 6-turn income projection **already** values a colony's tile
-yield, so the frontier term mostly restates what the bot knows, and at high weight it
-*overrides* the economic evaluation that correctly declines unsustainable colonies.
+Measured across a full weight sweep ([write-up](../sim/2026-07-21-settler-vs-smart.md)).
+First, the context that matters: **winning requires expanding** — 14 of 24 games are won by
+actively reaching 3 victory cards (`cities ≥ 3`, `pops ≥ 16`, …), and both bots expand to
+get there (settler 40 settlements, smart 38). This is *not* expand-vs-turtle.
 
-So the feared "board-static" blind spot is smaller than it looked. The takeaway is a
-**balance** signal, not a bot fix: a bot that expands more does not win more, so raw
-expansion is not currently a differentiating lever — if it is meant to be "the heart of the
-game," that is a *game*-tuning question for the owner (colony cost/reward, richer frontier
-tiles), not a scorer change. The foresight that *would* pay — racing a rival to a scarce
-tile, or founding-to-unlock a city upgrade two turns on — is competitive/cross-turn,
-beyond a one-ply term. `settler` ships at `FRONTIER_WEIGHT = 2` (measured-neutral) as the
-instrument to re-run this against any future expansion tuning.
+Given that, **no weight of the frontier term beats `smart`:**
+
+| `FRONTIER_WEIGHT` | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| settler win % | 19 | 25 | 19 | 13 | 13 | 8 |
+
+Neutral at low weight, monotonically worse as it is pushed. The reason: the 6-turn income
+projection **already** values a colony's tile yield *and its upkeep*, so `smart` already
+expands to about the right amount; the additive frontier term can only push it to found
+*more*, which at high weight overrides the projection's upkeep caution and the bot
+over-expands into colonies it can't feed.
+
+So the honest finding — I first over-framed it — is **"you cannot out-expand a
+well-balanced economy for an edge,"** not "expansion doesn't matter." The map foresight that
+*would* pay is what a one-ply term can't reach: colony→**city** upgrades (the `cities` card
+needs cities, and `beam`'s multi-step planning does upgrades and beats `smart`) and
+**competition** for scarce tiles. And whether expansion *should* pay more is a game-balance
+question for the owner. `settler` ships at `FRONTIER_WEIGHT = 2` as the instrument to re-run
+this against any future expansion tuning — not as a stronger bot.
 
 ## Where it lives
 
