@@ -108,7 +108,7 @@ export function HoldingNetYields({ resources }: { resources: Resources }) {
   );
 }
 
-export function formatTileCoordinates(tile: HexTile) {
+function formatTileCoordinates(tile: HexTile) {
   return `${tile.q},${tile.r}`;
 }
 
