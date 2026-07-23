@@ -1,6 +1,6 @@
 import { calculateIncome } from "../game/economy/income";
 import { getTile } from "../game/core/query";
-import { settlementBuildingSlots } from "../game/settlement";
+import { canPlaceColonyOnTile, settlementBuildingSlots } from "../game/settlement";
 import { enactForEval, politicianStandings } from "../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../game/assembly";
 import type { LegalMove } from "../game/legalMoves";
@@ -10,7 +10,7 @@ import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId } from "../game/types";
 import type { SimRng } from "./rng";
 
-export type PolicyId = "random" | "greedy" | "smart" | "beam" | "political";
+export type PolicyId = "random" | "greedy" | "smart" | "beam" | "political" | "master";
 
 export type Policy = {
   name: PolicyId;
@@ -62,7 +62,9 @@ function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMov
   // resource-priced insurances (cheap certainty), skip the concession, then roll.
   const resolveRiot = moves.find((move) => move.type === "resolveRiot");
   if (resolveRiot) {
-    const insurance = moves.find((move) => move.type === "buyRiotInsurance" && move.optionId !== "concession");
+    const insurance = moves.find(
+      (move) => move.type === "buyRiotInsurance" && move.optionId !== "concession",
+    );
     return insurance ?? resolveRiot;
   }
 
@@ -70,7 +72,7 @@ function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMov
   // (season-cycled so sims exercise all three tables), never peeking the roll.
   const goldVentures = moves.filter(
     (move): move is Extract<LegalMove, { type: "fundExpedition" }> =>
-      move.type === "fundExpedition" && move.stake === "gold"
+      move.type === "fundExpedition" && move.stake === "gold",
   );
   if (goldVentures.length > 0 && G.players[playerID].resources.gold >= 25) {
     return goldVentures[G.season % goldVentures.length];
@@ -80,13 +82,21 @@ function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMov
   // search: sell a hoard when the coffers run dry; buy wood when wood-starved, gold-rich.
   for (const material of ["stone", "wood", "food"] as const) {
     const sell = moves.find((move) => move.type === "bankSell" && move.material === material);
-    if (sell && G.players[playerID].resources[material] > 40 && G.players[playerID].resources.gold < 10) {
+    if (
+      sell &&
+      G.players[playerID].resources[material] > 40 &&
+      G.players[playerID].resources.gold < 10
+    ) {
       return sell;
     }
   }
 
   const woodBuy = moves.find((move) => move.type === "bankBuy" && move.material === "wood");
-  if (woodBuy && G.players[playerID].resources.wood < 20 && G.players[playerID].resources.gold >= 20) {
+  if (
+    woodBuy &&
+    G.players[playerID].resources.wood < 20 &&
+    G.players[playerID].resources.gold >= 20
+  ) {
     return woodBuy;
   }
 
@@ -100,7 +110,11 @@ function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMov
  * candidate. The two bots differ ONLY in the `score` function, so a greedy-vs-smart
  * comparison isolates the evaluation, not the search.
  */
-function onePlyLookahead(G: HegemonyState, moves: LegalMove[], score: (g: HegemonyState, p: PlayerId) => number): LegalMove {
+function onePlyLookahead(
+  G: HegemonyState,
+  moves: LegalMove[],
+  score: (g: HegemonyState, p: PlayerId) => number,
+): LegalMove {
   const playerID = G.currentPlayer;
 
   const byRule = resolveStochasticByRule(G, moves);
@@ -110,7 +124,7 @@ function onePlyLookahead(G: HegemonyState, moves: LegalMove[], score: (g: Hegemo
 
   const endTurn = moves.find((move) => move.type === "endTurn");
   const candidates = moves.filter(
-    (move) => !STOCHASTIC_MOVE_TYPES.has(move.type) && move.type !== "endTurn"
+    (move) => !STOCHASTIC_MOVE_TYPES.has(move.type) && move.type !== "endTurn",
   );
 
   if (candidates.length === 0 && endTurn) {
@@ -212,7 +226,12 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
   // had greedy bots pumping civic calm to +95 happiness.
   const projectedHappiness = Math.min(projected.happiness, 15);
 
-  return 100 * victoryCardsHeld(G, playerID) + 10 * heuristic + 2 * projectedHappiness + player.resources.influence;
+  return (
+    100 * victoryCardsHeld(G, playerID) +
+    10 * heuristic +
+    2 * projectedHappiness +
+    player.resources.influence
+  );
 }
 
 // The smart bot values what greedy flattens away. Pops are weighted BY TIER (a
@@ -261,7 +280,10 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
       citySlots += settlementBuildingSlots(tile, settlement, G.ruleset);
       // The Gymnasion only pays off if there are pops to promote; rewarding the
       // pairing is what makes one-ply build it (its discount is otherwise invisible).
-      if (settlement.buildings.includes("gymnasion") && settlement.pops.slaves + settlement.pops.freemen > 0) {
+      if (
+        settlement.buildings.includes("gymnasion") &&
+        settlement.pops.slaves + settlement.pops.freemen > 0
+      ) {
         gymSynergy += 1;
       }
     }
@@ -284,7 +306,12 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
 
   const projectedHappiness = Math.min(projected.happiness, 15);
 
-  return 120 * victoryCardsHeld(G, playerID) + 10 * heuristic + 2 * projectedHappiness + 2 * player.resources.influence;
+  return (
+    120 * victoryCardsHeld(G, playerID) +
+    10 * heuristic +
+    2 * projectedHappiness +
+    2 * player.resources.influence
+  );
 }
 
 /** Tunables for the within-turn beam search. Kept small so batch runtime stays sane; the
@@ -302,7 +329,15 @@ const BEAM_DEPTH = 4;
  */
 function cloneForSearch(G: HegemonyState): HegemonyState {
   // `log` is destructured only to omit it from `rest` (a fresh array is used below).
-  const { ruleset, seasonalDrawPile, seasonalDiscardPile, playerDrawPile, playerDiscardPile, log: _log, ...rest } = G;
+  const {
+    ruleset,
+    seasonalDrawPile,
+    seasonalDiscardPile,
+    playerDrawPile,
+    playerDiscardPile,
+    log: _log,
+    ...rest
+  } = G;
   return {
     ...structuredClone(rest),
     ruleset,
@@ -323,7 +358,11 @@ function cloneForSearch(G: HegemonyState): HegemonyState {
  * anti-peek invariant is asserted per branch — and ties break on enumeration order via a
  * stable score sort.
  */
-function beamPlan(G: HegemonyState, moves: LegalMove[], score: (g: HegemonyState, p: PlayerId) => number): LegalMove {
+function beamPlan(
+  G: HegemonyState,
+  moves: LegalMove[],
+  score: (g: HegemonyState, p: PlayerId) => number,
+): LegalMove {
   const playerID = G.currentPlayer;
 
   // Stochastic families are played by rule (shared with one-ply), never searched.
@@ -360,7 +399,8 @@ function beamPlan(G: HegemonyState, moves: LegalMove[], score: (g: HegemonyState
     const children: Node[] = [];
 
     for (const node of frontier) {
-      const candidateMoves = depth === 0 ? rootMoves : branchable(enumerateLegalMoves(node.state, playerID));
+      const candidateMoves =
+        depth === 0 ? rootMoves : branchable(enumerateLegalMoves(node.state, playerID));
 
       for (const move of candidateMoves) {
         const draft = cloneForSearch(node.state);
@@ -369,7 +409,9 @@ function beamPlan(G: HegemonyState, moves: LegalMove[], score: (g: HegemonyState
         }
         // Anti-peek invariant: an RNG-free branch must never advance the seeded stream.
         if (draft.rng !== rngBefore) {
-          throw new Error(`beam branched on a stochastic move "${move.type}" — add it to STOCHASTIC_MOVE_TYPES`);
+          throw new Error(
+            `beam branched on a stochastic move "${move.type}" — add it to STOCHASTIC_MOVE_TYPES`,
+          );
         }
 
         const firstMove = node.firstMove ?? move;
@@ -479,7 +521,9 @@ function scoreEveryone(G: HegemonyState): Scores {
 function competitiveDelta(before: Scores, after: HegemonyState, me: PlayerId): number {
   const rivals = playerIds(after).filter((player) => player !== me);
   const myGain = scorePolitical(after, me) - before[me];
-  const bestRivalGain = Math.max(...rivals.map((rival) => scorePolitical(after, rival) - before[rival]));
+  const bestRivalGain = Math.max(
+    ...rivals.map((rival) => scorePolitical(after, rival) - before[rival]),
+  );
   return myGain - bestRivalGain;
 }
 
@@ -504,7 +548,11 @@ const MAX_DRAWS = 1; // draw once and commit — fishing (redraw-after-discard) 
 
 /** Play the agora by heuristic instead of blind search. `moves` is always the current
  *  seat's ({@link G.currentPlayer}) options for the live phase. */
-function resolveAssemblyByHeuristic(G: HegemonyState, session: AssemblySession, moves: LegalMove[]): LegalMove {
+function resolveAssemblyByHeuristic(
+  G: HegemonyState,
+  session: AssemblySession,
+  moves: LegalMove[],
+): LegalMove {
   const me = G.currentPlayer;
 
   if (session.phase === "closing") {
@@ -523,7 +571,12 @@ function resolveAssemblyByHeuristic(G: HegemonyState, session: AssemblySession, 
   return chooseDrawRepealOrPass(G, session, moves, me);
 }
 
-function chooseVote(G: HegemonyState, session: AssemblySession, moves: LegalMove[], me: PlayerId): LegalMove {
+function chooseVote(
+  G: HegemonyState,
+  session: AssemblySession,
+  moves: LegalMove[],
+  me: PlayerId,
+): LegalMove {
   const item = session.ballot[session.ballotIndex];
   const before = scoreEveryone(G);
   const delta = deltaIfEnacted(G, before, item, me);
@@ -549,7 +602,12 @@ function chooseVote(G: HegemonyState, session: AssemblySession, moves: LegalMove
   );
 }
 
-function chooseProposeOrDiscard(G: HegemonyState, card: ResolutionCard, moves: LegalMove[], me: PlayerId): LegalMove {
+function chooseProposeOrDiscard(
+  G: HegemonyState,
+  card: ResolutionCard,
+  moves: LegalMove[],
+  me: PlayerId,
+): LegalMove {
   const before = scoreEveryone(G);
 
   let best: LegalMove | null = null;
@@ -579,7 +637,12 @@ function chooseProposeOrDiscard(G: HegemonyState, card: ResolutionCard, moves: L
   );
 }
 
-function chooseDrawRepealOrPass(G: HegemonyState, session: AssemblySession, moves: LegalMove[], me: PlayerId): LegalMove {
+function chooseDrawRepealOrPass(
+  G: HegemonyState,
+  session: AssemblySession,
+  moves: LegalMove[],
+  me: PlayerId,
+): LegalMove {
   const before = scoreEveryone(G);
   const influence = G.players[me].resources.influence;
 
@@ -590,7 +653,12 @@ function chooseDrawRepealOrPass(G: HegemonyState, session: AssemblySession, move
     if (move.type !== "assemblyProposeRepeal") {
       continue;
     }
-    const delta = deltaIfEnacted(G, before, { kind: "repeal", cardId: move.cardId, proposer: me }, me);
+    const delta = deltaIfEnacted(
+      G,
+      before,
+      { kind: "repeal", cardId: move.cardId, proposer: me },
+      me,
+    );
     if (delta > bestRepealDelta) {
       bestRepealDelta = delta;
       bestRepeal = move;
@@ -610,7 +678,9 @@ function chooseDrawRepealOrPass(G: HegemonyState, session: AssemblySession, move
     }
     const standing = standings.find((entry) => entry.politician.id === move.politician);
     const mine = standing?.authored[me] ?? 0;
-    const rivalBest = standing ? Math.max(0, ...rivals.map((rival) => standing.authored[rival] ?? 0)) : 0;
+    const rivalBest = standing
+      ? Math.max(0, ...rivals.map((rival) => standing.authored[rival] ?? 0))
+      : 0;
     const closeness = mine - rivalBest;
     if (closeness > bestCloseness) {
       bestCloseness = closeness;
@@ -642,7 +712,59 @@ export const politicalPolicy: Policy = {
       return resolveAssemblyByHeuristic(G, G.assembly, moves);
     }
     return onePlyLookahead(G, moves, scorePolitical);
+  },
+};
+
+// ── The cumulative policy — every shipped specialist in one bot ──────────────────────
+//
+// The earlier policies are controlled experiments: `beam` isolates search depth,
+// `political` isolates Assembly judgment, and PR #41's `settler` isolated a one-step map
+// signal. `master` is the play-strength composition rather than another isolated arm:
+// smart economy + political standing + frontier value, searched with the beam during
+// normal play, while the dedicated political heuristic runs the Assembly.
+
+/** Total yield on the player's next legally reachable settlement frontier. This is the
+ * measured-low-weight signal from PR #41: it nudges WHICH direction to expand without
+ * overpowering the income model into founding unsustainable extra colonies. */
+function frontierValue(G: HegemonyState, playerID: PlayerId): number {
+  let value = 0;
+
+  for (const tile of G.board.tiles) {
+    if (canPlaceColonyOnTile(G, playerID, tile).can) {
+      value += tile.resource?.amount ?? 0;
+    }
   }
+
+  return value;
+}
+
+/** PR #41's measured-neutral setting. Larger values made the prototype over-expand. */
+const FRONTIER_WEIGHT = 2;
+
+function scoreMaster(G: HegemonyState, playerID: PlayerId): number {
+  return scorePolitical(G, playerID) + FRONTIER_WEIGHT * frontierValue(G, playerID);
+}
+
+/**
+ * The strongest cumulative sim policy currently available:
+ *
+ * - `smart` economic / population / building evaluation;
+ * - `beam` within-turn sequencing (W=3, D=4);
+ * - `political` Assembly decisions and political standing;
+ * - `settler` one-step expansion-frontier signal.
+ *
+ * This deliberately does NOT claim capabilities that no specialist has built yet:
+ * cross-turn saving, general opponent replies, multi-hop route search, or chance EV.
+ */
+export const masterPolicy: Policy = {
+  name: "master",
+  choose(G, moves) {
+    if (G.assembly) {
+      return resolveAssemblyByHeuristic(G, G.assembly, moves);
+    }
+
+    return beamPlan(G, moves, scoreMaster);
+  },
 };
 
 export const POLICIES: Record<PolicyId, Policy> = {
@@ -651,13 +773,16 @@ export const POLICIES: Record<PolicyId, Policy> = {
   smart: smartPolicy,
   beam: beamPolicy,
   political: politicalPolicy,
+  master: masterPolicy,
 };
 
 export function resolvePolicy(id: string): Policy {
   const policy = POLICIES[id as PolicyId];
 
   if (!policy) {
-    throw new Error(`unknown policy "${id}" — expected one of: ${Object.keys(POLICIES).join(", ")}`);
+    throw new Error(
+      `unknown policy "${id}" — expected one of: ${Object.keys(POLICIES).join(", ")}`,
+    );
   }
 
   return policy;
