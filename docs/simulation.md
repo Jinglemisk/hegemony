@@ -48,8 +48,10 @@ npm run sim -- new --seed 42 [--mode standard|fastStart|deathmatch]
   path for balance experiments. Example patch:
 
   ```json
-  { "actionCosts": { "foundColony": { "wood": 15, "food": 2 } },
-    "economy": { "unrest": { "popLossThreshold": -6 } } }
+  {
+    "actionCosts": { "foundColony": { "wood": 15, "food": 2 } },
+    "economy": { "unrest": { "popLossThreshold": -6 } }
+  }
   ```
 
 ### `show` / `log` / `legal` / `preview` — inspect
@@ -67,7 +69,7 @@ npm run sim -- preview --index 4                # preview the Nth legal move
 ```
 
 `legal` lists moves in deterministic order with indices for `move index <N>`.
-While a player event is pending, resolving it is the *only* legal move — the
+While a player event is pending, resolving it is the _only_ legal move — the
 engine blocks everything else, including ending the turn.
 
 ### `move` / `end-turn` — act
@@ -97,7 +99,7 @@ must be resolved (`move resolve`) before anything else.
 ### `auto` — bot play
 
 ```bash
-npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam|political]
+npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam|political|master]
                     [--bot-seed N] [--record script.json] [--quiet]
 ```
 
@@ -129,6 +131,12 @@ Works from any phase — bots will finish a manual setup too. Policies:
   so it stays deterministic and reads no game RNG. A `political`-vs-`smart` A/B isolates
   the political layer. Assemblies convene from Year 2, so use long games (`--turns 280`)
   or the agora barely opens. See docs/feat/influence-aware-ai.md and docs/sim/.
+- `master` — the cumulative bot: `smart` economics, `beam`'s four-action within-turn
+  planning, `political`'s Assembly strategy and rival-aware resolution scoring, plus the
+  measured one-step expansion-frontier signal from PR #41. This is the strongest single
+  policy for whole-game runs. It combines all EXISTING specialist knowledge; cross-turn
+  saving, general opponent replies, multi-hop route planning, and chance expected value
+  remain future work. See docs/feat/ai-bot-parity.md.
 
 How the bots work, their limitations, and the path to CPU opponents with
 difficulty settings: **docs/ai.md**.
@@ -140,13 +148,13 @@ which cards come up.
 ### `batch` — balance simulation
 
 ```bash
-npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart|beam|political]
+npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart|beam|political|master]
                      [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
                      [--tune-patch p.json] [--seats p0,p1,p2,p3] [--rotate] [--seed 1000]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
 ```
 
-Runs `--games` self-contained games (game *i* uses seed `base+i`), aggregates,
+Runs `--games` self-contained games (game _i_ uses seed `base+i`), aggregates,
 and writes a JSON report plus optional per-turn CSV (one row per
 game/turn/player — pivot-table ready).
 
@@ -199,17 +207,17 @@ Replays are byte-identical to the original run.
 ```jsonc
 {
   "version": 1,
-  "seed": 42,             // game seed: decks, board draws, unrest removals
+  "seed": 42, // game seed: decks, board draws, unrest removals
   "mode": "standard",
-  "rulesetPatch": null,   // deep-merged over the mode's ruleset
+  "rulesetPatch": null, // deep-merged over the mode's ruleset
   "opening": "random",
-  "botRngState": 123,     // where the bot decision stream is parked
-  "history": [ { "player": "0", "move": { "type": "endTurn" } } ],
-  "state": { /* full HegemonyState — plain JSON */ }
+  "botRngState": 123, // where the bot decision stream is parked
+  "history": [{ "player": "0", "move": { "type": "endTurn" } }],
+  "state": {/* full HegemonyState — plain JSON */},
 }
 ```
 
-The save is a *recipe*: replaying `history` from `createInitialState(seed)`
+The save is a _recipe_: replaying `history` from `createInitialState(seed)`
 reproduces `state` byte-for-byte. Saves double as shareable bug reports and
 balance scenarios.
 
@@ -221,8 +229,8 @@ balance scenarios.
 
   ```ts
   const G = scenario({ seed: 7, mode: "fastStart" })
-    .stackPlayerEvent("player-new-citizen")   // rig the next draw (before .opening()!)
-    .opening()                                // scripted 4-player opening → gameplay
+    .stackPlayerEvent("player-new-citizen") // rig the next draw (before .opening()!)
+    .opening() // scripted 4-player opening → gameplay
     .withResources("0", "wealthy")
     .withSettlement("2", "0,0", "city", { citizens: 2, freemen: 1, slaves: 0 })
     .withHappiness("2", -7)

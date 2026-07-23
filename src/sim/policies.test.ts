@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { enumerateLegalMoves } from "../game/legalMoves";
+import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
 import { scenario } from "../game/testing/scenario";
 import { endTurn } from "../game/turn";
 import type { HegemonyState } from "../game/types";
-import { beamPolicy, greedyPolicy, politicalPolicy, smartPolicy } from "./policies";
+import { beamPolicy, greedyPolicy, masterPolicy, politicalPolicy, smartPolicy } from "./policies";
 import { createSimRng } from "./rng";
 import { runGame } from "./runner";
 
@@ -48,6 +48,41 @@ describe("policy evaluation is side-effect-free", () => {
     expect(() => beamPolicy.choose(G, moves, rng)).not.toThrow();
     // The political bot evaluates on structuredClones too — never mutates the passed G.
     expect(() => politicalPolicy.choose(G, moves, rng)).not.toThrow();
+    // Master composes the beam with the political + frontier score and is equally safe.
+    expect(() => masterPolicy.choose(G, moves, rng)).not.toThrow();
+  });
+});
+
+describe("master policy", () => {
+  it("is deterministic: same seed twice → byte-identical game", () => {
+    const a = runGame({ seed: 17, mode: "standard", policy: masterPolicy, turns: 8 });
+    const b = runGame({ seed: 17, mode: "standard", policy: masterPolicy, turns: 8 });
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  }, 30000);
+
+  it("uses the political Assembly strategy and carries the session to completion", () => {
+    const G = scenario({ seed: 23 }).opening().build();
+    playUntilAssembly(G);
+    expect(G.assembly).toBeTruthy();
+
+    const masterRng = createSimRng(1);
+    const politicalRng = createSimRng(1);
+    let steps = 0;
+
+    while (G.assembly && steps < 500) {
+      const player = G.currentPlayer;
+      const moves = enumerateLegalMoves(G, player);
+      expect(moves.length).toBeGreaterThan(0);
+
+      const choice = masterPolicy.choose(G, moves, masterRng);
+      // The Assembly half of master is deliberately the proven political heuristic.
+      expect(choice).toEqual(politicalPolicy.choose(G, moves, politicalRng));
+      expect(applyMove(G, player, choice).ok).toBe(true);
+      steps += 1;
+    }
+
+    expect(G.assembly).toBeNull();
+    expect(steps).toBeLessThan(500);
   });
 });
 
