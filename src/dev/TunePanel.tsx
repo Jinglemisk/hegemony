@@ -8,8 +8,10 @@ import {
   defaultValueAt,
   effectiveValueAt,
   loadOverrides,
+  loadStartAtAssembly,
   pruneToChanges,
-  saveOverrides
+  saveOverrides,
+  saveStartAtAssembly
 } from "./tuning";
 import type { OverrideMap, OverrideValue } from "./tuning";
 
@@ -38,6 +40,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
     }
   });
   const [draft, setDraft] = useState<OverrideMap>(() => loadOverrides());
+  const [startAtAssembly, setStartAtAssembly] = useState<boolean>(() => loadStartAtAssembly());
 
   useEffect(() => {
     try {
@@ -90,6 +93,14 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
     const text = ["# Hegemony dev tuning — make permanent:", ...lines].join("\n");
     navigator.clipboard?.writeText(text).catch(() => undefined);
   };
+  // Flip the sticky fast-forward flag and immediately re-roll the SAME board through it,
+  // so the toggle is a live A/B: Year-1 opening ⇄ dropped straight into the first Assembly.
+  const toggleStartAtAssembly = () => {
+    const next = !startAtAssembly;
+    saveStartAtAssembly(next);
+    setStartAtAssembly(next);
+    resetGame();
+  };
 
   if (!open) {
     return (
@@ -131,6 +142,23 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
       <p className="tune-hint">
         Edits are temporary overrides in your browser — Apply starts a fresh game (same board) with them. Nothing
         touches code until you Copy patch and ask Claude to make it permanent.
+      </p>
+
+      <div className="tune-actions">
+        <button
+          className={`tune-btn${startAtAssembly ? " primary" : ""}`}
+          onClick={toggleStartAtAssembly}
+          title="Fast-forward every new game to the first Assembly — spring of Year 2, sixteen turns of seed-driven play already in. No more clicking End Turn to reach the rivalry layer."
+        >
+          {startAtAssembly ? "✓ " : ""}Start at Assembly
+        </button>
+        <span className={`tune-badge${startAtAssembly ? " on" : ""}`}>
+          {startAtAssembly ? "≈1 yr in · at the agora" : "starts at Year 1"}
+        </span>
+      </div>
+      <p className="tune-hint">
+        Sticky dev flag (survives reloads). When on, each new game auto-plays sixteen seed-driven turns and drops you
+        straight into the first Assembly — same board, so it&apos;s a clean A/B against a Year-1 opening.
       </p>
 
       <Section title="Terrain" subtitle="read-only aggregates">
