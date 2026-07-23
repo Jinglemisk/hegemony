@@ -668,6 +668,17 @@ function enact(G: HegemonyState, item: BallotItem) {
   });
 }
 
+/**
+ * Apply a ballot item's board effect as if its vote had carried — enacts the Law (or
+ * monument), resolves a Directive, or removes a repealed Law, exactly as a passing vote
+ * does. Exposed for the sim's influence-aware bot, which calls it on a **clone** to score
+ * "what if this resolution passed" without duplicating the enactment. Mutates `G`; never
+ * call it on live state you mean to keep.
+ */
+export function enactForEval(G: HegemonyState, item: BallotItem): void {
+  enact(G, item);
+}
+
 /** Take a Law off the board and return its card to its politician's discard pile, so
  *  the agora can debate it again in a later year. */
 function removeLaw(G: HegemonyState, cardId: string) {

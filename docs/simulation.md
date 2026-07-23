@@ -97,7 +97,7 @@ must be resolved (`move resolve`) before anything else.
 ### `auto` — bot play
 
 ```bash
-npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam]
+npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam|political]
                     [--bot-seed N] [--record script.json] [--quiet]
 ```
 
@@ -121,6 +121,14 @@ Works from any phase — bots will finish a manual setup too. Policies:
   plays the stochastic families (riot/venture/bank) by the same hard-coded rules as
   one-ply. Stronger but slower — a `smart`-vs-`beam` A/B isolates search depth from
   evaluation. See docs/ai.md and docs/sim/ for the head-to-head.
+- `political` — the influence-aware bot (Phase 3-C). Same `smart` economy, but it plays
+  the **Assembly**: it scores a resolution's DIFFERENTIAL impact (my gain minus the
+  strongest rival's — "does this hurt me, help me, or help a rival more?") and draws /
+  proposes / votes / bribes / vetoes by that, atop a standing-in-the-agora term (progress
+  to the Voice card, the Stratokles clock). Reuses the engine's own enactment on clones,
+  so it stays deterministic and reads no game RNG. A `political`-vs-`smart` A/B isolates
+  the political layer. Assemblies convene from Year 2, so use long games (`--turns 280`)
+  or the agora barely opens. See docs/feat/influence-aware-ai.md and docs/sim/.
 
 How the bots work, their limitations, and the path to CPU opponents with
 difficulty settings: **docs/ai.md**.
@@ -132,7 +140,7 @@ which cards come up.
 ### `batch` — balance simulation
 
 ```bash
-npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart|beam]
+npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart|beam|political]
                      [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
                      [--tune-patch p.json] [--seats p0,p1,p2,p3] [--rotate] [--seed 1000]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
@@ -165,6 +173,10 @@ The report contains:
 - `buildings` — build counts and per-game rates
 - `events` — draw counts by card id, and per-option pick counts for choice cards
 - `finalCardsDistribution`
+- `assembly` — agora engagement: assemblies held/game, laws enacted / removed / standing,
+  directives, **influence sunk**/game, and a per-verb breakdown (the Phase 3-C instrument)
+- `currencyVerbs` — per-verb currency-move counts (bank / calm / ladder / venture / riot)
+- `upgrades` — colony→city upgrades per game
 
 Identical inputs produce byte-identical reports (minus `meta.generatedAt`).
 Compare two patches by running two batches with the same `--seed` and diffing
