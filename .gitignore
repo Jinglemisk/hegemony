@@ -15,3 +15,9 @@ outputs/
 
 # Sim report JSONs are regeneratable machine output — keep the .md write-ups, not the raw reports.
 docs/sim/*.json
+
+# Local agent/editor config
+.claude/
+
+# Hero art candidates — large binaries; force-add the chosen final asset only
+assets/hero-v2/
