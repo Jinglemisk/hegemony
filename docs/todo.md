@@ -81,8 +81,10 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
    picker is lobby scope (deferred).
 
 - Luxury goods and trade.
--- Deferred design; see docs/feat/luxury-goods.md — amended by docs/feat/terrain-economy.md
-   (distinct goods, diminishing duplicates, ~3 active per player cap).
+-- **docs/feat/luxury-goods.md is the one-stop shop** (rewritten 2026-07-23): the plan,
+   terrain-economy.md §6's amendments folded in, and every open luxury decision — appendix
+   Q31/Q32 moved there plus new Q43–Q49. Phase 4's first slice is the **land Trader** (no
+   coast needed), which is the gold sink this file's Buildings + Market passes are blocked on.
 
 - National ideas / player identities.
 -- Per-player modifiers so the four seats play asymmetrically.

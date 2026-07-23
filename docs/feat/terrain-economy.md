@@ -64,8 +64,11 @@ open questions.
      currency of player trade.
    - **Cap ~3 active per player** (the PDF already caps Traders at 3 globally) so
      stacked luxuries can't trivialize slave unhappiness the way the food hoard did.
-   - These amend `docs/feat/luxury-goods.md` (which stays the implementation plan for
-     ports/claims/state); the diminishing-duplicates and per-player cap rules are new.
+   - **Folded into `docs/feat/luxury-goods.md` (2026-07-23)** — that file is now the single
+     source for luxury mechanics. Two of the bullets above turned out to be contradicted
+     there and are open decisions in its §7: the "+2 happiness **flow**" wording collides
+     with the plan's never-banked *effective happiness* (its Q43), and diminishing
+     duplicates can never fire while 9 unique goods each have one owner (its Q45).
 7. **Radial map grammar.** Interior = production (food, wood, stone); coastal rim =
    trade, gold, and contentment. Capital placement becomes an identity choice —
    production heartland vs. coastal trade power — which National Ideas can later hook
@@ -185,15 +188,18 @@ Run before/after batches with the headless sim (`npm run sim` batch mode — com
 
 - Exact hill art/theming for the yield-less building-terrain identity (flat-vase style,
   per design vision). The Oracle tile needs its own treatment.
-- Do coastal tiles (when they land) also carry slots, or are they pure feature tiles
-  (luxury/fishing/exchange-rate) as the PDF implies? Leaning pure feature tiles.
+- ~~Do coastal tiles (when they land) also carry slots, or are they pure feature tiles?~~ —
+  **now appendix Q31, moved into `docs/feat/luxury-goods.md` §7**; the lean is unchanged
+  (pure feature ring, no slots, never settleable).
 - ~~Does the 4-slot hill need a founding restriction?~~ — **answered by default
   (appendix Q26, Q22 rule): no restriction.** Colony-squatting the best building site is
   denial-play, which is interesting. Standing watch item.
 - ~~Forest trim (14 → 12–13)~~ — **deferred** until map shuffling lands (appendix Q26).
   Note the locked spec moves forest to **15**, so revisit the trim question then.
-- Where exactly diminishing luxury duplicates and the 3-per-player cap live in state —
-  extend the `LuxuryGoodDefinition` plan in `docs/feat/luxury-goods.md` when built.
+- ~~Where exactly diminishing luxury duplicates and the 3-per-player cap live in state~~ —
+  **superseded**: the claim model (a board-level `LuxuryClaim` list with `active` +
+  `suppressedTurns`) is specified in `docs/feat/luxury-goods.md` §4.1, and the duplicates
+  rule itself is now under review there (its Q45).
 
 ## Post-Implementation Cleanup Requirement
 
