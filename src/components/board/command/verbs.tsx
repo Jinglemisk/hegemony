@@ -1,8 +1,7 @@
 import type { Phase } from "../../../game/controller";
 import { POP_TYPES } from "../../../game/rules";
 import type { HegemonyState, Resources } from "../../../game/types";
-import { AtlasIcon, UiSprite, type IconAtlasKey, type UiAtlasKey } from "../../Sprites";
-import { ResourceChips } from "../ResourceChips";
+import type { IconAtlasKey, UiAtlasKey } from "../../Sprites";
 
 /**
  * The action verbs as data (ladder rung R3). Every verb was a hand-written
@@ -45,12 +44,12 @@ export type VerbHandlers = {
 
 export type VerbId = "grow" | "move" | "found" | "upgrade" | "build" | "calm" | "venture" | "endTurn";
 
-type VerbIcon =
+export type VerbIcon =
   | { kind: "ui"; item: UiAtlasKey }
   | { kind: "atlas"; icon: IconAtlasKey };
 
 /** `{ lead, cost }` renders "from 🌾5"; `{ lead }` alone renders a bare word ("free"). */
-type VerbCost = { lead?: string; cost?: (context: VerbContext) => Partial<Resources> };
+export type VerbCost = { lead?: string; cost?: (context: VerbContext) => Partial<Resources> };
 
 export type VerbSpec = {
   id: VerbId;
@@ -196,58 +195,6 @@ export function verbTitle(verb: VerbSpec, context: VerbContext) {
   return typeof verb.hint === "function" ? verb.hint(context) : verb.hint;
 }
 
-export function VerbIconGlyph({ icon, className }: { icon: VerbIcon; className: string }) {
-  return icon.kind === "ui" ? (
-    <UiSprite item={icon.item} className={className} />
-  ) : (
-    <AtlasIcon icon={icon.icon} className={className} />
-  );
-}
-
-/** One verb, as a disc threaded on the bottom spine (ui-refit Step 3): a round
- *  knob with the label and cost hung below it. The bar is `VERBS.map(...)` over
- *  this. Armed verbs (Found / Build arm a map mode) glow clay. */
-export function CommandVerb({
-  verb,
-  context,
-  handlers
-}: {
-  verb: VerbSpec;
-  context: VerbContext;
-  handlers: VerbHandlers;
-}) {
-  const pressed = verb.pressed?.(context) ?? false;
-  const enabled = isVerbEnabled(verb, context);
-
-  return (
-    <button
-      aria-pressed={verb.pressed ? pressed : undefined}
-      className={`verbDisc${pressed ? " verbDiscArmed" : ""}${enabled ? "" : " verbDiscOff"}`}
-      disabled={!enabled}
-      onClick={() => verb.select(handlers)}
-      title={verbTitle(verb, context)}
-    >
-      <span className="verbKnob">
-        <VerbIconGlyph icon={verb.icon} className={`verbIcon ${verb.iconClassName ?? ""}`.trim()} />
-      </span>
-      <span className="verbLabel">{verb.label}</span>
-      {verb.cost ? <VerbCostSlot cost={verb.cost} context={context} /> : null}
-    </button>
-  );
-}
-
-function VerbCostSlot({ cost, context }: { cost: VerbCost; context: VerbContext }) {
-  return (
-    <span className="verbCost">
-      {cost.lead ? <em>{cost.lead}</em> : null}
-      {cost.cost ? (
-        <ResourceChips
-          resources={cost.cost(context)}
-          variant="cost"
-          chipClassName="verbCostItem"
-          iconClassName="verbCostIcon"
-        />
-      ) : null}
-    </span>
-  );
-}
+// The verb COMPONENTS (VerbIconGlyph, CommandVerb, VerbCostSlot) live in CommandVerb.tsx
+// so this module exports only data + types — a file that mixes data and component exports
+// can't Fast Refresh, and this data is imported by the always-live command dock.

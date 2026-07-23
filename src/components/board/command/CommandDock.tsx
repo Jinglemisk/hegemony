@@ -2,8 +2,8 @@ import { UiSprite } from "../../Sprites";
 import { PLAYER_NAMES } from "../../../game/data";
 import { yearOf } from "../../../game/rules";
 import { useGameUi } from "../GameUiContext";
+import { CommandVerb } from "./CommandVerb";
 import {
-  CommandVerb,
   END_TURN_VERB,
   VERBS,
   isVerbEnabled,
