@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hegemony — AI Simulation Framework</title>
+    <style>
+      :root {
+        --text: #20231f;
+        --muted: #60665e;
+        --line: #d8dcd5;
+        --light: #f5f6f3;
+        --link: #245f43;
+        --serif: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+        --sans: "Avenir Next", Avenir, "Gill Sans", sans-serif;
+        --mono: "SFMono-Regular", "Cascadia Mono", Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        background: #fff;
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      main {
+        width: min(calc(100% - 40px), 920px);
+        margin: 0 auto;
+        padding: 72px 0 120px;
+      }
+
+      header {
+        padding-bottom: 28px;
+        border-bottom: 2px solid var(--text);
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(36px, 6vw, 56px);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+      }
+
+      header p {
+        max-width: 68ch;
+        margin: 0;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      section {
+        scroll-margin-top: 24px;
+        padding-top: 54px;
+      }
+
+      h2 {
+        margin: 0 0 24px;
+        padding-bottom: 9px;
+        border-bottom: 1px solid var(--text);
+        font-size: 32px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      h3 {
+        margin: 30px 0 8px;
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      p {
+        max-width: 76ch;
+        margin: 0 0 16px;
+      }
+
+      a {
+        color: var(--link);
+        text-underline-offset: 0.16em;
+      }
+
+      code,
+      pre {
+        font-family: var(--mono);
+      }
+
+      code {
+        font-size: 0.9em;
+      }
+
+      pre {
+        margin: 18px 0 24px;
+        padding: 18px 20px;
+        border: 1px solid var(--line);
+        background: var(--light);
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.65;
+        white-space: pre-wrap;
+      }
+
+      ul,
+      ol {
+        max-width: 76ch;
+        margin: 10px 0 20px;
+        padding-left: 24px;
+      }
+
+      li {
+        margin-bottom: 9px;
+      }
+
+      .summary {
+        margin: 24px 0;
+        padding: 16px 18px;
+        border-left: 3px solid var(--text);
+        background: var(--light);
+      }
+
+      .summary p {
+        margin: 0;
+      }
+
+      .table-wrap {
+        margin: 18px 0 28px;
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        min-width: 680px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th {
+        padding: 10px 14px 10px 0;
+        border-bottom: 2px solid var(--text);
+        text-align: left;
+        vertical-align: bottom;
+      }
+
+      td {
+        padding: 11px 14px 11px 0;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      .priority-list {
+        counter-reset: priority;
+        list-style: none;
+        padding: 0;
+      }
+
+      .priority-list > li {
+        counter-increment: priority;
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 12px;
+        margin: 0;
+        padding: 18px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .priority-list > li::before {
+        content: counter(priority);
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--text);
+        border-radius: 50%;
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+
+      .priority-list strong {
+        display: block;
+        margin-bottom: 3px;
+      }
+
+      .priority-list p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      footer {
+        margin-top: 72px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      footer p {
+        margin-bottom: 8px;
+      }
+
+      @media (max-width: 600px) {
+        main {
+          width: min(calc(100% - 28px), 920px);
+          padding-top: 42px;
+        }
+
+        h1 {
+          font-size: 38px;
+        }
+
+        h2 {
+          font-size: 28px;
+        }
+      }
+
+      @media print {
+        main {
+          width: 100%;
+          padding: 0;
+        }
+
+        section {
+          break-before: page;
+        }
+
+        a {
+          color: inherit;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>AI Simulation Framework</h1>
+        <p>Current implementation, comparison with established approaches, and recommended next steps.</p>
+      </header>
+
+      <section id="current-state">
+        <h2>1. Current state of the simulation</h2>
+
+        <div class="summary">
+          <p>
+            The simulation uses the real game rules and legal moves. The current
+            <code>master</code> bot uses a hand-written position score and searches up to four
+            actions within its current turn. It does not plan across full rounds, model rival
+            responses, or calculate expected values for random outcomes.
+          </p>
+        </div>
+
+        <h3>Rules and execution</h3>
+        <ul>
+          <li>The simulator enumerates legal actions from the same rules used by the player-facing game.</li>
+          <li>Hypothetical and real actions use the same move application functions.</li>
+          <li>Games are seed-driven and reproducible.</li>
+          <li>Different bot policies can be assigned to individual seats.</li>
+          <li>Random setup currently chooses uniformly from legal placements instead of using the selected bot policy.</li>
+        </ul>
+
+        <h3>Master policy</h3>
+        <p><code>master</code> combines the current specialist logic:</p>
+        <ul>
+          <li><strong>Economic evaluation:</strong> resources, income, populations, settlements, building slots, happiness, and victory cards.</li>
+          <li><strong>Within-turn search:</strong> beam width 3, depth 4.</li>
+          <li><strong>Political evaluation:</strong> Assembly resolutions, patronage, political leads, and Stratokles.</li>
+          <li><strong>Spatial evaluation:</strong> the total printed yield on tiles where the player could found its next colony.</li>
+        </ul>
+
+        <h3>Benefit calculation</h3>
+        <p>For deterministic actions:</p>
+        <pre>estimated benefit = score(state after action) - score(current state)</pre>
+
+        <p>The economic evaluator first projects each resource:</p>
+        <pre>projected resource = current stockpile + 6 × current income</pre>
+
+        <p>
+          This is not a six-turn simulation. It assumes that the current income repeats six
+          times without changes from later construction, opponents, laws, or events.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Position feature</th>
+                <th>Current score contribution</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Victory card</td><td>120</td></tr>
+              <tr><td>City</td><td>60</td></tr>
+              <tr><td>Colony</td><td>30</td></tr>
+              <tr><td>Citizen / freeman / slave</td><td>30 / 20 / 12</td></tr>
+              <tr><td>Available city building slot</td><td>4</td></tr>
+              <tr><td>Useful Gymnasion synergy</td><td>30</td></tr>
+              <tr><td>Projected food / wood / stone / gold unit</td><td>0.50 / 0.75 / 1.0625 / 1.25</td></tr>
+              <tr><td>Stored influence</td><td>2 per unit</td></tr>
+              <tr><td>Reachable frontier yield</td><td>2 per printed yield</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Political calculation</h3>
+        <p>
+          The bot enacts a proposed resolution on a cloned state, recalculates every player's
+          position, and uses:
+        </p>
+        <pre>resolution value = my score change - largest rival score change</pre>
+        <p>
+          This captures immediate and recurring effects visible to the normal evaluator. It
+          does not reliably capture later discounts, future free actions, vote pivotality,
+          multi-round use, or spatial effects. Master currently uses the Political evaluator,
+          not the full Master evaluator, while inside the Assembly.
+        </p>
+
+        <h3>Current limitations</h3>
+        <ul>
+          <li>No cross-turn saving or planning.</li>
+          <li>No general opponent-response model.</li>
+          <li>No multi-hop colony route planning or opponent map races.</li>
+          <li>No expected-value search for riots, ventures, events, or hidden draws.</li>
+          <li>No observation boundary separating public information from hidden engine state.</li>
+          <li>Recurring influence income is not properly included in the projected material score.</li>
+          <li>Evaluation weights are heuristic points, not calibrated win probabilities.</li>
+          <li>Behavioral tests prove determinism and legality, but not full strategic awareness for every feature.</li>
+        </ul>
+
+        <p>
+          Current use: deterministic rules testing, basic balance simulations, policy comparison,
+          and a baseline bot. It is not yet sufficient as the final player-facing CPU.
+        </p>
+      </section>
+
+      <section id="comparison">
+        <h2>2. Comparison with other frameworks</h2>
+
+        <div class="summary">
+          <p>
+            The current system is closest to utility AI combined with shallow beam search. For
+            a multiplayer game with random outcomes and possible hidden information, the most
+            relevant next framework is Monte Carlo Tree Search with an information-set or
+            belief-state layer.
+          </p>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Framework</th>
+                <th>How it decides</th>
+                <th>Strengths</th>
+                <th>Limitations for Hegemony</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Current Master</td>
+                <td>Hand-written utility score plus width-3, depth-4 beam search.</td>
+                <td>Fast, deterministic, explainable, and integrated with the real rules.</td>
+                <td>No full rounds, rival replies, chance sampling, or hidden-information boundary.</td>
+              </tr>
+              <tr>
+                <td>Rule or utility AI</td>
+                <td>Scores available actions with authored rules and weights.</td>
+                <td>Cheap, controllable, easy to give personalities and difficulty levels.</td>
+                <td>Misses long combinations unless they are explicitly encoded.</td>
+              </tr>
+              <tr>
+                <td>Minimax / alpha-beta</td>
+                <td>Searches alternating moves under adversarial assumptions.</td>
+                <td>Effective in deterministic, two-player, zero-sum games.</td>
+                <td>Poor fit for four players, chance, politics, large action sequences, and hidden information.</td>
+              </tr>
+              <tr>
+                <td>Monte Carlo Tree Search</td>
+                <td>Runs many sampled future games and uses their outcomes to focus search.</td>
+                <td>Handles large action spaces, multiple players, and random outcomes.</td>
+                <td>Needs a fast simulator, action pruning, opponent policies, and a time budget.</td>
+              </tr>
+              <tr>
+                <td>Information Set MCTS</td>
+                <td>Searches over plausible states consistent with what the player knows.</td>
+                <td>Prevents cheating when cards, decks, or information are hidden.</td>
+                <td>Adds belief-state and sampling complexity.</td>
+              </tr>
+              <tr>
+                <td>AlphaZero-style self-play</td>
+                <td>Learns policy and value models from self-play and uses them to guide search.</td>
+                <td>Can learn long-term patterns not captured by hand-written scoring.</td>
+                <td>High implementation and training cost; standard form assumes a simpler two-player, deterministic setting.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Catan comparison</h3>
+        <p>
+          A published Catan agent used Monte Carlo Tree Search with 1,000 to 10,000 simulated
+          games per real move. Its simulations included future player actions and random
+          outcomes. At 10,000 simulations it won 49% of four-player games against three
+          JSettlers heuristic agents. An equal seat would be expected to win about 25%.
+        </p>
+        <p>
+          The study also found that poorly chosen heuristic biases reduced playing strength.
+          This is relevant to the current Master weights: adding more hand-written values is not
+          automatically an improvement. Weights must be tested through controlled tournaments.
+        </p>
+
+        <h3>Recommended framework choice</h3>
+        <p>
+          Do not replace the current evaluator. Use it as the default action policy and leaf
+          evaluator inside a bounded stochastic MCTS system. Add an information-set layer if
+          the CPU must reason about hidden cards or decks. Consider learned policy or value
+          models only after this search and measurement infrastructure is stable.
+        </p>
+      </section>
+
+      <section id="next-steps">
+        <h2>3. Best steps moving forward</h2>
+
+        <ol class="priority-list">
+          <li>
+            <div>
+              <strong>Create a bot observation boundary.</strong>
+              <p>
+                Define exactly what each player can see. Policies should receive public state,
+                their own private information, and explicit beliefs—not the ordered future decks
+                or other hidden engine state.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Return a structured score breakdown.</strong>
+              <p>
+                Replace opaque scalar-only output with economy, victory, happiness, spatial,
+                political, risk, and opponent components. Record these reason codes in simulation
+                telemetry. Correct recurring influence valuation and make Master use its full
+                evaluator in the Assembly.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Add expected-value handling for random actions.</strong>
+              <p>
+                Enumerate small outcome tables and sample large ones. Evaluate expected payoff,
+                variance, and downside without reading the actual next seeded result.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Extend planning across complete rounds.</strong>
+              <p>
+                Include end turn, income, opponent turns, Assembly responses, map races, and
+                delayed purchases. Use the existing policies as initial opponent models.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Implement bounded MCTS around Master.</strong>
+              <p>
+                Master supplies action ordering, rollout behavior, and unfinished-state
+                evaluation. A simulation or time budget controls difficulty and runtime.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Add capability tests for every game feature.</strong>
+              <p>
+                For each mechanic, create clear use, avoid, and edge-case scenarios. Assert that
+                Master perceives the relevant effect and returns the expected reason codes.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Measure with paired tournaments.</strong>
+              <p>
+                Compare agents on identical seeds with rotated seats and shuffled boards. Track
+                win rate, rank, feature usage, forced turns, runtime, and confidence intervals.
+                Tune weights only after capability tests pass.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Add CPU difficulty and personality after search works.</strong>
+              <p>
+                Vary simulation budget, opponent-model quality, risk preference, and near-best
+                move selection. Keep specialist policies for testing; use the cumulative agent as
+                the player-facing CPU base.
+              </p>
+            </div>
+          </li>
+        </ol>
+
+        <div class="summary">
+          <p>
+            Immediate order: observation boundary → score breakdown and fixes → chance expected
+            value → full-round opponent simulation → bounded MCTS → capability tests and
+            tournaments → CPU difficulty and personality.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          Local references:
+          <a href="ai-bot-parity.md">AI bot parity audit</a>,
+          <a href="../../src/sim/policies.ts">policy implementation</a>,
+          <a href="../../src/sim/runner.ts">simulation runner</a>.
+        </p>
+        <p>
+          Research references:
+          <a href="https://research.tilburguniversity.edu/en/publications/monte-carlo-tree-search-in-settlers-of-catan/">MCTS in Settlers of Catan</a>,
+          <a href="https://pure.york.ac.uk/portal/en/publications/information-set-monte-carlo-tree-search/">Information Set MCTS</a>,
+          <a href="https://discovery.ucl.ac.uk/id/eprint/10069050/">AlphaZero</a>.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
