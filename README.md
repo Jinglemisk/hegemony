@@ -1,4 +1,4 @@
-![Hegemony Codex Banana-generated interface art](assets/codex-banana-showcase/light-hero-tableau.png)
+![Hegemony — statesmen playing the hex board](docs/reference/assets/codex-showcase/light-hero-tableau.png)
 
 <div align="center">
 
