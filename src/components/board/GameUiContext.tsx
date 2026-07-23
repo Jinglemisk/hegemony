@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext } from "react";
 import type { GameEvents, GameMoves, Phase } from "../../game/controller";
 import type { HegemonyState, PlayerId, PlayerState } from "../../game/types";
 
@@ -33,11 +33,10 @@ export type GameUi = {
   events: GameEvents;
 };
 
-const GameUiContext = createContext<GameUi | null>(null);
-
-export function GameUiProvider({ value, children }: { value: GameUi; children: ReactNode }) {
-  return <GameUiContext.Provider value={value}>{children}</GameUiContext.Provider>;
-}
+// Exported so <GameUiProvider> (split into GameUiProvider.tsx) can reach it while this
+// module stays a data/hook module — a file mixing a component with the hook can't Fast
+// Refresh, and useGameUi is imported by ~two dozen live panels.
+export const GameUiContext = createContext<GameUi | null>(null);
 
 export function useGameUi(): GameUi {
   const value = useContext(GameUiContext);
