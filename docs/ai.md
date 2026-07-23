@@ -32,7 +32,7 @@ players too (seed their rng from the game seed).
 
 ## Current policies
 
-**`random`** — two-stage uniform: pick among the distinct move *types* present,
+**`random`** — two-stage uniform: pick among the distinct move _types_ present,
 then uniformly within that type. Grouping keeps huge move families (movePops,
 foundColony) from swamping the draw and gives endTurn ~1/k odds per action, so
 turns always terminate. Use: chaos monkey, smoke tests, cheap batch noise.
@@ -46,7 +46,7 @@ best-scoring resolution.
 by role, building room, Gymnasion synergy). See `evaluateSmart`.
 
 **`beam`** — a within-turn **beam search** over the `smart` score. A "decision" in
-Hegemony is not one move but a *sequence* ending in endTurn (turns run up to 30
+Hegemony is not one move but a _sequence_ ending in endTurn (turns run up to 30
 actions), and one-ply is greedy per step — it can't value a locally-worse first move
 that unlocks a much better second (build-then-promote, save-then-upgrade,
 sell-then-buy-then-build). The beam expands each frontier node by every branchable
@@ -54,8 +54,20 @@ move, scores the resulting state, keeps the best `W` (=3) nodes per depth up to 
 (=4), and commits the FIRST action of the best sequence found, re-planning each ply.
 Same evaluation as smart, so a smart-vs-beam A/B isolates search depth from scoring.
 
-*Determinism / anti-peek (the crux):* the game RNG lives inside state (`G.rng`), so
-applying a stochastic move in a clone would reveal *this game's* seeded roll. The beam
+**`political`** — the `smart` economy plus dedicated Assembly heuristics: it values
+political standing, compares a resolution's benefit to the strongest rival's, and makes
+draw/propose/repeal/vote/bribe/veto decisions. Outside the Assembly it returns to one-ply
+search, so it does not inherit `beam`'s depth.
+
+**`master`** — the cumulative whole-game policy. It uses the political Assembly handler;
+everywhere else it runs the `beam` over a combined score: `smart` economy + political
+standing + PR #41's low-weight one-step expansion-frontier signal. In lineage terms,
+`beam`, `political`, and the off-branch `settler` experiment are sibling specialists;
+`master` is their first composition. It does not yet add cross-turn saving, general rival
+replies, multi-hop route search, or chance expected value.
+
+_Determinism / anti-peek (the crux):_ the game RNG lives inside state (`G.rng`), so
+applying a stochastic move in a clone would reveal _this game's_ seeded roll. The beam
 branches ONLY on the RNG-free move set — it excludes fundExpedition / riot / bank
 (played by the shared `resolveStochasticByRule` rules) and endTurn — so no clone ever
 advances `G.rng`. Non-peeking is therefore structural, not a patch: it's asserted per
@@ -85,7 +97,7 @@ spending at ~10× and future income at 0.5×, so bots built 4 buildings in 10
 games (zero granaries, zero temples) and rode a food/happiness death spiral:
 mean happiness −5.4 by season 7, half the seats in unrest/revolt, 102 pops
 dead. With the horizon: 123 buildings, happiness +19, 80% calm, half the
-deaths, *higher* final VP. Same seeds — only the scoring changed. Moral: the
+deaths, _higher_ final VP. Same seeds — only the scoring changed. Moral: the
 spiral was bot myopia, and evaluation quality is the difference between a
 batch that measures the game and one that measures the bot.
 
@@ -97,7 +109,7 @@ batch that measures the game and one that measures the bot.
   economics, not position, denial, or future city sites.
 - **No opponent model**: bots never consider the other three players.
 - **Overshoot risk**: the happiness × horizon weight makes temples very
-  attractive (11/game in the post-fix batch). That surfaced a *real* balance
+  attractive (11/game in the post-fix batch). That surfaced a _real_ balance
   question (temples stack linearly at 6 stone — flagged in todo.md), but
   remember the bot exaggerates whatever the score loves.
 - `choose()` costs ~candidates × `structuredClone(G)` per action. Fine headless;
@@ -111,7 +123,7 @@ Difficulty = a `POLICIES` registry entry. The natural ladder, cheapest first:
    among the top-N moves (N is the difficulty dial).
 2. **Medium** — `greedy` as-is.
 3. **Hard** — `beam` (shipped): a within-turn beam search over the action
-   *sequence* (turns are multi-action, which one-ply ignores). Room to go further
+   _sequence_ (turns are multi-action, which one-ply ignores). Room to go further
    still: 2-ply opponent replies, or short rollouts reusing `runTurns` as the playout.
 4. **Personalities** — same evaluate, different weight vectors (expander:
    pops/colonies up; builder: income up; zealot: happiness/influence up).
