@@ -34,7 +34,7 @@ const ICON_SPRITE_CLASSES: Record<IconAtlasKey, string> = {
   workshop: "sprite-workshop",
   granary: "sprite-granary",
   // New civic buildings (2026-07-13) + the Phase 2 roster (villa/gymnasion) borrow the
-  // nearest atlas art until the sprite sheet gains their own — see OVERNIGHT.md.
+  // nearest atlas art until the sprite sheet gains their own — see docs/OVERNIGHT.md.
   forum: "sprite-marketplace",
   aqueduct: "sprite-granary",
   odeon: "sprite-temple",
