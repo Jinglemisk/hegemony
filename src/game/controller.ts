@@ -50,7 +50,7 @@ import {
 } from "./assembly";
 import type { PoliticianId } from "./assembly";
 import { GAME_MODES } from "./ruleset";
-import { resolveTunedRuleset } from "../dev/tuning";
+import { loadStartAtAssembly, resolveTunedRuleset } from "../dev/tuning";
 
 export type { Phase } from "./types";
 
@@ -91,8 +91,10 @@ function createGameFromUrl(): HegemonyState {
 
   // `?dev=assembly` fast-forwards to the first Assembly. The agora sits in the spring
   // of Year 2 — sixteen turns in — and neither a playtest nor a browser check should
-  // have to click through a whole year to reach the feature under test.
-  if (params?.get("dev") === "assembly") {
+  // have to click through a whole year to reach the feature under test. The TUNE panel's
+  // "Start at Assembly" toggle sets the same fast-forward as a sticky dev flag, so a plain
+  // map regen (reload or Apply) lands there too — no URL param, no sixteen End Turn clicks.
+  if (params?.get("dev") === "assembly" || (import.meta.env.DEV && loadStartAtAssembly())) {
     fastForwardToAssembly(G);
   }
 
