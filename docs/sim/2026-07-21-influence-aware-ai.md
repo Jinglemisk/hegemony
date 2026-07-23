@@ -94,5 +94,5 @@ hand-playtest + dial pass, not more bot tuning. Sim-backed *hypotheses* to test 
    first, since only crossing the Voice minimum converts patronage into a card.
 
 **Regression check:** all games finished (0 turn-capped), determinism preserved (same seed
-→ byte-identical report), no crashes, `npm run check` + 337 vitest green. Committed reports:
-`2026-07-21-political-vs-smart.json` (1-vs-3, final heuristics), `2026-07-21-political-2v2.json`.
+→ byte-identical report), no crashes, `npm run check` + 337 vitest green. Reports regenerate
+from the batch commands above (`--report …`); sim JSONs are gitignored, not committed.

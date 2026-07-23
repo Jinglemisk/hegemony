@@ -12,3 +12,6 @@ dist/
 .playwright-cli/
 output/
 outputs/
+
+# Sim report JSONs are regeneratable machine output — keep the .md write-ups, not the raw reports.
+docs/sim/*.json
