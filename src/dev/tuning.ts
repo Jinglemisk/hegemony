@@ -46,6 +46,38 @@ export function saveOverrides(map: OverrideMap): void {
   }
 }
 
+// ── Dev fast-forward flag ────────────────────────────────────────────────────────────
+// A persistent dev toggle, kept OUT of the tuning override map (which is for balance A/B
+// that translates to a code patch). When on, every new game is fast-forwarded to the
+// first Assembly — spring of Year 2, sixteen turns of seed-driven play in — so playtesting
+// the rivalry layer never begins with sixteen End Turn clicks. Set from the TUNE panel;
+// read by the controller at game creation. Same effect as the `?dev=assembly` URL param,
+// but sticky across reloads.
+
+const START_AT_ASSEMBLY_KEY = "hegemony-dev-start-at-assembly";
+
+export function loadStartAtAssembly(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  try {
+    return window.localStorage.getItem(START_AT_ASSEMBLY_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function saveStartAtAssembly(on: boolean): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(START_AT_ASSEMBLY_KEY, on ? "1" : "0");
+  } catch {
+    // Storage unavailable (private mode etc.) — the toggle simply won't persist.
+  }
+}
+
 // ── Path helpers ─────────────────────────────────────────────────────────────────────
 
 function getByPath(root: unknown, segments: string[]): unknown {
