@@ -112,7 +112,7 @@ into one global counter, the shipped per-politician patron buff (Demosthenes' pa
 risks double-paying the same behaviour; keeping only the buff loses the one-time hit that
 fixes the net loss.
 
-**Your answer:**
+**Your answer:** only keep one time gains from getting those resolutions passsed.
 
 ### P3.5 · Q38 · The prize table — `OPEN`
 
@@ -122,7 +122,7 @@ owed.
 **Rec:** keep every prize **off citizens** (the snowball constraint above); theme each to
 its politician; all are `Ruleset.assembly` dials so the sim can tune them.
 
-**Your answer:**
+**Your answer:** Yes and your task is also to find buffs appropiate for them in line with the rest of the game balancing. 
 
 ### P3.5 · Q39 · Voice tie-break & minimum-to-hold under the ratchet — `OPEN`
 
@@ -131,7 +131,7 @@ until strictly beaten** — and whether a **minimum threshold** applies before t
 be held at all (every other victory card carries a minimum, and "victory minimums must beat
 the opening" is a standing design rule).
 
-**Your answer:**
+**Your answer:** minimum + takeover after strictly beaten so both
 
 ### P3.5 · Q40 · Which Stratokles effects are table-wide vs player-directed? — `OPEN`
 
@@ -141,7 +141,7 @@ Decide per-Directive, plus the targeting UI in the bema.
 attacks); make the *theft*-flavoured ones directed — the "steal a pop" effect is the
 natural carrier for the robber.
 
-**Your answer:**
+**Your answer:** all stratokles cards are specific player affecting
 
 ### P3.5 · Q41 · Runaway check after deleting the coup — `OPEN`
 
@@ -153,7 +153,7 @@ rules** — make this a Phase 3.5 exit check rather than a design assumption. Th
 the explicit leader-check; deleting it without a measured replacement is the one place this
 revision could quietly break the game.
 
-**Your answer:**
+**Your answer:** i dont wnat a buzzkill stratkooles coup schtick remove it. 
 
 ### P3.5 · Q42 · Do Directives register on the permanent counter? — `OPEN`
 
@@ -163,7 +163,7 @@ They plant no standing Law, so it is ambiguous.
 gives a trailing player the Voice path that replaces the coup. Filed only to make it
 explicit rather than implicit.
 
-**Your answer:**
+**Your answer:** yeah
 
 ---
 
@@ -189,31 +189,15 @@ seasons.md's yearly-card notes; all effects on existing levers.
 
 **— Phase 4 · the wider world —**
 
-### P4 · Q31 · Coastal geometry — feature ring or real tiles? — `OPEN`
+### P4 · Q31 · Coastal geometry — feature ring or real tiles? — **MOVED**
+### P4 · Q32 · Luxury roster, caps, and port pricing — **MOVED**
 
-**Context.** luxury-goods.md proposes lightweight `CoastalTile` records attached to
-edge hexes; terrain-economy.md leans "pure feature tiles" (not settleable, no
-slots). The 18 rim tiles already serve as the coastline for leapfrog.
-
-**Rec:** **pure feature ring**: 12 coastal features attached to rim edges, never
-settleable, no slots — a port in a city adjacent to that edge claims the feature.
-Cheapest to build, matches the PDF, keeps naval anything out of scope.
-
-**Your answer:**
-
-### P4 · Q32 · Luxury roster, caps, and port pricing — `OPEN`
-
-**Context.** luxury-goods.md as amended by terrain-economy.md: 9 named goods
-(6 coastal + 3 via the 100-gold Trader, global Trader cap 3), +2 standing happiness
-each (effective-happiness accounting, never banked), diminishing duplicates (second
-copy of the same good +1), ~3 active per player, denial left as a seam for
-resolutions. Port cost provisional: 20 wood / 5 stone / 10 gold.
-
-**Rec:** approve the amended plan as written, every number a ruleset tunable; port
-cost per the provisional. (Luxury art via the banana pipeline — the plan's "ChatGPT
-image generation" line is stale.)
-
-**Your answer:**
+Both moved verbatim into **`docs/feat/luxury-goods.md` §7** (2026-07-23), which is now the
+one-stop shop for luxury mechanics — the plan, the amendments folded in from
+terrain-economy.md §6, and every open luxury decision in one place. Answer them there.
+That reconciliation also raised **Q43–Q49** (the happiness model, the Beloved card,
+duplicates/caps, Trader pricing, the Port's terrain gate, the denial seam, tradability),
+all filed in the same section.
 
 ### P4 · Q33 · Player trade v1 — what shape? — `OPEN`
 
