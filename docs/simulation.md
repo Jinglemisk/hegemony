@@ -99,7 +99,7 @@ must be resolved (`move resolve`) before anything else.
 ### `auto` — bot play
 
 ```bash
-npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam|political|master]
+npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam|political|settler|master]
                     [--bot-seed N] [--record script.json] [--quiet]
 ```
 
@@ -131,9 +131,13 @@ Works from any phase — bots will finish a manual setup too. Policies:
   so it stays deterministic and reads no game RNG. A `political`-vs-`smart` A/B isolates
   the political layer. Assemblies convene from Year 2, so use long games (`--turns 280`)
   or the agora barely opens. See docs/feat/influence-aware-ai.md and docs/sim/.
+- `settler` — `smart` plus **map/expansion foresight**: a frontier term (the total yield of
+  the tiles it could legally found a colony on _next_) so the one-ply search prefers
+  placements that OPEN expansion — the second-order move the board-static scorer misses.
+  A `settler`-vs-`smart` A/B isolates map foresight. See docs/feat/map-foresight.md.
 - `master` — the cumulative bot: `smart` economics, `beam`'s four-action within-turn
   planning, `political`'s Assembly strategy and rival-aware resolution scoring, plus the
-  measured one-step expansion-frontier signal from PR #41. This is the strongest single
+  measured one-step expansion-frontier signal from `settler`. This is the strongest single
   policy for whole-game runs. It combines all EXISTING specialist knowledge; cross-turn
   saving, general opponent replies, multi-hop route planning, and chance expected value
   remain future work. See docs/feat/ai-bot-parity.md.
@@ -148,7 +152,7 @@ which cards come up.
 ### `batch` — balance simulation
 
 ```bash
-npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart|beam|political|master]
+npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart|beam|political|settler|master]
                      [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
                      [--tune-patch p.json] [--seats p0,p1,p2,p3] [--rotate] [--seed 1000]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
