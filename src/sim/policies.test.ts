@@ -4,7 +4,14 @@ import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
 import { scenario } from "../game/testing/scenario";
 import { endTurn } from "../game/turn";
 import type { HegemonyState } from "../game/types";
-import { beamPolicy, greedyPolicy, masterPolicy, politicalPolicy, smartPolicy } from "./policies";
+import {
+  beamPolicy,
+  greedyPolicy,
+  masterPolicy,
+  politicalPolicy,
+  settlerPolicy,
+  smartPolicy,
+} from "./policies";
 import { createSimRng } from "./rng";
 import { runGame } from "./runner";
 
@@ -48,9 +55,29 @@ describe("policy evaluation is side-effect-free", () => {
     expect(() => beamPolicy.choose(G, moves, rng)).not.toThrow();
     // The political bot evaluates on structuredClones too — never mutates the passed G.
     expect(() => politicalPolicy.choose(G, moves, rng)).not.toThrow();
+    // The settler bot's frontier term only READS the board (canPlaceColonyOnTile) — safe on frozen state.
+    expect(() => settlerPolicy.choose(G, moves, rng)).not.toThrow();
     // Master composes the beam with the political + frontier score and is equally safe.
     expect(() => masterPolicy.choose(G, moves, rng)).not.toThrow();
   });
+});
+
+// The settler bot adds map/expansion foresight — a frontier term over the same smart
+// evaluation — so like the others it must stay deterministic and complete games (its
+// one-ply search still meets the agora, where it passes like smart).
+describe("settler policy", () => {
+  it("is deterministic: same seed twice → byte-identical game", () => {
+    const a = runGame({ seed: 31, mode: "standard", policy: settlerPolicy, turns: 60 });
+    const b = runGame({ seed: 31, mode: "standard", policy: settlerPolicy, turns: 60 });
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  }, 60000);
+
+  it("plays complete games across seeds without deadlocking", () => {
+    for (const seed of [1, 2, 3]) {
+      const G = runGame({ seed, mode: "standard", policy: settlerPolicy, turns: 80 });
+      expect(["gameplay", "gameOver"]).toContain(G.phase);
+    }
+  }, 90000);
 });
 
 describe("master policy", () => {
