@@ -10,7 +10,14 @@ import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId } from "../game/types";
 import type { SimRng } from "./rng";
 
-export type PolicyId = "random" | "greedy" | "smart" | "beam" | "political" | "master";
+export type PolicyId =
+  | "random"
+  | "greedy"
+  | "smart"
+  | "beam"
+  | "political"
+  | "settler"
+  | "master";
 
 export type Policy = {
   name: PolicyId;
@@ -715,16 +722,17 @@ export const politicalPolicy: Policy = {
   },
 };
 
-// ── The cumulative policy — every shipped specialist in one bot ──────────────────────
+// ── Map / expansion foresight — the "settler" bot ─────────────────────────────────────
 //
-// The earlier policies are controlled experiments: `beam` isolates search depth,
-// `political` isolates Assembly judgment, and PR #41's `settler` isolated a one-step map
-// signal. `master` is the play-strength composition rather than another isolated arm:
-// smart economy + political standing + frontier value, searched with the beam during
-// normal play, while the dedicated political heuristic runs the Assembly.
+// Every other bot is board-STATIC: it values a colony for its own count + tile yield, but
+// not for the EXPANSION it unlocks ("found HERE and I can chain to that rich cluster two
+// turns on"). Expansion is the heart of the game, so `settler` prices it: a term for the
+// reachable, unclaimed, yielding frontier, so the one-ply search prefers placements that
+// OPEN expansion, not just the fattest single tile. Same smart spine, so a settler-vs-smart
+// A/B isolates map foresight from everything else. See docs/feat/map-foresight.md.
 
 /** Total yield on the player's next legally reachable settlement frontier. This is the
- * measured-low-weight signal from PR #41: it nudges WHICH direction to expand without
+ * measured-low-weight signal from `settler`: it nudges WHICH direction to expand without
  * overpowering the income model into founding unsustainable extra colonies. */
 function frontierValue(G: HegemonyState, playerID: PlayerId): number {
   let value = 0;
@@ -738,8 +746,33 @@ function frontierValue(G: HegemonyState, playerID: PlayerId): number {
   return value;
 }
 
-/** PR #41's measured-neutral setting. Larger values made the prototype over-expand. */
+/** Measured-neutral setting. Larger values made the prototype over-expand. */
 const FRONTIER_WEIGHT = 2;
+
+function evaluateSettler(G: HegemonyState, playerID: PlayerId): number {
+  return evaluateSmart(G, playerID) + FRONTIER_WEIGHT * frontierValue(G, playerID);
+}
+
+/**
+ * The expansion-frontier bot: `smart`'s economic / population / building evaluation PLUS a
+ * one-step frontier term, over the same one-ply search `smart` uses. It scores the same as
+ * `smart` but adds `FRONTIER_WEIGHT × frontierValue`, so a `smart`-vs-`settler` A/B isolates
+ * map foresight from everything else. See docs/feat/map-foresight.md.
+ */
+export const settlerPolicy: Policy = {
+  name: "settler",
+  choose(G, moves) {
+    return onePlyLookahead(G, moves, evaluateSettler);
+  },
+};
+
+// ── The cumulative policy — every shipped specialist in one bot ──────────────────────
+//
+// The earlier policies are controlled experiments: `beam` isolates search depth,
+// `political` isolates Assembly judgment, and `settler` isolates a one-step map signal.
+// `master` is the play-strength composition rather than another isolated arm: smart
+// economy + political standing + frontier value, searched with the beam during normal
+// play, while the dedicated political heuristic runs the Assembly.
 
 function scoreMaster(G: HegemonyState, playerID: PlayerId): number {
   return scorePolitical(G, playerID) + FRONTIER_WEIGHT * frontierValue(G, playerID);
@@ -773,6 +806,7 @@ export const POLICIES: Record<PolicyId, Policy> = {
   smart: smartPolicy,
   beam: beamPolicy,
   political: politicalPolicy,
+  settler: settlerPolicy,
   master: masterPolicy,
 };
 
