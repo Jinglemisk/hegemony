@@ -5,6 +5,7 @@ import {
   calculateEconomyProjection,
   canPlaceColonyOnTile,
   getBuildBuildingStatus,
+  getActiveEffects,
   getFoundColonyStatus,
   getGrowPopStatus,
   getUpgradeColonyToCityStatus,
@@ -44,6 +45,7 @@ import { GameUiProvider } from "./board/GameUiProvider";
 import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
 import { getOwnedHoldings } from "./board/helpers";
+import { ActiveEffectsList } from "./ActiveEffectsList";
 
 type BoardProps = {
   G: HegemonyState;
@@ -130,11 +132,16 @@ export function HegemonyBoard({
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
   const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent);
+  const activeEffects = useMemo(
+    () => getActiveEffects(G, viewerId),
+    [G, viewerId]
+  );
   const gameUi = useMemo<GameUi>(
     () => ({
       G,
       viewerId,
       viewer,
+      activeEffects,
       currentPlayerId,
       phase: ctx.phase,
       isActive,
@@ -142,7 +149,7 @@ export function HegemonyBoard({
       moves,
       events
     }),
-    [G, viewerId, viewer, currentPlayerId, ctx.phase, isActive, hasPendingPlayerEvent, moves, events]
+    [G, viewerId, viewer, activeEffects, currentPlayerId, ctx.phase, isActive, hasPendingPlayerEvent, moves, events]
   );
   const projectedEconomy = useMemo(
     () => calculateEconomyProjection(G, viewerId, { resolveTransfers: true }),
@@ -388,11 +395,14 @@ export function HegemonyBoard({
           />
         </div>
 
-        <PlayerScoreboard
-          currentPlayerId={currentPlayerId}
-          onPlayerIDChange={onPlayerIDChange}
-          viewerId={viewerId}
-        />
+        <div className="topbarStatusCluster">
+          <ActiveEffectsList variant="board" />
+          <PlayerScoreboard
+            currentPlayerId={currentPlayerId}
+            onPlayerIDChange={onPlayerIDChange}
+            viewerId={viewerId}
+          />
+        </div>
       </header>
 
       {/* The KYKLOS ledger (ui-refit Step 2): a disc rail threaded on the left

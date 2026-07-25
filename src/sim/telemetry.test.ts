@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { ACTIVE_EFFECT_KINDS } from "../game/activeEffects";
 import { PLAYER_IDS } from "../game/data";
 import { randomPolicy } from "./policies";
 import { runGame } from "./runner";
@@ -69,6 +70,7 @@ describe("snapshotTurn", () => {
       expect(player.income.food).toBeTypeOf("number");
       expect(["calm", "discontent", "unrest", "revolt"]).toContain(player.unrestTier);
       expect(player.pops).toBeGreaterThanOrEqual(0);
+      expect(Object.keys(player.activeEffects)).toEqual([...ACTIVE_EFFECT_KINDS]);
     }
   });
 });
@@ -105,6 +107,13 @@ describe("Aggregator", () => {
     // Unrest tier shares are a distribution.
     const shares = report.perSeason[0].unrestTierShares;
     expect(shares.calm + shares.discontent + shares.unrest + shares.revolt).toBeCloseTo(1);
+
+    expect(Object.keys(report.activeEffects)).toEqual([...ACTIVE_EFFECT_KINDS]);
+    for (const kind of ACTIVE_EFFECT_KINDS) {
+      expect(report.activeEffects[kind].observations).toBeGreaterThanOrEqual(0);
+      expect(report.activeEffects[kind].playerTurnShare).toBeGreaterThanOrEqual(0);
+      expect(report.activeEffects[kind].playerTurnShare).toBeLessThanOrEqual(1);
+    }
   });
 
   it("counts a finished game as a real win, never as a cap leader", () => {

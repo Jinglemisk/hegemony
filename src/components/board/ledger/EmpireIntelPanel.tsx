@@ -16,6 +16,7 @@ import { LEDGER_TABS, ledgerTabLabel } from "./tabs";
 import { victoryCardsHeld } from "../../../game/victory";
 import { UiSprite } from "../../Sprites";
 import { useGameUi } from "../GameUiContext";
+import { ActiveEffectsList } from "../../ActiveEffectsList";
 
 const UNREST_TITLES: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
   discontent: "Discontent",
@@ -117,6 +118,8 @@ function EmpireIntelPanelComponent({
           <AnnotatedText text={unrestMessage(unrest, G.ruleset.economy.unrest.popLossThreshold)} />
         </div>
       ) : null}
+
+      <ActiveEffectsList variant="ledger" />
 
       <div className="intelBody">
         {activeTab === "cities" ? (

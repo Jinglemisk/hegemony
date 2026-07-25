@@ -1,4 +1,5 @@
 import { calculateIncome } from "../game/economy/income";
+import { getActiveEffects } from "../game/activeEffects";
 import { getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementBuildingSlots } from "../game/settlement";
 import { enactForEval, politicianStandings } from "../game/assembly";
@@ -193,6 +194,67 @@ export const smartPolicy: Policy = {
  *  temple's +1 happiness/turn are invisible at the moment of purchase and only
  *  become worth their cost when multiplied out. */
 const INCOME_HORIZON = 6;
+export type PolicyProjection = {
+  resources: HegemonyState["players"][PlayerId]["resources"];
+  expectedStarvationPopLoss: number;
+};
+
+/**
+ * The reference policies' canonical future-state projection. Ordinary recurring
+ * modifiers already flow through calculateIncome; the active-effect selector adds
+ * state that income alone cannot express: skipped collections, future timed mood,
+ * and accumulated starvation progress.
+ */
+export function projectPolicyHorizon(
+  G: HegemonyState,
+  playerID: PlayerId,
+  horizon = INCOME_HORIZON,
+): PolicyProjection {
+  const player = G.players[playerID];
+  const income = calculateIncome(G, playerID);
+  const activeEffects = getActiveEffects(G, playerID, { income });
+  const projected = { ...player.resources };
+  let suppressedCollections = 0;
+  let expectedStarvationPopLoss = 0;
+
+  for (const descriptor of activeEffects) {
+    for (const mechanic of descriptor.mechanics) {
+      if (mechanic.type === "suppressIncome") {
+        suppressedCollections += mechanic.turns;
+      }
+    }
+  }
+
+  const collectedTurns = Math.max(0, horizon - suppressedCollections);
+  for (const resource of Object.keys(income) as (keyof typeof income)[]) {
+    projected[resource] += income[resource] * collectedTurns;
+  }
+
+  for (const descriptor of activeEffects) {
+    for (const mechanic of descriptor.mechanics) {
+      if (mechanic.type === "timedHappiness") {
+        projected.happiness +=
+          mechanic.amountPerTurn * Math.min(horizon, mechanic.turns);
+      }
+
+      if (
+        mechanic.type === "foodDeficitProgress" &&
+        mechanic.netFood <= G.ruleset.economy.unrest.foodDeficitThreshold
+      ) {
+        const exposedUpkeeps = Math.max(
+          0,
+          horizon - (mechanic.graceActive ? 1 : 0),
+        );
+        const starvationEvents = Math.floor(
+          (mechanic.current + exposedUpkeeps) / mechanic.threshold,
+        );
+        expectedStarvationPopLoss += starvationEvents * mechanic.popLoss;
+      }
+    }
+  }
+
+  return { resources: projected, expectedStarvationPopLoss };
+}
 
 /**
  * Positional score for the greedy bot, evaluated on resources projected
@@ -210,15 +272,8 @@ const INCOME_HORIZON = 6;
  */
 function evaluate(G: HegemonyState, playerID: PlayerId): number {
   const player = G.players[playerID];
-  const income = calculateIncome(G, playerID);
-  // Project income forward on a COPY — the evaluator must never mutate G. onePlyLookahead
-  // scores the raw G as its baseline, and that G may be the UI's immer-committed (frozen)
-  // state where any write throws. The income-sensitive terms read `projected`; everything
-  // else reads the player's live resources, exactly as before.
-  const projected = { ...player.resources };
-  for (const resource of Object.keys(income) as (keyof typeof income)[]) {
-    projected[resource] += income[resource] * INCOME_HORIZON;
-  }
+  const projection = projectPolicyHorizon(G, playerID);
+  const projected = projection.resources;
 
   const standings = playerStandings(G, playerID);
   const material = projected.wood + projected.stone + projected.gold + projected.food;
@@ -227,7 +282,8 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
     3 * standings.colonies +
     standings.pops +
     Math.floor(material / 10) -
-    Math.max(0, -projected.happiness);
+    Math.max(0, -projected.happiness) -
+    2 * projection.expectedStarvationPopLoss;
   // Cap the happiness reward: below the cap it prices riot avoidance and the
   // Beloved card (min +10); past it, more calm is wasted coin — an uncapped term
   // had greedy bots pumping civic calm to +95 happiness.
@@ -253,13 +309,8 @@ const SMART_MATERIAL_WEIGHT = { food: 0.4, wood: 0.6, stone: 0.85, gold: 1 };
 
 function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
   const player = G.players[playerID];
-  const income = calculateIncome(G, playerID);
-  // Project onto a COPY — never mutate G (see evaluate). Income-sensitive terms read
-  // `projected`; settlement counts and the influence term read the live state as before.
-  const projected = { ...player.resources };
-  for (const resource of Object.keys(income) as (keyof typeof income)[]) {
-    projected[resource] += income[resource] * INCOME_HORIZON;
-  }
+  const projection = projectPolicyHorizon(G, playerID);
+  const projected = projection.resources;
 
   let cities = 0;
   let colonies = 0;
@@ -309,7 +360,8 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
     material / 8 +
     0.4 * citySlots +
     3 * gymSynergy -
-    Math.max(0, -projected.happiness);
+    Math.max(0, -projected.happiness) -
+    2 * projection.expectedStarvationPopLoss;
 
   const projectedHappiness = Math.min(projected.happiness, 15);
 

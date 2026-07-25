@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import type { GameEvents, GameMoves, Phase } from "../../game/controller";
+import type { ActiveEffectDescriptor } from "../../game/activeEffects";
 import type { HegemonyState, PlayerId, PlayerState } from "../../game/types";
 
 /**
@@ -22,6 +23,8 @@ export type GameUi = {
   /** The seat being *looked at* — whose ledger and resources are on screen. */
   viewerId: PlayerId;
   viewer: PlayerState;
+  /** Canonical persistent statuses bearing on the viewed seat. */
+  activeEffects: ActiveEffectDescriptor[];
   /** The seat whose turn it actually is. Differs from the viewer when spectating. */
   currentPlayerId: PlayerId;
   phase: Phase;

@@ -20,6 +20,7 @@
  *   events         — event deck draw + the event-effect interpreter
  *   actions        — the mutating moves
  *   season         — season / turn-flag lifecycle
+ *   activeEffects  — canonical persistent-effect/status projection
  *   state          — createInitialState
  *
  * This file re-exports the public surface so existing `./rules` imports keep working.
@@ -43,6 +44,7 @@ export * from "./events";
 export * from "./actions";
 export * from "./riot";
 export * from "./season";
+export * from "./activeEffects";
 export * from "./tables";
 export * from "./unrest";
 export * from "./ventures";
