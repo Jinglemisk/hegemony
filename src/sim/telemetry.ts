@@ -6,6 +6,7 @@ import { PLAYER_IDS } from "../game/data";
 import { playerStandings } from "../game/score";
 import { canPlaceColonyOnTile } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
+import { LEGAL_MOVE_TYPES, type LegalMoveType } from "../parity/moveParity";
 import type { UnrestTier } from "../game/unrest";
 import type { BoardLayout, GameOverReason, HegemonyState, PlayerId, Resources } from "../game/types";
 
@@ -164,6 +165,9 @@ export type BatchReport = {
    *  seat-independent measure a rotated mixed-policy batch produces. Empty for a
    *  uniform batch (no seat policies recorded). */
   winsByPolicy: Record<string, { games: number; wins: number; winRate: number }>;
+  /** Universal action telemetry. Every LegalMove type is present, including zeroes,
+   *  so newly added or unexercised actions cannot disappear from a report. */
+  movesByType: Record<LegalMoveType, { count: number; perGame: number }>;
   buildings: Record<string, { built: number; perGame: number }>;
   events: {
     player: Record<string, number>;
@@ -239,6 +243,7 @@ export class Aggregator {
   private playerEvents: Record<string, number> = {};
   private seasonalEvents: Record<string, number> = {};
   private choicePicks: Record<string, number[]> = {};
+  private movesByType: Partial<Record<LegalMoveType, number>> = {};
   private currencyVerbs: Record<string, number> = {};
   private assemblyVerbs: Record<string, number> = {};
   private assemblyInfluence = 0;
@@ -271,6 +276,8 @@ export class Aggregator {
   }
 
   onMove(G: HegemonyState, _player: PlayerId, move: LegalMove) {
+    this.movesByType[move.type] = (this.movesByType[move.type] ?? 0) + 1;
+
     if (move.type === "buildBuilding") {
       this.buildings[move.buildingId] = (this.buildings[move.buildingId] ?? 0) + 1;
     }
@@ -491,6 +498,12 @@ export class Aggregator {
       perSeason,
       perSeat,
       buildings,
+      movesByType: Object.fromEntries(
+        LEGAL_MOVE_TYPES.map((moveType) => [
+          moveType,
+          this.perGameCount(this.movesByType[moveType] ?? 0),
+        ]),
+      ) as BatchReport["movesByType"],
       events: {
         player: this.playerEvents,
         seasonal: this.seasonalEvents,

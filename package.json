@@ -13,6 +13,7 @@
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:parity": "vitest run src/parity/moveParity.test.ts",
     "sim": "tsx src/sim/cli.ts",
     "preview": "vite preview --host 127.0.0.1"
   },

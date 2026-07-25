@@ -9,6 +9,7 @@ Become the board's hegemon through economy, diplomacy, politics and luck.
 </div>
 
 Hegemony is a strategy board game where players gather Resources to construct Buildings in Colonies and Cities to extract the maximum value out of their Pops to grow their civilsation into a hegemon!
+
 ## Features
 
 - A hex map with different Resources, Luxury Goods and Building slots.
@@ -28,6 +29,7 @@ for the living status/roadmap and a file-by-file map of where things live.
 npm install
 npm run dev        # start the Vite dev server
 npm run check      # TypeScript type-check
+npm run test:parity # three-axis action/telemetry gate
 npm run lint       # ESLint (npm run format for Prettier)
 npm run test:run   # run the Vitest suite once (npm run test to watch)
 npm run build      # production build
@@ -37,6 +39,9 @@ npm run build      # production build
 
 The hard invariant is a clean split between a **pure rules engine** and the **React UI** —
 the UI never owns game state or duplicates a formula.
+Every feature is delivered as an applicable three-axis slice across the engine,
+frontend, and simulation/AI, under the mandatory contract at the top of
+[docs/roadmap.md](docs/roadmap.md#mandatory-three-axis-parity-contract).
 
 - `src/game/` — the engine. The whole game is one serializable `HegemonyState`
   (`types.ts`) advanced by pure functions. `rules.ts` is a barrel over cohesive modules
@@ -50,6 +55,12 @@ the UI never owns game state or duplicates a formula.
 - `src/components/` — the UI. `HegemonyBoard.tsx` + `board/` (topbar, ledger, command, modals),
   plus `HexMap.tsx`. Styling is split into slices under `src/styles/`, loaded by the
   `src/styles.css` barrel.
+- `src/sim/` — the headless runner, reference bot policies, replay tooling, and
+  telemetry. It executes the same `LegalMove` protocol as the engine.
+- `src/parity/` — exhaustive cross-system action classifications and their CI gate.
+  Adding a `LegalMove` without frontend and simulation/AI coverage fails
+  `npm run check`.
 
-The rules of the road live in [docs/v0.1-rules-spec.md](docs/v0.1-rules-spec.md) — though
-where that spec and the engine disagree, **the engine is the source of truth**.
+The delivery rules live in [docs/roadmap.md](docs/roadmap.md); the gameplay rules live
+in [docs/v0.1-rules-spec.md](docs/v0.1-rules-spec.md). Where the gameplay spec and the
+engine disagree, **the engine is the source of truth**.
