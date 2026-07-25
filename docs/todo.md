@@ -129,9 +129,10 @@ NOT do them mid-run. Revisit each with a fresh balance eye + a human playtest re
 
 ## Tech debt & polish
 
-- Shrink the .git history (~129 MB).
--- Bloated by old/replaced binary art still living in past commits.
--- Use git-filter-repo to purge the large blobs; coordinate first (rewrites history → force-push + everyone re-clones).
+- ~~Shrink the .git history (~129 MB).~~ **DONE 2026-07-25** — git-filter-repo purged
+  ~89 MB of dead binary art (150 MB → 62 MB) and stripped the two `Co-Authored-By: Claude`
+  trailers in the same pass. HEAD tree verified byte-identical; force-pushed to `main`.
+  Note: commit SHAs before 2026-07-25 changed, so older SHA references in docs are stale.
 
 - Fix the 2 npm-audit vulnerabilities from the toolchain.
 
