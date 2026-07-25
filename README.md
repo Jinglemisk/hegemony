@@ -55,11 +55,15 @@ frontend, and simulation/AI, under the mandatory contract at the top of
 - `src/components/` — the UI. `HegemonyBoard.tsx` + `board/` (topbar, ledger, command, modals),
   plus `HexMap.tsx`. Styling is split into slices under `src/styles/`, loaded by the
   `src/styles.css` barrel.
+- `src/ui/` and `src/components/EffectLine.tsx` — shared frontend presenters and
+  the canonical rendering seam for mechanical effects, so cards, tables, modals, and
+  summaries cannot invent competing text or tone.
 - `src/sim/` — the headless runner, reference bot policies, replay tooling, and
   telemetry. It executes the same `LegalMove` protocol as the engine.
-- `src/parity/` — exhaustive cross-system action classifications and their CI gate.
-  Adding a `LegalMove` without frontend and simulation/AI coverage fails
-  `npm run check`.
+- `src/parity/` — exhaustive cross-system action classifications plus within-axis
+  consistency regressions. Adding a `LegalMove` without frontend and simulation/AI
+  coverage fails `npm run check`; `npm run test:parity` also checks canonical
+  backend and frontend paths against drift.
 
 The delivery rules live in [docs/roadmap.md](docs/roadmap.md); the gameplay rules live
 in [docs/v0.1-rules-spec.md](docs/v0.1-rules-spec.md). Where the gameplay spec and the

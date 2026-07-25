@@ -177,6 +177,8 @@ export type EventDeck = EventCard[];
 export interface ActiveSeasonEvent {
   card: EventCard;
   season: number;
+  /** Seat whose turn revealed the card; authoritative for activePlayer-scoped effects. */
+  playerID: PlayerId;
 }
 
 export interface PendingPlayerEvent {
