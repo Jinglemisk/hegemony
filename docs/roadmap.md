@@ -5,7 +5,50 @@ sequence (what happens when, and why). Questions, answers, and execution state l
 the companion workbench: **`docs/roadmap-appendix.md`** — that is where this plan gets
 interrogated, refined, and driven.
 
-Last updated: 2026-07-23.
+Last updated: 2026-07-25.
+
+## Mandatory three-axis parity contract
+
+Read this before planning, scheduling, implementing, or declaring any work complete.
+Every change must be assessed across the same three axes:
+
+| Axis                 | Required assessment and proof                                                                                                                                                                                                                                                     |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Engine / backend** | The authoritative state, rules, data, legal move or automatic resolution, shared status/query functions, and engine tests. The engine remains the source of truth; consumers must not duplicate its formulas.                                                                     |
+| **Frontend**         | How a player initiates the action or sees the automatic result; eligibility and blocked reasons; choices and targets; effective costs/effects; persistent state, history, and Codex coverage where relevant; focused UI verification.                                             |
+| **Simulation & AI**  | Execution through the real engine/legal-move path; fair observation of every fact available to a human; policy valuation and planning in `master`; feature telemetry; deterministic “clearly use”, “clearly avoid”, and edge-case scenarios where the feature creates a decision. |
+
+Rules of the contract:
+
+1. Every feature plan and implementation handoff must record all three axes as
+   **applicable** or **not applicable**, with a reason for every `N/A`. A blank axis is
+   not a decision.
+2. Player-facing gameplay normally requires all three axes. Visual-only, documentation,
+   tooling, and internal refactors may mark an axis `N/A` when behavior truly does not
+   change.
+3. Automatic mechanics still require frontend representation when a player needs to see
+   or understand their result. They still require sim coverage, telemetry, and AI
+   awareness when they affect evaluation, even though the bot has no new verb to choose.
+4. A simulator being mechanically able to execute a move is not AI parity. The reference
+   `master` policy must also observe, value, plan for, and meaningfully exercise or avoid
+   the feature when applicable.
+5. Prefer one vertical slice that lands the applicable engine, frontend, simulation/AI,
+   telemetry, tests, and documentation together. If an axis is deliberately deferred,
+   the feature remains incomplete and the debt must be visible in this roadmap.
+6. A feature is complete only when every applicable axis has implementation evidence and
+   regression proof. Simulation results produced without policy parity must be labelled
+   as results for that named limited policy, not as balance evidence for the game itself.
+
+Enforcement surfaces:
+
+- `.github/pull_request_template.md` requires the three-axis status and evidence before
+  a change is presented as merge-ready.
+- `src/parity/moveParity.ts` exhaustively maps every `LegalMove` to concrete frontend
+  and simulation/AI paths; `npm run check` fails when a new move is left unclassified.
+- Universal `movesByType` telemetry and `npm run test:parity` keep every typed action
+  visible, including zero-use paths, and CI runs the parity test explicitly.
+- These gates catch missing routes and evidence. They do not replace the targeted
+  behavioral tests required to prove that `master` uses a feature intelligently.
 
 ## First principles (re-derive the order from these when things change)
 

@@ -182,6 +182,8 @@ The report contains:
 - `terminations` — how games ended (the winRate denominator context)
 - `forced` — action-cap hits / forced resolutions / forced end-turns (previously hidden)
 - `winsByPolicy` — wins credited to each policy over finished games (mixed/rotated runs)
+- `movesByType` — zero-filled total and per-game counts for every typed legal move;
+  this universal table makes missing or unexercised action paths visible
 - `buildings` — build counts and per-game rates
 - `events` — draw counts by card id, and per-option pick counts for choice cards
 - `finalCardsDistribution`
