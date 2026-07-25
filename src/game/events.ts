@@ -18,11 +18,11 @@ export function drawSeasonalEvent(G: HegemonyState) {
     return;
   }
 
-  G.activeSeasonEvent = { card, season: G.season };
+  G.activeSeasonEvent = { card, season: G.season, playerID: G.currentPlayer };
   addLog(G, `Seasonal Event revealed: ${card.name}. ${card.text}`);
 
   if (card.timing === "immediate") {
-    applyEventEffects(G, card, null, card.effects);
+    applyEventEffects(G, card, G.activeSeasonEvent.playerID, card.effects);
   }
 }
 

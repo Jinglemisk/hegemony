@@ -1,18 +1,21 @@
 import { getEventEffectChoices } from "../../../game/rules";
 import { OMEN_TABLE } from "../../../game/data";
 import type { EventCard, HegemonyState } from "../../../game/types";
+import type { EffectPresentation } from "../../../ui/effects";
+import { joinEffectPresentations, presentEventEffects, presentTableEffect } from "../../../ui/effects";
 import { AnnotatedText } from "../../AnnotatedText";
-import { eventCardArtUrl, formatEventEffects, formatTableEffect, omenArtUrl } from "../events";
+import { EffectLine } from "../../EffectLine";
+import { eventCardArtUrl, omenArtUrl } from "../events";
 
 /** A concise mechanical summary of a card's effect (choice cards join with "·"). */
-function effectSummary(card: EventCard): string {
+function effectSummary(card: EventCard): EffectPresentation {
   const choices = getEventEffectChoices(card);
 
   if (choices.length > 1) {
-    return choices.map((effects) => formatEventEffects(effects)).join("  ·  ");
+    return joinEffectPresentations(choices.map(presentEventEffects));
   }
 
-  return formatEventEffects(choices[0] ?? card.effects);
+  return presentEventEffects(choices[0] ?? card.effects);
 }
 
 /**
@@ -25,7 +28,7 @@ export function TopbarEvents({ G }: { G: HegemonyState }) {
   const seasonal = G.activeSeasonEvent?.card ?? null;
   const player = G.lastPlayerEvent;
   const omen = G.yearOmen;
-  const omenTone = omen?.effects.some((effect) => formatTableEffect(effect).tone === "negative") ? "ill" : "fair";
+  const omenTone = omen?.effects.some((effect) => presentTableEffect(effect).tone === "negative") ? "ill" : "fair";
 
   // Longest-standing first: the omen rules the year, the season card the season,
   // the player card just this turn.
@@ -34,7 +37,7 @@ export function TopbarEvents({ G }: { G: HegemonyState }) {
       <TopbarEventSlot
         label="Omen"
         name={omen?.label ?? null}
-        summary={omen ? omen.effects.map((effect) => formatTableEffect(effect).text).join("  ·  ") : null}
+        summary={omen ? joinEffectPresentations(omen.effects.map(presentTableEffect)) : null}
         tooltip={
           omen
             ? `${OMEN_TABLE.flavor} Rolled by Year ${omen.year}'s opener; a new sign comes each spring.`
@@ -73,7 +76,7 @@ function TopbarEventSlot({
 }: {
   label: string;
   name: string | null;
-  summary: string | null;
+  summary: EffectPresentation | null;
   tooltip: string | null;
   artUrl: string | null;
   fallback: string;
@@ -90,7 +93,7 @@ function TopbarEventSlot({
       <div className="topbarEventBody">
         <span className="topbarEventLabel">{label}</span>
         <strong className="topbarEventName">{name ?? fallback}</strong>
-        {summary ? <AnnotatedText text={summary} className="topbarEventEffect" /> : null}
+        {summary ? <EffectLine effect={summary} className="topbarEventEffect" /> : null}
       </div>
       {active && tooltip ? (
         <div className="topbarEventTooltip" role="tooltip">

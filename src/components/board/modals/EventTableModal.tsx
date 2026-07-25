@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { EventTableDefinition, TableRollRecord } from "../../../game/types";
-import { AnnotatedText } from "../../AnnotatedText";
-import { formatTableEffect } from "../events";
+import { presentTableEffect } from "../../../ui/effects";
+import { EffectLine } from "../../EffectLine";
 import { ModalShell } from "./ModalShell";
 
 /**
@@ -21,11 +21,11 @@ export function EventTableRows({ table, result }: { table: EventTableDefinition;
             <span className="eventTableRowLabel">{row.label}</span>
             <span className="eventTableRowEffects">
               {row.effects.map((effect, index) => {
-                const chip = formatTableEffect(effect);
+                const chip = presentTableEffect(effect);
 
                 return (
                   <em className={`eventTableEffect ${chip.tone}`} key={index}>
-                    <AnnotatedText text={chip.text} />
+                    <EffectLine effect={chip} />
                   </em>
                 );
               })}

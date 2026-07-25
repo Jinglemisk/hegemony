@@ -18,6 +18,19 @@ Every change must be assessed across the same three axes:
 | **Frontend**         | How a player initiates the action or sees the automatic result; eligibility and blocked reasons; choices and targets; effective costs/effects; persistent state, history, and Codex coverage where relevant; focused UI verification.                                             |
 | **Simulation & AI**  | Execution through the real engine/legal-move path; fair observation of every fact available to a human; policy valuation and planning in `master`; feature telemetry; deterministic “clearly use”, “clearly avoid”, and edge-case scenarios where the feature creates a decision. |
 
+Cross-axis presence is only half of parity. Each applicable axis must also remain
+internally consistent:
+
+- **Backend ↔ backend:** legal-move enumeration, validation, previews, queries,
+  execution, ruleset overrides, replay, and serialization must share authoritative
+  rules and agree on the same state.
+- **Frontend ↔ frontend:** the board, command surfaces, modals, ledger, history,
+  Codex, tooltips, and accessibility text must derive the same fact, status, cost,
+  and effect from shared selectors and presenters.
+- **Simulation ↔ simulation:** observation, policy evaluation, execution, replay,
+  and telemetry must use the same vocabulary and must not maintain contradictory
+  approximations.
+
 Rules of the contract:
 
 1. Every feature plan and implementation handoff must record all three axes as
@@ -38,6 +51,10 @@ Rules of the contract:
 6. A feature is complete only when every applicable axis has implementation evidence and
    regression proof. Simulation results produced without policy parity must be labelled
    as results for that named limited policy, not as balance evidence for the game itself.
+7. Every change must inventory sibling consumers inside each applicable axis. If the same
+   rule, fact, or presentation exists in more than one place, use one authoritative
+   function or typed presentation model and add a regression that compares behavior, not
+   merely file existence. “One surface works” is not within-axis parity.
 
 Enforcement surfaces:
 
@@ -47,6 +64,9 @@ Enforcement surfaces:
   and simulation/AI paths; `npm run check` fails when a new move is left unclassified.
 - Universal `movesByType` telemetry and `npm run test:parity` keep every typed action
   visible, including zero-use paths, and CI runs the parity test explicitly.
+- `npm run test:parity` also runs the engine's legal-move soundness and
+  preview-versus-outcome suites plus `src/parity/withinAxisParity.test.ts`, which
+  guards backend effect scope and the shared frontend effect-presentation vocabulary.
 - These gates catch missing routes and evidence. They do not replace the targeted
   behavioral tests required to prove that `master` uses a feature intelligently.
 

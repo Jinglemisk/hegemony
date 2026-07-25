@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds, getTile } from "../../../game/rules";
+import { presentEventEffects } from "../../../ui/effects";
 import { AnnotatedText } from "../../AnnotatedText";
-import { eventCardArtUrl, formatEventEffects } from "../events";
+import { EffectLine } from "../../EffectLine";
+import { eventCardArtUrl } from "../events";
 import { settlementPickerLabel } from "../helpers";
 import { ModalShell } from "./ModalShell";
 import { useGameUi } from "../GameUiContext";
@@ -80,7 +82,7 @@ export function PendingPlayerEventModal() {
                     >
                       <strong>Option {index + 1}</strong>
                       <span>
-                        <AnnotatedText text={formatEventEffects(effects)} />
+                        <EffectLine effect={presentEventEffects(effects)} />
                       </span>
                     </button>
                   );
@@ -90,7 +92,7 @@ export function PendingPlayerEventModal() {
               <div className="eventSingleEffect">
                 <strong>Effect</strong>
                 <span>
-                  <AnnotatedText text={formatEventEffects(selectedEffects)} />
+                  <EffectLine effect={presentEventEffects(selectedEffects)} />
                 </span>
               </div>
             )}

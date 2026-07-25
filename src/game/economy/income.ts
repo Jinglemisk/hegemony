@@ -1,4 +1,4 @@
-import { EMPTY_RESOURCES, PLAYER_IDS } from "../data";
+import { EMPTY_RESOURCES } from "../data";
 import { getBuildings } from "../content";
 import type { HegemonyState, HexTile, PlayerId, PopType, Resource, Resources, Settlement } from "../types";
 import { formatPopName, formatRuleNumber } from "../core/format";
@@ -281,14 +281,15 @@ function applySeasonalIncomeEffects(
   contributions: IncomeContribution[],
   income: Resources
 ) {
-  const card = G.activeSeasonEvent?.card;
+  const activeEvent = G.activeSeasonEvent;
+  const card = activeEvent?.card;
 
   if (!card) {
     return;
   }
 
   for (const effect of card.effects) {
-    if (effect.type === "incomeModifier" && effect.duration === "season" && effectAppliesToPlayer(effect.scope, playerID)) {
+    if (effect.type === "incomeModifier" && effect.duration === "season" && effectAppliesToPlayer(effect.scope, playerID, activeEvent.playerID)) {
       addIncomeContribution(contributions, income, {
         resource: effect.resource,
         amount: effect.amount,
@@ -298,7 +299,7 @@ function applySeasonalIncomeEffects(
     } else if (
       effect.type === "scaledHappinessDelta" &&
       effect.duration === "season" &&
-      effectAppliesToPlayer(effect.scope, playerID)
+      effectAppliesToPlayer(effect.scope, playerID, activeEvent.playerID)
     ) {
       addIncomeContribution(contributions, income, {
         resource: "happiness",
@@ -310,8 +311,12 @@ function applySeasonalIncomeEffects(
   }
 }
 
-function effectAppliesToPlayer(scope: "activePlayer" | "allPlayers", playerID: PlayerId) {
-  return scope === "allPlayers" || PLAYER_IDS.includes(playerID);
+function effectAppliesToPlayer(
+  scope: "activePlayer" | "allPlayers",
+  playerID: PlayerId,
+  activePlayerID: PlayerId
+) {
+  return scope === "allPlayers" || playerID === activePlayerID;
 }
 
 function applyIncomeBuildingEffects(
