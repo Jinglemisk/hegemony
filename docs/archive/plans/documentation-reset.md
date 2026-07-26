@@ -1,7 +1,7 @@
 ---
 archive_status: implemented
 archived: 2026-07-26
-shipping_pr: pending
+shipping_pr: "#52"
 ---
 
 > Implemented by the documentation-control-plane reset. Validation and the final
