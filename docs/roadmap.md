@@ -65,10 +65,18 @@ Enforcement surfaces:
 - Universal `movesByType` telemetry and `npm run test:parity` keep every typed action
   visible, including zero-use paths, and CI runs the parity test explicitly.
 - `npm run test:parity` also runs the engine's legal-move soundness and
-  preview-versus-outcome suites plus `src/parity/withinAxisParity.test.ts`, which
-  guards backend effect scope and the shared frontend effect-presentation vocabulary.
+  preview-versus-outcome suites plus `src/parity/withinAxisParity.test.ts` and
+  `src/parity/activeEffectParity.test.ts`. These guard backend effect scope, the
+  shared frontend presentation vocabulary, active-status calculation/presentation
+  agreement, policy projection, exact expiry, and sim telemetry.
 - These gates catch missing routes and evidence. They do not replace the targeted
   behavioral tests required to prove that `master` uses a feature intelligently.
+
+Persistent mechanical state has one cross-axis query:
+`src/game/activeEffects.ts#getActiveEffects`. Board and ledger presentations, CLI
+explanations, policy projections, and telemetry must consume its typed descriptors
+rather than rediscovering income suppression, starvation progress, timed mood,
+seasonal/omen modifiers, discounts, Laws, patronage, or pending Directives.
 
 ## First principles (re-derive the order from these when things change)
 

@@ -384,7 +384,10 @@ export interface HegemonyBoard {
 export interface TimedHappinessModifier {
   amountPerTurn: number;
   turnsRemaining: number;
-  source: string;
+  sourceCardId: string;
+  sourceName: string;
+  sourceDeck: EventDeckKind;
+  sourceScope: EventScope;
 }
 
 export interface PlayerState {

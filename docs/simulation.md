@@ -142,6 +142,13 @@ Works from any phase — bots will finish a manual setup too. Policies:
   saving, general opponent replies, multi-hop route planning, and chance expected value
   remain future work. See docs/feat/ai-bot-parity.md.
 
+The economic policies project six future upkeeps one step at a time through the
+canonical active-effect descriptors. Each step applies timed mood, burns suppressed
+collections, advances starvation, and recalculates authoritative income after projected
+pop loss. Starvation uses the mean state of the engine's uniform pop-removal bag, so the
+forecast responds when fewer pops repair the deficit without reading or advancing future
+game RNG.
+
 How the bots work, their limitations, and the path to CPU opponents with
 difficulty settings: **docs/ai.md**.
 
@@ -176,7 +183,8 @@ The report contains:
   (null for turn-capped games), `leaderAtCap`, final cards + pops lost per player,
   and the seat→policy map for mixed runs
 - `perSeason` — end-of-season victory-card/pops/food/happiness percentiles (mean,
-  p10, median, p90) pooled across games and seats, plus unrest-tier shares
+  p10, median, p90) pooled across games and seats, plus unrest-tier and active-effect
+  player-turn shares
 - `perSeat` — real `winRate` (finished games only), `capLeaderRate` (turn-capped
   games), and mean final cards per seat (first-player advantage check)
 - `terminations` — how games ended (the winRate denominator context)
@@ -184,6 +192,9 @@ The report contains:
 - `winsByPolicy` — wins credited to each policy over finished games (mixed/rotated runs)
 - `movesByType` — zero-filled total and per-game counts for every typed legal move;
   this universal table makes missing or unexercised action paths visible
+- `activeEffects` — zero-filled observations, per-player-turn counts, and player-turn
+  prevalence for every canonical active-effect kind (suppression, deficit, timed
+  mood, seasonal/omen modifiers, discounts, Laws, patronage, and pending Directives)
 - `buildings` — build counts and per-game rates
 - `events` — draw counts by card id, and per-option pick counts for choice cards
 - `finalCardsDistribution`

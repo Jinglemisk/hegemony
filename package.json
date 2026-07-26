@@ -13,7 +13,7 @@
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:parity": "vitest run src/parity/moveParity.test.ts src/parity/withinAxisParity.test.ts src/game/legalMoves.test.ts src/game/economy/preview.test.ts",
+    "test:parity": "vitest run src/parity/moveParity.test.ts src/parity/withinAxisParity.test.ts src/parity/activeEffectParity.test.ts src/game/legalMoves.test.ts src/game/economy/preview.test.ts",
     "sim": "tsx src/sim/cli.ts",
     "preview": "vite preview --host 127.0.0.1"
   },

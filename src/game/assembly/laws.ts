@@ -39,24 +39,61 @@ function matchesScope(kind: SettlementKind, scope: SettlementScope): boolean {
  * This is the ONE place the two sources are combined, so no pipeline can accidentally
  * honour Laws but forget buffs (or vice versa).
  */
-export function getStandingEffects(G: HegemonyState, playerID: PlayerId): LawEffect[] {
-  const effects: LawEffect[] = [];
+export type StandingEffectSource =
+  | {
+      kind: "law";
+      id: string;
+      label: string;
+      effects: LawEffect[];
+    }
+  | {
+      kind: "patronage";
+      id: string;
+      label: string;
+      effects: LawEffect[];
+    };
+
+/**
+ * Source-aware standing effects for status displays, telemetry, and any future
+ * rule consumer that needs to explain *why* a modifier exists. Keeping this next
+ * to {@link getStandingEffects} prevents those consumers from reconstructing Law
+ * and patron ownership independently.
+ */
+export function getStandingEffectSources(
+  G: HegemonyState,
+  playerID: PlayerId,
+): StandingEffectSource[] {
+  const sources: StandingEffectSource[] = [];
 
   for (const active of G.activeLaws) {
     const card = getResolutionCard(active.cardId);
 
     if (card?.kind === "law") {
-      effects.push(...card.effects);
+      sources.push({
+        kind: "law",
+        id: card.id,
+        label: card.name,
+        effects: card.effects,
+      });
     }
   }
 
   for (const standing of politicianStandings(G)) {
     if (standing.dominant && standing.patron === playerID) {
-      effects.push(...standing.politician.patronBuff.effects);
+      sources.push({
+        kind: "patronage",
+        id: standing.politician.id,
+        label: `${standing.politician.name}'s patronage`,
+        effects: standing.politician.patronBuff.effects,
+      });
     }
   }
 
-  return effects;
+  return sources;
+}
+
+export function getStandingEffects(G: HegemonyState, playerID: PlayerId): LawEffect[] {
+  return getStandingEffectSources(G, playerID).flatMap((source) => source.effects);
 }
 
 /** How many of the player's settlements answer to a scope. */

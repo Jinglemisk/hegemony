@@ -1,3 +1,4 @@
+import { getActiveEffects } from "../game/activeEffects";
 import { getTile } from "../game/rules";
 import { seasonName, yearOf } from "../game/core/calendar";
 import { totalPops } from "../game/core/pops";
@@ -8,6 +9,7 @@ import { playerStandings } from "../game/score";
 import { settlementCapacity } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import type { HegemonyState, PlayerId, Resources } from "../game/types";
+import { presentActiveEffects } from "../ui/effects";
 import type { BatchReport } from "./telemetry";
 
 /** Fractional values (happiness, VP) render with one decimal; integers stay bare. */
@@ -97,6 +99,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
   const standings = playerStandings(G, playerID);
   const unrest = unrestStatus(G, playerID);
   const projection = calculateEconomyProjection(G, playerID);
+  const activeEffects = presentActiveEffects(getActiveEffects(G, playerID, { income: projection.income }));
   const marker = G.currentPlayer === playerID ? " ◀ current" : "";
 
   const lines = [
@@ -110,6 +113,12 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
       .join(" · ")}`,
     `  income: ${formatResourceDelta(projection.income)}`,
   ];
+
+  if (activeEffects.length > 0) {
+    lines.push(
+      ...activeEffects.map((effect) => "  effect: " + effect.accessibleText),
+    );
+  }
 
   for (const tileId of player.settlements) {
     const tile = getTile(G, tileId);
@@ -228,6 +237,17 @@ export function renderBatchReport(report: BatchReport): string {
         `unrest ${(lastSeason.unrestTierShares.unrest * 100).toFixed(0)}% / ` +
         `revolt ${(lastSeason.unrestTierShares.revolt * 100).toFixed(0)}%`,
     );
+  }
+
+  const observedEffects = Object.entries(report.activeEffects)
+    .filter(([, stats]) => stats.observations > 0)
+    .map(
+      ([kind, stats]) =>
+        kind + " " + (stats.playerTurnShare * 100).toFixed(0) + "%",
+    )
+    .join(" · ");
+  if (observedEffects) {
+    lines.push("Active effects (share of player-turns): " + observedEffects);
   }
 
   const buildings = Object.entries(report.buildings)

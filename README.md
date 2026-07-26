@@ -81,6 +81,13 @@ The game is a React and TypeScript client over a pure, serialisable rules engine
 The browser UI, headless simulation/AI, and engine all use the same typed move
 protocol, with parity enforced in CI.
 
+Engine calculators remain authoritative. `src/game/activeEffects.ts#getActiveEffects`
+reads those calculations and persistent state into typed source/scope/duration/expiry
+descriptors; the board and ledger UI, CLI output, reference policies, and simulation
+telemetry consume that shared projection rather than reconstructing the rules.
+Frontend wording and semantic tone continue through `src/ui/effects.ts` and
+`src/components/EffectLine.tsx`.
+
 ```bash
 npm run check        # TypeScript type-check
 npm run test:parity  # engine, frontend, and simulation/AI parity gate

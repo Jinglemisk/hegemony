@@ -38,7 +38,7 @@ export function applyUnrestUpkeep(G: HegemonyState, playerID: PlayerId) {
       const turnsRemaining = modifier.turnsRemaining - 1;
       addLog(
         G,
-        `${getPlayerName(G, playerID)} feels ${formatRuleNumber(modifier.amountPerTurn)} happiness from ${modifier.source}` +
+        `${getPlayerName(G, playerID)} feels ${formatRuleNumber(modifier.amountPerTurn)} happiness from ${modifier.sourceName}` +
           (turnsRemaining > 0 ? ` (${turnsRemaining} turn${turnsRemaining === 1 ? "" : "s"} left).` : ", now passing.")
       );
 

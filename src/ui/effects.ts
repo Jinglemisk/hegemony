@@ -1,3 +1,5 @@
+import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../game/activeEffects";
+import type { LawEffect } from "../game/assembly/types";
 import type { EventEffect, TableEffect } from "../game/types";
 import {
   RESOURCE_LABELS,
@@ -14,6 +16,13 @@ export type EffectPresentation = {
   tone: EffectTone;
 };
 
+export type ActiveEffectPresentation = EffectPresentation & {
+  id: string;
+  source: string;
+  duration: string;
+  accessibleText: string;
+};
+
 export function presentEventEffects(effects: readonly EventEffect[]): EffectPresentation {
   const presented = effects.map(presentEventEffect);
 
@@ -21,6 +30,31 @@ export function presentEventEffects(effects: readonly EventEffect[]): EffectPres
     text: presented.map((effect) => effect.text).join(" / "),
     tone: combineTones(presented),
   };
+}
+
+/** One frontend projection for board, ledger, tooltip, and accessible status text. */
+export function presentActiveEffect(descriptor: ActiveEffectDescriptor): ActiveEffectPresentation {
+  const presented = descriptor.mechanics.map(presentActiveEffectMechanic);
+  const effect = joinEffectPresentations(presented);
+  const duration = presentActiveEffectDuration(descriptor);
+  const accessibleText = [descriptor.source.label, effect.text, duration]
+    .filter(Boolean)
+    .join(". ");
+
+  return {
+    id: descriptor.id,
+    source: descriptor.source.label,
+    text: effect.text,
+    tone: effect.tone,
+    duration,
+    accessibleText,
+  };
+}
+
+export function presentActiveEffects(
+  descriptors: readonly ActiveEffectDescriptor[],
+): ActiveEffectPresentation[] {
+  return descriptors.map(presentActiveEffect);
 }
 
 export function joinEffectPresentations(
@@ -137,6 +171,263 @@ function presentEventEffect(effect: EventEffect): EffectPresentation {
     case "choice":
       return { text: "Choose one option", tone: "neutral" };
   }
+}
+
+function presentActiveEffectMechanic(mechanic: ActiveEffectMechanic): EffectPresentation {
+  switch (mechanic.type) {
+    case "suppressIncome":
+      return {
+        text: "No income for " + mechanic.turns + " collection" + (mechanic.turns === 1 ? "" : "s"),
+        tone: "negative",
+      };
+    case "foodDeficitProgress":
+      return {
+        text:
+          formatSignedNumber(mechanic.netFood) +
+          " food income · starvation " +
+          mechanic.current +
+          "/" +
+          mechanic.threshold +
+          (mechanic.graceActive ? " (first-income grace)" : "") +
+          " · -" +
+          mechanic.popLoss +
+          " pop at threshold",
+        tone: "negative",
+      };
+    case "timedHappiness":
+      return {
+        text: formatSignedNumber(mechanic.amountPerTurn) + " happiness per upkeep",
+        tone: signedTone(mechanic.amountPerTurn),
+      };
+    case "resourceIncome":
+      return {
+        text:
+          formatSignedNumber(mechanic.amount) +
+          " " +
+          RESOURCE_LABELS[mechanic.resource] +
+          " income",
+        tone: signedTone(mechanic.amount),
+      };
+    case "buildingCostMultiplier":
+      return {
+        text:
+          "Building costs ×" +
+          formatNumber(mechanic.multiplier) +
+          (mechanic.excludes.length > 0
+            ? " (excludes " + mechanic.excludes.map(actionLabel).join(", ") + ")"
+            : ""),
+        tone: mechanic.multiplier < 1 ? "positive" : mechanic.multiplier > 1 ? "negative" : "muted",
+      };
+    case "actionCostDiscount": {
+      const target = mechanic.buildingId
+        ? buildingName(mechanic.buildingId)
+        : mechanic.action === "growPop" && mechanic.pop
+          ? formatPopLabel(mechanic.pop, 1) + " growth"
+          : actionLabel(mechanic.action);
+
+      return {
+        text:
+          "Next " +
+          target +
+          ": -" +
+          formatNumber(mechanic.amount) +
+          " " +
+          RESOURCE_LABELS[mechanic.resource],
+        tone: "positive",
+      };
+    }
+    case "standingLaw":
+      return presentLawEffect(mechanic.effect);
+    case "equalVotesNextAssembly":
+      return {
+        text:
+          "Exactly " + mechanic.votes + " vote" + (mechanic.votes === 1 ? "" : "s") + " per player",
+        tone: "neutral",
+      };
+  }
+}
+
+function presentLawEffect(effect: LawEffect): EffectPresentation {
+  switch (effect.type) {
+    case "settlementIncome":
+      return {
+        text:
+          formatSignedNumber(effect.amount) +
+          " " +
+          RESOURCE_LABELS[effect.resource] +
+          " per " +
+          settlementScopeLabel(effect.scope) +
+          (effect.step && effect.step > 1 ? " / " + effect.step : ""),
+        tone: signedTone(effect.amount),
+      };
+    case "popIncome":
+      return {
+        text:
+          formatSignedNumber(effect.amount) +
+          " " +
+          RESOURCE_LABELS[effect.resource] +
+          " per " +
+          (effect.step && effect.step > 1 ? effect.step + " " : "") +
+          formatPopLabel(effect.pop, effect.step ?? 1),
+        tone: signedTone(effect.amount),
+      };
+    case "popPrimaryIncome":
+      return {
+        text:
+          formatSignedNumber(effect.amount) + " tile resource per " + formatPopLabel(effect.pop, 1),
+        tone: signedTone(effect.amount),
+      };
+    case "flatIncome":
+      return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource] + " income");
+    case "thresholdHappiness":
+      return {
+        text:
+          formatSignedNumber(effect.atOrAbove) +
+          " happiness at " +
+          effect.threshold +
+          " " +
+          RESOURCE_LABELS[effect.resource] +
+          "; " +
+          formatSignedNumber(effect.below) +
+          " below",
+        tone:
+          signedTone(effect.atOrAbove) === signedTone(effect.below)
+            ? signedTone(effect.atOrAbove)
+            : "neutral",
+      };
+    case "surplusConversion":
+      return {
+        text:
+          formatSignedNumber(effect.amount) +
+          " " +
+          RESOURCE_LABELS[effect.to] +
+          " per " +
+          effect.per +
+          " " +
+          RESOURCE_LABELS[effect.from] +
+          " income above " +
+          effect.above,
+        tone: signedTone(effect.amount),
+      };
+    case "actionCostDelta":
+      return {
+        text:
+          lawActionCostTarget(effect) +
+          ": " +
+          formatSignedNumber(effect.amount) +
+          " " +
+          RESOURCE_LABELS[effect.resource] +
+          " cost",
+        tone: signedTone(-effect.amount),
+      };
+    case "actionCostMultiplier":
+      return {
+        text: actionLabel(effect.action) + " costs ×" + formatNumber(effect.multiplier),
+        tone: effect.multiplier < 1 ? "positive" : effect.multiplier > 1 ? "negative" : "muted",
+      };
+    case "bankRateStep":
+      return {
+        text:
+          RESOURCE_LABELS[effect.material] +
+          " bank rate " +
+          formatSignedNumber(effect.steps) +
+          " step" +
+          (Math.abs(effect.steps) === 1 ? "" : "s"),
+        tone: signedTone(effect.steps),
+      };
+    case "yearlyFreeAction":
+      return {
+        text:
+          "First " +
+          actionLabel(effect.action) +
+          " each year: free " +
+          effect.resources.map((resource) => RESOURCE_LABELS[resource]).join(" + "),
+        tone: "positive",
+      };
+    case "onFoundColony": {
+      const rewards = [
+        effect.grantPop ? "+1 " + formatPopLabel(effect.grantPop, 1) : null,
+        effect.happiness ? formatSignedNumber(effect.happiness) + " happiness" : null,
+      ].filter(Boolean);
+      return {
+        text: "On founding a colony: " + rewards.join(" + "),
+        tone: (effect.happiness ?? 0) < 0 && !effect.grantPop ? "negative" : "positive",
+      };
+    }
+  }
+}
+
+function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string {
+  const remaining = descriptor.duration.remaining;
+  switch (descriptor.duration.expiry) {
+    case "afterIncomeCollections":
+      return remaining + " income collection" + (remaining === 1 ? " remaining" : "s remaining");
+    case "afterPlayerUpkeeps":
+      return remaining + " upkeep" + (remaining === 1 ? " remaining" : "s remaining");
+    case "onFoodRecoveryOrStarvation":
+      return remaining + " deficient upkeep" + (remaining === 1 ? "" : "s") + " to threshold";
+    case "atSeasonEnd":
+      return "Until season end";
+    case "atYearEnd":
+      return "Until year end";
+    case "afterMatchingActionOrTurnEnd":
+      return "Until used or turn end";
+    case "afterMatchingLawActionOrYearEnd":
+      return "Until used or year end";
+    case "whenRepealed":
+      return "Until repealed";
+    case "whenPatronageChanges":
+      return "While patronage holds";
+    case "atNextAssembly":
+      return "At the next Assembly";
+  }
+}
+
+function actionLabel(action: string): string {
+  const labels: Record<string, string> = {
+    buildBuilding: "build",
+    foundColony: "found colony",
+    growPop: "grow pop",
+    upgradeColonyToCity: "upgrade colony",
+    promotePop: "promote pop",
+    demotePop: "demote pop",
+  };
+  return labels[action] ?? action;
+}
+
+function lawActionCostTarget(
+  effect: Extract<LawEffect, { type: "actionCostDelta" }>,
+): string {
+  let target = actionLabel(effect.action);
+
+  if (effect.scope) {
+    target += " in " + settlementScopePlural(effect.scope);
+  }
+
+  if (effect.pop) {
+    target += " (" + formatPopLabel(effect.pop, 1) + " only)";
+  }
+
+  if (effect.buildingIds?.length) {
+    target += " (" + joinHumanList(effect.buildingIds.map(buildingName)) + " only)";
+  }
+
+  return target;
+}
+
+function settlementScopePlural(scope: "all" | "city" | "colony"): string {
+  if (scope === "all") return "all settlements";
+  return scope === "city" ? "cities" : "colonies";
+}
+
+function joinHumanList(items: string[]): string {
+  if (items.length < 2) return items[0] ?? "";
+  if (items.length === 2) return items.join(" and ");
+  return items.slice(0, -1).join(", ") + ", and " + items.at(-1);
+}
+
+function settlementScopeLabel(scope: "all" | "city" | "colony"): string {
+  return scope === "all" ? "settlement" : scope;
 }
 
 function signedPresentation(amount: number, label: string): EffectPresentation {

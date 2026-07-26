@@ -1,6 +1,12 @@
 import { seasonName, yearOf } from "../game/core/calendar";
 import { totalPops } from "../game/core/pops";
 import { calculateIncome } from "../game/economy/income";
+import {
+  ACTIVE_EFFECT_KINDS,
+  countActiveEffectsByKind,
+  getActiveEffects,
+} from "../game/activeEffects";
+import type { ActiveEffectKind } from "../game/activeEffects";
 import type { LegalMove } from "../game/legalMoves";
 import { PLAYER_IDS } from "../game/data";
 import { playerStandings } from "../game/score";
@@ -33,6 +39,8 @@ export type PlayerSnapshot = {
   /** 1 when the current happiness puts the player on the riot table next upkeep. */
   riotAtRisk: number;
   deficitTurns: number;
+  /** Persistent mechanical effects observed by the same selector used by the UI. */
+  activeEffects: Record<ActiveEffectKind, number>;
   popsLostToUnrest: number;
   popsGainedFromEvents: number;
 };
@@ -57,6 +65,9 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
     const inTransit = G.transfers
       .filter((transfer) => transfer.owner === playerID)
       .reduce((total, transfer) => total + totalPops(transfer.pops), 0);
+    const income = calculateIncome(G, playerID);
+    const activeEffects = getActiveEffects(G, playerID, { income });
+    const activeEffectCounts = countActiveEffectsByKind(activeEffects);
 
     players[playerID] = {
       victoryCards: standings.victoryCards,
@@ -66,12 +77,13 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       frontierTiles: G.board.tiles.filter((tile) => canPlaceColonyOnTile(G, playerID, tile).can).length,
       inTransit,
       resources: { ...player.resources },
-      income: calculateIncome(G, playerID),
+      income,
       unrestTier: unrest.tier,
       riotAtRisk: unrest.riotAtRisk ? 1 : 0,
       deficitTurns: player.consecutiveFoodDeficitTurns,
       popsLostToUnrest: player.popsLostToUnrest,
       popsGainedFromEvents: player.popsGainedFromEvents,
+      activeEffects: activeEffectCounts,
     };
   }
 
@@ -117,6 +129,7 @@ export type SeasonRow = {
   food: Percentiles;
   happiness: Percentiles;
   unrestTierShares: Record<UnrestTier, number>;
+  activeEffectShares: Record<ActiveEffectKind, number>;
 };
 
 /** How a game ended. A real result (victoryRace/deckExhausted) names a winner; a
@@ -168,6 +181,12 @@ export type BatchReport = {
   /** Universal action telemetry. Every LegalMove type is present, including zeroes,
    *  so newly added or unexercised actions cannot disappear from a report. */
   movesByType: Record<LegalMoveType, { count: number; perGame: number }>;
+  /** Effect prevalence over every player-turn snapshot; no status can vanish from
+   *  balance interpretation merely because it has no dedicated move. */
+  activeEffects: Record<
+    ActiveEffectKind,
+    { observations: number; perPlayerTurn: number; playerTurnShare: number }
+  >;
   buildings: Record<string, { built: number; perGame: number }>;
   events: {
     player: Record<string, number>;
@@ -426,9 +445,18 @@ export class Aggregator {
 
         const tierShares: Record<UnrestTier, number> = { calm: 0, discontent: 0, unrest: 0, revolt: 0 };
         const seats = snapshots.length * PLAYER_IDS.length;
+        const activeEffectShares = Object.fromEntries(
+          ACTIVE_EFFECT_KINDS.map((kind) => [kind, 0]),
+        ) as Record<ActiveEffectKind, number>;
+
         for (const snapshot of snapshots) {
           for (const playerID of PLAYER_IDS) {
             tierShares[snapshot.players[playerID].unrestTier] += 1 / seats;
+            for (const kind of ACTIVE_EFFECT_KINDS) {
+              if (snapshot.players[playerID].activeEffects[kind] > 0) {
+                activeEffectShares[kind] += 1 / seats;
+              }
+            }
           }
         }
 
@@ -442,6 +470,7 @@ export class Aggregator {
           food: percentiles(values((player) => player.resources.food)),
           happiness: percentiles(values((player) => player.resources.happiness)),
           unrestTierShares: tierShares,
+          activeEffectShares,
         };
       });
 
@@ -492,6 +521,31 @@ export class Aggregator {
       buildings[buildingId] = { built, perGame: this.games.length > 0 ? built / this.games.length : 0 };
     }
 
+    const playerTurnCount = this.snapshots.length * PLAYER_IDS.length;
+    const activeEffects = Object.fromEntries(
+      ACTIVE_EFFECT_KINDS.map((kind) => {
+        let observations = 0;
+        let playerTurnsWithEffect = 0;
+        for (const snapshot of this.snapshots) {
+          for (const playerID of PLAYER_IDS) {
+            const count = snapshot.players[playerID].activeEffects[kind];
+            observations += count;
+            if (count > 0) {
+              playerTurnsWithEffect += 1;
+            }
+          }
+        }
+        return [
+          kind,
+          {
+            observations,
+            perPlayerTurn: playerTurnCount > 0 ? observations / playerTurnCount : 0,
+            playerTurnShare: playerTurnCount > 0 ? playerTurnsWithEffect / playerTurnCount : 0,
+          },
+        ];
+      }),
+    ) as BatchReport["activeEffects"];
+
     return {
       meta,
       perGame: this.games,
@@ -504,6 +558,7 @@ export class Aggregator {
           this.perGameCount(this.movesByType[moveType] ?? 0),
         ]),
       ) as BatchReport["movesByType"],
+      activeEffects,
       events: {
         player: this.playerEvents,
         seasonal: this.seasonalEvents,
@@ -593,6 +648,7 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
     "deficitTurns",
     "popsLostToUnrest",
     "popsGainedFromEvents",
+    ...ACTIVE_EFFECT_KINDS.map((kind) => "effect:" + kind),
   ];
 
   const rows = snapshots.flatMap((snapshot) =>
@@ -629,6 +685,7 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
         player.deficitTurns,
         player.popsLostToUnrest,
         player.popsGainedFromEvents,
+        ...ACTIVE_EFFECT_KINDS.map((kind) => player.activeEffects[kind]),
       ].join(",");
     }),
   );
