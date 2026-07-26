@@ -1,6 +1,6 @@
 /* scoreboard — Top-bar seat switcher (right): four squares in each player's
    colour that switch the viewed empire. A playtest tool, not a scoreboard —
-   per-empire detail moves to the player dossier (docs/feat/two-panel.md). */
+   per-empire detail moves to the player dossier (docs/archive/plans/two-panel.md). */
 
 .seatSwatch {
   flex: none;

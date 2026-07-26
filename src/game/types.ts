@@ -203,7 +203,7 @@ export interface Yield {
   amount: number;
 }
 
-// ── Event tables (roadmap-appendix D9/D10 · docs/feat/event-tables.md) ─────────────
+// ── Event tables (roadmap-appendix D9/D10 · docs/archive/plans/event-tables.md) ─────────────
 //
 // Dice-and-table as one reusable, data-driven component: a table is content data,
 // `rollOnTable` (game/tables.ts) is the only engine seam, and every instance — riot,
@@ -474,7 +474,7 @@ export interface HegemonyState {
   rng: number;
   log: LogEntry[];
 
-  // ── The Assembly (Phase 3-B · docs/feat/assembly-politicians.md) ────────────────
+  // ── The Assembly (Phase 3-B · docs/archive/plans/assembly-politicians.md) ────────────────
   //
   // The whole rivalry layer is these seven fields. Note what is NOT here: no power
   // counters, no patron table, no decay timers. Power and patronage are READ OFF

@@ -7,7 +7,7 @@ import type { PlayerId } from "../../../game/types";
  * player's colour; clicking one views that empire. The acting seat gets a ring,
  * the seat you are viewing gets a filled outline. Names/standings lived here once
  * but forced the roster wide enough to shove the season medallion off-centre;
- * per-empire detail belongs in the coming player dossier (docs/feat/two-panel.md).
+ * per-empire detail belongs in the coming player dossier (docs/archive/plans/two-panel.md).
  */
 function PlayerScoreboardComponent({
   currentPlayerId,

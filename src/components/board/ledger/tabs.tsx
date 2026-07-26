@@ -3,7 +3,7 @@ import { AtlasIcon, UiSprite } from "../../Sprites";
 import type { ConsultTab, EmpireTab, LedgerTab } from "../types";
 
 /**
- * The two rails' pages, in disc order. The two-panel law (docs/feat/two-panel.md):
+ * The two rails' pages, in disc order. The two-panel law (docs/archive/plans/two-panel.md):
  * the LEFT rail is what you *act on* (Cities/Pops/Build/Market), the RIGHT rail is
  * what you *consult* (Chronicle/Codex/Victory). Each list is read by both its rail
  * (which draws the discs) and its panel (which titles itself from the open page), so

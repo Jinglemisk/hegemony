@@ -2,7 +2,7 @@ import type { DirectiveCard, LawCard, Politician, PoliticianId, ResolutionCard }
 
 /**
  * The Assembly's content tables — the four politicians and the 31-card starter deck
- * (docs/feat/assembly-politicians.md Appendix A).
+ * (docs/archive/plans/assembly-politicians.md Appendix A).
  *
  * This is CONTENT, not balance: the "what exists". Every magnitude here is a
  * provisional number the `?tune` panel and `npm run sim` are expected to move — the

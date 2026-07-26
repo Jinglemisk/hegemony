@@ -29,6 +29,7 @@ change is not ready to merge.
 ## Validation
 
 - [ ] `npm run check`
+- [ ] `npm run docs:check`
 - [ ] `npm run test:parity`
 - [ ] `npm run lint`
 - [ ] `npm run test:run`

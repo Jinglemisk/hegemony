@@ -129,13 +129,13 @@ export interface PlacementRules {
 }
 
 /**
- * The Assembly's dials (docs/feat/assembly-politicians.md §5). Every number the
+ * The Assembly's dials (docs/archive/plans/assembly-politicians.md §5). Every number the
  * rivalry layer turns on lives here, because the design's own note is that the
  * *shape* is locked and the *numbers* want the `?tune` panel and the sim — the sink
  * depth in particular is called out as "the most important A/B".
  *
  * The costs reproduce the approved visual reference's own figures
- * (docs/design/showcases/assembly-mode-showcase.html): draw 3, bribe 10 capped at 2,
+ * (docs/reference/design/showcases/assembly-mode-showcase.html): draw 3, bribe 10 capped at 2,
  * veto 5.
  */
 export interface AssemblyRules {
@@ -240,7 +240,7 @@ export const DEFAULT_RULESET: Ruleset = {
     },
     bank: {
       // PROVISIONAL rates (D6): baseline sell 3:1 / buy 2g; scarcity classes sit one
-      // step off. The derivation default is the sim A/B's pick (docs/sim/).
+      // step off. The derivation default is the sim A/B's pick (docs/reports/simulation/).
       derivation: "scarcity",
       baseline: { sell: 3, buy: 2 },
       abundant: { sell: 4, buy: 2 },

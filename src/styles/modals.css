@@ -655,7 +655,7 @@
 
 
 /* Event-table modal — the ONE shared surface for every dice table
-   (docs/feat/event-tables.md): riot, expeditions, future omens. */
+   (docs/archive/plans/event-tables.md): riot, expeditions, future omens. */
 .eventTableModal {
   display: grid;
   gap: 12px;

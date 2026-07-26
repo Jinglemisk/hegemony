@@ -27,7 +27,7 @@ import { EventTableRows } from "../modals/EventTableModal";
 /**
  * The rulebook — the whole of Hegemony's rules, as chapters in the order you learn
  * the game, not a scatter of reference articles. It is the narrative head the Codex
- * plan (docs/feat/codex-rules.md) called for.
+ * plan (docs/archive/plans/codex-rules.md) called for.
  *
  * The one law (same as the rest of the Codex): every NUMBER is sourced — capacities,
  * costs, thresholds, minimums all read from `G.ruleset` or the content tables at

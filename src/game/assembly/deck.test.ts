@@ -4,7 +4,7 @@ import { POLITICIANS, POLITICIANS_BY_ID, RESOLUTION_CARDS, RESOLUTION_DECKS, get
 import type { LawCard, LawEffect, PoliticianId, ResolutionCard } from "./types";
 
 /**
- * Deck integrity (docs/feat/assembly-politicians.md Appendix A).
+ * Deck integrity (docs/archive/plans/assembly-politicians.md Appendix A).
  *
  * These are content assertions, not balance ones: every magnitude in deck.ts is
  * expected to move with `?tune` and the sim, so nothing here pins a number. What it

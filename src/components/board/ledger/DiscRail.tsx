@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 /**
  * The KYKLOS disc rail, shared by the left ledger rail and the right consult rail
- * (docs/feat/two-panel.md — the right rail *mirrors* the left, not a new widget). A
+ * (docs/archive/plans/two-panel.md — the right rail *mirrors* the left, not a new widget). A
  * thin glass spine with menu discs threaded on it, overhanging the sea; each disc
  * switches its floating panel to one page. `side` flips which edge it hugs and which
  * way the discs overhang (left → inward-right, right → inward-left).
