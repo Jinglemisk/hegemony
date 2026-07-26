@@ -1,8 +1,8 @@
 /* ==========================================================================
- * The Assembly (Phase 3-B) — docs/feat/assembly-politicians.md §1.2
+ * The Assembly (Phase 3-B) — docs/archive/plans/assembly-politicians.md §1.2
  *
  * Transcribed from the OWNER-APPROVED reference,
- * docs/design/showcases/assembly-mode-showcase.html (2026-07-20). Where this file
+ * docs/reference/design/showcases/assembly-mode-showcase.html (2026-07-20). Where this file
  * departs from that reference it is because the reference is a static mock and the
  * real panel has states it never drew (casting a vote, an empty stack, a picker
  * menu); each such departure is commented.

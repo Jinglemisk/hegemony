@@ -8,7 +8,7 @@ import { LEDGER_TABS } from "./tabs";
 
 /**
  * The left disc rail (ui-refit Step 2) — KYKLOS's menu spine, now the *act* rail
- * only (docs/feat/two-panel.md): Cities, Pops, Build, Market. Codex + Victory moved
+ * only (docs/archive/plans/two-panel.md): Cities, Pops, Build, Market. Codex + Victory moved
  * to the right consult rail.
  */
 function LedgerRailComponent({

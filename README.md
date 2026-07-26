@@ -96,9 +96,9 @@ npm run test:run     # Vitest suite
 npm run build        # production build
 ```
 
-See the [roadmap](docs/roadmap.md) for delivery plans, the
-[simulation guide](docs/simulation.md) for headless play and balance testing, and
-the [player guide](rules.md) for detailed gameplay instructions.
+Start with the [documentation control plane](docs/README.md), then use the
+[simulation guide](docs/reference/simulation.md) for headless play and balance
+testing or the [player guide](rules.md) for detailed gameplay instructions.
 
 ## Status
 

@@ -17,6 +17,14 @@ Finish the remaining truth, enforceability, interaction, and Assembly work neede
 before Phase 3.5 can be validated as a whole. Every gameplay change follows the
 roadmap's engine/frontend/simulation-AI parity contract.
 
+## Three-axis parity
+
+| Axis             | Applies? | Required representation and proof                                                                                                    |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Engine / backend | Yes      | Authoritative content, costs, status/effect queries, Assembly state and execution, ruleset dials, and behavioral tests               |
+| Frontend         | Yes      | Shared effective-cost/effect presentation, accessible Tooltip/Popover behavior, revised Assembly controls/status, history, and Codex |
+| Simulation & AI  | Yes      | Exhaustive classification, fair observation, revised policy valuation/planning, telemetry, fixtures, and validation campaigns        |
+
 ## Delivery train
 
 | Step                                  | PR type                 | Scope                                                                                                                                                                                                                                                                   | Exit gate                                                                                                                                                  |
@@ -36,12 +44,15 @@ roadmap's engine/frontend/simulation-AI parity contract.
   applicable parity axis for a later PR.
 - Balance results before Step 4 are historical results for the old Assembly.
 
-## Inputs still required
+## Settled and open inputs
 
-- Choose initial one-time prizes for Perdiccas, Kleistophenes, and Stratokles.
-- Choose the minimum authored-and-passed count required to hold Voice.
-
-Both values should remain ruleset dials and are validated in Step 5.
+- Patron standing buffs are removed; only the one-time enactment prizes remain.
+- The implementation owns balanced initial prizes for Perdiccas, Kleistophenes,
+  and Stratokles. Prizes never grant citizens and remain ruleset dials.
+- All Stratokles Directives target a chosen player, each passed Directive adds
+  one ratchet count, and the coup is removed.
+- Voice uses a minimum and first-to-reach ownership until strictly exceeded.
+  The numeric minimum remains [owner question Q39](../questions.md#q39--what-is-the-initial-voice-minimum).
 
 ## Retirement
 

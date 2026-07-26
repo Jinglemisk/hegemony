@@ -38,7 +38,7 @@ export function EventTableRows({ table, result }: { table: EventTableDefinition;
 }
 
 /**
- * The one shared surface for every dice table (docs/feat/event-tables.md): six rows,
+ * The one shared surface for every dice table (docs/archive/plans/event-tables.md): six rows,
  * the live modifier, and — after the die — the landed row highlighted with its
  * outcome lines. Riot mounts it blocking with insurance controls in `children`;
  * ventures mount it with the stake picker. No table gets a bespoke modal.

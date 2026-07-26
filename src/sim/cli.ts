@@ -35,7 +35,7 @@ import { Aggregator, snapshotsToCsv } from "./telemetry";
 /**
  * Headless driver for the Hegemony engine. Commands operate on a JSON save file
  * (default .sim/game.json) so a game can be played move-by-move from the shell.
- * See docs/simulation.md for the full reference.
+ * See docs/reference/simulation.md for the full reference.
  */
 
 // Piping into head/grep closes stdout early; exit quietly instead of crashing.

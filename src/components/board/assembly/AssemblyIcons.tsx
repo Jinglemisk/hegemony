@@ -1,6 +1,6 @@
 /**
  * The Assembly's glyph set, transcribed from the approved visual reference
- * (docs/design/showcases/assembly-mode-showcase.html §13).
+ * (docs/reference/design/showcases/assembly-mode-showcase.html §13).
  *
  * All inline SVG on a 24×24 box, `fill="none" stroke="currentColor"`, round caps and
  * joins — so every icon inks itself from its container's colour and none of them need

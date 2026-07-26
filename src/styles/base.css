@@ -212,7 +212,7 @@ button:focus-visible {
   --sea-shadow: 0 1px 3px rgb(10 34 41 / 55%);
 
   /* ── KYKLOS token table ─────────────────────────────────────────────────────
-     Ported verbatim from the contract, docs/design/showcases/DECIDED-UI-LAYOUT.html.
+     Ported verbatim from the contract, docs/reference/design/showcases/DECIDED-UI-LAYOUT.html.
      Values are the mock's, not paraphrases: change them there first. */
 
   /* the clay body and its slips */

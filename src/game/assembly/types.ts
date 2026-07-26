@@ -8,7 +8,7 @@ import type {
 } from "../types";
 
 /**
- * The Assembly & Politicians layer (Phase 3-B · docs/feat/assembly-politicians.md).
+ * The Assembly & Politicians layer (Phase 3-B · docs/archive/plans/assembly-politicians.md).
  *
  * These are TYPE-ONLY imports from `../types`, so the cycle between the two modules
  * is erased at compile time and nothing circular exists at runtime. The shapes live

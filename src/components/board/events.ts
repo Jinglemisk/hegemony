@@ -35,7 +35,7 @@ const EVENT_CARD_ART: Record<string, string> = {
 };
 
 // The 2026-07-13 deck-overhaul cards borrow their nearest kin's art until they get
-// their own (docs/OVERNIGHT.md morning questions) — better a grain jar for Granary Rats
+// their own (docs/archive/notes/OVERNIGHT.md morning questions) — better a grain jar for Granary Rats
 // than everything falling back to the drought plate.
 Object.assign(EVENT_CARD_ART, {
   "player-citizenship-rolls": EVENT_CARD_ART["player-new-citizen"],

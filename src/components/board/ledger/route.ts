@@ -1,7 +1,7 @@
 import type { ConsultTab, LedgerTab } from "../types";
 
 /**
- * A panel's current page as a ROUTE, not a bare tab enum (docs/feat/two-panel.md).
+ * A panel's current page as a ROUTE, not a bare tab enum (docs/archive/plans/two-panel.md).
  * Modelled from day one even while the stack is only ever one deep: retrofitting a
  * route onto an enum is painful, widening a shallow route is not. The two extra
  * fields are placeholders for the pieces that land with Phase 3:

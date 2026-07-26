@@ -9,7 +9,7 @@ import { VictoryTab } from "./VictoryTab";
 import { CONSULT_TABS, ledgerTabLabel } from "./tabs";
 
 /**
- * The right consult panel (docs/feat/two-panel.md): a floating card that mirrors the
+ * The right consult panel (docs/archive/plans/two-panel.md): a floating card that mirrors the
  * left ledger card on the far edge, showing what you *consult* — the Chronicle (the
  * running log, formerly the edge drawer), the Codex (rules reference), Victory
  * (the race table) and the Agora (the Assembly's standing record). No empire summary or unrest banner — those are act-side, on the

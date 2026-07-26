@@ -605,7 +605,7 @@ export const beamPolicy: Policy = {
 // that with two explicit ideas — a DIFFERENTIAL lens (my gain minus the STRONGEST rival's,
 // so "does this hurt me, help me, or help a rival more?") and a political-position term —
 // and plays the agora by heuristic rather than blind search. Same `evaluateSmart` spine,
-// so a political-vs-smart A/B isolates the political layer. See docs/feat/influence-aware-ai.md.
+// so a political-vs-smart A/B isolates the political layer. See docs/archive/plans/influence-aware-ai.md.
 
 /** How heavily the agora weighs against the ordinary economy — modest, the economy is the
  *  spine. Only shapes the bot's NON-assembly turns (valuing building toward Voice); the
@@ -872,7 +872,7 @@ export const politicalPolicy: Policy = {
 // turns on"). Expansion is the heart of the game, so `settler` prices it: a term for the
 // reachable, unclaimed, yielding frontier, so the one-ply search prefers placements that
 // OPEN expansion, not just the fattest single tile. Same smart spine, so a settler-vs-smart
-// A/B isolates map foresight from everything else. See docs/feat/map-foresight.md.
+// A/B isolates map foresight from everything else. See docs/reports/simulation/2026-07-21-map-foresight.md.
 
 /** Total yield on the player's next legally reachable settlement frontier. This is the
  * measured-low-weight signal from `settler`: it nudges WHICH direction to expand without
@@ -900,7 +900,7 @@ function evaluateSettler(G: HegemonyState, playerID: PlayerId): number {
  * The expansion-frontier bot: `smart`'s economic / population / building evaluation PLUS a
  * one-step frontier term, over the same one-ply search `smart` uses. It scores the same as
  * `smart` but adds `FRONTIER_WEIGHT × frontierValue`, so a `smart`-vs-`settler` A/B isolates
- * map foresight from everything else. See docs/feat/map-foresight.md.
+ * map foresight from everything else. See docs/reports/simulation/2026-07-21-map-foresight.md.
  */
 export const settlerPolicy: Policy = {
   name: "settler",

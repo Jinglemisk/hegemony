@@ -94,7 +94,7 @@ export const SETTLEMENT_RULES: Record<
   }
 };
 
-// ── Event tables (docs/feat/event-tables.md) ────────────────────────────────────────
+// ── Event tables (docs/archive/plans/event-tables.md) ────────────────────────────────────────
 //
 // Content data for the dice-table component. Adding a table here (plus a trigger)
 // is the whole cost of a new one — the engine seam and the modal are shared.

@@ -6,7 +6,7 @@ import { DiscRail } from "./DiscRail";
 import { CONSULT_TABS } from "./tabs";
 
 /**
- * The right disc rail (docs/feat/two-panel.md) — the *consult* rail, mirroring the
+ * The right disc rail (docs/archive/plans/two-panel.md) — the *consult* rail, mirroring the
  * left `.ledgerRail` on the far edge with discs overhanging inward. Chronicle, Codex,
  * Victory and the Agora: pages you read, not act on. The player dossier disc joins in Phase 3.
  */
