@@ -142,6 +142,13 @@ Works from any phase — bots will finish a manual setup too. Policies:
   saving, general opponent replies, multi-hop route planning, and chance expected value
   remain future work. See docs/feat/ai-bot-parity.md.
 
+The economic policies project six future upkeeps one step at a time through the
+canonical active-effect descriptors. Each step applies timed mood, burns suppressed
+collections, advances starvation, and recalculates authoritative income after projected
+pop loss. Starvation uses the mean state of the engine's uniform pop-removal bag, so the
+forecast responds when fewer pops repair the deficit without reading or advancing future
+game RNG.
+
 How the bots work, their limitations, and the path to CPU opponents with
 difficulty settings: **docs/ai.md**.
 

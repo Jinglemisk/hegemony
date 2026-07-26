@@ -210,50 +210,141 @@ export function projectPolicyHorizon(
   playerID: PlayerId,
   horizon = INCOME_HORIZON,
 ): PolicyProjection {
-  const player = G.players[playerID];
-  const income = calculateIncome(G, playerID);
-  const activeEffects = getActiveEffects(G, playerID, { income });
-  const projected = { ...player.resources };
-  let suppressedCollections = 0;
+  const projectedState = createPolicyProjectionState(G, playerID);
+  const player = projectedState.players[playerID];
   let expectedStarvationPopLoss = 0;
+  let income = calculateIncome(projectedState, playerID);
+  const activeEffects = getActiveEffects(projectedState, playerID, { income });
+  const mechanics = activeEffects.flatMap((descriptor) => descriptor.mechanics);
+  let suppressedCollections = mechanics.reduce(
+    (total, mechanic) => total + (mechanic.type === "suppressIncome" ? mechanic.turns : 0),
+    0,
+  );
+  let deficit = mechanics.find((mechanic) => mechanic.type === "foodDeficitProgress");
 
-  for (const descriptor of activeEffects) {
-    for (const mechanic of descriptor.mechanics) {
-      if (mechanic.type === "suppressIncome") {
-        suppressedCollections += mechanic.turns;
+  for (let step = 0; step < horizon; step += 1) {
+    for (const mechanic of mechanics) {
+      if (mechanic.type === "timedHappiness" && step < mechanic.turns) {
+        player.resources.happiness += mechanic.amountPerTurn;
       }
+    }
+
+    const graceActive =
+      projectedState.ruleset.economy.firstIncomeFoodGrace &&
+      !player.hasCollectedGameplayIncome;
+
+    if (!graceActive) {
+      if (deficit) {
+        player.consecutiveFoodDeficitTurns += 1;
+
+        if (player.consecutiveFoodDeficitTurns >= deficit.threshold) {
+          const removed = removeExpectedStarvationPops(
+            projectedState,
+            playerID,
+            deficit.popLoss,
+          );
+          expectedStarvationPopLoss += removed;
+          player.consecutiveFoodDeficitTurns = 0;
+
+          if (removed > 0) {
+            income = calculateIncome(projectedState, playerID);
+            deficit = getActiveEffects(projectedState, playerID, { income })
+              .flatMap((descriptor) => descriptor.mechanics)
+              .find((mechanic) => mechanic.type === "foodDeficitProgress");
+          }
+        }
+      } else {
+        player.consecutiveFoodDeficitTurns = 0;
+      }
+    }
+
+    if (suppressedCollections > 0) {
+      suppressedCollections -= 1;
+      player.incomeSuppressedTurns = Math.max(0, player.incomeSuppressedTurns - 1);
+    } else {
+      for (const resource of Object.keys(income) as Array<keyof typeof income>) {
+        player.resources[resource] += income[resource];
+      }
+    }
+
+    player.hasCollectedGameplayIncome = true;
+  }
+
+  return { resources: { ...player.resources }, expectedStarvationPopLoss };
+}
+
+/**
+ * Isolate only the state the projection mutates. Policy evaluation runs for every
+ * legal candidate, so cloning decks, logs, assembly state, and unrelated players
+ * here would turn the six-step horizon into a simulation-wide hot path.
+ */
+function createPolicyProjectionState(
+  G: HegemonyState,
+  playerID: PlayerId,
+): HegemonyState {
+  const originalPlayer = G.players[playerID];
+  const ownedTileIds = new Set(originalPlayer.settlements);
+
+  return {
+    ...G,
+    board: {
+      ...G.board,
+      tiles: G.board.tiles.map((tile) =>
+        ownedTileIds.has(tile.id)
+          ? {
+              ...tile,
+              settlements: tile.settlements.map((settlement) =>
+                settlement.owner === playerID
+                  ? { ...settlement, pops: { ...settlement.pops } }
+                  : settlement,
+              ),
+            }
+          : tile,
+      ),
+    },
+    players: {
+      ...G.players,
+      [playerID]: {
+        ...originalPlayer,
+        resources: { ...originalPlayer.resources },
+        timedHappinessModifiers: originalPlayer.timedHappinessModifiers.map((modifier) => ({
+          ...modifier,
+        })),
+      },
+    },
+  };
+}
+
+/**
+ * Mean-state counterpart to the engine's uniform random pop bag. Scaling each
+ * holding/type by its survival probability avoids peeking at future RNG while
+ * letting canonical income recalculate after every projected starvation event.
+ */
+function removeExpectedStarvationPops(
+  G: HegemonyState,
+  playerID: PlayerId,
+  count: number,
+): number {
+  const settlements = G.players[playerID].settlements
+    .map((tileId) => getTile(G, tileId)?.settlements.find((settlement) => settlement.owner === playerID))
+    .filter((settlement) => settlement !== undefined);
+  const total = settlements.reduce(
+    (sum, settlement) =>
+      sum + settlement.pops.citizens + settlement.pops.freemen + settlement.pops.slaves,
+    0,
+  );
+
+  if (total <= 0 || count <= 0) return 0;
+
+  const removed = Math.min(count, total);
+  const survivalRate = (total - removed) / total;
+  for (const settlement of settlements) {
+    for (const pop of ["citizens", "freemen", "slaves"] as const) {
+      settlement.pops[pop] *= survivalRate;
     }
   }
 
-  const collectedTurns = Math.max(0, horizon - suppressedCollections);
-  for (const resource of Object.keys(income) as (keyof typeof income)[]) {
-    projected[resource] += income[resource] * collectedTurns;
-  }
-
-  for (const descriptor of activeEffects) {
-    for (const mechanic of descriptor.mechanics) {
-      if (mechanic.type === "timedHappiness") {
-        projected.happiness +=
-          mechanic.amountPerTurn * Math.min(horizon, mechanic.turns);
-      }
-
-      if (
-        mechanic.type === "foodDeficitProgress" &&
-        mechanic.netFood <= G.ruleset.economy.unrest.foodDeficitThreshold
-      ) {
-        const exposedUpkeeps = Math.max(
-          0,
-          horizon - (mechanic.graceActive ? 1 : 0),
-        );
-        const starvationEvents = Math.floor(
-          (mechanic.current + exposedUpkeeps) / mechanic.threshold,
-        );
-        expectedStarvationPopLoss += starvationEvents * mechanic.popLoss;
-      }
-    }
-  }
-
-  return { resources: projected, expectedStarvationPopLoss };
+  return removed;
 }
 
 /**

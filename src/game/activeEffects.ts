@@ -6,6 +6,7 @@ import { scaledByPops } from "./settlement";
 import type {
   ActionCostDiscountTarget,
   BuildingId,
+  EventEffect,
   HegemonyState,
   PlayerId,
   PopType,
@@ -28,6 +29,33 @@ export const ACTIVE_EFFECT_KINDS = [
 
 export type ActiveEffectKind = (typeof ACTIVE_EFFECT_KINDS)[number];
 
+export type EventEffectActiveEffectHandling =
+  | "immediate"
+  | "materializedTimedHappiness"
+  | "materializedActionDiscount"
+  | "activeSeason"
+  | "activeSeasonWhenMarked"
+  | "container";
+
+/**
+ * Exhaustive inventory of how every event-effect variant reaches active status.
+ * Adding a new EventEffect is a type error until its parity path is classified.
+ */
+export const EVENT_EFFECT_ACTIVE_EFFECT_HANDLING = {
+  resourceDelta: "immediate",
+  scaledResourceDelta: "immediate",
+  happinessDelta: "immediate",
+  scaledHappinessDelta: "activeSeasonWhenMarked",
+  timedHappinessDelta: "materializedTimedHappiness",
+  incomeModifier: "activeSeasonWhenMarked",
+  buildingCostMultiplier: "activeSeason",
+  addPops: "immediate",
+  actionCostDiscount: "materializedActionDiscount",
+  resourceExchange: "immediate",
+  resourceDeltaPerPop: "immediate",
+  choice: "container",
+} as const satisfies Record<EventEffect["type"], EventEffectActiveEffectHandling>;
+
 export type ActiveEffectSource = {
   kind: "directive" | "unrest" | "seasonalEvent" | "omen" | "playerEvent" | "law" | "patronage";
   id: string;
@@ -46,6 +74,7 @@ export type ActiveEffectExpiry =
   | "atSeasonEnd"
   | "atYearEnd"
   | "afterMatchingActionOrTurnEnd"
+  | "afterMatchingLawActionOrYearEnd"
   | "whenRepealed"
   | "whenPatronageChanges"
   | "atNextAssembly";
@@ -166,10 +195,17 @@ export function getActiveEffects(
 
   for (const [index, modifier] of player.timedHappinessModifiers.entries()) {
     effects.push({
-      id: "timed-happiness:" + playerID + ":" + index + ":" + modifier.source,
+      id: "timed-happiness:" + playerID + ":" + index + ":" + modifier.sourceCardId,
       kind: "timedHappiness",
-      source: { kind: "playerEvent", id: modifier.source, label: modifier.source },
-      scope: { kind: "player", playerID },
+      source: {
+        kind: modifier.sourceDeck === "seasonal" ? "seasonalEvent" : "playerEvent",
+        id: modifier.sourceCardId,
+        label: modifier.sourceName,
+      },
+      scope:
+        modifier.sourceScope === "allPlayers"
+          ? { kind: "allPlayers" }
+          : { kind: "player", playerID },
       duration: {
         unit: "playerUpkeeps",
         remaining: modifier.turnsRemaining,
@@ -217,22 +253,48 @@ export function getActiveEffects(
   }
 
   for (const source of getStandingEffectSources(G, playerID)) {
-    effects.push({
-      id: source.kind + ":" + source.id,
-      kind: source.kind === "law" ? "standingLaw" : "patronage",
-      source: {
-        kind: source.kind,
-        id: source.id,
-        label: source.label,
-      },
-      scope: source.kind === "law" ? { kind: "allPlayers" } : { kind: "player", playerID },
-      duration: {
-        unit: "standing",
-        remaining: null,
-        expiry: source.kind === "law" ? "whenRepealed" : "whenPatronageChanges",
-      },
-      mechanics: source.effects.map((effect) => ({ type: "standingLaw", effect })),
-    });
+    const standingEffects = source.effects.filter((effect) => effect.type !== "yearlyFreeAction");
+
+    if (standingEffects.length > 0) {
+      effects.push({
+        id: source.kind + ":" + source.id,
+        kind: source.kind === "law" ? "standingLaw" : "patronage",
+        source: {
+          kind: source.kind,
+          id: source.id,
+          label: source.label,
+        },
+        scope: source.kind === "law" ? { kind: "allPlayers" } : { kind: "player", playerID },
+        duration: {
+          unit: "standing",
+          remaining: null,
+          expiry: source.kind === "law" ? "whenRepealed" : "whenPatronageChanges",
+        },
+        mechanics: standingEffects.map((effect) => ({ type: "standingLaw", effect })),
+      });
+    }
+
+    for (const effect of source.effects) {
+      if (
+        effect.type !== "yearlyFreeAction" ||
+        player.lawFreeActionsUsedThisYear.includes(effect.action)
+      ) {
+        continue;
+      }
+
+      effects.push({
+        id: source.kind + ":" + source.id + ":annual:" + effect.action,
+        kind: source.kind === "law" ? "standingLaw" : "patronage",
+        source: { kind: source.kind, id: source.id, label: source.label },
+        scope: { kind: "player", playerID },
+        duration: {
+          unit: "matchingAction",
+          remaining: 1,
+          expiry: "afterMatchingLawActionOrYearEnd",
+        },
+        mechanics: [{ type: "standingLaw", effect }],
+      });
+    }
   }
 
   if (G.pendingIsonomia) {
@@ -271,6 +333,12 @@ function addSeasonalEffects(
       : { kind: "activePlayer", playerID: active.playerID };
 
   for (const [index, effect] of active.card.effects.entries()) {
+    const handling = EVENT_EFFECT_ACTIVE_EFFECT_HANDLING[effect.type];
+
+    if (handling !== "activeSeason" && handling !== "activeSeasonWhenMarked") {
+      continue;
+    }
+
     if (
       effect.type === "incomeModifier" &&
       effect.duration === "season" &&

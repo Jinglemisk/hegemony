@@ -312,7 +312,7 @@ function presentLawEffect(effect: LawEffect): EffectPresentation {
     case "actionCostDelta":
       return {
         text:
-          actionLabel(effect.action) +
+          lawActionCostTarget(effect) +
           ": " +
           formatSignedNumber(effect.amount) +
           " " +
@@ -372,6 +372,8 @@ function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string
       return "Until year end";
     case "afterMatchingActionOrTurnEnd":
       return "Until used or turn end";
+    case "afterMatchingLawActionOrYearEnd":
+      return "Until used or year end";
     case "whenRepealed":
       return "Until repealed";
     case "whenPatronageChanges":
@@ -391,6 +393,37 @@ function actionLabel(action: string): string {
     demotePop: "demote pop",
   };
   return labels[action] ?? action;
+}
+
+function lawActionCostTarget(
+  effect: Extract<LawEffect, { type: "actionCostDelta" }>,
+): string {
+  let target = actionLabel(effect.action);
+
+  if (effect.scope) {
+    target += " in " + settlementScopePlural(effect.scope);
+  }
+
+  if (effect.pop) {
+    target += " (" + formatPopLabel(effect.pop, 1) + " only)";
+  }
+
+  if (effect.buildingIds?.length) {
+    target += " (" + joinHumanList(effect.buildingIds.map(buildingName)) + " only)";
+  }
+
+  return target;
+}
+
+function settlementScopePlural(scope: "all" | "city" | "colony"): string {
+  if (scope === "all") return "all settlements";
+  return scope === "city" ? "cities" : "colonies";
+}
+
+function joinHumanList(items: string[]): string {
+  if (items.length < 2) return items[0] ?? "";
+  if (items.length === 2) return items.join(" and ");
+  return items.slice(0, -1).join(", ") + ", and " + items.at(-1);
 }
 
 function settlementScopeLabel(scope: "all" | "city" | "colony"): string {

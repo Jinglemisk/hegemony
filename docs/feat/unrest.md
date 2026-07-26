@@ -39,8 +39,10 @@ spiral.
 ## Timed unrest events
 
 New `EventEffect` variant `timedHappinessDelta { scope, amountPerTurn, turns }`
-(`types.ts`). `applyEventEffects` (`events.ts`) pushes a `TimedHappinessModifier` onto
-each scoped player; the countdown lives entirely in the upkeep. Two cards use it:
+(`types.ts`). `applyEventEffects` (`events.ts`) pushes a `TimedHappinessModifier` with
+the source card ID, display name, deck, and original scope onto each affected player;
+the countdown lives entirely in the upkeep. The active-effect selector therefore keeps
+seasonal and player provenance without inferring it from display text. Two cards use it:
 `player-civil-discord` (activePlayer, −2/turn ×3) and `season-plague` (allPlayers,
 −2/turn ×3, immediate). The UI formatter (`components/board/events.ts`) renders
 "−2 Happiness per turn for 3 turns". **These two cards reuse the fallback card art** —

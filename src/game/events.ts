@@ -190,7 +190,10 @@ function applyEventEffects(
         G.players[playerID].timedHappinessModifiers.push({
           amountPerTurn: effect.amountPerTurn,
           turnsRemaining: effect.turns,
-          source: card.name
+          sourceCardId: card.id,
+          sourceName: card.name,
+          sourceDeck: card.deck,
+          sourceScope: effect.scope
         });
         addLog(
           G,

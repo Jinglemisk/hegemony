@@ -1,19 +1,40 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { ActiveEffectsList } from "../components/ActiveEffectsList";
+import type { GameUi } from "../components/board/GameUiContext";
+import { GameUiProvider } from "../components/board/GameUiProvider";
+import { collectIncome } from "../game/actions";
+import { enactForEval, openAssembly } from "../game/assembly";
+import { RESOLUTION_CARDS } from "../game/assembly/deck";
+import { consumeLawFreeAction } from "../game/assembly/laws";
 import {
   ACTIVE_EFFECT_KINDS,
+  EVENT_EFFECT_ACTIVE_EFFECT_HANDLING,
   countActiveEffectsByKind,
   getActiveEffects,
   type ActiveEffectDescriptor,
 } from "../game/activeEffects";
-import { collectIncome } from "../game/actions";
-import { RESOLUTION_CARDS } from "../game/assembly/deck";
+import { PLAYER_EVENT_CARDS, SEASONAL_EVENT_CARDS } from "../game/data";
 import { calculateIncomeBreakdown } from "../game/economy/income";
-import { expireTurnEventModifiers } from "../game/season";
+import {
+  drawSeasonalEvent,
+  getEventEffectChoices,
+  resolvePendingPlayerEvent,
+} from "../game/events";
+import { expireTurnEventModifiers, startNewSeason } from "../game/season";
 import { materialTile, scenario } from "../game/testing/scenario";
-import type { EventCard, HegemonyState, Pops, TableRollRecord } from "../game/types";
+import type {
+  EventCard,
+  HegemonyState,
+  Pops,
+  TableRollRecord,
+  TimedHappinessModifier,
+} from "../game/types";
 import { applyUnrestUpkeep } from "../game/unrest";
-import { projectPolicyHorizon } from "../sim/policies";
+import { masterPolicy, projectPolicyHorizon } from "../sim/policies";
+import { createSimRng } from "../sim/rng";
 import { snapshotTurn } from "../sim/telemetry";
 import { presentActiveEffect, presentActiveEffects } from "../ui/effects";
 
@@ -60,6 +81,48 @@ function omenRecord(): TableRollRecord {
   };
 }
 
+function timedModifier(
+  sourceName: string,
+  amountPerTurn: number,
+  turnsRemaining: number,
+): TimedHappinessModifier {
+  return {
+    amountPerTurn,
+    turnsRemaining,
+    sourceCardId: "test-" + sourceName.toLowerCase().replaceAll(" ", "-"),
+    sourceName,
+    sourceDeck: "player",
+    sourceScope: "activePlayer",
+  };
+}
+
+function plantLaw(G: HegemonyState, cardId: string, author: "0" | "1" = "0") {
+  G.activeLaws.push({
+    cardId,
+    author,
+    enactedSeason: G.season,
+    order: G.lawOrder++,
+  });
+}
+
+function renderActiveEffects(
+  activeEffects: ActiveEffectDescriptor[],
+  variant: "board" | "ledger",
+): string {
+  const value = { activeEffects } as GameUi;
+  return renderToStaticMarkup(
+    createElement(GameUiProvider, {
+      value,
+      children: createElement(ActiveEffectsList, { variant }),
+    }),
+  );
+}
+
+function cardSeason(card: EventCard): number {
+  const numbers = { spring: 1, summer: 2, autumn: 3, winter: 4 };
+  return numbers[card.seasons?.[0] ?? "spring"];
+}
+
 function effectByKind(
   G: HegemonyState,
   kind: ActiveEffectDescriptor["kind"],
@@ -73,9 +136,7 @@ describe("canonical active-effect selector", () => {
     const G = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });
     G.players["0"].incomeSuppressedTurns = 1;
     G.players["0"].consecutiveFoodDeficitTurns = 1;
-    G.players["0"].timedHappinessModifiers = [
-      { source: "Public Shame", amountPerTurn: -2, turnsRemaining: 2 },
-    ];
+    G.players["0"].timedHappinessModifiers = [timedModifier("Public Shame", -2, 2)];
     G.players["0"].actionCostDiscounts = [
       {
         id: "coupon",
@@ -185,6 +246,13 @@ describe("canonical active-effect selector", () => {
     expect(patronage).toHaveLength(1);
     expect(patronage[0].source.label).toContain("patronage");
     expect(patronage[0].duration.expiry).toBe("whenPatronageChanges");
+
+    const rivalLaws = RESOLUTION_CARDS.filter(
+      (card) => card.kind === "law" && card.politician === "demosthenes",
+    ).slice(G.ruleset.assembly.dominanceThreshold, G.ruleset.assembly.dominanceThreshold * 2);
+    for (const card of rivalLaws) plantLaw(G, card.id, "1");
+
+    expect(effectByKind(G, "patronage")).toHaveLength(0);
   });
 
   it("expires countdown and coupon state at the same lifecycle boundaries it declares", () => {
@@ -192,9 +260,7 @@ describe("canonical active-effect selector", () => {
     G.players["0"].resources.happiness = 20;
     G.players["0"].hasCollectedGameplayIncome = false;
     G.players["0"].incomeSuppressedTurns = 1;
-    G.players["0"].timedHappinessModifiers = [
-      { source: "Passing Cloud", amountPerTurn: -1, turnsRemaining: 1 },
-    ];
+    G.players["0"].timedHappinessModifiers = [timedModifier("Passing Cloud", -1, 1)];
     G.players["0"].actionCostDiscounts = [
       {
         id: "expiring",
@@ -217,22 +283,204 @@ describe("canonical active-effect selector", () => {
     expireTurnEventModifiers(G, "0");
     expect(effectByKind(G, "actionDiscount")).toHaveLength(0);
   });
+
+  it("keeps timed-event card identity, deck, and original scope from real resolution", () => {
+    const plague = SEASONAL_EVENT_CARDS.find((card) => card.id === "season-plague")!;
+    const G = stateWithSettlement();
+    G.season = cardSeason(plague);
+    G.activeSeasonEvent = null;
+    G.seasonalDrawPile = [plague];
+
+    drawSeasonalEvent(G);
+
+    const descriptor = effectByKind(G, "timedHappiness")[0];
+    expect(descriptor.source).toEqual({
+      kind: "seasonalEvent",
+      id: "season-plague",
+      label: "Plague",
+    });
+    expect(descriptor.scope).toEqual({ kind: "allPlayers" });
+    expect(effectByKind(G, "timedHappiness", "1")[0].source.id).toBe("season-plague");
+  });
+
+  it("shows an annual Law coupon only while it is unspent and refreshes it at the new year", () => {
+    const G = stateWithSettlement();
+    plantLaw(G, "monumental-code");
+
+    const annual = () =>
+      getActiveEffects(G, "0").find((effect) => effect.id.includes("annual:buildBuilding"));
+    expect(annual()?.duration.expiry).toBe("afterMatchingLawActionOrYearEnd");
+    expect(presentActiveEffect(annual()!).duration).toBe("Until used or year end");
+
+    consumeLawFreeAction(G, "0", "buildBuilding");
+    expect(annual()).toBeUndefined();
+    expect(getActiveEffects(G, "0").some((effect) => effect.source.id === "monumental-code")).toBe(
+      true,
+    );
+
+    G.season = 4;
+    startNewSeason(G);
+    expect(annual()).toBeDefined();
+  });
+
+  it("expires season, omen, Law, and Isonomia descriptors through their engine lifecycles", () => {
+    const G = stateWithSettlement();
+    G.activeSeasonEvent = {
+      card: seasonalCard([
+        {
+          type: "incomeModifier",
+          scope: "allPlayers",
+          resource: "gold",
+          amount: 2,
+          duration: "season",
+        },
+      ]),
+      season: G.season,
+      playerID: "0",
+    };
+    G.yearOmen = {
+      record: omenRecord(),
+      label: "Old omen",
+      year: 1,
+      effects: [{ type: "yearIncomeModifier", resource: "food", amount: 2 }],
+    };
+    const seasonalId = effectByKind(G, "seasonalModifier")[0].id;
+    const omenId = effectByKind(G, "yearlyOmen")[0].id;
+
+    G.season = 4;
+    startNewSeason(G);
+    expect(getActiveEffects(G, "0").some((effect) => effect.id === seasonalId)).toBe(false);
+    expect(getActiveEffects(G, "0").some((effect) => effect.id === omenId)).toBe(false);
+
+    plantLaw(G, "land-reform");
+    expect(getActiveEffects(G, "0").some((effect) => effect.source.id === "land-reform")).toBe(
+      true,
+    );
+    enactForEval(G, { kind: "repeal", cardId: "land-reform", proposer: "0" });
+    expect(getActiveEffects(G, "0").some((effect) => effect.source.id === "land-reform")).toBe(
+      false,
+    );
+
+    G.pendingIsonomia = true;
+    expect(effectByKind(G, "nextAssembly")).toHaveLength(1);
+    openAssembly(G, "0");
+    expect(G.assembly?.equalVotes).toBe(true);
+    expect(effectByKind(G, "nextAssembly")).toHaveLength(0);
+  });
+});
+
+describe("persistent event content inventory", () => {
+  it("projects every season-standing effect in authored seasonal content", () => {
+    let exercised = 0;
+
+    for (const card of SEASONAL_EVENT_CARDS) {
+      const expected = card.effects.filter((effect) => {
+        const handling = EVENT_EFFECT_ACTIVE_EFFECT_HANDLING[effect.type];
+        if (handling === "activeSeason") return true;
+        if (handling !== "activeSeasonWhenMarked") return false;
+        return (
+          (effect.type === "incomeModifier" || effect.type === "scaledHappinessDelta") &&
+          effect.duration === "season"
+        );
+      });
+      if (expected.length === 0) continue;
+
+      const G = stateWithSettlement({ citizens: 2, freemen: 1, slaves: 0 });
+      G.activeSeasonEvent = { card, season: G.season, playerID: "0" };
+      const descriptors = getActiveEffects(G, "0").filter(
+        (effect) => effect.source.kind === "seasonalEvent" && effect.source.id === card.id,
+      );
+
+      expect(descriptors, card.id).toHaveLength(expected.length);
+      exercised += expected.length;
+    }
+
+    expect(exercised).toBeGreaterThan(0);
+  });
+
+  it("materializes every authored player timed effect and discount through event resolution", () => {
+    let exercised = 0;
+
+    for (const card of PLAYER_EVENT_CARDS) {
+      for (const [choiceIndex, effects] of getEventEffectChoices(card).entries()) {
+        const expected = effects.filter((effect) => {
+          const handling = EVENT_EFFECT_ACTIVE_EFFECT_HANDLING[effect.type];
+          return (
+            handling === "materializedTimedHappiness" || handling === "materializedActionDiscount"
+          );
+        });
+        if (expected.length === 0) continue;
+
+        const G = stateWithSettlement();
+        G.pendingPlayerEvent = { card, playerID: "0" };
+        expect(resolvePendingPlayerEvent(G, "0", undefined, choiceIndex).ok, card.id).toBe(true);
+        const descriptors = getActiveEffects(G, "0").filter(
+          (effect) => effect.source.id === card.id,
+        );
+
+        expect(descriptors, card.id + " option " + choiceIndex).toHaveLength(expected.length);
+        exercised += expected.length;
+      }
+    }
+
+    expect(exercised).toBeGreaterThan(0);
+  });
+
+  it("materializes every authored seasonal timed effect through the real draw path", () => {
+    let exercised = 0;
+
+    for (const card of SEASONAL_EVENT_CARDS) {
+      const expected = card.effects.filter(
+        (effect) =>
+          EVENT_EFFECT_ACTIVE_EFFECT_HANDLING[effect.type] === "materializedTimedHappiness",
+      );
+      if (expected.length === 0) continue;
+
+      const G = stateWithSettlement();
+      G.season = cardSeason(card);
+      G.activeSeasonEvent = null;
+      G.seasonalDrawPile = [card];
+      drawSeasonalEvent(G);
+      const descriptors = getActiveEffects(G, "0").filter((effect) => effect.source.id === card.id);
+
+      expect(descriptors, card.id).toHaveLength(expected.length);
+      exercised += expected.length;
+    }
+
+    expect(exercised).toBeGreaterThan(0);
+  });
 });
 
 describe("frontend active-effect parity", () => {
-  it("projects the same source, mechanics, duration, and accessible words for every sibling surface", () => {
+  it("renders the same canonical words through the actual board and ledger variants", () => {
     const G = stateWithSettlement();
-    G.players["0"].timedHappinessModifiers = [
-      { source: "Public Shame", amountPerTurn: -2, turnsRemaining: 2 },
-    ];
-
+    G.players["0"].timedHappinessModifiers = [timedModifier("Public Shame", -2, 2)];
     const descriptors = getActiveEffects(G, "0");
-    const boardPresentation = presentActiveEffects(descriptors);
-    const ledgerPresentation = descriptors.map(presentActiveEffect);
+    const presentations = presentActiveEffects(descriptors);
+    const board = renderActiveEffects(descriptors, "board");
+    const ledger = renderActiveEffects(descriptors, "ledger");
 
-    expect(boardPresentation).toEqual(ledgerPresentation);
-    expect(boardPresentation[0].accessibleText).toContain(boardPresentation[0].source);
-    expect(boardPresentation[0].accessibleText).toContain(boardPresentation[0].duration);
+    expect(board).toContain('class="activeEffectsBoard"');
+    expect(ledger).toContain('class="activeEffectsLedger"');
+    for (const presentation of presentations) {
+      expect(board).toContain(presentation.accessibleText);
+      expect(ledger).toContain(presentation.accessibleText);
+    }
+  });
+
+  it("preserves every scoped Law qualifier in the shared frontend presentation", () => {
+    const G = stateWithSettlement();
+    plantLaw(G, "guild-charter");
+    plantLaw(G, "master-builders");
+    const presentations = presentActiveEffects(getActiveEffects(G, "0"));
+    const guild = presentations.find((effect) => effect.source === "Guild Charter")!;
+    const builders = presentations.find((effect) => effect.source === "Master Builders")!;
+
+    expect(guild.text).toContain("grow pop in cities: -3 Food cost");
+    expect(guild.text).toContain("grow pop in colonies: +2 Food cost");
+    for (const building of ["Temple", "Forum", "Aqueduct", "Odeon", "Gymnasion"]) {
+      expect(builders.text).toContain(building);
+    }
   });
 });
 
@@ -252,18 +500,40 @@ describe("simulation and AI active-effect parity", () => {
     const base = stateWithSettlement();
     const blessed = structuredClone(base);
     const harmed = structuredClone(base);
-    blessed.players["0"].timedHappinessModifiers = [
-      { source: "Festival", amountPerTurn: 2, turnsRemaining: 2 },
-    ];
-    harmed.players["0"].timedHappinessModifiers = [
-      { source: "Shame", amountPerTurn: -2, turnsRemaining: 2 },
-    ];
+    blessed.players["0"].timedHappinessModifiers = [timedModifier("Festival", 2, 2)];
+    harmed.players["0"].timedHappinessModifiers = [timedModifier("Shame", -2, 2)];
 
     const neutral = projectPolicyHorizon(base, "0", 2).resources.happiness;
     expect(projectPolicyHorizon(blessed, "0", 2).resources.happiness).toBe(neutral + 4);
     expect(projectPolicyHorizon(harmed, "0", 2).resources.happiness).toBe(neutral - 4);
   });
 
+  it("makes the master policy use calm against harmful mood and avoid it against beneficial mood", () => {
+    const choose = (modifier: TimedHappinessModifier) => {
+      const G = scenario().build();
+      G.phase = "gameplay";
+      G.currentPlayer = "0";
+      G.players["0"].hasCollectedGameplayIncome = true;
+      Object.assign(G.players["0"].resources, {
+        wood: 0,
+        stone: 0,
+        gold: 0,
+        food: 0,
+        influence: 4,
+        happiness: 0,
+      });
+      G.players["0"].timedHappinessModifiers = [modifier];
+
+      return masterPolicy.choose(
+        G,
+        [{ type: "civicCalm", payment: "influence", cost: { influence: 4 } }, { type: "endTurn" }],
+        createSimRng(1),
+      );
+    };
+
+    expect(choose(timedModifier("Shame", -2, 3)).type).toBe("civicCalm");
+    expect(choose(timedModifier("Festival", 2, 3)).type).toBe("endTurn");
+  });
   it("handles the safe edge and the starvation edge deterministically", () => {
     const safe = stateWithSettlement();
     const deficit = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });
@@ -276,6 +546,19 @@ describe("simulation and AI active-effect parity", () => {
     );
   });
 
+  it("recalculates food after projected starvation and matches the engine on the review case", () => {
+    const G = stateWithSettlement({ citizens: 0, freemen: 3, slaves: 0 });
+    const engine = structuredClone(G);
+    const before = engine.players["0"].popsLostToUnrest;
+
+    for (let upkeep = 0; upkeep < 6; upkeep += 1) {
+      applyUnrestUpkeep(engine, "0");
+    }
+
+    const actual = engine.players["0"].popsLostToUnrest - before;
+    expect(actual).toBe(2);
+    expect(projectPolicyHorizon(G, "0", 6).expectedStarvationPopLoss).toBe(actual);
+  });
   it("records the selector's exhaustive kind counts in snapshots", () => {
     const G = stateWithSettlement();
     G.players["0"].incomeSuppressedTurns = 1;
