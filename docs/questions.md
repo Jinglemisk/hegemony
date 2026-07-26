@@ -20,118 +20,48 @@ immediately awarding a victory card and remains a ruleset dial for Step 5 tuning
 
 **Answer:**
 
-## Q31 — Should coastal luxuries use a feature ring or real tiles?
+## Q46 — What is the Port's price, and is it the gold sink?
 
-**Context:** Coastal goods need board locations without accidentally adding naval
-movement, settlement slots, or a second map ruleset.
+**Context:** Luxuries were slotted first in Phase 4 as the **gold sink** the Buildings
+and Market/bank passes are blocked on — but that sink was the 100-gold land Trader, now
+**retired** (owner, 2026-07-26). The owner rejected 100 gold ("you'd have to bank it; a
+player at 20–80 gold will never say the best use of this gold is a Port"). The Port's
+provisional cost is only 20 wood / 5 stone / 10 gold, which is **not** a gold sink.
 
-**Options:** Unsettleable feature ring attached to rim edges, or full coastal tiles.
+**Options:** (a) Give the Port a real, sim-tunable gold cost so the luxury race becomes the
+gold sink; or (b) keep the Port cheap and give the Buildings/Market pass a different sink.
 
-**Recommendation:** Use the feature ring. A Port in an adjacent settlement claims
-the feature; the feature itself has no slots and cannot be settled.
-
-**Answer:**
-
-## Q32 — Is the luxury roster and provisional Port price accepted?
-
-**Context:** The plan defines nine named goods and a provisional Port cost of
-20 wood, 5 stone, and 10 gold.
-
-**Options:** Approve both as tunable defaults, or revise the roster/cost before design.
-
-**Recommendation:** Approve the roster and keep the provisional price until the
-Phase 4 simulation and human validation gate.
+**Recommendation:** (a) — re-price the Port with a meaningful gold component so the luxury
+race is the sink, but well below 100 so it stays a real decision rather than a wall. Set the
+exact number in the Phase 4 simulation.
 
 **Answer:**
 
-## Q43 — How do luxuries affect happiness?
+## Q32 — Is the coastal luxury roster accepted?
 
-**Context:** A permanent standing offset, recurring happiness income, and shifted
-riot thresholds produce materially different games.
+**Context:** With land goods removed (2026-07-26), all luxuries are coastal and unique. The
+plan lists six coastal goods (Tyrian Dye, Pearls, Coral, Glassware, Incense, Fine Linen);
+the three former land goods (Marble, Silverwork, Wine & Olive Oil) are dropped.
 
-**Options:** Standing `effective = stored + 2 × active`; +2 happiness income per
-good each turn; or move riot thresholds by 2 per good.
+**Options:** Ship the six coastal goods as-is, or re-add coastal replacements for the
+dropped three (up to about nine).
 
-**Recommendation:** Use the standing offset. It relieves unrest without banking
-unbounded happiness or silently buying the Beloved victory card.
-
-**Answer:**
-
-## Q44 — Do luxuries count toward Beloved of the People?
-
-**Context:** Beloved currently reads stored happiness. Three luxuries could otherwise
-contribute 6 of the card's 10-point minimum.
-
-**Options:** Count effective happiness, or keep the card on stored happiness only.
-
-**Recommendation:** Stored happiness only; luxuries are protective infrastructure,
-not banked public contentment.
-
-**Answer:**
-
-## Q45 — What are the monopoly and cap rules?
-
-**Context:** Unique goods make a duplicate bonus unreachable, and uncapped ownership
-could retire unrest for the leader.
-
-**Options:** Unique global goods with an active cap; repeatable goods with diminishing
-returns; or per-player allocations.
-
-**Recommendation:** Keep every good unique, cap active goods at 3 per player, allow
-surplus ownership as inactive trade inventory, and make the three land goods a
-first-come global race.
-
-**Answer:**
-
-## Q46 — What is the Trader's price and placement rule?
-
-**Context:** The Trader is the intended gold sink. At 100 gold it costs roughly five
-to six turns of a mid-game gold income and competes directly with Treasurer.
-
-**Options:** Normal one-slot building in any settlement at 100 gold, or a cheaper or
-location-gated special structure.
-
-**Recommendation:** Use a normal `maxLevel: 1` building in any settlement and keep
-100 gold as the authored, sim-tunable default.
-
-**Answer:**
-
-## Q47 — May the Port be location-gated?
-
-**Context:** The Port would be the first building forbidden by settlement location;
-allowing it inland would create a legal but useless resource trap.
-
-**Options:** Require a coastal-adjacent settlement, or allow construction anywhere
-while only coastal Ports claim goods.
-
-**Recommendation:** Make the Port the explicit exception and return an authoritative
-blocked reason on inland settlements.
+**Recommendation:** Ship the six; add more only if six unique coastal races feel too few once
+the board's coastal geometry is settled.
 
 **Answer:**
 
 ## Q48 — Should luxury denial ship now or only its state seam?
 
 **Context:** Blockade and denial fit player-targeted Stratokles Directives, but adding
-those cards during the luxury slice would couple two balancing passes.
+those cards during the luxury slice would couple two balancing passes. The owner's steer
+(2026-07-26) is "discuss later" — keep the state seam, defer the Directive.
 
 **Options:** Ship suppression state only; ship a Directive immediately; or defer all
 denial modeling.
 
 **Recommendation:** Include `active` and `suppressedTurns` on claims, then add denial
 content only during a later Assembly deck pass.
-
-**Answer:**
-
-## Q49 — Are luxury goods tradable?
-
-**Context:** A unique owned object creates a meaningful monopoly currency without
-making influence or happiness directly tradable.
-
-**Options:** Tradable with player trade, permanently bound to the claimant, or defer
-the transfer rule until trade v2.
-
-**Recommendation:** Make claims transferable in the model, while allowing the first
-luxury slice to ship before the player-trade interface.
 
 **Answer:**
 
