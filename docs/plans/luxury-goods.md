@@ -16,9 +16,12 @@ updated: 2026-07-26
 > 2026-07-26); goods sit at a **shared two-tile vertex** and are claimed by the **first
 > Port on either adjacent tile** (Q31 + owner call); happiness is a **standing offset**
 > (Q43) that **counts toward _Beloved_** (Q44); goods are **tradable** (Q49); the Port is
-> the **coastal-gated exception** with an authoritative blocked reason (Q47). **Still
-> open: the Port's price and the gold-sink question (Q46), the exact roster/count (Q32),
-> and denial timing (Q48).**
+> the **coastal-gated exception** with an authoritative blocked reason (Q47).
+>
+> **Folded 2026-07-27:** no dedicated gold sink is needed — gold already sinks into
+> actions and market trade, so the Port stays cheap (Q46). The roster is the **six**
+> coastal goods (Q32). Ship **claims + the `active`/`suppressedTurns` seam now**; add
+> suppression Directives later via the Assembly (Q48). All owner questions resolved.
 
 ---
 
@@ -56,13 +59,12 @@ The `political` bot shipped after the Assembly and promptly reported the layer a
 loss — half of that was design, half was "the bot doesn't know the verb exists." Don't
 repeat it with the Port.
 
-**⚠ The gold-sink premise now needs a decision (Q46).** Luxuries were slotted first in
-Phase 4 because they were meant to be the **gold sink** the deferred Buildings pass and
-Market/bank pass are blocked on (`docs/archive/todo.md:15-27`). That sink was the
-**100-gold Trader** — now retired. The Port's provisional price is only **10 gold**, which
-is not a gold sink. So either the **Port is re-priced with a real gold cost** (making it the
-sink), or luxuries stop being the gold sink and the Buildings/Market pass needs a different
-one. **This is the central open question — see Q46.**
+**No dedicated gold sink (Q46, resolved 2026-07-27).** Luxuries were originally slotted
+first in Phase 4 as the gold sink the Buildings/Market pass was blocked on — but the owner
+ruled **no gold sink is needed**: gold already sinks into existing actions and into market
+trade. The Port therefore stays cheap (its provisional 20 wood / 5 stone / 10 gold), and
+luxuries are a **happiness** feature, not the economy's gold sink. The Buildings/Market
+balance pass no longer depends on this feature.
 
 ---
 
@@ -259,8 +261,8 @@ luxury: {
   happinessPerGood: 2,
   activeCapPerPlayer: 3,
   countsTowardBelovedCard: true,   // Q44 — luxuries DO count
-  coastalGoods: 6,                 // Q32 — count still open
-  portCost: { /* open — Q46: must carry a real gold cost to be the sink */ }
+  coastalGoods: 6,                 // Q32 — six, accepted
+  portCost: { wood: 20, stone: 5, gold: 10 }   // Q46 — stays cheap; not a gold sink
 }
 ```
 
@@ -268,9 +270,8 @@ luxury: {
 
 ## 6. The named roster
 
-Unique coastal goods. Count is **open (Q32)** — the six below are the PDF's coastal set;
-the three former land goods are dropped, and whether to re-add coastal replacements is part
-of Q32.
+**Six** unique coastal goods (Q32, accepted) — the PDF's coastal set; the three former land
+goods are dropped.
 
 | Good           | Flavour             |
 | -------------- | ------------------- |
@@ -285,14 +286,8 @@ of Q32.
 
 ## 7. Open owner questions
 
-Context, options, and answer slots live only in [the owner question queue](../questions.md).
-The 2026-07-26 decisions are folded above; what remains open:
-
-| ID                                                                                   | Decision                                                                   |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| [Q46](../questions.md#q46--what-is-the-ports-price-and-is-it-the-gold-sink)          | **The Port price + the gold-sink question** (100-gold Trader retired)      |
-| [Q32](../questions.md#q32--is-the-coastal-luxury-roster-accepted)                    | The coastal roster and its count                                            |
-| [Q48](../questions.md#q48--should-luxury-denial-ship-now-or-only-its-state-seam)     | Denial seam vs. shipping a Directive (deferred — "discuss later")          |
+**None** — all luxury owner questions are resolved (folded above). The plan stays `blocked`
+only on Phase 3.5 landing first.
 
 ---
 
