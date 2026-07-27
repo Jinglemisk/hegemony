@@ -15,7 +15,8 @@ runaway advantage.
 
 ## Non-goals
 
-- The pre-game setup/mode screen (that is [Q35](../questions.md#q35), a separate slice).
+- The pre-game setup/mode screen and multiplayer — deferred until the game is balanced
+  (Q35, resolved 2026-07-27; out of scope for now).
 - Networking or 2–3-player scaling.
 - New content systems — every Idea reuses an existing engine seam wherever possible.
 
@@ -28,9 +29,9 @@ runaway advantage.
 - **Later acquisition (PDF):** additional Ideas can arrive via **Resolutions**, **Event
   Cards**, or the **Library** building (*"Every 2 Libraries grant one National Idea"*).
   Library is not yet built (parked with the civic roster); leave the hook open.
-- **Draft shape recommendation** — [Q34](../questions.md#q34): eight public ruleset-patch
-  ideas, one per player, **snake-drafted in reverse placement order** (last placer picks
-  first), validated so none is an automatic pick.
+- **Draft shape (Q34, resolved 2026-07-27):** all **twelve** PDF ideas below form the
+  catalog, drafted **reverse-snake** after placement (last placer picks first), each player
+  taking two. Validated so none is an automatic pick.
 
 ## The PDF roster (source content)
 
@@ -60,9 +61,9 @@ consumable Idea and defines the "discard-after-use" mechanic the acquisition hoo
 
 ## Open owner questions
 
-- [Q34](../questions.md#q34--what-is-the-national-ideas-draft) — the draft shape, catalog,
-  and which of the twelve above ship in v1 (or whether the roster is re-authored). This
-  plan stays `proposed` until Q34 is answered.
+**None.** Q34 is resolved (2026-07-27): all twelve PDF ideas form the catalog, reverse-snake
+draft, two per player. The plan stays `proposed` pending Phase 4 and the three design-heavy
+Ideas (#2, #4, #10) noted above.
 
 ## Three-axis parity
 

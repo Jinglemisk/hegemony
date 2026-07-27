@@ -52,7 +52,7 @@ roadmap's engine/frontend/simulation-AI parity contract.
 - All Stratokles Directives target a chosen player, each passed Directive adds
   one ratchet count, and the coup is removed.
 - Voice uses a minimum and first-to-reach ownership until strictly exceeded.
-  The numeric minimum remains [owner question Q39](../questions.md#q39--what-is-the-initial-voice-minimum).
+  The numeric minimum is **3** (Q39, resolved 2026-07-27) — a ruleset dial for Step 5 tuning.
 
 ## Retirement
 
