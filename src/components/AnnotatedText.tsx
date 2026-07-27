@@ -144,8 +144,17 @@ function tokenChapter(token: Token): string {
   }
 }
 
-export function AnnotatedText({ text, className }: { text: string; className?: string }) {
-  const codexLink = useCodexLink();
+export function AnnotatedText({
+  text,
+  className,
+  links = true,
+}: {
+  text: string;
+  className?: string;
+  links?: boolean;
+}) {
+  const contextCodexLink = useCodexLink();
+  const codexLink = links ? contextCodexLink : null;
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;

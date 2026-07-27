@@ -2,10 +2,16 @@ import { getEventEffectChoices } from "../../../game/rules";
 import { OMEN_TABLE } from "../../../game/data";
 import type { EventCard, HegemonyState } from "../../../game/types";
 import type { EffectPresentation } from "../../../ui/effects";
-import { joinEffectPresentations, presentEventEffects, presentTableEffect } from "../../../ui/effects";
+import {
+  joinEffectPresentations,
+  presentEventEffects,
+  presentTableEffect,
+} from "../../../ui/effects";
 import { AnnotatedText } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
+import { MechanicsDetails } from "../../MechanicsDetails";
 import { eventCardArtUrl, omenArtUrl } from "../events";
+import { Tooltip } from "../../overlays/Tooltip";
 
 /** A concise mechanical summary of a card's effect (choice cards join with "·"). */
 function effectSummary(card: EventCard): EffectPresentation {
@@ -28,7 +34,9 @@ export function TopbarEvents({ G }: { G: HegemonyState }) {
   const seasonal = G.activeSeasonEvent?.card ?? null;
   const player = G.lastPlayerEvent;
   const omen = G.yearOmen;
-  const omenTone = omen?.effects.some((effect) => presentTableEffect(effect).tone === "negative") ? "ill" : "fair";
+  const omenTone = omen?.effects.some((effect) => presentTableEffect(effect).tone === "negative")
+    ? "ill"
+    : "fair";
 
   // Longest-standing first: the omen rules the year, the season card the season,
   // the player card just this turn.
@@ -72,7 +80,7 @@ function TopbarEventSlot({
   summary,
   tooltip,
   artUrl,
-  fallback
+  fallback,
 }: {
   label: string;
   name: string | null;
@@ -82,26 +90,49 @@ function TopbarEventSlot({
   fallback: string;
 }) {
   const active = name !== null;
-
-  return (
-    <div className={`topbarEventCard${active ? " topbarEventActive" : ""}`} tabIndex={active ? 0 : undefined}>
+  const card = (
+    <>
       {artUrl ? (
         <img alt="" className="topbarEventArt" src={artUrl} />
       ) : (
         <span className="topbarEventArt topbarEventArtEmpty" aria-hidden="true" />
       )}
-      <div className="topbarEventBody">
+      <span className="topbarEventBody">
         <span className="topbarEventLabel">{label}</span>
         <strong className="topbarEventName">{name ?? fallback}</strong>
         {summary ? <EffectLine effect={summary} className="topbarEventEffect" /> : null}
-      </div>
-      {active && tooltip ? (
-        <div className="topbarEventTooltip" role="tooltip">
-          <span className="topbarEventTooltipLabel">{label} event</span>
-          <strong>{name}</strong>
-          <AnnotatedText text={tooltip} className="topbarEventTooltipText" />
-        </div>
-      ) : null}
-    </div>
+      </span>
+    </>
+  );
+
+  if (!active || !tooltip) {
+    return <span className="topbarEventCard">{card}</span>;
+  }
+
+  return (
+    <Tooltip
+      ariaLabel={`${label} event: ${name}`}
+      content={
+        <MechanicsDetails
+          effects={summary ? [summary] : []}
+          heading={name}
+          source={`${label} event`}
+          duration={
+            label === "Omen"
+              ? "This year"
+              : label === "Season"
+                ? "This season"
+                : "Resolved this turn"
+          }
+        >
+          <AnnotatedText text={tooltip} className="topbarEventTooltipText" links={false} />
+        </MechanicsDetails>
+      }
+      focusable
+      triggerClassName="topbarEventCard topbarEventActive"
+      tooltipClassName="topbarEventTooltip"
+    >
+      {card}
+    </Tooltip>
   );
 }

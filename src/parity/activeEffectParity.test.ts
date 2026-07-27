@@ -460,7 +460,8 @@ describe("frontend active-effect parity", () => {
     const board = renderActiveEffects(descriptors, "board");
     const ledger = renderActiveEffects(descriptors, "ledger");
 
-    expect(board).toContain('class="activeEffectsBoard"');
+    expect(board).toContain('class="tooltipTrigger activeEffectsBoard"');
+    expect(board).toContain("aria-describedby=");
     expect(ledger).toContain('class="activeEffectsLedger"');
     for (const presentation of presentations) {
       expect(board).toContain(presentation.accessibleText);

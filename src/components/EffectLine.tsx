@@ -9,13 +9,16 @@ import { AnnotatedText } from "./AnnotatedText";
 export function EffectLine({
   effect,
   className,
+  links = true,
 }: {
   effect: EffectPresentation;
   className?: string;
+  links?: boolean;
 }) {
   return (
     <AnnotatedText
       className={[`effectLine effect-${effect.tone}`, className].filter(Boolean).join(" ")}
+      links={links}
       text={effect.text}
     />
   );

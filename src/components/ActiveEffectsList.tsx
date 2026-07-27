@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { presentActiveEffects } from "../ui/effects";
 import { EffectLine } from "./EffectLine";
+import { MechanicsDetails } from "./MechanicsDetails";
 import { useGameUi } from "./board/GameUiContext";
+import { Tooltip } from "./overlays/Tooltip";
 
 /**
  * The same active-status projection in two sibling surfaces: a compact board
@@ -20,10 +22,16 @@ export function ActiveEffectsList({ variant }: { variant: "board" | "ledger" }) 
   if (variant === "board") {
     const first = presentations[0];
     return (
-      <section
-        aria-label={"Active effects. " + accessibleSummary}
-        className="activeEffectsBoard"
-        tabIndex={0}
+      <Tooltip
+        ariaLabel={"Active effects. " + accessibleSummary}
+        content={
+          <MechanicsDetails heading="Active effects">
+            <ActiveEffectRows links={false} presentations={presentations} />
+          </MechanicsDetails>
+        }
+        focusable
+        triggerClassName="activeEffectsBoard"
+        tooltipClassName="activeEffectsTooltip"
       >
         <span className="activeEffectsCount" aria-hidden="true">
           {presentations.length}
@@ -32,10 +40,7 @@ export function ActiveEffectsList({ variant }: { variant: "board" | "ledger" }) 
           <strong>Effects</strong>
           <span>{first.source}</span>
         </span>
-        <div className="activeEffectsTooltip" role="tooltip">
-          <ActiveEffectRows presentations={presentations} />
-        </div>
-      </section>
+      </Tooltip>
     );
   }
 
@@ -49,8 +54,10 @@ export function ActiveEffectsList({ variant }: { variant: "board" | "ledger" }) 
 
 function ActiveEffectRows({
   presentations,
+  links = true,
 }: {
   presentations: ReturnType<typeof presentActiveEffects>;
+  links?: boolean;
 }) {
   return (
     <ul className="activeEffectRows">
@@ -63,7 +70,7 @@ function ActiveEffectRows({
           <strong className="activeEffectSource" aria-hidden="true">
             {presentation.source}
           </strong>
-          <EffectLine effect={presentation} className="activeEffectMechanic" />
+          <EffectLine effect={presentation} className="activeEffectMechanic" links={links} />
           <span className="activeEffectDuration" aria-hidden="true">
             {presentation.duration}
           </span>

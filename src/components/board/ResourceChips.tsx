@@ -31,7 +31,7 @@ export function ResourceChips({
   chipClassName,
   iconClassName = "miniResourceIcon",
   empty,
-  title
+  title,
 }: {
   resources: Partial<Resources>;
   variant: ResourceChipsVariant;
@@ -45,7 +45,7 @@ export function ResourceChips({
 }) {
   // `yield` keeps zeros (as dashes); the others drop them.
   const entries = RESOURCE_ORDER.filter(
-    (resource) => variant === "yield" || (resources[resource] ?? 0) !== 0
+    (resource) => variant === "yield" || (resources[resource] ?? 0) !== 0,
   );
 
   if (entries.length === 0) {
@@ -63,8 +63,9 @@ export function ResourceChips({
               "resourceChip",
               chipClassName,
               variant === "yield" && value === 0 ? "emptyNetYield" : undefined,
-              variant !== "cost" ? toneClass(value) : undefined
+              variant !== "cost" ? toneClass(value) : undefined,
             )}
+            aria-label={chipAccessibleLabel(variant, resource as Resource, value)}
             key={resource}
             style={resourceCssVars(resource as Resource)}
             title={chipTitle(variant, resource as Resource, value)}
@@ -96,6 +97,16 @@ function renderValue(variant: ResourceChipsVariant, resource: Resource, value: n
       {formatSignedNumber(value)} {RESOURCE_LABELS[resource]}
     </>
   );
+}
+
+function chipAccessibleLabel(variant: ResourceChipsVariant, resource: Resource, value: number) {
+  const label = RESOURCE_LABELS[resource];
+
+  if (variant === "cost") {
+    return `${value} ${label}`;
+  }
+
+  return `${label}: ${value === 0 ? "no change" : formatSignedNumber(value)}`;
 }
 
 function chipTitle(variant: ResourceChipsVariant, resource: Resource, value: number) {
