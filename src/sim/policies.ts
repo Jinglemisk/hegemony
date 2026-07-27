@@ -1,5 +1,6 @@
 import { calculateIncome } from "../game/economy/income";
 import { getActiveEffects } from "../game/activeEffects";
+import { RIOT_TABLE } from "../game/data";
 import { getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementBuildingSlots } from "../game/settlement";
 import { enactForEval, politicianStandings } from "../game/assembly";
@@ -9,6 +10,7 @@ import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
 import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId } from "../game/types";
+import type { Ruleset } from "../game/ruleset";
 import type { SimRng } from "./rng";
 
 export type PolicyId =
@@ -194,9 +196,16 @@ export const smartPolicy: Policy = {
  *  temple's +1 happiness/turn are invisible at the moment of purchase and only
  *  become worth their cost when multiplied out. */
 const INCOME_HORIZON = 6;
+export type PolicyUnrestExposure = {
+  minimumHappiness: number;
+  mildRiotEvents: number;
+  severeRiotEvents: number;
+  riskPenalty: number;
+};
 export type PolicyProjection = {
   resources: HegemonyState["players"][PlayerId]["resources"];
   expectedStarvationPopLoss: number;
+  unrest: PolicyUnrestExposure;
 };
 
 /**
@@ -213,6 +222,12 @@ export function projectPolicyHorizon(
   const projectedState = createPolicyProjectionState(G, playerID);
   const player = projectedState.players[playerID];
   let expectedStarvationPopLoss = 0;
+  const unrest: PolicyUnrestExposure = {
+    minimumHappiness: player.resources.happiness,
+    mildRiotEvents: 0,
+    severeRiotEvents: 0,
+    riskPenalty: 0,
+  };
   let income = calculateIncome(projectedState, playerID);
   const activeEffects = getActiveEffects(projectedState, playerID, { income });
   const mechanics = activeEffects.flatMap((descriptor) => descriptor.mechanics);
@@ -227,6 +242,27 @@ export function projectPolicyHorizon(
       if (mechanic.type === "timedHappiness" && step < mechanic.turns) {
         player.resources.happiness += mechanic.amountPerTurn;
       }
+    }
+
+    // The engine checks unrest at every start-of-turn upkeep, before income.
+    // Record every exposure rather than judging only the terminal happiness.
+    unrest.minimumHappiness = Math.min(
+      unrest.minimumHappiness,
+      player.resources.happiness,
+    );
+    const upkeepRisk = evaluatePolicyUnrestRisk(
+      projectedState.ruleset,
+      player.resources.happiness,
+    );
+    unrest.riskPenalty += upkeepRisk.scorePenalty;
+
+    if (upkeepRisk.tier === "revolt") {
+      unrest.severeRiotEvents += 1;
+      // Severe riots always rebound after resolution, independent of the roll.
+      player.resources.happiness =
+        projectedState.ruleset.economy.unrest.severeRebound;
+    } else if (upkeepRisk.tier === "unrest") {
+      unrest.mildRiotEvents += 1;
     }
 
     const graceActive =
@@ -270,7 +306,11 @@ export function projectPolicyHorizon(
     player.hasCollectedGameplayIncome = true;
   }
 
-  return { resources: { ...player.resources }, expectedStarvationPopLoss };
+  return {
+    resources: { ...player.resources },
+    expectedStarvationPopLoss,
+    unrest,
+  };
 }
 
 /**
@@ -348,14 +388,91 @@ function removeExpectedStarvationPops(
 }
 
 /**
+ * Named strategic weights for unrest exposure. These are deliberately heuristic:
+ * exact riot outcomes depend on resources, buildings, insurance, and a future die
+ * roll. The policy instead prices the known act of entering each tier without
+ * pretending to know which conditional table effects will fire.
+ */
+export const POLICY_UNREST_WEIGHTS = {
+  /** Maximum per-upkeep caution cost immediately above the mild threshold. */
+  bufferMaxPenalty: 10,
+  /** Historical evaluator charged about 50 score at the default mild threshold. */
+  mildRiotPenalty: 50,
+  /** A revolt always retains at least one mild-riot unit of strategic danger. */
+  severeMultiplierFloor: 1,
+  /** How strongly the public severe roll shift scales the revolt penalty. */
+  severeRollShiftWeight: 1,
+} as const;
+
+export type PolicyUnrestRisk = {
+  tier: "safe" | "buffer" | "unrest" | "revolt";
+  scorePenalty: number;
+};
+
+/**
+ * Classify one projected upkeep using live ruleset thresholds and severe-tier
+ * consequences. This is a deterministic strategic ramp, not an expected riot-table
+ * payout: conditional resources, buildings, insurance, and future RNG stay unknown.
+ */
+export function evaluatePolicyUnrestRisk(
+  ruleset: Ruleset,
+  happiness: number,
+): PolicyUnrestRisk {
+  const unrest = ruleset.economy.unrest;
+  const bufferWidth = Math.max(
+    1,
+    unrest.popLossThreshold - unrest.severeThreshold,
+  );
+
+  if (happiness > unrest.popLossThreshold) {
+    const proximity = Math.max(
+      0,
+      1 - (happiness - unrest.popLossThreshold) / bufferWidth,
+    );
+    return {
+      tier: proximity > 0 ? "buffer" : "safe",
+      scorePenalty: POLICY_UNREST_WEIGHTS.bufferMaxPenalty * proximity,
+    };
+  }
+
+  if (happiness > unrest.severeThreshold) {
+    return {
+      tier: "unrest",
+      scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty,
+    };
+  }
+
+  const die = RIOT_TABLE.die ?? 6;
+  const popLossSeverity = Math.max(
+    POLICY_UNREST_WEIGHTS.severeMultiplierFloor,
+    unrest.severePopLossMultiplier,
+  );
+  const rollShiftSeverity = Math.max(
+    0.5,
+    1 -
+      (POLICY_UNREST_WEIGHTS.severeRollShiftWeight *
+        unrest.severeRollModifier) /
+        die,
+  );
+
+  return {
+    tier: "revolt",
+    scorePenalty:
+      POLICY_UNREST_WEIGHTS.mildRiotPenalty *
+      popLossSeverity *
+      rollShiftSeverity,
+  };
+}
+
+/**
  * Positional score for the greedy bot, evaluated on resources projected
  * INCOME_HORIZON turns ahead.
  *
  * The old provisional-VP formula lives on here as the bot's private heuristic —
  * a smooth gradient (cities, colonies, pops, banked material) the one-ply search
  * can climb — now topped with a large victory-card term so the bot actually
- * chases the race (game/victory.ts), and a happiness term because the unrest
- * thresholds (-5/-10) delete pops nonlinearly.
+ * chases the race (game/victory.ts), and the shared ruleset-aware unrest risk
+ * term prices the nonlinear riot and revolt thresholds.
  *
  * The projection runs through calculateIncome — the engine's own formula — so
  * the score sees food-shortage pressure, the stockpile happiness bonus,
@@ -373,7 +490,6 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
     3 * standings.colonies +
     standings.pops +
     Math.floor(material / 10) -
-    Math.max(0, -projected.happiness) -
     2 * projection.expectedStarvationPopLoss;
   // Cap the happiness reward: below the cap it prices riot avoidance and the
   // Beloved card (min +10); past it, more calm is wasted coin — an uncapped term
@@ -384,7 +500,8 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
     100 * victoryCardsHeld(G, playerID) +
     10 * heuristic +
     2 * projectedHappiness +
-    player.resources.influence
+    player.resources.influence -
+    projection.unrest.riskPenalty
   );
 }
 
@@ -451,7 +568,6 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
     material / 8 +
     0.4 * citySlots +
     3 * gymSynergy -
-    Math.max(0, -projected.happiness) -
     2 * projection.expectedStarvationPopLoss;
 
   const projectedHappiness = Math.min(projected.happiness, 15);
@@ -460,7 +576,8 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
     120 * victoryCardsHeld(G, playerID) +
     10 * heuristic +
     2 * projectedHappiness +
-    2 * player.resources.influence
+    2 * player.resources.influence -
+    projection.unrest.riskPenalty
   );
 }
 

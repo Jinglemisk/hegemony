@@ -1,19 +1,217 @@
 import { describe, expect, it } from "vitest";
 
 import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
+import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
 import { scenario } from "../game/testing/scenario";
 import { endTurn } from "../game/turn";
 import type { HegemonyState } from "../game/types";
 import {
   beamPolicy,
+  evaluatePolicyUnrestRisk,
   greedyPolicy,
   masterPolicy,
+  POLICY_UNREST_WEIGHTS,
   politicalPolicy,
+  projectPolicyHorizon,
   settlerPolicy,
   smartPolicy,
 } from "./policies";
 import { createSimRng } from "./rng";
 import { runGame } from "./runner";
+
+describe("policy unrest risk", () => {
+  const risk = (happiness: number) => evaluatePolicyUnrestRisk(DEFAULT_RULESET, happiness);
+  const mild = DEFAULT_RULESET.economy.unrest.popLossThreshold;
+  const severe = DEFAULT_RULESET.economy.unrest.severeThreshold;
+
+  it("classifies just above, at, and below the live mild-riot threshold", () => {
+    expect(risk(mild + 1)).toEqual({ tier: "buffer", scorePenalty: 8 });
+    expect(risk(mild)).toEqual({
+      tier: "unrest",
+      scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty,
+    });
+    expect(risk(mild - 1)).toEqual({
+      tier: "unrest",
+      scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty,
+    });
+  });
+
+  it("classifies just above, at, and below the live severe-revolt threshold", () => {
+    expect(risk(severe + 1)).toEqual({
+      tier: "unrest",
+      scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty,
+    });
+    expect(risk(severe)).toMatchObject({ tier: "revolt" });
+    expect(risk(severe).scorePenalty).toBeCloseTo(400 / 3);
+    expect(risk(severe - 1)).toEqual(risk(severe));
+  });
+
+  it("keeps mild-event weight independent while following severe ruleset consequences", () => {
+    const shifted = deriveRuleset(DEFAULT_RULESET, {
+      economy: {
+        unrest: {
+          popLossThreshold: -3,
+          severeThreshold: -7,
+        },
+      },
+    });
+    const harsher = deriveRuleset(shifted, {
+      economy: {
+        unrest: {
+          severeRollModifier: -3,
+          severePopLossMultiplier: 3,
+        },
+      },
+    });
+
+    expect(evaluatePolicyUnrestRisk(shifted, -3).scorePenalty).toBe(
+      POLICY_UNREST_WEIGHTS.mildRiotPenalty,
+    );
+    expect(evaluatePolicyUnrestRisk(harsher, -3)).toEqual(
+      evaluatePolicyUnrestRisk(shifted, -3),
+    );
+    expect(evaluatePolicyUnrestRisk(harsher, -7).scorePenalty).toBeGreaterThan(
+      evaluatePolicyUnrestRisk(shifted, -7).scorePenalty,
+    );
+  });
+
+  it("records a transient threshold crossing even when terminal happiness recovers", () => {
+    const G = projectionFixture();
+    const projection = projectPolicyHorizon(G, "0", 3);
+
+    expect(projection.resources.happiness).toBe(0);
+    expect(projection.unrest).toMatchObject({
+      minimumHappiness: -6,
+      mildRiotEvents: 1,
+      severeRiotEvents: 0,
+    });
+    expect(projection.unrest.riskPenalty).toBeGreaterThan(
+      risk(projection.resources.happiness).scorePenalty,
+    );
+  });
+
+  it("applies the configured severe rebound before projected income resumes", () => {
+    const G = projectionFixture();
+    G.ruleset = deriveRuleset(G.ruleset, {
+      economy: { unrest: { severeRebound: 1 } },
+    });
+    G.players["0"].resources.happiness = severe + 1;
+    G.players["0"].timedHappinessModifiers[0].amountPerTurn = -2;
+    const projection = projectPolicyHorizon(G, "0", 1);
+
+    expect(projection.unrest).toMatchObject({
+      minimumHappiness: severe - 1,
+      mildRiotEvents: 0,
+      severeRiotEvents: 1,
+    });
+    expect(projection.resources.happiness).toBe(
+      G.ruleset.economy.unrest.severeRebound + 2,
+    );
+    expect(evaluatePolicyUnrestRisk(G.ruleset, severe)).toEqual(risk(severe));
+  });
+
+  it.each([
+    ["smart", smartPolicy],
+    ["beam", beamPolicy],
+  ] as const)("%s rejects an unsafe promotion but takes the supported equivalent", (_name, policy) => {
+    expect(chooseFreemanPromotion(policy, 0).type).toBe("endTurn");
+    expect(chooseFreemanPromotion(policy, 30)).toMatchObject({
+      type: "promotePop",
+      from: "freemen",
+    });
+  });
+});
+
+function projectionFixture(): HegemonyState {
+  const G = scenario({
+    patch: {
+      economy: { foodStockpileHappinessDivisor: 0 },
+    },
+  })
+    .opening()
+    .build();
+  const player = G.players["0"];
+
+  G.pendingPlayerEvent = null;
+  G.pendingRiot = null;
+  G.activeSeasonEvent = null;
+  G.yearOmen = null;
+  G.activeLaws = [];
+  player.hasCollectedGameplayIncome = true;
+  Object.assign(player.resources, { food: 100, happiness: -4 });
+  for (const [index, tileId] of player.settlements.entries()) {
+    const settlement = G.board.tiles
+      .find((tile) => tile.id === tileId)
+      ?.settlements.find((candidate) => candidate.owner === "0");
+    if (settlement) {
+      settlement.pops = {
+        citizens: 0,
+        freemen: index === 0 ? 1 : 0,
+        slaves: 0,
+      };
+      settlement.buildings = index === 0 ? ["temple", "temple"] : [];
+    }
+  }
+  player.timedHappinessModifiers = [
+    {
+      amountPerTurn: -2,
+      turnsRemaining: 1,
+      sourceCardId: "test-transient-unrest",
+      sourceName: "Transient unrest",
+      sourceDeck: "player",
+      sourceScope: "activePlayer",
+    },
+  ];
+
+  return G;
+}
+
+function chooseFreemanPromotion(
+  policy: typeof smartPolicy | typeof beamPolicy,
+  food: number,
+) {
+  const G = scenario({
+    patch: {
+      economy: {
+        firstIncomeFoodGrace: false,
+        foodStockpileHappinessDivisor: 0,
+      },
+    },
+  }).build();
+  const player = G.players["0"];
+  const tile = G.board.tiles.find((candidate) => candidate.resource?.type === "wood");
+  if (!tile) throw new Error("promotion fixture needs a wood tile");
+
+  G.phase = "gameplay";
+  G.currentPlayer = "0";
+  tile.settlements.push({
+    owner: "0",
+    kind: "city",
+    buildings: ["gymnasion"],
+    pops: { citizens: 0, freemen: 2, slaves: 0 },
+  });
+  player.settlements = [tile.id];
+  player.hasCollectedGameplayIncome = true;
+  Object.assign(player.resources, {
+    wood: 0,
+    stone: 0,
+    gold: 2,
+    food,
+    influence: 0,
+    happiness: 0,
+  });
+
+  const moves = enumerateLegalMoves(G, "0");
+  const promotion = moves.find(
+    (move) => move.type === "promotePop" && move.from === "freemen",
+  );
+  const endTurnMove = moves.find((move) => move.type === "endTurn");
+  if (!promotion || !endTurnMove) {
+    throw new Error("promotion fixture did not enumerate its comparison moves");
+  }
+
+  return policy.choose(G, [promotion, endTurnMove], createSimRng(1));
+}
 
 /** Cycle whole turns until the agora convenes (spring of Year 2+). Unattended seats can
  *  pick up an event or riot on the way; both are dismissed exactly as the engine suites do. */
