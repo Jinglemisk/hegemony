@@ -18,13 +18,14 @@ be answered before the Assembly revision in Step 4. It does not block Steps 1–
 
 ## Active plans
 
-| Plan                                                            | Phase    | Status    | Position                                    |
-| --------------------------------------------------------------- | -------- | --------- | ------------------------------------------- |
-| [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md) | 3.5      | `ready`   | Next; execute Steps 1–5 in order            |
-| [Outcome-driven AI](plans/outcome-driven-ai.md)                 | Post-3.5 | `ready`   | Approved direction after the closeout       |
-| [Luxury goods](plans/luxury-goods.md)                           | 4        | `blocked` | Waits for Phase 3.5 and its owner questions |
-| [Player trade](plans/player-trade.md)                           | 4        | `proposed`| Catan-style negotiation; after luxuries          |
-| [National Ideas](plans/national-ideas.md)                       | 5        | `proposed`| Pre-filled from the PDF; twelve-idea reverse-snake draft |
+| Plan                                                            | Phase    | Status     | Position                                                         |
+| --------------------------------------------------------------- | -------- | ---------- | ---------------------------------------------------------------- |
+| [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md) | 3.5      | `ready`    | Next; execute Steps 1–5 in order                                 |
+| [Low-number economy preset](plans/low-number-economy-preset.md) | 3.5      | `ready`    | After presentation/evaluator repair; before validation campaigns |
+| [Outcome-driven AI](plans/outcome-driven-ai.md)                 | Post-3.5 | `ready`    | Approved direction after the closeout                            |
+| [Luxury goods](plans/luxury-goods.md)                           | 4        | `blocked`  | Waits for Phase 3.5 and its owner questions                      |
+| [Player trade](plans/player-trade.md)                           | 4        | `proposed` | Catan-style negotiation; after luxuries                          |
+| [National Ideas](plans/national-ideas.md)                       | 5        | `proposed` | Pre-filled from the PDF; twelve-idea reverse-snake draft         |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature
 from [the plan template](plans/_template.md).

@@ -92,6 +92,13 @@ gate, not deferred implementation coverage.
 6. Simulation is an instrument: use targeted campaigns and label policy limits.
 7. Batch visual-design decisions; do not reopen a frozen direction during feature work.
 
+**Phase 3.5 order amendment (2026-07-26):** after its canonical effect-presentation
+seam and bot-evaluator repair, implement the one-click **low-number core tuning preset**
+specified in [its active plan](plans/low-number-economy-preset.md), before the balance campaigns.
+The scheduled slice covers rules, buildings, terrain, events, economic tables, and
+Assembly participation costs; Assembly resolutions and politician effects are the
+explicitly deferred final 16%.
+
 ## Phase sequence
 
 | Phase   | Status                 | Scope                                                                                                       | Exit gate                                                                                                                        |
