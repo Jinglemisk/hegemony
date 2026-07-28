@@ -30,6 +30,7 @@ afterEach(() => {
   act(() => root.unmount());
   container.remove();
   document.body.replaceChildren();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -86,6 +87,7 @@ describe("Tooltip", () => {
   });
 
   it("uses the first touch to explain and the second touch to activate", () => {
+    vi.useFakeTimers();
     const onAction = vi.fn();
     act(() => {
       root.render(
@@ -100,7 +102,8 @@ describe("Tooltip", () => {
     const trigger = container.querySelector<HTMLElement>(".tooltipTrigger")!;
     const button = container.querySelector<HTMLButtonElement>("button")!;
 
-    act(() => dispatchTouchPointerDown(button));
+    act(() => dispatchTouchPointerEvent(button, "pointerdown"));
+    act(() => vi.runAllTimers());
     act(() => button.click());
 
     expect(document.body.querySelector("[role=tooltip]")?.textContent).toContain(
@@ -108,12 +111,35 @@ describe("Tooltip", () => {
     );
     expect(onAction).not.toHaveBeenCalled();
 
-    act(() => dispatchTouchPointerDown(button));
+    act(() => dispatchTouchPointerEvent(button, "pointerdown"));
     act(() => button.click());
 
     expect(onAction).toHaveBeenCalledOnce();
     expect(document.body.querySelector("[role=tooltip]")).toBeNull();
     expect(trigger.contains(button)).toBe(true);
+  });
+
+  it("clears touch suppression when the pointer is cancelled", () => {
+    const onAction = vi.fn();
+    act(() => {
+      root.render(
+        <Tooltip content="Build a workshop">
+          <button onClick={onAction} type="button">
+            Build
+          </button>
+        </Tooltip>,
+      );
+    });
+
+    const button = container.querySelector<HTMLButtonElement>("button")!;
+    act(() => dispatchTouchPointerEvent(button, "pointerdown"));
+    expect(document.body.querySelector("[role=tooltip]")).not.toBeNull();
+
+    act(() => dispatchTouchPointerEvent(button, "pointercancel"));
+    expect(document.body.querySelector("[role=tooltip]")).toBeNull();
+
+    act(() => button.click());
+    expect(onAction).toHaveBeenCalledOnce();
   });
 
   it("subscribes to viewport changes only while the tooltip is open", () => {
@@ -200,9 +226,10 @@ function PopoverHarness({ anchor, onDismiss }: { anchor: DOMRect; onDismiss: () 
   );
 }
 
-function dispatchTouchPointerDown(target: Element) {
-  const event = new Event("pointerdown", { bubbles: true });
+function dispatchTouchPointerEvent(target: Element, type: "pointerdown" | "pointercancel") {
+  const event = new Event(type, { bubbles: true });
   Object.defineProperty(event, "pointerType", { value: "touch" });
+  Object.defineProperty(event, "pointerId", { value: 1 });
   target.dispatchEvent(event);
 }
 

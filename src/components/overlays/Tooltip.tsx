@@ -39,8 +39,7 @@ export function Tooltip({
   const triggerRef = useRef<HTMLSpanElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
-  const suppressTouchClickRef = useRef(false);
-  const suppressTouchClickTimerRef = useRef<number | undefined>(undefined);
+  const suppressedTouchPointerRef = useRef<number | null>(null);
   const position = useAnchoredOverlay(
     open ? triggerRef : null,
     tooltipRef,
@@ -66,13 +65,6 @@ export function Tooltip({
     };
   }, [open]);
 
-  useEffect(
-    () => () => {
-      window.clearTimeout(suppressTouchClickTimerRef.current);
-    },
-    [],
-  );
-
   const wrapperIsTrigger = focusable;
   const describedChild = addDescription(children, wrapperIsTrigger ? undefined : tooltipId);
   const handleBlur = (event: FocusEvent<HTMLSpanElement>) => {
@@ -82,21 +74,25 @@ export function Tooltip({
     if (event.pointerType !== "touch") return;
 
     if (open) {
+      suppressedTouchPointerRef.current = null;
       setOpen(false);
       return;
     }
 
-    suppressTouchClickRef.current = true;
-    window.clearTimeout(suppressTouchClickTimerRef.current);
-    suppressTouchClickTimerRef.current = window.setTimeout(() => {
-      suppressTouchClickRef.current = false;
-    }, 0);
+    suppressedTouchPointerRef.current = event.pointerId;
     setOpen(true);
   };
-  const handleClickCapture = (event: MouseEvent<HTMLSpanElement>) => {
-    if (!suppressTouchClickRef.current) return;
+  const handlePointerCancel = (event: PointerEvent<HTMLSpanElement>) => {
+    if (event.pointerType !== "touch") return;
+    if (suppressedTouchPointerRef.current !== event.pointerId) return;
 
-    suppressTouchClickRef.current = false;
+    suppressedTouchPointerRef.current = null;
+    setOpen(false);
+  };
+  const handleClickCapture = (event: MouseEvent<HTMLSpanElement>) => {
+    if (suppressedTouchPointerRef.current === null) return;
+
+    suppressedTouchPointerRef.current = null;
     event.preventDefault();
     event.stopPropagation();
   };
@@ -113,6 +109,7 @@ export function Tooltip({
         onFocus={() => setOpen(true)}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
+        onPointerCancel={handlePointerCancel}
         onPointerDown={handlePointerDown}
         ref={triggerRef}
         tabIndex={wrapperIsTrigger ? 0 : undefined}
