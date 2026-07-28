@@ -82,14 +82,21 @@ resets the log, so each clone is ~an order of magnitude lighter than a full
 score = 10 · VP(resources projected INCOME_HORIZON turns ahead)
       +  2 · projectedHappiness
       +  1 · influence          (INCOME_HORIZON = 6)
+      -  projectedUnrestRisk
 ```
 
-The projection adds `calculateIncome(G, player) × horizon` onto the player's
-resources and re-reads `playerStandings` — the engine's own formulas — so the
-score automatically sees food-shortage pressure, the stockpile happiness bonus,
-building income, and seasonal modifiers without duplicating any of them.
-Happiness is weighted beyond VP's own penalty because the unrest thresholds
-(−5/−10) delete pops nonlinearly, which a VP-linear score can't see.
+The projection advances each future upkeep and income collection in order. It
+uses the engine's own income and active-effect queries, including suppressed
+collections, timed happiness, and expected starvation loss. At every projected
+upkeep it records the minimum happiness and any mild-riot or severe-revolt
+threshold crossing; a severe crossing applies the live ruleset's rebound before
+income resumes. This prevents a later recovery from hiding an earlier riot.
+
+`projectedUnrestRisk` is deliberately a named strategic heuristic, not an
+expected riot-table payout. It uses the active ruleset thresholds, severe pop-loss
+multiplier, severe roll modifier, and rebound. It does not guess whether a future
+conditional resource/building loss or insurance purchase will apply, and it never
+reads the seeded future die roll.
 
 **Why the horizon exists** (empirical, seeds 100–109, 10×24-turn batches):
 the pre-horizon score (`10·VP + 0.5·materialIncome + 2·happiness`) priced
@@ -108,10 +115,10 @@ batch that measures the game and one that measures the bot.
 - **No spatial strategy**: colony/movePops targets are scored only by immediate
   economics, not position, denial, or future city sites.
 - **No opponent model**: bots never consider the other three players.
-- **Overshoot risk**: the happiness × horizon weight makes temples very
-  attractive (11/game in the post-fix batch). That surfaced a _real_ balance
-  question (temples stack linearly at 6 stone — flagged in todo.md), but
-  remember the bot exaggerates whatever the score loves.
+- **Heuristic riot severity**: projected threshold crossings are priced, but the
+  evaluator does not branch over future insurance decisions or conditional
+  resource/building losses. Those require chance expectation and future policy
+  modeling; the current score intentionally stops short of pretending otherwise.
 - `choose()` costs ~candidates × `structuredClone(G)` per action. Fine headless;
   budget it before running inside the UI thread.
 
