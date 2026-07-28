@@ -20,9 +20,9 @@ export function PopoverActions({
     title ?? (disabled ? "Choose a valid option before confirming." : "Ready to confirm.");
   const confirmButton = (
     <button
+      aria-disabled={disabled}
       className="primaryButton eventResolveButton"
-      disabled={disabled}
-      onClick={onConfirm}
+      onClick={disabled ? undefined : onConfirm}
       type="button"
     >
       {confirmLabel}
@@ -35,13 +35,11 @@ export function PopoverActions({
         Cancel
       </button>
       <Tooltip
-        ariaLabel={`${typeof confirmLabel === "string" ? confirmLabel : "Confirm"}. ${reason}`}
         content={
           <MechanicsDetails blockedReason={disabled ? reason : undefined} heading={confirmLabel}>
             {!disabled ? <p className="mechanicsExplanation">{reason}</p> : null}
           </MechanicsDetails>
         }
-        disabled={disabled}
         preferredPlacement="above"
         triggerClassName="popoverActionTooltipTrigger"
       >

@@ -24,12 +24,20 @@ export function Popover({
     { preferredPlacement: "below", gap: 12 },
     measureKey,
   );
+  const returnFocusRef = useRef<FocusableElement | null>(activeFocusableElement());
 
   useEffect(() => {
     const element = ref.current;
+    const returnTarget = returnFocusRef.current;
     if (!element) return;
 
     element.focus({ preventScroll: true });
+
+    return () => {
+      if (returnTarget?.isConnected) {
+        returnTarget.focus({ preventScroll: true });
+      }
+    };
   }, []);
 
   if (typeof document === "undefined") return null;
@@ -65,4 +73,15 @@ export function Popover({
     </div>,
     document.body,
   );
+}
+
+type FocusableElement = Element & {
+  focus: (options?: FocusOptions) => void;
+};
+
+function activeFocusableElement(): FocusableElement | null {
+  if (typeof document === "undefined" || document.activeElement === document.body) return null;
+
+  const element = document.activeElement;
+  return element && "focus" in element ? (element as FocusableElement) : null;
 }

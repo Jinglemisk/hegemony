@@ -37,6 +37,19 @@
   letter-spacing: 0;
 }
 
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  margin: -1px;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 html,
 body,
 #root {
@@ -103,7 +116,8 @@ button {
     transform 160ms ease;
 }
 
-button:disabled {
+button:disabled,
+button[aria-disabled="true"] {
   cursor: not-allowed;
 }
 
@@ -131,16 +145,19 @@ button:focus-visible {
 }
 
 .appButton:disabled,
+.appButton[aria-disabled="true"],
 .primaryButton:disabled,
+.primaryButton[aria-disabled="true"],
 .iconButton:disabled,
+.iconButton[aria-disabled="true"],
 .buildingButton:disabled {
   opacity: 0.45;
 }
 
-.appButton:not(:disabled):hover,
-.primaryButton:not(:disabled):hover,
-.iconButton:not(:disabled):hover,
-.buildingButton:not(:disabled):hover {
+.appButton:not(:disabled):not([aria-disabled="true"]):hover,
+.primaryButton:not(:disabled):not([aria-disabled="true"]):hover,
+.iconButton:not(:disabled):not([aria-disabled="true"]):hover,
+.buildingButton:not(:disabled):not([aria-disabled="true"]):hover {
   border-color: var(--accent);
   box-shadow: var(--lift-shadow);
   transform: translateY(-1px);
@@ -155,11 +172,12 @@ button:focus-visible {
   overflow: hidden;
 }
 
-.eventResolveButton:disabled {
+.eventResolveButton:disabled,
+.eventResolveButton[aria-disabled="true"] {
   opacity: 0.45;
 }
 
-.eventResolveButton:not(:disabled):hover {
+.eventResolveButton:not(:disabled):not([aria-disabled="true"]):hover {
   box-shadow: var(--lift-shadow);
   transform: translateY(-1px);
 }
@@ -395,5 +413,4 @@ button:focus-visible {
   height: 30px;
   flex: 0 0 auto;
 }
-
 

@@ -5,7 +5,6 @@
   min-width: 0;
 }
 
-.tooltipTrigger[data-disabled]:focus-visible,
 .tooltipTrigger[tabindex="0"]:focus-visible {
   outline: 2px solid var(--clay);
   outline-offset: 2px;

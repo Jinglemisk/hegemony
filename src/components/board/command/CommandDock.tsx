@@ -100,7 +100,6 @@ export function CommandDock({
             <strong>{PLAYER_NAMES[currentPlayerId]}</strong>
           </div>
           <Tooltip
-            ariaLabel={`End Turn. ${endTurnExplanation}`}
             content={
               <MechanicsDetails
                 blockedReason={endTurnEnabled ? undefined : endTurnExplanation}
@@ -111,14 +110,13 @@ export function CommandDock({
                 ) : null}
               </MechanicsDetails>
             }
-            disabled={!endTurnEnabled}
             preferredPlacement="above"
             triggerClassName="endTurnTooltipTrigger"
           >
             <button
+              aria-disabled={!endTurnEnabled}
               className="endTurnSquare"
-              disabled={!endTurnEnabled}
-              onClick={() => END_TURN_VERB.select(handlers)}
+              onClick={endTurnEnabled ? () => END_TURN_VERB.select(handlers) : undefined}
               type="button"
             >
               <UiSprite item="endTurn" className="endTurnSquareIcon" />

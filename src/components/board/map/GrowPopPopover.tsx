@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { POP_TYPES, getGrowPopStatus, previewGrowPopIncomeDelta } from "../../../game/rules";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
+import { MechanicsDetails } from "../../MechanicsDetails";
 import { AtlasIcon } from "../../Sprites";
+import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { ResourceDeltaList } from "../ResourceDeltaList";
 import { ResourceChips } from "../ResourceChips";
@@ -64,21 +66,40 @@ export function GrowPopPopover({
       >
         {POP_TYPES.map((candidate) => {
           const candidateStatus = getGrowPopStatus(G, playerID, tileId, candidate);
+          const reason = actionRequirementText(candidateStatus, phase, isActive);
+          const blocked = gameplayActionDisabled(candidateStatus, phase, isActive);
+          const label = `Grow ${formatPopLabel(candidate, 1)}`;
 
           return (
-            <button
-              className={candidate === pop ? "selectedChoice" : ""}
+            <Tooltip
+              content={
+                <MechanicsDetails
+                  blockedReason={blocked ? reason : undefined}
+                  effectiveCost={candidateStatus.cost}
+                  heading={label}
+                >
+                  {!blocked ? <p className="mechanicsExplanation">{reason}</p> : null}
+                </MechanicsDetails>
+              }
               key={candidate}
-              onClick={() => setPop(candidate)}
-              title={candidateStatus.reasons.join(" ") || `Grow 1 ${formatPopLabel(candidate, 1)}.`}
-              type="button"
+              triggerClassName="popoverChoiceTooltipTrigger"
             >
-              <AtlasIcon icon={candidate} className="miniIcon" />
-              <span>{formatPopLabel(candidate, 1)}</span>
-              <strong>
-                <ResourceChips resources={candidateStatus.cost ?? {}} variant="cost" empty="Free" />
-              </strong>
-            </button>
+              <button
+                className={candidate === pop ? "selectedChoice" : ""}
+                onClick={() => setPop(candidate)}
+                type="button"
+              >
+                <AtlasIcon icon={candidate} className="miniIcon" />
+                <span>{formatPopLabel(candidate, 1)}</span>
+                <strong>
+                  <ResourceChips
+                    resources={candidateStatus.cost ?? {}}
+                    variant="cost"
+                    empty="Free"
+                  />
+                </strong>
+              </button>
+            </Tooltip>
           );
         })}
       </div>

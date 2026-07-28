@@ -47,7 +47,6 @@ export function CommandVerb({
 
   return (
     <Tooltip
-      ariaLabel={`${verb.label}. ${explanation}`}
       content={
         <MechanicsDetails
           blockedReason={enabled ? undefined : explanation}
@@ -57,15 +56,14 @@ export function CommandVerb({
           {enabled ? <p className="mechanicsExplanation">{explanation}</p> : null}
         </MechanicsDetails>
       }
-      disabled={!enabled}
       preferredPlacement="above"
       triggerClassName="verbTooltipTrigger"
     >
       <button
+        aria-disabled={!enabled}
         aria-pressed={verb.pressed ? pressed : undefined}
         className={`verbDisc${pressed ? " verbDiscArmed" : ""}${enabled ? "" : " verbDiscOff"}`}
-        disabled={!enabled}
-        onClick={() => verb.select(handlers)}
+        onClick={enabled ? () => verb.select(handlers) : undefined}
         type="button"
       >
         <span className="verbKnob">

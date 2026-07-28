@@ -69,7 +69,6 @@ export function BuildPopover({
 
           return (
             <Tooltip
-              ariaLabel={`${candidate.name}. ${reason}`}
               content={
                 <MechanicsDetails
                   blockedReason={disabled ? reason : undefined}
@@ -81,14 +80,13 @@ export function BuildPopover({
                   </p>
                 </MechanicsDetails>
               }
-              disabled={disabled}
               key={candidate.id}
               triggerClassName="popoverChoiceTooltipTrigger"
             >
               <button
+                aria-disabled={disabled}
                 className={candidate.id === buildingId ? "selectedChoice" : ""}
-                disabled={disabled}
-                onClick={() => setBuildingId(candidate.id)}
+                onClick={disabled ? undefined : () => setBuildingId(candidate.id)}
                 type="button"
               >
                 <AtlasIcon icon={candidate.id} className="miniIcon" />

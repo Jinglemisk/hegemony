@@ -49,7 +49,6 @@ export function BuildingsTab({
 
               return (
                 <Tooltip
-                  ariaLabel={`${building.name} in ${holding}. ${reason}`}
                   content={
                     <MechanicsDetails
                       blockedReason={disabled ? reason : undefined}
@@ -61,14 +60,15 @@ export function BuildingsTab({
                       </p>
                     </MechanicsDetails>
                   }
-                  disabled={disabled}
                   key={`${building.id}-${tile.id}`}
                   triggerClassName="candidateTooltipTrigger"
                 >
                   <button
+                    aria-disabled={disabled}
                     className="candidateButton"
-                    disabled={disabled}
-                    onClick={() => onBuildBuildingRequest(tile.id, building.id)}
+                    onClick={
+                      disabled ? undefined : () => onBuildBuildingRequest(tile.id, building.id)
+                    }
                     type="button"
                   >
                     <span>{holding}</span>

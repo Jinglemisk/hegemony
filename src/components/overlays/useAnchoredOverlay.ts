@@ -32,22 +32,24 @@ export function useAnchoredOverlay(
   }, [anchor, arrowInset, gap, margin, overlayRef, preferredPlacement]);
 
   useLayoutEffect(() => {
+    const anchorElement = isElementRef(anchor) ? anchor.current : anchor;
+    const overlay = overlayRef.current;
+
+    if (!anchorElement || !overlay || typeof window === "undefined") return;
+
     updatePosition();
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
     const resizeObserver =
-      typeof ResizeObserver === "undefined" || !overlayRef.current
-        ? null
-        : new ResizeObserver(updatePosition);
-    const observedOverlay = overlayRef.current;
-    if (observedOverlay) resizeObserver?.observe(observedOverlay);
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updatePosition);
+    resizeObserver?.observe(overlay);
 
     return () => {
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
       resizeObserver?.disconnect();
     };
-  }, [measureKey, overlayRef, updatePosition]);
+  }, [anchor, measureKey, overlayRef, updatePosition]);
 
   return position;
 }

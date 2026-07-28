@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type FocusEvent,
+  type MouseEvent,
   type PointerEvent,
   type ReactElement,
   type CSSProperties,
@@ -18,7 +19,6 @@ import { useAnchoredOverlay } from "./useAnchoredOverlay";
 export function Tooltip({
   children,
   content,
-  disabled = false,
   ariaLabel,
   focusable = false,
   triggerClassName,
@@ -28,8 +28,6 @@ export function Tooltip({
 }: {
   children: ReactNode;
   content: ReactNode;
-  /** Disabled native controls cannot receive focus; their wrapper becomes the trigger. */
-  disabled?: boolean;
   ariaLabel?: string;
   focusable?: boolean;
   triggerClassName?: string;
@@ -41,6 +39,8 @@ export function Tooltip({
   const triggerRef = useRef<HTMLSpanElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
+  const suppressTouchClickRef = useRef(false);
+  const suppressTouchClickTimerRef = useRef<number | undefined>(undefined);
   const position = useAnchoredOverlay(
     open ? triggerRef : null,
     tooltipRef,
@@ -66,13 +66,39 @@ export function Tooltip({
     };
   }, [open]);
 
-  const wrapperIsTrigger = disabled || focusable;
+  useEffect(
+    () => () => {
+      window.clearTimeout(suppressTouchClickTimerRef.current);
+    },
+    [],
+  );
+
+  const wrapperIsTrigger = focusable;
   const describedChild = addDescription(children, wrapperIsTrigger ? undefined : tooltipId);
   const handleBlur = (event: FocusEvent<HTMLSpanElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
   };
   const handlePointerDown = (event: PointerEvent<HTMLSpanElement>) => {
-    if (event.pointerType === "touch") setOpen((current) => !current);
+    if (event.pointerType !== "touch") return;
+
+    if (open) {
+      setOpen(false);
+      return;
+    }
+
+    suppressTouchClickRef.current = true;
+    window.clearTimeout(suppressTouchClickTimerRef.current);
+    suppressTouchClickTimerRef.current = window.setTimeout(() => {
+      suppressTouchClickRef.current = false;
+    }, 0);
+    setOpen(true);
+  };
+  const handleClickCapture = (event: MouseEvent<HTMLSpanElement>) => {
+    if (!suppressTouchClickRef.current) return;
+
+    suppressTouchClickRef.current = false;
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   return (
@@ -81,9 +107,9 @@ export function Tooltip({
         aria-describedby={wrapperIsTrigger ? tooltipId : undefined}
         aria-label={wrapperIsTrigger ? ariaLabel : undefined}
         className={["tooltipTrigger", triggerClassName].filter(Boolean).join(" ")}
-        data-disabled={disabled || undefined}
         style={triggerStyle}
         onBlur={handleBlur}
+        onClickCapture={handleClickCapture}
         onFocus={() => setOpen(true)}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}

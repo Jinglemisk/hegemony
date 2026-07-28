@@ -65,7 +65,6 @@ export function ResourceChips({
               variant === "yield" && value === 0 ? "emptyNetYield" : undefined,
               variant !== "cost" ? toneClass(value) : undefined,
             )}
-            aria-label={chipAccessibleLabel(variant, resource as Resource, value)}
             key={resource}
             style={resourceCssVars(resource as Resource)}
             title={chipTitle(variant, resource as Resource, value)}
@@ -85,11 +84,23 @@ export function ResourceChips({
 
 function renderValue(variant: ResourceChipsVariant, resource: Resource, value: number) {
   if (variant === "cost") {
-    return <strong>{value}</strong>;
+    return (
+      <>
+        <strong>{value}</strong>
+        <span className="visuallyHidden"> {RESOURCE_LABELS[resource]}</span>
+      </>
+    );
   }
 
   if (variant === "yield") {
-    return <strong>{value === 0 ? "–" : formatSignedNumber(value)}</strong>;
+    return (
+      <>
+        <strong aria-hidden="true">{value === 0 ? "–" : formatSignedNumber(value)}</strong>
+        <span className="visuallyHidden">
+          {RESOURCE_LABELS[resource]}: {value === 0 ? "no change" : formatSignedNumber(value)}
+        </span>
+      </>
+    );
   }
 
   return (
@@ -97,16 +108,6 @@ function renderValue(variant: ResourceChipsVariant, resource: Resource, value: n
       {formatSignedNumber(value)} {RESOURCE_LABELS[resource]}
     </>
   );
-}
-
-function chipAccessibleLabel(variant: ResourceChipsVariant, resource: Resource, value: number) {
-  const label = RESOURCE_LABELS[resource];
-
-  if (variant === "cost") {
-    return `${value} ${label}`;
-  }
-
-  return `${label}: ${value === 0 ? "no change" : formatSignedNumber(value)}`;
 }
 
 function chipTitle(variant: ResourceChipsVariant, resource: Resource, value: number) {
