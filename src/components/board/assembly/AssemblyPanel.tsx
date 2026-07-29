@@ -128,6 +128,7 @@ export function AssemblyPanel({
             }
             focusable
             preferredPlacement="above"
+            triggerAs="div"
             triggerClassName="assemblyVoiceTooltipTrigger"
           >
             <div className="asm-voice">

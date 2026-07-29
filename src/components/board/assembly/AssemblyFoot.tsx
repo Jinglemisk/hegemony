@@ -98,26 +98,27 @@ export function AssemblyFoot({
               measureKey={standing.length}
               onDismiss={() => onMenu(null)}
             >
-              <ul className="asmMenu" role="menu">
-                <li className="asmMenuHead">Move to strike a standing Law</li>
-                {standing.map((cardId) => (
-                  <li key={cardId}>
-                    <button
-                      onClick={() => {
-                        moves.assemblyProposeRepeal(viewerId, cardId);
-                        onMenu(null);
-                      }}
-                      role="menuitem"
-                      type="button"
-                    >
-                      <span className="asmMenuName">
-                        {getResolutionCard(cardId)?.name ?? cardId}
-                      </span>
-                      <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <div className="asmMenu">
+                <p className="asmMenuHead">Move to strike a standing Law</p>
+                <ul aria-label="Standing Laws available to repeal" className="asmMenuChoices">
+                  {standing.map((cardId) => (
+                    <li key={cardId}>
+                      <button
+                        onClick={() => {
+                          moves.assemblyProposeRepeal(viewerId, cardId);
+                          onMenu(null);
+                        }}
+                        type="button"
+                      >
+                        <span className="asmMenuName">
+                          {getResolutionCard(cardId)?.name ?? cardId}
+                        </span>
+                        <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </Popover>
           ) : null}
         </div>

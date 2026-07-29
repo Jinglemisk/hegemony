@@ -171,6 +171,7 @@ function PoliticianColumn({
                 focusable
                 key={isStratokles ? `${stele.cardId}-${stele.order}` : stele.cardId}
                 preferredPlacement="above"
+                triggerAs="div"
                 triggerClassName="assemblyCardTooltipTrigger"
               >
                 {isStratokles ? (

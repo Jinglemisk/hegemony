@@ -915,12 +915,19 @@
 }
 
 .asmMenuHead {
+  margin: 0;
   padding: 4px 7px 6px;
   color: var(--ink-48);
   font-family: var(--disp);
   font-size: 7.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.asmMenuChoices {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .asmMenu li button {

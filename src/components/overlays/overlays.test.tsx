@@ -86,6 +86,28 @@ describe("Tooltip", () => {
     expect(document.body.querySelector("[role=tooltip]")).toBeNull();
   });
 
+  it("supports a block trigger without nesting block content inside a span", () => {
+    act(() => {
+      root.render(
+        <Tooltip content="Standing Law details" focusable triggerAs="div">
+          <div className="blockTooltipContent">
+            <div>Grain Dole</div>
+          </div>
+        </Tooltip>,
+      );
+    });
+
+    const trigger = container.querySelector<HTMLElement>(".tooltipTrigger")!;
+    expect(trigger.tagName).toBe("DIV");
+    expect(trigger.firstElementChild?.tagName).toBe("DIV");
+    expect(trigger.querySelector("span > .blockTooltipContent")).toBeNull();
+
+    act(() => trigger.focus());
+    expect(document.body.querySelector("[role=tooltip]")?.textContent).toContain(
+      "Standing Law details",
+    );
+  });
+
   it("uses the first touch to explain and the second touch to activate", () => {
     vi.useFakeTimers();
     const onAction = vi.fn();

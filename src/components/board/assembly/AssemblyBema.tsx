@@ -239,6 +239,7 @@ function ColumnCard({ card }: { card: ResolutionCard }) {
       }
       focusable
       preferredPlacement="above"
+      triggerAs="div"
       triggerClassName="assemblyCardTooltipTrigger bemaCardTooltipTrigger"
     >
       <div className="bemaCard">
@@ -273,6 +274,7 @@ function RepealCard({ cardId }: { cardId: string }) {
       }
       focusable
       preferredPlacement="above"
+      triggerAs="div"
       triggerClassName="assemblyCardTooltipTrigger bemaCardTooltipTrigger"
     >
       <div className="bemaCard bemaCardRepeal">
@@ -334,26 +336,27 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
               measureKey={G.activeLaws.length}
               onDismiss={() => setReplacementAnchor(null)}
             >
-              <ul className="asmMenu" role="menu">
-                <li className="asmMenuHead">The board is full — name the Law to replace</li>
-                {activeLawIds(G).map((cardId) => (
-                  <li key={cardId}>
-                    <button
-                      onClick={() => {
-                        moves.assemblyPropose(viewerId, cardId);
-                        setReplacementAnchor(null);
-                      }}
-                      role="menuitem"
-                      type="button"
-                    >
-                      <span className="asmMenuName">
-                        {getResolutionCard(cardId)?.name ?? cardId}
-                      </span>
-                      <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <div className="asmMenu">
+                <p className="asmMenuHead">The board is full — name the Law to replace</p>
+                <ul aria-label="Standing Laws available for replacement" className="asmMenuChoices">
+                  {activeLawIds(G).map((cardId) => (
+                    <li key={cardId}>
+                      <button
+                        onClick={() => {
+                          moves.assemblyPropose(viewerId, cardId);
+                          setReplacementAnchor(null);
+                        }}
+                        type="button"
+                      >
+                        <span className="asmMenuName">
+                          {getResolutionCard(cardId)?.name ?? cardId}
+                        </span>
+                        <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </Popover>
           ) : null}
         </>

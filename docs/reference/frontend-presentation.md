@@ -51,6 +51,10 @@ dialog. Escape or an explicit cancel dismisses it, and unmounting restores focus
 connected opener when that opener still exists. Positioning must use the shared
 anchoring hook rather than component-specific viewport math.
 
+Choice collections use ordinary labelled lists of native buttons and normal Tab
+navigation. Do not apply ARIA menu roles unless the complete managed-focus menu
+keyboard pattern is implemented.
+
 ### `MechanicsDetails`
 
 Use the standard slots in this order where present: heading, structured effects,

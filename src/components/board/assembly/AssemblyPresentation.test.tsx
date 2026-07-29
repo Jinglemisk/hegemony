@@ -7,6 +7,7 @@ import { openAssembly, RESOLUTION_CARDS } from "../../../game/assembly";
 import { scenario } from "../../../game/testing/scenario";
 import type { GameUi } from "../GameUiContext";
 import { GameUiProvider } from "../GameUiProvider";
+import { AssemblyBema } from "./AssemblyBema";
 import { AssemblyFoot, type AssemblyMenu } from "./AssemblyFoot";
 import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
 
@@ -167,8 +168,14 @@ describe("Assembly pickers", () => {
 
     const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
     expect(dialog.getAttribute("aria-label")).toBe("Choose a standing Law to repeal");
-    expect(dialog.querySelector('[role="menu"]')).not.toBeNull();
-    expect(dialog.querySelector('[role="menuitem"]')?.textContent).toContain("Grain Dole");
+    const choices = dialog.querySelector<HTMLUListElement>(
+      'ul[aria-label="Standing Laws available to repeal"]',
+    )!;
+    const choice = choices.querySelector<HTMLButtonElement>("button")!;
+    expect(dialog.querySelector('[role="menu"]')).toBeNull();
+    expect(dialog.querySelector('[role="menuitem"]')).toBeNull();
+    expect(choice.textContent).toContain("Grain Dole");
+    expect(choice.tabIndex).toBe(0);
     expect(document.activeElement).toBe(dialog);
 
     act(() => dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
@@ -176,6 +183,60 @@ describe("Assembly pickers", () => {
     expect(document.body.querySelector("[role=dialog]")).toBeNull();
     expect(document.activeElement).toBe(opener);
     expect(proposeRepeal).not.toHaveBeenCalled();
+  });
+
+  it("uses a labelled native-button list for a full-board replacement", () => {
+    const G = scenario().build();
+    const laws = RESOLUTION_CARDS.filter((card) => card.kind === "law");
+    const standing = laws.slice(0, G.ruleset.assembly.lawCap);
+    const candidate = laws[G.ruleset.assembly.lawCap];
+    standing.forEach((card, index) => {
+      G.activeLaws.push({
+        cardId: card.id,
+        author: "0",
+        enactedSeason: G.season,
+        order: index,
+      });
+    });
+    openAssembly(G, "0");
+    G.assembly!.held["0"] = { card: candidate, draws: 1 };
+    const propose = vi.fn();
+    const value = {
+      G,
+      viewerId: "0",
+      moves: {
+        assemblyDiscardHeld: vi.fn(),
+        assemblyPropose: propose,
+      },
+    } as unknown as GameUi;
+
+    act(() => {
+      root.render(
+        <GameUiProvider value={value}>
+          <AssemblyBema G={G} session={G.assembly!} />
+        </GameUiProvider>,
+      );
+    });
+
+    const opener = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
+      button.textContent?.includes("Propose"),
+    )!;
+    act(() => {
+      opener.focus();
+      opener.click();
+    });
+
+    const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
+    const choices = dialog.querySelector<HTMLUListElement>(
+      'ul[aria-label="Standing Laws available for replacement"]',
+    )!;
+    const buttons = [...choices.querySelectorAll<HTMLButtonElement>("button")];
+    expect(dialog.querySelector('[role="menu"]')).toBeNull();
+    expect(dialog.querySelector('[role="menuitem"]')).toBeNull();
+    expect(buttons).toHaveLength(G.ruleset.assembly.lawCap);
+    expect(buttons.every((button) => button.tabIndex === 0)).toBe(true);
+    expect(document.activeElement).toBe(dialog);
+    expect(propose).not.toHaveBeenCalled();
   });
 });
 

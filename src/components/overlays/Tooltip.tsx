@@ -23,6 +23,7 @@ export function Tooltip({
   focusable = false,
   triggerClassName,
   triggerStyle,
+  triggerAs = "span",
   tooltipClassName,
   preferredPlacement = "below",
 }: {
@@ -32,11 +33,12 @@ export function Tooltip({
   focusable?: boolean;
   triggerClassName?: string;
   triggerStyle?: CSSProperties;
+  triggerAs?: "span" | "div";
   tooltipClassName?: string;
   preferredPlacement?: VerticalPlacement;
 }) {
   const tooltipId = useId();
-  const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
   const suppressedTouchPointerRef = useRef<number | null>(null);
@@ -67,10 +69,10 @@ export function Tooltip({
 
   const wrapperIsTrigger = focusable;
   const describedChild = addDescription(children, wrapperIsTrigger ? undefined : tooltipId);
-  const handleBlur = (event: FocusEvent<HTMLSpanElement>) => {
+  const handleBlur = (event: FocusEvent<HTMLElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
   };
-  const handlePointerDown = (event: PointerEvent<HTMLSpanElement>) => {
+  const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
     if (event.pointerType !== "touch") return;
 
     if (open) {
@@ -82,14 +84,14 @@ export function Tooltip({
     suppressedTouchPointerRef.current = event.pointerId;
     setOpen(true);
   };
-  const handlePointerCancel = (event: PointerEvent<HTMLSpanElement>) => {
+  const handlePointerCancel = (event: PointerEvent<HTMLElement>) => {
     if (event.pointerType !== "touch") return;
     if (suppressedTouchPointerRef.current !== event.pointerId) return;
 
     suppressedTouchPointerRef.current = null;
     setOpen(false);
   };
-  const handleClickCapture = (event: MouseEvent<HTMLSpanElement>) => {
+  const handleClickCapture = (event: MouseEvent<HTMLElement>) => {
     if (suppressedTouchPointerRef.current === null) return;
 
     suppressedTouchPointerRef.current = null;
@@ -97,9 +99,11 @@ export function Tooltip({
     event.stopPropagation();
   };
 
+  const Trigger = triggerAs;
+
   return (
     <>
-      <span
+      <Trigger
         aria-describedby={wrapperIsTrigger ? tooltipId : undefined}
         aria-label={wrapperIsTrigger ? ariaLabel : undefined}
         className={["tooltipTrigger", triggerClassName].filter(Boolean).join(" ")}
@@ -111,11 +115,13 @@ export function Tooltip({
         onMouseLeave={() => setOpen(false)}
         onPointerCancel={handlePointerCancel}
         onPointerDown={handlePointerDown}
-        ref={triggerRef}
+        ref={(element) => {
+          triggerRef.current = element;
+        }}
         tabIndex={wrapperIsTrigger ? 0 : undefined}
       >
         {describedChild}
-      </span>
+      </Trigger>
       {open && typeof document !== "undefined"
         ? createPortal(
             <div
