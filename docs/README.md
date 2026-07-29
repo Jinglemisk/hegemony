@@ -10,9 +10,11 @@ Last updated: 2026-07-29.
 ## Now
 
 **Current initiative:** [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md).
-Step 1 restores parity truth through the
-[effective content and costs contract](reference/effective-values.md). Step 2,
-exhaustive feature/effect/content manifests and behavioral CI, is next.
+Step 1 merged in PR #58 through the
+[effective content and costs contract](reference/effective-values.md). Step 2 is
+complete in this change through the exhaustive
+[parity manifests](reference/parity-manifests.md). Draft PR #57 is the next
+integration step after this PR merges and it rebases onto main.
 
 **Owner blocker:** None for Steps 1–4. Voice's initial minimum is 3. The remaining
 [Q30 and Q50](questions.md) are Step 5 validation inputs, not implementation blockers.
@@ -21,7 +23,7 @@ exhaustive feature/effect/content manifests and behavioral CI, is next.
 
 | Plan                                                            | Phase    | Status     | Position                                                         |
 | --------------------------------------------------------------- | -------- | ---------- | ---------------------------------------------------------------- |
-| [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md) | 3.5      | `active`   | Step 1 in this change; Step 2 next                               |
+| [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md) | 3.5      | `active`   | Step 2 in this change; Step 3 draft PR #57 next                  |
 | [Low-number economy preset](plans/low-number-economy-preset.md) | 3.5      | `ready`    | After presentation/evaluator repair; before validation campaigns |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)                 | Post-3.5 | `ready`    | Approved direction after the closeout                            |
 | [Luxury goods](plans/luxury-goods.md)                           | 4        | `blocked`  | Waits for Phase 3.5 and its owner questions                      |
@@ -55,7 +57,7 @@ Idea → owner question → accepted plan → implementation PRs → validation 
 - [Roadmap](roadmap.md) — mandatory parity contract, phase order, and exit gates.
 - [Questions](questions.md) — unresolved owner decisions only.
 - [`plans/`](plans/) — proposed, ready, active, or blocked work only.
-- [`reference/`](reference/) — living rules, effective-value contracts, AI, simulation, balance, and design descriptions.
+- [`reference/`](reference/) — living rules, effective-value and parity-manifest contracts, AI, simulation, balance, and design descriptions.
 - [`reports/`](reports/) — immutable dated audits, playtests, and simulation evidence.
 - [`archive/`](archive/) — shipped or superseded plans and historical work notes.
 

@@ -3,8 +3,9 @@
 Last updated: 2026-07-29.
 
 This is the living contract for values that can differ from authored defaults. It
-records the Phase 3.5 Step 1 inventory; Step 2 adds compile-time manifests, while
-Step 3 presentation components consume the APIs named here.
+records the Phase 3.5 Step 1 inventory. Step 2's compile-time and behavioral
+classification is defined by the [parity manifests](parity-manifests.md), while
+Step 3 presentation components consume both contracts.
 
 ## Vocabulary
 
@@ -64,9 +65,10 @@ After Steps 1 and 2 merge, PR #57 must rebase onto main and:
   Assembly explanations on their named status/legal-move queries above. Do not
   reconstruct costs inside presentation components.
 - Preserve the base/effective distinction in Codex or other reference content.
-- Consume Step 2's exhaustive manifests together with the existing
-  `src/parity/moveParity.ts`, `getActiveEffects()`, and `src/ui/effects.ts`
-  seams; do not create a UI-only classification registry.
+- Consume `CONTENT_MANIFEST`, `FEATURE_PARITY`, the exhaustive effect
+  registries in `src/parity/featureParity.ts`, `src/parity/moveParity.ts`,
+  `getActiveEffects()`, and the typed adapters in `src/ui/effects.ts`; do not
+  create a UI-only classification registry.
 - Rerun the full parity suite plus PR #57's accessibility, keyboard, touch
   emulation, and interaction checks, then record any owner real-device tests.
 
@@ -79,6 +81,7 @@ It also proves that the smart policy reverses a build decision when effective
 building economics reverse. Existing status, legal-move, preview, and parity suites
 cover the remaining action families.
 
-This contract does not add Step 2's exhaustive manifests and does not prescribe
-Step 3's Tooltip/Popover rendering. PR #57 must consume these queries when it
-reconciles its presentation components after Steps 1 and 2 merge.
+The [Step 2 manifest contract](parity-manifests.md) now enforces the exhaustive
+classification around these values. This reference still does not prescribe Step
+3's Tooltip/Popover rendering; PR #57 must consume both contracts when it rebases
+after this Step 2 change merges.
