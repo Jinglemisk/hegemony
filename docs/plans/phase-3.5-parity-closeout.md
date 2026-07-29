@@ -35,10 +35,9 @@ roadmap's engine/frontend/simulation-AI parity contract.
 | **4. Revise the Assembly**            | Gameplay implementation | Replace Voice with the permanent authored-and-passed ratchet and a minimum; add one-time politician prizes; remove the Stratokles coup; make Stratokles effects player-targeted; ship frontend state, master-policy behavior, telemetry, and behavioral tests together. | The revised Assembly is complete on all three axes and no PR depends on a later branch for required parity.                                                |
 | **5. Validate and tune**              | Validation              | Record the human playtest; run Assembly participation and runaway-leader checks; rerun cities 3→2 and the agreed balance campaigns; apply only evidence-driven tuning; close the Phase 3.5 record.                                                                      | A tester can explain changes, the reference policy exercises the revised game credibly, the agora is worth engaging, and the no-coup runaway check passes. |
 
-**Delivery state:** Step 1 merged in PR #58; Step 2 is complete in this change;
-Step 3 remains independent draft PR #57 and must rebase onto main and consume the
-Step 1 effective-value APIs plus the Step 2 parity manifests; Steps 4 and 5 remain
-pending.
+**Delivery state:** Steps 1 and 2 merged in PRs #58 and #59. Step 3 is implemented,
+rebased, and reconciled with their effective-value APIs and parity manifests in draft
+PR #57, but is not merged. Steps 4 and 5 remain pending.
 
 ## Merge and testing rules
 

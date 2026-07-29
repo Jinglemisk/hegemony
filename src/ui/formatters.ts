@@ -1,7 +1,7 @@
 import { getBuilding } from "../game/content";
 import { seasonName, yearOf } from "../game/core/calendar";
 import { formatPopName, formatRuleNumber } from "../game/core/format";
-import type { BuildingEffect, BuildingId, PopType, Resource, Resources, SeasonName } from "../game/types";
+import type { BuildingId, PopType, Resource, Resources, SeasonName } from "../game/types";
 
 export const RESOURCE_LABELS: Record<Resource, string> = {
   wood: "Wood",
@@ -66,50 +66,6 @@ export function formatNumber(amount: number) {
   return formatRuleNumber(amount);
 }
 
-export function formatBuildingEffects(effects: BuildingEffect[]) {
-  if (effects.length === 0) {
-    return "No effect";
-  }
-
-  return effects
-    .map((effect) => {
-      if (effect.type === "freemanGoldBonus") {
-        return `+${effect.amount} Gold per freeman, up to ${effect.supportedPops} ${formatPopLabel("freemen", effect.supportedPops)}`;
-      }
-
-      if (effect.type === "citizenInfluenceBonus") {
-        return `+${effect.amount} Influence per citizen, up to ${effect.supportedPops} ${formatPopLabel("citizens", effect.supportedPops)}`;
-      }
-
-      if (effect.type === "slavePrimaryResourceBonus") {
-        return `+${effect.amount} tile primary resource per slave, up to ${effect.supportedPops} ${formatPopLabel("slaves", effect.supportedPops)}`;
-      }
-
-      if (effect.type === "happiness") {
-        return `+${effect.amount} ${RESOURCE_LABELS.happiness}`;
-      }
-
-      if (effect.type === "growPopFoodDiscount") {
-        return `local Grow Pop costs -${effect.amount} Food`;
-      }
-
-      if (effect.type === "popCapacityBonus") {
-        return `+${effect.amount} pop capacity`;
-      }
-
-      if (effect.type === "tilePrimaryResourceBonus") {
-        return `+${effect.amount} tile yield`;
-      }
-
-      if (effect.type === "promoteCostReduction") {
-        return `promotions here cost -${effect.amount}`;
-      }
-
-      return `+${effect.amount} ${RESOURCE_LABELS[effect.resource]} income`;
-    })
-    .join(", ");
-}
-
 export function formatPopLabel(pop: PopType, amount: number) {
   return formatPopName(pop, amount);
 }
@@ -117,4 +73,3 @@ export function formatPopLabel(pop: PopType, amount: number) {
 export function buildingName(buildingId: BuildingId) {
   return getBuilding(buildingId)?.name ?? buildingId;
 }
-

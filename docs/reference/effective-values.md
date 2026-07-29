@@ -52,25 +52,21 @@ Pre-target command summaries only print a number when the engine can answer it
 without a target. Target-dependent or alternative-payment actions say `varies`,
 `options`, or `stakes`; their chooser shows the exact effective cost.
 
-## PR #57 reconciliation checklist
+## PR #57 integration status
 
-After Steps 1 and 2 merge, PR #57 must rebase onto main and:
+Draft PR #57 has rebased over Steps 1 and 2 and completed this reconciliation; it is
+implemented but not yet merged. Its Build popover consumes paired
+`getBuildBuildingOptions()` definitions/statuses, and its building ledgers consume the
+effective roster plus target-specific status costs. Other shared action explanations
+remain on the named status/legal-move queries above. Reference surfaces retain explicit
+base-cost labels, and action surfaces retain effective-cost or honest pre-target labels.
 
-- Replace any rebased runtime reads of `BUILDINGS` / `TERRAIN_DECK` with
-  `getBuildings()`, `getBuilding()`, `getTerrainDeck()`, or the paired
-  `getBuildBuildingOptions()` query.
-- Pass the selected option's `building` and `status` into shared Build
-  Tooltip/Popover presentation; render `status.cost` as the action price.
-- Keep Found, Upgrade, Grow, ladder, bank, Calm, Venture, riot-insurance, and
-  Assembly explanations on their named status/legal-move queries above. Do not
-  reconstruct costs inside presentation components.
-- Preserve the base/effective distinction in Codex or other reference content.
-- Consume `CONTENT_MANIFEST`, `FEATURE_PARITY`, the exhaustive effect
-  registries in `src/parity/featureParity.ts`, `src/parity/moveParity.ts`,
-  `getActiveEffects()`, and the typed adapters in `src/ui/effects.ts`; do not
-  create a UI-only classification registry.
-- Rerun the full parity suite plus PR #57's accessibility, keyboard, touch
-  emulation, and interaction checks, then record any owner real-device tests.
+The draft also consumes `CONTENT_MANIFEST`, `FEATURE_PARITY`, the exhaustive effect
+registries in `src/parity/featureParity.ts`, `src/parity/moveParity.ts`,
+`getActiveEffects()`, and the typed adapters in `src/ui/effects.ts`; it does not carry a
+UI-only classification registry. Automated keyboard and touch-emulation evidence is
+part of its validation, while the real-device checklist remains an owner gate in the
+[frontend presentation contract](frontend-presentation.md).
 
 ## Regression contract
 
@@ -81,7 +77,7 @@ It also proves that the smart policy reverses a build decision when effective
 building economics reverse. Existing status, legal-move, preview, and parity suites
 cover the remaining action families.
 
-The [Step 2 manifest contract](parity-manifests.md) now enforces the exhaustive
-classification around these values. This reference still does not prescribe Step
-3's Tooltip/Popover rendering; PR #57 must consume both contracts when it rebases
-after this Step 2 change merges.
+The [Step 2 manifest contract](parity-manifests.md) enforces the exhaustive
+classification around these values. The [frontend presentation contract](frontend-presentation.md)
+defines how draft PR #57 renders them through Tooltip, Popover, and MechanicsDetails;
+that PR remains unmerged until its review and validation gates pass.

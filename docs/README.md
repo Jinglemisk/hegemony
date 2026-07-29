@@ -10,11 +10,12 @@ Last updated: 2026-07-29.
 ## Now
 
 **Current initiative:** [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md).
-Step 1 merged in PR #58 through the
-[effective content and costs contract](reference/effective-values.md). Step 2 is
-complete in this change through the exhaustive
-[parity manifests](reference/parity-manifests.md). Draft PR #57 is the next
-integration step after this PR merges and it rebases onto main.
+Steps 1 and 2 merged in PRs #58 and #59 through the
+[effective content and costs contract](reference/effective-values.md) and exhaustive
+[parity manifests](reference/parity-manifests.md). Step 3 is implemented and reconciled
+over both in draft PR #57 through the
+[frontend presentation contract](reference/frontend-presentation.md); PR #57 has not
+merged.
 
 **Owner blocker:** None for Steps 1–4. Voice's initial minimum is 3. The remaining
 [Q30 and Q50](questions.md) are Step 5 validation inputs, not implementation blockers.
@@ -23,7 +24,7 @@ integration step after this PR merges and it rebases onto main.
 
 | Plan                                                            | Phase    | Status     | Position                                                         |
 | --------------------------------------------------------------- | -------- | ---------- | ---------------------------------------------------------------- |
-| [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md) | 3.5      | `active`   | Step 2 in this change; Step 3 draft PR #57 next                  |
+| [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md) | 3.5      | `active`   | Steps 1–2 merged; Step 3 implemented in unmerged draft PR #57   |
 | [Low-number economy preset](plans/low-number-economy-preset.md) | 3.5      | `ready`    | After presentation/evaluator repair; before validation campaigns |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)                 | Post-3.5 | `ready`    | Approved direction after the closeout                            |
 | [Luxury goods](plans/luxury-goods.md)                           | 4        | `blocked`  | Waits for Phase 3.5 and its owner questions                      |

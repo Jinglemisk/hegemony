@@ -92,17 +92,16 @@ When adding or changing a passive, automatic, content-driven, or read-only mecha
 A visual-only label or layout does not belong in this manifest. A mechanical fact
 that changes player understanding or policy choice does.
 
-## PR #57 reconciliation
+## PR #57 integration status
 
-After this Step 2 PR merges, draft PR #57 must rebase onto main and consume:
+Draft PR #57 has rebased over this contract and is implemented, but it has not merged.
+It consumes `CONTENT_MANIFEST` and `FEATURE_PARITY` as the classified scope;
+`presentEventEffect`, `presentTableEffect`, `presentLawEffect`,
+`presentDirectiveEffect`, and `presentBuildingEffect` for effect rows; and
+`presentActiveEffect` for persistent status. Building action surfaces also consume the
+effective-content and `ActionStatus.cost` APIs in
+`docs/reference/effective-values.md`.
 
-- `CONTENT_MANIFEST` and `FEATURE_PARITY` for the classified presentation scope;
-- `presentEventEffect`, `presentTableEffect`, `presentLawEffect`,
-  `presentDirectiveEffect`, and `presentBuildingEffect` for effect rows;
-- `presentActiveEffect` for persistent status;
-- the effective-content and `ActionStatus.cost` APIs in
-  `docs/reference/effective-values.md`.
-
-PR #57 must not introduce a UI-only effect or content registry. Its shared
-Tooltip/Popover/MechanicsDetails work owns interaction and accessibility, while
-these manifests remain the authoritative classification seam.
+The draft contains no UI-only effect or content registry. Its shared
+Tooltip/Popover/MechanicsDetails layer owns interaction and accessibility, while these
+manifests remain the authoritative classification seam.

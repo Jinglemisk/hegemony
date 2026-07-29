@@ -15,9 +15,8 @@ and assistive-technology users.
   target. A rulebook, Codex, or other reference surface may show a base cost only when
   it labels that value as base.
 - Availability and blocked explanations come from the same status or legal-move
-  predicate that gates execution when one exists. A temporarily unstatused action must
-  mirror the move's exact guard and be listed in the parked reconciliation checklist;
-  it must not invent a separate rule.
+  predicate that gates execution when one exists. An action without a dedicated status
+  must mirror the move's exact guard; it must not invent a separate rule.
 - Structured effects are projected from typed effect data. Authored prose may provide
   political framing or context, but it must not be the only representation of a cost,
   duration, source, blocked reason, or mechanical effect.
@@ -69,11 +68,12 @@ actions. Repeal and full-board replacement choices use the shared popover. Voice
 politician power, proposed cards, standing stelae, and Directive monuments are
 keyboard-inspectable board objects with accessible labels.
 
-`presentResolutionEffects` currently projects every `LawEffect` and `DirectiveEffect`
-from `RESOLUTION_CARDS` into `MechanicsDetails`. Law cards identify their trade-off and
-remain in force until repealed if passed. Directives identify their one-time resolution;
-their monument is permanent board history, not a persistent rule. These explanations
-do not change Assembly flow, resolution, balance, or AI behavior.
+The Assembly maps each discriminated card effect through the canonical
+`presentLawEffect` or `presentDirectiveEffect` adapter in `src/ui/effects.ts` and sends
+those rows to `MechanicsDetails`. Law cards identify their trade-off and remain in
+force until repealed if passed. Directives identify their one-time resolution; their
+monument is permanent board history, not a persistent rule. These explanations do not
+change Assembly flow, resolution, balance, or AI behavior.
 
 ## Required regression coverage
 
@@ -84,57 +84,48 @@ viewport listener cleanup. Manifest-backed presentation tests must fail when a t
 effect has no non-empty semantic projection. Browser smoke tests supplement these
 tests; real-device touch remains an owner check.
 
-## Parked integration checklist for PR #57
+## Step 1 and Step 2 integration status
 
-PR #57 is intentionally a draft until Phase 3.5 Steps 1 and 2 land. Do not replace
-their work on this branch. After both merge, rebase and reconcile every seam below.
+Phase 3.5 Steps 1 and 2 merged in PRs #58 and #59. Step 3 is implemented and rebased
+over both in draft PR #57; this records implementation status, not a claim that PR #57
+has merged.
 
-### Step 1: authoritative effective cost and content
+The Step 1 reconciliation preserves `getBuildings()`, `getBuilding()`,
+`getTerrainDeck()`, and `getBuildBuildingOptions()`. Build choices pair each effective
+definition with its target-specific status, show `status.cost` as the effective action
+cost, and label roster/reference prices as base costs. Command summaries retain the
+acting `playerID` and use honest `varies`, `options`, or `stakes` labels until the
+engine can quote a concrete target or payment. Assembly draw, repeal, bribe, and veto
+explanations continue to read the same session/ruleset values used by Assembly
+execution and legal moves; Step 1 did not add separate Assembly action-status APIs.
 
-1. Reconcile `ActionStatus.cost` in `src/game/core/results.ts` and all status producers:
-   `getFoundColonyStatus`, `getUpgradeColonyToCityStatus`, `getBuildBuildingStatus`, and
-   `getGrowPopStatus` in `src/game/status.ts`; `getPromotePopStatus` and
-   `getDemotePopStatus` in `src/game/civic.ts`; and the status selectors in
-   `src/game/bank.ts`, `src/game/ventures.ts`, `src/game/riot.ts`, and
-   `src/game/settlement.ts`.
-2. Confirm the final cost pipeline through `getAdjustedActionCost` and
-   `getDiscountedGrowPopCost` in `src/game/economy/cost.ts` and
-   `applyLawActionCost` in `src/game/assembly/laws.ts`. Execution and presentation must
-   consume the same returned cost.
-3. Reconcile every PR #57 action-cost consumer: `CommandVerb.tsx` and `verbs.tsx`;
-   `FoundColonyPopover.tsx`; `BuildPopover.tsx`; `GrowPopPopover.tsx`;
-   `LadderPopover.tsx`; `BuildingsTab.tsx`; and the settlement explanation assembled
-   in `src/components/board/helpers.ts`. Remove fallbacks to base data from action
-   surfaces where the authoritative API guarantees an effective value.
-4. Reconcile the Assembly costs introduced here: `nextDrawCost` in
-   `AssemblyColonnade.tsx`, direct `ruleset.assembly.repealCost` and `briberyCost` in
-   `AssemblyFoot.tsx`, and direct `ruleset.assembly.vetoCost` in `AssemblyBema.tsx`.
-   If Step 1 provides Assembly action statuses, use their cost and blocked reasons;
-   otherwise document why these existing execution-owned values remain authoritative.
-5. Audit reference-only costs in `ledger/rulebook.tsx` and other Codex/rulebook text.
-   Keep them only as explicitly labelled base costs. Do not convert reference examples
-   into action previews.
+The Step 2 reconciliation consumes `CONTENT_MANIFEST`, `FEATURE_PARITY`, the exhaustive
+effect registries in `src/parity/featureParity.ts`, and active-effect descriptors in
+`src/game/activeEffects.ts`. Event, Table, Law, Directive, Building, and active-effect
+rows use the canonical presenters exported by `src/ui/effects.ts`. The former
+resolution and building presentation switches were removed; Assembly, building
+surfaces, and active-effect status now project the canonical typed results through
+`MechanicsDetails`. Exhaustive presenter and manifest coverage remains in
+`src/parity/featureParity.test.ts` rather than a parallel Assembly-only registry loop.
 
-### Step 2: manifests and effect classifications
+## Owner real-device touch checklist
 
-1. Reconcile the current content sources—`PLAYER_EVENT_CARDS` and
-   `SEASONAL_EVENT_CARDS` in `src/game/data.ts`, `RIOT_TABLE`, `EXPEDITION_TABLES`, and
-   `OMEN_TABLE`, plus `RESOLUTION_CARDS` in `src/game/assembly/deck.ts`—with Step 2's
-   exhaustive content manifests. UI, AI, telemetry, and fixtures must resolve the same
-   entries and identifiers.
-2. Reconcile `presentEventEffects`, `presentTableEffect`, and
-   `presentResolutionEffects` in `src/ui/effects.ts` with the manifest's canonical
-   presentation/classification metadata. Remove parallel switches if Step 2 supplies a
-   single exhaustive registry; otherwise add compile-time exhaustiveness tests against
-   that registry.
-3. Reconcile `ACTIVE_EFFECT_KINDS`, `EVENT_EFFECT_ACTIVE_EFFECT_HANDLING`, and active
-   effect descriptors in `src/game/activeEffects.ts`. `MechanicsDetails` source,
-   duration, scope, and expiry output must come from the canonical classifications.
-4. Extend the parity loops in `src/parity/withinAxisParity.test.ts` and
-   `src/parity/activeEffectParity.test.ts` so every Step 2 Event, Table, Law, and
-   Directive manifest entry has engine handling, frontend presentation, AI handling,
-   telemetry classification, and a fixture path where required.
-5. Re-run all validation after the rebase and perform keyboard plus browser
-   touch-emulation smoke tests. The owner must separately verify first-tap explanation,
-   second-tap activation, cancellation, focus behavior, and overlay placement on real
-   touch devices.
+Browser/DOM touch emulation is regression evidence, not a substitute for hardware.
+Before PR #57 leaves draft, the owner must test the following on iOS Safari and Android
+Chrome where those devices are available:
+
+1. First-tap an enabled command, Build candidate, Assembly action, card, Voice, and
+   stela/monument: the explanation opens and the action does not run.
+2. Tap the same enabled control a second time: the action runs exactly once.
+3. Start a touch and cancel it by scrolling or moving away: no action runs, and the
+   next deliberate tap still follows the first-tap explanation contract.
+4. Inspect disabled controls: the explanation and blocked reason are reachable, while
+   repeated taps never activate the action.
+5. Open and dismiss map and Assembly popovers with Cancel and, where a hardware
+   keyboard is available, Escape: focus returns to the opener and the user's board
+   position is retained.
+6. Check overlays near every viewport edge, then scroll and rotate the device: content
+   remains visible, anchored, dismissible, and free from unintended page activation.
+7. With VoiceOver or TalkBack enabled, confirm controls announce their name, disabled
+   state where applicable, explanation, effective cost, effect rows, and blocked reason
+   without duplicate or unlabeled interactive elements.

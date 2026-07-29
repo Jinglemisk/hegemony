@@ -420,6 +420,15 @@ export function presentBuildingEffect(effect: BuildingEffect): EffectPresentatio
       };
   }
 }
+
+export function presentBuildingEffects(
+  effects: readonly BuildingEffect[],
+): EffectPresentation {
+  return effects.length > 0
+    ? joinEffectPresentations(effects.map(presentBuildingEffect), ", ")
+    : { text: "No effect", tone: "muted" };
+}
+
 function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string {
   const remaining = descriptor.duration.remaining;
   switch (descriptor.duration.expiry) {

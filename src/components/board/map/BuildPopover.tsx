@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { getBuildBuildingOptions } from "../../../game/rules";
 import type { BuildingId } from "../../../game/types";
+import { presentBuildingEffect } from "../../../ui/effects";
 import { AnnotatedText } from "../../AnnotatedText";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { AtlasIcon } from "../../Sprites";
@@ -72,6 +73,7 @@ export function BuildPopover({
               content={
                 <MechanicsDetails
                   blockedReason={disabled ? reason : undefined}
+                  effects={candidate.effects.map(presentBuildingEffect)}
                   effectiveCost={effectiveCost}
                   heading={candidate.name}
                 >

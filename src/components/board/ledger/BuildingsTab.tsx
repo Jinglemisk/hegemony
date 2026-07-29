@@ -1,6 +1,7 @@
 import { getBuildBuildingStatus, getBuildings } from "../../../game/rules";
 import type { BuildingId } from "../../../game/types";
-import { formatBuildingEffects, formatResourceCost } from "../../../ui/formatters";
+import { presentBuildingEffect, presentBuildingEffects } from "../../../ui/effects";
+import { formatResourceCost } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { AtlasIcon } from "../../Sprites";
@@ -29,7 +30,7 @@ export function BuildingsTab({
                 <CodexTermLink chapter="buildings">{building.name}</CodexTermLink>
               </strong>
               <em>
-                <AnnotatedText text={formatBuildingEffects(building.effects)} />
+                <AnnotatedText text={presentBuildingEffects(building.effects).text} />
               </em>
               <span className="buildingLedgerCost">
                 Base cost{" "}
@@ -52,6 +53,7 @@ export function BuildingsTab({
                   content={
                     <MechanicsDetails
                       blockedReason={disabled ? reason : undefined}
+                      effects={building.effects.map(presentBuildingEffect)}
                       effectiveCost={status.cost ?? building.cost}
                       heading={`${building.name} — ${holding}`}
                     >

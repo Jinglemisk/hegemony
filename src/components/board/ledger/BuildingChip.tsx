@@ -1,4 +1,5 @@
 import type { BuildingDefinition } from "../../../game/types";
+import { presentBuildingEffect } from "../../../ui/effects";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { AtlasIcon } from "../../Sprites";
 import { Tooltip } from "../../overlays/Tooltip";
@@ -19,7 +20,10 @@ export function BuildingChip({
   const tooltipLabel = [building.name, ...tooltipRows].join(". ");
   const content = <AtlasIcon icon={building.id} className="miniIcon" />;
   const tooltip = (
-    <MechanicsDetails heading={building.name}>
+    <MechanicsDetails
+      effects={building.effects.map(presentBuildingEffect)}
+      heading={building.name}
+    >
       <div className="detailTooltipRows">
         {tooltipRows.map((row) => (
           <em key={row}>{row}</em>
