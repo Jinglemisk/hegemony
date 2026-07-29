@@ -50,11 +50,15 @@ Enforcement surfaces:
 - `.github/pull_request_template.md` requires three-axis evidence.
 - `src/parity/moveParity.ts` exhaustively maps every `LegalMove` to frontend and
   simulation/AI paths.
-- Universal `movesByType` telemetry and `npm run test:parity` keep typed actions
-  visible, including zero-use paths.
+- `src/parity/featureParity.ts` exhaustively classifies Event, Table, Law,
+  Directive, Building, and active-effect vocabularies plus every shipped content
+  family across engine, frontend, simulation/AI, telemetry, and behavioral proof.
+- Universal action/effect/content telemetry and `npm run test:parity` keep
+  classified paths visible, including zero-use buildings and events.
 - The parity suite covers legal-move soundness, preview-versus-outcome,
-  within-axis consistency, active-effect presentation, policy projection, exact
-  expiry, and telemetry.
+  within-axis consistency, exact content/effect inventories, typed effect
+  presentation, policy projection, exact expiry, behavioral evidence pointers,
+  and telemetry.
 - These gates catch omissions; they do not replace targeted tests proving that
   `master` makes sensible decisions.
 
@@ -68,13 +72,14 @@ instead of rediscovering effects.
 The canonical work order and gates are in
 [the Phase 3.5 plan](plans/phase-3.5-parity-closeout.md).
 
-1. **Restore parity truth (complete in this change):** reconcile documentation
-   and effective content/effective-cost drift through the
+1. **Restore parity truth (merged in PR #58):** reconcile documentation and
+   effective content/effective-cost drift through the
    [effective-value contract](reference/effective-values.md).
-2. **Extend parity enforcement (next):** exhaustive feature/effect/content manifests
-   and behavioral CI.
-3. **Unify interaction presentation:** accessible shared Tooltip and interactive
-   Popover primitives.
+2. **Extend parity enforcement (complete in this change):** exhaustive
+   [feature/effect/content manifests](reference/parity-manifests.md) and
+   behavioral CI.
+3. **Unify interaction presentation (draft PR #57 next):** accessible shared
+   Tooltip and interactive Popover primitives.
 4. **Revise the Assembly:** permanent Voice ratchet and minimum, one-time author
    prizes, no coup, player-targeted Stratokles, and all three parity axes.
 5. **Validate and tune:** human playtest, Assembly/runaway campaigns, cities 3→2
@@ -102,15 +107,15 @@ explicitly deferred final 16%.
 
 ## Phase sequence
 
-| Phase   | Status                 | Scope                                                                                                       | Exit gate                                                                                                                        |
-| ------- | ---------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **0–2** | Shipped                | Playable victory loop, currencies, interface foundation, terrain economy, and capped buildings              | Historical plans and evidence are archived                                                                                       |
-| **2.5** | Absorbed               | Debt sweep; remaining authoritative-cost and shared-interaction work travels in Phase 3.5                   | Remaining debt has an explicit Phase 3.5 owner                                                                                   |
-| **3**   | Built, gate incomplete | Two-panel UI, Assembly, and influence-aware AI shipped; first results showed agora engagement is a net loss | Closed by the Phase 3.5 train                                                                                                    |
-| **3.5** | Active                 | Truth, enforcement, shared interaction primitives, Assembly revision, AI repair, and validation             | Parity omissions fail CI; humans can explain effects; `master` credibly exercises the revised game; no-coup runaway check passes |
-| **4**   | Blocked                | Topology, land luxuries, coastal luxuries and Port, then structured player trade or explicit v2 deferral    | Luxury/unrest economy holds; trade is used; feature set and balance numbers freeze                                               |
-| **5**   | Proposed               | National Ideas (twelve-idea reverse-snake draft). **Setup screen, networking, and 2–3-player scaling are deferred until the game is balanced (Q35, 2026-07-27) — out of scope for now.** | Ideas have no automatic pick                                                                |
-| **6**   | Deferred               | Post-freeze visual-system and technical-debt session                                                        | One coherent visual system over frozen rules and numbers                                                                         |
+| Phase   | Status                 | Scope                                                                                                                                                                                    | Exit gate                                                                                                                        |
+| ------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **0–2** | Shipped                | Playable victory loop, currencies, interface foundation, terrain economy, and capped buildings                                                                                           | Historical plans and evidence are archived                                                                                       |
+| **2.5** | Absorbed               | Debt sweep; remaining authoritative-cost and shared-interaction work travels in Phase 3.5                                                                                                | Remaining debt has an explicit Phase 3.5 owner                                                                                   |
+| **3**   | Built, gate incomplete | Two-panel UI, Assembly, and influence-aware AI shipped; first results showed agora engagement is a net loss                                                                              | Closed by the Phase 3.5 train                                                                                                    |
+| **3.5** | Active                 | Truth, enforcement, shared interaction primitives, Assembly revision, AI repair, and validation                                                                                          | Parity omissions fail CI; humans can explain effects; `master` credibly exercises the revised game; no-coup runaway check passes |
+| **4**   | Blocked                | Topology, land luxuries, coastal luxuries and Port, then structured player trade or explicit v2 deferral                                                                                 | Luxury/unrest economy holds; trade is used; feature set and balance numbers freeze                                               |
+| **5**   | Proposed               | National Ideas (twelve-idea reverse-snake draft). **Setup screen, networking, and 2–3-player scaling are deferred until the game is balanced (Q35, 2026-07-27) — out of scope for now.** | Ideas have no automatic pick                                                                                                     |
+| **6**   | Deferred               | Post-freeze visual-system and technical-debt session                                                                                                                                     | One coherent visual system over frozen rules and numbers                                                                         |
 
 ## Later and parked work
 

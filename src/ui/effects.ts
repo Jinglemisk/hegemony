@@ -1,6 +1,6 @@
 import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../game/activeEffects";
-import type { LawEffect } from "../game/assembly/types";
-import type { EventEffect, TableEffect } from "../game/types";
+import type { DirectiveEffect, LawEffect } from "../game/assembly/types";
+import type { BuildingEffect, EventEffect, TableEffect } from "../game/types";
 import {
   RESOURCE_LABELS,
   buildingName,
@@ -100,7 +100,7 @@ export function presentTableEffect(effect: TableEffect): EffectPresentation {
   }
 }
 
-function presentEventEffect(effect: EventEffect): EffectPresentation {
+export function presentEventEffect(effect: EventEffect): EffectPresentation {
   switch (effect.type) {
     case "resourceDelta":
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
@@ -247,7 +247,7 @@ function presentActiveEffectMechanic(mechanic: ActiveEffectMechanic): EffectPres
   }
 }
 
-function presentLawEffect(effect: LawEffect): EffectPresentation {
+export function presentLawEffect(effect: LawEffect): EffectPresentation {
   switch (effect.type) {
     case "settlementIncome":
       return {
@@ -357,6 +357,70 @@ function presentLawEffect(effect: LawEffect): EffectPresentation {
   }
 }
 
+export function presentDirectiveEffect(effect: DirectiveEffect): EffectPresentation {
+  switch (effect.type) {
+    case "resourceDelta":
+      return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
+    case "resourceFraction":
+      return {
+        text: `Lose ${formatNumber(effect.fraction * 100)}% stored ${RESOURCE_LABELS[effect.resource]}`,
+        tone: "negative",
+      };
+    case "losePopFromLargest":
+      return {
+        text: `-${formatNumber(effect.count)} ${effect.count === 1 ? "pop" : "pops"} from largest settlement`,
+        tone: "negative",
+      };
+    case "suppressIncome":
+      return {
+        text: `No income for ${effect.turns} collection${effect.turns === 1 ? "" : "s"}`,
+        tone: "negative",
+      };
+    case "repealNewestLaw":
+      return { text: "Repeal the newest standing Law", tone: "neutral" };
+    case "equalVotesNextAssembly":
+      return { text: "Exactly 1 vote per player at the next Assembly", tone: "neutral" };
+  }
+}
+
+export function presentBuildingEffect(effect: BuildingEffect): EffectPresentation {
+  switch (effect.type) {
+    case "freemanGoldBonus":
+      return {
+        text: `+${formatNumber(effect.amount)} Gold per freeman, up to ${effect.supportedPops}`,
+        tone: "positive",
+      };
+    case "citizenInfluenceBonus":
+      return {
+        text: `+${formatNumber(effect.amount)} Influence per citizen, up to ${effect.supportedPops}`,
+        tone: "positive",
+      };
+    case "slavePrimaryResourceBonus":
+      return {
+        text: `+${formatNumber(effect.amount)} tile resource per slave, up to ${effect.supportedPops}`,
+        tone: "positive",
+      };
+    case "income":
+      return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource] + " income");
+    case "happiness":
+      return signedPresentation(effect.amount, RESOURCE_LABELS.happiness);
+    case "growPopFoodDiscount":
+      return {
+        text: `Grow Pop costs -${formatNumber(effect.amount)} Food here`,
+        tone: "positive",
+      };
+    case "popCapacityBonus":
+      return signedPresentation(effect.amount, "pop capacity");
+    case "tilePrimaryResourceBonus":
+      return signedPresentation(effect.amount, "tile resource income");
+    case "promoteCostReduction":
+      return {
+        text: `Promotions cost -${formatNumber(effect.amount)} here`,
+        tone: "positive",
+      };
+  }
+}
+
 function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string {
   const remaining = descriptor.duration.remaining;
   switch (descriptor.duration.expiry) {
@@ -395,9 +459,7 @@ function actionLabel(action: string): string {
   return labels[action] ?? action;
 }
 
-function lawActionCostTarget(
-  effect: Extract<LawEffect, { type: "actionCostDelta" }>,
-): string {
+function lawActionCostTarget(effect: Extract<LawEffect, { type: "actionCostDelta" }>): string {
   let target = actionLabel(effect.action);
 
   if (effect.scope) {

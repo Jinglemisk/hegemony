@@ -13,8 +13,22 @@ import { playerStandings } from "../game/score";
 import { canPlaceColonyOnTile } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import { LEGAL_MOVE_TYPES, type LegalMoveType } from "../parity/moveParity";
+import {
+  BUILDING_CONTENT_IDS,
+  PLAYER_EVENT_CONTENT_IDS,
+  SEASONAL_EVENT_CONTENT_IDS,
+  type PlayerEventContentId,
+  type SeasonalEventContentId,
+} from "../parity/featureParity";
 import type { UnrestTier } from "../game/unrest";
-import type { BoardLayout, GameOverReason, HegemonyState, PlayerId, Resources } from "../game/types";
+import type {
+  BoardLayout,
+  BuildingId,
+  GameOverReason,
+  HegemonyState,
+  PlayerId,
+  Resources,
+} from "../game/types";
 
 /**
  * Balance instrumentation for batch runs. One TurnSnapshot per player-turn;
@@ -74,7 +88,8 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       cities: standings.cities,
       colonies: standings.colonies,
       pops: standings.pops,
-      frontierTiles: G.board.tiles.filter((tile) => canPlaceColonyOnTile(G, playerID, tile).can).length,
+      frontierTiles: G.board.tiles.filter((tile) => canPlaceColonyOnTile(G, playerID, tile).can)
+        .length,
       inTransit,
       resources: { ...player.resources },
       income,
@@ -98,7 +113,14 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
   };
 }
 
-export type Percentiles = { mean: number; p10: number; median: number; p90: number; min: number; max: number };
+export type Percentiles = {
+  mean: number;
+  p10: number;
+  median: number;
+  p90: number;
+  min: number;
+  max: number;
+};
 
 /** Nearest-rank percentiles on a copy; NaN-free for empty input (all zeros). */
 export function percentiles(values: number[]): Percentiles {
@@ -107,7 +129,8 @@ export function percentiles(values: number[]): Percentiles {
   }
 
   const sorted = [...values].sort((a, b) => a - b);
-  const at = (fraction: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(fraction * sorted.length) - 1))];
+  const at = (fraction: number) =>
+    sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(fraction * sorted.length) - 1))];
 
   return {
     mean: sorted.reduce((sum, value) => sum + value, 0) / sorted.length,
@@ -187,10 +210,13 @@ export type BatchReport = {
     ActiveEffectKind,
     { observations: number; perPlayerTurn: number; playerTurnShare: number }
   >;
-  buildings: Record<string, { built: number; perGame: number }>;
+  /** Every shipped building id is present, including zeroes. */
+  buildings: Record<BuildingId, { built: number; perGame: number }>;
   events: {
-    player: Record<string, number>;
-    seasonal: Record<string, number>;
+    /** Every shipped player-event id is present, including zeroes. */
+    player: Record<PlayerEventContentId, number>;
+    /** Every shipped seasonal-event id is present, including zeroes. */
+    seasonal: Record<SeasonalEventContentId, number>;
     /** For choice cards: how often each option index was picked. */
     choicePicks: Record<string, number[]>;
   };
@@ -204,7 +230,12 @@ export type BatchReport = {
   /** Turns the runner had to force-end at the per-turn action cap — previously
    *  invisible. actionCapHits == forcedEndTurns; forcedResolutions counts pending
    *  events/riots that had to be force-resolved first. */
-  forced: { actionCapHits: number; forcedResolutions: number; forcedEndTurns: number; perGame: number };
+  forced: {
+    actionCapHits: number;
+    forcedResolutions: number;
+    forcedEndTurns: number;
+    perGame: number;
+  };
   /** Colony→city upgrades performed across the batch (total + per game) — a bot that
    *  never saves for them reads ~0/game here. */
   upgrades: { count: number; perGame: number };
@@ -388,7 +419,9 @@ export class Aggregator {
     // stopped at the turn cap has NOT been won — record only a heuristic leaderAtCap
     // (cards → happiness → pops → seat) so it never inflates the real win rate.
     const finished = G.phase === "gameOver";
-    const termination: GameTermination = finished ? (G.gameOverReason as GameOverReason) : "turnCap";
+    const termination: GameTermination = finished
+      ? (G.gameOverReason as GameOverReason)
+      : "turnCap";
 
     this.games.push({
       game: this.game,
@@ -441,9 +474,16 @@ export class Aggregator {
       .sort(([a], [b]) => a - b)
       .map(([season, snapshots]) => {
         const values = (select: (player: PlayerSnapshot) => number) =>
-          snapshots.flatMap((snapshot) => PLAYER_IDS.map((playerID) => select(snapshot.players[playerID])));
+          snapshots.flatMap((snapshot) =>
+            PLAYER_IDS.map((playerID) => select(snapshot.players[playerID])),
+          );
 
-        const tierShares: Record<UnrestTier, number> = { calm: 0, discontent: 0, unrest: 0, revolt: 0 };
+        const tierShares: Record<UnrestTier, number> = {
+          calm: 0,
+          discontent: 0,
+          unrest: 0,
+          revolt: 0,
+        };
         const seats = snapshots.length * PLAYER_IDS.length;
         const activeEffectShares = Object.fromEntries(
           ACTIVE_EFFECT_KINDS.map((kind) => [kind, 0]),
@@ -494,7 +534,7 @@ export class Aggregator {
       victoryRace: 0,
       deckExhausted: 0,
       stratoklesCoup: 0,
-      turnCap: 0
+      turnCap: 0,
     };
     for (const game of this.games) {
       terminations[game.termination] += 1;
@@ -516,10 +556,15 @@ export class Aggregator {
       entry.winRate = entry.games > 0 ? entry.wins / entry.games : 0;
     }
 
-    const buildings: BatchReport["buildings"] = {};
-    for (const [buildingId, built] of Object.entries(this.buildings)) {
-      buildings[buildingId] = { built, perGame: this.games.length > 0 ? built / this.games.length : 0 };
-    }
+    const buildings = Object.fromEntries(
+      BUILDING_CONTENT_IDS.map((buildingId) => {
+        const built = this.buildings[buildingId] ?? 0;
+        return [
+          buildingId,
+          { built, perGame: this.games.length > 0 ? built / this.games.length : 0 },
+        ];
+      }),
+    ) as BatchReport["buildings"];
 
     const playerTurnCount = this.snapshots.length * PLAYER_IDS.length;
     const activeEffects = Object.fromEntries(
@@ -560,15 +605,19 @@ export class Aggregator {
       ) as BatchReport["movesByType"],
       activeEffects,
       events: {
-        player: this.playerEvents,
-        seasonal: this.seasonalEvents,
+        player: Object.fromEntries(
+          PLAYER_EVENT_CONTENT_IDS.map((eventId) => [eventId, this.playerEvents[eventId] ?? 0]),
+        ) as BatchReport["events"]["player"],
+        seasonal: Object.fromEntries(
+          SEASONAL_EVENT_CONTENT_IDS.map((eventId) => [eventId, this.seasonalEvents[eventId] ?? 0]),
+        ) as BatchReport["events"]["seasonal"],
         choicePicks: this.choicePicks,
       },
       currencyVerbs: Object.fromEntries(
         CURRENCY_VERBS.map((verb) => {
           const count = this.currencyVerbs[verb] ?? 0;
           return [verb, { count, perGame: this.games.length > 0 ? count / this.games.length : 0 }];
-        })
+        }),
       ),
       assembly: {
         held: this.perGameCount(this.assembliesHeld),
@@ -580,11 +629,16 @@ export class Aggregator {
         verbs: Object.fromEntries(
           ASSEMBLY_VERBS.map((verb) => {
             const count = this.assemblyVerbs[verb] ?? 0;
-            return [verb, { count, perGame: this.games.length > 0 ? count / this.games.length : 0 }];
-          })
+            return [
+              verb,
+              { count, perGame: this.games.length > 0 ? count / this.games.length : 0 },
+            ];
+          }),
         ),
       },
-      finalCardsDistribution: percentiles(this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalCards[playerID]))),
+      finalCardsDistribution: percentiles(
+        this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalCards[playerID])),
+      ),
       winsByPolicy,
       terminations,
       forced: {
