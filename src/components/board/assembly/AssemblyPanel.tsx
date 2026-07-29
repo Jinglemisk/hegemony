@@ -3,6 +3,8 @@ import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
 import { getResolutionCard } from "../../../game/assembly";
 import type { AssemblyResult } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
+import { MechanicsDetails } from "../../MechanicsDetails";
+import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { AssemblyBema } from "./AssemblyBema";
 import { AssemblyColonnade } from "./AssemblyColonnade";
@@ -12,7 +14,7 @@ import { UrnIcon } from "./AssemblyIcons";
 const STEPS = [
   { key: "proposal", numeral: "Ⅰ", label: "Proposal" },
   { key: "voting", numeral: "Ⅱ", label: "Voting" },
-  { key: "closing", numeral: "Ⅲ", label: "Standing" }
+  { key: "closing", numeral: "Ⅲ", label: "Standing" },
 ] as const;
 
 /**
@@ -31,7 +33,7 @@ const STEPS = [
  */
 export function AssemblyPanel({
   ledgerOpen,
-  consultOpen
+  consultOpen,
 }: {
   ledgerOpen: boolean;
   consultOpen: boolean;
@@ -66,7 +68,10 @@ export function AssemblyPanel({
     if (!flash) {
       return;
     }
-    const timer = window.setTimeout(() => setFlash((current) => (current?.key === flash.key ? null : current)), 2600);
+    const timer = window.setTimeout(
+      () => setFlash((current) => (current?.key === flash.key ? null : current)),
+      2600,
+    );
     return () => window.clearTimeout(timer);
   }, [flash]);
 
@@ -78,7 +83,12 @@ export function AssemblyPanel({
 
   return (
     <div className="asmSlot" data-consult-open={consultOpen} data-ledger-open={ledgerOpen}>
-      <section aria-labelledby="assembly-title" aria-modal="false" className="assembly" role="dialog">
+      <section
+        aria-labelledby="assembly-title"
+        aria-modal="false"
+        className="assembly"
+        role="dialog"
+      >
         <div className="asm-head">
           <div className="asm-urn">
             <UrnIcon />
@@ -102,20 +112,36 @@ export function AssemblyPanel({
             ))}
           </div>
 
-          <div
-            className="asm-voice"
-            title="The 6th victory card: patron of the most politicians. It recomputes every turn and flips hands like the other five."
+          <Tooltip
+            ariaLabel={`Voice of the Assembly: ${voice?.holder ? PLAYER_NAMES[voice.holder] : "unheld"}`}
+            content={
+              <MechanicsDetails
+                duration="Recomputed whenever patronage changes"
+                heading="Voice of the Assembly"
+                source="Victory standing"
+              >
+                <p className="mechanicsExplanation">
+                  The Voice belongs to the patron of the most politicians and changes hands with the
+                  other victory standings.
+                </p>
+              </MechanicsDetails>
+            }
+            focusable
+            preferredPlacement="above"
+            triggerClassName="assemblyVoiceTooltipTrigger"
           >
-            <span className="k">Voice</span>
-            {voice?.holder ? (
-              <>
-                <span className="dot" style={{ background: PLAYER_COLORS[voice.holder] }} />
-                <span className="n">{PLAYER_NAMES[voice.holder]}</span>
-              </>
-            ) : (
-              <span className="n asmVoiceNone">unheld</span>
-            )}
-          </div>
+            <div className="asm-voice">
+              <span className="k">Voice</span>
+              {voice?.holder ? (
+                <>
+                  <span className="dot" style={{ background: PLAYER_COLORS[voice.holder] }} />
+                  <span className="n">{PLAYER_NAMES[voice.holder]}</span>
+                </>
+              ) : (
+                <span className="n asmVoiceNone">unheld</span>
+              )}
+            </div>
+          </Tooltip>
         </div>
 
         <div className="asm-body">
@@ -155,6 +181,7 @@ function ResultFlash({ result }: { result: AssemblyResult }) {
 }
 
 function ordinal(count: number): string {
-  const suffix = count % 100 >= 11 && count % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][count % 10] ?? "th";
+  const suffix =
+    count % 100 >= 11 && count % 100 <= 13 ? "th" : (["th", "st", "nd", "rd"][count % 10] ?? "th");
   return `${count}${suffix}`;
 }

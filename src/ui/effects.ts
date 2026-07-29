@@ -420,7 +420,6 @@ export function presentBuildingEffect(effect: BuildingEffect): EffectPresentatio
       };
   }
 }
-
 function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string {
   const remaining = descriptor.duration.remaining;
   switch (descriptor.duration.expiry) {

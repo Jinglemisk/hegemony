@@ -1,9 +1,17 @@
 import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
 import { getResolutionCard, nextDrawCost, politicianStandings } from "../../../game/assembly";
-import type { ActiveLaw, Politician, PoliticianStanding, TallyMonument } from "../../../game/assembly";
+import type {
+  ActiveLaw,
+  Politician,
+  PoliticianStanding,
+  TallyMonument,
+} from "../../../game/assembly";
 import type { HegemonyState, PlayerId } from "../../../game/types";
+import { MechanicsDetails } from "../../MechanicsDetails";
+import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { DrawIcon } from "./AssemblyIcons";
+import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
 
 /**
  * The colonnade — four narrow columns, each politician standing over their own stack
@@ -36,10 +44,13 @@ export function AssemblyColonnade({ G }: { G: HegemonyState }) {
     <div className="colonnade">
       {standings.map((standing) => (
         <PoliticianColumn
-          canDraw={Boolean(proposing) && !holding && G.players[viewerId].resources.influence >= drawCost}
+          canDraw={
+            Boolean(proposing) && !holding && G.players[viewerId].resources.influence >= drawCost
+          }
           drawArmed={Boolean(proposing)}
           drawCost={drawCost}
           G={G}
+          holding={holding}
           key={standing.politician.id}
           standing={standing}
         />
@@ -53,18 +64,21 @@ function PoliticianColumn({
   standing,
   drawArmed,
   canDraw,
-  drawCost
+  drawCost,
+  holding,
 }: {
   G: HegemonyState;
   standing: PoliticianStanding;
   drawArmed: boolean;
   canDraw: boolean;
   drawCost: number;
+  holding: boolean;
 }) {
   const { politician, power, patron, dominant } = standing;
   const { moves, viewerId } = useGameUi();
   const isStratokles = politician.id === "stratokles";
-  const deckLeft = G.politicianDecks[politician.id].length + G.politicianDiscards[politician.id].length;
+  const deckLeft =
+    G.politicianDecks[politician.id].length + G.politicianDiscards[politician.id].length;
   // Stratokles's stelae are permanent monuments, everyone else's are standing Laws —
   // the two are drawn differently because they mean different things.
   const stelae: Array<ActiveLaw | TallyMonument> = isStratokles
@@ -74,9 +88,26 @@ function PoliticianColumn({
   return (
     <div className={`acol${isStratokles ? " strat" : ""}`}>
       <div className="ahead">
-        <span className="apow" title={`${power} ${isStratokles ? "monuments" : "standing laws"}`}>
-          {power}
-        </span>
+        <Tooltip
+          ariaLabel={`${politician.name} power: ${power} ${isStratokles ? "monuments" : "standing Laws"}`}
+          content={
+            <MechanicsDetails
+              effects={[
+                {
+                  text: `${power} ${isStratokles ? "permanent monuments" : "standing Laws"}`,
+                  tone: "neutral",
+                },
+              ]}
+              heading={`${politician.name} power`}
+              source={isStratokles ? "Resolved Directives" : "Standing Laws"}
+            />
+          }
+          focusable
+          preferredPlacement="above"
+          triggerClassName="assemblyPowerTooltipTrigger"
+        >
+          <span className="apow">{power}</span>
+        </Tooltip>
         <span className="aname">{politician.name}</span>
         <span className="aep">{politician.epithet}</span>
       </div>
@@ -86,6 +117,8 @@ function PoliticianColumn({
           canDraw={canDraw && deckLeft > 0}
           cost={drawCost}
           deckLeft={deckLeft}
+          holding={holding}
+          influence={G.players[viewerId].resources.influence}
           onDraw={() => moves.assemblyDraw(viewerId, politician.id)}
           politician={politician}
         />
@@ -115,31 +148,49 @@ function PoliticianColumn({
         {stelae
           .slice()
           .sort((a, b) => a.order - b.order)
-          .map((stele) =>
-            isStratokles ? (
-              <div
-                className="tally"
-                key={`${stele.cardId}-${stele.order}`}
-                title={`${getResolutionCard(stele.cardId)?.name ?? stele.cardId} — carried by ${authorName(stele.author)}. A monument never repeals.`}
+          .map((stele) => {
+            const card = getResolutionCard(stele.cardId);
+            const source = isStratokles
+              ? `Carried by ${authorName(stele.author)}`
+              : `Enacted by ${authorName(stele.author)}`;
+
+            if (!card) {
+              return null;
+            }
+
+            return (
+              <Tooltip
+                ariaLabel={`${card.name}. ${isStratokles ? "Permanent monument" : "Standing Law"}. ${source}.`}
+                content={
+                  <ResolutionDetails
+                    card={card}
+                    duration={isStratokles ? "Resolved; monument is permanent" : "Until repealed"}
+                    source={source}
+                  />
+                }
+                focusable
+                key={isStratokles ? `${stele.cardId}-${stele.order}` : stele.cardId}
+                preferredPlacement="above"
+                triggerClassName="assemblyCardTooltipTrigger"
               >
-                <span className="tk">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <span className="tn">{getResolutionCard(stele.cardId)?.name ?? "Directive resolved"}</span>
-              </div>
-            ) : (
-              <div
-                className="stele"
-                key={stele.cardId}
-                title={`${getResolutionCard(stele.cardId)?.name ?? stele.cardId} — enacted by ${authorName(stele.author)}. ${getResolutionCard(stele.cardId)?.text ?? ""}`}
-              >
-                <span className="sd" style={{ background: authorColor(stele.author) }} />
-                <span className="sn">{getResolutionCard(stele.cardId)?.name ?? stele.cardId}</span>
-              </div>
-            )
-          )}
+                {isStratokles ? (
+                  <div className="tally">
+                    <span className="tk">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                    <span className="tn">{card.name}</span>
+                  </div>
+                ) : (
+                  <div className="stele">
+                    <span className="sd" style={{ background: authorColor(stele.author) }} />
+                    <span className="sn">{card.name}</span>
+                  </div>
+                )}
+              </Tooltip>
+            );
+          })}
         {stelae.length === 0 ? <div className="steleEmpty">No stelae stand.</div> : null}
       </div>
     </div>
@@ -151,30 +202,43 @@ function DrawButton({
   cost,
   deckLeft,
   canDraw,
-  onDraw
+  holding,
+  influence,
+  onDraw,
 }: {
   politician: Politician;
   cost: number;
   deckLeft: number;
   canDraw: boolean;
+  holding: boolean;
+  influence: number;
   onDraw: () => void;
 }) {
+  const blockedReason =
+    deckLeft === 0
+      ? `${politician.name}'s deck is spent.`
+      : holding
+        ? "Resolve the card you are holding first."
+        : influence < cost
+          ? `Requires ${cost} influence.`
+          : undefined;
+
   return (
-    <button
+    <AssemblyAction
+      blockedReason={blockedReason}
       className="acolDraw"
-      disabled={!canDraw}
+      effectiveCost={{ influence: cost }}
+      enabled={canDraw}
+      explanation={`Draw one random card from ${politician.name}'s deck. Only you see it until it is proposed.`}
+      heading={`Draw from ${politician.name}`}
       onClick={onDraw}
-      title={
-        deckLeft === 0
-          ? `${politician.name}'s deck is spent.`
-          : `Pay ${cost} influence for one card of ${politician.name}'s, chosen at random and seen only by you.`
-      }
-      type="button"
+      preferredPlacement="below"
+      triggerClassName="assemblyDrawActionTrigger"
     >
       <DrawIcon size={12} />
       <span className="acolDrawLabel">Draw</span>
       <span className="acolDrawCost">{cost}</span>
-    </button>
+    </AssemblyAction>
   );
 }
 

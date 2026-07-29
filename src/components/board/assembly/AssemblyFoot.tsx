@@ -1,12 +1,14 @@
-import type { ReactNode } from "react";
+import type { MouseEventHandler, ReactNode } from "react";
 import { PLAYER_NAMES } from "../../../game/data";
 import { activeLawIds, getResolutionCard } from "../../../game/assembly";
 import type { AssemblySession } from "../../../game/assembly";
 import type { HegemonyState } from "../../../game/types";
+import { Popover } from "../../overlays/Popover";
 import { useGameUi } from "../GameUiContext";
 import { BribeIcon, PassIcon, RepealIcon } from "./AssemblyIcons";
+import { AssemblyAction } from "./AssemblyPresentation";
 
-export type AssemblyMenu = "repeal" | null;
+export type AssemblyMenu = { kind: "repeal"; anchor: DOMRect } | null;
 
 /**
  * The action dock now carries only the cross-cutting verbs — the primary card actions
@@ -22,7 +24,7 @@ export function AssemblyFoot({
   G,
   session,
   menu,
-  onMenu
+  onMenu,
 }: {
   G: HegemonyState;
   session: AssemblySession;
@@ -38,7 +40,9 @@ export function AssemblyFoot({
   if (session.phase === "closing") {
     return (
       <div className="asm-foot">
-        <span className="asmFootNote">The house has risen. Play returns to {PLAYER_NAMES[session.resumePlayer]}.</span>
+        <span className="asmFootNote">
+          The house has risen. Play returns to {PLAYER_NAMES[session.resumePlayer]}.
+        </span>
         <button className="amap" onClick={() => moves.assemblyClose()} type="button">
           Rise &amp; return to the map
         </button>
@@ -51,8 +55,9 @@ export function AssemblyFoot({
       return (
         <div className="asm-foot">
           <span className="asmFootNote">
-            You have spoken. Waiting for {session.voteOrder.filter((id) => !session.proposalDone[id]).length} more to
-            decide — switch seats top-right to play them.
+            You have spoken. Waiting for{" "}
+            {session.voteOrder.filter((id) => !session.proposalDone[id]).length} more to decide —
+            switch seats top-right to play them.
           </span>
         </div>
       );
@@ -63,68 +68,105 @@ export function AssemblyFoot({
         <div className="asmSelectWrap">
           <Verb
             armed={standing.length > 0 && influence >= rules.repealCost && !held}
-            cost={`${rules.repealCost} influence`}
-            icon={<RepealIcon />}
-            label="Repeal"
-            onClick={() => onMenu(menu === "repeal" ? null : "repeal")}
-            title={
+            blockedReason={
               held
                 ? "Resolve the card you are holding first."
-                : "Put the removal of a standing Law on the ballot — voted like any other card."
+                : standing.length === 0
+                  ? "No standing Law can be repealed."
+                  : influence < rules.repealCost
+                    ? `Requires ${rules.repealCost} influence.`
+                    : undefined
+            }
+            cost={`${rules.repealCost} influence`}
+            effectiveCost={{ influence: rules.repealCost }}
+            explanation="Put the removal of a standing Law on the ballot. The motion is voted like any other resolution."
+            icon={<RepealIcon />}
+            label="Repeal"
+            onClick={(event) =>
+              onMenu(
+                menu?.kind === "repeal"
+                  ? null
+                  : { kind: "repeal", anchor: event.currentTarget.getBoundingClientRect() },
+              )
             }
           />
-          {menu === "repeal" ? (
-            <ul className="asmMenu asmMenuUp" role="menu">
-              <li className="asmMenuHead">Move to strike a standing Law</li>
-              {standing.map((cardId) => (
-                <li key={cardId}>
-                  <button
-                    onClick={() => {
-                      moves.assemblyProposeRepeal(viewerId, cardId);
-                      onMenu(null);
-                    }}
-                    role="menuitem"
-                    type="button"
-                  >
-                    <span className="asmMenuName">{getResolutionCard(cardId)?.name ?? cardId}</span>
-                    <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+          {menu?.kind === "repeal" ? (
+            <Popover
+              anchor={menu.anchor}
+              ariaLabel="Choose a standing Law to repeal"
+              className="assemblyMenuPopover"
+              measureKey={standing.length}
+              onDismiss={() => onMenu(null)}
+            >
+              <ul className="asmMenu" role="menu">
+                <li className="asmMenuHead">Move to strike a standing Law</li>
+                {standing.map((cardId) => (
+                  <li key={cardId}>
+                    <button
+                      onClick={() => {
+                        moves.assemblyProposeRepeal(viewerId, cardId);
+                        onMenu(null);
+                      }}
+                      role="menuitem"
+                      type="button"
+                    >
+                      <span className="asmMenuName">
+                        {getResolutionCard(cardId)?.name ?? cardId}
+                      </span>
+                      <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Popover>
           ) : null}
         </div>
 
         <Verb
           armed
           cost="say nothing"
+          explanation="Finalize your proposal turn without adding a card. The house card still goes to the vote."
           icon={<PassIcon />}
           label="Pass"
           onClick={() => moves.assemblyPass(viewerId)}
-          title="Hold your peace and finalize your turn. The house card alone still goes to the vote."
         />
 
-        <span className="asmFootNote asmFootHint">Draw from a politician above, propose your card, or pass.</span>
+        <span className="asmFootNote asmFootHint">
+          Draw from a politician above, propose your card, or pass.
+        </span>
       </div>
     );
   }
 
   // Voting — yea/nay/veto are under the card; only Bribe remains here.
   const yourVote = session.voteOrder[session.voteIndex] === viewerId;
-  const canBribe = yourVote && session.bribesUsed[viewerId] < rules.briberyCap && influence >= rules.briberyCost;
+  const canBribe =
+    yourVote && session.bribesUsed[viewerId] < rules.briberyCap && influence >= rules.briberyCost;
 
   return (
     <div className="asm-foot">
       <Verb
         armed={canBribe}
+        blockedReason={
+          !yourVote
+            ? "Wait until your turn to cast."
+            : session.bribesUsed[viewerId] >= rules.briberyCap
+              ? `The limit is ${rules.briberyCap} bribes per Assembly.`
+              : influence < rules.briberyCost
+                ? `Requires ${rules.briberyCost} influence.`
+                : undefined
+        }
         cost={`+1 · ${rules.briberyCost} influence · ${session.bribesUsed[viewerId]}/${rules.briberyCap}`}
+        effectiveCost={{ influence: rules.briberyCost }}
+        explanation={`Buy one extra vote before casting, up to ${rules.briberyCap} per Assembly.`}
         icon={<BribeIcon />}
         label="Bribe"
         onClick={() => moves.assemblyBribe(viewerId)}
-        title={`Buy one extra vote for ${rules.briberyCost} influence before you cast, up to ${rules.briberyCap} per assembly. The cap is what stops a hoard from simply buying the outcome.`}
       />
       <span className="asmFootNote asmFootHint">
-        {yourVote ? "Cast your vote under the card above." : `${PLAYER_NAMES[session.voteOrder[session.voteIndex]]} is casting.`}
+        {yourVote
+          ? "Cast your vote under the card above."
+          : `${PLAYER_NAMES[session.voteOrder[session.voteIndex]]} is casting.`}
       </span>
     </div>
   );
@@ -132,26 +174,39 @@ export function AssemblyFoot({
 
 function Verb({
   armed,
+  blockedReason,
   cost,
+  effectiveCost,
+  explanation,
   icon,
   label,
   onClick,
-  title
 }: {
   armed: boolean;
+  blockedReason?: ReactNode;
   cost: string;
+  effectiveCost?: { influence: number };
+  explanation: ReactNode;
   icon: ReactNode;
   label: string;
-  onClick: () => void;
-  title: string;
+  onClick: MouseEventHandler<HTMLButtonElement>;
 }) {
   return (
-    <button className={`av${armed ? " armed" : " off"}`} disabled={!armed} onClick={onClick} title={title} type="button">
+    <AssemblyAction
+      blockedReason={blockedReason}
+      className={`av${armed ? " armed" : " off"}`}
+      effectiveCost={effectiveCost}
+      enabled={armed}
+      explanation={explanation}
+      heading={label}
+      onClick={onClick}
+      triggerClassName="assemblyFootActionTrigger"
+    >
       <span className="ad">{icon}</span>
       <span className="atx">
         <span className="al">{label}</span>
         <span className="ac">{cost}</span>
       </span>
-    </button>
+    </AssemblyAction>
   );
 }

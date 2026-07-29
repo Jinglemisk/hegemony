@@ -1,0 +1,210 @@
+// @vitest-environment jsdom
+
+import { act, useState } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { openAssembly, RESOLUTION_CARDS } from "../../../game/assembly";
+import { scenario } from "../../../game/testing/scenario";
+import type { GameUi } from "../GameUiContext";
+import { GameUiProvider } from "../GameUiProvider";
+import { AssemblyFoot, type AssemblyMenu } from "./AssemblyFoot";
+import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
+
+let container: HTMLDivElement;
+let root: Root;
+
+beforeEach(() => {
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  Object.defineProperty(window, "innerWidth", { configurable: true, value: 640 });
+  Object.defineProperty(window, "innerHeight", { configurable: true, value: 480 });
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    if (this.classList.contains("sharedTooltip")) return domRect(0, 0, 260, 160);
+    if (this.classList.contains("sharedPopover")) return domRect(0, 0, 320, 180);
+    return domRect(120, 180, 100, 30);
+  });
+  container = document.createElement("div");
+  document.body.append(container);
+  root = createRoot(container);
+});
+
+afterEach(() => {
+  act(() => root.unmount());
+  container.remove();
+  document.body.replaceChildren();
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
+
+describe("Assembly explanations", () => {
+  it("keeps a blocked action button-semantic, focusable, and mechanically described", () => {
+    const onClick = vi.fn();
+    act(() => {
+      root.render(
+        <AssemblyAction
+          blockedReason="Requires 3 influence."
+          className="bemaVeto"
+          effectiveCost={{ influence: 3 }}
+          enabled={false}
+          explanation="Strike this resolution outright."
+          heading="Veto"
+          onClick={onClick}
+        >
+          Veto
+        </AssemblyAction>,
+      );
+    });
+
+    const button = container.querySelector<HTMLButtonElement>("button")!;
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute("aria-disabled")).toBe("true");
+    expect(button.hasAttribute("title")).toBe(false);
+
+    act(() => button.focus());
+
+    const tooltip = document.body.querySelector<HTMLElement>("[role=tooltip]")!;
+    expect(tooltip.textContent).toContain("Veto");
+    expect(tooltip.textContent).toContain("Effective cost");
+    expect(tooltip.textContent).toContain("Influence");
+    expect(tooltip.textContent).toContain("Blocked");
+    expect(tooltip.textContent).toContain("Requires 3 influence");
+    expect(button.getAttribute("aria-describedby")).toBe(tooltip.id);
+
+    act(() => button.click());
+    expect(onClick).not.toHaveBeenCalled();
+
+    act(() =>
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })),
+    );
+    expect(document.body.querySelector("[role=tooltip]")).toBeNull();
+  });
+
+  it("uses the first emulated touch to explain and the second to activate", () => {
+    vi.useFakeTimers();
+    const onClick = vi.fn();
+    act(() => {
+      root.render(
+        <AssemblyAction
+          className="mb yea"
+          enabled
+          explanation="Cast your votes in favor."
+          heading="Vote Yea"
+          onClick={onClick}
+        >
+          Yea
+        </AssemblyAction>,
+      );
+    });
+
+    const button = container.querySelector<HTMLButtonElement>("button")!;
+    act(() => dispatchTouchPointerEvent(button, "pointerdown"));
+    act(() => vi.advanceTimersByTime(10));
+    act(() => button.click());
+
+    expect(document.body.querySelector("[role=tooltip]")?.textContent).toContain("Vote Yea");
+    expect(onClick).not.toHaveBeenCalled();
+
+    act(() => dispatchTouchPointerEvent(button, "pointerdown"));
+    act(() => button.click());
+
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(document.body.querySelector("[role=tooltip]")).toBeNull();
+  });
+
+  it("renders canonical Law and Directive presentations as non-interactive details", () => {
+    const law = RESOLUTION_CARDS.find((card) => card.kind === "law")!;
+    const directive = RESOLUTION_CARDS.find((card) => card.kind === "directive")!;
+
+    act(() => {
+      root.render(
+        <>
+          <ResolutionDetails card={law} duration="Until repealed" source="Assembly" />
+          <ResolutionDetails card={directive} duration="Resolves once" source="Assembly" />
+        </>,
+      );
+    });
+
+    expect(container.textContent).toContain(law.name);
+    expect(container.textContent).toContain("Political trade-off");
+    expect(container.textContent).toContain(directive.name);
+    expect(container.querySelectorAll('[aria-label="Effects"]')).toHaveLength(2);
+    expect(container.querySelector("button")).toBeNull();
+  });
+});
+
+describe("Assembly pickers", () => {
+  it("opens the repeal picker as a labelled dialog and restores keyboard focus on Escape", () => {
+    const G = scenario().build();
+    G.players["0"].resources.influence = 20;
+    G.activeLaws.push({ cardId: "grain-dole", author: "0", enactedSeason: G.season, order: 0 });
+    openAssembly(G, "0");
+    const proposeRepeal = vi.fn();
+    const value = {
+      G,
+      viewerId: "0",
+      moves: {
+        assemblyPass: vi.fn(),
+        assemblyProposeRepeal: proposeRepeal,
+      },
+    } as unknown as GameUi;
+
+    act(() => {
+      root.render(
+        <GameUiProvider value={value}>
+          <FootHarness value={value} />
+        </GameUiProvider>,
+      );
+    });
+
+    const opener = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
+      button.textContent?.includes("Repeal"),
+    )!;
+    act(() => {
+      opener.focus();
+      opener.click();
+    });
+
+    const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
+    expect(dialog.getAttribute("aria-label")).toBe("Choose a standing Law to repeal");
+    expect(dialog.querySelector('[role="menu"]')).not.toBeNull();
+    expect(dialog.querySelector('[role="menuitem"]')?.textContent).toContain("Grain Dole");
+    expect(document.activeElement).toBe(dialog);
+
+    act(() => dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+
+    expect(document.body.querySelector("[role=dialog]")).toBeNull();
+    expect(document.activeElement).toBe(opener);
+    expect(proposeRepeal).not.toHaveBeenCalled();
+  });
+});
+
+function FootHarness({ value }: { value: GameUi }) {
+  const [menu, setMenu] = useState<AssemblyMenu>(null);
+  return <AssemblyFoot G={value.G} menu={menu} onMenu={setMenu} session={value.G.assembly!} />;
+}
+
+function dispatchTouchPointerEvent(target: Element, type: "pointerdown") {
+  const event = new Event(type, { bubbles: true });
+  Object.defineProperty(event, "pointerType", { value: "touch" });
+  Object.defineProperty(event, "pointerId", { value: 1 });
+  target.dispatchEvent(event);
+}
+
+function domRect(left: number, top: number, width: number, height: number): DOMRect {
+  return {
+    x: left,
+    y: top,
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+    toJSON: () => ({}),
+  };
+}
+
+declare global {
+  var IS_REACT_ACT_ENVIRONMENT: boolean;
+}

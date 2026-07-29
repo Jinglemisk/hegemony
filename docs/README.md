@@ -58,6 +58,8 @@ Idea → owner question → accepted plan → implementation PRs → validation 
 - [Questions](questions.md) — unresolved owner decisions only.
 - [`plans/`](plans/) — proposed, ready, active, or blocked work only.
 - [`reference/`](reference/) — living rules, effective-value and parity-manifest contracts, AI, simulation, balance, and design descriptions.
+- [Frontend presentation contract](reference/frontend-presentation.md) — authoritative UI explanation,
+  accessibility, overlay, and integration rules.
 - [`reports/`](reports/) — immutable dated audits, playtests, and simulation evidence.
 - [`archive/`](archive/) — shipped or superseded plans and historical work notes.
 
