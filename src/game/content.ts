@@ -1,5 +1,5 @@
 import { BUILDINGS, TERRAIN_DECK } from "./data";
-import type { BuildingDefinition } from "./types";
+import type { BuildingDefinition, BuildingId } from "./types";
 
 /**
  * The content-override seam. The engine's "what exists" tables — {@link BUILDINGS}
@@ -23,6 +23,11 @@ let terrainOverride: TerrainDeck | null = null;
 /** The building roster in effect — the dev override if one is set, else the authored {@link BUILDINGS}. */
 export function getBuildings(): BuildingDefinition[] {
   return buildingOverride ?? BUILDINGS;
+}
+
+/** Resolve one building from the effective roster, including a dev-tuned override. */
+export function getBuilding(buildingId: BuildingId): BuildingDefinition | undefined {
+  return getBuildings().find((building) => building.id === buildingId);
 }
 
 /** The terrain deck in effect — the dev override if one is set, else the authored {@link TERRAIN_DECK}. */

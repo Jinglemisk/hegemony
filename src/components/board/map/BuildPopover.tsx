@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { getBuildBuildingStatus } from "../../../game/rules";
-import { BUILDINGS } from "../../../game/data";
+import { getBuildBuildingOptions } from "../../../game/rules";
 import type { BuildingId } from "../../../game/types";
 import { formatResourceCost } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
@@ -36,12 +35,13 @@ export function BuildPopover({
 }) {
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
+  const options = getBuildBuildingOptions(G, playerID, tileId);
   const [buildingId, setBuildingId] = useState<BuildingId>(
-    () => BUILDINGS.find((building) => getBuildBuildingStatus(G, playerID, tileId, building.id).can)?.id ?? BUILDINGS[0].id
+    () => options.find(({ status }) => status.can)?.building.id ?? options[0].building.id
   );
 
-  const building = BUILDINGS.find((candidate) => candidate.id === buildingId) ?? BUILDINGS[0];
-  const status = getBuildBuildingStatus(G, playerID, tileId, buildingId);
+  const selected = options.find(({ building }) => building.id === buildingId) ?? options[0];
+  const { building, status } = selected;
   const benefit = useMemo(
     () => (tile ? getBuildingBenefitText(G, playerID, tile, building) : ""),
     [G, playerID, tile, building]
@@ -56,24 +56,20 @@ export function BuildPopover({
       <p className="placementSectionLabel placementTargetName">{settlementPickerLabel(G, tile, playerID)}</p>
 
       <div className="popChoiceGrid growPopChoiceGrid popoverChoiceStack" role="group" aria-label="Building to raise">
-        {BUILDINGS.map((candidate) => {
-          const candidateStatus = getBuildBuildingStatus(G, playerID, tileId, candidate.id);
-
-          return (
-            <button
-              className={candidate.id === buildingId ? "selectedChoice" : ""}
-              disabled={!candidateStatus.can}
-              key={candidate.id}
-              onClick={() => setBuildingId(candidate.id)}
-              title={buildingTooltipRows(candidate, candidateStatus, getBuildingBenefitText(G, playerID, tile, candidate), phase, isActive).join(" ")}
-              type="button"
-            >
-              <AtlasIcon icon={candidate.id} className="miniIcon" />
-              <span>{candidate.name}</span>
-              <strong>{formatResourceCost(candidate.cost)}</strong>
-            </button>
-          );
-        })}
+        {options.map(({ building: candidate, status: candidateStatus }) => (
+          <button
+            className={candidate.id === buildingId ? "selectedChoice" : ""}
+            disabled={!candidateStatus.can}
+            key={candidate.id}
+            onClick={() => setBuildingId(candidate.id)}
+            title={buildingTooltipRows(candidate, candidateStatus, getBuildingBenefitText(G, playerID, tile, candidate), phase, isActive).join(" ")}
+            type="button"
+          >
+            <AtlasIcon icon={candidate.id} className="miniIcon" />
+            <span>{candidate.name}</span>
+            <strong>{formatResourceCost(candidateStatus.cost ?? candidate.cost)}</strong>
+          </button>
+        ))}
       </div>
 
       <div className="growPopBenefitPanel">

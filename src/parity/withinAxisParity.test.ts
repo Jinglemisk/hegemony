@@ -1,17 +1,31 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  BUILDINGS,
   EXPEDITION_TABLES,
   OMEN_TABLE,
   PLAYER_EVENT_CARDS,
   RIOT_TABLE,
   SEASONAL_EVENT_CARDS,
 } from "../game/data";
-import { calculateIncomeBreakdown } from "../game/economy/income";
+import { calculateIncome, calculateIncomeBreakdown } from "../game/economy/income";
 import { drawSeasonalEvent, getEventEffectChoices } from "../game/events";
-import { scenario } from "../game/testing/scenario";
-import type { EventCard, HegemonyState, PlayerId } from "../game/types";
+import { owned, scenario } from "../game/testing/scenario";
+import type { BuildingDefinition, EventCard, HegemonyState, PlayerId } from "../game/types";
 import { presentEventEffects, presentTableEffect } from "../ui/effects";
+import { setContentOverrides } from "../game/content";
+import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
+import type { LegalMove } from "../game/legalMoves";
+import {
+  getBuildBuildingOptions,
+  getFoundColonyStatus,
+  getUpgradeColonyToCityStatus,
+} from "../game/rules";
+import { VERBS } from "../components/board/command/verbs";
+import type { VerbContext } from "../components/board/command/verbs";
+import { buildingName } from "../ui/formatters";
+import { smartPolicy } from "../sim/policies";
+import { createSimRng } from "../sim/rng";
 
 function customSeasonalCard(
   id: string,
@@ -110,5 +124,170 @@ describe("frontend-to-frontend parity", () => {
         }
       }
     }
+  });
+});
+
+afterEach(() => {
+  setContentOverrides({ buildings: null, terrain: null });
+});
+
+function tunedBuildings(
+  buildingId: BuildingDefinition["id"],
+  patch: Partial<BuildingDefinition>,
+): BuildingDefinition[] {
+  return BUILDINGS.map((building) =>
+    building.id === buildingId ? { ...building, ...patch } : building,
+  );
+}
+
+function gameplayCity(): HegemonyState {
+  return scenario()
+    .withSettlement("0", "0,0", "city", { citizens: 0, freemen: 0, slaves: 0 })
+    .withResources("0", "wealthy")
+    .mutate((G) => {
+      G.phase = "gameplay";
+      G.currentPlayer = "0";
+    })
+    .build();
+}
+
+function commandContext(G: HegemonyState): VerbContext {
+  return {
+    G,
+    playerID: "0",
+    phase: "gameplay",
+    isActive: true,
+    hasPendingPlayerEvent: false,
+    canGrowPops: true,
+    canMovePops: true,
+    canFoundColony: true,
+    canUpgradeCity: true,
+    canBuild: true,
+    isFoundColonyActive: false,
+    isBuildActive: false,
+    calmUsed: false,
+    ventureUsed: false,
+  };
+}
+
+describe("effective content and cost parity", () => {
+  it("shares a tuned building's effective definition, cost, execution, label, and income", () => {
+    setContentOverrides({
+      buildings: tunedBuildings("marketplace", {
+        name: "Agora Market",
+        cost: { wood: 7, stone: 2 },
+        effects: [{ type: "income", resource: "gold", amount: 9 }],
+      }),
+    });
+    const G = gameplayCity();
+    G.activeSeasonEvent = {
+      card: {
+        id: "double-build-cost",
+        deck: "seasonal",
+        name: "Double Build Cost",
+        count: 1,
+        text: "Building costs double.",
+        timing: "season",
+        effects: [
+          {
+            type: "buildingCostMultiplier",
+            multiplier: 2,
+            duration: "season",
+            excludes: [],
+          },
+        ],
+      },
+      season: G.season,
+      playerID: "0",
+    };
+    G.players["0"].actionCostDiscounts.push({
+      id: "market-coupon",
+      sourceCardId: "market-coupon",
+      label: "Market coupon",
+      action: "buildBuilding",
+      buildingId: "marketplace",
+      resource: "wood",
+      amount: 3,
+      consume: "nextMatchingAction",
+    });
+
+    const option = getBuildBuildingOptions(G, "0", "0,0").find(
+      ({ building }) => building.id === "marketplace",
+    );
+    expect(option?.building.name).toBe("Agora Market");
+    expect(option?.status.cost).toEqual({ wood: 11, stone: 4 });
+    expect(buildingName("marketplace")).toBe("Agora Market");
+
+    const legalMove = enumerateLegalMoves(G, "0").find(
+      (move) => move.type === "buildBuilding" && move.buildingId === "marketplace",
+    );
+    expect(legalMove).toMatchObject({
+      type: "buildBuilding",
+      buildingId: "marketplace",
+      cost: { wood: 11, stone: 4 },
+    });
+
+    const beforeResources = { ...G.players["0"].resources };
+    const beforeIncome = calculateIncome(G, "0").gold;
+    expect(legalMove && applyMove(G, "0", legalMove).ok).toBe(true);
+    expect(G.players["0"].resources.wood).toBe(beforeResources.wood - 11);
+    expect(G.players["0"].resources.stone).toBe(beforeResources.stone - 4);
+    expect(owned(G, "0,0", "0").buildings).toContain("marketplace");
+    expect(calculateIncome(G, "0").gold - beforeIncome).toBe(9);
+  });
+
+  it("quotes exact target-independent command costs and labels later choices honestly", () => {
+    const G = gameplayCity();
+    G.players["0"].actionCostDiscounts.push({
+      id: "found-coupon",
+      sourceCardId: "found-coupon",
+      label: "Found coupon",
+      action: "foundColony",
+      resource: "wood",
+      amount: 2,
+      consume: "nextMatchingAction",
+    });
+    const context = commandContext(G);
+    const found = VERBS.find((verb) => verb.id === "found");
+    const upgrade = VERBS.find((verb) => verb.id === "upgrade");
+
+    expect(found?.cost?.cost?.(context)).toEqual(
+      getFoundColonyStatus(G, "0", "").cost,
+    );
+    expect(upgrade?.cost?.cost?.(context)).toEqual(
+      getUpgradeColonyToCityStatus(G, "0", "").cost,
+    );
+    expect(VERBS.find((verb) => verb.id === "grow")?.cost?.lead).toBe("varies");
+    expect(VERBS.find((verb) => verb.id === "build")?.cost?.lead).toBe("varies");
+    expect(VERBS.find((verb) => verb.id === "calm")?.cost?.lead).toBe("options");
+    expect(VERBS.find((verb) => verb.id === "venture")?.cost?.lead).toBe("stakes");
+  });
+
+  it("makes smart policy reverse its build choice when effective economics reverse", () => {
+    const choose = (cost: number, income: number) => {
+      setContentOverrides({
+        buildings: tunedBuildings("granary", {
+          cost: { wood: cost },
+          effects: income
+            ? [{ type: "income", resource: "food", amount: income }]
+            : [],
+        }),
+      });
+      const G = gameplayCity();
+      const moves: LegalMove[] = [
+        {
+          type: "buildBuilding",
+          tileId: "0,0",
+          buildingId: "granary",
+          cost: { wood: cost },
+        },
+        { type: "endTurn" },
+      ];
+
+      return smartPolicy.choose(G, moves, createSimRng(1)).type;
+    };
+
+    expect(choose(150, 0)).toBe("endTurn");
+    expect(choose(1, 50)).toBe("buildBuilding");
   });
 });

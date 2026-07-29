@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnnotatedText } from "../../AnnotatedText";
-import { RESOURCE_LABELS } from "../../../ui/formatters";
+import { formatResourceCost } from "../../../ui/formatters";
 import { getFundExpeditionStatus } from "../../../game/rules";
 import type { VentureStake } from "../../../game/rules";
 import { EXPEDITION_TABLES } from "../../../game/data";
@@ -76,10 +76,7 @@ export function VentureModal({
 
           <div className="ventureStakeRow" role="group" aria-label="Stake">
             {(Object.keys(G.ruleset.ventureStakes) as VentureStake[]).map((candidate) => {
-              const cost = G.ruleset.ventureStakes[candidate];
-              const label = Object.entries(cost)
-                .map(([resource, amount]) => `-${amount} ${RESOURCE_LABELS[resource as keyof typeof RESOURCE_LABELS] ?? resource}`)
-                .join(" + ");
+              const candidateStatus = getFundExpeditionStatus(G, playerID, table.id, candidate);
 
               return (
                 <button
@@ -88,7 +85,7 @@ export function VentureModal({
                   onClick={() => setStake(candidate)}
                 >
                   <strong>
-                    Stake · <AnnotatedText text={label} />
+                    Stake · <AnnotatedText text={formatResourceCost(candidateStatus.cost ?? {})} />
                   </strong>
                 </button>
               );

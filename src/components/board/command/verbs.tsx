@@ -1,6 +1,6 @@
 import type { Phase } from "../../../game/controller";
-import { POP_TYPES } from "../../../game/rules";
-import type { HegemonyState, Resources } from "../../../game/types";
+import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
+import type { HegemonyState, PlayerId, Resources } from "../../../game/types";
 import type { IconAtlasKey, UiAtlasKey } from "../../Sprites";
 
 /**
@@ -17,6 +17,7 @@ import type { IconAtlasKey, UiAtlasKey } from "../../Sprites";
 /** Everything a verb needs to decide whether it is available and what it costs. */
 export type VerbContext = {
   G: HegemonyState;
+  playerID: PlayerId;
   phase: Phase;
   isActive: boolean;
   hasPendingPlayerEvent: boolean;
@@ -74,12 +75,8 @@ export const VERBS: VerbSpec[] = [
     id: "grow",
     label: "Grow",
     icon: { kind: "ui", item: "growAction" },
-    cost: {
-      lead: "from",
-      cost: ({ G }) => ({
-        food: Math.min(...POP_TYPES.map((pop) => G.ruleset.growPopCosts[pop].food ?? Number.POSITIVE_INFINITY))
-      })
-    },
+    // The holding, class, and active discounts determine the exact amount.
+    cost: { lead: "varies" },
     available: ({ canGrowPops }) => canGrowPops,
     hint: "Choose a holding and pop type to grow.",
     blockedHint: "Requires an owned holding.",
@@ -100,7 +97,7 @@ export const VERBS: VerbSpec[] = [
     label: "Found",
     icon: { kind: "atlas", icon: "colony" },
     iconClassName: "commandAtlasIcon",
-    cost: { cost: ({ G }) => G.ruleset.actionCosts.foundColony },
+    cost: { cost: ({ G, playerID }) => getFoundColonyStatus(G, playerID, "").cost ?? {} },
     // Stays clickable while armed so the same button cancels the map mode.
     available: ({ canFoundColony, isFoundColonyActive }) => canFoundColony || isFoundColonyActive,
     pressed: ({ isFoundColonyActive }) => isFoundColonyActive,
@@ -116,7 +113,7 @@ export const VERBS: VerbSpec[] = [
     label: "Upgrade",
     icon: { kind: "atlas", icon: "city" },
     iconClassName: "commandAtlasIcon",
-    cost: { cost: ({ G }) => G.ruleset.actionCosts.upgradeColonyToCity },
+    cost: { cost: ({ G, playerID }) => getUpgradeColonyToCityStatus(G, playerID, "").cost ?? {} },
     available: ({ canUpgradeCity }) => canUpgradeCity,
     hint: "Upgrade one of your colonies into a city.",
     blockedHint: "Requires an upgradeable colony and enough resources.",
@@ -127,8 +124,9 @@ export const VERBS: VerbSpec[] = [
     label: "Build",
     icon: { kind: "atlas", icon: "workshop" },
     iconClassName: "commandAtlasIcon",
-    // The cost varies by building; the popover shows each. Stays clickable while
-    // armed so the same button cancels the map mode (like Found).
+    // The cost varies by building; the popover shows each authoritative option.
+    // Stays clickable while armed so the same button cancels the map mode (like Found).
+    cost: { lead: "varies" },
     available: ({ canBuild, isBuildActive }) => canBuild || isBuildActive,
     pressed: ({ isBuildActive }) => isBuildActive,
     hint: ({ isBuildActive }) =>
@@ -142,7 +140,7 @@ export const VERBS: VerbSpec[] = [
     id: "calm",
     label: "Calm",
     icon: { kind: "ui", item: "voteToken" },
-    cost: { lead: "from", cost: ({ G }) => ({ influence: G.ruleset.civicCalm.influenceCost }) },
+    cost: { lead: "options" },
     available: ({ calmUsed }) => !calmUsed,
     hint: "Buy happiness: influence or gold, once per turn.",
     blockedHint: "One civic-calm action per turn — already used.",
@@ -152,7 +150,7 @@ export const VERBS: VerbSpec[] = [
     id: "venture",
     label: "Venture",
     icon: { kind: "ui", item: "seal" },
-    cost: { lead: "stake", cost: ({ G }) => ({ gold: G.ruleset.ventureStakes.gold.gold }) },
+    cost: { lead: "stakes" },
     available: ({ ventureUsed }) => !ventureUsed,
     hint: "Fund an expedition: stake gold or wood, roll the table.",
     blockedHint: "One venture per turn — the ships are already out.",

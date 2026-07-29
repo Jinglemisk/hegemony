@@ -1,7 +1,7 @@
 ---
-status: ready
+status: active
 phase: "3.5"
-updated: 2026-07-26
+updated: 2026-07-29
 ---
 
 # Phase 3.5 parity closeout
@@ -34,6 +34,10 @@ roadmap's engine/frontend/simulation-AI parity contract.
 | **3. Unify interaction presentation** | Implementation          | Add shared accessible Tooltip and interactive Popover primitives with common anchoring, collision, semantic effect rows, source, duration, and blocked-reason slots. Migrate gameplay-critical surfaces first.                                                          | Costs, blocked reasons, active effects, and Assembly explanations behave consistently with hover, focus, and accessibility output.                         |
 | **4. Revise the Assembly**            | Gameplay implementation | Replace Voice with the permanent authored-and-passed ratchet and a minimum; add one-time politician prizes; remove the Stratokles coup; make Stratokles effects player-targeted; ship frontend state, master-policy behavior, telemetry, and behavioral tests together. | The revised Assembly is complete on all three axes and no PR depends on a later branch for required parity.                                                |
 | **5. Validate and tune**              | Validation              | Record the human playtest; run Assembly participation and runaway-leader checks; rerun cities 3→2 and the agreed balance campaigns; apply only evidence-driven tuning; close the Phase 3.5 record.                                                                      | A tester can explain changes, the reference policy exercises the revised game credibly, the agora is worth engaging, and the no-coup runaway check passes. |
+
+**Delivery state:** Step 1 is complete in this change; Step 2 is next; Step 3 is
+independent draft PR #57 and must reconcile the Step 1 APIs after rebase; Steps 4
+and 5 remain pending.
 
 ## Merge and testing rules
 
