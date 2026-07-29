@@ -1,5 +1,6 @@
 import { getCivicCalmStatus } from "../../../game/rules";
 import type { CivicCalmPayment } from "../../../game/rules";
+import { formatResourceCost } from "../../../ui/formatters";
 import { ModalShell } from "./ModalShell";
 import { useGameUi } from "../GameUiContext";
 
@@ -14,17 +15,15 @@ export function CalmModal({
 }) {
   const { G, viewerId: playerID, isActive, moves } = useGameUi();
   const rules = G.ruleset.civicCalm;
-  const options: Array<{ payment: CivicCalmPayment; name: string; price: string; blurb: string }> = [
+  const options: Array<{ payment: CivicCalmPayment; name: string; blurb: string }> = [
     {
       payment: "influence",
       name: "Stabilize Province",
-      price: `${rules.influenceCost} influence`,
       blurb: "Magistrates and envoys settle the districts."
     },
     {
       payment: "gold",
       name: "Bread & Circuses",
-      price: `${rules.goldCost} gold`,
       blurb: "Games, grain doles, and a very good day."
     }
   ];
@@ -57,7 +56,7 @@ export function CalmModal({
               }}
             >
               <strong>
-                {option.name} — {option.price}
+                {option.name} — {formatResourceCost(status.cost ?? {})}
               </strong>
               <span>{option.blurb}</span>
             </button>

@@ -4,6 +4,7 @@ import {
   POP_TYPES,
   calculateEconomyProjection,
   canPlaceColonyOnTile,
+  getBuildBuildingOptions,
   getBuildBuildingStatus,
   getActiveEffects,
   getFoundColonyStatus,
@@ -13,7 +14,7 @@ import {
   totalPops
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId, Resource } from "../game/types";
-import { PLAYER_NAMES, OMEN_TABLE, BUILDINGS } from "../game/data";
+import { PLAYER_NAMES, OMEN_TABLE } from "../game/data";
 import { HexMap } from "./HexMap";
 import { ResourceGrid } from "./ResourceGrid";
 import { BuildPopover } from "./board/map/BuildPopover";
@@ -180,7 +181,7 @@ export function HegemonyBoard({
   const canBuild = useMemo(
     () =>
       getOwnedHoldings(G, viewerId).some(({ tile }) =>
-        BUILDINGS.some((building) => getBuildBuildingStatus(G, viewerId, tile.id, building.id).can)
+        getBuildBuildingOptions(G, viewerId, tile.id).some(({ status }) => status.can)
       ),
     [G, viewerId]
   );

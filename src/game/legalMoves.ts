@@ -24,7 +24,6 @@ import { buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot
 import { fundExpedition, getFundExpeditionStatus } from "./ventures";
 import type { VentureStake } from "./ventures";
 import { EXPEDITION_TABLES, RIOT_TABLE } from "./data";
-import { getBuildings } from "./content";
 import { EMPTY_POPS, POP_TYPES, totalPops } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement } from "./core/query";
@@ -34,7 +33,7 @@ import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds, reso
 import { setupCapitalCount } from "./ruleset";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
 import {
-  getBuildBuildingStatus,
+  getBuildBuildingOptions,
   getFoundColonyStatus,
   getGrowPopStatus,
   getMovePopsStatus,
@@ -605,9 +604,7 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): LegalMove
   }
 
   for (const tileId of ownedTileIds) {
-    for (const building of getBuildings()) {
-      const status = getBuildBuildingStatus(G, playerID, tileId, building.id);
-
+    for (const { building, status } of getBuildBuildingOptions(G, playerID, tileId)) {
       if (status.can) {
         moves.push({ type: "buildBuilding", tileId, buildingId: building.id, cost: status.cost ?? {} });
       }

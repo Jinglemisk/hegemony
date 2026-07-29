@@ -1,5 +1,4 @@
-import { BUILDINGS } from "../../../game/data";
-import { getBuildBuildingStatus } from "../../../game/rules";
+import { getBuildBuildingStatus, getBuildings } from "../../../game/rules";
 import type { BuildingId } from "../../../game/types";
 import { formatBuildingEffects, formatResourceCost } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
@@ -19,7 +18,7 @@ export function BuildingsTab({
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
   return (
     <div className="buildingsLedger">
-      {BUILDINGS.map((building) => (
+      {getBuildings().map((building) => (
         <section className="buildingLedgerRow" key={building.id}>
           <div className="buildingLedgerLead">
             <AtlasIcon icon={building.id} className="buildingButtonIcon" />
@@ -31,7 +30,7 @@ export function BuildingsTab({
                 <AnnotatedText text={formatBuildingEffects(building.effects)} />
               </em>
               <span className="buildingLedgerCost">
-                Cost{" "}
+                Base cost{" "}
                 <b>
                   <AnnotatedText text={formatResourceCost(building.cost)} />
                 </b>
@@ -56,6 +55,7 @@ export function BuildingsTab({
                   <b>
                     <AnnotatedText text={benefit} />
                   </b>
+                  <span>Cost {formatResourceCost(status.cost ?? building.cost)}</span>
                 </button>
               );
             })}

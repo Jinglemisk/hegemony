@@ -47,6 +47,7 @@ export function CommandDock({
 
   const context: VerbContext = {
     G,
+    playerID: viewer.id,
     phase,
     isActive,
     hasPendingPlayerEvent,

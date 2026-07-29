@@ -32,6 +32,8 @@ export function MarketTab({
         const held = G.players[playerID].resources[material];
         const sell = getBankSellStatus(G, playerID, material);
         const buy = getBankBuyStatus(G, playerID, material);
+        const sellAmount = sell.cost?.[material] ?? rate.sell;
+        const buyAmount = buy.cost?.gold ?? rate.buy;
 
         return (
           <section className="marketRow" key={material} style={resourceCssVars(material)}>
@@ -47,18 +49,18 @@ export function MarketTab({
               <button
                 className="marketTradeButton"
                 disabled={!tradingOpen || !sell.can}
-                title={sell.reasons.join(" ") || `Sell ${rate.sell} ${material} for 1 gold.`}
+                title={sell.reasons.join(" ") || `Sell ${sellAmount} ${material} for 1 gold.`}
                 onClick={() => onBankSell(material)}
               >
-                Sell {rate.sell} <span className="marketArrow">→</span> 1g
+                Sell {sellAmount} <span className="marketArrow">→</span> 1g
               </button>
               <button
                 className="marketTradeButton"
                 disabled={!tradingOpen || !buy.can}
-                title={buy.reasons.join(" ") || `Buy 1 ${material} for ${rate.buy} gold.`}
+                title={buy.reasons.join(" ") || `Buy 1 ${material} for ${buyAmount} gold.`}
                 onClick={() => onBankBuy(material)}
               >
-                {rate.buy}g <span className="marketArrow">→</span> buy 1
+                {buyAmount}g <span className="marketArrow">→</span> buy 1
               </button>
             </div>
           </section>

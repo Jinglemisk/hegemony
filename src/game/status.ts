@@ -1,5 +1,5 @@
 import { getBuildings } from "./content";
-import type { BuildingId, HegemonyState, PlayerId, PopType, Pops } from "./types";
+import type { BuildingDefinition, BuildingId, HegemonyState, PlayerId, PopType, Pops } from "./types";
 import { hasPops, isPositivePopSelection, totalPops } from "./core/pops";
 import { getOwnedSettlement, getGrownSettlementsThisTurn, getTile } from "./core/query";
 import { canAfford } from "./core/resources";
@@ -136,6 +136,26 @@ export function getBuildBuildingStatus(
 
   status.can = status.reasons.length === 0;
   return status;
+}
+
+export type BuildBuildingOption = {
+  building: BuildingDefinition;
+  status: ActionStatus;
+};
+
+/**
+ * The effective building roster paired with each option's authoritative status
+ * and cost. Engine enumeration and every frontend picker consume this query.
+ */
+export function getBuildBuildingOptions(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+): BuildBuildingOption[] {
+  return getBuildings().map((building) => ({
+    building,
+    status: getBuildBuildingStatus(G, playerID, tileId, building.id),
+  }));
 }
 
 export function getGrowPopStatus(

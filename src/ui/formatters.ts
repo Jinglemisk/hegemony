@@ -1,4 +1,4 @@
-import { BUILDINGS } from "../game/data";
+import { getBuilding } from "../game/content";
 import { seasonName, yearOf } from "../game/core/calendar";
 import { formatPopName, formatRuleNumber } from "../game/core/format";
 import type { BuildingEffect, BuildingId, PopType, Resource, Resources, SeasonName } from "../game/types";
@@ -115,6 +115,6 @@ export function formatPopLabel(pop: PopType, amount: number) {
 }
 
 export function buildingName(buildingId: BuildingId) {
-  return BUILDINGS.find((building) => building.id === buildingId)?.name ?? buildingId;
+  return getBuilding(buildingId)?.name ?? buildingId;
 }
 

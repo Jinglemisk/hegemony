@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { BUILDINGS } from "../../../game/data";
 import {
   POP_TYPES,
   getBuildBuildingStatus,
+  getBuilding,
+  getBuildings,
   settlementBuildingSlots,
   settlementNetYield,
   settlementOverCapacity,
@@ -28,6 +29,7 @@ export function CitiesTab({
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
+  const buildings = getBuildings();
   const holdingIds = useMemo(
     () => holdings.map(({ tile, settlement }) => `${settlement.owner}-${tile.id}`),
     [holdings]
@@ -105,7 +107,7 @@ export function CitiesTab({
                   const builtBuildings = settlement.buildings.filter(
                     (buildingId) => BUILDING_AFFINITY[buildingId] === pop
                   );
-                  const unbuiltBuildings = BUILDINGS.filter(
+                  const unbuiltBuildings = buildings.filter(
                     (building) => !settlement.buildings.includes(building.id) && BUILDING_AFFINITY[building.id] === pop
                   );
 
@@ -121,7 +123,7 @@ export function CitiesTab({
                       <div className="buildingChipRow">
                         {builtBuildings.length > 0 ? (
                           builtBuildings.map((buildingId, index) => {
-                            const building = BUILDINGS.find((candidate) => candidate.id === buildingId);
+                            const building = getBuilding(buildingId);
 
                             return building ? (
                               <BuildingChip

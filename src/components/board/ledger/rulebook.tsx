@@ -4,16 +4,14 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { ReactNode } from "react";
 import {
-  BUILDINGS,
   EXPEDITION_TABLES,
   OMEN_TABLE,
   PLAYER_EVENT_CARDS,
   RIOT_TABLE,
   SEASONAL_EVENT_CARDS,
-  SETTLEMENT_RULES,
-  TERRAIN_DECK
+  SETTLEMENT_RULES
 } from "../../../game/data";
-import { TRADABLE_MATERIALS } from "../../../game/rules";
+import { TRADABLE_MATERIALS, getBuildings, getTerrainDeck } from "../../../game/rules";
 import { POLITICIANS, RESOLUTION_DECKS } from "../../../game/assembly";
 import type { EventCard, HegemonyState, PopType, Resource, SettlementKind, Terrain } from "../../../game/types";
 import { RESOURCE_LABELS, formatBuildingEffects, formatPopLabel, formatResourceCost } from "../../../ui/formatters";
@@ -103,7 +101,7 @@ function terrainSummary() {
     Terrain,
     { count: number; resource: Resource | null; yields: number[]; slots: number[] }
   >();
-  for (const tile of TERRAIN_DECK) {
+  for (const tile of getTerrainDeck()) {
     const existing = byKind.get(tile.terrain) ?? {
       count: 0,
       resource: tile.resource ? tile.resource.type : null,
@@ -351,10 +349,12 @@ const settlements: RuleChapter = {
       <Entry id={anchor("settlements", "expansion")} title="Founding & upgrading">
         <DefList>
           <DefRow term="Found a colony">
+            <strong>Base cost:</strong>{" "}
             <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.foundColony)} /> — beside an owned settlement,
             or on any coastal tile if you hold a coast (sailing, not teleporting).
           </DefRow>
           <DefRow term="Upgrade colony → city">
+            <strong>Base cost:</strong>{" "}
             <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.upgradeColonyToCity)} /> — lifts the pop cap and
             unlocks building.
           </DefRow>
@@ -411,7 +411,10 @@ const ladder: RuleChapter = {
     return (
       <div className="compendiumStack">
         <Entry id={anchor("ladder", "grow")} title="Growing">
-          <Note>Grow adds one new pop to a settlement — once per settlement per turn. The cost is per class:</Note>
+          <Note>
+            Grow adds one new pop to a settlement — once per settlement per turn. These are base costs; the action
+            picker shows the effective cost after local and active discounts.
+          </Note>
           <DefList>
             {(Object.entries(G.ruleset.growPopCosts) as Array<[PopType, Partial<typeof G.ruleset.growPopCosts.slaves>]>).map(
               ([pop, cost]) => (
@@ -425,7 +428,8 @@ const ladder: RuleChapter = {
         <Entry id={anchor("ladder", "ladder")} title="The ladder">
           <Note>
             One ladder move per turn: promote a pop up a class, or demote it down. Promotion buys civic standing; demotion
-            frees labour but can sting morale (the Gymnasion cheapens promotion in its city).
+            frees labour but can sting morale (the Gymnasion cheapens promotion in its city). The list below shows
+            base costs; the picker shows each effective cost.
           </Note>
           <DefList>
             {promotes.map(([pop, cost]) => (
@@ -458,13 +462,16 @@ const buildings: RuleChapter = {
   Body: () => (
     <div className="compendiumStack">
       <Entry id={anchor("buildings", "roster")} title="The roster">
-        <Note>Cities and the capital raise buildings into their slots. Every building's effect caps at its max level.</Note>
+        <Note>
+          Cities and the capital raise buildings into their slots. Every building's effect caps at its max level.
+          Roster prices below are base costs; build controls show effective costs.
+        </Note>
         <ul className="compendiumCostList">
-          {BUILDINGS.map((building) => (
+          {getBuildings().map((building) => (
             <li className="compendiumCostRow" key={building.id}>
               <span className="compendiumCostLabel">{building.name}</span>
               <span className="compendiumCostValue">
-                <AnnotatedText text={formatResourceCost(building.cost)} />
+                Base cost: <AnnotatedText text={formatResourceCost(building.cost)} />
               </span>
               <span className="compendiumCostNote">
                 <AnnotatedText text={formatBuildingEffects(building.effects)} />
@@ -502,7 +509,10 @@ const unrest: RuleChapter = {
           </Note>
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">
-          <Note>One civic calm per turn, both worth +{calm.happiness} happiness:</Note>
+          <Note>
+            One civic calm per turn, both worth +{calm.happiness} happiness. These are base costs; the payment picker
+            shows effective costs:
+          </Note>
           <DefList>
             <DefRow term="Stabilize Province">
               <AnnotatedText text={`${calm.influenceCost} ${RESOURCE_LABELS.influence}`} />
@@ -584,8 +594,8 @@ const bank: RuleChapter = {
     <div className="compendiumStack">
       <Entry id={anchor("bank", "rates")} title="Rates">
         <Note>
-          Gold is the unit of account — the bank never barters, and every round trip pays the spread. Rates follow this
-          board's tile supply and hold all game.
+          Gold is the unit of account — the bank never barters, and every round trip pays the spread. These are the
+          board's base rates; trade controls show each player's effective rate after standing Laws.
         </Note>
         {TRADABLE_MATERIALS.map((material) => {
           const rate = G.bank[material];
@@ -614,9 +624,9 @@ const ventures: RuleChapter = {
     <div className="compendiumStack">
       <Entry id={anchor("ventures", "expeditions")} title="Expeditions">
         <Note>
-          One venture per turn: post a stake — {formatResourceCost(G.ruleset.ventureStakes.gold)} or{" "}
-          {formatResourceCost(G.ruleset.ventureStakes.wood)} — pick any expedition, and roll. The stake is paid win or
-          lose.
+          One venture per turn: post a base stake — {formatResourceCost(G.ruleset.ventureStakes.gold)} or{" "}
+          {formatResourceCost(G.ruleset.ventureStakes.wood)} — pick any expedition, and roll. The stake picker shows
+          effective costs; the stake is paid win or lose.
         </Note>
         {EXPEDITION_TABLES.map((table) => (
           <div key={table.id} className="ruleVenture">
@@ -681,7 +691,7 @@ const assembly: RuleChapter = {
           <Note>
             This is what <AnnotatedText text="Influence" /> is for. Everything the Assembly asks of you — drawing,
             proposing, bribing, vetoing, repealing — is paid in influence, and nothing else in the game spends it at
-            this scale.
+            this scale. Participation prices in this reference are base costs; Assembly controls show effective costs.
           </Note>
         </Entry>
 

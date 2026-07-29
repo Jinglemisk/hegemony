@@ -5,7 +5,7 @@ before planning, implementing, or declaring work complete. Implementation detail
 belongs in linked plans; unresolved owner decisions belong only in
 [questions.md](questions.md).
 
-Last updated: 2026-07-26.
+Last updated: 2026-07-29.
 
 ## Mandatory three-axis parity contract
 
@@ -68,10 +68,11 @@ instead of rediscovering effects.
 The canonical work order and gates are in
 [the Phase 3.5 plan](plans/phase-3.5-parity-closeout.md).
 
-1. **Restore parity truth:** reconcile documentation and effective
-   content/effective-cost drift.
-2. **Extend parity enforcement:** exhaustive feature/effect/content manifests and
-   behavioral CI.
+1. **Restore parity truth (complete in this change):** reconcile documentation
+   and effective content/effective-cost drift through the
+   [effective-value contract](reference/effective-values.md).
+2. **Extend parity enforcement (next):** exhaustive feature/effect/content manifests
+   and behavioral CI.
 3. **Unify interaction presentation:** accessible shared Tooltip and interactive
    Popover primitives.
 4. **Revise the Assembly:** permanent Voice ratchet and minimum, one-time author
@@ -106,7 +107,7 @@ explicitly deferred final 16%.
 | **0–2** | Shipped                | Playable victory loop, currencies, interface foundation, terrain economy, and capped buildings              | Historical plans and evidence are archived                                                                                       |
 | **2.5** | Absorbed               | Debt sweep; remaining authoritative-cost and shared-interaction work travels in Phase 3.5                   | Remaining debt has an explicit Phase 3.5 owner                                                                                   |
 | **3**   | Built, gate incomplete | Two-panel UI, Assembly, and influence-aware AI shipped; first results showed agora engagement is a net loss | Closed by the Phase 3.5 train                                                                                                    |
-| **3.5** | Next                   | Truth, enforcement, shared interaction primitives, Assembly revision, AI repair, and validation             | Parity omissions fail CI; humans can explain effects; `master` credibly exercises the revised game; no-coup runaway check passes |
+| **3.5** | Active                 | Truth, enforcement, shared interaction primitives, Assembly revision, AI repair, and validation             | Parity omissions fail CI; humans can explain effects; `master` credibly exercises the revised game; no-coup runaway check passes |
 | **4**   | Blocked                | Topology, land luxuries, coastal luxuries and Port, then structured player trade or explicit v2 deferral    | Luxury/unrest economy holds; trade is used; feature set and balance numbers freeze                                               |
 | **5**   | Proposed               | National Ideas (twelve-idea reverse-snake draft). **Setup screen, networking, and 2–3-player scaling are deferred until the game is balanced (Q35, 2026-07-27) — out of scope for now.** | Ideas have no automatic pick                                                                |
 | **6**   | Deferred               | Post-freeze visual-system and technical-debt session                                                        | One coherent visual system over frozen rules and numbers                                                                         |
