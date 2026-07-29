@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
 import { POP_TYPES, getGrowPopStatus, previewGrowPopIncomeDelta } from "../../../game/rules";
 import type { PopType } from "../../../game/types";
-import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
+import { formatPopLabel } from "../../../ui/formatters";
+import { MechanicsDetails } from "../../MechanicsDetails";
 import { AtlasIcon } from "../../Sprites";
+import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { ResourceDeltaList } from "../ResourceDeltaList";
+import { ResourceChips } from "../ResourceChips";
 import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
 import { PopoverActions } from "../PopoverActions";
 import { TilePopover } from "./TilePopover";
@@ -19,7 +22,7 @@ export function GrowPopPopover({
   tileId,
   anchor,
   onCancel,
-  onConfirm
+  onConfirm,
 }: {
   tileId: string;
   anchor: DOMRect;
@@ -34,7 +37,7 @@ export function GrowPopPopover({
   // From the engine (R7), and memoized because the preview clones state.
   const benefit = useMemo(
     () => previewGrowPopIncomeDelta(G, playerID, tileId, pop),
-    [G, playerID, tileId, pop]
+    [G, playerID, tileId, pop],
   );
 
   if (!tile) {
@@ -49,27 +52,54 @@ export function GrowPopPopover({
       onCancel={onCancel}
       title="Grow Pop"
     >
-      <p className="placementSectionLabel placementTargetName">{settlementPickerLabel(G, tile, playerID)}</p>
+      <p className="placementSectionLabel placementTargetName">
+        {settlementPickerLabel(G, tile, playerID)}
+      </p>
 
       {/* growPopChoiceGrid, not foundColonyPopGrid: Found shows a bare pop count
           as its cost, Grow shows "9 Food, 2 Gold" — which needs the stacked rows
           and wrapping this variant already provides. */}
-      <div className="popChoiceGrid growPopChoiceGrid popoverChoiceStack" role="group" aria-label="Pop type to grow">
+      <div
+        className="popChoiceGrid growPopChoiceGrid popoverChoiceStack"
+        role="group"
+        aria-label="Pop type to grow"
+      >
         {POP_TYPES.map((candidate) => {
           const candidateStatus = getGrowPopStatus(G, playerID, tileId, candidate);
+          const reason = actionRequirementText(candidateStatus, phase, isActive);
+          const blocked = gameplayActionDisabled(candidateStatus, phase, isActive);
+          const label = `Grow ${formatPopLabel(candidate, 1)}`;
 
           return (
-            <button
-              className={candidate === pop ? "selectedChoice" : ""}
+            <Tooltip
+              content={
+                <MechanicsDetails
+                  blockedReason={blocked ? reason : undefined}
+                  effectiveCost={candidateStatus.cost}
+                  heading={label}
+                >
+                  {!blocked ? <p className="mechanicsExplanation">{reason}</p> : null}
+                </MechanicsDetails>
+              }
               key={candidate}
-              onClick={() => setPop(candidate)}
-              title={candidateStatus.reasons.join(" ") || `Grow 1 ${formatPopLabel(candidate, 1)}.`}
-              type="button"
+              triggerClassName="popoverChoiceTooltipTrigger"
             >
-              <AtlasIcon icon={candidate} className="miniIcon" />
-              <span>{formatPopLabel(candidate, 1)}</span>
-              <strong>{formatResourceCost(candidateStatus.cost ?? {})}</strong>
-            </button>
+              <button
+                className={candidate === pop ? "selectedChoice" : ""}
+                onClick={() => setPop(candidate)}
+                type="button"
+              >
+                <AtlasIcon icon={candidate} className="miniIcon" />
+                <span>{formatPopLabel(candidate, 1)}</span>
+                <strong>
+                  <ResourceChips
+                    resources={candidateStatus.cost ?? {}}
+                    variant="cost"
+                    empty="Free"
+                  />
+                </strong>
+              </button>
+            </Tooltip>
           );
         })}
       </div>

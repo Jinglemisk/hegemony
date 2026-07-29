@@ -1,0 +1,199 @@
+/* Shared portal overlays and mechanical explanation slots. */
+
+.tooltipTrigger {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.tooltipTrigger[tabindex="0"]:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 2px;
+}
+
+.sharedTooltip {
+  position: fixed;
+  z-index: 1000;
+  display: grid;
+  gap: 7px;
+  width: min(300px, calc(100vw - 20px));
+  max-height: min(440px, calc(100vh - 20px));
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid rgb(36 25 16 / 42%);
+  border-radius: 8px;
+  color: var(--fg);
+  background: rgb(255 248 231 / 99%);
+  box-shadow: 0 18px 38px rgb(36 25 16 / 28%);
+  pointer-events: none;
+  transform: none;
+  animation: sharedOverlayIn 120ms ease-out;
+}
+
+.sharedTooltip.placement-above {
+  transform: none;
+}
+
+.sharedTooltip.activeEffectsTooltip {
+  display: grid;
+  width: min(360px, calc(100vw - 20px));
+}
+
+.sharedTooltip.resourceTooltip {
+  position: fixed;
+  display: grid;
+  width: min(340px, calc(100vw - 20px));
+  opacity: 1;
+  pointer-events: none;
+}
+
+.sharedTooltip.topbarEventTooltip {
+  position: fixed;
+  display: grid;
+  width: min(264px, calc(100vw - 20px));
+  opacity: 1;
+  pointer-events: none;
+}
+
+.sharedTooltip.detailTooltip {
+  position: fixed;
+  width: min(260px, calc(100vw - 20px));
+  transform: none;
+}
+
+.sharedTooltip.detailTooltip.placement-above {
+  transform: none;
+}
+
+@keyframes sharedOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sharedPopover {
+  position: fixed;
+  z-index: 950;
+}
+
+.mechanicsDetails {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.mechanicsHeading {
+  color: var(--clay-deep);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mechanicsEffectRows {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mechanicsEffectRows li {
+  padding-left: 8px;
+  border-left: 2px solid var(--line-strong);
+  font-size: 0.76rem;
+  line-height: 1.3;
+}
+
+.mechanicsSlot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 5px;
+  border-top: 1px solid var(--line);
+  font-size: 0.72rem;
+}
+
+.mechanicsSlot > span:first-child {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mechanicsExplanation {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.mechanicsBlockedReason {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 7px 8px;
+  border-left: 3px solid #b13a28;
+  border-radius: 4px;
+  color: #7d291d;
+  background: rgb(177 58 40 / 10%);
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+.mechanicsBlockedReason strong {
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detailTooltipRows {
+  display: grid;
+  gap: 5px;
+}
+
+.detailTooltipRows em {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-style: normal;
+  line-height: 1.25;
+}
+
+.verbTooltipTrigger {
+  flex: 0 0 auto;
+  width: 76px;
+}
+
+.popoverActionTooltipTrigger,
+.popoverChoiceTooltipTrigger {
+  display: flex;
+  width: 100%;
+}
+
+.popoverActionTooltipTrigger > button,
+.popoverChoiceTooltipTrigger > button {
+  width: 100%;
+}
+
+.resourceGrid > .resourcePill,
+.topbarEvents > .topbarEventCard {
+  min-width: 0;
+}
+
+.candidateTooltipTrigger,
+.endTurnTooltipTrigger {
+  display: flex;
+  width: 100%;
+}
+
+.candidateTooltipTrigger > button,
+.endTurnTooltipTrigger > button {
+  width: 100%;
+}
+
+.candidateTooltipTrigger + .candidateTooltipTrigger {
+  border-top: 1px solid var(--ledger-rule);
+}

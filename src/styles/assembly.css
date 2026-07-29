@@ -195,6 +195,10 @@
   white-space: nowrap;
 }
 
+.assemblyVoiceTooltipTrigger {
+  flex: none;
+}
+
 .asm-voice .k {
   color: var(--aegean);
   font-family: var(--disp);
@@ -286,6 +290,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.assemblyPowerTooltipTrigger {
+  flex: none;
+}
+
 /* Stratokles is the only clay column: he is not a wing of the politics, he is the
    thing the politics is holding back. */
 .acol.strat .apow {
@@ -357,6 +365,11 @@
   flex-direction: column;
   gap: 4px;
   margin-top: 8px;
+}
+
+.assemblyCardTooltipTrigger {
+  display: block;
+  width: 100%;
 }
 
 /* The tombstone silhouette — rounded at the top, near-square at the foot. That
@@ -709,7 +722,7 @@
   transition: 0.16s;
 }
 
-.av:hover:not(:disabled) {
+.av:hover:not([aria-disabled="true"]) {
   background: var(--ink-07);
 }
 
@@ -881,6 +894,10 @@
   align-items: center;
 }
 
+.assemblyFootActionTrigger {
+  flex: none;
+}
+
 .asmMenu {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -898,12 +915,19 @@
 }
 
 .asmMenuHead {
+  margin: 0;
   padding: 4px 7px 6px;
   color: var(--ink-48);
   font-family: var(--disp);
   font-size: 7.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.asmMenuChoices {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .asmMenu li button {
@@ -944,6 +968,12 @@
   font-size: 9.5px;
   line-height: 1.35;
   white-space: normal;
+}
+
+.assemblyMenuPopover .asmMenu {
+  position: static;
+  border: 0;
+  box-shadow: none;
 }
 
 /* ── Narrow viewports ───────────────────────────────────────────────────────── */
@@ -1289,12 +1319,21 @@
   transition: 0.16s;
 }
 
-.acolDraw:hover:not(:disabled) {
+.assemblyDrawActionTrigger {
+  display: flex;
+  width: 100%;
+}
+
+.assemblyDrawActionTrigger > .acolDraw {
+  width: 100%;
+}
+
+.acolDraw:hover:not([aria-disabled="true"]) {
   background: var(--clay);
   color: var(--ivory);
 }
 
-.acolDraw:disabled {
+.acolDraw[aria-disabled="true"] {
   border-color: var(--ink-12);
   background: transparent;
   color: var(--ink-30);
@@ -1312,33 +1351,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-.acolDraw:not(:disabled) .acolDrawCost::before {
+.acolDraw:not([aria-disabled="true"]) .acolDrawCost::before {
   content: "";
 }
 
 /* The drawn card lives in the bema's left column now, shown in full via the shared
    ResolutionCardFace — so a card reads the same whether held or under vote. */
-
-/* An inline replace menu (at the law cap) that opens upward from the Propose button,
-   built on the native <details> so it needs no extra state. */
-.asmReplace {
-  position: relative;
-}
-
-.asmReplace > summary {
-  list-style: none;
-  cursor: pointer;
-}
-
-.asmReplace > summary::-webkit-details-marker {
-  display: none;
-}
-
-.asmMenuInline {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
-}
 
 .asmProposalHint,
 .asmFootHint {
@@ -1514,6 +1532,15 @@
   text-align: center;
 }
 
+.bemaActionTooltipTrigger {
+  display: flex;
+  flex: 1;
+}
+
+.bemaActionTooltipTrigger > .mb {
+  width: 100%;
+}
+
 .bemaColVote {
   display: flex;
   flex-direction: column;
@@ -1542,13 +1569,22 @@
   transition: 0.16s;
 }
 
-.bemaVeto:hover:not(:disabled) {
+.bemaVeto:hover:not([aria-disabled="true"]) {
   background: #77250f;
 }
 
-.bemaVeto:disabled {
+.bemaVeto[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.bemaVetoTooltipTrigger {
+  display: flex;
+  width: 100%;
+}
+
+.bemaVetoTooltipTrigger > .bemaVeto {
+  width: 100%;
 }
 
 .bemaColWaiting {

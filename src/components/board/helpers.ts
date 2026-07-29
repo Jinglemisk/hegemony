@@ -14,7 +14,8 @@ import type {
   Resources,
   Settlement
 } from "../../game/types";
-import { formatBuildingEffects, formatResourceCost, formatResourceDelta } from "../../ui/formatters";
+import { presentBuildingEffects } from "../../ui/effects";
+import { formatResourceCost, formatResourceDelta } from "../../ui/formatters";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
 import { SETTLEMENT_SORT } from "./constants";
 import type { OwnedHolding, PopEconomy, SettlementEntry } from "./types";
@@ -80,7 +81,7 @@ export function getBuildingBenefitText(
   const projected = preview?.incomeDelta ?? previewBuildingIncomeDelta(G, playerID, tile.id, building.id);
   const deltaText = formatResourceDelta(projected);
 
-  return deltaText === "none" ? formatBuildingEffects(building.effects) : deltaText;
+  return deltaText === "none" ? presentBuildingEffects(building.effects).text : deltaText;
 }
 
 export function buildingTooltipRows(

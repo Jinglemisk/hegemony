@@ -1,16 +1,19 @@
 import { getBuildBuildingStatus, getBuildings } from "../../../game/rules";
 import type { BuildingId } from "../../../game/types";
-import { formatBuildingEffects, formatResourceCost } from "../../../ui/formatters";
+import { presentBuildingEffect, presentBuildingEffects } from "../../../ui/effects";
+import { formatResourceCost } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
-import { CodexTermLink } from "../../codexLink";
+import { MechanicsDetails } from "../../MechanicsDetails";
 import { AtlasIcon } from "../../Sprites";
-import { buildingTooltipRows, getBuildingBenefitText, holdingShortLabel } from "../helpers";
-import type { OwnedHolding } from "../types";
+import { CodexTermLink } from "../../codexLink";
+import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
+import { actionRequirementText, getBuildingBenefitText, holdingShortLabel } from "../helpers";
+import type { OwnedHolding } from "../types";
 
 export function BuildingsTab({
   holdings,
-  onBuildBuildingRequest
+  onBuildBuildingRequest,
 }: {
   holdings: OwnedHolding[];
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
@@ -27,7 +30,7 @@ export function BuildingsTab({
                 <CodexTermLink chapter="buildings">{building.name}</CodexTermLink>
               </strong>
               <em>
-                <AnnotatedText text={formatBuildingEffects(building.effects)} />
+                <AnnotatedText text={presentBuildingEffects(building.effects).text} />
               </em>
               <span className="buildingLedgerCost">
                 Base cost{" "}
@@ -42,21 +45,41 @@ export function BuildingsTab({
               const status = getBuildBuildingStatus(G, playerID, tile.id, building.id);
               const benefit = getBuildingBenefitText(G, playerID, tile, building);
               const disabled = !isActive || phase !== "gameplay" || !status.can;
+              const reason = actionRequirementText(status, phase, isActive);
+              const holding = holdingShortLabel(tile, settlement);
 
               return (
-                <button
-                  className="candidateButton"
-                  disabled={disabled}
+                <Tooltip
+                  content={
+                    <MechanicsDetails
+                      blockedReason={disabled ? reason : undefined}
+                      effects={building.effects.map(presentBuildingEffect)}
+                      effectiveCost={status.cost ?? building.cost}
+                      heading={`${building.name} — ${holding}`}
+                    >
+                      <p className="mechanicsExplanation">
+                        <AnnotatedText links={false} text={benefit} />
+                      </p>
+                    </MechanicsDetails>
+                  }
                   key={`${building.id}-${tile.id}`}
-                  onClick={() => onBuildBuildingRequest(tile.id, building.id)}
-                  title={buildingTooltipRows(building, status, benefit, phase, isActive).join(" ")}
+                  triggerClassName="candidateTooltipTrigger"
                 >
-                  <span>{holdingShortLabel(tile, settlement)}</span>
-                  <b>
-                    <AnnotatedText text={benefit} />
-                  </b>
-                  <span>Cost {formatResourceCost(status.cost ?? building.cost)}</span>
-                </button>
+                  <button
+                    aria-disabled={disabled}
+                    className="candidateButton"
+                    onClick={
+                      disabled ? undefined : () => onBuildBuildingRequest(tile.id, building.id)
+                    }
+                    type="button"
+                  >
+                    <span>{holding}</span>
+                    <b>
+                      <AnnotatedText text={benefit} />
+                    </b>
+                    <span>Effective cost {formatResourceCost(status.cost ?? building.cost)}</span>
+                  </button>
+                </Tooltip>
               );
             })}
           </div>

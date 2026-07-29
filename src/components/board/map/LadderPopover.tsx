@@ -2,12 +2,13 @@ import {
   demotionTarget,
   getDemotePopStatus,
   getPromotePopStatus,
-  promotionTarget
+  promotionTarget,
 } from "../../../game/rules";
 import type { PopType } from "../../../game/types";
-import { formatPopLabel, formatResourceCost } from "../../../ui/formatters";
+import { formatPopLabel } from "../../../ui/formatters";
 import { AtlasIcon } from "../../Sprites";
 import { useGameUi } from "../GameUiContext";
+import { ResourceChips } from "../ResourceChips";
 import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
 import { PopoverActions } from "../PopoverActions";
 import { TilePopover } from "./TilePopover";
@@ -26,7 +27,7 @@ export function LadderPopover({
   tileId,
   anchor,
   onCancel,
-  onConfirm
+  onConfirm,
 }: {
   request: LadderRequest;
   tileId: string;
@@ -36,7 +37,10 @@ export function LadderPopover({
 }) {
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const { kind, from } = request;
-  const status = kind === "promote" ? getPromotePopStatus(G, playerID, tileId, from) : getDemotePopStatus(G, playerID, tileId, from);
+  const status =
+    kind === "promote"
+      ? getPromotePopStatus(G, playerID, tileId, from)
+      : getDemotePopStatus(G, playerID, tileId, from);
   const to = kind === "promote" ? promotionTarget(from) : demotionTarget(from);
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
 
@@ -51,7 +55,9 @@ export function LadderPopover({
       onCancel={onCancel}
       title={kind === "promote" ? "Promote" : "Demote"}
     >
-      <p className="placementSectionLabel placementTargetName">{settlementPickerLabel(G, tile, playerID)}</p>
+      <p className="placementSectionLabel placementTargetName">
+        {settlementPickerLabel(G, tile, playerID)}
+      </p>
 
       <div className="ladderMoveRow" aria-hidden="true">
         <AtlasIcon icon={from} className="miniIcon" />
@@ -63,7 +69,9 @@ export function LadderPopover({
 
       <div className="placementCostRow">
         <span className="placementSectionLabel">Cost</span>
-        <span>{formatResourceCost(status.cost ?? {}) || "Free"}</span>
+        <span>
+          <ResourceChips resources={status.cost ?? {}} variant="cost" empty="Free" />
+        </span>
       </div>
 
       <PopoverActions

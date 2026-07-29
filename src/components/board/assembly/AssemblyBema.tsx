@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PLAYER_COLORS, PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
 import {
   activeLawIds,
@@ -6,12 +7,16 @@ import {
   isAtLawCap,
   patronCount,
   politicianStandings,
-  POLITICIANS_BY_ID
+  POLITICIANS_BY_ID,
 } from "../../../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../../../game/assembly";
 import type { HegemonyState, PlayerId } from "../../../game/types";
+import { MechanicsDetails } from "../../MechanicsDetails";
+import { Popover } from "../../overlays/Popover";
+import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { NayMark, WaitMark, YeaMark } from "./AssemblyIcons";
+import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
 
 /**
  * The bema — the speaker's floor. Owner ruling (2026-07-21): it MIRRORS the colonnade
@@ -60,7 +65,10 @@ function BemaColumns({ G, session }: { G: HegemonyState; session: AssemblySessio
   const voting = session.phase === "voting";
   const currentItem = voting ? session.ballot[session.ballotIndex] : null;
 
-  const cells: Cell[] = [houseCell(session, currentItem), ...PLAYER_IDS.map((id) => playerCell(G, session, id, viewerId, currentItem))];
+  const cells: Cell[] = [
+    houseCell(session, currentItem),
+    ...PLAYER_IDS.map((id) => playerCell(G, session, id, viewerId, currentItem)),
+  ];
 
   return (
     <>
@@ -85,7 +93,7 @@ function houseCell(session: AssemblySession, currentItem: BallotItem | null): Ce
     actions: session.phase === "voting" && item !== null && item === currentItem ? "vote" : null,
     voteMark: null,
     isCurrent: item !== null && item === currentItem,
-    isViewer: false
+    isViewer: false,
   };
 }
 
@@ -94,7 +102,7 @@ function playerCell(
   session: AssemblySession,
   owner: PlayerId,
   viewerId: PlayerId,
-  currentItem: BallotItem | null
+  currentItem: BallotItem | null,
 ): Cell {
   const isViewer = owner === viewerId;
 
@@ -110,7 +118,7 @@ function playerCell(
       actions: item !== null && item === currentItem ? "vote" : null,
       voteMark: vote ? (vote.yea ? "yay" : "nay") : "wait",
       isCurrent: item !== null && item === currentItem,
-      isViewer
+      isViewer,
     };
   }
 
@@ -120,7 +128,16 @@ function playerCell(
 
   if (isViewer) {
     if (held) {
-      return { owner, card: held.card, item: null, status: null, actions: "proposeDiscard", voteMark: null, isCurrent: false, isViewer };
+      return {
+        owner,
+        card: held.card,
+        item: null,
+        status: null,
+        actions: "proposeDiscard",
+        voteMark: null,
+        isCurrent: false,
+        isViewer,
+      };
     }
     if (session.proposalDone[owner]) {
       return {
@@ -131,10 +148,19 @@ function playerCell(
         actions: null,
         voteMark: null,
         isCurrent: false,
-        isViewer
+        isViewer,
       };
     }
-    return { owner, card: null, item: null, status: "your move — draw a card above", actions: null, voteMark: null, isCurrent: false, isViewer };
+    return {
+      owner,
+      card: null,
+      item: null,
+      status: "your move — draw a card above",
+      actions: null,
+      voteMark: null,
+      isCurrent: false,
+      isViewer,
+    };
   }
 
   // A rival, mid-proposal: only their state of mind is visible, never their card.
@@ -146,16 +172,38 @@ function playerCell(
       ? "deciding"
       : "drawing";
 
-  return { owner, card: null, item: null, status, actions: null, voteMark: null, isCurrent: false, isViewer };
+  return {
+    owner,
+    card: null,
+    item: null,
+    status,
+    actions: null,
+    voteMark: null,
+    isCurrent: false,
+    isViewer,
+  };
 }
 
-function BemaColumn({ G, session, cell }: { G: HegemonyState; session: AssemblySession; cell: Cell }) {
+function BemaColumn({
+  G,
+  session,
+  cell,
+}: {
+  G: HegemonyState;
+  session: AssemblySession;
+  cell: Cell;
+}) {
   const isHouse = cell.owner === null;
 
   return (
-    <div className={`bemaCol${cell.isCurrent ? " current" : ""}${cell.isViewer ? " you" : ""}${isHouse ? " house" : ""}`}>
+    <div
+      className={`bemaCol${cell.isCurrent ? " current" : ""}${cell.isViewer ? " you" : ""}${isHouse ? " house" : ""}`}
+    >
       <div className="bemaColHead">
-        <span className="bemaColDot" style={{ background: isHouse ? "var(--stone)" : PLAYER_COLORS[cell.owner!] }} />
+        <span
+          className="bemaColDot"
+          style={{ background: isHouse ? "var(--stone)" : PLAYER_COLORS[cell.owner!] }}
+        />
         <span className="bemaColName">{isHouse ? "House" : PLAYER_NAMES[cell.owner!]}</span>
         {cell.voteMark ? <VoteBadge mark={cell.voteMark} /> : null}
       </div>
@@ -168,7 +216,9 @@ function BemaColumn({ G, session, cell }: { G: HegemonyState; session: AssemblyS
         <div className="bemaColEmpty">{cell.status}</div>
       )}
 
-      {cell.actions === "proposeDiscard" && cell.card ? <ProposeDiscard G={G} card={cell.card} /> : null}
+      {cell.actions === "proposeDiscard" && cell.card ? (
+        <ProposeDiscard G={G} card={cell.card} />
+      ) : null}
       {cell.actions === "vote" ? <VoteActions G={G} session={session} /> : null}
     </div>
   );
@@ -178,14 +228,29 @@ function ColumnCard({ card }: { card: ResolutionCard }) {
   const politician = POLITICIANS_BY_ID[card.politician];
 
   return (
-    <div className="bemaCard">
-      <div className="bemaCardPol">{politician.name}</div>
-      <div className="bemaCardName">{card.name}</div>
-      <ResolutionEffect card={card} />
-      <div className={`bemaCardKind${card.kind === "directive" ? " strat" : ""}`}>
-        {card.kind === "law" ? "Standing Law" : "One-time Directive"}
+    <Tooltip
+      ariaLabel={`${card.name}. ${card.kind === "law" ? "Proposed standing Law" : "Proposed one-time Directive"}.`}
+      content={
+        <ResolutionDetails
+          card={card}
+          duration={card.kind === "law" ? "Until repealed if passed" : "Resolves once if passed"}
+          source={politician.name}
+        />
+      }
+      focusable
+      preferredPlacement="above"
+      triggerAs="div"
+      triggerClassName="assemblyCardTooltipTrigger bemaCardTooltipTrigger"
+    >
+      <div className="bemaCard">
+        <div className="bemaCardPol">{politician.name}</div>
+        <div className="bemaCardName">{card.name}</div>
+        <ResolutionEffect card={card} />
+        <div className={`bemaCardKind${card.kind === "directive" ? " strat" : ""}`}>
+          {card.kind === "law" ? "Standing Law" : "One-time Directive"}
+        </div>
       </div>
-    </div>
+    </Tooltip>
   );
 }
 
@@ -193,11 +258,33 @@ function RepealCard({ cardId }: { cardId: string }) {
   const card = getResolutionCard(cardId);
 
   return (
-    <div className="bemaCard bemaCardRepeal">
-      <div className="bemaCardPol">A motion to repeal</div>
-      <div className="bemaCardName">Repeal {card?.name ?? cardId}</div>
-      <div className="bfx">Strike this standing Law from the record. {card ? <em>{card.text}</em> : null}</div>
-    </div>
+    <Tooltip
+      ariaLabel={`Motion to repeal ${card?.name ?? cardId}`}
+      content={
+        <MechanicsDetails
+          duration="Permanent if the motion passes"
+          effects={[{ text: "Remove this standing Law", tone: "negative" }]}
+          heading={`Repeal ${card?.name ?? cardId}`}
+          source="Assembly ballot"
+        >
+          {card ? (
+            <p className="mechanicsExplanation">The Law currently reads: {card.text}</p>
+          ) : null}
+        </MechanicsDetails>
+      }
+      focusable
+      preferredPlacement="above"
+      triggerAs="div"
+      triggerClassName="assemblyCardTooltipTrigger bemaCardTooltipTrigger"
+    >
+      <div className="bemaCard bemaCardRepeal">
+        <div className="bemaCardPol">A motion to repeal</div>
+        <div className="bemaCardName">Repeal {card?.name ?? cardId}</div>
+        <div className="bfx">
+          Strike this standing Law from the record. {card ? <em>{card.text}</em> : null}
+        </div>
+      </div>
+    </Tooltip>
   );
 }
 
@@ -205,6 +292,7 @@ function RepealCard({ cardId }: { cardId: string }) {
 
 function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard }) {
   const { moves, viewerId } = useGameUi();
+  const [replacementAnchor, setReplacementAnchor] = useState<DOMRect | null>(null);
   const alreadyStanding = card.kind === "law" && activeLawIds(G).includes(card.id);
   const needsReplacement = card.kind === "law" && isAtLawCap(G);
 
@@ -212,9 +300,16 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
     return (
       <div className="bemaColActions">
         <span className="asmBlocked">Already stands</span>
-        <button className="mb gh" onClick={() => moves.assemblyDiscardHeld(viewerId)} type="button">
+        <AssemblyAction
+          className="mb gh"
+          enabled
+          explanation="Return this held card to its politician's discard pile without adding it to the ballot."
+          heading={`Discard ${card.name}`}
+          onClick={() => moves.assemblyDiscardHeld(viewerId)}
+          triggerClassName="bemaActionTooltipTrigger"
+        >
           Discard
-        </button>
+        </AssemblyAction>
       </div>
     );
   }
@@ -222,28 +317,71 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
   return (
     <div className="bemaColActions">
       {needsReplacement ? (
-        <details className="asmReplace">
-          <summary className="mb go">Propose ▾</summary>
-          <ul className="asmMenu asmMenuInline">
-            <li className="asmMenuHead">The board is full — name the Law to replace</li>
-            {activeLawIds(G).map((cardId) => (
-              <li key={cardId}>
-                <button onClick={() => moves.assemblyPropose(viewerId, cardId)} type="button">
-                  <span className="asmMenuName">{getResolutionCard(cardId)?.name ?? cardId}</span>
-                  <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </details>
+        <>
+          <AssemblyAction
+            className="mb go"
+            enabled
+            explanation="Add this Law to the ballot. Because the standing-Law board is full, choose the Law it would replace if passed."
+            heading={`Propose ${card.name}`}
+            onClick={(event) => setReplacementAnchor(event.currentTarget.getBoundingClientRect())}
+            triggerClassName="bemaActionTooltipTrigger"
+          >
+            Propose ▾
+          </AssemblyAction>
+          {replacementAnchor ? (
+            <Popover
+              anchor={replacementAnchor}
+              ariaLabel={`Choose the standing Law ${card.name} would replace`}
+              className="assemblyMenuPopover"
+              measureKey={G.activeLaws.length}
+              onDismiss={() => setReplacementAnchor(null)}
+            >
+              <div className="asmMenu">
+                <p className="asmMenuHead">The board is full — name the Law to replace</p>
+                <ul aria-label="Standing Laws available for replacement" className="asmMenuChoices">
+                  {activeLawIds(G).map((cardId) => (
+                    <li key={cardId}>
+                      <button
+                        onClick={() => {
+                          moves.assemblyPropose(viewerId, cardId);
+                          setReplacementAnchor(null);
+                        }}
+                        type="button"
+                      >
+                        <span className="asmMenuName">
+                          {getResolutionCard(cardId)?.name ?? cardId}
+                        </span>
+                        <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Popover>
+          ) : null}
+        </>
       ) : (
-        <button className="mb go" onClick={() => moves.assemblyPropose(viewerId)} type="button">
+        <AssemblyAction
+          className="mb go"
+          enabled
+          explanation="Add this held resolution to the Assembly ballot. It is revealed after every seat has decided."
+          heading={`Propose ${card.name}`}
+          onClick={() => moves.assemblyPropose(viewerId)}
+          triggerClassName="bemaActionTooltipTrigger"
+        >
           Propose
-        </button>
+        </AssemblyAction>
       )}
-      <button className="mb gh" onClick={() => moves.assemblyDiscardHeld(viewerId)} type="button">
+      <AssemblyAction
+        className="mb gh"
+        enabled
+        explanation="Return this held card to its politician's discard pile without adding it to the ballot."
+        heading={`Discard ${card.name}`}
+        onClick={() => moves.assemblyDiscardHeld(viewerId)}
+        triggerClassName="bemaActionTooltipTrigger"
+      >
         Discard
-      </button>
+      </AssemblyAction>
     </div>
   );
 }
@@ -252,31 +390,62 @@ function VoteActions({ G, session }: { G: HegemonyState; session: AssemblySessio
   const { moves, viewerId } = useGameUi();
   const rules = G.ruleset.assembly;
   const yourTurn = session.voteOrder[session.voteIndex] === viewerId;
-  const canVeto = yourTurn && session.vetoUsed[viewerId] < rules.vetoesPerAssembly && G.players[viewerId].resources.influence >= rules.vetoCost;
+  const canVeto =
+    yourTurn &&
+    session.vetoUsed[viewerId] < rules.vetoesPerAssembly &&
+    G.players[viewerId].resources.influence >= rules.vetoCost;
+  const voteWeight = baseVoteWeight(G, viewerId) + session.bribesUsed[viewerId];
+  const vetoBlockedReason =
+    session.vetoUsed[viewerId] >= rules.vetoesPerAssembly
+      ? `The limit is ${rules.vetoesPerAssembly} veto${rules.vetoesPerAssembly === 1 ? "" : "es"} per Assembly.`
+      : G.players[viewerId].resources.influence < rules.vetoCost
+        ? `Requires ${rules.vetoCost} influence.`
+        : undefined;
 
   if (!yourTurn) {
-    return <div className="bemaColActions bemaColWaiting">{PLAYER_NAMES[session.voteOrder[session.voteIndex]]} is casting…</div>;
+    return (
+      <div className="bemaColActions bemaColWaiting">
+        {PLAYER_NAMES[session.voteOrder[session.voteIndex]]} is casting…
+      </div>
+    );
   }
 
   return (
     <div className="bemaColVote">
       <div className="bemaColActions">
-        <button className="mb yea" onClick={() => moves.assemblyVote(viewerId, true)} type="button">
+        <AssemblyAction
+          className="mb yea"
+          enabled
+          explanation={`Cast ${voteWeight} vote${voteWeight === 1 ? "" : "s"} in favor of this resolution.`}
+          heading="Vote Yea"
+          onClick={() => moves.assemblyVote(viewerId, true)}
+          triggerClassName="bemaActionTooltipTrigger"
+        >
           Yea
-        </button>
-        <button className="mb nay" onClick={() => moves.assemblyVote(viewerId, false)} type="button">
+        </AssemblyAction>
+        <AssemblyAction
+          className="mb nay"
+          enabled
+          explanation={`Cast ${voteWeight} vote${voteWeight === 1 ? "" : "s"} against this resolution.`}
+          heading="Vote Nay"
+          onClick={() => moves.assemblyVote(viewerId, false)}
+          triggerClassName="bemaActionTooltipTrigger"
+        >
           Nay
-        </button>
+        </AssemblyAction>
       </div>
-      <button
+      <AssemblyAction
+        blockedReason={vetoBlockedReason}
         className="bemaVeto"
-        disabled={!canVeto}
+        effectiveCost={{ influence: rules.vetoCost }}
+        enabled={canVeto}
+        explanation="Strike this resolution outright. Using a veto also costs your vote on this resolution."
+        heading="Veto"
         onClick={() => moves.assemblyVeto(viewerId)}
-        title="Strike this resolution outright — once per assembly. It costs your own vote on it."
-        type="button"
+        triggerClassName="bemaVetoTooltipTrigger"
       >
         Veto · {rules.vetoCost} inf
-      </button>
+      </AssemblyAction>
     </div>
   );
 }
@@ -284,7 +453,13 @@ function VoteActions({ G, session }: { G: HegemonyState; session: AssemblySessio
 function VoteBadge({ mark }: { mark: "yay" | "nay" | "wait" }) {
   return (
     <span className={`bemaVoteBadge ${mark}`}>
-      {mark === "yay" ? <YeaMark className="pm" /> : mark === "nay" ? <NayMark className="pm" /> : <WaitMark className="pm" />}
+      {mark === "yay" ? (
+        <YeaMark className="pm" />
+      ) : mark === "nay" ? (
+        <NayMark className="pm" />
+      ) : (
+        <WaitMark className="pm" />
+      )}
     </span>
   );
 }
@@ -296,7 +471,7 @@ function VoteTally({ G, session }: { G: HegemonyState; session: AssemblySession 
   const nay = session.votes.filter((v) => !v.yea).reduce((total, v) => total + v.weight, 0);
   const pending = PLAYER_IDS.filter((id) => !session.votes.some((v) => v.playerID === id)).reduce(
     (total, id) => total + baseVoteWeight(G, id) + session.bribesUsed[id],
-    0
+    0,
   );
   const total = Math.max(1, yea + nay + pending);
 
@@ -319,7 +494,8 @@ function VoteTally({ G, session }: { G: HegemonyState; session: AssemblySession 
       </div>
       <div className="talline">
         <span className="note">
-          Card {session.ballotIndex + 1} of {session.ballot.length} · {voteNote(G, session, yea, nay, pending)}
+          Card {session.ballotIndex + 1} of {session.ballot.length} ·{" "}
+          {voteNote(G, session, yea, nay, pending)}
         </span>
       </div>
     </div>
@@ -328,7 +504,13 @@ function VoteTally({ G, session }: { G: HegemonyState; session: AssemblySession 
 
 /** The running read on a close card — the thing a player would otherwise compute in
  *  their head before deciding whether to spend a bribe or a veto. */
-function voteNote(G: HegemonyState, session: AssemblySession, yea: number, nay: number, pending: number): string {
+function voteNote(
+  G: HegemonyState,
+  session: AssemblySession,
+  yea: number,
+  nay: number,
+  pending: number,
+): string {
   if (pending === 0) {
     return yea > nay ? "it carries" : yea === nay ? "tied — a tie fails" : "it is voted down";
   }
@@ -345,8 +527,8 @@ function voteNote(G: HegemonyState, session: AssemblySession, yea: number, nay: 
 function ProposalHint() {
   return (
     <div className="asmProposalHint">
-      Every seat draws at once. Switch seats with the roster top-right to take each player's turn; the round moves to the
-      vote once all four have decided.
+      Every seat draws at once. Switch seats with the roster top-right to take each player's turn;
+      the round moves to the vote once all four have decided.
     </div>
   );
 }
@@ -368,7 +550,9 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
             {session.results.map((result, index) => (
               <li className={result.passed ? "passed" : "failed"} key={index}>
                 {result.summary}
-                <span className="asmResultTally">{result.vetoedBy ? "vetoed" : `${result.yea}–${result.nay}`}</span>
+                <span className="asmResultTally">
+                  {result.vetoedBy ? "vetoed" : `${result.yea}–${result.nay}`}
+                </span>
               </li>
             ))}
           </ul>
@@ -396,7 +580,9 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
                 {PLAYER_NAMES[playerID]}{" "}
                 <span className="vrowNote">
                   ·{" "}
-                  {patronOf.length > 0 ? patronOf.map((standing) => standing.politician.name).join(" · ") : "no patronage"}
+                  {patronOf.length > 0
+                    ? patronOf.map((standing) => standing.politician.name).join(" · ")
+                    : "no patronage"}
                 </span>
               </span>
               <span className="sv2">

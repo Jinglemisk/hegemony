@@ -31,7 +31,7 @@ export function ResourceChips({
   chipClassName,
   iconClassName = "miniResourceIcon",
   empty,
-  title
+  title,
 }: {
   resources: Partial<Resources>;
   variant: ResourceChipsVariant;
@@ -45,7 +45,7 @@ export function ResourceChips({
 }) {
   // `yield` keeps zeros (as dashes); the others drop them.
   const entries = RESOURCE_ORDER.filter(
-    (resource) => variant === "yield" || (resources[resource] ?? 0) !== 0
+    (resource) => variant === "yield" || (resources[resource] ?? 0) !== 0,
   );
 
   if (entries.length === 0) {
@@ -63,7 +63,7 @@ export function ResourceChips({
               "resourceChip",
               chipClassName,
               variant === "yield" && value === 0 ? "emptyNetYield" : undefined,
-              variant !== "cost" ? toneClass(value) : undefined
+              variant !== "cost" ? toneClass(value) : undefined,
             )}
             key={resource}
             style={resourceCssVars(resource as Resource)}
@@ -84,11 +84,23 @@ export function ResourceChips({
 
 function renderValue(variant: ResourceChipsVariant, resource: Resource, value: number) {
   if (variant === "cost") {
-    return <strong>{value}</strong>;
+    return (
+      <>
+        <strong>{value}</strong>
+        <span className="visuallyHidden"> {RESOURCE_LABELS[resource]}</span>
+      </>
+    );
   }
 
   if (variant === "yield") {
-    return <strong>{value === 0 ? "–" : formatSignedNumber(value)}</strong>;
+    return (
+      <>
+        <strong aria-hidden="true">{value === 0 ? "–" : formatSignedNumber(value)}</strong>
+        <span className="visuallyHidden">
+          {RESOURCE_LABELS[resource]}: {value === 0 ? "no change" : formatSignedNumber(value)}
+        </span>
+      </>
+    );
   }
 
   return (

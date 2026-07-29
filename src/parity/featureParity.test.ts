@@ -217,6 +217,30 @@ describe("feature and content parity manifests", () => {
     }
   });
 
+  it("routes shared Step 3 surfaces through the canonical typed presenters", () => {
+    const consumers = [
+      {
+        implementation: "src/components/board/assembly/AssemblyPresentation.tsx",
+        evidence: ["presentLawEffect", "presentDirectiveEffect", "MechanicsDetails"],
+      },
+      {
+        implementation: "src/components/board/ledger/BuildingChip.tsx",
+        evidence: ["presentBuildingEffect", "MechanicsDetails"],
+      },
+      {
+        implementation: "src/components/ActiveEffectsList.tsx",
+        evidence: ["presentActiveEffects", "MechanicsDetails"],
+      },
+    ];
+
+    for (const consumer of consumers) {
+      const source = readFileSync(resolve(process.cwd(), consumer.implementation), "utf8");
+      for (const token of consumer.evidence) {
+        expect(source, `${consumer.implementation} must consume ${token}`).toContain(token);
+      }
+    }
+  });
+
   it("routes every building effect through its authoritative engine query", () => {
     const builder = scenario().withResources("0", "wealthy");
     const G = builder.build();

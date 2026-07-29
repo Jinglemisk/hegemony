@@ -1,11 +1,11 @@
+import { MechanicsDetails } from "../../MechanicsDetails";
 import { AtlasIcon, UiSprite } from "../../Sprites";
+import { Tooltip } from "../../overlays/Tooltip";
 import { ResourceChips } from "../ResourceChips";
 import { isVerbEnabled, verbTitle } from "./verbs";
 import type { VerbContext, VerbCost, VerbHandlers, VerbIcon, VerbSpec } from "./verbs";
 
-/** Split from verbs.tsx (2026-07-22): the verb DATA/logic stays there as a Fast-Refresh-clean
- *  module; the components live here so editing them hot-reloads without invalidating the dock. */
-
+/** Split from verbs.tsx so editing components remains Fast-Refresh-safe. */
 function VerbIconGlyph({ icon, className }: { icon: VerbIcon; className: string }) {
   return icon.kind === "ui" ? (
     <UiSprite item={icon.item} className={className} />
@@ -30,13 +30,11 @@ function VerbCostSlot({ cost, context }: { cost: VerbCost; context: VerbContext 
   );
 }
 
-/** One verb, as a disc threaded on the bottom spine (ui-refit Step 3): a round
- *  knob with the label and cost hung below it. The bar is `VERBS.map(...)` over
- *  this. Armed verbs (Found / Build arm a map mode) glow clay. */
+/** One command-disc action with a keyboard/touch reachable explanation. */
 export function CommandVerb({
   verb,
   context,
-  handlers
+  handlers,
 }: {
   verb: VerbSpec;
   context: VerbContext;
@@ -44,20 +42,39 @@ export function CommandVerb({
 }) {
   const pressed = verb.pressed?.(context) ?? false;
   const enabled = isVerbEnabled(verb, context);
+  const explanation = verbTitle(verb, context);
+  const effectiveCost = verb.cost?.cost?.(context);
 
   return (
-    <button
-      aria-pressed={verb.pressed ? pressed : undefined}
-      className={`verbDisc${pressed ? " verbDiscArmed" : ""}${enabled ? "" : " verbDiscOff"}`}
-      disabled={!enabled}
-      onClick={() => verb.select(handlers)}
-      title={verbTitle(verb, context)}
+    <Tooltip
+      content={
+        <MechanicsDetails
+          blockedReason={enabled ? undefined : explanation}
+          effectiveCost={effectiveCost}
+          heading={verb.label}
+        >
+          {enabled ? <p className="mechanicsExplanation">{explanation}</p> : null}
+        </MechanicsDetails>
+      }
+      preferredPlacement="above"
+      triggerClassName="verbTooltipTrigger"
     >
-      <span className="verbKnob">
-        <VerbIconGlyph icon={verb.icon} className={`verbIcon ${verb.iconClassName ?? ""}`.trim()} />
-      </span>
-      <span className="verbLabel">{verb.label}</span>
-      {verb.cost ? <VerbCostSlot cost={verb.cost} context={context} /> : null}
-    </button>
+      <button
+        aria-disabled={!enabled}
+        aria-pressed={verb.pressed ? pressed : undefined}
+        className={`verbDisc${pressed ? " verbDiscArmed" : ""}${enabled ? "" : " verbDiscOff"}`}
+        onClick={enabled ? () => verb.select(handlers) : undefined}
+        type="button"
+      >
+        <span className="verbKnob">
+          <VerbIconGlyph
+            icon={verb.icon}
+            className={`verbIcon ${verb.iconClassName ?? ""}`.trim()}
+          />
+        </span>
+        <span className="verbLabel">{verb.label}</span>
+        {verb.cost ? <VerbCostSlot cost={verb.cost} context={context} /> : null}
+      </button>
+    </Tooltip>
   );
 }

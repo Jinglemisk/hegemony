@@ -12,7 +12,7 @@ import {
   totalPops
 } from "../../../game/rules";
 import type { BuildingId } from "../../../game/types";
-import { RESOURCE_LABELS, formatBuildingEffects, formatNumber, formatPopLabel } from "../../../ui/formatters";
+import { RESOURCE_LABELS, formatNumber, formatPopLabel } from "../../../ui/formatters";
 import { SettlementSummaryCard } from "../../SettlementCard";
 import { AtlasIcon } from "../../Sprites";
 import { BUILDING_AFFINITY } from "../constants";
@@ -130,10 +130,7 @@ export function CitiesTab({
                                 building={building}
                                 key={`${buildingId}-${index}`}
                                 mode="built"
-                                tooltipRows={[
-                                  "Built in this holding.",
-                                  `Benefit: ${formatBuildingEffects(building.effects)}.`
-                                ]}
+                                tooltipRows={["Built in this holding."]}
                               />
                             ) : null;
                           })

@@ -4,6 +4,7 @@ import type { IncomeContribution } from "../game/rules";
 import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
 import { ResourceIcon } from "./Sprites";
+import { Tooltip } from "./overlays/Tooltip";
 
 type FlashDirection = "increase" | "decrease";
 
@@ -13,7 +14,7 @@ function ResourceGridComponent({
   breakdown = [],
   resetKey,
   className = "",
-  order = RESOURCE_ORDER
+  order = RESOURCE_ORDER,
 }: {
   resources: Resources;
   deltas?: Resources;
@@ -77,67 +78,71 @@ function ResourceGridComponent({
         const resourceBreakdown = breakdown.filter((entry) => entry.resource === resource);
 
         return (
-          <div
-            className={`resourcePill resource-${resource}${flash ? ` resourceFlash-${flash}` : ""}`}
+          <Tooltip
+            ariaLabel={`${RESOURCE_LABELS[resource]} ${formatNumber(resources[resource])}, projected ${formatSignedNumber(delta)} per turn`}
+            content={
+              <ResourceBreakdown resource={resource} delta={delta} entries={resourceBreakdown} />
+            }
+            focusable
             key={resource}
-            style={getResourcePillVars(resource, resources[resource])}
-            tabIndex={0}
-            aria-label={`${RESOURCE_LABELS[resource]} ${formatNumber(resources[resource])}, projected ${formatSignedNumber(delta)} per turn`}
+            triggerClassName={`resourcePill resource-${resource}${flash ? ` resourceFlash-${flash}` : ""}`}
+            triggerStyle={getResourcePillVars(resource, resources[resource])}
+            tooltipClassName={`resourceTooltip${resourceBreakdown.length >= 5 ? " compactResourceTooltip" : ""}`}
           >
-            <ResourceIcon resource={resource} value={resources[resource]} className="resourceIcon" />
+            <ResourceIcon
+              resource={resource}
+              value={resources[resource]}
+              className="resourceIcon"
+            />
             <span className="resourceValue">
               <strong>{formatNumber(resources[resource])}</strong>
               <span className={`resourceDelta ${deltaClass}`}>{formatSignedNumber(delta)}</span>
             </span>
-            <ResourceBreakdownTooltip
-              resource={resource}
-              delta={delta}
-              entries={resourceBreakdown}
-            />
-          </div>
+          </Tooltip>
         );
       })}
     </div>
   );
 }
 
-function ResourceBreakdownTooltip({
+function ResourceBreakdown({
   resource,
   delta,
-  entries
+  entries,
 }: {
   resource: Resource;
   delta: number;
   entries: IncomeContribution[];
 }) {
-  const isCompact = entries.length >= 5;
-
   return (
-    <div
-      className={`resourceTooltip${isCompact ? " compactResourceTooltip" : ""}`}
-      data-entry-count={entries.length}
-      role="tooltip"
-    >
+    <>
       <div className="resourceTooltipHeader">
         <span>{RESOURCE_LABELS[resource]}</span>
-        <strong className={getResourceDeltaClass(resource, delta)}>{formatSignedNumber(delta)}</strong>
+        <strong className={getResourceDeltaClass(resource, delta)}>
+          {formatSignedNumber(delta)}
+        </strong>
       </div>
       {entries.length > 0 ? (
         <div className="resourceTooltipRows">
           {entries.map((entry, index) => (
-            <div className="resourceTooltipRow" key={`${entry.resource}-${entry.source}-${entry.detail}-${index}`}>
+            <div
+              className="resourceTooltipRow"
+              key={`${entry.resource}-${entry.source}-${entry.detail}-${index}`}
+            >
               <span>
                 <strong>{entry.source}</strong>
                 <em>{entry.detail}</em>
               </span>
-              <b className={getResourceDeltaClass(resource, entry.amount)}>{formatSignedNumber(entry.amount)}</b>
+              <b className={getResourceDeltaClass(resource, entry.amount)}>
+                {formatSignedNumber(entry.amount)}
+              </b>
             </div>
           ))}
         </div>
       ) : (
         <p>No current income or expense.</p>
       )}
-    </div>
+    </>
   );
 }
 
@@ -159,7 +164,7 @@ function getResourcePillVars(resource: Resource, value: number) {
     "--resource-tile": "#b13a28",
     "--resource-soft": "rgb(177 58 40 / 14%)",
     "--resource-line": "rgb(177 58 40 / 46%)",
-    "--resource-shadow": "rgb(177 58 40 / 24%)"
+    "--resource-shadow": "rgb(177 58 40 / 24%)",
   };
 }
 

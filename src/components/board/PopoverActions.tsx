@@ -1,18 +1,14 @@
 import type { ReactNode } from "react";
+import { MechanicsDetails } from "../MechanicsDetails";
+import { Tooltip } from "../overlays/Tooltip";
 
-/**
- * The Cancel + confirm footer shared by every map popover and the placement popover
- * (post-sprint-debt §5.4). The confirm button's `disabled`/`title` are passed in rather
- * than computed here, because the sites gate on different things — the status-based ones
- * use {@link gameplayActionDisabled}, the move-source and found-colony popovers on their
- * own conditions. Only the chrome is shared.
- */
+/** Cancel + confirm footer shared by map and placement popovers. */
 export function PopoverActions({
   confirmLabel,
   disabled,
   title,
   onCancel,
-  onConfirm
+  onConfirm,
 }: {
   confirmLabel: ReactNode;
   disabled: boolean;
@@ -20,20 +16,35 @@ export function PopoverActions({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const reason =
+    title ?? (disabled ? "Choose a valid option before confirming." : "Ready to confirm.");
+  const confirmButton = (
+    <button
+      aria-disabled={disabled}
+      className="primaryButton eventResolveButton"
+      onClick={disabled ? undefined : onConfirm}
+      type="button"
+    >
+      {confirmLabel}
+    </button>
+  );
+
   return (
     <div className="foundColonyActions">
       <button className="placementCancelButton" onClick={onCancel} type="button">
         Cancel
       </button>
-      <button
-        className="primaryButton eventResolveButton"
-        disabled={disabled}
-        onClick={onConfirm}
-        title={title}
-        type="button"
+      <Tooltip
+        content={
+          <MechanicsDetails blockedReason={disabled ? reason : undefined} heading={confirmLabel}>
+            {!disabled ? <p className="mechanicsExplanation">{reason}</p> : null}
+          </MechanicsDetails>
+        }
+        preferredPlacement="above"
+        triggerClassName="popoverActionTooltipTrigger"
       >
-        {confirmLabel}
-      </button>
+        {confirmButton}
+      </Tooltip>
     </div>
   );
 }

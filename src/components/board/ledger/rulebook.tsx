@@ -14,7 +14,8 @@ import {
 import { TRADABLE_MATERIALS, getBuildings, getTerrainDeck } from "../../../game/rules";
 import { POLITICIANS, RESOLUTION_DECKS } from "../../../game/assembly";
 import type { EventCard, HegemonyState, PopType, Resource, SettlementKind, Terrain } from "../../../game/types";
-import { RESOURCE_LABELS, formatBuildingEffects, formatPopLabel, formatResourceCost } from "../../../ui/formatters";
+import { presentBuildingEffects } from "../../../ui/effects";
+import { RESOURCE_LABELS, formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../../../ui/resourceVisuals";
 import { AnnotatedText } from "../../AnnotatedText";
 import { ResourceIcon } from "../../Sprites";
@@ -474,7 +475,7 @@ const buildings: RuleChapter = {
                 Base cost: <AnnotatedText text={formatResourceCost(building.cost)} />
               </span>
               <span className="compendiumCostNote">
-                <AnnotatedText text={formatBuildingEffects(building.effects)} />
+                <AnnotatedText text={presentBuildingEffects(building.effects).text} />
                 {typeof building.maxLevel === "number" ? ` · max level ${building.maxLevel}` : ""}
               </span>
             </li>

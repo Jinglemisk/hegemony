@@ -1,4 +1,6 @@
+import { MechanicsDetails } from "../../MechanicsDetails";
 import { UiSprite } from "../../Sprites";
+import { Tooltip } from "../../overlays/Tooltip";
 import { PLAYER_NAMES } from "../../../game/data";
 import { yearOf } from "../../../game/rules";
 import { useGameUi } from "../GameUiContext";
@@ -9,7 +11,7 @@ import {
   isVerbEnabled,
   verbTitle,
   type VerbContext,
-  type VerbHandlers
+  type VerbHandlers,
 } from "./verbs";
 
 /**
@@ -59,11 +61,13 @@ export function CommandDock({
     isFoundColonyActive,
     isBuildActive,
     calmUsed: viewer.civicCalmUsedThisTurn,
-    ventureUsed: viewer.ventureUsedThisTurn
+    ventureUsed: viewer.ventureUsedThisTurn,
   };
 
   const seasonsLeft = G.seasonalDrawPile.length;
   const boardLabel = G.boardLayout === "classic" ? "Classic" : "Shuffled";
+  const endTurnEnabled = isVerbEnabled(END_TURN_VERB, context);
+  const endTurnExplanation = verbTitle(END_TURN_VERB, context);
 
   return (
     <div className="commandDock">
@@ -95,15 +99,30 @@ export function CommandDock({
             <span className="turnboxLabel">{isActive ? "Your turn" : "Now acting"}</span>
             <strong>{PLAYER_NAMES[currentPlayerId]}</strong>
           </div>
-          <button
-            className="endTurnSquare"
-            disabled={!isVerbEnabled(END_TURN_VERB, context)}
-            onClick={() => END_TURN_VERB.select(handlers)}
-            title={verbTitle(END_TURN_VERB, context)}
+          <Tooltip
+            content={
+              <MechanicsDetails
+                blockedReason={endTurnEnabled ? undefined : endTurnExplanation}
+                heading="End Turn"
+              >
+                {endTurnEnabled ? (
+                  <p className="mechanicsExplanation">{endTurnExplanation}</p>
+                ) : null}
+              </MechanicsDetails>
+            }
+            preferredPlacement="above"
+            triggerClassName="endTurnTooltipTrigger"
           >
-            <UiSprite item="endTurn" className="endTurnSquareIcon" />
-            <span>End Turn</span>
-          </button>
+            <button
+              aria-disabled={!endTurnEnabled}
+              className="endTurnSquare"
+              onClick={endTurnEnabled ? () => END_TURN_VERB.select(handlers) : undefined}
+              type="button"
+            >
+              <UiSprite item="endTurn" className="endTurnSquareIcon" />
+              <span>End Turn</span>
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>
