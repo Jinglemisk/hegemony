@@ -84,11 +84,10 @@ viewport listener cleanup. Manifest-backed presentation tests must fail when a t
 effect has no non-empty semantic projection. Browser smoke tests supplement these
 tests; real-device touch remains an owner check.
 
-## Step 1 and Step 2 integration status
+## Step 1–3 integration status
 
-Phase 3.5 Steps 1 and 2 merged in PRs #58 and #59. Step 3 is implemented and rebased
-over both in draft PR #57; this records implementation status, not a claim that PR #57
-has merged.
+Phase 3.5 Steps 1–3 merged in PRs #58, #59, and #57. Step 3 was rebased over the
+effective-value and parity-manifest contracts and reconciled with both before merge.
 
 The Step 1 reconciliation preserves `getBuildings()`, `getBuilding()`,
 `getTerrainDeck()`, and `getBuildBuildingOptions()`. Build choices pair each effective
@@ -111,8 +110,8 @@ surfaces, and active-effect status now project the canonical typed results throu
 ## Owner real-device touch checklist
 
 Browser/DOM touch emulation is regression evidence, not a substitute for hardware.
-Before PR #57 leaves draft, the owner must test the following on iOS Safari and Android
-Chrome where those devices are available:
+Before Phase 3.5 validation closes, the owner must test the following on iOS Safari
+and Android Chrome where those devices are available:
 
 1. First-tap an enabled command, Build candidate, Assembly action, card, Voice, and
    stela/monument: the explanation opens and the action does not run.

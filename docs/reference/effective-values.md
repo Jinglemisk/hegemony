@@ -52,16 +52,16 @@ Pre-target command summaries only print a number when the engine can answer it
 without a target. Target-dependent or alternative-payment actions say `varies`,
 `options`, or `stakes`; their chooser shows the exact effective cost.
 
-## PR #57 integration status
+## Step 3 integration status
 
-Draft PR #57 has rebased over Steps 1 and 2 and completed this reconciliation; it is
-implemented but not yet merged. Its Build popover consumes paired
+PR #57 merged after rebasing over Steps 1 and 2 and completing this reconciliation.
+Its Build popover consumes paired
 `getBuildBuildingOptions()` definitions/statuses, and its building ledgers consume the
 effective roster plus target-specific status costs. Other shared action explanations
 remain on the named status/legal-move queries above. Reference surfaces retain explicit
 base-cost labels, and action surfaces retain effective-cost or honest pre-target labels.
 
-The draft also consumes `CONTENT_MANIFEST`, `FEATURE_PARITY`, the exhaustive effect
+Step 3 also consumes `CONTENT_MANIFEST`, `FEATURE_PARITY`, the exhaustive effect
 registries in `src/parity/featureParity.ts`, `src/parity/moveParity.ts`,
 `getActiveEffects()`, and the typed adapters in `src/ui/effects.ts`; it does not carry a
 UI-only classification registry. Automated keyboard and touch-emulation evidence is
@@ -79,5 +79,5 @@ cover the remaining action families.
 
 The [Step 2 manifest contract](parity-manifests.md) enforces the exhaustive
 classification around these values. The [frontend presentation contract](frontend-presentation.md)
-defines how draft PR #57 renders them through Tooltip, Popover, and MechanicsDetails;
-that PR remains unmerged until its review and validation gates pass.
+defines how the merged Step 3 layer renders them through Tooltip, Popover, and
+MechanicsDetails.
