@@ -10,12 +10,14 @@ Last updated: 2026-07-29.
 ## Now
 
 **Current initiative:** [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md).
-Steps 1 and 2 merged in PRs #58 and #59 through the
+Steps 1–3 merged in PRs #58, #59, and #57 through the
 [effective content and costs contract](reference/effective-values.md) and exhaustive
-[parity manifests](reference/parity-manifests.md). Step 3 is implemented and reconciled
-over both in draft PR #57 through the
-[frontend presentation contract](reference/frontend-presentation.md); PR #57 has not
-merged.
+[parity manifests](reference/parity-manifests.md), followed by the shared interaction
+and mechanics presentation layer defined by the
+[frontend presentation contract](reference/frontend-presentation.md). The next
+implementation slice is the approved
+[low-number economy preset](plans/low-number-economy-preset.md), before the Assembly
+revision and final validation campaigns.
 
 **Owner blocker:** None for Steps 1–4. Voice's initial minimum is 3. The remaining
 [Q30 and Q50](questions.md) are Step 5 validation inputs, not implementation blockers.
@@ -24,8 +26,8 @@ merged.
 
 | Plan                                                            | Phase    | Status     | Position                                                         |
 | --------------------------------------------------------------- | -------- | ---------- | ---------------------------------------------------------------- |
-| [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md) | 3.5      | `active`   | Steps 1–2 merged; Step 3 implemented in unmerged draft PR #57   |
-| [Low-number economy preset](plans/low-number-economy-preset.md) | 3.5      | `ready`    | After presentation/evaluator repair; before validation campaigns |
+| [Phase 3.5 parity closeout](plans/phase-3.5-parity-closeout.md) | 3.5      | `active`   | Steps 1–3 merged; low-number preset is the next implementation slice |
+| [Low-number economy preset](plans/low-number-economy-preset.md) | 3.5      | `ready`    | Next implementation PR; before Assembly revision and final campaigns |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)                 | Post-3.5 | `ready`    | Approved direction after the closeout                            |
 | [Luxury goods](plans/luxury-goods.md)                           | 4        | `blocked`  | Waits for Phase 3.5 and its owner questions                      |
 | [Player trade](plans/player-trade.md)                           | 4        | `proposed` | Catan-style negotiation; after luxuries                          |

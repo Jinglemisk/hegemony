@@ -75,11 +75,12 @@ The canonical work order and gates are in
 1. **Restore parity truth (merged in PR #58):** reconcile documentation and
    effective content/effective-cost drift through the
    [effective-value contract](reference/effective-values.md).
-2. **Extend parity enforcement (complete in this change):** exhaustive
+2. **Extend parity enforcement (merged in PR #59):** exhaustive
    [feature/effect/content manifests](reference/parity-manifests.md) and
    behavioral CI.
-3. **Unify interaction presentation (draft PR #57 next):** accessible shared
-   Tooltip and interactive Popover primitives.
+3. **Unify interaction presentation (merged in PR #57):** accessible shared
+   Tooltip and interactive Popover primitives, canonical mechanics details, and
+   migrated Assembly explanations.
 4. **Revise the Assembly:** permanent Voice ratchet and minimum, one-time author
    prizes, no coup, player-targeted Stratokles, and all three parity axes.
 5. **Validate and tune:** human playtest, Assembly/runaway campaigns, cities 3→2
@@ -98,9 +99,11 @@ gate, not deferred implementation coverage.
 6. Simulation is an instrument: use targeted campaigns and label policy limits.
 7. Batch visual-design decisions; do not reopen a frozen direction during feature work.
 
-**Phase 3.5 order amendment (2026-07-26):** after its canonical effect-presentation
-seam and bot-evaluator repair, implement the one-click **low-number core tuning preset**
-specified in [its active plan](plans/low-number-economy-preset.md), before the balance campaigns.
+**Phase 3.5 order amendment (2026-07-26):** the canonical effect-presentation seams,
+parity enforcement, and bot-evaluator repair have merged. The next implementation
+slice is the one-click **low-number core tuning preset** specified in
+[its active plan](plans/low-number-economy-preset.md), before the Assembly revision and
+final balance campaigns.
 The scheduled slice covers rules, buildings, terrain, events, economic tables, and
 Assembly participation costs; Assembly resolutions and politician effects are the
 explicitly deferred final 16%.
