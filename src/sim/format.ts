@@ -38,7 +38,9 @@ export function renderHeader(G: HegemonyState): string {
   ];
 
   if (G.activeSeasonEvent) {
-    lines.push(`Seasonal event: ${G.activeSeasonEvent.card.name} — ${G.activeSeasonEvent.card.text}`);
+    lines.push(
+      `Seasonal event: ${G.activeSeasonEvent.card.name} — ${G.activeSeasonEvent.card.text}`,
+    );
   }
 
   if (G.pendingPlayerEvent) {
@@ -87,8 +89,12 @@ export function renderProjection(G: HegemonyState, playerID: PlayerId): string {
       .map(([resource, amount]) => `${resource} ${formatNumber(amount)}`)
       .join(" · ")}`,
     `  population: ${projection.population.pops}/${projection.population.capacity}` +
-      (projection.population.inTransit > 0 ? ` (+${projection.population.inTransit} in transit)` : "") +
-      (projection.population.overCapacity > 0 ? ` — ${projection.population.overCapacity} OVER capacity` : ""),
+      (projection.population.inTransit > 0
+        ? ` (+${projection.population.inTransit} in transit)`
+        : "") +
+      (projection.population.overCapacity > 0
+        ? ` — ${projection.population.overCapacity} OVER capacity`
+        : ""),
   );
 
   return lines.join("\n");
@@ -99,14 +105,18 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
   const standings = playerStandings(G, playerID);
   const unrest = unrestStatus(G, playerID);
   const projection = calculateEconomyProjection(G, playerID);
-  const activeEffects = presentActiveEffects(getActiveEffects(G, playerID, { income: projection.income }));
+  const activeEffects = presentActiveEffects(
+    getActiveEffects(G, playerID, { income: projection.income }),
+  );
   const marker = G.currentPlayer === playerID ? " ◀ current" : "";
 
   const lines = [
     `Player ${playerID} ${player.name}${marker}`,
     `  victory cards ${formatNumber(standings.victoryCards)}/${G.ruleset.victory.cardsToWin} · ${standings.cities} cities, ${standings.colonies} colonies · ` +
       `pops ${projection.population.pops}/${projection.population.capacity}` +
-      (projection.population.inTransit > 0 ? ` (+${projection.population.inTransit} in transit)` : "") +
+      (projection.population.inTransit > 0
+        ? ` (+${projection.population.inTransit} in transit)`
+        : "") +
       ` · ${unrest.tier}${unrest.riotAtRisk ? " (riot table at next upkeep)" : ""}`,
     `  resources: ${Object.entries(player.resources)
       .map(([resource, amount]) => `${resource} ${formatNumber(amount)}`)
@@ -115,9 +125,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
   ];
 
   if (activeEffects.length > 0) {
-    lines.push(
-      ...activeEffects.map((effect) => "  effect: " + effect.accessibleText),
-    );
+    lines.push(...activeEffects.map((effect) => "  effect: " + effect.accessibleText));
   }
 
   for (const tileId of player.settlements) {
@@ -128,7 +136,8 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
       continue;
     }
 
-    const buildings = settlement.buildings.length > 0 ? ` · buildings: ${settlement.buildings.join(", ")}` : "";
+    const buildings =
+      settlement.buildings.length > 0 ? ` · buildings: ${settlement.buildings.join(", ")}` : "";
     lines.push(
       `  ${tileId} ${settlement.kind} on ${tile.terrain} (${tile.resource ? `${tile.resource.type} ${tile.resource.amount}` : "no yield"}) — ` +
         `pops ${totalPops(settlement.pops)}/${settlementCapacity(settlement, G.ruleset)} ` +
@@ -170,7 +179,9 @@ export function renderPreview(preview: EconomyPreview): string {
 
   for (const settlement of preview.settlements) {
     const changes = [
-      hasResourceDelta(settlement.incomeDelta) ? `income ${formatResourceDelta(settlement.incomeDelta)}` : "",
+      hasResourceDelta(settlement.incomeDelta)
+        ? `income ${formatResourceDelta(settlement.incomeDelta)}`
+        : "",
       settlement.popsDelta !== 0 ? `pops ${formatDelta(settlement.popsDelta)}` : "",
       settlement.capacityDelta !== 0 ? `capacity ${formatDelta(settlement.capacityDelta)}` : "",
     ]
@@ -206,7 +217,13 @@ export function renderBatchReport(report: BatchReport): string {
   ];
 
   if (report.meta.tunePatchHash) {
-    lines.push(`Content patch: ${report.meta.tunePatchHash}`);
+    lines.push(`Manual tuning patch: ${report.meta.tunePatchHash}`);
+  }
+
+  if (report.meta.tuningPresetId) {
+    lines.push(
+      `Tuning preset: ${report.meta.tuningPresetId} · content ${report.meta.resolvedContentHash}`,
+    );
   }
 
   if (report.meta.seatPolicies) {
@@ -221,7 +238,10 @@ export function renderBatchReport(report: BatchReport): string {
   if (byPolicy.length > 0) {
     lines.push(
       `Win by policy (finished games): ${byPolicy
-        .map(([name, stats]) => `${name} ${(stats.winRate * 100).toFixed(0)}% (${stats.wins}/${stats.games})`)
+        .map(
+          ([name, stats]) =>
+            `${name} ${(stats.winRate * 100).toFixed(0)}% (${stats.wins}/${stats.games})`,
+        )
         .join(" · ")}`,
     );
   }
@@ -241,10 +261,7 @@ export function renderBatchReport(report: BatchReport): string {
 
   const observedEffects = Object.entries(report.activeEffects)
     .filter(([, stats]) => stats.observations > 0)
-    .map(
-      ([kind, stats]) =>
-        kind + " " + (stats.playerTurnShare * 100).toFixed(0) + "%",
-    )
+    .map(([kind, stats]) => kind + " " + (stats.playerTurnShare * 100).toFixed(0) + "%")
     .join(" · ");
   if (observedEffects) {
     lines.push("Active effects (share of player-turns): " + observedEffects);
@@ -269,7 +286,9 @@ export function renderBatchReport(report: BatchReport): string {
   }
 
   if (report.upgrades) {
-    lines.push(`Colony→city upgrades: ${formatNumber(report.upgrades.perGame)}/game (${report.upgrades.count} total)`);
+    lines.push(
+      `Colony→city upgrades: ${formatNumber(report.upgrades.perGame)}/game (${report.upgrades.count} total)`,
+    );
   }
 
   // The Assembly line is the instrument for the design's most important A/B: whether
@@ -289,7 +308,10 @@ export function renderBatchReport(report: BatchReport): string {
 
     const assemblyVerbs = Object.entries(assembly.verbs)
       .filter(([, value]) => value.count > 0)
-      .map(([verb, value]) => `${verb.replace("assembly", "").toLowerCase()} ${formatNumber(value.perGame)}`)
+      .map(
+        ([verb, value]) =>
+          `${verb.replace("assembly", "").toLowerCase()} ${formatNumber(value.perGame)}`,
+      )
       .join(" · ");
 
     if (assemblyVerbs) {

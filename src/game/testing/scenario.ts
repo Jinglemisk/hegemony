@@ -1,5 +1,5 @@
 import { TEST_OPENING_SETUP } from "../config";
-import { PLAYER_EVENT_CARDS, SEASONAL_EVENT_CARDS } from "../data";
+import { getPlayerEventCards, getSeasonalEventCards } from "../content";
 import { placeCapital, placeColony } from "../actions";
 import { clonePops } from "../core/pops";
 import type { MoveResult } from "../core/results";
@@ -95,7 +95,9 @@ export class ScenarioBuilder {
         throw new Error("scenario opening: setup did not converge");
       }
 
-      const placement = TEST_OPENING_SETUP.find((candidate) => candidate.playerID === G.currentPlayer);
+      const placement = TEST_OPENING_SETUP.find(
+        (candidate) => candidate.playerID === G.currentPlayer,
+      );
 
       if (!placement) {
         throw new Error(`scenario opening: no placement for player ${G.currentPlayer}`);
@@ -103,7 +105,11 @@ export class ScenarioBuilder {
 
       const target = G.phase === "setupCapital" ? placement.capital : placement.colony;
       const place = G.phase === "setupCapital" ? placeCapital : placeColony;
-      assertOk(place(G, placement.playerID, target.tileId, target.pops), placement.playerID, target.tileId);
+      assertOk(
+        place(G, placement.playerID, target.tileId, target.pops),
+        placement.playerID,
+        target.tileId,
+      );
       advanceSetupTurn(G);
     }
 
@@ -115,7 +121,14 @@ export class ScenarioBuilder {
     const target = this.G.players[playerID].resources;
 
     if (resources === "wealthy") {
-      Object.assign(target, { wood: 200, stone: 200, gold: 200, food: 200, influence: 0, happiness: 0 });
+      Object.assign(target, {
+        wood: 200,
+        stone: 200,
+        gold: 200,
+        food: 200,
+        influence: 0,
+        happiness: 0,
+      });
     } else {
       Object.assign(target, resources);
     }
@@ -147,7 +160,7 @@ export class ScenarioBuilder {
 
   /** Rig the player deck: the named card becomes the next draw. */
   stackPlayerEvent(cardId: string): this {
-    this.G.playerDrawPile.unshift(findCard(PLAYER_EVENT_CARDS, cardId));
+    this.G.playerDrawPile.unshift(findCard(getPlayerEventCards(), cardId));
     return this;
   }
 
@@ -157,7 +170,7 @@ export class ScenarioBuilder {
    * (or carries no season tags).
    */
   stackSeasonalEvent(cardId: string): this {
-    this.G.seasonalDrawPile.unshift(findCard(SEASONAL_EVENT_CARDS, cardId));
+    this.G.seasonalDrawPile.unshift(findCard(getSeasonalEventCards(), cardId));
     return this;
   }
 

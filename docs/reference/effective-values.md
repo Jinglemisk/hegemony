@@ -1,6 +1,6 @@
 # Effective content and costs
 
-Last updated: 2026-07-29.
+Last updated: 2026-07-31.
 
 This is the living contract for values that can differ from authored defaults. It
 records the Phase 3.5 Step 1 inventory. Step 2's compile-time and behavioral
@@ -10,9 +10,9 @@ Step 3 presentation components consume both contracts.
 ## Vocabulary
 
 - **Authored content** is the immutable source data in `src/game/data.ts`.
-- **Effective content** is the roster fixed before game creation and returned by
-  `getBuildings()` / `getBuilding()` or `getTerrainDeck()`. With no development
-  override, it is authored content.
+- **Effective content** is the complete `GameContent` package fixed before game
+  creation and returned by the typed content accessors. With no development preset
+  or override, it is authored content.
 - A **base cost** comes from the active ruleset or effective content before local,
   seasonal, event, or standing-Law modifiers. Game modes and tuning patches are
   already reflected in this value.
@@ -28,10 +28,18 @@ must label them as base costs and explain that modifiers appear at the action.
 | --------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | Buildings | `getBuildings()`, `getBuilding()`, and target-specific `getBuildBuildingOptions()` | Build legality/execution, income, settlement capacity/slots, growth and promotion discounts, table destruction | Board availability, map selection, Build popover, Cities/Buildings ledgers, Codex, building labels and benefit text | Legal-move enumeration and policy evaluation through the same engine income/status paths |
 | Terrain   | `getTerrainDeck()`                                                                 | Initial map/state creation and shuffle                                                                         | Codex terrain aggregates                                                                                            | Game setup and tuning runs through engine map creation                                   |
+| Events    | `getSeasonalEventCards()` and `getPlayerEventCards()`                              | Deck creation, resolution, active effects and logs                                                             | Topbar, pending-event dialog and Codex                                                                              | Seeded decks, policy execution and zero-filled telemetry                                 |
+| Tables    | `getRiotTable()`, `getExpeditionTables()`, and `getOmenTable()`                    | Legal moves, insurance, ventures, rolls and yearly omen state                                                  | Riot/Venture modals, topbar, result rows and Codex                                                                  | Policy risk, execution and telemetry                                                     |
 
-Runtime consumers must not import `BUILDINGS` or `TERRAIN_DECK` directly. Authored
-constants remain appropriate for development override construction, immutable
-comparison tests, and stable ID vocabulary.
+Runtime consumers must not import authored content constants directly. Authored
+constants remain appropriate for preset construction, immutable comparison tests,
+and stable ID vocabulary. `low-number-core-v1` clones the whole package, then manual
+building overrides clone again; activation and clearing never mutate authored data.
+
+Rules/content precedence is `authored defaults → game mode → tuning preset → manual
+overrides`. Configured `stockpileFloors` apply through the authoritative real-mutation
+seam for income, events, and tables; previews and policy projections use the same
+floor behavior, while costs remain affordability-gated.
 
 ## Effective-cost inventory
 

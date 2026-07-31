@@ -98,6 +98,13 @@ multiplier, severe roll modifier, and rebound. It does not guess whether a futur
 conditional resource/building loss or insurance purchase will apply, and it never
 reads the seeded future die roll.
 
+The rule-based stochastic chooser and the greedy/smart material evaluator also derive
+their affordability bands from the active ruleset. Venture reserves scale from the
+active stake, sell-surplus and material-starvation bands scale from the active colony
+cost, and material-score normalization scales from the active victory stockpile. This
+keeps the same policies useful under `low-number-core-v1` without baking the preset
+into bot code; standard mode still resolves to its historical thresholds exactly.
+
 **Why the horizon exists** (empirical, seeds 100–109, 10×24-turn batches):
 the pre-horizon score (`10·VP + 0.5·materialIncome + 2·happiness`) priced
 spending at ~10× and future income at 0.5×, so bots built 4 buildings in 10

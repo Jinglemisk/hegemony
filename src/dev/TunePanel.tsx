@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./tunePanel.css";
 import { getBuildings, getTerrainDeck } from "../game/content";
-import { DEFAULT_RULESET } from "../game/ruleset";
 import type { HegemonyState } from "../game/types";
 import { buildingSummary, describeBuildingEffect, terrainStats, terrainTotals } from "./aggregates";
 import {
@@ -9,11 +8,15 @@ import {
   effectiveValueAt,
   loadOverrides,
   loadStartAtAssembly,
-  pruneToChanges,
+  loadTuningPresetId,
   saveOverrides,
-  saveStartAtAssembly
+  saveStartAtAssembly,
+  saveTuningPresetId,
+  tuningBaselineRuleset,
 } from "./tuning";
 import type { OverrideMap, OverrideValue } from "./tuning";
+import { getTuningPreset } from "./tuningPresets";
+import type { TuningPresetId } from "./tuningPresets";
 
 /**
  * DEV-ONLY parameter dashboard. Two jobs in one panel:
@@ -30,7 +33,8 @@ const OPEN_KEY = "hegemony-dev-tune-open";
 const fmt = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(1));
 
 export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame: () => void }) {
-  const forceOpen = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("tune");
+  const forceOpen =
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).has("tune");
   const [open, setOpen] = useState<boolean>(() => {
     if (forceOpen) return true;
     try {
@@ -41,6 +45,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
   });
   const [draft, setDraft] = useState<OverrideMap>(() => loadOverrides());
   const [startAtAssembly, setStartAtAssembly] = useState<boolean>(() => loadStartAtAssembly());
+  const [presetId, setPresetId] = useState<TuningPresetId | null>(() => loadTuningPresetId());
 
   useEffect(() => {
     try {
@@ -64,10 +69,18 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const changes = useMemo(() => pruneToChanges(draft), [draft]);
+  const changes = draft;
   const changeCount = Object.keys(changes).length;
+  const preset = getTuningPreset(presetId);
+  const baselineRuleset = useMemo(() => tuningBaselineRuleset(presetId), [presetId]);
 
-  const setValue = (path: string, value: OverrideValue) => setDraft((prev) => ({ ...prev, [path]: value }));
+  const setValue = (path: string, value: OverrideValue) =>
+    setDraft((prev) => {
+      const next = { ...prev };
+      if (value === defaultValueAt(path, presetId)) delete next[path];
+      else next[path] = value;
+      return next;
+    });
   const revert = (path: string) =>
     setDraft((prev) => {
       const next = { ...prev };
@@ -76,20 +89,20 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
     });
 
   const apply = () => {
-    const pruned = pruneToChanges(draft);
-    saveOverrides(pruned);
-    setDraft(pruned);
+    saveOverrides(draft);
     resetGame();
   };
   const resetAll = () => {
     saveOverrides({});
+    saveTuningPresetId(null);
     setDraft({});
+    setPresetId(null);
     resetGame();
   };
   const copyPatch = () => {
     const lines = Object.keys(changes)
       .sort()
-      .map((path) => `${path}: ${defaultValueAt(path)} → ${changes[path]}`);
+      .map((path) => `${path}: ${defaultValueAt(path, presetId)} → ${changes[path]}`);
     const text = ["# Hegemony dev tuning — make permanent:", ...lines].join("\n");
     navigator.clipboard?.writeText(text).catch(() => undefined);
   };
@@ -101,11 +114,22 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
     setStartAtAssembly(next);
     resetGame();
   };
+  const toggleLowNumbers = () => {
+    const next = presetId ? null : "low-number-core-v1";
+    saveTuningPresetId(next);
+    setPresetId(next);
+    resetGame();
+  };
 
   if (!open) {
     return (
-      <button className="tune-fab" onClick={() => setOpen(true)} title="Open parameter dashboard ( ` )">
-        ⚙ TUNE{changeCount > 0 ? ` · ${changeCount}` : ""}
+      <button
+        className="tune-fab"
+        onClick={() => setOpen(true)}
+        title="Open parameter dashboard ( ` )"
+      >
+        ⚙ TUNE{preset ? " · LOW" : ""}
+        {changeCount > 0 ? ` · ${changeCount}` : ""}
       </button>
     );
   }
@@ -131,17 +155,36 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
         <button className="tune-btn primary" onClick={apply} disabled={changeCount === 0}>
           Apply &amp; New Game
         </button>
-        <button className="tune-btn" onClick={resetAll} disabled={changeCount === 0}>
+        <button className="tune-btn" onClick={resetAll} disabled={changeCount === 0 && !preset}>
           Reset
         </button>
         <button className="tune-btn" onClick={copyPatch} disabled={changeCount === 0}>
           Copy patch
         </button>
-        <span className={`tune-badge${changeCount > 0 ? " on" : ""}`}>{changeCount} changed</span>
+        <span className={`tune-badge${changeCount > 0 || preset ? " on" : ""}`}>
+          {preset ? `Low-number core + ${changeCount} edits` : `${changeCount} changed`}
+        </span>
       </div>
       <p className="tune-hint">
-        Edits are temporary overrides in your browser — Apply starts a fresh game (same board) with them. Nothing
-        touches code until you Copy patch and ask Claude to make it permanent.
+        Edits are temporary overrides in your browser — Apply starts a fresh game (same board) with
+        them. Nothing touches code until you Copy patch and ask Claude to make it permanent.
+      </p>
+
+      <div className="tune-actions">
+        <button
+          className={`tune-btn${preset ? " primary" : ""}`}
+          onClick={toggleLowNumbers}
+          title="Toggle the development-only low-number-core-v1 preset and restart this seed."
+        >
+          {preset ? "✓ " : ""}Low Numbers · 20W / 12S / 16F
+        </button>
+        <span className={`tune-badge${preset ? " on" : ""}`}>
+          {preset ? "preset active" : "standard values"}
+        </span>
+      </div>
+      <p className="tune-hint">
+        One-click Phase 3.5 economy A/B. Toggling starts a fresh game on the same seed; manual edits
+        stay layered on top.
       </p>
 
       <div className="tune-actions">
@@ -157,8 +200,9 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
         </span>
       </div>
       <p className="tune-hint">
-        Sticky dev flag (survives reloads). When on, each new game auto-plays sixteen seed-driven turns and drops you
-        straight into the first Assembly — same board, so it&apos;s a clean A/B against a Year-1 opening.
+        Sticky dev flag (survives reloads). When on, each new game auto-plays sixteen seed-driven
+        turns and drops you straight into the first Assembly — same board, so it&apos;s a clean A/B
+        against a Year-1 opening.
       </p>
 
       <Section title="Terrain" subtitle="read-only aggregates">
@@ -187,7 +231,8 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
           </tbody>
         </table>
         <div className="tune-totals">
-          {totals.tiles} tiles · {totals.slots} slots · wood {totals.wood} · stone {totals.stone} · food {totals.food}
+          {totals.tiles} tiles · {totals.slots} slots · wood {totals.wood} · stone {totals.stone} ·
+          food {totals.food}
         </div>
       </Section>
 
@@ -205,6 +250,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
                   label={`cost ${resource}`}
                   path={`buildings.${building.id}.cost.${resource}`}
                   draft={draft}
+                  presetId={presetId}
                   onChange={setValue}
                   onRevert={revert}
                 />
@@ -215,6 +261,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
                   label={effectLabel(describeBuildingEffect(effect))}
                   path={`buildings.${building.id}.effects.${effectIndex}.amount`}
                   draft={draft}
+                  presetId={presetId}
                   onChange={setValue}
                   onRevert={revert}
                 />
@@ -223,6 +270,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
                 label="max level"
                 path={`buildings.${building.id}.maxLevel`}
                 draft={draft}
+                presetId={presetId}
                 onChange={setValue}
                 onRevert={revert}
               />
@@ -233,13 +281,28 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
       </Section>
 
       <Section title="Ruleset" subtitle="costs · income · economy">
-        <RulesetTree obj={DEFAULT_RULESET as unknown as Record<string, unknown>} prefix="ruleset" draft={draft} onChange={setValue} onRevert={revert} />
+        <RulesetTree
+          obj={baselineRuleset as unknown as Record<string, unknown>}
+          prefix="ruleset"
+          draft={draft}
+          presetId={presetId}
+          onChange={setValue}
+          onRevert={revert}
+        />
       </Section>
     </aside>
   );
 }
 
-function Section({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+function Section({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+}) {
   const [open, setOpen] = useState(true);
   return (
     <section className="tune-section">
@@ -258,7 +321,7 @@ function Section({ title, subtitle, children }: { title: string; subtitle: strin
 function CollapsibleGroup({
   label,
   defaultOpen = false,
-  children
+  children,
 }: {
   label: string;
   defaultOpen?: boolean;
@@ -282,12 +345,14 @@ function RulesetTree({
   obj,
   prefix,
   draft,
+  presetId,
   onChange,
-  onRevert
+  onRevert,
 }: {
   obj: Record<string, unknown>;
   prefix: string;
   draft: OverrideMap;
+  presetId: TuningPresetId | null;
   onChange: (path: string, value: OverrideValue) => void;
   onRevert: (path: string) => void;
 }) {
@@ -296,10 +361,30 @@ function RulesetTree({
       {Object.entries(obj).map(([key, value]) => {
         const path = `${prefix}.${key}`;
         if (typeof value === "number") {
-          return <NumberField key={path} label={key} path={path} draft={draft} onChange={onChange} onRevert={onRevert} />;
+          return (
+            <NumberField
+              key={path}
+              label={key}
+              path={path}
+              draft={draft}
+              presetId={presetId}
+              onChange={onChange}
+              onRevert={onRevert}
+            />
+          );
         }
         if (typeof value === "boolean") {
-          return <BoolField key={path} label={key} path={path} draft={draft} onChange={onChange} onRevert={onRevert} />;
+          return (
+            <BoolField
+              key={path}
+              label={key}
+              path={path}
+              draft={draft}
+              presetId={presetId}
+              onChange={onChange}
+              onRevert={onRevert}
+            />
+          );
         }
         if (typeof value === "string") {
           return (
@@ -312,7 +397,14 @@ function RulesetTree({
         if (value && typeof value === "object" && !Array.isArray(value)) {
           return (
             <CollapsibleGroup key={path} label={key}>
-              <RulesetTree obj={value as Record<string, unknown>} prefix={path} draft={draft} onChange={onChange} onRevert={onRevert} />
+              <RulesetTree
+                obj={value as Record<string, unknown>}
+                prefix={path}
+                draft={draft}
+                presetId={presetId}
+                onChange={onChange}
+                onRevert={onRevert}
+              />
             </CollapsibleGroup>
           );
         }
@@ -326,17 +418,19 @@ function NumberField({
   label,
   path,
   draft,
+  presetId,
   onChange,
-  onRevert
+  onRevert,
 }: {
   label: string;
   path: string;
   draft: OverrideMap;
+  presetId: TuningPresetId | null;
   onChange: (path: string, value: OverrideValue) => void;
   onRevert: (path: string) => void;
 }) {
-  const def = defaultValueAt(path);
-  const value = effectiveValueAt(draft, path);
+  const def = defaultValueAt(path, presetId);
+  const value = effectiveValueAt(draft, path, presetId);
   const overridden = path in draft;
   return (
     <label className={`tune-field${overridden ? " overridden" : ""}`}>
@@ -371,21 +465,27 @@ function BoolField({
   label,
   path,
   draft,
+  presetId,
   onChange,
-  onRevert
+  onRevert,
 }: {
   label: string;
   path: string;
   draft: OverrideMap;
+  presetId: TuningPresetId | null;
   onChange: (path: string, value: OverrideValue) => void;
   onRevert: (path: string) => void;
 }) {
-  const value = Boolean(effectiveValueAt(draft, path));
+  const value = Boolean(effectiveValueAt(draft, path, presetId));
   const overridden = path in draft;
   return (
     <label className={`tune-field${overridden ? " overridden" : ""}`}>
       <span className="tune-label">{label}</span>
-      <input type="checkbox" checked={value} onChange={(event) => onChange(path, event.target.checked)} />
+      <input
+        type="checkbox"
+        checked={value}
+        onChange={(event) => onChange(path, event.target.checked)}
+      />
       {overridden && (
         <button className="tune-revert" title="revert" onClick={() => onRevert(path)}>
           ↺

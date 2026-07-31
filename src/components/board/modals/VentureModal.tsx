@@ -3,7 +3,7 @@ import { AnnotatedText } from "../../AnnotatedText";
 import { formatResourceCost } from "../../../ui/formatters";
 import { getFundExpeditionStatus } from "../../../game/rules";
 import type { VentureStake } from "../../../game/rules";
-import { EXPEDITION_TABLES } from "../../../game/data";
+import { getExpeditionTables } from "../../../game/content";
 import { EventTableModal } from "./EventTableModal";
 import { useGameUi } from "../GameUiContext";
 
@@ -12,27 +12,28 @@ import { useGameUi } from "../GameUiContext";
  * expedition, post a stake, roll. One venture per turn; the stake is spent win
  * or lose — rows 1–2 ARE "stake lost".
  */
-export function VentureModal({
-  onClose
-}: {
-  onClose: () => void;
-}) {
+export function VentureModal({ onClose }: { onClose: () => void }) {
   const { G, viewerId: playerID, isActive, moves } = useGameUi();
   const [expeditionIndex, setExpeditionIndex] = useState(0);
   const [stake, setStake] = useState<VentureStake>("gold");
   const [rolled, setRolled] = useState(false);
 
-  const table = EXPEDITION_TABLES[expeditionIndex];
+  const expeditionTables = getExpeditionTables();
+  const table = expeditionTables[expeditionIndex];
   const status = getFundExpeditionStatus(G, playerID, table.id, stake);
   const result = rolled && G.lastTableRoll?.playerID === playerID ? G.lastTableRoll : null;
-  const resultTable = result ? (EXPEDITION_TABLES.find((candidate) => candidate.id === result.tableId) ?? table) : table;
+  const resultTable = result
+    ? (expeditionTables.find((candidate) => candidate.id === result.tableId) ?? table)
+    : table;
 
   return (
     <EventTableModal
       table={resultTable}
       modifier={0}
       result={result}
-      subtitle={rolled ? undefined : "Stake it, sail, and let the table speak — one venture per turn."}
+      subtitle={
+        rolled ? undefined : "Stake it, sail, and let the table speak — one venture per turn."
+      }
       onDismiss={onClose}
       footer={
         rolled ? (
@@ -62,9 +63,13 @@ export function VentureModal({
       {!rolled ? (
         <div className="ventureControls">
           <div className="eventChoiceStack" role="group" aria-label="Expedition">
-            {EXPEDITION_TABLES.map((candidate, index) => (
+            {expeditionTables.map((candidate, index) => (
               <button
-                className={index === expeditionIndex ? "eventChoiceButton selectedChoice" : "eventChoiceButton"}
+                className={
+                  index === expeditionIndex
+                    ? "eventChoiceButton selectedChoice"
+                    : "eventChoiceButton"
+                }
                 key={candidate.id}
                 onClick={() => setExpeditionIndex(index)}
               >
@@ -80,7 +85,9 @@ export function VentureModal({
 
               return (
                 <button
-                  className={candidate === stake ? "eventChoiceButton selectedChoice" : "eventChoiceButton"}
+                  className={
+                    candidate === stake ? "eventChoiceButton selectedChoice" : "eventChoiceButton"
+                  }
                   key={candidate}
                   onClick={() => setStake(candidate)}
                 >

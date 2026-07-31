@@ -23,13 +23,18 @@ import type { CivicCalmPayment } from "./civic";
 import { buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
 import { fundExpedition, getFundExpeditionStatus } from "./ventures";
 import type { VentureStake } from "./ventures";
-import { EXPEDITION_TABLES, RIOT_TABLE } from "./data";
+import { getExpeditionTables, getRiotTable } from "./content";
 import { EMPTY_POPS, POP_TYPES, totalPops } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
-import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds, resolvePendingPlayerEvent } from "./events";
+import {
+  getAddPopsEffect,
+  getEventEffectChoices,
+  getEventPopTargetTileIds,
+  resolvePendingPlayerEvent,
+} from "./events";
 import { setupCapitalCount } from "./ruleset";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
 import {
@@ -90,7 +95,13 @@ export type LegalMove =
   | { type: "placeCapital"; tileId: string; pops: Pops }
   | { type: "placeCity"; tileId: string; pops: Pops }
   | { type: "placeColony"; tileId: string; pops: Pops }
-  | { type: "foundColony"; tileId: string; sourceTileId: string; pop: PopType; cost: Partial<Resources> }
+  | {
+      type: "foundColony";
+      tileId: string;
+      sourceTileId: string;
+      pop: PopType;
+      cost: Partial<Resources>;
+    }
   | { type: "upgradeColonyToCity"; tileId: string; cost: Partial<Resources> }
   | { type: "buildBuilding"; tileId: string; buildingId: BuildingId; cost: Partial<Resources> }
   | { type: "growPop"; tileId: string; pop: PopType; cost: Partial<Resources> }
@@ -101,8 +112,17 @@ export type LegalMove =
   | { type: "civicCalm"; payment: CivicCalmPayment; cost: Partial<Resources> }
   | { type: "promotePop"; tileId: string; from: PopType; cost: Partial<Resources> }
   | { type: "demotePop"; tileId: string; from: PopType; cost: Partial<Resources> }
-  | { type: "fundExpedition"; expeditionId: EventTableId; stake: VentureStake; cost: Partial<Resources> }
-  | { type: "buyRiotInsurance"; optionId: RiotInsuranceId; demoteTarget?: { tileId: string; from: PopType } }
+  | {
+      type: "fundExpedition";
+      expeditionId: EventTableId;
+      stake: VentureStake;
+      cost: Partial<Resources>;
+    }
+  | {
+      type: "buyRiotInsurance";
+      optionId: RiotInsuranceId;
+      demoteTarget?: { tileId: string; from: PopType };
+    }
   | { type: "resolveRiot" }
   // ── The Assembly (Phase 3-B). While a session is open these are the ONLY legal
   //    moves: the agora suspends the turn machine, so every gameplay verb is shut
@@ -159,7 +179,11 @@ export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): Legal
 
 type MoveCategory = "setup" | "riotResolution" | "eventResolution" | "assembly" | "gameplay";
 
-const SETUP_PHASES: ReadonlySet<HegemonyState["phase"]> = new Set(["setupCapital", "setupCity", "setupColony"]);
+const SETUP_PHASES: ReadonlySet<HegemonyState["phase"]> = new Set([
+  "setupCapital",
+  "setupCity",
+  "setupColony",
+]);
 
 function categorizeMove(type: LegalMove["type"]): MoveCategory {
   switch (type) {
@@ -202,9 +226,13 @@ function checkMoveAllowed(G: HegemonyState, playerID: PlayerId, move: LegalMove)
 
   switch (categorizeMove(move.type)) {
     case "riotResolution":
-      return G.pendingRiot?.playerID === playerID ? MOVE_OK : invalid("No riot is pending resolution.");
+      return G.pendingRiot?.playerID === playerID
+        ? MOVE_OK
+        : invalid("No riot is pending resolution.");
     case "eventResolution":
-      return G.pendingPlayerEvent?.playerID === playerID ? MOVE_OK : invalid("No pending event to resolve.");
+      return G.pendingPlayerEvent?.playerID === playerID
+        ? MOVE_OK
+        : invalid("No pending event to resolve.");
     case "setup":
       return SETUP_PHASES.has(G.phase) && !G.pendingPlayerEvent && !G.pendingRiot
         ? MOVE_OK
@@ -236,7 +264,12 @@ export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove)
     case "placeCapital":
     case "placeCity":
     case "placeColony": {
-      const place = move.type === "placeCapital" ? placeCapital : move.type === "placeCity" ? placeCity : placeColony;
+      const place =
+        move.type === "placeCapital"
+          ? placeCapital
+          : move.type === "placeCity"
+            ? placeCity
+            : placeColony;
       const result = place(G, playerID, move.tileId, move.pops);
       if (result.ok) {
         advanceSetupTurn(G);
@@ -370,15 +403,26 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove
 
     if (influence >= drawCost) {
       for (const politician of POLITICIANS) {
-        if (G.politicianDecks[politician.id].length > 0 || G.politicianDiscards[politician.id].length > 0) {
-          moves.push({ type: "assemblyDraw", politician: politician.id, cost: { influence: drawCost } });
+        if (
+          G.politicianDecks[politician.id].length > 0 ||
+          G.politicianDiscards[politician.id].length > 0
+        ) {
+          moves.push({
+            type: "assemblyDraw",
+            politician: politician.id,
+            cost: { influence: drawCost },
+          });
         }
       }
     }
 
     if (influence >= rules.repealCost) {
       for (const cardId of activeLawIds(G)) {
-        moves.push({ type: "assemblyProposeRepeal", cardId, cost: { influence: rules.repealCost } });
+        moves.push({
+          type: "assemblyProposeRepeal",
+          cardId,
+          cost: { influence: rules.repealCost },
+        });
       }
     }
   }
@@ -459,7 +503,7 @@ function formatCost(cost: Partial<Resources>): string {
 function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
   const moves: LegalMove[] = [];
 
-  for (const option of RIOT_TABLE.insurance ?? []) {
+  for (const option of getRiotTable().insurance ?? []) {
     if (!getBuyRiotInsuranceStatus(G, playerID, option.id).can) {
       continue;
     }
@@ -472,7 +516,11 @@ function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
     for (const tileId of G.players[playerID].settlements) {
       for (const from of DEMOTE_FROM) {
         if (getDemotePopStatus(G, playerID, tileId, from).can) {
-          moves.push({ type: "buyRiotInsurance", optionId: option.id, demoteTarget: { tileId, from } });
+          moves.push({
+            type: "buyRiotInsurance",
+            optionId: option.id,
+            demoteTarget: { tileId, from },
+          });
         }
       }
     }
@@ -551,7 +599,9 @@ function enumerateCityPlacements(G: HegemonyState, playerID: PlayerId): LegalMov
 function enumerateColonyPlacements(G: HegemonyState, playerID: PlayerId): LegalMove[] {
   const placed = G.players[playerID].settlements.length;
   const owesColony =
-    placed >= setupCapitalCount(G.ruleset) && placed < G.ruleset.setup.length && G.ruleset.setup[placed] === "colony";
+    placed >= setupCapitalCount(G.ruleset) &&
+    placed < G.ruleset.setup.length &&
+    G.ruleset.setup[placed] === "colony";
 
   if (!owesColony) {
     return [];
@@ -589,7 +639,13 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): LegalMove
 
       for (const pop of POP_TYPES) {
         if ((source?.pops[pop] ?? 0) > 0) {
-          moves.push({ type: "foundColony", tileId: tile.id, sourceTileId, pop, cost: status.cost ?? {} });
+          moves.push({
+            type: "foundColony",
+            tileId: tile.id,
+            sourceTileId,
+            pop,
+            cost: status.cost ?? {},
+          });
         }
       }
     }
@@ -606,7 +662,12 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): LegalMove
   for (const tileId of ownedTileIds) {
     for (const { building, status } of getBuildBuildingOptions(G, playerID, tileId)) {
       if (status.can) {
-        moves.push({ type: "buildBuilding", tileId, buildingId: building.id, cost: status.cost ?? {} });
+        moves.push({
+          type: "buildBuilding",
+          tileId,
+          buildingId: building.id,
+          cost: status.cost ?? {},
+        });
       }
     }
   }
@@ -677,11 +738,16 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): LegalMove
     }
   }
 
-  for (const table of EXPEDITION_TABLES) {
+  for (const table of getExpeditionTables()) {
     for (const stake of ["gold", "wood"] as const) {
       const status = getFundExpeditionStatus(G, playerID, table.id, stake);
       if (status.can) {
-        moves.push({ type: "fundExpedition", expeditionId: table.id, stake, cost: status.cost ?? {} });
+        moves.push({
+          type: "fundExpedition",
+          expeditionId: table.id,
+          stake,
+          cost: status.cost ?? {},
+        });
       }
     }
   }

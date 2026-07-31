@@ -105,3 +105,12 @@ effective-content and `ActionStatus.cost` APIs in
 Step 3 contains no UI-only effect or content registry. Its shared
 Tooltip/Popover/MechanicsDetails layer owns interaction and accessibility, while these
 manifests remain the authoritative classification seam.
+
+## Low-number preset integration
+
+`low-number-core-v1` preserves the authored ID/effect vocabulary while changing
+effective values. The reversible `GameContent` registry routes buildings, terrain,
+events, riot/expedition tables, and the omen table through typed accessors across
+engine, frontend, and simulation. Preset regression tests assert the authored manifest
+still matches exactly and every transformed effect has a non-empty canonical
+presentation. Browser and simulator resolve the same preset ID and content hash.

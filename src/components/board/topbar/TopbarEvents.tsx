@@ -1,5 +1,5 @@
 import { getEventEffectChoices } from "../../../game/rules";
-import { OMEN_TABLE } from "../../../game/data";
+import { getOmenTable } from "../../../game/content";
 import type { EventCard, HegemonyState } from "../../../game/types";
 import type { EffectPresentation } from "../../../ui/effects";
 import {
@@ -31,6 +31,7 @@ function effectSummary(card: EventCard): EffectPresentation {
  * description on hover.
  */
 export function TopbarEvents({ G }: { G: HegemonyState }) {
+  const omenTable = getOmenTable();
   const seasonal = G.activeSeasonEvent?.card ?? null;
   const player = G.lastPlayerEvent;
   const omen = G.yearOmen;
@@ -48,7 +49,7 @@ export function TopbarEvents({ G }: { G: HegemonyState }) {
         summary={omen ? joinEffectPresentations(omen.effects.map(presentTableEffect)) : null}
         tooltip={
           omen
-            ? `${OMEN_TABLE.flavor} Rolled by Year ${omen.year}'s opener; a new sign comes each spring.`
+            ? `${omenTable.flavor} Rolled by Year ${omen.year}'s opener; a new sign comes each spring.`
             : null
         }
         artUrl={omen ? omenArtUrl(omenTone) : null}

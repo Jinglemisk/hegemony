@@ -1,6 +1,6 @@
 import { collectIncome } from "./actions";
 import { demotePop } from "./civic";
-import { RIOT_TABLE } from "./data";
+import { getRiotTable } from "./content";
 import { addLog, getPlayerName } from "./core/query";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
@@ -23,23 +23,24 @@ export function startRiot(G: HegemonyState, playerID: PlayerId, tier: RiotTier) 
   G.pendingRiot = { playerID, tier, boughtInsurance: [] };
   addLog(
     G,
-    `${getPlayerName(G, playerID)}'s province erupts — a ${tier === "revolt" ? "revolt" : "riot"} must be faced before income is collected.`
+    `${getPlayerName(G, playerID)}'s province erupts — a ${tier === "revolt" ? "revolt" : "riot"} must be faced before income is collected.`,
   );
 }
 
 export function getBuyRiotInsuranceStatus(
   G: HegemonyState,
   playerID: PlayerId,
-  optionId: RiotInsuranceId
+  optionId: RiotInsuranceId,
 ): ActionStatus {
-  const option = RIOT_TABLE.insurance?.find((candidate) => candidate.id === optionId);
+  const option = getRiotTable().insurance?.find((candidate) => candidate.id === optionId);
   const reasons: string[] = [];
 
   if (!option) {
     return { can: false, reasons: ["No such insurance."] };
   }
   if (G.pendingRiot?.playerID !== playerID) reasons.push("No riot is pending.");
-  if (G.pendingRiot?.boughtInsurance.includes(optionId)) reasons.push("Already declared this riot.");
+  if (G.pendingRiot?.boughtInsurance.includes(optionId))
+    reasons.push("Already declared this riot.");
   if (!canAfford(G.players[playerID].resources, option.cost)) reasons.push("Can't afford it.");
 
   return { can: reasons.length === 0, reasons, cost: option.cost };
@@ -54,10 +55,10 @@ export function buyRiotInsurance(
   G: HegemonyState,
   playerID: PlayerId,
   optionId: RiotInsuranceId,
-  demoteTarget?: { tileId: string; from: PopType }
+  demoteTarget?: { tileId: string; from: PopType },
 ): MoveResult {
   const status = getBuyRiotInsuranceStatus(G, playerID, optionId);
-  const option = RIOT_TABLE.insurance?.find((candidate) => candidate.id === optionId);
+  const option = getRiotTable().insurance?.find((candidate) => candidate.id === optionId);
 
   if (!option || !status.can || !G.pendingRiot) {
     return invalid(...status.reasons);
@@ -99,7 +100,7 @@ export function getResolveRiotStatus(G: HegemonyState, playerID: PlayerId): Acti
  */
 export function insuranceRollBonus(boughtInsurance: RiotInsuranceId[]): number {
   return boughtInsurance.reduce((bonus, optionId) => {
-    const option = RIOT_TABLE.insurance?.find((candidate) => candidate.id === optionId);
+    const option = getRiotTable().insurance?.find((candidate) => candidate.id === optionId);
     return bonus + (option?.modifier ?? 0);
   }, 0);
 }
@@ -120,9 +121,10 @@ export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
 
   const severe = pending.tier === "revolt";
   const unrest = G.ruleset.economy.unrest;
-  const { popsRemoved } = rollOnTable(G, playerID, RIOT_TABLE, {
-    modifier: insuranceRollBonus(pending.boughtInsurance) + (severe ? unrest.severeRollModifier : 0),
-    popLossMultiplier: severe ? unrest.severePopLossMultiplier : 1
+  const { popsRemoved } = rollOnTable(G, playerID, getRiotTable(), {
+    modifier:
+      insuranceRollBonus(pending.boughtInsurance) + (severe ? unrest.severeRollModifier : 0),
+    popLossMultiplier: severe ? unrest.severePopLossMultiplier : 1,
   });
 
   const player = G.players[playerID];
@@ -130,7 +132,10 @@ export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
 
   if (severe) {
     player.resources.happiness = G.ruleset.economy.unrest.severeRebound;
-    addLog(G, `${getPlayerName(G, playerID)}'s happiness settles at ${G.ruleset.economy.unrest.severeRebound}.`);
+    addLog(
+      G,
+      `${getPlayerName(G, playerID)}'s happiness settles at ${G.ruleset.economy.unrest.severeRebound}.`,
+    );
   }
 
   G.pendingRiot = null;

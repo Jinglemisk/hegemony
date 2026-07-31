@@ -1,8 +1,10 @@
-import { BUILDINGS } from "../game/data";
-import { setContentOverrides } from "../game/content";
-import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
-import type { Ruleset } from "../game/ruleset";
+import { getAuthoredGameContent, installGameContent } from "../game/content";
+import type { GameContent } from "../game/content";
+import { DEFAULT_RULESET, deriveRuleset, mergeRulesetPatches } from "../game/ruleset";
+import type { Ruleset, RulesetPatch } from "../game/ruleset";
 import type { BuildingDefinition } from "../game/types";
+import { getTuningPreset, isTuningPresetId } from "./tuningPresets";
+import type { TuningPresetId } from "./tuningPresets";
 
 /**
  * The DEV tuning model. A tuning session is a flat map of dot-path → value overrides,
@@ -22,6 +24,7 @@ export type OverrideValue = number | boolean;
 export type OverrideMap = Record<string, OverrideValue>;
 
 const STORAGE_KEY = "hegemony-dev-overrides";
+const PRESET_STORAGE_KEY = "hegemony-dev-tuning-preset-v1";
 
 export function loadOverrides(): OverrideMap {
   if (typeof window === "undefined") {
@@ -43,6 +46,26 @@ export function saveOverrides(map: OverrideMap): void {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
   } catch {
     // Storage unavailable (private mode etc.) — tuning simply won't persist.
+  }
+}
+
+export function loadTuningPresetId(): TuningPresetId | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const value = window.localStorage.getItem(PRESET_STORAGE_KEY);
+    return isTuningPresetId(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveTuningPresetId(id: TuningPresetId | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (id) window.localStorage.setItem(PRESET_STORAGE_KEY, id);
+    else window.localStorage.removeItem(PRESET_STORAGE_KEY);
+  } catch {
+    // Storage unavailable — the preset still applies for the current reset only.
   }
 }
 
@@ -107,29 +130,58 @@ function setByPath(obj: Record<string, unknown>, segments: string[], value: unkn
 }
 
 /** The authored (code) value a path resolves to, for diffing and default display. */
-export function defaultValueAt(path: string): OverrideValue | undefined {
+function presetBaseline(presetId: TuningPresetId | null): {
+  ruleset: Ruleset;
+  content: GameContent;
+} {
+  const preset = getTuningPreset(presetId);
+  const authored = getAuthoredGameContent();
+  return {
+    ruleset: preset ? deriveRuleset(DEFAULT_RULESET, preset.rulesetPatch) : DEFAULT_RULESET,
+    content: preset ? preset.createContent(authored) : authored,
+  };
+}
+
+export function tuningBaselineRuleset(presetId: TuningPresetId | null): Ruleset {
+  return presetBaseline(presetId).ruleset;
+}
+
+export function defaultValueAt(
+  path: string,
+  presetId: TuningPresetId | null = null,
+): OverrideValue | undefined {
   const segments = path.split(".");
+  const baseline = presetBaseline(presetId);
   if (segments[0] === "ruleset") {
-    return getByPath(DEFAULT_RULESET, segments.slice(1)) as OverrideValue | undefined;
+    return getByPath(baseline.ruleset, segments.slice(1)) as OverrideValue | undefined;
   }
   if (segments[0] === "buildings") {
-    const building = BUILDINGS.find((candidate) => candidate.id === segments[1]);
-    return building ? (getByPath(building, segments.slice(2)) as OverrideValue | undefined) : undefined;
+    const building = baseline.content.buildings.find((candidate) => candidate.id === segments[1]);
+    return building
+      ? (getByPath(building, segments.slice(2)) as OverrideValue | undefined)
+      : undefined;
   }
   return undefined;
 }
 
 /** The effective value at a path under a given override map — the override if present, else the code default. */
-export function effectiveValueAt(map: OverrideMap, path: string): OverrideValue | undefined {
-  return path in map ? map[path] : defaultValueAt(path);
+export function effectiveValueAt(
+  map: OverrideMap,
+  path: string,
+  presetId: TuningPresetId | null = null,
+): OverrideValue | undefined {
+  return path in map ? map[path] : defaultValueAt(path, presetId);
 }
 
 /** Drop any override keys that equal their code default, so a "changed back" field
  *  doesn't linger in the diff or the persisted patch. */
-export function pruneToChanges(map: OverrideMap): OverrideMap {
+export function pruneToChanges(
+  map: OverrideMap,
+  presetId: TuningPresetId | null = null,
+): OverrideMap {
   const out: OverrideMap = {};
   for (const [path, value] of Object.entries(map)) {
-    if (value !== defaultValueAt(path)) {
+    if (value !== defaultValueAt(path, presetId)) {
       out[path] = value;
     }
   }
@@ -165,13 +217,16 @@ function cloneBuildings(base: BuildingDefinition[]): BuildingDefinition[] {
   return base.map((building) => ({
     ...building,
     cost: { ...building.cost },
-    effects: building.effects.map((effect) => ({ ...effect }))
+    effects: building.effects.map((effect) => ({ ...effect })),
   }));
 }
 
 /** Apply the `buildings.*` overrides onto a deep copy of `base`; returns null when there
  *  are none, so the caller can clear the content override rather than install a clone. */
-export function applyBuildingOverrides(base: BuildingDefinition[], map: OverrideMap): BuildingDefinition[] | null {
+export function applyBuildingOverrides(
+  base: BuildingDefinition[],
+  map: OverrideMap,
+): BuildingDefinition[] | null {
   const buildingPaths = Object.entries(map).filter(([path]) => path.startsWith("buildings."));
   if (buildingPaths.length === 0) {
     return null;
@@ -187,18 +242,78 @@ export function applyBuildingOverrides(base: BuildingDefinition[], map: Override
   return clone;
 }
 
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+export function stableTuningHash(value: unknown): string {
+  const canonical = canonicalJson(value);
+  let hash = 5381;
+  for (let index = 0; index < canonical.length; index += 1) {
+    hash = ((hash << 5) + hash + canonical.charCodeAt(index)) >>> 0;
+  }
+  return hash.toString(16).padStart(8, "0");
+}
+
+export type ResolvedTuning = {
+  ruleset: Ruleset;
+  rulesetPatch: RulesetPatch | null;
+  content: GameContent;
+  presetId: TuningPresetId | null;
+  resolvedContentHash: string;
+  manualPatchHash: string | null;
+};
+
+/** Pure browser/simulator resolver. Precedence is mode → preset → explicit ruleset
+ *  patch → manual dot-path overrides. Content is freshly cloned by every preset. */
+export function resolveTuning(
+  base: Ruleset,
+  presetId: TuningPresetId | null,
+  map: OverrideMap = {},
+  explicitPatch: RulesetPatch | null = null,
+): ResolvedTuning {
+  const preset = getTuningPreset(presetId);
+  const manualRuleset = rulesetPatchFromOverrides(map) as RulesetPatch | null;
+  const rulesetPatch = mergeRulesetPatches(
+    mergeRulesetPatches(preset?.rulesetPatch ?? null, explicitPatch),
+    manualRuleset,
+  );
+  const authored = getAuthoredGameContent();
+  const presetContent = preset ? preset.createContent(authored) : authored;
+  const manualBuildings = applyBuildingOverrides(presetContent.buildings, map);
+  const content = manualBuildings
+    ? { ...presetContent, buildings: manualBuildings }
+    : presetContent;
+
+  return {
+    ruleset: rulesetPatch ? deriveRuleset(base, rulesetPatch) : base,
+    rulesetPatch,
+    content,
+    presetId,
+    resolvedContentHash: stableTuningHash(content),
+    manualPatchHash: Object.keys(map).length > 0 ? stableTuningHash(map) : null,
+  };
+}
+
 /**
- * The one integration point: called from the controller at game creation. Installs the
- * building content override (or clears it) and returns the ruleset patched with the
- * `ruleset.*` overrides. A no-op that returns `base` unchanged when not in dev or when
- * no overrides are set.
+ * The one browser integration point: called from the controller at game creation.
+ * Installs the complete resolved content package and returns the resolved ruleset.
+ * Production clears the package back to authored content and returns `base` unchanged.
  */
 export function resolveTunedRuleset(base: Ruleset): Ruleset {
   if (!import.meta.env.DEV) {
-    setContentOverrides({ buildings: null, terrain: null });
+    installGameContent(null);
     return base;
   }
   const map = loadOverrides();
-  setContentOverrides({ buildings: applyBuildingOverrides(BUILDINGS, map) });
-  return applyRulesetOverrides(base, map);
+  const resolved = resolveTuning(base, loadTuningPresetId(), map);
+  installGameContent(resolved.content);
+  return resolved.ruleset;
 }

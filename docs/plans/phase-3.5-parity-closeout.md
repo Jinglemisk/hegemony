@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "3.5"
-updated: 2026-07-29
+updated: 2026-07-31
 ---
 
 # Phase 3.5 parity closeout
@@ -37,8 +37,10 @@ roadmap's engine/frontend/simulation-AI parity contract.
 
 **Delivery state:** Steps 1–3 merged in PRs #58, #59, and #57. The shared presentation
 layer was rebased and reconciled with the effective-value APIs and parity manifests
-before merge. Under the Phase 3.5 order amendment, the approved low-number economy
-preset is the next implementation slice. Steps 4 and 5 remain pending.
+before merge. The Phase 3.5 order amendment is fulfilled by the implemented
+`low-number-core-v1` preset and its
+[matched campaign](../reports/simulation/2026-07-31-low-number-core-v1.md). Step 4,
+the Assembly revision, is next; Step 5 remains pending.
 
 ## Merge and testing rules
 

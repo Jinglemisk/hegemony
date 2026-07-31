@@ -1,10 +1,25 @@
 import { PLAYER_IDS } from "./data";
-import type { EventCard, EventDeckKind, EventEffect, HegemonyState, PlayerId, Resource, Resources, SeasonName } from "./types";
+import type {
+  EventCard,
+  EventDeckKind,
+  EventEffect,
+  HegemonyState,
+  PlayerId,
+  Resource,
+  Resources,
+  SeasonName,
+} from "./types";
 import { seasonName } from "./core/calendar";
-import { capitalize, formatPopName, formatRuleNumber, formatRuleResourceDelta, formatTileLabel } from "./core/format";
+import {
+  capitalize,
+  formatPopName,
+  formatRuleNumber,
+  formatRuleResourceDelta,
+  formatTileLabel,
+} from "./core/format";
 import { totalPops } from "./core/pops";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
-import { applyResourceDelta, createResourceDelta } from "./core/resources";
+import { applyResourceDeltaWithFloors, createResourceDelta } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { shuffleWithSeed } from "./core/rng";
@@ -44,14 +59,17 @@ export function drawPlayerEvent(G: HegemonyState, playerID: PlayerId) {
   }
 
   G.pendingPlayerEvent = { card, playerID };
-  addLog(G, `${getPlayerName(G, playerID)} must reveal and resolve ${card.name} before taking normal actions.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} must reveal and resolve ${card.name} before taking normal actions.`,
+  );
 }
 
 export function resolvePendingPlayerEvent(
   G: HegemonyState,
   playerID: PlayerId,
   targetTileId?: string,
-  choiceIndex = 0
+  choiceIndex = 0,
 ): MoveResult {
   const pending = G.pendingPlayerEvent;
 
@@ -82,21 +100,27 @@ export function resolvePendingPlayerEvent(
 }
 
 export function getEventEffectChoices(card: EventCard): EventEffect[][] {
-  const choiceEffect = card.effects.find((effect): effect is Extract<EventEffect, { type: "choice" }> => effect.type === "choice");
+  const choiceEffect = card.effects.find(
+    (effect): effect is Extract<EventEffect, { type: "choice" }> => effect.type === "choice",
+  );
 
   return choiceEffect ? choiceEffect.options : [card.effects];
 }
 
 export function getAddPopsEffect(effects: EventEffect[]) {
-  return effects.find((effect): effect is Extract<EventEffect, { type: "addPops" }> => effect.type === "addPops");
+  return effects.find(
+    (effect): effect is Extract<EventEffect, { type: "addPops" }> => effect.type === "addPops",
+  );
 }
 
 export function getEventPopTargetTileIds(
   G: HegemonyState,
   playerID: PlayerId,
-  effect: Extract<EventEffect, { type: "addPops" }>
+  effect: Extract<EventEffect, { type: "addPops" }>,
 ) {
-  return G.players[playerID].settlements.filter((tileId) => canAddEventPopsToSettlement(G, playerID, tileId, effect));
+  return G.players[playerID].settlements.filter((tileId) =>
+    canAddEventPopsToSettlement(G, playerID, tileId, effect),
+  );
 }
 
 function drawFromEventDeck(G: HegemonyState, deck: EventDeckKind) {
@@ -148,11 +172,13 @@ function canAddEventPopsToSettlement(
   G: HegemonyState,
   playerID: PlayerId,
   tileId: string,
-  effect: Extract<EventEffect, { type: "addPops" }>
+  effect: Extract<EventEffect, { type: "addPops" }>,
 ) {
   const settlement = getOwnedSettlement(G, tileId, playerID);
 
-  return settlement ? totalPops(settlement.pops) + effect.amount <= settlementCapacity(settlement, G.ruleset) : false;
+  return settlement
+    ? totalPops(settlement.pops) + effect.amount <= settlementCapacity(settlement, G.ruleset)
+    : false;
 }
 
 function applyEventEffects(
@@ -160,7 +186,7 @@ function applyEventEffects(
   card: EventCard,
   activePlayerID: PlayerId | null,
   effects: EventEffect[],
-  targetTileId?: string
+  targetTileId?: string,
 ) {
   for (const effect of effects) {
     if (effect.type === "choice") {
@@ -169,20 +195,47 @@ function applyEventEffects(
 
     if (effect.type === "resourceDelta") {
       for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        applyEventResourceDelta(G, playerID, createResourceDelta(effect.resource, effect.amount), card.name);
+        applyEventResourceDelta(
+          G,
+          playerID,
+          createResourceDelta(effect.resource, effect.amount),
+          card.name,
+        );
       }
     } else if (effect.type === "scaledResourceDelta") {
       for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        const amount = scaledByPops(G, playerID, effect.amountPerPops, effect.popStep, effect.minimum);
-        applyEventResourceDelta(G, playerID, createResourceDelta(effect.resource, amount), card.name);
+        const amount = scaledByPops(
+          G,
+          playerID,
+          effect.amountPerPops,
+          effect.popStep,
+          effect.minimum,
+        );
+        applyEventResourceDelta(
+          G,
+          playerID,
+          createResourceDelta(effect.resource, amount),
+          card.name,
+        );
       }
     } else if (effect.type === "happinessDelta") {
       for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        applyEventResourceDelta(G, playerID, createResourceDelta("happiness", effect.amount), card.name);
+        applyEventResourceDelta(
+          G,
+          playerID,
+          createResourceDelta("happiness", effect.amount),
+          card.name,
+        );
       }
     } else if (effect.type === "scaledHappinessDelta" && effect.duration !== "season") {
       for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        const amount = scaledByPops(G, playerID, effect.amountPerPops, effect.popStep, effect.minimumMagnitude);
+        const amount = scaledByPops(
+          G,
+          playerID,
+          effect.amountPerPops,
+          effect.popStep,
+          effect.minimumMagnitude,
+        );
         applyEventResourceDelta(G, playerID, createResourceDelta("happiness", amount), card.name);
       }
     } else if (effect.type === "timedHappinessDelta") {
@@ -193,11 +246,11 @@ function applyEventEffects(
           sourceCardId: card.id,
           sourceName: card.name,
           sourceDeck: card.deck,
-          sourceScope: effect.scope
+          sourceScope: effect.scope,
         });
         addLog(
           G,
-          `${getPlayerName(G, playerID)} will feel ${formatRuleNumber(effect.amountPerTurn)} happiness per turn from ${card.name} for ${effect.turns} turns.`
+          `${getPlayerName(G, playerID)} will feel ${formatRuleNumber(effect.amountPerTurn)} happiness per turn from ${card.name} for ${effect.turns} turns.`,
         );
       }
     } else if (effect.type === "incomeModifier" || effect.type === "buildingCostMultiplier") {
@@ -217,7 +270,7 @@ function applyEventEffects(
       G.players[activePlayerID].popsGainedFromEvents += effect.amount;
       addLog(
         G,
-        `${getPlayerName(G, activePlayerID)} added ${effect.amount} ${formatPopName(effect.pop, effect.amount)} to ${formatTileLabel(G, targetTileId)} from ${card.name}.`
+        `${getPlayerName(G, activePlayerID)} added ${effect.amount} ${formatPopName(effect.pop, effect.amount)} to ${formatTileLabel(G, targetTileId)} from ${card.name}.`,
       );
     } else if (effect.type === "actionCostDiscount") {
       if (!activePlayerID) {
@@ -233,11 +286,11 @@ function applyEventEffects(
         pop: effect.pop,
         resource: effect.resource,
         amount: effect.amount,
-        consume: effect.consume
+        consume: effect.consume,
       });
       addLog(
         G,
-        `${getPlayerName(G, activePlayerID)} gained a ${formatRuleNumber(effect.amount)} ${effect.resource} discount from ${card.name}.`
+        `${getPlayerName(G, activePlayerID)} gained a ${formatRuleNumber(effect.amount)} ${effect.resource} discount from ${card.name}.`,
       );
     } else if (effect.type === "resourceExchange") {
       if (!activePlayerID) {
@@ -245,39 +298,62 @@ function applyEventEffects(
       }
 
       const player = G.players[activePlayerID];
-      const exchanged = Math.min(effect.maxAmount, Math.max(0, player.resources[effect.from]));
+      const floor = G.ruleset.economy.stockpileFloors[effect.from] ?? 0;
+      const exchanged = Math.min(
+        effect.maxAmount,
+        Math.max(0, player.resources[effect.from] - floor),
+      );
       // Non-integer ratios round the payout down — a short-stocked trade never mints fractions.
       const received = Math.floor(exchanged * effect.ratio);
-      player.resources[effect.from] -= exchanged;
-      player.resources[effect.to] += received;
+      applyResourceDeltaWithFloors(
+        player.resources,
+        createResourceDelta(effect.from, -exchanged),
+        G.ruleset.economy.stockpileFloors,
+      );
+      applyResourceDeltaWithFloors(
+        player.resources,
+        createResourceDelta(effect.to, received),
+        G.ruleset.economy.stockpileFloors,
+      );
       addLog(
         G,
         `${getPlayerName(G, activePlayerID)} exchanged ${formatRuleNumber(exchanged)} ${effect.from} for ${formatRuleNumber(
-          received
-        )} ${effect.to} from ${card.name}.`
+          received,
+        )} ${effect.to} from ${card.name}.`,
       );
     } else if (effect.type === "resourceDeltaPerPop") {
       for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
         const popCount = countPlayerPopType(G, playerID, effect.pop);
         const amount = Math.max(effect.minimum, popCount * effect.amountPerPop);
-        applyEventResourceDelta(G, playerID, createResourceDelta(effect.resource, amount), card.name);
+        applyEventResourceDelta(
+          G,
+          playerID,
+          createResourceDelta(effect.resource, amount),
+          card.name,
+        );
       }
     }
   }
 }
 
-function applyEventResourceDelta(G: HegemonyState, playerID: PlayerId, delta: Resources, source: string) {
+function applyEventResourceDelta(
+  G: HegemonyState,
+  playerID: PlayerId,
+  delta: Resources,
+  source: string,
+) {
   const resources = G.players[playerID].resources;
 
   // Harm cards can't take what isn't there: stocks clamp at zero. Happiness is the
   // exception — it is a ledger that goes negative by design (unrest).
   for (const [resource, amount] of Object.entries(delta) as Array<[Resource, number]>) {
     if (resource !== "happiness" && amount < 0) {
-      delta[resource] = -Math.min(-amount, Math.max(0, resources[resource]));
+      const floor = G.ruleset.economy.stockpileFloors[resource] ?? 0;
+      delta[resource] = -Math.min(-amount, Math.max(0, resources[resource] - floor));
     }
   }
 
-  applyResourceDelta(resources, delta);
+  applyResourceDeltaWithFloors(resources, delta, G.ruleset.economy.stockpileFloors);
   addLog(G, `${getPlayerName(G, playerID)} resolved ${source}: ${formatRuleResourceDelta(delta)}.`);
 }
 

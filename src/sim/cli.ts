@@ -13,14 +13,31 @@ import {
 import type { EconomyPreview } from "../game/economy/preview";
 import { applyMove, describeMove, enumerateLegalMoves } from "../game/legalMoves";
 import type { LegalMove } from "../game/legalMoves";
-import { setContentOverrides } from "../game/content";
-import { BUILDINGS, PLAYER_IDS } from "../game/data";
-import { GAME_MODES, mergeRulesetPatches } from "../game/ruleset";
+import { getAuthoredGameContent, installGameContent } from "../game/content";
+import { PLAYER_IDS } from "../game/data";
+import { GAME_MODES } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
-import { applyBuildingOverrides, rulesetPatchFromOverrides } from "../dev/tuning";
+import { resolveTuning } from "../dev/tuning";
 import type { OverrideMap } from "../dev/tuning";
-import type { BoardLayout, BuildingId, HegemonyState, PlayerId, PopType, Pops } from "../game/types";
-import { renderBatchReport, renderHeader, renderLegal, renderLog, renderPreview, renderProjection, renderShow } from "./format";
+import { isTuningPresetId, TUNING_PRESETS } from "../dev/tuningPresets";
+import type { TuningPresetId } from "../dev/tuningPresets";
+import type {
+  BoardLayout,
+  BuildingId,
+  HegemonyState,
+  PlayerId,
+  PopType,
+  Pops,
+} from "../game/types";
+import {
+  renderBatchReport,
+  renderHeader,
+  renderLegal,
+  renderLog,
+  renderPreview,
+  renderProjection,
+  renderShow,
+} from "./format";
 import { DEFAULT_SAVE_PATH, loadGame, saveGame } from "./io";
 import type { MoveRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
 import { POLICIES, resolvePolicy } from "./policies";
@@ -181,7 +198,9 @@ function parseBoard(flags: Flags): BoardLayout {
 }
 
 /** `--seats greedy,smart,smart,smart` → a policy per seat, plus the display names. */
-function parseSeats(flags: Flags): { policies: Record<PlayerId, Policy>; names: Record<PlayerId, string> } | null {
+function parseSeats(
+  flags: Flags,
+): { policies: Record<PlayerId, Policy>; names: Record<PlayerId, string> } | null {
   if (typeof flags.seats !== "string") {
     return null;
   }
@@ -189,7 +208,9 @@ function parseSeats(flags: Flags): { policies: Record<PlayerId, Policy>; names: 
   const parts = flags.seats.split(",").map((entry) => entry.trim());
 
   if (parts.length !== PLAYER_IDS.length) {
-    fail(`--seats needs ${PLAYER_IDS.length} comma-separated policies (got ${parts.length}: "${flags.seats}")`);
+    fail(
+      `--seats needs ${PLAYER_IDS.length} comma-separated policies (got ${parts.length}: "${flags.seats}")`,
+    );
   }
 
   const policies = {} as Record<PlayerId, Policy>;
@@ -231,14 +252,15 @@ function parseTune(flags: Flags): OverrideMap | null {
   return JSON.parse(readFileSync(flags["tune-patch"], "utf8")) as OverrideMap;
 }
 
-/** A stable fingerprint of a tune map for the report, so a run's content is identifiable. */
-function hashTune(map: OverrideMap): string {
-  const canonical = JSON.stringify(Object.fromEntries(Object.entries(map).sort(([a], [b]) => a.localeCompare(b))));
-  let hash = 5381;
-  for (let index = 0; index < canonical.length; index += 1) {
-    hash = ((hash << 5) + hash + canonical.charCodeAt(index)) >>> 0;
+function parseTuningPreset(flags: Flags): TuningPresetId | null {
+  const value = flags["tune-preset"];
+  if (value === undefined) return null;
+  if (!isTuningPresetId(value)) {
+    fail(
+      `unknown tuning preset "${String(value)}" — expected one of: ${Object.keys(TUNING_PRESETS).join(", ")}`,
+    );
   }
-  return hash.toString(16);
+  return value;
 }
 
 function cmdNew(flags: Flags, file: string) {
@@ -255,7 +277,10 @@ function cmdNew(flags: Flags, file: string) {
     fail(`unknown opening "${opening}" — expected random, fixed, or manual`);
   }
 
-  const botSeed = flags["bot-seed"] !== undefined ? requireInt(flags["bot-seed"], "--bot-seed") : deriveBotSeed(seed);
+  const botSeed =
+    flags["bot-seed"] !== undefined
+      ? requireInt(flags["bot-seed"], "--bot-seed")
+      : deriveBotSeed(seed);
   const simRng = createSimRng(botSeed);
   const history: MoveRecord[] = [];
 
@@ -294,7 +319,10 @@ function cmdShow(flags: Flags, file: string) {
     return;
   }
 
-  const onlyPlayer = typeof flags.player === "string" ? (flags.player as SaveFile["state"]["currentPlayer"]) : undefined;
+  const onlyPlayer =
+    typeof flags.player === "string"
+      ? (flags.player as SaveFile["state"]["currentPlayer"])
+      : undefined;
   console.log(renderShow(save.state, onlyPlayer));
 }
 
@@ -322,7 +350,8 @@ function applyAndSave(save: SaveFile, file: string, move: LegalMove, quiet = fal
   const result = applyMove(G, player, move);
 
   if (!result.ok) {
-    const reasons = result.reasons.length > 0 ? result.reasons.join(" ") : "(the engine gave no reason)";
+    const reasons =
+      result.reasons.length > 0 ? result.reasons.join(" ") : "(the engine gave no reason)";
     fail(`Move rejected: ${describeMove(move)} — ${reasons}`);
   }
 
@@ -340,7 +369,11 @@ function applyAndSave(save: SaveFile, file: string, move: LegalMove, quiet = fal
 /** Pick the current player's enumerated move matching `predicate` — lets named commands
  *  for payload-heavy actions (bank/civic/venture/riot) reuse the validated move instead
  *  of hand-building its cost/option fields. */
-function findLegal(G: HegemonyState, predicate: (move: LegalMove) => boolean, description: string): LegalMove {
+function findLegal(
+  G: HegemonyState,
+  predicate: (move: LegalMove) => boolean,
+  description: string,
+): LegalMove {
   const match = enumerateLegalMoves(G, G.currentPlayer).find(predicate);
 
   if (!match) {
@@ -357,7 +390,12 @@ function cmdMove(positionals: string[], file: string) {
   const move = ((): LegalMove => {
     switch (sub) {
       case "build":
-        return { type: "buildBuilding", tileId: requireTileId(args[0], "tile"), buildingId: args[1] as BuildingId, cost: {} };
+        return {
+          type: "buildBuilding",
+          tileId: requireTileId(args[0], "tile"),
+          buildingId: args[1] as BuildingId,
+          cost: {},
+        };
       case "found":
         return {
           type: "foundColony",
@@ -369,7 +407,12 @@ function cmdMove(positionals: string[], file: string) {
       case "upgrade":
         return { type: "upgradeColonyToCity", tileId: requireTileId(args[0], "tile"), cost: {} };
       case "grow":
-        return { type: "growPop", tileId: requireTileId(args[0], "tile"), pop: parsePopType(args[1]), cost: {} };
+        return {
+          type: "growPop",
+          tileId: requireTileId(args[0], "tile"),
+          pop: parsePopType(args[1]),
+          cost: {},
+        };
       case "pops":
         return {
           type: "movePops",
@@ -378,40 +421,71 @@ function cmdMove(positionals: string[], file: string) {
           pops: parsePops(args[2]),
         };
       case "place-capital":
-        return { type: "placeCapital", tileId: requireTileId(args[0], "tile"), pops: parsePops(args[1]) };
+        return {
+          type: "placeCapital",
+          tileId: requireTileId(args[0], "tile"),
+          pops: parsePops(args[1]),
+        };
       case "place-colony":
-        return { type: "placeColony", tileId: requireTileId(args[0], "tile"), pops: parsePops(args[1]) };
+        return {
+          type: "placeColony",
+          tileId: requireTileId(args[0], "tile"),
+          pops: parsePops(args[1]),
+        };
       case "resolve": {
         // Accept "resolve", "resolve 1", "resolve -2,1", "resolve 1 -2,1".
         if (args[0] !== undefined && TILE_ID.test(args[0])) {
           return { type: "resolveEvent", choiceIndex: 0, targetTileId: args[0] };
         }
         const choiceIndex = args[0] !== undefined ? requireInt(args[0], "choice index") : 0;
-        const targetTileId = args[1] !== undefined ? requireTileId(args[1], "target tile") : undefined;
+        const targetTileId =
+          args[1] !== undefined ? requireTileId(args[1], "target tile") : undefined;
         return { type: "resolveEvent", choiceIndex, targetTileId };
       }
       case "bank-sell":
-        return findLegal(save.state, (move) => move.type === "bankSell" && move.material === args[0], `bank-sell ${args[0] ?? "<material>"}`);
+        return findLegal(
+          save.state,
+          (move) => move.type === "bankSell" && move.material === args[0],
+          `bank-sell ${args[0] ?? "<material>"}`,
+        );
       case "bank-buy":
-        return findLegal(save.state, (move) => move.type === "bankBuy" && move.material === args[0], `bank-buy ${args[0] ?? "<material>"}`);
+        return findLegal(
+          save.state,
+          (move) => move.type === "bankBuy" && move.material === args[0],
+          `bank-buy ${args[0] ?? "<material>"}`,
+        );
       case "promote": {
         const tileId = requireTileId(args[0], "tile");
         const from = parsePopType(args[1]);
-        return findLegal(save.state, (move) => move.type === "promotePop" && move.tileId === tileId && move.from === from, "promote");
+        return findLegal(
+          save.state,
+          (move) => move.type === "promotePop" && move.tileId === tileId && move.from === from,
+          "promote",
+        );
       }
       case "demote": {
         const tileId = requireTileId(args[0], "tile");
         const from = parsePopType(args[1]);
-        return findLegal(save.state, (move) => move.type === "demotePop" && move.tileId === tileId && move.from === from, "demote");
+        return findLegal(
+          save.state,
+          (move) => move.type === "demotePop" && move.tileId === tileId && move.from === from,
+          "demote",
+        );
       }
       case "calm":
         return findLegal(save.state, (move) => move.type === "civicCalm", "civic calm");
       case "venture":
-        return findLegal(save.state, (move) => move.type === "fundExpedition" && move.stake === args[0], `venture ${args[0] ?? "<gold|wood>"}`);
+        return findLegal(
+          save.state,
+          (move) => move.type === "fundExpedition" && move.stake === args[0],
+          `venture ${args[0] ?? "<gold|wood>"}`,
+        );
       case "insure":
         return findLegal(
           save.state,
-          (move) => move.type === "buyRiotInsurance" && (args[0] === undefined || move.optionId === args[0]),
+          (move) =>
+            move.type === "buyRiotInsurance" &&
+            (args[0] === undefined || move.optionId === args[0]),
           "riot insurance",
         );
       case "resolve-riot":
@@ -421,7 +495,9 @@ function cmdMove(positionals: string[], file: string) {
         const index = requireInt(args[0], "move index");
 
         if (index < 0 || index >= moves.length) {
-          fail(`move index ${index} out of range — legal moves: 0..${moves.length - 1} (see: legal)`);
+          fail(
+            `move index ${index} out of range — legal moves: 0..${moves.length - 1} (see: legal)`,
+          );
         }
 
         return moves[index];
@@ -464,7 +540,9 @@ function cmdPreview(positionals: string[], flags: Flags, file: string) {
     const preview = previewLegalMove(save, move);
 
     if (!preview) {
-      console.log(`No economy preview for "${move.type}" moves — this action has no resource projection.`);
+      console.log(
+        `No economy preview for "${move.type}" moves — this action has no resource projection.`,
+      );
       return;
     }
 
@@ -475,7 +553,12 @@ function cmdPreview(positionals: string[], flags: Flags, file: string) {
   const preview = ((): EconomyPreview | null => {
     switch (sub) {
       case "build":
-        return previewBuildBuilding(G, playerID, requireTileId(args[0], "tile"), args[1] as BuildingId);
+        return previewBuildBuilding(
+          G,
+          playerID,
+          requireTileId(args[0], "tile"),
+          args[1] as BuildingId,
+        );
       case "found":
         return previewFoundColony(
           G,
@@ -495,7 +578,9 @@ function cmdPreview(positionals: string[], flags: Flags, file: string) {
           parsePops(args[2]),
         );
       default:
-        fail(`unknown preview "${String(sub)}" — expected build, found, upgrade, pops, or --index N`);
+        fail(
+          `unknown preview "${String(sub)}" — expected build, found, upgrade, pops, or --index N`,
+        );
     }
   })();
 
@@ -535,7 +620,10 @@ function cmdAuto(flags: Flags, file: string) {
   const turns = flags.turns !== undefined ? requirePositiveInt(flags.turns, "--turns") : 40;
   const policy = resolvePolicy(typeof flags.policy === "string" ? flags.policy : "random");
   // Continue the save's bot stream by default so command sequences stay reproducible.
-  const botSeed = flags["bot-seed"] !== undefined ? requireInt(flags["bot-seed"], "--bot-seed") : save.botRngState;
+  const botSeed =
+    flags["bot-seed"] !== undefined
+      ? requireInt(flags["bot-seed"], "--bot-seed")
+      : save.botRngState;
   const rng = createSimRng(botSeed);
   const quiet = Boolean(flags.quiet);
 
@@ -568,7 +656,9 @@ function cmdReplay(flags: Flags, file: string) {
   const script = JSON.parse(readFileSync(flags.script, "utf8")) as ScriptFile;
   const state = replayScript(script);
 
-  console.log(`Replayed ${script.moves.length} moves cleanly (seed ${script.seed}, mode ${script.mode}).`);
+  console.log(
+    `Replayed ${script.moves.length} moves cleanly (seed ${script.seed}, mode ${script.mode}).`,
+  );
   console.log(renderHeader(state));
 
   const out = typeof flags.out === "string" ? flags.out : flags.out === true ? file : undefined;
@@ -608,100 +698,102 @@ function cmdBatch(flags: Flags) {
   const rotate = Boolean(flags.rotate);
 
   if (rotate && !seats) {
-    fail("--rotate needs --seats <p0,p1,p2,p3> (there is nothing to rotate without per-seat policies)");
+    fail(
+      "--rotate needs --seats <p0,p1,p2,p3> (there is nothing to rotate without per-seat policies)",
+    );
   }
 
   const mode = parseMode(flags);
   const patch = parsePatch(flags);
   const boardLayout = parseBoard(flags);
   const tune = parseTune(flags);
-  // Install the tune-panel content override (buildings) for the whole run, and fold its
-  // ruleset scalars into the ruleset patch. Set once before the loop — fixed for the run.
-  if (tune) {
-    setContentOverrides({ buildings: applyBuildingOverrides(BUILDINGS, tune) });
-  }
-  const effectivePatch = mergeRulesetPatches(
-    patch,
-    tune ? (rulesetPatchFromOverrides(tune) as RulesetPatch | null) : null,
-  ) as RulesetPatch | null;
+  const presetId = parseTuningPreset(flags);
+  const resolved = resolveTuning(GAME_MODES[mode].ruleset, presetId, tune ?? {}, patch);
+  installGameContent(resolved.content);
+  const effectivePatch = resolved.rulesetPatch;
   const baseSeed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createSeed();
   const reportPath = typeof flags.report === "string" ? flags.report : ".sim/report.json";
   const csvPath = typeof flags.csv === "string" ? flags.csv : undefined;
 
-  const aggregator = new Aggregator();
-  const logEvery = games <= 20 ? 1 : 10;
-  // Rotation reseats each policy through every seat on the SAME seed to cancel
-  // first-player advantage; without it, one game per base seed.
-  const rotations = seats && rotate ? PLAYER_IDS.length : 1;
+  try {
+    const aggregator = new Aggregator();
+    const logEvery = games <= 20 ? 1 : 10;
+    // Rotation reseats each policy through every seat on the SAME seed to cancel
+    // first-player advantage; without it, one game per base seed.
+    const rotations = seats && rotate ? PLAYER_IDS.length : 1;
 
-  let gameIndex = 0;
-  for (let base = 0; base < games; base += 1) {
-    const seed = (baseSeed + base) >>> 0;
+    let gameIndex = 0;
+    for (let base = 0; base < games; base += 1) {
+      const seed = (baseSeed + base) >>> 0;
 
-    for (let r = 0; r < rotations; r += 1) {
-      const seatPolicies = seats ? rotateSeats(seats.policies, r) : undefined;
-      const seatNames = seats ? rotateSeats(seats.names, r) : undefined;
-      const currentGame = gameIndex;
+      for (let r = 0; r < rotations; r += 1) {
+        const seatPolicies = seats ? rotateSeats(seats.policies, r) : undefined;
+        const seatNames = seats ? rotateSeats(seats.names, r) : undefined;
+        const currentGame = gameIndex;
 
-      const G = runGame({
-        seed,
-        mode,
-        patch: effectivePatch,
-        boardLayout,
-        policy,
-        seatPolicies,
-        turns,
-        trimLogTo: 200,
-        hooks: {
-          onGameStart: (state) => aggregator.beginGame(currentGame, seed, state, seatNames),
-          onMove: (state, player, move) => aggregator.onMove(state, player, move),
-          onTurnEnd: (state) => aggregator.onTurnEnd(state),
-          onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
-        },
-      });
+        const G = runGame({
+          seed,
+          mode,
+          patch: effectivePatch,
+          boardLayout,
+          policy,
+          seatPolicies,
+          turns,
+          trimLogTo: 200,
+          hooks: {
+            onGameStart: (state) => aggregator.beginGame(currentGame, seed, state, seatNames),
+            onMove: (state, player, move) => aggregator.onMove(state, player, move),
+            onTurnEnd: (state) => aggregator.onTurnEnd(state),
+            onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
+          },
+        });
 
-      aggregator.endGame(G);
-      gameIndex += 1;
+        aggregator.endGame(G);
+        gameIndex += 1;
+      }
+
+      if ((base + 1) % logEvery === 0) {
+        console.log(
+          `seed ${base + 1}/${games} done (${rotations > 1 ? `${rotations} rotations, ` : ""}seed ${seed})`,
+        );
+      }
     }
 
-    if ((base + 1) % logEvery === 0) {
-      console.log(`seed ${base + 1}/${games} done (${rotations > 1 ? `${rotations} rotations, ` : ""}seed ${seed})`);
+    const report = aggregator.buildReport({
+      games: gameIndex,
+      turns,
+      policy: seats ? "mixed" : policy.name,
+      mode,
+      boardLayout,
+      seatPolicies: seats ? seats.names : null,
+      baseSeed,
+      botSeedRule: "seed ^ 0x9e3779b9",
+      rulesetPatch: effectivePatch,
+      tunePatch: tune ?? null,
+      tunePatchHash: resolved.manualPatchHash,
+      tuningPresetId: resolved.presetId,
+      resolvedContentHash: resolved.resolvedContentHash,
+      generatedAt: new Date().toISOString(),
+    });
+
+    writeJson(reportPath, report);
+    console.log(`\nReport written to ${reportPath}.`);
+
+    if (csvPath) {
+      mkdirSync(dirname(csvPath), { recursive: true });
+      writeFileSync(csvPath, snapshotsToCsv(aggregator.allSnapshots()));
+      console.log(`Turn snapshots written to ${csvPath}.`);
     }
+
+    console.log("\n" + renderBatchReport(report));
+  } finally {
+    installGameContent(null);
   }
-
-  // Clear the global content override now the run is done (report build doesn't need it).
-  if (tune) {
-    setContentOverrides({ buildings: null });
-  }
-
-  const report = aggregator.buildReport({
-    games: gameIndex,
-    turns,
-    policy: seats ? "mixed" : policy.name,
-    mode,
-    boardLayout,
-    seatPolicies: seats ? seats.names : null,
-    baseSeed,
-    botSeedRule: "seed ^ 0x9e3779b9",
-    rulesetPatch: effectivePatch,
-    tunePatch: tune ?? null,
-    tunePatchHash: tune ? hashTune(tune) : null,
-    generatedAt: new Date().toISOString(),
-  });
-
-  writeJson(reportPath, report);
-  console.log(`\nReport written to ${reportPath}.`);
-
-  if (csvPath) {
-    mkdirSync(dirname(csvPath), { recursive: true });
-    writeFileSync(csvPath, snapshotsToCsv(aggregator.allSnapshots()));
-    console.log(`Turn snapshots written to ${csvPath}.`);
-  }
-
-  console.log("\n" + renderBatchReport(report));
 }
 
-const BUILDING_IDS = BUILDINGS.map((building) => building.id).join("|");
+const BUILDING_IDS = getAuthoredGameContent()
+  .buildings.map((building) => building.id)
+  .join("|");
 const POLICY_IDS = Object.keys(POLICIES).join("|");
 
 const HELP = `Hegemony headless sim — usage: npm run sim -- <command> [args] [--file path]
@@ -731,7 +823,8 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
   end-turn
   auto       [--turns N] [--policy ${POLICY_IDS}] [--record s.json] [--quiet]
   batch      --games N [--turns N] [--policy ${POLICY_IDS}] [--seed N] [--board classic|shuffled]
-             [--ruleset-patch p.json] [--tune-patch p.json] [--seats ${POLICY_IDS}×4] [--rotate]
+             [--ruleset-patch p.json] [--tune-preset low-number-core-v1] [--tune-patch p.json]
+             [--seats ${POLICY_IDS}×4] [--rotate]
              [--report r.json] [--csv t.csv]
   replay     --script s.json [--out save.json]
 

@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react";
-import { DEMOTE_FROM, getBuyRiotInsuranceStatus, getDemotePopStatus, getTile, insuranceRollBonus } from "../../../game/rules";
-import { RIOT_TABLE } from "../../../game/data";
+import {
+  DEMOTE_FROM,
+  getBuyRiotInsuranceStatus,
+  getDemotePopStatus,
+  getTile,
+  insuranceRollBonus,
+} from "../../../game/rules";
+import { getRiotTable } from "../../../game/content";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
@@ -17,7 +23,7 @@ import { TileListbox } from "../TileListbox";
  */
 export function RiotModal({
   onRolled,
-  onDismissResult
+  onDismissResult,
 }: {
   onRolled: () => void;
   onDismissResult: () => void;
@@ -30,6 +36,7 @@ export function RiotModal({
   const playerID = G.pendingRiot?.playerID ?? currentPlayerId;
   const isActive = viewerCanAct && playerID === currentPlayerId;
   const pending = G.pendingRiot;
+  const riotTable = getRiotTable();
   const severe = pending?.tier === "revolt";
   const tierModifier = severe ? G.ruleset.economy.unrest.severeRollModifier : 0;
   const modifier = insuranceRollBonus(pending?.boughtInsurance ?? []) + tierModifier;
@@ -41,10 +48,12 @@ export function RiotModal({
     }
 
     return G.players[playerID].settlements.flatMap((tileId) =>
-      DEMOTE_FROM.filter((from) => getDemotePopStatus(G, playerID, tileId, from).can).map((from) => ({
-        tileId,
-        from: from as PopType
-      }))
+      DEMOTE_FROM.filter((from) => getDemotePopStatus(G, playerID, tileId, from).can).map(
+        (from) => ({
+          tileId,
+          from: from as PopType,
+        }),
+      ),
     );
   }, [G, playerID, pending]);
   const [demoteChoice, setDemoteChoice] = useState(0);
@@ -53,7 +62,7 @@ export function RiotModal({
 
   return (
     <EventTableModal
-      table={RIOT_TABLE}
+      table={riotTable}
       modifier={modifier}
       result={result}
       subtitle={
@@ -63,7 +72,11 @@ export function RiotModal({
       }
       footer={
         pending ? (
-          <button className="primaryButton eventResolveButton" disabled={!isActive} onClick={() => (onRolled(), moves.resolveRiot())}>
+          <button
+            className="primaryButton eventResolveButton"
+            disabled={!isActive}
+            onClick={() => (onRolled(), moves.resolveRiot())}
+          >
             Roll the Die
           </button>
         ) : (
@@ -75,8 +88,10 @@ export function RiotModal({
     >
       {pending ? (
         <div className="riotInsuranceStack" role="group" aria-label="Riot insurance">
-          <strong className="riotInsuranceTitle">Declare before the die — each once, +1 to the roll</strong>
-          {(RIOT_TABLE.insurance ?? []).map((option) => {
+          <strong className="riotInsuranceTitle">
+            Declare before the die — each once, +1 to the roll
+          </strong>
+          {(riotTable.insurance ?? []).map((option) => {
             const bought = pending.boughtInsurance.includes(option.id);
             const status = getBuyRiotInsuranceStatus(G, playerID, option.id);
             const costText = option.demotesPop
@@ -86,7 +101,8 @@ export function RiotModal({
                   .join(", ");
 
             if (option.demotesPop && !bought) {
-              const target = demoteTargets[Math.min(demoteChoice, Math.max(0, demoteTargets.length - 1))];
+              const target =
+                demoteTargets[Math.min(demoteChoice, Math.max(0, demoteTargets.length - 1))];
 
               return (
                 <div className="riotInsuranceRow" key={option.id}>
@@ -109,14 +125,16 @@ export function RiotModal({
                     onChange={(value) => setDemoteChoice(Number(value))}
                     options={demoteTargets.map((candidate, index) => {
                       const tile = getTile(G, candidate.tileId);
-                      const where = tile ? settlementPickerLabel(G, tile, playerID) : candidate.tileId;
+                      const where = tile
+                        ? settlementPickerLabel(G, tile, playerID)
+                        : candidate.tileId;
 
                       return {
                         value: String(index),
                         icon: candidate.from,
                         title: capitalize(formatPopLabel(candidate.from, 1)),
                         detail: where,
-                        label: `Demote a ${formatPopLabel(candidate.from, 1)} in ${where}.`
+                        label: `Demote a ${formatPopLabel(candidate.from, 1)} in ${where}.`,
                       };
                     })}
                     value={String(Math.min(demoteChoice, Math.max(0, demoteTargets.length - 1)))}

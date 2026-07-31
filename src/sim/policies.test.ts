@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
 import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
+import { LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
 import { scenario } from "../game/testing/scenario";
 import { endTurn } from "../game/turn";
 import type { HegemonyState } from "../game/types";
@@ -12,12 +13,36 @@ import {
   masterPolicy,
   POLICY_UNREST_WEIGHTS,
   politicalPolicy,
+  policyEconomyThresholds,
   projectPolicyHorizon,
   settlerPolicy,
   smartPolicy,
 } from "./policies";
 import { createSimRng } from "./rng";
 import { runGame } from "./runner";
+
+describe("policy denomination capabilities", () => {
+  it("derives thresholds from the active ruleset while preserving standard behavior", () => {
+    expect(policyEconomyThresholds(DEFAULT_RULESET)).toEqual({
+      ventureGoldReserve: 25,
+      sellSurplus: 40,
+      lowGold: 10,
+      woodStarved: 20,
+      goldRich: 20,
+      materialScoreDivisor: 10,
+    });
+    expect(
+      policyEconomyThresholds(deriveRuleset(DEFAULT_RULESET, LOW_NUMBER_RULESET_PATCH)),
+    ).toEqual({
+      ventureGoldReserve: 10,
+      sellSurplus: 18,
+      lowGold: 4,
+      woodStarved: 9,
+      goldRich: 9,
+      materialScoreDivisor: 5,
+    });
+  });
+});
 
 describe("policy unrest risk", () => {
   const risk = (happiness: number) => evaluatePolicyUnrestRisk(DEFAULT_RULESET, happiness);
@@ -67,9 +92,7 @@ describe("policy unrest risk", () => {
     expect(evaluatePolicyUnrestRisk(shifted, -3).scorePenalty).toBe(
       POLICY_UNREST_WEIGHTS.mildRiotPenalty,
     );
-    expect(evaluatePolicyUnrestRisk(harsher, -3)).toEqual(
-      evaluatePolicyUnrestRisk(shifted, -3),
-    );
+    expect(evaluatePolicyUnrestRisk(harsher, -3)).toEqual(evaluatePolicyUnrestRisk(shifted, -3));
     expect(evaluatePolicyUnrestRisk(harsher, -7).scorePenalty).toBeGreaterThan(
       evaluatePolicyUnrestRisk(shifted, -7).scorePenalty,
     );
@@ -104,22 +127,23 @@ describe("policy unrest risk", () => {
       mildRiotEvents: 0,
       severeRiotEvents: 1,
     });
-    expect(projection.resources.happiness).toBe(
-      G.ruleset.economy.unrest.severeRebound + 2,
-    );
+    expect(projection.resources.happiness).toBe(G.ruleset.economy.unrest.severeRebound + 2);
     expect(evaluatePolicyUnrestRisk(G.ruleset, severe)).toEqual(risk(severe));
   });
 
   it.each([
     ["smart", smartPolicy],
     ["beam", beamPolicy],
-  ] as const)("%s rejects an unsafe promotion but takes the supported equivalent", (_name, policy) => {
-    expect(chooseFreemanPromotion(policy, 0).type).toBe("endTurn");
-    expect(chooseFreemanPromotion(policy, 30)).toMatchObject({
-      type: "promotePop",
-      from: "freemen",
-    });
-  });
+  ] as const)(
+    "%s rejects an unsafe promotion but takes the supported equivalent",
+    (_name, policy) => {
+      expect(chooseFreemanPromotion(policy, 0).type).toBe("endTurn");
+      expect(chooseFreemanPromotion(policy, 30)).toMatchObject({
+        type: "promotePop",
+        from: "freemen",
+      });
+    },
+  );
 });
 
 function projectionFixture(): HegemonyState {
@@ -166,10 +190,7 @@ function projectionFixture(): HegemonyState {
   return G;
 }
 
-function chooseFreemanPromotion(
-  policy: typeof smartPolicy | typeof beamPolicy,
-  food: number,
-) {
+function chooseFreemanPromotion(policy: typeof smartPolicy | typeof beamPolicy, food: number) {
   const G = scenario({
     patch: {
       economy: {
@@ -202,9 +223,7 @@ function chooseFreemanPromotion(
   });
 
   const moves = enumerateLegalMoves(G, "0");
-  const promotion = moves.find(
-    (move) => move.type === "promotePop" && move.from === "freemen",
-  );
+  const promotion = moves.find((move) => move.type === "promotePop" && move.from === "freemen");
   const endTurnMove = moves.find((move) => move.type === "endTurn");
   if (!promotion || !endTurnMove) {
     throw new Error("promotion fixture did not enumerate its comparison moves");

@@ -162,7 +162,8 @@ which cards come up.
 ```bash
 npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart|beam|political|settler|master]
                      [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
-                     [--tune-patch p.json] [--seats p0,p1,p2,p3] [--rotate] [--seed 1000]
+                     [--tune-preset low-number-core-v1] [--tune-patch p.json]
+                     [--seats p0,p1,p2,p3] [--rotate] [--seed 1000]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
 ```
 
@@ -172,14 +173,20 @@ game/turn/player — pivot-table ready).
 
 - `--board` — `classic` (default, reproducible) or `shuffled` (seeded random terrain,
   as the live game defaults to). Recorded in the report and in saves/scripts.
+- `--tune-preset low-number-core-v1` — resolves the shared development preset before
+  the batch. Unknown IDs fail. `meta` records the ID and stable full-content hash.
 - `--tune-patch` — a dev tune-panel override map (the panel's "Copy patch" output):
   A/Bs building content (Villa/Gymnasion strength, costs, level caps) and ruleset
-  scalars in one run. The resolved patch + a hash land in `meta`.
+  scalars in one run. It applies after the preset; the manual patch and its separate
+  hash land in `meta`.
 - `--seats p0,p1,p2,p3` — a policy per seat for mixed-policy tables. `--rotate` runs
   each seed through every seat permutation, cancelling first-player advantage.
 
 The report contains:
 
+- `meta.tuningPresetId` / `meta.resolvedContentHash` — the named preset and stable
+  fingerprint of the complete effective content package; manual tune metadata remains
+  separate
 - `perGame` — seed, `termination` (victoryRace|deckExhausted|turnCap), `winner`
   (null for turn-capped games), `leaderAtCap`, final cards + pops lost per player,
   and the seat→policy map for mixed runs

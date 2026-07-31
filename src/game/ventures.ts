@@ -1,4 +1,4 @@
-import { EXPEDITION_TABLES } from "./data";
+import { getExpeditionTables } from "./content";
 import { addLog, getPlayerName } from "./core/query";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
@@ -19,14 +19,15 @@ export function getFundExpeditionStatus(
   G: HegemonyState,
   playerID: PlayerId,
   expeditionId: EventTableId,
-  stake: VentureStake
+  stake: VentureStake,
 ): ActionStatus {
   const cost = G.ruleset.ventureStakes[stake];
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("Expeditions sail during gameplay.");
   if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
-  if (!EXPEDITION_TABLES.some((table) => table.id === expeditionId)) reasons.push("No such expedition.");
+  if (!getExpeditionTables().some((table) => table.id === expeditionId))
+    reasons.push("No such expedition.");
   if (G.players[playerID].ventureUsedThisTurn) reasons.push("One venture per turn.");
   if (!canAfford(G.players[playerID].resources, cost)) reasons.push("Can't post the stake.");
 
@@ -39,10 +40,10 @@ export function fundExpedition(
   G: HegemonyState,
   playerID: PlayerId,
   expeditionId: EventTableId,
-  stake: VentureStake
+  stake: VentureStake,
 ): MoveResult {
   const status = getFundExpeditionStatus(G, playerID, expeditionId, stake);
-  const table = EXPEDITION_TABLES.find((candidate) => candidate.id === expeditionId);
+  const table = getExpeditionTables().find((candidate) => candidate.id === expeditionId);
 
   if (!table || !status.can) {
     return invalid(...status.reasons);

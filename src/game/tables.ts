@@ -1,10 +1,10 @@
-import { OMEN_TABLE } from "./data";
-import { getBuildings } from "./content";
+import { getBuildings, getOmenTable } from "./content";
 import { yearOf } from "./core/calendar";
 import { POP_TYPES, totalPops } from "./core/pops";
 import { settlementCapacity } from "./settlement";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
+import { applyResourceDeltaWithFloors, createResourceDelta } from "./core/resources";
 import { mulberry32, shuffleWithSeed } from "./core/rng";
 import type {
   EventTableDefinition,
@@ -13,7 +13,7 @@ import type {
   PopType,
   Settlement,
   TableEffect,
-  TableRollRecord
+  TableRollRecord,
 } from "./types";
 
 /**
@@ -55,15 +55,20 @@ export function rollOnTable(
   G: HegemonyState,
   playerID: PlayerId,
   table: EventTableDefinition,
-  { modifier = 0, popLossMultiplier = 1 }: RollOptions = {}
+  { modifier = 0, popLossMultiplier = 1 }: RollOptions = {},
 ): RollResult {
   const die = table.die ?? 6;
   const roll = rollDie(G, die);
   const modified = Math.min(die, Math.max(1, roll + modifier));
-  const row = table.rows.find((candidate) => candidate.roll === modified) ?? table.rows[table.rows.length - 1];
+  const row =
+    table.rows.find((candidate) => candidate.roll === modified) ??
+    table.rows[table.rows.length - 1];
 
   const modifierText = modifier === 0 ? "" : ` ${modifier > 0 ? "+" : ""}${modifier} → ${modified}`;
-  addLog(G, `${getPlayerName(G, playerID)} rolls ${roll}${modifierText} on the ${table.name} table: ${row.label}.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} rolls ${roll}${modifierText} on the ${table.name} table: ${row.label}.`,
+  );
 
   const outcomes: string[] = [];
   let popsRemoved = 0;
@@ -82,7 +87,7 @@ export function rollOnTable(
     modifier,
     rowLabel: row.label,
     outcomes,
-    season: G.season
+    season: G.season,
   };
   G.lastTableRoll = record;
   return { record, popsRemoved };
@@ -92,7 +97,7 @@ function applyTableEffect(
   G: HegemonyState,
   playerID: PlayerId,
   effect: TableEffect,
-  popLossMultiplier: number
+  popLossMultiplier: number,
 ): { outcomes: string[]; popsRemoved: number } {
   const player = G.players[playerID];
   const name = getPlayerName(G, playerID);
@@ -103,15 +108,21 @@ function applyTableEffect(
 
     case "losePops": {
       const removed = removeRandomPops(G, playerID, effect.count * popLossMultiplier);
-      const text = removed.total > 0 ? `Lost ${describeRemoval(removed)}.` : "No pops left to lose.";
+      const text =
+        removed.total > 0 ? `Lost ${describeRemoval(removed)}.` : "No pops left to lose.";
       addLog(G, `${name} — ${text}`);
       return { outcomes: [text], popsRemoved: removed.total };
     }
 
     case "loseResource": {
       const held = player.resources[effect.resource];
-      const paid = Math.min(effect.amount, Math.max(0, held));
-      player.resources[effect.resource] -= paid;
+      const floor = G.ruleset.economy.stockpileFloors[effect.resource] ?? 0;
+      const paid = Math.min(effect.amount, Math.max(0, held - floor));
+      applyResourceDeltaWithFloors(
+        player.resources,
+        createResourceDelta(effect.resource, -paid),
+        G.ruleset.economy.stockpileFloors,
+      );
       const outcomes = [`Lost ${paid} ${effect.resource}.`];
       let popsRemoved = 0;
 
@@ -140,13 +151,19 @@ function applyTableEffect(
       // player's roll 1 stays strictly worse than roll 2's two pops never inverting.
       const removed = removeRandomPops(G, playerID, effect.popLossFallback * popLossMultiplier);
       const text =
-        removed.total > 0 ? `No buildings to burn — lost ${describeRemoval(removed)} instead.` : "Nothing left to lose.";
+        removed.total > 0
+          ? `No buildings to burn — lost ${describeRemoval(removed)} instead.`
+          : "Nothing left to lose.";
       addLog(G, `${name} — ${text}`);
       return { outcomes: [text], popsRemoved: removed.total };
     }
 
     case "gainResource": {
-      player.resources[effect.resource] += effect.amount;
+      applyResourceDeltaWithFloors(
+        player.resources,
+        createResourceDelta(effect.resource, effect.amount),
+        G.ruleset.economy.stockpileFloors,
+      );
       const text = `Gained ${effect.amount} ${effect.resource}.`;
       addLog(G, `${name} — ${text}`);
       return { outcomes: [text], popsRemoved: 0 };
@@ -162,7 +179,11 @@ function applyTableEffect(
         return { outcomes: [text], popsRemoved: 0 };
       }
 
-      player.resources.food += effect.foodFallback;
+      applyResourceDeltaWithFloors(
+        player.resources,
+        createResourceDelta("food", effect.foodFallback),
+        G.ruleset.economy.stockpileFloors,
+      );
       const text = `No settlement has room — the settlers leave ${effect.foodFallback} food and sail on.`;
       addLog(G, `${name} — ${text}`);
       return { outcomes: [text], popsRemoved: 0 };
@@ -184,9 +205,11 @@ function applyTableEffect(
  * gameplay start (year 1) and on each new year's season turn.
  */
 export function rollYearOmen(G: HegemonyState) {
-  const { record } = rollOnTable(G, G.seasonOpener, OMEN_TABLE);
+  const omenTable = getOmenTable();
+  const { record } = rollOnTable(G, G.seasonOpener, omenTable);
   const row =
-    OMEN_TABLE.rows.find((candidate) => candidate.roll === record.modified) ?? OMEN_TABLE.rows[OMEN_TABLE.rows.length - 1];
+    omenTable.rows.find((candidate) => candidate.roll === record.modified) ??
+    omenTable.rows[omenTable.rows.length - 1];
 
   G.yearOmen = { record, label: row.label, year: yearOf(G.season), effects: row.effects };
   addLog(G, `The omen for Year ${yearOf(G.season)}: ${row.label}.`);
@@ -201,7 +224,11 @@ type RemovalSummary = { total: number; byType: Record<PopType, number> };
  * zero pops; the settlement itself is left standing. (Moved here from unrest.ts —
  * it is the `losePops` interpreter; unrest re-imports it.)
  */
-export function removeRandomPops(G: HegemonyState, playerID: PlayerId, count: number): RemovalSummary {
+export function removeRandomPops(
+  G: HegemonyState,
+  playerID: PlayerId,
+  count: number,
+): RemovalSummary {
   const summary: RemovalSummary = { total: 0, byType: { citizens: 0, freemen: 0, slaves: 0 } };
 
   if (count <= 0) {
@@ -245,7 +272,7 @@ export function removeRandomPops(G: HegemonyState, playerID: PlayerId, count: nu
 /** "2 slaves, 1 freeman" — nonzero pop types in a stable order, using the shared pop labels. */
 export function describeRemoval(summary: RemovalSummary): string {
   const parts = POP_TYPES.filter((pop) => summary.byType[pop] > 0).map(
-    (pop) => `${summary.byType[pop]} ${formatPopName(pop, summary.byType[pop])}`
+    (pop) => `${summary.byType[pop]} ${formatPopName(pop, summary.byType[pop])}`,
   );
 
   return parts.join(", ");
@@ -279,7 +306,11 @@ function destroyRandomBuilding(G: HegemonyState, playerID: PlayerId): string | n
 
 /** Add one pop to a random owned settlement with spare capacity (seeded). Returns a
  *  human label for the destination, or null when every settlement is full. */
-function addPopToSettlementWithRoom(G: HegemonyState, playerID: PlayerId, pop: PopType): string | null {
+function addPopToSettlementWithRoom(
+  G: HegemonyState,
+  playerID: PlayerId,
+  pop: PopType,
+): string | null {
   const candidates: Settlement[] = [];
 
   for (const tileId of G.players[playerID].settlements) {

@@ -189,6 +189,8 @@ export type BatchReport = {
      *  none), plus a stable fingerprint — so a batch's content is identifiable and A/B-able. */
     tunePatch?: unknown;
     tunePatchHash?: string | null;
+    tuningPresetId?: string | null;
+    resolvedContentHash?: string | null;
     /** Base seat→policy assignment for a mixed-policy batch (null for a uniform run).
      *  With --rotate the per-game assignment varies; see perGame[].seatPolicies. */
     seatPolicies?: Record<PlayerId, string> | null;
