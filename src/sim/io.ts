@@ -2,12 +2,12 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 import type { LegalMove } from "../game/legalMoves";
-import type { deriveRuleset, GameModeId } from "../game/ruleset";
+import type { GameModeId, RulesetPatch } from "../game/ruleset";
 import type { HegemonyState, PlayerId } from "../game/types";
 
 export const DEFAULT_SAVE_PATH = ".sim/game.json";
 
-export type RulesetPatch = Parameters<typeof deriveRuleset>[1];
+export type { RulesetPatch } from "../game/ruleset";
 
 export type OpeningKind = "random" | "fixed" | "manual";
 

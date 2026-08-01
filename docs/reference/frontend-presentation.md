@@ -2,7 +2,7 @@
 
 Status: living reference for the implemented frontend.
 
-Last updated: 2026-07-29.
+Last updated: 2026-07-31.
 
 This contract defines how the frontend explains gameplay mechanics without creating a
 second rules engine. Engine selectors, action statuses, and content manifests are the
@@ -106,6 +106,13 @@ resolution and building presentation switches were removed; Assembly, building
 surfaces, and active-effect status now project the canonical typed results through
 `MechanicsDetails`. Exhaustive presenter and manifest coverage remains in
 `src/parity/featureParity.test.ts` rather than a parallel Assembly-only registry loop.
+
+The development-only `low-number-core-v1` preset uses those same presenters for every
+effective building, event, and table value. Numeric event prose is rewritten from the
+transformed typed effects, so narrative copy cannot quote the authored magnitude beside
+a different effective row. Real-browser verification covers preset on/off, same-seed
+reset, manual-override precedence, Reset, terrain totals, action costs, and a complete
+event presentation.
 
 ## Owner real-device touch checklist
 

@@ -2,11 +2,14 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 import { PLAYER_IDS } from "../game/data";
-import { mergeRulesetPatches } from "../game/ruleset";
-import type { BoardLayout, HegemonyState } from "../game/types";
+import { installGameContent } from "../game/content";
+import { GAME_MODES } from "../game/ruleset";
+import type { BoardLayout } from "../game/types";
+import { resolveTuning } from "../dev/tuning";
+import { isTuningPresetId } from "../dev/tuningPresets";
+import type { TuningPresetId } from "../dev/tuningPresets";
 import { renderBatchReport } from "./format";
 import type { RulesetPatch } from "./io";
-import { installLowNumberContent, LOW_NUMBER_RULESET_PATCH } from "./lowNumberEconomy";
 import { resolvePolicy } from "./policies";
 import { runGame } from "./runner";
 import { Aggregator, percentiles, snapshotsToCsv } from "./telemetry";
@@ -37,15 +40,6 @@ function writeJson(path: string, value: unknown) {
   writeFileSync(path, JSON.stringify(value, null, 2));
 }
 
-function floorSpendableStocks(G: HegemonyState) {
-  for (const player of Object.values(G.players)) {
-    player.resources.wood = Math.max(0, player.resources.wood);
-    player.resources.stone = Math.max(0, player.resources.stone);
-    player.resources.gold = Math.max(0, player.resources.gold);
-    player.resources.influence = Math.max(0, player.resources.influence);
-  }
-}
-
 const args = flags(process.argv.slice(2));
 const games = int(args.games, 10);
 const turns = int(args.turns, 120);
@@ -54,11 +48,16 @@ const boardLayout = (args.board ?? "shuffled") as BoardLayout;
 if (boardLayout !== "classic" && boardLayout !== "shuffled")
   throw new Error(`Bad board: ${boardLayout}`);
 const policy = resolvePolicy(args.policy ?? "smart");
+const presetArg = args.preset ?? "low-number-core-v1";
+const presetId: TuningPresetId | null =
+  presetArg === "standard" ? null : isTuningPresetId(presetArg) ? presetArg : null;
+if (presetArg !== "standard" && !presetId) throw new Error(`Bad preset: ${presetArg}`);
 const reportPath = args.report ?? ".sim/low-number-economy.json";
 const csvPath = args.csv;
 
-installLowNumberContent();
-const patch = mergeRulesetPatches(null, LOW_NUMBER_RULESET_PATCH) as RulesetPatch;
+const resolved = resolveTuning(GAME_MODES.standard.ruleset, presetId);
+installGameContent(resolved.content);
+const patch = resolved.rulesetPatch as RulesetPatch;
 const aggregator = new Aggregator();
 
 for (let game = 0; game < games; game += 1) {
@@ -73,15 +72,12 @@ for (let game = 0; game < games; game += 1) {
     trimLogTo: 200,
     hooks: {
       onGameStart: (state) => {
-        floorSpendableStocks(state);
         aggregator.beginGame(game, seed, state);
       },
       onMove: (state, player, move) => {
-        floorSpendableStocks(state);
         aggregator.onMove(state, player, move);
       },
       onTurnEnd: (state) => {
-        floorSpendableStocks(state);
         aggregator.onTurnEnd(state);
       },
       onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
@@ -96,16 +92,27 @@ const batch = aggregator.buildReport({
   games,
   turns,
   policy: policy.name,
-  mode: "low-number-study",
+  mode: presetId ?? "standard-study",
   boardLayout,
   baseSeed,
   botSeedRule: "seed ^ 0x9e3779b9",
   rulesetPatch: patch,
+  tuningPresetId: resolved.presetId,
+  resolvedContentHash: resolved.resolvedContentHash,
   generatedAt: new Date().toISOString(),
 });
 
 const playerRows = snapshots.flatMap((snapshot) => PLAYER_IDS.map((id) => snapshot.players[id]));
+const finalRows = [...snapshots]
+  .reverse()
+  .filter(
+    (snapshot, index, all) =>
+      all.findIndex((candidate) => candidate.game === snapshot.game) === index,
+  )
+  .flatMap((snapshot) => PLAYER_IDS.map((id) => snapshot.players[id]));
 const resources = ["wood", "stone", "gold", "food", "influence"] as const;
+const openingPops =
+  resolved.ruleset.placementPopCounts.capital + resolved.ruleset.placementPopCounts.colony;
 const scale = {
   observations: playerRows.length,
   anyHoldingAtLeast10:
@@ -139,6 +146,21 @@ const scale = {
       ];
     }),
   ),
+  population: {
+    observations: percentiles(playerRows.map((row) => row.pops)),
+    final: percentiles(finalRows.map((row) => row.pops)),
+    netGrowth: percentiles(finalRows.map((row) => row.pops - openingPops)),
+  },
+  configuredFloorViolations: playerRows.reduce(
+    (count, row) =>
+      count +
+      Object.entries(resolved.ruleset.economy.stockpileFloors).filter(
+        ([resource, floor]) =>
+          row.resources[resource as keyof typeof row.resources] <
+          (floor ?? Number.NEGATIVE_INFINITY),
+      ).length,
+    0,
+  ),
 };
 
 writeJson(reportPath, { ...batch, scale });
@@ -153,3 +175,4 @@ console.log(
   `Two-digit scale: holdings ${(100 * scale.anyHoldingAtLeast10).toFixed(1)}% · incomes ${(100 * scale.anyIncomeMagnitudeAtLeast10).toFixed(1)}%`,
 );
 console.log(`\n${renderBatchReport(batch)}`);
+installGameContent(null);

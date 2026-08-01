@@ -8,10 +8,21 @@ import {
   hasPops,
   isExactPopSelection,
   isPositivePopSelection,
-  subtractPops
+  subtractPops,
 } from "./core/pops";
-import { addLog, getOwnedSettlement, getPlayerName, getTile, markSettlementGrown } from "./core/query";
-import { applyResourceDelta, payCost } from "./core/resources";
+import {
+  addLog,
+  getOwnedSettlement,
+  getPlayerName,
+  getTile,
+  markSettlementGrown,
+} from "./core/query";
+import {
+  applyResourceDeltaWithFloors,
+  cloneResources,
+  diffResources,
+  payCost,
+} from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
@@ -23,12 +34,17 @@ import {
   getFoundColonyStatus,
   getGrowPopStatus,
   getMovePopsStatus,
-  getUpgradeColonyToCityStatus
+  getUpgradeColonyToCityStatus,
 } from "./status";
 import { drawPlayerEvent } from "./events";
 import { consumeLawFreeAction, getFoundColonyRiders } from "./assembly/laws";
 
-export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops): MoveResult {
+export function placeCapital(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  pops: Pops,
+): MoveResult {
   const tile = getTile(G, tileId);
   const player = G.players[playerID];
 
@@ -53,17 +69,25 @@ export function placeCapital(G: HegemonyState, playerID: PlayerId, tileId: strin
     owner: playerID,
     kind: "city",
     buildings: [],
-    pops: clonePops(pops)
+    pops: clonePops(pops),
   });
   player.settlements.push(tile.id);
-  addLog(G, `${getPlayerName(G, playerID)} founded their metropolis on ${tile.terrain} with ${formatPops(pops)}.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} founded their metropolis on ${tile.terrain} with ${formatPops(pops)}.`,
+  );
   return MOVE_OK;
 }
 
 /** Setup placement of the second city (standard mode's snake round two). Same rules
  *  as the capital — empty tile, never adjacent to any city — placed freely anywhere,
  *  Catan-style: the two starting cities are the player's expansion poles. */
-export function placeCity(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops): MoveResult {
+export function placeCity(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  pops: Pops,
+): MoveResult {
   const tile = getTile(G, tileId);
   const player = G.players[playerID];
   const owesCity = G.ruleset.setup[player.settlements.length] === "city";
@@ -89,14 +113,22 @@ export function placeCity(G: HegemonyState, playerID: PlayerId, tileId: string, 
     owner: playerID,
     kind: "city",
     buildings: [],
-    pops: clonePops(pops)
+    pops: clonePops(pops),
   });
   player.settlements.push(tile.id);
-  addLog(G, `${getPlayerName(G, playerID)} founded their second city on ${tile.terrain} with ${formatPops(pops)}.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} founded their second city on ${tile.terrain} with ${formatPops(pops)}.`,
+  );
   return MOVE_OK;
 }
 
-export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string, pops: Pops): MoveResult {
+export function placeColony(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  pops: Pops,
+): MoveResult {
   const tile = getTile(G, tileId);
   const player = G.players[playerID];
 
@@ -104,7 +136,9 @@ export function placeColony(G: HegemonyState, playerID: PlayerId, tileId: string
   // colonies (setup = one capital + N colonies, so N can exceed 1 in e.g. deathmatch).
   const placed = player.settlements.length;
   const owesColony =
-    placed >= setupCapitalCount(G.ruleset) && placed < G.ruleset.setup.length && G.ruleset.setup[placed] === "colony";
+    placed >= setupCapitalCount(G.ruleset) &&
+    placed < G.ruleset.setup.length &&
+    G.ruleset.setup[placed] === "colony";
 
   if (
     !tile ||
@@ -124,7 +158,7 @@ export function foundColony(
   playerID: PlayerId,
   tileId: string,
   sourceTileId: string,
-  pop: PopType
+  pop: PopType,
 ): MoveResult {
   const status = getFoundColonyStatus(G, playerID, tileId);
   const tile = getTile(G, tileId);
@@ -134,7 +168,14 @@ export function foundColony(
     return invalid(...status.reasons);
   }
 
-  const transfer = schedulePopulationTransfer(G, playerID, sourceTileId, tileId, foundingPops, false);
+  const transfer = schedulePopulationTransfer(
+    G,
+    playerID,
+    sourceTileId,
+    tileId,
+    foundingPops,
+    false,
+  );
 
   if (!transfer.ok) {
     return transfer;
@@ -149,7 +190,7 @@ export function foundColony(
   applyFoundColonyRiders(G, playerID, tile);
   addLog(
     G,
-    `${getPlayerName(G, playerID)} sent ${formatPops(foundingPops)} to seed the new colony on ${tile.terrain}.`
+    `${getPlayerName(G, playerID)} sent ${formatPops(foundingPops)} to seed the new colony on ${tile.terrain}.`,
   );
   return MOVE_OK;
 }
@@ -165,7 +206,7 @@ function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexT
         settlement.pops[rider.grantPop] += 1;
         addLog(
           G,
-          `${rider.label}: a ${formatPopName(rider.grantPop, 1)} sails with the colonists.`
+          `${rider.label}: a ${formatPopName(rider.grantPop, 1)} sails with the colonists.`,
         );
       }
     }
@@ -180,12 +221,12 @@ function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexT
 export function upgradeColonyToCity(
   G: HegemonyState,
   playerID: PlayerId,
-  tileId: string
+  tileId: string,
 ): MoveResult {
   const status = getUpgradeColonyToCityStatus(G, playerID, tileId);
   const tile = getTile(G, tileId);
   const settlement = tile?.settlements.find(
-    (candidate) => candidate.owner === playerID && candidate.kind === "colony"
+    (candidate) => candidate.owner === playerID && candidate.kind === "colony",
   );
 
   if (!tile || !settlement || !status.can) {
@@ -200,14 +241,19 @@ export function upgradeColonyToCity(
   settlement.kind = "city";
 
   for (const displacedPlayer of displacedPlayers) {
-    G.players[displacedPlayer].settlements = G.players[displacedPlayer].settlements.filter((id) => id !== tile.id);
+    G.players[displacedPlayer].settlements = G.players[displacedPlayer].settlements.filter(
+      (id) => id !== tile.id,
+    );
   }
 
   const displacementText =
     displacedPlayers.length > 0
       ? ` ${displacedPlayers.map((id) => getPlayerName(G, id)).join(", ")} lost a shared colony.`
       : "";
-  addLog(G, `${getPlayerName(G, playerID)} upgraded a colony to a city on ${tile.terrain}.${displacementText}`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} upgraded a colony to a city on ${tile.terrain}.${displacementText}`,
+  );
   return MOVE_OK;
 }
 
@@ -216,16 +262,19 @@ function addColony(G: HegemonyState, playerID: PlayerId, tile: HexTile, pops: Po
     owner: playerID,
     kind: "colony",
     buildings: [],
-    pops: clonePops(pops)
+    pops: clonePops(pops),
   });
   G.players[playerID].settlements.push(tile.id);
-  addLog(G, `${getPlayerName(G, playerID)} founded a colony on ${tile.terrain} with ${formatPops(pops)}.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} founded a colony on ${tile.terrain} with ${formatPops(pops)}.`,
+  );
 }
 
 export function collectIncome(
   G: HegemonyState,
   playerID: PlayerId,
-  mode: "manual" | "automatic" = "manual"
+  mode: "manual" | "automatic" = "manual",
 ): MoveResult {
   const player = G.players[playerID];
 
@@ -248,12 +297,14 @@ export function collectIncome(
   }
 
   const income = calculateIncome(G, playerID);
-  applyResourceDelta(player.resources, income);
+  const beforeIncome = cloneResources(player.resources);
+  applyResourceDeltaWithFloors(player.resources, income, G.ruleset.economy.stockpileFloors);
+  const appliedIncome = diffResources(player.resources, beforeIncome);
   player.collectedThisTurn = true;
   player.hasCollectedGameplayIncome = true;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} ${mode === "automatic" ? "automatically collected" : "collected"} income (${formatRuleResourceDelta(income)}).`
+    `${getPlayerName(G, playerID)} ${mode === "automatic" ? "automatically collected" : "collected"} income (${formatRuleResourceDelta(appliedIncome)}).`,
   );
   drawPlayerEvent(G, playerID);
   return MOVE_OK;
@@ -263,12 +314,12 @@ export function buildBuilding(
   G: HegemonyState,
   playerID: PlayerId,
   tileId: string,
-  buildingId: BuildingId
+  buildingId: BuildingId,
 ): MoveResult {
   const tile = getTile(G, tileId);
   const building = getBuildings().find((candidate) => candidate.id === buildingId);
   const settlement = tile?.settlements.find(
-    (candidate) => candidate.owner === playerID && candidate.kind !== "colony"
+    (candidate) => candidate.owner === playerID && candidate.kind !== "colony",
   );
   const status = getBuildBuildingStatus(G, playerID, tileId, buildingId);
 
@@ -284,7 +335,12 @@ export function buildBuilding(
   return MOVE_OK;
 }
 
-export function growPop(G: HegemonyState, playerID: PlayerId, tileId: string, pop: PopType): MoveResult {
+export function growPop(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  pop: PopType,
+): MoveResult {
   const status = getGrowPopStatus(G, playerID, tileId, pop);
   const tile = getTile(G, tileId);
   const settlement = getOwnedSettlement(G, tileId, playerID);
@@ -297,7 +353,10 @@ export function growPop(G: HegemonyState, playerID: PlayerId, tileId: string, po
   consumeActionCostDiscounts(G, playerID, "growPop", undefined, pop);
   settlement.pops[pop] += 1;
   markSettlementGrown(G, playerID, tileId);
-  addLog(G, `${getPlayerName(G, playerID)} grew 1 ${formatPopName(pop, 1)} in ${settlement.kind} on ${tile.terrain}.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} grew 1 ${formatPopName(pop, 1)} in ${settlement.kind} on ${tile.terrain}.`,
+  );
   return MOVE_OK;
 }
 
@@ -306,7 +365,7 @@ export function movePops(
   playerID: PlayerId,
   sourceTileId: string,
   targetTileId: string,
-  pops: Pops
+  pops: Pops,
 ): MoveResult {
   const status = getMovePopsStatus(G, playerID, sourceTileId, targetTileId, pops);
 
@@ -333,7 +392,7 @@ export function resolveArrivingPops(G: HegemonyState, playerID: PlayerId) {
       addPops(target.pops, transfer.pops);
       addLog(
         G,
-        `${getPlayerName(G, playerID)}'s ${formatPops(transfer.pops)} arrived at ${formatTileLabel(G, transfer.toTileId)}.`
+        `${getPlayerName(G, playerID)}'s ${formatPops(transfer.pops)} arrived at ${formatTileLabel(G, transfer.toTileId)}.`,
       );
       continue;
     }
@@ -344,7 +403,7 @@ export function resolveArrivingPops(G: HegemonyState, playerID: PlayerId) {
       addPops(source.pops, transfer.pops);
       addLog(
         G,
-        `${getPlayerName(G, playerID)}'s ${formatPops(transfer.pops)} returned to ${formatTileLabel(G, transfer.fromTileId)}.`
+        `${getPlayerName(G, playerID)}'s ${formatPops(transfer.pops)} returned to ${formatTileLabel(G, transfer.fromTileId)}.`,
       );
     }
   }
@@ -356,7 +415,7 @@ function schedulePopulationTransfer(
   sourceTileId: string,
   targetTileId: string,
   pops: Pops,
-  requireTarget = true
+  requireTarget = true,
 ): MoveResult {
   const sourceSettlement = getOwnedSettlement(G, sourceTileId, playerID);
   const targetSettlement = getOwnedSettlement(G, targetTileId, playerID);
@@ -375,13 +434,13 @@ function schedulePopulationTransfer(
     owner: playerID,
     fromTileId: sourceTileId,
     toTileId: targetTileId,
-    pops: clonePops(pops)
+    pops: clonePops(pops),
   });
 
   if (requireTarget) {
     addLog(
       G,
-      `${getPlayerName(G, playerID)} moved ${formatPops(pops)} from ${formatTileLabel(G, sourceTileId)} to ${formatTileLabel(G, targetTileId)}.`
+      `${getPlayerName(G, playerID)} moved ${formatPops(pops)} from ${formatTileLabel(G, sourceTileId)} to ${formatTileLabel(G, targetTileId)}.`,
     );
   }
 

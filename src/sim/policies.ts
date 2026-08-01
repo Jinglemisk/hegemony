@@ -1,6 +1,7 @@
 import { calculateIncome } from "../game/economy/income";
 import { getActiveEffects } from "../game/activeEffects";
-import { RIOT_TABLE } from "../game/data";
+import { applyResourceDeltaWithFloors } from "../game/core/resources";
+import { getRiotTable } from "../game/content";
 import { getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementBuildingSlots } from "../game/settlement";
 import { enactForEval, politicianStandings } from "../game/assembly";
@@ -13,14 +14,7 @@ import type { HegemonyState, PlayerId } from "../game/types";
 import type { Ruleset } from "../game/ruleset";
 import type { SimRng } from "./rng";
 
-export type PolicyId =
-  | "random"
-  | "greedy"
-  | "smart"
-  | "beam"
-  | "political"
-  | "settler"
-  | "master";
+export type PolicyId = "random" | "greedy" | "smart" | "beam" | "political" | "settler" | "master";
 
 export type Policy = {
   name: PolicyId;
@@ -60,6 +54,19 @@ const STOCHASTIC_MOVE_TYPES: ReadonlySet<LegalMove["type"]> = new Set([
   "buyRiotInsurance",
 ]);
 
+export function policyEconomyThresholds(ruleset: Ruleset) {
+  const colonyWoodCost = ruleset.actionCosts.foundColony.wood ?? 0;
+  const goldVentureStake = ruleset.ventureStakes.gold.gold ?? 0;
+  return {
+    ventureGoldReserve: goldVentureStake * 5,
+    sellSurplus: colonyWoodCost * 2,
+    lowGold: goldVentureStake * 2,
+    woodStarved: colonyWoodCost,
+    goldRich: colonyWoodCost,
+    materialScoreDivisor: Math.max(1, ruleset.victory.minimums.stockpile / 8),
+  };
+}
+
 /**
  * The hard-coded rules for the stochastic move families (riot / venture / bank chains),
  * shared by the one-ply and beam searches so the anti-peek policy lives in one place.
@@ -67,6 +74,7 @@ const STOCHASTIC_MOVE_TYPES: ReadonlySet<LegalMove["type"]> = new Set([
  */
 function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMove | null {
   const playerID = G.currentPlayer;
+  const thresholds = policyEconomyThresholds(G.ruleset);
 
   // A pending riot is a forced menu with a stochastic resolution — declare the
   // resource-priced insurances (cheap certainty), skip the concession, then roll.
@@ -84,7 +92,10 @@ function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMov
     (move): move is Extract<LegalMove, { type: "fundExpedition" }> =>
       move.type === "fundExpedition" && move.stake === "gold",
   );
-  if (goldVentures.length > 0 && G.players[playerID].resources.gold >= 25) {
+  if (
+    goldVentures.length > 0 &&
+    G.players[playerID].resources.gold >= thresholds.ventureGoldReserve
+  ) {
     return goldVentures[G.season % goldVentures.length];
   }
 
@@ -94,8 +105,8 @@ function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMov
     const sell = moves.find((move) => move.type === "bankSell" && move.material === material);
     if (
       sell &&
-      G.players[playerID].resources[material] > 40 &&
-      G.players[playerID].resources.gold < 10
+      G.players[playerID].resources[material] > thresholds.sellSurplus &&
+      G.players[playerID].resources.gold < thresholds.lowGold
     ) {
       return sell;
     }
@@ -104,8 +115,8 @@ function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMov
   const woodBuy = moves.find((move) => move.type === "bankBuy" && move.material === "wood");
   if (
     woodBuy &&
-    G.players[playerID].resources.wood < 20 &&
-    G.players[playerID].resources.gold >= 20
+    G.players[playerID].resources.wood < thresholds.woodStarved &&
+    G.players[playerID].resources.gold >= thresholds.goldRich
   ) {
     return woodBuy;
   }
@@ -246,39 +257,27 @@ export function projectPolicyHorizon(
 
     // The engine checks unrest at every start-of-turn upkeep, before income.
     // Record every exposure rather than judging only the terminal happiness.
-    unrest.minimumHappiness = Math.min(
-      unrest.minimumHappiness,
-      player.resources.happiness,
-    );
-    const upkeepRisk = evaluatePolicyUnrestRisk(
-      projectedState.ruleset,
-      player.resources.happiness,
-    );
+    unrest.minimumHappiness = Math.min(unrest.minimumHappiness, player.resources.happiness);
+    const upkeepRisk = evaluatePolicyUnrestRisk(projectedState.ruleset, player.resources.happiness);
     unrest.riskPenalty += upkeepRisk.scorePenalty;
 
     if (upkeepRisk.tier === "revolt") {
       unrest.severeRiotEvents += 1;
       // Severe riots always rebound after resolution, independent of the roll.
-      player.resources.happiness =
-        projectedState.ruleset.economy.unrest.severeRebound;
+      player.resources.happiness = projectedState.ruleset.economy.unrest.severeRebound;
     } else if (upkeepRisk.tier === "unrest") {
       unrest.mildRiotEvents += 1;
     }
 
     const graceActive =
-      projectedState.ruleset.economy.firstIncomeFoodGrace &&
-      !player.hasCollectedGameplayIncome;
+      projectedState.ruleset.economy.firstIncomeFoodGrace && !player.hasCollectedGameplayIncome;
 
     if (!graceActive) {
       if (deficit) {
         player.consecutiveFoodDeficitTurns += 1;
 
         if (player.consecutiveFoodDeficitTurns >= deficit.threshold) {
-          const removed = removeExpectedStarvationPops(
-            projectedState,
-            playerID,
-            deficit.popLoss,
-          );
+          const removed = removeExpectedStarvationPops(projectedState, playerID, deficit.popLoss);
           expectedStarvationPopLoss += removed;
           player.consecutiveFoodDeficitTurns = 0;
 
@@ -298,9 +297,11 @@ export function projectPolicyHorizon(
       suppressedCollections -= 1;
       player.incomeSuppressedTurns = Math.max(0, player.incomeSuppressedTurns - 1);
     } else {
-      for (const resource of Object.keys(income) as Array<keyof typeof income>) {
-        player.resources[resource] += income[resource];
-      }
+      applyResourceDeltaWithFloors(
+        player.resources,
+        income,
+        projectedState.ruleset.economy.stockpileFloors,
+      );
     }
 
     player.hasCollectedGameplayIncome = true;
@@ -318,10 +319,7 @@ export function projectPolicyHorizon(
  * legal candidate, so cloning decks, logs, assembly state, and unrelated players
  * here would turn the six-step horizon into a simulation-wide hot path.
  */
-function createPolicyProjectionState(
-  G: HegemonyState,
-  playerID: PlayerId,
-): HegemonyState {
+function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): HegemonyState {
   const originalPlayer = G.players[playerID];
   const ownedTileIds = new Set(originalPlayer.settlements);
 
@@ -360,13 +358,11 @@ function createPolicyProjectionState(
  * holding/type by its survival probability avoids peeking at future RNG while
  * letting canonical income recalculate after every projected starvation event.
  */
-function removeExpectedStarvationPops(
-  G: HegemonyState,
-  playerID: PlayerId,
-  count: number,
-): number {
+function removeExpectedStarvationPops(G: HegemonyState, playerID: PlayerId, count: number): number {
   const settlements = G.players[playerID].settlements
-    .map((tileId) => getTile(G, tileId)?.settlements.find((settlement) => settlement.owner === playerID))
+    .map((tileId) =>
+      getTile(G, tileId)?.settlements.find((settlement) => settlement.owner === playerID),
+    )
     .filter((settlement) => settlement !== undefined);
   const total = settlements.reduce(
     (sum, settlement) =>
@@ -414,21 +410,12 @@ export type PolicyUnrestRisk = {
  * consequences. This is a deterministic strategic ramp, not an expected riot-table
  * payout: conditional resources, buildings, insurance, and future RNG stay unknown.
  */
-export function evaluatePolicyUnrestRisk(
-  ruleset: Ruleset,
-  happiness: number,
-): PolicyUnrestRisk {
+export function evaluatePolicyUnrestRisk(ruleset: Ruleset, happiness: number): PolicyUnrestRisk {
   const unrest = ruleset.economy.unrest;
-  const bufferWidth = Math.max(
-    1,
-    unrest.popLossThreshold - unrest.severeThreshold,
-  );
+  const bufferWidth = Math.max(1, unrest.popLossThreshold - unrest.severeThreshold);
 
   if (happiness > unrest.popLossThreshold) {
-    const proximity = Math.max(
-      0,
-      1 - (happiness - unrest.popLossThreshold) / bufferWidth,
-    );
+    const proximity = Math.max(0, 1 - (happiness - unrest.popLossThreshold) / bufferWidth);
     return {
       tier: proximity > 0 ? "buffer" : "safe",
       scorePenalty: POLICY_UNREST_WEIGHTS.bufferMaxPenalty * proximity,
@@ -442,25 +429,19 @@ export function evaluatePolicyUnrestRisk(
     };
   }
 
-  const die = RIOT_TABLE.die ?? 6;
+  const die = getRiotTable().die ?? 6;
   const popLossSeverity = Math.max(
     POLICY_UNREST_WEIGHTS.severeMultiplierFloor,
     unrest.severePopLossMultiplier,
   );
   const rollShiftSeverity = Math.max(
     0.5,
-    1 -
-      (POLICY_UNREST_WEIGHTS.severeRollShiftWeight *
-        unrest.severeRollModifier) /
-        die,
+    1 - (POLICY_UNREST_WEIGHTS.severeRollShiftWeight * unrest.severeRollModifier) / die,
   );
 
   return {
     tier: "revolt",
-    scorePenalty:
-      POLICY_UNREST_WEIGHTS.mildRiotPenalty *
-      popLossSeverity *
-      rollShiftSeverity,
+    scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty * popLossSeverity * rollShiftSeverity,
   };
 }
 
@@ -485,11 +466,12 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
 
   const standings = playerStandings(G, playerID);
   const material = projected.wood + projected.stone + projected.gold + projected.food;
+  const materialDivisor = policyEconomyThresholds(G.ruleset).materialScoreDivisor;
   const heuristic =
     5 * standings.cities +
     3 * standings.colonies +
     standings.pops +
-    Math.floor(material / 10) -
+    Math.floor(material / materialDivisor) -
     2 * projection.expectedStarvationPopLoss;
   // Cap the happiness reward: below the cap it prices riot avoidance and the
   // Beloved card (min +10); past it, more calm is wasted coin — an uncapped term

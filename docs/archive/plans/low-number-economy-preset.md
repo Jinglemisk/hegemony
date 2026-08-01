@@ -1,14 +1,14 @@
 ---
-status: ready
-phase: "3.5"
-updated: 2026-07-26
+archive_status: implemented
+archived: 2026-07-31
 ---
 
 # Low-number core economy tuning preset
 
-- **Status:** APPROVED FOR IMPLEMENTATION · scheduled in Phase 3.5
+- **Status:** IMPLEMENTED · validated on 2026-07-31
 - **Decision date:** 2026-07-26
 - **Preset ID:** low-number-core-v1
+- **Shipping evidence:** [matched simulation campaign](../../reports/simulation/2026-07-31-low-number-core-v1.md)
 
 ## 1. Decision
 
@@ -23,7 +23,7 @@ same seed for direct A/B testing.
 
 The engine and TypeScript content are authoritative. Hegemony.pdf is outdated and
 supplies no values. The derivation and existing evidence are in
-[the low-number economy report](../reports/simulation/2026-07-25-low-number-economy.md).
+[the low-number economy report](../../reports/simulation/2026-07-25-low-number-economy.md).
 
 ## 2. Scope boundary
 

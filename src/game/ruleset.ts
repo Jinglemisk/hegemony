@@ -1,4 +1,10 @@
-import { ACTION_COSTS, GROW_POP_COSTS, SETTLEMENT_RULES, STARTING_RESOURCES, VENTURE_STAKES } from "./data";
+import {
+  ACTION_COSTS,
+  GROW_POP_COSTS,
+  SETTLEMENT_RULES,
+  STARTING_RESOURCES,
+  VENTURE_STAKES,
+} from "./data";
 import { PLACEMENT_POP_COUNTS } from "./core/pops";
 import type { PopType, Resource, Resources, SettlementKind, VictoryMetric } from "./types";
 
@@ -82,6 +88,9 @@ export interface EconomyRules {
   unrest: UnrestRules;
   /** Bank exchange rates & derivation (D6/Q14). */
   bank: BankRules;
+  /** Optional lower bounds applied by authoritative income/event/table resource
+   *  mutations. Costs remain affordability-gated and are never rescued by clamping. */
+  stockpileFloors: Partial<Record<Resource, number>>;
 }
 
 /** Tunables for the unrest (negative-happiness) consequence system. Since D9 the
@@ -202,7 +211,12 @@ export const DEFAULT_RULESET: Ruleset = {
   startingResources: STARTING_RESOURCES,
   placementPopCounts: PLACEMENT_POP_COUNTS,
   settlements: SETTLEMENT_RULES,
-  placement: { colonyContiguity: true, coastalLeapfrog: true, maxColoniesPerTile: 2, cityExclusionRadius: 1 },
+  placement: {
+    colonyContiguity: true,
+    coastalLeapfrog: true,
+    maxColoniesPerTile: 2,
+    cityExclusionRadius: 1,
+  },
   victory: {
     // Design rule (roadmap-appendix D1, 2026-07-12): no card may be holdable at game
     // start or on the first turn — every minimum sits above anything a legal setup
@@ -213,14 +227,14 @@ export const DEFAULT_RULESET: Ruleset = {
     // live metric that flips hands like the other five. The minimum of 2 keeps it
     // genuinely contested — patronising a single politician is not a claim on the
     // Assembly, and with four politicians and four seats, two is a real bloc.
-    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 10, voice: 2 }
+    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 10, voice: 2 },
   },
   actionCosts: ACTION_COSTS,
   growPopCosts: GROW_POP_COSTS,
   popIncome: {
     citizens: { flat: { influence: 1, gold: 2, food: -2 }, primaryResource: 0 },
     freemen: { flat: { gold: 2, food: -1 }, primaryResource: 0 },
-    slaves: { flat: { food: -1, happiness: -0.5 }, primaryResource: 1 }
+    slaves: { flat: { food: -1, happiness: -0.5 }, primaryResource: 1 },
   },
   economy: {
     colonySharedTileYieldShare: 0.5,
@@ -236,7 +250,7 @@ export const DEFAULT_RULESET: Ruleset = {
       severeRebound: -4,
       foodDeficitThreshold: -2,
       foodDeficitTurnsToStarve: 2,
-      foodDeficitStarvePopLoss: 1
+      foodDeficitStarvePopLoss: 1,
     },
     bank: {
       // PROVISIONAL rates (D6): baseline sell 3:1 / buy 2g; scarcity classes sit one
@@ -244,14 +258,15 @@ export const DEFAULT_RULESET: Ruleset = {
       derivation: "scarcity",
       baseline: { sell: 3, buy: 2 },
       abundant: { sell: 4, buy: 2 },
-      scarce: { sell: 2, buy: 3 }
-    }
+      scarce: { sell: 2, buy: 3 },
+    },
+    stockpileFloors: {},
   },
   civicCalm: { happiness: 3, influenceCost: 4, goldCost: 6 },
   ladder: {
     promoteCosts: { slaves: { food: 4 }, freemen: { gold: 4 } },
     demoteCosts: { citizens: { influence: 2 }, freemen: { influence: 3 } },
-    demoteHappinessPenalty: { citizens: 0, freemen: 1 }
+    demoteHappinessPenalty: { citizens: 0, freemen: 1 },
   },
   ventureStakes: VENTURE_STAKES,
   assembly: {
@@ -272,15 +287,21 @@ export const DEFAULT_RULESET: Ruleset = {
     briberyCap: 2,
     vetoCost: 5,
     vetoesPerAssembly: 1,
-    tiesPass: false
+    tiesPass: false,
   },
-  setup: ["capital", "colony"]
+  setup: ["capital", "colony"],
 };
 
 /** Recursively merge a partial patch onto a base value; arrays and primitives replace, plain objects merge. */
-type DeepPartial<T> = {
-  [K in keyof T]?: T[K] extends readonly unknown[] ? T[K] : T[K] extends object ? DeepPartial<T[K]> : T[K];
+export type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends readonly unknown[]
+    ? T[K]
+    : T[K] extends object
+      ? DeepPartial<T[K]>
+      : T[K];
 };
+
+export type RulesetPatch = DeepPartial<Ruleset>;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -306,16 +327,16 @@ function deepMerge<T>(base: T, patch: unknown): T {
  * ruleset. `deriveRuleset(DEFAULT_RULESET, { startingResources: { wood: 40 } })`
  * keeps every other value and overrides only what the patch names.
  */
-export function deriveRuleset(base: Ruleset, patch: DeepPartial<Ruleset>): Ruleset {
+export function deriveRuleset(base: Ruleset, patch: RulesetPatch): Ruleset {
   return deepMerge(base, patch);
 }
 
 /** Combine two ruleset patches (b wins on conflicts); null when both are absent. Used to
  *  fold a tune-panel patch into a `--ruleset-patch` file in the headless sim. */
 export function mergeRulesetPatches(
-  a: DeepPartial<Ruleset> | null,
-  b: DeepPartial<Ruleset> | null,
-): DeepPartial<Ruleset> | null {
+  a: RulesetPatch | null,
+  b: RulesetPatch | null,
+): RulesetPatch | null {
   if (!a) return b;
   if (!b) return a;
   return deepMerge(a, b);
@@ -334,24 +355,27 @@ export type GameModeId = "standard" | "fastStart" | "deathmatch";
  * `createGame` selects one via {@link ./config.GAME_CONFIG.mode}. This is the "tracks"
  * for difficulty / handicaps / future modules — no plugin loader, just data.
  */
-export const GAME_MODES: Record<GameModeId, { label: string; description: string; ruleset: Ruleset }> = {
+export const GAME_MODES: Record<
+  GameModeId,
+  { label: string; description: string; ruleset: Ruleset }
+> = {
   standard: {
     label: "Standard",
     description: "The baseline: a metropolis, then a founding colony on any coast — snake order.",
-    ruleset: DEFAULT_RULESET
+    ruleset: DEFAULT_RULESET,
   },
   fastStart: {
     label: "Fast Start",
     description: "Open with a richer treasury so expansion comes sooner.",
     ruleset: deriveRuleset(DEFAULT_RULESET, {
-      startingResources: { wood: 40, stone: 20, gold: 20, food: 30 }
-    })
+      startingResources: { wood: 40, stone: 20, gold: 20, food: 30 },
+    }),
   },
   deathmatch: {
     label: "Deathmatch",
     description: "Each player founds three colonies at setup instead of one.",
     ruleset: deriveRuleset(DEFAULT_RULESET, {
-      setup: ["capital", "colony", "colony", "colony"]
-    })
-  }
+      setup: ["capital", "colony", "colony", "colony"],
+    }),
+  },
 };

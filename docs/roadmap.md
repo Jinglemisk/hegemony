@@ -5,7 +5,7 @@ before planning, implementing, or declaring work complete. Implementation detail
 belongs in linked plans; unresolved owner decisions belong only in
 [questions.md](questions.md).
 
-Last updated: 2026-07-29.
+Last updated: 2026-07-31.
 
 ## Mandatory three-axis parity contract
 
@@ -99,14 +99,13 @@ gate, not deferred implementation coverage.
 6. Simulation is an instrument: use targeted campaigns and label policy limits.
 7. Batch visual-design decisions; do not reopen a frozen direction during feature work.
 
-**Phase 3.5 order amendment (2026-07-26):** the canonical effect-presentation seams,
-parity enforcement, and bot-evaluator repair have merged. The next implementation
-slice is the one-click **low-number core tuning preset** specified in
-[its active plan](plans/low-number-economy-preset.md), before the Assembly revision and
-final balance campaigns.
-The scheduled slice covers rules, buildings, terrain, events, economic tables, and
-Assembly participation costs; Assembly resolutions and politician effects are the
-explicitly deferred final 16%.
+**Phase 3.5 order amendment (fulfilled 2026-07-31):** the one-click
+**low-number core tuning preset** is implemented across rules, buildings, terrain,
+events, economic tables, Assembly participation costs, browser tuning, and simulator
+evidence. Its [matched campaign](reports/simulation/2026-07-31-low-number-core-v1.md)
+passes the denomination and race-duration gates. Assembly resolutions and politician
+effects remain the explicitly deferred final 16%; the Assembly revision is now the
+next implementation slice before final balance campaigns.
 
 ## Phase sequence
 

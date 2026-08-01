@@ -1,5 +1,5 @@
-import { PLAYER_EVENT_CARDS, PLAYER_IDS, PLAYER_NAMES, SEASONAL_EVENT_CARDS } from "./data";
-import { getTerrainDeck } from "./content";
+import { PLAYER_IDS, PLAYER_NAMES } from "./data";
+import { getPlayerEventCards, getSeasonalEventCards, getTerrainDeck } from "./content";
 import { deriveBankRates } from "./bank";
 import { createInitialMap } from "./map";
 import type { BoardLayout, HegemonyState } from "./types";
@@ -11,12 +11,12 @@ import { createPoliticianDecks } from "./assembly/assembly";
 export function createInitialState(
   seed = createSeed(),
   ruleset: Ruleset = DEFAULT_RULESET,
-  boardLayout: BoardLayout = "classic"
+  boardLayout: BoardLayout = "classic",
 ): HegemonyState {
   let rng = seed >>> 0;
-  const seasonal = shuffleWithSeed(expandDeck(SEASONAL_EVENT_CARDS), rng);
+  const seasonal = shuffleWithSeed(expandDeck(getSeasonalEventCards()), rng);
   rng = seasonal.state;
-  const player = shuffleWithSeed(expandDeck(PLAYER_EVENT_CARDS), rng);
+  const player = shuffleWithSeed(expandDeck(getPlayerEventCards()), rng);
   rng = player.state;
 
   const baseTerrainDeck = getTerrainDeck();
@@ -65,10 +65,10 @@ export function createInitialState(
           ladderUsedThisTurn: false,
           ventureUsedThisTurn: false,
           lawFreeActionsUsedThisYear: [],
-          incomeSuppressedTurns: 0
-        }
+          incomeSuppressedTurns: 0,
+        },
       }),
-      {} as HegemonyState["players"]
+      {} as HegemonyState["players"],
     ),
     transfers: [],
     seasonalDrawPile: seasonal.cards,
@@ -94,6 +94,6 @@ export function createInitialState(
     politicianDiscards: politicians.discards,
     lawOrder: 0,
     pendingIsonomia: false,
-    assembliesHeld: 0
+    assembliesHeld: 0,
   };
 }
