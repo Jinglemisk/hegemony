@@ -21,7 +21,7 @@ change is not ready to merge.
 - [ ] Backend queries, previews, legal-move enumeration, and execution reuse authoritative rules and agree in regression tests.
 - [ ] Frontend surfaces reuse shared selectors/presenters for the same fact, cost, status, or effect.
 - [ ] Simulation observation, evaluation, execution, and telemetry reuse their canonical paths.
-- [ ] New or changed `LegalMove` members are classified in `src/parity/moveParity.ts`.
+- [ ] New or changed `GameCommand` members are classified in `src/parity/commandParity.ts`.
 - [ ] New automatic mechanics are visible to players where needed and represented in sim telemetry and AI evaluation.
 - [ ] Consequential AI decisions have clearly-use, clearly-avoid, and edge-case behavior tests.
 - [ ] Any deliberately deferred axis is recorded as incomplete work in `docs/roadmap.md`.

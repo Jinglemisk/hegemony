@@ -1,6 +1,6 @@
 # Parity manifests
 
-Last updated: 2026-08-03.
+Last updated: 2026-08-04.
 
 This reference defines the Phase 3.5 Step 2 enforcement boundary for consequential
 gameplay that is passive, automatic, content-driven, or read-only. It complements
@@ -10,7 +10,7 @@ the effective-value contract rather than replacing it.
 
 | Layer               | Authoritative seam                           | What it prevents                                                                                                                            |
 | ------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Player actions      | `src/parity/moveParity.ts`                   | A new `LegalMove` cannot omit frontend initiation or simulation execution.                                                                  |
+| Player actions      | `src/parity/commandParity.ts`                | A new `GameCommand` cannot omit frontend initiation or simulation execution.                                                                 |
 | Persistent state    | `src/game/activeEffects.ts#getActiveEffects` | A lasting mechanic cannot disappear from status, presentation, policy observation, or telemetry.                                            |
 | Effects and content | `src/parity/featureParity.ts`                | A passive/automatic effect type or shipped content ID cannot silently miss an engine, frontend, simulation, telemetry, or behavioral route. |
 | Effective values    | `docs/reference/effective-values.md`         | A routed consumer cannot substitute authored defaults for the effective content or cost the engine uses.                                    |
@@ -19,18 +19,16 @@ These layers intentionally overlap. A seasonal event may apply an immediate effe
 create persistent state, change an action's effective cost, and alter a later policy
 decision. Each applicable layer must remain true.
 
-## Current limitation and accepted closure
+## Canonical command boundary
 
-The current move manifest is exhaustive by `LegalMove["type"]`, but its frontend test
-proves only that named surface files exist. The browser still dispatches through parallel
-per-action controller wrappers while simulation and replay use `applyMove`. File presence
-is useful omission detection, not proof of one runtime path.
+The command manifest is exhaustive by `GameCommand["type"]`. Browser controls construct
+commands in `src/client/controller.ts`; browser, simulation, and replay execute through
+the same atomic `transition`. A behavioral regression compares the browser adapter with a
+direct engine transition, while the manifest keeps every command classified.
 
-[Phase 3.6](../plans/phase-3.6-architecture-hardening.md) replaces this with a canonical
-client-input `GameCommand`, derived legal options, workflow-aware actor eligibility, and
-one atomic transition used by browser, simulation, replay, and the future server. Parity
-tests must then exercise real command construction and transition behavior rather than
-searching only for implementation tokens.
+Workflow-wide actor eligibility and player-safe observation remain the next
+[Phase 3.6](../plans/phase-3.6-architecture-hardening.md) slice. Mechanical enforcement later
+strengthens per-command construction coverage beyond the current surface manifest.
 
 ## Exhaustive effect registries
 

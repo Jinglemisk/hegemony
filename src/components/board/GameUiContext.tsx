@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { GameEvents, GameMoves, Phase } from "../../game/controller";
+import type { GameEvents, GameMoves, Phase } from "../../client/controller";
 import type { ActiveEffectDescriptor } from "../../game/activeEffects";
 import type { HegemonyState, PlayerId, PlayerState } from "../../game/types";
 
@@ -11,7 +11,7 @@ import type { HegemonyState, PlayerId, PlayerState } from "../../game/types";
  * actually used them.
  *
  * This is also the network-client seam the architecture report calls for: when the
- * UI converges on `applyMove`, a server-backed client swaps `moves` here and the
+ * UI converges on the atomic `transition`, a server-backed client swaps `moves` here and the
  * tree below is unchanged.
  *
  * NOT a state store. It carries what the controller already owns, read-only. The

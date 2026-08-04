@@ -1,6 +1,6 @@
-import type { LegalMove } from "../game/legalMoves";
+import type { GameCommand } from "../game/legalMoves";
 
-export type LegalMoveType = LegalMove["type"];
+export type GameCommandType = GameCommand["type"];
 
 type NonEmptyList<T> = readonly [T, ...T[]];
 
@@ -27,7 +27,7 @@ export type SimulationMoveCoverage = {
   evidence: string;
 };
 
-export type MoveParityCoverage = {
+export type CommandParityCoverage = {
   frontend: FrontendMoveCoverage;
   simulation: SimulationMoveCoverage;
 };
@@ -50,8 +50,8 @@ function simulated(policyPath: SimulationPolicyPath, evidence: string): Simulati
 /**
  * Cross-system exhaustiveness gate for player actions.
  *
- * Adding a member to LegalMove without classifying both its frontend path and its
- * simulation/AI path fails `npm run check`. Every move is also counted by the
+ * Adding a member to GameCommand without classifying both its frontend path and its
+ * simulation/AI path fails `npm run check`. Every command is also counted by the
  * universal `movesByType` telemetry in src/sim/telemetry.ts.
  *
  * This registry proves that a route has been deliberately accounted for; it does
@@ -59,27 +59,27 @@ function simulated(policyPath: SimulationPolicyPath, evidence: string): Simulati
  * the targeted clearly-use, clearly-avoid, and edge-case tests required by the
  * roadmap's three-axis parity contract and the PR template.
  */
-export const MOVE_PARITY = {
+export const COMMAND_PARITY = {
   placeCapital: {
     frontend: interactive(
       "src/components/HegemonyBoard.tsx",
       "src/components/board/modals/PopulationPickerModal.tsx",
     ),
-    simulation: simulated("setup-driver", "buildNewGame → enumerateLegalMoves"),
+    simulation: simulated("setup-driver", "buildNewGame → enumerateLegalCommands"),
   },
   placeCity: {
     frontend: interactive(
       "src/components/HegemonyBoard.tsx",
       "src/components/board/modals/PopulationPickerModal.tsx",
     ),
-    simulation: simulated("setup-driver", "buildNewGame → enumerateLegalMoves"),
+    simulation: simulated("setup-driver", "buildNewGame → enumerateLegalCommands"),
   },
   placeColony: {
     frontend: interactive(
       "src/components/HegemonyBoard.tsx",
       "src/components/board/modals/PopulationPickerModal.tsx",
     ),
-    simulation: simulated("setup-driver", "buildNewGame → enumerateLegalMoves"),
+    simulation: simulated("setup-driver", "buildNewGame → enumerateLegalCommands"),
   },
   foundColony: {
     frontend: interactive(
@@ -204,9 +204,9 @@ export const MOVE_PARITY = {
     frontend: interactive("src/components/board/command/CommandDock.tsx"),
     simulation: simulated("turn-control", "beamPlan fallback and forceEndTurn"),
   },
-} satisfies Record<LegalMoveType, MoveParityCoverage>;
+} satisfies Record<GameCommandType, CommandParityCoverage>;
 
 /** Stable report order and the runtime vocabulary used to zero-fill telemetry. */
-export const LEGAL_MOVE_TYPES = Object.freeze(
-  Object.keys(MOVE_PARITY) as LegalMoveType[],
-) as readonly LegalMoveType[];
+export const GAME_COMMAND_TYPES = Object.freeze(
+  Object.keys(COMMAND_PARITY) as GameCommandType[],
+) as readonly GameCommandType[];

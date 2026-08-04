@@ -7,13 +7,13 @@ import {
   getActiveEffects,
 } from "../game/activeEffects";
 import type { ActiveEffectKind } from "../game/activeEffects";
-import type { LegalMove } from "../game/legalMoves";
+import type { GameCommand } from "../game/legalMoves";
 import type { DefinitionIdentity } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
 import { playerStandings } from "../game/score";
 import { canPlaceColonyOnTile } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
-import { LEGAL_MOVE_TYPES, type LegalMoveType } from "../parity/moveParity";
+import { GAME_COMMAND_TYPES, type GameCommandType } from "../parity/commandParity";
 import {
   BUILDING_CONTENT_IDS,
   PLAYER_EVENT_CONTENT_IDS,
@@ -210,9 +210,9 @@ export type BatchReport = {
    *  seat-independent measure a rotated mixed-policy batch produces. Empty for a
    *  uniform batch (no seat policies recorded). */
   winsByPolicy: Record<string, { games: number; wins: number; winRate: number }>;
-  /** Universal action telemetry. Every LegalMove type is present, including zeroes,
+  /** Universal action telemetry. Every GameCommand type is present, including zeroes,
    *  so newly added or unexercised actions cannot disappear from a report. */
-  movesByType: Record<LegalMoveType, { count: number; perGame: number }>;
+  movesByType: Record<GameCommandType, { count: number; perGame: number }>;
   /** Effect prevalence over every player-turn snapshot; no status can vanish from
    *  balance interpretation merely because it has no dedicated move. */
   activeEffects: Record<
@@ -315,7 +315,7 @@ export class Aggregator {
   private playerEvents: Record<string, number> = {};
   private seasonalEvents: Record<string, number> = {};
   private choicePicks: Record<string, number[]> = {};
-  private movesByType: Partial<Record<LegalMoveType, number>> = {};
+  private movesByType: Partial<Record<GameCommandType, number>> = {};
   private currencyVerbs: Record<string, number> = {};
   private assemblyVerbs: Record<string, number> = {};
   private assemblyInfluence = 0;
@@ -363,7 +363,7 @@ export class Aggregator {
     this.countPlayerDraw(G);
   }
 
-  onMove(G: HegemonyState, _player: PlayerId, move: LegalMove) {
+  onMove(G: HegemonyState, player: PlayerId, move: GameCommand) {
     this.movesByType[move.type] = (this.movesByType[move.type] ?? 0) + 1;
 
     if (move.type === "buildBuilding") {
@@ -376,10 +376,19 @@ export class Aggregator {
 
     if ((ASSEMBLY_VERBS as readonly string[]).includes(move.type)) {
       this.assemblyVerbs[move.type] = (this.assemblyVerbs[move.type] ?? 0) + 1;
-      // The enumerated move carries its own price, so the sink is measured from what
-      // was actually paid rather than re-derived from the ruleset.
-      if ("cost" in move && move.cost) {
-        this.assemblyInfluence += move.cost.influence ?? 0;
+      // Commands never carry prices. Measure the authoritative amount the engine
+      // just charged from the live rules and post-command Assembly counters.
+      if (move.type === "assemblyDraw") {
+        this.assemblyInfluence +=
+          (G.assembly?.draws[player] ?? 0) <= 1
+            ? G.ruleset.assembly.drawCost
+            : G.ruleset.assembly.redrawCost;
+      } else if (move.type === "assemblyProposeRepeal") {
+        this.assemblyInfluence += G.ruleset.assembly.repealCost;
+      } else if (move.type === "assemblyBribe") {
+        this.assemblyInfluence += G.ruleset.assembly.briberyCost;
+      } else if (move.type === "assemblyVeto") {
+        this.assemblyInfluence += G.ruleset.assembly.vetoCost;
       }
     }
 
@@ -684,7 +693,7 @@ export class Aggregator {
       perSeat,
       buildings,
       movesByType: Object.fromEntries(
-        LEGAL_MOVE_TYPES.map((moveType) => [
+        GAME_COMMAND_TYPES.map((moveType) => [
           moveType,
           this.perGameCount(this.movesByType[moveType] ?? 0),
         ]),

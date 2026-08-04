@@ -1,6 +1,6 @@
 import { EMPTY_RESOURCES } from "../../game/data";
 import { capitalize } from "../../game/core/format";
-import type { Phase } from "../../game/controller";
+import type { Phase } from "../../client/controller";
 import type { ActionStatus } from "../../game/rules";
 import type { Ruleset } from "../../game/ruleset";
 import { POP_TYPES, popIncome, previewBuildBuilding, previewBuildingIncomeDelta } from "../../game/rules";

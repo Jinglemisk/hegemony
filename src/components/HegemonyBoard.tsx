@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { GameEvents, GameMoves, LocalContext } from "../game/controller";
+import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
   POP_TYPES,
   calculateEconomyProjection,

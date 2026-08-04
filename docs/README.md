@@ -16,7 +16,7 @@ the accepted Assembly, low-number economy, Voice, prize, and three-city decision
 The report explicitly records the evidence limit: automated gates passed, but no
 separate full-game human playtest transcript was captured.
 
-**Owner blocker:** None for Phase 3.6. The first slice is definition isolation.
+**Owner blocker:** None for Phase 3.6. The next slice is actor and projection contracts.
 
 **Locked sequence:** Phase 3.6 hardens the shared command, per-match
 definition, actor, projection, identity, replay, invariant, and CI boundaries. V1 then
@@ -27,7 +27,7 @@ intended typed Resolution/Idea effects. The v1 mechanics freeze precedes full mu
 
 | Plan                                                                          | Phase    | Status    | Position                                                                         |
 | ----------------------------------------------------------------------------- | -------- | --------- | -------------------------------------------------------------------------------- |
-| [Phase 3.6 architecture hardening](plans/phase-3.6-architecture-hardening.md) | 3.6      | `active`  | Current; definition isolation is the first PR slice                              |
+| [Phase 3.6 architecture hardening](plans/phase-3.6-architecture-hardening.md) | 3.6      | `active`  | Definition and canonical transition implemented; actor/projection contract next  |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)                               | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze |
 | [Luxury goods](plans/luxury-goods.md)                                         | 4        | `blocked` | V1; waits for Phases 3.5 and 3.6                                                 |
 | [Player trade](plans/player-trade.md)                                         | 4        | `blocked` | V1 after luxuries; full negotiation ships before the mechanics freeze            |

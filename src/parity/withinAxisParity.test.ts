@@ -15,8 +15,8 @@ import type { BuildingDefinition, EventCard, HegemonyState, PlayerId } from "../
 import { presentEventEffects, presentTableEffect } from "../ui/effects";
 import { getAuthoredGameContent } from "../game/content";
 import { createGameDefinition } from "../game/definition";
-import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
-import type { LegalMove } from "../game/legalMoves";
+import { enumerateLegalOptions, transition } from "../game/legalMoves";
+import type { GameCommand } from "../game/legalMoves";
 import {
   getBuildBuildingOptions,
   getFoundColonyStatus,
@@ -224,22 +224,26 @@ describe("effective content and cost parity", () => {
     expect(option?.status.cost).toEqual({ wood: 11, stone: 4 });
     expect(buildingName("marketplace", G.definition.content)).toBe("Agora Market");
 
-    const legalMove = enumerateLegalMoves(G, "0").find(
-      (move) => move.type === "buildBuilding" && move.buildingId === "marketplace",
+    const legalOption = enumerateLegalOptions(G, "0").find(
+      ({ command }) =>
+        command.type === "buildBuilding" && command.buildingId === "marketplace",
     );
-    expect(legalMove).toMatchObject({
-      type: "buildBuilding",
-      buildingId: "marketplace",
+    expect(legalOption).toMatchObject({
+      command: { type: "buildBuilding", buildingId: "marketplace" },
       cost: { wood: 11, stone: 4 },
     });
 
     const beforeResources = { ...G.players["0"].resources };
     const beforeIncome = calculateIncome(G, "0").gold;
-    expect(legalMove && applyMove(G, "0", legalMove).ok).toBe(true);
-    expect(G.players["0"].resources.wood).toBe(beforeResources.wood - 11);
-    expect(G.players["0"].resources.stone).toBe(beforeResources.stone - 4);
-    expect(owned(G, "0,0", "0").buildings).toContain("marketplace");
-    expect(calculateIncome(G, "0").gold - beforeIncome).toBe(9);
+    const result = legalOption
+      ? transition(G.definition, G, "0", legalOption.command)
+      : { ok: false as const, reasons: ["missing option"] };
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.state.players["0"].resources.wood).toBe(beforeResources.wood - 11);
+    expect(result.state.players["0"].resources.stone).toBe(beforeResources.stone - 4);
+    expect(owned(result.state, "0,0", "0").buildings).toContain("marketplace");
+    expect(calculateIncome(result.state, "0").gold - beforeIncome).toBe(9);
   });
 
   it("quotes exact target-independent command costs and labels later choices honestly", () => {
@@ -279,12 +283,11 @@ describe("effective content and cost parity", () => {
       });
       const G = gameplayCity();
       pinBuildings(G, buildings);
-      const moves: LegalMove[] = [
+      const moves: GameCommand[] = [
         {
           type: "buildBuilding",
           tileId: "0,0",
           buildingId: "granary",
-          cost: { wood: cost },
         },
         { type: "endTurn" },
       ];

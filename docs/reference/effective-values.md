@@ -51,17 +51,17 @@ record the resolved identity. Loading re-hashes the serialized package and rejec
 a state/definition mismatch. Interleaved standard and low-number fixtures prove there is no
 process-global content to leak between matches.
 
-The next Phase 3.6 slice separates caller input from derived values. `GameCommand` never contains
-an authoritative cost, blocked reason, or outcome; `LegalOption`/status projections carry
-those engine-derived facts. Browser, simulation, replay, and future server apply the same
-atomic command transition.
+Phase 3.6 now separates caller input from derived values. `GameCommand` never contains an
+authoritative cost, blocked reason, or outcome; `LegalOption`/status projections carry those
+engine-derived facts. Browser, simulation, replay, and the future server apply the same atomic
+command transition.
 
 ## Effective-cost inventory
 
 | Action family          | Authoritative query                                                                           | Execution / simulation                                             | Action surfaces                                                                    | Reference surfaces                                                      |
 | ---------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Found colony           | `getFoundColonyStatus()`                                                                      | Execution and `LegalMove.cost` reuse the status                    | Command quote and Found popover reuse the status                                   | Codex labels the active-ruleset price as base cost                      |
-| Upgrade colony         | `getUpgradeColonyToCityStatus()`                                                              | Execution and `LegalMove.cost` reuse the status                    | Command quote and Upgrade modal reuse the status                                   | Codex labels the active-ruleset price as base cost                      |
+| Found colony           | `getFoundColonyStatus()`                                                                      | Execution and `LegalOption.cost` reuse the status                  | Command quote and Found popover reuse the status                                   | Codex labels the active-ruleset price as base cost                      |
+| Upgrade colony         | `getUpgradeColonyToCityStatus()`                                                              | Execution and `LegalOption.cost` reuse the status                  | Command quote and Upgrade modal reuse the status                                   | Codex labels the active-ruleset price as base cost                      |
 | Build building         | `getBuildBuildingOptions()` pairing each effective definition with `getBuildBuildingStatus()` | Execution, legal moves, and policy search reuse the paired status  | Build popover and ledger candidates show `status.cost`; building tooltips reuse it | Codex and roster headers label effective-definition prices as base cost |
 | Grow pop               | `getGrowPopStatus()`                                                                          | Execution and legal moves reuse the status                         | Target picker shows the selected status cost; the pre-target command says `varies` | Codex labels class prices as base costs                                 |
 | Promote / demote       | `getPromotePopStatus()` / `getDemotePopStatus()`                                              | Execution and legal moves reuse the status                         | Ladder target picker shows the status cost                                         | Codex labels ladder prices as base costs                                |
@@ -69,7 +69,7 @@ atomic command transition.
 | Civic calm             | `getCivicCalmStatus()`                                                                        | Execution and legal moves reuse the selected payment status        | Calm payment choices render the status cost; pre-choice command says `options`     | Codex labels both payments as base costs                                |
 | Venture                | `getFundExpeditionStatus()`                                                                   | Execution and legal moves reuse the selected stake status          | Stake choices render the status cost; pre-choice command says `stakes`             | Codex labels both stakes as base stakes                                 |
 | Riot insurance         | `getBuyRiotInsuranceStatus()`                                                                 | Execution and legal moves reuse the table option status            | Riot choices use the same option/status                                            | Riot table is the base reference                                        |
-| Assembly participation | `nextDrawCost()` and the Assembly legal-move/status rules                                     | Execution, legal moves, policy and telemetry share move costs      | Live Assembly controls read the same rules/session queries                         | Codex labels active-ruleset participation prices as base costs          |
+| Assembly participation | `nextDrawCost()` and the Assembly legal-option/status rules                                   | Execution, legal options, policy and telemetry share derived costs | Live Assembly controls read the same rules/session queries                         | Codex labels active-ruleset participation prices as base costs          |
 
 Pre-target command summaries only print a number when the engine can answer it
 without a target. Target-dependent or alternative-payment actions say `varies`,
@@ -85,7 +85,7 @@ remain on the named status/legal-move queries above. Reference surfaces retain e
 base-cost labels, and action surfaces retain effective-cost or honest pre-target labels.
 
 Step 3 also consumes `CONTENT_MANIFEST`, `FEATURE_PARITY`, the exhaustive effect
-registries in `src/parity/featureParity.ts`, `src/parity/moveParity.ts`,
+registries in `src/parity/featureParity.ts`, `src/parity/commandParity.ts`,
 `getActiveEffects()`, and the typed adapters in `src/ui/effects.ts`; it does not carry a
 UI-only classification registry. Automated keyboard and touch-emulation evidence is
 part of its validation, while the real-device checklist remains an owner gate in the

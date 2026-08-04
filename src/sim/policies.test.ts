@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
+import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { RESOLUTION_CARDS } from "../game/assembly/deck";
 import { PLAYER_IDS } from "../game/data";
 import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
@@ -263,7 +263,7 @@ function chooseFreemanPromotion(policy: typeof smartPolicy | typeof beamPolicy, 
     happiness: 0,
   });
 
-  const moves = enumerateLegalMoves(G, "0");
+  const moves = enumerateLegalCommands(G, "0");
   const promotion = moves.find((move) => move.type === "promotePop" && move.from === "freemen");
   const endTurnMove = moves.find((move) => move.type === "endTurn");
   if (!promotion || !endTurnMove) {
@@ -300,7 +300,7 @@ describe("policy evaluation is side-effect-free", () => {
   it("greedy and smart choose on a deep-frozen state without throwing (immer-safe)", () => {
     const rng = createSimRng(4);
     const G = runGame({ seed: 4, mode: "standard", policy: greedyPolicy, turns: 8 });
-    const moves = enumerateLegalMoves(G, G.currentPlayer);
+    const moves = enumerateLegalCommands(G, G.currentPlayer);
     expect(moves.length).toBeGreaterThan(0);
 
     deepFreeze(G);
@@ -346,7 +346,7 @@ describe("master policy", () => {
   }, 30000);
 
   it("uses the political Assembly strategy and carries the session to completion", () => {
-    const G = scenario({ seed: 23 }).opening().build();
+    let G = scenario({ seed: 23 }).opening().build();
     playUntilAssembly(G);
     expect(G.assembly).toBeTruthy();
 
@@ -356,13 +356,16 @@ describe("master policy", () => {
 
     while (G.assembly && steps < 500) {
       const player = G.currentPlayer;
-      const moves = enumerateLegalMoves(G, player);
+      const moves = enumerateLegalCommands(G, player);
       expect(moves.length).toBeGreaterThan(0);
 
       const choice = masterPolicy.choose(G, moves, masterRng);
       // The Assembly half of master is deliberately the proven political heuristic.
       expect(choice).toEqual(politicalPolicy.choose(G, moves, politicalRng));
-      expect(applyMove(G, player, choice).ok).toBe(true);
+      const result = transition(G.definition, G, player, choice);
+      expect(result.ok).toBe(true);
+      if (!result.ok) break;
+      G = result.state;
       steps += 1;
     }
 
@@ -395,7 +398,7 @@ describe("political policy", () => {
     playUntilAssembly(G);
     expect(G.assembly).toBeTruthy(); // the agora convened
 
-    const moves = enumerateLegalMoves(G, G.currentPlayer);
+    const moves = enumerateLegalCommands(G, G.currentPlayer);
     expect(moves.length).toBeGreaterThan(0);
 
     const rngBefore = G.rng;
@@ -416,7 +419,7 @@ describe("political policy", () => {
     const me = G.currentPlayer;
     G.players[me].resources.influence = 0; // nothing to spend
 
-    const choice = politicalPolicy.choose(G, enumerateLegalMoves(G, me), createSimRng(1));
+    const choice = politicalPolicy.choose(G, enumerateLegalCommands(G, me), createSimRng(1));
     expect(choice.type).toBe("assemblyPass");
   });
 
@@ -432,7 +435,7 @@ describe("political policy", () => {
       G.politicianDiscards[politician] = [];
     }
 
-    const choice = politicalPolicy.choose(G, enumerateLegalMoves(G, me), createSimRng(1));
+    const choice = politicalPolicy.choose(G, enumerateLegalCommands(G, me), createSimRng(1));
     expect(choice).toMatchObject({ type: "assemblyDraw", politician: "stratokles" });
   });
 
@@ -443,7 +446,7 @@ describe("political policy", () => {
 
     const me = G.currentPlayer;
     G.players[me].resources.influence = 100;
-    const moves = enumerateLegalMoves(G, me);
+    const moves = enumerateLegalCommands(G, me);
     const before = politicalPolicy.choose(G, moves, createSimRng(1));
 
     for (const politician of ["demosthenes", "perdiccas", "kleistophenes", "stratokles"] as const) {
@@ -467,7 +470,7 @@ describe("political policy", () => {
       draws: 1,
     };
 
-    const choice = politicalPolicy.choose(G, enumerateLegalMoves(G, me), createSimRng(1));
+    const choice = politicalPolicy.choose(G, enumerateLegalCommands(G, me), createSimRng(1));
     expect(choice).toMatchObject({ type: "assemblyPropose", target });
   });
 });
@@ -483,7 +486,7 @@ describe("beam policy", () => {
 
   it("consumes no game RNG and never mutates the passed state (anti-peek)", () => {
     const G = runGame({ seed: 8, mode: "standard", policy: beamPolicy, turns: 5 });
-    const moves = enumerateLegalMoves(G, G.currentPlayer);
+    const moves = enumerateLegalCommands(G, G.currentPlayer);
     if (moves.length === 0) return; // gameOver — nothing to choose
 
     const rngBefore = G.rng;

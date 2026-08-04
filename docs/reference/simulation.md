@@ -267,16 +267,16 @@ balance scenarios. Loading re-hashes the definition and rejects tampering or a
 state/definition mismatch. Legacy v1 saves without a definition are hydrated from
 their embedded ruleset plus authored content.
 
-**Phase 3.6 progress:** definition version/hash pinning is implemented. Engine/state
-schema and command-schema versioning land with the later version/invariant slice;
-browser, simulation, replay, and the future server move to the same client-input command
-through PR2's atomic transition. `LegalMove` values that contain derived costs remain
-transitional until that slice.
+**Phase 3.6 progress:** definition version/hash pinning and the canonical atomic transition
+are implemented. Browser, simulation, and replay submit intent-only `GameCommand` values;
+derived costs live on `LegalOption` and legacy replay costs are discarded during
+normalization. Engine/state and command-schema versioning land with the later
+version/invariant slice.
 
 ## Writing tests and scenarios
 
-- `src/game/legalMoves.ts` — `enumerateLegalMoves` / `applyMove` /
-  `describeMove`. Import directly (deliberately not in the `rules.ts` barrel).
+- `src/game/legalMoves.ts` — `enumerateLegalCommands` / `enumerateLegalOptions` /
+  `transition` / `describeCommand`. Import directly (deliberately not in the `rules.ts` barrel).
 - `src/game/testing/scenario.ts` — chainable mid-game state builder for tests:
 
   ```ts

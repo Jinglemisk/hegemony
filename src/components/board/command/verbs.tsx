@@ -1,4 +1,4 @@
-import type { Phase } from "../../../game/controller";
+import type { Phase } from "../../../client/controller";
 import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
 import type { HegemonyState, PlayerId, Resources } from "../../../game/types";
 import type { IconAtlasKey, UiAtlasKey } from "../../Sprites";

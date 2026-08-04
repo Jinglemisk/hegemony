@@ -5,7 +5,7 @@ import { yearOf } from "../core/calendar";
 import { collectIncome } from "../actions";
 import { owned, scenario, tile } from "../testing/scenario";
 import { closeAssembly, endTurn } from "../turn";
-import { enumerateLegalMoves } from "../legalMoves";
+import { enumerateLegalCommands, transition } from "../legalMoves";
 import type { HegemonyState, PlayerId } from "../types";
 import {
   assemblyBribe,
@@ -260,6 +260,24 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
 });
 
 describe("the proposal round", () => {
+  it("exposes and transitions an undecided rival's async command", () => {
+    const G = atAssembly();
+    const actor: PlayerId = "2";
+    expect(G.currentPlayer).not.toBe(actor);
+    const command = enumerateLegalCommands(G, actor).find(
+      (candidate) => candidate.type === "assemblyPass",
+    );
+
+    expect(command).toBeDefined();
+    if (!command) return;
+    const result = transition(G.definition, G, actor, command);
+
+    expect(result.ok).toBe(true);
+    expect(G.assembly?.proposalDone[actor]).toBe(false);
+    if (!result.ok) return;
+    expect(result.state.assembly?.proposalDone[actor]).toBe(true);
+  });
+
   it("is asynchronous — any undecided seat may act, in any order", () => {
     const G = atAssembly();
 
@@ -542,7 +560,7 @@ describe("the Law cap", () => {
 
     const fourth = proposeCard(G, "colonial-charter", undefined, "3");
     expect(fourth.result.ok).toBe(false);
-    const replacements = enumerateLegalMoves(G, "3")
+    const replacements = enumerateLegalCommands(G, "3")
       .filter((move) => move.type === "assemblyPropose")
       .map((move) => move.replaces);
     expect(replacements).not.toContain("land-reform");
@@ -669,7 +687,7 @@ describe("Directives: one-time and rival-targeted", () => {
     G.players[proposer].resources.influence += G.ruleset.assembly.drawCost;
     expect(assemblyDraw(G, proposer, "stratokles").ok).toBe(true);
     expect(
-      enumerateLegalMoves(G, proposer)
+      enumerateLegalCommands(G, proposer)
         .filter((move) => move.type === "assemblyPropose")
         .map((move) => move.target),
     ).toEqual(PLAYER_IDS.filter((id) => id !== proposer));

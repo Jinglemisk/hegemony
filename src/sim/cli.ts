@@ -11,8 +11,13 @@ import {
   previewUpgradeColonyToCity,
 } from "../game/economy/preview";
 import type { EconomyPreview } from "../game/economy/preview";
-import { applyMove, describeMove, enumerateLegalMoves } from "../game/legalMoves";
-import type { LegalMove } from "../game/legalMoves";
+import {
+  describeCommand,
+  enumerateLegalCommands,
+  enumerateLegalOptions,
+  transition,
+} from "../game/legalMoves";
+import type { GameCommand } from "../game/legalMoves";
 import { getAuthoredGameContent } from "../game/content";
 import { PLAYER_IDS } from "../game/data";
 import { GAME_MODES } from "../game/ruleset";
@@ -38,8 +43,8 @@ import {
   renderProjection,
   renderShow,
 } from "./format";
-import { DEFAULT_SAVE_PATH, loadGame, saveGame } from "./io";
-import type { MoveRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
+import { DEFAULT_SAVE_PATH, loadGame, normalizeCommandRecord, saveGame } from "./io";
+import type { CommandRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
 import { POLICIES, resolvePolicy } from "./policies";
 import type { Policy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
@@ -282,7 +287,7 @@ function cmdNew(flags: Flags, file: string) {
       ? requireInt(flags["bot-seed"], "--bot-seed")
       : deriveBotSeed(seed);
   const simRng = createSimRng(botSeed);
-  const history: MoveRecord[] = [];
+  const history: CommandRecord[] = [];
 
   const state = buildNewGame({
     seed,
@@ -291,7 +296,7 @@ function cmdNew(flags: Flags, file: string) {
     opening,
     boardLayout,
     simRng,
-    onMove: (_G, player, move) => history.push({ player, move }),
+    onMove: (_G, player, command) => history.push({ player, command }),
   });
 
   const save: SaveFile = {
@@ -337,32 +342,32 @@ function cmdLegal(flags: Flags, file: string) {
   const save = loadGame(file);
 
   if (flags.json) {
-    console.log(JSON.stringify(enumerateLegalMoves(save.state, save.state.currentPlayer), null, 2));
+    console.log(JSON.stringify(enumerateLegalOptions(save.state, save.state.currentPlayer), null, 2));
     return;
   }
 
   console.log(renderLegal(save.state));
 }
 
-function applyAndSave(save: SaveFile, file: string, move: LegalMove, quiet = false) {
+function applyAndSave(save: SaveFile, file: string, command: GameCommand, quiet = false) {
   const G = save.state;
   const player = G.currentPlayer;
-  const logBefore = G.log.length;
-  const result = applyMove(G, player, move);
+  const result = transition(G.definition, G, player, command);
 
   if (!result.ok) {
     const reasons =
       result.reasons.length > 0 ? result.reasons.join(" ") : "(the engine gave no reason)";
-    fail(`Move rejected: ${describeMove(move, G.definition.content)} — ${reasons}`);
+    fail(`Command rejected: ${describeCommand(command, G.definition.content)} — ${reasons}`);
   }
 
-  save.history.push({ player, move });
+  save.state = result.state;
+  save.history.push({ player, command });
   saveGame(file, save);
 
   if (!quiet) {
-    console.log(`player ${player}: ${describeMove(move, G.definition.content)}`);
-    for (const entry of G.log.slice(logBefore)) {
-      console.log(`  ${entry.message}`);
+    console.log(`player ${player}: ${describeCommand(command, G.definition.content)}`);
+    for (const event of result.events) {
+      console.log(`  ${event.entry.message}`);
     }
   }
 }
@@ -372,10 +377,10 @@ function applyAndSave(save: SaveFile, file: string, move: LegalMove, quiet = fal
  *  of hand-building its cost/option fields. */
 function findLegal(
   G: HegemonyState,
-  predicate: (move: LegalMove) => boolean,
+  predicate: (command: GameCommand) => boolean,
   description: string,
-): LegalMove {
-  const match = enumerateLegalMoves(G, G.currentPlayer).find(predicate);
+): GameCommand {
+  const match = enumerateLegalCommands(G, G.currentPlayer).find(predicate);
 
   if (!match) {
     fail(`no legal ${description} right now (see: legal)`);
@@ -388,14 +393,13 @@ function cmdMove(positionals: string[], file: string) {
   const save = loadGame(file);
   const [sub, ...args] = positionals;
 
-  const move = ((): LegalMove => {
+  const command = ((): GameCommand => {
     switch (sub) {
       case "build":
         return {
           type: "buildBuilding",
           tileId: requireTileId(args[0], "tile"),
           buildingId: args[1] as BuildingId,
-          cost: {},
         };
       case "found":
         return {
@@ -403,16 +407,14 @@ function cmdMove(positionals: string[], file: string) {
           tileId: requireTileId(args[0], "target tile"),
           sourceTileId: requireTileId(args[1], "source tile"),
           pop: parsePopType(args[2]),
-          cost: {},
         };
       case "upgrade":
-        return { type: "upgradeColonyToCity", tileId: requireTileId(args[0], "tile"), cost: {} };
+        return { type: "upgradeColonyToCity", tileId: requireTileId(args[0], "tile") };
       case "grow":
         return {
           type: "growPop",
           tileId: requireTileId(args[0], "tile"),
           pop: parsePopType(args[1]),
-          cost: {},
         };
       case "pops":
         return {
@@ -492,23 +494,23 @@ function cmdMove(positionals: string[], file: string) {
       case "resolve-riot":
         return findLegal(save.state, (move) => move.type === "resolveRiot", "resolve riot");
       case "index": {
-        const moves = enumerateLegalMoves(save.state, save.state.currentPlayer);
+        const commands = enumerateLegalCommands(save.state, save.state.currentPlayer);
         const index = requireInt(args[0], "move index");
 
-        if (index < 0 || index >= moves.length) {
+        if (index < 0 || index >= commands.length) {
           fail(
-            `move index ${index} out of range — legal moves: 0..${moves.length - 1} (see: legal)`,
+            `command index ${index} out of range — legal commands: 0..${commands.length - 1} (see: legal)`,
           );
         }
 
-        return moves[index];
+        return commands[index];
       }
       default:
         fail(`unknown move "${String(sub)}" — see: npm run sim -- help`);
     }
   })();
 
-  applyAndSave(save, file, move);
+  applyAndSave(save, file, command);
 }
 
 function cmdEndTurn(file: string) {
@@ -530,19 +532,19 @@ function cmdPreview(positionals: string[], flags: Flags, file: string) {
   // `--index N` previews the Nth legal move. Many move types have no economy preview;
   // that is reported cleanly (exit 0), not treated as an error.
   if (flags.index !== undefined) {
-    const moves = enumerateLegalMoves(G, playerID);
+    const commands = enumerateLegalCommands(G, playerID);
     const index = requireInt(flags.index, "--index");
 
-    if (index < 0 || index >= moves.length) {
-      fail(`move index ${index} out of range — legal moves: 0..${moves.length - 1}`);
+    if (index < 0 || index >= commands.length) {
+      fail(`command index ${index} out of range — legal commands: 0..${commands.length - 1}`);
     }
 
-    const move = moves[index];
-    const preview = previewLegalMove(save, move);
+    const command = commands[index];
+    const preview = previewLegalCommand(save, command);
 
     if (!preview) {
       console.log(
-        `No economy preview for "${move.type}" moves — this action has no resource projection.`,
+        `No economy preview for "${command.type}" commands — this action has no resource projection.`,
       );
       return;
     }
@@ -592,7 +594,7 @@ function cmdPreview(positionals: string[], flags: Flags, file: string) {
   console.log(renderPreview(preview));
 }
 
-function previewLegalMove(save: SaveFile, move: LegalMove): EconomyPreview | null {
+function previewLegalCommand(save: SaveFile, move: GameCommand): EconomyPreview | null {
   const G = save.state;
   const playerID = G.currentPlayer;
 
@@ -628,11 +630,11 @@ function cmdAuto(flags: Flags, file: string) {
   const rng = createSimRng(botSeed);
   const quiet = Boolean(flags.quiet);
 
-  runTurns(save.state, policy, rng, turns, {
-    onMove: (_G, player, move) => {
-      save.history.push({ player, move });
+  save.state = runTurns(save.state, policy, rng, turns, {
+    onMove: (_G, player, command) => {
+      save.history.push({ player, command });
       if (!quiet) {
-        console.log(`player ${player}: ${describeMove(move, _G.definition.content)}`);
+        console.log(`player ${player}: ${describeCommand(command, _G.definition.content)}`);
       }
     },
   });
@@ -656,9 +658,10 @@ function cmdReplay(flags: Flags, file: string) {
 
   const script = JSON.parse(readFileSync(flags.script, "utf8")) as ScriptFile;
   const state = replayScript(script);
+  const history = script.commands ?? script.moves?.map(normalizeCommandRecord) ?? [];
 
   console.log(
-    `Replayed ${script.moves.length} moves cleanly (seed ${script.seed}, mode ${script.mode}).`,
+    `Replayed ${history.length} commands cleanly (seed ${script.seed}, mode ${script.mode}).`,
   );
   console.log(renderHeader(state));
 
@@ -675,7 +678,7 @@ function cmdReplay(flags: Flags, file: string) {
       // Resume the original bot stream where it was parked; legacy scripts without
       // the field fall back to the derived start (the pre-fix behavior).
       botRngState: script.botRngState ?? deriveBotSeed(script.seed),
-      history: script.moves,
+      history,
       state,
     };
     saveGame(out, save);

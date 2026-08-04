@@ -5,15 +5,15 @@ import { createModeDefinition } from "../game/definition";
 
 import { scenario } from "../game/testing/scenario";
 import { Aggregator } from "../sim/telemetry";
-import { LEGAL_MOVE_TYPES, MOVE_PARITY } from "./moveParity";
+import { COMMAND_PARITY, GAME_COMMAND_TYPES } from "./commandParity";
 
 describe("three-axis move parity gate", () => {
   it("gives every legal move concrete frontend and simulation evidence", () => {
-    expect(Object.keys(MOVE_PARITY)).toEqual(LEGAL_MOVE_TYPES);
-    expect(new Set(LEGAL_MOVE_TYPES).size).toBe(LEGAL_MOVE_TYPES.length);
+    expect(Object.keys(COMMAND_PARITY)).toEqual(GAME_COMMAND_TYPES);
+    expect(new Set(GAME_COMMAND_TYPES).size).toBe(GAME_COMMAND_TYPES.length);
 
-    for (const moveType of LEGAL_MOVE_TYPES) {
-      const coverage = MOVE_PARITY[moveType];
+    for (const moveType of GAME_COMMAND_TYPES) {
+      const coverage = COMMAND_PARITY[moveType];
 
       expect(coverage.frontend.surfaces.length, `${moveType}: frontend surface`).toBeGreaterThan(0);
       for (const surface of coverage.frontend.surfaces) {
@@ -48,7 +48,7 @@ describe("three-axis move parity gate", () => {
       generatedAt: "test",
     });
 
-    expect(Object.keys(report.movesByType)).toEqual(LEGAL_MOVE_TYPES);
+    expect(Object.keys(report.movesByType)).toEqual(GAME_COMMAND_TYPES);
     expect(report.movesByType.endTurn).toEqual({ count: 1, perGame: 1 });
     expect(report.movesByType.assemblyVeto).toEqual({ count: 0, perGame: 0 });
   });
