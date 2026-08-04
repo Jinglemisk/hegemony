@@ -92,7 +92,7 @@ export function getBuildBuildingStatus(
   buildingId: BuildingId
 ): ActionStatus {
   const tile = getTile(G, tileId);
-  const building = getBuildings().find((candidate) => candidate.id === buildingId);
+  const building = getBuildings(G.definition.content).find((candidate) => candidate.id === buildingId);
   const settlement = tile?.settlements.find(
     (candidate) => candidate.owner === playerID && candidate.kind !== "colony"
   );
@@ -152,7 +152,7 @@ export function getBuildBuildingOptions(
   playerID: PlayerId,
   tileId: string,
 ): BuildBuildingOption[] {
-  return getBuildings().map((building) => ({
+  return getBuildings(G.definition.content).map((building) => ({
     building,
     status: getBuildBuildingStatus(G, playerID, tileId, building.id),
   }));
@@ -191,7 +191,7 @@ export function getGrowPopStatus(
     status.reasons.push("Already grew a pop here this turn.");
   }
 
-  if (totalPops(settlement.pops) + 1 > settlementCapacity(settlement, G.ruleset)) {
+  if (totalPops(settlement.pops) + 1 > settlementCapacity(settlement, G.ruleset, G.definition.content)) {
     status.reasons.push("Settlement is at population capacity.");
   }
 

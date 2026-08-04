@@ -1,4 +1,5 @@
-import { getBuildings } from "./content";
+import { getAuthoredGameContent, getBuildings } from "./content";
+import type { GameContent } from "./content";
 import { hexDistance, isCoastalTile } from "./map";
 import type { HegemonyState, HexTile, PlayerId, PopType, Settlement } from "./types";
 import { capitalize } from "./core/format";
@@ -15,9 +16,13 @@ export function settlementPopCapacity(kind: Settlement["kind"], ruleset: Ruleset
 }
 
 /** A real settlement's capacity: the kind's baseline plus building bonuses. */
-export function settlementCapacity(settlement: Settlement, ruleset: Ruleset) {
+export function settlementCapacity(
+  settlement: Settlement,
+  ruleset: Ruleset,
+  content: GameContent = getAuthoredGameContent()
+) {
   const bonus = settlement.buildings.reduce((sum, buildingId) => {
-    const building = getBuildings().find((candidate) => candidate.id === buildingId);
+    const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
 
     return (
       sum +
@@ -31,8 +36,12 @@ export function settlementCapacity(settlement: Settlement, ruleset: Ruleset) {
   return settlementPopCapacity(settlement.kind, ruleset) + bonus;
 }
 
-export function settlementOverCapacity(settlement: Settlement, ruleset: Ruleset) {
-  return Math.max(0, totalPops(settlement.pops) - settlementCapacity(settlement, ruleset));
+export function settlementOverCapacity(
+  settlement: Settlement,
+  ruleset: Ruleset,
+  content: GameContent = getAuthoredGameContent()
+) {
+  return Math.max(0, totalPops(settlement.pops) - settlementCapacity(settlement, ruleset, content));
 }
 
 export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
@@ -46,7 +55,7 @@ export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
       }
 
       totals.pops += totalPops(settlement.pops);
-      totals.capacity += settlementCapacity(settlement, G.ruleset);
+      totals.capacity += settlementCapacity(settlement, G.ruleset, G.definition.content);
       return totals;
     },
     { pops: 0, capacity: 0 }

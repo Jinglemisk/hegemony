@@ -1,9 +1,12 @@
 import { TEST_OPENING_SETUP } from "../game/config";
+import { createGameDefinition } from "../game/definition";
+import type { GameDefinition } from "../game/definition";
+import { getAuthoredGameContent } from "../game/content";
 import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
 import type { LegalMove } from "../game/legalMoves";
 import { GAME_MODES, deriveRuleset } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
-import { createInitialState } from "../game/state";
+import { createInitialStateFromDefinition } from "../game/state";
 import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
 import type { OpeningKind, RulesetPatch } from "./io";
 import type { SimRng } from "./rng";
@@ -12,6 +15,8 @@ export type NewGameOptions = {
   seed: number;
   mode: GameModeId;
   patch?: RulesetPatch | null;
+  /** Pre-resolved package for tuned or replayed games. */
+  definition?: GameDefinition;
   opening: OpeningKind;
   /** Terrain layout. Defaults to "classic" so historical balance runs stay
    *  reproducible; realistic runs pass "shuffled" to match the live game. */
@@ -28,9 +33,24 @@ export type NewGameOptions = {
  * replays the scripted UI opening, `manual` stops in setupCapital so placements
  * can be made move-by-move.
  */
-export function buildNewGame({ seed, mode, patch, opening, boardLayout, simRng, onMove }: NewGameOptions): HegemonyState {
+export function buildNewGame({
+  seed,
+  mode,
+  patch,
+  definition,
+  opening,
+  boardLayout,
+  simRng,
+  onMove,
+}: NewGameOptions): HegemonyState {
   const base = GAME_MODES[mode].ruleset;
-  const G = createInitialState(seed, patch ? deriveRuleset(base, patch) : base, boardLayout);
+  const resolvedDefinition =
+    definition ??
+    createGameDefinition({
+      ruleset: patch ? deriveRuleset(base, patch) : base,
+      content: getAuthoredGameContent(),
+    });
+  const G = createInitialStateFromDefinition(resolvedDefinition, seed, boardLayout);
 
   if (opening === "manual") {
     return G;
@@ -48,7 +68,9 @@ export function buildNewGame({ seed, mode, patch, opening, boardLayout, simRng, 
         throw new Error(`fixed opening did not converge (mode ${mode})`);
       }
 
-      const placement = TEST_OPENING_SETUP.find((candidate) => candidate.playerID === G.currentPlayer);
+      const placement = TEST_OPENING_SETUP.find(
+        (candidate) => candidate.playerID === G.currentPlayer,
+      );
       if (!placement) {
         throw new Error(`fixed opening: no placement for player ${G.currentPlayer}`);
       }
@@ -74,7 +96,9 @@ export function buildNewGame({ seed, mode, patch, opening, boardLayout, simRng, 
     const moves = enumerateLegalMoves(G, G.currentPlayer);
 
     if (moves.length === 0) {
-      throw new Error(`no legal setup placement for player ${G.currentPlayer} (seed ${seed}, mode ${mode})`);
+      throw new Error(
+        `no legal setup placement for player ${G.currentPlayer} (seed ${seed}, mode ${mode})`,
+      );
     }
 
     applyRecorded(G, simRng.pick(moves), onMove);

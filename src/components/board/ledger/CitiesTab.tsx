@@ -29,7 +29,7 @@ export function CitiesTab({
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
-  const buildings = getBuildings();
+  const buildings = getBuildings(G.definition.content);
   const holdingIds = useMemo(
     () => holdings.map(({ tile, settlement }) => `${settlement.owner}-${tile.id}`),
     [holdings]
@@ -69,11 +69,11 @@ export function CitiesTab({
         const holdingId = `${settlement.owner}-${tile.id}`;
         const isExpanded = expandedHoldingIds.has(holdingId);
         const popTotal = totalPops(settlement.pops);
-        const capacity = settlementCapacity(settlement, G.ruleset);
-        const overCapacity = settlementOverCapacity(settlement, G.ruleset);
+        const capacity = settlementCapacity(settlement, G.ruleset, G.definition.content);
+        const overCapacity = settlementOverCapacity(settlement, G.ruleset, G.definition.content);
         const slots = settlementBuildingSlots(tile, settlement, G.ruleset);
         const tileYield = settlementTileYield(tile, settlement, G.ruleset);
-        const netYield = settlementNetYield(tile, settlement, G.ruleset);
+        const netYield = settlementNetYield(tile, settlement, G.ruleset, G.definition.content);
         const detailId = `holding-${settlement.owner}-${tile.q}-${tile.r}-details`;
 
         return (
@@ -89,7 +89,13 @@ export function CitiesTab({
               onClick={() => toggleHolding(holdingId)}
               type="button"
             >
-              <SettlementSummaryCard netYield={netYield} ruleset={G.ruleset} settlement={settlement} tile={tile} />
+              <SettlementSummaryCard
+                content={G.definition.content}
+                netYield={netYield}
+                ruleset={G.ruleset}
+                settlement={settlement}
+                tile={tile}
+              />
               <span className="collapseChevron" aria-hidden="true" />
             </button>
 
@@ -123,7 +129,7 @@ export function CitiesTab({
                       <div className="buildingChipRow">
                         {builtBuildings.length > 0 ? (
                           builtBuildings.map((buildingId, index) => {
-                            const building = getBuilding(buildingId);
+                            const building = getBuilding(G.definition.content, buildingId);
 
                             return building ? (
                               <BuildingChip

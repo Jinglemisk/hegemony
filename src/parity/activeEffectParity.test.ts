@@ -105,10 +105,11 @@ function plantLaw(G: HegemonyState, cardId: string, author: "0" | "1" = "0") {
 }
 
 function renderActiveEffects(
+  G: HegemonyState,
   activeEffects: ActiveEffectDescriptor[],
   variant: "board" | "ledger",
 ): string {
-  const value = { activeEffects } as GameUi;
+  const value = { G, activeEffects } as GameUi;
   return renderToStaticMarkup(
     createElement(GameUiProvider, {
       value,
@@ -428,8 +429,8 @@ describe("frontend active-effect parity", () => {
     G.players["0"].timedHappinessModifiers = [timedModifier("Public Shame", -2, 2)];
     const descriptors = getActiveEffects(G, "0");
     const presentations = presentActiveEffects(descriptors);
-    const board = renderActiveEffects(descriptors, "board");
-    const ledger = renderActiveEffects(descriptors, "ledger");
+    const board = renderActiveEffects(G, descriptors, "board");
+    const ledger = renderActiveEffects(G, descriptors, "ledger");
 
     expect(board).toContain('class="tooltipTrigger activeEffectsBoard"');
     expect(board).toContain("aria-describedby=");

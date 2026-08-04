@@ -62,7 +62,12 @@ export function FoundColonyPopover({
     buildings: [],
     pops: { ...EMPTY_POPS, [pop]: 1 },
   };
-  const previewYield = settlementNetYield(targetTile, previewSettlement, G.ruleset);
+  const previewYield = settlementNetYield(
+    targetTile,
+    previewSettlement,
+    G.ruleset,
+    G.definition.content,
+  );
   // Fall back to the LIVE ruleset, never the ACTION_COSTS default: the status cost
   // has season multipliers and discounts already applied, and the ruleset itself is
   // patchable (R7). This branch is defensive — the status always carries a cost.
@@ -84,6 +89,7 @@ export function FoundColonyPopover({
         <>
           <article className="placementPreviewCard settlement-colony foundColonyPreview">
             <SettlementSummaryCard
+              content={G.definition.content}
               netYield={previewYield}
               ruleset={G.ruleset}
               settlement={previewSettlement}

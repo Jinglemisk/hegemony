@@ -1,5 +1,12 @@
 import { PLAYER_IDS, PLAYER_NAMES } from "./data";
-import { getPlayerEventCards, getSeasonalEventCards, getTerrainDeck } from "./content";
+import {
+  getAuthoredGameContent,
+  getPlayerEventCards,
+  getSeasonalEventCards,
+  getTerrainDeck,
+} from "./content";
+import { createGameDefinition } from "./definition";
+import type { GameDefinition } from "./definition";
 import { deriveBankRates } from "./bank";
 import { createInitialMap } from "./map";
 import type { BoardLayout, HegemonyState } from "./types";
@@ -13,13 +20,30 @@ export function createInitialState(
   ruleset: Ruleset = DEFAULT_RULESET,
   boardLayout: BoardLayout = "classic",
 ): HegemonyState {
+  return createInitialStateFromDefinition(
+    createGameDefinition({
+      ruleset,
+      content: getAuthoredGameContent(),
+    }),
+    seed,
+    boardLayout,
+  );
+}
+
+/** Create a match pinned to one immutable definition. Browser, sim and replay use this path. */
+export function createInitialStateFromDefinition(
+  definition: GameDefinition,
+  seed = createSeed(),
+  boardLayout: BoardLayout = "classic",
+): HegemonyState {
+  const { content, ruleset } = definition;
   let rng = seed >>> 0;
-  const seasonal = shuffleWithSeed(expandDeck(getSeasonalEventCards()), rng);
+  const seasonal = shuffleWithSeed(expandDeck(getSeasonalEventCards(content)), rng);
   rng = seasonal.state;
-  const player = shuffleWithSeed(expandDeck(getPlayerEventCards()), rng);
+  const player = shuffleWithSeed(expandDeck(getPlayerEventCards(content)), rng);
   rng = player.state;
 
-  const baseTerrainDeck = getTerrainDeck();
+  const baseTerrainDeck = getTerrainDeck(content);
   let terrainDeck = baseTerrainDeck;
   if (boardLayout === "shuffled") {
     const shuffled = shuffleWithSeed(baseTerrainDeck, rng);
@@ -31,7 +55,7 @@ export function createInitialState(
 
   // Each politician's deck is shuffled from the same seed chain as the event decks, so
   // an assembly four years away is still reproducible from the game's seed alone.
-  const politicians = createPoliticianDecks(rng);
+  const politicians = createPoliticianDecks(rng, content);
   rng = politicians.rng;
 
   return {
@@ -44,6 +68,8 @@ export function createInitialState(
     gameOverReason: null,
     boardLayout,
     ruleset,
+    definition,
+    definitionId: definition.identity.id,
     board: { tiles },
     players: PLAYER_IDS.reduce(
       (players, playerId) => ({

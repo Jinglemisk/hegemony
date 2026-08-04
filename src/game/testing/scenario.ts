@@ -160,7 +160,7 @@ export class ScenarioBuilder {
 
   /** Rig the player deck: the named card becomes the next draw. */
   stackPlayerEvent(cardId: string): this {
-    this.G.playerDrawPile.unshift(findCard(getPlayerEventCards(), cardId));
+    this.G.playerDrawPile.unshift(findCard(getPlayerEventCards(this.G.definition.content), cardId));
     return this;
   }
 
@@ -170,7 +170,9 @@ export class ScenarioBuilder {
    * (or carries no season tags).
    */
   stackSeasonalEvent(cardId: string): this {
-    this.G.seasonalDrawPile.unshift(findCard(getSeasonalEventCards(), cardId));
+    this.G.seasonalDrawPile.unshift(
+      findCard(getSeasonalEventCards(this.G.definition.content), cardId),
+    );
     return this;
   }
 

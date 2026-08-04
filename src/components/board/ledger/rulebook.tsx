@@ -104,12 +104,12 @@ function popIncomeText(G: HegemonyState, pop: PopType): string {
 }
 
 /** Aggregate the terrain deck into per-kind ranges — count, yield, slot spread. */
-function terrainSummary() {
+function terrainSummary(G: HegemonyState) {
   const byKind = new Map<
     Terrain,
     { count: number; resource: Resource | null; yields: number[]; slots: number[] }
   >();
-  for (const tile of getTerrainDeck()) {
+  for (const tile of getTerrainDeck(G.definition.content)) {
     const existing = byKind.get(tile.terrain) ?? {
       count: 0,
       resource: tile.resource ? tile.resource.type : null,
@@ -224,7 +224,7 @@ const board: RuleChapter = {
     { id: anchor("board", "terrain"), label: "Terrain" },
     { id: anchor("board", "special"), label: "Hills & the oracle" },
   ],
-  Body: () => (
+  Body: ({ G }) => (
     <div className="compendiumStack">
       <Entry id={anchor("board", "terrain")} title="Terrain">
         <Note>
@@ -233,7 +233,7 @@ const board: RuleChapter = {
           Rich tiles are cramped, poor tiles roomy: yield and slots trade off within every terrain.
         </Note>
         <ul className="compendiumCostList">
-          {terrainSummary().map((row) => (
+          {terrainSummary(G).map((row) => (
             <li
               className="compendiumCostRow"
               key={row.kind}
@@ -579,7 +579,7 @@ const buildings: RuleChapter = {
     "level",
   ],
   entries: [{ id: anchor("buildings", "roster"), label: "The roster" }],
-  Body: () => (
+  Body: ({ G }) => (
     <div className="compendiumStack">
       <Entry id={anchor("buildings", "roster")} title="The roster">
         <Note>
@@ -587,7 +587,7 @@ const buildings: RuleChapter = {
           its max level. Roster prices below are base costs; build controls show effective costs.
         </Note>
         <ul className="compendiumCostList">
-          {getBuildings().map((building) => (
+          {getBuildings(G.definition.content).map((building) => (
             <li className="compendiumCostRow" key={building.id}>
               <span className="compendiumCostLabel">{building.name}</span>
               <span className="compendiumCostValue">
@@ -661,8 +661,8 @@ const unrest: RuleChapter = {
             declare insurance first (each once, +1 to the roll). A revolt (≤ {u.severeThreshold})
             rolls at {u.severeRollModifier} and doubles pop losses.
           </Note>
-          <p className="compendiumFlavor">{getRiotTable().flavor}</p>
-          <EventTableRows table={getRiotTable()} result={null} />
+          <p className="compendiumFlavor">{getRiotTable(G.definition.content).flavor}</p>
+          <EventTableRows table={getRiotTable(G.definition.content)} result={null} />
         </Entry>
       </div>
     );
@@ -701,8 +701,11 @@ const seasons: RuleChapter = {
         </Note>
       </Entry>
       <Entry id={anchor("seasons", "omen")} title="The yearly omen">
-        <p className="compendiumFlavor">{getOmenTable().flavor}</p>
-        <EventTableRows table={getOmenTable()} result={G.yearOmen?.record ?? null} />
+        <p className="compendiumFlavor">{getOmenTable(G.definition.content).flavor}</p>
+        <EventTableRows
+          table={getOmenTable(G.definition.content)}
+          result={G.yearOmen?.record ?? null}
+        />
         <Note>
           Rolled publicly by the year's opener each spring; the sign stands over every polis until
           the year turns.
@@ -711,19 +714,20 @@ const seasons: RuleChapter = {
       </Entry>
       <Entry id={anchor("seasons", "decks")} title="The decks">
         <Note>
-          The <strong>seasonal deck</strong> ({countCopies(getSeasonalEventCards())} cards) is the
-          shared clock; the <strong>player deck</strong> ({countCopies(getPlayerEventCards())}{" "}
+          The <strong>seasonal deck</strong> (
+          {countCopies(getSeasonalEventCards(G.definition.content))} cards) is the shared clock; the{" "}
+          <strong>player deck</strong> ({countCopies(getPlayerEventCards(G.definition.content))}{" "}
           cards) deals you a private card each income. Season tags only weight the draw toward
           suited cards — a tendency, never a guarantee.
         </Note>
         <div className="codexCardGallery">
-          {getSeasonalEventCards().map((card) => (
+          {getSeasonalEventCards(G.definition.content).map((card) => (
             <RulebookCard card={card} key={card.id} showSeasons />
           ))}
         </div>
         <p className="compendiumNote ruleDeckLabel">Player deck</p>
         <div className="codexCardGallery">
-          {getPlayerEventCards().map((card) => (
+          {getPlayerEventCards(G.definition.content).map((card) => (
             <RulebookCard card={card} key={card.id} />
           ))}
         </div>
@@ -788,7 +792,7 @@ const ventures: RuleChapter = {
           {formatResourceCost(G.ruleset.ventureStakes.wood)} — pick any expedition, and roll. The
           stake picker shows effective costs; the stake is paid win or lose.
         </Note>
-        {getExpeditionTables().map((table) => (
+        {getExpeditionTables(G.definition.content).map((table) => (
           <div key={table.id} className="ruleVenture">
             <h3>{table.name}</h3>
             <p className="compendiumFlavor">{table.flavor}</p>
@@ -958,7 +962,9 @@ const assembly: RuleChapter = {
         <Entry id={anchor("assembly", "politicians")} title="The four politicians">
           <div className="ruleDefList">
             {POLITICIANS.map((politician) => {
-              const deck = getResolutionCards().filter((card) => card.politician === politician.id);
+              const deck = getResolutionCards(G.definition.content).filter(
+                (card) => card.politician === politician.id,
+              );
 
               return (
                 <div className="rulePolitician" key={politician.id}>

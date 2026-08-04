@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   getAuthoredGameContent,
@@ -10,8 +10,6 @@ import {
   getResolutionCards,
   getSeasonalEventCards,
   getTerrainDeck,
-  installGameContent,
-  setContentOverrides,
 } from "../game/content";
 import { BUILDINGS } from "../game/data";
 import { mergeRulesetPatches } from "../game/ruleset";
@@ -19,18 +17,15 @@ import { applyBuildingOverrides, rulesetPatchFromOverrides } from "../dev/tuning
 import { createLowNumberContent } from "../dev/tuningPresets";
 
 describe("sim content/tune patching", () => {
-  // The content override is a module-global — never let one test leak into the next.
-  afterEach(() => installGameContent(null));
-
   it("a buildings.* override changes the roster the engine reads, leaving the constant intact", () => {
     const villa = BUILDINGS.find((building) => building.id === "villa")!;
     const bumped = (villa.cost.wood ?? 0) + 50;
 
-    setContentOverrides({
-      buildings: applyBuildingOverrides(BUILDINGS, { "buildings.villa.cost.wood": bumped }),
-    });
+    const buildings = applyBuildingOverrides(BUILDINGS, {
+      "buildings.villa.cost.wood": bumped,
+    })!;
 
-    expect(getBuildings().find((building) => building.id === "villa")!.cost.wood).toBe(bumped);
+    expect(buildings.find((building) => building.id === "villa")!.cost.wood).toBe(bumped);
     // The authored table is untouched (the override clones).
     expect(BUILDINGS.find((building) => building.id === "villa")!.cost.wood).toBe(villa.cost.wood);
   });
@@ -50,24 +45,21 @@ describe("sim content/tune patching", () => {
     expect(mergeRulesetPatches(null, null)).toBeNull();
   });
 
-  it("installs and clears every effective content family as one package", () => {
+  it("selects every effective content family from the supplied package", () => {
     const authored = getAuthoredGameContent();
     const preset = createLowNumberContent(authored);
-    installGameContent(preset);
+    expect(getBuildings(preset)).toBe(preset.buildings);
+    expect(getTerrainDeck(preset)).toBe(preset.terrain);
+    expect(getSeasonalEventCards(preset)).toBe(preset.seasonalEvents);
+    expect(getPlayerEventCards(preset)).toBe(preset.playerEvents);
+    expect(getRiotTable(preset)).toBe(preset.riotTable);
+    expect(getExpeditionTables(preset)).toBe(preset.expeditionTables);
+    expect(getOmenTable(preset)).toBe(preset.omenTable);
+    expect(getResolutionCards(preset)).toBe(preset.resolutions);
 
-    expect(getBuildings()).toBe(preset.buildings);
-    expect(getTerrainDeck()).toBe(preset.terrain);
-    expect(getSeasonalEventCards()).toBe(preset.seasonalEvents);
-    expect(getPlayerEventCards()).toBe(preset.playerEvents);
-    expect(getRiotTable()).toBe(preset.riotTable);
-    expect(getExpeditionTables()).toBe(preset.expeditionTables);
-    expect(getOmenTable()).toBe(preset.omenTable);
-    expect(getResolutionCards()).toBe(preset.resolutions);
-
-    installGameContent(null);
-    expect(getBuildings()).toBe(authored.buildings);
-    expect(getPlayerEventCards()).toBe(authored.playerEvents);
-    expect(getRiotTable()).toBe(authored.riotTable);
-    expect(getResolutionCards()).toBe(authored.resolutions);
+    expect(getBuildings(authored)).toBe(authored.buildings);
+    expect(getPlayerEventCards(authored)).toBe(authored.playerEvents);
+    expect(getRiotTable(authored)).toBe(authored.riotTable);
+    expect(getResolutionCards(authored)).toBe(authored.resolutions);
   });
 });

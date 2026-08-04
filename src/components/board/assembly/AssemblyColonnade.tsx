@@ -78,7 +78,9 @@ function PoliticianColumn({
   // the two are drawn differently because they mean different things.
   const stelae: Array<ActiveLaw | TallyMonument> = isStratokles
     ? G.tallyMonuments
-    : G.activeLaws.filter((law) => getResolutionCard(law.cardId)?.politician === politician.id);
+    : G.activeLaws.filter(
+        (law) => getResolutionCard(G.definition.content, law.cardId)?.politician === politician.id,
+      );
 
   return (
     <div className={`acol${isStratokles ? " strat" : ""}`}>
@@ -142,7 +144,7 @@ function PoliticianColumn({
           .slice()
           .sort((a, b) => a.order - b.order)
           .map((stele) => {
-            const card = getResolutionCard(stele.cardId);
+            const card = getResolutionCard(G.definition.content, stele.cardId);
             const source = isStratokles
               ? `Carried by ${authorName(stele.author)}`
               : `Enacted by ${authorName(stele.author)}`;
@@ -157,6 +159,7 @@ function PoliticianColumn({
                 content={
                   <ResolutionDetails
                     card={card}
+                    content={G.definition.content}
                     duration={isStratokles ? "Resolved; monument is permanent" : "Until repealed"}
                     source={source}
                   />

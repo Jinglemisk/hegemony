@@ -134,8 +134,8 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
     );
   }
 
-  const buildings = getBuildings();
-  const deck = getTerrainDeck();
+  const buildings = getBuildings(game.definition.content);
+  const deck = getTerrainDeck(game.definition.content);
   const stats = terrainStats(deck);
   const totals = terrainTotals(deck);
 

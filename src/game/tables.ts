@@ -205,7 +205,7 @@ function applyTableEffect(
  * gameplay start (year 1) and on each new year's season turn.
  */
 export function rollYearOmen(G: HegemonyState) {
-  const omenTable = getOmenTable();
+  const omenTable = getOmenTable(G.definition.content);
   const { record } = rollOnTable(G, G.seasonOpener, omenTable);
   const row =
     omenTable.rows.find((candidate) => candidate.roll === record.modified) ??
@@ -301,7 +301,9 @@ function destroyRandomBuilding(G: HegemonyState, playerID: PlayerId): string | n
   G.rng = step.state;
   const target = owned[Math.floor(step.value * owned.length)];
   const [removed] = target.settlement.buildings.splice(target.index, 1);
-  return getBuildings().find((building) => building.id === removed)?.name ?? removed;
+  return (
+    getBuildings(G.definition.content).find((building) => building.id === removed)?.name ?? removed
+  );
 }
 
 /** Add one pop to a random owned settlement with spare capacity (seeded). Returns a
@@ -316,7 +318,10 @@ function addPopToSettlementWithRoom(
   for (const tileId of G.players[playerID].settlements) {
     const settlement = getOwnedSettlement(G, tileId, playerID);
 
-    if (settlement && totalPops(settlement.pops) < settlementCapacity(settlement, G.ruleset)) {
+    if (
+      settlement &&
+      totalPops(settlement.pops) < settlementCapacity(settlement, G.ruleset, G.definition.content)
+    ) {
       candidates.push(settlement);
     }
   }

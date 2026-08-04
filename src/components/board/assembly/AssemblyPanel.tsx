@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
 import { getResolutionCard } from "../../../game/assembly";
 import type { AssemblyResult } from "../../../game/assembly";
+import type { HegemonyState } from "../../../game/types";
 import { victoryStandings } from "../../../game/victory";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { Tooltip } from "../../overlays/Tooltip";
@@ -152,7 +153,7 @@ export function AssemblyPanel({
 
         {/* Anchored to the panel, not the (scrolling) body, so it sits just above the
             dock and survives the last card's phase → closing transition. */}
-        {flash ? <ResultFlash result={flash.result} /> : null}
+        {flash ? <ResultFlash G={G} result={flash.result} /> : null}
 
         <AssemblyFoot G={G} menu={menu} onMenu={setMenu} session={session} />
       </section>
@@ -161,10 +162,10 @@ export function AssemblyPanel({
 }
 
 /** The transient verdict banner shown under the vote bar for ~2.5s after a card resolves. */
-function ResultFlash({ result }: { result: AssemblyResult }) {
+function ResultFlash({ G, result }: { G: HegemonyState; result: AssemblyResult }) {
   const name =
     result.item.kind === "repeal"
-      ? `Repeal ${getResolutionCard(result.item.cardId)?.name ?? result.item.cardId}`
+      ? `Repeal ${getResolutionCard(G.definition.content, result.item.cardId)?.name ?? result.item.cardId}`
       : result.item.card.name;
   const verdict = result.vetoedBy ? "vetoed" : result.passed ? "passed" : "failed";
 

@@ -11,20 +11,6 @@ import { RESOLUTION_CARDS } from "./assembly/deck";
 import type { ResolutionCard } from "./assembly/types";
 import type { BuildingDefinition, BuildingId, EventCard, EventTableDefinition } from "./types";
 
-/**
- * The content-override seam. The engine's "what exists" tables — {@link BUILDINGS}
- * and the {@link TERRAIN_DECK} — are otherwise module constants read directly by the
- * rules code. Reading them through these accessors instead lets a DEV tuning session
- * swap in patched content (a Villa that yields +3, a richer breadbasket) WITHOUT
- * editing source, exactly as a game mode swaps in a patched {@link Ruleset}.
- *
- * The override is null by default, so `getBuildings()`/`getTerrainDeck()` return the
- * authored constants and every test / sim / production build behaves identically.
- * Browser tuning and headless simulation install a package before creating a game. The
- * package stays fixed for that run, keeping the rules engine deterministic just as a
- * plain constant would.
- */
-
 export type TerrainDeck = typeof TERRAIN_DECK;
 
 export interface GameContent {
@@ -49,106 +35,51 @@ const AUTHORED_CONTENT: GameContent = {
   resolutions: RESOLUTION_CARDS,
 };
 
-let activeContent: GameContent = AUTHORED_CONTENT;
-
 /** Authored source package. Presets must clone it before making changes. */
 export function getAuthoredGameContent(): GameContent {
   return AUTHORED_CONTENT;
 }
 
-/** The complete content package currently installed for fresh games. */
-export function getGameContent(): GameContent {
-  return activeContent;
+/** Pure content selectors. Callers must supply the match's pinned content package. */
+export function getBuildings(content: GameContent): BuildingDefinition[] {
+  return content.buildings;
 }
 
-/** Install one fixed package, or restore every authored content family with null. */
-export function installGameContent(content: GameContent | null): void {
-  activeContent = content ?? AUTHORED_CONTENT;
+export function getBuilding(
+  content: GameContent,
+  buildingId: BuildingId,
+): BuildingDefinition | undefined {
+  return content.buildings.find((building) => building.id === buildingId);
 }
 
-/** The building roster in effect — the dev override if one is set, else the authored {@link BUILDINGS}. */
-export function getBuildings(): BuildingDefinition[] {
-  return activeContent.buildings;
+export function getTerrainDeck(content: GameContent): TerrainDeck {
+  return content.terrain;
 }
 
-/** Resolve one building from the effective roster, including a dev-tuned override. */
-export function getBuilding(buildingId: BuildingId): BuildingDefinition | undefined {
-  return getBuildings().find((building) => building.id === buildingId);
+export function getSeasonalEventCards(content: GameContent): EventCard[] {
+  return content.seasonalEvents;
 }
 
-/** The terrain deck in effect — the dev override if one is set, else the authored {@link TERRAIN_DECK}. */
-export function getTerrainDeck(): TerrainDeck {
-  return activeContent.terrain;
+export function getPlayerEventCards(content: GameContent): EventCard[] {
+  return content.playerEvents;
 }
 
-export function getSeasonalEventCards(): EventCard[] {
-  return activeContent.seasonalEvents;
+export function getRiotTable(content: GameContent): EventTableDefinition {
+  return content.riotTable;
 }
 
-export function getPlayerEventCards(): EventCard[] {
-  return activeContent.playerEvents;
+export function getExpeditionTables(content: GameContent): EventTableDefinition[] {
+  return content.expeditionTables;
 }
 
-export function getRiotTable(): EventTableDefinition {
-  return activeContent.riotTable;
+export function getOmenTable(content: GameContent): EventTableDefinition {
+  return content.omenTable;
 }
 
-export function getExpeditionTables(): EventTableDefinition[] {
-  return activeContent.expeditionTables;
+export function getResolutionCards(content: GameContent): ResolutionCard[] {
+  return content.resolutions;
 }
 
-export function getOmenTable(): EventTableDefinition {
-  return activeContent.omenTable;
-}
-
-export function getResolutionCards(): ResolutionCard[] {
-  return activeContent.resolutions;
-}
-
-export function getResolutionCard(cardId: string): ResolutionCard | null {
-  return activeContent.resolutions.find((card) => card.id === cardId) ?? null;
-}
-
-/**
- * DEV-ONLY. Install (or clear, with null) content overrides for the next game created.
- * A missing key leaves that override untouched; an explicit null clears it back to the
- * authored constant. Call before {@link createGame}; do not mutate mid-game.
- */
-export function setContentOverrides(overrides: {
-  buildings?: BuildingDefinition[] | null;
-  terrain?: TerrainDeck | null;
-  seasonalEvents?: EventCard[] | null;
-  playerEvents?: EventCard[] | null;
-  riotTable?: EventTableDefinition | null;
-  expeditionTables?: EventTableDefinition[] | null;
-  omenTable?: EventTableDefinition | null;
-  resolutions?: ResolutionCard[] | null;
-}): void {
-  activeContent = {
-    ...activeContent,
-    ...(Object.hasOwn(overrides, "buildings")
-      ? { buildings: overrides.buildings ?? AUTHORED_CONTENT.buildings }
-      : {}),
-    ...(Object.hasOwn(overrides, "terrain")
-      ? { terrain: overrides.terrain ?? AUTHORED_CONTENT.terrain }
-      : {}),
-    ...(Object.hasOwn(overrides, "seasonalEvents")
-      ? { seasonalEvents: overrides.seasonalEvents ?? AUTHORED_CONTENT.seasonalEvents }
-      : {}),
-    ...(Object.hasOwn(overrides, "playerEvents")
-      ? { playerEvents: overrides.playerEvents ?? AUTHORED_CONTENT.playerEvents }
-      : {}),
-    ...(Object.hasOwn(overrides, "riotTable")
-      ? { riotTable: overrides.riotTable ?? AUTHORED_CONTENT.riotTable }
-      : {}),
-    ...(Object.hasOwn(overrides, "expeditionTables")
-      ? { expeditionTables: overrides.expeditionTables ?? AUTHORED_CONTENT.expeditionTables }
-      : {}),
-    ...(Object.hasOwn(overrides, "omenTable")
-      ? { omenTable: overrides.omenTable ?? AUTHORED_CONTENT.omenTable }
-      : {}),
-    ...(Object.hasOwn(overrides, "resolutions")
-      ? { resolutions: overrides.resolutions ?? AUTHORED_CONTENT.resolutions }
-      : {}),
-  };
+export function getResolutionCard(content: GameContent, cardId: string): ResolutionCard | null {
+  return content.resolutions.find((card) => card.id === cardId) ?? null;
 }

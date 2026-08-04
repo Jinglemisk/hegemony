@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
+import { createModeDefinition } from "../game/definition";
 
 import { scenario } from "../game/testing/scenario";
 import { Aggregator } from "../sim/telemetry";
@@ -43,6 +44,7 @@ describe("three-axis move parity gate", () => {
       baseSeed: 77,
       botSeedRule: "test",
       rulesetPatch: null,
+      definition: createModeDefinition("standard").identity,
       generatedAt: "test",
     });
 

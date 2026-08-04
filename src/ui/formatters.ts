@@ -1,4 +1,5 @@
-import { getBuilding } from "../game/content";
+import { getAuthoredGameContent, getBuilding } from "../game/content";
+import type { GameContent } from "../game/content";
 import { seasonName, yearOf } from "../game/core/calendar";
 import { formatPopName, formatRuleNumber } from "../game/core/format";
 import type { BuildingId, PopType, Resource, Resources, SeasonName } from "../game/types";
@@ -70,6 +71,6 @@ export function formatPopLabel(pop: PopType, amount: number) {
   return formatPopName(pop, amount);
 }
 
-export function buildingName(buildingId: BuildingId) {
-  return getBuilding(buildingId)?.name ?? buildingId;
+export function buildingName(buildingId: BuildingId, content: GameContent = getAuthoredGameContent()) {
+  return getBuilding(content, buildingId)?.name ?? buildingId;
 }

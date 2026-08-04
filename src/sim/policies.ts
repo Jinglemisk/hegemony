@@ -1,7 +1,8 @@
 import { calculateIncome } from "../game/economy/income";
 import { getActiveEffects } from "../game/activeEffects";
 import { applyResourceDeltaWithFloors } from "../game/core/resources";
-import { getRiotTable } from "../game/content";
+import { getAuthoredGameContent, getRiotTable } from "../game/content";
+import type { GameContent } from "../game/content";
 import { getResolutionCard } from "../game/content";
 import { getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementBuildingSlots } from "../game/settlement";
@@ -265,7 +266,11 @@ export function projectPolicyHorizon(
     // The engine checks unrest at every start-of-turn upkeep, before income.
     // Record every exposure rather than judging only the terminal happiness.
     unrest.minimumHappiness = Math.min(unrest.minimumHappiness, player.resources.happiness);
-    const upkeepRisk = evaluatePolicyUnrestRisk(projectedState.ruleset, player.resources.happiness);
+    const upkeepRisk = evaluatePolicyUnrestRisk(
+      projectedState.ruleset,
+      player.resources.happiness,
+      projectedState.definition.content,
+    );
     unrest.riskPenalty += upkeepRisk.scorePenalty;
 
     if (upkeepRisk.tier === "revolt") {
@@ -417,7 +422,11 @@ export type PolicyUnrestRisk = {
  * consequences. This is a deterministic strategic ramp, not an expected riot-table
  * payout: conditional resources, buildings, insurance, and future RNG stay unknown.
  */
-export function evaluatePolicyUnrestRisk(ruleset: Ruleset, happiness: number): PolicyUnrestRisk {
+export function evaluatePolicyUnrestRisk(
+  ruleset: Ruleset,
+  happiness: number,
+  content: GameContent = getAuthoredGameContent(),
+): PolicyUnrestRisk {
   const unrest = ruleset.economy.unrest;
   const bufferWidth = Math.max(1, unrest.popLossThreshold - unrest.severeThreshold);
 
@@ -436,7 +445,7 @@ export function evaluatePolicyUnrestRisk(ruleset: Ruleset, happiness: number): P
     };
   }
 
-  const die = getRiotTable().die ?? 6;
+  const die = getRiotTable(content).die ?? 6;
   const popLossSeverity = Math.max(
     POLICY_UNREST_WEIGHTS.severeMultiplierFloor,
     unrest.severePopLossMultiplier,
@@ -579,7 +588,7 @@ const BEAM_DEPTH = 4;
 /**
  * A cheap clone for search: deep-copies only what the RNG-free gameplay mutators touch
  * (players, board, transfers, and the rest of the small state) while SHARING the large
- * static structures — the ruleset and both event decks — by reference, and resetting the
+ * static structures — the definition/ruleset and both event decks — by reference, and resetting the
  * log to a fresh array (mutators push to it; a shared array would be corrupted). Because
  * the beam never applies a stochastic or deck-drawing move, none of the shared structures
  * are mutated, so this is safe and roughly an order of magnitude lighter than cloning G.
@@ -587,6 +596,7 @@ const BEAM_DEPTH = 4;
 function cloneForSearch(G: HegemonyState): HegemonyState {
   // `log` is destructured only to omit it from `rest` (a fresh array is used below).
   const {
+    definition,
     ruleset,
     seasonalDrawPile,
     seasonalDiscardPile,
@@ -597,6 +607,7 @@ function cloneForSearch(G: HegemonyState): HegemonyState {
   } = G;
   return {
     ...structuredClone(rest),
+    definition,
     ruleset,
     seasonalDrawPile,
     seasonalDiscardPile,
@@ -825,7 +836,9 @@ function expectedDeckDelta(
     G.politicianDecks[politician].length > 0
       ? G.politicianDecks[politician]
       : G.politicianDiscards[politician];
-  const cards = ids.map(getResolutionCard).filter((card): card is ResolutionCard => card !== null);
+  const cards = ids
+    .map((cardId) => getResolutionCard(G.definition.content, cardId))
+    .filter((card): card is ResolutionCard => card !== null);
 
   if (cards.length === 0) return -Infinity;
   return (

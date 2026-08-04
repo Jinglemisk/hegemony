@@ -1,7 +1,10 @@
 import { applyMove } from "../game/legalMoves";
+import { createGameDefinition, hydrateGameDefinition } from "../game/definition";
+import type { GameDefinition } from "../game/definition";
+import { getAuthoredGameContent } from "../game/content";
 import { GAME_MODES, deriveRuleset } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
-import { createInitialState } from "../game/state";
+import { createInitialStateFromDefinition } from "../game/state";
 import type { BoardLayout, HegemonyState } from "../game/types";
 import type { MoveRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
 
@@ -16,6 +19,7 @@ export type ScriptFile = {
   seed: number;
   mode: GameModeId;
   rulesetPatch: RulesetPatch | null;
+  definition?: GameDefinition;
   opening: OpeningKind;
   /** Terrain layout to rebuild from. Optional so pre-existing scripts still parse
    *  (they fall back to the classic default). */
@@ -33,6 +37,7 @@ export function scriptFromSave(save: SaveFile): ScriptFile {
     seed: save.seed,
     mode: save.mode,
     rulesetPatch: save.rulesetPatch,
+    definition: save.definition ?? save.state.definition,
     opening: save.opening,
     boardLayout: save.state.boardLayout,
     botRngState: save.botRngState,
@@ -51,11 +56,13 @@ export function replayScript(script: ScriptFile): HegemonyState {
     throw new Error(`script names unknown mode "${script.mode}"`);
   }
 
-  const G = createInitialState(
-    script.seed,
-    script.rulesetPatch ? deriveRuleset(base, script.rulesetPatch) : base,
-    script.boardLayout,
-  );
+  const definition = script.definition
+    ? hydrateGameDefinition(script.definition)
+    : createGameDefinition({
+        ruleset: script.rulesetPatch ? deriveRuleset(base, script.rulesetPatch) : base,
+        content: getAuthoredGameContent(),
+      });
+  const G = createInitialStateFromDefinition(definition, script.seed, script.boardLayout);
 
   script.moves.forEach(({ player, move }, index) => {
     if (G.currentPlayer !== player) {

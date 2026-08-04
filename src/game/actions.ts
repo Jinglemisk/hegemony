@@ -317,7 +317,9 @@ export function buildBuilding(
   buildingId: BuildingId,
 ): MoveResult {
   const tile = getTile(G, tileId);
-  const building = getBuildings().find((candidate) => candidate.id === buildingId);
+  const building = getBuildings(G.definition.content).find(
+    (candidate) => candidate.id === buildingId,
+  );
   const settlement = tile?.settlements.find(
     (candidate) => candidate.owner === playerID && candidate.kind !== "colony",
   );

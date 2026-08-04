@@ -5,7 +5,7 @@ import {
   POLITICIANS_BY_ID,
   RESOLUTION_CARDS,
   RESOLUTION_DECKS,
-  getResolutionCard,
+  getAuthoredResolutionCard,
 } from "./deck";
 import type { LawCard, LawEffect, PoliticianId, ResolutionCard } from "./types";
 
@@ -95,10 +95,10 @@ describe("the 31-card starter deck", () => {
     expect(new Set(ids).size).toBe(ids.length);
 
     for (const card of RESOLUTION_CARDS) {
-      expect(getResolutionCard(card.id), card.id).toBe(card);
+      expect(getAuthoredResolutionCard(card.id), card.id).toBe(card);
     }
 
-    expect(getResolutionCard("no-such-resolution")).toBeNull();
+    expect(getAuthoredResolutionCard("no-such-resolution")).toBeNull();
   });
 
   it("files every card under the politician it names", () => {

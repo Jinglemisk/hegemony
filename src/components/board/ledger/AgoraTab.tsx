@@ -82,7 +82,9 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
         const stelae = isStratokles
           ? G.tallyMonuments
           : G.activeLaws.filter(
-              (law) => getResolutionCard(law.cardId)?.politician === standing.politician.id,
+              (law) =>
+                getResolutionCard(G.definition.content, law.cardId)?.politician ===
+                standing.politician.id,
             );
 
         return (
@@ -120,7 +122,7 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
                   .slice()
                   .sort((a, b) => a.order - b.order)
                   .map((stele) => {
-                    const card = getResolutionCard(stele.cardId);
+                    const card = getResolutionCard(G.definition.content, stele.cardId);
 
                     return (
                       <li key={`${stele.cardId}-${stele.order}`}>

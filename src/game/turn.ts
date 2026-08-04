@@ -4,6 +4,7 @@ import {
   applyUnrestUpkeep,
   collectIncome,
   createInitialState,
+  createInitialStateFromDefinition,
   drawSeasonalEvent,
   expireTurnEventModifiers,
   placeCapital,
@@ -18,6 +19,7 @@ import { openAssembly, shouldOpenAssembly } from "./assembly/assembly";
 import { GAME_MODES } from "./ruleset";
 import type { Ruleset } from "./ruleset";
 import type { BoardLayout, HegemonyState, Phase, PlayerId, SettlementKind } from "./types";
+import type { GameDefinition } from "./definition";
 
 /**
  * The pure turn machine. It owns phase / currentPlayer / turn transitions on
@@ -33,6 +35,22 @@ export function createGame(
   preloadOpeningSetup: boolean = GAME_CONFIG.preloadOpeningSetupForTesting,
 ): HegemonyState {
   const G = createInitialState(seed, ruleset, boardLayout);
+
+  if (preloadOpeningSetup) {
+    runPreloadOpeningSetup(G);
+  }
+
+  return G;
+}
+
+/** Create a game from an already resolved immutable definition. */
+export function createGameFromDefinition(
+  definition: GameDefinition,
+  seed?: number,
+  boardLayout: BoardLayout = GAME_CONFIG.boardLayout,
+  preloadOpeningSetup: boolean = GAME_CONFIG.preloadOpeningSetupForTesting,
+): HegemonyState {
+  const G = createInitialStateFromDefinition(definition, seed, boardLayout);
 
   if (preloadOpeningSetup) {
     runPreloadOpeningSetup(G);

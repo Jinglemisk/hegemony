@@ -1,5 +1,6 @@
 import { getEventEffectChoices } from "../../../game/rules";
 import { getOmenTable } from "../../../game/content";
+import type { GameContent } from "../../../game/content";
 import type { EventCard, HegemonyState } from "../../../game/types";
 import type { EffectPresentation } from "../../../ui/effects";
 import {
@@ -14,14 +15,14 @@ import { eventCardArtUrl, omenArtUrl } from "../events";
 import { Tooltip } from "../../overlays/Tooltip";
 
 /** A concise mechanical summary of a card's effect (choice cards join with "·"). */
-function effectSummary(card: EventCard): EffectPresentation {
+function effectSummary(card: EventCard, content: GameContent): EffectPresentation {
   const choices = getEventEffectChoices(card);
 
   if (choices.length > 1) {
-    return joinEffectPresentations(choices.map(presentEventEffects));
+    return joinEffectPresentations(choices.map((effects) => presentEventEffects(effects, content)));
   }
 
-  return presentEventEffects(choices[0] ?? card.effects);
+  return presentEventEffects(choices[0] ?? card.effects, content);
 }
 
 /**
@@ -31,7 +32,7 @@ function effectSummary(card: EventCard): EffectPresentation {
  * description on hover.
  */
 export function TopbarEvents({ G }: { G: HegemonyState }) {
-  const omenTable = getOmenTable();
+  const omenTable = getOmenTable(G.definition.content);
   const seasonal = G.activeSeasonEvent?.card ?? null;
   const player = G.lastPlayerEvent;
   const omen = G.yearOmen;
@@ -58,7 +59,7 @@ export function TopbarEvents({ G }: { G: HegemonyState }) {
       <TopbarEventSlot
         label="Season"
         name={seasonal?.name ?? null}
-        summary={seasonal ? effectSummary(seasonal) : null}
+        summary={seasonal ? effectSummary(seasonal, G.definition.content) : null}
         tooltip={seasonal?.text ?? null}
         artUrl={seasonal ? eventCardArtUrl(seasonal) : null}
         fallback="No seasonal event"
@@ -66,7 +67,7 @@ export function TopbarEvents({ G }: { G: HegemonyState }) {
       <TopbarEventSlot
         label="Player"
         name={player?.name ?? null}
-        summary={player ? effectSummary(player) : null}
+        summary={player ? effectSummary(player, G.definition.content) : null}
         tooltip={player?.text ?? null}
         artUrl={player ? eventCardArtUrl(player) : null}
         fallback="No player event"

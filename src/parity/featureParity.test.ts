@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { createModeDefinition } from "../game/definition";
 import { POLITICIANS, RESOLUTION_CARDS } from "../game/assembly/deck";
 import { getPromotePopStatus } from "../game/civic";
-import { getBuildings, getTerrainDeck } from "../game/content";
+import { getAuthoredGameContent, getBuildings, getTerrainDeck } from "../game/content";
 import {
   PLAYER_EVENT_CARDS,
   SEASONAL_EVENT_CARDS,
@@ -24,6 +25,7 @@ import {
   presentLawEffect,
   presentTableEffect,
 } from "../ui/effects";
+
 import {
   ACTIVE_EFFECT_MECHANIC_PARITY,
   BUILDING_CONTENT_IDS,
@@ -47,6 +49,8 @@ import {
   VICTORY_CARD_CONTENT_IDS,
 } from "./featureParity";
 import { VICTORY_CARDS } from "../game/victory";
+
+const AUTHORED_CONTENT = getAuthoredGameContent();
 
 function sorted(values: readonly string[]): string[] {
   return [...values].sort();
@@ -127,10 +131,10 @@ describe("feature and content parity manifests", () => {
   it("matches every shipped content id and effect to the manifests", () => {
     const tables = [RIOT_TABLE, ...EXPEDITION_TABLES, OMEN_TABLE];
 
-    expect(sorted(getBuildings().map((building) => building.id))).toEqual(
+    expect(sorted(getBuildings(AUTHORED_CONTENT).map((building) => building.id))).toEqual(
       sorted(BUILDING_CONTENT_IDS),
     );
-    expect(unique(getTerrainDeck().map((entry) => entry.terrain))).toEqual(
+    expect(unique(getTerrainDeck(AUTHORED_CONTENT).map((entry) => entry.terrain))).toEqual(
       sorted(TERRAIN_CONTENT_IDS),
     );
     expect(sorted(SEASONAL_EVENT_CARDS.map((card) => card.id))).toEqual(
@@ -178,7 +182,11 @@ describe("feature and content parity manifests", () => {
       sorted(Object.keys(DIRECTIVE_EFFECT_PARITY)),
     );
     expect(
-      unique(getBuildings().flatMap((building) => building.effects.map((effect) => effect.type))),
+      unique(
+        getBuildings(AUTHORED_CONTENT).flatMap((building) =>
+          building.effects.map((effect) => effect.type),
+        ),
+      ),
     ).toEqual(sorted(Object.keys(BUILDING_EFFECT_PARITY)));
   });
 
@@ -202,7 +210,7 @@ describe("feature and content parity manifests", () => {
       }
     }
 
-    for (const building of getBuildings()) {
+    for (const building of getBuildings(AUTHORED_CONTENT)) {
       for (const effect of building.effects) expectPresentation(presentBuildingEffect(effect));
     }
   });
@@ -289,6 +297,7 @@ describe("feature and content parity manifests", () => {
       baseSeed: 0,
       botSeedRule: "fixture",
       rulesetPatch: null,
+      definition: createModeDefinition("standard").identity,
       generatedAt: "2026-07-29T00:00:00.000Z",
     });
 

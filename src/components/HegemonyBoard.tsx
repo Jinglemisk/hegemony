@@ -668,7 +668,7 @@ export function HegemonyBoard({
           !G.pendingPlayerEvent &&
           !G.assembly ? (
             <EventTableModal
-              table={getOmenTable()}
+              table={getOmenTable(G.definition.content)}
               modifier={0}
               result={G.yearOmen.record}
               subtitle={`${PLAYER_NAMES[G.seasonOpener]} takes the auspices for Year ${G.yearOmen.year} — the sign stands over every polis until spring.`}

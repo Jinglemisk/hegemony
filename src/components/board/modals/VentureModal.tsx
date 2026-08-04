@@ -18,7 +18,7 @@ export function VentureModal({ onClose }: { onClose: () => void }) {
   const [stake, setStake] = useState<VentureStake>("gold");
   const [rolled, setRolled] = useState(false);
 
-  const expeditionTables = getExpeditionTables();
+  const expeditionTables = getExpeditionTables(G.definition.content);
   const table = expeditionTables[expeditionIndex];
   const status = getFundExpeditionStatus(G, playerID, table.id, stake);
   const result = rolled && G.lastTableRoll?.playerID === playerID ? G.lastTableRoll : null;

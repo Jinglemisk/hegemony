@@ -3,9 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { TunePanel } from "./TunePanel";
 import { resolveTuning } from "./tuning";
-import { installGameContent } from "../game/content";
 import { GAME_MODES } from "../game/ruleset";
-import { createInitialState } from "../game/state";
+import { createInitialStateFromDefinition } from "../game/state";
 
 function memoryStorage(initial: Record<string, string>): Storage {
   const values = new Map(Object.entries(initial));
@@ -37,15 +36,13 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  installGameContent(null);
   Reflect.deleteProperty(globalThis, "window");
 });
 
 describe("TunePanel low-number preset", () => {
   it("shows active state and effective terrain/building values", () => {
     const resolved = resolveTuning(GAME_MODES.standard.ruleset, "low-number-core-v1");
-    installGameContent(resolved.content);
-    const game = createInitialState(42, resolved.ruleset);
+    const game = createInitialStateFromDefinition(resolved.definition, 42);
     const markup = renderToStaticMarkup(<TunePanel game={game} resetGame={() => undefined} />);
 
     expect(markup).toContain("✓ Low Numbers · 20W / 12S / 16F");

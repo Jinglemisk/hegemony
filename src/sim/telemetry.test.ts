@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { ACTIVE_EFFECT_KINDS } from "../game/activeEffects";
+import { createModeDefinition } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
 import { randomPolicy } from "./policies";
 import { runGame } from "./runner";
 import { Aggregator, percentiles, snapshotTurn, snapshotsToCsv } from "./telemetry";
 import type { BatchReport } from "./telemetry";
+
+const TEST_DEFINITION = createModeDefinition("standard").identity;
 
 function runAggregated(games: number, turns: number) {
   const aggregator = new Aggregator();
@@ -35,6 +38,7 @@ function runAggregated(games: number, turns: number) {
     baseSeed: 500,
     botSeedRule: "seed ^ 0x9e3779b9",
     rulesetPatch: null,
+    definition: TEST_DEFINITION,
     generatedAt: "test",
   };
 
@@ -162,6 +166,7 @@ describe("Aggregator", () => {
       baseSeed: seed,
       botSeedRule: "seed ^ 0x9e3779b9",
       rulesetPatch: null,
+      definition: TEST_DEFINITION,
       generatedAt: "test",
     });
 
@@ -202,6 +207,7 @@ describe("Aggregator", () => {
       baseSeed: seed,
       botSeedRule: "seed ^ 0x9e3779b9",
       rulesetPatch: null,
+      definition: TEST_DEFINITION,
       generatedAt: "test",
     });
 
@@ -235,6 +241,7 @@ describe("Aggregator", () => {
       baseSeed: seed,
       botSeedRule: "seed ^ 0x9e3779b9",
       rulesetPatch: null,
+      definition: TEST_DEFINITION,
       generatedAt: "test",
     });
 

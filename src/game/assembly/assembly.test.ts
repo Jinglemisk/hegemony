@@ -22,7 +22,7 @@ import {
   nextDrawCost,
   openAssembly,
 } from "./assembly";
-import { getResolutionCard } from "./deck";
+import { getAuthoredResolutionCard } from "./deck";
 import { authoredSteleCount, politicianStandings } from "./power";
 
 /**
@@ -86,7 +86,7 @@ function atAssembly(options?: Parameters<typeof scenario>[0]): HegemonyState {
 
 /** Put a known card on top of its politician's deck so a fish is deterministic. */
 function stackResolution(G: HegemonyState, cardId: string) {
-  const card = getResolutionCard(cardId)!;
+  const card = getAuthoredResolutionCard(cardId)!;
   const deck = G.politicianDecks[card.politician];
   const at = deck.indexOf(cardId);
 
@@ -109,7 +109,7 @@ function proposeCard(
   stackResolution(G, cardId);
   G.players[by].resources.influence += G.ruleset.assembly.drawCost;
 
-  expect(assemblyDraw(G, by, getResolutionCard(cardId)!.politician).ok).toBe(true);
+  expect(assemblyDraw(G, by, getAuthoredResolutionCard(cardId)!.politician).ok).toBe(true);
 
   return { proposer: by, result: assemblyPropose(G, by, replaces, target) };
 }
@@ -610,7 +610,7 @@ describe("author prizes and permanent Voice progress", () => {
   it("gives Voice to the first player at three, preserves it through a tie, then transfers on a strict lead", () => {
     const G = atAssembly();
     const enactLaw = (cardId: string, proposer: PlayerId) =>
-      enactForEval(G, { kind: "enact", card: getResolutionCard(cardId)!, proposer });
+      enactForEval(G, { kind: "enact", card: getAuthoredResolutionCard(cardId)!, proposer });
 
     ["land-reform", "public-works", "homestead-act"].forEach((cardId) => enactLaw(cardId, "0"));
     expect(G.assemblyPassedByPlayer["0"]).toBe(3);
@@ -627,7 +627,11 @@ describe("author prizes and permanent Voice progress", () => {
 
   it("does not decrement Voice progress when an authored Law leaves the board", () => {
     const G = atAssembly();
-    enactForEval(G, { kind: "enact", card: getResolutionCard("land-reform")!, proposer: "0" });
+    enactForEval(G, {
+      kind: "enact",
+      card: getAuthoredResolutionCard("land-reform")!,
+      proposer: "0",
+    });
     const count = G.assemblyPassedByPlayer["0"];
 
     enactForEval(G, { kind: "repeal", cardId: "land-reform", proposer: "1" });
@@ -638,11 +642,15 @@ describe("author prizes and permanent Voice progress", () => {
 
   it("preserves the displaced author's Voice progress when a Law is replaced", () => {
     const G = atAssembly();
-    enactForEval(G, { kind: "enact", card: getResolutionCard("land-reform")!, proposer: "0" });
+    enactForEval(G, {
+      kind: "enact",
+      card: getAuthoredResolutionCard("land-reform")!,
+      proposer: "0",
+    });
 
     enactForEval(G, {
       kind: "enact",
-      card: getResolutionCard("public-works")!,
+      card: getAuthoredResolutionCard("public-works")!,
       proposer: "1",
       replaces: "land-reform",
     });

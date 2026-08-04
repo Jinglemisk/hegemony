@@ -60,8 +60,8 @@ describe("shared tuning resolution", () => {
       8,
     );
     expect(resolved.presetId).toBe("low-number-core-v1");
-    expect(resolved.resolvedContentHash).toMatch(/^[0-9a-f]{8}$/);
-    expect(resolved.manualPatchHash).toMatch(/^[0-9a-f]{8}$/);
+    expect(resolved.resolvedContentHash).toMatch(/^[0-9a-f]{16}$/);
+    expect(resolved.manualPatchHash).toMatch(/^[0-9a-f]{16}$/);
   });
 
   it("produces stable hashes from fresh, equivalent content", () => {

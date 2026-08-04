@@ -8,6 +8,7 @@ import {
 } from "../game/activeEffects";
 import type { ActiveEffectKind } from "../game/activeEffects";
 import type { LegalMove } from "../game/legalMoves";
+import type { DefinitionIdentity } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
 import { playerStandings } from "../game/score";
 import { canPlaceColonyOnTile } from "../game/settlement";
@@ -189,6 +190,8 @@ export type BatchReport = {
     baseSeed: number;
     botSeedRule: string;
     rulesetPatch: unknown;
+    /** Exact rules/content provenance shared by every game in this batch. */
+    definition: DefinitionIdentity;
     /** The dev tune-panel override map applied to content/ruleset for this run (null when
      *  none), plus a stable fingerprint — so a batch's content is identifiable and A/B-able. */
     tunePatch?: unknown;

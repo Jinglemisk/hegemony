@@ -13,7 +13,7 @@ import {
 import type { EconomyPreview } from "../game/economy/preview";
 import { applyMove, describeMove, enumerateLegalMoves } from "../game/legalMoves";
 import type { LegalMove } from "../game/legalMoves";
-import { getAuthoredGameContent, installGameContent } from "../game/content";
+import { getAuthoredGameContent } from "../game/content";
 import { PLAYER_IDS } from "../game/data";
 import { GAME_MODES } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
@@ -299,6 +299,7 @@ function cmdNew(flags: Flags, file: string) {
     seed,
     mode,
     rulesetPatch: patch,
+    definition: state.definition,
     opening,
     botRngState: simRng.state(),
     history,
@@ -352,14 +353,14 @@ function applyAndSave(save: SaveFile, file: string, move: LegalMove, quiet = fal
   if (!result.ok) {
     const reasons =
       result.reasons.length > 0 ? result.reasons.join(" ") : "(the engine gave no reason)";
-    fail(`Move rejected: ${describeMove(move)} — ${reasons}`);
+    fail(`Move rejected: ${describeMove(move, G.definition.content)} — ${reasons}`);
   }
 
   save.history.push({ player, move });
   saveGame(file, save);
 
   if (!quiet) {
-    console.log(`player ${player}: ${describeMove(move)}`);
+    console.log(`player ${player}: ${describeMove(move, G.definition.content)}`);
     for (const entry of G.log.slice(logBefore)) {
       console.log(`  ${entry.message}`);
     }
@@ -631,7 +632,7 @@ function cmdAuto(flags: Flags, file: string) {
     onMove: (_G, player, move) => {
       save.history.push({ player, move });
       if (!quiet) {
-        console.log(`player ${player}: ${describeMove(move)}`);
+        console.log(`player ${player}: ${describeMove(move, _G.definition.content)}`);
       }
     },
   });
@@ -669,6 +670,7 @@ function cmdReplay(flags: Flags, file: string) {
       seed: script.seed,
       mode: script.mode,
       rulesetPatch: script.rulesetPatch,
+      definition: state.definition,
       opening: script.opening,
       // Resume the original bot stream where it was parked; legacy scripts without
       // the field fall back to the derived start (the pre-fix behavior).
@@ -709,13 +711,12 @@ function cmdBatch(flags: Flags) {
   const tune = parseTune(flags);
   const presetId = parseTuningPreset(flags);
   const resolved = resolveTuning(GAME_MODES[mode].ruleset, presetId, tune ?? {}, patch);
-  installGameContent(resolved.content);
   const effectivePatch = resolved.rulesetPatch;
   const baseSeed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createSeed();
   const reportPath = typeof flags.report === "string" ? flags.report : ".sim/report.json";
   const csvPath = typeof flags.csv === "string" ? flags.csv : undefined;
 
-  try {
+  {
     const aggregator = new Aggregator();
     const logEvery = games <= 20 ? 1 : 10;
     // Rotation reseats each policy through every seat on the SAME seed to cancel
@@ -735,6 +736,7 @@ function cmdBatch(flags: Flags) {
           seed,
           mode,
           patch: effectivePatch,
+          definition: resolved.definition,
           boardLayout,
           policy,
           seatPolicies,
@@ -769,6 +771,7 @@ function cmdBatch(flags: Flags) {
       baseSeed,
       botSeedRule: "seed ^ 0x9e3779b9",
       rulesetPatch: effectivePatch,
+      definition: resolved.definition.identity,
       tunePatch: tune ?? null,
       tunePatchHash: resolved.manualPatchHash,
       tuningPresetId: resolved.presetId,
@@ -786,8 +789,6 @@ function cmdBatch(flags: Flags) {
     }
 
     console.log("\n" + renderBatchReport(report));
-  } finally {
-    installGameContent(null);
   }
 }
 

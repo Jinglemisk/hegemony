@@ -82,7 +82,7 @@ export function PendingPlayerEventModal() {
                     >
                       <strong>Option {index + 1}</strong>
                       <span>
-                        <EffectLine effect={presentEventEffects(effects)} />
+                        <EffectLine effect={presentEventEffects(effects, G.definition.content)} />
                       </span>
                     </button>
                   );
@@ -92,7 +92,7 @@ export function PendingPlayerEventModal() {
               <div className="eventSingleEffect">
                 <strong>Effect</strong>
                 <span>
-                  <EffectLine effect={presentEventEffects(selectedEffects)} />
+                  <EffectLine effect={presentEventEffects(selectedEffects, G.definition.content)} />
                 </span>
               </div>
             )}

@@ -64,9 +64,9 @@ export function civicCalm(G: HegemonyState, playerID: PlayerId, payment: CivicCa
 
 /** Total promotion-cost reduction from a settlement's buildings (the Gymnasion) — the
  *  civic counterpart to the Granary's grow-pop food discount (economy/cost.ts). */
-function settlementPromoteDiscount(settlement: Settlement): number {
+function settlementPromoteDiscount(G: HegemonyState, settlement: Settlement): number {
   return settlement.buildings.reduce((sum, buildingId) => {
-    const building = getBuildings().find((candidate) => candidate.id === buildingId);
+    const building = getBuildings(G.definition.content).find((candidate) => candidate.id === buildingId);
 
     return (
       sum +
@@ -100,7 +100,7 @@ export function getPromotePopStatus(G: HegemonyState, playerID: PlayerId, tileId
     G,
     playerID,
     "promotePop",
-    discountPromoteCost(baseCost, settlement ? settlementPromoteDiscount(settlement) : 0),
+    discountPromoteCost(baseCost, settlement ? settlementPromoteDiscount(G, settlement) : 0),
     { pop: from }
   );
   const reasons: string[] = [];

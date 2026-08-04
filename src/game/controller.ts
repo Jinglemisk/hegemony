@@ -37,7 +37,13 @@ import {
   upgradeColonyToCity,
 } from "./rules";
 import type { CivicCalmPayment, VentureStake } from "./rules";
-import { advanceSetupTurn, beginGameplayTurn, closeAssembly, createGame, endTurn } from "./turn";
+import {
+  advanceSetupTurn,
+  beginGameplayTurn,
+  closeAssembly,
+  createGameFromDefinition,
+  endTurn,
+} from "./turn";
 import {
   assemblyBribe,
   assemblyDiscardHeld,
@@ -50,7 +56,7 @@ import {
 } from "./assembly";
 import type { PoliticianId } from "./assembly";
 import { GAME_MODES } from "./ruleset";
-import { loadStartAtAssembly, resolveTunedRuleset } from "../dev/tuning";
+import { loadStartAtAssembly, resolveTunedDefinition } from "../dev/tuning";
 
 export type { Phase } from "./types";
 
@@ -74,18 +80,18 @@ function createGameFromUrl(): HegemonyState {
   const manualSetup = params?.get("setup") === "manual";
   const preload = params?.get("dev") === "preload" || GAME_CONFIG.preloadOpeningSetupForTesting;
 
-  // Fold any dev tuning overrides (localStorage) onto the mode's ruleset and install the
-  // building content override. A no-op in production or when nothing is being tuned.
-  const ruleset = resolveTunedRuleset(GAME_MODES[GAME_CONFIG.mode].ruleset);
+  // Resolve one immutable definition before state creation. Existing matches keep their
+  // pinned package even if the tuning controls are changed for the next reset.
+  const definition = resolveTunedDefinition(GAME_MODES[GAME_CONFIG.mode].ruleset);
 
   if (preload) {
     // The scripted opening only fits the classic board's tiles.
-    return createGame(pinnedSeed, ruleset, "classic", true);
+    return createGameFromDefinition(definition, pinnedSeed, "classic", true);
   }
 
   const seed =
     pinnedSeed ?? (GAME_CONFIG.autoOpeningForDev && !manualSetup ? nextRotationSeed() : undefined);
-  const G = createGame(seed, ruleset, boardLayout, false);
+  const G = createGameFromDefinition(definition, seed, boardLayout, false);
 
   if (!manualSetup && GAME_CONFIG.autoOpeningForDev) {
     autoPlayOpening(G);

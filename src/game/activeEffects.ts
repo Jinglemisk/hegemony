@@ -149,7 +149,7 @@ export function getActiveEffects(
       source: {
         kind: "directive",
         id: "general-strike",
-        label: getResolutionCard("general-strike")?.name ?? "General Strike",
+        label: getResolutionCard(G.definition.content, "general-strike")?.name ?? "General Strike",
       },
       scope: { kind: "player", playerID },
       duration: {
@@ -302,7 +302,7 @@ export function getActiveEffects(
       source: {
         kind: "directive",
         id: "isonomia",
-        label: getResolutionCard("isonomia")?.name ?? "Isonomia",
+        label: getResolutionCard(G.definition.content, "isonomia")?.name ?? "Isonomia",
       },
       scope: { kind: "player", playerID },
       duration: {

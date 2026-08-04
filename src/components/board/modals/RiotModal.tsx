@@ -36,10 +36,11 @@ export function RiotModal({
   const playerID = G.pendingRiot?.playerID ?? currentPlayerId;
   const isActive = viewerCanAct && playerID === currentPlayerId;
   const pending = G.pendingRiot;
-  const riotTable = getRiotTable();
+  const riotTable = getRiotTable(G.definition.content);
   const severe = pending?.tier === "revolt";
   const tierModifier = severe ? G.ruleset.economy.unrest.severeRollModifier : 0;
-  const modifier = insuranceRollBonus(pending?.boughtInsurance ?? []) + tierModifier;
+  const modifier =
+    insuranceRollBonus(pending?.boughtInsurance ?? [], G.definition.content) + tierModifier;
 
   // Concession targets: every owned settlement × demotable pop with a body to spare.
   const demoteTargets = useMemo(() => {

@@ -8,6 +8,8 @@ import { mulberry32, shuffleWithSeed } from "../core/rng";
 import { totalPops } from "../core/pops";
 import { POLITICIANS } from "./deck";
 import { getResolutionCard, getResolutionCards } from "../content";
+import { getAuthoredGameContent } from "../content";
+import type { GameContent } from "../content";
 import type {
   AssemblyResult,
   AssemblySession,
@@ -228,7 +230,7 @@ function drawFromPoliticianDeck(G: HegemonyState, politician: PoliticianId): Res
   }
 
   const cardId = G.politicianDecks[politician].shift();
-  return cardId ? getResolutionCard(cardId) : null;
+  return cardId ? getResolutionCard(G.definition.content, cardId) : null;
 }
 
 function discardCard(G: HegemonyState, card: ResolutionCard) {
@@ -449,7 +451,7 @@ export function assemblyProposeRepeal(
   session!.proposals[playerID] = { kind: "repeal", cardId, proposer: playerID };
   addLog(
     G,
-    `${getPlayerName(G, playerID)} moves to strike ${getResolutionCard(cardId)?.name ?? cardId} from the record.`,
+    `${getPlayerName(G, playerID)} moves to strike ${getResolutionCard(G.definition.content, cardId)?.name ?? cardId} from the record.`,
   );
   finalizeProposal(G, playerID);
   return MOVE_OK;
@@ -689,7 +691,9 @@ function summarize(
   vetoedBy: PlayerId | null,
 ): string {
   const name =
-    item.kind === "repeal" ? (getResolutionCard(item.cardId)?.name ?? item.cardId) : item.card.name;
+    item.kind === "repeal"
+      ? (getResolutionCard(G.definition.content, item.cardId)?.name ?? item.cardId)
+      : item.card.name;
 
   if (vetoedBy) {
     return `${getPlayerName(G, vetoedBy)} struck ${name} from the ballot.`;
@@ -828,7 +832,7 @@ function removeLaw(G: HegemonyState, cardId: string) {
   }
 
   G.activeLaws.splice(index, 1);
-  const card = getResolutionCard(cardId);
+  const card = getResolutionCard(G.definition.content, cardId);
 
   if (card) {
     discardCard(G, card);
@@ -892,7 +896,7 @@ function applyDirectiveEffect(
       removeLaw(G, newest.cardId);
       addLog(
         G,
-        `${card.name}: ${getResolutionCard(newest.cardId)?.name ?? newest.cardId} is thrown down.`,
+        `${card.name}: ${getResolutionCard(G.definition.content, newest.cardId)?.name ?? newest.cardId} is thrown down.`,
       );
       break;
     }
@@ -954,7 +958,10 @@ function politicianName(politician: PoliticianId): string {
 }
 
 /** Every politician's deck, shuffled — built once at game creation. */
-export function createPoliticianDecks(seed: number): {
+export function createPoliticianDecks(
+  seed: number,
+  content: GameContent = getAuthoredGameContent(),
+): {
   decks: Record<PoliticianId, string[]>;
   discards: Record<PoliticianId, string[]>;
   rng: number;
@@ -965,7 +972,7 @@ export function createPoliticianDecks(seed: number): {
 
   for (const politician of POLITICIANS) {
     const shuffled = shuffleWithSeed(
-      getResolutionCards()
+      getResolutionCards(content)
         .filter((card) => card.politician === politician.id)
         .map((card) => card.id),
       rng,

@@ -23,7 +23,7 @@ import type { CivicCalmPayment } from "./civic";
 import { buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
 import { fundExpedition, getFundExpeditionStatus } from "./ventures";
 import type { VentureStake } from "./ventures";
-import { getExpeditionTables, getRiotTable } from "./content";
+import { getAuthoredGameContent, getExpeditionTables, getRiotTable } from "./content";
 import { EMPTY_POPS, POP_TYPES, totalPops } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement } from "./core/query";
@@ -74,6 +74,7 @@ import type {
   RiotInsuranceId,
   TradableMaterial,
 } from "./types";
+import { assertStateDefinition } from "./definition";
 
 /**
  * Legal-move enumeration + a uniform dispatcher over the engine's mutators, so a
@@ -147,6 +148,7 @@ export type LegalMove =
  * the ONLY legal move — everything else, including endTurn, is blocked.
  */
 export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+  assertStateDefinition(G);
   if (G.currentPlayer !== playerID) {
     return [];
   }
@@ -257,6 +259,7 @@ function checkMoveAllowed(G: HegemonyState, playerID: PlayerId, move: LegalMove)
  * to the individual mutators' partial checks.
  */
 export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove): MoveResult {
+  assertStateDefinition(G);
   const allowed = checkMoveAllowed(G, playerID, move);
   if (!allowed.ok) {
     return allowed;
@@ -437,7 +440,7 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove
   return moves;
 }
 
-export function describeMove(move: LegalMove): string {
+export function describeMove(move: LegalMove, content = getAuthoredGameContent()): string {
   switch (move.type) {
     case "placeCapital":
       return `place capital on ${move.tileId} (${formatPops(move.pops)})`;
@@ -480,7 +483,7 @@ export function describeMove(move: LegalMove): string {
     case "assemblyPropose":
       return `propose the drawn resolution${move.target ? ` against ${move.target}` : ""}${move.replaces ? ` in place of ${move.replaces}` : ""}`;
     case "assemblyProposeRepeal":
-      return `move to repeal ${getResolutionCard(move.cardId)?.name ?? move.cardId}${formatCost(move.cost)}`;
+      return `move to repeal ${getResolutionCard(content, move.cardId)?.name ?? move.cardId}${formatCost(move.cost)}`;
     case "assemblyPass":
       return "hold your peace";
     case "assemblyBribe":
@@ -509,7 +512,7 @@ function formatCost(cost: Partial<Resources>): string {
 function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
   const moves: LegalMove[] = [];
 
-  for (const option of getRiotTable().insurance ?? []) {
+  for (const option of getRiotTable(G.definition.content).insurance ?? []) {
     if (!getBuyRiotInsuranceStatus(G, playerID, option.id).can) {
       continue;
     }
@@ -744,7 +747,7 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): LegalMove
     }
   }
 
-  for (const table of getExpeditionTables()) {
+  for (const table of getExpeditionTables(G.definition.content)) {
     for (const stake of ["gold", "wood"] as const) {
       const status = getFundExpeditionStatus(G, playerID, table.id, stake);
       if (status.can) {

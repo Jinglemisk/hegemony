@@ -2,7 +2,6 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 import { PLAYER_IDS } from "../game/data";
-import { installGameContent } from "../game/content";
 import { GAME_MODES } from "../game/ruleset";
 import type { BoardLayout } from "../game/types";
 import { resolveTuning } from "../dev/tuning";
@@ -56,7 +55,6 @@ const reportPath = args.report ?? ".sim/low-number-economy.json";
 const csvPath = args.csv;
 
 const resolved = resolveTuning(GAME_MODES.standard.ruleset, presetId);
-installGameContent(resolved.content);
 const patch = resolved.rulesetPatch as RulesetPatch;
 const aggregator = new Aggregator();
 
@@ -66,6 +64,7 @@ for (let game = 0; game < games; game += 1) {
     seed,
     mode: "standard",
     patch,
+    definition: resolved.definition,
     boardLayout,
     policy,
     turns,
@@ -97,6 +96,7 @@ const batch = aggregator.buildReport({
   baseSeed,
   botSeedRule: "seed ^ 0x9e3779b9",
   rulesetPatch: patch,
+  definition: resolved.definition.identity,
   tuningPresetId: resolved.presetId,
   resolvedContentHash: resolved.resolvedContentHash,
   generatedAt: new Date().toISOString(),
@@ -175,4 +175,3 @@ console.log(
   `Two-digit scale: holdings ${(100 * scale.anyHoldingAtLeast10).toFixed(1)}% · incomes ${(100 * scale.anyIncomeMagnitudeAtLeast10).toFixed(1)}%`,
 );
 console.log(`\n${renderBatchReport(batch)}`);
-installGameContent(null);
