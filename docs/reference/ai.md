@@ -81,7 +81,8 @@ branches ONLY on the RNG-free move set — it excludes fundExpedition / riot / b
 (played by the shared `resolveStochasticByRule` rules) and endTurn — so no clone ever
 advances `G.rng`. Non-peeking is therefore structural, not a patch: it's asserted per
 branch (`draft.rng === rngBefore`) and proven end-to-end by record→replay being
-byte-identical. `cloneForSearch` shares the ruleset + event decks by reference and
+byte-identical. `cloneForSearch` shares the immutable game definition, its ruleset
+alias, and event decks by reference and
 resets the log, so each clone is ~an order of magnitude lighter than a full
 `structuredClone`.
 

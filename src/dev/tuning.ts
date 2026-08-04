@@ -1,5 +1,7 @@
-import { getAuthoredGameContent, installGameContent } from "../game/content";
+import { getAuthoredGameContent } from "../game/content";
 import type { GameContent } from "../game/content";
+import { createGameDefinition, stableDefinitionHash } from "../game/definition";
+import type { GameDefinition } from "../game/definition";
 import { DEFAULT_RULESET, deriveRuleset, mergeRulesetPatches } from "../game/ruleset";
 import type { Ruleset, RulesetPatch } from "../game/ruleset";
 import type { BuildingDefinition } from "../game/types";
@@ -9,7 +11,7 @@ import type { TuningPresetId } from "./tuningPresets";
 /**
  * The DEV tuning model. A tuning session is a flat map of dot-path → value overrides,
  * persisted to localStorage so it survives reloads but never touches source. The panel
- * (src/dev/TunePanel.tsx) edits it; {@link resolveTunedRuleset} injects it at game
+ * (src/dev/TunePanel.tsx) edits it; {@link resolveTunedDefinition} resolves it at game
  * creation. Nothing here runs in a production build — the whole module is dev-gated at
  * its one call site and localStorage-guarded for non-browser (test/sim) contexts.
  *
@@ -242,30 +244,15 @@ export function applyBuildingOverrides(
   return clone;
 }
 
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
-  if (value && typeof value === "object") {
-    return `{${Object.entries(value)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
 export function stableTuningHash(value: unknown): string {
-  const canonical = canonicalJson(value);
-  let hash = 5381;
-  for (let index = 0; index < canonical.length; index += 1) {
-    hash = ((hash << 5) + hash + canonical.charCodeAt(index)) >>> 0;
-  }
-  return hash.toString(16).padStart(8, "0");
+  return stableDefinitionHash(value);
 }
 
 export type ResolvedTuning = {
   ruleset: Ruleset;
   rulesetPatch: RulesetPatch | null;
   content: GameContent;
+  definition: GameDefinition;
   presetId: TuningPresetId | null;
   resolvedContentHash: string;
   manualPatchHash: string | null;
@@ -292,10 +279,14 @@ export function resolveTuning(
     ? { ...presetContent, buildings: manualBuildings }
     : presetContent;
 
+  const ruleset = rulesetPatch ? deriveRuleset(base, rulesetPatch) : base;
+  const definition = createGameDefinition({ ruleset, content });
+
   return {
-    ruleset: rulesetPatch ? deriveRuleset(base, rulesetPatch) : base,
+    ruleset,
     rulesetPatch,
     content,
+    definition,
     presetId,
     resolvedContentHash: stableTuningHash(content),
     manualPatchHash: Object.keys(map).length > 0 ? stableTuningHash(map) : null,
@@ -304,16 +295,14 @@ export function resolveTuning(
 
 /**
  * The one browser integration point: called from the controller at game creation.
- * Installs the complete resolved content package and returns the resolved ruleset.
- * Production clears the package back to authored content and returns `base` unchanged.
+ * It returns one immutable package without mutating module-level content. Production
+ * packages the authored content with `base` unchanged.
  */
-export function resolveTunedRuleset(base: Ruleset): Ruleset {
+export function resolveTunedDefinition(base: Ruleset): GameDefinition {
   if (!import.meta.env.DEV) {
-    installGameContent(null);
-    return base;
+    return createGameDefinition({ ruleset: base, content: getAuthoredGameContent() });
   }
   const map = loadOverrides();
   const resolved = resolveTuning(base, loadTuningPresetId(), map);
-  installGameContent(resolved.content);
-  return resolved.ruleset;
+  return resolved.definition;
 }

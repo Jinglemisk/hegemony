@@ -457,8 +457,7 @@ export const RESOLUTION_CARDS: ResolutionCard[] = POLITICIANS.flatMap(
   (politician) => RESOLUTION_DECKS[politician.id],
 );
 
-const RESOLUTION_CARDS_BY_ID = new Map(RESOLUTION_CARDS.map((card) => [card.id, card]));
-
-export function getResolutionCard(cardId: string): ResolutionCard | null {
-  return RESOLUTION_CARDS_BY_ID.get(cardId) ?? null;
+/** Authored-deck lookup for content-definition and deck tests, never runtime resolution. */
+export function getAuthoredResolutionCard(cardId: string): ResolutionCard | null {
+  return RESOLUTION_CARDS.find((card) => card.id === cardId) ?? null;
 }

@@ -58,7 +58,8 @@ function EmpireIntelPanelComponent({
   const colonyCount = holdings.length - cityCount;
   const popsUsed = holdings.reduce((sum, { settlement }) => sum + totalPops(settlement.pops), 0);
   const popsCapacity = holdings.reduce(
-    (sum, { settlement }) => sum + settlementCapacity(settlement, G.ruleset),
+    (sum, { settlement }) =>
+      sum + settlementCapacity(settlement, G.ruleset, G.definition.content),
     0
   );
   const unrest = unrestStatus(G, playerID);

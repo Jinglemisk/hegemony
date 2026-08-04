@@ -9,6 +9,7 @@ import {
   POLITICIANS_BY_ID,
 } from "../../../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../../../game/assembly";
+import type { GameContent } from "../../../game/content";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { Popover } from "../../overlays/Popover";
@@ -208,7 +209,7 @@ function BemaColumn({
       </div>
 
       {cell.item?.kind === "repeal" ? (
-        <RepealCard cardId={cell.item.cardId} />
+        <RepealCard cardId={cell.item.cardId} content={G.definition.content} />
       ) : cell.card ? (
         <ColumnCard
           G={G}
@@ -247,6 +248,7 @@ function ColumnCard({
       content={
         <ResolutionDetails
           card={card}
+          content={G.definition.content}
           duration={card.kind === "law" ? "Until repealed if passed" : "Resolves once if passed"}
           source={politician.name}
         />
@@ -280,8 +282,8 @@ function ColumnCard({
   );
 }
 
-function RepealCard({ cardId }: { cardId: string }) {
-  const card = getResolutionCard(cardId);
+function RepealCard({ cardId, content }: { cardId: string; content: GameContent }) {
+  const card = getResolutionCard(content, cardId);
 
   return (
     <Tooltip
@@ -424,9 +426,11 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
                         type="button"
                       >
                         <span className="asmMenuName">
-                          {getResolutionCard(cardId)?.name ?? cardId}
+                          {getResolutionCard(G.definition.content, cardId)?.name ?? cardId}
                         </span>
-                        <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
+                        <span className="asmMenuMeta">
+                          {getResolutionCard(G.definition.content, cardId)?.text}
+                        </span>
                       </button>
                     </li>
                   ))}

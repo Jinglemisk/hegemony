@@ -10,8 +10,11 @@ import { Tooltip } from "./overlays/Tooltip";
  * summary with a keyboard-accessible tooltip, and the ledger's full explanation.
  */
 export function ActiveEffectsList({ variant }: { variant: "board" | "ledger" }) {
-  const { activeEffects } = useGameUi();
-  const presentations = useMemo(() => presentActiveEffects(activeEffects), [activeEffects]);
+  const { G, activeEffects } = useGameUi();
+  const presentations = useMemo(
+    () => presentActiveEffects(activeEffects, G.definition.content),
+    [G.definition.content, activeEffects],
+  );
 
   if (presentations.length === 0) {
     return null;

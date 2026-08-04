@@ -56,8 +56,13 @@ match is created:
 
 ```ts
 type GameDefinition = {
-  rulesetVersion: string;
-  contentVersion: string;
+  identity: {
+    id: string;
+    rulesetVersion: string;
+    rulesetHash: string;
+    contentVersion: string;
+    contentHash: string;
+  };
   ruleset: Ruleset;
   content: GameContent;
 };
@@ -207,8 +212,9 @@ simulator packages. Redis, microservices, and a plugin framework wait for demons
 
 ## PR slices
 
-1. **Definition isolation:** immutable `GameDefinition`, tuning resolution without globals,
-   concurrent-definition and replay fixtures.
+1. **Definition isolation (implemented):** immutable `GameDefinition`, tuning resolution
+   without globals, definition provenance in saves/replays/reports, and concurrent-definition
+   and replay fixtures.
 2. **Canonical transition:** `GameCommand`, derived `LegalOption`, atomic transition, and browser,
    simulator, and replay adapters using it.
 3. **Actor and projection contract:** asynchronous Assembly parity, player/spectator views,

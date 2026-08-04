@@ -107,6 +107,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
   const projection = calculateEconomyProjection(G, playerID);
   const activeEffects = presentActiveEffects(
     getActiveEffects(G, playerID, { income: projection.income }),
+    G.definition.content,
   );
   const marker = G.currentPlayer === playerID ? " ◀ current" : "";
 
@@ -140,7 +141,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
       settlement.buildings.length > 0 ? ` · buildings: ${settlement.buildings.join(", ")}` : "";
     lines.push(
       `  ${tileId} ${settlement.kind} on ${tile.terrain} (${tile.resource ? `${tile.resource.type} ${tile.resource.amount}` : "no yield"}) — ` +
-        `pops ${totalPops(settlement.pops)}/${settlementCapacity(settlement, G.ruleset)} ` +
+        `pops ${totalPops(settlement.pops)}/${settlementCapacity(settlement, G.ruleset, G.definition.content)} ` +
         `(c${settlement.pops.citizens} f${settlement.pops.freemen} s${settlement.pops.slaves})${buildings}`,
     );
   }
@@ -155,7 +156,9 @@ export function renderLegal(G: HegemonyState): string {
     return "No legal moves (not this player's turn?).";
   }
 
-  const lines = moves.map((move, index) => `[${index}] ${describeMove(move)}`);
+  const lines = moves.map(
+    (move, index) => `[${index}] ${describeMove(move, G.definition.content)}`,
+  );
   lines.push(`(${moves.length} moves — apply one with: move index <N>)`);
   return lines.join("\n");
 }
@@ -204,6 +207,7 @@ function hasResourceDelta(resources: Resources): boolean {
 export function renderBatchReport(report: BatchReport): string {
   const lines = [
     `Batch: ${report.meta.games} games × ${report.meta.turns} turns, ${report.meta.policy} policy, ${report.meta.mode} mode, ${report.meta.boardLayout} board (base seed ${report.meta.baseSeed})`,
+    `Definition: ${report.meta.definition.id}`,
     `Final victory cards: mean ${formatNumber(report.finalCardsDistribution.mean)} · ` +
       `p10 ${formatNumber(report.finalCardsDistribution.p10)} · median ${formatNumber(report.finalCardsDistribution.median)} · ` +
       `p90 ${formatNumber(report.finalCardsDistribution.p90)}`,

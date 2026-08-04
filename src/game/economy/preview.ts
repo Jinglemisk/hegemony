@@ -166,7 +166,8 @@ export function previewBuildBuilding(
   buildingId: BuildingId,
 ): EconomyPreview | null {
   const buildingName =
-    getBuildings().find((building) => building.id === buildingId)?.name ?? "Building";
+    getBuildings(G.definition.content).find((building) => building.id === buildingId)?.name ??
+    "Building";
 
   return previewEconomyAction(G, playerID, `Build ${buildingName}`, (draft) =>
     buildBuilding(draft, playerID, tileId, buildingId),
@@ -250,8 +251,16 @@ function createSettlementEconomyProjections(
         kind: settlement.kind,
         income: summarizeIncome(settlementBreakdown),
         pops: totalPops(settlement.pops),
-        capacity: settlementCapacity(settlement, incomeState.ruleset),
-        overCapacity: settlementOverCapacity(settlement, incomeState.ruleset),
+        capacity: settlementCapacity(
+          settlement,
+          incomeState.ruleset,
+          incomeState.definition.content,
+        ),
+        overCapacity: settlementOverCapacity(
+          settlement,
+          incomeState.ruleset,
+          incomeState.definition.content,
+        ),
         inTransitIn,
         inTransitOut,
       };

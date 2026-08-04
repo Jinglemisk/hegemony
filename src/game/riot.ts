@@ -1,6 +1,6 @@
 import { collectIncome } from "./actions";
 import { demotePop } from "./civic";
-import { getRiotTable } from "./content";
+import { getAuthoredGameContent, getRiotTable } from "./content";
 import { addLog, getPlayerName } from "./core/query";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
@@ -32,7 +32,9 @@ export function getBuyRiotInsuranceStatus(
   playerID: PlayerId,
   optionId: RiotInsuranceId,
 ): ActionStatus {
-  const option = getRiotTable().insurance?.find((candidate) => candidate.id === optionId);
+  const option = getRiotTable(G.definition.content).insurance?.find(
+    (candidate) => candidate.id === optionId,
+  );
   const reasons: string[] = [];
 
   if (!option) {
@@ -58,7 +60,9 @@ export function buyRiotInsurance(
   demoteTarget?: { tileId: string; from: PopType },
 ): MoveResult {
   const status = getBuyRiotInsuranceStatus(G, playerID, optionId);
-  const option = getRiotTable().insurance?.find((candidate) => candidate.id === optionId);
+  const option = getRiotTable(G.definition.content).insurance?.find(
+    (candidate) => candidate.id === optionId,
+  );
 
   if (!option || !status.can || !G.pendingRiot) {
     return invalid(...status.reasons);
@@ -98,9 +102,12 @@ export function getResolveRiotStatus(G: HegemonyState, playerID: PlayerId): Acti
  * hardcodes that count. Shared with the RiotModal so the preview the player reads and
  * the roll that resolves can never disagree (post-sprint-debt §2.3).
  */
-export function insuranceRollBonus(boughtInsurance: RiotInsuranceId[]): number {
+export function insuranceRollBonus(
+  boughtInsurance: RiotInsuranceId[],
+  content = getAuthoredGameContent(),
+): number {
   return boughtInsurance.reduce((bonus, optionId) => {
-    const option = getRiotTable().insurance?.find((candidate) => candidate.id === optionId);
+    const option = getRiotTable(content).insurance?.find((candidate) => candidate.id === optionId);
     return bonus + (option?.modifier ?? 0);
   }, 0);
 }
@@ -121,9 +128,10 @@ export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
 
   const severe = pending.tier === "revolt";
   const unrest = G.ruleset.economy.unrest;
-  const { popsRemoved } = rollOnTable(G, playerID, getRiotTable(), {
+  const { popsRemoved } = rollOnTable(G, playerID, getRiotTable(G.definition.content), {
     modifier:
-      insuranceRollBonus(pending.boughtInsurance) + (severe ? unrest.severeRollModifier : 0),
+      insuranceRollBonus(pending.boughtInsurance, G.definition.content) +
+      (severe ? unrest.severeRollModifier : 0),
     popLossMultiplier: severe ? unrest.severePopLossMultiplier : 1,
   });
 

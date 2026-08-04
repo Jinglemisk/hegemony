@@ -1,4 +1,5 @@
 import type { Ruleset } from "../game/ruleset";
+import type { GameContent } from "../game/content";
 import type { HexTile, Resources, Settlement } from "../game/types";
 import {
   settlementBuildingSlots,
@@ -22,16 +23,18 @@ export function SettlementSummaryCard({
   tile,
   settlement,
   netYield,
-  ruleset
+  ruleset,
+  content
 }: {
   tile: HexTile;
   settlement: Settlement;
   netYield: Resources;
   ruleset: Ruleset;
+  content: GameContent;
 }) {
   const popTotal = totalPops(settlement.pops);
-  const capacity = settlementCapacity(settlement, ruleset);
-  const overCapacity = settlementOverCapacity(settlement, ruleset);
+  const capacity = settlementCapacity(settlement, ruleset, content);
+  const overCapacity = settlementOverCapacity(settlement, ruleset, content);
   const slots = settlementBuildingSlots(tile, settlement, ruleset);
   const tileYield = settlementTileYield(tile, settlement, ruleset);
 
@@ -111,4 +114,3 @@ export function HoldingNetYields({ resources }: { resources: Resources }) {
 function formatTileCoordinates(tile: HexTile) {
   return `${tile.q},${tile.r}`;
 }
-

@@ -112,9 +112,11 @@ export function AssemblyFoot({
                         type="button"
                       >
                         <span className="asmMenuName">
-                          {getResolutionCard(cardId)?.name ?? cardId}
+                          {getResolutionCard(G.definition.content, cardId)?.name ?? cardId}
                         </span>
-                        <span className="asmMenuMeta">{getResolutionCard(cardId)?.text}</span>
+                        <span className="asmMenuMeta">
+                          {getResolutionCard(G.definition.content, cardId)?.text}
+                        </span>
                       </button>
                     </li>
                   ))}

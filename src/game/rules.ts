@@ -21,6 +21,7 @@
  *   actions        — the mutating moves
  *   season         — season / turn-flag lifecycle
  *   activeEffects  — canonical persistent-effect/status projection
+ *   definition     — immutable per-match rules/content identity
  *   state          — createInitialState
  *
  * This file re-exports the public surface so existing `./rules` imports keep working.

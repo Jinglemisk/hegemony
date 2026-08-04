@@ -26,12 +26,12 @@ function steleAuthors(G: HegemonyState, politician: PoliticianId): Array<PlayerI
   }
 
   return G.activeLaws
-    .filter((law) => cardPolitician(law.cardId) === politician)
+    .filter((law) => cardPolitician(G, law.cardId) === politician)
     .map((law) => law.author);
 }
 
-function cardPolitician(cardId: string): PoliticianId | null {
-  return getResolutionCard(cardId)?.politician ?? null;
+function cardPolitician(G: HegemonyState, cardId: string): PoliticianId | null {
+  return getResolutionCard(G.definition.content, cardId)?.politician ?? null;
 }
 
 /**

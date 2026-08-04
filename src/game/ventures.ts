@@ -26,7 +26,7 @@ export function getFundExpeditionStatus(
 
   if (G.phase !== "gameplay") reasons.push("Expeditions sail during gameplay.");
   if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
-  if (!getExpeditionTables().some((table) => table.id === expeditionId))
+  if (!getExpeditionTables(G.definition.content).some((table) => table.id === expeditionId))
     reasons.push("No such expedition.");
   if (G.players[playerID].ventureUsedThisTurn) reasons.push("One venture per turn.");
   if (!canAfford(G.players[playerID].resources, cost)) reasons.push("Can't post the stake.");
@@ -43,7 +43,9 @@ export function fundExpedition(
   stake: VentureStake,
 ): MoveResult {
   const status = getFundExpeditionStatus(G, playerID, expeditionId, stake);
-  const table = getExpeditionTables().find((candidate) => candidate.id === expeditionId);
+  const table = getExpeditionTables(G.definition.content).find(
+    (candidate) => candidate.id === expeditionId,
+  );
 
   if (!table || !status.can) {
     return invalid(...status.reasons);

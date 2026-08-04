@@ -4,6 +4,7 @@ import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openAssembly, RESOLUTION_CARDS } from "../../../game/assembly";
+import { getAuthoredGameContent } from "../../../game/content";
 import { scenario } from "../../../game/testing/scenario";
 import type { GameUi } from "../GameUiContext";
 import { GameUiProvider } from "../GameUiProvider";
@@ -120,8 +121,18 @@ describe("Assembly explanations", () => {
     act(() => {
       root.render(
         <>
-          <ResolutionDetails card={law} duration="Until repealed" source="Assembly" />
-          <ResolutionDetails card={directive} duration="Resolves once" source="Assembly" />
+          <ResolutionDetails
+            card={law}
+            content={getAuthoredGameContent()}
+            duration="Until repealed"
+            source="Assembly"
+          />
+          <ResolutionDetails
+            card={directive}
+            content={getAuthoredGameContent()}
+            duration="Resolves once"
+            source="Assembly"
+          />
         </>,
       );
     });

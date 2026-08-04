@@ -1,4 +1,5 @@
 import type { Ruleset } from "./ruleset";
+import type { GameDefinition } from "./definition";
 import type {
   ActiveLaw,
   AssemblySession,
@@ -450,6 +451,10 @@ export interface HegemonyState {
   boardLayout: BoardLayout;
   /** Tunable balance values for this game (difficulty / handicaps / modules). */
   ruleset: Ruleset;
+  /** Frozen rules and content package selected when this match was created. */
+  definition: GameDefinition;
+  /** Stable identity duplicated at the state boundary for cheap mismatch checks. */
+  definitionId: string;
   board: HegemonyBoard;
   players: Record<PlayerId, PlayerState>;
   transfers: PopulationTransfer[];

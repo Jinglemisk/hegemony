@@ -1,4 +1,5 @@
-import { getBuildings } from "../content";
+import { getAuthoredGameContent, getBuildings } from "../content";
+import type { GameContent } from "../content";
 import type { ActionCostDiscountTarget, BuildingId, HegemonyState, PlayerId, PopType, Resource, Resources, Settlement } from "../types";
 import { addLog, getPlayerName } from "../core/query";
 import { clonePartialResources } from "../core/resources";
@@ -35,9 +36,14 @@ export function getAdjustedActionCost(
   return applyLawActionCost(G, playerID, action, adjusted, { buildingId });
 }
 
-export function getGrowPopCost(settlement: Settlement, pop: PopType, ruleset: Ruleset): Partial<Resources> {
+export function getGrowPopCost(
+  settlement: Settlement,
+  pop: PopType,
+  ruleset: Ruleset,
+  content: GameContent = getAuthoredGameContent()
+): Partial<Resources> {
   const baseCost = ruleset.growPopCosts[pop];
-  const discountedFood = Math.max(0, (baseCost.food ?? 0) - getGrowPopFoodDiscount(settlement));
+  const discountedFood = Math.max(0, (baseCost.food ?? 0) - getGrowPopFoodDiscount(settlement, content));
 
   return {
     ...baseCost,
@@ -56,7 +62,7 @@ export function getDiscountedGrowPopCost(
   settlement: Settlement,
   pop: PopType
 ): Partial<Resources> {
-  const adjusted = clonePartialResources(getGrowPopCost(settlement, pop, G.ruleset));
+  const adjusted = clonePartialResources(getGrowPopCost(settlement, pop, G.ruleset, G.definition.content));
 
   for (const discount of getMatchingActionCostDiscounts(G, playerID, "growPop", undefined, pop)) {
     adjusted[discount.resource] = Math.max(0, (adjusted[discount.resource] ?? 0) - discount.amount);
@@ -70,9 +76,9 @@ export function getDiscountedGrowPopCost(
   });
 }
 
-function getGrowPopFoodDiscount(settlement: Settlement) {
+function getGrowPopFoodDiscount(settlement: Settlement, content: GameContent) {
   return settlement.buildings.reduce((discount, buildingId) => {
-    const building = getBuildings().find((candidate) => candidate.id === buildingId);
+    const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
 
     return (
       discount +

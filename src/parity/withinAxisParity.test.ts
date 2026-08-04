@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   BUILDINGS,
@@ -13,7 +13,8 @@ import { drawSeasonalEvent, getEventEffectChoices } from "../game/events";
 import { owned, scenario } from "../game/testing/scenario";
 import type { BuildingDefinition, EventCard, HegemonyState, PlayerId } from "../game/types";
 import { presentEventEffects, presentTableEffect } from "../ui/effects";
-import { setContentOverrides } from "../game/content";
+import { getAuthoredGameContent } from "../game/content";
+import { createGameDefinition } from "../game/definition";
 import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
 import type { LegalMove } from "../game/legalMoves";
 import {
@@ -127,10 +128,6 @@ describe("frontend-to-frontend parity", () => {
   });
 });
 
-afterEach(() => {
-  setContentOverrides({ buildings: null, terrain: null });
-});
-
 function tunedBuildings(
   buildingId: BuildingDefinition["id"],
   patch: Partial<BuildingDefinition>,
@@ -149,6 +146,16 @@ function gameplayCity(): HegemonyState {
       G.currentPlayer = "0";
     })
     .build();
+}
+
+function pinBuildings(G: HegemonyState, buildings: BuildingDefinition[]) {
+  const definition = createGameDefinition({
+    ruleset: G.ruleset,
+    content: { ...getAuthoredGameContent(), buildings },
+  });
+  G.definition = definition;
+  G.definitionId = definition.identity.id;
+  G.ruleset = definition.ruleset;
 }
 
 function commandContext(G: HegemonyState): VerbContext {
@@ -172,14 +179,13 @@ function commandContext(G: HegemonyState): VerbContext {
 
 describe("effective content and cost parity", () => {
   it("shares a tuned building's effective definition, cost, execution, label, and income", () => {
-    setContentOverrides({
-      buildings: tunedBuildings("marketplace", {
-        name: "Agora Market",
-        cost: { wood: 7, stone: 2 },
-        effects: [{ type: "income", resource: "gold", amount: 9 }],
-      }),
+    const tuned = tunedBuildings("marketplace", {
+      name: "Agora Market",
+      cost: { wood: 7, stone: 2 },
+      effects: [{ type: "income", resource: "gold", amount: 9 }],
     });
     const G = gameplayCity();
+    pinBuildings(G, tuned);
     G.activeSeasonEvent = {
       card: {
         id: "double-build-cost",
@@ -216,7 +222,7 @@ describe("effective content and cost parity", () => {
     );
     expect(option?.building.name).toBe("Agora Market");
     expect(option?.status.cost).toEqual({ wood: 11, stone: 4 });
-    expect(buildingName("marketplace")).toBe("Agora Market");
+    expect(buildingName("marketplace", G.definition.content)).toBe("Agora Market");
 
     const legalMove = enumerateLegalMoves(G, "0").find(
       (move) => move.type === "buildBuilding" && move.buildingId === "marketplace",
@@ -265,15 +271,14 @@ describe("effective content and cost parity", () => {
 
   it("makes smart policy reverse its build choice when effective economics reverse", () => {
     const choose = (cost: number, income: number) => {
-      setContentOverrides({
-        buildings: tunedBuildings("granary", {
-          cost: { wood: cost },
-          effects: income
-            ? [{ type: "income", resource: "food", amount: income }]
-            : [],
-        }),
+      const buildings = tunedBuildings("granary", {
+        cost: { wood: cost },
+        effects: income
+          ? [{ type: "income", resource: "food", amount: income }]
+          : [],
       });
       const G = gameplayCity();
+      pinBuildings(G, buildings);
       const moves: LegalMove[] = [
         {
           type: "buildBuilding",

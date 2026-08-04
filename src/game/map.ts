@@ -1,4 +1,4 @@
-import { getTerrainDeck } from "./content";
+import { getAuthoredGameContent, getTerrainDeck } from "./content";
 import type { TerrainDeck } from "./content";
 import type { HexTile } from "./types";
 
@@ -8,9 +8,11 @@ import type { HexTile } from "./types";
  *  none of them, breaking coastal leapfrog and the founding voyage (post-sprint-debt §2.4). */
 export const BOARD_RADIUS = 3;
 
-/** Lay a terrain deck onto the board. Defaults to the terrain deck in effect
- *  (the authored order, or a dev override); pass a shuffled copy for a randomized board. */
-export function createInitialMap(deck: TerrainDeck = getTerrainDeck()): HexTile[] {
+/** Lay a terrain deck onto the board. Direct callers default to authored terrain;
+ *  match creation always passes the terrain from its pinned definition. */
+export function createInitialMap(
+  deck: TerrainDeck = getTerrainDeck(getAuthoredGameContent())
+): HexTile[] {
   const coordinates = axialRadius(BOARD_RADIUS);
 
   return coordinates.map(({ q, r }, index) => {

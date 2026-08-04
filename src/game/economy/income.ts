@@ -1,5 +1,6 @@
 import { EMPTY_RESOURCES } from "../data";
-import { getBuildings } from "../content";
+import { getAuthoredGameContent, getBuildings } from "../content";
+import type { GameContent } from "../content";
 import type {
   HegemonyState,
   HexTile,
@@ -83,6 +84,7 @@ export function settlementNetYield(
   tile: HexTile,
   settlement: Settlement,
   ruleset: Ruleset,
+  content: GameContent = getAuthoredGameContent(),
 ): Resources {
   const income: Resources = { ...EMPTY_RESOURCES };
   const primary = tile.resource?.type ?? null;
@@ -94,7 +96,8 @@ export function settlementNetYield(
   applyResourceDelta(income, popIncome("freemen", settlement.pops.freemen, primary, ruleset));
   applyResourceDelta(income, popIncome("slaves", settlement.pops.slaves, primary, ruleset));
   income.happiness -=
-    settlementOverCapacity(settlement, ruleset) * ruleset.economy.overCapacityHappinessPerPop;
+    settlementOverCapacity(settlement, ruleset, content) *
+    ruleset.economy.overCapacityHappinessPerPop;
 
   applyIncomeBuildingEffects(
     [],
@@ -102,6 +105,7 @@ export function settlementNetYield(
     settlement,
     settlementIncomeSource(tile, settlement),
     primary,
+    content,
   );
 
   return income;
@@ -199,12 +203,20 @@ export function calculateIncomeBreakdown(
     addIncomeContribution(contributions, income, {
       resource: "happiness",
       amount:
-        settlementOverCapacity(settlement, ruleset) * -ruleset.economy.overCapacityHappinessPerPop,
+        settlementOverCapacity(settlement, ruleset, G.definition.content) *
+        -ruleset.economy.overCapacityHappinessPerPop,
       source: settlementLabel,
       detail: "Over capacity pressure",
     });
 
-    applyIncomeBuildingEffects(contributions, income, settlement, settlementLabel, primary);
+    applyIncomeBuildingEffects(
+      contributions,
+      income,
+      settlement,
+      settlementLabel,
+      primary,
+      G.definition.content,
+    );
   }
 
   applySeasonalIncomeEffects(G, playerID, contributions, income);
@@ -368,6 +380,7 @@ function applyIncomeBuildingEffects(
   settlement: Settlement,
   settlementLabel: string,
   primaryResource: Resource | null,
+  content: GameContent,
 ) {
   const popBonusSupport = {
     freemen: { supportedPops: 0, amount: 0 },
@@ -379,7 +392,7 @@ function applyIncomeBuildingEffects(
   let tilePrimaryBonus = 0;
 
   for (const buildingId of settlement.buildings) {
-    const building = getBuildings().find((candidate) => candidate.id === buildingId);
+    const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
 
     for (const effect of building?.effects ?? []) {
       if (effect.type === "income") {

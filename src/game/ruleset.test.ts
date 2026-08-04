@@ -22,7 +22,9 @@ function capitalOfThreeCitizens(ruleset?: Ruleset): { G: HegemonyState; tileId: 
 describe("ruleset seam", () => {
   it("stores the ruleset on state and defaults to DEFAULT_RULESET", () => {
     const G = createInitialState(SEED);
-    expect(G.ruleset).toBe(DEFAULT_RULESET);
+    expect(G.ruleset).toStrictEqual(DEFAULT_RULESET);
+    expect(G.ruleset).toBe(G.definition.ruleset);
+    expect(Object.isFrozen(G.definition)).toBe(true);
   });
 
   it("seeds starting resources from the ruleset", () => {

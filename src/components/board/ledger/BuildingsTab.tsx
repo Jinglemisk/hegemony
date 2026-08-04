@@ -21,7 +21,7 @@ export function BuildingsTab({
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
   return (
     <div className="buildingsLedger">
-      {getBuildings().map((building) => (
+      {getBuildings(G.definition.content).map((building) => (
         <section className="buildingLedgerRow" key={building.id}>
           <div className="buildingLedgerLead">
             <AtlasIcon icon={building.id} className="buildingButtonIcon" />

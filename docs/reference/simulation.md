@@ -197,6 +197,8 @@ The report contains:
 - `meta.tuningPresetId` / `meta.resolvedContentHash` — the named preset and stable
   fingerprint of the complete effective content package; manual tune metadata remains
   separate
+- `meta.definition` — the exact ruleset/content versions, hashes, and combined definition
+  identity used by every game in the batch
 - `perGame` — seed, `termination` (victoryRace|deckExhausted|turnCap), `winner`
   (null for turn-capped games), `leaderAtCap`, final cards + pops lost per player,
   and the seat→policy map for mixed runs
@@ -247,6 +249,11 @@ Replays are byte-identical to the original run.
   "seed": 42, // game seed: decks, board draws, unrest removals
   "mode": "standard",
   "rulesetPatch": null, // deep-merged over the mode's ruleset
+  "definition": {
+    "identity": {/* ruleset/content versions, hashes, and combined id */},
+    "ruleset": {/* exact immutable rules package */},
+    "content": {/* exact immutable content package */},
+  },
   "opening": "random",
   "botRngState": 123, // where the bot decision stream is parked
   "history": [{ "player": "0", "move": { "type": "endTurn" } }],
@@ -254,15 +261,17 @@ Replays are byte-identical to the original run.
 }
 ```
 
-The save is a _recipe_: replaying `history` from `createInitialState(seed)`
+The save is a _recipe_: replaying `history` from its pinned definition and seed
 reproduces `state` byte-for-byte. Saves double as shareable bug reports and
-balance scenarios.
+balance scenarios. Loading re-hashes the definition and rejects tampering or a
+state/definition mismatch. Legacy v1 saves without a definition are hydrated from
+their embedded ruleset plus authored content.
 
-**Accepted Phase 3.6 migration:** recipes will additionally pin engine/state schema,
-command schema, ruleset version/hash, and content version/hash. Simulation, browser,
-replay, and the future server will submit the same client-input command through one
-atomic transition. The current process-global content override and `LegalMove` values
-that contain derived costs are transitional, not the target protocol.
+**Phase 3.6 progress:** definition version/hash pinning is implemented. Engine/state
+schema and command-schema versioning land with the later version/invariant slice;
+browser, simulation, replay, and the future server move to the same client-input command
+through PR2's atomic transition. `LegalMove` values that contain derived costs remain
+transitional until that slice.
 
 ## Writing tests and scenarios
 

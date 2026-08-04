@@ -1,5 +1,7 @@
 import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../game/activeEffects";
 import type { DirectiveEffect, LawEffect } from "../game/assembly/types";
+import { getAuthoredGameContent } from "../game/content";
+import type { GameContent } from "../game/content";
 import type { BuildingEffect, EventEffect, TableEffect } from "../game/types";
 import {
   RESOURCE_LABELS,
@@ -23,8 +25,11 @@ export type ActiveEffectPresentation = EffectPresentation & {
   accessibleText: string;
 };
 
-export function presentEventEffects(effects: readonly EventEffect[]): EffectPresentation {
-  const presented = effects.map(presentEventEffect);
+export function presentEventEffects(
+  effects: readonly EventEffect[],
+  content: GameContent = getAuthoredGameContent(),
+): EffectPresentation {
+  const presented = effects.map((effect) => presentEventEffect(effect, content));
 
   return {
     text: presented.map((effect) => effect.text).join(" / "),
@@ -33,8 +38,13 @@ export function presentEventEffects(effects: readonly EventEffect[]): EffectPres
 }
 
 /** One frontend projection for board, ledger, tooltip, and accessible status text. */
-export function presentActiveEffect(descriptor: ActiveEffectDescriptor): ActiveEffectPresentation {
-  const presented = descriptor.mechanics.map(presentActiveEffectMechanic);
+export function presentActiveEffect(
+  descriptor: ActiveEffectDescriptor,
+  content: GameContent = getAuthoredGameContent(),
+): ActiveEffectPresentation {
+  const presented = descriptor.mechanics.map((mechanic) =>
+    presentActiveEffectMechanic(mechanic, content),
+  );
   const effect = joinEffectPresentations(presented);
   const duration = presentActiveEffectDuration(descriptor);
   const accessibleText = [descriptor.source.label, effect.text, duration]
@@ -53,8 +63,9 @@ export function presentActiveEffect(descriptor: ActiveEffectDescriptor): ActiveE
 
 export function presentActiveEffects(
   descriptors: readonly ActiveEffectDescriptor[],
+  content: GameContent = getAuthoredGameContent(),
 ): ActiveEffectPresentation[] {
-  return descriptors.map(presentActiveEffect);
+  return descriptors.map((descriptor) => presentActiveEffect(descriptor, content));
 }
 
 export function joinEffectPresentations(
@@ -100,7 +111,10 @@ export function presentTableEffect(effect: TableEffect): EffectPresentation {
   }
 }
 
-export function presentEventEffect(effect: EventEffect): EffectPresentation {
+export function presentEventEffect(
+  effect: EventEffect,
+  content: GameContent = getAuthoredGameContent(),
+): EffectPresentation {
   switch (effect.type) {
     case "resourceDelta":
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
@@ -141,7 +155,7 @@ export function presentEventEffect(effect: EventEffect): EffectPresentation {
       };
     case "actionCostDiscount": {
       const target = effect.buildingId
-        ? buildingName(effect.buildingId)
+        ? buildingName(effect.buildingId, content)
         : effect.action === "foundColony"
           ? "colony"
           : effect.action === "growPop"
@@ -173,7 +187,10 @@ export function presentEventEffect(effect: EventEffect): EffectPresentation {
   }
 }
 
-function presentActiveEffectMechanic(mechanic: ActiveEffectMechanic): EffectPresentation {
+function presentActiveEffectMechanic(
+  mechanic: ActiveEffectMechanic,
+  content: GameContent,
+): EffectPresentation {
   switch (mechanic.type) {
     case "suppressIncome":
       return {
@@ -220,7 +237,7 @@ function presentActiveEffectMechanic(mechanic: ActiveEffectMechanic): EffectPres
       };
     case "actionCostDiscount": {
       const target = mechanic.buildingId
-        ? buildingName(mechanic.buildingId)
+        ? buildingName(mechanic.buildingId, content)
         : mechanic.action === "growPop" && mechanic.pop
           ? formatPopLabel(mechanic.pop, 1) + " growth"
           : actionLabel(mechanic.action);
@@ -237,7 +254,7 @@ function presentActiveEffectMechanic(mechanic: ActiveEffectMechanic): EffectPres
       };
     }
     case "standingLaw":
-      return presentLawEffect(mechanic.effect);
+      return presentLawEffect(mechanic.effect, content);
     case "equalVotesNextAssembly":
       return {
         text:
@@ -247,7 +264,10 @@ function presentActiveEffectMechanic(mechanic: ActiveEffectMechanic): EffectPres
   }
 }
 
-export function presentLawEffect(effect: LawEffect): EffectPresentation {
+export function presentLawEffect(
+  effect: LawEffect,
+  content: GameContent = getAuthoredGameContent(),
+): EffectPresentation {
   switch (effect.type) {
     case "settlementIncome":
       return {
@@ -312,7 +332,7 @@ export function presentLawEffect(effect: LawEffect): EffectPresentation {
     case "actionCostDelta":
       return {
         text:
-          lawActionCostTarget(effect) +
+          lawActionCostTarget(effect, content) +
           ": " +
           formatSignedNumber(effect.amount) +
           " " +
@@ -463,7 +483,10 @@ function actionLabel(action: string): string {
   return labels[action] ?? action;
 }
 
-function lawActionCostTarget(effect: Extract<LawEffect, { type: "actionCostDelta" }>): string {
+function lawActionCostTarget(
+  effect: Extract<LawEffect, { type: "actionCostDelta" }>,
+  content: GameContent,
+): string {
   let target = actionLabel(effect.action);
 
   if (effect.scope) {
@@ -475,7 +498,10 @@ function lawActionCostTarget(effect: Extract<LawEffect, { type: "actionCostDelta
   }
 
   if (effect.buildingIds?.length) {
-    target += " (" + joinHumanList(effect.buildingIds.map(buildingName)) + " only)";
+    target +=
+      " (" +
+      joinHumanList(effect.buildingIds.map((buildingId) => buildingName(buildingId, content))) +
+      " only)";
   }
 
   return target;

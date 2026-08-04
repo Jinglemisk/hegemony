@@ -1,6 +1,7 @@
 import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
 import type { LegalMove } from "../game/legalMoves";
 import type { GameModeId } from "../game/ruleset";
+import type { GameDefinition } from "../game/definition";
 import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
 import type { OpeningKind, RulesetPatch } from "./io";
 import type { Policy } from "./policies";
@@ -162,6 +163,7 @@ export type RunGameOptions = {
   seed: number;
   mode: GameModeId;
   patch?: RulesetPatch | null;
+  definition?: GameDefinition;
   opening?: OpeningKind;
   boardLayout?: BoardLayout;
   policy: Policy;
@@ -175,9 +177,9 @@ export type RunGameOptions = {
 };
 
 /** One self-contained bot game: build (setup counts as turns played too), then run to the cap. */
-export function runGame({ seed, mode, patch, opening = "random", boardLayout, policy, seatPolicies, botSeed, turns, hooks = {}, trimLogTo }: RunGameOptions): HegemonyState {
+export function runGame({ seed, mode, patch, definition, opening = "random", boardLayout, policy, seatPolicies, botSeed, turns, hooks = {}, trimLogTo }: RunGameOptions): HegemonyState {
   const rng = createSimRng(botSeed ?? deriveBotSeed(seed));
-  const G = buildNewGame({ seed, mode, patch, opening, boardLayout, simRng: rng, onMove: hooks.onMove });
+  const G = buildNewGame({ seed, mode, patch, definition, opening, boardLayout, simRng: rng, onMove: hooks.onMove });
 
   hooks.onGameStart?.(G);
   runTurns(G, policy, rng, turns, hooks, { trimLogTo, seatPolicies });

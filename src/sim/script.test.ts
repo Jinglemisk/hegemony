@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { resolveTuning } from "../dev/tuning";
+import { GAME_MODES } from "../game/ruleset";
 import type { MoveRecord, SaveFile } from "./io";
 import { randomPolicy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
@@ -8,6 +10,35 @@ import { replayScript, scriptFromSave } from "./script";
 import { buildNewGame } from "./setup";
 
 describe("record/replay", () => {
+  it("pins and replays the exact low-number definition after a JSON round trip", () => {
+    const moves: MoveRecord[] = [];
+    const definition = resolveTuning(GAME_MODES.standard.ruleset, "low-number-core-v1").definition;
+    const G = runGame({
+      seed: 31,
+      mode: "standard",
+      definition,
+      policy: randomPolicy,
+      turns: 12,
+      hooks: { onMove: (_G, player, move) => moves.push({ player, move }) },
+    });
+    const serializedScript = JSON.parse(
+      JSON.stringify({
+        version: 1,
+        seed: 31,
+        mode: "standard",
+        rulesetPatch: null,
+        definition,
+        opening: "random",
+        moves,
+      }),
+    );
+
+    const replayed = replayScript(serializedScript);
+
+    expect(replayed.definitionId).toBe(definition.identity.id);
+    expect(JSON.stringify(replayed)).toBe(JSON.stringify(G));
+  });
+
   it("replaying a recorded game reproduces the state byte-for-byte", () => {
     const moves: MoveRecord[] = [];
     const G = runGame({
@@ -42,7 +73,14 @@ describe("record/replay", () => {
 
     // Wrong seed → different decks/board draws → the recorded moves stop fitting.
     expect(() =>
-      replayScript({ version: 1, seed: 22, mode: "standard", rulesetPatch: null, opening: "random", moves }),
+      replayScript({
+        version: 1,
+        seed: 22,
+        mode: "standard",
+        rulesetPatch: null,
+        opening: "random",
+        moves,
+      }),
     ).toThrow(/replay diverged/);
   });
 
@@ -57,7 +95,9 @@ describe("record/replay", () => {
       simRng: rng,
       onMove: (_G, player, move) => history.push({ player, move }),
     });
-    runTurns(G, randomPolicy, rng, 12, { onMove: (_G, player, move) => history.push({ player, move }) });
+    runTurns(G, randomPolicy, rng, 12, {
+      onMove: (_G, player, move) => history.push({ player, move }),
+    });
 
     const save: SaveFile = {
       version: 1,

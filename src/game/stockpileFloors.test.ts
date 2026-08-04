@@ -33,7 +33,7 @@ describe("configured stockpile floors", () => {
     const G = scenario({ patch: { economy: { stockpileFloors: { wood: 2 } } } })
       .withResources("0", { wood: 3 })
       .build();
-    const card = getPlayerEventCards().find(
+    const card = getPlayerEventCards(G.definition.content).find(
       (candidate) => candidate.id === "player-warehouse-fire",
     )!;
     G.pendingPlayerEvent = { card, playerID: "0" };

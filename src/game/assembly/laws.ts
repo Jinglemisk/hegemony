@@ -59,7 +59,7 @@ export function getStandingEffectSources(
   const sources: StandingEffectSource[] = [];
 
   for (const active of G.activeLaws) {
-    const card = getResolutionCard(active.cardId);
+    const card = getResolutionCard(G.definition.content, active.cardId);
 
     if (card?.kind === "law") {
       sources.push({
@@ -244,7 +244,7 @@ export function getLawIncomeContributions(
  *  column, so a player can always trace a number back to the stele that caused it. */
 function effectLabel(G: HegemonyState, playerID: PlayerId, effect: LawEffect): string {
   for (const active of G.activeLaws) {
-    const card = getResolutionCard(active.cardId);
+    const card = getResolutionCard(G.definition.content, active.cardId);
 
     if (card?.kind === "law" && card.effects.includes(effect)) {
       return card.name;

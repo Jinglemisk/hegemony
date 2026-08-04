@@ -41,7 +41,9 @@ export function UpgradeCityModal({
   const [tileId, setTileId] = useState(() => candidates[0]?.tile.id ?? "");
   const selected = candidates.find((entry) => entry.tile.id === tileId) ?? candidates[0];
 
-  const colonyYield = selected ? settlementNetYield(selected.tile, selected.settlement, G.ruleset) : null;
+  const colonyYield = selected
+    ? settlementNetYield(selected.tile, selected.settlement, G.ruleset, G.definition.content)
+    : null;
   const preview = selected ? previewUpgradeColonyToCity(G, playerID, selected.tile.id) : null;
   // Live ruleset, not the ACTION_COSTS default — see FoundColonyPopover (R7).
   const cost =
@@ -107,7 +109,13 @@ export function UpgradeCityModal({
           {selected && colonyYield ? (
             <article className="placementPreviewCard settlement-colony">
               <span className="placementPreviewTag">Upgrading this colony</span>
-              <SettlementSummaryCard netYield={colonyYield} ruleset={G.ruleset} settlement={selected.settlement} tile={selected.tile} />
+              <SettlementSummaryCard
+                content={G.definition.content}
+                netYield={colonyYield}
+                ruleset={G.ruleset}
+                settlement={selected.settlement}
+                tile={selected.tile}
+              />
             </article>
           ) : null}
 
