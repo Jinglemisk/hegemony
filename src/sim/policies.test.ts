@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { RESOLUTION_CARDS } from "../game/assembly/deck";
 import { PLAYER_IDS } from "../game/data";
+import { projectForPlayer } from "../game/projection";
 import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
 import { LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
 import { scenario } from "../game/testing/scenario";
@@ -22,6 +23,10 @@ import {
 } from "./policies";
 import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
+
+function observe(G: HegemonyState, player = G.currentPlayer) {
+  return projectForPlayer(G.definition, G, player);
+}
 
 describe("policy denomination capabilities", () => {
   it("derives thresholds from the active ruleset while preserving standard behavior", () => {
@@ -270,7 +275,7 @@ function chooseFreemanPromotion(policy: typeof smartPolicy | typeof beamPolicy, 
     throw new Error("promotion fixture did not enumerate its comparison moves");
   }
 
-  return policy.choose(G, [promotion, endTurnMove], createSimRng(1));
+  return policy.choose(observe(G), [promotion, endTurnMove], createSimRng(1));
 }
 
 /** Cycle whole turns until the agora convenes (spring of Year 2+). Unattended seats can
@@ -297,6 +302,32 @@ function deepFreeze<T>(value: T): T {
 }
 
 describe("policy evaluation is side-effect-free", () => {
+  it("cannot change its choice when only hidden entropy and deck order change", () => {
+    const G = scenario()
+      .opening()
+      .withResources("0", "wealthy")
+      .mutate((draft) => {
+        draft.pendingPlayerEvent = null;
+        draft.pendingRiot = null;
+      })
+      .build();
+    const hiddenVariant = structuredClone(G);
+    hiddenVariant.seed += 999;
+    hiddenVariant.rng ^= 0x7fffffff;
+    hiddenVariant.seasonalDrawPile.reverse();
+    hiddenVariant.playerDrawPile.reverse();
+    for (const deck of Object.values(hiddenVariant.politicianDecks)) deck.reverse();
+
+    const firstView = observe(G);
+    const secondView = observe(hiddenVariant);
+    expect(JSON.stringify(secondView)).toBe(JSON.stringify(firstView));
+
+    const commands = enumerateLegalCommands(G, G.currentPlayer);
+    expect(masterPolicy.choose(firstView, commands, createSimRng(44))).toEqual(
+      masterPolicy.choose(secondView, commands, createSimRng(44)),
+    );
+  });
+
   it("greedy and smart choose on a deep-frozen state without throwing (immer-safe)", () => {
     const rng = createSimRng(4);
     const G = runGame({ seed: 4, mode: "standard", policy: greedyPolicy, turns: 8 });
@@ -307,16 +338,16 @@ describe("policy evaluation is side-effect-free", () => {
 
     // The old evaluator mutated G.players[x].resources in place then restored it —
     // which throws on frozen state. The projection now runs on a copy.
-    expect(() => greedyPolicy.choose(G, moves, rng)).not.toThrow();
-    expect(() => smartPolicy.choose(G, moves, rng)).not.toThrow();
+    expect(() => greedyPolicy.choose(observe(G), moves, rng)).not.toThrow();
+    expect(() => smartPolicy.choose(observe(G), moves, rng)).not.toThrow();
     // The beam searches on clones only, so a frozen committed state is safe too.
-    expect(() => beamPolicy.choose(G, moves, rng)).not.toThrow();
+    expect(() => beamPolicy.choose(observe(G), moves, rng)).not.toThrow();
     // The political bot evaluates on structuredClones too — never mutates the passed G.
-    expect(() => politicalPolicy.choose(G, moves, rng)).not.toThrow();
+    expect(() => politicalPolicy.choose(observe(G), moves, rng)).not.toThrow();
     // The settler bot's frontier term only READS the board (canPlaceColonyOnTile) — safe on frozen state.
-    expect(() => settlerPolicy.choose(G, moves, rng)).not.toThrow();
+    expect(() => settlerPolicy.choose(observe(G), moves, rng)).not.toThrow();
     // Master composes the beam with the political + frontier score and is equally safe.
-    expect(() => masterPolicy.choose(G, moves, rng)).not.toThrow();
+    expect(() => masterPolicy.choose(observe(G), moves, rng)).not.toThrow();
   });
 });
 
@@ -359,9 +390,9 @@ describe("master policy", () => {
       const moves = enumerateLegalCommands(G, player);
       expect(moves.length).toBeGreaterThan(0);
 
-      const choice = masterPolicy.choose(G, moves, masterRng);
+      const choice = masterPolicy.choose(observe(G), moves, masterRng);
       // The Assembly half of master is deliberately the proven political heuristic.
-      expect(choice).toEqual(politicalPolicy.choose(G, moves, politicalRng));
+      expect(choice).toEqual(politicalPolicy.choose(observe(G), moves, politicalRng));
       const result = transition(G.definition, G, player, choice);
       expect(result.ok).toBe(true);
       if (!result.ok) break;
@@ -403,7 +434,7 @@ describe("political policy", () => {
 
     const rngBefore = G.rng;
     const snapshot = JSON.stringify(G);
-    politicalPolicy.choose(G, moves, createSimRng(1));
+    politicalPolicy.choose(observe(G), moves, createSimRng(1));
 
     // The seeded stream never advanced, and the evaluation ran only on clones.
     expect(G.rng).toBe(rngBefore);
@@ -419,7 +450,11 @@ describe("political policy", () => {
     const me = G.currentPlayer;
     G.players[me].resources.influence = 0; // nothing to spend
 
-    const choice = politicalPolicy.choose(G, enumerateLegalCommands(G, me), createSimRng(1));
+    const choice = politicalPolicy.choose(
+      observe(G, me),
+      enumerateLegalCommands(G, me),
+      createSimRng(1),
+    );
     expect(choice.type).toBe("assemblyPass");
   });
 
@@ -435,7 +470,11 @@ describe("political policy", () => {
       G.politicianDiscards[politician] = [];
     }
 
-    const choice = politicalPolicy.choose(G, enumerateLegalCommands(G, me), createSimRng(1));
+    const choice = politicalPolicy.choose(
+      observe(G, me),
+      enumerateLegalCommands(G, me),
+      createSimRng(1),
+    );
     expect(choice).toMatchObject({ type: "assemblyDraw", politician: "stratokles" });
   });
 
@@ -447,13 +486,13 @@ describe("political policy", () => {
     const me = G.currentPlayer;
     G.players[me].resources.influence = 100;
     const moves = enumerateLegalCommands(G, me);
-    const before = politicalPolicy.choose(G, moves, createSimRng(1));
+    const before = politicalPolicy.choose(observe(G), moves, createSimRng(1));
 
     for (const politician of ["demosthenes", "perdiccas", "kleistophenes", "stratokles"] as const) {
       G.politicianDecks[politician].reverse();
     }
 
-    expect(politicalPolicy.choose(G, moves, createSimRng(1))).toEqual(before);
+    expect(politicalPolicy.choose(observe(G), moves, createSimRng(1))).toEqual(before);
   });
 
   it("aims a Directive at the rival it hurts most", () => {
@@ -470,7 +509,11 @@ describe("political policy", () => {
       draws: 1,
     };
 
-    const choice = politicalPolicy.choose(G, enumerateLegalCommands(G, me), createSimRng(1));
+    const choice = politicalPolicy.choose(
+      observe(G, me),
+      enumerateLegalCommands(G, me),
+      createSimRng(1),
+    );
     expect(choice).toMatchObject({ type: "assemblyPropose", target });
   });
 });
@@ -491,7 +534,7 @@ describe("beam policy", () => {
 
     const rngBefore = G.rng;
     const snapshot = JSON.stringify(G);
-    beamPolicy.choose(G, moves, createSimRng(1));
+    beamPolicy.choose(observe(G), moves, createSimRng(1));
 
     // The seeded stream never advanced, and the search ran only on clones.
     expect(G.rng).toBe(rngBefore);

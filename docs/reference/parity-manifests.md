@@ -26,9 +26,10 @@ commands in `src/client/controller.ts`; browser, simulation, and replay execute 
 the same atomic `transition`. A behavioral regression compares the browser adapter with a
 direct engine transition, while the manifest keeps every command classified.
 
-Workflow-wide actor eligibility and player-safe observation remain the next
-[Phase 3.6](../plans/phase-3.6-architecture-hardening.md) slice. Mechanical enforcement later
-strengthens per-command construction coverage beyond the current surface manifest.
+Workflow-wide actor eligibility and player/spectator-safe observation now cross the engine,
+browser, and policy runner, with redaction and anti-peek fixtures in `projection.test.ts` and
+`policies.test.ts`. Mechanical enforcement later strengthens per-command construction coverage
+beyond the current surface manifest.
 
 ## Exhaustive effect registries
 

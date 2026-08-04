@@ -3,6 +3,7 @@ import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
 import type { GameModeId } from "../game/ruleset";
 import type { GameDefinition } from "../game/definition";
+import { projectForPlayer } from "../game/projection";
 import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
 import type { OpeningKind, RulesetPatch } from "./io";
 import type { Policy } from "./policies";
@@ -80,7 +81,7 @@ export function playTurn(
       throw new SimDeadlockError(deadlockMessage(G, player));
     }
 
-    const command = policy.choose(G, commands, rng);
+    const command = policy.choose(projectForPlayer(G.definition, G, player), commands, rng);
     const result = transition(G.definition, G, player, command);
 
     if (!result.ok) {

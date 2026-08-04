@@ -218,8 +218,9 @@ simulator packages. Redis, microservices, and a plugin framework wait for demons
 2. **Canonical transition (implemented):** intent-only `GameCommand`, derived `LegalOption`,
    atomic transition, and browser, simulator, and replay adapters using it. Legacy v1 replay
    records are normalized at load and cannot restore caller-supplied costs.
-3. **Actor and projection contract:** asynchronous Assembly parity, player/spectator views,
-   fair AI observation, and anti-peek tests.
+3. **Actor and projection contract (implemented):** workflow-aware actor eligibility,
+   asynchronous Assembly parity, player/spectator views, browser consumption, fair AI
+   observation, public-zone political uncertainty, and anti-peek tests.
 4. **Identity, version, and invariants:** stable entity ids, versioned recipes, migrations or
    explicit rejection, invariant suite, and deterministic replay proof.
 5. **Mechanical enforcement:** import boundaries, stronger parity tests, dead-code ratchet,

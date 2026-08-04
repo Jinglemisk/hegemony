@@ -81,8 +81,9 @@ The game is a React and TypeScript client over a deterministic, serialisable rul
 engine. Browser controls, simulation policies, and replay now submit intent-only
 `GameCommand` values through one atomic transition; effective costs remain engine-owned.
 The accepted [Phase 3.6 architecture plan](docs/plans/phase-3.6-architecture-hardening.md)
-next adds explicit workflow actors and player-safe projections, followed by versioned
-replay, stable identities, invariants, and mechanical enforcement before more v1 systems land.
+now supplies explicit workflow actors and player/spectator-safe views shared by the browser
+and AI. Versioned replay, stable identities, invariants, and mechanical enforcement follow
+before more v1 systems land.
 
 Engine calculators remain authoritative. `src/game/activeEffects.ts#getActiveEffects`
 reads those calculations and persistent state into typed source/scope/duration/expiry

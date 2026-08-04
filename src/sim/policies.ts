@@ -1,9 +1,13 @@
 import { calculateIncome } from "../game/economy/income";
 import { getActiveEffects } from "../game/activeEffects";
 import { applyResourceDeltaWithFloors } from "../game/core/resources";
-import { getAuthoredGameContent, getRiotTable } from "../game/content";
+import {
+  getAuthoredGameContent,
+  getResolutionCard,
+  getResolutionCards,
+  getRiotTable,
+} from "../game/content";
 import type { GameContent } from "../game/content";
-import { getResolutionCard } from "../game/content";
 import { getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementBuildingSlots } from "../game/settlement";
 import {
@@ -19,6 +23,7 @@ import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
 import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId } from "../game/types";
+import type { PlayerView } from "../game/projection";
 import type { Ruleset } from "../game/ruleset";
 import type { SimRng } from "./rng";
 
@@ -26,7 +31,7 @@ export type PolicyId = "random" | "greedy" | "smart" | "beam" | "political" | "s
 
 export type Policy = {
   name: PolicyId;
-  choose(G: HegemonyState, commands: GameCommand[], rng: SimRng): GameCommand;
+  choose(view: PlayerView, commands: GameCommand[], rng: SimRng): GameCommand;
 };
 
 /**
@@ -36,7 +41,7 @@ export type Policy = {
  */
 export const randomPolicy: Policy = {
   name: "random",
-  choose(G, moves, rng) {
+  choose(_view, moves, rng) {
     const byType = new Map<GameCommand["type"], GameCommand[]>();
 
     for (const move of moves) {
@@ -192,8 +197,8 @@ function onePlyLookahead(
 
 export const greedyPolicy: Policy = {
   name: "greedy",
-  choose(G, moves) {
-    return onePlyLookahead(G, moves, evaluate);
+  choose(view, moves) {
+    return onePlyLookahead(view.state, moves, evaluate);
   },
 };
 
@@ -205,8 +210,8 @@ export const greedyPolicy: Policy = {
  */
 export const smartPolicy: Policy = {
   name: "smart",
-  choose(G, moves) {
-    return onePlyLookahead(G, moves, evaluateSmart);
+  choose(view, moves) {
+    return onePlyLookahead(view.state, moves, evaluateSmart);
   },
 };
 
@@ -680,8 +685,8 @@ function beamPlan(
  */
 export const beamPolicy: Policy = {
   name: "beam",
-  choose(G, moves) {
-    return beamPlan(G, moves, evaluateSmart);
+  choose(view, moves) {
+    return beamPlan(view.state, moves, evaluateSmart);
   },
 };
 
@@ -793,25 +798,51 @@ function bestProposalDelta(
   return Math.max(...items.map((item) => deltaIfEnacted(G, before, item, me)));
 }
 
-/** Expected value of drawing from a politician without peeking at deck order. Remaining
- * card identities are public information; only their shuffled order is hidden. */
+/** Expected value of drawing from a politician without peeking at hidden deck or hand
+ * identities. The pool contains every card not known to be in a public zone or this
+ * player's own private zone, so a rival's held card remains uncertainty, not knowledge. */
 function expectedDeckDelta(
   G: HegemonyState,
   before: Scores,
   politician: ResolutionCard["politician"],
   me: PlayerId,
 ): number {
-  const ids =
-    G.politicianDecks[politician].length > 0
-      ? G.politicianDecks[politician]
-      : G.politicianDiscards[politician];
-  const cards = ids
-    .map((cardId) => getResolutionCard(G.definition.content, cardId))
-    .filter((card): card is ResolutionCard => card !== null);
+  const cards = observablePoliticianPool(G, politician, me);
 
   if (cards.length === 0) return -Infinity;
   return (
     cards.reduce((sum, card) => sum + bestProposalDelta(G, before, card, me), 0) / cards.length
+  );
+}
+
+function observablePoliticianPool(
+  G: HegemonyState,
+  politician: ResolutionCard["politician"],
+  me: PlayerId,
+): ResolutionCard[] {
+  if (G.politicianDecks[politician].length === 0) {
+    return G.politicianDiscards[politician]
+      .map((cardId) => getResolutionCard(G.definition.content, cardId))
+      .filter((card): card is ResolutionCard => card !== null);
+  }
+
+  const knownOutsideDeck = new Set<string>([
+    ...G.politicianDiscards[politician],
+    ...G.activeLaws.map((law) => law.cardId),
+    ...G.tallyMonuments.map((monument) => monument.cardId),
+  ]);
+  const session = G.assembly;
+  if (session?.houseItem?.kind === "enact") knownOutsideDeck.add(session.houseItem.card.id);
+  for (const item of session?.ballot ?? []) {
+    if (item.kind === "enact") knownOutsideDeck.add(item.card.id);
+  }
+  const held = session?.held[me];
+  if (held) knownOutsideDeck.add(held.card.id);
+  const proposal = session?.proposals[me];
+  if (proposal?.kind === "enact") knownOutsideDeck.add(proposal.card.id);
+
+  return getResolutionCards(G.definition.content).filter(
+    (card) => card.politician === politician && !knownOutsideDeck.has(card.id),
   );
 }
 
@@ -1035,7 +1066,8 @@ function chooseDrawRepealOrPass(
 
 export const politicalPolicy: Policy = {
   name: "political",
-  choose(G, moves) {
+  choose(view, moves) {
+    const G = view.state;
     if (G.assembly) {
       return resolveAssemblyByHeuristic(G, G.assembly, moves);
     }
@@ -1082,8 +1114,8 @@ function evaluateSettler(G: HegemonyState, playerID: PlayerId): number {
  */
 export const settlerPolicy: Policy = {
   name: "settler",
-  choose(G, moves) {
-    return onePlyLookahead(G, moves, evaluateSettler);
+  choose(view, moves) {
+    return onePlyLookahead(view.state, moves, evaluateSettler);
   },
 };
 
@@ -1112,7 +1144,8 @@ function scoreMaster(G: HegemonyState, playerID: PlayerId): number {
  */
 export const masterPolicy: Policy = {
   name: "master",
-  choose(G, moves) {
+  choose(view, moves) {
+    const G = view.state;
     if (G.assembly) {
       return resolveAssemblyByHeuristic(G, G.assembly, moves);
     }

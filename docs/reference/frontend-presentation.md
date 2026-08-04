@@ -77,8 +77,10 @@ overlay infrastructure.
 
 Controls dispatch canonical `GameCommand` values through `src/client/controller.ts` and
 render engine-derived legal-option/status projections. They never call domain mutators
-directly or submit displayed costs and outcomes as authority. Player-safe view models land
-in the next Phase 3.6 slice.
+directly or submit displayed costs and outcomes as authority. The controller retains local
+authority only to execute commands; React receives `PlayerView.state`, never that authority.
+Changing the hot-seat viewer recomputes the projection so only that seat's private Assembly
+and event decision data becomes visible.
 
 ## Assembly presentation
 

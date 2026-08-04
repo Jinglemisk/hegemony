@@ -4,6 +4,8 @@ import { DEV_ROTATION_SEEDS, GAME_CONFIG } from "../game/config";
 import { mulberry32 } from "../game/core/rng";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
+import { projectForPlayer } from "../game/projection";
+import type { PlayerView, ProjectedGameState } from "../game/projection";
 import type {
   BoardLayout,
   BuildingId,
@@ -167,7 +169,7 @@ export type LocalContext = {
 };
 
 export type HegemonyGame = {
-  G: HegemonyState;
+  G: ProjectedGameState;
   ctx: LocalContext;
 };
 
@@ -231,22 +233,26 @@ export function useHegemonyGame() {
 
   const moves = useMemo(() => createMoves(setG), []);
   const events = useMemo(() => createEvents(setG), []);
+  const view = useMemo(() => projectForPlayer(G.definition, G, playerID), [G, playerID]);
   // Rebuild the whole game from URL + current dev tuning overrides. Reuses this page
   // load's rotation seed, so a re-tune re-rolls the SAME board with new params (clean A/B).
   const resetGame = useMemo(() => () => setG(createGameFromUrl()), []);
   // Stable while G is unchanged, so memoized panels that read the turn context don't re-render on unrelated UI state.
-  const ctx = useMemo(() => deriveContext(G), [G]);
+  const ctx = useMemo(() => deriveContext(view.state), [view.state]);
 
   return {
-    game: { G, ctx },
+    game: { G: view.state, ctx },
+    view,
     playerID,
     setPlayerID,
     moves,
     events,
     resetGame,
-    isActive: playerID === G.currentPlayer,
+    isActive: view.eligibleActors.includes(playerID),
   };
 }
+
+export type HegemonyClientView = PlayerView;
 
 /**
  * UI convenience methods construct intent-only commands and pass them to the same
