@@ -8,6 +8,12 @@ import { createInitialStateFromDefinition } from "../game/state";
 import type { BoardLayout, HegemonyState } from "../game/types";
 import { normalizeCommandRecord } from "./io";
 import type { CommandRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
+import {
+  SCRIPT_FORMAT_VERSION,
+  UnsupportedVersionError,
+  assertCurrentRecipeVersions,
+} from "../game/version";
+import { assertGameInvariants } from "../game/invariants";
 
 /**
  * A script is a save file minus the state: the recipe alone. Replaying it from
@@ -16,19 +22,22 @@ import type { CommandRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
  * replaying cleanly, a rule moved under it.
  */
 export type ScriptFile = {
-  version: 1;
+  version: typeof SCRIPT_FORMAT_VERSION;
+  engineVersion: string;
+  stateSchemaVersion: number;
+  commandSchemaVersion: number;
   seed: number;
   mode: GameModeId;
   rulesetPatch: RulesetPatch | null;
-  definition?: GameDefinition;
+  definition: GameDefinition;
   opening: OpeningKind;
   /** Terrain layout to rebuild from. Optional so pre-existing scripts still parse
    *  (they fall back to the classic default). */
-  boardLayout?: BoardLayout;
+  boardLayout: BoardLayout;
   /** Where the bot decision stream is parked after the recorded moves. Optional so
    *  pre-existing scripts still parse; carried through so a CONTINUED replay resumes
    *  the same bot stream as the original save instead of restarting it. */
-  botRngState?: number;
+  botRngState: number;
   /** Canonical intent history. `moves` is accepted only to replay legacy v1 scripts. */
   commands?: CommandRecord[];
   moves?: Array<
@@ -37,24 +46,62 @@ export type ScriptFile = {
   >;
 };
 
+type LegacyScriptFile = Omit<
+  ScriptFile,
+  | "version"
+  | "engineVersion"
+  | "stateSchemaVersion"
+  | "commandSchemaVersion"
+  | "definition"
+  | "boardLayout"
+  | "botRngState"
+> & {
+  version: 1;
+  definition?: GameDefinition;
+  boardLayout?: BoardLayout;
+  botRngState?: number;
+};
+
+export class ReplayDivergenceError extends Error {
+  readonly name = "ReplayDivergenceError";
+
+  constructor(
+    readonly commandIndex: number,
+    command: CommandRecord["command"],
+    reasons: string[],
+  ) {
+    super(
+      `replay diverged at command ${commandIndex} (${JSON.stringify(command)}): ${reasons.join("; ") || "(no reason)"}`,
+    );
+  }
+}
+
 export function scriptFromSave(save: SaveFile): ScriptFile {
   return {
-    version: 1,
+    version: SCRIPT_FORMAT_VERSION,
+    engineVersion: save.engineVersion,
+    stateSchemaVersion: save.stateSchemaVersion,
+    commandSchemaVersion: save.commandSchemaVersion,
     seed: save.seed,
     mode: save.mode,
     rulesetPatch: save.rulesetPatch,
-    definition: save.definition ?? save.state.definition,
+    definition: save.definition,
     opening: save.opening,
-    boardLayout: save.state.boardLayout,
+    boardLayout: save.boardLayout,
     botRngState: save.botRngState,
     commands: save.history,
   };
 }
 
-export function replayScript(script: ScriptFile): HegemonyState {
-  if (script.version !== 1) {
-    throw new Error(`unsupported script version ${String(script.version)}`);
+export function replayScript(script: ScriptFile | LegacyScriptFile): HegemonyState {
+  if (script.version !== 1 && script.version !== SCRIPT_FORMAT_VERSION) {
+    throw new UnsupportedVersionError(
+      "script format",
+      (script as { version: unknown }).version,
+      SCRIPT_FORMAT_VERSION,
+    );
   }
+  if (script.version === SCRIPT_FORMAT_VERSION) assertCurrentRecipeVersions(script, "script");
 
   const base = GAME_MODES[script.mode].ruleset;
 
@@ -75,12 +122,11 @@ export function replayScript(script: ScriptFile): HegemonyState {
     const result = transition(G.definition, G, player, command);
 
     if (!result.ok) {
-      throw new Error(
-        `replay diverged at command ${index} (${JSON.stringify(command)}): ${result.reasons.join("; ") || "(no reason)"}`,
-      );
+      throw new ReplayDivergenceError(index, command, result.reasons);
     }
     G = result.state;
   });
 
+  assertGameInvariants(G, { strictCardConservation: true });
   return G;
 }

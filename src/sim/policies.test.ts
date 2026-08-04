@@ -252,6 +252,8 @@ function chooseFreemanPromotion(policy: typeof smartPolicy | typeof beamPolicy, 
   G.phase = "gameplay";
   G.currentPlayer = "0";
   tile.settlements.push({
+    id: `settlement-${G.nextEntityId++}`,
+    tileId: tile.id,
     owner: "0",
     kind: "city",
     buildings: ["gymnasion"],

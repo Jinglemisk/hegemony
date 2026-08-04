@@ -82,7 +82,8 @@ engine. Browser controls, simulation policies, and replay now submit intent-only
 `GameCommand` values through one atomic transition; effective costs remain engine-owned.
 The accepted [Phase 3.6 architecture plan](docs/plans/phase-3.6-architecture-hardening.md)
 now supplies explicit workflow actors and player/spectator-safe views shared by the browser
-and AI. Versioned replay, stable identities, invariants, and mechanical enforcement follow
+and AI, stable settlement/transfer identities, versioned save and replay recipes, and
+post-transition integrity checks. Mechanical enforcement is the remaining hardening slice
 before more v1 systems land.
 
 Engine calculators remain authoritative. `src/game/activeEffects.ts#getActiveEffects`

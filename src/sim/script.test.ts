@@ -6,8 +6,14 @@ import type { CommandRecord, SaveFile } from "./io";
 import { randomPolicy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
 import { runGame, runTurns } from "./runner";
-import { replayScript, scriptFromSave } from "./script";
+import { ReplayDivergenceError, replayScript, scriptFromSave } from "./script";
 import { buildNewGame } from "./setup";
+import {
+  CURRENT_RECIPE_VERSIONS,
+  SAVE_FORMAT_VERSION,
+  SCRIPT_FORMAT_VERSION,
+  UnsupportedVersionError,
+} from "../game/version";
 
 describe("record/replay", () => {
   it("replays legacy move records while stripping their derived costs", () => {
@@ -49,12 +55,15 @@ describe("record/replay", () => {
     });
     const serializedScript = JSON.parse(
       JSON.stringify({
-        version: 1,
+        version: SCRIPT_FORMAT_VERSION,
+        ...CURRENT_RECIPE_VERSIONS,
         seed: 31,
         mode: "standard",
         rulesetPatch: null,
         definition,
         opening: "random",
+        boardLayout: G.boardLayout,
+        botRngState: 1,
         commands,
       }),
     );
@@ -76,11 +85,15 @@ describe("record/replay", () => {
     });
 
     const replayed = replayScript({
-      version: 1,
+      version: SCRIPT_FORMAT_VERSION,
+      ...CURRENT_RECIPE_VERSIONS,
       seed: 21,
       mode: "standard",
       rulesetPatch: null,
       opening: "random",
+      definition: G.definition,
+      boardLayout: G.boardLayout,
+      botRngState: 1,
       commands,
     });
 
@@ -107,7 +120,31 @@ describe("record/replay", () => {
         opening: "random",
         commands,
       }),
-    ).toThrow(/replay diverged/);
+    ).toThrow(ReplayDivergenceError);
+  });
+
+  it("distinguishes unsupported history from deterministic divergence", () => {
+    expect(() => replayScript({ version: 99 } as never)).toThrow(UnsupportedVersionError);
+    expect(() =>
+      replayScript({
+        version: SCRIPT_FORMAT_VERSION,
+        ...CURRENT_RECIPE_VERSIONS,
+        stateSchemaVersion: 99,
+        seed: 1,
+        mode: "standard",
+        rulesetPatch: null,
+        definition: runGame({
+          seed: 1,
+          mode: "standard",
+          policy: randomPolicy,
+          turns: 0,
+        }).definition,
+        opening: "random",
+        boardLayout: "classic",
+        botRngState: 1,
+        commands: [],
+      }),
+    ).toThrow(UnsupportedVersionError);
   });
 
   it("carries the bot RNG stream so a continued replay matches a continued original", () => {
@@ -126,11 +163,14 @@ describe("record/replay", () => {
     });
 
     const save: SaveFile = {
-      version: 1,
+      version: SAVE_FORMAT_VERSION,
+      ...CURRENT_RECIPE_VERSIONS,
       seed,
       mode: "standard",
       rulesetPatch: null,
+      definition: state.definition,
       opening: "random",
+      boardLayout: state.boardLayout,
       botRngState: rng.state(), // the ADVANCED stream position
       history,
       state,

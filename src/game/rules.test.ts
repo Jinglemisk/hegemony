@@ -16,8 +16,17 @@ import {
   startNewSeason,
   upgradeColonyToCity,
 } from "./rules";
+import { allocateEntityId } from "./entity";
 import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
-import type { HegemonyState, HexTile, PlayerId, Pops, Settlement, SettlementKind, Yield } from "./types";
+import type {
+  HegemonyState,
+  HexTile,
+  PlayerId,
+  Pops,
+  Settlement,
+  SettlementKind,
+  Yield,
+} from "./types";
 
 // Fixed seed so any deck draws triggered during a test are reproducible.
 const SEED = 0xc0ffee;
@@ -33,8 +42,21 @@ function freshColonySetup(): HegemonyState {
 
 /** Drop a settlement straight onto the board (no placement legality) — for tests
  *  whose subject is downstream of placement (yields, upgrades, buildings). */
-function poke(state: HegemonyState, owner: PlayerId, tileId: string, kind: SettlementKind, pops: Pops) {
-  tile(state, tileId).settlements.push({ owner, kind, buildings: [], pops: { ...pops } });
+function poke(
+  state: HegemonyState,
+  owner: PlayerId,
+  tileId: string,
+  kind: SettlementKind,
+  pops: Pops,
+) {
+  tile(state, tileId).settlements.push({
+    id: allocateEntityId(state, "settlement"),
+    tileId,
+    owner,
+    kind,
+    buildings: [],
+    pops: { ...pops },
+  });
   state.players[owner].settlements.push(tileId);
 }
 
@@ -117,7 +139,10 @@ describe("setup placement", () => {
   });
 
   it("places the second city anywhere legal — never adjacent to a city (two-city mode)", () => {
-    const state = createInitialState(SEED, deriveRuleset(DEFAULT_RULESET, { setup: ["capital", "city"] }));
+    const state = createInitialState(
+      SEED,
+      deriveRuleset(DEFAULT_RULESET, { setup: ["capital", "city"] }),
+    );
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
 
     // Adjacent to the capital is illegal for a city…
@@ -315,7 +340,11 @@ describe("civic buildings (2026-07-13 port — Forum from the PDF, Aqueduct/Odeo
 
     expect(buildBuilding(state, "0", "0,0", "forum").ok).toBe(true);
 
-    const yieldWithForum = settlementNetYield(tile(state, "0,0"), owned(state, "0,0", "0"), state.ruleset);
+    const yieldWithForum = settlementNetYield(
+      tile(state, "0,0"),
+      owned(state, "0,0", "0"),
+      state.ruleset,
+    );
     expect(yieldWithForum.influence).toBe(1 + 2); // 1 citizen + the Forum's flat 2
   });
 
@@ -337,9 +366,17 @@ describe("civic buildings (2026-07-13 port — Forum from the PDF, Aqueduct/Odeo
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     wealthy(state, "0");
 
-    const before = settlementNetYield(tile(state, "0,0"), owned(state, "0,0", "0"), state.ruleset).happiness;
+    const before = settlementNetYield(
+      tile(state, "0,0"),
+      owned(state, "0,0", "0"),
+      state.ruleset,
+    ).happiness;
     expect(buildBuilding(state, "0", "0,0", "odeon").ok).toBe(true);
-    const after = settlementNetYield(tile(state, "0,0"), owned(state, "0,0", "0"), state.ruleset).happiness;
+    const after = settlementNetYield(
+      tile(state, "0,0"),
+      owned(state, "0,0", "0"),
+      state.ruleset,
+    ).happiness;
 
     expect(after - before).toBe(2);
   });
@@ -392,7 +429,8 @@ describe("season rollover", () => {
 
       const card = state.activeSeasonEvent?.card;
       expect(card).toBeTruthy();
-      const suits = !card?.seasons || card.seasons.length === 0 || card.seasons.includes(seasonName(season));
+      const suits =
+        !card?.seasons || card.seasons.length === 0 || card.seasons.includes(seasonName(season));
       expect(suits).toBe(true);
     }
   });
@@ -424,6 +462,11 @@ describe("found colony & population transfers", () => {
     expect(owned(state, "1,0", "0").kind).toBe("colony");
     expect(owned(state, "0,0", "0").pops.slaves).toBe(0);
     expect(state.transfers).toHaveLength(1);
+    expect(state.transfers[0]).toMatchObject({
+      id: "transfer-3",
+      fromSettlementId: owned(state, "0,0", "0").id,
+      toSettlementId: owned(state, "1,0", "0").id,
+    });
 
     resolveArrivingPops(state, "0");
     expect(owned(state, "1,0", "0").pops.slaves).toBe(1);
@@ -435,13 +478,19 @@ describe("deterministic rng", () => {
   it("produces identical initial deck order for the same seed", () => {
     const a = createInitialState(42);
     const b = createInitialState(42);
-    expect(a.seasonalDrawPile.map((card) => card.id)).toEqual(b.seasonalDrawPile.map((card) => card.id));
-    expect(a.playerDrawPile.map((card) => card.id)).toEqual(b.playerDrawPile.map((card) => card.id));
+    expect(a.seasonalDrawPile.map((card) => card.id)).toEqual(
+      b.seasonalDrawPile.map((card) => card.id),
+    );
+    expect(a.playerDrawPile.map((card) => card.id)).toEqual(
+      b.playerDrawPile.map((card) => card.id),
+    );
   });
 
   it("produces different deck order for different seeds", () => {
     const a = createInitialState(1);
     const b = createInitialState(2);
-    expect(a.seasonalDrawPile.map((card) => card.id)).not.toEqual(b.seasonalDrawPile.map((card) => card.id));
+    expect(a.seasonalDrawPile.map((card) => card.id)).not.toEqual(
+      b.seasonalDrawPile.map((card) => card.id),
+    );
   });
 });

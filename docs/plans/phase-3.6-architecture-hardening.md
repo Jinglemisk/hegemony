@@ -221,8 +221,8 @@ simulator packages. Redis, microservices, and a plugin framework wait for demons
 3. **Actor and projection contract (implemented):** workflow-aware actor eligibility,
    asynchronous Assembly parity, player/spectator views, browser consumption, fair AI
    observation, public-zone political uncertainty, and anti-peek tests.
-4. **Identity, version, and invariants:** stable entity ids, versioned recipes, migrations or
-   explicit rejection, invariant suite, and deterministic replay proof.
+4. **Identity, version, and invariants (implemented):** stable entity ids, versioned recipes,
+   migrations or explicit rejection, invariant suite, and deterministic replay proof.
 5. **Mechanical enforcement:** import boundaries, stronger parity tests, dead-code ratchet,
    non-duplicative CI, formatting baseline, and a browser smoke test.
 

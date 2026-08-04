@@ -1,5 +1,5 @@
 import { PLAYER_IDS } from "../data";
-import type { HegemonyState, PlayerId } from "../types";
+import type { HegemonyState, PlayerId, Settlement } from "../types";
 
 export function getTile(G: HegemonyState, tileId: string) {
   return G.board.tiles.find((tile) => tile.id === tileId);
@@ -9,6 +9,15 @@ export function getOwnedSettlement(G: HegemonyState, tileId: string, playerID: P
   const tile = getTile(G, tileId);
 
   return tile?.settlements.find((settlement) => settlement.owner === playerID);
+}
+
+/** Resolve a persistent settlement reference without assuming its board-array position. */
+export function getSettlementById(G: HegemonyState, settlementId: string): Settlement | undefined {
+  for (const tile of G.board.tiles) {
+    const settlement = tile.settlements.find((candidate) => candidate.id === settlementId);
+    if (settlement) return settlement;
+  }
+  return undefined;
 }
 
 export function getPlayerName(G: HegemonyState, playerID: PlayerId) {
@@ -23,7 +32,7 @@ export function addLog(G: HegemonyState, message: string) {
   G.log.push({
     id: `${G.season}-${G.log.length}-${message}`,
     season: G.season,
-    message
+    message,
   });
 }
 

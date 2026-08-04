@@ -14,6 +14,7 @@ import {
   addLog,
   getOwnedSettlement,
   getPlayerName,
+  getSettlementById,
   getTile,
   markSettlementGrown,
 } from "./core/query";
@@ -38,6 +39,7 @@ import {
 } from "./status";
 import { drawPlayerEvent } from "./events";
 import { consumeLawFreeAction, getFoundColonyRiders } from "./assembly/laws";
+import { allocateEntityId } from "./entity";
 
 export function placeCapital(
   G: HegemonyState,
@@ -66,6 +68,8 @@ export function placeCapital(
   }
 
   tile.settlements.push({
+    id: allocateEntityId(G, "settlement"),
+    tileId: tile.id,
     owner: playerID,
     kind: "city",
     buildings: [],
@@ -110,6 +114,8 @@ export function placeCity(
   }
 
   tile.settlements.push({
+    id: allocateEntityId(G, "settlement"),
+    tileId: tile.id,
     owner: playerID,
     kind: "city",
     buildings: [],
@@ -168,6 +174,7 @@ export function foundColony(
     return invalid(...status.reasons);
   }
 
+  const colonyId = allocateEntityId(G, "settlement");
   const transfer = schedulePopulationTransfer(
     G,
     playerID,
@@ -175,9 +182,13 @@ export function foundColony(
     tileId,
     foundingPops,
     false,
+    colonyId,
   );
 
   if (!transfer.ok) {
+    // Allocation is the only mutation before validation; restore the counter so a
+    // rejected direct mutator call cannot perturb future deterministic identities.
+    G.nextEntityId -= 1;
     return transfer;
   }
 
@@ -186,7 +197,7 @@ export function foundColony(
   // Spend the year's free-colony coupon (Land Rush) only now the move has committed —
   // a refused founding must never burn it.
   consumeLawFreeAction(G, playerID, "foundColony");
-  addColony(G, playerID, tile, EMPTY_POPS);
+  addColony(G, playerID, tile, EMPTY_POPS, colonyId);
   applyFoundColonyRiders(G, playerID, tile);
   addLog(
     G,
@@ -257,18 +268,28 @@ export function upgradeColonyToCity(
   return MOVE_OK;
 }
 
-function addColony(G: HegemonyState, playerID: PlayerId, tile: HexTile, pops: Pops) {
-  tile.settlements.push({
+function addColony(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tile: HexTile,
+  pops: Pops,
+  settlementId = allocateEntityId(G, "settlement"),
+) {
+  const settlement = {
+    id: settlementId,
+    tileId: tile.id,
     owner: playerID,
-    kind: "colony",
+    kind: "colony" as const,
     buildings: [],
     pops: clonePops(pops),
-  });
+  };
+  tile.settlements.push(settlement);
   G.players[playerID].settlements.push(tile.id);
   addLog(
     G,
     `${getPlayerName(G, playerID)} founded a colony on ${tile.terrain} with ${formatPops(pops)}.`,
   );
+  return settlement;
 }
 
 export function collectIncome(
@@ -388,9 +409,9 @@ export function resolveArrivingPops(G: HegemonyState, playerID: PlayerId) {
   G.transfers = G.transfers.filter((transfer) => transfer.owner !== playerID);
 
   for (const transfer of arrivals) {
-    const target = getOwnedSettlement(G, transfer.toTileId, playerID);
+    const target = getSettlementById(G, transfer.toSettlementId);
 
-    if (target) {
+    if (target?.owner === playerID) {
       addPops(target.pops, transfer.pops);
       addLog(
         G,
@@ -399,9 +420,9 @@ export function resolveArrivingPops(G: HegemonyState, playerID: PlayerId) {
       continue;
     }
 
-    const source = getOwnedSettlement(G, transfer.fromTileId, playerID);
+    const source = getSettlementById(G, transfer.fromSettlementId);
 
-    if (source) {
+    if (source?.owner === playerID) {
       addPops(source.pops, transfer.pops);
       addLog(
         G,
@@ -418,6 +439,7 @@ function schedulePopulationTransfer(
   targetTileId: string,
   pops: Pops,
   requireTarget = true,
+  targetSettlementId?: string,
 ): MoveResult {
   const sourceSettlement = getOwnedSettlement(G, sourceTileId, playerID);
   const targetSettlement = getOwnedSettlement(G, targetTileId, playerID);
@@ -432,8 +454,10 @@ function schedulePopulationTransfer(
 
   subtractPops(sourceSettlement.pops, pops);
   G.transfers.push({
-    id: `${G.season}-${G.log.length}-${sourceTileId}-${targetTileId}-${formatPops(pops)}`,
+    id: allocateEntityId(G, "transfer"),
     owner: playerID,
+    fromSettlementId: sourceSettlement.id,
+    toSettlementId: targetSettlement?.id ?? targetSettlementId ?? "",
     fromTileId: sourceTileId,
     toTileId: targetTileId,
     pops: clonePops(pops),

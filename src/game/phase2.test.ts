@@ -23,10 +23,12 @@ const clearPending = (draft: HegemonyState) => {
 
 /** A bare owned city, for driving settlementNetYield directly. */
 const city = (pops: Settlement["pops"], buildings: Settlement["buildings"] = []): Settlement => ({
+  id: "fixture-city",
+  tileId: "fixture-tile",
   owner: "0",
   kind: "city",
   buildings,
-  pops
+  pops,
 });
 
 function findTile(G: HegemonyState, predicate: (tile: HexTile) => boolean): HexTile {
@@ -52,9 +54,7 @@ describe("the oracle (Phase 2)", () => {
     expect(placeCapital(G, "0", oracle.id, { citizens: 1, freemen: 2, slaves: 1 }).ok).toBe(false);
 
     const offered = new Set(
-      enumerateLegalCommands(G, "0").map((command) =>
-        "tileId" in command ? command.tileId : "",
-      )
+      enumerateLegalCommands(G, "0").map((command) => ("tileId" in command ? command.tileId : "")),
     );
     expect(offered.has(oracle.id)).toBe(false);
   });
@@ -80,7 +80,11 @@ describe("yield-less hills (Phase 2)", () => {
     const G = createInitialState(SEED);
     const hill = findTile(G, (tile) => tile.terrain === "hill");
 
-    const income = settlementNetYield(hill, city({ citizens: 1, freemen: 1, slaves: 0 }), DEFAULT_RULESET);
+    const income = settlementNetYield(
+      hill,
+      city({ citizens: 1, freemen: 1, slaves: 0 }),
+      DEFAULT_RULESET,
+    );
     // Citizen: +1 influence, +2 gold, −2 food. Freeman: +2 gold, −1 food.
     expect(income.influence).toBe(1);
     expect(income.gold).toBe(4);
@@ -119,14 +123,20 @@ describe("the Villa (Phase 2)", () => {
 
     const base = settlementNetYield(stoneTile, city(pops), DEFAULT_RULESET).stone;
     const oneVilla = settlementNetYield(stoneTile, city(pops, ["villa"]), DEFAULT_RULESET).stone;
-    const twoVillas = settlementNetYield(stoneTile, city(pops, ["villa", "villa"]), DEFAULT_RULESET).stone;
+    const twoVillas = settlementNetYield(
+      stoneTile,
+      city(pops, ["villa", "villa"]),
+      DEFAULT_RULESET,
+    ).stone;
 
     expect(oneVilla).toBe(base + 2);
     expect(twoVillas).toBe(base + 4);
   });
 
   it("caps at two copies via maxLevel", () => {
-    const stoneTile = createInitialState(SEED).board.tiles.find((tile) => tile.resource?.type === "stone")!;
+    const stoneTile = createInitialState(SEED).board.tiles.find(
+      (tile) => tile.resource?.type === "stone",
+    )!;
     const G = scenario()
       .opening()
       .mutate(clearPending)

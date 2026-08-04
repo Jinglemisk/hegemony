@@ -57,6 +57,8 @@ export function FoundColonyPopover({
   }
 
   const previewSettlement: Settlement = {
+    id: "preview-settlement",
+    tileId: targetTile.id,
     owner: playerID,
     kind: "colony",
     buildings: [],

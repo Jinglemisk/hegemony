@@ -245,7 +245,10 @@ Replays are byte-identical to the original run.
 
 ```jsonc
 {
-  "version": 1,
+  "version": 2,
+  "engineVersion": "0.1.0",
+  "stateSchemaVersion": 1,
+  "commandSchemaVersion": 1,
   "seed": 42, // game seed: decks, board draws, unrest removals
   "mode": "standard",
   "rulesetPatch": null, // deep-merged over the mode's ruleset
@@ -255,24 +258,27 @@ Replays are byte-identical to the original run.
     "content": {/* exact immutable content package */},
   },
   "opening": "random",
+  "boardLayout": "classic",
   "botRngState": 123, // where the bot decision stream is parked
-  "history": [{ "player": "0", "move": { "type": "endTurn" } }],
+  "history": [{ "player": "0", "command": { "type": "endTurn" } }],
   "state": {/* full HegemonyState — plain JSON */},
 }
 ```
 
 The save is a _recipe_: replaying `history` from its pinned definition and seed
 reproduces `state` byte-for-byte. Saves double as shareable bug reports and
-balance scenarios. Loading re-hashes the definition and rejects tampering or a
-state/definition mismatch. Legacy v1 saves without a definition are hydrated from
-their embedded ruleset plus authored content.
+balance scenarios. Loading re-hashes the definition and rejects tampering, unsupported
+schema versions, or a recipe/state mismatch. Legacy v1 saves are migrated on load:
+missing definitions are hydrated from their embedded ruleset plus authored content,
+legacy command costs are discarded, and settlement IDs are derived deterministically
+from placement history. New writes always use v2.
 
-**Phase 3.6 progress:** definition version/hash pinning and the canonical atomic transition
-are implemented. Browser, simulation, and replay submit intent-only `GameCommand` values;
-derived costs live on `LegalOption` and legacy replay costs are discarded during
-normalization. Policies receive the acting seat's redacted `PlayerView`, including opaque
-draw piles and no seed/RNG. Engine/state and command-schema versioning land with the later
-version/invariant slice.
+**Phase 3.6 progress:** definition pinning, the canonical atomic transition, workflow
+actors/projections, stable settlement and transfer IDs, versioned recipes, legacy migration,
+and post-transition invariants are implemented. Browser, simulation, and replay submit
+intent-only `GameCommand` values; policies receive the acting seat's redacted `PlayerView`.
+Replay errors distinguish unsupported history from deterministic command divergence, while
+authoritative saves and replay proofs run exact card-zone conservation.
 
 ## Writing tests and scenarios
 
