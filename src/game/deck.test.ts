@@ -43,9 +43,15 @@ function effectValue(effect: EventEffect): number {
     case "resourceDeltaPerPop":
       return effect.minimum;
     case "choice":
-      return Math.max(...effect.options.map((option) => option.reduce((sum, entry) => sum + effectValue(entry), 0)));
+      return Math.max(
+        ...effect.options.map((option) =>
+          option.reduce((sum, entry) => sum + effectValue(entry), 0),
+        ),
+      );
     default:
-      throw new Error(`deck valuation has no rule for effect type ${(effect as { type: string }).type}`);
+      throw new Error(
+        `deck valuation has no rule for effect type ${(effect as { type: string }).type}`,
+      );
   }
 }
 
@@ -57,7 +63,10 @@ describe("player deck tuning contract", () => {
   const copies = PLAYER_EVENT_CARDS.reduce((sum, card) => sum + card.count, 0);
 
   it("expected value per draw lands near +2 resource-equivalents", () => {
-    const totalValue = PLAYER_EVENT_CARDS.reduce((sum, card) => sum + card.count * cardValue(card), 0);
+    const totalValue = PLAYER_EVENT_CARDS.reduce(
+      (sum, card) => sum + card.count * cardValue(card),
+      0,
+    );
     const ev = totalValue / copies;
 
     expect(ev).toBeGreaterThanOrEqual(1.7);
@@ -67,7 +76,7 @@ describe("player deck tuning contract", () => {
   it("roughly a quarter of the deck is harm", () => {
     const harmCopies = PLAYER_EVENT_CARDS.filter((card) => cardValue(card) < 0).reduce(
       (sum, card) => sum + card.count,
-      0
+      0,
     );
     const harmShare = harmCopies / copies;
 
@@ -83,7 +92,7 @@ describe("player deck tuning contract", () => {
         }
 
         const optionValues = effect.options.map((option) =>
-          option.reduce((sum, entry) => sum + effectValue(entry), 0)
+          option.reduce((sum, entry) => sum + effectValue(entry), 0),
         );
         const best = Math.max(...optionValues);
 
@@ -107,7 +116,8 @@ describe("seasonal deck safety", () => {
       if (effect.type === "buildingCostMultiplier") return effect.multiplier > 1;
       if (effect.type === "scaledHappinessDelta") return effect.amountPerPops < 0;
       if (effect.type === "timedHappinessDelta") return effect.amountPerTurn < 0;
-      if (effect.type === "resourceDelta" || effect.type === "happinessDelta") return effect.amount < 0;
+      if (effect.type === "resourceDelta" || effect.type === "happinessDelta")
+        return effect.amount < 0;
       return false;
     });
   }
@@ -115,7 +125,7 @@ describe("seasonal deck safety", () => {
   it("no season is auto-safe: every pool holds at least one harm card", () => {
     for (const season of SEASONS) {
       const pool = SEASONAL_EVENT_CARDS.filter(
-        (card) => !card.seasons || card.seasons.length === 0 || card.seasons.includes(season)
+        (card) => !card.seasons || card.seasons.length === 0 || card.seasons.includes(season),
       );
       const harmCopies = pool.filter(isHarm).reduce((sum, card) => sum + card.count, 0);
 
@@ -198,7 +208,9 @@ describe("harm card mechanics", () => {
       .withResources("0", { wood: 3, gold: 0 })
       .build();
 
-    G.playerDrawPile.unshift(PLAYER_EVENT_CARDS.find((card) => card.id === "player-caravan-contacts")!);
+    G.playerDrawPile.unshift(
+      PLAYER_EVENT_CARDS.find((card) => card.id === "player-caravan-contacts")!,
+    );
     drawPlayerEvent(G, "0");
     // Option B: exchange up to 4 wood at 1.5 — with 3 wood that's floor(4.5) = 4 gold.
     expect(resolvePendingPlayerEvent(G, "0", undefined, 1).ok).toBe(true);

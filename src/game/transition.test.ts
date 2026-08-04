@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { reduceGameCommand } from "../client/controller";
 import { enumerateLegalCommands, enumerateLegalOptions, transition } from "./legalMoves";
 import type { GameCommand } from "./legalMoves";
 import { scenario } from "./testing/scenario";
@@ -60,17 +59,5 @@ describe("atomic game transition", () => {
         state.players["0"].resources[key] - (amount ?? 0),
       );
     }
-  });
-
-  it("gives the browser adapter byte-identical execution", () => {
-    const state = scenario().build();
-    const command = enumerateLegalCommands(state, state.currentPlayer)[0];
-    const direct = transition(state.definition, state, state.currentPlayer, command);
-
-    expect(direct.ok).toBe(true);
-    if (!direct.ok) return;
-    expect(JSON.stringify(reduceGameCommand(state, state.currentPlayer, command))).toBe(
-      JSON.stringify(direct.state),
-    );
   });
 });

@@ -39,7 +39,9 @@ export function applyUnrestUpkeep(G: HegemonyState, playerID: PlayerId) {
       addLog(
         G,
         `${getPlayerName(G, playerID)} feels ${formatRuleNumber(modifier.amountPerTurn)} happiness from ${modifier.sourceName}` +
-          (turnsRemaining > 0 ? ` (${turnsRemaining} turn${turnsRemaining === 1 ? "" : "s"} left).` : ", now passing.")
+          (turnsRemaining > 0
+            ? ` (${turnsRemaining} turn${turnsRemaining === 1 ? "" : "s"} left).`
+            : ", now passing."),
       );
 
       if (turnsRemaining > 0) {
@@ -75,7 +77,10 @@ export function applyUnrestUpkeep(G: HegemonyState, playerID: PlayerId) {
         player.consecutiveFoodDeficitTurns = 0;
 
         if (removed.total > 0) {
-          addLog(G, `${getPlayerName(G, playerID)} — starvation claims ${describeRemoval(removed)}.`);
+          addLog(
+            G,
+            `${getPlayerName(G, playerID)} — starvation claims ${describeRemoval(removed)}.`,
+          );
         }
       }
     } else {
@@ -122,6 +127,6 @@ export function unrestStatus(G: HegemonyState, playerID: PlayerId): UnrestStatus
     riotAtRisk: tier === "unrest" || tier === "revolt",
     timedModifiers: player.timedHappinessModifiers.length,
     deficitTurns: player.consecutiveFoodDeficitTurns,
-    totalDeaths: player.popsLostToUnrest
+    totalDeaths: player.popsLostToUnrest,
   };
 }

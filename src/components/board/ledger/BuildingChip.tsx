@@ -20,10 +20,7 @@ export function BuildingChip({
   const tooltipLabel = [building.name, ...tooltipRows].join(". ");
   const content = <AtlasIcon icon={building.id} className="miniIcon" />;
   const tooltip = (
-    <MechanicsDetails
-      effects={building.effects.map(presentBuildingEffect)}
-      heading={building.name}
-    >
+    <MechanicsDetails effects={building.effects.map(presentBuildingEffect)} heading={building.name}>
       <div className="detailTooltipRows">
         {tooltipRows.map((row) => (
           <em key={row}>{row}</em>

@@ -14,4 +14,4 @@ export * from "./power";
 export * from "./assembly";
 // Runtime resolution lookup follows the effective content package (including the
 // Low Numbers preset); the authored constants remain exported from deck.ts.
-export { getResolutionCard, getResolutionCards } from "../content";
+export { getResolutionCard } from "../content";

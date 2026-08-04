@@ -73,7 +73,9 @@ function emptyCopy(mode: MapSelectionMode): string {
     case "growPop":
       return "No settlement of yours can grow right now";
     case "movePops":
-      return mode.sourceTileId ? "No other settlement can receive these pops" : "No settlement has a pop to spare";
+      return mode.sourceTileId
+        ? "No other settlement can receive these pops"
+        : "No settlement has a pop to spare";
     case "build":
       return "No settlement of yours can build right now";
     case "ladder":

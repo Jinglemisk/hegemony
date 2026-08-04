@@ -32,7 +32,7 @@ export function terrainStats(deck: TerrainDeck): TerrainStat[] {
       slots: 0,
       totalYield: 0,
       avgYield: undefined,
-      maxYield: 0
+      maxYield: 0,
     };
     stat.tiles += 1;
     stat.slots += tile.buildingSlots;
@@ -44,21 +44,32 @@ export function terrainStats(deck: TerrainDeck): TerrainStat[] {
 
   const rows = [...byTerrain.values()];
   for (const stat of rows) {
-    const yielding = deck.filter((tile) => tile.terrain === stat.terrain && (tile.resource?.amount ?? 0) > 0).length;
+    const yielding = deck.filter(
+      (tile) => tile.terrain === stat.terrain && (tile.resource?.amount ?? 0) > 0,
+    ).length;
     stat.avgYield = yielding > 0 ? stat.totalYield / yielding : undefined;
   }
 
   return rows.sort((a, b) => TERRAIN_ORDER.indexOf(a.terrain) - TERRAIN_ORDER.indexOf(b.terrain));
 }
 
-export type TerrainTotals = { tiles: number; slots: number; wood: number; stone: number; food: number };
+export type TerrainTotals = {
+  tiles: number;
+  slots: number;
+  wood: number;
+  stone: number;
+  food: number;
+};
 
 export function terrainTotals(deck: TerrainDeck): TerrainTotals {
   const totals: TerrainTotals = { tiles: deck.length, slots: 0, wood: 0, stone: 0, food: 0 };
   for (const tile of deck) {
     totals.slots += tile.buildingSlots;
     const resource = tile.resource;
-    if (resource && (resource.type === "wood" || resource.type === "stone" || resource.type === "food")) {
+    if (
+      resource &&
+      (resource.type === "wood" || resource.type === "stone" || resource.type === "food")
+    ) {
       totals[resource.type] += resource.amount;
     }
   }

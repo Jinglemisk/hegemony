@@ -205,6 +205,11 @@ export function HegemonyBoard({
   // mode here, the board glows its legal tiles, and a popover confirms on the
   // spot — no dialog is laid over the answer.
   const mapSelection = useMapSelection({ G, playerID: viewerId, isActive });
+  const {
+    arm: armMapSelection,
+    clear: clearMapSelection,
+    setTarget: setMapSelectionTarget,
+  } = mapSelection;
   // During the founding-colony round, glow every legal tile (coast or beside the metropolis).
   const setupColonyValidTileIds = useMemo(
     () =>
@@ -232,9 +237,9 @@ export function HegemonyBoard({
     (mode: MapSelectionMode) => {
       setActiveModal(null);
       setTileConfirmation(null);
-      mapSelection.arm(mode);
+      armMapSelection(mode);
     },
-    [mapSelection],
+    [armMapSelection],
   );
   // The chronicle is a right-rail consult page now (two-panel.md); its newest line
   // still rides the command bar so the narration is never fully hidden.
@@ -244,9 +249,9 @@ export function HegemonyBoard({
   useEffect(() => {
     setTileConfirmation(null);
     setActiveModal(null);
-    mapSelection.clear();
+    clearMapSelection();
     setRiotResultOpen(false);
-  }, [ctx.phase, ctx.currentPlayer]);
+  }, [ctx.phase, ctx.currentPlayer, clearMapSelection]);
 
   // A drawn event takes the screen: dismiss the player's own dialogs behind it.
   // The ledger is left alone — the codex lives there now, and reading a rule
@@ -257,9 +262,9 @@ export function HegemonyBoard({
     }
 
     setTileConfirmation(null);
-    mapSelection.clear();
+    clearMapSelection();
     setActiveModal(null);
-  }, [G.pendingPlayerEvent]);
+  }, [G.pendingPlayerEvent, clearMapSelection]);
 
   // `?` toggles the codex from anywhere — it is a consult page now (right panel), so
   // this is the same act as pressing its rail disc.
@@ -306,7 +311,7 @@ export function HegemonyBoard({
           return;
         }
 
-        mapSelection.setTarget({ tileId, anchor: element.getBoundingClientRect() });
+        setMapSelectionTarget({ tileId, anchor: element.getBoundingClientRect() });
         return;
       }
 
@@ -328,7 +333,7 @@ export function HegemonyBoard({
 
       setTileConfirmation(null);
     },
-    [mapSelection, ctx.phase, isActive],
+    [mapSelection, setMapSelectionTarget, ctx.phase, isActive],
   );
 
   const confirmTileAction = useCallback(() => {
@@ -337,13 +342,13 @@ export function HegemonyBoard({
     }
 
     if (tileConfirmation.action === "foundColony") {
-      mapSelection.arm({ kind: "foundColony" });
+      armMapSelection({ kind: "foundColony" });
     } else {
       setActiveModal({ kind: "upgradeCity" });
     }
 
     setTileConfirmation(null);
-  }, [tileConfirmation, mapSelection]);
+  }, [tileConfirmation, armMapSelection]);
 
   const requestBuildBuilding = useCallback(
     (tileId: string, buildingId: BuildingId) => {

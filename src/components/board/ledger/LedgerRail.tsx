@@ -14,7 +14,7 @@ import { LEDGER_TABS } from "./tabs";
 function LedgerRailComponent({
   activeTab,
   isOpen,
-  onSelectTab
+  onSelectTab,
 }: {
   activeTab: LedgerTab;
   isOpen: boolean;

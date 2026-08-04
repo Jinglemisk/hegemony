@@ -25,15 +25,57 @@ export default tseslint.config(
     rules: {
       // Correctness rules stay as errors.
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-      // Start these as warnings so the gate is green on the current
-      // codebase; ratchet up to "error" as the refactor lands.
+      "react-hooks/exhaustive-deps": "error",
+      "react-refresh/only-export-components": ["error", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
+    },
+  },
+  {
+    files: ["src/game/**/*.{ts,tsx}"],
+    ignores: ["src/game/**/*.test.{ts,tsx}", "src/game/**/*.spec.{ts,tsx}", "src/game/testing/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            { name: "react", message: "The engine must remain independent of React." },
+            { name: "react-dom", message: "The engine must remain independent of React." },
+          ],
+          patterns: [
+            {
+              group: [
+                "**/client/**",
+                "**/components/**",
+                "**/dev/**",
+                "**/sim/**",
+                "node:*",
+                "@playwright/*",
+              ],
+              message:
+                "Production engine code cannot import runtime adapters, presentation, development, simulation, or Node modules.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-globals": [
+        "error",
+        ...[
+          "window",
+          "document",
+          "localStorage",
+          "sessionStorage",
+          "navigator",
+          "fetch",
+          "WebSocket",
+        ].map((name) => ({
+          name,
+          message: "Inject runtime capabilities outside src/game.",
+        })),
+      ],
     },
   },
   {

@@ -42,7 +42,7 @@ const ICON_SPRITE_CLASSES: Record<IconAtlasKey, string> = {
   gymnasion: "sprite-temple",
   capital: "sprite-capital",
   city: "sprite-city",
-  colony: "sprite-colony"
+  colony: "sprite-colony",
 };
 
 const TERRAIN_SPRITE_CLASSES: Record<Terrain, string> = {
@@ -52,7 +52,7 @@ const TERRAIN_SPRITE_CLASSES: Record<Terrain, string> = {
   plains: "sprite-terrain-plains",
   // The oracle has no atlas cell yet; the bare hill art is the nearest read (rock, no
   // yield). The map polygon carries the oracle's real, distinct colour.
-  oracle: "sprite-terrain-hill"
+  oracle: "sprite-terrain-hill",
 };
 
 const UI_SPRITE_CLASSES: Record<UiAtlasKey, string> = {
@@ -71,7 +71,7 @@ const UI_SPRITE_CLASSES: Record<UiAtlasKey, string> = {
   eventDeck: "sprite-ui-secondary",
   seasonDeck: "sprite-ui-season-marker",
   resolutionDeck: "sprite-ui-vote-token",
-  victoryPoint: "sprite-ui-vote-token"
+  victoryPoint: "sprite-ui-vote-token",
 };
 
 const RESOURCE_MASK_CLASSES: Record<Resource, string> = {
@@ -80,17 +80,22 @@ const RESOURCE_MASK_CLASSES: Record<Resource, string> = {
   gold: "resourceMask-gold",
   food: "resourceMask-food",
   influence: "resourceMask-influence",
-  happiness: "resourceMask-happiness"
+  happiness: "resourceMask-happiness",
 };
 
 export function AtlasIcon({ icon, className = "" }: { icon: IconAtlasKey; className?: string }) {
-  return <span aria-hidden="true" className={`atlasSprite atlasIcon ${ICON_SPRITE_CLASSES[icon]} ${className}`} />;
+  return (
+    <span
+      aria-hidden="true"
+      className={`atlasSprite atlasIcon ${ICON_SPRITE_CLASSES[icon]} ${className}`}
+    />
+  );
 }
 
 export function ResourceIcon({
   resource,
   value = 0,
-  className = ""
+  className = "",
 }: {
   resource: Resource;
   value?: number;
@@ -105,7 +110,12 @@ export function ResourceIcon({
     );
   }
 
-  return <span aria-hidden="true" className={`resourceMaskIcon ${RESOURCE_MASK_CLASSES[resource]} ${className}`} />;
+  return (
+    <span
+      aria-hidden="true"
+      className={`resourceMaskIcon ${RESOURCE_MASK_CLASSES[resource]} ${className}`}
+    />
+  );
 }
 
 function getHappinessTheatreClass(value: number) {
@@ -128,7 +138,13 @@ function getHappinessTheatreClass(value: number) {
   return "happinessTheatreIcon-happy";
 }
 
-export function TerrainSprite({ terrain, className = "" }: { terrain: Terrain; className?: string }) {
+export function TerrainSprite({
+  terrain,
+  className = "",
+}: {
+  terrain: Terrain;
+  className?: string;
+}) {
   return (
     <span
       aria-hidden="true"
@@ -138,5 +154,10 @@ export function TerrainSprite({ terrain, className = "" }: { terrain: Terrain; c
 }
 
 export function UiSprite({ item, className = "" }: { item: UiAtlasKey; className?: string }) {
-  return <span aria-hidden="true" className={`atlasSprite atlasUi ${UI_SPRITE_CLASSES[item]} ${className}`} />;
+  return (
+    <span
+      aria-hidden="true"
+      className={`atlasSprite atlasUi ${UI_SPRITE_CLASSES[item]} ${className}`}
+    />
+  );
 }

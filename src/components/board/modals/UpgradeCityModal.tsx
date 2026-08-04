@@ -4,7 +4,7 @@ import {
   previewUpgradeColonyToCity,
   settlementNetYield,
   settlementPopCapacity,
-  totalPops
+  totalPops,
 } from "../../../game/rules";
 import type { HexTile, Settlement } from "../../../game/types";
 import { formatResourceDelta } from "../../../ui/formatters";
@@ -16,7 +16,7 @@ import { CostRow, PlacementModalShell } from "./PlacementModalShell";
 
 export function UpgradeCityModal({
   onCancel,
-  onConfirm
+  onConfirm,
 }: {
   onCancel: () => void;
   onConfirm: (tileId: string) => void;
@@ -27,7 +27,7 @@ export function UpgradeCityModal({
 
     for (const tile of G.board.tiles) {
       const settlement = tile.settlements.find(
-        (candidate) => candidate.owner === playerID && candidate.kind === "colony"
+        (candidate) => candidate.owner === playerID && candidate.kind === "colony",
       );
 
       if (settlement && getUpgradeColonyToCityStatus(G, playerID, tile.id).can) {
@@ -76,30 +76,39 @@ export function UpgradeCityModal({
               <span className="placementSectionLabel">Choose a colony</span>
               <div className="placementPickerGrid" role="group" aria-label="Colony to upgrade">
                 {candidates.map(({ tile, settlement }) => {
-                  const rivals = tile.settlements.filter((candidate) => candidate.owner !== playerID);
+                  const rivals = tile.settlements.filter(
+                    (candidate) => candidate.owner !== playerID,
+                  );
 
                   return (
-                  <button
-                    className={tile.id === selected?.tile.id ? "placementPickerChip selectedChoice" : "placementPickerChip"}
-                    key={tile.id}
-                    onClick={() => setTileId(tile.id)}
-                    title={settlementPickerLabel(G, tile, playerID)}
-                    type="button"
-                  >
-                    <AtlasIcon icon="colony" className="miniIcon" />
-                    <span className="placementChipText">
-                      <strong>
-                        {capitalize(tile.terrain)}
-                        {tile.resource ? ` +${tile.resource.amount} ${tile.resource.type}` : " · no yield"}
-                      </strong>
-                      <em>
-                        {tile.id} · {totalPops(settlement.pops)}/{settlementPopCapacity("colony", G.ruleset)}
-                        {rivals.length > 0
-                          ? ` · evicts ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
-                          : ""}
-                      </em>
-                    </span>
-                  </button>
+                    <button
+                      className={
+                        tile.id === selected?.tile.id
+                          ? "placementPickerChip selectedChoice"
+                          : "placementPickerChip"
+                      }
+                      key={tile.id}
+                      onClick={() => setTileId(tile.id)}
+                      title={settlementPickerLabel(G, tile, playerID)}
+                      type="button"
+                    >
+                      <AtlasIcon icon="colony" className="miniIcon" />
+                      <span className="placementChipText">
+                        <strong>
+                          {capitalize(tile.terrain)}
+                          {tile.resource
+                            ? ` +${tile.resource.amount} ${tile.resource.type}`
+                            : " · no yield"}
+                        </strong>
+                        <em>
+                          {tile.id} · {totalPops(settlement.pops)}/
+                          {settlementPopCapacity("colony", G.ruleset)}
+                          {rivals.length > 0
+                            ? ` · evicts ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
+                            : ""}
+                        </em>
+                      </span>
+                    </button>
                   );
                 })}
               </div>
@@ -129,7 +138,8 @@ export function UpgradeCityModal({
             <span className="placementUpgradeStat">
               <em>Capacity</em>
               <strong>
-                {settlementPopCapacity("colony", G.ruleset)} <span className="meterSlash">→</span> {settlementPopCapacity("city", G.ruleset)}
+                {settlementPopCapacity("colony", G.ruleset)} <span className="meterSlash">→</span>{" "}
+                {settlementPopCapacity("city", G.ruleset)}
               </strong>
             </span>
             <span className="placementUpgradeStat">
@@ -138,7 +148,9 @@ export function UpgradeCityModal({
             </span>
           </div>
 
-          <p className="placementCostNote">The city keeps the colony's current population; only its capacity and yield grow.</p>
+          <p className="placementCostNote">
+            The city keeps the colony's current population; only its capacity and yield grow.
+          </p>
 
           <CostRow cost={cost} />
         </>

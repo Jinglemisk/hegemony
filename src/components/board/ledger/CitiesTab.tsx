@@ -9,7 +9,7 @@ import {
   settlementOverCapacity,
   settlementCapacity,
   settlementTileYield,
-  totalPops
+  totalPops,
 } from "../../../game/rules";
 import type { BuildingId } from "../../../game/types";
 import { RESOURCE_LABELS, formatNumber, formatPopLabel } from "../../../ui/formatters";
@@ -23,7 +23,7 @@ import { useGameUi } from "../GameUiContext";
 
 export function CitiesTab({
   holdings,
-  onBuildBuildingRequest
+  onBuildBuildingRequest,
 }: {
   holdings: OwnedHolding[];
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
@@ -32,7 +32,7 @@ export function CitiesTab({
   const buildings = getBuildings(G.definition.content);
   const holdingIds = useMemo(
     () => holdings.map(({ tile, settlement }) => `${settlement.owner}-${tile.id}`),
-    [holdings]
+    [holdings],
   );
   const [expandedHoldingIds, setExpandedHoldingIds] = useState<Set<string>>(() => new Set());
 
@@ -111,10 +111,12 @@ export function CitiesTab({
               <div className="popBuildingMatrix">
                 {POP_TYPES.map((pop) => {
                   const builtBuildings = settlement.buildings.filter(
-                    (buildingId) => BUILDING_AFFINITY[buildingId] === pop
+                    (buildingId) => BUILDING_AFFINITY[buildingId] === pop,
                   );
                   const unbuiltBuildings = buildings.filter(
-                    (building) => !settlement.buildings.includes(building.id) && BUILDING_AFFINITY[building.id] === pop
+                    (building) =>
+                      !settlement.buildings.includes(building.id) &&
+                      BUILDING_AFFINITY[building.id] === pop,
                   );
 
                   return (
@@ -141,13 +143,20 @@ export function CitiesTab({
                             ) : null;
                           })
                         ) : (
-                          <span className="emptyMini" title="No buildings of this type">—</span>
+                          <span className="emptyMini" title="No buildings of this type">
+                            —
+                          </span>
                         )}
                       </div>
                       <div className="buildingChipRow mutedChipRow">
                         {unbuiltBuildings.length > 0 ? (
                           unbuiltBuildings.map((building) => {
-                            const status = getBuildBuildingStatus(G, playerID, tile.id, building.id);
+                            const status = getBuildBuildingStatus(
+                              G,
+                              playerID,
+                              tile.id,
+                              building.id,
+                            );
                             const benefit = getBuildingBenefitText(G, playerID, tile, building);
                             const disabled = !isActive || phase !== "gameplay" || !status.can;
 
@@ -157,13 +166,21 @@ export function CitiesTab({
                                 disabled={disabled}
                                 key={building.id}
                                 mode="option"
-                                tooltipRows={buildingTooltipRows(building, status, benefit, phase, isActive)}
+                                tooltipRows={buildingTooltipRows(
+                                  building,
+                                  status,
+                                  benefit,
+                                  phase,
+                                  isActive,
+                                )}
                                 onClick={() => onBuildBuildingRequest(tile.id, building.id)}
                               />
                             );
                           })
                         ) : (
-                          <span className="emptyMini" title="All available buildings built">✓</span>
+                          <span className="emptyMini" title="All available buildings built">
+                            ✓
+                          </span>
                         )}
                       </div>
                     </div>

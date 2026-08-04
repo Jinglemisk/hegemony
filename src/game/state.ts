@@ -10,14 +10,14 @@ import type { GameDefinition } from "./definition";
 import { deriveBankRates } from "./bank";
 import { createInitialMap } from "./map";
 import type { BoardLayout, HegemonyState } from "./types";
-import { createSeed, expandDeck, shuffleWithSeed } from "./core/rng";
+import { expandDeck, shuffleWithSeed } from "./core/rng";
 import { DEFAULT_RULESET } from "./ruleset";
 import type { Ruleset } from "./ruleset";
 import { createPoliticianDecks } from "./assembly/assembly";
 import { CURRENT_RECIPE_VERSIONS } from "./version";
 
 export function createInitialState(
-  seed = createSeed(),
+  seed: number,
   ruleset: Ruleset = DEFAULT_RULESET,
   boardLayout: BoardLayout = "classic",
 ): HegemonyState {
@@ -34,7 +34,7 @@ export function createInitialState(
 /** Create a match pinned to one immutable definition. Browser, sim and replay use this path. */
 export function createInitialStateFromDefinition(
   definition: GameDefinition,
-  seed = createSeed(),
+  seed: number,
   boardLayout: BoardLayout = "classic",
 ): HegemonyState {
   const { content, ruleset } = definition;

@@ -23,7 +23,8 @@ describe("bank rate derivation (D6/Q14)", () => {
 
   it("uniform derivation prices everything at baseline", () => {
     const G = scenario({ patch: { economy: { bank: { derivation: "uniform" } } } })
-      .opening().mutate(clearPending)
+      .opening()
+      .mutate(clearPending)
       .build();
 
     for (const material of ["wood", "stone", "food"] as const) {
@@ -36,7 +37,7 @@ describe("bank rate derivation (D6/Q14)", () => {
       ({ resource: { type, amount: 4 } }) as Parameters<typeof deriveBankRates>[0][number];
     const rates = deriveBankRates(
       [tile("wood"), tile("stone"), tile("food")],
-      DEFAULT_RULESET.economy.bank
+      DEFAULT_RULESET.economy.bank,
     );
 
     expect(rates.wood).toEqual(DEFAULT_RULESET.economy.bank.baseline);
@@ -47,14 +48,16 @@ describe("bank rate derivation (D6/Q14)", () => {
   it("rates are static: the ruleset knob changes games, never a game in flight", () => {
     const scarcity = scenario().opening().mutate(clearPending).build();
     const uniform = scenario({ patch: { economy: { bank: { derivation: "uniform" } } } })
-      .opening().mutate(clearPending)
+      .opening()
+      .mutate(clearPending)
       .build();
 
     expect(scarcity.bank.wood.sell).not.toBe(uniform.bank.wood.sell);
     // deriveRuleset merges cleanly — the knob is data, not code.
-    expect(deriveRuleset(DEFAULT_RULESET, { economy: { bank: { derivation: "uniform" } } }).economy.bank.derivation).toBe(
-      "uniform"
-    );
+    expect(
+      deriveRuleset(DEFAULT_RULESET, { economy: { bank: { derivation: "uniform" } } }).economy.bank
+        .derivation,
+    ).toBe("uniform");
   });
 });
 
@@ -80,7 +83,11 @@ describe("bank trades", () => {
   });
 
   it("rejects unaffordable trades, allows unlimited affordable ones (no per-turn cap)", () => {
-    const G = scenario().opening().mutate(clearPending).withResources("1", { wood: 2, gold: 0 }).build();
+    const G = scenario()
+      .opening()
+      .mutate(clearPending)
+      .withResources("1", { wood: 2, gold: 0 })
+      .build();
 
     expect(bankSell(G, "1", "wood").ok).toBe(false);
     expect(bankBuy(G, "1", "food").ok).toBe(false);

@@ -5,13 +5,13 @@ export const POP_TYPES: PopType[] = ["citizens", "freemen", "slaves"];
 export const EMPTY_POPS: Pops = {
   citizens: 0,
   freemen: 0,
-  slaves: 0
+  slaves: 0,
 };
 
 export const PLACEMENT_POP_COUNTS = {
   city: 3,
   capital: 4,
-  colony: 2
+  colony: 2,
 };
 
 export function totalPops(pops: Pops) {

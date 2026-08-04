@@ -4,8 +4,7 @@
 .eventModalBackdrop {
   z-index: 90;
   background:
-    radial-gradient(circle at 50% 28%, rgb(255 248 231 / 26%), transparent 34%),
-    rgb(24 18 16 / 78%);
+    radial-gradient(circle at 50% 28%, rgb(255 248 231 / 26%), transparent 34%), rgb(24 18 16 / 78%);
 }
 
 .eventCardReveal {
@@ -29,7 +28,12 @@
   border-radius: 14px;
   color: var(--fg);
   background:
-    linear-gradient(90deg, rgb(143 46 19 / 18%) 0 2px, transparent 2px calc(100% - 2px), rgb(143 46 19 / 18%) calc(100% - 2px)),
+    linear-gradient(
+      90deg,
+      rgb(143 46 19 / 18%) 0 2px,
+      transparent 2px calc(100% - 2px),
+      rgb(143 46 19 / 18%) calc(100% - 2px)
+    ),
     radial-gradient(circle at 50% 12%, rgb(255 248 231 / 90%), transparent 38%),
     linear-gradient(180deg, #fff4d8, #eed5aa 72%, #d4a05f);
   box-shadow:
@@ -54,8 +58,21 @@
   border: 0;
   border-radius: 0;
   background:
-    linear-gradient(90deg, transparent 0 18px, rgb(143 46 19 / 18%) 18px 20px, transparent 20px calc(100% - 20px), rgb(143 46 19 / 18%) calc(100% - 20px) calc(100% - 18px), transparent calc(100% - 18px)),
-    linear-gradient(0deg, rgb(36 25 16 / 11%), transparent 28%, transparent 72%, rgb(36 25 16 / 10%));
+    linear-gradient(
+      90deg,
+      transparent 0 18px,
+      rgb(143 46 19 / 18%) 18px 20px,
+      transparent 20px calc(100% - 20px),
+      rgb(143 46 19 / 18%) calc(100% - 20px) calc(100% - 18px),
+      transparent calc(100% - 18px)
+    ),
+    linear-gradient(
+      0deg,
+      rgb(36 25 16 / 11%),
+      transparent 28%,
+      transparent 72%,
+      rgb(36 25 16 / 10%)
+    );
   mix-blend-mode: multiply;
 }
 
@@ -229,7 +246,12 @@
   border-radius: 14px;
   color: var(--fg);
   background:
-    linear-gradient(90deg, rgb(143 46 19 / 18%) 0 2px, transparent 2px calc(100% - 2px), rgb(143 46 19 / 18%) calc(100% - 2px)),
+    linear-gradient(
+      90deg,
+      rgb(143 46 19 / 18%) 0 2px,
+      transparent 2px calc(100% - 2px),
+      rgb(143 46 19 / 18%) calc(100% - 2px)
+    ),
     radial-gradient(circle at 50% 8%, rgb(255 248 231 / 90%), transparent 44%),
     linear-gradient(180deg, #fff4d8, #eed5aa 78%, #d4a05f);
   box-shadow:
@@ -347,9 +369,7 @@
   border: 1px solid rgb(143 46 19 / 28%);
   border-left: 2px solid var(--ledger-accent);
   border-radius: 6px;
-  background:
-    linear-gradient(90deg, rgb(192 70 28 / 6%), transparent 48%),
-    rgb(255 248 231 / 46%);
+  background: linear-gradient(90deg, rgb(192 70 28 / 6%), transparent 48%), rgb(255 248 231 / 46%);
 }
 
 .placementPreviewTag {
@@ -652,7 +672,6 @@
   color: var(--muted);
   font-size: 0.82rem;
 }
-
 
 /* Event-table modal — the ONE shared surface for every dice table
    (docs/archive/plans/event-tables.md): riot, expeditions, future omens. */

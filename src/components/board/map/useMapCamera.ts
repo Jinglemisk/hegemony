@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type WheelEvent as ReactWheelEvent,
+} from "react";
 import {
   BASE_VIEW_BOX,
   MAX_ZOOM,
@@ -12,7 +18,7 @@ import {
   viewBoxesEqual,
   zoomViewBox,
   type ViewBox,
-  type WorldInset
+  type WorldInset,
 } from "../../../ui/hexGeometry";
 
 /**
@@ -100,7 +106,7 @@ function sideInsetPx() {
 
   return {
     left: Math.max(70, cardOffset + leftCard - pull),
-    right: Math.max(70, cardOffset + rightCard - pull)
+    right: Math.max(70, cardOffset + rightCard - pull),
   };
 }
 
@@ -162,7 +168,7 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
   const worldInsetFor = (
     shown: ViewBox,
     stage: { width: number; height: number },
-    inset: { top: number; bottom: number; left: number; right: number }
+    inset: { top: number; bottom: number; left: number; right: number },
   ): WorldInset => {
     const worldPerPxX = shown.width / stage.width;
     const worldPerPxY = shown.height / stage.height;
@@ -171,7 +177,7 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
       top: inset.top * worldPerPxY,
       bottom: inset.bottom * worldPerPxY,
       left: inset.left * worldPerPxX,
-      right: inset.right * worldPerPxX
+      right: inset.right * worldPerPxX,
     };
   };
 
@@ -200,24 +206,36 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
     }
 
     const side = sideInsetPx();
-    const inset = { top: CHROME_INSET_TB.top, bottom: CHROME_INSET_TB.bottom, left: side.left, right: side.right };
+    const inset = {
+      top: CHROME_INSET_TB.top,
+      bottom: CHROME_INSET_TB.bottom,
+      left: side.left,
+      right: side.right,
+    };
     const liveWidth = Math.max(120, bounds.width - inset.left - inset.right);
     const liveHeight = Math.max(120, bounds.height - inset.top - inset.bottom);
     const pad = 28;
-    const sliceScale = Math.max(bounds.width / BASE_VIEW_BOX.width, bounds.height / BASE_VIEW_BOX.height);
+    const sliceScale = Math.max(
+      bounds.width / BASE_VIEW_BOX.width,
+      bounds.height / BASE_VIEW_BOX.height,
+    );
     const fitScale = Math.min(
       (liveWidth - 2 * pad) / BASE_VIEW_BOX.width,
-      (liveHeight - 2 * pad) / BASE_VIEW_BOX.height
+      (liveHeight - 2 * pad) / BASE_VIEW_BOX.height,
     );
     // vbW in [BASE.w, WORLD.w] → zoom in [MIN_ZOOM, 1.0]: never zoom past the base
     // frame at rest, never past the sea.
-    const fitWidth = clamp((BASE_VIEW_BOX.width * sliceScale) / fitScale, BASE_VIEW_BOX.width, WORLD_VIEW_BOX.width);
+    const fitWidth = clamp(
+      (BASE_VIEW_BOX.width * sliceScale) / fitScale,
+      BASE_VIEW_BOX.width,
+      WORLD_VIEW_BOX.width,
+    );
     const fitHeight = fitWidth * (BASE_VIEW_BOX.height / BASE_VIEW_BOX.width);
     const centered: ViewBox = {
       width: fitWidth,
       height: fitHeight,
       x: BASE_VIEW_BOX.x + (BASE_VIEW_BOX.width - fitWidth) / 2,
-      y: BASE_VIEW_BOX.y + (BASE_VIEW_BOX.height - fitHeight) / 2
+      y: BASE_VIEW_BOX.y + (BASE_VIEW_BOX.height - fitHeight) / 2,
     };
     const seated = seatViewBox(centered, worldInsetFor(centered, bounds, inset));
 
@@ -262,7 +280,10 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
         pendingAnimationFrame.current = null;
 
         if (pendingViewBox.current) {
-          cameraLayerRef.current?.setAttribute("transform", cameraTransform(pendingViewBox.current));
+          cameraLayerRef.current?.setAttribute(
+            "transform",
+            cameraTransform(pendingViewBox.current),
+          );
           pendingViewBox.current = null;
         }
       });
@@ -314,7 +335,7 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
       startClientY: event.clientY,
       startViewBox: cameraViewBox.current,
       hasMoved: false,
-      startTileId: getTileMapTargetId(event.target)
+      startTileId: getTileMapTargetId(event.target),
     };
     event.currentTarget.setPointerCapture(event.pointerId);
     event.currentTarget.classList.add("isDraggingSea");
@@ -346,7 +367,7 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
     applyCameraViewBox({
       ...drag.startViewBox,
       x: drag.startViewBox.x - deltaX,
-      y: drag.startViewBox.y - deltaY
+      y: drag.startViewBox.y - deltaY,
     });
   };
 
@@ -382,18 +403,22 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
       x: current.x + current.width * ratioX,
       y: current.y + current.height * ratioY,
       ratioX,
-      ratioY
+      ratioY,
     };
     const direction = event.deltaY > 0 ? -1 : 1;
     event.currentTarget.classList.add("isCameraMoving");
-    applyCameraViewBox(zoomViewBox(current, getZoomLevel(current) + direction * WHEEL_ZOOM_STEP, focus));
+    applyCameraViewBox(
+      zoomViewBox(current, getZoomLevel(current) + direction * WHEEL_ZOOM_STEP, focus),
+    );
     clearWheelCommit();
     wheelCommitTimeout.current = window.setTimeout(finishCameraInteraction, WHEEL_COMMIT_MS);
   };
 
   const zoomBy = (delta: number) => {
     clearWheelCommit();
-    applyCameraViewBox(zoomViewBox(cameraViewBox.current, getZoomLevel(cameraViewBox.current) + delta));
+    applyCameraViewBox(
+      zoomViewBox(cameraViewBox.current, getZoomLevel(cameraViewBox.current) + delta),
+    );
     commitCameraState();
   };
 
@@ -416,7 +441,7 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
       onPointerUp: endDrag,
       onPointerCancel: endDrag,
       onLostPointerCapture: endDrag,
-      onWheel: handleWheel
-    }
+      onWheel: handleWheel,
+    },
   };
 }

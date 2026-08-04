@@ -80,11 +80,11 @@ setup.
 The game is a React and TypeScript client over a deterministic, serialisable rules
 engine. Browser controls, simulation policies, and replay now submit intent-only
 `GameCommand` values through one atomic transition; effective costs remain engine-owned.
-The accepted [Phase 3.6 architecture plan](docs/plans/phase-3.6-architecture-hardening.md)
-now supplies explicit workflow actors and player/spectator-safe views shared by the browser
+The shipped [runtime architecture contract](docs/reference/architecture.md)
+supplies explicit workflow actors and player/spectator-safe views shared by the browser
 and AI, stable settlement/transfer identities, versioned save and replay recipes, and
-post-transition integrity checks. Mechanical enforcement is the remaining hardening slice
-before more v1 systems land.
+post-transition integrity checks. Import boundaries, behavioral parity, dead-code analysis,
+formatting, bounded tests, and a deterministic browser smoke path enforce that contract.
 
 Engine calculators remain authoritative. `src/game/activeEffects.ts#getActiveEffects`
 reads those calculations and persistent state into typed source/scope/duration/expiry
@@ -97,7 +97,10 @@ Frontend wording and semantic tone continue through `src/ui/effects.ts` and
 npm run check        # TypeScript type-check
 npm run test:parity  # engine, frontend, and simulation/AI parity gate
 npm run lint         # ESLint
+npm run format:check # active source and living documentation
+npm run dead-code    # unused files, exports, and dependencies
 npm run test:run     # Vitest suite
+npm run test:browser # deterministic Chromium smoke journey
 npm run build        # production build
 ```
 

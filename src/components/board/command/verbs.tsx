@@ -43,11 +43,10 @@ export type VerbHandlers = {
   onEndTurn: () => void;
 };
 
-export type VerbId = "grow" | "move" | "found" | "upgrade" | "build" | "calm" | "venture" | "endTurn";
+export type VerbId =
+  "grow" | "move" | "found" | "upgrade" | "build" | "calm" | "venture" | "endTurn";
 
-export type VerbIcon =
-  | { kind: "ui"; item: UiAtlasKey }
-  | { kind: "atlas"; icon: IconAtlasKey };
+export type VerbIcon = { kind: "ui"; item: UiAtlasKey } | { kind: "atlas"; icon: IconAtlasKey };
 
 /** `{ lead, cost }` renders "from 🌾5"; `{ lead }` alone renders a bare word ("free"). */
 export type VerbCost = { lead?: string; cost?: (context: VerbContext) => Partial<Resources> };
@@ -80,7 +79,7 @@ export const VERBS: VerbSpec[] = [
     available: ({ canGrowPops }) => canGrowPops,
     hint: "Choose a holding and pop type to grow.",
     blockedHint: "Requires an owned holding.",
-    select: (handlers) => handlers.onGrowPopRequest()
+    select: (handlers) => handlers.onGrowPopRequest(),
   },
   {
     id: "move",
@@ -90,7 +89,7 @@ export const VERBS: VerbSpec[] = [
     available: ({ canMovePops }) => canMovePops,
     hint: "Move pops between two owned settlements.",
     blockedHint: "Requires at least two settlements.",
-    select: (handlers) => handlers.onMovePopsRequest()
+    select: (handlers) => handlers.onMovePopsRequest(),
   },
   {
     id: "found",
@@ -106,7 +105,7 @@ export const VERBS: VerbSpec[] = [
         ? "Pick a glowing tile on the map, or click again to cancel."
         : "Send a pop from an existing settlement to found a new colony.",
     blockedHint: "Requires an open tile, a spare pop, and enough resources.",
-    select: (handlers) => handlers.onFoundColonyRequest()
+    select: (handlers) => handlers.onFoundColonyRequest(),
   },
   {
     id: "upgrade",
@@ -117,7 +116,7 @@ export const VERBS: VerbSpec[] = [
     available: ({ canUpgradeCity }) => canUpgradeCity,
     hint: "Upgrade one of your colonies into a city.",
     blockedHint: "Requires an upgradeable colony and enough resources.",
-    select: (handlers) => handlers.onUpgradeCityRequest()
+    select: (handlers) => handlers.onUpgradeCityRequest(),
   },
   {
     id: "build",
@@ -134,7 +133,7 @@ export const VERBS: VerbSpec[] = [
         ? "Pick a glowing settlement on the map, or click again to cancel."
         : "Raise a building in one of your settlements.",
     blockedHint: "Requires a settlement with an open slot and enough resources.",
-    select: (handlers) => handlers.onBuildRequest()
+    select: (handlers) => handlers.onBuildRequest(),
   },
   {
     id: "calm",
@@ -144,7 +143,7 @@ export const VERBS: VerbSpec[] = [
     available: ({ calmUsed }) => !calmUsed,
     hint: "Buy happiness: influence or gold, once per turn.",
     blockedHint: "One civic-calm action per turn — already used.",
-    select: (handlers) => handlers.onCalmRequest()
+    select: (handlers) => handlers.onCalmRequest(),
   },
   {
     id: "venture",
@@ -154,8 +153,8 @@ export const VERBS: VerbSpec[] = [
     available: ({ ventureUsed }) => !ventureUsed,
     hint: "Fund an expedition: stake gold or wood, roll the table.",
     blockedHint: "One venture per turn — the ships are already out.",
-    select: (handlers) => handlers.onVentureRequest()
-  }
+    select: (handlers) => handlers.onVentureRequest(),
+  },
 ];
 
 /** End Turn is a verb too, but it is the turn's terminator: own styling, always
@@ -166,9 +165,10 @@ export const END_TURN_VERB: VerbSpec = {
   label: "End Turn",
   icon: { kind: "ui", item: "endTurn" },
   available: () => true,
-  hint: ({ isActive }) => (isActive ? "End the current player's turn." : "Current player's turn only."),
+  hint: ({ isActive }) =>
+    isActive ? "End the current player's turn." : "Current player's turn only.",
   blockedHint: "Current player's turn only.",
-  select: (handlers) => handlers.onEndTurn()
+  select: (handlers) => handlers.onEndTurn(),
 };
 
 /** The shared gate every verb sits behind, in one place. */

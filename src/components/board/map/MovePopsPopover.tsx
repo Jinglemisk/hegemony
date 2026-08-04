@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { EMPTY_POPS, clonePops, formatPops, getMovePopsStatus, totalPops } from "../../../game/rules";
+import {
+  EMPTY_POPS,
+  clonePops,
+  formatPops,
+  getMovePopsStatus,
+  totalPops,
+} from "../../../game/rules";
 import type { Pops } from "../../../game/types";
 import { useGameUi } from "../GameUiContext";
 import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
@@ -24,7 +30,7 @@ export function MovePopsSourcePopover({
   tileId,
   anchor,
   onCancel,
-  onConfirm
+  onConfirm,
 }: {
   tileId: string;
   anchor: DOMRect;
@@ -41,7 +47,9 @@ export function MovePopsSourcePopover({
 
   return (
     <TilePopover anchor={anchor} label="Move pops from" onCancel={onCancel} title="Move From">
-      <p className="placementSectionLabel placementTargetName">{settlementPickerLabel(G, tile, playerID)}</p>
+      <p className="placementSectionLabel placementTargetName">
+        {settlementPickerLabel(G, tile, playerID)}
+      </p>
       <p className="placementCostNote">Holds {formatPops(settlement.pops)}.</p>
 
       <PopoverActions
@@ -60,7 +68,7 @@ export function MovePopsTargetPopover({
   tileId,
   anchor,
   onCancel,
-  onConfirm
+  onConfirm,
 }: {
   sourceTileId: string;
   tileId: string;
@@ -91,7 +99,9 @@ export function MovePopsTargetPopover({
       onCancel={onCancel}
       title="Move To"
     >
-      <p className="placementSectionLabel placementTargetName">{settlementPickerLabel(G, tile, playerID)}</p>
+      <p className="placementSectionLabel placementTargetName">
+        {settlementPickerLabel(G, tile, playerID)}
+      </p>
       <p className="placementCostNote">
         From {settlementPickerLabel(G, sourceTile, playerID)} — they arrive next turn.
       </p>

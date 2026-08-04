@@ -19,7 +19,7 @@ export function settlementPopCapacity(kind: Settlement["kind"], ruleset: Ruleset
 export function settlementCapacity(
   settlement: Settlement,
   ruleset: Ruleset,
-  content: GameContent = getAuthoredGameContent()
+  content: GameContent = getAuthoredGameContent(),
 ) {
   const bonus = settlement.buildings.reduce((sum, buildingId) => {
     const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
@@ -27,8 +27,9 @@ export function settlementCapacity(
     return (
       sum +
       (building?.effects ?? []).reduce(
-        (effectSum, effect) => (effect.type === "popCapacityBonus" ? effectSum + effect.amount : effectSum),
-        0
+        (effectSum, effect) =>
+          effect.type === "popCapacityBonus" ? effectSum + effect.amount : effectSum,
+        0,
       )
     );
   }, 0);
@@ -39,7 +40,7 @@ export function settlementCapacity(
 export function settlementOverCapacity(
   settlement: Settlement,
   ruleset: Ruleset,
-  content: GameContent = getAuthoredGameContent()
+  content: GameContent = getAuthoredGameContent(),
 ) {
   return Math.max(0, totalPops(settlement.pops) - settlementCapacity(settlement, ruleset, content));
 }
@@ -58,7 +59,7 @@ export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
       totals.capacity += settlementCapacity(settlement, G.ruleset, G.definition.content);
       return totals;
     },
-    { pops: 0, capacity: 0 }
+    { pops: 0, capacity: 0 },
   );
 }
 
@@ -78,7 +79,9 @@ export function settlementTileYield(tile: HexTile, settlement: Settlement, rules
   }
 
   const share =
-    settlement.kind === "colony" && tile.settlements.length > 1 ? ruleset.economy.colonySharedTileYieldShare : 1;
+    settlement.kind === "colony" && tile.settlements.length > 1
+      ? ruleset.economy.colonySharedTileYieldShare
+      : 1;
 
   return Math.floor(tile.resource.amount * share);
 }
@@ -126,11 +129,11 @@ export function canPlaceColonyOnTile(
   G: HegemonyState,
   playerID: PlayerId,
   tile: HexTile,
-  context: "gameplay" | "setup" = "gameplay"
+  context: "gameplay" | "setup" = "gameplay",
 ): ActionStatus {
   const status: ActionStatus = {
     can: false,
-    reasons: []
+    reasons: [],
   };
 
   if (tile.terrain === "oracle") {
@@ -154,13 +157,15 @@ export function canPlaceColonyOnTile(
     const bySea =
       context === "setup"
         ? isCoastalTile(tile)
-        : G.ruleset.placement.coastalLeapfrog && isCoastalTile(tile) && playerHoldsCoast(G, playerID);
+        : G.ruleset.placement.coastalLeapfrog &&
+          isCoastalTile(tile) &&
+          playerHoldsCoast(G, playerID);
 
     if (!contiguous && !bySea) {
       status.reasons.push(
         context === "setup"
           ? "The founding colony must border your metropolis or lie on the coast."
-          : "Must border one of your settlements — or be a coastal tile while you hold the coast."
+          : "Must border one of your settlements — or be a coastal tile while you hold the coast.",
       );
     }
   }
@@ -190,7 +195,7 @@ export function scaledByPops(
   playerID: PlayerId,
   amountPerPops: number,
   popStep: number,
-  minimumMagnitude: number
+  minimumMagnitude: number,
 ) {
   const { pops } = playerPopulationTotals(G, playerID);
   const scaled = Math.floor(pops / popStep) * amountPerPops;

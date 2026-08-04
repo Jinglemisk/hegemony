@@ -1,6 +1,7 @@
 import { produce } from "immer";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
+import type { TransitionResult } from "../game/legalMoves";
 import type { GameModeId } from "../game/ruleset";
 import type { GameDefinition } from "../game/definition";
 import { projectForPlayer } from "../game/projection";
@@ -56,6 +57,15 @@ export type PlayTurnOptions = {
   maxActions?: number;
 };
 
+/** Simulator seam for the canonical command transition; exported for parity proof. */
+export function applySimCommand(
+  state: HegemonyState,
+  actor: PlayerId,
+  command: GameCommand,
+): TransitionResult {
+  return transition(state.definition, state, actor, command);
+}
+
 export function playTurn(
   initial: HegemonyState,
   policy: Policy,
@@ -82,7 +92,7 @@ export function playTurn(
     }
 
     const command = policy.choose(projectForPlayer(G.definition, G, player), commands, rng);
-    const result = transition(G.definition, G, player, command);
+    const result = applySimCommand(G, player, command);
 
     if (!result.ok) {
       throw new SimEnumerationError(
@@ -119,7 +129,7 @@ function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
     // Riot enumeration lists insurance first and the roll last — forced turns roll.
     const forced = resolutions.find((move) => move.type === "resolveRiot") ?? resolutions[0];
 
-    const result = transition(G.definition, G, player, forced);
+    const result = applySimCommand(G, player, forced);
     if (!result.ok) {
       throw new SimEnumerationError(`forced resolution failed: ${JSON.stringify(forced)}`);
     }
@@ -132,7 +142,7 @@ function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
   const player = G.currentPlayer;
   const endTurn: GameCommand = { type: "endTurn" };
 
-  const result = transition(G.definition, G, player, endTurn);
+  const result = applySimCommand(G, player, endTurn);
   if (!result.ok) {
     throw new SimEnumerationError(`forced endTurn failed on turn ${G.turn} (phase ${G.phase})`);
   }
@@ -196,9 +206,31 @@ export type RunGameOptions = {
 };
 
 /** One self-contained bot game: build (setup counts as turns played too), then run to the cap. */
-export function runGame({ seed, mode, patch, definition, opening = "random", boardLayout, policy, seatPolicies, botSeed, turns, hooks = {}, trimLogTo }: RunGameOptions): HegemonyState {
+export function runGame({
+  seed,
+  mode,
+  patch,
+  definition,
+  opening = "random",
+  boardLayout,
+  policy,
+  seatPolicies,
+  botSeed,
+  turns,
+  hooks = {},
+  trimLogTo,
+}: RunGameOptions): HegemonyState {
   const rng = createSimRng(botSeed ?? deriveBotSeed(seed));
-  let G = buildNewGame({ seed, mode, patch, definition, opening, boardLayout, simRng: rng, onMove: hooks.onMove });
+  let G = buildNewGame({
+    seed,
+    mode,
+    patch,
+    definition,
+    opening,
+    boardLayout,
+    simRng: rng,
+    onMove: hooks.onMove,
+  });
 
   hooks.onGameStart?.(G);
   G = runTurns(G, policy, rng, turns, hooks, { trimLogTo, seatPolicies });

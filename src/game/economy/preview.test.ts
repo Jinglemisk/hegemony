@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { owned, scenario } from "../testing/scenario";
-import { calculateEconomyProjection, previewBuildingIncomeDelta, previewGrowPopIncomeDelta } from "./preview";
+import {
+  calculateEconomyProjection,
+  previewBuildingIncomeDelta,
+  previewGrowPopIncomeDelta,
+} from "./preview";
 
 /**
  * Guards the "UI never duplicates formulas" invariant (ladder rung R7).
@@ -34,7 +38,9 @@ describe("income previews come from the engine", () => {
   it("tracks a PATCHED ruleset — the drift the old UI copy could not see", () => {
     // Double what a freeman earns. The old UI helper read DEFAULT_RULESET and
     // would have kept reporting the unpatched number.
-    const G = scenario({ patch: { popIncome: { freemen: { flat: { gold: 4 } } } } }).opening().build();
+    const G = scenario({ patch: { popIncome: { freemen: { flat: { gold: 4 } } } } })
+      .opening()
+      .build();
 
     expect(G.ruleset.popIncome.freemen.flat.gold).toBe(4);
     expect(previewGrowPopIncomeDelta(G, "0", FIRST_CITY, "freemen").gold).toBe(4);

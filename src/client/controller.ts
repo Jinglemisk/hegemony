@@ -1,28 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
 import { DEV_ROTATION_SEEDS, GAME_CONFIG } from "../game/config";
 import { mulberry32 } from "../game/core/rng";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
-import type { GameCommand } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
-import type { PlayerView, ProjectedGameState } from "../game/projection";
-import type {
-  BoardLayout,
-  BuildingId,
-  EventTableId,
-  HegemonyState,
-  Phase,
-  PlayerId,
-  PopType,
-  Pops,
-  RiotInsuranceId,
-  TradableMaterial,
-} from "../game/types";
-import type { CivicCalmPayment, VentureStake } from "../game/rules";
+import type { BoardLayout, HegemonyState, Phase, PlayerId } from "../game/types";
 import { createGameFromDefinition } from "../game/turn";
-import type { PoliticianId } from "../game/assembly";
 import { GAME_MODES } from "../game/ruleset";
 import { loadStartAtAssembly, resolveTunedDefinition } from "../dev/tuning";
+import { createBrowserSeed } from "./seed";
+import { createCommandEvents, createCommandMoves, reduceGameCommand } from "./commandAdapter";
+
+export type { GameEvents, GameMoves } from "./commandAdapter";
 
 export type { Phase } from "../game/types";
 
@@ -43,6 +31,7 @@ function createGameFromUrl(): HegemonyState {
   const seedParam = Number(params?.get("seed"));
   const pinnedSeed =
     Number.isFinite(seedParam) && params?.get("seed") ? seedParam >>> 0 : undefined;
+  const matchSeed = pinnedSeed ?? createBrowserSeed();
   const manualSetup = params?.get("setup") === "manual";
   const preload = params?.get("dev") === "preload" || GAME_CONFIG.preloadOpeningSetupForTesting;
 
@@ -52,11 +41,11 @@ function createGameFromUrl(): HegemonyState {
 
   if (preload) {
     // The scripted opening only fits the classic board's tiles.
-    return createGameFromDefinition(definition, pinnedSeed, "classic", true);
+    return createGameFromDefinition(definition, matchSeed, "classic", true);
   }
 
   const seed =
-    pinnedSeed ?? (GAME_CONFIG.autoOpeningForDev && !manualSetup ? nextRotationSeed() : undefined);
+    pinnedSeed ?? (GAME_CONFIG.autoOpeningForDev && !manualSetup ? nextRotationSeed() : matchSeed);
   let G = createGameFromDefinition(definition, seed, boardLayout, false);
 
   if (!manualSetup && GAME_CONFIG.autoOpeningForDev) {
@@ -168,51 +157,6 @@ export type LocalContext = {
   turn: number;
 };
 
-export type HegemonyGame = {
-  G: ProjectedGameState;
-  ctx: LocalContext;
-};
-
-export type GameMoves = {
-  placeCapital: (tileId: string, pops: Pops) => void;
-  placeCity: (tileId: string, pops: Pops) => void;
-  placeColony: (tileId: string, pops: Pops) => void;
-  foundColony: (tileId: string, sourceTileId: string, pop: PopType) => void;
-  upgradeColonyToCity: (tileId: string) => void;
-  buildBuilding: (tileId: string, buildingId: BuildingId) => void;
-  growPop: (tileId: string, pop: PopType) => void;
-  movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
-  resolvePendingPlayerEvent: (targetTileId?: string, choiceIndex?: number) => void;
-  bankSell: (material: TradableMaterial) => void;
-  bankBuy: (material: TradableMaterial) => void;
-  civicCalm: (payment: CivicCalmPayment) => void;
-  promotePop: (tileId: string, from: PopType) => void;
-  demotePop: (tileId: string, from: PopType) => void;
-  fundExpedition: (expeditionId: EventTableId, stake: VentureStake) => void;
-  buyRiotInsurance: (
-    optionId: RiotInsuranceId,
-    demoteTarget?: { tileId: string; from: PopType },
-  ) => void;
-  resolveRiot: () => void;
-  // The Assembly (Phase 3-B). These are the only moves available while the agora
-  // sits — the engine refuses every other verb until the house rises.
-  assemblyDraw: (playerID: PlayerId, politician: PoliticianId) => void;
-  assemblyDiscardHeld: (playerID: PlayerId) => void;
-  assemblyPropose: (playerID: PlayerId, replaces?: string, target?: PlayerId) => void;
-  assemblyProposeRepeal: (playerID: PlayerId, cardId: string) => void;
-  assemblyPass: (playerID: PlayerId) => void;
-  assemblyBribe: (playerID: PlayerId) => void;
-  assemblyVote: (playerID: PlayerId, yea: boolean) => void;
-  assemblyVeto: (playerID: PlayerId) => void;
-  assemblyClose: () => void;
-};
-
-export type GameEvents = {
-  endTurn: () => void;
-};
-
-type SetState = Dispatch<SetStateAction<HegemonyState>>;
-
 function deriveContext(G: HegemonyState): LocalContext {
   return { currentPlayer: G.currentPlayer, phase: G.phase, turn: G.turn };
 }
@@ -231,8 +175,20 @@ export function useHegemonyGame() {
     setPlayerID(G.currentPlayer);
   }, [G.currentPlayer, G.assembly?.phase]);
 
-  const moves = useMemo(() => createMoves(setG), []);
-  const events = useMemo(() => createEvents(setG), []);
+  const moves = useMemo(
+    () =>
+      createCommandMoves((command, actor) => {
+        setG((previous) => reduceGameCommand(previous, actor ?? previous.currentPlayer, command));
+      }),
+    [],
+  );
+  const events = useMemo(
+    () =>
+      createCommandEvents((command, actor) => {
+        setG((previous) => reduceGameCommand(previous, actor ?? previous.currentPlayer, command));
+      }),
+    [],
+  );
   const view = useMemo(() => projectForPlayer(G.definition, G, playerID), [G, playerID]);
   // Rebuild the whole game from URL + current dev tuning overrides. Reuses this page
   // load's rotation seed, so a re-tune re-rolls the SAME board with new params (clean A/B).
@@ -252,78 +208,8 @@ export function useHegemonyGame() {
   };
 }
 
-export type HegemonyClientView = PlayerView;
-
 /**
  * UI convenience methods construct intent-only commands and pass them to the same
  * atomic transition used by simulation and replay. Rejections preserve the previous
  * state reference, so React does not render a partial or invalid command result.
  */
-function createMoves(setG: SetState): GameMoves {
-  const dispatch = (command: GameCommand, actor?: PlayerId) => {
-    setG((previous) => reduceGameCommand(previous, actor ?? previous.currentPlayer, command));
-  };
-
-  return {
-    placeCapital: (tileId, pops) => dispatch({ type: "placeCapital", tileId, pops }),
-    placeCity: (tileId, pops) => dispatch({ type: "placeCity", tileId, pops }),
-    placeColony: (tileId, pops) => dispatch({ type: "placeColony", tileId, pops }),
-    foundColony: (tileId, sourceTileId, pop) =>
-      dispatch({ type: "foundColony", tileId, sourceTileId, pop }),
-    upgradeColonyToCity: (tileId) => dispatch({ type: "upgradeColonyToCity", tileId }),
-    buildBuilding: (tileId, buildingId) =>
-      dispatch({ type: "buildBuilding", tileId, buildingId }),
-    growPop: (tileId, pop) => dispatch({ type: "growPop", tileId, pop }),
-    movePops: (sourceTileId, targetTileId, pops) =>
-      dispatch({ type: "movePops", sourceTileId, targetTileId, pops }),
-    resolvePendingPlayerEvent: (targetTileId, choiceIndex = 0) =>
-      dispatch({ type: "resolveEvent", choiceIndex, ...(targetTileId ? { targetTileId } : {}) }),
-    bankSell: (material) => dispatch({ type: "bankSell", material }),
-    bankBuy: (material) => dispatch({ type: "bankBuy", material }),
-    civicCalm: (payment) => dispatch({ type: "civicCalm", payment }),
-    promotePop: (tileId, from) => dispatch({ type: "promotePop", tileId, from }),
-    demotePop: (tileId, from) => dispatch({ type: "demotePop", tileId, from }),
-    fundExpedition: (expeditionId, stake) =>
-      dispatch({ type: "fundExpedition", expeditionId, stake }),
-    buyRiotInsurance: (optionId, demoteTarget) =>
-      dispatch({ type: "buyRiotInsurance", optionId, ...(demoteTarget ? { demoteTarget } : {}) }),
-    resolveRiot: () => dispatch({ type: "resolveRiot" }),
-    assemblyDraw: (playerID, politician) =>
-      dispatch({ type: "assemblyDraw", politician }, playerID),
-    assemblyDiscardHeld: (playerID) => dispatch({ type: "assemblyDiscardHeld" }, playerID),
-    assemblyPropose: (playerID, replaces, target) =>
-      dispatch(
-        {
-          type: "assemblyPropose",
-          ...(replaces ? { replaces } : {}),
-          ...(target ? { target } : {}),
-        },
-        playerID,
-      ),
-    assemblyProposeRepeal: (playerID, cardId) =>
-      dispatch({ type: "assemblyProposeRepeal", cardId }, playerID),
-    assemblyPass: (playerID) => dispatch({ type: "assemblyPass" }, playerID),
-    assemblyBribe: (playerID) => dispatch({ type: "assemblyBribe" }, playerID),
-    assemblyVote: (playerID, yea) => dispatch({ type: "assemblyVote", yea }, playerID),
-    assemblyVeto: (playerID) => dispatch({ type: "assemblyVeto" }, playerID),
-    assemblyClose: () => dispatch({ type: "assemblyClose" }),
-  };
-}
-
-/** Pure browser adapter, exported so parity tests can compare UI execution with the engine boundary. */
-export function reduceGameCommand(
-  previous: HegemonyState,
-  actor: PlayerId,
-  command: GameCommand,
-): HegemonyState {
-  const result = transition(previous.definition, previous, actor, command);
-  return result.ok ? result.state : previous;
-}
-
-function createEvents(setG: SetState): GameEvents {
-  return {
-    endTurn: () => {
-      setG((previous) => reduceGameCommand(previous, previous.currentPlayer, { type: "endTurn" }));
-    },
-  };
-}

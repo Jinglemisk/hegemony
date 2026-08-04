@@ -59,12 +59,6 @@ export function positionAnchoredOverlay(
   return { top, left, arrowLeft, placement };
 }
 
-/** Retained for callers that only need horizontal clamping. */
-export function clampAnchoredLeft(centerX: number, width: number, margin: number) {
-  const viewportWidth = typeof window === "undefined" ? width + margin * 2 : window.innerWidth;
-  return clampToViewport(centerX - width / 2, width, viewportWidth, margin);
-}
-
 function clampToViewport(position: number, size: number, viewportSize: number, margin: number) {
   return Math.max(margin, Math.min(position, Math.max(margin, viewportSize - size - margin)));
 }

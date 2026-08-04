@@ -168,4 +168,3 @@
   stroke: color-mix(in srgb, var(--resource-color, var(--terrain-neutral-line)) 72%, #241910 28%);
   stroke-width: 1.8;
 }
-

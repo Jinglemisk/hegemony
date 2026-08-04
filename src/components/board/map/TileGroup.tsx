@@ -29,7 +29,7 @@ export function TileGroup({
   isPending,
   isPlacementCandidate,
   onTileAction,
-  onTileClick
+  onTileClick,
 }: {
   tile: HexTile;
   x: number;
@@ -47,7 +47,9 @@ export function TileGroup({
   const colonyXPositions = getColonyXPositions(shownColonies.length);
   const overflowColonies = Math.max(0, colonies.length - shownColonies.length);
   const usedBuildingSlots = city?.buildings.length ?? 0;
-  const totalBuildingSlots = city ? settlementBuildingSlots(tile, city, ruleset) : tile.buildingSlots;
+  const totalBuildingSlots = city
+    ? settlementBuildingSlots(tile, city, ruleset)
+    : tile.buildingSlots;
   // Text glyphs (user, 2026-07-13): slots read "used/available" up top, the yield
   // reads "+n" below — both white, both growing with their number so a fat plains
   // shouts and a lean hill whispers.

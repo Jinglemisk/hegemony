@@ -8,7 +8,7 @@ const SEASON_ART: Record<SeasonName, string> = {
   spring: new URL("../../../../assets/season-icons/spring.webp", import.meta.url).href,
   summer: new URL("../../../../assets/season-icons/summer.webp", import.meta.url).href,
   autumn: new URL("../../../../assets/season-icons/autumn.webp", import.meta.url).href,
-  winter: new URL("../../../../assets/season-icons/winter.webp", import.meta.url).href
+  winter: new URL("../../../../assets/season-icons/winter.webp", import.meta.url).href,
 };
 
 /** The ring/tint hue for each season. */
@@ -16,7 +16,7 @@ const SEASON_TINT: Record<SeasonName, string> = {
   spring: "var(--olive)",
   summer: "var(--ochre)",
   autumn: "var(--clay)",
-  winter: "var(--aegean)"
+  winter: "var(--aegean)",
 };
 
 /** A round indicator showing the current season's painted emblem, framed in its hue. */
@@ -34,4 +34,3 @@ export function SeasonDial({ seasonIndex }: { seasonIndex: number }) {
     </div>
   );
 }
-

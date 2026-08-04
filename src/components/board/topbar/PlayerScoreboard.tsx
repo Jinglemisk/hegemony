@@ -12,7 +12,7 @@ import type { PlayerId } from "../../../game/types";
 function PlayerScoreboardComponent({
   currentPlayerId,
   viewerId,
-  onPlayerIDChange
+  onPlayerIDChange,
 }: {
   currentPlayerId: PlayerId;
   viewerId: PlayerId;

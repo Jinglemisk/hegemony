@@ -6,7 +6,7 @@ import {
   settlementOverCapacity,
   settlementCapacity,
   settlementTileYield,
-  totalPops
+  totalPops,
 } from "../game/rules";
 import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, tileCssVars } from "../ui/resourceVisuals";
@@ -24,7 +24,7 @@ export function SettlementSummaryCard({
   settlement,
   netYield,
   ruleset,
-  content
+  content,
 }: {
   tile: HexTile;
   settlement: Settlement;
@@ -51,7 +51,10 @@ export function SettlementSummaryCard({
       </span>
 
       <span className="holdingSummaryMetrics">
-        <span className="cityMeter" title={`Building slots ${settlement.buildings.length} of ${slots}`}>
+        <span
+          className="cityMeter"
+          title={`Building slots ${settlement.buildings.length} of ${slots}`}
+        >
           <AtlasIcon icon="temple" className="miniIcon" />
           <span className="cityMeterText">
             <strong>
@@ -106,7 +109,11 @@ export function HoldingNetYields({ resources }: { resources: Resources }) {
       variant="yield"
       className="holdingNetYields"
       chipClassName="holdingNetYield"
-      title={hasYield ? `Net income: ${formatResourceDelta(resources)}` : "No net income from this settlement"}
+      title={
+        hasYield
+          ? `Net income: ${formatResourceDelta(resources)}`
+          : "No net income from this settlement"
+      }
     />
   );
 }

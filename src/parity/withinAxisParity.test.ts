@@ -226,8 +226,7 @@ describe("effective content and cost parity", () => {
     expect(buildingName("marketplace", G.definition.content)).toBe("Agora Market");
 
     const legalOption = enumerateLegalOptions(G, "0").find(
-      ({ command }) =>
-        command.type === "buildBuilding" && command.buildingId === "marketplace",
+      ({ command }) => command.type === "buildBuilding" && command.buildingId === "marketplace",
     );
     expect(legalOption).toMatchObject({
       command: { type: "buildBuilding", buildingId: "marketplace" },
@@ -262,12 +261,8 @@ describe("effective content and cost parity", () => {
     const found = VERBS.find((verb) => verb.id === "found");
     const upgrade = VERBS.find((verb) => verb.id === "upgrade");
 
-    expect(found?.cost?.cost?.(context)).toEqual(
-      getFoundColonyStatus(G, "0", "").cost,
-    );
-    expect(upgrade?.cost?.cost?.(context)).toEqual(
-      getUpgradeColonyToCityStatus(G, "0", "").cost,
-    );
+    expect(found?.cost?.cost?.(context)).toEqual(getFoundColonyStatus(G, "0", "").cost);
+    expect(upgrade?.cost?.cost?.(context)).toEqual(getUpgradeColonyToCityStatus(G, "0", "").cost);
     expect(VERBS.find((verb) => verb.id === "grow")?.cost?.lead).toBe("varies");
     expect(VERBS.find((verb) => verb.id === "build")?.cost?.lead).toBe("varies");
     expect(VERBS.find((verb) => verb.id === "calm")?.cost?.lead).toBe("options");
@@ -278,9 +273,7 @@ describe("effective content and cost parity", () => {
     const choose = (cost: number, income: number) => {
       const buildings = tunedBuildings("granary", {
         cost: { wood: cost },
-        effects: income
-          ? [{ type: "income", resource: "food", amount: income }]
-          : [],
+        effects: income ? [{ type: "income", resource: "food", amount: income }] : [],
       });
       const G = gameplayCity();
       pinBuildings(G, buildings);
@@ -293,7 +286,8 @@ describe("effective content and cost parity", () => {
         { type: "endTurn" },
       ];
 
-      return smartPolicy.choose(projectForPlayer(G.definition, G, "0"), moves, createSimRng(1)).type;
+      return smartPolicy.choose(projectForPlayer(G.definition, G, "0"), moves, createSimRng(1))
+        .type;
     };
 
     expect(choose(150, 0)).toBe("endTurn");

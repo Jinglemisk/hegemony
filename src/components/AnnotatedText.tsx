@@ -104,7 +104,7 @@ const TOKEN_MAP: Record<string, Token> = {
   patronage: { type: "concept", chapter: "assembly" },
   repeal: { type: "concept", chapter: "assembly" },
   veto: { type: "concept", chapter: "assembly" },
-  agora: { type: "concept", chapter: "assembly" }
+  agora: { type: "concept", chapter: "assembly" },
 };
 
 // Longer words first so "citizens" wins over "citizen", etc.
@@ -112,7 +112,7 @@ const TOKEN_PATTERN = new RegExp(
   `\\b(${Object.keys(TOKEN_MAP)
     .sort((a, b) => b.length - a.length)
     .join("|")})\\b`,
-  "gi"
+  "gi",
 );
 
 function tokenIcon(token: Token) {
@@ -210,7 +210,7 @@ export function AnnotatedText({
           {label}
           {tokenIcon(token)}
         </span>
-      )
+      ),
     );
 
     lastIndex = match.index + word.length;

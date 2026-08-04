@@ -1,6 +1,15 @@
 import { getAuthoredGameContent, getBuildings } from "../content";
 import type { GameContent } from "../content";
-import type { ActionCostDiscountTarget, BuildingId, HegemonyState, PlayerId, PopType, Resource, Resources, Settlement } from "../types";
+import type {
+  ActionCostDiscountTarget,
+  BuildingId,
+  HegemonyState,
+  PlayerId,
+  PopType,
+  Resource,
+  Resources,
+  Settlement,
+} from "../types";
 import { addLog, getPlayerName } from "../core/query";
 import { clonePartialResources } from "../core/resources";
 import type { Ruleset } from "../ruleset";
@@ -14,20 +23,25 @@ export function getAdjustedActionCost(
   playerID: PlayerId,
   action: CostedAction,
   baseCost: Partial<Resources>,
-  buildingId?: BuildingId
+  buildingId?: BuildingId,
 ): Partial<Resources> {
   const adjusted = clonePartialResources(baseCost);
   const multiplier = getSeasonBuildingCostMultiplier(G, action);
 
   if (multiplier !== 1) {
-    for (const [resource, amount] of Object.entries(adjusted) as Array<[Resource, number | undefined]>) {
+    for (const [resource, amount] of Object.entries(adjusted) as Array<
+      [Resource, number | undefined]
+    >) {
       adjusted[resource] = Math.ceil((amount ?? 0) * multiplier);
     }
   }
 
   if (action === "buildBuilding" || action === "foundColony") {
     for (const discount of getMatchingActionCostDiscounts(G, playerID, action, buildingId)) {
-      adjusted[discount.resource] = Math.max(0, (adjusted[discount.resource] ?? 0) - discount.amount);
+      adjusted[discount.resource] = Math.max(
+        0,
+        (adjusted[discount.resource] ?? 0) - discount.amount,
+      );
     }
   }
 
@@ -40,14 +54,17 @@ export function getGrowPopCost(
   settlement: Settlement,
   pop: PopType,
   ruleset: Ruleset,
-  content: GameContent = getAuthoredGameContent()
+  content: GameContent = getAuthoredGameContent(),
 ): Partial<Resources> {
   const baseCost = ruleset.growPopCosts[pop];
-  const discountedFood = Math.max(0, (baseCost.food ?? 0) - getGrowPopFoodDiscount(settlement, content));
+  const discountedFood = Math.max(
+    0,
+    (baseCost.food ?? 0) - getGrowPopFoodDiscount(settlement, content),
+  );
 
   return {
     ...baseCost,
-    food: discountedFood
+    food: discountedFood,
   };
 }
 
@@ -60,9 +77,11 @@ export function getDiscountedGrowPopCost(
   G: HegemonyState,
   playerID: PlayerId,
   settlement: Settlement,
-  pop: PopType
+  pop: PopType,
 ): Partial<Resources> {
-  const adjusted = clonePartialResources(getGrowPopCost(settlement, pop, G.ruleset, G.definition.content));
+  const adjusted = clonePartialResources(
+    getGrowPopCost(settlement, pop, G.ruleset, G.definition.content),
+  );
 
   for (const discount of getMatchingActionCostDiscounts(G, playerID, "growPop", undefined, pop)) {
     adjusted[discount.resource] = Math.max(0, (adjusted[discount.resource] ?? 0) - discount.amount);
@@ -72,7 +91,7 @@ export function getDiscountedGrowPopCost(
   // Manifest Destiny), so the settlement's own kind is part of the question.
   return applyLawActionCost(G, playerID, "growPop", adjusted, {
     scope: settlement.kind === "colony" ? "colony" : "city",
-    pop
+    pop,
   });
 }
 
@@ -85,7 +104,7 @@ function getGrowPopFoodDiscount(settlement: Settlement, content: GameContent) {
       (building?.effects ?? []).reduce(
         (effectDiscount, effect) =>
           effect.type === "growPopFoodDiscount" ? effectDiscount + effect.amount : effectDiscount,
-        0
+        0,
       )
     );
   }, 0);
@@ -120,13 +139,13 @@ function getMatchingActionCostDiscounts(
   playerID: PlayerId,
   action: ActionCostDiscountTarget,
   buildingId?: BuildingId,
-  pop?: PopType
+  pop?: PopType,
 ) {
   return G.players[playerID].actionCostDiscounts.filter(
     (discount) =>
       discount.action === action &&
       (!discount.buildingId || discount.buildingId === buildingId) &&
-      (!discount.pop || discount.pop === pop)
+      (!discount.pop || discount.pop === pop),
   );
 }
 
@@ -135,7 +154,7 @@ export function consumeActionCostDiscounts(
   playerID: PlayerId,
   action: ActionCostDiscountTarget,
   buildingId?: BuildingId,
-  pop?: PopType
+  pop?: PopType,
 ) {
   const matching = getMatchingActionCostDiscounts(G, playerID, action, buildingId, pop);
 
@@ -145,12 +164,12 @@ export function consumeActionCostDiscounts(
 
   const consumedIds = new Set(matching.map((discount) => discount.id));
   G.players[playerID].actionCostDiscounts = G.players[playerID].actionCostDiscounts.filter(
-    (discount) => !consumedIds.has(discount.id)
+    (discount) => !consumedIds.has(discount.id),
   );
   addLog(
     G,
     `${getPlayerName(G, playerID)} used ${matching.map((discount) => discount.label).join(", ")} event discount${
       matching.length === 1 ? "" : "s"
-    }.`
+    }.`,
   );
 }

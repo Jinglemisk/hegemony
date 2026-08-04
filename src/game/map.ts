@@ -11,7 +11,7 @@ export const BOARD_RADIUS = 3;
 /** Lay a terrain deck onto the board. Direct callers default to authored terrain;
  *  match creation always passes the terrain from its pinned definition. */
 export function createInitialMap(
-  deck: TerrainDeck = getTerrainDeck(getAuthoredGameContent())
+  deck: TerrainDeck = getTerrainDeck(getAuthoredGameContent()),
 ): HexTile[] {
   const coordinates = axialRadius(BOARD_RADIUS);
 
@@ -24,7 +24,7 @@ export function createInitialMap(
       terrain: terrain.terrain,
       buildingSlots: terrain.buildingSlots,
       resource: terrain.resource,
-      settlements: []
+      settlements: [],
     };
   });
 }

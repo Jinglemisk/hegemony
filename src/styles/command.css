@@ -285,20 +285,29 @@
   border-radius: 50%;
   color: var(--ink);
   background: var(--disc);
-  box-shadow: 0 0 0 1px var(--ring), var(--lift);
-  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  box-shadow:
+    0 0 0 1px var(--ring),
+    var(--lift);
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .verbDisc:not(:disabled):not([aria-disabled="true"]):hover .verbKnob {
   background: var(--disc-hi);
-  box-shadow: 0 0 0 1px var(--ink-30), var(--lift-hi);
+  box-shadow:
+    0 0 0 1px var(--ink-30),
+    var(--lift-hi);
   transform: translateY(-3px);
 }
 
 .verbDiscArmed .verbKnob {
   color: var(--ivory);
   background: var(--clay);
-  box-shadow: 0 0 0 1px rgb(143 46 19 / 55%), 0 6px 18px rgb(192 70 28 / 42%);
+  box-shadow:
+    0 0 0 1px rgb(143 46 19 / 55%),
+    0 6px 18px rgb(192 70 28 / 42%);
 }
 
 .verbDiscOff .verbKnob {
@@ -436,12 +445,16 @@
   border-radius: 6px;
   color: var(--ivory);
   background: var(--clay-deep);
-  box-shadow: 0 6px 20px rgb(143 46 19 / 40%), 0 0 0 1px rgb(36 25 16 / 30%);
+  box-shadow:
+    0 6px 20px rgb(143 46 19 / 40%),
+    0 0 0 1px rgb(36 25 16 / 30%);
 }
 
 .endTurnSquare:not(:disabled):not([aria-disabled="true"]):hover {
   background: #a8371a;
-  box-shadow: 0 8px 22px rgb(143 46 19 / 46%), 0 0 0 1px rgb(36 25 16 / 30%);
+  box-shadow:
+    0 8px 22px rgb(143 46 19 / 46%),
+    0 0 0 1px rgb(36 25 16 / 30%);
   transform: translateY(-2px);
 }
 

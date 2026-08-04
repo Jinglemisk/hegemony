@@ -31,13 +31,17 @@ export function formatTileLabel(G: HegemonyState, tileId: string) {
 }
 
 export function formatRuleResourceDelta(resources: Resources) {
-  const entries = (Object.entries(resources) as Array<[Resource, number]>).filter(([, amount]) => amount !== 0);
+  const entries = (Object.entries(resources) as Array<[Resource, number]>).filter(
+    ([, amount]) => amount !== 0,
+  );
 
   if (entries.length === 0) {
     return "no change";
   }
 
-  return entries.map(([resource, amount]) => `${formatRuleNumber(amount, true)} ${resource}`).join(", ");
+  return entries
+    .map(([resource, amount]) => `${formatRuleNumber(amount, true)} ${resource}`)
+    .join(", ");
 }
 
 export function capitalize(value: string) {
@@ -46,6 +50,8 @@ export function capitalize(value: string) {
 
 export function formatRuleNumber(amount: number, signed = false) {
   const rounded = Math.round(amount * 100) / 100;
-  const value = Number.isInteger(rounded) ? `${rounded}` : `${rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}`;
+  const value = Number.isInteger(rounded)
+    ? `${rounded}`
+    : `${rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}`;
   return signed && rounded > 0 ? `+${value}` : value;
 }

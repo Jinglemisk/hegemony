@@ -126,7 +126,9 @@
   0%,
   38% {
     background: rgb(47 125 70 / 26%);
-    box-shadow: inset 0 0 0 2px rgb(47 125 70 / 42%), 0 2px 5px rgb(47 125 70 / 26%);
+    box-shadow:
+      inset 0 0 0 2px rgb(47 125 70 / 42%),
+      0 2px 5px rgb(47 125 70 / 26%);
   }
   100% {
     background: linear-gradient(180deg, var(--ivory), var(--bone));
@@ -141,7 +143,9 @@
   0%,
   38% {
     background: rgb(177 58 40 / 26%);
-    box-shadow: inset 0 0 0 2px rgb(177 58 40 / 42%), 0 2px 5px rgb(177 58 40 / 26%);
+    box-shadow:
+      inset 0 0 0 2px rgb(177 58 40 / 42%),
+      0 2px 5px rgb(177 58 40 / 26%);
   }
   100% {
     background: linear-gradient(180deg, var(--ivory), var(--bone));
@@ -298,4 +302,3 @@
   background-position: 50% 0%;
   opacity: 0.95;
 }
-

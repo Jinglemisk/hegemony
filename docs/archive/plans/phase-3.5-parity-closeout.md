@@ -68,5 +68,5 @@ separate full-game human playtest transcript was recorded.
 
 Phase 3.5 closed on 2026-08-04 by owner direction after the recorded automated gates
 passed. The next implementation train is
-[Phase 3.6 architecture hardening](../../plans/phase-3.6-architecture-hardening.md),
+[Phase 3.6 architecture hardening](phase-3.6-architecture-hardening.md),
 which closes the command/content/projection/replay seams before v1 luxury and trade.

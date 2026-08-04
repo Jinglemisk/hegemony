@@ -134,7 +134,16 @@ describe("phase-0 turn structure", () => {
     const placements = preloaded.log
       .filter((entry) => entry.message.includes("founded"))
       .map((entry) => entry.message.split(" ")[0]);
-    expect(placements).toEqual(["Damon", "Nikos", "Theron", "Kyros", "Kyros", "Theron", "Nikos", "Damon"]);
+    expect(placements).toEqual([
+      "Damon",
+      "Nikos",
+      "Theron",
+      "Kyros",
+      "Kyros",
+      "Theron",
+      "Nikos",
+      "Damon",
+    ]);
   });
 
   it("rotates the season opener each new year", () => {
@@ -190,13 +199,23 @@ describe("stockpile happiness cap", () => {
 
 describe("board layouts", () => {
   it("classic layout is identical across seeds; shuffled differs and is seed-stable", () => {
-    const classicA = createInitialState(1).board.tiles.map((tile) => tile.terrain).join();
-    const classicB = createInitialState(2).board.tiles.map((tile) => tile.terrain).join();
+    const classicA = createInitialState(1)
+      .board.tiles.map((tile) => tile.terrain)
+      .join();
+    const classicB = createInitialState(2)
+      .board.tiles.map((tile) => tile.terrain)
+      .join();
     expect(classicA).toBe(classicB);
 
-    const shuffledA = createInitialState(7, undefined, "shuffled").board.tiles.map((tile) => tile.terrain).join();
-    const shuffledB = createInitialState(7, undefined, "shuffled").board.tiles.map((tile) => tile.terrain).join();
-    const shuffledC = createInitialState(8, undefined, "shuffled").board.tiles.map((tile) => tile.terrain).join();
+    const shuffledA = createInitialState(7, undefined, "shuffled")
+      .board.tiles.map((tile) => tile.terrain)
+      .join();
+    const shuffledB = createInitialState(7, undefined, "shuffled")
+      .board.tiles.map((tile) => tile.terrain)
+      .join();
+    const shuffledC = createInitialState(8, undefined, "shuffled")
+      .board.tiles.map((tile) => tile.terrain)
+      .join();
     expect(shuffledA).toBe(shuffledB);
     expect(shuffledA).not.toBe(classicA);
     expect(shuffledA).not.toBe(shuffledC);

@@ -29,7 +29,7 @@ import type { GameDefinition } from "./definition";
 
 /** Create a new game in the configured mode. When the dev preload flag is on, run the scripted 4-player setup. */
 export function createGame(
-  seed?: number,
+  seed: number,
   ruleset: Ruleset = GAME_MODES[GAME_CONFIG.mode].ruleset,
   boardLayout: BoardLayout = GAME_CONFIG.boardLayout,
   preloadOpeningSetup: boolean = GAME_CONFIG.preloadOpeningSetupForTesting,
@@ -46,7 +46,7 @@ export function createGame(
 /** Create a game from an already resolved immutable definition. */
 export function createGameFromDefinition(
   definition: GameDefinition,
-  seed?: number,
+  seed: number,
   boardLayout: BoardLayout = GAME_CONFIG.boardLayout,
   preloadOpeningSetup: boolean = GAME_CONFIG.preloadOpeningSetupForTesting,
 ): HegemonyState {

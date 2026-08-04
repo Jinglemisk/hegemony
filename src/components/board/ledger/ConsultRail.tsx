@@ -13,7 +13,7 @@ import { CONSULT_TABS } from "./tabs";
 function ConsultRailComponent({
   activeTab,
   isOpen,
-  onSelectTab
+  onSelectTab,
 }: {
   activeTab: ConsultTab;
   isOpen: boolean;

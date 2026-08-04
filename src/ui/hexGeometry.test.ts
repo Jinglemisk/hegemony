@@ -18,7 +18,7 @@ import {
   seatViewBox,
   viewBoxesEqual,
   zoomViewBox,
-  type WorldInset
+  type WorldInset,
 } from "./hexGeometry";
 
 const NO_INSET: WorldInset = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -100,7 +100,7 @@ describe("neighbours", () => {
 
   it("gives six distinct neighbours", () => {
     const seen = new Set(
-      Array.from({ length: 6 }, (_, side) => getNeighborCoordinate(4, -2, side).join(","))
+      Array.from({ length: 6 }, (_, side) => getNeighborCoordinate(4, -2, side).join(",")),
     );
 
     expect(seen.size).toBe(6);
@@ -118,7 +118,7 @@ describe("shoreline", () => {
     // A hex and one neighbour: 12 sides total, but the touching pair is inland.
     const centers = [
       { q: 0, r: 0, x: 0, y: 0 },
-      { q: 1, r: 0, x: HEX_SIZE * 1.5, y: HEX_SIZE * 0.866 }
+      { q: 1, r: 0, x: HEX_SIZE * 1.5, y: HEX_SIZE * 0.866 },
     ];
 
     expect(getShorelineEdges(centers, HEX_SIZE)).toHaveLength(10);
@@ -145,14 +145,26 @@ describe("camera", () => {
   });
 
   it("never pans past the world edge", () => {
-    const runaway = clampViewBox({ x: -99999, y: 99999, width: BASE_VIEW_BOX.width, height: BASE_VIEW_BOX.height });
+    const runaway = clampViewBox({
+      x: -99999,
+      y: 99999,
+      width: BASE_VIEW_BOX.width,
+      height: BASE_VIEW_BOX.height,
+    });
 
     expect(runaway.x).toBeGreaterThanOrEqual(WORLD_VIEW_BOX.x);
-    expect(runaway.y + runaway.height).toBeLessThanOrEqual(WORLD_VIEW_BOX.y + WORLD_VIEW_BOX.height + 0.001);
+    expect(runaway.y + runaway.height).toBeLessThanOrEqual(
+      WORLD_VIEW_BOX.y + WORLD_VIEW_BOX.height + 0.001,
+    );
   });
 
   it("never shows more than the world", () => {
-    const tooWide = clampViewBox({ x: 0, y: 0, width: WORLD_VIEW_BOX.width * 4, height: WORLD_VIEW_BOX.height * 4 });
+    const tooWide = clampViewBox({
+      x: 0,
+      y: 0,
+      width: WORLD_VIEW_BOX.width * 4,
+      height: WORLD_VIEW_BOX.height * 4,
+    });
 
     expect(tooWide.width).toBeLessThanOrEqual(WORLD_VIEW_BOX.width);
     expect(tooWide.height).toBeLessThanOrEqual(WORLD_VIEW_BOX.height);
@@ -174,7 +186,9 @@ describe("camera", () => {
   });
 
   it("treats float noise as no movement", () => {
-    expect(viewBoxesEqual(BASE_VIEW_BOX, { ...BASE_VIEW_BOX, x: BASE_VIEW_BOX.x + 0.0001 })).toBe(true);
+    expect(viewBoxesEqual(BASE_VIEW_BOX, { ...BASE_VIEW_BOX, x: BASE_VIEW_BOX.x + 0.0001 })).toBe(
+      true,
+    );
     expect(viewBoxesEqual(BASE_VIEW_BOX, { ...BASE_VIEW_BOX, x: BASE_VIEW_BOX.x + 1 })).toBe(false);
   });
 });
@@ -205,7 +219,9 @@ describe("live-area seat", () => {
     const seated = seatViewBox(BASE_VIEW_BOX, bars);
 
     expect(seated.y).toBeGreaterThan(clampViewBox(BASE_VIEW_BOX).y);
-    expect(seated.y + seated.height).toBeLessThanOrEqual(WORLD_VIEW_BOX.y + WORLD_VIEW_BOX.height + 0.001);
+    expect(seated.y + seated.height).toBeLessThanOrEqual(
+      WORLD_VIEW_BOX.y + WORLD_VIEW_BOX.height + 0.001,
+    );
   });
 
   it("never seats past the sea, however deep the chrome reaches", () => {
@@ -213,7 +229,9 @@ describe("live-area seat", () => {
     const seated = seatViewBox(BASE_VIEW_BOX, swallowing);
 
     expect(seated.x).toBeGreaterThanOrEqual(WORLD_VIEW_BOX.x);
-    expect(seated.x + seated.width).toBeLessThanOrEqual(WORLD_VIEW_BOX.x + WORLD_VIEW_BOX.width + 0.001);
+    expect(seated.x + seated.width).toBeLessThanOrEqual(
+      WORLD_VIEW_BOX.x + WORLD_VIEW_BOX.width + 0.001,
+    );
   });
 });
 

@@ -35,8 +35,6 @@ export type SpectatorView = ViewBase & {
   legalOptions: [];
 };
 
-export type GameView = PlayerView | SpectatorView;
-
 /** Project authoritative state for one seat, preserving only that seat's private decisions. */
 export function projectForPlayer(
   definition: GameDefinition,
