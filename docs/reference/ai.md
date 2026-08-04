@@ -21,6 +21,12 @@ drive the same one:
   turn ends (action cap of 30 force-ends stuck turns); `runGame` wires setup +
   turns + hooks. The runner, CLI (`auto`/`batch`), and tests all share it.
 
+This is the current simulation seam, not yet the final runtime boundary. The browser
+still dispatches parallel controller mutators, `LegalMove` mixes client input with
+derived costs, and policies receive full authoritative state. Phase 3.6 replaces those
+with one atomic `GameCommand` transition and a fair player observation/projection shared
+with multiplayer. Existing policies remain deterministic baselines through that migration.
+
 ### Determinism contract
 
 Policies must be pure functions of `(G, moves, rng)`. No `Math.random`, no
@@ -48,11 +54,14 @@ by role, building room, Gymnasion synergy). See `evaluateSmart`.
 **`beam`** — a within-turn **beam search** over the `smart` score. A "decision" in
 Hegemony is not one move but a _sequence_ ending in endTurn (turns run up to 30
 actions), and one-ply is greedy per step — it can't value a locally-worse first move
-that unlocks a much better second (build-then-promote, save-then-upgrade,
+that unlocks a much better second (build-then-promote or
 sell-then-buy-then-build). The beam expands each frontier node by every branchable
 move, scores the resulting state, keeps the best `W` (=3) nodes per depth up to `D`
 (=4), and commits the FIRST action of the best sequence found, re-planning each ply.
 Same evaluation as smart, so a smart-vs-beam A/B isolates search depth from scoring.
+Because `endTurn` is not a branch, the beam cannot project income into a later action
+or deliberately save for a future city; `INCOME_HORIZON` only estimates passive
+income, upkeep, and unrest inside the state score.
 
 **`political`** — the `smart` economy plus dedicated Assembly heuristics: it values
 political standing, compares a resolution's benefit to the strongest rival's, and makes
@@ -117,8 +126,10 @@ batch that measures the game and one that measures the bot.
 
 ## Known limitations (read before trusting a batch)
 
-- **One-ply**: cannot sequence plans ("save two turns of stone, then upgrade").
-  Anything needing a multi-move setup is undervalued.
+- **No cross-turn plan search**: the beam can sequence up to four RNG-free actions in
+  the current turn, but cannot choose `endTurn`, receive income, observe rival turns,
+  and continue toward a later action. Anything requiring intentional saving is
+  undervalued.
 - **No spatial strategy**: colony/movePops targets are scored only by immediate
   economics, not position, denial, or future city sites.
 - **No opponent model**: bots never consider the other three players.
@@ -143,10 +154,11 @@ Difficulty = a `POLICIES` registry entry. The natural ladder, cheapest first:
    pops/colonies up; builder: income up; zealot: happiness/influence up).
    Cheap asymmetry, pairs well with the national-ideas roadmap item.
 
-In-game integration sketch: the UI's `controller.ts` keeps working as-is; a CPU
-turn is `enumerateLegalMoves → policy.choose → applyMove` inside the same Immer
-commit pattern the human moves use, seeded from the game seed so matches stay
-replayable. If evaluation cost grows, move choose() to a worker.
+In-game integration target: human and CPU clients consume the same player-safe legal
+options and submit the selected `GameCommand` through the same engine transition. The
+CPU receives a fair observation rather than full deck/RNG secrets, and its decision RNG
+and policy version are recorded for replay. If evaluation cost grows, move `choose()` to
+a worker without moving rules or authority out of the engine/server boundary.
 
 ## The tuning loop
 

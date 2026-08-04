@@ -1,4 +1,5 @@
 import type { GameContent } from "../game/content";
+import type { DirectiveEffect, LawEffect, ResolutionCard } from "../game/assembly/types";
 import type { RulesetPatch } from "../game/ruleset";
 import type {
   BuildingDefinition,
@@ -27,7 +28,7 @@ export const LOW_NUMBER_RULESET_PATCH = {
   },
   victory: {
     cardsToWin: 3,
-    minimums: { cities: 3, pops: 8, citizens: 6, stockpile: 40, happiness: 10, voice: 2 },
+    minimums: { cities: 3, pops: 8, citizens: 6, stockpile: 40, happiness: 10, voice: 3 },
   },
   actionCosts: {
     foundColony: { wood: 9, food: 1 },
@@ -61,6 +62,12 @@ export const LOW_NUMBER_RULESET_PATCH = {
   },
   ventureStakes: { gold: { gold: 2 }, wood: { wood: 3 } },
   assembly: {
+    prizes: {
+      demosthenes: { food: 2 },
+      perdiccas: { stone: 2 },
+      kleistophenes: { wood: 3 },
+      stratokles: { happiness: 1 },
+    },
     drawCost: 1,
     redrawCost: 1,
     repealCost: 2,
@@ -148,6 +155,122 @@ function scaleEventEffect(effect: EventEffect): EventEffect {
   }
 
   return copy;
+}
+
+function scaleLawEffect(effect: LawEffect): LawEffect {
+  const copy = structuredClone(effect);
+
+  switch (copy.type) {
+    case "actionCostDelta":
+      copy.amount = scaledMagnitude(copy.amount, isHappiness(copy.resource) ? 2 : 3);
+      break;
+    case "settlementIncome":
+    case "popIncome":
+      if (copy.step) copy.step = Math.max(1, Math.ceil(copy.step / 2));
+      break;
+    case "thresholdHappiness":
+      copy.threshold = Math.max(1, Math.round(copy.threshold / 3));
+      copy.atOrAbove = scaledMagnitude(copy.atOrAbove, 2);
+      copy.below = scaledMagnitude(copy.below, 2);
+      break;
+    case "surplusConversion":
+      copy.above = Math.max(1, Math.round(copy.above / 3));
+      break;
+    case "onFoundColony":
+      if (copy.happiness) copy.happiness = scaledMagnitude(copy.happiness, 2);
+      break;
+    case "flatIncome":
+    case "popPrimaryIncome":
+    case "actionCostMultiplier":
+    case "bankRateStep":
+    case "yearlyFreeAction":
+      break;
+  }
+
+  return copy;
+}
+
+function scaleDirectiveEffect(effect: DirectiveEffect): DirectiveEffect {
+  const copy = structuredClone(effect);
+  if (copy.type === "resourceDelta") {
+    copy.amount = scaledMagnitude(copy.amount, isHappiness(copy.resource) ? 2 : 3);
+  }
+  return copy;
+}
+
+function mechanicalNumbers(effect: LawEffect | DirectiveEffect): number[] {
+  switch (effect.type) {
+    case "settlementIncome":
+    case "popIncome":
+      return [effect.amount, ...(effect.step ? [effect.step] : [])];
+    case "popPrimaryIncome":
+    case "flatIncome":
+      return [effect.amount];
+    case "thresholdHappiness":
+      return [effect.threshold, effect.atOrAbove, effect.below];
+    case "surplusConversion":
+      return [effect.above, effect.per, effect.amount];
+    case "actionCostDelta":
+      return [effect.amount];
+    case "actionCostMultiplier":
+      return [effect.multiplier];
+    case "bankRateStep":
+      return [effect.steps];
+    case "onFoundColony":
+      return effect.happiness ? [effect.happiness] : [];
+    case "resourceDelta":
+      return [effect.amount];
+    case "resourceFraction":
+      return [];
+    case "losePopFromLargest":
+      return [effect.count];
+    case "suppressIncome":
+      return [effect.turns];
+    case "yearlyFreeAction":
+    case "repealNewestTargetLaw":
+    case "equalVotesNextAssembly":
+      return [];
+  }
+}
+
+function rewriteResolutionText(
+  text: string,
+  before: Array<LawEffect | DirectiveEffect>,
+  after: Array<LawEffect | DirectiveEffect>,
+): string {
+  const replacements = new Map<number, number>();
+  for (let effectIndex = 0; effectIndex < Math.min(before.length, after.length); effectIndex += 1) {
+    const original = mechanicalNumbers(before[effectIndex]);
+    const effective = mechanicalNumbers(after[effectIndex]);
+    for (let index = 0; index < Math.min(original.length, effective.length); index += 1) {
+      const from = Math.abs(original[index]);
+      const to = Math.abs(effective[index]);
+      if (from !== to && (!replacements.has(from) || replacements.get(from) === to)) {
+        replacements.set(from, to);
+      }
+    }
+  }
+
+  let output = text;
+  for (const [from, to] of replacements) {
+    output = output.replace(new RegExp(`(?<![\\d.])${from}(?!\\d|\\.\\d)`, "g"), String(to));
+  }
+  return output
+    .replace(/every 1 slaves cost/gi, "each slave costs")
+    .replace(/every 1 colonies yield/gi, (phrase) =>
+      phrase.startsWith("Every") ? "Every colony yields" : "every colony yields",
+    );
+}
+
+function scaleResolution(card: ResolutionCard): ResolutionCard {
+  const copy = structuredClone(card);
+  const effects =
+    copy.kind === "law" ? copy.effects.map(scaleLawEffect) : copy.effects.map(scaleDirectiveEffect);
+  return {
+    ...copy,
+    text: rewriteResolutionText(copy.text, copy.effects, effects),
+    effects,
+  } as ResolutionCard;
 }
 
 function eventTextNumbers(effect: EventEffect): number[] {
@@ -288,6 +411,7 @@ export function createLowNumberContent(base: GameContent): GameContent {
       effects,
     };
   });
+  content.resolutions = content.resolutions.map(scaleResolution);
 
   scaleTable(content.riotTable);
   content.expeditionTables.forEach(scaleTable);

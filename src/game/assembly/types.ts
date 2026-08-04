@@ -4,7 +4,7 @@ import type {
   PlayerId,
   PopType,
   Resource,
-  TradableMaterial
+  TradableMaterial,
 } from "../types";
 
 /**
@@ -36,12 +36,7 @@ export type SettlementScope = "all" | "city" | "colony";
 
 /** The actions a Law may reprice. */
 export type LawCostedAction =
-  | "foundColony"
-  | "upgradeColonyToCity"
-  | "buildBuilding"
-  | "growPop"
-  | "promotePop"
-  | "demotePop";
+  "foundColony" | "upgradeColonyToCity" | "buildBuilding" | "growPop" | "promotePop" | "demotePop";
 
 /**
  * The closed vocabulary a standing Law is built from. Every entry is a patch over a
@@ -56,7 +51,13 @@ export type LawCostedAction =
  */
 export type LawEffect =
   /** Income per settlement of a scope. `resource: "happiness"` expresses civic mood. */
-  | { type: "settlementIncome"; scope: SettlementScope; resource: Resource; amount: number; step?: number }
+  | {
+      type: "settlementIncome";
+      scope: SettlementScope;
+      resource: Resource;
+      amount: number;
+      step?: number;
+    }
   /** Income per pop of a type — the per-pop coefficient lever. */
   | { type: "popIncome"; pop: PopType; resource: Resource; amount: number; step?: number }
   /** Per-pop delta into the settlement TILE's own material — the slave-production lever.
@@ -65,10 +66,23 @@ export type LawEffect =
   /** A flat, player-wide income delta — the blunt lever. */
   | { type: "flatIncome"; resource: Resource; amount: number }
   /** Happiness that flips on a stockpile threshold (Cult of Demeter). */
-  | { type: "thresholdHappiness"; resource: Resource; threshold: number; atOrAbove: number; below: number }
+  | {
+      type: "thresholdHappiness";
+      resource: Resource;
+      threshold: number;
+      atOrAbove: number;
+      below: number;
+    }
   /** Convert income surplus above a floor into another resource (Agrarian Tariff):
    *  every `per` units of `from` income beyond `above` pays `amount` of `to`. */
-  | { type: "surplusConversion"; from: Resource; above: number; per: number; to: Resource; amount: number }
+  | {
+      type: "surplusConversion";
+      from: Resource;
+      above: number;
+      per: number;
+      to: Resource;
+      amount: number;
+    }
   /** Reprice an action. `scope` narrows grow-pop to cities or colonies, `pop` narrows a
    *  ladder move to one source pop, `buildingIds` narrows a build to named buildings. */
   | {
@@ -89,23 +103,20 @@ export type LawEffect =
   /** Riders that fire when a colony is founded (Frontier Spirit). */
   | { type: "onFoundColony"; grantPop?: PopType; happiness?: number };
 
-/**
- * Stratokles's one-time, table-wide vocabulary (design §1.8). Nothing here targets a
- * player: every Directive hits the whole table at once, which is what lets the
- * demagogue level a runaway leader without singling anyone out.
- */
+/** Stratokles's one-time vocabulary. Every Directive is aimed at one rival chosen by
+ * the author before the proposal is sealed; the target travels with the ballot item. */
 export type DirectiveEffect =
-  /** A flat delta on every player. */
+  /** A flat delta on the chosen rival. */
   | { type: "resourceDelta"; resource: Resource; amount: number }
-  /** Every player loses a fraction of a stored resource, rounded in the mob's favour. */
+  /** The chosen rival loses a fraction of a stored resource, rounded down to a whole unit. */
   | { type: "resourceFraction"; resource: Resource; fraction: number }
-  /** Every player loses pops from their largest settlement. */
+  /** The chosen rival loses pops from their largest settlement. */
   | { type: "losePopFromLargest"; count: number }
-  /** No player collects income for this many of their upcoming turns (General Strike). */
+  /** The chosen rival collects no income for this many upcoming turns. */
   | { type: "suppressIncome"; turns: number }
-  /** Tear down the most recently enacted Law — a free repeal that skips the vote. */
-  | { type: "repealNewestLaw" }
-  /** Isonomia: at the NEXT assembly every player has exactly one vote. */
+  /** Tear down the newest standing Law authored by the chosen rival. */
+  | { type: "repealNewestTargetLaw" }
+  /** At the next Assembly, the chosen rival has exactly one base vote. */
   | { type: "equalVotesNextAssembly" };
 
 interface ResolutionCardBase {
@@ -139,39 +150,31 @@ export interface Politician {
   /** One line of ideology — what this deck is FOR, shown under the colonnade header. */
   creed: string;
   kind: ResolutionKind;
-  /** The standing buff their patron holds once the politician is dominant (§1.6).
-   *  Expressed in the same {@link LawEffect} vocabulary, so the modifier layer needs
-   *  no second code path — a patron buff is just another standing effect. */
-  patronBuff: { label: string; effects: LawEffect[] };
 }
 
 /**
  * A Law standing on the board — the stele in the agora. `author` is the stele's
- * colour and the unit patronage is counted in (§1.6); `order` is a monotonic
+ * colour and descriptive patronage record; `order` is a monotonic
  * enactment counter, so "the most recently enacted Law" is exact even when two
  * pass in the same assembly.
  */
 export interface ActiveLaw {
   cardId: string;
-  /** The seat that enacted it — the stele's colour and the unit patronage counts in.
-   *  NULL for the house resolution, which no seat authored: it still gives its
-   *  politician power, but it hands nobody patronage. Crediting it to the season
-   *  opener would have paid them free Voice-card progress (and, for a house
-   *  Directive, free progress on Stratokles's coup clock) for doing nothing. */
+  /** The seat that enacted it. Null marks the unauthored house Law: it remains a
+   *  standing rule and adds politician power, but grants no prize or Voice progress. */
   author: PlayerId | null;
   enactedSeason: number;
   order: number;
 }
 
 /**
- * A passed Directive's permanent monument on Stratokles's stack (§1.8): momentum,
- * never an active rule. It consumes no Law-cap slot and can never be repealed, so
- * his track only ever rises — a true doomsday clock.
+ * A passed Directive's permanent monument on Stratokles's stack: a descriptive
+ * record, never an active rule. It consumes no Law-cap slot and cannot be repealed.
  */
 export interface TallyMonument {
   cardId: string;
-  /** Null for a house Directive — see {@link ActiveLaw.author}. */
-  author: PlayerId | null;
+  /** Directives can only be authored by a player; the house draws Laws only. */
+  author: PlayerId;
   enactedSeason: number;
   order: number;
 }
@@ -185,6 +188,8 @@ export type BallotItem =
       proposer: PlayerId | null;
       /** At the Law cap, the active Law this proposal would replace (§1.5). */
       replaces?: string;
+      /** Required for a Directive and always a rival of its proposer. */
+      target?: PlayerId;
     }
   | { kind: "repeal"; cardId: string; proposer: PlayerId };
 
@@ -260,15 +265,14 @@ export interface AssemblySession {
   bribesUsed: Record<PlayerId, number>;
   vetoUsed: Record<PlayerId, number>;
   results: AssemblyResult[];
-  /** Isonomia's legacy: every seat has exactly one vote this assembly. */
-  equalVotes: boolean;
+  /** The one rival whose base vote Isonomia fixes at one for this Assembly. */
+  isonomiaTarget: PlayerId | null;
   /** The seat whose turn was suspended to convene this assembly. `closeAssembly`
    *  hands play back to them, so the agora never eats a turn. */
   resumePlayer: PlayerId;
 }
 
-/** Board-derived standing for one politician (§1.6) — nothing here is tracked, it is
- *  all read off the stelae, so there is no counter that can drift from the board. */
+/** Board-derived, descriptive standing for one politician. */
 export interface PoliticianStanding {
   politician: Politician;
   /** Active Laws (regulars) or tally monuments (Stratokles) bearing their name. */
@@ -277,6 +281,4 @@ export interface PoliticianStanding {
   patron: PlayerId | null;
   /** Stelae authored, per seat — the stack's colour breakdown. */
   authored: Record<PlayerId, number>;
-  /** True once `power` reaches the dominance threshold: the patron buff is live. */
-  dominant: boolean;
 }

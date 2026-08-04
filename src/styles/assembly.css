@@ -329,6 +329,15 @@
   color: var(--clay);
 }
 
+.aprise {
+  margin-top: 4px;
+  color: var(--olive);
+  font-family: var(--disp);
+  font-size: 7px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .ameta {
   display: flex;
   align-items: center;
@@ -944,6 +953,25 @@
   transition: 0.16s;
 }
 
+.asmTargetMenu li button {
+  display: grid;
+  grid-template-columns: 9px 1fr;
+  column-gap: 7px;
+  align-items: center;
+}
+
+.asmTargetMenu .asmMenuMeta {
+  grid-column: 2;
+}
+
+.asmTargetChoiceDot {
+  grid-row: 1 / span 2;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--vase);
+}
+
 .asmMenu li button:hover:not(:disabled) {
   background: var(--ledger-hover);
 }
@@ -1094,6 +1122,49 @@
   color: var(--ink-66);
   font-size: 11px;
   line-height: 1.5;
+}
+
+.agoraVoiceLedger {
+  padding: 10px;
+  border: 1px solid var(--aeg-30);
+  border-radius: 8px;
+  background: var(--aeg-tint);
+}
+
+.agoraVoiceLedger > strong {
+  color: var(--aegean);
+  font-family: var(--disp);
+  font-size: 8px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.agoraVoiceLedger > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 8px;
+  margin-top: 8px;
+}
+
+.agoraVoiceLedger span {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 6px;
+  border-left: 3px solid;
+  color: var(--ink-66);
+  font-size: 10px;
+}
+
+.agoraVoiceLedger b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.agoraVoiceLedger p {
+  margin: 8px 0 0;
+  color: var(--ink-48);
+  font-size: 9.5px;
+  line-height: 1.4;
 }
 
 .agoraPolitician {
@@ -1490,6 +1561,33 @@
   line-height: 1.4;
 }
 
+.bemaCardTarget,
+.bemaCardPrize {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  color: var(--clay-deep);
+  font-size: 8.5px;
+  line-height: 1.25;
+}
+
+.bemaCardTarget span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--vase);
+}
+
+.bemaCardPrize {
+  color: var(--olive);
+}
+
+.bemaCardPrize.muted {
+  color: var(--ink-48);
+  font-style: italic;
+}
+
 .bemaCardKind {
   margin-top: 3px;
   color: var(--aegean);
@@ -1668,81 +1766,4 @@
   .bemaCols {
     grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
-}
-
-/* ── The Stratokles threat, atop the Victory ledger (owner ruling 2026-07-21) ────
-   Not a card you can hold — a shared clock that ends the game. The coup counter
-   that used to live in the agora lives here now. */
-
-.stratoklesThreat {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  border: 1px solid rgb(192 70 28 / 34%);
-  border-radius: 10px;
-  background: rgb(192 70 28 / 7%);
-}
-
-.stratoklesThreat.triggered {
-  background: rgb(192 70 28 / 16%);
-  box-shadow: inset 0 0 0 1px var(--clay);
-}
-
-.stratoklesThreatHead {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.stratoklesThreatName {
-  color: var(--clay-deep);
-  font-family: var(--disp);
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.stratoklesThreatEp {
-  color: var(--ink-48);
-  font-size: 9px;
-  font-style: italic;
-}
-
-.stratoklesThreatPatron {
-  margin-left: auto;
-  font-family: var(--disp);
-  font-size: 10.5px;
-  white-space: nowrap;
-}
-
-.stratoklesThreatUnfed {
-  color: var(--ink-30);
-}
-
-.stratoklesThreatPips {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.stratoklesThreatPips i {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--clay-deep);
-}
-
-.stratoklesThreatPips i.f {
-  background: var(--clay-deep);
-}
-
-.stratoklesThreatCount {
-  margin-left: 6px;
-  color: var(--clay-deep);
-  font-family: var(--disp);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
 }

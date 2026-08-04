@@ -26,6 +26,18 @@ change is not ready to merge.
 - [ ] Consequential AI decisions have clearly-use, clearly-avoid, and edge-case behavior tests.
 - [ ] Any deliberately deferred axis is recorded as incomplete work in `docs/roadmap.md`.
 
+## Architecture impact
+
+Classify applicable items in the PR summary; use `N/A` with a reason where they do not apply.
+
+- [ ] Browser, simulation, replay, and future server behavior crosses the canonical command transition; no parallel domain-mutation path was added.
+- [ ] Match rules/content come from the pinned per-match definition; no module-global match state or client-derived authority was introduced.
+- [ ] Actor eligibility covers ordinary turns and any multi-seat workflow affected by this change.
+- [ ] Private/public information is represented by player/spectator projections and anti-peek tests where relevant.
+- [ ] New addressable entities use stable ids; ownership/transfer/card-zone changes have conservation and post-transition invariant coverage.
+- [ ] Save/replay schema, command, ruleset, and content version compatibility was assessed.
+- [ ] Required decisions and persistent effects use the shared typed projection/presentation contracts rather than feature-private overlay infrastructure.
+
 ## Validation
 
 - [ ] `npm run check`
@@ -36,3 +48,7 @@ change is not ready to merge.
 - [ ] `npm run build`
 
 <!-- List any check that was not run and explain why. -->
+
+Simulation campaigns are risk-based. Link matched campaign evidence when probabilities,
+balance, policy evaluation, or multi-system behavior warrants it; otherwise list the
+deterministic scenarios/invariants run. No fixed number of full games is required for every PR.

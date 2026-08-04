@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { POLITICIANS, POLITICIANS_BY_ID, RESOLUTION_CARDS, RESOLUTION_DECKS, getResolutionCard } from "./deck";
+import {
+  POLITICIANS,
+  POLITICIANS_BY_ID,
+  RESOLUTION_CARDS,
+  RESOLUTION_DECKS,
+  getResolutionCard,
+} from "./deck";
 import type { LawCard, LawEffect, PoliticianId, ResolutionCard } from "./types";
 
 /**
@@ -59,20 +65,16 @@ describe("the politician roster", () => {
       "demosthenes",
       "perdiccas",
       "kleistophenes",
-      "stratokles"
+      "stratokles",
     ]);
     expect(POLITICIANS.filter((politician) => politician.kind === "law")).toHaveLength(3);
     expect(POLITICIANS.filter((politician) => politician.kind === "directive")).toHaveLength(1);
     expect(POLITICIANS_BY_ID.stratokles.kind).toBe("directive");
   });
 
-  it("gives every politician a patron buff with at least one standing effect", () => {
-    // The buff rides the same LawEffect vocabulary as the Laws (§1.6), which is what
-    // lets the modifier layer serve both from one code path — an empty one would be a
-    // dominance that switches nothing on.
+  it("keeps patronage descriptive: no politician carries a standing buff", () => {
     for (const politician of POLITICIANS) {
-      expect(politician.patronBuff.label, politician.id).not.toBe("");
-      expect(politician.patronBuff.effects.length, politician.id).toBeGreaterThan(0);
+      expect("patronBuff" in politician, politician.id).toBe(false);
     }
   });
 });
@@ -103,7 +105,9 @@ describe("the 31-card starter deck", () => {
     // The stack a card is drawn from IS the politician whose power it feeds
     // (power.ts reads `card.politician`), so a misfiled card would credit the wrong
     // figure on enactment.
-    for (const [politician, deck] of Object.entries(RESOLUTION_DECKS) as Array<[PoliticianId, ResolutionCard[]]>) {
+    for (const [politician, deck] of Object.entries(RESOLUTION_DECKS) as Array<
+      [PoliticianId, ResolutionCard[]]
+    >) {
       for (const card of deck) {
         expect(card.politician, card.id).toBe(politician);
       }
@@ -131,7 +135,7 @@ describe("the 31-card starter deck", () => {
   it("bands every Directive as mob or agitator", () => {
     for (const directive of directives) {
       expect(["mob", "agitator"], directive.id).toContain(
-        directive.kind === "directive" ? directive.faction : null
+        directive.kind === "directive" ? directive.faction : null,
       );
     }
   });
@@ -150,8 +154,10 @@ describe("every Law carries a trade-off", () => {
 
       // Either the Law spends two effects to buy one thing with another, or it spends
       // one inherently two-sided effect (a threshold, a colony rider) to do it.
-      expect(law.effects.length === 1 ? directions.filter(Boolean).length : law.effects.length, law.id)
-        .toBeGreaterThanOrEqual(2);
+      expect(
+        law.effects.length === 1 ? directions.filter(Boolean).length : law.effects.length,
+        law.id,
+      ).toBeGreaterThanOrEqual(2);
       expect(directions, `${law.id} has no upside`).toContain(1);
       expect(directions, `${law.id} has no downside`).toContain(-1);
     }

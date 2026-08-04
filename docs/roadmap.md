@@ -5,7 +5,7 @@ before planning, implementing, or declaring work complete. Implementation detail
 belongs in linked plans; unresolved owner decisions belong only in
 [questions.md](questions.md).
 
-Last updated: 2026-07-31.
+Last updated: 2026-08-04.
 
 ## Mandatory three-axis parity contract
 
@@ -67,10 +67,42 @@ Persistent mechanical state has one cross-axis query:
 explanations, policy projections, and telemetry consume its typed descriptors
 instead of rediscovering effects.
 
-## Current initiative — Phase 3.5 parity closeout
+## Mandatory architecture contract
 
-The canonical work order and gates are in
-[the Phase 3.5 plan](plans/phase-3.5-parity-closeout.md).
+The parity contract is only credible when every runtime crosses the same boundary.
+[Phase 3.6](plans/phase-3.6-architecture-hardening.md) therefore lands before new
+Phase 4 systems and establishes these rules:
+
+1. **One immutable definition per match.** Rules and content are pinned by version/hash;
+   mutable module-global content is forbidden. Concurrent matches may use different
+   definitions without leakage.
+2. **One command transition.** Browser, simulator, replay, and future server submit the
+   same client-input `GameCommand`. Effective costs, eligibility, effects, and outcomes
+   are derived by the engine, never trusted from the caller.
+3. **Atomic state changes.** A transition returns a new state and structured events on
+   success or reasons on rejection. Failed commands cannot leave partial mutation.
+4. **Workflow-aware actors.** `currentPlayer` governs ordinary turns, but multi-seat
+   Assembly and trade workflows expose their own authoritative actor eligibility.
+5. **Player-safe projections.** The browser and AI observation consume explicit
+   player/spectator views that redact private cards, deck order, RNG, and future private
+   negotiation state.
+6. **Stable identity and replay.** Settlements, transferable assets, offers, decisions,
+   commands, state, rules, and content have stable identities/versions. Ongoing games
+   stay pinned across deployments and supported replays remain deterministic.
+7. **Conservation and integrity.** Inexpensive post-transition invariants cover indexed
+   settlements, pops/transfers, card zones, Assembly state, and transferable ownership.
+
+Repository organization stays incremental: first keep `src/game` pure and move browser
+adapters to `src/client`; create `apps/` and `packages/` workspaces only when the server
+runtime begins. Import boundaries, behavioral command-parity tests, dead-code checks,
+warning-free lint, a scoped formatting gate, non-duplicative CI, and one browser smoke
+flow mechanically enforce the contract.
+
+## Phase 3.5 closeout — shipped
+
+The [archived Phase 3.5 plan](archive/plans/phase-3.5-parity-closeout.md) and
+[closeout campaign](reports/simulation/2026-08-03-phase-3.5-closeout.md) preserve the
+completed work and validation evidence.
 
 1. **Restore parity truth (merged in PR #58):** reconcile documentation and
    effective content/effective-cost drift through the
@@ -81,13 +113,35 @@ The canonical work order and gates are in
 3. **Unify interaction presentation (merged in PR #57):** accessible shared
    Tooltip and interactive Popover primitives, canonical mechanics details, and
    migrated Assembly explanations.
-4. **Revise the Assembly:** permanent Voice ratchet and minimum, one-time author
-   prizes, no coup, player-targeted Stratokles, and all three parity axes.
-5. **Validate and tune:** human playtest, Assembly/runaway campaigns, cities 3→2
-   rerun, and evidence-driven closure.
+4. **Revise the Assembly:** permanent Voice ratchet and minimum,
+   scarcity-weighted one-time author prizes, descriptive patrons, no coup,
+   rival-targeted Stratokles, and all three parity axes.
+5. **Validate and tune:** Assembly/runaway campaigns, cities 3→2 rerun, prize sweep,
+   and evidence-driven closure. Automated gates passed; owner review accepted the
+   closeout without representing the absent full-game human transcript as completed.
 
-Automated tests ship with Steps 1–4. Step 5 is the combined human and simulation
-gate, not deferred implementation coverage.
+Polis Builder remains at three cities. Standard prizes are +5 food / +3 stone / +4 wood /
++2 happiness; Low Numbers uses +2 / +2 / +3 / +1. The `master` policy's slow city
+result is recorded as a cross-turn planning limitation, not used to shorten the card.
+
+## Current initiative — Phase 3.6 architecture hardening
+
+The [Phase 3.6 plan](plans/phase-3.6-architecture-hardening.md) is active. Its first
+slice isolates immutable per-match definitions and proves that differently tuned games
+can run and replay concurrently without global-content leakage.
+
+## Locked v1 finish line
+
+The owner confirmed on 2026-08-03 that **luxury goods, Catan-style player trade, and
+National Ideas are all v1**. They are not optional v2 deferrals. After those systems
+and the intended typed Resolution/Idea effects are complete, the
+[v1 mechanics-freeze plan](plans/v1-mechanics-freeze.md) closes the content manifest.
+
+Full multiplayer follows that mechanics freeze. Phase 3.6 deliberately lands its
+network-shaped command, actor, projection, identity, definition, and replay foundations
+before Phase 4, so trade and Ideas do not need a gameplay rewrite when server authority
+arrives. The server runtime, persistence, lobby, reconnect, and deployment remain deferred
+until the rules are frozen.
 
 ## Delivery principles
 
@@ -98,39 +152,52 @@ gate, not deferred implementation coverage.
 5. No substantial work is scheduled without an accepted plan.
 6. Simulation is an instrument: use targeted campaigns and label policy limits.
 7. Batch visual-design decisions; do not reopen a frozen direction during feature work.
+8. Deterministic scenarios and invariants travel with behavior; broad balance batches are
+   risk-based, never an arbitrary fixed game count on every gameplay PR.
+9. New feature PRs are vertical capabilities. Engine, frontend, and simulation/telemetry
+   are not separate mergeable stages of an incomplete behavior.
 
-**Phase 3.5 order amendment (fulfilled 2026-07-31):** the one-click
+**Phase 3.5 order amendment (closed 2026-08-04):** the one-click
 **low-number core tuning preset** is implemented across rules, buildings, terrain,
 events, economic tables, Assembly participation costs, browser tuning, and simulator
 evidence. Its [matched campaign](reports/simulation/2026-07-31-low-number-core-v1.md)
-passes the denomination and race-duration gates. Assembly resolutions and politician
-effects remain the explicitly deferred final 16%; the Assembly revision is now the
-next implementation slice before final balance campaigns.
+passes the denomination and race-duration gates. Effective Assembly resolutions and
+politician prizes complete the preset; the final campaign accepted the three-city
+threshold and scarcity-scaled prizes.
 
 ## Phase sequence
 
-| Phase   | Status                 | Scope                                                                                                                                                                                    | Exit gate                                                                                                                        |
-| ------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **0–2** | Shipped                | Playable victory loop, currencies, interface foundation, terrain economy, and capped buildings                                                                                           | Historical plans and evidence are archived                                                                                       |
-| **2.5** | Absorbed               | Debt sweep; remaining authoritative-cost and shared-interaction work travels in Phase 3.5                                                                                                | Remaining debt has an explicit Phase 3.5 owner                                                                                   |
-| **3**   | Built, gate incomplete | Two-panel UI, Assembly, and influence-aware AI shipped; first results showed agora engagement is a net loss                                                                              | Closed by the Phase 3.5 train                                                                                                    |
-| **3.5** | Active                 | Truth, enforcement, shared interaction primitives, Assembly revision, AI repair, and validation                                                                                          | Parity omissions fail CI; humans can explain effects; `master` credibly exercises the revised game; no-coup runaway check passes |
-| **4**   | Blocked                | Topology, land luxuries, coastal luxuries and Port, then structured player trade or explicit v2 deferral                                                                                 | Luxury/unrest economy holds; trade is used; feature set and balance numbers freeze                                               |
-| **5**   | Proposed               | National Ideas (twelve-idea reverse-snake draft). **Setup screen, networking, and 2–3-player scaling are deferred until the game is balanced (Q35, 2026-07-27) — out of scope for now.** | Ideas have no automatic pick                                                                                                     |
-| **6**   | Deferred               | Post-freeze visual-system and technical-debt session                                                                                                                                     | One coherent visual system over frozen rules and numbers                                                                         |
+| Phase   | Status   | Scope                                                                                                                                                                   | Exit gate                                                                                                                       |
+| ------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **0–2** | Shipped  | Playable victory loop, currencies, interface foundation, terrain economy, and capped buildings                                                                          | Historical plans and evidence are archived                                                                                      |
+| **2.5** | Absorbed | Debt sweep; remaining authoritative-cost and shared-interaction work travels in Phase 3.5                                                                               | Remaining debt has an explicit Phase 3.5 owner                                                                                  |
+| **3**   | Shipped  | Two-panel UI, Assembly, and influence-aware AI                                                                                                                          | Closed by the Phase 3.5 train                                                                                                   |
+| **3.5** | Shipped  | Truth, enforcement, shared interaction primitives, Assembly revision, AI repair, and validation                                                                         | Closeout evidence accepted; the missing separate human transcript remains disclosed                                             |
+| **3.6** | Active   | Per-match definition, canonical atomic commands, workflow actors, player projections, stable identities/versioned replay, invariants, and mechanical architecture gates | Browser, sim, replay, and async Assembly all cross one deterministic, player-safe engine boundary                               |
+| **4**   | Blocked  | Topology, six coastal luxury assets and Port, then v1 Catan-style player trade using universal ownership transfer and tested multi-seat workflow primitives             | Luxury/unrest economy holds; full trade negotiation is used and understandable in human games                                   |
+| **5**   | Blocked  | Twelve National Ideas through a typed per-seat modifier channel; complete the intended typed Resolution and Idea effect families                                        | Draft has no automatic pick; every intended effect is authoritative, visible, observable, valued where relevant, and manifested |
+| **5.5** | Blocked  | V1 mechanics/content inventory, targeted balance and full-game validation, version/hash record, known caveats, and explicit v2 list                                     | The v1 mechanics freeze is published and representative games replay deterministically                                          |
+| **6**   | Deferred | Server-authoritative multiplayer: web/server/package split, validated protocol schemas, persistence, lobby, seat sessions, reconnect, synchronization, and deployment   | Four-player matches survive reconnect/deploy boundaries without leaking private state or diverging                              |
+| **7**   | Deferred | Final balance ratification, generated player guide, visual-system/debt consolidation, performance, accessibility, browser coverage, and release polish                  | One coherent, documented, deployable v1 artifact                                                                                |
 
 ## Later and parked work
 
 These items are intentionally not active plans:
 
-- Revisit the building roster and bank/market rates only after the luxury gold
-  sink exists; include the dead colony→city path and venture-stake pricing.
+- Revisit the building roster and bank/market rates only after luxury and player
+  trade establish the complete v1 economy; include the dead colony→city path and
+  venture-stake pricing. Luxury is not required to force a predetermined gold sink.
 - Revisit constrained map shuffling during topology work.
 - Decide whether seasonal end-of-season reckoning needs a feature plan.
-- Generate the external player guide from the same ruleset/content source as the Codex.
-- Review the autumn icon, stricter TypeScript flags, npm audit findings, and the
-  resource-versus-meter type split during the post-freeze debt session.
-- Military, networking, and 2–3-player balance remain unscheduled until designed.
+- Implement only the fair-observation, capability-scenario, and policy-modularization
+  prerequisites from the outcome-driven AI plan before the mechanics freeze. MCTS,
+  learned evaluation, and large tournament infrastructure wait until the v1 target is stable.
+- Generate the external player guide from the same typed rules/content source as the
+  Compendium after the v1 mechanics freeze.
+- Review the autumn icon, stricter TypeScript flags, resource-versus-meter type split,
+  and other visual/debt work during Phase 7 rather than mixing them into gameplay PRs.
+- Military, chat, spectators, Redis, microservices, learned AI, and 2–3-player scaling
+  are explicit post-v1 work unless the roadmap is amended.
 
 ## Documentation map
 

@@ -2,7 +2,7 @@
 archive_status: shipped
 archived: 2026-07-26
 shipping_evidence: "PR #40"
-superseded_by: "../../plans/phase-3.5-parity-closeout.md"
+superseded_by: "phase-3.5-parity-closeout.md"
 ---
 
 # Phase 3-C — The influence-aware AI

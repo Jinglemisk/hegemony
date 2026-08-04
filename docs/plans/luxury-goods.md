@@ -1,7 +1,7 @@
 ---
 status: blocked
 phase: "4"
-updated: 2026-07-26
+updated: 2026-08-03
 ---
 
 # Luxury Goods — feature plan & open decisions
@@ -20,17 +20,22 @@ updated: 2026-07-26
 >
 > **Folded 2026-07-27:** no dedicated gold sink is needed — gold already sinks into
 > actions and market trade, so the Port stays cheap (Q46). The roster is the **six**
-> coastal goods (Q32). Ship **claims + the `active`/`suppressedTurns` seam now**; add
+> coastal goods (Q32). Ship **stable claims + the suppression/derived-activity seam now**; add
 > suppression Directives later via the Assembly (Q48). All owner questions resolved.
+>
+> **Architecture reconciliation 2026-08-03:** Phase 3.6 is now a prerequisite. Luxury
+> goods use stable asset and settlement ids, one universal ownership-transfer operation,
+> per-match content, canonical commands, and derived activity. They never store a second
+> `active` truth that can disagree with ownership, caps, or suppression.
 
 ---
 
 ## Three-axis parity
 
-| Axis             | Applies? | Required representation and proof                                                                                                   |
-| ---------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Engine / backend | Yes      | Unique claims, authoritative happiness calculation (incl. _Beloved_), legality, costs, suppression lifecycle, overrides, tests      |
-| Frontend         | Yes      | Port build/claim choices, blocked reasons, raw/bonus/effective happiness, owned goods, the shared-vertex map marker, Codex rules    |
+| Axis             | Applies? | Required representation and proof                                                                                                    |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Engine / backend | Yes      | Unique claims, authoritative happiness calculation (incl. _Beloved_), legality, costs, suppression lifecycle, overrides, tests       |
+| Frontend         | Yes      | Port build/claim choices, blocked reasons, raw/bonus/effective happiness, owned goods, the shared-vertex map marker, Codex rules     |
 | Simulation & AI  | Yes      | Real legal execution, Port valuation and planning, luxury-aware unrest + Beloved evaluation, telemetry, and sink/threshold campaigns |
 
 Sibling engine calculations, every happiness surface, and every simulation
@@ -38,12 +43,12 @@ projection must share authoritative selectors rather than restating luxury rules
 
 ## 0. Where this sits
 
-**Phase 4.** With land goods removed (owner, 2026-07-26), luxuries are **coastal-only**,
+**Phase 4, after Phase 3.6.** With land goods removed (owner, 2026-07-26), luxuries are **coastal-only**,
 so the coastal + shared-vertex map work is now a **prerequisite** — there is no longer a
 "ships without any coast" MVP. Build order:
 
 `isCoastalTile` → **topology** (S) → **shared-vertex geometry** (M, new) →
-**coastal luxuries + Port** (L) → player trade (XL, last or v2).
+**coastal luxuries + Port** (L) → v1 player trade (XL, required before the freeze).
 
 Two things gate the first line of code:
 
@@ -53,6 +58,9 @@ Two things gate the first line of code:
   feature; they are exactly what that bug blinds.
 - **`<EffectLine>` shipped in Phase 3.5** (PR #49) as the shared effect seam. Luxuries are
   new content — they use it, they don't fork it.
+- **Phase 3.6 lands next.** The feature depends on immutable per-match content, stable
+  settlement/asset ids, canonical atomic commands, player-safe projections, and the
+  invariant/transfer seams that player trade will reuse.
 
 **Build rule carried from Phase 3-C:** teach the sim bot the new verb **in the same slice**.
 The `political` bot shipped after the Assembly and promptly reported the layer as a net
@@ -85,16 +93,16 @@ balance pass no longer depends on this feature.
 
 The plan predates the Phase 1–3 engine, and the 2026-07-26 owner decisions. Corrections:
 
-| The old plan said                                                          | Today                                                                                                                                                                                                                        |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Two acquisition paths (land Trader + coastal Port)                         | **One path — the Port.** Land goods and the Trader are **removed** (owner, 2026-07-26). All luxuries are coastal.                                                                                                            |
-| Coastal goods attach to **rim edges** as a feature ring (Q31 rec)          | **Overridden.** A good sits **offset from the shared vertex of two coastal tiles**, with a clear icon, so a Port on **either** adjacent tile can claim it (owner, 2026-07-26). See §3.2.                                     |
-| Claim rules go in `src/game/rules.ts`                                      | `rules.ts` is a 52-line **barrel**. Validators → `status.ts`, mutators → `actions.ts`, enumeration → `legalMoves.ts`, income → `economy/income.ts`                                                                          |
-| "The prototype uses only the 37 inland hexes"                              | **18 of the 37 are already coastal** — `isCoastalTile` (`map.ts:48`) drives coastal leapfrog, and the SVG coastline is drawn _topologically_ (`hexGeometry.ts:133`). No canvas rewrite; the **shared-vertex marker is new** |
-| "Happiness bonus is never banked (effective happiness)"                    | **Resolved (Q43): standing offset.** `effective = stored + active × 2`; the stored bank never grows from luxuries.                                                                                                          |
-| Luxuries do **not** count toward _Beloved_                                 | **Overridden (Q44): they DO count.** Effective happiness feeds the _Beloved of the People_ metric.                                                                                                                          |
-| "9 named goods" + "diminishing duplicates"                                 | **Unique only, no duplicates** (Q45). Count is coastal-only now and **still open** (Q32).                                                                                                                                   |
-| Trader cost 100 gold is the gold sink                                      | **Trader retired.** The gold-sink role is unresolved — it must move to the **Port price** or elsewhere (Q46).                                                                                                               |
+| The old plan said                                                 | Today                                                                                                                                                                                                                       |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Two acquisition paths (land Trader + coastal Port)                | **One path — the Port.** Land goods and the Trader are **removed** (owner, 2026-07-26). All luxuries are coastal.                                                                                                           |
+| Coastal goods attach to **rim edges** as a feature ring (Q31 rec) | **Overridden.** A good sits **offset from the shared vertex of two coastal tiles**, with a clear icon, so a Port on **either** adjacent tile can claim it (owner, 2026-07-26). See §3.2.                                    |
+| Claim rules go in `src/game/rules.ts`                             | `rules.ts` is a 52-line **barrel**. Validators → `status.ts`, mutators → `actions.ts`, enumeration → `legalMoves.ts`, income → `economy/income.ts`                                                                          |
+| "The prototype uses only the 37 inland hexes"                     | **18 of the 37 are already coastal** — `isCoastalTile` (`map.ts:48`) drives coastal leapfrog, and the SVG coastline is drawn _topologically_ (`hexGeometry.ts:133`). No canvas rewrite; the **shared-vertex marker is new** |
+| "Happiness bonus is never banked (effective happiness)"           | **Resolved (Q43): standing offset.** `effective = stored + active × 2`; the stored bank never grows from luxuries.                                                                                                          |
+| Luxuries do **not** count toward _Beloved_                        | **Overridden (Q44): they DO count.** Effective happiness feeds the _Beloved of the People_ metric.                                                                                                                          |
+| "9 named goods" + "diminishing duplicates"                        | **Unique only, no duplicates** (Q45). Count is coastal-only now and **still open** (Q32).                                                                                                                                   |
+| Trader cost 100 gold is the gold sink                             | **Trader retired; Q46 resolved.** No dedicated replacement sink is required. The Port stays affordable and end-game gold remains monitored rather than forced toward a predetermined direction.                             |
 
 **The happiness sources that already exist** — a luxury has to be priced against these:
 
@@ -138,9 +146,9 @@ Every luxury is **coastal**. It sits at a fixed **offset from the shared vertex 
 coastal tiles**, drawn with a clear icon, positioned so **either** of the two adjacent
 tiles can reach it.
 
-| Building                                                   | Cost                | Claims                                                                                    |
-| ---------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------- |
-| **Port** — a building in a settlement on a coastal tile    | **open — Q46**      | one unclaimed luxury at a shared vertex of the settlement's tile; **first Port claims it** |
+| Building                                                | Cost                      | Claims                                                                                     |
+| ------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
+| **Port** — a building in a settlement on a coastal tile | 20 wood, 5 stone, 10 gold | one unclaimed luxury at a shared vertex of the settlement's tile; **first Port claims it** |
 
 **Claiming rule (owner, 2026-07-26):** a luxury between tile A and tile B is claimable by a
 Port in a settlement on **A _or_ B**. Because goods are **unique** (§3.4), the **first Port
@@ -166,16 +174,18 @@ metric.
 
 - **One good, one owner** — the core rule. This is what makes luxuries the natural currency
   of player trade (Q33) and worth denying.
-- **Per-player active cap ~3** (dial). Goods held over the cap stay **owned but inactive** —
+- **Per-player active cap ~3** (dial). Activity is derived in a stable ordering from
+  ownership, cap, and suppression. Goods held over the cap stay **owned but inactive** —
   a trade asset, not dead weight.
 - **No duplicates** — every good is unique, so there is no second-copy case (Q45 resolved;
   `terrain-economy.md` §6's "diminishing duplicates" is dropped as unreachable).
 
 ### 3.5 The denial seam
 
-Every claim carries `active: boolean` and `suppressedTurns: number` **from day one**, even
-though nothing suppresses them yet. Cheap now, and it is the difference between "add a
-Directive" and "re-model claims" when the Assembly deck is re-cut (Q48 — deferred).
+Every claimed asset carries suppression state **from day one**, even though nothing suppresses
+it yet. Whether it is active is derived by one selector from ownership, the active cap, and
+suppression. This prevents impossible combinations such as `active: true` while suppressed
+and makes later Directives additions rather than model rewrites (Q48 — deferred).
 
 ---
 
@@ -183,35 +193,68 @@ Directive" and "re-model claims" when the Assembly deck is re-cut (Q48 — defer
 
 The land-Trader slice is **gone**; coastal work is the whole feature.
 
+The slices below are vertical capabilities, not engine/frontend/simulation handoffs.
+Each PR includes its applicable definition/model, authoritative query/transition,
+frontend projection/presentation, simulator execution/valuation/telemetry, deterministic
+fixtures, and docs. A stacked branch may depend on the previous slice, but no merged
+luxury behavior leaves an applicable axis for a later PR.
+
 ### Slice 1 — topology + the shared-vertex marker
 
-1. **Topology.** `isCoastalTile` (`map.ts:48`) already marks the 18 rim tiles; remove the
-   radius-3 assumption engine-side so the board can change shape later.
-2. **Shared-vertex model (new).** A luxury's board position is a pair of adjacent coastal
-   tiles + a fixed offset from their shared vertex — not a `HexTile`, not settleable, no
-   slot. Enumerate the eligible vertices from the coastal-tile adjacency graph.
-3. **Marker (new frontend primitive).** Draw the icon at the vertex offset over the SVG map;
-   it must read as belonging to *both* tiles. Accessible label names the good and its owner.
+This is the **opening Phase 4 PR**. Its deliverable is the reusable board-position seam;
+it deliberately does not add the Port, ownership, happiness, or authored luxury roster.
+
+1. **Topology (`src/game/map.ts`).** Replace the `BOARD_RADIUS` equality inside
+   `isCoastalTile` with an occupied-neighbour query over the actual board. Keep radius 3 only
+   as the classic map generator's input. Settlement legality must consume this query so an
+   irregular map, internal inlet, or later archipelago has the same coast in every engine rule.
+2. **Stable shared vertices (`src/game/mapTopology.ts`, new).** Canonically enumerate a
+   board's geometric vertices from tile coordinates, deduplicate the three-tile intersections,
+   and give each one a stable order-independent id. A luxury-eligible vertex touches exactly
+   two adjacent coastal tiles and open sea; expose its two claimable tile ids explicitly.
+3. **Geometry (`src/ui/hexGeometry.ts`).** Project the canonical board vertex to SVG space and
+   expose the sea-facing offset as pure tested geometry. Engine identity never depends on
+   floating-point coordinates.
+4. **Marker (`src/components/HexMap.tsx`, new child component if useful).** Render a neutral
+   fixture marker at authored eligible-vertex ids so its position and hit target can be judged
+   before ownership behavior exists. Its accessible name identifies both adjacent tiles; the
+   future good name and owner are typed optional presentation fields.
+5. **Fixtures and proof.** Add topology tests for the classic board (18 coastal tiles, no
+   duplicate vertex ids, every eligible vertex references two real adjacent tiles), an
+   irregular board, and deck shuffling. Add geometry tests proving the marker stays on the
+   same canonical vertex across tile iteration orders, plus one focused rendered-map test.
+
+**Non-goals:** no `LuxuryAsset`, Port build action, claim choice, happiness offset, AI
+valuation, telemetry, or art asset. Simulation & AI is `N/A` because this PR introduces no
+legal verb or scoring state; the topology fixtures are shared engine data that Slice 2 will
+consume.
+
+**Exit gate:** engine coast legality and SVG coastline/vertex placement derive from the same
+board topology; the classic map is behaviorally unchanged; six authored marker locations can
+be selected without coordinate guesses; type-check, map tests, render test, lint, and build pass.
 
 ### Slice 2 — the Port, claims, and the happiness bonus
 
-1. **Types** (`src/game/types.ts`) — `LuxuryGoodId`, `LuxuryGoodDefinition { id, name }`
-   (all coastal — no `source` field), and a **board-level** claim list on `HegemonyState`:
+1. **Types** (`src/game/types.ts`) — `LuxuryGoodId`, `LuxuryAssetId`,
+   `LuxuryGoodDefinition { id, name }` (all coastal — no `source` field), stable
+   settlement/vertex ids, and a **board-level** asset registry on `HegemonyState`:
    ```ts
-   interface LuxuryClaim {
+   interface LuxuryAsset {
+     id: LuxuryAssetId;
      goodId: LuxuryGoodId;
-     owner: PlayerId;
-     tileId: string; // the settlement (with the Port) that claimed it
-     active: boolean;
-     suppressedTurns: number; // denial seam — 0 today
+     vertexId: LuxuryVertexId;
+     owner: PlayerId | null;
+     claimedAtSettlementId: SettlementId | null;
+     suppressedTurns: number;
    }
    ```
-   Board-level, **not** on `PlayerState`: a good is a physical object with exactly one
-   owner, and that invariant is far easier to hold in one list than across four player
-   buckets. Denial effects mutate the list, not a player.
-2. **Content** (`data.ts` + `content.ts`) — a `LUXURY_GOODS` table behind a
-   `getLuxuryGoods()` accessor, so the dev content-override seam covers it like
-   `getBuildings()`.
+   Board-level, **not** duplicated into four player buckets: a good is a physical object
+   with at most one owner. `claimedAtSettlementId` remains its stable Port origin when
+   trade changes `owner`; a tile id alone cannot identify one settlement on a shared tile.
+   Denial effects mutate suppression, and activity is never stored.
+2. **Content** — a `LUXURY_GOODS` table inside the immutable per-match
+   `GameDefinition.content`, so authored, tuned, browser, simulator, replay, and future
+   server consumers resolve the same pinned roster without a module-global accessor.
 3. **Building** — `port` joins `BuildingId` and `BUILDINGS`, `maxLevel: 1`, **empty
    `effects` array** (its effect is the claim, not an income line), **coast-gated**.
 4. **Legality** (`status.ts` `getBuildBuildingStatus`, enumerated at `legalMoves.ts:612`) —
@@ -220,10 +263,12 @@ The land-Trader slice is **gone**; coastal work is the whole feature.
    _why not_ (inland, no unclaimed luxury, cap reached) so the UI greys it out with an
    explanation instead of silently hiding it.
 5. **Claim** (`actions.ts` `buildBuilding`) — building a Port claims one adjacent unclaimed
-   luxury; if two are reachable, a **player-choice** picker (ladder-target / riot-concession
-   modal precedent). First Port wins a contested good.
-6. **The effect** — a new `src/game/luxury.ts` exporting `luxuryHappinessBonus(G, playerID)`
-   and `activeClaims(G, playerID)`, read by the two threshold tests in `applyUnrestUpkeep`
+   luxury through the same atomic `transferAssets`/ownership seam future trade uses; if two
+   are reachable, expose a typed required decision rather than adding another private modal
+   workflow. First Port wins a contested good.
+6. **The effect** — a new `src/game/luxury.ts` exporting
+   `deriveLuxuryActivity(definition, G)`, `luxuryHappinessBonus(...)`, and
+   `activeClaims(...)`, read by the two threshold tests in `applyUnrestUpkeep`
    (`unrest.ts:55-59`), the tier in `unrestStatus`, the ledger readout, **and now
    `victoryMetricValue` for _Beloved_ (Q44).**
 7. **Dials** — a `luxury` block on `EconomyRules` (`ruleset.ts`) so `?tune` picks every
@@ -247,9 +292,14 @@ The land-Trader slice is **gone**; coastal work is the whole feature.
 - Effective happiness moves the riot threshold in `applyUnrestUpkeep` **and** the _Beloved_
   metric (Q44).
 - One good, one owner: a second claim on a claimed good is refused; first Port wins.
+- Trade changes only the owner; the stable claim origin continues to identify the Port
+  that first claimed the asset.
 - The Port is unbuildable inland and when no adjacent luxury is unclaimed, each with a reason.
-- The per-player active cap holds; goods over it are owned-but-inactive.
+- The per-player active cap holds; goods over it are owned-but-inactive and the same state
+  always produces the same active set.
 - `suppressedTurns > 0` removes the bonus and restores it on expiry.
+- No state stores an `active` boolean; invariant checks reject duplicate ownership or an
+  invalid asset/settlement reference.
 
 ---
 
@@ -286,15 +336,16 @@ goods are dropped.
 
 ## 7. Open owner questions
 
-**None** — all luxury owner questions are resolved (folded above). The plan stays `blocked`
-only on Phase 3.5 landing first.
+**None** — all luxury owner questions are resolved (folded above). The Phase 4 opening PR is
+fully scoped; the plan stays `blocked` only until Phase 3.6 supplies stable identity and the
+canonical transition/projection boundaries Slice 2 requires.
 
 ---
 
 ## 8. Phase-4 exit checks for this feature
 
-- **The sink bites** — end-of-game banked gold drops materially against the pre-luxury
-  baseline. (Contingent on Q46 giving the Port a real gold cost.)
+- **The Port has a legible opportunity cost** without being treated as a required new gold
+  sink; end-of-game gold remains telemetry rather than a predetermined pass/fail direction.
 - **The happiness economy holds at the ledger's caps** — luxuries relieve unrest without
   retiring it; riots still happen to expansionist players; _Beloved_ stays winnable but not
   trivially bought.

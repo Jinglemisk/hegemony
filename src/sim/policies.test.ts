@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
+import { RESOLUTION_CARDS } from "../game/assembly/deck";
+import { PLAYER_IDS } from "../game/data";
 import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
 import { LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
 import { scenario } from "../game/testing/scenario";
@@ -19,7 +21,7 @@ import {
   smartPolicy,
 } from "./policies";
 import { createSimRng } from "./rng";
-import { runGame } from "./runner";
+import { playTurn, runGame } from "./runner";
 
 describe("policy denomination capabilities", () => {
   it("derives thresholds from the active ruleset while preserving standard behavior", () => {
@@ -41,6 +43,45 @@ describe("policy denomination capabilities", () => {
       goldRich: 9,
       materialScoreDivisor: 5,
     });
+  });
+});
+
+describe("rule-driven bank chains", () => {
+  it("never re-enters generic search as cross-material buy/sell churn", () => {
+    const G = scenario({
+      patch: {
+        economy: {
+          bank: { derivation: "uniform", baseline: { sell: 2, buy: 2 } },
+        },
+      },
+    })
+      .opening()
+      .build();
+    G.pendingPlayerEvent = null;
+    G.players[G.currentPlayer].hasCollectedGameplayIncome = true;
+    G.activeLaws.push({
+      cardId: "aqueduct-levy",
+      author: "0",
+      enactedSeason: G.season,
+      order: G.lawOrder++,
+    });
+    Object.assign(G.players[G.currentPlayer].resources, {
+      wood: 0,
+      stone: 40,
+      gold: 8,
+      food: 0,
+    });
+
+    let forced = 0;
+    playTurn(
+      G,
+      smartPolicy,
+      createSimRng(1),
+      { onForceEndTurn: () => (forced += 1) },
+      { maxActions: 30 },
+    );
+
+    expect(forced).toBe(0);
   });
 });
 
@@ -377,6 +418,57 @@ describe("political policy", () => {
 
     const choice = politicalPolicy.choose(G, enumerateLegalMoves(G, me), createSimRng(1));
     expect(choice.type).toBe("assemblyPass");
+  });
+
+  it("draws from Stratokles when his authored prize is the available line", () => {
+    const G = scenario({ seed: 11 }).opening().build();
+    playUntilAssembly(G);
+    expect(G.assembly?.phase).toBe("proposal");
+
+    const me = G.currentPlayer;
+    G.players[me].resources.influence = 100;
+    for (const politician of ["demosthenes", "perdiccas", "kleistophenes"] as const) {
+      G.politicianDecks[politician] = [];
+      G.politicianDiscards[politician] = [];
+    }
+
+    const choice = politicalPolicy.choose(G, enumerateLegalMoves(G, me), createSimRng(1));
+    expect(choice).toMatchObject({ type: "assemblyDraw", politician: "stratokles" });
+  });
+
+  it("values only deck composition, never the hidden top-card order", () => {
+    const G = scenario({ seed: 29 }).opening().build();
+    playUntilAssembly(G);
+    expect(G.assembly?.phase).toBe("proposal");
+
+    const me = G.currentPlayer;
+    G.players[me].resources.influence = 100;
+    const moves = enumerateLegalMoves(G, me);
+    const before = politicalPolicy.choose(G, moves, createSimRng(1));
+
+    for (const politician of ["demosthenes", "perdiccas", "kleistophenes", "stratokles"] as const) {
+      G.politicianDecks[politician].reverse();
+    }
+
+    expect(politicalPolicy.choose(G, moves, createSimRng(1))).toEqual(before);
+  });
+
+  it("aims a Directive at the rival it hurts most", () => {
+    const G = scenario({ seed: 13 }).opening().build();
+    playUntilAssembly(G);
+    expect(G.assembly?.phase).toBe("proposal");
+
+    const me = G.currentPlayer;
+    const rivals = PLAYER_IDS.filter((playerID) => playerID !== me);
+    const target = rivals[0];
+    for (const rival of rivals) G.players[rival].resources.food = rival === target ? 200 : 0;
+    G.assembly!.held[me] = {
+      card: RESOLUTION_CARDS.find((card) => card.id === "grain-riot")!,
+      draws: 1,
+    };
+
+    const choice = politicalPolicy.choose(G, enumerateLegalMoves(G, me), createSimRng(1));
+    expect(choice).toMatchObject({ type: "assemblyPropose", target });
   });
 });
 

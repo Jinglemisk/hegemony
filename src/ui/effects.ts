@@ -376,10 +376,10 @@ export function presentDirectiveEffect(effect: DirectiveEffect): EffectPresentat
         text: `No income for ${effect.turns} collection${effect.turns === 1 ? "" : "s"}`,
         tone: "negative",
       };
-    case "repealNewestLaw":
-      return { text: "Repeal the newest standing Law", tone: "neutral" };
+    case "repealNewestTargetLaw":
+      return { text: "Repeal the target's newest authored standing Law", tone: "neutral" };
     case "equalVotesNextAssembly":
-      return { text: "Exactly 1 vote per player at the next Assembly", tone: "neutral" };
+      return { text: "Target has exactly 1 base vote at the next Assembly", tone: "neutral" };
   }
 }
 
@@ -421,9 +421,7 @@ export function presentBuildingEffect(effect: BuildingEffect): EffectPresentatio
   }
 }
 
-export function presentBuildingEffects(
-  effects: readonly BuildingEffect[],
-): EffectPresentation {
+export function presentBuildingEffects(effects: readonly BuildingEffect[]): EffectPresentation {
   return effects.length > 0
     ? joinEffectPresentations(effects.map(presentBuildingEffect), ", ")
     : { text: "No effect", tone: "muted" };
@@ -448,8 +446,6 @@ function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string
       return "Until used or year end";
     case "whenRepealed":
       return "Until repealed";
-    case "whenPatronageChanges":
-      return "While patronage holds";
     case "atNextAssembly":
       return "At the next Assembly";
   }

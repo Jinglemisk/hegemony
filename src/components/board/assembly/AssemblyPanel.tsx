@@ -116,13 +116,13 @@ export function AssemblyPanel({
             ariaLabel={`Voice of the Assembly: ${voice?.holder ? PLAYER_NAMES[voice.holder] : "unheld"}`}
             content={
               <MechanicsDetails
-                duration="Recomputed whenever patronage changes"
+                duration="Permanent until strictly exceeded"
                 heading="Voice of the Assembly"
                 source="Victory standing"
               >
                 <p className="mechanicsExplanation">
-                  The Voice belongs to the patron of the most politicians and changes hands with the
-                  other victory standings.
+                  The first player to pass {voice?.minimum ?? G.ruleset.victory.minimums.voice}{" "}
+                  authored resolutions claims Voice. Ties do not dislodge its holder.
                 </p>
               </MechanicsDetails>
             }

@@ -78,6 +78,18 @@
   z-index: 950;
 }
 
+.sharedPopover.placement-below .sharedPopoverArrow {
+  top: -8px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.sharedPopover.placement-above .sharedPopoverArrow {
+  bottom: -8px;
+  border-top: 0;
+  border-left: 0;
+}
+
 .mechanicsDetails {
   display: grid;
   gap: 7px;

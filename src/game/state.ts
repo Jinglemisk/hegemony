@@ -93,7 +93,9 @@ export function createInitialState(
     politicianDecks: politicians.decks,
     politicianDiscards: politicians.discards,
     lawOrder: 0,
-    pendingIsonomia: false,
+    assemblyPassedByPlayer: { "0": 0, "1": 0, "2": 0, "3": 0 },
+    voiceHolder: null,
+    pendingIsonomiaTarget: null,
     assembliesHeld: 0,
   };
 }

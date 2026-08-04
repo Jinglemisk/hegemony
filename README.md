@@ -77,9 +77,12 @@ setup.
 
 ## For Contributors
 
-The game is a React and TypeScript client over a pure, serialisable rules engine.
-The browser UI, headless simulation/AI, and engine all use the same typed move
-protocol, with parity enforced in CI.
+The game is a React and TypeScript client over a deterministic, serialisable rules
+engine. The simulator and replay tooling already use its typed move protocol. The
+browser still has a parallel direct-mutator adapter; the accepted
+[Phase 3.6 architecture plan](docs/plans/phase-3.6-architecture-hardening.md) removes
+that final split and adds per-match content, explicit actors, player-safe projections,
+versioned replay, stable identities, and invariants before more v1 systems land.
 
 Engine calculators remain authoritative. `src/game/activeEffects.ts#getActiveEffects`
 reads those calculations and persistent state into typed source/scope/duration/expiry
@@ -102,6 +105,9 @@ testing or the [player guide](rules.md) for detailed gameplay instructions.
 
 ## Status
 
-Hegemony is **almost feature-complete**. It is playable now as a four-player local
-hotseat game; the remaining work is focused on game balancing and multiplayer
-infrastructure.
+Hegemony's core is playable now as a four-player local hotseat game. The remaining
+v1 mechanics are explicitly scoped: six coastal luxury goods and Ports, full
+Catan-style player trade, twelve drafted National Ideas, and the intended typed
+Resolution/Idea effects. After those pass the
+[v1 mechanics freeze](docs/plans/v1-mechanics-freeze.md), work moves to final balance,
+server-authoritative multiplayer, and release hardening rather than more core systems.

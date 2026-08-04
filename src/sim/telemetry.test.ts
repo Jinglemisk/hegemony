@@ -86,7 +86,10 @@ describe("Aggregator", () => {
     expect(aggregator.allSnapshots()).toHaveLength(2 * turns);
 
     // Every turn draws a player event, plus the bootstrap draw per game.
-    const playerEventCount = Object.values(report.events.player).reduce((sum, count) => sum + count, 0);
+    const playerEventCount = Object.values(report.events.player).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
     expect(playerEventCount).toBe(2 * (turns + 1));
 
     // These short games all hit the turn cap — not wins. Real win rate is 0; the
@@ -97,7 +100,10 @@ describe("Aggregator", () => {
     expect(PLAYER_IDS).toContain(report.perGame[0].leaderAtCap);
     const totalWinRate = Object.values(report.perSeat).reduce((sum, seat) => sum + seat.winRate, 0);
     expect(totalWinRate).toBe(0);
-    const totalCapLeaderRate = Object.values(report.perSeat).reduce((sum, seat) => sum + seat.capLeaderRate, 0);
+    const totalCapLeaderRate = Object.values(report.perSeat).reduce(
+      (sum, seat) => sum + seat.capLeaderRate,
+      0,
+    );
     expect(totalCapLeaderRate).toBeCloseTo(1);
 
     // Season rows exist and pool both games once a season completed in both.
@@ -114,6 +120,23 @@ describe("Aggregator", () => {
       expect(report.activeEffects[kind].playerTurnShare).toBeGreaterThanOrEqual(0);
       expect(report.activeEffects[kind].playerTurnShare).toBeLessThanOrEqual(1);
     }
+
+    expect(report.assembly.authoredPassed.count).toBeGreaterThanOrEqual(0);
+    expect(report.assembly.voiceClaims.count).toBeGreaterThanOrEqual(0);
+    expect(report.assembly.voiceTransfers.count).toBeGreaterThanOrEqual(0);
+    expect(report.assembly.voiceHoldersAtEnd.perGame).toBeGreaterThanOrEqual(0);
+    expect(report.assembly.voiceHoldersAtEnd.perGame).toBeLessThanOrEqual(1);
+    expect(report.assembly.authoredPassLeaderShare.mean).toBeGreaterThanOrEqual(0);
+    expect(report.assembly.authoredPassLeaderShare.mean).toBeLessThanOrEqual(1);
+    expect(Object.keys(report.assembly.directiveTargets)).toEqual(PLAYER_IDS);
+    expect(report.assembly.prizesGranted).toEqual(
+      expect.objectContaining({
+        wood: expect.any(Number),
+        stone: expect.any(Number),
+        food: expect.any(Number),
+        happiness: expect.any(Number),
+      }),
+    );
   });
 
   it("counts a finished game as a real win, never as a cap leader", () => {
@@ -126,6 +149,8 @@ describe("Aggregator", () => {
     G.phase = "gameOver";
     G.gameOverReason = "victoryRace";
     G.winner = "0";
+    G.assemblyPassedByPlayer = { "0": 4, "1": 2, "2": 1, "3": 0 };
+    G.voiceHolder = "0";
     aggregator.endGame(G);
 
     const report = aggregator.buildReport({
@@ -143,10 +168,16 @@ describe("Aggregator", () => {
     expect(report.perGame[0].termination).toBe("victoryRace");
     expect(report.perGame[0].winner).toBe("0");
     expect(report.perGame[0].leaderAtCap).toBeNull();
-    expect(report.terminations).toEqual({ victoryRace: 1, deckExhausted: 0, stratoklesCoup: 0, turnCap: 0 });
+    expect(report.perGame[0].voiceHolder).toBe("0");
+    expect(report.perGame[0].finalAuthoredPasses).toEqual({ "0": 4, "1": 2, "2": 1, "3": 0 });
+    expect(report.terminations).toEqual({ victoryRace: 1, deckExhausted: 0, turnCap: 0 });
     expect(report.perSeat["0"].winRate).toBe(1);
     expect(report.perSeat["1"].winRate).toBe(0);
     expect(report.perSeat["0"].capLeaderRate).toBe(0);
+    expect(report.assembly.voiceHoldersAtEnd).toEqual({ count: 1, perGame: 1 });
+    expect(report.assembly.voiceHolderWins).toEqual({ count: 1, finishedGames: 1, rate: 1 });
+    expect(report.assembly.authoredPassLeadMargin.mean).toBe(2);
+    expect(report.assembly.authoredPassLeaderShare.mean).toBeCloseTo(4 / 7);
   });
 
   it("credits a finished game's win to the winning seat's policy (winsByPolicy)", () => {

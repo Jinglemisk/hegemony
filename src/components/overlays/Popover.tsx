@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import type { VerticalPlacement } from "../../ui/anchoring";
 import { useAnchoredOverlay } from "./useAnchoredOverlay";
 
 export function Popover({
@@ -9,6 +10,7 @@ export function Popover({
   className,
   measureKey,
   onDismiss,
+  preferredPlacement = "below",
 }: {
   anchor: DOMRect;
   ariaLabel: string;
@@ -16,14 +18,10 @@ export function Popover({
   className?: string;
   measureKey?: unknown;
   onDismiss: () => void;
+  preferredPlacement?: VerticalPlacement;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const position = useAnchoredOverlay(
-    anchor,
-    ref,
-    { preferredPlacement: "below", gap: 12 },
-    measureKey,
-  );
+  const position = useAnchoredOverlay(anchor, ref, { preferredPlacement, gap: 12 }, measureKey);
   const returnFocusRef = useRef<FocusableElement | null>(activeFocusableElement());
 
   useEffect(() => {
@@ -60,7 +58,11 @@ export function Popover({
       style={
         position
           ? { left: position.left, top: position.top, opacity: 1 }
-          : { left: anchor.left, top: anchor.bottom + 12, opacity: 0 }
+          : {
+              left: anchor.left,
+              top: preferredPlacement === "below" ? anchor.bottom + 12 : anchor.top - 12,
+              opacity: 0,
+            }
       }
       tabIndex={-1}
     >

@@ -8,10 +8,11 @@ import {
   getOmenTable,
   getPlayerEventCards,
   getRiotTable,
+  getResolutionCards,
   getSeasonalEventCards,
 } from "../../../game/content";
 import { TRADABLE_MATERIALS, getBuildings, getTerrainDeck } from "../../../game/rules";
-import { POLITICIANS, RESOLUTION_DECKS } from "../../../game/assembly";
+import { POLITICIANS } from "../../../game/assembly";
 import type {
   EventCard,
   HegemonyState,
@@ -162,7 +163,7 @@ const victory: RuleChapter = {
       citizens: { title: "The Republic", of: "the most citizens" },
       stockpile: { title: "The Treasury", of: "the largest stockpile of materials" },
       happiness: { title: "The Beloved", of: "the highest happiness" },
-      voice: { title: "Voice of the Assembly", of: "patronage of the most politicians" },
+      voice: { title: "Voice of the Assembly", of: "the most authored resolutions passed" },
     };
     return (
       <div className="compendiumStack">
@@ -170,9 +171,10 @@ const victory: RuleChapter = {
           <Note>
             There are six public victory cards, each awarded to the sole leader in one measure. Hold{" "}
             <strong>{victory.cardsToWin}</strong> of them at the <em>start of your own turn</em> and
-            you win at once. Ties award nothing — a card is held only by a clear sole leader who
-            also clears its minimum. Five measure what you have built; the sixth, Voice of the
-            Assembly, measures the agora (see <AnnotatedText text="Assembly" />
+            you win at once. Ties award nothing on the five board metrics. Voice instead stays with
+            its first qualifying holder through ties and moves only when strictly exceeded. Five
+            measure what you have built; the sixth measures the agora (see{" "}
+            <AnnotatedText text="Assembly" />
             ).
           </Note>
           <Note>
@@ -822,7 +824,6 @@ const assembly: RuleChapter = {
     "patron",
     "patronage",
     "agora",
-    "coup",
     "demosthenes",
     "perdiccas",
     "kleistophenes",
@@ -857,8 +858,9 @@ const assembly: RuleChapter = {
 
         <Entry id={anchor("assembly", "propose")} title="Proposing">
           <Note>
-            One house resolution drops onto the ballot on its own. Then, in <em>reverse</em> turn
-            order, each player may put one more there.
+            One unauthored house <strong>Law</strong> drops onto the ballot on its own. Directives
+            are never drawn by the house. Every player then decides independently and in secret
+            whether to add one resolution.
           </Note>
           <DefList>
             <DefRow term="Draw">
@@ -871,7 +873,8 @@ const assembly: RuleChapter = {
               as often as you can afford.
             </DefRow>
             <DefRow term="Propose">
-              Lay the card on the bema for everyone to see. One card per player per assembly.
+              Seal the card for the ballot. A Stratokles Directive must name one rival; both card
+              and target are revealed before voting. One proposal per player per Assembly.
             </DefRow>
             <DefRow term="Repeal">
               For <strong>{rules.repealCost}</strong> influence, move to strike a standing Law
@@ -917,8 +920,8 @@ const assembly: RuleChapter = {
             table backs.
           </Note>
           <Note>
-            The fourth, Stratokles, deals in <strong>Directives</strong>: one-time upheavals that
-            hit everyone at once and then leave a permanent monument on his stack.
+            The fourth, Stratokles, deals in <strong>Directives</strong>: one-time upheavals aimed
+            at a rival chosen by their author. Each leaves a permanent monument on his stack.
           </Note>
           <DefList>
             <DefRow term="The cap">
@@ -929,30 +932,25 @@ const assembly: RuleChapter = {
             <DefRow term="Removal">
               Only a repeal, or a replacement at the cap, takes a Law off the board.
             </DefRow>
+            <DefRow term="Author prize">
+              A player whose resolution passes immediately receives that politician's prize. House
+              Laws, failed votes, vetoes, and repeal motions pay nothing.
+            </DefRow>
           </DefList>
         </Entry>
 
-        <Entry id={anchor("assembly", "power")} title="Power & patrons">
+        <Entry id={anchor("assembly", "power")} title="Power, patrons & Voice">
           <Note>
-            Nothing here is tracked — it is all read off the board. A politician's{" "}
-            <strong>power</strong> is the number of their stelae standing; their{" "}
+            A politician's <strong>power</strong> is the number of their stelae standing; their{" "}
             <strong>patron</strong> is whoever authored the most of them. A tie leaves them
-            unpatroned.
+            unpatroned. Patron is descriptive only and grants no buff.
           </Note>
           <DefList>
-            <DefRow term="Dominance">
-              At <strong>{rules.dominanceThreshold}</strong> stelae the patron gains that
-              politician's standing buff.
-            </DefRow>
             <DefRow term="Voice of the Assembly">
-              A sixth <AnnotatedText text="victory" /> card, held by whoever is patron of the most
-              politicians — minimum <strong>{G.ruleset.victory.minimums.voice}</strong>. Like the
-              other five it recomputes every turn and can change hands.
-            </DefRow>
-            <DefRow term="The coup">
-              Stratokles's monuments never repeal, so his track only rises. If he leads the agora
-              with <strong>{rules.coupThreshold}</strong> monuments, he seizes the city and{" "}
-              <em>his patron wins the game</em>. The only brake is voting his Directives down.
+              Every player-authored Law or Directive that passes permanently adds one to that
+              player's count. The first to <strong>{G.ruleset.victory.minimums.voice}</strong>{" "}
+              claims Voice; a rival must strictly exceed the holder to take it. Repeal and
+              replacement never reduce progress.
             </DefRow>
           </DefList>
         </Entry>
@@ -960,7 +958,7 @@ const assembly: RuleChapter = {
         <Entry id={anchor("assembly", "politicians")} title="The four politicians">
           <div className="ruleDefList">
             {POLITICIANS.map((politician) => {
-              const deck = RESOLUTION_DECKS[politician.id];
+              const deck = getResolutionCards().filter((card) => card.politician === politician.id);
 
               return (
                 <div className="rulePolitician" key={politician.id}>
@@ -970,8 +968,8 @@ const assembly: RuleChapter = {
                   </h3>
                   <p className="compendiumFlavor">{politician.creed}</p>
                   <Note>
-                    {deck.length} {politician.kind === "law" ? "Laws" : "Directives"} · patron's
-                    buff: <strong>{politician.patronBuff.label}</strong>
+                    {deck.length} {politician.kind === "law" ? "Laws" : "Directives"} · author
+                    prize: <strong>{formatResourceCost(rules.prizes[politician.id])}</strong>
                   </Note>
                   <ul className="ruleCardList">
                     {deck.map((card) => (

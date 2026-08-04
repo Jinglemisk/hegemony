@@ -69,7 +69,8 @@ function createGameFromUrl(): HegemonyState {
   const boardLayout: BoardLayout =
     boardParam === "shuffled" || boardParam === "classic" ? boardParam : GAME_CONFIG.boardLayout;
   const seedParam = Number(params?.get("seed"));
-  const pinnedSeed = Number.isFinite(seedParam) && params?.get("seed") ? seedParam >>> 0 : undefined;
+  const pinnedSeed =
+    Number.isFinite(seedParam) && params?.get("seed") ? seedParam >>> 0 : undefined;
   const manualSetup = params?.get("setup") === "manual";
   const preload = params?.get("dev") === "preload" || GAME_CONFIG.preloadOpeningSetupForTesting;
 
@@ -82,7 +83,8 @@ function createGameFromUrl(): HegemonyState {
     return createGame(pinnedSeed, ruleset, "classic", true);
   }
 
-  const seed = pinnedSeed ?? (GAME_CONFIG.autoOpeningForDev && !manualSetup ? nextRotationSeed() : undefined);
+  const seed =
+    pinnedSeed ?? (GAME_CONFIG.autoOpeningForDev && !manualSetup ? nextRotationSeed() : undefined);
   const G = createGame(seed, ruleset, boardLayout, false);
 
   if (!manualSetup && GAME_CONFIG.autoOpeningForDev) {
@@ -120,7 +122,8 @@ function fastForwardToAssembly(G: HegemonyState) {
     // Bias hard toward ending the turn: the point is to reach spring of Year 2, not
     // to play a good game on the way there.
     const endTurnMove = moves.find((move) => move.type === "endTurn");
-    const move = endTurnMove && step.value < 0.7 ? endTurnMove : moves[Math.floor(step.value * moves.length)];
+    const move =
+      endTurnMove && step.value < 0.7 ? endTurnMove : moves[Math.floor(step.value * moves.length)];
 
     if (!applyMove(G, G.currentPlayer, move).ok) {
       return;
@@ -202,13 +205,16 @@ export type GameMoves = {
   promotePop: (tileId: string, from: PopType) => void;
   demotePop: (tileId: string, from: PopType) => void;
   fundExpedition: (expeditionId: EventTableId, stake: VentureStake) => void;
-  buyRiotInsurance: (optionId: RiotInsuranceId, demoteTarget?: { tileId: string; from: PopType }) => void;
+  buyRiotInsurance: (
+    optionId: RiotInsuranceId,
+    demoteTarget?: { tileId: string; from: PopType },
+  ) => void;
   resolveRiot: () => void;
   // The Assembly (Phase 3-B). These are the only moves available while the agora
   // sits — the engine refuses every other verb until the house rises.
   assemblyDraw: (playerID: PlayerId, politician: PoliticianId) => void;
   assemblyDiscardHeld: (playerID: PlayerId) => void;
-  assemblyPropose: (playerID: PlayerId, replaces?: string) => void;
+  assemblyPropose: (playerID: PlayerId, replaces?: string, target?: PlayerId) => void;
   assemblyProposeRepeal: (playerID: PlayerId, cardId: string) => void;
   assemblyPass: (playerID: PlayerId) => void;
   assemblyBribe: (playerID: PlayerId) => void;
@@ -270,78 +276,124 @@ export function useHegemonyGame() {
 function createMoves(setG: SetState): GameMoves {
   return {
     placeCapital: (tileId, pops) => {
-      setG((previous) => commitSetupPlacement(previous, "setupCapital", (G) => placeCapital(G, G.currentPlayer, tileId, pops)));
+      setG((previous) =>
+        commitSetupPlacement(previous, "setupCapital", (G) =>
+          placeCapital(G, G.currentPlayer, tileId, pops),
+        ),
+      );
     },
     placeCity: (tileId, pops) => {
-      setG((previous) => commitSetupPlacement(previous, "setupCity", (G) => placeCity(G, G.currentPlayer, tileId, pops)));
+      setG((previous) =>
+        commitSetupPlacement(previous, "setupCity", (G) =>
+          placeCity(G, G.currentPlayer, tileId, pops),
+        ),
+      );
     },
     placeColony: (tileId, pops) => {
-      setG((previous) => commitSetupPlacement(previous, "setupColony", (G) => placeColony(G, G.currentPlayer, tileId, pops)));
+      setG((previous) =>
+        commitSetupPlacement(previous, "setupColony", (G) =>
+          placeColony(G, G.currentPlayer, tileId, pops),
+        ),
+      );
     },
     collectIncome: () => {
       setG((previous) => commitGameplayMove(previous, (G) => collectIncome(G, G.currentPlayer)));
     },
     foundColony: (tileId, sourceTileId, pop) => {
       setG((previous) =>
-        commitGameplayMove(previous, (G) => foundColony(G, G.currentPlayer, tileId, sourceTileId, pop)),
+        commitGameplayMove(previous, (G) =>
+          foundColony(G, G.currentPlayer, tileId, sourceTileId, pop),
+        ),
       );
     },
     upgradeColonyToCity: (tileId) => {
-      setG((previous) => commitGameplayMove(previous, (G) => upgradeColonyToCity(G, G.currentPlayer, tileId)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => upgradeColonyToCity(G, G.currentPlayer, tileId)),
+      );
     },
     buildBuilding: (tileId, buildingId) => {
-      setG((previous) => commitGameplayMove(previous, (G) => buildBuilding(G, G.currentPlayer, tileId, buildingId)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => buildBuilding(G, G.currentPlayer, tileId, buildingId)),
+      );
     },
     growPop: (tileId, pop) => {
-      setG((previous) => commitGameplayMove(previous, (G) => growPop(G, G.currentPlayer, tileId, pop)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => growPop(G, G.currentPlayer, tileId, pop)),
+      );
     },
     movePops: (sourceTileId, targetTileId, pops) => {
       setG((previous) =>
-        commitGameplayMove(previous, (G) => movePops(G, G.currentPlayer, sourceTileId, targetTileId, pops)),
+        commitGameplayMove(previous, (G) =>
+          movePops(G, G.currentPlayer, sourceTileId, targetTileId, pops),
+        ),
       );
     },
     resolvePendingPlayerEvent: (targetTileId, choiceIndex) => {
       setG((previous) =>
-        commitGameplayMove(previous, (G) => resolvePendingPlayerEvent(G, G.currentPlayer, targetTileId, choiceIndex)),
+        commitGameplayMove(previous, (G) =>
+          resolvePendingPlayerEvent(G, G.currentPlayer, targetTileId, choiceIndex),
+        ),
       );
     },
     bankSell: (material) => {
-      setG((previous) => commitGameplayMove(previous, (G) => bankSell(G, G.currentPlayer, material)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => bankSell(G, G.currentPlayer, material)),
+      );
     },
     bankBuy: (material) => {
-      setG((previous) => commitGameplayMove(previous, (G) => bankBuy(G, G.currentPlayer, material)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => bankBuy(G, G.currentPlayer, material)),
+      );
     },
     civicCalm: (payment) => {
-      setG((previous) => commitGameplayMove(previous, (G) => civicCalm(G, G.currentPlayer, payment)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => civicCalm(G, G.currentPlayer, payment)),
+      );
     },
     promotePop: (tileId, from) => {
-      setG((previous) => commitGameplayMove(previous, (G) => promotePop(G, G.currentPlayer, tileId, from)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => promotePop(G, G.currentPlayer, tileId, from)),
+      );
     },
     demotePop: (tileId, from) => {
-      setG((previous) => commitGameplayMove(previous, (G) => demotePop(G, G.currentPlayer, tileId, from)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => demotePop(G, G.currentPlayer, tileId, from)),
+      );
     },
     fundExpedition: (expeditionId, stake) => {
-      setG((previous) => commitGameplayMove(previous, (G) => fundExpedition(G, G.currentPlayer, expeditionId, stake)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) =>
+          fundExpedition(G, G.currentPlayer, expeditionId, stake),
+        ),
+      );
     },
     buyRiotInsurance: (optionId, demoteTarget) => {
       setG((previous) =>
-        commitGameplayMove(previous, (G) => buyRiotInsurance(G, G.currentPlayer, optionId, demoteTarget)),
+        commitGameplayMove(previous, (G) =>
+          buyRiotInsurance(G, G.currentPlayer, optionId, demoteTarget),
+        ),
       );
     },
     resolveRiot: () => {
       setG((previous) => commitGameplayMove(previous, (G) => resolveRiot(G, G.currentPlayer)));
     },
     assemblyDraw: (playerID, politician) => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyDraw(G, playerID, politician)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => assemblyDraw(G, playerID, politician)),
+      );
     },
     assemblyDiscardHeld: (playerID) => {
       setG((previous) => commitGameplayMove(previous, (G) => assemblyDiscardHeld(G, playerID)));
     },
-    assemblyPropose: (playerID, replaces) => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyPropose(G, playerID, replaces)));
+    assemblyPropose: (playerID, replaces, target) => {
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => assemblyPropose(G, playerID, replaces, target)),
+      );
     },
     assemblyProposeRepeal: (playerID, cardId) => {
-      setG((previous) => commitGameplayMove(previous, (G) => assemblyProposeRepeal(G, playerID, cardId)));
+      setG((previous) =>
+        commitGameplayMove(previous, (G) => assemblyProposeRepeal(G, playerID, cardId)),
+      );
     },
     assemblyPass: (playerID) => {
       setG((previous) => commitGameplayMove(previous, (G) => assemblyPass(G, playerID)));

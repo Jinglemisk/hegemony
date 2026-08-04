@@ -6,6 +6,7 @@ import {
   VENTURE_STAKES,
 } from "./data";
 import { PLACEMENT_POP_COUNTS } from "./core/pops";
+import type { PoliticianId } from "./assembly/types";
 import type { PopType, Resource, Resources, SettlementKind, VictoryMetric } from "./types";
 
 /** One bank rate pair: `sell` materials buy 1 gold; 1 material costs `buy` gold. */
@@ -153,10 +154,8 @@ export interface AssemblyRules {
   firstYear: number;
   /** Standing Laws the board holds before a new one must name one to replace (§1.5). */
   lawCap: number;
-  /** Stelae that make a politician dominant — the patron's buff switches on here. */
-  dominanceThreshold: number;
-  /** Tally monuments that trigger Stratokles's coup: his patron wins outright. */
-  coupThreshold: number;
+  /** One-time reward paid when a player's authored resolution passes. House Laws pay none. */
+  prizes: Record<PoliticianId, Partial<Resources>>;
   /** Influence for the first draw of your proposal turn. */
   drawCost: number;
   /** Influence for every draw after it — the fishing sink (§1.4). */
@@ -223,11 +222,9 @@ export const DEFAULT_RULESET: Ruleset = {
     // plus one lucky opening turn can produce (start: 1 city + 1 colony, 6 pops,
     // ≤6 citizens, 52 banked materials, 0 happiness).
     cardsToWin: 3,
-    // `voice` is the Assembly's 6th card (§1.7): patron of the most politicians, a
-    // live metric that flips hands like the other five. The minimum of 2 keeps it
-    // genuinely contested — patronising a single politician is not a claim on the
-    // Assembly, and with four politicians and four seats, two is a real bloc.
-    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 10, voice: 2 },
+    // Voice is the permanent authored-and-passed Assembly ratchet. First to three
+    // holds it until another seat strictly exceeds the holder's count.
+    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 10, voice: 3 },
   },
   actionCosts: ACTION_COSTS,
   growPopCosts: GROW_POP_COSTS,
@@ -275,11 +272,14 @@ export const DEFAULT_RULESET: Ruleset = {
     // race-decided game sees ~4 assemblies and a grind to exhaustion up to ~7.
     firstYear: 2,
     lawCap: 6,
-    dominanceThreshold: 3,
-    // Raised 3→5 (owner playtest, 2026-07-20): with only 7 Directives and monuments
-    // that never repeal, 5 makes the coup a genuine late-game reach rather than a
-    // mid-game swing, and gives the table more assemblies to vote his Directives down.
-    coupThreshold: 5,
+    // Material prizes are ~11–12% of one classic board's base production for that
+    // resource (44 food / 36 wood / 26 stone). Happiness uses civic-track scaling.
+    prizes: {
+      demosthenes: { food: 5 },
+      perdiccas: { stone: 3 },
+      kleistophenes: { wood: 4 },
+      stratokles: { happiness: 2 },
+    },
     drawCost: 3,
     redrawCost: 3,
     repealCost: 6,

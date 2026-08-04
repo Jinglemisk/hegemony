@@ -1,15 +1,13 @@
 ---
-status: active
+status: shipped
 phase: "3.5"
-updated: 2026-07-31
+updated: 2026-08-04
 ---
 
 # Phase 3.5 parity closeout
 
-This is the active delivery plan after PRs #48–#50. It preserves the agreed work
-as one coordinated, stacked PR train. Each PR must be independently reviewable
-and green; implementation may be developed together, but branches merge in
-dependency order.
+This was the delivery plan after PRs #48–#50. It preserves the agreed work and
+the final disposition of the Phase 3.5 train.
 
 ## Outcome
 
@@ -39,8 +37,11 @@ roadmap's engine/frontend/simulation-AI parity contract.
 layer was rebased and reconciled with the effective-value APIs and parity manifests
 before merge. The Phase 3.5 order amendment is fulfilled by the implemented
 `low-number-core-v1` preset and its
-[matched campaign](../reports/simulation/2026-07-31-low-number-core-v1.md). Step 4,
-the Assembly revision, is next; Step 5 remains pending.
+[matched campaign](../../reports/simulation/2026-07-31-low-number-core-v1.md). Step 4's
+three-axis Assembly revision and Step 5's automated campaign are complete. The
+[closeout report](../../reports/simulation/2026-08-03-phase-3.5-closeout.md) records the
+accepted Assembly, prize, Voice, and three-city decisions and explicitly notes that no
+separate full-game human playtest transcript was recorded.
 
 ## Merge and testing rules
 
@@ -54,14 +55,18 @@ the Assembly revision, is next; Step 5 remains pending.
 ## Settled and open inputs
 
 - Patron standing buffs are removed; only the one-time enactment prizes remain.
-- The implementation owns balanced initial prizes for Perdiccas, Kleistophenes,
-  and Stratokles. Prizes never grant citizens and remain ruleset dials.
-- All Stratokles Directives target a chosen player, each passed Directive adds
-  one ratchet count, and the coup is removed.
+- The standard one-time author prizes are Demosthenes +5 food, Perdiccas +3 stone,
+  Kleistophenes +4 wood, and Stratokles +2 happiness. Low Numbers uses +2 food,
+  +2 stone, +3 wood, and +1 happiness. They remain ruleset dials.
+- The house can draw Laws only. Every Stratokles Directive requires one rival target
+  before proposal, each authored pass adds one Voice count, and the coup is removed.
 - Voice uses a minimum and first-to-reach ownership until strictly exceeded.
-  The numeric minimum is **3** (Q39, resolved 2026-07-27) — a ruleset dial for Step 5 tuning.
+  The numeric minimum is **3** (Q39, resolved 2026-07-27) and remains a ruleset dial.
+- Patron labels remain a descriptive reading of standing stelae and grant no modifier.
 
 ## Retirement
 
-After Step 5 passes, move this plan to the documentation archive and leave only
-the Phase 3.5 outcome and validation links in the roadmap.
+Phase 3.5 closed on 2026-08-04 by owner direction after the recorded automated gates
+passed. The next implementation train is
+[Phase 3.6 architecture hardening](../../plans/phase-3.6-architecture-hardening.md),
+which closes the command/content/projection/replay seams before v1 luxury and trade.

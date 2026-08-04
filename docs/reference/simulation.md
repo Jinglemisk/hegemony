@@ -4,6 +4,13 @@ The game engine (`src/game`) is pure and deterministic, so it can be driven
 entirely from the terminal — no browser, no React. This toolkit is the primary
 instrument for testing rules and simulating balance scenarios.
 
+Simulation intensity is risk-based. Gameplay PRs require deterministic examples,
+invariants, replay and policy behavior when applicable; they do **not** require an
+arbitrary fixed number of full games. Use broader matched batches when changing
+probabilities, balance values, policy evaluation, multi-system interactions, or when
+making a balance claim. Record the seeds, definition/version, policies, turns, and
+known policy limits with every campaign.
+
 ```bash
 npm run sim -- <command> [args] [--file path]
 ```
@@ -118,7 +125,9 @@ Works from any phase — bots will finish a manual setup too. Policies:
   favours slot-rich cities — the bot that actually exercises the terrain rework.
   Deterministic.
 - `beam` — a within-turn **beam search** over the same `smart` score, so it values the
-  multi-step plays one-ply misses (build-then-promote, save-then-upgrade, bank chains).
+  within-turn sequences one-ply misses (build-then-promote and bank chains). It does
+  not search through `endTurn`, so the six-turn income projection is state evaluation,
+  not income-to-future-action planning.
   Branches only on RNG-free moves — it never reads the seeded die/deck, so it stays
   deterministic (record→replay is byte-identical, proving zero game RNG consumed) and
   plays the stochastic families (riot/venture/bank) by the same hard-coded rules as
@@ -127,8 +136,9 @@ Works from any phase — bots will finish a manual setup too. Policies:
 - `political` — the influence-aware bot (Phase 3-C). Same `smart` economy, but it plays
   the **Assembly**: it scores a resolution's DIFFERENTIAL impact (my gain minus the
   strongest rival's — "does this hurt me, help me, or help a rival more?") and draws /
-  proposes / votes / bribes / vetoes by that, atop a standing-in-the-agora term (progress
-  to the Voice card, the Stratokles clock). Reuses the engine's own enactment on clones,
+  proposes / votes / bribes / vetoes by that, atop permanent authored-and-passed progress
+  toward Voice. Directive proposals evaluate each legal rival target separately. It reuses
+  the engine's own enactment on clones,
   so it stays deterministic and reads no game RNG. A `political`-vs-`smart` A/B isolates
   the political layer. Assemblies convene from Year 2, so use long games (`--turns 280`)
   or the agora barely opens. See docs/archive/plans/influence-aware-ai.md and docs/reports/simulation/.
@@ -202,12 +212,14 @@ The report contains:
   this universal table makes missing or unexercised action paths visible
 - `activeEffects` — zero-filled observations, per-player-turn counts, and player-turn
   prevalence for every canonical active-effect kind (suppression, deficit, timed
-  mood, seasonal/omen modifiers, discounts, Laws, patronage, and pending Directives)
+  mood, seasonal/omen modifiers, discounts, Laws, and pending Directives)
 - `buildings` — build counts and per-game rates
 - `events` — draw counts by card id, and per-option pick counts for choice cards
 - `finalCardsDistribution`
-- `assembly` — agora engagement: assemblies held/game, laws enacted / removed / standing,
-  directives, **influence sunk**/game, and a per-verb breakdown (the Phase 3-C instrument)
+- `assembly` — agora engagement: assemblies held/game, Laws enacted / removed / standing,
+  Directives and their target distribution, authored passes, prize resources, Voice claims
+  and transfers, final Voice ownership/win correlation, authored-pass lead margin and
+  concentration, **influence sunk**/game, and a per-verb breakdown
 - `currencyVerbs` — per-verb currency-move counts (bank / calm / ladder / venture / riot)
 - `upgrades` — colony→city upgrades per game
 
@@ -245,6 +257,12 @@ Replays are byte-identical to the original run.
 The save is a _recipe_: replaying `history` from `createInitialState(seed)`
 reproduces `state` byte-for-byte. Saves double as shareable bug reports and
 balance scenarios.
+
+**Accepted Phase 3.6 migration:** recipes will additionally pin engine/state schema,
+command schema, ruleset version/hash, and content version/hash. Simulation, browser,
+replay, and the future server will submit the same client-input command through one
+atomic transition. The current process-global content override and `LegalMove` values
+that contain derived costs are transitional, not the target protocol.
 
 ## Writing tests and scenarios
 

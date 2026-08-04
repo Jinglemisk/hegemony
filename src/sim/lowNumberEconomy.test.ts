@@ -4,7 +4,13 @@ import { LOW_NUMBER_RULESET_PATCH, createLowNumberContent } from "../dev/tuningP
 import { getAuthoredGameContent } from "../game/content";
 import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
 import { POLITICIANS, RESOLUTION_CARDS } from "../game/assembly/deck";
-import { presentBuildingEffect, presentEventEffects, presentTableEffect } from "../ui/effects";
+import {
+  presentBuildingEffect,
+  presentDirectiveEffect,
+  presentEventEffects,
+  presentLawEffect,
+  presentTableEffect,
+} from "../ui/effects";
 
 const LOW_NUMBER_CONTENT = createLowNumberContent(getAuthoredGameContent());
 const LOW_NUMBER_BUILDINGS = LOW_NUMBER_CONTENT.buildings;
@@ -83,7 +89,7 @@ describe("low-number economy study invariants", () => {
     expect(harmful).toBe(21);
   });
 
-  it("changes participation costs but leaves the Law cap and Assembly content untouched", () => {
+  it("compresses Assembly prizes and resolution magnitudes without mutating authored content", () => {
     const resolutionsBefore = structuredClone(RESOLUTION_CARDS);
     const politiciansBefore = structuredClone(POLITICIANS);
     const ruleset = deriveRuleset(DEFAULT_RULESET, LOW_NUMBER_RULESET_PATCH);
@@ -97,7 +103,23 @@ describe("low-number economy study invariants", () => {
       repealCost: 2,
       briberyCost: 3,
       vetoCost: 2,
+      prizes: {
+        demosthenes: { food: 2 },
+        perdiccas: { stone: 2 },
+        kleistophenes: { wood: 3 },
+        stratokles: { happiness: 1 },
+      },
     });
+    expect(ruleset.victory.minimums.cities).toBe(3);
+    expect(ruleset.victory.minimums.voice).toBe(3);
+    const streets = LOW_NUMBER_CONTENT.resolutions.find((card) => card.id === "the-streets-burn")!;
+    expect(streets.kind === "directive" && streets.effects[0]).toMatchObject({ amount: -2 });
+    expect(streets.text).toContain("lose 2 happiness");
+    const bread = LOW_NUMBER_CONTENT.resolutions.find((card) => card.id === "bread-and-circuses")!;
+    expect(bread.kind === "directive" && bread.effects).toMatchObject([
+      { amount: 2 },
+      { amount: -2 },
+    ]);
     expect(RESOLUTION_CARDS).toEqual(resolutionsBefore);
     expect(POLITICIANS).toEqual(politiciansBefore);
   });
@@ -113,6 +135,7 @@ describe("low-number economy study invariants", () => {
     expect(first.buildings[0].cost).not.toBe(second.buildings[0].cost);
     expect(first.riotTable.rows[0]).not.toBe(second.riotTable.rows[0]);
     expect(first.playerEvents).not.toBe(second.playerEvents);
+    expect(first.resolutions).not.toBe(second.resolutions);
     expect(first).toEqual(second);
     expect(authored).toEqual(authoredSnapshot);
     expect(first.omenTable).toEqual(authored.omenTable);
@@ -125,6 +148,13 @@ describe("low-number economy study invariants", () => {
     }
     for (const card of [...LOW_NUMBER_CONTENT.seasonalEvents, ...LOW_NUMBER_CONTENT.playerEvents]) {
       expect(presentEventEffects(card.effects).text).not.toBe("");
+    }
+    for (const card of LOW_NUMBER_CONTENT.resolutions) {
+      if (card.kind === "law") {
+        for (const effect of card.effects) expect(presentLawEffect(effect).text).not.toBe("");
+      } else {
+        for (const effect of card.effects) expect(presentDirectiveEffect(effect).text).not.toBe("");
+      }
     }
     for (const table of [
       LOW_NUMBER_CONTENT.riotTable,
@@ -146,5 +176,16 @@ describe("low-number economy study invariants", () => {
     expect(
       LOW_NUMBER_CONTENT.seasonalEvents.find((event) => event.id === "season-plague")?.text,
     ).toContain("loses 1 Happiness");
+  });
+
+  it("keeps transformed resolution prose aligned with low-number mechanics", () => {
+    const resolution = (id: string) =>
+      LOW_NUMBER_CONTENT.resolutions.find((candidate) => candidate.id === id)!;
+
+    expect(resolution("cult-of-demeter").text).toBe(
+      "Hold 5 or more food for 1 happiness; fall below it and lose 1.",
+    );
+    expect(resolution("manumission-law").text).toContain("each slave costs 1 happiness");
+    expect(resolution("rural-bloc").text).toContain("Every colony yields 1 influence");
   });
 });
