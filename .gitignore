@@ -18,6 +18,7 @@ docs/sim/*.json
 
 # Local agent/editor config
 .claude/
+.worktrees/
 
 # Hero art candidates — large binaries; force-add the chosen final asset only
 assets/hero-v2/

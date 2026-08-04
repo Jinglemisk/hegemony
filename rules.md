@@ -5,8 +5,8 @@ city-state into the dominant power of an island. You gather resources, grow your
 people, found colonies, upgrade them into cities, and raise buildings to
 out-produce your rivals.
 
-> This guide covers the game as it plays today. A few systems (final victory
-> scoring, the Assembly, luxury goods) are still being designed and are noted
+> This guide covers the game as it plays today. A few systems (luxury goods and
+> later-phase additions) are still being designed and are noted
 > where they come up.
 
 ---
@@ -19,7 +19,7 @@ resource from the land, and the amount is printed on the tile:
 - **Forest** → Wood
 - **Mountain** → Stone
 - **Plains** → Food (the life currency — the breadbasket is the richest tile on the map)
-- **Hill** → *nothing.* Hills yield no resource at all, but carry the **best building
+- **Hill** → _nothing._ Hills yield no resource at all, but carry the **best building
   slots** on the board. They are elite building terrain: your citizens and freemen live
   there fed from your shared food, while your slaves — who only work the land — sit idle.
   The map's single 4-slot tile is a hill, at the contested centre.
@@ -41,8 +41,8 @@ You keep track of six resources:
 - **Wood, Stone, Gold, Food** — the material goods you spend to expand and build.
   Gold doubles as the **unit of account at the bank** (see The bank, below).
 - **Influence** — a political currency earned by your citizens. It stabilizes the
-  province (civic calm), pays for demotions on the social ladder, and buys riot
-  insurance — with the Assembly still to come.
+  province (civic calm), pays for demotions on the social ladder, buys riot
+  insurance, and funds Assembly draws, repeals, bribes, and vetoes.
 - **Happiness** — the mood of your people. It is lifted by temples, stored food,
   and civic calm, and dragged down by overcrowding and hunger.
 
@@ -92,7 +92,7 @@ come back the other way, so whoever picked last picks first in the second round:
 Then the game begins. Your metropolis is your only city at the start — your seat of
 building and population; it carries no special bonuses, only its head start. The
 founding colony is your second pole, waiting to be grown or upgraded into your
-first daughter city. (Some modes change the opening — *deathmatch* places three
+first daughter city. (Some modes change the opening — _deathmatch_ places three
 colonies.)
 
 By default the island uses the classic authored layout; start the game with
@@ -138,7 +138,7 @@ seasonal event is revealed. Play runs through the year in order — **Spring,
 Summer, Autumn, Winter** — and then a new year opens on Spring again, with the
 **first player rotating one seat** (the year turns, the order turns). Each season
 has its own mood: Spring and Summer tend to be kind (growth, building, trade),
-Autumn is the mixed harvest, and Winter leans harsh. That is a *tendency*, not a
+Autumn is the mixed harvest, and Winter leans harsh. That is a _tendency_, not a
 rule — Winter simply deals more hard-luck cards, so a mild Winter is still
 possible, and no season is ever guaranteed good or bad.
 
@@ -170,7 +170,7 @@ The stake is spent win or lose; the low rolls simply return nothing:
   freeman in a settlement with room, +2 food).
 
 Every table pays out slightly less than it costs on average — the expedition is
-a gamble, and it is *meant* for whoever is behind and needs the swing.
+a gamble, and it is _meant_ for whoever is behind and needs the swing.
 
 ## Buildings
 
@@ -218,14 +218,14 @@ When happiness turns **negative** it reads as unrest, and unrest has teeth. At t
 start of your turn — before you collect income — **happiness at −5 or lower puts
 you on the riot table**. Your turn stops until the die is rolled:
 
-| Roll | Outcome |
-| ---: | --- |
-| 1 | The mob torches the works — lose 1 pop **and** a building (no building? lose 2 pops) |
-| 2 | Revolt spreads — lose 2 pops |
-| 3 | Blood in the streets — lose 1 pop |
-| 4 | Granary sacked — lose 6 food |
-| 5 | Bribe demanded — lose 6 gold (lose 1 pop if you can't pay in full) |
-| 6 | The mob disperses — no loss |
+| Roll | Outcome                                                                              |
+| ---: | ------------------------------------------------------------------------------------ |
+|    1 | The mob torches the works — lose 1 pop **and** a building (no building? lose 2 pops) |
+|    2 | Revolt spreads — lose 2 pops                                                         |
+|    3 | Blood in the streets — lose 1 pop                                                    |
+|    4 | Granary sacked — lose 6 food                                                         |
+|    5 | Bribe demanded — lose 6 gold (lose 1 pop if you can't pay in full)                   |
+|    6 | The mob disperses — no loss                                                          |
 
 Before rolling you may **declare insurance** — each option once per riot, each
 adding **+1 to your roll**: a **bread dole** (4 food), a **concession** (demote
@@ -277,23 +277,52 @@ rail (or press `?`) to open the **Compendium** — victory standings, every dice
 omen included), this board's bank rates, both decks' full composition, and a
 costs cheat-sheet.
 
+## The Assembly
+
+At the start of each spring from Year 2 onward, normal play pauses while the Assembly
+convenes. The house places one random **Law** on the ballot. Each player then decides in
+secret whether to pass, pay 3 influence to draw from a chosen politician, propose the
+drawn resolution, or pay 6 influence to propose repealing a standing Law. A redraw costs
+another 3 influence.
+
+The Assembly then reveals every proposal and votes on each item in order. Your base vote
+equals your citizens. During your vote you may buy up to two extra votes for 10 influence
+each, or spend 5 influence on your once-per-Assembly veto. A simple majority passes and a
+tie fails. No more than six Laws can stand; a new Law proposed at the cap must name the Law
+it will replace.
+
+Demosthenes, Perdiccas, and Kleistophenes offer standing table-wide Laws. Stratokles offers
+one-time **Directives**; their author must name one rival before sealing the proposal, and
+the target is revealed before voting. The house never draws a Directive. Politician power
+and patron labels describe the visible stelae only and grant no bonus.
+
+Every player-authored resolution that passes permanently adds one to that player's Voice
+record and immediately grants its politician's one-time prize: Demosthenes gives 5 food,
+Perdiccas 3 stone, Kleistophenes 4 wood, and Stratokles 2 happiness. House Laws, failed or
+vetoed proposals, and repeals grant no prize or Voice progress. Repealing or replacing a
+Law never removes progress already earned.
+
 ## Winning — the victory race
 
-Five **victory cards** sit face-up from the first turn. Each reads **"Most X,
-minimum Y"** and belongs to the *sole leader* in that category who also meets the
-minimum — ties, or leading below the minimum, leave the card unheld:
+Six **victory cards** sit face-up from the first turn. Five read **"Most X,
+minimum Y"** and belong to the _sole leader_ in that category who also meets the
+minimum — ties, or leading below the minimum, leave those cards unheld:
 
-| Card | Condition | Minimum |
-| --- | --- | ---: |
-| Polis Builder | most cities standing | 3 |
-| Demos | most total pops | 16 |
-| Civic Elite | most citizens | 8 |
-| Treasurer | largest banked material stockpile | 80 |
-| Beloved of the People | highest happiness | +10 |
+| Card                  | Condition                         | Minimum |
+| --------------------- | --------------------------------- | ------: |
+| Polis Builder         | most cities standing              |       3 |
+| Demos                 | most total pops                   |      16 |
+| Civic Elite           | most citizens                     |       8 |
+| Treasurer             | largest banked material stockpile |      80 |
+| Beloved of the People | highest happiness                 |     +10 |
+
+The sixth card, **Voice of the Assembly**, uses the permanent Assembly record. The first
+player to pass 3 authored resolutions claims it. A tie does not dislodge the holder; a
+rival takes Voice only by strictly exceeding the holder's count.
 
 No card can be held at the start of the game — every minimum sits above anything
 your setup and first turn can produce. Holding a card is an achievement, never a
-starting condition. (With one starting city, Polis Builder now takes two colony
+starting condition. (With one starting city, Polis Builder takes two colony
 upgrades — the race to your third city is the long game.)
 
 **Hold any 3 cards at the start of your own turn and you win on the spot.** The

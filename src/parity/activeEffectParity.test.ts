@@ -7,7 +7,6 @@ import type { GameUi } from "../components/board/GameUiContext";
 import { GameUiProvider } from "../components/board/GameUiProvider";
 import { collectIncome } from "../game/actions";
 import { enactForEval, openAssembly } from "../game/assembly";
-import { RESOLUTION_CARDS } from "../game/assembly/deck";
 import { consumeLawFreeAction } from "../game/assembly/laws";
 import {
   ACTIVE_EFFECT_KINDS,
@@ -174,7 +173,7 @@ describe("canonical active-effect selector", () => {
       enactedSeason: G.season,
       order: G.lawOrder++,
     });
-    G.pendingIsonomia = true;
+    G.pendingIsonomiaTarget = "0";
 
     const effects = getActiveEffects(G, "0");
     const kinds = new Set(effects.map((effect) => effect.kind));
@@ -225,34 +224,6 @@ describe("canonical active-effect selector", () => {
       .filter((line) => line.source === "Parity Season" && line.resource === "gold")
       .reduce((sum, line) => sum + line.amount, 0);
     expect(contribution).toBe(5);
-  });
-
-  it("derives patron effects from the same source-aware Law layer", () => {
-    const G = stateWithSettlement();
-    const regularLaws = RESOLUTION_CARDS.filter(
-      (card) => card.kind === "law" && card.politician === "demosthenes",
-    ).slice(0, G.ruleset.assembly.dominanceThreshold);
-
-    for (const card of regularLaws) {
-      G.activeLaws.push({
-        cardId: card.id,
-        author: "0",
-        enactedSeason: G.season,
-        order: G.lawOrder++,
-      });
-    }
-
-    const patronage = effectByKind(G, "patronage");
-    expect(patronage).toHaveLength(1);
-    expect(patronage[0].source.label).toContain("patronage");
-    expect(patronage[0].duration.expiry).toBe("whenPatronageChanges");
-
-    const rivalLaws = RESOLUTION_CARDS.filter(
-      (card) => card.kind === "law" && card.politician === "demosthenes",
-    ).slice(G.ruleset.assembly.dominanceThreshold, G.ruleset.assembly.dominanceThreshold * 2);
-    for (const card of rivalLaws) plantLaw(G, card.id, "1");
-
-    expect(effectByKind(G, "patronage")).toHaveLength(0);
   });
 
   it("expires countdown and coupon state at the same lifecycle boundaries it declares", () => {
@@ -361,10 +332,10 @@ describe("canonical active-effect selector", () => {
       false,
     );
 
-    G.pendingIsonomia = true;
+    G.pendingIsonomiaTarget = "0";
     expect(effectByKind(G, "nextAssembly")).toHaveLength(1);
     openAssembly(G, "0");
-    expect(G.assembly?.equalVotes).toBe(true);
+    expect(G.assembly?.isonomiaTarget).toBe("0");
     expect(effectByKind(G, "nextAssembly")).toHaveLength(0);
   });
 });

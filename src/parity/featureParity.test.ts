@@ -171,14 +171,9 @@ describe("feature and content parity manifests", () => {
     const directives = RESOLUTION_CARDS.filter((card) => card.kind === "directive");
     expect(sorted(laws.map((card) => card.id))).toEqual(sorted(LAW_CONTENT_IDS));
     expect(sorted(directives.map((card) => card.id))).toEqual(sorted(DIRECTIVE_CONTENT_IDS));
-    expect(
-      unique([
-        ...laws.flatMap((card) => card.effects.map((effect) => effect.type)),
-        ...POLITICIANS.flatMap((politician) =>
-          politician.patronBuff.effects.map((effect) => effect.type),
-        ),
-      ]),
-    ).toEqual(sorted(Object.keys(LAW_EFFECT_PARITY)));
+    expect(unique(laws.flatMap((card) => card.effects.map((effect) => effect.type)))).toEqual(
+      sorted(Object.keys(LAW_EFFECT_PARITY)),
+    );
     expect(unique(directives.flatMap((card) => card.effects.map((effect) => effect.type)))).toEqual(
       sorted(Object.keys(DIRECTIVE_EFFECT_PARITY)),
     );
@@ -205,11 +200,6 @@ describe("feature and content parity manifests", () => {
       } else {
         for (const effect of card.effects) expectPresentation(presentDirectiveEffect(effect));
       }
-    }
-
-    for (const politician of POLITICIANS) {
-      for (const effect of politician.patronBuff.effects)
-        expectPresentation(presentLawEffect(effect));
     }
 
     for (const building of getBuildings()) {

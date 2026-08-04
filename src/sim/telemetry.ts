@@ -172,6 +172,10 @@ export type GameRow = {
   /** Which policy sat in each seat this game (mixed-policy tables); absent for uniform runs. */
   seatPolicies?: Record<PlayerId, string>;
   finalCards: Record<PlayerId, number>;
+  /** Permanent authored-and-passed Assembly progress when the game ended. */
+  finalAuthoredPasses: Record<PlayerId, number>;
+  /** The seat holding Voice when the game ended, if its minimum was ever reached. */
+  voiceHolder: PlayerId | null;
   popsLostToUnrest: Record<PlayerId, number>;
 };
 
@@ -254,6 +258,19 @@ export type BatchReport = {
     held: { count: number; perGame: number };
     lawsEnacted: { count: number; perGame: number };
     directivesPassed: { count: number; perGame: number };
+    authoredPassed: { count: number; perGame: number };
+    prizesGranted: Resources;
+    directiveTargets: Record<PlayerId, number>;
+    voiceClaims: { count: number; perGame: number };
+    voiceTransfers: { count: number; perGame: number };
+    /** Games that ended with Voice claimed; `perGame` is the share of all games. */
+    voiceHoldersAtEnd: { count: number; perGame: number };
+    /** Finished games won by their final Voice holder. */
+    voiceHolderWins: { count: number; finishedGames: number; rate: number };
+    /** Highest authored-pass total minus the runner-up total in each game. */
+    authoredPassLeadMargin: Percentiles;
+    /** The leading seat's share of all authored passes in each game (zero if none passed). */
+    authoredPassLeaderShare: Percentiles;
     /** Laws that LEFT the board — repealed, replaced at the cap, or torn down by
      *  Stratokles. Derived (enacted − still standing), so it needs no counter. */
     lawsRemoved: { count: number; perGame: number };
@@ -302,6 +319,20 @@ export class Aggregator {
   private assembliesHeld = 0;
   private lawsEnacted = 0;
   private directivesPassed = 0;
+  private authoredPassed = 0;
+  private prizesGranted: Resources = {
+    wood: 0,
+    stone: 0,
+    gold: 0,
+    food: 0,
+    influence: 0,
+    happiness: 0,
+  };
+  private directiveTargets: Record<PlayerId, number> = { "0": 0, "1": 0, "2": 0, "3": 0 };
+  private voiceClaims = 0;
+  private voiceTransfers = 0;
+  private lastVoiceHolder: PlayerId | null = null;
+  private lastAssemblyResultKey: string | null = null;
   private lawsRemoved = 0;
   private lawsStandingAtEnd: number[] = [];
   private upgrades = 0;
@@ -321,6 +352,8 @@ export class Aggregator {
     this.startTurn = G.turn;
     this.lastSeason = G.season;
     this.gameSeatPolicies = seatPolicies ?? null;
+    this.lastVoiceHolder = G.voiceHolder;
+    this.lastAssemblyResultKey = null;
 
     // The opening already revealed season 1's card and player 0's first draw.
     this.countSeasonal(G);
@@ -345,6 +378,34 @@ export class Aggregator {
       if ("cost" in move && move.cost) {
         this.assemblyInfluence += move.cost.influence ?? 0;
       }
+    }
+
+    const results = G.assembly?.results;
+    if (results && results.length > 0) {
+      const key = `${this.game}:${G.assembliesHeld}:${results.length}`;
+      if (key !== this.lastAssemblyResultKey) {
+        this.lastAssemblyResultKey = key;
+        const result = results[results.length - 1];
+        if (result.passed && result.item.kind === "enact" && result.item.proposer) {
+          const prize = G.ruleset.assembly.prizes[result.item.card.politician];
+          for (const [resource, amount] of Object.entries(prize) as Array<
+            [keyof Resources, number | undefined]
+          >) {
+            this.prizesGranted[resource] += amount ?? 0;
+          }
+          if (result.item.card.kind === "directive" && result.item.target) {
+            this.directiveTargets[result.item.target] += 1;
+          }
+        }
+      }
+    }
+
+    if (G.voiceHolder !== this.lastVoiceHolder) {
+      if (G.voiceHolder) {
+        this.voiceClaims += 1;
+        if (this.lastVoiceHolder) this.voiceTransfers += 1;
+      }
+      this.lastVoiceHolder = G.voiceHolder;
     }
 
     // Colony→city upgrades are the sharpest one-ply blind spot (bots rarely save for
@@ -397,11 +458,15 @@ export class Aggregator {
   }
 
   endGame(G: HegemonyState) {
-    // The agora's outcome is read off the board at the end, the same way the engine
-    // reads power and patronage — no running counter to drift from it.
+    // Standing Laws remain board-derived; authored Voice progress is intentionally
+    // permanent state and survives repeal/replacement.
     this.assembliesHeld += G.assembliesHeld;
     this.lawsStandingAtEnd.push(G.activeLaws.length);
     this.directivesPassed += G.tallyMonuments.length;
+    this.authoredPassed += Object.values(G.assemblyPassedByPlayer).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
     // `lawOrder` ticks once per enacted resolution of either kind, so the Laws are
     // simply the ones that were not monuments — and whatever is no longer standing
     // was repealed, replaced at the cap, or thrown down by Stratokles.
@@ -410,10 +475,12 @@ export class Aggregator {
     this.lawsRemoved += enacted - G.activeLaws.length;
 
     const finalCards = {} as Record<PlayerId, number>;
+    const finalAuthoredPasses = {} as Record<PlayerId, number>;
     const popsLostToUnrest = {} as Record<PlayerId, number>;
 
     for (const playerID of PLAYER_IDS) {
       finalCards[playerID] = playerStandings(G, playerID).victoryCards;
+      finalAuthoredPasses[playerID] = G.assemblyPassedByPlayer[playerID];
       popsLostToUnrest[playerID] = G.players[playerID].popsLostToUnrest;
     }
 
@@ -435,6 +502,8 @@ export class Aggregator {
       leaderAtCap: finished ? null : this.leaderByTiebreak(G, finalCards),
       seatPolicies: this.gameSeatPolicies ?? undefined,
       finalCards,
+      finalAuthoredPasses,
+      voiceHolder: G.voiceHolder,
       popsLostToUnrest,
     });
   }
@@ -519,6 +588,19 @@ export class Aggregator {
     // Real win rate is over FINISHED games only; a turn-capped game is not a win.
     const finishedGames = this.games.filter((game) => game.termination !== "turnCap");
     const cappedGames = this.games.filter((game) => game.termination === "turnCap");
+    const voiceHoldersAtEnd = this.games.filter((game) => game.voiceHolder !== null).length;
+    const voiceHolderWins = finishedGames.filter(
+      (game) => game.voiceHolder !== null && game.winner === game.voiceHolder,
+    ).length;
+    const authoredPassLeadMargins = this.games.map((game) => {
+      const counts = Object.values(game.finalAuthoredPasses).sort((a, b) => b - a);
+      return counts[0] - counts[1];
+    });
+    const authoredPassLeaderShares = this.games.map((game) => {
+      const counts = Object.values(game.finalAuthoredPasses);
+      const total = counts.reduce((sum, count) => sum + count, 0);
+      return total > 0 ? Math.max(...counts) / total : 0;
+    });
 
     const perSeat = {} as BatchReport["perSeat"];
     for (const playerID of PLAYER_IDS) {
@@ -535,7 +617,6 @@ export class Aggregator {
     const terminations: Record<GameTermination, number> = {
       victoryRace: 0,
       deckExhausted: 0,
-      stratoklesCoup: 0,
       turnCap: 0,
     };
     for (const game of this.games) {
@@ -625,6 +706,19 @@ export class Aggregator {
         held: this.perGameCount(this.assembliesHeld),
         lawsEnacted: this.perGameCount(this.lawsEnacted),
         directivesPassed: this.perGameCount(this.directivesPassed),
+        authoredPassed: this.perGameCount(this.authoredPassed),
+        prizesGranted: { ...this.prizesGranted },
+        directiveTargets: { ...this.directiveTargets },
+        voiceClaims: this.perGameCount(this.voiceClaims),
+        voiceTransfers: this.perGameCount(this.voiceTransfers),
+        voiceHoldersAtEnd: this.perGameCount(voiceHoldersAtEnd),
+        voiceHolderWins: {
+          count: voiceHolderWins,
+          finishedGames: finishedGames.length,
+          rate: finishedGames.length > 0 ? voiceHolderWins / finishedGames.length : 0,
+        },
+        authoredPassLeadMargin: percentiles(authoredPassLeadMargins),
+        authoredPassLeaderShare: percentiles(authoredPassLeaderShares),
         lawsRemoved: this.perGameCount(this.lawsRemoved),
         lawsStanding: percentiles(this.lawsStandingAtEnd).mean,
         influenceSpent: this.perGameCount(this.assemblyInfluence),

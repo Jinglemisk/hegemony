@@ -303,6 +303,10 @@ export function renderBatchReport(report: BatchReport): string {
         `removed ${formatNumber(assembly.lawsRemoved.perGame)}/game · ` +
         `standing at end ${formatNumber(assembly.lawsStanding)} · ` +
         `directives ${formatNumber(assembly.directivesPassed.perGame)}/game · ` +
+        `authored passes ${formatNumber(assembly.authoredPassed.perGame)}/game · ` +
+        `Voice claims ${formatNumber(assembly.voiceClaims.perGame)}/game · ` +
+        `held at end ${(assembly.voiceHoldersAtEnd.perGame * 100).toFixed(0)}% · ` +
+        `top authored share ${(assembly.authoredPassLeaderShare.mean * 100).toFixed(0)}% · ` +
         `influence sunk ${formatNumber(assembly.influenceSpent.perGame)}/game`,
     );
 

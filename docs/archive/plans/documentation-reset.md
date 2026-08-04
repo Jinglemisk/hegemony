@@ -100,7 +100,7 @@ evidence.
 | `docs/plans/luxury-goods.md`           | `docs/plans/luxury-goods.md`                                                     |
 | `docs/plans/outcome-driven-ai.md` | `docs/plans/outcome-driven-ai.md`                                                |
 | `docs/archive/notes/simulation-plan.md`                    | Fold still-valid campaigns into the active Phase 3.5 plan; archive the original. |
-| New five-step delivery train          | `docs/plans/phase-3.5-parity-closeout.md`                                        |
+| New five-step delivery train          | `docs/archive/plans/phase-3.5-parity-closeout.md`                                |
 
 ### Living reference
 

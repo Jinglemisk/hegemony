@@ -97,6 +97,7 @@ export function AssemblyFoot({
               className="assemblyMenuPopover"
               measureKey={standing.length}
               onDismiss={() => onMenu(null)}
+              preferredPlacement="above"
             >
               <div className="asmMenu">
                 <p className="asmMenuHead">Move to strike a standing Law</p>

@@ -1,4 +1,4 @@
-import { getResolutionCard } from "./assembly/deck";
+import { getResolutionCard } from "./content";
 import { getStandingEffectSources } from "./assembly/laws";
 import type { LawEffect } from "./assembly/types";
 import { calculateIncome } from "./economy/income";
@@ -23,7 +23,6 @@ export const ACTIVE_EFFECT_KINDS = [
   "yearlyOmen",
   "actionDiscount",
   "standingLaw",
-  "patronage",
   "nextAssembly",
 ] as const;
 
@@ -57,7 +56,7 @@ export const EVENT_EFFECT_ACTIVE_EFFECT_HANDLING = {
 } as const satisfies Record<EventEffect["type"], EventEffectActiveEffectHandling>;
 
 export type ActiveEffectSource = {
-  kind: "directive" | "unrest" | "seasonalEvent" | "omen" | "playerEvent" | "law" | "patronage";
+  kind: "directive" | "unrest" | "seasonalEvent" | "omen" | "playerEvent" | "law";
   id: string;
   label: string;
 };
@@ -76,7 +75,6 @@ export type ActiveEffectExpiry =
   | "afterMatchingActionOrTurnEnd"
   | "afterMatchingLawActionOrYearEnd"
   | "whenRepealed"
-  | "whenPatronageChanges"
   | "atNextAssembly";
 
 export type ActiveEffectDuration = {
@@ -153,7 +151,7 @@ export function getActiveEffects(
         id: "general-strike",
         label: getResolutionCard("general-strike")?.name ?? "General Strike",
       },
-      scope: { kind: "allPlayers" },
+      scope: { kind: "player", playerID },
       duration: {
         unit: "incomeCollections",
         remaining: player.incomeSuppressedTurns,
@@ -258,17 +256,17 @@ export function getActiveEffects(
     if (standingEffects.length > 0) {
       effects.push({
         id: source.kind + ":" + source.id,
-        kind: source.kind === "law" ? "standingLaw" : "patronage",
+        kind: "standingLaw",
         source: {
-          kind: source.kind,
+          kind: "law",
           id: source.id,
           label: source.label,
         },
-        scope: source.kind === "law" ? { kind: "allPlayers" } : { kind: "player", playerID },
+        scope: { kind: "allPlayers" },
         duration: {
           unit: "standing",
           remaining: null,
-          expiry: source.kind === "law" ? "whenRepealed" : "whenPatronageChanges",
+          expiry: "whenRepealed",
         },
         mechanics: standingEffects.map((effect) => ({ type: "standingLaw", effect })),
       });
@@ -284,8 +282,8 @@ export function getActiveEffects(
 
       effects.push({
         id: source.kind + ":" + source.id + ":annual:" + effect.action,
-        kind: source.kind === "law" ? "standingLaw" : "patronage",
-        source: { kind: source.kind, id: source.id, label: source.label },
+        kind: "standingLaw",
+        source: { kind: "law", id: source.id, label: source.label },
         scope: { kind: "player", playerID },
         duration: {
           unit: "matchingAction",
@@ -297,7 +295,7 @@ export function getActiveEffects(
     }
   }
 
-  if (G.pendingIsonomia) {
+  if (G.pendingIsonomiaTarget === playerID) {
     effects.push({
       id: "next-assembly:isonomia",
       kind: "nextAssembly",
@@ -306,7 +304,7 @@ export function getActiveEffects(
         id: "isonomia",
         label: getResolutionCard("isonomia")?.name ?? "Isonomia",
       },
-      scope: { kind: "allPlayers" },
+      scope: { kind: "player", playerID },
       duration: {
         unit: "assembly",
         remaining: 1,

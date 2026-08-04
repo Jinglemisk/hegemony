@@ -2,9 +2,15 @@ import { calculateIncome } from "../game/economy/income";
 import { getActiveEffects } from "../game/activeEffects";
 import { applyResourceDeltaWithFloors } from "../game/core/resources";
 import { getRiotTable } from "../game/content";
+import { getResolutionCard } from "../game/content";
 import { getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementBuildingSlots } from "../game/settlement";
-import { enactForEval, politicianStandings } from "../game/assembly";
+import {
+  availableLawReplacementIds,
+  currentVoteWeight,
+  enactForEval,
+  lawNeedsReplacement,
+} from "../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../game/assembly";
 import type { LegalMove } from "../game/legalMoves";
 import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
@@ -44,14 +50,15 @@ export const randomPolicy: Policy = {
   },
 };
 
-/** Move types whose resolution consumes the game's seeded RNG. A lookahead that cloned
- *  and applied one of these would "peek" the die/deck through the clone, so every search
- *  branches ONLY on the RNG-free complement and plays these by rule. If a future move type
- *  starts consuming G.rng, add it here (the beam asserts no branch advances the RNG). */
-const STOCHASTIC_MOVE_TYPES: ReadonlySet<LegalMove["type"]> = new Set([
+/** Move types handled by explicit policy rules rather than generic search. Stochastic
+ * moves stay out to prevent RNG peeking; unit bank moves stay out because independently
+ * optimizing both sides of a multi-step exchange can create wasteful buy/sell churn. */
+const RULE_DRIVEN_MOVE_TYPES: ReadonlySet<LegalMove["type"]> = new Set([
   "fundExpedition",
   "resolveRiot",
   "buyRiotInsurance",
+  "bankBuy",
+  "bankSell",
 ]);
 
 export function policyEconomyThresholds(ruleset: Ruleset) {
@@ -145,7 +152,7 @@ function onePlyLookahead(
 
   const endTurn = moves.find((move) => move.type === "endTurn");
   const candidates = moves.filter(
-    (move) => !STOCHASTIC_MOVE_TYPES.has(move.type) && move.type !== "endTurn",
+    (move) => !RULE_DRIVEN_MOVE_TYPES.has(move.type) && move.type !== "endTurn",
   );
 
   if (candidates.length === 0 && endTurn) {
@@ -496,6 +503,7 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
 // promotion synergy, so slot-rich cities and the ladder building get built.
 const SMART_POP_WEIGHT = { citizens: 3, freemen: 2, slaves: 1.2 };
 const SMART_MATERIAL_WEIGHT = { food: 0.4, wood: 0.6, stone: 0.85, gold: 1 };
+const SMART_VICTORY_CARD_VALUE = 120;
 
 function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
   const player = G.players[playerID];
@@ -555,7 +563,7 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
   const projectedHappiness = Math.min(projected.happiness, 15);
 
   return (
-    120 * victoryCardsHeld(G, playerID) +
+    SMART_VICTORY_CARD_VALUE * victoryCardsHeld(G, playerID) +
     10 * heuristic +
     2 * projectedHappiness +
     2 * player.resources.influence -
@@ -629,7 +637,7 @@ function beamPlan(
   }
 
   const branchable = (list: LegalMove[]) =>
-    list.filter((move) => !STOCHASTIC_MOVE_TYPES.has(move.type) && move.type !== "endTurn");
+    list.filter((move) => !RULE_DRIVEN_MOVE_TYPES.has(move.type) && move.type !== "endTurn");
 
   const rootMoves = branchable(moves);
   if (rootMoves.length === 0) {
@@ -659,7 +667,7 @@ function beamPlan(
         // Anti-peek invariant: an RNG-free branch must never advance the seeded stream.
         if (draft.rng !== rngBefore) {
           throw new Error(
-            `beam branched on a stochastic move "${move.type}" — add it to STOCHASTIC_MOVE_TYPES`,
+            `beam branched on an RNG-consuming move "${move.type}" — add it to RULE_DRIVEN_MOVE_TYPES`,
           );
         }
 
@@ -686,7 +694,8 @@ function beamPlan(
 
 /**
  * The turn-planning bot: a within-turn beam search over {@link evaluateSmart}, so it values
- * the multi-step plays one-ply misses (build-then-promote, save-then-upgrade, bank chains).
+ * the within-turn sequences one-ply misses (build-then-promote and bank chains).
+ * It cannot intentionally save across turns because endTurn is not a search branch.
  * Same scoring as `smart`, deeper search — so a smart-vs-beam A/B isolates search depth.
  */
 export const beamPolicy: Policy = {
@@ -707,7 +716,7 @@ export const beamPolicy: Policy = {
 // so a political-vs-smart A/B isolates the political layer. See docs/archive/plans/influence-aware-ai.md.
 
 /** How heavily the agora weighs against the ordinary economy — modest, the economy is the
- *  spine. Only shapes the bot's NON-assembly turns (valuing building toward Voice); the
+ *  spine. Only shapes the bot's NON-assembly turns (valuing passed resolutions toward Voice); the
  *  Assembly decisions themselves are made by the heuristics below. Sim-tuned. */
 const POLITICS_WEIGHT = 8;
 
@@ -716,36 +725,16 @@ function playerIds(G: HegemonyState): PlayerId[] {
 }
 
 /**
- * A seat's standing in the agora, on the smart-score scale, read entirely off the board:
- * progress toward the Voice victory card (patron of politicians, and leading their stacks)
- * and the Stratokles clock priced as a prize if it would crown me or a threat otherwise.
+ * A seat's permanent authored-and-passed progress toward Voice, on the smart-score scale.
+ * The actual held victory card is already priced by evaluateSmart; this values the path.
  */
 function politicalStanding(G: HegemonyState, me: PlayerId): number {
-  const standings = politicianStandings(G);
-  const rivals = playerIds(G).filter((player) => player !== me);
-  const patronsHeld = standings.filter((standing) => standing.patron === me).length;
-  // Voice (the 6th victory card) is already priced at 120× in evaluateSmart the moment it
-  // is HELD; this prices PROGRESS toward it. Rivals that pass (smart) never contest
-  // patronage, so patronage is a cheap, near-solo path to a card — value it richly.
-  let value = 4 * patronsHeld;
-
-  const stratokles = standings.find((standing) => standing.politician.id === "stratokles");
-  for (const standing of standings) {
-    if (standing.politician.id === "stratokles") {
-      continue; // the coup is priced separately, below
-    }
-    const mine = standing.authored[me] ?? 0;
-    const rivalBest = Math.max(0, ...rivals.map((rival) => standing.authored[rival] ?? 0));
-    value += Math.max(0, mine - rivalBest); // leading a stack is progress to that patronage
-  }
-
-  if (stratokles && stratokles.power > 0) {
-    const proximity = stratokles.power / G.ruleset.assembly.coupThreshold;
-    // If his coup would crown me, a rising clock is a comeback line; otherwise a threat.
-    value += (stratokles.patron === me ? 6 : -4) * proximity;
-  }
-
-  return value;
+  const mine = G.assemblyPassedByPlayer[me];
+  // Progress matters, but it is not itself a victory card. The actual threshold
+  // crossing is already worth a full card in `evaluateSmart`; overpricing every
+  // preliminary pass made political seats reject virtually every rival-authored
+  // public good and left Voice mechanically present but strategically unreachable.
+  return mine;
 }
 
 /** The political bot's positional score: the smart economy plus its agora standing. */
@@ -788,12 +777,61 @@ function deltaIfEnacted(G: HegemonyState, before: Scores, item: BallotItem, me: 
 // income Law shifts a beneficiary's score by ~tens (10 × the projected income delta / 8).
 // Bribes (10 inf) and vetoes (5 inf) are the real influence drains, so their bars sit high:
 // the bot spends only when a resolution genuinely swings the race, not on every signal.
-const PROPOSE_THRESHOLD = 12; // propose iff it helps me clearly more than my strongest rival
+const PROPOSE_THRESHOLD = 6; // propose iff the private prize/progress covers a merely neutral Law
 const REPEAL_THRESHOLD = 25; // repeal (6 inf) only a standing Law that is clearly hostile
 const BRIBE_MAGNITUDE = 45; // buy votes only when the outcome genuinely swings the race
-const VETO_MAGNITUDE = 90; // veto only a resolution that is catastrophic for me
-const DRAW_BUFFER = 8; // keep a real influence reserve above the draw cost — don't drain
+const VETO_MAGNITUDE = 180; // reserve the once-yearly veto for a collapse-scale swing
+// A repeated legislature needs room for coalitions: support a measure that is only
+// modestly better for its author, while still blocking material harm and Voice-clinching
+// swings. This roughly covers one preliminary Voice tick plus a normal author prize.
+const VOTE_COALITION_TOLERANCE = 12;
+const DRAW_THRESHOLD = 2;
 const MAX_DRAWS = 1; // draw once and commit — fishing (redraw-after-discard) just burns influence
+
+/** Best legal target/replacement value for one known card. This is used only while
+ * evaluating a deck's unordered public composition; it never reads the top card. */
+function bestProposalDelta(
+  G: HegemonyState,
+  before: Scores,
+  card: ResolutionCard,
+  me: PlayerId,
+): number {
+  const items: BallotItem[] = [];
+
+  if (card.kind === "directive") {
+    for (const target of playerIds(G)) {
+      if (target !== me) items.push({ kind: "enact", card, proposer: me, target });
+    }
+  } else if (lawNeedsReplacement(G)) {
+    for (const cardId of availableLawReplacementIds(G)) {
+      items.push({ kind: "enact", card, proposer: me, replaces: cardId });
+    }
+  } else {
+    items.push({ kind: "enact", card, proposer: me });
+  }
+
+  return Math.max(...items.map((item) => deltaIfEnacted(G, before, item, me)));
+}
+
+/** Expected value of drawing from a politician without peeking at deck order. Remaining
+ * card identities are public information; only their shuffled order is hidden. */
+function expectedDeckDelta(
+  G: HegemonyState,
+  before: Scores,
+  politician: ResolutionCard["politician"],
+  me: PlayerId,
+): number {
+  const ids =
+    G.politicianDecks[politician].length > 0
+      ? G.politicianDecks[politician]
+      : G.politicianDiscards[politician];
+  const cards = ids.map(getResolutionCard).filter((card): card is ResolutionCard => card !== null);
+
+  if (cards.length === 0) return -Infinity;
+  return (
+    cards.reduce((sum, card) => sum + bestProposalDelta(G, before, card, me), 0) / cards.length
+  );
+}
 
 /** Play the agora by heuristic instead of blind search. `moves` is always the current
  *  seat's ({@link G.currentPlayer}) options for the live phase. */
@@ -828,27 +866,86 @@ function chooseVote(
 ): LegalMove {
   const item = session.ballot[session.ballotIndex];
   const before = scoreEveryone(G);
-  const delta = deltaIfEnacted(G, before, item, me);
+  const assessment = assessVote(G, before, item, me);
 
-  // A resolution that is catastrophic for me relative to rivals — kill it outright.
+  // A resolution that wins the race for a rival, transfers Voice away from me, or is
+  // otherwise catastrophic is worth the once-yearly walkout. Merely granting a rival
+  // their first Voice card is contested with votes/bribes, not veto-locked forever.
   const veto = moves.find((move) => move.type === "assemblyVeto");
-  if (veto && delta <= -VETO_MAGNITUDE) {
+  if (veto && (assessment.rivalCompletesRace || assessment.delta <= -VETO_MAGNITUDE)) {
     return veto;
   }
 
-  // Buy weight when the outcome matters; the seat is asked again and eventually casts
-  // (bribe leaves the move list once the per-assembly cap or the coffers run out).
+  // Buy only a pivotal vote. The old magnitude-only rule spent two bribes even when
+  // the projected coalition already carried—or could not be rescued—which made
+  // political participation lose on avoidable private cost.
   const bribe = moves.find((move) => move.type === "assemblyBribe");
-  if (bribe && Math.abs(delta) >= BRIBE_MAGNITUDE) {
-    return bribe;
+  if (bribe && Math.abs(assessment.voteDelta) >= BRIBE_MAGNITUDE) {
+    const tally = projectedPlainVote(G, session, item, before);
+    const needed = assessment.yea
+      ? Math.max(0, tally.nay - tally.yea + 1)
+      : Math.max(0, tally.yea - tally.nay);
+    const available = G.ruleset.assembly.briberyCap - session.bribesUsed[me];
+    if (needed > 0 && needed <= available) {
+      return bribe;
+    }
   }
 
-  const yea = delta > 0;
   return (
-    moves.find((move) => move.type === "assemblyVote" && move.yea === yea) ??
+    moves.find((move) => move.type === "assemblyVote" && move.yea === assessment.yea) ??
     moves.find((move) => move.type === "assemblyVote") ??
     moves[0]
   );
+}
+
+function assessVote(
+  G: HegemonyState,
+  before: Scores,
+  item: BallotItem,
+  me: PlayerId,
+): { delta: number; voteDelta: number; rivalCompletesRace: boolean; yea: boolean } {
+  const delta = deltaIfEnacted(G, before, item, me);
+  const clone = structuredClone(G);
+  enactForEval(clone, item);
+  const rivalCompletesRace = playerIds(G).some(
+    (player) =>
+      player !== me &&
+      victoryCardsHeld(G, player) < G.ruleset.victory.cardsToWin &&
+      victoryCardsHeld(clone, player) >= G.ruleset.victory.cardsToWin,
+  );
+  // An open Voice claim is a coalition milestone, not an automatic catastrophe. If it
+  // does not complete the rival's race, remove the generic card jump from the voting
+  // comparison; the proposal's Law/Directive, prize, and permanent lead still count.
+  const rivalClaimsOpenVoice =
+    G.voiceHolder === null && clone.voiceHolder !== null && clone.voiceHolder !== me;
+  const voteDelta = delta + (rivalClaimsOpenVoice ? SMART_VICTORY_CARD_VALUE : 0);
+  return {
+    delta,
+    voteDelta,
+    rivalCompletesRace,
+    yea: !rivalCompletesRace && voteDelta >= -VOTE_COALITION_TOLERANCE,
+  };
+}
+
+/** Current votes plus every uncast seat's plain-vote preference and effective weight.
+ * This predicts no hidden information and assumes rivals use the same public Assembly
+ * logic; it exists only to distinguish pivotal bribes from wasted ones. */
+function projectedPlainVote(
+  G: HegemonyState,
+  session: AssemblySession,
+  item: BallotItem,
+  before: Scores,
+): { yea: number; nay: number } {
+  let yea = session.votes.filter((vote) => vote.yea).reduce((sum, vote) => sum + vote.weight, 0);
+  let nay = session.votes.filter((vote) => !vote.yea).reduce((sum, vote) => sum + vote.weight, 0);
+
+  for (const player of session.voteOrder.slice(session.voteIndex)) {
+    const weight = currentVoteWeight(G, player);
+    if (assessVote(G, before, item, player).yea) yea += weight;
+    else nay += weight;
+  }
+
+  return { yea, nay };
 }
 
 function chooseProposeOrDiscard(
@@ -865,9 +962,13 @@ function chooseProposeOrDiscard(
     if (move.type !== "assemblyPropose") {
       continue;
     }
-    const item: BallotItem = move.replaces
-      ? { kind: "enact", card, proposer: me, replaces: move.replaces }
-      : { kind: "enact", card, proposer: me };
+    const item: BallotItem = {
+      kind: "enact",
+      card,
+      proposer: me,
+      replaces: move.replaces,
+      target: move.target,
+    };
     const delta = deltaIfEnacted(G, before, item, me);
     if (delta > bestDelta) {
       bestDelta = delta;
@@ -914,35 +1015,31 @@ function chooseDrawRepealOrPass(
     }
   }
 
-  // Draw target: the regular politician I'm nearest to being patron of — patronage is the
-  // one thing a random, secret draw reliably advances (the card itself is a gamble).
-  const standings = politicianStandings(G);
-  const rivals = playerIds(G).filter((player) => player !== me);
+  // Every authored pass advances the same Voice ledger. Compare each deck's full
+  // unordered composition, including its prize and the best rival target/replacement,
+  // so Stratokles is a real comeback line without peeking at the shuffled top card.
   let bestDraw: LegalMove | null = null;
-  let bestCloseness = -Infinity;
+  let bestDrawValue = -Infinity;
   let drawCost = Infinity;
   for (const move of moves) {
-    if (move.type !== "assemblyDraw" || move.politician === "stratokles") {
-      continue; // never feed the demagogue by fishing his deck
+    if (move.type !== "assemblyDraw") {
+      continue;
     }
-    const standing = standings.find((entry) => entry.politician.id === move.politician);
-    const mine = standing?.authored[me] ?? 0;
-    const rivalBest = standing
-      ? Math.max(0, ...rivals.map((rival) => standing.authored[rival] ?? 0))
-      : 0;
-    const closeness = mine - rivalBest;
-    if (closeness > bestCloseness) {
-      bestCloseness = closeness;
+    const cost = move.cost.influence ?? 0;
+    const value = expectedDeckDelta(G, before, move.politician, me) - 2 * cost;
+    if (value > bestDrawValue) {
+      bestDrawValue = value;
       bestDraw = move;
-      drawCost = move.cost.influence ?? 0;
+      drawCost = cost;
     }
   }
 
+  const drawBuffer = G.ruleset.assembly.drawCost * 2;
   const canDraw =
     bestDraw !== null &&
+    bestDrawValue > DRAW_THRESHOLD &&
     (session.draws[me] ?? 0) < MAX_DRAWS &&
-    influence >= drawCost + DRAW_BUFFER &&
-    (bestCloseness >= 0 || G.activeLaws.length < 2); // take a lead, or seed an empty agora
+    influence >= drawCost + drawBuffer;
 
   // A strong repeal is a concrete gain and beats a gamble; else fish if it's worth it; else pass.
   if (bestRepeal && bestRepealDelta > REPEAL_THRESHOLD) {

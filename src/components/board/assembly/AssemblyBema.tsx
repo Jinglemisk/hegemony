@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { PLAYER_COLORS, PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
 import {
+  availableLawReplacementIds,
   activeLawIds,
   baseVoteWeight,
   getResolutionCard,
-  isAtLawCap,
-  patronCount,
-  politicianStandings,
+  lawNeedsReplacement,
   POLITICIANS_BY_ID,
 } from "../../../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../../../game/assembly";
@@ -211,7 +210,12 @@ function BemaColumn({
       {cell.item?.kind === "repeal" ? (
         <RepealCard cardId={cell.item.cardId} />
       ) : cell.card ? (
-        <ColumnCard card={cell.card} />
+        <ColumnCard
+          G={G}
+          card={cell.card}
+          showPrize={!isHouse}
+          target={cell.item?.kind === "enact" ? cell.item.target : undefined}
+        />
       ) : (
         <div className="bemaColEmpty">{cell.status}</div>
       )}
@@ -224,7 +228,17 @@ function BemaColumn({
   );
 }
 
-function ColumnCard({ card }: { card: ResolutionCard }) {
+function ColumnCard({
+  G,
+  card,
+  showPrize,
+  target,
+}: {
+  G: HegemonyState;
+  card: ResolutionCard;
+  showPrize: boolean;
+  target?: PlayerId;
+}) {
   const politician = POLITICIANS_BY_ID[card.politician];
 
   return (
@@ -246,6 +260,18 @@ function ColumnCard({ card }: { card: ResolutionCard }) {
         <div className="bemaCardPol">{politician.name}</div>
         <div className="bemaCardName">{card.name}</div>
         <ResolutionEffect card={card} />
+        {target ? (
+          <div className="bemaCardTarget">
+            <span style={{ background: PLAYER_COLORS[target] }} /> Target · {PLAYER_NAMES[target]}
+          </div>
+        ) : null}
+        {showPrize ? (
+          <div className="bemaCardPrize">
+            Author prize · {formatPrize(G.ruleset.assembly.prizes[card.politician])}
+          </div>
+        ) : (
+          <div className="bemaCardPrize muted">House Laws grant no author prize</div>
+        )}
         <div className={`bemaCardKind${card.kind === "directive" ? " strat" : ""}`}>
           {card.kind === "law" ? "Standing Law" : "One-time Directive"}
         </div>
@@ -294,7 +320,8 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
   const { moves, viewerId } = useGameUi();
   const [replacementAnchor, setReplacementAnchor] = useState<DOMRect | null>(null);
   const alreadyStanding = card.kind === "law" && activeLawIds(G).includes(card.id);
-  const needsReplacement = card.kind === "law" && isAtLawCap(G);
+  const needsReplacement = card.kind === "law" && lawNeedsReplacement(G);
+  const replacementCandidates = availableLawReplacementIds(G);
 
   if (alreadyStanding) {
     return (
@@ -316,12 +343,59 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
 
   return (
     <div className="bemaColActions">
-      {needsReplacement ? (
+      {card.kind === "directive" ? (
+        <>
+          <AssemblyAction
+            className="mb go strat"
+            enabled
+            explanation="Choose one rival, then seal this Directive. The target is revealed with the ballot before voting begins."
+            heading={`Target ${card.name}`}
+            onClick={(event) => setReplacementAnchor(event.currentTarget.getBoundingClientRect())}
+            triggerClassName="bemaActionTooltipTrigger"
+          >
+            Choose rival ▾
+          </AssemblyAction>
+          {replacementAnchor ? (
+            <Popover
+              anchor={replacementAnchor}
+              ariaLabel={`Choose the rival targeted by ${card.name}`}
+              className="assemblyMenuPopover"
+              measureKey={viewerId}
+              onDismiss={() => setReplacementAnchor(null)}
+              preferredPlacement="above"
+            >
+              <div className="asmMenu asmTargetMenu">
+                <p className="asmMenuHead">Name the rival this Directive will strike</p>
+                <ul aria-label="Rivals available as Directive targets" className="asmMenuChoices">
+                  {PLAYER_IDS.filter((id) => id !== viewerId).map((target) => (
+                    <li key={target}>
+                      <button
+                        onClick={() => {
+                          moves.assemblyPropose(viewerId, undefined, target);
+                          setReplacementAnchor(null);
+                        }}
+                        type="button"
+                      >
+                        <span
+                          className="asmTargetChoiceDot"
+                          style={{ background: PLAYER_COLORS[target] }}
+                        />
+                        <span className="asmMenuName">{PLAYER_NAMES[target]}</span>
+                        <span className="asmMenuMeta">{targetSummary(G, card, target)}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Popover>
+          ) : null}
+        </>
+      ) : needsReplacement ? (
         <>
           <AssemblyAction
             className="mb go"
             enabled
-            explanation="Add this Law to the ballot. Because the standing-Law board is full, choose the Law it would replace if passed."
+            explanation="Add this Law to the ballot. Because the standing-Law board is full or its remaining slots are reserved, choose the Law it would replace if passed."
             heading={`Propose ${card.name}`}
             onClick={(event) => setReplacementAnchor(event.currentTarget.getBoundingClientRect())}
             triggerClassName="bemaActionTooltipTrigger"
@@ -335,11 +409,12 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
               className="assemblyMenuPopover"
               measureKey={G.activeLaws.length}
               onDismiss={() => setReplacementAnchor(null)}
+              preferredPlacement="above"
             >
               <div className="asmMenu">
-                <p className="asmMenuHead">The board is full — name the Law to replace</p>
+                <p className="asmMenuHead">Reserve the Law this proposal would replace</p>
                 <ul aria-label="Standing Laws available for replacement" className="asmMenuChoices">
-                  {activeLawIds(G).map((cardId) => (
+                  {replacementCandidates.map((cardId) => (
                     <li key={cardId}>
                       <button
                         onClick={() => {
@@ -536,8 +611,11 @@ function ProposalHint() {
 // ── Closing recap (unchanged in shape) ──────────────────────────────────────────────
 
 function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySession }) {
-  const standings = politicianStandings(G);
-  const ranked = [...PLAYER_IDS].sort((a, b) => patronCount(G, b) - patronCount(G, a));
+  const ranked = [...PLAYER_IDS].sort(
+    (a, b) =>
+      G.assemblyPassedByPlayer[b] - G.assemblyPassedByPlayer[a] ||
+      PLAYER_IDS.indexOf(a) - PLAYER_IDS.indexOf(b),
+  );
 
   return (
     <div className="brow">
@@ -569,9 +647,9 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
       </div>
 
       <div className="polls">
-        <div className="blab">Patronage standings · the Voice of the Assembly</div>
+        <div className="blab">Permanent Voice ledger · authored resolutions passed</div>
         {ranked.map((playerID) => {
-          const patronOf = standings.filter((standing) => standing.patron === playerID);
+          const count = G.assemblyPassedByPlayer[playerID];
 
           return (
             <div className="vrowline" key={playerID}>
@@ -580,13 +658,13 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
                 {PLAYER_NAMES[playerID]}{" "}
                 <span className="vrowNote">
                   ·{" "}
-                  {patronOf.length > 0
-                    ? patronOf.map((standing) => standing.politician.name).join(" · ")
-                    : "no patronage"}
+                  {G.voiceHolder === playerID
+                    ? "holds Voice through ties"
+                    : `minimum ${G.ruleset.victory.minimums.voice}`}
                 </span>
               </span>
               <span className="sv2">
-                <b>{patronOf.length}</b> patron{patronOf.length === 1 ? "" : "s"}
+                <b>{count}</b> passed
               </span>
             </div>
           );
@@ -594,6 +672,27 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
       </div>
     </div>
   );
+}
+
+function formatPrize(prize: Partial<HegemonyState["players"][PlayerId]["resources"]>): string {
+  return Object.entries(prize)
+    .filter(([, amount]) => Boolean(amount))
+    .map(([resource, amount]) => `+${amount} ${resource}`)
+    .join(" · ");
+}
+
+function targetSummary(G: HegemonyState, card: ResolutionCard, target: PlayerId): string {
+  if (card.id === "grain-riot") return `${G.players[target].resources.food} food stored`;
+  if (card.id === "bread-and-circuses")
+    return `${G.players[target].resources.gold} gold · ${G.players[target].resources.happiness} happiness`;
+  if (card.id === "the-streets-burn") return `${G.players[target].resources.happiness} happiness`;
+  if (card.id === "the-stele-is-broken") {
+    const laws = G.activeLaws.filter((law) => law.author === target).length;
+    return `${laws} authored standing Law${laws === 1 ? "" : "s"}`;
+  }
+  if (card.id === "general-strike") return "next income collection is skipped";
+  if (card.id === "the-mob-rises") return "loses 1 pop from their largest settlement";
+  return card.id === "isonomia" ? "1 base vote next Assembly" : "chosen rival";
 }
 
 /**

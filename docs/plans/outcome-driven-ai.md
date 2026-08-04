@@ -1,7 +1,7 @@
 ---
 status: ready
 phase: "post-3.5"
-updated: 2026-07-26
+updated: 2026-08-03
 ---
 
 # Outcome-driven AI plan
@@ -13,7 +13,7 @@ and incorporates its still-current recommendations.
 Implementation plan for replacing fixed feature prices with goal-directed, sampled planning and
 for evolving the simulation policy into a fair player-facing CPU.
 
-- **Status:** approved direction; implementation not started
+- **Status:** approved direction; staged around the v1 mechanics freeze
 - **Date:** 2026-07-23
 - **Primary policy:** a new outcome-driven policy, developed beside the existing `master`
 - **Related audit:** [AI bot parity and vision audit](../reports/audits/2026-07-23-ai-bot-parity.md)
@@ -30,6 +30,14 @@ for evolving the simulation policy into a fair player-facing CPU.
 The browser CPU and headless policy are one implementation. Explanation,
 observation, evaluation, execution, replay, and telemetry must not fork their
 vocabulary or rules.
+
+**Scheduling ruling (owner sequence, 2026-08-03):** do not execute this entire plan
+immediately after Phase 3.5. Phase 3.6 pulls forward only the fair player observation,
+capability contract, policy modularization, and versioned deterministic foundations that
+also unblock multiplayer. Luxury goods, v1 trade, National Ideas, and typed Resolution/Idea
+effect closure then establish the frozen target. Outcome vectors, rollouts, tournaments,
+MCTS, player-facing CPU difficulty, and learned models resume after the v1 mechanics
+freeze unless a narrower feature slice needs them for honest validation.
 
 ## 1. Decision
 
@@ -55,6 +63,11 @@ The existing `master` remains useful as:
 - a fallback when the CPU exhausts its decision budget.
 
 It stops being the authoritative definition of a good position.
+
+This is the technical order inside the AI program, not permission to place the whole
+program ahead of the v1 feature roadmap. Preserve `master` as the bounded reference policy
+through the mechanics freeze; improve it only enough to observe and exercise each shipped
+v1 decision honestly.
 
 ## 2. Why this change is required
 
@@ -687,6 +700,18 @@ and CPU debugging.
 
 ## 11. Implementation phases
 
+Roadmap scheduling for these internal phases:
+
+- **Before the v1 mechanics freeze:** Phase 0 capability contracts and the redaction/public
+  observation portion of Phase 1, implemented with Phase 3.6. Modularize the existing policy
+  file only where needed to keep these seams maintainable.
+- **During luxury, trade, and Ideas:** add feature-specific observation, legal execution,
+  telemetry, and deterministic clearly-use/avoid behavior to the existing bounded policy.
+  Human validation remains authoritative for social negotiation quality.
+- **After the v1 mechanics freeze:** complete Phase 1 chance/belief work, then Phases 2–7
+  behind their stated exit gates. Do not let advanced search move the rules target while
+  v1 content is still changing.
+
 ### Phase 0 — Freeze baselines and capability contract
 
 **Deliverables**
@@ -975,26 +1000,26 @@ win without a compensating win, access hidden information, or choose illegal act
 
 ## 15. File-by-file target
 
-| File/module                 | Planned responsibility                                             |
-| --------------------------- | ------------------------------------------------------------------ |
-| `src/ai/observation.ts`     | Fair player observation and redaction                              |
-| `src/ai/belief.ts`          | Hidden-state belief representation and sampling                    |
-| `src/ai/chance.ts`          | Public outcome distributions and chance sampling                   |
-| `src/ai/outcome.ts`         | Outcome vectors, estimates, aggregation, comparison                |
-| `src/ai/victoryRoutes.ts`   | Victory margins, stable cards, threats, and route generation       |
-| `src/ai/collapse.ts`        | Riot, starvation, forced loss, and feasibility risk                |
-| `src/ai/plans.ts`           | Named plan generation, ETA, progress, and invalidation             |
-| `src/ai/explain.ts`         | Reason codes and decision traces                                   |
-| `src/ai/rollout.ts`         | Multi-round sampled action evaluation                              |
-| `src/ai/rolloutPolicies.ts` | Frozen/diverse continuation-policy league                          |
-| `src/ai/budgets.ts`         | Deterministic test/batch and bounded CPU profiles                  |
-| `src/ai/mcts/*`             | Later information-set, multi-player MCTS implementation            |
-| `src/sim/policies.ts`       | Legacy policies and temporary registration/fallback                |
-| `src/sim/runner.ts`         | Existing real-game runner plus rollout-safe round advancement seam |
-| `src/sim/setup.ts`          | Policy-controlled strategic setup path                             |
-| `src/sim/telemetry.ts`      | Outcome, plan, reason, strength, and compute telemetry             |
-| `src/game/victory.ts`       | Remains authoritative for cards, winners, and game-end rules       |
-| `src/game/legalMoves.ts`    | Remains authoritative for legal actions and dispatch               |
+| File/module                     | Planned responsibility                                                                                           |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `src/ai/observation.ts`         | Fair player observation and redaction                                                                            |
+| `src/ai/belief.ts`              | Hidden-state belief representation and sampling                                                                  |
+| `src/ai/chance.ts`              | Public outcome distributions and chance sampling                                                                 |
+| `src/ai/outcome.ts`             | Outcome vectors, estimates, aggregation, comparison                                                              |
+| `src/ai/victoryRoutes.ts`       | Victory margins, stable cards, threats, and route generation                                                     |
+| `src/ai/collapse.ts`            | Riot, starvation, forced loss, and feasibility risk                                                              |
+| `src/ai/plans.ts`               | Named plan generation, ETA, progress, and invalidation                                                           |
+| `src/ai/explain.ts`             | Reason codes and decision traces                                                                                 |
+| `src/ai/rollout.ts`             | Multi-round sampled action evaluation                                                                            |
+| `src/ai/rolloutPolicies.ts`     | Frozen/diverse continuation-policy league                                                                        |
+| `src/ai/budgets.ts`             | Deterministic test/batch and bounded CPU profiles                                                                |
+| `src/ai/mcts/*`                 | Later information-set, multi-player MCTS implementation                                                          |
+| `src/sim/policies.ts`           | Legacy policies and temporary registration/fallback                                                              |
+| `src/sim/runner.ts`             | Existing real-game runner plus rollout-safe round advancement seam                                               |
+| `src/sim/setup.ts`              | Policy-controlled strategic setup path                                                                           |
+| `src/sim/telemetry.ts`          | Outcome, plan, reason, strength, and compute telemetry                                                           |
+| `src/game/victory.ts`           | Remains authoritative for cards, winners, and game-end rules                                                     |
+| canonical engine command module | Remains authoritative for client-input commands, derived legal options, actor eligibility, and atomic transition |
 
 Split implementation by behavior, not by creating another monolithic `policies.ts`.
 

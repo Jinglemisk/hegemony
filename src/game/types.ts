@@ -4,7 +4,7 @@ import type {
   AssemblySession,
   LawCostedAction,
   PoliticianId,
-  TallyMonument
+  TallyMonument,
 } from "./assembly/types";
 
 export type PlayerId = "0" | "1" | "2" | "3";
@@ -32,12 +32,11 @@ export type Phase = "setupCapital" | "setupCity" | "setupColony" | "gameplay" | 
 export type BoardLayout = "classic" | "shuffled";
 
 /** The scoreboard metrics victory cards race on (see game/victory.ts). `voice` is the
- *  Assembly's political card — patron of the most politicians (assembly/power.ts). */
+ *  Assembly's permanent authored-and-passed ratchet. */
 export type VictoryMetric = "cities" | "pops" | "citizens" | "stockpile" | "happiness" | "voice";
 
-/** Why the game ended: a player held enough victory cards, the seasonal deck (the
- *  clock) ran out, or Stratokles's tally track reached the coup and crowned his patron. */
-export type GameOverReason = "victoryRace" | "deckExhausted" | "stratoklesCoup";
+/** Why the game ended: a player held enough victory cards or the seasonal deck ran out. */
+export type GameOverReason = "victoryRace" | "deckExhausted";
 
 /** The four seasons, in the order they cycle each year (a year always opens on spring). */
 export type SeasonName = "spring" | "summer" | "autumn" | "winter";
@@ -476,10 +475,8 @@ export interface HegemonyState {
 
   // ── The Assembly (Phase 3-B · docs/archive/plans/assembly-politicians.md) ────────────────
   //
-  // The whole rivalry layer is these seven fields. Note what is NOT here: no power
-  // counters, no patron table, no decay timers. Power and patronage are READ OFF
-  // `activeLaws` / `tallyMonuments` on demand (assembly/power.ts), so the stele
-  // stacks the panel draws are the scoreboard rather than a view of one.
+  // Politician power and descriptive patrons remain board-derived. Voice deliberately
+  // diverges: authored-and-passed progress is permanent after repeal or replacement.
 
   /** The Assembly in session. Non-null SUSPENDS the turn machine — the same
    *  engine-state gate the yearly omen uses, so no click can open or dismiss it. */
@@ -496,8 +493,12 @@ export interface HegemonyState {
   /** Monotonic enactment counter, so "the most recently enacted Law" is exact even
    *  when two pass in the same assembly. */
   lawOrder: number;
-  /** Set by a passed Isonomia; consumed when the NEXT assembly convenes. */
-  pendingIsonomia: boolean;
+  /** Permanent authored-and-passed resolution count, including Directives. */
+  assemblyPassedByPlayer: Record<PlayerId, number>;
+  /** First seat to reach the Voice minimum; changes only when strictly exceeded. */
+  voiceHolder: PlayerId | null;
+  /** Rival targeted by a passed Isonomia; consumed when the next Assembly convenes. */
+  pendingIsonomiaTarget: PlayerId | null;
   /** How many assemblies have convened — the panel's "Nth of the game" subtitle. */
   assembliesHeld: number;
 }

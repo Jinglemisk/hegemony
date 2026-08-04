@@ -7,13 +7,7 @@ import prettier from "eslint-config-prettier";
 
 export default tseslint.config(
   {
-    ignores: [
-      "dist/",
-      "node_modules/",
-      "assets/",
-      "coverage/",
-      "**/*.html",
-    ],
+    ignores: ["dist/", "node_modules/", "assets/", "coverage/", ".worktrees/", "**/*.html"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -32,10 +26,7 @@ export default tseslint.config(
       // Correctness rules stay as errors.
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
+      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       // Start these as warnings so the gate is green on the current
       // codebase; ratchet up to "error" as the refactor lands.
       "@typescript-eslint/no-unused-vars": [
@@ -47,12 +38,7 @@ export default tseslint.config(
   },
   {
     // Node-context config/build files.
-    files: [
-      "**/*.{js,cjs,mjs}",
-      "vite.config.ts",
-      "vitest.config.ts",
-      "eslint.config.js",
-    ],
+    files: ["**/*.{js,cjs,mjs}", "vite.config.ts", "vitest.config.ts", "eslint.config.js"],
     languageOptions: { globals: { ...globals.node } },
   },
   prettier,

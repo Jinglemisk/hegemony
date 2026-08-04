@@ -10,7 +10,7 @@ import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
   getGrowPopStatus,
-  getUpgradeColonyToCityStatus
+  getUpgradeColonyToCityStatus,
 } from "../status";
 import { owned, scenario } from "../testing/scenario";
 import type { HegemonyState, PlayerId } from "../types";
@@ -96,7 +96,7 @@ describe("standing laws reach the income pipeline", () => {
     expect(after.stone - before.stone).toBe(-2);
 
     const lines = getLawIncomeContributions(G, "0", { ...EMPTY_RESOURCES }).filter(
-      (contribution) => contribution.label === "Grain Dole"
+      (contribution) => contribution.label === "Grain Dole",
     );
     // One line per settlement that HAS a primary resource — the hill produces none.
     expect(lines).toHaveLength(2);
@@ -163,10 +163,16 @@ describe("standing laws reprice actions", () => {
 
   it("actionCostDelta reaches grow-pop, in both directions at once", () => {
     const G = opening().build();
-    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "citizens").cost).toMatchObject({ food: 9, gold: 2 });
+    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "citizens").cost).toMatchObject({
+      food: 9,
+      gold: 2,
+    });
 
     plantLaw(G, "tenant-rights"); // growing costs 3 less food but 2 more gold
-    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "citizens").cost).toMatchObject({ food: 6, gold: 4 });
+    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "citizens").cost).toMatchObject({
+      food: 6,
+      gold: 4,
+    });
   });
 
   it("actionCostDelta narrowed by settlement scope only bites in that scope", () => {
@@ -209,7 +215,7 @@ describe("standing laws reprice actions", () => {
     expect(getUpgradeColonyToCityStatus(G, "0", P0_COLONY).cost).toMatchObject({
       wood: 30,
       stone: 10,
-      food: 5
+      food: 5,
     });
 
     plantLaw(G, "enfranchise-the-colonies");
@@ -217,7 +223,7 @@ describe("standing laws reprice actions", () => {
     expect(getUpgradeColonyToCityStatus(G, "0", P0_COLONY).cost).toMatchObject({
       wood: 15,
       stone: 5,
-      food: 3
+      food: 3,
     });
   });
 });
@@ -231,10 +237,25 @@ describe("standing laws reach the bank and the colony charter", () => {
     plantLaw(G, "aqueduct-levy"); // stone improves one step
     expect(getPlayerBankRate(G, "0", "stone")).toEqual({
       sell: Math.max(1, board.sell - 1),
-      buy: Math.max(1, board.buy - 1)
+      buy: Math.max(1, board.buy - 1),
     });
     // Only the material the Law names moves.
     expect(getPlayerBankRate(G, "0", "wood")).toEqual(G.bank.wood);
+  });
+
+  it("preserves bank friction when Low Numbers and Aqueduct Levy meet at the floor", () => {
+    const G = opening({
+      patch: {
+        economy: {
+          bank: { derivation: "uniform", baseline: { sell: 2, buy: 2 } },
+        },
+      },
+    }).build();
+    plantLaw(G, "aqueduct-levy");
+
+    const rate = getPlayerBankRate(G, "0", "stone");
+    expect(rate).toEqual({ sell: 1, buy: 2 });
+    expect(rate.sell * rate.buy).toBeGreaterThan(1);
   });
 
   it("yearlyFreeAction is spent once and refreshes when the year turns", () => {
@@ -285,7 +306,9 @@ describe("a Law is table-wide", () => {
     expect(after.food - before.food).toBe(2);
     expect(after.gold - before.gold).toBe(-1);
     // ...and it is named on their breakdown, so they can see whose stele is doing it.
-    expect(calculateIncomeBreakdown(G, "2").some((line) => line.source === "Land Reform")).toBe(true);
+    expect(calculateIncomeBreakdown(G, "2").some((line) => line.source === "Land Reform")).toBe(
+      true,
+    );
   });
 
   it("reprices actions for every seat, not just the author's", () => {

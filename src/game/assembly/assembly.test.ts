@@ -5,6 +5,7 @@ import { yearOf } from "../core/calendar";
 import { collectIncome } from "../actions";
 import { owned, scenario, tile } from "../testing/scenario";
 import { closeAssembly, endTurn } from "../turn";
+import { enumerateLegalMoves } from "../legalMoves";
 import type { HegemonyState, PlayerId } from "../types";
 import {
   assemblyBribe,
@@ -17,8 +18,9 @@ import {
   assemblyVote,
   baseVoteWeight,
   currentVoteWeight,
+  enactForEval,
   nextDrawCost,
-  openAssembly
+  openAssembly,
 } from "./assembly";
 import { getResolutionCard } from "./deck";
 import { authoredSteleCount, politicianStandings } from "./power";
@@ -97,13 +99,19 @@ function stackResolution(G: HegemonyState, cardId: string) {
 
 /** A seat fishes the named card out and seals it as its proposal. Proposal is async, so
  *  the seat is explicit — it defaults to player 0, which the author assertions expect. */
-function proposeCard(G: HegemonyState, cardId: string, replaces?: string, by: PlayerId = "0") {
+function proposeCard(
+  G: HegemonyState,
+  cardId: string,
+  replaces?: string,
+  by: PlayerId = "0",
+  target: PlayerId = PLAYER_IDS.find((id) => id !== by)!,
+) {
   stackResolution(G, cardId);
   G.players[by].resources.influence += G.ruleset.assembly.drawCost;
 
   expect(assemblyDraw(G, by, getResolutionCard(cardId)!.politician).ok).toBe(true);
 
-  return { proposer: by, result: assemblyPropose(G, by, replaces) };
+  return { proposer: by, result: assemblyPropose(G, by, replaces, target) };
 }
 
 /** Every still-undecided seat holds its peace. `activePlayer` parks on the first
@@ -121,8 +129,14 @@ function voteEverything(G: HegemonyState, yea: boolean) {
 }
 
 /** Seal a proposal, let the rest hold their peace, then carry it. */
-function carryResolution(G: HegemonyState, cardId: string, replaces?: string, by: PlayerId = "0"): PlayerId {
-  const { proposer, result } = proposeCard(G, cardId, replaces, by);
+function carryResolution(
+  G: HegemonyState,
+  cardId: string,
+  replaces?: string,
+  by: PlayerId = "0",
+  target: PlayerId = PLAYER_IDS.find((id) => id !== by)!,
+): PlayerId {
+  const { proposer, result } = proposeCard(G, cardId, replaces, by, target);
   expect(result.ok).toBe(true);
   passRemainingSeats(G);
   voteEverything(G, true);
@@ -139,7 +153,7 @@ const SIX_LAWS = [
   "festival-calendar",
   "public-works",
   "forum-rites",
-  "homestead-act"
+  "homestead-act",
 ];
 
 describe("cadence: the Assembly sits each spring from the ruleset's first year", () => {
@@ -171,6 +185,7 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
     // ballot, so no player proposal is revealed early.
     expect(G.assembly?.houseItem).not.toBeNull();
     expect(G.assembly?.houseItem?.kind).toBe("enact");
+    expect(G.assembly?.houseItem?.kind === "enact" && G.assembly.houseItem.card.kind).toBe("law");
     expect(G.assembly?.ballot).toHaveLength(0);
   });
 
@@ -227,7 +242,9 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
   });
 
   it("is disabled outright by firstYear: 0", () => {
-    const G = scenario({ patch: { assembly: { firstYear: 0 } } }).opening().build();
+    const G = scenario({ patch: { assembly: { firstYear: 0 } } })
+      .opening()
+      .build();
 
     for (let turn = 0; turn < 24 && G.phase === "gameplay"; turn += 1) {
       G.pendingPlayerEvent = null;
@@ -353,7 +370,11 @@ describe("the proposal round", () => {
     expect(assemblyProposeRepeal(G, proposer, "land-reform").ok).toBe(true);
 
     expect(G.players[proposer].resources.influence).toBe(0);
-    expect(G.assembly?.proposals[proposer]).toEqual({ kind: "repeal", cardId: "land-reform", proposer });
+    expect(G.assembly?.proposals[proposer]).toEqual({
+      kind: "repeal",
+      cardId: "land-reform",
+      proposer,
+    });
     expect(G.assembly?.proposalDone[proposer]).toBe(true);
   });
 
@@ -453,11 +474,15 @@ describe("the ballot", () => {
 
     expect(currentVoteWeight(G, "1")).toBe(1 + rules.briberyCap);
     expect(assemblyVote(G, "1", true).ok).toBe(true);
-    expect(G.assembly?.votes[0]).toMatchObject({ weight: 1 + rules.briberyCap, bribed: rules.briberyCap });
+    expect(G.assembly?.votes[0]).toMatchObject({
+      weight: 1 + rules.briberyCap,
+      bribed: rules.briberyCap,
+    });
   });
 
   it("lets one veto strike the resolution outright, at the cost of the vetoer's own vote", () => {
     const G = atAssembly();
+    const authorFood = G.players["0"].resources.food;
     proposeCard(G, "land-reform");
     passRemainingSeats(G);
     G.players["1"].resources.influence = G.ruleset.assembly.vetoCost * 2;
@@ -469,11 +494,14 @@ describe("the ballot", () => {
     // A walkout, not a free extra lever: nobody else even got to cast.
     expect(result.votes).toHaveLength(0);
     expect(G.activeLaws).toHaveLength(0);
+    expect(G.players["0"].resources.food).toBe(authorFood);
+    expect(G.assemblyPassedByPlayer["0"]).toBe(0);
     expect(G.assembly?.phase).toBe("closing");
   });
 
   it("returns a voted-down card to its politician's discard pile", () => {
     const G = atAssembly();
+    const authorFood = G.players["0"].resources.food;
     proposeCard(G, "land-reform");
     passRemainingSeats(G);
     voteEverything(G, false);
@@ -481,6 +509,8 @@ describe("the ballot", () => {
     expect(G.activeLaws).toHaveLength(0);
     expect(G.politicianDiscards.demosthenes).toContain("land-reform");
     expect(G.assembly?.results[0]).toMatchObject({ passed: false, yea: 0, nay: 4 });
+    expect(G.players["0"].resources.food).toBe(authorFood);
+    expect(G.assemblyPassedByPlayer["0"]).toBe(0);
   });
 
   it("strikes a standing Law when a repeal carries, returning it to the pile", () => {
@@ -499,6 +529,32 @@ describe("the ballot", () => {
 });
 
 describe("the Law cap", () => {
+  it("reserves unique casualties when simultaneous proposals fill the remaining slots", () => {
+    const G = atAssembly();
+    for (const cardId of SIX_LAWS.slice(0, 4)) {
+      plantLaw(G, cardId, "3");
+    }
+
+    expect(proposeCard(G, "forum-rites", undefined, "0").result.ok).toBe(true);
+    expect(proposeCard(G, "homestead-act", undefined, "1").result.ok).toBe(true);
+    expect(proposeCard(G, "civic-pride", undefined, "2").result.ok).toBe(false);
+    expect(assemblyPropose(G, "2", "land-reform").ok).toBe(true);
+
+    const fourth = proposeCard(G, "colonial-charter", undefined, "3");
+    expect(fourth.result.ok).toBe(false);
+    const replacements = enumerateLegalMoves(G, "3")
+      .filter((move) => move.type === "assemblyPropose")
+      .map((move) => move.replaces);
+    expect(replacements).not.toContain("land-reform");
+    expect(assemblyPropose(G, "3", "sacred-fields").ok).toBe(true);
+
+    voteEverything(G, true);
+
+    expect(G.activeLaws).toHaveLength(G.ruleset.assembly.lawCap);
+    expect(G.activeLaws.map((law) => law.cardId)).not.toContain("land-reform");
+    expect(G.activeLaws.map((law) => law.cardId)).not.toContain("sacred-fields");
+  });
+
   it("refuses a new Law until the proposal names one to tear down", () => {
     const G = atAssembly();
     for (const cardId of SIX_LAWS) {
@@ -530,43 +586,127 @@ describe("the Law cap", () => {
   });
 });
 
-describe("Directives: one-time, table-wide, and they never name a target", () => {
-  it("Grain Riot halves every player's stored food", () => {
+describe("author prizes and permanent Voice progress", () => {
+  it.each([
+    ["land-reform", "food", 5],
+    ["public-works", "stone", 3],
+    ["homestead-act", "wood", 4],
+    ["the-streets-burn", "happiness", 2],
+  ] as const)(
+    "pays %s's politician prize exactly once to its author",
+    (cardId, resource, amount) => {
+      const G = atAssembly();
+      const authorBefore = G.players["0"].resources[resource];
+      const rivalBefore = G.players["2"].resources[resource];
+
+      carryResolution(G, cardId, undefined, "0", "1");
+
+      expect(G.players["0"].resources[resource]).toBe(authorBefore + amount);
+      expect(G.players["2"].resources[resource]).toBe(rivalBefore);
+      expect(G.assemblyPassedByPlayer["0"]).toBe(1);
+    },
+  );
+
+  it("gives Voice to the first player at three, preserves it through a tie, then transfers on a strict lead", () => {
+    const G = atAssembly();
+    const enactLaw = (cardId: string, proposer: PlayerId) =>
+      enactForEval(G, { kind: "enact", card: getResolutionCard(cardId)!, proposer });
+
+    ["land-reform", "public-works", "homestead-act"].forEach((cardId) => enactLaw(cardId, "0"));
+    expect(G.assemblyPassedByPlayer["0"]).toBe(3);
+    expect(G.voiceHolder).toBe("0");
+
+    ["sacred-fields", "forum-rites", "colonial-charter"].forEach((cardId) => enactLaw(cardId, "1"));
+    expect(G.assemblyPassedByPlayer["1"]).toBe(3);
+    expect(G.voiceHolder).toBe("0");
+
+    enactLaw("festival-calendar", "1");
+    expect(G.assemblyPassedByPlayer["1"]).toBe(4);
+    expect(G.voiceHolder).toBe("1");
+  });
+
+  it("does not decrement Voice progress when an authored Law leaves the board", () => {
+    const G = atAssembly();
+    enactForEval(G, { kind: "enact", card: getResolutionCard("land-reform")!, proposer: "0" });
+    const count = G.assemblyPassedByPlayer["0"];
+
+    enactForEval(G, { kind: "repeal", cardId: "land-reform", proposer: "1" });
+
+    expect(G.activeLaws).toHaveLength(0);
+    expect(G.assemblyPassedByPlayer["0"]).toBe(count);
+  });
+
+  it("preserves the displaced author's Voice progress when a Law is replaced", () => {
+    const G = atAssembly();
+    enactForEval(G, { kind: "enact", card: getResolutionCard("land-reform")!, proposer: "0" });
+
+    enactForEval(G, {
+      kind: "enact",
+      card: getResolutionCard("public-works")!,
+      proposer: "1",
+      replaces: "land-reform",
+    });
+
+    expect(G.activeLaws.map((law) => law.cardId)).toEqual(["public-works"]);
+    expect(G.assemblyPassedByPlayer["0"]).toBe(1);
+    expect(G.assemblyPassedByPlayer["1"]).toBe(1);
+  });
+});
+
+describe("Directives: one-time and rival-targeted", () => {
+  it("requires one rival and records the target on the sealed ballot item", () => {
+    const G = atAssembly();
+    const proposer = G.currentPlayer;
+    stackResolution(G, "grain-riot");
+    G.players[proposer].resources.influence += G.ruleset.assembly.drawCost;
+    expect(assemblyDraw(G, proposer, "stratokles").ok).toBe(true);
+    expect(
+      enumerateLegalMoves(G, proposer)
+        .filter((move) => move.type === "assemblyPropose")
+        .map((move) => move.target),
+    ).toEqual(PLAYER_IDS.filter((id) => id !== proposer));
+    expect(assemblyPropose(G, proposer).ok).toBe(false);
+    expect(assemblyPropose(G, proposer, undefined, proposer).ok).toBe(false);
+    expect(assemblyPropose(G, proposer, undefined, "2").ok).toBe(true);
+    expect(G.assembly?.proposals[proposer]).toMatchObject({ target: "2" });
+  });
+
+  it("Grain Riot halves only the chosen rival's stored food", () => {
     const G = atAssembly();
     G.players["0"].resources.food = 10;
     G.players["1"].resources.food = 7;
     G.players["2"].resources.food = 0;
     G.players["3"].resources.food = 21;
 
-    carryResolution(G, "grain-riot");
+    carryResolution(G, "grain-riot", undefined, "0", "3");
 
-    // Rounded in the mob's favour: it takes floor(half) and leaves the remainder.
-    expect(G.players["0"].resources.food).toBe(5);
-    expect(G.players["1"].resources.food).toBe(4);
+    // Whole resources only: the loss rounds down and leaves the odd remainder.
+    expect(G.players["0"].resources.food).toBe(10);
+    expect(G.players["1"].resources.food).toBe(7);
     expect(G.players["2"].resources.food).toBe(0);
     expect(G.players["3"].resources.food).toBe(11);
   });
 
-  it("The Streets Burn takes 3 happiness from the whole table, into the negative", () => {
+  it("The Streets Burn takes 3 happiness only from its rival, into the negative", () => {
     const G = atAssembly();
     const before = PLAYER_IDS.map((playerID) => G.players[playerID].resources.happiness);
     G.players["1"].resources.happiness = 1;
 
-    carryResolution(G, "the-streets-burn");
+    carryResolution(G, "the-streets-burn", undefined, "0", "1");
 
     expect(G.players["1"].resources.happiness).toBe(-2);
-    expect(G.players["0"].resources.happiness).toBe(before[0] - 3);
-    expect(G.players["3"].resources.happiness).toBe(before[3] - 3);
+    expect(G.players["0"].resources.happiness).toBe(before[0] + 2); // Stratokles author prize
+    expect(G.players["3"].resources.happiness).toBe(before[3]);
   });
 
-  it("General Strike suppresses one income collection for everyone", () => {
+  it("General Strike suppresses one income collection for its chosen rival", () => {
     const G = atAssembly();
 
-    carryResolution(G, "general-strike");
+    carryResolution(G, "general-strike", undefined, "0", "1");
 
-    for (const playerID of PLAYER_IDS) {
-      expect(G.players[playerID].incomeSuppressedTurns, playerID).toBe(1);
-    }
+    expect(G.players["1"].incomeSuppressedTurns).toBe(1);
+    expect(G.players["0"].incomeSuppressedTurns).toBe(0);
+    expect(G.players["2"].incomeSuppressedTurns).toBe(0);
 
     // The strike costs the income, not the tempo: the turn still opens and passes.
     G.players["1"].resources.happiness = 5; // keep the upkeep from starting a riot
@@ -585,48 +725,47 @@ describe("Directives: one-time, table-wide, and they never name a target", () =>
     expect(G.players["1"].resources.gold).toBeGreaterThan(gold);
   });
 
-  it("The Mob Rises takes a pop from every player's largest settlement, lowest rung first", () => {
+  it("The Mob Rises takes a pop from the rival's largest settlement, lowest rung first", () => {
     const G = atAssembly();
-    // Player 0's metropolis is the bigger holding, and it has a slave to give up.
-    G.players["0"].settlements.forEach((tileId) => {
-      owned(G, tileId, "0").pops = { citizens: 0, freemen: 0, slaves: 0 };
+    // Player 1's metropolis is the bigger holding, and it has a slave to give up.
+    G.players["1"].settlements.forEach((tileId) => {
+      owned(G, tileId, "1").pops = { citizens: 0, freemen: 0, slaves: 0 };
     });
-    owned(G, "-2,0", "0").pops = { citizens: 1, freemen: 1, slaves: 2 };
-    owned(G, "3,0", "0").pops = { citizens: 0, freemen: 1, slaves: 0 };
+    const [large, small] = G.players["1"].settlements;
+    owned(G, large, "1").pops = { citizens: 1, freemen: 1, slaves: 2 };
+    owned(G, small, "1").pops = { citizens: 0, freemen: 1, slaves: 0 };
 
-    carryResolution(G, "the-mob-rises");
+    carryResolution(G, "the-mob-rises", undefined, "0", "1");
 
-    expect(owned(G, "-2,0", "0").pops).toEqual({ citizens: 1, freemen: 1, slaves: 1 });
-    expect(owned(G, "3,0", "0").pops.freemen).toBe(1);
-
-    for (const playerID of PLAYER_IDS) {
-      expect(G.players[playerID].popsLostToUnrest, playerID).toBeGreaterThanOrEqual(1);
-    }
+    expect(owned(G, large, "1").pops).toEqual({ citizens: 1, freemen: 1, slaves: 1 });
+    expect(owned(G, small, "1").pops.freemen).toBe(1);
+    expect(G.players["1"].popsLostToUnrest).toBeGreaterThanOrEqual(1);
+    expect(G.players["0"].popsLostToUnrest).toBe(0);
   });
 
-  it("Bread and Circuses pays 3 happiness and takes 5 gold, clamped at an empty purse", () => {
+  it("Bread and Circuses pays and charges only its target, clamped at an empty purse", () => {
     const G = atAssembly();
-    const happiness = G.players["0"].resources.happiness;
     G.players["0"].resources.gold = 12;
     G.players["1"].resources.gold = 2;
+    const targetHappiness = G.players["1"].resources.happiness;
 
-    carryResolution(G, "bread-and-circuses");
+    carryResolution(G, "bread-and-circuses", undefined, "0", "1");
 
-    expect(G.players["0"].resources.happiness).toBe(happiness + 3);
-    expect(G.players["0"].resources.gold).toBe(7);
-    // A stock clamps at zero — the populist giveaway never puts a polis in debt.
+    expect(G.players["1"].resources.happiness).toBe(targetHappiness + 3);
     expect(G.players["1"].resources.gold).toBe(0);
+    expect(G.players["0"].resources.gold).toBe(12);
   });
 
-  it("The Stele Is Broken throws down the most recently enacted Law", () => {
+  it("The Stele Is Broken throws down the target's newest authored standing Law", () => {
     const G = atAssembly();
-    plantLaw(G, "land-reform", "3");
-    plantLaw(G, "public-works", "3"); // enacted later — the higher `order`
+    plantLaw(G, "land-reform", "1");
+    plantLaw(G, "public-works", "3"); // globally newer, but authored by another rival
+    plantLaw(G, "sacred-fields", "1");
 
-    carryResolution(G, "the-stele-is-broken");
+    carryResolution(G, "the-stele-is-broken", undefined, "0", "1");
 
-    expect(G.activeLaws.map((law) => law.cardId)).toEqual(["land-reform"]);
-    expect(G.politicianDiscards.perdiccas).toContain("public-works");
+    expect(G.activeLaws.map((law) => law.cardId)).toEqual(["land-reform", "public-works"]);
+    expect(G.politicianDiscards.demosthenes).toContain("sacred-fields");
   });
 
   it("The Stele Is Broken is a legal no-op when the agora is empty", () => {
@@ -636,35 +775,39 @@ describe("Directives: one-time, table-wide, and they never name a target", () =>
 
     expect(G.activeLaws).toHaveLength(0);
     expect(G.tallyMonuments).toHaveLength(1);
-    expect(G.log.some((entry) => entry.message.includes("no stele left standing"))).toBe(true);
+    expect(G.log.some((entry) => entry.message.includes("no authored stele left standing"))).toBe(
+      true,
+    );
   });
 
-  it("Isonomia flattens every voice at the NEXT assembly, then is spent", () => {
+  it("Isonomia fixes only its target at one base vote in the next Assembly, then is spent", () => {
     const G = atAssembly();
     setCitizens(G, "3", 4);
+    setCitizens(G, "2", 3);
 
-    carryResolution(G, "isonomia");
+    carryResolution(G, "isonomia", undefined, "0", "3");
 
     // It changes nothing about the assembly that passed it.
-    expect(G.assembly?.equalVotes).toBe(false);
+    expect(G.assembly?.isonomiaTarget).toBeNull();
     expect(baseVoteWeight(G, "3")).toBe(4);
-    expect(G.pendingIsonomia).toBe(true);
+    expect(G.pendingIsonomiaTarget).toBe("3");
 
     // A whole year later, the legacy lands on the assembly it was aimed at.
     expect(closeAssembly(G).ok).toBe(true);
     playUntilAssembly(G);
 
-    expect(G.assembly?.equalVotes).toBe(true);
+    expect(G.assembly?.isonomiaTarget).toBe("3");
+    setCitizens(G, "2", 3);
     expect(baseVoteWeight(G, "3")).toBe(1);
-    // The demos got its equal vote exactly once.
-    expect(G.pendingIsonomia).toBe(false);
+    expect(baseVoteWeight(G, "2")).toBe(3);
+    expect(G.pendingIsonomiaTarget).toBeNull();
 
     // ...and the assembly after that weighs citizens again.
     passRemainingSeats(G);
     voteEverything(G, false);
     expect(closeAssembly(G).ok).toBe(true);
     playUntilAssembly(G);
-    expect(G.assembly?.equalVotes).toBe(false);
+    expect(G.assembly?.isonomiaTarget).toBeNull();
   });
 
   it("plants a permanent tally monument that costs no Law-cap slot", () => {
@@ -682,7 +825,7 @@ describe("Directives: one-time, table-wide, and they never name a target", () =>
     expect(G.tallyMonuments[0]).toMatchObject({ cardId: "the-streets-burn", author: "0" });
     expect(politicianStandings(G).find((s) => s.politician.id === "stratokles")).toMatchObject({
       power: 1,
-      patron: "0"
+      patron: "0",
     });
     // The card itself goes back to the pile: the monument is the record, not the card.
     expect(G.politicianDiscards.stratokles).toContain("the-streets-burn");
@@ -690,13 +833,13 @@ describe("Directives: one-time, table-wide, and they never name a target", () =>
 
   it("does nothing at all when it is voted down", () => {
     const G = atAssembly();
-    G.players["0"].resources.food = 10;
+    G.players["1"].resources.food = 10;
 
-    proposeCard(G, "grain-riot");
+    proposeCard(G, "grain-riot", undefined, "0", "1");
     passRemainingSeats(G);
     voteEverything(G, false);
 
-    expect(G.players["0"].resources.food).toBe(10);
+    expect(G.players["1"].resources.food).toBe(10);
     expect(G.tallyMonuments).toHaveLength(0);
     expect(G.politicianDiscards.stratokles).toContain("grain-riot");
   });
@@ -716,10 +859,8 @@ describe("the house resolution", () => {
 
   it("plants an UNAUTHORED stele — nobody gains patronage from it", () => {
     // The house card is the one resolution no seat proposed, so it belongs to no seat.
-    // It lends its politician power (the stele is standing) but hands nobody patronage:
-    // crediting it to the season opener would pay them free Voice-card progress — and,
-    // for a house Directive, free progress on Stratokles's coup clock — for doing
-    // nothing at all.
+    // It lends its politician power (the stele is standing) but hands nobody patronage,
+    // prize, or permanent Voice progress.
     const G = atAssembly();
     reopenWithHouseCard(G, "land-reform");
     expect(G.assembly!.houseItem?.proposer).toBeNull();
@@ -733,6 +874,7 @@ describe("the house resolution", () => {
     expect(demosthenes.power).toBe(1);
     expect(demosthenes.patron).toBeNull();
     expect(authoredSteleCount(G, "1")).toBe(0);
+    expect(G.assemblyPassedByPlayer["1"]).toBe(0);
   });
 
   // Design §1.3: "Passed Laws plant a stele on the board (respecting the cap /
@@ -769,31 +911,6 @@ describe("the house resolution", () => {
   });
 });
 
-describe("the coup resolves when the agora rises", () => {
-  it("crowns the demagogue's patron the moment his last monument lands", () => {
-    // Pin the threshold at 3 so the mechanism test is independent of the tunable
-    // (the default is 5) — two monuments already stand, this Directive is the third.
-    const G = atAssembly({ patch: { assembly: { coupThreshold: 3 } } });
-    for (let index = 0; index < 2; index += 1) {
-      G.tallyMonuments.push({
-        cardId: "grain-riot",
-        author: "0",
-        enactedSeason: G.season,
-        order: G.lawOrder++
-      });
-    }
-
-    carryResolution(G, "the-streets-burn");
-    expect(G.phase).toBe("gameplay");
-
-    expect(closeAssembly(G).ok).toBe(true);
-
-    expect(G.phase).toBe("gameOver");
-    expect(G.winner).toBe("0");
-    expect(G.gameOverReason).toBe("stratoklesCoup");
-  });
-});
-
 describe("the board keeps its shape across an assembly", () => {
   it("never leaves a tile without the settlements the players still own", () => {
     // A guard on the pokes above: everything the flow tests do goes through the real
@@ -805,7 +922,10 @@ describe("the board keeps its shape across an assembly", () => {
 
     for (const playerID of PLAYER_IDS) {
       for (const tileId of G.players[playerID].settlements) {
-        expect(tile(G, tileId).settlements.some((s) => s.owner === playerID), `${playerID}/${tileId}`).toBe(true);
+        expect(
+          tile(G, tileId).settlements.some((s) => s.owner === playerID),
+          `${playerID}/${tileId}`,
+        ).toBe(true);
       }
     }
   });

@@ -1,6 +1,6 @@
 # Parity manifests
 
-Last updated: 2026-07-29.
+Last updated: 2026-08-03.
 
 This reference defines the Phase 3.5 Step 2 enforcement boundary for consequential
 gameplay that is passive, automatic, content-driven, or read-only. It complements
@@ -19,6 +19,19 @@ These layers intentionally overlap. A seasonal event may apply an immediate effe
 create persistent state, change an action's effective cost, and alter a later policy
 decision. Each applicable layer must remain true.
 
+## Current limitation and accepted closure
+
+The current move manifest is exhaustive by `LegalMove["type"]`, but its frontend test
+proves only that named surface files exist. The browser still dispatches through parallel
+per-action controller wrappers while simulation and replay use `applyMove`. File presence
+is useful omission detection, not proof of one runtime path.
+
+[Phase 3.6](../plans/phase-3.6-architecture-hardening.md) replaces this with a canonical
+client-input `GameCommand`, derived legal options, workflow-aware actor eligibility, and
+one atomic transition used by browser, simulation, replay, and the future server. Parity
+tests must then exercise real command construction and transition behavior rather than
+searching only for implementation tokens.
+
 ## Exhaustive effect registries
 
 `src/parity/featureParity.ts` keeps separate exhaustive records for the closed
@@ -33,6 +46,15 @@ resolution boundaries instead of inventing one lossy universal effect type.
 | `DIRECTIVE_EFFECT_PARITY`       | `DirectiveEffect["type"]`      | One-time Assembly resolution, frontend presentation, policy observation/value, Assembly telemetry, behavioral fixture |
 | `BUILDING_EFFECT_PARITY`        | `BuildingEffect["type"]`       | Effective-content engine query, frontend presentation, policy projection, building telemetry, behavioral fixture      |
 | `ACTIVE_EFFECT_MECHANIC_PARITY` | `ActiveEffectMechanic["type"]` | Persistent-state query, frontend presentation, policy projection, prevalence telemetry, lifecycle/behavior fixture    |
+
+Phase 4–5 extend this family deliberately rather than creating feature-private registries:
+
+- `LUXURY_EFFECT_PARITY` for claim, suppression, derived activity, happiness, and transfer;
+- `TRADE_WORKFLOW_PARITY` for propose, reject, counter, accept, cancel/expiry, and atomic settlement;
+- `NATIONAL_IDEA_EFFECT_PARITY` for every persistent or consumable typed Idea effect.
+
+The v1 mechanics-freeze inventory verifies those registries plus the final Resolution
+effect catalog before multiplayer begins.
 
 Each record uses `satisfies Record<Union["type"], EffectParityCoverage>`. Adding an
 effect variant therefore fails TypeScript until its classification exists. The
@@ -110,7 +132,7 @@ manifests remain the authoritative classification seam.
 
 `low-number-core-v1` preserves the authored ID/effect vocabulary while changing
 effective values. The reversible `GameContent` registry routes buildings, terrain,
-events, riot/expedition tables, and the omen table through typed accessors across
+events, resolutions, riot/expedition tables, and the omen table through typed accessors across
 engine, frontend, and simulation. Preset regression tests assert the authored manifest
 still matches exactly and every transformed effect has a non-empty canonical
 presentation. Browser and simulator resolve the same preset ID and content hash.

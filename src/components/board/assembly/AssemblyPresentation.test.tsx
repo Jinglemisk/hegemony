@@ -231,12 +231,60 @@ describe("Assembly pickers", () => {
       'ul[aria-label="Standing Laws available for replacement"]',
     )!;
     const buttons = [...choices.querySelectorAll<HTMLButtonElement>("button")];
+    const houseItem = G.assembly!.houseItem;
+    const houseReservation = houseItem?.kind === "enact" ? houseItem.replaces : undefined;
     expect(dialog.querySelector('[role="menu"]')).toBeNull();
     expect(dialog.querySelector('[role="menuitem"]')).toBeNull();
-    expect(buttons).toHaveLength(G.ruleset.assembly.lawCap);
+    expect(houseReservation).toBeTruthy();
+    expect(buttons).toHaveLength(G.ruleset.assembly.lawCap - 1);
+    expect(buttons.map((button) => button.textContent)).not.toContain(
+      RESOLUTION_CARDS.find((card) => card.id === houseReservation)?.name,
+    );
     expect(buttons.every((button) => button.tabIndex === 0)).toBe(true);
     expect(document.activeElement).toBe(dialog);
     expect(propose).not.toHaveBeenCalled();
+  });
+
+  it("requires a labelled rival choice before sealing a Directive", () => {
+    const G = scenario().build();
+    const directive = RESOLUTION_CARDS.find((card) => card.kind === "directive")!;
+    openAssembly(G, "0");
+    G.assembly!.held["0"] = { card: directive, draws: 1 };
+    const propose = vi.fn();
+    const value = {
+      G,
+      viewerId: "0",
+      moves: {
+        assemblyDiscardHeld: vi.fn(),
+        assemblyPropose: propose,
+      },
+    } as unknown as GameUi;
+
+    act(() => {
+      root.render(
+        <GameUiProvider value={value}>
+          <AssemblyBema G={G} session={G.assembly!} />
+        </GameUiProvider>,
+      );
+    });
+
+    const opener = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
+      button.textContent?.includes("Choose rival"),
+    )!;
+    act(() => opener.click());
+
+    const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
+    expect(dialog.getAttribute("aria-label")).toContain("Choose the rival targeted by");
+    const choices = dialog.querySelector<HTMLUListElement>(
+      'ul[aria-label="Rivals available as Directive targets"]',
+    )!;
+    const buttons = [...choices.querySelectorAll<HTMLButtonElement>("button")];
+    expect(buttons).toHaveLength(3);
+    expect(buttons.some((button) => button.textContent?.includes("Damon"))).toBe(false);
+
+    const rival = buttons.find((button) => button.textContent?.includes("Nikos"))!;
+    act(() => rival.click());
+    expect(propose).toHaveBeenCalledWith("0", undefined, "1");
   });
 });
 

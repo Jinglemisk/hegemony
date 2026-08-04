@@ -2,7 +2,7 @@
 
 Status: living reference for the implemented frontend.
 
-Last updated: 2026-07-31.
+Last updated: 2026-08-03.
 
 This contract defines how the frontend explains gameplay mechanics without creating a
 second rules engine. Engine selectors, action statuses, and content manifests are the
@@ -61,19 +61,39 @@ effective cost, short explanation, source, duration, and blocked reason. Resourc
 amounts use `ResourceChips`, whose accessible text includes both amount and resource.
 Tooltip content is descriptive only; actions and Codex navigation live outside it.
 
+## Required decisions and multi-seat workflows
+
+Do not add one unrelated boolean/modal/controller method for every new forced choice.
+Engine state may keep domain-specific workflow data, but a player projection exposes a
+closed typed required-decision view with source, eligible actor, choices, blocked reasons,
+visibility, and completion state. A shared decision host routes that union to focused
+renderers using `ModalShell`, `Popover`, and `MechanicsDetails` as appropriate.
+
+Assembly remains an Assembly workflow and trade remains a negotiation workflow; this is
+not a generic rules scripting engine. The shared layer owns only presentation, actor,
+focus, cancellation/expiry, and public/private projection contracts. Luxury claim choices,
+trade responses, and National Idea drafts use it rather than creating feature-private
+overlay infrastructure.
+
+After Phase 3.6, controls dispatch canonical `GameCommand` values and render server/engine
+legal-option projections. They never call domain mutators directly or submit displayed
+costs and outcomes as authority.
+
 ## Assembly presentation
 
 Assembly action buttons use the same tooltip semantics as command verbs and map
-actions. Repeal and full-board replacement choices use the shared popover. Voice,
-politician power, proposed cards, standing stelae, and Directive monuments are
-keyboard-inspectable board objects with accessible labels.
+actions. Repeal, full-board replacement, and required rival-target choices use the
+shared popover. The ballot visibly records a Directive's target and each authored
+resolution displays its active-ruleset prize. Voice, its permanent per-seat progress,
+politician power, descriptive patrons, proposed cards, standing stelae, and Directive
+monuments are keyboard-inspectable board objects with accessible labels.
 
 The Assembly maps each discriminated card effect through the canonical
 `presentLawEffect` or `presentDirectiveEffect` adapter in `src/ui/effects.ts` and sends
 those rows to `MechanicsDetails`. Law cards identify their trade-off and remain in
-force until repealed if passed. Directives identify their one-time resolution; their
-monument is permanent board history, not a persistent rule. These explanations do not
-change Assembly flow, resolution, balance, or AI behavior.
+force until repealed if passed. Directives identify their one-time rival effect; their
+monument is permanent board history, not a persistent rule. The UI never offers a
+Directive as a house resolution and never lets its author target themselves.
 
 ## Required regression coverage
 

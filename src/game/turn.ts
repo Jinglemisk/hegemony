@@ -13,7 +13,7 @@ import {
   startNewSeason,
 } from "./rules";
 import type { MoveResult } from "./rules";
-import { checkStratoklesCoup, checkVictoryAtTurnStart } from "./victory";
+import { checkVictoryAtTurnStart } from "./victory";
 import { openAssembly, shouldOpenAssembly } from "./assembly/assembly";
 import { GAME_MODES } from "./ruleset";
 import type { Ruleset } from "./ruleset";
@@ -30,7 +30,7 @@ export function createGame(
   seed?: number,
   ruleset: Ruleset = GAME_MODES[GAME_CONFIG.mode].ruleset,
   boardLayout: BoardLayout = GAME_CONFIG.boardLayout,
-  preloadOpeningSetup: boolean = GAME_CONFIG.preloadOpeningSetupForTesting
+  preloadOpeningSetup: boolean = GAME_CONFIG.preloadOpeningSetupForTesting,
 ): HegemonyState {
   const G = createInitialState(seed, ruleset, boardLayout);
 
@@ -175,8 +175,7 @@ export function beginTurnFor(G: HegemonyState, playerID: PlayerId) {
 
 /**
  * Dismiss the Assembly's closing recap and hand play back to the season opener. The
- * coup is checked here — a Directive passed this session may have just crowned
- * Stratokles's patron, and that must resolve before anyone takes another turn.
+ * Voice and prizes resolve with each ballot item, so closing only resumes the turn.
  */
 export function closeAssembly(G: HegemonyState): MoveResult {
   const session = G.assembly;
@@ -187,12 +186,6 @@ export function closeAssembly(G: HegemonyState): MoveResult {
 
   const resume = session.resumePlayer;
   G.assembly = null;
-
-  checkStratoklesCoup(G);
-
-  if (G.phase !== "gameplay") {
-    return { ok: true };
-  }
 
   beginTurnFor(G, resume);
   return { ok: true };
@@ -213,7 +206,9 @@ function runPreloadOpeningSetup(G: HegemonyState) {
       throw new Error("Invalid test setup: setup did not converge.");
     }
 
-    const placement = TEST_OPENING_SETUP.find((candidate) => candidate.playerID === G.currentPlayer);
+    const placement = TEST_OPENING_SETUP.find(
+      (candidate) => candidate.playerID === G.currentPlayer,
+    );
 
     if (!placement) {
       throw new Error(`Invalid test setup: no placement for player ${G.currentPlayer}.`);

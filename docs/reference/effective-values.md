@@ -1,6 +1,6 @@
 # Effective content and costs
 
-Last updated: 2026-07-31.
+Last updated: 2026-08-03.
 
 This is the living contract for values that can differ from authored defaults. It
 records the Phase 3.5 Step 1 inventory. Step 2's compile-time and behavioral
@@ -24,12 +24,13 @@ must label them as base costs and explain that modifiers appear at the action.
 
 ## Effective-content inventory
 
-| Content   | Authoritative query                                                                | Engine consumers                                                                                               | Frontend consumers                                                                                                  | Simulation consumers                                                                     |
-| --------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Buildings | `getBuildings()`, `getBuilding()`, and target-specific `getBuildBuildingOptions()` | Build legality/execution, income, settlement capacity/slots, growth and promotion discounts, table destruction | Board availability, map selection, Build popover, Cities/Buildings ledgers, Codex, building labels and benefit text | Legal-move enumeration and policy evaluation through the same engine income/status paths |
-| Terrain   | `getTerrainDeck()`                                                                 | Initial map/state creation and shuffle                                                                         | Codex terrain aggregates                                                                                            | Game setup and tuning runs through engine map creation                                   |
-| Events    | `getSeasonalEventCards()` and `getPlayerEventCards()`                              | Deck creation, resolution, active effects and logs                                                             | Topbar, pending-event dialog and Codex                                                                              | Seeded decks, policy execution and zero-filled telemetry                                 |
-| Tables    | `getRiotTable()`, `getExpeditionTables()`, and `getOmenTable()`                    | Legal moves, insurance, ventures, rolls and yearly omen state                                                  | Riot/Venture modals, topbar, result rows and Codex                                                                  | Policy risk, execution and telemetry                                                     |
+| Content     | Authoritative query                                                                | Engine consumers                                                                                               | Frontend consumers                                                                                                  | Simulation consumers                                                                     |
+| ----------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Buildings   | `getBuildings()`, `getBuilding()`, and target-specific `getBuildBuildingOptions()` | Build legality/execution, income, settlement capacity/slots, growth and promotion discounts, table destruction | Board availability, map selection, Build popover, Cities/Buildings ledgers, Codex, building labels and benefit text | Legal-move enumeration and policy evaluation through the same engine income/status paths |
+| Terrain     | `getTerrainDeck()`                                                                 | Initial map/state creation and shuffle                                                                         | Codex terrain aggregates                                                                                            | Game setup and tuning runs through engine map creation                                   |
+| Events      | `getSeasonalEventCards()` and `getPlayerEventCards()`                              | Deck creation, resolution, active effects and logs                                                             | Topbar, pending-event dialog and Codex                                                                              | Seeded decks, policy execution and zero-filled telemetry                                 |
+| Tables      | `getRiotTable()`, `getExpeditionTables()`, and `getOmenTable()`                    | Legal moves, insurance, ventures, rolls and yearly omen state                                                  | Riot/Venture modals, topbar, result rows and Codex                                                                  | Policy risk, execution and telemetry                                                     |
+| Resolutions | `getResolutionCards()` and `getResolutionCard()`                                   | Politician decks, Law modifiers, Directive resolution and logs                                                 | Assembly cards, target previews, ledgers and Codex                                                                  | Seeded decks, real-engine enactment evaluation and Assembly telemetry                    |
 
 Runtime consumers must not import authored content constants directly. Authored
 constants remain appropriate for preset construction, immutable comparison tests,
@@ -40,6 +41,19 @@ Rules/content precedence is `authored defaults → game mode → tuning preset �
 overrides`. Configured `stockpileFloors` apply through the authoritative real-mutation
 seam for income, events, and tables; previews and policy projections use the same
 floor behavior, while costs remain affordability-gated.
+
+### Accepted Phase 3.6 correction
+
+The package is conceptually fixed per game today, but its runtime accessor is backed by
+mutable process-global `activeContent`. That is insufficient for concurrent matches,
+different pinned definitions, and durable replay. Phase 3.6 replaces installation with an
+immutable per-match `GameDefinition` carrying ruleset/content version and hash. Engine
+queries receive or resolve that definition without cross-game global state.
+
+The same phase separates caller input from derived values. `GameCommand` never contains
+an authoritative cost, blocked reason, or outcome; `LegalOption`/status projections carry
+those engine-derived facts. Browser, simulation, replay, and future server apply the same
+atomic command transition.
 
 ## Effective-cost inventory
 
@@ -89,3 +103,7 @@ The [Step 2 manifest contract](parity-manifests.md) enforces the exhaustive
 classification around these values. The [frontend presentation contract](frontend-presentation.md)
 defines how the merged Step 3 layer renders them through Tooltip, Popover, and
 MechanicsDetails.
+
+The Step 4 Assembly revision extends the same contract to effective Resolution cards.
+`low-number-core-v1` transforms their effects and matching prose, while one-time author
+prizes remain ruleset values consumed by execution, UI, policy evaluation, and telemetry.

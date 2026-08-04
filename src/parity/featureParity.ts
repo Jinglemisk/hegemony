@@ -61,27 +61,27 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   directiveResources: {
     implementation: "src/game/assembly/assembly.test.ts",
-    evidence: "Bread and Circuses pays 3 happiness and takes 5 gold",
+    evidence: "Bread and Circuses pays and charges only its target",
   },
   directiveFraction: {
     implementation: "src/game/assembly/assembly.test.ts",
-    evidence: "Grain Riot halves every player's stored food",
+    evidence: "Grain Riot halves only the chosen rival's stored food",
   },
   directiveSuppression: {
     implementation: "src/game/assembly/assembly.test.ts",
-    evidence: "General Strike suppresses one income collection for everyone",
+    evidence: "General Strike suppresses one income collection for its chosen rival",
   },
   directivePops: {
     implementation: "src/game/assembly/assembly.test.ts",
-    evidence: "The Mob Rises takes a pop from every player's largest settlement",
+    evidence: "The Mob Rises takes a pop from the rival's largest settlement",
   },
   directiveRepeal: {
     implementation: "src/game/assembly/assembly.test.ts",
-    evidence: "The Stele Is Broken throws down the most recently enacted Law",
+    evidence: "The Stele Is Broken throws down the target's newest authored standing Law",
   },
   directiveVotes: {
     implementation: "src/game/assembly/assembly.test.ts",
-    evidence: "Isonomia flattens every voice at the NEXT assembly",
+    evidence: "Isonomia fixes only its target at one base vote in the next Assembly",
   },
   buildingEffects: {
     implementation: "src/parity/featureParity.test.ts",
@@ -230,7 +230,7 @@ export const DIRECTIVE_EFFECT_PARITY = {
   resourceFraction: directive("directiveFraction", "policyAssembly"),
   losePopFromLargest: directive("directivePops", "policyAssembly"),
   suppressIncome: directive("directiveSuppression", "activeEffectPolicy", "policyAssembly"),
-  repealNewestLaw: directive("directiveRepeal", "policyAssembly"),
+  repealNewestTargetLaw: directive("directiveRepeal", "policyAssembly"),
   equalVotesNextAssembly: directive("directiveVotes", "policyAssembly"),
 } as const satisfies Record<DirectiveEffect["type"], EffectParityCoverage>;
 
@@ -491,7 +491,10 @@ export const CONTENT_MANIFEST = {
       implementation: "src/components/board/assembly/AssemblyColonnade.tsx",
       evidence: "politician",
     },
-    simulation: { implementation: "src/sim/policies.ts", evidence: "politicianStandings" },
+    simulation: {
+      implementation: "src/sim/policies.ts",
+      evidence: "expectedDeckDelta",
+    },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "assembly" },
     behaviorFixtures: ["policyAssembly"],
   },

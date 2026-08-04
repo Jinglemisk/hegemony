@@ -1,7 +1,13 @@
-import type { HegemonyState, PlayerId, PopType, Resource, Resources, SettlementKind } from "../types";
+import type {
+  HegemonyState,
+  PlayerId,
+  PopType,
+  Resource,
+  Resources,
+  SettlementKind,
+} from "../types";
 import { getTile } from "../core/query";
-import { getResolutionCard, POLITICIANS } from "./deck";
-import { politicianStandings } from "./power";
+import { getResolutionCard } from "../content";
 import type { LawCostedAction, LawEffect, SettlementScope } from "./types";
 
 /**
@@ -11,15 +17,13 @@ import type { LawCostedAction, LawEffect, SettlementScope } from "./types";
  * Every other content system in this engine applies its effects ONCE, at the moment a
  * card resolves. A Law does not: it is a patch that hangs over the ruleset until it is
  * repealed, so the income, cost, bank and happiness pipelines must CONSULT it every
- * time they compute. This module is that consultation — it turns `G.activeLaws` (plus
- * any patron buffs the reader has earned) into the small set of questions those
+ * time they compute. This module is that consultation — it turns `G.activeLaws` into
+ * the small set of questions those
  * pipelines actually ask, and nothing else in the engine needs to know Laws exist.
  *
- * Two rules keep it honest:
- *   1. A Law is table-wide. Every active Law applies to EVERY player, including the
- *      seat that never voted for it — that is what makes a vote worth having.
- *   2. A patron buff is not. It applies only to the politician's patron, and only
- *      once that politician is dominant (§1.6).
+ * A Law is table-wide. Every active Law applies to every player, including the seat
+ * that never voted for it — that is what makes a vote worth having. Patronage is
+ * descriptive only and never contributes an effect.
  */
 
 /** The scopes a settlement of each kind answers to. A capital IS a city for a Law's
@@ -33,25 +37,14 @@ function matchesScope(kind: SettlementKind, scope: SettlementScope): boolean {
 }
 
 /**
- * Every standing effect bearing on one player: the table-wide Laws, plus the patron
- * buffs of every politician this player is patron of and who has reached dominance.
- *
- * This is the ONE place the two sources are combined, so no pipeline can accidentally
- * honour Laws but forget buffs (or vice versa).
+ * A source-aware view of every table-wide Law currently standing.
  */
-export type StandingEffectSource =
-  | {
-      kind: "law";
-      id: string;
-      label: string;
-      effects: LawEffect[];
-    }
-  | {
-      kind: "patronage";
-      id: string;
-      label: string;
-      effects: LawEffect[];
-    };
+export type StandingEffectSource = {
+  kind: "law";
+  id: string;
+  label: string;
+  effects: LawEffect[];
+};
 
 /**
  * Source-aware standing effects for status displays, telemetry, and any future
@@ -61,7 +54,7 @@ export type StandingEffectSource =
  */
 export function getStandingEffectSources(
   G: HegemonyState,
-  playerID: PlayerId,
+  _playerID: PlayerId,
 ): StandingEffectSource[] {
   const sources: StandingEffectSource[] = [];
 
@@ -78,17 +71,6 @@ export function getStandingEffectSources(
     }
   }
 
-  for (const standing of politicianStandings(G)) {
-    if (standing.dominant && standing.patron === playerID) {
-      sources.push({
-        kind: "patronage",
-        id: standing.politician.id,
-        label: `${standing.politician.name}'s patronage`,
-        effects: standing.politician.patronBuff.effects,
-      });
-    }
-  }
-
   return sources;
 }
 
@@ -97,11 +79,17 @@ export function getStandingEffects(G: HegemonyState, playerID: PlayerId): LawEff
 }
 
 /** How many of the player's settlements answer to a scope. */
-function countSettlementsInScope(G: HegemonyState, playerID: PlayerId, scope: SettlementScope): number {
+function countSettlementsInScope(
+  G: HegemonyState,
+  playerID: PlayerId,
+  scope: SettlementScope,
+): number {
   let count = 0;
 
   for (const tileId of G.players[playerID].settlements) {
-    const settlement = getTile(G, tileId)?.settlements.find((candidate) => candidate.owner === playerID);
+    const settlement = getTile(G, tileId)?.settlements.find(
+      (candidate) => candidate.owner === playerID,
+    );
 
     if (settlement && matchesScope(settlement.kind, scope)) {
       count += 1;
@@ -116,7 +104,9 @@ function countPops(G: HegemonyState, playerID: PlayerId, pop: PopType): number {
   let count = 0;
 
   for (const tileId of G.players[playerID].settlements) {
-    const settlement = getTile(G, tileId)?.settlements.find((candidate) => candidate.owner === playerID);
+    const settlement = getTile(G, tileId)?.settlements.find(
+      (candidate) => candidate.owner === playerID,
+    );
 
     if (settlement) {
       count += settlement.pops[pop];
@@ -136,7 +126,7 @@ function scaled(count: number, amount: number, step: number | undefined): number
 export type LawIncomeContribution = {
   resource: Resource;
   amount: number;
-  /** The Law (or patron buff) that produced it — becomes the income breakdown's source. */
+  /** The Law that produced it — becomes the income breakdown's source. */
   label: string;
 };
 
@@ -150,7 +140,7 @@ export type LawIncomeContribution = {
 export function getLawIncomeContributions(
   G: HegemonyState,
   playerID: PlayerId,
-  baseIncome: Resources
+  baseIncome: Resources,
 ): LawIncomeContribution[] {
   const contributions: LawIncomeContribution[] = [];
   const effects = getStandingEffects(G, playerID);
@@ -168,7 +158,7 @@ export function getLawIncomeContributions(
         contributions.push({
           resource: effect.resource,
           amount: scaled(count, effect.amount, effect.step),
-          label: label(effect)
+          label: label(effect),
         });
         break;
       }
@@ -177,7 +167,7 @@ export function getLawIncomeContributions(
         contributions.push({
           resource: effect.resource,
           amount: scaled(count, effect.amount, effect.step),
-          label: label(effect)
+          label: label(effect),
         });
         break;
       }
@@ -197,20 +187,24 @@ export function getLawIncomeContributions(
           contributions.push({
             resource: primary,
             amount: settlement.pops[effect.pop] * effect.amount,
-            label: label(effect)
+            label: label(effect),
           });
         }
         break;
       }
       case "flatIncome":
-        contributions.push({ resource: effect.resource, amount: effect.amount, label: label(effect) });
+        contributions.push({
+          resource: effect.resource,
+          amount: effect.amount,
+          label: label(effect),
+        });
         break;
       case "thresholdHappiness": {
         const held = G.players[playerID].resources[effect.resource];
         contributions.push({
           resource: "happiness",
           amount: held >= effect.threshold ? effect.atOrAbove : effect.below,
-          label: label(effect)
+          label: label(effect),
         });
         break;
       }
@@ -238,7 +232,7 @@ export function getLawIncomeContributions(
       contributions.push({
         resource: effect.to,
         amount: Math.floor(surplus / effect.per) * effect.amount,
-        label: effectLabel(G, playerID, effect)
+        label: effectLabel(G, playerID, effect),
       });
     }
   }
@@ -246,7 +240,7 @@ export function getLawIncomeContributions(
   return contributions;
 }
 
-/** Which Law (or patron buff) an effect came from — for the income breakdown's source
+/** Which Law an effect came from — for the income breakdown's source
  *  column, so a player can always trace a number back to the stele that caused it. */
 function effectLabel(G: HegemonyState, playerID: PlayerId, effect: LawEffect): string {
   for (const active of G.activeLaws) {
@@ -254,12 +248,6 @@ function effectLabel(G: HegemonyState, playerID: PlayerId, effect: LawEffect): s
 
     if (card?.kind === "law" && card.effects.includes(effect)) {
       return card.name;
-    }
-  }
-
-  for (const politician of POLITICIANS) {
-    if (politician.patronBuff.effects.includes(effect)) {
-      return `${politician.name}'s patronage`;
     }
   }
 
@@ -276,7 +264,7 @@ export function applyLawActionCost(
   playerID: PlayerId,
   action: LawCostedAction,
   cost: Partial<Resources>,
-  context: { scope?: SettlementScope; pop?: PopType; buildingId?: string } = {}
+  context: { scope?: SettlementScope; pop?: PopType; buildingId?: string } = {},
 ): Partial<Resources> {
   const effects = getStandingEffects(G, playerID);
 
@@ -288,7 +276,9 @@ export function applyLawActionCost(
 
   for (const effect of effects) {
     if (effect.type === "actionCostMultiplier" && effect.action === action) {
-      for (const [resource, amount] of Object.entries(adjusted) as Array<[Resource, number | undefined]>) {
+      for (const [resource, amount] of Object.entries(adjusted) as Array<
+        [Resource, number | undefined]
+      >) {
         adjusted[resource] = Math.ceil((amount ?? 0) * effect.multiplier);
       }
     }
@@ -309,7 +299,10 @@ export function applyLawActionCost(
       continue;
     }
 
-    if (effect.buildingIds && (!context.buildingId || !effect.buildingIds.includes(context.buildingId as never))) {
+    if (
+      effect.buildingIds &&
+      (!context.buildingId || !effect.buildingIds.includes(context.buildingId as never))
+    ) {
       continue;
     }
 
@@ -353,19 +346,27 @@ function freeActionResources(effects: LawEffect[], action: LawCostedAction): Res
 }
 
 /** True when the player still holds an unspent free-action coupon for this action. */
-export function hasLawFreeAction(G: HegemonyState, playerID: PlayerId, action: LawCostedAction): boolean {
+export function hasLawFreeAction(
+  G: HegemonyState,
+  playerID: PlayerId,
+  action: LawCostedAction,
+): boolean {
   if (G.players[playerID].lawFreeActionsUsedThisYear.includes(action)) {
     return false;
   }
 
   return getStandingEffects(G, playerID).some(
-    (effect) => effect.type === "yearlyFreeAction" && effect.action === action
+    (effect) => effect.type === "yearlyFreeAction" && effect.action === action,
   );
 }
 
 /** Spend the year's free-action coupon. Called by the action AFTER it commits, so a
  *  refused move never burns the coupon. */
-export function consumeLawFreeAction(G: HegemonyState, playerID: PlayerId, action: LawCostedAction) {
+export function consumeLawFreeAction(
+  G: HegemonyState,
+  playerID: PlayerId,
+  action: LawCostedAction,
+) {
   if (hasLawFreeAction(G, playerID, action)) {
     G.players[playerID].lawFreeActionsUsedThisYear.push(action);
   }
@@ -378,7 +379,7 @@ export function applyLawBankRate(
   G: HegemonyState,
   playerID: PlayerId,
   material: string,
-  rate: { sell: number; buy: number }
+  rate: { sell: number; buy: number },
 ): { sell: number; buy: number } {
   let steps = 0;
 
@@ -392,10 +393,14 @@ export function applyLawBankRate(
     return rate;
   }
 
-  return {
-    sell: Math.max(1, rate.sell - steps),
-    buy: Math.max(1, rate.buy - steps)
-  };
+  const sell = Math.max(1, rate.sell - steps);
+  const buy = Math.max(1, rate.buy - steps);
+
+  // The Bank's defining invariant is that a round trip destroys value. At a compact
+  // 2:2 rate, improving both sides to 1:1 would create a lossless buy/sell cycle (and
+  // an infinite legal-move loop for any optimizer). Preserve one unit of spread at
+  // the floor; the Law still improves the sell side from 2 to 1.
+  return sell === 1 && buy === 1 ? { sell, buy: 2 } : { sell, buy };
 }
 
 /** The riders a Law hangs on founding a colony (Frontier Spirit). */
@@ -407,7 +412,7 @@ export function getFoundColonyRiders(G: HegemonyState, playerID: PlayerId) {
       riders.push({
         grantPop: effect.grantPop,
         happiness: effect.happiness,
-        label: effectLabel(G, playerID, effect)
+        label: effectLabel(G, playerID, effect),
       });
     }
   }

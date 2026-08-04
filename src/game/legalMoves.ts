@@ -47,6 +47,7 @@ import {
 import { advanceSetupTurn, beginGameplayTurn, closeAssembly, endTurn } from "./turn";
 import {
   activeLawIds,
+  availableLawReplacementIds,
   assemblyBribe,
   assemblyDiscardHeld,
   assemblyDraw,
@@ -56,11 +57,12 @@ import {
   assemblyVeto,
   assemblyVote,
   getResolutionCard,
-  isAtLawCap,
+  lawNeedsReplacement,
   nextDrawCost,
   POLITICIANS,
 } from "./assembly";
 import type { PoliticianId } from "./assembly";
+import { PLAYER_IDS } from "./data";
 import type {
   BuildingId,
   EventTableId,
@@ -129,7 +131,7 @@ export type LegalMove =
   //    off until the house rises.
   | { type: "assemblyDraw"; politician: PoliticianId; cost: Partial<Resources> }
   | { type: "assemblyDiscardHeld" }
-  | { type: "assemblyPropose"; replaces?: string }
+  | { type: "assemblyPropose"; replaces?: string; target?: PlayerId }
   | { type: "assemblyProposeRepeal"; cardId: string; cost: Partial<Resources> }
   | { type: "assemblyPass" }
   | { type: "assemblyBribe"; cost: Partial<Resources> }
@@ -312,7 +314,7 @@ export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove)
     case "assemblyDiscardHeld":
       return assemblyDiscardHeld(G, playerID);
     case "assemblyPropose":
-      return assemblyPropose(G, playerID, move.replaces);
+      return assemblyPropose(G, playerID, move.replaces, move.target);
     case "assemblyProposeRepeal":
       return assemblyProposeRepeal(G, playerID, move.cardId);
     case "assemblyPass":
@@ -386,10 +388,14 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove
     const standing = activeLawIds(G);
 
     if (card.kind === "directive" || !standing.includes(card.id)) {
-      if (card.kind === "law" && isAtLawCap(G)) {
+      if (card.kind === "directive") {
+        for (const target of PLAYER_IDS.filter((rival) => rival !== playerID)) {
+          moves.push({ type: "assemblyPropose", target });
+        }
+      } else if (lawNeedsReplacement(G)) {
         // At the cap a proposal must name its casualty — one move per candidate, so
         // the choice of what to tear down is itself an enumerated decision.
-        for (const cardId of standing) {
+        for (const cardId of availableLawReplacementIds(G)) {
           moves.push({ type: "assemblyPropose", replaces: cardId });
         }
       } else {
@@ -472,7 +478,7 @@ export function describeMove(move: LegalMove): string {
     case "assemblyDiscardHeld":
       return "set the drawn resolution aside";
     case "assemblyPropose":
-      return `propose the drawn resolution${move.replaces ? ` in place of ${move.replaces}` : ""}`;
+      return `propose the drawn resolution${move.target ? ` against ${move.target}` : ""}${move.replaces ? ` in place of ${move.replaces}` : ""}`;
     case "assemblyProposeRepeal":
       return `move to repeal ${getResolutionCard(move.cardId)?.name ?? move.cardId}${formatCost(move.cost)}`;
     case "assemblyPass":

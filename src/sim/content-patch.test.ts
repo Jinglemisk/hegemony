@@ -7,6 +7,7 @@ import {
   getOmenTable,
   getPlayerEventCards,
   getRiotTable,
+  getResolutionCards,
   getSeasonalEventCards,
   getTerrainDeck,
   installGameContent,
@@ -61,10 +62,12 @@ describe("sim content/tune patching", () => {
     expect(getRiotTable()).toBe(preset.riotTable);
     expect(getExpeditionTables()).toBe(preset.expeditionTables);
     expect(getOmenTable()).toBe(preset.omenTable);
+    expect(getResolutionCards()).toBe(preset.resolutions);
 
     installGameContent(null);
     expect(getBuildings()).toBe(authored.buildings);
     expect(getPlayerEventCards()).toBe(authored.playerEvents);
     expect(getRiotTable()).toBe(authored.riotTable);
+    expect(getResolutionCards()).toBe(authored.resolutions);
   });
 });

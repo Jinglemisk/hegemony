@@ -17,13 +17,8 @@ import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
  * The colonnade — four narrow columns, each politician standing over their own stack
  * of stelae.
  *
- * This one drawing does triple duty (design §1.2): stack height is POWER, the colour
- * that dominates a stack is the PATRON, and who owns the most stacks is the
- * Voice-of-the-Assembly race. Stratokles's danger is read the same way — his stack of
- * monuments and his clay colour — with no explicit "coup" meter here (owner ruling,
- * 2026-07-21: colour grading in the agora, the counter in the Victory ledger). Because
- * every one of these is read off `G.activeLaws` / `G.tallyMonuments` rather than
- * tracked, the picture can never disagree with the board.
+ * Stack height remains politician power and the leading author remains a descriptive
+ * patron. Voice is shown separately because its passed-resolution tally is permanent.
  *
  * During the async proposal round each column also carries a **Draw** button — you
  * draw from a politician by reaching up to their pillar, which makes the "pick the
@@ -74,7 +69,7 @@ function PoliticianColumn({
   drawCost: number;
   holding: boolean;
 }) {
-  const { politician, power, patron, dominant } = standing;
+  const { politician, power, patron } = standing;
   const { moves, viewerId } = useGameUi();
   const isStratokles = politician.id === "stratokles";
   const deckLeft =
@@ -111,6 +106,9 @@ function PoliticianColumn({
         <span className="aname">{politician.name}</span>
         <span className="aep">{politician.epithet}</span>
       </div>
+      <div className="aprise">
+        Author prize · {formatPrize(G.ruleset.assembly.prizes[politician.id])}
+      </div>
 
       {drawArmed ? (
         <DrawButton
@@ -131,12 +129,7 @@ function PoliticianColumn({
           {patron ? (
             <>
               <span className="dot" style={{ background: PLAYER_COLORS[patron] }} />
-              <b>{PLAYER_NAMES[patron]}</b>
-              {dominant ? (
-                <> · {politician.patronBuff.label}</>
-              ) : (
-                <> · {isStratokles ? "feeding him" : "not yet dominant"}</>
-              )}
+              <b>{PLAYER_NAMES[patron]}</b> · descriptive patron
             </>
           ) : (
             <span className="ametaNone">no patron — the stack is split</span>
@@ -196,6 +189,13 @@ function PoliticianColumn({
       </div>
     </div>
   );
+}
+
+function formatPrize(prize: Partial<HegemonyState["players"][PlayerId]["resources"]>): string {
+  return Object.entries(prize)
+    .filter(([, amount]) => Boolean(amount))
+    .map(([resource, amount]) => `+${amount} ${resource}`)
+    .join(" · ");
 }
 
 function DrawButton({

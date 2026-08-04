@@ -7,6 +7,8 @@ import {
   SEASONAL_EVENT_CARDS,
   TERRAIN_DECK,
 } from "./data";
+import { RESOLUTION_CARDS } from "./assembly/deck";
+import type { ResolutionCard } from "./assembly/types";
 import type { BuildingDefinition, BuildingId, EventCard, EventTableDefinition } from "./types";
 
 /**
@@ -33,6 +35,7 @@ export interface GameContent {
   riotTable: EventTableDefinition;
   expeditionTables: EventTableDefinition[];
   omenTable: EventTableDefinition;
+  resolutions: ResolutionCard[];
 }
 
 const AUTHORED_CONTENT: GameContent = {
@@ -43,6 +46,7 @@ const AUTHORED_CONTENT: GameContent = {
   riotTable: RIOT_TABLE,
   expeditionTables: EXPEDITION_TABLES,
   omenTable: OMEN_TABLE,
+  resolutions: RESOLUTION_CARDS,
 };
 
 let activeContent: GameContent = AUTHORED_CONTENT;
@@ -97,6 +101,14 @@ export function getOmenTable(): EventTableDefinition {
   return activeContent.omenTable;
 }
 
+export function getResolutionCards(): ResolutionCard[] {
+  return activeContent.resolutions;
+}
+
+export function getResolutionCard(cardId: string): ResolutionCard | null {
+  return activeContent.resolutions.find((card) => card.id === cardId) ?? null;
+}
+
 /**
  * DEV-ONLY. Install (or clear, with null) content overrides for the next game created.
  * A missing key leaves that override untouched; an explicit null clears it back to the
@@ -110,6 +122,7 @@ export function setContentOverrides(overrides: {
   riotTable?: EventTableDefinition | null;
   expeditionTables?: EventTableDefinition[] | null;
   omenTable?: EventTableDefinition | null;
+  resolutions?: ResolutionCard[] | null;
 }): void {
   activeContent = {
     ...activeContent,
@@ -133,6 +146,9 @@ export function setContentOverrides(overrides: {
       : {}),
     ...(Object.hasOwn(overrides, "omenTable")
       ? { omenTable: overrides.omenTable ?? AUTHORED_CONTENT.omenTable }
+      : {}),
+    ...(Object.hasOwn(overrides, "resolutions")
+      ? { resolutions: overrides.resolutions ?? AUTHORED_CONTENT.resolutions }
       : {}),
   };
 }
