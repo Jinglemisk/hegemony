@@ -84,8 +84,13 @@ describe("the event-table component (docs/archive/plans/event-tables.md)", () =>
   it("the bribe takes what gold there is, then blood for the shortfall", () => {
     const G = opening();
     G.players["0"].resources.gold = 2;
-    const bribeOnly: TableEffect[] = [{ type: "loseResource", resource: "gold", amount: 6, popLossIfShort: 1 }];
-    const table = { ...RIOT_TABLE, rows: RIOT_TABLE.rows.map((row) => ({ ...row, effects: bribeOnly })) };
+    const bribeOnly: TableEffect[] = [
+      { type: "loseResource", resource: "gold", amount: 6, popLossIfShort: 1 },
+    ];
+    const table = {
+      ...RIOT_TABLE,
+      rows: RIOT_TABLE.rows.map((row) => ({ ...row, effects: bribeOnly })),
+    };
 
     const { popsRemoved } = rollOnTable(G, "0", table);
 
@@ -147,7 +152,9 @@ describe("ventures (D10/Q16)", () => {
     const goldValue = (effect: TableEffect): number => {
       if (effect.type !== "gainResource" && effect.type !== "gainPop") return 0;
       if (effect.type === "gainPop") return 8;
-      const perUnit = { gold: 1, influence: 1.5, food: 1, wood: 1, stone: 1, happiness: 0 }[effect.resource];
+      const perUnit = { gold: 1, influence: 1.5, food: 1, wood: 1, stone: 1, happiness: 0 }[
+        effect.resource
+      ];
       return effect.amount * perUnit;
     };
 
@@ -155,7 +162,7 @@ describe("ventures (D10/Q16)", () => {
       const ev =
         table.rows.reduce(
           (sum, row) => sum + row.effects.reduce((rowSum, effect) => rowSum + goldValue(effect), 0),
-          0
+          0,
         ) / 6;
       // Stake 5 gold: EV of returns should sit near 4.65 (−7%), tolerance ±0.75.
       expect(ev, table.id).toBeGreaterThan(3.9);
@@ -176,7 +183,9 @@ describe("the yearly omen (PROVISIONAL, 2026-07-13)", () => {
     expect(effect.type).toBe("yearIncomeModifier");
 
     // The income projection carries the omen for every player, not just the roller.
-    const omenLine = calculateIncomeBreakdown(G, "1").find((entry) => entry.detail === "Yearly omen");
+    const omenLine = calculateIncomeBreakdown(G, "1").find(
+      (entry) => entry.detail === "Yearly omen",
+    );
     expect(omenLine).toBeDefined();
     if (effect.type === "yearIncomeModifier") {
       expect(omenLine!.resource).toBe(effect.resource);
@@ -223,8 +232,8 @@ describe("the yearly omen (PROVISIONAL, 2026-07-13)", () => {
       rows: [
         { roll: 1, label: "one", effects: [{ type: "none" }] },
         { roll: 2, label: "two", effects: [{ type: "none" }] },
-        { roll: 3, label: "three", effects: [{ type: "none" }] }
-      ]
+        { roll: 3, label: "three", effects: [{ type: "none" }] },
+      ],
     };
 
     for (let i = 0; i < 12; i += 1) {

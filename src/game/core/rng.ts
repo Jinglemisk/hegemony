@@ -4,10 +4,6 @@ export function expandDeck(cards: EventCard[]): EventCard[] {
   return cards.flatMap((card) => Array.from({ length: card.count }, () => card));
 }
 
-export function createSeed(): number {
-  return Math.floor(Math.random() * 0x1_0000_0000);
-}
-
 /**
  * One mulberry32 step: advance the 32-bit state and yield a unit float in [0, 1).
  * The returned state is what callers persist (e.g. on {@link HegemonyState.rng})

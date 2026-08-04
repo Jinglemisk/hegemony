@@ -1,5 +1,10 @@
-import { useEffect, useState } from "react";
-import { getAddPopsEffect, getEventEffectChoices, getEventPopTargetTileIds, getTile } from "../../../game/rules";
+import { useEffect, useMemo, useState } from "react";
+import {
+  getAddPopsEffect,
+  getEventEffectChoices,
+  getEventPopTargetTileIds,
+  getTile,
+} from "../../../game/rules";
 import { presentEventEffects } from "../../../ui/effects";
 import { AnnotatedText } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
@@ -21,7 +26,10 @@ export function PendingPlayerEventModal() {
   const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);
   const selectedEffects = choices[selectedChoiceIndex] ?? choices[0] ?? [];
   const popEffect = getAddPopsEffect(selectedEffects);
-  const targetTileIds = popEffect ? getEventPopTargetTileIds(G, playerID, popEffect) : [];
+  const targetTileIds = useMemo(
+    () => (popEffect ? getEventPopTargetTileIds(G, playerID, popEffect) : []),
+    [G, playerID, popEffect],
+  );
   const [targetTileId, setTargetTileId] = useState(targetTileIds[0] ?? "");
 
   useEffect(() => {
@@ -45,103 +53,122 @@ export function PendingPlayerEventModal() {
   }
 
   const canConfirm = isActive && (!popEffect || targetTileIds.length > 0);
-  const actionLabel = choices.length > 1 ? "Resolve Choice" : popEffect ? "Place Pops" : "Claim Event";
+  const actionLabel =
+    choices.length > 1 ? "Resolve Choice" : popEffect ? "Place Pops" : "Claim Event";
 
   return (
     // Blocking on purpose: a drawn event must be resolved, never dismissed.
-    <ModalShell backdropClassName="eventModalBackdrop" className="eventCardReveal" labelledBy="pending-event-title">
-        <div className="eventCardSurface">
-          <div className="eventCardCrest">
-            <span>Player Event</span>
-            <b>{G.players[playerID].name}</b>
-          </div>
+    <ModalShell
+      backdropClassName="eventModalBackdrop"
+      className="eventCardReveal"
+      labelledBy="pending-event-title"
+    >
+      <div className="eventCardSurface">
+        <div className="eventCardCrest">
+          <span>Player Event</span>
+          <b>{G.players[playerID].name}</b>
+        </div>
 
-          <div className="eventCardArtFrame">
-            <img alt={`${card.name} card art`} src={eventCardArtUrl(card)} />
-          </div>
+        <div className="eventCardArtFrame">
+          <img alt={`${card.name} card art`} src={eventCardArtUrl(card)} />
+        </div>
 
-          <div className="eventCardBody">
-            <span className="eventCardDeckLabel">Hegemony Event</span>
-            <h2 id="pending-event-title">{card.name}</h2>
-            <p>
-              <AnnotatedText text={card.text} />
-            </p>
+        <div className="eventCardBody">
+          <span className="eventCardDeckLabel">Hegemony Event</span>
+          <h2 id="pending-event-title">{card.name}</h2>
+          <p>
+            <AnnotatedText text={card.text} />
+          </p>
 
-            {choices.length > 1 ? (
-              <div className="eventChoiceStack" role="group" aria-label="Event choices">
-                {choices.map((effects, index) => {
-                  const optionPopEffect = getAddPopsEffect(effects);
-                  const disabled = Boolean(optionPopEffect && getEventPopTargetTileIds(G, playerID, optionPopEffect).length === 0);
+          {choices.length > 1 ? (
+            <div className="eventChoiceStack" role="group" aria-label="Event choices">
+              {choices.map((effects, index) => {
+                const optionPopEffect = getAddPopsEffect(effects);
+                const disabled = Boolean(
+                  optionPopEffect &&
+                  getEventPopTargetTileIds(G, playerID, optionPopEffect).length === 0,
+                );
 
-                  return (
-                    <button
-                      className={index === selectedChoiceIndex ? "selectedChoice eventChoiceButton" : "eventChoiceButton"}
-                      disabled={disabled}
-                      key={`${card.id}-${index}`}
-                      onClick={() => setSelectedChoiceIndex(index)}
-                    >
-                      <strong>Option {index + 1}</strong>
-                      <span>
-                        <EffectLine effect={presentEventEffects(effects, G.definition.content)} />
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="eventSingleEffect">
-                <strong>Effect</strong>
-                <span>
-                  <EffectLine effect={presentEventEffects(selectedEffects, G.definition.content)} />
-                </span>
-              </div>
-            )}
+                return (
+                  <button
+                    className={
+                      index === selectedChoiceIndex
+                        ? "selectedChoice eventChoiceButton"
+                        : "eventChoiceButton"
+                    }
+                    disabled={disabled}
+                    key={`${card.id}-${index}`}
+                    onClick={() => setSelectedChoiceIndex(index)}
+                  >
+                    <strong>Option {index + 1}</strong>
+                    <span>
+                      <EffectLine effect={presentEventEffects(effects, G.definition.content)} />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="eventSingleEffect">
+              <strong>Effect</strong>
+              <span>
+                <EffectLine effect={presentEventEffects(selectedEffects, G.definition.content)} />
+              </span>
+            </div>
+          )}
 
-            {popEffect ? (
-              <div className="fieldGroup eventTargetField">
-                <span>Settlement target</span>
-                {/* A list, not the map: this dialog blocks by design (a drawn card
+          {popEffect ? (
+            <div className="fieldGroup eventTargetField">
+              <span>Settlement target</span>
+              {/* A list, not the map: this dialog blocks by design (a drawn card
                     must be resolved), so the board behind it cannot be the picker
                     — exactly scope 4's carve-out. */}
-                <TileListbox
-                  ariaLabel="Settlement target"
-                  onChange={setTargetTileId}
-                  options={targetTileIds.map((tileId) => {
-                    const tile = getTile(G, tileId);
-                    const where = tile ? settlementPickerLabel(G, tile, playerID) : tileId;
+              <TileListbox
+                ariaLabel="Settlement target"
+                onChange={setTargetTileId}
+                options={targetTileIds.map((tileId) => {
+                  const tile = getTile(G, tileId);
+                  const where = tile ? settlementPickerLabel(G, tile, playerID) : tileId;
 
-                    return {
-                      value: tileId,
-                      icon: tile?.settlements.some((s) => s.owner === playerID && s.kind !== "colony")
-                        ? ("city" as const)
-                        : ("colony" as const),
-                      title: where,
-                      label: `Place the pops in ${where}.`
-                    };
-                  })}
-                  value={targetTileId || null}
-                />
-                {targetTileIds.length === 0 ? <em>No owned settlement has enough capacity for this option.</em> : null}
-              </div>
-            ) : null}
+                  return {
+                    value: tileId,
+                    icon: tile?.settlements.some((s) => s.owner === playerID && s.kind !== "colony")
+                      ? ("city" as const)
+                      : ("colony" as const),
+                    title: where,
+                    label: `Place the pops in ${where}.`,
+                  };
+                })}
+                value={targetTileId || null}
+              />
+              {targetTileIds.length === 0 ? (
+                <em>No owned settlement has enough capacity for this option.</em>
+              ) : null}
+            </div>
+          ) : null}
 
-            {!isActive ? (
-              <div className="selectionSummary negative">
-                <span>Only the active player can resolve this event.</span>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="eventCardFooter">
-            <button
-              className="primaryButton eventResolveButton"
-              disabled={!canConfirm}
-              onClick={() => moves.resolvePendingPlayerEvent(popEffect ? targetTileId : undefined, selectedChoiceIndex)}
-            >
-              {actionLabel}
-            </button>
-          </div>
+          {!isActive ? (
+            <div className="selectionSummary negative">
+              <span>Only the active player can resolve this event.</span>
+            </div>
+          ) : null}
         </div>
+
+        <div className="eventCardFooter">
+          <button
+            className="primaryButton eventResolveButton"
+            disabled={!canConfirm}
+            onClick={() =>
+              moves.resolvePendingPlayerEvent(
+                popEffect ? targetTileId : undefined,
+                selectedChoiceIndex,
+              )
+            }
+          >
+            {actionLabel}
+          </button>
+        </div>
+      </div>
     </ModalShell>
   );
 }

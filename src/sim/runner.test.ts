@@ -43,7 +43,13 @@ describe("runGame smoke", () => {
   });
 
   it("counts setup placements as turns (runs from a manual opening)", () => {
-    const G = runGame({ seed: 5, mode: "standard", opening: "manual", policy: randomPolicy, turns: 12 });
+    const G = runGame({
+      seed: 5,
+      mode: "standard",
+      opening: "manual",
+      policy: randomPolicy,
+      turns: 12,
+    });
 
     // 8 placements (4 capitals + 4 colonies) + 4 gameplay turns.
     expect(G.phase).toBe("gameplay");
@@ -51,14 +57,32 @@ describe("runGame smoke", () => {
   });
 
   it("trims the log when asked", () => {
-    const G = runGame({ seed: 7, mode: "standard", policy: randomPolicy, turns: 16, trimLogTo: 10 });
+    const G = runGame({
+      seed: 7,
+      mode: "standard",
+      policy: randomPolicy,
+      turns: 16,
+      trimLogTo: 10,
+    });
 
     expect(G.log.length).toBeLessThanOrEqual(10);
   });
 
   it("honours boardLayout: shuffled diverges from classic and is recorded on state", () => {
-    const classic = runGame({ seed: 5, mode: "standard", boardLayout: "classic", policy: randomPolicy, turns: 2 });
-    const shuffled = runGame({ seed: 5, mode: "standard", boardLayout: "shuffled", policy: randomPolicy, turns: 2 });
+    const classic = runGame({
+      seed: 5,
+      mode: "standard",
+      boardLayout: "classic",
+      policy: randomPolicy,
+      turns: 2,
+    });
+    const shuffled = runGame({
+      seed: 5,
+      mode: "standard",
+      boardLayout: "shuffled",
+      policy: randomPolicy,
+      turns: 2,
+    });
 
     expect(classic.boardLayout).toBe("classic");
     expect(shuffled.boardLayout).toBe("shuffled");
@@ -112,7 +136,13 @@ describe("action cap", () => {
 
     const forced: number[] = [];
     // A tiny action cap guarantees the force path runs even while moves remain.
-    const next = playTurn(G, stubborn, createSimRng(1), { onForceEndTurn: (_G, resolutions) => forced.push(resolutions) }, { maxActions: 2 });
+    const next = playTurn(
+      G,
+      stubborn,
+      createSimRng(1),
+      { onForceEndTurn: (_G, resolutions) => forced.push(resolutions) },
+      { maxActions: 2 },
+    );
 
     expect(next.turn).toBe(before + 1);
     // The intervention is surfaced (previously hidden): exactly one force-end fired.

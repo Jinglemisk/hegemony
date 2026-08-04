@@ -40,14 +40,14 @@ const SEARCH_INDEX: Array<SearchHit & { hay: string }> = RULEBOOK.flatMap((chapt
     entryId: null,
     label: chapter.title,
     context: chapter.blurb,
-    hay: [chapter.title, chapter.blurb, ...chapter.keywords].join(" ").toLowerCase()
+    hay: [chapter.title, chapter.blurb, ...chapter.keywords].join(" ").toLowerCase(),
   };
   const entryHits = chapter.entries.map((entry) => ({
     chapterId: chapter.id,
     entryId: entry.id,
     label: entry.label,
     context: chapter.title,
-    hay: `${entry.label} ${chapter.title} ${chapter.keywords.join(" ")}`.toLowerCase()
+    hay: `${entry.label} ${chapter.title} ${chapter.keywords.join(" ")}`.toLowerCase(),
   }));
   return [chapterHit, ...entryHits];
 });
@@ -67,10 +67,17 @@ function searchRulebook(query: string): SearchHit[] {
     const wordStart = index === 0 || hit.hay[index - 1] === " ";
     return { hit, rank: (wordStart ? 0 : 1) + (hit.entryId ? 0.5 : 0) };
   })
-    .filter((scored): scored is { hit: SearchHit & { hay: string }; rank: number } => scored !== null)
+    .filter(
+      (scored): scored is { hit: SearchHit & { hay: string }; rank: number } => scored !== null,
+    )
     .sort((a, b) => a.rank - b.rank)
     .slice(0, 8)
-    .map(({ hit }) => ({ chapterId: hit.chapterId, entryId: hit.entryId, label: hit.label, context: hit.context }));
+    .map(({ hit }) => ({
+      chapterId: hit.chapterId,
+      entryId: hit.entryId,
+      label: hit.label,
+      context: hit.context,
+    }));
 }
 
 // ── scroll-spy + jump (scoped to the consult panel's own scroll) ────────────────
@@ -153,7 +160,13 @@ function useCodexNav(section: SectionId, entries: NavEntry[]) {
   return { navRef, activeId, jumpTo };
 }
 
-export function CodexTab({ G, target }: { G: HegemonyState; target?: { chapter: string; nonce: number } | null }) {
+export function CodexTab({
+  G,
+  target,
+}: {
+  G: HegemonyState;
+  target?: { chapter: string; nonce: number } | null;
+}) {
   const [section, setSection] = useState<SectionId>(SECTIONS[0].id);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -199,7 +212,9 @@ export function CodexTab({ G, target }: { G: HegemonyState; target?: { chapter: 
 
   return (
     <>
-      <p className="codexLede">The whole rulebook, as this board plays it — search a topic, or read it through.</p>
+      <p className="codexLede">
+        The whole rulebook, as this board plays it — search a topic, or read it through.
+      </p>
 
       <div className="codexNav" ref={navRef}>
         <div className="codexSearch">
@@ -228,7 +243,12 @@ export function CodexTab({ G, target }: { G: HegemonyState; target?: { chapter: 
             <ul className="codexSearchResults" role="listbox">
               {results.map((hit) => (
                 <li key={`${hit.chapterId}-${hit.entryId ?? "top"}`}>
-                  <button className="codexSearchHit" type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => goTo(hit)}>
+                  <button
+                    className="codexSearchHit"
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => goTo(hit)}
+                  >
                     <span className="codexSearchHitLabel">{hit.label}</span>
                     <span className="codexSearchHitContext">{hit.context}</span>
                   </button>
@@ -246,7 +266,9 @@ export function CodexTab({ G, target }: { G: HegemonyState; target?: { chapter: 
         <nav className="compendiumTabs codexChapterTabs" aria-label="Rulebook chapters">
           {SECTIONS.map((candidate) => (
             <button
-              className={candidate.id === section ? "compendiumTab compendiumTabActive" : "compendiumTab"}
+              className={
+                candidate.id === section ? "compendiumTab compendiumTabActive" : "compendiumTab"
+              }
               key={candidate.id}
               onClick={() => setSection(candidate.id)}
               type="button"
@@ -260,7 +282,9 @@ export function CodexTab({ G, target }: { G: HegemonyState; target?: { chapter: 
           <nav className="codexJump" aria-label={`${chapter.title} contents`}>
             {entries.map((entry) => (
               <button
-                className={entry.id === activeId ? "codexJumpLink codexJumpLinkActive" : "codexJumpLink"}
+                className={
+                  entry.id === activeId ? "codexJumpLink codexJumpLinkActive" : "codexJumpLink"
+                }
                 key={entry.id}
                 onClick={() => jumpTo(entry.id)}
                 type="button"

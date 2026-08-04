@@ -22,10 +22,12 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
   // Longest name first, so no player's name can be a prefix of another's.
   const nameToId = useMemo(
     () =>
-      (Object.values(G.players).map((player) => [player.name, player.id]) as Array<[string, PlayerId]>).sort(
-        (a, b) => b[0].length - a[0].length
-      ),
-    [G.players]
+      (
+        Object.values(G.players).map((player) => [player.name, player.id]) as Array<
+          [string, PlayerId]
+        >
+      ).sort((a, b) => b[0].length - a[0].length),
+    [G.players],
   );
 
   const tagged = useMemo<TaggedEntry[]>(
@@ -35,9 +37,9 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
         .reverse()
         .map((entry) => ({
           entry,
-          player: nameToId.find(([name]) => entry.message.startsWith(name))?.[1] ?? null
+          player: nameToId.find(([name]) => entry.message.startsWith(name))?.[1] ?? null,
         })),
-    [G.log, nameToId]
+    [G.log, nameToId],
   );
 
   const visible = filter === "all" ? tagged : tagged.filter((row) => row.player === filter);
@@ -80,7 +82,9 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
         {players.map((player) => (
           <button
             aria-pressed={filter === player.id}
-            className={filter === player.id ? "chronicleFilter chronicleFilterActive" : "chronicleFilter"}
+            className={
+              filter === player.id ? "chronicleFilter chronicleFilterActive" : "chronicleFilter"
+            }
             key={player.id}
             onClick={() => setFilter((current) => (current === player.id ? "all" : player.id))}
             style={{ "--filter-color": PLAYER_COLORS[player.id] } as CSSProperties}
@@ -104,7 +108,9 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
               <p
                 className={player ? "chronicleLine chronicleLinePlayer" : "chronicleLine"}
                 key={entry.id}
-                style={player ? ({ "--line-color": PLAYER_COLORS[player] } as CSSProperties) : undefined}
+                style={
+                  player ? ({ "--line-color": PLAYER_COLORS[player] } as CSSProperties) : undefined
+                }
               >
                 <AnnotatedText text={entry.message} />
               </p>

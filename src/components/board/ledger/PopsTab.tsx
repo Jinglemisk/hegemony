@@ -3,7 +3,7 @@ import {
   calculateEconomyProjection,
   getDemotePopStatus,
   getPromotePopStatus,
-  totalPops
+  totalPops,
 } from "../../../game/rules";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
@@ -15,18 +15,20 @@ import type { OwnedHolding } from "../types";
 import { useGameUi } from "../GameUiContext";
 
 /** The social ladder's two directions per pop row (D8). */
-const LADDER_MOVES: Partial<Record<PopType, Array<{ kind: "promote" | "demote"; label: string; to: string }>>> = {
+const LADDER_MOVES: Partial<
+  Record<PopType, Array<{ kind: "promote" | "demote"; label: string; to: string }>>
+> = {
   citizens: [{ kind: "demote", label: "↓", to: "freeman" }],
   freemen: [
     { kind: "promote", label: "↑", to: "citizen" },
-    { kind: "demote", label: "↓", to: "slave" }
+    { kind: "demote", label: "↓", to: "slave" },
   ],
-  slaves: [{ kind: "promote", label: "↑", to: "freeman" }]
+  slaves: [{ kind: "promote", label: "↑", to: "freeman" }],
 };
 
 export function PopsTab({
   holdings,
-  onLadderRequest
+  onLadderRequest,
 }: {
   holdings: OwnedHolding[];
   onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
@@ -41,9 +43,9 @@ export function PopsTab({
   const totals = POP_TYPES.reduce(
     (counts, pop) => ({
       ...counts,
-      [pop]: holdings.reduce((total, { settlement }) => total + settlement.pops[pop], 0)
+      [pop]: holdings.reduce((total, { settlement }) => total + settlement.pops[pop], 0),
     }),
-    { citizens: 0, freemen: 0, slaves: 0 } as Record<PopType, number>
+    { citizens: 0, freemen: 0, slaves: 0 } as Record<PopType, number>,
   );
 
   return (
@@ -54,7 +56,9 @@ export function PopsTab({
             <AtlasIcon icon={pop} className="buildingButtonIcon" />
             <span>
               <strong>
-                <CodexTermLink chapter="population">{capitalize(formatPopLabel(pop, totals[pop]))}</CodexTermLink>
+                <CodexTermLink chapter="population">
+                  {capitalize(formatPopLabel(pop, totals[pop]))}
+                </CodexTermLink>
               </strong>
               <em>{totals[pop]} total</em>
             </span>
@@ -66,7 +70,9 @@ export function PopsTab({
               // modal — the PLAYER picks which settlement pays (a slave's yield
               // depends on its tile, so the town is the decision).
               const getStatus = move.kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
-              const possible = holdings.some(({ tile }) => getStatus(G, playerID, tile.id, pop).can);
+              const possible = holdings.some(
+                ({ tile }) => getStatus(G, playerID, tile.id, pop).can,
+              );
 
               return (
                 <button

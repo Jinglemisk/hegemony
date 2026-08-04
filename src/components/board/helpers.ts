@@ -3,7 +3,12 @@ import { capitalize } from "../../game/core/format";
 import type { Phase } from "../../client/controller";
 import type { ActionStatus } from "../../game/rules";
 import type { Ruleset } from "../../game/ruleset";
-import { POP_TYPES, popIncome, previewBuildBuilding, previewBuildingIncomeDelta } from "../../game/rules";
+import {
+  POP_TYPES,
+  popIncome,
+  previewBuildBuilding,
+  previewBuildingIncomeDelta,
+} from "../../game/rules";
 import type {
   BuildingDefinition,
   HegemonyState,
@@ -12,7 +17,7 @@ import type {
   PopType,
   Pops,
   Resources,
-  Settlement
+  Settlement,
 } from "../../game/types";
 import { presentBuildingEffects } from "../../ui/effects";
 import { formatResourceCost, formatResourceDelta } from "../../ui/formatters";
@@ -29,7 +34,8 @@ export function getOwnedHoldings(G: HegemonyState, playerID: PlayerId): OwnedHol
     })
     .filter((entry): entry is OwnedHolding => Boolean(entry))
     .sort((left, right) => {
-      const kindSort = SETTLEMENT_SORT[left.settlement.kind] - SETTLEMENT_SORT[right.settlement.kind];
+      const kindSort =
+        SETTLEMENT_SORT[left.settlement.kind] - SETTLEMENT_SORT[right.settlement.kind];
 
       return kindSort === 0 ? left.tile.id.localeCompare(right.tile.id) : kindSort;
     });
@@ -46,12 +52,15 @@ export function calculatePopEconomy(holdings: OwnedHolding[], ruleset: Ruleset):
   const economy: PopEconomy = {
     citizens: createEmptyResources(),
     freemen: createEmptyResources(),
-    slaves: createEmptyResources()
+    slaves: createEmptyResources(),
   };
 
   for (const { tile, settlement } of holdings) {
     for (const pop of POP_TYPES) {
-      addResources(economy[pop], popIncome(pop, settlement.pops[pop], tile.resource?.type ?? null, ruleset));
+      addResources(
+        economy[pop],
+        popIncome(pop, settlement.pops[pop], tile.resource?.type ?? null, ruleset),
+      );
     }
   }
 
@@ -75,10 +84,11 @@ export function getBuildingBenefitText(
   G: HegemonyState,
   playerID: PlayerId,
   tile: HexTile,
-  building: BuildingDefinition
+  building: BuildingDefinition,
 ) {
   const preview = previewBuildBuilding(G, playerID, tile.id, building.id);
-  const projected = preview?.incomeDelta ?? previewBuildingIncomeDelta(G, playerID, tile.id, building.id);
+  const projected =
+    preview?.incomeDelta ?? previewBuildingIncomeDelta(G, playerID, tile.id, building.id);
   const deltaText = formatResourceDelta(projected);
 
   return deltaText === "none" ? presentBuildingEffects(building.effects).text : deltaText;
@@ -89,12 +99,12 @@ export function buildingTooltipRows(
   status: ActionStatus,
   benefit: string,
   phase: Phase,
-  isActive: boolean
+  isActive: boolean,
 ) {
   return [
     `Cost: ${formatResourceCost(status.cost ?? building.cost)}.`,
     `Benefit: ${benefit}.`,
-    actionRequirementText(status, phase, isActive)
+    actionRequirementText(status, phase, isActive),
   ];
 }
 
@@ -113,7 +123,11 @@ export function actionRequirementText(status: ActionStatus | null, phase?: Phase
 /** The shared "can this act fire right now" gate for the map popovers' confirm buttons:
  *  the action is legal, it is the viewer's turn, and we are in gameplay. Was restated
  *  verbatim at four call sites (post-sprint-debt §5.4). */
-export function gameplayActionDisabled(status: ActionStatus | null, phase?: Phase, isActive = true) {
+export function gameplayActionDisabled(
+  status: ActionStatus | null,
+  phase?: Phase,
+  isActive = true,
+) {
   return !status?.can || !isActive || phase !== "gameplay";
 }
 

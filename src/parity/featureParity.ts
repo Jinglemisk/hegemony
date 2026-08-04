@@ -524,10 +524,6 @@ export const CONTENT_MANIFEST = {
 
 export type SeasonalEventContentId = (typeof SEASONAL_EVENT_CONTENT_IDS)[number];
 export type PlayerEventContentId = (typeof PLAYER_EVENT_CONTENT_IDS)[number];
-export type ResolutionContentId = (typeof RESOLUTION_CONTENT_IDS)[number];
-export type VictoryCardContentId = (typeof VICTORY_CARD_CONTENT_IDS)[number];
-
-export type ContentManifestFamily = keyof typeof CONTENT_MANIFEST;
 
 export const FEATURE_PARITY = {
   terrainEconomy: CONTENT_MANIFEST.terrain,
@@ -565,5 +561,3 @@ export const FEATURE_PARITY = {
     ],
   },
 } as const satisfies Record<string, ContentManifestEntry>;
-
-export type ConsequentialFeatureId = keyof typeof FEATURE_PARITY;

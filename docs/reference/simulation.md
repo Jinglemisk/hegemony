@@ -273,12 +273,14 @@ missing definitions are hydrated from their embedded ruleset plus authored conte
 legacy command costs are discarded, and settlement IDs are derived deterministically
 from placement history. New writes always use v2.
 
-**Phase 3.6 progress:** definition pinning, the canonical atomic transition, workflow
+**Phase 3.6 architecture:** definition pinning, the canonical atomic transition, workflow
 actors/projections, stable settlement and transfer IDs, versioned recipes, legacy migration,
 and post-transition invariants are implemented. Browser, simulation, and replay submit
 intent-only `GameCommand` values; policies receive the acting seat's redacted `PlayerView`.
 Replay errors distinguish unsupported history from deterministic command divergence, while
-authoritative saves and replay proofs run exact card-zone conservation.
+authoritative saves and replay proofs run exact card-zone conservation. Import, parity,
+dead-code, formatting, bounded-test, and browser-smoke enforcement is now shipped; see the
+[runtime architecture contract](architecture.md).
 
 ## Writing tests and scenarios
 

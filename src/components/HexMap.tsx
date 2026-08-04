@@ -9,7 +9,7 @@ import {
   cameraTransform,
   getShorelineEdges,
   hexCenter,
-  viewBoxToString
+  viewBoxToString,
 } from "../ui/hexGeometry";
 import { TileGroup } from "./board/map/TileGroup";
 import { useMapCamera } from "./board/map/useMapCamera";
@@ -26,13 +26,13 @@ const MAP_MODE_OPTIONS: Array<{ mode: MapMode; label: string; iconHref: string }
   {
     mode: "current",
     label: "Current",
-    iconHref: new URL("../../assets/map-modes/current-map-mode.svg", import.meta.url).href
+    iconHref: new URL("../../assets/map-modes/current-map-mode.svg", import.meta.url).href,
   },
   {
     mode: "terrain",
     label: "Terrain",
-    iconHref: new URL("../../assets/map-modes/terrain-map-mode.svg", import.meta.url).href
-  }
+    iconHref: new URL("../../assets/map-modes/terrain-map-mode.svg", import.meta.url).href,
+  },
 ];
 
 function HexMapComponent({
@@ -42,7 +42,7 @@ function HexMapComponent({
   selectedTileId,
   highlightTileIds,
   placementActive = false,
-  onTileAction
+  onTileAction,
 }: {
   G: HegemonyState;
   confirmation: {
@@ -59,19 +59,34 @@ function HexMapComponent({
 }) {
   const [mapMode, setMapMode] = useState<MapMode>("current");
   const highlightSet = useMemo(() => new Set(highlightTileIds ?? []), [highlightTileIds]);
-  const { viewBox, svgRef, cameraLayerRef, canZoomIn, canZoomOut, zoomBy, shouldSuppressTileClick, cameraHandlers } =
-    useMapCamera({ onTileAction });
+  const {
+    viewBox,
+    svgRef,
+    cameraLayerRef,
+    canZoomIn,
+    canZoomOut,
+    zoomBy,
+    shouldSuppressTileClick,
+    cameraHandlers,
+  } = useMapCamera({ onTileAction });
 
   const centers = useMemo(
-    () => G.board.tiles.map((tile) => ({ tile, q: tile.q, r: tile.r, ...hexCenter(tile.q, tile.r, HEX_SIZE) })),
-    [G.board.tiles]
+    () =>
+      G.board.tiles.map((tile) => ({
+        tile,
+        q: tile.q,
+        r: tile.r,
+        ...hexCenter(tile.q, tile.r, HEX_SIZE),
+      })),
+    [G.board.tiles],
   );
   // SHORELINE_RADIUS overhangs the tile so the foam reads as surf against the
   // land rather than a line drawn through it.
   const shorelineEdges = useMemo(() => getShorelineEdges(centers, SHORELINE_RADIUS), [centers]);
 
   const isTerrainMapMode = mapMode === "terrain";
-  const activeMapModeLabel = MAP_MODE_OPTIONS.find((option) => option.mode === mapMode)?.label ?? "Current";
+  const activeMapModeLabel =
+    MAP_MODE_OPTIONS.find((option) => option.mode === mapMode)?.label ?? "Current";
 
   const handleTileClick = (tileId: string, event: React.MouseEvent<SVGGElement>) => {
     // The camera already fired this tile's action on pointer-up; swallow the
@@ -164,8 +179,17 @@ function HexMapComponent({
                 .filter(({ tile }) => tile.id === confirmation.tileId)
                 .map(({ tile, x, y }) => (
                   <g key={`confirm-${tile.id}`} transform={`translate(${x} ${y})`}>
-                    <foreignObject className="tileConfirmObject" height={34} width={152} x={-76} y={49}>
-                      <div className="tileConfirmPrompt" onClick={(event) => event.stopPropagation()}>
+                    <foreignObject
+                      className="tileConfirmObject"
+                      height={34}
+                      width={152}
+                      x={-76}
+                      y={49}
+                    >
+                      <div
+                        className="tileConfirmPrompt"
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         <span>{confirmation.label}</span>
                         <button
                           aria-label={`Confirm ${confirmation.label}`}

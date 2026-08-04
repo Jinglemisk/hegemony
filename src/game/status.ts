@@ -1,5 +1,12 @@
 import { getBuildings } from "./content";
-import type { BuildingDefinition, BuildingId, HegemonyState, PlayerId, PopType, Pops } from "./types";
+import type {
+  BuildingDefinition,
+  BuildingId,
+  HegemonyState,
+  PlayerId,
+  PopType,
+  Pops,
+} from "./types";
 import { hasPops, isPositivePopSelection, totalPops } from "./core/pops";
 import { getOwnedSettlement, getGrownSettlementsThisTurn, getTile } from "./core/query";
 import { canAfford } from "./core/resources";
@@ -9,16 +16,20 @@ import {
   isAdjacentToCity,
   playerHasMovablePop,
   settlementBuildingSlots,
-  settlementCapacity
+  settlementCapacity,
 } from "./settlement";
 import { getAdjustedActionCost, getDiscountedGrowPopCost } from "./economy/cost";
 
-export function getFoundColonyStatus(G: HegemonyState, playerID: PlayerId, tileId: string): ActionStatus {
+export function getFoundColonyStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+): ActionStatus {
   const tile = getTile(G, tileId);
   const status: ActionStatus = {
     can: false,
     reasons: [],
-    cost: getAdjustedActionCost(G, playerID, "foundColony", G.ruleset.actionCosts.foundColony)
+    cost: getAdjustedActionCost(G, playerID, "foundColony", G.ruleset.actionCosts.foundColony),
   };
 
   if (!tile) {
@@ -42,7 +53,11 @@ export function getFoundColonyStatus(G: HegemonyState, playerID: PlayerId, tileI
   return status;
 }
 
-export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerId, tileId: string): ActionStatus {
+export function getUpgradeColonyToCityStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+): ActionStatus {
   const tile = getTile(G, tileId);
   const status: ActionStatus = {
     can: false,
@@ -54,8 +69,8 @@ export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerI
       G,
       playerID,
       "upgradeColonyToCity",
-      G.ruleset.actionCosts.upgradeColonyToCity
-    )
+      G.ruleset.actionCosts.upgradeColonyToCity,
+    ),
   };
 
   if (!tile) {
@@ -65,7 +80,11 @@ export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerI
 
   addPendingEventReason(G, status);
 
-  if (!tile.settlements.some((settlement) => settlement.owner === playerID && settlement.kind === "colony")) {
+  if (
+    !tile.settlements.some(
+      (settlement) => settlement.owner === playerID && settlement.kind === "colony",
+    )
+  ) {
     status.reasons.push("Requires your colony on this tile.");
   }
 
@@ -77,7 +96,12 @@ export function getUpgradeColonyToCityStatus(G: HegemonyState, playerID: PlayerI
     status.reasons.push("Cities cannot be adjacent.");
   }
 
-  if (!canAfford(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.upgradeColonyToCity)) {
+  if (
+    !canAfford(
+      G.players[playerID].resources,
+      status.cost ?? G.ruleset.actionCosts.upgradeColonyToCity,
+    )
+  ) {
     status.reasons.push("Not enough resources.");
   }
 
@@ -89,17 +113,21 @@ export function getBuildBuildingStatus(
   G: HegemonyState,
   playerID: PlayerId,
   tileId: string,
-  buildingId: BuildingId
+  buildingId: BuildingId,
 ): ActionStatus {
   const tile = getTile(G, tileId);
-  const building = getBuildings(G.definition.content).find((candidate) => candidate.id === buildingId);
+  const building = getBuildings(G.definition.content).find(
+    (candidate) => candidate.id === buildingId,
+  );
   const settlement = tile?.settlements.find(
-    (candidate) => candidate.owner === playerID && candidate.kind !== "colony"
+    (candidate) => candidate.owner === playerID && candidate.kind !== "colony",
   );
   const status: ActionStatus = {
     can: false,
     reasons: [],
-    cost: building ? getAdjustedActionCost(G, playerID, "buildBuilding", building.cost, building.id) : undefined
+    cost: building
+      ? getAdjustedActionCost(G, playerID, "buildBuilding", building.cost, building.id)
+      : undefined,
   };
 
   if (!tile) {
@@ -126,7 +154,7 @@ export function getBuildBuildingStatus(
     status.reasons.push(
       building.maxLevel === 1
         ? `${building.name} is already built here.`
-        : `${building.name} is at its maximum level (${building.maxLevel}).`
+        : `${building.name} is at its maximum level (${building.maxLevel}).`,
     );
   }
 
@@ -162,13 +190,13 @@ export function getGrowPopStatus(
   G: HegemonyState,
   playerID: PlayerId,
   tileId: string,
-  pop: PopType
+  pop: PopType,
 ): ActionStatus {
   const tile = getTile(G, tileId);
   const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
   const status: ActionStatus = {
     can: false,
-    reasons: []
+    reasons: [],
   };
 
   if (!tile) {
@@ -191,7 +219,10 @@ export function getGrowPopStatus(
     status.reasons.push("Already grew a pop here this turn.");
   }
 
-  if (totalPops(settlement.pops) + 1 > settlementCapacity(settlement, G.ruleset, G.definition.content)) {
+  if (
+    totalPops(settlement.pops) + 1 >
+    settlementCapacity(settlement, G.ruleset, G.definition.content)
+  ) {
     status.reasons.push("Settlement is at population capacity.");
   }
 
@@ -208,11 +239,11 @@ export function getMovePopsStatus(
   playerID: PlayerId,
   sourceTileId: string,
   targetTileId: string,
-  pops: Pops
+  pops: Pops,
 ): ActionStatus {
   const status: ActionStatus = {
     can: false,
-    reasons: []
+    reasons: [],
   };
   const sourceSettlement = getOwnedSettlement(G, sourceTileId, playerID);
   const targetSettlement = getOwnedSettlement(G, targetTileId, playerID);

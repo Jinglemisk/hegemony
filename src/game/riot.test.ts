@@ -72,7 +72,9 @@ describe("riot insurance", () => {
     expect(buyRiotInsurance(G, "0", "breadDole").ok).toBe(true);
     expect(buyRiotInsurance(G, "0", "breadDole").ok).toBe(false);
     expect(buyRiotInsurance(G, "0", "patronage").ok).toBe(true);
-    expect(buyRiotInsurance(G, "0", "concession", { tileId: P0_CAPITAL, from: "citizens" }).ok).toBe(true);
+    expect(
+      buyRiotInsurance(G, "0", "concession", { tileId: P0_CAPITAL, from: "citizens" }).ok,
+    ).toBe(true);
 
     expect(G.pendingRiot?.boughtInsurance).toHaveLength(3);
     expect(G.players["0"].resources.food).toBe(0);
@@ -87,10 +89,14 @@ describe("riot insurance", () => {
     capital.pops = { citizens: 2, freemen: 1, slaves: 0 };
     G.players["0"].resources.influence = 0;
 
-    expect(buyRiotInsurance(G, "0", "concession", { tileId: P0_CAPITAL, from: "citizens" }).ok).toBe(true);
+    expect(
+      buyRiotInsurance(G, "0", "concession", { tileId: P0_CAPITAL, from: "citizens" }).ok,
+    ).toBe(true);
 
     expect(capital.pops).toEqual({ citizens: 1, freemen: 2, slaves: 0 });
-    expect(buyRiotInsurance(G, "0", "concession", { tileId: P0_CAPITAL, from: "citizens" }).ok).toBe(false);
+    expect(
+      buyRiotInsurance(G, "0", "concession", { tileId: P0_CAPITAL, from: "citizens" }).ok,
+    ).toBe(false);
   });
 
   it("full insurance makes mild-tier pop loss impossible (worst case is food or gold)", () => {

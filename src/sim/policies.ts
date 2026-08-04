@@ -634,7 +634,10 @@ function beamPlan(
   type Node = { state: HegemonyState; firstMove: GameCommand | null; score: number };
   let frontier: Node[] = [{ state: G, firstMove: null, score: rootScore }];
   // The best terminal reachable so far; the baseline is "end the turn now" (do nothing).
-  let best: { firstMove: GameCommand | null; score: number } = { firstMove: null, score: rootScore };
+  let best: { firstMove: GameCommand | null; score: number } = {
+    firstMove: null,
+    score: rootScore,
+  };
 
   for (let depth = 0; depth < BEAM_DEPTH; depth += 1) {
     const children: Node[] = [];

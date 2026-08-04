@@ -27,16 +27,26 @@ export function demotionTarget(from: PopType): PopType {
   return from === "citizens" ? "freemen" : "slaves";
 }
 
-export function getCivicCalmStatus(G: HegemonyState, playerID: PlayerId, payment: CivicCalmPayment): ActionStatus {
+export function getCivicCalmStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  payment: CivicCalmPayment,
+): ActionStatus {
   const rules = G.ruleset.civicCalm;
-  const cost = payment === "influence" ? { influence: rules.influenceCost } : { gold: rules.goldCost };
+  const cost =
+    payment === "influence" ? { influence: rules.influenceCost } : { gold: rules.goldCost };
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("Calm is a gameplay action.");
   if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
-  if (G.players[playerID].civicCalmUsedThisTurn) reasons.push("One civic-calm action per turn — calm must not stack.");
+  if (G.players[playerID].civicCalmUsedThisTurn)
+    reasons.push("One civic-calm action per turn — calm must not stack.");
   if (!canAfford(G.players[playerID].resources, cost)) {
-    reasons.push(payment === "influence" ? `Stabilizing takes ${rules.influenceCost} influence.` : `Bread & circuses cost ${rules.goldCost} gold.`);
+    reasons.push(
+      payment === "influence"
+        ? `Stabilizing takes ${rules.influenceCost} influence.`
+        : `Bread & circuses cost ${rules.goldCost} gold.`,
+    );
   }
 
   return { can: reasons.length === 0, reasons, cost };
@@ -44,7 +54,11 @@ export function getCivicCalmStatus(G: HegemonyState, playerID: PlayerId, payment
 
 /** One `civicCalm` seam, two payments (D7): Stabilize Province (influence) or
  *  Bread & Circuses (gold), both +`happiness` and both burning the same shared throttle. */
-export function civicCalm(G: HegemonyState, playerID: PlayerId, payment: CivicCalmPayment): MoveResult {
+export function civicCalm(
+  G: HegemonyState,
+  playerID: PlayerId,
+  payment: CivicCalmPayment,
+): MoveResult {
   const status = getCivicCalmStatus(G, playerID, payment);
 
   if (!status.can) {
@@ -57,7 +71,7 @@ export function civicCalm(G: HegemonyState, playerID: PlayerId, payment: CivicCa
   player.civicCalmUsedThisTurn = true;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} ${payment === "influence" ? "stabilized the province" : "staged bread & circuses"} (+${G.ruleset.civicCalm.happiness} happiness).`
+    `${getPlayerName(G, playerID)} ${payment === "influence" ? "stabilized the province" : "staged bread & circuses"} (+${G.ruleset.civicCalm.happiness} happiness).`,
   );
   return MOVE_OK;
 }
@@ -66,13 +80,16 @@ export function civicCalm(G: HegemonyState, playerID: PlayerId, payment: CivicCa
  *  civic counterpart to the Granary's grow-pop food discount (economy/cost.ts). */
 function settlementPromoteDiscount(G: HegemonyState, settlement: Settlement): number {
   return settlement.buildings.reduce((sum, buildingId) => {
-    const building = getBuildings(G.definition.content).find((candidate) => candidate.id === buildingId);
+    const building = getBuildings(G.definition.content).find(
+      (candidate) => candidate.id === buildingId,
+    );
 
     return (
       sum +
       (building?.effects ?? []).reduce(
-        (effectSum, effect) => (effect.type === "promoteCostReduction" ? effectSum + effect.amount : effectSum),
-        0
+        (effectSum, effect) =>
+          effect.type === "promoteCostReduction" ? effectSum + effect.amount : effectSum,
+        0,
       )
     );
   }, 0);
@@ -91,7 +108,12 @@ function discountPromoteCost(cost: Partial<Resources>, discount: number): Partia
   return out;
 }
 
-export function getPromotePopStatus(G: HegemonyState, playerID: PlayerId, tileId: string, from: PopType): ActionStatus {
+export function getPromotePopStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  from: PopType,
+): ActionStatus {
   const settlement = getOwnedSettlement(G, tileId, playerID);
   const baseCost = G.ruleset.ladder.promoteCosts[from as "slaves" | "freemen"] ?? {};
   // Buildings discount first (the Gymnasion), then the Assembly's standing Laws —
@@ -101,21 +123,28 @@ export function getPromotePopStatus(G: HegemonyState, playerID: PlayerId, tileId
     playerID,
     "promotePop",
     discountPromoteCost(baseCost, settlement ? settlementPromoteDiscount(G, settlement) : 0),
-    { pop: from }
+    { pop: from },
   );
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("The ladder is a gameplay action.");
   if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
-  if (!PROMOTE_FROM.includes(from as "slaves" | "freemen")) reasons.push("Only slaves and freemen can rise.");
+  if (!PROMOTE_FROM.includes(from as "slaves" | "freemen"))
+    reasons.push("Only slaves and freemen can rise.");
   if (G.players[playerID].ladderUsedThisTurn) reasons.push("One ladder move per turn.");
-  if (!settlement || settlement.pops[from] < 1) reasons.push(`No ${formatPopName(from, 1)} there to promote.`);
+  if (!settlement || settlement.pops[from] < 1)
+    reasons.push(`No ${formatPopName(from, 1)} there to promote.`);
   if (!canAfford(G.players[playerID].resources, cost)) reasons.push("Can't afford the promotion.");
 
   return { can: reasons.length === 0, reasons, cost };
 }
 
-export function getDemotePopStatus(G: HegemonyState, playerID: PlayerId, tileId: string, from: PopType): ActionStatus {
+export function getDemotePopStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  from: PopType,
+): ActionStatus {
   // Demotion is FREE during your own riot (D8 — the mob forces it), and doesn't
   // burn the ladder throttle: the concession insurance rides on this rule.
   const duringOwnRiot = G.pendingRiot?.playerID === playerID;
@@ -126,7 +155,7 @@ export function getDemotePopStatus(G: HegemonyState, playerID: PlayerId, tileId:
         playerID,
         "demotePop",
         G.ruleset.ladder.demoteCosts[from as "citizens" | "freemen"] ?? {},
-        { pop: from }
+        { pop: from },
       );
   const reasons: string[] = [];
   const settlement = getOwnedSettlement(G, tileId, playerID);
@@ -134,16 +163,24 @@ export function getDemotePopStatus(G: HegemonyState, playerID: PlayerId, tileId:
   if (G.phase !== "gameplay") reasons.push("The ladder is a gameplay action.");
   if (G.pendingPlayerEvent) reasons.push("Resolve the pending event first.");
   if (G.pendingRiot && !duringOwnRiot) reasons.push("Resolve the pending riot first.");
-  if (!DEMOTE_FROM.includes(from as "citizens" | "freemen")) reasons.push("Only citizens and freemen can fall.");
-  if (!duringOwnRiot && G.players[playerID].ladderUsedThisTurn) reasons.push("One ladder move per turn.");
-  if (!settlement || settlement.pops[from] < 1) reasons.push(`No ${formatPopName(from, 1)} there to demote.`);
+  if (!DEMOTE_FROM.includes(from as "citizens" | "freemen"))
+    reasons.push("Only citizens and freemen can fall.");
+  if (!duringOwnRiot && G.players[playerID].ladderUsedThisTurn)
+    reasons.push("One ladder move per turn.");
+  if (!settlement || settlement.pops[from] < 1)
+    reasons.push(`No ${formatPopName(from, 1)} there to demote.`);
   if (!canAfford(G.players[playerID].resources, cost)) reasons.push("Can't afford the demotion.");
 
   return { can: reasons.length === 0, reasons, cost };
 }
 
 /** Climb one rung: slave→freeman (food) or freeman→citizen (gold). */
-export function promotePop(G: HegemonyState, playerID: PlayerId, tileId: string, from: PopType): MoveResult {
+export function promotePop(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  from: PopType,
+): MoveResult {
   const status = getPromotePopStatus(G, playerID, tileId, from);
   const settlement = getOwnedSettlement(G, tileId, playerID);
   const tile = getTile(G, tileId);
@@ -159,14 +196,19 @@ export function promotePop(G: HegemonyState, playerID: PlayerId, tileId: string,
   G.players[playerID].ladderUsedThisTurn = true;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} promoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} on ${tile.terrain}.`
+    `${getPlayerName(G, playerID)} promoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} on ${tile.terrain}.`,
   );
   return MOVE_OK;
 }
 
 /** Fall one rung: citizen→freeman or freeman→slave (influence; the freeman's fall
  *  also costs happiness). Free and throttle-exempt during your own riot. */
-export function demotePop(G: HegemonyState, playerID: PlayerId, tileId: string, from: PopType): MoveResult {
+export function demotePop(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  from: PopType,
+): MoveResult {
   const status = getDemotePopStatus(G, playerID, tileId, from);
   const settlement = getOwnedSettlement(G, tileId, playerID);
   const tile = getTile(G, tileId);
@@ -180,7 +222,8 @@ export function demotePop(G: HegemonyState, playerID: PlayerId, tileId: string, 
   payCost(G.players[playerID].resources, status.cost ?? {});
 
   if (!duringOwnRiot) {
-    G.players[playerID].resources.happiness -= G.ruleset.ladder.demoteHappinessPenalty[from as "citizens" | "freemen"];
+    G.players[playerID].resources.happiness -=
+      G.ruleset.ladder.demoteHappinessPenalty[from as "citizens" | "freemen"];
     G.players[playerID].ladderUsedThisTurn = true;
   }
 
@@ -188,7 +231,7 @@ export function demotePop(G: HegemonyState, playerID: PlayerId, tileId: string, 
   settlement.pops[to] += 1;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} demoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} on ${tile.terrain}${duringOwnRiot ? " — the mob demanded it" : ""}.`
+    `${getPlayerName(G, playerID)} demoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} on ${tile.terrain}${duringOwnRiot ? " — the mob demanded it" : ""}.`,
   );
   return MOVE_OK;
 }

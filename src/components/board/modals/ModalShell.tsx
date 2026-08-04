@@ -35,7 +35,7 @@ export function ModalShell({
   labelledBy,
   label,
   onDismiss,
-  dismissOnBackdrop = true
+  dismissOnBackdrop = true,
 }: ModalShellProps) {
   const surfaceRef = useRef<HTMLElement>(null);
 

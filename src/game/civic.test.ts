@@ -14,7 +14,11 @@ const P0_CAPITAL = TEST_OPENING_SETUP[0].capital.tileId;
 
 describe("civic calm (D7)", () => {
   it("stabilize province: 4 influence buys +3 happiness", () => {
-    const G = scenario().opening().mutate(clearPending).withResources("0", { influence: 4 }).build();
+    const G = scenario()
+      .opening()
+      .mutate(clearPending)
+      .withResources("0", { influence: 4 })
+      .build();
     const happiness = G.players["0"].resources.happiness;
 
     expect(civicCalm(G, "0", "influence").ok).toBe(true);
@@ -34,7 +38,11 @@ describe("civic calm (D7)", () => {
   });
 
   it("shares one throttle across both payments — calm must not stack", () => {
-    const G = scenario().opening().mutate(clearPending).withResources("0", { influence: 8, gold: 12 }).build();
+    const G = scenario()
+      .opening()
+      .mutate(clearPending)
+      .withResources("0", { influence: 8, gold: 12 })
+      .build();
 
     expect(civicCalm(G, "0", "influence").ok).toBe(true);
     expect(civicCalm(G, "0", "gold").ok).toBe(false);

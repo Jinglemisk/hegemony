@@ -10,14 +10,14 @@ export const RESOURCE_LABELS: Record<Resource, string> = {
   gold: "Gold",
   food: "Food",
   influence: "Influence",
-  happiness: "Happiness"
+  happiness: "Happiness",
 };
 
 export const SEASON_LABELS: Record<SeasonName, string> = {
   spring: "Spring",
   summer: "Summer",
   autumn: "Autumn",
-  winter: "Winter"
+  winter: "Winter",
 };
 
 /** "Spring" — the season a given season index falls in. */
@@ -32,7 +32,7 @@ export function yearLabel(seasonIndex: number) {
 
 export function formatResourceCost(cost: Partial<Resources>) {
   const entries = (Object.entries(cost) as Array<[Resource, number | undefined]>).filter(
-    ([, amount]) => (amount ?? 0) > 0
+    ([, amount]) => (amount ?? 0) > 0,
   );
 
   if (entries.length === 0) {
@@ -45,7 +45,9 @@ export function formatResourceCost(cost: Partial<Resources>) {
 }
 
 export function formatResourceDelta(resources: Resources) {
-  const entries = (Object.entries(resources) as Array<[Resource, number]>).filter(([, amount]) => amount !== 0);
+  const entries = (Object.entries(resources) as Array<[Resource, number]>).filter(
+    ([, amount]) => amount !== 0,
+  );
 
   if (entries.length === 0) {
     return "none";
@@ -71,6 +73,9 @@ export function formatPopLabel(pop: PopType, amount: number) {
   return formatPopName(pop, amount);
 }
 
-export function buildingName(buildingId: BuildingId, content: GameContent = getAuthoredGameContent()) {
+export function buildingName(
+  buildingId: BuildingId,
+  content: GameContent = getAuthoredGameContent(),
+) {
   return getBuilding(content, buildingId)?.name ?? buildingId;
 }

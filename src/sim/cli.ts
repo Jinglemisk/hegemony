@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import process from "node:process";
 
-import { createSeed } from "../game/core/rng";
+import { createCliSeed } from "./seed";
 import {
   previewBuildBuilding,
   previewFoundColony,
@@ -270,7 +270,7 @@ function parseTuningPreset(flags: Flags): TuningPresetId | null {
 }
 
 function cmdNew(flags: Flags, file: string) {
-  const seed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createSeed();
+  const seed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createCliSeed();
   const mode = parseMode(flags);
   const patch = parsePatch(flags);
   const boardLayout = parseBoard(flags);
@@ -722,7 +722,7 @@ function cmdBatch(flags: Flags) {
   const presetId = parseTuningPreset(flags);
   const resolved = resolveTuning(GAME_MODES[mode].ruleset, presetId, tune ?? {}, patch);
   const effectivePatch = resolved.rulesetPatch;
-  const baseSeed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createSeed();
+  const baseSeed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createCliSeed();
   const reportPath = typeof flags.report === "string" ? flags.report : ".sim/report.json";
   const csvPath = typeof flags.csv === "string" ? flags.csv : undefined;
 

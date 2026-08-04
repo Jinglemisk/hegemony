@@ -70,8 +70,8 @@ instead of rediscovering effects.
 ## Mandatory architecture contract
 
 The parity contract is only credible when every runtime crosses the same boundary.
-[Phase 3.6](plans/phase-3.6-architecture-hardening.md) therefore lands before new
-Phase 4 systems and establishes these rules:
+The [runtime architecture contract](reference/architecture.md), shipped in Phase 3.6,
+establishes these rules before new Phase 4 systems:
 
 1. **One immutable definition per match.** Rules and content are pinned by version/hash;
    mutable module-global content is forbidden. Concurrent matches may use different
@@ -124,13 +124,20 @@ Polis Builder remains at three cities. Standard prizes are +5 food / +3 stone / 
 +2 happiness; Low Numbers uses +2 / +2 / +3 / +1. The `master` policy's slow city
 result is recorded as a cross-turn planning limitation, not used to shorten the card.
 
-## Current initiative — Phase 3.6 architecture hardening
+## Phase 3.6 architecture hardening — shipped
 
-The [Phase 3.6 plan](plans/phase-3.6-architecture-hardening.md) is active. Definition
-isolation, the canonical atomic transition, workflow actors, player/spectator projections,
-fair AI observation, stable settlement/transfer identities, versioned recipes, replay
-compatibility handling, and post-transition invariants are implemented. The final slice
-adds mechanical import/parity/dead-code/format/CI enforcement and a browser smoke path.
+The [archived Phase 3.6 plan](archive/plans/phase-3.6-architecture-hardening.md) records
+definition isolation, the canonical atomic transition, workflow actors, safe projections,
+fair AI observation, stable identities, versioned recipes, replay compatibility, invariants,
+and the final mechanical enforcement slice. The living
+[architecture contract](reference/architecture.md) is the current authority.
+
+## Current initiative — Phase 4 luxury goods
+
+The [Luxury Goods plan](plans/luxury-goods.md) is active. Its opening slice establishes
+authoritative topology and stable shared-vertex marker geometry. The following vertical slice
+adds the six coastal assets, Port claiming, happiness, UI, AI behavior, and telemetry before
+player trade begins.
 
 ## Locked v1 finish line
 
@@ -175,8 +182,8 @@ threshold and scarcity-scaled prizes.
 | **2.5** | Absorbed | Debt sweep; remaining authoritative-cost and shared-interaction work travels in Phase 3.5                                                                               | Remaining debt has an explicit Phase 3.5 owner                                                                                  |
 | **3**   | Shipped  | Two-panel UI, Assembly, and influence-aware AI                                                                                                                          | Closed by the Phase 3.5 train                                                                                                   |
 | **3.5** | Shipped  | Truth, enforcement, shared interaction primitives, Assembly revision, AI repair, and validation                                                                         | Closeout evidence accepted; the missing separate human transcript remains disclosed                                             |
-| **3.6** | Active   | Per-match definition, canonical atomic commands, workflow actors, player projections, stable identities/versioned replay, invariants, and mechanical architecture gates | Browser, sim, replay, and async Assembly all cross one deterministic, player-safe engine boundary                               |
-| **4**   | Blocked  | Topology, six coastal luxury assets and Port, then v1 Catan-style player trade using universal ownership transfer and tested multi-seat workflow primitives             | Luxury/unrest economy holds; full trade negotiation is used and understandable in human games                                   |
+| **3.6** | Shipped  | Per-match definition, canonical atomic commands, workflow actors, player projections, stable identities/versioned replay, invariants, and mechanical architecture gates | Browser, sim, replay, and async Assembly all cross one deterministic, player-safe engine boundary                               |
+| **4**   | Active   | Topology, six coastal luxury assets and Port, then v1 Catan-style player trade using universal ownership transfer and tested multi-seat workflow primitives             | Luxury/unrest economy holds; full trade negotiation is used and understandable in human games                                   |
 | **5**   | Blocked  | Twelve National Ideas through a typed per-seat modifier channel; complete the intended typed Resolution and Idea effect families                                        | Draft has no automatic pick; every intended effect is authoritative, visible, observable, valued where relevant, and manifested |
 | **5.5** | Blocked  | V1 mechanics/content inventory, targeted balance and full-game validation, version/hash record, known caveats, and explicit v2 list                                     | The v1 mechanics freeze is published and representative games replay deterministically                                          |
 | **6**   | Deferred | Server-authoritative multiplayer: web/server/package split, validated protocol schemas, persistence, lobby, seat sessions, reconnect, synchronization, and deployment   | Four-player matches survive reconnect/deploy boundaries without leaking private state or diverging                              |

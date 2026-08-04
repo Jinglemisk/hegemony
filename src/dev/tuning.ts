@@ -175,21 +175,6 @@ export function effectiveValueAt(
   return path in map ? map[path] : defaultValueAt(path, presetId);
 }
 
-/** Drop any override keys that equal their code default, so a "changed back" field
- *  doesn't linger in the diff or the persisted patch. */
-export function pruneToChanges(
-  map: OverrideMap,
-  presetId: TuningPresetId | null = null,
-): OverrideMap {
-  const out: OverrideMap = {};
-  for (const [path, value] of Object.entries(map)) {
-    if (value !== defaultValueAt(path, presetId)) {
-      out[path] = value;
-    }
-  }
-  return out;
-}
-
 // ── Applying overrides ─────────────────────────────────────────────────────────────
 
 /** The ruleset PATCH implied by the `ruleset.*` overrides (the input to deriveRuleset),
@@ -207,12 +192,6 @@ export function rulesetPatchFromOverrides(map: OverrideMap): Record<string, unkn
     touched = true;
   }
   return touched ? patch : null;
-}
-
-/** Build a {@link Ruleset} patch from the `ruleset.*` overrides and derive it onto `base`. */
-export function applyRulesetOverrides(base: Ruleset, map: OverrideMap): Ruleset {
-  const patch = rulesetPatchFromOverrides(map);
-  return patch ? deriveRuleset(base, patch as never) : base;
 }
 
 function cloneBuildings(base: BuildingDefinition[]): BuildingDefinition[] {

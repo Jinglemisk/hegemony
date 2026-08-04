@@ -16,7 +16,7 @@ export function PopulationStepper({
   pops,
   maxByPop,
   totalLimit,
-  onChange
+  onChange,
 }: {
   pops: Pops;
   maxByPop: Pops;
@@ -28,7 +28,10 @@ export function PopulationStepper({
   function setAmount(pop: PopType, nextAmount: number) {
     const cappedByPop = Math.max(0, Math.min(nextAmount, maxByPop[pop]));
     const otherTotal = selectedTotal - pops[pop];
-    const cappedByTotal = totalLimit === undefined ? cappedByPop : Math.min(cappedByPop, Math.max(0, totalLimit - otherTotal));
+    const cappedByTotal =
+      totalLimit === undefined
+        ? cappedByPop
+        : Math.min(cappedByPop, Math.max(0, totalLimit - otherTotal));
     onChange({ ...pops, [pop]: cappedByTotal });
   }
 
@@ -54,7 +57,10 @@ export function PopulationStepper({
               onChange={(event) => setAmount(pop, Number(event.target.value))}
             />
             <button
-              disabled={pops[pop] >= maxByPop[pop] || (totalLimit !== undefined && selectedTotal >= totalLimit)}
+              disabled={
+                pops[pop] >= maxByPop[pop] ||
+                (totalLimit !== undefined && selectedTotal >= totalLimit)
+              }
               onClick={() => setAmount(pop, pops[pop] + 1)}
             >
               +

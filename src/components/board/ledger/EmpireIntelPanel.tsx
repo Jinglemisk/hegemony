@@ -21,7 +21,7 @@ import { ActiveEffectsList } from "../../ActiveEffectsList";
 const UNREST_TITLES: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
   discontent: "Discontent",
   unrest: "Unrest",
-  revolt: "Revolt"
+  revolt: "Revolt",
 };
 
 /** Player-facing sentence for the ledger's unrest banner. Uses the status numbers +
@@ -43,7 +43,7 @@ function EmpireIntelPanelComponent({
   onBuildBuildingRequest,
   onBankSell,
   onBankBuy,
-  onLadderRequest
+  onLadderRequest,
 }: {
   activeTab: LedgerTab;
   onClose: () => void;
@@ -58,9 +58,8 @@ function EmpireIntelPanelComponent({
   const colonyCount = holdings.length - cityCount;
   const popsUsed = holdings.reduce((sum, { settlement }) => sum + totalPops(settlement.pops), 0);
   const popsCapacity = holdings.reduce(
-    (sum, { settlement }) =>
-      sum + settlementCapacity(settlement, G.ruleset, G.definition.content),
-    0
+    (sum, { settlement }) => sum + settlementCapacity(settlement, G.ruleset, G.definition.content),
+    0,
   );
   const unrest = unrestStatus(G, playerID);
   const cardsHeld = victoryCardsHeld(G, playerID);
@@ -78,7 +77,10 @@ function EmpireIntelPanelComponent({
           <AtlasIcon icon="city" className="empireStatIcon" />
           <strong>{cityCount}</strong>
         </span>
-        <span className="empireStat" title={`${colonyCount} ${colonyCount === 1 ? "colony" : "colonies"}`}>
+        <span
+          className="empireStat"
+          title={`${colonyCount} ${colonyCount === 1 ? "colony" : "colonies"}`}
+        >
           <AtlasIcon icon="colony" className="empireStatIcon" />
           <strong>{colonyCount}</strong>
         </span>
@@ -108,8 +110,10 @@ function EmpireIntelPanelComponent({
           title={
             [
               unrest.deficitTurns > 0 ? `${unrest.deficitTurns} turn(s) of food deficit` : null,
-              unrest.timedModifiers > 0 ? `${unrest.timedModifiers} lingering unrest effect(s)` : null,
-              unrest.totalDeaths > 0 ? `${unrest.totalDeaths} pops lost so far` : null
+              unrest.timedModifiers > 0
+                ? `${unrest.timedModifiers} lingering unrest effect(s)`
+                : null,
+              unrest.totalDeaths > 0 ? `${unrest.totalDeaths} pops lost so far` : null,
             ]
               .filter(Boolean)
               .join(" · ") || undefined
@@ -124,28 +128,16 @@ function EmpireIntelPanelComponent({
 
       <div className="intelBody">
         {activeTab === "cities" ? (
-          <CitiesTab
-            holdings={holdings}
-            onBuildBuildingRequest={onBuildBuildingRequest}
-          />
+          <CitiesTab holdings={holdings} onBuildBuildingRequest={onBuildBuildingRequest} />
         ) : null}
         {activeTab === "buildings" ? (
-          <BuildingsTab
-            holdings={holdings}
-            onBuildBuildingRequest={onBuildBuildingRequest}
-          />
+          <BuildingsTab holdings={holdings} onBuildBuildingRequest={onBuildBuildingRequest} />
         ) : null}
         {activeTab === "pops" ? (
-          <PopsTab
-            holdings={holdings}
-            onLadderRequest={onLadderRequest}
-          />
+          <PopsTab holdings={holdings} onLadderRequest={onLadderRequest} />
         ) : null}
         {activeTab === "market" ? (
-          <MarketTab
-            onBankSell={onBankSell}
-            onBankBuy={onBankBuy}
-          />
+          <MarketTab onBankSell={onBankSell} onBankBuy={onBankBuy} />
         ) : null}
       </div>
     </div>

@@ -12,7 +12,7 @@ import { useGameUi } from "../GameUiContext";
  */
 export function MarketTab({
   onBankSell,
-  onBankBuy
+  onBankBuy,
 }: {
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
@@ -24,7 +24,8 @@ export function MarketTab({
   return (
     <div className="marketLedger">
       <p className="marketIntro">
-        Gold is the unit of account — the bank never barters. Rates follow this board's supply and hold all game.
+        Gold is the unit of account — the bank never barters. Rates follow this board's supply and
+        hold all game.
       </p>
 
       {TRADABLE_MATERIALS.map((material) => {

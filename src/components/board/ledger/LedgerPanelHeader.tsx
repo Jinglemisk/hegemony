@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 export function LedgerPanelHeader({
   title,
   icon,
-  onClose
+  onClose,
 }: {
   title: string;
   icon: ReactNode;

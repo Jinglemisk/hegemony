@@ -11,7 +11,7 @@ export function PlacementModalShell({
   canConfirm,
   onCancel,
   onConfirm,
-  children
+  children,
 }: {
   kicker: string;
   title: string;
@@ -56,7 +56,6 @@ export function PlacementModalShell({
     </ModalShell>
   );
 }
-
 
 export function CostRow({ cost, note }: { cost: Partial<Resources>; note?: string }) {
   return (

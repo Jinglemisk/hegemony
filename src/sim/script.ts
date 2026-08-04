@@ -1,11 +1,12 @@
 import { transition } from "../game/legalMoves";
+import type { GameCommand, TransitionResult } from "../game/legalMoves";
 import { createGameDefinition, hydrateGameDefinition } from "../game/definition";
 import type { GameDefinition } from "../game/definition";
 import { getAuthoredGameContent } from "../game/content";
 import { GAME_MODES, deriveRuleset } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
 import { createInitialStateFromDefinition } from "../game/state";
-import type { BoardLayout, HegemonyState } from "../game/types";
+import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
 import { normalizeCommandRecord } from "./io";
 import type { CommandRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
 import {
@@ -76,6 +77,15 @@ export class ReplayDivergenceError extends Error {
   }
 }
 
+/** Replay seam for the canonical command transition; exported for parity proof. */
+export function applyReplayCommand(
+  state: HegemonyState,
+  actor: PlayerId,
+  command: GameCommand,
+): TransitionResult {
+  return transition(state.definition, state, actor, command);
+}
+
 export function scriptFromSave(save: SaveFile): ScriptFile {
   return {
     version: SCRIPT_FORMAT_VERSION,
@@ -119,7 +129,7 @@ export function replayScript(script: ScriptFile | LegacyScriptFile): HegemonySta
   const records = script.commands ?? script.moves?.map(normalizeCommandRecord) ?? [];
 
   records.forEach(({ player, command }, index) => {
-    const result = transition(G.definition, G, player, command);
+    const result = applyReplayCommand(G, player, command);
 
     if (!result.ok) {
       throw new ReplayDivergenceError(index, command, result.reasons);

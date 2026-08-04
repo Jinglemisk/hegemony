@@ -38,7 +38,7 @@ export function TileListbox<T extends string>({
   value,
   onChange,
   ariaLabel,
-  className
+  className,
 }: {
   options: Array<TileListboxOption<T>>;
   value: T | null;
@@ -98,7 +98,9 @@ export function TileListbox<T extends string>({
         <button
           aria-selected={option.value === value}
           className={
-            option.value === value ? "placementPickerChip tileListboxRow selectedChoice" : "placementPickerChip tileListboxRow"
+            option.value === value
+              ? "placementPickerChip tileListboxRow selectedChoice"
+              : "placementPickerChip tileListboxRow"
           }
           disabled={option.disabled}
           key={option.value}

@@ -14,7 +14,6 @@ import type {
   AssemblyResult,
   AssemblySession,
   BallotItem,
-  BallotVote,
   DirectiveCard,
   DirectiveEffect,
   PoliticianId,
@@ -985,4 +984,4 @@ export function createPoliticianDecks(
   return { decks, discards, rng };
 }
 
-export type { AssemblySession, BallotItem, BallotVote, AssemblyResult };
+export type { AssemblySession, BallotItem, AssemblyResult };

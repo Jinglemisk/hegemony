@@ -1,12 +1,12 @@
 ---
-status: blocked
+status: active
 phase: "4"
-updated: 2026-08-03
+updated: 2026-08-04
 ---
 
 # Luxury Goods — feature plan & open decisions
 
-> **Status 2026-07-26 · blocked by Phase 3.5 · nothing built yet.**
+> **Status 2026-08-04 · active · opening topology/shared-vertex slice next.**
 > This file is the **single source** for luxury-goods mechanics. It absorbs
 > `docs/archive/plans/terrain-economy.md` §6 and the appendix's Q31/Q32.
 >
@@ -50,15 +50,15 @@ so the coastal + shared-vertex map work is now a **prerequisite** — there is n
 `isCoastalTile` → **topology** (S) → **shared-vertex geometry** (M, new) →
 **coastal luxuries + Port** (L) → v1 player trade (XL, required before the freeze).
 
-Two things gate the first line of code:
+The former prerequisites are now shipped:
 
-- **Phase 3.5 lands first.** The sim's `evaluateSmart` uses a _linear_ happiness penalty
+- **Phase 3.5 landed.** The sim's `evaluateSmart` uses a _linear_ happiness penalty
   (`src/sim/policies.ts:209,283`) that cannot see the −5/−10 riot cliff, so any luxury A/B
   run today would measure the bot's flaw, not the feature. Luxuries are a happiness
   feature; they are exactly what that bug blinds.
 - **`<EffectLine>` shipped in Phase 3.5** (PR #49) as the shared effect seam. Luxuries are
   new content — they use it, they don't fork it.
-- **Phase 3.6 lands next.** The feature depends on immutable per-match content, stable
+- **Phase 3.6 landed.** The feature uses immutable per-match content, stable
   settlement/asset ids, canonical atomic commands, player-safe projections, and the
   invariant/transfer seams that player trade will reuse.
 
@@ -337,8 +337,8 @@ goods are dropped.
 ## 7. Open owner questions
 
 **None** — all luxury owner questions are resolved (folded above). The Phase 4 opening PR is
-fully scoped; the plan stays `blocked` only until Phase 3.6 supplies stable identity and the
-canonical transition/projection boundaries Slice 2 requires.
+fully scoped and active. The opening PR establishes topology and canonical shared-vertex
+geometry without introducing assets or Port mechanics prematurely.
 
 ---
 

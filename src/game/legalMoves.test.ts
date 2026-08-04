@@ -65,10 +65,18 @@ describe("setup enumeration", () => {
 
   it("excludes tiles adjacent to an existing capital", () => {
     const G = scenario().build();
-    expect(applyTestCommand(G, "0", { type: "placeCapital", tileId: "0,0", pops: { citizens: 1, freemen: 2, slaves: 1 } }).ok).toBe(true);
+    expect(
+      applyTestCommand(G, "0", {
+        type: "placeCapital",
+        tileId: "0,0",
+        pops: { citizens: 1, freemen: 2, slaves: 1 },
+      }).ok,
+    ).toBe(true);
 
     const moves = enumerateLegalCommands(G, "1");
-    const offeredTiles = new Set(moves.map((move) => (move.type === "placeCapital" ? move.tileId : "")));
+    const offeredTiles = new Set(
+      moves.map((move) => (move.type === "placeCapital" ? move.tileId : "")),
+    );
 
     // 0,0 and its 6 neighbors are gone: 30 tiles * 15 compositions.
     expect(offeredTiles.has("0,0")).toBe(false);
@@ -279,7 +287,9 @@ describe("transition boundary guard", () => {
     expect(G.pendingPlayerEvent?.playerID).toBe("0");
 
     expect(applyTestCommand(structuredClone(G), "0", { type: "endTurn" }).ok).toBe(false);
-    expect(applyTestCommand(structuredClone(G), "0", { type: "resolveEvent", choiceIndex: 0 }).ok).toBe(true);
+    expect(
+      applyTestCommand(structuredClone(G), "0", { type: "resolveEvent", choiceIndex: 0 }).ok,
+    ).toBe(true);
   });
 
   it("refuses a gameplay move in setup and a setup move in gameplay", () => {
@@ -287,7 +297,11 @@ describe("transition boundary guard", () => {
     expect(applyTestCommand(structuredClone(setup), "0", { type: "endTurn" }).ok).toBe(false);
 
     const play = cleanGameplay();
-    const stray = { type: "placeCapital" as const, tileId: "2,0", pops: { citizens: 1, freemen: 2, slaves: 1 } };
+    const stray = {
+      type: "placeCapital" as const,
+      tileId: "2,0",
+      pops: { citizens: 1, freemen: 2, slaves: 1 },
+    };
     expect(applyTestCommand(structuredClone(play), "0", stray).ok).toBe(false);
   });
 });

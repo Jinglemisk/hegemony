@@ -49,7 +49,7 @@ export const WORLD_VIEW_BOX: ViewBox = {
   x: BASE_VIEW_BOX.x - BASE_VIEW_BOX.width * WORLD_MARGIN,
   y: BASE_VIEW_BOX.y - BASE_VIEW_BOX.height * WORLD_MARGIN,
   width: BASE_VIEW_BOX.width * (1 + WORLD_MARGIN * 2),
-  height: BASE_VIEW_BOX.height * (1 + WORLD_MARGIN * 2)
+  height: BASE_VIEW_BOX.height * (1 + WORLD_MARGIN * 2),
 };
 
 export const MIN_ZOOM = BASE_VIEW_BOX.width / WORLD_VIEW_BOX.width;
@@ -92,7 +92,7 @@ export function hexPoints(size: number) {
 export function hexCenter(q: number, r: number, size: number) {
   return {
     x: size * Math.sqrt(3) * (q + r / 2),
-    y: size * 1.5 * r
+    y: size * 1.5 * r,
   };
 }
 
@@ -105,7 +105,7 @@ export function getHexCorners(x: number, y: number, size: number) {
 
     return {
       x: x + Math.cos(angle) * size,
-      y: y + Math.sin(angle) * size
+      y: y + Math.sin(angle) * size,
     };
   });
 }
@@ -118,7 +118,7 @@ export function getNeighborCoordinate(q: number, r: number, sideIndex: number) {
     [-1, 1],
     [-1, 0],
     [0, -1],
-    [1, -1]
+    [1, -1],
   ];
   const [deltaQ, deltaR] = directions[sideIndex];
 
@@ -177,8 +177,8 @@ export function zoomViewBox(
     x: current.x + current.width / 2,
     y: current.y + current.height / 2,
     ratioX: 0.5,
-    ratioY: 0.5
-  }
+    ratioY: 0.5,
+  },
 ) {
   const nextZoom = clamp(zoomLevel, MIN_ZOOM, MAX_ZOOM);
   const nextWidth = BASE_VIEW_BOX.width / nextZoom;
@@ -188,7 +188,7 @@ export function zoomViewBox(
     x: focus.x - nextWidth * focus.ratioX,
     y: focus.y - nextHeight * focus.ratioY,
     width: nextWidth,
-    height: nextHeight
+    height: nextHeight,
   });
 }
 
@@ -203,7 +203,7 @@ export function clampViewBox(viewBox: ViewBox): ViewBox {
     x: clamp(viewBox.x, WORLD_VIEW_BOX.x, maxX),
     y: clamp(viewBox.y, WORLD_VIEW_BOX.y, maxY),
     width,
-    height
+    height,
   };
 }
 
@@ -223,7 +223,7 @@ export function seatViewBox(rest: ViewBox, inset: WorldInset): ViewBox {
   return clampViewBox({
     ...rest,
     x: rest.x + (inset.right - inset.left) / 2,
-    y: rest.y + (inset.bottom - inset.top) / 2
+    y: rest.y + (inset.bottom - inset.top) / 2,
   });
 }
 

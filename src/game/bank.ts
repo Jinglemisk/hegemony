@@ -29,7 +29,7 @@ export function deriveBankRates(tiles: HexTile[], rules: BankRules): BankRates {
   const uniform: BankRates = {
     wood: { ...rules.baseline },
     stone: { ...rules.baseline },
-    food: { ...rules.baseline }
+    food: { ...rules.baseline },
   };
 
   if (rules.derivation === "uniform") {
@@ -37,7 +37,8 @@ export function deriveBankRates(tiles: HexTile[], rules: BankRules): BankRates {
   }
 
   const counts = TRADABLE_MATERIALS.map(
-    (material) => [material, tiles.filter((tile) => tile.resource?.type === material).length] as const
+    (material) =>
+      [material, tiles.filter((tile) => tile.resource?.type === material).length] as const,
   );
   const most = Math.max(...counts.map(([, count]) => count));
   const least = Math.min(...counts.map(([, count]) => count));
@@ -65,11 +66,19 @@ export function deriveBankRates(tiles: HexTile[], rules: BankRules): BankRates {
  * through here so the preview, the status check and the trade itself can never
  * disagree about what an exchange costs.
  */
-export function getPlayerBankRate(G: HegemonyState, playerID: PlayerId, material: TradableMaterial) {
+export function getPlayerBankRate(
+  G: HegemonyState,
+  playerID: PlayerId,
+  material: TradableMaterial,
+) {
   return applyLawBankRate(G, playerID, material, G.bank[material]);
 }
 
-export function getBankSellStatus(G: HegemonyState, playerID: PlayerId, material: TradableMaterial): ActionStatus {
+export function getBankSellStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  material: TradableMaterial,
+): ActionStatus {
   const reasons: string[] = [];
   const rate = getPlayerBankRate(G, playerID, material);
 
@@ -82,7 +91,11 @@ export function getBankSellStatus(G: HegemonyState, playerID: PlayerId, material
   return { can: reasons.length === 0, reasons, cost: { [material]: rate.sell } };
 }
 
-export function getBankBuyStatus(G: HegemonyState, playerID: PlayerId, material: TradableMaterial): ActionStatus {
+export function getBankBuyStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  material: TradableMaterial,
+): ActionStatus {
   const reasons: string[] = [];
   const rate = getPlayerBankRate(G, playerID, material);
 
@@ -96,7 +109,11 @@ export function getBankBuyStatus(G: HegemonyState, playerID: PlayerId, material:
 }
 
 /** Sell `sell`-rate worth of a material for 1 gold. */
-export function bankSell(G: HegemonyState, playerID: PlayerId, material: TradableMaterial): MoveResult {
+export function bankSell(
+  G: HegemonyState,
+  playerID: PlayerId,
+  material: TradableMaterial,
+): MoveResult {
   const status = getBankSellStatus(G, playerID, material);
 
   if (!status.can) {
@@ -112,7 +129,11 @@ export function bankSell(G: HegemonyState, playerID: PlayerId, material: Tradabl
 }
 
 /** Buy 1 of a material for its `buy`-rate in gold. */
-export function bankBuy(G: HegemonyState, playerID: PlayerId, material: TradableMaterial): MoveResult {
+export function bankBuy(
+  G: HegemonyState,
+  playerID: PlayerId,
+  material: TradableMaterial,
+): MoveResult {
   const status = getBankBuyStatus(G, playerID, material);
 
   if (!status.can) {
@@ -123,6 +144,9 @@ export function bankBuy(G: HegemonyState, playerID: PlayerId, material: Tradable
   const resources = G.players[playerID].resources;
   resources.gold -= rate.buy;
   resources[material] += 1;
-  addLog(G, `${getPlayerName(G, playerID)} bought 1 ${material} from the bank for ${rate.buy} gold.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} bought 1 ${material} from the bank for ${rate.buy} gold.`,
+  );
   return MOVE_OK;
 }

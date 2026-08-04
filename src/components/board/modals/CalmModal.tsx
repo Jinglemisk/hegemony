@@ -8,24 +8,20 @@ import { useGameUi } from "../GameUiContext";
  * Civic calm (D7): one action per turn, two prices, same +happiness. A single
  * `civicCalm` seam in the engine — this modal is just the payment picker.
  */
-export function CalmModal({
-  onClose
-}: {
-  onClose: () => void;
-}) {
+export function CalmModal({ onClose }: { onClose: () => void }) {
   const { G, viewerId: playerID, isActive, moves } = useGameUi();
   const rules = G.ruleset.civicCalm;
   const options: Array<{ payment: CivicCalmPayment; name: string; blurb: string }> = [
     {
       payment: "influence",
       name: "Stabilize Province",
-      blurb: "Magistrates and envoys settle the districts."
+      blurb: "Magistrates and envoys settle the districts.",
     },
     {
       payment: "gold",
       name: "Bread & Circuses",
-      blurb: "Games, grain doles, and a very good day."
-    }
+      blurb: "Games, grain doles, and a very good day.",
+    },
   ];
 
   return (

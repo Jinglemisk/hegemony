@@ -18,7 +18,7 @@ export function DiscRail<T extends string>({
   onSelectTab,
   badges,
   ariaLabel,
-  discTitle
+  discTitle,
 }: {
   side: "left" | "right";
   tabs: Array<{ tab: T; label: string; icon: ReactNode }>;

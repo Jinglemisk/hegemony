@@ -1,5 +1,5 @@
 ---
-status: active
+status: shipped
 phase: "3.6"
 updated: 2026-08-04
 ---

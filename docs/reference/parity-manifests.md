@@ -10,7 +10,7 @@ the effective-value contract rather than replacing it.
 
 | Layer               | Authoritative seam                           | What it prevents                                                                                                                            |
 | ------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Player actions      | `src/parity/commandParity.ts`                | A new `GameCommand` cannot omit frontend initiation or simulation execution.                                                                 |
+| Player actions      | `src/parity/commandParity.ts`                | A new `GameCommand` cannot omit frontend initiation or simulation execution.                                                                |
 | Persistent state    | `src/game/activeEffects.ts#getActiveEffects` | A lasting mechanic cannot disappear from status, presentation, policy observation, or telemetry.                                            |
 | Effects and content | `src/parity/featureParity.ts`                | A passive/automatic effect type or shipped content ID cannot silently miss an engine, frontend, simulation, telemetry, or behavioral route. |
 | Effective values    | `docs/reference/effective-values.md`         | A routed consumer cannot substitute authored defaults for the effective content or cost the engine uses.                                    |

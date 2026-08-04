@@ -9,14 +9,23 @@ import { ModalShell } from "./ModalShell";
  * rolling modal below and the compendium's read-only listings. Pass `result: null`
  * for a reference render with no landed row.
  */
-export function EventTableRows({ table, result }: { table: EventTableDefinition; result: TableRollRecord | null }) {
+export function EventTableRows({
+  table,
+  result,
+}: {
+  table: EventTableDefinition;
+  result: TableRollRecord | null;
+}) {
   return (
     <ol className="eventTableRows">
       {table.rows.map((row) => {
         const landed = result?.tableId === table.id && result.modified === row.roll;
 
         return (
-          <li className={landed ? "eventTableRow eventTableRowLanded" : "eventTableRow"} key={row.roll}>
+          <li
+            className={landed ? "eventTableRow eventTableRowLanded" : "eventTableRow"}
+            key={row.roll}
+          >
             <span className="eventTableDie">{row.roll}</span>
             <span className="eventTableRowLabel">{row.label}</span>
             <span className="eventTableRowEffects">
@@ -50,7 +59,7 @@ export function EventTableModal({
   children,
   footer,
   subtitle,
-  onDismiss
+  onDismiss,
 }: {
   table: EventTableDefinition;
   /** Net roll modifier already declared (insurance − tier), shown before the roll. */

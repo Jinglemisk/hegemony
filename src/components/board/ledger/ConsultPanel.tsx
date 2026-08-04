@@ -18,7 +18,7 @@ import { CONSULT_TABS, ledgerTabLabel } from "./tabs";
 function ConsultPanelComponent({
   activeTab,
   codexTarget,
-  onClose
+  onClose,
 }: {
   activeTab: ConsultTab;
   /** A deep-link destination for the Codex (a rulebook chapter + nonce), or null. */

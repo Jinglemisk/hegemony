@@ -6,7 +6,7 @@ import {
   getFoundColonyStatus,
   getGrowPopStatus,
   getPromotePopStatus,
-  totalPops
+  totalPops,
 } from "../../../game/rules";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { getOwnedHoldings } from "../helpers";
@@ -23,7 +23,7 @@ import type { MapSelection, MapSelectionMode } from "./mapSelection";
 export function useMapSelection({
   G,
   playerID,
-  isActive
+  isActive,
 }: {
   G: HegemonyState;
   playerID: PlayerId;
@@ -35,7 +35,9 @@ export function useMapSelection({
 
   /** Arm a mode, or disarm it if the same verb is pressed again. */
   const arm = useCallback((mode: MapSelectionMode) => {
-    setSelection((current) => (current && current.mode.kind === mode.kind ? null : { mode, target: null }));
+    setSelection((current) =>
+      current && current.mode.kind === mode.kind ? null : { mode, target: null },
+    );
   }, []);
 
   const setTarget = useCallback((target: MapSelection["target"]) => {
@@ -47,7 +49,7 @@ export function useMapSelection({
     setSelection((current) =>
       current && current.mode.kind === "movePops"
         ? { mode: { kind: "movePops", sourceTileId }, target: null }
-        : current
+        : current,
     );
   }, []);
 
@@ -76,12 +78,16 @@ export function useMapSelection({
 
     switch (selection.mode.kind) {
       case "foundColony":
-        return G.board.tiles.filter((tile) => getFoundColonyStatus(G, playerID, tile.id).can).map((tile) => tile.id);
+        return G.board.tiles
+          .filter((tile) => getFoundColonyStatus(G, playerID, tile.id).can)
+          .map((tile) => tile.id);
 
       case "growPop":
         // Any pop type being growable is enough to offer the settlement.
         return holdings
-          .filter(({ tile }) => POP_TYPES.some((pop) => getGrowPopStatus(G, playerID, tile.id, pop).can))
+          .filter(({ tile }) =>
+            POP_TYPES.some((pop) => getGrowPopStatus(G, playerID, tile.id, pop).can),
+          )
           .map(({ tile }) => tile.id);
 
       case "movePops": {
@@ -91,22 +97,27 @@ export function useMapSelection({
           ? // Step two: anywhere of mine that isn't where they started.
             holdings.filter(({ tile }) => tile.id !== sourceTileId).map(({ tile }) => tile.id)
           : // Step one: only settlements with a body to spare.
-            holdings.filter(({ settlement }) => totalPops(settlement.pops) > 0).map(({ tile }) => tile.id);
+            holdings
+              .filter(({ settlement }) => totalPops(settlement.pops) > 0)
+              .map(({ tile }) => tile.id);
       }
 
       case "build":
         // Any building being buildable is enough to offer the settlement.
         return holdings
-          .filter(({ tile }) => getBuildBuildingOptions(G, playerID, tile.id).some(({ status }) => status.can))
+          .filter(({ tile }) =>
+            getBuildBuildingOptions(G, playerID, tile.id).some(({ status }) => status.can),
+          )
           .map(({ tile }) => tile.id);
 
       case "ladder": {
         const { kind, from } = selection.mode.request;
         const status = kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
 
-        return holdings.filter(({ tile }) => status(G, playerID, tile.id, from).can).map(({ tile }) => tile.id);
+        return holdings
+          .filter(({ tile }) => status(G, playerID, tile.id, from).can)
+          .map(({ tile }) => tile.id);
       }
-
     }
   }, [selection, G, playerID, isActive]);
 

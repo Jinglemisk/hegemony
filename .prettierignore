@@ -2,6 +2,8 @@ dist/
 node_modules/
 coverage/
 assets/
+docs/archive/
+docs/reports/
 package-lock.json
 *.html
 Hegemony.pdf

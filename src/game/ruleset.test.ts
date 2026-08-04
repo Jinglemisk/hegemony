@@ -30,7 +30,7 @@ describe("ruleset seam", () => {
   it("seeds starting resources from the ruleset", () => {
     const rich: Ruleset = {
       ...DEFAULT_RULESET,
-      startingResources: { ...DEFAULT_RULESET.startingResources, gold: 999 }
+      startingResources: { ...DEFAULT_RULESET.startingResources, gold: 999 },
     };
     const G = createInitialState(SEED, rich);
     expect(G.players["0"].resources.gold).toBe(999);
@@ -45,8 +45,8 @@ describe("ruleset seam", () => {
       ...DEFAULT_RULESET,
       popIncome: {
         ...DEFAULT_RULESET.popIncome,
-        citizens: { flat: { influence: 1, gold: 4, food: -2 }, primaryResource: 0 }
-      }
+        citizens: { flat: { influence: 1, gold: 4, food: -2 }, primaryResource: 0 },
+      },
     };
     expect(calculateIncome(capitalOfThreeCitizens(goldRush).G, "0").gold).toBe(12);
   });
@@ -58,8 +58,8 @@ describe("ruleset seam", () => {
       ...DEFAULT_RULESET,
       settlements: {
         ...DEFAULT_RULESET.settlements,
-        capital: { ...DEFAULT_RULESET.settlements.capital, popCapacity: 20 }
-      }
+        capital: { ...DEFAULT_RULESET.settlements.capital, popCapacity: 20 },
+      },
     };
     expect(settlementPopCapacity("capital", spacious)).toBe(20);
   });

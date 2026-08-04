@@ -73,9 +73,7 @@
   stroke: var(--accent);
   stroke-width: 2.6;
   stroke-dasharray: 8 5;
-  filter:
-    drop-shadow(0 0 5px rgb(192 70 28 / 48%))
-    drop-shadow(0 0 10px rgb(217 138 53 / 30%));
+  filter: drop-shadow(0 0 5px rgb(192 70 28 / 48%)) drop-shadow(0 0 10px rgb(217 138 53 / 30%));
 }
 
 .tileMetrics {
@@ -127,18 +125,14 @@
   paint-order: stroke fill;
   pointer-events: none;
   text-anchor: middle;
-  filter:
-    drop-shadow(0 0 1px rgb(255 248 231 / 96%))
-    drop-shadow(0 2px 2px rgb(24 18 16 / 34%));
+  filter: drop-shadow(0 0 1px rgb(255 248 231 / 96%)) drop-shadow(0 2px 2px rgb(24 18 16 / 34%));
 }
 
 .terrainMapMode .tileMetric {
   fill: #181210;
   stroke: #fff8e7;
   stroke-width: 5.4px;
-  filter:
-    drop-shadow(0 0 2px rgb(255 248 231 / 94%))
-    drop-shadow(0 3px 3px rgb(24 18 16 / 38%));
+  filter: drop-shadow(0 0 2px rgb(255 248 231 / 94%)) drop-shadow(0 3px 3px rgb(24 18 16 / 38%));
 }
 
 .settlementShape,
@@ -151,9 +145,7 @@
   stroke: var(--ivory);
   stroke-linejoin: round;
   stroke-width: 3;
-  filter:
-    drop-shadow(0 0 1px rgb(24 18 16 / 92%))
-    drop-shadow(0 1px 0 rgb(255 248 231 / 84%))
+  filter: drop-shadow(0 0 1px rgb(24 18 16 / 92%)) drop-shadow(0 1px 0 rgb(255 248 231 / 84%))
     drop-shadow(0 2px 3px rgb(24 18 16 / 34%));
   paint-order: stroke fill;
   vector-effect: non-scaling-stroke;
@@ -232,4 +224,3 @@
   border-color: rgb(177 58 40 / 78%);
   background: #b13a28;
 }
-

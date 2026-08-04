@@ -8,7 +8,7 @@ import {
   getEventPopTargetTileIds,
   resolvePendingPlayerEvent,
   totalPops,
-  unrestStatus
+  unrestStatus,
 } from "./rules";
 import { PLAYER_EVENT_CARDS } from "./data";
 import { createGame } from "./turn";
@@ -107,14 +107,16 @@ describe("unrest upkeep", () => {
     setPops(G, "0", { citizens: 3, freemen: 0, slaves: 0 }, NONE);
     G.players["0"].resources.happiness = 0;
     // -1/turn for 3 turns keeps happiness above the -5 threshold throughout.
-    G.players["0"].timedHappinessModifiers = [{
-      amountPerTurn: -1,
-      turnsRemaining: 3,
-      sourceCardId: "player-civil-discord",
-      sourceName: "Civil Discord",
-      sourceDeck: "player",
-      sourceScope: "activePlayer"
-    }];
+    G.players["0"].timedHappinessModifiers = [
+      {
+        amountPerTurn: -1,
+        turnsRemaining: 3,
+        sourceCardId: "player-civil-discord",
+        sourceName: "Civil Discord",
+        sourceDeck: "player",
+        sourceScope: "activePlayer",
+      },
+    ];
 
     applyUnrestUpkeep(G, "0");
     expect(G.players["0"].resources.happiness).toBe(-1);

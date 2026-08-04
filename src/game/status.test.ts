@@ -4,7 +4,7 @@ import {
   getFoundColonyStatus,
   getGrowPopStatus,
   getMovePopsStatus,
-  getUpgradeColonyToCityStatus
+  getUpgradeColonyToCityStatus,
 } from "./status";
 import { materialTile, owned, scenario, tile } from "./testing/scenario";
 import { PLAYER_EVENT_CARDS } from "./data";
@@ -78,7 +78,13 @@ describe("getMovePopsStatus", () => {
   });
 
   it("blocks on a pending player event", () => {
-    const status = getMovePopsStatus(withPendingEvent(twoSettlements()), "0", "1,0", "-1,0", pops(1, 0, 0));
+    const status = getMovePopsStatus(
+      withPendingEvent(twoSettlements()),
+      "0",
+      "1,0",
+      "-1,0",
+      pops(1, 0, 0),
+    );
     expect(status.reasons).toContain(PENDING_REASON);
   });
 });
@@ -87,7 +93,13 @@ describe("getGrowPopStatus", () => {
   const cityWith = (settlementPops: Pops) => {
     const G = scenario().withResources("0", "wealthy").build();
     const id = materialTile(G).id;
-    return { G: scenario().withResources("0", "wealthy").withSettlement("0", id, "city", settlementPops).build(), id };
+    return {
+      G: scenario()
+        .withResources("0", "wealthy")
+        .withSettlement("0", id, "city", settlementPops)
+        .build(),
+      id,
+    };
   };
 
   it("passes a legal grow and sets a discounted cost", () => {
@@ -107,7 +119,9 @@ describe("getGrowPopStatus", () => {
 
   it("requires the player to own the tile", () => {
     const { G, id } = cityWith(pops(1, 0, 0));
-    const unowned = G.board.tiles.find((candidate) => candidate.id !== id && candidate.settlements.length === 0);
+    const unowned = G.board.tiles.find(
+      (candidate) => candidate.id !== id && candidate.settlements.length === 0,
+    );
     if (!unowned) throw new Error("expected an empty tile on the board");
     const status = getGrowPopStatus(G, "0", unowned.id, "freemen");
     expect(status.reasons).toContain("Requires your settlement on this tile.");
@@ -143,7 +157,10 @@ describe("getBuildBuildingStatus", () => {
   const cityForBuild = () => {
     const probe = scenario().build();
     const id = materialTile(probe).id;
-    const G = scenario().withResources("0", "wealthy").withSettlement("0", id, "city", pops(1, 1, 1)).build();
+    const G = scenario()
+      .withResources("0", "wealthy")
+      .withSettlement("0", id, "city", pops(1, 1, 1))
+      .build();
     return { G, id };
   };
 
@@ -171,7 +188,10 @@ describe("getBuildBuildingStatus", () => {
   it("refuses to exceed a single-level building's cap", () => {
     const probe = scenario().build();
     const id = materialTile(probe).id;
-    const G = scenario().withResources("0", "wealthy").withSettlement("0", id, "city", pops(1, 1, 1)).build();
+    const G = scenario()
+      .withResources("0", "wealthy")
+      .withSettlement("0", id, "city", pops(1, 1, 1))
+      .build();
     owned(G, id, "0").buildings = ["gymnasion"];
     const status = getBuildBuildingStatus(G, "0", id, "gymnasion");
     expect(status.reasons).toContain("Gymnasion is already built here.");
@@ -180,7 +200,10 @@ describe("getBuildBuildingStatus", () => {
   it("refuses to exceed a multi-level building's cap", () => {
     const probe = scenario().build();
     const id = materialTile(probe).id;
-    const G = scenario().withResources("0", "wealthy").withSettlement("0", id, "city", pops(1, 1, 1)).build();
+    const G = scenario()
+      .withResources("0", "wealthy")
+      .withSettlement("0", id, "city", pops(1, 1, 1))
+      .build();
     owned(G, id, "0").buildings = ["marketplace", "marketplace"];
     const status = getBuildBuildingStatus(G, "0", id, "marketplace");
     expect(status.reasons.some((reason) => reason.includes("maximum level"))).toBe(true);
@@ -208,7 +231,10 @@ describe("getUpgradeColonyToCityStatus", () => {
   it("passes an isolated colony the player can afford", () => {
     const probe = scenario().build();
     const id = materialTile(probe).id;
-    const G = scenario().withResources("0", "wealthy").withSettlement("0", id, "colony", pops(0, 1, 1)).build();
+    const G = scenario()
+      .withResources("0", "wealthy")
+      .withSettlement("0", id, "colony", pops(0, 1, 1))
+      .build();
     const status = getUpgradeColonyToCityStatus(G, "0", id);
     expect(status.can).toBe(true);
     expect(status.reasons).toEqual([]);
@@ -221,7 +247,10 @@ describe("getUpgradeColonyToCityStatus", () => {
   });
 
   it("requires the player's colony on the tile", () => {
-    const G = scenario().withResources("0", "wealthy").withSettlement("0", "1,0", "city", pops(1, 0, 0)).build();
+    const G = scenario()
+      .withResources("0", "wealthy")
+      .withSettlement("0", "1,0", "city", pops(1, 0, 0))
+      .build();
     const status = getUpgradeColonyToCityStatus(G, "0", "1,0");
     expect(status.reasons).toContain("Requires your colony on this tile.");
     expect(status.reasons).toContain("Tile already has a city.");
@@ -262,7 +291,12 @@ describe("getFoundColonyStatus", () => {
   });
 
   it("blocks on a pending player event", () => {
-    const G = withPendingEvent(scenario().withResources("0", "wealthy").withSettlement("0", "1,0", "city", pops(2, 2, 2)).build());
+    const G = withPendingEvent(
+      scenario()
+        .withResources("0", "wealthy")
+        .withSettlement("0", "1,0", "city", pops(2, 2, 2))
+        .build(),
+    );
     const status = getFoundColonyStatus(G, "0", tile(G, "0,0").id);
     expect(status.reasons).toContain(PENDING_REASON);
   });

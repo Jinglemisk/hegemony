@@ -19,7 +19,7 @@ export const GAME_CONFIG = {
   boardLayout: "shuffled" as BoardLayout,
   // Dev testing default: auto-play the opening (seed-driven legal placements) so a
   // reload lands straight in gameplay. ?setup=manual restores hand placement.
-  autoOpeningForDev: true
+  autoOpeningForDev: true,
 };
 
 /**
@@ -51,21 +51,21 @@ export const TEST_OPENING_SETUP: OpeningSetupPlacement[] = [
   {
     playerID: "0",
     capital: { tileId: "-2,0", pops: { citizens: 1, freemen: 2, slaves: 1 } },
-    colony: { tileId: "3,0", pops: { citizens: 0, freemen: 1, slaves: 1 } }
+    colony: { tileId: "3,0", pops: { citizens: 0, freemen: 1, slaves: 1 } },
   },
   {
     playerID: "1",
     capital: { tileId: "0,-2", pops: { citizens: 1, freemen: 1, slaves: 2 } },
-    colony: { tileId: "0,3", pops: { citizens: 0, freemen: 1, slaves: 1 } }
+    colony: { tileId: "0,3", pops: { citizens: 0, freemen: 1, slaves: 1 } },
   },
   {
     playerID: "2",
     capital: { tileId: "2,0", pops: { citizens: 0, freemen: 2, slaves: 2 } },
-    colony: { tileId: "-3,0", pops: { citizens: 1, freemen: 1, slaves: 0 } }
+    colony: { tileId: "-3,0", pops: { citizens: 1, freemen: 1, slaves: 0 } },
   },
   {
     playerID: "3",
     capital: { tileId: "0,2", pops: { citizens: 2, freemen: 1, slaves: 1 } },
-    colony: { tileId: "0,-3", pops: { citizens: 0, freemen: 2, slaves: 0 } }
-  }
+    colony: { tileId: "0,-3", pops: { citizens: 0, freemen: 2, slaves: 0 } },
+  },
 ];
