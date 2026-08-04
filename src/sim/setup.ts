@@ -2,8 +2,8 @@ import { TEST_OPENING_SETUP } from "../game/config";
 import { createGameDefinition } from "../game/definition";
 import type { GameDefinition } from "../game/definition";
 import { getAuthoredGameContent } from "../game/content";
-import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
-import type { LegalMove } from "../game/legalMoves";
+import { enumerateLegalCommands, transition } from "../game/legalMoves";
+import type { GameCommand } from "../game/legalMoves";
 import { GAME_MODES, deriveRuleset } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
 import { createInitialStateFromDefinition } from "../game/state";
@@ -24,7 +24,7 @@ export type NewGameOptions = {
   /** Decides random-opening placements; unused for fixed/manual openings. */
   simRng: SimRng;
   /** Called once per applied setup move, for history recording. */
-  onMove?: (G: HegemonyState, player: PlayerId, move: LegalMove) => void;
+  onMove?: (G: HegemonyState, player: PlayerId, command: GameCommand) => void;
 };
 
 /**
@@ -50,7 +50,7 @@ export function buildNewGame({
       ruleset: patch ? deriveRuleset(base, patch) : base,
       content: getAuthoredGameContent(),
     });
-  const G = createInitialStateFromDefinition(resolvedDefinition, seed, boardLayout);
+  let G = createInitialStateFromDefinition(resolvedDefinition, seed, boardLayout);
 
   if (opening === "manual") {
     return G;
@@ -75,11 +75,11 @@ export function buildNewGame({
         throw new Error(`fixed opening: no placement for player ${G.currentPlayer}`);
       }
 
-      const move: LegalMove =
+      const command: GameCommand =
         G.phase === "setupCapital"
           ? { type: "placeCapital", tileId: placement.capital.tileId, pops: placement.capital.pops }
           : { type: "placeColony", tileId: placement.colony.tileId, pops: placement.colony.pops };
-      applyRecorded(G, move, onMove);
+      G = applyRecorded(G, command, onMove);
     }
 
     return G;
@@ -93,15 +93,15 @@ export function buildNewGame({
       throw new Error(`setup did not converge (seed ${seed}, mode ${mode})`);
     }
 
-    const moves = enumerateLegalMoves(G, G.currentPlayer);
+    const commands = enumerateLegalCommands(G, G.currentPlayer);
 
-    if (moves.length === 0) {
+    if (commands.length === 0) {
       throw new Error(
         `no legal setup placement for player ${G.currentPlayer} (seed ${seed}, mode ${mode})`,
       );
     }
 
-    applyRecorded(G, simRng.pick(moves), onMove);
+    G = applyRecorded(G, simRng.pick(commands), onMove);
   }
 
   return G;
@@ -109,15 +109,16 @@ export function buildNewGame({
 
 function applyRecorded(
   G: HegemonyState,
-  move: LegalMove,
-  onMove?: (G: HegemonyState, player: PlayerId, move: LegalMove) => void,
-) {
+  command: GameCommand,
+  onMove?: (G: HegemonyState, player: PlayerId, command: GameCommand) => void,
+): HegemonyState {
   const player = G.currentPlayer;
-  const result = applyMove(G, player, move);
+  const result = transition(G.definition, G, player, command);
 
   if (!result.ok) {
-    throw new Error(`setup move rejected: ${JSON.stringify(move)}`);
+    throw new Error(`setup command rejected: ${JSON.stringify(command)}`);
   }
 
-  onMove?.(G, player, move);
+  onMove?.(result.state, player, command);
+  return result.state;
 }

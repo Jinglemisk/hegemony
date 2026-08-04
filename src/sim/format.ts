@@ -4,7 +4,7 @@ import { seasonName, yearOf } from "../game/core/calendar";
 import { totalPops } from "../game/core/pops";
 import { calculateEconomyProjection } from "../game/economy/preview";
 import type { EconomyPreview } from "../game/economy/preview";
-import { describeMove, enumerateLegalMoves } from "../game/legalMoves";
+import { describeCommand, enumerateLegalOptions } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
 import { settlementCapacity } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
@@ -150,16 +150,17 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
 }
 
 export function renderLegal(G: HegemonyState): string {
-  const moves = enumerateLegalMoves(G, G.currentPlayer);
+  const options = enumerateLegalOptions(G, G.currentPlayer);
 
-  if (moves.length === 0) {
-    return "No legal moves (not this player's turn?).";
+  if (options.length === 0) {
+    return "No legal commands (not an eligible actor?).";
   }
 
-  const lines = moves.map(
-    (move, index) => `[${index}] ${describeMove(move, G.definition.content)}`,
+  const lines = options.map(
+    (option, index) =>
+      `[${index}] ${describeCommand(option.command, G.definition.content, option.cost)}`,
   );
-  lines.push(`(${moves.length} moves — apply one with: move index <N>)`);
+  lines.push(`(${options.length} commands — apply one with: move index <N>)`);
   return lines.join("\n");
 }
 

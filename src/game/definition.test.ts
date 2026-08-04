@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { produce } from "immer";
 
 import { createLowNumberContent, LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
 import { getAuthoredGameContent, getBuilding } from "./content";
@@ -10,7 +9,7 @@ import {
   hydrateGameDefinition,
   stableDefinitionHash,
 } from "./definition";
-import { applyMove, enumerateLegalMoves } from "./legalMoves";
+import { enumerateLegalCommands, transition } from "./legalMoves";
 import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
 import { createInitialStateFromDefinition } from "./state";
 
@@ -47,8 +46,8 @@ describe("game definitions", () => {
       ruleset: deriveRuleset(DEFAULT_RULESET, LOW_NUMBER_RULESET_PATCH),
       content: createLowNumberContent(getAuthoredGameContent()),
     });
-    const standardGame = createInitialStateFromDefinition(standard, 41);
-    const lowNumberGame = createInitialStateFromDefinition(lowNumber, 41);
+    let standardGame = createInitialStateFromDefinition(standard, 41);
+    let lowNumberGame = createInitialStateFromDefinition(lowNumber, 41);
     const standardVillaWood = getBuilding(standard.content, "villa")?.cost.wood;
     const lowNumberVillaWood = getBuilding(lowNumber.content, "villa")?.cost.wood;
 
@@ -57,10 +56,17 @@ describe("game definitions", () => {
 
     // Alternate real engine transitions so neither match can depend on whichever
     // definition another caller resolved most recently.
-    for (const game of [standardGame, lowNumberGame, standardGame, lowNumberGame]) {
-      const move = enumerateLegalMoves(game, game.currentPlayer)[0];
-      expect(move).toBeDefined();
-      expect(applyMove(game, game.currentPlayer, move).ok).toBe(true);
+    for (let step = 0; step < 2; step += 1) {
+      for (const kind of ["standard", "lowNumber"] as const) {
+        const game = kind === "standard" ? standardGame : lowNumberGame;
+        const command = enumerateLegalCommands(game, game.currentPlayer)[0];
+        expect(command).toBeDefined();
+        const result = transition(game.definition, game, game.currentPlayer, command);
+        expect(result.ok).toBe(true);
+        if (!result.ok) continue;
+        if (kind === "standard") standardGame = result.state;
+        else lowNumberGame = result.state;
+      }
     }
 
     expect(standardGame.definitionId).toBe(standard.identity.id);
@@ -77,15 +83,16 @@ describe("game definitions", () => {
     const game = createInitialStateFromDefinition(createModeDefinition("standard"), 9);
     game.definitionId = "tampered";
 
-    expect(() => enumerateLegalMoves(game, game.currentPlayer)).toThrow(/definition mismatch/);
+    expect(() => enumerateLegalCommands(game, game.currentPlayer)).toThrow(/definition mismatch/);
   });
 
   it("preserves the definition/ruleset alias through the browser's Immer transition", () => {
     const game = createInitialStateFromDefinition(createModeDefinition("standard"), 17);
-    const move = enumerateLegalMoves(game, game.currentPlayer)[0];
-    const next = produce(game, (draft) => {
-      expect(applyMove(draft, draft.currentPlayer, move).ok).toBe(true);
-    });
+    const command = enumerateLegalCommands(game, game.currentPlayer)[0];
+    const result = transition(game.definition, game, game.currentPlayer, command);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const next = result.state;
 
     expect(next.definition).toBe(game.definition);
     expect(next.ruleset).toBe(next.definition.ruleset);

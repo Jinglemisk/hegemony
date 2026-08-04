@@ -10,10 +10,10 @@ excavation. (Deliberately parked for now; see todo.md → Tooling.)
 Everything an AI needs is behind one seam, and any future CPU player should
 drive the same one:
 
-- **`src/game/legalMoves.ts`** — `enumerateLegalMoves(G, player)` returns typed
-  move descriptors (validated by the engine's own `status.ts` predicates);
-  `applyMove(G, player, move)` dispatches to the real mutators. A bot never
-  constructs moves by hand and never re-derives rules.
+- **`src/game/legalMoves.ts`** — `enumerateLegalCommands(G, player)` returns
+  intent-only commands validated by the engine's status predicates;
+  `transition(definition, G, player, command)` applies one atomically. A bot never
+  submits effective costs or re-derives rules.
 - **`src/sim/policies.ts`** — the brain. `Policy = { name, choose(G, moves, rng) }`:
   given the state and the legal moves, return one. That interface is the whole
   contract; new AIs are new entries in the `POLICIES` registry.
@@ -21,11 +21,10 @@ drive the same one:
   turn ends (action cap of 30 force-ends stuck turns); `runGame` wires setup +
   turns + hooks. The runner, CLI (`auto`/`batch`), and tests all share it.
 
-This is the current simulation seam, not yet the final runtime boundary. The browser
-still dispatches parallel controller mutators, `LegalMove` mixes client input with
-derived costs, and policies receive full authoritative state. Phase 3.6 replaces those
-with one atomic `GameCommand` transition and a fair player observation/projection shared
-with multiplayer. Existing policies remain deterministic baselines through that migration.
+The browser, simulation, and replay now share the atomic `GameCommand` transition.
+Policies still receive full authoritative state; Phase 3.6's next slice replaces that
+input with a fair player observation/projection shared with multiplayer. Existing policies
+remain deterministic baselines through that migration.
 
 ### Determinism contract
 

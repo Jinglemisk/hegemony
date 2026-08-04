@@ -146,8 +146,9 @@ describe("Aggregator", () => {
   it("counts a finished game as a real win, never as a cap leader", () => {
     const aggregator = new Aggregator();
     const seed = 700;
-    const G = runGame({ seed, mode: "standard", policy: randomPolicy, turns: 6 });
-    aggregator.beginGame(0, seed, G);
+    const played = runGame({ seed, mode: "standard", policy: randomPolicy, turns: 6 });
+    aggregator.beginGame(0, seed, played);
+    const G = structuredClone(played);
 
     // Force a real victory-race finish on the post-run state.
     G.phase = "gameOver";
@@ -188,9 +189,10 @@ describe("Aggregator", () => {
   it("credits a finished game's win to the winning seat's policy (winsByPolicy)", () => {
     const aggregator = new Aggregator();
     const seed = 900;
-    const G = runGame({ seed, mode: "standard", policy: randomPolicy, turns: 6 });
+    const played = runGame({ seed, mode: "standard", policy: randomPolicy, turns: 6 });
     const seatPolicies = { "0": "greedy", "1": "smart", "2": "smart", "3": "smart" } as const;
-    aggregator.beginGame(0, seed, G, { ...seatPolicies });
+    aggregator.beginGame(0, seed, played, { ...seatPolicies });
+    const G = structuredClone(played);
 
     G.phase = "gameOver";
     G.gameOverReason = "victoryRace";

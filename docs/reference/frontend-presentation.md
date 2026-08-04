@@ -75,9 +75,10 @@ focus, cancellation/expiry, and public/private projection contracts. Luxury clai
 trade responses, and National Idea drafts use it rather than creating feature-private
 overlay infrastructure.
 
-After Phase 3.6, controls dispatch canonical `GameCommand` values and render server/engine
-legal-option projections. They never call domain mutators directly or submit displayed
-costs and outcomes as authority.
+Controls dispatch canonical `GameCommand` values through `src/client/controller.ts` and
+render engine-derived legal-option/status projections. They never call domain mutators
+directly or submit displayed costs and outcomes as authority. Player-safe view models land
+in the next Phase 3.6 slice.
 
 ## Assembly presentation
 

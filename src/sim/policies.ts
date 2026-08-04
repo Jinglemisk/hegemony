@@ -11,10 +11,11 @@ import {
   currentVoteWeight,
   enactForEval,
   lawNeedsReplacement,
+  nextDrawCost,
 } from "../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../game/assembly";
-import type { LegalMove } from "../game/legalMoves";
-import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
+import type { GameCommand } from "../game/legalMoves";
+import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
 import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId } from "../game/types";
@@ -25,7 +26,7 @@ export type PolicyId = "random" | "greedy" | "smart" | "beam" | "political" | "s
 
 export type Policy = {
   name: PolicyId;
-  choose(G: HegemonyState, moves: LegalMove[], rng: SimRng): LegalMove;
+  choose(G: HegemonyState, commands: GameCommand[], rng: SimRng): GameCommand;
 };
 
 /**
@@ -36,7 +37,7 @@ export type Policy = {
 export const randomPolicy: Policy = {
   name: "random",
   choose(G, moves, rng) {
-    const byType = new Map<LegalMove["type"], LegalMove[]>();
+    const byType = new Map<GameCommand["type"], GameCommand[]>();
 
     for (const move of moves) {
       const group = byType.get(move.type) ?? [];
@@ -54,7 +55,7 @@ export const randomPolicy: Policy = {
 /** Move types handled by explicit policy rules rather than generic search. Stochastic
  * moves stay out to prevent RNG peeking; unit bank moves stay out because independently
  * optimizing both sides of a multi-step exchange can create wasteful buy/sell churn. */
-const RULE_DRIVEN_MOVE_TYPES: ReadonlySet<LegalMove["type"]> = new Set([
+const RULE_DRIVEN_MOVE_TYPES: ReadonlySet<GameCommand["type"]> = new Set([
   "fundExpedition",
   "resolveRiot",
   "buyRiotInsurance",
@@ -80,7 +81,7 @@ export function policyEconomyThresholds(ruleset: Ruleset) {
  * shared by the one-ply and beam searches so the anti-peek policy lives in one place.
  * Returns the move to play by rule, or null when none applies and the search proceeds.
  */
-function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMove | null {
+function resolveStochasticByRule(G: HegemonyState, moves: GameCommand[]): GameCommand | null {
   const playerID = G.currentPlayer;
   const thresholds = policyEconomyThresholds(G.ruleset);
 
@@ -97,7 +98,7 @@ function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMov
   // Ventures are stochastic too — a gold-rich bot funds one expedition a turn
   // (season-cycled so sims exercise all three tables), never peeking the roll.
   const goldVentures = moves.filter(
-    (move): move is Extract<LegalMove, { type: "fundExpedition" }> =>
+    (move): move is Extract<GameCommand, { type: "fundExpedition" }> =>
       move.type === "fundExpedition" && move.stake === "gold",
   );
   if (
@@ -141,9 +142,9 @@ function resolveStochasticByRule(G: HegemonyState, moves: LegalMove[]): LegalMov
  */
 function onePlyLookahead(
   G: HegemonyState,
-  moves: LegalMove[],
+  moves: GameCommand[],
   score: (g: HegemonyState, p: PlayerId) => number,
-): LegalMove {
+): GameCommand {
   const playerID = G.currentPlayer;
 
   const byRule = resolveStochasticByRule(G, moves);
@@ -161,17 +162,16 @@ function onePlyLookahead(
   }
 
   const before = score(G, playerID);
-  let best: LegalMove | null = null;
+  let best: GameCommand | null = null;
   let bestDelta = -Infinity;
 
   for (const move of candidates) {
-    const draft = structuredClone(G);
-
-    if (!applyMove(draft, playerID, move).ok) {
+    const result = transition(G.definition, G, playerID, move);
+    if (!result.ok) {
       continue;
     }
 
-    const delta = score(draft, playerID) - before;
+    const delta = score(result.state, playerID) - before;
 
     if (delta > bestDelta) {
       bestDelta = delta;
@@ -581,41 +581,9 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
 }
 
 /** Tunables for the within-turn beam search. Kept small so batch runtime stays sane; the
- *  top-W frontier + depth cap bound the clones per decision. */
+ *  top-W frontier + depth cap bound the transitions per decision. */
 const BEAM_WIDTH = 3;
 const BEAM_DEPTH = 4;
-
-/**
- * A cheap clone for search: deep-copies only what the RNG-free gameplay mutators touch
- * (players, board, transfers, and the rest of the small state) while SHARING the large
- * static structures — the definition/ruleset and both event decks — by reference, and resetting the
- * log to a fresh array (mutators push to it; a shared array would be corrupted). Because
- * the beam never applies a stochastic or deck-drawing move, none of the shared structures
- * are mutated, so this is safe and roughly an order of magnitude lighter than cloning G.
- */
-function cloneForSearch(G: HegemonyState): HegemonyState {
-  // `log` is destructured only to omit it from `rest` (a fresh array is used below).
-  const {
-    definition,
-    ruleset,
-    seasonalDrawPile,
-    seasonalDiscardPile,
-    playerDrawPile,
-    playerDiscardPile,
-    log: _log,
-    ...rest
-  } = G;
-  return {
-    ...structuredClone(rest),
-    definition,
-    ruleset,
-    seasonalDrawPile,
-    seasonalDiscardPile,
-    playerDrawPile,
-    playerDiscardPile,
-    log: [],
-  };
-}
 
 /**
  * Within-turn beam search over the current player's RNG-free action sequence. Expands each
@@ -628,9 +596,9 @@ function cloneForSearch(G: HegemonyState): HegemonyState {
  */
 function beamPlan(
   G: HegemonyState,
-  moves: LegalMove[],
+  moves: GameCommand[],
   score: (g: HegemonyState, p: PlayerId) => number,
-): LegalMove {
+): GameCommand {
   const playerID = G.currentPlayer;
 
   // Stochastic families are played by rule (shared with one-ply), never searched.
@@ -647,7 +615,7 @@ function beamPlan(
     return onePlyLookahead(G, moves, score);
   }
 
-  const branchable = (list: LegalMove[]) =>
+  const branchable = (list: GameCommand[]) =>
     list.filter((move) => !RULE_DRIVEN_MOVE_TYPES.has(move.type) && move.type !== "endTurn");
 
   const rootMoves = branchable(moves);
@@ -658,33 +626,34 @@ function beamPlan(
   const rootScore = score(G, playerID);
   const rngBefore = G.rng;
 
-  type Node = { state: HegemonyState; firstMove: LegalMove | null; score: number };
+  type Node = { state: HegemonyState; firstMove: GameCommand | null; score: number };
   let frontier: Node[] = [{ state: G, firstMove: null, score: rootScore }];
   // The best terminal reachable so far; the baseline is "end the turn now" (do nothing).
-  let best: { firstMove: LegalMove | null; score: number } = { firstMove: null, score: rootScore };
+  let best: { firstMove: GameCommand | null; score: number } = { firstMove: null, score: rootScore };
 
   for (let depth = 0; depth < BEAM_DEPTH; depth += 1) {
     const children: Node[] = [];
 
     for (const node of frontier) {
       const candidateMoves =
-        depth === 0 ? rootMoves : branchable(enumerateLegalMoves(node.state, playerID));
+        depth === 0 ? rootMoves : branchable(enumerateLegalCommands(node.state, playerID));
 
       for (const move of candidateMoves) {
-        const draft = cloneForSearch(node.state);
-        if (!applyMove(draft, playerID, move).ok) {
+        const result = transition(node.state.definition, node.state, playerID, move);
+        if (!result.ok) {
           continue;
         }
+        const nextState = result.state;
         // Anti-peek invariant: an RNG-free branch must never advance the seeded stream.
-        if (draft.rng !== rngBefore) {
+        if (nextState.rng !== rngBefore) {
           throw new Error(
             `beam branched on an RNG-consuming move "${move.type}" — add it to RULE_DRIVEN_MOVE_TYPES`,
           );
         }
 
         const firstMove = node.firstMove ?? move;
-        const nextScore = score(draft, playerID);
-        children.push({ state: draft, firstMove, score: nextScore });
+        const nextScore = score(nextState, playerID);
+        children.push({ state: nextState, firstMove, score: nextScore });
         if (nextScore > best.score) {
           best = { firstMove, score: nextScore };
         }
@@ -851,8 +820,8 @@ function expectedDeckDelta(
 function resolveAssemblyByHeuristic(
   G: HegemonyState,
   session: AssemblySession,
-  moves: LegalMove[],
-): LegalMove {
+  moves: GameCommand[],
+): GameCommand {
   const me = G.currentPlayer;
 
   if (session.phase === "closing") {
@@ -874,9 +843,9 @@ function resolveAssemblyByHeuristic(
 function chooseVote(
   G: HegemonyState,
   session: AssemblySession,
-  moves: LegalMove[],
+  moves: GameCommand[],
   me: PlayerId,
-): LegalMove {
+): GameCommand {
   const item = session.ballot[session.ballotIndex];
   const before = scoreEveryone(G);
   const assessment = assessVote(G, before, item, me);
@@ -964,12 +933,12 @@ function projectedPlainVote(
 function chooseProposeOrDiscard(
   G: HegemonyState,
   card: ResolutionCard,
-  moves: LegalMove[],
+  moves: GameCommand[],
   me: PlayerId,
-): LegalMove {
+): GameCommand {
   const before = scoreEveryone(G);
 
-  let best: LegalMove | null = null;
+  let best: GameCommand | null = null;
   let bestDelta = -Infinity;
   for (const move of moves) {
     if (move.type !== "assemblyPropose") {
@@ -1003,14 +972,14 @@ function chooseProposeOrDiscard(
 function chooseDrawRepealOrPass(
   G: HegemonyState,
   session: AssemblySession,
-  moves: LegalMove[],
+  moves: GameCommand[],
   me: PlayerId,
-): LegalMove {
+): GameCommand {
   const before = scoreEveryone(G);
   const influence = G.players[me].resources.influence;
 
   // The most valuable hostile-Law repeal on offer.
-  let bestRepeal: LegalMove | null = null;
+  let bestRepeal: GameCommand | null = null;
   let bestRepealDelta = -Infinity;
   for (const move of moves) {
     if (move.type !== "assemblyProposeRepeal") {
@@ -1031,14 +1000,14 @@ function chooseDrawRepealOrPass(
   // Every authored pass advances the same Voice ledger. Compare each deck's full
   // unordered composition, including its prize and the best rival target/replacement,
   // so Stratokles is a real comeback line without peeking at the shuffled top card.
-  let bestDraw: LegalMove | null = null;
+  let bestDraw: GameCommand | null = null;
   let bestDrawValue = -Infinity;
   let drawCost = Infinity;
   for (const move of moves) {
     if (move.type !== "assemblyDraw") {
       continue;
     }
-    const cost = move.cost.influence ?? 0;
+    const cost = nextDrawCost(G, me);
     const value = expectedDeckDelta(G, before, move.politician, me) - 2 * cost;
     if (value > bestDrawValue) {
       bestDrawValue = value;

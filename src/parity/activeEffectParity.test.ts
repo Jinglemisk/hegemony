@@ -499,7 +499,7 @@ describe("simulation and AI active-effect parity", () => {
 
       return masterPolicy.choose(
         G,
-        [{ type: "civicCalm", payment: "influence", cost: { influence: 4 } }, { type: "endTurn" }],
+        [{ type: "civicCalm", payment: "influence" }, { type: "endTurn" }],
         createSimRng(1),
       );
     };

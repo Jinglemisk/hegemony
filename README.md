@@ -78,11 +78,11 @@ setup.
 ## For Contributors
 
 The game is a React and TypeScript client over a deterministic, serialisable rules
-engine. The simulator and replay tooling already use its typed move protocol. The
-browser still has a parallel direct-mutator adapter; the accepted
-[Phase 3.6 architecture plan](docs/plans/phase-3.6-architecture-hardening.md) removes
-that final split and adds per-match content, explicit actors, player-safe projections,
-versioned replay, stable identities, and invariants before more v1 systems land.
+engine. Browser controls, simulation policies, and replay now submit intent-only
+`GameCommand` values through one atomic transition; effective costs remain engine-owned.
+The accepted [Phase 3.6 architecture plan](docs/plans/phase-3.6-architecture-hardening.md)
+next adds explicit workflow actors and player-safe projections, followed by versioned
+replay, stable identities, invariants, and mechanical enforcement before more v1 systems land.
 
 Engine calculators remain authoritative. `src/game/activeEffects.ts#getActiveEffects`
 reads those calculations and persistent state into typed source/scope/duration/expiry

@@ -48,7 +48,7 @@ Rules of the contract:
 Enforcement surfaces:
 
 - `.github/pull_request_template.md` requires three-axis evidence.
-- `src/parity/moveParity.ts` exhaustively maps every `LegalMove` to frontend and
+- `src/parity/commandParity.ts` exhaustively maps every `GameCommand` to frontend and
   simulation/AI paths.
 - `src/parity/featureParity.ts` exhaustively classifies Event, Table, Law,
   Directive, Building, and active-effect vocabularies plus every shipped content
@@ -126,9 +126,9 @@ result is recorded as a cross-turn planning limitation, not used to shorten the 
 
 ## Current initiative — Phase 3.6 architecture hardening
 
-The [Phase 3.6 plan](plans/phase-3.6-architecture-hardening.md) is active. Its first
-slice isolates immutable per-match definitions and proves that differently tuned games
-can run and replay concurrently without global-content leakage.
+The [Phase 3.6 plan](plans/phase-3.6-architecture-hardening.md) is active. Definition
+isolation and the canonical atomic transition are implemented. The next slice formalizes
+workflow actors and player/spectator-safe projections, including fair AI observation.
 
 ## Locked v1 finish line
 

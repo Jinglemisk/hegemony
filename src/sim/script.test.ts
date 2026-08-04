@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { resolveTuning } from "../dev/tuning";
 import { GAME_MODES } from "../game/ruleset";
-import type { MoveRecord, SaveFile } from "./io";
+import type { CommandRecord, SaveFile } from "./io";
 import { randomPolicy } from "./policies";
 import { createSimRng, deriveBotSeed } from "./rng";
 import { runGame, runTurns } from "./runner";
@@ -10,8 +10,34 @@ import { replayScript, scriptFromSave } from "./script";
 import { buildNewGame } from "./setup";
 
 describe("record/replay", () => {
+  it("replays legacy move records while stripping their derived costs", () => {
+    const commands: CommandRecord[] = [];
+    const G = runGame({
+      seed: 19,
+      mode: "standard",
+      policy: randomPolicy,
+      turns: 4,
+      hooks: { onMove: (_G, player, command) => commands.push({ player, command }) },
+    });
+    const moves = commands.map(({ player, command }) => ({
+      player,
+      move: { ...command, cost: { gold: 0 } },
+    }));
+
+    const replayed = replayScript({
+      version: 1,
+      seed: 19,
+      mode: "standard",
+      rulesetPatch: null,
+      opening: "random",
+      moves,
+    });
+
+    expect(JSON.stringify(replayed)).toBe(JSON.stringify(G));
+  });
+
   it("pins and replays the exact low-number definition after a JSON round trip", () => {
-    const moves: MoveRecord[] = [];
+    const commands: CommandRecord[] = [];
     const definition = resolveTuning(GAME_MODES.standard.ruleset, "low-number-core-v1").definition;
     const G = runGame({
       seed: 31,
@@ -19,7 +45,7 @@ describe("record/replay", () => {
       definition,
       policy: randomPolicy,
       turns: 12,
-      hooks: { onMove: (_G, player, move) => moves.push({ player, move }) },
+      hooks: { onMove: (_G, player, command) => commands.push({ player, command }) },
     });
     const serializedScript = JSON.parse(
       JSON.stringify({
@@ -29,7 +55,7 @@ describe("record/replay", () => {
         rulesetPatch: null,
         definition,
         opening: "random",
-        moves,
+        commands,
       }),
     );
 
@@ -40,13 +66,13 @@ describe("record/replay", () => {
   });
 
   it("replaying a recorded game reproduces the state byte-for-byte", () => {
-    const moves: MoveRecord[] = [];
+    const commands: CommandRecord[] = [];
     const G = runGame({
       seed: 21,
       mode: "standard",
       policy: randomPolicy,
       turns: 20,
-      hooks: { onMove: (_G, player, move) => moves.push({ player, move }) },
+      hooks: { onMove: (_G, player, command) => commands.push({ player, command }) },
     });
 
     const replayed = replayScript({
@@ -55,20 +81,20 @@ describe("record/replay", () => {
       mode: "standard",
       rulesetPatch: null,
       opening: "random",
-      moves,
+      commands,
     });
 
     expect(JSON.stringify(replayed)).toBe(JSON.stringify(G));
   });
 
   it("throws when the script diverges from the rules", () => {
-    const moves: MoveRecord[] = [];
+    const commands: CommandRecord[] = [];
     runGame({
       seed: 21,
       mode: "standard",
       policy: randomPolicy,
       turns: 4,
-      hooks: { onMove: (_G, player, move) => moves.push({ player, move }) },
+      hooks: { onMove: (_G, player, command) => commands.push({ player, command }) },
     });
 
     // Wrong seed → different decks/board draws → the recorded moves stop fitting.
@@ -79,24 +105,24 @@ describe("record/replay", () => {
         mode: "standard",
         rulesetPatch: null,
         opening: "random",
-        moves,
+        commands,
       }),
     ).toThrow(/replay diverged/);
   });
 
   it("carries the bot RNG stream so a continued replay matches a continued original", () => {
     const seed = 77;
-    const history: MoveRecord[] = [];
+    const history: CommandRecord[] = [];
     const rng = createSimRng(deriveBotSeed(seed));
     const G = buildNewGame({
       seed,
       mode: "standard",
       opening: "random",
       simRng: rng,
-      onMove: (_G, player, move) => history.push({ player, move }),
+      onMove: (_G, player, command) => history.push({ player, command }),
     });
-    runTurns(G, randomPolicy, rng, 12, {
-      onMove: (_G, player, move) => history.push({ player, move }),
+    const state = runTurns(G, randomPolicy, rng, 12, {
+      onMove: (_G, player, command) => history.push({ player, command }),
     });
 
     const save: SaveFile = {
@@ -107,7 +133,7 @@ describe("record/replay", () => {
       opening: "random",
       botRngState: rng.state(), // the ADVANCED stream position
       history,
-      state: G,
+      state,
     };
 
     const script = scriptFromSave(save);
@@ -118,15 +144,27 @@ describe("record/replay", () => {
     const replayedBotRngState = script.botRngState ?? deriveBotSeed(seed);
 
     // Continue both from their parked streams → identical futures.
-    const continuedOriginal = structuredClone(save.state);
-    runTurns(continuedOriginal, randomPolicy, createSimRng(save.botRngState), 8);
-    const continuedReplay = structuredClone(replayedState);
-    runTurns(continuedReplay, randomPolicy, createSimRng(replayedBotRngState), 8);
+    const continuedOriginal = runTurns(
+      structuredClone(save.state),
+      randomPolicy,
+      createSimRng(save.botRngState),
+      8,
+    );
+    const continuedReplay = runTurns(
+      structuredClone(replayedState),
+      randomPolicy,
+      createSimRng(replayedBotRngState),
+      8,
+    );
     expect(JSON.stringify(continuedReplay)).toBe(JSON.stringify(continuedOriginal));
 
     // Control: the old reset-to-start behavior diverges — which is the bug this fixes.
-    const continuedReset = structuredClone(replayedState);
-    runTurns(continuedReset, randomPolicy, createSimRng(deriveBotSeed(seed)), 8);
+    const continuedReset = runTurns(
+      structuredClone(replayedState),
+      randomPolicy,
+      createSimRng(deriveBotSeed(seed)),
+      8,
+    );
     expect(JSON.stringify(continuedReset)).not.toBe(JSON.stringify(continuedOriginal));
   });
 });

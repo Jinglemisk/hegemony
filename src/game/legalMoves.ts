@@ -75,6 +75,8 @@ import type {
   TradableMaterial,
 } from "./types";
 import { assertStateDefinition } from "./definition";
+import type { GameDefinition } from "./definition";
+import type { LogEntry } from "./types";
 
 /**
  * Legal-move enumeration + a uniform dispatcher over the engine's mutators, so a
@@ -94,33 +96,26 @@ import { assertStateDefinition } from "./definition";
  * automatically at the start of every gameplay turn).
  */
 
-export type LegalMove =
+/**
+ * Serializable player intent. Commands contain only choices the player is allowed
+ * to make; effective costs, blocked reasons, and random outcomes stay engine-owned.
+ */
+export type GameCommand =
   | { type: "placeCapital"; tileId: string; pops: Pops }
   | { type: "placeCity"; tileId: string; pops: Pops }
   | { type: "placeColony"; tileId: string; pops: Pops }
-  | {
-      type: "foundColony";
-      tileId: string;
-      sourceTileId: string;
-      pop: PopType;
-      cost: Partial<Resources>;
-    }
-  | { type: "upgradeColonyToCity"; tileId: string; cost: Partial<Resources> }
-  | { type: "buildBuilding"; tileId: string; buildingId: BuildingId; cost: Partial<Resources> }
-  | { type: "growPop"; tileId: string; pop: PopType; cost: Partial<Resources> }
+  | { type: "foundColony"; tileId: string; sourceTileId: string; pop: PopType }
+  | { type: "upgradeColonyToCity"; tileId: string }
+  | { type: "buildBuilding"; tileId: string; buildingId: BuildingId }
+  | { type: "growPop"; tileId: string; pop: PopType }
   | { type: "movePops"; sourceTileId: string; targetTileId: string; pops: Pops }
   | { type: "resolveEvent"; choiceIndex: number; targetTileId?: string }
-  | { type: "bankSell"; material: TradableMaterial; cost: Partial<Resources> }
-  | { type: "bankBuy"; material: TradableMaterial; cost: Partial<Resources> }
-  | { type: "civicCalm"; payment: CivicCalmPayment; cost: Partial<Resources> }
-  | { type: "promotePop"; tileId: string; from: PopType; cost: Partial<Resources> }
-  | { type: "demotePop"; tileId: string; from: PopType; cost: Partial<Resources> }
-  | {
-      type: "fundExpedition";
-      expeditionId: EventTableId;
-      stake: VentureStake;
-      cost: Partial<Resources>;
-    }
+  | { type: "bankSell"; material: TradableMaterial }
+  | { type: "bankBuy"; material: TradableMaterial }
+  | { type: "civicCalm"; payment: CivicCalmPayment }
+  | { type: "promotePop"; tileId: string; from: PopType }
+  | { type: "demotePop"; tileId: string; from: PopType }
+  | { type: "fundExpedition"; expeditionId: EventTableId; stake: VentureStake }
   | {
       type: "buyRiotInsurance";
       optionId: RiotInsuranceId;
@@ -130,16 +125,26 @@ export type LegalMove =
   // ── The Assembly (Phase 3-B). While a session is open these are the ONLY legal
   //    moves: the agora suspends the turn machine, so every gameplay verb is shut
   //    off until the house rises.
-  | { type: "assemblyDraw"; politician: PoliticianId; cost: Partial<Resources> }
+  | { type: "assemblyDraw"; politician: PoliticianId }
   | { type: "assemblyDiscardHeld" }
   | { type: "assemblyPropose"; replaces?: string; target?: PlayerId }
-  | { type: "assemblyProposeRepeal"; cardId: string; cost: Partial<Resources> }
+  | { type: "assemblyProposeRepeal"; cardId: string }
   | { type: "assemblyPass" }
-  | { type: "assemblyBribe"; cost: Partial<Resources> }
+  | { type: "assemblyBribe" }
   | { type: "assemblyVote"; yea: boolean }
-  | { type: "assemblyVeto"; cost: Partial<Resources> }
+  | { type: "assemblyVeto" }
   | { type: "assemblyClose" }
   | { type: "endTurn" };
+
+/** Engine-derived presentation for one currently legal command. */
+export type LegalOption = {
+  command: GameCommand;
+  cost?: Partial<Resources>;
+  blockedReasons: string[];
+};
+
+/** Internal enumeration shape before derived fields are split from the command. */
+type DerivedCommand = GameCommand & { cost?: Partial<Resources> };
 
 /**
  * Every move `playerID` may take right now, in deterministic order (board/index
@@ -147,9 +152,9 @@ export type LegalMove =
  * players get an empty list. While a player event is pending, resolving it is
  * the ONLY legal move — everything else, including endTurn, is blocked.
  */
-export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+function enumerateDerivedCommands(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   assertStateDefinition(G);
-  if (G.currentPlayer !== playerID) {
+  if (G.currentPlayer !== playerID && !isAsyncAssemblyActor(G, playerID)) {
     return [];
   }
 
@@ -181,7 +186,25 @@ export function enumerateLegalMoves(G: HegemonyState, playerID: PlayerId): Legal
   }
 }
 
+/** Every currently legal intent plus engine-derived presentation data. */
+export function enumerateLegalOptions(G: HegemonyState, playerID: PlayerId): LegalOption[] {
+  return enumerateDerivedCommands(G, playerID).map(({ cost, ...command }) => ({
+    command: command as GameCommand,
+    ...(cost ? { cost } : {}),
+    blockedReasons: [],
+  }));
+}
+
+/** Intent-only view used by clients, policies, and replay recording. */
+export function enumerateLegalCommands(G: HegemonyState, playerID: PlayerId): GameCommand[] {
+  return enumerateLegalOptions(G, playerID).map((option) => option.command);
+}
+
 type MoveCategory = "setup" | "riotResolution" | "eventResolution" | "assembly" | "gameplay";
+
+function isAsyncAssemblyActor(G: HegemonyState, playerID: PlayerId): boolean {
+  return G.assembly?.phase === "proposal" && !G.assembly.proposalDone[playerID];
+}
 
 const SETUP_PHASES: ReadonlySet<HegemonyState["phase"]> = new Set([
   "setupCapital",
@@ -189,7 +212,7 @@ const SETUP_PHASES: ReadonlySet<HegemonyState["phase"]> = new Set([
   "setupColony",
 ]);
 
-function categorizeMove(type: LegalMove["type"]): MoveCategory {
+function categorizeMove(type: GameCommand["type"]): MoveCategory {
   switch (type) {
     case "placeCapital":
     case "placeCity":
@@ -216,19 +239,23 @@ function categorizeMove(type: LegalMove["type"]): MoveCategory {
 }
 
 /**
- * The authoritative turn/phase/pending gate for {@link applyMove}. Enumeration
- * already refuses to LIST an illegal move, but applyMove is the engine's public
- * dispatcher — a driver (or a future off-turn caller) could hand it any move — so
+ * The authoritative turn/phase/pending gate for {@link transition}. Enumeration
+ * already refuses to list an illegal command, but transition is the engine's public
+ * dispatcher — a driver (or a future off-turn caller) could hand it any command — so
  * the boundary is re-checked here rather than trusted. Mirrors the same
- * currentPlayer / phase / pending conditions {@link enumerateLegalMoves} gates on,
- * so it never rejects a legitimately enumerated move.
+ * currentPlayer / phase / pending conditions {@link enumerateLegalCommands} gates on,
+ * so it never rejects a legitimately enumerated command.
  */
-function checkMoveAllowed(G: HegemonyState, playerID: PlayerId, move: LegalMove): MoveResult {
-  if (G.currentPlayer !== playerID) {
+function checkMoveAllowed(G: HegemonyState, playerID: PlayerId, move: GameCommand): MoveResult {
+  const category = categorizeMove(move.type);
+  if (
+    G.currentPlayer !== playerID &&
+    !(category === "assembly" && isAsyncAssemblyActor(G, playerID))
+  ) {
     return invalid("It is not this player's turn.");
   }
 
-  switch (categorizeMove(move.type)) {
+  switch (category) {
     case "riotResolution":
       return G.pendingRiot?.playerID === playerID
         ? MOVE_OK
@@ -251,14 +278,18 @@ function checkMoveAllowed(G: HegemonyState, playerID: PlayerId, move: LegalMove)
 }
 
 /**
- * Apply an enumerated move through the engine's own mutators. Setup placements
+ * Apply an enumerated command through the engine's own mutators. Setup placements
  * also advance the setup turn machine (and bootstrap gameplay on the final
  * placement), so a driver can run the whole game through this one entry point.
  * The boundary guard runs first, so an off-turn move or a move made during the
  * wrong phase / a pending event or riot is rejected authoritatively — not left
  * to the individual mutators' partial checks.
  */
-export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove): MoveResult {
+function applyCommandMutable(
+  G: HegemonyState,
+  playerID: PlayerId,
+  move: GameCommand,
+): MoveResult {
   assertStateDefinition(G);
   const allowed = checkMoveAllowed(G, playerID, move);
   if (!allowed.ok) {
@@ -335,20 +366,76 @@ export function applyMove(G: HegemonyState, playerID: PlayerId, move: LegalMove)
   }
 }
 
+export type TransitionEvent = { type: "log"; entry: LogEntry };
+
+export type TransitionResult =
+  | { ok: true; state: HegemonyState; events: TransitionEvent[] }
+  | { ok: false; reasons: string[] };
+
+class RejectedCommand {
+  constructor(readonly reasons: string[]) {}
+}
+
+/**
+ * The single atomic command boundary. It executes against an Immer draft and
+ * publishes a new state only when the command succeeds. Rejections abort the
+ * draft, guaranteeing that even a mutator which changed data before returning an
+ * error cannot leak a partial update.
+ */
+export function transition(
+  definition: GameDefinition,
+  state: HegemonyState,
+  actor: PlayerId,
+  command: GameCommand,
+): TransitionResult {
+  assertStateDefinition(state);
+  if (definition.identity.id !== state.definitionId) {
+    throw new Error(
+      `game definition mismatch: state requires ${state.definitionId}, received ${definition.identity.id}`,
+    );
+  }
+
+  try {
+    const next = produce(state, (draft) => {
+      const result = applyCommandMutable(draft, actor, command);
+      if (!result.ok) {
+        throw new RejectedCommand(result.reasons);
+      }
+    });
+
+    if (next.definitionId !== state.definitionId) {
+      throw new Error("game definition identity changed during transition");
+    }
+
+    return {
+      ok: true,
+      state: next,
+      events: next.log
+        .slice(state.log.length)
+        .map((entry) => ({ type: "log" as const, entry })),
+    };
+  } catch (error) {
+    if (error instanceof RejectedCommand) {
+      return { ok: false, reasons: error.reasons };
+    }
+    throw error;
+  }
+}
+
 /**
  * The Assembly's moves for whoever the house is waiting on. Every branch is
  * guaranteed to return at least one move for the acting seat — pass in the proposal
  * round, a vote in the ballot, close at the end — so a headless driver can always
  * make progress and the agora can never deadlock a game.
  */
-function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   const session = G.assembly;
 
   if (!session) {
     return [];
   }
 
-  const moves: LegalMove[] = [];
+  const moves: DerivedCommand[] = [];
   const rules = G.ruleset.assembly;
   const influence = G.players[playerID].resources.influence;
 
@@ -440,7 +527,11 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): LegalMove
   return moves;
 }
 
-export function describeMove(move: LegalMove, content = getAuthoredGameContent()): string {
+export function describeCommand(
+  move: GameCommand,
+  content = getAuthoredGameContent(),
+  cost: Partial<Resources> = {},
+): string {
   switch (move.type) {
     case "placeCapital":
       return `place capital on ${move.tileId} (${formatPops(move.pops)})`;
@@ -449,49 +540,49 @@ export function describeMove(move: LegalMove, content = getAuthoredGameContent()
     case "placeColony":
       return `place colony on ${move.tileId} (${formatPops(move.pops)})`;
     case "foundColony":
-      return `found colony on ${move.tileId}, sending 1 ${formatPopName(move.pop, 1)} from ${move.sourceTileId}${formatCost(move.cost)}`;
+      return `found colony on ${move.tileId}, sending 1 ${formatPopName(move.pop, 1)} from ${move.sourceTileId}${formatCost(cost)}`;
     case "upgradeColonyToCity":
-      return `upgrade colony to city on ${move.tileId}${formatCost(move.cost)}`;
+      return `upgrade colony to city on ${move.tileId}${formatCost(cost)}`;
     case "buildBuilding":
-      return `build ${move.buildingId} on ${move.tileId}${formatCost(move.cost)}`;
+      return `build ${move.buildingId} on ${move.tileId}${formatCost(cost)}`;
     case "growPop":
-      return `grow 1 ${formatPopName(move.pop, 1)} on ${move.tileId}${formatCost(move.cost)}`;
+      return `grow 1 ${formatPopName(move.pop, 1)} on ${move.tileId}${formatCost(cost)}`;
     case "movePops":
       return `move ${formatPops(move.pops)} from ${move.sourceTileId} to ${move.targetTileId}`;
     case "resolveEvent":
       return `resolve pending event (choice ${move.choiceIndex})${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
     case "bankSell":
-      return `sell ${Object.values(move.cost)[0]} ${move.material} to the bank for 1 gold`;
+      return `sell ${Object.values(cost)[0] ?? 1} ${move.material} to the bank for 1 gold`;
     case "bankBuy":
-      return `buy 1 ${move.material} from the bank${formatCost(move.cost)}`;
+      return `buy 1 ${move.material} from the bank${formatCost(cost)}`;
     case "civicCalm":
-      return `${move.payment === "influence" ? "stabilize province" : "bread & circuses"}${formatCost(move.cost)}`;
+      return `${move.payment === "influence" ? "stabilize province" : "bread & circuses"}${formatCost(cost)}`;
     case "promotePop":
-      return `promote a ${formatPopName(move.from, 1)} on ${move.tileId}${formatCost(move.cost)}`;
+      return `promote a ${formatPopName(move.from, 1)} on ${move.tileId}${formatCost(cost)}`;
     case "demotePop":
-      return `demote a ${formatPopName(move.from, 1)} on ${move.tileId}${formatCost(move.cost)}`;
+      return `demote a ${formatPopName(move.from, 1)} on ${move.tileId}${formatCost(cost)}`;
     case "fundExpedition":
-      return `fund the ${move.expeditionId} staking ${move.stake}${formatCost(move.cost)}`;
+      return `fund the ${move.expeditionId} staking ${move.stake}${formatCost(cost)}`;
     case "buyRiotInsurance":
       return `declare riot insurance: ${move.optionId}${move.demoteTarget ? ` (demoting a ${formatPopName(move.demoteTarget.from, 1)} on ${move.demoteTarget.tileId})` : ""}`;
     case "resolveRiot":
       return "face the riot table";
     case "assemblyDraw":
-      return `sound out ${move.politician}${formatCost(move.cost)}`;
+      return `sound out ${move.politician}${formatCost(cost)}`;
     case "assemblyDiscardHeld":
       return "set the drawn resolution aside";
     case "assemblyPropose":
       return `propose the drawn resolution${move.target ? ` against ${move.target}` : ""}${move.replaces ? ` in place of ${move.replaces}` : ""}`;
     case "assemblyProposeRepeal":
-      return `move to repeal ${getResolutionCard(content, move.cardId)?.name ?? move.cardId}${formatCost(move.cost)}`;
+      return `move to repeal ${getResolutionCard(content, move.cardId)?.name ?? move.cardId}${formatCost(cost)}`;
     case "assemblyPass":
       return "hold your peace";
     case "assemblyBribe":
-      return `buy a vote${formatCost(move.cost)}`;
+      return `buy a vote${formatCost(cost)}`;
     case "assemblyVote":
       return `vote ${move.yea ? "yea" : "nay"}`;
     case "assemblyVeto":
-      return `veto the resolution${formatCost(move.cost)}`;
+      return `veto the resolution${formatCost(cost)}`;
     case "assemblyClose":
       return "rise from the Assembly";
     case "endTurn":
@@ -509,8 +600,8 @@ function formatCost(cost: Partial<Resources>): string {
 
 /** The riot's forced menu: each unbought, affordable insurance (the concession once
  *  per legal demote target), and always the roll itself. */
-function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
-  const moves: LegalMove[] = [];
+function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
+  const moves: DerivedCommand[] = [];
 
   for (const option of getRiotTable(G.definition.content).insurance ?? []) {
     if (!getBuyRiotInsuranceStatus(G, playerID, option.id).can) {
@@ -539,13 +630,13 @@ function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
   return moves;
 }
 
-function enumerateEventResolutions(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+function enumerateEventResolutions(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   const pending = G.pendingPlayerEvent;
   if (!pending) {
     return [];
   }
 
-  const moves: LegalMove[] = [];
+  const moves: DerivedCommand[] = [];
 
   getEventEffectChoices(pending.card).forEach((effects, choiceIndex) => {
     const popEffect = getAddPopsEffect(effects);
@@ -563,13 +654,13 @@ function enumerateEventResolutions(G: HegemonyState, playerID: PlayerId): LegalM
   return moves;
 }
 
-function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   if (G.players[playerID].settlements.length > 0) {
     return [];
   }
 
   const compositions = popCompositions(G.ruleset.placementPopCounts.capital);
-  const moves: LegalMove[] = [];
+  const moves: DerivedCommand[] = [];
 
   for (const tile of G.board.tiles) {
     if (tile.terrain === "oracle" || tile.settlements.length > 0 || isAdjacentToCity(G, tile)) {
@@ -584,13 +675,13 @@ function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): Legal
   return moves;
 }
 
-function enumerateCityPlacements(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+function enumerateCityPlacements(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   if (G.ruleset.setup[G.players[playerID].settlements.length] !== "city") {
     return [];
   }
 
   const compositions = popCompositions(G.ruleset.placementPopCounts.city);
-  const moves: LegalMove[] = [];
+  const moves: DerivedCommand[] = [];
 
   for (const tile of G.board.tiles) {
     if (tile.terrain === "oracle" || tile.settlements.length > 0 || isAdjacentToCity(G, tile)) {
@@ -605,7 +696,7 @@ function enumerateCityPlacements(G: HegemonyState, playerID: PlayerId): LegalMov
   return moves;
 }
 
-function enumerateColonyPlacements(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+function enumerateColonyPlacements(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   const placed = G.players[playerID].settlements.length;
   const owesColony =
     placed >= setupCapitalCount(G.ruleset) &&
@@ -617,7 +708,7 @@ function enumerateColonyPlacements(G: HegemonyState, playerID: PlayerId): LegalM
   }
 
   const compositions = popCompositions(G.ruleset.placementPopCounts.colony);
-  const moves: LegalMove[] = [];
+  const moves: DerivedCommand[] = [];
 
   for (const tile of G.board.tiles) {
     if (!canPlaceColonyOnTile(G, playerID, tile, "setup").can) {
@@ -632,9 +723,9 @@ function enumerateColonyPlacements(G: HegemonyState, playerID: PlayerId): LegalM
   return moves;
 }
 
-function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): LegalMove[] {
+function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   const ownedTileIds = G.players[playerID].settlements;
-  const moves: LegalMove[] = [];
+  const moves: DerivedCommand[] = [];
 
   for (const tile of G.board.tiles) {
     const status = getFoundColonyStatus(G, playerID, tile.id);
@@ -817,3 +908,4 @@ export function popCompositions(total: number): Pops[] {
 
   return compositions;
 }
+import { produce } from "immer";

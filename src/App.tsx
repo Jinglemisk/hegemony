@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { HegemonyBoard } from "./components/HegemonyBoard";
-import { useHegemonyGame } from "./game/controller";
+import { useHegemonyGame } from "./client/controller";
 import { TunePanel } from "./dev/TunePanel";
 
 export function App() {

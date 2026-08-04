@@ -5,7 +5,7 @@ import { getBuildBuildingStatus } from "./status";
 import { promotePop, getPromotePopStatus } from "./civic";
 import { settlementNetYield } from "./economy/income";
 import { settlementTileYield } from "./settlement";
-import { enumerateLegalMoves } from "./legalMoves";
+import { enumerateLegalCommands } from "./legalMoves";
 import { createInitialState } from "./state";
 import { DEFAULT_RULESET } from "./ruleset";
 import { scenario, owned } from "./testing/scenario";
@@ -52,7 +52,9 @@ describe("the oracle (Phase 2)", () => {
     expect(placeCapital(G, "0", oracle.id, { citizens: 1, freemen: 2, slaves: 1 }).ok).toBe(false);
 
     const offered = new Set(
-      enumerateLegalMoves(G, "0").map((move) => ("tileId" in move ? move.tileId : ""))
+      enumerateLegalCommands(G, "0").map((command) =>
+        "tileId" in command ? command.tileId : "",
+      )
     );
     expect(offered.has(oracle.id)).toBe(false);
   });

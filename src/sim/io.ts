@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
-import type { LegalMove } from "../game/legalMoves";
+import type { GameCommand } from "../game/legalMoves";
 import { getAuthoredGameContent } from "../game/content";
 import {
   createGameDefinition,
@@ -18,11 +18,13 @@ export type { RulesetPatch } from "../game/ruleset";
 
 export type OpeningKind = "random" | "fixed" | "manual";
 
-export type MoveRecord = { player: PlayerId; move: LegalMove };
+export type CommandRecord = { player: PlayerId; command: GameCommand };
+
+type LegacyMoveRecord = { player: PlayerId; move: GameCommand & { cost?: unknown } };
 
 /**
  * A save is the full recipe for the game, not just its current state: seed +
- * mode + patch rebuild the initial state, `history` is every move applied
+ * mode + patch rebuild the initial state, `history` is every command applied
  * since (setup placements included), and `botRngState` is where the bot's
  * decision stream is parked. Replaying the recipe reproduces `state` exactly —
  * which is what makes saves shareable as bug reports and balance scenarios.
@@ -36,7 +38,7 @@ export type SaveFile = {
   definition?: GameDefinition;
   opening: OpeningKind;
   botRngState: number;
-  history: MoveRecord[];
+  history: CommandRecord[];
   state: HegemonyState;
 };
 
@@ -54,7 +56,9 @@ export function loadGame(path: string): SaveFile {
     throw new Error(`no save file at ${path} — start one with: npm run sim -- new --seed 42`);
   }
 
-  const save = JSON.parse(raw) as SaveFile;
+  const save = JSON.parse(raw) as SaveFile & {
+    history: Array<CommandRecord | LegacyMoveRecord>;
+  };
 
   if (save.version !== 1) {
     throw new Error(`save file ${path} has unsupported version ${String(save.version)}`);
@@ -95,6 +99,22 @@ export function loadGame(path: string): SaveFile {
   save.state.definition = definition;
   save.state.definitionId = definition.identity.id;
   save.state.ruleset = definition.ruleset;
+  save.history = save.history.map(normalizeCommandRecord);
 
   return save;
+}
+
+/** Accept legacy v1 `{move}` records, but never carry their client-supplied costs forward. */
+export function normalizeCommandRecord(
+  record: CommandRecord | LegacyMoveRecord,
+): CommandRecord {
+  if ("command" in record) {
+    return { player: record.player, command: stripLegacyCost(record.command) };
+  }
+  return { player: record.player, command: stripLegacyCost(record.move) };
+}
+
+function stripLegacyCost(command: GameCommand & { cost?: unknown }): GameCommand {
+  const { cost: _ignored, ...intent } = command;
+  return intent as GameCommand;
 }

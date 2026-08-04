@@ -1,5 +1,6 @@
-import { applyMove, enumerateLegalMoves } from "../game/legalMoves";
-import type { LegalMove } from "../game/legalMoves";
+import { produce } from "immer";
+import { enumerateLegalCommands, transition } from "../game/legalMoves";
+import type { GameCommand } from "../game/legalMoves";
 import type { GameModeId } from "../game/ruleset";
 import type { GameDefinition } from "../game/definition";
 import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
@@ -34,14 +35,14 @@ export const MAX_ACTIONS_PER_ASSEMBLY = 500;
 /** Enumeration returned nothing — a rules invariant broke; the state is in the message. */
 export class SimDeadlockError extends Error {}
 
-/** An enumerated/chosen move failed to apply — enumeration and mutators disagree. */
+/** An enumerated/chosen command failed to transition — enumeration and execution disagree. */
 export class SimEnumerationError extends Error {}
 
 export type SimHooks = {
   /** Fires right after the game is built, before the first turn — the telemetry baseline point. */
   onGameStart?: (G: HegemonyState) => void;
-  /** Fires after each applied move. NOTE: the move has already mutated G. */
-  onMove?: (G: HegemonyState, player: PlayerId, move: LegalMove) => void;
+  /** Fires after each successful command with the newly published state. */
+  onMove?: (G: HegemonyState, player: PlayerId, command: GameCommand) => void;
   /** Fires after each completed turn — the telemetry snapshot point. */
   onTurnEnd?: (G: HegemonyState) => void;
   /** Fires once when a turn hits the action cap and is force-ended; forcedResolutions
@@ -54,54 +55,61 @@ export type PlayTurnOptions = {
   maxActions?: number;
 };
 
-export function playTurn(G: HegemonyState, policy: Policy, rng: SimRng, hooks: SimHooks = {}, options: PlayTurnOptions = {}) {
+export function playTurn(
+  initial: HegemonyState,
+  policy: Policy,
+  rng: SimRng,
+  hooks: SimHooks = {},
+  options: PlayTurnOptions = {},
+): HegemonyState {
+  let G = initial;
   const maxActions = options.maxActions ?? MAX_ACTIONS_PER_TURN;
   const startTurn = G.turn;
 
   if (G.phase === "gameOver") {
-    return;
+    return G;
   }
 
   // While the agora is open the turn is really a bounded multi-seat sub-process, not one
   // seat's gameplay turn — give it room rather than force-ending (which is illegal mid-assembly).
   for (let action = 0; action < (G.assembly ? MAX_ACTIONS_PER_ASSEMBLY : maxActions); action += 1) {
     const player = G.currentPlayer;
-    const moves = enumerateLegalMoves(G, player);
+    const commands = enumerateLegalCommands(G, player);
 
-    if (moves.length === 0) {
+    if (commands.length === 0) {
       throw new SimDeadlockError(deadlockMessage(G, player));
     }
 
-    const move = policy.choose(G, moves, rng);
-    const result = applyMove(G, player, move);
+    const command = policy.choose(G, commands, rng);
+    const result = transition(G.definition, G, player, command);
 
     if (!result.ok) {
       throw new SimEnumerationError(
-        `policy chose a move that failed to apply: ${JSON.stringify(move)} — ${result.reasons.join("; ") || "(no reason)"}`,
+        `policy chose a command that failed to apply: ${JSON.stringify(command)} — ${result.reasons.join("; ") || "(no reason)"}`,
       );
     }
 
-    hooks.onMove?.(G, player, move);
+    G = result.state;
+    hooks.onMove?.(G, player, command);
 
-    // applyMove may have ended the game (victory race / deck exhaustion) — TS can't
-    // see the mutation through the narrowed union, hence the widening read.
-    if ((G.phase as HegemonyState["phase"]) === "gameOver" || G.turn !== startTurn) {
+    if (G.phase === "gameOver" || G.turn !== startTurn) {
       hooks.onTurnEnd?.(G);
-      return;
+      return G;
     }
   }
 
-  forceEndTurn(G, hooks);
+  return forceEndTurn(G, hooks);
 }
 
 /** Action cap hit: resolve any pending event (first option) or pending riot (roll,
  *  no more insurance), then end the turn. */
-function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
+function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
+  let G = initial;
   let forcedResolutions = 0;
 
   for (let guard = 0; (G.pendingPlayerEvent || G.pendingRiot) && guard < 4; guard += 1) {
     const player = G.currentPlayer;
-    const resolutions = enumerateLegalMoves(G, player);
+    const resolutions = enumerateLegalCommands(G, player);
 
     if (resolutions.length === 0) {
       throw new SimDeadlockError(deadlockMessage(G, player));
@@ -110,24 +118,29 @@ function forceEndTurn(G: HegemonyState, hooks: SimHooks) {
     // Riot enumeration lists insurance first and the roll last — forced turns roll.
     const forced = resolutions.find((move) => move.type === "resolveRiot") ?? resolutions[0];
 
-    if (!applyMove(G, player, forced).ok) {
+    const result = transition(G.definition, G, player, forced);
+    if (!result.ok) {
       throw new SimEnumerationError(`forced resolution failed: ${JSON.stringify(forced)}`);
     }
 
+    G = result.state;
     forcedResolutions += 1;
     hooks.onMove?.(G, player, forced);
   }
 
   const player = G.currentPlayer;
-  const endTurn: LegalMove = { type: "endTurn" };
+  const endTurn: GameCommand = { type: "endTurn" };
 
-  if (!applyMove(G, player, endTurn).ok) {
+  const result = transition(G.definition, G, player, endTurn);
+  if (!result.ok) {
     throw new SimEnumerationError(`forced endTurn failed on turn ${G.turn} (phase ${G.phase})`);
   }
+  G = result.state;
 
   hooks.onForceEndTurn?.(G, forcedResolutions);
   hooks.onMove?.(G, player, endTurn);
   hooks.onTurnEnd?.(G);
+  return G;
 }
 
 export type RunTurnsOptions = PlayTurnOptions & {
@@ -145,18 +158,23 @@ export function runTurns(
   turns: number,
   hooks: SimHooks = {},
   options: RunTurnsOptions = {},
-) {
-  const stopAt = G.turn + turns;
+): HegemonyState {
+  let current = G;
+  const stopAt = current.turn + turns;
 
-  while (G.turn < stopAt && G.phase !== "gameOver") {
+  while (current.turn < stopAt && current.phase !== "gameOver") {
     // A single playTurn is one seat's turn, so pick that seat's policy (mixed tables).
-    const active = options.seatPolicies?.[G.currentPlayer] ?? policy;
-    playTurn(G, active, rng, hooks, options);
+    const active = options.seatPolicies?.[current.currentPlayer] ?? policy;
+    current = playTurn(current, active, rng, hooks, options);
 
-    if (options.trimLogTo !== undefined && G.log.length > options.trimLogTo) {
-      G.log.splice(0, G.log.length - options.trimLogTo);
+    if (options.trimLogTo !== undefined && current.log.length > options.trimLogTo) {
+      current = produce(current, (draft) => {
+        draft.log.splice(0, draft.log.length - options.trimLogTo!);
+      });
     }
   }
+
+  return current;
 }
 
 export type RunGameOptions = {
@@ -179,16 +197,16 @@ export type RunGameOptions = {
 /** One self-contained bot game: build (setup counts as turns played too), then run to the cap. */
 export function runGame({ seed, mode, patch, definition, opening = "random", boardLayout, policy, seatPolicies, botSeed, turns, hooks = {}, trimLogTo }: RunGameOptions): HegemonyState {
   const rng = createSimRng(botSeed ?? deriveBotSeed(seed));
-  const G = buildNewGame({ seed, mode, patch, definition, opening, boardLayout, simRng: rng, onMove: hooks.onMove });
+  let G = buildNewGame({ seed, mode, patch, definition, opening, boardLayout, simRng: rng, onMove: hooks.onMove });
 
   hooks.onGameStart?.(G);
-  runTurns(G, policy, rng, turns, hooks, { trimLogTo, seatPolicies });
+  G = runTurns(G, policy, rng, turns, hooks, { trimLogTo, seatPolicies });
   return G;
 }
 
 function deadlockMessage(G: HegemonyState, player: PlayerId): string {
   return (
-    `no legal moves for player ${player} on turn ${G.turn} (phase ${G.phase}, ` +
+    `no legal commands for player ${player} on turn ${G.turn} (phase ${G.phase}, ` +
     `pending ${G.pendingPlayerEvent ? G.pendingPlayerEvent.card.id : "none"})`
   );
 }

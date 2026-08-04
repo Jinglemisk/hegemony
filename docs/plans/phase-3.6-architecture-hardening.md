@@ -215,8 +215,9 @@ simulator packages. Redis, microservices, and a plugin framework wait for demons
 1. **Definition isolation (implemented):** immutable `GameDefinition`, tuning resolution
    without globals, definition provenance in saves/replays/reports, and concurrent-definition
    and replay fixtures.
-2. **Canonical transition:** `GameCommand`, derived `LegalOption`, atomic transition, and browser,
-   simulator, and replay adapters using it.
+2. **Canonical transition (implemented):** intent-only `GameCommand`, derived `LegalOption`,
+   atomic transition, and browser, simulator, and replay adapters using it. Legacy v1 replay
+   records are normalized at load and cannot restore caller-supplied costs.
 3. **Actor and projection contract:** asynchronous Assembly parity, player/spectator views,
    fair AI observation, and anti-peek tests.
 4. **Identity, version, and invariants:** stable entity ids, versioned recipes, migrations or

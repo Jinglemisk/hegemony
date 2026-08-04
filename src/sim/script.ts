@@ -1,4 +1,4 @@
-import { applyMove } from "../game/legalMoves";
+import { transition } from "../game/legalMoves";
 import { createGameDefinition, hydrateGameDefinition } from "../game/definition";
 import type { GameDefinition } from "../game/definition";
 import { getAuthoredGameContent } from "../game/content";
@@ -6,7 +6,8 @@ import { GAME_MODES, deriveRuleset } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
 import { createInitialStateFromDefinition } from "../game/state";
 import type { BoardLayout, HegemonyState } from "../game/types";
-import type { MoveRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
+import { normalizeCommandRecord } from "./io";
+import type { CommandRecord, OpeningKind, RulesetPatch, SaveFile } from "./io";
 
 /**
  * A script is a save file minus the state: the recipe alone. Replaying it from
@@ -28,7 +29,12 @@ export type ScriptFile = {
    *  pre-existing scripts still parse; carried through so a CONTINUED replay resumes
    *  the same bot stream as the original save instead of restarting it. */
   botRngState?: number;
-  moves: MoveRecord[];
+  /** Canonical intent history. `moves` is accepted only to replay legacy v1 scripts. */
+  commands?: CommandRecord[];
+  moves?: Array<
+    | CommandRecord
+    | { player: CommandRecord["player"]; move: CommandRecord["command"] & { cost?: unknown } }
+  >;
 };
 
 export function scriptFromSave(save: SaveFile): ScriptFile {
@@ -41,7 +47,7 @@ export function scriptFromSave(save: SaveFile): ScriptFile {
     opening: save.opening,
     boardLayout: save.state.boardLayout,
     botRngState: save.botRngState,
-    moves: save.history,
+    commands: save.history,
   };
 }
 
@@ -62,22 +68,18 @@ export function replayScript(script: ScriptFile): HegemonyState {
         ruleset: script.rulesetPatch ? deriveRuleset(base, script.rulesetPatch) : base,
         content: getAuthoredGameContent(),
       });
-  const G = createInitialStateFromDefinition(definition, script.seed, script.boardLayout);
+  let G = createInitialStateFromDefinition(definition, script.seed, script.boardLayout);
+  const records = script.commands ?? script.moves?.map(normalizeCommandRecord) ?? [];
 
-  script.moves.forEach(({ player, move }, index) => {
-    if (G.currentPlayer !== player) {
-      throw new Error(
-        `replay diverged at move ${index}: script says player ${player} acts, but the game is on player ${G.currentPlayer}`,
-      );
-    }
-
-    const result = applyMove(G, player, move);
+  records.forEach(({ player, command }, index) => {
+    const result = transition(G.definition, G, player, command);
 
     if (!result.ok) {
       throw new Error(
-        `replay diverged at move ${index} (${JSON.stringify(move)}): ${result.reasons.join("; ") || "(no reason)"}`,
+        `replay diverged at command ${index} (${JSON.stringify(command)}): ${result.reasons.join("; ") || "(no reason)"}`,
       );
     }
+    G = result.state;
   });
 
   return G;
