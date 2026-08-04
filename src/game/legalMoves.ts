@@ -78,6 +78,7 @@ import type {
 import { assertStateDefinition } from "./definition";
 import type { GameDefinition } from "./definition";
 import type { LogEntry } from "./types";
+import { assertGameInvariants } from "./invariants";
 
 /**
  * Legal-move enumeration + a uniform dispatcher over the engine's mutators, so a
@@ -222,11 +223,7 @@ function checkMoveAllowed(G: HegemonyState, playerID: PlayerId, move: GameComman
  * wrong phase / a pending event or riot is rejected authoritatively — not left
  * to the individual mutators' partial checks.
  */
-function applyCommandMutable(
-  G: HegemonyState,
-  playerID: PlayerId,
-  move: GameCommand,
-): MoveResult {
+function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCommand): MoveResult {
   assertStateDefinition(G);
   const allowed = checkMoveAllowed(G, playerID, move);
   if (!allowed.ok) {
@@ -306,8 +303,7 @@ function applyCommandMutable(
 export type TransitionEvent = { type: "log"; entry: LogEntry };
 
 export type TransitionResult =
-  | { ok: true; state: HegemonyState; events: TransitionEvent[] }
-  | { ok: false; reasons: string[] };
+  { ok: true; state: HegemonyState; events: TransitionEvent[] } | { ok: false; reasons: string[] };
 
 class RejectedCommand {
   constructor(readonly reasons: string[]) {}
@@ -343,13 +339,19 @@ export function transition(
     if (next.definitionId !== state.definitionId) {
       throw new Error("game definition identity changed during transition");
     }
+    if (
+      next.engineVersion !== state.engineVersion ||
+      next.stateSchemaVersion !== state.stateSchemaVersion ||
+      next.commandSchemaVersion !== state.commandSchemaVersion
+    ) {
+      throw new Error("game compatibility version changed during transition");
+    }
+    assertGameInvariants(next);
 
     return {
       ok: true,
       state: next,
-      events: next.log
-        .slice(state.log.length)
-        .map((entry) => ({ type: "log" as const, entry })),
+      events: next.log.slice(state.log.length).map((entry) => ({ type: "log" as const, entry })),
     };
   } catch (error) {
     if (error instanceof RejectedCommand) {

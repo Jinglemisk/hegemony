@@ -14,6 +14,7 @@ import { createSeed, expandDeck, shuffleWithSeed } from "./core/rng";
 import { DEFAULT_RULESET } from "./ruleset";
 import type { Ruleset } from "./ruleset";
 import { createPoliticianDecks } from "./assembly/assembly";
+import { CURRENT_RECIPE_VERSIONS } from "./version";
 
 export function createInitialState(
   seed = createSeed(),
@@ -59,6 +60,8 @@ export function createInitialStateFromDefinition(
   rng = politicians.rng;
 
   return {
+    ...CURRENT_RECIPE_VERSIONS,
+    nextEntityId: 1,
     phase: "setupCapital",
     currentPlayer: "0",
     turn: 1,

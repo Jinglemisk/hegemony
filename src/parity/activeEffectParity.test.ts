@@ -37,6 +37,7 @@ import { masterPolicy, projectPolicyHorizon } from "../sim/policies";
 import { createSimRng } from "../sim/rng";
 import { snapshotTurn } from "../sim/telemetry";
 import { presentActiveEffect, presentActiveEffects } from "../ui/effects";
+import { allocateEntityId } from "../game/entity";
 
 const EMPTY_POPS: Pops = { citizens: 0, freemen: 0, slaves: 0 };
 
@@ -44,6 +45,8 @@ function stateWithSettlement(pops: Pops = EMPTY_POPS): HegemonyState {
   const G = scenario().build();
   const target = materialTile(G);
   target.settlements.push({
+    id: allocateEntityId(G, "settlement"),
+    tileId: target.id,
     owner: "0",
     kind: "capital",
     buildings: [],

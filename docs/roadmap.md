@@ -128,8 +128,9 @@ result is recorded as a cross-turn planning limitation, not used to shorten the 
 
 The [Phase 3.6 plan](plans/phase-3.6-architecture-hardening.md) is active. Definition
 isolation, the canonical atomic transition, workflow actors, player/spectator projections,
-and fair AI observation are implemented. The next slice adds stable identities, explicit
-schema versions, replay compatibility handling, and post-transition invariants.
+fair AI observation, stable settlement/transfer identities, versioned recipes, replay
+compatibility handling, and post-transition invariants are implemented. The final slice
+adds mechanical import/parity/dead-code/format/CI enforcement and a browser smoke path.
 
 ## Locked v1 finish line
 

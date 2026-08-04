@@ -296,6 +296,10 @@ export interface YearOmen {
 }
 
 export interface Settlement {
+  /** Stable match-local identity used by persistence and future ownership transfers. */
+  id: string;
+  /** Location is explicit because a tile may contain settlements owned by several seats. */
+  tileId: string;
   owner: PlayerId;
   kind: SettlementKind;
   buildings: BuildingId[];
@@ -394,6 +398,7 @@ export interface PlayerState {
   id: PlayerId;
   name: string;
   resources: Resources;
+  /** Derived location index for board traversal; persistent references use Settlement.id. */
   settlements: string[];
   collectedThisTurn: boolean;
   hasCollectedGameplayIncome: boolean;
@@ -425,6 +430,8 @@ export interface PlayerState {
 export interface PopulationTransfer {
   id: string;
   owner: PlayerId;
+  fromSettlementId: string;
+  toSettlementId: string;
   fromTileId: string;
   toTileId: string;
   pops: Pops;
@@ -437,6 +444,12 @@ export interface LogEntry {
 }
 
 export interface HegemonyState {
+  /** Persisted compatibility contract. These values are immutable for the match. */
+  engineVersion: string;
+  stateSchemaVersion: number;
+  commandSchemaVersion: number;
+  /** Monotonic source for stable match-local entity identities. */
+  nextEntityId: number;
   phase: Phase;
   currentPlayer: PlayerId;
   turn: number;

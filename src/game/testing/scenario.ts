@@ -1,5 +1,4 @@
 import { TEST_OPENING_SETUP } from "../config";
-import { getPlayerEventCards, getSeasonalEventCards } from "../content";
 import { placeCapital, placeColony } from "../actions";
 import { clonePops } from "../core/pops";
 import type { MoveResult } from "../core/results";
@@ -8,7 +7,6 @@ import { GAME_MODES, deriveRuleset } from "../ruleset";
 import type { GameModeId } from "../ruleset";
 import { advanceSetupTurn, beginGameplayTurn } from "../turn";
 import type {
-  EventCard,
   HegemonyState,
   HexTile,
   PlayerId,
@@ -18,6 +16,7 @@ import type {
   SettlementKind,
   Yield,
 } from "../types";
+import { allocateEntityId } from "../entity";
 
 /**
  * Test/sim state construction. One home for the helpers the suites used to
@@ -144,6 +143,8 @@ export class ScenarioBuilder {
   /** Drop a settlement straight onto the board — no placement legality, no cost. */
   withSettlement(playerID: PlayerId, tileId: string, kind: SettlementKind, pops: Pops): this {
     tile(this.G, tileId).settlements.push({
+      id: allocateEntityId(this.G, "settlement"),
+      tileId,
       owner: playerID,
       kind,
       buildings: [],
@@ -160,7 +161,7 @@ export class ScenarioBuilder {
 
   /** Rig the player deck: the named card becomes the next draw. */
   stackPlayerEvent(cardId: string): this {
-    this.G.playerDrawPile.unshift(findCard(getPlayerEventCards(this.G.definition.content), cardId));
+    moveCardToTop(this.G.playerDrawPile, cardId);
     return this;
   }
 
@@ -170,9 +171,7 @@ export class ScenarioBuilder {
    * (or carries no season tags).
    */
   stackSeasonalEvent(cardId: string): this {
-    this.G.seasonalDrawPile.unshift(
-      findCard(getSeasonalEventCards(this.G.definition.content), cardId),
-    );
+    moveCardToTop(this.G.seasonalDrawPile, cardId);
     return this;
   }
 
@@ -187,10 +186,11 @@ export class ScenarioBuilder {
   }
 }
 
-function findCard(deck: EventCard[], cardId: string): EventCard {
-  const card = deck.find((candidate) => candidate.id === cardId);
-  if (!card) throw new Error(`no event card ${cardId}`);
-  return card;
+function moveCardToTop(deck: HegemonyState["playerDrawPile"], cardId: string): void {
+  const index = deck.findIndex((candidate) => candidate.id === cardId);
+  if (index < 0) throw new Error(`no event card ${cardId}`);
+  const [card] = deck.splice(index, 1);
+  deck.unshift(card);
 }
 
 function assertOk(result: MoveResult, playerID: PlayerId, tileId: string) {

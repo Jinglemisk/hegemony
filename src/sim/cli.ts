@@ -53,6 +53,7 @@ import { replayScript, scriptFromSave } from "./script";
 import type { ScriptFile } from "./script";
 import { buildNewGame } from "./setup";
 import { Aggregator, snapshotsToCsv } from "./telemetry";
+import { CURRENT_RECIPE_VERSIONS, SAVE_FORMAT_VERSION } from "../game/version";
 
 /**
  * Headless driver for the Hegemony engine. Commands operate on a JSON save file
@@ -300,12 +301,14 @@ function cmdNew(flags: Flags, file: string) {
   });
 
   const save: SaveFile = {
-    version: 1,
+    version: SAVE_FORMAT_VERSION,
+    ...CURRENT_RECIPE_VERSIONS,
     seed,
     mode,
     rulesetPatch: patch,
     definition: state.definition,
     opening,
+    boardLayout: state.boardLayout,
     botRngState: simRng.state(),
     history,
     state,
@@ -342,7 +345,9 @@ function cmdLegal(flags: Flags, file: string) {
   const save = loadGame(file);
 
   if (flags.json) {
-    console.log(JSON.stringify(enumerateLegalOptions(save.state, save.state.currentPlayer), null, 2));
+    console.log(
+      JSON.stringify(enumerateLegalOptions(save.state, save.state.currentPlayer), null, 2),
+    );
     return;
   }
 
@@ -669,12 +674,14 @@ function cmdReplay(flags: Flags, file: string) {
 
   if (out) {
     const save: SaveFile = {
-      version: 1,
+      version: SAVE_FORMAT_VERSION,
+      ...CURRENT_RECIPE_VERSIONS,
       seed: script.seed,
       mode: script.mode,
       rulesetPatch: script.rulesetPatch,
       definition: state.definition,
       opening: script.opening,
+      boardLayout: state.boardLayout,
       // Resume the original bot stream where it was parked; legacy scripts without
       // the field fall back to the derived start (the pre-fix behavior).
       botRngState: script.botRngState ?? deriveBotSeed(script.seed),
