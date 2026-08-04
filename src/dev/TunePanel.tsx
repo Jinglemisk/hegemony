@@ -144,7 +144,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
       <header className="tune-head">
         <span className="tune-title">PARAMETERS</span>
         <span className="tune-sub">
-          turn {game.turn} · {game.boardLayout} · seed {game.seed}
+          turn {game.turn} · {game.boardLayout} · seed private in player view
         </span>
         <button className="tune-x" onClick={() => setOpen(false)} title="Close ( ` )">
           ×

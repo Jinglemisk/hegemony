@@ -17,6 +17,7 @@ import { getAuthoredGameContent } from "../game/content";
 import { createGameDefinition } from "../game/definition";
 import { enumerateLegalOptions, transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
+import { projectForPlayer } from "../game/projection";
 import {
   getBuildBuildingOptions,
   getFoundColonyStatus,
@@ -292,7 +293,7 @@ describe("effective content and cost parity", () => {
         { type: "endTurn" },
       ];
 
-      return smartPolicy.choose(G, moves, createSimRng(1)).type;
+      return smartPolicy.choose(projectForPlayer(G.definition, G, "0"), moves, createSimRng(1)).type;
     };
 
     expect(choose(150, 0)).toBe("endTurn");

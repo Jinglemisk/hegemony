@@ -75,8 +75,8 @@ describe("runGame smoke", () => {
     const calls: Array<{ seat: string; policy: string }> = [];
     const recorder = (name: PolicyId): Policy => ({
       name,
-      choose: (G, moves) => {
-        calls.push({ seat: G.currentPlayer, policy: name });
+      choose: (view, moves) => {
+        calls.push({ seat: view.state.currentPlayer, policy: name });
         return moves.find((move) => move.type === "endTurn") ?? moves[0];
       },
     });

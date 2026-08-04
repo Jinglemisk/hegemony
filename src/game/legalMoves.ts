@@ -63,6 +63,7 @@ import {
 } from "./assembly";
 import type { PoliticianId } from "./assembly";
 import { PLAYER_IDS } from "./data";
+import { commandActorEligibility, eligibleActors } from "./actors";
 import type {
   BuildingId,
   EventTableId,
@@ -154,7 +155,7 @@ type DerivedCommand = GameCommand & { cost?: Partial<Resources> };
  */
 function enumerateDerivedCommands(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   assertStateDefinition(G);
-  if (G.currentPlayer !== playerID && !isAsyncAssemblyActor(G, playerID)) {
+  if (!eligibleActors(G).includes(playerID)) {
     return [];
   }
 
@@ -200,44 +201,6 @@ export function enumerateLegalCommands(G: HegemonyState, playerID: PlayerId): Ga
   return enumerateLegalOptions(G, playerID).map((option) => option.command);
 }
 
-type MoveCategory = "setup" | "riotResolution" | "eventResolution" | "assembly" | "gameplay";
-
-function isAsyncAssemblyActor(G: HegemonyState, playerID: PlayerId): boolean {
-  return G.assembly?.phase === "proposal" && !G.assembly.proposalDone[playerID];
-}
-
-const SETUP_PHASES: ReadonlySet<HegemonyState["phase"]> = new Set([
-  "setupCapital",
-  "setupCity",
-  "setupColony",
-]);
-
-function categorizeMove(type: GameCommand["type"]): MoveCategory {
-  switch (type) {
-    case "placeCapital":
-    case "placeCity":
-    case "placeColony":
-      return "setup";
-    case "buyRiotInsurance":
-    case "resolveRiot":
-      return "riotResolution";
-    case "resolveEvent":
-      return "eventResolution";
-    case "assemblyDraw":
-    case "assemblyDiscardHeld":
-    case "assemblyPropose":
-    case "assemblyProposeRepeal":
-    case "assemblyPass":
-    case "assemblyBribe":
-    case "assemblyVote":
-    case "assemblyVeto":
-    case "assemblyClose":
-      return "assembly";
-    default:
-      return "gameplay";
-  }
-}
-
 /**
  * The authoritative turn/phase/pending gate for {@link transition}. Enumeration
  * already refuses to list an illegal command, but transition is the engine's public
@@ -247,34 +210,8 @@ function categorizeMove(type: GameCommand["type"]): MoveCategory {
  * so it never rejects a legitimately enumerated command.
  */
 function checkMoveAllowed(G: HegemonyState, playerID: PlayerId, move: GameCommand): MoveResult {
-  const category = categorizeMove(move.type);
-  if (
-    G.currentPlayer !== playerID &&
-    !(category === "assembly" && isAsyncAssemblyActor(G, playerID))
-  ) {
-    return invalid("It is not this player's turn.");
-  }
-
-  switch (category) {
-    case "riotResolution":
-      return G.pendingRiot?.playerID === playerID
-        ? MOVE_OK
-        : invalid("No riot is pending resolution.");
-    case "eventResolution":
-      return G.pendingPlayerEvent?.playerID === playerID
-        ? MOVE_OK
-        : invalid("No pending event to resolve.");
-    case "setup":
-      return SETUP_PHASES.has(G.phase) && !G.pendingPlayerEvent && !G.pendingRiot
-        ? MOVE_OK
-        : invalid("Setup placements are only legal during setup.");
-    case "assembly":
-      return G.assembly ? MOVE_OK : invalid("The Assembly is not in session.");
-    case "gameplay":
-      return G.phase === "gameplay" && !G.pendingPlayerEvent && !G.pendingRiot && !G.assembly
-        ? MOVE_OK
-        : invalid("That move is not available right now.");
-  }
+  const eligibility = commandActorEligibility(G, playerID, move);
+  return eligibility.eligible ? MOVE_OK : invalid(eligibility.reasons[0]);
 }
 
 /**

@@ -17,6 +17,7 @@ import {
 } from "../game/activeEffects";
 import { PLAYER_EVENT_CARDS, SEASONAL_EVENT_CARDS } from "../game/data";
 import { calculateIncomeBreakdown } from "../game/economy/income";
+import { projectForPlayer } from "../game/projection";
 import {
   drawSeasonalEvent,
   getEventEffectChoices,
@@ -498,7 +499,7 @@ describe("simulation and AI active-effect parity", () => {
       G.players["0"].timedHappinessModifiers = [modifier];
 
       return masterPolicy.choose(
-        G,
+        projectForPlayer(G.definition, G, "0"),
         [{ type: "civicCalm", payment: "influence" }, { type: "endTurn" }],
         createSimRng(1),
       );

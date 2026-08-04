@@ -14,21 +14,22 @@ drive the same one:
   intent-only commands validated by the engine's status predicates;
   `transition(definition, G, player, command)` applies one atomically. A bot never
   submits effective costs or re-derives rules.
-- **`src/sim/policies.ts`** — the brain. `Policy = { name, choose(G, moves, rng) }`:
-  given the state and the legal moves, return one. That interface is the whole
+- **`src/sim/policies.ts`** — the brain. `Policy = { name, choose(view, commands, rng) }`:
+  given the acting seat's projection and legal commands, return one. That interface is the whole
   contract; new AIs are new entries in the `POLICIES` registry.
 - **`src/sim/runner.ts`** — the body. `playTurn` loops choose→apply until the
   turn ends (action cap of 30 force-ends stuck turns); `runGame` wires setup +
   turns + hooks. The runner, CLI (`auto`/`batch`), and tests all share it.
 
-The browser, simulation, and replay now share the atomic `GameCommand` transition.
-Policies still receive full authoritative state; Phase 3.6's next slice replaces that
-input with a fair player observation/projection shared with multiplayer. Existing policies
-remain deterministic baselines through that migration.
+The browser, simulation, and replay share the atomic `GameCommand` transition. Every policy
+receives `PlayerView`, the same redacted observation used by the browser: draw identities,
+deck order, seed/RNG, rival Assembly hands/proposals, and private pending events never reach
+policy code. Political draw valuation uses a public uncertainty pool rather than the actual
+deck. Existing policies remain deterministic baselines across that boundary.
 
 ### Determinism contract
 
-Policies must be pure functions of `(G, moves, rng)`. No `Math.random`, no
+Policies must be pure functions of `(view, commands, rng)`. No `Math.random`, no
 `Date`, no hidden state. All randomness comes from the injected `SimRng` — a
 mulberry32 stream separate from the game's deck RNG, so changing a policy never
 changes which cards come up. Tie-breaks follow enumeration order. This is what

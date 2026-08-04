@@ -127,8 +127,9 @@ result is recorded as a cross-turn planning limitation, not used to shorten the 
 ## Current initiative — Phase 3.6 architecture hardening
 
 The [Phase 3.6 plan](plans/phase-3.6-architecture-hardening.md) is active. Definition
-isolation and the canonical atomic transition are implemented. The next slice formalizes
-workflow actors and player/spectator-safe projections, including fair AI observation.
+isolation, the canonical atomic transition, workflow actors, player/spectator projections,
+and fair AI observation are implemented. The next slice adds stable identities, explicit
+schema versions, replay compatibility handling, and post-transition invariants.
 
 ## Locked v1 finish line
 

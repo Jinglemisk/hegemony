@@ -78,7 +78,7 @@ export function CommandDock({
           {seasonsLeft} season{seasonsLeft === 1 ? "" : "s"} remain
         </span>
         <span className="dockSeasonDecks">
-          Seasonal {seasonsLeft} · Events {G.playerDrawPile.length} · {boardLabel} #{G.seed}
+          Seasonal {seasonsLeft} · Events {G.playerDrawPile.length} · {boardLabel} · Seed private
         </span>
       </div>
 

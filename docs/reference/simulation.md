@@ -270,7 +270,8 @@ their embedded ruleset plus authored content.
 **Phase 3.6 progress:** definition version/hash pinning and the canonical atomic transition
 are implemented. Browser, simulation, and replay submit intent-only `GameCommand` values;
 derived costs live on `LegalOption` and legacy replay costs are discarded during
-normalization. Engine/state and command-schema versioning land with the later
+normalization. Policies receive the acting seat's redacted `PlayerView`, including opaque
+draw piles and no seed/RNG. Engine/state and command-schema versioning land with the later
 version/invariant slice.
 
 ## Writing tests and scenarios
