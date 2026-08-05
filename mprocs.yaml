@@ -1,0 +1,62 @@
+# mprocs dev dashboard — `npm start` (or just `mprocs`)
+#
+#   j/k or ↑/↓  select pane      s start   x stop   r restart   q quit
+#   Ctrl+a      focus the selected pane's terminal so you can TYPE in it
+#               (Ctrl+a again goes back to the pane list)
+#   z           zoom the terminal full-screen — use this for `sim` output
+#   Ctrl+u / Ctrl+d   scroll output up / down      v  copy mode
+#
+# The scratch shells (sim, git) autostart so they show a live prompt.
+# Select one, hit Ctrl+a, and type.
+
+proc_list_width: 22
+scrollback: 10000
+
+procs:
+  # --- always-on watchers -------------------------------------------------
+  web:
+    shell: npm run dev
+
+  types:
+    # --preserveWatchOutput keeps history instead of clearing on each rebuild,
+    # so you can scroll back through errors you already fixed.
+    shell: npx tsc --noEmit --watch --preserveWatchOutput
+
+  test:
+    shell: npx vitest --reporter dot
+
+  # --- scratch shells -----------------------------------------------------
+  # Headless engine driver. Prints a cheatsheet, then hands you a real prompt.
+  # Ctrl+a to type here; `z` to zoom, since `show` output is tall.
+  sim:
+    shell: |
+      printf '\033[1m HEGEMONY SIM \033[0m  full reference: docs/reference/simulation.md\n\n'
+      printf '  npm run sim -- new --seed 42          new game (seed drives everything)\n'
+      printf '  npm run sim -- show                   players, resources, settlements\n'
+      printf '  npm run sim -- legal                  numbered list of every legal move\n'
+      printf '  npm run sim -- move index 3           apply move #3\n'
+      printf '  npm run sim -- preview build 0,0 granary   before/after economics\n'
+      printf '  npm run sim -- auto --turns 40 --policy master   bots play\n'
+      printf '  npm run sim -- log --tail 30          what just happened\n'
+      printf '  npm run sim -- batch --games 30 --turns 60 --policy master\n\n'
+      printf '  Add --file .sim/scratch.json to run a game beside the default save.\n'
+      printf '  Ctrl+a to leave this pane.\n\n'
+      exec "${SHELL:-/bin/zsh}"
+
+  git:
+    shell: exec "${SHELL:-/bin/zsh}"
+
+  # --- on-demand gates (press `s` to run) ---------------------------------
+  # The engine is pure (src/game), so parity is the fast "did I break the
+  # rules" gate — run it before every commit.
+  parity:
+    shell: npm run test:parity
+    autostart: false
+
+  lint:
+    shell: npm run lint
+    autostart: false
+
+  docs:
+    shell: npm run docs:check
+    autostart: false

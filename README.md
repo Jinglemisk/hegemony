@@ -104,6 +104,13 @@ npm run test:browser # deterministic Chromium smoke journey
 npm run build        # production build
 ```
 
+For day-to-day work, `npm start` opens an [mprocs](https://github.com/pvolok/mprocs)
+dashboard (`brew install mprocs`) that runs the Vite server, a TypeScript watcher,
+and Vitest side by side, plus scratch shells for `npm run sim` and git. The parity
+gate, linter, and doc check sit idle until you select them and press `s`. Select a
+pane with `j`/`k`, press `Ctrl+a` to type into it and `z` to zoom it full-screen.
+Config lives in `mprocs.yaml`.
+
 Start with the [documentation control plane](docs/README.md), then use the
 [simulation guide](docs/reference/simulation.md) for headless play and balance
 testing or the [player guide](rules.md) for detailed gameplay instructions.
