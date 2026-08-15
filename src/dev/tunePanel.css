@@ -1,11 +1,14 @@
 /* DEV parameter dashboard. Deliberately utilitarian — a tool, not game chrome —
    but tinted to the Kerameikos palette so it doesn't clash with the board. */
 
+/* Docked top-left of the map well. It used to sit bottom-right, where it lay on
+   top of END TURN and swallowed clicks on the one button that must never be
+   blocked. Top-left is the only corner with no game affordance in it. */
 .tune-fab {
   position: fixed;
-  right: 14px;
-  bottom: 14px;
-  z-index: 9999;
+  left: 14px;
+  top: calc(var(--chrome-top) + 12px);
+  z-index: var(--z-fab);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
