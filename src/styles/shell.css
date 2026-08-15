@@ -752,3 +752,24 @@
   box-shadow: none;
   transform: none;
 }
+
+/* ── Clearing the dials ───────────────────────────────────────────────────
+   The two dials protrude 76px above the rail, and at the tablets' outer edges
+   that is 76px of page they sit on top of. The prototype's tablets never reach
+   that low; ours scroll, so the Chronicle's last entry and the Codex's last
+   paragraph were sliding under the END TURN seal with no way to read them.
+   Every scrolling body ends a dial's height above the rail. */
+.intelBody,
+.chronicleList,
+.asm-body {
+  padding-bottom: 84px;
+}
+
+/* The chapter row scrolls sideways with its scrollbar hidden, which left it
+   looking cut off rather than scrollable. The fade says there is more. */
+.codexChapterTabs {
+  /* Any opaque colour works — a mask reads alpha, not hue — so this spends the
+     ink token rather than introducing a raw value the palette does not own. */
+  mask-image: linear-gradient(90deg, var(--ink) calc(100% - 28px), transparent);
+  -webkit-mask-image: linear-gradient(90deg, var(--ink) calc(100% - 28px), transparent);
+}
