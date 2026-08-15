@@ -459,7 +459,6 @@ export function HegemonyBoard({
                 <EmpireIntelPanel
                   activeTab={ledgerRoute.view}
                   onBuildBuildingRequest={requestBuildBuilding}
-                  onClose={() => setLedgerOpen(false)}
                   onBankSell={moves.bankSell}
                   onBankBuy={moves.bankBuy}
                   onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
@@ -480,11 +479,7 @@ export function HegemonyBoard({
 
             {isConsultOpen ? (
               <aside className="panel consultPanel">
-                <ConsultPanel
-                  activeTab={consultRoute.view}
-                  codexTarget={codexTarget}
-                  onClose={() => setConsultOpen(false)}
-                />
+                <ConsultPanel activeTab={consultRoute.view} codexTarget={codexTarget} />
               </aside>
             ) : null}
           </section>
