@@ -20,7 +20,8 @@
     "test:browser": "playwright test",
     "dead-code": "knip",
     "sim": "tsx src/sim/cli.ts",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "ui:audit": "node scripts/audit-ui-geometry.mjs"
   },
   "engines": {
     "node": ">=22"
