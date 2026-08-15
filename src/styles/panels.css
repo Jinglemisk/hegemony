@@ -1084,7 +1084,14 @@
 
 /* Glaze discs with blazons — the same mark the roster and the board use, so the
    filter is read rather than decoded. The four named pills they replace wrapped
-   onto two lines on a 306px page. */
+   onto two lines on a 306px page.
+
+   They sit at FULL glaze. Resting opacity used to be 0.45, which turned four
+   live filters into pastel ghosts of the very colours the roster, the board and
+   the Victory cards print at full strength — so an available control read as a
+   disabled one, and the seat you were about to filter by was not the colour you
+   had learned. Which one is armed is the clay ring, the way it is everywhere
+   else; dimming is reserved for things you cannot press. */
 .chronFilter {
   display: grid;
   place-items: center;
@@ -1096,24 +1103,23 @@
   border: 0;
   border-radius: 50%;
   color: var(--ivory);
-  opacity: 0.45;
   box-shadow:
-    inset 0 0 0 1.3px rgb(255 248 231 / 80%),
-    0 0 0 1px rgb(36 25 16 / 35%);
-  transition: opacity 140ms ease;
+    inset 0 0 0 1.3px rgb(255 248 231 / 85%),
+    0 0 0 1px rgb(36 25 16 / 40%);
+  transition: box-shadow 140ms ease;
 }
 
 .chronFilter:hover {
-  opacity: 0.8;
   box-shadow:
-    inset 0 0 0 1.3px rgb(255 248 231 / 80%),
-    0 0 0 1px rgb(36 25 16 / 35%);
+    inset 0 0 0 1.3px rgb(255 248 231 / 85%),
+    0 0 0 1.6px var(--ink);
   transform: none;
 }
 
 .chronFilter.on {
-  opacity: 1;
-  box-shadow: 0 0 0 2px var(--clay);
+  box-shadow:
+    inset 0 0 0 1.3px rgb(255 248 231 / 85%),
+    0 0 0 2px var(--clay);
 }
 
 /* Same disc, same keyline, same blazon grammar as the four seats — only the
@@ -1151,6 +1157,24 @@
 
 .entry em {
   color: var(--ink-66);
+}
+
+/* In the log, a term is NOT emphasis. Every noun the annotator knows — wood,
+   food, granary, event, card, colony — came out oxblood and semibold, so a line
+   like "Damon received Player Event Card Granary Rats" was four highlights in
+   nine words and the paragraph had no rhythm left to read. Emphasis that lands
+   on nearly every noun says nothing. The glyph stays, because the glyph is the
+   information; the colour goes back to prose and returns on hover, where it
+   says "pressable" to the one reader who is reaching for it. What carries
+   judgment here is the signed number, and that keeps its olive and oxblood. */
+.entry .richTokenLink {
+  color: inherit;
+  font-weight: inherit;
+}
+
+.entry .richTokenLink:hover,
+.entry .richTokenLink:focus-visible {
+  color: var(--clay-deep);
 }
 
 .chronicleEmpty {
