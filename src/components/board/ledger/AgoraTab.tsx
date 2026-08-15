@@ -2,11 +2,11 @@ import { PLAYER_NAMES } from "../../../game/data";
 import { yearOf } from "../../../game/core/calendar";
 import { getResolutionCard, politicianStandings } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
-import type { HegemonyState, PlayerId } from "../../../game/types";
+import type { HegemonyState } from "../../../game/types";
 import { POLITICIAN_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
 import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
-import { AnnotatedText } from "../../AnnotatedText";
+import { StandingLaw } from "../assembly/StandingLaw";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { Tooltip } from "../../overlays/Tooltip";
 
@@ -70,21 +70,14 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
         G.activeLaws
           .slice()
           .sort((left, right) => left.order - right.order)
-          .map((law) => {
-            const card = getResolutionCard(G.definition.content, law.cardId);
-
-            return (
-              <div className="lawslab" key={`${law.cardId}-${law.order}`}>
-                <b className="title">{card?.name ?? law.cardId}</b>
-                <span className="lawslabText caption">
-                  <AnnotatedText text={card?.text ?? ""} />
-                </span>
-                <span className="lawslabMeta label">
-                  carried by {authorName(law.author)} · Year {yearOf(law.enactedSeason)}
-                </span>
-              </div>
-            );
-          })
+          .map((law) => (
+            <StandingLaw
+              content={G.definition.content}
+              key={`${law.cardId}-${law.order}`}
+              stele={law}
+              variant="slab"
+            />
+          ))
       )}
 
       <h3 className="ladderSection label">The four orators</h3>
@@ -150,8 +143,4 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
       </div>
     </div>
   );
-}
-
-function authorName(author: PlayerId | null): string {
-  return author ? PLAYER_NAMES[author] : "the house";
 }

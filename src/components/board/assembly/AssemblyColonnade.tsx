@@ -7,11 +7,16 @@ import type {
   TallyMonument,
 } from "../../../game/assembly";
 import type { HegemonyState, PlayerId } from "../../../game/types";
+import { presentDirectiveEffect, presentLawEffect } from "../../../ui/effects";
+import { POLITICIAN_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
+import { EffectIcon } from "../../../ui/icons/EffectIcon";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { DrawIcon } from "./AssemblyIcons";
 import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
+import { StandingLaw } from "./StandingLaw";
 import { glazeOf } from "../../../ui/playerGlazes";
 
 /**
@@ -85,6 +90,13 @@ function PoliticianColumn({
 
   return (
     <div className={`colonnadeCol${isStratokles ? " isStratokles" : ""}`}>
+      {/* The bust. An orator you can recognise before you read his name — the
+          colonnade is scanned dozens of times a game and four identical text
+          columns are four columns you have to read every time. */}
+      <span className="steleBust">
+        <Icon glyph={POLITICIAN_GLYPHS[politician.id]} size="rail" />
+      </span>
+
       <div className="ahead">
         <Tooltip
           ariaLabel={`${politician.name} power: ${power} ${isStratokles ? "monuments" : "standing Laws"}`}
@@ -109,8 +121,34 @@ function PoliticianColumn({
         <span className="aname">{politician.name}</span>
         <span className="oratorEpithet">{politician.epithet}</span>
       </div>
+      {/* What you are buying if you draw from this man, BEFORE you have seen a
+          card. Authored in content beside the deck (Politician.tendency) and run
+          through the same presenters and icons as every other effect — never a
+          sentence the frontend wrote. */}
+      <div className="dogma">
+        <div className="dogmaKey label">
+          {isStratokles ? "His decrees tend to" : "His laws tend to"}
+        </div>
+        {politician.kind === "law"
+          ? politician.tendency.map((effect, index) => (
+              <div className="dogmaRow effectRow" key={index}>
+                <EffectIcon effect={effect} family="law" />
+                <span className="caption">
+                  {presentLawEffect(effect, G.definition.content).text}
+                </span>
+              </div>
+            ))
+          : politician.tendency.map((effect, index) => (
+              <div className="dogmaRow effectRow" key={index}>
+                <EffectIcon effect={effect} family="directive" />
+                <span className="caption">{presentDirectiveEffect(effect).text}</span>
+              </div>
+            ))}
+      </div>
+
       <div className="aprise">
-        Author prize · {formatPrize(G.ruleset.assembly.prizes[politician.id])}
+        <span className="label">Author prize</span>{" "}
+        <b className="stelePrize num">{formatPrize(G.ruleset.assembly.prizes[politician.id])}</b>
       </div>
 
       {drawArmed ? (
@@ -171,24 +209,12 @@ function PoliticianColumn({
                 triggerAs="div"
                 triggerClassName="assemblyCardTooltipTrigger"
               >
-                {isStratokles ? (
-                  <div className="tally">
-                    <span className="tallyKey">
-                      <i />
-                      <i />
-                      <i />
-                    </span>
-                    <span className="tallyName">{card.name}</span>
-                  </div>
-                ) : (
-                  <div className="stele">
-                    <span
-                      className="steleAuthorDot"
-                      style={{ background: authorColor(stele.author) }}
-                    />
-                    <span className="steleName">{card.name}</span>
-                  </div>
-                )}
+                <StandingLaw
+                  content={G.definition.content}
+                  monument={isStratokles}
+                  stele={stele}
+                  variant="stele"
+                />
               </Tooltip>
             );
           })}
@@ -248,12 +274,6 @@ function DrawButton({
       <span className="acolDrawCost">{cost}</span>
     </AssemblyAction>
   );
-}
-
-/** The house resolution has no author, so its bead is stone rather than a seat colour —
- *  it stands in the agora and lends its politician power, but it is nobody's stele. */
-function authorColor(author: PlayerId | null): string {
-  return author ? glazeOf(author) : "var(--stone)";
 }
 
 function authorName(author: PlayerId | null): string {
