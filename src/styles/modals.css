@@ -1,81 +1,24 @@
 /* modals — Card-style modals: event card, placement (found colony / upgrade city) card, found-colony popover, grow-pop modal
    Split from styles.css (Phase 2e); original source order preserved. */
 
+/* Every dialog takes focus the moment it opens, so the focus trap in ModalShell
+   has somewhere to start and a keyboard player is never left behind on a board
+   they are not allowed to touch. The surface is not a control, though, so it
+   draws no ring for it — the ring belongs to whatever they tab to next. */
+.modalBackdrop > [role="dialog"]:focus {
+  outline: none;
+}
+
 .eventModalBackdrop {
   z-index: 90;
   background:
     radial-gradient(circle at 50% 28%, rgb(255 248 231 / 26%), transparent 34%), rgb(24 18 16 / 78%);
 }
 
-.eventCardReveal {
-  width: min(390px, calc(100vw - 34px));
-  max-height: min(92vh, 760px);
-  aspect-ratio: 2 / 3;
-  padding: 0;
-  border: 0;
-  background: none;
-}
-
-.eventCardSurface {
-  position: relative;
-  isolation: isolate;
-  display: grid;
-  grid-template-rows: auto minmax(190px, 39%) minmax(0, 1fr) auto;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border: 2px solid rgb(80 35 18 / 72%);
-  border-radius: 14px;
-  color: var(--fg);
-  background:
-    linear-gradient(
-      90deg,
-      rgb(143 46 19 / 18%) 0 2px,
-      transparent 2px calc(100% - 2px),
-      rgb(143 46 19 / 18%) calc(100% - 2px)
-    ),
-    radial-gradient(circle at 50% 12%, rgb(255 248 231 / 90%), transparent 38%),
-    linear-gradient(180deg, #fff4d8, #eed5aa 72%, #d4a05f);
-  box-shadow:
-    0 28px 70px rgb(0 0 0 / 48%),
-    inset 0 0 0 7px rgb(255 248 231 / 48%),
-    inset 0 0 0 11px rgb(143 46 19 / 34%);
-}
-
-.eventCardSurface::before,
-.eventCardSurface::after {
-  content: "";
-  position: absolute;
-  inset: 10px;
-  z-index: -1;
-  pointer-events: none;
-  border: 1px solid rgb(143 46 19 / 28%);
-  border-radius: 10px;
-}
-
-.eventCardSurface::after {
-  inset: 0;
-  border: 0;
-  border-radius: 0;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 0 18px,
-      rgb(143 46 19 / 18%) 18px 20px,
-      transparent 20px calc(100% - 20px),
-      rgb(143 46 19 / 18%) calc(100% - 20px) calc(100% - 18px),
-      transparent calc(100% - 18px)
-    ),
-    linear-gradient(
-      0deg,
-      rgb(36 25 16 / 11%),
-      transparent 28%,
-      transparent 72%,
-      rgb(36 25 16 / 10%)
-    );
-  mix-blend-mode: multiply;
-}
-
+/* The fate card's own surface moved to ceremony.css, class names and all. A
+   ceremony is not a variant of a modal, and two sheets fighting over one set of
+   selectors is exactly what clamped its title to two thirds of spec. What stays
+   here is the crest — the PLACEMENT cards still wear it. */
 .eventCardCrest {
   display: flex;
   align-items: center;
@@ -88,8 +31,7 @@
 }
 
 .eventCardCrest span,
-.eventCardCrest b,
-.eventCardDeckLabel {
+.eventCardCrest b {
   color: var(--clay-deep);
   font-size: 0.68rem;
   letter-spacing: 0.08em;
@@ -102,62 +44,13 @@
   white-space: nowrap;
 }
 
-.eventCardArtFrame {
-  margin: 0 24px 12px;
-  overflow: hidden;
-  border: 1px solid rgb(80 35 18 / 46%);
-  border-radius: 8px;
-  background: #dcc08c;
-  box-shadow:
-    0 10px 20px rgb(72 42 21 / 24%),
-    inset 0 0 0 4px rgb(255 248 231 / 42%);
-}
-
-.eventCardArtFrame img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.eventCardBody {
-  display: grid;
-  align-content: start;
-  gap: 8px;
-  min-height: 0;
-  overflow: auto;
-  padding: 0 24px 10px;
-  scrollbar-color: var(--clay) transparent;
-}
-
-.eventCardBody h2 {
-  margin: 0;
-  color: #27150d;
-  font-size: clamp(1.08rem, 4.8vw, 1.42rem);
-  line-height: 1.02;
-  text-align: center;
-}
-
-.eventCardBody p {
-  margin: 0;
-  color: rgb(36 25 16 / 82%);
-  font-size: 0.84rem;
-  line-height: 1.28;
-  text-align: center;
-}
-
-.eventCardDeckLabel {
-  justify-self: center;
-}
-
 .eventChoiceStack {
   display: grid;
   gap: 7px;
   margin-top: 2px;
 }
 
-.eventChoiceButton,
-.eventSingleEffect {
+.eventChoiceButton {
   display: grid;
   gap: 5px;
   min-width: 0;
@@ -182,8 +75,7 @@
   box-shadow: inset 0 0 0 1px rgb(255 248 231 / 56%);
 }
 
-.eventChoiceButton strong,
-.eventSingleEffect strong {
+.eventChoiceButton strong {
   color: var(--fg);
   font-family: var(--font-display);
   font-size: 0.74rem;
@@ -191,7 +83,6 @@
 }
 
 .eventChoiceButton span,
-.eventSingleEffect span,
 .fieldGroup em {
   color: var(--muted);
   font-family: var(--font-body);
@@ -199,14 +90,6 @@
   font-style: normal;
   font-weight: 400;
   line-height: 1.25;
-}
-
-.eventTargetField {
-  margin-top: 2px;
-}
-
-.eventCardFooter {
-  padding: 10px 24px 22px;
 }
 
 .eventResolveButton {
@@ -751,42 +634,17 @@
   font-size: 0.78rem;
 }
 
-.eventTableModifier,
-.eventTableOutcome {
-  display: grid;
-  gap: 3px;
-  padding: 8px 10px;
-  border-left: 2px solid var(--clay);
-  background: rgb(255 248 231 / 62%);
-  font-size: 0.78rem;
-}
-
-.eventTableOutcome strong {
-  font-family: var(--font-display);
-  letter-spacing: 0.03em;
-}
-
+/* The rolled table's verdict band, its stake kicker and its foot row live in
+   ceremony.css now — the riot and the venture are rites, not forms. What is left
+   below still dresses the Codex's read-only table listings. */
 .eventTableFooter {
   display: grid;
-}
-
-.eventTableFooterRow {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 8px;
 }
 
 .riotInsuranceStack,
 .ventureControls {
   display: grid;
   gap: 7px;
-}
-
-.riotInsuranceTitle {
-  color: var(--muted);
-  font-size: 0.68rem;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
 }
 
 .riotInsuranceRow {
@@ -802,12 +660,6 @@
   border-radius: 7px;
   background: var(--panel);
   font-size: 0.72rem;
-}
-
-.ventureStakeRow {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px;
 }
 
 .ghostButton {

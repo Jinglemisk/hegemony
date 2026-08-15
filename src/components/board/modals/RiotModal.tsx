@@ -9,7 +9,9 @@ import {
 import { getRiotTable } from "../../../game/content";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
+import { presentTableEffect } from "../../../ui/effects";
 import { AnnotatedText } from "../../AnnotatedText";
+import { ceremonyMood, commitVerb } from "./ceremonyMood";
 import { EventTableModal } from "./EventTableModal";
 import { capitalize, settlementPickerLabel } from "../helpers";
 import { useGameUi } from "../GameUiContext";
@@ -60,6 +62,22 @@ export function RiotModal({
   const [demoteChoice, setDemoteChoice] = useState(0);
 
   const result = !pending && G.lastTableRoll?.tableId === "riot" ? G.lastTableRoll : null;
+  // The verb is the outcome, and it comes from the shared mood map rather than
+  // the word "Continue" — a riot is something you endure, not something you
+  // navigate past.
+  const landed = result
+    ? (riotTable.rows
+        .find((row) => row.roll === result.modified)
+        ?.effects.map((effect) => presentTableEffect(effect)) ?? [])
+    : [];
+  const gain = landed.find((effect) => effect.tone === "positive");
+  const mood = ceremonyMood(
+    gain
+      ? "positive"
+      : landed.some((effect) => effect.tone === "negative")
+        ? "negative"
+        : "neutral",
+  );
 
   return (
     <EventTableModal
@@ -74,22 +92,22 @@ export function RiotModal({
       footer={
         pending ? (
           <button
-            className="primaryButton eventResolveButton"
+            className="ceremonyCommit verb verb-lg"
             disabled={!isActive}
             onClick={() => (onRolled(), moves.resolveRiot())}
           >
             Roll the Die
           </button>
         ) : (
-          <button className="primaryButton eventResolveButton" onClick={onDismissResult}>
-            Continue
+          <button className="ceremonyCommit verb verb-lg" onClick={onDismissResult}>
+            {commitVerb(mood, gain?.subject)}
           </button>
         )
       }
     >
       {pending ? (
         <div className="riotInsuranceStack" role="group" aria-label="Riot insurance">
-          <strong className="riotInsuranceTitle label">Before the die</strong>
+          <strong className="label">Before the die</strong>
           {(riotTable.insurance ?? []).map((option) => {
             const bought = pending.boughtInsurance.includes(option.id);
             const status = getBuyRiotInsuranceStatus(G, playerID, option.id);
@@ -106,12 +124,12 @@ export function RiotModal({
               return (
                 <div className="riotInsuranceRow" key={option.id}>
                   <button
-                    className="eventChoiceButton"
+                    className="ceremonyPick"
                     disabled={!isActive || !status.can || demoteTargets.length === 0}
                     onClick={() => target && moves.buyRiotInsurance(option.id, target)}
                   >
-                    <strong>{option.label}</strong>
-                    <span>
+                    <strong className="title">{option.label}</strong>
+                    <span className="caption">
                       <AnnotatedText text={costText} />
                     </span>
                   </button>
@@ -144,16 +162,16 @@ export function RiotModal({
 
             return (
               <button
-                className={bought ? "eventChoiceButton selectedChoice" : "eventChoiceButton"}
+                className={bought ? "ceremonyPick ceremonyPickTaken" : "ceremonyPick"}
                 disabled={bought || !isActive || !status.can}
                 key={option.id}
                 onClick={() => moves.buyRiotInsurance(option.id)}
               >
-                <strong>
+                <strong className="title">
                   {option.label}
                   {bought ? " — declared" : ""}
                 </strong>
-                <span>
+                <span className="caption">
                   <AnnotatedText text={costText} />
                 </span>
               </button>
