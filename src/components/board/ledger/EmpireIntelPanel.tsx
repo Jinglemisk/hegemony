@@ -17,14 +17,12 @@ import { ActiveEffectsList } from "../../ActiveEffectsList";
 
 function EmpireIntelPanelComponent({
   activeTab,
-  onClose,
   onBuildBuildingRequest,
   onBankSell,
   onBankBuy,
   onLadderRequest,
 }: {
   activeTab: LedgerTab;
-  onClose: () => void;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
@@ -44,43 +42,60 @@ function EmpireIntelPanelComponent({
 
   const title = ledgerTabLabel(activeTab);
   const titleGlyph = LEDGER_TABS.find(({ tab }) => tab === activeTab)?.glyph;
+  /* The empire strip, the unrest alarm and the standing effects are the CITIES
+     page's own furniture (f-panels.html ~194–208), not a masthead the whole left
+     tablet wears. They used to ride above every act page, which cost Pops, Build
+     and Market ~200px of the little height they have — and put the alarm on four
+     pages at once, when a page is allowed exactly one raised voice. */
+  const showsEmpireFurniture = activeTab === "cities";
 
   return (
     <div className="empireIntel">
       {/* The card is titled by the page it is showing, not by the furniture. */}
-      <LedgerPanelHeader title={title} glyph={titleGlyph} onClose={onClose} />
+      <LedgerPanelHeader title={title} glyph={titleGlyph} />
 
-      {/* The empire strip: four counts, the same four on every act page, so the
-          shape of your position is constant while the page under it changes. */}
-      <div className="empireStrip" aria-label="Empire summary">
-        <span className="est" title={`${cityCount} ${cityCount === 1 ? "city" : "cities"}`}>
-          <Icon glyph="city" />
-          <b className="stat-lg num">{cityCount}</b>
-          <span className="label">{cityCount === 1 ? "city" : "cities"}</span>
-        </span>
-        <span className="est" title={`${colonyCount} ${colonyCount === 1 ? "colony" : "colonies"}`}>
-          <Icon glyph="colony" />
-          <b className="stat-lg num">{colonyCount}</b>
-          <span className="label">{colonyCount === 1 ? "colony" : "colonies"}</span>
-        </span>
-        <span className="est" title={`${popsUsed} of ${popsCapacity} population`}>
-          <Icon glyph="citizens" />
-          <b className="stat-lg num">{popsUsed}</b>
-          <span className="label num">/{popsCapacity}</span>
-        </span>
-        <span
-          className="est"
-          title={`${cardsHeld} of ${G.ruleset.victory.cardsToWin} laurels held`}
-        >
-          <Icon glyph="laurel" />
-          <b className="stat-lg num">{cardsHeld}</b>
-          <span className="label num">/{G.ruleset.victory.cardsToWin}</span>
-        </span>
-      </div>
+      {showsEmpireFurniture ? (
+        <>
+          {/* Four counts: the shape of your position, on the page about your
+              settlements. Icon + number, four times — the words "city" and
+              "colony" that used to trail the first two are what their icons
+              already say, and at a tablet's real width (236px of page) they were
+              pushing the laurel count out through the frame. */}
+          <div className="empireStrip" aria-label="Empire summary">
+            <span className="est" title={`${cityCount} ${cityCount === 1 ? "city" : "cities"}`}>
+              <Icon glyph="city" />
+              <b className="stat-lg num">{cityCount}</b>
+            </span>
+            <span
+              className="est"
+              title={`${colonyCount} ${colonyCount === 1 ? "colony" : "colonies"}`}
+            >
+              <Icon glyph="colony" />
+              <b className="stat-lg num">{colonyCount}</b>
+            </span>
+            <span className="est" title={`${popsUsed} of ${popsCapacity} population`}>
+              <Icon glyph="citizens" />
+              <b className="stat-lg num">{popsUsed}</b>
+              <span className="label num">/{popsCapacity}</span>
+            </span>
+            <span
+              className="est"
+              title={`${cardsHeld} of ${G.ruleset.victory.cardsToWin} laurels held`}
+            >
+              <Icon glyph="laurel" />
+              <b className="stat-lg num">{cardsHeld}</b>
+              <span className="label num">/{G.ruleset.victory.cardsToWin}</span>
+            </span>
+          </div>
 
-      <UnrestAlarm status={unrest} popLossThreshold={G.ruleset.economy.unrest.popLossThreshold} />
+          <UnrestAlarm
+            status={unrest}
+            popLossThreshold={G.ruleset.economy.unrest.popLossThreshold}
+          />
 
-      <ActiveEffectsList variant="ledger" />
+          <ActiveEffectsList variant="ledger" />
+        </>
+      ) : null}
 
       <div className="intelBody">
         {activeTab === "cities" ? (
