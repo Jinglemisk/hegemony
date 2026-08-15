@@ -123,7 +123,16 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
                 key={entry.id}
                 style={player ? ({ "--line-color": glazeOf(player) } as CSSProperties) : undefined}
               >
-                <AnnotatedText text={entry.message} />
+                {/* Annotated, but NOT linked. Every noun the annotator knows —
+                    wood, food, colony, freeman, event, card — became a Codex
+                    button, so a single screen of log carried a dozen tabbable
+                    controls with eleven duplicate names ("Food", "Food",
+                    "Food"), and on the page they were a dozen oxblood
+                    highlights in prose that is meant to be read straight
+                    through. The chronicle is a RECORD: the glyph belongs, the
+                    link does not. Every one of those terms is still a link on
+                    the pages where you act on it. */}
+                <AnnotatedText links={false} text={entry.message} />
               </p>
             ))}
           </div>

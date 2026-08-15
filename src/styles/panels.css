@@ -1193,17 +1193,12 @@
    like "Damon received Player Event Card Granary Rats" was four highlights in
    nine words and the paragraph had no rhythm left to read. Emphasis that lands
    on nearly every noun says nothing. The glyph stays, because the glyph is the
-   information; the colour goes back to prose and returns on hover, where it
-   says "pressable" to the one reader who is reaching for it. What carries
-   judgment here is the signed number, and that keeps its olive and oxblood. */
-.entry .richTokenLink {
+   information; the colour is gone with the link (see ActionLogPanel). What
+   carries judgment here is the signed number, and it keeps its olive and
+   oxblood. */
+.entry .richToken {
   color: inherit;
   font-weight: inherit;
-}
-
-.entry .richTokenLink:hover,
-.entry .richTokenLink:focus-visible {
-  color: var(--clay-deep);
 }
 
 .chronicleEmpty {
