@@ -125,6 +125,13 @@
   font-size: 1.625rem; /* 26px */
 }
 
+/* The one number a whole page is ABOUT: the unrest alarm's happiness, the
+   victory heldline's count. At most one per page — a second would mean neither
+   is the answer. */
+.stat-lg.stat-hero {
+  font-size: 2rem; /* 32px */
+}
+
 .caption {
   font-size: 0.78125rem; /* 12.5px */
   font-weight: 400;

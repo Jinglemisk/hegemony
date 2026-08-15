@@ -35,4 +35,5 @@
    responsive.css stays after it, as ever. */
 @import "./styles/shell.css";
 @import "./styles/board.css";
+@import "./styles/panels.css";
 @import "./styles/responsive.css";

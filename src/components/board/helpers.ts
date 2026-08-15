@@ -17,7 +17,6 @@ import type {
   PopType,
   Pops,
   Resources,
-  Settlement,
 } from "../../game/types";
 import { presentBuildingEffects } from "../../ui/effects";
 import { formatResourceCost, formatResourceDelta } from "../../ui/formatters";
@@ -130,13 +129,6 @@ export function gameplayActionDisabled(
   isActive = true,
 ) {
   return !status?.can || !isActive || phase !== "gameplay";
-}
-
-/** How a settlement is named everywhere in the UI: ARGOS, not "City -2,0". The
- *  coordinates survive in tooltips and accessible labels, where a debugging fact
- *  belongs — the player's mental map is of PLACES, and it always was. */
-export function holdingShortLabel(G: HegemonyState, settlement: Settlement) {
-  return settlementNameOf(G.board.tiles, settlement.id);
 }
 
 /** One consistent line for every settlement picker: the place's NAME and rank,

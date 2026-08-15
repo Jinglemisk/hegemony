@@ -220,6 +220,11 @@
   --season-winter: #9db4ba;
   --clay-lit: #cd5124;
   --clay-shade: #a93c17;
+  /* The alarm's two fired grounds — oxblood for the wound, ochre for the warning.
+     Both are the lower half of a gradient, so they are darker than --neg/--warn
+     rather than different meanings. */
+  --oxblood-deep: #7a2610;
+  --warn-deep: #98601f;
   /* The band the floating left rail + ledger card live in — clear of the flush top
      spine and the bottom dock. The rail, card and camera all read them so they
      stay in agreement. */

@@ -582,6 +582,16 @@
    The tab rail stays even when its page is closed, so the way back is always in
    the same place; closing gives the sea back, which is the point of the toggle. */
 
+/* The workbench band is pointer-events: none so the sea stays pannable through
+   the gap between the tablets; every docked surface has to hand pointers back or
+   it is decoration. The rail and both pages were inert without this — clicks fell
+   straight through to the map's drag plane. */
+.tabRail,
+.intelPanel,
+.consultPanel {
+  pointer-events: auto;
+}
+
 .tabRail {
   position: fixed;
   top: var(--chrome-top);
