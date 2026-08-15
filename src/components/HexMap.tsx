@@ -277,28 +277,36 @@ function HexMapComponent({
 
   return (
     <>
-      <div className="mapModeControls" aria-label="Map mode controls">
-        {MAP_MODE_OPTIONS.map((option) => (
-          <button
-            aria-label={`${option.label} map mode`}
-            aria-pressed={mapMode === option.mode}
-            className={mapMode === option.mode ? "activeMapModeButton" : ""}
-            key={option.mode}
-            onClick={() => setMapMode(option.mode)}
-            title={`${option.label} map mode`}
-          >
-            <img alt="" src={option.iconHref} />
+      {/* The map's own chrome, inboard of the left tablet at its foot — proto.css
+          `.map-chrome`. Zoom leads because it is the one a player reaches for. */}
+      <div className="mapChrome">
+        <div className="mapZoomControls" aria-label="Map zoom controls">
+          <button aria-label="Zoom in" disabled={!canZoomIn} onClick={() => zoomBy(ZOOM_STEP)}>
+            <svg aria-hidden="true" className="mapChromeGlyph" viewBox="0 0 24 24">
+              <path d="M12 6v12M6 12h12" />
+            </svg>
           </button>
-        ))}
-      </div>
+          <button aria-label="Zoom out" disabled={!canZoomOut} onClick={() => zoomBy(-ZOOM_STEP)}>
+            <svg aria-hidden="true" className="mapChromeGlyph" viewBox="0 0 24 24">
+              <path d="M6 12h12" />
+            </svg>
+          </button>
+        </div>
 
-      <div className="mapZoomControls" aria-label="Map zoom controls">
-        <button aria-label="Zoom in" disabled={!canZoomIn} onClick={() => zoomBy(ZOOM_STEP)}>
-          +
-        </button>
-        <button aria-label="Zoom out" disabled={!canZoomOut} onClick={() => zoomBy(-ZOOM_STEP)}>
-          -
-        </button>
+        <div className="mapModeControls" aria-label="Map mode controls">
+          {MAP_MODE_OPTIONS.map((option) => (
+            <button
+              aria-label={`${option.label} map mode`}
+              aria-pressed={mapMode === option.mode}
+              className={mapMode === option.mode ? "activeMapModeButton" : ""}
+              key={option.mode}
+              onClick={() => setMapMode(option.mode)}
+              title={`${option.label} map mode`}
+            >
+              <img alt="" src={option.iconHref} />
+            </button>
+          ))}
+        </div>
       </div>
 
       <svg

@@ -67,14 +67,33 @@
   filter: none;
 }
 
+/* ── The map's own chrome ─────────────────────────────────────────────────────
+   Inboard of the left tablet, at its foot: proto.css `.map-chrome`, whose
+   `left: 322px` is that prototype's 306px tablet plus a 16px breath — the same
+   arithmetic as `--panel-w + 16px` here, so it follows --ui-scale for free.
+
+   It used to hang off the opposite corner, `right: 14px; bottom: 14px`, which at
+   1920 put both zoom discs entirely underneath the 128px End Turn seal: invisible,
+   and unclickable through it. The mode buttons had the mirror-image problem behind
+   the season dial. Nothing about the sea's bottom corners is free real estate —
+   both dials live there.
+
+   They are 34px lacquer DISCS with an ivory hairline, not rounded squares. On this
+   board a round object is a control and a hexagon is the world; a rounded square
+   was the only shape in the vocabulary that meant nothing. */
+.mapChrome {
+  position: absolute;
+  left: calc(var(--panel-w) + 16px);
+  bottom: calc(var(--chrome-bot) + 14px);
+  z-index: var(--z-map-chrome);
+  display: flex;
+  gap: 14px;
+}
+
 .mapZoomControls,
 .mapModeControls {
-  position: absolute;
-  bottom: 14px;
-  z-index: 5;
-  display: grid;
-  grid-template-columns: repeat(2, 36px);
-  gap: 6px;
+  display: flex;
+  gap: 8px;
   padding: 0;
   border: none;
   background: none;
@@ -82,58 +101,66 @@
   backdrop-filter: none;
 }
 
-.mapZoomControls {
-  right: 14px;
-}
-
-.mapModeControls {
-  left: 14px;
-}
-
 .mapZoomControls button,
 .mapModeControls button {
   display: grid;
   place-items: center;
-  min-width: 36px;
-  min-height: 36px;
-  width: 36px;
-  height: 36px;
+  min-width: 34px;
+  min-height: 34px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: 1px solid rgb(255 248 231 / 38%);
-  border-radius: 8px;
+  border: 1px solid rgb(255 248 231 / 30%);
+  border-radius: 50%;
   color: var(--ivory);
-  background: rgb(24 62 70 / 82%);
-  box-shadow: 0 6px 14px rgb(8 22 28 / 30%);
-  font-size: 1.15rem;
+  background: var(--vase-black);
+  box-shadow: var(--shadow-laid);
   line-height: 1;
 }
 
 .mapZoomControls button:not(:disabled):hover,
 .mapModeControls button:not(:disabled):hover {
-  border-color: rgb(255 248 231 / 78%);
-  background: rgb(31 105 119 / 92%);
-  box-shadow: 0 8px 16px rgb(8 22 28 / 24%);
+  border-color: rgb(255 248 231 / 70%);
+  background: var(--lacquer-lit);
+  box-shadow: var(--lift-hi);
+}
+
+.mapZoomControls button:disabled {
+  opacity: 0.42;
+}
+
+/* The +/− are drawn, not typed: a glyph in a fixed viewBox keeps its weight next
+   to the hairline at any --ui-scale, and it costs the sheet no font-size. */
+.mapChromeGlyph {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  pointer-events: none;
 }
 
 .mapModeControls button {
-  padding: 3px;
+  overflow: hidden;
+  padding: 2px;
 }
 
 .mapModeControls img {
   display: block;
   width: 28px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: 50%;
   pointer-events: none;
-  filter: saturate(0.92) contrast(1.05) drop-shadow(0 1px 2px rgb(8 22 28 / 30%));
+  filter: saturate(0.92) contrast(1.05);
 }
 
 .mapModeControls button[aria-pressed="true"] {
   border-color: rgb(255 248 231 / 86%);
-  background: rgb(192 70 28 / 88%);
+  background: var(--clay);
   box-shadow:
     inset 0 0 0 1px rgb(24 18 16 / 24%),
-    0 8px 17px rgb(8 22 28 / 28%);
+    var(--lift-hi);
 }
 
 .mapSetupCaption {
