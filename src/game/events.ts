@@ -50,7 +50,11 @@ export function drawPlayerEvent(G: HegemonyState, playerID: PlayerId) {
   }
 
   G.lastPlayerEvent = card;
-  addLog(G, `${getPlayerName(G, playerID)} received Player Event card ${card.name}. ${card.text}`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} received Player Event card ${card.name}. ${card.text}`,
+    playerID,
+  );
 
   if (!hasResolvablePendingOption(G, playerID, card)) {
     G.playerDiscardPile.push(card);
@@ -58,11 +62,10 @@ export function drawPlayerEvent(G: HegemonyState, playerID: PlayerId) {
     return;
   }
 
+  // No log line here. The modal that opens IS the notice, and a chronicle entry
+  // saying "must resolve X" duplicated the "received X" line above it and the
+  // "resolved X: -5 wood" line below — four entries for one event.
   G.pendingPlayerEvent = { card, playerID };
-  addLog(
-    G,
-    `${getPlayerName(G, playerID)} must reveal and resolve ${card.name} before taking normal actions.`,
-  );
 }
 
 export function resolvePendingPlayerEvent(
@@ -95,7 +98,6 @@ export function resolvePendingPlayerEvent(
   applyEventEffects(G, pending.card, playerID, effects, targetTileId);
   G.playerDiscardPile.push(pending.card);
   G.pendingPlayerEvent = null;
-  addLog(G, `${getPlayerName(G, playerID)} resolved ${pending.card.name}.`);
   return MOVE_OK;
 }
 
@@ -252,6 +254,7 @@ function applyEventEffects(
         addLog(
           G,
           `${getPlayerName(G, playerID)} will feel ${formatRuleNumber(effect.amountPerTurn)} happiness per turn from ${card.name} for ${effect.turns} turns.`,
+          playerID,
         );
       }
     } else if (effect.type === "incomeModifier" || effect.type === "buildingCostMultiplier") {
@@ -272,6 +275,7 @@ function applyEventEffects(
       addLog(
         G,
         `${getPlayerName(G, activePlayerID)} added ${effect.amount} ${formatPopName(effect.pop, effect.amount)} to ${formatTileLabel(G, targetTileId)} from ${card.name}.`,
+        activePlayerID,
       );
     } else if (effect.type === "actionCostDiscount") {
       if (!activePlayerID) {
@@ -292,6 +296,7 @@ function applyEventEffects(
       addLog(
         G,
         `${getPlayerName(G, activePlayerID)} gained a ${formatRuleNumber(effect.amount)} ${effect.resource} discount from ${card.name}.`,
+        activePlayerID,
       );
     } else if (effect.type === "resourceExchange") {
       if (!activePlayerID) {
@@ -321,6 +326,7 @@ function applyEventEffects(
         `${getPlayerName(G, activePlayerID)} exchanged ${formatRuleNumber(exchanged)} ${effect.from} for ${formatRuleNumber(
           received,
         )} ${effect.to} from ${card.name}.`,
+        activePlayerID,
       );
     } else if (effect.type === "resourceDeltaPerPop") {
       for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
@@ -355,7 +361,11 @@ function applyEventResourceDelta(
   }
 
   applyResourceDeltaWithFloors(resources, delta, G.ruleset.economy.stockpileFloors);
-  addLog(G, `${getPlayerName(G, playerID)} resolved ${source}: ${formatRuleResourceDelta(delta)}.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} resolved ${source}: ${formatRuleResourceDelta(delta)}.`,
+    playerID,
+  );
 }
 
 function scopedPlayerIds(scope: "activePlayer" | "allPlayers", activePlayerID: PlayerId | null) {

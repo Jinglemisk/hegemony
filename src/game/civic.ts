@@ -72,6 +72,7 @@ export function civicCalm(
   addLog(
     G,
     `${getPlayerName(G, playerID)} ${payment === "influence" ? "stabilized the province" : "staged bread & circuses"} (+${G.ruleset.civicCalm.happiness} happiness).`,
+    playerID,
   );
   return MOVE_OK;
 }
@@ -197,6 +198,7 @@ export function promotePop(
   addLog(
     G,
     `${getPlayerName(G, playerID)} promoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} on ${tile.terrain}.`,
+    playerID,
   );
   return MOVE_OK;
 }
@@ -232,6 +234,7 @@ export function demotePop(
   addLog(
     G,
     `${getPlayerName(G, playerID)} demoted a ${formatPopName(from, 1)} to ${formatPopName(to, 1)} on ${tile.terrain}${duringOwnRiot ? " — the mob demanded it" : ""}.`,
+    playerID,
   );
   return MOVE_OK;
 }

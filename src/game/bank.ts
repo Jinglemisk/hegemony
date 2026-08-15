@@ -124,7 +124,11 @@ export function bankSell(
   const resources = G.players[playerID].resources;
   resources[material] -= rate.sell;
   resources.gold += 1;
-  addLog(G, `${getPlayerName(G, playerID)} sold ${rate.sell} ${material} to the bank for 1 gold.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} sold ${rate.sell} ${material} to the bank for 1 gold.`,
+    playerID,
+  );
   return MOVE_OK;
 }
 
@@ -147,6 +151,7 @@ export function bankBuy(
   addLog(
     G,
     `${getPlayerName(G, playerID)} bought 1 ${material} from the bank for ${rate.buy} gold.`,
+    playerID,
   );
   return MOVE_OK;
 }

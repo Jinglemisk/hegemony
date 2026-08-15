@@ -24,6 +24,7 @@ export function startRiot(G: HegemonyState, playerID: PlayerId, tier: RiotTier) 
   addLog(
     G,
     `${getPlayerName(G, playerID)}'s province erupts — a ${tier === "revolt" ? "revolt" : "riot"} must be faced before income is collected.`,
+    playerID,
   );
 }
 
@@ -83,7 +84,11 @@ export function buyRiotInsurance(
   }
 
   G.pendingRiot.boughtInsurance.push(optionId);
-  addLog(G, `${getPlayerName(G, playerID)} declares ${option.label} (+1 to the riot roll).`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} declares ${option.label} (+1 to the riot roll).`,
+    playerID,
+  );
   return MOVE_OK;
 }
 
@@ -143,6 +148,7 @@ export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
     addLog(
       G,
       `${getPlayerName(G, playerID)}'s happiness settles at ${G.ruleset.economy.unrest.severeRebound}.`,
+      playerID,
     );
   }
 

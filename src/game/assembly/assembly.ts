@@ -147,6 +147,7 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
     addLog(
       G,
       `Isonomia binds ${getPlayerName(G, G.assembly.isonomiaTarget)} to one base vote at this Assembly.`,
+      G.assembly.isonomiaTarget,
     );
   }
 
@@ -300,6 +301,7 @@ export function assemblyDraw(
   addLog(
     G,
     `${getPlayerName(G, playerID)} paid ${cost} influence to sound out ${politicianName(politician)}.`,
+    playerID,
   );
   return MOVE_OK;
 }
@@ -314,7 +316,7 @@ export function assemblyDiscardHeld(G: HegemonyState, playerID: PlayerId): MoveR
 
   discardCard(G, session!.held[playerID]!.card);
   session!.held[playerID] = null;
-  addLog(G, `${getPlayerName(G, playerID)} set the drawn resolution aside.`);
+  addLog(G, `${getPlayerName(G, playerID)} set the drawn resolution aside.`, playerID);
   return MOVE_OK;
 }
 
@@ -409,7 +411,11 @@ export function assemblyPropose(
     target: card.kind === "directive" ? target : undefined,
   };
   session!.held[playerID] = null;
-  addLog(G, `${getPlayerName(G, playerID)} seals a resolution to lay before the Assembly.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} seals a resolution to lay before the Assembly.`,
+    playerID,
+  );
   finalizeProposal(G, playerID);
   return MOVE_OK;
 }
@@ -451,6 +457,7 @@ export function assemblyProposeRepeal(
   addLog(
     G,
     `${getPlayerName(G, playerID)} moves to strike ${getResolutionCard(G.definition.content, cardId)?.name ?? cardId} from the record.`,
+    playerID,
   );
   finalizeProposal(G, playerID);
   return MOVE_OK;
@@ -471,7 +478,7 @@ export function assemblyPass(G: HegemonyState, playerID: PlayerId): MoveResult {
   }
 
   session!.proposals[playerID] = null;
-  addLog(G, `${getPlayerName(G, playerID)} holds their peace.`);
+  addLog(G, `${getPlayerName(G, playerID)} holds their peace.`, playerID);
   finalizeProposal(G, playerID);
   return MOVE_OK;
 }
@@ -573,7 +580,11 @@ export function assemblyBribe(G: HegemonyState, playerID: PlayerId): MoveResult 
 
   G.players[playerID].resources.influence -= rules.briberyCost;
   session.bribesUsed[playerID] += 1;
-  addLog(G, `${getPlayerName(G, playerID)} buys a vote for ${rules.briberyCost} influence.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} buys a vote for ${rules.briberyCost} influence.`,
+    playerID,
+  );
   return MOVE_OK;
 }
 
@@ -600,6 +611,7 @@ export function assemblyVote(G: HegemonyState, playerID: PlayerId, yea: boolean)
   addLog(
     G,
     `${getPlayerName(G, playerID)} votes ${yea ? "yea" : "nay"} with ${weight} vote${weight === 1 ? "" : "s"}.`,
+    playerID,
   );
   session.voteIndex += 1;
 
@@ -634,7 +646,7 @@ export function assemblyVeto(G: HegemonyState, playerID: PlayerId): MoveResult {
 
   G.players[playerID].resources.influence -= rules.vetoCost;
   session.vetoUsed[playerID] += 1;
-  addLog(G, `${getPlayerName(G, playerID)} vetoes the resolution before the house.`);
+  addLog(G, `${getPlayerName(G, playerID)} vetoes the resolution before the house.`, playerID);
   resolveBallotItem(G, playerID);
   return MOVE_OK;
 }
@@ -789,7 +801,7 @@ function recordAuthoredPass(G: HegemonyState, author: PlayerId, politician: Poli
   if (holder === null) {
     if (G.assemblyPassedByPlayer[author] >= minimum) {
       G.voiceHolder = author;
-      addLog(G, `${getPlayerName(G, author)} claims the Voice of the Assembly.`);
+      addLog(G, `${getPlayerName(G, author)} claims the Voice of the Assembly.`, author);
     }
   } else if (
     holder !== author &&
@@ -799,6 +811,7 @@ function recordAuthoredPass(G: HegemonyState, author: PlayerId, politician: Poli
     addLog(
       G,
       `${getPlayerName(G, author)} surpasses ${getPlayerName(G, holder)} and takes the Voice.`,
+      author,
     );
   }
 }
@@ -861,7 +874,7 @@ function applyDirectiveEffect(
           ? effect.amount
           : -Math.min(-effect.amount, Math.max(0, resources[effect.resource]));
       resources[effect.resource] += amount;
-      addLog(G, `${card.name}: ${getPlayerName(G, target)} bears the decree.`);
+      addLog(G, `${card.name}: ${getPlayerName(G, target)} bears the decree.`, target);
       break;
     }
 
@@ -869,7 +882,11 @@ function applyDirectiveEffect(
       const resources = G.players[target].resources;
       const lost = Math.floor(Math.max(0, resources[effect.resource]) * effect.fraction);
       resources[effect.resource] -= lost;
-      addLog(G, `${card.name}: ${getPlayerName(G, target)} loses ${lost} ${effect.resource}.`);
+      addLog(
+        G,
+        `${card.name}: ${getPlayerName(G, target)} loses ${lost} ${effect.resource}.`,
+        target,
+      );
       break;
     }
 
@@ -879,7 +896,7 @@ function applyDirectiveEffect(
 
     case "suppressIncome":
       G.players[target].incomeSuppressedTurns += effect.turns;
-      addLog(G, `${card.name}: work stops in ${getPlayerName(G, target)}'s polis.`);
+      addLog(G, `${card.name}: work stops in ${getPlayerName(G, target)}'s polis.`, target);
       break;
 
     case "repealNewestTargetLaw": {
@@ -888,7 +905,11 @@ function applyDirectiveEffect(
         .sort((a, b) => b.order - a.order)[0];
 
       if (!newest) {
-        addLog(G, `${card.name}: ${getPlayerName(G, target)} had no authored stele left standing.`);
+        addLog(
+          G,
+          `${card.name}: ${getPlayerName(G, target)} had no authored stele left standing.`,
+          target,
+        );
         break;
       }
 
@@ -905,6 +926,7 @@ function applyDirectiveEffect(
       addLog(
         G,
         `${card.name}: ${getPlayerName(G, target)} will have one base vote at the next Assembly.`,
+        target,
       );
       break;
   }
@@ -948,6 +970,7 @@ function loseFromLargestSettlement(
     addLog(
       G,
       `${source}: ${getPlayerName(G, playerID)} loses a ${pop === "slaves" ? "slave" : pop === "freemen" ? "freeman" : "citizen"} to the mob.`,
+      playerID,
     );
   }
 }

@@ -171,5 +171,6 @@ export function consumeActionCostDiscounts(
     `${getPlayerName(G, playerID)} used ${matching.map((discount) => discount.label).join(", ")} event discount${
       matching.length === 1 ? "" : "s"
     }.`,
+    playerID,
   );
 }

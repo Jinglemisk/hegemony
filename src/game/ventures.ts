@@ -61,7 +61,11 @@ export function fundExpedition(
     .filter(([, amount]) => amount)
     .map(([resource, amount]) => `${amount} ${resource}`)
     .join(", ");
-  addLog(G, `${getPlayerName(G, playerID)} stakes ${stakeText} to fund the ${table.name}.`);
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} stakes ${stakeText} to fund the ${table.name}.`,
+    playerID,
+  );
   rollOnTable(G, playerID, table);
   return MOVE_OK;
 }

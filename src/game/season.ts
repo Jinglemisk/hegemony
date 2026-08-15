@@ -43,7 +43,7 @@ export function startNewSeason(G: HegemonyState) {
   if (isNewYear(G.season)) {
     const index = PLAYER_IDS.indexOf(G.seasonOpener);
     G.seasonOpener = PLAYER_IDS[(index + 1) % PLAYER_IDS.length];
-    addLog(G, `${getPlayerName(G, G.seasonOpener)} opens the new year.`);
+    addLog(G, `${getPlayerName(G, G.seasonOpener)} opens the new year.`, G.seasonOpener);
     // The new opener takes the auspices — the omen replaces last year's.
     rollYearOmen(G);
 
@@ -66,5 +66,5 @@ export function expireTurnEventModifiers(G: HegemonyState, playerID: PlayerId) {
   }
 
   G.players[playerID].actionCostDiscounts = [];
-  addLog(G, `${getPlayerName(G, playerID)}'s unused event discounts expired.`);
+  addLog(G, `${getPlayerName(G, playerID)}'s unused event discounts expired.`, playerID);
 }
