@@ -84,6 +84,45 @@ are the causes behind those 689 — one row per decision, not per element.
 
 **After wave 1: 156.** `OVERFLOW 262 → 7`, `OFFSCREEN:top 247 → 0`.
 
+### Final state
+
+| checker            | start     | end                                         |
+| ------------------ | --------- | ------------------------------------------- |
+| `ui:audit`         | **689**   | **0** across 19 surfaces × 3 widths         |
+| `ui:conduct`       | **362**   | **16**, every one a repeated glossary token |
+| `ui:check` budgets | 224/75/20 | **131 / 47 / 0**                            |
+
+`NAMELESS 0 · CONTRAST 0 · NOFOCUS 0 · TINY 0`. No console errors on any surface.
+Suites: 524 tests, 95 parity.
+
+**A large share of the run went into the checkers, not the UI.** Six
+false-positive classes were found and removed, each of which had been reported as
+a defect and would have been "fixed" by damaging something that already worked:
+
+1. `OFFSCREEN` counted content below the fold of a working scroll region — 101 rows.
+2. `COLLISION` used bounding boxes, so a `<strong>` on line three "overlapped" the
+   `<em>` wrapping all four lines at 100%. This one sent an agent chasing a
+   phantom clause bug in the Assembly.
+3. `COLLISION` measured where things are _laid out_, not where they are _painted_,
+   so a card clipped 80px under a tablet "collided" with the End Turn seal.
+4. The focus probe called `.focus()`, and `:focus-visible` deliberately does not
+   match programmatic focus — 277 rows, all fiction.
+5. `TINY` ignored WCAG 2.5.8's inline-in-a-sentence exemption, which this app
+   leans on for hundreds of glossary links. Padding them to 24px was tried first
+   and produced 53 fresh collisions — the evidence that the exemption is real.
+6. The focus probe read computed style mid-transition, so controls that were
+   visibly lighting up measured as inert.
+
+Every correction was checked the same way: restore the old rule and confirm it
+still catches a defect known to be real. **A detector softened until it passes is
+worse than no detector, because its clean run reads as proof.**
+
+**Two real defects were hiding under those fictions** and would not have been
+found without fixing the ruler first: a focused hex was painted identically to a
+hovered one (and in targeting mode had no indicator at all), and the End Turn
+seal's tooltip opened at viewport (10, 10) because `display: contents` gave its
+trigger a zero-size rect.
+
 ### Owner rulings taken during the run
 
 Two questions were escalated rather than guessed, because either answer led to
@@ -130,6 +169,19 @@ materially different work. Both were answered:
 
 Parity rows (`PAR-*`) live in
 [the parity companion](./ui-triage-parity.md) and carry the same severity scale.
+
+### Known-open, deliberately
+
+Nothing here is a surprise; each was reasoned rather than missed.
+
+| ID      | what                                                                                                                                                                                                                                                                                                              |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CER-1   | **Fate cards have no voice.** `EventCard` has no flavour field; `card.text` _is_ the rules sentence. The duplication is fixed (a card no longer says its one thing twice), but the showcase's quoted line has nowhere to come from. Needs an authored `flavor` field — an `engine:` commit, and the owner's call. |
+| ICON-1  | **`AtlasIcon` is a fourth icon system** — tinted PNG masks for pops, buildings, settlement kinds and terrain, across 11 files. `POP_GLYPHS`, `BUILDING_GLYPHS`, `SETTLEMENT_GLYPHS` and `TERRAIN_GLYPHS` already exist as line art for every one. Same defect as the happiness raster, one register over.         |
+| SHELL-3 | The compass rose is **painted into the sea plate** (`center / cover`), so its position moves with the viewport while the dials' is fixed. No CSS placement separates them at every width; needs the ornament off the plate or a different crop.                                                                   |
+| ASM-11  | The repeal crack-and-fall ceremony. Needs exit-animation state retention. Out of scope since the original run.                                                                                                                                                                                                    |
+| TYPE-1  | The venture title renders 24px against a 27px spec, and the Assembly tally 52–54px against 56 below 1440. Both are `--ui-scale` behaving as documented — "1280 gets the same scene smaller, not a different one". Honouring the spec would break the uniform scale for one element.                               |
+| DUP-1   | 16 repeated glossary tokens (`Food` ×6 in one chronicle page). Each links to the same chapter, and each is read _in its sentence_, which is what disambiguates it. Numbering them would make the chronicle unreadable to fix an ambiguity that only exists when tabbing the page as a list.                       |
 
 ### Opened by the fixes
 
