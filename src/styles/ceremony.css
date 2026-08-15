@@ -1,0 +1,268 @@
+/* ceremony — the register a dialog rises into when a rite is happening.
+ *
+ * Most dialogs are not ceremonies. Choosing a settlement, picking a payment,
+ * confirming a build: those are picks, and they stay plain, because **if every
+ * dialog is a rite then none of them is**. Only three things earn the dark table
+ * — a fate drawn, a die cast, and the age ending.
+ *
+ * The mood is the only thing that changes between them, and it is about how the
+ * moment feels, not what it does: `gift` olive, `wound` oxblood, `rite` clay.
+ * The mood reaches the frame, the kicker and the verb on the button; the numbers
+ * inside keep the same --pos/--neg they have everywhere else.
+ */
+
+/* The table goes dark and closes to a vignette. The chart stays visible under it,
+   because the game did not go away — it is holding its breath. */
+.modalBackdrop.ceremonyScrim {
+  background: radial-gradient(ellipse at 50% 42%, rgb(24 18 16 / 68%), rgb(24 18 16 / 93%));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* The mood frame: a keyline, a coloured band, and a wide soft glow, layered as
+   one box-shadow so the card reads as a lit object rather than a bordered box. */
+.ceremony {
+  border: 0;
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--ivory-lit), var(--ivory) 50%, var(--ivory-settled));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    0 0 0 1px rgb(36 25 16 / 55%),
+    0 0 0 5px var(--mood),
+    0 0 0 6.5px rgb(36 25 16 / 60%),
+    0 42px 110px rgb(0 0 0 / 75%),
+    0 0 120px var(--mood-glow);
+}
+
+.ceremony-wound {
+  --mood: rgb(143 46 19 / 85%);
+  --mood-glow: rgb(143 46 19 / 28%);
+  --mood-ink: var(--neg);
+}
+
+.ceremony-gift {
+  --mood: rgb(94 110 58 / 85%);
+  --mood-glow: rgb(94 110 58 / 26%);
+  --mood-ink: var(--pos);
+}
+
+.ceremony-rite {
+  --mood: rgb(192 70 28 / 85%);
+  --mood-glow: rgb(192 70 28 / 26%);
+  --mood-ink: var(--clay);
+}
+
+.ceremony .eventCardDeckLabel,
+.ceremony .eventTableHeader h2 {
+  color: var(--mood-ink);
+}
+
+.ceremony .eventCardDeckLabel {
+  letter-spacing: 0.34em;
+}
+
+/* The seat that drew it, on a lacquer tag over the art. */
+.ceremony .eventCardCrest {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 13px 5px 6px;
+  border: 0;
+  border-radius: 20px;
+  color: var(--ivory);
+  background: rgb(24 18 16 / 78%);
+}
+
+.ceremony .eventCardCrest b {
+  color: var(--ivory);
+  letter-spacing: 0.14em;
+}
+
+/* The commit takes the mood. A card that hurts you does not get a clay button. */
+.ceremony .eventResolveButton,
+.ceremony .primaryButton {
+  border: 0;
+  border-radius: 4px;
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--mood-ink), var(--mood-ink));
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 30%),
+    0 3px 12px rgb(0 0 0 / 50%);
+}
+
+/* ── The drama row: the die, and what it found ────────────────────────────── */
+
+.drama {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  margin-bottom: 18px;
+}
+
+.dramaOutcome {
+  text-align: left;
+}
+
+.dramaOutcome .label {
+  color: var(--ink-48);
+  letter-spacing: 0.24em;
+}
+
+.dramaOutcome h3 {
+  margin: 1px 0 3px;
+}
+
+.dramaOutcome .caption {
+  color: var(--ink-48);
+}
+
+/* A lacquer cube with ivory pips — an object you rolled, not a number you were
+   given. The glow is the one place ochre appears outside the season wheel. */
+.lacquerDie {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 84px;
+  height: 84px;
+  border-radius: 12px;
+  background: linear-gradient(160deg, var(--lacquer-lit), var(--vase-black) 70%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 20%),
+    0 10px 26px rgb(0 0 0 / 50%),
+    0 0 46px rgb(217 138 53 / 40%);
+}
+
+.diePips {
+  display: grid;
+  grid-template-rows: repeat(3, 14px);
+  grid-template-columns: repeat(3, 14px);
+  gap: 6px;
+}
+
+.pip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ivory);
+  box-shadow: inset 0 -2px 3px rgb(0 0 0 / 40%);
+}
+
+.pipOff {
+  visibility: hidden;
+}
+
+/* ── The blow ─────────────────────────────────────────────────────────────
+   What the card does to you, in one band across the card's waist: the effect's
+   own glyph, and the sentence with its signed numbers already coloured. Bounded
+   above and below by mood-tinted rules so the eye stops there and nowhere else. */
+
+.ceremony .blow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 6px;
+  padding: 13px var(--sp-3);
+  border-top: 1px solid var(--mood);
+  border-bottom: 1px solid var(--mood);
+  background: var(--mood-glow);
+  text-align: left;
+}
+
+.ceremony .blow .icon {
+  flex: none;
+  color: var(--mood-ink);
+  stroke-width: 2;
+}
+
+.ceremony .blowLine {
+  color: var(--ink);
+}
+
+/* The card is wider and shorter than the old portrait reveal: a fate is read in
+   one glance, and 2:3 forced a column of empty ivory under every short card. */
+.ceremony.eventCardReveal {
+  width: min(470px, calc(100vw - 34px));
+  max-height: none;
+  aspect-ratio: auto;
+  overflow: hidden;
+}
+
+/* A column, not a grid. The crest is absolutely positioned here, which means it
+   leaves the flow entirely — so the grid's four named rows were handed to three
+   children and the art took the row meant for the body: a 705px painting and the
+   name, the blow and the button pushed off the bottom of the card. A flex column
+   has no rows to mis-assign. */
+.ceremony .eventCardSurface {
+  display: flex;
+  flex-direction: column;
+  max-height: min(88vh, 780px);
+  border: 0;
+  border-radius: 6px;
+  background: none;
+}
+
+/* The frame is the mood ring now; the painted double keyline underneath it was a
+   second frame competing with it. */
+.ceremony .eventCardSurface::before,
+.ceremony .eventCardSurface::after {
+  display: none;
+}
+
+.ceremony .eventCardArtFrame {
+  position: relative;
+  flex: none;
+  height: 280px;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* The art fades into the ivory it sits on, so the card is one object rather than
+   a picture in a box. */
+.ceremony .eventCardArtFrame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(36 25 16 / 22%),
+    transparent 30%,
+    transparent 62%,
+    var(--ivory-lit) 98%
+  );
+  pointer-events: none;
+}
+
+/* The crest's own sizing rules are for the old bordered card; here the seat is a
+   glazed disc with its blazon, exactly as on the roster and the board. */
+.ceremony .eventCardCrest .seatGlaze {
+  width: 22px;
+  height: 22px;
+  color: var(--ivory);
+  box-shadow: inset 0 0 0 1.4px rgb(255 248 231 / 85%);
+}
+
+.ceremony .eventCardCrest {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+}
+
+.ceremony .eventCardBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 34px 22px;
+  text-align: center;
+}
+
+.ceremony .eventCardFooter {
+  flex: none;
+  padding: 0 34px 26px;
+}

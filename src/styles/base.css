@@ -225,6 +225,11 @@
      rather than different meanings. */
   --oxblood-deep: #7a2610;
   --warn-deep: #98601f;
+  /* The ceremony card's fired ivory, lit at the top and settling to bone, and the
+     lacquer's own highlight. Three artwork values that only ceremony.css spends. */
+  --ivory-lit: #fffaf0;
+  --ivory-settled: #f3e7cb;
+  --lacquer-lit: #2d221a;
   /* The band the floating left rail + ledger card live in — clear of the flush top
      spine and the bottom dock. The rail, card and camera all read them so they
      stay in agreement. */
