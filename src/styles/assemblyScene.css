@@ -49,6 +49,10 @@
   /* Wide enough that "held their peace" and "has cast 3 — 1 bought" sit on one
      line. The prototype's 200px was drawn against the word "deliberates". */
   --asm-seat-w: calc(220px * var(--ui-scale));
+  /* How tall the floor's two hero objects — the card and the scale — will grow
+     into spare height before they stop. Past this an ivory slab with four lines
+     on it reads as a panel rather than as something you are holding. */
+  --asm-object-h: calc(430px * var(--ui-scale));
   --asm-lacquer: rgb(24 18 16 / 72%);
   --asm-keyline: rgb(255 248 231 / 20%);
 
@@ -455,20 +459,37 @@
 /* ── The floor ─────────────────────────────────────────────────────────────
    One hero object and one companion, centred. Never a row of equal boxes. */
 
+/* The floor takes every pixel the head and the seats do not, and — this is the
+   part that was wrong — it used to hand all of that to the GAPS. At 1366 the head
+   sat 175px off the tally and it read well; at 1440 that was 240px and at 1920 it
+   was 320px above AND below, leaving the ballot a small island in a black sea.
+   Extra height belongs to the objects. `stretch` gives the card and the scale the
+   floor's own height, each capped so they grow into a taller object rather than
+   an infinitely tall one, and what is left over is a margin, not a chasm. */
 .asmFloor {
   display: flex;
   flex: 1 1 auto;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   gap: calc(46px * var(--ui-scale));
   min-height: 0;
   width: 100%;
 }
 
+/* The closing floor's three registers stay mutually top-aligned — a triptych, not
+   three things floating at three heights — so the GROUP is what centres. */
 .asmFloorClosing {
+  align-items: center;
+  gap: 0;
+  padding-top: 0;
+}
+
+.asmClosingRegisters {
+  display: flex;
   align-items: flex-start;
+  justify-content: center;
   gap: calc(60px * var(--ui-scale));
-  padding-top: calc(12px * var(--ui-scale));
+  max-height: 100%;
 }
 
 .asmCardWrap {
@@ -476,6 +497,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   flex: none;
 }
@@ -491,12 +513,20 @@
    Fired ivory floating on the dark floor, with a meander band across its head.
    It is NOT inside a bordered container: the darkness is the frame. */
 
+/* The card GROWS into spare height instead of floating in the middle of it, and
+   it grows by FLEX rather than by a percentage min-height: the wrap also holds a
+   prompt line and a next-on-the-bema line, and `min-height: 100%` ignored them
+   and pushed the card three pixels up through the colonnade above it. `flex: 1`
+   claims only what is actually free. The cap is what keeps it a card — past this
+   an ivory slab with four lines on it reads as a panel, not as something held. */
 .asmLawCard {
   position: relative;
   z-index: 2;
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   width: var(--asm-card-w);
+  max-height: var(--asm-object-h);
   overflow: hidden;
   border-radius: 4px;
   background: linear-gradient(180deg, var(--ivory-lit), var(--ivory) 55%, var(--ivory-settled));
@@ -516,10 +546,17 @@
 }
 
 .asmLawFaceTrigger {
-  display: block;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-height: 0;
 }
 
+/* The band stays pinned to the head of the card and the FACE takes the growth,
+   so a taller card is a card with more air around its sentence — never a meander
+   floating in the middle of one. */
 .asmLawFace {
+  flex: 1 1 auto;
   padding: 16px 0 4px;
 }
 
@@ -795,11 +832,17 @@
    Two hero numerals over a tug bar with an ivory tie-notch, one potsherd per
    voter beneath it, then the verdict and the speaking order. */
 
+/* The scale grows with the card beside it: numerals high, bar and sherds at the
+   waist, the verdict and the order low. A 216px instrument centred beside a
+   430px card was the other half of the void the ballot used to sit in. */
 .asmTally {
   display: flex;
-  flex: none;
+  flex: 0 1 auto;
+  align-self: center;
   flex-direction: column;
+  justify-content: space-evenly;
   width: var(--asm-tally-w);
+  height: min(var(--asm-object-h), 100%);
   text-align: center;
 }
 

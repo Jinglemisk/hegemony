@@ -766,51 +766,56 @@ function ClosingFloor({ G, session }: { G: HegemonyState; session: AssemblySessi
 
   return (
     <div className="asmFloor asmFloorClosing">
-      <section className="asmRecap">
-        <h4 className="asmStandingKey label">What the Assembly decided</h4>
-        {session.results.length === 0 ? (
-          <p className="asmFloorEmpty body-em">The house rose with nothing on the bema.</p>
-        ) : (
-          <ul className="asmResults">
-            {session.results.map((result, index) => (
-              <li className={`is-${outcomeOf(result)}`} key={index}>
-                <span className="asmResultVerdict label">{OUTCOME_WORDS[outcomeOf(result)]}</span>
-                <span className="asmResultText body">{result.summary}</span>
-                <span className="asmResultTally stat num">
-                  {result.vetoedBy ? "—" : `${result.yea}–${result.nay}`}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="asmCapNote body-em">{steleNote(G)}</p>
-      </section>
+      <div className="asmClosingRegisters">
+        <section className="asmRecap">
+          <h4 className="asmStandingKey label">What the Assembly decided</h4>
+          {session.results.length === 0 ? (
+            <p className="asmFloorEmpty body-em">The house rose with nothing on the bema.</p>
+          ) : (
+            <ul className="asmResults">
+              {session.results.map((result, index) => (
+                <li className={`is-${outcomeOf(result)}`} key={index}>
+                  <span className="asmResultVerdict label">{OUTCOME_WORDS[outcomeOf(result)]}</span>
+                  <span className="asmResultText body">{result.summary}</span>
+                  <span className="asmResultTally stat num">
+                    {result.vetoedBy ? "—" : `${result.yea}–${result.nay}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="asmCapNote body-em">{steleNote(G)}</p>
+        </section>
 
-      <StandingColumn G={G} />
+        <StandingColumn G={G} />
 
-      <section className="asmRecap">
-        {/* "Voice ledger · authored resolutions passed" wrapped, orphaning
+        <section className="asmRecap">
+          {/* "Voice ledger · authored resolutions passed" wrapped, orphaning
             "PASSED" onto a line of its own in tracked caps. The heading names
             the thing; the column of numerals under it is self-evidently a count. */}
-        <h4 className="asmStandingKey label">Voice ledger</h4>
-        {ranked.map((playerID) => (
-          <p className="asmVoiceRow" key={playerID}>
-            <span className="asmGlaze title" style={{ background: PLAYER_GLAZES[playerID].color }}>
-              {PLAYER_GLAZES[playerID].blazon}
-            </span>
-            <span className="asmVoiceRowName verb">{PLAYER_NAMES[playerID]}</span>
-            <span className="asmVoiceRowNote caption">
-              {G.voiceHolder === playerID
-                ? "holds Voice through ties"
-                : `minimum ${G.ruleset.victory.minimums.voice}`}
-            </span>
-            <b className="asmVoiceRowCount stat num">{G.assemblyPassedByPlayer[playerID]}</b>
+          <h4 className="asmStandingKey label">Voice ledger</h4>
+          {ranked.map((playerID) => (
+            <p className="asmVoiceRow" key={playerID}>
+              <span
+                className="asmGlaze title"
+                style={{ background: PLAYER_GLAZES[playerID].color }}
+              >
+                {PLAYER_GLAZES[playerID].blazon}
+              </span>
+              <span className="asmVoiceRowName verb">{PLAYER_NAMES[playerID]}</span>
+              <span className="asmVoiceRowNote caption">
+                {G.voiceHolder === playerID
+                  ? "holds Voice through ties"
+                  : `minimum ${G.ruleset.victory.minimums.voice}`}
+              </span>
+              <b className="asmVoiceRowCount stat num">{G.assemblyPassedByPlayer[playerID]}</b>
+            </p>
+          ))}
+          <p className="asmVoiceFoot body-em">
+            resolutions each seat has authored and carried, all sittings
           </p>
-        ))}
-        <p className="asmVoiceFoot body-em">
-          resolutions each seat has authored and carried, all sittings
-        </p>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
