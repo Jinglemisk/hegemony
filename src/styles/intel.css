@@ -257,12 +257,47 @@
    "active effects" above rows that already name themselves; each slip now
    carries its own tone on a left rule (olive for a gift, oxblood for a wound)
    and trails the duration as a clause on the same sentence. */
+/* No height cap. The list used to wear `max-height: min(190px, 32vh)` against
+   rows that routinely measure more, which cut the fourth slip to a 4px sliver —
+   an oxblood dash that reads as a rendering artifact rather than as a modifier
+   you are about to look for on the income line. How many slips are held back is
+   a COUNT, and only the component can know it, so the cap moved there
+   (`LEDGER_SLIP_LIMIT`) and what it holds back is a button that says the number.
+   Opened, the list is allowed to scroll — the reader asked for it. */
 .activeEffectsLedger {
   display: grid;
   gap: 7px;
-  max-height: min(190px, 32vh);
   margin: 0 0 10px;
+}
+
+.activeEffectsLedger.isOpen {
+  max-height: 46vh;
   overflow-y: auto;
+  scrollbar-color: var(--ink-30) transparent;
+  scrollbar-gutter: stable;
+}
+
+/* The remainder, named and pressable. Aligned with the slips' text so it reads
+   as the last line of the list rather than a control docked beside it. */
+.activeEffectsMore {
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  /* 24px is 2.5.8's floor and this is a real control, not a caption. */
+  min-height: 24px;
+  padding: 0 8px 0 12px;
+  border: 0;
+  color: var(--clay-deep);
+  background: none;
+  letter-spacing: 0.14em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.activeEffectsMore:hover {
+  color: var(--clay);
+  box-shadow: none;
+  transform: none;
 }
 
 .activeEffectRows {
