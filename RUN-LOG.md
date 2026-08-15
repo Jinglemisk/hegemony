@@ -88,3 +88,67 @@ metrics · `db0b58d` ratchet.
 render; the only visible change is the typeface. Confirmed the two known bugs
 still present for later phases: the TUNE fab sits on top of END TURN, and the
 board shows `CITY -2,0` / `COLONY 3,0` rather than names.
+
+---
+
+## Phase 0b — the effect-icon system
+
+**Shipped.** 94 hand-drawn SVG line icons, one grid, one line weight, and a total
+map from every typed effect to its own glyph.
+
+- **`src/ui/icons/glyphs.ts`** — the whole alphabet as path data in one module, so
+  drift in line weight or optical size is visible by reading rather than by
+  diffing screenshots. Rules enforced in the suite: 24×24 grid, stroke-only in
+  `currentColor`, round caps, at most one solid mass per glyph.
+- **`src/ui/icons/Icon.tsx` + `src/styles/icons.css`** — three sizes and only
+  three (14 inline / 18 verb / 24 rail), stroke width set once and deliberately
+  NOT scaled with the icon, so a 14px glyph renders a ~1px line instead of a fat
+  one. Icons are `aria-hidden` unless given a label; a glyph beside its own text
+  should not be announced twice.
+- **`src/ui/iconRegistry.ts`** — fifteen families, every one `satisfies
+Record<Union, GlyphId>`, so a new effect kind without an icon is a compile
+  error. Includes the nouns (resources, pops, settlements, terrain, seasons,
+  verbs, buildings, orators, tables) and the six effect vocabularies.
+- **`<EffectIcon family=… effect=… />`** takes the effect the caller already
+  holds rather than a glyph name, so each union is narrowed in exactly one place
+  in the frontend.
+- **`src/ui/iconRegistry.test.ts`**, added to `npm run test:parity` (95 tests
+  now). Beyond totality it asserts the thing types cannot say: **no two members of
+  the same family share a glyph.** Eleven law effects must be eleven pictures. It
+  also checks every registry entry resolves to real path data, that no glyph
+  strays off the grid, the one-solid-mass rule, and that no glyph was drawn and
+  then forgotten.
+
+**Deviations.**
+
+- **Six glyphs were redrawn after looking at them**, which is the only way this
+  works. The contact sheet at 14/18/24/44px (`.playwright-mcp/glyphs.png`, script
+  in `.playwright-mcp/sheet.mjs`) caught: `stone` indistinguishable from
+  `mountain`; `influence` drawn as an Ionic capital and reading as a table (now a
+  ribboned medal — influence is standing, not a second currency); `plains` drawn
+  as two wave lines and reading as the sea; `gymnasion` drawn as a running track
+  and reading as an eye, which `omen` already owns; `spring` too close to the
+  Grow sprout; and all four orators wearing their distinguishing marks _inside_
+  the head silhouette, where at 14px they vanished and the four became one man.
+- **Sharing a glyph across families is allowed, within a family is not.** Forest
+  terrain and the wood resource are the same tree because they are the same
+  thing; the bank's rate step and the forum both get the scales. The test draws
+  the line exactly there.
+- **Cross-family sizing:** the plan's inventory listed ~50–70 glyphs; the set came
+  in at 94 because the nine buildings, five terrains, four seasons and four
+  orators all needed their own architecture rather than the shared atlas cells
+  they had been aliased onto (the sprite atlas mapped forum→marketplace,
+  aqueduct→granary, and odeon/villa/gymnasion all→temple).
+- **The die's pips are rings, not filled dots.** Three solid masses would have
+  made it the one glyph in the set that reads as a sticker, and at 14px a 1.6r
+  ring closes into a dot anyway.
+- Glyphs are declared but not yet _placed_ — Phases 1–5 replace the PNG mask and
+  atlas call sites surface by surface. The ratchet counts are unchanged for that
+  reason.
+
+**Commits.** `742c87b`.
+
+**Red.** None. `check` · `lint` · `test:parity` (95) · `ui:check` green.
+
+**Screenshots.** `.playwright-mcp/glyphs.png` — the full set at four sizes. This
+is the sheet to look at first if a later phase's icons ever stop matching.
