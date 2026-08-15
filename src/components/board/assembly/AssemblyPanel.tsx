@@ -8,6 +8,7 @@ import { AssemblyFloor } from "./AssemblyFloor";
 import { AssemblyFoot, type AssemblyMenu } from "./AssemblyFoot";
 import { AssemblyHead } from "./AssemblyHead";
 import { AssemblySeats } from "./AssemblySeats";
+import { useSceneContainment } from "./useSceneContainment";
 
 /**
  * The Assembly — a FULL-BLEED TAKEOVER (owner ruling, 2026-08-15).
@@ -40,6 +41,9 @@ export function AssemblyPanel({ onTakeSeat }: { onTakeSeat: (playerID: PlayerId)
   const { G, viewerId } = useGameUi();
   const session = G.assembly;
   const [menu, setMenu] = useState<AssemblyMenu>(null);
+  const sceneRef = useRef<HTMLDivElement>(null);
+
+  useSceneContainment(sceneRef, Boolean(session));
 
   // Any change of hands or of viewer closes an open picker: a menu left hanging across
   // seats would let one player's half-made choice land in the next player's turn.
@@ -79,9 +83,15 @@ export function AssemblyPanel({ onTakeSeat }: { onTakeSeat: (playerID: PlayerId)
   return (
     <div
       aria-labelledby="assembly-title"
-      aria-modal="false"
+      // The scene covers the app for the mouse; `aria-modal` and the containment
+      // hook are what make that true for the keyboard and the screen reader too.
+      // It declared itself NON-modal while sitting on top of everything, which is
+      // the one thing a takeover must never say.
+      aria-modal="true"
       className="asmScene onDark"
+      ref={sceneRef}
       role="dialog"
+      tabIndex={-1}
     >
       <div className="asmStage">
         <AssemblyHead G={G} session={session} />
