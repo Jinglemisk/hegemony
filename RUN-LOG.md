@@ -472,3 +472,78 @@ and go above it.
 chronicle}.png` (each tablet at panel width), `p4-fate.png`,
 `p4-venture-before.png`, `p4-venture-flip.png`, `p4-venture.png`,
 `p4-venture-reduced.png`.
+
+---
+
+## Phase 5 — the Assembly
+
+**Shipped.** The house sitting is a night scene now, and `assembly.css` reads like
+the rest of the codebase.
+
+- **The rename came first**, as the plan insists. 50 single- and double-letter
+  classes became readable names across `assembly.css` and five components. It had
+  to be done per-file rather than globally, and the reason is the argument for
+  doing it at all: **`.n` meant the Voice holder's name in the panel header and
+  the NAY segment of the tug bar in the bema** — one token, two meanings, four
+  inches apart. Also `.d/.l/.k/.p/.u/.y/.tk/.tn/.sd/.sn/.sd2/.sn2/.sv2/.av/.mb`
+  and the rest; state modifiers became `isNow`, `isYea`, `isOff`, `isYou`.
+- **The night scene.** The chart goes dark under a vignette, the colonnade stands
+  in the light, and the register is aegean. The panel's bone card and its frame
+  retire: the darkness IS the frame.
+- **The stations** are I · II · III joined by the meander — the same band that
+  edges the bone bars, drawn in ivory because it is running across the dark.
+- **Stelae** with bust medallions (the four orator glyphs), cut corners, and
+  **"HIS LAWS TEND TO"** with two effects in icon grammar. DRAW is a clay seal
+  with its influence cost; the author prize sits above it.
+- **The tally is a scale:** two hero numerals over a tug bar with an **ivory
+  tie-notch**. The notch is the whole point of drawing a bar — a tie _fails_, and
+  without a mark at the middle there is nothing to be short of. `CARD I OF II` in
+  Roman numerals, with the running read beneath in the game's voice.
+- **Ostraka.** A seat that has not voted shows a blank potsherd, not an empty
+  box — you can see that a decision is _pending_ rather than missing. Cast sherds
+  take the yea/nay glazes.
+- **One law, three lives.** `StandingLaw` renders the colonnade's stele and the
+  Agora's slab from one component at two densities. They were two renderings, and
+  that is how the Agora came to describe a Law differently from the colonnade
+  standing four inches away.
+
+**Deviations.**
+
+- **A third `engine:` commit** (`82bc234`). `Politician` became a discriminated
+  union on `kind` and gained **`tendency`**: two representative effects authored
+  beside the deck. The Assembly has to answer "what am I buying if I draw from
+  this man?" before you have seen a card, and the plan is explicit that the answer
+  must be real typed effects run through the canonical presenters — not a sentence
+  the frontend wrote, which would be a fifth place the rules are described and the
+  first to go stale. Nothing in the rules reads it. Full suite green (489).
+- **The scrim is darker than the prototype's** (82→96% against 60→88%). The
+  prototype is drawn over a static painting; the live board carries owner glazes
+  and yield numerals, and at the reference strength they read straight through
+  the seats.
+- **Two rendering bugs found by screenshot**, both from restyling a sheet that
+  still owns the layout: the station labels kept `assembly.css`'s ink colour and
+  went black-on-black (the two stations you are _not_ in were invisible), and the
+  vote mark overflowed the ostrakon's clip so the sherd read as a plain ring.
+- **`UiSprite` retired** with its last call site, and with it `VerbSpec.icon` —
+  a verb IS its id, and a second field naming its picture drifted the moment the
+  atlas did. `.sprite-ui-*` deleted.
+
+**Red — one item, deliberately not done.**
+
+**The repeal crack-and-fall ceremony is NOT implemented.** Every other Phase 5
+item is. A stele leaves the DOM the instant the law leaves `activeLaws`, so an
+exit animation needs the component to retain the departing law for the length of
+the ceremony — a real piece of state machinery, not styling. What _is_ done is
+the part that ceremony would decorate: one component for the law's three lives, so
+whatever animates it later animates it in one place. Recorded here as a scope
+call rather than a blocker; nothing is broken and nothing is half-built.
+
+**Commits.** `d264acd` rename · `82bc234` engine tendency · `375f5ae` standing-law
+component · `29bff3e` tally · `de4095a` night scene · `422efee` sprite retirement.
+
+**Red (checks).** None. `check` · `lint` · **full `test:run` (489)** ·
+`test:parity` · `ui:check` green.
+
+**Screenshots.** `.playwright-mcp/p5-assembly-1440x900.png` (proposal),
+`p5-head.png` (the colonnade close up), `p5-vote.png` (the ballot, driven by
+`vote.mjs` — four seats pass, the vote opens).
