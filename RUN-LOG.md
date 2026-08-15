@@ -616,7 +616,7 @@ nothing is red.
 2. `.playwright-mcp/sweep/` — the whole app, both widths, one folder.
 3. `.playwright-mcp/glyphs.png` — the 94-glyph alphabet at four sizes.
 
-### The four `engine:` commits, for the adoption review
+### The three `engine:` commits, for the adoption review
 
 Every one is additive, presentational, and read by nothing in the rules. The full
 suite (489 tests) was re-run green after each.
