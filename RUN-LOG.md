@@ -547,3 +547,110 @@ component · `29bff3e` tally · `de4095a` night scene · `422efee` sprite retire
 **Screenshots.** `.playwright-mcp/p5-assembly-1440x900.png` (proposal),
 `p5-head.png` (the colonnade close up), `p5-vote.png` (the ballot, driven by
 `vote.mjs` — four seats pass, the vote opens).
+
+---
+
+## Phase 6 — closing QA
+
+**Shipped.** A scripted sweep of every surface at both widths
+(`.playwright-mcp/sweep.mjs` → `.playwright-mcp/sweep/`), console errors
+collected, and the five defects it found fixed.
+
+**32 surfaces** at 1440×900 and 1280×800: the drawn fate, the table, all eight
+tabs on both rails, a targeting state, the venture pick and its roll, the Calm
+dialog, the Assembly's proposal and its ballot. **No console errors at either
+width.**
+
+### What the sweep caught
+
+1. **The END TURN seal had no accessible name at all.** Its SVG is `aria-hidden`
+   (it is drawn art), so the commit button announced nothing and no by-role query
+   could find it — including the e2e smoke test, which is how it surfaced. It
+   carries `aria-label="End turn — Nikos acts"` now. The worst defect of the run,
+   and it was invisible in every screenshot.
+2. **The dials sat on top of scrolling content.** Both dials protrude 76px above
+   the rail; at the tablets' outer edges that is 76px of page they cover. The
+   Chronicle's last entry and the Codex's last paragraph slid under the seal with
+   no way to reach them. Every scrolling body now ends a dial's height above the
+   rail.
+3. **The Codex's chapter row looked cut off.** It is a horizontal scroller with a
+   hidden scrollbar, so it read as truncated rather than scrollable. A fade mask
+   on the right says there is more.
+4. **The Assembly's tug bar fell below the fold at 1280×800** — the one thing a
+   voter is reading. Two rounds of tightening did not fix it, and the fix was
+   structural rather than cosmetic: **the ballot drops the colonnade.** During the
+   vote nobody is drawing, so four columns of orators are dead weight; the
+   reference vote scene has no colonnade either. The scene now fits at both sizes
+   with room to spare.
+5. **`scoreboard.css` was empty** — the glazed roster had taken every rule in it.
+   Deleted with its import; Vite was warning about it on every build.
+
+### Also fixed
+
+- **`npm run docs:check` was failing** on the overhaul plan itself: it was not in
+  `docs/README.md`'s index and had no three-axis parity table. Both added, and the
+  table is worth reading — it records that the engine axis applies only _partly_
+  and names the three additive fields this run put there.
+
+**Deviations.** None beyond the four listed above.
+
+**Red.** None.
+
+**Commits.** `9ea779e` accessible name · `a5fe752` dial clearance + codex fade ·
+`8abaee3` the ballot's colonnade · `7975016` empty stylesheet · `6336acd` docs.
+
+**Screenshots.** `.playwright-mcp/sweep/` — 32 files, `<surface>-<width>.png`.
+This is the regression baseline; re-run `node .playwright-mcp/sweep.mjs` and diff.
+
+---
+
+## The run, closed
+
+**Every phase 0a → 6 is done.** One item is deliberately not: the repeal
+crack-and-fall ceremony (Phase 5, reasoned above). Nothing is half-built and
+nothing is red.
+
+### Where to start reading
+
+1. This log, top to bottom — each phase says what shipped and what it cost.
+2. `.playwright-mcp/sweep/` — the whole app, both widths, one folder.
+3. `.playwright-mcp/glyphs.png` — the 94-glyph alphabet at four sizes.
+
+### The four `engine:` commits, for the adoption review
+
+Every one is additive, presentational, and read by nothing in the rules. The full
+suite (489 tests) was re-run green after each.
+
+| Commit    | Change                                                          | Why it could not live in the frontend                                        |
+| --------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `2438baa` | `IncomeContribution.settlementId`                               | The engine mints the row's label; the id lets the UI put ARGOS on it instead |
+| `b70e387` | `LogEntry.about` + two redundant log lines deleted              | Replaces a UI heuristic that guessed the actor from the message's first word |
+| `82bc234` | `Politician.tendency`, and `Politician` discriminated on `kind` | Two representative effects, authored beside the deck, not written in the UI  |
+| `82bc234` | (same commit) —                                                 | —                                                                            |
+
+`PLAYER_COLORS` also left `src/game/data.ts` for `src/ui/playerGlazes.ts`. That is
+**not** an `engine:` commit: nothing in `src/game` read it, and four Tailwind
+primaries in the rules' data table were never engine state to begin with.
+
+### The ratchet, start to finish
+
+| Rule              | Start | End | Note                                                        |
+| ----------------- | ----- | --- | ----------------------------------------------------------- |
+| font-size         | 224   | 210 | Every new surface uses the role sheet; the remainder is old |
+| raw-hex           | 75    | 61  | Artwork colours became tokens as each phase touched them    |
+| printed-mechanics | 20    | 0   | A hard gate now, not a ratchet                              |
+
+The two that are not zero are the honest measure of what is left: `assembly.css`
+still declares 69 of the sizes, and the older slices still hold hexes the new
+sheets never spend. Both only go down.
+
+### If the owner adopts
+
+Take the branch for the presentation files, review the four `engine:` commits
+explicitly, then delete `THIS-WORKTREE.md` and this log and move
+`docs/plans/ui-overhaul.md` to `docs/archive/plans/`.
+
+### If not
+
+`git worktree remove ~/Desktop/hegemony-ui-overhaul` and delete the branch.
+Nothing else to clean up — `main` was never touched.
