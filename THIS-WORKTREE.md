@@ -17,16 +17,16 @@ Reference prototypes (screenshot-verified HTML/CSS): `docs/plans/ui-overhaul-pro
 
 Implement every phase of `docs/plans/ui-overhaul.md`, in this order, in one run:
 
-| # | Phase | Scope |
-| --- | --- | --- |
-| 0a | Tokens & guards | palette + `--pos/--neg/--warn`, nine type roles, spacing scale, z-ladder; tokens `.shell`→`:root`; extract the 3 JS↔CSS camera couplings; kill the global display-face button rule; add the `ui:check` ratchet script |
-| 0b | Effect-icon system | `iconRegistry` total over all typed-effect discriminants + parity totality test + `<EffectIcon>`; **all glyphs are hand-drawn inline SVG line icons** — one line-weight, 24px grid, `currentColor`, self-consistent set; no AI-generated art, no PNGs beyond the existing resource masks |
-| 1 | The great deletion | remove/relocate all ~60 metatext sites; `blockedHint` optional → tooltip only; kill deck/seed telemetry; re-dock the TUNE fab so it can never cover End Turn |
-| 2 | The ceramic shell | light bone bars + clay meander edges; symmetric layout (resources dead-center top, verbs dead-center bottom, tab icons centered in rails); **twin dials** (SeasonClock bottom-left, EndTurnSeal bottom-right); sea chart full-bleed under the board; docked tablets |
-| 3 | The board | ceramic terrain ramp + engraved emblems; settlement seals, pop beads, glaze rims, name plates (ARGOS, not "City 1,1"); stroke-based states; fix the Found-banner overlap bug |
-| 4 | Panels & ceremony | all seven tabs rebuilt per `f-panels.html` (Cities alarm, The Ladder, Build cards, Market rates, Victory laurels, Agora, Chronicle in game voice); ceremony dial through ModalShell (dark fates, venture die) |
-| 5 | The Assembly | rename `assembly.css` classes first; proposal + voting scenes per prototypes (stelae with "HIS LAWS TEND TO" example effects, law card at the bema, tug-bar tally, ostraka, lit voting seat) |
-| 6 | Closing QA | full screenshot sweep at 1440×900 and 1280×800 across every surface; fix what the sweep catches; final RUN-LOG summary |
+| #   | Phase              | Scope                                                                                                                                                                                                                                                                                    |
+| --- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0a  | Tokens & guards    | palette + `--pos/--neg/--warn`, nine type roles, spacing scale, z-ladder; tokens `.shell`→`:root`; extract the 3 JS↔CSS camera couplings; kill the global display-face button rule; add the `ui:check` ratchet script                                                                    |
+| 0b  | Effect-icon system | `iconRegistry` total over all typed-effect discriminants + parity totality test + `<EffectIcon>`; **all glyphs are hand-drawn inline SVG line icons** — one line-weight, 24px grid, `currentColor`, self-consistent set; no AI-generated art, no PNGs beyond the existing resource masks |
+| 1   | The great deletion | remove/relocate all ~60 metatext sites; `blockedHint` optional → tooltip only; kill deck/seed telemetry; re-dock the TUNE fab so it can never cover End Turn                                                                                                                             |
+| 2   | The ceramic shell  | light bone bars + clay meander edges; symmetric layout (resources dead-center top, verbs dead-center bottom, tab icons centered in rails); **twin dials** (SeasonClock bottom-left, EndTurnSeal bottom-right); sea chart full-bleed under the board; docked tablets                      |
+| 3   | The board          | ceramic terrain ramp + engraved emblems; settlement seals, pop beads, glaze rims, name plates (ARGOS, not "City 1,1"); stroke-based states; fix the Found-banner overlap bug                                                                                                             |
+| 4   | Panels & ceremony  | all seven tabs rebuilt per `f-panels.html` (Cities alarm, The Ladder, Build cards, Market rates, Victory laurels, Agora, Chronicle in game voice); ceremony dial through ModalShell (dark fates, venture die)                                                                            |
+| 5   | The Assembly       | rename `assembly.css` classes first; proposal + voting scenes per prototypes (stelae with "HIS LAWS TEND TO" example effects, law card at the bema, tug-bar tally, ostraka, lit voting seat)                                                                                             |
+| 6   | Closing QA         | full screenshot sweep at 1440×900 and 1280×800 across every surface; fix what the sweep catches; final RUN-LOG summary                                                                                                                                                                   |
 
 ## The continuous loop (every phase)
 
@@ -74,7 +74,7 @@ screenshots taken. This file is the owner's re-entry point.
 
 1. **Never merge `ui-overhaul` into `main`.** Adoption is the owner's explicit call.
 2. **Sync from main by merge, never rebase**: `git fetch origin && git merge
-   origin/main` — once at run start; no mid-run merges expected while the owner is
+origin/main` — once at run start; no mid-run merges expected while the owner is
    away.
 3. Engine-side edits follow the "work clean" policy above — never casual, never
    patchwork, always `engine:`-prefixed, never rules/balance.

@@ -14,11 +14,11 @@ for the owner).
 
 ## Three-axis parity
 
-| Axis             | Applies? | Required representation and proof                                                                                                    |
-| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Axis             | Applies? | Required representation and proof                                                                                                                                                                                      |
+| ---------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Engine / backend | Partly   | Presentation-only additions, always additive and `engine:`-prefixed: `IncomeContribution.settlementId`, `LogEntry.about`, `Politician.tendency`. No rule, cost, legality or balance change; the full suite stays green |
-| Frontend         | Yes      | Every surface: tokens, type roles, the icon registry's totality, the board's grammar, seven panels, the ceremony register, the Assembly scenes |
-| Simulation & AI  | No       | The sim reads engine state and never renders; nothing here changes what it observes, values or logs                                  |
+| Frontend         | Yes      | Every surface: tokens, type roles, the icon registry's totality, the board's grammar, seven panels, the ceremony register, the Assembly scenes                                                                         |
+| Simulation & AI  | No       | The sim reads engine state and never renders; nothing here changes what it observes, values or logs                                                                                                                    |
 
 The engine-side additions carry data the frontend needs and the rules never read.
 Each is justified at its definition site and listed in `RUN-LOG.md`.
@@ -36,7 +36,7 @@ https://claude.ai/code/artifact/e9b9fc1d-4d72-4ea6-a03f-22327529b3cd
 ## Non-goals
 
 - No new mechanics, no rule changes, no balance changes — ever. Engine-side
-  *presentation* refactors (structured log entries, a settlement-name field) are
+  _presentation_ refactors (structured log entries, a settlement-name field) are
   allowed under the work-clean policy in `THIS-WORKTREE.md`, always additive,
   always `engine:`-prefixed, with parity/scenario suites kept meaningful.
 - No responsive/mobile redesign beyond keeping the existing `--ui-scale` behavior
@@ -50,7 +50,7 @@ https://claude.ai/code/artifact/e9b9fc1d-4d72-4ea6-a03f-22327529b3cd
 
 - Direction: Katalogos type discipline + Painted Table density ("the lacquered board").
 - **Light chrome:** top/bottom bars are bone slip with a clay meander edge — never
-  dark slabs. Vase-black is reserved for *objects*: the END TURN seal, dice, ostraka,
+  dark slabs. Vase-black is reserved for _objects_: the END TURN seal, dice, ostraka,
   tooltips.
 - **Symmetry:** resource spine dead-center in the top bar (event slips left, roster
   right); verbs dead-center in the bottom rail; tab icons vertically centered in
@@ -71,19 +71,19 @@ https://claude.ai/code/artifact/e9b9fc1d-4d72-4ea6-a03f-22327529b3cd
 
 ### Palette (keep existing Kerameikos hexes; add semantic status)
 
-| Token | Value | Role |
-| --- | --- | --- |
-| `--bone` | `#f4e6c8` | bars, tablets (panel ground) |
-| `--ivory` | `#fff8e7` | cards, dial faces, figures on dark objects |
-| `--slip` | `#d8c8a8` | tab rails, tracks |
-| `--vase-black` | `#181210` | objects only: seal, dice, ostraka, tooltips |
-| `--ink` + 5-step alpha ramp | `#241910` | text (ramp already exists) |
-| `--clay` / `--clay-deep` | `#c0461c` / `#8f2e13` | the one accent / pressed |
-| **`--pos`** | `#5e6e3a` | NEW — positive deltas/text only |
-| **`--neg`** | `#8f2e13` | NEW — negative deltas/text only |
-| **`--warn`** | `#b0702a` | NEW — expiring, low, approaching riot |
-| `--aegean` | `#1f6977` | politics register (Assembly/Agora only) |
-| `--p1..p4` | glazes above | owner marks only (seals, rims, roster discs) |
+| Token                       | Value                 | Role                                         |
+| --------------------------- | --------------------- | -------------------------------------------- |
+| `--bone`                    | `#f4e6c8`             | bars, tablets (panel ground)                 |
+| `--ivory`                   | `#fff8e7`             | cards, dial faces, figures on dark objects   |
+| `--slip`                    | `#d8c8a8`             | tab rails, tracks                            |
+| `--vase-black`              | `#181210`             | objects only: seal, dice, ostraka, tooltips  |
+| `--ink` + 5-step alpha ramp | `#241910`             | text (ramp already exists)                   |
+| `--clay` / `--clay-deep`    | `#c0461c` / `#8f2e13` | the one accent / pressed                     |
+| **`--pos`**                 | `#5e6e3a`             | NEW — positive deltas/text only              |
+| **`--neg`**                 | `#8f2e13`             | NEW — negative deltas/text only              |
+| **`--warn`**                | `#b0702a`             | NEW — expiring, low, approaching riot        |
+| `--aegean`                  | `#1f6977`             | politics register (Assembly/Agora only)      |
+| `--p1..p4`                  | glazes above          | owner marks only (seals, rims, roster discs) |
 
 Hard rule: owner color and status color never share a pixel class. Status color
 appears only in text and signed deltas, always paired with a sign — never
@@ -91,17 +91,17 @@ color-alone.
 
 ### Type roles (nine; kill the 47 ad-hoc sizes)
 
-| Role | Face | @1440 | Use |
-| --- | --- | --- | --- |
-| `display` | Cinzel 700 | 24–34px | rite titles, Assembly head, game over |
-| `title` | Cinzel 700 | 15px | panel headings |
-| `verb` | Cinzel 700 | 12–13px | buttons, tabs, END TURN |
-| `label` | Cinzel 600 | 11px floor | THE micro-label (replaces ~12 variants) |
-| `body` | Alegreya 400 | 14–15px | chronicle, card text |
-| `body-em` | Alegreya 500 it. | 14px | flavor, quotes |
-| `stat` | Alegreya 600 tnum | 15px | every inline number |
-| `stat-lg` | Alegreya 800 tnum | 19–26px | resource spine, die results, tallies |
-| `caption` | Alegreya 400 | 12.5px | tooltips, timestamps |
+| Role      | Face              | @1440      | Use                                     |
+| --------- | ----------------- | ---------- | --------------------------------------- |
+| `display` | Cinzel 700        | 24–34px    | rite titles, Assembly head, game over   |
+| `title`   | Cinzel 700        | 15px       | panel headings                          |
+| `verb`    | Cinzel 700        | 12–13px    | buttons, tabs, END TURN                 |
+| `label`   | Cinzel 600        | 11px floor | THE micro-label (replaces ~12 variants) |
+| `body`    | Alegreya 400      | 14–15px    | chronicle, card text                    |
+| `body-em` | Alegreya 500 it.  | 14px       | flavor, quotes                          |
+| `stat`    | Alegreya 600 tnum | 15px       | every inline number                     |
+| `stat-lg` | Alegreya 800 tnum | 19–26px    | resource spine, die results, tallies    |
+| `caption` | Alegreya 400      | 12.5px     | tooltips, timestamps                    |
 
 Self-host Cinzel + Alegreya (woff2, OFL). Marcellus retires. The global
 `button { font-family: var(--disp); font-weight: 700 }` at `base.css:98-117` dies —
@@ -128,7 +128,7 @@ shorthands onto it opportunistically per phase (not as a big-bang).
     by the topbar's own height — measure before changing either."
 - ~60 metatext sites catalogued (see Phase 1).
 - `assembly.css` = 1,769 lines of single/double-letter classes (`.mb .av .tk .y .p
-  .n`…), 69 font-size declarations, several ≤7.5px. Rename before restyling.
+.n`…), 69 font-size declarations, several ≤7.5px. Rename before restyling.
 - 21-value z-index ladder with unexplained one-offs (34, 95, 180, 950) — tokenize.
 
 ## Phase plan
@@ -152,7 +152,7 @@ regression baseline).
    `npm run ui:check`): fails on (a) `font-size:` outside the role sheet,
    (b) raw hex outside `base.css`, (c) `title="` sentences in `src/components`
    outside Tooltip/MechanicsDetails. Grandfather-list the current violations and
-   ratchet the count down per phase — the script fails if the count *rises*.
+   ratchet the count down per phase — the script fails if the count _rises_.
 
 Done when: check+parity green; grep counts recorded; app renders unchanged (this
 phase is invisible).
@@ -184,8 +184,8 @@ style reference.
    fails the suite.
 4. `<EffectIcon kind=…/>`: renders the glyph at 14 (inline) / 18 (verbs) / 24
    (rails), tinted by `currentColor`.
-5. Rendering rule (identity vs judgment): the icon carries *identity*; the signed
-   colored numeral carries *judgment*; the sentence lives in the tooltip. An effect
+5. Rendering rule (identity vs judgment): the icon carries _identity_; the signed
+   colored numeral carries _judgment_; the sentence lives in the tooltip. An effect
    row is `[EffectIcon][signed value][short object]`, e.g. ⚱ +2 per freeman.
 
 Glyph inventory (~50–70): resources ×6 (+ a proper happiness glyph — the current
@@ -287,7 +287,7 @@ References: `f-panels.html` (all seven tabs at true width), `c-event.html`,
    consequence) replacing the beige unrest text; named settlement cards with bead
    rows, socket rows, signed colored income.
 2. **Pops → The Ladder:** three tiers with 26px counts and income chips; promote/
-   demote as labeled rungs *between* tiers with icon costs; "where they live" bead
+   demote as labeled rungs _between_ tiers with icon costs; "where they live" bead
    map; NET/TURN anchor row. Delete the GROWN/IN TRANSIT/GAINED/DEATHS grid (data
    moves to tooltips).
 3. **Build:** building cards (engraved tile icon, effect in icon grammar, one cost
