@@ -2,12 +2,14 @@
    Split from styles.css (Phase 2e); original source order preserved. */
 
 :root {
-  /* KYKLOS typefaces — Marcellus for the display register, Source Serif 4 for
-     body. Loaded in index.html. These ARE the mock's --disp/--body; the older
-     --font-display/--font-body names stay as aliases so the ~200 existing call
-     sites keep working. Copperplate survives only as a fallback. */
-  --disp: "Marcellus", Copperplate, Georgia, serif;
-  --body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  /* Typefaces — Cinzel for the carved display register, Alegreya for everything
+     read as text. Self-hosted; see styles/fonts.css. Marcellus and Source Serif
+     retired with the overhaul: Marcellus has one weight and no small-size
+     legibility, which is why the old UI had to shout to be read at all.
+     The older --font-display/--font-body names stay as aliases so the ~200
+     existing call sites keep working. */
+  --disp: "Cinzel", Copperplate, Georgia, serif;
+  --body: "Alegreya", "Iowan Old Style", Palatino, Georgia, serif;
   --font-display: var(--disp);
   --font-body: var(--body);
 
@@ -30,6 +32,206 @@
   font-family: var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+
+  /* ── The token table ────────────────────────────────────────────────────────
+     These used to live on `.shell`. They are on :root now, for two reasons: the
+     camera's probe (ui/chromeMetrics.ts) had to be mounted inside `.shell` to
+     read them at all, and anything portalled out of the shell — overlays, the
+     dev tune panel — lost the whole palette. Scope was never doing any work
+     here; :root is where a design system lives. */
+
+  --vase-black: #181210;
+  --clay: #c0461c;
+  --clay-deep: #8f2e13;
+  --ochre: #d98a35;
+  --bone: #f4e6c8;
+  --ivory: #fff8e7;
+  --olive: #5e6e3a;
+  --aegean: #1f6977;
+  --stone: #8f8571;
+  --terrain-neutral: #d8c8a8;
+  --terrain-neutral-light: #eee1c4;
+  --terrain-neutral-shade: #9f8e70;
+  --terrain-neutral-line: #5f4a35;
+  --terrain-neutral-soft: rgb(216 200 168 / 17%);
+  --accent: var(--clay);
+  --accent-2: var(--aegean);
+
+  /* ── Status: judgment, never identity ───────────────────────────────────────
+     Three colours, and they mean good / bad / running out. They appear ONLY in
+     text and signed deltas, always beside a sign or an icon — never as the sole
+     carrier of meaning, never on an owner mark. The `-lit` twins are the same
+     three raised to reading contrast on lacquer objects (seal, dice, ostraka,
+     tooltips), not separate meanings. */
+  --pos: #5e6e3a;
+  --neg: #8f2e13;
+  --warn: #b0702a;
+  --pos-lit: #a8b877;
+  --neg-lit: #e8846b;
+  --warn-lit: #e2a558;
+
+  /* The POLITICS register (assembly-mode-showcase.html). Aegean is reserved for the
+     Assembly: it never appears on the board or in the ledger, so the moment it shows
+     up the player knows they are looking at the agora. Clay stays "your action /
+     armed", olive stays "yea / gain", clay-deep stays "nay / cost". */
+  --aeg-tint: rgb(31 105 119 / 7%);
+  --aeg-12: rgb(31 105 119 / 12%);
+  --aeg-20: rgb(31 105 119 / 20%);
+  /* Named for the register's step, not the alpha — the showcase's own value is 34%. */
+  --aeg-30: rgb(31 105 119 / 34%);
+  --fg: #241910;
+  --muted: rgb(36 25 16 / 66%);
+  --subtle: rgb(36 25 16 / 48%);
+  --panel: rgb(255 248 231 / 78%);
+  --panel-strong: rgb(255 248 231 / 94%);
+  --panel-soft: rgb(192 70 28 / 10%);
+  /* 13%, per the mock's table — the app had drifted to 18%, which is why every
+     keyline and rule reads heavier here than in DECIDED-UI-LAYOUT.html. */
+  --line: rgb(36 25 16 / 13%);
+  --line-strong: rgb(192 70 28 / 48%);
+  --button-bg: rgb(255 248 231 / 86%);
+  --button-line: rgb(36 25 16 / 24%);
+  --shadow: 0 20px 46px rgb(72 42 21 / 20%);
+  --lift-shadow: 0 12px 24px rgb(72 42 21 / 18%);
+  /* The chrome floats on the sea now (ui-refit): bone glass for the spines and
+     cards, a soft drop for lift, ivory text where anything sits on the water. */
+  --glass: rgb(244 230 200 / 93%);
+  --float: 0 10px 30px rgb(24 18 16 / 26%);
+  --on-sea: #fff8e7;
+  --sea-shadow: 0 1px 3px rgb(10 34 41 / 55%);
+
+  /* ── KYKLOS token table ─────────────────────────────────────────────────────
+     Ported verbatim from the contract, docs/reference/design/showcases/DECIDED-UI-LAYOUT.html.
+     Values are the mock's, not paraphrases: change them there first. */
+
+  /* the clay body and its slips */
+  --slip: #d8c8a8;
+  --vase: #181210;
+  --ochre-ink: #b06a1d;
+
+  /* the ink ramp — every text weight in the UI comes off this one hue */
+  --ink: #241910;
+  --ink-66: rgb(36 25 16 / 66%);
+  --ink-48: rgb(36 25 16 / 48%);
+  --ink-30: rgb(36 25 16 / 30%);
+  --ink-12: rgb(36 25 16 / 12%);
+  --ink-07: rgb(36 25 16 / 7%);
+  --ivory-70: rgb(255 248 231 / 70%);
+  --ivory-45: rgb(255 248 231 / 45%);
+
+  /* the disc vocabulary — discs are the lighter plate so they read ON the bone;
+     every disc keeps a keyline, because it must survive the sea behind it too */
+  --disc: #fff8e7;
+  --disc-hi: #fffdf6;
+  --ring: rgb(36 25 16 / 22%);
+  --lift: 0 2px 8px rgb(24 18 16 / 20%);
+  --lift-hi: 0 5px 14px rgb(24 18 16 / 26%);
+  --shadow-laid: 0 2px 10px rgb(24 18 16 / 28%);
+  --shadow-float: 0 18px 56px rgb(24 18 16 / 50%);
+
+  /* text floating ON THE SEA stays light — the sea is the one dark value left */
+  --on-sea-dim: rgb(255 248 231 / 72%);
+
+  /* ── Player glazes ──────────────────────────────────────────────────────────
+     Owner identity, and nothing else. Each is a real ceramic glaze name and each
+     carries a Greek blazon letter wherever it appears, so the four seats stay
+     told apart without colour: Kyanos Δ · Kinnabari Κ · Melichron Ν · Porphyra Θ.
+     A glaze never encodes good or bad — that is what --pos/--neg are for. */
+  --p1: #2f5d9e;
+  --p2: #a83226;
+  --p3: #dfa437;
+  --p4: #7c4d79;
+  --kyanos: #2f5d9e;
+  --kinnabari: #a83226;
+  --melichron: #dfa437;
+  --porphyra: #7c4d79;
+
+  /* ── Terrain ramp ───────────────────────────────────────────────────────────
+     Deliberately near-identical values. Terrain KIND is carried by the engraved
+     emblem, never by hue; the ramp only says "this ground is a little harder". */
+  --t-plains: #e2d4b6;
+  --t-hill: #d5c5a4;
+  --t-forest: #cabb97;
+  --t-mountain: #bfae8c;
+  --t-oracle: #ede4cd;
+
+  /* ── Spacing: the 8px grid ──────────────────────────────────────────────────
+     Five steps, and the audit's 40+ ad-hoc padding shorthands collapse onto them
+     as each surface is rebuilt. Not a big-bang sweep — a rule for new work. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 20px;
+  --sp-5: 32px;
+
+  /* ── The z ladder ───────────────────────────────────────────────────────────
+     Nine named rungs replacing 21 ad-hoc values (34, 95, 180, 950 among them).
+     The rule is that everything on a rung is a KIND of thing, so a new element
+     never has to guess a number: it names what it is. Surfaces adopt these as
+     they are rebuilt. */
+  --z-sea: 0; /* the full-bleed map stage */
+  --z-board: 10; /* board svg, tile tokens, the workbench band */
+  --z-map-chrome: 20; /* zoom + map-mode buttons lying on the sea */
+  --z-tablet: 30; /* the docked ledger tablets */
+  --z-bar: 40; /* top and bottom ceramic bars */
+  --z-dial: 50; /* the twin dials — above bar AND tablet, they protrude */
+  --z-popover: 70; /* anchored popovers over the chrome */
+  --z-fab: 90; /* dev affordances (tune) — over chrome, under ceremony */
+  --z-ceremony: 100; /* scrim + modal: a rite covers the whole table */
+  --z-tooltip: 200; /* the top rung, always; nothing may outrank an explanation */
+
+  /* chrome geometry — the bars, the discs threaded on them, the cards. Each rides
+     --ui-scale so the whole frame shrinks together at narrow viewports (two-panel.md). */
+  --rail-w: calc(30px * var(--ui-scale));
+  --top-h: calc(48px * var(--ui-scale));
+  --bot-h: calc(64px * var(--ui-scale));
+  --bub: calc(46px * var(--ui-scale));
+  --bub-out: calc(28px * var(--ui-scale));
+  --vb: calc(54px * var(--ui-scale));
+  --vb-out: calc(32px * var(--ui-scale));
+  /* Widened toward centre (2026-07-19): the board no longer sits under the panels
+     (the camera now reserves their width symmetrically — see ui/chromeMetrics.ts),
+     so both ledger cards can claim the sea they used to float over. Kept equal so
+     the two flanks are symmetric around the centred board. */
+  /* The unscaled design width, named so JS can ask for it. ui/chromeMetrics.ts
+     divides the live --panel-w by this to learn how far --ui-scale has shrunk the
+     chrome; it used to carry a bare literal `360` for the same purpose. */
+  --panel-w-base: 360px;
+  --panel-w: calc(var(--panel-w-base) * var(--ui-scale));
+  --chron-w: calc(var(--panel-w-base) * var(--ui-scale));
+  --hexclip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  /* The band the floating left rail + ledger card live in — clear of the flush top
+     spine and the bottom dock. The rail, card and camera all read them so they
+     stay in agreement. */
+  /* The top bar's real measured height. It exceeds the mock's --top-h (48px)
+     because it still renders the old card thumbnails rather than the mock's flat
+     chips; re-skinning it should collapse this to var(--top-h). Kept in sync by
+     the topbar's own `height` below — measure before changing either. */
+  --chrome-top: calc(73px * var(--ui-scale));
+  /* Derived, not guessed: the dock is the spine plus the discs' overhang above
+     it. Hard-coding this drifted from the real dock height once already. Scales
+     for free — --bot-h and --vb-out already ride --ui-scale. */
+  --chrome-bot: calc(var(--bot-h) + var(--vb-out));
+  /* The clearance the camera holds under each bar: the bar's own height plus a
+     breath of sea, so a tile edge never kisses the meander. Read by
+     ui/chromeMetrics.ts — the camera has no numbers of its own any more. */
+  --camera-inset-top: calc(var(--chrome-top) + 23px);
+  --camera-inset-bot: calc(var(--chrome-bot) + 4px);
+  --rail-gap: calc(70px * var(--ui-scale));
+  --ledger-rule: rgb(36 25 16 / 14%);
+  --ledger-rule-strong: rgb(36 25 16 / 22%);
+  --ledger-accent: rgb(192 70 28 / 70%);
+  --ledger-hover: rgb(192 70 28 / 8%);
+  --hero-tableau: url("../../assets/codex-banana-showcase/light-hero-tableau.png");
+  /* Alpha-keyed atlases: the painted originals bake each glyph onto an opaque,
+     stained parchment square, which no amount of CSS can crop out of a circle.
+     These carry the glyph in the alpha channel only, so they are used as MASKS
+     and take their colour from `currentColor` — which is also what lets a glyph
+     flip to ivory on the clay active disc. Regenerate with tools/key-atlas.py;
+     the painted originals are kept beside them. */
+  --icon-atlas: url("../../assets/codex-banana-showcase/light-icon-atlas-keyed.png");
+  --terrain-atlas: url("../../assets/codex-banana-showcase/light-terrain-atlas.png");
+  --ui-atlas: url("../../assets/codex-banana-showcase/light-ui-kit-keyed.png");
 }
 
 * {
@@ -95,19 +297,20 @@ h3 {
    bordered chip and forced every KYKLOS disc/square to fight it back off — the
    source of three separate clip/ghost-box bugs. Chrome that overhangs (a hover
    lift, a badge) can never be clipped by a button that no longer sets overflow. */
+/* Typography is bare too, as of the overhaul. `font-family: var(--disp);
+   font-weight: 700` used to fire on every single <button> in the app — 96 of the
+   audit's 106 font-family declarations landed on the display face, and that one
+   rule is most of the reason the old UI shouted. The display register is opt-in
+   now: press `.verb`, `.title`, or `.display` onto the buttons that are meant to
+   be carved, and everything else inherits Alegreya like ordinary text. */
 button {
   position: relative;
   min-width: 0;
-  /* Bare SURFACE — no border, fill, min-height or clip. Typography stays
-     (display face, bold, ink) because it never caused the disc bugs and text
-     buttons rely on it; only the chip surface is opt-in below. */
   border: 0;
   color: var(--fg);
   background: none;
   cursor: pointer;
   font: inherit;
-  font-family: var(--disp);
-  font-weight: 700;
   padding: 0;
   transition:
     border-color 160ms ease,
@@ -182,130 +385,9 @@ button:focus-visible {
   transform: translateY(-1px);
 }
 
+/* The shell is layout only now — every token it used to carry moved to :root
+   above, so overlays and the tune panel inherit the palette wherever they mount. */
 .shell {
-  --vase-black: #181210;
-  --clay: #c0461c;
-  --clay-deep: #8f2e13;
-  --ochre: #d98a35;
-  --bone: #f4e6c8;
-  --ivory: #fff8e7;
-  --olive: #5e6e3a;
-  --aegean: #1f6977;
-  --stone: #8f8571;
-  --terrain-neutral: #d8c8a8;
-  --terrain-neutral-light: #eee1c4;
-  --terrain-neutral-shade: #9f8e70;
-  --terrain-neutral-line: #5f4a35;
-  --terrain-neutral-soft: rgb(216 200 168 / 17%);
-  --accent: var(--clay);
-  --accent-2: var(--aegean);
-  /* The POLITICS register (assembly-mode-showcase.html). Aegean is reserved for the
-     Assembly: it never appears on the board or in the ledger, so the moment it shows
-     up the player knows they are looking at the agora. Clay stays "your action /
-     armed", olive stays "yea / gain", clay-deep stays "nay / cost". */
-  --aeg-tint: rgb(31 105 119 / 7%);
-  --aeg-12: rgb(31 105 119 / 12%);
-  --aeg-20: rgb(31 105 119 / 20%);
-  /* Named for the register's step, not the alpha — the showcase's own value is 34%. */
-  --aeg-30: rgb(31 105 119 / 34%);
-  --fg: #241910;
-  --muted: rgb(36 25 16 / 66%);
-  --subtle: rgb(36 25 16 / 48%);
-  --panel: rgb(255 248 231 / 78%);
-  --panel-strong: rgb(255 248 231 / 94%);
-  --panel-soft: rgb(192 70 28 / 10%);
-  /* 13%, per the mock's table — the app had drifted to 18%, which is why every
-     keyline and rule reads heavier here than in DECIDED-UI-LAYOUT.html. */
-  --line: rgb(36 25 16 / 13%);
-  --line-strong: rgb(192 70 28 / 48%);
-  --button-bg: rgb(255 248 231 / 86%);
-  --button-line: rgb(36 25 16 / 24%);
-  --shadow: 0 20px 46px rgb(72 42 21 / 20%);
-  --lift-shadow: 0 12px 24px rgb(72 42 21 / 18%);
-  /* The chrome floats on the sea now (ui-refit): bone glass for the spines and
-     cards, a soft drop for lift, ivory text where anything sits on the water. */
-  --glass: rgb(244 230 200 / 93%);
-  --float: 0 10px 30px rgb(24 18 16 / 26%);
-  --on-sea: #fff8e7;
-  --sea-shadow: 0 1px 3px rgb(10 34 41 / 55%);
-
-  /* ── KYKLOS token table ─────────────────────────────────────────────────────
-     Ported verbatim from the contract, docs/reference/design/showcases/DECIDED-UI-LAYOUT.html.
-     Values are the mock's, not paraphrases: change them there first. */
-
-  /* the clay body and its slips */
-  --slip: #d8c8a8;
-  --vase: #181210;
-  --ochre-ink: #b06a1d;
-
-  /* the ink ramp — every text weight in the UI comes off this one hue */
-  --ink: #241910;
-  --ink-66: rgb(36 25 16 / 66%);
-  --ink-48: rgb(36 25 16 / 48%);
-  --ink-30: rgb(36 25 16 / 30%);
-  --ink-12: rgb(36 25 16 / 12%);
-  --ink-07: rgb(36 25 16 / 7%);
-
-  /* the disc vocabulary — discs are the lighter plate so they read ON the bone;
-     every disc keeps a keyline, because it must survive the sea behind it too */
-  --disc: #fff8e7;
-  --disc-hi: #fffdf6;
-  --ring: rgb(36 25 16 / 22%);
-  --lift: 0 2px 8px rgb(24 18 16 / 20%);
-  --lift-hi: 0 5px 14px rgb(24 18 16 / 26%);
-
-  /* text floating ON THE SEA stays light — the sea is the one dark value left */
-  --on-sea-dim: rgb(255 248 231 / 72%);
-
-  /* player colours */
-  --p1: #2f5d9e;
-  --p2: #a83226;
-  --p3: #dfa437;
-  --p4: #55673a;
-
-  /* chrome geometry — the bars, the discs threaded on them, the cards. Each rides
-     --ui-scale so the whole frame shrinks together at narrow viewports (two-panel.md). */
-  --rail-w: calc(30px * var(--ui-scale));
-  --top-h: calc(48px * var(--ui-scale));
-  --bot-h: calc(64px * var(--ui-scale));
-  --bub: calc(46px * var(--ui-scale));
-  --bub-out: calc(28px * var(--ui-scale));
-  --vb: calc(54px * var(--ui-scale));
-  --vb-out: calc(32px * var(--ui-scale));
-  /* Widened toward centre (2026-07-19): the board no longer sits under the panels
-     (the camera now reserves their width symmetrically — see useMapCamera's
-     CHROME_INSET_PX), so both ledger cards can claim the sea they used to float
-     over. Kept equal so the two flanks are symmetric around the centred board. */
-  --panel-w: calc(360px * var(--ui-scale));
-  --chron-w: calc(360px * var(--ui-scale));
-  --hexclip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  /* The band the floating left rail + ledger card live in — clear of the flush top
-     spine and the bottom dock. The rail, card and camera all read them so they
-     stay in agreement. */
-  /* The top bar's real measured height. It exceeds the mock's --top-h (48px)
-     because it still renders the old card thumbnails rather than the mock's flat
-     chips; re-skinning it should collapse this to var(--top-h). Kept in sync by
-     the topbar's own `height` below — measure before changing either. */
-  --chrome-top: calc(73px * var(--ui-scale));
-  /* Derived, not guessed: the dock is the spine plus the discs' overhang above
-     it. Hard-coding this drifted from the real dock height once already. Scales
-     for free — --bot-h and --vb-out already ride --ui-scale. */
-  --chrome-bot: calc(var(--bot-h) + var(--vb-out));
-  --rail-gap: calc(70px * var(--ui-scale));
-  --ledger-rule: rgb(36 25 16 / 14%);
-  --ledger-rule-strong: rgb(36 25 16 / 22%);
-  --ledger-accent: rgb(192 70 28 / 70%);
-  --ledger-hover: rgb(192 70 28 / 8%);
-  --hero-tableau: url("../../assets/codex-banana-showcase/light-hero-tableau.png");
-  /* Alpha-keyed atlases: the painted originals bake each glyph onto an opaque,
-     stained parchment square, which no amount of CSS can crop out of a circle.
-     These carry the glyph in the alpha channel only, so they are used as MASKS
-     and take their colour from `currentColor` — which is also what lets a glyph
-     flip to ivory on the clay active disc. Regenerate with tools/key-atlas.py;
-     the painted originals are kept beside them. */
-  --icon-atlas: url("../../assets/codex-banana-showcase/light-icon-atlas-keyed.png");
-  --terrain-atlas: url("../../assets/codex-banana-showcase/light-terrain-atlas.png");
-  --ui-atlas: url("../../assets/codex-banana-showcase/light-ui-kit-keyed.png");
   position: relative;
   isolation: isolate;
   display: grid;
