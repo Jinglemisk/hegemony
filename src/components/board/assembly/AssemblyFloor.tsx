@@ -159,7 +159,7 @@ function LawSlab({
       triggerAs="div"
       triggerClassName="asmSlabTrigger"
     >
-      <StandingLaw content={G.definition.content} monument={monument} stele={law} variant="slab" />
+      <StandingLaw content={G.definition.content} monument={monument} stele={law} />
     </Tooltip>
   );
 }

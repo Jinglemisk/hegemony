@@ -6,34 +6,32 @@ import type { GameContent } from "../../../game/content";
 import type { PlayerId } from "../../../game/types";
 import { presentLawEffect } from "../../../ui/effects";
 import { EffectIcon } from "../../../ui/icons/EffectIcon";
-import { glazeOf } from "../../../ui/playerGlazes";
 import { AnnotatedText } from "../../AnnotatedText";
 
 /**
- * A standing Law, in the three places it lives.
+ * A standing Law where it is read: a **slab**, in the Assembly's standing-laws
+ * column and on the Agora page. One rendering serving both, so the two can never
+ * come to describe the same Law differently.
  *
- * One law has three lives: a card argued at the bema, a **stele** in the
- * colonnade under the orator whose deck it came from, and a **slab** in the
- * Agora where you read what is still biting you. Those were three separate
- * renderings, which is how the Agora came to describe a Law differently from the
- * colonnade standing four inches away.
+ * There was a second, denser `variant="stele"` — an author bead and a name, for a
+ * colonnade that counted laws rather than showed them. The rebuilt scene counts
+ * them with notches instead, so no caller has asked for it since; it survived as
+ * a branch emitting `.stele` / `.steleName` / `.steleAuthorDot` / `.steleMonument`,
+ * not one of which any sheet has ever matched. An unstyled render path no caller
+ * reaches is the trap PAR-ASM-22 actually names, so it is deleted rather than
+ * given a treatment nothing would ever show.
  *
- * They are one component with two densities now. The stele is a spine and a
- * name — it is being counted, not read. The slab is the full thing, because the
- * Agora is where you go to read it.
- *
- * A monument (Stratokles' resolved Directives) uses the same component: it is
- * not a law, but it stands in the same colonnade for the same reason.
+ * A monument (Stratokles' resolved Directives) uses the same component: it is not
+ * a law, but it stands in the same column for the same reason — and
+ * `.lawslabMonument` is what keeps it from reading as an ordinary standing Law.
  */
 export function StandingLaw({
   stele,
   content,
-  variant,
   monument = false,
 }: {
   stele: ActiveLaw | TallyMonument;
   content: GameContent;
-  variant: "stele" | "slab";
   /** A resolved Directive rather than a standing Law — permanent, not repealable. */
   monument?: boolean;
 }) {
@@ -41,15 +39,6 @@ export function StandingLaw({
 
   if (!card) {
     return null;
-  }
-
-  if (variant === "stele") {
-    return (
-      <div className={monument ? "stele steleMonument" : "stele"}>
-        <span className="steleAuthorDot" style={{ background: authorColor(stele.author) }} />
-        <span className="steleName">{card.name}</span>
-      </div>
-    );
   }
 
   return (
@@ -81,13 +70,8 @@ export function StandingLaw({
   );
 }
 
-/** The house resolution has no author, so its bead is stone rather than a seat
- *  colour — it stands in the agora and lends its politician power, but it is
- *  nobody's stele. */
-function authorColor(author: PlayerId | null): string {
-  return author ? glazeOf(author) : "var(--stone)";
-}
-
+/** The house resolution has no author — it stands in the agora and lends its
+ *  politician power, but it is nobody's stele. */
 function authorName(author: PlayerId | null): string {
   return author ? PLAYER_NAMES[author] : "the house";
 }

@@ -80,7 +80,6 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
             content={G.definition.content}
             key={`${law.cardId}-${law.order}`}
             stele={law}
-            variant="slab"
           />
         ))}
 
