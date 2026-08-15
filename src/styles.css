@@ -14,6 +14,7 @@
    still needs one — which is exactly the ratchet we are driving to zero. */
 @import "./styles/fonts.css";
 @import "./styles/type.css";
+@import "./styles/icons.css";
 @import "./styles/base.css";
 @import "./styles/map.css";
 @import "./styles/sprites.css";

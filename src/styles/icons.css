@@ -1,0 +1,60 @@
+/* icons — the line weight of the entire glyph set, declared once.
+ *
+ * Every icon is stroke-on-nothing in `currentColor`, so a glyph inherits the
+ * colour of whatever it sits in: ink on bone, ivory on a lacquer object, clay on
+ * an armed verb. That inheritance is the reason there is no per-icon colour
+ * anywhere in the codebase, and why an icon on the clay END TURN seal needed no
+ * special case.
+ *
+ * Stroke width is NOT scaled with the icon. A 1.7 stroke on a 24 viewBox drawn
+ * at 14px renders at ~1px, which is exactly right — scaling the stroke would
+ * make small icons fat and rail icons spindly. `vector-effect` is deliberately
+ * not used for the same reason.
+ */
+
+.icon {
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The one solid mass a glyph is allowed — a pupil, a wax seal, a filled half. */
+.icon .icon-solid {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* The three sizes, and only these three. They ride --ui-scale through rem like
+   the type roles, so an icon never drifts out of step with the label beside it. */
+.icon-inline {
+  width: 0.875rem; /* 14px @1440 — beside body text */
+  height: 0.875rem;
+}
+
+.icon-verb {
+  width: 1.125rem; /* 18px — on a pressable verb */
+  height: 1.125rem;
+}
+
+.icon-rail {
+  width: 1.5rem; /* 24px — a tab rail, a panel heading */
+  height: 1.5rem;
+}
+
+/* An effect row is [icon][signed value][short object]: the icon carries
+   identity, the coloured numeral carries judgment, and the sentence lives in
+   the tooltip. Nothing here sets a colour — the row's own text colour reaches
+   the glyph through currentColor. */
+.effectRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.effectRow .icon {
+  opacity: 0.85;
+}
