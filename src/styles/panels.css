@@ -691,10 +691,15 @@
 
 /* ── Market ───────────────────────────────────────────────────────────────── */
 
+/* The row wraps rather than squeezes. A stockpile reaches three digits by the
+   middle of a game, and against a fixed-width count the trade block had 2px less
+   than it needed at 1280 — so the pair drops to its own full-width line instead,
+   the way the Build card's price does. */
 .marketRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px 10px;
   padding: 13px 2px;
   border-bottom: 1px solid var(--ink-12);
 }
@@ -704,8 +709,12 @@
   color: var(--ink);
 }
 
+/* A floor, not a ceiling: `width: 46px` cut the third digit off a stockpile of
+   100 or more, which on the page whose whole job is telling you what you hold is
+   the one number that may not be clipped. */
 .marketHeld {
-  width: 46px;
+  flex: none;
+  min-width: 46px;
 }
 
 .marketHeld b {
@@ -738,6 +747,7 @@
    before the numbers do. */
 .marketTrade {
   display: grid;
+  flex: 1 1 auto;
   gap: 5px;
   margin-left: auto;
   min-width: 0;
