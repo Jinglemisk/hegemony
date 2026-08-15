@@ -27,6 +27,17 @@ export type IncomeContribution = {
   amount: number;
   source: string;
   detail: string;
+  /**
+   * The settlement this line comes from, when one does.
+   *
+   * `source` is the engine's own label and stays a plain string — the simulator,
+   * the telemetry and every test read it. This id exists so the frontend can put
+   * the settlement's NAME on the row instead ("ARGOS", not "City on plains
+   * -2,0") without the engine having to know that settlements have names, which
+   * is a presentation fact and not a rule. Purely additive; nothing in the rules
+   * reads it.
+   */
+  settlementId?: string;
 };
 
 export type FoodShortageStatus = {
@@ -146,6 +157,7 @@ export function calculateIncomeBreakdown(
         resource: primary,
         amount: settlementTileYield(tile, settlement, ruleset),
         source: settlementLabel,
+        settlementId: settlement.id,
         detail: `Tile yield${share < 1 ? " shared colony" : ""}`,
       });
     }
@@ -154,30 +166,35 @@ export function calculateIncomeBreakdown(
       resource: "influence",
       amount: settlement.pops.citizens * coeff("citizens", "influence"),
       source: settlementLabel,
+      settlementId: settlement.id,
       detail: `${settlement.pops.citizens} citizens`,
     });
     addIncomeContribution(contributions, income, {
       resource: "gold",
       amount: settlement.pops.citizens * coeff("citizens", "gold"),
       source: settlementLabel,
+      settlementId: settlement.id,
       detail: `${settlement.pops.citizens} citizens`,
     });
     addIncomeContribution(contributions, income, {
       resource: "food",
       amount: settlement.pops.citizens * coeff("citizens", "food"),
       source: settlementLabel,
+      settlementId: settlement.id,
       detail: `${settlement.pops.citizens} citizens upkeep`,
     });
     addIncomeContribution(contributions, income, {
       resource: "gold",
       amount: settlement.pops.freemen * coeff("freemen", "gold"),
       source: settlementLabel,
+      settlementId: settlement.id,
       detail: `${settlement.pops.freemen} freeman pops`,
     });
     addIncomeContribution(contributions, income, {
       resource: "food",
       amount: settlement.pops.freemen * coeff("freemen", "food"),
       source: settlementLabel,
+      settlementId: settlement.id,
       detail: `${settlement.pops.freemen} freeman pops upkeep`,
     });
     if (primary) {
@@ -185,6 +202,7 @@ export function calculateIncomeBreakdown(
         resource: primary,
         amount: settlement.pops.slaves * ruleset.popIncome.slaves.primaryResource,
         source: settlementLabel,
+        settlementId: settlement.id,
         detail: `${settlement.pops.slaves} slave pops production`,
       });
     }
@@ -192,12 +210,14 @@ export function calculateIncomeBreakdown(
       resource: "food",
       amount: settlement.pops.slaves * coeff("slaves", "food"),
       source: settlementLabel,
+      settlementId: settlement.id,
       detail: `${settlement.pops.slaves} slave pops upkeep`,
     });
     addIncomeContribution(contributions, income, {
       resource: "happiness",
       amount: settlement.pops.slaves * coeff("slaves", "happiness"),
       source: settlementLabel,
+      settlementId: settlement.id,
       detail: `${settlement.pops.slaves} slave pops pressure`,
     });
     addIncomeContribution(contributions, income, {
@@ -206,6 +226,7 @@ export function calculateIncomeBreakdown(
         settlementOverCapacity(settlement, ruleset, G.definition.content) *
         -ruleset.economy.overCapacityHappinessPerPop,
       source: settlementLabel,
+      settlementId: settlement.id,
       detail: "Over capacity pressure",
     });
 
@@ -400,6 +421,7 @@ function applyIncomeBuildingEffects(
           resource: effect.resource,
           amount: effect.amount,
           source: settlementLabel,
+          settlementId: settlement.id,
           detail: building?.name ?? buildingId,
         });
       } else if (effect.type === "happiness") {
@@ -407,6 +429,7 @@ function applyIncomeBuildingEffects(
           resource: "happiness",
           amount: effect.amount,
           source: settlementLabel,
+          settlementId: settlement.id,
           detail: building?.name ?? buildingId,
         });
       } else if (effect.type === "freemanGoldBonus") {
@@ -429,6 +452,7 @@ function applyIncomeBuildingEffects(
       resource: primaryResource,
       amount: tilePrimaryBonus,
       source: settlementLabel,
+      settlementId: settlement.id,
       detail: "Villa",
     });
   }
@@ -438,6 +462,7 @@ function applyIncomeBuildingEffects(
     resource: "gold",
     amount: supportedFreemen * popBonusSupport.freemen.amount,
     source: settlementLabel,
+    settlementId: settlement.id,
     detail: `Marketplace supports ${supportedFreemen} ${formatPopName("freemen", supportedFreemen)}`,
   });
 
@@ -449,6 +474,7 @@ function applyIncomeBuildingEffects(
     resource: "influence",
     amount: supportedCitizens * popBonusSupport.citizens.amount,
     source: settlementLabel,
+    settlementId: settlement.id,
     detail: `Temple supports ${supportedCitizens} ${formatPopName("citizens", supportedCitizens)}`,
   });
 
@@ -460,6 +486,7 @@ function applyIncomeBuildingEffects(
       resource: primaryResource,
       amount: supportedSlaves * popBonusSupport.slaves.amount,
       source: settlementLabel,
+      settlementId: settlement.id,
       detail: `Workshop supports ${supportedSlaves} ${formatPopName("slaves", supportedSlaves)}`,
     });
   }
