@@ -22,6 +22,11 @@ export type PoliticianId = "demosthenes" | "perdiccas" | "kleistophenes" | "stra
  * The Twilight-Imperium split (design §1.5). A **Law** is table-wide and stands until
  * repealed — the three regular politicians deal only in these. A **Directive** resolves
  * once and leaves a permanent tally monument; Stratokles deals only in these.
+ *
+ * Cards and politicians both spell the two literals inline rather than naming this
+ * type, because both are discriminated unions and a discriminant has to be a
+ * literal to narrow. The name survives as the place the distinction is written
+ * down — every `kind: "law" | "directive"` in this file means exactly this.
  */
 export type ResolutionKind = "law" | "directive";
 
@@ -143,14 +148,32 @@ export interface DirectiveCard extends ResolutionCardBase {
 
 export type ResolutionCard = LawCard | DirectiveCard;
 
-export interface Politician {
+interface PoliticianBase {
   id: PoliticianId;
   name: string;
   epithet: string;
   /** One line of ideology — what this deck is FOR, shown under the colonnade header. */
   creed: string;
-  kind: ResolutionKind;
 }
+
+/**
+ * An orator, and what his laws TEND to do.
+ *
+ * `tendency` is two representative effects authored beside the deck itself — not
+ * a summary the UI writes. The Assembly has to answer "what am I buying if I draw
+ * from this man?" before you have seen a single card, and the honest answer is in
+ * the same vocabulary the cards are: real typed effects, run through the same
+ * presenters and the same icons as everything else. A hand-written sentence in
+ * the frontend would be a fifth place the rules are described, and the first to
+ * go stale.
+ *
+ * Discriminated on `kind` so the two effect vocabularies never mix: a law
+ * politician tends toward `LawEffect`s, the demagogue toward `DirectiveEffect`s.
+ * Nothing in the rules reads `tendency`.
+ */
+export type Politician =
+  | (PoliticianBase & { kind: "law"; tendency: readonly LawEffect[] })
+  | (PoliticianBase & { kind: "directive"; tendency: readonly DirectiveEffect[] });
 
 /**
  * A Law standing on the board — the stele in the agora. `author` is the stele's

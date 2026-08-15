@@ -23,6 +23,11 @@ export const POLITICIANS: Politician[] = [
     epithet: "Agricultural Reformer",
     creed: "The land feeds the city, and the citizen who works it is owed his place in it.",
     kind: "law",
+    // Bread from the whole country, paid for by the crowd it feeds.
+    tendency: [
+      { type: "settlementIncome", scope: "all", resource: "food", amount: 1 },
+      { type: "popIncome", pop: "citizens", resource: "happiness", amount: -1, step: 3 },
+    ],
   },
   {
     id: "perdiccas",
@@ -30,6 +35,11 @@ export const POLITICIANS: Politician[] = [
     epithet: "Urban Planner",
     creed: "Build upward. A polis is measured in stone, not in miles.",
     kind: "law",
+    // Cheap stone in the city, and the countryside pays for it.
+    tendency: [
+      { type: "actionCostDelta", action: "buildBuilding", resource: "stone", amount: -3 },
+      { type: "settlementIncome", scope: "colony", resource: "happiness", amount: -1 },
+    ],
   },
   {
     id: "kleistophenes",
@@ -37,6 +47,11 @@ export const POLITICIANS: Politician[] = [
     epithet: "Rural Expansionist",
     creed: "Every horizon is a farm not yet planted. Send them out.",
     kind: "law",
+    // Send them out cheaply; the cities carry the cost.
+    tendency: [
+      { type: "actionCostDelta", action: "foundColony", resource: "wood", amount: -10 },
+      { type: "settlementIncome", scope: "city", resource: "gold", amount: -1 },
+    ],
   },
   {
     id: "stratokles",
@@ -44,6 +59,11 @@ export const POLITICIANS: Politician[] = [
     epithet: "Cunning Populist",
     creed: "The demos is patient until it is not. I merely tell them when.",
     kind: "directive",
+    // He does not legislate. He points at a rival and the street does the rest.
+    tendency: [
+      { type: "resourceFraction", resource: "food", fraction: 0.5 },
+      { type: "losePopFromLargest", count: 1 },
+    ],
   },
 ];
 
