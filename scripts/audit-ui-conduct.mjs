@@ -156,6 +156,56 @@ const PROBE = () => {
     'button, a[href], input, select, textarea, [role="button"], [role="tab"], [tabindex]:not([tabindex="-1"])';
   const controls = [...document.querySelectorAll(CONTROLS)].filter(visible);
 
+  /**
+   * WCAG 2.5.8's Inline exception: "the target is in a sentence, or its size is
+   * otherwise constrained by the line-height of non-target text". Both halves of
+   * that say the same thing about layout — the control is a WORD on a line it
+   * shares with prose, and it cannot be made 24px tall without overlapping what
+   * is above and below it.
+   *
+   * So test the layout, not the markup. The previous version asked whether the
+   * immediate parent held more text than the control. Any wrapper element
+   * defeats that (AnnotatedText emits one around every run it tokenises), and a
+   * short chip like "-3 Food" could not satisfy its four-character slack either,
+   * so it reported roughly forty glossary words in running prose as defects. It
+   * was also the only reason to believe they were fixable: padding them to 24px
+   * was tried, and the geometry auditor came back with 53 fresh COLLISION rows —
+   * every one of them the padded word lying over the line above it. That is the
+   * exception's whole point.
+   *
+   * "Non-target text" means text belonging to some OTHER control. Text inside a
+   * control that CONTAINS this one still counts — a glossary word inside the top
+   * bar's event chip is in a phrase, and the chip being focusable does not make
+   * the phrase disappear.
+   */
+  const INLINE = new Set(["inline", "inline-block", "inline-flex"]);
+  const exemptInline = (el) => {
+    if (!INLINE.has(getComputedStyle(el).display)) return false;
+    const own = [...el.getClientRects()];
+    if (own.length === 0) return false;
+
+    let block = el.parentElement;
+    while (block && INLINE.has(getComputedStyle(block).display)) block = block.parentElement;
+    if (!block) return false;
+
+    const walker = document.createTreeWalker(block, window.NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (!(node.nodeValue || "").trim()) continue;
+      if (el.contains(node)) continue;
+      const owner = node.parentElement?.closest(CONTROLS);
+      if (owner && !owner.contains(el)) continue; // another target's text
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const other of range.getClientRects()) {
+        for (const mine of own) {
+          const shared = Math.min(other.bottom, mine.bottom) - Math.max(other.top, mine.top);
+          if (shared > Math.min(other.height, mine.height) * 0.5) return true;
+        }
+      }
+    }
+    return false;
+  };
+
   const groups = new Map();
 
   for (const el of controls) {
@@ -171,19 +221,7 @@ const PROBE = () => {
     }
 
     // ── TINY ─────────────────────────────────────────────────────────────────
-    // WCAG 2.5.8 exempts a target that sits *in a sentence*, because moving it
-    // would break the sentence. This app leans on that heavily: a rich token
-    // ("Gold", "Metropolis") is a glossary link inside running text, and there
-    // are hundreds of them. Test it the way the spec means it — is the control
-    // laid out inline, inside text? — rather than by listing container classes,
-    // which missed most of them and buried the real findings.
-    const display = getComputedStyle(el).display;
-    const inline = display === "inline" || display === "inline-block" || display === "inline-flex";
-    const inSentence =
-      inline &&
-      el.parentElement &&
-      (el.parentElement.textContent || "").trim().length > (el.textContent || "").trim().length + 4;
-    if (!inSentence && (rect.width < MIN_TARGET || rect.height < MIN_TARGET)) {
+    if (!exemptInline(el) && (rect.width < MIN_TARGET || rect.height < MIN_TARGET)) {
       out.push({
         kind: "TINY",
         el: describe(el),
