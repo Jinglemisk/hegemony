@@ -9,28 +9,30 @@ Based on review of the last ~17 merged PRs (#49–#67), dominated by the **Phase
 **Important: `npm run dead-code` (knip) reports ZERO issues, but that's a config artifact.** `knip.json` sets `"entry": ["e2e/**/*.ts"]` and `"ignoreExportsUsedInFile": true` — the latter hides the entire class of dead `export` modifiers below. Nothing is orphaned (no unreachable modules), so these are all safe, mechanical wins.
 
 ### High-value dead exports (exported, never imported anywhere)
-| Location | Symbol |
-|---|---|
-| `src/game/turn.ts:176` | `beginTurnFor` (only used in-file) |
-| `src/game/turn.ts:31,62` | `createGame`, `nextPlayer` — production never uses them; only tests do |
-| `src/game/map.ts:9` | `BOARD_RADIUS` |
-| `src/game/invariants.ts:37` | `collectInvariantViolations` |
-| `src/game/version.ts:7` | `ENGINE_VERSION` |
-| `src/game/definition.ts:6,7,52` | `RULESET_VERSION`, `CONTENT_VERSION`, `createModeDefinition` (test-only) |
-| `src/game/definition.ts:43` | `canonicalJson` (in-file only) |
-| `src/game/testing/scenario.ts:33` | `TEST_SEED` |
-| `src/dev/tuning.ts:226` | `stableTuningHash` |
-| `src/components/board/helpers.ts:155` | `createEmptyResources` |
-| `src/sim/runner.ts:24,35` | `MAX_ACTIONS_PER_TURN`, `MAX_ACTIONS_PER_ASSEMBLY` |
-| `src/ui/anchoring.ts:3-5` | `ANCHOR_MARGIN`, `ANCHOR_GAP`, `ANCHOR_ARROW_INSET` |
-| `src/ui/formatters.ts:16` | `SEASON_LABELS` |
-| `src/ui/hexGeometry.ts:128` | `coordinateKey` |
-| `src/ui/resourceVisuals.ts:25` | `RESOURCE_VISUALS` |
-| `src/sim/format.ts:16,20,26` | `formatNumber`, `formatDelta`, `formatResourceDelta` |
+
+| Location                              | Symbol                                                                   |
+| ------------------------------------- | ------------------------------------------------------------------------ |
+| `src/game/turn.ts:176`                | `beginTurnFor` (only used in-file)                                       |
+| `src/game/turn.ts:31,62`              | `createGame`, `nextPlayer` — production never uses them; only tests do   |
+| `src/game/map.ts:9`                   | `BOARD_RADIUS`                                                           |
+| `src/game/invariants.ts:37`           | `collectInvariantViolations`                                             |
+| `src/game/version.ts:7`               | `ENGINE_VERSION`                                                         |
+| `src/game/definition.ts:6,7,52`       | `RULESET_VERSION`, `CONTENT_VERSION`, `createModeDefinition` (test-only) |
+| `src/game/definition.ts:43`           | `canonicalJson` (in-file only)                                           |
+| `src/game/testing/scenario.ts:33`     | `TEST_SEED`                                                              |
+| `src/dev/tuning.ts:226`               | `stableTuningHash`                                                       |
+| `src/components/board/helpers.ts:155` | `createEmptyResources`                                                   |
+| `src/sim/runner.ts:24,35`             | `MAX_ACTIONS_PER_TURN`, `MAX_ACTIONS_PER_ASSEMBLY`                       |
+| `src/ui/anchoring.ts:3-5`             | `ANCHOR_MARGIN`, `ANCHOR_GAP`, `ANCHOR_ARROW_INSET`                      |
+| `src/ui/formatters.ts:16`             | `SEASON_LABELS`                                                          |
+| `src/ui/hexGeometry.ts:128`           | `coordinateKey`                                                          |
+| `src/ui/resourceVisuals.ts:25`        | `RESOURCE_VISUALS`                                                       |
+| `src/sim/format.ts:16,20,26`          | `formatNumber`, `formatDelta`, `formatResourceDelta`                     |
 
 Plus ~20 barrel-exported-but-unused helpers (via `rules.ts`): `getGrowPopCost`, `addIncomeContribution`, `isValidPopSelection`, `getResolveRiotStatus`, `resetTurnFlags`, `isContiguousForPlayer`, `playerHoldsCoast`, `rollDie`, `isAtLawCap`, and ~60 type exports that only document state shape.
 
 ### Concrete dead code (verified)
+
 - **`src/game/legalMoves.ts:850`** — a stray trailing `import { produce } from "immer";` (dead line at EOF).
 - **`src/game/transition.test.ts`** — tests `transition` from `./legalMoves`; `src/game/transition.ts` does **not** exist. Stale filename from before the engine decomposition.
 - **`src/sim/lowNumberEconomy.test.ts`** — imports from `../dev/tuningPresets`; the `lowNumberEconomy.ts` it's named after was deleted (PR #61). Misleading name, still valid test.
@@ -43,18 +45,21 @@ Plus ~20 barrel-exported-but-unused helpers (via `rules.ts`): `getGrowPopCost`, 
 The top risk: the codebase already fixed one "UI/sim re-derive engine math" bug (documented as R7), but the same class of duplication persists in the hottest spots:
 
 ### Critical (drift = bugs)
+
 1. **First-income food grace — identical predicate in 4 files** (`income.ts:270`, `unrest.ts:66`, `activeEffects.ts:165`, `policies.ts:290`). Extract one `firstIncomeGraceActive(G, playerID)`.
 2. **Victory tiebreak written twice** — `resolveDeckExhaustion` (victory.ts:177-188) and `leaderByTiebreak` (telemetry.ts:525-534) re-implement the same cards→happiness→pops→seat sort. If the ruleset changes the tiebreak, telemetry silently disagrees with the engine.
 3. **Settlement/pop tally loop copy-pasted ~6×** — `score.ts:26`, `victory.ts:76`, `settlement.ts:48`, `policies.ts:527` & `:380`, `sim/format.ts:132`. `victoryCardsHeld` alone sweeps all settlements 24× per call. Consolidate on one `playerStandings`-style selector.
 4. **`getBuilding()` exists but is bypassed at 8 call sites** — `status.ts:119`, `actions.ts:341`, `civic.ts:83`, `income.ts:395`, `preview.ts:169`, `cost.ts:100`, `settlement.ts:25`, `tables.ts:305` all re-write `getBuildings(content).find(...)`.
 
 ### High
+
 5. **Cost fallback chain** — `status.cost ?? G.ruleset.actionCosts.X` re-states base constants at 5+ call sites (status.ts:44,102; actions.ts:195,247,353) that validators already derived. Cost-only query needed (see verbs.tsx:99/115 abusing `getFoundColonyStatus(G, playerID, "")` with empty tileId just to read `.cost`).
 6. **In-transit pop count** in 3 places (`telemetry.ts:80`, `preview.ts:106` & `:228`, `PopsTab.tsx:40`).
-7. **Setup placement legality triplicated** — `placeCapital/placeCity/placeColony` validate inline (actions.ts:44-160) with *no* `get*Status` validator, and legalMoves.ts re-derives geometry at :604-663. This is the one move family that skipped the status layer.
+7. **Setup placement legality triplicated** — `placeCapital/placeCity/placeColony` validate inline (actions.ts:44-160) with _no_ `get*Status` validator, and legalMoves.ts re-derives geometry at :604-663. This is the one move family that skipped the status layer.
 8. **`state.ruleset` compat alias** — 162 `G.ruleset.*` uses vs 3 `G.definition.ruleset`. Forces a full FNV-1a hash fallback on **every transition** (definition.ts:174-179), an invariants check, and load-time restore (io.ts:122-126). Comment says "until PR2 removes the alias" — that refactor is overdue.
 
 ### Medium / naming
+
 9. **Three parallel formatters** for resources/numbers — `core/format.ts` ("no change", lowercase), `ui/formatters.ts` ("none", Title-Case), `sim/format.ts` (toFixed(1), different order). Same delta renders 3 different ways.
 10. **`formatPrize` ×3** — AssemblyBema.tsx:681 and AssemblyColonnade.tsx:197 (byte-identical), plus an engine copy at assembly.ts:806 (UI string in the engine layer).
 11. **`beginGameplayTurn` vs `beginTurnFor`** (turn.ts:102 vs :176) share the identical victory→upkeep→income tail; extraction was partial.
@@ -87,4 +92,4 @@ The top risk: the codebase already fixed one "UI/sim re-derive engine math" bug 
 7. **Rename stale test files** (`transition.test.ts`, `lowNumberEconomy.test.ts`); delete dead CSS classes; fix `.gitignore` line 19; refresh the low-number-economy report.
 8. **Defer (bigger surgery):** split the god files, remove `migration.ts` once v1 save support drops, retire the `rules.ts` barrel.
 
-The overall trajectory of the last PRs is genuinely clean (the atomic `transition`, actor/projection layers, and parity enforcement are well-done and clearly documented). The remaining debt is concentrated in *duplicated predicates/selectors* and the *uncommitted mprocs work* — both cheap to fix now and increasingly costly later.
+The overall trajectory of the last PRs is genuinely clean (the atomic `transition`, actor/projection layers, and parity enforcement are well-done and clearly documented). The remaining debt is concentrated in _duplicated predicates/selectors_ and the _uncommitted mprocs work_ — both cheap to fix now and increasingly costly later.
