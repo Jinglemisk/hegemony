@@ -580,6 +580,15 @@
   transform: none;
 }
 
+/* The one-button collapse carries the card's whole refusal, and a shortfall that
+   names every short resource ("short by 9 wood + 3 stone") is longer than a
+   place name. It owns the row, so it may take a second line rather than run out
+   through the frame; the per-settlement targets keep their `nowrap`, which is
+   what lets two of them share a line. */
+.bcardTargetWhole {
+  white-space: normal;
+}
+
 /* A refused target is an outline, not a filled slab: it still reads as a place
    you could build, once the thing it names is fixed. */
 .bcardTargetGhost {

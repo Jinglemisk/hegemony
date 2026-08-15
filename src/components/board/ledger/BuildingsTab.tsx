@@ -34,17 +34,22 @@ import { slotsOf } from "./slots";
  * about the card and not about any one settlement, so the card says it once.
  */
 
-/** The part of a price you cannot pay, as a phrase: "needs 2 more stone". */
+/**
+ * The WHOLE part of a price you cannot pay: "short by 1 wood + 11 stone".
+ *
+ * This used to return on the first short resource in `RESOURCE_ORDER` and word
+ * it as a complete requirement — "needs 1 more wood" — so a Gymnasion at 4 wood
+ * and 12 stone told a player holding 3 wood and 1 stone to buy one plank, and
+ * then refused the press anyway. Five of nine cards named wood and hid stone.
+ * "Short by" is deliberate: "needs N" can be read as the price itself, and the
+ * phrase has to survive being stamped on a button in caps.
+ */
 function shortfallOf(cost: Resources | Partial<Resources>, held: Resources): string | null {
-  for (const resource of RESOURCE_ORDER) {
-    const price = cost[resource] ?? 0;
+  const gaps = RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) > held[resource]).map(
+    (resource) => `${formatNumber((cost[resource] ?? 0) - held[resource])} ${resource}`,
+  );
 
-    if (price > held[resource]) {
-      return `needs ${formatNumber(price - held[resource])} more ${resource}`;
-    }
-  }
-
-  return null;
+  return gaps.length === 0 ? null : `short by ${gaps.join(" + ")}`;
 }
 
 function CostRow({
@@ -200,7 +205,9 @@ export function BuildingsTab({
                           ? `${building.name} in ${name}: ${blocker}.`
                           : `Raise ${building.name} in ${name}.`
                       }
-                      className={`bcardTarget${disabled ? " bcardTargetGhost" : ""}`}
+                      className={`bcardTarget${disabled ? " bcardTargetGhost" : ""}${
+                        wholeCard ? " bcardTargetWhole" : ""
+                      }`}
                       onClick={
                         disabled ? undefined : () => onBuildBuildingRequest(tile.id, building.id)
                       }
