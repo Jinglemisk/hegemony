@@ -29,10 +29,14 @@ export function BuildingSockets({
   slots: number;
   content: GameContent;
 }) {
-  // A colony cannot raise anything, so it has no ground to draw. An empty row
-  // with a "0 of 0" caption would be furniture claiming to be information.
+  // A colony has no ground to draw — but drawing NOTHING made "this place has
+  // zero slots" and "the row failed to render" the same picture, and the only
+  // confirmation anywhere was the Build page's `SIKYON · NO SLOT`. Zero is a
+  // fact about the settlement, so the band says it in words instead of standing
+  // empty. (A "0 of 0" meter would be the furniture this avoids: a denominator
+  // saying nothing, which is what the sockets replaced.)
   if (slots === 0) {
-    return null;
+    return <p className="socketNone caption">no ground to build on</p>;
   }
 
   const open = Math.max(0, slots - built.length);
