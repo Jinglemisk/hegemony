@@ -29,6 +29,7 @@ precedes full multiplayer.
 | [UI overhaul](plans/ui-overhaul.md)                 | —        | `active`  | Presentation only, on the `ui-overhaul` worktree branch; adoption is the owner's call |
 | [UI triage](plans/ui-triage.md)                     | —        | `active`  | The defect ledger closing the holes found by driving the overhauled UI                |
 | [UI triage — parity](plans/ui-triage-parity.md)     | —        | `active`  | What the showcase designed and the app never built; companion feed to the ledger      |
+| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The work that is not a defect: two features, one owner call, and three judged calls   |
 | [Player trade](plans/player-trade.md)               | 4        | `blocked` | V1 after luxuries; full negotiation ships before the mechanics freeze                 |
 | [National Ideas](plans/national-ideas.md)           | 5        | `blocked` | V1; twelve-idea reverse-snake draft after Phase 4                                     |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer                   |
