@@ -840,7 +840,10 @@
   flex: 0 1 auto;
   align-self: center;
   flex-direction: column;
-  justify-content: space-evenly;
+  /* space-BETWEEN, not space-evenly: the numerals then sit on the card's top edge
+     and the speaking order on its bottom edge, so the scale reads as the card's
+     pair rather than as four things adrift in a tall column. */
+  justify-content: space-between;
   width: var(--asm-tally-w);
   height: min(var(--asm-object-h), 100%);
   text-align: center;
