@@ -54,10 +54,9 @@ export function AssemblyFoot({
     if (session.proposalDone[viewerId]) {
       return (
         <div className="asm-foot">
-          <span className="asmFootNote">
-            You have spoken. Waiting for{" "}
-            {session.voteOrder.filter((id) => !session.proposalDone[id]).length} more to decide —
-            switch seats top-right to play them.
+          <span className="asmFootNote label">
+            You have spoken · {session.voteOrder.filter((id) => !session.proposalDone[id]).length}{" "}
+            still to decide
           </span>
         </div>
       );
@@ -134,10 +133,6 @@ export function AssemblyFoot({
           label="Pass"
           onClick={() => moves.assemblyPass(viewerId)}
         />
-
-        <span className="asmFootNote asmFootHint">
-          Draw from a politician above, propose your card, or pass.
-        </span>
       </div>
     );
   }

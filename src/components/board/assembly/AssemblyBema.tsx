@@ -77,7 +77,10 @@ function BemaColumns({ G, session }: { G: HegemonyState; session: AssemblySessio
           <BemaColumn G={G} cell={cell} key={cell.owner ?? "house"} session={session} />
         ))}
       </div>
-      {voting ? <VoteTally G={G} session={session} /> : <ProposalHint />}
+      {/* Nothing under the seats during proposal. The hot-seat instructions that
+          used to sit here explained the harness, not the game — the seats
+          themselves already say who has spoken and who has not. */}
+      {voting ? <VoteTally G={G} session={session} /> : null}
     </>
   );
 }
@@ -601,15 +604,6 @@ function voteNote(
   }
 
   return yea > nay ? "the rest cannot stop it" : "the rest cannot save it";
-}
-
-function ProposalHint() {
-  return (
-    <div className="asmProposalHint">
-      Every seat draws at once. Switch seats with the roster top-right to take each player's turn;
-      the round moves to the vote once all four have decided.
-    </div>
-  );
 }
 
 // ── Closing recap (unchanged in shape) ──────────────────────────────────────────────

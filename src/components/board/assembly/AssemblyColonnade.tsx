@@ -188,7 +188,7 @@ function PoliticianColumn({
               </Tooltip>
             );
           })}
-        {stelae.length === 0 ? <div className="steleEmpty">No stelae stand.</div> : null}
+        {stelae.length === 0 ? <div className="steleEmpty">No stele bears his name.</div> : null}
       </div>
     </div>
   );
