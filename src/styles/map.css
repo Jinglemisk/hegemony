@@ -204,49 +204,9 @@
   -webkit-mask-size: 400% 400%;
 }
 
-.resourceMaskIcon {
-  display: inline-block;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  background: var(--resource-color, currentColor);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
-
-.resourceMask-wood {
-  -webkit-mask-image: url("../../assets/resource-icons/wood-mask.png");
-  mask-image: url("../../assets/resource-icons/wood-mask.png");
-}
-
-.resourceMask-stone {
-  -webkit-mask-image: url("../../assets/resource-icons/stone-mask.png");
-  mask-image: url("../../assets/resource-icons/stone-mask.png");
-}
-
-.resourceMask-gold {
-  -webkit-mask-image: url("../../assets/resource-icons/gold-mask.png");
-  mask-image: url("../../assets/resource-icons/gold-mask.png");
-}
-
-.resourceMask-food {
-  -webkit-mask-image: url("../../assets/resource-icons/food-mask.png");
-  mask-image: url("../../assets/resource-icons/food-mask.png");
-}
-
-.resourceMask-influence {
-  -webkit-mask-image: url("../../assets/resource-icons/influence-mask.png");
-  mask-image: url("../../assets/resource-icons/influence-mask.png");
-}
-
-.resourceMask-happiness {
-  -webkit-mask-image: url("../../assets/resource-icons/unrest-mask.png");
-  mask-image: url("../../assets/resource-icons/unrest-mask.png");
-}
+/* The six resource PNG masks used to live here, tinted to a fixed per-resource
+   hue. They are `<Icon>` line glyphs now (Sprites.tsx): one drawing hand for the
+   whole app, and colour that says sign rather than which resource it is. */
 
 .atlasTerrain {
   background-image: var(--terrain-atlas);

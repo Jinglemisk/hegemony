@@ -43,37 +43,10 @@
   filter: drop-shadow(0 4px 7px var(--resource-shadow, rgb(36 25 16 / 22%)));
 }
 
-.happinessTheatreIcon {
-  display: inline-block;
-  width: 46px;
-  height: 46px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 165%;
-  filter: drop-shadow(0 4px 7px var(--resource-shadow, rgb(36 25 16 / 22%)));
-}
-
-.happinessTheatreIcon-neutral {
-  background-image: url("../../assets/resource-icons/happiness-neutral.png");
-}
-
-.happinessTheatreIcon-happy {
-  background-image: url("../../assets/resource-icons/happiness-happy.png");
-}
-
-.happinessTheatreIcon-veryHappy {
-  background-image: url("../../assets/resource-icons/happiness-very-happy.png");
-}
-
-.happinessTheatreIcon-sad {
-  background-image: url("../../assets/resource-icons/happiness-sad.png");
-}
-
-.happinessTheatreIcon-veryAngry {
-  background-image: url("../../assets/resource-icons/happiness-very-angry.png");
-}
+/* The five happiness mood rasters used to live here — an untintable
+   background-image per mood, the one resource in the game drawn as a picture
+   instead of a line. Happiness is the `happiness` glyph now, like the other
+   five, and the mask only frowns where unhappiness is the subject (the alarm). */
 
 .resourceValue {
   display: inline-flex;

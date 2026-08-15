@@ -63,6 +63,11 @@
   min-width: 0;
 }
 
+/* A delta row is toned by its SIGN, not by which resource it is. It used to be
+   `var(--resource-color)`, so a gain came out in the resource's own hue while a
+   loss came out oxblood — half a sign rule and half an identity rule, and the
+   glyph beside it inherited whichever won. The glyph is the identity; the colour
+   is the verdict, the same as every income row in the ledger (QA-SHELL-1). */
 .resourceDeltaList > span {
   display: inline-flex;
   align-items: center;
@@ -71,15 +76,19 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--resource-color, var(--fg));
+  color: var(--fg);
   font-family: var(--font-display);
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }
 
+.resourceDeltaList > span.positive {
+  color: var(--pos);
+}
+
 .resourceDeltaList > span.negative {
-  color: rgb(177 58 40 / 92%);
+  color: var(--neg);
 }
 
 .resourceDeltaList.neutral {
