@@ -63,6 +63,38 @@
   scrollbar-gutter: stable;
 }
 
+/* THE EDGE CUE — one answer for three findings.
+ *
+ * The Build cards, the Chronicle's entries and the Codex's chapters all cut a
+ * line in half at the bottom of a 1280–1366 tablet, and nothing said there was
+ * more below: macOS and Chromium give these regions OVERLAY scrollbars, which
+ * are invisible at rest, so a half-drawn card reads as a half-drawn card.
+ *
+ * A frame that has more behind it fades into its own edge. The fade is driven by
+ * the region's own scroll position, so it is present exactly when it is true and
+ * retracts over the last tenth of the scroll — a list scrolled to its end has a
+ * hard edge again, and a list that does not overflow has no timeline at all and
+ * so never fades. Where scroll-driven animation is unsupported, nothing is
+ * masked and the scrollbar remains the only cue, which is where we started. */
+@keyframes intelScrollEdge {
+  from {
+    mask-image: linear-gradient(to bottom, black calc(100% - 26px), transparent);
+  }
+
+  to {
+    mask-image: linear-gradient(to bottom, black 100%, transparent);
+  }
+}
+
+@supports (animation-timeline: scroll(self)) {
+  .intelBody,
+  .chronicleList {
+    animation: intelScrollEdge linear both;
+    animation-timeline: scroll(self);
+    animation-range: 88% 100%;
+  }
+}
+
 /* A page's rows are as wide as the page and never wider. Flex children default
    to `min-width: auto`, which lets a row's longest unbreakable run — a pair of
    "Raise in SIKYON" buttons, a stele's notches — push the row out through the
@@ -271,9 +303,8 @@
 }
 
 .activeEffectsLedger.isOpen {
-  max-height: 46vh;
+  max-height: min(56vh, 420px);
   overflow-y: auto;
-  scrollbar-color: var(--ink-30) transparent;
   scrollbar-gutter: stable;
 }
 
