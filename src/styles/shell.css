@@ -513,6 +513,21 @@
   opacity: 1;
 }
 
+/* The emblem in each quarter. It is drawn INSIDE another drawing, so it carries
+   the line the dial needs rather than the one `.icon` gives type-height glyphs —
+   the group is scaled to 15/24, and 2.4 there lands on the dial's own 1.5. */
+.dialSeasonMark {
+  fill: none;
+  stroke: var(--ink-63);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dialSeasonMark.isNow {
+  stroke: var(--ink);
+}
+
 .dialSeason-spring {
   fill: var(--season-spring);
 }
