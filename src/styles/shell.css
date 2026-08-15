@@ -791,8 +791,6 @@
   font-weight: 600;
 }
 
-/* The Assembly is its own scene with its own foot; it still clears the dials by
-   hand. The tablets no longer do — their frame ends above the dials instead. */
-.asm-body {
-  padding-bottom: 84px;
-}
+/* `.asm-body` used to take an 84px dial clearance here. The Assembly covers the
+   dials now — it covers the whole table — and the element itself is gone with the
+   scene rebuild, so the rule was 84px of dead space inside a takeover. */

@@ -110,7 +110,9 @@ function StandingColumn({ G }: { G: HegemonyState }) {
         <p className="asmSlabBare body-em">
           {bare === cap
             ? "No law stands. The stones are bare."
-            : `${bare} stele${bare === 1 ? "" : "e"} stand${bare === 1 ? "s" : ""} empty`}
+            : bare === 1
+              ? "one stele stands empty"
+              : `${bare} stelae stand empty`}
         </p>
       ) : null}
 

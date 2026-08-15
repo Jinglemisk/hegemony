@@ -37,7 +37,9 @@
   --asm-card-w: calc(360px * var(--ui-scale));
   --asm-standing-w: calc(300px * var(--ui-scale));
   --asm-tally-w: calc(430px * var(--ui-scale));
-  --asm-seat-w: calc(200px * var(--ui-scale));
+  /* Wide enough that "held their peace" and "has cast 3 — 1 bought" sit on one
+     line. The prototype's 200px was drawn against the word "deliberates". */
+  --asm-seat-w: calc(220px * var(--ui-scale));
   --asm-lacquer: rgb(24 18 16 / 72%);
   --asm-keyline: rgb(255 248 231 / 20%);
 }
@@ -700,6 +702,18 @@
   color: var(--ivory-45);
 }
 
+/* The slab's sentence carries resource chips, and those are masks painted with
+   the resource's own colour — wood is a near-black olive, which on this ground is
+   an invisible chip. They ink ivory here. The glyph's SHAPE is what names the
+   resource anyway; colour on this board says whose, not what. */
+.asmStanding .resourceMaskIcon {
+  background: var(--ivory-70);
+}
+
+.asmStanding .richToken {
+  color: var(--ivory);
+}
+
 /* The stelae still bare. Dashed and empty, because "five stand empty" is a fact
    you act on: it is the difference between proposing freely and having to name a
    standing Law to tear down. */
@@ -903,20 +917,27 @@
    hotseat's seat switcher: the scene covers the top bar's roster, and taking a
    seat is the same act that roster performed. */
 
+/* One bench, never two rows. Wrapping is decided on a flex item's BASIS, not on
+   what it can shrink to, so a row that wraps will not then shrink to fit — and a
+   seat on a second line reads as a fifth player who fell off the bench. */
 .asmSeats {
   display: flex;
   flex: none;
   align-items: stretch;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: calc(16px * var(--ui-scale));
+  max-width: 100%;
 }
 
+/* The plaques shrink before anything else does: the casting plaque is three
+   times the width of a resting one, and at 1280 that is exactly the overflow. */
 .asmSeat {
   display: flex;
   align-items: center;
-  gap: 11px;
-  width: var(--asm-seat-w);
+  gap: 10px;
+  flex: 0 1 var(--asm-seat-w);
+  min-width: 0;
   padding: 10px 14px;
   border: 1px solid var(--asm-keyline);
   border-radius: 5px;
@@ -950,8 +971,12 @@
 .asmSeatName {
   color: var(--ivory);
   letter-spacing: 0.1em;
+  white-space: nowrap;
 }
 
+/* The status WRAPS rather than truncating. An ellipsis here would hide the half
+   of "has cast 3 — 1 bought" that is the news, and a plaque one line taller is
+   cheaper than a fact you cannot read. */
 .asmSeatStatus {
   color: var(--ivory-45);
   font-style: italic;
@@ -1008,7 +1033,7 @@
 /* The seat that is casting holds ALL FOUR choices. Bribe used to be exiled to a
    dock at the foot of the panel, one whole surface away from the vote it buys. */
 .asmSeatCasting {
-  width: auto;
+  flex: 0 0 auto;
   gap: 14px;
   padding: 10px 16px;
   border-color: var(--warn-lit);
@@ -1397,6 +1422,24 @@
 
   .asmStations {
     margin-top: -4px;
+  }
+}
+
+/* Narrow: the casting plaque is the widest thing in the scene, so it is the one
+   that gives width back — never the four seats beside it. */
+@media (max-width: 1400px) {
+  .asmVote.is-yea,
+  .asmVote.is-nay {
+    padding: 12px 16px;
+  }
+
+  .asmVote.is-minor {
+    padding: 9px 10px;
+  }
+
+  .asmSeatCasting {
+    gap: 10px;
+    padding: 10px 12px;
   }
 }
 
