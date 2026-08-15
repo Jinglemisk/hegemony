@@ -243,21 +243,46 @@ const PROBE = () => {
  *
  * So: stamp every control, record how each one looks at rest, then walk the real
  * tab order with real key presses and compare.
+ *
+ * Two things the first version of this got wrong, both of which manufactured
+ * findings rather than hiding them:
+ *
+ * · The rest seal was read BEFORE blurring whatever the last surface left
+ *   focused, so a control that happened to be focused when we arrived was
+ *   compared against its own focused self and always came back "identical".
+ *   That is the whole of the tune fab and the armed Grow verb. Blur first.
+ * · A ring is often painted on a CHILD — the board's hex is a <g> whose focus
+ *   stroke lands on the polygon inside it — and an element-only seal cannot see
+ *   it. The seal now covers the control and its first few descendants, and
+ *   carries SVG paint (stroke, stroke-width, fill) as well as CSS box paint,
+ *   because on the board a stroke IS the ring.
  */
-const STAMP_AND_REST = () => {
-  const seal = (style) =>
-    [
-      style.outlineWidth,
-      style.outlineColor,
-      style.outlineStyle,
-      style.boxShadow,
-      style.backgroundColor,
-      style.borderColor,
-      style.color,
-      style.filter,
-      style.transform,
-    ].join("|");
+const INSTALL_SEAL = () => {
+  const props = (style) => [
+    style.outlineWidth,
+    style.outlineColor,
+    style.outlineStyle,
+    style.boxShadow,
+    style.backgroundColor,
+    style.borderColor,
+    style.color,
+    style.filter,
+    style.transform,
+    style.stroke,
+    style.strokeWidth,
+    style.fill,
+    style.opacity,
+  ];
+  window.__auditSeal = (el) => {
+    const parts = props(getComputedStyle(el));
+    for (const child of [...el.querySelectorAll("*")].slice(0, 8)) {
+      parts.push(...props(getComputedStyle(child)));
+    }
+    return parts.join("|");
+  };
+};
 
+const STAMP_AND_REST = () => {
   const describe = (el) => {
     const cls =
       typeof el.className === "string" && el.className
@@ -276,14 +301,17 @@ const STAMP_AND_REST = () => {
     return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && !el.hasAttribute("disabled");
   });
 
-  controls.forEach((el, i) => {
-    el.setAttribute("data-audit-idx", String(i));
-    rest[i] = { seal: seal(getComputedStyle(el)), el: describe(el) };
-  });
-
+  // Blur BEFORE sealing: a control the previous surface left focused would
+  // otherwise record its focused look as its resting one.
   if (document.activeElement && document.activeElement !== document.body) {
     document.activeElement.blur();
   }
+
+  controls.forEach((el, i) => {
+    el.setAttribute("data-audit-idx", String(i));
+    rest[i] = { seal: window.__auditSeal(el), el: describe(el) };
+  });
+
   return rest;
 };
 
@@ -293,41 +321,41 @@ const FOCUSED_NOW = () => {
   if (!el || el === document.body || !el.getAttribute) return null;
   const idx = el.getAttribute("data-audit-idx");
   if (idx === null) return null;
-  const style = getComputedStyle(el);
-  return {
-    idx,
-    seal: [
-      style.outlineWidth,
-      style.outlineColor,
-      style.outlineStyle,
-      style.boxShadow,
-      style.backgroundColor,
-      style.borderColor,
-      style.color,
-      style.filter,
-      style.transform,
-    ].join("|"),
-  };
+  return { idx, seal: window.__auditSeal(el) };
 };
 
 /**
  * Walk the real tab order and report every stop whose appearance does not change.
  * Stops after a full cycle or 80 presses, whichever comes first.
+ *
+ * The second look matters. Half this UI transitions its state changes over
+ * 160ms, and `getComputedStyle` mid-transition returns the INTERPOLATED value —
+ * read the instant after the key press and a control that is visibly lighting up
+ * still reads exactly as it did at rest. Every hex on the board came back
+ * "unfocusable" for that reason alone. So: read immediately, and only if it
+ * looks unchanged wait out the transition and read once more. The cost is paid
+ * on suspects only, which is a handful per surface rather than eighty.
  */
 const tabThrough = async (page) => {
+  await page.evaluate(INSTALL_SEAL);
   const rest = await page.evaluate(STAMP_AND_REST);
   const out = [];
   const seenIdx = new Set();
 
   for (let press = 0; press < 80; press += 1) {
     await page.keyboard.press("Tab");
-    const now = await page.evaluate(FOCUSED_NOW);
+    let now = await page.evaluate(FOCUSED_NOW);
     if (!now) continue; // focus left the stamped set (browser chrome, body)
     if (seenIdx.has(now.idx)) break; // wrapped around
     seenIdx.add(now.idx);
 
-    const resting = rest[now.idx];
-    if (resting && resting.seal === now.seal) {
+    const idx = now.idx;
+    const resting = rest[idx];
+    if (!resting || resting.seal !== now.seal) continue;
+
+    await page.waitForTimeout(240); // longer than the longest transition in the app
+    now = await page.evaluate(FOCUSED_NOW);
+    if (now && now.idx === idx && resting.seal === now.seal) {
       out.push({ kind: "NOFOCUS", el: resting.el });
     }
   }
