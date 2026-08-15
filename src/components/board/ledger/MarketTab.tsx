@@ -1,14 +1,22 @@
 import { TRADABLE_MATERIALS, getBankBuyStatus, getBankSellStatus } from "../../../game/rules";
 import type { TradableMaterial } from "../../../game/types";
-import { resourceCssVars } from "../../../ui/resourceVisuals";
-import { ResourceIcon } from "../../Sprites";
-import { capitalize } from "../helpers";
+import { RESOURCE_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
+import { MechanicsDetails } from "../../MechanicsDetails";
+import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 
 /**
- * The bank exchange (D6/Q14): sell a material for 1 gold, buy one for gold, rates
- * always on display so the corridor teaches itself. Rates were derived from THIS
- * board at game creation and never move; no cap on trades per turn.
+ * The bank. Rates were fixed from this board at game creation and never move, so
+ * the page is a price list you act on rather than a market you watch.
+ *
+ * The row is `[glyph] [HELD] [SELL] [BUY]`, and the two trade buttons are
+ * deliberately unlike each other: SELL is a filled lacquer block, BUY an outline.
+ * Two identically-shaped buttons a thumb apart is how you sell the thing you
+ * meant to buy, and this page is pressed dozens of times a game.
+ *
+ * A shortfall — you do not hold enough to sell — mutes SELL and turns the count
+ * red. Nothing is hidden; what is unaffordable simply stops inviting the press.
  */
 export function MarketTab({
   onBankSell,
@@ -22,7 +30,7 @@ export function MarketTab({
   const tradingOpen = isActive && phase === "gameplay";
 
   return (
-    <div className="marketLedger">
+    <div className="marketPage">
       {TRADABLE_MATERIALS.map((material) => {
         const rate = G.bank[material];
         const held = G.players[playerID].resources[material];
@@ -30,42 +38,83 @@ export function MarketTab({
         const buy = getBankBuyStatus(G, playerID, material);
         const sellAmount = sell.cost?.[material] ?? rate.sell;
         const buyAmount = buy.cost?.gold ?? rate.buy;
+        const canSell = tradingOpen && sell.can;
+        const canBuy = tradingOpen && buy.can;
+        const short = held < sellAmount;
 
         return (
-          <section className="marketRow" key={material} style={resourceCssVars(material)}>
-            <div className="marketRowLead">
-              <ResourceIcon resource={material} className="marketRowIcon" />
-              <span>
-                <strong>{capitalize(material)}</strong>
-                <em>{held} held</em>
-              </span>
-            </div>
+          <section className={`marketRow${short ? " marketRowShort" : ""}`} key={material}>
+            <Icon glyph={RESOURCE_GLYPHS[material]} size="rail" className="marketGlyph" />
 
-            <div className="marketRowActions">
-              <button
-                className="marketTradeButton"
-                disabled={!tradingOpen || !sell.can}
-                title={sell.reasons.join(" ") || `Sell ${sellAmount} ${material} for 1 gold.`}
-                onClick={() => onBankSell(material)}
+            <span className="marketHeld">
+              <b className="stat-lg num">{held}</b>
+              <small className="label">held</small>
+            </span>
+
+            <span className="marketTrade">
+              <Tooltip
+                content={
+                  <MechanicsDetails
+                    blockedReason={canSell ? undefined : sell.reasons.join(" ")}
+                    heading={`Sell ${material}`}
+                  >
+                    <p className="mechanicsExplanation">
+                      The bank pays 1 gold for {sellAmount} {material}.
+                    </p>
+                  </MechanicsDetails>
+                }
+                triggerClassName="marketTradeTrigger"
               >
-                Sell {sellAmount} <span className="marketArrow">→</span> 1g
-              </button>
-              <button
-                className="marketTradeButton"
-                disabled={!tradingOpen || !buy.can}
-                title={buy.reasons.join(" ") || `Buy 1 ${material} for ${buyAmount} gold.`}
-                onClick={() => onBankBuy(material)}
+                <button
+                  aria-disabled={!canSell}
+                  className="marketSell"
+                  onClick={canSell ? () => onBankSell(material) : undefined}
+                  type="button"
+                >
+                  <b className="num">
+                    {sellAmount}
+                    <Icon glyph={RESOURCE_GLYPHS[material]} />
+                  </b>
+                  <small className="label">sell</small>
+                </button>
+              </Tooltip>
+
+              <Tooltip
+                content={
+                  <MechanicsDetails
+                    blockedReason={canBuy ? undefined : buy.reasons.join(" ")}
+                    heading={`Buy ${material}`}
+                  >
+                    <p className="mechanicsExplanation">
+                      The bank asks {buyAmount} gold for 1 {material}.
+                    </p>
+                  </MechanicsDetails>
+                }
+                triggerClassName="marketTradeTrigger"
               >
-                {buyAmount}g <span className="marketArrow">→</span> buy 1
-              </button>
-            </div>
+                <button
+                  aria-disabled={!canBuy}
+                  className="marketBuy"
+                  onClick={canBuy ? () => onBankBuy(material) : undefined}
+                  type="button"
+                >
+                  <b className="num">
+                    {buyAmount}
+                    <Icon glyph="gold" />
+                  </b>
+                  <small className="label">buy</small>
+                </button>
+              </Tooltip>
+            </span>
           </section>
         );
       })}
 
-      <div className="marketFooter">
-        <span>
-          Treasury <strong>{gold} gold</strong>
+      <div className="anchorRow">
+        <span className="anchorKey label">Treasury</span>
+        <span className="treasuryValue stat-lg stat-xl num">
+          <Icon glyph="gold" size="rail" />
+          {gold}
         </span>
       </div>
     </div>
