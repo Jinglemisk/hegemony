@@ -1,61 +1,111 @@
 import { PLAYER_NAMES, PLAYER_IDS } from "../../../game/data";
 import { victoryStandings } from "../../../game/victory";
-import type { HegemonyState, PlayerId } from "../../../game/types";
+import type { HegemonyState, PlayerId, VictoryMetric } from "../../../game/types";
 import { formatNumber } from "../../../ui/formatters";
-import { glazeOf } from "../../../ui/playerGlazes";
+import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
+import type { GlyphId } from "../../../ui/icons/glyphs";
+import { Icon } from "../../../ui/icons/Icon";
+import { MechanicsDetails } from "../../MechanicsDetails";
+import { Tooltip } from "../../overlays/Tooltip";
 
 /**
- * The victory race, always visible: the six public cards, who holds each, and every
- * player's current value against the minimum. Reads the same engine helper the win
- * check uses (victoryStandings), so the ledger can never disagree with the rules.
+ * The victory race — six laurels, and how close each seat is to holding one.
  *
+ * Every card shows the LEADER, not four columns of numbers. The old tab printed
+ * all four values on every card: twenty-four figures, of which the two that
+ * matter are the leader's and yours. Those two are on the card; the full standing
+ * is one hover away.
+ *
+ * The meter is `--warn`, never a glaze. A glaze on a progress bar would say the
+ * leader's colour means "ahead", and colour on this board means whose, not how
+ * good. Reads from the same engine helper the win check uses, so the ledger can
+ * never disagree with the rules.
  */
+
+/** What each laurel is actually about, in the icon vocabulary. */
+const METRIC_GLYPHS: Record<VictoryMetric, GlyphId> = {
+  cities: "city",
+  pops: "crowd",
+  citizens: "citizens",
+  stockpile: "stockpile",
+  happiness: "happiness",
+  voice: "voice",
+};
+
 export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId }) {
   const standings = victoryStandings(G);
   const cardsToWin = G.ruleset.victory.cardsToWin;
   const held = standings.filter(({ holder }) => holder === playerID).length;
 
   return (
-    <div className="victoryTab">
+    <div className="victoryPage">
       {/* What the deleted scoring lecture was really carrying: how close you are.
-          A count is a fact the player can act on; the rule behind it lives in the
-          Codex, one hover away, where it belongs. */}
-      <p className="victoryHeldline label">
-        <b className="stat-lg num">
-          {held}/{cardsToWin}
-        </b>{" "}
-        laurels held
+          A count is a fact you can act on; the rule behind it lives in the Codex,
+          one hover away, where it belongs. */}
+      <p className="heldline">
+        <b className="heldlineBig num">
+          {held}
+          <small>/{cardsToWin}</small>
+        </b>
+        <span className="label">laurels held</span>
       </p>
 
-      {standings.map(({ card, holder, minimum, values }) => (
-        <article className="victoryCardRow" key={card.id}>
-          <header className="victoryCardHead">
-            <strong className="victoryCardName">{card.name}</strong>
-            {holder ? (
-              <span className="victoryHolder" style={{ color: glazeOf(holder) }}>
-                ◈ {PLAYER_NAMES[holder]}
-              </span>
-            ) : (
-              <span className="victoryHolder victoryUnheld">unheld</span>
-            )}
-          </header>
-          <p className="victoryCardCondition">
-            {card.description} · minimum {minimum}
-          </p>
-          <div className="victoryValues">
-            {PLAYER_IDS.map((id) => (
-              <span
-                className={`victoryValue${holder === id ? " victoryLeader" : ""}${id === playerID ? " victoryViewer" : ""}`}
-                key={id}
-                style={{ borderBottomColor: glazeOf(id) }}
-                title={`${PLAYER_NAMES[id]}: ${formatNumber(values[id])} (needs ${minimum})`}
-              >
-                {PLAYER_NAMES[id].slice(0, 2)} {formatNumber(values[id])}
-              </span>
-            ))}
-          </div>
-        </article>
-      ))}
+      {standings.map(({ card, holder, minimum, values }) => {
+        const leader = holder ?? bestOf(values);
+        const leadValue = values[leader];
+        const progress = minimum > 0 ? Math.min(1, leadValue / minimum) : 1;
+
+        return (
+          <Tooltip
+            content={
+              <MechanicsDetails heading={card.name}>
+                <p className="mechanicsExplanation">
+                  {card.description} · minimum {minimum}.
+                </p>
+                <div className="detailTooltipRows">
+                  {PLAYER_IDS.map((id) => (
+                    <em key={id}>
+                      {PLAYER_NAMES[id]} {formatNumber(values[id])}
+                      {id === holder ? " — holds it" : ""}
+                    </em>
+                  ))}
+                </div>
+              </MechanicsDetails>
+            }
+            key={card.id}
+            triggerClassName="vcardTrigger"
+          >
+            <article className={`vcard${holder === playerID ? " vcardHeld" : ""}`}>
+              {holder === playerID ? <span className="vcardStamp label">Held</span> : null}
+              <div className="vcardName">
+                <Icon glyph={METRIC_GLYPHS[card.metric]} />
+                <b className="title">{card.name}</b>
+              </div>
+
+              <div className="vcardRace">
+                <span
+                  className="vcardGlaze label"
+                  style={{ background: PLAYER_GLAZES[leader].color }}
+                >
+                  {PLAYER_GLAZES[leader].blazon}
+                </span>
+                <span className="vcardLead stat num">
+                  {formatNumber(leadValue)}
+                  <small>/{minimum}</small>
+                </span>
+                <span className="vcardMeter" aria-hidden="true">
+                  <i style={{ width: `${progress * 100}%` }} />
+                </span>
+              </div>
+            </article>
+          </Tooltip>
+        );
+      })}
     </div>
   );
+}
+
+/** Who is furthest along when nobody holds the card yet. */
+function bestOf(values: Record<PlayerId, number>): PlayerId {
+  return PLAYER_IDS.reduce((best, id) => (values[id] > values[best] ? id : best), PLAYER_IDS[0]);
 }
