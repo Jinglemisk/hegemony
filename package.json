@@ -21,7 +21,8 @@
     "dead-code": "knip",
     "sim": "tsx src/sim/cli.ts",
     "preview": "vite preview --host 127.0.0.1",
-    "ui:audit": "node scripts/audit-ui-geometry.mjs"
+    "ui:audit": "node scripts/audit-ui-geometry.mjs",
+    "ui:conduct": "node scripts/audit-ui-conduct.mjs"
   },
   "engines": {
     "node": ">=22"
