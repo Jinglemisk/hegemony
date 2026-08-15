@@ -82,9 +82,12 @@ function headline(G: HegemonyState, session: AssemblySession): { title: string; 
   if (session.phase === "voting") {
     const left = session.ballot.length;
 
+    // Roman, like the counter in the corner two lines above it. The corner read
+    // "CARD I OF I" while this line read "1 resolution stands" — the same figure
+    // twice, in two numbering systems, inside one head.
     return {
       title: "The vote",
-      sub: `the Assembly turns to the ballot — ${left} resolution${left === 1 ? "" : "s"} stand${left === 1 ? "s" : ""}`,
+      sub: `the Assembly turns to the ballot — ${toRoman(left)} resolution${left === 1 ? "" : "s"} stand${left === 1 ? "s" : ""}`,
     };
   }
 
