@@ -77,7 +77,11 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
   return (
     <section className="chroniclePage" aria-label="Action log">
       <div className="chronicleFilters" role="group" aria-label="Filter the chronicle by player">
+        {/* The all-filter is a disc like the four beside it, bearing Π for pantes
+            — all of them. A text pill among four glaze discs read as a different
+            kind of control, when it is the same control set to everyone. */}
         <button
+          aria-label="Every deed"
           aria-pressed={filter === "all"}
           className={
             filter === "all" ? "chronFilter chronFilterAll on" : "chronFilter chronFilterAll"
@@ -86,7 +90,7 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
           title="Every deed"
           type="button"
         >
-          <span className="label">All</span>
+          <span className="label">Π</span>
         </button>
         {PLAYER_GLAZE_LIST.map(({ id, name, color, blazon }) => (
           <button

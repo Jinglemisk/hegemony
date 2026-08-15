@@ -23,6 +23,14 @@ import { Tooltip } from "../../overlays/Tooltip";
  * stele in the colonnade, a slab here.
  */
 
+/** The empty stelae are counted in words, the way the floor announces them; past
+ *  the words the numeral does the job. Only the law cap's range ever lands here. */
+const SPELLED = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight"];
+
+function spell(count: number): string {
+  return SPELLED[count] ?? String(count);
+}
+
 export function AgoraTab({ G }: { G: HegemonyState }) {
   const standings = politicianStandings(G);
   const voice = victoryStandings(G).find((standing) => standing.card.metric === "voice");
@@ -60,27 +68,33 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
         </div>
       </Tooltip>
 
-      <h3 className="ladderSection label">
-        Standing laws · {G.activeLaws.length}/{rules.lawCap}
+      <h3 className="pageSection label">
+        Standing laws · {G.activeLaws.length} of {rules.lawCap}
       </h3>
 
-      {G.activeLaws.length === 0 ? (
-        <div className="lawslab lawslabEmpty body-em">No law stands. The stones are bare.</div>
-      ) : (
-        G.activeLaws
-          .slice()
-          .sort((left, right) => left.order - right.order)
-          .map((law) => (
-            <StandingLaw
-              content={G.definition.content}
-              key={`${law.cardId}-${law.order}`}
-              stele={law}
-              variant="slab"
-            />
-          ))
-      )}
+      {G.activeLaws
+        .slice()
+        .sort((left, right) => left.order - right.order)
+        .map((law) => (
+          <StandingLaw
+            content={G.definition.content}
+            key={`${law.cardId}-${law.order}`}
+            stele={law}
+            variant="slab"
+          />
+        ))}
 
-      <h3 className="ladderSection label">The four orators</h3>
+      {/* The room left on the floor is a slab of its own, dashed, standing beside
+          the laws that already stand — how many more the house may pass is a fact
+          you want at four laws as much as at none. */}
+      {G.activeLaws.length < rules.lawCap ? (
+        <div className="lawslab lawslabEmpty body-em">
+          {spell(rules.lawCap - G.activeLaws.length)}{" "}
+          {rules.lawCap - G.activeLaws.length === 1 ? "stele stands" : "stelae stand"} empty
+        </div>
+      ) : null}
+
+      <h3 className="pageSection label">The four orators</h3>
 
       {standings.map((standing) => {
         const isStratokles = standing.politician.id === "stratokles";
@@ -119,12 +133,16 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
               <span className="polWho">
                 <b className="title">{standing.politician.name}</b>
                 <span className="polEpithet label">{standing.politician.epithet}</span>
-              </span>
-              {/* Notches, not a number: how many stones bear his name, at a glance. */}
-              <span className="steleNotches" aria-label={`${stelae.length} stelae`}>
-                {Array.from({ length: rules.lawCap }, (_, index) => (
-                  <i className={index < stelae.length ? "notch notchWon" : "notch"} key={index} />
-                ))}
+                {/* Notches, not a number: how many stones bear his name, at a
+                    glance. They sit under the epithet rather than at the row's
+                    end because a name like KLEISTOPHENES and six notches want
+                    250px between them and the tablet gives 192 — hung on the
+                    right they ran 71px out through the frame. */}
+                <span className="steleNotches" aria-label={`${stelae.length} stelae`}>
+                  {Array.from({ length: rules.lawCap }, (_, index) => (
+                    <i className={index < stelae.length ? "notch notchWon" : "notch"} key={index} />
+                  ))}
+                </span>
               </span>
             </section>
           </Tooltip>

@@ -913,17 +913,25 @@
     0 0 0 1px rgb(36 25 16 / 40%);
 }
 
+.polWho {
+  min-width: 0;
+}
+
 .polEpithet {
   display: block;
   color: var(--clay);
   letter-spacing: 0.16em;
 }
 
-/* Notches, not a count: how many stones bear his name, read at a glance. */
+/* Notches, not a count: how many stones bear his name, read at a glance. They
+   sit under the name rather than at the row's end — an orator's name and six
+   notches want 250px between them and the tablet gives 192, so hung on the
+   right the last of them fell 71px outside the frame. */
 .steleNotches {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
-  margin-left: auto;
+  margin-top: 5px;
 }
 
 .notch {
@@ -988,10 +996,9 @@
   box-shadow: 0 0 0 2px var(--clay);
 }
 
+/* Same disc, same keyline, same blazon grammar as the four seats — only the
+   glaze is the lacquer everyone shares. */
 .chronFilterAll {
-  width: auto;
-  padding: 0 9px;
-  border-radius: 11px;
   background: var(--vase-black);
 }
 
