@@ -292,3 +292,79 @@ widths.
 
 **Screenshots.** `.playwright-mcp/p2-table-{1440x900,1280x800}.png`,
 `p2-assembly-1280x800.png`, plus `crop-top*`/`crop-bottom` for the two bars.
+
+---
+
+## Phase 3 — the board
+
+**Shipped.** The board reads by shape now. One grammar governs it: **shape says
+what · colour says whose · stroke says state.**
+
+- **Terrain ramp** `--t-plains` → `--t-mountain`: four steps of the same bone,
+  deliberately almost flat, because **kind is carried by an engraved emblem**
+  (`src/ui/boardEmblems.ts` — three firs, a ridge with a false summit, uneven
+  furrows, a double swell, the omphalos) at 30% ink. That flatness is what buys
+  the owner glazes their loudness.
+- **Settlement tokens:** a glazed seal with an ivory keyline (city = temple front,
+  colony = pennant), **pop beads** arced beneath (solid = citizen, ring = freeman,
+  black = slave — three shapes, no colour, so the ladder survives beside four
+  glazes), an **owner rim** as an inner hex stroke, and an **ivory name plate**.
+- **Names.** ARGOS, THERMON, PYLOS… `src/ui/settlementNames.ts` derives a
+  deterministic name from the settlement's own engine-allocated id, deduped
+  board-wide so two places never share one. `City -2,0` now appears nowhere: the
+  map, the Cities tab, every settlement picker, the build tooltips and the income
+  breakdown all say the place's name. Coordinates survive in tooltips and
+  accessible labels, where a debugging fact belongs.
+- **States are strokes.** Selection = clay; a legal target = dashed aegean (the
+  one place the politics colour touches the board, and it means "the rules accept
+  this", not "this is good"); pending = dashed clay. **Non-targets dim to 42%** —
+  quieter than lighting up the right answers on a board this dense.
+- **Slot pips are hidden at rest** and appear only while you are choosing where to
+  build. Forty permanent "0/3"s were forty numbers nobody read.
+- **The white dashed coastline is gone.** It was the loudest line on the board and
+  carried no information — the island's edge is already the edge. A soft ink
+  shadow remains.
+- **Fixed the Found-banner overlap.** The targeting caption sat 60px off the
+  viewport's bottom, which is _inside_ the command rail: the instruction printed
+  straight through the verb buttons, character over character. It clears the whole
+  rail now, dials included, and it is a bone-on-lacquer object rather than a teal
+  pill.
+
+**Deviations.**
+
+- **One `engine:` commit** (`2438baa`). `IncomeContribution` gained an optional
+  `settlementId`. The engine mints its own label — `"City on plains -2,0"` — and
+  the simulator, telemetry and tests all read it, so that string stays exactly as
+  it was; the id is purely additive and lets the frontend put ARGOS on the row
+  without the engine having to know that settlements have names. No rule, no
+  balance, no save shape changed. Full suite re-run: **489 tests green.**
+- **Names are derived, not stored.** The plan allowed an engine name field with a
+  migration. Deriving from the id gives the same guarantee — stable across a
+  reload, a rewind and a different machine — for no state and no migration, so the
+  field would have been carrying a string the rules never read.
+- **The board draws in two passes.** A name plate hangs below its hex into the
+  neighbour's, and SVG has no z-index — paint order is the only lever — so a
+  single pass had every plate half-buried under the tile drawn after it
+  ("OLYNTHOS" arriving as "OLYNTHO"). `TileGroup` split into `TileGround` and
+  `TileTokens`; `HexMap` runs all the ground, then everything standing on it.
+- **The tile inset dropped from 2 to 1.** At 2 the sea showed through every seam
+  and the island read as forty separate counters rather than one landmass.
+- `getColonyXPositions` became `getSideBySidePositions` (a tile can hold a city
+  _and_ a rival's colony) and widened 14 → 22 to clear the bigger seals; its test
+  moved with it rather than a second constant appearing in the component.
+- Board text sizes moved onto their elements as `fontSize` attributes, for the
+  same reason as the dials': inside the world's coordinate system a size is
+  geometry that pans and zooms with the tile.
+- Superseded styles deleted: `.terrainTint-*`, the old `.hexTile`, `.oracleMark`,
+  `.tileSlotsGlyph`, `.tileYieldGlyph`, `.tileMetric`, `.settlementShape`,
+  `.cityShape`, `.colonyOverflow`. Ratchet: **raw-hex 74 → 61**, font-size 211 → 210.
+
+**Commits.** `663c898` names · `19a2b6e` tokens + two-pass · `ab1a4bc` ramp,
+emblems, states · `dfe1ca0` ratchet · `2438baa` engine id · `bbeaa44` name sweep.
+
+**Red.** None. `check` · `lint` · **full `test:run` (489)** · `ui:check` ·
+`format:check` green.
+
+**Screenshots.** `.playwright-mcp/p3-table-{1440x900,1280x800}.png`,
+`p3-targeting.png` (dimming + dashed targets + the banner clearing the rail),
+`board3.png` (the board close up).
