@@ -64,8 +64,10 @@ export type VerbSpec = {
   pressed?: (context: VerbContext) => boolean;
   /** Shown when the verb is usable. */
   hint: string | ((context: VerbContext) => string);
-  /** Shown when `available` is false — always says which precondition is missing. */
-  blockedHint: string;
+  /** Shown in the tooltip ladder when `available` is false, and ONLY there — a
+   *  blocked reason is never printed as chrome. Optional: a verb whose blocked
+   *  state needs no explanation beyond its own hint simply omits it. */
+  blockedHint?: string;
   select: (handlers: VerbHandlers) => void;
 };
 
@@ -167,7 +169,6 @@ export const END_TURN_VERB: VerbSpec = {
   available: () => true,
   hint: ({ isActive }) =>
     isActive ? "End the current player's turn." : "Current player's turn only.",
-  blockedHint: "Current player's turn only.",
   select: (handlers) => handlers.onEndTurn(),
 };
 
@@ -186,11 +187,9 @@ export function verbTitle(verb: VerbSpec, context: VerbContext) {
     return "Resolve the pending player event first.";
   }
 
-  if (!verb.available(context)) {
-    return verb.blockedHint;
-  }
+  const hint = typeof verb.hint === "function" ? verb.hint(context) : verb.hint;
 
-  return typeof verb.hint === "function" ? verb.hint(context) : verb.hint;
+  return verb.available(context) ? hint : (verb.blockedHint ?? hint);
 }
 
 // The verb COMPONENTS (VerbIconGlyph, CommandVerb, VerbCostSlot) live in CommandVerb.tsx
