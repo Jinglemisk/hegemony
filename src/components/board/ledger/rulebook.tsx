@@ -13,6 +13,7 @@ import {
 } from "../../../game/content";
 import { TRADABLE_MATERIALS, getBuildings, getTerrainDeck } from "../../../game/rules";
 import { POLITICIANS } from "../../../game/assembly";
+import { VICTORY_CARDS } from "../../../game/victory";
 import type {
   EventCard,
   HegemonyState,
@@ -56,6 +57,14 @@ export type RuleChapter = {
 };
 
 const anchor = (chapter: string, sub: string) => `codex-${chapter}-${sub}`;
+
+/** Prose counts a roster rather than quoting it: "six public victory cards" was a
+ *  hand-typed six sitting next to a table of cards that could grow or shrink. */
+const SPELLED = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+
+function spell(count: number): string {
+  return SPELLED[count] ?? String(count);
+}
 
 // ── shared render helpers ────────────────────────────────────────────────────
 
@@ -157,23 +166,22 @@ const victory: RuleChapter = {
   ],
   Body: ({ G }) => {
     const { victory } = G.ruleset;
-    const metricLabels: Record<keyof typeof victory.minimums, { title: string; of: string }> = {
-      cities: { title: "The Great Polis", of: "the most cities" },
-      pops: { title: "The Populous", of: "the most population" },
-      citizens: { title: "The Republic", of: "the most citizens" },
-      stockpile: { title: "The Treasury", of: "the largest stockpile of materials" },
-      happiness: { title: "The Beloved", of: "the highest happiness" },
-      voice: { title: "Voice of the Assembly", of: "the most authored resolutions passed" },
-    };
+    // The deck itself, not a copy of it. This table used to hand-name the cards —
+    // "The Great Polis", "The Populous", "The Treasury" — while the game awarded
+    // Polis Builder, Demos and Treasurer, so the rulebook did not name the cards
+    // the rules deal out. Names, descriptions and the count all come from the
+    // authored deck now, and the minimums from the ruleset beside it.
+    const boardCards = VICTORY_CARDS.filter((card) => card.metric !== "voice");
     return (
       <div className="compendiumStack">
         <Entry id={anchor("victory", "race")} title="The race">
           <Note>
-            There are six public victory cards, each awarded to the sole leader in one measure. Hold{" "}
-            <strong>{victory.cardsToWin}</strong> of them at the <em>start of your own turn</em> and
-            you win at once. Ties award nothing on the five board metrics. Voice instead stays with
-            its first qualifying holder through ties and moves only when strictly exceeded. Five
-            measure what you have built; the sixth measures the agora (see{" "}
+            There are {spell(VICTORY_CARDS.length)} public victory cards, each awarded to the sole
+            leader in one measure. Hold <strong>{victory.cardsToWin}</strong> of them at the{" "}
+            <em>start of your own turn</em> and you win at once. Ties award nothing on the{" "}
+            {spell(boardCards.length)} board metrics. Voice instead stays with its first qualifying
+            holder through ties and moves only when strictly exceeded. Those{" "}
+            {spell(boardCards.length)} measure what you have built; Voice measures the agora (see{" "}
             <AnnotatedText text="Assembly" />
             ).
           </Note>
@@ -189,10 +197,9 @@ const victory: RuleChapter = {
             setup or on turn one.
           </Note>
           <DefList>
-            {(Object.keys(metricLabels) as Array<keyof typeof victory.minimums>).map((metric) => (
-              <DefRow key={metric} term={metricLabels[metric].title}>
-                Sole leader in {metricLabels[metric].of}, minimum{" "}
-                <strong>{victory.minimums[metric]}</strong>.
+            {VICTORY_CARDS.map((card) => (
+              <DefRow key={card.id} term={card.name}>
+                {card.description}, minimum <strong>{victory.minimums[card.metric]}</strong>.
               </DefRow>
             ))}
           </DefList>
@@ -839,10 +846,15 @@ const assembly: RuleChapter = {
     { id: anchor("assembly", "vote"), label: "Voting" },
     { id: anchor("assembly", "laws"), label: "Laws & Directives" },
     { id: anchor("assembly", "power"), label: "Power & patrons" },
-    { id: anchor("assembly", "politicians"), label: "The four politicians" },
+    {
+      id: anchor("assembly", "politicians"),
+      label: `The ${spell(POLITICIANS.length)} politicians`,
+    },
   ],
   Body: ({ G }) => {
     const rules = G.ruleset.assembly;
+    const lawmakers = POLITICIANS.filter((politician) => politician.kind === "law");
+    const directivemakers = POLITICIANS.filter((politician) => politician.kind !== "law");
 
     return (
       <div className="compendiumStack">
@@ -917,15 +929,21 @@ const assembly: RuleChapter = {
         </Entry>
 
         <Entry id={anchor("assembly", "laws")} title="Laws & Directives">
+          {/* Which politicians deal in what is authored data (POLITICIANS), so the
+              prose counts them instead of quoting "three of the four" and naming
+              Stratokles by hand. */}
           <Note>
-            A resolution is not a one-year buff — it changes how the game is played. Three of the
-            four politicians deal in <strong>Laws</strong>: table-wide rules that stand until
-            repealed, each carrying a trade-off, so a vote is a referendum on which strategy the
-            table backs.
+            A resolution is not a one-year buff — it changes how the game is played.{" "}
+            {capitalize(spell(lawmakers.length))} of the {spell(POLITICIANS.length)} politicians
+            deal in <strong>Laws</strong>: table-wide rules that stand until repealed, each carrying
+            a trade-off, so a vote is a referendum on which strategy the table backs.
           </Note>
           <Note>
-            The fourth, Stratokles, deals in <strong>Directives</strong>: one-time upheavals aimed
-            at a rival chosen by their author. Each leaves a permanent monument on his stack.
+            {directivemakers.length === 1 ? "The other, " : "The others, "}
+            {directivemakers.map((politician) => politician.name).join(" and ")},{" "}
+            {directivemakers.length === 1 ? "deals" : "deal"} in <strong>Directives</strong>:
+            one-time upheavals aimed at a rival chosen by their author. Each leaves a permanent
+            monument on his stack.
           </Note>
           <DefList>
             <DefRow term="The cap">
@@ -959,7 +977,10 @@ const assembly: RuleChapter = {
           </DefList>
         </Entry>
 
-        <Entry id={anchor("assembly", "politicians")} title="The four politicians">
+        <Entry
+          id={anchor("assembly", "politicians")}
+          title={`The ${spell(POLITICIANS.length)} politicians`}
+        >
           <div className="ruleDefList">
             {POLITICIANS.map((politician) => {
               const deck = getResolutionCards(G.definition.content).filter(
