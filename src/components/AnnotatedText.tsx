@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
+import { POLITICIANS } from "../game/assembly/deck";
+import { getAuthoredGameContent } from "../game/content";
 import { capitalize } from "../game/core/format";
 import type { BuildingId, PopType, Resource, SettlementKind } from "../game/types";
 import { resourceCssVars } from "../ui/resourceVisuals";
-import { useCodexLink } from "./codexLink";
+import { useCodexLink, type CodexLink } from "./codexLink";
 import { AtlasIcon, ResourceIcon } from "./Sprites";
 
 /**
@@ -115,6 +117,61 @@ const TOKEN_PATTERN = new RegExp(
   "gi",
 );
 
+/**
+ * Titles the annotator must read as names, not as vocabulary.
+ *
+ * The tokeniser matches a WORD. It has no idea whether that word is doing its
+ * own job or standing inside somebody's name, so the chronicle line "Theron
+ * resolved Granary Rats: -3 Food" drew the **granary building** glyph beside a
+ * card about vermin — a structure you can build, pictured next to a misfortune
+ * that has nothing to do with it. Wrong information, not noise.
+ *
+ * The fix is a closed list rather than a guess. Every title the game ships is
+ * authored right here in the content package, so the exact strings are known;
+ * matching them verbatim (case included) needs no capitalisation heuristic,
+ * which would have misfired on every sentence start and every player name.
+ *
+ * Two filters keep the list honest, and both matter:
+ *
+ * · Only titles that a term can actually collide with are listed — a name the
+ *   tokeniser never matches has nothing to protect.
+ * · A title that IS the term is left alone. "Ada built Granary." names the
+ *   granary and means the granary, so the glyph there is right; only a compound
+ *   like "Granary Rats", where the word no longer denotes the thing, is muted.
+ *
+ * Derived at module load, so authoring a new card extends the list for free —
+ * and `AnnotatedText.test.tsx` walks every authored name to prove it.
+ */
+const PROPER_NAMES: string[] = (() => {
+  const content = getAuthoredGameContent();
+
+  return [
+    ...content.buildings,
+    ...content.seasonalEvents,
+    ...content.playerEvents,
+    ...content.resolutions,
+    ...POLITICIANS,
+    content.riotTable,
+    content.omenTable,
+    ...content.expeditionTables,
+  ]
+    .map((authored) => authored.name)
+    .filter((name) => {
+      TOKEN_PATTERN.lastIndex = 0;
+      return TOKEN_PATTERN.test(name) && !(name.toLowerCase() in TOKEN_MAP);
+    })
+    .sort((a, b) => b.length - a.length);
+})();
+
+function escapeRegExp(literal: string) {
+  return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Longest title first, so "Granary Surplus" is not shadowed by a shorter name. */
+const PROPER_NAME_PATTERN = PROPER_NAMES.length
+  ? new RegExp(`\\b(?:${PROPER_NAMES.map(escapeRegExp).join("|")})\\b`, "g")
+  : null;
+
 function tokenIcon(token: Token) {
   if (token.type === "concept") {
     return null;
@@ -156,6 +213,34 @@ export function AnnotatedText({
   const contextCodexLink = useCodexLink();
   const codexLink = links ? contextCodexLink : null;
   const nodes: ReactNode[] = [];
+
+  // Titles are lifted out FIRST and passed through untouched; only what is left
+  // between them is vocabulary the tokeniser may annotate.
+  let cursor = 0;
+
+  if (PROPER_NAME_PATTERN) {
+    PROPER_NAME_PATTERN.lastIndex = 0;
+    let name: RegExpExecArray | null;
+
+    while ((name = PROPER_NAME_PATTERN.exec(text)) !== null) {
+      annotateInto(nodes, text.slice(cursor, name.index), cursor, codexLink);
+      nodes.push(name[0]);
+      cursor = name.index + name[0].length;
+    }
+  }
+
+  annotateInto(nodes, text.slice(cursor), cursor, codexLink);
+
+  return <span className={className}>{nodes.map(signPlainText)}</span>;
+}
+
+/** The tokenising pass, run over one stretch of text that holds no title. */
+function annotateInto(
+  nodes: ReactNode[],
+  text: string,
+  offset: number,
+  codexLink: CodexLink | null,
+) {
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -170,7 +255,7 @@ export function AnnotatedText({
     }
 
     const style = token.type === "resource" ? resourceCssVars(token.key) : undefined;
-    const key = `${match.index}-${word}`;
+    const key = `${offset + match.index}-${word}`;
     // Terminology is a proper noun (RPG style): Title-Case it however the source
     // wrote it — "gain 3 freemen" reads "gain 3 Freemen".
     const label = capitalize(word);
@@ -219,8 +304,6 @@ export function AnnotatedText({
   if (lastIndex < text.length) {
     nodes.push(text.slice(lastIndex));
   }
-
-  return <span className={className}>{nodes.map(signPlainText)}</span>;
 }
 
 /**
