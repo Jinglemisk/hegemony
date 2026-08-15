@@ -646,13 +646,13 @@ export function HegemonyBoard({
             <GameOverModal G={G} onInspectBoard={() => setGameOverDismissed(true)} />
           ) : null}
           {G.pendingPlayerEvent ? <PendingPlayerEventModal /> : null}
-          {/* The Assembly owns the sea from spring of Year 2 (assembly-politicians.md
-          §1.2). It mounts off engine state like the omen, and it deliberately leaves
-          the top bar, both rails and the dock live around it — you want to read your
-          cities, pops and market before you vote. */}
-          {G.assembly ? (
-            <AssemblyPanel consultOpen={isConsultOpen} ledgerOpen={isLedgerOpen} />
-          ) : null}
+          {/* The Assembly TAKES OVER the table from spring of Year 2
+          (assembly-politicians.md §1.2; owner ruling 2026-08-15). It mounts off
+          engine state like the omen, and it covers the whole viewport — bars,
+          rails and dock included. It therefore takes the seat switcher with it:
+          the roster it covers is the only way a hotseat changes hands, and each
+          of the scene's seat plaques performs that same act. */}
+          {G.assembly ? <AssemblyPanel onTakeSeat={onPlayerIDChange} /> : null}
           {G.yearOmen &&
           G.yearOmen.year !== seenOmenYear &&
           !G.pendingRiot &&
