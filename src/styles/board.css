@@ -77,10 +77,33 @@
   outline: none;
 }
 
-.svgButton:hover .hexTile,
-.svgButton:focus-visible .hexTile {
+.svgButton:hover .hexTile {
   stroke: rgb(36 25 16 / 62%);
   stroke-width: 2;
+}
+
+/* Keyboard focus is NOT hover. Every tile is in the tab order — it is the only
+   way to reach the board without a mouse — and the two states used to paint the
+   identical 2px stroke, so a keyboard player tabbing the map could not tell
+   where they were. Focus takes the same ink at full strength and a wider stroke:
+   no new colour, because clay already means "selected" here and aegean means
+   "the rules will accept this", and a focus ring that borrows either would say
+   something the board does not mean.
+
+   The halo is on the BUTTON, not the tile, and that is deliberate. While a mode
+   is armed the tile's stroke belongs to the rules — aegean dashed for a legal
+   target, clay for pending — and those rules are declared after this one and
+   rightly win. A keyboard player in targeting mode would then have no indicator
+   at all. Painting focus as an outer glow puts it on a different channel from
+   the stroke, so the tile can say "the rules will accept this" and "you are
+   here" at the same time. */
+.svgButton:focus-visible .hexTile {
+  stroke: rgb(36 25 16 / 92%);
+  stroke-width: 4;
+}
+
+.svgButton:focus-visible {
+  filter: drop-shadow(0 0 2px rgb(255 248 231 / 95%)) drop-shadow(0 0 4px rgb(36 25 16 / 90%));
 }
 
 .tile.isSelected .hexTile {

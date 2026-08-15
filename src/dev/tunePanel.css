@@ -26,6 +26,14 @@
   border-color: #c96a3a;
 }
 
+/* The app-wide ring is aegean, which is 1.9:1 against this dark lacquer fab and
+   invisible the moment the offset lands back on it. A dark object gets a light
+   ring. */
+.tune-fab:focus-visible {
+  outline: 2px solid #f3e9d8;
+  outline-offset: 2px;
+}
+
 .tune-panel {
   position: fixed;
   top: 0;
