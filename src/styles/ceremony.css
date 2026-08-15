@@ -310,6 +310,7 @@
 .ceremonyPick {
   display: grid;
   gap: 2px;
+  padding: 9px 0;
   border-bottom: 1px solid var(--ink-12);
   text-align: left;
 }
@@ -639,7 +640,12 @@
 
 .ceremony .riotInsuranceRow {
   align-items: start;
-  padding-bottom: 9px;
+}
+
+/* Short on purpose: the list belongs to the concession slot beside it, and a
+   tall one leaves a lake of ivory between that slot and the next. */
+.ceremony .riotConcessionList {
+  max-height: 84px;
 }
 
 .tabletFoot {
