@@ -1,20 +1,30 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import type { HegemonyState, LogEntry, PlayerId } from "../../../game/types";
 import { seasonLabel, yearLabel } from "../../../ui/formatters";
+import { PLAYER_GLAZE_LIST, glazeOf } from "../../../ui/playerGlazes";
 import { AnnotatedText } from "../../AnnotatedText";
-import { UiSprite } from "../../Sprites";
-import { glazeOf } from "../../../ui/playerGlazes";
 
 type Filter = PlayerId | "all";
 type TaggedEntry = { entry: LogEntry; player: PlayerId | null };
 
 /**
- * The chronicle (right consult panel). Filters by the player who acted: log lines are
- * written "<Name> did X", so the leading name identifies the actor. `LogEntry` carries
- * no playerID (an engine concern), so this is a deliberately UI-side heuristic — lines
- * with no leading player (the season openers, the age ending) are neutral and show only
- * under "All". Each line also takes a thin accent in its actor's colour so the log is
- * scannable at a glance.
+ * The chronicle — what happened, newest first, in the game's own voice.
+ *
+ * Three things were wrong with it and all three are fixed here:
+ *
+ * · **A doubled header.** The tablet already titles itself "Chronicle"; the page
+ *   printed its own heading and icon underneath. One title per page.
+ * · **Named filter pills.** Four buttons wide enough to wrap, in a page whose
+ *   whole job is density. They are glaze discs with blazons now — the same mark
+ *   the roster and the board use, so the filter is read, not decoded.
+ * · **Duplicate entries.** One player event used to produce four lines. Two of
+ *   them were deleted at the source (`src/game/events.ts`) because they said
+ *   nothing the lines beside them did not; what remains here is a guard against
+ *   any *consecutive identical* message, which is a rendering concern.
+ *
+ * Filtering reads `entry.about`, the engine's own answer. The old prefix
+ * heuristic survives only as a fallback for saves written before that field
+ * existed.
  */
 export function ActionLogPanel({ G }: { G: HegemonyState }) {
   const [filter, setFilter] = useState<Filter>("all");
@@ -30,17 +40,25 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
     [G.players],
   );
 
-  const tagged = useMemo<TaggedEntry[]>(
-    () =>
-      G.log
-        .slice()
-        .reverse()
-        .map((entry) => ({
-          entry,
-          player: nameToId.find(([name]) => entry.message.startsWith(name))?.[1] ?? null,
-        })),
-    [G.log, nameToId],
-  );
+  const tagged = useMemo<TaggedEntry[]>(() => {
+    const rows: TaggedEntry[] = [];
+    let previousMessage: string | null = null;
+
+    for (const entry of G.log) {
+      if (entry.message === previousMessage) {
+        continue;
+      }
+
+      previousMessage = entry.message;
+      rows.push({
+        entry,
+        player:
+          entry.about ?? nameToId.find(([name]) => entry.message.startsWith(name))?.[1] ?? null,
+      });
+    }
+
+    return rows.reverse();
+  }, [G.log, nameToId]);
 
   const visible = filter === "all" ? tagged : tagged.filter((row) => row.player === filter);
 
@@ -56,57 +74,48 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
     }
   }
 
-  const players = Object.values(G.players);
-
   return (
-    <section className="turnLogPanel" aria-label="Action log">
-      <div className="turnLogHeader">
-        <UiSprite item="seal" className="titleIcon" />
-        <div>
-          <h3>Chronicle</h3>
-          <em>
-            {visible.length}
-            {filter === "all" ? "" : ` of ${G.log.length}`} entries
-          </em>
-        </div>
-      </div>
-
+    <section className="chroniclePage" aria-label="Action log">
       <div className="chronicleFilters" role="group" aria-label="Filter the chronicle by player">
         <button
-          className={filter === "all" ? "chronicleFilter chronicleFilterActive" : "chronicleFilter"}
+          aria-pressed={filter === "all"}
+          className={
+            filter === "all" ? "chronFilter chronFilterAll on" : "chronFilter chronFilterAll"
+          }
           onClick={() => setFilter("all")}
+          title="Every deed"
           type="button"
         >
-          All
+          <span className="label">All</span>
         </button>
-        {players.map((player) => (
+        {PLAYER_GLAZE_LIST.map(({ id, name, color, blazon }) => (
           <button
-            aria-pressed={filter === player.id}
-            className={
-              filter === player.id ? "chronicleFilter chronicleFilterActive" : "chronicleFilter"
-            }
-            key={player.id}
-            onClick={() => setFilter((current) => (current === player.id ? "all" : player.id))}
-            style={{ "--filter-color": glazeOf(player.id) } as CSSProperties}
-            title={`Only ${player.name}'s deeds`}
+            aria-label={`Only ${name}'s deeds`}
+            aria-pressed={filter === id}
+            className={filter === id ? "chronFilter on" : "chronFilter"}
+            key={id}
+            onClick={() => setFilter((current) => (current === id ? "all" : id))}
+            style={{ background: color } as CSSProperties}
+            title={name}
             type="button"
           >
-            <span className="chronicleFilterSwatch" aria-hidden="true" />
-            {player.name}
+            <span className="label">{blazon}</span>
           </button>
         ))}
       </div>
 
-      <div className="turnLogList" tabIndex={0}>
-        {groups.length === 0 ? <p className="chronicleEmpty">No deeds recorded here yet.</p> : null}
+      <div className="chronicleList" tabIndex={0}>
+        {groups.length === 0 ? (
+          <p className="chronicleEmpty body-em">No deeds recorded here yet.</p>
+        ) : null}
         {groups.map((group) => (
-          <div className="turnLogGroup" key={`${group.season}-${group.rows[0].entry.id}`}>
-            <div className="turnLogGroupHeading">
+          <div key={`${group.season}-${group.rows[0].entry.id}`}>
+            <div className="chronSeason label">
               {seasonLabel(group.season)} · {yearLabel(group.season)}
             </div>
             {group.rows.map(({ entry, player }) => (
               <p
-                className={player ? "chronicleLine chronicleLinePlayer" : "chronicleLine"}
+                className={player ? "entry entryOwned body" : "entry body"}
                 key={entry.id}
                 style={player ? ({ "--line-color": glazeOf(player) } as CSSProperties) : undefined}
               >

@@ -220,5 +220,50 @@ export function AnnotatedText({
     nodes.push(text.slice(lastIndex));
   }
 
-  return <span className={className}>{nodes}</span>;
+  return <span className={className}>{nodes.map(signPlainText)}</span>;
+}
+
+/**
+ * A signed number, coloured by its sign.
+ *
+ * The chronicle's whole job is telling you whether the last thing that happened
+ * was good or bad, and it was printing "+9 gold" and "-5 wood" in identical ink.
+ * This is the last step of the same tokenising pass, applied only to the PLAIN
+ * text between tokens — the resource chips keep their own colour, which says
+ * WHAT, while the sign says whether.
+ *
+ * The sign always travels with the colour. `+9` in olive and `-5` in oxblood are
+ * legible to a colour-blind player because the glyph in front of the digits
+ * already carries the whole meaning; the colour is a second, faster channel.
+ */
+const SIGNED_NUMBER = /([+\u2212-]\d+(?:\.\d+)?)/g;
+/** The same pattern, anchored and NOT global: `test` on a /g regex advances its
+ *  own lastIndex, so reusing SIGNED_NUMBER for the per-part check would match
+ *  every other number and silently drop the rest. */
+const IS_SIGNED_NUMBER = /^[+\u2212-]\d+(?:\.\d+)?$/;
+
+function signPlainText(node: ReactNode, index: number): ReactNode {
+  if (typeof node !== "string") {
+    return node;
+  }
+
+  const parts = node.split(SIGNED_NUMBER);
+
+  if (parts.length === 1) {
+    return node;
+  }
+
+  return (
+    <span key={`signed-${index}`}>
+      {parts.map((part, partIndex) =>
+        IS_SIGNED_NUMBER.test(part) ? (
+          <b className={part.startsWith("+") ? "pos num" : "neg num"} key={partIndex}>
+            {part}
+          </b>
+        ) : (
+          part
+        ),
+      )}
+    </span>
+  );
 }
