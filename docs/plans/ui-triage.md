@@ -86,11 +86,11 @@ are the causes behind those 689 — one row per decision, not per element.
 
 ### Final state
 
-| checker            | start     | end                                         |
-| ------------------ | --------- | ------------------------------------------- |
-| `ui:audit`         | **689**   | **0** across 19 surfaces × 3 widths         |
-| `ui:conduct`       | **362**   | **16**, every one a repeated glossary token |
-| `ui:check` budgets | 224/75/20 | **131 / 47 / 0**                            |
+| checker            | start     | end                                        |
+| ------------------ | --------- | ------------------------------------------ |
+| `ui:audit`         | **689**   | **0** across 19 surfaces × 3 widths        |
+| `ui:conduct`       | **362**   | **5**, every one a repeated glossary token |
+| `ui:check` budgets | 224/75/20 | **131 / 47 / 0**                           |
 
 `NAMELESS 0 · CONTRAST 0 · NOFOCUS 0 · TINY 0`. No console errors on any surface.
 Suites: 524 tests, 95 parity.
@@ -174,14 +174,16 @@ Parity rows (`PAR-*`) live in
 
 Nothing here is a surprise; each was reasoned rather than missed.
 
-| ID      | what                                                                                                                                                                                                                                                                                                              |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CER-1   | **Fate cards have no voice.** `EventCard` has no flavour field; `card.text` _is_ the rules sentence. The duplication is fixed (a card no longer says its one thing twice), but the showcase's quoted line has nowhere to come from. Needs an authored `flavor` field — an `engine:` commit, and the owner's call. |
-| ICON-1  | **`AtlasIcon` is a fourth icon system** — tinted PNG masks for pops, buildings, settlement kinds and terrain, across 11 files. `POP_GLYPHS`, `BUILDING_GLYPHS`, `SETTLEMENT_GLYPHS` and `TERRAIN_GLYPHS` already exist as line art for every one. Same defect as the happiness raster, one register over.         |
-| SHELL-3 | The compass rose is **painted into the sea plate** (`center / cover`), so its position moves with the viewport while the dials' is fixed. No CSS placement separates them at every width; needs the ornament off the plate or a different crop.                                                                   |
-| ASM-11  | The repeal crack-and-fall ceremony. Needs exit-animation state retention. Out of scope since the original run.                                                                                                                                                                                                    |
-| TYPE-1  | The venture title renders 24px against a 27px spec, and the Assembly tally 52–54px against 56 below 1440. Both are `--ui-scale` behaving as documented — "1280 gets the same scene smaller, not a different one". Honouring the spec would break the uniform scale for one element.                               |
-| DUP-1   | 16 repeated glossary tokens (`Food` ×6 in one chronicle page). Each links to the same chapter, and each is read _in its sentence_, which is what disambiguates it. Numbering them would make the chronicle unreadable to fix an ambiguity that only exists when tabbing the page as a list.                       |
+| ID       | what                                                                                                                                                                                                                                                                                                                                    |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CER-1    | **Fate cards have no voice.** `EventCard` has no flavour field; `card.text` _is_ the rules sentence. The duplication is fixed (a card no longer says its one thing twice), but the showcase's quoted line has nowhere to come from. Needs an authored `flavor` field — an `engine:` commit, and the owner's call.                       |
+| ICON-1   | **`AtlasIcon` is a fourth icon system** — tinted PNG masks for pops, buildings, settlement kinds and terrain, across 11 files. `POP_GLYPHS`, `BUILDING_GLYPHS`, `SETTLEMENT_GLYPHS` and `TERRAIN_GLYPHS` already exist as line art for every one. Same defect as the happiness raster, one register over.                               |
+| SHELL-3  | The compass rose is **painted into the sea plate** (`center / cover`), so its position moves with the viewport while the dials' is fixed. No CSS placement separates them at every width; needs the ornament off the plate or a different crop.                                                                                         |
+| ASM-11   | The repeal crack-and-fall ceremony. Needs exit-animation state retention. Out of scope since the original run.                                                                                                                                                                                                                          |
+| TYPE-1   | The venture title renders 24px against a 27px spec, and the Assembly tally 52–54px against 56 below 1440. Both are `--ui-scale` behaving as documented — "1280 gets the same scene smaller, not a different one". Honouring the spec would break the uniform scale for one element.                                                     |
+| DUP-1    | 5 repeated glossary tokens (`Gold` x5 in a venture odds table). Each links to the same chapter, and each is read _in its sentence_, which is what disambiguates it. Numbering them would fix an ambiguity that only exists when tabbing the page as a list.                                                                             |
+| CHRON-2  | **The chronicle mis-glyphs card titles** - "Granary Rats" draws the _granary building_ glyph, because `AnnotatedText` matches the word inside a card name. This is wrong information, not noise, and it is the last one left. Needs either the engine to mark card names in log entries, or the annotator to know it is inside a title. |
+| TICKER-1 | The dock ticker prints `-5 wood` where the chronicle prints `-5 Wood` with its glyph - one event, two voices. Rendering the ticker through `<AnnotatedText links={false} />` would settle it.                                                                                                                                           |
 
 ### Opened by the fixes
 

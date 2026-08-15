@@ -27,8 +27,8 @@ const listMode = process.argv.includes("--list");
  * A count that comes in UNDER budget is reported so the number can be tightened.
  */
 const budgets = {
-  "font-size": 135,
-  "raw-hex": 50,
+  "font-size": 131,
+  "raw-hex": 47,
   "printed-mechanics": 0,
 };
 
