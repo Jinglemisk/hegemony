@@ -447,3 +447,47 @@
   border-color: var(--warn-lit);
   box-shadow: inset 0 0 0 1.4px var(--warn-lit);
 }
+
+/* ── Narrow heights ───────────────────────────────────────────────────────
+   At 1280×800 the colonnade, the bema and the tally together overran the scene
+   and the tug bar — the one thing a voter is reading — fell below the fold. The
+   stelae give the room back: a smaller bust, a tighter tendency box. Nothing is
+   hidden, only closer together. */
+@media (max-height: 860px) {
+  .steleBust {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 5px;
+  }
+
+  .dogma {
+    margin: 2px 0 6px;
+    padding: 5px 8px 6px;
+  }
+
+  .dogmaKey {
+    margin-bottom: 3px;
+  }
+
+  .voteTally {
+    width: 380px;
+  }
+
+  /* The seats give room back too. An empty seat is a name and a sherd; it does
+     not need the height of a full card to say "held their peace". */
+  .colonnadeCol {
+    padding: 12px 14px 10px;
+  }
+
+  .bemaCol {
+    padding: 8px 10px;
+  }
+
+  .bemaCard {
+    padding-bottom: 8px;
+  }
+
+  .asm-head {
+    padding-bottom: 4px;
+  }
+}

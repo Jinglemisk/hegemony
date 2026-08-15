@@ -148,7 +148,12 @@ export function AssemblyPanel({
         </div>
 
         <div className="asm-body">
-          <AssemblyColonnade G={G} />
+          {/* The colonnade is where you CHOOSE a deck, and where the stelae stand
+              afterwards. During the ballot it is neither: nobody is drawing, and
+              four columns of orators were pushing the tug bar — the one thing a
+              voter is actually reading — off the bottom of the scene at 1280x800.
+              The reference vote scene has no colonnade either. */}
+          {session.phase === "voting" ? null : <AssemblyColonnade G={G} />}
           <AssemblyBema G={G} session={session} />
         </div>
 
