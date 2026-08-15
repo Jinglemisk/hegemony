@@ -8,43 +8,78 @@
   max-width: none;
 }
 
-.empireIntel {
-  display: grid;
-  gap: 10px;
-  min-height: 0;
-}
-
+/* The page inside a tablet: a title row, whatever furniture that page earns, and
+   the one body that scrolls. It fills the frame exactly — `flex: 1` against the
+   frame's fixed height, `min-height: 0` so the BODY absorbs the overflow rather
+   than the page growing and pushing itself out of the slab. */
 .empireIntel {
   display: flex;
   flex: 1;
   min-height: 0;
   flex-direction: column;
+  gap: 10px;
   overflow: hidden;
-  /* clip, not hidden, on the x-axis: the intelBody's -4px scrollbar-gutter trick makes
-     the panel 4px scrollable, and scroll-on-focus then clips the first character. */
-  overflow-x: clip;
 }
 
-.intelBody,
+/* The three stacks a page pours its rows into. `minmax(0, 1fr)` rather than a
+   bare column: a grid track sized `auto`/`1fr` still floors at its widest item's
+   min-content, so one un-wrappable card was widening the whole stack past the
+   page it sits in. */
 .holdingStack,
 .buildingsLedger,
 .popsLedger {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 9px;
   min-width: 0;
 }
 
+/* The one scroll region on a page.
+ *
+ * It used to hang 4px out of its own frame: `margin-right: -4px` against a 4px
+ * right padding, a trick meant to hide the reserved scrollbar gutter, which
+ * instead made every tablet in the game 4px wider than the slab it sits in and
+ * cost `.empireIntel` an `overflow-x: clip` to hide the damage. The gutter was
+ * never the problem — it is zero-width wherever scrollbars overlay — so the
+ * gutter stays and the negative margin is gone.
+ *
+ * Column flex, not grid: a page's anchor row (net income, treasury) pins itself
+ * with `margin-top: auto`, which a grid with `align-content: start` silently
+ * ignored.
+ */
 .intelBody {
+  display: flex;
   flex: 1;
   min-height: 0;
-  margin-right: -4px;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0 4px 12px 0;
-  scrollbar-color: var(--clay) transparent;
+  padding-right: var(--sp-1);
+  scrollbar-color: var(--ink-30) transparent;
   scrollbar-gutter: stable;
+}
+
+/* A page's rows are as wide as the page and never wider. Flex children default
+   to `min-width: auto`, which lets a row's longest unbreakable run — a pair of
+   "Raise in SIKYON" buttons, a stele's notches — push the row out through the
+   frame instead of wrapping inside it. The frame states the bound; what a row
+   does with it is the page's business. */
+.intelBody > * {
+  min-width: 0;
+}
+
+/* `.bcard` is claimed by two surfaces: the Assembly's bema cards (assembly.css —
+   `flex: 1 1 300px; min-width: 250px`, sized for a full-width scene) and the
+   Build page's building cards. The Assembly's floor is wider than a tablet's
+   whole page, so every build card was standing 14px outside the frame. Inside a
+   tablet, a card is the page's width; the Assembly keeps its own. */
+.intelBody .bcard {
+  flex: none;
+  min-width: 0;
 }
 
 .holdingMatrix,

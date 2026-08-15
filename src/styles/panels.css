@@ -11,13 +11,10 @@
  *   · exactly ONE surface per page is allowed to raise its voice (the alarm)
  */
 
-/* ── Shared furniture ─────────────────────────────────────────────────────── */
-
-.intelBody {
-  min-height: 0;
-  overflow-y: auto;
-  scrollbar-color: var(--ink-30) transparent;
-}
+/* ── Shared furniture ───────────────────────────────────────────────────────
+   The scroll region itself (`.intelBody`) belongs to the tablet FRAME and lives
+   in intel.css. It was declared a second time here, which is how its scrollbar
+   colour ended up disagreeing with the rule that owns it. */
 
 .ladderSection {
   margin: 14px 0 8px;
