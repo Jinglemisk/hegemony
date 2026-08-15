@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { HegemonyState } from "../../../game/types";
 import { toRoman } from "../../../ui/formatters";
 import { Icon } from "../../../ui/icons/Icon";
@@ -176,6 +176,48 @@ function useCodexNav(section: SectionId, entries: NavEntry[]) {
   return { navRef, activeId, jumpTo };
 }
 
+/**
+ * How tall the contents sheet may be: the room left between where it drops and the
+ * bottom of the tablet, less a gutter.
+ *
+ * It used to be `min(52vh, 440px)`, which is a measure of the WINDOW, and the sheet
+ * hangs inside a panel — at 1366×768 that put its last row 13px short of the tablet's
+ * inner edge, so a chapter was sliced in half and a strip of the rules underneath
+ * showed through the gap below it. Measured against the panel it always ends where
+ * the tablet does, and a part-row at that edge reads as "there is more", which is
+ * what it is.
+ */
+function useContentsHeight(open: boolean, listRef: React.RefObject<HTMLElement | null>) {
+  const [max, setMax] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setMax(null);
+      return;
+    }
+
+    const measure = () => {
+      const list = listRef.current;
+      const panel = list?.closest(".intelBody");
+      if (!list || !panel) {
+        return;
+      }
+      // Flush with the tablet's inner edge, not short of it: any gap left here is a
+      // strip of the chapter underneath showing between the sheet and the frame.
+      const room = panel.getBoundingClientRect().bottom - list.getBoundingClientRect().top;
+      // Floored: a panel too short to hold the sheet must still get a scrollable
+      // sheet, never a zero-height (or negative, and so ignored) one.
+      setMax(Math.max(140, Math.round(room)));
+    };
+
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [open, listRef]);
+
+  return max;
+}
+
 export function CodexTab({
   G,
   target,
@@ -188,8 +230,10 @@ export function CodexTab({
   const [searchOpen, setSearchOpen] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
   const contentsButtonRef = useRef<HTMLButtonElement>(null);
+  const contentsListRef = useRef<HTMLOListElement>(null);
   const entries = useMemo(() => sectionEntries(section), [section]);
   const { navRef, activeId, jumpTo } = useCodexNav(section, entries);
+  const contentsMax = useContentsHeight(contentsOpen, contentsListRef);
 
   // A deep-link (an AnnotatedText term clicked anywhere) opens the codex to a chapter.
   // The nonce changes on every click, so the same term re-navigates even if you'd
@@ -316,7 +360,12 @@ export function CodexTab({
           </button>
 
           {contentsOpen ? (
-            <ol className="codexContentsList" id="codexContentsList">
+            <ol
+              className="codexContentsList"
+              id="codexContentsList"
+              ref={contentsListRef}
+              style={contentsMax === null ? undefined : { maxHeight: `${contentsMax}px` }}
+            >
               {SECTIONS.map((candidate, index) => (
                 <li key={candidate.id}>
                   <button
