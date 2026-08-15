@@ -65,11 +65,15 @@
 /* The slips take whatever room is left to the LEFT of the spine, and no more. A
    plain `1fr` let a long omen name grow until it slid under the numbers at 1280;
    half the viewport less half the spine is the only honest bound, because the
-   spine is centred on the viewport rather than on the space between the ends. */
+   spine is centred on the viewport rather than on the space between the ends.
+   The bound has to pay for the bar's own left padding too — without that the
+   row ended 20px past where it was told to stop, which is how the first resource
+   icon came to sit ON the fate slip at 1280. 262px = 230 (half the widest spine
+   a four-figure turn produces) + 20 (the bar's left pad) + 12 (air between the
+   last slip and the first numeral). */
 .topbarEvents {
   min-width: 0;
-  max-width: calc(50vw - 220px);
-  overflow: hidden;
+  max-width: calc(50vw - 262px);
 }
 
 /* ── The resource spine ────────────────────────────────────────────────────
@@ -133,6 +137,26 @@
    the one number that leaves the ink. */
 .resourceSpine .resourceAlert strong {
   color: var(--neg);
+}
+
+/* Below ~1400 the bar runs out of room before anything else does: the numerals
+   scale with the chrome, but the spine's metal — icon size and the air between
+   resources — is fixed px and does not, so it eats an ever larger share of the
+   width and starves the slips at the other end. Tightening the metal buys the
+   slips back ~40px, which is one wrapped line each. */
+@media (max-width: 1400px) {
+  .topbarEvents {
+    max-width: calc(50vw - 234px);
+  }
+
+  .resourceSpine .resourceGrid {
+    gap: 10px;
+  }
+
+  .resourceSpine .resourceIcon {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 /* A stockpile that just changed flashes the NUMERAL, not a box behind it. The

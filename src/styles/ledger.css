@@ -181,90 +181,91 @@
   min-width: 118px;
 }
 
-/* Event cards — top-left corner (seasonal + player), art + inline-icon effect. */
+/* Event slips — top-left corner. Bone chips with the card's art let into them,
+   a clay kicker naming the source (and, for a fate card, the seat), the name,
+   and the mechanical line. */
 .topbarEvents {
   display: flex;
   align-items: stretch;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
+/* ONE surface. The card this replaces was a bordered box with a second bordered
+   box — the art — sitting inside it, which is the nested-box reading the whole
+   overhaul is meant to be rid of. The art is now flush in the slip's own face,
+   and the slip's outline is an inset hairline rather than a border, so the chip
+   has an edge without having a frame. */
 .topbarEventCard {
   position: relative;
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
+  display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
-  max-width: 264px;
-  padding: 5px 9px 5px 6px;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--line-strong);
-  border-radius: 8px;
-  background: var(--panel);
-}
+  padding: 4px 10px 4px 4px;
+  border: 0;
+  border-radius: 3px;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--ivory), var(--bone));
+  box-shadow:
+    0 1px 4px rgb(24 18 16 / 22%),
+    inset 0 0 0 1px var(--ink-30);
 
-.topbarEventActive {
-  border-left-color: var(--clay);
+  /* Every line in the slip is one size; only the kicker steps down, and it takes
+     that step in `em` off the slip. Cinzel and clay are what make a kicker a
+     kicker — a third point size would just be another thing to keep in tune.
+     Fluid, because this is the one place on the bar where the text has a fixed
+     column and the column is what shrinks: half the viewport, less the spine,
+     less the roster's air, shared three ways. Holding 11px down to 1280 made
+     every name wrap and pushed the slips through the bottom of the bar. */
+  font-size: clamp(0.55rem, 0.39rem + 0.25vw, 0.7rem);
+  line-height: 1.18;
 }
 
 .topbarEventArt {
   width: 30px;
-  height: 40px;
-  border: 1px solid rgb(143 46 19 / 40%);
-  border-radius: 4px;
+  height: 30px;
+  flex: none;
+  border: 0;
+  border-radius: 2px;
   object-fit: cover;
-}
-
-.topbarEventArtEmpty {
-  border-style: dashed;
-  border-color: var(--line);
-  background: repeating-linear-gradient(
-    135deg,
-    transparent,
-    transparent 4px,
-    rgb(36 25 16 / 6%) 4px,
-    rgb(36 25 16 / 6%) 5px
-  );
 }
 
 .topbarEventBody {
   display: grid;
-  gap: 1px;
   min-width: 0;
 }
 
 .topbarEventLabel {
-  color: var(--muted);
-  font-size: 0.5rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.topbarEventName {
-  overflow: hidden;
-  color: var(--fg);
+  color: var(--clay);
   font-family: var(--font-display);
-  font-size: 0.74rem;
-  line-height: 1.1;
-  text-overflow: ellipsis;
+  font-size: 0.76em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.topbarEventActive .topbarEventName {
-  color: var(--clay);
+/* A fate card is somebody's, and the seat's own glaze says whose. */
+.topbarEventCard-fate .topbarEventLabel {
+  color: var(--porphyra);
 }
 
+.topbarEventName {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.12;
+}
+
+/* Nothing in a slip is clipped. The name used to ellipsize and the effect line
+   was clamped to one line — which did not shorten the effect, it cut the second
+   line in half and left the severed top of a resource glyph against the slip's
+   edge. Both wrap now, and the slip grows the line it needs. */
 .topbarEventEffect {
-  display: -webkit-box;
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 0.62rem;
-  line-height: 1.25;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
+  color: var(--ink-66);
 }
 
 .topbarEventTooltip {
