@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: active
 phase: "UI overhaul (ui-overhaul worktree)"
 updated: 2026-08-15
 ---
@@ -11,6 +11,17 @@ autonomous one-pass run loop, and the owner-ratified run policies (SVG-only icon
 work clean / future-proof — refactor rather than patch, engine-touching commits
 prefixed `engine:`; push per phase; leave-red-and-continue when stuck; never wait
 for the owner).
+
+## Three-axis parity
+
+| Axis             | Applies? | Required representation and proof                                                                                                    |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Engine / backend | Partly   | Presentation-only additions, always additive and `engine:`-prefixed: `IncomeContribution.settlementId`, `LogEntry.about`, `Politician.tendency`. No rule, cost, legality or balance change; the full suite stays green |
+| Frontend         | Yes      | Every surface: tokens, type roles, the icon registry's totality, the board's grammar, seven panels, the ceremony register, the Assembly scenes |
+| Simulation & AI  | No       | The sim reads engine state and never renders; nothing here changes what it observes, values or logs                                  |
+
+The engine-side additions carry data the frontend needs and the rules never read.
+Each is justified at its definition site and listed in `RUN-LOG.md`.
 
 ## Outcome
 
