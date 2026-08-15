@@ -118,7 +118,12 @@ function TopbarEventSlip({
       <span className="topbarEventBody">
         <span className="topbarEventLabel">{kicker}</span>
         <strong className="topbarEventName">{name}</strong>
-        <EffectLine effect={summary} className="topbarEventEffect" />
+        {/* No codex links in the slip. A slip is a ~10px summary line inside a
+            control that is itself a tab stop, so every linked noun in it cost a
+            second stop — Tab landed on "Warehouse Fire" and then on a bare
+            "Wood" (QA-TOPBAR-1). The tooltip below carries the same nouns with
+            room to click them. */}
+        <EffectLine effect={summary} className="topbarEventEffect" links={false} />
       </span>
     </>
   );
