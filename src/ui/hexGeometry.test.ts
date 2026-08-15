@@ -7,7 +7,7 @@ import {
   WORLD_VIEW_BOX,
   cameraTransform,
   clampViewBox,
-  getColonyXPositions,
+  getSideBySidePositions,
   SHORELINE_RADIUS,
   getHexCorners,
   hexCenter,
@@ -235,10 +235,10 @@ describe("live-area seat", () => {
   });
 });
 
-describe("colony placement", () => {
-  it("centres a lone colony and splits a shared tile", () => {
-    expect(getColonyXPositions(0)).toEqual([0]);
-    expect(getColonyXPositions(1)).toEqual([0]);
-    expect(getColonyXPositions(2)).toEqual([-14, 14]);
+describe("side-by-side settlements", () => {
+  it("centres a lone settlement and splits a shared tile", () => {
+    expect(getSideBySidePositions(0)).toEqual([0]);
+    expect(getSideBySidePositions(1)).toEqual([0]);
+    expect(getSideBySidePositions(2)).toEqual([-22, 22]);
   });
 });

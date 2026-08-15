@@ -11,7 +11,8 @@ import {
   hexCenter,
   viewBoxToString,
 } from "../ui/hexGeometry";
-import { TileGroup } from "./board/map/TileGroup";
+import { settlementNames } from "../ui/settlementNames";
+import { TileGround, TileTokens } from "./board/map/TileGroup";
 import { useMapCamera } from "./board/map/useMapCamera";
 
 /**
@@ -83,6 +84,15 @@ function HexMapComponent({
   // SHORELINE_RADIUS overhangs the tile so the foam reads as surf against the
   // land rather than a line drawn through it.
   const shorelineEdges = useMemo(() => getShorelineEdges(centers, SHORELINE_RADIUS), [centers]);
+  // Named once for the whole board: the mapping has to see every settlement at
+  // once to guarantee no two share a name.
+  const names = useMemo(() => settlementNames(G.board.tiles), [G.board.tiles]);
+  const tileState = (tileId: string) => ({
+    isSelected: selectedTileId === tileId,
+    isPending: pendingTileId === tileId,
+    isPlacementCandidate: placementActive && highlightSet.has(tileId),
+    isDimmed: placementActive && !highlightSet.has(tileId),
+  });
 
   const isTerrainMapMode = mapMode === "terrain";
   const activeMapModeLabel =
@@ -159,15 +169,28 @@ function HexMapComponent({
             ))}
           </g>
 
+          {/* Two passes over the same tiles. A name plate hangs into the tile
+              below it, and SVG paints in document order, so ground and tokens
+              cannot be interleaved without every plate being half-buried. */}
           {centers.map(({ tile, x, y }) => (
-            <TileGroup
-              isPending={pendingTileId === tile.id}
-              isPlacementCandidate={placementActive && highlightSet.has(tile.id)}
-              isSelected={selectedTileId === tile.id}
+            <TileGround
               key={tile.id}
+              names={names}
               onTileAction={onTileAction}
               onTileClick={handleTileClick}
               ruleset={G.ruleset}
+              state={tileState(tile.id)}
+              tile={tile}
+              x={x}
+              y={y}
+            />
+          ))}
+
+          {centers.map(({ tile, x, y }) => (
+            <TileTokens
+              key={tile.id}
+              names={names}
+              state={tileState(tile.id)}
               tile={tile}
               x={x}
               y={y}

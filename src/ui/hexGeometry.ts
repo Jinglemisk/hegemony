@@ -56,15 +56,13 @@ export const MIN_ZOOM = BASE_VIEW_BOX.width / WORLD_VIEW_BOX.width;
 export const MAX_ZOOM = 1.18;
 export const ZOOM_STEP = 0.08;
 
-/** Two colonies on one tile sit either side of centre; one sits on it. */
-const TWO_COLONY_POSITIONS = [-14, 14];
+/** Two settlements on one tile sit either side of centre; one sits on it. The
+ *  offset is half a seal plus a keyline's clearance — a tile may hold a city and
+ *  a rival's colony at once, and the two seals must not touch. */
+const SIDE_BY_SIDE_POSITIONS = [-22, 22];
 
-export function getColonyXPositions(count: number) {
-  if (count <= 1) {
-    return [0];
-  }
-
-  return TWO_COLONY_POSITIONS;
+export function getSideBySidePositions(count: number) {
+  return count <= 1 ? [0] : SIDE_BY_SIDE_POSITIONS;
 }
 
 /**
