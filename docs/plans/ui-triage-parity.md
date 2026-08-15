@@ -66,16 +66,28 @@ four of seven dock verbs ("varies", "options", "stakes"), and the victory cards
 you need in order to decide is printed; only the _arithmetic behind it_ is
 hover-only.
 
-## The unreconciled ruling
+## The ruling that was blocking the Assembly — now settled
 
 `b-assembly.html` and `e-assembly-vote.html` are drawn as **full-bleed 1440×900
-night scenes**. The shipped Assembly is a `min(900px, 100%)` card floating inside
-the live chrome — a deliberate owner ruling, documented in `AssemblyPanel.tsx`,
-that **predates these prototypes**. The two have never been reconciled, and every
-Assembly width and type-size deviation is downstream of that one decision.
+night scenes**. The shipped Assembly was a `min(900px, 100%)` card floating
+inside the live chrome — an owner ruling, documented in `AssemblyPanel.tsx`, that
+**predated these prototypes**. The two had never been reconciled, and every
+Assembly width and type-size deviation is downstream of that one decision. It was
+escalated rather than guessed.
 
-This is not a defect anyone can fix by choosing well; it is a product question,
-and it is flagged for the owner rather than settled here.
+**The owner has ruled for the showcase: the Assembly is a full-bleed takeover.**
+The scene covers the viewport, the night vignette darkens the whole app — top bar,
+rails and command dock included — and the colonnade gets its designed width. The
+rationale in `AssemblyPanel.tsx` is superseded and is being rewritten to say so.
+
+Rows `PAR-ASM-12`, `-13`, `-17`, `-20`, `-23`, `-24` and much of `-14` dissolve
+with the re-scoping rather than needing a fix apiece.
+
+**A second ruling, on the ceremonies:** `src/ui/effects.ts` gets split, so a
+presented effect returns its parts — magnitude, subject, condition, turns —
+alongside the flat `text` it returns today. That is the seam theme 4 says is
+missing. UI layer only; `.text` stays, so every existing caller keeps working.
+`PAR-CER-2`, `-3` and `-5` become reachable.
 
 ## Table — the table and the panels (`a-table.html`, `f-panels.html`)
 

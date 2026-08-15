@@ -22,8 +22,8 @@ row only moves to `fixed` when the auditor re-runs clean over it.
 
 Two feeds, deliberately different in kind:
 
-**The auditor** — `node .playwright-mcp/audit.mjs` drives every surface at 1920,
-1440 and 1280 and reports four geometric facts about every element on the page:
+**The auditor** — `npm run ui:audit` drives every surface at 1920, 1440 and 1280
+and reports four geometric facts about every element on the page:
 
 | class       | means                                              |
 | ----------- | -------------------------------------------------- |
@@ -35,6 +35,13 @@ Two feeds, deliberately different in kind:
 Spillage is not a matter of taste, it is arithmetic — so it is machine-found and
 machine-closed. `report.json` holds the raw rows; the ledger holds the ones
 worth a human decision.
+
+**Read `OFFSCREEN:bottom` with care.** The probe measures against the viewport at
+scroll position zero, so a _working_ scroll region whose content is longer than
+its window reports every row below the fold. A 1400px list in a 630px tablet is
+correct behaviour and reports ~100 rows. `OVERFLOW`, `TRUNCATED`, `COLLISION` and
+`OFFSCREEN:right/top` are the trustworthy classes; bottom-side rows are judged by
+scrolling the surface in a browser, not by the count.
 
 **The parity audits** — each showcase prototype in
 `docs/plans/ui-overhaul-prototypes/` read against the component that was
@@ -75,33 +82,65 @@ Baseline: **689 defects** across 17 surfaces at three widths
 (`OFFSCREEN 354 · OVERFLOW 262 · TRUNCATED 59 · COLLISION 14`). The rows below
 are the causes behind those 689 — one row per decision, not per element.
 
+**After wave 1: 156.** `OVERFLOW 262 → 7`, `OFFSCREEN:top 247 → 0`.
+
+### Owner rulings taken during the run
+
+Two questions were escalated rather than guessed, because either answer led to
+materially different work. Both were answered:
+
+- **The Assembly is a full-bleed takeover.** The showcase draws it as a
+  1440×900 night scene; the shipped Assembly was a ~900px card floating inside
+  the live chrome, per an earlier ruling that predated the showcase. The owner
+  has now ruled for the showcase: the scene covers the viewport and the vignette
+  darkens the whole app, chrome included. **This supersedes the rationale
+  recorded in `AssemblyPanel.tsx`**, and roughly a third of the Assembly's
+  parity rows dissolve with it rather than needing a fix of their own.
+- **The effect presenters get split.** `src/ui/effects.ts` will return an
+  effect's parts — magnitude, subject, condition, turns — alongside the flat
+  `text` it returns today, so the ceremonies can carve their one big number the
+  way both prototypes compose around. UI layer only; `.text` stays, so every
+  existing caller keeps working.
+
 ### Systemic — every surface pays for these
 
-| ID      | sev     | surface                 | defect                                                                                                                                                                                                          | status |
-| ------- | ------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| SHELL-1 | major   | top bar                 | The resource spine's icon row is out of phase with its number row — icons sit ~50px right of the number they belong to, and the first one lands on the Player card. This is the owner's "sit completely loose". | open   |
-| SHELL-2 | major   | top bar                 | `strong.topbarEventName` truncates by 14px at every width — "Warehouse Fire", "Civil Discord", "Spring Floods" all clipped.                                                                                     | open   |
-| SHELL-3 | major   | top bar                 | `span.topbarEventEffect` truncates by 13px at every width, cutting the effect's icon in half — the stray glyph beside the card edge.                                                                            | open   |
-| SHELL-4 | minor   | top bar                 | `.resourceSpine` escapes the viewport 2px upward at 1280.                                                                                                                                                       | open   |
-| PANEL-1 | blocker | all 8 tabs              | `.intelBody` overflows `.empireIntel` by 4px on every single tab. The panel frame does not contain its own content.                                                                                             | open   |
-| PANEL-2 | blocker | build, chronicle, codex | Tab content runs off the **bottom of the page** instead of scrolling inside the frame — 888px of building cards, 356px of chronicle. The frame reserves no room for the season dial or the End Turn seal.       | open   |
+| ID      | sev     | surface                 | defect                                                                                                                                                                                                          | status    |
+| ------- | ------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| SHELL-1 | major   | top bar                 | The resource spine's icon row is out of phase with its number row — icons sit ~50px right of the number they belong to, and the first one lands on the Player card. This is the owner's "sit completely loose". | **fixed** |
+| SHELL-2 | major   | top bar                 | `strong.topbarEventName` truncates by 14px at every width — "Warehouse Fire", "Civil Discord", "Spring Floods" all clipped.                                                                                     | **fixed** |
+| SHELL-3 | major   | top bar                 | `span.topbarEventEffect` truncates by 13px at every width, cutting the effect's icon in half — the stray glyph beside the card edge.                                                                            | **fixed** |
+| SHELL-4 | minor   | top bar                 | `.resourceSpine` escapes the viewport 2px upward at 1280.                                                                                                                                                       | **fixed** |
+| PANEL-1 | blocker | all 8 tabs              | `.intelBody` overflows `.empireIntel` by 4px on every single tab. The panel frame does not contain its own content.                                                                                             | **fixed** |
+| PANEL-2 | blocker | build, chronicle, codex | Tab content runs off the **bottom of the page** instead of scrolling inside the frame — 888px of building cards, 356px of chronicle. The frame reserves no room for the season dial or the End Turn seal.       | **fixed** |
 
 ### Per surface
 
-| ID       | sev     | surface   | defect                                                                                                                                                                                | status |
-| -------- | ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| CODEX-1  | blocker | codex     | 10 of 15 section tabs sit off the right edge, the furthest by 1013px, **at every width**. Two-thirds of the rulebook is unreachable — a horizontal stack where the content is a menu. | open   |
-| BUILD-1  | blocker | build     | Every building card carries two full-width `Raise in <city>` buttons, so seven cards need ~1700px of column. Combined with PANEL-2 the list simply falls off the page.                | open   |
-| ASM-1    | blocker | assembly  | A law's clause spans (`.clauseGain`, `.clauseBut`, `.clauseCost`) render **on top of each other** at 100% overlap. The text of the thing being voted on is illegible.                 | open   |
-| BOARD-1  | major   | board     | Settlement name plaques are narrower than the names they carry (`AIGAI`, `SIKYON`, `BOURA`, `PHLIOUS` all truncate).                                                                  | open   |
-| BOARD-2  | major   | board     | Neighbouring labels collide — `OLYNTHOS` over `AIGAI` — and labels overlap the yield numbers of adjacent hexes.                                                                       | open   |
-| CITIES-1 | major   | cities    | The settlement rows are the pre-overhaul layout: a cryptic icon strip (`0/3 · 4/10`) and a chevron. The showcase's per-settlement building slots are absent.                          | open   |
-| ASM-2    | major   | assembly  | The board reads through the Assembly's backdrop — hex numbers and settlement names visible across the scene.                                                                          | open   |
-| POPS-1   | major   | pops      | `Net / turn` collides with the season dial at 1280.                                                                                                                                   | open   |
-| TGT-1    | major   | targeting | The placement caption sits on top of the `Build` mechanics heading (89% overlap).                                                                                                     | open   |
-| ASM-3    | minor   | assembly  | `.tugBar` truncates by 3px.                                                                                                                                                           | open   |
+| ID       | sev     | surface   | defect                                                                                                                                                                                | status    |
+| -------- | ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| CODEX-1  | blocker | codex     | 10 of 15 section tabs sit off the right edge, the furthest by 1013px, **at every width**. Two-thirds of the rulebook is unreachable — a horizontal stack where the content is a menu. | open      |
+| BUILD-1  | blocker | build     | Every building card carries two full-width `Raise in <city>` buttons, so seven cards need ~1700px of column. Combined with PANEL-2 the list simply falls off the page.                | open      |
+| ASM-1    | blocker | assembly  | A law's clause spans (`.clauseGain`, `.clauseBut`, `.clauseCost`) render **on top of each other** at 100% overlap. The text of the thing being voted on is illegible.                 | open      |
+| BOARD-1  | major   | board     | Settlement name plaques are narrower than the names they carry (`AIGAI`, `SIKYON`, `BOURA`, `PHLIOUS` all truncate).                                                                  | **fixed** |
+| BOARD-2  | major   | board     | Neighbouring labels collide — `OLYNTHOS` over `AIGAI` — and labels overlap the yield numbers of adjacent hexes.                                                                       | **fixed** |
+| CITIES-1 | major   | cities    | The settlement rows are the pre-overhaul layout: a cryptic icon strip (`0/3 · 4/10`) and a chevron. The showcase's per-settlement building slots are absent.                          | open      |
+| ASM-2    | major   | assembly  | The board reads through the Assembly's backdrop — hex numbers and settlement names visible across the scene.                                                                          | open      |
+| POPS-1   | major   | pops      | `Net / turn` collides with the season dial at 1280.                                                                                                                                   | open      |
+| TGT-1    | major   | targeting | The placement caption sits on top of the `Build` mechanics heading (89% overlap).                                                                                                     | open      |
+| ASM-3    | minor   | assembly  | `.tugBar` truncates by 3px.                                                                                                                                                           | open      |
 
-Parity rows (`PAR-*`) are appended by the showcase audits and carry the same
-severity scale.
+Parity rows (`PAR-*`) live in
+[the parity companion](./ui-triage-parity.md) and carry the same severity scale.
+
+### Opened by the fixes
+
+Honest bookkeeping: wave 1 narrowed the tablets to the design's 306px/286px, and
+content that had been built for 360px now has less room than it assumes.
+
+| ID    | sev   | surface | defect                                                                                                                                                                                                                | status |
+| ----- | ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| REG-1 | major | cities  | `strong.title` truncates by 22px (`AIGAI`) and 31px (`SIKYON`) in the settlement card; the `city · mountain` subtitle by 47px. A 5-letter name truncates as badly as a 6-letter one, so the cause is not name length. | open   |
+| REG-2 | major | agora   | `.steleNotches` overflows by 67px — it cannot wrap.                                                                                                                                                                   | open   |
+| REG-3 | minor | pops    | The ladder rung button pair overflows by 5px.                                                                                                                                                                         | open   |
+| REG-4 | minor | chrome  | New collisions between right-tablet content and the two floating dials (`spring, Year 2` × `DAMON ACTS`, `Colony` × `END TURN`).                                                                                      | open   |
 
 <!-- END LEDGER -->
