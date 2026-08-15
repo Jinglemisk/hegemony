@@ -368,3 +368,107 @@ emblems, states · `dfe1ca0` ratchet · `2438baa` engine id · `bbeaa44` name sw
 **Screenshots.** `.playwright-mcp/p3-table-{1440x900,1280x800}.png`,
 `p3-targeting.png` (dimming + dashed targets + the banner clearing the rail),
 `board3.png` (the board close up).
+
+---
+
+## Phase 4 — panels & ceremony
+
+**Shipped.** All seven pages rebuilt, and the three moments that deserve a rite
+now get one.
+
+Every page follows one shape: **rows of facts over a single anchor**. The anchor
+is the number the page exists to tell you — net income, treasury, next assembly —
+pinned under a heavy rule with `margin-top: auto`, so it never moves as rows come
+and go above it.
+
+- **Cities:** an empire strip of four counts identical on every act page, and a
+  new **oxblood alarm** (`UnrestAlarm`) that leads with the happiness number at
+  32px and names the consequence in caps. It is the ledger's only raised voice;
+  two of these would be none. Discontent gets the ochre tier, not the wound.
+- **Pops → The Ladder:** three tiers with **both rungs in each gap**. The first
+  pass hung one arrow off each tier and the raise-to-citizen step went missing
+  entirely — exactly the bug that drawing a ladder as a ladder prevents. Plus a
+  bead map in the board's own vocabulary and a NET/TURN anchor. The
+  GROWN/IN TRANSIT/GAINED/DEATHS grid is gone to the tier tooltips.
+- **Build:** one card per building with **one** cost — the effective one — and
+  the base-vs-effective arithmetic in the tooltip. Blocked cards dim to 55%
+  except the shortfall, which stays lit in `--neg` and says "needs 2 more stone".
+  Targets read `RAISE IN AIGAI`.
+- **Market:** `[glyph] [HELD] [SELL] [BUY]`, with SELL a filled lacquer block and
+  BUY an outline — two identically-shaped buttons a thumb apart is how you sell
+  the thing you meant to buy, and this page is pressed dozens of times a game.
+  TREASURY anchors.
+- **Victory:** a `2/3 LAURELS HELD` heldline, then one card per laurel showing
+  the **leader** and a meter, not four columns of numbers (24 figures of which
+  two matter). The meter is `--warn`, never a glaze: a glaze there would say the
+  leader's colour means "ahead", and on this board colour means whose.
+- **Agora:** a Voice plaque, aegean law slabs (the same component the Assembly's
+  colonnade will use — one law, three lives), orators with medallions and
+  **stele notches** instead of a count, NEXT ASSEMBLY anchoring.
+- **Chronicle:** the doubled header is gone (the tablet already says Chronicle),
+  filters are **glaze discs with blazons** instead of four wrapping named pills,
+  seasons are quiet rules, and each entry takes a hairline in its seat's glaze.
+- **Ceremony.** `ModalShell` gained a `ceremony` prop with three moods — `gift`
+  olive, `wound` oxblood, `rite` clay. The table goes dark and closes to a
+  vignette; the card takes a mood ring; the commit button takes the mood, so a
+  card that hurts you never asks to be "claimed" — you **ENDURE IT**. Routine
+  picks stay plain, because if every dialog is a rite then none of them is.
+- **The die is an object you roll**, not a number you are handed: an 84px lacquer
+  cube that flips faces for 400ms and settles. Verified under
+  `prefers-reduced-motion: reduce` — eight samples across the flip window, all
+  showing the settled face.
+
+**Deviations.**
+
+- **A second `engine:` commit** (`b70e387`), and it does two things.
+  `LogEntry` gained an optional **`about`** — deliberately not `actor`, because
+  the chronicle's filter asks _show me the lines that matter to this seat_ and
+  half of those are things done TO you. It replaces a UI heuristic that decided
+  the actor by checking whether the message _started with_ a player's name, which
+  mis-filed every line phrased the other way round and would have broken outright
+  the first time a seat was renamed. 53 call sites now declare it.
+  Second, **two redundant log lines were deleted at the source**: "X must reveal
+  and resolve Y before taking normal actions" (the modal that opens IS the
+  notice) and a bare "X resolved Y." that duplicated the "X resolved Y: -5 wood"
+  written a line earlier. One player event used to produce four chronicle
+  entries. Nothing asserts on either string; full suite re-run **489 green**.
+- **A full structured-log refactor was considered and rejected.** 79 `addLog`
+  sites author their own strings, and typing all of them would touch every engine
+  module and every test that reads a message — a large change with real risk to
+  the parity suites, for a Chronicle that reads correctly with the smaller one.
+  The plan permits the refactor; it does not require it, and this is the version
+  that earns its cost. Recorded here so the choice is visible rather than
+  discovered.
+- **Signed numbers are coloured in `AnnotatedText`**, as the last step of the
+  tokenising pass it already runs, applied only to the plain text between tokens.
+  The sign always travels with the colour. (One bug caught in review: `test` on a
+  `/g` regex advances its own `lastIndex`, so a second anchored pattern does the
+  per-part check — the shared one would have matched every _other_ number.)
+- **`.stat-lg.stat-hero` (32px) joined the role sheet.** The plan's `stat-lg`
+  spans 19–26px; an alarm and a heldline are a different case — the one number a
+  whole _page_ is about. At most one per page, or neither is the answer.
+- **A real bug found by screenshot, not by tests:** `.workbench` is
+  `pointer-events: none` so the sea stays pannable between the tablets, and the
+  Phase 2 docked tablets never handed pointers back. **The entire ledger — both
+  rails and both pages — had been inert since Phase 2.** Clicks fell through to
+  the map's drag plane. Fixed in `shell.css`; this is why every phase drives the
+  real app rather than trusting the render.
+- **The fate card is a flex column, not a grid.** Its crest is absolutely
+  positioned, which takes it out of flow entirely, so a four-row grid handed its
+  rows to three children and the art took the row meant for the body — a 705px
+  painting with the name, the blow and the button pushed off the bottom.
+- `holdingShortLabel` deleted (every caller now names the place directly), and
+  with it the last coordinate-based settlement label.
+
+**Commits.** `b70e387` engine log · `6b55e58` ladder · `b07ef03` build ·
+`d1146e3` market · `5907581` victory · `713a4b8` agora · `ec8f666` cities alarm ·
+`27dace8` chronicle · `d793785` panel grammar · `936458d` ceremony shell + die ·
+`85a8ae1` fate card + drama row · `57e11cd` ceremony styling.
+
+**Red.** None. `check` · `lint` · **full `test:run` (489)** · `test:parity` (95) ·
+`ui:check` · `format:check` green.
+
+**Screenshots.** `.playwright-mcp/p4-{cities,pops,build,market,victory,agora,
+chronicle}.png` (each tablet at panel width), `p4-fate.png`,
+`p4-venture-before.png`, `p4-venture-flip.png`, `p4-venture.png`,
+`p4-venture-reduced.png`.
