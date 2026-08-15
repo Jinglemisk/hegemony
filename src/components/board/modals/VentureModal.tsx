@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { AnnotatedText } from "../../AnnotatedText";
-import { formatResourceCost } from "../../../ui/formatters";
+import { RESOURCE_LABELS, formatNumber, formatResourceCost } from "../../../ui/formatters";
 import { getFundExpeditionStatus } from "../../../game/rules";
 import type { VentureStake } from "../../../game/rules";
 import { getExpeditionTables } from "../../../game/content";
+import type { Resource } from "../../../game/types";
 import { presentTableEffect } from "../../../ui/effects";
 import { ceremonyMood, commitVerb } from "./ceremonyMood";
 import { EventTableModal } from "./EventTableModal";
+import type { BlankRowMeaning } from "./EventTableModal";
 import { useGameUi } from "../GameUiContext";
 
 /**
@@ -28,12 +30,35 @@ export function VentureModal({ onClose }: { onClose: () => void }) {
     ? (expeditionTables.find((candidate) => candidate.id === result.tableId) ?? table)
     : table;
 
+  // A venture charges before it sails, so a row that pays nothing is not "no
+  // losses" — it is the stake, gone. The tablet cannot know that from `none`
+  // alone (the riot table's `none` is mercy), so the venture states it, built
+  // from the cost the engine actually took rather than a literal that would
+  // drift the day `ruleset.ventureStakes` changes.
+  const [staked, stakeAmount] = (Object.entries(status.cost ?? {}) as Array<[Resource, number]>)
+    .filter(([, amount]) => amount)
+    .at(0) ?? [undefined, 0];
+  const blankRow: BlankRowMeaning | undefined = staked
+    ? {
+        loss: { type: "loseResource", resource: staked, amount: stakeAmount },
+        label: "Stake lost",
+        verdict: `Lost ${formatNumber(stakeAmount)} ${RESOURCE_LABELS[staked].toLowerCase()} — the stake does not come home.`,
+      }
+    : undefined;
+
   // What the die found, so the commit can name it. "Continue" is a navigation
-  // instruction; the design's verb is the outcome — you take the gold.
+  // instruction; the design's verb is the outcome — you take the gold, or you
+  // endure the loss.
   const landedRow = result
     ? resultTable.rows.find((row) => row.roll === result.modified)
     : undefined;
-  const landed = landedRow?.effects.map((effect) => presentTableEffect(effect)) ?? [];
+  const lost = Boolean(
+    blankRow && landedRow && landedRow.effects.every((effect) => effect.type === "none"),
+  );
+  const landed =
+    lost && blankRow
+      ? [presentTableEffect(blankRow.loss)]
+      : (landedRow?.effects.map((effect) => presentTableEffect(effect)) ?? []);
   const gain = landed.find((effect) => effect.tone === "positive");
   const mood = ceremonyMood(
     gain ? "positive" : landed.some((e) => e.tone === "negative") ? "negative" : "neutral",
@@ -42,6 +67,7 @@ export function VentureModal({ onClose }: { onClose: () => void }) {
   return (
     <EventTableModal
       table={resultTable}
+      blankRow={blankRow}
       modifier={0}
       result={result}
       subtitle={undefined}

@@ -1,11 +1,34 @@
 import type { ReactNode } from "react";
-import type { EventTableDefinition, TableRollRecord } from "../../../game/types";
+import type { EventTableDefinition, TableEffect, TableRollRecord } from "../../../game/types";
 import { presentTableEffect } from "../../../ui/effects";
 import { EffectIcon } from "../../../ui/icons/EffectIcon";
 import { EffectLine } from "../../EffectLine";
 import { ceremonyMood } from "./ceremonyMood";
 import { LacquerDie } from "./LacquerDie";
 import { ModalShell } from "./ModalShell";
+
+/**
+ * What a row with NO effects MEANS on this particular table.
+ *
+ * `{ type: "none" }` is one engine token wearing two opposite meanings. On the
+ * riot table it is mercy — the mob went home. On a venture table the stake was
+ * spent to sail, so a row that pays nothing is a TOTAL LOSS, and the engine's
+ * own outcome string for it ("No losses.") is then the exact opposite of what
+ * just happened to you.
+ *
+ * The register that knows which one it is, is the caller: a venture modal knows
+ * it is a venture. So the venture hands the tablet the truth about its own blank
+ * rows and the riot hands it nothing, rather than the shared table trying to
+ * guess from a token that cannot carry the difference.
+ */
+export type BlankRowMeaning = {
+  /** The figure the drama carves — built from the stake the engine actually charged. */
+  loss: TableEffect;
+  /** How a paying-nothing row reads in the odds list, in place of the muted dash. */
+  label: string;
+  /** The verdict line, replacing the engine's — which is written for the other meaning. */
+  verdict: string;
+};
 
 /**
  * The rows of a dice table — the one render path for table content, shared by the
@@ -22,10 +45,18 @@ export function EventTableRows({
   table,
   result,
   register = "reference",
+  blankLabel,
 }: {
   table: EventTableDefinition;
   result: TableRollRecord | null;
   register?: "reference" | "ceremony";
+  /**
+   * What a row that pays nothing says on this table — "Stake lost" on a venture.
+   * Words, not a figure: the stake left the purse when the die was funded, so a
+   * second `-5` in this column would be the same coin counted twice. Ceremony
+   * only; the Codex lists the table's own effects and has no stake in play.
+   */
+  blankLabel?: string;
 }) {
   const ceremony = register === "ceremony";
   const landedRoll = result?.tableId === table.id ? result.modified : null;
@@ -67,15 +98,19 @@ export function EventTableRows({
             </span>
             <span className="oddsLabel body">{row.label}</span>
             <span className="oddsEffects">
-              {row.effects.map((effect, index) => {
-                const chip = presentTableEffect(effect);
+              {blankLabel && row.effects.every((effect) => effect.type === "none") ? (
+                <em className="oddsEffect stat negative">{blankLabel}</em>
+              ) : (
+                row.effects.map((effect, index) => {
+                  const chip = presentTableEffect(effect);
 
-                return (
-                  <em className={`oddsEffect stat ${chip.tone}`} key={index}>
-                    <EffectLine effect={chip} />
-                  </em>
-                );
-              })}
+                  return (
+                    <em className={`oddsEffect stat ${chip.tone}`} key={index}>
+                      <EffectLine effect={chip} />
+                    </em>
+                  );
+                })
+              )}
             </span>
           </li>
         );
@@ -103,6 +138,7 @@ export function EventTableModal({
   footer,
   subtitle,
   kicker,
+  blankRow,
   onDismiss,
 }: {
   table: EventTableDefinition;
@@ -121,6 +157,12 @@ export function EventTableModal({
    */
   kicker?: ReactNode;
   /**
+   * What a row with no effects costs on THIS table. Omit and a blank row is
+   * mercy; pass it and a blank row is the loss it really is. See
+   * `BlankRowMeaning` for why the shared tablet cannot work this out alone.
+   */
+  blankRow?: BlankRowMeaning;
+  /**
    * Escape/backdrop route out. Omit for tables the player must resolve — the riot
    * mounts blocking on purpose (Q15), so it passes nothing.
    */
@@ -128,7 +170,15 @@ export function EventTableModal({
 }) {
   const landed = result && result.tableId === table.id ? result : null;
   const landedRow = landed ? table.rows.find((row) => row.roll === landed.modified) : null;
-  const landedEffects = landedRow?.effects.map((effect) => presentTableEffect(effect)) ?? [];
+  // A blank row on a table that charges up front is not an absence of an outcome
+  // — it IS the outcome, and it is the number the moment is about. Substituting
+  // it here is what gives the tablet its mood, its carved figure and its verb;
+  // without it a total loss wore the same clay weather as an unrolled tablet.
+  const blankLanded = Boolean(
+    blankRow && landedRow && landedRow.effects.every((effect) => effect.type === "none"),
+  );
+  const rowEffects = blankLanded && blankRow ? [blankRow.loss] : (landedRow?.effects ?? []);
+  const landedEffects = rowEffects.map((effect) => presentTableEffect(effect));
   // The mood is the table's own verdict, read off the row the die found. A wound
   // and a gift are the same dialog with different weather.
   const tone = landedEffects.map((effect) => effect.tone);
@@ -145,7 +195,7 @@ export function EventTableModal({
   // 12.5px sentence beside a die the size of a fist.
   const payoffIndex = landedEffects.findIndex((effect) => effect.magnitude);
   const payoff = payoffIndex === -1 ? null : landedEffects[payoffIndex];
-  const payoffEffect = payoffIndex === -1 ? null : landedRow?.effects[payoffIndex];
+  const payoffEffect = payoffIndex === -1 ? null : rowEffects[payoffIndex];
 
   return (
     <ModalShell
@@ -190,11 +240,16 @@ export function EventTableModal({
         </div>
       ) : null}
 
-      <EventTableRows table={table} result={result} register="ceremony" />
+      <EventTableRows
+        blankLabel={blankRow?.label}
+        table={table}
+        result={result}
+        register="ceremony"
+      />
 
       {landed ? (
         <div className="tabletVerdict" role="status">
-          {landed.outcomes.map((line, index) => (
+          {(blankLanded && blankRow ? [blankRow.verdict] : landed.outcomes).map((line, index) => (
             <span className="body-sm body" key={index}>
               {line}
             </span>
