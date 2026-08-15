@@ -105,10 +105,10 @@ export function AssemblyPanel({
           <div className="asm-steps">
             {STEPS.map((step, index) => (
               <div className="asmStepWrap" key={step.key}>
-                {index > 0 ? <span className="arw">→</span> : null}
-                <div className={`astep${step.key === session.phase ? " on" : ""}`}>
-                  <span className="d">{step.numeral}</span>
-                  <span className="l">{step.label}</span>
+                {index > 0 ? <span className="stepArrow">→</span> : null}
+                <div className={`astep${step.key === session.phase ? " isNow" : ""}`}>
+                  <span className="stepNumeral">{step.numeral}</span>
+                  <span className="stepLabel">{step.label}</span>
                 </div>
               </div>
             ))}
@@ -134,14 +134,14 @@ export function AssemblyPanel({
             triggerClassName="assemblyVoiceTooltipTrigger"
           >
             <div className="asm-voice">
-              <span className="k">Voice</span>
+              <span className="voiceKey">Voice</span>
               {voice?.holder ? (
                 <>
-                  <span className="dot" style={{ background: glazeOf(voice.holder) }} />
-                  <span className="n">{PLAYER_NAMES[voice.holder]}</span>
+                  <span className="voiceDot" style={{ background: glazeOf(voice.holder) }} />
+                  <span className="voiceHolder">{PLAYER_NAMES[voice.holder]}</span>
                 </>
               ) : (
-                <span className="n asmVoiceNone">unheld</span>
+                <span className="voiceHolder asmVoiceNone">unheld</span>
               )}
             </div>
           </Tooltip>

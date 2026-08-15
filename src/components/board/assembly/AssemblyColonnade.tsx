@@ -84,7 +84,7 @@ function PoliticianColumn({
       );
 
   return (
-    <div className={`acol${isStratokles ? " strat" : ""}`}>
+    <div className={`colonnadeCol${isStratokles ? " isStratokles" : ""}`}>
       <div className="ahead">
         <Tooltip
           ariaLabel={`${politician.name} power: ${power} ${isStratokles ? "monuments" : "standing Laws"}`}
@@ -104,10 +104,10 @@ function PoliticianColumn({
           preferredPlacement="above"
           triggerClassName="assemblyPowerTooltipTrigger"
         >
-          <span className="apow">{power}</span>
+          <span className="oratorPower">{power}</span>
         </Tooltip>
         <span className="aname">{politician.name}</span>
-        <span className="aep">{politician.epithet}</span>
+        <span className="oratorEpithet">{politician.epithet}</span>
       </div>
       <div className="aprise">
         Author prize · {formatPrize(G.ruleset.assembly.prizes[politician.id])}
@@ -131,7 +131,7 @@ function PoliticianColumn({
         <div className="ameta">
           {patron ? (
             <>
-              <span className="dot" style={{ background: glazeOf(patron) }} />
+              <span className="oratorPatronDot" style={{ background: glazeOf(patron) }} />
               <b>{PLAYER_NAMES[patron]}</b> · descriptive patron
             </>
           ) : (
@@ -173,17 +173,20 @@ function PoliticianColumn({
               >
                 {isStratokles ? (
                   <div className="tally">
-                    <span className="tk">
+                    <span className="tallyKey">
                       <i />
                       <i />
                       <i />
                     </span>
-                    <span className="tn">{card.name}</span>
+                    <span className="tallyName">{card.name}</span>
                   </div>
                 ) : (
                   <div className="stele">
-                    <span className="sd" style={{ background: authorColor(stele.author) }} />
-                    <span className="sn">{card.name}</span>
+                    <span
+                      className="steleAuthorDot"
+                      style={{ background: authorColor(stele.author) }}
+                    />
+                    <span className="steleName">{card.name}</span>
                   </div>
                 )}
               </Tooltip>

@@ -43,7 +43,7 @@ export function AssemblyFoot({
         <span className="asmFootNote">
           The house has risen. Play returns to {PLAYER_NAMES[session.resumePlayer]}.
         </span>
-        <button className="amap" onClick={() => moves.assemblyClose()} type="button">
+        <button className="asmMapButton" onClick={() => moves.assemblyClose()} type="button">
           Rise &amp; return to the map
         </button>
       </div>
@@ -193,7 +193,7 @@ function Verb({
   return (
     <AssemblyAction
       blockedReason={blockedReason}
-      className={`av${armed ? " armed" : " off"}`}
+      className={`asmVerb${armed ? " isArmed" : " isOff"}`}
       effectiveCost={effectiveCost}
       enabled={armed}
       explanation={explanation}
@@ -201,10 +201,10 @@ function Verb({
       onClick={onClick}
       triggerClassName="assemblyFootActionTrigger"
     >
-      <span className="ad">{icon}</span>
-      <span className="atx">
-        <span className="al">{label}</span>
-        <span className="ac">{cost}</span>
+      <span className="asmVerbIcon">{icon}</span>
+      <span className="asmVerbText">
+        <span className="asmVerbLabel">{label}</span>
+        <span className="asmVerbCost">{cost}</span>
       </span>
     </AssemblyAction>
   );

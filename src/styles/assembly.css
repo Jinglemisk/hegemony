@@ -143,7 +143,7 @@
   border-radius: 999px;
 }
 
-.astep .d {
+.stepNumeral {
   display: grid;
   place-items: center;
   width: 14px;
@@ -155,7 +155,7 @@
   box-shadow: inset 0 0 0 1px var(--ink-30);
 }
 
-.astep .l {
+.stepLabel {
   color: var(--ink-48);
   font-family: var(--disp);
   font-size: 8px;
@@ -164,21 +164,21 @@
   white-space: nowrap;
 }
 
-.astep.on {
+.astep.isNow {
   background: var(--aeg-tint);
 }
 
-.astep.on .d {
+.astep.isNow .stepNumeral {
   color: var(--ivory);
   background: var(--aegean);
   box-shadow: 0 0 0 1px var(--aeg-30);
 }
 
-.astep.on .l {
+.astep.isNow .stepLabel {
   color: var(--aegean);
 }
 
-.asm-steps .arw {
+.stepArrow {
   color: var(--ink-30);
   font-size: 9px;
 }
@@ -199,7 +199,7 @@
   flex: none;
 }
 
-.asm-voice .k {
+.voiceKey {
   color: var(--aegean);
   font-family: var(--disp);
   font-size: 7.5px;
@@ -207,7 +207,7 @@
   text-transform: uppercase;
 }
 
-.asm-voice .dot {
+.voiceDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -216,7 +216,7 @@
     0 0 0 2px var(--vase);
 }
 
-.asm-voice .n {
+.voiceHolder {
   color: var(--ink);
   font-size: 11px;
   font-weight: 600;
@@ -253,18 +253,18 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.acol {
+.colonnadeCol {
   min-width: 0;
   padding: 0 11px;
   border-left: 1px solid var(--ink-12);
 }
 
-.acol:first-child {
+.colonnadeCol:first-child {
   padding-left: 2px;
   border-left: 0;
 }
 
-.acol:last-child {
+.colonnadeCol:last-child {
   padding-right: 2px;
 }
 
@@ -275,7 +275,7 @@
   flex-wrap: wrap;
 }
 
-.apow {
+.oratorPower {
   display: grid;
   flex: none;
   place-items: center;
@@ -296,7 +296,7 @@
 
 /* Stratokles is the only clay column: he is not a wing of the politics, he is the
    thing the politics is holding back. */
-.acol.strat .apow {
+.colonnadeCol.isStratokles .oratorPower {
   color: var(--clay);
   background: rgb(192 70 28 / 8%);
   box-shadow: inset 0 0 0 1px rgb(192 70 28 / 34%);
@@ -315,7 +315,7 @@
    reference let it wrap naturally, which reads fine in a mock with one name length
    but leaves the four live columns at ragged heights — and since stack height is the
    power reading, the header above it has to be a flat baseline. */
-.aep {
+.oratorEpithet {
   flex-basis: 100%;
   color: var(--aegean);
   font-family: var(--disp);
@@ -325,7 +325,7 @@
   line-height: 1;
 }
 
-.acol.strat .aep {
+.colonnadeCol.isStratokles .oratorEpithet {
   color: var(--clay);
 }
 
@@ -348,7 +348,7 @@
   line-height: 1.3;
 }
 
-.ameta .dot {
+.oratorPatronDot {
   flex: none;
   width: 8px;
   height: 8px;
@@ -393,7 +393,7 @@
   background: rgb(255 248 231 / 70%);
 }
 
-.stele .sd {
+.steleAuthorDot {
   flex: none;
   width: 7px;
   height: 7px;
@@ -403,7 +403,7 @@
     0 0 0 1.5px var(--vase);
 }
 
-.stele .sn {
+.steleName {
   color: var(--ink);
   font-size: 10.5px;
   white-space: nowrap;
@@ -423,20 +423,20 @@
   background: rgb(192 70 28 / 5%);
 }
 
-.tally .tk {
+.tallyKey {
   display: flex;
   flex: none;
   gap: 2px;
 }
 
-.tally .tk i {
+.tallyKey i {
   width: 2px;
   height: 10px;
   border-radius: 1px;
   background: var(--clay-deep);
 }
 
-.tally .tn {
+.tallyName {
   color: var(--ink-48);
   font-size: 10px;
   white-space: nowrap;
@@ -457,7 +457,7 @@
 
 /* The bema takes the height the colonnade leaves, and its columns stretch to fill it
    — so the tall panel reads as a table of cards rather than a short strip over a void. */
-.band {
+.bemaBand {
   position: relative;
   display: flex;
   flex: 1 1 auto;
@@ -469,7 +469,7 @@
 }
 
 /* A notch label: it straddles the aegean rule and paints it out behind itself. */
-.band-k {
+.bemaBandKey {
   position: absolute;
   top: -6px;
   left: 0;
@@ -482,7 +482,7 @@
   text-transform: uppercase;
 }
 
-.brow {
+.bemaRecap {
   display: flex;
   align-items: flex-start;
   gap: 14px;
@@ -500,7 +500,7 @@
   min-width: 260px;
 }
 
-.blab {
+.bemaLedgerLabel {
   margin-bottom: 5px;
   color: var(--ink-48);
   font-family: var(--disp);
@@ -509,7 +509,7 @@
   text-transform: uppercase;
 }
 
-.bpol {
+.bemaRecapHead {
   color: var(--aegean);
   font-family: var(--disp);
   font-size: 7.5px;
@@ -517,7 +517,7 @@
   text-transform: uppercase;
 }
 
-.bfx {
+.bemaText {
   margin-top: 3px;
   color: var(--ink-66);
   font-size: 11px;
@@ -526,17 +526,17 @@
 
 /* The trade-off, inked in two colours: what you win against what it costs. Seeing
    both at a glance is what makes the vote an argument instead of a formality. */
-.gain {
+.clauseGain {
   color: var(--olive);
   font-weight: 600;
 }
 
-.cost {
+.clauseCost {
   color: var(--clay-deep);
   font-weight: 600;
 }
 
-.but {
+.clauseBut {
   padding: 0 4px;
   color: var(--ink-48);
   font-style: italic;
@@ -559,27 +559,27 @@
   font-variant-numeric: tabular-nums;
 }
 
-.talline .yv {
+.tallyYea {
   color: var(--olive);
   font-family: var(--disp);
   font-size: 13px;
 }
 
-.talline .nv {
+.tallyNay {
   color: var(--clay-deep);
   font-family: var(--disp);
   font-size: 13px;
 }
 
-.talline .u {
+.tallyUnit {
   font-size: 8px;
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
-/* Named .tbar, never .bar — `.bar` is the chrome's absolutely-positioned spine and
+/* Named .tugBar, never .bar — `.bar` is the chrome's absolutely-positioned spine and
    the collision throws this into the page corner. The reference warns about it. */
-.talline .tbar {
+.tugBar {
   display: flex;
   flex: 1 1 60px;
   height: 6px;
@@ -588,27 +588,27 @@
   overflow: hidden;
 }
 
-.talline .tbar .y {
+.tugYea {
   background: var(--olive);
 }
 
 /* Pending sits BETWEEN yea and nay, so the bar reads as a chamber filling from both
    ends toward the seats that have not spoken. */
-.talline .tbar .p {
+.tugPending {
   background: var(--ink-12);
 }
 
-.talline .tbar .n {
+.tugNay {
   background: var(--clay-deep);
 }
 
-.talline .note {
+.tallyVerdict {
   color: var(--aegean);
   font-size: 10px;
   line-height: 1.4;
 }
 
-.talline .note b {
+.tallyVerdict b {
   color: var(--ink);
   font-weight: 700;
 }
@@ -632,7 +632,7 @@
   border-top: 0;
 }
 
-.vrowline .sd2 {
+.voterDot {
   flex: none;
   width: 8px;
   height: 8px;
@@ -642,7 +642,7 @@
     0 0 0 1.5px var(--vase);
 }
 
-.vrowline .sn2 {
+.voterName {
   flex: 1;
   min-width: 0;
   color: var(--ink);
@@ -652,12 +652,12 @@
   color: var(--ink-48);
 }
 
-.vrowline .sv2 {
+.voterVote {
   color: var(--ink-48);
   white-space: nowrap;
 }
 
-.vrowline .sv2 b {
+.voterVote b {
   color: var(--aegean);
   font-weight: 700;
 }
@@ -716,7 +716,7 @@
   background: var(--glass);
 }
 
-.av {
+.asmVerb {
   display: flex;
   flex: none;
   align-items: center;
@@ -731,13 +731,13 @@
   transition: 0.16s;
 }
 
-.av:hover:not([aria-disabled="true"]) {
+.asmVerb:hover:not([aria-disabled="true"]) {
   background: var(--ink-07);
 }
 
 /* The same disc recipe as the dock and rail verbs, so a panel verb and a chrome
    verb read as one family rather than two vocabularies. */
-.av .ad {
+.asmVerbIcon {
   display: grid;
   flex: none;
   place-items: center;
@@ -751,14 +751,14 @@
     var(--lift);
 }
 
-.av .atx {
+.asmVerbText {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 1px;
 }
 
-.av .al {
+.asmVerbLabel {
   color: var(--ink);
   font-family: var(--disp);
   font-size: 9px;
@@ -767,14 +767,14 @@
   line-height: 1.15;
 }
 
-.av .ac {
+.asmVerbCost {
   color: var(--ink-48);
   font-size: 9px;
   font-variant-numeric: tabular-nums;
   line-height: 1.15;
 }
 
-.av.armed .ad {
+.asmVerb.isArmed .asmVerbIcon {
   color: var(--ivory);
   background: var(--clay);
   box-shadow:
@@ -782,20 +782,20 @@
     0 3px 10px rgb(192 70 28 / 38%);
 }
 
-.av.armed .al {
+.asmVerb.isArmed .asmVerbLabel {
   color: var(--clay-deep);
 }
 
-.av.off {
+.asmVerb.isOff {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.av.off:hover {
+.asmVerb.isOff:hover {
   background: transparent;
 }
 
-.amap {
+.asmMapButton {
   display: flex;
   flex: none;
   align-items: center;
@@ -817,7 +817,7 @@
 
 /* The one element that inverts to a solid aegean fill — the strongest note in the
    register, saved for the act of leaving the agora. */
-.amap:hover {
+.asmMapButton:hover {
   border-color: var(--aegean);
   background: var(--aegean);
   color: var(--ivory);
@@ -831,7 +831,7 @@
 
 /* The held card / the ballot widget. */
 
-.mb {
+.asmButton {
   padding: 5px 7px;
   border: 0;
   border-radius: 6px;
@@ -843,43 +843,43 @@
   transition: 0.16s;
 }
 
-.mb.go {
+.asmButton.isPrimary {
   background: var(--clay);
   color: var(--ivory);
 }
 
-.mb.go:hover {
+.asmButton.isPrimary:hover {
   background: #a8371a;
 }
 
-.mb.gh {
+.asmButton.isGhost {
   background: transparent;
   color: var(--ink-66);
   box-shadow: inset 0 0 0 1px var(--ink-30);
 }
 
-.mb.gh:hover {
+.asmButton.isGhost:hover {
   background: var(--ink-07);
   color: var(--ink);
 }
 
 /* Casting: olive for yea, clay-deep for nay — the same two inks the tally bar and
    the pebbles use, so the button and its consequence match. */
-.mb.yea {
+.asmButton.isYea {
   background: var(--olive);
   color: var(--ivory);
 }
 
-.mb.yea:hover {
+.asmButton.isYea:hover {
   background: #4c5a2e;
 }
 
-.mb.nay {
+.asmButton.isNay {
   background: var(--clay-deep);
   color: var(--ivory);
 }
 
-.mb.nay:hover {
+.asmButton.isNay:hover {
   background: #77250f;
 }
 
@@ -976,7 +976,7 @@
   background: var(--ledger-hover);
 }
 
-.asmMenu li button.on {
+.asmMenu li button.isOn {
   background: var(--aeg-tint);
 }
 
@@ -1015,7 +1015,7 @@
     gap: 10px 0;
   }
 
-  .acol:nth-child(3) {
+  .colonnadeCol:nth-child(3) {
     padding-left: 2px;
     border-left: 0;
   }
@@ -1039,7 +1039,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .acol {
+  .colonnadeCol {
     padding: 0 2px;
     border-left: 0;
   }
@@ -1479,7 +1479,7 @@
 }
 
 /* Your own seat gets a clay hairline, the same "this is you" marker the roster uses. */
-.bemaCol.you {
+.bemaCol.isYou {
   border-color: var(--clay);
 }
 
@@ -1519,15 +1519,15 @@
   flex: none;
 }
 
-.bemaVoteBadge.yay {
+.bemaVoteBadge.isYea {
   color: var(--olive);
 }
 
-.bemaVoteBadge.nay {
+.bemaVoteBadge.isNay {
   color: var(--clay-deep);
 }
 
-.bemaVoteBadge.wait {
+.bemaVoteBadge.isWaiting {
   color: var(--ink-30);
 }
 
@@ -1555,7 +1555,7 @@
   line-height: 1.12;
 }
 
-.bemaCard .bfx {
+.bemaCard .bemaText {
   margin-top: 2px;
   font-size: 10px;
   line-height: 1.4;
@@ -1597,7 +1597,7 @@
   text-transform: uppercase;
 }
 
-.bemaCardKind.strat {
+.bemaCardKind.isDirective {
   color: var(--clay);
 }
 
@@ -1625,7 +1625,7 @@
   padding-top: 4px;
 }
 
-.bemaColActions .mb {
+.bemaColActions .asmButton {
   flex: 1;
   text-align: center;
 }
@@ -1635,7 +1635,7 @@
   flex: 1;
 }
 
-.bemaActionTooltipTrigger > .mb {
+.bemaActionTooltipTrigger > .asmButton {
   width: 100%;
 }
 

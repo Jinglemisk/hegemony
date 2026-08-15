@@ -88,7 +88,7 @@ describe("Assembly explanations", () => {
     act(() => {
       root.render(
         <AssemblyAction
-          className="mb yea"
+          className="asmButton isYea"
           enabled
           explanation="Cast your votes in favor."
           heading="Vote Yea"

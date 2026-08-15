@@ -35,8 +35,8 @@ export function AssemblyBema({ G, session }: { G: HegemonyState; session: Assemb
         : "The Bema · what the Assembly decided";
 
   return (
-    <div className="band">
-      <span className="band-k">{label}</span>
+    <div className="bemaBand">
+      <span className="bemaBandKey">{label}</span>
       {session.phase === "closing" ? (
         <ClosingView G={G} session={session} />
       ) : (
@@ -201,7 +201,7 @@ function BemaColumn({
 
   return (
     <div
-      className={`bemaCol${cell.isCurrent ? " current" : ""}${cell.isViewer ? " you" : ""}${isHouse ? " house" : ""}`}
+      className={`bemaCol${cell.isCurrent ? " current" : ""}${cell.isViewer ? " isYou" : ""}${isHouse ? " house" : ""}`}
     >
       <div className="bemaColHead">
         <span
@@ -278,7 +278,7 @@ function ColumnCard({
         ) : (
           <div className="bemaCardPrize muted">House Laws grant no author prize</div>
         )}
-        <div className={`bemaCardKind${card.kind === "directive" ? " strat" : ""}`}>
+        <div className={`bemaCardKind${card.kind === "directive" ? " isDirective" : ""}`}>
           {card.kind === "law" ? "Standing Law" : "One-time Directive"}
         </div>
       </div>
@@ -312,7 +312,7 @@ function RepealCard({ cardId, content }: { cardId: string; content: GameContent 
       <div className="bemaCard bemaCardRepeal">
         <div className="bemaCardPol">A motion to repeal</div>
         <div className="bemaCardName">Repeal {card?.name ?? cardId}</div>
-        <div className="bfx">
+        <div className="bemaText">
           Strike this standing Law from the record. {card ? <em>{card.text}</em> : null}
         </div>
       </div>
@@ -334,7 +334,7 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
       <div className="bemaColActions">
         <span className="asmBlocked">Already stands</span>
         <AssemblyAction
-          className="mb gh"
+          className="asmButton isGhost"
           enabled
           explanation="Return this held card to its politician's discard pile without adding it to the ballot."
           heading={`Discard ${card.name}`}
@@ -352,7 +352,7 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
       {card.kind === "directive" ? (
         <>
           <AssemblyAction
-            className="mb go strat"
+            className="asmButton isPrimary isDirective"
             enabled
             explanation="Choose one rival, then seal this Directive. The target is revealed with the ballot before voting begins."
             heading={`Target ${card.name}`}
@@ -399,7 +399,7 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
       ) : needsReplacement ? (
         <>
           <AssemblyAction
-            className="mb go"
+            className="asmButton isPrimary"
             enabled
             explanation="Add this Law to the ballot. Because the standing-Law board is full or its remaining slots are reserved, choose the Law it would replace if passed."
             heading={`Propose ${card.name}`}
@@ -445,7 +445,7 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
         </>
       ) : (
         <AssemblyAction
-          className="mb go"
+          className="asmButton isPrimary"
           enabled
           explanation="Add this held resolution to the Assembly ballot. It is revealed after every seat has decided."
           heading={`Propose ${card.name}`}
@@ -456,7 +456,7 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
         </AssemblyAction>
       )}
       <AssemblyAction
-        className="mb gh"
+        className="asmButton isGhost"
         enabled
         explanation="Return this held card to its politician's discard pile without adding it to the ballot."
         heading={`Discard ${card.name}`}
@@ -497,7 +497,7 @@ function VoteActions({ G, session }: { G: HegemonyState; session: AssemblySessio
     <div className="bemaColVote">
       <div className="bemaColActions">
         <AssemblyAction
-          className="mb yea"
+          className="asmButton isYea"
           enabled
           explanation={`Cast ${voteWeight} vote${voteWeight === 1 ? "" : "s"} in favor of this resolution.`}
           heading="Vote Yea"
@@ -507,7 +507,7 @@ function VoteActions({ G, session }: { G: HegemonyState; session: AssemblySessio
           Yea
         </AssemblyAction>
         <AssemblyAction
-          className="mb nay"
+          className="asmButton isNay"
           enabled
           explanation={`Cast ${voteWeight} vote${voteWeight === 1 ? "" : "s"} against this resolution.`}
           heading="Vote Nay"
@@ -533,15 +533,17 @@ function VoteActions({ G, session }: { G: HegemonyState; session: AssemblySessio
   );
 }
 
+const VOTE_BADGE_CLASS = { yay: "isYea", nay: "isNay", wait: "isWaiting" } as const;
+
 function VoteBadge({ mark }: { mark: "yay" | "nay" | "wait" }) {
   return (
-    <span className={`bemaVoteBadge ${mark}`}>
+    <span className={`bemaVoteBadge ${VOTE_BADGE_CLASS[mark]}`}>
       {mark === "yay" ? (
-        <YeaMark className="pm" />
+        <YeaMark className="voteMarkGlyph" />
       ) : mark === "nay" ? (
-        <NayMark className="pm" />
+        <NayMark className="voteMarkGlyph" />
       ) : (
-        <WaitMark className="pm" />
+        <WaitMark className="voteMarkGlyph" />
       )}
     </span>
   );
@@ -561,22 +563,22 @@ function VoteTally({ G, session }: { G: HegemonyState; session: AssemblySession 
   return (
     <div className="voteTally">
       <div className="talline">
-        <span className="yv">
+        <span className="tallyYea">
           {yea}
-          <span className="u"> yay</span>
+          <span className="tallyUnit"> yay</span>
         </span>
-        <span className="tbar">
-          <span className="y" style={{ width: `${(yea / total) * 100}%` }} />
-          <span className="p" style={{ width: `${(pending / total) * 100}%` }} />
-          <span className="n" style={{ width: `${(nay / total) * 100}%` }} />
+        <span className="tugBar">
+          <span className="tugYea" style={{ width: `${(yea / total) * 100}%` }} />
+          <span className="tugPending" style={{ width: `${(pending / total) * 100}%` }} />
+          <span className="tugNay" style={{ width: `${(nay / total) * 100}%` }} />
         </span>
-        <span className="nv">
-          <span className="u">nay </span>
+        <span className="tallyNay">
+          <span className="tallyUnit">nay </span>
           {nay}
         </span>
       </div>
       <div className="talline">
-        <span className="note">
+        <span className="tallyVerdict">
           Card {session.ballotIndex + 1} of {session.ballot.length} ·{" "}
           {voteNote(G, session, yea, nay, pending)}
         </span>
@@ -617,11 +619,11 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
   );
 
   return (
-    <div className="brow">
+    <div className="bemaRecap">
       <div className="bcard">
-        <div className="bpol">What the Assembly decided</div>
+        <div className="bemaRecapHead">What the Assembly decided</div>
         {session.results.length === 0 ? (
-          <div className="bfx">The house rose with nothing on the bema.</div>
+          <div className="bemaText">The house rose with nothing on the bema.</div>
         ) : (
           <ul className="asmResults">
             {session.results.map((result, index) => (
@@ -634,7 +636,7 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
             ))}
           </ul>
         )}
-        <div className="bfx asmCapNote">
+        <div className="bemaText asmCapNote">
           <b>
             {G.activeLaws.length} of {G.ruleset.assembly.lawCap}
           </b>{" "}
@@ -646,14 +648,14 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
       </div>
 
       <div className="polls">
-        <div className="blab">Permanent Voice ledger · authored resolutions passed</div>
+        <div className="bemaLedgerLabel">Permanent Voice ledger · authored resolutions passed</div>
         {ranked.map((playerID) => {
           const count = G.assemblyPassedByPlayer[playerID];
 
           return (
             <div className="vrowline" key={playerID}>
-              <span className="sd2" style={{ background: glazeOf(playerID) }} />
-              <span className="sn2">
+              <span className="voterDot" style={{ background: glazeOf(playerID) }} />
+              <span className="voterName">
                 {PLAYER_NAMES[playerID]}{" "}
                 <span className="vrowNote">
                   ·{" "}
@@ -662,7 +664,7 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
                     : `minimum ${G.ruleset.victory.minimums.voice}`}
                 </span>
               </span>
-              <span className="sv2">
+              <span className="voterVote">
                 <b>{count}</b> passed
               </span>
             </div>
@@ -704,14 +706,14 @@ export function ResolutionEffect({ card }: { card: ResolutionCard }) {
   const split = card.text.split(", but ");
 
   if (split.length !== 2) {
-    return <div className="bfx">{card.text}</div>;
+    return <div className="bemaText">{card.text}</div>;
   }
 
   return (
-    <div className="bfx">
-      <span className="gain">{split[0]}</span>
-      <span className="but">but</span>
-      <span className="cost">{split[1].replace(/\.$/, "")}</span>.
+    <div className="bemaText">
+      <span className="clauseGain">{split[0]}</span>
+      <span className="clauseBut">but</span>
+      <span className="clauseCost">{split[1].replace(/\.$/, "")}</span>.
     </div>
   );
 }
