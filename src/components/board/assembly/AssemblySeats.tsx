@@ -229,7 +229,12 @@ function castingCue(G: HegemonyState, session: AssemblySession, playerID: Player
  * seat's CITIZEN count, so a player holding only freemen and slaves is given the
  * floor with nothing to cast, and nothing on screen said why.
  */
-function weightNote(G: HegemonyState, session: AssemblySession, playerID: PlayerId): string {
+function weightNote(
+  G: HegemonyState,
+  session: AssemblySession,
+  playerID: PlayerId,
+  canBribe: boolean,
+): string {
   const bought = session.bribesUsed[playerID];
   const bribes = bought > 0 ? `, ${bought} bought` : "";
 
@@ -237,10 +242,15 @@ function weightNote(G: HegemonyState, session: AssemblySession, playerID: Player
     return `Isonomia holds you to one vote${bribes}`;
   }
 
-  const base = baseVoteWeight(G, playerID);
-
-  if (base === 0) {
-    return `no citizens, no voice${bought > 0 ? ` — ${bought} bought` : " — buy one below"}`;
+  if (baseVoteWeight(G, playerID) === 0) {
+    // Never offer a way out that is already shut: on the first ballot of a game
+    // the bribe is usually unaffordable, and "buy one below" beside a greyed
+    // Bribe would be the second thing on this plaque to mislead.
+    return bought > 0
+      ? `no citizens — ${bought} bought`
+      : canBribe
+        ? "no citizens, no voice — buy one below"
+        : "no citizens, no voice";
   }
 
   return `one vote per citizen${bribes}`;
@@ -287,7 +297,7 @@ function CastingSeat({
           <span className="visuallyHidden">, your seat</span>
         </span>
         <span className="asmSeatCue label">{castingCue(G, session, playerID)}</span>
-        <span className="asmSeatWhy caption">{weightNote(G, session, playerID)}</span>
+        <span className="asmSeatWhy caption">{weightNote(G, session, playerID, canBribe)}</span>
       </span>
 
       <AssemblyAction
