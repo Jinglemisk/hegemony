@@ -1,7 +1,8 @@
-import { PLAYER_NAMES, PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
+import { PLAYER_NAMES, PLAYER_IDS } from "../../../game/data";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { formatNumber } from "../../../ui/formatters";
+import { glazeOf } from "../../../ui/playerGlazes";
 
 /**
  * The victory race, always visible: the six public cards, who holds each, and every
@@ -31,7 +32,7 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
           <header className="victoryCardHead">
             <strong className="victoryCardName">{card.name}</strong>
             {holder ? (
-              <span className="victoryHolder" style={{ color: PLAYER_COLORS[holder] }}>
+              <span className="victoryHolder" style={{ color: glazeOf(holder) }}>
                 ◈ {PLAYER_NAMES[holder]}
               </span>
             ) : (
@@ -46,7 +47,7 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
               <span
                 className={`victoryValue${holder === id ? " victoryLeader" : ""}${id === playerID ? " victoryViewer" : ""}`}
                 key={id}
-                style={{ borderBottomColor: PLAYER_COLORS[id] }}
+                style={{ borderBottomColor: glazeOf(id) }}
                 title={`${PLAYER_NAMES[id]}: ${formatNumber(values[id])} (needs ${minimum})`}
               >
                 {PLAYER_NAMES[id].slice(0, 2)} {formatNumber(values[id])}

@@ -1,4 +1,4 @@
-import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
+import { PLAYER_NAMES } from "../../../game/data";
 import { getResolutionCard, nextDrawCost, politicianStandings } from "../../../game/assembly";
 import type {
   ActiveLaw,
@@ -12,6 +12,7 @@ import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { DrawIcon } from "./AssemblyIcons";
 import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
+import { glazeOf } from "../../../ui/playerGlazes";
 
 /**
  * The colonnade — four narrow columns, each politician standing over their own stack
@@ -130,7 +131,7 @@ function PoliticianColumn({
         <div className="ameta">
           {patron ? (
             <>
-              <span className="dot" style={{ background: PLAYER_COLORS[patron] }} />
+              <span className="dot" style={{ background: glazeOf(patron) }} />
               <b>{PLAYER_NAMES[patron]}</b> · descriptive patron
             </>
           ) : (
@@ -249,7 +250,7 @@ function DrawButton({
 /** The house resolution has no author, so its bead is stone rather than a seat colour —
  *  it stands in the agora and lends its politician power, but it is nobody's stele. */
 function authorColor(author: PlayerId | null): string {
-  return author ? PLAYER_COLORS[author] : "var(--stone)";
+  return author ? glazeOf(author) : "var(--stone)";
 }
 
 function authorName(author: PlayerId | null): string {

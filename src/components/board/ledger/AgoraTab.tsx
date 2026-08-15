@@ -1,9 +1,10 @@
-import { PLAYER_COLORS, PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
+import { PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
 import { yearOf } from "../../../game/core/calendar";
 import { getResolutionCard, politicianStandings } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { AnnotatedText } from "../../AnnotatedText";
+import { glazeOf } from "../../../ui/playerGlazes";
 
 /**
  * The Agora — the standing record, readable at any time.
@@ -39,7 +40,7 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
           <span className="agoraValue agoraVoice">
             {voice?.holder ? (
               <>
-                <span className="agoraDot" style={{ background: PLAYER_COLORS[voice.holder] }} />
+                <span className="agoraDot" style={{ background: glazeOf(voice.holder) }} />
                 {PLAYER_NAMES[voice.holder]}
               </>
             ) : (
@@ -61,7 +62,7 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
         <strong>Authored resolutions passed</strong>
         <div>
           {PLAYER_IDS.map((id) => (
-            <span key={id} style={{ borderColor: PLAYER_COLORS[id] }}>
+            <span key={id} style={{ borderColor: glazeOf(id) }}>
               {PLAYER_NAMES[id]} <b>{G.assemblyPassedByPlayer[id]}</b>
             </span>
           ))}
@@ -93,10 +94,7 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
             <div className="agoraPatron">
               {standing.patron ? (
                 <>
-                  <span
-                    className="agoraDot"
-                    style={{ background: PLAYER_COLORS[standing.patron] }}
-                  />
+                  <span className="agoraDot" style={{ background: glazeOf(standing.patron) }} />
                   <strong>{PLAYER_NAMES[standing.patron]}</strong> is descriptive patron of this
                   stack
                 </>
@@ -145,7 +143,7 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
 
 /** An unauthored house resolution reads as stone, not as anyone's seat colour. */
 function authorColor(author: PlayerId | null): string {
-  return author ? PLAYER_COLORS[author] : "var(--stone)";
+  return author ? glazeOf(author) : "var(--stone)";
 }
 
 function authorName(author: PlayerId | null): string {

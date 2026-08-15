@@ -1,10 +1,10 @@
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
-import { PLAYER_COLORS } from "../../../game/data";
 import { settlementBuildingSlots } from "../../../game/rules";
 import type { Ruleset } from "../../../game/ruleset";
 import type { HexTile } from "../../../game/types";
 import { HEX_SIZE, getColonyXPositions, hexPoints } from "../../../ui/hexGeometry";
 import { tileCssVars } from "../../../ui/resourceVisuals";
+import { glazeOf } from "../../../ui/playerGlazes";
 
 /**
  * One tile and everything standing on it (ladder rung R6): the hex, its glyphs,
@@ -114,7 +114,7 @@ export function TileGroup({
       {city ? (
         <g
           className="settlementShape cityShape"
-          style={{ "--player-color": PLAYER_COLORS[city.owner] } as CSSProperties}
+          style={{ "--player-color": glazeOf(city.owner) } as CSSProperties}
           transform={`translate(0 ${CITY_ICON_CENTER_Y}) scale(0.85)`}
         >
           <rect height={20} rx={2} width={20} x={-10} y={-10} />
@@ -129,7 +129,7 @@ export function TileGroup({
         >
           <g
             className="settlementShape colonyShape"
-            style={{ "--player-color": PLAYER_COLORS[colony.owner] } as CSSProperties}
+            style={{ "--player-color": glazeOf(colony.owner) } as CSSProperties}
             transform="scale(0.85)"
           >
             <path d="M 0 -11 L 10 8 L -10 8 Z" />

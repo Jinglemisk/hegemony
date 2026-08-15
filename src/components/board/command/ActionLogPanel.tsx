@@ -1,9 +1,9 @@
 import { useMemo, useState, type CSSProperties } from "react";
-import { PLAYER_COLORS } from "../../../game/data";
 import type { HegemonyState, LogEntry, PlayerId } from "../../../game/types";
 import { seasonLabel, yearLabel } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { UiSprite } from "../../Sprites";
+import { glazeOf } from "../../../ui/playerGlazes";
 
 type Filter = PlayerId | "all";
 type TaggedEntry = { entry: LogEntry; player: PlayerId | null };
@@ -87,7 +87,7 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
             }
             key={player.id}
             onClick={() => setFilter((current) => (current === player.id ? "all" : player.id))}
-            style={{ "--filter-color": PLAYER_COLORS[player.id] } as CSSProperties}
+            style={{ "--filter-color": glazeOf(player.id) } as CSSProperties}
             title={`Only ${player.name}'s deeds`}
             type="button"
           >
@@ -108,9 +108,7 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
               <p
                 className={player ? "chronicleLine chronicleLinePlayer" : "chronicleLine"}
                 key={entry.id}
-                style={
-                  player ? ({ "--line-color": PLAYER_COLORS[player] } as CSSProperties) : undefined
-                }
+                style={player ? ({ "--line-color": glazeOf(player) } as CSSProperties) : undefined}
               >
                 <AnnotatedText text={entry.message} />
               </p>

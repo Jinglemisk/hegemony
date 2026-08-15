@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
+import { PLAYER_NAMES } from "../../../game/data";
 import { getResolutionCard } from "../../../game/assembly";
 import type { AssemblyResult } from "../../../game/assembly";
 import type { HegemonyState } from "../../../game/types";
@@ -11,6 +11,7 @@ import { AssemblyBema } from "./AssemblyBema";
 import { AssemblyColonnade } from "./AssemblyColonnade";
 import { AssemblyFoot, type AssemblyMenu } from "./AssemblyFoot";
 import { UrnIcon } from "./AssemblyIcons";
+import { glazeOf } from "../../../ui/playerGlazes";
 
 const STEPS = [
   { key: "proposal", numeral: "Ⅰ", label: "Proposal" },
@@ -136,7 +137,7 @@ export function AssemblyPanel({
               <span className="k">Voice</span>
               {voice?.holder ? (
                 <>
-                  <span className="dot" style={{ background: PLAYER_COLORS[voice.holder] }} />
+                  <span className="dot" style={{ background: glazeOf(voice.holder) }} />
                   <span className="n">{PLAYER_NAMES[voice.holder]}</span>
                 </>
               ) : (

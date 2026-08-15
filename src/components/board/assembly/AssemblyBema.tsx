@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PLAYER_COLORS, PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
+import { PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
 import {
   availableLawReplacementIds,
   activeLawIds,
@@ -17,6 +17,7 @@ import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { NayMark, WaitMark, YeaMark } from "./AssemblyIcons";
 import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
+import { glazeOf } from "../../../ui/playerGlazes";
 
 /**
  * The bema — the speaker's floor. Owner ruling (2026-07-21): it MIRRORS the colonnade
@@ -205,7 +206,7 @@ function BemaColumn({
       <div className="bemaColHead">
         <span
           className="bemaColDot"
-          style={{ background: isHouse ? "var(--stone)" : PLAYER_COLORS[cell.owner!] }}
+          style={{ background: isHouse ? "var(--stone)" : glazeOf(cell.owner!) }}
         />
         <span className="bemaColName">{isHouse ? "House" : PLAYER_NAMES[cell.owner!]}</span>
         {cell.voteMark ? <VoteBadge mark={cell.voteMark} /> : null}
@@ -267,7 +268,7 @@ function ColumnCard({
         <ResolutionEffect card={card} />
         {target ? (
           <div className="bemaCardTarget">
-            <span style={{ background: PLAYER_COLORS[target] }} /> Target · {PLAYER_NAMES[target]}
+            <span style={{ background: glazeOf(target) }} /> Target · {PLAYER_NAMES[target]}
           </div>
         ) : null}
         {showPrize ? (
@@ -383,7 +384,7 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
                       >
                         <span
                           className="asmTargetChoiceDot"
-                          style={{ background: PLAYER_COLORS[target] }}
+                          style={{ background: glazeOf(target) }}
                         />
                         <span className="asmMenuName">{PLAYER_NAMES[target]}</span>
                         <span className="asmMenuMeta">{targetSummary(G, card, target)}</span>
@@ -651,7 +652,7 @@ function ClosingView({ G, session }: { G: HegemonyState; session: AssemblySessio
 
           return (
             <div className="vrowline" key={playerID}>
-              <span className="sd2" style={{ background: PLAYER_COLORS[playerID] }} />
+              <span className="sd2" style={{ background: glazeOf(playerID) }} />
               <span className="sn2">
                 {PLAYER_NAMES[playerID]}{" "}
                 <span className="vrowNote">

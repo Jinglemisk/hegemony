@@ -1,7 +1,8 @@
-import { PLAYER_NAMES, PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
+import { PLAYER_NAMES, PLAYER_IDS } from "../../../game/data";
 import { victoryCardsHeld, victoryStandings } from "../../../game/victory";
 import type { HegemonyState } from "../../../game/types";
 import { ModalShell } from "./ModalShell";
+import { glazeOf } from "../../../ui/playerGlazes";
 
 /**
  * The end of the game. Shown when the engine reaches phase "gameOver" — either a
@@ -33,7 +34,7 @@ export function GameOverModal({
           <span className="gameOverKicker">
             {G.gameOverReason === "victoryRace" ? "The race is won" : "The age has ended"}
           </span>
-          <h2 id="game-over-title" style={{ color: PLAYER_COLORS[winner] }}>
+          <h2 id="game-over-title" style={{ color: glazeOf(winner) }}>
             {PLAYER_NAMES[winner]} rules the Hegemony
           </h2>
         </div>
@@ -48,7 +49,7 @@ export function GameOverModal({
       <div className="gameOverStandings">
         {ranked.map((id) => (
           <div className={`gameOverSeat${id === winner ? " gameOverWinner" : ""}`} key={id}>
-            <span className="gameOverDot" style={{ backgroundColor: PLAYER_COLORS[id] }} />
+            <span className="gameOverDot" style={{ backgroundColor: glazeOf(id) }} />
             <strong>{PLAYER_NAMES[id]}</strong>
             <span className="gameOverCards">
               {victoryCardsHeld(G, id)} card{victoryCardsHeld(G, id) === 1 ? "" : "s"}
