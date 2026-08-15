@@ -27,6 +27,7 @@ import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
 import { StandingLaw } from "./StandingLaw";
+import { verdict } from "./voteVerdict";
 
 /**
  * The floor of the house — one hero object with one companion beside it.
@@ -291,31 +292,6 @@ function pile(count: number, side: "yea" | "nay" | "ghost"): ReactNode[] {
     sherds.push(<i className={`asmShard is-${side}`} key={i} />);
   }
   return sherds;
-}
-
-/**
- * The dramatic read on the vote — the headline the ballot's counter used to occupy.
- *
- * The zero branch is not a nicety. A ballot OPENS at 0–0 with votes pending, and
- * 0 === 0 fell into the tie test, so the scene's one dramatic line announced a
- * cliffhanger about a vote nobody had cast — every seed, every width, and on a
- * short ballot it was the only verdict the scene ever showed. A tie is only a tie
- * once someone has spoken; before that, the honest headline is that nobody has.
- */
-export function verdict(yea: number, nay: number, pending: number, cast: number): string {
-  if (cast === 0) {
-    return "The floor is open";
-  }
-  if (pending === 0) {
-    return yea > nay ? "It carries" : yea === nay ? "Tied — the law falls" : "It is voted down";
-  }
-  if (yea === nay) {
-    return "On the knife's edge";
-  }
-  if (pending >= Math.abs(yea - nay)) {
-    return "Still in the balance";
-  }
-  return yea > nay ? "It cannot be stopped" : "It cannot be saved";
 }
 
 /** The running read on a close card — the thing a player would otherwise compute in

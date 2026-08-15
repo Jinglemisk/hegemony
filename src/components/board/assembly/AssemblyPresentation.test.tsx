@@ -12,11 +12,12 @@ import { presentDirectiveEffect, presentLawEffect } from "../../../ui/effects";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import type { GameUi } from "../GameUiContext";
 import { GameUiProvider } from "../GameUiProvider";
-import { AssemblyFloor, ResolutionEffect, verdict } from "./AssemblyFloor";
+import { AssemblyFloor, ResolutionEffect } from "./AssemblyFloor";
 import { AssemblyFoot, type AssemblyMenu } from "./AssemblyFoot";
 import { AssemblyHead } from "./AssemblyHead";
 import { AssemblySeats } from "./AssemblySeats";
 import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
+import { verdict } from "./voteVerdict";
 
 let container: HTMLDivElement;
 let root: Root;
