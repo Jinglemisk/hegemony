@@ -553,10 +553,16 @@
   background: var(--ivory);
 }
 
+/* The price drops to its own line rather than squeezing the effect column. At
+   1366 a card is ~210px: minus the tile and the cost chips, an effect had ~110px
+   and "Grow Pop costs 2 less Food here" came out four lines deep. Given a 130px
+   floor the name/effect block keeps the price beside it wherever there is room
+   and pushes it under itself where there is not, still right-aligned. */
 .bcardTop {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 6px 10px;
 }
 
 .bcardTile {
@@ -572,6 +578,7 @@
 }
 
 .bcardName {
+  flex: 1 1 130px;
   min-width: 0;
 }
 
@@ -1128,6 +1135,8 @@
   background: var(--vase-black);
 }
 
+/* The edge cue that says "more below" is shared with the other scroll regions
+   and lives beside `.intelBody` in intel.css. */
 .chronicleList {
   min-height: 0;
   overflow-y: auto;

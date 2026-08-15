@@ -498,9 +498,13 @@ export function presentBuildingEffect(effect: BuildingEffect): EffectPresentatio
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource] + " income");
     case "happiness":
       return signedPresentation(effect.amount, RESOURCE_LABELS.happiness);
+    // "costs -2 Food" has two readings — cheaper by 2, or a price of minus two —
+    // and a discount is exactly the case where the negative numeral is the
+    // ambiguous one. "2 less" is the phrasing the Assembly deck already uses,
+    // and it is a word shorter, which matters in a ~110px effect column.
     case "growPopFoodDiscount":
       return {
-        text: `Grow Pop costs -${formatNumber(effect.amount)} Food here`,
+        text: `Grow Pop costs ${formatNumber(effect.amount)} less Food here`,
         tone: "positive",
       };
     case "popCapacityBonus":
@@ -509,7 +513,7 @@ export function presentBuildingEffect(effect: BuildingEffect): EffectPresentatio
       return signedPresentation(effect.amount, "tile resource income");
     case "promoteCostReduction":
       return {
-        text: `Promotions cost -${formatNumber(effect.amount)} here`,
+        text: `Promotions cost ${formatNumber(effect.amount)} less here`,
         tone: "positive",
       };
   }
