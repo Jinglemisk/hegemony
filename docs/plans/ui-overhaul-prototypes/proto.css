@@ -1,0 +1,309 @@
+/* ============================================================
+   HEGEMONY — "OSTRAKON" overhaul prototypes · shared tokens
+   Chrome is black-figure lacquer; panels are laid ceramic;
+   numbers are carved big; color speaks only good / bad.
+   ============================================================ */
+
+:root {
+  /* materials */
+  --lacquer: #181210;
+  --lacquer-raised: #261c15;
+  --ivory: #fff8e7;
+  --bone: #f4e6c8;
+  --slip: #d8c8a8;
+
+  /* ink */
+  --ink: #241910;
+  --ink-66: rgb(36 25 16 / 0.66);
+  --ink-48: rgb(36 25 16 / 0.48);
+  --ink-30: rgb(36 25 16 / 0.3);
+  --ink-12: rgb(36 25 16 / 0.12);
+  --ivory-70: rgb(255 248 231 / 0.7);
+  --ivory-45: rgb(255 248 231 / 0.45);
+
+  /* accent + status */
+  --clay: #c0461c;
+  --clay-deep: #8f2e13;
+  --pos: #5e6e3a;
+  --neg: #8f2e13;
+  --warn: #b0702a;
+  --aegean: #1f6977;
+  /* status, readable on lacquer */
+  --pos-lit: #a8b877;
+  --neg-lit: #e8846b;
+  --warn-lit: #e2a558;
+
+  /* player glazes */
+  --kyanos: #2f5d9e;
+  --kinnabari: #a83226;
+  --melichron: #dfa437;
+  --porphyra: #7c4d79;
+
+  /* terrain ramp (quiet — kind = emblem, never hue) */
+  --t-plains: #e2d4b6;
+  --t-hill: #d5c5a4;
+  --t-forest: #cabb97;
+  --t-mountain: #bfae8c;
+  --t-oracle: #ede4cd;
+
+  --shadow-laid: 0 2px 10px rgb(24 18 16 / 0.28);
+  --shadow-float: 0 18px 56px rgb(24 18 16 / 0.5);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { width: 1440px; height: 900px; overflow: hidden; }
+
+body {
+  font-family: "Alegreya", "Iowan Old Style", Palatino, Georgia, serif;
+  color: var(--ink);
+  background: var(--lacquer);
+}
+
+.num { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum", "lnum"; }
+
+/* inline cost icon, tinted by text color */
+.ci {
+  display: inline-block; width: 13px; height: 13px;
+  background: currentColor; vertical-align: -2px;
+  -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat;
+}
+.happy-ic { width: 1em; height: 1em; vertical-align: -0.12em; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+.display { font-family: "Cinzel", Copperplate, Georgia, serif; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* ---------- shell grid ---------- */
+.shell {
+  width: 1440px; height: 900px;
+  display: grid;
+  grid-template-rows: 64px 1fr 76px;
+  position: relative;
+}
+
+/* ---------- the sea (table) ---------- */
+.table-well {
+  position: relative;
+  overflow: hidden;
+  background: url("/assets/map/aegean-sea-board.png") center / cover no-repeat;
+}
+.table-well::after { /* gentle vignette so bone tablets sit apart from the sea */
+  content: ""; position: absolute; inset: 0;
+  box-shadow: inset 0 6px 22px rgb(24 18 16 / 0.38), inset 0 -6px 22px rgb(24 18 16 / 0.38);
+  pointer-events: none;
+}
+
+/* ---------- ceramic bars (light) ---------- */
+.bar {
+  background: linear-gradient(180deg, #faf1dc, #f0e0bd 70%);
+  color: var(--ink);
+  display: flex; align-items: center;
+  padding: 0 18px;
+  position: relative; z-index: 30;
+}
+.bar.top { border-bottom: 1px solid rgb(36 25 16 / 0.3); gap: 14px; padding-right: 14px;
+  box-shadow: 0 2px 10px rgb(24 18 16 / 0.16); }
+.bar.bottom { border-top: 1px solid rgb(36 25 16 / 0.3); gap: 6px; justify-content: center;
+  box-shadow: 0 -2px 10px rgb(24 18 16 / 0.16); }
+
+/* meander — the designed edge */
+.bar.top::after, .bar.bottom::before {
+  content: ""; position: absolute; left: 0; right: 0; height: 7px; opacity: 0.4;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9"><path d="M1 8V1h12v4H7V3" fill="none" stroke="%23c0461c" stroke-width="1.3"/></svg>') repeat-x left center / 18px 9px;
+  pointer-events: none;
+}
+.bar.top::after { bottom: 2px; }
+.bar.bottom::before { top: 2px; }
+
+.bar .divider { width: 1px; height: 60%; background: rgb(36 25 16 / 0.16); flex: none; }
+
+/* season + year */
+.clock { display: flex; align-items: center; gap: 12px; flex: none; }
+.clock .medallion {
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 2px solid rgb(255 248 231 / 0.55);
+  box-shadow: 0 0 0 3px rgb(24 18 16 / 0.6);
+  object-fit: cover;
+}
+.clock .year { display: flex; flex-direction: column; line-height: 1.12; }
+.clock .year b { font-family: Cinzel, serif; font-size: 17px; font-weight: 700; letter-spacing: 0.08em; }
+.clock .year span { font-size: 12.5px; color: var(--ivory-70); letter-spacing: 0.04em; }
+
+/* event slips */
+.slips { display: flex; gap: 8px; flex: none; }
+.slip {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(180deg, #fff8e7, #f6e9ca);
+  color: var(--ink);
+  border-radius: 3px;
+  padding: 4px 10px 4px 4px;
+  box-shadow: 0 1px 4px rgb(24 18 16 / 0.22), inset 0 0 0 1px rgb(36 25 16 / 0.3);
+}
+.slip img { width: 30px; height: 30px; object-fit: cover; border-radius: 2px; }
+.slip .k { font-size: 8px; letter-spacing: 0.14em; font-weight: 700; color: var(--clay); font-family: Cinzel, serif; }
+.slip.fate .k { color: var(--porphyra); }
+.slip b { display: block; font-family: Cinzel, serif; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; }
+.slip .fx { font-size: 10.5px; color: var(--ink-66); }
+.slip .fx .up { color: var(--pos); font-weight: 700; }
+.slip .fx .down { color: var(--neg); font-weight: 700; }
+
+/* resource spine — the big numbers, dead center of the bar */
+.spine { display: flex; align-items: center; gap: 14px; flex: none;
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.res { display: flex; align-items: baseline; gap: 5px; }
+.res .icon {
+  width: 21px; height: 21px; align-self: center; flex: none;
+  background: var(--ink); opacity: 0.85;
+  -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat;
+}
+.res .v { font-size: 26px; font-weight: 800; line-height: 1; color: var(--ink); }
+.res .d { font-size: 13.5px; font-weight: 700; }
+.res .d.up { color: var(--pos); }
+.res .d.down { color: var(--neg); }
+.res .d.zero { color: rgb(36 25 16 / 0.3); }
+.res.alert .v { color: var(--neg); }
+
+/* roster */
+.roster { display: flex; gap: 11px; flex: none; align-items: center; margin-left: auto; }
+.seat { display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: 0.55; }
+.seat.acting { opacity: 1; }
+.seat .glaze {
+  width: 27px; height: 27px; border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--ivory); font-family: Cinzel, serif; font-weight: 700; font-size: 13px;
+  box-shadow: inset 0 0 0 1.5px rgb(255 248 231 / 0.85), 0 0 0 1px rgb(24 18 16 / 0.55);
+}
+.seat .nm { font-family: Cinzel, serif; font-size: 9.5px; letter-spacing: 0.1em; color: var(--ink); }
+.seat.acting .nm { border-bottom: 2px solid var(--clay); padding-bottom: 1px; }
+
+/* ---------- verbs on the ceramic rail, dead center ---------- */
+.verb {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  min-width: 84px; padding: 6px 8px 5px;
+  background: none; border: none; color: var(--ink); cursor: pointer;
+  border-radius: 4px;
+}
+.verb:hover { background: rgb(36 25 16 / 0.06); }
+.verb svg { width: 23px; height: 23px; stroke: var(--ink); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
+.verb .lbl { font-family: Cinzel, serif; font-size: 11.5px; font-weight: 700; letter-spacing: 0.12em; }
+.verb .cost { font-size: 11.5px; color: rgb(36 25 16 / 0.6); font-weight: 600; }
+.verb.armed { background: var(--clay); color: var(--ivory); }
+.verb.armed svg { stroke: var(--ivory); }
+.verb.off { opacity: 0.38; }
+.verb.off .cost.blocked { opacity: 1; color: var(--neg); font-weight: 700; }
+
+/* ---------- the twin dials: season clock (left) · end-turn seal (right) ---------- */
+.dial {
+  position: absolute; bottom: 12px; width: 128px; height: 128px; z-index: 40;
+  filter: drop-shadow(0 6px 18px rgb(24 18 16 / 0.45));
+}
+.dial.clock { left: 26px; }
+.dial.turn-seal { right: 26px; cursor: pointer; border: none; background: none; padding: 0;
+  box-shadow: none; width: 128px; height: 128px; }
+.dial svg { display: block; width: 128px; height: 128px; }
+
+/* ---------- laid tablets (panels) ---------- */
+.tablet {
+  position: absolute; z-index: 20;
+  background: var(--bone);
+  box-shadow: 0 2px 0 #cbb58e, var(--shadow-laid);
+  display: flex;
+}
+.tablet.left { left: 0; top: 0; bottom: 0; width: 306px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+.tablet.right { right: 0; top: 0; bottom: 0; width: 286px; }
+
+/* vertical tab spine — tabs centered in the rail */
+.tabrail { width: 46px; background: var(--slip); display: flex; flex-direction: column; align-items: stretch;
+  justify-content: center; flex: none; }
+.tablet.right .tabrail { order: 2; }
+.tab {
+  height: 52px; display: grid; place-items: center; position: relative;
+  border: none; background: none; cursor: pointer; color: var(--ink-48);
+}
+.tab svg { width: 21px; height: 21px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.tab.on { background: var(--bone); color: var(--clay); }
+.tablet.left .tab.on::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; background: var(--clay); }
+.tablet.right .tab.on::before { content: ""; position: absolute; right: 0; top: 8px; bottom: 8px; width: 3px; background: var(--clay); }
+.tab .badge {
+  position: absolute; top: 7px; right: 7px; min-width: 15px; height: 15px; border-radius: 8px;
+  background: var(--clay); color: var(--ivory); font-size: 9.5px; font-weight: 700;
+  display: grid; place-items: center; padding: 0 4px; font-family: Alegreya, serif;
+}
+
+.tablet .content { flex: 1; padding: 16px 16px 12px; overflow: hidden; display: flex; flex-direction: column; }
+
+.panel-h { display: flex; align-items: center; gap: 9px; padding-bottom: 9px; border-bottom: 1px solid var(--ink-12); }
+.panel-h svg { width: 19px; height: 19px; stroke: var(--ink); fill: none; stroke-width: 1.6; }
+.panel-h h2 { font-family: Cinzel, serif; font-size: 15px; font-weight: 700; letter-spacing: 0.1em; }
+.panel-h .count { margin-left: auto; font-size: 12.5px; color: var(--ink-48); font-weight: 600; }
+
+/* empire summary strip */
+.empire { display: flex; justify-content: space-between; padding: 12px 2px; }
+.est { display: flex; align-items: baseline; gap: 5px; }
+.est svg { width: 17px; height: 17px; align-self: center; stroke: var(--ink-66); fill: none; stroke-width: 1.6; }
+.est b { font-size: 19px; font-weight: 800; }
+.est span { font-size: 12px; color: var(--ink-48); font-weight: 600; }
+
+/* effect slips */
+.fx-slip {
+  border-left: 3px solid var(--pos);
+  background: rgb(94 110 58 / 0.1);
+  padding: 7px 10px; border-radius: 0 3px 3px 0;
+  margin: 2px 0 10px;
+}
+.fx-slip.bad { border-color: var(--neg); background: rgb(143 46 19 / 0.09); }
+.fx-slip b { font-family: Cinzel, serif; font-size: 11px; letter-spacing: 0.08em; display: block; }
+.fx-slip .line { font-size: 13px; }
+.fx-slip .line .up { color: var(--pos); font-weight: 700; }
+.fx-slip .line .down { color: var(--neg); font-weight: 700; }
+.fx-slip .until { font-size: 11.5px; color: var(--ink-48); }
+
+/* settlement rows */
+.city-card { padding: 12px 2px 10px; border-bottom: 1px solid var(--ink-12); }
+.city-card .id { display: flex; align-items: center; gap: 9px; }
+.seal { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  box-shadow: inset 0 0 0 1.5px rgb(255 248 231 / 0.9), 0 0 0 1px rgb(24 18 16 / 0.6); }
+.seal svg { width: 14px; height: 14px; stroke: var(--ivory); fill: none; stroke-width: 1.6; }
+.city-card .id b { font-family: Cinzel, serif; font-size: 13.5px; font-weight: 700; letter-spacing: 0.06em; }
+.city-card .id span { font-size: 11.5px; color: var(--ink-48); }
+.city-card .meters { margin-left: auto; display: flex; gap: 12px; }
+.meter { display: flex; align-items: baseline; gap: 4px; }
+.meter svg { width: 14px; height: 14px; align-self: center; stroke: var(--ink-66); fill: none; stroke-width: 1.6; }
+.meter b { font-size: 15px; font-weight: 800; }
+.meter small { font-size: 11px; color: var(--ink-48); font-weight: 700; }
+.income { display: flex; gap: 13px; margin-top: 8px; padding-left: 35px; }
+.inc { display: flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 800; }
+.inc .icon { width: 15px; height: 15px; background: var(--ink-66);
+  -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+.inc.up { color: var(--pos); } .inc.up .icon { background: var(--pos); }
+.inc.down { color: var(--neg); } .inc.down .icon { background: var(--neg); }
+
+/* chronicle */
+.chron-season { font-family: Cinzel, serif; font-size: 10.5px; letter-spacing: 0.18em; color: var(--ink-48);
+  margin: 13px 0 4px; padding-bottom: 4px; border-bottom: 1px solid var(--ink-12); }
+.entry { font-size: 13.5px; line-height: 1.42; padding: 6px 0; }
+.entry .up { color: var(--pos); font-weight: 700; }
+.entry .down { color: var(--neg); font-weight: 700; }
+.entry .who { font-weight: 700; }
+.entry em { color: var(--ink-66); }
+
+/* board svg */
+.board-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; }
+.hex-yield { font-family: Alegreya, serif; font-weight: 800; font-size: 17px; fill: rgb(36 25 16 / 0.82); }
+.hex-name { font-family: Cinzel, serif; font-weight: 700; font-size: 10.5px; letter-spacing: 0.08em; fill: var(--ink); }
+
+/* map chrome (zoom, mode) */
+.map-chrome { position: absolute; left: 322px; bottom: 14px; z-index: 25; display: flex; gap: 8px; }
+.map-chrome button {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--lacquer); color: var(--ivory);
+  border: 1px solid rgb(255 248 231 / 0.3);
+  font-size: 17px; cursor: pointer; box-shadow: 0 2px 8px rgb(0 0 0 / 0.4);
+  display: grid; place-items: center;
+}
+
+/* ---------- ceremony (modals) ---------- */
+.scrim {
+  position: absolute; inset: 0; z-index: 100;
+  background: radial-gradient(ellipse at center, rgb(24 18 16 / 0.62) 0%, rgb(24 18 16 / 0.88) 100%);
+  display: grid; place-items: center;
+}

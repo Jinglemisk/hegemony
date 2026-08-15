@@ -1,0 +1,586 @@
+<meta charset="utf-8">
+<title>Hegemony — panel components</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto.css">
+<style>
+  html, body { width: auto; height: auto; overflow: auto; }
+  body { background: #241b16; padding: 30px; display: flex; gap: 26px; flex-wrap: wrap; align-items: flex-start; }
+
+  .pane { width: 306px; background: var(--bone); display: flex;
+    box-shadow: 0 2px 0 #cbb58e, 0 10px 34px rgb(0 0 0 / .5); }
+  .pane .tabrail { width: 44px; }
+  .pane .content { flex: 1; padding: 14px 14px 16px; display: flex; flex-direction: column; min-height: 780px; }
+
+  /* ── shared bits ── */
+  .alarm {
+    background: linear-gradient(180deg, #8f2e13, #7a2610); color: var(--ivory);
+    border-radius: 5px; padding: 12px 14px 11px; margin: 12px 0;
+    box-shadow: inset 0 1px 0 rgb(255 248 231 / .25), 0 3px 10px rgb(143 46 19 / .4);
+  }
+  .alarm .row1 { display: flex; align-items: center; gap: 10px; }
+  .alarm svg { width: 30px; height: 30px; stroke: var(--ivory); fill: none; stroke-width: 2; stroke-linecap: round; flex: none; }
+  .alarm .n { font-size: 32px; font-weight: 800; line-height: 1; }
+  .alarm .w { font-family: Cinzel, serif; font-size: 12.5px; font-weight: 700; letter-spacing: .14em; line-height: 1.3; }
+  .alarm .sub { font-size: 12px; color: rgb(255 248 231 / .75); margin-top: 6px; font-style: italic; }
+
+  .sect { font-family: Cinzel, serif; font-size: 10px; font-weight: 700; letter-spacing: .22em;
+    color: var(--ink-48); margin: 14px 0 8px; padding-bottom: 5px; border-bottom: 1px solid var(--ink-12); }
+
+  /* ladder tiers */
+  .tier { display: flex; align-items: center; gap: 10px; padding: 11px 4px; border-bottom: 1px solid var(--ink-12); }
+  .tier .fig { width: 38px; height: 38px; border-radius: 50%; background: var(--slip); flex: none;
+    display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px rgb(36 25 16 / .35); }
+  .tier .fig svg { width: 22px; height: 22px; stroke: var(--ink); fill: none; stroke-width: 1.6; }
+  .tier .who b { font-family: Cinzel, serif; font-size: 12.5px; letter-spacing: .08em; display: block; }
+  .tier .who .inc { font-size: 13.5px; display: flex; gap: 9px; margin-top: 2px; }
+  .tier .who .inc span { display: inline-flex; align-items: center; gap: 3px; font-weight: 800; }
+  .tier .who .inc .up { color: var(--pos); } .tier .who .inc .down { color: var(--neg); }
+  .tier .who .inc .icon { width: 13px; height: 13px; background: currentColor;
+    -webkit-mask: var(--m) center/contain no-repeat; mask: var(--m) center/contain no-repeat; }
+  .tier .count { margin-left: auto; font-size: 26px; font-weight: 800; }
+  .rung { display: flex; justify-content: center; padding: 3px 0; }
+  .rung button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--ink-30);
+    background: var(--ivory); border-radius: 14px; padding: 3px 12px; font-family: Alegreya, serif;
+    font-size: 12.5px; font-weight: 700; color: var(--ink); cursor: pointer; }
+  .rung button svg { width: 12px; height: 12px; stroke: var(--clay); stroke-width: 2.2; fill: none; }
+  .rung button .ci { width: 12px; height: 12px; }
+
+  .netrow { margin-top: auto; border-top: 2px solid var(--ink); padding-top: 10px;
+    display: flex; align-items: baseline; gap: 12px; }
+  .netrow .k { font-family: Cinzel, serif; font-size: 10.5px; letter-spacing: .18em; }
+  .netrow .vals { display: flex; gap: 11px; margin-left: auto; }
+  .netrow .vals span { font-size: 17px; font-weight: 800; display: inline-flex; align-items: center; gap: 3px; }
+  .netrow .up { color: var(--pos); } .netrow .down { color: var(--neg); }
+  .netrow .icon { width: 14px; height: 14px; background: currentColor;
+    -webkit-mask: var(--m) center/contain no-repeat; mask: var(--m) center/contain no-repeat; }
+
+  /* city card expanded */
+  .cityx { padding: 12px 2px; border-bottom: 1px solid var(--ink-12); }
+  .cityx .id { display: flex; align-items: center; gap: 9px; }
+  .cityx .id .nm b { font-family: Cinzel, serif; font-size: 14.5px; letter-spacing: .06em; display: block; }
+  .cityx .id .nm span { font-size: 11.5px; color: var(--ink-48); }
+  .beads { display: flex; gap: 4px; margin: 9px 0 3px; align-items: center; }
+  .beads i { width: 11px; height: 11px; border-radius: 50%; }
+  .beads i.cit { background: var(--ivory); box-shadow: inset 0 0 0 1.2px rgb(36 25 16 / .6); }
+  .beads i.fre { background: none; box-shadow: inset 0 0 0 2px rgb(36 25 16 / .55); }
+  .beads i.sla { background: var(--lacquer); }
+  .beads i.empty { background: none; box-shadow: inset 0 0 0 1px rgb(36 25 16 / .2); }
+  .beads .cap { font-size: 12px; color: var(--ink-48); margin-left: 5px; font-weight: 700; }
+  .sockets { display: flex; gap: 7px; margin: 7px 0 4px; align-items: center; }
+  .socket { width: 34px; height: 34px; border-radius: 4px; display: grid; place-items: center; }
+  .socket.built { background: var(--ivory); box-shadow: inset 0 0 0 1.4px rgb(36 25 16 / .5); }
+  .socket.built svg { width: 20px; height: 20px; stroke: var(--ink); fill: none; stroke-width: 1.6; }
+  .socket.open { border: 1.6px dashed var(--ink-30); }
+  .sockets .cap { font-size: 12px; color: var(--ink-48); margin-left: 4px; font-weight: 700; }
+
+  /* build cards */
+  .bcard { border: 1px solid var(--ink-12); background: var(--ivory); border-radius: 6px;
+    padding: 11px 12px 10px; margin-bottom: 10px; }
+  .bcard .top { display: flex; align-items: center; gap: 10px; }
+  .bcard .tile { width: 40px; height: 40px; border-radius: 5px; background: var(--bone); flex: none;
+    display: grid; place-items: center; box-shadow: inset 0 0 0 1.4px rgb(36 25 16 / .4); }
+  .bcard .tile svg { width: 24px; height: 24px; stroke: var(--ink); fill: none; stroke-width: 1.6; }
+  .bcard .top b { font-family: Cinzel, serif; font-size: 13.5px; letter-spacing: .06em; display: block; }
+  .bcard .fx { font-size: 13px; color: var(--ink-66); display: flex; align-items: center; gap: 4px; margin-top: 1px; }
+  .bcard .fx .up { color: var(--pos); font-weight: 800; }
+  .bcard .fx .icon { width: 13px; height: 13px; background: var(--pos);
+    -webkit-mask: var(--m) center/contain no-repeat; mask: var(--m) center/contain no-repeat; }
+  .bcard .cost { margin-left: auto; text-align: right; }
+  .bcard .cost span { display: inline-flex; align-items: center; gap: 3px; font-size: 15px; font-weight: 800; }
+  .bcard .cost .icon { width: 14px; height: 14px; background: currentColor;
+    -webkit-mask: var(--m) center/contain no-repeat; mask: var(--m) center/contain no-repeat; }
+  .bcard .cost .short { color: var(--neg); }
+  .bcard .targets { display: flex; gap: 7px; margin-top: 9px; }
+  .bcard .targets button { flex: 1; font-family: Cinzel, serif; font-size: 11px; font-weight: 700;
+    letter-spacing: .1em; border: none; border-radius: 4px; padding: 8px 0; cursor: pointer;
+    background: linear-gradient(180deg, #cd5124, var(--clay) 55%, #a93c17); color: var(--ivory);
+    box-shadow: inset 0 1px 0 rgb(255 248 231 / .3); }
+  .bcard .targets button.ghost { background: none; box-shadow: inset 0 0 0 1.4px var(--ink-30); color: var(--ink-66); }
+  .bcard.blocked { opacity: .55; }
+  .bcard.blocked .cost .short { opacity: 1; }
+  .bcard.blocked .targets button { background: var(--ink-12); color: var(--ink-48); box-shadow: none; cursor: not-allowed; }
+
+  /* market rows */
+  .mrow { display: flex; align-items: center; gap: 10px; padding: 13px 2px; border-bottom: 1px solid var(--ink-12); }
+  .mrow .icon-lg { width: 26px; height: 26px; background: var(--ink); flex: none;
+    -webkit-mask: var(--m) center/contain no-repeat; mask: var(--m) center/contain no-repeat; }
+  .mrow .held { font-size: 22px; font-weight: 800; width: 44px; }
+  .mrow .held small { display: block; font-size: 10px; font-weight: 700; letter-spacing: .14em;
+    color: var(--ink-48); font-family: Cinzel, serif; }
+  .mrow .trade { display: flex; gap: 7px; margin-left: auto; }
+  .mrow .trade button { display: flex; flex-direction: column; align-items: center; border-radius: 5px;
+    border: none; cursor: pointer; padding: 7px 11px 6px; font-family: Alegreya, serif; }
+  .mrow .trade .sell { background: var(--lacquer); color: var(--ivory); }
+  .mrow .trade .buy { background: none; box-shadow: inset 0 0 0 1.4px var(--ink-30); color: var(--ink); }
+  .mrow .trade b { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 3px; }
+  .mrow .trade small { font-size: 9px; font-weight: 700; letter-spacing: .16em; font-family: Cinzel, serif; opacity: .7; }
+  .mrow .trade .icon { width: 12px; height: 12px; background: currentColor;
+    -webkit-mask: var(--m) center/contain no-repeat; mask: var(--m) center/contain no-repeat; }
+  .treasury { margin-top: auto; display: flex; align-items: baseline; gap: 10px; border-top: 2px solid var(--ink);
+    padding-top: 12px; }
+  .treasury .k { font-family: Cinzel, serif; font-size: 10.5px; letter-spacing: .18em; }
+  .treasury .v { margin-left: auto; font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 7px; }
+  .treasury .icon { width: 20px; height: 20px; background: var(--ink);
+    -webkit-mask: var(--m) center/contain no-repeat; mask: var(--m) center/contain no-repeat; }
+
+  /* victory laurels */
+  .heldline { display: flex; align-items: baseline; gap: 10px; padding: 12px 2px 14px; }
+  .heldline .big { font-size: 40px; font-weight: 800; line-height: 1; }
+  .heldline .big small { font-size: 20px; color: var(--ink-48); }
+  .heldline .lbl { font-family: Cinzel, serif; font-size: 11px; letter-spacing: .18em; color: var(--ink-66); line-height: 1.5; }
+  .vcard { border: 1px solid var(--ink-12); background: var(--ivory); border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 9px; position: relative; }
+  .vcard .nm { display: flex; align-items: center; gap: 8px; }
+  .vcard .nm svg { width: 17px; height: 17px; stroke: var(--ink-66); fill: none; stroke-width: 1.5; flex: none; }
+  .vcard .nm b { font-family: Cinzel, serif; font-size: 13px; letter-spacing: .06em; }
+  .vcard .req { font-size: 12px; color: var(--ink-48); margin: 2px 0 7px 25px; }
+  .vcard .race { display: flex; align-items: center; gap: 7px; margin-left: 25px; }
+  .vcard .race .glaze { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+    color: var(--ivory); font-family: Cinzel, serif; font-size: 9px; font-weight: 700;
+    box-shadow: inset 0 0 0 1.2px rgb(255 248 231 / .85), 0 0 0 1px rgb(36 25 16 / .4); }
+  .vcard .race .lead { font-size: 15px; font-weight: 800; }
+  .vcard .race .lead small { color: var(--ink-48); font-weight: 700; }
+  .vcard .race .meter { flex: 1; height: 5px; border-radius: 3px; background: var(--ink-12); overflow: hidden; }
+  .vcard .race .meter i { display: block; height: 100%; background: var(--warn); }
+  .vcard.held { border-color: var(--pos); box-shadow: 0 0 0 1px var(--pos); }
+  .vcard.held::after { content: "HELD"; position: absolute; top: 9px; right: 10px; font-family: Cinzel, serif;
+    font-size: 9px; letter-spacing: .2em; color: var(--pos); font-weight: 700; }
+
+  /* agora */
+  .voicebox { display: flex; align-items: center; gap: 10px; background: var(--ivory);
+    border: 1px solid var(--ink-12); border-radius: 6px; padding: 11px 13px; margin: 12px 0 2px; }
+  .voicebox svg { width: 22px; height: 22px; stroke: var(--aegean); fill: none; stroke-width: 1.7; flex: none; }
+  .voicebox b { font-family: Cinzel, serif; font-size: 12.5px; letter-spacing: .1em; display: block; }
+  .voicebox span { font-size: 12px; color: var(--ink-48); font-style: italic; }
+  .lawslab { border-left: 3px solid var(--aegean); background: rgb(31 105 119 / .08);
+    border-radius: 0 4px 4px 0; padding: 9px 12px; margin-bottom: 8px; }
+  .lawslab b { font-family: Cinzel, serif; font-size: 12.5px; letter-spacing: .06em; display: block; }
+  .lawslab .fx { font-size: 12.5px; color: var(--ink-66); margin-top: 1px; }
+  .lawslab .fx .up { color: var(--pos); font-weight: 800; } .lawslab .fx .down { color: var(--neg); font-weight: 800; }
+  .lawslab.empty { border-style: none; border-left: 3px dashed var(--ink-30); background: none;
+    font-size: 12px; color: var(--ink-48); font-style: italic; padding: 8px 12px; }
+  .pol { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--ink-12); }
+  .pol .med { width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    box-shadow: inset 0 0 0 1.6px rgb(255 248 231 / .85), 0 0 0 1px rgb(36 25 16 / .4); }
+  .pol .med svg { width: 19px; height: 19px; stroke: var(--ivory); fill: none; stroke-width: 1.6; }
+  .pol .who b { font-family: Cinzel, serif; font-size: 12.5px; letter-spacing: .07em; display: block; }
+  .pol .who span { font-family: Cinzel, serif; font-size: 8.5px; letter-spacing: .16em; color: var(--clay); }
+  .pol .stele-dots { margin-left: auto; display: flex; gap: 4px; }
+  .pol .stele-dots i { width: 8px; height: 11px; border-radius: 1.5px; background: var(--ink-12); }
+  .pol .stele-dots i.won { background: var(--aegean); }
+
+  /* chronicle */
+  .filters { display: flex; gap: 6px; padding: 11px 0 3px; align-items: center; }
+  .filters .f { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+    font-family: Cinzel, serif; font-size: 10px; font-weight: 700; color: var(--ivory); cursor: pointer;
+    box-shadow: inset 0 0 0 1.3px rgb(255 248 231 / .8), 0 0 0 1px rgb(36 25 16 / .35); opacity: .45; }
+  .filters .all { background: var(--lacquer); opacity: 1; box-shadow: 0 0 0 2px var(--clay); }
+</style>
+
+<!-- ═══ CITIES ═══ -->
+<div class="pane" id="p-cities">
+  <nav class="tabrail">
+    <button class="tab on"><svg viewBox="0 0 24 24"><path d="M4 20h16M5 20V9m4 11V9m6 11V9m4 11V9M3 9l9-5 9 5z"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c.7-4 3.2-6 6.5-6s5.8 2 6.5 6"/></svg><span class="badge">6</span></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><rect x="4" y="12" width="7" height="8"/><rect x="13" y="6" width="7" height="14"/><path d="M7.5 12V8.5L11 6"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M12 4v3m0 0L5 9m7-2 7 2M5 9l-2 5h6L7 9zm14 0-2 5h6l-2-5zM12 7v13m-4 0h8"/></svg></button>
+  </nav>
+  <div class="content">
+    <div class="panel-h">
+      <svg viewBox="0 0 24 24"><path d="M4 20h16M5 20V9m4 11V9m6 11V9m4 11V9M3 9l9-5 9 5z"/></svg>
+      <h2>Cities</h2>
+    </div>
+    <div class="empire num">
+      <div class="est"><b>1</b><span>city</span></div>
+      <div class="est"><b>1</b><span>colony</span></div>
+      <div class="est"><b>5</b><span>/14</span></div>
+      <div class="est"><b>0</b><span>/3</span></div>
+    </div>
+
+    <div class="alarm num">
+      <div class="row1">
+        <svg viewBox="0 0 24 24"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11zM8.5 11.5l2 1.2m5-1.2-2 1.2M8 16.5c1.2-1.3 2.5-2 4-2s2.8.7 4 2"/></svg>
+        <span class="n">−22</span>
+        <span class="w">REVOLT — THE RIOT TABLE ROLLS EVERY TURN</span>
+      </div>
+      <div class="sub">until happiness climbs back above the mob's patience</div>
+    </div>
+
+    <div class="cityx">
+      <div class="id">
+        <span class="seal" style="background:var(--kyanos)"><svg viewBox="0 0 24 24"><path d="M5 20h14M7 20v-8m4 8v-8m4 8v-8m4 8v-8M4 12l8-6 8 6z"/></svg></span>
+        <div class="nm"><b>ARGOS</b><span>city · the hill country</span></div>
+        <div class="meters num" style="margin-left:auto"><div class="meter"><b>0</b><small>/10</small></div></div>
+      </div>
+      <div class="beads">
+        <i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i>
+        <span class="cap">the city stands empty — starvation</span>
+      </div>
+      <div class="sockets">
+        <span class="socket built"><svg viewBox="0 0 24 24"><path d="M4 10h16M5 10V6h14v4M6 10v10h12V10m-9 4h6"/></svg></span>
+        <span class="socket open"></span>
+        <span class="socket open"></span>
+        <span class="cap">1 of 3 built</span>
+      </div>
+      <div class="income num">
+        <span class="inc up"><i class="icon" style="--m:url('/assets/resource-icons/wood-mask.png')"></i>+3</span>
+        <span class="inc down"><svg class="happy-ic" viewBox="0 0 24 24"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11zM8.5 10.5v1.8M15.5 10.5v1.8M8 15c1.2 1.3 2.5 2 4 2s2.8-.7 4-2"/></svg>−2</span>
+      </div>
+    </div>
+
+    <div class="cityx">
+      <div class="id">
+        <span class="seal" style="background:var(--kyanos)"><svg viewBox="0 0 24 24"><path d="M7 21V4m0 1h9l-2.5 3L16 11H7"/></svg></span>
+        <div class="nm"><b>THERMON</b><span>colony · the west shore</span></div>
+        <div class="meters num" style="margin-left:auto"><div class="meter"><b>1</b><small>/4</small></div></div>
+      </div>
+      <div class="beads"><i class="fre"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i></div>
+      <div class="income num">
+        <span class="inc up"><i class="icon" style="--m:url('/assets/resource-icons/wood-mask.png')"></i>+2</span>
+        <span class="inc up"><i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i>+2</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ POPS ═══ -->
+<div class="pane" id="p-pops">
+  <nav class="tabrail">
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M4 20h16M5 20V9m4 11V9m6 11V9m4 11V9M3 9l9-5 9 5z"/></svg></button>
+    <button class="tab on"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c.7-4 3.2-6 6.5-6s5.8 2 6.5 6"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><rect x="4" y="12" width="7" height="8"/><rect x="13" y="6" width="7" height="14"/><path d="M7.5 12V8.5L11 6"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M12 4v3m0 0L5 9m7-2 7 2M5 9l-2 5h6L7 9zm14 0-2 5h6l-2-5zM12 7v13m-4 0h8"/></svg></button>
+  </nav>
+  <div class="content">
+    <div class="panel-h">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c.7-4 3.2-6 6.5-6s5.8 2 6.5 6"/></svg>
+      <h2>The Ladder</h2>
+    </div>
+
+    <div class="sect">SOCIAL ORDER · TOP TO BOTTOM</div>
+
+    <div class="tier">
+      <span class="fig"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M6 20c.8-3.6 3-5.4 6-5.4s5.2 1.8 6 5.4M5 6c2-2 4-3 7-3s5 1 7 3"/></svg></span>
+      <div class="who"><b>CITIZENS</b>
+        <div class="inc num"><span class="up"><i class="icon" style="--m:url('/assets/resource-icons/influence-mask.png')"></i>+1</span><span class="up">+1 <svg class="happy-ic" viewBox="0 0 24 24"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11zM8.5 10.5v1.8M15.5 10.5v1.8M8 15c1.2 1.3 2.5 2 4 2s2.8-.7 4-2"/></svg></span></div>
+      </div>
+      <span class="count num">0</span>
+    </div>
+    <div class="rung"><button><svg viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>PROMOTE · 4<i class="ci" style="--m:url('/assets/resource-icons/gold-mask.png')"></i>2<i class="ci" style="--m:url('/assets/resource-icons/influence-mask.png')"></i></button></div>
+
+    <div class="tier">
+      <span class="fig"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M6 20c.8-3.6 3-5.4 6-5.4s5.2 1.8 6 5.4"/></svg></span>
+      <div class="who"><b>FREEMEN</b>
+        <div class="inc num"><span class="up"><i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i>+10</span><span class="down"><i class="icon" style="--m:url('/assets/resource-icons/food-mask.png')"></i>−5</span></div>
+      </div>
+      <span class="count num">5</span>
+    </div>
+    <div class="rung"><button><svg viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>FREE · 6<i class="ci" style="--m:url('/assets/resource-icons/gold-mask.png')"></i></button></div>
+
+    <div class="tier" style="border-bottom:none">
+      <span class="fig" style="background:var(--lacquer)"><svg viewBox="0 0 24 24" style="stroke:var(--ivory)"><circle cx="12" cy="9" r="4"/><path d="M6 20c.8-3.6 3-5.4 6-5.4s5.2 1.8 6 5.4M8 12l8 2"/></svg></span>
+      <div class="who"><b>SLAVES</b>
+        <div class="inc num"><span class="down">−0.5 <svg class="happy-ic" viewBox="0 0 24 24"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11zM8.5 10.5v1.8M15.5 10.5v1.8M8 15c1.2 1.3 2.5 2 4 2s2.8-.7 4-2"/></svg> each</span></div>
+      </div>
+      <span class="count num">1</span>
+    </div>
+
+    <div class="sect" style="margin-top:22px">WHERE THEY LIVE</div>
+    <div class="tier" style="padding:8px 4px">
+      <span class="seal" style="background:var(--kyanos)"><svg viewBox="0 0 24 24"><path d="M5 20h14M7 20v-8m4 8v-8m4 8v-8m4 8v-8M4 12l8-6 8 6z"/></svg></span>
+      <div class="who"><b>ARGOS</b></div>
+      <div class="beads" style="margin:0 0 0 auto"><i class="fre"></i><i class="fre"></i><i class="fre"></i><i class="sla"></i></div>
+    </div>
+    <div class="tier" style="padding:8px 4px; border-bottom:none">
+      <span class="seal" style="background:var(--kyanos)"><svg viewBox="0 0 24 24"><path d="M7 21V4m0 1h9l-2.5 3L16 11H7"/></svg></span>
+      <div class="who"><b>THERMON</b></div>
+      <div class="beads" style="margin:0 0 0 auto"><i class="fre"></i><i class="fre"></i></div>
+    </div>
+
+    <div class="netrow num">
+      <span class="k">NET / TURN</span>
+      <div class="vals">
+        <span class="up"><i class="icon" style="--m:url('/assets/resource-icons/wood-mask.png')"></i>+5</span>
+        <span class="up"><i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i>+10</span>
+        <span class="down"><i class="icon" style="--m:url('/assets/resource-icons/food-mask.png')"></i>−5</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BUILD ═══ -->
+<div class="pane" id="p-build">
+  <nav class="tabrail">
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M4 20h16M5 20V9m4 11V9m6 11V9m4 11V9M3 9l9-5 9 5z"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c.7-4 3.2-6 6.5-6s5.8 2 6.5 6"/></svg></button>
+    <button class="tab on"><svg viewBox="0 0 24 24"><rect x="4" y="12" width="7" height="8"/><rect x="13" y="6" width="7" height="14"/><path d="M7.5 12V8.5L11 6"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M12 4v3m0 0L5 9m7-2 7 2M5 9l-2 5h6L7 9zm14 0-2 5h6l-2-5zM12 7v13m-4 0h8"/></svg></button>
+  </nav>
+  <div class="content">
+    <div class="panel-h">
+      <svg viewBox="0 0 24 24"><rect x="4" y="12" width="7" height="8"/><rect x="13" y="6" width="7" height="14"/><path d="M7.5 12V8.5L11 6"/></svg>
+      <h2>Build</h2>
+    </div>
+    <div class="sect">RAISE IN AN OPEN SLOT · ARGOS HAS 2</div>
+
+    <div class="bcard">
+      <div class="top">
+        <span class="tile"><svg viewBox="0 0 24 24"><path d="M4 10h16M5 10V6h14v4M6 10v10h12V10m-9 4h6"/></svg></span>
+        <div><b>MARKETPLACE</b>
+          <span class="fx num"><i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i><span class="up">+2</span>&nbsp;per freeman, up to 3</span></div>
+        <div class="cost num"><span><i class="icon" style="--m:url('/assets/resource-icons/wood-mask.png')"></i>12</span></div>
+      </div>
+      <div class="targets"><button>RAISE IN ARGOS</button></div>
+    </div>
+
+    <div class="bcard">
+      <div class="top">
+        <span class="tile"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V10m4 10V10m4 10V10m4 10V10M3 10l9-6 9 6z"/></svg></span>
+        <div><b>TEMPLE</b>
+          <span class="fx num"><span class="up">+1</span>&nbsp;<svg class="happy-ic" viewBox="0 0 24 24" style="color:var(--pos)"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11zM8.5 10.5v1.8M15.5 10.5v1.8M8 15c1.2 1.3 2.5 2 4 2s2.8-.7 4-2"/></svg>&nbsp;·&nbsp;<i class="icon" style="--m:url('/assets/resource-icons/influence-mask.png')"></i><span class="up">+1</span>&nbsp;per citizen</span></div>
+        <div class="cost num"><span><i class="icon" style="--m:url('/assets/resource-icons/stone-mask.png')"></i>6</span></div>
+      </div>
+      <div class="targets"><button>RAISE IN ARGOS</button></div>
+    </div>
+
+    <div class="bcard blocked">
+      <div class="top">
+        <span class="tile"><svg viewBox="0 0 24 24"><path d="M5 20V9l7-5 7 5v11M9 20v-6h6v6M5 20h14"/></svg></span>
+        <div><b>GRANARY</b>
+          <span class="fx num"><i class="icon" style="--m:url('/assets/resource-icons/food-mask.png')"></i><span class="up">+2</span>&nbsp;per turn</span></div>
+        <div class="cost num"><span><i class="icon" style="--m:url('/assets/resource-icons/wood-mask.png')"></i>12</span> <span class="short"><i class="icon" style="--m:url('/assets/resource-icons/stone-mask.png')"></i>2</span></div>
+      </div>
+      <div class="targets"><button>NEEDS 2 MORE STONE</button></div>
+    </div>
+
+    <div class="bcard">
+      <div class="top">
+        <span class="tile"><svg viewBox="0 0 24 24"><path d="M4 19c2-6 6-9 8-9s6 3 8 9M12 10V5m-3 2.5L12 5l3 2.5"/></svg></span>
+        <div><b>ODEON</b>
+          <span class="fx num"><span class="up">+2</span>&nbsp;<svg class="happy-ic" viewBox="0 0 24 24" style="color:var(--pos)"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11zM8.5 10.5v1.8M15.5 10.5v1.8M8 15c1.2 1.3 2.5 2 4 2s2.8-.7 4-2"/></svg></span></div>
+        <div class="cost num"><span><i class="icon" style="--m:url('/assets/resource-icons/stone-mask.png')"></i>8</span> <span><i class="icon" style="--m:url('/assets/resource-icons/wood-mask.png')"></i>4</span></div>
+      </div>
+      <div class="targets"><button>RAISE IN ARGOS</button><button class="ghost">THERMON · NO SLOT</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MARKET ═══ -->
+<div class="pane" id="p-market">
+  <nav class="tabrail">
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M4 20h16M5 20V9m4 11V9m6 11V9m4 11V9M3 9l9-5 9 5z"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c.7-4 3.2-6 6.5-6s5.8 2 6.5 6"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><rect x="4" y="12" width="7" height="8"/><rect x="13" y="6" width="7" height="14"/><path d="M7.5 12V8.5L11 6"/></svg></button>
+    <button class="tab on"><svg viewBox="0 0 24 24"><path d="M12 4v3m0 0L5 9m7-2 7 2M5 9l-2 5h6L7 9zm14 0-2 5h6l-2-5zM12 7v13m-4 0h8"/></svg></button>
+  </nav>
+  <div class="content">
+    <div class="panel-h">
+      <svg viewBox="0 0 24 24"><path d="M12 4v3m0 0L5 9m7-2 7 2M5 9l-2 5h6L7 9zm14 0-2 5h6l-2-5zM12 7v13m-4 0h8"/></svg>
+      <h2>Market</h2>
+    </div>
+    <div class="sect">THE BANK'S STANDING RATES</div>
+
+    <div class="mrow num">
+      <i class="icon-lg" style="--m:url('/assets/resource-icons/wood-mask.png')"></i>
+      <div class="held">16<small>HELD</small></div>
+      <div class="trade">
+        <button class="sell"><b>4 → 1<i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i></b><small>SELL</small></button>
+        <button class="buy"><b>2<i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i> → 1</b><small>BUY</small></button>
+      </div>
+    </div>
+
+    <div class="mrow num">
+      <i class="icon-lg" style="--m:url('/assets/resource-icons/stone-mask.png')"></i>
+      <div class="held">14<small>HELD</small></div>
+      <div class="trade">
+        <button class="sell"><b>3 → 1<i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i></b><small>SELL</small></button>
+        <button class="buy"><b>2<i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i> → 1</b><small>BUY</small></button>
+      </div>
+    </div>
+
+    <div class="mrow num" style="border-bottom:none">
+      <i class="icon-lg" style="--m:url('/assets/resource-icons/food-mask.png')"></i>
+      <div class="held" style="color:var(--neg)">−7<small style="color:var(--neg)">DEFICIT</small></div>
+      <div class="trade">
+        <button class="sell" style="opacity:.35"><b>3 → 1<i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i></b><small>SELL</small></button>
+        <button class="buy" style="box-shadow: inset 0 0 0 2px var(--clay); color: var(--clay)"><b>2<i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i> → 1</b><small>BUY</small></button>
+      </div>
+    </div>
+
+    <div class="treasury num">
+      <span class="k">TREASURY</span>
+      <span class="v"><i class="icon" style="--m:url('/assets/resource-icons/gold-mask.png')"></i>29</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VICTORY ═══ -->
+<div class="pane" id="p-victory">
+  <nav class="tabrail">
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M7 4h10a2 2 0 0 1 2 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 0 1 2-2z"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 2-2h12v16H7a2 2 0 0 0-2 2z"/><path d="M5 19V5"/></svg></button>
+    <button class="tab on"><svg viewBox="0 0 24 24"><path d="M12 3c1 4 4 6 8 6-3 2-4 5-3 9-3-2-7-2-10 0 1-4 0-7-3-9 4 0 7-2 8-6z"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V10m4 10V10m4 10V10m4 10V10M3 10l9-6 9 6z"/></svg></button>
+  </nav>
+  <div class="content">
+    <div class="panel-h">
+      <svg viewBox="0 0 24 24"><path d="M12 3c1 4 4 6 8 6-3 2-4 5-3 9-3-2-7-2-10 0 1-4 0-7-3-9 4 0 7-2 8-6z"/></svg>
+      <h2>Victory</h2>
+    </div>
+
+    <div class="heldline num">
+      <span class="big">0<small>/3</small></span>
+      <span class="lbl">LAURELS HELD ·<br>THREE AT DAWN WINS</span>
+    </div>
+
+    <div class="vcard">
+      <div class="nm"><svg viewBox="0 0 24 24"><path d="M4 20h16M5 20V9m4 11V9m6 11V9m4 11V9M3 9l9-5 9 5z"/></svg><b>POLIS BUILDER</b></div>
+      <div class="req num">most cities · min 3</div>
+      <div class="race num">
+        <span class="glaze" style="background:var(--kyanos)">Δ</span>
+        <span class="lead">1<small>/3</small></span>
+        <span class="meter"><i style="width:33%"></i></span>
+      </div>
+    </div>
+
+    <div class="vcard">
+      <div class="nm"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c.7-4 3.2-6 6.5-6s5.8 2 6.5 6"/></svg><b>DEMOS</b></div>
+      <div class="req num">most pops · min 16</div>
+      <div class="race num">
+        <span class="glaze" style="background:var(--porphyra)">Θ</span>
+        <span class="lead">9<small>/16</small></span>
+        <span class="meter"><i style="width:56%"></i></span>
+      </div>
+    </div>
+
+    <div class="vcard held">
+      <div class="nm"><svg viewBox="0 0 24 24"><path d="M12 4v10m0 0-3-3m3 3 3-3M5 20h14M7 20v-3h10v3"/></svg><b>TREASURER</b></div>
+      <div class="req num">largest stockpile · min 80</div>
+      <div class="race num">
+        <span class="glaze" style="background:var(--melichron)">Ν</span>
+        <span class="lead">88<small>/80</small></span>
+        <span class="meter"><i style="width:100%; background:var(--pos)"></i></span>
+      </div>
+    </div>
+
+    <div class="vcard">
+      <div class="nm"><svg viewBox="0 0 24 24"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11z"/></svg><b>BELOVED</b></div>
+      <div class="req num">highest happiness · min 10</div>
+      <div class="race num">
+        <span class="glaze" style="background:var(--kinnabari)">Κ</span>
+        <span class="lead">4<small>/10</small></span>
+        <span class="meter"><i style="width:40%"></i></span>
+      </div>
+    </div>
+
+    <div class="vcard">
+      <div class="nm"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M6 20c.8-3.6 3-5.4 6-5.4s5.2 1.8 6 5.4M5 6c2-2 4-3 7-3s5 1 7 3"/></svg><b>CIVIC ELITE</b></div>
+      <div class="req num">most citizens · min 8</div>
+      <div class="race num">
+        <span class="glaze" style="background:var(--porphyra)">Θ</span>
+        <span class="lead">4<small>/8</small></span>
+        <span class="meter"><i style="width:50%"></i></span>
+      </div>
+    </div>
+
+    <div class="vcard">
+      <div class="nm"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V10m4 10V10m4 10V10m4 10V10M3 10l9-6 9 6z"/></svg><b>VOICE OF THE ASSEMBLY</b></div>
+      <div class="req num">most laws authored · min 3</div>
+      <div class="race num">
+        <span class="glaze" style="background:var(--slip); color:var(--ink)">·</span>
+        <span class="lead">0<small>/3</small></span>
+        <span class="meter"><i style="width:0%"></i></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AGORA ═══ -->
+<div class="pane" id="p-agora">
+  <nav class="tabrail">
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M7 4h10a2 2 0 0 1 2 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 0 1 2-2z"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 2-2h12v16H7a2 2 0 0 0-2 2z"/><path d="M5 19V5"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M12 3c1 4 4 6 8 6-3 2-4 5-3 9-3-2-7-2-10 0 1-4 0-7-3-9 4 0 7-2 8-6z"/></svg></button>
+    <button class="tab on"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V10m4 10V10m4 10V10m4 10V10M3 10l9-6 9 6z"/></svg></button>
+  </nav>
+  <div class="content">
+    <div class="panel-h">
+      <svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V10m4 10V10m4 10V10m4 10V10M3 10l9-6 9 6z"/></svg>
+      <h2>Agora</h2>
+    </div>
+
+    <div class="voicebox">
+      <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm-6-3a6 6 0 0 0 12 0M12 18v3"/></svg>
+      <div><b>THE VOICE · UNHELD</b><span>first to three authored laws</span></div>
+    </div>
+
+    <div class="sect">STANDING LAWS · 1 OF 6</div>
+    <div class="lawslab">
+      <b>MANIFEST DESTINY</b>
+      <div class="fx num">founding <span class="up">−5 food</span> · city growth <span class="down">+1 food</span> · house law of Kleistophenes</div>
+    </div>
+    <div class="lawslab empty">five stelae stand empty</div>
+
+    <div class="sect">THE FOUR ORATORS</div>
+    <div class="pol">
+      <span class="med" style="background:var(--clay)"><svg viewBox="0 0 24 24"><path d="M12 21V9M12 12c0-3-2-4.5-4.5-4.5C7.5 10 9 12 12 12zm0 0c0-3 2-4.5 4.5-4.5C16.5 10 15 12 12 12z"/></svg></span>
+      <div class="who"><b>DEMOSTHENES</b><span>AGRICULTURAL REFORMER</span></div>
+      <div class="stele-dots"><i class="won"></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="pol">
+      <span class="med" style="background:var(--aegean)"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V10m4 10V10m4 10V10m4 10V10M3 10l9-6 9 6z"/></svg></span>
+      <div class="who"><b>PERDICCAS</b><span>URBAN PLANNER</span></div>
+      <div class="stele-dots"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="pol">
+      <span class="med" style="background:var(--pos)"><svg viewBox="0 0 24 24"><path d="M3 15c4 3 14 3 18 0M5 15V9l7-4v10m0-6 6 3v3"/></svg></span>
+      <div class="who"><b>KLEISTOPHENES</b><span>RURAL EXPANSIONIST</span></div>
+      <div class="stele-dots"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="pol" style="border-bottom:none">
+      <span class="med" style="background:var(--lacquer)"><svg viewBox="0 0 24 24"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11z"/></svg></span>
+      <div class="who"><b>STRATOKLES</b><span>CUNNING POPULIST</span></div>
+      <div class="stele-dots"><i></i><i></i><i></i><i></i></div>
+    </div>
+
+    <div class="netrow num" style="border-top-color:var(--ink-12)">
+      <span class="k">NEXT ASSEMBLY</span>
+      <span style="margin-left:auto; font-size:15px; font-weight:800">SPRING · YEAR III</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHRONICLE ═══ -->
+<div class="pane" id="p-chronicle">
+  <nav class="tabrail">
+    <button class="tab on"><svg viewBox="0 0 24 24"><path d="M7 4h10a2 2 0 0 1 2 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 0 1 2-2z"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 2-2h12v16H7a2 2 0 0 0-2 2z"/><path d="M5 19V5"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M12 3c1 4 4 6 8 6-3 2-4 5-3 9-3-2-7-2-10 0 1-4 0-7-3-9 4 0 7-2 8-6z"/></svg></button>
+    <button class="tab"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V10m4 10V10m4 10V10m4 10V10M3 10l9-6 9 6z"/></svg></button>
+  </nav>
+  <div class="content">
+    <div class="panel-h">
+      <svg viewBox="0 0 24 24"><path d="M7 4h10a2 2 0 0 1 2 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 0 1 2-2z"/></svg>
+      <h2>Chronicle</h2>
+      <span class="count num">161</span>
+    </div>
+
+    <div class="filters">
+      <span class="f all">Π</span>
+      <span class="f" style="background:var(--kyanos)">Δ</span>
+      <span class="f" style="background:var(--melichron)">Ν</span>
+      <span class="f" style="background:var(--porphyra)">Θ</span>
+      <span class="f" style="background:var(--kinnabari)">Κ</span>
+    </div>
+
+    <div class="chron-season">SPRING · YEAR II</div>
+    <div class="entry num"><span class="who">Theron</span> holds their peace at the Assembly.</div>
+    <div class="entry num"><em>Festival Games</em> — the crowds roar. <span class="up">+2</span> happiness, all seats.</div>
+    <div class="chron-season">WINTER · YEAR I</div>
+    <div class="entry num"><span class="who">Theron</span> welcomes <em>Free Settlers</em> — a freeman joins the mountain camp.</div>
+    <div class="entry num"><span class="who">Damon</span>'s granaries run dry. <span class="down">−1</span> pop to starvation.</div>
+    <div class="entry num"><span class="who">Kyros</span> sells 8 wood to the bank. <span class="up">+2</span> gold.</div>
+    <div class="entry num"><span class="who">Nikos</span> raises a <b>Temple</b> in Pylos. <span class="up">+1</span> happiness.</div>
+  </div>
+</div>
