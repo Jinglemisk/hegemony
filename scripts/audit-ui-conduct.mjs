@@ -171,9 +171,19 @@ const PROBE = () => {
     }
 
     // ── TINY ─────────────────────────────────────────────────────────────────
-    // Inline links in prose are exempt — WCAG exempts targets in a sentence.
-    const inProse = el.tagName === "A" || el.closest("p, li, .body, .caption");
-    if (!inProse && (rect.width < MIN_TARGET || rect.height < MIN_TARGET)) {
+    // WCAG 2.5.8 exempts a target that sits *in a sentence*, because moving it
+    // would break the sentence. This app leans on that heavily: a rich token
+    // ("Gold", "Metropolis") is a glossary link inside running text, and there
+    // are hundreds of them. Test it the way the spec means it — is the control
+    // laid out inline, inside text? — rather than by listing container classes,
+    // which missed most of them and buried the real findings.
+    const display = getComputedStyle(el).display;
+    const inline = display === "inline" || display === "inline-block" || display === "inline-flex";
+    const inSentence =
+      inline &&
+      el.parentElement &&
+      (el.parentElement.textContent || "").trim().length > (el.textContent || "").trim().length + 4;
+    if (!inSentence && (rect.width < MIN_TARGET || rect.height < MIN_TARGET)) {
       out.push({
         kind: "TINY",
         el: describe(el),
@@ -222,9 +232,19 @@ const PROBE = () => {
   return { defects: out, controlCount: controls.length };
 };
 
-/** Focus each control and check that something visibly changes. */
-const FOCUS_PROBE = () => {
-  const out = [];
+/**
+ * Focus visibility, tested the only way that is honest: with the Tab key.
+ *
+ * `element.focus()` does NOT make `:focus-visible` match — that pseudo-class
+ * deliberately withholds the ring when focus was moved programmatically or by a
+ * mouse, and paints it for keyboard users. A probe that calls .focus() therefore
+ * reports every correctly-styled control in the app as unfocusable. The first
+ * run of this file did exactly that and produced 277 findings, all fiction.
+ *
+ * So: stamp every control, record how each one looks at rest, then walk the real
+ * tab order with real key presses and compare.
+ */
+const STAMP_AND_REST = () => {
   const seal = (style) =>
     [
       style.outlineWidth,
@@ -233,7 +253,9 @@ const FOCUS_PROBE = () => {
       style.boxShadow,
       style.backgroundColor,
       style.borderColor,
+      style.color,
       style.filter,
+      style.transform,
     ].join("|");
 
   const describe = (el) => {
@@ -245,23 +267,70 @@ const FOCUS_PROBE = () => {
     return `${el.tagName.toLowerCase()}${cls}${text ? ` «${text}»` : ""}`;
   };
 
+  const rest = {};
   const controls = [
-    ...document.querySelectorAll('button, a[href], [role="button"], [role="tab"]'),
+    ...document.querySelectorAll('button, a[href], [role="button"], [role="tab"], input, select'),
   ].filter((el) => {
     const r = el.getBoundingClientRect();
     const s = getComputedStyle(el);
     return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && !el.hasAttribute("disabled");
   });
 
-  const active = document.activeElement;
-  for (const el of controls.slice(0, 60)) {
-    const before = seal(getComputedStyle(el));
-    el.focus();
-    const after = seal(getComputedStyle(el));
-    if (before === after) out.push({ kind: "NOFOCUS", el: describe(el) });
-    el.blur();
+  controls.forEach((el, i) => {
+    el.setAttribute("data-audit-idx", String(i));
+    rest[i] = { seal: seal(getComputedStyle(el)), el: describe(el) };
+  });
+
+  if (document.activeElement && document.activeElement !== document.body) {
+    document.activeElement.blur();
   }
-  if (active && active.focus) active.focus();
+  return rest;
+};
+
+/** What is focused right now, and how does it look? */
+const FOCUSED_NOW = () => {
+  const el = document.activeElement;
+  if (!el || el === document.body || !el.getAttribute) return null;
+  const idx = el.getAttribute("data-audit-idx");
+  if (idx === null) return null;
+  const style = getComputedStyle(el);
+  return {
+    idx,
+    seal: [
+      style.outlineWidth,
+      style.outlineColor,
+      style.outlineStyle,
+      style.boxShadow,
+      style.backgroundColor,
+      style.borderColor,
+      style.color,
+      style.filter,
+      style.transform,
+    ].join("|"),
+  };
+};
+
+/**
+ * Walk the real tab order and report every stop whose appearance does not change.
+ * Stops after a full cycle or 80 presses, whichever comes first.
+ */
+const tabThrough = async (page) => {
+  const rest = await page.evaluate(STAMP_AND_REST);
+  const out = [];
+  const seenIdx = new Set();
+
+  for (let press = 0; press < 80; press += 1) {
+    await page.keyboard.press("Tab");
+    const now = await page.evaluate(FOCUSED_NOW);
+    if (!now) continue; // focus left the stamped set (browser chrome, body)
+    if (seenIdx.has(now.idx)) break; // wrapped around
+    seenIdx.add(now.idx);
+
+    const resting = rest[now.idx];
+    if (resting && resting.seal === now.seal) {
+      out.push({ kind: "NOFOCUS", el: resting.el });
+    }
+  }
   return out;
 };
 
@@ -287,7 +356,7 @@ for (const [w, h] of SIZES) {
     await surface.go(page).catch((e) => consoleErrors.push(`drive ${surface.name}: ${e.message}`));
     if (!ONLY || surface.name === ONLY) {
       const { defects, controlCount } = await page.evaluate(PROBE);
-      const focus = await page.evaluate(FOCUS_PROBE);
+      const focus = await tabThrough(page);
       controlsSeen = Math.max(controlsSeen, controlCount);
       for (const d of [...defects, ...focus])
         report.push({ surface: surface.name, width: w, ...d });
