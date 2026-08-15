@@ -64,7 +64,10 @@ cost with a word or a hover: the ladder rungs ("Raise to citizen", no price),
 four of seven dock verbs ("varies", "options", "stakes"), and the victory cards
 (minimums moved into a tooltip). The showcase's rule is consistent — the number
 you need in order to decide is printed; only the _arithmetic behind it_ is
-hover-only.
+hover-only. **The dock is done** (`PAR-COMMAND-1`), and it settles the pattern
+for the other two: where a price has no single value, print the range or the
+floor and read both ends off the engine query that charges it, so the surface
+cannot drift from what the press takes. The ladder and the laurels still owe it.
 
 ## The ruling that was blocking the Assembly — now settled
 
@@ -91,36 +94,36 @@ missing. UI layer only; `.text` stays, so every existing caller keeps working.
 
 ## Table — the table and the panels (`a-table.html`, `f-panels.html`)
 
-| ID               | sev     | surface    | gap                                                                                                                   |
-| ---------------- | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------- |
-| PAR-CITIES-1     | blocker | cities     | Per-settlement building **sockets** (filled tile / dashed open slot + "1 of 3 built"). No socket concept exists.      |
-| PAR-CITIES-2     | blocker | cities     | Per-settlement **pop beads** with capacity ghosts and a state caption. Cities shows a numeric meter only.             |
-| PAR-CITIES-3     | blocker | cities     | Settlement identified by its **glazed seal disc**. App renders a bare monochrome icon — breaks the board↔ledger link. |
-| PAR-CITIES-4     | blocker | cities     | The card body is always visible. App hides it behind a disclosure that boots closed.                                  |
-| PAR-CITIES-5     | blocker | cities     | The pop×building affinity matrix appears in **neither** prototype. This is the "old cities layout".                   |
-| PAR-POPS-1       | blocker | pops       | Each ladder rung is one button **carrying its price**. App shows costless labels; price is tooltip-only.              |
-| PAR-VICTORY-1    | blocker | victory    | Every laurel card prints its requirement line. App moved it into a tooltip.                                           |
-| PAR-BUILD-1      | blocker | build      | Page headed by the open-slot count ("ARGOS HAS 2"). App opens straight into the card list.                            |
-| PAR-CITIES-6     | major   | cities     | Active effects are a **slip** with a tone-coloured left rule and a trailing "until" clause, not a bordered box.       |
-| PAR-CITIES-7     | major   | cities     | Income is a short row of **only what moved**. App prints a fixed 6-column grid, dimming zeros to dashes.              |
-| PAR-LEFT-RAIL-1  | major   | left rail  | Empire strip + alarm + effects belong to **Cities only**. App renders them above all four left tabs (~120px each).    |
-| PAR-POPS-2       | major   | pops       | Panel is titled "The Ladder" with a `SOCIAL ORDER · TOP TO BOTTOM` sub-head. App titles it "Pops", no sub-head.       |
-| PAR-BUILD-2      | major   | build      | A target button **names its own blocker** ("THERMON · NO SLOT"). App always reads "Raise in {name}".                  |
-| PAR-TOPBAR-1     | major   | top bar    | Event **slips**: square art tile, 3px radius, kicker naming source _and player_, empty slots simply not drawn.        |
-| PAR-TOPBAR-2     | major   | top bar    | A resource in deficit turns its numeral oxblood. `shell.css` pins the colour, so the branch is dead.                  |
-| PAR-BOARD-1      | major   | board      | Map chrome sits inboard of the left tablet as round lacquer discs. App pins rounded squares bottom-right.             |
-| PAR-PANEL-1      | minor   | rails      | Tablets are asymmetric — left 306px, right 286px, rail included. App has both at 360px with the rail outside.         |
-| PAR-POPS-3       | minor   | pops       | "Where they live" rows lead with the seal disc and no capacity ghosts.                                                |
-| PAR-MARKET-1     | minor   | market     | `THE BANK'S STANDING RATES` heading; a deficit row relabels HELD → DEFICIT and outlines BUY in clay.                  |
-| PAR-VICTORY-2    | minor   | victory    | Held-count label is two lines and states the win condition. App drops it.                                             |
-| PAR-AGORA-1      | minor   | agora      | Remaining empty stelae get their own dashed slab even when laws stand. App shows it only at zero laws.                |
-| PAR-CHRONICLE-1  | minor   | chronicle  | Panel header carries an entry count; the all-filter is a lacquer disc with the Π blazon, not a text pill.             |
-| PAR-COMMAND-1    | minor   | dock       | Verb costs are concrete with icons. Grow/Build/Calm/Venture print "varies"/"options"/"stakes".                        |
-| PAR-TOPBAR-3     | minor   | top bar    | A zero delta is a faint middot, not the numeral `0` six times over.                                                   |
-| PAR-TOPBAR-4     | minor   | top bar    | The bar's right end is the roster and nothing else; the app inserts an Effects counter chip.                          |
-| PAR-RIGHT-RAIL-1 | minor   | right rail | Only Pops carries a badge. App badges victory, chronicle and agora — chronicle puts 3 digits in a 15px box.           |
-| PAR-BOARD-2      | minor   | board      | No transient `used/total` slot pip on a selected tile.                                                                |
-| PAR-PANEL-2      | minor   | rails      | Tablets have no close `×`; the tab spine is the only control.                                                         |
+| ID               | sev     | surface    | gap                                                                                                                     |
+| ---------------- | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| PAR-CITIES-1     | blocker | cities     | Per-settlement building **sockets** (filled tile / dashed open slot + "1 of 3 built"). No socket concept exists.        |
+| PAR-CITIES-2     | blocker | cities     | Per-settlement **pop beads** with capacity ghosts and a state caption. Cities shows a numeric meter only.               |
+| PAR-CITIES-3     | blocker | cities     | Settlement identified by its **glazed seal disc**. App renders a bare monochrome icon — breaks the board↔ledger link.   |
+| PAR-CITIES-4     | blocker | cities     | The card body is always visible. App hides it behind a disclosure that boots closed.                                    |
+| PAR-CITIES-5     | blocker | cities     | The pop×building affinity matrix appears in **neither** prototype. This is the "old cities layout".                     |
+| PAR-POPS-1       | blocker | pops       | Each ladder rung is one button **carrying its price**. App shows costless labels; price is tooltip-only.                |
+| PAR-VICTORY-1    | blocker | victory    | Every laurel card prints its requirement line. App moved it into a tooltip.                                             |
+| PAR-BUILD-1      | blocker | build      | Page headed by the open-slot count ("ARGOS HAS 2"). App opens straight into the card list.                              |
+| PAR-CITIES-6     | major   | cities     | Active effects are a **slip** with a tone-coloured left rule and a trailing "until" clause, not a bordered box.         |
+| PAR-CITIES-7     | major   | cities     | Income is a short row of **only what moved**. App prints a fixed 6-column grid, dimming zeros to dashes.                |
+| PAR-LEFT-RAIL-1  | major   | left rail  | Empire strip + alarm + effects belong to **Cities only**. App renders them above all four left tabs (~120px each).      |
+| PAR-POPS-2       | major   | pops       | Panel is titled "The Ladder" with a `SOCIAL ORDER · TOP TO BOTTOM` sub-head. App titles it "Pops", no sub-head.         |
+| PAR-BUILD-2      | major   | build      | A target button **names its own blocker** ("THERMON · NO SLOT"). App always reads "Raise in {name}".                    |
+| PAR-TOPBAR-1     | major   | top bar    | Event **slips**: square art tile, 3px radius, kicker naming source _and player_, empty slots simply not drawn.          |
+| PAR-TOPBAR-2     | major   | top bar    | A resource in deficit turns its numeral oxblood. `shell.css` pins the colour, so the branch is dead.                    |
+| PAR-BOARD-1      | major   | board      | Map chrome sits inboard of the left tablet as round lacquer discs. App pins rounded squares bottom-right.               |
+| PAR-PANEL-1      | minor   | rails      | Tablets are asymmetric — left 306px, right 286px, rail included. App has both at 360px with the rail outside.           |
+| PAR-POPS-3       | minor   | pops       | "Where they live" rows lead with the seal disc and no capacity ghosts.                                                  |
+| PAR-MARKET-1     | minor   | market     | `THE BANK'S STANDING RATES` heading; a deficit row relabels HELD → DEFICIT and outlines BUY in clay.                    |
+| PAR-VICTORY-2    | minor   | victory    | Held-count label is two lines and states the win condition. App drops it.                                               |
+| PAR-AGORA-1      | minor   | agora      | Remaining empty stelae get their own dashed slab even when laws stand. App shows it only at zero laws.                  |
+| PAR-CHRONICLE-1  | minor   | chronicle  | Panel header carries an entry count; the all-filter is a lacquer disc with the Π blazon, not a text pill.               |
+| PAR-COMMAND-1    | minor   | dock       | **fixed** — Grow prints its food range, Build its floor, Calm both payments, Venture the stake. All off engine queries. |
+| PAR-TOPBAR-3     | minor   | top bar    | A zero delta is a faint middot, not the numeral `0` six times over.                                                     |
+| PAR-TOPBAR-4     | minor   | top bar    | The bar's right end is the roster and nothing else; the app inserts an Effects counter chip.                            |
+| PAR-RIGHT-RAIL-1 | minor   | right rail | Only Pops carries a badge. App badges victory, chronicle and agora — chronicle puts 3 digits in a 15px box.             |
+| PAR-BOARD-2      | minor   | board      | No transient `used/total` slot pip on a selected tile.                                                                  |
+| PAR-PANEL-2      | minor   | rails      | Tablets have no close `×`; the tab spine is the only control.                                                           |
 
 ## Table — the ceremonies (`c-event.html`, `d-venture.html`)
 

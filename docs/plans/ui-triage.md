@@ -125,7 +125,7 @@ materially different work. Both were answered:
 | CITIES-1 | major   | cities    | The settlement rows are the pre-overhaul layout: a cryptic icon strip (`0/3 · 4/10`) and a chevron. The showcase's per-settlement building slots are absent.                          | open      |
 | ASM-2    | major   | assembly  | The board reads through the Assembly's backdrop — hex numbers and settlement names visible across the scene.                                                                          | open      |
 | POPS-1   | major   | pops      | `Net / turn` collides with the season dial at 1280.                                                                                                                                   | open      |
-| TGT-1    | major   | targeting | The placement caption sits on top of the `Build` mechanics heading (89% overlap).                                                                                                     | open      |
+| TGT-1    | major   | targeting | The placement caption sits on top of the `Build` mechanics heading (89% overlap).                                                                                                     | **fixed** |
 | ASM-3    | minor   | assembly  | `.tugBar` truncates by 3px.                                                                                                                                                           | open      |
 
 Parity rows (`PAR-*`) live in
@@ -136,11 +136,24 @@ Parity rows (`PAR-*`) live in
 Honest bookkeeping: wave 1 narrowed the tablets to the design's 306px/286px, and
 content that had been built for 360px now has less room than it assumes.
 
-| ID    | sev   | surface | defect                                                                                                                                                                                                                | status |
-| ----- | ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| REG-1 | major | cities  | `strong.title` truncates by 22px (`AIGAI`) and 31px (`SIKYON`) in the settlement card; the `city · mountain` subtitle by 47px. A 5-letter name truncates as badly as a 6-letter one, so the cause is not name length. | open   |
-| REG-2 | major | agora   | `.steleNotches` overflows by 67px — it cannot wrap.                                                                                                                                                                   | open   |
-| REG-3 | minor | pops    | The ladder rung button pair overflows by 5px.                                                                                                                                                                         | open   |
-| REG-4 | minor | chrome  | New collisions between right-tablet content and the two floating dials (`spring, Year 2` × `DAMON ACTS`, `Colony` × `END TURN`).                                                                                      | open   |
+| ID    | sev   | surface | defect                                                                                                                                                                                                                | status           |
+| ----- | ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| REG-1 | major | cities  | `strong.title` truncates by 22px (`AIGAI`) and 31px (`SIKYON`) in the settlement card; the `city · mountain` subtitle by 47px. A 5-letter name truncates as badly as a 6-letter one, so the cause is not name length. | open             |
+| REG-2 | major | agora   | `.steleNotches` overflows by 67px — it cannot wrap.                                                                                                                                                                   | open             |
+| REG-3 | minor | pops    | The ladder rung button pair overflows by 5px.                                                                                                                                                                         | open             |
+| REG-4 | minor | chrome  | New collisions between right-tablet content and the two floating dials (`spring, Year 2` × `DAMON ACTS`, `Colony` × `END TURN`).                                                                                      | **not a defect** |
+
+**REG-4, and the two `tab-build` × ticker rows with it, were never real.** Eight
+COLLISION rows accused the floating bottom chrome of painting over panel content.
+Driven at all three widths, every one of them has the panel side of the pair
+BELOW THE FOLD of a working scroll region: the tablets end exactly at the dials'
+top edge (`--tablet-bot`) and clip, the ticker lives inside the dock bar, and
+`elementFromPoint` at each overlap centre finds the seal and never the card. The
+auditor was reading `getBoundingClientRect`, which reports where a row is laid
+out, not where it is painted. COLLISION now clips each line box to the ancestors
+that clip it — the same correction OFFSCREEN already carries — and the class was
+re-checked against TGT-1, a genuine overlap between two painted elements, which
+it still reports at 89%. **Nothing in the frame moved, because nothing in the
+frame was wrong.**
 
 <!-- END LEDGER -->
