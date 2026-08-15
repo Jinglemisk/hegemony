@@ -1,10 +1,10 @@
 import { MechanicsDetails } from "../../MechanicsDetails";
-import { UiSprite } from "../../Sprites";
 import { Tooltip } from "../../overlays/Tooltip";
 import { PLAYER_NAMES } from "../../../game/data";
-import { yearOf } from "../../../game/rules";
 import { useGameUi } from "../GameUiContext";
 import { CommandVerb } from "./CommandVerb";
+import { EndTurnSeal } from "./EndTurnSeal";
+import { SeasonClock } from "./SeasonClock";
 import {
   END_TURN_VERB,
   VERBS,
@@ -15,14 +15,16 @@ import {
 } from "./verbs";
 
 /**
- * The bottom dock (ui-refit Step 3), KYKLOS mode A. The fused command bar splits
- * into placed pieces: the verb discs thread on a spine across the centre, the
- * chronicle's newest line tickers bottom-left, and the commit anchors
- * bottom-right — the whose-turn box above the one dark-red *square*, End Turn.
+ * The bottom rail: a bone ceramic bar with the seven verbs dead-centre and a
+ * dial protruding from each end.
  *
- * The circle law: every verb is a disc because you press it repeatedly; the only
- * square control is the commit, so it can never be misfired for a verb. Resources
- * left this band entirely — they now ride the top bar, split around the medallion.
+ * The two dials are a matched pair on purpose — the season clock at bottom left
+ * says what time it is, the END TURN seal at bottom right is how you spend it,
+ * and they bracket the verbs between them. They are the only round masses in the
+ * chrome, so the eye finds both instantly and never confuses either for a verb.
+ *
+ * The chronicle's newest line still tickers along the bar, inboard of the clock,
+ * where it has room to be long without ever crowding the verbs.
  */
 export function CommandDock({
   canGrowPops,
@@ -64,19 +66,12 @@ export function CommandDock({
     ventureUsed: viewer.ventureUsedThisTurn,
   };
 
-  const seasonsLeft = G.seasonalDrawPile.length;
   const endTurnEnabled = isVerbEnabled(END_TURN_VERB, context);
   const endTurnExplanation = verbTitle(END_TURN_VERB, context);
 
   return (
     <div className="commandDock">
-      {/* The clock reads from the spine's left end, on bone. */}
-      <div className="dockSeason">
-        <span className="dockSeasonYear">Year {yearOf(G.season)}</span>
-        <span className="dockSeasonSub">
-          {seasonsLeft} season{seasonsLeft === 1 ? "" : "s"} remain
-        </span>
-      </div>
+      <SeasonClock G={G} />
 
       <div className="verbSpine" aria-label="Action toolbar">
         {VERBS.map((verb) => (
@@ -84,43 +79,30 @@ export function CommandDock({
         ))}
       </div>
 
-      <div className="dockCommit">
-        {/* The narration sits between the verbs and the commit. */}
-        <div className="dockTicker">
-          {chronicleTicker ? <p title={chronicleTicker}>{chronicleTicker}</p> : null}
-        </div>
-
-        <div className="dockCommitStack">
-          <div className="turnbox">
-            <span className="turnboxLabel">{isActive ? "Your turn" : "Now acting"}</span>
-            <strong>{PLAYER_NAMES[currentPlayerId]}</strong>
-          </div>
-          <Tooltip
-            content={
-              <MechanicsDetails
-                blockedReason={endTurnEnabled ? undefined : endTurnExplanation}
-                heading="End Turn"
-              >
-                {endTurnEnabled ? (
-                  <p className="mechanicsExplanation">{endTurnExplanation}</p>
-                ) : null}
-              </MechanicsDetails>
-            }
-            preferredPlacement="above"
-            triggerClassName="endTurnTooltipTrigger"
-          >
-            <button
-              aria-disabled={!endTurnEnabled}
-              className="endTurnSquare"
-              onClick={endTurnEnabled ? () => END_TURN_VERB.select(handlers) : undefined}
-              type="button"
-            >
-              <UiSprite item="endTurn" className="endTurnSquareIcon" />
-              <span>End Turn</span>
-            </button>
-          </Tooltip>
-        </div>
+      {/* The narration, inboard of the clock: it has the whole left half to be
+          long in, and it can never reach the verbs. */}
+      <div className="dockTicker">
+        {chronicleTicker ? <p className="caption">{chronicleTicker}</p> : null}
       </div>
+
+      <Tooltip
+        content={
+          <MechanicsDetails
+            blockedReason={endTurnEnabled ? undefined : endTurnExplanation}
+            heading="End Turn"
+          >
+            {endTurnEnabled ? <p className="mechanicsExplanation">{endTurnExplanation}</p> : null}
+          </MechanicsDetails>
+        }
+        preferredPlacement="above"
+        triggerClassName="endTurnTooltipTrigger"
+      >
+        <EndTurnSeal
+          actingName={PLAYER_NAMES[currentPlayerId]}
+          disabled={!endTurnEnabled}
+          onClick={() => END_TURN_VERB.select(handlers)}
+        />
+      </Tooltip>
     </div>
   );
 }

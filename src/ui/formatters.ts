@@ -79,3 +79,27 @@ export function buildingName(
 ) {
   return getBuilding(content, buildingId)?.name ?? buildingId;
 }
+
+/** Roman numerals, small-N only — the season clock counts years, and a game runs
+ *  to single digits. Anything larger than the table below simply repeats X. */
+const ROMAN: readonly (readonly [number, string])[] = [
+  [10, "X"],
+  [9, "IX"],
+  [5, "V"],
+  [4, "IV"],
+  [1, "I"],
+];
+
+export function toRoman(value: number): string {
+  let remaining = Math.max(0, Math.floor(value));
+  let numerals = "";
+
+  for (const [amount, numeral] of ROMAN) {
+    while (remaining >= amount) {
+      numerals += numeral;
+      remaining -= amount;
+    }
+  }
+
+  return numerals || "—";
+}
