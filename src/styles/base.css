@@ -176,6 +176,7 @@
   --z-bar: 40; /* top and bottom ceramic bars */
   --z-dial: 50; /* the twin dials — above bar AND tablet, they protrude */
   --z-popover: 70; /* anchored popovers over the chrome */
+  --z-takeover: 80; /* a scene that REPLACES the table — the Assembly, over all chrome */
   --z-fab: 90; /* dev affordances (tune) — over chrome, under ceremony */
   --z-ceremony: 100; /* scrim + modal: a rite covers the whole table */
   --z-tooltip: 200; /* the top rung, always; nothing may outrank an explanation */
