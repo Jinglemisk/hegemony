@@ -50,6 +50,64 @@ function overlaps(a: Box, b: Box) {
 const NAME_SLOTS: readonly NameSlot[] = ["below", "above"];
 
 /**
+ * Arrow-key navigation over the board, by geometry rather than by index.
+ *
+ * The 37 hexes were 37 tab stops, so leaving the map cost 37 presses of Tab —
+ * the standard answer for a grid is one tab stop and arrows inside it, which is
+ * what {@link nextTileInDirection} feeds. It reads the drawn centres rather than
+ * the q/r pair on purpose: "the tile to the right" is a fact about where a hex
+ * was painted, and deriving it from axial coordinates would silently commit this
+ * function to an orientation that `hexCenter` owns.
+ *
+ * The cone is 120° wide, because a pointy-top hex has no northern neighbour and
+ * ArrowUp has to reach the two tiles 30° either side of vertical. Inside the
+ * cone the winner is the nearest tile DIVIDED by how squarely it lies in the
+ * pressed direction: the true east neighbour and the south-east one are exactly
+ * the same distance away on this grid, so distance alone made ArrowRight walk
+ * diagonally down the board.
+ */
+const ARROW_DIRECTIONS: Record<string, readonly [number, number]> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+};
+
+function nextTileInDirection(centers: readonly TileCenter[], fromId: string, key: string) {
+  const direction = ARROW_DIRECTIONS[key];
+  const origin = centers.find(({ tile }) => tile.id === fromId);
+
+  if (!direction || !origin) {
+    return null;
+  }
+
+  let best: { id: string; cost: number } | null = null;
+
+  for (const candidate of centers) {
+    if (candidate.tile.id === fromId) {
+      continue;
+    }
+
+    const dx = candidate.x - origin.x;
+    const dy = candidate.y - origin.y;
+    const distance = Math.hypot(dx, dy);
+    const alignment = (dx * direction[0] + dy * direction[1]) / distance;
+
+    if (alignment < 0.5) {
+      continue;
+    }
+
+    const cost = distance / alignment;
+
+    if (!best || cost < best.cost) {
+      best = { id: candidate.tile.id, cost };
+    }
+  }
+
+  return best?.id ?? null;
+}
+
+/**
  * Every distinct name on the board, measured once in the face and size it will be
  * drawn in.
  *
@@ -252,6 +310,29 @@ function HexMapComponent({
     () => planPlacements(centers, names, nameWidths),
     [centers, names, nameWidths],
   );
+  // The board's single tab stop. It follows focus, so Tab returns you to the hex
+  // you were last on rather than to the top-left corner of the island.
+  const [rovingTileId, setRovingTileId] = useState<string | null>(null);
+  const tabStopTileId =
+    (rovingTileId && centers.some(({ tile }) => tile.id === rovingTileId) ? rovingTileId : null) ??
+    selectedTileId ??
+    centers[0]?.tile.id ??
+    null;
+
+  const roveTo = (fromId: string, key: string) => {
+    const nextId = nextTileInDirection(centers, fromId, key);
+
+    if (!nextId) {
+      return false;
+    }
+
+    setRovingTileId(nextId);
+    svgRef.current
+      ?.querySelector<SVGGElement>(`[data-tile-id="${nextId}"]`)
+      ?.focus({ preventScroll: true });
+    return true;
+  };
+
   const tileState = (tileId: string) => ({
     isSelected: selectedTileId === tileId,
     isPending: pendingTileId === tileId,
@@ -363,10 +444,13 @@ function HexMapComponent({
               cannot be interleaved without every plate being half-buried. */}
           {centers.map(({ tile, x, y }) => (
             <TileGround
+              isTabStop={tile.id === tabStopTileId}
               key={tile.id}
               names={names}
               onTileAction={onTileAction}
               onTileClick={handleTileClick}
+              onTileFocus={setRovingTileId}
+              onTileRove={roveTo}
               state={tileState(tile.id)}
               tile={tile}
               x={x}

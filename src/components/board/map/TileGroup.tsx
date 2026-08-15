@@ -156,8 +156,11 @@ export function TileGround({
   y,
   names,
   state,
+  isTabStop,
   onTileAction,
   onTileClick,
+  onTileFocus,
+  onTileRove,
 }: {
   tile: HexTile;
   x: number;
@@ -165,8 +168,16 @@ export function TileGround({
   /** settlement id → name, from ui/settlementNames. */
   names: Map<string, string>;
   state: TileState;
+  /** The board's ONE tab stop (roving tabindex). Every other hex is reached with
+   *  the arrow keys and skipped by Tab — otherwise leaving the map costs one Tab
+   *  press per hex, which on this board is 37 of them. */
+  isTabStop: boolean;
   onTileAction: (tileId: string) => void;
   onTileClick: (tileId: string, event: ReactMouseEvent<SVGGElement>) => void;
+  onTileFocus: (tileId: string) => void;
+  /** Moves focus to the neighbour in the pressed direction; false when the board
+   *  ends there, so the key falls back to the browser. */
+  onTileRove: (tileId: string, key: string) => boolean;
 }) {
   // The primary settlement leads: a city outranks a colony for the centre slot,
   // because a city is the thing you look for when scanning the board.
@@ -186,14 +197,22 @@ export function TileGround({
         className="svgButton"
         data-tile-id={tile.id}
         onClick={(event) => onTileClick(tile.id, event)}
+        onFocus={() => onTileFocus(tile.id)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             onTileAction(tile.id);
+            return;
+          }
+
+          if (onTileRove(tile.id, event.key)) {
+            // The board scrolls nothing, but the arrow keys still pan the page
+            // in some browsers and the camera listens for them elsewhere.
+            event.preventDefault();
           }
         }}
         role="button"
-        tabIndex={0}
+        tabIndex={isTabStop ? 0 : -1}
       >
         <polygon className={`hexTile terrain-${tile.terrain}`} points={hexPoints(HEX_SIZE - 1)} />
       </g>
