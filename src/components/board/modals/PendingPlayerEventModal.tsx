@@ -6,8 +6,10 @@ import {
   getTile,
 } from "../../../game/rules";
 import { presentEventEffects } from "../../../ui/effects";
+import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { AnnotatedText } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
+import { EffectIcon } from "../../../ui/icons/EffectIcon";
 import { eventCardArtUrl } from "../events";
 import { settlementPickerLabel } from "../helpers";
 import { ModalShell } from "./ModalShell";
@@ -53,20 +55,28 @@ export function PendingPlayerEventModal() {
   }
 
   const canConfirm = isActive && (!popEffect || targetTileIds.length > 0);
-  const actionLabel =
-    choices.length > 1 ? "Resolve Choice" : popEffect ? "Place Pops" : "Claim Event";
+  // The mood decides the frame AND the verb. A card that hurts you should not ask
+  // to be "claimed" — you endure it. This is the whole of the ceremony dial: one
+  // word and one colour, read off the effects the engine already presented.
+  const tone = presentEventEffects(selectedEffects, G.definition.content).tone;
+  const ceremony = tone === "negative" ? "wound" : tone === "positive" ? "gift" : "rite";
+  const moodVerb = tone === "negative" ? "Endure It" : tone === "positive" ? "Take It" : "So Be It";
+  const actionLabel = choices.length > 1 ? "Resolve Choice" : popEffect ? "Place Pops" : moodVerb;
 
   return (
     // Blocking on purpose: a drawn event must be resolved, never dismissed.
     <ModalShell
       backdropClassName="eventModalBackdrop"
+      ceremony={ceremony}
       className="eventCardReveal"
       labelledBy="pending-event-title"
     >
       <div className="eventCardSurface">
         <div className="eventCardCrest">
-          <span>Player Event</span>
-          <b>{G.players[playerID].name}</b>
+          <span className="seatGlaze label" style={{ background: glazeOf(playerID) }}>
+            {PLAYER_GLAZES[playerID].blazon}
+          </span>
+          <b className="label">{G.players[playerID].name} draws</b>
         </div>
 
         <div className="eventCardArtFrame">
@@ -74,9 +84,13 @@ export function PendingPlayerEventModal() {
         </div>
 
         <div className="eventCardBody">
-          <span className="eventCardDeckLabel">Hegemony Event</span>
-          <h2 id="pending-event-title">{card.name}</h2>
-          <p>
+          <span className="eventCardDeckLabel label">
+            {tone === "negative" ? "A dark fate" : tone === "positive" ? "A kind wind" : "A fate"}
+          </span>
+          <h2 className="display" id="pending-event-title">
+            {card.name}
+          </h2>
+          <p className="body-em">
             <AnnotatedText text={card.text} />
           </p>
 
@@ -109,11 +123,17 @@ export function PendingPlayerEventModal() {
               })}
             </div>
           ) : (
-            <div className="eventSingleEffect">
-              <strong>Effect</strong>
-              <span>
-                <EffectLine effect={presentEventEffects(selectedEffects, G.definition.content)} />
-              </span>
+            // The blow: one band, the effect's own glyph, and the sentence with
+            // its signed numbers already coloured. A card does ONE thing to you,
+            // and this is where the eye lands.
+            <div className="blow">
+              {selectedEffects.length > 0 ? (
+                <EffectIcon effect={selectedEffects[0]} family="event" size="rail" />
+              ) : null}
+              <EffectLine
+                className="blowLine"
+                effect={presentEventEffects(selectedEffects, G.definition.content)}
+              />
             </div>
           )}
 

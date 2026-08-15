@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { EventTableDefinition, TableRollRecord } from "../../../game/types";
 import { presentTableEffect } from "../../../ui/effects";
 import { EffectLine } from "../../EffectLine";
+import { LacquerDie } from "./LacquerDie";
 import { ModalShell } from "./ModalShell";
 
 /**
@@ -76,29 +77,58 @@ export function EventTableModal({
    */
   onDismiss?: () => void;
 }) {
+  const landed = result && result.tableId === table.id ? result : null;
+  const landedRow = landed ? table.rows.find((row) => row.roll === landed.modified) : null;
+  // The mood is the table's own verdict, read off the row the die found. A wound
+  // and a gift are the same dialog with different weather.
+  const tone = landedRow?.effects.map((effect) => presentTableEffect(effect).tone) ?? [];
+  const ceremony = !landed
+    ? "rite"
+    : tone.includes("negative") && !tone.includes("positive")
+      ? "wound"
+      : tone.includes("positive")
+        ? "gift"
+        : "rite";
+
   return (
     <ModalShell
       backdropClassName="eventModalBackdrop"
+      ceremony={ceremony}
       className="eventTableModal"
       labelledBy="event-table-title"
       onDismiss={onDismiss}
     >
       <header className="eventTableHeader">
-        <h2 id="event-table-title">{table.name}</h2>
-        <p>{subtitle ?? table.flavor}</p>
+        <h2 className="display" id="event-table-title">
+          {table.name}
+        </h2>
+        <p className="body-em">{subtitle ?? table.flavor}</p>
       </header>
+
+      {/* The drama: the die on the left, what it found on the right. Before the
+          roll there is nothing to show here, and the table below is the whole
+          dialog — which is right, because that is the moment you are reading it. */}
+      {landed ? (
+        <div className="drama">
+          <LacquerDie value={landed.modified} />
+          <div className="dramaOutcome">
+            <span className="label">The table speaks</span>
+            <h3 className="display">{landedRow?.label ?? "The die is cast"}</h3>
+            {landed.modifier !== 0 ? (
+              <span className="caption num">
+                rolled {landed.roll} {landed.modifier > 0 ? "+" : ""}
+                {landed.modifier} → {landed.modified}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <EventTableRows table={table} result={result} />
 
-      {result && result.tableId === table.id ? (
+      {landed ? (
         <div className="eventTableOutcome" role="status">
-          <strong>
-            Rolled {result.roll}
-            {result.modifier !== 0
-              ? ` ${result.modifier > 0 ? "+" : ""}${result.modifier} → ${result.modified}`
-              : ""}
-          </strong>
-          {result.outcomes.map((line, index) => (
+          {landed.outcomes.map((line, index) => (
             <span key={index}>{line}</span>
           ))}
         </div>
