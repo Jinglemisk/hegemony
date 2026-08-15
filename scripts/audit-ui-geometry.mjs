@@ -196,6 +196,48 @@ const PROBE = () => {
   // has a bounding box spanning the whole paragraph, so a <strong> on line three
   // "collides" with the <em> around it at 100%. getClientRects() gives one rect
   // per line, which is what the eye actually sees.
+  //
+  // And PAINTED boxes, not laid-out ones. Content below the fold of a working
+  // scroll region still has a layout rect further down the page: the last
+  // victory card, clipped 80px under a tablet that ends at the dials' top edge,
+  // reported a 72% collision with text on the END TURN seal that no eye can
+  // see. Six such rows were carried as a frame defect before anyone measured
+  // whether either element was on screen at that point — neither was, at any of
+  // the three widths. Clipping each line box to every ancestor that clips it
+  // makes this class ask the question it claims to ask.
+  const intersect = (a, b) => {
+    const left = Math.max(a.left, b.left);
+    const right = Math.min(a.right, b.right);
+    const top = Math.max(a.top, b.top);
+    const bottom = Math.min(a.bottom, b.bottom);
+    if (right - left <= 0 || bottom - top <= 0) return null;
+    return { left, right, top, bottom, width: right - left, height: bottom - top };
+  };
+
+  /** The parts of `rects` that survive every ancestor that clips this element. */
+  const painted = (el, rects) => {
+    let out = rects;
+    // A fixed element escapes ordinary ancestor clipping; an absolutely
+    // positioned one is clipped only by ancestors that are its containing block.
+    let escaping = getComputedStyle(el).position;
+    let node = el.parentElement;
+
+    while (node && out.length > 0 && node !== document.documentElement) {
+      if (escaping === "fixed") break;
+      const s = getComputedStyle(node);
+      const containingBlock =
+        s.position !== "static" || s.transform !== "none" || s.filter !== "none";
+      if (clips(s) && (escaping !== "absolute" || containingBlock)) {
+        const box = node.getBoundingClientRect();
+        out = out.map((r) => intersect(r, box)).filter(Boolean);
+      }
+      if (containingBlock) escaping = "static";
+      node = node.parentElement;
+    }
+
+    return out;
+  };
+
   const leaves = [...info.entries()]
     .filter(([el, { rect }]) => {
       if (rect.width > 400 || rect.height > 200) return false;
@@ -204,8 +246,10 @@ const PROBE = () => {
     })
     .map(([el, { rect }]) => {
       const lines = [...el.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
-      return [el, lines.length ? lines : [rect]];
-    });
+      return [el, painted(el, lines.length ? lines : [rect])];
+    })
+    // Nothing painted, nothing to collide with.
+    .filter(([, lines]) => lines.length > 0);
 
   const overlap = (ra, rb) => {
     const w = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
