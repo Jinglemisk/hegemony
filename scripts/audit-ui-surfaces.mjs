@@ -171,6 +171,18 @@ export const SURFACES = [
     },
   },
   {
+    // The FIRST Assembly always convenes at 0 of 6 laws with every orator on zero,
+    // so half of this surface — the law cap, a stele carrying more than one pip, a
+    // repeal that is actually armed, a voice ledger with a number in it — never
+    // appeared in either auditor. `?dev=assembly2` plays the first sitting out and
+    // stops at the second, which is where all of that is standing.
+    name: "assembly-standing",
+    go: async (p) => {
+      await p.goto(`${BASE}/?dev=assembly2&seed=42`, { waitUntil: "networkidle" });
+      await p.waitForTimeout(2200);
+    },
+  },
+  {
     name: "assembly-vote",
     go: async (p) => {
       for (let round = 0; round < 6; round += 1) {
