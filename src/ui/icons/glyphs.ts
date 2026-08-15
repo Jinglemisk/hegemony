@@ -71,12 +71,21 @@ const bust = (...crown: GlyphShape[]): GlyphShape[] => [
   ...crown,
 ];
 
-/* The figure, in three states of freedom. Only the mark below the shoulders
-   changes: a citizen wears the wreath, a freeman wears nothing, a slave wears
-   the bond. Colour never distinguishes them — the game's whole ladder rides on
-   these three silhouettes being told apart at 14px. */
+/* The figure, in three states of freedom: a citizen wears the wreath, a freeman
+   wears nothing, a slave wears the bond. Colour never distinguishes them — the
+   game's whole ladder rides on these three silhouettes being told apart at 14px.
+   Which they were not: the wreath was an arc hugging the crown of the head and
+   the bond an 8-unit tick across the chest, so freeman and slave were the SAME
+   drawing and the citizen differed by a hairline. Both marks now break the
+   outline — the wreath as two sprigs standing clear of the head, the bond as a
+   yoke wider than the shoulders — so what tells them apart is the shape of the
+   whole figure and not a detail you have to find. */
 const FIGURE_HEAD = c(12, 9, 4);
 const FIGURE_BODY = p("M6 20c.8-3.6 3-5.4 6-5.4s5.2 1.8 6 5.4");
+/* Two laurel sprigs, outboard of the head at head height. */
+const FIGURE_WREATH = p("M5.6 11.2C4.2 8.4 4.9 5.4 6.9 3.8M18.4 11.2c1.4-2.8.7-5.8-1.3-7.4");
+/* The yoke: a bar across the shoulders, overhanging both, with its two drops. */
+const FIGURE_BOND = p("M4.6 15h14.8M8 15v2.2M16 15v2.2");
 
 /* The store, the vessel and the bowl recur across a dozen effects; drawing them
    from the same three paths is what keeps "your stores" one idea. */
@@ -130,9 +139,9 @@ export const GLYPHS = {
   maskPlain: [MASK_HOLLOW],
 
   /* ── The ladder: three classes and the two rungs between them ─────────────── */
-  citizens: [FIGURE_HEAD, FIGURE_BODY, p("M5 6c2-2 4-3 7-3s5 1 7 3")],
+  citizens: [FIGURE_HEAD, FIGURE_BODY, FIGURE_WREATH],
   freemen: [FIGURE_HEAD, FIGURE_BODY],
-  slaves: [FIGURE_HEAD, FIGURE_BODY, p("M8 12l8 2")],
+  slaves: [FIGURE_HEAD, FIGURE_BODY, FIGURE_BOND],
   promote: [p("M6 20h12M6 14h12"), p("M12 11V3m-3.5 3.5L12 3l3.5 3.5")],
   demote: [p("M6 4h12M6 10h12"), p("M12 13v8m-3.5-3.5L12 21l3.5-3.5")],
 
