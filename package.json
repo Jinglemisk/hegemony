@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "check": "tsc --noEmit",
     "docs:check": "node scripts/check-docs.mjs",
+    "ui:check": "node scripts/check-ui-system.mjs",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
