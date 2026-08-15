@@ -26,11 +26,16 @@
   display: grid;
   overflow: hidden;
   color: var(--ivory);
-  /* Much darker than the prototype's 60→88%, and the reason is what it covers.
-     The prototype is drawn over a static painting; this lies over the LIVE app —
-     two bone bars, four glazed seats, forty yield numerals and a lit tablet — and
-     anything under ~92% leaves the map legible enough to read past the seats. */
-  background: radial-gradient(ellipse at 50% 32%, rgb(24 18 16 / 93%), rgb(24 18 16 / 99%));
+  /* OPAQUE. This is a floor, not a veil.
+     It was 93→99% alpha, and the last 7% was enough to read SIKYON, OLYNTHOS and
+     BOURA straight through the middle of the scene, with hex outlines running
+     behind the very card the sitting is about. A translucency that leaks the
+     settlement names reads as an accident rather than as depth, and it competes
+     with the one object the scene exists to show. The ellipse survives as the
+     vignette: its two stops are TONES now, not alphas, so the floor still lifts
+     under the head and falls away at the corners while nothing behind it comes
+     through. The prototype's scene sits on an opaque ground for the same reason. */
+  background: radial-gradient(ellipse at 50% 32%, rgb(35 26 22), rgb(14 10 9));
 
   --asm-stele-w: calc(252px * var(--ui-scale));
   --asm-gap: calc(22px * var(--ui-scale));
