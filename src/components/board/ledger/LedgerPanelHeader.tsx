@@ -1,25 +1,24 @@
-import type { ReactNode } from "react";
+import type { GlyphId } from "../../../ui/icons/glyphs";
+import { Icon } from "../../../ui/icons/Icon";
 
 /**
- * The shared title row for the two floating ledger cards — the act-side EmpireIntel and
- * the consult-side ConsultPanel. A page icon, the page title, and a close button: both
- * cards are titled by the page they show, not by the furniture (post-sprint-debt §5.5).
+ * The shared title row for the two docked tablets — the act-side EmpireIntel and
+ * the consult-side ConsultPanel. A page glyph, the page title, and a close
+ * button: both tablets are titled by the page they show, not by the furniture.
  */
 export function LedgerPanelHeader({
   title,
-  icon,
+  glyph,
   onClose,
 }: {
   title: string;
-  icon: ReactNode;
+  glyph: GlyphId | undefined;
   onClose: () => void;
 }) {
   return (
     <div className="panelTitle ledgerCardTitle">
-      <span className="titleIcon" aria-hidden="true">
-        {icon}
-      </span>
-      <h2>{title}</h2>
+      {glyph ? <Icon glyph={glyph} size="rail" className="titleIcon" /> : null}
+      <h2 className="title">{title}</h2>
       <button
         className="ledgerCloseButton"
         onClick={onClose}
@@ -27,7 +26,7 @@ export function LedgerPanelHeader({
         title="Close"
         type="button"
       >
-        ×
+        <Icon glyph="cross" />
       </button>
     </div>
   );

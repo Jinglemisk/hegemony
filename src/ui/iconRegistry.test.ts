@@ -122,6 +122,8 @@ describe("the glyph set is drawn by one hand", () => {
       "voice",
       "crowd",
       "citizens",
+      "chronicle",
+      "codex",
       "city",
       "stockpile",
       "chevronDown",

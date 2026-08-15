@@ -2,7 +2,7 @@ import { memo } from "react";
 import { victoryCardsHeld } from "../../../game/victory";
 import { useGameUi } from "../GameUiContext";
 import type { ConsultTab } from "../types";
-import { DiscRail } from "./DiscRail";
+import { TabRail } from "./TabRail";
 import { CONSULT_TABS } from "./tabs";
 
 /**
@@ -23,7 +23,7 @@ function ConsultRailComponent({
   const cardsHeld = victoryCardsHeld(G, viewerId);
 
   return (
-    <DiscRail
+    <TabRail
       side="right"
       tabs={CONSULT_TABS}
       activeTab={activeTab}
@@ -31,7 +31,7 @@ function ConsultRailComponent({
       onSelectTab={onSelectTab}
       badges={{ victory: cardsHeld, chronicle: G.log.length, agora: G.activeLaws.length }}
       ariaLabel="Consult menu"
-      discTitle={(tab) =>
+      tabTitle={(tab) =>
         tab === "codex"
           ? "Codex — rules & reference (?)"
           : tab === "chronicle"

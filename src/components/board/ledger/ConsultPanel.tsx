@@ -27,11 +27,11 @@ function ConsultPanelComponent({
 }) {
   const { G, viewerId } = useGameUi();
   const title = ledgerTabLabel(activeTab);
-  const titleIcon = CONSULT_TABS.find(({ tab }) => tab === activeTab)?.icon;
+  const titleGlyph = CONSULT_TABS.find(({ tab }) => tab === activeTab)?.glyph;
 
   return (
     <div className="empireIntel">
-      <LedgerPanelHeader title={title} icon={titleIcon} onClose={onClose} />
+      <LedgerPanelHeader title={title} glyph={titleGlyph} onClose={onClose} />
 
       <div className="intelBody">
         {activeTab === "chronicle" ? <ActionLogPanel G={G} /> : null}

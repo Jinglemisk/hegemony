@@ -347,6 +347,13 @@ export const GLYPHS = {
   ruin: [p("M5 21h14M8.5 21V6.5M6 6.5h5"), p("M15.5 21v-8m0 0-2-2 3-1.5-2-2.5V6.5")],
   equalVotes: [c(12, 12, 8.5), p("M8 10h8M8 14h8")],
 
+  /* ── The two reference tablets ───────────────────────────────────────────────
+     The chronicle is a bookmarked record you keep adding to; the codex is a book
+     you open. Both are objects a Greek would recognise, and neither is a
+     "document" icon — the Assembly already owns that. */
+  chronicle: [p("M7 4h10a2 2 0 0 1 2 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 0 1 2-2z")],
+  codex: [p("M5 5a2 2 0 0 1 2-2h12v16H7a2 2 0 0 0-2 2z"), p("M5 19V5")],
+
   /* ── UI micro ──────────────────────────────────────────────────────────────── */
   chevronDown: [p("M6 9.5 12 15.5 18 9.5")],
   chevronRight: [p("M9.5 6 15.5 12 9.5 18")],
@@ -357,5 +364,3 @@ export const GLYPHS = {
 } as const satisfies Record<string, readonly GlyphShape[]>;
 
 export type GlyphId = keyof typeof GLYPHS;
-
-export const GLYPH_IDS = Object.keys(GLYPHS) as readonly GlyphId[];

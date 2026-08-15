@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { AtlasIcon, UiSprite } from "../../Sprites";
+import type { GlyphId } from "../../../ui/icons/glyphs";
 import type { ConsultTab, EmpireTab, LedgerTab } from "../types";
 
 /**
@@ -9,40 +8,22 @@ import type { ConsultTab, EmpireTab, LedgerTab } from "../types";
  * (which draws the discs) and its panel (which titles itself from the open page), so
  * a disc and its page can never disagree about what they are called.
  */
-export const LEDGER_TABS: Array<{ tab: LedgerTab; label: string; icon: ReactNode }> = [
-  { tab: "cities", label: "Cities", icon: <AtlasIcon icon="city" className="railDiscIcon" /> },
-  { tab: "pops", label: "Pops", icon: <AtlasIcon icon="citizens" className="railDiscIcon" /> },
-  {
-    tab: "buildings",
-    label: "Build",
-    icon: <AtlasIcon icon="workshop" className="railDiscIcon" />,
-  },
-  {
-    tab: "market",
-    label: "Market",
-    icon: <AtlasIcon icon="marketplace" className="railDiscIcon" />,
-  },
+export const LEDGER_TABS: Array<{ tab: LedgerTab; label: string; glyph: GlyphId }> = [
+  { tab: "cities", label: "Cities", glyph: "city" },
+  { tab: "pops", label: "Pops", glyph: "citizens" },
+  { tab: "buildings", label: "Build", glyph: "workshop" },
+  // The market's glyph is the forum's scales: the bank is where things are
+  // weighed, and drawing that twice with two pictures would be a lie.
+  { tab: "market", label: "Market", glyph: "forum" },
 ];
 
-export const CONSULT_TABS: Array<{ tab: ConsultTab; label: string; icon: ReactNode }> = [
-  {
-    tab: "chronicle",
-    label: "Chronicle",
-    icon: <UiSprite item="meander" className="railDiscIcon" />,
-  },
-  { tab: "codex", label: "Codex", icon: <UiSprite item="seal" className="railDiscIcon" /> },
-  {
-    tab: "victory",
-    label: "Victory",
-    icon: <UiSprite item="victoryPoint" className="railDiscIcon" />,
-  },
+export const CONSULT_TABS: Array<{ tab: ConsultTab; label: string; glyph: GlyphId }> = [
+  { tab: "chronicle", label: "Chronicle", glyph: "chronicle" },
+  { tab: "codex", label: "Codex", glyph: "codex" },
+  { tab: "victory", label: "Victory", glyph: "laurel" },
   // The Agora is a consult page, not an act page: the Assembly panel is where you
   // act on politics, this is where you read what it left standing.
-  {
-    tab: "agora",
-    label: "Agora",
-    icon: <UiSprite item="resolutionDeck" className="railDiscIcon" />,
-  },
+  { tab: "agora", label: "Agora", glyph: "temple" },
 ];
 
 const LABELS = new Map<EmpireTab, string>(

@@ -65,12 +65,12 @@ function EmpireIntelPanelComponent({
   const cardsHeld = victoryCardsHeld(G, playerID);
 
   const title = ledgerTabLabel(activeTab);
-  const titleIcon = LEDGER_TABS.find(({ tab }) => tab === activeTab)?.icon;
+  const titleGlyph = LEDGER_TABS.find(({ tab }) => tab === activeTab)?.glyph;
 
   return (
     <div className="empireIntel">
       {/* The card is titled by the page it is showing, not by the furniture. */}
-      <LedgerPanelHeader title={title} icon={titleIcon} onClose={onClose} />
+      <LedgerPanelHeader title={title} glyph={titleGlyph} onClose={onClose} />
 
       <div className="empireSummary" aria-label="Empire summary">
         <span className="empireStat" title={`${cityCount} ${cityCount === 1 ? "city" : "cities"}`}>

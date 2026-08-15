@@ -3,7 +3,7 @@ import { totalPops } from "../../../game/rules";
 import { getOwnedHoldings } from "../helpers";
 import { useGameUi } from "../GameUiContext";
 import type { LedgerTab } from "../types";
-import { DiscRail } from "./DiscRail";
+import { TabRail } from "./TabRail";
 import { LEDGER_TABS } from "./tabs";
 
 /**
@@ -25,7 +25,7 @@ function LedgerRailComponent({
   const popsUsed = holdings.reduce((sum, { settlement }) => sum + totalPops(settlement.pops), 0);
 
   return (
-    <DiscRail
+    <TabRail
       side="left"
       tabs={LEDGER_TABS}
       activeTab={activeTab}
