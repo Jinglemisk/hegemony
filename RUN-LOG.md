@@ -152,3 +152,67 @@ Record<Union, GlyphId>`, so a new effect kind without an icon is a compile
 
 **Screenshots.** `.playwright-mcp/glyphs.png` — the full set at four sizes. This
 is the sheet to look at first if a later phase's icons ever stop matching.
+
+---
+
+## Phase 1 — the great deletion
+
+**Shipped.** Fourteen sites where the UI explained a mechanic in printed chrome
+are gone. Nothing that was a _fact_ was lost — facts were kept and shortened;
+what went is the teaching.
+
+- **Panel ledes:** Codex ("the whole rulebook, as this board plays it…"), both
+  Market lectures (the unit-of-account paragraph and the spread warning), the
+  Victory scoring rule, the Agora's convening rules and the Voice footnote.
+- **The Victory tab gained a heldline** — `2/3 LAURELS HELD` — because that is
+  what the deleted paragraph was really carrying. A count is a fact you can act
+  on; the rule behind it is one hover away in the Codex, which is the whole
+  bargain of this phase.
+- **The Agora note became one line of game voice:** `NEXT ASSEMBLY · SPRING OF
+YEAR 3` instead of a paragraph about when the Assembly convenes and how long a
+  Law stands.
+- **The Assembly stopped explaining its own harness:** the proposal hint under the
+  seats and the two hot-seat notes in the foot. The seats already show who has
+  spoken; the waiting note is now `YOU HAVE SPOKEN · 2 STILL TO DECIDE`.
+- **Deck telemetry left the bottom spine** (`Seasonal 32 · Events 82 · Classic ·
+Seed private`). None of it is a move the player can make.
+- **Modal lectures:** Calm's stacking rule, the riot-insurance instruction line,
+  the venture subtitle, and the upgrade note about population carrying over.
+- **Lecturing titles** shortened to names: the season dial's four-sentence
+  explanation of the game clock, the victory-card `title`.
+- **Empty states in the game's voice:** "No settlements yet" → "No walls have
+  risen yet"; "No stelae stand" → "No stele bears his name"; "No colony can be
+  upgraded into a city right now" → "No colony is ready to become a city".
+- **`blockedHint` is optional** and documented as tooltip-only. End Turn's was
+  deleted outright — it repeated its own hint word for word.
+- **The TUNE fab moved to the top-left of the map well.** It was fixed
+  bottom-right at `z-index: 9999`, lying directly on END TURN and swallowing
+  clicks on the one button that must never be blocked. Confirmed fixed in the
+  screenshot.
+
+**Deviations.**
+
+- **The `printed-mechanics` rule was rewritten, and it is narrower than the habit
+  it names.** The first version counted any `title=` with three words and scored
+  20 — nearly all of them short labels like "3 cities". Widening it to catch
+  printed prose scored 601, mostly source comments and type signatures; after
+  stripping comments and test files it still could not tell a lecture from a
+  status line in the game's own voice ("The house has risen"), which is exactly
+  the register the overhaul wants MORE of. A check that fires on both would be
+  switched off within a week. So the rule now counts only what it can judge
+  honestly — a `title=` holding a sentence rather than a name, with
+  interpolations collapsed before measuring — and the script says so in a comment
+  at the site. Printed prose is removed by hand and recorded here. **Budget: 20 →
+  0**, so that half of the habit is now a hard gate rather than a ratchet.
+- `font-size` (224) and `raw-hex` (75) are unchanged — this phase deleted text,
+  not styling. They come down in Phases 2–5.
+
+**Commits.** `0495109` ledes · `f9fdfbf` assembly harness copy · `0692eaa` chrome
+telemetry and titles · `91ed9fc` modals and empty states · `33cd0d9` verbs ·
+`9f02695` TUNE fab · `ae1c4d3` ratchet.
+
+**Red.** None. `check` · `lint` · `test:parity` (95) · `ui:check` green.
+
+**Screenshots.** `.playwright-mcp/p1-{table,assembly,market,victory}-1440x900.png`.
+END TURN is now unobstructed; the Market tab is rates and buttons with no prose
+above or below them.
