@@ -29,6 +29,11 @@ export function EndTurnSeal({
 }) {
   return (
     <button
+      // The whole seal is drawn art with `aria-hidden` on the svg, so without
+      // this the commit button had NO accessible name at all — invisible to a
+      // screen reader and to every by-role query, which is how the smoke test
+      // found it.
+      aria-label={`End turn — ${actingName} acts`}
       aria-disabled={disabled}
       className={`dial turnSeal${disabled ? " turnSealOff" : ""}`}
       onClick={disabled ? undefined : onClick}

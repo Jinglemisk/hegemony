@@ -8,23 +8,26 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   await expect(page.getByRole("heading", { name: "Choose metropolis pops" })).toBeVisible();
   await page.getByRole("button", { name: "Place metropolis" }).click();
   await expect(page.getByRole("heading", { name: "Choose metropolis pops" })).toBeHidden();
-  await expect(page.locator(".turnbox strong")).toHaveText("Nikos");
+  // Whose turn it is lives on the END TURN seal now, not in a separate box.
+  await expect(page.locator(".turnSealActor")).toHaveText("NIKOS ACTS");
 
   await page.goto("/?dev=preload&seed=42");
   const forcedDecision = page.getByRole("dialog");
   await expect(forcedDecision).toBeVisible();
   const decisionTitle = await forcedDecision.getByRole("heading").textContent();
   await forcedDecision
-    .getByRole("button", { name: /^(Claim Event|Place Pops|Resolve Choice)$/ })
+    // A fate's commit verb takes the card's mood now — you ENDURE a wound and
+    // TAKE a gift; only a choice or a placement keeps a procedural label.
+    .getByRole("button", { name: /^(Endure It|Take It|So Be It|Place Pops|Resolve Choice)$/ })
     .click();
   await expect(forcedDecision).toBeHidden();
 
-  const endTurn = page.getByRole("button", { name: "End Turn" });
+  const endTurn = page.getByRole("button", { name: /^End turn/i });
   await endTurn.focus();
   await page.keyboard.press("Enter");
-  await expect(page.locator(".turnbox strong")).toHaveText("Nikos");
+  await expect(page.locator(".turnSealActor")).toHaveText("NIKOS ACTS");
 
   await page.reload();
   await expect(page.getByRole("dialog").getByRole("heading")).toHaveText(decisionTitle ?? "");
-  await expect(page.locator(".turnbox strong")).toHaveText("Damon");
+  await expect(page.locator(".turnSealActor")).toHaveText("DAMON ACTS");
 });
