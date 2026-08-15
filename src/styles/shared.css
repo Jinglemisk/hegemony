@@ -59,9 +59,15 @@
    term so the eye learns "these are pressable", the term's own icon beside it, and a
    hover underline. font: inherit drops the bold display-font button default; only the
    colour and pointer set it apart from prose. The term IS the link — no (?) sprinkles. */
+/* The vertical padding is a TARGET, not a box. A glossary term is a word, so its
+   height is whatever the line gives it — 12px in the topbar chip, 20px in a
+   ceremony — and 2.5.8 asks for 24. On an `inline` box vertical padding grows the
+   border box, and with it the hit area, without touching the line box: the
+   sentence sets exactly as before, the word does not move, only what you can hit
+   does. There is no background or border here, so nothing of it is visible. */
 .richTokenLink {
   display: inline;
-  padding: 0;
+  padding: 6px 0;
   border: 0;
   margin: 0;
   background: none;

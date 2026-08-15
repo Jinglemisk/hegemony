@@ -836,8 +836,13 @@
   gap: 4px;
 }
 
+/* A pill the reader steers the book with, so it takes 2.5.8's 24px floor. The
+   text stays where it was: the extra height is centred around it, not added
+   under it. */
 .codexJumpLink {
-  min-height: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
   padding: 2px 8px;
   border: 1px solid transparent;
   border-radius: 999px;

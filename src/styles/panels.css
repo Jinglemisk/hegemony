@@ -970,8 +970,10 @@
 .chronFilter {
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  /* 24, not 22: five discs in a row are the smallest thing a hand has to hit on
+     this page, and 2.5.8's floor is 24. The blazon inside is unchanged. */
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 0;
   border-radius: 50%;

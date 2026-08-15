@@ -427,8 +427,14 @@
 
 /* One pip per law this orator has landed. A glanceable count, not a list — the
    laws themselves stand in their own column on the floor below. */
+/* The pips are 9px tall and the row is focusable — it carries the orator's power
+   tooltip — so the TRIGGER takes 2.5.8's 24px and the pips sit centred in it. The
+   old 10px margin is folded into that height, so the stele grows 6px, not 15. */
 .asmPipsTrigger {
-  margin-top: 10px;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  margin-top: 1px;
 }
 
 .asmPips {
