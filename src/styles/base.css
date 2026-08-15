@@ -189,16 +189,26 @@
   --bub-out: calc(28px * var(--ui-scale));
   --vb: calc(54px * var(--ui-scale));
   --vb-out: calc(32px * var(--ui-scale));
-  /* Widened toward centre (2026-07-19): the board no longer sits under the panels
-     (the camera now reserves their width symmetrically — see ui/chromeMetrics.ts),
-     so both ledger cards can claim the sea they used to float over. Kept equal so
-     the two flanks are symmetric around the centred board. */
-  /* The unscaled design width, named so JS can ask for it. ui/chromeMetrics.ts
-     divides the live --panel-w by this to learn how far --ui-scale has shrunk the
-     chrome; it used to carry a bare literal `360` for the same purpose. */
-  --panel-w-base: 360px;
+  /* The unscaled design widths, named so JS can ask for them. ui/chromeMetrics.ts
+     divides the live --panel-w by --panel-w-base to learn how far --ui-scale has
+     shrunk the chrome; it used to carry a bare literal `360` for the same purpose.
+     The two tablets are ASYMMETRIC and narrower than the 360/360 the app had
+     drifted to (proto.css .tablet.left/.right): 306 and 286, each INCLUDING its
+     own tab spine. The board is what the extra 54px + 74px buys back. */
+  --panel-w-base: 306px;
+  --chron-w-base: 286px;
   --panel-w: calc(var(--panel-w-base) * var(--ui-scale));
-  --chron-w: calc(var(--panel-w-base) * var(--ui-scale));
+  --chron-w: calc(var(--chron-w-base) * var(--ui-scale));
+  /* The tab spine is PART of the tablet, not furniture beside it: each page
+     subtracts the spine from its tablet's width, so the docked object measures
+     exactly --panel-w from the screen edge and the camera's reserve is honest. */
+  --tab-rail-w: 46px;
+  /* The twin dials are 128px across and float 12px off the table's foot. A
+     tablet ENDS where they begin — that is the whole of its bottom clearance,
+     and the reason no page has to pad its scroll region to dodge them. */
+  --dial-d: 128px;
+  --dial-gap: 12px;
+  --tablet-bot: calc(var(--dial-d) + var(--dial-gap));
   --hexclip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 
   /* ── The frame's own materials ──────────────────────────────────────────────
