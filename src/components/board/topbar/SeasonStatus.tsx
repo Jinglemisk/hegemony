@@ -14,7 +14,7 @@ function SeasonStatusComponent({ G }: { G: HegemonyState }) {
     <div className="seasonCluster">
       <div
         className="seasonDialFrame"
-        title={`The seasonal deck is the game clock: ${seasonsLeft} season${seasonsLeft === 1 ? "" : "s"} remain. When it runs out, most victory cards held wins.`}
+        title={`${seasonsLeft} season${seasonsLeft === 1 ? "" : "s"} remain`}
       >
         <SeasonDial seasonIndex={G.season} />
       </div>

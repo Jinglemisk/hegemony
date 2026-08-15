@@ -65,7 +65,6 @@ export function CommandDock({
   };
 
   const seasonsLeft = G.seasonalDrawPile.length;
-  const boardLabel = G.boardLayout === "classic" ? "Classic" : "Shuffled";
   const endTurnEnabled = isVerbEnabled(END_TURN_VERB, context);
   const endTurnExplanation = verbTitle(END_TURN_VERB, context);
 
@@ -76,9 +75,6 @@ export function CommandDock({
         <span className="dockSeasonYear">Year {yearOf(G.season)}</span>
         <span className="dockSeasonSub">
           {seasonsLeft} season{seasonsLeft === 1 ? "" : "s"} remain
-        </span>
-        <span className="dockSeasonDecks">
-          Seasonal {seasonsLeft} · Events {G.playerDrawPile.length} · {boardLabel} · Seed private
         </span>
       </div>
 

@@ -93,7 +93,7 @@ function EmpireIntelPanelComponent({
         </span>
         <span
           className="empireStat"
-          title={`${cardsHeld} of ${G.ruleset.victory.cardsToWin} victory cards — hold ${G.ruleset.victory.cardsToWin} at the start of your turn to win`}
+          title={`${cardsHeld} of ${G.ruleset.victory.cardsToWin} laurels held`}
         >
           <UiSprite item="victoryPoint" className="empireStatIcon" />
           <strong>
