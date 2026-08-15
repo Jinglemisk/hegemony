@@ -1,9 +1,13 @@
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
-import { settlementBuildingSlots } from "../../../game/rules";
-import type { Ruleset } from "../../../game/ruleset";
 import type { HexTile, PopType, Settlement } from "../../../game/types";
-import { HEX_SIZE, getSideBySidePositions, hexPoints } from "../../../ui/hexGeometry";
-import { SETTLEMENT_SEALS, TERRAIN_EMBLEMS } from "../../../ui/boardEmblems";
+import { HEX_SIZE, hexPoints } from "../../../ui/hexGeometry";
+import {
+  NAME_LAYOUT,
+  SETTLEMENT_SEALS,
+  TERRAIN_EMBLEMS,
+  YIELD_LAYOUT,
+} from "../../../ui/boardEmblems";
+import type { NameSlot } from "../../../ui/boardEmblems";
 import { glazeOf } from "../../../ui/playerGlazes";
 
 /**
@@ -21,19 +25,27 @@ import { glazeOf } from "../../../ui/playerGlazes";
 
 /** Where things sit inside a 45-unit hex, measured from its centre. */
 const EMBLEM_Y = -14;
-const YIELD_Y = 30;
 const SEAL_Y = -6;
 const SEAL_RADIUS = { capital: 20, city: 20, colony: 16 } as const;
 const BEAD_SPREAD = 13;
 const BEAD_RADIUS = 4;
-/** Roughly a character's width in the name plate's display face. */
-const NAME_CHAR_WIDTH = 7.6;
 
 /** Pop beads in ladder order, so a settlement always reads the same way. */
 const BEAD_ORDER: readonly PopType[] = ["citizens", "freemen", "slaves"];
 
-/** At most two settlements are drawn side by side; the rest collapse into +n. */
-const MAX_SHOWN_SETTLEMENTS = 2;
+/**
+ * One settlement, with where it stands on its tile, how wide its name is and which
+ * of the two slots that name takes. All three are decided for the whole board at
+ * once, in HexMap — a label can only know whether it has room by looking at its
+ * neighbours' labels, and it can only know its own width by being measured.
+ */
+export type SettlementPlacement = {
+  settlement: Settlement;
+  offsetX: number;
+  slot: NameSlot;
+  /** The name's measured advance, in world units. */
+  nameWidth: number;
+};
 
 function beadsOf(settlement: Settlement): PopType[] {
   return BEAD_ORDER.flatMap((pop) => Array.from({ length: settlement.pops[pop] }, () => pop));
@@ -52,14 +64,19 @@ function SettlementToken({
   settlement,
   name,
   offsetX,
+  slot,
+  nameWidth,
 }: {
   settlement: Settlement;
   name: string;
   offsetX: number;
+  slot: NameSlot;
+  nameWidth: number;
 }) {
   const radius = SEAL_RADIUS[settlement.kind];
   const beads = beadsOf(settlement);
-  const plateWidth = name.length * NAME_CHAR_WIDTH + 14;
+  const plateWidth = nameWidth + NAME_LAYOUT.platePad;
+  const plateY = NAME_LAYOUT.slotY[slot];
 
   return (
     <g
@@ -87,13 +104,18 @@ function SettlementToken({
 
       <rect
         className="namePlate"
-        height={15}
+        height={NAME_LAYOUT.plateHeight}
         rx={2}
         width={plateWidth}
         x={-plateWidth / 2}
-        y={SEAL_Y + radius + 18}
+        y={plateY}
       />
-      <text className="nameText" textAnchor="middle" y={SEAL_Y + radius + 29.5}>
+      <text
+        className="nameText"
+        fontSize={NAME_LAYOUT.fontSize}
+        textAnchor="middle"
+        y={plateY + NAME_LAYOUT.baseline}
+      >
         {name}
       </text>
     </g>
@@ -132,7 +154,6 @@ export function TileGround({
   tile,
   x,
   y,
-  ruleset,
   names,
   state,
   onTileAction,
@@ -141,30 +162,20 @@ export function TileGround({
   tile: HexTile;
   x: number;
   y: number;
-  ruleset: Ruleset;
   /** settlement id → name, from ui/settlementNames. */
   names: Map<string, string>;
   state: TileState;
   onTileAction: (tileId: string) => void;
   onTileClick: (tileId: string, event: ReactMouseEvent<SVGGElement>) => void;
 }) {
-  const { isSelected, isPending, isPlacementCandidate } = state;
   // The primary settlement leads: a city outranks a colony for the centre slot,
   // because a city is the thing you look for when scanning the board.
   const ordered = [...tile.settlements].sort((left, right) =>
     left.kind === "colony" && right.kind !== "colony" ? 1 : right.kind === "colony" ? -1 : 0,
   );
   const leading = ordered[0];
-  const city = tile.settlements.find((settlement) => settlement.kind !== "colony");
-  const usedBuildingSlots = city?.buildings.length ?? 0;
-  const totalBuildingSlots = city
-    ? settlementBuildingSlots(tile, city, ruleset)
-    : tile.buildingSlots;
   const yieldAmount = tile.resource?.amount ?? null;
   const yieldLabel = tile.resource ? `${tile.resource.amount} ${tile.resource.type}` : "no yield";
-  // Slot pips are hidden at rest. They matter only when choosing where to build,
-  // and a permanent "0/3" on forty tiles is forty numbers nobody is reading.
-  const showSlots = (isSelected || isPending || isPlacementCandidate) && totalBuildingSlots > 0;
 
   return (
     <g className={`tile ${stateClassOf(state)}`} transform={`translate(${x} ${y})`}>
@@ -195,14 +206,13 @@ export function TileGround({
         />
 
         {yieldAmount !== null && tile.settlements.length === 0 ? (
-          <text className="hexYield num" textAnchor="middle" y={YIELD_Y}>
+          <text
+            className="hexYield num"
+            fontSize={YIELD_LAYOUT.fontSize}
+            textAnchor="middle"
+            y={YIELD_LAYOUT.y}
+          >
             {yieldAmount}
-          </text>
-        ) : null}
-
-        {showSlots ? (
-          <text className="hexSlots num" textAnchor="middle" y={-24}>
-            {usedBuildingSlots}/{totalBuildingSlots}
           </text>
         ) : null}
 
@@ -220,39 +230,43 @@ export function TileGround({
   );
 }
 
-/** Everything standing on a tile, drawn in the second pass over the whole board. */
+/**
+ * Everything standing on a tile, drawn in the second pass over the whole board.
+ *
+ * Which settlements are shown and where their names hang is decided for the whole
+ * board at once, in HexMap — a label can only know whether it has room by looking
+ * at its neighbours' labels.
+ */
 export function TileTokens({
-  tile,
+  placements,
+  overflow,
   x,
   y,
   names,
   state,
 }: {
-  tile: HexTile;
+  placements: readonly SettlementPlacement[];
+  /** Settlements on this tile that did not fit; drawn as a +n bead. */
+  overflow: number;
   x: number;
   y: number;
   names: Map<string, string>;
   state: TileState;
 }) {
-  if (tile.settlements.length === 0) {
+  if (placements.length === 0) {
     return null;
   }
 
-  const ordered = [...tile.settlements].sort((left, right) =>
-    left.kind === "colony" && right.kind !== "colony" ? 1 : right.kind === "colony" ? -1 : 0,
-  );
-  const shown = ordered.slice(0, MAX_SHOWN_SETTLEMENTS);
-  const overflow = ordered.length - shown.length;
-  const offsets = getSideBySidePositions(shown.length);
-
   return (
     <g className={`tile tileTokens ${stateClassOf(state)}`} transform={`translate(${x} ${y})`}>
-      {shown.map((settlement, index) => (
+      {placements.map(({ settlement, offsetX, slot, nameWidth }) => (
         <SettlementToken
           key={settlement.id}
           name={names.get(settlement.id) ?? "POLIS"}
-          offsetX={offsets[index]}
+          nameWidth={nameWidth}
+          offsetX={offsetX}
           settlement={settlement}
+          slot={slot}
         />
       ))}
 

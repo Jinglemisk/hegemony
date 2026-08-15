@@ -1,5 +1,5 @@
-import { memo, useMemo, useState } from "react";
-import type { HegemonyState } from "../game/types";
+import { memo, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { HegemonyState, HexTile } from "../game/types";
 import {
   BASE_VIEW_BOX,
   HEX_SIZE,
@@ -8,11 +8,15 @@ import {
   ZOOM_STEP,
   cameraTransform,
   getShorelineEdges,
+  getSideBySidePositions,
   hexCenter,
   viewBoxToString,
 } from "../ui/hexGeometry";
 import { settlementNames } from "../ui/settlementNames";
+import { MAX_SHOWN_SETTLEMENTS, NAME_LAYOUT, YIELD_LAYOUT } from "../ui/boardEmblems";
+import type { NameSlot } from "../ui/boardEmblems";
 import { TileGround, TileTokens } from "./board/map/TileGroup";
+import type { SettlementPlacement } from "./board/map/TileGroup";
 import { useMapCamera } from "./board/map/useMapCamera";
 
 /**
@@ -35,6 +39,161 @@ const MAP_MODE_OPTIONS: Array<{ mode: MapMode; label: string; iconHref: string }
     iconHref: new URL("../../assets/map-modes/terrain-map-mode.svg", import.meta.url).href,
   },
 ];
+
+type Box = { x0: number; x1: number; y0: number; y1: number };
+type TileCenter = { tile: HexTile; x: number; y: number };
+
+function overlaps(a: Box, b: Box) {
+  return a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+}
+
+const NAME_SLOTS: readonly NameSlot[] = ["below", "above"];
+
+/**
+ * Every distinct name on the board, measured once in the face and size it will be
+ * drawn in.
+ *
+ * The board needs the answer BEFORE it draws anything: a plate has to be as wide as
+ * its name, and a name can only know whether it has room by comparing its own box
+ * with its neighbours'. So the widths come from a hidden row of the same `<text>`
+ * elements rather than from a per-character constant — which is what was wrong in
+ * the first place, and what would go wrong again the first time the face, the size
+ * or the letter-spacing moved.
+ */
+function useMeasuredNameWidths(names: readonly string[]) {
+  const nodes = useRef(new Map<string, SVGTextElement>());
+  const [widths, setWidths] = useState<ReadonlyMap<string, number>>(new Map());
+
+  useLayoutEffect(() => {
+    let live = true;
+
+    const measure = () => {
+      const measured = new Map<string, number>();
+
+      for (const [name, node] of nodes.current) {
+        if (typeof node.getComputedTextLength !== "function") {
+          return;
+        }
+
+        const width = node.getComputedTextLength();
+
+        if (width > 0) {
+          measured.set(name, width);
+        }
+      }
+
+      if (live && measured.size > 0) {
+        setWidths(measured);
+      }
+    };
+
+    measure();
+    // Cinzel may still be loading at first paint, and the fallback serif has its
+    // own metrics — ask again once the real face is in.
+    const fonts: FontFaceSet | undefined = document.fonts;
+
+    if (fonts) {
+      void fonts.ready.then(measure);
+    }
+
+    return () => {
+      live = false;
+    };
+  }, [names]);
+
+  const register = (name: string) => (node: SVGTextElement | null) => {
+    if (node) {
+      nodes.current.set(name, node);
+    } else {
+      nodes.current.delete(name);
+    }
+  };
+
+  return { widths, register };
+}
+
+/**
+ * Where every settlement's name hangs, decided for the whole board in one pass.
+ *
+ * Two settlements on adjacent hexes are 78 world units apart, and a plate wide
+ * enough to hold an eight-letter name at a size still legible on a 1280 screen is
+ * about that wide — so at the resting camera two neighbours simply cannot both
+ * hang their names under their seals. OLYNTHOS ran into AIGAI and the pair read as
+ * one word.
+ *
+ * The board neither shrinks the type until nobody can read it nor hides the lesser
+ * name: a label that would land on one already placed flips to the slot ABOVE its
+ * seal. Same-row neighbours — the case that fails — then sit in two different bands
+ * and both stay whole, in place, with no leader lines to follow. Yield numerals go
+ * in first as fixed obstacles, because a name reading through a "10" is the same
+ * defect.
+ *
+ * Tiles are visited in board order, so a name never swaps slots between frames.
+ */
+function planPlacements(
+  centers: readonly TileCenter[],
+  names: Map<string, string>,
+  nameWidths: ReadonlyMap<string, number>,
+) {
+  const taken: Box[] = [];
+
+  for (const { tile, x, y } of centers) {
+    if (tile.settlements.length > 0 || !tile.resource) {
+      continue;
+    }
+
+    const half = (String(tile.resource.amount).length * YIELD_LAYOUT.digitWidth) / 2;
+
+    taken.push({
+      x0: x - half,
+      x1: x + half,
+      y0: y + YIELD_LAYOUT.y - YIELD_LAYOUT.height,
+      y1: y + YIELD_LAYOUT.y,
+    });
+  }
+
+  const plans = new Map<string, { placements: SettlementPlacement[]; overflow: number }>();
+
+  for (const { tile, x, y } of centers) {
+    if (tile.settlements.length === 0) {
+      continue;
+    }
+
+    // A city outranks a colony for the centre slot: a city is the thing you look
+    // for when scanning the board.
+    const ordered = [...tile.settlements].sort((left, right) =>
+      left.kind === "colony" && right.kind !== "colony" ? 1 : right.kind === "colony" ? -1 : 0,
+    );
+    const shown = ordered.slice(0, MAX_SHOWN_SETTLEMENTS);
+    const offsets = getSideBySidePositions(shown.length);
+
+    const placements = shown.map((settlement, index) => {
+      const offsetX = offsets[index];
+      const name = names.get(settlement.id) ?? "POLIS";
+      const nameWidth = nameWidths.get(name) ?? name.length * NAME_LAYOUT.charAdvance;
+      const half = (nameWidth + NAME_LAYOUT.platePad) / 2 + NAME_LAYOUT.gutter;
+      const boxAt = (slot: NameSlot): Box => ({
+        x0: x + offsetX - half,
+        x1: x + offsetX + half,
+        y0: y + NAME_LAYOUT.slotY[slot],
+        y1: y + NAME_LAYOUT.slotY[slot] + NAME_LAYOUT.plateHeight,
+      });
+      // Below is home; above is the escape. If neither is clear the name stays
+      // home rather than moving somewhere just as bad.
+      const slot = NAME_SLOTS.find(
+        (candidate) => !taken.some((box) => overlaps(box, boxAt(candidate))),
+      );
+
+      taken.push(boxAt(slot ?? "below"));
+
+      return { settlement, offsetX, slot: slot ?? "below", nameWidth };
+    });
+
+    plans.set(tile.id, { placements, overflow: ordered.length - shown.length });
+  }
+
+  return plans;
+}
 
 function HexMapComponent({
   G,
@@ -87,6 +246,12 @@ function HexMapComponent({
   // Named once for the whole board: the mapping has to see every settlement at
   // once to guarantee no two share a name.
   const names = useMemo(() => settlementNames(G.board.tiles), [G.board.tiles]);
+  const nameList = useMemo(() => [...new Set(names.values())].sort(), [names]);
+  const { widths: nameWidths, register: registerNameMetric } = useMeasuredNameWidths(nameList);
+  const plans = useMemo(
+    () => planPlacements(centers, names, nameWidths),
+    [centers, names, nameWidths],
+  );
   const tileState = (tileId: string) => ({
     isSelected: selectedTileId === tileId,
     isPending: pendingTileId === tileId,
@@ -146,6 +311,22 @@ function HexMapComponent({
         preserveAspectRatio="xMidYMid slice"
         {...cameraHandlers}
       >
+        {/* The names, drawn once with nothing on them so they can be measured. It
+            sits outside the camera layer because `getComputedTextLength` answers in
+            the element's own units, which zoom does not touch. */}
+        <g className="nameMetrics" aria-hidden="true">
+          {nameList.map((name) => (
+            <text
+              className="nameText"
+              fontSize={NAME_LAYOUT.fontSize}
+              key={name}
+              ref={registerNameMetric(name)}
+            >
+              {name}
+            </text>
+          ))}
+        </g>
+
         {/* No sea image: KYKLOS paints the water as a static gradient + texture on
             .hexMap itself. A backdrop inside this layer would pan and zoom with the
             board, which is what dragged the old chart's frame and sea-monsters
@@ -178,7 +359,6 @@ function HexMapComponent({
               names={names}
               onTileAction={onTileAction}
               onTileClick={handleTileClick}
-              ruleset={G.ruleset}
               state={tileState(tile.id)}
               tile={tile}
               x={x}
@@ -186,16 +366,21 @@ function HexMapComponent({
             />
           ))}
 
-          {centers.map(({ tile, x, y }) => (
-            <TileTokens
-              key={tile.id}
-              names={names}
-              state={tileState(tile.id)}
-              tile={tile}
-              x={x}
-              y={y}
-            />
-          ))}
+          {centers.map(({ tile, x, y }) => {
+            const plan = plans.get(tile.id);
+
+            return plan ? (
+              <TileTokens
+                key={tile.id}
+                names={names}
+                overflow={plan.overflow}
+                placements={plan.placements}
+                state={tileState(tile.id)}
+                x={x}
+                y={y}
+              />
+            ) : null;
+          })}
 
           {confirmation
             ? centers

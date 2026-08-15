@@ -70,13 +70,6 @@
   font-weight: 800;
 }
 
-/* Slots appear only while you are choosing where to build. */
-.hexSlots {
-  fill: rgb(36 25 16 / 62%);
-  font-family: var(--body);
-  font-weight: 700;
-}
-
 /* ── State: strokes, always ───────────────────────────────────────────────── */
 
 .svgButton {
@@ -178,6 +171,10 @@
    A settlement is ARGOS, not "City -2,0". The coordinates are still there, in
    the tile's accessible label and its tooltip, where a debugging fact belongs. */
 
+/* The plate is sized to the name it carries, measured in the browser before either
+   is drawn (HexMap's `useMeasuredNameWidths`); nothing here may decide how wide it
+   is. The size of the name itself is an ATTRIBUTE on the element rather than a
+   declaration — inside a fixed viewBox a text size is geometry. */
 .namePlate {
   fill: var(--ivory);
   fill-opacity: 0.92;
@@ -189,7 +186,14 @@
   fill: var(--ink);
   font-family: var(--disp);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+}
+
+/* The measuring row: the same names in the same face, drawn nowhere. `visibility`
+   rather than `display` on purpose — a `display: none` text has no metrics. */
+.nameMetrics {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .settlementOverflow circle {
