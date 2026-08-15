@@ -20,6 +20,7 @@ import { buildingTooltipRows, capitalize, getBuildingBenefitText } from "../help
 import type { OwnedHolding } from "../types";
 import { BuildingChip } from "./BuildingChip";
 import { useGameUi } from "../GameUiContext";
+import { settlementNameOf } from "../../../ui/settlementNames";
 
 export function CitiesTab({
   holdings,
@@ -84,12 +85,13 @@ export function CitiesTab({
             <button
               aria-controls={detailId}
               aria-expanded={isExpanded}
-              aria-label={`${isExpanded ? "Collapse" : "Expand"} ${capitalize(settlement.kind)} ${tile.id}: ${popTotal} of ${capacity} pops, ${settlement.buildings.length} of ${slots} building slots, ${tile.resource ? `${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]} tile yield` : "no tile yield"}.`}
+              aria-label={`${isExpanded ? "Collapse" : "Expand"} ${settlementNameOf(G.board.tiles, settlement.id)}: ${popTotal} of ${capacity} pops, ${settlement.buildings.length} of ${slots} building slots, ${tile.resource ? `${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]} tile yield` : "no tile yield"}.`}
               className="holdingSummaryButton"
               onClick={() => toggleHolding(holdingId)}
               type="button"
             >
               <SettlementSummaryCard
+                name={settlementNameOf(G.board.tiles, settlement.id)}
                 content={G.definition.content}
                 netYield={netYield}
                 ruleset={G.ruleset}

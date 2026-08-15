@@ -13,6 +13,7 @@ import { AtlasIcon } from "../../Sprites";
 import { useGameUi } from "../GameUiContext";
 import { capitalize, settlementPickerLabel } from "../helpers";
 import { CostRow, PlacementModalShell } from "./PlacementModalShell";
+import { settlementNameOf } from "../../../ui/settlementNames";
 
 export function UpgradeCityModal({
   onCancel,
@@ -119,6 +120,7 @@ export function UpgradeCityModal({
             <article className="placementPreviewCard settlement-colony">
               <span className="placementPreviewTag">Upgrading this colony</span>
               <SettlementSummaryCard
+                name={settlementNameOf(G.board.tiles, selected.settlement.id)}
                 content={G.definition.content}
                 netYield={colonyYield}
                 ruleset={G.ruleset}

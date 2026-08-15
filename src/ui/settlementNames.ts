@@ -73,8 +73,29 @@ function hash(value: string): number {
  * Every settlement on the board, named. Collisions are resolved by probing
  * forward through the pool, and settlements are visited in id order so the answer
  * never depends on which tile happened to be read first.
+ *
+ * Memoised on the tiles array's identity. The whole board has to be seen at once
+ * to guarantee uniqueness, so this cannot be computed per settlement — and it is
+ * asked for from the map, the ledger and half a dozen pickers on every render.
+ * `G.board.tiles` is frozen and only replaced when the board actually changes,
+ * which makes identity the correct cache key.
  */
+let cached: { tiles: readonly HexTile[]; names: Map<string, string> } | null = null;
+
 export function settlementNames(tiles: readonly HexTile[]): Map<string, string> {
+  if (cached?.tiles !== tiles) {
+    cached = { tiles, names: computeSettlementNames(tiles) };
+  }
+
+  return cached.names;
+}
+
+/** The name of one settlement, for the surfaces that only hold a single one. */
+export function settlementNameOf(tiles: readonly HexTile[], settlementId: string): string {
+  return settlementNames(tiles).get(settlementId) ?? "POLIS";
+}
+
+function computeSettlementNames(tiles: readonly HexTile[]): Map<string, string> {
   const settlements = tiles
     .flatMap((tile) => tile.settlements)
     .slice()

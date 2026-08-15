@@ -1,15 +1,17 @@
 import { memo, useEffect, useRef, useState } from "react";
-import type { Resource, Resources } from "../game/types";
+import type { HexTile, Resource, Resources } from "../game/types";
 import type { IncomeContribution } from "../game/rules";
 import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
 import { RESOURCE_GLYPHS } from "../ui/iconRegistry";
+import { settlementNames } from "../ui/settlementNames";
 import { Icon } from "../ui/icons/Icon";
 import { Tooltip } from "./overlays/Tooltip";
 
 type FlashDirection = "increase" | "decrease";
 
 function ResourceGridComponent({
+  tiles,
   resources,
   deltas,
   breakdown = [],
@@ -17,6 +19,8 @@ function ResourceGridComponent({
   className = "",
   order = RESOURCE_ORDER,
 }: {
+  /** The board, so a breakdown row can name the settlement it came from. */
+  tiles: readonly HexTile[];
   resources: Resources;
   deltas?: Resources;
   breakdown?: IncomeContribution[];
@@ -82,7 +86,12 @@ function ResourceGridComponent({
           <Tooltip
             ariaLabel={`${RESOURCE_LABELS[resource]} ${formatNumber(resources[resource])}, projected ${formatSignedNumber(delta)} per turn`}
             content={
-              <ResourceBreakdown resource={resource} delta={delta} entries={resourceBreakdown} />
+              <ResourceBreakdown
+                delta={delta}
+                entries={resourceBreakdown}
+                resource={resource}
+                tiles={tiles}
+              />
             }
             focusable
             key={resource}
@@ -108,11 +117,14 @@ function ResourceBreakdown({
   resource,
   delta,
   entries,
+  tiles,
 }: {
   resource: Resource;
   delta: number;
   entries: IncomeContribution[];
+  tiles: readonly HexTile[];
 }) {
+  const names = settlementNames(tiles);
   return (
     <>
       <div className="resourceTooltipHeader">
@@ -129,7 +141,11 @@ function ResourceBreakdown({
               key={`${entry.resource}-${entry.source}-${entry.detail}-${index}`}
             >
               <span>
-                <strong>{entry.source}</strong>
+                {/* The engine labels its own lines "City on plains -2,0"; where
+                    a line names a settlement, the place's name replaces it. */}
+                <strong>
+                  {(entry.settlementId ? names.get(entry.settlementId) : null) ?? entry.source}
+                </strong>
                 <em>{entry.detail}</em>
               </span>
               <b className={getResourceDeltaClass(resource, entry.amount)}>

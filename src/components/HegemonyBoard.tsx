@@ -422,6 +422,7 @@ export function HegemonyBoard({
             <div className="resourceSpine">
               <ResourceGrid
                 order={TOP_RESOURCES}
+                tiles={G.board.tiles}
                 resources={viewer.resources}
                 deltas={projectedIncome}
                 breakdown={projectedIncomeBreakdown}

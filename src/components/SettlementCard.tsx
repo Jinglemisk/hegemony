@@ -11,6 +11,8 @@ import {
 import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, tileCssVars } from "../ui/resourceVisuals";
 import { AtlasIcon, TerrainSprite } from "./Sprites";
+import { SETTLEMENT_GLYPHS } from "../ui/iconRegistry";
+import { Icon } from "../ui/icons/Icon";
 import { ResourceChips } from "./board/ResourceChips";
 import { capitalize } from "./board/helpers";
 
@@ -20,6 +22,7 @@ import { capitalize } from "./board/helpers";
  * computed {@link Resources} net yield so the existing Cities tab math is untouched.
  */
 export function SettlementSummaryCard({
+  name,
   tile,
   settlement,
   netYield,
@@ -28,6 +31,8 @@ export function SettlementSummaryCard({
 }: {
   tile: HexTile;
   settlement: Settlement;
+  /** The place's name, from ui/settlementNames. */
+  name: string;
   netYield: Resources;
   ruleset: Ruleset;
   content: GameContent;
@@ -41,11 +46,15 @@ export function SettlementSummaryCard({
   return (
     <span className="holdingSummaryRows">
       <span className="holdingIdentityCluster">
-        <span className="cityIdentity" title={`${capitalize(settlement.kind)} ${tile.id}`}>
-          <AtlasIcon icon={settlement.kind} className="miniIcon settlementIdentityIcon" />
+        {/* NAME first, rank and ground beneath — the same identity the board
+            shows. Coordinates live in the title, where debugging facts belong. */}
+        <span className="cityIdentity" title={`${capitalize(settlement.kind)} at ${tile.id}`}>
+          <Icon glyph={SETTLEMENT_GLYPHS[settlement.kind]} size="rail" className="miniIcon" />
           <span className="holdingTitleBlock">
-            <strong>{capitalize(settlement.kind)}</strong>
-            <em>{formatTileCoordinates(tile)}</em>
+            <strong className="title">{name}</strong>
+            <em className="caption">
+              {settlement.kind} · {tile.terrain}
+            </em>
           </span>
         </span>
       </span>
@@ -116,8 +125,4 @@ export function HoldingNetYields({ resources }: { resources: Resources }) {
       }
     />
   );
-}
-
-function formatTileCoordinates(tile: HexTile) {
-  return `${tile.q},${tile.r}`;
 }

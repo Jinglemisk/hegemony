@@ -46,7 +46,7 @@ export function BuildingsTab({
               const benefit = getBuildingBenefitText(G, playerID, tile, building);
               const disabled = !isActive || phase !== "gameplay" || !status.can;
               const reason = actionRequirementText(status, phase, isActive);
-              const holding = holdingShortLabel(tile, settlement);
+              const holding = holdingShortLabel(G, settlement);
 
               return (
                 <Tooltip
