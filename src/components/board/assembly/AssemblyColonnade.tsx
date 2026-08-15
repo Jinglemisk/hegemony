@@ -265,6 +265,9 @@ function DrawSeal({
       Draw
       <b className="asmDrawCost stat num">{cost}</b>
       <Icon glyph={RESOURCE_GLYPHS.influence} />
+      {/* Four orators, four seals, and all four announced "Draw 3". The stele the
+          seal stands on names it to the eye; this names it to a reader. */}
+      <span className="visuallyHidden"> from {politician.name}</span>
     </AssemblyAction>
   );
 }

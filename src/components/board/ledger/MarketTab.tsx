@@ -85,6 +85,9 @@ export function MarketTab({
                     <Icon glyph={RESOURCE_GLYPHS[material]} />
                   </b>
                   <small className="label">sell</small>
+                  {/* The row's glyph says WHICH material to the eye; to a reader
+                      it says nothing, and five rows announced "3 sell" alike. */}
+                  <span className="visuallyHidden"> {material}</span>
                 </button>
               </Tooltip>
 
@@ -112,6 +115,7 @@ export function MarketTab({
                     <Icon glyph="gold" />
                   </b>
                   <small className="label">buy</small>
+                  <span className="visuallyHidden"> {material}</span>
                 </button>
               </Tooltip>
             </span>
