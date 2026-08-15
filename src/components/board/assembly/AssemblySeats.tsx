@@ -96,14 +96,18 @@ function SeatPlaque({
 }) {
   const glaze = PLAYER_GLAZES[playerID];
   const isViewer = playerID === viewerId;
-  const { status, sherd } = seatState(G, session, playerID, viewerId);
+  const { status, sherd, casting } = seatState(G, session, playerID, viewerId);
 
   return (
     <button
+      // `aria-pressed` is "you hold this seat"; `aria-current` is "the house is
+      // waiting on this one". They are different facts and in a hotseat they are
+      // routinely on different plaques, so neither can stand in for the other.
+      aria-current={casting ? "true" : undefined}
       aria-pressed={isViewer}
       className={`asmSeat${lit ? " is-lit" : ""}${isViewer ? " is-you" : ""}`}
       onClick={() => onTakeSeat(playerID)}
-      title={isViewer ? `${glaze.name} — you hold this seat` : `Take ${glaze.name}'s seat`}
+      title={isViewer ? `${glaze.name}, your seat` : `Take ${glaze.name}'s seat`}
       type="button"
     >
       <span className="asmGlaze title" style={{ background: glaze.color }}>
@@ -111,7 +115,10 @@ function SeatPlaque({
       </span>
       <span className="asmSeatBody">
         <span className="asmSeatName verb">{glaze.name}</span>
-        <span className="asmSeatStatus caption">{status}</span>
+        {/* The seat the game is waiting on takes the CUE treatment — clay caps,
+            the same ink the casting plaque uses — not the quiet italic every
+            other state wears. It is the one plaque you must click. */}
+        <span className={casting ? "asmSeatCue label" : "asmSeatStatus caption"}>{status}</span>
       </span>
       {sherd ? (
         <span className={`asmSherd is-${sherd.tone}`}>
@@ -131,7 +138,7 @@ function seatState(
   session: AssemblySession,
   playerID: PlayerId,
   viewerId: PlayerId,
-): { status: string; sherd: Sherd | null } {
+): { status: string; sherd: Sherd | null; casting?: boolean } {
   const glaze = PLAYER_GLAZES[playerID];
 
   if (session.phase === "voting") {
@@ -144,13 +151,26 @@ function seatState(
       };
     }
 
-    const place = session.voteOrder.indexOf(playerID) - session.voteIndex;
+    // Two different questions, and the row used to answer only the second one.
+    // `index` is where a seat stands in the order and never moves; `place` is how
+    // far off its turn is and shrinks as the ballot walks. "Speaks last" is about
+    // the ORDER — it stayed true only while `voteIndex` was 0, which is why the
+    // fourth seat silently became "yet to speak" after the first vote landed. And
+    // `place === 0` — the seat the whole house is waiting on — had no branch at
+    // all, so the one plaque you must click read the same as the one that votes
+    // third. The row was off by one and least urgent exactly where it mattered.
+    const index = session.voteOrder.indexOf(playerID);
+    const place = index - session.voteIndex;
+
+    if (place === 0) {
+      return { status: castingCue(G, session, playerID), sherd: null, casting: true };
+    }
 
     return {
       status:
         place === 1
           ? "speaks next"
-          : place === session.voteOrder.length - 1
+          : index === session.voteOrder.length - 1
             ? "speaks last"
             : "yet to speak",
       sherd: { tone: "blank", mark: "·", greek: false },
@@ -158,8 +178,19 @@ function seatState(
   }
 
   if (session.phase === "closing") {
+    // What this seat DID in the sitting that just rose. The all-time count lives
+    // in the voice ledger on the floor above, and printing it here too put the
+    // same numeral on screen twice per player.
+    const authored = session.results.filter((result) => result.item.proposer === playerID);
+    const carried = authored.filter((result) => result.passed).length;
+
     return {
-      status: `${G.assemblyPassedByPlayer[playerID]} carried in all`,
+      status:
+        carried > 0
+          ? `carried ${carried} today`
+          : authored.length > 0
+            ? "spoke, and lost"
+            : "held their peace",
       sherd: null,
     };
   }
@@ -185,11 +216,45 @@ function seatState(
   };
 }
 
+/** "Casts now · 2 votes" — the line every plaque uses for the seat on the floor,
+ *  whether or not the viewer happens to be sitting in it. */
+function castingCue(G: HegemonyState, session: AssemblySession, playerID: PlayerId): string {
+  const weight = baseVoteWeight(G, playerID) + session.bribesUsed[playerID];
+  return `Casts now · ${weight} vote${weight === 1 ? "" : "s"}`;
+}
+
+/**
+ * Where a seat's weight comes from — the answer to "Casts now · 0 votes", which
+ * used to be printed with no explanation and no recourse. Vote weight is the
+ * seat's CITIZEN count, so a player holding only freemen and slaves is given the
+ * floor with nothing to cast, and nothing on screen said why.
+ */
+function weightNote(G: HegemonyState, session: AssemblySession, playerID: PlayerId): string {
+  const bought = session.bribesUsed[playerID];
+  const bribes = bought > 0 ? `, ${bought} bought` : "";
+
+  if (session.isonomiaTarget === playerID) {
+    return `Isonomia holds you to one vote${bribes}`;
+  }
+
+  const base = baseVoteWeight(G, playerID);
+
+  if (base === 0) {
+    return `no citizens, no voice${bought > 0 ? ` — ${bought} bought` : " — buy one below"}`;
+  }
+
+  return `one vote per citizen${bribes}`;
+}
+
 /**
  * The seat that is casting, held by the viewer: one wide lit plaque carrying all
  * four choices at once — the two votes as filled lacquer, the two purchases as
  * outlines with their prices. Yea and Nay are the same shape a thumb apart, which
  * is deliberate; Veto and Bribe are a different shape because they cost money.
+ *
+ * The plaque explains ITSELF. A player handed the floor with 0 votes and both
+ * purchases greyed out was given no reason for either, and the reasons only
+ * existed inside tooltips nobody hovers mid-decision.
  */
 function CastingSeat({
   G,
@@ -212,15 +277,17 @@ function CastingSeat({
   const canBribe = !bribesSpent && influence >= rules.briberyCost;
 
   return (
-    <div className="asmSeat asmSeatCasting">
+    <div aria-current="true" className="asmSeat asmSeatCasting is-you">
       <span className="asmGlaze title" style={{ background: glaze.color }}>
         {glaze.blazon}
       </span>
       <span className="asmSeatBody">
-        <span className="asmSeatName verb">{glaze.name}</span>
-        <span className="asmSeatCue label">
-          Casts now · {weight} vote{weight === 1 ? "" : "s"}
+        <span className="asmSeatName verb">
+          {glaze.name}
+          <span className="visuallyHidden">, your seat</span>
         </span>
+        <span className="asmSeatCue label">{castingCue(G, session, playerID)}</span>
+        <span className="asmSeatWhy caption">{weightNote(G, session, playerID)}</span>
       </span>
 
       <AssemblyAction
@@ -259,10 +326,7 @@ function CastingSeat({
         triggerClassName="asmVoteTrigger"
       >
         Veto
-        <small className="asmVoteCost stat num">
-          {rules.vetoCost}
-          <Icon glyph={RESOURCE_GLYPHS.influence} />
-        </small>
+        <PurchaseChip cost={rules.vetoCost} held={influence} spent={vetoSpent} />
       </AssemblyAction>
       <AssemblyAction
         blockedReason={
@@ -279,11 +343,37 @@ function CastingSeat({
         triggerClassName="asmVoteTrigger"
       >
         Bribe +1
-        <small className="asmVoteCost stat num">
-          {rules.briberyCost}
-          <Icon glyph={RESOURCE_GLYPHS.influence} />
-        </small>
+        <PurchaseChip cost={rules.briberyCost} held={influence} spent={bribesSpent} />
       </AssemblyAction>
     </div>
+  );
+}
+
+/**
+ * The price on a purchase, and — when the purchase is inert — the reason it is.
+ *
+ * Veto and Bribe are routinely both greyed out on the very first ballot, and a
+ * greyed slab with a price on it is indistinguishable from one you simply have
+ * not clicked. The chip says which of the two walls you are against: a spent
+ * allowance, or a shortfall you could still fix by collecting influence.
+ */
+function PurchaseChip({ cost, held, spent }: { cost: number; held: number; spent: boolean }) {
+  if (spent) {
+    return <small className="asmVoteWhy caption">none left</small>;
+  }
+
+  if (held < cost) {
+    return (
+      <small className="asmVoteWhy caption num">
+        {cost - held} <Icon glyph={RESOURCE_GLYPHS.influence} /> short
+      </small>
+    );
+  }
+
+  return (
+    <small className="asmVoteCost stat num">
+      {cost}
+      <Icon glyph={RESOURCE_GLYPHS.influence} />
+    </small>
   );
 }
