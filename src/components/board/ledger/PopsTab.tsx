@@ -82,7 +82,15 @@ function bestRungCost(
   }, fallback);
 }
 
-/** A price, printed: the numeral and the glyph of what it costs. */
+/**
+ * A price, printed as what it takes OUT of you: `−3 🎗`.
+ *
+ * It used to print the bare numeral, and on the rung whose verb is SELL that
+ * reads as takings — "sell a freeman, 3 influence" is a sale price, not a fee,
+ * when selling a freeman in fact *costs* 3 influence (ruleset `demoteCosts`).
+ * The page's own rule is that a signed numeral carries judgment, so the sign is
+ * what stops a cost being read as income.
+ */
 function Price({ cost }: { cost: Partial<Resources> }) {
   const parts = RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) !== 0);
 
@@ -94,12 +102,22 @@ function Price({ cost }: { cost: Partial<Resources> }) {
     <span className="rungPrice num">
       {parts.map((resource) => (
         <span key={resource}>
+          {"−"}
           {cost[resource]}
           <Icon glyph={RESOURCE_GLYPHS[resource as Resource]} />
         </span>
       ))}
     </span>
   );
+}
+
+/** The same price as a sentence, for the button's accessible name. */
+function priceText(cost: Partial<Resources>) {
+  const parts = RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) !== 0).map(
+    (resource) => `${cost[resource]} ${resource}`,
+  );
+
+  return parts.length === 0 ? "free" : `costs ${parts.join(" and ")}`;
 }
 
 /** Income chips: only the resources this tier actually moves, signed and coloured. */
@@ -169,6 +187,7 @@ export function PopsTab({
       >
         <button
           aria-disabled={!enabled}
+          aria-label={`${verb} a ${formatPopLabel(from, 1)} to ${formatPopLabel(to, 1)} — ${priceText(cost)}.`}
           className="rungButton"
           onClick={enabled ? () => onLadderRequest({ kind, from }) : undefined}
           type="button"
@@ -235,6 +254,12 @@ export function PopsTab({
           question, and printing it twice made this row a capacity meter instead
           of the census it is. */}
       <h3 className="pageSection label">Where they live</h3>
+      {/* Reachable at ?setup=manual, and before this a heading and a rule stood
+          over nothing at all — which reads as a section that failed to load.
+          Cities answers the same state in words; so does this. */}
+      {holdings.length === 0 ? (
+        <p className="emptyState">No one lives under your seal yet.</p>
+      ) : null}
       <div className="beadMap">
         {holdings.map(({ tile, settlement }) => {
           const beads = POP_TYPES.flatMap((pop) =>
@@ -258,8 +283,14 @@ export function PopsTab({
         })}
       </div>
 
-      {/* The anchor: the one number on this page that changes a decision. */}
-      <div className="anchorRow">
+      {/* The anchor: the one number on this page that changes a decision.
+          It STACKS. Six resources can move in a turn and the key eats 68px of a
+          236px page, so a shared line always broke three chips onto one row and
+          left the fourth orphaned and right-aligned under them — and at 1366x768
+          that second row pushed the anchor 14px out through the bottom of the
+          frame, which is triage POPS-1. Given the whole width, the chips fit one
+          row at every width the game runs at. */}
+      <div className="anchorRow anchorRowStacked">
         <span className="anchorKey label">Net / turn</span>
         <IncomeChips resources={projection.income} />
       </div>

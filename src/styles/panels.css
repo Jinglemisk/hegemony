@@ -71,6 +71,20 @@
   color: var(--ink);
 }
 
+/* A key and six income chips do not share 236px. Stacked, the chips get the whole
+   width and land on one row — beside the key they always broke 3 + 1 orphan. */
+.anchorRowStacked {
+  display: grid;
+  gap: 5px;
+  align-items: start;
+}
+
+.anchorRowStacked .tierIncome {
+  justify-content: flex-start;
+  gap: 4px 11px;
+  margin-left: 0;
+}
+
 /* The empire strip: four counts, identical on every act page. */
 .empireStrip {
   display: flex;
