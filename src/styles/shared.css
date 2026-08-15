@@ -72,6 +72,16 @@
   cursor: pointer;
 }
 
+/* A Codex link used as a NAME — a building on its card, a rank on the ladder —
+   is the one kind that is NOT in a sentence: it stands alone on its own line, so
+   2.5.8 applies to it in full and the 17px it inherits from `.title` is short.
+   It grows into the room the card actually has. There are 19–39px of air above
+   these names and 2px below, so the target takes 6 up and 1 down — 24px tall,
+   and because the box is `inline` the line it sits on does not move. */
+button.richTokenLink {
+  padding: 6px 0 1px;
+}
+
 .richTokenLink:hover,
 .richTokenLink:focus-visible {
   box-shadow: none;
