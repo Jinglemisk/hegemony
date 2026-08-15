@@ -1,21 +1,95 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
+  countPlayerPopType,
   getAddPopsEffect,
   getEventEffectChoices,
   getEventPopTargetTileIds,
+  getOwnedSettlement,
   getTile,
+  settlementCapacity,
+  totalPops,
 } from "../../../game/rules";
+import type { EventEffect, HegemonyState, PlayerId } from "../../../game/types";
 import { presentEventEffects } from "../../../ui/effects";
+import type { EffectPresentation } from "../../../ui/effects";
+import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
 import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
+import { settlementNameOf } from "../../../ui/settlementNames";
 import { AnnotatedText } from "../../AnnotatedText";
 import { EffectIcon } from "../../../ui/icons/EffectIcon";
 import { eventCardArtUrl } from "../events";
-import { settlementPickerLabel } from "../helpers";
+import { capitalize } from "../helpers";
 import { CeremonyBlow, DurationStrip } from "./CeremonyBlow";
 import { ceremonyMood, commitVerb, moodKicker } from "./ceremonyMood";
 import { ModalShell } from "./ModalShell";
 import { useGameUi } from "../GameUiContext";
 import { TileListbox } from "../TileListbox";
+
+/**
+ * What an option is actually WORTH, on this board, at this moment.
+ *
+ * "+1 Gold per freeman, minimum 2" is not a number — it is a sum the player
+ * cannot do without counting pops that are behind the scrim. Set beside a flat
+ * "+3 Gold" it made a two-option card undecidable: the card offered a choice and
+ * withheld the one figure the choice turns on.
+ *
+ * This is the dock's own rule applied to a ceremony: **the number you need in
+ * order to decide is printed, and only the arithmetic behind it is demoted**. So
+ * the figure becomes the resolved total and the rule that produced it drops to
+ * the condition line, with the pop count that drove it named there.
+ */
+function presentOption(
+  G: HegemonyState,
+  playerID: PlayerId,
+  effects: readonly EventEffect[],
+): EffectPresentation {
+  const presented = presentEventEffects(effects, G.definition.content);
+  const effect = effects.length === 1 ? effects[0] : null;
+
+  if (!effect || effect.type !== "resourceDeltaPerPop") {
+    return presented;
+  }
+
+  // Counted with the engine's own query, and combined the way the card's own
+  // data spells it — see the `resourceDeltaPerPop` arm of `applyEventEffects`.
+  const held = countPlayerPopType(G, playerID, effect.pop);
+  const amount = Math.max(effect.minimum, held * effect.amountPerPop);
+
+  return {
+    ...presented,
+    magnitude: formatSignedNumber(amount),
+    condition: `${formatSignedNumber(effect.amountPerPop)} per ${formatPopLabel(effect.pop, 1)} · you hold ${held}`,
+  };
+}
+
+/**
+ * A settlement, described by the thing the card is asking about.
+ *
+ * These rows used to read "BOURA · CITY · PLAINS +6 FOOD" — the tile's yield,
+ * which is not what "a settlement with room" is a question about, and which left
+ * the ONE number that decides it (how much room) off the card entirely.
+ */
+function settlementRoom(G: HegemonyState, tileId: string, playerID: PlayerId) {
+  const tile = getTile(G, tileId);
+  const settlement = getOwnedSettlement(G, tileId, playerID);
+
+  if (!tile || !settlement) {
+    return { title: tileId, detail: "", isCity: false };
+  }
+
+  const capacity = settlementCapacity(settlement, G.ruleset, G.definition.content);
+  const filled = totalPops(settlement.pops);
+  const rivals = tile.settlements.filter((candidate) => candidate.owner !== playerID);
+  const shared = rivals.length
+    ? ` · shares the tile with ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
+    : "";
+
+  return {
+    title: `${settlementNameOf(G.board.tiles, settlement.id)} · ${capitalize(settlement.kind)}`,
+    detail: `room for ${Math.max(0, capacity - filled)} more · ${filled} of ${capacity} filled${shared}`,
+    isCity: settlement.kind !== "colony",
+  };
+}
 
 export function PendingPlayerEventModal() {
   const { G, currentPlayerId, isActive: viewerCanAct, moves } = useGameUi();
@@ -56,14 +130,17 @@ export function PendingPlayerEventModal() {
   }
 
   const canConfirm = isActive && (!popEffect || targetTileIds.length > 0);
-  const blow = presentEventEffects(selectedEffects, G.definition.content);
+  const blow = presentOption(G, playerID, selectedEffects);
   // The mood decides the frame AND the verb. A card that hurts you should not ask
   // to be "claimed" — you endure it. One word and one colour, read off the
   // effects the engine already presented.
   const mood = ceremonyMood(blow.tone);
   const carved = Boolean(blow.magnitude && blow.subject) && choices.length <= 1;
-  const actionLabel =
-    choices.length > 1 ? "Resolve Choice" : popEffect ? "Place Pops" : commitVerb(mood);
+  // The verb names the option that is currently taken, so the button and the lit
+  // row say the same thing. "Resolve Choice" named the dialog, not the outcome —
+  // and on a card where nothing else marked the rows as alternatives, it was one
+  // more thing that failed to say only one of them happens.
+  const actionLabel = popEffect ? "Place Pops" : commitVerb(mood, blow.subject);
 
   return (
     // Blocking on purpose: a drawn event must be resolved, never dismissed.
@@ -104,36 +181,49 @@ export function PendingPlayerEventModal() {
         )}
 
         {choices.length > 1 ? (
-          <div className="fateChoices" role="group" aria-label="Event choices">
+          // Alternatives, and they have to LOOK like alternatives. The rows used
+          // to sit flush under each other with the taken one wearing the same
+          // tint a single-effect card's blow band wears — so a reader saw a card
+          // that granted both. The heading says how many you get, the "or"
+          // between them says they exclude each other, and the option you have
+          // not taken recedes.
+          <div className="fateChoices" role="group" aria-label="Choose one">
+            <span className="fateChoicesLabel label">Choose one</span>
             {choices.map((effects, index) => {
               const optionPopEffect = getAddPopsEffect(effects);
-              const option = presentEventEffects(effects, G.definition.content);
+              const option = presentOption(G, playerID, effects);
               const disabled = Boolean(
                 optionPopEffect &&
                 getEventPopTargetTileIds(G, playerID, optionPopEffect).length === 0,
               );
 
               return (
-                <button
-                  aria-pressed={index === selectedChoiceIndex}
-                  className={
-                    index === selectedChoiceIndex ? "fateChoice fateChoiceTaken" : "fateChoice"
-                  }
-                  disabled={disabled}
-                  key={`${card.id}-${index}`}
-                  onClick={() => setSelectedChoiceIndex(index)}
-                >
-                  <CeremonyBlow
-                    className="blowChoice"
-                    figureRole="stat-lg"
-                    icon={
-                      effects.length > 0 ? (
-                        <EffectIcon effect={effects[0]} family="event" size="verb" />
-                      ) : null
+                <Fragment key={`${card.id}-${index}`}>
+                  {index > 0 ? (
+                    <span aria-hidden="true" className="fateOr caption">
+                      or
+                    </span>
+                  ) : null}
+                  <button
+                    aria-pressed={index === selectedChoiceIndex}
+                    className={
+                      index === selectedChoiceIndex ? "fateChoice fateChoiceTaken" : "fateChoice"
                     }
-                    presentation={option}
-                  />
-                </button>
+                    disabled={disabled}
+                    onClick={() => setSelectedChoiceIndex(index)}
+                  >
+                    <CeremonyBlow
+                      className="blowChoice"
+                      figureRole="stat-lg"
+                      icon={
+                        effects.length > 0 ? (
+                          <EffectIcon effect={effects[0]} family="event" size="verb" />
+                        ) : null
+                      }
+                      presentation={option}
+                    />
+                  </button>
+                </Fragment>
               );
             })}
           </div>
@@ -164,16 +254,14 @@ export function PendingPlayerEventModal() {
               ariaLabel="Settlement target"
               onChange={setTargetTileId}
               options={targetTileIds.map((tileId) => {
-                const tile = getTile(G, tileId);
-                const where = tile ? settlementPickerLabel(G, tile, playerID) : tileId;
+                const where = settlementRoom(G, tileId, playerID);
 
                 return {
                   value: tileId,
-                  icon: tile?.settlements.some((s) => s.owner === playerID && s.kind !== "colony")
-                    ? ("city" as const)
-                    : ("colony" as const),
-                  title: where,
-                  label: `Place the pops in ${where}.`,
+                  icon: where.isCity ? ("city" as const) : ("colony" as const),
+                  title: where.title,
+                  detail: where.detail,
+                  label: `Place the pops in ${where.title} — ${where.detail}.`,
                 };
               })}
               value={targetTileId || null}

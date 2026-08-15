@@ -199,9 +199,60 @@
   color: var(--neg);
 }
 
+/* ── Picking the settlement ──────────────────────────────────────────────────
+   PAR-CER-11 the rest of the way. The effect rows became tinted bands and these
+   did not: two 1px rounded rectangles sitting directly under the blow band, the
+   last thing on the card that still looked like a web form. They are the same
+   full-bleed hairlined rows every other choice in a ceremony wears.
+
+   The listbox keeps a scroll ceiling — `.fateCard` clips, so a player with six
+   settlements must not push the commit off the bottom of the card — but it
+   sheds the plate, the border and the radius that made it an inset control. */
 .fateTarget {
-  margin-bottom: 14px;
+  margin: 0 -34px 14px;
   text-align: left;
+}
+
+.fateTarget > .label {
+  display: block;
+  padding: 0 34px 5px;
+  color: var(--ink-63);
+  letter-spacing: 0.24em;
+}
+
+.fateTarget > .caption {
+  display: block;
+  padding: 6px 34px 0;
+  color: var(--ink-63);
+}
+
+.ceremony .fateTarget .tileListbox {
+  gap: 0;
+  max-height: 172px;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--ink-12);
+  border-radius: 0;
+  background: none;
+}
+
+.ceremony .fateTarget .placementPickerChip {
+  gap: 10px;
+  padding: 9px 34px;
+  border: 0;
+  border-bottom: 1px solid var(--ink-12);
+  border-radius: 0;
+  background: none;
+}
+
+.ceremony .fateTarget .placementPickerChip:not(:disabled):hover {
+  background: var(--ink-07);
+  box-shadow: none;
+}
+
+.ceremony .fateTarget .placementPickerChip.selectedChoice {
+  background: var(--mood-band);
+  box-shadow: inset 3px 0 0 var(--mood-ink);
 }
 
 /* ── The blow ────────────────────────────────────────────────────────────────
@@ -299,11 +350,40 @@
    No bordered boxes: full-bleed rows parted by hairlines, and the one you have
    taken gets a tinted wash and a bar on its leading edge. The old treatment made
    each option a chip headed "Option 1" — a form, in the middle of a rite — and
-   dropped the blow entirely for any card that had two of them. */
+   dropped the blow entirely for any card that had two of them.
+
+   What the hairlines alone could NOT say is that the rows exclude each other:
+   the taken row wore exactly the tint a single-effect card's blow band wears, so
+   a two-option card read as a card that grants both. Three things say it now —
+   a heading that counts, an "or" in the seam, and an untaken row that recedes. */
 .fateChoices {
   display: grid;
   margin: 0 -34px 14px;
+}
+
+.fateChoicesLabel {
+  display: block;
+  padding: 0 34px 5px;
+  color: var(--ink-63);
+  letter-spacing: 0.24em;
+}
+
+.fateChoicesLabel + .fateChoice {
   border-top: 1px solid var(--ink-12);
+}
+
+/* In the seam, in the card's own voice — the word does the work three borders
+   and a radio column were failing to do. */
+.fateOr {
+  padding: 6px 0 5px;
+  color: var(--ink-63);
+  font-style: italic;
+  text-align: center;
+}
+
+/* Only one of these is going to happen, so only one of them is lit. */
+.fateChoice:not(.fateChoiceTaken):not(:disabled):not(:hover) {
+  opacity: 0.55;
 }
 
 .fateChoice,
