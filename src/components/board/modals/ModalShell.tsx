@@ -139,7 +139,15 @@ export function ModalShell({
 
   return (
     <div
-      className={["modalBackdrop", ceremony ? "ceremonyScrim" : null, backdropClassName]
+      className={[
+        "modalBackdrop",
+        ceremony ? "ceremonyScrim" : null,
+        // The note is a real sibling of the dialog, so the scrim has to STACK the
+        // two. It used to be pinned to the chrome independently of the card,
+        // which put it behind any card tall enough to reach that line.
+        scrimNote ? "scrimNoted" : null,
+        backdropClassName,
+      ]
         .filter(Boolean)
         .join(" ")}
       role="presentation"

@@ -659,13 +659,20 @@
 }
 
 /* ── The deck the fate came out of ───────────────────────────────────────────
-   Pinned to the foot of the SCRIM, outside the card, because it is a fact about
-   the table rather than about this card. `G.playerDrawPile` always knew. */
+   Outside the card, because it is a fact about the table rather than about this
+   card — but STACKED under it, not pinned to the chrome. Pinned, it landed on
+   the command dock's line regardless of how tall the card was: 170px adrift of
+   a short card at 1920, and straight through the middle of a 659px one at
+   1440×900 and below, where it rendered chopped in half behind the card.
+
+   The scrim becomes a column and centres the pair, so the note is always the
+   card's own footnote at 16px and can never meet it. */
+.modalBackdrop.scrimNoted {
+  flex-direction: column;
+  gap: 16px;
+}
+
 .deckEcho {
-  position: absolute;
-  bottom: calc(var(--chrome-bot) + 18px);
-  left: 0;
-  right: 0;
   margin: 0;
   color: var(--ivory-45);
   letter-spacing: 0.28em;
