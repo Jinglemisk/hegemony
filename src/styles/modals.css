@@ -867,41 +867,6 @@
   line-height: 1.4;
 }
 
-.compendiumTabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 10px;
-}
-
-.compendiumTab {
-  min-height: 0;
-  padding: 4px 8px;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  color: var(--ink-66);
-  font-family: var(--disp);
-  font-size: 0.62rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.compendiumTab:not(:disabled):hover {
-  box-shadow: none;
-  transform: none;
-  background: var(--ink-07);
-  color: var(--ink);
-}
-
-.compendiumTabActive,
-.compendiumTabActive:not(:disabled):hover {
-  background: var(--clay);
-  color: var(--ivory);
-}
-
 .compendiumBody {
   min-height: 0;
 }
@@ -993,18 +958,13 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  /* The panel body is a GRID; without this the nowrap chapter-tab row's min-content
-     forces the whole track (and every note) wider than the panel. min-width:0 lets
-     the track stay panel-width and the tabs scroll inside it. */
+  /* The panel body is a GRID; without this a nav row's min-content would force the
+     whole track (and every note) wider than the panel. */
   min-width: 0;
   margin-bottom: 10px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--ledger-rule);
   background: var(--ivory);
-}
-
-.codexNav .compendiumTabs {
-  margin-bottom: 7px;
 }
 
 .codexJump {
@@ -1118,22 +1078,153 @@
   font-size: 0.72rem;
 }
 
-/* The chapter chips: one scrolling row rather than a tall wrap of a dozen. */
-.codexChapterTabs {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  padding-bottom: 2px;
+/* The contents (2026-08-15). Thirteen chapters cannot be a tab row in a 220px
+   tablet — as a row, ten of them sat past the right edge at every width, the
+   furthest by 1013px, so two thirds of the rulebook could not be reached at all.
+   A book solves this with a contents page, and so does this: the closed control
+   is one line naming the chapter you are in, and it opens the whole list. */
+.codexContents {
+  position: relative;
+  margin-bottom: 8px;
 }
 
-.codexChapterTabs::-webkit-scrollbar {
-  display: none;
+.codexContentsToggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--ledger-rule);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--ink-07);
+  text-align: left;
+  cursor: pointer;
 }
 
-.codexChapterTabs .compendiumTab {
-  flex: 0 0 auto;
+.codexContentsToggle:not(:disabled):hover,
+.codexContentsToggle.on {
+  border-color: var(--clay);
+  background: var(--ivory);
+  box-shadow: none;
+  transform: none;
+}
+
+/* The chapter's place in the book, carried as a Roman numeral in a fired disc —
+   the same mark the contents list uses, so the closed control is a row of the
+   list that stayed behind. */
+.codexContentsNumeral {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--ivory);
+  background: var(--clay);
+  letter-spacing: 0;
+}
+
+.codexContentsWhere {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.codexContentsWhere b {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.codexContentsOf {
+  display: block;
+  color: var(--ink-48);
+}
+
+.codexContentsCaret {
+  flex: none;
+  margin-left: auto;
+  color: var(--ink-48);
+  transition: transform 140ms ease;
+}
+
+.codexContentsToggle.on .codexContentsCaret {
+  transform: rotate(180deg);
+}
+
+/* Dropped like the search results, so opening the contents never pushes the rules
+   you are reading down the page. Its own scroll: thirteen chapters are taller than
+   the tablet, and a contents page you cannot reach the end of is the bug again. */
+.codexContentsList {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 3px);
+  right: 0;
+  left: 0;
+  max-height: min(52vh, 440px);
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid var(--ledger-rule);
+  border-radius: 8px;
+  background: var(--ivory);
+  box-shadow: var(--float);
+  list-style: none;
+  scrollbar-color: var(--ink-30) transparent;
+}
+
+.codexContentsRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  width: 100%;
+  min-height: 0;
+  padding: 6px 7px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ink);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.codexContentsRow:not(:disabled):hover {
+  background: var(--ink-07);
+  box-shadow: none;
+  transform: none;
+}
+
+/* Where you are, in the book's own colour. No second box — the row simply inks. */
+.codexContentsRow.on b {
+  color: var(--clay);
+}
+
+.codexContentsRow .codexContentsNumeral {
+  margin-top: 1px;
+  color: var(--ink-66);
+  background: var(--ink-12);
+}
+
+.codexContentsRow.on .codexContentsNumeral {
+  color: var(--ivory);
+  background: var(--clay);
+}
+
+.codexContentsEntry {
+  min-width: 0;
+}
+
+.codexContentsEntry b {
+  display: block;
+}
+
+.codexContentsBlurb {
+  display: block;
+  margin-top: 1px;
+  color: var(--ink-66);
+  line-height: 1.35;
 }
 
 /* A defined-term list — a rule name and its sourced value/description. */
