@@ -8,10 +8,10 @@
  *
  * This sheet is the ONE owner of the scene's layout AND its light. It used to be
  * a light-only restyle sitting on top of assembly.css's layout, and the two
- * disagreed about who owned what — which is how `.steleMonument` came to be
- * emitted with no rule anywhere while a dashed-clay treatment sat unused on
- * `.tally`, a name the vote tally also wanted. assembly.css keeps the Agora page
- * and the Codex roster; everything the scene draws is here.
+ * disagreed about who owned what — which is how a monument came to be emitted
+ * with no rule anywhere while its dashed-clay treatment sat unused on `.tally`,
+ * a name the vote tally also wanted. assembly.css keeps the Agora page and the
+ * Codex roster; everything the scene draws is here.
  *
  * Type: every size in this sheet is either a role from type.css or one of the
  * three scene sizes declared in the `.asmScene` block below. There is no third
@@ -755,14 +755,16 @@
   text-align: center;
 }
 
-/* PAR-ASM-22. `.lawslabMonument` and `.steleMonument` were emitted by
-   StandingLaw and matched by NOTHING, while the dashed-clay treatment they were
-   meant to have sat on `.tally` / `.tallyKey` / `.tallyName` — dead selectors
-   that also collided, conceptually, with the vote tally's own family. Those are
-   deleted; this is the treatment, on the class that is actually emitted, and it
-   lands in BOTH lives of the object (the Agora page and this column) because it
-   is the object that is different, not the page. A monument is not a rule: it is
-   a permanent scratch on Stratokles's stack, so it is dashed and it is clay. */
+/* PAR-ASM-22, closed. `.lawslabMonument` was emitted by StandingLaw and matched
+   by NOTHING, while the dashed-clay treatment it was meant to have sat on
+   `.tally` / `.tallyKey` / `.tallyName` — dead selectors that also collided,
+   conceptually, with the vote tally's own family. Those are deleted; this is the
+   treatment, on the class that is actually emitted, and it lands in BOTH lives of
+   the object (the Agora page and this column) because it is the object that is
+   different, not the page. A monument is not a rule: it is a permanent scratch on
+   Stratokles's stack, so it is dashed and it is clay. The report's other half,
+   `.steleMonument`, had no caller at all and its whole render path is gone —
+   see StandingLaw.tsx. */
 .lawslabMonument {
   border-left: 3px dashed var(--clay);
   background: rgb(192 70 28 / 8%);

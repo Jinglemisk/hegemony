@@ -8,10 +8,15 @@
  *
  * This file used to carry the scene's layout as well, with assemblyScene.css
  * restyling it in place — two sheets disagreeing about who owned what, which is
- * how `.steleMonument` came to be emitted with no rule anywhere while its
- * intended dashed-clay treatment sat on `.tally`, a name the vote tally also
- * wanted. The scene's rules all moved; what is left here is what the two
- * reference pages actually spend.
+ * how a monument's dashed-clay treatment came to sit on `.tally`, a selector
+ * nothing emitted and a name the vote tally also wanted. The scene's rules all
+ * moved; what is left here is what the two reference pages actually spend.
+ *
+ * Known and NOT fixed here: the Codex roster below still sets 8px and 10.5px,
+ * which is the illegible register the overhaul exists to remove. Fixing it means
+ * putting type roles on the markup in rulebook.tsx, which is the Codex's own
+ * pass, not this sheet's — a size cannot be corrected from here without breaking
+ * the rule that type.css owns sizes.
  * ========================================================================== */
 
 /* ── The Agora — the Assembly's standing record, as a right-rail page ─────── */
