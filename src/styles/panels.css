@@ -45,9 +45,13 @@
   border-top: 2px solid var(--ink);
 }
 
+/* One line, always. Wrapped, the key grew the anchor a second row and pushed it
+   down under the season dial — the last number on the page, hidden by a clock. */
 .anchorKey {
+  flex: none;
   color: var(--ink);
   letter-spacing: 0.18em;
+  white-space: nowrap;
 }
 
 .anchorValue,
@@ -56,6 +60,15 @@
   align-items: center;
   gap: 7px;
   margin-left: auto;
+}
+
+/* The value takes what is left and wraps inside itself, so a long tail of income
+   chips lengthens the row rather than the page. */
+.anchorRow .tierIncome {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+  color: var(--ink);
 }
 
 /* The empire strip: four counts, identical on every act page. */
@@ -344,28 +357,32 @@
 }
 
 /* A rung is centred BETWEEN two tiers, which is the whole point — it is a step,
-   not a property of either end. Both directions share the gap. */
+   not a property of either end. Both directions share the gap as two equal
+   halves: sized by their own labels they ran past the page edge, and the half you
+   cannot read is the half you cannot take. */
 .gap {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
-  justify-content: center;
   padding: 4px 0;
 }
 
-.rung {
-  display: flex;
-  justify-content: center;
-}
-
 .rungTrigger {
-  display: inline-flex;
+  display: block;
+  min-width: 0;
 }
 
+/* The price rides ON the button. It is the number that decides whether you press
+   and it used to live in a tooltip, so you had to hover a control to find out
+   what it would spend. Only the arithmetic behind the price — which settlement
+   pays, which discount applies — is still hover-only. */
 .rungButton {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 12px;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 4px 7px;
   border: 1px solid var(--ink-30);
   border-radius: 14px;
   color: var(--ink);
@@ -373,7 +390,26 @@
 }
 
 .rungButton .icon {
+  flex: none;
   color: var(--clay);
+}
+
+.rungPrice {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-66);
+  font-weight: 800;
+}
+
+.rungPrice span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rungPrice .icon {
+  color: var(--ink-48);
 }
 
 .rungButton:not([aria-disabled="true"]):hover {
@@ -387,16 +423,25 @@
   opacity: 0.42;
 }
 
-/* Where they live — the same bead vocabulary as the board. */
+/* Where they live — the same bead vocabulary as the board, led by the same seal
+   the board draws, so a name read here is findable out there. */
 .beadRow {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 2px;
+  padding: 6px 2px;
+}
+
+.beadSeal {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(36 25 16 / 30%);
 }
 
 .beadPlace {
-  width: 74px;
+  min-width: 0;
   overflow: hidden;
   color: var(--ink-66);
   text-overflow: ellipsis;
@@ -405,8 +450,15 @@
 
 .beads {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   align-items: center;
+}
+
+/* The census sits at the row's far end, where the eye falls after the name. */
+.beadRow .beads {
+  justify-content: flex-end;
+  margin-left: auto;
 }
 
 .bead {
@@ -432,12 +484,6 @@
 .bead-empty {
   background: none;
   box-shadow: inset 0 0 0 1px rgb(36 25 16 / 20%);
-}
-
-.beadCap {
-  margin-left: auto;
-  color: var(--ink-48);
-  font-weight: 700;
 }
 
 /* ── Build ──────────────────────────────────────────────────────────────────

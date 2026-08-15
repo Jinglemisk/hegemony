@@ -3,9 +3,8 @@ import {
   calculateEconomyProjection,
   getDemotePopStatus,
   getPromotePopStatus,
-  settlementCapacity,
 } from "../../../game/rules";
-import type { PopType, Resources } from "../../../game/types";
+import type { HegemonyState, PlayerId, PopType, Resource, Resources } from "../../../game/types";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { POP_GLYPHS, RESOURCE_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
@@ -15,6 +14,7 @@ import { CodexTermLink } from "../../codexLink";
 import { Tooltip } from "../../overlays/Tooltip";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { calculatePopEconomy, capitalize } from "../helpers";
+import { SealMark } from "./SealMark";
 import type { OwnedHolding } from "../types";
 import { useGameUi } from "../GameUiContext";
 
@@ -38,11 +38,69 @@ import { useGameUi } from "../GameUiContext";
  * because a rung is a step you can take either way — the first pass hung one
  * arrow off each tier and the raise-to-citizen step went missing entirely, which
  * is exactly the class of bug that drawing a ladder as a ladder prevents.
+ *
+ * The verbs are the acts, not the direction: a slave is FREED and a freeman is
+ * SOLD, and neither is "promote" to anyone who has played a turn.
  */
 const GAPS: Array<{ upper: PopType; lower: PopType }> = [
   { upper: "citizens", lower: "freemen" },
   { upper: "freemen", lower: "slaves" },
 ];
+
+const RUNG_VERBS: Record<"promote" | "demote", Record<string, string>> = {
+  promote: { slaves: "Free", freemen: "Raise" },
+  demote: { citizens: "Demote", freemen: "Sell" },
+};
+
+/**
+ * What this move costs right now, at the cheapest settlement that can make it.
+ *
+ * A ladder step is priced per settlement — a Gymnasion discounts promotions, and
+ * standing Laws cheapen or tax them — so there is no single number in the
+ * ruleset to print. The engine's own status helper is asked for each holding and
+ * the best price wins, which is the number that decides whether you press: the
+ * arithmetic behind it (which settlement, which discount) stays in the tooltip.
+ */
+function bestRungCost(
+  G: HegemonyState,
+  playerID: PlayerId,
+  holdings: OwnedHolding[],
+  kind: "promote" | "demote",
+  from: PopType,
+): Partial<Resources> {
+  const getStatus = kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
+  const fallback =
+    kind === "promote"
+      ? (G.ruleset.ladder.promoteCosts[from as "slaves" | "freemen"] ?? {})
+      : (G.ruleset.ladder.demoteCosts[from as "citizens" | "freemen"] ?? {});
+  const total = (cost: Partial<Resources>) =>
+    Object.values(cost).reduce((sum, amount) => sum + amount, 0);
+
+  return holdings.reduce<Partial<Resources>>((best, { tile }) => {
+    const cost = getStatus(G, playerID, tile.id, from).cost ?? {};
+    return total(cost) < total(best) ? cost : best;
+  }, fallback);
+}
+
+/** A price, printed: the numeral and the glyph of what it costs. */
+function Price({ cost }: { cost: Partial<Resources> }) {
+  const parts = RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) !== 0);
+
+  if (parts.length === 0) {
+    return <span className="rungPrice num">free</span>;
+  }
+
+  return (
+    <span className="rungPrice num">
+      {parts.map((resource) => (
+        <span key={resource}>
+          {cost[resource]}
+          <Icon glyph={RESOURCE_GLYPHS[resource as Resource]} />
+        </span>
+      ))}
+    </span>
+  );
+}
 
 /** Income chips: only the resources this tier actually moves, signed and coloured. */
 function IncomeChips({ resources }: { resources: Resources }) {
@@ -88,44 +146,45 @@ export function PopsTab({
     const getStatus = kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
     const possible = holdings.some(({ tile }) => getStatus(G, playerID, tile.id, from).can);
     const enabled = isActive && phase === "gameplay" && possible;
-    const verb = kind === "promote" ? "Raise" : "Sell";
+    const verb = RUNG_VERBS[kind][from] ?? (kind === "promote" ? "Raise" : "Sell");
+    const cost = bestRungCost(G, playerID, holdings, kind, from);
 
     return (
-      <div className="rung" key={`${kind}-${from}`}>
-        <Tooltip
-          content={
-            <MechanicsDetails
-              blockedReason={
-                enabled ? undefined : "No legal move right now — one ladder step per turn."
-              }
-              heading={`${verb} a ${formatPopLabel(from, 1)}`}
-            >
-              <p className="mechanicsExplanation">
-                Choose which settlement pays: a pop&rsquo;s worth depends on the ground it stands
-                on.
-              </p>
-            </MechanicsDetails>
-          }
-          triggerClassName="rungTrigger"
-        >
-          <button
-            aria-disabled={!enabled}
-            className="rungButton"
-            onClick={enabled ? () => onLadderRequest({ kind, from }) : undefined}
-            type="button"
+      <Tooltip
+        content={
+          <MechanicsDetails
+            blockedReason={
+              enabled ? undefined : "No legal move right now — one ladder step per turn."
+            }
+            heading={`${verb} a ${formatPopLabel(from, 1)} to ${formatPopLabel(to, 1)}`}
           >
-            <Icon glyph={kind === "promote" ? "promote" : "demote"} />
-            <span className="verb">
-              {verb} to {formatPopLabel(to, 1)}
-            </span>
-          </button>
-        </Tooltip>
-      </div>
+            <p className="mechanicsExplanation">
+              The price shown is the cheapest settlement&rsquo;s. Choose which one pays: a
+              pop&rsquo;s worth depends on the ground it stands on.
+            </p>
+          </MechanicsDetails>
+        }
+        key={`${kind}-${from}`}
+        triggerClassName="rungTrigger"
+      >
+        <button
+          aria-disabled={!enabled}
+          className="rungButton"
+          onClick={enabled ? () => onLadderRequest({ kind, from }) : undefined}
+          type="button"
+        >
+          <Icon glyph={kind === "promote" ? "promote" : "demote"} />
+          <span className="verb">{verb}</span>
+          <Price cost={cost} />
+        </button>
+      </Tooltip>
     );
   };
 
   return (
     <div className="ladderPage">
+      <h3 className="pageSection label">Social order · top to bottom</h3>
+
       {POP_TYPES.map((pop) => {
         const gap = GAPS.find((step) => step.upper === pop);
 
@@ -170,31 +229,29 @@ export function PopsTab({
       })}
 
       {/* Where they live. The bead map speaks the board's vocabulary exactly, so
-          reading a settlement here and finding it out there is one skill. */}
-      <h3 className="ladderSection label">Where they live</h3>
+          reading a settlement here and finding it out there is one skill — which
+          is why the row is led by the seal the board draws, not a bare icon.
+          Only the beads that EXIST are drawn: room to grow is the Cities page's
+          question, and printing it twice made this row a capacity meter instead
+          of the census it is. */}
+      <h3 className="pageSection label">Where they live</h3>
       <div className="beadMap">
         {holdings.map(({ tile, settlement }) => {
-          const capacity = settlementCapacity(settlement, G.ruleset, G.definition.content);
           const beads = POP_TYPES.flatMap((pop) =>
             Array.from({ length: settlement.pops[pop] }, () => pop),
           );
 
           return (
             <div className="beadRow" key={settlement.id}>
+              <SealMark className="beadSeal" kind={settlement.kind} owner={playerID} />
               <span className="beadPlace label">{names.get(settlement.id)}</span>
               <span className="beads" aria-hidden="true">
                 {beads.map((pop, beadIndex) => (
                   <i className={`bead bead-${pop}`} key={`${pop}-${beadIndex}`} />
                 ))}
-                {Array.from({ length: Math.max(0, capacity - beads.length) }, (_, empty) => (
-                  <i className="bead bead-empty" key={`empty-${empty}`} />
-                ))}
-              </span>
-              <span className="beadCap caption num">
-                {beads.length}/{capacity}
               </span>
               <span className="visuallyHidden">
-                {beads.length} of {capacity} on {tile.terrain}
+                {beads.length} living on {tile.terrain}
               </span>
             </div>
           );

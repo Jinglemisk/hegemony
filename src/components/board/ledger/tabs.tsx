@@ -8,9 +8,17 @@ import type { ConsultTab, EmpireTab, LedgerTab } from "../types";
  * (which draws the discs) and its panel (which titles itself from the open page), so
  * a disc and its page can never disagree about what they are called.
  */
-export const LEDGER_TABS: Array<{ tab: LedgerTab; label: string; glyph: GlyphId }> = [
+export const LEDGER_TABS: Array<{
+  tab: LedgerTab;
+  label: string;
+  glyph: GlyphId;
+  /** What the PAGE calls itself, when that is not what the tab is called. A tab
+   *  is a spine label — one word, so four of them fit a 44px rail; a page has a
+   *  masthead and can say what it actually is. */
+  title?: string;
+}> = [
   { tab: "cities", label: "Cities", glyph: "city" },
-  { tab: "pops", label: "Pops", glyph: "citizens" },
+  { tab: "pops", label: "Pops", glyph: "citizens", title: "The Ladder" },
   { tab: "buildings", label: "Build", glyph: "workshop" },
   // The market's glyph is the forum's scales: the bank is where things are
   // weighed, and drawing that twice with two pictures would be a lie.
@@ -27,7 +35,10 @@ export const CONSULT_TABS: Array<{ tab: ConsultTab; label: string; glyph: GlyphI
 ];
 
 const LABELS = new Map<EmpireTab, string>(
-  [...LEDGER_TABS, ...CONSULT_TABS].map(({ tab, label }) => [tab, label]),
+  [...LEDGER_TABS, ...CONSULT_TABS].map((entry) => [
+    entry.tab,
+    ("title" in entry ? entry.title : undefined) ?? entry.label,
+  ]),
 );
 
 export function ledgerTabLabel(tab: EmpireTab): string {
