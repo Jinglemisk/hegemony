@@ -1,11 +1,12 @@
 import {
+  POP_TYPES,
   settlementCapacity,
   settlementNetYield,
   settlementOverCapacity,
   totalPops,
 } from "../../../game/rules";
 import type { BuildingId, Resources } from "../../../game/types";
-import { formatSignedNumber } from "../../../ui/formatters";
+import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
 import { RESOURCE_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
@@ -77,6 +78,27 @@ export function CitiesTab({
 
   return (
     <div className="cityStack">
+      {/* The bead vocabulary, named once. Four marks appear on every card below
+          and nothing in the game has ever said what they are. */}
+      <p className="beadLegend caption" aria-hidden="true">
+        <span>
+          <i className="bead bead-citizens" />
+          citizens
+        </span>
+        <span>
+          <i className="bead bead-freemen" />
+          freemen
+        </span>
+        <span>
+          <i className="bead bead-slaves" />
+          slaves
+        </span>
+        <span>
+          <i className="bead bead-empty" />
+          room
+        </span>
+      </p>
+
       {holdings.map((holding) => {
         const { tile, settlement } = holding;
         const name = settlementNameOf(G.board.tiles, settlement.id);
@@ -126,8 +148,14 @@ export function CitiesTab({
 
             <CityIncome resources={netYield} />
 
+            {/* The beads are shapes, and a shape says nothing out loud — so the
+                census is spelled out by rank here rather than as one total. */}
             <span className="visuallyHidden">
-              {name}, {settlement.kind} on {tile.terrain}. {popTotal} of {capacity} people.
+              {name}, {settlement.kind} on {tile.terrain}. {popTotal} of {capacity} people:{" "}
+              {POP_TYPES.map(
+                (pop) => `${settlement.pops[pop]} ${formatPopLabel(pop, settlement.pops[pop])}`,
+              ).join(", ")}
+              .
             </span>
           </article>
         );

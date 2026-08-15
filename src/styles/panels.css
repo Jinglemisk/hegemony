@@ -275,6 +275,13 @@
   font-weight: 700;
 }
 
+/* A settlement with no slots says so, on the line where its sockets would be. */
+.socketNone {
+  margin: 8px 0 0;
+  color: var(--ink-63);
+  font-style: italic;
+}
+
 /* Band 4 — the take. Only what moved: the old strip printed all six resources
    on every settlement and dimmed four of them to dashes. */
 .cityIncome {
@@ -461,29 +468,62 @@
   margin-left: auto;
 }
 
+/* Shape is the rank. All four of these used to be circles — a freeman a 2px ring
+   and an empty slot a 1px ring — so a rank and an absence were one mark at two
+   weights and a settlement's census could not be counted. Colour belongs to
+   owners; a pop has no owner, so the silhouette has to carry the kind. */
 .bead {
+  flex: none;
   width: 11px;
   height: 11px;
-  border-radius: 50%;
 }
 
+/* Round — a citizen. */
 .bead-citizens {
+  border-radius: 50%;
   background: var(--ivory);
-  box-shadow: inset 0 0 0 1.2px rgb(36 25 16 / 60%);
+  box-shadow: inset 0 0 0 1.3px rgb(36 25 16 / 65%);
 }
 
+/* Square — a freeman. */
 .bead-freemen {
-  background: none;
-  box-shadow: inset 0 0 0 2px rgb(36 25 16 / 55%);
+  border-radius: 2px;
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 1.3px rgb(36 25 16 / 65%);
 }
 
+/* Point-down — a slave, the bottom rung. A clipped shape takes no inset keyline,
+   so this is the one bead that carries its weight in fill. */
 .bead-slaves {
   background: var(--vase-black);
+  clip-path: polygon(50% 100%, 0 6%, 100% 6%);
 }
 
+/* Room is not a rank, so it is not a bead: a rule on the line, which cannot be
+   miscounted as anybody. */
 .bead-empty {
-  background: none;
-  box-shadow: inset 0 0 0 1px rgb(36 25 16 / 20%);
+  align-self: center;
+  height: 2px;
+  border-radius: 1px;
+  background: rgb(36 25 16 / 22%);
+}
+
+/* The vocabulary, named once at the head of the page. Nothing anywhere carried a
+   legend for these marks, and a shape system nobody has been taught is a cipher. */
+.beadLegend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 3px 10px;
+  margin: 2px 0 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ink-12);
+  color: var(--ink-63);
+}
+
+.beadLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 /* ── Build ──────────────────────────────────────────────────────────────────
