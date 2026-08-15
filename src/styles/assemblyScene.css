@@ -1,0 +1,449 @@
+/* assemblyScene — the Assembly as a night scene, not a panel.
+ *
+ * The house sitting is the one moment the game stops being a map. The chart goes
+ * dark under a vignette, the colonnade stands in the light, and the register is
+ * AEGEAN — a colour that appears nowhere else in the game, so the moment you see
+ * it you know where you are.
+ *
+ * Loaded after assembly.css and restyles it in place: that file is 1,700 lines of
+ * an owner-approved reference and it still governs the layout. What changes here
+ * is the light.
+ */
+
+/* ── The night ────────────────────────────────────────────────────────────── */
+
+/* The scrim has to be dark enough that the chart reads as a memory rather than
+   as texture behind the text. The prototype's 60/88 is drawn over a static
+   painting; the live board carries owner glazes and yield numerals, and at that
+   strength they showed straight through the seats. */
+.asmSlot {
+  background: radial-gradient(ellipse at 50% 32%, rgb(24 18 16 / 82%), rgb(24 18 16 / 96%));
+}
+
+/* The frame around the scene retires: the darkness IS the frame. */
+.assembly {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.asm-head {
+  color: var(--ivory);
+  border-bottom: 1px solid rgb(255 248 231 / 14%);
+  background: none;
+}
+
+.asm-t {
+  color: var(--ivory);
+  letter-spacing: 0.18em;
+}
+
+.asm-t span {
+  color: var(--ivory-70);
+  font-style: italic;
+}
+
+.asm-urn {
+  color: var(--warn-lit);
+  border-color: rgb(255 248 231 / 30%);
+  background: rgb(255 248 231 / 8%);
+}
+
+/* ── The stations ─────────────────────────────────────────────────────────
+   I · II · III, joined by the meander — the same band that edges the bone bars,
+   drawn in ivory here because it is running across the dark. */
+
+.astep {
+  color: var(--ivory-45);
+}
+
+/* The station's own label kept assembly.css's ink colour, which on the night
+   ground was black on black — the two stations you are not in went invisible. */
+.stepLabel {
+  color: inherit;
+}
+
+.stepNumeral {
+  color: inherit;
+  border-color: currentcolor;
+  background: none;
+}
+
+.astep.isNow {
+  color: var(--warn-lit);
+}
+
+.astep.isNow .stepNumeral {
+  color: var(--vase-black);
+  border-color: var(--warn-lit);
+  background: var(--warn-lit);
+}
+
+.astep.isNow .stepLabel {
+  color: var(--warn-lit);
+}
+
+.stepArrow {
+  width: 52px;
+  height: 8px;
+  background: var(--meander-ivory) repeat-x left center / 18px 9px;
+  opacity: 0.4;
+}
+
+/* ── The Voice plaque ─────────────────────────────────────────────────────── */
+
+.asm-voice {
+  border: 1px solid rgb(255 248 231 / 30%);
+  border-radius: 4px;
+  color: var(--ivory);
+  background: none;
+}
+
+.voiceKey {
+  color: var(--ivory-45);
+  letter-spacing: 0.22em;
+}
+
+.voiceHolder {
+  color: var(--ivory);
+}
+
+/* ── The colonnade ────────────────────────────────────────────────────────
+   Four stelae standing in the light: fired bone with a cut corner, a bust at the
+   top, and the man's tendency under his name. */
+
+.colonnadeCol {
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, var(--stele-face), var(--bone) 60%);
+  /* The cut corners are what makes it a stele rather than a card. */
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%, 0 14px);
+  box-shadow:
+    0 3px 0 var(--stele-shade),
+    0 14px 40px rgb(0 0 0 / 50%);
+}
+
+.steleBust {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  color: var(--ivory);
+  background: var(--clay);
+  box-shadow:
+    inset 0 0 0 2px rgb(255 248 231 / 85%),
+    0 0 0 1.5px rgb(36 25 16 / 50%);
+}
+
+.colonnadeCol.isStratokles .steleBust {
+  background: var(--aegean);
+}
+
+/* What his laws tend to do — the answer before you have seen a card. */
+.dogma {
+  margin: 2px 0 9px;
+  padding: 7px 10px 8px;
+  border: 1px solid rgb(36 25 16 / 14%);
+  border-radius: 4px;
+  background: rgb(36 25 16 / 5%);
+}
+
+.dogmaKey {
+  margin-bottom: 5px;
+  color: var(--ink-48);
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+
+.dogmaRow {
+  gap: 6px;
+  padding: 2px 0;
+  color: var(--ink-66);
+}
+
+.stelePrize {
+  color: var(--pos);
+}
+
+/* The draw is a clay seal — the one pressable thing on a stele. */
+.acolDraw {
+  width: 100%;
+  border: 0;
+  border-radius: 4px;
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--clay-lit), var(--clay) 55%, var(--clay-shade));
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 35%),
+    0 2px 6px rgb(0 0 0 / 40%);
+}
+
+.acolDraw[aria-disabled="true"] {
+  background: var(--ink-12);
+  color: var(--ink-48);
+  box-shadow: none;
+}
+
+/* ── Standing stelae, in the colonnade's stack ───────────────────────────── */
+
+.stele,
+.tally {
+  border-left: 3px solid var(--aegean);
+  background: rgb(31 105 119 / 8%);
+}
+
+/* ── The bema ─────────────────────────────────────────────────────────────
+   The card on trial, lit, with a meander band across its head. */
+
+.bemaCard {
+  border: 0;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--ivory-lit), var(--ivory) 55%, var(--ivory-settled));
+  box-shadow:
+    0 26px 70px rgb(0 0 0 / 60%),
+    inset 0 0 0 1px rgb(36 25 16 / 35%);
+  overflow: hidden;
+}
+
+.bemaCard::before {
+  content: "";
+  display: block;
+  height: 12px;
+  background:
+    var(--meander) repeat-x center / 18px 9px,
+    var(--vase-black);
+  opacity: 0.75;
+}
+
+/* The trade-off, inked in two colours: what you win against what it costs.
+   Seeing both at a glance is what makes the vote an argument. */
+.clauseGain {
+  color: var(--pos);
+  font-weight: 800;
+}
+
+.clauseCost {
+  color: var(--neg);
+  font-weight: 800;
+}
+
+.clauseBut {
+  color: var(--ink-48);
+  font-style: italic;
+}
+
+/* ── The seats ───────────────────────────────────────────────────────────
+   Lacquer plaques on the dark floor, each with a face-down ostrakon until it is
+   turned. A vote nobody has cast is a blank shard, not an empty box — you can
+   see that a decision is *pending* rather than missing. */
+
+.bemaCol {
+  border: 1px solid rgb(255 248 231 / 20%);
+  border-radius: 5px;
+  color: var(--ivory);
+  background: rgb(24 18 16 / 88%);
+}
+
+.bemaCol.current {
+  border-color: var(--warn-lit);
+  box-shadow: 0 0 30px rgb(226 165 88 / 25%);
+}
+
+.bemaColName {
+  color: var(--ivory);
+}
+
+.bemaColEmpty {
+  color: var(--ivory-45);
+  font-style: italic;
+}
+
+/* The ostrakon: a potsherd, not a chip. Its outline is deliberately irregular —
+   it is a broken piece of pot with a name scratched on it, which is what an
+   ostrakon was. */
+.bemaVoteBadge {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 26px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(160deg, var(--shard-blank), var(--shard-blank-shade));
+  clip-path: polygon(8% 38%, 30% 6%, 74% 0%, 100% 30%, 92% 78%, 60% 100%, 18% 88%, 0% 62%);
+}
+
+.bemaVoteBadge.isYea {
+  background: linear-gradient(160deg, var(--yea-lit), var(--yea-shade));
+}
+
+.bemaVoteBadge.isNay {
+  background: linear-gradient(160deg, var(--nay-lit), var(--nay-shade));
+}
+
+/* The mark is scratched ON the sherd, so it has to fit inside it — at full size
+   the glyph overflowed the shard's clip and the ostrakon read as a plain ring. */
+.voteMarkGlyph {
+  width: 14px;
+  height: 14px;
+  color: rgb(255 248 231 / 90%);
+}
+
+.bemaVoteBadge.isYea .voteMarkGlyph,
+.bemaVoteBadge.isNay .voteMarkGlyph {
+  color: var(--ivory);
+}
+
+/* ── The tally ───────────────────────────────────────────────────────────
+   Two numerals over a tug bar with an ivory tie-notch. The notch is the whole
+   point: a bar without one cannot show you that a tie FAILS. */
+
+.voteTally {
+  width: 430px;
+  margin: 0 auto;
+  color: var(--ivory);
+  text-align: center;
+}
+
+.tallyNums {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 var(--sp-2);
+}
+
+.tallySide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.tallyYea b,
+.tallyNay b {
+  font-weight: 800;
+}
+
+.tallyYea b {
+  color: var(--pos-lit);
+}
+
+.tallyNay b {
+  color: var(--neg-lit);
+}
+
+.tallyYea .tallyUnit {
+  color: var(--pos-lit);
+  letter-spacing: 0.3em;
+}
+
+.tallyNay .tallyUnit {
+  color: var(--neg-lit);
+  letter-spacing: 0.3em;
+}
+
+.tugBar {
+  position: relative;
+  display: flex;
+  margin-top: 14px;
+  overflow: hidden;
+  height: 18px;
+  border-radius: 9px;
+  background: rgb(255 248 231 / 14%);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 50%);
+}
+
+.tugBar::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: 50%;
+  width: 2.5px;
+  background: var(--ivory);
+  box-shadow: 0 0 8px rgb(0 0 0 / 60%);
+  transform: translateX(-50%);
+}
+
+.tugYea {
+  background: linear-gradient(180deg, var(--yea-lit), var(--pos));
+}
+
+.tugNay {
+  background: linear-gradient(180deg, var(--nay-lit), var(--neg));
+}
+
+.tugPending {
+  background: rgb(255 248 231 / 10%);
+}
+
+.tallyVerdict {
+  margin-top: 14px;
+  color: var(--warn-lit);
+  letter-spacing: 0.22em;
+}
+
+/* The running read on a close card, in the game's voice under the count. */
+.tallyVerdict small {
+  display: block;
+  margin-top: 3px;
+  color: var(--ivory-45);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.tallyVerdict b {
+  color: var(--ivory);
+}
+
+/* ── The foot: the lit voting seat ──────────────────────────────────────── */
+
+.asm-foot {
+  border-top: 1px solid rgb(255 248 231 / 18%);
+  background: rgb(24 18 16 / 72%);
+}
+
+.asmFootNote {
+  color: var(--ivory-45);
+}
+
+.asmButton.isYea {
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--yea-lit), var(--pos) 55%, var(--yea-shade));
+}
+
+.asmButton.isNay {
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--nay-lit), var(--neg) 55%, var(--nay-shade));
+}
+
+.asmButton.isPrimary {
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--clay-lit), var(--clay) 55%, var(--clay-shade));
+}
+
+.asmButton.isGhost {
+  color: var(--ivory);
+  background: none;
+  box-shadow: inset 0 0 0 1.4px rgb(255 248 231 / 35%);
+}
+
+.asmVerb,
+.asmMapButton {
+  color: var(--ivory);
+  background: none;
+  box-shadow: inset 0 0 0 1.4px rgb(255 248 231 / 28%);
+}
+
+.asmVerbCost {
+  color: var(--ivory-45);
+}
+
+.asmVerb.isArmed {
+  border-color: var(--warn-lit);
+  box-shadow: inset 0 0 0 1.4px var(--warn-lit);
+}

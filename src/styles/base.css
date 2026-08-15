@@ -209,6 +209,8 @@
   --bar-face: linear-gradient(180deg, #faf1dc, #f0e0bd 70%);
   --meander: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9"><path d="M1 8V1h12v4H7V3" fill="none" stroke="%23c0461c" stroke-width="1.3"/></svg>');
   --sea-chart: url("../../assets/map/aegean-sea-board.png");
+  /* The meander again, in ivory — the Assembly runs it across the dark. */
+  --meander-ivory: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9"><path d="M1 8V1h12v4H7V3" fill="none" stroke="%23fff8e7" stroke-width="1.3"/></svg>');
 
   /* The season wheel's four washes and the seal's fired gradient. Both are
      ARTWORK colours — they name a season and a curved clay surface, not a state —
@@ -230,6 +232,18 @@
   --ivory-lit: #fffaf0;
   --ivory-settled: #f3e7cb;
   --lacquer-lit: #2d221a;
+  /* The Assembly's own fired values: the stele's lit face and its laid shadow,
+     the two vote glazes (a yea shard and a nay shard are OBJECTS, so they get a
+     gradient rather than the flat --pos/--neg text colours), and the blank
+     potsherd nobody has scratched yet. */
+  --stele-face: #f7ecd2;
+  --stele-shade: #c9b48c;
+  --yea-lit: #7d8f51;
+  --yea-shade: #48542c;
+  --nay-lit: #a83a1c;
+  --nay-shade: #6e2410;
+  --shard-blank: #6b6157;
+  --shard-blank-shade: #4a423a;
   /* The band the floating left rail + ledger card live in — clear of the flush top
      spine and the bottom dock. The rail, card and camera all read them so they
      stay in agreement. */
