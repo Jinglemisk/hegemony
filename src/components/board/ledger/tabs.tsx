@@ -31,7 +31,12 @@ export const CONSULT_TABS: Array<{ tab: ConsultTab; label: string; glyph: GlyphI
   { tab: "victory", label: "Victory", glyph: "laurel" },
   // The Agora is a consult page, not an act page: the Assembly panel is where you
   // act on politics, this is where you read what it left standing.
-  { tab: "agora", label: "Agora", glyph: "temple" },
+  //
+  // The bema, not the temple front. The temple front is a pediment on columns and
+  // so is the Cities tab's city — two near-identical pictures of unrelated things,
+  // one on each rail. The speaker's platform is the agora as a PLACE, and a low
+  // flight of steps shares its silhouette with nothing else on either spine.
+  { tab: "agora", label: "Agora", glyph: "bema" },
 ];
 
 const LABELS = new Map<EmpireTab, string>(

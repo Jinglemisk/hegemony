@@ -711,20 +711,28 @@
   right: 0;
 }
 
+/* A headcount, not an alarm. This was an ivory-on-clay pill in the top-right
+   corner — the red-dot vocabulary the whole UI reserves for "something is
+   wrong" — and it sat directly on the figure's head, so the one glyph carrying
+   a number was also the one glyph you could not read. It is a plain ink numeral
+   tucked under the glyph now; the rail has exactly one badge, and it counts
+   people. */
 .railTabBadge {
   position: absolute;
-  top: 7px;
-  right: 7px;
+  right: 5px;
+  bottom: 5px;
   display: grid;
   place-items: center;
-  min-width: 15px;
-  height: 15px;
-  padding: 0 4px;
-  border-radius: 8px;
-  color: var(--ivory);
-  background: var(--clay);
+  min-width: 12px;
+  color: var(--ink-63);
   font-family: var(--body);
   font-weight: 700;
+}
+
+/* The open tab's ink lifts with its glyph, so the count belongs to the tab it
+   is on rather than staying a stray grey figure on a lit page. */
+.railTabOn .railTabBadge {
+  color: var(--clay-ink);
 }
 
 /* The two pages. Square, flush to their rail, laid on the chart with a hard

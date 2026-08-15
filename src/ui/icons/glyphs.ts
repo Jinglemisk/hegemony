@@ -278,11 +278,19 @@ export const GLYPHS = {
      closes up into a dot anyway. */
   die: [box(4.5, 4.5, 15, 15), c(9, 9, 1.6), c(12, 12, 1.6), c(15, 15, 1.6)],
 
-  /* ── Victory ───────────────────────────────────────────────────────────────── */
+  /* ── Victory ─────────────────────────────────────────────────────────────────
+     Two leafy crescents facing each other, open at the crown and meeting at the
+     stem — the wreath as its own silhouette. The first draft drew a closed oval
+     with six short strokes radiating off it, and at 22px on the tab rail that is
+     a body with legs: it read as a beetle, which is not what wins a game. There
+     is no way to draw individual leaves at this size, so the wreath is drawn as
+     the two shapes a wreath actually is. */
   laurel: [
-    p("M12 21C7.5 19 5 15 5 11c0-3.5 2.5-6.5 7-7.5M12 21c4.5-2 7-6 7-10 0-3.5-2.5-6.5-7-7.5"),
     p(
-      "M6.6 14.5 4 13.5M7.8 10.7 5.4 9.2M10 7.3 8.2 5.4M17.4 14.5 20 13.5M16.2 10.7l2.4-1.5M14 7.3l1.8-1.9",
+      "M10.6 3.4C6.2 5.3 3.8 9 4.4 13.1c.6 4 3.4 6.7 7.4 8-2.6-2.7-4-5.5-4.2-8.5-.2-3.3 1-6.4 3-9.2z",
+    ),
+    p(
+      "M13.4 3.4c4.4 1.9 6.8 5.6 6.2 9.7-.6 4-3.4 6.7-7.4 8 2.6-2.7 4-5.5 4.2-8.5.2-3.3-1-6.4-3-9.2z",
     ),
   ],
   treasury: [p("M12 4v10m0 0-3-3m3 3 3-3M5 20h14M7 20v-3h10v3")],
@@ -350,9 +358,19 @@ export const GLYPHS = {
   /* ── The two reference tablets ───────────────────────────────────────────────
      The chronicle is a bookmarked record you keep adding to; the codex is a book
      you open. Both are objects a Greek would recognise, and neither is a
-     "document" icon — the Assembly already owns that. */
+     "document" icon — the Assembly already owns that.
+
+     The codex used to be a closed book: a rounded rectangle with a spine line,
+     which beside the chronicle's rounded rectangle with a notch made the two
+     consult tabs one shape at 22px. Opened, it is a wide shallow silhouette that
+     shares nothing with the tall bookmarked slip beside it. */
   chronicle: [p("M7 4h10a2 2 0 0 1 2 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 0 1 2-2z")],
-  codex: [p("M5 5a2 2 0 0 1 2-2h12v16H7a2 2 0 0 0-2 2z"), p("M5 19V5")],
+  codex: [
+    p(
+      "M12 7.2C10.2 5.4 7.6 4.6 4 4.8v12.4c3.6-.2 6.2.6 8 2.4 1.8-1.8 4.4-2.6 8-2.4V4.8c-3.6-.2-6.2.6-8 2.4z",
+    ),
+    p("M12 7.2v12.4"),
+  ],
 
   /* ── UI micro ──────────────────────────────────────────────────────────────── */
   chevronDown: [p("M6 9.5 12 15.5 18 9.5")],
