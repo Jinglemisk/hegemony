@@ -9,6 +9,144 @@
   outline: none;
 }
 
+/* ── Civic calm: a PICK, in the ceremonies' family ───────────────────────────
+   Not a rite. No mood, no ring, no dealt card — because if every dialog is a
+   rite then none of them is. But it stands next to a chamfered bone tablet and
+   a dealt fate, and it used to arrive as three stacked bordered rectangles with
+   a centred plain title: pre-overhaul `modals.css`, wearing nothing Greek.
+
+   So it takes the family's MATERIAL — the same bone the venture tablet is cut
+   from, the same full-bleed hairlined rows a ceremony's choices wear — at one
+   rank down: no chamfer, no ring, a shallower shadow, and a scrim that stops
+   well short of the ceremony vignette.
+
+   The scrim is the load-bearing part. It was a LIGHT wash, which desaturates
+   the board and reads as "this application is disabled" — the one direction a
+   modal must never go. Every other dialog in the game darkens the table. */
+.modalBackdrop.calmScrim {
+  background: radial-gradient(ellipse at 50% 44%, rgb(24 18 16 / 50%), rgb(24 18 16 / 80%));
+}
+
+.logModal.calmSlate {
+  width: min(408px, calc(100vw - 34px));
+  padding: 22px 30px 18px;
+  border: 0;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--stele-face), var(--bone) 60%);
+  box-shadow:
+    inset 0 -3px 0 var(--stele-shade),
+    0 20px 44px rgb(0 0 0 / 62%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  text-align: center;
+}
+
+.calmHead {
+  display: grid;
+  gap: 1px;
+}
+
+.calmKicker {
+  color: var(--clay-ink);
+  letter-spacing: 0.3em;
+}
+
+.calmSlate h2 {
+  margin: 0 0 14px;
+  letter-spacing: 0.1em;
+}
+
+/* The one thing both prices buy, stated ONCE and set like a blow: glyph, carved
+   figure, subject over its condition. Two options with different flavour text
+   and no stated outcome implied a choice between effects; there is only a
+   choice of currency, and the band above the prices is what says so. */
+.calmGain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 -30px 4px;
+  padding: 12px 30px;
+  border-top: 1px solid rgb(94 110 58 / 34%);
+  border-bottom: 1px solid rgb(94 110 58 / 34%);
+  background: rgb(94 110 58 / 9%);
+  text-align: left;
+}
+
+.calmGain .icon {
+  flex: none;
+  width: 1.875rem;
+  height: 1.875rem;
+  color: var(--pos);
+  stroke-width: 2;
+}
+
+.calmWhat {
+  line-height: 1.15;
+}
+
+.calmWhat b {
+  display: block;
+  color: var(--pos);
+}
+
+.calmWhat .caption {
+  color: var(--ink-66);
+}
+
+/* Full-bleed hairlined rows, the same grammar every choice in the family uses.
+   The PRICE leads, because the price is the only thing that differs. */
+.calmPrices {
+  display: grid;
+  margin: 0 -30px 14px;
+}
+
+.calmPrice {
+  display: grid;
+  gap: 1px;
+  padding: 10px 30px;
+  border-bottom: 1px solid var(--ink-12);
+  text-align: left;
+}
+
+.calmPrice:not(:disabled):hover {
+  background: var(--ink-07);
+}
+
+.calmPrice:disabled {
+  opacity: 0.42;
+}
+
+.calmPriceCost {
+  color: var(--ink);
+}
+
+.calmPriceName {
+  color: var(--clay-ink);
+  letter-spacing: 0.2em;
+}
+
+.calmPriceVoice {
+  color: var(--ink-63);
+}
+
+/* A way out, not a second offer — so it is quiet type, not another box. The
+   ceremonies' own `ghostVerb` would have done, but a pick must not emit a
+   ceremony's class names: that seam is exactly what let one sheet restyle the
+   other's surfaces out from under it. */
+.calmFoot {
+  display: grid;
+}
+
+.calmCancel {
+  padding: 12px 0 2px;
+  color: var(--ink-63);
+}
+
+.calmCancel:hover {
+  color: var(--ink);
+}
+
 .eventModalBackdrop {
   z-index: 90;
   background:
