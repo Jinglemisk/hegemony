@@ -9,7 +9,12 @@ import {
   lawNeedsReplacement,
   POLITICIANS_BY_ID,
 } from "../../../game/assembly";
-import type { AssemblySession, BallotItem, ResolutionCard } from "../../../game/assembly";
+import type {
+  AssemblyResult,
+  AssemblySession,
+  BallotItem,
+  ResolutionCard,
+} from "../../../game/assembly";
 import type { GameContent } from "../../../game/content";
 import type { HegemonyState, PlayerId, Resource } from "../../../game/types";
 import { RESOURCE_GLYPHS } from "../../../ui/iconRegistry";
@@ -737,13 +742,27 @@ function targetSummary(G: HegemonyState, card: ResolutionCard, target: PlayerId)
 
 // ── Closing ─────────────────────────────────────────────────────────────────────
 
+/**
+ * The house rises — and this used to be the weakest surface in the build.
+ *
+ * Three things were wrong with it and all three were the same thing: the moment
+ * of consequence was drawn with less material than the moments before it.
+ *
+ * · A law PASSING and a law FAILING rendered as the same grey sentence with 5–0
+ *   or 0–5 in the same weight. The verdict is the news; it now carries the ink.
+ * · The standing-laws column stood beside the card through the whole proposal
+ *   and vanished at the exact moment it had news — the stele that was just
+ *   planted is the outcome of everything the sitting did. It comes back.
+ * · Content stopped at y≈380 with the seats at 770, and at 1920 roughly 85% of
+ *   the scene was empty black. Three columns of real objects, stretched to the
+ *   floor's height, is what fills it — not padding.
+ */
 function ClosingFloor({ G, session }: { G: HegemonyState; session: AssemblySession }) {
   const ranked = [...PLAYER_IDS].sort(
     (a, b) =>
       G.assemblyPassedByPlayer[b] - G.assemblyPassedByPlayer[a] ||
       PLAYER_IDS.indexOf(a) - PLAYER_IDS.indexOf(b),
   );
-  const headroom = G.ruleset.assembly.lawCap - G.activeLaws.length;
 
   return (
     <div className="asmFloor asmFloorClosing">
@@ -754,28 +773,26 @@ function ClosingFloor({ G, session }: { G: HegemonyState; session: AssemblySessi
         ) : (
           <ul className="asmResults">
             {session.results.map((result, index) => (
-              <li className={result.passed ? "is-passed" : "is-failed"} key={index}>
+              <li className={`is-${outcomeOf(result)}`} key={index}>
+                <span className="asmResultVerdict label">{OUTCOME_WORDS[outcomeOf(result)]}</span>
                 <span className="asmResultText body">{result.summary}</span>
                 <span className="asmResultTally stat num">
-                  {result.vetoedBy ? "vetoed" : `${result.yea}–${result.nay}`}
+                  {result.vetoedBy ? "—" : `${result.yea}–${result.nay}`}
                 </span>
               </li>
             ))}
           </ul>
         )}
-        <p className="asmCapNote body-em">
-          <b className="num">
-            {G.activeLaws.length} of {G.ruleset.assembly.lawCap}
-          </b>{" "}
-          stelae planted.{" "}
-          {headroom <= 0
-            ? "The board is full — a new Law must now name one to replace."
-            : `${headroom} slot${headroom === 1 ? "" : "s"} of headroom.`}
-        </p>
+        <p className="asmCapNote body-em">{steleNote(G)}</p>
       </section>
 
+      <StandingColumn G={G} />
+
       <section className="asmRecap">
-        <h4 className="asmStandingKey label">Voice ledger · authored resolutions passed</h4>
+        {/* "Voice ledger · authored resolutions passed" wrapped, orphaning
+            "PASSED" onto a line of its own in tracked caps. The heading names
+            the thing; the column of numerals under it is self-evidently a count. */}
+        <h4 className="asmStandingKey label">Voice ledger</h4>
         {ranked.map((playerID) => (
           <p className="asmVoiceRow" key={playerID}>
             <span className="asmGlaze title" style={{ background: PLAYER_GLAZES[playerID].color }}>
@@ -790,7 +807,42 @@ function ClosingFloor({ G, session }: { G: HegemonyState; session: AssemblySessi
             <b className="asmVoiceRowCount stat num">{G.assemblyPassedByPlayer[playerID]}</b>
           </p>
         ))}
+        <p className="asmVoiceFoot body-em">
+          resolutions each seat has authored and carried, all sittings
+        </p>
       </section>
     </div>
   );
+}
+
+type Outcome = "enacted" | "struck" | "fallen";
+
+/** The word the house would say. It is the news, so it is set as a verdict and
+ *  not left to be inferred from whether 5–0 or 0–5 came first. */
+const OUTCOME_WORDS: Record<Outcome, string> = {
+  enacted: "Enacted",
+  struck: "Vetoed",
+  fallen: "Falls",
+};
+
+function outcomeOf(result: AssemblyResult): Outcome {
+  return result.vetoedBy ? "struck" : result.passed ? "enacted" : "fallen";
+}
+
+/** What the agora looks like now the sitting has risen. "0 of 6 stelae planted.
+ *  6 slots of headroom." is a status field read aloud; this is the same two facts
+ *  said the way the rest of the scene talks. */
+function steleNote(G: HegemonyState): string {
+  const cap = G.ruleset.assembly.lawCap;
+  const standing = G.activeLaws.length;
+
+  if (standing === 0) {
+    return `No law stands. All ${cap} stones are bare.`;
+  }
+
+  if (standing >= cap) {
+    return `Every stone is carved. A new Law must now name the one it tears down.`;
+  }
+
+  return `${standing} of ${cap} stones carved — ${cap - standing} still bare.`;
 }

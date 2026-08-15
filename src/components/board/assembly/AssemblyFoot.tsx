@@ -48,7 +48,7 @@ export function AssemblyFoot({
     return (
       <div className="asmFoot">
         <button className="asmRise verb-lg" onClick={() => moves.assemblyClose()} type="button">
-          Rise &amp; return to the map
+          Rise &amp; return
         </button>
       </div>
     );
