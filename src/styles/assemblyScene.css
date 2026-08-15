@@ -581,6 +581,16 @@
   font-style: italic;
 }
 
+/* A card that pulls only one way, or pulls both ways inside a single effect, is
+   carved WHOLE rather than split. It keeps the clause's weight — this is still
+   the sentence the scene exists to put in front of four people — and declines the
+   olive/oxblood ink, because there is no half of it to claim either. Eight cards
+   land here, and they used to render as flat grey prose with no carving at all. */
+.asmClauseWhole {
+  color: var(--ink);
+  font-weight: 800;
+}
+
 .asmLawTarget,
 .asmLawPrize,
 .asmLawHouseNote,
@@ -876,20 +886,41 @@
 
 /* One potsherd per voter. The bar shows the shape of the vote; the sherds make
    it countable, which is what you need before you spend a bribe. */
+/* Three groups under the bar's three zones, all growing INWARD to the tie notch:
+   cast Yea, the urn of votes still to come, cast Nay. The two piles used to be
+   pushed to opposite ends of a 430px bar, and nothing that far apart can be
+   compared at a glance — which is the only reason to draw sherds at all. */
 .asmShards {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   margin-top: 9px;
   padding: 0 4px;
 }
 
 .asmPile {
   display: flex;
+  flex: 1 1 0;
   gap: 5px;
+  min-width: 0;
 }
 
-.asmPileNay {
+/* Yea sits left of the notch, so its sherds pack to the RIGHT and the newest
+   cast lands nearest the middle. Nay is the mirror. */
+.asmPile.is-yea {
   flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.asmPile.is-nay {
+  justify-content: flex-start;
+}
+
+/* The urn is not a side. It takes only the width it needs, over the notch. */
+.asmPileUrn {
+  flex: 0 0 auto;
+  justify-content: center;
 }
 
 .asmShard {
@@ -1026,6 +1057,27 @@
   letter-spacing: 0.2em;
 }
 
+/* Where the weight came from. "Casts now · 0 votes" was printed with no reason
+   beside it, and vote weight is the seat's CITIZEN count — a fact held nowhere
+   else on this scene. It rides under the cue, on the plaque that is acting. */
+.asmSeatWhy {
+  color: var(--ivory-45);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Why a purchase is inert, printed where the price would be. A greyed slab that
+   still shows a price is indistinguishable from one you simply have not clicked,
+   and Veto and Bribe are BOTH routinely dead on the first ballot of a game. */
+.asmVoteWhy {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--warn-lit);
+  font-style: italic;
+  white-space: nowrap;
+}
+
 /* The ostrakon. Every seat carries one during PROPOSAL too — the seat's own
    blazon scratched on fired clay means "this one has spoken", a blank sherd
    means "still deliberating". A decision nobody has made is pending, not
@@ -1127,8 +1179,10 @@
   color: var(--ivory-70);
 }
 
+/* Dim enough to read as unavailable, bright enough that the REASON printed on it
+   is still legible — 0.42 put the explanation below the contrast it needs. */
 .asmVote[aria-disabled="true"] {
-  opacity: 0.42;
+  opacity: 0.62;
   cursor: not-allowed;
 }
 
