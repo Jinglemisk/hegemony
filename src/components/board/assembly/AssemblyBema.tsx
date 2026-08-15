@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
+import { toRoman } from "../../../ui/formatters";
 import {
   availableLawReplacementIds,
   activeLawIds,
@@ -562,26 +563,31 @@ function VoteTally({ G, session }: { G: HegemonyState; session: AssemblySession 
 
   return (
     <div className="voteTally">
-      <div className="talline">
-        <span className="tallyYea">
-          {yea}
-          <span className="tallyUnit"> yay</span>
+      {/* The two numerals stand over the bar, not beside it. A tally is a pair of
+          weights on a scale, and reading it should not require reading left to
+          right through a sentence. */}
+      <div className="tallyNums">
+        <span className="tallySide tallyYea">
+          <b className="stat-lg stat-hero num">{yea}</b>
+          <span className="tallyUnit label">yea</span>
         </span>
-        <span className="tugBar">
-          <span className="tugYea" style={{ width: `${(yea / total) * 100}%` }} />
-          <span className="tugPending" style={{ width: `${(pending / total) * 100}%` }} />
-          <span className="tugNay" style={{ width: `${(nay / total) * 100}%` }} />
-        </span>
-        <span className="tallyNay">
-          <span className="tallyUnit">nay </span>
-          {nay}
+        <span className="tallySide tallyNay">
+          <b className="stat-lg stat-hero num">{nay}</b>
+          <span className="tallyUnit label">nay</span>
         </span>
       </div>
-      <div className="talline">
-        <span className="tallyVerdict">
-          Card {session.ballotIndex + 1} of {session.ballot.length} ·{" "}
-          {voteNote(G, session, yea, nay, pending)}
-        </span>
+
+      {/* The ivory notch at the centre is the whole point of drawing a bar: a tie
+          FAILS, and without a mark at the middle there is nothing to be short of. */}
+      <span className="tugBar">
+        <span className="tugYea" style={{ width: `${(yea / total) * 100}%` }} />
+        <span className="tugPending" style={{ width: `${(pending / total) * 100}%` }} />
+        <span className="tugNay" style={{ width: `${(nay / total) * 100}%` }} />
+      </span>
+
+      <div className="tallyVerdict label">
+        Card {toRoman(session.ballotIndex + 1)} of {toRoman(session.ballot.length)}
+        <small className="body-em">{voteNote(G, session, yea, nay, pending)}</small>
       </div>
     </div>
   );

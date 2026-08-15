@@ -105,7 +105,7 @@ export function AssemblyPanel({
           <div className="asm-steps">
             {STEPS.map((step, index) => (
               <div className="asmStepWrap" key={step.key}>
-                {index > 0 ? <span className="stepArrow">→</span> : null}
+                {index > 0 ? <span aria-hidden="true" className="stepArrow" /> : null}
                 <div className={`astep${step.key === session.phase ? " isNow" : ""}`}>
                   <span className="stepNumeral">{step.numeral}</span>
                   <span className="stepLabel">{step.label}</span>
