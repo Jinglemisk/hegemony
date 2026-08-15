@@ -704,6 +704,75 @@
   color: var(--ink-63);
 }
 
+/* ── The age ends ────────────────────────────────────────────────────────────
+   The third moment that earns the dark table, and the one that had never been
+   given it: the end of the game rendered in the plain log register, with a
+   header bar, a secondary button, and a bare colour dot for each seat.
+
+   It is the venture's tablet, wider — the age is READ and laid down — and the
+   standings are the same full-bleed hairlined rows every other list in a
+   ceremony uses. Each seat carries its glaze AND its blazon: a glaze never
+   travels alone, least of all on the screen where the four are compared. */
+.ageEnd {
+  width: min(600px, calc(100vw - 34px));
+}
+
+.ageEnd .tabletVoice {
+  margin-bottom: 20px;
+}
+
+.ageStandings {
+  margin: 0 -34px 20px;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--ink-12);
+  text-align: left;
+}
+
+.ageSeat {
+  display: grid;
+  grid-template-columns: 26px 27px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 34px;
+  border-bottom: 1px solid var(--ink-12);
+}
+
+.ageRank {
+  color: var(--ink-30);
+  text-align: center;
+}
+
+.ageWho {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.ageWho .caption {
+  overflow: hidden;
+  color: var(--ink-63);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ageCards {
+  color: var(--ink-66);
+}
+
+/* The seat that took it: the clay bar and wash every taken row in a ceremony
+   wears, and its count in full ink. The rank numeral steps up with it. */
+.ageSeatCrowned {
+  background: var(--mood-band);
+  box-shadow: inset 3px 0 0 var(--mood-ink);
+}
+
+.ageSeatCrowned .ageRank,
+.ageSeatCrowned .ageCards {
+  color: var(--clay-ink);
+}
+
 /* The riot's insurance slots are picks too, but they sit in a stack that also
    carries a heading and a listbox — so they keep the tablet's own gutter rather
    than bleeding, and are parted by the same hairlines. */
