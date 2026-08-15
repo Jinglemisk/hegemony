@@ -1,12 +1,16 @@
 /**
- * The Assembly's glyph set, transcribed from the approved visual reference
- * (docs/reference/design/showcases/assembly-mode-showcase.html §13).
+ * The Assembly's two bespoke verbs.
  *
- * All inline SVG on a 24×24 box, `fill="none" stroke="currentColor"`, round caps and
- * joins — so every icon inks itself from its container's colour and none of them need
- * a sprite-sheet cell. That matters here because the Assembly is the first surface in
- * the game with its own colour register (aegean), and the atlas sprites are baked to
- * clay.
+ * Inline SVG on a 24×24 box, `fill="none" stroke="currentColor"`, round caps and
+ * joins — so each inks itself from its container's colour and neither needs a
+ * sprite-sheet cell. That matters here because the scene runs on a dark ground
+ * and the atlas sprites are baked to clay.
+ *
+ * The set used to be seven. The scene rebuild spent five of them: the urn (the
+ * head is a Greek kicker over a title now), the yea / nay / waiting marks (an
+ * ostrakon bears ΝΑΙ, ΟΥ or a middot — Greek, not a check and a cross) and the
+ * draw document (the seal reads DRAW n ⟨influence⟩, and the influence glyph is
+ * the one that matters on it).
  */
 
 const STROKE = {
@@ -15,86 +19,6 @@ const STROKE = {
   strokeLinecap: "round",
   strokeLinejoin: "round",
 } as const;
-
-/**
- * The voting urn — a two-handled kalpis on its base. The Assembly's identity mark,
- * and the one bespoke glyph in the set: the *psephos* was dropped into exactly this
- * vessel, so it carries the whole system's meaning on its own.
- */
-export function UrnIcon({ size = 15 }: { size?: number }) {
-  return (
-    <svg
-      aria-hidden="true"
-      height={size}
-      viewBox="0 0 24 24"
-      width={size}
-      {...STROKE}
-      strokeWidth={1.5}
-    >
-      <path d="M7 4h10M8.6 4l.9 3.2M15.4 4l-.9 3.2M9.5 7.2c-3.1 1.4-3.4 9.8 2.5 13 5.9-3.2 5.6-11.6 2.5-13M6.2 20.4h11.6" />
-    </svg>
-  );
-}
-
-/** Cast yea — the pebble went in. */
-export function YeaMark({ className = "" }: { className?: string }) {
-  return (
-    <svg aria-hidden="true" className={className} viewBox="0 0 20 20" {...STROKE} strokeWidth={2.6}>
-      <path d="M4 10.5l4 4 8-9" />
-    </svg>
-  );
-}
-
-/** Cast nay. */
-export function NayMark({ className = "" }: { className?: string }) {
-  return (
-    <svg aria-hidden="true" className={className} viewBox="0 0 20 20" {...STROKE} strokeWidth={2.6}>
-      <path d="M5 5l10 10M15 5L5 15" />
-    </svg>
-  );
-}
-
-/** Yet to speak — a dashed ring, the empty place in the urn. */
-export function WaitMark({ className = "" }: { className?: string }) {
-  return (
-    <svg aria-hidden="true" className={className} viewBox="0 0 20 20" {...STROKE} strokeWidth={2.2}>
-      <circle cx="10" cy="10" r="6" strokeDasharray="3 3" />
-    </svg>
-  );
-}
-
-/** Draw — a ruled document with a folded corner. */
-export function DrawIcon({ size = 15 }: { size?: number }) {
-  return (
-    <svg
-      aria-hidden="true"
-      height={size}
-      viewBox="0 0 24 24"
-      width={size}
-      {...STROKE}
-      strokeWidth={1.7}
-    >
-      <path d="M5 4.4h9l4 4v11.2H5zM14 4.4V8.4h4M8 12.4h7M8 15.6h7" />
-    </svg>
-  );
-}
-
-/** Bribe — a coin. */
-export function BribeIcon({ size = 15 }: { size?: number }) {
-  return (
-    <svg
-      aria-hidden="true"
-      height={size}
-      viewBox="0 0 24 24"
-      width={size}
-      {...STROKE}
-      strokeWidth={1.7}
-    >
-      <circle cx="12" cy="12" r="6.6" />
-      <path d="M12 8.4v7.2M10.2 10.2h2.9a1.4 1.4 0 0 1 0 2.8h-1.8a1.4 1.4 0 0 0 0 2.8H14" />
-    </svg>
-  );
-}
 
 /** Repeal — a law leaving the record. */
 export function RepealIcon({ size = 15 }: { size?: number }) {
