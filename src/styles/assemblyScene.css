@@ -13,6 +13,10 @@
  * `.tally`, a name the vote tally also wanted. assembly.css keeps the Agora page
  * and the Codex roster; everything the scene draws is here.
  *
+ * Type: every size in this sheet is either a role from type.css or one of the
+ * three scene sizes declared in the `.asmScene` block below. There is no third
+ * kind, and the block below is where a fourth would have to argue for itself.
+ *
  * The register: AEGEAN is politics and appears nowhere else in the game. Clay is
  * "your move", olive is yea, oxblood is nay. Every geometry number rides
  * --ui-scale, exactly like the chrome it is covering, so 1280 gets the same
@@ -47,6 +51,31 @@
   --asm-seat-w: calc(220px * var(--ui-scale));
   --asm-lacquer: rgb(24 18 16 / 72%);
   --asm-keyline: rgb(255 248 231 / 20%);
+
+  /* ── The scene's own three sizes ───────────────────────────────────────────
+     type.css owns the nine roles and every other sheet spends them. These three
+     are the declared exception, and type.css is where the exception is granted:
+     its note on `.stat-hero` rules that the venture's payoff and the Assembly's
+     tally are "scene numerals inside a scene that owns its whole viewport, not
+     page numerals", because giving each a role would make the size table longer
+     than the thing it disciplines. This sheet IS that scene — fixed, inset 0 —
+     and while it stands there is no page left to be in register with.
+
+     What was wrong was never that the sizes were local. It was that they were
+     three loose numbers in three separate rules, each carrying its own apology,
+     which is indistinguishable from three sizes nobody decided. They are a
+     register now: declared once, here, beside the widths they share a scene
+     with, and spent by name below. They ride rem like every role, so --ui-scale
+     shrinks them with the rest of the scene at 1280. */
+  --asm-numeral: 3.5rem; /* 56px — the tally. Two of them are weighed against
+                            each other, which is why it outranks the single
+                            carved figure any ceremony gets. */
+  --asm-motion: 1.5625rem; /* 25px — the name of the card under debate. No role
+                              sits between title and display, and a 34px display
+                              would outrank the scene's own head. */
+  --asm-clause: 1.03125rem; /* 16.5px — one step above body, for the sentence
+                               the whole scene exists to put in front of four
+                               people. */
 }
 
 .asmStage {
@@ -498,10 +527,7 @@
   margin: 0;
   color: var(--ink);
   font-family: var(--disp);
-  /* 25px. The name of the thing the house is arguing about — the one size on
-     this card that is not a type role, because no role sits between title and
-     display and a 34px display would outrank the scene's own head. */
-  font-size: 1.5625rem;
+  font-size: var(--asm-motion);
   font-weight: 700;
   letter-spacing: 0.08em;
   line-height: 1.12;
@@ -520,9 +546,7 @@
   margin: 0;
   padding: 0 30px;
   color: var(--ink-66);
-  /* 16.5px. Reading register, one step above body: this is the sentence the
-     whole scene exists to put in front of four people. */
-  font-size: 1.03125rem;
+  font-size: var(--asm-clause);
   line-height: 1.5;
 }
 
@@ -776,9 +800,7 @@
 }
 
 .asmTallyNum {
-  /* 56px. The number the whole scene is about — bigger than any ceremony's
-     carved figure, because two of them are being weighed against each other. */
-  font-size: 3.5rem;
+  font-size: var(--asm-numeral);
   font-weight: 800;
   line-height: 1;
 }
@@ -932,7 +954,11 @@
   justify-content: center;
   flex-wrap: nowrap;
   gap: calc(16px * var(--ui-scale));
-  max-width: 100%;
+  /* A DEFINITE width, not fit-content. A shrinkable flex item contributes only
+     its content width to a fit-content container, so a bench sized to its
+     contents hands every plaque back to its own text and the four widths stop
+     agreeing with each other. */
+  width: 100%;
 }
 
 /* The plaques shrink before anything else does: the casting plaque is three
