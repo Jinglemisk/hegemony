@@ -1,3 +1,4 @@
+import { AnnotatedText } from "../../AnnotatedText";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { Tooltip } from "../../overlays/Tooltip";
 import { PLAYER_NAMES } from "../../../game/data";
@@ -79,9 +80,21 @@ export function CommandDock({
       </div>
 
       {/* The narration, inboard of the clock: it has the whole left half to be
-          long in, and it can never reach the verbs. */}
+          long in, and it can never reach the verbs.
+
+          It is the SAME line the chronicle is showing a few hundred pixels away,
+          so it is rendered the same way — the bar used to print the raw message,
+          "-5 wood" in flat ink, while the chronicle printed "-5 Wood" in oxblood
+          with a timber glyph. One event, two voices, both on screen at once.
+
+          Unlinked, like the chronicle: a status line is not a place you act, and
+          the dock already carries every tab stop it should. */}
       <div className="dockTicker">
-        {chronicleTicker ? <p className="caption">{chronicleTicker}</p> : null}
+        {chronicleTicker ? (
+          <p className="caption">
+            <AnnotatedText links={false} text={chronicleTicker} />
+          </p>
+        ) : null}
       </div>
 
       <Tooltip
