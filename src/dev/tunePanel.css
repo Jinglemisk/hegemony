@@ -1,12 +1,13 @@
 /* DEV parameter dashboard. Deliberately utilitarian — a tool, not game chrome —
    but tinted to the Kerameikos palette so it doesn't clash with the board. */
 
-/* Docked top-left of the map well. It used to sit bottom-right, where it lay on
-   top of END TURN and swallowed clicks on the one button that must never be
-   blocked. Top-left is the only corner with no game affordance in it. */
+/* Docked to the top-left corner of the MAP WELL — inboard of the left tablet, not
+   over it. It used to sit bottom-right, where it lay on top of END TURN and
+   swallowed clicks on the one button that must never be blocked; the first move
+   put it at the screen's left edge, where the docked ledger then covered it. */
 .tune-fab {
   position: fixed;
-  left: 14px;
+  left: calc(var(--panel-w) + 14px);
   top: calc(var(--chrome-top) + 12px);
   z-index: var(--z-fab);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
