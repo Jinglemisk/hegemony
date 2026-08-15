@@ -195,14 +195,12 @@
   min-width: 0;
 }
 
-.candidateTooltipTrigger,
-.endTurnTooltipTrigger {
+.candidateTooltipTrigger {
   display: flex;
   width: 100%;
 }
 
-.candidateTooltipTrigger > button,
-.endTurnTooltipTrigger > button {
+.candidateTooltipTrigger > button {
   width: 100%;
 }
 

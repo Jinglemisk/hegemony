@@ -1,0 +1,744 @@
+/* shell — the ceramic frame: two bone bars, the resource spine, the roster,
+ * the verb rail and the twin dials.
+ *
+ * Loaded late so it wins over the sheets it replaces (scoreboard.css,
+ * command.css) without those files having to be gutted in the same commit as the
+ * restyle. What is dead in them gets deleted as each surface lands.
+ *
+ * The one rule the whole frame obeys: **bars are bone, objects are lacquer.**
+ * Vase-black and clay are spent on things you press or throw — the seal, dice,
+ * ostraka, tooltips — and never on a surface. Dark bars were what made the old
+ * chrome feel like a control panel bolted over a game.
+ */
+
+/* ── The two bars ─────────────────────────────────────────────────────────── */
+
+.topbar,
+.commandDock::before {
+  border: 0;
+  background: var(--bar-face);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.topbar {
+  z-index: var(--z-bar);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--chrome-top);
+  padding: 0 var(--sp-3) 0 var(--sp-4);
+  border-bottom: 1px solid var(--ink-30);
+  box-shadow: 0 2px 10px rgb(24 18 16 / 16%);
+}
+
+.commandDock::before {
+  border-top: 1px solid var(--ink-30);
+  box-shadow: 0 -2px 10px rgb(24 18 16 / 16%);
+}
+
+/* The meander. It is the one piece of pattern in the chrome, and it earns its
+   place by marking where the bar ENDS — without it the bone bar and the bone
+   tablets below it read as one surface. Drawn at 40% so it is texture, not
+   decoration you have to look at. */
+.topbar::after,
+.commandDock::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 9px;
+  background: var(--meander) repeat-x left center / 18px 9px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.topbar::after {
+  bottom: 2px;
+}
+
+.commandDock::after {
+  bottom: calc(var(--bot-h) - 9px);
+}
+
+/* The slips take whatever room is left to the LEFT of the spine, and no more. A
+   plain `1fr` let a long omen name grow until it slid under the numbers at 1280;
+   half the viewport less half the spine is the only honest bound, because the
+   spine is centred on the viewport rather than on the space between the ends. */
+.topbarEvents {
+  min-width: 0;
+  max-width: calc(50vw - 220px);
+  overflow: hidden;
+}
+
+/* ── The resource spine ────────────────────────────────────────────────────
+   Pinned to the bar's true centre, not to the space between the slips and the
+   roster. Those two ends change width constantly (a long omen name, a fourth
+   seat joining) and centring BETWEEN them made the numbers drift a few pixels
+   every turn — which is exactly the kind of motion that makes a UI feel unsteady
+   without anyone being able to say why. */
+.resourceSpine {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.resourceSpine .resourceGrid {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.resourceSpine .resourcePill {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.resourceSpine .resourceIcon {
+  width: 21px;
+  height: 21px;
+  align-self: center;
+  opacity: 0.85;
+}
+
+.resourceSpine .resourceValue {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.resourceSpine .resourceValue strong {
+  color: var(--ink);
+}
+
+/* A stockpile that just changed flashes the NUMERAL, not a box behind it. The
+   old flash filled the pill with a green or red plate for a second and a half,
+   which on a bar of six numbers read as an alarm every single turn. Colour on the
+   figure itself says the same thing and then gets out of the way. */
+.resourceSpine .resourcePill[class*="resourceFlash"] {
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+  animation: none;
+}
+
+.resourceSpine .resourceFlash-increase strong {
+  animation: spineFlashUp 2400ms ease-out;
+}
+
+.resourceSpine .resourceFlash-decrease strong {
+  animation: spineFlashDown 2400ms ease-out;
+}
+
+@keyframes spineFlashUp {
+  0%,
+  30% {
+    color: var(--pos);
+  }
+
+  100% {
+    color: var(--ink);
+  }
+}
+
+@keyframes spineFlashDown {
+  0%,
+  30% {
+    color: var(--neg);
+  }
+
+  100% {
+    color: var(--ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resourceSpine .resourceFlash-increase strong,
+  .resourceSpine .resourceFlash-decrease strong {
+    animation: none;
+  }
+}
+
+/* The delta is the only coloured thing up here, and it always carries its sign.
+   A bare colour would be saying "bad" in a way a third of players cannot see. */
+.resourceSpine .resourceDelta {
+  font-weight: 700;
+}
+
+.resourceSpine .resourceDelta.positive {
+  color: var(--pos);
+}
+
+.resourceSpine .resourceDelta.negative {
+  color: var(--neg);
+}
+
+.resourceSpine .resourceDelta.neutral {
+  color: var(--ink-30);
+}
+
+/* ── The roster ───────────────────────────────────────────────────────────── */
+
+.roster {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  opacity: 0.55;
+  transition: opacity 140ms ease;
+}
+
+.seat:hover,
+.seatViewing {
+  opacity: 1;
+}
+
+.seatActing {
+  opacity: 1;
+}
+
+/* Every glaze carries an ivory keyline and an ink halo, because a disc has to
+   survive on bone here and on open sea when the same mark lands on the board. */
+.seatGlaze {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  color: var(--ivory);
+  box-shadow:
+    inset 0 0 0 1.5px rgb(255 248 231 / 85%),
+    0 0 0 1px rgb(24 18 16 / 55%);
+}
+
+.seatName {
+  color: var(--ink);
+  letter-spacing: 0.1em;
+}
+
+/* Acting is a clay underline — a state of the seat, not a fifth colour. */
+.seatActing .seatName {
+  padding-bottom: 1px;
+  border-bottom: 2px solid var(--clay);
+}
+
+.seatViewing .seatGlaze {
+  box-shadow:
+    inset 0 0 0 2px var(--ivory),
+    0 0 0 1px rgb(24 18 16 / 55%),
+    var(--lift);
+}
+
+/* ── The bottom rail ──────────────────────────────────────────────────────── */
+
+.commandDock {
+  z-index: var(--z-bar);
+  display: block;
+  padding: 0;
+}
+
+.verbSpine {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  height: var(--bot-h);
+  transform: translateX(-50%);
+}
+
+/* The button is `.railVerb`, NOT `.verb` — `.verb` is a TYPE ROLE (Cinzel 700
+   caps, 12px) and the two collided: every roster glaze picked up the button's
+   flex box and min-width and stopped being a disc. Roles describe text; a
+   component class describes a thing. They must never share a name. */
+.railVerb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 84px;
+  padding: 6px 8px 5px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--ink);
+  background: none;
+}
+
+.railVerb:not([aria-disabled="true"]):hover {
+  background: rgb(36 25 16 / 6%);
+  box-shadow: none;
+  transform: none;
+}
+
+.railVerb .icon {
+  opacity: 0.9;
+}
+
+.verbLabel {
+  color: inherit;
+}
+
+.railVerbArmed {
+  color: var(--ivory);
+  background: var(--clay);
+}
+
+.railVerbArmed:not([aria-disabled="true"]):hover {
+  background: var(--clay-deep);
+}
+
+/* Blocked: dim the whole verb far enough to read as unavailable, then bring the
+   part of the price you cannot pay back to full strength in --neg. The player
+   gets the answer without hovering, and the tooltip still carries the sentence. */
+.railVerbOff {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.railVerbOff .verbCostShort {
+  color: var(--neg);
+  font-weight: 700;
+  opacity: 2.63; /* 1 / 0.38 — cancels the parent's dim for this span alone */
+}
+
+.verbCost {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 12px;
+  color: var(--ink-66);
+}
+
+.verbCost em {
+  font-style: normal;
+  text-transform: lowercase;
+}
+
+.verbCostItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.verbCostItem .icon {
+  width: 0.813rem;
+  height: 0.813rem;
+}
+
+.railVerbArmed .verbCost {
+  color: rgb(255 248 231 / 78%);
+}
+
+/* The ticker: narration, inboard of the clock, on the bone. */
+.dockTicker {
+  position: absolute;
+  bottom: 0;
+  left: 178px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  max-width: 260px;
+  height: var(--bot-h);
+}
+
+.dockTicker p {
+  overflow: hidden;
+  margin: 0;
+  color: var(--ink-48);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── The twin dials ───────────────────────────────────────────────────────
+   Both protrude above the rail and above the tablets, because a thing that
+   sticks out of the frame is a thing you can reach — which is true of the seal
+   and is the reason the clock is worth drawing at all rather than printing. */
+.dial {
+  position: absolute;
+  bottom: 12px;
+  z-index: var(--z-dial);
+  width: 128px;
+  height: 128px;
+  padding: 0;
+  border: 0;
+  background: none;
+  filter: drop-shadow(0 6px 18px rgb(24 18 16 / 45%));
+}
+
+.dial svg {
+  display: block;
+  width: 128px;
+  height: 128px;
+}
+
+.seasonClock {
+  left: 26px;
+  pointer-events: none;
+}
+
+.turnSeal {
+  right: 26px;
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+.turnSeal:not(.turnSealOff):hover {
+  box-shadow: none;
+  transform: translateY(-2px);
+}
+
+.turnSealOff {
+  cursor: not-allowed;
+  filter: grayscale(0.7) drop-shadow(0 4px 12px rgb(24 18 16 / 35%));
+  opacity: 0.72;
+}
+
+/* The tooltip wraps the seal in a trigger span; it must not become a box of its
+   own, or the seal positions against IT rather than against the rail. */
+.endTurnTooltipTrigger {
+  position: static;
+  display: contents;
+}
+
+/* The roster is pushed to the far right so the spine's true centre is free. */
+.topbarStatusCluster {
+  gap: var(--sp-3);
+  margin-left: auto;
+}
+
+.dialFace {
+  fill: var(--disc-hi);
+  stroke: rgb(36 25 16 / 45%);
+  stroke-width: 1.5;
+}
+
+.dialTrack {
+  fill: none;
+  stroke: var(--slip);
+  stroke-width: 7;
+}
+
+.dialTicks line {
+  stroke: var(--ink-30);
+  stroke-width: 1;
+}
+
+.dialProgress {
+  fill: none;
+  stroke: var(--clay);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+/* The four seasons, muted to a wash except the one under the needle. Reading a
+   clock is finding the hand, not the numbers. */
+.dialSeason {
+  stroke: rgb(36 25 16 / 28%);
+  stroke-width: 1;
+  opacity: 0.38;
+}
+
+.dialSeason.isNow {
+  opacity: 1;
+}
+
+.dialSeason-spring {
+  fill: var(--season-spring);
+}
+
+.dialSeason-summer {
+  fill: var(--season-summer);
+}
+
+.dialSeason-autumn {
+  fill: var(--season-autumn);
+}
+
+.dialSeason-winter {
+  fill: var(--season-winter);
+}
+
+.dialNeedle {
+  fill: var(--clay);
+  stroke: var(--disc-hi);
+  stroke-width: 1.2;
+}
+
+.dialHub {
+  fill: var(--disc-hi);
+  stroke: var(--ink-30);
+  stroke-width: 1.2;
+}
+
+.dialYear {
+  fill: var(--ink);
+  font-family: var(--disp);
+  font-weight: 700;
+}
+
+.dialSeasonName {
+  fill: var(--clay);
+  font-family: var(--disp);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.turnSealBody {
+  fill: url("#turnSealClay");
+}
+
+.turnSealClayTop {
+  stop-color: var(--clay-lit);
+}
+
+.turnSealClayMid {
+  stop-color: var(--clay);
+}
+
+.turnSealClayLow {
+  stop-color: var(--clay-shade);
+}
+
+.turnSealBeads {
+  fill: none;
+  stroke: rgb(255 248 231 / 35%);
+  stroke-width: 5;
+  stroke-dasharray: 2.5 4.5;
+}
+
+.turnSealKeyline {
+  fill: none;
+  stroke: rgb(255 248 231 / 40%);
+  stroke-width: 1.2;
+}
+
+.turnSealGlyph path {
+  fill: none;
+  stroke: var(--disc-hi);
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.turnSealLabel {
+  fill: var(--disc-hi);
+  font-family: var(--disp);
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.turnSealActor {
+  fill: rgb(255 248 231 / 68%);
+  font-family: var(--disp);
+  font-weight: 700;
+  letter-spacing: 2.2px;
+}
+
+/* ── The sea ──────────────────────────────────────────────────────────────
+   The painted chart, full-bleed under the board, with a vignette so the bone
+   tablets lying on it read as ON the table rather than cut out of it. */
+.hexMap {
+  background: var(--sea-chart) center / cover no-repeat;
+}
+
+.mapStage::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  box-shadow:
+    inset 0 8px 26px rgb(24 18 16 / 38%),
+    inset 0 -8px 26px rgb(24 18 16 / 38%);
+  pointer-events: none;
+}
+
+/* ── The docked tablets ────────────────────────────────────────────────────
+   Two bone slabs lying on the chart, each with a slip-coloured tab spine at the
+   screen's edge and its page beside it. They are DOCKED, flush and square: the
+   floating rounded cards they replace hovered over the sea with a soft shadow,
+   which read as a UI overlay rather than as something on the table.
+   The tab rail stays even when its page is closed, so the way back is always in
+   the same place; closing gives the sea back, which is the point of the toggle. */
+
+.tabRail {
+  position: fixed;
+  top: var(--chrome-top);
+  bottom: var(--bot-h);
+  z-index: var(--z-tablet);
+  display: flex;
+  flex-direction: column;
+  /* Tabs live in the middle of the rail, not stacked at the top: the rail runs
+     the full height of the table and a cluster at one end would point at nothing. */
+  justify-content: center;
+  width: 46px;
+  background: var(--slip);
+}
+
+.tabRail-left {
+  left: 0;
+  border-right: 1px solid var(--ink-12);
+}
+
+.tabRail-right {
+  right: 0;
+  border-left: 1px solid var(--ink-12);
+}
+
+.railTab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  color: var(--ink-48);
+  background: none;
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.railTab:hover {
+  color: var(--ink);
+  box-shadow: none;
+  transform: none;
+}
+
+/* The open tab is CONTINUOUS with its page — same bone, no divider — so the rail
+   and the tablet read as one object rather than a menu next to a box. */
+.railTabOn {
+  color: var(--clay);
+  background: var(--bone);
+}
+
+.railTabOn::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--clay);
+}
+
+.tabRail-left .railTabOn::before {
+  left: 0;
+}
+
+.tabRail-right .railTabOn::before {
+  right: 0;
+}
+
+.railTabBadge {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 8px;
+  color: var(--ivory);
+  background: var(--clay);
+  font-family: var(--body);
+  font-weight: 700;
+}
+
+/* The two pages. Square, flush to their rail, laid on the chart with a hard
+   bottom edge — a slab has thickness, and that 2px of shade is the whole
+   difference between "on the table" and "floating above it". */
+.intelPanel,
+.consultPanel {
+  position: fixed;
+  top: var(--chrome-top);
+  bottom: var(--bot-h);
+  z-index: var(--z-tablet);
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+  border: 0;
+  border-radius: 0;
+  background: var(--bone);
+  box-shadow:
+    0 2px 0 #cbb58e,
+    var(--shadow-laid);
+}
+
+.intelPanel {
+  left: 46px;
+  width: calc(var(--panel-w) - 46px);
+}
+
+.consultPanel {
+  right: 46px;
+  width: calc(var(--chron-w) - 46px);
+}
+
+/* Hovering a tablet used to raise it above the rest of the chrome. It is docked
+   now; there is nothing to raise it over. */
+.intelPanel:focus-within,
+.intelPanel:hover,
+.consultPanel:focus-within,
+.consultPanel:hover {
+  z-index: var(--z-tablet);
+}
+
+.ledgerCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 0;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--ink-12);
+}
+
+.ledgerCardTitle .titleIcon {
+  width: 1.1875rem;
+  height: 1.1875rem;
+}
+
+.ledgerCardTitle h2 {
+  flex: 1;
+  margin: 0;
+}
+
+.ledgerCloseButton {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  color: var(--ink-48);
+  background: none;
+}
+
+.ledgerCloseButton:hover {
+  color: var(--clay);
+  box-shadow: none;
+  transform: none;
+}

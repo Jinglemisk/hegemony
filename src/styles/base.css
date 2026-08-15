@@ -200,6 +200,26 @@
   --panel-w: calc(var(--panel-w-base) * var(--ui-scale));
   --chron-w: calc(var(--panel-w-base) * var(--ui-scale));
   --hexclip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+
+  /* ── The frame's own materials ──────────────────────────────────────────────
+     The bar face is fired bone catching light at the top; the meander is the
+     single band of pattern in the chrome, and it lives here as a token so no
+     sheet ever has to spell out clay in a data URI. The chart is the painted
+     Aegean the whole table lies on. */
+  --bar-face: linear-gradient(180deg, #faf1dc, #f0e0bd 70%);
+  --meander: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9"><path d="M1 8V1h12v4H7V3" fill="none" stroke="%23c0461c" stroke-width="1.3"/></svg>');
+  --sea-chart: url("../../assets/map/aegean-sea-board.png");
+
+  /* The season wheel's four washes and the seal's fired gradient. Both are
+     ARTWORK colours — they name a season and a curved clay surface, not a state —
+     so they live in the table with everything else rather than as loose hexes in
+     a component sheet. */
+  --season-spring: #a8b26d;
+  --season-summer: #dfb46f;
+  --season-autumn: #cf9468;
+  --season-winter: #9db4ba;
+  --clay-lit: #cd5124;
+  --clay-shade: #a93c17;
   /* The band the floating left rail + ledger card live in — clear of the flush top
      spine and the bottom dock. The rail, card and camera all read them so they
      stay in agreement. */

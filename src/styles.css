@@ -30,4 +30,8 @@
 @import "./styles/modals.css";
 @import "./styles/assembly.css";
 @import "./styles/overlays.css";
+/* shell lands last but one: it restyles surfaces the older slices above still
+   describe, and it must win without those files being gutted in the same commit.
+   responsive.css stays after it, as ever. */
+@import "./styles/shell.css";
 @import "./styles/responsive.css";
