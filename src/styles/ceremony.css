@@ -671,3 +671,214 @@
   letter-spacing: 0.28em;
   text-align: center;
 }
+
+/* ── The ceremonies MOVE ─────────────────────────────────────────────────────
+   A rite that arrives fully-formed is an illustration of a rite. Every one of
+   these is an OBJECT doing what the object does — a card is dealt, a tablet is
+   laid down, a die tumbles and settles, and the verdict is read out only once
+   the die has stopped. Nothing here is decoration for its own sake: the die's
+   motion in particular is the whole difference between a number you rolled and
+   a number the engine told you.
+
+   The sheet had NO keyframes at all, which is why every ceremony read as a
+   static picture. `LacquerDie.tsx` was doing its part in JS the whole time —
+   flipping faces on a cube that never budged.
+
+   Everything below is off under `prefers-reduced-motion`, at the foot of the
+   file. Delays are keyed to the die: it settles at 400ms (`FLIP_MS`), so the
+   figure lands after it and the verdict is read after that. */
+
+/* A fate is DEALT: it comes in off the deck, off-axis, and squares up. */
+@keyframes fateDeal {
+  from {
+    transform: translate3d(0, 26px, 0) rotate(-2.4deg) scale(0.94);
+    opacity: 0;
+  }
+
+  60% {
+    opacity: 1;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* A tablet is LAID DOWN: heavier, flatter, no spin. */
+@keyframes tabletLay {
+  from {
+    transform: translate3d(0, 16px, 0) scale(0.985);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* The table goes dark before the object arrives on it. */
+@keyframes ceremonyDusk {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* The die: thrown, caught by the table, one last shudder. The rotation is done
+   by 77% — 400ms of 520ms — so the face stops changing exactly as the cube
+   stops turning, and the tail is the settle. */
+@keyframes dieTumble {
+  0% {
+    transform: translate3d(0, -22px, 0) rotate(-24deg) scale(0.82);
+  }
+
+  38% {
+    transform: translate3d(0, 4px, 0) rotate(12deg) scale(1.05);
+  }
+
+  62% {
+    transform: translate3d(0, -5px, 0) rotate(-7deg) scale(0.99);
+  }
+
+  77% {
+    transform: rotate(2.5deg) scale(1.03);
+  }
+
+  90% {
+    transform: rotate(-1deg) scale(0.995);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+/* What the die found, read out after it has stopped. */
+@keyframes verdictRise {
+  from {
+    transform: translate3d(0, 7px, 0);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* The figure is CARVED, so it arrives large and settles to size rather than
+   sliding in from somewhere. */
+@keyframes figureStrike {
+  from {
+    transform: scale(1.38);
+    opacity: 0;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.modalBackdrop.ceremonyScrim {
+  animation: ceremonyDusk 240ms ease-out both;
+}
+
+.fateCard {
+  animation: fateDeal 380ms cubic-bezier(0.17, 0.84, 0.35, 1.02) both;
+}
+
+.ceremonyTablet {
+  animation: tabletLay 300ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.lacquerDie {
+  animation: dieTumble 520ms cubic-bezier(0.2, 0.72, 0.3, 1) both;
+}
+
+/* Soft only while the faces are changing; the settled face is crisp. The class
+   comes off the moment the die stops. */
+.lacquerDie.dieRolling .diePips {
+  filter: blur(0.6px);
+}
+
+/* The label can come with the throw; the number the die found cannot. */
+.dramaOutcome .label {
+  animation: verdictRise 240ms ease-out both;
+}
+
+.dramaOutcome h3 {
+  animation: verdictRise 280ms ease-out 400ms both;
+}
+
+.dramaGain {
+  animation: figureStrike 300ms cubic-bezier(0.2, 0.9, 0.3, 1.1) 500ms both;
+}
+
+.dramaOutcome .caption {
+  animation: verdictRise 260ms ease-out 560ms both;
+}
+
+/* Only the verdict that FOLLOWS a die waits for it. The pre-roll modifier line
+   sits in the same band with no `.drama` before it, and must not be withheld. */
+.drama ~ .tabletVerdict {
+  animation: verdictRise 300ms ease-out 620ms both;
+}
+
+/* The table dims around the row the die found, rather than arriving dimmed. */
+.oddsRow {
+  transition:
+    opacity 300ms ease 380ms,
+    border-color 300ms ease 380ms;
+}
+
+.oddsRow > * {
+  transition:
+    background-color 300ms ease 380ms,
+    color 300ms ease 380ms,
+    box-shadow 300ms ease 380ms;
+}
+
+/* A commit that has just changed its mind about the mood shouldn't jump colour. */
+.ceremonyCommit {
+  transition:
+    background 220ms ease,
+    box-shadow 160ms ease;
+}
+
+/* ── Stillness ───────────────────────────────────────────────────────────────
+   Every animation above is off, not merely faster. A player who asked for
+   stillness gets the finished state on the first frame — and `LacquerDie` makes
+   the same promise in JS, so the die never even paints a face it did not roll. */
+@media (prefers-reduced-motion: reduce) {
+  .modalBackdrop.ceremonyScrim,
+  .fateCard,
+  .ceremonyTablet,
+  .lacquerDie,
+  .dramaOutcome .label,
+  .dramaOutcome h3,
+  .dramaOutcome .caption,
+  .dramaGain,
+  .drama ~ .tabletVerdict {
+    animation: none;
+  }
+
+  .lacquerDie.dieRolling .diePips {
+    filter: none;
+  }
+
+  .oddsRow,
+  .oddsRow > *,
+  .ceremonyCommit {
+    transition: none;
+  }
+}

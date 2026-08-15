@@ -419,6 +419,17 @@
   }
 }
 
+/* An INFINITE pulse is the one animation a player who asked for stillness cannot
+   look away from, and this one runs across the whole map. The highlight has to
+   stay legible without it, so the stroke settles at full opacity rather than
+   at the dim end of its own cycle. */
+@media (prefers-reduced-motion: reduce) {
+  .hexTile.placementCandidate {
+    animation: none;
+    stroke-opacity: 1;
+  }
+}
+
 .placementCaption {
   color: #fff;
   text-shadow: 0 1px 2px rgb(8 22 28 / 55%);
