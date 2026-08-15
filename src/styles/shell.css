@@ -403,7 +403,7 @@
 .dockTicker p {
   overflow: hidden;
   margin: 0;
-  color: var(--ink-48);
+  color: var(--ink-63);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -662,7 +662,7 @@
   height: 52px;
   padding: 0;
   border: 0;
-  color: var(--ink-48);
+  color: var(--ink-63);
   background: none;
   transition:
     color 160ms ease,
@@ -678,7 +678,7 @@
 /* The open tab is CONTINUOUS with its page — same bone, no divider — so the rail
    and the tablet read as one object rather than a menu next to a box. */
 .railTabOn {
-  color: var(--clay);
+  color: var(--clay-ink);
   background: var(--bone);
 }
 
@@ -787,7 +787,7 @@
    badge that a three-digit number cannot fit inside. */
 .ledgerCardTitle .panelCount {
   margin-left: auto;
-  color: var(--ink-48);
+  color: var(--ink-63);
   font-weight: 600;
 }
 

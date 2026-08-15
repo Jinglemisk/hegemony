@@ -316,7 +316,7 @@
 
 .asmSteleEpithet {
   margin: 2px 0 9px;
-  color: var(--clay);
+  color: var(--clay-ink);
   letter-spacing: 0.16em;
 }
 
@@ -331,7 +331,7 @@
 }
 
 .asmDogmaKey {
-  color: var(--ink-48);
+  color: var(--ink-63);
   letter-spacing: 0.18em;
   text-align: center;
 }
@@ -348,7 +348,7 @@
   display: flex;
   flex: none;
   align-self: center;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 /* Tint the glyph and ink the numeral: the row says whether this orator pays you
@@ -370,7 +370,7 @@
 }
 
 .asmPrizeKey {
-  color: var(--ink-48);
+  color: var(--ink-63);
   letter-spacing: 0.16em;
 }
 
@@ -387,7 +387,7 @@
 }
 
 .asmPrizeNone {
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 /* The one pressable thing on a stele: a fired clay seal. */
@@ -415,7 +415,7 @@
 }
 
 .asmDraw[aria-disabled="true"] {
-  color: var(--ink-48);
+  color: var(--ink-63);
   background: var(--ink-12);
   box-shadow: none;
   cursor: not-allowed;
@@ -519,7 +519,7 @@
 
 .asmLawKicker {
   margin: 0 0 4px;
-  color: var(--clay);
+  color: var(--clay-ink);
   letter-spacing: 0.28em;
 }
 
@@ -570,7 +570,7 @@
 }
 
 .asmClauseBut {
-  color: var(--ink-48);
+  color: var(--ink-63);
   font-weight: 400;
   font-style: italic;
 }
@@ -599,7 +599,7 @@
 
 .asmLawHouseNote,
 .asmLawKind {
-  color: var(--ink-48);
+  color: var(--ink-63);
   letter-spacing: 0.18em;
 }
 
@@ -609,7 +609,7 @@
 }
 
 .asmLawKind.is-directive {
-  color: var(--clay);
+  color: var(--clay-ink);
 }
 
 .asmLawRepeal .asmLawName {
@@ -1355,7 +1355,7 @@
 .asmMenuHead {
   margin: 0;
   padding: 4px 7px 6px;
-  color: var(--ink-48);
+  color: var(--ink-63);
   font-family: var(--disp);
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1415,7 +1415,7 @@
 }
 
 .asmMenuMeta {
-  color: var(--ink-48);
+  color: var(--ink-63);
   line-height: 1.35;
   white-space: normal;
 }

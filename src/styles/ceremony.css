@@ -291,7 +291,7 @@
 }
 
 .turnCaption {
-  color: var(--ink-48);
+  color: var(--ink-63);
   font-style: italic;
 }
 
@@ -375,7 +375,7 @@
 .ghostVerb {
   padding: 15px 20px;
   border-radius: 4px;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .ghostVerb:not(:disabled):hover {
@@ -407,7 +407,7 @@
    the die flips. */
 .tabletKicker {
   display: block;
-  color: var(--clay);
+  color: var(--clay-ink);
   letter-spacing: 0.3em;
 }
 
@@ -437,7 +437,7 @@
 
 .dramaOutcome .label {
   display: block;
-  color: var(--ink-48);
+  color: var(--ink-63);
   letter-spacing: 0.24em;
 }
 
@@ -448,7 +448,7 @@
 .dramaOutcome .caption {
   display: block;
   margin-top: 3px;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 /* The figure the whole dialog is about, beside its own glyph. Before the
@@ -574,7 +574,7 @@
 }
 
 .oddsRowHit .oddsFace {
-  color: var(--clay);
+  color: var(--clay-ink);
   box-shadow: inset 3px 0 0 var(--clay);
 }
 
@@ -621,7 +621,7 @@
 }
 
 .ceremonyPick .caption {
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 /* The riot's insurance slots are picks too, but they sit in a stack that also
@@ -635,7 +635,7 @@
 
 .ceremony .riotInsuranceStack > .label {
   padding-bottom: 6px;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .ceremony .riotInsuranceRow {

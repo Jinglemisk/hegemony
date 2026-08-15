@@ -311,7 +311,7 @@
 
 .placementUpgradeStat .meterSlash {
   margin: 0 3px;
-  color: var(--clay);
+  color: var(--clay-ink);
 }
 
 .placementCostRow {
@@ -849,7 +849,7 @@
 .codexJumpLinkActive:not(:disabled):hover {
   border-color: var(--clay);
   background: transparent;
-  color: var(--clay);
+  color: var(--clay-ink);
   font-weight: 700;
 }
 
@@ -992,13 +992,13 @@
 
 .codexContentsOf {
   display: block;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .codexContentsCaret {
   flex: none;
   margin-left: auto;
-  color: var(--ink-48);
+  color: var(--ink-63);
   transition: transform 140ms ease;
 }
 
@@ -1050,7 +1050,7 @@
 
 /* Where you are, in the book's own colour. No second box — the row simply inks. */
 .codexContentsRow.on b {
-  color: var(--clay);
+  color: var(--clay-ink);
 }
 
 .codexContentsRow .codexContentsNumeral {

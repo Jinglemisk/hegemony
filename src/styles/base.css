@@ -42,6 +42,13 @@
 
   --vase-black: #181210;
   --clay: #c0461c;
+  /* Clay has to do two jobs and cannot do both at one value. As a FILL — the
+     armed verb, the seal, a keyline — #c0461c is the identity and stays. As INK
+     it reads 4.11:1 on bone, so every glossary term, kicker and epithet drawn in
+     it was under AA. --clay-ink is the same hue five points darker, the least
+     that clears 4.5:1 (4.92:1 on bone, 5.74:1 on ivory). The ramp is therefore
+     fill → ink → deep, and --clay-deep stays what a clay link does on hover. */
+  --clay-ink: #ad3d18;
   --clay-deep: #8f2e13;
   --ochre: #d98a35;
   --bone: #f4e6c8;
@@ -80,8 +87,10 @@
   /* Named for the register's step, not the alpha — the showcase's own value is 34%. */
   --aeg-30: rgb(31 105 119 / 34%);
   --fg: #241910;
-  --muted: rgb(36 25 16 / 66%);
-  --subtle: rgb(36 25 16 / 48%);
+  /* The older names for the two quiet ink steps; aliases now, so the pair cannot
+     drift apart the way --subtle and the old --ink-48 quietly had. */
+  --muted: var(--ink-66);
+  --subtle: var(--ink-63);
   --panel: rgb(255 248 231 / 78%);
   --panel-strong: rgb(255 248 231 / 94%);
   --panel-soft: rgb(192 70 28 / 10%);
@@ -109,10 +118,16 @@
   --vase: #181210;
   --ochre-ink: #b06a1d;
 
-  /* the ink ramp — every text weight in the UI comes off this one hue */
+  /* the ink ramp — every text weight in the UI comes off this one hue.
+     Steps are named for their alpha, and the QUIET step is 63% rather than the
+     mock's 48% because 48% inks 2.98:1 on bone: every section head, capacity
+     denominator and settlement subtitle in the app was below AA. 63% is the
+     floor that clears 4.5:1 on the darkest ground this ramp lands on (bone,
+     4.61:1) — not a wholesale contrast raise, the minimum that reads. Anything
+     below --ink-63 is a keyline or a wash, never text. */
   --ink: #241910;
   --ink-66: rgb(36 25 16 / 66%);
-  --ink-48: rgb(36 25 16 / 48%);
+  --ink-63: rgb(36 25 16 / 63%);
   --ink-30: rgb(36 25 16 / 30%);
   --ink-12: rgb(36 25 16 / 12%);
   --ink-07: rgb(36 25 16 / 7%);

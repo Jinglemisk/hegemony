@@ -24,7 +24,7 @@
   margin: 14px 0 8px;
   padding-bottom: 5px;
   border-bottom: 1px solid var(--ink-12);
-  color: var(--ink-48);
+  color: var(--ink-63);
   letter-spacing: 0.22em;
 }
 
@@ -93,7 +93,7 @@
 }
 
 .est .label {
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 /* ── The alarm ───────────────────────────────────────────────────────────
@@ -202,7 +202,7 @@
 
 .cityName .caption {
   overflow: hidden;
-  color: var(--ink-48);
+  color: var(--ink-63);
   font-style: normal;
   text-overflow: ellipsis;
   text-transform: lowercase;
@@ -217,7 +217,7 @@
 }
 
 .cityPops small {
-  color: var(--ink-48);
+  color: var(--ink-63);
   font-weight: 700;
 }
 
@@ -232,7 +232,7 @@
 }
 
 .cityState {
-  color: var(--ink-48);
+  color: var(--ink-63);
   font-weight: 700;
 }
 
@@ -271,7 +271,7 @@
 }
 
 .socketCap {
-  color: var(--ink-48);
+  color: var(--ink-63);
   font-weight: 700;
 }
 
@@ -282,7 +282,7 @@
   flex-wrap: wrap;
   gap: 4px 13px;
   margin: 9px 0 0;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .cityIncome span {
@@ -342,7 +342,7 @@
   display: flex;
   gap: 9px;
   margin-top: 2px;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .tierIncome span {
@@ -391,7 +391,7 @@
 
 .rungButton .icon {
   flex: none;
-  color: var(--clay);
+  color: var(--clay-ink);
 }
 
 .rungPrice {
@@ -409,7 +409,7 @@
 }
 
 .rungPrice .icon {
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .rungButton:not([aria-disabled="true"]):hover {
@@ -623,7 +623,7 @@
 }
 
 .marketHeld .label {
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .marketRowShort .marketHeld b {
@@ -638,7 +638,7 @@
 }
 
 .marketRowDeficit .marketBuy {
-  color: var(--clay);
+  color: var(--clay-ink);
   box-shadow: inset 0 0 0 2px var(--clay);
 }
 
@@ -716,7 +716,7 @@
 }
 
 .heldlineBig small {
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .heldlineLabel {
@@ -753,7 +753,7 @@
    sentence rather than two facts. */
 .vcardReq {
   margin: 2px 0 7px 25px;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .vcardRace {
@@ -781,7 +781,7 @@
 }
 
 .vcardLead small {
-  color: var(--ink-48);
+  color: var(--ink-63);
   font-weight: 700;
 }
 
@@ -844,7 +844,7 @@
 }
 
 .voicebox .caption {
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .voiceGlaze {
@@ -878,14 +878,14 @@
 .lawslabMeta {
   display: block;
   margin-top: 3px;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .lawslabEmpty {
   border-left-style: dashed;
   border-left-color: var(--ink-30);
   background: none;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
 
 .polTrigger {
@@ -919,7 +919,7 @@
 
 .polEpithet {
   display: block;
-  color: var(--clay);
+  color: var(--clay-ink);
   letter-spacing: 0.16em;
 }
 
@@ -1012,7 +1012,7 @@
   margin: 13px 0 4px;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--ink-12);
-  color: var(--ink-48);
+  color: var(--ink-63);
   letter-spacing: 0.18em;
 }
 
@@ -1035,5 +1035,5 @@
 
 .chronicleEmpty {
   padding: 16px 2px;
-  color: var(--ink-48);
+  color: var(--ink-63);
 }
