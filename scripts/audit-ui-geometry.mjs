@@ -60,6 +60,23 @@ const PROBE = () => {
   const clips = (style) =>
     style.overflowX !== "visible" || style.overflowY !== "visible" || style.clipPath !== "none";
 
+  /** Is this element inside something the user can scroll to bring it into view? */
+  const scrollableAncestor = (el) => {
+    let node = el.parentElement;
+    while (node && node !== document.body) {
+      const s = getComputedStyle(node);
+      const scrollsY =
+        (s.overflowY === "auto" || s.overflowY === "scroll") &&
+        node.scrollHeight > node.clientHeight + 1;
+      const scrollsX =
+        (s.overflowX === "auto" || s.overflowX === "scroll") &&
+        node.scrollWidth > node.clientWidth + 1;
+      if (scrollsY || scrollsX) return true;
+      node = node.parentElement;
+    }
+    return false;
+  };
+
   const describe = (el) => {
     const cls =
       typeof el.className === "string" && el.className
@@ -97,8 +114,14 @@ const PROBE = () => {
 
     // ── OFFSCREEN ────────────────────────────────────────────────────────────
     // Only leaves and small boxes: a full-bleed container legitimately bleeds.
+    //
+    // And only content the user cannot reach. A working scroll region whose
+    // content is longer than its window puts every row below the fold outside
+    // the viewport at scroll-zero — that is what scrolling is for, not a defect.
+    // Reporting it drowned 12 real collisions under 101 false ones, so
+    // reachability is now part of the question this class asks.
     const smallish = rect.width < vw * 0.9 && rect.height < vh * 0.9;
-    if (smallish && style.position !== "fixed") {
+    if (smallish && style.position !== "fixed" && !scrollableAncestor(el)) {
       const out_l = -rect.left,
         out_r = rect.right - vw,
         out_t = -rect.top,
@@ -168,24 +191,37 @@ const PROBE = () => {
   // ── COLLISION ──────────────────────────────────────────────────────────────
   // Leaf text elements that overlap and are not related by containment. This is
   // the one that catches two map labels sitting on top of each other.
-  const leaves = [...info.entries()].filter(([el, { rect }]) => {
-    if (rect.width > 400 || rect.height > 200) return false;
-    if (!el.textContent || !el.textContent.trim()) return false;
-    return ![...el.children].some((c) => (c.textContent || "").trim());
-  });
+  //
+  // Line boxes, not bounding boxes. An inline element that wraps over four lines
+  // has a bounding box spanning the whole paragraph, so a <strong> on line three
+  // "collides" with the <em> around it at 100%. getClientRects() gives one rect
+  // per line, which is what the eye actually sees.
+  const leaves = [...info.entries()]
+    .filter(([el, { rect }]) => {
+      if (rect.width > 400 || rect.height > 200) return false;
+      if (!el.textContent || !el.textContent.trim()) return false;
+      return ![...el.children].some((c) => (c.textContent || "").trim());
+    })
+    .map(([el, { rect }]) => {
+      const lines = [...el.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
+      return [el, lines.length ? lines : [rect]];
+    });
+
+  const overlap = (ra, rb) => {
+    const w = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
+    const h = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+    if (w <= TOL || h <= TOL) return 0;
+    const smaller = Math.min(ra.width * ra.height, rb.width * rb.height);
+    return smaller > 0 ? (w * h) / smaller : 0;
+  };
 
   for (let i = 0; i < leaves.length; i += 1) {
     for (let j = i + 1; j < leaves.length; j += 1) {
-      const [a, ra] = [leaves[i][0], leaves[i][1].rect];
-      const [b, rb] = [leaves[j][0], leaves[j][1].rect];
+      const [a, linesA] = leaves[i];
+      const [b, linesB] = leaves[j];
       if (a.contains(b) || b.contains(a)) continue;
-      const w = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
-      const h = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
-      if (w <= TOL || h <= TOL) continue;
-      const area = w * h;
-      const smaller = Math.min(ra.width * ra.height, rb.width * rb.height);
-      if (smaller <= 0) continue;
-      const share = area / smaller;
+      let share = 0;
+      for (const ra of linesA) for (const rb of linesB) share = Math.max(share, overlap(ra, rb));
       if (share < 0.18) continue; // a hair of overlap is a shadow, not a bug
       out.push({
         kind: "COLLISION",
