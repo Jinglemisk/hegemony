@@ -452,11 +452,23 @@
   opacity: 0.72;
 }
 
-/* The tooltip wraps the seal in a trigger span; it must not become a box of its
-   own, or the seal positions against IT rather than against the rail. */
+/* The tooltip wraps the seal in a trigger span, and the tooltip anchors to the
+   TRIGGER — so the trigger has to be the seal's box, not a passthrough. It used
+   to be `display: contents`, which gave it no box at all: the tooltip measured
+   {0,0,0,0} and landed in the top-left corner of the screen (QA-DOCK-1).
+   The trigger therefore takes the dial's placement and the seal sits statically
+   inside it, which is also what keeps the seal off the rail's flow. */
 .endTurnTooltipTrigger {
+  position: absolute;
+  right: 26px;
+  bottom: var(--dial-gap);
+  z-index: var(--z-dial);
+  width: var(--dial-d);
+  height: var(--dial-d);
+}
+
+.endTurnTooltipTrigger .turnSeal {
   position: static;
-  display: contents;
 }
 
 /* The roster is pushed to the far right so the spine's true centre is free. */
