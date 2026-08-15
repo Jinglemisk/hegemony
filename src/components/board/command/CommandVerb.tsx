@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { Tooltip } from "../../overlays/Tooltip";
 import { RESOURCE_GLYPHS, VERB_GLYPHS } from "../../../ui/iconRegistry";
@@ -6,7 +7,7 @@ import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { formatNumber } from "../../../ui/formatters";
 import type { Resources } from "../../../game/types";
 import { isVerbEnabled, verbTitle } from "./verbs";
-import type { VerbContext, VerbCost, VerbHandlers, VerbSpec } from "./verbs";
+import type { VerbContext, VerbHandlers, VerbPriceClause, VerbSpec } from "./verbs";
 
 /**
  * One verb on the bottom rail: glyph, name, price.
@@ -19,24 +20,43 @@ import type { VerbContext, VerbCost, VerbHandlers, VerbSpec } from "./verbs";
  * the eye is going anyway. The sentence is still in the tooltip for the detail.
  */
 function VerbCostSlot({
-  cost,
+  clauses,
   context,
   blocked,
 }: {
-  cost: VerbCost;
+  clauses: VerbPriceClause[];
   context: VerbContext;
   blocked: boolean;
 }) {
-  const required = cost.cost?.(context);
   const held = context.G.players[context.playerID].resources;
 
   return (
     <span className="verbCost caption num">
-      {cost.lead ? <em>{cost.lead}</em> : null}
-      {required ? <VerbPrice held={held} required={required} showShortfall={blocked} /> : null}
+      {clauses.map((clause, index) => (
+        <Fragment key={clauseKey(clause)}>
+          {/* Several clauses are ALTERNATIVES, never a total: Calm takes the
+              influence or the gold, and the joiner has to say so. */}
+          {index > 0 ? <em>or</em> : null}
+          {clause.lead ? <em>{clause.lead}</em> : null}
+          {clause.span ? (
+            <span className="verbCostItem">
+              <Icon glyph={RESOURCE_GLYPHS[clause.span.resource]} />
+              {clause.span.min === clause.span.max
+                ? formatNumber(clause.span.min)
+                : `${formatNumber(clause.span.min)}–${formatNumber(clause.span.max)}`}
+            </span>
+          ) : null}
+          {clause.amounts ? (
+            <VerbPrice held={held} required={clause.amounts} showShortfall={blocked} />
+          ) : null}
+        </Fragment>
+      ))}
     </span>
   );
 }
+
+const clauseKey = (clause: VerbPriceClause) =>
+  [clause.lead, clause.span?.resource, ...Object.keys(clause.amounts ?? {})].join("-");
 
 function VerbPrice({
   required,
@@ -79,7 +99,26 @@ export function CommandVerb({
   const pressed = verb.pressed?.(context) ?? false;
   const enabled = isVerbEnabled(verb, context);
   const explanation = verbTitle(verb, context);
-  const effectiveCost = verb.cost?.cost?.(context);
+  const clauses = verb.cost?.(context) ?? [];
+  // "Effective cost" is a single exact figure. A floor, a range or a pair of
+  // alternatives is none of those, so those verbs simply do not fill that slot
+  // rather than filling it with something that reads as the price.
+  const effectiveCost =
+    clauses.length === 1 && !clauses[0].lead && !clauses[0].span ? clauses[0].amounts : undefined;
+
+  const button = (
+    <button
+      aria-disabled={!enabled}
+      aria-pressed={verb.pressed ? pressed : undefined}
+      className={`railVerb${pressed ? " railVerbArmed" : ""}${enabled ? "" : " railVerbOff"}`}
+      onClick={enabled ? () => verb.select(handlers) : undefined}
+      type="button"
+    >
+      <Icon glyph={VERB_GLYPHS[verb.id]} size="verb" />
+      <span className="verbLabel verb">{verb.label}</span>
+      {verb.cost ? <VerbCostSlot blocked={!enabled} clauses={clauses} context={context} /> : null}
+    </button>
+  );
 
   return (
     <Tooltip
@@ -95,17 +134,7 @@ export function CommandVerb({
       preferredPlacement="above"
       triggerClassName="verbTooltipTrigger"
     >
-      <button
-        aria-disabled={!enabled}
-        aria-pressed={verb.pressed ? pressed : undefined}
-        className={`railVerb${pressed ? " railVerbArmed" : ""}${enabled ? "" : " railVerbOff"}`}
-        onClick={enabled ? () => verb.select(handlers) : undefined}
-        type="button"
-      >
-        <Icon glyph={VERB_GLYPHS[verb.id]} size="verb" />
-        <span className="verbLabel verb">{verb.label}</span>
-        {verb.cost ? <VerbCostSlot cost={verb.cost} context={context} blocked={!enabled} /> : null}
-      </button>
+      {button}
     </Tooltip>
   );
 }

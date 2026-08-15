@@ -1,6 +1,10 @@
 import type { Phase } from "../../../client/controller";
+import { getCivicCalmStatus } from "../../../game/civic";
+import { getBuildings } from "../../../game/content";
+import { POP_TYPES } from "../../../game/core/pops";
+import { getAdjustedActionCost, getDiscountedGrowPopCost } from "../../../game/economy/cost";
 import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
-import type { HegemonyState, PlayerId, Resources } from "../../../game/types";
+import type { HegemonyState, PlayerId, Resource, Resources } from "../../../game/types";
 
 /**
  * The action verbs as data (ladder rung R3). Every verb was a hand-written
@@ -45,8 +49,71 @@ export type VerbHandlers = {
 export type VerbId =
   "grow" | "move" | "found" | "upgrade" | "build" | "calm" | "venture" | "endTurn";
 
-/** `{ lead, cost }` renders "from 🌾5"; `{ lead }` alone renders a bare word ("free"). */
-export type VerbCost = { lead?: string; cost?: (context: VerbContext) => Partial<Resources> };
+/**
+ * What a verb prints under its name.
+ *
+ * The showcase's rule, and it holds across the whole app: **the number you need
+ * in order to decide is printed; only the arithmetic behind it is hover-only.**
+ * So a verb whose price depends on what you point it at prints the RANGE or the
+ * FLOOR — `2–6 food`, `from 6 stone` — never the word "varies". A price you have
+ * to hover to learn is a price you cannot plan around.
+ *
+ * A clause is a lead word (`free`, `from`, `stake`) and/or an amount; a `span` is
+ * the min–max of one resource. Two clauses read as alternatives, which is what
+ * Calm's influence-or-gold is.
+ */
+export type VerbPriceClause = {
+  lead?: string;
+  amounts?: Partial<Resources>;
+  span?: { resource: Resource; min: number; max: number };
+};
+
+/** Every figure below comes back from an engine query or the ruleset field that
+ *  query reads, so the dock can never quote a price the press does not charge. */
+export type VerbCost = (context: VerbContext) => VerbPriceClause[];
+
+/** The settlements a target-dependent price is a range over. */
+function ownedSettlements(G: HegemonyState, playerID: PlayerId) {
+  return G.board.tiles.flatMap((tile) =>
+    tile.settlements.filter((settlement) => settlement.owner === playerID),
+  );
+}
+
+const totalUnits = (cost: Partial<Resources>) =>
+  Object.values(cost).reduce((sum: number, amount) => sum + (amount ?? 0), 0);
+
+/** Grow's food price across every settlement × pop type the player could grow.
+ *  Building discounts, event coupons and Standing Laws are already inside the
+ *  engine's own number — this only takes its ends. */
+function growFoodSpan(context: VerbContext): VerbPriceClause[] {
+  const { G, playerID } = context;
+  const settlements = ownedSettlements(G, playerID);
+  const foods =
+    settlements.length > 0
+      ? settlements.flatMap((settlement) =>
+          POP_TYPES.map((pop) => getDiscountedGrowPopCost(G, playerID, settlement, pop).food ?? 0),
+        )
+      : // Before the first settlement stands there is nothing to discount, so the
+        // ruleset's undiscounted mouths are the honest quote.
+        POP_TYPES.map((pop) => G.ruleset.growPopCosts[pop].food ?? 0);
+
+  return [{ span: { resource: "food", min: Math.min(...foods), max: Math.max(...foods) } }];
+}
+
+/** The cheapest building on the roster, priced the way `getBuildBuildingStatus`
+ *  prices it. "From" is exact: nothing on the Build page costs less than this. */
+function buildFloor(context: VerbContext): VerbPriceClause[] {
+  const { G, playerID } = context;
+  const costs = getBuildings(G.definition.content).map((building) =>
+    getAdjustedActionCost(G, playerID, "buildBuilding", building.cost, building.id),
+  );
+  const cheapest = costs.reduce(
+    (best, cost) => (totalUnits(cost) < totalUnits(best) ? cost : best),
+    costs[0] ?? {},
+  );
+
+  return [{ lead: "from", amounts: cheapest }];
+}
 
 export type VerbSpec = {
   id: VerbId;
@@ -72,8 +139,7 @@ export const VERBS: VerbSpec[] = [
   {
     id: "grow",
     label: "Grow",
-    // The holding, class, and active discounts determine the exact amount.
-    cost: { lead: "varies" },
+    cost: growFoodSpan,
     available: ({ canGrowPops }) => canGrowPops,
     hint: "Choose a holding and pop type to grow.",
     blockedHint: "Requires an owned holding.",
@@ -82,7 +148,7 @@ export const VERBS: VerbSpec[] = [
   {
     id: "move",
     label: "Move",
-    cost: { lead: "free" },
+    cost: () => [{ lead: "free" }],
     available: ({ canMovePops }) => canMovePops,
     hint: "Move pops between two owned settlements.",
     blockedHint: "Requires at least two settlements.",
@@ -91,7 +157,7 @@ export const VERBS: VerbSpec[] = [
   {
     id: "found",
     label: "Found",
-    cost: { cost: ({ G, playerID }) => getFoundColonyStatus(G, playerID, "").cost ?? {} },
+    cost: ({ G, playerID }) => [{ amounts: getFoundColonyStatus(G, playerID, "").cost ?? {} }],
     // Stays clickable while armed so the same button cancels the map mode.
     available: ({ canFoundColony, isFoundColonyActive }) => canFoundColony || isFoundColonyActive,
     pressed: ({ isFoundColonyActive }) => isFoundColonyActive,
@@ -105,7 +171,9 @@ export const VERBS: VerbSpec[] = [
   {
     id: "upgrade",
     label: "Upgrade",
-    cost: { cost: ({ G, playerID }) => getUpgradeColonyToCityStatus(G, playerID, "").cost ?? {} },
+    cost: ({ G, playerID }) => [
+      { amounts: getUpgradeColonyToCityStatus(G, playerID, "").cost ?? {} },
+    ],
     available: ({ canUpgradeCity }) => canUpgradeCity,
     hint: "Upgrade one of your colonies into a city.",
     blockedHint: "Requires an upgradeable colony and enough resources.",
@@ -114,9 +182,10 @@ export const VERBS: VerbSpec[] = [
   {
     id: "build",
     label: "Build",
-    // The cost varies by building; the popover shows each authoritative option.
-    // Stays clickable while armed so the same button cancels the map mode (like Found).
-    cost: { lead: "varies" },
+    // The floor, not a word: the Build page prices each building, and none of
+    // them is cheaper than this. Stays clickable while armed so the same button
+    // cancels the map mode (like Found).
+    cost: buildFloor,
     available: ({ canBuild, isBuildActive }) => canBuild || isBuildActive,
     pressed: ({ isBuildActive }) => isBuildActive,
     hint: ({ isBuildActive }) =>
@@ -129,7 +198,11 @@ export const VERBS: VerbSpec[] = [
   {
     id: "calm",
     label: "Calm",
-    cost: { lead: "options" },
+    // Two payments, one seam — so the dock prints both and joins them with "or".
+    cost: ({ G, playerID }) => [
+      { amounts: getCivicCalmStatus(G, playerID, "influence").cost ?? {} },
+      { amounts: getCivicCalmStatus(G, playerID, "gold").cost ?? {} },
+    ],
     available: ({ calmUsed }) => !calmUsed,
     hint: "Buy happiness: influence or gold, once per turn.",
     blockedHint: "One civic-calm action per turn — already used.",
@@ -138,7 +211,9 @@ export const VERBS: VerbSpec[] = [
   {
     id: "venture",
     label: "Venture",
-    cost: { lead: "stakes" },
+    // Every expedition posts the same stake, so it is quotable before you pick
+    // one — `ruleset.ventureStakes` is the field `getFundExpeditionStatus` reads.
+    cost: ({ G }) => [{ lead: "stake", amounts: G.ruleset.ventureStakes.gold }],
     available: ({ ventureUsed }) => !ventureUsed,
     hint: "Fund an expedition: stake gold or wood, roll the table.",
     blockedHint: "One venture per turn — the ships are already out.",
