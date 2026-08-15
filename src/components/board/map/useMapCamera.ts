@@ -20,6 +20,7 @@ import {
   type ViewBox,
   type WorldInset,
 } from "../../../ui/hexGeometry";
+import { chromeInsetPx } from "../../../ui/chromeMetrics";
 
 /**
  * Pan, zoom and click-vs-drag arbitration for the board (ladder rung R6). None of
@@ -55,60 +56,6 @@ const WHEEL_COMMIT_MS = 90;
 /** Zoom per wheel tick — smaller than the +/- buttons' ZOOM_STEP because a trackpad
  *  fires many ticks per gesture, so the full button step feels hyper-sensitive. */
 const WHEEL_ZOOM_STEP = 0.03;
-
-/**
- * Top/bottom clearance held under the two opaque full-width spines, in CSS px.
- * Left/right are NOT fixed — they are measured per-seat from the live ledger-card
- * widths (see {@link sideInsetPx}), so the board tracks --ui-scale automatically.
- */
-const CHROME_INSET_TB = { top: 96, bottom: 100 };
-
-/**
- * How far to pull the side inset IN from each ledger card's full reach, in CSS px
- * at ui-scale 1. The seat fits the whole BASE_VIEW_BOX (744 wide) into the live
- * area, but the tile cluster is ~540 wide, so the frame carries ~100px/side of its
- * own sea margin. Reserving the card's full reach therefore over-clears (board too
- * small, dead sea); pulling in ~84 lets that built-in margin sit under the card
- * instead, landing the tiles ~40px clear of the card at a laptop width. Wider
- * monitors go height-bound and clear by more — never less.
- */
-const PANEL_CLEAR_PULL_PX = 84;
-
-/** Resolve a CSS length expression (a var/calc) to CSS pixels by measuring a probe.
- *  Custom properties don't resolve through getComputedStyle, so we measure. The
- *  chrome tokens (--panel-w, --rail-w, …) live on `.shell`, NOT :root, so the probe
- *  MUST be hosted inside `.shell` to inherit them — on document.body they read 0. */
-function measureCssLength(expression: string): number {
-  const host = document.querySelector(".shell") ?? document.body;
-  const probe = document.createElement("div");
-  probe.style.cssText = `position:absolute;left:-9999px;top:0;visibility:hidden;width:${expression}`;
-  host.appendChild(probe);
-  const width = probe.getBoundingClientRect().width;
-  probe.remove();
-  return width;
-}
-
-/**
- * The resting board sits in the sea BETWEEN the two ledger cards (2026-07-19, owner
- * ask — the cards widened toward the centre to reclaim the empty sea they used to
- * float over). Each side reserves a card's reach — its edge offset plus its width —
- * less a sea overlap, so the board fills the gap and clears each card by a small
- * margin. Left/right stay SYMMETRIC so the board centres on the viewport, under the
- * medallion (an asymmetric left of 210 once shoved it 70px right — the old "map is
- * off" bug). Reads the live CSS tokens, so it follows --ui-scale and any --panel-w
- * change with no second source of truth.
- */
-function sideInsetPx() {
-  const cardOffset = measureCssLength("calc(var(--rail-w) + var(--bub-out) + 14px)");
-  const leftCard = measureCssLength("var(--panel-w)");
-  const rightCard = measureCssLength("var(--chron-w)");
-  const pull = PANEL_CLEAR_PULL_PX * (leftCard / 360 || 1);
-
-  return {
-    left: Math.max(70, cardOffset + leftCard - pull),
-    right: Math.max(70, cardOffset + rightCard - pull),
-  };
-}
 
 /** Buttons and the confirm prompt own their own pointers — never pan under them. */
 function isMapDragBlockedTarget(target: EventTarget) {
@@ -205,13 +152,9 @@ export function useMapCamera({ onTileAction }: { onTileAction: (tileId: string) 
       return;
     }
 
-    const side = sideInsetPx();
-    const inset = {
-      top: CHROME_INSET_TB.top,
-      bottom: CHROME_INSET_TB.bottom,
-      left: side.left,
-      right: side.right,
-    };
+    // Every clearance is read from the CSS tokens (ui/chromeMetrics.ts) — the
+    // camera holds no bar heights or panel widths of its own.
+    const inset = chromeInsetPx();
     const liveWidth = Math.max(120, bounds.width - inset.left - inset.right);
     const liveHeight = Math.max(120, bounds.height - inset.top - inset.bottom);
     const pad = 28;
