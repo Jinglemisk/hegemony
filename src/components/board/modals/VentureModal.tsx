@@ -31,9 +31,7 @@ export function VentureModal({ onClose }: { onClose: () => void }) {
       table={resultTable}
       modifier={0}
       result={result}
-      subtitle={
-        rolled ? undefined : "Stake it, sail, and let the table speak — one venture per turn."
-      }
+      subtitle={undefined}
       onDismiss={onClose}
       footer={
         rolled ? (

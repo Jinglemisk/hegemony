@@ -60,7 +60,7 @@ export function CitiesTab({
   };
 
   if (holdings.length === 0) {
-    return <p className="emptyState">No settlements yet.</p>;
+    return <p className="emptyState">No walls have risen yet.</p>;
   }
 
   return (

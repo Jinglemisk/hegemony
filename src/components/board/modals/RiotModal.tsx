@@ -89,9 +89,7 @@ export function RiotModal({
     >
       {pending ? (
         <div className="riotInsuranceStack" role="group" aria-label="Riot insurance">
-          <strong className="riotInsuranceTitle">
-            Declare before the die — each once, +1 to the roll
-          </strong>
+          <strong className="riotInsuranceTitle label">Before the die</strong>
           {(riotTable.insurance ?? []).map((option) => {
             const bought = pending.boughtInsurance.includes(option.id);
             const status = getBuyRiotInsuranceStatus(G, playerID, option.id);

@@ -68,7 +68,7 @@ export function UpgradeCityModal({
       }}
     >
       {candidates.length === 0 ? (
-        <p className="placementEmptyState">No colony can be upgraded into a city right now.</p>
+        <p className="placementEmptyState">No colony is ready to become a city.</p>
       ) : (
         <>
           {candidates.length > 1 ? (
@@ -147,10 +147,6 @@ export function UpgradeCityModal({
               <strong>{preview ? formatResourceDelta(preview.incomeDelta) : "—"}</strong>
             </span>
           </div>
-
-          <p className="placementCostNote">
-            The city keeps the colony's current population; only its capacity and yield grow.
-          </p>
 
           <CostRow cost={cost} />
         </>

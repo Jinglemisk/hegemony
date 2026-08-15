@@ -10,7 +10,6 @@ import { useGameUi } from "../GameUiContext";
  */
 export function CalmModal({ onClose }: { onClose: () => void }) {
   const { G, viewerId: playerID, isActive, moves } = useGameUi();
-  const rules = G.ruleset.civicCalm;
   const options: Array<{ payment: CivicCalmPayment; name: string; blurb: string }> = [
     {
       payment: "influence",
@@ -33,7 +32,6 @@ export function CalmModal({ onClose }: { onClose: () => void }) {
     >
       <header className="eventTableHeader">
         <h2 id="calm-title">Civic Calm</h2>
-        <p>+{rules.happiness} happiness, once per turn — calm never stacks.</p>
       </header>
 
       <div className="eventChoiceStack" role="group" aria-label="Payment">
