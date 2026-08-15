@@ -651,14 +651,19 @@
   box-shadow: inset 0 0 0 2px var(--clay);
 }
 
+/* The two trades STACK. Printed give → get, an exchange is twice as wide as the
+   bare numeral it replaces and the pair will not sit side by side in a 236px
+   page; stacked, the two arrows line up in a column and the direction reads
+   before the numbers do. */
 .marketTrade {
-  display: flex;
-  gap: 7px;
+  display: grid;
+  gap: 5px;
   margin-left: auto;
+  min-width: 0;
 }
 
 .marketTradeTrigger {
-  display: inline-flex;
+  display: block;
 }
 
 /* SELL is a filled lacquer block, BUY an outline. Two identically-shaped buttons
@@ -666,24 +671,46 @@
 .marketSell,
 .marketBuy {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 7px 11px 6px;
+  gap: 9px;
+  width: 100%;
+  padding: 5px 9px;
   border: 0;
   border-radius: 5px;
 }
 
-.marketSell b,
-.marketBuy b {
+/* give → get. The arrow is the whole point: it is what stops one side being read
+   in wood and the other in gold. */
+.marketRate {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
+  margin-left: auto;
   font-weight: 800;
 }
 
+.marketGive,
+.marketGet {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.marketArrow {
+  flex: none;
+  opacity: 0.75;
+}
+
+/* The verb holds a fixed column so the exchange behind it starts at the same
+   place on both rows — "SELL" and "BUY" are different lengths, and left to
+   themselves they staggered the two rates by half a glyph. */
 .marketSell small,
 .marketBuy small {
+  flex: none;
+  width: 2.1rem;
   opacity: 0.7;
+  letter-spacing: 0.12em;
+  text-align: left;
 }
 
 .marketSell {
