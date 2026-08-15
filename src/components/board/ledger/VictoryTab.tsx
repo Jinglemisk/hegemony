@@ -47,7 +47,12 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
           {held}
           <small>/{cardsToWin}</small>
         </b>
-        <span className="label">laurels held</span>
+        {/* The count says where you stand; the second line says what standing
+            there would mean. A race with no finishing line stated is a number. */}
+        <span className="heldlineLabel label">
+          laurels held ·<br />
+          {cardsToWin} at dawn wins
+        </span>
       </p>
 
       {standings.map(({ card, holder, minimum, values }) => {
@@ -81,6 +86,14 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
                 <Icon glyph={METRIC_GLYPHS[card.metric]} />
                 <b className="title">{card.name}</b>
               </div>
+
+              {/* What the card is FOR, printed. It was a tooltip, so the one
+                  thing you need in order to read the meter beside it — what the
+                  meter is measuring, and the floor it has to clear — was hidden
+                  behind a hover on all six cards at once. */}
+              <p className="vcardReq caption">
+                {card.description.toLowerCase()} · min {formatNumber(minimum)}
+              </p>
 
               <div className="vcardRace">
                 <span

@@ -31,6 +31,8 @@ export function MarketTab({
 
   return (
     <div className="marketPage">
+      <h3 className="pageSection label">The bank&rsquo;s standing rates</h3>
+
       {TRADABLE_MATERIALS.map((material) => {
         const rate = G.bank[material];
         const held = G.players[playerID].resources[material];
@@ -41,14 +43,21 @@ export function MarketTab({
         const canSell = tradingOpen && sell.can;
         const canBuy = tradingOpen && buy.can;
         const short = held < sellAmount;
+        // A negative store is not a small store: the row stops saying HELD and
+        // says DEFICIT, and BUY — the only move that answers it — is outlined in
+        // clay so the page names its own way out.
+        const deficit = held < 0;
 
         return (
-          <section className={`marketRow${short ? " marketRowShort" : ""}`} key={material}>
+          <section
+            className={`marketRow${short ? " marketRowShort" : ""}${deficit ? " marketRowDeficit" : ""}`}
+            key={material}
+          >
             <Icon glyph={RESOURCE_GLYPHS[material]} size="rail" className="marketGlyph" />
 
             <span className="marketHeld">
               <b className="stat-lg num">{held}</b>
-              <small className="label">held</small>
+              <small className="label">{deficit ? "deficit" : "held"}</small>
             </span>
 
             <span className="marketTrade">
