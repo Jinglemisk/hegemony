@@ -18,6 +18,16 @@ type ModalShellProps = {
   onDismiss?: () => void;
   /** Default true when `onDismiss` is set; pass false for dialogs mid-transaction. */
   dismissOnBackdrop?: boolean;
+  /**
+   * Raises the dialog into the CEREMONY register: the table goes dark, the scrim
+   * closes to a vignette, and the surface takes a mood frame.
+   *
+   * The three moods are the only thing that changes between ceremonies, and they
+   * are about how the moment FEELS, not what it does: a `gift` is olive, a
+   * `wound` oxblood, a `rite` clay. Routine picks — choosing a target, picking a
+   * payment — stay plain, because if every dialog is a rite then none of them is.
+   */
+  ceremony?: "gift" | "wound" | "rite";
 };
 
 /**
@@ -36,6 +46,7 @@ export function ModalShell({
   label,
   onDismiss,
   dismissOnBackdrop = true,
+  ceremony,
 }: ModalShellProps) {
   const surfaceRef = useRef<HTMLElement>(null);
 
@@ -57,7 +68,9 @@ export function ModalShell({
 
   return (
     <div
-      className={["modalBackdrop", backdropClassName].filter(Boolean).join(" ")}
+      className={["modalBackdrop", ceremony ? "ceremonyScrim" : null, backdropClassName]
+        .filter(Boolean)
+        .join(" ")}
       role="presentation"
       onMouseDown={
         onDismiss && dismissOnBackdrop
@@ -75,7 +88,9 @@ export function ModalShell({
         aria-label={label}
         aria-labelledby={labelledBy}
         aria-modal="true"
-        className={["logModal", className].filter(Boolean).join(" ")}
+        className={["logModal", ceremony ? `ceremony ceremony-${ceremony}` : null, className]
+          .filter(Boolean)
+          .join(" ")}
         ref={surfaceRef}
         role="dialog"
       >
