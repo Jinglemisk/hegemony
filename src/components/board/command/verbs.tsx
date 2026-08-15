@@ -1,7 +1,6 @@
 import type { Phase } from "../../../client/controller";
 import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
 import type { HegemonyState, PlayerId, Resources } from "../../../game/types";
-import type { IconAtlasKey, UiAtlasKey } from "../../Sprites";
 
 /**
  * The action verbs as data (ladder rung R3). Every verb was a hand-written
@@ -46,17 +45,15 @@ export type VerbHandlers = {
 export type VerbId =
   "grow" | "move" | "found" | "upgrade" | "build" | "calm" | "venture" | "endTurn";
 
-export type VerbIcon = { kind: "ui"; item: UiAtlasKey } | { kind: "atlas"; icon: IconAtlasKey };
-
 /** `{ lead, cost }` renders "from 🌾5"; `{ lead }` alone renders a bare word ("free"). */
 export type VerbCost = { lead?: string; cost?: (context: VerbContext) => Partial<Resources> };
 
 export type VerbSpec = {
   id: VerbId;
   label: string;
-  icon: VerbIcon;
-  /** Extra classes on the icon — the atlas icons need their own sizing hook. */
-  iconClassName?: string;
+  /* The verb's glyph is looked up by id in ui/iconRegistry (VERB_GLYPHS) rather
+     than carried here. A verb IS its id; a second field naming its picture is a
+     second thing to keep in sync, and it drifted the moment the atlas retired. */
   cost?: VerbCost;
   /** Availability *beyond* the shared gate (active seat, gameplay phase, no pending event). */
   available: (context: VerbContext) => boolean;
@@ -75,7 +72,6 @@ export const VERBS: VerbSpec[] = [
   {
     id: "grow",
     label: "Grow",
-    icon: { kind: "ui", item: "growAction" },
     // The holding, class, and active discounts determine the exact amount.
     cost: { lead: "varies" },
     available: ({ canGrowPops }) => canGrowPops,
@@ -86,7 +82,6 @@ export const VERBS: VerbSpec[] = [
   {
     id: "move",
     label: "Move",
-    icon: { kind: "ui", item: "moveAction" },
     cost: { lead: "free" },
     available: ({ canMovePops }) => canMovePops,
     hint: "Move pops between two owned settlements.",
@@ -96,8 +91,6 @@ export const VERBS: VerbSpec[] = [
   {
     id: "found",
     label: "Found",
-    icon: { kind: "atlas", icon: "colony" },
-    iconClassName: "commandAtlasIcon",
     cost: { cost: ({ G, playerID }) => getFoundColonyStatus(G, playerID, "").cost ?? {} },
     // Stays clickable while armed so the same button cancels the map mode.
     available: ({ canFoundColony, isFoundColonyActive }) => canFoundColony || isFoundColonyActive,
@@ -112,8 +105,6 @@ export const VERBS: VerbSpec[] = [
   {
     id: "upgrade",
     label: "Upgrade",
-    icon: { kind: "atlas", icon: "city" },
-    iconClassName: "commandAtlasIcon",
     cost: { cost: ({ G, playerID }) => getUpgradeColonyToCityStatus(G, playerID, "").cost ?? {} },
     available: ({ canUpgradeCity }) => canUpgradeCity,
     hint: "Upgrade one of your colonies into a city.",
@@ -123,8 +114,6 @@ export const VERBS: VerbSpec[] = [
   {
     id: "build",
     label: "Build",
-    icon: { kind: "atlas", icon: "workshop" },
-    iconClassName: "commandAtlasIcon",
     // The cost varies by building; the popover shows each authoritative option.
     // Stays clickable while armed so the same button cancels the map mode (like Found).
     cost: { lead: "varies" },
@@ -140,7 +129,6 @@ export const VERBS: VerbSpec[] = [
   {
     id: "calm",
     label: "Calm",
-    icon: { kind: "ui", item: "voteToken" },
     cost: { lead: "options" },
     available: ({ calmUsed }) => !calmUsed,
     hint: "Buy happiness: influence or gold, once per turn.",
@@ -150,7 +138,6 @@ export const VERBS: VerbSpec[] = [
   {
     id: "venture",
     label: "Venture",
-    icon: { kind: "ui", item: "seal" },
     cost: { lead: "stakes" },
     available: ({ ventureUsed }) => !ventureUsed,
     hint: "Fund an expedition: stake gold or wood, roll the table.",
@@ -165,7 +152,6 @@ export const VERBS: VerbSpec[] = [
 export const END_TURN_VERB: VerbSpec = {
   id: "endTurn",
   label: "End Turn",
-  icon: { kind: "ui", item: "endTurn" },
   available: () => true,
   hint: ({ isActive }) =>
     isActive ? "End the current player's turn." : "Current player's turn only.",
@@ -192,6 +178,6 @@ export function verbTitle(verb: VerbSpec, context: VerbContext) {
   return verb.available(context) ? hint : (verb.blockedHint ?? hint);
 }
 
-// The verb COMPONENTS (VerbIconGlyph, CommandVerb, VerbCostSlot) live in CommandVerb.tsx
+// The verb COMPONENTS (CommandVerb, VerbCostSlot) live in CommandVerb.tsx
 // so this module exports only data + types — a file that mixes data and component exports
 // can't Fast Refresh, and this data is imported by the always-live command dock.

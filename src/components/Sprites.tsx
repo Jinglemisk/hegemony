@@ -1,23 +1,6 @@
 import type { BuildingId, PopType, Resource, SettlementKind, Terrain } from "../game/types";
 
 export type IconAtlasKey = Resource | PopType | BuildingId | SettlementKind;
-export type UiAtlasKey =
-  | "seal"
-  | "primaryButton"
-  | "secondaryButton"
-  | "resourcePill"
-  | "hexHalo"
-  | "playerToken"
-  | "meander"
-  | "voteToken"
-  | "seasonMarker"
-  | "growAction"
-  | "moveAction"
-  | "endTurn"
-  | "eventDeck"
-  | "seasonDeck"
-  | "resolutionDeck"
-  | "victoryPoint";
 
 const ICON_SPRITE_CLASSES: Record<IconAtlasKey, string> = {
   wood: "sprite-wood",
@@ -53,25 +36,6 @@ const TERRAIN_SPRITE_CLASSES: Record<Terrain, string> = {
   // The oracle has no atlas cell yet; the bare hill art is the nearest read (rock, no
   // yield). The map polygon carries the oracle's real, distinct colour.
   oracle: "sprite-terrain-hill",
-};
-
-const UI_SPRITE_CLASSES: Record<UiAtlasKey, string> = {
-  seal: "sprite-ui-seal",
-  primaryButton: "sprite-ui-primary",
-  secondaryButton: "sprite-ui-secondary",
-  resourcePill: "sprite-ui-resource-pill",
-  hexHalo: "sprite-ui-hex-halo",
-  playerToken: "sprite-ui-player-token",
-  meander: "sprite-ui-meander",
-  voteToken: "sprite-ui-vote-token",
-  seasonMarker: "sprite-ui-season-marker",
-  growAction: "sprite-ui-season-marker",
-  moveAction: "sprite-ui-meander",
-  endTurn: "sprite-ui-primary",
-  eventDeck: "sprite-ui-secondary",
-  seasonDeck: "sprite-ui-season-marker",
-  resolutionDeck: "sprite-ui-vote-token",
-  victoryPoint: "sprite-ui-vote-token",
 };
 
 const RESOURCE_MASK_CLASSES: Record<Resource, string> = {
@@ -149,15 +113,6 @@ export function TerrainSprite({
     <span
       aria-hidden="true"
       className={`atlasSprite atlasTerrain terrainTint-${terrain} ${TERRAIN_SPRITE_CLASSES[terrain]} ${className}`}
-    />
-  );
-}
-
-export function UiSprite({ item, className = "" }: { item: UiAtlasKey; className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`atlasSprite atlasUi ${UI_SPRITE_CLASSES[item]} ${className}`}
     />
   );
 }

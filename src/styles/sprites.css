@@ -2,8 +2,7 @@
    Split from styles.css (Phase 2e); original source order preserved. */
 
 .sprite-wood,
-.sprite-terrain-mountain,
-.sprite-ui-seal {
+.sprite-terrain-mountain {
   --sprite-x: 0%;
   --sprite-y: 0%;
 }
@@ -116,46 +115,6 @@
 .atlasTerrain.sprite-terrain-plains {
   --sprite-x: 94%;
   --sprite-y: 94%;
-}
-
-.sprite-ui-primary {
-  --sprite-x: 50%;
-  --sprite-y: 0%;
-}
-
-.sprite-ui-secondary {
-  --sprite-x: 100%;
-  --sprite-y: 0%;
-}
-
-.sprite-ui-resource-pill {
-  --sprite-x: 0%;
-  --sprite-y: 50%;
-}
-
-.sprite-ui-hex-halo {
-  --sprite-x: 50%;
-  --sprite-y: 50%;
-}
-
-.sprite-ui-player-token {
-  --sprite-x: 100%;
-  --sprite-y: 50%;
-}
-
-.sprite-ui-meander {
-  --sprite-x: 0%;
-  --sprite-y: 100%;
-}
-
-.sprite-ui-vote-token {
-  --sprite-x: 50%;
-  --sprite-y: 100%;
-}
-
-.sprite-ui-season-marker {
-  --sprite-x: 100%;
-  --sprite-y: 100%;
 }
 
 .tileConfirmObject {
