@@ -58,7 +58,10 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
       {standings.map(({ card, holder, minimum, values }) => {
         const leader = holder ?? bestOf(values);
         const leadValue = values[leader];
-        const progress = minimum > 0 ? Math.min(1, leadValue / minimum) : 1;
+        // Clamped at BOTH ends. Happiness goes negative, and React drops a negative
+        // width as an invalid style, which left the bar at its full-width default —
+        // a laurel nobody was near drawing as a finished meter.
+        const progress = minimum > 0 ? Math.min(1, Math.max(0, leadValue / minimum)) : 1;
 
         return (
           <Tooltip
