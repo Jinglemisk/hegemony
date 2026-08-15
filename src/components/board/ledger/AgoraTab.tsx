@@ -49,18 +49,12 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
         </div>
       </section>
 
-      <p className="agoraNote">
-        {rules.firstYear === 0 ? (
-          "The Assembly is not convening in this game."
-        ) : G.assembly ? (
-          "The Assembly is sitting now."
-        ) : (
-          <>
-            The Assembly convenes each spring from Year {rules.firstYear} — next in the spring of
-            Year {nextYear + (yearOf(G.season) >= rules.firstYear ? 1 : 0)}. A passed Law stands
-            until it is repealed.
-          </>
-        )}
+      <p className="agoraNote label">
+        {rules.firstYear === 0
+          ? "The Assembly never convenes"
+          : G.assembly
+            ? "The Assembly sits now"
+            : `Next assembly · spring of Year ${nextYear + (yearOf(G.season) >= rules.firstYear ? 1 : 0)}`}
       </p>
 
       <section className="agoraVoiceLedger" aria-label="Permanent Voice progress">
@@ -72,9 +66,6 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
             </span>
           ))}
         </div>
-        <p>
-          Repeal and replacement do not reduce these counts. The holder keeps Voice through ties.
-        </p>
       </section>
 
       {standings.map((standing) => {

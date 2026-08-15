@@ -23,11 +23,6 @@ export function MarketTab({
 
   return (
     <div className="marketLedger">
-      <p className="marketIntro">
-        Gold is the unit of account — the bank never barters. Rates follow this board's supply and
-        hold all game.
-      </p>
-
       {TRADABLE_MATERIALS.map((material) => {
         const rate = G.bank[material];
         const held = G.players[playerID].resources[material];
@@ -72,7 +67,6 @@ export function MarketTab({
         <span>
           Treasury <strong>{gold} gold</strong>
         </span>
-        <em>Every round trip pays the spread — trading always shrinks a stockpile.</em>
       </div>
     </div>
   );

@@ -12,13 +12,18 @@ import { formatNumber } from "../../../ui/formatters";
 export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId }) {
   const standings = victoryStandings(G);
   const cardsToWin = G.ruleset.victory.cardsToWin;
+  const held = standings.filter(({ holder }) => holder === playerID).length;
 
   return (
     <div className="victoryTab">
-      <p className="victoryRule">
-        Five cards belong to the <strong>sole leader</strong> at or above their minimum. Voice is
-        first-to-minimum and changes hands only when strictly exceeded. Hold any{" "}
-        <strong>{cardsToWin}</strong> at the start of your turn to win.
+      {/* What the deleted scoring lecture was really carrying: how close you are.
+          A count is a fact the player can act on; the rule behind it lives in the
+          Codex, one hover away, where it belongs. */}
+      <p className="victoryHeldline label">
+        <b className="stat-lg num">
+          {held}/{cardsToWin}
+        </b>{" "}
+        laurels held
       </p>
 
       {standings.map(({ card, holder, minimum, values }) => (

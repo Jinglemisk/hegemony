@@ -212,10 +212,6 @@ export function CodexTab({
 
   return (
     <>
-      <p className="codexLede">
-        The whole rulebook, as this board plays it — search a topic, or read it through.
-      </p>
-
       <div className="codexNav" ref={navRef}>
         <div className="codexSearch">
           <input
