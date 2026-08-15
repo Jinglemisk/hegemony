@@ -14,6 +14,7 @@ import type { GameContent } from "../../../game/content";
 import type { HegemonyState, PlayerId, Resource } from "../../../game/types";
 import { RESOURCE_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
+import { presentDirectiveEffect, presentLawEffect } from "../../../ui/effects";
 import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { Popover } from "../../overlays/Popover";
@@ -218,9 +219,7 @@ function VoteTally({ G, session }: { G: HegemonyState; session: AssemblySession 
   );
   const yeaSeats = session.votes.filter((v) => v.yea).length;
   const naySeats = session.votes.filter((v) => !v.yea).length;
-  // A vote yet to come could land on either side, so the ghosts sit evenly across
-  // the two piles rather than being guessed onto one.
-  const yeaGhosts = Math.ceil(waiting.length / 2);
+  const cast = session.votes.length;
 
   return (
     <div className="voteTally asmTally">
@@ -243,16 +242,22 @@ function VoteTally({ G, session }: { G: HegemonyState; session: AssemblySession 
         <span className="tugNay" style={{ flexGrow: nay }} />
       </span>
 
+      {/* Three groups, matching the bar's three zones and meeting at the notch.
+          The ghosts used to be pre-split `ceil(waiting / 2)` to each side, so an
+          untouched ballot showed two sherds already committed to Yea and two to
+          Nay — a PREDICTION of a vote nobody had cast. An uncast vote belongs to
+          neither pile; it sits in the urn over the tie mark until it is cast.
+          The piles also sat at opposite ends of a 430px bar, which is why
+          "countable" never landed — they grow inward now. */}
       <div aria-hidden="true" className="asmShards">
-        <span className="asmPile">{pile(yeaSeats, yeaGhosts, "yea")}</span>
-        <span className="asmPile asmPileNay">
-          {pile(naySeats, waiting.length - yeaGhosts, "nay")}
-        </span>
+        <span className="asmPile is-yea">{pile(yeaSeats, "yea")}</span>
+        <span className="asmPile asmPileUrn">{pile(waiting.length, "ghost")}</span>
+        <span className="asmPile is-nay">{pile(naySeats, "nay")}</span>
       </div>
 
       <p className="asmVerdict">
-        <span className="asmVerdictLine label">{verdict(yea, nay, pending)}</span>
-        <small className="body-em">{voteNote(G, session, yea, nay, pending)}</small>
+        <span className="asmVerdictLine label">{verdict(yea, nay, pending, cast)}</span>
+        <small className="body-em">{voteNote(G, session, yea, nay, pending, cast)}</small>
       </p>
 
       <p className="asmOrder label">
@@ -275,19 +280,27 @@ function VoteTally({ G, session }: { G: HegemonyState; session: AssemblySession 
   );
 }
 
-function pile(cast: number, ghosts: number, side: "yea" | "nay"): ReactNode[] {
+function pile(count: number, side: "yea" | "nay" | "ghost"): ReactNode[] {
   const sherds: ReactNode[] = [];
-  for (let i = 0; i < cast; i += 1) {
-    sherds.push(<i className={`asmShard is-${side}`} key={`c${i}`} />);
-  }
-  for (let i = 0; i < ghosts; i += 1) {
-    sherds.push(<i className="asmShard is-ghost" key={`g${i}`} />);
+  for (let i = 0; i < count; i += 1) {
+    sherds.push(<i className={`asmShard is-${side}`} key={i} />);
   }
   return sherds;
 }
 
-/** The dramatic read on the vote — the headline the ballot's counter used to occupy. */
-function verdict(yea: number, nay: number, pending: number): string {
+/**
+ * The dramatic read on the vote — the headline the ballot's counter used to occupy.
+ *
+ * The zero branch is not a nicety. A ballot OPENS at 0–0 with votes pending, and
+ * 0 === 0 fell into the tie test, so the scene's one dramatic line announced a
+ * cliffhanger about a vote nobody had cast — every seed, every width, and on a
+ * short ballot it was the only verdict the scene ever showed. A tie is only a tie
+ * once someone has spoken; before that, the honest headline is that nobody has.
+ */
+export function verdict(yea: number, nay: number, pending: number, cast: number): string {
+  if (cast === 0) {
+    return "The floor is open";
+  }
   if (pending === 0) {
     return yea > nay ? "It carries" : yea === nay ? "Tied — the law falls" : "It is voted down";
   }
@@ -308,12 +321,17 @@ function voteNote(
   yea: number,
   nay: number,
   pending: number,
+  cast: number,
 ): string {
   if (pending === 0) {
     return yea > nay ? "the house has spoken" : "a tie fails, and this one is decided";
   }
 
   const next = session.voteOrder.filter((id) => !session.votes.some((v) => v.playerID === id))[0];
+
+  if (cast === 0) {
+    return `${PLAYER_NAMES[next]} opens; ${pending} votes stand to be cast, and a tie fails`;
+  }
 
   if (pending >= Math.abs(yea - nay)) {
     return `${PLAYER_NAMES[next]} speaks next; the ${pending} votes to come can still swing it`;
@@ -491,30 +509,65 @@ function PrizeLine({ prize }: { prize: Partial<Record<Resource, number>> }) {
 }
 
 /**
- * The effect line, and the fix for the worst bug on this surface.
+ * The effect line on the one hero object the proposal phase has.
  *
- * Law text is authored as "<gain>, but <cost>." so the two halves can be inked
- * differently — olive for what you win, clay for what it costs. That split is the
- * whole point of a Law: a vote is a referendum on which build the table backs.
+ * A resolution is inked by POLARITY: olive for what the table wins, oxblood for
+ * what it pays. That carving is the whole point of drawing the card large — a
+ * vote is a referendum on which build the table backs, and the two halves have to
+ * be separable at a glance.
  *
- * The three clause spans used to be INLINE inside one narrow column, so each one
- * wrapped across several lines and their boxes nested inside one another at up to
- * 100% overlap. Each clause takes its own line box now, and "but" rides INSIDE the
- * cost clause where it belongs — one object, one rectangle.
+ * The carving used to be decided by `card.text.split(", but ")`, and a substring
+ * match on authored prose is the wrong mechanism for it. Eight of the thirty-one
+ * cards carry no such comma — including ALL SEVEN of Stratokles's aimed
+ * directives, the most dramatic cards in the deck — so a quarter of the content
+ * fell out to flat grey prose, decided by whether an author remembered a comma.
+ *
+ * The cards carry TYPED effects, each with a tone, so the types decide the shape:
+ *
+ * · the tones say whether this card has a gain, a cost, or both — no parsing,
+ * · a card with both is a trade-off card and reads on two lines, and only then is
+ *   the authored seam consulted, and only to decide where the line breaks,
+ * · a card with one polarity is carved whole in that polarity — a pure blow reads
+ *   oxblood end to end, which is what Stratokles's directives always wanted,
+ * · a card whose effects pull both ways inside one clause is carved neutral,
+ *   because there is no single side for it to claim.
+ *
+ * Nothing falls through to flat prose any more. The authored sentence is still
+ * the words on the face — the presenter's terse rendering ("grow pop: +2 Gold
+ * cost") is the right thing in a ledger and the wrong thing on the object you
+ * vote on — and it stays available verbatim in the card's own tooltip.
  */
 export function ResolutionEffect({ card }: { card: ResolutionCard }) {
-  const split = card.text.split(", but ");
+  const tones = new Set(
+    card.kind === "law"
+      ? card.effects.map((effect) => presentLawEffect(effect).tone)
+      : card.effects.map((effect) => presentDirectiveEffect(effect).tone),
+  );
+  const tradeOff = tones.has("positive") && tones.has("negative");
+  const seam = tradeOff ? card.text.indexOf(", but ") : -1;
 
-  if (split.length !== 2) {
-    return <p className="asmLawText">{card.text}</p>;
+  if (seam >= 0) {
+    return (
+      <p className="asmLawText">
+        <span className="asmClause asmClauseGain">{card.text.slice(0, seam)},</span>
+        <span className="asmClause asmClauseCost">
+          <i className="asmClauseBut">but</i> {card.text.slice(seam + ", but ".length)}
+        </span>
+      </p>
+    );
   }
+
+  const whole = tradeOff
+    ? "asmClauseWhole"
+    : tones.has("positive")
+      ? "asmClauseGain"
+      : tones.has("negative")
+        ? "asmClauseCost"
+        : "asmClauseWhole";
 
   return (
     <p className="asmLawText">
-      <span className="asmClause asmClauseGain">{split[0]},</span>
-      <span className="asmClause asmClauseCost">
-        <i className="asmClauseBut">but</i> {split[1].replace(/\.$/, "")}.
-      </span>
+      <span className={`asmClause ${whole}`}>{card.text}</span>
     </p>
   );
 }

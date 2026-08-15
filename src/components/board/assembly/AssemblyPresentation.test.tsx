@@ -8,10 +8,11 @@ import { getAuthoredGameContent } from "../../../game/content";
 import { PLAYER_IDS } from "../../../game/data";
 import { scenario } from "../../../game/testing/scenario";
 import type { LawCard } from "../../../game/assembly";
+import { presentDirectiveEffect, presentLawEffect } from "../../../ui/effects";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import type { GameUi } from "../GameUiContext";
 import { GameUiProvider } from "../GameUiProvider";
-import { AssemblyFloor, ResolutionEffect } from "./AssemblyFloor";
+import { AssemblyFloor, ResolutionEffect, verdict } from "./AssemblyFloor";
 import { AssemblyFoot, type AssemblyMenu } from "./AssemblyFoot";
 import { AssemblyHead } from "./AssemblyHead";
 import { AssemblySeats } from "./AssemblySeats";
@@ -322,6 +323,71 @@ describe("The Assembly scene", () => {
     expect(clauses[1].className).toContain("asmClauseCost");
     expect(container.querySelector(".asmClauseBut")?.closest(".asmClauseCost")).toBe(clauses[1]);
     expect(container.textContent).toContain(law.text.split(", but ")[0]);
+  });
+
+  it("carves EVERY card in the deck, and takes its polarity from the typed effects", () => {
+    // The carving used to be decided by `card.text.split(", but ")`, so the eight
+    // cards carrying no such comma — all seven of Stratokles's aimed directives
+    // among them — fell out to flat grey prose. The whole deck is the assertion
+    // now: a card added without the authored comma cannot lose its typography.
+    const uncarved: string[] = [];
+    const misinked: string[] = [];
+
+    for (const card of RESOLUTION_CARDS) {
+      act(() => root.render(<ResolutionEffect card={card} />));
+
+      const clauses = [...container.querySelectorAll(".asmClause")];
+
+      if (clauses.length === 0) {
+        uncarved.push(card.name);
+        continue;
+      }
+
+      const rendered = clauses.map((clause) => clause.textContent ?? "").join(" ");
+      const tones = new Set(
+        card.kind === "law"
+          ? card.effects.map((effect) => presentLawEffect(effect).tone)
+          : card.effects.map((effect) => presentDirectiveEffect(effect).tone),
+      );
+      const onlyBlows = tones.has("negative") && !tones.has("positive");
+
+      // The clauses between them still carry the whole authored sentence — the
+      // carving reshapes the line, it never edits the card.
+      for (const word of card.text.split(" ")) {
+        if (!rendered.includes(word)) {
+          misinked.push(`${card.name}: dropped "${word}"`);
+        }
+      }
+
+      if (onlyBlows && !clauses.every((clause) => clause.className.includes("asmClauseCost"))) {
+        misinked.push(`${card.name}: a pure blow is not inked as a cost`);
+      }
+    }
+
+    expect(uncarved).toEqual([]);
+    expect(misinked).toEqual([]);
+    // Guard the guard: if the deck ever loses its comma-less cards the test above
+    // would pass vacuously on the old parsing code.
+    expect(RESOLUTION_CARDS.filter((card) => !card.text.includes(", but ")).length).toBeGreaterThan(
+      0,
+    );
+  });
+
+  it("does not call a vote nobody has cast a cliffhanger", () => {
+    // A ballot opens 0–0 with votes pending, and 0 === 0 fell into the tie test,
+    // so the scene's one dramatic line announced a knife's edge before anyone had
+    // spoken — every seed, every width, and often the only verdict a short ballot
+    // ever showed.
+    expect(verdict(0, 0, 6, 0)).toBe("The floor is open");
+    expect(verdict(2, 2, 4, 2)).toBe("On the knife's edge");
+
+    // Every band below it must still be reachable, in both directions.
+    expect(verdict(2, 0, 4, 1)).toBe("Still in the balance");
+    expect(verdict(5, 0, 1, 2)).toBe("It cannot be stopped");
+    expect(verdict(0, 5, 1, 2)).toBe("It cannot be saved");
+    expect(verdict(4, 2, 0, 4)).toBe("It carries");
+    expect(verdict(3, 3, 0, 4)).toBe("Tied — the law falls");
+    expect(verdict(2, 4, 0, 4)).toBe("It is voted down");
   });
 
   it("hands every seat an ostrakon during proposal — a blazon for spoken, a blank for deliberating", () => {
