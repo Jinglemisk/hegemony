@@ -1,0 +1,233 @@
+/* board — the tiles, their emblems, and the tokens standing on them.
+ *
+ * One grammar governs everything here:
+ *
+ *     shape says WHAT · colour says WHOSE · stroke says STATE
+ *
+ * Terrain kind is an engraved emblem, never a hue — which is why the ramp below
+ * spans four barely-different steps of the same bone. That flatness is what buys
+ * the four owner glazes their loudness: on a board where the ground is quiet, a
+ * glazed disc is unmissable, and a player can count who holds what across forty
+ * tiles in one look.
+ *
+ * Nothing on the board is coloured to mean good or bad. Status colour is a text
+ * vocabulary and stays in the panels, beside a sign.
+ */
+
+/* ── The ground ───────────────────────────────────────────────────────────── */
+
+.hexTile {
+  fill: var(--terrain-fill, var(--t-plains));
+  stroke: rgb(36 25 16 / 34%);
+  stroke-width: 1.4;
+  transition:
+    stroke 160ms ease,
+    stroke-width 160ms ease,
+    opacity 160ms ease;
+}
+
+.terrain-plains {
+  --terrain-fill: var(--t-plains);
+}
+
+.terrain-hill {
+  --terrain-fill: var(--t-hill);
+}
+
+.terrain-forest {
+  --terrain-fill: var(--t-forest);
+}
+
+.terrain-mountain {
+  --terrain-fill: var(--t-mountain);
+}
+
+.terrain-oracle {
+  --terrain-fill: var(--t-oracle);
+}
+
+/* The emblem is CUT into the tile, not printed on it: one weight, ink at a third,
+   no fill. At 30% it is unmistakable close up and disappears into texture when you
+   are reading the board as a whole, which is exactly the right amount of loud for
+   information you only need when you look. */
+.tileEmblem {
+  fill: none;
+  stroke: rgb(36 25 16 / 30%);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tileMarks {
+  pointer-events: none;
+}
+
+/* The yield, at the tile's foot. It is the one number on an empty tile, so it can
+   be plain ink at a readable size instead of the old white-on-halo shout. */
+.hexYield {
+  fill: rgb(36 25 16 / 82%);
+  font-family: var(--body);
+  font-weight: 800;
+}
+
+/* Slots appear only while you are choosing where to build. */
+.hexSlots {
+  fill: rgb(36 25 16 / 62%);
+  font-family: var(--body);
+  font-weight: 700;
+}
+
+/* ── State: strokes, always ───────────────────────────────────────────────── */
+
+.svgButton {
+  cursor: pointer;
+  outline: none;
+}
+
+.svgButton:hover .hexTile,
+.svgButton:focus-visible .hexTile {
+  stroke: rgb(36 25 16 / 62%);
+  stroke-width: 2;
+}
+
+.tile.isSelected .hexTile {
+  stroke: var(--clay);
+  stroke-width: 3;
+}
+
+/* A legal target is aegean and dashed — the one place the politics colour touches
+   the board, and it means "the rules will accept this", not "this is good". */
+.tile.isTarget .hexTile {
+  stroke: var(--aegean);
+  stroke-width: 3;
+  stroke-dasharray: 9 6;
+}
+
+.tile.isTarget .hexTile,
+.tile.isPending .hexTile {
+  filter: brightness(1.06);
+}
+
+.tile.isPending .hexTile {
+  stroke: var(--clay);
+  stroke-width: 3.4;
+  stroke-dasharray: 8 5;
+}
+
+/* Everything the armed mode will not accept steps back. Dimming the wrong answers
+   is far quieter than highlighting the right ones on a board this dense — the
+   player's eye lands on what is left. */
+.tile.isDimmed {
+  opacity: 0.42;
+}
+
+/* ── Ownership ────────────────────────────────────────────────────────────── */
+
+.ownerRim {
+  fill: none;
+  stroke: var(--glaze);
+  stroke-width: 3;
+  stroke-opacity: 0.95;
+}
+
+.sealShadow {
+  fill: rgb(24 18 16 / 45%);
+}
+
+/* Every glazed disc carries an ivory keyline, on the board exactly as in the
+   roster: it is what lets a dark glaze survive on dark ground and a pale one
+   survive on bone. */
+.sealDisc {
+  fill: var(--glaze);
+  stroke: var(--ivory);
+  stroke-width: 1.8;
+}
+
+.sealGlyph {
+  fill: none;
+  stroke: var(--ivory);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── The people ───────────────────────────────────────────────────────────
+   Three bead shapes, no colour: solid ivory is a citizen, a ring is a freeman,
+   a black bead is a slave. The ladder has to be readable next to four owner
+   glazes, so it cannot spend hue on itself. */
+
+.popBead-citizens {
+  fill: var(--ivory);
+  stroke: rgb(24 18 16 / 70%);
+  stroke-width: 1;
+}
+
+.popBead-freemen {
+  fill: none;
+  stroke: var(--ivory);
+  stroke-width: 1.8;
+}
+
+.popBead-slaves {
+  fill: var(--vase-black);
+  stroke: var(--ivory);
+  stroke-width: 1;
+}
+
+/* ── Names ────────────────────────────────────────────────────────────────
+   A settlement is ARGOS, not "City -2,0". The coordinates are still there, in
+   the tile's accessible label and its tooltip, where a debugging fact belongs. */
+
+.namePlate {
+  fill: var(--ivory);
+  fill-opacity: 0.92;
+  stroke: rgb(36 25 16 / 40%);
+  stroke-width: 0.8;
+}
+
+.nameText {
+  fill: var(--ink);
+  font-family: var(--disp);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.settlementOverflow circle {
+  fill: var(--vase-black);
+  stroke: var(--ivory);
+  stroke-width: 1.4;
+}
+
+.settlementOverflow text {
+  fill: var(--ivory);
+  font-family: var(--body);
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+/* ── The shore ────────────────────────────────────────────────────────────
+   The white dashed coastline is gone. It was the loudest line on the board and
+   it carried no information at all — the island's edge is already the edge. What
+   remains is a soft shadow where the land meets the water. */
+.shorelineFoamLine,
+.shorelineFoamBreak {
+  stroke: rgb(24 18 16 / 22%);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* ── The targeting banner ────────────────────────────────────────────────────
+   It used to sit 60px off the viewport's bottom, which is *inside* the command
+   rail: the Found instruction printed straight through the verb buttons, and the
+   two texts overlapped character for character. It clears the whole rail now,
+   dials included, and it is bone-on-ink like every other object rather than a
+   teal pill. */
+.mapSetupCaption {
+  bottom: calc(var(--chrome-bot) + 22px);
+  z-index: var(--z-map-chrome);
+  padding: 6px 16px;
+  border-radius: 3px;
+  color: var(--ivory);
+  background: var(--vase-black);
+  box-shadow: var(--shadow-laid);
+}
