@@ -397,13 +397,23 @@
    and it used to live in a tooltip, so you had to hover a control to find out
    what it would spend. Only the arithmetic behind the price — which settlement
    pays, which discount applies — is still hover-only. */
+/* Half a 236px page, minus a gap: a rung has ~106px and everything on it — the
+   step arrow, the verb, the signed price — has to live inside that. The minus
+   sign the price wears (it is a cost, not takings) cost it 5px, which is what
+   put the button 4px over its own half at every width. */
 .rungButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  /* The price sits UNDER the verb, always. A rung is half of a 236px page — 100px
+     at 1280 — and `DEMOTE −2 🎗` does not fit on one line there at any tracking;
+     letting it wrap only where it must gave two rungs of different heights side
+     by side, which reads as breakage. Two lines everywhere is a shape, and it
+     gives the number the room to be read. */
+  flex-wrap: wrap;
+  gap: 1px 3px;
   width: 100%;
-  padding: 4px 7px;
+  padding: 4px 3px 5px;
   border: 1px solid var(--ink-30);
   border-radius: 14px;
   color: var(--ink);
@@ -415,9 +425,19 @@
   color: var(--clay-ink);
 }
 
+/* DEMOTE is the longest verb on the ladder and it sets the button's width. At
+   the display face's default 0.12em tracking those six letters ran the widest
+   rung 5px past its own half of the page; half that tracking is what buys the
+   price its minus sign without shortening a word a player has to read. */
+.rungButton .verb {
+  letter-spacing: 0.06em;
+}
+
 .rungPrice {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex: 1 0 100%;
   gap: 5px;
   color: var(--ink-66);
   font-weight: 800;
