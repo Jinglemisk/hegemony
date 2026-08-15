@@ -29,7 +29,7 @@ const listMode = process.argv.includes("--list");
 const budgets = {
   "font-size": 224,
   "raw-hex": 75,
-  "printed-mechanics": 20,
+  "printed-mechanics": 0,
 };
 
 /** type.css owns the nine roles; fonts.css declares faces. Sizes are legal there
@@ -43,11 +43,33 @@ const FONT_SIZE_EXEMPT = new Set([
 /** base.css is where colour is DEFINED; every other sheet must spend a token. */
 const RAW_HEX_EXEMPT = new Set(["src/styles/base.css", "src/dev/tunePanel.css"]);
 
-/** The two components whose whole job is explaining a mechanic on demand. */
+/**
+ * Surfaces whose whole job IS explaining. The tooltip ladder is where a mechanic
+ * is supposed to be explained, the rulebook and the Codex are the rulebook, and
+ * the tune panel is a dev dashboard the player never opens.
+ */
 const MECHANICS_EXEMPT = new Set([
   "src/components/MechanicsDetails.tsx",
   "src/components/overlays/Tooltip.tsx",
+  "src/components/board/ledger/rulebook.tsx",
+  "src/components/board/ledger/CodexTab.tsx",
+  "src/dev/TunePanel.tsx",
 ]);
+
+/** Below this, a string is a label. At or above it, it is prose. */
+const SENTENCE_CHARS = 55;
+
+/** A sentence explains; a label names. The tell is a full stop or a clause dash
+ *  mid-string, or simply being too long to be a name for something.
+ *
+ *  Interpolations collapse to a placeholder first: a template literal's SOURCE is
+ *  far longer than what it renders, and measuring the source flagged
+ *  `${n} ${n === 1 ? "city" : "cities"}` — which renders "3 cities". */
+function isSentence(text) {
+  const rendered = text.replace(/\$\{[^}]*\}/g, "N");
+
+  return rendered.length >= SENTENCE_CHARS || /[.?!]\s|[.?!]$| — /.test(rendered);
+}
 
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -70,9 +92,15 @@ function relative(file) {
   return path.relative(root, file).split(path.sep).join("/");
 }
 
-/** Strip /* … *\/ comments so a commented-out rule never counts as a violation. */
-function stripBlockComments(source) {
-  return source.replace(/\/\*[\s\S]*?\*\//g, (match) => match.replace(/[^\n]/g, " "));
+/** Blank out comments — block and line — preserving line numbers, so a commented
+ *  rule or a paragraph of rationale never counts as a violation. */
+function stripComments(source) {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, (match) => match.replace(/[^\n]/g, " "))
+    .replace(
+      /(^|[^:"'`\\])\/\/.*$/gm,
+      (match, lead) => lead + " ".repeat(match.length - lead.length),
+    );
 }
 
 const violations = { "font-size": [], "raw-hex": [], "printed-mechanics": [] };
@@ -87,12 +115,13 @@ for (const file of files) {
   const name = relative(file);
   const extension = path.extname(file);
 
-  if (![".css", ".ts", ".tsx"].includes(extension)) {
+  // Tests assert on the strings the UI uses; they are not the UI.
+  if (![".css", ".ts", ".tsx"].includes(extension) || /\.(test|spec)\./.test(name)) {
     continue;
   }
 
   const raw = await readFile(file, "utf8");
-  const source = extension === ".css" ? stripBlockComments(raw) : raw;
+  const source = stripComments(raw);
   const lines = source.split(/\r?\n/);
 
   lines.forEach((line, index) => {
@@ -114,13 +143,22 @@ for (const file of files) {
       }
     }
 
-    // (c) a mechanic explained in printed chrome. A `title=` holding a SENTENCE
-    //     (a space and more than a couple of words) is chrome doing a tooltip's
-    //     job; short titles naming a thing are fine.
+    // (c) a mechanic explained in printed chrome: a `title=` holding a SENTENCE
+    //     rather than a name for the thing it labels.
+    //
+    //     Scope note, because this rule is narrower than the habit it targets.
+    //     The real quarry is a paragraph of rules printed into a persistent
+    //     panel, and there is no reliable way to tell one of those from a status
+    //     line in the game's own voice — which the overhaul WANTS more of. A
+    //     heuristic that flagged both would fire on "The house has risen" as
+    //     loudly as on a scoring lecture, so it would be turned off within a
+    //     week. Printed prose is therefore removed by hand, phase by phase, and
+    //     recorded in RUN-LOG.md; what this rule guarantees is only that the
+    //     tooltip-shaped version of the habit cannot creep back in.
     if (extension === ".tsx" && !MECHANICS_EXEMPT.has(name)) {
-      const title = /\btitle=(?:"([^"]{16,})"|\{`([^`]{16,})`\})/.exec(line);
+      const title = /\btitle=(?:"([^"]+)"|\{`([^`]+)`\})/.exec(line);
 
-      if (title && /\s\S+\s\S+\s/.test(title[1] ?? title[2] ?? "")) {
+      if (title && isSentence(title[1] ?? title[2] ?? "")) {
         record("printed-mechanics", file, lineNumber, line);
       }
     }
