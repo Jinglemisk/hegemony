@@ -120,6 +120,17 @@ export function CommandVerb({
     </button>
   );
 
+  // TGT-1. An ARMED verb's popover repeats what the map's own placement caption
+  // already says, lands on top of it at 89% overlap at every width, and cuts the
+  // caption mid-word. Of the two, the caption is the one in the right place: it
+  // is the mode's persistent instruction, it carries role="status", and it sits
+  // over the map the instruction is about. The popover is a hover explanation
+  // for a verb you are still CONSIDERING — once the mode is armed the verb has
+  // been chosen and the popover has nothing left to say, so it stands down.
+  if (pressed) {
+    return button;
+  }
+
   return (
     <Tooltip
       content={
