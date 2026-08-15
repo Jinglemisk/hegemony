@@ -216,3 +216,79 @@ telemetry and titles · `91ed9fc` modals and empty states · `33cd0d9` verbs ·
 **Screenshots.** `.playwright-mcp/p1-{table,assembly,market,victory}-1440x900.png`.
 END TURN is now unobstructed; the Market tab is rates and buttons with no prose
 above or below them.
+
+---
+
+## Phase 2 — the ceramic shell
+
+**Shipped.** The frame is bone ceramic on a painted chart, symmetric, with a dial
+at each end of the bottom rail.
+
+- **Two bone bars.** `--bar-face` slip gradient, ink figures, a clay meander strip
+  along each bar's inner edge, soft outer shadow. No dark slabs anywhere in the
+  chrome — vase-black and clay are now spent only on objects you press or throw.
+- **The sea is the chart.** `assets/map/aegean-sea-board.png` full-bleed under the
+  board, replacing the teal gradient and its two texture passes, with a vignette
+  so the bone tablets read as lying ON the table.
+- **Symmetry.** Event slips left (capped at `calc(50vw - 220px)` so a long omen
+  name can never slide under the numbers), the resource spine pinned to the
+  viewport's true centre, the roster hard right. The season medallion left the top
+  bar entirely.
+- **The resource spine:** one row of six, `stat-lg stat-xl` 26px values with signed
+  colour-and-sign deltas and the new SVG glyphs at 21px. A stockpile that changes
+  now flashes the _numeral_; the old flash filled the pill with a green or red
+  plate for a second and a half, which on a bar of six numbers read as an alarm
+  every turn. `prefers-reduced-motion` settles instantly.
+- **The roster** is four glazed discs with Greek blazons (Δ Ν Θ Κ) and ivory
+  keylines, the acting seat underlined in clay — previously four bare coloured
+  squares told apart by hue alone.
+- **Twin dials.** `SeasonClock` (outer arc = game spent, inner annulus = the four
+  seasons rotating under a needle fixed at 45°, hub = year in Roman numerals) and
+  `EndTurnSeal` (clay disc, beaded ring, ivory hourglass from the glyph table,
+  acting player beneath). Both protrude above the rail and above the tablets.
+- **Verbs** rebuilt flat and centred: glyph + name + price. Blocked dims to 38%
+  **except the part of the price you cannot pay**, which stays at full opacity in
+  `--neg` — the answer to "why can't I?" is on screen without hovering.
+- **Docked tablets.** `DiscRail` → `TabRail`: a 46px slip spine at each edge with
+  its tabs vertically centred, the open tab continuous with its bone page. The
+  floating rounded cards are gone.
+
+**Deviations.**
+
+- **`PLAYER_COLORS` was deleted from `src/game/data.ts`.** Four Tailwind primaries
+  (`#1e3a8a`, `#eab308`, `#7c3aed`, `#c1121f`) living in the engine's data table
+  and fighting the palette in nine components. They are now
+  `src/ui/playerGlazes.ts` — glaze, colour, blazon per seat — which is where a
+  frontend fact belongs. Purely presentational, no rule or save touched, so it is
+  **not** an `engine:` commit; nothing in `src/game` read it.
+- **`.verb` collided with `.verb`.** The type role and the dock's button class
+  shared a name, and every roster glaze picked up the button's flex box and
+  min-width and stopped being a disc. The button is `.railVerb` now. Roles
+  describe text; component classes describe things; they must never share a name.
+  Cost: one wasted screenshot cycle, and worth recording as the rule it produced.
+- **SVG text sizes moved onto the elements as `fontSize` attributes.** Inside a
+  fixed viewBox a font-size is geometry — the same kind of number as `r` or `cx` —
+  and putting the dials' four text sizes in CSS would have meant either weakening
+  the role sheet or inventing roles for artwork.
+- **Season sector and seal gradient colours became tokens** (`--season-*`,
+  `--clay-lit`, `--clay-shade`) rather than sitting as loose hexes in a component
+  sheet. The ratchet caught them, which is what it is for.
+- **Superseded rules were deleted, not left dormant** — `.verbDisc`, `.verbKnob`,
+  `.endTurnSquare`, `.dockSeason*`, `.seatSwatch*`, `.topResourceHalf`,
+  `.seasonBanner`, `.ledgerRail*`, `.railDisc*`, `.consultRail*`, `.seasonDial*`
+  — plus the now-dead `SeasonDial`/`SeasonStatus` components and `DiscRail`.
+  Ratchet: **font-size 224 → 211**, raw-hex 75 → 74.
+- **`.playwright-mcp/` is now eslint-ignored.** It is a gitignored scratch
+  directory for screenshots and the throwaway scripts that drive them; linting
+  build artefacts is noise.
+- `src/ui/icons/EffectIcon.tsx` is written and tested but not yet placed — Phase 4
+  puts it on every effect row. `npm run dead-code` will name it until then.
+
+**Commits.** `a4a217f` glazes · `90d2b2d` bars + chart · `3b9dbcf` topbar ·
+`5d83903` dials · `a8385bd` tablets · `373519f` fab + ratchet.
+
+**Red.** None. `check` · `lint` · `test:parity` (95) · `ui:check` green at both
+widths.
+
+**Screenshots.** `.playwright-mcp/p2-table-{1440x900,1280x800}.png`,
+`p2-assembly-1280x800.png`, plus `crop-top*`/`crop-bottom` for the two bars.
