@@ -12,6 +12,7 @@ import {
   verbTitle,
   type VerbContext,
   type VerbHandlers,
+  type VerbId,
 } from "./verbs";
 
 /**
@@ -32,8 +33,7 @@ export function CommandDock({
   canFoundColony,
   canUpgradeCity,
   canBuild,
-  isFoundColonyActive,
-  isBuildActive,
+  armedVerb,
   chronicleTicker,
   ...handlers
 }: {
@@ -42,8 +42,8 @@ export function CommandDock({
   canFoundColony: boolean;
   canUpgradeCity: boolean;
   canBuild: boolean;
-  isFoundColonyActive: boolean;
-  isBuildActive: boolean;
+  /** The verb that currently holds the map, if any (`armedVerbOf`). */
+  armedVerb: VerbId | null;
   /** Latest chronicle line — the drawer's contents at a glance (Q19). */
   chronicleTicker: string | null;
 } & VerbHandlers) {
@@ -60,8 +60,7 @@ export function CommandDock({
     canFoundColony,
     canUpgradeCity,
     canBuild,
-    isFoundColonyActive,
-    isBuildActive,
+    armedVerb,
     calmUsed: viewer.civicCalmUsedThisTurn,
     ventureUsed: viewer.ventureUsedThisTurn,
   };

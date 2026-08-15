@@ -28,6 +28,7 @@ import { MovePopsSourcePopover, MovePopsTargetPopover } from "./board/map/MovePo
 import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelection";
 import { useMapSelection } from "./board/map/useMapSelection";
 import { CommandDock } from "./board/command/CommandDock";
+import { armedVerbOf } from "./board/command/verbs";
 import { CalmModal } from "./board/modals/CalmModal";
 import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
@@ -490,8 +491,7 @@ export function HegemonyBoard({
             canFoundColony={canFoundColony}
             canUpgradeCity={canUpgradeCity}
             canBuild={canBuild}
-            isFoundColonyActive={mapSelection.selection?.mode.kind === "foundColony"}
-            isBuildActive={mapSelection.selection?.mode.kind === "build"}
+            armedVerb={armedVerbOf(mapSelection.selection?.mode)}
             chronicleTicker={latestChronicleLine}
             onEndTurn={events.endTurn}
             // Grow / Move / Found / Build are map modes, not dialogs (refit scope 3):

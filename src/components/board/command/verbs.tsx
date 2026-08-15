@@ -5,6 +5,7 @@ import { POP_TYPES } from "../../../game/core/pops";
 import { getAdjustedActionCost, getDiscountedGrowPopCost } from "../../../game/economy/cost";
 import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../../game/types";
+import type { MapSelectionMode } from "../map/mapSelection";
 
 /**
  * The action verbs as data (ladder rung R3). Every verb was a hand-written
@@ -29,8 +30,16 @@ export type VerbContext = {
   canFoundColony: boolean;
   canUpgradeCity: boolean;
   canBuild: boolean;
-  isFoundColonyActive: boolean;
-  isBuildActive: boolean;
+  /**
+   * Which verb currently owns the map, if any.
+   *
+   * It used to be two booleans, `isFoundColonyActive` and `isBuildActive` — so
+   * only those two verbs could show they were armed, and Grow and Move dimmed
+   * the map and lit targets while the bar said nothing and told a screen reader
+   * nothing (QA-DOCK-2). One field for one fact: at most one verb holds the map,
+   * and every verb that can hold it reads the same field.
+   */
+  armedVerb: VerbId | null;
   calmUsed: boolean;
   ventureUsed: boolean;
 };
@@ -48,6 +57,24 @@ export type VerbHandlers = {
 
 export type VerbId =
   "grow" | "move" | "found" | "upgrade" | "build" | "calm" | "venture" | "endTurn";
+
+/**
+ * Which verb a given map mode belongs to. The board arms modes; the dock shows
+ * verbs; this is the one place the two vocabularies meet, so a mode can never be
+ * armed without its verb going pressed.
+ */
+const MODE_VERBS: Partial<Record<MapSelectionMode["kind"], VerbId>> = {
+  growPop: "grow",
+  movePops: "move",
+  foundColony: "found",
+  build: "build",
+};
+
+/** The dock verb an armed map mode belongs to — `null` for a mode no verb owns
+ *  (the pop ladder arms the map from the Pops page, not from the bar). */
+export function armedVerbOf(mode: MapSelectionMode | undefined): VerbId | null {
+  return (mode && MODE_VERBS[mode.kind]) ?? null;
+}
 
 /**
  * What a verb prints under its name.
@@ -124,8 +151,10 @@ export type VerbSpec = {
   cost?: VerbCost;
   /** Availability *beyond* the shared gate (active seat, gameplay phase, no pending event). */
   available: (context: VerbContext) => boolean;
-  /** A toggle verb reflects its own state — only Found has one (it arms a map mode). */
-  pressed?: (context: VerbContext) => boolean;
+  /** This verb takes the map when pressed, and pressing it again gives it back.
+   *  Declaring it is what earns the armed styling and `aria-pressed`; the state
+   *  itself is read from `armedVerb`, so no verb can define it differently. */
+  arms?: true;
   /** Shown when the verb is usable. */
   hint: string | ((context: VerbContext) => string);
   /** Shown in the tooltip ladder when `available` is false, and ONLY there — a
@@ -140,16 +169,21 @@ export const VERBS: VerbSpec[] = [
     id: "grow",
     label: "Grow",
     cost: growFoodSpan,
-    available: ({ canGrowPops }) => canGrowPops,
-    hint: "Choose a holding and pop type to grow.",
-    blockedHint: "Requires an owned holding.",
+    arms: true,
+    // Stays clickable while armed so the same button cancels the map mode.
+    available: ({ canGrowPops, armedVerb }) => canGrowPops || armedVerb === "grow",
+    // "Settlement", not "holding". The map's own caption says settlement, and one
+    // thing may not have two names thirty pixels apart (QA-DOCK-3).
+    hint: "Choose a settlement and pop type to grow.",
+    blockedHint: "Requires an owned settlement.",
     select: (handlers) => handlers.onGrowPopRequest(),
   },
   {
     id: "move",
     label: "Move",
     cost: () => [{ lead: "free" }],
-    available: ({ canMovePops }) => canMovePops,
+    arms: true,
+    available: ({ canMovePops, armedVerb }) => canMovePops || armedVerb === "move",
     hint: "Move pops between two owned settlements.",
     blockedHint: "Requires at least two settlements.",
     select: (handlers) => handlers.onMovePopsRequest(),
@@ -158,13 +192,9 @@ export const VERBS: VerbSpec[] = [
     id: "found",
     label: "Found",
     cost: ({ G, playerID }) => [{ amounts: getFoundColonyStatus(G, playerID, "").cost ?? {} }],
-    // Stays clickable while armed so the same button cancels the map mode.
-    available: ({ canFoundColony, isFoundColonyActive }) => canFoundColony || isFoundColonyActive,
-    pressed: ({ isFoundColonyActive }) => isFoundColonyActive,
-    hint: ({ isFoundColonyActive }) =>
-      isFoundColonyActive
-        ? "Pick a glowing tile on the map, or click again to cancel."
-        : "Send a pop from an existing settlement to found a new colony.",
+    arms: true,
+    available: ({ canFoundColony, armedVerb }) => canFoundColony || armedVerb === "found",
+    hint: "Send a pop from an existing settlement to found a new colony.",
     blockedHint: "Requires an open tile, a spare pop, and enough resources.",
     select: (handlers) => handlers.onFoundColonyRequest(),
   },
@@ -183,15 +213,11 @@ export const VERBS: VerbSpec[] = [
     id: "build",
     label: "Build",
     // The floor, not a word: the Build page prices each building, and none of
-    // them is cheaper than this. Stays clickable while armed so the same button
-    // cancels the map mode (like Found).
+    // them is cheaper than this.
     cost: buildFloor,
-    available: ({ canBuild, isBuildActive }) => canBuild || isBuildActive,
-    pressed: ({ isBuildActive }) => isBuildActive,
-    hint: ({ isBuildActive }) =>
-      isBuildActive
-        ? "Pick a glowing settlement on the map, or click again to cancel."
-        : "Raise a building in one of your settlements.",
+    arms: true,
+    available: ({ canBuild, armedVerb }) => canBuild || armedVerb === "build",
+    hint: "Raise a building in one of your settlements.",
     blockedHint: "Requires a settlement with an open slot and enough resources.",
     select: (handlers) => handlers.onBuildRequest(),
   },

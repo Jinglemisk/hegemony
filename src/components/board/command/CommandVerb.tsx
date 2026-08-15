@@ -18,16 +18,15 @@ import type { VerbContext, VerbHandlers, VerbPriceClause, VerbSpec } from "./ver
  * the part of its price you cannot pay, which stays at full opacity in `--neg`.
  * The answer to "why can't I?" is therefore already on screen, in the one place
  * the eye is going anyway. The sentence is still in the tooltip for the detail.
+ *
+ * The mark is on the PRICE, not on the verb's blocked state. That distinction is
+ * the whole of QA-DOCK-2's second half: Calm is always clickable — it is gated on
+ * "once per turn", not on money — so keying the mark off "blocked" left its `4 or
+ * 6` grey while the player held 1 influence. A figure you cannot pay is marked
+ * whether or not the button beside it happens to be dimmed, and each alternative
+ * is judged on its own, so `4 or 6` can mark the four and leave the six alone.
  */
-function VerbCostSlot({
-  clauses,
-  context,
-  blocked,
-}: {
-  clauses: VerbPriceClause[];
-  context: VerbContext;
-  blocked: boolean;
-}) {
+function VerbCostSlot({ clauses, context }: { clauses: VerbPriceClause[]; context: VerbContext }) {
   const held = context.G.players[context.playerID].resources;
 
   return (
@@ -39,16 +38,19 @@ function VerbCostSlot({
           {index > 0 ? <em>or</em> : null}
           {clause.lead ? <em>{clause.lead}</em> : null}
           {clause.span ? (
-            <span className="verbCostItem">
+            // A range is unaffordable only when even its cheap end is out of
+            // reach; between the ends some targets are payable and some are not,
+            // and oxblood there would be a lie in the other direction.
+            <span
+              className={`verbCostItem${held[clause.span.resource] < clause.span.min ? " verbCostShort" : ""}`}
+            >
               <Icon glyph={RESOURCE_GLYPHS[clause.span.resource]} />
               {clause.span.min === clause.span.max
                 ? formatNumber(clause.span.min)
                 : `${formatNumber(clause.span.min)}–${formatNumber(clause.span.max)}`}
             </span>
           ) : null}
-          {clause.amounts ? (
-            <VerbPrice held={held} required={clause.amounts} showShortfall={blocked} />
-          ) : null}
+          {clause.amounts ? <VerbPrice held={held} required={clause.amounts} /> : null}
         </Fragment>
       ))}
     </span>
@@ -58,15 +60,7 @@ function VerbCostSlot({
 const clauseKey = (clause: VerbPriceClause) =>
   [clause.lead, clause.span?.resource, ...Object.keys(clause.amounts ?? {})].join("-");
 
-function VerbPrice({
-  required,
-  held,
-  showShortfall,
-}: {
-  required: Partial<Resources>;
-  held: Resources;
-  showShortfall: boolean;
-}) {
+function VerbPrice({ required, held }: { required: Partial<Resources>; held: Resources }) {
   return (
     <>
       {RESOURCE_ORDER.filter((resource) => (required[resource] ?? 0) > 0).map((resource) => {
@@ -74,7 +68,7 @@ function VerbPrice({
         // Only the unaffordable line is lit. Marking every line red when one
         // resource is short would say "you cannot pay for any of this", which is
         // both wrong and the reason the old dimmed-cost row was unreadable.
-        const short = showShortfall && held[resource] < amount;
+        const short = held[resource] < amount;
 
         return (
           <span className={`verbCostItem${short ? " verbCostShort" : ""}`} key={resource}>
@@ -96,7 +90,9 @@ export function CommandVerb({
   context: VerbContext;
   handlers: VerbHandlers;
 }) {
-  const pressed = verb.pressed?.(context) ?? false;
+  // Armed state is read from the one field that holds it, never re-derived per
+  // verb: that is what stopped Grow and Move from arming the map silently.
+  const pressed = verb.arms === true && context.armedVerb === verb.id;
   const enabled = isVerbEnabled(verb, context);
   const explanation = verbTitle(verb, context);
   const clauses = verb.cost?.(context) ?? [];
@@ -109,14 +105,14 @@ export function CommandVerb({
   const button = (
     <button
       aria-disabled={!enabled}
-      aria-pressed={verb.pressed ? pressed : undefined}
+      aria-pressed={verb.arms ? pressed : undefined}
       className={`railVerb${pressed ? " railVerbArmed" : ""}${enabled ? "" : " railVerbOff"}`}
       onClick={enabled ? () => verb.select(handlers) : undefined}
       type="button"
     >
       <Icon glyph={VERB_GLYPHS[verb.id]} size="verb" />
       <span className="verbLabel verb">{verb.label}</span>
-      {verb.cost ? <VerbCostSlot blocked={!enabled} clauses={clauses} context={context} /> : null}
+      {verb.cost ? <VerbCostSlot clauses={clauses} context={context} /> : null}
     </button>
   );
 

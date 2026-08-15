@@ -181,8 +181,7 @@ function commandContext(G: HegemonyState): VerbContext {
     canFoundColony: true,
     canUpgradeCity: true,
     canBuild: true,
-    isFoundColonyActive: false,
-    isBuildActive: false,
+    armedVerb: null,
     calmUsed: false,
     ventureUsed: false,
   };
