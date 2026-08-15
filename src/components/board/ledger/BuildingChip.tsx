@@ -1,54 +1,39 @@
 import type { BuildingDefinition } from "../../../game/types";
 import { presentBuildingEffect } from "../../../ui/effects";
+import { BUILDING_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 import { MechanicsDetails } from "../../MechanicsDetails";
-import { AtlasIcon } from "../../Sprites";
 import { Tooltip } from "../../overlays/Tooltip";
 
-export function BuildingChip({
-  building,
-  mode,
-  tooltipRows,
-  disabled = false,
-  onClick,
-}: {
-  building: BuildingDefinition;
-  mode: "built" | "option";
-  tooltipRows: string[];
-  disabled?: boolean;
-  onClick?: () => void;
-}) {
-  const tooltipLabel = [building.name, ...tooltipRows].join(". ");
-  const content = <AtlasIcon icon={building.id} className="miniIcon" />;
-  const tooltip = (
-    <MechanicsDetails effects={building.effects.map(presentBuildingEffect)} heading={building.name}>
-      <div className="detailTooltipRows">
-        {tooltipRows.map((row) => (
-          <em key={row}>{row}</em>
-        ))}
-      </div>
-    </MechanicsDetails>
-  );
-
-  if (mode === "option") {
-    return (
-      <Tooltip content={tooltip} tooltipClassName="detailTooltip">
-        <button
-          aria-disabled={disabled}
-          aria-label={tooltipLabel}
-          className="buildingChip buildingChipOption"
-          onClick={disabled ? undefined : onClick}
-          type="button"
-        >
-          {content}
-        </button>
-      </Tooltip>
-    );
-  }
-
+/**
+ * A raised building, drawn as the slot it fills: an ivory tile bearing the
+ * building's roofline.
+ *
+ * It used to be a raster atlas chip in the pop×building affinity matrix, where
+ * "built" and "could be built" were two modes of one component. That matrix is
+ * gone — what a settlement has raised is told by its sockets now — so this is
+ * one shape with one meaning, drawn as a line glyph rather than a painted cell.
+ */
+export function BuildingChip({ building }: { building: BuildingDefinition }) {
   return (
-    <Tooltip content={tooltip} preferredPlacement="above" tooltipClassName="detailTooltip">
-      <span aria-label={tooltipLabel} className="buildingChip buildingChipBuilt" tabIndex={0}>
-        {content}
+    <Tooltip
+      content={
+        <MechanicsDetails
+          effects={building.effects.map(presentBuildingEffect)}
+          heading={building.name}
+        >
+          <p className="mechanicsExplanation">Raised here.</p>
+        </MechanicsDetails>
+      }
+      preferredPlacement="above"
+      tooltipClassName="detailTooltip"
+    >
+      <span
+        aria-label={`${building.name}, raised here.`}
+        className="socket socketBuilt"
+        tabIndex={0}
+      >
+        <Icon glyph={BUILDING_GLYPHS[building.id]} size="verb" />
       </span>
     </Tooltip>
   );

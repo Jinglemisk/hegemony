@@ -16,12 +16,21 @@
    in intel.css. It was declared a second time here, which is how its scrollbar
    colour ended up disagreeing with the rule that owns it. */
 
-.ladderSection {
+/* A page's section head: a hairline and a whispered caps line, never a box.
+   `.pageSection` is the general name; `.ladderSection` is the Ladder's older
+   one, kept until that page is next touched. */
+.ladderSection,
+.pageSection {
   margin: 14px 0 8px;
   padding-bottom: 5px;
   border-bottom: 1px solid var(--ink-12);
   color: var(--ink-48);
   letter-spacing: 0.22em;
+}
+
+/* A section head that opens a page has nothing above it to clear. */
+.pageSection:first-child {
+  margin-top: 2px;
 }
 
 /* The anchor row. `margin-top: auto` inside a column flex page pins it to the
@@ -115,6 +124,159 @@
 .alarmDetail {
   margin: 6px 0 0;
   color: rgb(255 248 231 / 75%);
+}
+
+/* ── Cities ───────────────────────────────────────────────────────────────
+   A settlement is four bands: identity, the people, the ground, the take. No
+   box around any of it — one hairline between cards is the whole separation,
+   which is what stops a card-inside-a-panel-inside-a-tablet. */
+
+.cityStack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cityCard {
+  min-width: 0;
+  padding: 11px 2px 12px;
+  border-bottom: 1px solid var(--ink-12);
+}
+
+.cityCard:last-child {
+  border-bottom: 0;
+}
+
+/* Band 1 — who it is. The seal is the mark the board draws, so the name you
+   read here is findable out there. */
+.cityId {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.sealMark {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(36 25 16 / 30%);
+}
+
+/* The board's own seal rules draw at board scale; inside a 28px disc the same
+   numbers land a hair heavy, so only the glyph's weight is restated. */
+.sealMark .sealGlyph {
+  stroke-width: 1.5;
+}
+
+.cityName {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+/* The name gets the row's only flexible track. It used to share it with a pair
+   of nowrap meters and a terrain hex, both sized `auto`, which floored at their
+   own content and left the name ~38px — so every settlement ellipsised at four
+   letters regardless of how long its name was. */
+.cityName .title {
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cityName .caption {
+  overflow: hidden;
+  color: var(--ink-48);
+  font-style: normal;
+  text-overflow: ellipsis;
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+
+.cityPops {
+  flex: none;
+  margin-left: auto;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.cityPops small {
+  color: var(--ink-48);
+  font-weight: 700;
+}
+
+/* Band 2 — the people, one bead each, with their empty room drawn. */
+.cityBeads {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+  margin: 9px 0 0;
+  min-height: 11px;
+}
+
+.cityState {
+  color: var(--ink-48);
+  font-weight: 700;
+}
+
+/* Band 3 — the ground. A socket is a place, not a denominator: filled tiles
+   first, then the dashed outlines of what still stands open. */
+.sockets {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.socket {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+}
+
+.socketBuilt {
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 1.4px rgb(36 25 16 / 50%);
+}
+
+.socketBuilt:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 2px;
+}
+
+.socketOpen {
+  border: 1.6px dashed var(--ink-30);
+}
+
+.socketCap {
+  color: var(--ink-48);
+  font-weight: 700;
+}
+
+/* Band 4 — the take. Only what moved: the old strip printed all six resources
+   on every settlement and dimmed four of them to dashes. */
+.cityIncome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 13px;
+  margin: 9px 0 0;
+  color: var(--ink-48);
+}
+
+.cityIncome span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 800;
 }
 
 /* ── The Ladder ───────────────────────────────────────────────────────────
@@ -278,11 +440,14 @@
   font-weight: 700;
 }
 
-/* ── Build ────────────────────────────────────────────────────────────────── */
+/* ── Build ──────────────────────────────────────────────────────────────────
+   Seven cards have to fit a column, so every band pays rent. The old card spent
+   two full-width buttons per settlement — a whole second row of chrome per
+   place, most of it repeating a refusal it would not name. */
 
 .bcard {
-  margin-bottom: 10px;
-  padding: 11px 12px 10px;
+  margin-bottom: 8px;
+  padding: 9px 10px;
   border: 1px solid var(--ink-12);
   border-radius: 6px;
   background: var(--ivory);
@@ -298,8 +463,8 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   border-radius: 5px;
   color: var(--ink);
   background: var(--bone);
@@ -335,30 +500,36 @@
   gap: 3px;
 }
 
-.bcardShortfall {
-  margin: 7px 0 0;
-}
-
 .bcardTargets {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 9px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
+/* `flex: 1 1 auto` against `nowrap` labels is what makes the row adaptive: two
+   short place names share a line, and a target carrying its blocker
+   ("SIKYON · NO SLOT") is wide enough to claim one of its own instead of
+   wrapping its own words into a two-line button. */
 .bcardTargetTrigger {
-  flex: 1;
-  min-width: 96px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .bcardTarget {
   width: 100%;
-  padding: 8px 4px;
+  padding: 7px 6px;
   border: 0;
   border-radius: 4px;
   color: var(--ivory);
-  background: linear-gradient(180deg, var(--clay-lit), var(--clay) 55%, var(--clay-shade));
+  background: linear-gradient(
+    180deg,
+    var(--clay-lit),
+    var(--clay) 55%,
+    var(--clay-shade)
+  );
   box-shadow: inset 0 1px 0 rgb(255 248 231 / 30%);
+  white-space: nowrap;
 }
 
 .bcardTarget:not([aria-disabled="true"]):hover {
@@ -368,10 +539,12 @@
   transform: none;
 }
 
+/* A refused target is an outline, not a filled slab: it still reads as a place
+   you could build, once the thing it names is fixed. */
 .bcardTargetGhost {
-  color: var(--ink-48);
-  background: var(--ink-12);
-  box-shadow: none;
+  color: var(--ink-66);
+  background: none;
+  box-shadow: inset 0 0 0 1.4px var(--ink-30);
   cursor: not-allowed;
 }
 
@@ -380,8 +553,7 @@
   opacity: 0.55;
 }
 
-.bcardBlocked .bcardCostShort,
-.bcardBlocked .bcardShortfall {
+.bcardBlocked .bcardCostShort {
   color: var(--neg);
   opacity: 1.82; /* 1 / 0.55 */
 }
