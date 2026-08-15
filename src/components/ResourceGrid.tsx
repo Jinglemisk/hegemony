@@ -3,7 +3,8 @@ import type { Resource, Resources } from "../game/types";
 import type { IncomeContribution } from "../game/rules";
 import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../ui/resourceVisuals";
-import { ResourceIcon } from "./Sprites";
+import { RESOURCE_GLYPHS } from "../ui/iconRegistry";
+import { Icon } from "../ui/icons/Icon";
 import { Tooltip } from "./overlays/Tooltip";
 
 type FlashDirection = "increase" | "decrease";
@@ -89,14 +90,12 @@ function ResourceGridComponent({
             triggerStyle={getResourcePillVars(resource, resources[resource])}
             tooltipClassName={`resourceTooltip${resourceBreakdown.length >= 5 ? " compactResourceTooltip" : ""}`}
           >
-            <ResourceIcon
-              resource={resource}
-              value={resources[resource]}
-              className="resourceIcon"
-            />
+            <Icon glyph={RESOURCE_GLYPHS[resource]} className="resourceIcon" />
             <span className="resourceValue">
-              <strong>{formatNumber(resources[resource])}</strong>
-              <span className={`resourceDelta ${deltaClass}`}>{formatSignedNumber(delta)}</span>
+              <strong className="stat-lg stat-xl">{formatNumber(resources[resource])}</strong>
+              <span className={`resourceDelta stat ${deltaClass}`}>
+                {formatSignedNumber(delta)}
+              </span>
             </span>
           </Tooltip>
         );

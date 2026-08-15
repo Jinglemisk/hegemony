@@ -40,7 +40,6 @@ import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal"
 import { RiotModal } from "./board/modals/RiotModal";
 import { VentureModal } from "./board/modals/VentureModal";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
-import { SeasonStatus } from "./board/topbar/SeasonStatus";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
 import { AssemblyPanel } from "./board/assembly/AssemblyPanel";
 import { GameUiProvider } from "./board/GameUiProvider";
@@ -73,10 +72,11 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
   colony: "founding colony",
 };
 
-// Resources ride the top bar now (ui-refit Step 3 / Q17), split around the season
-// medallion: raw materials on the left, the softer economy on the right.
-const TOP_RESOURCES_LEFT: Resource[] = ["wood", "stone", "food"];
-const TOP_RESOURCES_RIGHT: Resource[] = ["gold", "influence", "happiness"];
+// One spine, dead centre of the top bar. The resources used to be split in two
+// halves flanking the season medallion; that arrangement made the bar's centre a
+// picture rather than the numbers, and the numbers are what a player reads
+// forty times a turn. The medallion became the season clock on the bottom rail.
+const TOP_RESOURCES: Resource[] = ["wood", "stone", "food", "gold", "influence", "happiness"];
 
 /**
  * Exactly one dialog owns the screen at a time — the union makes that a type
@@ -413,29 +413,19 @@ export function HegemonyBoard({
             ) : null}
           </div>
 
+          {/* Symmetric, and absolutely so: the event slips read from the left, the
+          roster sits at the right, and the resource spine is pinned to the bar's
+          true centre rather than to whatever space the two ends left over. */}
           <header className="topbar strategyTopbar">
             <TopbarEvents G={G} />
 
-            {/* Resources split around the season medallion (Q17 · KYKLOS arrangement). */}
-            <div className="seasonBanner">
+            <div className="resourceSpine">
               <ResourceGrid
-                className="topResourceHalf topResourceLeft"
-                order={TOP_RESOURCES_LEFT}
+                order={TOP_RESOURCES}
                 resources={viewer.resources}
                 deltas={projectedIncome}
                 breakdown={projectedIncomeBreakdown}
-                resetKey={`resL-${viewerId}`}
-              />
-
-              <SeasonStatus G={G} />
-
-              <ResourceGrid
-                className="topResourceHalf topResourceRight"
-                order={TOP_RESOURCES_RIGHT}
-                resources={viewer.resources}
-                deltas={projectedIncome}
-                breakdown={projectedIncomeBreakdown}
-                resetKey={`resR-${viewerId}`}
+                resetKey={`res-${viewerId}`}
               />
             </div>
 
