@@ -95,16 +95,18 @@ function ResourceGridComponent({
             }
             focusable
             key={resource}
-            triggerClassName={`resourcePill resource-${resource}${flash ? ` resourceFlash-${flash}` : ""}`}
-            triggerStyle={getResourcePillVars(resource, resources[resource])}
+            triggerClassName={`resourcePill resource-${resource}${resources[resource] < 0 ? " resourceAlert" : ""}${flash ? ` resourceFlash-${flash}` : ""}`}
+            triggerStyle={resourceCssVars(resource)}
             tooltipClassName={`resourceTooltip${resourceBreakdown.length >= 5 ? " compactResourceTooltip" : ""}`}
           >
+            {/* One atomic group: icon, numeral and delta are siblings on a single
+                baseline, so an icon can never drift away from the number it names. */}
             <Icon glyph={RESOURCE_GLYPHS[resource]} className="resourceIcon" />
-            <span className="resourceValue">
-              <strong className="stat-lg stat-xl">{formatNumber(resources[resource])}</strong>
-              <span className={`resourceDelta stat ${deltaClass}`}>
-                {formatSignedNumber(delta)}
-              </span>
+            <strong className="stat-lg stat-xl">{formatNumber(resources[resource])}</strong>
+            <span className={`resourceDelta stat ${deltaClass}`}>
+              {/* Nothing moved is said quietly: six printed zeros in a row read as
+                  six facts, when they are the absence of one. */}
+              {delta === 0 ? "·" : formatSignedNumber(delta)}
             </span>
           </Tooltip>
         );
@@ -167,20 +169,6 @@ function getResourceDeltaClass(resource: Resource, amount: number) {
   }
 
   return amount > 0 ? "positive" : "negative";
-}
-
-function getResourcePillVars(resource: Resource, value: number) {
-  if (resource !== "happiness" || value >= 0) {
-    return resourceCssVars(resource);
-  }
-
-  return {
-    "--resource-color": "#b13a28",
-    "--resource-tile": "#b13a28",
-    "--resource-soft": "rgb(177 58 40 / 14%)",
-    "--resource-line": "rgb(177 58 40 / 46%)",
-    "--resource-shadow": "rgb(177 58 40 / 24%)",
-  };
 }
 
 /** Memoized (render-perf pass): the top bar's two resource grids only re-render when

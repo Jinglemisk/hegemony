@@ -89,15 +89,27 @@
   display: flex;
   align-items: center;
   gap: 14px;
+
+  /* The ledger grid's 12px bottom margin survived the switch to flex and made
+     the spine 12px taller than its own numbers. Centred on the bar, that pushed
+     the figures 6px up — clean off the top of the bar at 1280. */
+  margin: 0;
   padding: 0;
   border: 0;
   background: none;
 }
 
+/* One resource is ONE object. The pill kept the ledger's 58px min-height, and
+   under `align-items: baseline` the numeral sat at the TOP of that tall box
+   while the icon — the only centred item — hung 20px below it. That is what
+   "completely loose" was: two rows out of phase, and the eye left to guess
+   which icon belonged to which number. Sizing the pill to its own content puts
+   the icon back beside its numeral, exactly as the prototype's `.res` has it. */
 .resourceSpine .resourcePill {
   display: flex;
   align-items: baseline;
   gap: 5px;
+  min-height: 0;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -109,17 +121,18 @@
   width: 21px;
   height: 21px;
   align-self: center;
+  filter: none;
   opacity: 0.85;
 }
 
-.resourceSpine .resourceValue {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
+.resourceSpine .resourcePill strong {
+  color: var(--ink);
 }
 
-.resourceSpine .resourceValue strong {
-  color: var(--ink);
+/* A stockpile below zero is the one number up here you have to act on, so it is
+   the one number that leaves the ink. */
+.resourceSpine .resourceAlert strong {
+  color: var(--neg);
 }
 
 /* A stockpile that just changed flashes the NUMERAL, not a box behind it. The
@@ -377,10 +390,10 @@
    and is the reason the clock is worth drawing at all rather than printing. */
 .dial {
   position: absolute;
-  bottom: 12px;
+  bottom: var(--dial-gap);
   z-index: var(--z-dial);
-  width: 128px;
-  height: 128px;
+  width: var(--dial-d);
+  height: var(--dial-d);
   padding: 0;
   border: 0;
   background: none;
@@ -389,8 +402,8 @@
 
 .dial svg {
   display: block;
-  width: 128px;
-  height: 128px;
+  width: var(--dial-d);
+  height: var(--dial-d);
 }
 
 .seasonClock {
@@ -595,14 +608,16 @@
 .tabRail {
   position: fixed;
   top: var(--chrome-top);
-  bottom: var(--bot-h);
+  /* The spine ends where its page ends — they are one slab, so a shared bottom
+     edge is the difference between a tablet and a menu stuck beside a box. */
+  bottom: var(--tablet-bot);
   z-index: var(--z-tablet);
   display: flex;
   flex-direction: column;
   /* Tabs live in the middle of the rail, not stacked at the top: the rail runs
      the full height of the table and a cluster at one end would point at nothing. */
   justify-content: center;
-  width: 46px;
+  width: var(--tab-rail-w);
   background: var(--slip);
 }
 
@@ -683,7 +698,12 @@
 .consultPanel {
   position: fixed;
   top: var(--chrome-top);
-  bottom: var(--bot-h);
+  /* A tablet ends ABOVE the bottom chrome — at the dials' top edge, not the
+     bar's. It used to run to the bar and then fake the clearance with 84px of
+     padding *inside* its scroll region, which put a dead zone at the end of
+     every page and ran the scrollbar under the season clock. The frame owns its
+     own clearance; the pages inside it own nothing but their content. */
+  bottom: var(--tablet-bot);
   z-index: var(--z-tablet);
   display: flex;
   flex-direction: column;
@@ -691,6 +711,9 @@
   padding: var(--sp-3) var(--sp-3) var(--sp-2);
   border: 0;
   border-radius: 0;
+  /* The frame CONTAINS. Nothing inside it may paint outside it; the one thing
+     allowed to move is the page body, which scrolls. */
+  overflow: hidden;
   background: var(--bone);
   box-shadow:
     0 2px 0 #cbb58e,
@@ -698,13 +721,13 @@
 }
 
 .intelPanel {
-  left: 46px;
-  width: calc(var(--panel-w) - 46px);
+  left: var(--tab-rail-w);
+  width: calc(var(--panel-w) - var(--tab-rail-w));
 }
 
 .consultPanel {
-  right: 46px;
-  width: calc(var(--chron-w) - 46px);
+  right: var(--tab-rail-w);
+  width: calc(var(--chron-w) - var(--tab-rail-w));
 }
 
 /* Hovering a tablet used to raise it above the rest of the chrome. It is docked
@@ -735,32 +758,17 @@
   margin: 0;
 }
 
-.ledgerCloseButton {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  min-height: 0;
-  padding: 0;
-  border: 0;
+/* The header's right-hand slot (proto.css `.panel-h .count`): how many of the
+   thing this page lists. It belongs on the page it counts, not on a 15px rail
+   badge that a three-digit number cannot fit inside. */
+.ledgerCardTitle .panelCount {
+  margin-left: auto;
   color: var(--ink-48);
-  background: none;
+  font-weight: 600;
 }
 
-.ledgerCloseButton:hover {
-  color: var(--clay);
-  box-shadow: none;
-  transform: none;
-}
-
-/* ── Clearing the dials ───────────────────────────────────────────────────
-   The two dials protrude 76px above the rail, and at the tablets' outer edges
-   that is 76px of page they sit on top of. The prototype's tablets never reach
-   that low; ours scroll, so the Chronicle's last entry and the Codex's last
-   paragraph were sliding under the END TURN seal with no way to read them.
-   Every scrolling body ends a dial's height above the rail. */
-.intelBody,
-.chronicleList,
+/* The Assembly is its own scene with its own foot; it still clears the dials by
+   hand. The tablets no longer do — their frame ends above the dials instead. */
 .asm-body {
   padding-bottom: 84px;
 }
