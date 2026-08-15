@@ -1,4 +1,4 @@
-import { PLAYER_NAMES } from "../../../game/data";
+import { PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
 import { yearOf } from "../../../game/core/calendar";
 import { getResolutionCard, politicianStandings } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
@@ -31,9 +31,18 @@ function spell(count: number): string {
   return SPELLED[count] ?? String(count);
 }
 
+/** Stones bear names, but only Laws take a stele: Stratokles raises monuments. */
+function stoneWord(count: number, monuments: boolean): string {
+  if (monuments) {
+    return count === 1 ? "monument" : "monuments";
+  }
+  return count === 1 ? "stele" : "stelae";
+}
+
 export function AgoraTab({ G }: { G: HegemonyState }) {
   const standings = politicianStandings(G);
   const voice = victoryStandings(G).find((standing) => standing.card.metric === "voice");
+  const voicePassed = voice ? Math.max(...PLAYER_IDS.map((id) => voice.values[id])) : 0;
   const rules = G.ruleset.assembly;
   const nextYear = Math.max(rules.firstYear, yearOf(G.season) + (G.assembly ? 1 : 0));
 
@@ -42,10 +51,14 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
       {/* The Voice plaque: the one standing thing that is a victory card. */}
       <Tooltip
         content={
-          <MechanicsDetails heading="Voice of the Assembly">
+          <MechanicsDetails heading={voice?.card.name ?? "Voice"}>
             <p className="mechanicsExplanation">
-              Held by whoever has authored and passed the most resolutions. Repeal does not take
-              them back.
+              Claimed by the first player to author and pass {voice?.minimum} resolutions, and taken
+              only by a rival who strictly exceeds the holder. Repeal does not take them back.
+            </p>
+            <p className="mechanicsExplanation">
+              The house has sat {spell(G.assembliesHeld)}{" "}
+              {G.assembliesHeld === 1 ? "time" : "times"}.
             </p>
           </MechanicsDetails>
         }
@@ -55,9 +68,12 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
           <Icon glyph="voice" size="rail" />
           <span>
             <b className="title">Voice</b>
+            {/* The same fact the Victory tab's Voice card prints, in the same words
+                and the same figures — the two pages read the same standing, so a
+                reader flipping between them must not find two answers. */}
             <span className="caption">
-              {voice?.holder ? PLAYER_NAMES[voice.holder] : "unheld"} · {G.assembliesHeld}{" "}
-              assemblies held
+              {voice?.holder ? PLAYER_NAMES[voice.holder] : "unheld"} · {voicePassed}/
+              {voice?.minimum} passed
             </span>
           </span>
           {voice?.holder ? (
@@ -93,7 +109,9 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
         </div>
       ) : null}
 
-      <h3 className="pageSection label">The four orators</h3>
+      {/* Counted, not quoted: the roster is authored data, and a fifth politician
+          would otherwise leave this heading insisting there are four. */}
+      <h3 className="pageSection label">The {spell(standings.length)} orators</h3>
 
       {standings.map((standing) => {
         const isStratokles = standing.politician.id === "stratokles";
@@ -132,15 +150,23 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
               <span className="polWho">
                 <b className="title">{standing.politician.name}</b>
                 <span className="polEpithet label">{standing.politician.epithet}</span>
-                {/* Notches, not a number: how many stones bear his name, at a
-                    glance. They sit under the epithet rather than at the row's
-                    end because a name like KLEISTOPHENES and six notches want
-                    250px between them and the tablet gives 192 — hung on the
-                    right they ran 71px out through the frame. */}
-                <span className="steleNotches" aria-label={`${stelae.length} stelae`}>
-                  {Array.from({ length: rules.lawCap }, (_, index) => (
+                {/* Notches for the glance, a count for the fact. They sit under
+                    the epithet rather than at the row's end because a name like
+                    KLEISTOPHENES and six notches want 250px between them and the
+                    tablet gives 192 — hung on the right they ran 71px out through
+                    the frame.
+
+                    The track is the law cap, because that is how many stelae the
+                    house may keep standing. Stratokles's monuments take no slot
+                    and have no cap, so his track grows past six rather than
+                    filling up and reading as maxed at the seventh. */}
+                <span className="steleNotches">
+                  {Array.from({ length: Math.max(rules.lawCap, stelae.length) }, (_, index) => (
                     <i className={index < stelae.length ? "notch notchWon" : "notch"} key={index} />
                   ))}
+                  <em className="steleCount label">
+                    {stelae.length} {stoneWord(stelae.length, isStratokles)}
+                  </em>
                 </span>
               </span>
             </section>

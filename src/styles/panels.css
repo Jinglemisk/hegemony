@@ -953,6 +953,26 @@
   background: var(--aegean);
 }
 
+/* Six grey pips are a picture of nothing until they are named. The count also
+   carries the truth when the track cannot: Stratokles's monuments have no cap. */
+.steleCount {
+  margin-left: 3px;
+  color: var(--ink-63);
+  font-style: normal;
+}
+
+/* "Spring, Year 2" is one date, and it broke after the comma into two lines that
+   read as two facts. The key is already nowrap and eats 110 of the tablet's 212px,
+   so the date cannot both stay whole and sit beside it: let the row break BETWEEN
+   the two instead — same two lines, but each one says a whole thing. */
+.agoraPage .anchorRow {
+  flex-wrap: wrap;
+}
+
+.agoraPage .anchorValue {
+  white-space: nowrap;
+}
+
 /* ── Chronicle ────────────────────────────────────────────────────────────
    Newest first, with the seasons as quiet rules between them. The page has no
    heading of its own: the tablet is already titled Chronicle, and a second one
