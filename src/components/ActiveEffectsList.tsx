@@ -47,9 +47,11 @@ export function ActiveEffectsList({ variant }: { variant: "board" | "ledger" }) 
     );
   }
 
+  // No heading and no box: on the ledger each effect is a slip — a tone-coloured
+  // left rule, what it is, and how long it lasts. A titled ochre panel around
+  // them made a container out of what is really two or three short lines.
   return (
     <section aria-label={"Active effects. " + accessibleSummary} className="activeEffectsLedger">
-      <h3>Active effects</h3>
       <ActiveEffectRows presentations={presentations} />
     </section>
   );
@@ -67,15 +69,17 @@ function ActiveEffectRows({
       {presentations.map((presentation) => (
         <li
           aria-label={presentation.accessibleText}
-          className="activeEffectRow"
+          className={`activeEffectRow tone-${presentation.tone}`}
           key={presentation.id}
         >
-          <strong className="activeEffectSource" aria-hidden="true">
+          <strong className="activeEffectSource label" aria-hidden="true">
             {presentation.source}
           </strong>
-          <EffectLine effect={presentation} className="activeEffectMechanic" links={links} />
-          <span className="activeEffectDuration" aria-hidden="true">
-            {presentation.duration}
+          <span className="activeEffectBody caption" aria-hidden="true">
+            <EffectLine effect={presentation} className="activeEffectMechanic" links={links} />
+            {/* The clause the showcase trails the line with, not a third stacked
+                row: how long this lasts is part of the same sentence. */}
+            <span className="activeEffectDuration"> · {presentation.duration.toLowerCase()}</span>
           </span>
         </li>
       ))}
