@@ -776,6 +776,14 @@
     0 0 0 1px rgb(36 25 16 / 40%);
 }
 
+/* No disc when no seat is ahead. A tie, and an unclaimed Voice, are facts about
+   the card rather than about a player, so the slot that carries WHOSE stands
+   empty of colour and says the fact in the word the Agora uses for it. */
+.vcardNobody {
+  flex: none;
+  color: var(--ink-63);
+}
+
 .vcardLead {
   font-weight: 800;
 }

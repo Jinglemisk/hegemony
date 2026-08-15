@@ -18,7 +18,8 @@ import { Tooltip } from "../../overlays/Tooltip";
  *
  * The meter is `--warn`, never a glaze. A glaze on a progress bar would say the
  * leader's colour means "ahead", and colour on this board means whose, not how
- * good. Reads from the same engine helper the win check uses, so the ledger can
+ * good. Holders come from the same engine helper the win check uses, and the
+ * "who is ahead" mark below applies that helper's own rule, so the ledger can
  * never disagree with the rules.
  */
 
@@ -56,8 +57,12 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
       </p>
 
       {standings.map(({ card, holder, minimum, values }) => {
-        const leader = holder ?? bestOf(values);
-        const leadValue = values[leader];
+        const { leader: ahead, best } = soleLeader(values);
+        // Voice is not led, it is HELD: the first seat to the minimum keeps it
+        // through ties and loses it only when strictly exceeded, so until it is
+        // claimed nobody is ahead on it — it is unheld, the word the Agora prints.
+        const leader = holder ?? (card.metric === "voice" ? null : ahead);
+        const leadValue = holder === null ? best : values[holder];
         // Clamped at BOTH ends. Happiness goes negative, and React drops a negative
         // width as an invalid style, which left the bar at its full-width default —
         // a laurel nobody was near drawing as a finished meter.
@@ -74,7 +79,7 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
                   {PLAYER_IDS.map((id) => (
                     <em key={id}>
                       {PLAYER_NAMES[id]} {formatNumber(values[id])}
-                      {id === holder ? " — holds it" : ""}
+                      {id === holder ? " — holds it" : id === leader ? " — leads" : ""}
                     </em>
                   ))}
                 </div>
@@ -99,12 +104,20 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
               </p>
 
               <div className="vcardRace">
-                <span
-                  className="vcardGlaze label"
-                  style={{ background: PLAYER_GLAZES[leader].color }}
-                >
-                  {PLAYER_GLAZES[leader].blazon}
-                </span>
+                {/* The disc carries WHOSE. With no sole leader there is no whose,
+                    so the slot says the fact instead of naming a seat. */}
+                {leader === null ? (
+                  <span className="vcardNobody label">
+                    {card.metric === "voice" ? "unheld" : "tied"}
+                  </span>
+                ) : (
+                  <span
+                    className="vcardGlaze label"
+                    style={{ background: PLAYER_GLAZES[leader].color }}
+                  >
+                    {PLAYER_GLAZES[leader].blazon}
+                  </span>
+                )}
                 <span className="vcardLead stat num">
                   {formatNumber(leadValue)}
                   <small>/{minimum}</small>
@@ -121,7 +134,32 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
   );
 }
 
-/** Who is furthest along when nobody holds the card yet. */
-function bestOf(values: Record<PlayerId, number>): PlayerId {
-  return PLAYER_IDS.reduce((best, id) => (values[id] > values[best] ? id : best), PLAYER_IDS[0]);
+/**
+ * Who is ahead when nobody holds the card yet — the engine's own rule
+ * (`victoryStandings` in src/game/victory.ts) with the minimum gate left off.
+ *
+ * That helper answers "who HOLDS this", which is null both for a tie and for a
+ * leader still under the minimum; the card also wants to name who is ahead before
+ * anyone qualifies. So this is the engine's reduce verbatim: a strict `>` takes the
+ * lead and an equal value clears it, which is what makes a tie have no leader. The
+ * `bestOf` it replaces seeded itself with seat 0 and kept it through every tie, so
+ * on turn 0 — four seats, identical boards — five laurels named Damon.
+ */
+function soleLeader(values: Record<PlayerId, number>): {
+  leader: PlayerId | null;
+  best: number;
+} {
+  let leader: PlayerId | null = null;
+  let best = -Infinity;
+
+  for (const playerID of PLAYER_IDS) {
+    if (values[playerID] > best) {
+      best = values[playerID];
+      leader = playerID;
+    } else if (values[playerID] === best) {
+      leader = null;
+    }
+  }
+
+  return { leader, best };
 }
