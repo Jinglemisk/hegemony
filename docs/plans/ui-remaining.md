@@ -29,11 +29,10 @@ when it ships or when the owner rules it closed.
 
 ## The list
 
-| ID       | needs      | what                                                              |
-| -------- | ---------- | ----------------------------------------------------------------- |
-| `TYPE-1` | a decision | Two type sizes sit under spec, on purpose                         |
-| `DUP-1`  | nothing    | Five repeated glossary words, judged and left                     |
-| `TERR-1` | nobody     | The terrain chip is the last raster, and it paints the wrong cell |
+| ID       | needs      | what                                          |
+| -------- | ---------- | --------------------------------------------- |
+| `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
+| `DUP-1`  | nothing    | Five repeated glossary words, judged and left |
 
 ### Shipped
 
@@ -226,21 +225,26 @@ walks every family: 12 assertions became 21.
 - **The terrain sheet.** `TerrainSprite` is a different token and a different
   component, and it turned up a defect of its own — see `TERR-1`.
 
-## TERR-1 — the terrain chip is the last raster, and it paints the wrong cell
+## TERR-1 — the terrain chip draws its terrain · **shipped** (`09e9dc7`)
 
-`TerrainSprite` still cuts a cell out of `light-terrain-atlas.png`, so the terrain
-hexagon on a settlement summary card (the found-colony and upgrade previews, its
-only two appearances) is a muddy brown raster sitting beside line art. With ICON-1
-landed it is the only raster icon left in the app.
+The chip had **never painted the cell it selected.** `--sprite-x` and
+`--sprite-y` only ever fed `mask-position`, while `.atlasTerrain` painted with
+`background-image`, which took its default `0 0` — so every terrain chip showed
+the sheet's top-left corner, and a forest tile drew a mountain. Nothing consumed
+those two custom properties at all; a grep for readers returned zero.
 
-**And it has never shown the right cell.** `--sprite-x/y` only ever fed
-`mask-position`; `.atlasTerrain` paints with `background-image`, which has always
-taken its default `0 0`. Every terrain chip shows the sheet's top-left corner
-whatever the terrain is — a forest tile draws the mountain. The cell coordinates
-are still in `sprites.css` for whoever takes this.
+A **sixth alias** was hiding under it: `oracle → sprite-terrain-hill`, with a
+comment calling the hill "the nearest read" — the same borrowing that had five
+buildings wearing three pictures.
 
-`TERRAIN_GLYPHS` already covers all five terrains including the oracle, which the
-painted sheet never had a cell for.
+Both went the way the atlas did. `TERRAIN_GLYPHS` already had all five as their
+own line drawing, so no new art was needed, and the no-duplicate registry test —
+widened to every family by `ICON-1` — now guarantees they stay distinct. That
+guarantee's absence is exactly what let the aliases exist: a CSS class table was
+doing the drawing, and no test can see a duplicate that lives there.
+
+The PNG stays on disk; four files under `docs/reference/` display it as design
+record. It no longer ships.
 
 ## ASM-11 — the repeal ceremony · **shipped** (`9f8432f`)
 
