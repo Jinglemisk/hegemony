@@ -31,6 +31,8 @@ when it ships or when the owner rules it closed.
 
 | ID           | needs         | what                                                                             |
 | ------------ | ------------- | -------------------------------------------------------------------------------- |
+| `FRAME-1`    | a design pass | The frame's corners are gore: rectangles end in mid-air where circles sit        |
+| `DOCK-1`     | a decision    | The verbs go back to discs that protrude from the bottom bar                     |
 | `BUILD-2`    | a decision    | An open socket should be pressable, and open the buildings you could raise there |
 | `BOARD-BG-1` | a decision    | The sea plate becomes a texture: no iconography, no cartographic border          |
 | `CER-1`      | **the owner** | Fate cards have no voice, because there is no field to hold one                  |
@@ -40,6 +42,77 @@ when it ships or when the owner rules it closed.
 | `DUP-1`      | nothing       | Five repeated glossary words, judged and left                                    |
 
 ---
+
+## FRAME-1 — the corners are gore, and it is one problem, not four
+
+**What it looks like.** At both bottom corners the chrome simply stops. On the
+right, the parchment rail runs down the screen, ends in mid-air over the sea, and
+the END TURN seal sits across the ragged edge it left. On the left, the tab rail's
+strip does the same and the panel's bottom edge floats above nothing while the
+season dial overlaps the join. The meander border runs into the cut and terminates
+without meeting anything.
+
+**Why it happens.** The frame is four rectangles — top bar, left rail with its
+panel, right rail, bottom bar — and two **circles** sit exactly where the
+rectangles are supposed to meet: the season dial at the bottom-left corner, the
+END TURN seal at the bottom-right. The rectangles were shortened to make room for
+the circles, so their edges now end wherever the clearance calculation put them,
+which is a place with nothing on the other side of it.
+
+The circles are not the problem and neither are the rectangles. **The problem is
+that nobody designed the junction.** Every fix so far has moved one of the two
+apart from the other, which is why it keeps reappearing somewhere else — the
+tablets were ended above the dials, the seal was cleared, the panel frame was
+given its own floor, and the corner still reads as damage.
+
+**What a fix has to decide.** How a round thing and a straight thing meet, once,
+and then apply it at both corners. The options are the usual ones and they are
+genuinely different in feel:
+
+- the bar **carries a socket** — a cut-out the disc seats into, so the frame is
+  continuous and the circle is set into it like a boss into a plate;
+- the disc **sits proud on an unbroken bar**, overlapping it with its own shadow,
+  and the rails run to the bar's edge and stop against it;
+- the corner is **mitred** — the vertical strip turns and becomes the bottom bar,
+  and the disc floats clear of the join entirely.
+
+Whichever it is, the rule that has to hold afterwards: **no edge of the frame may
+terminate against empty board.** Either it meets another edge or it is deliberately
+cut by something drawn on top of it.
+
+**Note this interacts with `BOARD-BG-1`.** Half of what reads as damage is the
+meander border and the cartographic edge baked into the sea plate, which cannot
+line up with anything because it scales with the viewport. Doing the background
+first will change what this problem even looks like, and may shrink it. Worth
+sequencing that way.
+
+## DOCK-1 — the verbs protrude from the bar again
+
+**Wanted.** The verb bar returns to the structure it had before the overhaul:
+each verb a **circular disc that protrudes upward from the bottom bar**, half
+proud of the edge, with its name and its cost set beneath it on the bar itself.
+
+**It still exists to copy.** `main` has `.verbDisc` — a 50%-radius disc with a
+`.verbKnob` that lifts a few pixels on hover, an armed state, and a dimmed state
+for a verb you cannot afford. The overhaul replaced the whole thing with
+`.railVerb`, a flat text label sitting inside the bar, and the protrusion went
+with it. Read the old rules before rewriting them; the states are already
+worked out.
+
+**What must survive the change.** The dock has had a lot of work done to it this
+run and none of it should be lost in the restyle:
+
+- every verb prints a **real cost** now — `GROW 5–9`, `BUILD from 6`,
+  `CALM 4 or 6`, `VENTURE stake 5` — read from the engine query that charges it;
+- a price you cannot pay is **oxblood**, judged per alternative and per range end;
+- an armed verb carries `railVerbArmed` and `aria-pressed`, and **stands its
+  tooltip down** so it stops explaining itself over the map's own caption;
+- the discs are the dock's only tab stops, seven of them plus the seal.
+
+**Watch out for:** a protruding disc overlaps the board, so it needs to clear the
+sea and cast against it; and the discs are the elements nearest the two corner
+circles, so this and `FRAME-1` should be designed together rather than in
+sequence — they are the same edge.
 
 ## BUILD-2 — an open socket should be pressable
 
