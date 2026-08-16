@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { getBuildBuildingOptions } from "../../../game/rules";
 import type { BuildingId, HexTile, Settlement } from "../../../game/types";
 import { presentBuildingEffect } from "../../../ui/effects";
@@ -29,15 +29,44 @@ import { buildRefusal, shortfallOf } from "./buildRefusal";
  * leaves the card standing behind it.
  */
 
-/** The picker follows its socket: the ledger scrolls, and an anchored overlay
- *  measured once ends up floating over the wrong row. `useAnchoredOverlay`
- *  re-measures on scroll but reads the rect it was handed, so the rect is what
- *  has to be refreshed. */
-function useAnchorRect(anchorElement: HTMLElement) {
-  const [rect, setRect] = useState(() => anchorElement.getBoundingClientRect());
+/** The gap `Popover` leaves between an anchor and its surface. Mirrored here
+ *  because the height has to be decided before the surface exists to measure. */
+const ANCHOR_GAP = 12;
+/** Head, its rule, and the surface's own padding — everything above and below
+ *  the scrolling list. Measured off the rendered picker. */
+const SURFACE_CHROME = 56;
+/** Three rows. Below this the picker stops being a list and starts being a
+ *  peephole, so a cramped socket overhangs its band rather than shrink further. */
+const LEAST_USEFUL_LIST = 168;
+
+/**
+ * Where the socket is, and how much room stands over and under it.
+ *
+ * Two things have to be re-measured, not measured once. The ledger scrolls, so a
+ * rect taken at open floats over the wrong row a moment later. And the room is
+ * read off the LEDGER TABLET, not the viewport: `positionAnchoredOverlay` clamps
+ * to the window, which at 1366×768 is how a 368px picker ended up at y=40 with
+ * its head laid across the omen, season and fate slips — the window had space
+ * there, the game did not. The page the socket belongs to already sits inside the
+ * chrome, so its own box is the honest ceiling and floor.
+ */
+function useAnchorGeometry(anchorElement: HTMLElement) {
+  const measure = useCallback(() => {
+    const rect = anchorElement.getBoundingClientRect();
+    const panel = anchorElement.closest<HTMLElement>(".panel");
+    const band = panel?.getBoundingClientRect();
+
+    return {
+      rect,
+      above: rect.top - (band?.top ?? 0) - ANCHOR_GAP,
+      below: (band?.bottom ?? window.innerHeight) - rect.bottom - ANCHOR_GAP,
+    };
+  }, [anchorElement]);
+
+  const [geometry, setGeometry] = useState(measure);
 
   useEffect(() => {
-    const remeasure = () => setRect(anchorElement.getBoundingClientRect());
+    const remeasure = () => setGeometry(measure());
 
     remeasure();
     window.addEventListener("scroll", remeasure, true);
@@ -47,9 +76,9 @@ function useAnchorRect(anchorElement: HTMLElement) {
       window.removeEventListener("scroll", remeasure, true);
       window.removeEventListener("resize", remeasure);
     };
-  }, [anchorElement]);
+  }, [measure]);
 
-  return rect;
+  return geometry;
 }
 
 export function SocketPicker({
@@ -74,7 +103,11 @@ export function SocketPicker({
 }) {
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const bodyRef = useRef<HTMLDivElement>(null);
-  const rect = useAnchorRect(anchorElement);
+  const { rect, above, below } = useAnchorGeometry(anchorElement);
+  // The picker takes the roomier side of its socket and is cut to fit it, so the
+  // surface never needs the viewport clamp that used to slide it over the chrome.
+  const placement = below >= above ? "below" : "above";
+  const listMax = Math.max(LEAST_USEFUL_LIST, Math.max(above, below) - SURFACE_CHROME);
   const held = G.players[playerID].resources;
   const options = getBuildBuildingOptions(G, playerID, tile.id);
   // One gate over the whole picker, worded as the Build page words it. When the
@@ -143,10 +176,15 @@ export function SocketPicker({
       anchor={rect}
       ariaLabel={`Raise a building in ${name}`}
       className="socketPicker"
-      measureKey={`${tile.id}-${settlement.buildings.length}`}
+      measureKey={`${tile.id}-${settlement.buildings.length}-${listMax}`}
       onDismiss={onDismiss}
+      preferredPlacement={placement}
     >
-      <div className="socketPickerBody" ref={bodyRef}>
+      <div
+        className="socketPickerBody"
+        ref={bodyRef}
+        style={{ "--socketListMax": `${listMax}px` } as CSSProperties}
+      >
         <p className="socketPickerHead label">
           {name} · {shut ?? (open === 1 ? "1 slot open" : `${open} slots open`)}
         </p>
@@ -180,19 +218,21 @@ export function SocketPicker({
                 <b className="socketOptionName title">{building.name}</b>
 
                 <span className="socketOptionCost num">
-                  {RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) > 0).map((resource) => (
-                    <span
-                      className={
-                        (cost[resource] ?? 0) > held[resource]
-                          ? "socketCostItem socketCostShort"
-                          : "socketCostItem"
-                      }
-                      key={resource}
-                    >
-                      <Icon glyph={RESOURCE_GLYPHS[resource]} />
-                      {formatNumber(cost[resource] ?? 0)}
-                    </span>
-                  ))}
+                  {RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) > 0).map(
+                    (resource) => (
+                      <span
+                        className={
+                          (cost[resource] ?? 0) > held[resource]
+                            ? "socketCostItem socketCostShort"
+                            : "socketCostItem"
+                        }
+                        key={resource}
+                      >
+                        <Icon glyph={RESOURCE_GLYPHS[resource]} />
+                        {formatNumber(cost[resource] ?? 0)}
+                      </span>
+                    ),
+                  )}
                 </span>
 
                 <span className="socketOptionEffects">

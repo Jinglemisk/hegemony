@@ -357,18 +357,33 @@
 
 /* The list scrolls, not the surface — an overflow on the popover itself clips
    the arrow off its own edge.
-   The ceiling is what keeps the picker out of the chrome. Nine buildings at full
-   height come to ~440px, and a socket sits low enough in the tablet that the
-   anchoring flips the panel upward: at 1366×768 that put its head across the
-   fate and season slips in the top bar. The popover cannot be told to respect
-   the chrome — it clamps to the viewport — so it is told to be shorter, and the
-   ninth building is one scroll away instead of on top of the omen. */
+   The ceiling comes from `SocketPicker`, which measures the room over and under
+   the socket INSIDE the ledger tablet and hands it down. A flat cap could not do
+   this job: `min(42vh, 320px)` was tried, and at 1366×768 it still left a 368px
+   surface that the viewport clamp slid up over the omen, season and fate slips.
+   The fallback is that old cap, for a socket rendered outside any panel.
+
+   Nine buildings fit at none of the four sizes, so this list always has more
+   behind it, and it inherits the edge cue the tablets already use (`intel.css`,
+   THE EDGE CUE) for exactly the finding it was written for: at 1920 the ceiling
+   happened to fall flush on a row boundary, and four buildings below it left no
+   mark on the screen at all. A half-cut row is the cue when the arithmetic lands
+   there, and where it lands is luck — rows are one or two effect-lines tall. The
+   fade is not luck. */
 .socketPickList {
   display: flex;
   flex-direction: column;
-  max-height: min(42vh, 320px);
+  max-height: var(--socketListMax, min(42vh, 320px));
   overflow-y: auto;
   scrollbar-color: var(--clay) transparent;
+}
+
+@supports (animation-timeline: scroll(self)) {
+  .socketPickList {
+    animation: intelScrollEdge linear both;
+    animation-timeline: scroll(self);
+    animation-range: 88% 100%;
+  }
 }
 
 /* [tile] [name .......... price]
