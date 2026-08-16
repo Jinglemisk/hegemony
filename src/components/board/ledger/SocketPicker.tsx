@@ -202,6 +202,12 @@ export function SocketPicker({
             const refusal = refused
               ? (shut ?? buildRefusal(settlement, building, open, shortfall))
               : null;
+            // The gate over the whole picker is already standing in the head, so
+            // the rows do not repeat it — nine identical lines of "not your
+            // turn" is the noise the head was written to spare. A control still
+            // has to carry its own reason in its accessible name, which is why
+            // only the PRINTED line is dropped.
+            const printedRefusal = shut ? null : refusal;
 
             return (
               <button
@@ -256,7 +262,9 @@ export function SocketPicker({
                   })}
                 </span>
 
-                {refusal ? <span className="socketOptionBlocker label">{refusal}</span> : null}
+                {printedRefusal ? (
+                  <span className="socketOptionBlocker label">{printedRefusal}</span>
+                ) : null}
               </button>
             );
           })}

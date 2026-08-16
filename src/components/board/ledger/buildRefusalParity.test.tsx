@@ -51,8 +51,8 @@ afterEach(() => {
   container.remove();
 });
 
-function uiFor(G: HegemonyState): GameUi {
-  return { G, viewerId: "0", phase: "gameplay", isActive: true } as unknown as GameUi;
+function uiFor(G: HegemonyState, isActive = true): GameUi {
+  return { G, viewerId: "0", phase: "gameplay", isActive } as unknown as GameUi;
 }
 
 /** The scripted opening gives a seat one city and one colony. Only the city has
@@ -155,5 +155,31 @@ describe("the socket picker and the Build page", () => {
 
     expect(citiesPageWithEverySocketOpen(G).size).toBe(0);
     expect([...buildPage(G).values()]).toContain("no slot");
+  });
+
+  it("says a turn that is not yours once, in the head, and not on all nine rows", () => {
+    const G = scenario().opening().withResources("0", "wealthy").build();
+
+    act(() =>
+      root.render(
+        <GameUiProvider value={uiFor(G, false)}>
+          <CitiesTab holdings={getOwnedHoldings(G, "0")} onBuildBuildingRequest={() => {}} />
+        </GameUiProvider>,
+      ),
+    );
+    act(() => container.querySelector<HTMLButtonElement>(".socketAdd")!.click());
+
+    const spoken = refusalsOnScreen();
+
+    // Every control still carries the reason in its own accessible name — a
+    // screen reader lands on one button at a time and cannot see the head.
+    expect([...spoken.values()].every((why) => why === "not your turn")).toBe(true);
+    expect(spoken.size).toBeGreaterThan(1);
+
+    // But the page says it once. Nine identical lines of it is the noise the
+    // head exists to spare, and the printed refusal is reserved for reasons that
+    // differ from building to building.
+    expect(document.querySelector(".socketPickerHead")?.textContent).toContain("not your turn");
+    expect(document.querySelectorAll(".socketOptionBlocker")).toHaveLength(0);
   });
 });
