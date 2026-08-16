@@ -44,6 +44,7 @@ afterEach(() => {
   document.body.replaceChildren();
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("Assembly explanations", () => {
@@ -478,6 +479,140 @@ describe("The Assembly scene", () => {
     // PAR-ASM-22: a monument is not a rule, and now says so in the markup AND in
     // a stylesheet — `.lawslabMonument` was emitted with no rule anywhere.
     expect(column.querySelectorAll(".lawslabMonument")).toHaveLength(1);
+  });
+
+  // ── The repeal ceremony (ASM-11) ────────────────────────────────────────────
+  // The hard part is not the animation, it is that the law has to survive the
+  // phase in which nothing is drawing it. A repeal carries during the BALLOT, and
+  // the standing column is not on the floor during the ballot — it stands through
+  // proposal, goes away for the vote, and comes back on the closing floor. Both
+  // tests below drive that whole passage, because a fixture that removes a law
+  // while the column is on screen would pass with machinery that cannot do the
+  // only thing this feature needs.
+
+  it("holds a struck law across the phase that has no column, and buries it on the closing floor", () => {
+    vi.useFakeTimers();
+    const G = scenario().build();
+    const laws = RESOLUTION_CARDS.filter((card) => card.kind === "law").slice(0, 2);
+    laws.forEach((card, index) => {
+      G.activeLaws.push({ cardId: card.id, author: "0", enactedSeason: G.season, order: index });
+    });
+    openAssembly(G, "0");
+    const value = { G, viewerId: "0", moves: {} } as unknown as GameUi;
+    const draw = () =>
+      act(() => {
+        root.render(
+          <GameUiProvider value={value}>
+            <AssemblyFloor G={G} session={G.assembly!} />
+          </GameUiProvider>,
+        );
+      });
+
+    draw();
+    expect(container.querySelectorAll(".asmSlabTrigger")).toHaveLength(2);
+
+    // The house votes it down mid-ballot. The engine drops it immediately and the
+    // column is not even mounted to see it go.
+    G.activeLaws = G.activeLaws.filter((law) => law.cardId !== laws[1].id);
+    G.assembly!.phase = "voting";
+    draw();
+    expect(container.querySelector(".asmStanding")).toBeNull();
+    expect(container.querySelector(".lawslabFalling")).toBeNull();
+
+    // The record comes back when the house rises — and the stele that was struck
+    // is still on it, going down.
+    G.assembly!.phase = "closing";
+    draw();
+    const falling = container.querySelector(".lawslabFalling")!;
+    expect(falling.querySelector("b.title")?.textContent).toBe(laws[1].name);
+    // Retained as a PICTURE. The count is the engine's, and it has already moved
+    // on; a screen reader is never told a repealed Law still stands.
+    expect(falling.getAttribute("aria-hidden")).toBe("true");
+    expect(container.querySelector(".asmStanding .asmStandingKey")?.textContent).toBe(
+      `Standing laws · 1 of ${G.ruleset.assembly.lawCap}`,
+    );
+    expect(container.querySelectorAll(".asmSlabTrigger")).toHaveLength(1);
+
+    act(() => vi.advanceTimersByTime(1530));
+    expect(container.querySelector(".lawslabFalling")).toBeNull();
+    expect(container.querySelectorAll(".asmSlabTrigger")).toHaveLength(1);
+  });
+
+  it("leaves the LAST struck law falling over the bare stones, not over a hole", () => {
+    vi.useFakeTimers();
+    const G = scenario().build();
+    const only = RESOLUTION_CARDS.find((card) => card.kind === "law")!;
+    G.activeLaws.push({ cardId: only.id, author: "0", enactedSeason: G.season, order: 0 });
+    openAssembly(G, "0");
+    const value = { G, viewerId: "0", moves: {} } as unknown as GameUi;
+    const draw = () =>
+      act(() => {
+        root.render(
+          <GameUiProvider value={value}>
+            <AssemblyFloor G={G} session={G.assembly!} />
+          </GameUiProvider>,
+        );
+      });
+
+    draw();
+    G.activeLaws = [];
+    G.assembly!.phase = "voting";
+    draw();
+    G.assembly!.phase = "closing";
+    draw();
+
+    // The empty-stelae slab is drawn off `G.activeLaws` and so is already there,
+    // under the stone that is still coming down. An emptied column that fell back
+    // to nothing at all — no slab, no dashed outline — is what "vanished" looked
+    // like, and it is the one shape this must not produce.
+    expect(container.querySelector(".lawslabFalling")).not.toBeNull();
+    expect(container.querySelector(".asmSlabBare")?.textContent).toBe(
+      "No law stands. The stones are bare.",
+    );
+
+    act(() => vi.advanceTimersByTime(1530));
+    expect(container.querySelector(".lawslabFalling")).toBeNull();
+    expect(container.querySelector(".asmSlabBare")?.textContent).toBe(
+      "No law stands. The stones are bare.",
+    );
+  });
+
+  it("skips the transit, not the destination, when the reader asked for stillness", () => {
+    vi.useFakeTimers();
+    // jsdom ships no `matchMedia` at all, which is exactly the shape the guard in
+    // useDepartedLaws treats as "no preference expressed".
+    vi.stubGlobal("matchMedia", () => ({ matches: true }) as unknown as MediaQueryList);
+
+    const G = scenario().build();
+    const laws = RESOLUTION_CARDS.filter((card) => card.kind === "law").slice(0, 2);
+    laws.forEach((card, index) => {
+      G.activeLaws.push({ cardId: card.id, author: "0", enactedSeason: G.season, order: index });
+    });
+    openAssembly(G, "0");
+    const value = { G, viewerId: "0", moves: {} } as unknown as GameUi;
+    const draw = () =>
+      act(() => {
+        root.render(
+          <GameUiProvider value={value}>
+            <AssemblyFloor G={G} session={G.assembly!} />
+          </GameUiProvider>,
+        );
+      });
+
+    draw();
+    G.activeLaws = G.activeLaws.filter((law) => law.cardId !== laws[1].id);
+    G.assembly!.phase = "voting";
+    draw();
+    G.assembly!.phase = "closing";
+    draw();
+
+    // Nothing is ever retained, so nothing has to be released: the record on the
+    // closing floor is the record the engine holds, on the first frame.
+    expect(container.querySelector(".lawslabFalling")).toBeNull();
+    expect(container.querySelectorAll(".asmSlabTrigger")).toHaveLength(1);
+    expect(container.querySelector(".asmStanding .asmStandingKey")?.textContent).toBe(
+      `Standing laws · 1 of ${G.ruleset.assembly.lawCap}`,
+    );
   });
 
   it("marks a station the house has left as done, not merely not-current", () => {

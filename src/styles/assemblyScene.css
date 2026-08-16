@@ -828,6 +828,127 @@
   background: rgb(192 70 28 / 14%);
 }
 
+/* ── The repeal ceremony (ASM-11) ──────────────────────────────────────────
+   A law that is struck used to VANISH: the engine dropped it from `activeLaws`
+   and the slab left the DOM on the same frame. A rule that stood for two years
+   has more to say about leaving than that.
+
+   The stone is read for a beat, splits, and goes over. Three movements, and the
+   timing is a contract with `CEREMONY_MS` in StandingLaw.tsx — the same
+   arrangement `LacquerDie`'s `FLIP_MS` has with `dieTumble`, and for the same
+   reason: the JS is what actually ends the moment, so the JS clock and the
+   animation have to agree or the stone is removed mid-fall.
+
+     0–350ms    still. The column has just come back on the closing floor and is
+                being read; a stone that starts falling before you have found it
+                is a glitch, not a ceremony.
+     350–830ms  the crack RUNS, top edge to bottom, splinters opening after the
+                main fracture reaches them. The slab shudders under it.
+     830–1530ms it tips on its own footing and goes, over the stones below it.
+
+   Under `prefers-reduced-motion` this element is never rendered at all — the
+   hook queues nothing and the law leaves on the frame the engine drops it, which
+   is the end state the fall was going to reach. The stillness block at the foot
+   of this file is not dead code covering that case: it covers the reader who
+   turns reduced motion ON while a stone is already in the air. */
+
+.lawslabFalling {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  /* It has left the record; it is not a thing to hover, read or tab to. */
+  pointer-events: none;
+  /* It pivots on its own footing, the corner the stone actually rests on — a
+     stele toppling about its centre reads as a card being swiped away. */
+  transform-origin: 0 100%;
+  animation: steleFall 1530ms linear forwards;
+}
+
+.asmCrack {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* A lit edge with a dark gap behind it. One stroke alone reads as a scratch ON
+     the stone; the offset shadow is what makes it read as a split THROUGH it. */
+  color: var(--ivory);
+  filter: drop-shadow(1px 1px 0 rgb(18 11 5 / 85%));
+}
+
+.asmCrack path {
+  /* `pathLength="1"` on every path (AssemblyIcons.tsx) normalises four fractures
+     of four different lengths to one dash, so a single offset walk draws each of
+     them end to end at its own pace. */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  /* The viewBox is stretched to the slab, so without this the hairline would be
+     drawn several times wider than it is tall. */
+  vector-effect: non-scaling-stroke;
+  animation: steleCrack 480ms linear 350ms forwards;
+}
+
+/* The splinters open OFF the main fracture, so they cannot precede it. */
+.asmCrack path + path {
+  animation-delay: 560ms;
+  animation-duration: 250ms;
+}
+
+@keyframes steleCrack {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes steleFall {
+  0%,
+  22% {
+    transform: none;
+    opacity: 1;
+  }
+
+  27% {
+    transform: translate3d(-1.2px, 0, 0);
+  }
+
+  33% {
+    transform: translate3d(1.2px, 0, 0);
+  }
+
+  40% {
+    transform: translate3d(-0.7px, 0, 0);
+  }
+
+  47% {
+    transform: translate3d(0.4px, 0, 0);
+  }
+
+  /* Square on its base for an instant, cracked through — then gravity. */
+  54% {
+    transform: none;
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.72);
+  }
+
+  100% {
+    transform: rotate(13deg) translate3d(7px, 64px, 0);
+    opacity: 0;
+  }
+}
+
+/* Stillness, for a preference changed mid-fall. The stone lands where the engine
+   already is — struck, and gone the moment the timeout in StandingLaw.tsx comes
+   round — rather than freezing upright on a record that no longer holds it. */
+@media (prefers-reduced-motion: reduce) {
+  .lawslabFalling {
+    opacity: 0;
+    animation: none;
+  }
+
+  .asmCrack path {
+    animation: none;
+  }
+}
+
 /* ── The scale ─────────────────────────────────────────────────────────────
    Two hero numerals over a tug bar with an ivory tie-notch, one potsherd per
    voter beneath it, then the verdict and the speaking order. */

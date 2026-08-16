@@ -26,7 +26,8 @@ import { Popover } from "../../overlays/Popover";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
-import { StandingLaw } from "./StandingLaw";
+import { FallingLaw, StandingLaw } from "./StandingLaw";
+import { useDepartedLaws, type DepartedLaws } from "./useDepartedLaws";
 import { verdict } from "./voteVerdict";
 
 /**
@@ -41,22 +42,39 @@ import { verdict } from "./voteVerdict";
  * as empty voids. A vote is about ONE card at a time; the seats belong at the
  * foot of the scene as plaques, not as five tall boxes competing with the thing
  * being voted on.
+ *
+ * The floor is also where the repeal ceremony is HELD, in the sense of held on
+ * to. A law is struck during the ballot, and the standing record is not drawn
+ * during the ballot — so nothing that unmounts with the record can remember what
+ * left it. This component spans all three faces of the sitting, so
+ * `useDepartedLaws` sits here and the struck stele survives the phase change to
+ * fall on the closing floor, where the sitting's news is read.
  */
 export function AssemblyFloor({ G, session }: { G: HegemonyState; session: AssemblySession }) {
+  const departed = useDepartedLaws(G.activeLaws);
+
   if (session.phase === "closing") {
-    return <ClosingFloor G={G} session={session} />;
+    return <ClosingFloor G={G} departed={departed} session={session} />;
   }
 
   if (session.phase === "voting") {
     return <VotingFloor G={G} session={session} />;
   }
 
-  return <ProposalFloor G={G} session={session} />;
+  return <ProposalFloor G={G} departed={departed} session={session} />;
 }
 
 // ── Proposal ────────────────────────────────────────────────────────────────────
 
-function ProposalFloor({ G, session }: { G: HegemonyState; session: AssemblySession }) {
+function ProposalFloor({
+  G,
+  departed,
+  session,
+}: {
+  G: HegemonyState;
+  departed: DepartedLaws;
+  session: AssemblySession;
+}) {
   const { viewerId } = useGameUi();
   const held = session.held[viewerId];
   const sealed = session.proposals[viewerId];
@@ -86,7 +104,7 @@ function ProposalFloor({ G, session }: { G: HegemonyState; session: AssemblySess
         ) : null}
       </div>
 
-      <StandingColumn G={G} />
+      <StandingColumn G={G} departed={departed} />
     </div>
   );
 }
@@ -96,12 +114,30 @@ function ProposalFloor({ G, session }: { G: HegemonyState; session: AssemblySess
  * most; the ones still bare get their own dashed slab, because "five empty" is a
  * fact you act on — it is the difference between proposing freely and having to
  * name a Law to tear down.
+ *
+ * Every count on this column — the heading, the bare-stelae line — is read off
+ * `G.activeLaws` and is therefore already correct on the frame a law is struck.
+ * A falling stone is spliced back in by its `order`, so it goes down in the place
+ * it stood, but it is not counted as standing by anything, because it is not
+ * standing. That is the point of the ceremony: the record says four, and you are
+ * watching the fifth go.
+ *
+ * The column draws whatever the floor is holding, in every phase it stands in. As
+ * the rules are written today only the ballot can drop a law, so in practice the
+ * stones only ever fall on the closing floor — but which phase a removal can
+ * happen in is the engine's business, and a column that only knew how to bury a
+ * law on one of its two appearances would silently go back to blinking the day
+ * that changed.
  */
-function StandingColumn({ G }: { G: HegemonyState }) {
+function StandingColumn({ G, departed }: { G: HegemonyState; departed: DepartedLaws }) {
   const cap = G.ruleset.assembly.lawCap;
   const laws = [...G.activeLaws].sort((a, b) => a.order - b.order);
   const bare = Math.max(0, cap - laws.length);
   const monuments = [...G.tallyMonuments].sort((a, b) => a.order - b.order);
+  const column = [
+    ...laws.map((law) => ({ law, key: null as number | null })),
+    ...departed.departing.map((entry) => ({ law: entry.law, key: entry.key })),
+  ].sort((a, b) => a.law.order - b.law.order);
 
   return (
     <section className="asmStanding">
@@ -109,9 +145,19 @@ function StandingColumn({ G }: { G: HegemonyState }) {
         Standing laws · {laws.length} of {cap}
       </h4>
 
-      {laws.map((law) => (
-        <LawSlab G={G} key={law.cardId} law={law} />
-      ))}
+      {column.map((entry) =>
+        entry.key === null ? (
+          <LawSlab G={G} key={entry.law.cardId} law={entry.law} />
+        ) : (
+          <FallingLaw
+            content={G.definition.content}
+            entryKey={entry.key}
+            key={`fall-${entry.key}`}
+            onFallen={departed.release}
+            stele={entry.law}
+          />
+        ),
+      )}
 
       {bare > 0 ? (
         <p className="asmSlabBare body-em">
@@ -729,11 +775,22 @@ function targetSummary(G: HegemonyState, card: ResolutionCard, target: PlayerId)
  * · The standing-laws column stood beside the card through the whole proposal
  *   and vanished at the exact moment it had news — the stele that was just
  *   planted is the outcome of everything the sitting did. It comes back.
+ *   It is also where a law that was STRUCK is seen to go: the record returns as
+ *   it stood, and the stele the house voted down cracks and falls out of it
+ *   while the recap beside it reads the same news in words (ASM-11).
  * · Content stopped at y≈380 with the seats at 770, and at 1920 roughly 85% of
  *   the scene was empty black. Three columns of real objects, stretched to the
  *   floor's height, is what fills it — not padding.
  */
-function ClosingFloor({ G, session }: { G: HegemonyState; session: AssemblySession }) {
+function ClosingFloor({
+  G,
+  departed,
+  session,
+}: {
+  G: HegemonyState;
+  departed: DepartedLaws;
+  session: AssemblySession;
+}) {
   const ranked = [...PLAYER_IDS].sort(
     (a, b) =>
       G.assemblyPassedByPlayer[b] - G.assemblyPassedByPlayer[a] ||
@@ -763,7 +820,7 @@ function ClosingFloor({ G, session }: { G: HegemonyState; session: AssemblySessi
           <p className="asmCapNote body-em">{steleNote(G)}</p>
         </section>
 
-        <StandingColumn G={G} />
+        <StandingColumn G={G} departed={departed} />
 
         <section className="asmRecap">
           {/* "Voice ledger · authored resolutions passed" wrapped, orphaning
