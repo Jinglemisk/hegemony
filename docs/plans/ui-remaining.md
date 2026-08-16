@@ -29,11 +29,11 @@ when it ships or when the owner rules it closed.
 
 ## The list
 
-| ID       | needs      | what                                                                 |
-| -------- | ---------- | -------------------------------------------------------------------- |
-| `ICON-1` | nobody     | `AtlasIcon` is a fourth icon system, and the line art already exists |
-| `TYPE-1` | a decision | Two type sizes sit under spec, on purpose                            |
-| `DUP-1`  | nothing    | Five repeated glossary words, judged and left                        |
+| ID       | needs      | what                                                              |
+| -------- | ---------- | ----------------------------------------------------------------- |
+| `TYPE-1` | a decision | Two type sizes sit under spec, on purpose                         |
+| `DUP-1`  | nothing    | Five repeated glossary words, judged and left                     |
+| `TERR-1` | nobody     | The terrain chip is the last raster, and it paints the wrong cell |
 
 ### Shipped
 
@@ -195,21 +195,54 @@ token _rename_ is not. And the plate currently supplies the map's contrast again
 the bone tablets; a flat texture may need the tablets' shadow doing more work.
 Check the Assembly too, whose full-bleed floor sits over this ground.
 
-## ICON-1 — the fourth icon system
+## ICON-1 — the fourth icon system · **shipped**
 
-The overhaul's standing rule is **SVG line icons only**. The happiness raster and
-its five mood variants are gone, and `ResourceIcon` now draws the same `<Icon>`
-glyph as everything else.
+`AtlasIcon` drew tinted PNG masks off `--icon-atlas` for pops, buildings and
+settlement kinds across nine components. All nine now ask `<Icon>` for a glyph off
+`iconRegistry`, the component and its sprite-class table are gone, and so are the
+two alpha-keyed PNGs and the CSS that loaded them. No glyph had to be drawn: the
+line art for every atlas cell already existed.
 
-`AtlasIcon` did not get the same treatment. It still draws tinted PNG masks off
-`--icon-atlas` for pops, buildings, settlement kinds and terrain, across ~11
-files — and five of its call sites alias onto four painted cells, so two
-different things already share a picture.
+**The point of it was never the file count.** The sprite sheet had four painted
+building cells and nine buildings, so `ICON_SPRITE_CLASSES` aliased five of them
+onto the other four's art — the forum wore the marketplace's stall, the aqueduct
+and the villa shared the granary's roof, the odeon and the gymnasion shared the
+temple. Those five buildings had been showing another building's picture since
+they were added, and the swap is what fixed it.
 
-`POP_GLYPHS`, `BUILDING_GLYPHS`, `SETTLEMENT_GLYPHS` and `TERRAIN_GLYPHS` already
-exist as line art for **every one** of them. This is the same defect as the
-happiness raster, one register over, and it is mostly a mechanical swap plus a
-careful look at the five aliased cells.
+**Why nothing caught it, which is the part worth keeping.** `iconRegistry.test.ts`
+asserts that no two members of one family share a glyph, and it ran that check over
+the six _effect_ families only. The noun families were exempt — not by judgement,
+but because the registry was not what drew them; a CSS class table was, and no test
+can see a duplicate that lives there. They are all registry-drawn now, so the check
+walks every family: 12 assertions became 21.
+
+### What was deliberately left
+
+- **`light-icon-atlas.png`**, the painted original, stays under `assets/`. Only the
+  alpha-keyed derivative was deleted. `docs/reference/codex-banana-showcase.html`
+  displays the original as part of the design record — the same reason the sea
+  plate stayed on disk when the sea became CSS.
+- **The terrain sheet.** `TerrainSprite` is a different token and a different
+  component, and it turned up a defect of its own — see `TERR-1`.
+
+## TERR-1 — the terrain chip is the last raster, and it paints the wrong cell
+
+`TerrainSprite` still cuts a cell out of `light-terrain-atlas.png`, so the terrain
+hexagon on a settlement summary card (the found-colony and upgrade previews, its
+only two appearances) is a muddy brown raster sitting beside line art. With ICON-1
+landed it is the only raster icon left in the app.
+
+**And it has never shown the right cell.** `--sprite-x/y` only ever fed
+`mask-position`; `.atlasTerrain` paints with `background-image`, which has always
+taken its default `0 0`. Every terrain chip shows the sheet's top-left corner
+whatever the terrain is — a forest tile draws the mountain. The cell coordinates
+are still in `sprites.css` for whoever takes this.
+
+`TERRAIN_GLYPHS` already covers all five terrains including the oracle, which the
+painted sheet never had a cell for.
+
+## ASM-11 — the repeal ceremony · **shipped** (`9f8432f`)
 
 ## ASM-11 — the repeal ceremony · **shipped** (`9f8432f`)
 
