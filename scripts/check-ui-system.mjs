@@ -28,7 +28,7 @@ const listMode = process.argv.includes("--list");
  */
 const budgets = {
   "font-size": 131,
-  "raw-hex": 47,
+  "raw-hex": 44,
   "printed-mechanics": 0,
 };
 

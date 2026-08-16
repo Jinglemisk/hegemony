@@ -621,12 +621,11 @@
 }
 
 /* ── The sea ──────────────────────────────────────────────────────────────
-   The painted chart, full-bleed under the board, with a vignette so the bone
-   tablets lying on it read as ON the table rather than cut out of it. */
-.hexMap {
-  background: var(--sea-chart) center / cover no-repeat;
-}
-
+   The ground is map.css's business now (`--sea-ground` + `--sea-grain`); this
+   sheet used to override it with a `center / cover` painting and no longer does.
+   What stays here is the vignette, so the bone tablets lying on the water read
+   as ON the table rather than cut out of it. It has to work harder than it did:
+   the plate supplied its own darkened edge, and a tiling texture supplies none. */
 .mapStage::after {
   content: "";
   position: absolute;
