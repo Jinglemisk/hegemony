@@ -38,8 +38,26 @@ describe("every typed effect has an icon", () => {
     it(`${family}: covers exactly the discriminants the parity manifest ships`, () => {
       expect(Object.keys(registry).sort()).toEqual(Object.keys(manifest).sort());
     });
+  }
+});
 
-    it(`${family}: gives each discriminant its OWN glyph`, () => {
+/**
+ * The no-duplicate rule, over EVERY family rather than the effect ones.
+ *
+ * The noun families sat outside this check until ICON-1, because they were not
+ * what drew the UI: pops, buildings and settlement kinds came off a painted
+ * sprite atlas whose sheet had four building cells for nine buildings. The forum
+ * wore the marketplace's stall; the aqueduct and the villa shared the granary's
+ * roof; the odeon and the gymnasion shared the temple. Five buildings, three
+ * borrowed pictures, and nothing in the suite could say so — the duplication was
+ * in a CSS class table the registry never saw.
+ *
+ * Every one of those is an `<Icon>` off this registry now, so the guarantee that
+ * caught it for effects can finally cover them too.
+ */
+describe("no family shows two things the same picture", () => {
+  for (const [family, registry] of Object.entries(ICON_REGISTRY_FAMILIES)) {
+    it(`${family}: gives each member its OWN glyph`, () => {
       const glyphs = Object.values(registry) as GlyphId[];
       const duplicates = glyphs.filter((glyph, index) => glyphs.indexOf(glyph) !== index);
 

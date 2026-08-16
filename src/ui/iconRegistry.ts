@@ -25,7 +25,9 @@ import type { GlyphId } from "./icons/glyphs";
  * a question mark rendered at runtime. `iconRegistry.test.ts` additionally asserts
  * that no two members of the SAME family share a glyph — that is what "a dedicated
  * icon per effect" means in practice, and a totality check alone would happily
- * accept eleven law effects all pointing at one shrug.
+ * accept eleven law effects all pointing at one shrug. Since ICON-1 that assertion
+ * covers the noun families too — they were exempt only because a sprite atlas, not
+ * this registry, was drawing them.
  *
  * Sharing ACROSS families is intended and load-bearing: `forest` terrain and the
  * `wood` resource are one tree because they are one thing. When two entries in
@@ -84,9 +86,10 @@ export const VERB_GLYPHS = {
   endTurn: "hourglass",
 } as const satisfies Record<VerbId, GlyphId>;
 
-/** Nine rooflines. The sprite atlas had to alias five of these onto four painted
- *  cells (forum→marketplace, aqueduct→granary, odeon/villa/gymnasion→temple);
- *  drawn as line icons each building finally gets its own architecture. */
+/** Nine rooflines, nine drawings. The sprite atlas these replaced had four painted
+ *  building cells and aliased five buildings onto them (forum→marketplace,
+ *  aqueduct/villa→granary, odeon/gymnasion→temple) — which is what a family sitting
+ *  outside the no-duplicate test looks like from the player's side of the screen. */
 export const BUILDING_GLYPHS = {
   marketplace: "marketplace",
   temple: "temple",
