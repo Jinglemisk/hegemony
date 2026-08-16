@@ -161,6 +161,16 @@ export interface EventCard {
   name: string;
   count: number;
   text: string;
+  /**
+   * The card's own voice — presentation only, never a rule.
+   *
+   * `text` is the mechanical sentence and stays the single source of what the
+   * card DOES; this is the one or two lines that say what it feels like. No
+   * reducer, query, cost, probability or simulation policy may read it, and a
+   * card that has none simply omits it — the flavour slot is skipped, not
+   * blanked. Authored in `data.ts`; see `PendingPlayerEventModal` for the slot.
+   */
+  flavor?: string;
   timing: EventTiming;
   effects: EventEffect[];
   /**
