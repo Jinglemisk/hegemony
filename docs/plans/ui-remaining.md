@@ -36,7 +36,6 @@ when it ships or when the owner rules it closed.
 | `BUILD-2`    | a decision    | An open socket should be pressable, and open the buildings you could raise there |
 | `BOARD-BG-1` | a decision    | The sea plate becomes a texture: no iconography, no cartographic border          |
 | `ICON-1`     | nobody        | `AtlasIcon` is a fourth icon system, and the line art already exists             |
-| `ASM-11`     | nobody        | The repeal crack-and-fall ceremony                                               |
 | `TYPE-1`     | a decision    | Two type sizes sit under spec, on purpose                                        |
 | `DUP-1`      | nothing       | Five repeated glossary words, judged and left                                    |
 
@@ -201,15 +200,28 @@ exist as line art for **every one** of them. This is the same defect as the
 happiness raster, one register over, and it is mostly a mechanical swap plus a
 careful look at the five aliased cells.
 
-## ASM-11 — the repeal ceremony
+## ASM-11 — the repeal ceremony · **shipped** (`9f8432f`)
 
-A law that is repealed vanishes the instant it leaves `activeLaws`. The designed
-moment is the stele cracking and falling.
+A struck law now cracks and falls. Kept here only for the finding that shaped it,
+because it is the kind of thing that gets re-broken by someone who does not know:
 
-Out of scope since the original overhaul run, for the same reason: an exit
-animation needs the component to **retain the departing law** after the state has
-dropped it, which is real state machinery rather than styling. The component that
-would host it — one object for a law's three lives — does exist.
+**A repeal is enacted during the ballot, and the standing column is not drawn
+during the ballot.** It stands beside the card through proposal, disappears for
+the vote, and returns on the closing floor. So the departure happens while
+nothing is rendering it — a time-boxed "falling" flag started at detection would
+have expired, unwatched, in a phase with no column in it, and the stone would
+still have blinked out when the record came back.
+
+The retention is therefore a **queue, held indefinitely**, that records the
+departure, with the ceremony's clock starting only when the slab mounts. It lives
+on `AssemblyFloor`, which spans all three phases, rather than on the column, which
+does not. The engine stays the authority throughout: the hook diffs `activeLaws`
+and holds a copy, the falling stone is `aria-hidden` and counted by nothing, and
+the heading reads `0 of 1` while the stone is still visibly coming down.
+
+**A monument cannot be repealed** — `G.tallyMonuments` is append-only, so a
+resolved Directive is permanent. That case does not exist rather than being
+unhandled.
 
 ## TYPE-1 — two sizes under spec, on purpose
 
