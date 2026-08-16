@@ -110,7 +110,14 @@ export function CommandVerb({
       onClick={enabled ? () => verb.select(handlers) : undefined}
       type="button"
     >
-      <Icon glyph={VERB_GLYPHS[verb.id]} size="verb" />
+      {/* The knob is the disc, and it is a separate box from the button on
+          purpose: the button is the whole 76px column — disc, name and price —
+          while every state the verb has (rest, hover lift, armed clay, dimmed)
+          belongs to the round part alone. Styling the button instead is what
+          made the pre-disc version a flat highlighted rectangle. */}
+      <span className="verbKnob">
+        <Icon glyph={VERB_GLYPHS[verb.id]} size="rail" />
+      </span>
       <span className="verbLabel verb">{verb.label}</span>
       {verb.cost ? <VerbCostSlot clauses={clauses} context={context} /> : null}
     </button>

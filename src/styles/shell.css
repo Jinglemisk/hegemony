@@ -396,7 +396,22 @@
   padding: 0;
 }
 
-/* The spine's reach is a token, and the token is what the ticker's cap is
+/* ── The verb dock (DOCK-1) ───────────────────────────────────────────────
+   Seven discs threaded on the bar's top edge, each standing PROUD of it, with
+   its name and its price set beneath it on the bone.
+
+   The overhaul had replaced the discs with flat labels inside the bar, and the
+   dock stopped reading as a row of things you press: seven equal rectangles of
+   text on a plate look like a legend, and the only feedback a press had was a
+   6% wash behind the words. A disc that stands out of the frame is a thing you
+   can reach — the same sentence the two dials are drawn to, one register down.
+
+   The spine's box is the bar PLUS the overhang, top-aligned, so a disc's top
+   edge lands at --vb-out above the bar and the label and price fall inside the
+   bone underneath it. --chrome-bot is already `--bot-h + --vb-out`, so the
+   camera has been holding room for exactly this the whole time.
+
+   The spine's reach is a token, and the token is what the ticker's cap is
    measured against — the two used to disagree, because the spine was sized by
    seven unscaled `min-width`s while everything around it rode --ui-scale. */
 .verbSpine {
@@ -406,9 +421,9 @@
   z-index: 2;
   display: flex;
   gap: var(--verb-gap);
-  align-items: flex-end;
+  align-items: flex-start;
   width: var(--verb-spine-w);
-  height: var(--bot-h);
+  height: calc(var(--bot-h) + var(--vb-out));
   transform: translateX(-50%);
 }
 
@@ -420,60 +435,121 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2px;
+  gap: calc(4px * var(--ui-scale));
   flex: 0 0 var(--verb-col);
   min-width: 0;
-  padding: 6px 4px 5px;
+  padding: 0;
   border: 0;
-  border-radius: 4px;
+  border-radius: 10px;
   color: var(--ink);
   background: none;
+  /* Nothing here may clip: the knob is flush with the button's top edge and its
+     hover lifts it 3px, so a clipping parent shaves those pixels off against a
+     rounded rectangle and squares off the top of the circle. */
+  overflow: visible;
+  text-align: center;
 }
 
+/* The global button chrome drops a 0 12px 24px shadow on the whole 76px column,
+   which reads as a stray rounded box floating behind the verb. The knob carries
+   the entire hover state. */
 .railVerb:not([aria-disabled="true"]):hover {
-  background: rgb(36 25 16 / 6%);
+  background: none;
   box-shadow: none;
   transform: none;
 }
 
-.railVerb .icon {
-  opacity: 0.9;
+/* The disc. It is half over the sea, so its shadow is a laid one at full
+   strength rather than the bone-on-bone --lift: on water a 20% drop disappears
+   and the disc reads as a sticker. */
+.verbKnob {
+  display: grid;
+  place-items: center;
+  width: var(--vb);
+  height: var(--vb);
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--disc);
+  box-shadow:
+    0 0 0 1px var(--ring),
+    0 3px 10px rgb(24 18 16 / 30%);
+  transition:
+    background 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
-.verbLabel {
-  color: inherit;
+.railVerb:not([aria-disabled="true"]):hover .verbKnob {
+  background: var(--disc-hi);
+  box-shadow:
+    0 0 0 1px var(--ink-30),
+    0 7px 16px rgb(24 18 16 / 34%);
+  transform: translateY(-3px);
 }
 
-.railVerbArmed {
+/* The armed verb is the one clay mass on the bar. The LABEL stays on the bone
+   and goes clay-deep rather than riding an ivory-on-clay block: an armed verb is
+   a state of the disc you pressed, not a highlighted row. */
+.railVerbArmed .verbKnob {
   color: var(--ivory);
   background: var(--clay);
+  box-shadow:
+    0 0 0 1px rgb(143 46 19 / 55%),
+    0 6px 18px rgb(192 70 28 / 42%);
 }
 
-.railVerbArmed:not([aria-disabled="true"]):hover {
+.railVerbArmed:not([aria-disabled="true"]):hover .verbKnob {
   background: var(--clay-deep);
 }
 
-/* Blocked: dim the whole verb far enough to read as unavailable, then bring the
-   part of the price you cannot pay back to full strength in --neg. The player
-   gets the answer without hovering, and the tooltip still carries the sentence. */
+.railVerbArmed .verbLabel {
+  color: var(--clay-deep);
+}
+
+.railVerbArmed .verbCost {
+  color: var(--ink-66);
+}
+
+/* Blocked. The dimming is per element, never a blanket opacity on the button:
+   the flat version faded the whole verb to 38% and then had to un-fade the
+   oxblood figure with `opacity: 2.63`, which is a number that only means
+   anything if you know what it is cancelling. An unaffordable price is oxblood
+   at full strength because it is oxblood, not because arithmetic restored it. */
 .railVerbOff {
-  opacity: 0.38;
   cursor: not-allowed;
 }
 
-.railVerbOff .verbCostShort {
-  color: var(--neg);
-  font-weight: 700;
-  opacity: 2.63; /* 1 / 0.38 — cancels the parent's dim for this span alone */
+/* A blocked disc is still a disc: it keeps a solid plate and loses its lift and
+   its ink. The pre-overhaul rule washed it to 55% ivory, which was fine when a
+   bar sat behind it and reads as a hole once half the disc is over open water. */
+.railVerbOff .verbKnob {
+  color: var(--ink-30);
+  background: rgb(250 243 226 / 88%);
+  box-shadow:
+    0 0 0 1px var(--ink-12),
+    0 1px 3px rgb(24 18 16 / 16%);
+}
+
+.railVerbOff .verbLabel,
+.railVerbOff .verbCost,
+.railVerbOff .verbCost em {
+  color: var(--ink-30);
 }
 
 .verbCost {
   display: flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 4px;
   min-height: 12px;
   color: var(--ink-66);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.verbLabel {
+  color: var(--ink);
+  line-height: 1;
 }
 
 .verbCost em {
@@ -488,12 +564,20 @@
 }
 
 .verbCostItem .icon {
-  width: 0.813rem;
-  height: 0.813rem;
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
-.railVerbArmed .verbCost {
-  color: rgb(255 248 231 / 78%);
+/* A figure you cannot pay is oxblood WHEREVER it appears — judged per
+   alternative and per range end, and never gated on whether the button beside it
+   happens to be dimmed. Calm is the case that proves it: it is blocked on
+   "once per turn", not on money, so it stays clickable while you hold one
+   influence against a price of four, and under the old rule its `4 or 6` sat
+   there in quiet grey. Last in the cascade so it wins over both the resting and
+   the blocked colour. */
+.verbCostShort {
+  color: var(--neg);
+  font-weight: 700;
 }
 
 /* The ticker: narration on the bar, clear of the dial's reach and stopping short
