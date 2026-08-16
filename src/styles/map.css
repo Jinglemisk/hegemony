@@ -192,8 +192,3 @@
   flex: 0 0 auto;
   background-color: currentColor;
 }
-
-.atlasTerrain {
-  background-image: var(--terrain-atlas);
-  background-size: 218% 218%;
-}

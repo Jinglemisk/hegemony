@@ -1,35 +1,13 @@
-/* sprites — terrain sheet cell positions + terrain map-mode swatches
+/* sprites — terrain map-mode swatches
    Split from styles.css (Phase 2e); original source order preserved.
 
-   The sixteen icon-atlas cells that used to head this file are gone with the
-   atlas itself (ICON-1). What is left is the terrain sheet's four corners.
-
-   NOTE, and it is a live defect rather than a leftover: nothing reads
-   --sprite-x/y any more. They only ever fed `mask-position`, and .atlasTerrain
-   paints with `background-image`, which has always taken its default 0 0 — so
-   every terrain chip shows the sheet's top-left corner regardless of terrain.
-   That was true before ICON-1 too; it is the terrain sheet's own job to fix,
-   and the cell coordinates are kept here so whoever takes it has them. */
-
-.atlasTerrain.sprite-terrain-mountain {
-  --sprite-x: 6%;
-  --sprite-y: 6%;
-}
-
-.atlasTerrain.sprite-terrain-hill {
-  --sprite-x: 94%;
-  --sprite-y: 6%;
-}
-
-.atlasTerrain.sprite-terrain-forest {
-  --sprite-x: 6%;
-  --sprite-y: 94%;
-}
-
-.atlasTerrain.sprite-terrain-plains {
-  --sprite-x: 94%;
-  --sprite-y: 94%;
-}
+   The icon atlas went with ICON-1 and the terrain sheet went with TERR-1. The
+   terrain chip had never painted the cell it selected: --sprite-x/y only ever
+   fed `mask-position`, while .atlasTerrain painted with `background-image`,
+   which took its default 0 0 — so every chip showed the sheet's top-left
+   corner, and a forest tile drew a mountain. The oracle was aliased onto the
+   hill's art besides. Both are gone; the chip draws TERRAIN_GLYPHS now, where
+   all five terrains are their own line drawing. */
 
 .tileConfirmObject {
   overflow: visible;

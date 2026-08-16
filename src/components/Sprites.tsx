@@ -1,16 +1,6 @@
-import type { Resource, Terrain } from "../game/types";
+import type { Resource } from "../game/types";
 import { RESOURCE_GLYPHS } from "../ui/iconRegistry";
 import { Icon } from "../ui/icons/Icon";
-
-const TERRAIN_SPRITE_CLASSES: Record<Terrain, string> = {
-  mountain: "sprite-terrain-mountain",
-  hill: "sprite-terrain-hill",
-  forest: "sprite-terrain-forest",
-  plains: "sprite-terrain-plains",
-  // The oracle has no atlas cell yet; the bare hill art is the nearest read (rock, no
-  // yield). The map polygon carries the oracle's real, distinct colour.
-  oracle: "sprite-terrain-hill",
-};
 
 /**
  * A resource, drawn the way every other icon in the app is drawn.
@@ -36,19 +26,4 @@ export function ResourceIcon({
   className?: string;
 }) {
   return <Icon glyph={RESOURCE_GLYPHS[resource]} className={className} />;
-}
-
-export function TerrainSprite({
-  terrain,
-  className = "",
-}: {
-  terrain: Terrain;
-  className?: string;
-}) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`atlasSprite atlasTerrain terrainTint-${terrain} ${TERRAIN_SPRITE_CLASSES[terrain]} ${className}`}
-    />
-  );
 }

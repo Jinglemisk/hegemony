@@ -10,8 +10,7 @@ import {
 } from "../game/rules";
 import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, tileCssVars } from "../ui/resourceVisuals";
-import { TerrainSprite } from "./Sprites";
-import { BUILDING_GLYPHS, POP_GLYPHS, SETTLEMENT_GLYPHS } from "../ui/iconRegistry";
+import { BUILDING_GLYPHS, POP_GLYPHS, SETTLEMENT_GLYPHS, TERRAIN_GLYPHS } from "../ui/iconRegistry";
 import { Icon } from "../ui/icons/Icon";
 import { ResourceChips } from "./board/ResourceChips";
 import { capitalize } from "./board/helpers";
@@ -98,7 +97,7 @@ export function SettlementSummaryCard({
         }
       >
         <span className="summaryTerrain" aria-hidden="true">
-          <TerrainSprite terrain={tile.terrain} className="terrainChip" />
+          <Icon className="terrainChip miniIcon" glyph={TERRAIN_GLYPHS[tile.terrain]} size="rail" />
         </span>
       </span>
 

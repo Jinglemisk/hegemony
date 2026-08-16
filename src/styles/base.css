@@ -355,7 +355,6 @@
      sit beside it are gone: every pop, building, settlement kind and resource is
      an `<Icon>` line glyph now, so there is nothing left to mask. The painted
      originals stay under assets/ because the showcase pages document them. */
-  --terrain-atlas: url("../../assets/codex-banana-showcase/light-terrain-atlas.png");
 }
 
 * {
