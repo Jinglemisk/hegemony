@@ -454,14 +454,6 @@
   white-space: nowrap;
 }
 
-/* The bare glyph — no plate. It is an .atlasIcon, so the atlas mask and the
-   sprite-capital/city/colony cell do the drawing; this only sets the ink. */
-.settlementIdentityIcon {
-  width: 28px;
-  height: 28px;
-  color: var(--clay-deep);
-}
-
 .summaryTerrain {
   display: inline-flex;
   align-items: center;
