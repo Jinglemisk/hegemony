@@ -14,6 +14,7 @@ import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { actionRequirementText, getBuildingBenefitText } from "../helpers";
 import type { OwnedHolding } from "../types";
+import { buildRefusal, shortfallOf } from "./buildRefusal";
 import { slotsOf } from "./slots";
 
 /**
@@ -33,24 +34,6 @@ import { slotsOf } from "./slots";
  * `SIKYON · NO SLOT` — and when the price is what stops you, that is a fact
  * about the card and not about any one settlement, so the card says it once.
  */
-
-/**
- * The WHOLE part of a price you cannot pay: "short by 1 wood + 11 stone".
- *
- * This used to return on the first short resource in `RESOURCE_ORDER` and word
- * it as a complete requirement — "needs 1 more wood" — so a Gymnasion at 4 wood
- * and 12 stone told a player holding 3 wood and 1 stone to buy one plank, and
- * then refused the press anyway. Five of nine cards named wood and hid stone.
- * "Short by" is deliberate: "needs N" can be read as the price itself, and the
- * phrase has to survive being stamped on a button in caps.
- */
-function shortfallOf(cost: Resources | Partial<Resources>, held: Resources): string | null {
-  const gaps = RESOURCE_ORDER.filter((resource) => (cost[resource] ?? 0) > held[resource]).map(
-    (resource) => `${formatNumber((cost[resource] ?? 0) - held[resource])} ${resource}`,
-  );
-
-  return gaps.length === 0 ? null : `short by ${gaps.join(" + ")}`;
-}
 
 function CostRow({
   cost,
@@ -159,15 +142,12 @@ export function BuildingsTab({
                 const name = settlementNameOf(G.board.tiles, settlement.id);
                 const disabled = shut !== null || !status.can;
                 // Why this place says no, as a phrase short enough to wear. The
-                // facts come from state, never from parsing the engine's prose.
+                // facts come from state, never from parsing the engine's prose —
+                // and the wording lives in `./buildRefusal`, where the Cities
+                // page's socket picker reads the same sentence for the same case.
                 const blocker = !disabled
                   ? null
-                  : (wholeCard ??
-                    (room <= 0
-                      ? "no slot"
-                      : settlement.buildings.includes(building.id)
-                        ? "already raised"
-                        : (shortfall ?? "cannot raise here")));
+                  : (wholeCard ?? buildRefusal(settlement, building, room, shortfall));
                 // The heading already said the verb ("raise in an open slot"), so
                 // a live target only has to name its place — which is also what
                 // keeps two of them on one line inside a 306px tablet.

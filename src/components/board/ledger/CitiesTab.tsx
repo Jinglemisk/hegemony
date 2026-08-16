@@ -64,11 +64,13 @@ function CityIncome({ resources }: { resources: Resources }) {
 
 export function CitiesTab({
   holdings,
+  onBuildBuildingRequest,
 }: {
   holdings: OwnedHolding[];
-  /** Raising is the Build page's act now, not this one's. The prop stays on the
-   *  type so the panel's call site is untouched. */
-  onBuildBuildingRequest?: (tileId: string, buildingId: BuildingId) => void;
+  /** Raising, taken from the socket that showed the room. This prop sat here
+   *  unused for a whole run: the page was handed the act and never plugged it
+   *  in, so the sockets drew a question the page could not answer. */
+  onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
   const { G } = useGameUi();
 
@@ -141,8 +143,10 @@ export function CitiesTab({
             </div>
 
             <BuildingSockets
-              built={settlement.buildings}
               content={G.definition.content}
+              holding={holding}
+              name={name}
+              onBuildBuildingRequest={onBuildBuildingRequest}
               slots={slots}
             />
 

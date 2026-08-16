@@ -284,6 +284,27 @@
   border: 1.6px dashed var(--ink-30);
 }
 
+/* An open socket is pressable, and the `+` is the whole of the invitation. The
+   box is NOT resized to advertise itself: 26px already clears the 24px target
+   floor, and growing it would push the row's caption onto a second line on every
+   card at once. So the affordance is paid for in ink — the outline closes and
+   takes clay — rather than in space. */
+.socketAdd {
+  color: var(--ink-30);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.socketAdd:hover,
+.socketAdd[aria-expanded="true"] {
+  border-style: solid;
+  border-color: var(--clay);
+  color: var(--clay);
+  background: var(--panel-soft);
+}
+
 .socketCap {
   color: var(--ink-63);
   font-weight: 700;
@@ -294,6 +315,177 @@
   margin: 8px 0 0;
   color: var(--ink-63);
   font-style: italic;
+}
+
+/* ── What could stand here ────────────────────────────────────────────────
+   The socket's answer, pinned to the socket. One surface, and inside it nothing
+   is boxed: a hairline under the head, a hairline between options, and the only
+   fill is the band a live option takes under the cursor. The card behind it
+   stays readable, which is the reason this is a popover and not a page. */
+
+.socketPicker {
+  width: min(324px, calc(100vw - 24px));
+  padding: 10px 11px 11px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 10px;
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: var(--float);
+  transition: opacity 0.12s ease;
+}
+
+/* The surface takes focus on open so a screen reader announces the dialog, but
+   it is not a control and the browser's own blue ring is both off-palette and a
+   lie about what is pressable. The first Tab lands on an option, which rings. */
+.socketPicker:focus-visible {
+  outline: none;
+}
+
+/* The arrow is drawn by the shared popover, in the map's cream. It has to be
+   this surface's own ivory or it reads as a chip stuck to the corner. */
+.socketPicker .sharedPopoverArrow {
+  border-color: var(--line-strong);
+  background: var(--ivory);
+}
+
+.socketPickerHead {
+  margin: 0 0 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--ink-12);
+  color: var(--clay-deep);
+}
+
+/* The list scrolls, not the surface — an overflow on the popover itself clips
+   the arrow off its own edge.
+   The ceiling is what keeps the picker out of the chrome. Nine buildings at full
+   height come to ~440px, and a socket sits low enough in the tablet that the
+   anchoring flips the panel upward: at 1366×768 that put its head across the
+   fate and season slips in the top bar. The popover cannot be told to respect
+   the chrome — it clamps to the viewport — so it is told to be shorter, and the
+   ninth building is one scroll away instead of on top of the omen. */
+.socketPickList {
+  display: flex;
+  flex-direction: column;
+  max-height: min(42vh, 320px);
+  overflow-y: auto;
+  scrollbar-color: var(--clay) transparent;
+}
+
+/* [tile] [name .......... price]
+          [what it does        ]
+          [why not, if not     ]
+   The price sits on the name's line because that is the pair the decision is
+   made from; the effect explains it underneath, and a refusal takes the third
+   line rather than displacing either fact. */
+.socketOption {
+  display: grid;
+  grid-template-areas:
+    "tile name cost"
+    "tile effects effects"
+    "tile blocker blocker";
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1px 9px;
+  width: 100%;
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--ink-12);
+  border-radius: 4px;
+  text-align: left;
+}
+
+.socketPickList > :last-child {
+  border-bottom: 0;
+}
+
+.socketOption:not([aria-disabled="true"]):hover {
+  background: var(--ink-07);
+}
+
+/* The ring turns INWARD. The list is the scroll container, so an offset ring on
+   the first or last row is cropped by the very edge it is trying to stand
+   against — the top row showed a single teal line under itself and nothing
+   above. Inset, it is whole on every row including the two ends. */
+.socketOption:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: -2px;
+}
+
+.socketOptionTile {
+  display: grid;
+  grid-area: tile;
+  place-items: center;
+  align-self: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  color: var(--ink);
+  background: var(--bone);
+  box-shadow: inset 0 0 0 1.4px rgb(36 25 16 / 40%);
+}
+
+.socketOptionName {
+  grid-area: name;
+  align-self: center;
+  color: var(--clay-deep);
+}
+
+.socketOptionCost {
+  display: flex;
+  grid-area: cost;
+  align-self: center;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.socketCostItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.socketOptionEffects {
+  display: flex;
+  grid-area: effects;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.socketOptionEffects .caption {
+  color: var(--ink-66);
+}
+
+/* The refusal, in the same oxblood the Build page spends on a price you cannot
+   pay. */
+.socketOptionBlocker {
+  grid-area: blocker;
+  margin-top: 2px;
+  color: var(--neg);
+}
+
+/* A refused option stands down in INK, not in opacity. A row-level `opacity`
+   composites the whole row as one group, so the oxblood inside it is dimmed
+   along with everything else and cannot be lifted back out — the 1/0.55 counter
+   trick on the Build card is a no-op for exactly that reason. Standing the name
+   down instead leaves the two things the row came to say — what it costs, and
+   what is missing — at full strength on a row you cannot press. */
+.socketOptionGhost {
+  cursor: not-allowed;
+}
+
+.socketOptionGhost .socketOptionName {
+  color: var(--ink-63);
+}
+
+.socketOptionGhost .socketOptionTile {
+  color: var(--ink-63);
+  background: none;
+  box-shadow: inset 0 0 0 1.4px var(--ink-30);
+}
+
+.socketOptionGhost .socketCostShort {
+  color: var(--neg);
 }
 
 /* Band 4 — the take. Only what moved: the old strip printed all six resources

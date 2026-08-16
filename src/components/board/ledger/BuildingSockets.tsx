@@ -1,7 +1,11 @@
+import { useState } from "react";
 import type { GameContent } from "../../../game/content";
 import { getBuilding } from "../../../game/rules";
 import type { BuildingId } from "../../../game/types";
+import { Icon } from "../../../ui/icons/Icon";
+import type { OwnedHolding } from "../types";
 import { BuildingChip } from "./BuildingChip";
+import { SocketPicker } from "./SocketPicker";
 
 /**
  * The socket — the one primitive the showcase has and the app never built.
@@ -14,6 +18,12 @@ import { BuildingChip } from "./BuildingChip";
  * target buttons naming "NO SLOT") are all the same missing idea, so the count
  * and the drawing are one idea: the count lives in `./slots`, the drawing here,
  * and every surface asks them rather than counting buildings for itself.
+ *
+ * And an open socket is a **control**, not a picture of one. It carried a gap
+ * and nothing else: you could see the room, and then had to leave the page to
+ * learn what would fill it, from a list that did not know which settlement you
+ * had been looking at. Pressing the gap answers it in place — `SocketPicker`
+ * has the shape and the reasons.
  */
 
 /**
@@ -21,14 +31,26 @@ import { BuildingChip } from "./BuildingChip";
  * — it is the sentence the old meter was trying to be.
  */
 export function BuildingSockets({
-  built,
-  slots,
   content,
+  holding,
+  name,
+  onBuildBuildingRequest,
+  slots,
 }: {
-  built: readonly BuildingId[];
-  slots: number;
   content: GameContent;
+  holding: OwnedHolding;
+  /** The place's name — the picker's head, and every socket's own voice. */
+  name: string;
+  onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
+  slots: number;
 }) {
+  const { settlement, tile } = holding;
+  // Which gap is holding the picker open. The element, not an index: the picker
+  // anchors to it, hands focus back to it on close, and has to know that a press
+  // landing on it is a toggle rather than a dismissal.
+  const [openSocket, setOpenSocket] = useState<{ element: HTMLElement; slot: number } | null>(null);
+  const built = settlement.buildings;
+
   // A colony has no ground to draw — but drawing NOTHING made "this place has
   // zero slots" and "the row failed to render" the same picture, and the only
   // confirmation anywhere was the Build page's `SIKYON · NO SLOT`. Zero is a
@@ -54,12 +76,48 @@ export function BuildingSockets({
           <BuildingChip building={building} key={`${buildingId}-${index}`} />
         ) : null;
       })}
+
       {Array.from({ length: open }, (_, index) => (
-        <span aria-hidden="true" className="socket socketOpen" key={`open-${index}`} />
+        <button
+          // Every gap is the same door, so every gap opens it — but they still
+          // have to announce themselves apart, or the card offers three controls
+          // under one name and identifies none of them.
+          aria-expanded={openSocket?.slot === index}
+          aria-label={`Raise a building in ${name} — open slot ${built.length + index + 1} of ${slots}.`}
+          className="socket socketOpen socketAdd"
+          key={`open-${index}`}
+          onClick={(event) => {
+            const element = event.currentTarget;
+
+            setOpenSocket((current) => (current?.slot === index ? null : { element, slot: index }));
+          }}
+          type="button"
+        >
+          <Icon glyph="plus" size="verb" />
+        </button>
       ))}
+
       <span aria-hidden="true" className="socketCap caption">
         {built.length} of {slots} built
       </span>
+
+      {openSocket ? (
+        <SocketPicker
+          anchorElement={openSocket.element}
+          // Remount per socket, so the focus `Popover` gives back on close is
+          // the gap the player actually pressed.
+          key={openSocket.slot}
+          name={name}
+          onDismiss={() => setOpenSocket(null)}
+          onRaise={(tileId, buildingId) => {
+            setOpenSocket(null);
+            onBuildBuildingRequest(tileId, buildingId);
+          }}
+          open={open}
+          settlement={settlement}
+          tile={tile}
+        />
+      ) : null}
     </div>
   );
 }
