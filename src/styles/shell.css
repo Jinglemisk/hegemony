@@ -58,8 +58,111 @@
   bottom: 2px;
 }
 
+/* The dock's meander runs the FLAT RUN only — from one end block's inner wall to
+   the other's. It traces the frame's top edge, and the frame's top edge steps up
+   at each corner, so each block carries the band on up. Running it edge to edge
+   under the blocks would have it disappear into them and reappear, which is what
+   a border does when nobody has decided where it goes. */
 .commandDock::after {
+  right: var(--plinth-r);
   bottom: calc(var(--bot-h) - 9px);
+  left: var(--plinth-l);
+}
+
+/* ── The frame's corners: two end blocks (FRAME-1) ─────────────────────────
+   The chrome is four rectangles and two circles, and the circles sit exactly
+   where two of the rectangles are supposed to meet. Every previous fix moved
+   one away from the other — the tablets were ended above the dials, the seal
+   was cleared, the panel was given its own floor — and the corner kept reading
+   as damage, because a shortened edge still ends somewhere, and the somewhere
+   was open sea.
+
+   The junction, decided once and applied at both corners: **the bar carries a
+   socket.** The bottom bar steps up at each end to a block as deep as a dial and
+   as wide as the tablet standing on it; the disc is set into that block like a
+   boss into a plate, with a shadowed seat around it; the tablet — or its bare
+   spine, when the page is closed — lands on the block's top edge.
+
+   The rule that holds afterwards: NO EDGE OF THE FRAME TERMINATES AGAINST OPEN
+   BOARD. It comes out as three stacked rectangles, each fully carried by the one
+   below: the bar runs edge to edge and never ends; a block stands on the bar at
+   each corner and is closed on all four sides; a tablet — or its bare spine —
+   stands on each block. The only things that cross those edges are drawn ON
+   them, on purpose: the two dials in their seats and the verb discs standing
+   proud of the flat run.
+
+   The block is the COURSE ABOVE the bar, not a taller bar: it starts at the
+   bar's top edge and rises from there. That is why the bar's own hairline runs
+   on underneath it, and it is what leaves the bar's full width free for the
+   ticker to lie across. Painting the block down to the floor instead put a
+   second copy of the bar's gradient beside the real one, out of phase with it,
+   and a seam appeared at the corner that no border could explain. */
+.dockPlinth {
+  position: absolute;
+  /* The course starts where the bar's top surface is. */
+  bottom: var(--bot-h);
+  /* Under the discs and under the tablets' own shadow, over the bar. */
+  z-index: 0;
+  height: calc(var(--plinth-h) - var(--bot-h));
+  border-top: 1px solid var(--ink-30);
+  background: var(--bar-face);
+  pointer-events: auto;
+}
+
+.dockPlinth-left {
+  left: 0;
+  width: var(--plinth-l);
+  /* The riser, and the shade the course throws inboard. */
+  border-right: 1px solid var(--ink-30);
+  box-shadow: 2px 0 10px rgb(24 18 16 / 14%);
+}
+
+.dockPlinth-right {
+  right: 0;
+  width: var(--plinth-r);
+  border-left: 1px solid var(--ink-30);
+  box-shadow: -2px 0 10px rgb(24 18 16 / 14%);
+}
+
+/* The seat. A shallow depression six pixels proud of the dial's own box all
+   round — the dial's drawn circle is inset another four inside that box, so ten
+   pixels of shaded rim read the whole way round and the disc sits IN the plate
+   rather than on it. Cut to the box exactly and the seal's own ivory ring eats
+   the rim and the socket disappears. */
+.dockPlinth::before {
+  content: "";
+  position: absolute;
+  /* Measured from the FLOOR, so it overhangs the course and lands on the bar
+     below — the dial straddles the two and the seat has to as well. */
+  bottom: calc(var(--dial-gap) - 6px - var(--bot-h));
+  width: calc(var(--dial-d) + 12px);
+  height: calc(var(--dial-d) + 12px);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 4px 9px rgb(24 18 16 / 22%),
+    inset 0 -1px 0 rgb(255 253 246 / 70%);
+}
+
+.dockPlinth-left::before {
+  left: calc(var(--dial-inset) - 6px);
+}
+
+.dockPlinth-right::before {
+  right: calc(var(--dial-inset) - 6px);
+}
+
+/* The meander, carried on up the step. Same band, same 40%, so the frame's top
+   edge is one line that changes height rather than three separate borders. */
+.dockPlinth::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 9px;
+  background: var(--meander) repeat-x left center / 18px 9px;
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 /* The slips take whatever room is left to the LEFT of the spine, and no more. A
@@ -293,14 +396,18 @@
   padding: 0;
 }
 
+/* The spine's reach is a token, and the token is what the ticker's cap is
+   measured against — the two used to disagree, because the spine was sized by
+   seven unscaled `min-width`s while everything around it rode --ui-scale. */
 .verbSpine {
   position: absolute;
   bottom: 0;
   left: 50%;
   z-index: 2;
   display: flex;
-  gap: 6px;
+  gap: var(--verb-gap);
   align-items: flex-end;
+  width: var(--verb-spine-w);
   height: var(--bot-h);
   transform: translateX(-50%);
 }
@@ -315,8 +422,9 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-width: 84px;
-  padding: 6px 8px 5px;
+  flex: 0 0 var(--verb-col);
+  min-width: 0;
+  padding: 6px 4px 5px;
   border: 0;
   border-radius: 4px;
   color: var(--ink);
@@ -388,15 +496,25 @@
   color: rgb(255 248 231 / 78%);
 }
 
-/* The ticker: narration, inboard of the clock, on the bone. */
+/* The ticker: narration on the bar, clear of the dial's reach and stopping short
+   of the verbs. It lies on the bar, which runs unbroken under the end blocks, so
+   the corner fix costs it nothing — its start is the dial's own reach plus a
+   breath, computed rather than the bare 178px literal it used to be, and its
+   width is bounded by where the verb spine actually begins rather than by a flat
+   260 that only happened to fit. */
 .dockTicker {
   position: absolute;
   bottom: 0;
-  left: 178px;
+  left: calc(var(--dial-inset) + var(--dial-d) + var(--sp-3));
   z-index: 2;
   display: flex;
   align-items: center;
-  max-width: 260px;
+  max-width: min(
+    260px,
+    calc(
+      50vw - var(--dial-inset) - var(--dial-d) - var(--sp-3) - var(--verb-spine-half) - var(--sp-3)
+    )
+  );
   height: var(--bot-h);
 }
 
@@ -409,9 +527,14 @@
 }
 
 /* ── The twin dials ───────────────────────────────────────────────────────
-   Both protrude above the rail and above the tablets, because a thing that
-   sticks out of the frame is a thing you can reach — which is true of the seal
-   and is the reason the clock is worth drawing at all rather than printing. */
+   Each is SEATED in its end block (FRAME-1), not floating on the water: the
+   block's seat is drawn under it and the disc lies in it. The shadow is a laid
+   one now, tight and short. It used to be a 18px float at 45%, which is the
+   shadow of an object hovering above a surface — and it was, because there was
+   no surface under it. A thing that hovers over the board reads as a thing you
+   can reach; a thing set into the frame reads as part of the frame, which is
+   what these two are. The seal earns the hover lift back on hover, because it
+   is the one of the pair you press. */
 .dial {
   position: absolute;
   bottom: var(--dial-gap);
@@ -421,7 +544,7 @@
   padding: 0;
   border: 0;
   background: none;
-  filter: drop-shadow(0 6px 18px rgb(24 18 16 / 45%));
+  filter: drop-shadow(0 2px 5px rgb(24 18 16 / 34%));
 }
 
 .dial svg {
@@ -431,24 +554,29 @@
 }
 
 .seasonClock {
-  left: 26px;
+  left: var(--dial-inset);
   pointer-events: none;
 }
 
 .turnSeal {
-  right: 26px;
+  right: var(--dial-inset);
   cursor: pointer;
-  transition: transform 160ms ease;
+  transition:
+    filter 160ms ease,
+    transform 160ms ease;
 }
 
+/* Lifting OUT of the seat: the disc rises and its shadow grows with it, which is
+   the only way a 2px translate reads as a press target rather than a jitter. */
 .turnSeal:not(.turnSealOff):hover {
   box-shadow: none;
-  transform: translateY(-2px);
+  filter: drop-shadow(0 6px 14px rgb(24 18 16 / 42%));
+  transform: translateY(-3px);
 }
 
 .turnSealOff {
   cursor: not-allowed;
-  filter: grayscale(0.7) drop-shadow(0 4px 12px rgb(24 18 16 / 35%));
+  filter: grayscale(0.7) drop-shadow(0 2px 5px rgb(24 18 16 / 28%));
   opacity: 0.72;
 }
 
@@ -460,7 +588,7 @@
    inside it, which is also what keeps the seal off the rail's flow. */
 .endTurnTooltipTrigger {
   position: absolute;
-  right: 26px;
+  right: var(--dial-inset);
   bottom: var(--dial-gap);
   z-index: var(--z-dial);
   width: var(--dial-d);

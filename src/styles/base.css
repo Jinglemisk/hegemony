@@ -205,6 +205,16 @@
   --bub-out: calc(28px * var(--ui-scale));
   --vb: calc(54px * var(--ui-scale));
   --vb-out: calc(32px * var(--ui-scale));
+  /* One verb's column and the whole spine's reach. The spine used to be sized by
+     seven `min-width: 84px` buttons and a literal gap, in unscaled pixels — so it
+     stayed 624px wide while the frame around it shrank, and at 1280 there was
+     nothing left between it and the ticker. Sized here, in one place, and riding
+     --ui-scale like the rest of the chrome; the count is VERBS.length, and if a
+     verb is ever added this is the number that moves. */
+  --verb-col: calc(76px * var(--ui-scale));
+  --verb-gap: calc(5px * var(--ui-scale));
+  --verb-spine-w: calc(var(--verb-col) * 7 + var(--verb-gap) * 6);
+  --verb-spine-half: calc(var(--verb-spine-w) / 2);
   /* The unscaled design widths, named so JS can ask for them. ui/chromeMetrics.ts
      divides the live --panel-w by --panel-w-base to learn how far --ui-scale has
      shrunk the chrome; it used to carry a bare literal `360` for the same purpose.
@@ -219,12 +229,27 @@
      subtracts the spine from its tablet's width, so the docked object measures
      exactly --panel-w from the screen edge and the camera's reserve is honest. */
   --tab-rail-w: 46px;
-  /* The twin dials are 128px across and float 12px off the table's foot. A
-     tablet ENDS where they begin — that is the whole of its bottom clearance,
-     and the reason no page has to pad its scroll region to dodge them. */
+  /* The twin dials are 128px across, seated 12px off the table's foot and 26px
+     in from its side. */
   --dial-d: 128px;
   --dial-gap: 12px;
-  --tablet-bot: calc(var(--dial-d) + var(--dial-gap));
+  --dial-inset: 26px;
+  /* ── The frame's two end blocks (FRAME-1) ─────────────────────────────────
+     The bottom bar is NOT a rectangle. At each corner it steps up to a block
+     deep enough to seat a dial with a breath of bone all round it, and the
+     tablet above lands on that block's top edge. That is the whole of the
+     corner fix: the frame's outline became one continuous polygon, so no edge
+     of it terminates against open sea.
+     A block is as wide as the tablet standing on it — anything narrower and the
+     tablet's bottom edge overhangs it and floats over water again, which is the
+     defect this replaces. When the tablet is closed its 46px spine still lands
+     on the same block: a column is allowed to be narrower than its footing. */
+  --plinth-h: calc(var(--dial-d) + var(--dial-gap) * 2);
+  --plinth-l: var(--panel-w);
+  --plinth-r: var(--chron-w);
+  /* A tablet ENDS on its block. That is the whole of its bottom clearance, and
+     the reason no page has to pad its scroll region to dodge a dial. */
+  --tablet-bot: var(--plinth-h);
   --hexclip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 
   /* ── The sea ────────────────────────────────────────────────────────────────

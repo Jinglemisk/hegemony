@@ -71,6 +71,17 @@ export function CommandDock({
 
   return (
     <div className="commandDock">
+      {/* The bar's two end blocks. They are the frame's corners: the bottom bar
+          steps up at each end to a block deep enough to seat a dial, and the
+          tablet above lands on it. Without them the tablet's bottom edge, the
+          rail's, and the bar's all ended in mid-air a hundred pixels apart with
+          open sea between them, and a disc floated in the gap (FRAME-1).
+          They are drawn here rather than as more pseudo-elements because the
+          bar already spends both of its own on the plate and the meander, and
+          each block carries a meander of its own along its top. */}
+      <div aria-hidden="true" className="dockPlinth dockPlinth-left" />
+      <div aria-hidden="true" className="dockPlinth dockPlinth-right" />
+
       <SeasonClock G={G} />
 
       <div className="verbSpine" aria-label="Action toolbar">
