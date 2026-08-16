@@ -1,6 +1,6 @@
 import { useRef, type ReactNode } from "react";
-import { AtlasIcon } from "../Sprites";
-import type { IconAtlasKey } from "../Sprites";
+import { Icon } from "../../ui/icons/Icon";
+import type { GlyphId } from "../../ui/icons/glyphs";
 
 /**
  * The one custom listbox (refit scope 4 / selection rule 2). Replaces every native
@@ -23,7 +23,7 @@ import type { IconAtlasKey } from "../Sprites";
 
 export type TileListboxOption<T extends string> = {
   value: T;
-  icon: IconAtlasKey;
+  icon: GlyphId;
   /** The bold line — usually terrain + yield. */
   title: ReactNode;
   /** The quiet line — coordinates, pops, shared-tile warnings. */
@@ -112,7 +112,7 @@ export function TileListbox<T extends string>({
           title={option.label}
           type="button"
         >
-          <AtlasIcon icon={option.icon} className="miniIcon" />
+          <Icon glyph={option.icon} size="rail" className="miniIcon" />
           <span className="placementChipText">
             <strong>{option.title}</strong>
             {option.detail ? <em>{option.detail}</em> : null}

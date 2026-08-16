@@ -4,7 +4,8 @@ import type { BuildingId } from "../../../game/types";
 import { presentBuildingEffect } from "../../../ui/effects";
 import { AnnotatedText } from "../../AnnotatedText";
 import { MechanicsDetails } from "../../MechanicsDetails";
-import { AtlasIcon } from "../../Sprites";
+import { BUILDING_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { PopoverActions } from "../PopoverActions";
@@ -91,7 +92,7 @@ export function BuildPopover({
                 onClick={disabled ? undefined : () => setBuildingId(candidate.id)}
                 type="button"
               >
-                <AtlasIcon icon={candidate.id} className="miniIcon" />
+                <Icon glyph={BUILDING_GLYPHS[candidate.id]} size="rail" className="miniIcon" />
                 <span>{candidate.name}</span>
                 <strong>
                   <ResourceChips resources={effectiveCost} variant="cost" empty="Free" />

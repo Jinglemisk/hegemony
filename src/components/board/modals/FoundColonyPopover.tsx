@@ -11,7 +11,7 @@ import {
 import type { PopType, Settlement } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { SettlementSummaryCard } from "../../SettlementCard";
-import { POP_GLYPHS } from "../../../ui/iconRegistry";
+import { POP_GLYPHS, SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
 import { useGameUi } from "../GameUiContext";
 import { TileListbox } from "../TileListbox";
@@ -114,8 +114,8 @@ export function FoundColonyPopover({
                 icon: entry.tile.settlements.some(
                   (s) => s.owner === playerID && s.kind !== "colony",
                 )
-                  ? "city"
-                  : "colony",
+                  ? SETTLEMENT_GLYPHS.city
+                  : SETTLEMENT_GLYPHS.colony,
                 title: settlementPickerLabel(G, entry.tile, playerID),
                 detail: formatPops(entry.pops),
                 label: `Send a pop from ${settlementPickerLabel(G, entry.tile, playerID)} — holds ${formatPops(entry.pops)}.`,

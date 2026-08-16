@@ -9,7 +9,8 @@ import {
 import type { HexTile, Settlement } from "../../../game/types";
 import { formatResourceDelta } from "../../../ui/formatters";
 import { SettlementSummaryCard } from "../../SettlementCard";
-import { AtlasIcon } from "../../Sprites";
+import { SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 import { useGameUi } from "../GameUiContext";
 import { capitalize, settlementPickerLabel } from "../helpers";
 import { CostRow, PlacementModalShell } from "./PlacementModalShell";
@@ -93,7 +94,7 @@ export function UpgradeCityModal({
                       title={settlementPickerLabel(G, tile, playerID)}
                       type="button"
                     >
-                      <AtlasIcon icon="colony" className="miniIcon" />
+                      <Icon glyph={SETTLEMENT_GLYPHS.colony} size="rail" className="miniIcon" />
                       <span className="placementChipText">
                         <strong>
                           {capitalize(tile.terrain)}
@@ -131,9 +132,9 @@ export function UpgradeCityModal({
           ) : null}
 
           <div className="placementUpgradeArrow" aria-hidden="true">
-            <AtlasIcon icon="colony" className="miniIcon" />
+            <Icon glyph={SETTLEMENT_GLYPHS.colony} size="rail" className="miniIcon" />
             <span>becomes</span>
-            <AtlasIcon icon="city" className="miniIcon" />
+            <Icon glyph={SETTLEMENT_GLYPHS.city} size="rail" className="miniIcon" />
           </div>
 
           <div className="placementCityPreview">

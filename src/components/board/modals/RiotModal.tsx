@@ -10,6 +10,7 @@ import { getRiotTable } from "../../../game/content";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { presentTableEffect } from "../../../ui/effects";
+import { POP_GLYPHS } from "../../../ui/iconRegistry";
 import { AnnotatedText } from "../../AnnotatedText";
 import { ceremonyMood, commitVerb } from "./ceremonyMood";
 import { EventTableModal } from "./EventTableModal";
@@ -148,7 +149,7 @@ export function RiotModal({
 
                       return {
                         value: String(index),
-                        icon: candidate.from,
+                        icon: POP_GLYPHS[candidate.from],
                         title: capitalize(formatPopLabel(candidate.from, 1)),
                         detail: where,
                         label: `Demote a ${formatPopLabel(candidate.from, 1)} in ${where}.`,

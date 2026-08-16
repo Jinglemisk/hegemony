@@ -10,8 +10,8 @@ import {
 } from "../game/rules";
 import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, tileCssVars } from "../ui/resourceVisuals";
-import { AtlasIcon, TerrainSprite } from "./Sprites";
-import { SETTLEMENT_GLYPHS } from "../ui/iconRegistry";
+import { TerrainSprite } from "./Sprites";
+import { BUILDING_GLYPHS, POP_GLYPHS, SETTLEMENT_GLYPHS } from "../ui/iconRegistry";
 import { Icon } from "../ui/icons/Icon";
 import { ResourceChips } from "./board/ResourceChips";
 import { capitalize } from "./board/helpers";
@@ -64,7 +64,7 @@ export function SettlementSummaryCard({
           className="cityMeter"
           title={`Building slots ${settlement.buildings.length} of ${slots}`}
         >
-          <AtlasIcon icon="temple" className="miniIcon" />
+          <Icon glyph={BUILDING_GLYPHS.temple} size="rail" className="miniIcon" />
           <span className="cityMeterText">
             <strong>
               {settlement.buildings.length}
@@ -77,7 +77,7 @@ export function SettlementSummaryCard({
           className={overCapacity > 0 ? "cityMeter overCapacityText" : "cityMeter"}
           title={`Population ${popTotal} of ${capacity}`}
         >
-          <AtlasIcon icon="citizens" className="miniIcon" />
+          <Icon glyph={POP_GLYPHS.citizens} size="rail" className="miniIcon" />
           <span className="cityMeterText">
             <strong>
               {popTotal}

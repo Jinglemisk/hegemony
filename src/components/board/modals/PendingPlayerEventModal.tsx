@@ -15,6 +15,7 @@ import type { EffectPresentation } from "../../../ui/effects";
 import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
 import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { settlementNameOf } from "../../../ui/settlementNames";
+import { SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
 import { EffectIcon } from "../../../ui/icons/EffectIcon";
 import { eventCardArtUrl } from "../events";
 import { capitalize } from "../helpers";
@@ -258,7 +259,7 @@ export function PendingPlayerEventModal() {
 
                 return {
                   value: tileId,
-                  icon: where.isCity ? ("city" as const) : ("colony" as const),
+                  icon: where.isCity ? SETTLEMENT_GLYPHS.city : SETTLEMENT_GLYPHS.colony,
                   title: where.title,
                   detail: where.detail,
                   label: `Place the pops in ${where.title} — ${where.detail}.`,
