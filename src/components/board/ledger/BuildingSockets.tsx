@@ -35,6 +35,7 @@ export function BuildingSockets({
   holding,
   name,
   onBuildBuildingRequest,
+  open,
   slots,
 }: {
   content: GameContent;
@@ -42,6 +43,11 @@ export function BuildingSockets({
   /** The place's name — the picker's head, and every socket's own voice. */
   name: string;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
+  /** Both counts come from `./slots` and neither is re-derived here. Subtracting
+   *  the built from the total is a one-line sum that looks too small to be worth
+   *  a module, which is how the Build page and this one came to disagree about
+   *  it once already. */
+  open: number;
   slots: number;
 }) {
   const { settlement, tile } = holding;
@@ -61,8 +67,6 @@ export function BuildingSockets({
     return <p className="socketNone caption">no ground to build on</p>;
   }
 
-  const open = Math.max(0, slots - built.length);
-
   return (
     <div
       aria-label={`${built.length} of ${slots} building slots filled.`}
@@ -77,7 +81,7 @@ export function BuildingSockets({
         ) : null;
       })}
 
-      {Array.from({ length: open }, (_, index) => (
+      {Array.from({ length: Math.max(0, open) }, (_, index) => (
         <button
           // Every gap is the same door, so every gap opens it — but they still
           // have to announce themselves apart, or the card offers three controls

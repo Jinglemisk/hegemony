@@ -209,4 +209,30 @@ export const SURFACES = [
       await p.waitForTimeout(400);
     },
   },
+  {
+    // The socket picker is the one control on Cities that neither auditor could
+    // see: `tab-cities` walks the page with every picker shut, so a surface that
+    // reports clean says nothing about the nine rows that open out of it. It
+    // starts from its own `goto` because it runs after the Assembly surfaces and
+    // inherits their scene otherwise.
+    name: "cities-socket-picker",
+    go: async (p) => {
+      await p.goto(`${BASE}/?dev=preload&seed=42`, { waitUntil: "networkidle" });
+      await p.waitForTimeout(1300);
+      await dismissDialogs(p);
+      for (const other of LEFT) if (other !== "Cities") await closeTab(p, other);
+      const tab = p.locator(`.tabRail button[aria-label="Cities"]`).first();
+      if ((await tab.count()) && (await tab.getAttribute("aria-pressed")) !== "true") {
+        await tab.click().catch(() => {});
+        await p.waitForTimeout(500);
+      }
+      const socket = p.locator(".socketAdd").first();
+      if (await socket.count()) await socket.click().catch(() => {});
+      await p.waitForTimeout(500);
+    },
+    after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(300);
+    },
+  },
 ];

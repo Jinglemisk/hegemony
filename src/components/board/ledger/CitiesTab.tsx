@@ -108,7 +108,7 @@ export function CitiesTab({
         const capacity = settlementCapacity(settlement, G.ruleset, G.definition.content);
         const overCapacity = settlementOverCapacity(settlement, G.ruleset, G.definition.content);
         const netYield = settlementNetYield(tile, settlement, G.ruleset, G.definition.content);
-        const { slots } = slotsOf(holding, G.ruleset);
+        const { slots, open } = slotsOf(holding, G.ruleset);
         // A caption only where the beads alone would not tell you. Two settlements
         // sitting comfortably inside their walls get no line, and the silence is
         // the information.
@@ -147,6 +147,7 @@ export function CitiesTab({
               holding={holding}
               name={name}
               onBuildBuildingRequest={onBuildBuildingRequest}
+              open={open}
               slots={slots}
             />
 
