@@ -29,15 +29,14 @@ when it ships or when the owner rules it closed.
 
 ## The list
 
-| ID           | needs         | what                                                                             |
-| ------------ | ------------- | -------------------------------------------------------------------------------- |
-| `FRAME-1`    | a design pass | The frame's corners are gore: rectangles end in mid-air where circles sit        |
-| `DOCK-1`     | a decision    | The verbs go back to discs that protrude from the bottom bar                     |
-| `BUILD-2`    | a decision    | An open socket should be pressable, and open the buildings you could raise there |
-| `BOARD-BG-1` | a decision    | The sea plate becomes a texture: no iconography, no cartographic border          |
-| `ICON-1`     | nobody        | `AtlasIcon` is a fourth icon system, and the line art already exists             |
-| `TYPE-1`     | a decision    | Two type sizes sit under spec, on purpose                                        |
-| `DUP-1`      | nothing       | Five repeated glossary words, judged and left                                    |
+| ID           | needs         | what                                                                      |
+| ------------ | ------------- | ------------------------------------------------------------------------- |
+| `FRAME-1`    | a design pass | The frame's corners are gore: rectangles end in mid-air where circles sit |
+| `DOCK-1`     | a decision    | The verbs go back to discs that protrude from the bottom bar              |
+| `BOARD-BG-1` | a decision    | The sea plate becomes a texture: no iconography, no cartographic border   |
+| `ICON-1`     | nobody        | `AtlasIcon` is a fourth icon system, and the line art already exists      |
+| `TYPE-1`     | a decision    | Two type sizes sit under spec, on purpose                                 |
+| `DUP-1`      | nothing       | Five repeated glossary words, judged and left                             |
 
 ---
 
@@ -112,44 +111,41 @@ sea and cast against it; and the discs are the elements nearest the two corner
 circles, so this and `FRAME-1` should be designed together rather than in
 sequence — they are the same edge.
 
-## BUILD-2 — an open socket should be pressable
+## BUILD-2 — the socket opens what could stand in it · **shipped** (`74cf6c1`…`e9f02b1`)
 
-**What is missing.** The Cities page now draws a settlement's building slots as
-sockets you can see: a filled tile per raised building, a dashed outline per open
-slot, and a caption reading "1 of 3 built". That was the overhaul's central new
-primitive and it answers _where is there room_.
+An open socket carries a `+` and opens the buildings raisable in that settlement,
+each with its cost, its effect, and an honest reason when refused. Every number
+comes from the engine query that charges it — `getBuildBuildingStatus` per
+building, `settlementBuildingSlots` for the count, and the Build page's own
+`buildRefusal` wording — so the two pages cannot disagree.
 
-It does not answer _what could go there_. The dashed sockets are decoration — you
-can see the gap, and then you have to leave the page, open Build, and read a list
-that does not know which settlement you were looking at.
+Kept for the next person, because all four were invisible until someone drove it:
 
-**The old UI had this and it was better.** In the pre-overhaul Cities tab the
-building chips carried a `+` badge when a building was buildable there, so the
-affordance and the answer sat on the settlement you were already reading. The
-overhaul deleted that layout wholesale — correctly, since the pop×building matrix
-it lived in appears in neither prototype — but the _behaviour_ went with it and
-was never rebuilt. Worth reading `src/components/board/ledger/CitiesTab.tsx` and
-`src/components/board/map/BuildPopover.tsx` **as they stand on `main`** — the
-primary checkout still has the pre-overhaul versions — before designing the
-replacement.
+- **A flat height cap cannot keep a popover out of the chrome.**
+  `positionAnchoredOverlay` clamps to the _window_, and the window has room above
+  the top bar where the game does not — so at 1366 and 1280 the picker flipped up
+  and laid its head across the omen, season and fate slips. The height now comes
+  from the **ledger tablet's own box**: the page the socket belongs to already
+  sits inside the chrome, so its bounds are the honest ones.
+- **A scroll region can be silent.** Four buildings sat below the fold with
+  nothing on screen saying so, because the old ceiling happened to land flush on a
+  row boundary. A forced scrollbar does not claim layout on this platform
+  (`offsetWidth - clientWidth === 0`, and setting `scrollbar-color` makes Chromium
+  ignore `::-webkit-scrollbar` outright). The app already had the answer —
+  `intel.css`'s scroll-driven edge fade, written for this same finding on the
+  Build, Chronicle and Codex lists.
+- **A focus trap that only checks first and last has a hole.** The surface itself
+  is neither, and it is the options' _parent_, so a plain Tab from it fell onto
+  the first option by document order and looked like the trap working — while
+  Shift+Tab walked out onto the dev fab with no way back.
+- **A gate printed once is information; printed ten times it is noise.** The
+  not-your-turn reason appeared in the head and again on all nine rows. It is said
+  once now, and kept in each control's accessible name, because a screen reader
+  lands on a button and never hears the head.
 
-**What it should do.** An open socket carries a `+` and is a real control. Press
-it and you get the buildings you could raise **in that settlement** — each with
-its cost, its effect, and an honest reason when it is refused. The Build page
-already computes all of this: `getBuildBuildingOptions`, and the blocker phrasing
-built for `PAR-BUILD-2` ("`SIKYON · NO SLOT`", "`short by 1 wood + 11 stone`").
-This is a new entry point onto work that exists, not new logic.
-
-**Why it matters more than it looks.** The showcase's rule, which the dock and
-the ladder already follow, is that _the number you need in order to decide is
-printed where you decide_. A socket that shows a gap and cannot tell you what
-fills it is the one place left where the UI shows you a question and sends you
-somewhere else for the answer.
-
-**Watch out for:** the picker must be reachable by keyboard, and a socket is
-currently a ~20px mark — it will need to reach 24×24 to satisfy the conduct
-auditor. The map's `BuildPopover` grammar already exists; reusing it is probably
-right, but it anchors to a tile rather than to a ledger row.
+The parity test reads refusals off the **rendered DOM of both pages** rather than
+off the helper they share — a unit test of the wording passes straight through the
+class of defect it exists to catch.
 
 ## BOARD-BG-1 — the sea becomes a texture
 
