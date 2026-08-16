@@ -29,18 +29,33 @@ when it ships or when the owner rules it closed.
 
 ## The list
 
-| ID           | needs         | what                                                                      |
-| ------------ | ------------- | ------------------------------------------------------------------------- |
-| `FRAME-1`    | a design pass | The frame's corners are gore: rectangles end in mid-air where circles sit |
-| `DOCK-1`     | a decision    | The verbs go back to discs that protrude from the bottom bar              |
-| `BOARD-BG-1` | a decision    | The sea plate becomes a texture: no iconography, no cartographic border   |
-| `ICON-1`     | nobody        | `AtlasIcon` is a fourth icon system, and the line art already exists      |
-| `TYPE-1`     | a decision    | Two type sizes sit under spec, on purpose                                 |
-| `DUP-1`      | nothing       | Five repeated glossary words, judged and left                             |
+| ID       | needs      | what                                                                 |
+| -------- | ---------- | -------------------------------------------------------------------- |
+| `ICON-1` | nobody     | `AtlasIcon` is a fourth icon system, and the line art already exists |
+| `TYPE-1` | a decision | Two type sizes sit under spec, on purpose                            |
+| `DUP-1`  | nothing    | Five repeated glossary words, judged and left                        |
+
+### Shipped
+
+`BOARD-BG-1`, `FRAME-1` and `DOCK-1` landed together, in that order, because
+each changed what the next one looked like. The sea is a CSS texture and three
+palette tokens (`--sea`, `--sea-lit`, `--sea-deep`); the 3.8 MB plate left the
+bundle and took `SHELL-3`'s compass-rose collision with it. The bottom bar now
+steps up to a **course** at each corner that a dial seats into and a tablet
+stands on — the junction decided once, of the three options, as _the bar carries
+a socket_. The seven verbs are discs again, standing proud of the flat run
+between those two courses, keeping every price, oxblood mark and armed state the
+run had built. The reasoning for each is in its commit; what follows is the
+brief they were written against, kept because the rule at the end of `FRAME-1`
+is a standing one.
+
+**The rule that now holds, and must keep holding:** no edge of the frame may
+terminate against empty board. Either it meets another edge, or it is
+deliberately cut by something drawn on top of it.
 
 ---
 
-## FRAME-1 — the corners are gore, and it is one problem, not four
+## FRAME-1 — the corners are gore, and it is one problem, not four · **shipped**
 
 **What it looks like.** At both bottom corners the chrome simply stops. On the
 right, the parchment rail runs down the screen, ends in mid-air over the sea, and
@@ -83,7 +98,7 @@ line up with anything because it scales with the viewport. Doing the background
 first will change what this problem even looks like, and may shrink it. Worth
 sequencing that way.
 
-## DOCK-1 — the verbs protrude from the bar again
+## DOCK-1 — the verbs protrude from the bar again · **shipped**
 
 **Wanted.** The verb bar returns to the structure it had before the overhaul:
 each verb a **circular disc that protrudes upward from the bottom bar**, half
@@ -147,7 +162,7 @@ The parity test reads refusals off the **rendered DOM of both pages** rather tha
 off the helper they share — a unit test of the wording passes straight through the
 class of defect it exists to catch.
 
-## BOARD-BG-1 — the sea becomes a texture
+## BOARD-BG-1 — the sea becomes a texture · **shipped**
 
 **Today.** `assets/map/aegean-sea-board.png` is a single **3.8 MB** painting
 applied at `shell.css:627` as `background: var(--sea-chart) center / cover
