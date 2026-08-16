@@ -21,11 +21,11 @@ when it ships or when the owner rules it closed.
 
 ## Three-axis parity
 
-| Axis             | Applies? | Required representation and proof                                                                                                                                                                                                   |
-| ---------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine / backend | Partly   | One row (`CER-1`) needs an authored field on `EventCard`, which is an `engine:` commit reviewed on its own terms. Everything else is presentation only, and the parity suites stay meaningful because nothing beneath the UI moves. |
-| Frontend         | Yes      | Every row names the surface it lands on and closes the same way the ledger's rows do: driven in a real browser at 1920, 1440 and 1280, looked at, with both auditors re-run.                                                        |
-| Simulation & AI  | N/A      | Nothing here is reachable from the headless sim.                                                                                                                                                                                    |
+| Axis             | Applies? | Required representation and proof                                                                                                                                                                                                              |
+| ---------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine / backend | N/A      | The one row that reached the engine (`CER-1`) has shipped: an optional authored `flavor` on `EventCard`, presentation only, nothing beneath the UI moved. Everything still on this list is presentation, so the parity suites stay meaningful. |
+| Frontend         | Yes      | Every row names the surface it lands on and closes the same way the ledger's rows do: driven in a real browser at 1920, 1440 and 1280, looked at, with both auditors re-run.                                                                   |
+| Simulation & AI  | N/A      | Nothing here is reachable from the headless sim.                                                                                                                                                                                               |
 
 ## The list
 
@@ -35,7 +35,6 @@ when it ships or when the owner rules it closed.
 | `DOCK-1`     | a decision    | The verbs go back to discs that protrude from the bottom bar                     |
 | `BUILD-2`    | a decision    | An open socket should be pressable, and open the buildings you could raise there |
 | `BOARD-BG-1` | a decision    | The sea plate becomes a texture: no iconography, no cartographic border          |
-| `CER-1`      | **the owner** | Fate cards have no voice, because there is no field to hold one                  |
 | `ICON-1`     | nobody        | `AtlasIcon` is a fourth icon system, and the line art already exists             |
 | `ASM-11`     | nobody        | The repeal crack-and-fall ceremony                                               |
 | `TYPE-1`     | a decision    | Two type sizes sit under spec, on purpose                                        |
@@ -185,27 +184,6 @@ tests pinning exact CSS expression strings — a token _value_ change is free, a
 token _rename_ is not. And the plate currently supplies the map's contrast against
 the bone tablets; a flat texture may need the tablets' shadow doing more work.
 Check the Assembly too, whose full-bleed floor sits over this ground.
-
-## CER-1 — fate cards have no voice · **needs the owner**
-
-The showcase's fate card carries two registers: the mechanical blow, and the
-card's own voice — _"The wells crack. The assembly mutters."_ The app has the
-first and cannot have the second, because `EventCard` has no flavour field:
-`card.text` **is** the rules sentence.
-
-The ceremony work fixed the visible half honestly — a card no longer prints its
-one fact twice — but the consequence is that a fate card is now silent, and a
-handful of cards that carry a voice fragment welded onto the front of their rules
-text lose that fragment too.
-
-**The fix is an authored `flavor` field on `EventCard`, one line per card.** That
-is an `engine:` commit and a content pass, and it is the owner's call — not
-because it is risky, but because somebody has to write 30-odd lines of prose in
-the game's voice, and that is authorship, not engineering.
-
-Splitting the existing text on a colon would recover some of it, but it is a
-heuristic over data that cannot be validated, and it would invent a content model
-by accident. Explicitly rejected.
 
 ## ICON-1 — the fourth icon system
 

@@ -2,7 +2,7 @@
 title: UI triage — showcase parity gaps
 status: active
 phase: "—"
-updated: 2026-08-15
+updated: 2026-08-16
 ---
 
 # UI triage — showcase parity gaps
@@ -19,11 +19,11 @@ wrong · **minor** = cosmetic drift.
 
 ## Three-axis parity
 
-| Axis             | Applies? | Required representation and proof                                                                                                                                                                                                                                  |
-| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Engine / backend | N/A      | This file only records what the showcase drew and the app did not build. Two rows (`PAR-CER-1`, `PAR-ASM-9`) note that a designed field has no home in the data model; adding one would be an `engine:` commit reviewed on its own terms, and is not assumed here. |
-| Frontend         | Yes      | The whole document. Each row names the prototype element and the component or rule that stands in its place; a row closes when the surface is driven in a browser and matches.                                                                                     |
-| Simulation & AI  | N/A      | Nothing here is reachable from the headless sim.                                                                                                                                                                                                                   |
+| Axis             | Applies? | Required representation and proof                                                                                                                                                                                                                                                                                                          |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Engine / backend | N/A      | This file only records what the showcase drew and the app did not build. Two rows (`PAR-CER-1`, `PAR-ASM-9`) note that a designed field has no home in the data model; adding one is an `engine:` commit reviewed on its own terms. `PAR-CER-1`'s has since shipped — an optional authored `flavor` on `EventCard`. `PAR-ASM-9`'s has not. |
+| Frontend         | Yes      | The whole document. Each row names the prototype element and the component or rule that stands in its place; a row closes when the surface is driven in a browser and matches.                                                                                                                                                             |
+| Simulation & AI  | N/A      | Nothing here is reachable from the headless sim.                                                                                                                                                                                                                                                                                           |
 
 ## What the whole audit says, before the tables
 
