@@ -1,101 +1,15 @@
-/* sprites — Sprite-sheet icon positioning (atlas) + terrain map-mode swatches
-   Split from styles.css (Phase 2e); original source order preserved. */
+/* sprites — terrain sheet cell positions + terrain map-mode swatches
+   Split from styles.css (Phase 2e); original source order preserved.
 
-.sprite-wood,
-.sprite-terrain-mountain {
-  --sprite-x: 0%;
-  --sprite-y: 0%;
-}
+   The sixteen icon-atlas cells that used to head this file are gone with the
+   atlas itself (ICON-1). What is left is the terrain sheet's four corners.
 
-.sprite-stone {
-  --sprite-x: 33.333%;
-  --sprite-y: 0%;
-}
-
-.sprite-gold {
-  --sprite-x: 66.667%;
-  --sprite-y: 0%;
-}
-
-.sprite-food {
-  --sprite-x: 100%;
-  --sprite-y: 0%;
-}
-
-.sprite-influence {
-  --sprite-x: 0%;
-  --sprite-y: 33.333%;
-}
-
-.sprite-happiness {
-  --sprite-x: 33.333%;
-  --sprite-y: 33.333%;
-}
-
-.sprite-citizens {
-  --sprite-x: 66.667%;
-  --sprite-y: 33.333%;
-}
-
-.sprite-freemen {
-  --sprite-x: 100%;
-  --sprite-y: 33.333%;
-}
-
-.sprite-slaves {
-  --sprite-x: 0%;
-  --sprite-y: 66.667%;
-}
-
-.sprite-marketplace {
-  --sprite-x: 33.333%;
-  --sprite-y: 66.667%;
-}
-
-.sprite-temple {
-  --sprite-x: 66.667%;
-  --sprite-y: 66.667%;
-}
-
-.sprite-workshop {
-  --sprite-x: 100%;
-  --sprite-y: 66.667%;
-}
-
-.sprite-granary {
-  --sprite-x: 0%;
-  --sprite-y: 100%;
-}
-
-.sprite-capital {
-  --sprite-x: 33.333%;
-  --sprite-y: 100%;
-}
-
-.sprite-city {
-  --sprite-x: 66.667%;
-  --sprite-y: 100%;
-}
-
-.sprite-colony {
-  --sprite-x: 100%;
-  --sprite-y: 100%;
-}
-
-.sprite-terrain-hill {
-  --sprite-x: 100%;
-  --sprite-y: 0%;
-}
-
-.sprite-terrain-forest {
-  --sprite-x: 0%;
-  --sprite-y: 100%;
-}
-
-.sprite-terrain-plains {
-  --sprite-x: 100%;
-  --sprite-y: 100%;
-}
+   NOTE, and it is a live defect rather than a leftover: nothing reads
+   --sprite-x/y any more. They only ever fed `mask-position`, and .atlasTerrain
+   paints with `background-image`, which has always taken its default 0 0 — so
+   every terrain chip shows the sheet's top-left corner regardless of terrain.
+   That was true before ICON-1 too; it is the terrain sheet's own job to fix,
+   and the cell coordinates are kept here so whoever takes it has them. */
 
 .atlasTerrain.sprite-terrain-mountain {
   --sprite-x: 6%;

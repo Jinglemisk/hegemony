@@ -1,34 +1,6 @@
-import type { BuildingId, PopType, Resource, SettlementKind, Terrain } from "../game/types";
+import type { Resource, Terrain } from "../game/types";
 import { RESOURCE_GLYPHS } from "../ui/iconRegistry";
 import { Icon } from "../ui/icons/Icon";
-
-export type IconAtlasKey = Resource | PopType | BuildingId | SettlementKind;
-
-const ICON_SPRITE_CLASSES: Record<IconAtlasKey, string> = {
-  wood: "sprite-wood",
-  stone: "sprite-stone",
-  gold: "sprite-gold",
-  food: "sprite-food",
-  influence: "sprite-influence",
-  happiness: "sprite-happiness",
-  citizens: "sprite-citizens",
-  freemen: "sprite-freemen",
-  slaves: "sprite-slaves",
-  marketplace: "sprite-marketplace",
-  temple: "sprite-temple",
-  workshop: "sprite-workshop",
-  granary: "sprite-granary",
-  // New civic buildings (2026-07-13) + the Phase 2 roster (villa/gymnasion) borrow the
-  // nearest atlas art until the sprite sheet gains their own — see docs/archive/notes/OVERNIGHT.md.
-  forum: "sprite-marketplace",
-  aqueduct: "sprite-granary",
-  odeon: "sprite-temple",
-  villa: "sprite-granary",
-  gymnasion: "sprite-temple",
-  capital: "sprite-capital",
-  city: "sprite-city",
-  colony: "sprite-colony",
-};
 
 const TERRAIN_SPRITE_CLASSES: Record<Terrain, string> = {
   mountain: "sprite-terrain-mountain",
@@ -39,15 +11,6 @@ const TERRAIN_SPRITE_CLASSES: Record<Terrain, string> = {
   // yield). The map polygon carries the oracle's real, distinct colour.
   oracle: "sprite-terrain-hill",
 };
-
-export function AtlasIcon({ icon, className = "" }: { icon: IconAtlasKey; className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`atlasSprite atlasIcon ${ICON_SPRITE_CLASSES[icon]} ${className}`}
-    />
-  );
-}
 
 /**
  * A resource, drawn the way every other icon in the app is drawn.

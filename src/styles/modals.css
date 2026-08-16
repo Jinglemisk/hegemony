@@ -490,10 +490,6 @@
   margin: 0;
 }
 
-.commandAtlasIcon {
-  border-radius: 6px;
-}
-
 /* Found-colony placement: map highlight + tile-anchored popover */
 .hexMap.placementMode {
   cursor: crosshair;

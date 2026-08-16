@@ -5,7 +5,14 @@ import { capitalize } from "../game/core/format";
 import type { BuildingId, PopType, Resource, SettlementKind } from "../game/types";
 import { resourceCssVars } from "../ui/resourceVisuals";
 import { useCodexLink, type CodexLink } from "./codexLink";
-import { AtlasIcon, ResourceIcon } from "./Sprites";
+import {
+  BUILDING_GLYPHS,
+  POP_GLYPHS,
+  RESOURCE_GLYPHS,
+  SETTLEMENT_GLYPHS,
+} from "../ui/iconRegistry";
+import { Icon } from "../ui/icons/Icon";
+import type { GlyphId } from "../ui/icons/glyphs";
 
 /**
  * Renders free text with a small icon appended to every resource, pop, or
@@ -19,7 +26,7 @@ type Token =
   | { type: "pop"; key: PopType }
   | { type: "building"; key: BuildingId }
   | { type: "settlement"; key: SettlementKind }
-  // Concept terms have no glyph in the atlas — they carry their rulebook chapter directly.
+  // Concept terms have no glyph at all — they carry their rulebook chapter directly.
   | { type: "concept"; chapter: string };
 
 const TOKEN_MAP: Record<string, Token> = {
@@ -59,7 +66,7 @@ const TOKEN_MAP: Record<string, Token> = {
   villas: { type: "building", key: "villa" },
   gymnasion: { type: "building", key: "gymnasion" },
   gymnasions: { type: "building", key: "gymnasion" },
-  // Settlements — their own atlas glyph, link to the Settlements chapter.
+  // Settlements — their own glyph, link to the Settlements chapter.
   capital: { type: "settlement", key: "capital" },
   capitals: { type: "settlement", key: "capital" },
   metropolis: { type: "settlement", key: "capital" },
@@ -172,17 +179,25 @@ const PROPER_NAME_PATTERN = PROPER_NAMES.length
   ? new RegExp(`\\b(?:${PROPER_NAMES.map(escapeRegExp).join("|")})\\b`, "g")
   : null;
 
+function tokenGlyph(token: Token): GlyphId | null {
+  switch (token.type) {
+    case "concept":
+      return null;
+    case "resource":
+      return RESOURCE_GLYPHS[token.key];
+    case "pop":
+      return POP_GLYPHS[token.key];
+    case "building":
+      return BUILDING_GLYPHS[token.key];
+    case "settlement":
+      return SETTLEMENT_GLYPHS[token.key];
+  }
+}
+
 function tokenIcon(token: Token) {
-  if (token.type === "concept") {
-    return null;
-  }
+  const glyph = tokenGlyph(token);
 
-  if (token.type === "resource") {
-    return <ResourceIcon resource={token.key} className="richIcon" />;
-  }
-
-  // AtlasIcon's key space covers pops, buildings and settlement kinds.
-  return <AtlasIcon icon={token.key} className="richIcon" />;
+  return glyph ? <Icon glyph={glyph} className="richIcon" /> : null;
 }
 
 /** The rulebook chapter (rulebook.tsx id) a token deep-links to. */

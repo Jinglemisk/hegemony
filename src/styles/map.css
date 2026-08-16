@@ -179,42 +179,21 @@
   pointer-events: none;
 }
 
-/* The atlases are masks, not images: the glyph lives in the alpha channel and
-   the ink comes from `currentColor`, so an icon inherits whatever colour its
-   disc sets — ink on bone, ivory on clay. --sprite-x/y pick the cell. */
+/* Three raster icon systems used to live here — the six resource masks tinted to
+   a fixed per-resource hue, the ui-kit sheet, and the icon atlas that drew every
+   pop, building and settlement kind. All three are `<Icon>` line glyphs now: one
+   drawing hand for the whole app, and colour that says sign rather than which
+   thing it is. The icon atlas was the worst of them — it only ever painted four
+   building cells for nine buildings, so the forum wore the marketplace's stall
+   and the odeon wore the temple's roof.
+   The painted terrain sheet is the one that is left. */
 .atlasSprite {
   display: inline-block;
   flex: 0 0 auto;
   background-color: currentColor;
-  mask-repeat: no-repeat;
-  mask-position: var(--sprite-x) var(--sprite-y);
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: var(--sprite-x) var(--sprite-y);
 }
-
-.atlasIcon {
-  width: 34px;
-  height: 34px;
-  mask-image: var(--icon-atlas);
-  mask-size: 400% 400%;
-  -webkit-mask-image: var(--icon-atlas);
-  -webkit-mask-size: 400% 400%;
-}
-
-/* The six resource PNG masks used to live here, tinted to a fixed per-resource
-   hue. They are `<Icon>` line glyphs now (Sprites.tsx): one drawing hand for the
-   whole app, and colour that says sign rather than which resource it is. */
 
 .atlasTerrain {
   background-image: var(--terrain-atlas);
   background-size: 218% 218%;
-}
-
-.atlasUi {
-  width: 40px;
-  height: 40px;
-  mask-image: var(--ui-atlas);
-  mask-size: 300% 300%;
-  -webkit-mask-image: var(--ui-atlas);
-  -webkit-mask-size: 300% 300%;
 }
