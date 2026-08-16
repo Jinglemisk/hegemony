@@ -3,7 +3,8 @@ import { POP_TYPES, getGrowPopStatus, previewGrowPopIncomeDelta } from "../../..
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { MechanicsDetails } from "../../MechanicsDetails";
-import { AtlasIcon } from "../../Sprites";
+import { POP_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { ResourceDeltaList } from "../ResourceDeltaList";
@@ -89,7 +90,7 @@ export function GrowPopPopover({
                 onClick={() => setPop(candidate)}
                 type="button"
               >
-                <AtlasIcon icon={candidate} className="miniIcon" />
+                <Icon glyph={POP_GLYPHS[candidate]} size="rail" className="miniIcon" />
                 <span>{formatPopLabel(candidate, 1)}</span>
                 <strong>
                   <ResourceChips
