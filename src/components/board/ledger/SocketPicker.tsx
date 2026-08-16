@@ -137,9 +137,14 @@ export function SocketPicker({
         return;
       }
 
+      // The surface itself counts as an edge, not as "somewhere in the middle".
+      // It is what `Popover` focuses on open, and it is the PARENT of the options
+      // — so a plain Tab from it falls onto the first option by document order
+      // and looked like the trap working, while Shift+Tab from it walked
+      // backwards straight out of the dialog and landed on the TUNE button.
       const edge = event.shiftKey ? items[0] : items[items.length - 1];
 
-      if (!inside || active === edge) {
+      if (!inside || active === edge || active === surface) {
         event.preventDefault();
         (event.shiftKey ? items[items.length - 1] : items[0]).focus();
       }
