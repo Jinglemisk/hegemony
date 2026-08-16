@@ -15,7 +15,6 @@ import type { EffectPresentation } from "../../../ui/effects";
 import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
 import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { settlementNameOf } from "../../../ui/settlementNames";
-import { AnnotatedText } from "../../AnnotatedText";
 import { EffectIcon } from "../../../ui/icons/EffectIcon";
 import { eventCardArtUrl } from "../events";
 import { capitalize } from "../helpers";
@@ -135,7 +134,6 @@ export function PendingPlayerEventModal() {
   // to be "claimed" — you endure it. One word and one colour, read off the
   // effects the engine already presented.
   const mood = ceremonyMood(blow.tone);
-  const carved = Boolean(blow.magnitude && blow.subject) && choices.length <= 1;
   // The verb names the option that is currently taken, so the button and the lit
   // row say the same thing. "Resolve Choice" named the dialog, not the outcome —
   // and on a card where nothing else marked the rows as alternatives, it was one
@@ -169,16 +167,18 @@ export function PendingPlayerEventModal() {
           {card.name}
         </h2>
 
-        {/* PAR-CER-1: the card must not say its one thing twice. `card.text` IS
-            the rules sentence — the data model has no flavour field of its own —
-            so it is printed only where the blow below cannot carry the mechanics
-            on its own. The card's missing VOICE is a documented gap, not a
-            styling one; giving it a voice is an engine change. */}
-        {carved ? null : (
-          <p className="fateVoice body-em">
-            <AnnotatedText text={card.text} />
-          </p>
-        )}
+        {/* PAR-CER-1: the card's VOICE, and only that. `card.text` is the rules
+            sentence and belongs in the blow band, which never fails to render it
+            — a presenter with no single number to carve falls back to the flat
+            sentence, and a two-option card puts one band under each option. So
+            this slot never repeats mechanics, and a card with no authored line
+            simply does not render it: the 15px that parts the title from the
+            band lives on the band, so nothing leaves a gap.
+
+            Deliberately NOT run through `AnnotatedText` — glossary chips down
+            the middle of a quoted line would make prose read as a rules index,
+            which is the register this slot exists to escape. */}
+        {card.flavor ? <p className="fateVoice body-em">“{card.flavor}”</p> : null}
 
         {choices.length > 1 ? (
           // Alternatives, and they have to LOOK like alternatives. The rows used
