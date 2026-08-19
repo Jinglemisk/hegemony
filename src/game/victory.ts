@@ -200,5 +200,6 @@ function endGame(G: HegemonyState, winner: PlayerId, reason: GameOverReason) {
     reason === "victoryRace"
       ? `${getPlayerName(G, winner)} holds ${G.ruleset.victory.cardsToWin} victory cards — the game is won!`
       : `${getPlayerName(G, winner)} leads the victory cards as the age ends — the game is won!`,
+    winner,
   );
 }

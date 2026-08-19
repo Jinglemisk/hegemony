@@ -1,28 +1,20 @@
-import { MechanicsDetails } from "../../MechanicsDetails";
-import { UiSprite } from "../../Sprites";
-import { Tooltip } from "../../overlays/Tooltip";
-import { PLAYER_NAMES } from "../../../game/data";
-import { yearOf } from "../../../game/rules";
+import { AnnotatedText } from "../../AnnotatedText";
 import { useGameUi } from "../GameUiContext";
 import { CommandVerb } from "./CommandVerb";
-import {
-  END_TURN_VERB,
-  VERBS,
-  isVerbEnabled,
-  verbTitle,
-  type VerbContext,
-  type VerbHandlers,
-} from "./verbs";
+import { VERBS, type VerbContext, type VerbHandlers, type VerbId } from "./verbs";
 
 /**
- * The bottom dock (ui-refit Step 3), KYKLOS mode A. The fused command bar splits
- * into placed pieces: the verb discs thread on a spine across the centre, the
- * chronicle's newest line tickers bottom-left, and the commit anchors
- * bottom-right — the whose-turn box above the one dark-red *square*, End Turn.
+ * The bottom rail: a bone ceramic bar carrying the seven verbs, each disc
+ * standing proud of its top edge.
  *
- * The circle law: every verb is a disc because you press it repeatedly; the only
- * square control is the commit, so it can never be misfired for a verb. Resources
- * left this band entirely — they now ride the top bar, split around the medallion.
+ * It used to carry a dial at each end as well — the season clock at bottom left,
+ * the END TURN seal at bottom right. Both moved into the single turn dial in the
+ * top bar. What that bought is the board's two bottom corners back: the bar is
+ * now one flat run of verbs, and the only round masses on it are the seven
+ * things you press to act.
+ *
+ * The chronicle's newest line tickers along the bar's left half, where it has
+ * room to be long without ever crowding the verbs.
  */
 export function CommandDock({
   canGrowPops,
@@ -30,8 +22,7 @@ export function CommandDock({
   canFoundColony,
   canUpgradeCity,
   canBuild,
-  isFoundColonyActive,
-  isBuildActive,
+  armedVerb,
   chronicleTicker,
   ...handlers
 }: {
@@ -40,12 +31,12 @@ export function CommandDock({
   canFoundColony: boolean;
   canUpgradeCity: boolean;
   canBuild: boolean;
-  isFoundColonyActive: boolean;
-  isBuildActive: boolean;
+  /** The verb that currently holds the map, if any (`armedVerbOf`). */
+  armedVerb: VerbId | null;
   /** Latest chronicle line — the drawer's contents at a glance (Q19). */
   chronicleTicker: string | null;
 } & VerbHandlers) {
-  const { G, viewer, phase, isActive, hasPendingPlayerEvent, currentPlayerId } = useGameUi();
+  const { G, viewer, phase, isActive, hasPendingPlayerEvent } = useGameUi();
 
   const context: VerbContext = {
     G,
@@ -58,29 +49,23 @@ export function CommandDock({
     canFoundColony,
     canUpgradeCity,
     canBuild,
-    isFoundColonyActive,
-    isBuildActive,
+    armedVerb,
     calmUsed: viewer.civicCalmUsedThisTurn,
     ventureUsed: viewer.ventureUsedThisTurn,
   };
 
-  const seasonsLeft = G.seasonalDrawPile.length;
-  const boardLabel = G.boardLayout === "classic" ? "Classic" : "Shuffled";
-  const endTurnEnabled = isVerbEnabled(END_TURN_VERB, context);
-  const endTurnExplanation = verbTitle(END_TURN_VERB, context);
-
   return (
     <div className="commandDock">
-      {/* The clock reads from the spine's left end, on bone. */}
-      <div className="dockSeason">
-        <span className="dockSeasonYear">Year {yearOf(G.season)}</span>
-        <span className="dockSeasonSub">
-          {seasonsLeft} season{seasonsLeft === 1 ? "" : "s"} remain
-        </span>
-        <span className="dockSeasonDecks">
-          Seasonal {seasonsLeft} · Events {G.playerDrawPile.length} · {boardLabel} · Seed private
-        </span>
-      </div>
+      {/* The bar's two end blocks. They are the frame's corners: the bottom bar
+          steps up at each end to a block deep enough to seat a dial, and the
+          tablet above lands on it. Without them the tablet's bottom edge, the
+          rail's, and the bar's all ended in mid-air a hundred pixels apart with
+          open sea between them, and a disc floated in the gap (FRAME-1).
+          They are drawn here rather than as more pseudo-elements because the
+          bar already spends both of its own on the plate and the meander, and
+          each block carries a meander of its own along its top. */}
+      <div aria-hidden="true" className="dockPlinth dockPlinth-left" />
+      <div aria-hidden="true" className="dockPlinth dockPlinth-right" />
 
       <div className="verbSpine" aria-label="Action toolbar">
         {VERBS.map((verb) => (
@@ -88,42 +73,22 @@ export function CommandDock({
         ))}
       </div>
 
-      <div className="dockCommit">
-        {/* The narration sits between the verbs and the commit. */}
-        <div className="dockTicker">
-          {chronicleTicker ? <p title={chronicleTicker}>{chronicleTicker}</p> : null}
-        </div>
+      {/* The narration: it has the whole left half to be long in, and it can
+          never reach the verbs.
 
-        <div className="dockCommitStack">
-          <div className="turnbox">
-            <span className="turnboxLabel">{isActive ? "Your turn" : "Now acting"}</span>
-            <strong>{PLAYER_NAMES[currentPlayerId]}</strong>
-          </div>
-          <Tooltip
-            content={
-              <MechanicsDetails
-                blockedReason={endTurnEnabled ? undefined : endTurnExplanation}
-                heading="End Turn"
-              >
-                {endTurnEnabled ? (
-                  <p className="mechanicsExplanation">{endTurnExplanation}</p>
-                ) : null}
-              </MechanicsDetails>
-            }
-            preferredPlacement="above"
-            triggerClassName="endTurnTooltipTrigger"
-          >
-            <button
-              aria-disabled={!endTurnEnabled}
-              className="endTurnSquare"
-              onClick={endTurnEnabled ? () => END_TURN_VERB.select(handlers) : undefined}
-              type="button"
-            >
-              <UiSprite item="endTurn" className="endTurnSquareIcon" />
-              <span>End Turn</span>
-            </button>
-          </Tooltip>
-        </div>
+          It is the SAME line the chronicle is showing a few hundred pixels away,
+          so it is rendered the same way — the bar used to print the raw message,
+          "-5 wood" in flat ink, while the chronicle printed "-5 Wood" in oxblood
+          with a timber glyph. One event, two voices, both on screen at once.
+
+          Unlinked, like the chronicle: a status line is not a place you act, and
+          the dock already carries every tab stop it should. */}
+      <div className="dockTicker">
+        {chronicleTicker ? (
+          <p className="caption">
+            <AnnotatedText links={false} text={chronicleTicker} />
+          </p>
+        ) : null}
       </div>
     </div>
   );

@@ -68,6 +68,7 @@ export function rollOnTable(
   addLog(
     G,
     `${getPlayerName(G, playerID)} rolls ${roll}${modifierText} on the ${table.name} table: ${row.label}.`,
+    playerID,
   );
 
   const outcomes: string[] = [];

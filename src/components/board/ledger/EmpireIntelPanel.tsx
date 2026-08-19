@@ -1,52 +1,28 @@
 import { memo, useMemo } from "react";
 import { settlementCapacity, totalPops, unrestStatus } from "../../../game/rules";
-import type { UnrestStatus } from "../../../game/rules";
 import type { BuildingId, PopType, TradableMaterial } from "../../../game/types";
-import { formatNumber } from "../../../ui/formatters";
-import { AnnotatedText } from "../../AnnotatedText";
-import { AtlasIcon } from "../../Sprites";
 import { getOwnedHoldings } from "../helpers";
 import type { LedgerTab } from "../types";
 import { BuildingsTab } from "./BuildingsTab";
 import { CitiesTab } from "./CitiesTab";
 import { LedgerPanelHeader } from "./LedgerPanelHeader";
+import { UnrestAlarm } from "./UnrestAlarm";
+import { Icon } from "../../../ui/icons/Icon";
 import { MarketTab } from "./MarketTab";
 import { PopsTab } from "./PopsTab";
 import { LEDGER_TABS, ledgerTabLabel } from "./tabs";
 import { victoryCardsHeld } from "../../../game/victory";
-import { UiSprite } from "../../Sprites";
 import { useGameUi } from "../GameUiContext";
 import { ActiveEffectsList } from "../../ActiveEffectsList";
 
-const UNREST_TITLES: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
-  discontent: "Discontent",
-  unrest: "Unrest",
-  revolt: "Revolt",
-};
-
-/** Player-facing sentence for the ledger's unrest banner. Uses the status numbers +
- *  the ruleset threshold so the warning never disagrees with the engine. */
-function unrestMessage(status: UnrestStatus, popLossThreshold: number): string {
-  const happiness = formatNumber(status.happiness);
-
-  if (status.tier === "revolt" || status.tier === "unrest") {
-    return `Happiness ${happiness} — facing the ${status.tier === "revolt" ? "severe " : ""}riot table every turn until it recovers.`;
-  }
-
-  // discontent
-  return `Happiness ${happiness} — pops start dying at ${popLossThreshold} happiness.`;
-}
-
 function EmpireIntelPanelComponent({
   activeTab,
-  onClose,
   onBuildBuildingRequest,
   onBankSell,
   onBankBuy,
   onLadderRequest,
 }: {
   activeTab: LedgerTab;
-  onClose: () => void;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
@@ -65,66 +41,61 @@ function EmpireIntelPanelComponent({
   const cardsHeld = victoryCardsHeld(G, playerID);
 
   const title = ledgerTabLabel(activeTab);
-  const titleIcon = LEDGER_TABS.find(({ tab }) => tab === activeTab)?.icon;
+  const titleGlyph = LEDGER_TABS.find(({ tab }) => tab === activeTab)?.glyph;
+  /* The empire strip, the unrest alarm and the standing effects are the CITIES
+     page's own furniture (f-panels.html ~194–208), not a masthead the whole left
+     tablet wears. They used to ride above every act page, which cost Pops, Build
+     and Market ~200px of the little height they have — and put the alarm on four
+     pages at once, when a page is allowed exactly one raised voice. */
+  const showsEmpireFurniture = activeTab === "cities";
 
   return (
     <div className="empireIntel">
       {/* The card is titled by the page it is showing, not by the furniture. */}
-      <LedgerPanelHeader title={title} icon={titleIcon} onClose={onClose} />
+      <LedgerPanelHeader title={title} glyph={titleGlyph} />
 
-      <div className="empireSummary" aria-label="Empire summary">
-        <span className="empireStat" title={`${cityCount} ${cityCount === 1 ? "city" : "cities"}`}>
-          <AtlasIcon icon="city" className="empireStatIcon" />
-          <strong>{cityCount}</strong>
-        </span>
-        <span
-          className="empireStat"
-          title={`${colonyCount} ${colonyCount === 1 ? "colony" : "colonies"}`}
-        >
-          <AtlasIcon icon="colony" className="empireStatIcon" />
-          <strong>{colonyCount}</strong>
-        </span>
-        <span className="empireStat" title={`${popsUsed} of ${popsCapacity} population`}>
-          <AtlasIcon icon="citizens" className="empireStatIcon" />
-          <strong>
-            {popsUsed}
-            <span className="empireStatCap">/{popsCapacity}</span>
-          </strong>
-        </span>
-        <span
-          className="empireStat"
-          title={`${cardsHeld} of ${G.ruleset.victory.cardsToWin} victory cards — hold ${G.ruleset.victory.cardsToWin} at the start of your turn to win`}
-        >
-          <UiSprite item="victoryPoint" className="empireStatIcon" />
-          <strong>
-            {cardsHeld}
-            <span className="empireStatCap">/{G.ruleset.victory.cardsToWin}</span>
-          </strong>
-        </span>
-      </div>
+      {showsEmpireFurniture ? (
+        <>
+          {/* Four counts: the shape of your position, on the page about your
+              settlements. Icon + number, four times — the words "city" and
+              "colony" that used to trail the first two are what their icons
+              already say, and at a tablet's real width (236px of page) they were
+              pushing the laurel count out through the frame. */}
+          <div className="empireStrip" aria-label="Empire summary">
+            <span className="est" title={`${cityCount} ${cityCount === 1 ? "city" : "cities"}`}>
+              <Icon glyph="city" />
+              <b className="stat-lg num">{cityCount}</b>
+            </span>
+            <span
+              className="est"
+              title={`${colonyCount} ${colonyCount === 1 ? "colony" : "colonies"}`}
+            >
+              <Icon glyph="colony" />
+              <b className="stat-lg num">{colonyCount}</b>
+            </span>
+            <span className="est" title={`${popsUsed} of ${popsCapacity} population`}>
+              <Icon glyph="citizens" />
+              <b className="stat-lg num">{popsUsed}</b>
+              <span className="label num">/{popsCapacity}</span>
+            </span>
+            <span
+              className="est"
+              title={`${cardsHeld} of ${G.ruleset.victory.cardsToWin} laurels held`}
+            >
+              <Icon glyph="laurel" />
+              <b className="stat-lg num">{cardsHeld}</b>
+              <span className="label num">/{G.ruleset.victory.cardsToWin}</span>
+            </span>
+          </div>
 
-      {unrest.tier !== "calm" ? (
-        <div
-          className={`unrestBanner unrestBanner-${unrest.tier}`}
-          role="status"
-          title={
-            [
-              unrest.deficitTurns > 0 ? `${unrest.deficitTurns} turn(s) of food deficit` : null,
-              unrest.timedModifiers > 0
-                ? `${unrest.timedModifiers} lingering unrest effect(s)`
-                : null,
-              unrest.totalDeaths > 0 ? `${unrest.totalDeaths} pops lost so far` : null,
-            ]
-              .filter(Boolean)
-              .join(" · ") || undefined
-          }
-        >
-          <span className="unrestBannerTag">{UNREST_TITLES[unrest.tier]}</span>
-          <AnnotatedText text={unrestMessage(unrest, G.ruleset.economy.unrest.popLossThreshold)} />
-        </div>
+          <UnrestAlarm
+            status={unrest}
+            popLossThreshold={G.ruleset.economy.unrest.popLossThreshold}
+          />
+
+          <ActiveEffectsList variant="ledger" />
+        </>
       ) : null}
-
-      <ActiveEffectsList variant="ledger" />
 
       <div className="intelBody">
         {activeTab === "cities" ? (

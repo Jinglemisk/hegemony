@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { AtlasIcon, UiSprite } from "../../Sprites";
+import type { GlyphId } from "../../../ui/icons/glyphs";
 import type { ConsultTab, EmpireTab, LedgerTab } from "../types";
 
 /**
@@ -9,44 +8,42 @@ import type { ConsultTab, EmpireTab, LedgerTab } from "../types";
  * (which draws the discs) and its panel (which titles itself from the open page), so
  * a disc and its page can never disagree about what they are called.
  */
-export const LEDGER_TABS: Array<{ tab: LedgerTab; label: string; icon: ReactNode }> = [
-  { tab: "cities", label: "Cities", icon: <AtlasIcon icon="city" className="railDiscIcon" /> },
-  { tab: "pops", label: "Pops", icon: <AtlasIcon icon="citizens" className="railDiscIcon" /> },
-  {
-    tab: "buildings",
-    label: "Build",
-    icon: <AtlasIcon icon="workshop" className="railDiscIcon" />,
-  },
-  {
-    tab: "market",
-    label: "Market",
-    icon: <AtlasIcon icon="marketplace" className="railDiscIcon" />,
-  },
+export const LEDGER_TABS: Array<{
+  tab: LedgerTab;
+  label: string;
+  glyph: GlyphId;
+  /** What the PAGE calls itself, when that is not what the tab is called. A tab
+   *  is a spine label — one word, so four of them fit a 44px rail; a page has a
+   *  masthead and can say what it actually is. */
+  title?: string;
+}> = [
+  { tab: "cities", label: "Cities", glyph: "city" },
+  { tab: "pops", label: "Pops", glyph: "citizens", title: "The Ladder" },
+  { tab: "buildings", label: "Build", glyph: "workshop" },
+  // The market's glyph is the forum's scales: the bank is where things are
+  // weighed, and drawing that twice with two pictures would be a lie.
+  { tab: "market", label: "Market", glyph: "forum" },
 ];
 
-export const CONSULT_TABS: Array<{ tab: ConsultTab; label: string; icon: ReactNode }> = [
-  {
-    tab: "chronicle",
-    label: "Chronicle",
-    icon: <UiSprite item="meander" className="railDiscIcon" />,
-  },
-  { tab: "codex", label: "Codex", icon: <UiSprite item="seal" className="railDiscIcon" /> },
-  {
-    tab: "victory",
-    label: "Victory",
-    icon: <UiSprite item="victoryPoint" className="railDiscIcon" />,
-  },
+export const CONSULT_TABS: Array<{ tab: ConsultTab; label: string; glyph: GlyphId }> = [
+  { tab: "chronicle", label: "Chronicle", glyph: "chronicle" },
+  { tab: "codex", label: "Codex", glyph: "codex" },
+  { tab: "victory", label: "Victory", glyph: "laurel" },
   // The Agora is a consult page, not an act page: the Assembly panel is where you
   // act on politics, this is where you read what it left standing.
-  {
-    tab: "agora",
-    label: "Agora",
-    icon: <UiSprite item="resolutionDeck" className="railDiscIcon" />,
-  },
+  //
+  // The bema, not the temple front. The temple front is a pediment on columns and
+  // so is the Cities tab's city — two near-identical pictures of unrelated things,
+  // one on each rail. The speaker's platform is the agora as a PLACE, and a low
+  // flight of steps shares its silhouette with nothing else on either spine.
+  { tab: "agora", label: "Agora", glyph: "bema" },
 ];
 
 const LABELS = new Map<EmpireTab, string>(
-  [...LEDGER_TABS, ...CONSULT_TABS].map(({ tab, label }) => [tab, label]),
+  [...LEDGER_TABS, ...CONSULT_TABS].map((entry) => [
+    entry.tab,
+    ("title" in entry ? entry.title : undefined) ?? entry.label,
+  ]),
 );
 
 export function ledgerTabLabel(tab: EmpireTab): string {

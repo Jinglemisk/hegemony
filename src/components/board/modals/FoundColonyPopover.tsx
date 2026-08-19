@@ -11,7 +11,8 @@ import {
 import type { PopType, Settlement } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { SettlementSummaryCard } from "../../SettlementCard";
-import { AtlasIcon } from "../../Sprites";
+import { POP_GLYPHS, SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 import { useGameUi } from "../GameUiContext";
 import { TileListbox } from "../TileListbox";
 import { firstAvailablePop, getSettlementEntries, settlementPickerLabel } from "../helpers";
@@ -91,6 +92,7 @@ export function FoundColonyPopover({
         <>
           <article className="placementPreviewCard settlement-colony foundColonyPreview">
             <SettlementSummaryCard
+              name="NEW COLONY"
               content={G.definition.content}
               netYield={previewYield}
               ruleset={G.ruleset}
@@ -112,8 +114,8 @@ export function FoundColonyPopover({
                 icon: entry.tile.settlements.some(
                   (s) => s.owner === playerID && s.kind !== "colony",
                 )
-                  ? "city"
-                  : "colony",
+                  ? SETTLEMENT_GLYPHS.city
+                  : SETTLEMENT_GLYPHS.colony,
                 title: settlementPickerLabel(G, entry.tile, playerID),
                 detail: formatPops(entry.pops),
                 label: `Send a pop from ${settlementPickerLabel(G, entry.tile, playerID)} — holds ${formatPops(entry.pops)}.`,
@@ -135,7 +137,7 @@ export function FoundColonyPopover({
                   onClick={() => setPop(candidate)}
                   type="button"
                 >
-                  <AtlasIcon icon={candidate} className="miniIcon" />
+                  <Icon glyph={POP_GLYPHS[candidate]} size="rail" className="miniIcon" />
                   <span>{formatPopLabel(candidate, 1)}</span>
                   <strong>{source?.pops[candidate] ?? 0}</strong>
                 </button>

@@ -6,10 +6,12 @@ import {
 } from "../../../game/rules";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
-import { AtlasIcon } from "../../Sprites";
+import { POP_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 import { useGameUi } from "../GameUiContext";
 import { ResourceChips } from "../ResourceChips";
-import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
+import { actionRequirementText, gameplayActionDisabled } from "../helpers";
+import { TileSubject } from "../TileSubject";
 import { PopoverActions } from "../PopoverActions";
 import { TilePopover } from "./TilePopover";
 
@@ -55,15 +57,13 @@ export function LadderPopover({
       onCancel={onCancel}
       title={kind === "promote" ? "Promote" : "Demote"}
     >
-      <p className="placementSectionLabel placementTargetName">
-        {settlementPickerLabel(G, tile, playerID)}
-      </p>
+      <TileSubject G={G} playerID={playerID} tile={tile} />
 
       <div className="ladderMoveRow" aria-hidden="true">
-        <AtlasIcon icon={from} className="miniIcon" />
+        <Icon glyph={POP_GLYPHS[from]} size="rail" className="miniIcon" />
         <span>{formatPopLabel(from, 1)}</span>
         <span className="meterSlash">→</span>
-        <AtlasIcon icon={to} className="miniIcon" />
+        <Icon glyph={POP_GLYPHS[to]} size="rail" className="miniIcon" />
         <span>{formatPopLabel(to, 1)}</span>
       </div>
 

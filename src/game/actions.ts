@@ -79,6 +79,7 @@ export function placeCapital(
   addLog(
     G,
     `${getPlayerName(G, playerID)} founded their metropolis on ${tile.terrain} with ${formatPops(pops)}.`,
+    playerID,
   );
   return MOVE_OK;
 }
@@ -125,6 +126,7 @@ export function placeCity(
   addLog(
     G,
     `${getPlayerName(G, playerID)} founded their second city on ${tile.terrain} with ${formatPops(pops)}.`,
+    playerID,
   );
   return MOVE_OK;
 }
@@ -202,6 +204,7 @@ export function foundColony(
   addLog(
     G,
     `${getPlayerName(G, playerID)} sent ${formatPops(foundingPops)} to seed the new colony on ${tile.terrain}.`,
+    playerID,
   );
   return MOVE_OK;
 }
@@ -264,6 +267,7 @@ export function upgradeColonyToCity(
   addLog(
     G,
     `${getPlayerName(G, playerID)} upgraded a colony to a city on ${tile.terrain}.${displacementText}`,
+    playerID,
   );
   return MOVE_OK;
 }
@@ -288,6 +292,7 @@ function addColony(
   addLog(
     G,
     `${getPlayerName(G, playerID)} founded a colony on ${tile.terrain} with ${formatPops(pops)}.`,
+    playerID,
   );
   return settlement;
 }
@@ -312,7 +317,7 @@ export function collectIncome(
     player.incomeSuppressedTurns -= 1;
     player.collectedThisTurn = true;
     player.hasCollectedGameplayIncome = true;
-    addLog(G, `${getPlayerName(G, playerID)} collects nothing — the city is on strike.`);
+    addLog(G, `${getPlayerName(G, playerID)} collects nothing — the city is on strike.`, playerID);
     drawPlayerEvent(G, playerID);
     return MOVE_OK;
   }
@@ -326,6 +331,7 @@ export function collectIncome(
   addLog(
     G,
     `${getPlayerName(G, playerID)} ${mode === "automatic" ? "automatically collected" : "collected"} income (${formatRuleResourceDelta(appliedIncome)}).`,
+    playerID,
   );
   drawPlayerEvent(G, playerID);
   return MOVE_OK;
@@ -354,7 +360,7 @@ export function buildBuilding(
   consumeActionCostDiscounts(G, playerID, "buildBuilding", building.id);
   consumeLawFreeAction(G, playerID, "buildBuilding");
   settlement.buildings.push(building.id);
-  addLog(G, `${getPlayerName(G, playerID)} built ${building.name}.`);
+  addLog(G, `${getPlayerName(G, playerID)} built ${building.name}.`, playerID);
   return MOVE_OK;
 }
 
@@ -379,6 +385,7 @@ export function growPop(
   addLog(
     G,
     `${getPlayerName(G, playerID)} grew 1 ${formatPopName(pop, 1)} in ${settlement.kind} on ${tile.terrain}.`,
+    playerID,
   );
   return MOVE_OK;
 }
@@ -416,6 +423,7 @@ export function resolveArrivingPops(G: HegemonyState, playerID: PlayerId) {
       addLog(
         G,
         `${getPlayerName(G, playerID)}'s ${formatPops(transfer.pops)} arrived at ${formatTileLabel(G, transfer.toTileId)}.`,
+        playerID,
       );
       continue;
     }
@@ -427,6 +435,7 @@ export function resolveArrivingPops(G: HegemonyState, playerID: PlayerId) {
       addLog(
         G,
         `${getPlayerName(G, playerID)}'s ${formatPops(transfer.pops)} returned to ${formatTileLabel(G, transfer.fromTileId)}.`,
+        playerID,
       );
     }
   }
@@ -467,6 +476,7 @@ function schedulePopulationTransfer(
     addLog(
       G,
       `${getPlayerName(G, playerID)} moved ${formatPops(pops)} from ${formatTileLabel(G, sourceTileId)} to ${formatTileLabel(G, targetTileId)}.`,
+      playerID,
     );
   }
 

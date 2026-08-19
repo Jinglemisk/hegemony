@@ -1,0 +1,1778 @@
+/* ==========================================================================
+ * assemblyScene — the Assembly as a full-bleed night scene.
+ *
+ * OWNER RULING, 2026-08-15: the Assembly is a TAKEOVER. It replaces the
+ * 2026-07-20 ruling that sized it to the sea gap. The scene covers the viewport,
+ * the vignette darkens the whole app — top bar, rails, dock — and the colonnade
+ * gets its designed 1074px. See AssemblyPanel.tsx for the reasoning.
+ *
+ * This sheet is the ONE owner of the scene's layout AND its light. It used to be
+ * a light-only restyle sitting on top of assembly.css's layout, and the two
+ * disagreed about who owned what — which is how a monument came to be emitted
+ * with no rule anywhere while its dashed-clay treatment sat unused on `.tally`,
+ * a name the vote tally also wanted. assembly.css keeps the Agora page and the
+ * Codex roster; everything the scene draws is here.
+ *
+ * Type: every size in this sheet is either a role from type.css or one of the
+ * three scene sizes declared in the `.asmScene` block below. There is no third
+ * kind, and the block below is where a fourth would have to argue for itself.
+ *
+ * The register: AEGEAN is politics and appears nowhere else in the game. Clay is
+ * "your move", olive is yea, oxblood is nay. Every geometry number rides
+ * --ui-scale, exactly like the chrome it is covering, so 1280 gets the same
+ * scene smaller rather than a different one.
+ * ========================================================================== */
+
+.asmScene {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-takeover);
+  display: grid;
+  overflow: hidden;
+  color: var(--ivory);
+  /* OPAQUE. This is a floor, not a veil.
+     It was 93→99% alpha, and the last 7% was enough to read SIKYON, OLYNTHOS and
+     BOURA straight through the middle of the scene, with hex outlines running
+     behind the very card the sitting is about. A translucency that leaks the
+     settlement names reads as an accident rather than as depth, and it competes
+     with the one object the scene exists to show. The ellipse survives as the
+     vignette: its two stops are TONES now, not alphas, so the floor still lifts
+     under the head and falls away at the corners while nothing behind it comes
+     through. The prototype's scene sits on an opaque ground for the same reason. */
+  background: radial-gradient(ellipse at 50% 32%, rgb(35 26 22), rgb(14 10 9));
+
+  --asm-stele-w: calc(252px * var(--ui-scale));
+  --asm-gap: calc(22px * var(--ui-scale));
+  --asm-card-w: calc(360px * var(--ui-scale));
+  --asm-standing-w: calc(300px * var(--ui-scale));
+  --asm-tally-w: calc(430px * var(--ui-scale));
+  /* Wide enough that "held their peace" and "has cast 3 — 1 bought" sit on one
+     line. The prototype's 200px was drawn against the word "deliberates". */
+  --asm-seat-w: calc(220px * var(--ui-scale));
+  /* How tall the floor's two hero objects — the card and the scale — will grow
+     into spare height before they stop. Past this an ivory slab with four lines
+     on it reads as a panel rather than as something you are holding. */
+  --asm-object-h: calc(430px * var(--ui-scale));
+  --asm-lacquer: rgb(24 18 16 / 72%);
+  --asm-keyline: rgb(255 248 231 / 20%);
+
+  /* ── The scene's own three sizes ───────────────────────────────────────────
+     type.css owns the nine roles and every other sheet spends them. These three
+     are the declared exception, and type.css is where the exception is granted:
+     its note on `.stat-hero` rules that the venture's payoff and the Assembly's
+     tally are "scene numerals inside a scene that owns its whole viewport, not
+     page numerals", because giving each a role would make the size table longer
+     than the thing it disciplines. This sheet IS that scene — fixed, inset 0 —
+     and while it stands there is no page left to be in register with.
+
+     What was wrong was never that the sizes were local. It was that they were
+     three loose numbers in three separate rules, each carrying its own apology,
+     which is indistinguishable from three sizes nobody decided. They are a
+     register now: declared once, here, beside the widths they share a scene
+     with, and spent by name below. They ride rem like every role, so --ui-scale
+     shrinks them with the rest of the scene at 1280. */
+  --asm-numeral: 3.5rem; /* 56px — the tally. Two of them are weighed against
+                            each other, which is why it outranks the single
+                            carved figure any ceremony gets. */
+  --asm-motion: 1.5625rem; /* 25px — the name of the card under debate. No role
+                              sits between title and display, and a 34px display
+                              would outrank the scene's own head. */
+  --asm-clause: 1.03125rem; /* 16.5px — one step above body, for the sentence
+                               the whole scene exists to put in front of four
+                               people. */
+}
+
+.asmStage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(18px * var(--ui-scale));
+  min-height: 0;
+  padding: calc(26px * var(--ui-scale)) calc(40px * var(--ui-scale)) calc(20px * var(--ui-scale));
+}
+
+/* ── The head ──────────────────────────────────────────────────────────────
+   Three centred rows and two fixed corners. */
+
+.asmHead {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.asmHeadBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.asmKicker {
+  margin-bottom: 4px;
+  color: var(--warn-lit);
+  letter-spacing: 0.5em;
+  /* The tracking is applied on the right of every glyph, the last one included,
+     so a centred word drifts left by half a space without this. */
+  text-indent: 0.5em;
+}
+
+.asmTitle {
+  margin: 0;
+  color: var(--ivory);
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+}
+
+.asmSub {
+  margin-top: 2px;
+  color: var(--ivory-70);
+}
+
+/* The ballot counter and the Voice plaque are furniture: same corner, every
+   frame, so the eye stops looking for them after the first sitting. */
+.asmBallotCount {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.asmBallotKey {
+  color: var(--ivory-45);
+  letter-spacing: 0.22em;
+}
+
+.asmBallotValue {
+  color: var(--ivory);
+  font-weight: 700;
+}
+
+.asmVoiceTrigger {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.asmVoice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 13px;
+  border: 1px solid rgb(255 248 231 / 30%);
+  border-radius: 4px;
+}
+
+.asmVoiceKey {
+  color: var(--ivory-45);
+  letter-spacing: 0.22em;
+}
+
+.asmVoiceName {
+  color: var(--ivory);
+  letter-spacing: 0.12em;
+}
+
+.asmVoiceNone {
+  color: var(--ivory-45);
+}
+
+/* A glaze never travels alone: every owner mark in this scene is a disc bearing
+   the seat's Greek blazon with an ivory keyline. The Assembly used to be the one
+   surface in the game that broke that rule, with a bare 8px colour dot. */
+.asmGlaze {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--ivory);
+  box-shadow: inset 0 0 0 1.6px rgb(255 248 231 / 85%);
+  line-height: 1;
+}
+
+/* ── The stations ──────────────────────────────────────────────────────────
+   Three discs joined by the ivory meander — the same band that edges the bone
+   bars, drawn in ivory because it is running across the dark. */
+
+.asmStations {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.asmStation {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ivory-45);
+}
+
+.asmStationLink {
+  width: 52px;
+  height: 8px;
+  margin-right: 5px;
+  background: var(--meander-ivory) repeat-x left center / 18px 9px;
+  opacity: 0.4;
+}
+
+.asmStationNum {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1.6px solid currentcolor;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.asmStationLabel {
+  color: inherit;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+}
+
+/* A station you have LEFT turns olive and its numeral becomes a check. Without a
+   done state a finished phase reads exactly like one not yet reached, and the
+   track stops being a track. */
+.asmStation.is-done {
+  color: var(--pos-lit);
+}
+
+.asmStation.is-now {
+  color: var(--warn-lit);
+}
+
+.asmStation.is-now .asmStationNum {
+  color: var(--vase-black);
+  border-color: var(--warn-lit);
+  background: var(--warn-lit);
+}
+
+/* ── The colonnade ─────────────────────────────────────────────────────────
+   Four SEPARATE stelae. The gap is the whole point: with none declared the cut
+   corners met and the four read as one slab with dark V-notches chipped out. */
+
+.asmColonnade {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  gap: var(--asm-gap);
+}
+
+.asmStele {
+  display: flex;
+  flex-direction: column;
+  width: var(--asm-stele-w);
+  padding: calc(16px * var(--ui-scale)) calc(18px * var(--ui-scale));
+  background: linear-gradient(180deg, var(--stele-face), var(--bone) 60%);
+  /* The cut corners are what make it a stele rather than a card. The vertical
+     padding above is what keeps the bust out of the cut. */
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%, 0 14px);
+  box-shadow:
+    0 3px 0 var(--stele-shade),
+    0 14px 40px rgb(0 0 0 / 50%);
+  color: var(--ink);
+  text-align: center;
+}
+
+/* Four glazes, not two. The medallion is the faster half of recognising an
+   orator; three identical clay discs made three of them one man. */
+.asmBust {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  color: var(--ivory);
+  background: var(--clay);
+  box-shadow:
+    inset 0 0 0 2px rgb(255 248 231 / 85%),
+    0 0 0 1.5px rgb(36 25 16 / 50%);
+}
+
+.asmStele[data-orator="perdiccas"] .asmBust {
+  background: var(--aegean);
+}
+
+.asmStele[data-orator="kleistophenes"] .asmBust {
+  background: var(--olive);
+}
+
+.asmStele[data-orator="stratokles"] .asmBust {
+  background: var(--vase-black);
+}
+
+.asmSteleName {
+  margin: 0;
+  color: var(--ink);
+}
+
+.asmSteleEpithet {
+  margin: 2px 0 9px;
+  color: var(--clay-ink);
+  letter-spacing: 0.16em;
+}
+
+.asmDogma {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 10px 8px;
+  border-radius: 4px;
+  background: rgb(36 25 16 / 5%);
+  text-align: left;
+}
+
+.asmDogmaKey {
+  color: var(--ink-63);
+  letter-spacing: 0.18em;
+  text-align: center;
+}
+
+.asmDogmaRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  color: var(--ink-66);
+}
+
+.asmDogmaIcon {
+  display: flex;
+  flex: none;
+  align-self: center;
+  color: var(--ink-63);
+}
+
+/* Tint the glyph and ink the numeral: the row says whether this orator pays you
+   or charges you before you have read a word of it. */
+.asmDogmaRow.is-pos .asmDogmaIcon {
+  color: var(--pos);
+}
+
+.asmDogmaRow.is-neg .asmDogmaIcon {
+  color: var(--neg);
+}
+
+.asmStelePrize {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 9px 0 10px;
+}
+
+.asmPrizeKey {
+  color: var(--ink-63);
+  letter-spacing: 0.16em;
+}
+
+.asmPrizeValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.asmPrizePart {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.asmPrizeNone {
+  color: var(--ink-63);
+}
+
+/* The one pressable thing on a stele: a fired clay seal. */
+.asmDrawTrigger {
+  display: flex;
+  width: 100%;
+}
+
+.asmDraw {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  border-radius: 4px;
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--clay-lit), var(--clay) 55%, var(--clay-shade));
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 35%),
+    0 2px 6px rgb(0 0 0 / 40%);
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.asmDraw[aria-disabled="true"] {
+  color: var(--ink-63);
+  background: var(--ink-12);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.asmDrawCost {
+  color: inherit;
+}
+
+/* One pip per law this orator has landed. A glanceable count, not a list — the
+   laws themselves stand in their own column on the floor below. */
+/* The pips are 9px tall and the row is focusable — it carries the orator's power
+   tooltip — so the TRIGGER takes 2.5.8's 24px and the pips sit centred in it. The
+   old 10px margin is folded into that height, so the stele grows 6px, not 15. */
+.asmPipsTrigger {
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  margin-top: 1px;
+}
+
+.asmPips {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  min-height: 9px;
+}
+
+.asmPip {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--clay);
+  box-shadow: inset 0 0 0 1px rgb(36 25 16 / 30%);
+}
+
+/* ── The floor ─────────────────────────────────────────────────────────────
+   One hero object and one companion, centred. Never a row of equal boxes. */
+
+/* The floor takes every pixel the head and the seats do not, and — this is the
+   part that was wrong — it used to hand all of that to the GAPS. At 1366 the head
+   sat 175px off the tally and it read well; at 1440 that was 240px and at 1920 it
+   was 320px above AND below, leaving the ballot a small island in a black sea.
+   Extra height belongs to the objects. `stretch` gives the card and the scale the
+   floor's own height, each capped so they grow into a taller object rather than
+   an infinitely tall one, and what is left over is a margin, not a chasm. */
+.asmFloor {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  justify-content: center;
+  gap: calc(46px * var(--ui-scale));
+  min-height: 0;
+  width: 100%;
+}
+
+/* The closing floor's three registers stay mutually top-aligned — a triptych, not
+   three things floating at three heights — so the GROUP is what centres. */
+.asmFloorClosing {
+  align-items: center;
+  gap: 0;
+  padding-top: 0;
+}
+
+.asmClosingRegisters {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: calc(60px * var(--ui-scale));
+  max-height: 100%;
+}
+
+.asmCardWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: none;
+}
+
+.asmFloorEmpty,
+.asmFloorPrompt {
+  margin: 0;
+  color: var(--ivory-45);
+  text-align: center;
+}
+
+/* ── The resolution card ───────────────────────────────────────────────────
+   Fired ivory floating on the dark floor, with a meander band across its head.
+   It is NOT inside a bordered container: the darkness is the frame. */
+
+/* The card GROWS into spare height instead of floating in the middle of it, and
+   it grows by FLEX rather than by a percentage min-height: the wrap also holds a
+   prompt line and a next-on-the-bema line, and `min-height: 100%` ignored them
+   and pushed the card three pixels up through the colonnade above it. `flex: 1`
+   claims only what is actually free. The cap is what keeps it a card — past this
+   an ivory slab with four lines on it reads as a panel, not as something held. */
+.asmLawCard {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: var(--asm-card-w);
+  max-height: var(--asm-object-h);
+  overflow: hidden;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--ivory-lit), var(--ivory) 55%, var(--ivory-settled));
+  box-shadow:
+    0 26px 70px rgb(0 0 0 / 60%),
+    inset 0 0 0 1px rgb(36 25 16 / 35%);
+  color: var(--ink);
+  text-align: center;
+}
+
+.asmLawBand {
+  height: 12px;
+  background:
+    var(--meander) repeat-x center / 18px 9px,
+    var(--vase-black);
+  opacity: 0.75;
+}
+
+.asmLawFaceTrigger {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-height: 0;
+}
+
+/* The band stays pinned to the head of the card and the FACE takes the growth,
+   so a taller card is a card with more air around its sentence — never a meander
+   floating in the middle of one. */
+.asmLawFace {
+  flex: 1 1 auto;
+  padding: 16px 0 4px;
+}
+
+.asmLawKicker {
+  margin: 0 0 4px;
+  color: var(--clay-ink);
+  letter-spacing: 0.28em;
+}
+
+.asmLawName {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: var(--asm-motion);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.12;
+  text-transform: uppercase;
+}
+
+.asmLawRule {
+  display: block;
+  width: 60px;
+  height: 1px;
+  margin: 12px auto;
+  background: var(--ink-30);
+}
+
+.asmLawText {
+  margin: 0;
+  padding: 0 30px;
+  color: var(--ink-66);
+  font-size: var(--asm-clause);
+  line-height: 1.5;
+}
+
+/* The trade-off, inked in two colours: what you win against what it costs.
+   Each clause takes its OWN LINE BOX. They used to be three inline spans in a
+   narrow column, each wrapping across several lines, so their bounding boxes
+   nested inside one another — the auditor read 100% overlap and the reader read
+   a smear. "but" rides inside the cost clause, where it belongs anyway. */
+.asmClause {
+  display: block;
+}
+
+.asmClauseGain {
+  color: var(--pos);
+  font-weight: 800;
+}
+
+.asmClauseCost {
+  color: var(--neg);
+  font-weight: 800;
+}
+
+.asmClauseBut {
+  color: var(--ink-63);
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* A card that pulls only one way, or pulls both ways inside a single effect, is
+   carved WHOLE rather than split. It keeps the clause's weight — this is still
+   the sentence the scene exists to put in front of four people — and declines the
+   olive/oxblood ink, because there is no half of it to claim either. Eight cards
+   land here, and they used to render as flat grey prose with no carving at all. */
+.asmClauseWhole {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.asmLawTarget,
+.asmLawPrize,
+.asmLawHouseNote,
+.asmLawKind {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 12px 0 0;
+}
+
+.asmLawTarget {
+  color: var(--neg);
+}
+
+.asmTargetDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--vase);
+}
+
+.asmLawHouseNote,
+.asmLawKind {
+  color: var(--ink-63);
+  letter-spacing: 0.18em;
+}
+
+.asmLawKind {
+  margin: 8px 0 0;
+  color: var(--aegean);
+}
+
+.asmLawKind.is-directive {
+  color: var(--clay-ink);
+}
+
+.asmLawRepeal .asmLawName {
+  color: var(--neg);
+}
+
+/* Propose / discard, on the card they concern. */
+.asmLawActs {
+  display: flex;
+  gap: 10px;
+  padding: 14px 22px 18px;
+}
+
+.asmActTrigger {
+  display: flex;
+  flex: 1;
+}
+
+.asmAct {
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.asmAct.is-primary {
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--clay-lit), var(--clay) 55%, var(--clay-shade));
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 35%),
+    0 2px 8px rgb(0 0 0 / 35%);
+}
+
+.asmAct.is-ghost {
+  color: var(--ink-66);
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--ink-30);
+}
+
+.asmAct.is-ghost:hover {
+  color: var(--ink);
+  background: var(--ink-07);
+}
+
+.asmBlocked {
+  align-self: center;
+  color: var(--neg);
+}
+
+/* The rest of the ballot exists, so it is drawn: the next card peeks out from
+   under the current one, tilted off true like a card slid half out of a stack. */
+.asmNextCard {
+  position: relative;
+  z-index: 1;
+  width: calc(290px * var(--ui-scale));
+  margin: -22px 0 0;
+  padding: 32px 12px 12px;
+  border-radius: 4px;
+  background: var(--stele-face);
+  box-shadow:
+    0 8px 30px rgb(0 0 0 / 50%),
+    inset 0 0 0 1px rgb(36 25 16 / 30%);
+  color: var(--ink-66);
+  letter-spacing: 0.2em;
+  text-align: center;
+  transform: rotate(-1.6deg);
+}
+
+/* ── The standing record ───────────────────────────────────────────────────
+   Beside the card that wants to join it. */
+
+.asmStanding {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: var(--asm-standing-w);
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.asmStanding::-webkit-scrollbar {
+  display: none;
+}
+
+.asmStandingKey {
+  margin: 0 0 10px;
+  color: var(--ivory-45);
+  letter-spacing: 0.26em;
+}
+
+.asmStandingKey + .asmStandingKey,
+.lawslab + .asmStandingKey,
+.asmSlabTrigger + .asmStandingKey,
+.asmSlabBare + .asmStandingKey {
+  margin-top: 14px;
+}
+
+.asmSlabTrigger {
+  display: block;
+}
+
+/* The slab is the same component the Agora renders — one law, three lives — so
+   it is re-lit here rather than re-drawn. Colours only. */
+.asmStanding .lawslab {
+  border-left-color: var(--ivory-45);
+  background: rgb(255 248 231 / 8%);
+  color: var(--ivory);
+}
+
+.asmStanding .lawslab .lawslabText,
+.asmStanding .lawslab .lawslabEffects {
+  color: var(--ivory-70);
+}
+
+.asmStanding .lawslab .lawslabMeta {
+  color: var(--ivory-45);
+}
+
+/* The slab's sentence carries resource chips, and those are masks painted with
+   the resource's own colour — wood is a near-black olive, which on this ground is
+   an invisible chip. They ink ivory here. The glyph's SHAPE is what names the
+   resource anyway; colour on this board says whose, not what. */
+.asmStanding .resourceMaskIcon {
+  background: var(--ivory-70);
+}
+
+.asmStanding .richToken {
+  color: var(--ivory);
+}
+
+/* The stelae still bare. Dashed and empty, because "five stand empty" is a fact
+   you act on: it is the difference between proposing freely and having to name a
+   standing Law to tear down. */
+.asmSlabBare {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed rgb(255 248 231 / 26%);
+  border-radius: 4px;
+  color: var(--ivory-45);
+  text-align: center;
+}
+
+/* PAR-ASM-22, closed. `.lawslabMonument` was emitted by StandingLaw and matched
+   by NOTHING, while the dashed-clay treatment it was meant to have sat on
+   `.tally` / `.tallyKey` / `.tallyName` — dead selectors that also collided,
+   conceptually, with the vote tally's own family. Those are deleted; this is the
+   treatment, on the class that is actually emitted, and it lands in BOTH lives of
+   the object (the Agora page and this column) because it is the object that is
+   different, not the page. A monument is not a rule: it is a permanent scratch on
+   Stratokles's stack, so it is dashed and it is clay. The report's other half,
+   `.steleMonument`, had no caller at all and its whole render path is gone —
+   see StandingLaw.tsx. */
+.lawslabMonument {
+  border-left: 3px dashed var(--clay);
+  background: rgb(192 70 28 / 8%);
+}
+
+.asmStanding .lawslabMonument {
+  border-left-color: var(--clay-lit);
+  background: rgb(192 70 28 / 14%);
+}
+
+/* ── The repeal ceremony (ASM-11) ──────────────────────────────────────────
+   A law that is struck used to VANISH: the engine dropped it from `activeLaws`
+   and the slab left the DOM on the same frame. A rule that stood for two years
+   has more to say about leaving than that.
+
+   The stone is read for a beat, splits, and goes over. Three movements, and the
+   timing is a contract with `CEREMONY_MS` in StandingLaw.tsx — the same
+   arrangement `LacquerDie`'s `FLIP_MS` has with `dieTumble`, and for the same
+   reason: the JS is what actually ends the moment, so the JS clock and the
+   animation have to agree or the stone is removed mid-fall.
+
+     0–350ms    still. The column has just come back on the closing floor and is
+                being read; a stone that starts falling before you have found it
+                is a glitch, not a ceremony.
+     350–830ms  the crack RUNS, top edge to bottom, splinters opening after the
+                main fracture reaches them. The slab shudders under it.
+     830–1530ms it tips on its own footing and goes, over the stones below it.
+
+   Under `prefers-reduced-motion` this element is never rendered at all — the
+   hook queues nothing and the law leaves on the frame the engine drops it, which
+   is the end state the fall was going to reach. The stillness block at the foot
+   of this file is not dead code covering that case: it covers the reader who
+   turns reduced motion ON while a stone is already in the air. */
+
+.lawslabFalling {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  /* It has left the record; it is not a thing to hover, read or tab to. */
+  pointer-events: none;
+  /* It pivots on its own footing, the corner the stone actually rests on — a
+     stele toppling about its centre reads as a card being swiped away. */
+  transform-origin: 0 100%;
+  animation: steleFall 1530ms linear forwards;
+}
+
+.asmCrack {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* A lit edge with a dark gap behind it. One stroke alone reads as a scratch ON
+     the stone; the offset shadow is what makes it read as a split THROUGH it. */
+  color: var(--ivory);
+  filter: drop-shadow(1px 1px 0 rgb(18 11 5 / 85%));
+}
+
+.asmCrack path {
+  /* `pathLength="1"` on every path (AssemblyIcons.tsx) normalises four fractures
+     of four different lengths to one dash, so a single offset walk draws each of
+     them end to end at its own pace. */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  /* The viewBox is stretched to the slab, so without this the hairline would be
+     drawn several times wider than it is tall. */
+  vector-effect: non-scaling-stroke;
+  animation: steleCrack 480ms linear 350ms forwards;
+}
+
+/* The splinters open OFF the main fracture, so they cannot precede it. */
+.asmCrack path + path {
+  animation-delay: 560ms;
+  animation-duration: 250ms;
+}
+
+@keyframes steleCrack {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes steleFall {
+  0%,
+  22% {
+    transform: none;
+    opacity: 1;
+  }
+
+  27% {
+    transform: translate3d(-1.2px, 0, 0);
+  }
+
+  33% {
+    transform: translate3d(1.2px, 0, 0);
+  }
+
+  40% {
+    transform: translate3d(-0.7px, 0, 0);
+  }
+
+  47% {
+    transform: translate3d(0.4px, 0, 0);
+  }
+
+  /* Square on its base for an instant, cracked through — then gravity. */
+  54% {
+    transform: none;
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.72);
+  }
+
+  100% {
+    transform: rotate(13deg) translate3d(7px, 64px, 0);
+    opacity: 0;
+  }
+}
+
+/* Stillness, for a preference changed mid-fall. The stone lands where the engine
+   already is — struck, and gone the moment the timeout in StandingLaw.tsx comes
+   round — rather than freezing upright on a record that no longer holds it. */
+@media (prefers-reduced-motion: reduce) {
+  .lawslabFalling {
+    opacity: 0;
+    animation: none;
+  }
+
+  .asmCrack path {
+    animation: none;
+  }
+}
+
+/* ── The scale ─────────────────────────────────────────────────────────────
+   Two hero numerals over a tug bar with an ivory tie-notch, one potsherd per
+   voter beneath it, then the verdict and the speaking order. */
+
+/* The scale grows with the card beside it: numerals high, bar and sherds at the
+   waist, the verdict and the order low. A 216px instrument centred beside a
+   430px card was the other half of the void the ballot used to sit in. */
+.asmTally {
+  display: flex;
+  flex: 0 1 auto;
+  align-self: center;
+  flex-direction: column;
+  /* space-BETWEEN, not space-evenly: the numerals then sit on the card's top edge
+     and the speaking order on its bottom edge, so the scale reads as the card's
+     pair rather than as four things adrift in a tall column. */
+  justify-content: space-between;
+  width: var(--asm-tally-w);
+  height: min(var(--asm-object-h), 100%);
+  text-align: center;
+}
+
+.asmTallyNums {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 var(--sp-2);
+}
+
+.asmTallySide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.asmTallyNum {
+  font-size: var(--asm-numeral);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.asmTallyKey {
+  letter-spacing: 0.3em;
+}
+
+.asmTallySide.is-yea .asmTallyNum,
+.asmTallySide.is-yea .asmTallyKey {
+  color: var(--pos-lit);
+}
+
+.asmTallySide.is-nay .asmTallyNum,
+.asmTallySide.is-nay .asmTallyKey {
+  color: var(--neg-lit);
+}
+
+.tugBar {
+  position: relative;
+  display: flex;
+  height: 18px;
+  margin-top: 14px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: rgb(255 248 231 / 14%);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 50%);
+}
+
+/* The three bands are proportional flex, never percentage widths: three
+   percentages each rounding up is how the bar came to overflow its own clip by
+   3px. Sized this way they cannot sum to more than the bar. */
+.tugYea,
+.tugPending,
+.tugNay {
+  flex-basis: 0;
+  min-width: 0;
+}
+
+.tugYea {
+  background: linear-gradient(180deg, var(--yea-lit), var(--pos));
+}
+
+.tugNay {
+  background: linear-gradient(180deg, var(--nay-lit), var(--neg));
+}
+
+.tugPending {
+  background: rgb(255 248 231 / 10%);
+}
+
+/* The ivory notch at the centre is the whole point of drawing a bar: a tie
+   FAILS, and without a mark at the middle there is nothing to be short of. */
+.tugBar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2.5px;
+  background: var(--ivory);
+  box-shadow: 0 0 8px rgb(0 0 0 / 60%);
+  transform: translateX(-50%);
+}
+
+/* One potsherd per voter. The bar shows the shape of the vote; the sherds make
+   it countable, which is what you need before you spend a bribe. */
+/* Three groups under the bar's three zones, all growing INWARD to the tie notch:
+   cast Yea, the urn of votes still to come, cast Nay. The two piles used to be
+   pushed to opposite ends of a 430px bar, and nothing that far apart can be
+   compared at a glance — which is the only reason to draw sherds at all. */
+.asmShards {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 9px;
+  padding: 0 4px;
+}
+
+.asmPile {
+  display: flex;
+  flex: 1 1 0;
+  gap: 5px;
+  min-width: 0;
+}
+
+/* Yea sits left of the notch, so its sherds pack to the RIGHT and the newest
+   cast lands nearest the middle. Nay is the mirror. */
+.asmPile.is-yea {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.asmPile.is-nay {
+  justify-content: flex-start;
+}
+
+/* The urn is not a side. It takes only the width it needs, over the notch. */
+.asmPileUrn {
+  flex: 0 0 auto;
+  justify-content: center;
+}
+
+.asmShard {
+  width: 26px;
+  height: 22px;
+  clip-path: polygon(8% 38%, 30% 6%, 74% 0%, 100% 30%, 92% 78%, 60% 100%, 18% 88%, 0% 62%);
+}
+
+.asmShard.is-yea {
+  background: linear-gradient(160deg, var(--yea-lit), var(--yea-shade));
+}
+
+.asmShard.is-nay {
+  background: linear-gradient(160deg, var(--nay-lit), var(--nay-shade));
+}
+
+/* A vote still to come. An inset ring inside a clip-path loses its corners, so
+   the ghost carries a faint fill as well — otherwise it reads as three unrelated
+   scratches rather than as an empty place in the urn. */
+.asmShard.is-ghost {
+  background: rgb(255 248 231 / 7%);
+  box-shadow: inset 0 0 0 1.6px rgb(255 248 231 / 40%);
+}
+
+/* The dramatic read on the vote. A card counter used to occupy this slot; the
+   counter is furniture and belongs in the corner, this is the sentence. */
+.asmVerdict {
+  margin: 16px 0 0;
+}
+
+.asmVerdictLine {
+  display: block;
+  color: var(--warn-lit);
+  letter-spacing: 0.22em;
+}
+
+.asmVerdict small {
+  display: block;
+  margin-top: 3px;
+  color: var(--ivory-45);
+}
+
+.asmOrder {
+  margin: 14px 0 0;
+  color: var(--ivory-45);
+  letter-spacing: 0.22em;
+}
+
+.asmOrderName.is-now {
+  color: var(--warn-lit);
+  font-weight: 800;
+}
+
+.asmOrderName.is-cast {
+  opacity: 0.55;
+}
+
+/* ── The seats ─────────────────────────────────────────────────────────────
+   Compact lacquer plaques along the foot, one per player. They are also the
+   hotseat's seat switcher: the scene covers the top bar's roster, and taking a
+   seat is the same act that roster performed. */
+
+/* One bench, never two rows. Wrapping is decided on a flex item's BASIS, not on
+   what it can shrink to, so a row that wraps will not then shrink to fit — and a
+   seat on a second line reads as a fifth player who fell off the bench. */
+.asmSeats {
+  display: flex;
+  flex: none;
+  align-items: stretch;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: calc(16px * var(--ui-scale));
+  /* A DEFINITE width, not fit-content. A shrinkable flex item contributes only
+     its content width to a fit-content container, so a bench sized to its
+     contents hands every plaque back to its own text and the four widths stop
+     agreeing with each other. */
+  width: 100%;
+}
+
+/* The plaques shrink before anything else does: the casting plaque is three
+   times the width of a resting one, and at 1280 that is exactly the overflow. */
+.asmSeat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 1 var(--asm-seat-w);
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--asm-keyline);
+  border-radius: 5px;
+  background: var(--asm-lacquer);
+  color: var(--ivory);
+  text-align: left;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.asmSeat:hover {
+  border-color: rgb(255 248 231 / 45%);
+}
+
+.asmSeat.is-you {
+  border-color: var(--clay);
+}
+
+.asmSeat.is-lit {
+  border-color: var(--warn-lit);
+  box-shadow: 0 0 24px rgb(226 165 88 / 25%);
+}
+
+.asmSeatBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.asmSeatName {
+  color: var(--ivory);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+/* The status WRAPS rather than truncating. An ellipsis here would hide the half
+   of "has cast 3 — 1 bought" that is the news, and a plaque one line taller is
+   cheaper than a fact you cannot read. */
+.asmSeatStatus {
+  color: var(--ivory-45);
+  font-style: italic;
+}
+
+.asmSeatCue {
+  color: var(--warn-lit);
+  letter-spacing: 0.2em;
+}
+
+/* Where the weight came from. "Casts now · 0 votes" was printed with no reason
+   beside it, and vote weight is the seat's CITIZEN count — a fact held nowhere
+   else on this scene. It rides under the cue, on the plaque that is acting. */
+.asmSeatWhy {
+  color: var(--ivory-45);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Why a purchase is inert, printed where the price would be. A greyed slab that
+   still shows a price is indistinguishable from one you simply have not clicked,
+   and Veto and Bribe are BOTH routinely dead on the first ballot of a game. */
+.asmVoteWhy {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--warn-lit);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* The ostrakon. Every seat carries one during PROPOSAL too — the seat's own
+   blazon scratched on fired clay means "this one has spoken", a blank sherd
+   means "still deliberating". A decision nobody has made is pending, not
+   missing, and an empty box cannot say that. */
+.asmSherd {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 26px;
+  margin-left: auto;
+  clip-path: polygon(8% 38%, 30% 6%, 74% 0%, 100% 30%, 92% 78%, 60% 100%, 18% 88%, 0% 62%);
+}
+
+.asmSherd.is-seat {
+  background: linear-gradient(160deg, var(--clay-lit), var(--clay-shade));
+}
+
+.asmSherd.is-blank {
+  background: linear-gradient(160deg, var(--shard-blank), var(--shard-blank-shade));
+}
+
+.asmSherd.is-yea {
+  background: linear-gradient(160deg, var(--yea-lit), var(--yea-shade));
+}
+
+.asmSherd.is-nay {
+  background: linear-gradient(160deg, var(--nay-lit), var(--nay-shade));
+}
+
+/* Greek, not a check and a cross: ΝΑΙ / ΟΥ on a cast sherd, the seat's blazon on
+   a spoken one, a middot on a blank. The Greek subsets are self-hosted. */
+.asmSherdMark {
+  color: rgb(255 248 231 / 92%);
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.asmSherd.is-blank .asmSherdMark {
+  color: rgb(255 248 231 / 45%);
+}
+
+/* The seat that is casting holds ALL FOUR choices. Bribe used to be exiled to a
+   dock at the foot of the panel, one whole surface away from the vote it buys. */
+.asmSeatCasting {
+  flex: 0 0 auto;
+  gap: 14px;
+  padding: 10px 16px;
+  border-color: var(--warn-lit);
+  background: rgb(24 18 16 / 85%);
+  box-shadow: 0 0 34px rgb(226 165 88 / 28%);
+  cursor: default;
+}
+
+.asmVoteTrigger {
+  display: flex;
+}
+
+.asmVote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--ivory);
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.asmVote.is-yea,
+.asmVote.is-nay {
+  padding: 12px 24px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 30%),
+    0 3px 10px rgb(0 0 0 / 45%);
+}
+
+.asmVote.is-yea {
+  background: linear-gradient(180deg, var(--yea-lit), var(--pos) 55%, var(--yea-shade));
+}
+
+.asmVote.is-nay {
+  background: linear-gradient(180deg, var(--nay-lit), var(--neg) 55%, var(--nay-shade));
+}
+
+/* The two that cost money are a different shape from the two that do not. */
+.asmVote.is-minor {
+  padding: 9px 14px;
+  background: none;
+  box-shadow: inset 0 0 0 1.4px rgb(255 248 231 / 35%);
+}
+
+.asmVoteCost {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ivory-70);
+}
+
+/* Dim enough to read as unavailable, bright enough that the REASON printed on it
+   is still legible — 0.42 put the explanation below the contrast it needs. */
+.asmVote[aria-disabled="true"] {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+/* ── The foot ──────────────────────────────────────────────────────────────
+   Only the two verbs that belong to nobody's card. No band, no border: a row of
+   objects on the dark floor. */
+
+.asmFoot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 34px;
+}
+
+.asmVerbTrigger {
+  flex: none;
+}
+
+.asmVerb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 5px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  box-shadow: inset 0 0 0 1.4px rgb(255 248 231 / 28%);
+  color: var(--ivory);
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.asmVerb.is-armed {
+  box-shadow: inset 0 0 0 1.4px var(--warn-lit);
+}
+
+.asmVerb.is-off {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.asmVerbIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--ivory);
+  box-shadow: inset 0 0 0 1px rgb(255 248 231 / 30%);
+}
+
+.asmVerb.is-armed .asmVerbIcon {
+  color: var(--ivory);
+  background: var(--clay);
+  box-shadow: none;
+}
+
+.asmVerbText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.asmVerbLabel {
+  color: var(--ivory);
+}
+
+.asmVerbCost {
+  color: var(--ivory-45);
+}
+
+.asmFootNote {
+  color: var(--ivory-45);
+}
+
+/* The one control that ends the Assembly. It was a low-contrast outline in
+   sentence case, alone at the bottom of a void, while every other commit in the
+   app is a filled lacquer slab in caps — the least prominent thing on the screen
+   was the only thing on it you have to press. It is a commit now. */
+.asmRise {
+  padding: 13px 34px;
+  border: 0;
+  border-radius: 5px;
+  background: linear-gradient(180deg, var(--clay-lit), var(--clay) 55%, var(--clay-shade));
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 30%),
+    0 4px 16px rgb(0 0 0 / 50%);
+  color: var(--ivory);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.asmRise:hover {
+  filter: brightness(1.12);
+}
+
+/* ── The closing recap ─────────────────────────────────────────────────────
+   Rows of facts under a hairline, not two cards. */
+
+.asmRecap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: calc(400px * var(--ui-scale));
+}
+
+.asmResults {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A decision, drawn as a decision. A law passing and a law failing used to be the
+   same grey sentence with 5–0 or 0–5 set in the same weight — on the one screen
+   whose entire job is to say what happened. The outcome has a WORD now, a border
+   in its own colour down the edge the eye scans, and a lacquer bed under it. */
+.asmResults li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  margin-top: 8px;
+  padding: 9px 12px;
+  border-left: 3px solid var(--ivory-45);
+  border-radius: 3px;
+  background: var(--asm-lacquer);
+}
+
+.asmResults li:first-child {
+  margin-top: 0;
+}
+
+.asmResultVerdict {
+  grid-column: 1;
+  letter-spacing: 0.24em;
+}
+
+.asmResultText {
+  grid-column: 1;
+  color: var(--ivory);
+}
+
+.asmResultTally {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.asmResults li.is-enacted {
+  border-left-color: var(--pos);
+}
+
+.asmResults li.is-enacted .asmResultVerdict,
+.asmResults li.is-enacted .asmResultTally {
+  color: var(--yea-lit);
+}
+
+.asmResults li.is-fallen {
+  border-left-color: var(--neg);
+}
+
+.asmResults li.is-fallen .asmResultVerdict,
+.asmResults li.is-fallen .asmResultTally {
+  color: var(--nay-lit);
+}
+
+.asmResults li.is-fallen .asmResultText {
+  color: var(--ivory-70);
+}
+
+.asmResults li.is-struck {
+  border-left-color: var(--warn-lit);
+}
+
+.asmResults li.is-struck .asmResultVerdict,
+.asmResults li.is-struck .asmResultTally {
+  color: var(--warn-lit);
+}
+
+.asmCapNote {
+  margin: 12px 0 0;
+  color: var(--ivory-70);
+}
+
+/* What the ledger's column of numerals counts, said once at the foot instead of
+   inside a heading that wrapped and orphaned "PASSED" onto a line of its own. */
+.asmVoiceFoot {
+  margin: 10px 0 0;
+  color: var(--ivory-45);
+}
+
+.asmVoiceRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 6px 0;
+  border-top: 1px solid rgb(255 248 231 / 14%);
+}
+
+.asmVoiceRowName {
+  color: var(--ivory);
+}
+
+.asmVoiceRowNote {
+  color: var(--ivory-45);
+  font-style: italic;
+}
+
+.asmVoiceRowCount {
+  margin-left: auto;
+  color: var(--warn-lit);
+}
+
+/* ── The verdict flash ─────────────────────────────────────────────────────
+   The engine advances to the next ballot card the instant a vote resolves, so
+   this holds the outcome on screen for a beat. */
+
+.asmFlash {
+  position: absolute;
+  bottom: calc(120px * var(--ui-scale));
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 55%);
+  color: var(--ivory);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.asmFlash.is-passed {
+  background: var(--pos);
+}
+
+.asmFlash.is-failed {
+  background: var(--neg);
+}
+
+.asmFlash.is-vetoed {
+  background: var(--vase-black);
+  box-shadow:
+    inset 0 0 0 1px var(--warn-lit),
+    0 12px 40px rgb(0 0 0 / 55%);
+}
+
+.asmFlashVerdict {
+  opacity: 0.85;
+}
+
+.asmFlashTally {
+  opacity: 0.85;
+}
+
+/* ── The pickers ───────────────────────────────────────────────────────────
+   Three decisions the reference mock left implied: choose a politician, a Law to
+   repeal, and a Law to replace at the cap. They are bone popovers over the dark. */
+
+.asmSelectWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.asmMenu {
+  width: max-content;
+  max-width: 320px;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+}
+
+.asmMenuHead {
+  margin: 0;
+  padding: 4px 7px 6px;
+  color: var(--ink-63);
+  font-family: var(--disp);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.asmMenuChoices {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.asmMenu li button {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 5px 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.16s;
+}
+
+.asmTargetMenu li button {
+  display: grid;
+  grid-template-columns: 9px 1fr;
+  column-gap: 7px;
+  align-items: center;
+}
+
+.asmTargetMenu .asmMenuMeta {
+  grid-column: 2;
+}
+
+.asmTargetChoiceDot {
+  grid-row: 1 / span 2;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--vase);
+}
+
+.asmMenu li button:hover:not(:disabled) {
+  background: var(--ledger-hover);
+}
+
+.asmMenu li button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.asmMenuName {
+  color: var(--ink);
+  font-family: var(--disp);
+}
+
+.asmMenuMeta {
+  color: var(--ink-63);
+  line-height: 1.35;
+  white-space: normal;
+}
+
+/* ── Short viewports ───────────────────────────────────────────────────────
+   Nothing is hidden, only closer together. The colonnade gives the room back
+   first: a stele is read once per sitting, the card and the scale are read
+   continuously. */
+
+@media (max-height: 900px) {
+  .asmStage {
+    gap: calc(12px * var(--ui-scale));
+    padding-top: calc(16px * var(--ui-scale));
+  }
+
+  .asmBust {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 5px;
+  }
+
+  .asmDogma {
+    padding: 5px 8px 6px;
+  }
+
+  .asmSteleEpithet {
+    margin-bottom: 6px;
+  }
+
+  .asmStelePrize {
+    margin: 6px 0 7px;
+  }
+
+  .asmDraw {
+    padding: 8px 0;
+  }
+
+  .asmStations {
+    margin-top: -4px;
+  }
+}
+
+/* Narrow: the casting plaque is the widest thing in the scene, so it is the one
+   that gives width back — never the four seats beside it. */
+@media (max-width: 1400px) {
+  .asmVote.is-yea,
+  .asmVote.is-nay {
+    padding: 12px 16px;
+  }
+
+  .asmVote.is-minor {
+    padding: 9px 10px;
+  }
+
+  .asmSeatCasting {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+}
+
+@media (max-height: 820px) {
+  .asmLawFace {
+    padding-top: 12px;
+  }
+
+  .asmLawRule {
+    margin: 8px auto;
+  }
+
+  .asmLawActs {
+    padding: 10px 22px 14px;
+  }
+
+  .asmTallyNums {
+    padding: 0;
+  }
+}

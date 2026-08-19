@@ -1,7 +1,8 @@
 import { POP_TYPES, totalPops } from "../../../game/rules";
 import type { PopType, Pops } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
-import { AtlasIcon } from "../../Sprites";
+import { POP_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 
 /**
  * The three-row pop allocator (citizens / freemen / slaves), shared by every
@@ -40,7 +41,7 @@ export function PopulationStepper({
       {POP_TYPES.map((pop) => (
         <div className="popStepperRow" key={pop}>
           <span className="popStepperLabel">
-            <AtlasIcon icon={pop} className="miniIcon" />
+            <Icon glyph={POP_GLYPHS[pop]} size="rail" className="miniIcon" />
             <strong>{formatPopLabel(pop, 2)}</strong>
             <em>Available {maxByPop[pop]}</em>
           </span>

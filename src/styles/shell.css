@@ -1,0 +1,1037 @@
+/* shell — the ceramic frame: two bone bars, the resource spine, the roster,
+ * the verb rail and the turn dial.
+ *
+ * Loaded late so it wins over the sheets it replaces (scoreboard.css,
+ * command.css) without those files having to be gutted in the same commit as the
+ * restyle. What is dead in them gets deleted as each surface lands.
+ *
+ * The one rule the whole frame obeys: **bars are bone, objects are lacquer.**
+ * Vase-black and clay are spent on things you press or throw — the seal, dice,
+ * ostraka, tooltips — and never on a surface. Dark bars were what made the old
+ * chrome feel like a control panel bolted over a game.
+ */
+
+/* ── The two bars ─────────────────────────────────────────────────────────── */
+
+.topbar,
+.commandDock::before {
+  border: 0;
+  background: var(--bar-face);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.topbar {
+  z-index: var(--z-bar);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--chrome-top);
+  padding: 0 var(--sp-3) 0 var(--sp-4);
+  border-bottom: 1px solid var(--ink-30);
+  box-shadow: 0 2px 10px rgb(24 18 16 / 16%);
+}
+
+.commandDock::before {
+  border-top: 1px solid var(--ink-30);
+  box-shadow: 0 -2px 10px rgb(24 18 16 / 16%);
+}
+
+/* The meander. It is the one piece of pattern in the chrome, and it earns its
+   place by marking where the bar ENDS — without it the bone bar and the bone
+   tablets below it read as one surface. Drawn at 40% so it is texture, not
+   decoration you have to look at. */
+.topbar::after,
+.commandDock::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 9px;
+  background: var(--meander) repeat-x left center / 18px 9px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.topbar::after {
+  bottom: 2px;
+}
+
+/* The dock's meander runs the FLAT RUN only — from one end block's inner wall to
+   the other's. It traces the frame's top edge, and the frame's top edge steps up
+   at each corner, so each block carries the band on up. Running it edge to edge
+   under the blocks would have it disappear into them and reappear, which is what
+   a border does when nobody has decided where it goes. */
+.commandDock::after {
+  right: var(--plinth-r);
+  bottom: calc(var(--bot-h) - 9px);
+  left: var(--plinth-l);
+}
+
+/* ── The frame's corners: two end blocks (FRAME-1) ─────────────────────────
+   The chrome is four rectangles and two circles, and the circles sit exactly
+   where two of the rectangles are supposed to meet. Every previous fix moved
+   one away from the other — the tablets were ended above the dials, the seal
+   was cleared, the panel was given its own floor — and the corner kept reading
+   as damage, because a shortened edge still ends somewhere, and the somewhere
+   was open sea.
+
+   The junction, decided once and applied at both corners: **the bar steps up.**
+   The bottom bar rises at each end to a block as wide as the tablet standing on
+   it, and the tablet — or its bare spine, when the page is closed — lands on
+   that block's top edge.
+
+   The block used to be as DEEP as a dial, because a dial was set into it like a
+   boss into a plate. Both dials moved into the top bar; the block stayed,
+   because the junction it fixes has nothing to do with them, and it dropped to a
+   step — which is ~60px of ledger height handed back to each tablet.
+
+   The rule that holds afterwards: NO EDGE OF THE FRAME TERMINATES AGAINST OPEN
+   BOARD. It comes out as three stacked rectangles, each fully carried by the one
+   below: the bar runs edge to edge and never ends; a block stands on the bar at
+   each corner and is closed on all four sides; a tablet — or its bare spine —
+   stands on each block. The only things that cross those edges are drawn ON
+   them, on purpose: the verb discs standing proud of the flat run.
+
+   The block is the COURSE ABOVE the bar, not a taller bar: it starts at the
+   bar's top edge and rises from there. That is why the bar's own hairline runs
+   on underneath it, and it is what leaves the bar's full width free for the
+   ticker to lie across. Painting the block down to the floor instead put a
+   second copy of the bar's gradient beside the real one, out of phase with it,
+   and a seam appeared at the corner that no border could explain. */
+.dockPlinth {
+  position: absolute;
+  /* The course starts where the bar's top surface is. */
+  bottom: var(--bot-h);
+  /* Under the discs and under the tablets' own shadow, over the bar. */
+  z-index: 0;
+  height: calc(var(--plinth-h) - var(--bot-h));
+  border-top: 1px solid var(--ink-30);
+  background: var(--bar-face);
+  pointer-events: auto;
+}
+
+.dockPlinth-left {
+  left: 0;
+  width: var(--plinth-l);
+  /* The riser, and the shade the course throws inboard. */
+  border-right: 1px solid var(--ink-30);
+  box-shadow: 2px 0 10px rgb(24 18 16 / 14%);
+}
+
+.dockPlinth-right {
+  right: 0;
+  width: var(--plinth-r);
+  border-left: 1px solid var(--ink-30);
+  box-shadow: -2px 0 10px rgb(24 18 16 / 14%);
+}
+
+/* The meander, carried on up the step. Same band, same 40%, so the frame's top
+   edge is one line that changes height rather than three separate borders. */
+.dockPlinth::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 9px;
+  background: var(--meander) repeat-x left center / 18px 9px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* The slips take whatever room is left to the LEFT of the spine, and no more. A
+   plain `1fr` let a long omen name grow until it slid under the numbers at 1280;
+   half the viewport less the spine's reach is the only honest bound, because the
+   spine is centred on the VIEWPORT rather than on the space between the ends.
+   The bound is computed from the spine's own tokens (--spine-reach) rather than
+   from a literal, which is what let the first numeral come to sit ON the fate
+   slip the last time the spine changed width. */
+.topbarEvents {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: calc(50vw - var(--spine-reach));
+}
+
+/* ── The resource spine ────────────────────────────────────────────────────
+   Pinned to the bar's true centre, not to the space between the slips and the
+   roster. Those two ends change width constantly (a long omen name, a fourth
+   seat joining) and centring BETWEEN them made the numbers drift a few pixels
+   every turn — which is exactly the kind of motion that makes a UI feel unsteady
+   without anyone being able to say why.
+
+   Three parts, and the middle one is the turn dial: materials read out to its
+   left, civic stock to its right. The dial is what makes the spine a SCALE
+   rather than a row — six numerals in a line have no centre, so nothing about
+   them was ever aligned to anything, which is what made the bar feel loose. */
+.resourceSpine {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  /* Exactly the bar's height. Sized by its tallest child instead, the 92px dial
+     made the spine 92 tall, and centred on a 73px bar that put the spine's own
+     box 10px above the top of the screen — the dial was painted where it should
+     be, by a transform, but the BOX it was painted from was off-screen. */
+  height: var(--chrome-top);
+  transform: translate(-50%, -50%);
+}
+
+/* Each half is the same width, so the dial lands on the bar's true centre
+   whatever the numerals are doing. Without this a four-figure gold count on the
+   right pushed the dial left, and the one fixed object on the bar moved. */
+.resourceSpine .resourceGrid {
+  flex: 0 0 auto;
+  min-width: var(--spine-half-w);
+}
+
+.resourceSpine .resourceGrid:first-child {
+  justify-content: flex-end;
+}
+
+.resourceSpine .resourceGrid {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  /* The ledger grid's 12px bottom margin survived the switch to flex and made
+     the spine 12px taller than its own numbers. Centred on the bar, that pushed
+     the figures 6px up — clean off the top of the bar at 1280. */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+/* One resource is ONE object, and it reads in two tiers: WHAT YOU HAVE over
+   WHAT IT IS DOING. The stockpile takes the top three quarters of the pill and
+   the per-turn income the bottom quarter, both in one column beside the glyph —
+   so the eye takes the whole stockpile row across the bar first and only then
+   drops a line for the rates.
+
+   In a single baseline row the two numbers competed: `27 +7 15 +1 11 +2` is six
+   figures of equal standing and no way to tell a total from a rate without
+   reading the sign. It is also why the pill was one flat row of ten items —
+   before that it kept the ledger's 58px min-height and, under `align-items:
+   baseline`, the numeral sat at the TOP of that tall box while the icon hung 20px
+   below it. That was the original "completely loose". Both are answered the same
+   way: give the pill a definite height and put every part of it in a named cell. */
+.resourceSpine .resourcePill {
+  display: grid;
+  /* The glyph sits on the STOCKPILE's row, not centred against both. Centred, it
+     lands between the two numbers and belongs to neither — which is the same
+     out-of-phase read the flat row had, one axis over. */
+  grid-template-areas:
+    "icon value"
+    ".    delta";
+  grid-template-columns: auto auto;
+  grid-template-rows: 3fr 1fr;
+  align-items: center;
+  column-gap: 6px;
+  height: var(--res-h);
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.resourceSpine .resourceIcon {
+  grid-area: icon;
+  width: 23px;
+  height: 23px;
+  align-self: center;
+  filter: none;
+  opacity: 0.85;
+}
+
+/* The stockpile sits ON the line the income hangs from, not centred in its own
+   cell — the two tiers have to touch or they read as two rows of numbers rather
+   than one number and its rate. */
+.resourceSpine .resourcePill strong {
+  grid-area: value;
+  align-self: end;
+  color: var(--ink);
+  line-height: 0.92;
+}
+
+/* A stockpile below zero is the one number up here you have to act on, so it is
+   the one number that leaves the ink. */
+.resourceSpine .resourceAlert strong {
+  color: var(--neg);
+}
+
+/* Below ~1400 the bar runs out of room before anything else does: the numerals
+   scale with the chrome, but the spine's metal — icon size and the air between
+   resources — is fixed px and does not, so it eats an ever larger share of the
+   width and starves the slips at the other end. Tightening the metal buys the
+   slips back ~40px, which is one wrapped line each. */
+@media (max-width: 1400px) {
+  .resourceSpine .resourceGrid {
+    gap: 12px;
+  }
+
+  .resourceSpine .resourceIcon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* A stockpile that just changed flashes the NUMERAL, not a box behind it. The
+   old flash filled the pill with a green or red plate for a second and a half,
+   which on a bar of six numbers read as an alarm every single turn. Colour on the
+   figure itself says the same thing and then gets out of the way. */
+.resourceSpine .resourcePill[class*="resourceFlash"] {
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+  animation: none;
+}
+
+.resourceSpine .resourceFlash-increase strong {
+  animation: spineFlashUp 2400ms ease-out;
+}
+
+.resourceSpine .resourceFlash-decrease strong {
+  animation: spineFlashDown 2400ms ease-out;
+}
+
+@keyframes spineFlashUp {
+  0%,
+  30% {
+    color: var(--pos);
+  }
+
+  100% {
+    color: var(--ink);
+  }
+}
+
+@keyframes spineFlashDown {
+  0%,
+  30% {
+    color: var(--neg);
+  }
+
+  100% {
+    color: var(--ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resourceSpine .resourceFlash-increase strong,
+  .resourceSpine .resourceFlash-decrease strong {
+    animation: none;
+  }
+}
+
+/* The delta is the only coloured thing up here, and it always carries its sign.
+   A bare colour would be saying "bad" in a way a third of players cannot see. */
+.resourceSpine .resourceDelta {
+  grid-area: delta;
+  align-self: start;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.resourceSpine .resourceDelta.positive {
+  color: var(--pos);
+}
+
+.resourceSpine .resourceDelta.negative {
+  color: var(--neg);
+}
+
+.resourceSpine .resourceDelta.neutral {
+  color: var(--ink-30);
+}
+
+/* ── The roster ───────────────────────────────────────────────────────────── */
+
+.roster {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  opacity: 0.55;
+  transition: opacity 140ms ease;
+}
+
+.seat:hover,
+.seatViewing {
+  opacity: 1;
+}
+
+.seatActing {
+  opacity: 1;
+}
+
+/* Every glaze carries an ivory keyline and an ink halo, because a disc has to
+   survive on bone here and on open sea when the same mark lands on the board. */
+.seatGlaze {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  color: var(--ivory);
+  box-shadow:
+    inset 0 0 0 1.5px rgb(255 248 231 / 85%),
+    0 0 0 1px rgb(24 18 16 / 55%);
+}
+
+.seatName {
+  color: var(--ink);
+  letter-spacing: 0.1em;
+}
+
+/* Acting is a clay underline — a state of the seat, not a fifth colour. */
+.seatActing .seatName {
+  padding-bottom: 1px;
+  border-bottom: 2px solid var(--clay);
+}
+
+.seatViewing .seatGlaze {
+  box-shadow:
+    inset 0 0 0 2px var(--ivory),
+    0 0 0 1px rgb(24 18 16 / 55%),
+    var(--lift);
+}
+
+/* ── The bottom rail ──────────────────────────────────────────────────────── */
+
+.commandDock {
+  z-index: var(--z-bar);
+  display: block;
+  padding: 0;
+}
+
+/* ── The verb dock (DOCK-1) ───────────────────────────────────────────────
+   Seven discs threaded on the bar's top edge, each standing PROUD of it, with
+   its name and its price set beneath it on the bone.
+
+   The overhaul had replaced the discs with flat labels inside the bar, and the
+   dock stopped reading as a row of things you press: seven equal rectangles of
+   text on a plate look like a legend, and the only feedback a press had was a
+   6% wash behind the words. A disc that stands out of the frame is a thing you
+   can reach — the same sentence the two dials are drawn to, one register down.
+
+   The spine's box is the bar PLUS the overhang, top-aligned, so a disc's top
+   edge lands at --vb-out above the bar and the label and price fall inside the
+   bone underneath it. --chrome-bot is already `--bot-h + --vb-out`, so the
+   camera has been holding room for exactly this the whole time.
+
+   The spine's reach is a token, and the token is what the ticker's cap is
+   measured against — the two used to disagree, because the spine was sized by
+   seven unscaled `min-width`s while everything around it rode --ui-scale. */
+.verbSpine {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  gap: var(--verb-gap);
+  align-items: flex-start;
+  width: var(--verb-spine-w);
+  height: calc(var(--bot-h) + var(--vb-out));
+  transform: translateX(-50%);
+}
+
+/* The button is `.railVerb`, NOT `.verb` — `.verb` is a TYPE ROLE (Cinzel 700
+   caps, 12px) and the two collided: every roster glaze picked up the button's
+   flex box and min-width and stopped being a disc. Roles describe text; a
+   component class describes a thing. They must never share a name. */
+.railVerb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(4px * var(--ui-scale));
+  flex: 0 0 var(--verb-col);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  color: var(--ink);
+  background: none;
+  /* Nothing here may clip: the knob is flush with the button's top edge and its
+     hover lifts it 3px, so a clipping parent shaves those pixels off against a
+     rounded rectangle and squares off the top of the circle. */
+  overflow: visible;
+  text-align: center;
+}
+
+/* The global button chrome drops a 0 12px 24px shadow on the whole 76px column,
+   which reads as a stray rounded box floating behind the verb. The knob carries
+   the entire hover state. */
+.railVerb:not([aria-disabled="true"]):hover {
+  background: none;
+  box-shadow: none;
+  transform: none;
+}
+
+/* The disc. It is half over the sea, so its shadow is a laid one at full
+   strength rather than the bone-on-bone --lift: on water a 20% drop disappears
+   and the disc reads as a sticker. */
+.verbKnob {
+  display: grid;
+  place-items: center;
+  width: var(--vb);
+  height: var(--vb);
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--disc);
+  box-shadow:
+    0 0 0 1px var(--ring),
+    0 3px 10px rgb(24 18 16 / 30%);
+  transition:
+    background 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.railVerb:not([aria-disabled="true"]):hover .verbKnob {
+  background: var(--disc-hi);
+  box-shadow:
+    0 0 0 1px var(--ink-30),
+    0 7px 16px rgb(24 18 16 / 34%);
+  transform: translateY(-3px);
+}
+
+/* The armed verb is the one clay mass on the bar. The LABEL stays on the bone
+   and goes clay-deep rather than riding an ivory-on-clay block: an armed verb is
+   a state of the disc you pressed, not a highlighted row. */
+.railVerbArmed .verbKnob {
+  color: var(--ivory);
+  background: var(--clay);
+  box-shadow:
+    0 0 0 1px rgb(143 46 19 / 55%),
+    0 6px 18px rgb(192 70 28 / 42%);
+}
+
+.railVerbArmed:not([aria-disabled="true"]):hover .verbKnob {
+  background: var(--clay-deep);
+}
+
+.railVerbArmed .verbLabel {
+  color: var(--clay-deep);
+}
+
+.railVerbArmed .verbCost {
+  color: var(--ink-66);
+}
+
+/* Blocked. The dimming is per element, never a blanket opacity on the button:
+   the flat version faded the whole verb to 38% and then had to un-fade the
+   oxblood figure with `opacity: 2.63`, which is a number that only means
+   anything if you know what it is cancelling. An unaffordable price is oxblood
+   at full strength because it is oxblood, not because arithmetic restored it. */
+.railVerbOff {
+  cursor: not-allowed;
+}
+
+/* A blocked disc is still a disc: it keeps a solid plate and loses its lift and
+   its ink. The pre-overhaul rule washed it to 55% ivory, which was fine when a
+   bar sat behind it and reads as a hole once half the disc is over open water. */
+.railVerbOff .verbKnob {
+  color: var(--ink-30);
+  background: rgb(250 243 226 / 88%);
+  box-shadow:
+    0 0 0 1px var(--ink-12),
+    0 1px 3px rgb(24 18 16 / 16%);
+}
+
+.railVerbOff .verbLabel,
+.railVerbOff .verbCost,
+.railVerbOff .verbCost em {
+  color: var(--ink-30);
+}
+
+.verbCost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 12px;
+  color: var(--ink-66);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.verbLabel {
+  color: var(--ink);
+  line-height: 1;
+}
+
+.verbCost em {
+  font-style: normal;
+  text-transform: lowercase;
+}
+
+.verbCostItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.verbCostItem .icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* A figure you cannot pay is oxblood WHEREVER it appears — judged per
+   alternative and per range end, and never gated on whether the button beside it
+   happens to be dimmed. Calm is the case that proves it: it is blocked on
+   "once per turn", not on money, so it stays clickable while you hold one
+   influence against a price of four, and under the old rule its `4 or 6` sat
+   there in quiet grey. Last in the cascade so it wins over both the resting and
+   the blocked colour. */
+.verbCostShort {
+  color: var(--neg);
+  font-weight: 700;
+}
+
+/* The ticker: narration on the bar, stopping short of the verbs. It lies on the
+   BAR, which runs edge to edge and unbroken underneath the two end blocks — so it
+   starts at the bar's own left padding now that no dial sits in that corner. It
+   used to clear the season clock, and when the clock left it was moved inboard of
+   the left block instead, which is a surface it was never under: that left it
+   109px wide at 1440 and cut every chronicle line in half. Its far end is still
+   bounded by where the verb spine actually begins. */
+.dockTicker {
+  position: absolute;
+  bottom: 0;
+  left: var(--sp-4);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  max-width: min(420px, calc(50vw - var(--sp-4) - var(--verb-spine-half) - var(--sp-3)));
+  height: var(--bot-h);
+}
+
+.dockTicker p {
+  overflow: hidden;
+  margin: 0;
+  color: var(--ink-63);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── The turn dial ────────────────────────────────────────────────────────
+   One disc, set into the middle of the resource spine and hanging below the
+   bar's bottom edge — the same move the verb discs make on the bottom bar,
+   mirrored. It replaced two 128px dials that sat in the board's own bottom
+   corners; this is the SAME object in the place the eye already goes.
+
+   It hangs rather than sits inside because the bar is 73px and the dial is 92:
+   a disc that fits inside a bar is a button on a toolbar, and a disc that
+   breaks its line is an object the bar is carrying. */
+.turnDial {
+  position: relative;
+  z-index: var(--z-dial);
+  width: var(--turn-d);
+  height: var(--turn-d);
+  padding: 0;
+  border: 0;
+  background: none;
+  filter: drop-shadow(0 3px 7px rgb(24 18 16 / 34%));
+}
+
+.turnDial svg {
+  display: block;
+  width: var(--turn-d);
+  height: var(--turn-d);
+}
+
+/* Live only when it is your move. When it is not, the dial is a status disc and
+   must not read as a target — no cursor, no lift, no focus ring. */
+.turnDialLive {
+  cursor: pointer;
+  transition:
+    filter 160ms ease,
+    transform 160ms ease;
+}
+
+.turnDialLive:hover {
+  filter: drop-shadow(0 7px 16px rgb(24 18 16 / 42%));
+  transform: translateY(-2px);
+}
+
+/* Under the finger the disc presses IN, which is the half of the hold gesture
+   that says the press was received before the ring has filled. */
+.turnDialLive.isHeld {
+  filter: drop-shadow(0 1px 3px rgb(24 18 16 / 46%));
+  transform: translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turnDialLive {
+    transition: none;
+  }
+}
+
+/* The tooltip wraps the dial in a trigger span and anchors to the TRIGGER, so
+   the trigger has to be the dial's box rather than a passthrough. It used to be
+   `display: contents` on the old seal, which gave it no box at all: the tooltip
+   measured {0,0,0,0} and landed in the top-left corner of the screen (QA-DOCK-1).
+   Kept as a hard-won rule, not rediscovered. */
+.turnDialTrigger {
+  position: relative;
+  /* The disc is taller than the bar and the bar's top edge is the top of the
+     screen, so the whole overhang goes DOWNWARD: the trigger starts at the top of
+     the spine rather than being centred in it, and the 3px is headroom for the
+     hover lift, which would otherwise clip the very thing it draws attention to.
+     Done with `top`, not a transform — a transform moves the paint and leaves the
+     box behind, and the box is what the tooltip anchors to and what the auditor
+     measures. */
+  top: 3px;
+  align-self: flex-start;
+  display: block;
+  width: var(--turn-d);
+  height: var(--turn-d);
+}
+
+/* The roster is pushed to the far right so the spine's true centre is free. */
+.topbarStatusCluster {
+  gap: var(--sp-3);
+  margin-left: auto;
+}
+
+.dialFace {
+  fill: var(--disc-hi);
+  stroke: rgb(36 25 16 / 45%);
+  stroke-width: 1.5;
+}
+
+.dialTrack {
+  fill: none;
+  stroke: var(--slip);
+  stroke-width: 7;
+}
+
+.dialTicks line {
+  stroke: var(--ink-30);
+  stroke-width: 1;
+}
+
+.dialProgress {
+  fill: none;
+  stroke: var(--clay);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+/* The four seasons, muted to a wash except the one under the needle. Reading a
+   clock is finding the hand, not the numbers. */
+.dialSeason {
+  stroke: rgb(36 25 16 / 28%);
+  stroke-width: 1;
+  opacity: 0.38;
+}
+
+.dialSeason.isNow {
+  opacity: 1;
+}
+
+/* The emblem in each quarter. It is drawn INSIDE another drawing, so it carries
+   the line the dial needs rather than the one `.icon` gives type-height glyphs —
+   the group is scaled to 15/24, and 2.4 there lands on the dial's own 1.5. */
+.dialSeasonMark {
+  fill: none;
+  stroke: var(--ink-63);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dialSeasonMark.isNow {
+  stroke: var(--ink);
+}
+
+.dialSeason-spring {
+  fill: var(--season-spring);
+}
+
+.dialSeason-summer {
+  fill: var(--season-summer);
+}
+
+.dialSeason-autumn {
+  fill: var(--season-autumn);
+}
+
+.dialSeason-winter {
+  fill: var(--season-winter);
+}
+
+.dialNeedle {
+  fill: var(--clay);
+  stroke: var(--disc-hi);
+  stroke-width: 1.2;
+}
+
+.dialHub {
+  stroke: var(--ink-30);
+  stroke-width: 1.2;
+}
+
+/* Your move: clay, the colour this UI spends only on things you press. */
+.dialHubLive {
+  fill: var(--clay);
+  stroke: rgb(255 248 231 / 55%);
+  stroke-width: 1.5;
+}
+
+/* Somebody else's move: the acting seat's own glaze, filled inline because the
+   glaze table is data (ui/playerGlazes.ts) and no sheet may hold a second copy
+   of it. The ivory keyline is the same one every owner mark on the board wears —
+   a glaze never travels alone. */
+.dialHubSeat {
+  stroke: rgb(255 248 231 / 78%);
+  stroke-width: 2;
+}
+
+.dialBlazon {
+  fill: var(--ivory);
+  font-family: var(--disp);
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.dialHourglass path {
+  fill: none;
+  stroke: var(--disc-hi);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The hold. It sweeps the disc's outer edge as you press, and it is the whole
+   confirmation — ending a turn is the one move that cannot be taken back, and it
+   used to be a single click on the largest target on screen. */
+.dialHold {
+  fill: none;
+  stroke: var(--clay);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* ── The sea ──────────────────────────────────────────────────────────────
+   The ground is map.css's business now (`--sea-ground` + `--sea-grain`); this
+   sheet used to override it with a `center / cover` painting and no longer does.
+   What stays here is the vignette, so the bone tablets lying on the water read
+   as ON the table rather than cut out of it. It has to work harder than it did:
+   the plate supplied its own darkened edge, and a tiling texture supplies none. */
+.mapStage::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  box-shadow:
+    inset 0 8px 26px rgb(24 18 16 / 38%),
+    inset 0 -8px 26px rgb(24 18 16 / 38%);
+  pointer-events: none;
+}
+
+/* ── The docked tablets ────────────────────────────────────────────────────
+   Two bone slabs lying on the chart, each with a slip-coloured tab spine at the
+   screen's edge and its page beside it. They are DOCKED, flush and square: the
+   floating rounded cards they replace hovered over the sea with a soft shadow,
+   which read as a UI overlay rather than as something on the table.
+   The tab rail stays even when its page is closed, so the way back is always in
+   the same place; closing gives the sea back, which is the point of the toggle. */
+
+/* The workbench band is pointer-events: none so the sea stays pannable through
+   the gap between the tablets; every docked surface has to hand pointers back or
+   it is decoration. The rail and both pages were inert without this — clicks fell
+   straight through to the map's drag plane. */
+.tabRail,
+.intelPanel,
+.consultPanel {
+  pointer-events: auto;
+}
+
+.tabRail {
+  position: fixed;
+  top: var(--chrome-top);
+  /* The spine ends where its page ends — they are one slab, so a shared bottom
+     edge is the difference between a tablet and a menu stuck beside a box. */
+  bottom: var(--tablet-bot);
+  z-index: var(--z-tablet);
+  display: flex;
+  flex-direction: column;
+  /* Tabs live in the middle of the rail, not stacked at the top: the rail runs
+     the full height of the table and a cluster at one end would point at nothing. */
+  justify-content: center;
+  width: var(--tab-rail-w);
+  background: var(--slip);
+}
+
+.tabRail-left {
+  left: 0;
+  border-right: 1px solid var(--ink-12);
+}
+
+.tabRail-right {
+  right: 0;
+  border-left: 1px solid var(--ink-12);
+}
+
+.railTab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  color: var(--ink-63);
+  background: none;
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.railTab:hover {
+  color: var(--ink);
+  box-shadow: none;
+  transform: none;
+}
+
+/* The open tab is CONTINUOUS with its page — same bone, no divider — so the rail
+   and the tablet read as one object rather than a menu next to a box. */
+.railTabOn {
+  color: var(--clay-ink);
+  background: var(--bone);
+}
+
+.railTabOn::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--clay);
+}
+
+.tabRail-left .railTabOn::before {
+  left: 0;
+}
+
+.tabRail-right .railTabOn::before {
+  right: 0;
+}
+
+/* A headcount, not an alarm. This was an ivory-on-clay pill in the top-right
+   corner — the red-dot vocabulary the whole UI reserves for "something is
+   wrong" — and it sat directly on the figure's head, so the one glyph carrying
+   a number was also the one glyph you could not read. It is a plain ink numeral
+   tucked under the glyph now; the rail has exactly one badge, and it counts
+   people. */
+.railTabBadge {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  display: grid;
+  place-items: center;
+  min-width: 12px;
+  color: var(--ink-63);
+  font-family: var(--body);
+  font-weight: 700;
+}
+
+/* The open tab's ink lifts with its glyph, so the count belongs to the tab it
+   is on rather than staying a stray grey figure on a lit page. */
+.railTabOn .railTabBadge {
+  color: var(--clay-ink);
+}
+
+/* The two pages. Square, flush to their rail, laid on the chart with a hard
+   bottom edge — a slab has thickness, and that 2px of shade is the whole
+   difference between "on the table" and "floating above it". */
+.intelPanel,
+.consultPanel {
+  position: fixed;
+  top: var(--chrome-top);
+  /* A tablet ends ABOVE the bottom chrome — at the dials' top edge, not the
+     bar's. It used to run to the bar and then fake the clearance with 84px of
+     padding *inside* its scroll region, which put a dead zone at the end of
+     every page and ran the scrollbar under the season clock. The frame owns its
+     own clearance; the pages inside it own nothing but their content. */
+  bottom: var(--tablet-bot);
+  z-index: var(--z-tablet);
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+  border: 0;
+  border-radius: 0;
+  /* The frame CONTAINS. Nothing inside it may paint outside it; the one thing
+     allowed to move is the page body, which scrolls. */
+  overflow: hidden;
+  background: var(--bone);
+  box-shadow:
+    0 2px 0 #cbb58e,
+    var(--shadow-laid);
+}
+
+.intelPanel {
+  left: var(--tab-rail-w);
+  width: calc(var(--panel-w) - var(--tab-rail-w));
+}
+
+.consultPanel {
+  right: var(--tab-rail-w);
+  width: calc(var(--chron-w) - var(--tab-rail-w));
+}
+
+/* Hovering a tablet used to raise it above the rest of the chrome. It is docked
+   now; there is nothing to raise it over. */
+.intelPanel:focus-within,
+.intelPanel:hover,
+.consultPanel:focus-within,
+.consultPanel:hover {
+  z-index: var(--z-tablet);
+}
+
+.ledgerCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 0;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--ink-12);
+}
+
+.ledgerCardTitle .titleIcon {
+  width: 1.1875rem;
+  height: 1.1875rem;
+}
+
+.ledgerCardTitle h2 {
+  flex: 1;
+  margin: 0;
+}
+
+/* The header's right-hand slot (proto.css `.panel-h .count`): how many of the
+   thing this page lists. It belongs on the page it counts, not on a 15px rail
+   badge that a three-digit number cannot fit inside. */
+.ledgerCardTitle .panelCount {
+  margin-left: auto;
+  color: var(--ink-63);
+  font-weight: 600;
+}
+
+/* `.asm-body` used to take an 84px dial clearance here. The Assembly covers the
+   dials now — it covers the whole table — and the element itself is gone with the
+   scene rebuild, so the rule was 84px of dead space inside a takeover. */

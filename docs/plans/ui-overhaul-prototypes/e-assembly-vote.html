@@ -1,0 +1,225 @@
+<meta charset="utf-8">
+<title>Hegemony — the vote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto.css">
+<style>
+  .scene {
+    width: 1440px; height: 900px; position: relative; overflow: hidden;
+    background: url("/assets/map/aegean-sea-board.png") center / cover no-repeat;
+  }
+  .scene::before { content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 32%, rgb(24 18 16 / 0.6), rgb(24 18 16 / 0.88)); }
+  .asm { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 26px 60px 24px; }
+
+  .asm-head { display: flex; flex-direction: column; align-items: center; color: var(--ivory); }
+  .asm-head .gk { font-family: Cinzel, serif; font-size: 12px; letter-spacing: 0.5em; color: var(--warn-lit); margin-bottom: 4px; }
+  .asm-head h1 { font-family: Cinzel, serif; font-size: 34px; font-weight: 700; letter-spacing: 0.18em; }
+  .asm-head .sub { font-size: 15px; font-style: italic; color: var(--ivory-70); margin-top: 2px; }
+
+  .stations { display: flex; align-items: center; gap: 14px; margin: 14px 0 8px; }
+  .station { display: flex; align-items: center; gap: 9px; color: var(--ivory-45); font-family: Cinzel, serif; font-size: 12px; letter-spacing: 0.16em; }
+  .station .n { width: 30px; height: 30px; border-radius: 50%; border: 1.6px solid currentColor; display: grid; place-items: center; font-size: 13px; font-family: Alegreya, serif; font-weight: 700; }
+  .station.done { color: rgb(168 184 119 / .8); }
+  .station.done .n::after { content: "✓"; }
+  .station.done .n { border-color: currentColor; font-size: 12px; }
+  .station.on { color: var(--warn-lit); }
+  .station.on .n { background: var(--warn-lit); color: var(--lacquer); border-color: var(--warn-lit); }
+  .meander-link { width: 52px; height: 8px; opacity: 0.4;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9"><path d="M1 8V1h12v4H7V3" fill="none" stroke="%23fff8e7" stroke-width="1.3"/></svg>') repeat-x left center / 18px 9px; }
+
+  .voice { position: absolute; top: 30px; right: 60px; display: flex; align-items: center; gap: 10px; color: var(--ivory);
+    border: 1px solid rgb(255 248 231 / 0.3); border-radius: 4px; padding: 8px 14px; }
+  .voice .lbl { font-family: Cinzel, serif; font-size: 10.5px; letter-spacing: 0.22em; color: var(--ivory-45); }
+  .voice b { font-family: Cinzel, serif; font-size: 13px; letter-spacing: 0.12em; }
+  .cardcount { position: absolute; top: 30px; left: 60px; color: var(--ivory); text-align: left; }
+  .cardcount .k { font-family: Cinzel, serif; font-size: 10.5px; letter-spacing: 0.22em; color: var(--ivory-45); display: block; }
+  .cardcount b { font-family: Cinzel, serif; font-size: 15px; letter-spacing: 0.14em; }
+
+  /* floor */
+  .floor { flex: 1; display: flex; align-items: center; justify-content: center; gap: 60px; width: 100%; }
+
+  .law-card {
+    width: 385px; background: linear-gradient(180deg, #fffaf0, var(--ivory) 55%, #f6ecd4);
+    border-radius: 4px; box-shadow: 0 26px 70px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(36 25 16 / 0.35);
+    padding: 0 0 20px; overflow: hidden; text-align: center; position: relative; z-index: 2;
+  }
+  .law-card .band { height: 12px; opacity: 0.75; background:
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9"><path d="M1 8V1h12v4H7V3" fill="none" stroke="%23c0461c" stroke-width="1.3"/></svg>') repeat-x center / 18px 9px, #241910; }
+  .law-card .kicker { font-family: Cinzel, serif; font-size: 10px; letter-spacing: 0.3em; color: var(--clay); margin: 16px 0 4px; }
+  .law-card h2 { font-family: Cinzel, serif; font-size: 25px; font-weight: 700; letter-spacing: 0.08em; }
+  .law-card .from { font-size: 12.5px; font-style: italic; color: var(--ink-48); margin: 3px 0 12px; }
+  .law-card .rule-line { width: 60px; height: 1px; background: var(--ink-30); margin: 0 auto 12px; }
+  .law-card .fx { font-size: 16.5px; line-height: 1.55; padding: 0 30px; }
+  .law-card .fx .up { color: var(--pos); font-weight: 800; }
+  .law-card .fx .down { color: var(--neg); font-weight: 800; }
+  .law-card .housenote { margin-top: 13px; font-family: Cinzel, serif; font-size: 9.5px; letter-spacing: 0.2em; color: var(--ink-48); }
+
+  .next-card { position: absolute; left: 50%; bottom: -52px; transform: translateX(-50%) rotate(-1.6deg);
+    width: 290px; background: #efe2c2; border-radius: 4px; padding: 46px 0 12px;
+    box-shadow: 0 8px 30px rgb(0 0 0 / .5), inset 0 0 0 1px rgb(36 25 16 / .3);
+    font-family: Cinzel, serif; font-size: 10.5px; letter-spacing: .2em; color: var(--ink-66); z-index: 1; text-align: center; }
+  .cardwrap { position: relative; }
+
+  /* the scale */
+  .tally { width: 430px; color: var(--ivory); text-align: center; }
+  .tally .nums { display: flex; justify-content: space-between; align-items: baseline; padding: 0 8px; }
+  .tally .side { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .tally .side .v { font-size: 56px; font-weight: 800; line-height: 1; }
+  .tally .side .k { font-family: Cinzel, serif; font-size: 13px; letter-spacing: 0.3em; }
+  .tally .side.yea .v, .tally .side.yea .k { color: var(--pos-lit); }
+  .tally .side.nay .v, .tally .side.nay .k { color: var(--neg-lit); }
+  .tally .verdict { margin-top: 16px; font-family: Cinzel, serif; font-size: 13px; letter-spacing: 0.22em; color: var(--warn-lit); }
+  .tally .verdict small { display: block; font-family: Alegreya, serif; font-size: 13px; letter-spacing: 0; font-style: italic;
+    color: var(--ivory-45); text-transform: none; margin-top: 3px; }
+  .tug { margin-top: 14px; }
+  .tug .bar { position: relative; height: 18px; border-radius: 9px; overflow: hidden;
+    background: rgb(255 248 231 / 0.14); box-shadow: inset 0 1px 3px rgb(0 0 0 / .5); }
+  .tug .bar .yea-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 50%;
+    background: linear-gradient(180deg, #7d8f51, #5e6e3a); }
+  .tug .bar .nay-fill { position: absolute; right: 0; top: 0; bottom: 0; width: 50%;
+    background: linear-gradient(180deg, #a83a1c, #8f2e13); }
+  .tug .bar .notch { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2.5px;
+    background: var(--ivory); transform: translateX(-50%); box-shadow: 0 0 8px rgb(0 0 0 / .6); }
+  .tug .shards { display: flex; justify-content: space-between; margin-top: 9px; padding: 0 4px; }
+  .tug .pile { display: flex; gap: 5px; }
+  .shard { width: 26px; height: 22px; position: relative;
+    clip-path: polygon(8% 38%, 30% 6%, 74% 0%, 100% 30%, 92% 78%, 60% 100%, 18% 88%, 0% 62%); }
+  .shard.yea { background: linear-gradient(160deg, #74854a, #556238); }
+  .shard.nay { background: linear-gradient(160deg, #a83a1c, #6e2410); }
+  .shard.ghost { background: none; box-shadow: inset 0 0 0 1.4px rgb(255 248 231 / .3); }
+  .order { margin-top: 15px; font-family: Cinzel, serif; font-size: 9.5px; letter-spacing: 0.22em; color: var(--ivory-45); }
+  .order b { color: var(--warn-lit); }
+
+  /* seats */
+  .seats { display: flex; gap: 16px; align-items: stretch; }
+  .seat-plaque {
+    width: 200px; display: flex; align-items: center; gap: 10px;
+    background: rgb(24 18 16 / 0.72); border: 1px solid rgb(255 248 231 / 0.2);
+    border-radius: 5px; padding: 11px 14px; color: var(--ivory);
+  }
+  .seat-plaque .glaze { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none;
+    font-family: Cinzel, serif; font-weight: 700; font-size: 15px;
+    box-shadow: inset 0 0 0 1.6px rgb(255 248 231 / 0.85); }
+  .seat-plaque .nm { font-family: Cinzel, serif; font-size: 12.5px; letter-spacing: 0.1em; display: block; }
+  .seat-plaque .st { font-size: 11.5px; color: var(--ivory-45); font-style: italic; }
+  .cast { margin-left: auto; width: 30px; height: 26px; flex: none; position: relative;
+    clip-path: polygon(8% 38%, 30% 6%, 74% 0%, 100% 30%, 92% 78%, 60% 100%, 18% 88%, 0% 62%); }
+  .cast.yea { background: linear-gradient(160deg, #74854a, #556238); }
+  .cast.yea::after { content: "ΝΑΙ"; position: absolute; inset: 0; display: grid; place-items: center;
+    font-family: Cinzel, serif; font-size: 8.5px; color: rgb(255 248 231 / .9); }
+  .cast.nay { background: linear-gradient(160deg, #a83a1c, #6e2410); }
+  .cast.nay::after { content: "ΟΥ"; position: absolute; inset: 0; display: grid; place-items: center;
+    font-family: Cinzel, serif; font-size: 9px; color: rgb(255 248 231 / .9); }
+
+  /* the lit voting seat */
+  .seat-vote {
+    display: flex; align-items: center; gap: 14px;
+    background: rgb(24 18 16 / 0.85); border: 1px solid var(--warn-lit);
+    border-radius: 6px; padding: 11px 16px; color: var(--ivory);
+    box-shadow: 0 0 34px rgb(226 165 88 / 0.28);
+  }
+  .seat-vote .who { display: flex; align-items: center; gap: 10px; }
+  .seat-vote .glaze { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+    font-family: Cinzel, serif; font-weight: 700; font-size: 16px;
+    box-shadow: inset 0 0 0 1.8px rgb(255 248 231 / 0.9); }
+  .seat-vote .nm { font-family: Cinzel, serif; font-size: 13.5px; letter-spacing: 0.12em; display: block; }
+  .seat-vote .st { font-family: Cinzel, serif; font-size: 9px; letter-spacing: 0.22em; color: var(--warn-lit); }
+  .vbtn { border: none; cursor: pointer; border-radius: 5px; padding: 12px 24px;
+    font-family: Cinzel, serif; font-weight: 700; font-size: 14px; letter-spacing: 0.16em; color: var(--ivory);
+    box-shadow: inset 0 1px 0 rgb(255 248 231 / .3), 0 3px 10px rgb(0 0 0 / .45); }
+  .vbtn.yea { background: linear-gradient(180deg, #74854a, #5e6e3a 55%, #48542c); }
+  .vbtn.nay { background: linear-gradient(180deg, #a83a1c, #8f2e13 55%, #6e2410); }
+  .vbtn.minor { background: none; box-shadow: inset 0 0 0 1.4px rgb(255 248 231 / .35); font-size: 11px;
+    padding: 8px 14px; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .vbtn.minor small { font-family: Alegreya, serif; font-size: 11px; letter-spacing: 0; opacity: .75; font-weight: 600; }
+  .vbtn.minor .ci { width: 11px; height: 11px; }
+</style>
+
+<div class="scene">
+  <div class="asm">
+
+    <div class="cardcount num"><span class="k">THE BALLOT</span><b>CARD I OF II</b></div>
+
+    <div class="asm-head">
+      <span class="gk">ΕΚΚΛΗΣΙΑ</span>
+      <h1>THE VOTE</h1>
+      <span class="sub">the Assembly turns to the ballot — two resolutions stand</span>
+    </div>
+
+    <div class="voice"><span class="lbl">VOICE</span><b>UNHELD</b></div>
+
+    <div class="stations">
+      <div class="station done"><span class="n"></span>PROPOSAL</div>
+      <div class="meander-link"></div>
+      <div class="station on"><span class="n">II</span>VOTING</div>
+      <div class="meander-link"></div>
+      <div class="station"><span class="n">III</span>STANDING LAW</div>
+    </div>
+
+    <div class="floor">
+      <div class="cardwrap">
+        <div class="law-card">
+          <div class="band"></div>
+          <div class="kicker">A HOUSE LAW · OF DEMOSTHENES</div>
+          <h2>SACRED FIELDS</h2>
+          <div class="from">“Let every furrow be counted, and every hand upon the plough.”</div>
+          <div class="rule-line"></div>
+          <div class="fx num">Each citizen yields <span class="up">+1 food</span>,<br>
+            but every 3 citizens cost <span class="down">−1 happiness</span>.</div>
+          <div class="housenote">HOUSE LAWS GRANT NO AUTHOR PRIZE</div>
+        </div>
+        <div class="next-card">NEXT ON THE BEMA · LAND REFORM — DAMON</div>
+      </div>
+
+      <div class="tally num">
+        <div class="nums">
+          <div class="side yea"><span class="v">1</span><span class="k">YEA</span></div>
+          <div class="side nay"><span class="v">1</span><span class="k">NAY</span></div>
+        </div>
+        <div class="tug">
+          <div class="bar">
+            <span class="yea-fill"></span><span class="nay-fill"></span><span class="notch"></span>
+          </div>
+          <div class="shards">
+            <div class="pile"><span class="shard yea"></span><span class="shard ghost"></span></div>
+            <div class="pile"><span class="shard ghost"></span><span class="shard nay"></span></div>
+          </div>
+        </div>
+        <div class="verdict">ON THE KNIFE'S EDGE
+          <small>two still to speak — a tie breaks against the law</small></div>
+        <div class="order">VOTED IN TURN · DAMON → KYROS → <b>THERON</b> → NIKOS</div>
+      </div>
+    </div>
+
+    <div class="seats">
+      <div class="seat-plaque">
+        <span class="glaze" style="background:var(--kyanos)">Δ</span>
+        <div><span class="nm">DAMON</span><span class="st">has cast</span></div>
+        <div class="cast nay"></div>
+      </div>
+      <div class="seat-plaque">
+        <span class="glaze" style="background:var(--kinnabari)">Κ</span>
+        <div><span class="nm">KYROS</span><span class="st">has cast</span></div>
+        <div class="cast yea"></div>
+      </div>
+
+      <div class="seat-vote">
+        <div class="who">
+          <span class="glaze" style="background:var(--porphyra)">Θ</span>
+          <div><span class="nm">THERON</span><span class="st">CASTS NOW</span></div>
+        </div>
+        <button class="vbtn yea">YEA</button>
+        <button class="vbtn nay">NAY</button>
+        <button class="vbtn minor"><span>VETO</span><small class="num">5<i class="ci" style="--m:url('/assets/resource-icons/influence-mask.png')"></i></small></button>
+        <button class="vbtn minor"><span>BRIBE +1</span><small class="num">10<i class="ci" style="--m:url('/assets/resource-icons/influence-mask.png')"></i></small></button>
+      </div>
+
+      <div class="seat-plaque">
+        <span class="glaze" style="background:var(--melichron)">Ν</span>
+        <div><span class="nm">NIKOS</span><span class="st">speaks last</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>

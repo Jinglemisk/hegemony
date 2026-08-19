@@ -161,6 +161,16 @@ export interface EventCard {
   name: string;
   count: number;
   text: string;
+  /**
+   * The card's own voice — presentation only, never a rule.
+   *
+   * `text` is the mechanical sentence and stays the single source of what the
+   * card DOES; this is the one or two lines that say what it feels like. No
+   * reducer, query, cost, probability or simulation policy may read it, and a
+   * card that has none simply omits it — the flavour slot is skipped, not
+   * blanked. Authored in `data.ts`; see `PendingPlayerEventModal` for the slot.
+   */
+  flavor?: string;
   timing: EventTiming;
   effects: EventEffect[];
   /**
@@ -441,6 +451,23 @@ export interface LogEntry {
   id: string;
   season: number;
   message: string;
+  /**
+   * Which seat this line concerns.
+   *
+   * Deliberately "about", not "actor": the chronicle's filter asks *show me the
+   * lines that matter to this player*, and half of those are things done TO them
+   * — a directive landing, a mob taking a pop. A line's subject is the useful
+   * answer; the deed's author is already named in the sentence.
+   *
+   * Before this field the frontend worked it out by checking whether the message
+   * STARTED WITH a player's name — a heuristic that silently mis-filed every line
+   * phrased the other way round, and that would have broken outright the first
+   * time a seat was renamed. Optional so old saves still load; the frontend keeps
+   * the prefix check as a fallback for entries that predate it.
+   *
+   * Nothing in the rules reads it.
+   */
+  about?: PlayerId;
 }
 
 export interface HegemonyState {

@@ -1,39 +1,31 @@
-/* map — Hex map canvas: sea backdrop, camera/drag layer, zoom & map-mode controls, resource band, atlas sprites
-   Split from styles.css (Phase 2e); original source order preserved. */
+/* map — the hex board: the sea it lies on, the fitted frame it is drawn in, and
+   the captions that sit over it.
+
+   There is no pan, no zoom and no map mode. The whole island is on screen at one
+   fitted framing (components/board/map/useBoardFrame.ts), so nothing here has a
+   grab cursor, a moving state, or a control disc of its own. */
 
 .hexMap {
   display: block;
   width: 100%;
   height: 100%;
   min-height: 0;
-  /* The KYKLOS sea: the mock's stage gradient with its two texture passes over
-     it. Static — it belongs to the stage, not the world, so it does not pan or
-     zoom with the board. */
-  background:
-    repeating-linear-gradient(104deg, rgb(255 248 231 / 2.5%) 0 2px, transparent 2px 90px),
-    repeating-linear-gradient(8deg, rgb(12 40 48 / 4%) 0 3px, transparent 3px 120px),
-    radial-gradient(900px 620px at 62% 34%, #2e8a9a 0%, #206e7c 46%, #17505c 100%);
-  cursor: grab;
-  touch-action: none;
+  /* The KYKLOS sea: the stage's own ground with its grain laid over it. Static —
+     it belongs to the stage, not the world, so it does not pan or zoom with the
+     board. Every value is a token now; the sea is in the palette (base.css). */
+  background: var(--sea-grain), var(--sea-ground);
   user-select: none;
-}
-
-.hexMap.isDraggingSea {
-  cursor: grabbing;
 }
 
 .shorelineFoam {
   pointer-events: none;
 }
 
-.mapCameraLayer {
+/* The board layer. `will-change` is deliberately NOT set: the frame changes only
+   on a resize, and a permanent compositing hint for a transform that almost never
+   moves costs a layer for nothing. */
+.mapBoardLayer {
   transform-origin: 0 0;
-  will-change: transform;
-}
-
-.seaDragPlane {
-  fill: transparent;
-  pointer-events: all;
 }
 
 .shorelineFoamLine,
@@ -56,86 +48,6 @@
   filter: drop-shadow(0 2px 5px rgb(31 105 119 / 24%));
 }
 
-.hexMap.isCameraMoving .shorelineFoamLine,
-.hexMap.isCameraMoving .shorelineFoamBreak {
-  filter: none;
-}
-
-.hexMap.isCameraMoving .settlementShape,
-.hexMap.isCameraMoving .hexTile.selected,
-.hexMap.isCameraMoving .hexTile.pending {
-  filter: none;
-}
-
-.mapZoomControls,
-.mapModeControls {
-  position: absolute;
-  bottom: 14px;
-  z-index: 5;
-  display: grid;
-  grid-template-columns: repeat(2, 36px);
-  gap: 6px;
-  padding: 0;
-  border: none;
-  background: none;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-.mapZoomControls {
-  right: 14px;
-}
-
-.mapModeControls {
-  left: 14px;
-}
-
-.mapZoomControls button,
-.mapModeControls button {
-  display: grid;
-  place-items: center;
-  min-width: 36px;
-  min-height: 36px;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid rgb(255 248 231 / 38%);
-  border-radius: 8px;
-  color: var(--ivory);
-  background: rgb(24 62 70 / 82%);
-  box-shadow: 0 6px 14px rgb(8 22 28 / 30%);
-  font-size: 1.15rem;
-  line-height: 1;
-}
-
-.mapZoomControls button:not(:disabled):hover,
-.mapModeControls button:not(:disabled):hover {
-  border-color: rgb(255 248 231 / 78%);
-  background: rgb(31 105 119 / 92%);
-  box-shadow: 0 8px 16px rgb(8 22 28 / 24%);
-}
-
-.mapModeControls button {
-  padding: 3px;
-}
-
-.mapModeControls img {
-  display: block;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  pointer-events: none;
-  filter: saturate(0.92) contrast(1.05) drop-shadow(0 1px 2px rgb(8 22 28 / 30%));
-}
-
-.mapModeControls button[aria-pressed="true"] {
-  border-color: rgb(255 248 231 / 86%);
-  background: rgb(192 70 28 / 88%);
-  box-shadow:
-    inset 0 0 0 1px rgb(24 18 16 / 24%),
-    0 8px 17px rgb(8 22 28 / 28%);
-}
-
 .mapSetupCaption {
   position: absolute;
   left: 50%;
@@ -155,82 +67,16 @@
   pointer-events: none;
 }
 
-/* The atlases are masks, not images: the glyph lives in the alpha channel and
-   the ink comes from `currentColor`, so an icon inherits whatever colour its
-   disc sets — ink on bone, ivory on clay. --sprite-x/y pick the cell. */
+/* Three raster icon systems used to live here — the six resource masks tinted to
+   a fixed per-resource hue, the ui-kit sheet, and the icon atlas that drew every
+   pop, building and settlement kind. All three are `<Icon>` line glyphs now: one
+   drawing hand for the whole app, and colour that says sign rather than which
+   thing it is. The icon atlas was the worst of them — it only ever painted four
+   building cells for nine buildings, so the forum wore the marketplace's stall
+   and the odeon wore the temple's roof.
+   The painted terrain sheet is the one that is left. */
 .atlasSprite {
   display: inline-block;
   flex: 0 0 auto;
   background-color: currentColor;
-  mask-repeat: no-repeat;
-  mask-position: var(--sprite-x) var(--sprite-y);
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: var(--sprite-x) var(--sprite-y);
-}
-
-.atlasIcon {
-  width: 34px;
-  height: 34px;
-  mask-image: var(--icon-atlas);
-  mask-size: 400% 400%;
-  -webkit-mask-image: var(--icon-atlas);
-  -webkit-mask-size: 400% 400%;
-}
-
-.resourceMaskIcon {
-  display: inline-block;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  background: var(--resource-color, currentColor);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
-
-.resourceMask-wood {
-  -webkit-mask-image: url("../../assets/resource-icons/wood-mask.png");
-  mask-image: url("../../assets/resource-icons/wood-mask.png");
-}
-
-.resourceMask-stone {
-  -webkit-mask-image: url("../../assets/resource-icons/stone-mask.png");
-  mask-image: url("../../assets/resource-icons/stone-mask.png");
-}
-
-.resourceMask-gold {
-  -webkit-mask-image: url("../../assets/resource-icons/gold-mask.png");
-  mask-image: url("../../assets/resource-icons/gold-mask.png");
-}
-
-.resourceMask-food {
-  -webkit-mask-image: url("../../assets/resource-icons/food-mask.png");
-  mask-image: url("../../assets/resource-icons/food-mask.png");
-}
-
-.resourceMask-influence {
-  -webkit-mask-image: url("../../assets/resource-icons/influence-mask.png");
-  mask-image: url("../../assets/resource-icons/influence-mask.png");
-}
-
-.resourceMask-happiness {
-  -webkit-mask-image: url("../../assets/resource-icons/unrest-mask.png");
-  mask-image: url("../../assets/resource-icons/unrest-mask.png");
-}
-
-.atlasTerrain {
-  background-image: var(--terrain-atlas);
-  background-size: 218% 218%;
-}
-
-.atlasUi {
-  width: 40px;
-  height: 40px;
-  mask-image: var(--ui-atlas);
-  mask-size: 300% 300%;
-  -webkit-mask-image: var(--ui-atlas);
-  -webkit-mask-size: 300% 300%;
 }

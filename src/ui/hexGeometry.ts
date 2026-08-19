@@ -28,22 +28,18 @@ export type WorldInset = { top: number; right: number; bottom: number; left: num
 
 export const HEX_SIZE = 45;
 
-/** The board at rest: the frame every zoom level is expressed relative to. */
+/** The board's own frame: the coordinate system every tile is drawn in, and the
+ *  window the fitted board frame is expressed relative to. */
 export const BASE_VIEW_BOX: ViewBox = { x: -372, y: -270, width: 744, height: 540 };
 
 /**
- * The furthest you may pull back — base plus a margin of sea on every side. The
- * board is full-bleed against the sea, and the margin does triple duty: the
- * pan/zoom-out limit, the room the live-area reseat pans into to lift the board
- * clear of the chrome, and — since the fit-to-live seat zooms OUT to fit the whole
- * board on wide screens (`slice` scales it to cover the width, so a 21:9 monitor
- * wants ~0.45×) — the headroom that zoom needs. Generous on purpose; the resting
+ * How far the world extends past the board — base plus a margin of sea on every
+ * side. It is the room {@link seatViewBox} slides into to lift the board clear of
+ * the chrome, and the headroom the fit needs: `slice` scales the map to COVER the
+ * stage, so fitting the whole island into the sea between two ledger tablets
+ * means pulling back well past 1× on a wide monitor. Generous on purpose; the
  * fit never reaches the floor, it only needs the room to exist.
  */
-// 1.0 (was 0.7): the between-panels reseat (2026-07-19) fits the WHOLE board into
-// the narrower sea BETWEEN the two widened ledger cards, which on a laptop wants to
-// zoom out past the old 0.7 floor. The extra headroom only enables that resting
-// zoom-out (and a little more manual pan-out); wide monitors never reach the floor.
 const WORLD_MARGIN = 1.0;
 export const WORLD_VIEW_BOX: ViewBox = {
   x: BASE_VIEW_BOX.x - BASE_VIEW_BOX.width * WORLD_MARGIN,
@@ -52,19 +48,42 @@ export const WORLD_VIEW_BOX: ViewBox = {
   height: BASE_VIEW_BOX.height * (1 + WORLD_MARGIN * 2),
 };
 
-export const MIN_ZOOM = BASE_VIEW_BOX.width / WORLD_VIEW_BOX.width;
-export const MAX_ZOOM = 1.18;
-export const ZOOM_STEP = 0.08;
+/** Two settlements on one tile sit either side of centre; one sits on it. The
+ *  offset is half a seal plus a keyline's clearance — a tile may hold a city and
+ *  a rival's colony at once, and the two seals must not touch. */
+const SIDE_BY_SIDE_POSITIONS = [-22, 22];
 
-/** Two colonies on one tile sit either side of centre; one sits on it. */
-const TWO_COLONY_POSITIONS = [-14, 14];
+export function getSideBySidePositions(count: number) {
+  return count <= 1 ? [0] : SIDE_BY_SIDE_POSITIONS;
+}
 
-export function getColonyXPositions(count: number) {
-  if (count <= 1) {
-    return [0];
+/**
+ * The bounding box of the drawn island, in world units.
+ *
+ * The frame used to fit {@link BASE_VIEW_BOX} instead, which is the coordinate
+ * window rather than the land: it carries about a hundred units of its own sea on
+ * every side, so fitting it meant the real margin around the island was that
+ * built-in sea PLUS whatever margin was asked for, and the board came out a third
+ * smaller than the space it was given. Every other length in the frame — the
+ * tablets' reserve, the sea margin — had a fudge factor in it to compensate.
+ * Measure the land and the fudges go away.
+ */
+export function boardExtent(centers: readonly { x: number; y: number }[]): ViewBox {
+  if (centers.length === 0) {
+    return BASE_VIEW_BOX;
   }
 
-  return TWO_COLONY_POSITIONS;
+  // A pointy-top hex is `size` tall from centre to vertex and `size·cos30` wide
+  // from centre to flat.
+  const halfWidth = HEX_SIZE * Math.cos(Math.PI / 6);
+  const xs = centers.map(({ x }) => x);
+  const ys = centers.map(({ y }) => y);
+  const minX = Math.min(...xs) - halfWidth;
+  const maxX = Math.max(...xs) + halfWidth;
+  const minY = Math.min(...ys) - HEX_SIZE;
+  const maxY = Math.max(...ys) + HEX_SIZE;
+
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
 /**
@@ -152,14 +171,10 @@ export function viewBoxToString(viewBox: ViewBox) {
   return `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`;
 }
 
-export function getZoomLevel(viewBox: ViewBox) {
-  return BASE_VIEW_BOX.width / viewBox.width;
-}
-
 /**
- * The camera is a CSS transform on a static viewBox rather than a live viewBox
- * swap — the browser can composite a matrix without re-rasterising the SVG, so
- * panning stays smooth.
+ * The frame is a CSS transform on a static viewBox rather than a live viewBox
+ * swap — the browser can composite a matrix without re-rasterising the SVG, so a
+ * re-fit on resize costs one matrix rather than 37 re-rasterised hexes.
  */
 export function cameraTransform(viewBox: ViewBox) {
   const scale = BASE_VIEW_BOX.width / viewBox.width;
@@ -169,30 +184,7 @@ export function cameraTransform(viewBox: ViewBox) {
   return `matrix(${scale} 0 0 ${scale} ${translateX} ${translateY})`;
 }
 
-/** Zoom about a focus point, keeping whatever is under it pinned there. */
-export function zoomViewBox(
-  current: ViewBox,
-  zoomLevel: number,
-  focus: { x: number; y: number; ratioX: number; ratioY: number } = {
-    x: current.x + current.width / 2,
-    y: current.y + current.height / 2,
-    ratioX: 0.5,
-    ratioY: 0.5,
-  },
-) {
-  const nextZoom = clamp(zoomLevel, MIN_ZOOM, MAX_ZOOM);
-  const nextWidth = BASE_VIEW_BOX.width / nextZoom;
-  const nextHeight = BASE_VIEW_BOX.height / nextZoom;
-
-  return clampViewBox({
-    x: focus.x - nextWidth * focus.ratioX,
-    y: focus.y - nextHeight * focus.ratioY,
-    width: nextWidth,
-    height: nextHeight,
-  });
-}
-
-/** Keeps the camera inside the world — no pan or zoom can show past the sea. */
+/** Keeps the frame inside the world — no fit can show past the sea. */
 export function clampViewBox(viewBox: ViewBox): ViewBox {
   const width = Math.min(viewBox.width, WORLD_VIEW_BOX.width);
   const height = Math.min(viewBox.height, WORLD_VIEW_BOX.height);
@@ -208,16 +200,12 @@ export function clampViewBox(viewBox: ViewBox): ViewBox {
 }
 
 /**
- * The resting seat of the camera: take a window centred on the board and slide it
- * so the board centre lands at the centre of the *live* area rather than the raw
- * window. Chrome on the left (the ledger) pushes the window left so the board
- * shows to its right; a heavier bottom bar lifts it up. The result is clamped to
- * the world, so a reseat can never expose a non-sea edge — if the world margin is
- * too small to honour the full shift the board simply gets as clear as it can.
- *
- * This is a resting move only. Panning and zooming still use {@link clampViewBox}
- * directly, so a drag's feel is unchanged and the player can pull any corner out
- * from under the chrome by hand.
+ * Seat a window centred on the board so the board's centre lands at the centre of
+ * the *live* area rather than the raw window. Chrome on the left (the ledger)
+ * pushes the window left so the board shows to its right; a heavier bottom bar
+ * lifts it up. The result is clamped to the world, so a seat can never expose a
+ * non-sea edge — if the world margin is too small to honour the full shift the
+ * board simply gets as clear as it can.
  */
 export function seatViewBox(rest: ViewBox, inset: WorldInset): ViewBox {
   return clampViewBox({
@@ -231,7 +219,7 @@ export function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-/** Sub-thousandth differences are float noise, not a camera move. */
+/** Sub-thousandth differences are float noise, not a re-fit. */
 export function viewBoxesEqual(a: ViewBox, b: ViewBox) {
   return (
     Math.abs(a.x - b.x) < 0.001 &&

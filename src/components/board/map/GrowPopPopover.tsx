@@ -3,12 +3,14 @@ import { POP_TYPES, getGrowPopStatus, previewGrowPopIncomeDelta } from "../../..
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { MechanicsDetails } from "../../MechanicsDetails";
-import { AtlasIcon } from "../../Sprites";
+import { POP_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { ResourceDeltaList } from "../ResourceDeltaList";
 import { ResourceChips } from "../ResourceChips";
-import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
+import { actionRequirementText, gameplayActionDisabled } from "../helpers";
+import { TileSubject } from "../TileSubject";
 import { PopoverActions } from "../PopoverActions";
 import { TilePopover } from "./TilePopover";
 
@@ -52,9 +54,7 @@ export function GrowPopPopover({
       onCancel={onCancel}
       title="Grow Pop"
     >
-      <p className="placementSectionLabel placementTargetName">
-        {settlementPickerLabel(G, tile, playerID)}
-      </p>
+      <TileSubject G={G} playerID={playerID} tile={tile} />
 
       {/* growPopChoiceGrid, not foundColonyPopGrid: Found shows a bare pop count
           as its cost, Grow shows "9 Food, 2 Gold" — which needs the stacked rows
@@ -89,7 +89,7 @@ export function GrowPopPopover({
                 onClick={() => setPop(candidate)}
                 type="button"
               >
-                <AtlasIcon icon={candidate} className="miniIcon" />
+                <Icon glyph={POP_GLYPHS[candidate]} size="rail" className="miniIcon" />
                 <span>{formatPopLabel(candidate, 1)}</span>
                 <strong>
                   <ResourceChips

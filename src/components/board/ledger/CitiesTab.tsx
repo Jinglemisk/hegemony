@@ -1,193 +1,174 @@
-import { useEffect, useMemo, useState } from "react";
 import {
   POP_TYPES,
-  getBuildBuildingStatus,
-  getBuilding,
-  getBuildings,
-  settlementBuildingSlots,
+  settlementCapacity,
   settlementNetYield,
   settlementOverCapacity,
-  settlementCapacity,
-  settlementTileYield,
   totalPops,
 } from "../../../game/rules";
-import type { BuildingId } from "../../../game/types";
-import { RESOURCE_LABELS, formatNumber, formatPopLabel } from "../../../ui/formatters";
-import { SettlementSummaryCard } from "../../SettlementCard";
-import { AtlasIcon } from "../../Sprites";
-import { BUILDING_AFFINITY } from "../constants";
-import { buildingTooltipRows, capitalize, getBuildingBenefitText } from "../helpers";
+import type { BuildingId, Resources } from "../../../game/types";
+import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
+import { RESOURCE_GLYPHS, TERRAIN_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
+import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
+import { settlementNameOf } from "../../../ui/settlementNames";
 import type { OwnedHolding } from "../types";
-import { BuildingChip } from "./BuildingChip";
 import { useGameUi } from "../GameUiContext";
+import { BuildingSockets } from "./BuildingSockets";
+import { slotsOf } from "./slots";
+import { PopBeads } from "./PopBeads";
+import { SealMark } from "./SealMark";
+
+/**
+ * Cities — one four-band block per settlement: **who it is, who lives there,
+ * what stands on it, what it pays.** All four always visible.
+ *
+ * What was here before this rewrite was the pre-overhaul design, untouched by
+ * the overhaul: a pop×building affinity matrix — nine chips in three columns,
+ * one column per social class — behind a disclosure that booted closed. Two
+ * things were wrong with it and neither was cosmetic.
+ *
+ * 1. **It hid the page.** Every fact the Cities page exists to give you sat
+ *    behind a chevron, so the page opened as a list of names.
+ * 2. **It answered a question nobody asks here.** Which class a building favours
+ *    is a Build decision; it appears in neither prototype. Cities is the page
+ *    that tells you the *state* of a place.
+ *
+ * So the matrix is gone, the disclosure with it, and the four bands say the four
+ * things: the seal disc carries the same mark the board draws (find the place
+ * out there), the beads carry the people with their empty room, the sockets
+ * carry the buildings with their open ground, and the income row prints only
+ * what actually moved.
+ */
+
+/** Only what moved, signed and coloured. The old strip printed all six resources
+ *  on every settlement and dimmed four of them to dashes — five columns of "no"
+ *  to find the one "yes". */
+function CityIncome({ resources }: { resources: Resources }) {
+  const moved = RESOURCE_ORDER.filter((resource) => resources[resource] !== 0);
+
+  if (moved.length === 0) {
+    return <p className="cityIncome caption">no net income</p>;
+  }
+
+  return (
+    <p className="cityIncome num stat">
+      {moved.map((resource) => (
+        <span className={resources[resource] > 0 ? "pos" : "neg"} key={resource}>
+          <Icon glyph={RESOURCE_GLYPHS[resource]} />
+          {formatSignedNumber(resources[resource])}
+        </span>
+      ))}
+    </p>
+  );
+}
 
 export function CitiesTab({
   holdings,
   onBuildBuildingRequest,
 }: {
   holdings: OwnedHolding[];
+  /** Raising, taken from the socket that showed the room. This prop sat here
+   *  unused for a whole run: the page was handed the act and never plugged it
+   *  in, so the sockets drew a question the page could not answer. */
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
 }) {
-  const { G, viewerId: playerID, phase, isActive } = useGameUi();
-  const buildings = getBuildings(G.definition.content);
-  const holdingIds = useMemo(
-    () => holdings.map(({ tile, settlement }) => `${settlement.owner}-${tile.id}`),
-    [holdings],
-  );
-  const [expandedHoldingIds, setExpandedHoldingIds] = useState<Set<string>>(() => new Set());
-
-  useEffect(() => {
-    setExpandedHoldingIds((current) => {
-      const visibleHoldings = new Set(holdingIds);
-      const next = new Set([...current].filter((holdingId) => visibleHoldings.has(holdingId)));
-
-      return next.size === current.size ? current : next;
-    });
-  }, [holdingIds]);
-
-  const toggleHolding = (holdingId: string) => {
-    setExpandedHoldingIds((current) => {
-      const next = new Set(current);
-
-      if (next.has(holdingId)) {
-        next.delete(holdingId);
-      } else {
-        next.add(holdingId);
-      }
-
-      return next;
-    });
-  };
+  const { G } = useGameUi();
 
   if (holdings.length === 0) {
-    return <p className="emptyState">No settlements yet.</p>;
+    return <p className="emptyState">No walls have risen yet.</p>;
   }
 
   return (
-    <div className="holdingStack">
-      {holdings.map(({ tile, settlement }) => {
-        const holdingId = `${settlement.owner}-${tile.id}`;
-        const isExpanded = expandedHoldingIds.has(holdingId);
+    <div className="cityStack">
+      {/* The bead vocabulary, named once. Four marks appear on every card below
+          and nothing in the game has ever said what they are. */}
+      <p className="beadLegend caption" aria-hidden="true">
+        <span>
+          <i className="bead bead-citizens" />
+          citizens
+        </span>
+        <span>
+          <i className="bead bead-freemen" />
+          freemen
+        </span>
+        <span>
+          <i className="bead bead-slaves" />
+          slaves
+        </span>
+        <span>
+          <i className="bead bead-empty" />
+          room
+        </span>
+      </p>
+
+      {holdings.map((holding) => {
+        const { tile, settlement } = holding;
+        const name = settlementNameOf(G.board.tiles, settlement.id);
         const popTotal = totalPops(settlement.pops);
         const capacity = settlementCapacity(settlement, G.ruleset, G.definition.content);
         const overCapacity = settlementOverCapacity(settlement, G.ruleset, G.definition.content);
-        const slots = settlementBuildingSlots(tile, settlement, G.ruleset);
-        const tileYield = settlementTileYield(tile, settlement, G.ruleset);
         const netYield = settlementNetYield(tile, settlement, G.ruleset, G.definition.content);
-        const detailId = `holding-${settlement.owner}-${tile.q}-${tile.r}-details`;
+        const { slots, open } = slotsOf(holding, G.ruleset);
+        // A caption only where the beads alone would not tell you. Two settlements
+        // sitting comfortably inside their walls get no line, and the silence is
+        // the information.
+        const state =
+          popTotal === 0
+            ? "stands empty"
+            : overCapacity > 0
+              ? `over its walls · −${overCapacity} happiness`
+              : popTotal >= capacity
+                ? "at capacity"
+                : null;
 
         return (
-          <article
-            className={`holdingMatrix settlement-${settlement.kind}${overCapacity > 0 ? " overCapacityCard" : ""}${isExpanded ? " expandedHolding" : ""}`}
-            key={holdingId}
-          >
-            <button
-              aria-controls={detailId}
-              aria-expanded={isExpanded}
-              aria-label={`${isExpanded ? "Collapse" : "Expand"} ${capitalize(settlement.kind)} ${tile.id}: ${popTotal} of ${capacity} pops, ${settlement.buildings.length} of ${slots} building slots, ${tile.resource ? `${formatNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]} tile yield` : "no tile yield"}.`}
-              className="holdingSummaryButton"
-              onClick={() => toggleHolding(holdingId)}
-              type="button"
-            >
-              <SettlementSummaryCard
-                content={G.definition.content}
-                netYield={netYield}
-                ruleset={G.ruleset}
-                settlement={settlement}
-                tile={tile}
-              />
-              <span className="collapseChevron" aria-hidden="true" />
-            </button>
-
-            <div className="holdingDetail" hidden={!isExpanded} id={detailId}>
-              {overCapacity > 0 ? (
-                <div className="holdingPenaltyLine overCapacityText">
-                  <AtlasIcon icon="happiness" className="miniIcon" />
-                  <strong>-{overCapacity}</strong>
-                  <span>Happiness over capacity</span>
-                </div>
-              ) : null}
-
-              <div className="popBuildingMatrix">
-                {POP_TYPES.map((pop) => {
-                  const builtBuildings = settlement.buildings.filter(
-                    (buildingId) => BUILDING_AFFINITY[buildingId] === pop,
-                  );
-                  const unbuiltBuildings = buildings.filter(
-                    (building) =>
-                      !settlement.buildings.includes(building.id) &&
-                      BUILDING_AFFINITY[building.id] === pop,
-                  );
-
-                  return (
-                    <div className="popBuildingColumn" key={pop}>
-                      <div
-                        className="popColumnHeader"
-                        title={`${capitalize(formatPopLabel(pop, settlement.pops[pop]))}: ${settlement.pops[pop]}`}
-                      >
-                        <AtlasIcon icon={pop} className="miniIcon" />
-                        <strong>{settlement.pops[pop]}</strong>
-                      </div>
-                      <div className="buildingChipRow">
-                        {builtBuildings.length > 0 ? (
-                          builtBuildings.map((buildingId, index) => {
-                            const building = getBuilding(G.definition.content, buildingId);
-
-                            return building ? (
-                              <BuildingChip
-                                building={building}
-                                key={`${buildingId}-${index}`}
-                                mode="built"
-                                tooltipRows={["Built in this holding."]}
-                              />
-                            ) : null;
-                          })
-                        ) : (
-                          <span className="emptyMini" title="No buildings of this type">
-                            —
-                          </span>
-                        )}
-                      </div>
-                      <div className="buildingChipRow mutedChipRow">
-                        {unbuiltBuildings.length > 0 ? (
-                          unbuiltBuildings.map((building) => {
-                            const status = getBuildBuildingStatus(
-                              G,
-                              playerID,
-                              tile.id,
-                              building.id,
-                            );
-                            const benefit = getBuildingBenefitText(G, playerID, tile, building);
-                            const disabled = !isActive || phase !== "gameplay" || !status.can;
-
-                            return (
-                              <BuildingChip
-                                building={building}
-                                disabled={disabled}
-                                key={building.id}
-                                mode="option"
-                                tooltipRows={buildingTooltipRows(
-                                  building,
-                                  status,
-                                  benefit,
-                                  phase,
-                                  isActive,
-                                )}
-                                onClick={() => onBuildBuildingRequest(tile.id, building.id)}
-                              />
-                            );
-                          })
-                        ) : (
-                          <span className="emptyMini" title="All available buildings built">
-                            ✓
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+          <article className="cityCard" key={`${settlement.owner}-${tile.id}`}>
+            <div className="cityId">
+              <SealMark kind={settlement.kind} owner={settlement.owner} />
+              {/* The name, and the ground it stands on as a glyph. The rank is
+                  already the seal to the left of it, and "colony · plains" spelled
+                  both of them out a second time in the ledger's tightest row. The
+                  census below still says the whole sentence out loud. */}
+              <span className="cityName">
+                <strong className="title">{name}</strong>
+                <Icon
+                  aria-hidden="true"
+                  className="cityGround miniIcon"
+                  glyph={TERRAIN_GLYPHS[tile.terrain]}
+                  size="rail"
+                />
+              </span>
+              <span className="cityPops stat num" title={`Population ${popTotal} of ${capacity}`}>
+                {popTotal}
+                <small>/{capacity}</small>
+              </span>
             </div>
+
+            <div className="cityBeads">
+              <PopBeads capacity={capacity} pops={settlement.pops} />
+              {state ? <span className="cityState caption">{state}</span> : null}
+            </div>
+
+            <BuildingSockets
+              content={G.definition.content}
+              holding={holding}
+              name={name}
+              onBuildBuildingRequest={onBuildBuildingRequest}
+              open={open}
+              slots={slots}
+            />
+
+            <CityIncome resources={netYield} />
+
+            {/* The beads are shapes, and a shape says nothing out loud — so the
+                census is spelled out by rank here rather than as one total. */}
+            <span className="visuallyHidden">
+              {name}, {settlement.kind} on {tile.terrain}. {popTotal} of {capacity} people:{" "}
+              {POP_TYPES.map(
+                (pop) => `${settlement.pops[pop]} ${formatPopLabel(pop, settlement.pops[pop])}`,
+              ).join(", ")}
+              .
+            </span>
           </article>
         );
       })}

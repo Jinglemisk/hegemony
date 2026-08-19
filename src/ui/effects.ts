@@ -13,10 +13,48 @@ import {
 
 export type EffectTone = "positive" | "negative" | "muted" | "neutral";
 
+/**
+ * A presented effect, in two registers at once.
+ *
+ * `text` is the flat sentence every ledger row, chip and tooltip has always
+ * rendered, and it is unchanged — this split adds to the shape, it never
+ * rewrites it. The parts beside it are that same sentence taken apart, because
+ * a ceremony stakes its whole composition on ONE enormous figure with the words
+ * demoted around it, and a single string has no seam to size differently.
+ *
+ * An effect that has no one number worth carving simply omits the parts, and a
+ * caller that finds none falls back to `text`. That is the fallback rule
+ * everywhere: `text` is always there, the parts are an opportunity.
+ */
 export type EffectPresentation = {
   text: string;
   tone: EffectTone;
+  /** The carved numeral, signed — "+9", "-2". */
+  magnitude?: string;
+  /** What the number is about, set in display caps — "Happiness", "Gold". */
+  subject?: string;
+  /** When or how it lands, demoted beneath the subject. */
+  condition?: string;
+  /** How many turns it stands, when it is timed — drives the duration strip. */
+  turns?: number;
 };
+
+/**
+ * Build a presentation from its parts.
+ *
+ * By default `text` is the parts joined in order, so the flat sentence is
+ * PRODUCED by the split rather than maintained beside it and the two cannot
+ * drift. `text` is passed explicitly only where the flat wording and the carved
+ * wording genuinely differ — a timed blow says "for 3 turns" in prose and says
+ * it with pips in a ceremony, so its condition is the *when*, not the *how long*.
+ */
+function carve(
+  tone: EffectTone,
+  parts: { magnitude?: string; subject?: string; condition?: string; turns?: number },
+  text = [parts.magnitude, parts.subject, parts.condition].filter(Boolean).join(" "),
+): EffectPresentation {
+  return { text, tone, ...parts };
+}
 
 export type ActiveEffectPresentation = EffectPresentation & {
   id: string;
@@ -30,6 +68,13 @@ export function presentEventEffects(
   content: GameContent = getAuthoredGameContent(),
 ): EffectPresentation {
   const presented = effects.map((effect) => presentEventEffect(effect, content));
+
+  // A card that does ONE thing keeps that effect's parts, so the ceremony can
+  // carve them. Two effects joined by " / " have no single number to be about,
+  // and the flat sentence is the honest answer.
+  if (presented.length === 1) {
+    return presented[0];
+  }
 
   return {
     text: presented.map((effect) => effect.text).join(" / "),
@@ -72,6 +117,10 @@ export function joinEffectPresentations(
   effects: readonly EffectPresentation[],
   separator = "  ·  ",
 ): EffectPresentation {
+  if (effects.length === 1) {
+    return effects[0];
+  }
+
   return {
     text: effects.map((effect) => effect.text).join(separator),
     tone: combineTones(effects),
@@ -83,31 +132,37 @@ export function presentTableEffect(effect: TableEffect): EffectPresentation {
     case "none":
       return { text: "—", tone: "muted" };
     case "losePops":
-      return {
-        text: `-${formatNumber(effect.count)} ${effect.count === 1 ? "pop" : "pops"}`,
-        tone: "negative",
-      };
+      return carve("negative", {
+        magnitude: `-${formatNumber(effect.count)}`,
+        subject: effect.count === 1 ? "pop" : "pops",
+      });
     case "loseResource":
-      return {
-        text:
-          `-${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}` +
-          (effect.popLossIfShort ? ` (short: -${formatNumber(effect.popLossIfShort)} pop)` : ""),
-        tone: "negative",
-      };
+      return carve("negative", {
+        magnitude: `-${formatNumber(effect.amount)}`,
+        subject: RESOURCE_LABELS[effect.resource],
+        condition: effect.popLossIfShort
+          ? `(short: -${formatNumber(effect.popLossIfShort)} pop)`
+          : undefined,
+      });
     case "destroyBuilding":
-      return { text: "-1 building", tone: "negative" };
+      return carve("negative", { magnitude: "-1", subject: "building" });
     case "gainResource":
-      return {
-        text: `+${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}`,
-        tone: "positive",
-      };
+      return carve("positive", {
+        magnitude: `+${formatNumber(effect.amount)}`,
+        subject: RESOURCE_LABELS[effect.resource],
+      });
     case "gainPop":
-      return { text: `+1 ${formatPopLabel(effect.pop, 1)}`, tone: "positive" };
+      return carve("positive", { magnitude: "+1", subject: formatPopLabel(effect.pop, 1) });
     case "yearIncomeModifier":
-      return {
-        text: `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]} income, all year`,
-        tone: effect.amount >= 0 ? "positive" : "negative",
-      };
+      return carve(
+        effect.amount >= 0 ? "positive" : "negative",
+        {
+          magnitude: formatSignedNumber(effect.amount),
+          subject: `${RESOURCE_LABELS[effect.resource]} income`,
+          condition: "all year",
+        },
+        `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]} income, all year`,
+      );
   }
 }
 
@@ -119,27 +174,38 @@ export function presentEventEffect(
     case "resourceDelta":
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
     case "scaledResourceDelta":
-      return {
-        text: `${formatSignedNumber(effect.amountPerPops)} ${RESOURCE_LABELS[effect.resource]} per ${effect.popStep} pops`,
-        tone: signedTone(effect.amountPerPops),
-      };
+      return carve(signedTone(effect.amountPerPops), {
+        magnitude: formatSignedNumber(effect.amountPerPops),
+        subject: RESOURCE_LABELS[effect.resource],
+        condition: `per ${effect.popStep} pops`,
+      });
     case "happinessDelta":
       return signedPresentation(effect.amount, RESOURCE_LABELS.happiness);
     case "scaledHappinessDelta":
-      return {
-        text: `${formatSignedNumber(effect.amountPerPops)} ${RESOURCE_LABELS.happiness} per ${effect.popStep} pops`,
-        tone: signedTone(effect.amountPerPops),
-      };
+      return carve(signedTone(effect.amountPerPops), {
+        magnitude: formatSignedNumber(effect.amountPerPops),
+        subject: RESOURCE_LABELS.happiness,
+        condition: `per ${effect.popStep} pops`,
+      });
     case "timedHappinessDelta":
-      return {
-        text: `${formatSignedNumber(effect.amountPerTurn)} ${RESOURCE_LABELS.happiness} per turn for ${effect.turns} turns`,
-        tone: signedTone(effect.amountPerTurn),
-      };
+      // The one presenter whose two registers genuinely differ. The flat
+      // sentence has to say how long it lasts; a ceremony says that with pips,
+      // so the carved condition is the WHEN and `turns` carries the duration.
+      return carve(
+        signedTone(effect.amountPerTurn),
+        {
+          magnitude: formatSignedNumber(effect.amountPerTurn),
+          subject: RESOURCE_LABELS.happiness,
+          condition: "at each of your upkeeps",
+          turns: effect.turns,
+        },
+        `${formatSignedNumber(effect.amountPerTurn)} ${RESOURCE_LABELS.happiness} per turn for ${effect.turns} turns`,
+      );
     case "incomeModifier":
-      return {
-        text: `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]} income`,
-        tone: signedTone(effect.amount),
-      };
+      return carve(signedTone(effect.amount), {
+        magnitude: formatSignedNumber(effect.amount),
+        subject: `${RESOURCE_LABELS[effect.resource]} income`,
+      });
     case "buildingCostMultiplier":
       return {
         text:
@@ -149,10 +215,15 @@ export function presentEventEffect(
         tone: effect.multiplier > 1 ? "negative" : "positive",
       };
     case "addPops":
-      return {
-        text: `Add ${effect.amount} ${formatPopLabel(effect.pop, effect.amount)}`,
-        tone: "positive",
-      };
+      return carve(
+        "positive",
+        {
+          magnitude: `+${formatNumber(effect.amount)}`,
+          subject: formatPopLabel(effect.pop, effect.amount),
+          condition: "in a settlement with room",
+        },
+        `Add ${effect.amount} ${formatPopLabel(effect.pop, effect.amount)}`,
+      );
     case "actionCostDiscount": {
       const target = effect.buildingId
         ? buildingName(effect.buildingId, content)
@@ -162,10 +233,15 @@ export function presentEventEffect(
             ? `${effect.pop ? formatPopLabel(effect.pop, 1) : "pop"} grown`
             : "building";
 
-      return {
-        text: `Next ${target}: -${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}`,
-        tone: "positive",
-      };
+      return carve(
+        "positive",
+        {
+          magnitude: `-${formatNumber(effect.amount)}`,
+          subject: RESOURCE_LABELS[effect.resource],
+          condition: `on your next ${target}`,
+        },
+        `Next ${target}: -${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}`,
+      );
     }
     case "resourceExchange":
       return {
@@ -175,13 +251,11 @@ export function presentEventEffect(
         tone: "neutral",
       };
     case "resourceDeltaPerPop":
-      return {
-        text: `${formatSignedNumber(effect.amountPerPop)} ${RESOURCE_LABELS[effect.resource]} per ${formatPopLabel(
-          effect.pop,
-          1,
-        )}, minimum ${effect.minimum}`,
-        tone: signedTone(effect.amountPerPop),
-      };
+      return carve(signedTone(effect.amountPerPop), {
+        magnitude: formatSignedNumber(effect.amountPerPop),
+        subject: RESOURCE_LABELS[effect.resource],
+        condition: `per ${formatPopLabel(effect.pop, 1)}, minimum ${effect.minimum}`,
+      });
     case "choice":
       return { text: "Choose one option", tone: "neutral" };
   }
@@ -424,9 +498,13 @@ export function presentBuildingEffect(effect: BuildingEffect): EffectPresentatio
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource] + " income");
     case "happiness":
       return signedPresentation(effect.amount, RESOURCE_LABELS.happiness);
+    // "costs -2 Food" has two readings — cheaper by 2, or a price of minus two —
+    // and a discount is exactly the case where the negative numeral is the
+    // ambiguous one. "2 less" is the phrasing the Assembly deck already uses,
+    // and it is a word shorter, which matters in a ~110px effect column.
     case "growPopFoodDiscount":
       return {
-        text: `Grow Pop costs -${formatNumber(effect.amount)} Food here`,
+        text: `Grow Pop costs ${formatNumber(effect.amount)} less Food here`,
         tone: "positive",
       };
     case "popCapacityBonus":
@@ -435,7 +513,7 @@ export function presentBuildingEffect(effect: BuildingEffect): EffectPresentatio
       return signedPresentation(effect.amount, "tile resource income");
     case "promoteCostReduction":
       return {
-        text: `Promotions cost -${formatNumber(effect.amount)} here`,
+        text: `Promotions cost ${formatNumber(effect.amount)} less here`,
         tone: "positive",
       };
   }
@@ -523,10 +601,7 @@ function settlementScopeLabel(scope: "all" | "city" | "colony"): string {
 }
 
 function signedPresentation(amount: number, label: string): EffectPresentation {
-  return {
-    text: `${formatSignedNumber(amount)} ${label}`,
-    tone: signedTone(amount),
-  };
+  return carve(signedTone(amount), { magnitude: formatSignedNumber(amount), subject: label });
 }
 
 function signedTone(amount: number): EffectTone {

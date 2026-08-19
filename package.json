@@ -9,17 +9,20 @@
     "build": "tsc -b && vite build",
     "check": "tsc --noEmit",
     "docs:check": "node scripts/check-docs.mjs",
+    "ui:check": "node scripts/check-ui-system.mjs",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run --maxWorkers=2",
-    "test:parity": "vitest run src/parity/commandParity.test.ts src/parity/commandConsumers.test.ts src/parity/withinAxisParity.test.ts src/parity/activeEffectParity.test.ts src/parity/featureParity.test.ts src/game/legalMoves.test.ts src/game/projection.test.ts src/game/economy/preview.test.ts --maxWorkers=2",
+    "test:parity": "vitest run src/parity/commandParity.test.ts src/parity/commandConsumers.test.ts src/parity/withinAxisParity.test.ts src/parity/activeEffectParity.test.ts src/parity/featureParity.test.ts src/ui/iconRegistry.test.ts src/game/legalMoves.test.ts src/game/projection.test.ts src/game/economy/preview.test.ts --maxWorkers=2",
     "test:browser": "playwright test",
     "dead-code": "knip",
     "sim": "tsx src/sim/cli.ts",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "ui:audit": "node scripts/audit-ui-geometry.mjs",
+    "ui:conduct": "node scripts/audit-ui-conduct.mjs"
   },
   "engines": {
     "node": ">=22"

@@ -42,6 +42,7 @@ export function applyUnrestUpkeep(G: HegemonyState, playerID: PlayerId) {
           (turnsRemaining > 0
             ? ` (${turnsRemaining} turn${turnsRemaining === 1 ? "" : "s"} left).`
             : ", now passing."),
+        playerID,
       );
 
       if (turnsRemaining > 0) {
@@ -80,6 +81,7 @@ export function applyUnrestUpkeep(G: HegemonyState, playerID: PlayerId) {
           addLog(
             G,
             `${getPlayerName(G, playerID)} — starvation claims ${describeRemoval(removed)}.`,
+            playerID,
           );
         }
       }

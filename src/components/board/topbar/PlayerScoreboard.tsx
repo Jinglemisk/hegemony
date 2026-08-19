@@ -1,13 +1,18 @@
 import { memo } from "react";
-import { PLAYER_NAMES, PLAYER_COLORS, PLAYER_IDS } from "../../../game/data";
 import type { PlayerId } from "../../../game/types";
+import { PLAYER_GLAZE_LIST } from "../../../ui/playerGlazes";
 
 /**
- * The seat switcher — a playtest tool, not a scoreboard. Four squares in each
- * player's colour; clicking one views that empire. The acting seat gets a ring,
- * the seat you are viewing gets a filled outline. Names/standings lived here once
- * but forced the roster wide enough to shove the season medallion off-centre;
- * per-empire detail belongs in the coming player dossier (docs/archive/plans/two-panel.md).
+ * The roster at the right of the top bar: four glazed discs, each with its seat's
+ * Greek blazon and an ivory keyline, the acting seat underlined in clay.
+ *
+ * The discs were bare coloured squares before, which meant the four seats were
+ * told apart by hue alone — unreadable to a colour-blind player and, on a board
+ * where owner marks are also coloured, one more thing competing for the same
+ * signal. The blazon does the identifying; the glaze only confirms it.
+ *
+ * It is still a seat switcher, not a scoreboard: clicking a disc views that
+ * empire. Per-empire standing belongs in the player dossier.
  */
 function PlayerScoreboardComponent({
   currentPlayerId,
@@ -19,21 +24,25 @@ function PlayerScoreboardComponent({
   onPlayerIDChange: (playerID: PlayerId) => void;
 }) {
   return (
-    <section className="scoreboardPanel" aria-label="Switch player view">
-      {PLAYER_IDS.map((id) => {
+    <section className="roster" aria-label="Switch player view">
+      {PLAYER_GLAZE_LIST.map(({ id, name, color, blazon }) => {
         const isViewer = id === viewerId;
-        const isCurrent = id === currentPlayerId;
+        const isActing = id === currentPlayerId;
 
         return (
           <button
             aria-pressed={isViewer}
-            className={`seatSwatch${isCurrent ? " seatSwatchActing" : ""}${isViewer ? " seatSwatchViewing" : ""}`}
+            className={`seat${isActing ? " seatActing" : ""}${isViewer ? " seatViewing" : ""}`}
             key={id}
             onClick={() => onPlayerIDChange(id)}
-            style={{ backgroundColor: PLAYER_COLORS[id] }}
-            title={`View ${PLAYER_NAMES[id]}${isCurrent ? " — acting" : ""}`}
+            title={name}
             type="button"
-          />
+          >
+            <span className="seatGlaze verb" style={{ background: color }}>
+              {blazon}
+            </span>
+            <span className="seatName label">{name}</span>
+          </button>
         );
       })}
     </section>

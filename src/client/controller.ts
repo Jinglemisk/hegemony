@@ -61,6 +61,70 @@ function createGameFromUrl(): HegemonyState {
     G = fastForwardToAssembly(G);
   }
 
+  // `?dev=assembly2` goes one sitting further, and it is a TEST AFFORDANCE, not a
+  // rule: it plays the first Assembly out through the same legal-command path and
+  // stops at the next one. The first Assembly always convenes at 0 of 6 laws with
+  // every orator on zero, so the six-law cap, a stele with more than one pip, a
+  // repeal on the ballot and a non-empty voice ledger were all unreachable in a
+  // browser — reviewable only by playing sixteen turns and then a whole sitting
+  // by hand. Nothing here touches the engine; it drives it.
+  if (params?.get("dev") === "assembly2") {
+    G = fastForwardToAssembly(G);
+    G = playOutAssembly(G);
+    G = fastForwardToAssembly(G);
+  }
+
+  return G;
+}
+
+/** Resolve the sitting that is open, biased toward landing Laws on the board: draw,
+ *  propose what you drew, and vote yea. A sitting that passes nothing leaves the
+ *  next Assembly looking exactly like the first, which is the state this exists to
+ *  get past. */
+function playOutAssembly(initial: HegemonyState): HegemonyState {
+  let G = initial;
+  let rngState = G.seed ^ 0x1d872b41;
+  let guard = 0;
+
+  const preferred = new Set(["assemblyDraw", "assemblyPropose", "assemblyClose"]);
+
+  while (G.assembly && G.phase === "gameplay" && guard++ < 400) {
+    const player =
+      G.assembly.phase === "voting" ? G.assembly.voteOrder[G.assembly.voteIndex] : null;
+    const actor = player ?? G.assembly.activePlayer ?? G.currentPlayer;
+    const commands = enumerateLegalCommands(G, actor);
+
+    if (commands.length === 0) {
+      return G;
+    }
+
+    const step = mulberry32(rngState);
+    rngState = step.state;
+    const yea = commands.find((command) => command.type === "assemblyVote" && command.yea);
+    const wanted = commands.find((command) => preferred.has(command.type));
+    const command = yea ?? wanted ?? commands[Math.floor(step.value * commands.length)];
+
+    const result = transition(G.definition, G, actor, command);
+
+    if (!result.ok) {
+      // Fall back to whatever the engine will accept rather than spinning: this is
+      // a dev shortcut, and a stuck one is worse than an imperfect one.
+      const any = commands.find(
+        (candidate) => transition(G.definition, G, actor, candidate).ok === true,
+      );
+
+      if (!any) {
+        return G;
+      }
+
+      const forced = transition(G.definition, G, actor, any);
+      G = forced.ok ? forced.state : G;
+      continue;
+    }
+
+    G = result.state;
+  }
+
   return G;
 }
 

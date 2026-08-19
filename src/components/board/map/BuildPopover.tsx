@@ -4,18 +4,15 @@ import type { BuildingId } from "../../../game/types";
 import { presentBuildingEffect } from "../../../ui/effects";
 import { AnnotatedText } from "../../AnnotatedText";
 import { MechanicsDetails } from "../../MechanicsDetails";
-import { AtlasIcon } from "../../Sprites";
+import { BUILDING_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { PopoverActions } from "../PopoverActions";
 import { ResourceChips } from "../ResourceChips";
-import {
-  actionRequirementText,
-  gameplayActionDisabled,
-  getBuildingBenefitText,
-  settlementPickerLabel,
-} from "../helpers";
+import { actionRequirementText, gameplayActionDisabled, getBuildingBenefitText } from "../helpers";
 import { TilePopover } from "./TilePopover";
+import { TileSubject } from "../TileSubject";
 
 /** Build at the selected settlement through the shared map popover grammar. */
 export function BuildPopover({
@@ -53,9 +50,7 @@ export function BuildPopover({
       onCancel={onCancel}
       title="Build"
     >
-      <p className="placementSectionLabel placementTargetName">
-        {settlementPickerLabel(G, tile, playerID)}
-      </p>
+      <TileSubject G={G} playerID={playerID} tile={tile} />
 
       <div
         className="popChoiceGrid growPopChoiceGrid popoverChoiceStack"
@@ -91,7 +86,7 @@ export function BuildPopover({
                 onClick={disabled ? undefined : () => setBuildingId(candidate.id)}
                 type="button"
               >
-                <AtlasIcon icon={candidate.id} className="miniIcon" />
+                <Icon glyph={BUILDING_GLYPHS[candidate.id]} size="rail" className="miniIcon" />
                 <span>{candidate.name}</span>
                 <strong>
                   <ResourceChips resources={effectiveCost} variant="cost" empty="Free" />

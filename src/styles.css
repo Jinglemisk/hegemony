@@ -7,19 +7,33 @@
  * earlier rules and must stay last.
  * ========================================================================== */
 
+/* fonts + type lead: the @font-face block and the nine type roles are the
+   vocabulary every later slice speaks in. type.css is the ONLY sheet allowed to
+   declare a font-size (scripts/check-ui-system.mjs enforces it), so it sits early
+   and every role class is beaten by a later, more specific rule if a surface
+   still needs one — which is exactly the ratchet we are driving to zero. */
+@import "./styles/fonts.css";
+@import "./styles/type.css";
+@import "./styles/icons.css";
 @import "./styles/base.css";
 @import "./styles/map.css";
-@import "./styles/sprites.css";
 @import "./styles/tiles.css";
 @import "./styles/resources.css";
 @import "./styles/shared.css";
 @import "./styles/ledger.css";
 @import "./styles/deck.css";
-@import "./styles/scoreboard.css";
 @import "./styles/intel.css";
 @import "./styles/pops.css";
 @import "./styles/command.css";
 @import "./styles/modals.css";
 @import "./styles/assembly.css";
 @import "./styles/overlays.css";
+/* shell lands last but one: it restyles surfaces the older slices above still
+   describe, and it must win without those files being gutted in the same commit.
+   responsive.css stays after it, as ever. */
+@import "./styles/shell.css";
+@import "./styles/board.css";
+@import "./styles/panels.css";
+@import "./styles/ceremony.css";
+@import "./styles/assemblyScene.css";
 @import "./styles/responsive.css";

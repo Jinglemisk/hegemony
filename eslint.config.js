@@ -7,7 +7,17 @@ import prettier from "eslint-config-prettier";
 
 export default tseslint.config(
   {
-    ignores: ["dist/", "node_modules/", "assets/", "coverage/", ".worktrees/", "**/*.html"],
+    // .playwright-mcp/ is a gitignored scratch directory for screenshot output and
+    // the throwaway scripts that drive it; linting build artefacts is noise.
+    ignores: [
+      "dist/",
+      "node_modules/",
+      "assets/",
+      "coverage/",
+      ".worktrees/",
+      ".playwright-mcp/",
+      "**/*.html",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

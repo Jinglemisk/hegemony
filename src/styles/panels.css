@@ -1,0 +1,1426 @@
+/* panels — the seven ledger pages.
+ *
+ * One shape governs all of them: a page is **rows of facts with one anchor at the
+ * bottom**. The anchor is the number the page exists to tell you — net income,
+ * treasury, next assembly — and it is pinned under a heavy rule so your eye can
+ * fall to it without reading anything above.
+ *
+ * Every page also obeys the same three rules as the board:
+ *   · an icon carries identity, a signed coloured numeral carries judgment
+ *   · owner glaze and status colour never share a pixel class
+ *   · exactly ONE surface per page is allowed to raise its voice (the alarm)
+ */
+
+/* ── Shared furniture ───────────────────────────────────────────────────────
+   The scroll region itself (`.intelBody`) belongs to the tablet FRAME and lives
+   in intel.css. It was declared a second time here, which is how its scrollbar
+   colour ended up disagreeing with the rule that owns it. */
+
+/* A page's section head: a hairline and a whispered caps line, never a box.
+   `.pageSection` is the general name; `.ladderSection` is the Ladder's older
+   one, kept until that page is next touched. */
+.ladderSection,
+.pageSection {
+  margin: 14px 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--ink-12);
+  color: var(--ink-63);
+  letter-spacing: 0.22em;
+}
+
+/* A section head that opens a page has nothing above it to clear. */
+.pageSection:first-child {
+  margin-top: 2px;
+}
+
+/* The anchor row. `margin-top: auto` inside a column flex page pins it to the
+   bottom whatever the content above does, so the number a page is ABOUT never
+   moves as rows come and go. */
+.anchorRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 2px solid var(--ink);
+}
+
+/* One line, always. Wrapped, the key grew the anchor a second row and pushed it
+   down under the season dial — the last number on the page, hidden by a clock. */
+.anchorKey {
+  flex: none;
+  color: var(--ink);
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+}
+
+.anchorValue,
+.treasuryValue {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+}
+
+/* The value takes what is left and wraps inside itself, so a long tail of income
+   chips lengthens the row rather than the page. */
+.anchorRow .tierIncome {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+  color: var(--ink);
+}
+
+/* A key and six income chips do not share 236px. Stacked, the chips get the whole
+   width and land on one row — beside the key they always broke 3 + 1 orphan. */
+.anchorRowStacked {
+  display: grid;
+  gap: 5px;
+  align-items: start;
+}
+
+.anchorRowStacked .tierIncome {
+  justify-content: flex-start;
+  gap: 4px 11px;
+  margin-left: 0;
+}
+
+/* The empire strip: four counts, identical on every act page. */
+.empireStrip {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 2px;
+}
+
+.est {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--ink);
+}
+
+.est .icon {
+  align-self: center;
+  width: 1.0625rem;
+  height: 1.0625rem;
+  color: var(--ink-66);
+}
+
+.est .label {
+  color: var(--ink-63);
+}
+
+/* ── The alarm ───────────────────────────────────────────────────────────
+   The ledger's one raised voice. Two of these would be none. */
+
+.alarm {
+  margin: 12px 0;
+  padding: 12px 14px 11px;
+  border-radius: 5px;
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--neg), var(--oxblood-deep));
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 25%),
+    0 3px 10px rgb(143 46 19 / 40%);
+}
+
+/* Discontent is the warning tier, not the wound: ochre, and it does not shout. */
+.alarm-discontent {
+  background: linear-gradient(180deg, var(--warn), var(--warn-deep));
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 25%),
+    0 3px 10px rgb(176 112 42 / 34%);
+}
+
+.alarmRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alarmRow .icon {
+  width: 1.875rem;
+  height: 1.875rem;
+  stroke-width: 2;
+}
+
+.alarmWord {
+  line-height: 1.3;
+}
+
+.alarmDetail {
+  margin: 6px 0 0;
+  color: rgb(255 248 231 / 75%);
+}
+
+/* ── Cities ───────────────────────────────────────────────────────────────
+   A settlement is four bands: identity, the people, the ground, the take. No
+   box around any of it — one hairline between cards is the whole separation,
+   which is what stops a card-inside-a-panel-inside-a-tablet. */
+
+.cityStack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cityCard {
+  min-width: 0;
+  padding: 11px 2px 12px;
+  border-bottom: 1px solid var(--ink-12);
+}
+
+.cityCard:last-child {
+  border-bottom: 0;
+}
+
+/* Band 1 — who it is. The seal is the mark the board draws, so the name you
+   read here is findable out there. */
+.cityId {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.sealMark {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(36 25 16 / 30%);
+}
+
+/* The board's own seal rules draw at board scale; inside a 28px disc the same
+   numbers land a hair heavy, so only the glyph's weight is restated. */
+.sealMark .sealGlyph {
+  stroke-width: 1.5;
+}
+
+.cityName {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+/* The name gets the row's only flexible track. It used to share it with a pair
+   of nowrap meters and a terrain hex, both sized `auto`, which floored at their
+   own content and left the name ~38px — so every settlement ellipsised at four
+   letters regardless of how long its name was. */
+.cityName .title {
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The ground, as a glyph beside the name rather than a word beneath it. It never
+   shrinks: an icon that ellipsises is not an icon. Ink, not the clay it would
+   otherwise inherit from the row — the ground is a fact, and clay in this UI is
+   reserved for things you act on. */
+.cityGround {
+  flex: none;
+  color: var(--ink);
+  opacity: 0.5;
+}
+
+.cityPops {
+  flex: none;
+  margin-left: auto;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.cityPops small {
+  color: var(--ink-63);
+  font-weight: 700;
+}
+
+/* Band 2 — the people, one bead each, with their empty room drawn. */
+.cityBeads {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+  margin: 9px 0 0;
+  min-height: 11px;
+}
+
+.cityState {
+  color: var(--ink-63);
+  font-weight: 700;
+}
+
+/* Band 3 — the ground. A socket is a place, not a denominator: filled tiles
+   first, then the dashed outlines of what still stands open. */
+.sockets {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.socket {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+}
+
+.socketBuilt {
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 1.4px rgb(36 25 16 / 50%);
+}
+
+.socketBuilt:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 2px;
+}
+
+.socketOpen {
+  border: 1.6px dashed var(--ink-30);
+}
+
+/* An open socket is pressable, and the `+` is the whole of the invitation. The
+   box is NOT resized to advertise itself: 26px already clears the 24px target
+   floor, and growing it would push the row's caption onto a second line on every
+   card at once. So the affordance is paid for in ink — the outline closes and
+   takes clay — rather than in space. */
+.socketAdd {
+  color: var(--ink-30);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.socketAdd:hover,
+.socketAdd[aria-expanded="true"] {
+  border-style: solid;
+  border-color: var(--clay);
+  color: var(--clay);
+  background: var(--panel-soft);
+}
+
+.socketCap {
+  color: var(--ink-63);
+  font-weight: 700;
+}
+
+/* A settlement with no slots says so, on the line where its sockets would be. */
+.socketNone {
+  margin: 8px 0 0;
+  color: var(--ink-63);
+  font-style: italic;
+}
+
+/* ── What could stand here ────────────────────────────────────────────────
+   The socket's answer, pinned to the socket. One surface, and inside it nothing
+   is boxed: a hairline under the head, a hairline between options, and the only
+   fill is the band a live option takes under the cursor. The card behind it
+   stays readable, which is the reason this is a popover and not a page. */
+
+.socketPicker {
+  width: min(324px, calc(100vw - 24px));
+  padding: 10px 11px 11px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 10px;
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: var(--float);
+  transition: opacity 0.12s ease;
+}
+
+/* The surface takes focus on open so a screen reader announces the dialog, but
+   it is not a control and the browser's own blue ring is both off-palette and a
+   lie about what is pressable. The first Tab lands on an option, which rings. */
+.socketPicker:focus-visible {
+  outline: none;
+}
+
+/* The arrow is drawn by the shared popover, in the map's cream. It has to be
+   this surface's own ivory or it reads as a chip stuck to the corner. */
+.socketPicker .sharedPopoverArrow {
+  border-color: var(--line-strong);
+  background: var(--ivory);
+}
+
+.socketPickerHead {
+  margin: 0 0 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--ink-12);
+  color: var(--clay-deep);
+}
+
+/* The list scrolls, not the surface — an overflow on the popover itself clips
+   the arrow off its own edge.
+   The ceiling comes from `SocketPicker`, which measures the room over and under
+   the socket INSIDE the ledger tablet and hands it down. A flat cap could not do
+   this job: `min(42vh, 320px)` was tried, and at 1366×768 it still left a 368px
+   surface that the viewport clamp slid up over the omen, season and fate slips.
+   The fallback is that old cap, for a socket rendered outside any panel.
+
+   Nine buildings fit at none of the four sizes, so this list always has more
+   behind it, and it inherits the edge cue the tablets already use (`intel.css`,
+   THE EDGE CUE) for exactly the finding it was written for: at 1920 the ceiling
+   happened to fall flush on a row boundary, and four buildings below it left no
+   mark on the screen at all. A half-cut row is the cue when the arithmetic lands
+   there, and where it lands is luck — rows are one or two effect-lines tall. The
+   fade is not luck. */
+.socketPickList {
+  display: flex;
+  flex-direction: column;
+  max-height: var(--socketListMax, min(42vh, 320px));
+  overflow-y: auto;
+  scrollbar-color: var(--clay) transparent;
+}
+
+@supports (animation-timeline: scroll(self)) {
+  .socketPickList {
+    animation: intelScrollEdge linear both;
+    animation-timeline: scroll(self);
+    animation-range: 88% 100%;
+  }
+}
+
+/* [tile] [name .......... price]
+          [what it does        ]
+          [why not, if not     ]
+   The price sits on the name's line because that is the pair the decision is
+   made from; the effect explains it underneath, and a refusal takes the third
+   line rather than displacing either fact. */
+.socketOption {
+  display: grid;
+  grid-template-areas:
+    "tile name cost"
+    "tile effects effects"
+    "tile blocker blocker";
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1px 9px;
+  width: 100%;
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--ink-12);
+  border-radius: 4px;
+  text-align: left;
+}
+
+.socketPickList > :last-child {
+  border-bottom: 0;
+}
+
+.socketOption:not([aria-disabled="true"]):hover {
+  background: var(--ink-07);
+}
+
+/* The ring turns INWARD. The list is the scroll container, so an offset ring on
+   the first or last row is cropped by the very edge it is trying to stand
+   against — the top row showed a single teal line under itself and nothing
+   above. Inset, it is whole on every row including the two ends. */
+.socketOption:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: -2px;
+}
+
+.socketOptionTile {
+  display: grid;
+  grid-area: tile;
+  place-items: center;
+  align-self: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  color: var(--ink);
+  background: var(--bone);
+  box-shadow: inset 0 0 0 1.4px rgb(36 25 16 / 40%);
+}
+
+.socketOptionName {
+  grid-area: name;
+  align-self: center;
+  color: var(--clay-deep);
+}
+
+.socketOptionCost {
+  display: flex;
+  grid-area: cost;
+  align-self: center;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.socketCostItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.socketOptionEffects {
+  display: flex;
+  grid-area: effects;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.socketOptionEffects .caption {
+  color: var(--ink-66);
+}
+
+/* The refusal, in the same oxblood the Build page spends on a price you cannot
+   pay. */
+.socketOptionBlocker {
+  grid-area: blocker;
+  margin-top: 2px;
+  color: var(--neg);
+}
+
+/* A refused option stands down in INK, not in opacity. A row-level `opacity`
+   composites the whole row as one group, so the oxblood inside it is dimmed
+   along with everything else and cannot be lifted back out — the 1/0.55 counter
+   trick on the Build card is a no-op for exactly that reason. Standing the name
+   down instead leaves the two things the row came to say — what it costs, and
+   what is missing — at full strength on a row you cannot press. */
+.socketOptionGhost {
+  cursor: not-allowed;
+}
+
+.socketOptionGhost .socketOptionName {
+  color: var(--ink-63);
+}
+
+.socketOptionGhost .socketOptionTile {
+  color: var(--ink-63);
+  background: none;
+  box-shadow: inset 0 0 0 1.4px var(--ink-30);
+}
+
+.socketOptionGhost .socketCostShort {
+  color: var(--neg);
+}
+
+/* Band 4 — the take. Only what moved: the old strip printed all six resources
+   on every settlement and dimmed four of them to dashes. */
+.cityIncome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 13px;
+  margin: 9px 0 0;
+  color: var(--ink-63);
+}
+
+.cityIncome span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 800;
+}
+
+/* ── The Ladder ───────────────────────────────────────────────────────────
+   Tiers with the rungs between them, because that is what a ladder is. */
+
+.ladderPage,
+.marketPage,
+.buildPage,
+.victoryPage,
+.agoraPage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tierTrigger {
+  display: block;
+}
+
+.tier {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 4px;
+  border-bottom: 1px solid var(--ink-12);
+}
+
+.tierFigure {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--slip);
+  box-shadow: inset 0 0 0 1.5px rgb(36 25 16 / 35%);
+}
+
+.tierWho {
+  min-width: 0;
+}
+
+.tierWho b {
+  display: block;
+}
+
+.tierIncome {
+  display: flex;
+  gap: 9px;
+  margin-top: 2px;
+  color: var(--ink-63);
+}
+
+.tierIncome span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 800;
+}
+
+.tierCount {
+  margin-left: auto;
+}
+
+/* A rung is centred BETWEEN two tiers, which is the whole point — it is a step,
+   not a property of either end. Both directions share the gap as two equal
+   halves: sized by their own labels they ran past the page edge, and the half you
+   cannot read is the half you cannot take. */
+.gap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.rungTrigger {
+  display: block;
+  min-width: 0;
+}
+
+/* The price rides ON the button. It is the number that decides whether you press
+   and it used to live in a tooltip, so you had to hover a control to find out
+   what it would spend. Only the arithmetic behind the price — which settlement
+   pays, which discount applies — is still hover-only. */
+/* Half a 236px page, minus a gap: a rung has ~106px and everything on it — the
+   step arrow, the verb, the signed price — has to live inside that. The minus
+   sign the price wears (it is a cost, not takings) cost it 5px, which is what
+   put the button 4px over its own half at every width. */
+.rungButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* The price sits UNDER the verb, always. A rung is half of a 236px page — 100px
+     at 1280 — and `DEMOTE −2 🎗` does not fit on one line there at any tracking;
+     letting it wrap only where it must gave two rungs of different heights side
+     by side, which reads as breakage. Two lines everywhere is a shape, and it
+     gives the number the room to be read. */
+  flex-wrap: wrap;
+  gap: 1px 3px;
+  width: 100%;
+  padding: 4px 3px 5px;
+  border: 1px solid var(--ink-30);
+  border-radius: 14px;
+  color: var(--ink);
+  background: var(--ivory);
+}
+
+.rungButton .icon {
+  flex: none;
+  color: var(--clay-ink);
+}
+
+/* DEMOTE is the longest verb on the ladder and it sets the button's width. At
+   the display face's default 0.12em tracking those six letters ran the widest
+   rung 5px past its own half of the page; half that tracking is what buys the
+   price its minus sign without shortening a word a player has to read. */
+.rungButton .verb {
+  letter-spacing: 0.06em;
+}
+
+.rungPrice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 0 100%;
+  gap: 5px;
+  color: var(--ink-66);
+  font-weight: 800;
+}
+
+.rungPrice span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rungPrice .icon {
+  color: var(--ink-63);
+}
+
+.rungButton:not([aria-disabled="true"]):hover {
+  border-color: var(--clay);
+  box-shadow: none;
+  transform: none;
+}
+
+.rungButton[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+/* Where they live — the same bead vocabulary as the board, led by the same seal
+   the board draws, so a name read here is findable out there. */
+.beadRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 2px;
+}
+
+.beadSeal {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(36 25 16 / 30%);
+}
+
+.beadPlace {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-66);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.beads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+/* The census sits at the row's far end, where the eye falls after the name. */
+.beadRow .beads {
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+/* Shape is the rank. All four of these used to be circles — a freeman a 2px ring
+   and an empty slot a 1px ring — so a rank and an absence were one mark at two
+   weights and a settlement's census could not be counted. Colour belongs to
+   owners; a pop has no owner, so the silhouette has to carry the kind. */
+.bead {
+  flex: none;
+  width: 11px;
+  height: 11px;
+}
+
+/* Round — a citizen. */
+.bead-citizens {
+  border-radius: 50%;
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 1.3px rgb(36 25 16 / 65%);
+}
+
+/* Square — a freeman. */
+.bead-freemen {
+  border-radius: 2px;
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 1.3px rgb(36 25 16 / 65%);
+}
+
+/* Point-down — a slave, the bottom rung. A clipped shape takes no inset keyline,
+   so this is the one bead that carries its weight in fill. */
+.bead-slaves {
+  background: var(--vase-black);
+  clip-path: polygon(50% 100%, 0 6%, 100% 6%);
+}
+
+/* Room is not a rank, so it is not a bead: a rule on the line, which cannot be
+   miscounted as anybody. */
+.bead-empty {
+  align-self: center;
+  height: 2px;
+  border-radius: 1px;
+  background: rgb(36 25 16 / 22%);
+}
+
+/* The vocabulary, named once at the head of the page. Nothing anywhere carried a
+   legend for these marks, and a shape system nobody has been taught is a cipher. */
+.beadLegend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 3px 10px;
+  margin: 2px 0 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ink-12);
+  color: var(--ink-63);
+}
+
+.beadLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── Build ──────────────────────────────────────────────────────────────────
+   Seven cards have to fit a column, so every band pays rent. The old card spent
+   two full-width buttons per settlement — a whole second row of chrome per
+   place, most of it repeating a refusal it would not name. */
+
+.bcard {
+  margin-bottom: 8px;
+  padding: 9px 10px;
+  border: 1px solid var(--ink-12);
+  border-radius: 6px;
+  background: var(--ivory);
+}
+
+/* The price drops to its own line rather than squeezing the effect column. At
+   1366 a card is ~210px: minus the tile and the cost chips, an effect had ~110px
+   and "Grow Pop costs 2 less Food here" came out four lines deep. Given a 130px
+   floor the name/effect block keeps the price beside it wherever there is room
+   and pushes it under itself where there is not, still right-aligned. */
+.bcardTop {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.bcardTile {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 5px;
+  color: var(--ink);
+  background: var(--bone);
+  box-shadow: inset 0 0 0 1.4px rgb(36 25 16 / 40%);
+}
+
+.bcardName {
+  flex: 1 1 130px;
+  min-width: 0;
+}
+
+.bcardEffects {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 2px;
+}
+
+.bcardEffects .caption {
+  color: var(--ink-66);
+}
+
+.bcardCost {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.bcardCostItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.bcardTargets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* `flex: 1 1 auto` against `nowrap` labels is what makes the row adaptive: two
+   short place names share a line, and a target carrying its blocker
+   ("SIKYON · NO SLOT") is wide enough to claim one of its own instead of
+   wrapping its own words into a two-line button. */
+.bcardTargetTrigger {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.bcardTarget {
+  width: 100%;
+  padding: 7px 6px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--clay-lit), var(--clay) 55%, var(--clay-shade));
+  box-shadow: inset 0 1px 0 rgb(255 248 231 / 30%);
+  white-space: nowrap;
+}
+
+.bcardTarget:not([aria-disabled="true"]):hover {
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 30%),
+    var(--lift-hi);
+  transform: none;
+}
+
+/* The one-button collapse carries the card's whole refusal, and a shortfall that
+   names every short resource ("short by 9 wood + 3 stone") is longer than a
+   place name. It owns the row, so it may take a second line rather than run out
+   through the frame; the per-settlement targets keep their `nowrap`, which is
+   what lets two of them share a line. */
+.bcardTargetWhole {
+  white-space: normal;
+}
+
+/* A refused target is an outline, not a filled slab: it still reads as a place
+   you could build, once the thing it names is fixed. */
+.bcardTargetGhost {
+  color: var(--ink-66);
+  background: none;
+  box-shadow: inset 0 0 0 1.4px var(--ink-30);
+  cursor: not-allowed;
+}
+
+/* A blocked card dims — EXCEPT the price you cannot pay, which is the answer. */
+.bcardBlocked {
+  opacity: 0.55;
+}
+
+.bcardBlocked .bcardCostShort {
+  color: var(--neg);
+  opacity: 1.82; /* 1 / 0.55 */
+}
+
+/* ── Market ───────────────────────────────────────────────────────────────── */
+
+/* The row wraps rather than squeezes. A stockpile reaches three digits by the
+   middle of a game, and against a fixed-width count the trade block had 2px less
+   than it needed at 1280 — so the pair drops to its own full-width line instead,
+   the way the Build card's price does. */
+.marketRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--ink-12);
+}
+
+.marketGlyph {
+  flex: none;
+  color: var(--ink);
+}
+
+/* A floor, not a ceiling: `width: 46px` cut the third digit off a stockpile of
+   100 or more, which on the page whose whole job is telling you what you hold is
+   the one number that may not be clipped. */
+.marketHeld {
+  flex: none;
+  min-width: 46px;
+}
+
+.marketHeld b {
+  display: block;
+}
+
+.marketHeld .label {
+  color: var(--ink-63);
+}
+
+.marketRowShort .marketHeld b {
+  color: var(--neg);
+}
+
+/* A deficit is a different fact from a shortfall, so it is labelled differently
+   and the way out of it is lit: BUY takes the clay outline. */
+.marketRowDeficit .marketHeld b,
+.marketRowDeficit .marketHeld .label {
+  color: var(--neg);
+}
+
+.marketRowDeficit .marketBuy {
+  color: var(--clay-ink);
+  box-shadow: inset 0 0 0 2px var(--clay);
+}
+
+/* The two trades STACK. Printed give → get, an exchange is twice as wide as the
+   bare numeral it replaces and the pair will not sit side by side in a 236px
+   page; stacked, the two arrows line up in a column and the direction reads
+   before the numbers do. */
+.marketTrade {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 5px;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.marketTradeTrigger {
+  display: block;
+}
+
+/* SELL is a filled lacquer block, BUY an outline. Two identically-shaped buttons
+   a thumb apart is how you sell the thing you meant to buy. */
+.marketSell,
+.marketBuy {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 5px;
+}
+
+/* give → get. The arrow is the whole point: it is what stops one side being read
+   in wood and the other in gold. */
+.marketRate {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  font-weight: 800;
+}
+
+.marketGive,
+.marketGet {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.marketArrow {
+  flex: none;
+  opacity: 0.75;
+}
+
+/* The verb holds a fixed column so the exchange behind it starts at the same
+   place on both rows — "SELL" and "BUY" are different lengths, and left to
+   themselves they staggered the two rates by half a glyph. */
+.marketSell small,
+.marketBuy small {
+  flex: none;
+  width: 2.1rem;
+  opacity: 0.7;
+  letter-spacing: 0.12em;
+  text-align: left;
+}
+
+.marketSell {
+  color: var(--ivory);
+  background: var(--vase-black);
+}
+
+.marketBuy {
+  color: var(--ink);
+  background: none;
+  box-shadow: inset 0 0 0 1.4px var(--ink-30);
+}
+
+.marketBuy:not([aria-disabled="true"]):hover {
+  box-shadow: inset 0 0 0 1.4px var(--clay);
+  transform: none;
+}
+
+.marketSell:not([aria-disabled="true"]):hover {
+  background: var(--clay-shade);
+  box-shadow: none;
+  transform: none;
+}
+
+.marketSell[aria-disabled="true"],
+.marketBuy[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+/* ── Victory ──────────────────────────────────────────────────────────────── */
+
+.heldline {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 2px 14px;
+}
+
+.heldlineBig small {
+  color: var(--ink-63);
+}
+
+.heldlineLabel {
+  color: var(--ink-66);
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+}
+
+.vcardTrigger {
+  display: block;
+}
+
+.vcard {
+  position: relative;
+  margin-bottom: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--ink-12);
+  border-radius: 6px;
+  background: var(--ivory);
+}
+
+.vcardName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-66);
+}
+
+.vcardName b {
+  color: var(--ink);
+}
+
+/* The requirement, indented under the card's own name so the two read as one
+   sentence rather than two facts. */
+.vcardReq {
+  margin: 2px 0 7px 25px;
+  color: var(--ink-63);
+}
+
+.vcardRace {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: 25px;
+}
+
+.vcardGlaze {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  color: var(--ivory);
+  box-shadow:
+    inset 0 0 0 1.2px rgb(255 248 231 / 85%),
+    0 0 0 1px rgb(36 25 16 / 40%);
+}
+
+/* No disc when no seat is ahead. A tie, and an unclaimed Voice, are facts about
+   the card rather than about a player, so the slot that carries WHOSE stands
+   empty of colour and says the fact in the word the Agora uses for it. */
+.vcardNobody {
+  flex: none;
+  color: var(--ink-63);
+}
+
+.vcardLead {
+  font-weight: 800;
+}
+
+.vcardLead small {
+  color: var(--ink-63);
+  font-weight: 700;
+}
+
+/* The meter is --warn, never a glaze. A glaze here would say the leader's colour
+   means "ahead"; on this board colour means WHOSE, not how good. */
+.vcardMeter {
+  flex: 1;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--ink-12);
+}
+
+.vcardMeter i {
+  display: block;
+  height: 100%;
+  background: var(--warn);
+}
+
+.vcardHeld {
+  border-color: var(--pos);
+  box-shadow: 0 0 0 1px var(--pos);
+}
+
+.vcardStamp {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  color: var(--pos);
+  letter-spacing: 0.2em;
+}
+
+/* ── Agora ────────────────────────────────────────────────────────────────
+   Aegean is the politics register: it appears here and in the Assembly and
+   nowhere else, so the moment you see it you know what you are looking at. */
+
+.voiceboxTrigger {
+  display: block;
+}
+
+.voicebox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 2px;
+  padding: 11px 13px;
+  border: 1px solid var(--ink-12);
+  border-radius: 6px;
+  background: var(--ivory);
+}
+
+.voicebox .icon {
+  flex: none;
+  color: var(--aegean);
+}
+
+.voicebox b,
+.voicebox .caption {
+  display: block;
+}
+
+.voicebox .caption {
+  color: var(--ink-63);
+}
+
+.voiceGlaze {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  border-radius: 50%;
+  color: var(--ivory);
+  box-shadow:
+    inset 0 0 0 1.2px rgb(255 248 231 / 85%),
+    0 0 0 1px rgb(36 25 16 / 40%);
+}
+
+.lawslab {
+  margin-bottom: 8px;
+  padding: 9px 12px;
+  border-left: 3px solid var(--aegean);
+  border-radius: 0 4px 4px 0;
+  background: rgb(31 105 119 / 8%);
+}
+
+.lawslabText {
+  display: block;
+  margin-top: 1px;
+  color: var(--ink-66);
+}
+
+.lawslabMeta {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink-63);
+}
+
+.lawslabEmpty {
+  border-left-style: dashed;
+  border-left-color: var(--ink-30);
+  background: none;
+  color: var(--ink-63);
+}
+
+.polTrigger {
+  display: block;
+}
+
+.pol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--ink-12);
+}
+
+.polMedallion {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--ivory);
+  box-shadow:
+    inset 0 0 0 1.6px rgb(255 248 231 / 85%),
+    0 0 0 1px rgb(36 25 16 / 40%);
+}
+
+.polWho {
+  min-width: 0;
+}
+
+.polEpithet {
+  display: block;
+  color: var(--clay-ink);
+  letter-spacing: 0.16em;
+}
+
+/* Notches, not a count: how many stones bear his name, read at a glance. They
+   sit under the name rather than at the row's end — an orator's name and six
+   notches want 250px between them and the tablet gives 192, so hung on the
+   right the last of them fell 71px outside the frame. */
+.steleNotches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.notch {
+  width: 8px;
+  height: 11px;
+  border-radius: 1.5px;
+  background: var(--ink-12);
+}
+
+.notchWon {
+  background: var(--aegean);
+}
+
+/* Six grey pips are a picture of nothing until they are named. The count also
+   carries the truth when the track cannot: Stratokles's monuments have no cap. */
+.steleCount {
+  margin-left: 3px;
+  color: var(--ink-63);
+  font-style: normal;
+}
+
+/* "Spring, Year 2" is one date, and it broke after the comma into two lines that
+   read as two facts. The key is already nowrap and eats 110 of the tablet's 212px,
+   so the date cannot both stay whole and sit beside it: let the row break BETWEEN
+   the two instead — same two lines, but each one says a whole thing. */
+.agoraPage .anchorRow {
+  flex-wrap: wrap;
+}
+
+.agoraPage .anchorValue {
+  white-space: nowrap;
+}
+
+/* ── Chronicle ────────────────────────────────────────────────────────────
+   Newest first, with the seasons as quiet rules between them. The page has no
+   heading of its own: the tablet is already titled Chronicle, and a second one
+   under it was the first thing a reader had to skip past. */
+
+.chroniclePage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chronicleFilters {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 11px 0 3px;
+}
+
+/* Glaze discs with blazons — the same mark the roster and the board use, so the
+   filter is read rather than decoded. The four named pills they replace wrapped
+   onto two lines on a 306px page.
+
+   They sit at FULL glaze. Resting opacity used to be 0.45, which turned four
+   live filters into pastel ghosts of the very colours the roster, the board and
+   the Victory cards print at full strength — so an available control read as a
+   disabled one, and the seat you were about to filter by was not the colour you
+   had learned. Which one is armed is the clay ring, the way it is everywhere
+   else; dimming is reserved for things you cannot press. */
+.chronFilter {
+  display: grid;
+  place-items: center;
+  /* 24, not 22: five discs in a row are the smallest thing a hand has to hit on
+     this page, and 2.5.8's floor is 24. The blazon inside is unchanged. */
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ivory);
+  box-shadow:
+    inset 0 0 0 1.3px rgb(255 248 231 / 85%),
+    0 0 0 1px rgb(36 25 16 / 40%);
+  transition: box-shadow 140ms ease;
+}
+
+.chronFilter:hover {
+  box-shadow:
+    inset 0 0 0 1.3px rgb(255 248 231 / 85%),
+    0 0 0 1.6px var(--ink);
+  transform: none;
+}
+
+.chronFilter.on {
+  box-shadow:
+    inset 0 0 0 1.3px rgb(255 248 231 / 85%),
+    0 0 0 2px var(--clay);
+}
+
+/* Same disc, same keyline, same blazon grammar as the four seats — only the
+   glaze is the lacquer everyone shares. */
+.chronFilterAll {
+  background: var(--vase-black);
+}
+
+/* The edge cue that says "more below" is shared with the other scroll regions
+   and lives beside `.intelBody` in intel.css. */
+.chronicleList {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-color: var(--ink-30) transparent;
+}
+
+.chronSeason {
+  margin: 13px 0 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--ink-12);
+  color: var(--ink-63);
+  letter-spacing: 0.18em;
+}
+
+.entry {
+  margin: 0;
+  padding: 6px 0;
+  line-height: 1.42;
+}
+
+/* A hairline in the seat's glaze, so the log is scannable by owner at a glance
+   without four coloured paragraphs of text. */
+.entryOwned {
+  padding-left: 9px;
+  border-left: 2px solid var(--line-color);
+}
+
+.entry em {
+  color: var(--ink-66);
+}
+
+/* In the log, a term is NOT emphasis. Every noun the annotator knows — wood,
+   food, granary, event, card, colony — came out oxblood and semibold, so a line
+   like "Damon received Player Event Card Granary Rats" was four highlights in
+   nine words and the paragraph had no rhythm left to read. Emphasis that lands
+   on nearly every noun says nothing. The glyph stays, because the glyph is the
+   information; the colour is gone with the link (see ActionLogPanel). What
+   carries judgment here is the signed number, and it keeps its olive and
+   oxblood. */
+.entry .richToken {
+  color: inherit;
+  font-weight: inherit;
+}
+
+.chronicleEmpty {
+  padding: 16px 2px;
+  color: var(--ink-63);
+}

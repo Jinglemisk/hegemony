@@ -23,13 +23,30 @@ export type AnchoringOptions = {
   arrowInset?: number;
 };
 
-/** Positions, flips, and clamps an overlay within the viewport. */
+/**
+ * Positions, flips, and clamps an overlay within the viewport — or refuses to.
+ *
+ * `null` means "the anchor has no box, so there is nowhere to anchor to". A
+ * `display: contents` trigger measures {0,0,0,0}, and the arithmetic below would
+ * take that at face value: no space above, no space below, both clamps bottom
+ * out at the margin, and the overlay lands in the top-left corner of the screen
+ * looking deliberate. That is exactly how the End Turn tooltip shipped at
+ * (10, 10) on top of the event slips. A helper that fails INTO a corner will do
+ * it again the next time a trigger loses its box, so it fails to nothing
+ * instead: the caller already knows how to hold an unplaced overlay invisible,
+ * and a tooltip that does not appear is a bug someone fixes rather than a
+ * misplacement everyone learns to ignore.
+ */
 export function positionAnchoredOverlay(
   anchor: Pick<DOMRect, "top" | "right" | "bottom" | "left" | "width" | "height">,
   floating: FloatingSize,
   viewport: ViewportSize,
   options: AnchoringOptions = {},
-): FloatingPosition {
+): FloatingPosition | null {
+  if (anchor.width <= 0 && anchor.height <= 0) {
+    return null;
+  }
+
   const margin = options.margin ?? ANCHOR_MARGIN;
   const gap = options.gap ?? ANCHOR_GAP;
   const arrowInset = options.arrowInset ?? ANCHOR_ARROW_INSET;

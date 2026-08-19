@@ -8,10 +8,20 @@ import {
   RIOT_TABLE,
   SEASONAL_EVENT_CARDS,
 } from "../game/data";
+import { getCivicCalmStatus } from "../game/civic";
+import { POP_TYPES } from "../game/core/pops";
+import { getDiscountedGrowPopCost } from "../game/economy/cost";
 import { calculateIncome, calculateIncomeBreakdown } from "../game/economy/income";
 import { drawSeasonalEvent, getEventEffectChoices } from "../game/events";
 import { owned, scenario } from "../game/testing/scenario";
-import type { BuildingDefinition, EventCard, HegemonyState, PlayerId } from "../game/types";
+import type {
+  BuildingDefinition,
+  EventCard,
+  HegemonyState,
+  PlayerId,
+  Resources,
+} from "../game/types";
+import { getFundExpeditionStatus } from "../game/ventures";
 import { presentEventEffects, presentTableEffect } from "../ui/effects";
 import { getAuthoredGameContent } from "../game/content";
 import { createGameDefinition } from "../game/definition";
@@ -171,8 +181,7 @@ function commandContext(G: HegemonyState): VerbContext {
     canFoundColony: true,
     canUpgradeCity: true,
     canBuild: true,
-    isFoundColonyActive: false,
-    isBuildActive: false,
+    armedVerb: null,
     calmUsed: false,
     ventureUsed: false,
   };
@@ -246,7 +255,7 @@ describe("effective content and cost parity", () => {
     expect(calculateIncome(result.state, "0").gold - beforeIncome).toBe(9);
   });
 
-  it("quotes exact target-independent command costs and labels later choices honestly", () => {
+  it("quotes every dock price off the engine, targets-dependent ones included", () => {
     const G = gameplayCity();
     G.players["0"].actionCostDiscounts.push({
       id: "found-coupon",
@@ -261,12 +270,42 @@ describe("effective content and cost parity", () => {
     const found = VERBS.find((verb) => verb.id === "found");
     const upgrade = VERBS.find((verb) => verb.id === "upgrade");
 
-    expect(found?.cost?.cost?.(context)).toEqual(getFoundColonyStatus(G, "0", "").cost);
-    expect(upgrade?.cost?.cost?.(context)).toEqual(getUpgradeColonyToCityStatus(G, "0", "").cost);
-    expect(VERBS.find((verb) => verb.id === "grow")?.cost?.lead).toBe("varies");
-    expect(VERBS.find((verb) => verb.id === "build")?.cost?.lead).toBe("varies");
-    expect(VERBS.find((verb) => verb.id === "calm")?.cost?.lead).toBe("options");
-    expect(VERBS.find((verb) => verb.id === "venture")?.cost?.lead).toBe("stakes");
+    const priceOf = (id: string) => VERBS.find((verb) => verb.id === id)?.cost?.(context) ?? [];
+    const units = (cost: Partial<Resources> | undefined) =>
+      Object.values(cost ?? {}).reduce((sum, amount) => sum + amount, 0);
+
+    expect(found?.cost?.(context)).toEqual([{ amounts: getFoundColonyStatus(G, "0", "").cost }]);
+    expect(upgrade?.cost?.(context)).toEqual([
+      { amounts: getUpgradeColonyToCityStatus(G, "0", "").cost },
+    ]);
+
+    // The four verbs that used to print "varies" / "options" / "stakes". A dock
+    // price has to be a figure the press would really charge, so each is checked
+    // against the engine query that charges it rather than against a literal.
+    const growFood = POP_TYPES.map(
+      (pop) => getDiscountedGrowPopCost(G, "0", owned(G, "0,0", "0"), pop).food ?? 0,
+    );
+    expect(priceOf("grow")).toEqual([
+      { span: { resource: "food", min: Math.min(...growFood), max: Math.max(...growFood) } },
+    ]);
+
+    const [floor] = priceOf("build");
+    const cheapest = Math.min(
+      ...getBuildBuildingOptions(G, "0", "0,0").map((option) => units(option.status.cost)),
+    );
+    expect(floor.lead).toBe("from");
+    expect(units(floor.amounts)).toBe(cheapest);
+
+    expect(priceOf("calm")).toEqual([
+      { amounts: getCivicCalmStatus(G, "0", "influence").cost },
+      { amounts: getCivicCalmStatus(G, "0", "gold").cost },
+    ]);
+    expect(priceOf("venture")).toEqual([
+      {
+        lead: "stake",
+        amounts: getFundExpeditionStatus(G, "0", EXPEDITION_TABLES[0].id, "gold").cost,
+      },
+    ]);
   });
 
   it("makes smart policy reverse its build choice when effective economics reverse", () => {

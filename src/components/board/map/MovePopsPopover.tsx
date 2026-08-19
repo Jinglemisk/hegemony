@@ -9,6 +9,7 @@ import {
 import type { Pops } from "../../../game/types";
 import { useGameUi } from "../GameUiContext";
 import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
+import { TileSubject } from "../TileSubject";
 import { PopoverActions } from "../PopoverActions";
 import { PopulationStepper } from "../modals/PopulationStepper";
 import { TilePopover } from "./TilePopover";
@@ -47,9 +48,7 @@ export function MovePopsSourcePopover({
 
   return (
     <TilePopover anchor={anchor} label="Move pops from" onCancel={onCancel} title="Move From">
-      <p className="placementSectionLabel placementTargetName">
-        {settlementPickerLabel(G, tile, playerID)}
-      </p>
+      <TileSubject G={G} playerID={playerID} tile={tile} />
       <p className="placementCostNote">Holds {formatPops(settlement.pops)}.</p>
 
       <PopoverActions
@@ -99,9 +98,7 @@ export function MovePopsTargetPopover({
       onCancel={onCancel}
       title="Move To"
     >
-      <p className="placementSectionLabel placementTargetName">
-        {settlementPickerLabel(G, tile, playerID)}
-      </p>
+      <TileSubject G={G} playerID={playerID} tile={tile} />
       <p className="placementCostNote">
         From {settlementPickerLabel(G, sourceTile, playerID)} — they arrive next turn.
       </p>

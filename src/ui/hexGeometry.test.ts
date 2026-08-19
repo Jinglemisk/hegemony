@@ -2,22 +2,19 @@ import { describe, expect, it } from "vitest";
 import {
   BASE_VIEW_BOX,
   HEX_SIZE,
-  MAX_ZOOM,
-  MIN_ZOOM,
   WORLD_VIEW_BOX,
+  boardExtent,
   cameraTransform,
   clampViewBox,
-  getColonyXPositions,
+  getSideBySidePositions,
   SHORELINE_RADIUS,
   getHexCorners,
   hexCenter,
   getNeighborCoordinate,
   getShorelineEdges,
-  getZoomLevel,
   hexPoints,
   seatViewBox,
   viewBoxesEqual,
-  zoomViewBox,
   type WorldInset,
 } from "./hexGeometry";
 
@@ -138,13 +135,38 @@ describe("shoreline", () => {
   });
 });
 
-describe("camera", () => {
-  it("clamps zoom to the allowed band", () => {
-    expect(getZoomLevel(zoomViewBox(BASE_VIEW_BOX, 99))).toBeCloseTo(MAX_ZOOM, 6);
-    expect(getZoomLevel(zoomViewBox(BASE_VIEW_BOX, 0.001))).toBeCloseTo(MIN_ZOOM, 6);
+describe("board extent", () => {
+  it("wraps a lone hex in its own outline, not in the coordinate window", () => {
+    const extent = boardExtent([{ x: 0, y: 0 }]);
+
+    // A pointy-top hex is `size` tall and `size·cos30` wide from its centre, so a
+    // single tile's extent is that box and nothing more. Fitting BASE_VIEW_BOX
+    // instead is what made the board come out a third smaller than its room.
+    expect(extent.height).toBeCloseTo(HEX_SIZE * 2, 6);
+    expect(extent.width).toBeCloseTo(HEX_SIZE * Math.cos(Math.PI / 6) * 2, 6);
+    expect(extent.width).toBeLessThan(BASE_VIEW_BOX.width);
   });
 
-  it("never pans past the world edge", () => {
+  it("spans every tile it is given", () => {
+    const extent = boardExtent([
+      { x: -100, y: -50 },
+      { x: 0, y: 0 },
+      { x: 140, y: 90 },
+    ]);
+
+    expect(extent.x).toBeLessThan(-100);
+    expect(extent.y).toBeLessThan(-50);
+    expect(extent.x + extent.width).toBeGreaterThan(140);
+    expect(extent.y + extent.height).toBeGreaterThan(90);
+  });
+
+  it("falls back to the coordinate window when there is no board yet", () => {
+    expect(boardExtent([])).toEqual(BASE_VIEW_BOX);
+  });
+});
+
+describe("board frame", () => {
+  it("never sits past the world edge", () => {
     const runaway = clampViewBox({
       x: -99999,
       y: 99999,
@@ -168,17 +190,6 @@ describe("camera", () => {
 
     expect(tooWide.width).toBeLessThanOrEqual(WORLD_VIEW_BOX.width);
     expect(tooWide.height).toBeLessThanOrEqual(WORLD_VIEW_BOX.height);
-  });
-
-  it("keeps the focus point pinned while zooming", () => {
-    // Zoom about the box's own centre: the centre must not drift.
-    const start = zoomViewBox(BASE_VIEW_BOX, 1);
-    const centerBefore = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
-    const zoomed = zoomViewBox(start, 1.1, { ...centerBefore, ratioX: 0.5, ratioY: 0.5 });
-    const centerAfter = { x: zoomed.x + zoomed.width / 2, y: zoomed.y + zoomed.height / 2 };
-
-    expect(centerAfter.x).toBeCloseTo(centerBefore.x, 6);
-    expect(centerAfter.y).toBeCloseTo(centerBefore.y, 6);
   });
 
   it("is identity at the base frame", () => {
@@ -235,10 +246,10 @@ describe("live-area seat", () => {
   });
 });
 
-describe("colony placement", () => {
-  it("centres a lone colony and splits a shared tile", () => {
-    expect(getColonyXPositions(0)).toEqual([0]);
-    expect(getColonyXPositions(1)).toEqual([0]);
-    expect(getColonyXPositions(2)).toEqual([-14, 14]);
+describe("side-by-side settlements", () => {
+  it("centres a lone settlement and splits a shared tile", () => {
+    expect(getSideBySidePositions(0)).toEqual([0]);
+    expect(getSideBySidePositions(1)).toEqual([0]);
+    expect(getSideBySidePositions(2)).toEqual([-22, 22]);
   });
 });

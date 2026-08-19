@@ -1,11 +1,15 @@
 /* DEV parameter dashboard. Deliberately utilitarian — a tool, not game chrome —
    but tinted to the Kerameikos palette so it doesn't clash with the board. */
 
+/* Docked to the top-left corner of the MAP WELL — inboard of the left tablet, not
+   over it. It used to sit bottom-right, where it lay on top of END TURN and
+   swallowed clicks on the one button that must never be blocked; the first move
+   put it at the screen's left edge, where the docked ledger then covered it. */
 .tune-fab {
   position: fixed;
-  right: 14px;
-  bottom: 14px;
-  z-index: 9999;
+  left: calc(var(--panel-w) + 14px);
+  top: calc(var(--chrome-top) + 12px);
+  z-index: var(--z-fab);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -20,6 +24,14 @@
 .tune-fab:hover {
   background: #3a332c;
   border-color: #c96a3a;
+}
+
+/* The app-wide ring is aegean, which is 1.9:1 against this dark lacquer fab and
+   invisible the moment the offset lands back on it. A dark object gets a light
+   ring. */
+.tune-fab:focus-visible {
+  outline: 2px solid #f3e9d8;
+  outline-offset: 2px;
 }
 
 .tune-panel {

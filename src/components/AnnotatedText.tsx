@@ -1,9 +1,18 @@
 import type { ReactNode } from "react";
+import { POLITICIANS } from "../game/assembly/deck";
+import { getAuthoredGameContent } from "../game/content";
 import { capitalize } from "../game/core/format";
 import type { BuildingId, PopType, Resource, SettlementKind } from "../game/types";
 import { resourceCssVars } from "../ui/resourceVisuals";
-import { useCodexLink } from "./codexLink";
-import { AtlasIcon, ResourceIcon } from "./Sprites";
+import { useCodexLink, type CodexLink } from "./codexLink";
+import {
+  BUILDING_GLYPHS,
+  POP_GLYPHS,
+  RESOURCE_GLYPHS,
+  SETTLEMENT_GLYPHS,
+} from "../ui/iconRegistry";
+import { Icon } from "../ui/icons/Icon";
+import type { GlyphId } from "../ui/icons/glyphs";
 
 /**
  * Renders free text with a small icon appended to every resource, pop, or
@@ -17,7 +26,7 @@ type Token =
   | { type: "pop"; key: PopType }
   | { type: "building"; key: BuildingId }
   | { type: "settlement"; key: SettlementKind }
-  // Concept terms have no glyph in the atlas — they carry their rulebook chapter directly.
+  // Concept terms have no glyph at all — they carry their rulebook chapter directly.
   | { type: "concept"; chapter: string };
 
 const TOKEN_MAP: Record<string, Token> = {
@@ -57,7 +66,7 @@ const TOKEN_MAP: Record<string, Token> = {
   villas: { type: "building", key: "villa" },
   gymnasion: { type: "building", key: "gymnasion" },
   gymnasions: { type: "building", key: "gymnasion" },
-  // Settlements — their own atlas glyph, link to the Settlements chapter.
+  // Settlements — their own glyph, link to the Settlements chapter.
   capital: { type: "settlement", key: "capital" },
   capitals: { type: "settlement", key: "capital" },
   metropolis: { type: "settlement", key: "capital" },
@@ -115,17 +124,89 @@ const TOKEN_PATTERN = new RegExp(
   "gi",
 );
 
+/**
+ * Titles the annotator must read as names, not as vocabulary.
+ *
+ * The tokeniser matches a WORD. It has no idea whether that word is doing its
+ * own job or standing inside somebody's name, so the chronicle line "Theron
+ * resolved Granary Rats: -3 Food" drew the **granary building** glyph beside a
+ * card about vermin — a structure you can build, pictured next to a misfortune
+ * that has nothing to do with it. Wrong information, not noise.
+ *
+ * The fix is a closed list rather than a guess. Every title the game ships is
+ * authored right here in the content package, so the exact strings are known;
+ * matching them verbatim (case included) needs no capitalisation heuristic,
+ * which would have misfired on every sentence start and every player name.
+ *
+ * Two filters keep the list honest, and both matter:
+ *
+ * · Only titles that a term can actually collide with are listed — a name the
+ *   tokeniser never matches has nothing to protect.
+ * · A title that IS the term is left alone. "Ada built Granary." names the
+ *   granary and means the granary, so the glyph there is right; only a compound
+ *   like "Granary Rats", where the word no longer denotes the thing, is muted.
+ *
+ * Derived at module load, so authoring a new card extends the list for free —
+ * and `AnnotatedText.test.tsx` walks every authored name to prove it.
+ */
+const PROPER_NAMES: string[] = (() => {
+  const content = getAuthoredGameContent();
+
+  return [
+    ...content.buildings,
+    ...content.seasonalEvents,
+    ...content.playerEvents,
+    ...content.resolutions,
+    ...POLITICIANS,
+    content.riotTable,
+    content.omenTable,
+    ...content.expeditionTables,
+  ]
+    .map((authored) => authored.name)
+    .filter((name) => {
+      TOKEN_PATTERN.lastIndex = 0;
+      return TOKEN_PATTERN.test(name) && !(name.toLowerCase() in TOKEN_MAP);
+    })
+    .sort((a, b) => b.length - a.length);
+})();
+
+function escapeRegExp(literal: string) {
+  return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Longest title first, so "Granary Surplus" is not shadowed by a shorter name. */
+const PROPER_NAME_PATTERN = PROPER_NAMES.length
+  ? new RegExp(`\\b(?:${PROPER_NAMES.map(escapeRegExp).join("|")})\\b`, "g")
+  : null;
+
+function tokenGlyph(token: Token): GlyphId | null {
+  switch (token.type) {
+    case "concept":
+      return null;
+    case "resource":
+      return RESOURCE_GLYPHS[token.key];
+    case "pop":
+      return POP_GLYPHS[token.key];
+    case "building":
+      return BUILDING_GLYPHS[token.key];
+    case "settlement":
+      return SETTLEMENT_GLYPHS[token.key];
+  }
+}
+
+/**
+ * The glyph leads, the word follows: "-1 ⬮ Gold", not "-1 Gold ⬮".
+ *
+ * It used to trail, and the effect of that was that the fastest thing to read —
+ * the picture — sat on the far side of the slowest. Reading a cost meant taking
+ * the numeral, then the word, then the glyph that had already said what the word
+ * said. Leading puts the glyph next to the digits it belongs to, which is the
+ * order the eye wants and the order every strategy game in this genre uses.
+ */
 function tokenIcon(token: Token) {
-  if (token.type === "concept") {
-    return null;
-  }
+  const glyph = tokenGlyph(token);
 
-  if (token.type === "resource") {
-    return <ResourceIcon resource={token.key} className="richIcon" />;
-  }
-
-  // AtlasIcon's key space covers pops, buildings and settlement kinds.
-  return <AtlasIcon icon={token.key} className="richIcon" />;
+  return glyph ? <Icon glyph={glyph} className="richIcon" /> : null;
 }
 
 /** The rulebook chapter (rulebook.tsx id) a token deep-links to. */
@@ -156,6 +237,34 @@ export function AnnotatedText({
   const contextCodexLink = useCodexLink();
   const codexLink = links ? contextCodexLink : null;
   const nodes: ReactNode[] = [];
+
+  // Titles are lifted out FIRST and passed through untouched; only what is left
+  // between them is vocabulary the tokeniser may annotate.
+  let cursor = 0;
+
+  if (PROPER_NAME_PATTERN) {
+    PROPER_NAME_PATTERN.lastIndex = 0;
+    let name: RegExpExecArray | null;
+
+    while ((name = PROPER_NAME_PATTERN.exec(text)) !== null) {
+      annotateInto(nodes, text.slice(cursor, name.index), cursor, codexLink);
+      nodes.push(name[0]);
+      cursor = name.index + name[0].length;
+    }
+  }
+
+  annotateInto(nodes, text.slice(cursor), cursor, codexLink);
+
+  return <span className={className}>{nodes.map(signPlainText)}</span>;
+}
+
+/** The tokenising pass, run over one stretch of text that holds no title. */
+function annotateInto(
+  nodes: ReactNode[],
+  text: string,
+  offset: number,
+  codexLink: CodexLink | null,
+) {
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -170,7 +279,7 @@ export function AnnotatedText({
     }
 
     const style = token.type === "resource" ? resourceCssVars(token.key) : undefined;
-    const key = `${match.index}-${word}`;
+    const key = `${offset + match.index}-${word}`;
     // Terminology is a proper noun (RPG style): Title-Case it however the source
     // wrote it — "gain 3 freemen" reads "gain 3 Freemen".
     const label = capitalize(word);
@@ -202,13 +311,13 @@ export function AnnotatedText({
           style={style}
           title={`Open the rulebook: ${label}`}
         >
-          {label}
           {tokenIcon(token)}
+          {label}
         </span>
       ) : (
         <span className="richToken" key={key} style={style}>
-          {label}
           {tokenIcon(token)}
+          {label}
         </span>
       ),
     );
@@ -219,6 +328,49 @@ export function AnnotatedText({
   if (lastIndex < text.length) {
     nodes.push(text.slice(lastIndex));
   }
+}
 
-  return <span className={className}>{nodes}</span>;
+/**
+ * A signed number, coloured by its sign.
+ *
+ * The chronicle's whole job is telling you whether the last thing that happened
+ * was good or bad, and it was printing "+9 gold" and "-5 wood" in identical ink.
+ * This is the last step of the same tokenising pass, applied only to the PLAIN
+ * text between tokens — the resource chips keep their own colour, which says
+ * WHAT, while the sign says whether.
+ *
+ * The sign always travels with the colour. `+9` in olive and `-5` in oxblood are
+ * legible to a colour-blind player because the glyph in front of the digits
+ * already carries the whole meaning; the colour is a second, faster channel.
+ */
+const SIGNED_NUMBER = /([+\u2212-]\d+(?:\.\d+)?)/g;
+/** The same pattern, anchored and NOT global: `test` on a /g regex advances its
+ *  own lastIndex, so reusing SIGNED_NUMBER for the per-part check would match
+ *  every other number and silently drop the rest. */
+const IS_SIGNED_NUMBER = /^[+\u2212-]\d+(?:\.\d+)?$/;
+
+function signPlainText(node: ReactNode, index: number): ReactNode {
+  if (typeof node !== "string") {
+    return node;
+  }
+
+  const parts = node.split(SIGNED_NUMBER);
+
+  if (parts.length === 1) {
+    return node;
+  }
+
+  return (
+    <span key={`signed-${index}`}>
+      {parts.map((part, partIndex) =>
+        IS_SIGNED_NUMBER.test(part) ? (
+          <b className={part.startsWith("+") ? "pos num" : "neg num"} key={partIndex}>
+            {part}
+          </b>
+        ) : (
+          part
+        ),
+      )}
+    </span>
+  );
 }

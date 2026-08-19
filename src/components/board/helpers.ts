@@ -17,11 +17,11 @@ import type {
   PopType,
   Pops,
   Resources,
-  Settlement,
 } from "../../game/types";
 import { presentBuildingEffects } from "../../ui/effects";
 import { formatResourceCost, formatResourceDelta } from "../../ui/formatters";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
+import { settlementNameOf } from "../../ui/settlementNames";
 import { SETTLEMENT_SORT } from "./constants";
 import type { OwnedHolding, PopEconomy, SettlementEntry } from "./types";
 
@@ -131,17 +131,13 @@ export function gameplayActionDisabled(
   return !status?.can || !isActive || phase !== "gameplay";
 }
 
-export function holdingShortLabel(tile: HexTile, settlement: Settlement) {
-  return `${capitalize(settlement.kind)} ${tile.id}`;
-}
-
-/** One consistent line for every settlement picker (user request 2026-07-13): names
- *  the tile the settlement stands on — kind, coords, terrain + yield — and whether
- *  the tile is shared with another player's colony (shared yields are halved, and an
- *  upgrade would evict the rival). */
+/** One consistent line for every settlement picker: the place's NAME and rank,
+ *  the ground it stands on, and whether it shares the tile with a rival (shared
+ *  yields are halved, and an upgrade would evict them). */
 export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: PlayerId): string {
   const own = tile.settlements.find((candidate) => candidate.owner === ownerID);
-  const kind = own ? capitalize(own.kind) : "Settlement";
+  const name = own ? settlementNameOf(G.board.tiles, own.id) : "Open ground";
+  const kind = own ? capitalize(own.kind) : "";
   const rivals = tile.settlements.filter((candidate) => candidate.owner !== ownerID);
   const shared = rivals.length
     ? ` · shares tile with ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
@@ -149,7 +145,7 @@ export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: 
 
   const yieldText = tile.resource ? `+${tile.resource.amount} ${tile.resource.type}` : "no yield";
 
-  return `${kind} ${tile.id} · ${capitalize(tile.terrain)} ${yieldText}${shared}`;
+  return `${name}${kind ? ` · ${kind}` : ""} · ${capitalize(tile.terrain)} ${yieldText}${shared}`;
 }
 
 export function createEmptyResources(): Resources {

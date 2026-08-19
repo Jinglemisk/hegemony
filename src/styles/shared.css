@@ -65,11 +65,22 @@
   border: 0;
   margin: 0;
   background: none;
-  color: var(--clay);
+  color: var(--clay-ink);
   font: inherit;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
+}
+
+/* A Codex link used as a NAME — a building on its card, a rank on the ladder —
+   is the one kind that is NOT in a sentence: it stands alone on its own line, so
+   2.5.8 applies to it in full and the 17px it inherits from `.title` is short.
+   It grows into the room the card actually has. There are 19–39px of air above
+   these names and 2px below, so the target takes 7 up and 1 down — 25px tall at
+   the 0.82 scale, where 6 up landed on 23.98 and still failed — and because the
+   box is `inline` the line it sits on does not move. */
+button.richTokenLink {
+  padding: 7px 0 1px;
 }
 
 .richTokenLink:hover,
@@ -81,9 +92,12 @@
   text-underline-offset: 2px;
 }
 
+/* The glyph LEADS its word (AnnotatedText.tokenIcon), so the air goes on its
+   right — between glyph and word — and only a hair on its left, where the
+   preceding numeral already sits. */
 .richIcon {
   width: 1.08em;
   height: 1.08em;
-  margin: 0 0.04em 0 0.18em;
+  margin: 0 0.18em 0 0.04em;
   vertical-align: -0.22em;
 }

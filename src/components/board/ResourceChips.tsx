@@ -69,11 +69,7 @@ export function ResourceChips({
             style={resourceCssVars(resource as Resource)}
             title={chipTitle(variant, resource as Resource, value)}
           >
-            <ResourceIcon
-              resource={resource as Resource}
-              value={variant === "cost" ? undefined : value}
-              className={iconClassName}
-            />
+            <ResourceIcon resource={resource as Resource} className={iconClassName} />
             {renderValue(variant, resource as Resource, value)}
           </span>
         );

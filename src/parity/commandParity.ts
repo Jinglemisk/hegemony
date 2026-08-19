@@ -169,11 +169,11 @@ export const COMMAND_PARITY = {
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyDiscardHeld: {
-    frontend: interactive("src/components/board/assembly/AssemblyBema.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblyFloor.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyPropose: {
-    frontend: interactive("src/components/board/assembly/AssemblyBema.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblyFloor.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyProposeRepeal: {
@@ -185,15 +185,15 @@ export const COMMAND_PARITY = {
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyBribe: {
-    frontend: interactive("src/components/board/assembly/AssemblyFoot.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySeats.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyVote: {
-    frontend: interactive("src/components/board/assembly/AssemblyBema.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySeats.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyVeto: {
-    frontend: interactive("src/components/board/assembly/AssemblyBema.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySeats.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyClose: {

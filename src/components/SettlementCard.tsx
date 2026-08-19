@@ -10,7 +10,8 @@ import {
 } from "../game/rules";
 import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
 import { RESOURCE_ORDER, tileCssVars } from "../ui/resourceVisuals";
-import { AtlasIcon, TerrainSprite } from "./Sprites";
+import { BUILDING_GLYPHS, POP_GLYPHS, SETTLEMENT_GLYPHS, TERRAIN_GLYPHS } from "../ui/iconRegistry";
+import { Icon } from "../ui/icons/Icon";
 import { ResourceChips } from "./board/ResourceChips";
 import { capitalize } from "./board/helpers";
 
@@ -20,6 +21,7 @@ import { capitalize } from "./board/helpers";
  * computed {@link Resources} net yield so the existing Cities tab math is untouched.
  */
 export function SettlementSummaryCard({
+  name,
   tile,
   settlement,
   netYield,
@@ -28,6 +30,8 @@ export function SettlementSummaryCard({
 }: {
   tile: HexTile;
   settlement: Settlement;
+  /** The place's name, from ui/settlementNames. */
+  name: string;
   netYield: Resources;
   ruleset: Ruleset;
   content: GameContent;
@@ -41,11 +45,17 @@ export function SettlementSummaryCard({
   return (
     <span className="holdingSummaryRows">
       <span className="holdingIdentityCluster">
-        <span className="cityIdentity" title={`${capitalize(settlement.kind)} ${tile.id}`}>
-          <AtlasIcon icon={settlement.kind} className="miniIcon settlementIdentityIcon" />
+        {/* NAME only. The rank and the ground used to be spelled out under it —
+            "city · mountain" — beside the rank's own glyph on the left and the
+            terrain's own chip at the right of the same row. Two facts, drawn and
+            written, twice each, in the narrowest column in the ledger. */}
+        <span
+          className="cityIdentity"
+          title={`${capitalize(settlement.kind)} on ${capitalize(tile.terrain)}, at ${tile.id}`}
+        >
+          <Icon glyph={SETTLEMENT_GLYPHS[settlement.kind]} size="rail" className="miniIcon" />
           <span className="holdingTitleBlock">
-            <strong>{capitalize(settlement.kind)}</strong>
-            <em>{formatTileCoordinates(tile)}</em>
+            <strong className="title">{name}</strong>
           </span>
         </span>
       </span>
@@ -55,7 +65,7 @@ export function SettlementSummaryCard({
           className="cityMeter"
           title={`Building slots ${settlement.buildings.length} of ${slots}`}
         >
-          <AtlasIcon icon="temple" className="miniIcon" />
+          <Icon glyph={BUILDING_GLYPHS.temple} size="rail" className="miniIcon" />
           <span className="cityMeterText">
             <strong>
               {settlement.buildings.length}
@@ -68,7 +78,7 @@ export function SettlementSummaryCard({
           className={overCapacity > 0 ? "cityMeter overCapacityText" : "cityMeter"}
           title={`Population ${popTotal} of ${capacity}`}
         >
-          <AtlasIcon icon="citizens" className="miniIcon" />
+          <Icon glyph={POP_GLYPHS.citizens} size="rail" className="miniIcon" />
           <span className="cityMeterText">
             <strong>
               {popTotal}
@@ -89,7 +99,7 @@ export function SettlementSummaryCard({
         }
       >
         <span className="summaryTerrain" aria-hidden="true">
-          <TerrainSprite terrain={tile.terrain} className="terrainChip" />
+          <Icon className="terrainChip miniIcon" glyph={TERRAIN_GLYPHS[tile.terrain]} size="rail" />
         </span>
       </span>
 
@@ -116,8 +126,4 @@ export function HoldingNetYields({ resources }: { resources: Resources }) {
       }
     />
   );
-}
-
-function formatTileCoordinates(tile: HexTile) {
-  return `${tile.q},${tile.r}`;
 }

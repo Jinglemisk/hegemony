@@ -28,11 +28,14 @@ export function toPlayerId(value: string | null | undefined): PlayerId {
   return PLAYER_IDS.includes(value as PlayerId) ? (value as PlayerId) : "0";
 }
 
-export function addLog(G: HegemonyState, message: string) {
+/** `about` is the seat the line concerns — the one who acted, or the one it was
+ *  done to. See LogEntry.about for why the subject rather than the author. */
+export function addLog(G: HegemonyState, message: string, about?: PlayerId) {
   G.log.push({
     id: `${G.season}-${G.log.length}-${message}`,
     season: G.season,
     message,
+    ...(about ? { about } : {}),
   });
 }
 

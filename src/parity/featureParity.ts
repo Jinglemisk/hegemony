@@ -502,7 +502,7 @@ export const CONTENT_MANIFEST = {
     ids: RESOLUTION_CONTENT_IDS,
     engine: { implementation: "src/game/assembly/deck.ts", evidence: "RESOLUTION_CARDS" },
     frontend: {
-      implementation: "src/components/board/assembly/AssemblyBema.tsx",
+      implementation: "src/components/board/assembly/AssemblyFloor.tsx",
       evidence: "ResolutionEffect",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "deltaIfEnacted" },

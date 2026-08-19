@@ -19,13 +19,6 @@ export const PLAYER_NAMES: Record<PlayerId, string> = {
   "3": "Kyros",
 };
 
-export const PLAYER_COLORS: Record<PlayerId, string> = {
-  "0": "#1e3a8a",
-  "1": "#eab308",
-  "2": "#7c3aed",
-  "3": "#c1121f",
-};
-
 export const STARTING_RESOURCES: Resources = {
   wood: 20,
   stone: 10,
@@ -445,6 +438,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Drought",
     count: 4,
     text: "All players get -2 Food income this season.",
+    flavor: "The riverbed shows its stones, and the sky stays white.",
     seasons: ["autumn", "winter"],
     timing: "season",
     effects: [
@@ -463,6 +457,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Bountiful Harvest",
     count: 4,
     text: "All players get +2 Food income this season.",
+    flavor: "The carts come in loaded. The threshing floors do not empty.",
     seasons: ["summer", "autumn"],
     timing: "season",
     effects: [
@@ -481,6 +476,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Timber Levies",
     count: 3,
     text: "Each player gains 2 Wood per 6 pops, minimum 4 Wood.",
+    flavor: "Every village sends its share of timber down to the yards.",
     seasons: ["spring", "summer", "winter"],
     timing: "immediate",
     effects: [
@@ -500,6 +496,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Quarry Contracts",
     count: 3,
     text: "Each player gains 2 Stone per 6 pops, minimum 4 Stone.",
+    flavor: "The quarries are let out for the season, and the dust never settles.",
     seasons: ["summer", "autumn"],
     timing: "immediate",
     effects: [
@@ -519,6 +516,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Grain Tithe",
     count: 3,
     text: "Each player gains 2 Food per 6 pops, minimum 4 Food.",
+    flavor: "A measure from every household, sealed and counted at the gate.",
     seasons: ["spring", "autumn", "winter"],
     timing: "immediate",
     effects: [
@@ -538,6 +536,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Civic Anxiety",
     count: 2,
     text: "Each player suffers -2 Happiness per 10 pops, minimum -2, during income collection this season.",
+    flavor: "Something is wrong and nobody can name it. The porticoes stay crowded late.",
     seasons: ["winter"],
     timing: "season",
     effects: [
@@ -557,6 +556,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Festival Games",
     count: 2,
     text: "Each player gains 2 Happiness per 10 pops, minimum 2 Happiness.",
+    flavor: "Oil, sand, and a whole city on the banking, shouting.",
     seasons: ["spring", "summer"],
     timing: "immediate",
     effects: [
@@ -575,6 +575,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Scarce Labor",
     count: 2,
     text: "Building costs, excluding colony founding and city upgrades, are doubled this season.",
+    flavor: "The good crews are all promised elsewhere.",
     seasons: ["autumn", "winter"],
     timing: "season",
     effects: [
@@ -592,6 +593,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Skilled Artisans",
     count: 2,
     text: "Building costs, excluding colony founding and city upgrades, are halved this season, rounded up.",
+    flavor: "Workshops full of men who have done this a hundred times.",
     seasons: ["spring", "summer"],
     timing: "season",
     effects: [
@@ -609,6 +611,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     name: "Open Markets",
     count: 2,
     text: "All players get +2 Gold income this season.",
+    flavor: "Foreign sails in the harbour, and the quays stay busy past dusk.",
     seasons: ["summer", "autumn"],
     timing: "season",
     effects: [
@@ -626,7 +629,8 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     deck: "seasonal",
     name: "Plague",
     count: 2,
-    text: "Sickness spreads: every player loses 2 Happiness at the start of each of their next 3 turns.",
+    text: "Every player loses 2 Happiness at the start of each of their next 3 turns.",
+    flavor: "Sickness spreads.",
     seasons: ["autumn", "winter"],
     timing: "immediate",
     effects: [{ type: "timedHappinessDelta", scope: "allPlayers", amountPerTurn: -2, turns: 3 }],
@@ -638,7 +642,8 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     deck: "seasonal",
     name: "Spring Floods",
     count: 2,
-    text: "The rivers burst their banks: all players lose 3 Food.",
+    text: "All players lose 3 Food.",
+    flavor: "The rivers burst their banks.",
     seasons: ["spring"],
     timing: "immediate",
     effects: [{ type: "resourceDelta", scope: "allPlayers", resource: "food", amount: -3 }],
@@ -648,7 +653,8 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     deck: "seasonal",
     name: "Wildfire",
     count: 2,
-    text: "Tinder-dry groves burn: all players get -2 Wood income this season.",
+    text: "All players get -2 Wood income this season.",
+    flavor: "Tinder-dry groves burn.",
     seasons: ["summer"],
     timing: "season",
     effects: [
@@ -677,6 +683,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "New Citizen",
     count: 4,
     text: "Add 1 citizen to one owned settlement with available capacity.",
+    flavor: "A name goes onto the roll. The neighbours stand witness.",
     timing: "pendingChoice",
     effects: [
       { type: "addPops", pop: "citizens", amount: 1, target: "ownedSettlementWithCapacity" },
@@ -688,6 +695,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Free Settlers",
     count: 4,
     text: "Add 1 freeman to one owned settlement with available capacity.",
+    flavor: "They came over the pass with their tools on their backs.",
     timing: "pendingChoice",
     effects: [
       { type: "addPops", pop: "freemen", amount: 1, target: "ownedSettlementWithCapacity" },
@@ -699,6 +707,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Captured Laborers",
     count: 3,
     text: "Add 2 slaves to one owned settlement with available capacity.",
+    flavor: "A column comes up from the harbour, roped at the wrist.",
     timing: "pendingChoice",
     effects: [{ type: "addPops", pop: "slaves", amount: 2, target: "ownedSettlementWithCapacity" }],
   },
@@ -707,7 +716,8 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Citizenship Rolls",
     count: 4,
-    text: "The archon opens the rolls: the next citizen grown this turn costs -5 Food and -1 Gold.",
+    text: "The next citizen grown this turn costs -5 Food and -1 Gold.",
+    flavor: "The archon opens the rolls.",
     timing: "immediate",
     effects: [
       {
@@ -735,7 +745,8 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Willing Hands",
     count: 4,
-    text: "Landless families seek a plot: the next freeman grown this turn costs -4 Food.",
+    text: "The next freeman grown this turn costs -4 Food.",
+    flavor: "Landless families seek a plot.",
     timing: "immediate",
     effects: [
       {
@@ -754,7 +765,8 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Slave Auction",
     count: 3,
-    text: "The block clears cheap: the next slave grown this turn costs -3 Food.",
+    text: "The next slave grown this turn costs -3 Food.",
+    flavor: "The block clears cheap.",
     timing: "immediate",
     effects: [
       {
@@ -774,6 +786,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Good Stores",
     count: 4,
     text: "Gain 3 Food.",
+    flavor: "The jars in the cellar are heavier than anyone remembered.",
     timing: "immediate",
     effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "food", amount: 3 }],
   },
@@ -783,6 +796,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Timber Windfall",
     count: 4,
     text: "Gain 3 Wood.",
+    flavor: "The storm felled the ridge pines. The crews only had to haul.",
     timing: "immediate",
     effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "wood", amount: 3 }],
   },
@@ -792,6 +806,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Merchant Profit",
     count: 4,
     text: "Gain 3 Gold.",
+    flavor: "A ship comes in early, and the price holds.",
     timing: "immediate",
     effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "gold", amount: 3 }],
   },
@@ -801,6 +816,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Stone Shipment",
     count: 4,
     text: "Gain 3 Stone.",
+    flavor: "Ox-carts grind up from the quarry road all morning.",
     timing: "immediate",
     effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "stone", amount: 3 }],
   },
@@ -810,6 +826,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Local Unrest",
     count: 4,
     text: "Lose 2 Happiness.",
+    flavor: "Voices in the agora, and none of them yours.",
     timing: "immediate",
     effects: [{ type: "happinessDelta", scope: "activePlayer", amount: -2 }],
   },
@@ -819,6 +836,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Public Calm",
     count: 4,
     text: "Gain 2 Happiness.",
+    flavor: "Quiet streets. The market keeps its ordinary hours.",
     timing: "immediate",
     effects: [{ type: "happinessDelta", scope: "activePlayer", amount: 2 }],
   },
@@ -828,6 +846,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Civil Discord",
     count: 3,
     text: "Lose 2 Happiness at the start of each of your next 3 turns.",
+    flavor: "The wells crack. The assembly mutters.",
     timing: "immediate",
     effects: [{ type: "timedHappinessDelta", scope: "activePlayer", amountPerTurn: -2, turns: 3 }],
   },
@@ -836,7 +855,8 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Granary Rats",
     count: 5,
-    text: "Rats find the grain stores. Lose 3 Food.",
+    text: "Lose 3 Food.",
+    flavor: "Rats find the grain stores.",
     timing: "immediate",
     effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "food", amount: -3 }],
   },
@@ -845,7 +865,8 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Banditry",
     count: 3,
-    text: "Bandits prey on the mountain roads. Lose 4 Gold.",
+    text: "Lose 4 Gold.",
+    flavor: "Bandits prey on the mountain roads.",
     timing: "immediate",
     effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "gold", amount: -4 }],
   },
@@ -854,7 +875,8 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Warehouse Fire",
     count: 4,
-    text: "Fire guts a waterfront warehouse. Lose 5 Wood.",
+    text: "Lose 5 Wood.",
+    flavor: "Fire guts a waterfront warehouse.",
     timing: "immediate",
     effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "wood", amount: -5 }],
   },
@@ -863,7 +885,8 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Quarry Collapse",
     count: 2,
-    text: "A gallery falls in. Lose 3 Stone and 1 Happiness.",
+    text: "Lose 3 Stone and 1 Happiness.",
+    flavor: "A gallery falls in.",
     timing: "immediate",
     effects: [
       { type: "resourceDelta", scope: "activePlayer", resource: "stone", amount: -3 },
@@ -876,6 +899,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Patronage Network",
     count: 3,
     text: "Gain 3 Influence.",
+    flavor: "Favours owed, and the right men remember them.",
     timing: "immediate",
     effects: [{ type: "resourceDelta", scope: "activePlayer", resource: "influence", amount: 3 }],
   },
@@ -885,6 +909,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Emergency Labor",
     count: 3,
     text: "Gain 6 Wood and lose 1 Happiness, or gain 2 Wood with no penalty.",
+    flavor: "Every hand that can hold an axe is sent up to the trees.",
     timing: "pendingChoice",
     effects: [
       {
@@ -905,6 +930,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Granary Surplus",
     count: 3,
     text: "Gain 4 Food, or add 1 freeman to a settlement with available capacity.",
+    flavor: "The threshing floor is still full at the end of the day.",
     timing: "pendingChoice",
     effects: [
       {
@@ -922,6 +948,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Civic Petition",
     count: 3,
     text: "Gain 2 Influence, or gain 2 Happiness.",
+    flavor: "A wax tablet passes down the benches, gathering names.",
     timing: "pendingChoice",
     effects: [
       {
@@ -939,6 +966,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Skilled Mason",
     count: 2,
     text: "Gain 4 Stone, or the next building built this turn costs -5 Stone.",
+    flavor: "He squints along the course, and the stones go true.",
     timing: "pendingChoice",
     effects: [
       {
@@ -965,6 +993,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Caravan Contacts",
     count: 2,
     text: "Gain 4 Gold, or exchange up to 4 Wood for 6 Gold.",
+    flavor: "Dust on the inland road. They know your name at the far end of it.",
     timing: "pendingChoice",
     effects: [
       {
@@ -982,6 +1011,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Forest Crews",
     count: 2,
     text: "Gain 4 Wood, or the next colony founded this turn costs -6 Wood.",
+    flavor: "Axes ring on the slope from first light.",
     timing: "pendingChoice",
     effects: [
       {
@@ -1008,6 +1038,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Temple Donation",
     count: 1,
     text: "Gain 3 Happiness, or the next Temple built this turn costs -5 Stone.",
+    flavor: "The god's house gets its share, and the city watches you give it.",
     timing: "pendingChoice",
     effects: [
       {
@@ -1035,6 +1066,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     name: "Market Day",
     count: 1,
     text: "Gain 3 Gold, or gain 1 Gold per freeman, minimum 2 Gold.",
+    flavor: "Awnings up before dawn, and the whole town smelling of fish and oil.",
     timing: "pendingChoice",
     effects: [
       {

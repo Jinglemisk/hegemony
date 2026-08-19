@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { HegemonyState } from "../../../game/types";
+import { toRoman } from "../../../ui/formatters";
+import { Icon } from "../../../ui/icons/Icon";
 import { RULEBOOK } from "./rulebook";
 
 /**
@@ -7,17 +9,31 @@ import { RULEBOOK } from "./rulebook";
  * It is a ledger page like any other (reached from its rail disc, not a modal), so
  * reading the rules never takes the board away from you.
  *
- * Two navigations, because a dozen chapters don't fit one tab row:
- *  - a SEARCH that matches on 2+ letters and lists the topics it hits; picking one
- *    jumps straight there (the owner's ask, 2026-07-19);
- *  - the chapter chips + a sticky jump strip for the active chapter's sub-headings,
- *    kept in step with a scroll-spy.
+ * Three navigations, and each answers a different question:
+ *  - a SEARCH that matches on 2+ letters and lists the topics it hits — "where is
+ *    the rule about X?" (the owner's ask, 2026-07-19);
+ *  - a CONTENTS sheet naming every chapter and what it covers — "what is in this
+ *    book?";
+ *  - a jump strip for the open chapter's sub-headings, kept in step with a
+ *    scroll-spy — "where am I inside it?".
+ *
+ * The contents replaced a row of chapter pills (2026-08-15). A tab bar is a
+ * container for three or four peers you flip between; this is a thirteen-chapter
+ * table of contents in a 220px tablet, and as a row it put ten of the thirteen
+ * past the right edge at every width — two thirds of the rulebook unreachable.
+ * A book's answer to that problem is a contents page, so this is one: closed it
+ * costs one line and says which chapter you are in, open it lists every chapter
+ * with its subject.
  *
  * The one law: every number renders FROM `G.ruleset` / the content tables (see
  * rulebook.tsx), so the Codex can never disagree with the engine.
  */
 
-const SECTIONS = RULEBOOK.map((chapter) => ({ id: chapter.id, label: chapter.title }));
+const SECTIONS = RULEBOOK.map((chapter) => ({
+  id: chapter.id,
+  label: chapter.title,
+  blurb: chapter.blurb,
+}));
 type SectionId = string;
 
 type NavEntry = { id: string; label: string };
@@ -160,6 +176,48 @@ function useCodexNav(section: SectionId, entries: NavEntry[]) {
   return { navRef, activeId, jumpTo };
 }
 
+/**
+ * How tall the contents sheet may be: the room left between where it drops and the
+ * bottom of the tablet, less a gutter.
+ *
+ * It used to be `min(52vh, 440px)`, which is a measure of the WINDOW, and the sheet
+ * hangs inside a panel — at 1366×768 that put its last row 13px short of the tablet's
+ * inner edge, so a chapter was sliced in half and a strip of the rules underneath
+ * showed through the gap below it. Measured against the panel it always ends where
+ * the tablet does, and a part-row at that edge reads as "there is more", which is
+ * what it is.
+ */
+function useContentsHeight(open: boolean, listRef: React.RefObject<HTMLElement | null>) {
+  const [max, setMax] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setMax(null);
+      return;
+    }
+
+    const measure = () => {
+      const list = listRef.current;
+      const panel = list?.closest(".intelBody");
+      if (!list || !panel) {
+        return;
+      }
+      // Flush with the tablet's inner edge, not short of it: any gap left here is a
+      // strip of the chapter underneath showing between the sheet and the frame.
+      const room = panel.getBoundingClientRect().bottom - list.getBoundingClientRect().top;
+      // Floored: a panel too short to hold the sheet must still get a scrollable
+      // sheet, never a zero-height (or negative, and so ignored) one.
+      setMax(Math.max(140, Math.round(room)));
+    };
+
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [open, listRef]);
+
+  return max;
+}
+
 export function CodexTab({
   G,
   target,
@@ -170,8 +228,12 @@ export function CodexTab({
   const [section, setSection] = useState<SectionId>(SECTIONS[0].id);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [contentsOpen, setContentsOpen] = useState(false);
+  const contentsButtonRef = useRef<HTMLButtonElement>(null);
+  const contentsListRef = useRef<HTMLOListElement>(null);
   const entries = useMemo(() => sectionEntries(section), [section]);
   const { navRef, activeId, jumpTo } = useCodexNav(section, entries);
+  const contentsMax = useContentsHeight(contentsOpen, contentsListRef);
 
   // A deep-link (an AnnotatedText term clicked anywhere) opens the codex to a chapter.
   // The nonce changes on every click, so the same term re-navigates even if you'd
@@ -184,10 +246,18 @@ export function CodexTab({
   }, [target?.nonce]);
   const results = useMemo(() => searchRulebook(query), [query]);
   const chapter = RULEBOOK.find((candidate) => candidate.id === section) ?? RULEBOOK[0];
+  const chapterNumber = SECTIONS.findIndex((candidate) => candidate.id === section) + 1;
+
+  const openChapter = (id: SectionId) => {
+    setSection(id);
+    setContentsOpen(false);
+    contentsButtonRef.current?.focus();
+  };
 
   const goTo = (hit: SearchHit) => {
     setQuery("");
     setSearchOpen(false);
+    setContentsOpen(false);
     if (hit.chapterId !== section) {
       setSection(hit.chapterId);
     }
@@ -212,10 +282,6 @@ export function CodexTab({
 
   return (
     <>
-      <p className="codexLede">
-        The whole rulebook, as this board plays it — search a topic, or read it through.
-      </p>
-
       <div className="codexNav" ref={navRef}>
         <div className="codexSearch">
           <input
@@ -263,20 +329,64 @@ export function CodexTab({
           ) : null}
         </div>
 
-        <nav className="compendiumTabs codexChapterTabs" aria-label="Rulebook chapters">
-          {SECTIONS.map((candidate) => (
-            <button
-              className={
-                candidate.id === section ? "compendiumTab compendiumTabActive" : "compendiumTab"
-              }
-              key={candidate.id}
-              onClick={() => setSection(candidate.id)}
-              type="button"
+        {/* The contents. Closed it is one line that always names where you are;
+            open it is the whole book, chapter by chapter, with what each covers. */}
+        <div
+          className="codexContents"
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && contentsOpen) {
+              event.stopPropagation();
+              setContentsOpen(false);
+              contentsButtonRef.current?.focus();
+            }
+          }}
+        >
+          <button
+            aria-controls="codexContentsList"
+            aria-expanded={contentsOpen}
+            className={contentsOpen ? "codexContentsToggle on" : "codexContentsToggle"}
+            onClick={() => setContentsOpen((open) => !open)}
+            ref={contentsButtonRef}
+            type="button"
+          >
+            <span className="codexContentsNumeral label num">{toRoman(chapterNumber)}</span>
+            <span className="codexContentsWhere">
+              <b className="title">{chapter.title}</b>
+              <span className="codexContentsOf label">
+                chapter {chapterNumber} of {SECTIONS.length}
+              </span>
+            </span>
+            <Icon className="codexContentsCaret" glyph="chevronDown" />
+          </button>
+
+          {contentsOpen ? (
+            <ol
+              className="codexContentsList"
+              id="codexContentsList"
+              ref={contentsListRef}
+              style={contentsMax === null ? undefined : { maxHeight: `${contentsMax}px` }}
             >
-              {candidate.label}
-            </button>
-          ))}
-        </nav>
+              {SECTIONS.map((candidate, index) => (
+                <li key={candidate.id}>
+                  <button
+                    aria-current={candidate.id === section ? "true" : undefined}
+                    className={
+                      candidate.id === section ? "codexContentsRow on" : "codexContentsRow"
+                    }
+                    onClick={() => openChapter(candidate.id)}
+                    type="button"
+                  >
+                    <span className="codexContentsNumeral label num">{toRoman(index + 1)}</span>
+                    <span className="codexContentsEntry">
+                      <b className="title">{candidate.label}</b>
+                      <span className="codexContentsBlurb caption">{candidate.blurb}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+        </div>
 
         {entries.length > 0 ? (
           <nav className="codexJump" aria-label={`${chapter.title} contents`}>

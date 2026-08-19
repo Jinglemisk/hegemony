@@ -1,28 +1,33 @@
-import { PLAYER_COLORS, PLAYER_NAMES } from "../../../game/data";
-import { getResolutionCard, nextDrawCost, politicianStandings } from "../../../game/assembly";
-import type {
-  ActiveLaw,
-  Politician,
-  PoliticianStanding,
-  TallyMonument,
-} from "../../../game/assembly";
-import type { HegemonyState, PlayerId } from "../../../game/types";
+import type { ReactNode } from "react";
+import { nextDrawCost, politicianStandings } from "../../../game/assembly";
+import type { Politician, PoliticianStanding } from "../../../game/assembly";
+import type { HegemonyState, Resource } from "../../../game/types";
+import { presentDirectiveEffect, presentLawEffect } from "../../../ui/effects";
+import type { EffectPresentation } from "../../../ui/effects";
+import { POLITICIAN_GLYPHS, RESOURCE_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
+import { EffectIcon } from "../../../ui/icons/EffectIcon";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
-import { DrawIcon } from "./AssemblyIcons";
-import { AssemblyAction, ResolutionDetails } from "./AssemblyPresentation";
+import { AssemblyAction } from "./AssemblyPresentation";
 
 /**
- * The colonnade — four narrow columns, each politician standing over their own stack
- * of stelae.
+ * The colonnade — four SEPARATE stelae standing in the light across the top of
+ * the floor.
  *
- * Stack height remains politician power and the leading author remains a descriptive
- * patron. Voice is shown separately because its passed-resolution tally is permanent.
+ * Separate is the whole word. They used to be four cells of one gridded slab
+ * with no gap declared, so the cut corners met and read as dark V-notches
+ * chipped out of a single stone. A stele is one man's monument; four of them
+ * standing apart is a colonnade, and the 22px between them is what says so.
  *
- * During the async proposal round each column also carries a **Draw** button — you
- * draw from a politician by reaching up to their pillar, which makes the "pick the
- * politician, not the card" choice (§1.3) a spatial one.
+ * Each stele answers one question — *what am I buying if I draw from this man?* —
+ * before you have seen a card: his tendency in the same typed-effect vocabulary
+ * the cards use, his author prize, the price of a draw, and a row of pips, one
+ * per law he has landed on the board. The laws themselves stand on the floor
+ * below in their own column; a stele counts, it does not list.
+ *
+ * The colonnade is drawn during PROPOSAL only. Nobody draws during a ballot.
  */
 export function AssemblyColonnade({ G }: { G: HegemonyState }) {
   const standings = politicianStandings(G);
@@ -36,9 +41,9 @@ export function AssemblyColonnade({ G }: { G: HegemonyState }) {
   const drawCost = session ? nextDrawCost(G, viewerId) : 0;
 
   return (
-    <div className="colonnade">
+    <div className="asmColonnade">
       {standings.map((standing) => (
-        <PoliticianColumn
+        <Stele
           canDraw={
             Boolean(proposing) && !holding && G.players[viewerId].resources.influence >= drawCost
           }
@@ -54,7 +59,7 @@ export function AssemblyColonnade({ G }: { G: HegemonyState }) {
   );
 }
 
-function PoliticianColumn({
+function Stele({
   G,
   standing,
   drawArmed,
@@ -69,51 +74,57 @@ function PoliticianColumn({
   drawCost: number;
   holding: boolean;
 }) {
-  const { politician, power, patron } = standing;
+  const { politician, power } = standing;
   const { moves, viewerId } = useGameUi();
-  const isStratokles = politician.id === "stratokles";
+  const isDemagogue = politician.kind === "directive";
   const deckLeft =
     G.politicianDecks[politician.id].length + G.politicianDiscards[politician.id].length;
-  // Stratokles's stelae are permanent monuments, everyone else's are standing Laws —
-  // the two are drawn differently because they mean different things.
-  const stelae: Array<ActiveLaw | TallyMonument> = isStratokles
-    ? G.tallyMonuments
-    : G.activeLaws.filter(
-        (law) => getResolutionCard(G.definition.content, law.cardId)?.politician === politician.id,
-      );
+  const tendency: EffectPresentation[] =
+    politician.kind === "law"
+      ? politician.tendency.map((effect) => presentLawEffect(effect, G.definition.content))
+      : politician.tendency.map(presentDirectiveEffect);
 
   return (
-    <div className={`acol${isStratokles ? " strat" : ""}`}>
-      <div className="ahead">
-        <Tooltip
-          ariaLabel={`${politician.name} power: ${power} ${isStratokles ? "monuments" : "standing Laws"}`}
-          content={
-            <MechanicsDetails
-              effects={[
-                {
-                  text: `${power} ${isStratokles ? "permanent monuments" : "standing Laws"}`,
-                  tone: "neutral",
-                },
-              ]}
-              heading={`${politician.name} power`}
-              source={isStratokles ? "Resolved Directives" : "Standing Laws"}
-            />
-          }
-          focusable
-          preferredPlacement="above"
-          triggerClassName="assemblyPowerTooltipTrigger"
-        >
-          <span className="apow">{power}</span>
-        </Tooltip>
-        <span className="aname">{politician.name}</span>
-        <span className="aep">{politician.epithet}</span>
+    <article className="asmStele" data-orator={politician.id}>
+      {/* The bust. An orator you recognise before you read his name — the colonnade
+          is scanned dozens of times a game and four identical text columns are four
+          columns you have to read every time. Four glazes, not two: the medallion
+          is the fastest half of the recognition. */}
+      <span className="asmBust" aria-hidden="true">
+        <Icon glyph={POLITICIAN_GLYPHS[politician.id]} size="rail" />
+      </span>
+
+      <h3 className="asmSteleName title">{politician.name}</h3>
+      <p className="asmSteleEpithet label">{politician.epithet}</p>
+
+      <div className="asmDogma">
+        <span className="asmDogmaKey label">
+          {isDemagogue ? "His decrees tend to" : "His laws tend to"}
+        </span>
+        {politician.kind === "law"
+          ? politician.tendency.map((effect, index) => (
+              <TendencyRow
+                key={index}
+                presented={tendency[index]}
+                icon={<EffectIcon effect={effect} family="law" />}
+              />
+            ))
+          : politician.tendency.map((effect, index) => (
+              <TendencyRow
+                key={index}
+                presented={tendency[index]}
+                icon={<EffectIcon effect={effect} family="directive" />}
+              />
+            ))}
       </div>
-      <div className="aprise">
-        Author prize · {formatPrize(G.ruleset.assembly.prizes[politician.id])}
+
+      <div className="asmStelePrize">
+        <span className="asmPrizeKey label">Author prize</span>
+        <PrizeAmount prize={G.ruleset.assembly.prizes[politician.id]} />
       </div>
 
       {drawArmed ? (
-        <DrawButton
+        <DrawSeal
           canDraw={canDraw && deckLeft > 0}
           cost={drawCost}
           deckLeft={deckLeft}
@@ -124,84 +135,96 @@ function PoliticianColumn({
         />
       ) : null}
 
-      {/* The patron line only exists once there is a stack to have a patron OF — an
-          empty column says "no stelae stand" once, in the stack, and not twice. */}
-      {power > 0 ? (
-        <div className="ameta">
-          {patron ? (
-            <>
-              <span className="dot" style={{ background: PLAYER_COLORS[patron] }} />
-              <b>{PLAYER_NAMES[patron]}</b> · descriptive patron
-            </>
-          ) : (
-            <span className="ametaNone">no patron — the stack is split</span>
-          )}
+      {/* One pip per stele this orator has landed. A count you can see is worth
+          more here than a list: the laws themselves stand on the floor below. */}
+      <Tooltip
+        ariaLabel={`${politician.name} power: ${power} ${isDemagogue ? "monuments" : "standing Laws"}`}
+        content={
+          <MechanicsDetails
+            effects={[
+              {
+                text: `${power} ${isDemagogue ? "permanent monuments" : "standing Laws"}`,
+                tone: "neutral",
+              },
+            ]}
+            heading={`${politician.name} power`}
+            source={isDemagogue ? "Resolved Directives" : "Standing Laws"}
+          />
+        }
+        focusable
+        preferredPlacement="below"
+        triggerAs="div"
+        triggerClassName="asmPipsTrigger"
+      >
+        <div className="asmPips">
+          {Array.from({ length: power }, (_, index) => (
+            <i className="asmPip" key={index} />
+          ))}
         </div>
-      ) : null}
-
-      <div className="stack">
-        {stelae
-          .slice()
-          .sort((a, b) => a.order - b.order)
-          .map((stele) => {
-            const card = getResolutionCard(G.definition.content, stele.cardId);
-            const source = isStratokles
-              ? `Carried by ${authorName(stele.author)}`
-              : `Enacted by ${authorName(stele.author)}`;
-
-            if (!card) {
-              return null;
-            }
-
-            return (
-              <Tooltip
-                ariaLabel={`${card.name}. ${isStratokles ? "Permanent monument" : "Standing Law"}. ${source}.`}
-                content={
-                  <ResolutionDetails
-                    card={card}
-                    content={G.definition.content}
-                    duration={isStratokles ? "Resolved; monument is permanent" : "Until repealed"}
-                    source={source}
-                  />
-                }
-                focusable
-                key={isStratokles ? `${stele.cardId}-${stele.order}` : stele.cardId}
-                preferredPlacement="above"
-                triggerAs="div"
-                triggerClassName="assemblyCardTooltipTrigger"
-              >
-                {isStratokles ? (
-                  <div className="tally">
-                    <span className="tk">
-                      <i />
-                      <i />
-                      <i />
-                    </span>
-                    <span className="tn">{card.name}</span>
-                  </div>
-                ) : (
-                  <div className="stele">
-                    <span className="sd" style={{ background: authorColor(stele.author) }} />
-                    <span className="sn">{card.name}</span>
-                  </div>
-                )}
-              </Tooltip>
-            );
-          })}
-        {stelae.length === 0 ? <div className="steleEmpty">No stelae stand.</div> : null}
-      </div>
-    </div>
+      </Tooltip>
+    </article>
   );
 }
 
-function formatPrize(prize: Partial<HegemonyState["players"][PlayerId]["resources"]>): string {
-  return Object.entries(prize)
-    .filter(([, amount]) => Boolean(amount))
-    .map(([resource, amount]) => `+${amount} ${resource}`)
-    .join(" · ");
+/**
+ * A tendency row: the glyph tinted by the effect's own tone, the signed number
+ * inked to match, and the rest of the clause in ink. Monochrome rows made four
+ * orators look like four copies of the same paragraph — the colour is what lets
+ * you tell "this man pays you" from "this man charges you" at a glance.
+ */
+function TendencyRow({ presented, icon }: { presented: EffectPresentation; icon: ReactNode }) {
+  const tone = presented.tone === "positive" ? "pos" : presented.tone === "negative" ? "neg" : "";
+
+  return (
+    <p className={`asmDogmaRow caption${tone ? ` is-${tone}` : ""}`}>
+      <span className="asmDogmaIcon">{icon}</span>
+      <span>
+        {splitSignedNumbers(presented.text).map((part, index) =>
+          part.signed ? (
+            <b className={`${part.text.startsWith("-") ? "neg" : "pos"} num`} key={index}>
+              {part.text}
+            </b>
+          ) : (
+            <span key={index}>{part.text}</span>
+          ),
+        )}
+      </span>
+    </p>
+  );
 }
 
-function DrawButton({
+const SIGNED = /([+-]\d+(?:\.\d+)?)/g;
+
+function splitSignedNumbers(text: string): Array<{ text: string; signed: boolean }> {
+  return text
+    .split(SIGNED)
+    .filter((part) => part !== "")
+    .map((part) => ({ text: part, signed: /^[+-]\d/.test(part) }));
+}
+
+/** The prize as a number with its own resource glyph, centred under the tendency. */
+function PrizeAmount({ prize }: { prize: Partial<Record<Resource, number>> }) {
+  const entries = Object.entries(prize).filter(([, amount]) => Boolean(amount)) as Array<
+    [Resource, number]
+  >;
+
+  if (entries.length === 0) {
+    return <span className="asmPrizeNone caption">none</span>;
+  }
+
+  return (
+    <span className="asmPrizeValue stat pos num">
+      {entries.map(([resource, amount]) => (
+        <span className="asmPrizePart" key={resource}>
+          <Icon glyph={RESOURCE_GLYPHS[resource]} />+{amount}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** The one pressable thing on a stele: a clay seal with the influence it costs. */
+function DrawSeal({
   politician,
   cost,
   deckLeft,
@@ -230,28 +253,21 @@ function DrawButton({
   return (
     <AssemblyAction
       blockedReason={blockedReason}
-      className="acolDraw"
+      className="asmDraw verb"
       effectiveCost={{ influence: cost }}
       enabled={canDraw}
       explanation={`Draw one random card from ${politician.name}'s deck. Only you see it until it is proposed.`}
       heading={`Draw from ${politician.name}`}
       onClick={onDraw}
       preferredPlacement="below"
-      triggerClassName="assemblyDrawActionTrigger"
+      triggerClassName="asmDrawTrigger"
     >
-      <DrawIcon size={12} />
-      <span className="acolDrawLabel">Draw</span>
-      <span className="acolDrawCost">{cost}</span>
+      Draw
+      <b className="asmDrawCost stat num">{cost}</b>
+      <Icon glyph={RESOURCE_GLYPHS.influence} />
+      {/* Four orators, four seals, and all four announced "Draw 3". The stele the
+          seal stands on names it to the eye; this names it to a reader. */}
+      <span className="visuallyHidden"> from {politician.name}</span>
     </AssemblyAction>
   );
-}
-
-/** The house resolution has no author, so its bead is stone rather than a seat colour —
- *  it stands in the agora and lends its politician power, but it is nobody's stele. */
-function authorColor(author: PlayerId | null): string {
-  return author ? PLAYER_COLORS[author] : "var(--stone)";
-}
-
-function authorName(author: PlayerId | null): string {
-  return author ? PLAYER_NAMES[author] : "the house";
 }

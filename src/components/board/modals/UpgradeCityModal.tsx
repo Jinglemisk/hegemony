@@ -9,10 +9,12 @@ import {
 import type { HexTile, Settlement } from "../../../game/types";
 import { formatResourceDelta } from "../../../ui/formatters";
 import { SettlementSummaryCard } from "../../SettlementCard";
-import { AtlasIcon } from "../../Sprites";
+import { SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 import { useGameUi } from "../GameUiContext";
 import { capitalize, settlementPickerLabel } from "../helpers";
 import { CostRow, PlacementModalShell } from "./PlacementModalShell";
+import { settlementNameOf } from "../../../ui/settlementNames";
 
 export function UpgradeCityModal({
   onCancel,
@@ -68,7 +70,7 @@ export function UpgradeCityModal({
       }}
     >
       {candidates.length === 0 ? (
-        <p className="placementEmptyState">No colony can be upgraded into a city right now.</p>
+        <p className="placementEmptyState">No colony is ready to become a city.</p>
       ) : (
         <>
           {candidates.length > 1 ? (
@@ -92,7 +94,7 @@ export function UpgradeCityModal({
                       title={settlementPickerLabel(G, tile, playerID)}
                       type="button"
                     >
-                      <AtlasIcon icon="colony" className="miniIcon" />
+                      <Icon glyph={SETTLEMENT_GLYPHS.colony} size="rail" className="miniIcon" />
                       <span className="placementChipText">
                         <strong>
                           {capitalize(tile.terrain)}
@@ -119,6 +121,7 @@ export function UpgradeCityModal({
             <article className="placementPreviewCard settlement-colony">
               <span className="placementPreviewTag">Upgrading this colony</span>
               <SettlementSummaryCard
+                name={settlementNameOf(G.board.tiles, selected.settlement.id)}
                 content={G.definition.content}
                 netYield={colonyYield}
                 ruleset={G.ruleset}
@@ -129,9 +132,9 @@ export function UpgradeCityModal({
           ) : null}
 
           <div className="placementUpgradeArrow" aria-hidden="true">
-            <AtlasIcon icon="colony" className="miniIcon" />
+            <Icon glyph={SETTLEMENT_GLYPHS.colony} size="rail" className="miniIcon" />
             <span>becomes</span>
-            <AtlasIcon icon="city" className="miniIcon" />
+            <Icon glyph={SETTLEMENT_GLYPHS.city} size="rail" className="miniIcon" />
           </div>
 
           <div className="placementCityPreview">
@@ -147,10 +150,6 @@ export function UpgradeCityModal({
               <strong>{preview ? formatResourceDelta(preview.incomeDelta) : "—"}</strong>
             </span>
           </div>
-
-          <p className="placementCostNote">
-            The city keeps the colony's current population; only its capacity and yield grow.
-          </p>
 
           <CostRow cost={cost} />
         </>

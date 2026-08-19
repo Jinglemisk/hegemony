@@ -8,295 +8,110 @@
   max-width: none;
 }
 
-/* The ledger card: KYKLOS's floating ivory panel (ui-refit Step 2). Fixed to the
-   viewport's left edge so it hugs it on any width, in the band between the top bar
-   and the command bar. The painted Greek-key frame retires with the docked
-   layout; the reskin (Q36) revisits the card's surface, not this PR. */
-.intelPanel {
-  position: fixed;
-  /* Clear of the rail: the spine plus the discs' overhang, plus air. The mock's
-     `left: calc(var(--rail-w) + var(--bub-out) + 14px)`. */
-  left: calc(var(--rail-w) + var(--bub-out) + 14px);
-  top: calc(var(--chrome-top) + 12px);
-  /* A FIXED height, not max-height: every page fills the band and the body
-     scrolls inside it, so switching pages never resizes the card. Sizing to
-     content made the box jump between Cities and Market. */
-  /* Reserve only the dock SPINE at the bottom, not the verb-disc overhang (--vb-out):
-     the discs are centred, so at the panel's edge there is nothing to clear. This
-     extends both cards down ~a disc-overhang's worth, balancing the top/bottom air. */
-  height: calc(100vh - var(--chrome-top) - var(--bot-h) - 24px);
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  width: var(--panel-w);
-  padding: 14px 15px 15px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--ivory);
-  box-shadow: var(--float);
-  overflow: hidden;
-  pointer-events: auto;
-}
-
-.intelPanel:focus-within,
-.intelPanel:hover {
-  z-index: 80;
-}
-
-.ledgerCardTitle {
-  margin-bottom: 10px;
-  padding-bottom: 9px;
-  border-bottom: 1px solid var(--ledger-rule);
-}
-
-.ledgerCardTitle h2 {
-  flex: 1;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ledgerCloseButton {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  min-height: 26px;
-  height: 26px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  color: var(--muted);
-  background: transparent;
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.ledgerCloseButton:not(:disabled):hover {
-  color: var(--fg);
-  background: var(--ledger-hover);
-  box-shadow: none;
-  transform: none;
-}
-
+/* The page inside a tablet: a title row, whatever furniture that page earns, and
+   the one body that scrolls. It fills the frame exactly — `flex: 1` against the
+   frame's fixed height, `min-height: 0` so the BODY absorbs the overflow rather
+   than the page growing and pushing itself out of the slab. */
 .empireIntel {
-  display: grid;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
   gap: 10px;
-  min-height: 0;
-}
-
-.empireIntel {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  flex-direction: column;
   overflow: hidden;
-  /* clip, not hidden, on the x-axis: the intelBody's -4px scrollbar-gutter trick makes
-     the panel 4px scrollable, and scroll-on-focus then clips the first character. */
-  overflow-x: clip;
 }
 
-/* ── The left disc rail (ui-refit Step 2) ────────────────────────────────────
-   A thin glass spine with the menu discs threaded on its right edge, overhanging
-   the sea. Fixed to the viewport in the same band as the ledger card. The discs
-   are circles because you press them repeatedly; the one square stays End Turn. */
-.ledgerRail {
-  position: fixed;
-  left: 0;
-  /* Runs between the two spines and meets them: from the top bar's underside
-     down to the bottom spine's top edge (--bot-h), not to --chrome-bot (which
-     includes the discs' overhang and would leave the rail hanging in mid-air). */
-  top: var(--chrome-top, 62px);
-  bottom: var(--bot-h);
-  z-index: 30;
-  width: 62px;
-  pointer-events: none;
-}
-
-/* The mock's `.bar.rail`: a flush plate — square corners, a hairline right edge,
-   no drop shadow. It butts into the top and bottom spines so the chrome reads as
-   one continuous frame rather than a floating card. */
-.ledgerRailSpine {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: var(--rail-w);
-  border-right: 1px solid var(--line);
-  background: var(--glass);
-  backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
-  pointer-events: auto;
-}
-
-.ledgerRailDiscs {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 9px;
-  /* The mock's SPILL_B: the disc's CENTRE rides 5px past the spine's right edge
-     (RAIL 30 + BUB_OUT 28 − BUB/2 23 = 35). With a 46px disc that puts its left
-     edge at 12px, so it covers 18px of bone and overhangs 28px onto the sea —
-     the same 5px spill the verb discs use against the bottom spine. */
-  padding-left: calc(var(--rail-w) + var(--bub-out) - var(--bub));
-  pointer-events: none;
-}
-
-.railDisc {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: var(--bub);
-  height: var(--bub);
-  min-height: 0;
-  /* The badge overhangs this disc by 2px on both top and right; a clipping
-     parent cuts its corner off. */
-  overflow: visible;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  color: var(--ink);
-  background: var(--disc);
-  box-shadow:
-    0 0 0 1px var(--ring),
-    var(--lift);
-  pointer-events: auto;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.railDisc:not(:disabled):hover {
-  background: var(--disc-hi);
-  box-shadow:
-    0 0 0 1px var(--ink-30),
-    var(--lift-hi);
-  transform: none;
-}
-
-.railDiscActive,
-.railDiscActive:not(:disabled):hover {
-  color: var(--ivory);
-  background: var(--clay);
-  box-shadow:
-    0 0 0 1px rgb(143 46 19 / 55%),
-    0 4px 14px rgb(192 70 28 / 38%);
-}
-
-.railDiscIcon {
-  width: 24px;
-  height: 24px;
-}
-
-.railDiscBadge {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  display: grid;
-  place-items: center;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 3px;
-  border-radius: 8px;
-  background: var(--ochre);
-  color: #181210;
-  font-family: var(--font-display);
-  font-size: 0.6rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  box-shadow: 0 0 0 1.5px var(--ivory);
-}
-
-/* ── The right consult rail + card (two-panel.md) ────────────────────────────
-   A mirror of the left ledger rail on the far edge: the spine hugs the right, its
-   discs overhang inward (leftward) onto the sea, and its floating card opens to its
-   left. Same disc grammar (.railDisc*), flipped geometry. Both panels may be open at
-   once, so this is an independent fixed layer alongside the ledger. */
-.consultRail {
-  position: fixed;
-  right: 0;
-  top: var(--chrome-top, 62px);
-  bottom: var(--bot-h);
-  z-index: 30;
-  width: 62px;
-  pointer-events: none;
-}
-
-.consultRailSpine {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: var(--rail-w);
-  border-left: 1px solid var(--line);
-  background: var(--glass);
-  backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
-  pointer-events: auto;
-}
-
-.consultRailDiscs {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 9px;
-  padding-right: calc(var(--rail-w) + var(--bub-out) - var(--bub));
-  pointer-events: none;
-}
-
-.consultPanel {
-  position: fixed;
-  right: calc(var(--rail-w) + var(--bub-out) + 14px);
-  top: calc(var(--chrome-top) + 12px);
-  /* Reserve only the dock SPINE at the bottom, not the verb-disc overhang (--vb-out):
-     the discs are centred, so at the panel's edge there is nothing to clear. This
-     extends both cards down ~a disc-overhang's worth, balancing the top/bottom air. */
-  height: calc(100vh - var(--chrome-top) - var(--bot-h) - 24px);
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  width: var(--chron-w);
-  padding: 14px 15px 15px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--ivory);
-  box-shadow: var(--float);
-  overflow: hidden;
-  pointer-events: auto;
-}
-
-.consultPanel:focus-within,
-.consultPanel:hover {
-  z-index: 80;
-}
-
-.intelBody,
+/* The three stacks a page pours its rows into. `minmax(0, 1fr)` rather than a
+   bare column: a grid track sized `auto`/`1fr` still floors at its widest item's
+   min-content, so one un-wrappable card was widening the whole stack past the
+   page it sits in. */
 .holdingStack,
 .buildingsLedger,
 .popsLedger {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 9px;
   min-width: 0;
 }
 
+/* The one scroll region on a page.
+ *
+ * It used to hang 4px out of its own frame: `margin-right: -4px` against a 4px
+ * right padding, a trick meant to hide the reserved scrollbar gutter, which
+ * instead made every tablet in the game 4px wider than the slab it sits in and
+ * cost `.empireIntel` an `overflow-x: clip` to hide the damage. The gutter was
+ * never the problem — it is zero-width wherever scrollbars overlay — so the
+ * gutter stays and the negative margin is gone.
+ *
+ * Column flex, not grid: a page's anchor row (net income, treasury) pins itself
+ * with `margin-top: auto`, which a grid with `align-content: start` silently
+ * ignored.
+ */
 .intelBody {
+  display: flex;
   flex: 1;
   min-height: 0;
-  margin-right: -4px;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0 4px 12px 0;
-  scrollbar-color: var(--clay) transparent;
+  padding-right: var(--sp-1);
+  scrollbar-color: var(--ink-30) transparent;
   scrollbar-gutter: stable;
+}
+
+/* THE EDGE CUE — one answer for three findings.
+ *
+ * The Build cards, the Chronicle's entries and the Codex's chapters all cut a
+ * line in half at the bottom of a 1280–1366 tablet, and nothing said there was
+ * more below: macOS and Chromium give these regions OVERLAY scrollbars, which
+ * are invisible at rest, so a half-drawn card reads as a half-drawn card.
+ *
+ * A frame that has more behind it fades into its own edge. The fade is driven by
+ * the region's own scroll position, so it is present exactly when it is true and
+ * retracts over the last tenth of the scroll — a list scrolled to its end has a
+ * hard edge again, and a list that does not overflow has no timeline at all and
+ * so never fades. Where scroll-driven animation is unsupported, nothing is
+ * masked and the scrollbar remains the only cue, which is where we started. */
+@keyframes intelScrollEdge {
+  from {
+    mask-image: linear-gradient(to bottom, black calc(100% - 26px), transparent);
+  }
+
+  to {
+    mask-image: linear-gradient(to bottom, black 100%, transparent);
+  }
+}
+
+@supports (animation-timeline: scroll(self)) {
+  .intelBody,
+  .chronicleList {
+    animation: intelScrollEdge linear both;
+    animation-timeline: scroll(self);
+    animation-range: 88% 100%;
+  }
+}
+
+/* A page's rows are as wide as the page and never wider. Flex children default
+   to `min-width: auto`, which lets a row's longest unbreakable run — a pair of
+   "Raise in SIKYON" buttons, a stele's notches — push the row out through the
+   frame instead of wrapping inside it. The frame states the bound; what a row
+   does with it is the page's business. */
+.intelBody > * {
+  min-width: 0;
+}
+
+/* `.bcard` is claimed by two surfaces: the Assembly's bema cards (assembly.css —
+   `flex: 1 1 300px; min-width: 250px`, sized for a full-width scene) and the
+   Build page's building cards. The Assembly's floor is wider than a tablet's
+   whole page, so every build card was standing 14px outside the frame. Inside a
+   tablet, a card is the page's width; the Assembly keeps its own. */
+.intelBody .bcard {
+  flex: none;
+  min-width: 0;
 }
 
 .holdingMatrix,
@@ -469,26 +284,51 @@
   display: block;
 }
 
+/* Active effects, on the ledger, are SLIPS — not a titled ochre panel with a
+   list inside it. The panel was a box drawn around two short lines, and it said
+   "active effects" above rows that already name themselves; each slip now
+   carries its own tone on a left rule (olive for a gift, oxblood for a wound)
+   and trails the duration as a clause on the same sentence. */
+/* No height cap. The list used to wear `max-height: min(190px, 32vh)` against
+   rows that routinely measure more, which cut the fourth slip to a 4px sliver —
+   an oxblood dash that reads as a rendering artifact rather than as a modifier
+   you are about to look for on the income line. How many slips are held back is
+   a COUNT, and only the component can know it, so the cap moved there
+   (`LEDGER_SLIP_LIMIT`) and what it holds back is a button that says the number.
+   Opened, the list is allowed to scroll — the reader asked for it. */
 .activeEffectsLedger {
   display: grid;
-  gap: 6px;
-  max-height: min(190px, 32vh);
+  gap: 7px;
   margin: 0 0 10px;
-  overflow-y: auto;
-  padding: 9px 10px;
-  border: 1px solid rgb(217 138 53 / 35%);
-  border-left: 3px solid var(--ochre);
-  border-radius: 8px;
-  background: rgb(217 138 53 / 8%);
 }
 
-.activeEffectsLedger h3 {
-  margin: 0;
+.activeEffectsLedger.isOpen {
+  max-height: min(56vh, 420px);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+/* The remainder, named and pressable. Aligned with the slips' text so it reads
+   as the last line of the list rather than a control docked beside it. */
+.activeEffectsMore {
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  /* 24px is 2.5.8's floor and this is a real control, not a caption. */
+  min-height: 24px;
+  padding: 0 8px 0 12px;
+  border: 0;
   color: var(--clay-deep);
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  background: none;
+  letter-spacing: 0.14em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.activeEffectsMore:hover {
+  color: var(--clay);
+  box-shadow: none;
+  transform: none;
 }
 
 .activeEffectRows {
@@ -503,23 +343,28 @@
   display: grid;
   gap: 1px;
   min-width: 0;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--ledger-rule);
-  font-size: 0.7rem;
-  line-height: 1.25;
+  padding: 1px 0 1px 9px;
+  border-left: 3px solid var(--ink-30);
+  line-height: 1.3;
 }
 
-.activeEffectRow:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+.activeEffectRow.tone-positive {
+  border-left-color: var(--olive);
+}
+
+.activeEffectRow.tone-negative {
+  border-left-color: var(--clay-deep);
 }
 
 .activeEffectSource {
   overflow: hidden;
   color: var(--fg);
-  font-size: 0.72rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.activeEffectBody {
+  min-width: 0;
 }
 
 .activeEffectMechanic {
@@ -528,7 +373,6 @@
 
 .activeEffectDuration {
   color: var(--subtle);
-  font-size: 0.62rem;
 }
 
 .effect-positive {
@@ -537,49 +381,6 @@
 
 .effect-negative {
   color: var(--clay-deep);
-}
-
-/* Column legend — resource icons aligned over the per-holding net-income columns. */
-.holdingMatrix {
-  gap: 0;
-  position: relative;
-  padding: 10px 6px 11px 9px;
-  background: linear-gradient(90deg, rgb(192 70 28 / 4%), transparent 48%), rgb(255 248 231 / 16%);
-}
-
-.holdingStack > .holdingMatrix:not(:last-child),
-.buildingsLedger > .buildingLedgerRow:not(:last-child),
-.popsLedger > .popEconomyRow:not(:last-child) {
-  border-bottom: 1px solid var(--ledger-rule);
-}
-
-.holdingSummaryButton {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 16px;
-  align-items: center;
-  align-self: start;
-  gap: 5px;
-  width: 100%;
-  min-height: 60px;
-  min-width: 0;
-  overflow: visible;
-  padding: 0;
-  border: 0;
-  border-radius: 4px;
-  color: var(--fg);
-  background: none;
-  box-shadow: none;
-  font-family: var(--font-body);
-  font-weight: 700;
-  text-align: left;
-}
-
-.holdingSummaryButton:not(:disabled):hover {
-  border: 0;
-  color: var(--fg);
-  background: var(--ledger-hover);
-  box-shadow: none;
-  transform: none;
 }
 
 /* Two-tier layout.
@@ -625,9 +426,10 @@
   min-width: 0;
 }
 
+/* One line now — the rank and the ground that used to sit under the name are
+   both already drawn on this row, on either side of it. */
 .holdingTitleBlock {
   display: grid;
-  gap: 2px;
   min-width: 0;
 }
 
@@ -640,25 +442,6 @@
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-.cityIdentity em {
-  overflow: hidden;
-  max-width: 100%;
-  color: var(--subtle);
-  font-size: 0.72rem;
-  font-style: normal;
-  font-variant-numeric: tabular-nums;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* The bare glyph — no plate. It is an .atlasIcon, so the atlas mask and the
-   sprite-capital/city/colony cell do the drawing; this only sets the ink. */
-.settlementIdentityIcon {
-  width: 28px;
-  height: 28px;
-  color: var(--clay-deep);
 }
 
 .summaryTerrain {
@@ -740,8 +523,8 @@
 
 /* Second summary line — net income per resource, flat, fixed columns so the
    same resource lines up across every settlement row (wood…happiness order).
-   Stretched right (-21px = the 5px button gap + 16px chevron column) so the
-   strip runs to the right edge of the chevron sitting above it. */
+   The -21px right stretch is gone with the disclosure chevron it was reaching
+   past; the only surfaces left (found-colony, upgrade-city) never had one. */
 .holdingNetYields {
   grid-area: holdingTotals;
   display: grid;
@@ -749,7 +532,6 @@
   align-items: center;
   gap: 2px 8px;
   margin-top: 0;
-  margin-right: -21px;
   min-width: 0;
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
@@ -799,68 +581,6 @@
   color: var(--subtle);
   font-weight: 500;
   opacity: 0.75;
-}
-
-.collapseChevron {
-  position: relative;
-  display: block;
-  width: 16px;
-  height: 16px;
-  border: 1px solid var(--ledger-rule-strong);
-  border-radius: 50%;
-}
-
-.collapseChevron::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  border-right: 2px solid var(--muted);
-  border-bottom: 2px solid var(--muted);
-  transform: translate(-55%, -65%) rotate(45deg);
-  transition: transform 140ms ease;
-}
-
-.holdingSummaryButton[aria-expanded="true"] .collapseChevron::before {
-  transform: translate(-50%, -38%) rotate(225deg);
-}
-
-.holdingDetail {
-  display: grid;
-  gap: 8px;
-  margin-top: 7px;
-  padding: 8px 2px 0 0;
-  border-top: 1px solid var(--ledger-rule);
-}
-
-.holdingDetail[hidden] {
-  display: none;
-}
-
-.holdingPenaltyLine {
-  display: inline-flex;
-  gap: 6px;
-  min-height: 22px;
-  font-size: 0.74rem;
-}
-
-.holdingPenaltyLine span {
-  color: var(--muted);
-}
-
-.popBuildingMatrix {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
-}
-
-.popBuildingColumn {
-  display: grid;
-  align-content: start;
-  gap: 5px;
-  min-width: 0;
 }
 
 /* ---- victory tab ---- */

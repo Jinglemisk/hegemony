@@ -1,6 +1,7 @@
 import { getEventEffectChoices } from "../../../game/rules";
 import { getOmenTable } from "../../../game/content";
 import type { GameContent } from "../../../game/content";
+import { PLAYER_NAMES } from "../../../game/data";
 import type { EventCard, HegemonyState } from "../../../game/types";
 import type { EffectPresentation } from "../../../ui/effects";
 import {
@@ -8,6 +9,7 @@ import {
   presentEventEffects,
   presentTableEffect,
 } from "../../../ui/effects";
+import { toRoman } from "../../../ui/formatters";
 import { AnnotatedText } from "../../AnnotatedText";
 import { EffectLine } from "../../EffectLine";
 import { MechanicsDetails } from "../../MechanicsDetails";
@@ -26,10 +28,16 @@ function effectSummary(card: EventCard, content: GameContent): EffectPresentatio
 }
 
 /**
- * The live event cards in the top-left corner: the seasonal card (everyone, this
- * season), the acting player's last card, and the year's standing omen. Each shows
- * its art, name, and an inline-icon summary of its effect, with the full
- * description on hover.
+ * The live event slips in the top-left corner: the year's standing omen, the
+ * seasonal card (everyone, this season), and the acting player's last card.
+ *
+ * A slip is a bone chip with its art let into it, a clay kicker naming WHERE the
+ * card came from — and, for a fate card, WHOSE it is — the card's name, and an
+ * inline-icon summary of its effect. The full text is on hover.
+ *
+ * A slot with no card is not drawn at all. The hatched placeholders it replaces
+ * spent a third of the bar's left end saying "nothing here", which is the one
+ * thing the player does not need told.
  */
 export function TopbarEvents({ G }: { G: HegemonyState }) {
   const omenTable = getOmenTable(G.definition.content);
@@ -44,97 +52,117 @@ export function TopbarEvents({ G }: { G: HegemonyState }) {
   // the player card just this turn.
   return (
     <section className="topbarEvents" aria-label="Current event cards">
-      <TopbarEventSlot
-        label="Omen"
-        name={omen?.label ?? null}
-        summary={omen ? joinEffectPresentations(omen.effects.map(presentTableEffect)) : null}
-        tooltip={
-          omen
-            ? `${omenTable.flavor} Rolled by Year ${omen.year}'s opener; a new sign comes each spring.`
-            : null
-        }
-        artUrl={omen ? omenArtUrl(omenTone) : null}
-        fallback="No omen yet"
-      />
-      <TopbarEventSlot
-        label="Season"
-        name={seasonal?.name ?? null}
-        summary={seasonal ? effectSummary(seasonal, G.definition.content) : null}
-        tooltip={seasonal?.text ?? null}
-        artUrl={seasonal ? eventCardArtUrl(seasonal) : null}
-        fallback="No seasonal event"
-      />
-      <TopbarEventSlot
-        label="Player"
-        name={player?.name ?? null}
-        summary={player ? effectSummary(player, G.definition.content) : null}
-        tooltip={player?.text ?? null}
-        artUrl={player ? eventCardArtUrl(player) : null}
-        fallback="No player event"
-      />
+      {omen ? (
+        <TopbarEventSlip
+          artUrl={omenArtUrl(omenTone)}
+          duration="This year"
+          kicker={`Omen · Year ${toRoman(omen.year)}`}
+          name={omen.label}
+          source="Omen"
+          summary={joinEffectPresentations(omen.effects.map(presentTableEffect))}
+          tooltip={`${omenTable.flavor} Rolled by Year ${omen.year}'s opener; a new sign comes each spring.`}
+        />
+      ) : null}
+      {seasonal ? (
+        <TopbarEventSlip
+          artUrl={eventCardArtUrl(seasonal)}
+          duration="This season"
+          kicker="Season"
+          name={seasonal.name}
+          source="Season"
+          summary={effectSummary(seasonal, G.definition.content)}
+          tooltip={seasonal.text}
+        />
+      ) : null}
+      {player ? (
+        <TopbarEventSlip
+          artUrl={eventCardArtUrl(player)}
+          duration="Resolved this turn"
+          kicker={`Fate · ${PLAYER_NAMES[G.currentPlayer]}`}
+          kind="fate"
+          name={player.name}
+          source="Player"
+          summary={effectSummary(player, G.definition.content)}
+          tooltip={player.text}
+        />
+      ) : null}
     </section>
   );
 }
 
-function TopbarEventSlot({
-  label,
+function TopbarEventSlip({
+  artUrl,
+  duration,
+  kicker,
+  kind,
   name,
+  source,
   summary,
   tooltip,
-  artUrl,
-  fallback,
 }: {
-  label: string;
-  name: string | null;
-  summary: EffectPresentation | null;
+  artUrl: string;
+  /** How long the card's effect stands — the tooltip's third line. */
+  duration: string;
+  /** The line the slip prints: the source, and for a fate card the seat too. */
+  kicker: string;
+  kind?: "fate";
+  name: string;
+  /** The source in the tooltip's own words, which never carries the seat name. */
+  source: string;
+  summary: EffectPresentation;
   tooltip: string | null;
-  artUrl: string | null;
-  fallback: string;
 }) {
-  const active = name !== null;
-  const card = (
+  const slip = (
     <>
-      {artUrl ? (
-        <img alt="" className="topbarEventArt" src={artUrl} />
-      ) : (
-        <span className="topbarEventArt topbarEventArtEmpty" aria-hidden="true" />
-      )}
+      <img alt="" className="topbarEventArt" src={artUrl} />
       <span className="topbarEventBody">
-        <span className="topbarEventLabel">{label}</span>
-        <strong className="topbarEventName">{name ?? fallback}</strong>
-        {summary ? <EffectLine effect={summary} className="topbarEventEffect" /> : null}
+        <span className="topbarEventLabel">{kicker}</span>
+        {/* One line, shortened when it has to be. Three slips of one fixed size
+            and card names of any length cannot both be had, and slips sized by
+            their own text is what made the row read as three different kinds of
+            object. `data-truncates` says so to the geometry auditor, which counts
+            declared summaries separately rather than either failing them or
+            silently ignoring them. The whole name is in the tooltip. */}
+        <strong className="topbarEventName" data-truncates="summary">
+          {name}
+        </strong>
+        {/* No codex links in the slip. A slip is a ~10px summary line inside a
+            control that is itself a tab stop, so every linked noun in it cost a
+            second stop — Tab landed on "Warehouse Fire" and then on a bare
+            "Wood" (QA-TOPBAR-1). The tooltip below carries the same nouns with
+            room to click them. */}
+        {/* The clipping box is this span, not the effect line inside it: the
+            element that shortens the line is the element that declares it. */}
+        <span className="topbarEventEffect" data-truncates="summary">
+          <EffectLine effect={summary} links={false} />
+        </span>
       </span>
     </>
   );
+  const className = `topbarEventCard${kind ? ` topbarEventCard-${kind}` : ""}`;
 
-  if (!active || !tooltip) {
-    return <span className="topbarEventCard">{card}</span>;
+  if (!tooltip) {
+    return <span className={className}>{slip}</span>;
   }
 
   return (
     <Tooltip
-      ariaLabel={`${label} event: ${name}`}
+      ariaLabel={`${source} event: ${name}`}
       content={
         <MechanicsDetails
-          effects={summary ? [summary] : []}
+          effects={[summary]}
           heading={name}
-          source={`${label} event`}
-          duration={
-            label === "Omen"
-              ? "This year"
-              : label === "Season"
-                ? "This season"
-                : "Resolved this turn"
-          }
+          source={`${source} event`}
+          duration={duration}
         >
           <AnnotatedText text={tooltip} className="topbarEventTooltipText" links={false} />
         </MechanicsDetails>
       }
       focusable
-      triggerClassName="topbarEventCard topbarEventActive"
+      triggerClassName={className}
       tooltipClassName="topbarEventTooltip"
     >
-      {card}
+      {slip}
     </Tooltip>
   );
 }

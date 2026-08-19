@@ -1,0 +1,267 @@
+<meta charset="utf-8">
+<title>Hegemony — the Assembly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="proto.css">
+<style>
+  .scene {
+    width: 1440px; height: 900px; position: relative; overflow: hidden;
+    background: url("/assets/map/aegean-sea-board.png") center / cover no-repeat;
+  }
+  .scene::before { content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 30%, rgb(24 18 16 / 0.55), rgb(24 18 16 / 0.86)); }
+
+  .asm { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 26px 60px 22px; }
+
+  .asm-head { display: flex; flex-direction: column; align-items: center; color: var(--ivory); }
+  .asm-head .gk { font-family: Cinzel, serif; font-size: 12px; letter-spacing: 0.5em; color: var(--warn-lit); margin-bottom: 4px; }
+  .asm-head h1 { font-family: Cinzel, serif; font-size: 34px; font-weight: 700; letter-spacing: 0.18em; }
+  .asm-head .sub { font-size: 15px; font-style: italic; color: var(--ivory-70); margin-top: 2px; }
+
+  .stations { display: flex; align-items: center; gap: 14px; margin: 16px 0 22px; }
+  .station { display: flex; align-items: center; gap: 9px; color: var(--ivory-45); font-family: Cinzel, serif; font-size: 12px; letter-spacing: 0.16em; }
+  .station .n { width: 30px; height: 30px; border-radius: 50%; border: 1.6px solid currentColor; display: grid; place-items: center; font-size: 13px; font-family: Alegreya, serif; font-weight: 700; }
+  .station.on { color: var(--warn-lit); }
+  .station.on .n { background: var(--warn-lit); color: var(--lacquer); border-color: var(--warn-lit); }
+  .meander-link { width: 52px; height: 8px; opacity: 0.4;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9"><path d="M1 8V1h12v4H7V3" fill="none" stroke="%23fff8e7" stroke-width="1.3"/></svg>') repeat-x left center / 18px 9px; }
+
+  .voice { position: absolute; top: 30px; right: 60px; display: flex; align-items: center; gap: 10px; color: var(--ivory);
+    border: 1px solid rgb(255 248 231 / 0.3); border-radius: 4px; padding: 8px 14px; }
+  .voice .lbl { font-family: Cinzel, serif; font-size: 10.5px; letter-spacing: 0.22em; color: var(--ivory-45); }
+  .voice b { font-family: Cinzel, serif; font-size: 13px; letter-spacing: 0.12em; }
+
+  /* ── the colonnade ── */
+  .colonnade { display: flex; gap: 22px; }
+  .stele {
+    width: 252px; background: linear-gradient(180deg, #f7ecd2, var(--bone) 60%);
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%, 0 14px);
+    box-shadow: 0 3px 0 #c9b48c, 0 14px 40px rgb(0 0 0 / 0.5);
+    padding: 18px 18px 14px; position: relative;
+  }
+  .stele .bust { width: 52px; height: 52px; margin: 0 auto 8px; border-radius: 50%;
+    background: var(--clay); display: grid; place-items: center;
+    box-shadow: inset 0 0 0 2px rgb(255 248 231 / 0.85), 0 0 0 1.5px rgb(36 25 16 / 0.5); }
+  .stele .bust svg { width: 30px; height: 30px; stroke: var(--ivory); fill: none; stroke-width: 1.5; }
+  .stele h3 { font-family: Cinzel, serif; font-size: 16px; font-weight: 700; letter-spacing: 0.1em; text-align: center; }
+  .stele .epi { font-family: Cinzel, serif; font-size: 9.5px; letter-spacing: 0.2em; color: var(--clay); text-align: center; margin: 2px 0 9px; }
+  .stele .dogma { background: rgb(36 25 16 / 0.05); border: 1px solid rgb(36 25 16 / 0.14);
+    border-radius: 4px; padding: 7px 10px 8px; min-height: 62px; }
+  .stele .dogma .dk { font-family: Cinzel, serif; font-size: 8px; letter-spacing: 0.2em;
+    color: var(--ink-48); text-align: center; margin-bottom: 5px; }
+  .stele .dogma .drow { display: flex; align-items: center; gap: 6px; font-size: 12.5px;
+    color: var(--ink-66); padding: 2px 0; }
+  .stele .dogma .drow .ci { width: 12px; height: 12px; flex: none; }
+  .stele .dogma .drow .up { color: var(--pos); font-weight: 800; }
+  .stele .dogma .drow .down { color: var(--neg); font-weight: 800; }
+  .stele .dogma .drow .happy-ic { flex: none; }
+  .stele .prize { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 9px 0 11px;
+    font-size: 13px; font-weight: 700; color: var(--pos); }
+  .stele .prize .k { font-family: Cinzel, serif; font-size: 9px; letter-spacing: 0.18em; color: var(--ink-48); font-weight: 600; }
+  .stele .draw {
+    width: 100%; display: flex; justify-content: center; align-items: center; gap: 9px;
+    background: linear-gradient(180deg, #cd5124, var(--clay) 55%, #a93c17);
+    border: none; border-radius: 4px; color: var(--ivory); padding: 10px 0; cursor: pointer;
+    font-family: Cinzel, serif; font-weight: 700; font-size: 12.5px; letter-spacing: 0.14em;
+    box-shadow: inset 0 1px 0 rgb(255 248 231 / 0.35), 0 2px 6px rgb(0 0 0 / 0.4);
+  }
+  .stele .draw .c { font-family: Alegreya, serif; font-weight: 700; font-size: 13px; }
+  .stele .marks { display: flex; justify-content: center; gap: 5px; margin-top: 10px; min-height: 10px; }
+  .stele .marks i { width: 9px; height: 9px; border-radius: 2px; background: var(--slip); box-shadow: inset 0 0 0 1px rgb(36 25 16 / 0.3); }
+  .stele .marks i.won { background: var(--clay); }
+
+  /* ── the bema ── */
+  .floor { flex: 1; display: flex; align-items: center; justify-content: center; gap: 46px; width: 100%; }
+
+  .law-card {
+    width: 360px; background: linear-gradient(180deg, #fffaf0, var(--ivory) 55%, #f6ecd4);
+    border-radius: 4px; box-shadow: 0 26px 70px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(36 25 16 / 0.35);
+    padding: 0 0 18px; overflow: hidden; text-align: center;
+  }
+  .law-card .band { height: 12px; opacity: 0.75; background:
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9"><path d="M1 8V1h12v4H7V3" fill="none" stroke="%23c0461c" stroke-width="1.3"/></svg>') repeat-x center / 18px 9px, #241910; }
+  .law-card .kicker { font-family: Cinzel, serif; font-size: 10px; letter-spacing: 0.3em; color: var(--clay); margin: 16px 0 4px; }
+  .law-card h2 { font-family: Cinzel, serif; font-size: 25px; font-weight: 700; letter-spacing: 0.08em; }
+  .law-card .from { font-size: 12.5px; font-style: italic; color: var(--ink-48); margin: 3px 0 12px; }
+  .law-card .rule-line { width: 60px; height: 1px; background: var(--ink-30); margin: 0 auto 12px; }
+  .law-card .fx { font-size: 16.5px; line-height: 1.5; padding: 0 30px; }
+  .law-card .fx .up { color: var(--pos); font-weight: 800; }
+  .law-card .fx .down { color: var(--neg); font-weight: 800; }
+  .law-card .prize { margin: 13px auto 15px; display: inline-flex; gap: 7px; align-items: center;
+    background: rgb(94 110 58 / 0.12); border: 1px solid rgb(94 110 58 / 0.4); border-radius: 20px;
+    padding: 5px 14px; font-size: 13px; font-weight: 700; color: var(--pos); }
+  .law-card .prize .k { font-family: Cinzel, serif; font-size: 9px; letter-spacing: 0.16em; color: var(--ink-48); }
+  .law-card .acts { display: flex; gap: 10px; padding: 0 22px; }
+  .law-card .acts .go {
+    flex: 1; background: linear-gradient(180deg, #cd5124, var(--clay) 55%, #a93c17); color: var(--ivory);
+    border: none; border-radius: 4px; padding: 12px 0; font-family: Cinzel, serif; font-weight: 700;
+    font-size: 14px; letter-spacing: 0.14em; cursor: pointer;
+    box-shadow: inset 0 1px 0 rgb(255 248 231 / 0.35), 0 2px 8px rgb(0 0 0 / 0.35); }
+  .law-card .acts .gh { background: none; border: 1px solid var(--ink-30); border-radius: 4px; color: var(--ink-66);
+    padding: 12px 18px; font-family: Cinzel, serif; font-weight: 700; font-size: 12px; letter-spacing: 0.12em; cursor: pointer; }
+
+  .standing {
+    width: 300px; color: var(--ivory);
+  }
+  .standing h4 { font-family: Cinzel, serif; font-size: 12px; letter-spacing: 0.26em; color: var(--ivory-45); margin-bottom: 10px; }
+  .law-slab { background: rgb(255 248 231 / 0.08); border: 1px solid rgb(255 248 231 / 0.22); border-radius: 4px;
+    padding: 11px 14px; margin-bottom: 9px; }
+  .law-slab b { font-family: Cinzel, serif; font-size: 13.5px; letter-spacing: 0.08em; display: block; }
+  .law-slab .by { font-size: 12px; color: var(--ivory-45); font-style: italic; }
+  .law-slab .fx { font-size: 13px; margin-top: 3px; color: var(--ivory-70); }
+  .law-slab .fx .up { color: var(--pos-lit); font-weight: 700; }
+  .law-slab .fx .down { color: var(--neg-lit); font-weight: 700; }
+  .law-slab.empty { border-style: dashed; color: var(--ivory-45); font-size: 12.5px; font-style: italic;
+    text-align: center; padding: 15px; }
+
+  /* ── the seats / ostraka ── */
+  .seats { display: flex; gap: 18px; align-items: stretch; }
+  .seat-plaque {
+    width: 210px; display: flex; align-items: center; gap: 11px;
+    background: rgb(24 18 16 / 0.72); border: 1px solid rgb(255 248 231 / 0.2);
+    border-radius: 5px; padding: 11px 15px; color: var(--ivory);
+  }
+  .seat-plaque.lit { border-color: var(--warn-lit); box-shadow: 0 0 24px rgb(226 165 88 / 0.25); }
+  .seat-plaque .glaze { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none;
+    font-family: Cinzel, serif; font-weight: 700; font-size: 16px;
+    box-shadow: inset 0 0 0 1.6px rgb(255 248 231 / 0.85); }
+  .seat-plaque .nm { font-family: Cinzel, serif; font-size: 13px; letter-spacing: 0.1em; display: block; }
+  .seat-plaque .st { font-size: 12px; color: var(--ivory-45); font-style: italic; }
+  .seat-plaque .st b { color: var(--warn-lit); font-style: normal; font-weight: 700; }
+  .ostrakon { margin-left: auto; width: 30px; height: 26px; flex: none;
+    clip-path: polygon(8% 38%, 30% 6%, 74% 0%, 100% 30%, 92% 78%, 60% 100%, 18% 88%, 0% 62%);
+    background: linear-gradient(160deg, #cd5124, #a93c17); box-shadow: inset 0 0 0 1px rgb(36 25 16 / 0.4); position: relative; }
+  .ostrakon::after { content: "Δ"; position: absolute; inset: 0; display: grid; place-items: center;
+    font-family: Cinzel, serif; font-size: 12px; color: rgb(24 18 16 / 0.65); }
+  .ostrakon.blank { background: linear-gradient(160deg, #6b6157, #4a423a); }
+  .ostrakon.blank::after { content: "·"; color: rgb(255 248 231 / 0.4); }
+</style>
+
+<div class="scene">
+  <div class="asm">
+
+    <div class="asm-head">
+      <span class="gk">ΕΚΚΛΗΣΙΑ</span>
+      <h1>THE ASSEMBLY</h1>
+      <span class="sub">First of the game · spring of Year II</span>
+    </div>
+
+    <div class="voice"><span class="lbl">VOICE</span><b>UNHELD</b></div>
+
+    <div class="stations">
+      <div class="station on"><span class="n">I</span>PROPOSAL</div>
+      <div class="meander-link"></div>
+      <div class="station"><span class="n">II</span>VOTING</div>
+      <div class="meander-link"></div>
+      <div class="station"><span class="n">III</span>STANDING LAW</div>
+    </div>
+
+    <div class="colonnade">
+      <div class="stele">
+        <div class="bust"><svg viewBox="0 0 24 24"><path d="M12 21V9M12 12c0-3-2-4.5-4.5-4.5C7.5 10 9 12 12 12zm0 0c0-3 2-4.5 4.5-4.5C16.5 10 15 12 12 12zm0 5c0-2.6-1.7-4-4-4 0 2.3 1.6 4 4 4zm0 0c0-2.6 1.7-4 4-4 0 2.3-1.6 4-4 4z"/></svg></div>
+        <h3>DEMOSTHENES</h3>
+        <div class="epi">AGRICULTURAL REFORMER</div>
+        <div class="dogma num">
+          <div class="dk">HIS LAWS TEND TO</div>
+          <div class="drow"><i class="ci" style="--m:url('/assets/resource-icons/food-mask.png'); background:var(--pos)"></i><span class="up">+1 food</span>&nbsp;per citizen at upkeep</div>
+          <div class="drow"><i class="ci" style="--m:url('/assets/resource-icons/food-mask.png'); background:var(--pos)"></i>growing pops costs <span class="up">−2 food</span></div>
+        </div>
+        <div class="prize num"><span class="k">AUTHOR PRIZE</span><i class="ci" style="--m:url('/assets/resource-icons/food-mask.png')"></i>+5</div>
+        <button class="draw">DRAW <span class="c num">3</span><i class="ci" style="--m:url('/assets/resource-icons/influence-mask.png')"></i></button>
+        <div class="marks"><i class="won"></i></div>
+      </div>
+
+      <div class="stele">
+        <div class="bust" style="background:var(--aegean)"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V10m4 10V10m4 10V10m4 10V10M3 10l9-6 9 6z"/></svg></div>
+        <h3>PERDICCAS</h3>
+        <div class="epi">URBAN PLANNER</div>
+        <div class="dogma num">
+          <div class="dk">HIS LAWS TEND TO</div>
+          <div class="drow"><i class="ci" style="--m:url('/assets/resource-icons/stone-mask.png'); background:var(--pos)"></i>buildings cost <span class="up">−4 stone</span></div>
+          <div class="drow"><i class="ci" style="--m:url('/assets/resource-icons/gold-mask.png'); background:var(--neg)"></i>city upgrades pay <span class="down">+5 gold</span></div>
+        </div>
+        <div class="prize num"><span class="k">AUTHOR PRIZE</span><i class="ci" style="--m:url('/assets/resource-icons/stone-mask.png')"></i>+3</div>
+        <button class="draw">DRAW <span class="c num">3</span><i class="ci" style="--m:url('/assets/resource-icons/influence-mask.png')"></i></button>
+        <div class="marks"></div>
+      </div>
+
+      <div class="stele">
+        <div class="bust" style="background:var(--pos)"><svg viewBox="0 0 24 24"><path d="M3 15c4 3 14 3 18 0M5 15V9l7-4v10m0-6 6 3v3"/></svg></div>
+        <h3>KLEISTOPHENES</h3>
+        <div class="epi">RURAL EXPANSIONIST</div>
+        <div class="dogma num">
+          <div class="dk">HIS LAWS TEND TO</div>
+          <div class="drow"><i class="ci" style="--m:url('/assets/resource-icons/wood-mask.png'); background:var(--pos)"></i>founding costs <span class="up">−5 wood</span></div>
+          <div class="drow"><i class="ci" style="--m:url('/assets/resource-icons/food-mask.png'); background:var(--neg)"></i>cities yield <span class="down">−1 food</span></div>
+        </div>
+        <div class="prize num"><span class="k">AUTHOR PRIZE</span><i class="ci" style="--m:url('/assets/resource-icons/wood-mask.png')"></i>+4</div>
+        <button class="draw">DRAW <span class="c num">3</span><i class="ci" style="--m:url('/assets/resource-icons/influence-mask.png')"></i></button>
+        <div class="marks"></div>
+      </div>
+
+      <div class="stele">
+        <div class="bust" style="background:var(--lacquer)"><svg viewBox="0 0 24 24"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11zM8.5 10.5v1.8M15.5 10.5v1.8M8 15c1.2 1.3 2.5 2 4 2s2.8-.7 4-2"/></svg></div>
+        <h3>STRATOKLES</h3>
+        <div class="epi">CUNNING POPULIST</div>
+        <div class="dogma num">
+          <div class="dk">HIS LAWS TEND TO</div>
+          <div class="drow"><svg class="happy-ic" viewBox="0 0 24 24" style="color:var(--pos)"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11zM8.5 10.5v1.8M15.5 10.5v1.8M8 15c1.2 1.3 2.5 2 4 2s2.8-.7 4-2"/></svg><span class="up">+2 happiness</span>&nbsp;to the poorest</div>
+          <div class="drow"><i class="ci" style="--m:url('/assets/resource-icons/influence-mask.png'); background:var(--neg)"></i>a rival loses <span class="down">−2 influence</span></div>
+        </div>
+        <div class="prize num"><span class="k">AUTHOR PRIZE</span><svg class="happy-ic" viewBox="0 0 24 24"><path d="M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11zM8.5 10.5v1.8M15.5 10.5v1.8M8 15c1.2 1.3 2.5 2 4 2s2.8-.7 4-2"/></svg>+2</div>
+        <button class="draw">DRAW <span class="c num">3</span><i class="ci" style="--m:url('/assets/resource-icons/influence-mask.png')"></i></button>
+        <div class="marks"></div>
+      </div>
+    </div>
+
+    <div class="floor">
+      <div class="law-card">
+        <div class="band"></div>
+        <div class="kicker">OF DEMOSTHENES · BY NIKOS</div>
+        <h2>CULT OF DEMETER</h2>
+        <div class="from">“Let the granaries be temples, and the harvest a rite.”</div>
+        <div class="rule-line"></div>
+        <div class="fx num">Hold <b>15</b>+ food at upkeep: <span class="up">+2 happiness</span>.<br>
+          Fall below it: <span class="down">−2 happiness</span>.</div>
+        <div class="prize num"><span class="k">AUTHOR PRIZE</span> +5 food each turn it stands</div>
+        <div class="acts">
+          <button class="go">PROPOSE</button>
+          <button class="gh">DISCARD</button>
+        </div>
+      </div>
+
+      <div class="standing">
+        <h4>STANDING LAWS · 1 OF 6</h4>
+        <div class="law-slab">
+          <b>MANIFEST DESTINY</b>
+          <span class="by">a house law of Kleistophenes</span>
+          <div class="fx num">Founding costs <span class="up">−5 food</span> · growing in a city <span class="down">+1 food</span></div>
+        </div>
+        <div class="law-slab empty">five stelae stand empty</div>
+      </div>
+    </div>
+
+    <div class="seats">
+      <div class="seat-plaque">
+        <span class="glaze" style="background:var(--kyanos)">Δ</span>
+        <div><span class="nm">DAMON</span><span class="st">has spoken</span></div>
+        <div class="ostrakon"></div>
+      </div>
+      <div class="seat-plaque lit">
+        <span class="glaze" style="background:var(--melichron)">Ν</span>
+        <div><span class="nm">NIKOS</span><span class="st"><b>holds the bema</b></span></div>
+      </div>
+      <div class="seat-plaque">
+        <span class="glaze" style="background:var(--porphyra)">Θ</span>
+        <div><span class="nm">THERON</span><span class="st">deliberates</span></div>
+        <div class="ostrakon blank"></div>
+      </div>
+      <div class="seat-plaque">
+        <span class="glaze" style="background:var(--kinnabari)">Κ</span>
+        <div><span class="nm">KYROS</span><span class="st">deliberates</span></div>
+        <div class="ostrakon blank"></div>
+      </div>
+    </div>
+
+  </div>
+</div>

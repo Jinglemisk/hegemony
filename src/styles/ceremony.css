@@ -1,0 +1,1040 @@
+/* ceremony — the register a dialog rises into when a rite is happening.
+ *
+ * Most dialogs are not ceremonies. Choosing a settlement, picking a payment,
+ * confirming a build: those are picks, and they stay plain, because **if every
+ * dialog is a rite then none of them is**. Only three things earn the dark table
+ * — a fate drawn, a die cast, and the age ending.
+ *
+ * The mood is the only thing that changes between them, and it is about how the
+ * moment feels, not what it does: `gift` olive, `wound` oxblood, `rite` clay.
+ * The mood reaches the frame, the kicker and the verb on the button; the numbers
+ * inside keep the same --pos/--neg they have everywhere else.
+ *
+ * ── OWNERSHIP ───────────────────────────────────────────────────────────────
+ * This sheet owns the ceremonies OUTRIGHT. It used to restyle only the container
+ * and then hand off to `modals.css`, which was still wearing pre-overhaul
+ * clothes — and because those selectors outranked the type roles, every title,
+ * flavour line, choice button and odds row inside a ceremony lost. One seam, six
+ * majors.
+ *
+ * The fix is not more overrides. Every class named below is emitted ONLY by a
+ * ceremony (`fateCard`, `ceremonyTablet`, `blow`, `oddsRow`, `ceremonyPick`…),
+ * so `modals.css` never matches them and has nothing to win. `modals.css` keeps
+ * the plain-dialog vocabulary — the calm picker, the placement cards, the
+ * compendium's read-only table listings — and no longer has a say in what a fate
+ * looks like. Where a shared component serves both registers (`EventTableRows`)
+ * it emits different class names per register rather than layering two sheets.
+ *
+ * Sizes come from the nine roles in type.css and nowhere else; this sheet
+ * declares none. Where a role lands under the prototype's value the role wins —
+ * a surface that invents a size is how the old chrome got 47 of them.
+ *
+ * ── TWO MATERIALS ───────────────────────────────────────────────────────────
+ * A fate is DEALT to you: a card, fired ivory, lit by the mood ring the moment
+ * decides. A venture is a tablet you READ and lay back down: bone, chamfered at
+ * the top corners, carved along the bottom edge, and wearing no ring at all. The
+ * app used to generalise the card's treatment over both, which is why the
+ * venture arrived glowing and 130px too narrow.
+ */
+
+/* ── The table goes dark ─────────────────────────────────────────────────────
+   The chart stays visible under the vignette, because the game did not go away —
+   it is holding its breath. The scrim owns the ceremony rung outright; it used
+   to inherit z-index from whichever backdrop class a caller happened to pass. */
+.modalBackdrop.ceremonyScrim {
+  z-index: var(--z-ceremony);
+  background: radial-gradient(ellipse at 50% 42%, rgb(24 18 16 / 68%), rgb(24 18 16 / 93%));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* A tablet is read on a lighter, higher table than a card is dealt on. */
+.modalBackdrop.tabletScrim {
+  background: radial-gradient(ellipse at 50% 40%, rgb(24 18 16 / 60%), rgb(24 18 16 / 90%));
+}
+
+/* ── The moods ───────────────────────────────────────────────────────────────
+   Four values per mood and every ceremony spends them: the ring, its wide glow,
+   the band a blow is set in, and the hairlines that bound it. The band and the
+   rules are DELIBERATELY faint — they exist to stop the eye, not to compete with
+   the figure sitting in them. */
+.ceremony-wound {
+  --mood-ring: rgb(143 46 19 / 85%);
+  --mood-glow: rgb(143 46 19 / 28%);
+  --mood-band: rgb(143 46 19 / 10%);
+  --mood-rule: rgb(143 46 19 / 40%);
+  --mood-ink: var(--neg);
+  --mood-lit: var(--nay-lit);
+  --mood-shade: var(--nay-shade);
+}
+
+.ceremony-gift {
+  --mood-ring: rgb(94 110 58 / 85%);
+  --mood-glow: rgb(94 110 58 / 26%);
+  --mood-band: rgb(94 110 58 / 10%);
+  --mood-rule: rgb(94 110 58 / 40%);
+  --mood-ink: var(--pos);
+  --mood-lit: var(--yea-lit);
+  --mood-shade: var(--yea-shade);
+}
+
+.ceremony-rite {
+  --mood-ring: rgb(192 70 28 / 85%);
+  --mood-glow: rgb(192 70 28 / 26%);
+  --mood-band: rgb(192 70 28 / 10%);
+  --mood-rule: rgb(192 70 28 / 40%);
+  --mood-ink: var(--clay);
+  --mood-lit: var(--clay-lit);
+  --mood-shade: var(--clay-shade);
+}
+
+/* ── The fate: a dealt card ──────────────────────────────────────────────── */
+
+.fateCard {
+  position: relative;
+  overflow: hidden;
+  width: min(470px, calc(100vw - 34px));
+  border-radius: 6px;
+  text-align: center;
+  background: linear-gradient(180deg, var(--ivory-lit), var(--ivory) 50%, var(--ivory-settled));
+  box-shadow:
+    0 0 0 1px rgb(36 25 16 / 55%),
+    0 0 0 5px var(--mood-ring),
+    0 0 0 6.5px rgb(36 25 16 / 60%),
+    0 42px 110px rgb(0 0 0 / 75%),
+    0 0 120px var(--mood-glow);
+}
+
+.fateArt {
+  position: relative;
+  height: 300px;
+}
+
+.fateArt img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The painting dissolves into the card it is printed on. The terminal stop is
+   TRANSLUCENT and it is the card's own ivory, so the art ghosts through the last
+   few percent instead of hitting an opaque line in a slightly different cream. */
+.fateArt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgb(36 25 16 / 22%),
+    transparent 30%,
+    transparent 62%,
+    rgb(255 248 231 / 94%) 96%
+  );
+}
+
+/* The seat that drew it, on a lacquer tag over the art. */
+.fateSeat {
+  position: absolute;
+  z-index: 2;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 13px 5px 6px;
+  border-radius: 20px;
+  color: var(--ivory);
+  background: rgb(24 18 16 / 78%);
+}
+
+.fateSeat .seatGlaze {
+  width: 22px;
+  height: 22px;
+  color: var(--ivory);
+  box-shadow: inset 0 0 0 1.4px rgb(255 248 231 / 85%);
+}
+
+.fateSeat b {
+  color: var(--ivory);
+  letter-spacing: 0.14em;
+}
+
+/* The body is pulled UP into the dissolve, so painting and type interlock. When
+   it started below the art band the bottom third of the fade rendered as an
+   empty ivory gap — a card with a hole in the middle of it. */
+.fateBody {
+  position: relative;
+  z-index: 2;
+  margin-top: -26px;
+  padding: 0 34px 26px;
+}
+
+.fateKicker {
+  display: block;
+  color: var(--mood-ink);
+  letter-spacing: 0.34em;
+}
+
+.fateCard h2 {
+  margin: 4px 0 2px;
+}
+
+.fateVoice {
+  margin: 0;
+  color: var(--ink-66);
+}
+
+/* The 15px that parts the name (or the voice under it) from the blow lives on
+   the band, not on the line above it — the voice is only sometimes there. */
+.fateBody > .blowBand,
+.fateBody > .fateChoices {
+  margin-top: 15px;
+}
+
+.fateWait {
+  display: block;
+  margin: 0 0 12px;
+  color: var(--neg);
+}
+
+/* ── Picking the settlement ──────────────────────────────────────────────────
+   PAR-CER-11 the rest of the way. The effect rows became tinted bands and these
+   did not: two 1px rounded rectangles sitting directly under the blow band, the
+   last thing on the card that still looked like a web form. They are the same
+   full-bleed hairlined rows every other choice in a ceremony wears.
+
+   The listbox keeps a scroll ceiling — `.fateCard` clips, so a player with six
+   settlements must not push the commit off the bottom of the card — but it
+   sheds the plate, the border and the radius that made it an inset control. */
+.fateTarget {
+  margin: 0 -34px 14px;
+  text-align: left;
+}
+
+.fateTarget > .label {
+  display: block;
+  padding: 0 34px 5px;
+  color: var(--ink-63);
+  letter-spacing: 0.24em;
+}
+
+.fateTarget > .caption {
+  display: block;
+  padding: 6px 34px 0;
+  color: var(--ink-63);
+}
+
+.ceremony .fateTarget .tileListbox {
+  gap: 0;
+  max-height: 172px;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--ink-12);
+  border-radius: 0;
+  background: none;
+}
+
+.ceremony .fateTarget .placementPickerChip {
+  gap: 10px;
+  padding: 9px 34px;
+  border: 0;
+  border-bottom: 1px solid var(--ink-12);
+  border-radius: 0;
+  background: none;
+}
+
+.ceremony .fateTarget .placementPickerChip:not(:disabled):hover {
+  background: var(--ink-07);
+  box-shadow: none;
+}
+
+.ceremony .fateTarget .placementPickerChip.selectedChoice {
+  background: var(--mood-band);
+  box-shadow: inset 3px 0 0 var(--mood-ink);
+}
+
+/* ── The blow ────────────────────────────────────────────────────────────────
+   What the moment does to you, in three ranks: the effect's own glyph, the
+   carved figure, and the subject over its condition. The figure is the largest
+   thing on the card on purpose — a player should read it from across the room
+   and lean in only for the condition.
+   `.blow` is the arrangement; `.blowBand` is the band it is set in. A choice row
+   uses the same three ranks with no band, which is why they are separate. */
+.blow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.blow .icon {
+  flex: none;
+  color: var(--mood-ink);
+  stroke-width: 2;
+}
+
+/* Bleeding past the body's own padding, because a band that stops short of the
+   card edge is a box. The fill and the rules are a third and a half of what they
+   were: at full mood strength the band was shouting over its own numeral. */
+.blowBand {
+  margin: 0 -34px 6px;
+  padding: 13px 34px;
+  border-top: 1px solid var(--mood-rule);
+  border-bottom: 1px solid var(--mood-rule);
+  background: var(--mood-band);
+}
+
+.blowBand .icon {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+
+.blowFigure {
+  color: var(--mood-ink);
+}
+
+.blowWhat {
+  line-height: 1.15;
+}
+
+.blowWhat b {
+  display: block;
+  color: var(--mood-ink);
+}
+
+.blowWhat .caption {
+  color: var(--ink-66);
+}
+
+.blowLine {
+  color: var(--ink);
+}
+
+/* ── How long it stands ──────────────────────────────────────────────────────
+   One bar per turn at falling opacity, and the count spelled out beside them.
+   The data was always there (`timedHappinessDelta.turns`); it was being
+   dissolved into a clause nobody counts. */
+.turnStrip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 12px 0 18px;
+}
+
+.turnBar {
+  width: 26px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--mood-ink);
+  opacity: 0.9;
+}
+
+.turnBar + .turnBar {
+  opacity: 0.55;
+}
+
+.turnBar + .turnBar ~ .turnBar {
+  opacity: 0.3;
+}
+
+.turnCaption {
+  color: var(--ink-63);
+  font-style: italic;
+}
+
+/* ── Choosing inside a ceremony ──────────────────────────────────────────────
+   No bordered boxes: full-bleed rows parted by hairlines, and the one you have
+   taken gets a tinted wash and a bar on its leading edge. The old treatment made
+   each option a chip headed "Option 1" — a form, in the middle of a rite — and
+   dropped the blow entirely for any card that had two of them.
+
+   What the hairlines alone could NOT say is that the rows exclude each other:
+   the taken row wore exactly the tint a single-effect card's blow band wears, so
+   a two-option card read as a card that grants both. Three things say it now —
+   a heading that counts, an "or" in the seam, and an untaken row that recedes. */
+.fateChoices {
+  display: grid;
+  margin: 0 -34px 14px;
+}
+
+.fateChoicesLabel {
+  display: block;
+  padding: 0 34px 5px;
+  color: var(--ink-63);
+  letter-spacing: 0.24em;
+}
+
+.fateChoicesLabel + .fateChoice {
+  border-top: 1px solid var(--ink-12);
+}
+
+/* In the seam, in the card's own voice — the word does the work three borders
+   and a radio column were failing to do. */
+.fateOr {
+  padding: 6px 0 5px;
+  color: var(--ink-63);
+  font-style: italic;
+  text-align: center;
+}
+
+/* Only one of these is going to happen, so only one of them is lit. */
+.fateChoice:not(.fateChoiceTaken):not(:disabled):not(:hover) {
+  opacity: 0.55;
+}
+
+.fateChoice,
+.ceremonyPick {
+  display: grid;
+  gap: 2px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--ink-12);
+  text-align: left;
+}
+
+.fateChoice {
+  padding: 11px 34px;
+}
+
+.fateChoice:not(:disabled):hover,
+.ceremonyPick:not(:disabled):hover {
+  background: var(--ink-07);
+}
+
+.fateChoice:disabled,
+.ceremonyPick:disabled {
+  opacity: 0.42;
+}
+
+.fateChoiceTaken,
+.ceremonyPickTaken {
+  background: var(--mood-band);
+  box-shadow: inset 3px 0 0 var(--mood-ink);
+}
+
+.blowChoice {
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.blowChoice .blowFigure {
+  min-width: 2.4rem;
+  text-align: right;
+}
+
+/* ── The commit ──────────────────────────────────────────────────────────────
+   Lit at the top, the mood's own ink through the middle, shaded at the foot:
+   three stops, so the button reads as a raised object. It emitted the same value
+   twice for a while, which is a flat fill with extra steps. */
+.ceremonyCommit {
+  width: 100%;
+  padding: 15px 0;
+  border: 0;
+  border-radius: 4px;
+  color: var(--ivory);
+  background: linear-gradient(180deg, var(--mood-lit), var(--mood-ink) 60%, var(--mood-shade));
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 30%),
+    0 3px 12px rgb(0 0 0 / 50%);
+  letter-spacing: 0.2em;
+}
+
+.ceremonyCommit:disabled {
+  opacity: 0.45;
+}
+
+.ceremonyCommit:not(:disabled):hover {
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 42%),
+    0 5px 16px rgb(0 0 0 / 55%);
+}
+
+.ghostVerb {
+  padding: 15px 20px;
+  border-radius: 4px;
+  color: var(--ink-63);
+}
+
+.ghostVerb:not(:disabled):hover {
+  color: var(--ink);
+  background: var(--ink-07);
+}
+
+/* ── The venture: a tablet you read ──────────────────────────────────────────
+   Bone rather than fired ivory, chamfered at the top corners, and carved along
+   the bottom edge. No mood ring: a tablet is not lit by anything, it is laid on
+   the table. `clip-path` would swallow an outer box-shadow, so the carved edge
+   is an inset and the lift is a filter — which follows the chamfered silhouette
+   instead of the bounding box. */
+.ceremonyTablet {
+  width: min(560px, calc(100vw - 34px));
+  max-height: min(92vh, 880px);
+  overflow-y: auto;
+  padding: 26px 34px;
+  text-align: center;
+  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%, 0 16px);
+  background: linear-gradient(180deg, var(--stele-face), var(--bone) 55%);
+  box-shadow: inset 0 -4px 0 var(--stele-shade);
+  filter: drop-shadow(0 24px 44px rgb(0 0 0 / 70%));
+  scrollbar-color: var(--clay) transparent;
+}
+
+/* The kicker is the one thing on the tablet that must survive the roll: what was
+   staked. It used to live only in the picker buttons, which unmount the instant
+   the die flips. */
+.tabletKicker {
+  display: block;
+  color: var(--clay-ink);
+  letter-spacing: 0.3em;
+}
+
+.ceremonyTablet h2 {
+  margin: 3px 0 1px;
+  letter-spacing: 0.1em;
+}
+
+.tabletVoice {
+  margin: 0 0 16px;
+  color: var(--ink-66);
+}
+
+/* ── The drama row: the die, and what it found ────────────────────────────── */
+
+.drama {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  margin-bottom: 18px;
+}
+
+.dramaOutcome {
+  text-align: left;
+}
+
+.dramaOutcome .label {
+  display: block;
+  color: var(--ink-63);
+  letter-spacing: 0.24em;
+}
+
+.dramaOutcome h3 {
+  margin: 1px 0 3px;
+}
+
+.dramaOutcome .caption {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink-63);
+}
+
+/* The figure the whole dialog is about, beside its own glyph. Before the
+   presenter split this rendered as a body-size sentence next to a die the size
+   of a fist. */
+.dramaGain {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dramaGain.positive {
+  color: var(--pos);
+}
+
+.dramaGain.negative {
+  color: var(--neg);
+}
+
+.dramaGain .icon {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+
+/* A lacquer cube with ivory pips — an object you rolled, not a number you were
+   given. The glow is the one place ochre appears outside the season wheel. */
+.lacquerDie {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 84px;
+  height: 84px;
+  border-radius: 12px;
+  background: linear-gradient(160deg, var(--lacquer-lit), var(--vase-black) 70%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 248 231 / 20%),
+    0 10px 26px rgb(0 0 0 / 50%),
+    0 0 46px rgb(217 138 53 / 40%);
+}
+
+.diePips {
+  display: grid;
+  grid-template-rows: repeat(3, 14px);
+  grid-template-columns: repeat(3, 14px);
+  gap: 6px;
+}
+
+.pip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ivory);
+  box-shadow: inset 0 -2px 3px rgb(0 0 0 / 40%);
+}
+
+.pipOff {
+  visibility: hidden;
+}
+
+/* ── The odds ────────────────────────────────────────────────────────────────
+   Every row the die did NOT find recedes; the one it found takes a clay wash and
+   a bar on its first cell only, and its numeral steps up. The table's whole
+   purpose at this moment is to have a focal point, and it had none: nothing
+   receded and every row wore an identical accent bar. */
+.oddsRows {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.oddsRow {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  border-top: 1px solid var(--ink-12);
+}
+
+.oddsRow > * {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+}
+
+.oddsFace {
+  justify-content: center;
+  color: var(--ink-66);
+}
+
+.oddsEffects {
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.oddsEffect {
+  font-style: normal;
+}
+
+.oddsEffect.positive {
+  color: var(--pos);
+}
+
+.oddsEffect.negative {
+  color: var(--neg);
+}
+
+/* A row with no outcome says so with the faintest mark on the tablet. */
+.oddsEffect.muted {
+  color: var(--ink-30);
+}
+
+.oddsRowPast {
+  opacity: 0.42;
+}
+
+.oddsRowHit {
+  border-top-color: rgb(192 70 28 / 50%);
+}
+
+.oddsRowHit > * {
+  background: rgb(192 70 28 / 13%);
+}
+
+.oddsRowHit .oddsFace {
+  color: var(--clay-ink);
+  box-shadow: inset 3px 0 0 var(--clay);
+}
+
+/* ── What it cost you, and what you do about it ──────────────────────────── */
+
+.tabletVerdict {
+  display: grid;
+  gap: 3px;
+  margin: 0 -34px 18px;
+  padding: 10px 34px;
+  border-top: 1px solid var(--mood-rule);
+  border-bottom: 1px solid var(--mood-rule);
+  background: var(--mood-band);
+  text-align: left;
+}
+
+.ceremonyPicks {
+  display: grid;
+  margin: 0 -34px;
+  border-top: 1px solid var(--ink-12);
+}
+
+/* Two runs of picks — the expedition, then the stake — read as ONE run of
+   hairlined rows. Parting them left a bare strip and a doubled rule. */
+.ceremony .ventureControls {
+  gap: 0;
+  margin-bottom: 18px;
+}
+
+.ceremonyPicks + .ceremonyPicks {
+  border-top: 0;
+}
+
+.ceremonyPicks > .ceremonyPick {
+  padding: 9px 34px;
+}
+
+.ventureStakeRow {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ventureStakeRow > .ceremonyPick + .ceremonyPick {
+  border-left: 1px solid var(--ink-12);
+}
+
+.ceremonyPick .caption {
+  color: var(--ink-63);
+}
+
+/* ── The age ends ────────────────────────────────────────────────────────────
+   The third moment that earns the dark table, and the one that had never been
+   given it: the end of the game rendered in the plain log register, with a
+   header bar, a secondary button, and a bare colour dot for each seat.
+
+   It is the venture's tablet, wider — the age is READ and laid down — and the
+   standings are the same full-bleed hairlined rows every other list in a
+   ceremony uses. Each seat carries its glaze AND its blazon: a glaze never
+   travels alone, least of all on the screen where the four are compared. */
+.ageEnd {
+  width: min(600px, calc(100vw - 34px));
+}
+
+.ageEnd .tabletVoice {
+  margin-bottom: 20px;
+}
+
+.ageStandings {
+  margin: 0 -34px 20px;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--ink-12);
+  text-align: left;
+}
+
+.ageSeat {
+  display: grid;
+  grid-template-columns: 26px 27px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 34px;
+  border-bottom: 1px solid var(--ink-12);
+}
+
+.ageRank {
+  color: var(--ink-30);
+  text-align: center;
+}
+
+.ageWho {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.ageWho .caption {
+  overflow: hidden;
+  color: var(--ink-63);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ageCards {
+  color: var(--ink-66);
+}
+
+/* The seat that took it: the clay bar and wash every taken row in a ceremony
+   wears, and its count in full ink. The rank numeral steps up with it. */
+.ageSeatCrowned {
+  background: var(--mood-band);
+  box-shadow: inset 3px 0 0 var(--mood-ink);
+}
+
+.ageSeatCrowned .ageRank,
+.ageSeatCrowned .ageCards {
+  color: var(--clay-ink);
+}
+
+/* The riot's insurance slots are picks too, but they sit in a stack that also
+   carries a heading and a listbox — so they keep the tablet's own gutter rather
+   than bleeding, and are parted by the same hairlines. */
+.ceremony .riotInsuranceStack {
+  gap: 0;
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.ceremony .riotInsuranceStack > .label {
+  padding-bottom: 6px;
+  color: var(--ink-63);
+}
+
+.ceremony .riotInsuranceRow {
+  align-items: start;
+}
+
+/* Short on purpose: the list belongs to the concession slot beside it, and a
+   tall one leaves a lake of ivory between that slot and the next. */
+.ceremony .riotConcessionList {
+  max-height: 84px;
+}
+
+.tabletFoot {
+  display: grid;
+}
+
+.tabletFootRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+}
+
+/* ── The deck the fate came out of ───────────────────────────────────────────
+   Outside the card, because it is a fact about the table rather than about this
+   card — but STACKED under it, not pinned to the chrome. Pinned, it landed on
+   the command dock's line regardless of how tall the card was: 170px adrift of
+   a short card at 1920, and straight through the middle of a 659px one at
+   1440×900 and below, where it rendered chopped in half behind the card.
+
+   The scrim becomes a column and centres the pair, so the note is always the
+   card's own footnote at 16px and can never meet it. */
+.modalBackdrop.scrimNoted {
+  flex-direction: column;
+  gap: 16px;
+}
+
+.deckEcho {
+  margin: 0;
+  color: var(--ivory-45);
+  letter-spacing: 0.28em;
+  text-align: center;
+}
+
+/* ── The ceremonies MOVE ─────────────────────────────────────────────────────
+   A rite that arrives fully-formed is an illustration of a rite. Every one of
+   these is an OBJECT doing what the object does — a card is dealt, a tablet is
+   laid down, a die tumbles and settles, and the verdict is read out only once
+   the die has stopped. Nothing here is decoration for its own sake: the die's
+   motion in particular is the whole difference between a number you rolled and
+   a number the engine told you.
+
+   The sheet had NO keyframes at all, which is why every ceremony read as a
+   static picture. `LacquerDie.tsx` was doing its part in JS the whole time —
+   flipping faces on a cube that never budged.
+
+   Everything below is off under `prefers-reduced-motion`, at the foot of the
+   file. Delays are keyed to the die: it settles at 400ms (`FLIP_MS`), so the
+   figure lands after it and the verdict is read after that. */
+
+/* A fate is DEALT: it comes in off the deck, off-axis, and squares up. */
+@keyframes fateDeal {
+  from {
+    transform: translate3d(0, 26px, 0) rotate(-2.4deg) scale(0.94);
+    opacity: 0;
+  }
+
+  60% {
+    opacity: 1;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* A tablet is LAID DOWN: heavier, flatter, no spin. */
+@keyframes tabletLay {
+  from {
+    transform: translate3d(0, 16px, 0) scale(0.985);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* The table goes dark before the object arrives on it. */
+@keyframes ceremonyDusk {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* The die: thrown, caught by the table, one last shudder. The rotation is done
+   by 77% — 400ms of 520ms — so the face stops changing exactly as the cube
+   stops turning, and the tail is the settle. */
+@keyframes dieTumble {
+  0% {
+    transform: translate3d(0, -22px, 0) rotate(-24deg) scale(0.82);
+  }
+
+  38% {
+    transform: translate3d(0, 4px, 0) rotate(12deg) scale(1.05);
+  }
+
+  62% {
+    transform: translate3d(0, -5px, 0) rotate(-7deg) scale(0.99);
+  }
+
+  77% {
+    transform: rotate(2.5deg) scale(1.03);
+  }
+
+  90% {
+    transform: rotate(-1deg) scale(0.995);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+/* What the die found, read out after it has stopped. */
+@keyframes verdictRise {
+  from {
+    transform: translate3d(0, 7px, 0);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* The figure is CARVED, so it arrives large and settles to size rather than
+   sliding in from somewhere. */
+@keyframes figureStrike {
+  from {
+    transform: scale(1.38);
+    opacity: 0;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.modalBackdrop.ceremonyScrim {
+  animation: ceremonyDusk 240ms ease-out both;
+}
+
+.fateCard {
+  animation: fateDeal 380ms cubic-bezier(0.17, 0.84, 0.35, 1.02) both;
+}
+
+.ceremonyTablet {
+  animation: tabletLay 300ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.lacquerDie {
+  animation: dieTumble 520ms cubic-bezier(0.2, 0.72, 0.3, 1) both;
+}
+
+/* Soft only while the faces are changing; the settled face is crisp. The class
+   comes off the moment the die stops. */
+.lacquerDie.dieRolling .diePips {
+  filter: blur(0.6px);
+}
+
+/* The label can come with the throw; the number the die found cannot. */
+.dramaOutcome .label {
+  animation: verdictRise 240ms ease-out both;
+}
+
+.dramaOutcome h3 {
+  animation: verdictRise 280ms ease-out 400ms both;
+}
+
+.dramaGain {
+  animation: figureStrike 300ms cubic-bezier(0.2, 0.9, 0.3, 1.1) 500ms both;
+}
+
+.dramaOutcome .caption {
+  animation: verdictRise 260ms ease-out 560ms both;
+}
+
+/* Only the verdict that FOLLOWS a die waits for it. The pre-roll modifier line
+   sits in the same band with no `.drama` before it, and must not be withheld. */
+.drama ~ .tabletVerdict {
+  animation: verdictRise 300ms ease-out 620ms both;
+}
+
+/* The table dims around the row the die found, rather than arriving dimmed. */
+.oddsRow {
+  transition:
+    opacity 300ms ease 380ms,
+    border-color 300ms ease 380ms;
+}
+
+.oddsRow > * {
+  transition:
+    background-color 300ms ease 380ms,
+    color 300ms ease 380ms,
+    box-shadow 300ms ease 380ms;
+}
+
+/* A commit that has just changed its mind about the mood shouldn't jump colour. */
+.ceremonyCommit {
+  transition:
+    background 220ms ease,
+    box-shadow 160ms ease;
+}
+
+/* ── Stillness ───────────────────────────────────────────────────────────────
+   Every animation above is off, not merely faster. A player who asked for
+   stillness gets the finished state on the first frame — and `LacquerDie` makes
+   the same promise in JS, so the die never even paints a face it did not roll. */
+@media (prefers-reduced-motion: reduce) {
+  .modalBackdrop.ceremonyScrim,
+  .fateCard,
+  .ceremonyTablet,
+  .lacquerDie,
+  .dramaOutcome .label,
+  .dramaOutcome h3,
+  .dramaOutcome .caption,
+  .dramaGain,
+  .drama ~ .tabletVerdict {
+    animation: none;
+  }
+
+  .lacquerDie.dieRolling .diePips {
+    filter: none;
+  }
+
+  .oddsRow,
+  .oddsRow > *,
+  .ceremonyCommit {
+    transition: none;
+  }
+}

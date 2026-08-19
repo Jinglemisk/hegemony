@@ -181,213 +181,113 @@
   min-width: 118px;
 }
 
-.strategyTopbar {
-  /* events (1fr) | season cluster (auto, dead-centre) | roster (1fr). Full-width
-     and flush — no max-width, or the spine leaves a gap at the screen's edge. */
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 14px;
-  /* Pinned, not content-sized: the left rail starts at --chrome-top, so if this
-     bar can grow past it the rail tucks underneath. One value, both edges. */
-  height: var(--chrome-top);
-}
-
-.scoreboardPanel {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  overflow: visible;
-  padding: 2px 0;
-}
-
-/* ── Top bar: resources split around the season medallion (ui-refit Step 3) ──── */
-.seasonBanner {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 18px;
-  min-width: 0;
-}
-
-/* Resources go flat on the top bar — never a plate — icon over value + delta. */
-.topResourceHalf {
-  display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  padding: 2px 0 0;
-}
-
-/* A vertical stack, not a row: icon over stockpile over income. Every resource
-   reads down the same three registers, so the six line up across the bar. */
-.topResourceHalf .resourcePill {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
-
-.topResourceHalf .resourceIcon {
-  width: 22px;
-  height: 22px;
-}
-
-.topResourceHalf .resourceValue {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.topResourceHalf .resourceValue strong {
-  color: var(--ink);
-  font-family: var(--disp);
-  font-size: 0.9rem;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.topResourceHalf .resourceDelta {
-  font-size: 0.62rem;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-/* The season cluster: the medallion at centre. Its caption reads from the bottom
-   spine now, so the disc stays compact and the resources tuck close on either
-   side instead of being shoved out by a caption. */
-.seasonCluster {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 0;
-}
-
-.seasonDialFrame {
-  flex: none;
-  line-height: 0;
-  /* Centred in the bar — the grid's align-items:center does it; no nudge. The old
-     translateY(6px) shoved it low (12px of air above, 1px below). */
-}
-
-/* Season dial — a round indicator framing the current season's painted emblem. */
-.seasonDial {
-  display: grid;
-  flex: none;
-  place-items: center;
-  overflow: hidden;
-  width: 60px;
-  height: 60px;
-  border: 1.5px solid color-mix(in srgb, var(--season-tint, var(--clay)) 48%, var(--line-strong));
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 40%,
-    color-mix(in srgb, var(--season-tint, var(--clay)) 13%, rgb(255 248 231 / 82%)),
-    rgb(244 230 200 / 46%)
-  );
-  box-shadow:
-    inset 0 1px 3px rgb(72 42 21 / 12%),
-    0 2px 6px rgb(72 42 21 / 14%);
-}
-
-.seasonDialArt {
-  width: 92%;
-  height: 92%;
-  object-fit: contain;
-  filter: drop-shadow(0 1px 1px rgb(72 42 21 / 22%));
-}
-
-/* Event cards — top-left corner (seasonal + player), art + inline-icon effect. */
+/* Event slips — top-left corner. Bone chips with the card's art let into them,
+   a clay kicker naming the source (and, for a fate card, the seat), the name,
+   and the mechanical line. */
 .topbarEvents {
   display: flex;
   align-items: stretch;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
+/* ONE surface. The card this replaces was a bordered box with a second bordered
+   box — the art — sitting inside it, which is the nested-box reading the whole
+   overhaul is meant to be rid of. The art is now flush in the slip's own face,
+   and the slip's outline is an inset hairline rather than a border, so the chip
+   has an edge without having a frame.
+
+   And ONE SIZE. Each slip used to be sized by its own text — a long omen name
+   wrapped to three lines and stood a third taller than the season card beside
+   it, so the row of three read as three different kinds of object rather than
+   three of the same. They share the row equally now (`flex: 1 1 0`) and each is
+   the same fixed height, whatever is written in it. */
 .topbarEventCard {
   position: relative;
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
+  display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
-  max-width: 264px;
-  padding: 5px 9px 5px 6px;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--line-strong);
-  border-radius: 8px;
-  background: var(--panel);
+  max-width: var(--slip-w);
+  height: var(--slip-h);
+  padding: 4px 10px 4px 4px;
+  border: 0;
+  border-radius: 3px;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--ivory), var(--bone));
+  box-shadow:
+    0 1px 4px rgb(24 18 16 / 22%),
+    inset 0 0 0 1px var(--ink-30);
+
+  /* Every line in the slip is one size; only the kicker steps down, and it takes
+     that step in `em` off the slip. Cinzel and clay are what make a kicker a
+     kicker — a third point size would just be another thing to keep in tune.
+     Fluid, because this is the one place on the bar where the text has a fixed
+     column and the column is what shrinks: half the viewport, less the spine,
+     less the roster's air, shared three ways. Holding 11px down to 1280 made
+     every name wrap and pushed the slips through the bottom of the bar. */
+  font-size: clamp(0.55rem, 0.39rem + 0.25vw, 0.7rem);
+  line-height: 1.18;
 }
 
-.topbarEventActive {
-  border-left-color: var(--clay);
-}
-
+/* The art is a square as tall as the slip's text block, so three slips side by
+   side line up on both edges rather than only on the top one. */
 .topbarEventArt {
-  width: 30px;
-  height: 40px;
-  border: 1px solid rgb(143 46 19 / 40%);
-  border-radius: 4px;
+  width: calc(var(--slip-h) - 8px);
+  height: calc(var(--slip-h) - 8px);
+  flex: none;
+  border: 0;
+  border-radius: 2px;
   object-fit: cover;
-}
-
-.topbarEventArtEmpty {
-  border-style: dashed;
-  border-color: var(--line);
-  background: repeating-linear-gradient(
-    135deg,
-    transparent,
-    transparent 4px,
-    rgb(36 25 16 / 6%) 4px,
-    rgb(36 25 16 / 6%) 5px
-  );
 }
 
 .topbarEventBody {
   display: grid;
-  gap: 1px;
+  align-content: center;
   min-width: 0;
 }
 
 .topbarEventLabel {
-  color: var(--muted);
-  font-size: 0.5rem;
+  color: var(--clay-ink);
+  font-family: var(--font-display);
+  font-size: 0.76em;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* A fate card is somebody's, and the seat's own glaze says whose. */
+.topbarEventCard-fate .topbarEventLabel {
+  color: var(--porphyra);
 }
 
 .topbarEventName {
   overflow: hidden;
-  color: var(--fg);
+  color: var(--ink);
   font-family: var(--font-display);
-  font-size: 0.74rem;
-  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.12;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.topbarEventActive .topbarEventName {
-  color: var(--clay);
-}
-
+/* The effect line runs to one line and FADES OUT rather than ellipsizing.
+   It is not prose: it is numerals with resource glyphs between them, and both
+   the ways a box normally shortens text damage a glyph. `-webkit-line-clamp`
+   cut the second line in half and left the severed top of an icon against the
+   slip's edge; `text-overflow: ellipsis` slices whatever inline-block happens to
+   straddle the edge. A mask takes the same width and lets a half-shown glyph
+   disappear instead of being cut — and the tooltip carries the whole line
+   anyway, which is what the slip is a summary OF. */
 .topbarEventEffect {
-  display: -webkit-box;
+  display: block;
   overflow: hidden;
-  color: var(--muted);
-  font-size: 0.62rem;
-  line-height: 1.25;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
+  color: var(--ink-66);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 16px), transparent);
+  white-space: nowrap;
 }
 
 .topbarEventTooltip {
@@ -426,7 +326,7 @@
 }
 
 .topbarEventTooltip strong {
-  color: var(--clay);
+  color: var(--clay-ink);
   font-family: var(--font-display);
   font-size: 0.9rem;
 }
@@ -479,7 +379,7 @@
 }
 
 .gameOverSeat.gameOverWinner strong {
-  color: var(--clay);
+  color: var(--clay-ink);
 }
 
 .gameOverDot {

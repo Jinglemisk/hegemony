@@ -28,6 +28,7 @@ import { MovePopsSourcePopover, MovePopsTargetPopover } from "./board/map/MovePo
 import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelection";
 import { useMapSelection } from "./board/map/useMapSelection";
 import { CommandDock } from "./board/command/CommandDock";
+import { armedVerbOf, isTurnOpen, turnCommitTitle } from "./board/command/verbs";
 import { CalmModal } from "./board/modals/CalmModal";
 import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
@@ -39,8 +40,10 @@ import { routeTo, type ConsultRoute, type LedgerRoute } from "./board/ledger/rou
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
 import { RiotModal } from "./board/modals/RiotModal";
 import { VentureModal } from "./board/modals/VentureModal";
+import { MechanicsDetails } from "./MechanicsDetails";
+import { Tooltip } from "./overlays/Tooltip";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
-import { SeasonStatus } from "./board/topbar/SeasonStatus";
+import { TurnDial } from "./board/topbar/TurnDial";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
 import { AssemblyPanel } from "./board/assembly/AssemblyPanel";
 import { GameUiProvider } from "./board/GameUiProvider";
@@ -73,10 +76,17 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
   colony: "founding colony",
 };
 
-// Resources ride the top bar now (ui-refit Step 3 / Q17), split around the season
-// medallion: raw materials on the left, the softer economy on the right.
-const TOP_RESOURCES_LEFT: Resource[] = ["wood", "stone", "food"];
-const TOP_RESOURCES_RIGHT: Resource[] = ["gold", "influence", "happiness"];
+// One spine, dead centre of the top bar. The resources used to be split in two
+// halves flanking the season medallion; that arrangement made the bar's centre a
+// picture rather than the numbers, and the numbers are what a player reads
+// forty times a turn. The medallion became the season clock on the bottom rail.
+/* The spine reads out from the dial in the middle of it: what the land gives on
+   the left, what the city makes of it on the right. Split rather than run as one
+   row of six because the middle of that row is where the turn dial now sits, and
+   an odd number of numerals either side of a large object reads as a scale that
+   balances. */
+const MATERIAL_RESOURCES: Resource[] = ["wood", "stone", "food"];
+const CIVIC_RESOURCES: Resource[] = ["gold", "influence", "happiness"];
 
 /**
  * Exactly one dialog owns the screen at a time — the union makes that a type
@@ -134,6 +144,10 @@ export function HegemonyBoard({
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
   const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent);
+  // The one gate the turn dial needs. It is the same gate every verb sits behind
+  // (verbs.tsx), asked without a board fact in sight.
+  const turnGate = { isActive, phase: ctx.phase, hasPendingPlayerEvent };
+  const turnOpen = isTurnOpen(turnGate);
   const activeEffects = useMemo(() => getActiveEffects(G, viewerId), [G, viewerId]);
   const gameUi = useMemo<GameUi>(
     () => ({
@@ -413,29 +427,52 @@ export function HegemonyBoard({
             ) : null}
           </div>
 
+          {/* Symmetric, and absolutely so: the event slips read from the left, the
+          roster sits at the right, and the resource spine is pinned to the bar's
+          true centre rather than to whatever space the two ends left over. The
+          turn dial is the centre of that spine, so the one object the eye goes to
+          first is also the only thing on the bar that never moves. */}
           <header className="topbar strategyTopbar">
             <TopbarEvents G={G} />
 
-            {/* Resources split around the season medallion (Q17 · KYKLOS arrangement). */}
-            <div className="seasonBanner">
+            <div className="resourceSpine">
               <ResourceGrid
-                className="topResourceHalf topResourceLeft"
-                order={TOP_RESOURCES_LEFT}
+                order={MATERIAL_RESOURCES}
+                tiles={G.board.tiles}
                 resources={viewer.resources}
                 deltas={projectedIncome}
                 breakdown={projectedIncomeBreakdown}
-                resetKey={`resL-${viewerId}`}
+                resetKey={`res-${viewerId}`}
               />
 
-              <SeasonStatus G={G} />
+              <Tooltip
+                content={
+                  <MechanicsDetails
+                    blockedReason={turnOpen ? undefined : turnCommitTitle(turnGate)}
+                    heading="End Turn"
+                  >
+                    {turnOpen ? (
+                      <p className="mechanicsExplanation">{turnCommitTitle(turnGate)}</p>
+                    ) : null}
+                  </MechanicsDetails>
+                }
+                triggerClassName="turnDialTrigger"
+              >
+                <TurnDial
+                  G={G}
+                  actingPlayerId={currentPlayerId}
+                  canEndTurn={turnOpen}
+                  onEndTurn={events.endTurn}
+                />
+              </Tooltip>
 
               <ResourceGrid
-                className="topResourceHalf topResourceRight"
-                order={TOP_RESOURCES_RIGHT}
+                order={CIVIC_RESOURCES}
+                tiles={G.board.tiles}
                 resources={viewer.resources}
                 deltas={projectedIncome}
                 breakdown={projectedIncomeBreakdown}
-                resetKey={`resR-${viewerId}`}
+                resetKey={`res-${viewerId}`}
               />
             </div>
 
@@ -468,7 +505,6 @@ export function HegemonyBoard({
                 <EmpireIntelPanel
                   activeTab={ledgerRoute.view}
                   onBuildBuildingRequest={requestBuildBuilding}
-                  onClose={() => setLedgerOpen(false)}
                   onBankSell={moves.bankSell}
                   onBankBuy={moves.bankBuy}
                   onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
@@ -489,11 +525,7 @@ export function HegemonyBoard({
 
             {isConsultOpen ? (
               <aside className="panel consultPanel">
-                <ConsultPanel
-                  activeTab={consultRoute.view}
-                  codexTarget={codexTarget}
-                  onClose={() => setConsultOpen(false)}
-                />
+                <ConsultPanel activeTab={consultRoute.view} codexTarget={codexTarget} />
               </aside>
             ) : null}
           </section>
@@ -504,10 +536,8 @@ export function HegemonyBoard({
             canFoundColony={canFoundColony}
             canUpgradeCity={canUpgradeCity}
             canBuild={canBuild}
-            isFoundColonyActive={mapSelection.selection?.mode.kind === "foundColony"}
-            isBuildActive={mapSelection.selection?.mode.kind === "build"}
+            armedVerb={armedVerbOf(mapSelection.selection?.mode)}
             chronicleTicker={latestChronicleLine}
-            onEndTurn={events.endTurn}
             // Grow / Move / Found / Build are map modes, not dialogs (refit scope 3):
             // each arms the board and clears any open dialog, so nothing covers the answer.
             onGrowPopRequest={() => armSelection({ kind: "growPop" })}
@@ -660,13 +690,13 @@ export function HegemonyBoard({
             <GameOverModal G={G} onInspectBoard={() => setGameOverDismissed(true)} />
           ) : null}
           {G.pendingPlayerEvent ? <PendingPlayerEventModal /> : null}
-          {/* The Assembly owns the sea from spring of Year 2 (assembly-politicians.md
-          §1.2). It mounts off engine state like the omen, and it deliberately leaves
-          the top bar, both rails and the dock live around it — you want to read your
-          cities, pops and market before you vote. */}
-          {G.assembly ? (
-            <AssemblyPanel consultOpen={isConsultOpen} ledgerOpen={isLedgerOpen} />
-          ) : null}
+          {/* The Assembly TAKES OVER the table from spring of Year 2
+          (assembly-politicians.md §1.2; owner ruling 2026-08-15). It mounts off
+          engine state like the omen, and it covers the whole viewport — bars,
+          rails and dock included. It therefore takes the seat switcher with it:
+          the roster it covers is the only way a hotseat changes hands, and each
+          of the scene's seat plaques performs that same act. */}
+          {G.assembly ? <AssemblyPanel onTakeSeat={onPlayerIDChange} /> : null}
           {G.yearOmen &&
           G.yearOmen.year !== seenOmenYear &&
           !G.pendingRiot &&

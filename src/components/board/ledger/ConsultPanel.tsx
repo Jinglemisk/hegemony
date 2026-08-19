@@ -18,20 +18,24 @@ import { CONSULT_TABS, ledgerTabLabel } from "./tabs";
 function ConsultPanelComponent({
   activeTab,
   codexTarget,
-  onClose,
 }: {
   activeTab: ConsultTab;
   /** A deep-link destination for the Codex (a rulebook chapter + nonce), or null. */
   codexTarget?: { chapter: string; nonce: number } | null;
-  onClose: () => void;
 }) {
   const { G, viewerId } = useGameUi();
   const title = ledgerTabLabel(activeTab);
-  const titleIcon = CONSULT_TABS.find(({ tab }) => tab === activeTab)?.icon;
+  const titleGlyph = CONSULT_TABS.find(({ tab }) => tab === activeTab)?.glyph;
 
   return (
     <div className="empireIntel">
-      <LedgerPanelHeader title={title} icon={titleIcon} onClose={onClose} />
+      {/* The Chronicle's length is the one count worth printing, and the header
+          is where the design puts it — a rail badge cannot hold three digits. */}
+      <LedgerPanelHeader
+        title={title}
+        glyph={titleGlyph}
+        count={activeTab === "chronicle" ? G.log.length : undefined}
+      />
 
       <div className="intelBody">
         {activeTab === "chronicle" ? <ActionLogPanel G={G} /> : null}

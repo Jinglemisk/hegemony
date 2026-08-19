@@ -1,0 +1,173 @@
+/* type — THE role sheet. Nine roles, and nothing else in the UI may set a size.
+ *
+ * The 2026-08-04 audit counted 47 distinct font sizes across 237 declarations,
+ * half px and half rem, with no shared vocabulary; that is why the old chrome
+ * reads as noise. These nine roles replace all of them. `scripts/check-ui-system.mjs`
+ * treats this file (and fonts.css) as the only legal home for `font-size`, and
+ * ratchets the grandfathered violations elsewhere down to zero.
+ *
+ * Sizes are the @1440 values from docs/archive/plans/ui-overhaul.md. They ride --ui-scale
+ * through rem, exactly like the rest of the chrome: :root's font-size is already
+ * `16px * --ui-scale`, so 1rem is one scaled step and the whole register shrinks
+ * together at 1280.
+ *
+ * Choosing a role:
+ *   display   a rite is happening — one per scene, never twice on screen
+ *   title     the name of a panel or a card
+ *   verb      something you can press
+ *   label     the micro-caps that name a column, a stat, a state
+ *   body      prose the player reads
+ *   body-em   flavour, quotes, the game's own voice
+ *   stat      any number inline with text
+ *   stat-lg   the number a scene is ABOUT
+ *   caption   tooltips, timestamps, provenance
+ */
+
+.display,
+.title,
+.verb,
+.label {
+  font-family: var(--disp);
+  text-transform: uppercase;
+}
+
+.display {
+  font-size: 1.5rem; /* 24px @1440 */
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.14;
+}
+
+/* The one step up, for a scene's own head (game over, the Assembly). */
+.display.display-xl {
+  font-size: 2.125rem; /* 34px */
+}
+
+.title {
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+
+.verb {
+  font-size: 0.75rem; /* 12px */
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+}
+
+.verb.verb-lg {
+  font-size: 0.8125rem; /* 13px */
+}
+
+/* The 11px floor. Below this the display face stops being readable at all, and
+   the audit found several labels at 7.5px. There is no smaller role on purpose. */
+.label {
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.25;
+}
+
+.body,
+.body-em,
+.stat,
+.stat-lg,
+.caption {
+  font-family: var(--body);
+  text-transform: none;
+}
+
+.body {
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.body.body-sm {
+  font-size: 0.875rem; /* 14px */
+}
+
+.body-em {
+  font-size: 0.875rem; /* 14px */
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/* Every number in the UI is tabular, always — a column of figures that shifts
+   width as it ticks is the single loudest thing a strategy UI can do. */
+.stat,
+.stat-lg,
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
+}
+
+.stat {
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.stat-lg {
+  font-size: 1.1875rem; /* 19px */
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* The resource spine and the tally numerals — the two places a number IS the
+   scene. Anything bigger than this is a ceremony, and gets .display. */
+.stat-lg.stat-xl {
+  font-size: 1.625rem; /* 26px */
+}
+
+/* The one number a whole page is ABOUT: the unrest alarm's happiness, the
+   victory heldline's count, a ceremony's carved figure. At most one per page —
+   a second would mean neither is the answer.
+
+   34px is the fate card's own spec (c-event.html). The venture's payoff is drawn
+   at 38 and the Assembly's tally at 56, but those are scene numerals inside a
+   scene that owns its whole viewport, not page numerals; giving each its own
+   role would make the size table longer than the thing it disciplines. */
+.stat-lg.stat-hero {
+  font-size: 2.125rem; /* 34px */
+}
+
+.caption {
+  font-size: 0.78125rem; /* 12.5px */
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+/* Judgment, never identity. A status colour appears only on text and only next
+   to a sign — the icon beside it carries what the number is about, so colour
+   never has to. Owner glaze and status colour never share a pixel class. */
+.pos {
+  color: var(--pos);
+}
+
+.neg {
+  color: var(--neg);
+}
+
+.warn {
+  color: var(--warn);
+}
+
+/* On lacquer objects (the seal, ostraka, tooltips) the same three at reading
+   contrast — the dark-ground twins, not different meanings. */
+.onDark .pos {
+  color: var(--pos-lit);
+}
+
+.onDark .neg {
+  color: var(--neg-lit);
+}
+
+.onDark .warn {
+  color: var(--warn-lit);
+}
