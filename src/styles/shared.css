@@ -92,9 +92,12 @@ button.richTokenLink {
   text-underline-offset: 2px;
 }
 
+/* The glyph LEADS its word (AnnotatedText.tokenIcon), so the air goes on its
+   right — between glyph and word — and only a hair on its left, where the
+   preceding numeral already sits. */
 .richIcon {
   width: 1.08em;
   height: 1.08em;
-  margin: 0 0.04em 0 0.18em;
+  margin: 0 0.18em 0 0.04em;
   vertical-align: -0.22em;
 }

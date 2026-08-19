@@ -283,6 +283,7 @@
    disappear instead of being cut — and the tooltip carries the whole line
    anyway, which is what the slip is a summary OF. */
 .topbarEventEffect {
+  display: block;
   overflow: hidden;
   color: var(--ink-66);
   mask-image: linear-gradient(90deg, #000 calc(100% - 16px), transparent);

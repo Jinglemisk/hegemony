@@ -172,6 +172,11 @@
   display: flex;
   align-items: center;
   gap: var(--sp-4);
+  /* Exactly the bar's height. Sized by its tallest child instead, the 92px dial
+     made the spine 92 tall, and centred on a 73px bar that put the spine's own
+     box 10px above the top of the screen — the dial was painted where it should
+     be, by a transform, but the BOX it was painted from was off-screen. */
+  height: var(--chrome-top);
   transform: translate(-50%, -50%);
 }
 
@@ -572,21 +577,20 @@
 }
 
 /* The ticker: narration on the bar, stopping short of the verbs. It lies on the
-   bar, which runs unbroken under the end blocks, so the corner fix costs it
-   nothing. With the season dial gone from the left corner it starts inboard of
-   the left block instead, and its width is still bounded by where the verb spine
-   actually begins rather than by a flat 260 that only happened to fit. */
+   BAR, which runs edge to edge and unbroken underneath the two end blocks — so it
+   starts at the bar's own left padding now that no dial sits in that corner. It
+   used to clear the season clock, and when the clock left it was moved inboard of
+   the left block instead, which is a surface it was never under: that left it
+   109px wide at 1440 and cut every chronicle line in half. Its far end is still
+   bounded by where the verb spine actually begins. */
 .dockTicker {
   position: absolute;
   bottom: 0;
-  left: calc(var(--plinth-l) + var(--sp-3));
+  left: var(--sp-4);
   z-index: 2;
   display: flex;
   align-items: center;
-  max-width: min(
-    320px,
-    calc(50vw - var(--plinth-l) - var(--sp-3) - var(--verb-spine-half) - var(--sp-3))
-  );
+  max-width: min(420px, calc(50vw - var(--sp-4) - var(--verb-spine-half) - var(--sp-3)));
   height: var(--bot-h);
 }
 
@@ -657,13 +661,19 @@
    measured {0,0,0,0} and landed in the top-left corner of the screen (QA-DOCK-1).
    Kept as a hard-won rule, not rediscovered. */
 .turnDialTrigger {
+  position: relative;
+  /* The disc is taller than the bar and the bar's top edge is the top of the
+     screen, so the whole overhang goes DOWNWARD: the trigger starts at the top of
+     the spine rather than being centred in it, and the 3px is headroom for the
+     hover lift, which would otherwise clip the very thing it draws attention to.
+     Done with `top`, not a transform — a transform moves the paint and leaves the
+     box behind, and the box is what the tooltip anchors to and what the auditor
+     measures. */
+  top: 3px;
+  align-self: flex-start;
   display: block;
   width: var(--turn-d);
   height: var(--turn-d);
-  /* The disc is taller than the bar, and the bar's top edge is the top of the
-     screen — so the overhang has to go entirely DOWNWARD. Centred, the top of
-     the dial was sliced off by the viewport. Flush at the top, hanging below. */
-  transform: translateY(calc((var(--turn-d) - var(--chrome-top)) / 2));
 }
 
 /* The roster is pushed to the far right so the spine's true centre is free. */

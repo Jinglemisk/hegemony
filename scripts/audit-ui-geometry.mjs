@@ -44,8 +44,26 @@ const PROBE = () => {
   // · When a modal is open the board sits under it. Every label on the board
   //   then "collides" with the dialog, which is what a modal is for. With a
   //   dialog up we audit the dialog and the fixed chrome, nothing beneath.
+  //
+  // And one DECLARED exclusion, which is different in kind from the three above
+  // and is why it is reported rather than dropped. An element carrying
+  // `data-truncates="summary"` is a deliberate one-line précis of something
+  // written out in full within reach — the event slips in the top bar are the
+  // case: three chips of one fixed size, each summarising a card whose whole
+  // text is in the tooltip you get by pointing at it. Uniform chips and
+  // variable-length card names cannot both be had, and the alternative — chips
+  // sized by their own text — is what made the row read as three different kinds
+  // of object.
+  //
+  // The exclusion is opt-in per element, X-axis only, and COUNTED: the run prints
+  // "N declared summaries" beside the defect total, so the number can never
+  // quietly grow. Nothing about it makes the checker blind — an element that
+  // clips vertically, or that clips without saying so, is still a defect.
   const HIDDEN_TEXT = /(^|\s)(visuallyHidden|srOnly|sr-only|visually-hidden)(\s|$)/;
   const isHiddenText = (el) => typeof el.className === "string" && HIDDEN_TEXT.test(el.className);
+
+  /** Declared one-line summaries, and anything drawn inside one. */
+  const declaredSummary = (el) => el.closest('[data-truncates="summary"]');
 
   const dialog = document.querySelector('[role="dialog"], dialog[open]');
   const beneathModal = (el) => dialog !== null && !dialog.contains(el) && !el.contains(dialog);
@@ -150,8 +168,12 @@ const PROBE = () => {
       const dx = el.scrollWidth - el.clientWidth;
       const dy = el.scrollHeight - el.clientHeight;
       if (dx > TOL || dy > TOL) {
+        // A declared summary shortens its ONE line and says so. Vertical
+        // clipping in one is still a defect — that is the class that severs a
+        // glyph in half, and no declaration excuses it.
+        const declared = el.dataset.truncates === "summary" && dx >= dy;
         out.push({
-          kind: "TRUNCATED",
+          kind: declared ? "SUMMARY" : "TRUNCATED",
           el: describe(el),
           by: Math.round(Math.max(dx, dy)),
           axis: dx > dy ? "x" : "y",
@@ -161,6 +183,9 @@ const PROBE = () => {
 
     // ── OVERFLOW ─────────────────────────────────────────────────────────────
     // Escaping the nearest ancestor that would clip it. Walk up to find it.
+    // Inside a declared summary this is the same fact the SUMMARY row already
+    // states, once per word of the line that was shortened.
+    if (declaredSummary(el) && declaredSummary(el) !== el) continue;
     let parent = el.parentElement;
     while (parent && parent !== document.body) {
       const p = info.get(parent);
@@ -326,17 +351,26 @@ for (const d of report) {
     folded.set(key, { ...d, widths: [d.width] });
   }
 }
-const rows = [...folded.values()].sort((a, b) => b.by - a.by);
+const all = [...folded.values()].sort((a, b) => b.by - a.by);
+const rows = all.filter((r) => r.kind !== "SUMMARY");
+const summaries = all.filter((r) => r.kind === "SUMMARY");
 
 await writeFile(
   `${ROOT}/report.json`,
-  JSON.stringify({ rows, consoleErrors: [...new Set(consoleErrors.map((e) => e.text))] }, null, 2),
+  JSON.stringify(
+    { rows, summaries, consoleErrors: [...new Set(consoleErrors.map((e) => e.text))] },
+    null,
+    2,
+  ),
 );
 
 const bySurface = new Map();
 for (const r of rows) bySurface.set(r.surface, [...(bySurface.get(r.surface) ?? []), r]);
 
-console.log(`\n${rows.length} distinct defects across ${bySurface.size} surfaces\n`);
+console.log(
+  `\n${rows.length} distinct defects across ${bySurface.size} surfaces` +
+    `  ·  ${summaries.length} declared summaries\n`,
+);
 for (const [surface, list] of [...bySurface.entries()].sort((a, b) => b[1].length - a[1].length)) {
   console.log(`── ${surface} (${list.length})`);
   for (const r of list.slice(0, 24)) {

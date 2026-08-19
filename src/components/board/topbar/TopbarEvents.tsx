@@ -117,13 +117,25 @@ function TopbarEventSlip({
       <img alt="" className="topbarEventArt" src={artUrl} />
       <span className="topbarEventBody">
         <span className="topbarEventLabel">{kicker}</span>
-        <strong className="topbarEventName">{name}</strong>
+        {/* One line, shortened when it has to be. Three slips of one fixed size
+            and card names of any length cannot both be had, and slips sized by
+            their own text is what made the row read as three different kinds of
+            object. `data-truncates` says so to the geometry auditor, which counts
+            declared summaries separately rather than either failing them or
+            silently ignoring them. The whole name is in the tooltip. */}
+        <strong className="topbarEventName" data-truncates="summary">
+          {name}
+        </strong>
         {/* No codex links in the slip. A slip is a ~10px summary line inside a
             control that is itself a tab stop, so every linked noun in it cost a
             second stop — Tab landed on "Warehouse Fire" and then on a bare
             "Wood" (QA-TOPBAR-1). The tooltip below carries the same nouns with
             room to click them. */}
-        <EffectLine effect={summary} className="topbarEventEffect" links={false} />
+        {/* The clipping box is this span, not the effect line inside it: the
+            element that shortens the line is the element that declares it. */}
+        <span className="topbarEventEffect" data-truncates="summary">
+          <EffectLine effect={summary} links={false} />
+        </span>
       </span>
     </>
   );

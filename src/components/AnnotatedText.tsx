@@ -194,6 +194,15 @@ function tokenGlyph(token: Token): GlyphId | null {
   }
 }
 
+/**
+ * The glyph leads, the word follows: "-1 ⬮ Gold", not "-1 Gold ⬮".
+ *
+ * It used to trail, and the effect of that was that the fastest thing to read —
+ * the picture — sat on the far side of the slowest. Reading a cost meant taking
+ * the numeral, then the word, then the glyph that had already said what the word
+ * said. Leading puts the glyph next to the digits it belongs to, which is the
+ * order the eye wants and the order every strategy game in this genre uses.
+ */
 function tokenIcon(token: Token) {
   const glyph = tokenGlyph(token);
 
@@ -302,13 +311,13 @@ function annotateInto(
           style={style}
           title={`Open the rulebook: ${label}`}
         >
-          {label}
           {tokenIcon(token)}
+          {label}
         </span>
       ) : (
         <span className="richToken" key={key} style={style}>
-          {label}
           {tokenIcon(token)}
+          {label}
         </span>
       ),
     );
