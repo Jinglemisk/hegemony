@@ -242,10 +242,14 @@ Reference: `ui-overhaul-prototypes/a-table.html` + `proto.css`.
   and both were folded into this one on 2026-08-19:
   - outer arc = how much of the whole game is spent, taken from the seasonal deck
     (played + remaining) rather than a configured maximum;
-  - season ring = four **fixed** quarters, each with its own emblem, and a needle
-    that swings to the season you are in. The face used to turn under a fixed
-    needle, which made four unlabelled pastel wedges of it (QA-SHELL-4): if the
-    current season is always in the same place, position says nothing;
+  - season ring = four quarters, each with its own emblem, **turned so the season
+    you are in arrives at six o'clock under a fixed needle** (owner, 2026-08-19).
+    A turning face was wrong when the dial sat in a corner — a season always in
+    the same place says nothing, and the wedges had nothing else in them to read
+    (QA-SHELL-4). It is right here: the dial hangs off the TOP of the screen, so
+    its lower half is the half you look at and the moving part has to live there,
+    and the wedges carry their own emblems now, so each names itself wherever it
+    has been turned to;
   - hub = the acting seat's blazon in its glaze, or an hourglass when that seat is
     yours. **Press and hold** to commit; the ring fills as you hold. Ending a turn
     is the one move that cannot be taken back and it used to be one click on the

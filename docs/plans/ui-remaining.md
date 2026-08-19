@@ -74,6 +74,25 @@ anything in that pass that took a pointer swallowed the press. Pressing a city,
 the most obvious thing on the board to press, did nothing at all. The tokens are
 `pointer-events: none` now; the tile's polygon is directly under every one of them.
 
+**Second round, same day, on looking at it:**
+
+- **The glyph leads its word** — `-1 ⬮ Gold`, not `-1 Gold ⬮`. The picture was on
+  the far side of the word it was faster to read than.
+- **A resource reads in two tiers**, stockpile over income: the total takes the
+  top three quarters of the pill and the per-turn rate the bottom quarter, in one
+  column beside the glyph. On one baseline the two competed — `27 +7 15 +1 11 +2`
+  is six figures of equal standing with no way to tell a total from a rate except
+  by reading the sign.
+- **The season ring turns; the needle is fixed at six o'clock.** That is the
+  opposite of a clock, and the opposite of what this dial did in the corner. It is
+  right here because the dial hangs off the top of the screen: its lower half is
+  the half you look at, so the moving part has to live there.
+- **The ledger tablets are 10% wider** (306/286 → 337/315). The board did NOT pay
+  for it: `--board-reserve-l`/`-r` now declare what the island holds clear,
+  independent of what a tablet happens to be. Tying the two together had made the
+  board's size a function of the ledger's, so every column the ledger gained came
+  out of the sea.
+
 `BOARD-BG-1`, `FRAME-1` and `DOCK-1` landed together, in that order, because
 each changed what the next one looked like. The sea is a CSS texture and three
 palette tokens (`--sea`, `--sea-lit`, `--sea-deep`); the 3.8 MB plate left the

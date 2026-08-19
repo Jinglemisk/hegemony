@@ -22,9 +22,19 @@ import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
  *
  *   · the **outer arc** is how much of the whole game is spent
  *   · the **season ring** is the four seasons, each in its own quarter with its
- *     own emblem, and a needle that swings to the one you are in
+ *     own emblem, turned so the season you are in sits at the BOTTOM under a
+ *     fixed needle
  *   · the **hub** is whose turn it is — the acting seat's blazon in its glaze,
  *     or, when that seat is yours, an hourglass you press and hold to commit
+ *
+ * The ring turns and the needle is fixed, which is the opposite of what a clock
+ * does and the opposite of what this dial did in the corner. It is right HERE
+ * because the dial hangs off the top of the screen: its upper half is against the
+ * bar and its lower half is the half you actually look at, so the one moving part
+ * has to live down there. The reason a turning face was wrong before
+ * (QA-SHELL-4) was that a season in a fixed place says nothing and the wedges had
+ * nothing else in them to read — they carry their own emblems now, so each
+ * quarter names itself wherever it has been turned to.
  *
  * Nothing here is written out. The ring says which season without the word, the
  * arc says how late it is without a count, and the year is already printed on
@@ -36,8 +46,12 @@ const SIZE = 128;
 const CENTER = SIZE / 2;
 const SEASON_COUNT = SEASONS.length;
 const SEASON_SWEEP = 360 / SEASON_COUNT;
-/** The middle of a season's quarter, clockwise from twelve. */
+/** The middle of a season's quarter, clockwise from twelve, before the ring is
+ *  turned. */
 const seasonAngle = (index: number) => index * SEASON_SWEEP + SEASON_SWEEP / 2;
+/** Six o'clock: where the needle stands and where the ring brings the season you
+ *  are in. */
+const NEEDLE_ANGLE = 180;
 /** Where a wedge's emblem sits, and how big it is drawn in dial units. */
 const EMBLEM_RADIUS = 36;
 const EMBLEM_SIZE = 14;
@@ -179,9 +193,10 @@ export function TurnDial({
 
   const { progress, begin, cancel } = useHoldToCommit(onEndTurn, canEndTurn);
 
-  const needleAngle = seasonAngle(seasonIndex);
-  const needle = polar(58, needleAngle);
-  const needleInner = polar(44, needleAngle);
+  // Turn the whole ring so the current season's quarter arrives under the needle.
+  const wheelTurn = NEEDLE_ANGLE - seasonAngle(seasonIndex);
+  const needle = polar(58, NEEDLE_ANGLE);
+  const needleInner = polar(44, NEEDLE_ANGLE);
   const calendar = `Year ${toRoman(year)}, ${season}. ${remaining} season${remaining === 1 ? "" : "s"} remain.`;
 
   const face = (
@@ -205,7 +220,7 @@ export function TurnDial({
           className={`dialSeason dialSeason-${name}${index === seasonIndex ? " isNow" : ""}`}
           d={seasonSector(46, 30)}
           key={name}
-          transform={`rotate(${index * SEASON_SWEEP} ${CENTER} ${CENTER})`}
+          transform={`rotate(${index * SEASON_SWEEP + wheelTurn} ${CENTER} ${CENTER})`}
         />
       ))}
 
@@ -213,7 +228,7 @@ export function TurnDial({
           picture, and the whole reason the quarters are legible is that each one
           shows its own season the right way up. */}
       {SEASONS.map((name, index) => {
-        const at = polar(EMBLEM_RADIUS, seasonAngle(index));
+        const at = polar(EMBLEM_RADIUS, seasonAngle(index) + wheelTurn);
 
         return (
           <g
@@ -226,10 +241,10 @@ export function TurnDial({
         );
       })}
 
-      {/* The face is fixed. The needle swings to the season you are in. */}
+      {/* The needle is fixed at six o'clock; the ring brings the season to it. */}
       <path
         className="dialNeedle"
-        d={`M ${needleInner.x.toFixed(2)} ${needleInner.y.toFixed(2)} L ${(needle.x + 5).toFixed(2)} ${(needle.y + 4).toFixed(2)} L ${(needle.x - 4).toFixed(2)} ${(needle.y - 5).toFixed(2)} Z`}
+        d={`M ${needleInner.x.toFixed(2)} ${needleInner.y.toFixed(2)} L ${(needle.x + 5).toFixed(2)} ${(needle.y - 4).toFixed(2)} L ${(needle.x - 5).toFixed(2)} ${(needle.y - 4).toFixed(2)} Z`}
       />
 
       {canEndTurn ? (

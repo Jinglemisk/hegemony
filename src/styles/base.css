@@ -215,29 +215,44 @@
   --verb-gap: calc(5px * var(--ui-scale));
   --verb-spine-w: calc(var(--verb-col) * 7 + var(--verb-gap) * 6);
   --verb-spine-half: calc(var(--verb-spine-w) / 2);
-  /* The unscaled design widths, named so JS can ask for them. ui/chromeMetrics.ts
-     divides the live --panel-w by --panel-w-base to learn how far --ui-scale has
-     shrunk the chrome; it used to carry a bare literal `360` for the same purpose.
-     The two tablets are ASYMMETRIC and narrower than the 360/360 the app had
-     drifted to (proto.css .tablet.left/.right): 306 and 286, each INCLUDING its
-     own tab spine. The board is what the extra 54px + 74px buys back. */
-  --panel-w-base: 306px;
-  --chron-w-base: 286px;
+  /* The two tablets' unscaled design widths. They are ASYMMETRIC on purpose
+     (proto.css .tablet.left/.right), each INCLUDING its own tab spine.
+     Widened 10% on 2026-08-19 (owner) from 306/286 — the ledger pages were the
+     tightest columns in the game and every one of them was fighting for a line.
+     The board did NOT give the room up: see --board-reserve-* below. */
+  --panel-w-base: 337px;
+  --chron-w-base: 315px;
   --panel-w: calc(var(--panel-w-base) * var(--ui-scale));
   --chron-w: calc(var(--chron-w-base) * var(--ui-scale));
   /* The tab spine is PART of the tablet, not furniture beside it: each page
      subtracts the spine from its tablet's width, so the docked object measures
-     exactly --panel-w from the screen edge and the camera's reserve is honest. */
+     exactly --panel-w from the screen edge. */
   --tab-rail-w: 46px;
+  /* ── What the BOARD holds clear on each side ──────────────────────────────
+     Declared here rather than derived from the tablets, because they are two
+     different questions. A tablet's width is about the ledger inside it; the
+     board's clearance is about how much sea the island needs. They agreed
+     exactly until the tablets were widened, and tying one to the other would
+     have meant the island paying for every column the ledger gains — so the
+     tablets simply lie over ~30px more sea than they used to, and the board is
+     the size it was.
+     The numbers are the old reach: the rail + bubble offset (72) plus each
+     tablet's former width (306 / 286). Read by ui/chromeMetrics.ts, which has
+     no lengths of its own. */
+  --board-reserve-l: calc(378px * var(--ui-scale));
+  --board-reserve-r: calc(358px * var(--ui-scale));
   /* The turn dial: one disc in the middle of the top bar's resource spine. It is
      deliberately LARGER than the bar is tall (73px) — a disc that fits inside a
      bar reads as a button on a toolbar, one that breaks the bar's line reads as
      an object the bar is carrying. */
   --turn-d: calc(92px * var(--ui-scale));
-  /* Each half of the resource spine. Three numerals with their icons, sized for
-     the widest they get (a four-figure count with a signed delta), so the dial
-     between them never shifts as the numbers do. */
-  --spine-half-w: calc(214px * var(--ui-scale));
+  /* One resource pill's height. It is split 3:1 — stockpile over income — so the
+     number has three quarters of it and the rate one. */
+  --res-h: calc(48px * var(--ui-scale));
+  /* Each half of the resource spine. Three stacked pills with their icons, sized
+     for the widest they get (a four-figure count), so the dial between them never
+     shifts as the numbers do. */
+  --spine-half-w: calc(180px * var(--ui-scale));
   /* How far the spine reaches from the bar's centre before anything else may
      start: half the numerals, the gap, half the dial, and a breath. The event
      slips at the other end are bounded by this — held at a literal, the first

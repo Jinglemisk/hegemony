@@ -64,22 +64,21 @@ export function verticalInsetPx(measure: MeasureLength = measureCssLength) {
 /**
  * The resting board sits in the sea BETWEEN the two ledger tablets (2026-07-19,
  * owner ask — the tablets widened toward the centre to reclaim the empty sea they
- * used to float over). Each side reserves exactly a tablet's reach: its edge
- * offset plus its width.
+ * used to float over). Each side holds clear whatever `--board-reserve-*` says.
  *
- * It used to reserve that reach LESS an 84px pull, because the frame fitted the
- * coordinate window rather than the island and so carried ~100px/side of sea it
- * did not need — the pull cancelled a fudge with a fudge. The frame measures the
- * land now (`boardExtent`), so the honest reserve is the honest number.
+ * It used to add a tablet's width to a rail offset here, which quietly made the
+ * board's size a function of the ledger's. When the tablets were widened 10% for
+ * their own contents the island would have paid for every column they gained. A
+ * tablet may lie over the sea; how much sea the board needs is its own question,
+ * declared in base.css and only measured here.
+ *
+ * Left and right stay independent but are read the same way, so neither can
+ * drift into an asymmetry the board would show as being off-centre.
  */
 export function sideInsetPx(measure: MeasureLength = measureCssLength) {
-  const cardOffset = measure("calc(var(--rail-w) + var(--bub-out) + 14px)");
-  const leftCard = measure("var(--panel-w)");
-  const rightCard = measure("var(--chron-w)");
-
   return {
-    left: Math.max(MIN_SIDE_INSET_PX, cardOffset + leftCard),
-    right: Math.max(MIN_SIDE_INSET_PX, cardOffset + rightCard),
+    left: Math.max(MIN_SIDE_INSET_PX, measure("var(--board-reserve-l)")),
+    right: Math.max(MIN_SIDE_INSET_PX, measure("var(--board-reserve-r)")),
   };
 }
 

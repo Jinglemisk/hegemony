@@ -24,9 +24,8 @@ import {
  */
 
 const TOKEN_PX: Record<string, number> = {
-  "calc(var(--rail-w) + var(--bub-out) + 14px)": 72,
-  "var(--panel-w)": 360,
-  "var(--chron-w)": 360,
+  "var(--board-reserve-l)": 432,
+  "var(--board-reserve-r)": 432,
   "var(--camera-inset-top)": 96,
   "var(--camera-inset-bot)": 100,
 };
@@ -63,27 +62,23 @@ describe("verticalInsetPx", () => {
 });
 
 describe("sideInsetPx", () => {
-  it("reserves exactly each tablet's reach, symmetrically", () => {
-    // offset 72 + tablet 360 = 432, and the two sides must agree or the board
-    // slides off-centre (the old "map is off" bug).
+  it("holds clear exactly what --board-reserve-* declares", () => {
+    // The board's clearance is NOT a tablet's width. Deriving it from one made
+    // the island pay for every column the ledger gained.
     expect(sideInsetPx(fakeMeasure())).toEqual({ left: 432, right: 432 });
   });
 
-  it("follows --ui-scale down, because every token it reads already has", () => {
-    const halfScale = fakeMeasure({
-      "calc(var(--rail-w) + var(--bub-out) + 14px)": 43,
-      "var(--panel-w)": 180,
-      "var(--chron-w)": 180,
-    });
-
-    expect(sideInsetPx(halfScale).left).toBe(223);
+  it("follows --ui-scale down, because the tokens it reads already have", () => {
+    expect(
+      sideInsetPx(fakeMeasure({ "var(--board-reserve-l)": 216, "var(--board-reserve-r)": 216 }))
+        .left,
+    ).toBe(216);
   });
 
   it("never lets a narrow viewport collapse the board against a tablet", () => {
     const collapsed = fakeMeasure({
-      "calc(var(--rail-w) + var(--bub-out) + 14px)": 0,
-      "var(--panel-w)": 0,
-      "var(--chron-w)": 0,
+      "var(--board-reserve-l)": 0,
+      "var(--board-reserve-r)": 0,
     });
 
     expect(sideInsetPx(collapsed).left).toBe(MIN_SIDE_INSET_PX);

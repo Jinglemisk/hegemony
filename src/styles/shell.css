@@ -206,16 +206,32 @@
   background: none;
 }
 
-/* One resource is ONE object. The pill kept the ledger's 58px min-height, and
-   under `align-items: baseline` the numeral sat at the TOP of that tall box
-   while the icon — the only centred item — hung 20px below it. That is what
-   "completely loose" was: two rows out of phase, and the eye left to guess
-   which icon belonged to which number. Sizing the pill to its own content puts
-   the icon back beside its numeral, exactly as the prototype's `.res` has it. */
+/* One resource is ONE object, and it reads in two tiers: WHAT YOU HAVE over
+   WHAT IT IS DOING. The stockpile takes the top three quarters of the pill and
+   the per-turn income the bottom quarter, both in one column beside the glyph —
+   so the eye takes the whole stockpile row across the bar first and only then
+   drops a line for the rates.
+
+   In a single baseline row the two numbers competed: `27 +7 15 +1 11 +2` is six
+   figures of equal standing and no way to tell a total from a rate without
+   reading the sign. It is also why the pill was one flat row of ten items —
+   before that it kept the ledger's 58px min-height and, under `align-items:
+   baseline`, the numeral sat at the TOP of that tall box while the icon hung 20px
+   below it. That was the original "completely loose". Both are answered the same
+   way: give the pill a definite height and put every part of it in a named cell. */
 .resourceSpine .resourcePill {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
+  display: grid;
+  /* The glyph sits on the STOCKPILE's row, not centred against both. Centred, it
+     lands between the two numbers and belongs to neither — which is the same
+     out-of-phase read the flat row had, one axis over. */
+  grid-template-areas:
+    "icon value"
+    ".    delta";
+  grid-template-columns: auto auto;
+  grid-template-rows: 3fr 1fr;
+  align-items: center;
+  column-gap: 6px;
+  height: var(--res-h);
   min-height: 0;
   padding: 0;
   border: 0;
@@ -225,15 +241,22 @@
 }
 
 .resourceSpine .resourceIcon {
-  width: 21px;
-  height: 21px;
+  grid-area: icon;
+  width: 23px;
+  height: 23px;
   align-self: center;
   filter: none;
   opacity: 0.85;
 }
 
+/* The stockpile sits ON the line the income hangs from, not centred in its own
+   cell — the two tiers have to touch or they read as two rows of numbers rather
+   than one number and its rate. */
 .resourceSpine .resourcePill strong {
+  grid-area: value;
+  align-self: end;
   color: var(--ink);
+  line-height: 0.92;
 }
 
 /* A stockpile below zero is the one number up here you have to act on, so it is
@@ -249,12 +272,12 @@
    slips back ~40px, which is one wrapped line each. */
 @media (max-width: 1400px) {
   .resourceSpine .resourceGrid {
-    gap: 10px;
+    gap: 12px;
   }
 
   .resourceSpine .resourceIcon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -309,6 +332,9 @@
 /* The delta is the only coloured thing up here, and it always carries its sign.
    A bare colour would be saying "bad" in a way a third of players cannot see. */
 .resourceSpine .resourceDelta {
+  grid-area: delta;
+  align-self: start;
+  line-height: 1;
   font-weight: 700;
 }
 
