@@ -55,9 +55,13 @@ https://claude.ai/code/artifact/e9b9fc1d-4d72-4ea6-a03f-22327529b3cd
 - **Symmetry:** resource spine dead-center in the top bar (event slips left, roster
   right); verbs dead-center in the bottom rail; tab icons vertically centered in
   their rails.
-- **Twin dials:** season clock protruding bottom-left (outer year-progress ring,
-  inner rotating season wheel under a fixed needle at the top-right, year numeral in
-  the hub) mirrored by a circular Greek-seal END TURN button bottom-right.
+- ~~**Twin dials:** season clock protruding bottom-left mirrored by a circular
+  Greek-seal END TURN button bottom-right.~~ **Superseded 2026-08-19 (owner):** one
+  **turn dial** in the middle of the resource spine instead. The two discs were the
+  largest objects in the chrome and sat in the board's own bottom corners; whose
+  move it is and how far the year has run are one question. Season ring,
+  game-progress arc, and a hub that is the acting seat's blazon in its glaze — or
+  an hourglass you **press and hold** when the seat is yours. No calendar text.
 - Settlements get names (ARGOS, THERMON…) — coordinates retreat to tooltips.
 - Politician stelae show "HIS LAWS TEND TO" + two example effects in icon grammar
   instead of italic creeds.
@@ -232,18 +236,22 @@ Reference: `ui-overhaul-prototypes/a-table.html` + `proto.css`.
   rail (icon 23 + `verb` label + cost as icon+numeral; blocked = 38% opacity with the
   unmet cost at full-opacity `--neg`). `DiscRail` → docked tablet rails with
   vertically centered tabs.
-- **Twin dials** (new components, both 128px discs protruding above the rail,
-  drop-shadow, z above tablets):
-  - `SeasonClock` (rework of `SeasonDial`): outer ring = year progress arc,
-    `year / maxYears` clockwise from 12 o'clock, 8 tick marks; inner annulus = four
-    season sectors that rotate so the active season sits under a **fixed needle at
-    45° (top-right)**; hub = year numeral (`display` role) + season name in clay
-    `label`. Data: current year, max years, season index — all already in the
-    projection.
-  - `EndTurnSeal` (replaces the End Turn square): clay-gradient disc, beaded ring
-    (dashed stroke), ivory hourglass, END TURN in `verb` caps, acting player name
-    beneath. Disabled state: desaturated + the blocking reason in its tooltip
-    (attention-funnel behavior can come later; the seal is the anchor).
+- **The turn dial** (`board/topbar/TurnDial.tsx`, 92px, in the middle of the
+  resource spine and hanging below the bar; z above tablets). It shipped first as
+  two 128px discs in the rail's bottom corners — `SeasonClock` and `EndTurnSeal` —
+  and both were folded into this one on 2026-08-19:
+  - outer arc = how much of the whole game is spent, taken from the seasonal deck
+    (played + remaining) rather than a configured maximum;
+  - season ring = four **fixed** quarters, each with its own emblem, and a needle
+    that swings to the season you are in. The face used to turn under a fixed
+    needle, which made four unlabelled pastel wedges of it (QA-SHELL-4): if the
+    current season is always in the same place, position says nothing;
+  - hub = the acting seat's blazon in its glaze, or an hourglass when that seat is
+    yours. **Press and hold** to commit; the ring fills as you hold. Ending a turn
+    is the one move that cannot be taken back and it used to be one click on the
+    largest target on screen.
+  - No calendar text anywhere on it. The year is already printed on the omen slip
+    at the other end of the same bar; the full sentence is the accessible name.
   - Naming gotcha from prototyping: `.seal` already means settlement-seal; use
     distinct class names (`.turn-seal`).
 - The map well: `assets/map/aegean-sea-board.png` full-bleed under the board

@@ -36,6 +36,44 @@ when it ships or when the owner rules it closed.
 
 ### Shipped
 
+**2026-08-19 — the cleanup pass (owner ask).** Six items, and one bug found under
+them:
+
+- **The board is a fixed frame.** No pan, no zoom, no map modes. The island is 37
+  hexes meant to be seen at once, and a board you can drag is a board no other
+  surface can point at. It re-fits on resize into the sea the chrome does not
+  cover, with a proportional margin of open water — which is not decoration: a
+  luxury good is claimed at a vertex SHARED by two tiles, so a coastal marker
+  draws half into the water, and a frame fitted tight to the land would clip them
+  the moment Phase 4 lands.
+- **Two fudges went with it.** The frame fits the ISLAND now (`boardExtent`)
+  rather than the coordinate window, which carries ~100 world units of its own sea
+  per side — so `PANEL_CLEAR_PULL_PX`, the 84px that cancelled that sea out of the
+  tablets' reserve, is gone and each side reserves the honest number.
+- **One turn dial** in the middle of the resource spine replaces the season clock
+  and the END TURN seal in the board's bottom corners. Ending a turn is a press
+  and **hold**. See the [overhaul plan](./ui-overhaul.md) for what it draws.
+- **The plinths dropped to a step.** They were a dial's diameter deep because a
+  dial seated into them; nothing seats into them now. `FRAME-1`'s rule is
+  untouched and still holds — the corners are still a continuous frame — the
+  course is simply as tall as it needs to be, which hands ~60px of ledger height
+  back to each tablet.
+- **The event slips are one size.** They were sized by their own text, so a long
+  omen name stood a third taller than the card beside it. The effect line is
+  masked rather than ellipsized: it is numerals and glyphs, and both the usual
+  ways of shortening text cut a glyph in half.
+- **Icons where the words were duplicates.** The targeting popovers opened with
+  "NAXOS · CITY · PLAINS +2 FOOD"; the rank, the ground and the yield are drawn
+  now and only the name is typed. Both settlement rows printed "city · mountain"
+  between the rank's own glyph and the terrain's own chip.
+
+The bug: **a settlement's seal ate the click for the tile it stands on.** Tokens
+are drawn in a second pass over the whole board so a name plate is not half-buried
+by the tile below it, which puts them outside the tile's own `.svgButton` — and
+anything in that pass that took a pointer swallowed the press. Pressing a city,
+the most obvious thing on the board to press, did nothing at all. The tokens are
+`pointer-events: none` now; the tile's polygon is directly under every one of them.
+
 `BOARD-BG-1`, `FRAME-1` and `DOCK-1` landed together, in that order, because
 each changed what the next one looked like. The sea is a CSS texture and three
 palette tokens (`--sea`, `--sea-lit`, `--sea-deep`); the 3.8 MB plate left the
