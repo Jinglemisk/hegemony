@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
+import type { CSSProperties } from "react";
 import type { HexTile, PopType, Settlement } from "../../../game/types";
 import { HEX_SIZE, hexPoints } from "../../../ui/hexGeometry";
 import {
@@ -158,7 +158,6 @@ export function TileGround({
   state,
   isTabStop,
   onTileAction,
-  onTileClick,
   onTileFocus,
   onTileRove,
 }: {
@@ -173,7 +172,6 @@ export function TileGround({
    *  press per hex, which on this board is 37 of them. */
   isTabStop: boolean;
   onTileAction: (tileId: string) => void;
-  onTileClick: (tileId: string, event: ReactMouseEvent<SVGGElement>) => void;
   onTileFocus: (tileId: string) => void;
   /** Moves focus to the neighbour in the pressed direction; false when the board
    *  ends there, so the key falls back to the browser. */
@@ -196,7 +194,7 @@ export function TileGround({
         }`}
         className="svgButton"
         data-tile-id={tile.id}
-        onClick={(event) => onTileClick(tile.id, event)}
+        onClick={() => onTileAction(tile.id)}
         onFocus={() => onTileFocus(tile.id)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -206,8 +204,8 @@ export function TileGround({
           }
 
           if (onTileRove(tile.id, event.key)) {
-            // The board scrolls nothing, but the arrow keys still pan the page
-            // in some browsers and the camera listens for them elsewhere.
+            // The board scrolls nothing, but the arrow keys still scroll the
+            // page in some browsers.
             event.preventDefault();
           }
         }}

@@ -186,7 +186,7 @@
      they are rebuilt. */
   --z-sea: 0; /* the full-bleed map stage */
   --z-board: 10; /* board svg, tile tokens, the workbench band */
-  --z-map-chrome: 20; /* zoom + map-mode buttons lying on the sea */
+  --z-over-sea: 20; /* captions lying on the sea, over the board */
   --z-tablet: 30; /* the docked ledger tablets */
   --z-bar: 40; /* top and bottom ceramic bars */
   --z-dial: 50; /* the twin dials — above bar AND tablet, they protrude */

@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   BASE_VIEW_BOX,
   HEX_SIZE,
-  MAX_ZOOM,
-  MIN_ZOOM,
   WORLD_VIEW_BOX,
   cameraTransform,
   clampViewBox,
@@ -13,11 +11,9 @@ import {
   hexCenter,
   getNeighborCoordinate,
   getShorelineEdges,
-  getZoomLevel,
   hexPoints,
   seatViewBox,
   viewBoxesEqual,
-  zoomViewBox,
   type WorldInset,
 } from "./hexGeometry";
 
@@ -138,13 +134,8 @@ describe("shoreline", () => {
   });
 });
 
-describe("camera", () => {
-  it("clamps zoom to the allowed band", () => {
-    expect(getZoomLevel(zoomViewBox(BASE_VIEW_BOX, 99))).toBeCloseTo(MAX_ZOOM, 6);
-    expect(getZoomLevel(zoomViewBox(BASE_VIEW_BOX, 0.001))).toBeCloseTo(MIN_ZOOM, 6);
-  });
-
-  it("never pans past the world edge", () => {
+describe("board frame", () => {
+  it("never sits past the world edge", () => {
     const runaway = clampViewBox({
       x: -99999,
       y: 99999,
@@ -168,17 +159,6 @@ describe("camera", () => {
 
     expect(tooWide.width).toBeLessThanOrEqual(WORLD_VIEW_BOX.width);
     expect(tooWide.height).toBeLessThanOrEqual(WORLD_VIEW_BOX.height);
-  });
-
-  it("keeps the focus point pinned while zooming", () => {
-    // Zoom about the box's own centre: the centre must not drift.
-    const start = zoomViewBox(BASE_VIEW_BOX, 1);
-    const centerBefore = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
-    const zoomed = zoomViewBox(start, 1.1, { ...centerBefore, ratioX: 0.5, ratioY: 0.5 });
-    const centerAfter = { x: zoomed.x + zoomed.width / 2, y: zoomed.y + zoomed.height / 2 };
-
-    expect(centerAfter.x).toBeCloseTo(centerBefore.x, 6);
-    expect(centerAfter.y).toBeCloseTo(centerBefore.y, 6);
   });
 
   it("is identity at the base frame", () => {

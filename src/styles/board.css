@@ -246,12 +246,11 @@
 /* ── The targeting banner ────────────────────────────────────────────────────
    It used to sit 60px off the viewport's bottom, which is *inside* the command
    rail: the Found instruction printed straight through the verb buttons, and the
-   two texts overlapped character for character. It clears the whole rail now,
-   dials included, and it is bone-on-ink like every other object rather than a
-   teal pill. */
+   two texts overlapped character for character. It clears the whole rail now, and
+   it is bone-on-ink like every other object rather than a teal pill. */
 .mapSetupCaption {
   bottom: calc(var(--chrome-bot) + 22px);
-  z-index: var(--z-map-chrome);
+  z-index: var(--z-over-sea);
   padding: 6px 16px;
   border-radius: 3px;
   color: var(--ivory);

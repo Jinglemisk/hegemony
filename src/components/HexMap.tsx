@@ -4,8 +4,6 @@ import {
   BASE_VIEW_BOX,
   HEX_SIZE,
   SHORELINE_RADIUS,
-  WORLD_VIEW_BOX,
-  ZOOM_STEP,
   cameraTransform,
   getShorelineEdges,
   getSideBySidePositions,
@@ -17,28 +15,18 @@ import { MAX_SHOWN_SETTLEMENTS, NAME_LAYOUT, YIELD_LAYOUT } from "../ui/boardEmb
 import type { NameSlot } from "../ui/boardEmblems";
 import { TileGround, TileTokens } from "./board/map/TileGroup";
 import type { SettlementPlacement } from "./board/map/TileGroup";
-import { useMapCamera } from "./board/map/useMapCamera";
+import { useBoardFrame } from "./board/map/useBoardFrame";
 
 /**
  * The board. After R6 this file composes three pieces rather than being all of
- * them: `useMapCamera` owns pan/zoom, `hexGeometry` owns the maths (and is
- * unit-tested), `TileGroup` owns what stands on a tile.
+ * them: `useBoardFrame` decides where the board sits, `hexGeometry` owns the
+ * maths (and is unit-tested), `TileGroup` owns what stands on a tile.
+ *
+ * There is no camera and no map mode. The whole island is always on screen at
+ * its one true framing, and every tile says what it is where it stands — a
+ * second "terrain mode" was a copy of the board with the yields turned off, and
+ * a board you can drag is a board no other surface can point at.
  */
-
-type MapMode = "current" | "terrain";
-
-const MAP_MODE_OPTIONS: Array<{ mode: MapMode; label: string; iconHref: string }> = [
-  {
-    mode: "current",
-    label: "Current",
-    iconHref: new URL("../../assets/map-modes/current-map-mode.svg", import.meta.url).href,
-  },
-  {
-    mode: "terrain",
-    label: "Terrain",
-    iconHref: new URL("../../assets/map-modes/terrain-map-mode.svg", import.meta.url).href,
-  },
-];
 
 type Box = { x0: number; x1: number; y0: number; y1: number };
 type TileCenter = { tile: HexTile; x: number; y: number };
@@ -275,18 +263,8 @@ function HexMapComponent({
   placementActive?: boolean;
   onTileAction: (tileId: string) => void;
 }) {
-  const [mapMode, setMapMode] = useState<MapMode>("current");
   const highlightSet = useMemo(() => new Set(highlightTileIds ?? []), [highlightTileIds]);
-  const {
-    viewBox,
-    svgRef,
-    cameraLayerRef,
-    canZoomIn,
-    canZoomOut,
-    zoomBy,
-    shouldSuppressTileClick,
-    cameraHandlers,
-  } = useMapCamera({ onTileAction });
+  const { viewBox, svgRef, cameraLayerRef } = useBoardFrame();
 
   const centers = useMemo(
     () =>
@@ -340,65 +318,17 @@ function HexMapComponent({
     isDimmed: placementActive && !highlightSet.has(tileId),
   });
 
-  const isTerrainMapMode = mapMode === "terrain";
-  const activeMapModeLabel =
-    MAP_MODE_OPTIONS.find((option) => option.mode === mapMode)?.label ?? "Current";
-
-  const handleTileClick = (tileId: string, event: React.MouseEvent<SVGGElement>) => {
-    // The camera already fired this tile's action on pointer-up; swallow the
-    // click the browser sends afterwards so a press never counts twice.
-    if (shouldSuppressTileClick()) {
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
-
-    onTileAction(tileId);
-  };
-
   return (
     <>
-      {/* The map's own chrome, inboard of the left tablet at its foot — proto.css
-          `.map-chrome`. Zoom leads because it is the one a player reaches for. */}
-      <div className="mapChrome">
-        <div className="mapZoomControls" aria-label="Map zoom controls">
-          <button aria-label="Zoom in" disabled={!canZoomIn} onClick={() => zoomBy(ZOOM_STEP)}>
-            <svg aria-hidden="true" className="mapChromeGlyph" viewBox="0 0 24 24">
-              <path d="M12 6v12M6 12h12" />
-            </svg>
-          </button>
-          <button aria-label="Zoom out" disabled={!canZoomOut} onClick={() => zoomBy(-ZOOM_STEP)}>
-            <svg aria-hidden="true" className="mapChromeGlyph" viewBox="0 0 24 24">
-              <path d="M6 12h12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="mapModeControls" aria-label="Map mode controls">
-          {MAP_MODE_OPTIONS.map((option) => (
-            <button
-              aria-label={`${option.label} map mode`}
-              aria-pressed={mapMode === option.mode}
-              className={mapMode === option.mode ? "activeMapModeButton" : ""}
-              key={option.mode}
-              onClick={() => setMapMode(option.mode)}
-              title={`${option.label} map mode`}
-            >
-              <img alt="" src={option.iconHref} />
-            </button>
-          ))}
-        </div>
-      </div>
-
       <svg
         ref={svgRef}
-        className={`hexMap ${isTerrainMapMode ? "terrainMapMode" : "currentMapMode"}${placementActive ? " placementMode" : ""}`}
-        // The viewBox is fixed; the camera moves via a transform on the layer below.
+        className={`hexMap${placementActive ? " placementMode" : ""}`}
+        // The viewBox is fixed; the fitted frame is applied as a transform on the
+        // layer below, so the board scales without the sea scaling with it.
         viewBox={viewBoxToString(BASE_VIEW_BOX)}
         role="img"
-        aria-label={`Hegemony island hex map, ${activeMapModeLabel} mode`}
+        aria-label="Hegemony island hex map"
         preserveAspectRatio="xMidYMid slice"
-        {...cameraHandlers}
       >
         {/* The names, drawn once with nothing on them so they can be measured. It
             sits outside the camera layer because `getComputedTextLength` answers in
@@ -417,18 +347,11 @@ function HexMapComponent({
         </g>
 
         {/* No sea image: KYKLOS paints the water as a static gradient + texture on
-            .hexMap itself. A backdrop inside this layer would pan and zoom with the
-            board, which is what dragged the old chart's frame and sea-monsters
-            across the screen. Only the world moves. */}
-        <g ref={cameraLayerRef} className="mapCameraLayer" transform={cameraTransform(viewBox)}>
-          <rect
-            className="seaDragPlane"
-            x={WORLD_VIEW_BOX.x}
-            y={WORLD_VIEW_BOX.y}
-            width={WORLD_VIEW_BOX.width}
-            height={WORLD_VIEW_BOX.height}
-          />
-
+            .hexMap itself. A backdrop inside this layer would scale with the board
+            rather than with the stage, which is what stretched the old chart's
+            frame and sea-monsters. The sea belongs to the stage; only the island
+            is drawn in here. */}
+        <g ref={cameraLayerRef} className="mapBoardLayer" transform={cameraTransform(viewBox)}>
           <g className="shorelineFoam" aria-hidden="true">
             {shorelineEdges.map(({ x1, y1, x2, y2 }, index) => (
               <path
@@ -448,7 +371,6 @@ function HexMapComponent({
               key={tile.id}
               names={names}
               onTileAction={onTileAction}
-              onTileClick={handleTileClick}
               onTileFocus={setRovingTileId}
               onTileRove={roveTo}
               state={tileState(tile.id)}
