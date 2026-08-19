@@ -52,7 +52,7 @@ them:
   tablets' reserve, is gone and each side reserves the honest number.
 - **One turn dial** in the middle of the resource spine replaces the season clock
   and the END TURN seal in the board's bottom corners. Ending a turn is a press
-  and **hold**. See the [overhaul plan](./ui-overhaul.md) for what it draws.
+  and **hold**. See the [overhaul plan](../archive/plans/ui-overhaul.md) for what it draws.
 - **The plinths dropped to a step.** They were a dial's diameter deep because a
   dial seated into them; nothing seats into them now. `FRAME-1`'s rule is
   untouched and still holds — the corners are still a continuous frame — the

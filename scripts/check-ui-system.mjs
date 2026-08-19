@@ -153,7 +153,7 @@ for (const file of files) {
     //     heuristic that flagged both would fire on "The house has risen" as
     //     loudly as on a scoring lecture, so it would be turned off within a
     //     week. Printed prose is therefore removed by hand, phase by phase, and
-    //     recorded in RUN-LOG.md; what this rule guarantees is only that the
+    //     reviewed phase by phase; what this rule guarantees is only that the
     //     tooltip-shaped version of the habit cannot creep back in.
     if (extension === ".tsx" && !MECHANICS_EXEMPT.has(name)) {
       const title = /\btitle=(?:"([^"]+)"|\{`([^`]+)`\})/.exec(line);

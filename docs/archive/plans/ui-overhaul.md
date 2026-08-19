@@ -1,16 +1,13 @@
 ---
-status: active
-phase: "UI overhaul (ui-overhaul worktree)"
-updated: 2026-08-15
+archive_status: implemented
+archived: 2026-08-20
+shipping_pr: "pending"
 ---
 
 # The Lacquered Board — UI overhaul work plan
 
-Read `THIS-WORKTREE.md` at the repo root first: it defines the branch rules, the
-autonomous one-pass run loop, and the owner-ratified run policies (SVG-only icons;
-work clean / future-proof — refactor rather than patch, engine-touching commits
-prefixed `engine:`; push per phase; leave-red-and-continue when stuck; never wait
-for the owner).
+Implemented on the `ui-overhaul` branch in one continuous pass. The branch's
+temporary run instructions and log were removed when the overhaul was adopted.
 
 ## Three-axis parity
 
@@ -21,7 +18,7 @@ for the owner).
 | Simulation & AI  | No       | The sim reads engine state and never renders; nothing here changes what it observes, values or logs                                                                                                                    |
 
 The engine-side additions carry data the frontend needs and the rules never read.
-Each is justified at its definition site and listed in `RUN-LOG.md`.
+Each is justified at its definition site and was reviewed before adoption.
 
 ## Outcome
 
@@ -37,7 +34,7 @@ https://claude.ai/code/artifact/e9b9fc1d-4d72-4ea6-a03f-22327529b3cd
 
 - No new mechanics, no rule changes, no balance changes — ever. Engine-side
   _presentation_ refactors (structured log entries, a settlement-name field) are
-  allowed under the work-clean policy in `THIS-WORKTREE.md`, always additive,
+  allowed under the work-clean policy, always additive,
   always `engine:`-prefixed, with parity/scenario suites kept meaningful.
 - No responsive/mobile redesign beyond keeping the existing `--ui-scale` behavior
   working at 1280×800 and 1440×900.
@@ -370,14 +367,14 @@ the codebase.
   the real app with Playwright and visually compares 1440×900 / 1280×800 screenshots
   against the prototypes, fixing defects before commit. Push after each phase.
 - Stuck policy (owner-ratified): after honest fix attempts, leave it red, mark the
-  commit `WIP-RED:`, log the blocker in `RUN-LOG.md`, continue with the next phase.
+  commit `WIP-RED:`, record the blocker, and continue with the next phase.
 - Effect-icon totality: the extended parity test fails on any typed effect without
   a registry entry.
-- The owner reviews on return via RUN-LOG.md + the side-by-side A/B in
-  `THIS-WORKTREE.md`; owner playtest replaces per-phase gates at that point.
+- The owner reviewed the engine-boundary commits and side-by-side A/B before
+  adoption.
 
 ## Retirement
 
-On adoption: this plan moves to `docs/archive/plans/` with the adoption PR; delete
-`THIS-WORKTREE.md`; the prototypes folder may be deleted or archived. On rejection:
-remove the worktree and branch; nothing else to clean up.
+Adopted on 2026-08-20. The plan moved to `docs/archive/plans/` and the temporary
+worktree instructions and run log were deleted. The prototypes remain as historical
+visual references.

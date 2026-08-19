@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-08-04.
+Last updated: 2026-08-20.
 
 ## Now
 
@@ -26,10 +26,9 @@ precedes full multiplayer.
 | --------------------------------------------------- | -------- | --------- | ----------------------------------------------------------------------------------------- |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze          |
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Opening slice: topology and canonical shared-vertex marker                                |
-| [UI overhaul](plans/ui-overhaul.md)                 | —        | `active`  | Presentation only, on the `ui-overhaul` worktree branch; adoption is the owner's call     |
 | [UI triage](plans/ui-triage.md)                     | —        | `active`  | The defect ledger closing the holes found by driving the overhauled UI                    |
 | [UI triage — parity](plans/ui-triage-parity.md)     | —        | `active`  | What the showcase designed and the app never built; companion feed to the ledger          |
-| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The work that is not a defect: a frame pass, three features, one owner call, judged calls |
+| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | Two intentional type-size exceptions and five glossary duplicates remain judged          |
 | [Player trade](plans/player-trade.md)               | 4        | `blocked` | V1 after luxuries; full negotiation ships before the mechanics freeze                     |
 | [National Ideas](plans/national-ideas.md)           | 5        | `blocked` | V1; twelve-idea reverse-snake draft after Phase 4                                         |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer                       |

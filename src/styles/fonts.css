@@ -2,7 +2,7 @@
    Fetched from Google Fonts and committed to assets/fonts so the app never depends on
    a CDN at run time. Subsets kept: latin, latin-ext, greek, greek-ext — the Greek ones
    matter, the UI writes real Greek (player blazons Δ Ν Θ Κ, ostraka ΝΑΙ / ΟΥ).
-   Regenerate with the recipe in docs/plans/ui-overhaul.md if a weight is ever added. */
+   Regenerate with the recipe in docs/archive/plans/ui-overhaul.md if a weight is ever added. */
 
 @font-face {
   font-family: "Alegreya";
