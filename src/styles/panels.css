@@ -198,8 +198,9 @@
 }
 
 .cityName {
-  display: grid;
-  gap: 1px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   min-width: 0;
 }
 
@@ -214,13 +215,14 @@
   white-space: nowrap;
 }
 
-.cityName .caption {
-  overflow: hidden;
-  color: var(--ink-63);
-  font-style: normal;
-  text-overflow: ellipsis;
-  text-transform: lowercase;
-  white-space: nowrap;
+/* The ground, as a glyph beside the name rather than a word beneath it. It never
+   shrinks: an icon that ellipsises is not an icon. Ink, not the clay it would
+   otherwise inherit from the row — the ground is a fact, and clay in this UI is
+   reserved for things you act on. */
+.cityGround {
+  flex: none;
+  color: var(--ink);
+  opacity: 0.5;
 }
 
 .cityPops {

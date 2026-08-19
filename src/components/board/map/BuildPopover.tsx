@@ -10,13 +10,9 @@ import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { PopoverActions } from "../PopoverActions";
 import { ResourceChips } from "../ResourceChips";
-import {
-  actionRequirementText,
-  gameplayActionDisabled,
-  getBuildingBenefitText,
-  settlementPickerLabel,
-} from "../helpers";
+import { actionRequirementText, gameplayActionDisabled, getBuildingBenefitText } from "../helpers";
 import { TilePopover } from "./TilePopover";
+import { TileSubject } from "../TileSubject";
 
 /** Build at the selected settlement through the shared map popover grammar. */
 export function BuildPopover({
@@ -54,9 +50,7 @@ export function BuildPopover({
       onCancel={onCancel}
       title="Build"
     >
-      <p className="placementSectionLabel placementTargetName">
-        {settlementPickerLabel(G, tile, playerID)}
-      </p>
+      <TileSubject G={G} playerID={playerID} tile={tile} />
 
       <div
         className="popChoiceGrid growPopChoiceGrid popoverChoiceStack"

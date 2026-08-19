@@ -9,7 +9,8 @@ import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
 import { ResourceDeltaList } from "../ResourceDeltaList";
 import { ResourceChips } from "../ResourceChips";
-import { actionRequirementText, gameplayActionDisabled, settlementPickerLabel } from "../helpers";
+import { actionRequirementText, gameplayActionDisabled } from "../helpers";
+import { TileSubject } from "../TileSubject";
 import { PopoverActions } from "../PopoverActions";
 import { TilePopover } from "./TilePopover";
 
@@ -53,9 +54,7 @@ export function GrowPopPopover({
       onCancel={onCancel}
       title="Grow Pop"
     >
-      <p className="placementSectionLabel placementTargetName">
-        {settlementPickerLabel(G, tile, playerID)}
-      </p>
+      <TileSubject G={G} playerID={playerID} tile={tile} />
 
       {/* growPopChoiceGrid, not foundColonyPopGrid: Found shows a bare pop count
           as its cost, Grow shows "9 Food, 2 Gold" — which needs the stacked rows

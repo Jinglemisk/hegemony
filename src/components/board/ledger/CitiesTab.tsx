@@ -7,7 +7,7 @@ import {
 } from "../../../game/rules";
 import type { BuildingId, Resources } from "../../../game/types";
 import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
-import { RESOURCE_GLYPHS } from "../../../ui/iconRegistry";
+import { RESOURCE_GLYPHS, TERRAIN_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { settlementNameOf } from "../../../ui/settlementNames";
@@ -125,11 +125,18 @@ export function CitiesTab({
           <article className="cityCard" key={`${settlement.owner}-${tile.id}`}>
             <div className="cityId">
               <SealMark kind={settlement.kind} owner={settlement.owner} />
+              {/* The name, and the ground it stands on as a glyph. The rank is
+                  already the seal to the left of it, and "colony · plains" spelled
+                  both of them out a second time in the ledger's tightest row. The
+                  census below still says the whole sentence out loud. */}
               <span className="cityName">
                 <strong className="title">{name}</strong>
-                <em className="caption">
-                  {settlement.kind} · {tile.terrain}
-                </em>
+                <Icon
+                  aria-hidden="true"
+                  className="cityGround miniIcon"
+                  glyph={TERRAIN_GLYPHS[tile.terrain]}
+                  size="rail"
+                />
               </span>
               <span className="cityPops stat num" title={`Population ${popTotal} of ${capacity}`}>
                 {popTotal}

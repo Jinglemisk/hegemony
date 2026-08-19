@@ -45,15 +45,17 @@ export function SettlementSummaryCard({
   return (
     <span className="holdingSummaryRows">
       <span className="holdingIdentityCluster">
-        {/* NAME first, rank and ground beneath — the same identity the board
-            shows. Coordinates live in the title, where debugging facts belong. */}
-        <span className="cityIdentity" title={`${capitalize(settlement.kind)} at ${tile.id}`}>
+        {/* NAME only. The rank and the ground used to be spelled out under it —
+            "city · mountain" — beside the rank's own glyph on the left and the
+            terrain's own chip at the right of the same row. Two facts, drawn and
+            written, twice each, in the narrowest column in the ledger. */}
+        <span
+          className="cityIdentity"
+          title={`${capitalize(settlement.kind)} on ${capitalize(tile.terrain)}, at ${tile.id}`}
+        >
           <Icon glyph={SETTLEMENT_GLYPHS[settlement.kind]} size="rail" className="miniIcon" />
           <span className="holdingTitleBlock">
             <strong className="title">{name}</strong>
-            <em className="caption">
-              {settlement.kind} · {tile.terrain}
-            </em>
           </span>
         </span>
       </span>

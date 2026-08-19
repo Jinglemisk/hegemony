@@ -426,9 +426,10 @@
   min-width: 0;
 }
 
+/* One line now — the rank and the ground that used to sit under the name are
+   both already drawn on this row, on either side of it. */
 .holdingTitleBlock {
   display: grid;
-  gap: 2px;
   min-width: 0;
 }
 
@@ -440,17 +441,6 @@
   line-height: 1;
   text-overflow: ellipsis;
   text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.cityIdentity em {
-  overflow: hidden;
-  max-width: 100%;
-  color: var(--subtle);
-  font-size: 0.72rem;
-  font-style: normal;
-  font-variant-numeric: tabular-nums;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

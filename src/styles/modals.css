@@ -1315,3 +1315,53 @@
 .foundColonyPopover.widePopover {
   width: min(392px, calc(100vw - 24px));
 }
+
+/* ── The tile subject line (components/board/TileSubject.tsx) ──────────────
+   The name in type, everything else in glyphs. It replaced a sentence —
+   "NAXOS · CITY · PLAINS +2 FOOD" — of which four words in five were facts the
+   icon set already draws. */
+.tileSubject {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tileSubjectName {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The marks sit in a group of their own with tighter air than the name gets, so
+   the line reads as a NAME followed by its facts rather than as five things. */
+.tileSubjectMarks {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  opacity: 0.9;
+}
+
+.tileSubjectYield {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* A rival on your tile wears its seat's glaze and blazon — the same mark it
+   wears on the board, at ledger size. */
+.tileSubjectRival {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  color: var(--ivory);
+  font-family: var(--font-display);
+  font-weight: 700;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 248 231 / 80%),
+    0 0 0 1px rgb(24 18 16 / 45%);
+}

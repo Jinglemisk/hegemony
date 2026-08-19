@@ -62,6 +62,20 @@
   pointer-events: none;
 }
 
+/* The tokens standing on a tile — seals, name plates, the overflow bead — are
+   drawn in a SECOND pass over the board, after every tile's ground, so that a
+   name plate hanging into the tile below is not half-buried by it. That second
+   pass is outside the tile's own `.svgButton`, so anything in it that took a
+   pointer ATE the click for the tile it stands on: pressing a city's seal — the
+   most obvious thing on the board to press — did nothing at all.
+
+   They are decoration. The tile's own polygon is the target, and it is directly
+   underneath every one of them. (The confirm prompt inside this layer sets
+   `pointer-events: auto` for itself; it is a control, and it still works.) */
+.tileTokens {
+  pointer-events: none;
+}
+
 /* The yield, at the tile's foot. It is the one number on an empty tile, so it can
    be plain ink at a readable size instead of the old white-on-halo shout. */
 .hexYield {
