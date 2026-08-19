@@ -83,7 +83,6 @@ export const VERB_GLYPHS = {
   build: "build",
   calm: "calm",
   venture: "venture",
-  endTurn: "hourglass",
 } as const satisfies Record<VerbId, GlyphId>;
 
 /** Nine rooflines, nine drawings. The sprite atlas these replaced had four painted

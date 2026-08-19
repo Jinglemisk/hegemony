@@ -52,11 +52,9 @@ export type VerbHandlers = {
   onBuildRequest: () => void;
   onCalmRequest: () => void;
   onVentureRequest: () => void;
-  onEndTurn: () => void;
 };
 
-export type VerbId =
-  "grow" | "move" | "found" | "upgrade" | "build" | "calm" | "venture" | "endTurn";
+export type VerbId = "grow" | "move" | "found" | "upgrade" | "build" | "calm" | "venture";
 
 /**
  * Which verb a given map mode belongs to. The board arms modes; the dock shows
@@ -247,26 +245,24 @@ export const VERBS: VerbSpec[] = [
   },
 ];
 
-/** End Turn is a verb too, but it is the turn's terminator: own styling, always
- *  last, no cost. Kept out of VERBS so a map over the array can't accidentally
- *  place it mid-row. */
-export const END_TURN_VERB: VerbSpec = {
-  id: "endTurn",
-  label: "End Turn",
-  available: () => true,
-  hint: ({ isActive }) =>
-    isActive ? "End the current player's turn." : "Current player's turn only.",
-  select: (handlers) => handlers.onEndTurn(),
-};
+/**
+ * Whether the viewer may act on their turn at all — the part of the gate that is
+ * about the seat and the moment rather than about any one verb.
+ *
+ * Named separately because the turn dial lives in the top bar and needs exactly
+ * this and nothing else: it has no board facts to hand, and building a whole
+ * VerbContext to ask "is it my move?" was how the same three conditions came to
+ * be written twice.
+ */
+export type TurnGate = Pick<VerbContext, "isActive" | "phase" | "hasPendingPlayerEvent">;
+
+export function isTurnOpen(gate: TurnGate) {
+  return gate.isActive && gate.phase === "gameplay" && !gate.hasPendingPlayerEvent;
+}
 
 /** The shared gate every verb sits behind, in one place. */
 export function isVerbEnabled(verb: VerbSpec, context: VerbContext) {
-  return (
-    context.isActive &&
-    context.phase === "gameplay" &&
-    !context.hasPendingPlayerEvent &&
-    verb.available(context)
-  );
+  return isTurnOpen(context) && verb.available(context);
 }
 
 export function verbTitle(verb: VerbSpec, context: VerbContext) {
@@ -277,6 +273,15 @@ export function verbTitle(verb: VerbSpec, context: VerbContext) {
   const hint = typeof verb.hint === "function" ? verb.hint(context) : verb.hint;
 
   return verb.available(context) ? hint : (verb.blockedHint ?? hint);
+}
+
+/** The end-turn explanation, blocked or not, without a VerbContext to build. */
+export function turnCommitTitle(gate: TurnGate) {
+  if (gate.hasPendingPlayerEvent) {
+    return "Resolve the pending player event first.";
+  }
+
+  return gate.isActive ? "Press and hold to end the turn." : "Current player's turn only.";
 }
 
 // The verb COMPONENTS (CommandVerb, VerbCostSlot) live in CommandVerb.tsx

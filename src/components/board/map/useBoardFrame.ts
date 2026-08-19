@@ -42,7 +42,7 @@ const SEA_MARGIN_RATIO = 0.08;
 const SEA_MARGIN_MIN_PX = 32;
 const SEA_MARGIN_MAX_PX = 80;
 
-export function useBoardFrame() {
+export function useBoardFrame(extent: ViewBox) {
   // Rest at the base frame so the very first paint is already board-sized; the
   // fit below then replaces it as soon as the stage reports a real size.
   const [viewBox, setViewBox] = useState(BASE_VIEW_BOX);
@@ -72,15 +72,14 @@ export function useBoardFrame() {
   };
 
   /**
-   * Fit the whole board into the live area (KYKLOS `fit()`), then slide that
-   * window so the board sits centred in it rather than under the chrome.
+   * Fit the island into the live area (KYKLOS `fit()`), then slide that window so
+   * it sits centred in the live area rather than under the chrome.
    *
-   * The map SVG covers the stage (`preserveAspectRatio="… slice"`), so a screen
-   * pixel is `(BASE.w/vbW)·s` world units where `s = max(stageW/BASE.w,
-   * stageH/BASE.h)`. Choosing the window width `vbW = BASE.w·s / kFit`, with
-   * `kFit` the px-per-world that fits BASE into the live rectangle, pulls the
-   * board back until it fits — on a wide monitor `slice` would otherwise blow it
-   * up to cover the width.
+   * The map SVG covers the stage (`preserveAspectRatio="… slice"`), so px-per-
+   * world is `s·BASE.w / vbW` where `s = max(stageW/BASE.w, stageH/BASE.h)`.
+   * Choosing `vbW = BASE.w·s / kFit`, with `kFit` the px-per-world that lands the
+   * island inside the live rectangle, pulls the board back until it fits — on a
+   * wide monitor `slice` would otherwise blow it up to cover the width.
    */
   const fitToLive = () => {
     const svg = svgRef.current;
@@ -110,10 +109,10 @@ export function useBoardFrame() {
       bounds.height / BASE_VIEW_BOX.height,
     );
     const fitScale = Math.min(
-      (liveWidth - 2 * margin) / BASE_VIEW_BOX.width,
-      (liveHeight - 2 * margin) / BASE_VIEW_BOX.height,
+      (liveWidth - 2 * margin) / extent.width,
+      (liveHeight - 2 * margin) / extent.height,
     );
-    // vbW in [BASE.w, WORLD.w]: never draw the board LARGER than its base frame,
+    // vbW in [BASE.w, WORLD.w]: never draw the board LARGER than its own frame,
     // never pull back past the sea the world box covers.
     const fitWidth = clamp(
       (BASE_VIEW_BOX.width * sliceScale) / fitScale,
@@ -121,11 +120,13 @@ export function useBoardFrame() {
       WORLD_VIEW_BOX.width,
     );
     const fitHeight = fitWidth * (BASE_VIEW_BOX.height / BASE_VIEW_BOX.width);
+    // Centred on the ISLAND, not on the coordinate window — the two are the same
+    // only as long as the board stays symmetric about the origin.
     const centered: ViewBox = {
       width: fitWidth,
       height: fitHeight,
-      x: BASE_VIEW_BOX.x + (BASE_VIEW_BOX.width - fitWidth) / 2,
-      y: BASE_VIEW_BOX.y + (BASE_VIEW_BOX.height - fitHeight) / 2,
+      x: extent.x + extent.width / 2 - fitWidth / 2,
+      y: extent.y + extent.height / 2 - fitHeight / 2,
     };
     const seated = seatViewBox(centered, worldInsetFor(centered, bounds, inset));
 
@@ -151,7 +152,7 @@ export function useBoardFrame() {
 
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [extent]);
 
   return { viewBox, svgRef, cameraLayerRef };
 }

@@ -11,8 +11,8 @@ import {
 } from "./chromeMetrics";
 
 /**
- * The point of this module is that the camera stopped carrying its own copies of
- * the chrome's dimensions — a `{ top: 96, bottom: 100 }` literal and a bare `360`
+ * The point of this module is that the board frame stopped carrying its own copies
+ * of the chrome's dimensions — a `{ top: 96, bottom: 100 }` literal and a bare `360`
  * that both had to be re-typed whenever CSS changed. These tests guard the two
  * ways that regresses: the arithmetic drifting, and the probe reading a token the
  * layout engine cannot see.
@@ -27,7 +27,6 @@ const TOKEN_PX: Record<string, number> = {
   "calc(var(--rail-w) + var(--bub-out) + 14px)": 72,
   "var(--panel-w)": 360,
   "var(--chron-w)": 360,
-  "var(--panel-w-base)": 360,
   "var(--camera-inset-top)": 96,
   "var(--camera-inset-bot)": 100,
 };
@@ -64,21 +63,20 @@ describe("verticalInsetPx", () => {
 });
 
 describe("sideInsetPx", () => {
-  it("reserves each tablet's reach less the sea overlap, symmetrically", () => {
-    // offset 72 + tablet 360 - pull 84 = 348, and the two sides must agree or the
-    // board slides off-centre (the old "map is off" bug).
-    expect(sideInsetPx(fakeMeasure())).toEqual({ left: 348, right: 348 });
+  it("reserves exactly each tablet's reach, symmetrically", () => {
+    // offset 72 + tablet 360 = 432, and the two sides must agree or the board
+    // slides off-centre (the old "map is off" bug).
+    expect(sideInsetPx(fakeMeasure())).toEqual({ left: 432, right: 432 });
   });
 
-  it("shrinks the overlap with --ui-scale, so clearance stays visually equal", () => {
+  it("follows --ui-scale down, because every token it reads already has", () => {
     const halfScale = fakeMeasure({
       "calc(var(--rail-w) + var(--bub-out) + 14px)": 43,
       "var(--panel-w)": 180,
       "var(--chron-w)": 180,
     });
 
-    // 43 + 180 - (84 x 0.5) = 181.
-    expect(sideInsetPx(halfScale).left).toBe(181);
+    expect(sideInsetPx(halfScale).left).toBe(223);
   });
 
   it("never lets a narrow viewport collapse the board against a tablet", () => {
@@ -90,12 +88,6 @@ describe("sideInsetPx", () => {
 
     expect(sideInsetPx(collapsed).left).toBe(MIN_SIDE_INSET_PX);
   });
-
-  it("survives a reference token that reads 0 rather than dividing by nothing", () => {
-    const unresolved = fakeMeasure({ "var(--panel-w-base)": 0 });
-
-    expect(Number.isFinite(sideInsetPx(unresolved).left)).toBe(true);
-  });
 });
 
 describe("chromeInsetPx", () => {
@@ -103,8 +95,8 @@ describe("chromeInsetPx", () => {
     expect(chromeInsetPx(fakeMeasure())).toEqual({
       top: 96,
       bottom: 100,
-      left: 348,
-      right: 348,
+      left: 432,
+      right: 432,
     });
   });
 });

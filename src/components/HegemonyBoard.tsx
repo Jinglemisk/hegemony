@@ -28,7 +28,7 @@ import { MovePopsSourcePopover, MovePopsTargetPopover } from "./board/map/MovePo
 import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelection";
 import { useMapSelection } from "./board/map/useMapSelection";
 import { CommandDock } from "./board/command/CommandDock";
-import { armedVerbOf } from "./board/command/verbs";
+import { armedVerbOf, isTurnOpen, turnCommitTitle } from "./board/command/verbs";
 import { CalmModal } from "./board/modals/CalmModal";
 import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
@@ -40,7 +40,10 @@ import { routeTo, type ConsultRoute, type LedgerRoute } from "./board/ledger/rou
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
 import { RiotModal } from "./board/modals/RiotModal";
 import { VentureModal } from "./board/modals/VentureModal";
+import { MechanicsDetails } from "./MechanicsDetails";
+import { Tooltip } from "./overlays/Tooltip";
 import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
+import { TurnDial } from "./board/topbar/TurnDial";
 import { TopbarEvents } from "./board/topbar/TopbarEvents";
 import { AssemblyPanel } from "./board/assembly/AssemblyPanel";
 import { GameUiProvider } from "./board/GameUiProvider";
@@ -77,7 +80,13 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
 // halves flanking the season medallion; that arrangement made the bar's centre a
 // picture rather than the numbers, and the numbers are what a player reads
 // forty times a turn. The medallion became the season clock on the bottom rail.
-const TOP_RESOURCES: Resource[] = ["wood", "stone", "food", "gold", "influence", "happiness"];
+/* The spine reads out from the dial in the middle of it: what the land gives on
+   the left, what the city makes of it on the right. Split rather than run as one
+   row of six because the middle of that row is where the turn dial now sits, and
+   an odd number of numerals either side of a large object reads as a scale that
+   balances. */
+const MATERIAL_RESOURCES: Resource[] = ["wood", "stone", "food"];
+const CIVIC_RESOURCES: Resource[] = ["gold", "influence", "happiness"];
 
 /**
  * Exactly one dialog owns the screen at a time — the union makes that a type
@@ -135,6 +144,10 @@ export function HegemonyBoard({
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
   const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent);
+  // The one gate the turn dial needs. It is the same gate every verb sits behind
+  // (verbs.tsx), asked without a board fact in sight.
+  const turnGate = { isActive, phase: ctx.phase, hasPendingPlayerEvent };
+  const turnOpen = isTurnOpen(turnGate);
   const activeEffects = useMemo(() => getActiveEffects(G, viewerId), [G, viewerId]);
   const gameUi = useMemo<GameUi>(
     () => ({
@@ -416,13 +429,45 @@ export function HegemonyBoard({
 
           {/* Symmetric, and absolutely so: the event slips read from the left, the
           roster sits at the right, and the resource spine is pinned to the bar's
-          true centre rather than to whatever space the two ends left over. */}
+          true centre rather than to whatever space the two ends left over. The
+          turn dial is the centre of that spine, so the one object the eye goes to
+          first is also the only thing on the bar that never moves. */}
           <header className="topbar strategyTopbar">
             <TopbarEvents G={G} />
 
             <div className="resourceSpine">
               <ResourceGrid
-                order={TOP_RESOURCES}
+                order={MATERIAL_RESOURCES}
+                tiles={G.board.tiles}
+                resources={viewer.resources}
+                deltas={projectedIncome}
+                breakdown={projectedIncomeBreakdown}
+                resetKey={`res-${viewerId}`}
+              />
+
+              <Tooltip
+                content={
+                  <MechanicsDetails
+                    blockedReason={turnOpen ? undefined : turnCommitTitle(turnGate)}
+                    heading="End Turn"
+                  >
+                    {turnOpen ? (
+                      <p className="mechanicsExplanation">{turnCommitTitle(turnGate)}</p>
+                    ) : null}
+                  </MechanicsDetails>
+                }
+                triggerClassName="turnDialTrigger"
+              >
+                <TurnDial
+                  G={G}
+                  actingPlayerId={currentPlayerId}
+                  canEndTurn={turnOpen}
+                  onEndTurn={events.endTurn}
+                />
+              </Tooltip>
+
+              <ResourceGrid
+                order={CIVIC_RESOURCES}
                 tiles={G.board.tiles}
                 resources={viewer.resources}
                 deltas={projectedIncome}
@@ -493,7 +538,6 @@ export function HegemonyBoard({
             canBuild={canBuild}
             armedVerb={armedVerbOf(mapSelection.selection?.mode)}
             chronicleTicker={latestChronicleLine}
-            onEndTurn={events.endTurn}
             // Grow / Move / Found / Build are map modes, not dialogs (refit scope 3):
             // each arms the board and clears any open dialog, so nothing covers the answer.
             onGrowPopRequest={() => armSelection({ kind: "growPop" })}

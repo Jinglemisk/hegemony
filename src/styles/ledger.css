@@ -195,14 +195,22 @@
    box — the art — sitting inside it, which is the nested-box reading the whole
    overhaul is meant to be rid of. The art is now flush in the slip's own face,
    and the slip's outline is an inset hairline rather than a border, so the chip
-   has an edge without having a frame. */
+   has an edge without having a frame.
+
+   And ONE SIZE. Each slip used to be sized by its own text — a long omen name
+   wrapped to three lines and stood a third taller than the season card beside
+   it, so the row of three read as three different kinds of object rather than
+   three of the same. They share the row equally now (`flex: 1 1 0`) and each is
+   the same fixed height, whatever is written in it. */
 .topbarEventCard {
   position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 0 1 auto;
+  flex: 1 1 0;
   min-width: 0;
+  max-width: var(--slip-w);
+  height: var(--slip-h);
   padding: 4px 10px 4px 4px;
   border: 0;
   border-radius: 3px;
@@ -223,9 +231,11 @@
   line-height: 1.18;
 }
 
+/* The art is a square as tall as the slip's text block, so three slips side by
+   side line up on both edges rather than only on the top one. */
 .topbarEventArt {
-  width: 30px;
-  height: 30px;
+  width: calc(var(--slip-h) - 8px);
+  height: calc(var(--slip-h) - 8px);
   flex: none;
   border: 0;
   border-radius: 2px;
@@ -234,6 +244,7 @@
 
 .topbarEventBody {
   display: grid;
+  align-content: center;
   min-width: 0;
 }
 
@@ -253,19 +264,29 @@
 }
 
 .topbarEventName {
+  overflow: hidden;
   color: var(--ink);
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.12;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Nothing in a slip is clipped. The name used to ellipsize and the effect line
-   was clamped to one line — which did not shorten the effect, it cut the second
-   line in half and left the severed top of a resource glyph against the slip's
-   edge. Both wrap now, and the slip grows the line it needs. */
+/* The effect line runs to one line and FADES OUT rather than ellipsizing.
+   It is not prose: it is numerals with resource glyphs between them, and both
+   the ways a box normally shortens text damage a glyph. `-webkit-line-clamp`
+   cut the second line in half and left the severed top of an icon against the
+   slip's edge; `text-overflow: ellipsis` slices whatever inline-block happens to
+   straddle the edge. A mask takes the same width and lets a half-shown glyph
+   disappear instead of being cut — and the tooltip carries the whole line
+   anyway, which is what the slip is a summary OF. */
 .topbarEventEffect {
+  overflow: hidden;
   color: var(--ink-66);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 16px), transparent);
+  white-space: nowrap;
 }
 
 .topbarEventTooltip {

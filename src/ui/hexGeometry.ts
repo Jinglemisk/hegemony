@@ -58,6 +58,35 @@ export function getSideBySidePositions(count: number) {
 }
 
 /**
+ * The bounding box of the drawn island, in world units.
+ *
+ * The frame used to fit {@link BASE_VIEW_BOX} instead, which is the coordinate
+ * window rather than the land: it carries about a hundred units of its own sea on
+ * every side, so fitting it meant the real margin around the island was that
+ * built-in sea PLUS whatever margin was asked for, and the board came out a third
+ * smaller than the space it was given. Every other length in the frame — the
+ * tablets' reserve, the sea margin — had a fudge factor in it to compensate.
+ * Measure the land and the fudges go away.
+ */
+export function boardExtent(centers: readonly { x: number; y: number }[]): ViewBox {
+  if (centers.length === 0) {
+    return BASE_VIEW_BOX;
+  }
+
+  // A pointy-top hex is `size` tall from centre to vertex and `size·cos30` wide
+  // from centre to flat.
+  const halfWidth = HEX_SIZE * Math.cos(Math.PI / 6);
+  const xs = centers.map(({ x }) => x);
+  const ys = centers.map(({ y }) => y);
+  const minX = Math.min(...xs) - halfWidth;
+  const maxX = Math.max(...xs) + halfWidth;
+  const minY = Math.min(...ys) - HEX_SIZE;
+  const maxY = Math.max(...ys) + HEX_SIZE;
+
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/**
  * POINTY-TOP hex outline, as an SVG `points` string: corners at −30° + 60°·i put
  * vertices straight up and down, and flats on the left and right.
  *

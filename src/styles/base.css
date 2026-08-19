@@ -229,11 +229,26 @@
      subtracts the spine from its tablet's width, so the docked object measures
      exactly --panel-w from the screen edge and the camera's reserve is honest. */
   --tab-rail-w: 46px;
-  /* The twin dials are 128px across, seated 12px off the table's foot and 26px
-     in from its side. */
-  --dial-d: 128px;
-  --dial-gap: 12px;
-  --dial-inset: 26px;
+  /* The turn dial: one disc in the middle of the top bar's resource spine. It is
+     deliberately LARGER than the bar is tall (73px) — a disc that fits inside a
+     bar reads as a button on a toolbar, one that breaks the bar's line reads as
+     an object the bar is carrying. */
+  --turn-d: calc(92px * var(--ui-scale));
+  /* Each half of the resource spine. Three numerals with their icons, sized for
+     the widest they get (a four-figure count with a signed delta), so the dial
+     between them never shifts as the numbers do. */
+  --spine-half-w: calc(214px * var(--ui-scale));
+  /* How far the spine reaches from the bar's centre before anything else may
+     start: half the numerals, the gap, half the dial, and a breath. The event
+     slips at the other end are bounded by this — held at a literal, the first
+     numeral came to sit ON the fate slip at 1280. */
+  --spine-reach: calc(
+    var(--spine-half-w) + var(--sp-4) + var(--turn-d) / 2 + var(--sp-4) + var(--sp-3)
+  );
+  /* One event slip. Three of them share the bar's left end equally and each is
+     this tall whatever is written in it. */
+  --slip-w: calc(218px * var(--ui-scale));
+  --slip-h: calc(52px * var(--ui-scale));
   /* ── The frame's two end blocks (FRAME-1) ─────────────────────────────────
      The bottom bar is NOT a rectangle. At each corner it steps up to a block
      deep enough to seat a dial with a breath of bone all round it, and the
@@ -243,8 +258,10 @@
      A block is as wide as the tablet standing on it — anything narrower and the
      tablet's bottom edge overhangs it and floats over water again, which is the
      defect this replaces. When the tablet is closed its 46px spine still lands
-     on the same block: a column is allowed to be narrower than its footing. */
-  --plinth-h: calc(var(--dial-d) + var(--dial-gap) * 2);
+     on the same block: a column is allowed to be narrower than its footing.
+     Its HEIGHT was a dial's diameter, because a dial used to be set into it. The
+     dials moved to the top bar and it became what it always was — a step. */
+  --plinth-h: calc(var(--bot-h) + 24px);
   --plinth-l: var(--panel-w);
   --plinth-r: var(--chron-w);
   /* A tablet ENDS on its block. That is the whole of its bottom clearance, and

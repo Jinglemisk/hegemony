@@ -1,32 +1,20 @@
 import { AnnotatedText } from "../../AnnotatedText";
-import { MechanicsDetails } from "../../MechanicsDetails";
-import { Tooltip } from "../../overlays/Tooltip";
-import { PLAYER_NAMES } from "../../../game/data";
 import { useGameUi } from "../GameUiContext";
 import { CommandVerb } from "./CommandVerb";
-import { EndTurnSeal } from "./EndTurnSeal";
-import { SeasonClock } from "./SeasonClock";
-import {
-  END_TURN_VERB,
-  VERBS,
-  isVerbEnabled,
-  verbTitle,
-  type VerbContext,
-  type VerbHandlers,
-  type VerbId,
-} from "./verbs";
+import { VERBS, type VerbContext, type VerbHandlers, type VerbId } from "./verbs";
 
 /**
- * The bottom rail: a bone ceramic bar with the seven verbs dead-centre and a
- * dial protruding from each end.
+ * The bottom rail: a bone ceramic bar carrying the seven verbs, each disc
+ * standing proud of its top edge.
  *
- * The two dials are a matched pair on purpose — the season clock at bottom left
- * says what time it is, the END TURN seal at bottom right is how you spend it,
- * and they bracket the verbs between them. They are the only round masses in the
- * chrome, so the eye finds both instantly and never confuses either for a verb.
+ * It used to carry a dial at each end as well — the season clock at bottom left,
+ * the END TURN seal at bottom right. Both moved into the single turn dial in the
+ * top bar. What that bought is the board's two bottom corners back: the bar is
+ * now one flat run of verbs, and the only round masses on it are the seven
+ * things you press to act.
  *
- * The chronicle's newest line still tickers along the bar, inboard of the clock,
- * where it has room to be long without ever crowding the verbs.
+ * The chronicle's newest line tickers along the bar's left half, where it has
+ * room to be long without ever crowding the verbs.
  */
 export function CommandDock({
   canGrowPops,
@@ -48,7 +36,7 @@ export function CommandDock({
   /** Latest chronicle line — the drawer's contents at a glance (Q19). */
   chronicleTicker: string | null;
 } & VerbHandlers) {
-  const { G, viewer, phase, isActive, hasPendingPlayerEvent, currentPlayerId } = useGameUi();
+  const { G, viewer, phase, isActive, hasPendingPlayerEvent } = useGameUi();
 
   const context: VerbContext = {
     G,
@@ -66,9 +54,6 @@ export function CommandDock({
     ventureUsed: viewer.ventureUsedThisTurn,
   };
 
-  const endTurnEnabled = isVerbEnabled(END_TURN_VERB, context);
-  const endTurnExplanation = verbTitle(END_TURN_VERB, context);
-
   return (
     <div className="commandDock">
       {/* The bar's two end blocks. They are the frame's corners: the bottom bar
@@ -82,16 +67,14 @@ export function CommandDock({
       <div aria-hidden="true" className="dockPlinth dockPlinth-left" />
       <div aria-hidden="true" className="dockPlinth dockPlinth-right" />
 
-      <SeasonClock G={G} />
-
       <div className="verbSpine" aria-label="Action toolbar">
         {VERBS.map((verb) => (
           <CommandVerb context={context} handlers={handlers} key={verb.id} verb={verb} />
         ))}
       </div>
 
-      {/* The narration, inboard of the clock: it has the whole left half to be
-          long in, and it can never reach the verbs.
+      {/* The narration: it has the whole left half to be long in, and it can
+          never reach the verbs.
 
           It is the SAME line the chronicle is showing a few hundred pixels away,
           so it is rendered the same way — the bar used to print the raw message,
@@ -107,25 +90,6 @@ export function CommandDock({
           </p>
         ) : null}
       </div>
-
-      <Tooltip
-        content={
-          <MechanicsDetails
-            blockedReason={endTurnEnabled ? undefined : endTurnExplanation}
-            heading="End Turn"
-          >
-            {endTurnEnabled ? <p className="mechanicsExplanation">{endTurnExplanation}</p> : null}
-          </MechanicsDetails>
-        }
-        preferredPlacement="above"
-        triggerClassName="endTurnTooltipTrigger"
-      >
-        <EndTurnSeal
-          actingName={PLAYER_NAMES[currentPlayerId]}
-          disabled={!endTurnEnabled}
-          onClick={() => END_TURN_VERB.select(handlers)}
-        />
-      </Tooltip>
     </div>
   );
 }

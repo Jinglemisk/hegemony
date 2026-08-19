@@ -4,6 +4,7 @@ import {
   BASE_VIEW_BOX,
   HEX_SIZE,
   SHORELINE_RADIUS,
+  boardExtent,
   cameraTransform,
   getShorelineEdges,
   getSideBySidePositions,
@@ -264,7 +265,6 @@ function HexMapComponent({
   onTileAction: (tileId: string) => void;
 }) {
   const highlightSet = useMemo(() => new Set(highlightTileIds ?? []), [highlightTileIds]);
-  const { viewBox, svgRef, cameraLayerRef } = useBoardFrame();
 
   const centers = useMemo(
     () =>
@@ -276,6 +276,10 @@ function HexMapComponent({
       })),
     [G.board.tiles],
   );
+  // The land itself, which is what the frame fits — not the coordinate window,
+  // which carries a hundred units of its own sea on every side.
+  const extent = useMemo(() => boardExtent(centers), [centers]);
+  const { viewBox, svgRef, cameraLayerRef } = useBoardFrame(extent);
   // SHORELINE_RADIUS overhangs the tile so the foam reads as surf against the
   // land rather than a line drawn through it.
   const shorelineEdges = useMemo(() => getShorelineEdges(centers, SHORELINE_RADIUS), [centers]);

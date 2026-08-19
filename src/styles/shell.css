@@ -1,5 +1,5 @@
 /* shell — the ceramic frame: two bone bars, the resource spine, the roster,
- * the verb rail and the twin dials.
+ * the verb rail and the turn dial.
  *
  * Loaded late so it wins over the sheets it replaces (scoreboard.css,
  * command.css) without those files having to be gutted in the same commit as the
@@ -77,19 +77,22 @@
    as damage, because a shortened edge still ends somewhere, and the somewhere
    was open sea.
 
-   The junction, decided once and applied at both corners: **the bar carries a
-   socket.** The bottom bar steps up at each end to a block as deep as a dial and
-   as wide as the tablet standing on it; the disc is set into that block like a
-   boss into a plate, with a shadowed seat around it; the tablet — or its bare
-   spine, when the page is closed — lands on the block's top edge.
+   The junction, decided once and applied at both corners: **the bar steps up.**
+   The bottom bar rises at each end to a block as wide as the tablet standing on
+   it, and the tablet — or its bare spine, when the page is closed — lands on
+   that block's top edge.
+
+   The block used to be as DEEP as a dial, because a dial was set into it like a
+   boss into a plate. Both dials moved into the top bar; the block stayed,
+   because the junction it fixes has nothing to do with them, and it dropped to a
+   step — which is ~60px of ledger height handed back to each tablet.
 
    The rule that holds afterwards: NO EDGE OF THE FRAME TERMINATES AGAINST OPEN
    BOARD. It comes out as three stacked rectangles, each fully carried by the one
    below: the bar runs edge to edge and never ends; a block stands on the bar at
    each corner and is closed on all four sides; a tablet — or its bare spine —
    stands on each block. The only things that cross those edges are drawn ON
-   them, on purpose: the two dials in their seats and the verb discs standing
-   proud of the flat run.
+   them, on purpose: the verb discs standing proud of the flat run.
 
    The block is the COURSE ABOVE the bar, not a taller bar: it starts at the
    bar's top edge and rises from there. That is why the bar's own hairline runs
@@ -124,33 +127,6 @@
   box-shadow: -2px 0 10px rgb(24 18 16 / 14%);
 }
 
-/* The seat. A shallow depression six pixels proud of the dial's own box all
-   round — the dial's drawn circle is inset another four inside that box, so ten
-   pixels of shaded rim read the whole way round and the disc sits IN the plate
-   rather than on it. Cut to the box exactly and the seal's own ivory ring eats
-   the rim and the socket disappears. */
-.dockPlinth::before {
-  content: "";
-  position: absolute;
-  /* Measured from the FLOOR, so it overhangs the course and lands on the bar
-     below — the dial straddles the two and the seat has to as well. */
-  bottom: calc(var(--dial-gap) - 6px - var(--bot-h));
-  width: calc(var(--dial-d) + 12px);
-  height: calc(var(--dial-d) + 12px);
-  border-radius: 50%;
-  box-shadow:
-    inset 0 4px 9px rgb(24 18 16 / 22%),
-    inset 0 -1px 0 rgb(255 253 246 / 70%);
-}
-
-.dockPlinth-left::before {
-  left: calc(var(--dial-inset) - 6px);
-}
-
-.dockPlinth-right::before {
-  right: calc(var(--dial-inset) - 6px);
-}
-
 /* The meander, carried on up the step. Same band, same 40%, so the frame's top
    edge is one line that changes height rather than three separate borders. */
 .dockPlinth::after {
@@ -167,16 +143,15 @@
 
 /* The slips take whatever room is left to the LEFT of the spine, and no more. A
    plain `1fr` let a long omen name grow until it slid under the numbers at 1280;
-   half the viewport less half the spine is the only honest bound, because the
-   spine is centred on the viewport rather than on the space between the ends.
-   The bound has to pay for the bar's own left padding too — without that the
-   row ended 20px past where it was told to stop, which is how the first resource
-   icon came to sit ON the fate slip at 1280. 262px = 230 (half the widest spine
-   a four-figure turn produces) + 20 (the bar's left pad) + 12 (air between the
-   last slip and the first numeral). */
+   half the viewport less the spine's reach is the only honest bound, because the
+   spine is centred on the VIEWPORT rather than on the space between the ends.
+   The bound is computed from the spine's own tokens (--spine-reach) rather than
+   from a literal, which is what let the first numeral come to sit ON the fate
+   slip the last time the spine changed width. */
 .topbarEvents {
+  flex: 1 1 auto;
   min-width: 0;
-  max-width: calc(50vw - 262px);
+  max-width: calc(50vw - var(--spine-reach));
 }
 
 /* ── The resource spine ────────────────────────────────────────────────────
@@ -184,12 +159,32 @@
    roster. Those two ends change width constantly (a long omen name, a fourth
    seat joining) and centring BETWEEN them made the numbers drift a few pixels
    every turn — which is exactly the kind of motion that makes a UI feel unsteady
-   without anyone being able to say why. */
+   without anyone being able to say why.
+
+   Three parts, and the middle one is the turn dial: materials read out to its
+   left, civic stock to its right. The dial is what makes the spine a SCALE
+   rather than a row — six numerals in a line have no centre, so nothing about
+   them was ever aligned to anything, which is what made the bar feel loose. */
 .resourceSpine {
   position: absolute;
   top: 50%;
   left: 50%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
   transform: translate(-50%, -50%);
+}
+
+/* Each half is the same width, so the dial lands on the bar's true centre
+   whatever the numerals are doing. Without this a four-figure gold count on the
+   right pushed the dial left, and the one fixed object on the bar moved. */
+.resourceSpine .resourceGrid {
+  flex: 0 0 auto;
+  min-width: var(--spine-half-w);
+}
+
+.resourceSpine .resourceGrid:first-child {
+  justify-content: flex-end;
 }
 
 .resourceSpine .resourceGrid {
@@ -248,10 +243,6 @@
    width and starves the slips at the other end. Tightening the metal buys the
    slips back ~40px, which is one wrapped line each. */
 @media (max-width: 1400px) {
-  .topbarEvents {
-    max-width: calc(50vw - 234px);
-  }
-
   .resourceSpine .resourceGrid {
     gap: 10px;
   }
@@ -580,24 +571,21 @@
   font-weight: 700;
 }
 
-/* The ticker: narration on the bar, clear of the dial's reach and stopping short
-   of the verbs. It lies on the bar, which runs unbroken under the end blocks, so
-   the corner fix costs it nothing — its start is the dial's own reach plus a
-   breath, computed rather than the bare 178px literal it used to be, and its
-   width is bounded by where the verb spine actually begins rather than by a flat
-   260 that only happened to fit. */
+/* The ticker: narration on the bar, stopping short of the verbs. It lies on the
+   bar, which runs unbroken under the end blocks, so the corner fix costs it
+   nothing. With the season dial gone from the left corner it starts inboard of
+   the left block instead, and its width is still bounded by where the verb spine
+   actually begins rather than by a flat 260 that only happened to fit. */
 .dockTicker {
   position: absolute;
   bottom: 0;
-  left: calc(var(--dial-inset) + var(--dial-d) + var(--sp-3));
+  left: calc(var(--plinth-l) + var(--sp-3));
   z-index: 2;
   display: flex;
   align-items: center;
   max-width: min(
-    260px,
-    calc(
-      50vw - var(--dial-inset) - var(--dial-d) - var(--sp-3) - var(--verb-spine-half) - var(--sp-3)
-    )
+    320px,
+    calc(50vw - var(--plinth-l) - var(--sp-3) - var(--verb-spine-half) - var(--sp-3))
   );
   height: var(--bot-h);
 }
@@ -610,77 +598,72 @@
   white-space: nowrap;
 }
 
-/* ── The twin dials ───────────────────────────────────────────────────────
-   Each is SEATED in its end block (FRAME-1), not floating on the water: the
-   block's seat is drawn under it and the disc lies in it. The shadow is a laid
-   one now, tight and short. It used to be a 18px float at 45%, which is the
-   shadow of an object hovering above a surface — and it was, because there was
-   no surface under it. A thing that hovers over the board reads as a thing you
-   can reach; a thing set into the frame reads as part of the frame, which is
-   what these two are. The seal earns the hover lift back on hover, because it
-   is the one of the pair you press. */
-.dial {
-  position: absolute;
-  bottom: var(--dial-gap);
+/* ── The turn dial ────────────────────────────────────────────────────────
+   One disc, set into the middle of the resource spine and hanging below the
+   bar's bottom edge — the same move the verb discs make on the bottom bar,
+   mirrored. It replaced two 128px dials that sat in the board's own bottom
+   corners; this is the SAME object in the place the eye already goes.
+
+   It hangs rather than sits inside because the bar is 73px and the dial is 92:
+   a disc that fits inside a bar is a button on a toolbar, and a disc that
+   breaks its line is an object the bar is carrying. */
+.turnDial {
+  position: relative;
   z-index: var(--z-dial);
-  width: var(--dial-d);
-  height: var(--dial-d);
+  width: var(--turn-d);
+  height: var(--turn-d);
   padding: 0;
   border: 0;
   background: none;
-  filter: drop-shadow(0 2px 5px rgb(24 18 16 / 34%));
+  filter: drop-shadow(0 3px 7px rgb(24 18 16 / 34%));
 }
 
-.dial svg {
+.turnDial svg {
   display: block;
-  width: var(--dial-d);
-  height: var(--dial-d);
+  width: var(--turn-d);
+  height: var(--turn-d);
 }
 
-.seasonClock {
-  left: var(--dial-inset);
-  pointer-events: none;
-}
-
-.turnSeal {
-  right: var(--dial-inset);
+/* Live only when it is your move. When it is not, the dial is a status disc and
+   must not read as a target — no cursor, no lift, no focus ring. */
+.turnDialLive {
   cursor: pointer;
   transition:
     filter 160ms ease,
     transform 160ms ease;
 }
 
-/* Lifting OUT of the seat: the disc rises and its shadow grows with it, which is
-   the only way a 2px translate reads as a press target rather than a jitter. */
-.turnSeal:not(.turnSealOff):hover {
-  box-shadow: none;
-  filter: drop-shadow(0 6px 14px rgb(24 18 16 / 42%));
-  transform: translateY(-3px);
+.turnDialLive:hover {
+  filter: drop-shadow(0 7px 16px rgb(24 18 16 / 42%));
+  transform: translateY(-2px);
 }
 
-.turnSealOff {
-  cursor: not-allowed;
-  filter: grayscale(0.7) drop-shadow(0 2px 5px rgb(24 18 16 / 28%));
-  opacity: 0.72;
+/* Under the finger the disc presses IN, which is the half of the hold gesture
+   that says the press was received before the ring has filled. */
+.turnDialLive.isHeld {
+  filter: drop-shadow(0 1px 3px rgb(24 18 16 / 46%));
+  transform: translateY(1px);
 }
 
-/* The tooltip wraps the seal in a trigger span, and the tooltip anchors to the
-   TRIGGER — so the trigger has to be the seal's box, not a passthrough. It used
-   to be `display: contents`, which gave it no box at all: the tooltip measured
-   {0,0,0,0} and landed in the top-left corner of the screen (QA-DOCK-1).
-   The trigger therefore takes the dial's placement and the seal sits statically
-   inside it, which is also what keeps the seal off the rail's flow. */
-.endTurnTooltipTrigger {
-  position: absolute;
-  right: var(--dial-inset);
-  bottom: var(--dial-gap);
-  z-index: var(--z-dial);
-  width: var(--dial-d);
-  height: var(--dial-d);
+@media (prefers-reduced-motion: reduce) {
+  .turnDialLive {
+    transition: none;
+  }
 }
 
-.endTurnTooltipTrigger .turnSeal {
-  position: static;
+/* The tooltip wraps the dial in a trigger span and anchors to the TRIGGER, so
+   the trigger has to be the dial's box rather than a passthrough. It used to be
+   `display: contents` on the old seal, which gave it no box at all: the tooltip
+   measured {0,0,0,0} and landed in the top-left corner of the screen (QA-DOCK-1).
+   Kept as a hard-won rule, not rediscovered. */
+.turnDialTrigger {
+  display: block;
+  width: var(--turn-d);
+  height: var(--turn-d);
+  /* The disc is taller than the bar, and the bar's top edge is the top of the
+     screen — so the overhang has to go entirely DOWNWARD. Centred, the top of
+     the dial was sliced off by the viewport. Flush at the top, hanging below. */
+  transform: translateY(calc((var(--turn-d) - var(--chrome-top)) / 2));
 }
 
 /* The roster is pushed to the far right so the spine's true centre is free. */
@@ -763,73 +746,49 @@
 }
 
 .dialHub {
-  fill: var(--disc-hi);
   stroke: var(--ink-30);
   stroke-width: 1.2;
 }
 
-.dialYear {
-  fill: var(--ink);
-  font-family: var(--disp);
-  font-weight: 700;
-}
-
-.dialSeasonName {
+/* Your move: clay, the colour this UI spends only on things you press. */
+.dialHubLive {
   fill: var(--clay);
+  stroke: rgb(255 248 231 / 55%);
+  stroke-width: 1.5;
+}
+
+/* Somebody else's move: the acting seat's own glaze, filled inline because the
+   glaze table is data (ui/playerGlazes.ts) and no sheet may hold a second copy
+   of it. The ivory keyline is the same one every owner mark on the board wears —
+   a glaze never travels alone. */
+.dialHubSeat {
+  stroke: rgb(255 248 231 / 78%);
+  stroke-width: 2;
+}
+
+.dialBlazon {
+  fill: var(--ivory);
   font-family: var(--disp);
   font-weight: 700;
-  letter-spacing: 1.5px;
+  text-anchor: middle;
 }
 
-.turnSealBody {
-  fill: url("#turnSealClay");
-}
-
-.turnSealClayTop {
-  stop-color: var(--clay-lit);
-}
-
-.turnSealClayMid {
-  stop-color: var(--clay);
-}
-
-.turnSealClayLow {
-  stop-color: var(--clay-shade);
-}
-
-.turnSealBeads {
-  fill: none;
-  stroke: rgb(255 248 231 / 35%);
-  stroke-width: 5;
-  stroke-dasharray: 2.5 4.5;
-}
-
-.turnSealKeyline {
-  fill: none;
-  stroke: rgb(255 248 231 / 40%);
-  stroke-width: 1.2;
-}
-
-.turnSealGlyph path {
+.dialHourglass path {
   fill: none;
   stroke: var(--disc-hi);
-  stroke-width: 1.9;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.turnSealLabel {
-  fill: var(--disc-hi);
-  font-family: var(--disp);
-  font-weight: 700;
-  letter-spacing: 2px;
-}
-
-.turnSealActor {
-  fill: rgb(255 248 231 / 68%);
-  font-family: var(--disp);
-  font-weight: 700;
-  letter-spacing: 2.2px;
+/* The hold. It sweeps the disc's outer edge as you press, and it is the whole
+   confirmation — ending a turn is the one move that cannot be taken back, and it
+   used to be a single click on the largest target on screen. */
+.dialHold {
+  fill: none;
+  stroke: var(--clay);
+  stroke-width: 5;
+  stroke-linecap: round;
 }
 
 /* ── The sea ──────────────────────────────────────────────────────────────

@@ -3,6 +3,7 @@ import {
   BASE_VIEW_BOX,
   HEX_SIZE,
   WORLD_VIEW_BOX,
+  boardExtent,
   cameraTransform,
   clampViewBox,
   getSideBySidePositions,
@@ -131,6 +132,36 @@ describe("shoreline", () => {
     // The enclosed centre contributes nothing. Each ring hex touches the centre
     // plus two ring neighbours, so 3 of its 6 sides face open sea: 6 × 3 = 18.
     expect(edges.length).toBe(18);
+  });
+});
+
+describe("board extent", () => {
+  it("wraps a lone hex in its own outline, not in the coordinate window", () => {
+    const extent = boardExtent([{ x: 0, y: 0 }]);
+
+    // A pointy-top hex is `size` tall and `size·cos30` wide from its centre, so a
+    // single tile's extent is that box and nothing more. Fitting BASE_VIEW_BOX
+    // instead is what made the board come out a third smaller than its room.
+    expect(extent.height).toBeCloseTo(HEX_SIZE * 2, 6);
+    expect(extent.width).toBeCloseTo(HEX_SIZE * Math.cos(Math.PI / 6) * 2, 6);
+    expect(extent.width).toBeLessThan(BASE_VIEW_BOX.width);
+  });
+
+  it("spans every tile it is given", () => {
+    const extent = boardExtent([
+      { x: -100, y: -50 },
+      { x: 0, y: 0 },
+      { x: 140, y: 90 },
+    ]);
+
+    expect(extent.x).toBeLessThan(-100);
+    expect(extent.y).toBeLessThan(-50);
+    expect(extent.x + extent.width).toBeGreaterThan(140);
+    expect(extent.y + extent.height).toBeGreaterThan(90);
+  });
+
+  it("falls back to the coordinate window when there is no board yet", () => {
+    expect(boardExtent([])).toEqual(BASE_VIEW_BOX);
   });
 });
 
