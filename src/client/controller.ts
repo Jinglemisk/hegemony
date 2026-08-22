@@ -8,6 +8,8 @@ import { createGameFromDefinition } from "../game/turn";
 import { GAME_MODES } from "../game/ruleset";
 import { loadStartAtAssembly, resolveTunedDefinition } from "../dev/tuning";
 import { createBrowserSeed } from "./seed";
+import { choosePlacement } from "../sim/policies";
+import { createSimRng, deriveBotSeed } from "../sim/rng";
 import { createCommandEvents, createCommandMoves, reduceGameCommand } from "./commandAdapter";
 
 export type { GameEvents, GameMoves } from "./commandAdapter";
@@ -17,11 +19,13 @@ export type { Phase } from "../game/types";
 /**
  * URL-driven game options, so a browser session can pick the board and seed without a
  * lobby: `?board=shuffled&seed=42` for a randomized layout, `?setup=manual` to place
- * the opening towns by hand, `?dev=preload` to replay the fixed scripted opening.
+ * the opening towns by hand, `?dev=preload` to replay the fixed scripted opening,
+ * `?opening=random` for the old uniform draw instead of policy placement.
  *
- * Default dev behavior: the opening is auto-played with seed-driven legal placements,
- * and the seed rotates through {@link DEV_ROTATION_SEEDS} on every reload — testing
- * never starts at "place your capital" unless asked to.
+ * Default dev behavior: the opening is auto-played by the sim's placement policy (the
+ * same brain the bots use, seeded from the game seed), and the seed rotates through
+ * {@link DEV_ROTATION_SEEDS} on every reload — testing never starts at "place your
+ * capital" unless asked to.
  */
 function createGameFromUrl(): HegemonyState {
   const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
@@ -49,7 +53,7 @@ function createGameFromUrl(): HegemonyState {
   let G = createGameFromDefinition(definition, seed, boardLayout, false);
 
   if (!manualSetup && GAME_CONFIG.autoOpeningForDev) {
-    G = autoPlayOpening(G);
+    G = autoPlayOpening(G, params?.get("opening") === "random");
   }
 
   // `?dev=assembly` fast-forwards to the first Assembly. The agora sits in the spring
@@ -186,11 +190,12 @@ function nextRotationSeed(): number {
   return rotationSeedThisLoad;
 }
 
-/** Play the opening with seed-driven legal placements (the sim's "random" opening,
- *  driven by the game's own seed so it is reproducible), landing in gameplay. */
-function autoPlayOpening(initial: HegemonyState): HegemonyState {
+/** Play the opening the sim way — the shared placement policy, or a uniform draw when
+ *  asked — with a bot stream derived from the game seed exactly as `runGame` does, so
+ *  the browser and the headless sim place identically for a seed. Lands in gameplay. */
+function autoPlayOpening(initial: HegemonyState, uniform: boolean): HegemonyState {
   let G = initial;
-  let rngState = G.seed ^ 0x9e3779b9;
+  const rng = createSimRng(deriveBotSeed(G.seed));
   let guard = 0;
 
   while (G.phase !== "gameplay" && guard++ < 64) {
@@ -200,10 +205,7 @@ function autoPlayOpening(initial: HegemonyState): HegemonyState {
       return G; // leave whatever remains to manual play rather than crash
     }
 
-    const step = mulberry32(rngState);
-    rngState = step.state;
-
-    const command = commands[Math.floor(step.value * commands.length)];
+    const command = uniform ? rng.pick(commands) : choosePlacement(G, commands, rng);
     const result = transition(G.definition, G, G.currentPlayer, command);
     if (!result.ok) {
       return G;

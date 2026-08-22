@@ -17,8 +17,9 @@ export const GAME_CONFIG = {
   // uneven; the constrained shuffle (landmarks non-adjacent, breadbasket off-rim, fair
   // seats) is the deferred proper version. Sims stay on classic for reproducible A/B.
   boardLayout: "shuffled" as BoardLayout,
-  // Dev testing default: auto-play the opening (seed-driven legal placements) so a
-  // reload lands straight in gameplay. ?setup=manual restores hand placement.
+  // Dev testing default: auto-play the opening with the sim's placement policy so a
+  // reload lands straight in a sanely placed game. ?setup=manual restores hand
+  // placement; ?opening=random restores the old uniform draw.
   autoOpeningForDev: true,
 };
 
