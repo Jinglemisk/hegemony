@@ -19,7 +19,7 @@ import type {
   Resources,
 } from "../../game/types";
 import { presentBuildingEffects } from "../../ui/effects";
-import { formatResourceCost, formatResourceDelta } from "../../ui/formatters";
+import { formatResourceDelta } from "../../ui/formatters";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
 import { settlementNameOf } from "../../ui/settlementNames";
 import { SETTLEMENT_SORT } from "./constants";
@@ -92,20 +92,6 @@ export function getBuildingBenefitText(
   const deltaText = formatResourceDelta(projected);
 
   return deltaText === "none" ? presentBuildingEffects(building.effects).text : deltaText;
-}
-
-export function buildingTooltipRows(
-  building: BuildingDefinition,
-  status: ActionStatus,
-  benefit: string,
-  phase: Phase,
-  isActive: boolean,
-) {
-  return [
-    `Cost: ${formatResourceCost(status.cost ?? building.cost)}.`,
-    `Benefit: ${benefit}.`,
-    actionRequirementText(status, phase, isActive),
-  ];
 }
 
 export function actionRequirementText(status: ActionStatus | null, phase?: Phase, isActive = true) {

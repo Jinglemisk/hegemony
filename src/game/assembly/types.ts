@@ -18,17 +18,14 @@ import type {
 
 export type PoliticianId = "demosthenes" | "perdiccas" | "kleistophenes" | "stratokles";
 
-/**
- * The Twilight-Imperium split (design §1.5). A **Law** is table-wide and stands until
- * repealed — the three regular politicians deal only in these. A **Directive** resolves
- * once and leaves a permanent tally monument; Stratokles deals only in these.
- *
- * Cards and politicians both spell the two literals inline rather than naming this
- * type, because both are discriminated unions and a discriminant has to be a
- * literal to narrow. The name survives as the place the distinction is written
- * down — every `kind: "law" | "directive"` in this file means exactly this.
- */
-export type ResolutionKind = "law" | "directive";
+// The Twilight-Imperium split (design §1.5). A **Law** is table-wide and stands until
+// repealed — the three regular politicians deal only in these. A **Directive** resolves
+// once and leaves a permanent tally monument; Stratokles deals only in these.
+//
+// Cards and politicians both spell the two literals inline rather than naming a
+// `ResolutionKind` type, because both are discriminated unions and a discriminant has
+// to be a literal to narrow. This comment is where the distinction is written down —
+// every `kind: "law" | "directive"` in this file means exactly this.
 
 /**
  * Which settlements a standing effect counts.
