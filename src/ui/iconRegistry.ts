@@ -249,6 +249,34 @@ export type EffectIconTarget =
   | { family: "building"; effect: BuildingEffect }
   | { family: "activeMechanic"; effect: ActiveEffectMechanic };
 
+/**
+ * The glyph a card's blow band leads with.
+ *
+ * `EVENT_EFFECT_GLYPHS` says what KIND of change an effect is, which is the right
+ * answer in a ledger row where the kind is the distinguishing fact. On the card
+ * the player has one effect in front of them, the subject word sits right beside
+ * the figure, and the crate beside "+1 Stone" read as a stray building. When the
+ * effect is about one resource, the resource's own glyph leads — the same one the
+ * topbar, the chronicle and every annotated sentence draw for it. Effects with no
+ * single resource (a pop gain, a cost discount, an exchange, a choice) keep the
+ * kind glyph.
+ */
+export function eventBlowGlyph(effect: EventEffect): GlyphId {
+  switch (effect.type) {
+    case "resourceDelta":
+    case "scaledResourceDelta":
+    case "resourceDeltaPerPop":
+    case "incomeModifier":
+      return RESOURCE_GLYPHS[effect.resource];
+    case "happinessDelta":
+    case "scaledHappinessDelta":
+    case "timedHappinessDelta":
+      return RESOURCE_GLYPHS.happiness;
+    default:
+      return EVENT_EFFECT_GLYPHS[effect.type];
+  }
+}
+
 export function effectGlyph(target: EffectIconTarget): GlyphId {
   switch (target.family) {
     case "event":
