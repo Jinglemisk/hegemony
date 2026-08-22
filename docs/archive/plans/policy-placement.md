@@ -1,5 +1,5 @@
 ---
-status: active
+status: shipped
 phase: "tooling"
 updated: 2026-08-22
 ---
@@ -27,7 +27,7 @@ CPU opponent inherits it without a second code path.
 - **Browser CPU opponents.** Hot-seat stays hot-seat. This plan only changes who fills in
   the opening when a human has not asked to place by hand.
 - **Search deeper than one ply for setup.** Rollouts, MCTS, and "react to rivals' likely
-  next placement" belong to [Outcome-driven AI §7.5](outcome-driven-ai.md) after the
+  next placement" belong to [Outcome-driven AI §7.5](../../plans/outcome-driven-ai.md) after the
   mechanics freeze. One-ply with a placement-aware score is the production floor, and it
   is also the seam that deeper search later plugs into.
 - **Changing placement rules.** Snake order, the metropolis exclusion radius, and the
@@ -39,7 +39,7 @@ CPU opponent inherits it without a second code path.
 - Owner ruling (2026-08-22): "I don't want a fair board, I only want initial placements
   to not be random." Option A from the 2026-08-22 assessment is accepted; option B
   (fair-start constraint) is rejected, not deferred.
-- [Outcome-driven AI §7.5](outcome-driven-ai.md): "The selected policy must control
+- [Outcome-driven AI §7.5](../../plans/outcome-driven-ai.md): "The selected policy must control
   setup in outcome-driven and CPU games. Random uniform setup remains a chaos/test option
   only." and §12.7: reject dominated placements, react to earlier seats, preserve opening
   diversity among equivalents. This plan delivers the first two at one-ply depth and the
@@ -226,7 +226,7 @@ Behavioural tests (travel with slice 1, in `src/sim/policies.test.ts` and
   `smart`-vs-`settler` batch differs only after setup.
 
 Simulation evidence — shipped as
-[2026-08-22 policy-placed openings](../reports/simulation/2026-08-22-policy-placement-openings.md):
+[2026-08-22 policy-placed openings](../../reports/simulation/2026-08-22-policy-placement-openings.md):
 zero of eighty policy capitals on yield-less land against nine of eighty random ones,
 mean capital yield 7 against 2.7, and pops lost to unrest down by a third to a half over
 sixty turns of `smart` play. The classic board's seat spread widens under good play
@@ -245,8 +245,11 @@ sixty turns of `smart` play. The classic board's seat spread widens under good p
 Human evidence: load the app on three rotation seeds and confirm every start is one a
 playtester would not call braindead.
 
-## Retirement
+## Shipped
 
-After validation, fold the opening description into `docs/reference/ai.md` (setup is
-"just more policy calls") and `docs/reference/simulation.md` (opening kinds), note the
-shipped PRs and the A/B report, and move this plan to `docs/archive/plans/`.
+PR #71 (merged 2026-08-22, `d2da011`): the headless slice, the browser slice, and the
+[opening A/B report](../../reports/simulation/2026-08-22-policy-placement-openings.md).
+Owner playtested the rotation seeds and accepted the starts on 2026-08-22. The living
+description now sits in [`reference/ai.md`](../../reference/ai.md) ("Setup is more
+policy calls") and [`reference/simulation.md`](../../reference/simulation.md) (opening
+kinds).

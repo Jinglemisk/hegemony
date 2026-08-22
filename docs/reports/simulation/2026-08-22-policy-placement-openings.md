@@ -7,7 +7,7 @@ Date: 2026-08-22
 Does placing capitals and founding colonies with the shared placement evaluator
 (`--opening policy`, now the default) give playtests and batches a sane start, compared
 with the uniform draw over legal placements (`--opening random`) that both the sim and
-the browser's dev auto-opening used before? Plan: `docs/plans/policy-placement.md`.
+the browser's dev auto-opening used before? Plan: `docs/archive/plans/policy-placement.md`.
 
 Board fairness is out of scope by owner ruling (2026-08-22): the question is whether
 each seat's start is one a competent player would choose on the board as dealt.

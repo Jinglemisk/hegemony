@@ -709,7 +709,7 @@ export const beamPolicy: Policy = {
 // policy now branches here during the setup phases and scores placements with ONE shared
 // evaluator, so a smart-vs-settler batch differs only after setup — openings stay a held
 // constant in gameplay A/Bs. `random` keeps its uniform pick as the chaos baseline.
-// See docs/plans/policy-placement.md.
+// See docs/archive/plans/policy-placement.md.
 
 export function isSetupPhase(G: HegemonyState): boolean {
   return G.phase === "setupCapital" || G.phase === "setupCity" || G.phase === "setupColony";
@@ -722,7 +722,7 @@ export function isSetupPhase(G: HegemonyState): boolean {
 const PLACEMENT_FRONTIER_TOP = 3;
 
 /** Half the frontier weight: a contested tile still counts for something. Measured by the
- *  opening A/B in docs/plans/policy-placement.md. */
+ *  opening A/B in docs/archive/plans/policy-placement.md. */
 const CONTEST_WEIGHT = 1;
 
 /** The bounded frontier a placement opens: the top few yields the player could found on
