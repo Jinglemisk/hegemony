@@ -49,7 +49,7 @@ also settle. It runs in two passes (rank tiles by their most even pop split, the
 score every split on the top three tiles) so a capital costs ~80 transitions rather
 than ~540. `random` keeps its uniform pick. The browser's dev auto-opening calls the
 same routine with a bot stream derived from the game seed, so the browser and the
-sim place identically for a seed. See `docs/plans/policy-placement.md`.
+sim place identically for a seed. See `docs/archive/plans/policy-placement.md`.
 
 ## Current policies
 
