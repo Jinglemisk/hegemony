@@ -15,8 +15,8 @@ import type { EffectPresentation } from "../../../ui/effects";
 import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
 import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { settlementNameOf } from "../../../ui/settlementNames";
-import { SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
-import { EffectIcon } from "../../../ui/icons/EffectIcon";
+import { SETTLEMENT_GLYPHS, eventBlowGlyph } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 import { eventCardArtUrl } from "../events";
 import { capitalize } from "../helpers";
 import { CeremonyBlow, DurationStrip } from "./CeremonyBlow";
@@ -218,7 +218,7 @@ export function PendingPlayerEventModal() {
                       figureRole="stat-lg"
                       icon={
                         effects.length > 0 ? (
-                          <EffectIcon effect={effects[0]} family="event" size="verb" />
+                          <Icon glyph={eventBlowGlyph(effects[0])} size="verb" />
                         ) : null
                       }
                       presentation={option}
@@ -236,7 +236,7 @@ export function PendingPlayerEventModal() {
             className="blowBand"
             icon={
               selectedEffects.length > 0 ? (
-                <EffectIcon effect={selectedEffects[0]} family="event" size="rail" />
+                <Icon glyph={eventBlowGlyph(selectedEffects[0])} size="rail" />
               ) : null
             }
             presentation={blow}
