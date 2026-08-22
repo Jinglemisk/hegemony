@@ -36,6 +36,21 @@ changes which cards come up. Tie-breaks follow enumeration order. This is what
 makes batches byte-reproducible and games replayable; keep it true for CPU
 players too (seed their rng from the game seed).
 
+### Setup is more policy calls
+
+Capitals and founding colonies go through the same `choose` seam: during the setup
+phases every search policy branches to one shared `choosePlacement` — a one-ply
+clone→apply→score over the legal placements, so a `smart`-vs-`settler` batch differs
+only after setup. The score is `evaluateSmart` of the placed state (once the pops sit
+on the tile, the income projection is the site score) plus a _bounded_ frontier —
+the top three yields the seat could found on next, with gameplay geometry so a
+coastal seat sees the leapfrog coast — minus the part of that frontier a rival could
+also settle. It runs in two passes (rank tiles by their most even pop split, then
+score every split on the top three tiles) so a capital costs ~80 transitions rather
+than ~540. `random` keeps its uniform pick. The browser's dev auto-opening calls the
+same routine with a bot stream derived from the game seed, so the browser and the
+sim place identically for a seed. See `docs/plans/policy-placement.md`.
+
 ## Current policies
 
 **`random`** — two-stage uniform: pick among the distinct move _types_ present,

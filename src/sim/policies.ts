@@ -22,7 +22,7 @@ import type { GameCommand } from "../game/legalMoves";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
 import { victoryCardsHeld } from "../game/victory";
-import type { HegemonyState, PlayerId } from "../game/types";
+import type { HegemonyState, PlayerId, Pops } from "../game/types";
 import type { PlayerView } from "../game/projection";
 import type { Ruleset } from "../game/ruleset";
 import type { SimRng } from "./rng";
@@ -197,7 +197,10 @@ function onePlyLookahead(
 
 export const greedyPolicy: Policy = {
   name: "greedy",
-  choose(view, moves) {
+  choose(view, moves, rng) {
+    if (isSetupPhase(view.state)) {
+      return choosePlacement(view.state, moves, rng);
+    }
     return onePlyLookahead(view.state, moves, evaluate);
   },
 };
@@ -210,7 +213,10 @@ export const greedyPolicy: Policy = {
  */
 export const smartPolicy: Policy = {
   name: "smart",
-  choose(view, moves) {
+  choose(view, moves, rng) {
+    if (isSetupPhase(view.state)) {
+      return choosePlacement(view.state, moves, rng);
+    }
     return onePlyLookahead(view.state, moves, evaluateSmart);
   },
 };
@@ -688,10 +694,165 @@ function beamPlan(
  */
 export const beamPolicy: Policy = {
   name: "beam",
-  choose(view, moves) {
+  choose(view, moves, rng) {
+    if (isSetupPhase(view.state)) {
+      return choosePlacement(view.state, moves, rng);
+    }
     return beamPlan(view.state, moves, evaluateSmart);
   },
 };
+
+// ── Opening placement — setup is just more policy calls ──────────────────────────────
+//
+// Capitals and founding colonies used to be filled in by a uniform draw over the legal
+// placements (the sim's "random" opening and the browser's dev auto-opening). Every search
+// policy now branches here during the setup phases and scores placements with ONE shared
+// evaluator, so a smart-vs-settler batch differs only after setup — openings stay a held
+// constant in gameplay A/Bs. `random` keeps its uniform pick as the chaos baseline.
+// See docs/plans/policy-placement.md.
+
+export function isSetupPhase(G: HegemonyState): boolean {
+  return G.phase === "setupCapital" || G.phase === "setupCity" || G.phase === "setupColony";
+}
+
+/** How many frontier tiles a placement is credited with. Colonies are founded one at a
+ *  time, so the whole coastline must not sum up once a seat holds the coast — that made
+ *  a food-4 shore beat the food-10 breadbasket. The best few reachable sites are what a
+ *  placement really buys. */
+const PLACEMENT_FRONTIER_TOP = 3;
+
+/** Half the frontier weight: a contested tile still counts for something. Measured by the
+ *  opening A/B in docs/plans/policy-placement.md. */
+const CONTEST_WEIGHT = 1;
+
+/** The bounded frontier a placement opens: the top few yields the player could found on
+ *  next (gameplay geometry, so a coastal seat sees the leapfrog coast), and how much of
+ *  that a rival could also settle — later seats use it to react to earlier placements
+ *  beyond what the exclusion radius already forbids. */
+export function placementFrontier(
+  G: HegemonyState,
+  playerID: PlayerId,
+): { frontier: number; contested: number } {
+  // A seat that has not placed yet has no contiguity rule and "reaches" every tile;
+  // only rivals already on the board contest anything.
+  const rivals = playerIds(G).filter(
+    (player) => player !== playerID && G.players[player].settlements.length > 0,
+  );
+  const reachable: { amount: number; contested: boolean }[] = [];
+
+  for (const tile of G.board.tiles) {
+    const amount = tile.resource?.amount ?? 0;
+    if (amount === 0 || !canPlaceColonyOnTile(G, playerID, tile).can) {
+      continue;
+    }
+    reachable.push({
+      amount,
+      contested: rivals.some((rival) => canPlaceColonyOnTile(G, rival, tile).can),
+    });
+  }
+
+  reachable.sort((a, b) => b.amount - a.amount);
+
+  let frontier = 0;
+  let contested = 0;
+  for (const site of reachable.slice(0, PLACEMENT_FRONTIER_TOP)) {
+    frontier += site.amount;
+    contested += site.contested ? site.amount : 0;
+  }
+
+  return { frontier, contested };
+}
+
+/** The placement score: `smart`'s economy plus the bounded frontier, minus its contested
+ *  part. Once the pops sit on the tile, the income projection IS the site score, so no
+ *  bespoke site heuristic is needed; coast access shows up through the leapfrog frontier. */
+export function evaluatePlacement(G: HegemonyState, playerID: PlayerId): number {
+  const { frontier, contested } = placementFrontier(G, playerID);
+  return evaluateSmart(G, playerID) + FRONTIER_WEIGHT * frontier - CONTEST_WEIGHT * contested;
+}
+
+/** How many tiles survive the tile-ranking pass before every pop split is scored. */
+const PLACEMENT_TOP_TILES = 3;
+
+type Placement = Extract<GameCommand, { tileId: string; pops: Pops }>;
+
+/** The most even split among a tile's compositions — the stand-in used to rank tiles
+ *  before the surviving tiles are scored with every split. */
+function representativeSplit(placements: Placement[]): Placement {
+  let best = placements[0];
+  let bestSpread = Infinity;
+
+  for (const placement of placements) {
+    const counts = [placement.pops.citizens, placement.pops.freemen, placement.pops.slaves];
+    const spread = Math.max(...counts) - Math.min(...counts);
+    if (spread < bestSpread) {
+      bestSpread = spread;
+      best = placement;
+    }
+  }
+
+  return best;
+}
+
+function scorePlacements(
+  G: HegemonyState,
+  moves: GameCommand[],
+): { move: GameCommand; score: number }[] {
+  const playerID = G.currentPlayer;
+  const scored: { move: GameCommand; score: number }[] = [];
+
+  for (const move of moves) {
+    const result = transition(G.definition, G, playerID, move);
+    if (result.ok) {
+      scored.push({ move, score: evaluatePlacement(result.state, playerID) });
+    }
+  }
+
+  return scored;
+}
+
+/**
+ * One-ply over the legal placements, in two passes so a capital decision costs ~80
+ * transitions instead of ~540: rank tiles by their most even pop split, then score every
+ * split on the top few tiles. Exact ties are broken with the injected rng so symmetric
+ * sites and compositions do not always resolve to the lowest tile id.
+ */
+export function choosePlacement(G: HegemonyState, moves: GameCommand[], rng: SimRng): GameCommand {
+  const byTile = new Map<string, Placement[]>();
+  for (const move of moves) {
+    if ("tileId" in move && "pops" in move) {
+      byTile.set(move.tileId, [...(byTile.get(move.tileId) ?? []), move]);
+    }
+  }
+
+  let candidates: GameCommand[] = moves;
+  if (byTile.size > PLACEMENT_TOP_TILES) {
+    const ranked = scorePlacements(G, [...byTile.values()].map(representativeSplit)).sort(
+      (a, b) => b.score - a.score,
+    );
+    candidates = ranked
+      .slice(0, PLACEMENT_TOP_TILES)
+      .flatMap(({ move }) => byTile.get((move as Placement).tileId) ?? []);
+  }
+
+  let best: GameCommand[] = [];
+  let bestScore = -Infinity;
+
+  for (const { move, score } of scorePlacements(G, candidates)) {
+    if (score > bestScore) {
+      bestScore = score;
+      best = [move];
+    } else if (score === bestScore) {
+      best.push(move);
+    }
+  }
+
+  if (best.length === 0) {
+    throw new Error("policy found no applicable placement");
+  }
+
+  return best.length === 1 ? best[0] : rng.pick(best);
+}
 
 // ── Phase 3-C: the influence-aware "political" bot ────────────────────────────────────
 //
@@ -1069,8 +1230,11 @@ function chooseDrawRepealOrPass(
 
 export const politicalPolicy: Policy = {
   name: "political",
-  choose(view, moves) {
+  choose(view, moves, rng) {
     const G = view.state;
+    if (isSetupPhase(G)) {
+      return choosePlacement(G, moves, rng);
+    }
     if (G.assembly) {
       return resolveAssemblyByHeuristic(G, G.assembly, moves);
     }
@@ -1117,7 +1281,10 @@ function evaluateSettler(G: HegemonyState, playerID: PlayerId): number {
  */
 export const settlerPolicy: Policy = {
   name: "settler",
-  choose(view, moves) {
+  choose(view, moves, rng) {
+    if (isSetupPhase(view.state)) {
+      return choosePlacement(view.state, moves, rng);
+    }
     return onePlyLookahead(view.state, moves, evaluateSettler);
   },
 };
@@ -1147,8 +1314,11 @@ function scoreMaster(G: HegemonyState, playerID: PlayerId): number {
  */
 export const masterPolicy: Policy = {
   name: "master",
-  choose(view, moves) {
+  choose(view, moves, rng) {
     const G = view.state;
+    if (isSetupPhase(G)) {
+      return choosePlacement(G, moves, rng);
+    }
     if (G.assembly) {
       return resolveAssemblyByHeuristic(G, G.assembly, moves);
     }

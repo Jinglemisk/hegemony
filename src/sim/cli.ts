@@ -269,6 +269,16 @@ function parseTuningPreset(flags: Flags): TuningPresetId | null {
   return value;
 }
 
+function parseOpening(flags: Flags, allowed: OpeningKind[]): OpeningKind {
+  const opening = (typeof flags.opening === "string" ? flags.opening : "policy") as OpeningKind;
+
+  if (!allowed.includes(opening)) {
+    fail(`unknown opening "${opening}" — expected ${allowed.join(", ")}`);
+  }
+
+  return opening;
+}
+
 function cmdNew(flags: Flags, file: string) {
   const seed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createCliSeed();
   const mode = parseMode(flags);
@@ -277,11 +287,7 @@ function cmdNew(flags: Flags, file: string) {
 
   const opening: OpeningKind = flags["manual-setup"]
     ? "manual"
-    : ((typeof flags.opening === "string" ? flags.opening : "random") as OpeningKind);
-
-  if (!["random", "fixed", "manual"].includes(opening)) {
-    fail(`unknown opening "${opening}" — expected random, fixed, or manual`);
-  }
+    : parseOpening(flags, ["policy", "random", "fixed"]);
 
   const botSeed =
     flags["bot-seed"] !== undefined
@@ -718,6 +724,7 @@ function cmdBatch(flags: Flags) {
   const mode = parseMode(flags);
   const patch = parsePatch(flags);
   const boardLayout = parseBoard(flags);
+  const opening = parseOpening(flags, ["policy", "random"]);
   const tune = parseTune(flags);
   const presetId = parseTuningPreset(flags);
   const resolved = resolveTuning(GAME_MODES[mode].ruleset, presetId, tune ?? {}, patch);
@@ -747,6 +754,7 @@ function cmdBatch(flags: Flags) {
           mode,
           patch: effectivePatch,
           definition: resolved.definition,
+          opening,
           boardLayout,
           policy,
           seatPolicies,
@@ -777,6 +785,7 @@ function cmdBatch(flags: Flags) {
       policy: seats ? "mixed" : policy.name,
       mode,
       boardLayout,
+      opening,
       seatPolicies: seats ? seats.names : null,
       baseSeed,
       botSeedRule: "seed ^ 0x9e3779b9",
@@ -812,7 +821,7 @@ const HELP = `Hegemony headless sim — usage: npm run sim -- <command> [args] [
 Save file defaults to ${DEFAULT_SAVE_PATH}.
 
   new        --seed N [--mode standard|fastStart|deathmatch] [--ruleset-patch p.json]
-             [--manual-setup | --opening random|fixed] [--bot-seed N] [--board classic|shuffled]
+             [--manual-setup | --opening policy|random|fixed] [--bot-seed N] [--board classic|shuffled]
   show       [--json] [--player 0..3]
   log        [--tail N]
   legal      [--json]                      list this player's legal moves, indexed
@@ -834,6 +843,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
   end-turn
   auto       [--turns N] [--policy ${POLICY_IDS}] [--record s.json] [--quiet]
   batch      --games N [--turns N] [--policy ${POLICY_IDS}] [--seed N] [--board classic|shuffled]
+             [--opening policy|random]
              [--ruleset-patch p.json] [--tune-preset low-number-core-v1] [--tune-patch p.json]
              [--seats ${POLICY_IDS}×4] [--rotate]
              [--report r.json] [--csv t.csv]

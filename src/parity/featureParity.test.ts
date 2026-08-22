@@ -295,6 +295,7 @@ describe("feature and content parity manifests", () => {
       mode: "standard",
       boardLayout: "classic",
       baseSeed: 0,
+      opening: "policy",
       botSeedRule: "fixture",
       rulesetPatch: null,
       definition: createModeDefinition("standard").identity,

@@ -42,6 +42,7 @@ describe("three-axis move parity gate", () => {
       mode: "standard",
       boardLayout: "classic",
       baseSeed: 77,
+      opening: "policy",
       botSeedRule: "test",
       rulesetPatch: null,
       definition: createModeDefinition("standard").identity,

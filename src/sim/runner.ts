@@ -211,7 +211,7 @@ export function runGame({
   mode,
   patch,
   definition,
-  opening = "random",
+  opening = "policy",
   boardLayout,
   policy,
   seatPolicies,

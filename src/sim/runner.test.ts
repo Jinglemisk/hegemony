@@ -5,6 +5,9 @@ import { greedyPolicy, randomPolicy } from "./policies";
 import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
 
+// Several full games per test; the policy opening costs ~0.4 s of placement search per
+// game on top of play, so these get a timeout that survives a loaded machine.
+
 describe("runGame determinism", () => {
   it("random policy: same seed twice → byte-identical state", () => {
     const first = runGame({ seed: 7, mode: "standard", policy: randomPolicy, turns: 24 });
@@ -18,7 +21,7 @@ describe("runGame determinism", () => {
     const second = runGame({ seed: 11, mode: "standard", policy: greedyPolicy, turns: 8 });
 
     expect(JSON.stringify(first)).toBe(JSON.stringify(second));
-  });
+  }, 30_000);
 
   it("different seeds diverge", () => {
     const first = runGame({ seed: 1, mode: "standard", policy: randomPolicy, turns: 8 });
@@ -40,7 +43,7 @@ describe("runGame smoke", () => {
     for (const player of Object.values(deathmatch.players)) {
       expect(player.settlements.length).toBeGreaterThanOrEqual(4);
     }
-  });
+  }, 30_000);
 
   it("counts setup placements as turns (runs from a manual opening)", () => {
     const G = runGame({

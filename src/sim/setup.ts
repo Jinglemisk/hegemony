@@ -9,6 +9,7 @@ import type { GameModeId } from "../game/ruleset";
 import { createInitialStateFromDefinition } from "../game/state";
 import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
 import type { OpeningKind, RulesetPatch } from "./io";
+import { choosePlacement } from "./policies";
 import type { SimRng } from "./rng";
 
 export type NewGameOptions = {
@@ -21,7 +22,7 @@ export type NewGameOptions = {
   /** Terrain layout. Defaults to "classic" so historical balance runs stay
    *  reproducible; realistic runs pass "shuffled" to match the live game. */
   boardLayout?: BoardLayout;
-  /** Decides random-opening placements; unused for fixed/manual openings. */
+  /** Breaks placement ties (policy) or draws placements (random); unused for fixed/manual. */
   simRng: SimRng;
   /** Called once per applied setup move, for history recording. */
   onMove?: (G: HegemonyState, player: PlayerId, command: GameCommand) => void;
@@ -29,9 +30,9 @@ export type NewGameOptions = {
 
 /**
  * Build a game the sim way (never via createGame — its preload flag belongs to
- * the UI). `random` plays seed-driven legal placements to gameplay, `fixed`
- * replays the scripted UI opening, `manual` stops in setupCapital so placements
- * can be made move-by-move.
+ * the UI). `policy` places the opening with the shared placement evaluator, `random`
+ * draws seed-driven legal placements uniformly, `fixed` replays the scripted UI
+ * opening, `manual` stops in setupCapital so placements can be made move-by-move.
  */
 export function buildNewGame({
   seed,
@@ -85,7 +86,7 @@ export function buildNewGame({
     return G;
   }
 
-  // random: pick uniformly among legal placements until setup completes.
+  // policy / random: place until setup completes — scored, or drawn uniformly.
   let guard = 0;
 
   while (G.phase !== "gameplay") {
@@ -101,7 +102,9 @@ export function buildNewGame({
       );
     }
 
-    G = applyRecorded(G, simRng.pick(commands), onMove);
+    const command =
+      opening === "policy" ? choosePlacement(G, commands, simRng) : simRng.pick(commands);
+    G = applyRecorded(G, command, onMove);
   }
 
   return G;
