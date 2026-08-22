@@ -25,7 +25,10 @@ export const DEFAULT_SAVE_PATH = ".sim/game.json";
 
 export type { RulesetPatch } from "../game/ruleset";
 
-export type OpeningKind = "random" | "fixed" | "manual";
+/** `policy` places the opening with the shared placement evaluator (the default);
+ *  `random` is the uniform chaos baseline; `fixed` replays the scripted UI opening;
+ *  `manual` stops in setup. Metadata only — replay rebuilds from history. */
+export type OpeningKind = "policy" | "random" | "fixed" | "manual";
 
 export type CommandRecord = { player: PlayerId; command: GameCommand };
 

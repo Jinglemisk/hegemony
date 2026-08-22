@@ -42,16 +42,19 @@ npm run sim -- batch --games 50 --turns 40 --policy greedy   # balance report
 ```bash
 npm run sim -- new --seed 42 [--mode standard|fastStart|deathmatch]
                   [--ruleset-patch patch.json]
-                  [--manual-setup | --opening random|fixed]
+                  [--manual-setup | --opening policy|random|fixed]
                   [--bot-seed N] [--file path]
 ```
 
 - `--seed` drives **everything**: deck shuffles, random placements, unrest pop
   removal. Same seed → same game, always. Omitting it picks (and prints) one.
-- Openings: `random` (default) plays seed-driven legal placements straight to
-  the gameplay phase; `fixed` replays the scripted UI opening
+- Openings: `policy` (default) places capitals and founding colonies with the
+  shared placement evaluator — the same brain the bots play with, so a reload
+  or a batch starts from a sane opening; `random` draws uniformly among legal
+  placements (the chaos baseline); `fixed` replays the scripted UI opening
   (`TEST_OPENING_SETUP`); `--manual-setup` stops in `setupCapital` so
-  placements are made by hand (`move place-capital …`).
+  placements are made by hand (`move place-capital …`). `batch` takes
+  `--opening policy|random` too, and records it in the report's `meta`.
 - `--ruleset-patch` deep-merges a JSON file onto the mode's ruleset — the fast
   path for balance experiments. Example patch:
 

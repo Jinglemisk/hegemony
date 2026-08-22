@@ -11,6 +11,7 @@ import { endTurn } from "../game/turn";
 import type { HegemonyState } from "../game/types";
 import {
   beamPolicy,
+  evaluatePlacement,
   evaluatePolicyUnrestRisk,
   greedyPolicy,
   masterPolicy,
@@ -23,6 +24,13 @@ import {
 } from "./policies";
 import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
+import { buildNewGame } from "./setup";
+import { getTile } from "../game/core/query";
+import { hexDistance } from "../game/map";
+import { createGameDefinition } from "../game/definition";
+import { getAuthoredGameContent } from "../game/content";
+import { GAME_MODES } from "../game/ruleset";
+import { createInitialStateFromDefinition } from "../game/state";
 
 function observe(G: HegemonyState, player = G.currentPlayer) {
   return projectForPlayer(G.definition, G, player);
@@ -549,4 +557,104 @@ describe("beam policy", () => {
       expect(["gameplay", "gameOver"]).toContain(G.phase);
     }
   }, 30000);
+});
+
+describe("opening placement", () => {
+  const definition = createGameDefinition({
+    ruleset: GAME_MODES.standard.ruleset,
+    content: getAuthoredGameContent(),
+  });
+  const searchPolicies = [
+    greedyPolicy,
+    smartPolicy,
+    beamPolicy,
+    politicalPolicy,
+    settlerPolicy,
+    masterPolicy,
+  ];
+
+  it("seats the first metropolis on the breadbasket of the classic board", () => {
+    const G = createInitialStateFromDefinition(definition, 5, "classic");
+    const commands = enumerateLegalCommands(G, G.currentPlayer);
+    const command = smartPolicy.choose(observe(G), commands, createSimRng(1));
+
+    expect(command.type).toBe("placeCapital");
+    const tile = getTile(G, (command as { tileId: string }).tileId)!;
+    expect(tile.resource).toEqual({ type: "food", amount: 10 });
+  });
+
+  it("every search policy places identically — openings are a held constant in A/Bs", () => {
+    const G = createInitialStateFromDefinition(definition, 5, "classic");
+    const commands = enumerateLegalCommands(G, G.currentPlayer);
+    const choices = searchPolicies.map((policy) =>
+      JSON.stringify(policy.choose(observe(G), commands, createSimRng(1))),
+    );
+
+    expect(new Set(choices).size).toBe(1);
+  });
+
+  it("policy openings put every capital on yielding land", () => {
+    for (const seed of [5, 42, 73000]) {
+      const G = buildNewGame({
+        seed,
+        mode: "standard",
+        opening: "policy",
+        boardLayout: "shuffled",
+        simRng: createSimRng(seed),
+      });
+      expect(G.phase).toBe("gameplay");
+      for (const player of Object.values(G.players)) {
+        const capital = getTile(G, player.settlements[0])!;
+        expect(capital.resource?.amount ?? 0).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("is a pure function of the seed", () => {
+    const build = () =>
+      buildNewGame({ seed: 42, mode: "standard", opening: "policy", simRng: createSimRng(7) });
+
+    expect(JSON.stringify(build())).toBe(JSON.stringify(build()));
+  });
+
+  it("discounts frontier a rival can also reach", () => {
+    const G = createInitialStateFromDefinition(definition, 5, "classic");
+    const site = getTile(G, "-2,1")!; // food 8, the second-best seat on the classic board
+    const legalCapitals = G.board.tiles.filter(
+      (tile) =>
+        tile.terrain !== "oracle" &&
+        tile.id !== site.id &&
+        (tile.resource?.amount ?? 0) > 0 &&
+        hexDistance(tile, site) >= 2,
+    );
+    const nearby = legalCapitals.filter((tile) => hexDistance(tile, site) === 2);
+    const far = legalCapitals.reduce((a, b) =>
+      hexDistance(b, site) > hexDistance(a, site) ? b : a,
+    );
+    expect(hexDistance(far, site)).toBeGreaterThanOrEqual(4);
+
+    const pops = { citizens: 4, freemen: 0, slaves: 0 };
+    const place = (rivalTile: string) => {
+      const first = transition(G.definition, G, "0", {
+        type: "placeCapital",
+        tileId: rivalTile,
+        pops,
+      });
+      if (!first.ok) throw new Error(first.reasons.join());
+      const second = transition(G.definition, first.state, "1", {
+        type: "placeCapital",
+        tileId: site.id,
+        pops,
+      });
+      if (!second.ok) throw new Error(second.reasons.join());
+      return second.state;
+    };
+
+    // Same site, same pops, same own income: only the shared frontier differs. A rival
+    // two hexes away can only take frontier from the site, never add to it.
+    const farScore = evaluatePlacement(place(far.id), "1");
+    const nearScores = nearby.map((tile) => evaluatePlacement(place(tile.id), "1"));
+    expect(Math.max(...nearScores)).toBeLessThanOrEqual(farScore);
+    expect(Math.min(...nearScores)).toBeLessThan(farScore);
+  });
 });

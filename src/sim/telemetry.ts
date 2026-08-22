@@ -1,3 +1,4 @@
+import type { OpeningKind } from "./io";
 import { seasonName, yearOf } from "../game/core/calendar";
 import { totalPops } from "../game/core/pops";
 import { calculateIncome } from "../game/economy/income";
@@ -187,6 +188,8 @@ export type BatchReport = {
     policy: string;
     mode: string;
     boardLayout: BoardLayout;
+    /** How setup was placed: the shared placement policy, or the uniform draw. */
+    opening: OpeningKind;
     baseSeed: number;
     botSeedRule: string;
     rulesetPatch: unknown;
