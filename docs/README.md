@@ -22,16 +22,16 @@ precedes full multiplayer.
 
 ## Active plans
 
-| Plan                                                | Phase    | Status    | Position                                                                                  |
-| --------------------------------------------------- | -------- | --------- | ----------------------------------------------------------------------------------------- |
-| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze          |
-| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Opening slice: topology and canonical shared-vertex marker                                |
-| [UI triage](plans/ui-triage.md)                     | —        | `active`  | The defect ledger closing the holes found by driving the overhauled UI                    |
-| [UI triage — parity](plans/ui-triage-parity.md)     | —        | `active`  | What the showcase designed and the app never built; companion feed to the ledger          |
-| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | Two intentional type-size exceptions and five glossary duplicates remain judged          |
-| [Player trade](plans/player-trade.md)               | 4        | `blocked` | V1 after luxuries; full negotiation ships before the mechanics freeze                     |
-| [National Ideas](plans/national-ideas.md)           | 5        | `blocked` | V1; twelve-idea reverse-snake draft after Phase 4                                         |
-| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer                       |
+| Plan                                                | Phase    | Status    | Position                                                                         |
+| --------------------------------------------------- | -------- | --------- | -------------------------------------------------------------------------------- |
+| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze |
+| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Opening slice: topology and canonical shared-vertex marker                       |
+| [UI triage](plans/ui-triage.md)                     | —        | `active`  | The defect ledger closing the holes found by driving the overhauled UI           |
+| [UI triage — parity](plans/ui-triage-parity.md)     | —        | `active`  | What the showcase designed and the app never built; companion feed to the ledger |
+| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | Two intentional type-size exceptions and five glossary duplicates remain judged  |
+| [Player trade](plans/player-trade.md)               | 4        | `blocked` | V1 after luxuries; full negotiation ships before the mechanics freeze            |
+| [National Ideas](plans/national-ideas.md)           | 5        | `blocked` | V1; twelve-idea reverse-snake draft after Phase 4                                |
+| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer              |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature
 from [the plan template](plans/_template.md).
