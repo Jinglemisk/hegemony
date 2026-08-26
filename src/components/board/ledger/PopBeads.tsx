@@ -1,20 +1,20 @@
 import { POP_TYPES } from "../../../game/rules";
 import type { Pops } from "../../../game/types";
+import { POP_GLYPHS } from "../../../ui/iconRegistry";
+import { Icon } from "../../../ui/icons/Icon";
 
 /**
- * The people of one place, one bead each, with the room they have left drawn
+ * The people of one place, one figure each, with the room they have left drawn
  * after them.
  *
- * **Shape is the rank.** A citizen is a disc, a freeman a square, a slave a
- * point-down triangle, and empty room is a dash — not a mark at all. Every one
- * of those was a circle before: a freeman was a 2px ring and an empty slot a 1px
- * ring, which is the same mark at two weights, so at NAXOS 3/10 you could not
- * count your own people. The board's rule is shape = kind and colour = owner;
- * pops have no owner to spend hue on, so kind has to be the silhouette, and the
- * ranks may not be told apart by stroke width.
+ * Each pop is the rank's own icon — the same citizen, freeman and slave the
+ * rest of the UI draws, so the census speaks the app's one vocabulary instead
+ * of a private disc/square/triangle cipher that needed a legend to read. Empty
+ * room stays a dash: it is not a rank, so it is not a figure, and it cannot be
+ * miscounted as anybody.
  *
  * The board still draws all three as circles (`.popBead-*`, board.css) — see the
- * report: it needs the same three silhouettes before the two surfaces agree.
+ * report: it needs the same three figures before the two surfaces agree.
  */
 export function PopBeads({ pops, capacity }: { pops: Pops; capacity: number }) {
   const beads = POP_TYPES.flatMap((pop) => Array.from({ length: pops[pop] }, () => pop));
@@ -23,7 +23,7 @@ export function PopBeads({ pops, capacity }: { pops: Pops; capacity: number }) {
   return (
     <span aria-hidden="true" className="beads">
       {beads.map((pop, index) => (
-        <i className={`bead bead-${pop}`} key={`${pop}-${index}`} />
+        <Icon className="beadFigure" glyph={POP_GLYPHS[pop]} key={`${pop}-${index}`} />
       ))}
       {Array.from({ length: room }, (_, index) => (
         <i className="bead bead-empty" key={`empty-${index}`} />

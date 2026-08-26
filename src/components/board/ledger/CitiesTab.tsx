@@ -7,7 +7,7 @@ import {
 } from "../../../game/rules";
 import type { BuildingId, Resources } from "../../../game/types";
 import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
-import { RESOURCE_GLYPHS, TERRAIN_GLYPHS } from "../../../ui/iconRegistry";
+import { POP_GLYPHS, RESOURCE_GLYPHS, TERRAIN_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { settlementNameOf } from "../../../ui/settlementNames";
@@ -84,15 +84,15 @@ export function CitiesTab({
           and nothing in the game has ever said what they are. */}
       <p className="beadLegend caption" aria-hidden="true">
         <span>
-          <i className="bead bead-citizens" />
+          <Icon className="beadFigure" glyph={POP_GLYPHS.citizens} />
           citizens
         </span>
         <span>
-          <i className="bead bead-freemen" />
+          <Icon className="beadFigure" glyph={POP_GLYPHS.freemen} />
           freemen
         </span>
         <span>
-          <i className="bead bead-slaves" />
+          <Icon className="beadFigure" glyph={POP_GLYPHS.slaves} />
           slaves
         </span>
         <span>

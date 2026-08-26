@@ -711,38 +711,17 @@
   margin-left: auto;
 }
 
-/* Shape is the rank. All four of these used to be circles — a freeman a 2px ring
-   and an empty slot a 1px ring — so a rank and an absence were one mark at two
-   weights and a settlement's census could not be counted. Colour belongs to
-   owners; a pop has no owner, so the silhouette has to carry the kind. */
-.bead {
+/* A pop in the census is the rank's own icon, at bead scale. The abstract
+   disc/square/triangle cipher this replaces needed a legend to read; the figure
+   icons are the vocabulary every other surface already speaks. */
+.bead,
+.beadFigure {
   flex: none;
-  width: 11px;
-  height: 11px;
+  width: 13px;
+  height: 13px;
 }
 
-/* Round — a citizen. */
-.bead-citizens {
-  border-radius: 50%;
-  background: var(--ivory);
-  box-shadow: inset 0 0 0 1.3px rgb(36 25 16 / 65%);
-}
-
-/* Square — a freeman. */
-.bead-freemen {
-  border-radius: 2px;
-  background: var(--ivory);
-  box-shadow: inset 0 0 0 1.3px rgb(36 25 16 / 65%);
-}
-
-/* Point-down — a slave, the bottom rung. A clipped shape takes no inset keyline,
-   so this is the one bead that carries its weight in fill. */
-.bead-slaves {
-  background: var(--vase-black);
-  clip-path: polygon(50% 100%, 0 6%, 100% 6%);
-}
-
-/* Room is not a rank, so it is not a bead: a rule on the line, which cannot be
+/* Room is not a rank, so it is not a figure: a rule on the line, which cannot be
    miscounted as anybody. */
 .bead-empty {
   align-self: center;
@@ -751,8 +730,8 @@
   background: rgb(36 25 16 / 22%);
 }
 
-/* The vocabulary, named once at the head of the page. Nothing anywhere carried a
-   legend for these marks, and a shape system nobody has been taught is a cipher. */
+/* The vocabulary, named once at the head of the page — the figures name
+   themselves, but the ROOM dash still has to be taught. */
 .beadLegend {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
