@@ -3,6 +3,7 @@ import type { TradableMaterial } from "../../../game/types";
 import { RESOURCE_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
 import type { GlyphId } from "../../../ui/icons/glyphs";
+import { TRADE_PLACEHOLDERS } from "../../../ui/icons/placeholders";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { Tooltip } from "../../overlays/Tooltip";
 import { useGameUi } from "../GameUiContext";
@@ -122,6 +123,12 @@ export function MarketTab({
                   onClick={canSell ? () => onBankSell(material) : undefined}
                   type="button"
                 >
+                  <Icon
+                    className="marketTradeIcon"
+                    glyph={RESOURCE_GLYPHS[material]}
+                    size="verb"
+                    src={TRADE_PLACEHOLDERS.sell[material]}
+                  />
                   <small className="label">sell</small>
                   <Rate
                     give={sellAmount}
@@ -152,6 +159,12 @@ export function MarketTab({
                   onClick={canBuy ? () => onBankBuy(material) : undefined}
                   type="button"
                 >
+                  <Icon
+                    className="marketTradeIcon"
+                    glyph={RESOURCE_GLYPHS[material]}
+                    size="verb"
+                    src={TRADE_PLACEHOLDERS.buy[material]}
+                  />
                   <small className="label">buy</small>
                   <Rate
                     give={buyAmount}

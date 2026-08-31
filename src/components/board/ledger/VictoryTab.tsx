@@ -5,6 +5,7 @@ import { formatNumber } from "../../../ui/formatters";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import type { GlyphId } from "../../../ui/icons/glyphs";
 import { Icon } from "../../../ui/icons/Icon";
+import { VICTORY_PLACEHOLDERS } from "../../../ui/icons/placeholders";
 import { MechanicsDetails } from "../../MechanicsDetails";
 import { Tooltip } from "../../overlays/Tooltip";
 
@@ -91,7 +92,7 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
             <article className={`vcard${holder === playerID ? " vcardHeld" : ""}`}>
               {holder === playerID ? <span className="vcardStamp label">Held</span> : null}
               <div className="vcardName">
-                <Icon glyph={METRIC_GLYPHS[card.metric]} />
+                <Icon glyph={METRIC_GLYPHS[card.metric]} src={VICTORY_PLACEHOLDERS[card.metric]} />
                 <b className="title">{card.name}</b>
               </div>
 

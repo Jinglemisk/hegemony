@@ -5,6 +5,8 @@ import type { AssemblySession } from "../../../game/assembly";
 import type { HegemonyState } from "../../../game/types";
 import { Popover } from "../../overlays/Popover";
 import { useGameUi } from "../GameUiContext";
+import { Icon } from "../../../ui/icons/Icon";
+import { ASSEMBLY_PLACEHOLDERS, glyphPlaceholder } from "../../../ui/icons/placeholders";
 import { PassIcon, RepealIcon } from "./AssemblyIcons";
 import { AssemblyAction } from "./AssemblyPresentation";
 
@@ -83,7 +85,7 @@ export function AssemblyFoot({
           cost={`${rules.repealCost} influence`}
           effectiveCost={{ influence: rules.repealCost }}
           explanation="Put the removal of a standing Law on the ballot. The motion is voted like any other resolution."
-          icon={<RepealIcon />}
+          icon={glyphPlaceholder("repeal") ? <Icon glyph="repeal" size="verb" /> : <RepealIcon />}
           label="Repeal"
           onClick={(event) =>
             onMenu(
@@ -133,7 +135,13 @@ export function AssemblyFoot({
         armed
         cost="say nothing"
         explanation="Finalize your proposal turn without adding a card. The house card still goes to the vote."
-        icon={<PassIcon />}
+        icon={
+          ASSEMBLY_PLACEHOLDERS.pass ? (
+            <Icon glyph="maskPlain" size="verb" src={ASSEMBLY_PLACEHOLDERS.pass} />
+          ) : (
+            <PassIcon />
+          )
+        }
         label="Pass"
         onClick={() => moves.assemblyPass(viewerId)}
       />

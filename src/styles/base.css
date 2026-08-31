@@ -246,13 +246,19 @@
      bar reads as a button on a toolbar, one that breaks the bar's line reads as
      an object the bar is carrying. */
   --turn-d: calc(92px * var(--ui-scale));
-  /* One resource pill's height. It is split 3:1 — stockpile over income — so the
-     number has three quarters of it and the rate one. */
-  --res-h: calc(48px * var(--ui-scale));
-  /* Each half of the resource spine. Three stacked pills with their icons, sized
-     for the widest they get (a four-figure count), so the dial between them never
-     shifts as the numbers do. */
-  --spine-half-w: calc(180px * var(--ui-scale));
+  /* One resource's coin. It is the pill's whole height: the count's row and the
+     rate's row are cut from it 3:2, so the two numerals stacked beside the coin
+     measure exactly the coin's diameter and the pair reads as one object. Change
+     this and both halves of the resource move together. */
+  --coin-d: calc(36px * var(--ui-scale));
+  /* Each half of the resource spine: three coins with their counts, reserved at
+     the width a half actually takes when one of its three counts has run to four
+     figures (three two-figure counts measure 215). The reserve is what holds the
+     event slips off at one end and the roster at the other, so understating it
+     shows up as an overlap rather than as a tight fit — held at 180 while the
+     halves rendered 191 and 204, the first coin and the fate slip were already
+     sharing pixels at 1440. */
+  --spine-half-w: calc(232px * var(--ui-scale));
   /* How far the spine reaches from the bar's centre before anything else may
      start: half the numerals, the gap, half the dial, and a breath. The event
      slips at the other end are bounded by this — held at a literal, the first

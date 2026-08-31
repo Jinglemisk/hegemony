@@ -24,7 +24,7 @@ export function TabRail<T extends string>({
   tabTitle,
 }: {
   side: "left" | "right";
-  tabs: Array<{ tab: T; label: string; glyph: GlyphId }>;
+  tabs: Array<{ tab: T; label: string; glyph: GlyphId; src?: string }>;
   activeTab: T;
   isOpen: boolean;
   onSelectTab: (tab: T) => void;
@@ -34,7 +34,7 @@ export function TabRail<T extends string>({
 }) {
   return (
     <nav className={`tabRail tabRail-${side}`} aria-label={ariaLabel}>
-      {tabs.map(({ tab, label, glyph }) => {
+      {tabs.map(({ tab, label, glyph, src }) => {
         const active = isOpen && activeTab === tab;
         const badge = badges?.[tab];
 
@@ -48,7 +48,7 @@ export function TabRail<T extends string>({
             title={tabTitle?.(tab) ?? label}
             type="button"
           >
-            <Icon glyph={glyph} size="rail" />
+            <Icon glyph={glyph} size="rail" src={src} />
             {badge && badge > 0 ? <span className="railTabBadge num">{badge}</span> : null}
           </button>
         );

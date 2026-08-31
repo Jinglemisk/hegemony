@@ -99,11 +99,14 @@ function ResourceGridComponent({
             triggerStyle={resourceCssVars(resource)}
             tooltipClassName={`resourceTooltip${resourceBreakdown.length >= 5 ? " compactResourceTooltip" : ""}`}
           >
-            {/* One atomic group: icon, numeral and delta are siblings on a single
-                baseline, so an icon can never drift away from the number it names. */}
+            {/* One atomic group: the coin, the count, and the rate under the count.
+                Siblings in one grid, so the icon can never drift away from the
+                number it names. The rate wears .label because 11px display is the
+                smallest role there is — it is a footnote to the count, not a
+                second number of equal standing. */}
             <Icon glyph={RESOURCE_GLYPHS[resource]} className="resourceIcon" />
-            <strong className="stat-lg stat-xl">{formatNumber(resources[resource])}</strong>
-            <span className={`resourceDelta stat ${deltaClass}`}>
+            <strong className="stat-lg">{formatNumber(resources[resource])}</strong>
+            <span className={`resourceDelta label ${deltaClass}`}>
               {/* Nothing moved is said quietly: six printed zeros in a row read as
                   six facts, when they are the absence of one. */}
               {delta === 0 ? "·" : formatSignedNumber(delta)}

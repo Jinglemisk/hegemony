@@ -41,7 +41,7 @@ function EmpireIntelPanelComponent({
   const cardsHeld = victoryCardsHeld(G, playerID);
 
   const title = ledgerTabLabel(activeTab);
-  const titleGlyph = LEDGER_TABS.find(({ tab }) => tab === activeTab)?.glyph;
+  const titleTab = LEDGER_TABS.find(({ tab }) => tab === activeTab);
   /* The empire strip, the unrest alarm and the standing effects are the CITIES
      page's own furniture (f-panels.html ~194–208), not a masthead the whole left
      tablet wears. They used to ride above every act page, which cost Pops, Build
@@ -52,7 +52,7 @@ function EmpireIntelPanelComponent({
   return (
     <div className="empireIntel">
       {/* The card is titled by the page it is showing, not by the furniture. */}
-      <LedgerPanelHeader title={title} glyph={titleGlyph} />
+      <LedgerPanelHeader title={title} glyph={titleTab?.glyph} src={titleTab?.src} />
 
       {showsEmpireFurniture ? (
         <>

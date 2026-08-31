@@ -195,7 +195,7 @@
 .resourceSpine .resourceGrid {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 
   /* The ledger grid's 12px bottom margin survived the switch to flex and made
      the spine 12px taller than its own numbers. Centred on the bar, that pushed
@@ -206,32 +206,40 @@
   background: none;
 }
 
-/* One resource is ONE object, and it reads in two tiers: WHAT YOU HAVE over
-   WHAT IT IS DOING. The stockpile takes the top three quarters of the pill and
-   the per-turn income the bottom quarter, both in one column beside the glyph —
-   so the eye takes the whole stockpile row across the bar first and only then
-   drops a line for the rates.
+/* One resource is ONE object: a struck coin with its count beside it and the
+   per-turn rate tucked under the count.
 
-   In a single baseline row the two numbers competed: `27 +7 15 +1 11 +2` is six
-   figures of equal standing and no way to tell a total from a rate without
-   reading the sign. It is also why the pill was one flat row of ten items —
-   before that it kept the ledger's 58px min-height and, under `align-items:
-   baseline`, the numeral sat at the TOP of that tall box while the icon hung 20px
-   below it. That was the original "completely loose". Both are answered the same
-   way: give the pill a definite height and put every part of it in a named cell. */
+   Two things were wrong before. The icon was a painted raster dropped straight
+   onto the bone bar, and six of them in a row read as marks pasted on the
+   parchment because nothing gave them a ground. And the rate hung a long way
+   below the numeral, level with the meander, so the bar read as one row of big
+   numbers with a second, unrelated row of small green ones beneath it.
+
+   The coin answers both. Every icon now sits on the same ivory disc, which is
+   the frame's own vocabulary — the turn dial between the two halves and the verb
+   knobs below are that disc at other sizes — so the six resources become one
+   rhythm instead of six loose marks, and a pale icon has an edge to work against
+   that the file itself does not have to carry. The count and its rate then hug
+   in a single column beside the coin: one object per resource, read as
+   WHAT YOU HAVE over WHAT IT IS DOING. */
 .resourceSpine .resourcePill {
   display: grid;
-  /* The glyph sits on the STOCKPILE's row, not centred against both. Centred, it
-     lands between the two numbers and belongs to neither — which is the same
-     out-of-phase read the flat row had, one axis over. */
+  /* The coin spans both rows. It names the resource, and the count and the rate
+     both belong to it — on one row only, it would belong to the count and the
+     rate would dangle off the pill, which is the read this replaces. */
   grid-template-areas:
     "icon value"
-    ".    delta";
+    "icon delta";
   grid-template-columns: auto auto;
-  grid-template-rows: 3fr 1fr;
+  /* The two rows are the coin, cut 3:2 — which is what makes the count and the
+     rate stacked beside it measure exactly the coin's height. Left to `auto`
+     they measured whatever the type roles happened to be that week, and the
+     column and the coin were only ever the same height by coincidence. */
+  grid-template-rows: calc(var(--coin-d) * 0.6) calc(var(--coin-d) * 0.4);
   align-items: center;
-  column-gap: 6px;
-  height: var(--res-h);
+  column-gap: 7px;
+  row-gap: 0;
+  height: var(--coin-d);
   min-height: 0;
   padding: 0;
   border: 0;
@@ -240,23 +248,58 @@
   box-shadow: none;
 }
 
+/* The coin: ivory, struck, a hairline of ink round the rim — the disc the turn
+   dial and the verb knobs are, at resource size, and drawn from the same three
+   tokens so it can never drift from them.
+
+   The coin is the measure, not the numbers: --coin-d sets the plate here and the
+   pill's two rows there, so the count and the rate stacked beside it come to
+   exactly this height. Sized off the type roles instead, the two were the same
+   height only at the one width they were measured at. */
 .resourceSpine .resourceIcon {
   grid-area: icon;
-  width: 23px;
-  height: 23px;
+  box-sizing: border-box;
   align-self: center;
+  width: var(--coin-d);
+  height: var(--coin-d);
+  /* The ring the art sits inside. Any wider and the coin reads as a halo around
+     a small picture rather than as a struck plate carrying one. */
+  padding: 4px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--disc-hi), var(--disc));
+  box-shadow:
+    0 0 0 1px var(--ring),
+    0 1px 2px rgb(24 18 16 / 22%),
+    inset 0 1px 0 var(--disc-hi);
   filter: none;
-  opacity: 0.85;
+  opacity: 1;
 }
 
-/* The stockpile sits ON the line the income hangs from, not centred in its own
-   cell — the two tiers have to touch or they read as two rows of numbers rather
-   than one number and its rate. */
+/* The stockpile sits ON the line the rate hangs from, and the two are centred
+   over each other so the pair reads as one column rather than as a number with
+   something loose beneath it. Neither sets a size: the count wears .stat-lg and
+   the rate .label, which is the whole of the size table this chrome is allowed.
+   The count came down a step from .stat-xl so the coin, which matches the pair's
+   height, could be the bigger half of the object — the picture names the
+   resource, the figure only counts it. */
 .resourceSpine .resourcePill strong {
   grid-area: value;
   align-self: end;
+  justify-self: center;
   color: var(--ink);
-  line-height: 0.92;
+  line-height: 0.88;
+}
+
+.resourceSpine .resourceDelta {
+  grid-area: delta;
+  align-self: start;
+  justify-self: center;
+}
+
+/* A resource doing nothing prints a dot, and a row of six dots is noise. Kept
+   faint enough to hold the line's place without being read. */
+.resourceSpine .resourceDelta.neutral {
+  opacity: 0.25;
 }
 
 /* A stockpile below zero is the one number up here you have to act on, so it is
@@ -265,19 +308,14 @@
   color: var(--neg);
 }
 
-/* Below ~1400 the bar runs out of room before anything else does: the numerals
-   scale with the chrome, but the spine's metal — icon size and the air between
-   resources — is fixed px and does not, so it eats an ever larger share of the
-   width and starves the slips at the other end. Tightening the metal buys the
-   slips back ~40px, which is one wrapped line each. */
+/* Below ~1400 the bar runs out of room before anything else does, and the air
+   between resources is the part that does not scale with the chrome — it is
+   fixed px, so it eats an ever larger share of the width and starves the slips
+   at the other end. Tightening it buys the slips back, which is one wrapped line
+   each. */
 @media (max-width: 1400px) {
   .resourceSpine .resourceGrid {
-    gap: 12px;
-  }
-
-  .resourceSpine .resourceIcon {
-    width: 20px;
-    height: 20px;
+    gap: 10px;
   }
 }
 
@@ -501,6 +539,15 @@
     transform 180ms ease;
 }
 
+/* The glyph fills its disc rather than floating in the middle of one. At the
+   rail size it was 24px inside 54px of ivory — more than half the knob was empty
+   plate, and on a bar you press every turn the mark you are aiming at was the
+   smallest thing on it. 2rem leaves a proper margin and still clears the ring. */
+.verbKnob .icon {
+  width: 2rem;
+  height: 2rem;
+}
+
 .railVerb:not([aria-disabled="true"]):hover .verbKnob {
   background: var(--disc-hi);
   box-shadow:
@@ -703,8 +750,14 @@
 }
 
 /* The roster is pushed to the far right so the spine's true centre is free. */
+/* The mirror of the slips' bound at the other end. The roster and the effects
+   slip take whatever is left to the RIGHT of the spine and no more; held only by
+   `margin-left: auto`, the cluster grew inboard until the effects slip sat on
+   the happiness coin at 1280. Same expression, same token — if the spine's reach
+   changes, both ends move with it. */
 .topbarStatusCluster {
   gap: var(--sp-3);
+  max-width: calc(50vw - var(--spine-reach));
   margin-left: auto;
 }
 

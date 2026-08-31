@@ -51,6 +51,26 @@ slots visible on every tile, pops as class-glyph + numeral, keylined owner rims.
 > explicit per-element **keep** (Q36); blanks park at the current look until a post-Phase-5
 > design session. The interaction grammar and refactor ladder are unaffected.
 
+## Placeholder rasters (2026-08-22)
+
+Until the stylized pictograms are cut, the UI wears Imperator: Rome icons the owner
+shortlisted one concept at a time. They live in `assets/icons/placeholder/<family>/`
+under game-native names, are mapped in `src/ui/icons/placeholders.ts`, and `Icon`
+draws the raster when one is mapped and the hand-authored glyph otherwise — so the
+glyph registry stays the meaning layer and removing a file is safe. Up/downgrade
+verbs are the state's own icon with a green plus or red minus (market buy/sell per
+material, promote/demote, upgrade, propose/repeal, veto). The review kit and the
+decision record (`shortlist.json`) sit in the untracked `icon-preview/` folder; the
+assets are Paradox property and leave with the first real art.
+
+**The coin (2026-08-24).** Every resource in the top spine sits on an ivory disc
+struck from the frame's own `--disc` / `--disc-hi` / `--ring` tokens — the turn
+dial and the verb knobs at resource size. Painted art dropped straight onto the
+bone bar reads as marks pasted on parchment however well the file itself is
+edged; the plate is what gives six unrelated pictures one ground and one rhythm.
+The count sits beside the coin with its per-turn rate under it, so a resource is
+one object rather than a row of numbers over a row of smaller ones.
+
 ## Caveat on "verified"
 
 Agents verified the **stimulus** (contrast, sizes, silhouettes, overflow — machine-checkable)
