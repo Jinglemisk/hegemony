@@ -8,6 +8,7 @@ import {
 import type { BuildingId, Resources } from "../../../game/types";
 import { formatPopLabel, formatSignedNumber } from "../../../ui/formatters";
 import { POP_GLYPHS, RESOURCE_GLYPHS, TERRAIN_GLYPHS } from "../../../ui/iconRegistry";
+import { TERRAIN_PLACEHOLDERS } from "../../../ui/icons/placeholders";
 import { Icon } from "../../../ui/icons/Icon";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
 import { settlementNameOf } from "../../../ui/settlementNames";
@@ -136,6 +137,7 @@ export function CitiesTab({
                   className="cityGround miniIcon"
                   glyph={TERRAIN_GLYPHS[tile.terrain]}
                   size="rail"
+                  src={TERRAIN_PLACEHOLDERS[tile.terrain]}
                 />
               </span>
               <span className="cityPops stat num" title={`Population ${popTotal} of ${capacity}`}>

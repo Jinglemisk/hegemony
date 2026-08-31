@@ -21,6 +21,22 @@
   stroke-linejoin: round;
 }
 
+/* A placeholder raster (assets/icons/placeholder) rides the same three sizes. */
+img.icon {
+  object-fit: contain;
+}
+
+/* Dimming an icon to 85% is dimming a STROKE in `currentColor` — a shade under
+   the ink beside it, so the glyph supports the text instead of competing with
+   it. A raster has no ink to thin: the same rule just fades painted art toward
+   the parchment it sits on, which is the one thing these placeholders cannot
+   afford. They render at full strength, and the edge treatment baked into the
+   file (icon-preview/polish.py) keeps them off the page's own value. The spine's
+   coins say this for themselves in shell.css, where the plate is defined. */
+.effectRow img.icon {
+  opacity: 1;
+}
+
 /* The one solid mass a glyph is allowed — a pupil, a wax seal, a filled half. */
 .icon .icon-solid {
   fill: currentColor;

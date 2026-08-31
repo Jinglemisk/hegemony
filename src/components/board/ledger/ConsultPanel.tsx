@@ -25,7 +25,7 @@ function ConsultPanelComponent({
 }) {
   const { G, viewerId } = useGameUi();
   const title = ledgerTabLabel(activeTab);
-  const titleGlyph = CONSULT_TABS.find(({ tab }) => tab === activeTab)?.glyph;
+  const titleTab = CONSULT_TABS.find(({ tab }) => tab === activeTab);
 
   return (
     <div className="empireIntel">
@@ -33,7 +33,8 @@ function ConsultPanelComponent({
           is where the design puts it — a rail badge cannot hold three digits. */}
       <LedgerPanelHeader
         title={title}
-        glyph={titleGlyph}
+        glyph={titleTab?.glyph}
+        src={titleTab?.src}
         count={activeTab === "chronicle" ? G.log.length : undefined}
       />
 

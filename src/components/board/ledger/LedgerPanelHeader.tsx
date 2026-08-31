@@ -14,16 +14,19 @@ import { Icon } from "../../../ui/icons/Icon";
 export function LedgerPanelHeader({
   title,
   glyph,
+  src,
   count,
 }: {
   title: string;
   glyph: GlyphId | undefined;
+  /** The page's placeholder raster, when its tab carries one. */
+  src?: string;
   /** How many entries the page below is showing, when that number is the point. */
   count?: number;
 }) {
   return (
     <div className="panelTitle ledgerCardTitle">
-      {glyph ? <Icon glyph={glyph} size="rail" className="titleIcon" /> : null}
+      {glyph ? <Icon glyph={glyph} size="rail" className="titleIcon" src={src} /> : null}
       <h2 className="title">{title}</h2>
       {count === undefined ? null : <span className="panelCount caption num">{count}</span>}
     </div>

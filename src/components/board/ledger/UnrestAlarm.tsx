@@ -1,6 +1,7 @@
 import type { UnrestStatus } from "../../../game/rules";
 import { formatNumber } from "../../../ui/formatters";
 import { Icon } from "../../../ui/icons/Icon";
+import { UNREST_TIER_PLACEHOLDERS } from "../../../ui/icons/placeholders";
 
 /**
  * The alarm — the one oxblood mass in the whole ledger.
@@ -68,7 +69,7 @@ export function UnrestAlarm({
   return (
     <div className={`alarm alarm-${status.tier}`} role="status">
       <div className="alarmRow">
-        <Icon glyph="unhappiness" size="rail" />
+        <Icon glyph="unhappiness" size="rail" src={UNREST_TIER_PLACEHOLDERS[status.tier]} />
         <b className="alarmNumber stat-lg stat-hero num">{formatNumber(status.happiness)}</b>
         <span className="alarmWord verb">{TITLES[status.tier]}</span>
       </div>

@@ -1,4 +1,5 @@
 import type { GlyphId } from "../../../ui/icons/glyphs";
+import { TAB_PLACEHOLDERS } from "../../../ui/icons/placeholders";
 import type { ConsultTab, EmpireTab, LedgerTab } from "../types";
 
 /**
@@ -12,23 +13,36 @@ export const LEDGER_TABS: Array<{
   tab: LedgerTab;
   label: string;
   glyph: GlyphId;
+  /** A placeholder raster where the tab's picture is not its glyph's picture. */
+  src?: string;
   /** What the PAGE calls itself, when that is not what the tab is called. A tab
    *  is a spine label — one word, so four of them fit a 44px rail; a page has a
    *  masthead and can say what it actually is. */
   title?: string;
 }> = [
   { tab: "cities", label: "Cities", glyph: "city" },
-  { tab: "pops", label: "Pops", glyph: "citizens", title: "The Ladder" },
-  { tab: "buildings", label: "Build", glyph: "workshop" },
+  {
+    tab: "pops",
+    label: "Pops",
+    glyph: "citizens",
+    src: TAB_PLACEHOLDERS.pops,
+    title: "The Ladder",
+  },
+  { tab: "buildings", label: "Build", glyph: "workshop", src: TAB_PLACEHOLDERS.buildings },
   // The market's glyph is the forum's scales: the bank is where things are
   // weighed, and drawing that twice with two pictures would be a lie.
-  { tab: "market", label: "Market", glyph: "forum" },
+  { tab: "market", label: "Market", glyph: "forum", src: TAB_PLACEHOLDERS.market },
 ];
 
-export const CONSULT_TABS: Array<{ tab: ConsultTab; label: string; glyph: GlyphId }> = [
+export const CONSULT_TABS: Array<{
+  tab: ConsultTab;
+  label: string;
+  glyph: GlyphId;
+  src?: string;
+}> = [
   { tab: "chronicle", label: "Chronicle", glyph: "chronicle" },
   { tab: "codex", label: "Codex", glyph: "codex" },
-  { tab: "victory", label: "Victory", glyph: "laurel" },
+  { tab: "victory", label: "Victory", glyph: "laurel", src: TAB_PLACEHOLDERS.victory },
   // The Agora is a consult page, not an act page: the Assembly panel is where you
   // act on politics, this is where you read what it left standing.
   //

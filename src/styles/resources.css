@@ -59,7 +59,6 @@
 .resourcePill strong {
   color: var(--resource-color, var(--fg));
   font-family: var(--font-display);
-  font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -68,7 +67,6 @@
   justify-self: end;
   color: var(--subtle);
   font-family: var(--font-display);
-  font-size: 0.92rem;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }

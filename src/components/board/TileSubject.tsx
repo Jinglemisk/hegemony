@@ -1,5 +1,6 @@
 import type { HegemonyState, HexTile, PlayerId } from "../../game/types";
 import { RESOURCE_GLYPHS, SETTLEMENT_GLYPHS, TERRAIN_GLYPHS } from "../../ui/iconRegistry";
+import { TERRAIN_PLACEHOLDERS } from "../../ui/icons/placeholders";
 import { Icon } from "../../ui/icons/Icon";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { settlementNameOf } from "../../ui/settlementNames";
@@ -42,7 +43,12 @@ export function TileSubject({
 
       <span aria-hidden="true" className="tileSubjectMarks">
         {own ? <Icon className="miniIcon" glyph={SETTLEMENT_GLYPHS[own.kind]} size="rail" /> : null}
-        <Icon className="miniIcon" glyph={TERRAIN_GLYPHS[tile.terrain]} size="rail" />
+        <Icon
+          className="miniIcon"
+          glyph={TERRAIN_GLYPHS[tile.terrain]}
+          size="rail"
+          src={TERRAIN_PLACEHOLDERS[tile.terrain]}
+        />
 
         {tile.resource ? (
           <span className="tileSubjectYield">

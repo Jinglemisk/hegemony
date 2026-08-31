@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import "./tunePanel.css";
 import { getBuildings, getTerrainDeck } from "../game/content";
 import type { HegemonyState } from "../game/types";
+import { CHROME_PLACEHOLDERS } from "../ui/icons/placeholders";
 import { buildingSummary, describeBuildingEffect, terrainStats, terrainTotals } from "./aggregates";
 import {
   defaultValueAt,
@@ -128,7 +129,12 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
         onClick={() => setOpen(true)}
         title="Open parameter dashboard ( ` )"
       >
-        ⚙ TUNE{preset ? " · LOW" : ""}
+        {CHROME_PLACEHOLDERS.settings ? (
+          <img alt="" className="icon icon-inline" src={CHROME_PLACEHOLDERS.settings} />
+        ) : (
+          "⚙"
+        )}{" "}
+        TUNE{preset ? " · LOW" : ""}
         {changeCount > 0 ? ` · ${changeCount}` : ""}
       </button>
     );

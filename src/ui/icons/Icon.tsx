@@ -1,4 +1,5 @@
 import { GLYPHS, type GlyphId, type GlyphShape } from "./glyphs";
+import { glyphPlaceholder } from "./placeholders";
 
 /**
  * The one component that draws a glyph. Everything else in the UI asks for an
@@ -26,6 +27,12 @@ export type IconProps = {
    * only where the glyph is the ONLY carrier of meaning (a bare icon button).
    */
   label?: string;
+  /**
+   * A raster to draw instead of the glyph. Callers pass one only where the glyph
+   * set folds two ideas into one picture and a placeholder tells them apart
+   * (`placeholders.ts`); the glyph stays the fallback and the meaning.
+   */
+  src?: string;
 };
 
 function renderShape(shape: GlyphShape, index: number) {
@@ -41,8 +48,21 @@ function renderShape(shape: GlyphShape, index: number) {
   }
 }
 
-export function Icon({ glyph, size = "inline", className, label }: IconProps) {
+export function Icon({ glyph, size = "inline", className, label, src }: IconProps) {
   const classes = ["icon", SIZE_CLASS[size], className].filter(Boolean).join(" ");
+  const raster = src ?? glyphPlaceholder(glyph);
+
+  if (raster) {
+    return (
+      <img
+        className={classes}
+        src={raster}
+        alt={label ?? ""}
+        aria-hidden={label ? undefined : true}
+        draggable={false}
+      />
+    );
+  }
 
   return (
     <svg

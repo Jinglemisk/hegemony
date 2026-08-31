@@ -19,6 +19,7 @@ import type { GameContent } from "../../../game/content";
 import type { HegemonyState, PlayerId, Resource } from "../../../game/types";
 import { RESOURCE_GLYPHS } from "../../../ui/iconRegistry";
 import { Icon } from "../../../ui/icons/Icon";
+import { ASSEMBLY_PLACEHOLDERS } from "../../../ui/icons/placeholders";
 import { presentDirectiveEffect, presentLawEffect } from "../../../ui/effects";
 import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 import { MechanicsDetails } from "../../MechanicsDetails";
@@ -685,6 +686,7 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
             onClick={(event) => setReplacementAnchor(event.currentTarget.getBoundingClientRect())}
             triggerClassName="asmActTrigger"
           >
+            <Icon glyph="law" size="verb" src={ASSEMBLY_PLACEHOLDERS.propose} />
             Propose ▾
           </AssemblyAction>
           {replacementAnchor ? (
@@ -731,6 +733,7 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
           onClick={() => moves.assemblyPropose(viewerId)}
           triggerClassName="asmActTrigger"
         >
+          <Icon glyph="law" size="verb" src={ASSEMBLY_PLACEHOLDERS.propose} />
           Propose
         </AssemblyAction>
       )}

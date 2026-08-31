@@ -335,6 +335,7 @@ function CastingSeat({
         onClick={() => moves.assemblyVeto(playerID)}
         triggerClassName="asmVoteTrigger"
       >
+        <Icon glyph="veto" size="verb" />
         Veto
         <PurchaseChip cost={rules.vetoCost} held={influence} spent={vetoSpent} />
       </AssemblyAction>
@@ -352,6 +353,7 @@ function CastingSeat({
         onClick={() => moves.assemblyBribe(playerID)}
         triggerClassName="asmVoteTrigger"
       >
+        <Icon glyph="bribe" size="verb" />
         Bribe +1
         <PurchaseChip cost={rules.briberyCost} held={influence} spent={bribesSpent} />
       </AssemblyAction>
