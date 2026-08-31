@@ -166,7 +166,10 @@ export function selectLuxuryVertices(
   const phase = (options.seed >>> 0) % Math.max(1, Math.floor(step));
 
   return sortById(
-    Array.from({ length: count }, (_, index) => byAngle[(phase + Math.round(index * step)) % byAngle.length]),
+    Array.from(
+      { length: count },
+      (_, index) => byAngle[(phase + Math.round(index * step)) % byAngle.length],
+    ),
   );
 }
 
