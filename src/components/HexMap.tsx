@@ -3,19 +3,23 @@ import type { HegemonyState, HexTile } from "../game/types";
 import {
   BASE_VIEW_BOX,
   HEX_SIZE,
+  LUXURY_MARKER_OFFSET,
   SHORELINE_RADIUS,
   boardExtent,
   cameraTransform,
   getShorelineEdges,
   getSideBySidePositions,
   hexCenter,
+  luxuryMarkerPosition,
   viewBoxToString,
 } from "../ui/hexGeometry";
+import { selectLuxuryVertices } from "../game/mapTopology";
 import { settlementNames } from "../ui/settlementNames";
 import { MAX_SHOWN_SETTLEMENTS, NAME_LAYOUT, YIELD_LAYOUT } from "../ui/boardEmblems";
 import type { NameSlot } from "../ui/boardEmblems";
 import { TileGround, TileTokens } from "./board/map/TileGroup";
 import type { SettlementPlacement } from "./board/map/TileGroup";
+import { LuxuryVertexMarker } from "./board/map/LuxuryVertexMarker";
 import { useBoardFrame } from "./board/map/useBoardFrame";
 
 /**
@@ -283,6 +287,17 @@ function HexMapComponent({
   // SHORELINE_RADIUS overhangs the tile so the foam reads as surf against the
   // land rather than a line drawn through it.
   const shorelineEdges = useMemo(() => getShorelineEdges(centers, SHORELINE_RADIUS), [centers]);
+  // The moorings where luxury goods will sit (slice 1: neutral fixtures). Derived,
+  // never stored — the same selector slice 2's asset registry will seed from.
+  const luxuryVertices = useMemo(
+    () =>
+      selectLuxuryVertices(G.board.tiles, {
+        count: G.ruleset.economy.luxury.coastalGoods,
+        random: G.ruleset.economy.luxury.randomPlacement,
+        seed: G.seed,
+      }),
+    [G.board.tiles, G.ruleset.economy.luxury, G.seed],
+  );
   // Named once for the whole board: the mapping has to see every settlement at
   // once to guarantee no two share a name.
   const names = useMemo(() => settlementNames(G.board.tiles), [G.board.tiles]);
@@ -383,6 +398,12 @@ function HexMapComponent({
               y={y}
             />
           ))}
+
+          {luxuryVertices.map((vertex) => {
+            const at = luxuryMarkerPosition(vertex, HEX_SIZE, LUXURY_MARKER_OFFSET);
+
+            return <LuxuryVertexMarker key={vertex.id} vertex={vertex} x={at.x} y={at.y} />;
+          })}
 
           {centers.map(({ tile, x, y }) => {
             const plan = plans.get(tile.id);

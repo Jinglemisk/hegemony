@@ -114,7 +114,7 @@ export function isContiguousForPlayer(G: HegemonyState, playerID: PlayerId, tile
 export function playerHoldsCoast(G: HegemonyState, playerID: PlayerId) {
   return G.players[playerID].settlements.some((tileId) => {
     const owned = getTile(G, tileId);
-    return owned ? isCoastalTile(owned) : false;
+    return owned ? isCoastalTile(owned, G.board.tiles) : false;
   });
 }
 
@@ -156,9 +156,9 @@ export function canPlaceColonyOnTile(
     const contiguous = isContiguousForPlayer(G, playerID, tile);
     const bySea =
       context === "setup"
-        ? isCoastalTile(tile)
+        ? isCoastalTile(tile, G.board.tiles)
         : G.ruleset.placement.coastalLeapfrog &&
-          isCoastalTile(tile) &&
+          isCoastalTile(tile, G.board.tiles) &&
           playerHoldsCoast(G, playerID);
 
     if (!contiguous && !bySea) {
