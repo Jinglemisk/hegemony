@@ -7,6 +7,9 @@
  * Everything here is a pure function of its arguments. See `hexGeometry.test.ts`.
  */
 
+import { axialToPlane } from "../game/mapTopology";
+import type { LuxuryVertex } from "../game/mapTopology";
+
 export type ViewBox = {
   x: number;
   y: number;
@@ -109,10 +112,34 @@ export function hexPoints(size: number) {
  * and silently produces a board of overlapping tiles.
  */
 export function hexCenter(q: number, r: number, size: number) {
-  return {
-    x: size * Math.sqrt(3) * (q + r / 2),
-    y: size * 1.5 * r,
-  };
+  // The unit embedding is the engine's (mapTopology owns the formula, so the
+  // luxury-vertex angular order and the drawn board can never disagree).
+  const plane = axialToPlane(q, r);
+  return { x: plane.x * size, y: plane.y * size };
+}
+
+/** A board vertex's pixel position: the centroid of the three hex centres that
+ *  meet at it — exact for any hex grid, no corner-index bookkeeping. */
+export function vertexCenter(cells: readonly { q: number; r: number }[], size: number) {
+  const points = cells.map(({ q, r }) => hexCenter(q, r, size));
+  const x = points.reduce((sum, point) => sum + point.x, 0) / points.length;
+  const y = points.reduce((sum, point) => sum + point.y, 0) / points.length;
+  return { x, y };
+}
+
+/** How far a luxury marker stands off its vertex, into open water — past the foam
+ *  ({@link SHORELINE_RADIUS}) so the good reads as moored off the coast, not on it. */
+export const LUXURY_MARKER_OFFSET = 14;
+
+/** Where a luxury vertex's marker is drawn: the vertex, pushed toward the centre of
+ *  its open-sea cell. Engine identity never depends on this — it is presentation. */
+export function luxuryMarkerPosition(vertex: LuxuryVertex, size: number, offset: number) {
+  const at = vertexCenter(vertex.cells, size);
+  const sea = hexCenter(vertex.seaCell.q, vertex.seaCell.r, size);
+  const toSea = { x: sea.x - at.x, y: sea.y - at.y };
+  const length = Math.hypot(toSea.x, toSea.y) || 1;
+
+  return { x: at.x + (toSea.x / length) * offset, y: at.y + (toSea.y / length) * offset };
 }
 
 /** The foam is drawn just OUTSIDE the tile, which is itself inset from HEX_SIZE. */

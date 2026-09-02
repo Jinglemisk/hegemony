@@ -67,6 +67,25 @@
   pointer-events: none;
 }
 
+/* The luxury moorings (docs/plans/luxury-goods.md slice 1): neutral fixtures at the
+   shared vertex of two coastal tiles, standing a little off the shore in open water.
+   Slice 2 dresses them as named goods; until then they only have to be findable and
+   read as anchored objects, not tile decoration. */
+.luxuryVertexMarker {
+  pointer-events: none;
+}
+
+.luxuryMarkerPlate {
+  fill: var(--ivory);
+  stroke: var(--vase-black);
+  stroke-width: 1.4;
+  filter: drop-shadow(0 2px 4px rgb(31 105 119 / 35%));
+}
+
+.luxuryMarkerCore {
+  fill: var(--aegean);
+}
+
 /* Three raster icon systems used to live here — the six resource masks tinted to
    a fixed per-resource hue, the ui-kit sheet, and the icon atlas that drew every
    pop, building and settlement kind. All three are `<Icon>` line glyphs now: one

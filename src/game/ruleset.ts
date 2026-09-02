@@ -92,6 +92,17 @@ export interface EconomyRules {
   /** Optional lower bounds applied by authoritative income/event/table resource
    *  mutations. Costs remain affordability-gated and are never rescued by clamping. */
   stockpileFloors: Partial<Record<Resource, number>>;
+  /** Phase 4 luxury goods (docs/plans/luxury-goods.md). Slice 1 seats the coastal
+   *  vertex markers; the Port, claims, and the happiness offset land in slice 2. */
+  luxury: LuxuryRules;
+}
+
+export interface LuxuryRules {
+  /** How many coastal luxury goods the board seats (Q32: six). */
+  coastalGoods: number;
+  /** Marker distribution: false = evenly spaced around the coast, true = a seeded
+   *  random draw. A `?tune` A/B dial today, a game-setup option later. */
+  randomPlacement: boolean;
 }
 
 /** Tunables for the unrest (negative-happiness) consequence system. Since D9 the
@@ -258,6 +269,10 @@ export const DEFAULT_RULESET: Ruleset = {
       scarce: { sell: 2, buy: 3 },
     },
     stockpileFloors: {},
+    luxury: {
+      coastalGoods: 6,
+      randomPlacement: false,
+    },
   },
   civicCalm: { happiness: 3, influenceCost: 4, goldCost: 6 },
   ladder: {

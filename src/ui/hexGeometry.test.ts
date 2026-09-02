@@ -13,10 +13,14 @@ import {
   getNeighborCoordinate,
   getShorelineEdges,
   hexPoints,
+  LUXURY_MARKER_OFFSET,
+  luxuryMarkerPosition,
   seatViewBox,
+  vertexCenter,
   viewBoxesEqual,
   type WorldInset,
 } from "./hexGeometry";
+import type { AxialCell } from "../game/mapTopology";
 
 const NO_INSET: WorldInset = { top: 0, right: 0, bottom: 0, left: 0 };
 
@@ -251,5 +255,44 @@ describe("side-by-side settlements", () => {
     expect(getSideBySidePositions(0)).toEqual([0]);
     expect(getSideBySidePositions(1)).toEqual([0]);
     expect(getSideBySidePositions(2)).toEqual([-22, 22]);
+  });
+});
+
+describe("luxury vertex projection", () => {
+  // The vertex where tiles (0,0), (1,0) and the sea cell (1,-1) meet.
+  const vertex = {
+    id: "0,0|1,-1|1,0",
+    cells: [
+      { q: 0, r: 0 },
+      { q: 1, r: -1 },
+      { q: 1, r: 0 },
+    ] as [AxialCell, AxialCell, AxialCell],
+    tileIds: ["0,0", "1,0"] as [string, string],
+    seaCell: { q: 1, r: -1 },
+  };
+
+  it("puts a vertex equidistant from the three hex centres that meet at it", () => {
+    const at = vertexCenter(vertex.cells, HEX_SIZE);
+    const distances = vertex.cells.map(({ q, r }) => {
+      const centre = hexCenter(q, r, HEX_SIZE);
+      return Math.hypot(centre.x - at.x, centre.y - at.y);
+    });
+
+    expect(distances[1]).toBeCloseTo(distances[0], 6);
+    expect(distances[2]).toBeCloseTo(distances[0], 6);
+    // …and that distance is the hex radius: corners sit at HEX_SIZE from centre.
+    expect(distances[0]).toBeCloseTo(HEX_SIZE, 6);
+  });
+
+  it("moors the marker the offset distance seaward of its vertex", () => {
+    const at = vertexCenter(vertex.cells, HEX_SIZE);
+    const marker = luxuryMarkerPosition(vertex, HEX_SIZE, LUXURY_MARKER_OFFSET);
+    const sea = hexCenter(vertex.seaCell.q, vertex.seaCell.r, HEX_SIZE);
+
+    expect(Math.hypot(marker.x - at.x, marker.y - at.y)).toBeCloseTo(LUXURY_MARKER_OFFSET, 6);
+    // Seaward: the marker is closer to the sea cell's centre than the vertex is.
+    expect(Math.hypot(marker.x - sea.x, marker.y - sea.y)).toBeLessThan(
+      Math.hypot(at.x - sea.x, at.y - sea.y),
+    );
   });
 });

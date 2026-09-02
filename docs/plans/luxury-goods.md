@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "4"
-updated: 2026-08-04
+updated: 2026-09-01
 ---
 
 # Luxury Goods — feature plan & open decisions
@@ -223,6 +223,14 @@ it deliberately does not add the Port, ownership, happiness, or authored luxury 
    duplicate vertex ids, every eligible vertex references two real adjacent tiles), an
    irregular board, and deck shuffling. Add geometry tests proving the marker stays on the
    same canonical vertex across tile iteration orders, plus one focused rendered-map test.
+
+6. **Placement (owner, 2026-09-01).** Which eligible vertices seat the six goods is a
+   pure selector over board + seed (`selectLuxuryVertices`), never stored state. Default
+   is **evenly spaced** around the coast; a seeded **random** draw is the A/B alternative.
+   Both dials live in `EconomyRules.luxury` (`coastalGoods`, `randomPlacement`) so `?tune`
+   picks them up now and a game-setup option can expose them later. Slice 2's asset
+   registry seeds from the same selector, so the markers and the claimed assets can
+   never disagree about where a good sits.
 
 **Non-goals:** no `LuxuryAsset`, Port build action, claim choice, happiness offset, AI
 valuation, telemetry, or art asset. Simulation & AI is `N/A` because this PR introduces no
