@@ -86,6 +86,7 @@ const BUILDING_COSTS: Record<BuildingId, BuildingDefinition["cost"]> = {
   odeon: { wood: 2, stone: 5 },
   villa: { wood: 6, gold: 2 },
   gymnasion: { wood: 2, stone: 7 },
+  port: { wood: 9, stone: 3, gold: 5 },
 };
 
 const BUILDING_MAX: Record<BuildingId, number> = {
@@ -98,6 +99,7 @@ const BUILDING_MAX: Record<BuildingId, number> = {
   odeon: 2,
   villa: 1,
   gymnasion: 1,
+  port: 1,
 };
 
 function scaledMagnitude(value: number, divisor: number): number {

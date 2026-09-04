@@ -462,8 +462,10 @@ describe("found colony & population transfers", () => {
     expect(owned(state, "1,0", "0").kind).toBe("colony");
     expect(owned(state, "0,0", "0").pops.slaves).toBe(0);
     expect(state.transfers).toHaveLength(1);
+    // transfer-9: the six luxury assets (luxury-1…6) now open the match-local id
+    // sequence, then the two settlements, then this transfer.
     expect(state.transfers[0]).toMatchObject({
-      id: "transfer-3",
+      id: "transfer-9",
       fromSettlementId: owned(state, "0,0", "0").id,
       toSettlementId: owned(state, "1,0", "0").id,
     });

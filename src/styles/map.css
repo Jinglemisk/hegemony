@@ -86,6 +86,19 @@
   fill: var(--aegean);
 }
 
+/* A claimed good wears its holder's glaze — never alone: the blazon letter rides
+   inside the ivory keyline, same grammar as the settlement seals. */
+.luxuryMarkerSeal {
+  stroke: var(--ivory);
+  stroke-width: 1;
+}
+
+.luxuryMarkerBlazon {
+  fill: var(--ivory);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
 /* Three raster icon systems used to live here — the six resource masks tinted to
    a fixed per-resource hue, the ui-kit sheet, and the icon atlas that drew every
    pop, building and settlement kind. All three are `<Icon>` line glyphs now: one

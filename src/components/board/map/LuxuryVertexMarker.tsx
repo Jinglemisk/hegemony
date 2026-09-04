@@ -12,18 +12,23 @@ export function LuxuryVertexMarker({
   y,
   goodName,
   ownerName,
+  ownerColor,
+  ownerBlazon,
 }: {
-  vertex: LuxuryVertex;
+  vertex: Pick<LuxuryVertex, "id" | "tileIds">;
   x: number;
   y: number;
-  /** Slice 2: the named good moored here. */
+  /** The named good moored here. */
   goodName?: string;
-  /** Slice 2: who holds it, once a Port has claimed it. */
+  /** Who holds it, once a Port has claimed it. */
   ownerName?: string;
+  /** The holder's glaze — identity only, and never alone: the blazon rides with it. */
+  ownerColor?: string;
+  ownerBlazon?: string;
 }) {
   const [tileA, tileB] = vertex.tileIds;
   const subject = goodName ?? "Luxury mooring";
-  const holder = ownerName ? `, held by ${ownerName}` : "";
+  const holder = ownerName ? `, held by ${ownerName}` : ", unclaimed";
   const label = `${subject} between tiles ${tileA} and ${tileB}${holder}`;
 
   return (
@@ -35,7 +40,17 @@ export function LuxuryVertexMarker({
       transform={`translate(${x.toFixed(2)} ${y.toFixed(2)})`}
     >
       <circle className="luxuryMarkerPlate" r={6.5} />
-      <circle className="luxuryMarkerCore" r={2.4} />
+      {ownerColor ? (
+        <>
+          <circle className="luxuryMarkerSeal" r={4.6} fill={ownerColor} />
+          {/* World-unit type, like the name plates: an SVG attribute, not a CSS size. */}
+          <text className="luxuryMarkerBlazon" fontSize={6} textAnchor="middle" y={2.1}>
+            {ownerBlazon}
+          </text>
+        </>
+      ) : (
+        <circle className="luxuryMarkerCore" r={2.4} />
+      )}
     </g>
   );
 }

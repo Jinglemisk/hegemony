@@ -8,6 +8,7 @@ import {
 import { createGameDefinition } from "./definition";
 import type { GameDefinition } from "./definition";
 import { deriveBankRates } from "./bank";
+import { createLuxuryAssets } from "./luxury";
 import { createInitialMap } from "./map";
 import type { BoardLayout, HegemonyState } from "./types";
 import { expandDeck, shuffleWithSeed } from "./core/rng";
@@ -59,9 +60,15 @@ export function createInitialStateFromDefinition(
   const politicians = createPoliticianDecks(rng, content);
   rng = politicians.rng;
 
+  // Seat the luxury goods (Phase 4). Uses the initial seed, not the rng chain: the
+  // moorings are a fact of the board like the bank rates, not a draw in the deck
+  // sequence, so adding them cannot shift any existing shuffle.
+  const identity = { nextEntityId: 1 };
+  const luxuries = createLuxuryAssets(identity, tiles, ruleset, content, seed >>> 0);
+
   return {
     ...CURRENT_RECIPE_VERSIONS,
-    nextEntityId: 1,
+    nextEntityId: identity.nextEntityId,
     phase: "setupCapital",
     currentPlayer: "0",
     turn: 1,
@@ -73,7 +80,7 @@ export function createInitialStateFromDefinition(
     ruleset,
     definition,
     definitionId: definition.identity.id,
-    board: { tiles },
+    board: { tiles, luxuries },
     players: PLAYER_IDS.reduce(
       (players, playerId) => ({
         ...players,

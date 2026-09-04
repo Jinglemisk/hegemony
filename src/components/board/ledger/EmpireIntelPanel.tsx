@@ -1,5 +1,13 @@
 import { memo, useMemo } from "react";
-import { settlementCapacity, totalPops, unrestStatus } from "../../../game/rules";
+import {
+  activeClaims,
+  getLuxuryGood,
+  luxuryHappinessBonus,
+  ownedClaims,
+  settlementCapacity,
+  totalPops,
+  unrestStatus,
+} from "../../../game/rules";
 import type { BuildingId, PopType, TradableMaterial } from "../../../game/types";
 import { getOwnedHoldings } from "../helpers";
 import type { LedgerTab } from "../types";
@@ -39,6 +47,18 @@ function EmpireIntelPanelComponent({
   );
   const unrest = unrestStatus(G, playerID);
   const cardsHeld = victoryCardsHeld(G, playerID);
+  // Claimed luxury goods (Phase 4): the dossier names what the player holds, which
+  // of it is active, and what the standing offset is worth.
+  const claims = ownedClaims(G, playerID);
+  const active = activeClaims(G, playerID);
+  const claimNames = claims
+    .map((asset) => {
+      const name = getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId;
+      const suppressed = asset.suppressedTurns > 0 ? " (suppressed)" : "";
+      const idle = !active.includes(asset) && asset.suppressedTurns === 0 ? " (over cap)" : "";
+      return `${name}${suppressed}${idle}`;
+    })
+    .join(", ");
 
   const title = ledgerTabLabel(activeTab);
   const titleTab = LEDGER_TABS.find(({ tab }) => tab === activeTab);
@@ -86,6 +106,16 @@ function EmpireIntelPanelComponent({
               <b className="stat-lg num">{cardsHeld}</b>
               <span className="label num">/{G.ruleset.victory.cardsToWin}</span>
             </span>
+            {claims.length > 0 ? (
+              <span
+                className="est"
+                title={`Luxury goods: ${claimNames} (+${luxuryHappinessBonus(G, playerID)} effective happiness)`}
+              >
+                <Icon glyph="luxury" />
+                <b className="stat-lg num">{active.length}</b>
+                <span className="label num">/{claims.length}</span>
+              </span>
+            ) : null}
           </div>
 
           <UnrestAlarm

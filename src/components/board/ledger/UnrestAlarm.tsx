@@ -1,5 +1,5 @@
 import type { UnrestStatus } from "../../../game/rules";
-import { formatNumber } from "../../../ui/formatters";
+import { formatNumber, formatSignedNumber } from "../../../ui/formatters";
 import { Icon } from "../../../ui/icons/Icon";
 import { UNREST_TIER_PLACEHOLDERS } from "../../../ui/icons/placeholders";
 
@@ -54,6 +54,11 @@ export function UnrestAlarm({
   }
 
   const detail = [
+    // The three-number rule: when a luxury offset is holding the line, say what is
+    // stored and what the goods add — the big number above is the effective one.
+    status.luxuryBonus !== 0
+      ? `${formatNumber(status.storedHappiness)} stored ${formatSignedNumber(status.luxuryBonus)} from luxuries`
+      : null,
     status.deficitTurns > 0 ? `${count(status.deficitTurns, "turn")} of food deficit` : null,
     status.timedModifiers > 0 ? count(status.timedModifiers, "lingering effect") : null,
     status.totalDeaths > 0 ? `${count(status.totalDeaths, "pop")} lost so far` : null,

@@ -11,7 +11,13 @@ import {
   getResolutionCards,
   getSeasonalEventCards,
 } from "../../../game/content";
-import { TRADABLE_MATERIALS, getBuildings, getTerrainDeck } from "../../../game/rules";
+import {
+  TRADABLE_MATERIALS,
+  getBuilding,
+  getBuildings,
+  getLuxuryGoods,
+  getTerrainDeck,
+} from "../../../game/rules";
 import { POLITICIANS } from "../../../game/assembly";
 import { VICTORY_CARDS } from "../../../game/victory";
 import type {
@@ -612,6 +618,75 @@ const buildings: RuleChapter = {
   ),
 };
 
+const luxuries: RuleChapter = {
+  id: "luxuries",
+  title: "Luxury Goods",
+  blurb: "Six coastal goods, claimed by Ports, that raise your effective happiness.",
+  keywords: [
+    "luxury",
+    "luxuries",
+    "port",
+    "coastal",
+    "coast",
+    "claim",
+    "mooring",
+    "effective",
+    "dye",
+    "pearls",
+    "coral",
+    "glassware",
+    "incense",
+    "linen",
+  ],
+  entries: [
+    { id: anchor("luxuries", "claim"), label: "The Port & the claim" },
+    { id: anchor("luxuries", "offset"), label: "The standing offset" },
+    { id: anchor("luxuries", "roster"), label: "The six goods" },
+  ],
+  Body: ({ G }) => {
+    const lux = G.ruleset.economy.luxury;
+    const port = getBuilding(G.definition.content, "port");
+
+    return (
+      <div className="compendiumStack">
+        <Entry id={anchor("luxuries", "claim")} title="The Port & the claim">
+          <Note>
+            Each good sits off the shared vertex of two coastal tiles. A Port
+            {port ? (
+              <>
+                {" "}
+                (base cost <AnnotatedText text={formatResourceCost(port.cost)} />)
+              </>
+            ) : null}{" "}
+            raised in a city on either tile claims it — the first Port wins, and a claimed good
+            never leaves its owner except by trade. A Port needs the coast, an unclaimed good
+            adjacent, and room under your active cap.
+          </Note>
+        </Entry>
+        <Entry id={anchor("luxuries", "offset")} title="The standing offset">
+          <Note>
+            Every active good adds +{lux.happinessPerGood} to your EFFECTIVE happiness — a standing
+            floor, never banked. Riot and revolt thresholds and{" "}
+            {lux.countsTowardBeloved ? "the Beloved of the People laurel" : "nothing else"} test the
+            effective number. At most {lux.activeCapPerPlayer} goods are active at once; goods past
+            the cap stay owned but inactive — trade assets, not dead weight.
+          </Note>
+        </Entry>
+        <Entry id={anchor("luxuries", "roster")} title="The six goods">
+          <ul className="compendiumCostList">
+            {getLuxuryGoods(G.definition.content).map((good) => (
+              <li className="compendiumCostRow" key={good.id}>
+                <span className="compendiumCostLabel">{good.name}</span>
+                <span className="compendiumCostNote">{good.flavour}</span>
+              </li>
+            ))}
+          </ul>
+        </Entry>
+      </div>
+    );
+  },
+};
+
 const unrest: RuleChapter = {
   id: "unrest",
   title: "Happiness & Unrest",
@@ -664,9 +739,9 @@ const unrest: RuleChapter = {
         </Entry>
         <Entry id={anchor("unrest", "riot")} title="The riot table">
           <Note>
-            At happiness ≤ {u.popLossThreshold} at your turn start, a riot rolls before income —
-            declare insurance first (each once, +1 to the roll). A revolt (≤ {u.severeThreshold})
-            rolls at {u.severeRollModifier} and doubles pop losses.
+            At EFFECTIVE happiness (stored + the luxury offset) ≤ {u.popLossThreshold} at your turn
+            start, a riot rolls before income — declare insurance first (each once, +1 to the roll).
+            A revolt (≤ {u.severeThreshold}) rolls at {u.severeRollModifier} and doubles pop losses.
           </Note>
           <p className="compendiumFlavor">{getRiotTable(G.definition.content).flavor}</p>
           <EventTableRows table={getRiotTable(G.definition.content)} result={null} />
@@ -1054,6 +1129,7 @@ export const RULEBOOK: RuleChapter[] = [
   turn,
   ladder,
   buildings,
+  luxuries,
   unrest,
   seasons,
   bank,

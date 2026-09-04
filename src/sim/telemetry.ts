@@ -11,6 +11,7 @@ import type { ActiveEffectKind } from "../game/activeEffects";
 import type { GameCommand } from "../game/legalMoves";
 import type { DefinitionIdentity } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
+import { activeClaims, luxuryHappinessBonus, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
 import { canPlaceColonyOnTile } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
@@ -179,6 +180,11 @@ export type GameRow = {
   /** The seat holding Voice when the game ended, if its minimum was ever reached. */
   voiceHolder: PlayerId | null;
   popsLostToUnrest: Record<PlayerId, number>;
+  /** Luxury goods (Phase 4): claims held / active and the standing happiness they
+   *  contributed at game end — the Beloved-side of the feature's exit gate. */
+  luxuries: Record<PlayerId, { goodsHeld: number; goodsActive: number; luxuryHappiness: number }>;
+  /** End-of-game banked gold per seat — monitored, not judged (Q46: no gold sink). */
+  finalGold: Record<PlayerId, number>;
 };
 
 export type BatchReport = {
@@ -224,6 +230,16 @@ export type BatchReport = {
   >;
   /** Every shipped building id is present, including zeroes. */
   buildings: Record<BuildingId, { built: number; perGame: number }>;
+  /** Phase 4 luxuries: how many goods were claimed / active at game end, the standing
+   *  happiness they carried, and end-of-game banked gold (monitored, not judged — Q46).
+   *  Ports built already appear under `buildings.port`. */
+  luxuries: {
+    claimedPerGame: number;
+    activePerGame: number;
+    /** Mean standing luxury happiness per seat at game end — the Beloved contribution. */
+    happinessPerSeatMean: number;
+    endGoldDistribution: Percentiles;
+  };
   events: {
     /** Every shipped player-event id is present, including zeroes. */
     player: Record<PlayerEventContentId, number>;
@@ -492,11 +508,19 @@ export class Aggregator {
     const finalCards = {} as Record<PlayerId, number>;
     const finalAuthoredPasses = {} as Record<PlayerId, number>;
     const popsLostToUnrest = {} as Record<PlayerId, number>;
+    const luxuries = {} as GameRow["luxuries"];
+    const finalGold = {} as Record<PlayerId, number>;
 
     for (const playerID of PLAYER_IDS) {
       finalCards[playerID] = playerStandings(G, playerID).victoryCards;
       finalAuthoredPasses[playerID] = G.assemblyPassedByPlayer[playerID];
       popsLostToUnrest[playerID] = G.players[playerID].popsLostToUnrest;
+      luxuries[playerID] = {
+        goodsHeld: ownedClaims(G, playerID).length,
+        goodsActive: activeClaims(G, playerID).length,
+        luxuryHappiness: luxuryHappinessBonus(G, playerID),
+      };
+      finalGold[playerID] = G.players[playerID].resources.gold;
     }
 
     // A finished game (victory race / deck exhaustion) names a real winner. A game
@@ -520,6 +544,8 @@ export class Aggregator {
       finalAuthoredPasses,
       voiceHolder: G.voiceHolder,
       popsLostToUnrest,
+      luxuries,
+      finalGold,
     });
   }
 
@@ -689,12 +715,44 @@ export class Aggregator {
       }),
     ) as BatchReport["activeEffects"];
 
+    const perSeatLuxuries = this.games.flatMap((game) =>
+      PLAYER_IDS.map((playerID) => game.luxuries[playerID]),
+    );
+    const luxuries: BatchReport["luxuries"] = {
+      claimedPerGame:
+        this.games.length > 0
+          ? this.games.reduce(
+              (sum, game) =>
+                sum +
+                PLAYER_IDS.reduce((held, playerID) => held + game.luxuries[playerID].goodsHeld, 0),
+              0,
+            ) / this.games.length
+          : 0,
+      activePerGame:
+        this.games.length > 0
+          ? this.games.reduce(
+              (sum, game) =>
+                sum +
+                PLAYER_IDS.reduce(
+                  (active, playerID) => active + game.luxuries[playerID].goodsActive,
+                  0,
+                ),
+              0,
+            ) / this.games.length
+          : 0,
+      happinessPerSeatMean: percentiles(perSeatLuxuries.map((entry) => entry.luxuryHappiness)).mean,
+      endGoldDistribution: percentiles(
+        this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalGold[playerID])),
+      ),
+    };
+
     return {
       meta,
       perGame: this.games,
       perSeason,
       perSeat,
       buildings,
+      luxuries,
       movesByType: Object.fromEntries(
         GAME_COMMAND_TYPES.map((moveType) => [
           moveType,
