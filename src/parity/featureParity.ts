@@ -5,6 +5,7 @@ import type {
   BuildingId,
   EventEffect,
   EventTableId,
+  LuxuryGoodId,
   RiotInsuranceId,
   TableEffect,
   Terrain,
@@ -119,6 +120,14 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   policyCompleteGame: {
     implementation: "src/sim/policies.test.ts",
     evidence: "plays complete games across seeds without deadlocking through the agora",
+  },
+  luxuryClaims: {
+    implementation: "src/game/luxury.test.ts",
+    evidence: "claims the adjacent good through the ownership seam — first Port wins",
+  },
+  luxuryActivity: {
+    implementation: "src/game/luxury.test.ts",
+    evidence: "keeps goods over the active cap owned but inactive, deterministically",
   },
 } as const satisfies Record<string, ParityEvidence>;
 
@@ -287,7 +296,17 @@ export const BUILDING_CONTENT_IDS = [
   "odeon",
   "villa",
   "gymnasion",
+  "port",
 ] as const satisfies readonly BuildingId[];
+
+export const LUXURY_GOOD_CONTENT_IDS = [
+  "tyrian-dye",
+  "pearls",
+  "coral",
+  "glassware",
+  "incense",
+  "fine-linen",
+] as const satisfies readonly LuxuryGoodId[];
 
 export const TERRAIN_CONTENT_IDS = [
   "forest",
@@ -509,6 +528,17 @@ export const CONTENT_MANIFEST = {
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "assembly" },
     behaviorFixtures: ["policyAssembly", "policyCompleteGame"],
   },
+  luxuryGoods: {
+    ids: LUXURY_GOOD_CONTENT_IDS,
+    engine: { implementation: "src/game/luxury.ts", evidence: "activeClaims" },
+    frontend: {
+      implementation: "src/components/board/ledger/EmpireIntelPanel.tsx",
+      evidence: "ownedClaims",
+    },
+    simulation: { implementation: "src/sim/policies.ts", evidence: "scoreMaster" },
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "luxuries" },
+    behaviorFixtures: ["luxuryClaims", "luxuryActivity"],
+  },
   victoryCards: {
     ids: VICTORY_CARD_CONTENT_IDS,
     engine: { implementation: "src/game/victory.ts", evidence: "victoryStandings" },
@@ -543,6 +573,7 @@ export const FEATURE_PARITY = {
     behaviorFixtures: ["unrestResolution", "activeEffectPolicy"],
   },
   victoryRace: CONTENT_MANIFEST.victoryCards,
+  luxuryGoods: CONTENT_MANIFEST.luxuryGoods,
   assemblyLaws: {
     ...CONTENT_MANIFEST.resolutions,
     ids: LAW_CONTENT_IDS,

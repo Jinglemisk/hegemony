@@ -18,6 +18,8 @@ import {
   settlementBuildingSlots,
   settlementCapacity,
 } from "./settlement";
+import { claimableLuxuriesAt, underActiveCap } from "./luxury";
+import { isCoastalTile } from "./map";
 import { getAdjustedActionCost, getDiscountedGrowPopCost } from "./economy/cost";
 
 export function getFoundColonyStatus(
@@ -114,6 +116,7 @@ export function getBuildBuildingStatus(
   playerID: PlayerId,
   tileId: string,
   buildingId: BuildingId,
+  claimVertexId?: string,
 ): ActionStatus {
   const tile = getTile(G, tileId);
   const building = getBuildings(G.definition.content).find(
@@ -156,6 +159,30 @@ export function getBuildBuildingStatus(
         ? `${building.name} is already built here.`
         : `${building.name} is at its maximum level (${building.maxLevel}).`,
     );
+  }
+
+  // The Port is the coastal-gated exception (Q47): its effect is the claim, so it
+  // is refused — with the authoritative why-not the UI renders — wherever there is
+  // no sea, nothing left to claim, or no room under the active cap.
+  if (building.id === "port" && tile) {
+    if (!isCoastalTile(tile, G.board.tiles)) {
+      status.reasons.push("A Port needs the coast — this settlement is inland.");
+    } else if (claimableLuxuriesAt(G, tileId).length === 0) {
+      status.reasons.push("No unclaimed luxury good adjoins this tile.");
+    }
+
+    if (!underActiveCap(G, playerID)) {
+      status.reasons.push(
+        `Your luxury trade is at its active cap (${G.ruleset.economy.luxury.activeCapPerPlayer}).`,
+      );
+    }
+
+    if (
+      claimVertexId !== undefined &&
+      !claimableLuxuriesAt(G, tileId).some((asset) => asset.vertexId === claimVertexId)
+    ) {
+      status.reasons.push("That good is not claimable from this tile.");
+    }
   }
 
   if (!canAfford(G.players[playerID].resources, status.cost ?? building.cost)) {

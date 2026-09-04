@@ -99,6 +99,7 @@ export const BUILDING_GLYPHS = {
   odeon: "odeon",
   villa: "villa",
   gymnasion: "gymnasion",
+  port: "port",
 } as const satisfies Record<BuildingId, GlyphId>;
 
 export const POLITICIAN_GLYPHS = {

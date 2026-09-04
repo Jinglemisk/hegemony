@@ -79,6 +79,7 @@ describe("low-number economy study invariants", () => {
       odeon: 2,
       villa: 1,
       gymnasion: 1,
+      port: 1,
     });
 
     const copies = LOW_NUMBER_CONTENT.playerEvents.reduce((sum, card) => sum + card.count, 0);

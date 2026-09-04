@@ -44,6 +44,7 @@ import {
   getMovePopsStatus,
   getUpgradeColonyToCityStatus,
 } from "./status";
+import { claimableLuxuriesAt } from "./luxury";
 import { advanceSetupTurn, beginGameplayTurn, closeAssembly, endTurn } from "./turn";
 import {
   activeLawIds,
@@ -108,7 +109,14 @@ export type GameCommand =
   | { type: "placeColony"; tileId: string; pops: Pops }
   | { type: "foundColony"; tileId: string; sourceTileId: string; pop: PopType }
   | { type: "upgradeColonyToCity"; tileId: string }
-  | { type: "buildBuilding"; tileId: string; buildingId: BuildingId }
+  | {
+      type: "buildBuilding";
+      tileId: string;
+      buildingId: BuildingId;
+      /** Port only: the shared vertex of the luxury good this Port claims. Required
+       *  when two goods are reachable — the choice is the player's, never a default. */
+      claimVertexId?: string;
+    }
   | { type: "growPop"; tileId: string; pop: PopType }
   | { type: "movePops"; sourceTileId: string; targetTileId: string; pops: Pops }
   | { type: "resolveEvent"; choiceIndex: number; targetTileId?: string }
@@ -254,7 +262,7 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
     case "upgradeColonyToCity":
       return upgradeColonyToCity(G, playerID, move.tileId);
     case "buildBuilding":
-      return buildBuilding(G, playerID, move.tileId, move.buildingId);
+      return buildBuilding(G, playerID, move.tileId, move.buildingId, move.claimVertexId);
     case "growPop":
       return growPop(G, playerID, move.tileId, move.pop);
     case "movePops":
@@ -483,7 +491,7 @@ export function describeCommand(
     case "upgradeColonyToCity":
       return `upgrade colony to city on ${move.tileId}${formatCost(cost)}`;
     case "buildBuilding":
-      return `build ${move.buildingId} on ${move.tileId}${formatCost(cost)}`;
+      return `build ${move.buildingId} on ${move.tileId}${move.claimVertexId ? ` claiming the luxury at ${move.claimVertexId}` : ""}${formatCost(cost)}`;
     case "growPop":
       return `grow 1 ${formatPopName(move.pop, 1)} on ${move.tileId}${formatCost(cost)}`;
     case "movePops":
@@ -700,14 +708,31 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
 
   for (const tileId of ownedTileIds) {
     for (const { building, status } of getBuildBuildingOptions(G, playerID, tileId)) {
-      if (status.can) {
-        moves.push({
-          type: "buildBuilding",
-          tileId,
-          buildingId: building.id,
-          cost: status.cost ?? {},
-        });
+      if (!status.can) {
+        continue;
       }
+
+      // A Port is enumerated once per claimable good, claim explicit, so a bot's
+      // choice between two reachable luxuries is a command, not a coin flip.
+      if (building.id === "port") {
+        for (const asset of claimableLuxuriesAt(G, tileId)) {
+          moves.push({
+            type: "buildBuilding",
+            tileId,
+            buildingId: building.id,
+            claimVertexId: asset.vertexId,
+            cost: status.cost ?? {},
+          });
+        }
+        continue;
+      }
+
+      moves.push({
+        type: "buildBuilding",
+        tileId,
+        buildingId: building.id,
+        cost: status.cost ?? {},
+      });
     }
   }
 

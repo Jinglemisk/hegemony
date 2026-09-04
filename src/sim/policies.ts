@@ -20,6 +20,12 @@ import {
 import type { AssemblySession, BallotItem, ResolutionCard } from "../game/assembly";
 import type { GameCommand } from "../game/legalMoves";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
+import {
+  activeClaims,
+  claimableLuxuriesAt,
+  luxuryHappinessBonus,
+  ownedClaims,
+} from "../game/luxury";
 import { playerStandings } from "../game/score";
 import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId, Pops } from "../game/types";
@@ -252,8 +258,12 @@ export function projectPolicyHorizon(
   const projectedState = createPolicyProjectionState(G, playerID);
   const player = projectedState.players[playerID];
   let expectedStarvationPopLoss = 0;
+  // The luxury standing offset (Q43): a constant floor over the whole horizon —
+  // claims don't move during a projection — read through the engine's own selector
+  // so the risk term tests the same EFFECTIVE line the riot upkeep does.
+  const luxuryBonus = luxuryHappinessBonus(G, playerID);
   const unrest: PolicyUnrestExposure = {
-    minimumHappiness: player.resources.happiness,
+    minimumHappiness: player.resources.happiness + luxuryBonus,
     mildRiotEvents: 0,
     severeRiotEvents: 0,
     riskPenalty: 0,
@@ -276,10 +286,13 @@ export function projectPolicyHorizon(
 
     // The engine checks unrest at every start-of-turn upkeep, before income.
     // Record every exposure rather than judging only the terminal happiness.
-    unrest.minimumHappiness = Math.min(unrest.minimumHappiness, player.resources.happiness);
+    unrest.minimumHappiness = Math.min(
+      unrest.minimumHappiness,
+      player.resources.happiness + luxuryBonus,
+    );
     const upkeepRisk = evaluatePolicyUnrestRisk(
       projectedState.ruleset,
-      player.resources.happiness,
+      player.resources.happiness + luxuryBonus,
       projectedState.definition.content,
     );
     unrest.riskPenalty += upkeepRisk.scorePenalty;
@@ -502,8 +515,9 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
     2 * projection.expectedStarvationPopLoss;
   // Cap the happiness reward: below the cap it prices riot avoidance and the
   // Beloved card (min +10); past it, more calm is wasted coin — an uncapped term
-  // had greedy bots pumping civic calm to +95 happiness.
-  const projectedHappiness = Math.min(projected.happiness, 15);
+  // had greedy bots pumping civic calm to +95 happiness. EFFECTIVE happiness (the
+  // luxury offset included) is what the thresholds and Beloved actually read.
+  const projectedHappiness = Math.min(projected.happiness + luxuryHappinessBonus(G, playerID), 15);
 
   return (
     100 * victoryCardsHeld(G, playerID) +
@@ -524,6 +538,12 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
 const SMART_POP_WEIGHT = { citizens: 3, freemen: 2, slaves: 1.2 };
 const SMART_MATERIAL_WEIGHT = { food: 0.4, wood: 0.6, stone: 0.85, gold: 1 };
 const SMART_VICTORY_CARD_VALUE = 120;
+/** Score per ACTIVE luxury good: its +2 offset × the 6-turn horizon × the happiness
+ *  term's ×2, times a permanence premium — the claim outlives any projection
+ *  horizon, is a monopoly (denied to rivals), and is the future trade currency.
+ *  At ~36 versus the Port's ~33-score cost the build clears without dominating
+ *  every other verb; the A/B campaigns own the fine tuning. */
+const LUXURY_HORIZON_WEIGHT = INCOME_HORIZON * 2 * 3;
 
 function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
   const player = G.players[playerID];
@@ -580,13 +600,25 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
     3 * gymSynergy -
     2 * projection.expectedStarvationPopLoss;
 
-  const projectedHappiness = Math.min(projected.happiness, 15);
+  // Luxury claims (Phase 4). The +2 standing offset alone would price a claimed
+  // good like one turn of a Temple and the Port would never repay its 20w/5s/10g —
+  // the Assembly lesson all over again. A claim is permanent infrastructure, so an
+  // ACTIVE good is worth its offset over the projection horizon (like any flow the
+  // horizon multiplies out), and an inactive over-cap good keeps trade/denial value
+  // at half weight. Beam search sees the jump the moment a branch builds the Port.
+  const active = activeClaims(G, playerID).length;
+  const luxuryValue =
+    LUXURY_HORIZON_WEIGHT * active +
+    (LUXURY_HORIZON_WEIGHT / 2) * (ownedClaims(G, playerID).length - active);
+
+  const projectedHappiness = Math.min(projected.happiness + luxuryHappinessBonus(G, playerID), 15);
 
   return (
     SMART_VICTORY_CARD_VALUE * victoryCardsHeld(G, playerID) +
     10 * heuristic +
     2 * projectedHappiness +
-    2 * player.resources.influence -
+    2 * player.resources.influence +
+    luxuryValue -
     projection.unrest.riskPenalty
   );
 }
@@ -763,12 +795,41 @@ export function placementFrontier(
   return { frontier, contested };
 }
 
+/** Unclaimed goods a Port could claim from the player's CITY tiles. Colonies don't
+ *  count — they cannot raise buildings — which is exactly why placement is where
+ *  the contested-claim race is decided: a capital seated on a mooring tile is a
+ *  Port site for the whole game. */
+function luxuryClaimReach(G: HegemonyState, playerID: PlayerId): number {
+  let reach = 0;
+
+  for (const tileId of G.players[playerID].settlements) {
+    const tile = getTile(G, tileId);
+    const holdsCity = tile?.settlements.some(
+      (settlement) => settlement.owner === playerID && settlement.kind !== "colony",
+    );
+    if (holdsCity) {
+      reach += claimableLuxuriesAt(G, tileId).length;
+    }
+  }
+
+  return reach;
+}
+
+/** A reachable future claim is worth roughly half a realized one. */
+const LUXURY_REACH_WEIGHT = LUXURY_HORIZON_WEIGHT / 2;
+
 /** The placement score: `smart`'s economy plus the bounded frontier, minus its contested
- *  part. Once the pops sit on the tile, the income projection IS the site score, so no
- *  bespoke site heuristic is needed; coast access shows up through the leapfrog frontier. */
+ *  part, plus the luxury claims a city on this site could reach. Once the pops sit on
+ *  the tile, the income projection IS the site score, so no bespoke site heuristic is
+ *  needed; coast access shows up through the leapfrog frontier. */
 export function evaluatePlacement(G: HegemonyState, playerID: PlayerId): number {
   const { frontier, contested } = placementFrontier(G, playerID);
-  return evaluateSmart(G, playerID) + FRONTIER_WEIGHT * frontier - CONTEST_WEIGHT * contested;
+  return (
+    evaluateSmart(G, playerID) +
+    FRONTIER_WEIGHT * frontier -
+    CONTEST_WEIGHT * contested +
+    LUXURY_REACH_WEIGHT * luxuryClaimReach(G, playerID)
+  );
 }
 
 /** How many tiles survive the tile-ranking pass before every pop split is scored. */
@@ -1255,16 +1316,25 @@ export const politicalPolicy: Policy = {
  * measured-low-weight signal from `settler`: it nudges WHICH direction to expand without
  * overpowering the income model into founding unsustainable extra colonies. */
 function frontierValue(G: HegemonyState, playerID: PlayerId): number {
+  // Unclaimed goods make their two claim tiles worth expanding toward — the
+  // contested-claim race is won at settlement time, turns before a Port can go up.
+  const luxuryTiles = new Set(
+    G.board.luxuries.filter((asset) => asset.owner === null).flatMap((asset) => asset.tileIds),
+  );
   let value = 0;
 
   for (const tile of G.board.tiles) {
     if (canPlaceColonyOnTile(G, playerID, tile).can) {
-      value += tile.resource?.amount ?? 0;
+      value += (tile.resource?.amount ?? 0) + (luxuryTiles.has(tile.id) ? LUXURY_FRONTIER_PULL : 0);
     }
   }
 
   return value;
 }
+
+/** How strongly an unclaimed good pulls the frontier toward its claim tiles —
+ *  sized like a good yield tile so it steers direction without minting colonies. */
+const LUXURY_FRONTIER_PULL = 3;
 
 /** Measured-neutral setting. Larger values made the prototype over-expand. */
 const FRONTIER_WEIGHT = 2;
