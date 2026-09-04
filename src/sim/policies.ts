@@ -815,8 +815,12 @@ function luxuryClaimReach(G: HegemonyState, playerID: PlayerId): number {
   return reach;
 }
 
-/** A reachable future claim is worth roughly half a realized one. */
-const LUXURY_REACH_WEIGHT = LUXURY_HORIZON_WEIGHT / 2;
+/** A reachable future claim is a thumb on the scale, not a mandate: at half a
+ *  realized claim's value the capital abandoned the classic board's food-10
+ *  breadbasket for a mooring, which trades certain income for an option. Sized
+ *  like a good frontier tile instead — it breaks ties toward the coast and no
+ *  more; the A/B campaigns own the fine tuning. */
+const LUXURY_REACH_WEIGHT = 6;
 
 /** The placement score: `smart`'s economy plus the bounded frontier, minus its contested
  *  part, plus the luxury claims a city on this site could reach. Once the pops sit on
