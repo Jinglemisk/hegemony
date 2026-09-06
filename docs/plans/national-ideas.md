@@ -45,20 +45,20 @@ runaway advantage.
 
 The PDF lists twelve candidate Ideas. Verbatim, with today's-engine reconciliation:
 
-| #   | PDF National Idea                                           | Reuses which seam today                      | Notes                                                                                                                                                                                  |
-| --- | ----------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **+2 Food income for every 5 Pops**                         | income pipeline (`economy/income.ts`)        | scales with pop count; watch late-game food inflation                                                                                                                                  |
-| 2   | **Pops consume Gold instead of Food**                       | income upkeep                                | **novel** — inverts the food-upkeep model for that seat; largest engine change, biggest identity swing                                                                                 |
-| 3   | **+1 Building slot in all Cities**                          | `settlementCapacity` / slot count            | additive slot bonus                                                                                                                                                                    |
-| 4   | **+2 Building slots in the Capital**                        | capital slot bonus                           | ⚠ the Capital **already** carries +2 slots (`data.ts`); this Idea would stack to +4 or needs re-pricing                                                                                |
-| 5   | **Gain +2 Influence every Season**                          | seasonal income                              | flat influence flow; interacts with the Assembly ratchet                                                                                                                               |
+| #   | PDF National Idea                                           | Reuses which seam today                      | Notes                                                                                                                                           |
+| --- | ----------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **+2 Food income for every 5 Pops**                         | income pipeline (`economy/income.ts`)        | scales with pop count; watch late-game food inflation                                                                                           |
+| 2   | **Pops consume Gold instead of Food**                       | income upkeep                                | **novel** — inverts the food-upkeep model for that seat; largest engine change, biggest identity swing                                          |
+| 3   | **+1 Building slot in all Cities**                          | `settlementCapacity` / slot count            | additive slot bonus                                                                                                                             |
+| 4   | **+2 Building slots in the Capital**                        | capital slot bonus                           | ⚠ the Capital **already** carries +2 slots (`data.ts`); this Idea would stack to +4 or needs re-pricing                                         |
+| 5   | **Gain +2 Influence every Season**                          | seasonal income                              | flat influence flow; interacts with the Assembly ratchet                                                                                        |
 | 6   | **Maximum Colonies +1**                                     | **No matching seam yet**                     | the current placement cap is per tile, not per player; define a per-player colony supply/cap first (answered 2026-09-06: one more colony piece) |
-| 7   | **Start with one additional Pop**                           | Post-placement grant or changed draft timing | the draft currently occurs after placement, so “start with” needs an explicit resolution (answered 2026-09-06: granted right after the pick)                     |
-| 8   | **Always gain an extra Pop when founding a City**           | `upgradeColonyToCity`                        | rewards the (currently dead) colony→city path — could revive it                                                                                                                        |
-| 9   | **Each Colony begins with 2 Slaves**                        | `foundColony`                                | slave-economy opener                                                                                                                                                                   |
-| 10  | **Start with a Luxury Goods' Trader in your Capital**       | luxury assets/Port                           | **dropped** (owner, 2026-09-06): luxuries are coastal, Port-claimed, and the Port is never free                            |
-| 11  | **Start the game with 20 Gold**                             | starting resources                           | flat economic head start                                                                                                                                                               |
-| 12  | **One free Veto of any Resolution, then discard this Idea** | Assembly veto (`assembly/`)                  | one-shot; the only _consumable_ Idea — models a discard-after-use hook                                                                                                                 |
+| 7   | **Start with one additional Pop**                           | Post-placement grant or changed draft timing | the draft currently occurs after placement, so “start with” needs an explicit resolution (answered 2026-09-06: granted right after the pick)    |
+| 8   | **Always gain an extra Pop when founding a City**           | `upgradeColonyToCity`                        | rewards the (currently dead) colony→city path — could revive it                                                                                 |
+| 9   | **Each Colony begins with 2 Slaves**                        | `foundColony`                                | slave-economy opener                                                                                                                            |
+| 10  | **Start with a Luxury Goods' Trader in your Capital**       | luxury assets/Port                           | **dropped** (owner, 2026-09-06): luxuries are coastal, Port-claimed, and the Port is never free                                                 |
+| 11  | **Start the game with 20 Gold**                             | starting resources                           | flat economic head start                                                                                                                        |
+| 12  | **One free Veto of any Resolution, then discard this Idea** | Assembly veto (`assembly/`)                  | one-shot; the only _consumable_ Idea — models a discard-after-use hook                                                                          |
 
 **Reconciliation summary:** none of these should be implemented as an ad hoc per-seat
 `Ruleset` clone. Author a closed `NationalIdeaEffect` union and make the affected income,
@@ -87,11 +87,11 @@ defaulted during implementation.
 
 ## Three-axis parity
 
-| Axis             | Applies? | Required representation and proof                                                                                    |
-| ---------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
-| Engine / backend | Yes      | A per-seat modifier channel on `PlayerState`/`Ruleset`, the setup pick and the influence-priced purchase action, and behavioral tests    |
-| Frontend         | Yes      | The setup pick, the in-game purchase, a persistent "your Ideas" surface in the dossier, and Codex entries rendered from data |
-| Simulation & AI  | Yes      | The bot picks and later buys an Idea matching its build, values its own Ideas in evaluation, and telemetry records picks and win-rate   |
+| Axis             | Applies? | Required representation and proof                                                                                                     |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine / backend | Yes      | A per-seat modifier channel on `PlayerState`/`Ruleset`, the setup pick and the influence-priced purchase action, and behavioral tests |
+| Frontend         | Yes      | The setup pick, the in-game purchase, a persistent "your Ideas" surface in the dossier, and Codex entries rendered from data          |
+| Simulation & AI  | Yes      | The bot picks and later buys an Idea matching its build, values its own Ideas in evaluation, and telemetry records picks and win-rate |
 
 The engine has **no per-seat modifier channel today** — `Ruleset` is patched per _mode_,
 not per _player_. Add an explicit public `nationalIdeas` ownership list plus typed effect
