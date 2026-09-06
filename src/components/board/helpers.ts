@@ -5,6 +5,8 @@ import type { ActionStatus } from "../../game/rules";
 import type { Ruleset } from "../../game/ruleset";
 import {
   POP_TYPES,
+  claimableLuxuriesAt,
+  getLuxuryGood,
   popIncome,
   previewBuildBuilding,
   previewBuildingIncomeDelta,
@@ -86,6 +88,19 @@ export function getBuildingBenefitText(
   tile: HexTile,
   building: BuildingDefinition,
 ) {
+  // The Port's effect is the claim, not an income line — say what it seizes and
+  // what the standing offset is worth, from the same selectors the engine reads.
+  if (building.id === "port") {
+    const goods = claimableLuxuriesAt(G, tile.id)
+      .map((asset) => getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId)
+      .join(" or ");
+    const perGood = G.ruleset.economy.luxury.happinessPerGood;
+
+    return goods
+      ? `Claims ${goods}: +${perGood} effective happiness while active. Never banked; counts toward Beloved of the People.`
+      : "Claims an adjacent unclaimed coastal luxury good — none adjoins this tile.";
+  }
+
   const preview = previewBuildBuilding(G, playerID, tile.id, building.id);
   const projected =
     preview?.incomeDelta ?? previewBuildingIncomeDelta(G, playerID, tile.id, building.id);

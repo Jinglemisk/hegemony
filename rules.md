@@ -199,6 +199,26 @@ buildings.
   yield-less hill.
 - **Gymnasion** (12 stone, 4 wood) — **promotions on the social ladder cost 2 less** in
   this settlement, the building that makes a citizen-heavy hill city affordable.
+- **Port** (20 wood, 5 stone, 10 gold) — claims one adjacent **luxury good** (below).
+  Coastal cities only, and only while an unclaimed good adjoins the tile and you have
+  room under your active cap.
+
+## Luxury goods
+
+Six named goods — Tyrian Dye, Pearls, Coral, Glassware, Incense, Fine Linen — sit
+moored off the coast, each at a point shared by **two** coastal tiles. A **Port**
+raised in a city on either tile claims the good; **the first Port wins**, and the
+good stays claimed for the rest of the game. Each good is unique: one copy, one
+owner.
+
+Every **active** good raises your **effective happiness** by +2 — a standing floor,
+never banked. The riot and revolt thresholds and the **Beloved of the People**
+laurel all test the effective number, so wherever happiness is shown you see the
+stored figure, the luxury offset, and the effective total. At most **3** goods are
+active at once; goods past the cap stay owned but inactive.
+
+The intended play: slaves cost −0.5 happiness each per turn, so three active goods
+offset twelve slaves. Luxuries buy the right to expand ugly, not calm itself.
 
 ## Happiness and food
 
@@ -215,8 +235,9 @@ Happiness is your civilization's stability. It moves each turn:
   forgiven this.)
 
 When happiness turns **negative** it reads as unrest, and unrest has teeth. At the
-start of your turn — before you collect income — **happiness at −5 or lower puts
-you on the riot table**. Your turn stops until the die is rolled:
+start of your turn — before you collect income — **effective happiness (stored plus
+your luxury offset) at −5 or lower puts you on the riot table**. Your turn stops
+until the die is rolled:
 
 | Roll | Outcome                                                                              |
 | ---: | ------------------------------------------------------------------------------------ |

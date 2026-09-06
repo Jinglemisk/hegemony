@@ -103,6 +103,12 @@ export interface LuxuryRules {
   /** Marker distribution: false = evenly spaced around the coast, true = a seeded
    *  random draw. A `?tune` A/B dial today, a game-setup option later. */
   randomPlacement: boolean;
+  /** Effective-happiness offset per ACTIVE good (Q43: a standing floor, never banked). */
+  happinessPerGood: number;
+  /** Goods active at once per player; the rest stay owned-but-inactive trade assets. */
+  activeCapPerPlayer: number;
+  /** Q44: whether the offset also feeds the Beloved of the People victory metric. */
+  countsTowardBeloved: boolean;
 }
 
 /** Tunables for the unrest (negative-happiness) consequence system. Since D9 the
@@ -272,6 +278,9 @@ export const DEFAULT_RULESET: Ruleset = {
     luxury: {
       coastalGoods: 6,
       randomPlacement: false,
+      happinessPerGood: 2,
+      activeCapPerPlayer: 3,
+      countsTowardBeloved: true,
     },
   },
   civicCalm: { happiness: 3, influenceCost: 4, goldCost: 6 },

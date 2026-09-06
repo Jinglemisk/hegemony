@@ -2,6 +2,7 @@ import type {
   BuildingDefinition,
   EventCard,
   EventTableDefinition,
+  LuxuryGoodDefinition,
   PlayerId,
   PopType,
   Resources,
@@ -363,6 +364,28 @@ export const BUILDINGS: BuildingDefinition[] = [
     effects: [{ type: "promoteCostReduction", amount: 2 }],
     maxLevel: 1,
   },
+  // ── Phase 4 (luxury-goods.md §3.2). The Port's effect is the CLAIM — it seizes one
+  //    adjacent coastal luxury good — so its effects array is deliberately empty: no
+  //    income line, no flat bonus. Coast-gated and adjacency-gated in status.ts.
+  //    Deliberately cheap (Q46): luxuries are a happiness feature, not a gold sink.
+  {
+    id: "port",
+    name: "Port",
+    cost: { wood: 20, stone: 5, gold: 10 },
+    effects: [],
+    maxLevel: 1,
+  },
+];
+
+/** The six coastal luxury goods (luxury-goods.md §6, Q32 accepted). Order is the
+ *  authored seating order onto the board's selected moorings. */
+export const LUXURY_GOODS: LuxuryGoodDefinition[] = [
+  { id: "tyrian-dye", name: "Tyrian Dye", flavour: "the murex trade" },
+  { id: "pearls", name: "Pearls", flavour: "deep-water diving" },
+  { id: "coral", name: "Coral", flavour: "reef harvest" },
+  { id: "glassware", name: "Glassware", flavour: "eastern kilns" },
+  { id: "incense", name: "Incense", flavour: "the southern routes" },
+  { id: "fine-linen", name: "Fine Linen", flavour: "riverine weaving" },
 ];
 
 // ── Terrain deck (Phase 2 "The land repriced", terrain-economy.md — LOCKED spec) ────

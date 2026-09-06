@@ -205,6 +205,19 @@ export const GLYPHS = {
      in at the bottom. The first draft was a running track and read as an eye,
      which the omen already owns. */
   gymnasion: [box(3.5, 3.5, 17, 17), box(8, 8, 8, 8), p("M10.5 20.5h3")],
+  /* The anchor — the Port's whole effect happens off-shore (it claims a moored
+     luxury good), so its mark is the mooring, not another roofline. */
+  port: [c(12, 5.5, 2.2), p("M12 7.7V19M8.5 10.5h7"), p("M5 14c0 4 3 6.5 7 6.5s7-2.5 7-6.5")],
+  /* The amphora: one vessel stands for every luxury good until each has its own
+     art — the goods differ by name, not by rule. */
+  luxury: [
+    p("M9 4h6M10 4v2.5M14 4v2.5"),
+    p(
+      "M10 6.5h4c2.2 1.6 3.2 3.4 3.2 5.7 0 3.7-2.1 6.3-5.2 6.3s-5.2-2.6-5.2-6.3c0-2.3 1-4.1 3.2-5.7z",
+    ),
+    p("M8.6 8.8c-1.5.3-2.4 1-2.7 2.1M15.4 8.8c1.5.3 2.4 1 2.7 2.1"),
+    p("M9.5 21h5M12 18.5V21"),
+  ],
 
   /* ── The four seasons ──────────────────────────────────────────────────────
      Read as a set on the season wheel, so they share a weight and each is a

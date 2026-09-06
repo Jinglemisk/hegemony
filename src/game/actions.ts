@@ -1,4 +1,5 @@
-import { getBuildings } from "./content";
+import { getBuildings, getLuxuryGood } from "./content";
+import { claimableLuxuriesAt, transferLuxury } from "./luxury";
 import type { BuildingId, HegemonyState, HexTile, PlayerId, PopType, Pops } from "./types";
 import { formatPopName, formatPops, formatRuleResourceDelta, formatTileLabel } from "./core/format";
 import {
@@ -342,6 +343,7 @@ export function buildBuilding(
   playerID: PlayerId,
   tileId: string,
   buildingId: BuildingId,
+  claimVertexId?: string,
 ): MoveResult {
   const tile = getTile(G, tileId);
   const building = getBuildings(G.definition.content).find(
@@ -350,16 +352,52 @@ export function buildBuilding(
   const settlement = tile?.settlements.find(
     (candidate) => candidate.owner === playerID && candidate.kind !== "colony",
   );
-  const status = getBuildBuildingStatus(G, playerID, tileId, buildingId);
+  const status = getBuildBuildingStatus(G, playerID, tileId, buildingId, claimVertexId);
 
   if (!tile || !building || !settlement || !status.can) {
     return invalid(...status.reasons);
+  }
+
+  // The Port's effect is the claim (luxury-goods.md §3.2). Resolve WHICH good
+  // before paying anything: with two reachable, the choice is the player's — a
+  // typed command field, never a default the engine guesses.
+  let claim = null;
+  if (building.id === "port") {
+    const claimable = claimableLuxuriesAt(G, tileId);
+    claim =
+      claimVertexId === undefined
+        ? claimable.length === 1
+          ? claimable[0]
+          : null
+        : (claimable.find((asset) => asset.vertexId === claimVertexId) ?? null);
+
+    if (!claim) {
+      return invalid("Choose which luxury good this Port claims.");
+    }
   }
 
   payCost(G.players[playerID].resources, status.cost ?? building.cost);
   consumeActionCostDiscounts(G, playerID, "buildBuilding", building.id);
   consumeLawFreeAction(G, playerID, "buildBuilding");
   settlement.buildings.push(building.id);
+
+  if (claim) {
+    // First Port wins: legality already proved the good unclaimed, and the claim
+    // travels the same ownership seam player trade will use.
+    const transferred = transferLuxury(G, claim.id, playerID);
+    if (!transferred.ok) {
+      return transferred;
+    }
+    claim.claimedAtSettlementId = settlement.id;
+    const good = getLuxuryGood(G.definition.content, claim.goodId);
+    addLog(
+      G,
+      `${getPlayerName(G, playerID)} built ${building.name} and claimed ${good?.name ?? claim.goodId}.`,
+      playerID,
+    );
+    return MOVE_OK;
+  }
+
   addLog(G, `${getPlayerName(G, playerID)} built ${building.name}.`, playerID);
   return MOVE_OK;
 }

@@ -48,6 +48,7 @@ export * from "./riot";
 export * from "./season";
 export * from "./activeEffects";
 export * from "./tables";
+export * from "./luxury";
 export * from "./unrest";
 export * from "./ventures";
 export * from "./score";

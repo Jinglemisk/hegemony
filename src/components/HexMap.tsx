@@ -13,7 +13,9 @@ import {
   luxuryMarkerPosition,
   viewBoxToString,
 } from "../ui/hexGeometry";
-import { selectLuxuryVertices } from "../game/mapTopology";
+import { luxuryEligibleVertices } from "../game/mapTopology";
+import { getLuxuryGood } from "../game/content";
+import { PLAYER_GLAZES } from "../ui/playerGlazes";
 import { settlementNames } from "../ui/settlementNames";
 import { MAX_SHOWN_SETTLEMENTS, NAME_LAYOUT, YIELD_LAYOUT } from "../ui/boardEmblems";
 import type { NameSlot } from "../ui/boardEmblems";
@@ -287,17 +289,18 @@ function HexMapComponent({
   // SHORELINE_RADIUS overhangs the tile so the foam reads as surf against the
   // land rather than a line drawn through it.
   const shorelineEdges = useMemo(() => getShorelineEdges(centers, SHORELINE_RADIUS), [centers]);
-  // The moorings where luxury goods will sit (slice 1: neutral fixtures). Derived,
-  // never stored — the same selector slice 2's asset registry will seed from.
-  const luxuryVertices = useMemo(
-    () =>
-      selectLuxuryVertices(G.board.tiles, {
-        count: G.ruleset.economy.luxury.coastalGoods,
-        random: G.ruleset.economy.luxury.randomPlacement,
-        seed: G.seed,
-      }),
-    [G.board.tiles, G.ruleset.economy.luxury, G.seed],
-  );
+  // The board's luxury goods, positioned by looking their vertex up in the same
+  // topology the registry was seated from — state owns WHO, geometry owns WHERE.
+  const luxuryMarkers = useMemo(() => {
+    const vertexById = new Map(
+      luxuryEligibleVertices(G.board.tiles).map((vertex) => [vertex.id, vertex]),
+    );
+
+    return G.board.luxuries.flatMap((asset) => {
+      const vertex = vertexById.get(asset.vertexId);
+      return vertex ? [{ asset, vertex }] : [];
+    });
+  }, [G.board.tiles, G.board.luxuries]);
   // Named once for the whole board: the mapping has to see every settlement at
   // once to guarantee no two share a name.
   const names = useMemo(() => settlementNames(G.board.tiles), [G.board.tiles]);
@@ -399,10 +402,22 @@ function HexMapComponent({
             />
           ))}
 
-          {luxuryVertices.map((vertex) => {
+          {luxuryMarkers.map(({ asset, vertex }) => {
             const at = luxuryMarkerPosition(vertex, HEX_SIZE, LUXURY_MARKER_OFFSET);
+            const glaze = asset.owner ? PLAYER_GLAZES[asset.owner] : null;
 
-            return <LuxuryVertexMarker key={vertex.id} vertex={vertex} x={at.x} y={at.y} />;
+            return (
+              <LuxuryVertexMarker
+                goodName={getLuxuryGood(G.definition.content, asset.goodId)?.name}
+                key={vertex.id}
+                ownerBlazon={glaze?.blazon}
+                ownerColor={glaze?.color}
+                ownerName={glaze?.name}
+                vertex={vertex}
+                x={at.x}
+                y={at.y}
+              />
+            );
           })}
 
           {centers.map(({ tile, x, y }) => {

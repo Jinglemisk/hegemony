@@ -51,7 +51,43 @@ export type BuildingId =
   | "aqueduct"
   | "odeon"
   | "villa"
-  | "gymnasion";
+  | "gymnasion"
+  | "port";
+
+/** The six coastal luxury goods (docs/plans/luxury-goods.md §6, Q32). */
+export type LuxuryGoodId =
+  "tyrian-dye" | "pearls" | "coral" | "glassware" | "incense" | "fine-linen";
+
+export interface LuxuryGoodDefinition {
+  id: LuxuryGoodId;
+  name: string;
+  /** One line of flavour for the Codex and the map marker's tooltip. */
+  flavour: string;
+}
+
+/**
+ * One luxury good standing on the board — a physical, unique object with at most
+ * one owner, seated at a shared two-tile coastal vertex (Q31/Q45).
+ *
+ * Whether it is ACTIVE is never stored: activity is derived in one place
+ * (`game/luxury.ts`) from ownership, the per-player active cap, and suppression,
+ * so no state can say "active but suppressed" (Q48's denial seam, unused today).
+ */
+export interface LuxuryAsset {
+  /** Stable match-local identity (`luxury-N`) — the handle trade and denial use. */
+  id: string;
+  goodId: LuxuryGoodId;
+  /** The canonical shared vertex it sits at (game/mapTopology.ts). */
+  vertexId: string;
+  /** The two adjacent coastal tiles a Port can claim it from. */
+  tileIds: [string, string];
+  owner: PlayerId | null;
+  /** The settlement whose Port first claimed it. Stays put when trade later moves
+   *  `owner` — a tile id alone cannot name one settlement on a shared tile. */
+  claimedAtSettlementId: string | null;
+  /** Turns of denial remaining (future Directives mutate this; 0 = untouched). */
+  suppressedTurns: number;
+}
 
 export type Resources = Record<Resource, number>;
 
@@ -390,6 +426,9 @@ export interface HexTile {
 
 export interface HegemonyBoard {
   tiles: HexTile[];
+  /** The board's luxury goods — board-level, never duplicated into player buckets:
+   *  a good is one physical object with at most one owner (luxury-goods.md §3.4). */
+  luxuries: LuxuryAsset[];
 }
 
 /** A happiness penalty (or bonus) that applies for a fixed number of the owning

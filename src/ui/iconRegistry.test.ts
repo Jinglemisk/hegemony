@@ -154,6 +154,9 @@ describe("the glyph set is drawn by one hand", () => {
       "costUp",
       "gain",
       "loss",
+      // The luxury amphora: the map marker, the dossier's goods count, and the
+      // Port's claim picker reach it by name.
+      "luxury",
     ];
 
     for (const glyph of furniture) {

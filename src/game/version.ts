@@ -5,7 +5,10 @@
  * versions move only when their serialized shapes require migration or rejection.
  */
 export const ENGINE_VERSION = "0.1.0";
-export const STATE_SCHEMA_VERSION = 1;
+/** v2 (Phase 4): the board carries the luxury-asset registry and the ruleset the
+ *  `economy.luxury` block. Pre-luxury saves are rejected rather than limped along —
+ *  their pinned rulesets cannot answer the new happiness questions. */
+export const STATE_SCHEMA_VERSION = 2;
 export const COMMAND_SCHEMA_VERSION = 1;
 
 export const SAVE_FORMAT_VERSION = 2;

@@ -19,7 +19,7 @@ export type GameMoves = {
   placeColony: (tileId: string, pops: Pops) => void;
   foundColony: (tileId: string, sourceTileId: string, pop: PopType) => void;
   upgradeColonyToCity: (tileId: string) => void;
-  buildBuilding: (tileId: string, buildingId: BuildingId) => void;
+  buildBuilding: (tileId: string, buildingId: BuildingId, claimVertexId?: string) => void;
   growPop: (tileId: string, pop: PopType) => void;
   movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
   resolvePendingPlayerEvent: (targetTileId?: string, choiceIndex?: number) => void;
@@ -64,7 +64,13 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     foundColony: (tileId, sourceTileId, pop) =>
       dispatch({ type: "foundColony", tileId, sourceTileId, pop }),
     upgradeColonyToCity: (tileId) => dispatch({ type: "upgradeColonyToCity", tileId }),
-    buildBuilding: (tileId, buildingId) => dispatch({ type: "buildBuilding", tileId, buildingId }),
+    buildBuilding: (tileId, buildingId, claimVertexId) =>
+      dispatch({
+        type: "buildBuilding",
+        tileId,
+        buildingId,
+        ...(claimVertexId ? { claimVertexId } : {}),
+      }),
     growPop: (tileId, pop) => dispatch({ type: "growPop", tileId, pop }),
     movePops: (sourceTileId, targetTileId, pops) =>
       dispatch({ type: "movePops", sourceTileId, targetTileId, pops }),

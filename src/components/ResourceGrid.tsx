@@ -18,6 +18,7 @@ function ResourceGridComponent({
   resetKey,
   className = "",
   order = RESOURCE_ORDER,
+  happiness,
 }: {
   /** The board, so a breakdown row can name the settlement it came from. */
   tiles: readonly HexTile[];
@@ -28,6 +29,10 @@ function ResourceGridComponent({
   className?: string;
   /** Which resources to render, in order — lets the top bar split into two halves. */
   order?: Resource[];
+  /** When given, the happiness pill shows EFFECTIVE happiness (the number the riot
+   *  thresholds and Beloved test) and its tooltip breaks out stored + luxury —
+   *  the three-number legibility rule (luxury-goods.md §8). */
+  happiness?: { stored: number; luxuryBonus: number; effective: number };
 }) {
   const previousResourcesByKey = useRef<Record<string, Resources>>({});
   const [flashes, setFlashes] = useState<Partial<Record<Resource, FlashDirection>>>({});
@@ -81,21 +86,37 @@ function ResourceGridComponent({
         const flash = flashes[resource];
         const deltaClass = getResourceDeltaClass(resource, delta);
         const resourceBreakdown = breakdown.filter((entry) => entry.resource === resource);
+        const luxuryBreakdown = resource === "happiness" && happiness ? happiness : null;
+        const shown = luxuryBreakdown ? luxuryBreakdown.effective : resources[resource];
 
         return (
           <Tooltip
-            ariaLabel={`${RESOURCE_LABELS[resource]} ${formatNumber(resources[resource])}, projected ${formatSignedNumber(delta)} per turn`}
+            ariaLabel={
+              luxuryBreakdown
+                ? `${RESOURCE_LABELS[resource]} ${formatNumber(luxuryBreakdown.effective)} effective (${formatNumber(luxuryBreakdown.stored)} stored, ${formatSignedNumber(luxuryBreakdown.luxuryBonus)} from luxuries), projected ${formatSignedNumber(delta)} per turn`
+                : `${RESOURCE_LABELS[resource]} ${formatNumber(resources[resource])}, projected ${formatSignedNumber(delta)} per turn`
+            }
             content={
-              <ResourceBreakdown
-                delta={delta}
-                entries={resourceBreakdown}
-                resource={resource}
-                tiles={tiles}
-              />
+              <>
+                {luxuryBreakdown ? (
+                  <p className="mechanicsExplanation">
+                    {formatNumber(luxuryBreakdown.stored)} stored{" "}
+                    {formatSignedNumber(luxuryBreakdown.luxuryBonus)} from luxury goods ={" "}
+                    {formatNumber(luxuryBreakdown.effective)} effective — the number riots and
+                    Beloved of the People test.
+                  </p>
+                ) : null}
+                <ResourceBreakdown
+                  delta={delta}
+                  entries={resourceBreakdown}
+                  resource={resource}
+                  tiles={tiles}
+                />
+              </>
             }
             focusable
             key={resource}
-            triggerClassName={`resourcePill resource-${resource}${resources[resource] < 0 ? " resourceAlert" : ""}${flash ? ` resourceFlash-${flash}` : ""}`}
+            triggerClassName={`resourcePill resource-${resource}${shown < 0 ? " resourceAlert" : ""}${flash ? ` resourceFlash-${flash}` : ""}`}
             triggerStyle={resourceCssVars(resource)}
             tooltipClassName={`resourceTooltip${resourceBreakdown.length >= 5 ? " compactResourceTooltip" : ""}`}
           >
@@ -105,7 +126,7 @@ function ResourceGridComponent({
                 smallest role there is — it is a footnote to the count, not a
                 second number of equal standing. */}
             <Icon glyph={RESOURCE_GLYPHS[resource]} className="resourceIcon" />
-            <strong className="stat-lg">{formatNumber(resources[resource])}</strong>
+            <strong className="stat-lg">{formatNumber(shown)}</strong>
             <span className={`resourceDelta label ${deltaClass}`}>
               {/* Nothing moved is said quietly: six printed zeros in a row read as
                   six facts, when they are the absence of one. */}

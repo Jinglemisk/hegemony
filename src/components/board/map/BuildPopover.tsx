@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { getBuildBuildingOptions } from "../../../game/rules";
+import { claimableLuxuriesAt, getBuildBuildingOptions, getLuxuryGood } from "../../../game/rules";
 import type { BuildingId } from "../../../game/types";
 import { presentBuildingEffect } from "../../../ui/effects";
 import { AnnotatedText } from "../../AnnotatedText";
@@ -24,13 +24,20 @@ export function BuildPopover({
   tileId: string;
   anchor: DOMRect;
   onCancel: () => void;
-  onConfirm: (tileId: string, buildingId: BuildingId) => void;
+  onConfirm: (tileId: string, buildingId: BuildingId, claimVertexId?: string) => void;
 }) {
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
   const options = getBuildBuildingOptions(G, playerID, tileId);
   const [buildingId, setBuildingId] = useState<BuildingId>(
     () => options.find(({ status }) => status.can)?.building.id ?? options[0].building.id,
+  );
+  // The Port claims one adjacent good; with two reachable, the pick is the
+  // player's (a typed command field, never an engine default) — so it is a
+  // visible choice here, defaulting to the first good in stable order.
+  const claimable = useMemo(() => claimableLuxuriesAt(G, tileId), [G, tileId]);
+  const [claimVertexId, setClaimVertexId] = useState<string | undefined>(
+    () => claimable[0]?.vertexId,
   );
 
   const selected = options.find(({ building }) => building.id === buildingId) ?? options[0];
@@ -97,6 +104,30 @@ export function BuildPopover({
         })}
       </div>
 
+      {building.id === "port" && claimable.length > 1 ? (
+        <div
+          className="popChoiceGrid growPopChoiceGrid popoverChoiceStack"
+          role="group"
+          aria-label="Luxury good this Port claims"
+        >
+          {claimable.map((asset) => {
+            const good = getLuxuryGood(G.definition.content, asset.goodId);
+
+            return (
+              <button
+                className={asset.vertexId === claimVertexId ? "selectedChoice" : ""}
+                key={asset.vertexId}
+                onClick={() => setClaimVertexId(asset.vertexId)}
+                type="button"
+              >
+                <Icon glyph="luxury" size="rail" className="miniIcon" />
+                <span>{good?.name ?? asset.goodId}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
       <div className="growPopBenefitPanel">
         <div>
           <strong>Projected Benefit</strong>
@@ -109,7 +140,9 @@ export function BuildPopover({
         disabled={gameplayActionDisabled(status, phase, isActive)}
         title={actionRequirementText(status, phase, isActive)}
         onCancel={onCancel}
-        onConfirm={() => onConfirm(tileId, buildingId)}
+        onConfirm={() =>
+          onConfirm(tileId, buildingId, building.id === "port" ? claimVertexId : undefined)
+        }
       />
     </TilePopover>
   );

@@ -135,6 +135,47 @@ export function collectInvariantViolations(
     validatePops(transfer.pops, `${path}.pops`, add, true);
   }
 
+  // Luxury goods (luxury-goods.md §3.4/§3.5): unique physical objects with at most
+  // one owner, a real claim origin, and non-negative suppression. Activity is never
+  // stored, so there is no `active` flag to cross-check — that is the point.
+  const luxuryIds = new Set<string>();
+  const luxuryGoodIds = new Set<string>();
+  const luxuryVertexIds = new Set<string>();
+  const tileIds = new Set(G.board.tiles.map((tile) => tile.id));
+
+  for (const [index, asset] of (G.board.luxuries ?? []).entries()) {
+    const path = `board.luxuries[${index}]`;
+    if (!asset.id || luxuryIds.has(asset.id)) {
+      add("luxury.identity", `${path}.id`, "asset id is missing or duplicated");
+    }
+    luxuryIds.add(asset.id);
+    if (luxuryGoodIds.has(asset.goodId)) {
+      add("luxury.unique", `${path}.goodId`, `duplicate good ${asset.goodId} — goods are unique`);
+    }
+    luxuryGoodIds.add(asset.goodId);
+    if (luxuryVertexIds.has(asset.vertexId)) {
+      add("luxury.vertex", `${path}.vertexId`, "two goods cannot share one vertex");
+    }
+    luxuryVertexIds.add(asset.vertexId);
+    for (const tileId of asset.tileIds) {
+      if (!tileIds.has(tileId)) {
+        add("luxury.reference", `${path}.tileIds`, `claimable tile ${tileId} is not on the board`);
+      }
+    }
+    if (asset.owner !== null && !PLAYER_IDS.includes(asset.owner)) {
+      add("luxury.owner", `${path}.owner`, `unknown player ${asset.owner}`);
+    }
+    if (asset.owner !== null && !asset.claimedAtSettlementId) {
+      add("luxury.origin", `${path}.claimedAtSettlementId`, "an owned good has no claim origin");
+    }
+    if (asset.owner === null && asset.claimedAtSettlementId !== null) {
+      add("luxury.origin", `${path}.claimedAtSettlementId`, "an unclaimed good has an origin");
+    }
+    if (!Number.isSafeInteger(asset.suppressedTurns) || asset.suppressedTurns < 0) {
+      add("luxury.suppression", `${path}.suppressedTurns`, "must be a non-negative integer");
+    }
+  }
+
   for (const id of [...settlementIds, ...transferIds]) {
     const allocated = Number(id.match(/-(\d+)$/)?.[1]);
     if (Number.isSafeInteger(allocated) && allocated >= G.nextEntityId) {

@@ -52,7 +52,7 @@ describe("luxury moorings on the rendered map", () => {
     };
 
     const neutral = renderToStaticMarkup(<LuxuryVertexMarker vertex={vertex} x={0} y={0} />);
-    expect(neutral).toContain('aria-label="Luxury mooring between tiles 0,0 and 1,0"');
+    expect(neutral).toContain('aria-label="Luxury mooring between tiles 0,0 and 1,0, unclaimed"');
 
     const dressed = renderToStaticMarkup(
       <LuxuryVertexMarker goodName="Tyrian Dye" ownerName="Athens" vertex={vertex} x={0} y={0} />,

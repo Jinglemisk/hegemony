@@ -5,7 +5,9 @@ import {
   calculateEconomyProjection,
   canPlaceColonyOnTile,
   getBuildBuildingOptions,
+  claimableLuxuriesAt,
   getBuildBuildingStatus,
+  happinessBreakdown,
   getActiveEffects,
   getFoundColonyStatus,
   getGrowPopStatus,
@@ -365,16 +367,24 @@ export function HegemonyBoard({
   }, [tileConfirmation, armMapSelection]);
 
   const requestBuildBuilding = useCallback(
-    (tileId: string, buildingId: BuildingId) => {
+    (tileId: string, buildingId: BuildingId, claimVertexId?: string) => {
       setSelectedTileId(tileId);
 
       if (
         ctx.phase === "gameplay" &&
         isActive &&
         !hasPendingPlayerEvent &&
-        getBuildBuildingStatus(G, viewerId, tileId, buildingId).can
+        getBuildBuildingStatus(G, viewerId, tileId, buildingId, claimVertexId).can
       ) {
-        moves.buildBuilding(tileId, buildingId);
+        // A Port needs to know WHICH good it claims. The map popover asks the
+        // player and passes it; the ledger paths don't, so name the first
+        // claimable in stable order — the only one, everywhere the shipping even
+        // placement can produce.
+        const resolvedClaim =
+          buildingId === "port"
+            ? (claimVertexId ?? claimableLuxuriesAt(G, tileId)[0]?.vertexId)
+            : undefined;
+        moves.buildBuilding(tileId, buildingId, resolvedClaim);
       }
     },
     [ctx.phase, isActive, hasPendingPlayerEvent, G, viewerId, moves],
@@ -473,6 +483,7 @@ export function HegemonyBoard({
                 deltas={projectedIncome}
                 breakdown={projectedIncomeBreakdown}
                 resetKey={`res-${viewerId}`}
+                happiness={happinessBreakdown(G, viewerId)}
               />
             </div>
 
@@ -611,8 +622,8 @@ export function HegemonyBoard({
                     <BuildPopover
                       anchor={anchor}
                       onCancel={mapSelection.clear}
-                      onConfirm={(target, buildingId) => {
-                        requestBuildBuilding(target, buildingId);
+                      onConfirm={(target, buildingId, claimVertexId) => {
+                        requestBuildBuilding(target, buildingId, claimVertexId);
                         mapSelection.clear();
                       }}
                       tileId={tileId}

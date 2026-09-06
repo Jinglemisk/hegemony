@@ -6,7 +6,8 @@ updated: 2026-09-01
 
 # Luxury Goods — feature plan & open decisions
 
-> **Status 2026-08-04 · active · opening topology/shared-vertex slice next.**
+> **Status 2026-09-02 · active · slice 1 merged (PR #75); slice 2 (Port, claims,
+> happiness, sim verb) implemented and in PR — awaiting owner review.**
 > This file is the **single source** for luxury-goods mechanics. It absorbs
 > `docs/archive/plans/terrain-economy.md` §6 and the appendix's Q31/Q32.
 >
