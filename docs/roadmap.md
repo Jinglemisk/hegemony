@@ -132,12 +132,13 @@ fair AI observation, stable identities, versioned recipes, replay compatibility,
 and the final mechanical enforcement slice. The living
 [architecture contract](reference/architecture.md) is the current authority.
 
-## Current initiative — Phase 4 luxury goods
+## Current initiative — v2 migration
 
-The [Luxury Goods plan](plans/luxury-goods.md) is active. Its opening slice establishes
-authoritative topology and stable shared-vertex marker geometry. The following vertical slice
-adds the six coastal assets, Port claiming, happiness, UI, AI behavior, and telemetry before
-player trade begins.
+The [v2 migration plan](plans/v2-migration.md) rebuilds the economy on the shallow-economy
+[direction paper](reports/balance/2026-09-05-shallow-economy.md) and replaces the in-match
+shell with the Hybrid arc layout, on the branch `feat/v2`. `main` keeps today's game until
+the owner merges. Luxury slices 1–2 shipped on `main` before the migration and carry over
+unchanged; player trade and the mechanics freeze follow the merge.
 
 ## Locked v1 finish line
 

@@ -179,7 +179,7 @@ Parity rows (`PAR-*`) live in
 
 Nothing here is a surprise; each was reasoned rather than missed. **The
 forward-looking home for all of this is [what is genuinely
-left](./ui-remaining.md)** — it carries these rows with their reasoning, plus the
+left](../../plans/ui-remaining.md)** — it carries these rows with their reasoning, plus the
 two features the overhaul never built. This table stays as the ledger's own
 record of what it did not close.
 

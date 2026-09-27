@@ -5,16 +5,15 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-09-06.
+Last updated: 2026-09-28.
 
 ## Now
 
-**Current initiative:** [Phase 4 luxury goods](plans/luxury-goods.md), beginning with the
-topology and shared-vertex marker slice. Phase 3.6 is closed; its
-[architecture contract](reference/architecture.md) is now living reference and its
-[delivery plan](archive/plans/phase-3.6-architecture-hardening.md) is archived.
+**Current initiative:** the [v2 migration](plans/v2-migration.md): the shallow-economy rules
+in the Hybrid arc shell, built on `feat/v2` while `main` keeps today's game. Start a
+session with "start step N in docs/plans/v2-migration.md".
 
-**Owner blocker:** None for the Phase 4 opening slice.
+**Owner blocker:** None. Step 11 of the migration carries proposed thresholds to confirm.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
@@ -24,11 +23,10 @@ precedes full multiplayer.
 
 | Plan                                                | Phase    | Status    | Position                                                                         |
 | --------------------------------------------------- | -------- | --------- | -------------------------------------------------------------------------------- |
+| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 1: the Hybrid arc frame on `feat/v2`                                        |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze |
-| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Opening slice: topology and canonical shared-vertex marker                       |
-| [UI triage](plans/ui-triage.md)                     | —        | `active`  | The defect ledger closing the holes found by driving the overhauled UI           |
-| [UI triage — parity](plans/ui-triage-parity.md)     | —        | `active`  | What the showcase designed and the app never built; companion feed to the ledger |
-| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | Two intentional type-size exceptions and five glossary duplicates remain judged  |
+| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged            |
+| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                        |
 | [Player trade](plans/player-trade.md)               | 4        | `blocked` | V1 after luxuries; full negotiation ships before the mechanics freeze            |
 | [National Ideas](plans/national-ideas.md)           | 5        | `blocked` | V1; one Idea picked at setup, one bought with influence in play; after Phase 4   |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer              |

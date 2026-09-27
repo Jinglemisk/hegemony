@@ -2,6 +2,7 @@
 
 Date: 2026-09-05 (v0.2: v0.1 was revised after an eight-lens adversarial critique; v0.2 folds in the owner's review)
 Owner amendments (v0.2): buildings are per-pop again, raising a class column's printed value (5.5); the influence cap is withdrawn in favour of sinks, including the Dole (5.6); the population term is dropped from the level (5.7); the rising colony price is replaced by a piece supply (5.4); citizens by promotion only (5.1) and the bank and Treasurer rulings (5.6, 5.10) are confirmed. Tiles print no yield: terrain plus slots, slaves are the yield, slaves do not eat (5.2–5.3, owner, third round).
+Corrections (2026-09-25, owner): the §5.5 table now allows one Temple and one Granary per settlement, matching the ruling; Appendix A M12 no longer says influence is capped.
 Status: direction paper for owner decision; not a change to the live rules
 Evidence: [engine census](2026-09-05-engine-census.md) · [deck audit](2026-09-05-deck-audit.md) · [comparables](2026-09-05-comparables.md) · [sim baseline](../simulation/2026-09-05-shallow-economy-baseline.md)
 Owner decisions: all answered 2026-09-06 and folded into section 8 and the affected plans; [questions.md](../../questions.md) is empty
@@ -190,8 +191,8 @@ building's name under it, which is the whole reading.
 | Marketplace | 3 wood, 2 gold | freemen here produce 2 gold | 1 |
 | Estate | 4 wood | slaves here produce 2 of the terrain resource (not on a hill) | 1 |
 | Forum | 3 stone | citizens here produce 2 influence | 1 |
-| Temple | 3 stone | +1 happiness | 2 |
-| Granary | 4 wood | +2 food | 2 |
+| Temple | 3 stone | +1 happiness | 1 |
+| Granary | 4 wood | +2 food | 1 |
 | Port | 4 gold, 2 stone | claims one adjacent luxury | 1 |
 
 Workshop and Villa merge into the Estate. Odeon, Aqueduct, and Gymnasion are cut: calm and
@@ -488,7 +489,7 @@ Then one four-player human session, the only measurement of feel.
 | M9 | Minimums re-denominated; Treasurer gold-only; Voice a level | hoarding of materials, the Voice ratchet |
 | M10 | Colony and city piece supply, flat prices | frictionless wide play, and the dead colony-to-city path |
 | M11 | One price per verb | three cost pipelines, zero-price stacks |
-| M12 | Ladder one price each; influence capped | happiness side effect on demotion, influence pile |
+| M12 | Ladder one price each; influence uncapped, drained by sinks | happiness side effect on demotion, influence pile |
 
 ## Appendix B — Law rewrite (16 Laws, 6 Directives)
 
