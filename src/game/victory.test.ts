@@ -4,7 +4,12 @@ import { calculateIncome, createInitialState, startNewSeason } from "./rules";
 import { scenario } from "./testing/scenario";
 import { createGame, endTurn } from "./turn";
 import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
-import { checkVictoryAtTurnStart, victoryCardsHeld, victoryStandings } from "./victory";
+import {
+  checkVictoryAtTurnStart,
+  victoryCardsHeld,
+  victorySeatStatuses,
+  victoryStandings,
+} from "./victory";
 import type { HegemonyState } from "./types";
 
 const SEED = 0xc0ffee;
@@ -92,6 +97,23 @@ describe("victory card standings", () => {
     checkVictoryAtTurnStart(G);
     expect(G.phase).toBe("gameplay");
     expect(G.winner).toBeNull();
+  });
+
+  it("exposes the next-dawn threat used by the shell", () => {
+    const G = scenario()
+      .opening()
+      .withSettlement("0", "0,0", "city", { citizens: 6, freemen: 4, slaves: 0 })
+      .withSettlement("0", "1,-2", "city", { citizens: 0, freemen: 0, slaves: 0 })
+      .withHappiness("0", 12)
+      .build();
+
+    const status = victorySeatStatuses(G).find((seat) => seat.playerID === "0");
+
+    expect(status).toMatchObject({
+      held: expect.any(Number),
+      needed: 0,
+      winsAtNextTurnStart: true,
+    });
   });
 });
 

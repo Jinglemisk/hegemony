@@ -1,0 +1,1061 @@
+/* The asymmetric match table. The island remains one fixed, fully visible object;
+   the lower corners are planning furniture, not a reason to invent a camera. */
+
+:root {
+  --strip-h: calc(64px * var(--ui-scale));
+  --ops-w-base: 480px;
+  --ops-h-base: 360px;
+  --ops-w: calc(var(--ops-w-base) * var(--ui-scale));
+  --ops-h: calc(var(--ops-h-base) * var(--ui-scale));
+  --roster-d-base: 280px;
+  --roster-d: calc(var(--roster-d-base) * var(--ui-scale));
+  --drawer-w-base: 400px;
+  --drawer-w: calc(var(--drawer-w-base) * var(--ui-scale));
+  --consult-rail-w: calc(92px * var(--ui-scale));
+  --corner-inset: calc(16px * var(--ui-scale));
+  --command-h: calc(76px * var(--ui-scale));
+  --ticker-h: calc(30px * var(--ui-scale));
+
+  /* useBoardFrame reads these root tokens through a body-mounted measuring probe. */
+  --chrome-top: var(--strip-h);
+  --chrome-bot: calc(var(--command-h) + var(--ticker-h) + var(--corner-inset));
+  --camera-inset-top: calc(var(--strip-h) + 18px);
+  --camera-inset-bot: calc(var(--command-h) + var(--ticker-h) + 22px);
+  --board-reserve-l: calc(var(--ops-w) - 48px * var(--ui-scale));
+  --board-reserve-r: calc(var(--roster-d) - 34px * var(--ui-scale));
+}
+
+/* ── Top strip ───────────────────────────────────────────────────────────── */
+
+.asymmetricShell .asymmetricTopStrip {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: var(--z-bar);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-2);
+  height: var(--strip-h);
+  padding: 0 var(--sp-2);
+  border-bottom: 2px solid var(--clay);
+}
+
+.asymmetricShell .asymmetricTopStrip::after {
+  display: none;
+}
+
+.topStripEvents {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.asymmetricShell .topbarEvents {
+  max-width: none;
+}
+
+.asymmetricShell .resourceSpine {
+  position: static;
+  display: flex;
+  height: var(--strip-h);
+  gap: var(--sp-2);
+  transform: none;
+}
+
+.asymmetricShell .resourceSpine .resourceGrid {
+  min-width: calc(162px * var(--ui-scale));
+  gap: calc(10px * var(--ui-scale));
+}
+
+.asymmetricShell .resourceSpine .resourceIcon {
+  width: calc(20px * var(--ui-scale));
+  height: calc(20px * var(--ui-scale));
+}
+
+.topbarUtilities {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.readabilityControl {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ink-12);
+  background: rgb(255 248 231 / 58%);
+}
+
+.readabilityChoice {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0 5px;
+  border: 0;
+  color: var(--ink-63);
+  background: transparent;
+}
+
+.readabilityChoice[aria-pressed="true"] {
+  color: var(--ivory);
+  background: var(--ink);
+}
+
+/* The dial is now a compact calendar beside a written commit. It keeps its hold
+   gesture while the labelled docket supplies the standard click path. */
+.turnDocketCluster {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 144px;
+}
+
+.asymmetricShell .turnDial {
+  width: calc(56px * var(--ui-scale));
+  height: calc(56px * var(--ui-scale));
+}
+
+.asymmetricShell .turnDial svg {
+  width: 100%;
+  height: 100%;
+}
+
+.turnDocketToggle {
+  display: grid;
+  gap: 2px;
+  min-width: 82px;
+  padding: 6px 7px;
+  border: 0;
+  border-left: 1px solid var(--ink-12);
+  background: transparent;
+  text-align: left;
+}
+
+.turnDocketToggle > span {
+  color: var(--ink-63);
+  white-space: nowrap;
+}
+
+.turnDocketToggle[aria-expanded="true"] strong {
+  color: var(--clay-deep);
+}
+
+.turnDocket {
+  position: fixed;
+  top: calc(var(--strip-h) + 8px);
+  left: 50%;
+  z-index: var(--z-popover);
+  display: grid;
+  gap: var(--sp-2);
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100svh - var(--strip-h) - 32px);
+  padding: var(--sp-3);
+  overflow: auto;
+  border: 1px solid var(--clay-deep);
+  background: var(--ivory);
+  box-shadow: var(--lift-shadow);
+  transform: translateX(-50%);
+}
+
+.turnDocket > header,
+.turnDocketIncome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.turnDocket > header {
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--ledger-rule);
+}
+
+.turnDocketDismiss {
+  padding: 4px 7px;
+  border: 0;
+  color: var(--ink-63);
+  background: transparent;
+}
+
+.turnDocketList {
+  display: grid;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.turnDocketItem {
+  display: grid;
+  gap: 1px;
+  padding: 7px 9px;
+  border-left: 3px solid var(--stone);
+  background: var(--terrain-neutral-soft);
+}
+
+.turnDocketItem.is-blocker,
+.turnDocketItem.is-warning {
+  border-left-color: var(--neg);
+}
+
+.turnDocketItem.is-reminder {
+  border-left-color: var(--warn);
+}
+
+.turnDocketItem.is-info {
+  border-left-color: var(--aegean);
+}
+
+.turnDocketItem > span {
+  color: var(--ink-63);
+}
+
+.turnDocketCommit {
+  min-height: 44px;
+  border: 1px solid var(--clay-deep);
+  color: var(--ivory);
+  background: var(--clay);
+  text-align: center;
+}
+
+.turnDocketCommit[aria-disabled="true"] {
+  border-color: var(--ink-12);
+  color: var(--ink-30);
+  background: var(--slip);
+}
+
+.turnDocketAlternative {
+  margin: -3px 0 0;
+  color: var(--ink-63);
+  text-align: center;
+}
+
+/* ── Stable realm block ──────────────────────────────────────────────────── */
+
+.operationsBlock {
+  position: fixed;
+  bottom: calc(var(--command-h) + var(--corner-inset));
+  left: var(--corner-inset);
+  z-index: var(--z-tablet);
+  display: flex;
+  width: var(--ops-w);
+  height: var(--ops-h);
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--clay-deep);
+  background: var(--bone);
+  box-shadow: 0 8px 28px rgb(24 18 16 / 34%);
+}
+
+.operationsHead {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 4px 9px;
+  border-bottom: 1px solid var(--ledger-rule);
+  background: linear-gradient(180deg, var(--ivory), var(--bone));
+}
+
+.operationsBlazon,
+.rivalBlazon,
+.rosterBlazon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--ivory);
+  box-shadow: inset 0 0 0 1px rgb(255 248 231 / 72%);
+}
+
+.operationsWorkspaceTabs {
+  display: flex;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.operationsWorkspaceTab {
+  max-width: 190px;
+  min-height: 30px;
+  padding: 0 10px;
+  overflow: hidden;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-63);
+  background: transparent;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operationsWorkspaceTab[aria-selected="true"] {
+  border-bottom-color: var(--clay);
+  color: var(--ink);
+  background: rgb(255 248 231 / 58%);
+}
+
+.operationsOwner {
+  margin-left: auto;
+  color: var(--ink-63);
+  white-space: nowrap;
+}
+
+.realmTabs {
+  display: flex;
+  flex: none;
+  min-height: 42px;
+  border-bottom: 1px solid var(--ledger-rule);
+  background: rgb(216 200 168 / 38%);
+}
+
+.realmTab,
+.realmCompareToggle {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 5px 4px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-63);
+  background: transparent;
+}
+
+.realmTab[aria-selected="true"] {
+  border-bottom-color: var(--clay);
+  color: var(--ink);
+  background: var(--bone);
+}
+
+.realmCompareToggle {
+  flex: 0 0 82px;
+  border-left: 1px solid var(--ledger-rule);
+}
+
+.realmCompareToggle .icon {
+  display: none;
+}
+
+.realmCompareToggle[aria-expanded="true"] {
+  color: var(--clay-deep);
+  background: var(--ivory);
+}
+
+.operationsBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 9px 11px 10px;
+  overflow: hidden;
+}
+
+.operationsBody .ledgerCardTitle {
+  padding-bottom: 6px;
+}
+
+.operationsBody .empireIntel {
+  width: 100%;
+}
+
+.settlementComparison {
+  display: grid;
+  flex: none;
+  gap: 5px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--ledger-rule);
+  background: var(--ivory);
+}
+
+.comparisonPins {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.comparisonPin {
+  flex: none;
+  padding: 3px 7px;
+  border: 1px solid var(--ink-12);
+  color: var(--ink-63);
+  background: transparent;
+}
+
+.comparisonPin[aria-pressed="true"] {
+  border-color: var(--clay);
+  color: var(--clay-deep);
+  background: rgb(192 70 28 / 8%);
+}
+
+.comparisonRows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.comparisonRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 8px;
+  min-width: 0;
+  padding-left: 7px;
+  border-left: 2px solid var(--clay);
+}
+
+.comparisonRow > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comparisonRow .resourceDeltaList {
+  grid-column: 1 / -1;
+}
+
+/* Explicit subject mode: selecting a tile never removes the Realm tab or its
+   remembered page, so a mode error is one labelled press to undo. */
+.subjectBody {
+  display: block;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.subjectHead {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--ledger-rule);
+}
+
+.subjectHead h2,
+.subjectHead span,
+.rivalSettlement header span {
+  min-width: 0;
+  margin: 0;
+}
+
+.subjectTerrain {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--ink-12);
+  background: var(--terrain-neutral-light);
+}
+
+.subjectYield,
+.rivalLaurels {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.subjectSettlement,
+.rivalSettlement {
+  display: grid;
+  gap: 9px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--ledger-rule);
+}
+
+.subjectSettlement .holdingSummaryRows,
+.rivalSettlement .holdingSummaryRows {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+}
+
+.subjectActions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.subjectAction {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-height: 48px;
+  padding: 6px 7px;
+  border: 1px solid var(--ink-12);
+  background: var(--ivory);
+  text-align: left;
+}
+
+.subjectAction > span {
+  display: grid;
+  min-width: 0;
+}
+
+.subjectAction small {
+  overflow: hidden;
+  color: var(--ink-63);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subjectAction.isDisabled {
+  color: var(--ink-30);
+  background: var(--slip);
+  cursor: not-allowed;
+}
+
+.subjectEmpty {
+  margin: 12px 0;
+  color: var(--ink-63);
+}
+
+.rivalSettlement header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.rivalSettlement header > span:nth-child(2) {
+  display: grid;
+}
+
+/* ── Roster and drawer ───────────────────────────────────────────────────── */
+
+.rosterSquare {
+  position: fixed;
+  right: var(--corner-inset);
+  bottom: calc(var(--command-h) + var(--corner-inset));
+  z-index: var(--z-tablet);
+  display: flex;
+  width: var(--roster-d);
+  height: var(--roster-d);
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--clay-deep);
+  background: var(--bone);
+  box-shadow: 0 8px 28px rgb(24 18 16 / 34%);
+}
+
+.rosterSquare[aria-hidden="true"] {
+  visibility: hidden;
+}
+
+.rosterSquareHead {
+  display: flex;
+  flex: none;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 9px;
+  border-bottom: 1px solid var(--ledger-rule);
+  color: var(--ink-63);
+}
+
+.rosterColumns,
+.rosterNumbers {
+  display: grid;
+  grid-template-columns: repeat(3, 30px);
+  text-align: right;
+}
+
+.rosterColumns {
+  margin-left: auto;
+}
+
+.rosterSeats {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.rosterSeat {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  min-height: 0;
+  padding: 4px 9px;
+  border: 0;
+  border-bottom: 1px solid var(--ledger-rule);
+  background: transparent;
+  text-align: left;
+}
+
+.rosterSeat.isViewing {
+  background: var(--ivory);
+  box-shadow: inset 3px 0 0 var(--clay);
+}
+
+.rosterSeat.isActing .rosterName strong {
+  text-decoration: underline;
+  text-decoration-color: var(--clay);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.rosterIdentity {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.rosterName {
+  display: grid;
+  min-width: 0;
+}
+
+.rosterName strong,
+.rosterName small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rosterName small {
+  color: var(--ink-63);
+}
+
+.rosterThreat {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 6px 9px;
+  border-top: 1px solid var(--ledger-rule-strong);
+  color: var(--ink-63);
+  background: rgb(216 200 168 / 42%);
+}
+
+.rosterThreat.hasThreat {
+  border-left: 3px solid var(--warn);
+  color: var(--ink);
+}
+
+.consultDrawerDock {
+  position: fixed;
+  inset: var(--strip-h) 0 var(--command-h) auto;
+  z-index: 45;
+  width: var(--consult-rail-w);
+  pointer-events: none;
+}
+
+.consultDrawerDock.isOpen {
+  width: calc(var(--drawer-w) + var(--consult-rail-w));
+}
+
+.consultDrawerRail {
+  position: absolute;
+  top: var(--sp-4);
+  right: 0;
+  z-index: 2;
+  display: grid;
+  width: var(--consult-rail-w);
+  padding: 5px 0 5px 5px;
+  border: 1px solid var(--clay-deep);
+  border-right: 0;
+  background: var(--bone);
+  box-shadow: -3px 4px 14px rgb(24 18 16 / 28%);
+  pointer-events: auto;
+  transition: right 180ms ease-out;
+}
+
+.consultDrawerDock.isOpen .consultDrawerRail {
+  right: var(--drawer-w);
+}
+
+.consultDrawerTab {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  min-height: 42px;
+  padding: 4px 5px;
+  border: 0;
+  color: var(--ink-63);
+  background: transparent;
+  text-align: left;
+}
+
+.consultDrawerTab .label {
+  letter-spacing: 0.035em;
+  text-transform: none;
+}
+
+.consultDrawerTab.isActive {
+  color: var(--ivory);
+  background: var(--ink);
+}
+
+.consultDrawer {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 1;
+  display: flex;
+  width: var(--drawer-w);
+  min-height: 0;
+  padding: 12px 13px 10px;
+  overflow: hidden;
+  border-left: 1px solid var(--clay-deep);
+  background: var(--bone);
+  box-shadow: -8px 0 28px rgb(24 18 16 / 34%);
+  pointer-events: auto;
+}
+
+.consultDrawerClose {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 2;
+  padding: 4px 7px;
+  border: 0;
+  color: var(--ink-63);
+  background: transparent;
+}
+
+.consultDrawer > .empireIntel {
+  width: 100%;
+  padding-top: 2px;
+}
+
+/* ── Free command spine and ticker ───────────────────────────────────────── */
+
+.asymmetricShell .commandDock {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: var(--z-bar);
+  display: block;
+  min-height: var(--command-h);
+  padding: 0;
+}
+
+.asymmetricShell .commandDock::before {
+  height: var(--command-h);
+}
+
+.asymmetricShell .commandDock::after {
+  right: 0;
+  bottom: calc(var(--command-h) - 9px);
+  left: 0;
+}
+
+.asymmetricShell .verbSpine {
+  bottom: 0;
+  gap: calc(4px * var(--ui-scale));
+  width: auto;
+  height: var(--command-h);
+}
+
+.asymmetricShell .railVerb {
+  flex-basis: calc(74px * var(--ui-scale));
+  gap: 2px;
+}
+
+.asymmetricShell .verbKnob {
+  width: calc(42px * var(--ui-scale));
+  height: calc(42px * var(--ui-scale));
+}
+
+.verbMeta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  max-width: 100%;
+  min-height: 13px;
+  color: var(--ink-63);
+  white-space: nowrap;
+}
+
+.verbMeta > .verbCost {
+  min-height: 0;
+}
+
+.verbTarget {
+  max-width: 54px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asymmetricShell .dockTicker {
+  position: fixed;
+  right: calc(var(--roster-d) + var(--corner-inset) * 2);
+  bottom: calc(var(--command-h) + 6px);
+  left: calc(var(--ops-w) + var(--corner-inset) * 2);
+  z-index: var(--z-over-sea);
+  max-width: none;
+  height: var(--ticker-h);
+  padding: 0 10px;
+  overflow: hidden;
+  color: var(--bone);
+  background: rgb(24 18 16 / 68%);
+  backdrop-filter: blur(3px);
+}
+
+.asymmetricShell .dockTicker p {
+  width: 100%;
+  color: var(--bone);
+  text-align: left;
+}
+
+.asymmetricShell .mapSetupCaption {
+  bottom: calc(var(--command-h) + var(--ticker-h) + 14px);
+}
+
+/* ── Action preview and handoff ──────────────────────────────────────────── */
+
+.actionPreviewCard {
+  display: grid;
+  gap: var(--sp-3);
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100svh - 32px);
+  padding: var(--sp-4);
+  overflow: auto;
+  border: 1px solid var(--clay-deep);
+  background: var(--ivory);
+}
+
+.actionPreviewHead {
+  display: grid;
+  gap: 3px;
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--ledger-rule);
+}
+
+.actionPreviewHead h2 {
+  margin: 0;
+}
+
+.actionPreviewTarget {
+  color: var(--ink-63);
+}
+
+.actionPreviewColumns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.actionPreviewStockpile {
+  display: grid;
+  gap: 6px;
+  padding: 9px;
+  border: 1px solid var(--ledger-rule);
+  background: var(--bone);
+}
+
+.actionPreviewResourceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px 9px;
+}
+
+.actionPreviewResource {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.actionPreviewArrow {
+  color: var(--clay-deep);
+}
+
+.actionPreviewDeltas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.actionPreviewDeltas > section,
+.actionPreviewSettlements {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  padding: 9px;
+  border-left: 2px solid var(--clay);
+  background: var(--terrain-neutral-soft);
+}
+
+.actionPreviewSettlements > p {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+}
+
+.actionPreviewActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--ledger-rule);
+}
+
+.handoffBackdrop {
+  z-index: calc(var(--z-ceremony) + 1);
+}
+
+.handoffCard {
+  width: min(520px, calc(100vw - 32px));
+  padding: var(--sp-4);
+  border: 1px solid var(--clay-deep);
+  background: var(--ivory);
+  text-align: center;
+}
+
+.handoffSeal,
+.handoffDigest {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-2);
+}
+
+.handoffSeal h2,
+.handoffSeal p,
+.handoffDigest h2,
+.handoffDigest p {
+  margin: 0;
+}
+
+.handoffBlazon {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  color: var(--ivory);
+  box-shadow:
+    inset 0 0 0 3px rgb(255 248 231 / 78%),
+    0 0 0 1px var(--ink-30);
+}
+
+.handoffDigest ol {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-height: 260px;
+  padding: 8px 8px 8px 32px;
+  overflow: auto;
+  background: var(--bone);
+  text-align: left;
+}
+
+.handoffButton {
+  min-height: 44px;
+  padding: 8px 18px;
+}
+
+/* ── Compact presentation regime ─────────────────────────────────────────── */
+
+:root[data-readability="large"] .realmTab .icon {
+  display: none;
+}
+
+:root[data-readability="large"] .realmCompareToggle {
+  flex-basis: 88px;
+}
+
+:root[data-readability="large"] .rosterSeat {
+  gap: 4px;
+  padding-inline: 7px;
+}
+
+:root[data-readability="large"] .rosterIdentity {
+  gap: 5px;
+}
+
+:root[data-readability="large"] .rosterName strong {
+  letter-spacing: 0.04em;
+}
+
+:root[data-readability="large"] .rosterColumns,
+:root[data-readability="large"] .rosterNumbers {
+  grid-template-columns: repeat(3, 26px);
+}
+
+@media (max-width: 1365px) {
+  :root {
+    --ops-w-base: 460px;
+    --ops-h-base: 350px;
+    --roster-d-base: 266px;
+    --drawer-w-base: 380px;
+    --consult-rail-w: calc(86px * var(--ui-scale));
+    --board-reserve-l: calc(var(--ops-w) - 50px * var(--ui-scale));
+    --board-reserve-r: calc(var(--roster-d) - 42px * var(--ui-scale));
+  }
+
+  .asymmetricShell .topbarEventEffect,
+  .topbarUtilities .activeEffectsBoardCopy {
+    display: none;
+  }
+
+  .asymmetricShell .topbarEventCard {
+    width: calc(164px * var(--ui-scale));
+  }
+
+  .asymmetricShell .resourceSpine .resourceGrid {
+    min-width: calc(148px * var(--ui-scale));
+    gap: calc(8px * var(--ui-scale));
+  }
+
+  .operationsOwner {
+    display: none;
+  }
+
+  .subjectActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1120px) {
+  :root {
+    --ops-w-base: 430px;
+    --ops-h-base: 330px;
+    --roster-d-base: 238px;
+    --drawer-w-base: 360px;
+  }
+
+  .topStripEvents {
+    max-width: calc(180px * var(--ui-scale));
+    overflow-x: auto;
+  }
+
+  .asymmetricShell .topbarEventCard:not(:first-child),
+  .topbarUtilities .activeEffectsBoard {
+    display: none;
+  }
+
+  .realmTab {
+    gap: 2px;
+  }
+
+  .realmTab .icon {
+    display: none;
+  }
+}
+
+@media (max-height: 760px) {
+  :root {
+    --ops-h-base: 330px;
+    --roster-d-base: 248px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consultDrawerRail {
+    transition: none;
+  }
+}

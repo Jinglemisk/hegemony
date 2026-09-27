@@ -1,5 +1,5 @@
 import { PLAYER_NAMES, PLAYER_IDS } from "../../../game/data";
-import { victoryStandings } from "../../../game/victory";
+import { victoryCardLeader, victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId, VictoryMetric } from "../../../game/types";
 import { formatNumber } from "../../../ui/formatters";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
@@ -57,7 +57,12 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
       </p>
 
       {standings.map(({ card, holder, minimum, values }) => {
-        const { leader: ahead, best } = soleLeader(values);
+        const { leader: ahead, value: best } = victoryCardLeader({
+          card,
+          holder,
+          minimum,
+          values,
+        });
         // Voice is not led, it is HELD: the first seat to the minimum keeps it
         // through ties and loses it only when strictly exceeded, so until it is
         // claimed nobody is ahead on it — it is unheld, the word the Agora prints.
@@ -132,34 +137,4 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
       })}
     </div>
   );
-}
-
-/**
- * Who is ahead when nobody holds the card yet — the engine's own rule
- * (`victoryStandings` in src/game/victory.ts) with the minimum gate left off.
- *
- * That helper answers "who HOLDS this", which is null both for a tie and for a
- * leader still under the minimum; the card also wants to name who is ahead before
- * anyone qualifies. So this is the engine's reduce verbatim: a strict `>` takes the
- * lead and an equal value clears it, which is what makes a tie have no leader. The
- * `bestOf` it replaces seeded itself with seat 0 and kept it through every tie, so
- * on turn 0 — four seats, identical boards — five laurels named Damon.
- */
-function soleLeader(values: Record<PlayerId, number>): {
-  leader: PlayerId | null;
-  best: number;
-} {
-  let leader: PlayerId | null = null;
-  let best = -Infinity;
-
-  for (const playerID of PLAYER_IDS) {
-    if (values[playerID] > best) {
-      best = values[playerID];
-      leader = playerID;
-    } else if (values[playerID] === best) {
-      leader = null;
-    }
-  }
-
-  return { leader, best };
 }

@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-08-22.
+Last updated: 2026-08-26.
 
 ## Now
 
@@ -28,7 +28,7 @@ precedes full multiplayer.
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Opening slice: topology and canonical shared-vertex marker                       |
 | [UI triage](plans/ui-triage.md)                     | —        | `active`  | The defect ledger closing the holes found by driving the overhauled UI           |
 | [UI triage — parity](plans/ui-triage-parity.md)     | —        | `active`  | What the showcase designed and the app never built; companion feed to the ledger |
-| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | Two intentional type-size exceptions and five glossary duplicates remain judged  |
+| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | Asymmetric shell shipped; four focused playtests remain                          |
 | [Player trade](plans/player-trade.md)               | 4        | `blocked` | V1 after luxuries; full negotiation ships before the mechanics freeze            |
 | [National Ideas](plans/national-ideas.md)           | 5        | `blocked` | V1; twelve-idea reverse-snake draft after Phase 4                                |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer              |

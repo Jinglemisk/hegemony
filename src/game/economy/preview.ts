@@ -24,6 +24,7 @@ import type { FoodShortageStatus, IncomeContribution } from "./income";
 import {
   buildBuilding,
   foundColony,
+  growPop,
   movePops,
   placeCapital,
   placeColony,
@@ -171,6 +172,23 @@ export function previewBuildBuilding(
 
   return previewEconomyAction(G, playerID, `Build ${buildingName}`, (draft) =>
     buildBuilding(draft, playerID, tileId, buildingId),
+  );
+}
+
+/**
+ * Full before/after preview for a legal growth action. The older
+ * {@link previewGrowPopIncomeDelta} answers the useful hypothetical even when the
+ * player cannot pay; this companion takes the real action path and is what a
+ * confirmation surface uses once the move is legal.
+ */
+export function previewGrowPop(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  pop: PopType,
+): EconomyPreview | null {
+  return previewEconomyAction(G, playerID, "Grow Pop", (draft) =>
+    growPop(draft, playerID, tileId, pop),
   );
 }
 

@@ -105,6 +105,15 @@ export interface VictoryCardStanding {
   values: Record<PlayerId, number>;
 }
 
+export interface VictorySeatStatus {
+  playerID: PlayerId;
+  held: number;
+  needed: number;
+  /** Victory is checked at the opening of this seat's next turn, not immediately. */
+  winsAtNextTurnStart: boolean;
+  oneCardFromVictory: boolean;
+}
+
 /** All six cards with their current holders — the single source for engine checks and UI. */
 export function victoryStandings(G: HegemonyState): VictoryCardStanding[] {
   return VICTORY_CARDS.map((card) => {
@@ -145,6 +154,52 @@ export function victoryStandings(G: HegemonyState): VictoryCardStanding[] {
 
 export function victoryCardsHeld(G: HegemonyState, playerID: PlayerId): number {
   return victoryStandings(G).filter((standing) => standing.holder === playerID).length;
+}
+
+/** The race reduced to the one fact the roster needs for every seat. */
+export function victorySeatStatuses(G: HegemonyState): VictorySeatStatus[] {
+  const standings = victoryStandings(G);
+  const target = G.ruleset.victory.cardsToWin;
+
+  return PLAYER_IDS.map((playerID) => {
+    const held = standings.filter((standing) => standing.holder === playerID).length;
+    const needed = Math.max(0, target - held);
+
+    return {
+      playerID,
+      held,
+      needed,
+      winsAtNextTurnStart: needed === 0,
+      oneCardFromVictory: needed === 1,
+    };
+  });
+}
+
+/**
+ * The visible leader for a card before it is held. This used to be reconstructed
+ * in the Victory tab; keeping the tie rule here prevents the UI from inventing a
+ * second definition of "ahead" beside {@link victoryStandings}.
+ *
+ * Voice is possession-based: until the first player qualifies it is unheld, not
+ * led. Other cards may name a sole leader below the minimum.
+ */
+export function victoryCardLeader(standing: VictoryCardStanding): {
+  leader: PlayerId | null;
+  value: number;
+} {
+  if (standing.holder) {
+    return { leader: standing.holder, value: standing.values[standing.holder] };
+  }
+
+  const values = Object.entries(standing.values) as Array<[PlayerId, number]>;
+  const best = Math.max(...values.map(([, value]) => value));
+
+  if (standing.card.metric === "voice") {
+    return { leader: null, value: best };
+  }
+
+  const leaders = values.filter(([, value]) => value === best);
+  return { leader: leaders.length === 1 ? leaders[0][0] : null, value: best };
 }
 
 /**

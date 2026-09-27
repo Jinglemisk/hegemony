@@ -101,6 +101,9 @@ export function CommandVerb({
   // rather than filling it with something that reads as the price.
   const effectiveCost =
     clauses.length === 1 && !clauses[0].lead && !clauses[0].span ? clauses[0].amounts : undefined;
+  const showsTarget =
+    Boolean(context.targetLabel) &&
+    (verb.id === "grow" || verb.id === "move" || verb.id === "upgrade" || verb.id === "build");
 
   const button = (
     <button
@@ -119,7 +122,15 @@ export function CommandVerb({
         <Icon glyph={VERB_GLYPHS[verb.id]} size="rail" />
       </span>
       <span className="verbLabel verb">{verb.label}</span>
-      {verb.cost ? <VerbCostSlot clauses={clauses} context={context} /> : null}
+      <span className="verbMeta caption num">
+        {verb.cost ? <VerbCostSlot clauses={clauses} context={context} /> : null}
+        {showsTarget ? (
+          <>
+            {verb.cost ? <i aria-hidden="true">·</i> : null}
+            <span className="verbTarget">{context.targetLabel}</span>
+          </>
+        ) : null}
+      </span>
     </button>
   );
 

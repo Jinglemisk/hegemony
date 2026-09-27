@@ -24,6 +24,7 @@ export function CommandDock({
   canBuild,
   armedVerb,
   chronicleTicker,
+  targetLabel,
   ...handlers
 }: {
   canGrowPops: boolean;
@@ -35,6 +36,8 @@ export function CommandDock({
   armedVerb: VerbId | null;
   /** Latest chronicle line — the drawer's contents at a glance (Q19). */
   chronicleTicker: string | null;
+  /** Selected owned settlement, if one should contextualize targetable verbs. */
+  targetLabel?: string;
 } & VerbHandlers) {
   const { G, viewer, phase, isActive, hasPendingPlayerEvent } = useGameUi();
 
@@ -49,6 +52,7 @@ export function CommandDock({
     canFoundColony,
     canUpgradeCity,
     canBuild,
+    targetLabel,
     armedVerb,
     calmUsed: viewer.civicCalmUsedThisTurn,
     ventureUsed: viewer.ventureUsedThisTurn,
@@ -56,17 +60,6 @@ export function CommandDock({
 
   return (
     <div className="commandDock">
-      {/* The bar's two end blocks. They are the frame's corners: the bottom bar
-          steps up at each end to a block deep enough to seat a dial, and the
-          tablet above lands on it. Without them the tablet's bottom edge, the
-          rail's, and the bar's all ended in mid-air a hundred pixels apart with
-          open sea between them, and a disc floated in the gap (FRAME-1).
-          They are drawn here rather than as more pseudo-elements because the
-          bar already spends both of its own on the plate and the meander, and
-          each block carries a meander of its own along its top. */}
-      <div aria-hidden="true" className="dockPlinth dockPlinth-left" />
-      <div aria-hidden="true" className="dockPlinth dockPlinth-right" />
-
       <div className="verbSpine" aria-label="Action toolbar">
         {VERBS.map((verb) => (
           <CommandVerb context={context} handlers={handlers} key={verb.id} verb={verb} />

@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { owned, scenario } from "../testing/scenario";
+import { materialTile, owned, scenario } from "../testing/scenario";
 import {
   calculateEconomyProjection,
   previewBuildingIncomeDelta,
+  previewGrowPop,
   previewGrowPopIncomeDelta,
+  previewUpgradeColonyToCity,
 } from "./preview";
 
 /**
@@ -83,5 +85,33 @@ describe("income previews come from the engine", () => {
     previewBuildingIncomeDelta(G, "0", FIRST_CITY, "temple");
 
     expect(JSON.stringify(G)).toBe(snapshot);
+  });
+
+  it("previews a legal grow through the real action path without mutating play", () => {
+    const G = scenario().opening().withResources("0", "wealthy").build();
+    G.pendingPlayerEvent = null;
+    const snapshot = JSON.stringify(G);
+
+    const preview = previewGrowPop(G, "0", FIRST_CITY, "freemen");
+
+    expect(preview).not.toBeNull();
+    expect(preview?.populationDelta.pops).toBe(1);
+    expect(
+      preview?.settlements.find((settlement) => settlement.tileId === FIRST_CITY)?.popsDelta,
+    ).toBe(1);
+    expect(JSON.stringify(G)).toBe(snapshot);
+  });
+
+  it("previews a city upgrade through the real action path", () => {
+    const id = materialTile(scenario().build()).id;
+    const G = scenario()
+      .withResources("0", "wealthy")
+      .withSettlement("0", id, "colony", { citizens: 0, freemen: 1, slaves: 1 })
+      .build();
+
+    const preview = previewUpgradeColonyToCity(G, "0", id);
+
+    expect(preview).not.toBeNull();
+    expect(preview?.populationDelta.capacity).toBeGreaterThan(0);
   });
 });

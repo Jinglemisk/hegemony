@@ -6,10 +6,9 @@
  * treats this file (and fonts.css) as the only legal home for `font-size`, and
  * ratchets the grandfathered violations elsewhere down to zero.
  *
- * Sizes are the @1440 values from docs/archive/plans/ui-overhaul.md. They ride --ui-scale
- * through rem, exactly like the rest of the chrome: :root's font-size is already
- * `16px * --ui-scale`, so 1rem is one scaled step and the whole register shrinks
- * together at 1280.
+ * Sizes are the standard reading values from docs/archive/plans/ui-overhaul.md.
+ * They ride --readability-scale through rem, independently of the geometry scale,
+ * so a narrow viewport does not make the player read smaller type.
  *
  * Choosing a role:
  *   display   a rite is happening — one per scene, never twice on screen

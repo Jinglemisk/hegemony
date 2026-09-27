@@ -30,6 +30,8 @@ export type VerbContext = {
   canFoundColony: boolean;
   canUpgradeCity: boolean;
   canBuild: boolean;
+  /** Explicit selected settlement, shown as context without changing the verb's name. */
+  targetLabel?: string;
   /**
    * Which verb currently owns the map, if any.
    *
@@ -273,15 +275,6 @@ export function verbTitle(verb: VerbSpec, context: VerbContext) {
   const hint = typeof verb.hint === "function" ? verb.hint(context) : verb.hint;
 
   return verb.available(context) ? hint : (verb.blockedHint ?? hint);
-}
-
-/** The end-turn explanation, blocked or not, without a VerbContext to build. */
-export function turnCommitTitle(gate: TurnGate) {
-  if (gate.hasPendingPlayerEvent) {
-    return "Resolve the pending player event first.";
-  }
-
-  return gate.isActive ? "Press and hold to end the turn." : "Current player's turn only.";
 }
 
 // The verb COMPONENTS (CommandVerb, VerbCostSlot) live in CommandVerb.tsx

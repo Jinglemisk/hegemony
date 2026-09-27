@@ -17,9 +17,11 @@ import { CostRow, PlacementModalShell } from "./PlacementModalShell";
 import { settlementNameOf } from "../../../ui/settlementNames";
 
 export function UpgradeCityModal({
+  initialTileId,
   onCancel,
   onConfirm,
 }: {
+  initialTileId?: string;
   onCancel: () => void;
   onConfirm: (tileId: string) => void;
 }) {
@@ -40,7 +42,11 @@ export function UpgradeCityModal({
     return entries;
   }, [G, playerID]);
 
-  const [tileId, setTileId] = useState(() => candidates[0]?.tile.id ?? "");
+  const [tileId, setTileId] = useState(() =>
+    initialTileId && candidates.some((entry) => entry.tile.id === initialTileId)
+      ? initialTileId
+      : (candidates[0]?.tile.id ?? ""),
+  );
   const selected = candidates.find((entry) => entry.tile.id === tileId) ?? candidates[0];
 
   const colonyYield = selected

@@ -40,6 +40,14 @@ export function useMapSelection({
     );
   }, []);
 
+  /** Start a mode on a target already selected in the operations block. */
+  const startAt = useCallback(
+    (mode: MapSelectionMode, target: NonNullable<MapSelection["target"]>) => {
+      setSelection({ mode, target });
+    },
+    [],
+  );
+
   const setTarget = useCallback((target: MapSelection["target"]) => {
     setSelection((current) => (current ? { ...current, target } : current));
   }, []);
@@ -121,5 +129,5 @@ export function useMapSelection({
     }
   }, [selection, G, playerID, isActive]);
 
-  return { selection, arm, clear, setTarget, advanceToTarget, candidateTileIds };
+  return { selection, arm, startAt, clear, setTarget, advanceToTarget, candidateTileIds };
 }

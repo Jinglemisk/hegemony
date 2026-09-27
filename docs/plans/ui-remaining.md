@@ -2,7 +2,7 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-08-16
+updated: 2026-08-26
 ---
 
 # UI — what is genuinely left
@@ -29,12 +29,49 @@ when it ships or when the owner rules it closed.
 
 ## The list
 
-| ID       | needs      | what                                          |
-| -------- | ---------- | --------------------------------------------- |
-| `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
-| `DUP-1`  | nothing    | Five repeated glossary words, judged and left |
+| ID         | needs      | what                                                     |
+| ---------- | ---------- | -------------------------------------------------------- |
+| `TYPE-1`   | a decision | Two type sizes sit under spec, on purpose                |
+| `DUP-1`    | nothing    | Five repeated glossary words, judged and left            |
+| `ASYM-PT1` | playtest   | Realm/subject mode errors and time to recover            |
+| `ASYM-PT2` | playtest   | End-turn docket signal versus warning fatigue            |
+| `ASYM-PT3` | playtest   | Hot-seat privacy and since-last-turn recall              |
+| `ASYM-PT4` | playtest   | Task completion at 1280×720 with standard and large text |
 
 ### Shipped
+
+**2026-08-26 — the asymmetric shell.** The prototype's placement idea landed with
+the review's structural changes rather than its camera and selection modality:
+
+- The whole 37-hex island remains in one fixed fit. Browser measurement at
+  1280×720 found all 37 tile targets on-screen and no tile intersecting either
+  corner panel.
+- Realm is a permanent lower-left workspace with Cities, Pops, Build, and Market.
+  A selected hex adds a named subject tab; it never becomes the only way back.
+  Cities can pin two settlements, and Build keeps the cross-settlement matrix.
+- The seven verbs remain a free bottom spine. A selected settlement is printed as
+  the target without changing the verb's name.
+- The lower-right roster keeps cities, population, laurels, acting/viewing state,
+  and next-dawn victory danger visible. The labelled consult rail opens a 400px
+  drawer over that roster and returns focus to its trigger when closed.
+- Grow, build, found, move, and upgrade commits show before/after stockpiles,
+  next-income changes, and affected settlements from cloned engine transitions.
+- End turn has a labelled click path with engine-derived blockers, economic harm,
+  expiring opportunities, and next income. The hold dial remains an alternative.
+- A privacy handoff sits above pending ceremonies, takes the incoming seat before
+  revealing the table, and gives that ruler a short since-last-turn digest.
+- Text size is independent of chrome scale. Compact presentation rules preserve
+  labels at 1280 without shrinking the selected reading size.
+
+The remaining asymmetric-shell work is deliberately human evidence, not more
+chrome. For `ASYM-PT1`, give players one grow, one cross-settlement build comparison,
+one rival check, and one consult lookup; record wrong-workspace clicks and recovery
+time. For `ASYM-PT2`, seed food pressure, an unused Ladder move, and a rival holding
+three laurels; record which warnings change a decision. For `ASYM-PT3`, run two full
+hot-seat rounds and test recall before and after the digest. Repeat the task set at
+1280×720 in both reading sizes for `ASYM-PT4`. Do not add pan, zoom, a minimap, or
+more permanent chrome unless this evidence shows the fixed island itself is the
+constraint.
 
 **2026-08-19 — the cleanup pass (owner ask).** Six items, and one bug found under
 them:
