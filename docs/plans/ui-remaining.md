@@ -9,7 +9,7 @@ updated: 2026-08-16
 
 The triage run closed everything the two checkers can see: `ui:audit` reports **0**
 geometric defects across 19 surfaces at three widths, `ui:conduct` reports **5**,
-and every suite is green. [The defect ledger](./ui-triage.md) records how that was
+and every suite is green. [The defect ledger](../archive/plans/ui-triage.md) records how that was
 reached and what was found along the way.
 
 This file is the other half — the work that is **not** a defect. Some of it needs

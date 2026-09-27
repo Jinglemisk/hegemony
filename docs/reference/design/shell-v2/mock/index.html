@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Katalogos · Hybrid Arc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Cinzel:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="shell.css">
+</head>
+<body>
+<svg id="board" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The island"></svg>
+
+<div class="hud hud-top">
+  <header class="topbar" id="topbar" data-c="topbar" data-gate-flex data-exclude></header>
+  <aside class="ticker" id="ticker" data-c="ticker" data-exclude tabindex="0" aria-label="Latest in the Chronicle"></aside>
+</div>
+
+<div class="hud hud-bottom">
+  <section class="realm" id="realm" data-c="realm" data-exclude aria-label="Realm"></section>
+  <button class="endturn" id="endturn" data-c="endturn" data-exclude data-tip="endturn" data-tip-at="above"></button>
+</div>
+
+<div class="tooltip" id="tooltip" role="tooltip" data-gate-skip hidden></div>
+
+<script id="data" type="application/json">{"glyphs":{"wood":[{"kind":"path","d":"M12 3 8 10h1.5l-4 7h13l-4-7H16z"},{"kind":"path","d":"M12 17v4"}],"stone":[{"kind":"path","d":"M3 19.5c-.5-4 2-7.5 6-7.5 1.5-3 6-3.5 8 0 3 .5 4.5 3.5 4 7.5z"},{"kind":"path","d":"M9 12 10.5 19.5M17 12l-1.5 7.5"}],"gold":[{"kind":"path","d":"M5 9c0-1.7 3.1-3 7-3s7 1.3 7 3-3.1 3-7 3-7-1.3-7-3z"},{"kind":"path","d":"M5 9v5c0 1.7 3.1 3 7 3s7-1.3 7-3V9"},{"kind":"path","d":"M5 11.5c0 1.7 3.1 3 7 3s7-1.3 7-3"}],"food":[{"kind":"path","d":"M12 21v-8M12 13 8 10m4 3 4-3M12 9.5 8 6.5m4 3 4-3M12 6 9.5 3.5M12 6l2.5-2.5"}],"influence":[{"kind":"circle","cx":12,"cy":8,"r":4},{"kind":"path","d":"M9.4 11.3 7 20.5l3.2-1.6L12 21l1.8-2.1 3.2 1.6-2.4-9.2"}],"happiness":[{"kind":"path","d":"M4 5c2.5 1.2 5.2 1.8 8 1.8S17.5 6.2 20 5v6c0 5-3.5 8.5-8 8.5S4 16 4 11z"},{"kind":"path","d":"M8.5 10.5v1.8M15.5 10.5v1.8"},{"kind":"path","d":"M8 15c1.2 1.3 2.5 2 4 2s2.8-.7 4-2"}],"citizens":[{"kind":"circle","cx":12,"cy":9,"r":4},{"kind":"path","d":"M6 20c.8-3.6 3-5.4 6-5.4s5.2 1.8 6 5.4"},{"kind":"path","d":"M5.6 11.2C4.2 8.4 4.9 5.4 6.9 3.8M18.4 11.2c1.4-2.8.7-5.8-1.3-7.4"}],"freemen":[{"kind":"circle","cx":12,"cy":9,"r":4},{"kind":"path","d":"M6 20c.8-3.6 3-5.4 6-5.4s5.2 1.8 6 5.4"}],"slaves":[{"kind":"circle","cx":12,"cy":9,"r":4},{"kind":"path","d":"M6 20c.8-3.6 3-5.4 6-5.4s5.2 1.8 6 5.4"},{"kind":"path","d":"M4.6 15h14.8M8 15v2.2M16 15v2.2"}],"promote":[{"kind":"path","d":"M6 20h12M6 14h12"},{"kind":"path","d":"M12 11V3m-3.5 3.5L12 3l3.5 3.5"}],"demote":[{"kind":"path","d":"M6 4h12M6 10h12"},{"kind":"path","d":"M12 13v8m-3.5-3.5L12 21l3.5-3.5"}],"capital":[{"kind":"path","d":"M4 20h16M6 20V10m6 10V10m6 10V10M3 10l9-6 9 6z"},{"kind":"path","d":"M12 4V1.6M10.6 2.4h2.8"},{"kind":"circle","cx":12,"cy":8,"r":1.2,"solid":true}],"city":[{"kind":"path","d":"M4 20h16M7 20V11m10 9V11M3.5 11 12 6l8.5 5z"}],"colony":[{"kind":"path","d":"M4 20h16M6 20v-7l6-4 6 4v7"}],"plains":[{"kind":"path","d":"M3 19.5h18"},{"kind":"path","d":"M7 19.5v-4m0 0-2-2m2 2 2-2M12 19.5v-6m0 0-2-2m2 2 2-2M17 19.5v-4m0 0-2-2m2 2 2-2"}],"hill":[{"kind":"path","d":"M3 18l5-7 4 5 3-3 6 5z"}],"mountain":[{"kind":"path","d":"M2 19l6.5-11L13 15l2.5-3.5L21 19z"},{"kind":"path","d":"M6.5 15h3.4M14.6 14h2.6"}],"grow":[{"kind":"path","d":"M12 21V11m0 0C12 7 9 5 5 5c0 4 3 6 7 6zm0-2c0-3 2.5-5 6-5 0 3-2.5 5-6 5z"}],"move":[{"kind":"path","d":"M7 20c-1-3 0-5 2-6m6-8c1 3 0 5-2 6M9 4C7 5 6 7 7 9m8 8c2-1 3-3 2-5"},{"kind":"circle","cx":8,"cy":11.5,"r":1.6},{"kind":"circle","cx":15.5,"cy":8,"r":1.6}],"found":[{"kind":"rect","x":5,"y":13,"w":14,"h":7},{"kind":"path","d":"M8 13V9l4-3 4 3v4"}],"upgrade":[{"kind":"path","d":"M6 20h12M8 20V8m8 12V8M6 8h12M9 8V5h6v3"}],"build":[{"kind":"path","d":"M4 20l6-6m2-2 8-8m-8 8 3 3M12 12 9 9m5 11h6v-6"}],"calm":[{"kind":"path","d":"M5 13c2-2 5-2 7 0s5 2 7 0M8 13V7a4 4 0 0 1 8 0v6"}],"venture":[{"kind":"path","d":"M3 15c4 3 14 3 18 0M5 15V9l7-4v10m0-6 6 3v3"}],"hourglass":[{"kind":"path","d":"M7 3h10M7 21h10M8.5 3v3.4L12 11l3.5-4.6V3M8.5 21v-3.4L12 13l3.5 4.6V21"}],"marketplace":[{"kind":"path","d":"M4 10h16M5 10V6h14v4M6 10v10h12V10m-9 4h6"}],"temple":[{"kind":"path","d":"M4 20h16M6 20V10m6 10V10m6 10V10M3 10l9-6 9 6z"}],"granary":[{"kind":"path","d":"M5 20V9l7-5 7 5v11M9 20v-6h6v6M5 20h14"}],"forum":[{"kind":"path","d":"M12 4v3m0 0L5 9m7-2 7 2M5 9l-2 5h6L7 9zm14 0-2 5h6l-2-5zM12 7v13m-4 0h8"}],"port":[{"kind":"circle","cx":12,"cy":5.5,"r":2.2},{"kind":"path","d":"M12 7.7V19M8.5 10.5h7"},{"kind":"path","d":"M5 14c0 4 3 6.5 7 6.5s7-2.5 7-6.5"}],"luxury":[{"kind":"path","d":"M9 4h6M10 4v2.5M14 4v2.5"},{"kind":"path","d":"M10 6.5h4c2.2 1.6 3.2 3.4 3.2 5.7 0 3.7-2.1 6.3-5.2 6.3s-5.2-2.6-5.2-6.3c0-2.3 1-4.1 3.2-5.7z"},{"kind":"path","d":"M8.6 8.8c-1.5.3-2.4 1-2.7 2.1M15.4 8.8c1.5.3 2.4 1 2.7 2.1"},{"kind":"path","d":"M9.5 21h5M12 18.5V21"}],"law":[{"kind":"path","d":"M12 21V9M12 12c0-3-2-4.5-4.5-4.5C7.5 10 9 12 12 12zm0 0c0-3 2-4.5 4.5-4.5C16.5 10 15 12 12 12zm0 5c0-2.6-1.7-4-4-4 0 2.3 1.6 4 4 4zm0 0c0-2.6 1.7-4 4-4 0 2.3-1.6 4-4 4z"}],"directive":[{"kind":"path","d":"M5 3h10l4 4v14H5z"},{"kind":"path","d":"M15 3v4h4"},{"kind":"path","d":"M8.5 11h7M8.5 14.5h7M8.5 18h4"}],"laurel":[{"kind":"path","d":"M10.6 3.4C6.2 5.3 3.8 9 4.4 13.1c.6 4 3.4 6.7 7.4 8-2.6-2.7-4-5.5-4.2-8.5-.2-3.3 1-6.4 3-9.2z"},{"kind":"path","d":"M13.4 3.4c4.4 1.9 6.8 5.6 6.2 9.7-.6 4-3.4 6.7-7.4 8 2.6-2.7 4-5.5 4.2-8.5.2-3.3-1-6.4-3-9.2z"}],"voice":[{"kind":"path","d":"M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm-6-3a6 6 0 0 0 12 0M12 18v3"}],"chronicle":[{"kind":"path","d":"M7 4h10a2 2 0 0 1 2 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 0 1 2-2z"}],"codex":[{"kind":"path","d":"M12 7.2C10.2 5.4 7.6 4.6 4 4.8v12.4c3.6-.2 6.2.6 8 2.4 1.8-1.8 4.4-2.6 8-2.4V4.8c-3.6-.2-6.2.6-8 2.4z"},{"kind":"path","d":"M12 7.2v12.4"}],"chevronDown":[{"kind":"path","d":"M6 9.5 12 15.5 18 9.5"}],"chevronRight":[{"kind":"path","d":"M9.5 6 15.5 12 9.5 18"}],"plus":[{"kind":"path","d":"M12 5v14M5 12h14"}],"minus":[{"kind":"path","d":"M5 12h14"}],"pin":[{"kind":"path","d":"M12 21.5c4-5 6-8.4 6-11.5a6 6 0 1 0-12 0c0 3.1 2 6.5 6 11.5z"},{"kind":"circle","cx":12,"cy":10,"r":2.2}],"stele":[{"kind":"path","d":"M7 21V8.5a5 5 0 0 1 10 0V21z"},{"kind":"path","d":"M9.5 12h5M9.5 15.5h5"}],"ostrakon":[{"kind":"path","d":"M6 8.5 11.5 4l7 3-1.2 8.5L11 20 5.5 15z"}],"riot":[{"kind":"path","d":"M6 21v-8M6 13 3.5 9M6 13l2.5-4M12 21V11M12 11 9.2 6.6M12 11l2.8-4.4M18 21v-8M18 13l-2.5-4M18 13l2.5-4"}],"die":[{"kind":"rect","x":4.5,"y":4.5,"w":15,"h":15},{"kind":"circle","cx":9,"cy":9,"r":1.6},{"kind":"circle","cx":12,"cy":12,"r":1.6},{"kind":"circle","cx":15,"cy":15,"r":1.6}],"treasury":[{"kind":"path","d":"M12 4v10m0 0-3-3m3 3 3-3M5 20h14M7 20v-3h10v3"}],"income":[{"kind":"path","d":"M20 12a8 8 0 1 1-2.3-5.6M20 4.5V8h-3.5"}],"forest":null},"tiles":[{"id":"-3,0","q":-3,"r":0,"terrain":"forest","slots":2,"resource":{"type":"wood","amount":2}},{"id":"-3,1","q":-3,"r":1,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":2}},{"id":"-3,2","q":-3,"r":2,"terrain":"plains","slots":3,"resource":{"type":"food","amount":2}},{"id":"-3,3","q":-3,"r":3,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":2}},{"id":"-2,-1","q":-2,"r":-1,"terrain":"mountain","slots":2,"resource":{"type":"stone","amount":2}},{"id":"-2,0","q":-2,"r":0,"terrain":"mountain","slots":1,"resource":{"type":"stone","amount":4}},{"id":"-2,1","q":-2,"r":1,"terrain":"plains","slots":2,"resource":{"type":"food","amount":8}},{"id":"-2,2","q":-2,"r":2,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":4}},{"id":"-2,3","q":-2,"r":3,"terrain":"hill","slots":3,"resource":null},{"id":"-1,-2","q":-1,"r":-2,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":2}},{"id":"-1,-1","q":-1,"r":-1,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":3}},{"id":"-1,0","q":-1,"r":0,"terrain":"hill","slots":3,"resource":null},{"id":"-1,1","q":-1,"r":1,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":3}},{"id":"-1,2","q":-1,"r":2,"terrain":"mountain","slots":1,"resource":{"type":"stone","amount":3}},{"id":"-1,3","q":-1,"r":3,"terrain":"forest","slots":2,"resource":{"type":"wood","amount":1}},{"id":"0,-3","q":0,"r":-3,"terrain":"plains","slots":3,"resource":{"type":"food","amount":4}},{"id":"0,-2","q":0,"r":-2,"terrain":"plains","slots":2,"resource":{"type":"food","amount":6}},{"id":"0,-1","q":0,"r":-1,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":4}},{"id":"0,0","q":0,"r":0,"terrain":"hill","slots":4,"resource":null},{"id":"0,1","q":0,"r":1,"terrain":"oracle","slots":0,"resource":null},{"id":"0,2","q":0,"r":2,"terrain":"mountain","slots":1,"resource":{"type":"stone","amount":4}},{"id":"0,3","q":0,"r":3,"terrain":"plains","slots":3,"resource":{"type":"food","amount":4}},{"id":"1,-3","q":1,"r":-3,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":2}},{"id":"1,-2","q":1,"r":-2,"terrain":"mountain","slots":1,"resource":{"type":"stone","amount":3}},{"id":"1,-1","q":1,"r":-1,"terrain":"hill","slots":3,"resource":null},{"id":"1,0","q":1,"r":0,"terrain":"plains","slots":2,"resource":{"type":"food","amount":10}},{"id":"1,1","q":1,"r":1,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":2}},{"id":"1,2","q":1,"r":2,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":2}},{"id":"2,-3","q":2,"r":-3,"terrain":"mountain","slots":2,"resource":{"type":"stone","amount":2}},{"id":"2,-2","q":2,"r":-2,"terrain":"mountain","slots":1,"resource":{"type":"stone","amount":6}},{"id":"2,-1","q":2,"r":-1,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":3}},{"id":"2,0","q":2,"r":0,"terrain":"plains","slots":2,"resource":{"type":"food","amount":6}},{"id":"2,1","q":2,"r":1,"terrain":"hill","slots":3,"resource":null},{"id":"3,-3","q":3,"r":-3,"terrain":"forest","slots":2,"resource":{"type":"wood","amount":2}},{"id":"3,-2","q":3,"r":-2,"terrain":"mountain","slots":2,"resource":{"type":"stone","amount":2}},{"id":"3,-1","q":3,"r":-1,"terrain":"forest","slots":1,"resource":{"type":"wood","amount":2}},{"id":"3,0","q":3,"r":0,"terrain":"plains","slots":3,"resource":{"type":"food","amount":4}}],"opening":[{"playerID":"0","capital":{"tileId":"-2,0","pops":{"citizens":1,"freemen":2,"slaves":1}},"colony":{"tileId":"3,0","pops":{"citizens":0,"freemen":1,"slaves":1}}},{"playerID":"1","capital":{"tileId":"0,-2","pops":{"citizens":1,"freemen":1,"slaves":2}},"colony":{"tileId":"0,3","pops":{"citizens":0,"freemen":1,"slaves":1}}},{"playerID":"2","capital":{"tileId":"2,0","pops":{"citizens":0,"freemen":2,"slaves":2}},"colony":{"tileId":"-3,0","pops":{"citizens":1,"freemen":1,"slaves":0}}},{"playerID":"3","capital":{"tileId":"0,2","pops":{"citizens":2,"freemen":1,"slaves":1}},"colony":{"tileId":"0,-3","pops":{"citizens":0,"freemen":2,"slaves":0}}}],"names":{"0":"Damon","1":"Nikos","2":"Theron","3":"Kyros"}}</script>
+<script>
+/* ---------------------------------------------------------------- scene ---- */
+const DATA = JSON.parse(document.getElementById("data").textContent);
+const GL = DATA.glyphs;
+const TILES = DATA.tiles;
+const NAMES = DATA.names;
+/* glaze name, colour token, letter, and the ink that reads on that glaze */
+const GLAZE = { "0": ["Kyanos", "kyanos", "Δ", "ivory"], "1": ["Melichron", "melichron", "Ν", "ink"], "2": ["Porphyra", "porphyra", "Θ", "ivory"], "3": ["Kinnabari", "kinnabari", "Κ", "ivory"] };
+const TERRAIN_GOOD = { plains: "food", forest: "wood", mountain: "stone", hill: null, oracle: null };
+/* Year V of XIV, Damon (Kyanos) acting, v0.2 rules. */
+const OP = DATA.opening;
+const SETTLE = [
+  { tile: OP[0].capital.tileId, owner: "0", rank: "capital", name: "ARGOS", pops: { s: 2, f: 2, c: 1 }, built: ["marketplace", "temple"] },
+  { tile: OP[0].colony.tileId, owner: "0", rank: "colony", name: "PYLOS", pops: { s: 2, f: 1, c: 0 }, built: ["port"] },
+  { tile: "1,1", owner: "0", rank: "colony", name: "MEGARA", pops: { s: 1, f: 1, c: 0 }, built: [] },
+  { tile: OP[1].capital.tileId, owner: "1", rank: "capital", name: "THERMON", pops: { s: 3, f: 2, c: 1 }, built: ["marketplace"] },
+  { tile: OP[1].colony.tileId, owner: "1", rank: "colony", name: "NAXOS", pops: { s: 2, f: 1, c: 0 }, built: ["port"] },
+  { tile: OP[2].capital.tileId, owner: "2", rank: "capital", name: "KYDONIA", pops: { s: 2, f: 2, c: 1 }, built: ["temple"] },
+  { tile: OP[2].colony.tileId, owner: "2", rank: "colony", name: "EPHYRA", pops: { s: 2, f: 1, c: 0 }, built: [] },
+  { tile: "-1,-1", owner: "2", rank: "city", name: "ELIS", pops: { s: 2, f: 2, c: 1 }, built: ["granary"] },
+  { tile: OP[3].capital.tileId, owner: "3", rank: "capital", name: "SIKYON", pops: { s: 3, f: 2, c: 1 }, built: ["marketplace"] },
+  { tile: OP[3].colony.tileId, owner: "3", rank: "colony", name: "GORTYN", pops: { s: 2, f: 1, c: 0 }, built: [] },
+];
+const ME = "0";
+const SUBJECT = OP[0].capital.tileId; /* ARGOS is open in the realm area */
+const YEAR = { n: 5, of: 14, card: "Drought", rule: "Plains slaves yield nothing this year.", left: 9 };
+const RES = { wood: [6, 0], stone: [3, 0], food: [4, 0], gold: [9, 0], influence: [5, 0] };
+const LEVEL = { v: 1, riot: -3, lines: [["Temples", 1], ["Luxuries × 2", 2], ["Slaves ÷ 2", -2], ["Unrest tokens", 0], ["Calm this year", 0]] };
+const PIECES = { colony: [2, 4], city: [3, 3] };
+const SLOTS = { capital: 4 };
+const IDEA = { price: 6 };
+const ROSTER = [
+  { id: "0", threat: false },
+  { id: "1", threat: true },
+  { id: "2", threat: false },
+  { id: "3", threat: false },
+];
+/* A price is a list of [amount, resource] pairs; the string "or" separates alternatives. */
+const BUILDINGS = {
+  marketplace: { n: "Marketplace", ic: "buildings/marketplace", price: [["3", "wood"], ["2", "gold"]], fx: "freemen ×2" },
+  estate: { n: "Estate", ic: "buildings/villa", price: [["4", "wood"]], fx: "slaves ×2" },
+  forum: { n: "Forum", ic: "buildings/forum", price: [["3", "stone"]], fx: "citizens ×2" },
+  temple: { n: "Temple", ic: "buildings/temple", price: [["3", "stone"]], fx: "+1 level" },
+  granary: { n: "Granary", ic: "buildings/granary", price: [["4", "wood"]], fx: "+2 food" },
+  port: { n: "Port", ic: "events/voyage", price: [["4", "gold"], ["2", "stone"]], fx: "claims a mooring" },
+};
+const words = (p) => p.map(([n, r]) => `${n} ${r}`).join(" ");
+const ADVISORY = [["Hunger next year", "4 food in hand, 5 mouths, and PYLOS's plains yield nothing under the Drought."], ["The Ladder is unused", "A promotion is legal in ARGOS for 2 gold."]];
+const CHRONICLE = [["Year V", "Nikos claimed the Purple Dye mooring off NAXOS."], ["Year V", "Drought revealed: plains slaves yield nothing this year."], ["Year IV", "Damon passed the Sumptuary Law, 7 votes to 4."], ["Year IV", "Theron founded ELIS."]];
+const CONSULT = [["chronicle", "Chronicle", "chrome/chronicle", "Every event, newest first."], ["codex", "Codex", "chrome/codex", "The rules, generated from the engine."], ["victory", "Victory", "victory/laurel", "Six cards; three held at year end wins. Nikos holds two."], ["agora", "Agora", "assembly/agora", "Standing Laws 3 of 4; the Assembly sits in Year VI."]];
+const RES_IC = { wood: "resources/wood", stone: "resources/stone", food: "resources/food", gold: "resources/gold", influence: "resources/influence", happiness: "resources/happiness" };
+const POP_IC = { s: "pops/slaves", f: "pops/freemen", c: "pops/citizens" };
+
+/* ------------------------------------------------------------- selectors ---- */
+const tileOf = (id) => TILES.find((t) => t.id === id);
+const settleAt = (id) => SETTLE.find((s) => s.tile === id);
+const mine = () => SETTLE.filter((s) => s.owner === ME);
+const roman = (n) => ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV"][n];
+const cap = (s) => s[0].toUpperCase() + s.slice(1);
+function yieldOf(s) {
+  const t = tileOf(s.tile); const good = TERRAIN_GOOD[t.terrain];
+  const drought = t.terrain === "plains";
+  return {
+    s: { n: s.pops.s * (s.built.includes("estate") ? 2 : 1), good, zero: drought, mult: s.built.includes("estate") ? 2 : 1, by: "estate" },
+    f: { n: s.pops.f * (s.built.includes("marketplace") ? 2 : 1), good: "gold", mult: s.built.includes("marketplace") ? 2 : 1, by: "marketplace" },
+    c: { n: s.pops.c * (s.built.includes("forum") ? 2 : 1), good: "influence", mult: s.built.includes("forum") ? 2 : 1, by: "forum" },
+  };
+}
+function computeIncome() {
+  const d = { wood: 0, stone: 0, food: 0, gold: 0, influence: 0 };
+  for (const s of mine()) {
+    const y = yieldOf(s);
+    if (y.s.good && !y.s.zero) d[y.s.good] += y.s.n;
+    d.gold += y.f.n; d.influence += y.c.n; d.food -= s.pops.f + s.pops.c;
+    if (s.built.includes("granary")) d.food += 2;
+  }
+  for (const k in d) RES[k][1] = d[k];
+}
+function census(id) {
+  const own = SETTLE.filter((s) => s.owner === id);
+  const sum = (k) => own.reduce((a, s) => a + s.pops[k], 0);
+  return { s: sum("s"), f: sum("f"), c: sum("c"), cities: own.filter((s) => s.rank !== "colony").length, colonies: own.filter((s) => s.rank === "colony").length };
+}
+/* a price is short when no alternative can be paid from the store */
+const alternatives = (p) => p.reduce((alts, x) => (x === "or" ? [...alts, []] : (alts[alts.length - 1].push(x), alts)), [[]]);
+const affordable = (p) => alternatives(p).some((alt) => alt.every(([n, r]) => RES[r][0] >= Number(n)));
+
+/* ---------------------------------------------------------------- atoms ---- */
+const ico = (path, size, cls = "") => `<img class="ico ico-${size}${cls ? " " + cls : ""}" src=${JSON.stringify(`../icons/${path}.png`)} alt="">`;
+const sign = (n) => (n > 0 ? "+" + n : n < 0 ? "−" + Math.abs(n) : "0");
+const tone = (n) => (n > 0 ? "pos" : n < 0 ? "neg" : "");
+function price(parts, cls = "", attrs = "", check = true) {
+  const short = check && parts.some((x) => x !== "or" && RES[x[1]]) && !affordable(parts);
+  const body = parts.map((x) => (x === "or" ? `<span class="price-or">·</span>` : `<span>${x[0]}</span>${ico(RES_IC[x[1]], "chip")}`)).join("");
+  return `<span class="price${cls ? " " + cls : ""}${short ? " is-short" : ""}"${attrs}>${body}</span>`;
+}
+/* a tooltip ledger: [label, value, icon?] rows */
+const ledger = (rows) => `<div class="tip-ledger">${rows.map(([k, v, ic]) => `<span class="tip-k">${ic ? ico(ic, "chip") : ""}${k}</span><b>${v}</b>`).join("")}</div>`;
+const warn = (text) => `<div class="tip-warn">${ico("unrest/alarm", "chip")}${text}</div>`;
+const censusRows = (c) => [["Slaves", c.s, POP_IC.s], ["Freemen", c.f, POP_IC.f], ["Citizens", c.c, POP_IC.c]];
+
+/* Tooltip bodies, keyed by data-tip. Each is { title, sub, body } with HTML. */
+const TIPS = {};
+const tipText = (title, body, sub = "") => ({ title, sub, body: body ? `<p class="tip-body">${body}</p>` : "" });
+
+/* ------------------------------------------------------------- top bar ---- */
+function topbar() {
+  TIPS.year = tipText(`Year ${roman(YEAR.n)}`, `Year ${roman(YEAR.n)} of ${roman(YEAR.of)}. ${YEAR.left} cards left in the year deck; the next lies face-down.`, "The year deck");
+  TIPS.card = tipText(YEAR.card, `${YEAR.rule} PYLOS stands on plains.`, "This year's card");
+  const clock = `<div class="clock" data-c="clock">
+    <div class="year" data-c="year" tabindex="0" data-tip="year" data-tip-at="below"><span class="year-n">Year ${roman(YEAR.n)}</span><span class="year-of">of ${roman(YEAR.of)}</span></div>
+    <button class="yearcard" data-c="yearcard" data-tip="card" data-tip-at="below" aria-label="This year's card: ${YEAR.card}. ${YEAR.rule}"><span class="yearcard-name">${YEAR.card}</span><span class="yearcard-rule">${ico("terrain/plains", "ui")}${ico("pops/slaves", "ui")}<span class="yearcard-x">×0</span></span></button>
+  </div>`;
+  const res = Object.entries(RES).map(([k, [v, d]]) => {
+    const short = v + d < 0;
+    TIPS["res-" + k] = tipText(cap(k), `${v} in store, ${sign(d)} next year.${short ? " Short: one pop leaves unless you buy food, take the Dole, or move a mouth." : ""}`, "Resource");
+    return `<div class="res${short ? " is-short" : ""}" data-c="res" tabindex="0" data-tip="res-${k}" data-tip-at="below" aria-label="${cap(k)} ${v}, ${sign(d)} next year${short ? ", short" : ""}">${ico(RES_IC[k], "ui")}<span class="res-val num">${v}</span><span class="res-delta ${tone(d)}">${sign(d)}</span></div>`;
+  }).join("");
+  const riot = LEVEL.v <= LEVEL.riot;
+  TIPS.level = { title: `Level ${sign(LEVEL.v)}`, sub: "Riot at −3 · revolt at −6", body: `<div class="tip-ledger">${LEVEL.lines.map(([k, v]) => `<span>${k}</span><b>${sign(v)}</b>`).join("")}<span class="is-total">Level</span><b class="is-total">${sign(LEVEL.v)}</b></div>` };
+  const level = `<div class="level${riot ? " is-riot" : ""}" data-c="level" tabindex="0" data-tip="level" data-tip-at="below" aria-label="Level ${sign(LEVEL.v)}; riot at −3, revolt at −6">${ico(RES_IC.happiness, "ui")}<span class="res-val num ${tone(LEVEL.v)}">${sign(LEVEL.v)}</span><span class="gauge" style="--level:${LEVEL.v}"></span></div>`;
+  const consult = CONSULT.map(([k, n, gl, t]) => { TIPS["c-" + k] = tipText(n, t, "Consult"); return `<button class="consult-btn" data-c="consult-btn" data-tip="c-${k}" data-tip-at="below" aria-label="${n}">${ico(gl, "ui")}</button>`; }).join("");
+  const rivals = ROSTER.map((r) => {
+    const [gz, tok, letter, ink] = GLAZE[r.id]; const c = census(r.id);
+    TIPS["r-" + r.id] = {
+      title: NAMES[r.id], sub: gz + (r.id === ME ? " · acting" : ""),
+      body: ledger([...censusRows(c), ["Cities", c.cities, "settlements/city"], ["Colonies", c.colonies, "settlements/colony"]])
+        + (r.threat ? warn("One condition from a third card") : ""),
+    };
+    return `<button class="rival${r.id === ME ? " is-acting" : ""}${r.threat ? " is-threat" : ""}" data-c="rival" style="--owner:var(--${tok});--owner-ink:var(--${ink})" data-tip="r-${r.id}" data-tip-at="below"${r.threat ? ' data-gate-hover="rival"' : ""} aria-label="${NAMES[r.id]}${r.id === ME ? ", acting" : ""}${r.threat ? ", one condition from a third card" : ""}"><span class="rival-disc">${letter}</span></button>`;
+  }).join("");
+  document.getElementById("topbar").innerHTML = `${clock}<div class="purse" data-c="purse">${res}${level}</div><div class="court" data-c="court"><nav class="consult" data-c="consult" aria-label="Consult">${consult}</nav><div class="rivals" data-c="rivals" role="group" aria-label="Rulers">${rivals}</div></div>`;
+}
+
+/* The current line stands alone; the year column appears in the history below it. */
+function ticker() {
+  const [[, line], ...rest] = CHRONICLE;
+  document.getElementById("ticker").innerHTML = `<span class="ticker-line">${line}</span><ol class="ticker-more" data-gate-skip>${rest.map(([yy, l]) => `<li><span class="ticker-year">${yy}</span><span>${l}</span></li>`).join("")}</ol>`;
+}
+
+/* ---------------------------------------------------------- realm sheet ----
+   p-ledger-r3's sheet: six verb groups ride its edge; DISCS sets their order,
+   and with it their hotkeys 1 to 6. Every fan lists all of its group's
+   options, the one a disc click runs included. `click` names that option; a
+   group without one opens its fan on a click. An option with `items` holds a
+   second fan. An option pays `price` and may receive `get`; `text` stands in
+   for a price where there is none. While a fan is open, the name under the
+   disc gives way to `hint` (and the click's price). To give the sixth disc
+   (Grow) other content, point its DISCS entry at another group. */
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const nums = (s) => esc(s).replace(/(\d+)/g, "<b>$1</b>");
+const argosBuilt = () => settleAt(SUBJECT).built;
+const buildings = (...ids) => ids.map((id) => ({ id, n: BUILDINGS[id].n, ic: BUILDINGS[id].ic, price: BUILDINGS[id].price, built: argosBuilt().includes(id) }));
+const GROUPS = {
+  grow: {
+    n: "Grow", ic: "pops/pop-gain", click: "grow-slave", hint: "Slave",
+    items: [
+      { id: "grow-slave", n: "Slave", ic: POP_IC.s, price: [["2", "food"]] },
+      { id: "grow-freeman", n: "Freeman", ic: POP_IC.f, price: [["3", "food"]] },
+    ],
+  },
+  people: {
+    n: "People", ic: "pops/crowd", click: null, hint: "Pick one",
+    items: [
+      { id: "promote", n: "Promote", ic: "pops/promote", price: [["2", "gold"]] },
+      { id: "demote", n: "Demote", ic: "pops/demote", price: [["1", "influence"]] },
+      { id: "move", n: "Move", ic: "pops/move", price: [["1", "food"]] },
+    ],
+  },
+  expand: {
+    n: "Expand", ic: "settlements/found", left: PIECES.colony[0], click: "found", hint: "Found",
+    items: [
+      { id: "found", n: "Found a colony", ic: "settlements/found", price: [["4", "wood"], ["1", "food"]], left: PIECES.colony[0], note: `${PIECES.colony[0]} of ${PIECES.colony[1]} colonies left` },
+      { id: "upgrade", n: "Upgrade to a city", ic: "settlements/upgrade", price: [["3", "wood"], ["3", "stone"]], left: PIECES.city[0], note: `${PIECES.city[0]} of ${PIECES.city[1]} cities left` },
+    ],
+  },
+  build: {
+    n: "Build", ic: "buildings/build", click: null, hint: "Pick a class",
+    items: [
+      { id: "build-slaves", n: "Slaves", ic: POP_IC.s, text: "Estate", items: buildings("estate") },
+      { id: "build-freemen", n: "Freemen", ic: POP_IC.f, text: "Marketplace", items: buildings("marketplace") },
+      { id: "build-citizens", n: "Citizens", ic: POP_IC.c, text: "Forum", items: buildings("forum") },
+      { id: "build-civic", n: "Civic", ic: "settlements/capital", text: "3 buildings", items: buildings("temple", "granary", "port") },
+    ],
+  },
+  civic: {
+    n: "Civic", ic: "unrest/calm-verb", click: "calm-gold", hint: "Calm",
+    items: [
+      { id: "calm-gold", n: "Calm", ic: "unrest/calm-verb", price: [["2", "gold"]], note: "+2 level until your next turn" },
+      { id: "calm-influence", n: "Calm", ic: "unrest/patronage", price: [["2", "influence"]], note: "+2 level until your next turn" },
+      { id: "dole", n: "Dole", ic: "unrest/bread-dole", price: [["3", "influence"]], get: [["1", "food"]] },
+      { id: "venture", n: "Venture", ic: "events/venture", price: [["2", "gold"]] },
+    ],
+  },
+  exchange: {
+    n: "Exchange", ic: "market/bank", click: null, hint: "Pick a good",
+    items: ["wood", "stone", "food"].map((r) => ({
+      id: r, n: cap(r), ic: RES_IC[r], text: `${RES[r][0]} in store`,
+      items: [
+        { id: `buy-${r}`, n: "Buy 1", ic: `market/buy-${r}`, price: [["2", "gold"]], get: [["1", r]] },
+        { id: `sell-${r}`, n: "Sell 3", ic: `market/sell-${r}`, price: [["3", r]], get: [["1", "gold"]] },
+      ],
+    })),
+  },
+};
+const DISCS = ["grow", "people", "expand", "build", "civic", "exchange"];
+/* what an option costs, shown as chips and said as words */
+const pay = (it) => `${price(it.price)}${it.get ? `<span class="price-or">▸</span>${price(it.get, "", "", false)}` : ""}`;
+const say = (it) => it.text || `${words(it.price)}${it.get ? ` for ${words(it.get)}` : ""}`;
+
+/* one fan: a menu of sub-circles; an option with `items` nests its own */
+function fan(id, label, items) {
+  const lis = items.map((it, k) => {
+    const sub = it.items;
+    const off = !sub && (it.built || !affordable(it.price));
+    const state = it.built ? " is-built" : off ? " is-short" : "";
+    const shown = it.built ? "built here" : it.text ? nums(it.text) : pay(it);
+    const spoken = it.built ? "built here" : say(it);
+    const opens = sub ? ` aria-haspopup="menu" aria-expanded="false" aria-controls="fan-${it.id}"` : "";
+    return `
+        <li class="fan-item${state}" style="--k: ${k}" role="none">
+          <button class="fan-btn" role="menuitem" tabindex="-1" data-verb="${it.id}"${opens}${off ? ' aria-disabled="true"' : ""} aria-label="${esc(`${it.n}, ${spoken}${it.note ? `, ${it.note}` : ""}`)}">
+            <span class="fan-disc">${ico(it.ic, "tile")}${it.left ? `<span class="verb-count" aria-hidden="true">${it.left}</span>` : ""}</span>
+            <span class="fan-label"><span class="fan-k">${esc(it.n)}</span><span class="fan-p">${shown}</span></span>
+          </button>${sub ? fan(`fan-${it.id}`, it.n, sub) : ""}
+        </li>`;
+  }).join("");
+  return `<ul class="fan" id="${id}" role="menu" aria-label="${esc(label)}" data-gate-skip>${lis}</ul>`;
+}
+/* the gate's hover shots: a fan, a second-level fan, and Exchange's second level */
+const HOVER = {
+  build: { disc: "fan", name: "fan-2", next: '[data-verb="build-freemen"]' },
+  exchange: { name: "exchange", next: '[data-verb="wood"]' },
+};
+function verbs() {
+  const shot = (name, next) => ` data-gate-hover="${name}" data-gate-hover-wait="800"${next ? ` data-gate-hover-next="${esc(next)}"` : ""}`;
+  return DISCS.map((gid, i) => {
+    const g = GROUPS[gid];
+    const key = String(i + 1);
+    const p = g.click && g.items.find((it) => it.id === g.click);
+    const short = p && !affordable(p.price);
+    const label = p ? `${g.n}: ${p.n}, ${say(p)}. Enter for more.` : `${g.n}: pick one`;
+    const h = HOVER[gid] || {};
+    return `
+      <li class="verb${short ? " is-short" : ""}" data-c="verb" data-group="${gid}" style="--i: ${i}">
+        <button class="verb-btn" aria-keyshortcuts="${key}" aria-haspopup="menu" aria-expanded="false" aria-controls="fan-${gid}" aria-label="${esc(label)}"${short ? ' aria-disabled="true"' : ""}>
+          <span class="verb-disc" data-c="verb-disc" data-exclude${h.disc ? shot(h.disc) : ""}>${ico(g.ic, "disc")}<span class="verb-key" aria-hidden="true">${key}</span>${g.left ? `<span class="verb-count" aria-hidden="true">${g.left}</span>` : ""}</span>
+          <span class="verb-name" data-c="verb-name" data-exclude${h.name ? shot(h.name, h.next) : ""}><span class="verb-name-k">${g.n}</span><span class="verb-name-p">${g.hint}${p ? pay(p) : ""}</span></span>
+        </button>
+        ${fan(`fan-${gid}`, g.n, g.items)}
+      </li>`;
+  }).join("");
+}
+
+/* the subject settlement: meta line, three pop columns, building lines */
+function settlementPage(s) {
+  const t = tileOf(s.tile);
+  const y = yieldOf(s);
+  const slots = SLOTS[s.rank] ?? t.slots;
+  const pops = s.pops.s + s.pops.f + s.pops.c;
+  const open = slots - s.built.length;
+  const chip = (k) => ico(RES_IC[k], "chip");
+  const slaveYield = y.s.zero ? `<b>0</b>${chip(y.s.good)}<span>this year</span>` : y.s.good ? `<b>+${y.s.n}</b>${chip(y.s.good)}` : "<span>no yield on hills</span>";
+  const col = (k, label, yieldHtml) => `
+    <div class="settle-col" data-c="settle-col">
+      <span class="col-head caps">${label}<b class="${y[k].mult > 1 ? "is-raised" : ""}">×${y[k].mult}</b></span>
+      ${ico(POP_IC[k], "tile")}
+      <span class="col-count num">${s.pops[k]}</span>
+      <span class="col-yield">${yieldHtml}</span>
+    </div>`;
+  const lines = s.built.map((b) => `<li class="settle-line" data-c="settle-line">${ico(BUILDINGS[b].ic, "ui")}${BUILDINGS[b].n}<span>${BUILDINGS[b].fx}</span></li>`).join("");
+  return `
+    <p class="settle-meta caps" data-c="settle-meta">
+      <span class="meta-i">${ico(`settlements/${s.rank}`, "chip")}${s.rank}</span>
+      <span class="meta-i">${ico(`terrain/${t.terrain}`, "chip")}${t.terrain}</span>
+      <span class="meta-i">${ico("pops/capacity", "chip")}<b>${pops}</b>pops</span>
+      <span class="meta-i">${ico("settlements/slot", "chip")}<b>${s.built.length}</b>of ${slots} slots</span>
+    </p>
+    <div class="settle-cols" data-c="settle-cols">
+      ${col("s", "Slaves", slaveYield)}
+      ${col("f", "Freemen", `<b>+${y.f.n}</b>${chip("gold")}<span>· eat ${s.pops.f}</span>`)}
+      ${col("c", "Citizens", `<b>+${y.c.n}</b>${chip("influence")}<span>· ${s.pops.c} vote${s.pops.c === 1 ? "" : "s"}</span>`)}
+    </div>
+    <ul class="settle-lines" data-c="settle-lines">${lines}<li class="settle-line" data-c="settle-line">${ico("settlements/slot", "ui")}Build<span><b>${open}</b> slot${open === 1 ? "" : "s"} open</span></li></ul>`;
+}
+function realm() {
+  const s = settleAt(SUBJECT);
+  const [, tok, letter] = GLAZE[ME];
+  const short = RES.influence[0] < IDEA.price;
+  const need = IDEA.price - RES.influence[0];
+  const tabs = ["Cities", "Ladder", "Build", "Market"].map((n) => `<button class="realm-tab" role="tab" aria-selected="false" aria-controls="realm-page" tabindex="-1" data-c="tab">${n}</button>`).join("");
+  document.getElementById("realm").innerHTML = `
+    <ol class="verbs" data-c="verbs" data-gate-flex aria-label="Verbs">${verbs()}</ol>
+    <div class="realm-body">
+      <header class="realm-head" data-c="realm-head">
+        <span class="seal" data-c="seal" style="--owner:var(--${tok})" aria-hidden="true">${letter}</span>
+        <h1 class="realm-title" data-c="realm-title"><span class="caps">Realm of</span><b>${NAMES[ME]}</b></h1>
+        <button class="idea" data-c="idea" aria-label="National Idea, ${IDEA.price} influence${short ? `, you need ${need} more` : ""}"${short ? ' aria-disabled="true"' : ""}><span class="idea-name">National Idea</span>${price([[String(IDEA.price), "influence"]])}</button>
+      </header>
+      <nav class="realm-tabs" role="tablist" data-c="realm-tabs" aria-label="Realm pages">${tabs}<button class="realm-tab is-subject" role="tab" id="subject-tab" aria-selected="true" aria-controls="realm-page" data-c="tab">${ico(`settlements/${s.rank}`, "ui")}<span class="realm-tab-name">${s.name}</span></button></nav>
+      <section class="realm-page" id="realm-page" role="tabpanel" aria-labelledby="subject-tab" data-c="realm-page">${settlementPage(s)}</section>
+    </div>`;
+}
+
+/* ------------------------------------------------------------- end turn ---- */
+function endturn() {
+  TIPS.endturn = { title: "End turn", sub: `${ADVISORY.length} before the table passes`, body: ADVISORY.map(([t, d]) => `${warn(t)}<p class="tip-body">${d}</p>`).join("") };
+  const end = document.getElementById("endturn");
+  end.setAttribute("aria-label", `End turn, ${ADVISORY.length} advisories`);
+  end.innerHTML = `<span class="endturn-disc" data-c="disc">${ico("events/end-turn", "disc")}<span class="endturn-badge" data-c="badge">${ADVISORY.length}</span></span><span class="endturn-label" data-c="chip">End turn</span>`;
+}
+
+/* ------------------------------------------------------------- tooltip ---- */
+const GAP = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--board-gap"));
+const tipEl = document.getElementById("tooltip");
+function showTip(host) {
+  const t = TIPS[host.dataset.tip]; if (!t) return;
+  tipEl.innerHTML = `<div class="tip-title">${t.title}${t.sub ? `<span class="tip-sub">${t.sub}</span>` : ""}</div>${t.body}`;
+  tipEl.hidden = false;
+  const r = host.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight, gap = GAP();
+  const at = host.dataset.tipAt || (r.top > innerHeight / 2 ? "above" : "below");
+  const left = Math.min(innerWidth - w - gap, Math.max(gap, r.left + r.width / 2 - w / 2));
+  const top = at === "above" ? r.top - h - gap : r.bottom + gap;
+  tipEl.style.setProperty("--tip-x", Math.round(left) + "px");
+  tipEl.style.setProperty("--tip-y", Math.round(top) + "px");
+}
+const hideTip = () => { tipEl.hidden = true; };
+document.addEventListener("pointerover", (e) => { const h = e.target.closest("[data-tip]"); h ? showTip(h) : hideTip(); });
+document.addEventListener("focusin", (e) => { const h = e.target.closest("[data-tip]"); h ? showTip(h) : hideTip(); });
+document.addEventListener("focusout", hideTip);
+
+/* --------------------------------------------------------------- board ---- */
+const SQ3 = Math.sqrt(3);
+const HEX = 100;          /* user units from a hex's centre to a corner */
+const unitPos = (q, r) => ({ x: SQ3 * (q + r / 2), y: 1.5 * r });
+/* Luxury moorings on sea vertices: three hexes each. The label sits on the sea side;
+   "low" drops it below the bottom row's corners. */
+const MOORINGS = [[[3, 0], [3, -1], [4, -1], "0", "Marble", "start"], [[0, 3], [1, 2], [1, 3], "1", "Purple Dye", "start"], [[-3, 3], [-2, 3], [-3, 4], null, "Olive Oil", "start", "low"]].map(([a, b, c, owner, name, anchor, low]) => {
+  const ps = [a, b, c].map(([q, r]) => unitPos(q, r));
+  return { x: ps.reduce((s, p) => s + p.x, 0) / 3 * 1.08, y: ps.reduce((s, p) => s + p.y, 0) / 3 * 1.08, owner, name, anchor, low: !!low };
+});
+const MOOR_R = 18, MOOR_LX = 26;             /* mooring disc radius, label offset (user units) */
+const ROW_BOTTOM = 5.5;                      /* the bottom row's lowest corner (hex units) */
+const POPS_BASE = 16, GLYPH_W = 18;          /* the pop count's base size; a pop glyph is 24 × .75 */
+function renderBoard() {
+  const svg = document.getElementById("board");
+  const pts = Array.from({ length: 6 }, (_, i) => { const a = Math.PI / 180 * (60 * i - 30); return `${(Math.cos(a) * HEX).toFixed(1)},${(Math.sin(a) * HEX).toFixed(1)}`; }).join(" ");
+  const shape = (x, cls) => x.kind === "path" ? `<path class="${cls}" d="${x.d}"/>` : x.kind === "circle" ? `<circle class="${cls}" cx="${x.cx}" cy="${x.cy}" r="${x.r}"/>` : `<rect class="${cls}" x="${x.x}" y="${x.y}" width="${x.w}" height="${x.h}"/>`;
+  /* board symbols are the same rasters as the chrome, in the glyphs' 24-unit box */
+  const popset = (ic, n) => `<g class="popset"><g class="popset-glyph"><image href=${JSON.stringify(`../icons/${ic}.png`)} width="24" height="24"/></g><text class="pops">${n}</text></g>`;
+  const tiles = TILES.map((t) => {
+    const p = unitPos(t.q, t.r); const s = settleAt(t.id);
+    const pipN = t.terrain === "oracle" ? 0 : s && SLOTS[s.rank] ? SLOTS[s.rank] : t.slots; const built = s ? s.built.length : 0;
+    const pips = `<g class="pips">${Array.from({ length: pipN }, (_, i) => `<circle class="pip ${i < built ? "built" : ""}" cx="${(i - (pipN - 1) / 2) * 16}" cy="0" r="5"/>`).join("")}</g>`;
+    let settle = "", tip = "";
+    if (s) {
+      const [, tok] = GLAZE[s.owner];
+      TIPS["tile-" + t.id] = { title: s.name, sub: `${NAMES[s.owner]} · ${s.rank}`, body: ledger(censusRows(s.pops)) };
+      tip = ` data-tip="tile-${t.id}"`;
+      settle = `<g class="settle" style="--owner:var(--${tok})"><g transform="translate(0,-32)"><circle class="seal-disc ${s.rank}" r="28"/><image href=${JSON.stringify(`../icons/settlements/${s.rank}.png`)} x="-20" y="-20" width="40" height="40"/></g>`
+        + `<rect class="plate" rx="1"/><text class="plate-text">${s.name}</text>`
+        + `<g class="pops-split">${popset(POP_IC.s, s.pops.s)}${popset(POP_IC.f, s.pops.f)}${popset(POP_IC.c, s.pops.c)}</g>`
+        + `<g class="pops-total">${popset("pops/crowd", s.pops.s + s.pops.f + s.pops.c)}</g></g>`;
+    }
+    const emblem = s ? "" : `<image class="emblem" href=${JSON.stringify(`../icons/terrain/${t.terrain}.png`)} x="-24" y="-40" width="48" height="48"/>`;
+    const own = s ? ` owned" style="--owner:var(--${GLAZE[s.owner][1]})` : "";
+    return `<g class="tile-btn${t.id === SUBJECT ? " is-selected" : ""}" data-tile="${t.id}"${tip} transform="translate(${(p.x * HEX).toFixed(1)},${(p.y * HEX).toFixed(1)})"><polygon class="tile ${t.terrain}${own}" points="${pts}"/>${emblem}${settle}${pips}</g>`;
+  });
+  const moorings = MOORINGS.map((m, i) => {
+    TIPS["moor-" + i] = tipText(m.name, m.owner ? `Claimed by ${NAMES[m.owner]}.` : "Unclaimed. A Port on an adjacent settlement claims it.", "Luxury mooring");
+    return `<g class="moor" data-tip="moor-${i}" transform="translate(${(m.x * HEX).toFixed(1)},${(m.y * HEX).toFixed(1)})"${m.owner ? ` style="--owner:var(--${GLAZE[m.owner][1]})"` : ""}><circle class="mooring${m.owner ? " claimed" : ""}" r="${MOOR_R}"/><g transform="translate(-11,-11) scale(.92)">${GL.luxury.map((x) => shape(x, "popg")).join("")}</g><text class="mooring-name" x="${m.anchor === "end" ? -MOOR_LX : MOOR_LX}" text-anchor="${m.anchor}">${m.name}</text></g>`;
+  }).join("");
+  const hw = 3.5 * SQ3 * HEX, hh = 5.5 * HEX;
+  svg.setAttribute("viewBox", `${-hw} ${-hh} ${hw * 2} ${hh * 2}`);
+  svg.innerHTML = `<g>${tiles.join("")}${moorings}</g>`;
+}
+
+/* Board text keeps a 12px floor on screen, so at a small hex it grows in user units.
+   k is that growth for the pop counts (the smallest text); the label stack follows it. */
+const floorPx = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--b-floor"));
+const kOf = (s) => Math.max(1, floorPx() / (POPS_BASE * s / HEX));
+/* Three pop counts need the hex's width at their row; below that the tile shows one total. */
+function compactOf(s) {
+  const k = kOf(s), plateH = 1.45 * Math.max(18, floorPx() * HEX / s);
+  const rowBottom = 4 + plateH + 6 + GLYPH_W * k;
+  const halfW = HEX * SQ3 / 2 * (rowBottom <= HEX / 2 ? 1 : (HEX - rowBottom) / (HEX / 2));
+  return 60 * k + 4 > halfW;
+}
+/* Lay the labels out from the font sizes the stylesheet resolved for this scale. */
+function layoutLabels(s) {
+  const board = document.getElementById("board");
+  const fs = (el) => parseFloat(getComputedStyle(el).fontSize);
+  board.classList.toggle("is-compact", compactOf(s));
+  const place = (set, x, top, k) => {
+    set.querySelector(".popset-glyph").setAttribute("transform", `translate(${x - 20 * k},${top}) scale(${0.75 * k})`);
+    const t = set.querySelector(".pops"); t.setAttribute("x", x + 8 * k); t.setAttribute("y", top + 14 * k);
+  };
+  for (const g of board.querySelectorAll(".settle")) {
+    const text = g.querySelector(".plate-text"), plate = g.querySelector(".plate");
+    const f = fs(text), h = 1.45 * f, w = text.getComputedTextLength() + 1.3 * f;
+    plate.setAttribute("x", -w / 2); plate.setAttribute("y", 4); plate.setAttribute("width", w); plate.setAttribute("height", h);
+    text.setAttribute("y", 4 + h / 2 + 0.35 * f);
+    const k = fs(g.querySelector(".pops")) / POPS_BASE, top = 4 + h + 6;
+    g.querySelectorAll(".pops-split .popset").forEach((set, i) => place(set, (i - 1) * 40 * k, top, k));
+    place(g.querySelector(".pops-total .popset"), 0, top, k);
+    g.parentNode.querySelector(".pips").setAttribute("transform", `translate(0,${top + GLYPH_W * k + 6 + 5})`);
+  }
+  for (const pips of board.querySelectorAll(".tile-btn:not(:has(.settle)) .pips")) pips.setAttribute("transform", "translate(0,72)");
+  board.querySelectorAll(".mooring-name").forEach((t, i) => {
+    const f = fs(t), m = MOORINGS[i];
+    t.setAttribute("y", m.low ? (ROW_BOTTOM - m.y) * HEX + 2 + 0.72 * f : 0.35 * f);
+  });
+}
+
+/* Fit the island against the chrome's exclusion rectangles: the largest hex size
+   whose 37 tiles and 3 moorings clear every [data-exclude] box by one spacing
+   step (--board-gap), then the free centre nearest the viewport's middle. The
+   size is found to a sixteenth of a pixel, so no chrome-free height goes unused. */
+function fitBoard() {
+  const W = innerWidth, H = innerHeight, M = GAP();
+  const rects = [...document.querySelectorAll("[data-exclude]")].map((e) => e.getBoundingClientRect()).filter((r) => r.width > 0 && r.height > 0);
+  const tileBoxes = TILES.map((t) => { const p = unitPos(t.q, t.r); return [p.x - SQ3 / 2, p.x + SQ3 / 2, p.y - 1, p.y + 1]; });
+  const HW = 3.5 * SQ3, HH = 5.5;
+  /* a mooring's box: its disc, plus its label when the hex is large enough to carry one */
+  function mooringBoxes(s) {
+    if (compactOf(s)) return MOORINGS.map((m) => [m.x - 0.2, m.x + 0.2, m.y - 0.2, m.y + 0.2]);
+    const f = Math.max(16, floorPx() * HEX / s);
+    return MOORINGS.map((m) => {
+      const len = (MOOR_LX + 0.6 * f * m.name.length) / HEX;
+      const y1 = m.low ? ROW_BOTTOM + (2 + 0.95 * f) / HEX : m.y + 0.2;
+      return m.anchor === "end" ? [m.x - len, m.x + 0.2, m.y - 0.2, y1] : [m.x - 0.2, m.x + len, m.y - 0.2, y1];
+    });
+  }
+  /* the free centre for hex size s, or null */
+  function centre(s) {
+    const boxes = tileBoxes.concat(mooringBoxes(s));
+    /* the island's extent, labels included, must stay on screen */
+    const ext = (i, pick) => pick(...boxes.map((x) => x[i]));
+    const cyMin = Math.ceil(-ext(2, Math.min) * s + M), cyMax = Math.floor(H - ext(3, Math.max) * s - M); if (cyMin > cyMax) return null;
+    const mid = Math.round((cyMin + cyMax) / 2);
+    for (let d = 0; d <= cyMax - cyMin; d++) {
+      for (const cy of d ? [mid - d, mid + d] : [mid]) {
+        if (cy < cyMin || cy > cyMax) continue;
+        const bans = [];
+        for (const [x0, x1, y0, y1] of boxes) for (const r of rects) if (cy + y0 * s < r.bottom + M && cy + y1 * s > r.top - M) bans.push([r.left - M - x1 * s, r.right + M - x0 * s]);
+        const lo = Math.ceil(-ext(0, Math.min) * s + M), hi = Math.floor(W - ext(1, Math.max) * s - M);
+        const want = Math.min(hi, Math.max(lo, W / 2));
+        const cands = [want, ...bans.flat().map(Math.ceil), ...bans.flat().map(Math.floor)];
+        let best = null;
+        for (const c of cands) {
+          if (c < lo || c > hi || bans.some(([a, b]) => c > a && c < b)) continue;
+          if (best === null || Math.abs(c - want) < Math.abs(best - want)) best = c;
+        }
+        if (best !== null) return [best, cy];
+      }
+    }
+    return null;
+  }
+  const sMax = Math.floor(Math.min((H - 2 * M) / (2 * HH), (W - 2 * M) / (2 * HW)));
+  for (let s = sMax; s >= 16; s--) {
+    if (!centre(s)) continue;
+    let fit = s;
+    for (let f = s + 1 - 1 / 16; f > s; f -= 1 / 16) if (centre(f)) { fit = f; break; }
+    const [cx, cy] = centre(fit);
+    return place(fit, cx, cy);
+  }
+  function place(s, cx, cy) {
+    const b = document.getElementById("board").style;
+    b.setProperty("--board-w", (2 * HW * s).toFixed(1) + "px");
+    b.setProperty("--board-h", (2 * HH * s).toFixed(1) + "px");
+    b.setProperty("--board-x", (cx - HW * s).toFixed(1) + "px");
+    b.setProperty("--board-y", (cy - HH * s).toFixed(1) + "px");
+    b.setProperty("--b-scale", (s / HEX).toFixed(4));
+    layoutLabels(s);
+  }
+}
+
+/* ------------------------------------------------------------ verb fans --
+   Where a fan opens: sub-circles on an arc around its centre, aimed at the
+   island's centre (a second fan: straight out from the disc through its
+   option). The arc may turn up to a right angle either way and widen; the
+   cheapest placement wins in which no circle or label leaves the screen,
+   overlaps another, or touches a disc, a disc's name (as the open hint), the
+   realm, the bar, the ticker or the end turn. A second fan also keeps clear of every circle
+   and label of the first, so its peers stay in reach. */
+const token = (name) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
+const FAN_AT = new WeakMap(); /* an open option's circle centre, viewport px */
+function fanShapes(item, d) {
+  const lab = item.querySelector(":scope > .fan-btn .fan-label");
+  return [[-d / 2, -d / 2, d / 2, d / 2], [-lab.offsetWidth / 2, lab.offsetTop - d / 2, lab.offsetWidth / 2, lab.offsetTop - d / 2 + lab.offsetHeight]];
+}
+function placeFan(host) {
+  const items = [...host.querySelector(":scope > .fan").children];
+  const n = items.length;
+  const d = items[0].querySelector(":scope > .fan-btn .fan-disc").offsetWidth;
+  const gap = GAP();
+  const shapes = items.map((it) => fanShapes(it, d));
+  const chord = Math.max(d, ...shapes.map((sh) => sh[1][2] - sh[1][0])) + gap;
+  const verb = host.closest(".verb");
+  const disc = verb.getBoundingClientRect();
+  const dx = disc.left + disc.width / 2;
+  const dy = disc.top + disc.height / 2;
+  const second = host !== verb;
+  const [cx, cy] = second ? FAN_AT.get(host) : [dx, dy];
+  const isle = document.getElementById("board").getBoundingClientRect();
+  const aim = second ? Math.atan2(cy - dy, cx - dx) : Math.atan2(isle.top + isle.height / 2 - cy, isle.left + isle.width / 2 - cx);
+  const pad = (r) => ({ l: r.left - gap, t: r.top - gap, r: r.right + gap, b: r.bottom + gap });
+  const walls = [...document.querySelectorAll(".verb-disc, .verb-name, #topbar, #ticker, #realm, #endturn")].map((el) => pad(el.getBoundingClientRect()));
+  /* the open disc's plate will read as its hint: wall off the wider of the two */
+  const plate = verb.querySelector(".verb-name").getBoundingClientRect();
+  const hintW = verb.querySelector(".verb-name-p").offsetWidth + 2 * gap;
+  walls.push(pad({ left: dx - hintW / 2, right: dx + hintW / 2, top: plate.top, bottom: plate.bottom }));
+  if (second)
+    for (const peer of host.parentElement.children)
+      for (const [l, t, r, b] of fanShapes(peer, d)) {
+        const [px, py] = FAN_AT.get(peer);
+        walls.push(pad({ left: px + l, top: py + t, right: px + r, bottom: py + b }));
+      }
+  const hit = (a, z) => a.l < z.r && a.r > z.l && a.t < z.b && a.b > z.t;
+  const boxes = ([x, y], k) => shapes[k].map(([l, t, r, b]) => ({ l: x + l, t: y + t, r: x + r, b: y + b }));
+  const onScreen = (q) => q.l >= gap && q.t >= gap && q.r <= innerWidth - gap && q.b <= innerHeight - gap;
+  /* cost: one degree of turn weighs as much as two pixels of radius */
+  const rho0 = (second ? d : disc.width) / 2 + gap + d / 2;
+  let best = null;
+  for (let rho = rho0; rho < rho0 + innerHeight / 2; rho += gap) {
+    const step = n > 1 ? 2 * Math.asin(Math.min(1, chord / (2 * rho))) : 0;
+    for (let t = -90; t <= 90; t += 5) {
+      const cost = Math.abs(t) + (rho - rho0) / 2;
+      if (best && cost >= best.cost) continue;
+      const a0 = aim + (t * Math.PI) / 180 - (step * (n - 1)) / 2;
+      const ps = items.map((_, k) => [cx + rho * Math.cos(a0 + k * step), cy + rho * Math.sin(a0 + k * step)]);
+      const bs = ps.map(boxes);
+      const ok = bs.every((qs, k) => qs.every((q) => onScreen(q) && !walls.some((z) => hit(q, z)) && bs.every((os, j) => j === k || os.every((o) => !hit(q, o)))));
+      if (ok) best = { cost, ps };
+    }
+  }
+  (best ? best.ps : items.map(() => [cx, cy])).forEach(([x, y], k) => {
+    const fx = Math.round(x - cx);
+    const fy = Math.round(y - cy);
+    items[k].style.setProperty("--fx", `${fx}px`);
+    items[k].style.setProperty("--fy", `${fy}px`);
+    FAN_AT.set(items[k], [cx + fx, cy + fy]);
+  });
+}
+
+/* A fan opens after --fan-dwell of hover on its disc, or on its option for a
+   second fan, and closes --fan-linger after the pointer has left both; the
+   second fan is inside its option, so crossing into it never shuts it. A disc
+   click runs the group's `click` option, or opens the fan. Choosing an option
+   that holds a second fan opens it. Enter or ArrowUp on a disc opens its fan
+   and moves focus in; arrows walk a fan, Enter opens a second fan, Escape
+   backs out one level. Hotkeys 1 to 6 act as a click. The mock only
+   announces the verb. */
+const runVerb = (id) => document.dispatchEvent(new CustomEvent("verb", { detail: id }));
+function wireVerbs() {
+  const dwell = token("--fan-dwell");
+  const linger = token("--fan-linger");
+  const lis = [...document.querySelectorAll(".verb")];
+  const btnOf = (host) => host.querySelector(":scope > .verb-btn, :scope > .fan-btn");
+  const fanOf = (host) => host.querySelector(":scope > .fan");
+  const itemsOf = (host) => [...fanOf(host).querySelectorAll(":scope > .fan-item > .fan-btn")];
+  const isOpen = (host) => host.classList.contains("is-open");
+  const cancel = new WeakMap();
+  const setOpen = (host, open) => {
+    if (open === isOpen(host)) return;
+    if (open) {
+      const peers = host.classList.contains("verb") ? lis : [...host.parentElement.children];
+      peers.forEach((o) => o !== host && setOpen(o, false));
+      placeFan(host);
+    } else {
+      host.querySelectorAll(".fan-item.is-open").forEach((o) => setOpen(o, false));
+    }
+    host.classList.toggle("is-open", open);
+    btnOf(host).setAttribute("aria-expanded", String(open));
+  };
+  /* every host of a fan (a disc, or an option holding a second fan) */
+  for (const host of [...lis, ...document.querySelectorAll(".fan-item")].filter(fanOf)) {
+    let openT = 0;
+    let closeT = 0;
+    host.addEventListener("pointerenter", () => {
+      clearTimeout(closeT);
+      if (!isOpen(host)) openT = setTimeout(() => setOpen(host, true), dwell);
+    });
+    host.addEventListener("pointerleave", () => {
+      clearTimeout(openT);
+      closeT = setTimeout(() => setOpen(host, false), linger);
+    });
+    cancel.set(host, () => clearTimeout(openT));
+  }
+  for (const li of lis) {
+    const g = GROUPS[li.dataset.group];
+    const btn = btnOf(li);
+    btn.addEventListener("click", () => {
+      cancel.get(li)();
+      if (!g.click) return setOpen(li, !isOpen(li));
+      setOpen(li, false);
+      if (!li.classList.contains("is-short")) runVerb(g.click);
+    });
+    btn.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== "ArrowUp") return;
+      e.preventDefault();
+      setOpen(li, true);
+      itemsOf(li)[0].focus();
+    });
+    li.addEventListener("focusout", (e) => {
+      if (!li.contains(e.relatedTarget)) setOpen(li, false);
+    });
+  }
+  for (const f of document.querySelectorAll(".fan")) {
+    const host = f.parentElement;
+    const own = (e) => e.target.closest(".fan") === f;
+    f.addEventListener("keydown", (e) => {
+      const move = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (!move || !own(e)) return;
+      e.preventDefault();
+      const its = itemsOf(host);
+      its[(its.indexOf(document.activeElement) + move + its.length) % its.length].focus();
+      f.querySelectorAll(":scope > .fan-item.is-open").forEach((o) => setOpen(o, false));
+    });
+    f.addEventListener("click", (e) => {
+      const b = e.target.closest(".fan-btn");
+      if (!b || !own(e)) return;
+      const item = b.parentElement;
+      if (fanOf(item)) {
+        cancel.get(item)();
+        setOpen(item, true);
+        if (e.detail === 0) itemsOf(item)[0].focus();
+        return;
+      }
+      if (b.getAttribute("aria-disabled") === "true") return;
+      const li = f.closest(".verb");
+      setOpen(li, false);
+      btnOf(li).focus();
+      runVerb(b.dataset.verb);
+    });
+  }
+  document.addEventListener("pointerdown", (e) => lis.forEach((li) => !li.contains(e.target) && setOpen(li, false)));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const li = lis.find(isOpen);
+      if (!li) return;
+      const host = li.querySelector(".fan-item.is-open") || li;
+      setOpen(host, false);
+      btnOf(host).focus();
+      return;
+    }
+    const li = lis[Number(e.key) - 1];
+    if (li && !e.altKey && !e.ctrlKey && !e.metaKey && !e.repeat) btnOf(li).click();
+  });
+  addEventListener("resize", () => lis.forEach((li) => setOpen(li, false)));
+}
+
+/* -------------------------------------------------------------- render ---- */
+computeIncome();
+topbar(); ticker(); realm(); endturn(); wireVerbs(); renderBoard(); fitBoard();
+addEventListener("resize", fitBoard);
+document.fonts && document.fonts.ready.then(fitBoard);
+</script>
+</body>
+</html>
