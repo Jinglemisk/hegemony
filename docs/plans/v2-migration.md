@@ -29,6 +29,9 @@ curved edge. The owner can run the old and new games side by side and decides wh
   `npm run test:run`, `npm run test:parity`, and a bot batch through `npm run sim`
   (commands in [simulation](../reference/simulation.md)).
 - `main` receives docs only until the owner merges `feat/v2`.
+- When a step meets a rule the paper leaves unstated (how half a slave rounds, riot
+  thresholds, whether the capital uses a city piece, starting stocks, first-seat rotation),
+  it picks the simplest default, records it under Settled inputs, and moves on.
 
 ## Non-goals
 
@@ -48,11 +51,25 @@ with the owner's rulings in its section 8, plus these later rulings:
 - One Temple and one Granary per settlement, like every building (2026-09-25).
 - No per-player cap on active luxuries; each counts +2 happiness (2026-09-25).
 - Setup keeps one citizen; every later citizen comes by promotion (2026-09-25).
-- Happiness ships as the clamped integer bank. The level model is built only if Step 11
-  shows riots persist (2026-09-06).
+- Happiness: open as [Q77](../questions.md#q77--which-happiness-model-ships-at-step-5).
+  The bank-first ruling of 2026-09-06 conflicts with the token cards and the mock's level
+  display.
 - National Ideas follow [their plan](national-ideas.md): one picked at setup, one bought
   with influence.
 - Luxury goods as shipped on `main`: coastal only, claimed by a Port that is never free.
+
+After the independent audit (2026-09-28):
+
+- The shell is still built before the systems.
+- Hunger scales with the shortfall: one pop leaves per unfed mouth.
+- Victory is checked at the start of each player's own turn, as today, so the last seat in
+  a year cannot win unanswered.
+- Two colonies of different players may share a tile, as today. Each yields by its own
+  pops, so the half-share goes with the printed yields. Upgrading one to a city evicts the
+  other, as today. Shared tiles keep the map from being walled off.
+- Tiles keep their terrain's resource type, their slot count and their coast; only the
+  printed amount goes.
+- Luxuries stay uncapped; Step 11 measures whether they decide Beloved.
 
 **Shell.** The [Hybrid arc mock](../reference/design/shell-v2/mock/index.html), picked by
 the owner on 2026-09-28 from seven candidates. Its [brief](../reference/design/shell-v2/BRIEF.md)
@@ -87,7 +104,9 @@ danger selector and the real-path previews, with their tests.
 
 ## Open owner questions
 
-None. Step 11's thresholds are proposals the owner may change before it runs.
+- [Q77](../questions.md#q77--which-happiness-model-ships-at-step-5): which happiness model
+  ships. Needed before Step 5; Steps 1–4 do not depend on it.
+- Step 11's thresholds are proposals the owner may change before it runs.
 
 ## Three-axis parity
 
@@ -133,32 +152,43 @@ Each step also updates the shell panels it touches.
 
 - [ ] **Step 3 · Pops and tiles.** Tiles print terrain and slots only. Slaves yield their
       terrain's resource, hills yield nothing, and slaves eat nothing. Freemen make 1 gold;
-      citizens make 1 influence and hold a vote; both eat 1 food. Hunger removes one pop and
-      food stays at zero. One settlement per tile. Citizens come only by promotion.
+      citizens make 1 influence and hold a vote; both eat 1 food. Hunger removes one pop per
+      unfed mouth and food stays at zero. Two colonies of different players may share a
+      tile, each yielding by its own pops; an upgrade evicts the other. Citizens come only
+      by promotion.
 - [ ] **Step 4 · Buildings and prices.** Marketplace, Estate and Forum raise their class
       column; Temple, Granary and Port state one fact each; one of each per settlement.
       Workshop and Villa merge into the Estate; Odeon, Aqueduct and Gymnasion are cut. One
       price per verb, per the paper's section 5.6, including the Dole and the paid pop move.
       Piece supply: four colonies and three cities, and an upgrade returns the colony piece.
-- [ ] **Step 5 · Happiness bank.** Integers clamped from −10 to +10, the food-stockpile bonus
-      removed, calm as +2 for this year, luxuries +2 each with no cap, and riot and revolt
-      per the paper's fallback.
+- [ ] **Step 5 · Happiness.** The model Q77 picks: the clamped bank (integers from −10 to
+      +10, riot and revolt per the paper's fallback) or the level with Unrest tokens (the
+      paper's section 5.7). Either way the food-stockpile bonus goes, calm is +2 for this
+      year, and luxuries are +2 each with no cap.
 - [ ] **Step 6 · Years and the year deck.** Seasons and the omen retire. A 14-card year deck
-      is the clock and the next card stays hidden. Victory is checked at year end with the
-      paper's minimums; Treasurer counts gold only; Voice is a level.
+      is the clock and the next card stays hidden. Victory is checked at the start of each
+      player's own turn, as today, with the paper's minimums; Treasurer counts gold only; Voice is a level.
 - [ ] **Step 7 · Cards.** A player deck of twelve kinds in the four verbs. Ventures take one
       stake of 2 gold. Coupons, choice cards and per-pop scaling go.
+      If Q77 picks the bank, the token cards (Plague, Festival, Local Unrest, Public Calm,
+      The Streets Burn) become plain happiness gains and losses.
 - [ ] **Step 8 · Assembly and Laws.** It meets every other year and votes on player proposals
       only. At most four Laws stand, the oldest is replaced, and a new Law has a minimum
       tenure. One vote per seat plus one per citizen, up to two bought votes, no veto. The
       paper's Appendix B Laws and Directives, under its three global limits.
-- [ ] **Step 9 · National Ideas.** Per [their plan](national-ideas.md).
+- [ ] **Step 9 · National Ideas.** First rewrite the Ideas in v2 terms, since seasons, the
+      veto, per-pop scaling and gold upkeep no longer exist; then build them per
+      [their plan](national-ideas.md).
 - [ ] **Step 10 · Bot personalities.** Slaver, civic and trader as weight vectors over the
-      existing evaluator.
+      political scorer, with bank and venture moves inside the search, so each personality
+      can actually pursue its build.
 - [ ] **Step 11 · Sim gate.** Run batches on the baseline seeds, compare with the
       [2026-09-05 baseline](../reports/simulation/2026-09-05-shallow-economy-baseline.md),
-      apply the decision rules below, and save a dated report.
-- [ ] **Step 12 · Level model, only if Step 11 calls for it.** Unrest tokens and year cards
+      apply the decision rules below, and save a dated report. First commit the class and
+      draw telemetry the baseline relied on, and rerun the v1 baseline with food floored at
+      zero, so v2 is measured against that fix rather than credited with it. Run at least
+      60 games per condition with seats rotated.
+- [ ] **Step 12 · Level model, only if Q77 picked the bank and Step 11 calls for it.** Unrest tokens and year cards
       that zero a term, per the paper's section 5.7.
 
 ### Finish
@@ -176,13 +206,19 @@ Each step also updates the shell panels it touches.
 
 Proposed thresholds; the owner may change them before Step 11 runs.
 
-| Question                       | Rule                                                           | If it fails                                         |
-| ------------------------------ | -------------------------------------------------------------- | --------------------------------------------------- |
-| Does the bank still slide?     | The riot table is reached on at most 10% of turns after year 7 | Build Step 12                                       |
-| Does influence plateau?        | Median influence stock at year 14 is at most 1.5 times year 10 | Raise the propose and repeal prices first           |
-| Is every build viable?         | Each personality wins between 20% and 45% of games             | Rework the weakest build's column and Law downsides |
-| Do player-deck draws matter?   | At least 10% of draws swing more than half a turn's income     | Report only; cutting the deck is the owner's call   |
-| How long and how do games end? | Fourteen years; the share ending by the race is recorded       | Report only                                         |
+| Question                        | Rule                                                                                                                       | If it fails                                                               |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Does the bank still slide?      | Under the bank, the riot table is reached on at most 10% of turns after year 7                                             | Build Step 12                                                             |
+| Does influence plateau?         | Median influence stock grows by at most 5 a year from year 10 to year 14                                                   | Raise the propose and repeal prices first                                 |
+| Is every build viable?          | Each personality wins between 20% and 45% of games                                                                         | Rework the weakest build, and check whether missing trade is the real gap |
+| Does the leader run away?       | The round-5 income leader wins at most 40% of games, and the leader holds at most 2.5 times the laggard's stock at year 10 | Report, with a proposed catch-up rule                                     |
+| Do luxuries decide Beloved?     | Beloved's holder is also the luxury leader in at most 60% of the turns it is held                                          | Raise the Port price or cap what luxuries add                             |
+| Is it legible?                  | Recount the paper's section 5.11 reads per decision against the built game                                                 | Report only                                                               |
+| Do draws matter?                | The spread of draw swings against income is recorded                                                                       | Report only; cutting the deck is the owner's call                         |
+| How long, and how do games end? | Fourteen years; the share ending by the race is recorded                                                                   | Report only                                                               |
+
+The audit showed the first draft of these rules could not measure what they asked: a
+linear influence pile passed, and no card could meet the draw rule.
 
 ## Acceptance and validation
 

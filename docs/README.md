@@ -13,7 +13,7 @@ Last updated: 2026-09-28.
 in the Hybrid arc shell, built on `feat/v2` while `main` keeps today's game. Start a
 session with "start step N in docs/plans/v2-migration.md".
 
-**Owner blocker:** None. Step 11 of the migration carries proposed thresholds to confirm.
+**Owner blocker:** Q77, the happiness model, is needed before migration Step 5.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
