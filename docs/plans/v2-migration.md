@@ -32,11 +32,16 @@ then:
 
 Every step:
 
+- Works on its own branch, `v2/step-NN-short-name`, cut from the latest `feat/v2`.
 - Builds the step and updates the shell panels it touches.
 - Passes `npm run check`, `npm run lint`, `npm run test:run`, `npm run test:parity`, and a
   bot batch through `npm run sim` (commands in [simulation](../reference/simulation.md)).
 - Runs `/code-review` at medium effort on its own diff and fixes what it finds.
-- Commits, pushes to `feat/v2`, and ticks its box with a one-line evidence note.
+- Opens a PR into `feat/v2`, titled like "(Feature) v2 step 3: pops and tiles", with a short
+  body per the owner's PR style. Its last commit ticks the step's box here with the PR
+  number and a one-line evidence note.
+- Merges the PR with a merge commit once CI passes, which runs the full suite, browser tests
+  included, on every PR. The step branch stays; the owner decides about deleting branches.
 
 Standing rules:
 
@@ -52,7 +57,10 @@ Standing rules:
   cost about 6M tokens and hit the weekly usage limit, and workflow resume did not replay
   finished agents. Committing per step means a usage limit costs at most the step in
   progress. After Step 1 the owner checks `/usage` to see what one step costs.
-- `main` receives docs only until the owner merges `feat/v2`.
+- `main` receives docs only until the owner merges `feat/v2`. If `main` has moved, merge it
+  into `feat/v2` at the start of a stretch; never rebase `feat/v2`, since it is pushed.
+- Nothing is merged into `main` except by the owner. Step 15 ends by opening the one PR
+  from `feat/v2` into `main`.
 
 ## Non-goals
 
@@ -241,7 +249,7 @@ rule; the owner decides, including whether Step 12 runs. Remind the owner to run
 
 **Mode:** Steps 12–14 back to back, as in Stretch 3; Step 14 may instead run in parallel at
 any time in its own worktree when the owner asks. **Stop:** Step 15 ends at the owner's
-playtest and the decision on merging `feat/v2` into `main`.
+playtest, with the PR from `feat/v2` into `main` open for the owner to merge.
 
 - [ ] **Step 12 · Level model, only if Q77 picked the bank and Step 11 calls for it.** Unrest tokens and year cards
       that zero a term, per the paper's section 5.7.
