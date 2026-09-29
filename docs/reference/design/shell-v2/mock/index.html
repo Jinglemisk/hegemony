@@ -489,18 +489,77 @@ function fitBoard() {
     let fit = s;
     for (let f = s + 1 - 1 / 16; f > s; f -= 1 / 16) if (centre(f)) { fit = f; break; }
     const [cx, cy] = centre(fit);
-    return place(fit, cx, cy);
-  }
-  function place(s, cx, cy) {
-    const b = document.getElementById("board").style;
-    b.setProperty("--board-w", (2 * HW * s).toFixed(1) + "px");
-    b.setProperty("--board-h", (2 * HH * s).toFixed(1) + "px");
-    b.setProperty("--board-x", (cx - HW * s).toFixed(1) + "px");
-    b.setProperty("--board-y", (cy - HH * s).toFixed(1) + "px");
-    b.setProperty("--b-scale", (s / HEX).toFixed(4));
-    layoutLabels(s);
+    BASE = { s: fit, cx, cy };
+    resetView();
+    return applyView();
   }
 }
+
+function placeBoard(s, cx, cy) {
+  const HW = 3.5 * SQ3, HH = 5.5;
+  const b = document.getElementById("board").style;
+  b.setProperty("--board-w", (2 * HW * s).toFixed(1) + "px");
+  b.setProperty("--board-h", (2 * HH * s).toFixed(1) + "px");
+  b.setProperty("--board-x", (cx - HW * s).toFixed(1) + "px");
+  b.setProperty("--board-y", (cy - HH * s).toFixed(1) + "px");
+  b.setProperty("--b-scale", (s / HEX).toFixed(4));
+  layoutLabels(s);
+}
+
+/* ---------------------------------------------------------------- the map --
+   The island is a canvas. Drag the sea or the island to pan; wheel or pinch to
+   zoom about the pointer. fitBoard's fit is the opening view, and a resize or
+   the 0 key returns to it. */
+let BASE = null;
+const VIEW = { x: 0, y: 0, z: 1 };
+const Z_MIN = 0.6, Z_MAX = 2.5;
+function resetView() { VIEW.x = 0; VIEW.y = 0; VIEW.z = 1; }
+function applyView() {
+  if (!BASE) return;
+  /* the island's centre never leaves the screen */
+  const cx = Math.min(innerWidth, Math.max(0, BASE.cx + VIEW.x));
+  const cy = Math.min(innerHeight, Math.max(0, BASE.cy + VIEW.y));
+  VIEW.x = cx - BASE.cx;
+  VIEW.y = cy - BASE.cy;
+  placeBoard(BASE.s * VIEW.z, cx, cy);
+}
+(function wireMap() {
+  const board = document.getElementById("board");
+  const onMap = (t) => t === document.body || t === document.documentElement || board.contains(t);
+  let drag = null;
+  addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || !onMap(e.target)) return;
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, vx: VIEW.x, vy: VIEW.y, moved: false };
+  });
+  addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+    if (!drag.moved) { drag.moved = true; document.body.classList.add("is-panning"); hideTip(); }
+    VIEW.x = drag.vx + dx;
+    VIEW.y = drag.vy + dy;
+    applyView();
+  });
+  const end = (e) => { if (drag && e.pointerId === drag.id) { drag = null; document.body.classList.remove("is-panning"); } };
+  addEventListener("pointerup", end);
+  addEventListener("pointercancel", end);
+  addEventListener("wheel", (e) => {
+    if (!BASE || !onMap(e.target)) return;
+    e.preventDefault();
+    const z = Math.min(Z_MAX, Math.max(Z_MIN, VIEW.z * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015))));
+    const k = z / VIEW.z;
+    const cx = BASE.cx + VIEW.x, cy = BASE.cy + VIEW.y;
+    VIEW.x += (e.clientX - cx) * (1 - k);
+    VIEW.y += (e.clientY - cy) * (1 - k);
+    VIEW.z = z;
+    applyView();
+  }, { passive: false });
+  addEventListener("keydown", (e) => {
+    if (e.key !== "0" || e.target.closest("input, textarea")) return;
+    resetView();
+    applyView();
+  });
+})();
 
 /* ------------------------------------------------------------ verb fans --
    Where a fan opens: sub-circles on an arc around its centre, aimed at the
