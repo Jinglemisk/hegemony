@@ -16,22 +16,43 @@ curved edge. The owner can run the old and new games side by side and decides wh
 
 ## How to run this plan
 
-- Work in the worktree `hegemony-v2`, next to the primary checkout, on branch `feat/v2`.
-  It was cut from `main` on 2026-09-28 with dependencies installed.
-- One step per session. Open a session with "start step N in docs/plans/v2-migration.md".
-  A step is done when its checks pass, its work is committed and pushed to `feat/v2`, and
-  its box below is ticked with a one-line evidence note.
-- Keep each step's fan-out small: one agent or a few. No overnight mega-workflows. Round 1
-  of the layout work cost about 6M tokens and hit the weekly usage limit, and workflow
-  resume did not replay pipeline agents from cache. Every agent writes its result to disk,
-  so a rerun skips finished work.
-- Every step keeps all three axes working: `npm run check`, `npm run lint`,
-  `npm run test:run`, `npm run test:parity`, and a bot batch through `npm run sim`
-  (commands in [simulation](../reference/simulation.md)).
+The owner starts every session with the same sentence, **"continue the v2 migration"**, in
+the worktree `hegemony-v2` next to the primary checkout, on branch `feat/v2`. That session
+then:
+
+1. Pulls `feat/v2`, reads this plan, and finds the first unticked step and its stretch.
+2. If the owner's message answers an open question, folds the answer into Settled inputs
+   and removes it from `docs/questions.md` in the same commit.
+3. If the stretch's **Before** condition is unmet, presents that question from
+   `docs/questions.md` with its recommendation, and stops.
+4. Otherwise runs the stretch in its **Mode**, stopping at its **Stop** point or earlier on
+   an early-stop condition.
+5. Ends with a short report: steps done, commits, defaults picked, and what the owner must
+   do next.
+
+Every step:
+
+- Builds the step and updates the shell panels it touches.
+- Passes `npm run check`, `npm run lint`, `npm run test:run`, `npm run test:parity`, and a
+  bot batch through `npm run sim` (commands in [simulation](../reference/simulation.md)).
+- Runs `/code-review` at medium effort on its own diff and fixes what it finds.
+- Commits, pushes to `feat/v2`, and ticks its box with a one-line evidence note.
+
+Standing rules:
+
+- When a stretch runs several steps, each step runs in a fresh subagent briefed with this
+  plan and that step, one after another, so the session's own context stays small. Steps
+  never run in parallel, except Step 14 when the owner asks for it.
+- Early stop: a check that still fails after a second attempt, a conflict with Settled
+  inputs, or a rule with no simple default. Otherwise, when a step meets a rule the paper
+  leaves unstated (how half a slave rounds, riot thresholds, whether the capital uses a
+  city piece, starting stocks, first-seat rotation), it picks the simplest default,
+  records it under Settled inputs, and moves on.
+- Keep fan-out small: one agent per step, no large workflows. Round 1 of the layout work
+  cost about 6M tokens and hit the weekly usage limit, and workflow resume did not replay
+  finished agents. Committing per step means a usage limit costs at most the step in
+  progress. After Step 1 the owner checks `/usage` to see what one step costs.
 - `main` receives docs only until the owner merges `feat/v2`.
-- When a step meets a rule the paper leaves unstated (how half a slave rounds, riot
-  thresholds, whether the capital uses a city piece, starting stocks, first-seat rotation),
-  it picks the simplest default, records it under Settled inputs, and moves on.
 
 ## Non-goals
 
@@ -135,7 +156,11 @@ selectors, so a rule change updates one selector, not three views.
 
 ## Steps
 
-### Shell
+### Stretch 1 · Shell (Steps 1–2)
+
+**Mode:** one step per session. **Stop:** after each step, show the owner the real app at
+1280, 1440 and 1920 with the gate script's results; the owner approves the look before the
+next step.
 
 - [ ] **Step 1 · Frame.** Replace the old in-match shell with the Hybrid arc frame, wired to
       today's engine: the top bar with rivals and their tooltip, the pannable map, the realm
@@ -150,9 +175,11 @@ selectors, so a rule change updates one selector, not three views.
       moves and a full keyboard path. Exit: every legal verb is reachable by mouse and by
       keyboard; no fan leaves the screen or covers a city name from 1280 to 1920.
 
-### Systems
+### Stretch 2 · Core systems (Steps 3–4)
 
-Each step also updates the shell panels it touches.
+**Before:** Q78 is answered. **Mode:** both steps in one session, back to back. **Stop:**
+present Step 4's bot batch (riots per game, share of turns on the riot table) and ask Q77.
+Remind the owner to run `/code-review ultra` on `feat/v2`, which only they can launch.
 
 - [ ] **Step 3 · Pops and tiles.** Settle Q78 first. Unless it says otherwise, tiles print
       terrain and slots only. Slaves yield their
@@ -169,6 +196,12 @@ Each step also updates the shell panels it touches.
       Write Temples, luxuries, slaves and calm as happiness contributions that Step 5
       combines, not as bank changes. End with a bot batch showing whether today's bank still
       slides without the food debt; that is Q77's evidence.
+
+### Stretch 3 · Remaining systems (Steps 5–10)
+
+**Before:** Q77 is answered. **Mode:** all six steps back to back; this stretch may run
+unattended overnight. **Stop:** a summary of the commits and every default picked.
+
 - [ ] **Step 5 · Happiness.** The model Q77 picks: the clamped bank (integers from −10 to
       +10, riot and revolt per the paper's fallback) or the level with Unrest tokens (the
       paper's section 5.7). Either way the food-stockpile bonus goes, calm is +2 for this
@@ -190,16 +223,28 @@ Each step also updates the shell panels it touches.
 - [ ] **Step 10 · Bot personalities.** Slaver, civic and trader as weight vectors over the
       political scorer, with bank and venture moves inside the search, so each personality
       can actually pursue its build.
+
+### Stretch 4 · Sim gate (Step 11)
+
+**Mode:** one session. **Stop:** the dated report, with a proposed remedy for each failing
+rule; the owner decides, including whether Step 12 runs. Remind the owner to run
+`/code-review ultra` on `feat/v2`.
+
 - [ ] **Step 11 · Sim gate.** Run batches on the baseline seeds, compare with the
       [2026-09-05 baseline](../reports/simulation/2026-09-05-shallow-economy-baseline.md),
       apply the decision rules below, and save a dated report. First commit the class and
       draw telemetry the baseline relied on, and rerun the v1 baseline with food floored at
       zero, so v2 is measured against that fix rather than credited with it. Run at least
       60 games per condition with seats rotated.
+
+### Stretch 5 · Finish (Steps 12–15)
+
+**Mode:** Steps 12–14 back to back, as in Stretch 3; Step 14 may instead run in parallel at
+any time in its own worktree when the owner asks. **Stop:** Step 15 ends at the owner's
+playtest and the decision on merging `feat/v2` into `main`.
+
 - [ ] **Step 12 · Level model, only if Q77 picked the bank and Step 11 calls for it.** Unrest tokens and year cards
       that zero a term, per the paper's section 5.7.
-
-### Finish
 
 - [ ] **Step 13 · Ceremony surfaces.** The year-card reveal, the Assembly sitting, hunger and
       riot moments, victory, and the National Idea pick, designed in the app in the mock's

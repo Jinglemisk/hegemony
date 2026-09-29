@@ -10,8 +10,8 @@ Last updated: 2026-09-28.
 ## Now
 
 **Current initiative:** the [v2 migration](plans/v2-migration.md): the shallow-economy rules
-in the Hybrid arc shell, built on `feat/v2` while `main` keeps today's game. Start a
-session with "start step N in docs/plans/v2-migration.md".
+in the Hybrid arc shell, built on `feat/v2` while `main` keeps today's game. Start every
+session with "continue the v2 migration" in the `hegemony-v2` worktree.
 
 **Owner blockers:** Q78, landmark tiles, before migration Step 3; Q77, the happiness model, before Step 5.
 
