@@ -105,7 +105,9 @@ danger selector and the real-path previews, with their tests.
 ## Open owner questions
 
 - [Q77](../questions.md#q77--which-happiness-model-ships-at-step-5): which happiness model
-  ships. Needed before Step 5; Steps 1–4 do not depend on it.
+  ships. Needed before Step 5; Steps 1–4 are written so they do not depend on it.
+- [Q78](../questions.md#q78--should-landmark-tiles-print-a-richer-yield): whether landmark
+  tiles print a richer yield. Needed before Step 3.
 - Step 11's thresholds are proposals the owner may change before it runs.
 
 ## Three-axis parity
@@ -139,6 +141,8 @@ selectors, so a rule change updates one selector, not three views.
       today's engine: the top bar with rivals and their tooltip, the pannable map, the realm
       panel with its tabs and the settlement's three-column view, and end turn. Port the
       mock's tokens into `src/styles` and delete the old shell's components and CSS.
+      Build the happiness display so it can show either a bank value or a level with its
+      riot and revolt marks; Q77 decides which at Step 5.
       Exit: bots play a full game in the new shell; browser smoke passes; `ui:audit` and
       `ui:conduct` pass or are updated to the new addresses.
 - [ ] **Step 2 · Verb discs and fans.** The six discs as one data-driven component, since the
@@ -150,7 +154,8 @@ selectors, so a rule change updates one selector, not three views.
 
 Each step also updates the shell panels it touches.
 
-- [ ] **Step 3 · Pops and tiles.** Tiles print terrain and slots only. Slaves yield their
+- [ ] **Step 3 · Pops and tiles.** Settle Q78 first. Unless it says otherwise, tiles print
+      terrain and slots only. Slaves yield their
       terrain's resource, hills yield nothing, and slaves eat nothing. Freemen make 1 gold;
       citizens make 1 influence and hold a vote; both eat 1 food. Hunger removes one pop per
       unfed mouth and food stays at zero. Two colonies of different players may share a
@@ -161,6 +166,9 @@ Each step also updates the shell panels it touches.
       Workshop and Villa merge into the Estate; Odeon, Aqueduct and Gymnasion are cut. One
       price per verb, per the paper's section 5.6, including the Dole and the paid pop move.
       Piece supply: four colonies and three cities, and an upgrade returns the colony piece.
+      Write Temples, luxuries, slaves and calm as happiness contributions that Step 5
+      combines, not as bank changes. End with a bot batch showing whether today's bank still
+      slides without the food debt; that is Q77's evidence.
 - [ ] **Step 5 · Happiness.** The model Q77 picks: the clamped bank (integers from −10 to
       +10, riot and revolt per the paper's fallback) or the level with Unrest tokens (the
       paper's section 5.7). Either way the food-stockpile bonus goes, calm is +2 for this
