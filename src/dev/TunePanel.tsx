@@ -126,6 +126,9 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
     return (
       <button
         className="tune-fab"
+        // A dev affordance, not player chrome: the design gate and auditors skip it.
+        data-audit-ignore
+        data-gate-skip
         onClick={() => setOpen(true)}
         title="Open parameter dashboard ( ` )"
       >

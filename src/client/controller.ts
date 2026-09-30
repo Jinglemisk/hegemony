@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DEV_ROTATION_SEEDS, GAME_CONFIG } from "../game/config";
 import { mulberry32 } from "../game/core/rng";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
@@ -8,7 +8,8 @@ import { createGameFromDefinition } from "../game/turn";
 import { GAME_MODES } from "../game/ruleset";
 import { loadStartAtAssembly, resolveTunedDefinition } from "../dev/tuning";
 import { createBrowserSeed } from "./seed";
-import { choosePlacement } from "../sim/policies";
+import { choosePlacement, resolvePolicy } from "../sim/policies";
+import { playTurn } from "../sim/runner";
 import { createSimRng, deriveBotSeed } from "../sim/rng";
 import { createCommandEvents, createCommandMoves, reduceGameCommand } from "./commandAdapter";
 
@@ -20,7 +21,9 @@ export type { Phase } from "../game/types";
  * URL-driven game options, so a browser session can pick the board and seed without a
  * lobby: `?board=shuffled&seed=42` for a randomized layout, `?setup=manual` to place
  * the opening towns by hand, `?dev=preload` to replay the fixed scripted opening,
- * `?opening=random` for the old uniform draw instead of policy placement.
+ * `?opening=random` for the old uniform draw instead of policy placement, and
+ * `?dev=bots` to let the sim's bots play every seat (`&policy=` picks which, `master`
+ * by default) — a whole game played through the shell, one turn per tick.
  *
  * Default dev behavior: the opening is auto-played by the sim's placement policy (the
  * same brain the bots use, seeded from the game seed), and the seed rotates through
@@ -216,6 +219,34 @@ function autoPlayOpening(initial: HegemonyState, uniform: boolean): HegemonyStat
   return G;
 }
 
+const BOT_TICK_MS = 250;
+
+/** `?dev=bots`: the sim's policy plays every seat, one whole turn per tick, through the
+ *  same `playTurn` the headless batch uses, so the shell renders a real bot game. */
+function useBotTable(
+  G: HegemonyState,
+  setG: (next: (previous: HegemonyState) => HegemonyState) => void,
+) {
+  const [policy] = useState(() => {
+    const params =
+      typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    return params?.get("dev") === "bots" ? resolvePolicy(params.get("policy") ?? "master") : null;
+  });
+  const rng = useRef(createSimRng(deriveBotSeed(G.seed)));
+
+  useEffect(() => {
+    if (!policy || G.phase === "gameOver") {
+      return;
+    }
+
+    const tick = window.setTimeout(
+      () => setG((previous) => playTurn(previous, policy, rng.current)),
+      BOT_TICK_MS,
+    );
+    return () => window.clearTimeout(tick);
+  }, [G, policy, setG]);
+}
+
 /** Read-only projection of the turn fields now living on {@link HegemonyState}, kept for the UI's convenience. */
 export type LocalContext = {
   currentPlayer: PlayerId;
@@ -255,6 +286,7 @@ export function useHegemonyGame() {
       }),
     [],
   );
+  useBotTable(G, setG);
   const view = useMemo(() => projectForPlayer(G.definition, G, playerID), [G, playerID]);
   // Rebuild the whole game from URL + current dev tuning overrides. Reuses this page
   // load's rotation seed, so a re-tune re-rolls the SAME board with new params (clean A/B).

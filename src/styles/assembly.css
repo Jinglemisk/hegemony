@@ -28,15 +28,6 @@
   min-width: 0;
 }
 
-/* Everything else the Agora used to spend is GONE, 2026-08-15. The page was
-   rebuilt on the shared ledger objects — the Voice plaque, `.pol` orator rows and
-   `StandingLaw`'s slab — and nineteen `.agora*` rules for a summary block, a Voice
-   ledger, a politician card and a law list went on sitting here matching nothing.
-   Two of them declared 8px and 7.5px type, i.e. the illegible register the whole
-   overhaul was called to remove, and they would have gone on passing review
-   because no page rendered them. Dead rules at this specificity are how the next
-   person's fix silently fails to apply. */
-
 /* The Codex's Assembly chapter — the politician roster and its card lists. */
 .rulePolitician {
   padding-top: 10px;

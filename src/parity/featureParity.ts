@@ -454,7 +454,7 @@ export const CONTENT_MANIFEST = {
   terrain: {
     ids: TERRAIN_CONTENT_IDS,
     engine: { implementation: "src/game/content.ts", evidence: "getTerrainDeck" },
-    frontend: { implementation: "src/components/HexMap.tsx", evidence: "terrain" },
+    frontend: { implementation: "src/components/frame/island/Island.tsx", evidence: "terrain" },
     simulation: { implementation: "src/sim/setup.ts", evidence: "boardLayout" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "frontierTiles" },
     behaviorFixtures: ["contentInventory"],
@@ -463,7 +463,7 @@ export const CONTENT_MANIFEST = {
     ids: SEASONAL_EVENT_CONTENT_IDS,
     engine: { implementation: "src/game/events.ts", evidence: "drawSeasonalEvent" },
     frontend: {
-      implementation: "src/components/board/topbar/TopbarEvents.tsx",
+      implementation: "src/components/frame/TopBar.tsx",
       evidence: "presentEventEffects",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "projectPolicyHorizon" },
@@ -532,7 +532,7 @@ export const CONTENT_MANIFEST = {
     ids: LUXURY_GOOD_CONTENT_IDS,
     engine: { implementation: "src/game/luxury.ts", evidence: "activeClaims" },
     frontend: {
-      implementation: "src/components/board/ledger/EmpireIntelPanel.tsx",
+      implementation: "src/components/frame/RealmPanel.tsx",
       evidence: "ownedClaims",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "scoreMaster" },

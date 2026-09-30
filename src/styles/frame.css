@@ -1,0 +1,1420 @@
+/* ============================================================================
+   Katalogos v2 · s-hybrid-arc — s-hybrid's bar, palette, rivals, board and
+   end turn, with p-ledger-r3's realm sheet: its top edge (a straight run, then
+   one quarter-circle) carries six verb discs, each opening a fan. No verb strip.
+   Raster icons carry identity; words stay where they carry meaning.
+
+   Every length comes from the tokens below. Region sizes are multiples of the
+   4px grid unit; gaps and insets use the one spacing scale, in one rhythm:
+   4 inside an item (icon to number), 8 between items of a group, 16 between
+   groups. Components size themselves from role tokens (--t-body, --ic-ui,
+   --disc …), so a tier is a token swap: at 1680 and wider the realm, its discs
+   and the end turn step up together; the bar stays one control tall.
+   ========================================================================== */
+
+:root {
+  /* ---- gate contract ---------------------------------------------------- */
+  --gate-space: "0 4 8 12 16 24 32 48 64";
+  --gate-grid: 4;
+  --gate-icons: "16 24 32 48";
+  --gate-hit: 32;
+  --gate-text: 12;
+
+  /* ---- grid unit and the one spacing scale ------------------------------ */
+  --u: 4px;
+  --s-1: calc(var(--u) * 1); /*  4 */
+  --s-2: calc(var(--u) * 2); /*  8 */
+  --s-3: calc(var(--u) * 3); /* 12 */
+  --s-4: calc(var(--u) * 4); /* 16 */
+  --s-6: calc(var(--u) * 6); /* 24 */
+  --s-8: calc(var(--u) * 8); /* 32 */
+  --s-12: calc(var(--u) * 12); /* 48 */
+  --s-16: calc(var(--u) * 16); /* 64 */
+
+  /* ---- type scale --------------------------------------------------------- */
+  --f-name: "Cinzel", Copperplate, Georgia, serif; /* proper names, titles only */
+  --f-body: "Alegreya", "Iowan Old Style", Palatino, Georgia, serif;
+  --f-sans: "Alegreya Sans", "Gill Sans", Helvetica, Arial, sans-serif;
+  --t-12: 12px;
+  --t-14: 14px;
+  --t-16: 16px;
+  --t-20: 20px;
+  --t-24: 24px;
+  --t-28: 28px;
+  --lh-16: 16px;
+  --lh-20: 20px;
+  --lh-24: 24px;
+  --lh-28: 28px;
+  --lh-32: 32px;
+  --track-caps: 0.08em;
+  --track-name: 0.04em;
+  /* roles */
+  --t-cap: var(--t-12);
+  --l-cap: var(--lh-16); /* the floor: chips, caps labels, deltas */
+  --t-body: var(--t-14);
+  --l-body: var(--lh-20); /* panel body */
+  --t-num: var(--t-16);
+  --l-num: var(--lh-20); /* bar numbers */
+  --t-lead: var(--t-16);
+  --l-lead: var(--lh-20); /* the ruler's name */
+  --t-count: var(--t-24);
+  --l-count: var(--lh-28); /* pop counts */
+
+  /* ---- icons --------------------------------------------------------------- */
+  --ic-16: 16px;
+  --ic-24: 24px;
+  --ic-32: 32px;
+  --ic-48: 48px;
+  /* roles */
+  --ic-chip: var(--ic-16); /* inside price chips */
+  --ic-ui: var(--ic-24); /* bar, tabs, header, yields, buttons */
+  --ic-tile: var(--ic-32); /* fan options, pop columns */
+  --ic-disc: var(--ic-32); /* verb discs, the hourglass */
+
+  /* ---- controls and regions (grid multiples) ----------------------------- */
+  --hit: calc(var(--u) * 8); /* 32: every control's short edge */
+  --bar-h: var(--hit); /* 32: the bar is one control tall */
+  --row-h: calc(var(--u) * 10); /* 40: realm tabs */
+  --chip-h: calc(var(--u) * 5); /* 20: the end-turn label */
+  --name-h: var(--lh-20); /* 20: a verb's name under its disc */
+  --price-h: var(--ic-16); /* 16: the end-turn label's lift off the bottom, less one step */
+  --badge: calc(var(--u) * 4); /* 16: the advisory count */
+  --caret: var(--s-2); /*  8: "opens more" mark */
+  --rival-d: calc(var(--u) * 7); /* 28: a ruler's disc; the ring brings it to --hit */
+  --verb-d: calc(var(--u) * 12); /* 48: verb disc */
+  --disc-end: calc(var(--u) * 16); /* 64: the hourglass */
+  --fan-d: calc(var(--u) * 10); /* 40: a fan's option, first or second level */
+  --fan-w: calc(var(--u) * 24); /* 96: an option's slot: its name and price */
+  --endturn-w: calc(var(--u) * 24); /* 96: the end-turn column, flush to the right edge */
+  --endturn-h: calc(var(--u) * 24); /* 96 */
+  --res-w: calc(var(--u) * 18); /* 72 */
+  --level-w: calc(var(--u) * 32); /* 128 */
+  --purse-w: calc(var(--res-w) * 5 + var(--s-4) + var(--level-w)); /* 504 */
+  --clock-w: calc(var(--u) * 89); /* 356: 16 short of the purse at 1280 */
+  --ticker-w: calc(var(--u) * 90); /* 360 */
+  --ticker-label: calc(var(--u) * 14); /* 56: the year column of the ticker's history */
+  --gauge-floor: 6; /* the gauge runs −6 … +6, one unit per step */
+  --gauge-w: calc(var(--u) * var(--gauge-floor) * 2); /* 48 */
+  --gauge-h: calc(var(--u) * 2); /* 8 */
+  --tip-w: calc(var(--u) * 72); /* 288 */
+  --fillet: var(--s-4); /* the concave join of the ticker tab and the bar */
+  --board-gap: 8px; /* = --s-2; clearance between the island and the chrome, read by the fit */
+  --sheet-w: calc(var(--u) * 100); /* 400: the consult sheet */
+  --page-max: calc(var(--u) * 60); /* 240: a realm page's height before it scrolls */
+
+  /* The realm sheet. Its edge is one path: the straight top run, then one
+     quarter-circle (--area-curve) down to the right side. Six discs sit on it
+     at equal arc lengths (--verb-pitch), the first and last --verb-inset from
+     its ends, each centre on the edge. Width, radius and inset keep every box
+     gap between neighbouring discs over 64 and no two disc edges 1 to 3px
+     apart. --body-top clears the discs and their names; --body-right clears
+     the last disc's name. */
+  --area-w: calc(var(--u) * 132); /* 528 */
+  --area-curve: calc(var(--u) * 49); /* 196 */
+  --verb-n: 6;
+  --verb-inset: calc(var(--u) * 9); /* 36: half a name plate, so the first name stays on screen */
+  --edge: shape(
+    from 0 0,
+    hline to calc(var(--area-w) - var(--area-curve)),
+    arc to var(--area-w) var(--area-curve) of var(--area-curve) cw
+  );
+  --edge-len: calc(var(--area-w) - var(--area-curve) + var(--area-curve) * pi / 2);
+  --verb-pitch: calc((var(--edge-len) - 2 * var(--verb-inset)) / (var(--verb-n) - 1));
+  --verb-name-w: calc(var(--verb-d) + var(--s-6));
+  --body-top: calc(var(--verb-d) / 2 + var(--s-1) + var(--name-h) + var(--s-3));
+  --body-right: calc(var(--u) * 12); /* 48 */
+
+  /* ---- colour: base.css defines the palette (sea, paper, ink, glazes, terrain);
+     the frame adds only its translucent shades ---------------------------- */
+  --sea-shade: rgb(10 34 41 / 35%);
+  --ink-45: rgb(36 25 16 / 45%);
+
+  /* ---- rules, radii, shadows, states -------------------------------------- */
+  --rule: 1px;
+  --rule-2: 2px;
+  --r-round: 50%;
+  --shadow-chrome: drop-shadow(0 0 var(--rule) var(--ink-66))
+    drop-shadow(0 var(--s-1) var(--s-3) var(--sea-shade));
+  --shadow-hud: 0 var(--s-2) var(--s-6) var(--sea-shade);
+  --at-rest: opacity(0.85); /* an unselected icon tab */
+  --dim: 0.45; /* an empty tile's emblem, an unaffordable verb */
+
+  /* ---- motion: the verb fans ------------------------------------------------ */
+  --fan-dwell: 500ms; /* hover this long before a fan opens */
+  --fan-linger: 250ms; /* a fan stays this long after the pointer leaves */
+  --t-fan: 160ms;
+  --t-stagger: 40ms;
+  --fan-from: 0.4; /* a sub-circle grows out of its disc from this scale */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* ---- board (SVG user units: one hex is 100 from centre to corner) -------- */
+  --b-rule: 1.2;
+  --b-own: 5;
+  --b-sel: 6;
+  --b-pip: 1.4;
+  --b-glyph: 1.6;
+  --b-seal: 3;
+  --b-ring: 5;
+  --b-ring-cap: 8;
+  --b-plate: 18px;
+  --b-pops: 16px;
+  --b-moor: 16px;
+  /* the fit publishes --b-scale (screen px per user unit); board text never drops below the floor */
+  --b-floor: var(--t-12);
+
+  color-scheme: light;
+}
+
+/* 1920-class viewports: the realm and end turn step up a tier */
+@media (min-width: 1680px) {
+  :root {
+    --area-w: calc(var(--u) * 168); /* 672 */
+    --area-curve: calc(var(--u) * 53); /* 212 */
+    --verb-inset: calc(var(--u) * 11); /* 44 */
+    --body-right: calc(var(--u) * 15); /* 60 */
+    --verb-d: calc(var(--u) * 16); /* 64 */
+    --name-h: var(--lh-24);
+    --fan-d: calc(var(--u) * 12); /* 48 */
+    --fan-w: calc(var(--u) * 28); /* 112 */
+    --clock-w: calc(var(--u) * 100); /* 400: room for the season card's rule */
+    --disc-end: calc(var(--u) * 20); /* 80 */
+    --endturn-w: calc(var(--u) * 28); /* 112 */
+    --endturn-h: calc(var(--u) * 30); /* 120 */
+    --chip-h: calc(var(--u) * 6); /* 24 */
+    --price-h: var(--ic-24);
+    --ic-disc: var(--ic-48);
+  }
+  .realm,
+  .endturn {
+    --t-cap: var(--t-14);
+    --l-cap: var(--lh-20);
+    --ic-chip: var(--ic-24);
+  }
+  .realm {
+    --t-body: var(--t-16);
+    --l-body: var(--lh-24);
+    --t-lead: var(--t-20);
+    --l-lead: var(--lh-24);
+    --t-count: var(--t-28);
+    --l-count: var(--lh-28);
+    --ic-ui: var(--ic-32);
+    --hit: calc(var(--u) * 10); /* 40 */
+    --row-h: calc(var(--u) * 12); /* 48 */
+  }
+}
+
+/* ---- base: the frame is the sea; everything else floats over it ---------- */
+.frame {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--sea)
+    radial-gradient(ellipse at 60% 40%, var(--sea-lit) 0%, var(--sea) 50%, var(--sea-deep) 100%);
+  font: var(--t-body) / var(--l-body) var(--f-body);
+}
+/* The frame's own controls take their colour from where they sit. */
+.verb-btn,
+.fan-btn,
+.consult-btn,
+.rival,
+.endturn,
+.consult-close {
+  color: inherit;
+  transition: none;
+}
+.hud ol,
+.hud ul,
+.hud p,
+.sharedTooltip p {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.frame :focus-visible {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+
+.ico {
+  display: block;
+  flex: none;
+  object-fit: contain;
+}
+.ico-chip {
+  width: var(--ic-chip);
+  height: var(--ic-chip);
+}
+.ico-ui {
+  width: var(--ic-ui);
+  height: var(--ic-ui);
+}
+.ico-tile {
+  width: var(--ic-tile);
+  height: var(--ic-tile);
+}
+.ico-disc {
+  width: var(--ic-disc);
+  height: var(--ic-disc);
+}
+
+.num {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.pos {
+  color: var(--olive);
+}
+.neg {
+  color: var(--clay-ink);
+}
+
+/* A price: number-and-icon pairs, alternatives joined by a dot. No words. */
+.price {
+  display: inline-flex;
+  align-items: center;
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+.price-or {
+  margin: 0 var(--s-1);
+  color: var(--ink-45);
+}
+.price.is-short {
+  color: var(--clay-ink);
+}
+
+/* Raised paper: an ivory face on a hairline, for layers that float over the table
+   and for the labels that sit across the sheet's edge (disc names, fan labels). */
+.ticker-more,
+.sharedTooltip,
+.verb-name,
+.fan-label {
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+/* A caps label: pop classes, the glaze, "open". */
+.caps {
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ink-66);
+  white-space: nowrap;
+}
+/* Bar controls are flat until hovered: the bar is one control tall. */
+.yearcard:hover,
+.consult-btn:hover,
+.res:hover,
+.level:hover,
+.year:hover {
+  background: var(--ivory);
+}
+
+/* The HUD layers: one shadow and one hairline around each paper mass. */
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  filter: var(--shadow-chrome);
+  z-index: var(--z-bar);
+}
+.hud > * {
+  pointer-events: auto;
+}
+
+/* ============================================================================
+   Top bar
+   ========================================================================== */
+.topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--bar-h);
+  background: var(--bone);
+}
+.clock,
+.purse,
+.court {
+  position: absolute;
+  top: calc((var(--bar-h) - var(--hit)) / 2);
+  height: var(--hit);
+  display: flex;
+  align-items: center;
+}
+.clock {
+  left: var(--s-4);
+  width: var(--clock-w);
+  gap: var(--s-4);
+}
+.purse {
+  left: calc(50% - var(--purse-w) / 2);
+  width: var(--purse-w);
+}
+.court {
+  right: var(--s-4);
+  gap: var(--s-4);
+}
+
+.year {
+  height: var(--hit);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  white-space: nowrap;
+}
+.year-n {
+  font: 700 var(--t-num) / var(--l-num) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+.year-of,
+.tip-sub {
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ink-66);
+}
+.yearcard {
+  position: relative;
+  height: var(--hit);
+  padding: 0 var(--s-2);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.yearcard::before,
+.rivals::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--s-2) * -1);
+  top: var(--s-1);
+  bottom: var(--s-1);
+  width: var(--rule);
+  background: var(--ink-30);
+}
+.yearcard-name {
+  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  letter-spacing: var(--track-name);
+  white-space: nowrap;
+}
+.yearcard {
+  min-width: 0;
+}
+.yearcard-name,
+.yearcard-rule {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.yearcard-rule {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+}
+.yearcard-x {
+  font: 700 var(--t-body) / var(--l-body) var(--f-sans);
+  color: var(--clay-ink);
+}
+
+.res,
+.level {
+  height: var(--hit);
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+.res {
+  width: var(--res-w);
+}
+.res-val {
+  font-size: var(--t-num);
+  line-height: var(--l-num);
+}
+.res-delta {
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  font-variant-numeric: tabular-nums;
+}
+/* Danger reads at a glance: a store that goes below zero next year, a level at riot. */
+.res.is-short,
+.level.is-riot {
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
+}
+.res.is-short .res-val,
+.level.is-riot .res-val {
+  color: var(--clay-ink);
+}
+.level {
+  width: var(--level-w);
+  margin-left: var(--s-4);
+}
+/* Level gauge: −6 … +6. Revolt band −6…−3, riot warning −3…0, calm above 0;
+   the tick is the current level (--level carries the data). */
+/* The happiness gauge, for either model: its ends are the display's floor and
+   ceiling; revolt is clay, the riot band ochre, calm above. --g-revolt, --g-riot
+   and --g-value are fractions of its width (the data it carries). */
+.gauge {
+  position: relative;
+  width: var(--gauge-w);
+  height: var(--gauge-h);
+  margin-left: var(--s-1);
+  background: linear-gradient(
+    to right,
+    var(--clay) 0 calc(var(--g-revolt) * 100% + var(--rule)),
+    var(--ochre) calc(var(--g-revolt) * 100% + var(--rule)) calc(var(--g-riot) * 100%),
+    var(--ink-12) calc(var(--g-riot) * 100%)
+  );
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.gauge::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--s-1) * -1);
+  bottom: calc(var(--s-1) * -1);
+  left: calc(var(--g-value) * 100% - var(--rule));
+  width: var(--rule-2);
+  background: var(--ink);
+}
+
+.consult,
+.rivals {
+  display: flex;
+}
+.consult {
+  gap: var(--s-1);
+}
+.rivals {
+  gap: var(--s-1);
+  position: relative;
+}
+.consult-btn {
+  width: var(--hit);
+  height: var(--hit);
+  display: grid;
+  place-items: center;
+}
+.consult-btn .ico,
+.realm-tab .ico {
+  filter: var(--at-rest);
+}
+.consult-btn:hover .ico,
+.realm-tab:hover .ico,
+.realm-tab.is-on .ico {
+  filter: none;
+}
+
+/* A ruler: a glaze disc inside a full-height hit box. The outer ring says who is
+   acting (ink) or who is one condition from winning (clay). */
+.rival {
+  --ring: transparent;
+  position: relative;
+  width: var(--hit);
+  height: var(--hit);
+  display: grid;
+  place-items: center;
+}
+.rival.is-acting {
+  --ring: var(--ink);
+}
+.rival.is-threat {
+  --ring: var(--clay);
+}
+.rival-disc {
+  width: var(--rival-d);
+  height: var(--rival-d);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--owner);
+  color: var(--owner-ink);
+  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--ivory-45),
+    0 0 0 var(--rule-2) var(--ring);
+}
+.rival:hover .rival-disc {
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--ivory),
+    0 0 0 var(--rule-2) var(--ring);
+}
+
+/* ---- ticker: the last Chronicle line, a tab hanging from the bar's left end --- */
+.ticker {
+  position: absolute;
+  top: var(--bar-h);
+  left: 0;
+  width: var(--ticker-w);
+  height: var(--hit);
+  padding: 0 var(--s-4);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  background: var(--bone);
+  border-bottom-right-radius: var(--fillet);
+}
+/* the concave join of tab and bar */
+.ticker::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: var(--fillet);
+  height: var(--fillet);
+  background: radial-gradient(
+    circle at 100% 100%,
+    transparent calc(var(--fillet) - var(--rule)),
+    var(--bone) var(--fillet)
+  );
+}
+/* more lines wait below: a down-caret at the tab's right end */
+.ticker::before {
+  content: "";
+  order: 1;
+  flex: none;
+  margin-left: auto;
+  width: var(--caret);
+  height: var(--caret);
+  background: var(--ink-66);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.ticker-year {
+  flex: none;
+  width: var(--ticker-label);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-name);
+  letter-spacing: var(--track-caps);
+  color: var(--clay-ink);
+  white-space: nowrap;
+}
+/* Inline icons in the bar's text take the chip size. */
+.hud .richIcon {
+  width: var(--ic-chip);
+  height: var(--ic-chip);
+}
+.ticker-line {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ticker-more {
+  display: none;
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  left: 0;
+  width: var(--tip-w);
+  padding: var(--s-2) var(--s-3);
+}
+.ticker:hover .ticker-more,
+.ticker:focus-visible .ticker-more {
+  display: grid;
+  gap: var(--s-1);
+}
+.ticker-more li {
+  display: flex;
+  gap: var(--s-2);
+}
+
+/* ============================================================================
+   Realm sheet (bottom-left), after p-ledger-r3: one edge path, the straight
+   top run then one quarter-circle, carries six verb discs, each with a fan.
+   Its body is the ledger: head, tabs, the settlement page. Paper is bone like
+   the bar; the HUD's one shadow and hairline outline the sheet, the discs,
+   the name tabs over the sea and the fans alike.
+   ========================================================================== */
+.realm {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--area-w);
+  min-height: calc(var(--area-curve) + var(--verb-d));
+  padding: var(--body-top) var(--body-right) var(--s-4) var(--s-4);
+  display: grid;
+  align-items: start;
+  font: var(--t-body) / var(--l-body) var(--f-body);
+  background: var(--bone);
+  border-top-right-radius: var(--area-curve);
+}
+
+/* The verbs layer overlays the sheet; only discs and fans take the pointer.
+   Each disc rides --edge at its own arc length. */
+.verbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.verb-group {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--verb-d);
+  height: var(--verb-d);
+  offset-path: var(--edge);
+  offset-distance: calc(var(--verb-inset) + var(--i) * var(--verb-pitch));
+  offset-rotate: 0deg;
+  pointer-events: auto;
+}
+.verb-group.is-open {
+  z-index: 1;
+}
+.verb-btn {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--r-round);
+}
+.verb-disc {
+  position: relative;
+  width: var(--verb-d);
+  height: var(--verb-d);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--ink);
+}
+.verb-btn:hover .verb-disc,
+.verb-btn:focus-visible .verb-disc,
+.verb-group.is-open .verb-disc {
+  background: var(--bone);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.verb-group.is-short .verb-disc .ico {
+  opacity: var(--dim);
+}
+/* hotkey bottom-right, pieces left top-right: badges on the disc's rim */
+.verb-key,
+.verb-count {
+  position: absolute;
+  right: 0;
+  min-width: var(--badge);
+  height: var(--badge);
+  padding: 0 var(--s-1);
+  border-radius: calc(var(--badge) / 2);
+  font: 700 var(--t-12) / var(--badge) var(--f-sans);
+  text-align: center;
+}
+.verb-key {
+  bottom: 0;
+  background: var(--bone);
+  color: var(--ink-66);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.verb-count {
+  top: 0;
+  background: var(--ink);
+  color: var(--ivory);
+}
+
+/* The group's name under its disc, on raised paper so it reads the same on the
+   sheet and over the sea. While the fan is open it says what a click does; the
+   hint is laid out but hidden while the fan is shut, so the fan can measure it
+   and keep clear of the plate it becomes. */
+.verb-name {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--s-1));
+  min-width: var(--verb-name-w);
+  width: max-content;
+  padding: 0 var(--s-2);
+  display: flex;
+  justify-content: center;
+  font: 500 var(--t-body) / var(--name-h) var(--f-sans);
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.verb-group.is-short .verb-name-k {
+  color: var(--ink-66);
+}
+.verb-name-p {
+  position: absolute;
+  visibility: hidden;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: var(--name-h);
+}
+.verb-group.is-open .verb-name-k {
+  display: none;
+}
+.verb-group.is-open .verb-name-p {
+  position: static;
+  visibility: visible;
+}
+
+/* The fan: every option of the group, the click's own included, as circles on
+   an arc toward the island. The script sets each circle's offset (--fx, --fy)
+   from the disc centre when it opens; --k staggers the opening. An option that
+   holds a second fan (Build's classes, Exchange's goods) nests one, ringed
+   around that option's circle and opening outward by the same rules. */
+.fan {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.fan-item {
+  position: absolute;
+  left: var(--fx, 0);
+  top: var(--fy, 0);
+  width: var(--fan-w);
+  margin-left: calc(var(--fan-w) / -2);
+  margin-top: calc(var(--fan-d) / -2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(calc(-1 * var(--fx, 0px)), calc(-1 * var(--fy, 0px))) scale(var(--fan-from));
+  transition:
+    transform var(--t-fan) var(--ease-out),
+    opacity var(--t-fan) var(--ease-out),
+    visibility 0s linear var(--t-fan);
+  pointer-events: auto;
+}
+.is-open > .fan > .fan-item {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: calc(var(--k) * var(--t-stagger));
+}
+.fan-item > .fan {
+  top: calc(var(--fan-d) / 2);
+}
+.fan-item.is-open {
+  z-index: 1;
+}
+.fan-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  text-align: center;
+}
+/* an option is s-hybrid's small disc: bone on a hairline, clay when taken up */
+.fan-disc {
+  position: relative;
+  width: var(--fan-d);
+  height: var(--fan-d);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--bone);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.fan-btn:hover .fan-disc,
+.fan-item.is-open > .fan-btn .fan-disc {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.fan-btn:focus-visible {
+  outline: none;
+}
+.fan-btn:focus-visible .fan-disc {
+  outline: var(--rule-2) solid var(--ochre);
+  outline-offset: var(--rule-2);
+}
+.fan-label {
+  padding: 0 var(--s-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  white-space: nowrap;
+}
+.fan-k {
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+}
+.fan-p {
+  height: var(--l-cap);
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  color: var(--ink-66);
+}
+.fan-p b {
+  color: var(--ink);
+}
+.fan-item.is-short .fan-disc .ico,
+.fan-item.is-built .fan-disc .ico {
+  opacity: var(--dim);
+}
+.fan-item.is-built .fan-p {
+  color: var(--olive);
+}
+.fan-item.is-short .fan-btn,
+.fan-item.is-built .fan-btn {
+  cursor: default;
+}
+
+/* ---- the sheet's body: head, tabs, page, set under the straight run ------- */
+.realm-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.realm-head {
+  height: var(--hit);
+  display: grid;
+  grid-template-columns: var(--ic-ui) auto auto;
+  justify-content: start;
+  align-items: center;
+  column-gap: var(--s-4);
+}
+.seal {
+  width: var(--ic-ui);
+  height: var(--ic-ui);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--owner);
+  color: var(--ivory);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-name);
+}
+.realm-title {
+  margin: 0;
+  display: grid;
+  white-space: nowrap;
+}
+.realm-title b {
+  font: 700 var(--t-lead) / var(--l-cap) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+/* the Idea as a header cell: its name, then its price */
+.idea {
+  height: var(--hit);
+  padding-left: var(--s-4);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  white-space: nowrap;
+  box-shadow: inset var(--rule) 0 0 var(--ink-12);
+}
+.idea-name {
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+}
+.idea:hover .idea-name {
+  color: var(--clay-deep);
+}
+
+.realm-tabs {
+  height: var(--row-h);
+  display: flex;
+  gap: var(--s-4);
+  box-shadow: inset 0 calc(var(--rule) * -1) 0 var(--ink-30);
+}
+.realm-tab {
+  height: var(--row-h);
+  min-width: var(--hit);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+  color: var(--ink-66);
+}
+.realm-tab:hover {
+  color: var(--ink);
+}
+.realm-tab[aria-selected="true"] {
+  color: var(--ink);
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
+}
+.realm-tab.is-subject {
+  padding-left: var(--s-4);
+  box-shadow: inset var(--rule) 0 0 var(--ink-12);
+}
+.realm-tab.is-subject[aria-selected="true"] {
+  box-shadow:
+    inset 0 calc(var(--rule-2) * -1) 0 var(--clay),
+    inset var(--rule) 0 0 var(--ink-12);
+}
+.realm-tab-name {
+  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+
+/* ---- the settlement page: meta line, three pop columns, building lines ---- */
+.realm-page {
+  padding-top: var(--s-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.settle-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.meta-i {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+.settle-meta b {
+  color: var(--ink);
+}
+.settle-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: var(--s-3);
+}
+.settle-col {
+  padding-top: var(--s-2);
+  display: grid;
+  grid-template-columns: var(--ic-tile) minmax(0, 1fr);
+  grid-template-rows: var(--l-cap) var(--l-count) var(--l-body);
+  column-gap: var(--s-2);
+  box-shadow: inset 0 var(--rule-2) 0 var(--ink);
+}
+.col-head {
+  grid-column: 1 / 3;
+  display: flex;
+  justify-content: space-between;
+}
+.col-head b {
+  letter-spacing: 0;
+}
+.col-head b.is-raised {
+  color: var(--olive);
+}
+.settle-col .ico {
+  align-self: center;
+}
+.col-count {
+  font-size: var(--t-count);
+  line-height: var(--l-count);
+}
+.col-yield {
+  grid-column: 1 / 3;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+  color: var(--ink-66);
+  white-space: nowrap;
+}
+.col-yield b {
+  color: var(--ink);
+}
+.settle-lines {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--s-6);
+  row-gap: var(--s-1);
+}
+.settle-line {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+  white-space: nowrap;
+}
+.settle-line span {
+  color: var(--ink-66);
+}
+.settle-line b {
+  color: var(--ink);
+}
+
+/* End turn: its own column at the far bottom right. */
+.endturn {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--endturn-w);
+  height: var(--endturn-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.endturn-disc {
+  position: relative;
+  width: var(--disc-end);
+  height: var(--disc-end);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--clay);
+  color: var(--ivory);
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--clay-deep),
+    inset 0 0 0 var(--s-1) var(--ivory-45);
+}
+.endturn:hover .endturn-disc {
+  background: var(--clay-deep);
+}
+.endturn-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--badge);
+  height: var(--badge);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: var(--ivory);
+  color: var(--clay-deep);
+  font: 700 var(--t-12) / var(--badge) var(--f-sans);
+  box-shadow: inset 0 0 0 var(--rule) var(--clay-deep);
+}
+/* the label hangs over the disc's lower ring, level with the verb names */
+.endturn-label {
+  position: absolute;
+  bottom: calc(var(--price-h) + var(--s-1));
+  height: var(--chip-h);
+  justify-content: center;
+  width: calc(var(--endturn-w) - var(--s-4));
+  display: flex;
+  align-items: center;
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--clay-deep);
+  font: 700 var(--t-cap) / var(--chip-h) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   Tooltip (one layer, placed by script)
+   ========================================================================== */
+/* The one tooltip layer (components/overlays/Tooltip places it). */
+.sharedTooltip {
+  z-index: var(--z-tooltip);
+  width: max-content;
+  max-width: var(--tip-w);
+  padding: var(--s-2) var(--s-3);
+  display: grid;
+  gap: var(--s-1);
+  border: 0;
+  border-radius: 0;
+  color: var(--ink);
+  font: var(--t-body) / var(--l-body) var(--f-body);
+  box-shadow:
+    inset 0 0 0 var(--rule) var(--ink-30),
+    var(--shadow-hud);
+}
+.tip-row {
+  display: contents;
+}
+.tip-body {
+  font: 400 var(--t-body) / var(--l-body) var(--f-body);
+}
+.tip-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+.tip-ledger {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  font: 400 var(--t-body) / var(--l-body) var(--f-sans);
+}
+.tip-ledger b {
+  padding-left: var(--s-4);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tip-k {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.tip-ledger .is-total {
+  box-shadow: inset 0 var(--rule) 0 var(--ink-30);
+  padding-top: var(--s-1);
+}
+.tip-warn {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--clay-ink);
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+}
+
+/* ============================================================================
+   The island
+   ========================================================================== */
+/* The stage takes the drag; the island sits on it. */
+.island-stage {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-sea);
+  touch-action: none;
+  cursor: grab;
+}
+.island-stage.is-panning {
+  cursor: grabbing;
+}
+.island {
+  position: fixed;
+  left: var(--board-x, 0);
+  top: var(--board-y, 0);
+  width: var(--board-w, 0);
+  height: var(--board-h, 0);
+  overflow: visible;
+}
+.island .tile {
+  stroke: var(--tile-rule);
+  stroke-width: var(--b-rule);
+  stroke-linejoin: round;
+}
+.island .tile.plains {
+  fill: var(--t-plains);
+}
+.island .tile.hill {
+  fill: var(--t-hill);
+}
+.island .tile.forest {
+  fill: var(--t-forest);
+}
+.island .tile.mountain {
+  fill: var(--t-mountain);
+}
+.island .tile.oracle {
+  fill: var(--t-oracle);
+}
+.island .tile.owned {
+  stroke: var(--owner);
+  stroke-width: var(--b-own);
+}
+.island .tile-btn {
+  cursor: pointer;
+}
+.island .tile-btn:hover .tile {
+  filter: brightness(1.04);
+}
+.island .tile-btn.is-selected .tile {
+  stroke: var(--ink);
+  stroke-width: var(--b-sel);
+}
+.island .emblem {
+  opacity: var(--dim);
+}
+.island .pip {
+  fill: none;
+  stroke: var(--tile-rule);
+  stroke-width: var(--b-pip);
+}
+.island .pip.built {
+  fill: var(--tile-rule);
+}
+/* a settlement's seal: its rank's raster on ivory, ringed in the owner's glaze */
+.island .seal-disc {
+  fill: var(--ivory);
+  stroke: var(--owner);
+  stroke-width: var(--b-ring);
+}
+.island .seal-disc.capital {
+  stroke-width: var(--b-ring-cap);
+}
+.island .plate {
+  fill: var(--ivory);
+  stroke: var(--ink);
+  stroke-width: var(--rule);
+}
+/* Board text is in user units, so it shrinks with the fitted hex; the floor holds it at 12px on screen. */
+.island .plate-text {
+  font-family: var(--f-name);
+  font-weight: 700;
+  font-size: max(var(--b-plate), calc(var(--b-floor) / var(--b-scale, 1)));
+  letter-spacing: var(--track-name);
+  fill: var(--ink);
+  text-anchor: middle;
+}
+.island .pops {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: max(var(--b-pops), calc(var(--b-floor) / var(--b-scale, 1)));
+  fill: var(--ink);
+  text-anchor: middle;
+}
+.island .popg {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: var(--b-glyph);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.island .mooring {
+  fill: var(--ivory);
+  stroke: var(--ink);
+  stroke-width: var(--b-rule);
+}
+.island .mooring.claimed {
+  stroke: var(--owner);
+  stroke-width: var(--b-seal);
+}
+.island .mooring-name {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: max(var(--b-moor), calc(var(--b-floor) / var(--b-scale, 1)));
+  fill: var(--ivory);
+  paint-order: stroke;
+  stroke: var(--sea-deep);
+  stroke-width: var(--b-seal);
+}
+/* A small hex: one pop total per settlement, no mooring names; the tooltips carry the rest. */
+.island.is-compact .pops-split,
+.island:not(.is-compact) .pops-total,
+.island.is-compact .mooring-name {
+  display: none;
+}
+
+/* ============================================================================
+   What the app needs beyond the mock's one scene: map modes, a shared tile,
+   the printed yield (until v2 retires it), a rival's turn, the hold, the
+   consult sheet and the map caption.
+   ========================================================================== */
+.island .tile-btn:focus-visible {
+  outline: none;
+}
+.island .tile-btn:focus-visible .tile {
+  stroke: var(--ochre);
+  stroke-width: var(--b-sel);
+}
+/* A map mode is asking a question: the answers are ringed, the rest recede. */
+.island .tile-btn.is-candidate .tile {
+  stroke: var(--ochre);
+  stroke-width: var(--b-sel);
+}
+.island .tile-btn.is-dimmed {
+  opacity: var(--dim);
+}
+.island .yield-n {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: max(var(--b-pops), calc(var(--b-floor) / var(--b-scale, 1)));
+  fill: var(--ink-66);
+  text-anchor: end;
+}
+.island .settle-shared .seal-disc {
+  stroke-width: var(--b-seal);
+}
+
+.verb-group.is-armed .verb-disc {
+  background: var(--bone);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.verb-name-p .price-alt,
+.fan-p .price-alt {
+  display: inline-flex;
+  align-items: center;
+}
+.price-part {
+  display: inline-flex;
+  align-items: center;
+}
+.price-part + .price-part {
+  margin-left: var(--s-1);
+}
+
+.realm-head {
+  grid-template-columns: var(--ic-ui) auto auto;
+}
+.realm-counts {
+  height: var(--hit);
+  padding-left: var(--s-4);
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  color: var(--ink-66);
+  box-shadow: inset var(--rule) 0 0 var(--ink-12);
+}
+.realm-counts b {
+  color: var(--ink);
+}
+/* A long page scrolls inside the sheet rather than pushing it up the screen. */
+.realm-page {
+  max-height: var(--page-max);
+  overflow-y: auto;
+}
+.col-yield-i {
+  display: inline-flex;
+  align-items: center;
+}
+
+.rival-disc.ink-dark {
+  color: var(--ink);
+}
+.rival.is-viewing .rival-disc {
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--ivory),
+    0 0 0 var(--rule-2) var(--ring);
+}
+
+/* End turn while a rival acts: their glaze and blazon, no press. */
+.endturn.is-waiting .endturn-disc {
+  background: var(--owner);
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--ink-30),
+    inset 0 0 0 var(--s-1) var(--ivory-45);
+}
+.endturn.is-waiting .endturn-label {
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.endturn-blazon {
+  font: 700 var(--t-24) / var(--lh-32) var(--f-name);
+  color: var(--ivory);
+}
+/* The hold fills the disc's ring (--hold carries the fraction). */
+.endturn.is-held .endturn-disc {
+  background: conic-gradient(var(--clay-deep) calc(var(--hold) * 1turn), var(--clay) 0);
+}
+.endturn-anchor {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+/* The consult sheet: Chronicle, Codex, Victory and Agora, on the right under the bar. */
+.consult-sheet {
+  position: fixed;
+  z-index: var(--z-bar);
+  top: calc(var(--bar-h) + var(--s-2));
+  right: var(--s-2);
+  bottom: calc(var(--endturn-h) + var(--s-2));
+  width: var(--sheet-w);
+  padding: var(--s-4);
+  overflow-y: auto;
+  background: var(--bone);
+  filter: var(--shadow-chrome);
+}
+.consult-close {
+  position: absolute;
+  top: var(--s-2);
+  right: var(--s-2);
+  z-index: 1;
+  width: var(--hit);
+  height: var(--hit);
+  font: 700 var(--t-20) / var(--hit) var(--f-sans);
+  color: var(--ink-66);
+}
+/* The page's own header leaves the close button its corner. */
+.consult-sheet .ledgerCardTitle {
+  padding-right: var(--hit);
+}
+.consult-close:hover {
+  color: var(--ink);
+}
+
+/* What the board is asking, on raised paper under the ticker, over open sea. */
+.map-caption {
+  position: fixed;
+  z-index: var(--z-over-sea);
+  top: calc(var(--bar-h) + var(--hit) + var(--s-2));
+  left: var(--s-4);
+  padding: var(--s-1) var(--s-3);
+  background: var(--ivory);
+  box-shadow:
+    inset 0 0 0 var(--rule) var(--ink-30),
+    var(--shadow-hud);
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+  white-space: nowrap;
+  pointer-events: none;
+}

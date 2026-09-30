@@ -18,7 +18,8 @@ export const SIZES = [
 ];
 
 // ── surfaces ─────────────────────────────────────────────────────────────────
-const LEFT = ["Cities", "Pops", "Build", "Market"];
+// The realm sheet's pages (tabs) and the bar's consult pages (toggle buttons).
+const LEFT = ["Cities", "Ladder", "Build", "Market"];
 const RIGHT = ["Chronicle", "Codex", "Victory", "Agora"];
 
 const dismissDialogs = async (p) => {
@@ -36,8 +37,26 @@ const dismissDialogs = async (p) => {
   }
 };
 
-const closeTab = async (p, tab) => {
-  const t = p.locator(`.tabRail button[aria-label="${tab}"]`).first();
+const realmTab = (p, tab) => p.locator(".realm-tabs").getByRole("tab", { name: tab, exact: true });
+const consultButton = (p, tab) => p.locator(`.consult-btn[aria-label="${tab}"]`).first();
+const verb = (p, name) => p.locator(`.verb-btn[aria-label^="${name}"]`).first();
+
+/** Open a verb's option: a single-option disc acts on its click; a fan opens first. */
+const pressVerb = async (p, group, option) => {
+  const disc = verb(p, group);
+  if (!(await disc.count()) || (await disc.getAttribute("aria-disabled")) === "true") return;
+  await disc.click().catch(() => {});
+  if (option) {
+    const item = p.getByRole("menuitem", { name: new RegExp(`^${option}`) }).first();
+    if ((await item.count()) && (await item.getAttribute("aria-disabled")) !== "true") {
+      await item.click().catch(() => {});
+    }
+  }
+  await p.waitForTimeout(600);
+};
+
+const closeConsult = async (p, tab) => {
+  const t = consultButton(p, tab);
   if ((await t.count()) && (await t.getAttribute("aria-pressed")) === "true") {
     await t.click().catch(() => {});
     await p.waitForTimeout(250);
@@ -54,22 +73,26 @@ export const SURFACES = [
     },
   },
   { name: "table", go: async (p) => dismissDialogs(p) },
+  {
+    name: "tab-subject",
+    go: async (p) => {
+      const t = p.locator(".realm-tab.is-subject").first();
+      if (await t.count()) await t.click().catch(() => {});
+      await p.waitForTimeout(400);
+    },
+  },
   ...LEFT.map((tab) => ({
     name: `tab-${tab.toLowerCase()}`,
     go: async (p) => {
-      for (const other of LEFT) if (other !== tab) await closeTab(p, other);
-      const t = p.locator(`.tabRail button[aria-label="${tab}"]`).first();
-      if ((await t.count()) && (await t.getAttribute("aria-pressed")) !== "true") {
-        await t.click().catch(() => {});
-      }
+      const t = realmTab(p, tab);
+      if (await t.count()) await t.click().catch(() => {});
       await p.waitForTimeout(500);
     },
   })),
   ...RIGHT.map((tab) => ({
     name: `tab-${tab.toLowerCase()}`,
     go: async (p) => {
-      for (const other of RIGHT) if (other !== tab) await closeTab(p, other);
-      const t = p.locator(`.tabRail button[aria-label="${tab}"]`).first();
+      const t = consultButton(p, tab);
       if ((await t.count()) && (await t.getAttribute("aria-pressed")) !== "true") {
         await t.click().catch(() => {});
       }
@@ -87,18 +110,14 @@ export const SURFACES = [
   {
     name: "board-clear",
     go: async (p) => {
-      for (const tab of [...LEFT, ...RIGHT]) await closeTab(p, tab);
+      for (const tab of RIGHT) await closeConsult(p, tab);
       await p.waitForTimeout(300);
     },
   },
   {
     name: "targeting-grow",
     go: async (p) => {
-      const v = p.locator('.railVerb:has-text("Grow")').first();
-      if ((await v.count()) && (await v.getAttribute("aria-disabled")) !== "true") {
-        await v.click().catch(() => {});
-        await p.waitForTimeout(600);
-      }
+      await pressVerb(p, "Grow");
     },
     after: async (p) => {
       await p.keyboard.press("Escape");
@@ -108,11 +127,7 @@ export const SURFACES = [
   {
     name: "targeting-build",
     go: async (p) => {
-      const v = p.locator('.railVerb:has-text("Build")').first();
-      if ((await v.count()) && (await v.getAttribute("aria-disabled")) !== "true") {
-        await v.click().catch(() => {});
-        await p.waitForTimeout(600);
-      }
+      await pressVerb(p, "Build");
     },
     after: async (p) => {
       await p.keyboard.press("Escape");
@@ -122,11 +137,7 @@ export const SURFACES = [
   {
     name: "calm",
     go: async (p) => {
-      const c = p.locator('.railVerb:has-text("Calm")').first();
-      if ((await c.count()) && (await c.getAttribute("aria-disabled")) !== "true") {
-        await c.click().catch(() => {});
-        await p.waitForTimeout(600);
-      }
+      await pressVerb(p, "Civic", "Calm");
     },
     after: async (p) => {
       await p.keyboard.press("Escape");
@@ -136,11 +147,7 @@ export const SURFACES = [
   {
     name: "venture-pick",
     go: async (p) => {
-      const v = p.locator('.railVerb:has-text("Venture")').first();
-      if (await v.count()) {
-        await v.click().catch(() => {});
-        await p.waitForTimeout(600);
-      }
+      await pressVerb(p, "Civic", "Venture");
     },
   },
   {
@@ -220,9 +227,8 @@ export const SURFACES = [
       await p.goto(`${BASE}/?dev=preload&seed=42`, { waitUntil: "networkidle" });
       await p.waitForTimeout(1300);
       await dismissDialogs(p);
-      for (const other of LEFT) if (other !== "Cities") await closeTab(p, other);
-      const tab = p.locator(`.tabRail button[aria-label="Cities"]`).first();
-      if ((await tab.count()) && (await tab.getAttribute("aria-pressed")) !== "true") {
+      const tab = realmTab(p, "Cities");
+      if (await tab.count()) {
         await tab.click().catch(() => {});
         await p.waitForTimeout(500);
       }

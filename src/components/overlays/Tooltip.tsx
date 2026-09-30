@@ -122,7 +122,7 @@ export function Tooltip({
       >
         {describedChild}
       </Trigger>
-      {open && typeof document !== "undefined"
+      {open && content && typeof document !== "undefined"
         ? createPortal(
             <div
               className={[

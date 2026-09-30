@@ -77,9 +77,7 @@
   --asm-motion: 1.5625rem; /* 25px — the name of the card under debate. No role
                               sits between title and display, and a 34px display
                               would outrank the scene's own head. */
-  --asm-clause: 1.03125rem; /* 16.5px — one step above body, for the sentence
-                               the whole scene exists to put in front of four
-                               people. */
+  --asm-clause: 1.03125rem;
 }
 
 .asmStage {
@@ -428,9 +426,6 @@
 .asmDrawCost {
   color: inherit;
 }
-
-/* One pip per law this orator has landed. A glanceable count, not a list — the
-   laws themselves stand in their own column on the floor below. */
 /* The pips are 9px tall and the row is focusable — it carries the orator's power
    tooltip — so the TRIGGER takes 2.5.8's 24px and the pips sit centred in it. The
    old 10px margin is folded into that height, so the stele grows 6px, not 15. */
@@ -455,9 +450,6 @@
   background: var(--clay);
   box-shadow: inset 0 0 0 1px rgb(36 25 16 / 30%);
 }
-
-/* ── The floor ─────────────────────────────────────────────────────────────
-   One hero object and one companion, centred. Never a row of equal boxes. */
 
 /* The floor takes every pixel the head and the seats do not, and — this is the
    part that was wrong — it used to hand all of that to the GAPS. At 1366 the head
@@ -508,10 +500,6 @@
   color: var(--ivory-45);
   text-align: center;
 }
-
-/* ── The resolution card ───────────────────────────────────────────────────
-   Fired ivory floating on the dark floor, with a meander band across its head.
-   It is NOT inside a bordered container: the darkness is the frame. */
 
 /* The card GROWS into spare height instead of floating in the middle of it, and
    it grows by FLEX rather than by a percentage min-height: the wrap also holds a
@@ -788,9 +776,6 @@
    the resource's own colour — wood is a near-black olive, which on this ground is
    an invisible chip. They ink ivory here. The glyph's SHAPE is what names the
    resource anyway; colour on this board says whose, not what. */
-.asmStanding .resourceMaskIcon {
-  background: var(--ivory-70);
-}
 
 .asmStanding .richToken {
   color: var(--ivory);
@@ -949,10 +934,6 @@
   }
 }
 
-/* ── The scale ─────────────────────────────────────────────────────────────
-   Two hero numerals over a tug bar with an ivory tie-notch, one potsherd per
-   voter beneath it, then the verdict and the speaking order. */
-
 /* The scale grows with the card beside it: numerals high, bar and sherds at the
    waist, the verdict and the order low. A 216px instrument centred beside a
    430px card was the other half of the void the ballot used to sit in. */
@@ -1050,9 +1031,6 @@
   box-shadow: 0 0 8px rgb(0 0 0 / 60%);
   transform: translateX(-50%);
 }
-
-/* One potsherd per voter. The bar shows the shape of the vote; the sherds make
-   it countable, which is what you need before you spend a bribe. */
 /* Three groups under the bar's three zones, all growing INWARD to the tie notch:
    cast Yea, the urn of votes still to come, cast Nay. The two piles used to be
    pushed to opposite ends of a 430px bar, and nothing that far apart can be
@@ -1144,11 +1122,6 @@
 .asmOrderName.is-cast {
   opacity: 0.55;
 }
-
-/* ── The seats ─────────────────────────────────────────────────────────────
-   Compact lacquer plaques along the foot, one per player. They are also the
-   hotseat's seat switcher: the scene covers the top bar's roster, and taking a
-   seat is the same act that roster performed. */
 
 /* One bench, never two rows. Wrapping is decided on a flex item's BASIS, not on
    what it can shrink to, so a row that wraps will not then shrink to fit — and a

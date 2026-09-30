@@ -26,7 +26,7 @@ import { chromium } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { SURFACES, SIZES } from "./audit-ui-surfaces.mjs";
 
-const ROOT = "/Users/jinglemisk/Desktop/hegemony-ui-overhaul/.playwright-mcp/audit";
+const ROOT = `${process.cwd()}/.playwright-mcp/audit`;
 const onlyIndex = process.argv.indexOf("--only");
 const ONLY = onlyIndex === -1 ? null : process.argv[onlyIndex + 1];
 

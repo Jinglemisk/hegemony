@@ -26,6 +26,10 @@ function placeholder(path: string): string | undefined {
   return FILES[`../../../assets/icons/placeholder/${path}.png`];
 }
 
+/** A raster by its `family/name` path, for the v2 frame, whose icon slots name the
+ *  placeholder file directly (the mock's vocabulary) rather than a glyph. */
+export const rasterIcon = placeholder;
+
 const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
   wood: placeholder("resources/wood"),
   stone: placeholder("resources/stone"),

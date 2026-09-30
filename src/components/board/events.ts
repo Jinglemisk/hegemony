@@ -131,14 +131,6 @@ Object.assign(EVENT_CARD_ART, {
   "season-wildfire": EVENT_CARD_ART["season-timber-levies"],
 });
 
-/** Art for the yearly omen's top-bar card: festive plate for fair signs, the
- *  anxious one for ill — placeholders until the omen gets its own art. */
-export function omenArtUrl(tone: "fair" | "ill") {
-  return tone === "fair"
-    ? EVENT_CARD_ART["season-festival-games"]
-    : EVENT_CARD_ART["season-civic-anxiety"];
-}
-
 export function eventCardArtUrl(card: EventCard) {
   return EVENT_CARD_ART[card.id] ?? EVENT_CARD_ART["season-drought"];
 }

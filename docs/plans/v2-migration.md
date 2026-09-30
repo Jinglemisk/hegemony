@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-09-28
+updated: 2026-09-30
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -126,6 +126,18 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - Checks carried from the judges: an open fan never covers a city name; far fan options
   stay open while the pointer travels to them; Build may skip the class step when a class
   has one building; consult icons get labels or tooltips.
+
+**Defaults picked in Step 1** (2026-09-30):
+
+- Until Step 2, the discs act on a click: a one-option disc runs it, a disc with
+  several opens a plain fan. People's Promote and Demote open the Ladder page, and
+  Exchange opens the Market page, until their fans carry the choice.
+- The consult icons open one sheet on the right, below the bar; one page at a time.
+- The realm opens on the viewer's first settlement; picking one of your own tiles
+  opens that settlement's page.
+- The season card stands where the year card will; the omen is in the year's tooltip.
+- A rival's turn shows their glaze and blazon on the end-turn disc.
+- `?dev=bots` lets the sim's `master` policy play every seat in the browser.
 
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
