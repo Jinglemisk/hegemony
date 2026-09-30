@@ -828,22 +828,6 @@
   text-align: center;
 }
 
-/* ── The ceremonies MOVE ─────────────────────────────────────────────────────
-   A rite that arrives fully-formed is an illustration of a rite. Every one of
-   these is an OBJECT doing what the object does — a card is dealt, a tablet is
-   laid down, a die tumbles and settles, and the verdict is read out only once
-   the die has stopped. Nothing here is decoration for its own sake: the die's
-   motion in particular is the whole difference between a number you rolled and
-   a number the engine told you.
-
-   The sheet had NO keyframes at all, which is why every ceremony read as a
-   static picture. `LacquerDie.tsx` was doing its part in JS the whole time —
-   flipping faces on a cube that never budged.
-
-   Everything below is off under `prefers-reduced-motion`, at the foot of the
-   file. Delays are keyed to the die: it settles at 400ms (`FLIP_MS`), so the
-   figure lands after it and the verdict is read after that. */
-
 /* A fate is DEALT: it comes in off the deck, off-axis, and squares up. */
 @keyframes fateDeal {
   from {

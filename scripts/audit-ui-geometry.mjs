@@ -20,7 +20,7 @@ import { chromium } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { SURFACES, SIZES } from "./audit-ui-surfaces.mjs";
 
-const ROOT = "/Users/jinglemisk/Desktop/hegemony-ui-overhaul/.playwright-mcp/audit";
+const ROOT = `${process.cwd()}/.playwright-mcp/audit`;
 // PROBE below is serialised and evaluated inside the page, not in node — hence
 // the browser globals, which eslint cannot infer from a file under scripts/.
 /* global document, getComputedStyle, window */
@@ -292,6 +292,19 @@ const PROBE = () => {
       let share = 0;
       for (const ra of linesA) for (const rb of linesB) share = Math.max(share, overlap(ra, rb));
       if (share < 0.18) continue; // a hair of overlap is a shadow, not a bug
+      // The map is a canvas under the chrome (owner ruling, 2026-09-27): island
+      // text beneath a floating layer is covered, not colliding, and is counted
+      // apart. Except under a fan: an open fan must never cover a city name.
+      const onIsland = (el) => Boolean(el.closest("svg.island"));
+      if (onIsland(a) !== onIsland(b) && !(onIsland(a) ? b : a).closest(".fan")) {
+        out.push({
+          kind: "COVERED",
+          el: describe(a),
+          other: describe(b),
+          by: Math.round(share * 100),
+        });
+        continue;
+      }
       out.push({
         kind: "COLLISION",
         el: describe(a),
@@ -352,13 +365,14 @@ for (const d of report) {
   }
 }
 const all = [...folded.values()].sort((a, b) => b.by - a.by);
-const rows = all.filter((r) => r.kind !== "SUMMARY");
+const rows = all.filter((r) => r.kind !== "SUMMARY" && r.kind !== "COVERED");
 const summaries = all.filter((r) => r.kind === "SUMMARY");
+const covered = all.filter((r) => r.kind === "COVERED");
 
 await writeFile(
   `${ROOT}/report.json`,
   JSON.stringify(
-    { rows, summaries, consoleErrors: [...new Set(consoleErrors.map((e) => e.text))] },
+    { rows, summaries, covered, consoleErrors: [...new Set(consoleErrors.map((e) => e.text))] },
     null,
     2,
   ),
@@ -369,7 +383,7 @@ for (const r of rows) bySurface.set(r.surface, [...(bySurface.get(r.surface) ?? 
 
 console.log(
   `\n${rows.length} distinct defects across ${bySurface.size} surfaces` +
-    `  ·  ${summaries.length} declared summaries\n`,
+    `  ·  ${summaries.length} declared summaries  ·  ${covered.length} island labels under chrome\n`,
 );
 for (const [surface, list] of [...bySurface.entries()].sort((a, b) => b[1].length - a[1].length)) {
   console.log(`── ${surface} (${list.length})`);

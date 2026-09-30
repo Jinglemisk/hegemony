@@ -3,32 +3,6 @@
    Was inspector.css; the legacy settlement inspector it held was removed as dead
    CSS (Phase 2e audit) and these shared survivors kept in original source order. */
 
-.buildingButton {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  min-height: 98px;
-  padding: 8px;
-  text-align: left;
-}
-
-.buildingButtonIcon {
-  width: 38px;
-  height: 38px;
-}
-
-.buildingButton strong,
-.buildingButton span {
-  display: block;
-}
-
-.buildingButton strong {
-  color: var(--fg);
-  font-size: 0.82rem;
-  text-transform: uppercase;
-}
-
 .miniIcon {
   width: 22px;
   height: 22px;
@@ -45,7 +19,6 @@
    inks them, so a plate here would both re-introduce the box and hijack the ink
    (the mask clips the element's own background, painting the glyph in it). */
 .miniIcon,
-.buildingButtonIcon,
 .titleIcon {
   color: var(--clay-deep);
 }

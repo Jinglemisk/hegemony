@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-09-28
+updated: 2026-09-30
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -127,6 +127,18 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   stay open while the pointer travels to them; Build may skip the class step when a class
   has one building; consult icons get labels or tooltips.
 
+**Defaults picked in Step 1** (2026-09-30):
+
+- Until Step 2, the discs act on a click: a one-option disc runs it, a disc with
+  several opens a plain fan. People's Promote and Demote open the Ladder page, and
+  Exchange opens the Market page, until their fans carry the choice.
+- The consult icons open one sheet on the right, below the bar; one page at a time.
+- The realm opens on the viewer's first settlement; picking one of your own tiles
+  opens that settlement's page.
+- The season card stands where the year card will; the omen is in the year's tooltip.
+- A rival's turn shows their glaze and blazon on the end-turn disc.
+- `?dev=bots` lets the sim's `master` policy play every seat in the browser.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.
@@ -170,7 +182,7 @@ selectors, so a rule change updates one selector, not three views.
 1280, 1440 and 1920 with the gate script's results; the owner approves the look before the
 next step.
 
-- [ ] **Step 1 · Frame.** Replace the old in-match shell with the Hybrid arc frame, wired to
+- [x] **Step 1 · Frame.** ([#79](https://github.com/Jinglemisk/hegemony/pull/79): the gate passes at 1280/1440/1920 on the real app; a `?dev=bots` game plays to victory in the shell.) Replace the old in-match shell with the Hybrid arc frame, wired to
       today's engine: the top bar with rivals and their tooltip, the pannable map, the realm
       panel with its tabs and the settlement's three-column view, and end turn. Port the
       mock's tokens into `src/styles` and delete the old shell's components and CSS.

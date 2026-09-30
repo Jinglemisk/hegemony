@@ -83,35 +83,35 @@ export const COMMAND_PARITY = {
   },
   foundColony: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/modals/FoundColonyPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   upgradeColonyToCity: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/modals/UpgradeCityModal.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   buildBuilding: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/BuildPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   growPop: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/GrowPopPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   movePops: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/MovePopsPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
@@ -130,28 +130,28 @@ export const COMMAND_PARITY = {
   },
   civicCalm: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/modals/CalmModal.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   promotePop: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/LadderPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   demotePop: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/map/LadderPopover.tsx",
     ),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   fundExpedition: {
     frontend: interactive(
-      "src/components/board/command/CommandDock.tsx",
+      "src/components/frame/VerbDiscs.tsx",
       "src/components/board/modals/VentureModal.tsx",
     ),
     simulation: simulated("master-rule", "resolveStochasticByRule venture heuristic"),
@@ -201,7 +201,7 @@ export const COMMAND_PARITY = {
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   endTurn: {
-    frontend: interactive("src/components/board/command/CommandDock.tsx"),
+    frontend: interactive("src/components/frame/EndTurn.tsx"),
     simulation: simulated("turn-control", "beamPlan fallback and forceEndTurn"),
   },
 } satisfies Record<GameCommandType, CommandParityCoverage>;

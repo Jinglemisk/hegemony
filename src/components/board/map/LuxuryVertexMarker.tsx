@@ -1,10 +1,15 @@
+import type { CSSProperties } from "react";
 import type { LuxuryVertex } from "../../../game/mapTopology";
+import { GlyphMarks } from "../../../ui/icons/Icon";
+
+/** The mooring disc's radius and its name's offset, in island user units. */
+export const MOORING_RADIUS = 18;
+export const MOORING_LABEL_X = 26;
 
 /**
- * The neutral fixture standing where a luxury good will sit (docs/plans/luxury-goods.md,
- * slice 1): a mooring buoy off the shared vertex of two coastal tiles, so its position
- * and hit target can be judged before any ownership behaviour exists. The good's name
- * and owner are slice-2 presentation — typed now so the marker's contract is settled.
+ * A luxury good's mooring off the shared vertex of two coastal tiles: an ivory
+ * disc with the amphora, ringed in the holder's glaze once a Port claims it, and
+ * the good's name on the sea side.
  */
 export function LuxuryVertexMarker({
   vertex,
@@ -13,7 +18,7 @@ export function LuxuryVertexMarker({
   goodName,
   ownerName,
   ownerColor,
-  ownerBlazon,
+  labelSide = "start",
 }: {
   vertex: Pick<LuxuryVertex, "id" | "tileIds">;
   x: number;
@@ -22,9 +27,10 @@ export function LuxuryVertexMarker({
   goodName?: string;
   /** Who holds it, once a Port has claimed it. */
   ownerName?: string;
-  /** The holder's glaze — identity only, and never alone: the blazon rides with it. */
+  /** The holder's glaze. */
   ownerColor?: string;
-  ownerBlazon?: string;
+  /** Where the name sits: beside the disc (reading away from it) or over or under it. */
+  labelSide?: "start" | "end" | "above" | "below";
 }) {
   const [tileA, tileB] = vertex.tileIds;
   const subject = goodName ?? "Luxury mooring";
@@ -34,23 +40,26 @@ export function LuxuryVertexMarker({
   return (
     <g
       aria-label={label}
-      className="luxuryVertexMarker"
+      className="moor"
       data-vertex-id={vertex.id}
       role="img"
-      transform={`translate(${x.toFixed(2)} ${y.toFixed(2)})`}
+      style={ownerColor ? ({ "--owner": ownerColor } as CSSProperties) : undefined}
+      transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}
     >
-      <circle className="luxuryMarkerPlate" r={6.5} />
-      {ownerColor ? (
-        <>
-          <circle className="luxuryMarkerSeal" r={4.6} fill={ownerColor} />
-          {/* World-unit type, like the name plates: an SVG attribute, not a CSS size. */}
-          <text className="luxuryMarkerBlazon" fontSize={6} textAnchor="middle" y={2.1}>
-            {ownerBlazon}
-          </text>
-        </>
-      ) : (
-        <circle className="luxuryMarkerCore" r={2.4} />
-      )}
+      <circle className={`mooring${ownerColor ? " claimed" : ""}`} r={MOORING_RADIUS} />
+      <g className="popg" transform="translate(-11 -11) scale(.92)">
+        <GlyphMarks glyph="luxury" />
+      </g>
+      {goodName ? (
+        <text
+          className="mooring-name"
+          data-side={labelSide}
+          textAnchor={labelSide === "start" || labelSide === "end" ? labelSide : "middle"}
+          x={labelSide === "start" ? MOORING_LABEL_X : labelSide === "end" ? -MOORING_LABEL_X : 0}
+        >
+          {goodName}
+        </text>
+      ) : null}
     </g>
   );
 }

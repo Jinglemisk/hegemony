@@ -122,17 +122,3 @@ export function tickLuxurySuppression(G: HegemonyState, playerID: PlayerId) {
     }
   }
 }
-
-/** Presentation triple for every surface that shows happiness (a hard requirement:
- *  raw, luxury bonus, and effective are always shown together). */
-export interface HappinessBreakdown {
-  stored: number;
-  luxuryBonus: number;
-  effective: number;
-}
-
-export function happinessBreakdown(G: HegemonyState, playerID: PlayerId): HappinessBreakdown {
-  const stored = G.players[playerID].resources.happiness;
-  const luxuryBonus = luxuryHappinessBonus(G, playerID);
-  return { stored, luxuryBonus, effective: stored + luxuryBonus };
-}

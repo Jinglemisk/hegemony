@@ -2,7 +2,7 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-08-16
+updated: 2026-09-30
 ---
 
 # UI — what is genuinely left
@@ -32,7 +32,25 @@ when it ships or when the owner rules it closed.
 | ID       | needs      | what                                          |
 | -------- | ---------- | --------------------------------------------- |
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
-| `DUP-1`  | nothing    | Five repeated glossary words, judged and left |
+| `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
+| `V2-1`   | Step 2     | Fans use an interim placement                 |
+| `V2-2`   | a pass     | The realm and consult pages are v1 content    |
+| `V2-3`   | nothing    | A shared tile's second seal has no name plate |
+| `V2-4`   | Step 3     | Tiles still print their yield                 |
+
+### v2 frame carry-overs (Step 1, 2026-09-30)
+
+- **`V2-1`.** A fan opens on click and spreads along the sheet edge's outward normal.
+  Step 2 brings the mock's collision-aware placement, the hover dwell, hotkeys and the
+  second level; until then `ui:audit`'s only rows are an open Civic fan over a city name.
+- **`V2-2`.** The settlement page is built to the mock. The Cities, Ladder, Build and
+  Market pages and the four consult pages still render their v1 components (cards
+  inside the sheet), restyled only by the frame's tokens. Each wants the ledger
+  language of the settlement page.
+- **`V2-3`.** A rival colony sharing a tile draws as a small seal on the tile's
+  shoulder; its name is in the tile tooltip. Two plates side by side do not fit a hex.
+- **`V2-4`.** The v1 engine still gives tiles a printed amount, so the tile shows it
+  beside the terrain emblem. Step 3 removes both.
 
 ### Shipped
 

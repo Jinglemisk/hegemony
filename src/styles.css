@@ -16,12 +16,9 @@
 @import "./styles/type.css";
 @import "./styles/icons.css";
 @import "./styles/base.css";
-@import "./styles/map.css";
-@import "./styles/tiles.css";
 @import "./styles/resources.css";
 @import "./styles/shared.css";
 @import "./styles/ledger.css";
-@import "./styles/deck.css";
 @import "./styles/intel.css";
 @import "./styles/pops.css";
 @import "./styles/command.css";
@@ -36,4 +33,6 @@
 @import "./styles/panels.css";
 @import "./styles/ceremony.css";
 @import "./styles/assemblyScene.css";
+/* The v2 frame (Hybrid arc): the shell every match is played in. */
+@import "./styles/frame.css";
 @import "./styles/responsive.css";

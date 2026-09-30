@@ -491,17 +491,6 @@
 }
 
 /* Found-colony placement: map highlight + tile-anchored popover */
-.hexMap.placementMode {
-  cursor: crosshair;
-}
-
-.hexTile.placementCandidate {
-  stroke: #f6d98a;
-  stroke-width: 3.5;
-  paint-order: stroke;
-  filter: drop-shadow(0 0 6px rgb(246 217 138 / 85%));
-  animation: placementCandidatePulse 1.4s ease-in-out infinite;
-}
 
 @keyframes placementCandidatePulse {
   0%,
@@ -518,17 +507,6 @@
    look away from, and this one runs across the whole map. The highlight has to
    stay legible without it, so the stroke settles at full opacity rather than
    at the dim end of its own cycle. */
-@media (prefers-reduced-motion: reduce) {
-  .hexTile.placementCandidate {
-    animation: none;
-    stroke-opacity: 1;
-  }
-}
-
-.placementCaption {
-  color: #fff;
-  text-shadow: 0 1px 2px rgb(8 22 28 / 55%);
-}
 
 .foundColonyPopover {
   position: fixed;
@@ -757,12 +735,6 @@
 /* Codex (Q18) — the read-only rule reference. It is a ledger page now, not a
    modal, so it inherits the card's surface and carries no plate of its own.
    Every section renders from ruleset or content data; nothing is hand-written. */
-.codexLede {
-  margin: 0 0 10px;
-  color: var(--ink-66);
-  font-size: 0.74rem;
-  line-height: 1.4;
-}
 
 .compendiumBody {
   min-height: 0;

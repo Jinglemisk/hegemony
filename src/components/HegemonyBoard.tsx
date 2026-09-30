@@ -7,7 +7,6 @@ import {
   getBuildBuildingOptions,
   claimableLuxuriesAt,
   getBuildBuildingStatus,
-  happinessBreakdown,
   getActiveEffects,
   getFoundColonyStatus,
   getGrowPopStatus,
@@ -15,11 +14,9 @@ import {
   toPlayerId,
   totalPops,
 } from "../game/rules";
-import type { BuildingId, HegemonyState, PlayerId, Resource } from "../game/types";
+import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { PLAYER_NAMES } from "../game/data";
 import { getOmenTable } from "../game/content";
-import { HexMap } from "./HexMap";
-import { ResourceGrid } from "./ResourceGrid";
 import { BuildPopover } from "./board/map/BuildPopover";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
 import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
@@ -29,30 +26,28 @@ import { LadderPopover } from "./board/map/LadderPopover";
 import { MovePopsSourcePopover, MovePopsTargetPopover } from "./board/map/MovePopsPopover";
 import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelection";
 import { useMapSelection } from "./board/map/useMapSelection";
-import { CommandDock } from "./board/command/CommandDock";
 import { armedVerbOf, isTurnOpen, turnCommitTitle } from "./board/command/verbs";
+import type { VerbContext } from "./board/command/verbs";
 import { CalmModal } from "./board/modals/CalmModal";
 import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
-import { EmpireIntelPanel } from "./board/ledger/EmpireIntelPanel";
-import { LedgerRail } from "./board/ledger/LedgerRail";
-import { ConsultRail } from "./board/ledger/ConsultRail";
 import { ConsultPanel } from "./board/ledger/ConsultPanel";
-import { routeTo, type ConsultRoute, type LedgerRoute } from "./board/ledger/route";
+import type { ConsultTab } from "./board/types";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
 import { RiotModal } from "./board/modals/RiotModal";
 import { VentureModal } from "./board/modals/VentureModal";
-import { MechanicsDetails } from "./MechanicsDetails";
-import { Tooltip } from "./overlays/Tooltip";
-import { PlayerScoreboard } from "./board/topbar/PlayerScoreboard";
-import { TurnDial } from "./board/topbar/TurnDial";
-import { TopbarEvents } from "./board/topbar/TopbarEvents";
 import { AssemblyPanel } from "./board/assembly/AssemblyPanel";
 import { GameUiProvider } from "./board/GameUiProvider";
 import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
 import { getOwnedHoldings } from "./board/helpers";
-import { ActiveEffectsList } from "./ActiveEffectsList";
+import { happinessDisplay } from "../ui/frameSelectors";
+import { Island } from "./frame/island/Island";
+import { TopBar } from "./frame/TopBar";
+import { Ticker } from "./frame/Ticker";
+import { RealmPanel, type RealmTab } from "./frame/RealmPanel";
+import { EndTurn } from "./frame/EndTurn";
+import { discGroups } from "./frame/discs";
 
 type BoardProps = {
   G: HegemonyState;
@@ -64,12 +59,6 @@ type BoardProps = {
   isActive: boolean;
 };
 
-type PendingTileConfirmation = {
-  action: "foundColony" | "upgradeCity";
-  label: string;
-  tileId: string;
-};
-
 type SetupPlacement = "capital" | "city" | "colony";
 
 const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
@@ -77,18 +66,6 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
   city: "second city",
   colony: "founding colony",
 };
-
-// One spine, dead centre of the top bar. The resources used to be split in two
-// halves flanking the season medallion; that arrangement made the bar's centre a
-// picture rather than the numbers, and the numbers are what a player reads
-// forty times a turn. The medallion became the season clock on the bottom rail.
-/* The spine reads out from the dial in the middle of it: what the land gives on
-   the left, what the city makes of it on the right. Split rather than run as one
-   row of six because the middle of that row is where the turn dial now sits, and
-   an odd number of numerals either side of a large object reads as a scale that
-   balances. */
-const MATERIAL_RESOURCES: Resource[] = ["wood", "stone", "food"];
-const CIVIC_RESOURCES: Resource[] = ["gold", "influence", "happiness"];
 
 /**
  * Exactly one dialog owns the screen at a time — the union makes that a type
@@ -114,32 +91,23 @@ export function HegemonyBoard({
   isActive,
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
-  const [tileConfirmation, setTileConfirmation] = useState<PendingTileConfirmation | null>(null);
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
   const [gameOverDismissed, setGameOverDismissed] = useState(false);
   // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
   const [riotResultOpen, setRiotResultOpen] = useState(false);
   // Initialized to the omen standing at mount so a reload never re-announces it.
   const [seenOmenYear, setSeenOmenYear] = useState<number | null>(() => G.yearOmen?.year ?? null);
-  // Each panel's page is a ROUTE ({view, entry?, scroll?}), not a bare tab enum
-  // (two-panel.md) — one frame deep for now, so Phase 3's deep-links/history widen it
-  // rather than retrofit an enum. The ledger boots open on Cities (ui-refit Step 2); a
-  // rail disc toggles it, its own × closes it, so the sea can be read whole.
-  const [ledgerRoute, setLedgerRoute] = useState<LedgerRoute>({ view: "cities" });
-  const [isLedgerOpen, setLedgerOpen] = useState(true);
-  // The right consult rail (two-panel.md): Chronicle/Codex/Victory. Independent of the
-  // left ledger — both can be open at once (owner, 2026-07-18). Boots closed; the sea
-  // outranks reference, and the dock ticker keeps the latest chronicle line visible.
-  const [consultRoute, setConsultRoute] = useState<ConsultRoute>({ view: "chronicle" });
-  const [isConsultOpen, setConsultOpen] = useState(false);
+  // The realm sheet's page, and the consult page open on the right (null: none).
+  // The realm boots on your first settlement's page; picking another opens its page.
+  const [realmTab, setRealmTab] = useState<RealmTab>("subject");
+  const [consultTab, setConsultTab] = useState<ConsultTab | null>(null);
   // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
   // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
   // the target chapter is unchanged (you clicked away and clicked the link again).
   const [codexTarget, setCodexTarget] = useState<{ chapter: string; nonce: number } | null>(null);
   const openCodexTo = useCallback((chapter: string) => {
     setCodexTarget((current) => ({ chapter, nonce: (current?.nonce ?? 0) + 1 }));
-    setConsultRoute(routeTo("codex"));
-    setConsultOpen(true);
+    setConsultTab("codex");
   }, []);
   const codexLink = useMemo(() => ({ openCodexTo }), [openCodexTo]);
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
@@ -252,18 +220,12 @@ export function HegemonyBoard({
   const armSelection = useCallback(
     (mode: MapSelectionMode) => {
       setActiveModal(null);
-      setTileConfirmation(null);
       armMapSelection(mode);
     },
     [armMapSelection],
   );
-  // The chronicle is a right-rail consult page now (two-panel.md); its newest line
-  // still rides the command bar so the narration is never fully hidden.
-  const latestChronicleLine = G.log.length > 0 ? G.log[G.log.length - 1].message : null;
-
   // Handing the turn over closes everything the previous seat had open.
   useEffect(() => {
-    setTileConfirmation(null);
     setActiveModal(null);
     clearMapSelection();
     setRiotResultOpen(false);
@@ -277,13 +239,11 @@ export function HegemonyBoard({
       return;
     }
 
-    setTileConfirmation(null);
     clearMapSelection();
     setActiveModal(null);
   }, [G.pendingPlayerEvent, clearMapSelection]);
 
-  // `?` toggles the codex from anywhere — it is a consult page now (right panel), so
-  // this is the same act as pressing its rail disc.
+  // `?` toggles the codex from anywhere: the same act as pressing its consult icon.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -296,15 +256,14 @@ export function HegemonyBoard({
       }
 
       if (event.key === "?") {
-        setConsultOpen((open) => !(open && consultRoute.view === "codex"));
-        setConsultRoute(routeTo("codex"));
+        setConsultTab((open) => (open === "codex" ? null : "codex"));
       }
       // Escape is ModalShell's job — every dialog gets it from the one place.
     };
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [consultRoute.view]);
+  }, []);
 
   const handleTileAction = useCallback(
     (tileId: string) => {
@@ -338,33 +297,18 @@ export function HegemonyBoard({
       ) {
         const placement: SetupPlacement =
           ctx.phase === "setupCapital" ? "capital" : ctx.phase === "setupCity" ? "city" : "colony";
-        setTileConfirmation(null);
         setActiveModal({ kind: "populationPrompt", placement, tileId });
         return;
       }
 
-      if (!isActive) {
-        return;
+      // Picking one of your own settlements opens its page on the realm sheet.
+      const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
+      if (tile?.settlements.some((settlement) => settlement.owner === viewerId)) {
+        setRealmTab("subject");
       }
-
-      setTileConfirmation(null);
     },
-    [mapSelection, setMapSelectionTarget, ctx.phase, isActive],
+    [mapSelection, setMapSelectionTarget, ctx.phase, G.board.tiles, viewerId],
   );
-
-  const confirmTileAction = useCallback(() => {
-    if (!tileConfirmation) {
-      return;
-    }
-
-    if (tileConfirmation.action === "foundColony") {
-      armMapSelection({ kind: "foundColony" });
-    } else {
-      setActiveModal({ kind: "upgradeCity" });
-    }
-
-    setTileConfirmation(null);
-  }, [tileConfirmation, armMapSelection]);
 
   const requestBuildBuilding = useCallback(
     (tileId: string, buildingId: BuildingId, claimVertexId?: string) => {
@@ -390,176 +334,112 @@ export function HegemonyBoard({
     [ctx.phase, isActive, hasPendingPlayerEvent, G, viewerId, moves],
   );
 
-  const confirmation = useMemo(
-    () =>
-      tileConfirmation
-        ? {
-            label: tileConfirmation.label,
-            tileId: tileConfirmation.tileId,
-            onCancel: () => setTileConfirmation(null),
-            onConfirm: confirmTileAction,
-          }
-        : null,
-    [tileConfirmation, confirmTileAction],
-  );
+  const verbContext: VerbContext = {
+    G,
+    playerID: viewerId,
+    phase: ctx.phase,
+    isActive,
+    hasPendingPlayerEvent,
+    canGrowPops,
+    canMovePops,
+    canFoundColony,
+    canUpgradeCity,
+    canBuild,
+    armedVerb: armedVerbOf(mapSelection.selection?.mode),
+    calmUsed: viewer.civicCalmUsedThisTurn,
+    ventureUsed: viewer.ventureUsedThisTurn,
+  };
+  // The realm's subject: the viewer's settlement on the picked tile, else their first.
+  const holdings = getOwnedHoldings(G, viewerId);
+  const subject = holdings.find(({ tile }) => tile.id === selectedTileId) ?? holdings[0] ?? null;
 
   return (
     <GameUiProvider value={gameUi}>
       <CodexLinkProvider value={codexLink}>
-        <main className="shell uiOverhaulShell">
-          {/* The map is the stage now, not a grid cell: a full-bleed sea the chrome
-          floats over (ui-refit Step 1). The captions ride the stage so they stay
-          pinned to the sea, not to a docked frame. */}
-          <div className="mapStage">
-            <HexMap
+        <main className="frame">
+          <Island
+            G={G}
+            highlightTileIds={
+              mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds
+            }
+            onTileAction={handleTileAction}
+            // A popover pinned to a tile's old spot closes when the map moves;
+            // the mode stays armed, so the next click re-opens it in place.
+            onViewChange={() => setMapSelectionTarget(null)}
+            placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
+            selectedTileId={selectedTileId}
+          />
+
+          <div className="hud hud-top">
+            <TopBar
               G={G}
-              confirmation={confirmation}
-              pendingTileId={tileConfirmation?.tileId ?? null}
-              selectedTileId={selectedTileId}
-              highlightTileIds={
-                mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds
-              }
-              placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
-              onTileAction={handleTileAction}
+              actingId={currentPlayerId}
+              breakdown={projectedIncomeBreakdown}
+              consultOpen={consultTab}
+              happiness={happinessDisplay(G, viewerId)}
+              income={projectedIncome}
+              onConsult={(tab) => setConsultTab((open) => (open === tab ? null : tab))}
+              onSeat={onPlayerIDChange}
+              viewerId={viewerId}
             />
-            {isSetup ? (
-              <div className="mapSetupCaption" role="status">
-                {pendingSetupCopy}
-              </div>
-            ) : null}
-            {mapSelection.selection ? (
-              <div className="mapSetupCaption placementCaption" role="status">
-                {selectionCaption(
-                  mapSelection.selection.mode,
-                  mapSelection.candidateTileIds.length,
-                )}
-              </div>
-            ) : null}
+            <Ticker log={G.log} />
           </div>
 
-          {/* Symmetric, and absolutely so: the event slips read from the left, the
-          roster sits at the right, and the resource spine is pinned to the bar's
-          true centre rather than to whatever space the two ends left over. The
-          turn dial is the centre of that spine, so the one object the eye goes to
-          first is also the only thing on the bar that never moves. */}
-          <header className="topbar strategyTopbar">
-            <TopbarEvents G={G} />
+          {isSetup || mapSelection.selection ? (
+            <div className="map-caption" role="status">
+              {mapSelection.selection
+                ? selectionCaption(
+                    mapSelection.selection.mode,
+                    mapSelection.candidateTileIds.length,
+                  )
+                : pendingSetupCopy}
+            </div>
+          ) : null}
 
-            <div className="resourceSpine">
-              <ResourceGrid
-                order={MATERIAL_RESOURCES}
-                tiles={G.board.tiles}
-                resources={viewer.resources}
-                deltas={projectedIncome}
-                breakdown={projectedIncomeBreakdown}
-                resetKey={`res-${viewerId}`}
-              />
+          <div className="hud hud-bottom">
+            <RealmPanel
+              armed={armedVerbOf(mapSelection.selection?.mode)}
+              groups={discGroups(verbContext, {
+                // Grow / Move / Found / Build arm the map; nothing covers the answer.
+                onGrowPopRequest: () => armSelection({ kind: "growPop" }),
+                onMovePopsRequest: () => armSelection({ kind: "movePops" }),
+                onFoundColonyRequest: () => armSelection({ kind: "foundColony" }),
+                onBuildRequest: () => armSelection({ kind: "build" }),
+                onCalmRequest: () => setActiveModal({ kind: "calm" }),
+                onVentureRequest: () => setActiveModal({ kind: "venture" }),
+                onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
+                onLadder: () => setRealmTab("pops"),
+                onMarket: () => setRealmTab("market"),
+              })}
+              onBankBuy={moves.bankBuy}
+              onBankSell={moves.bankSell}
+              onBuildBuildingRequest={requestBuildBuilding}
+              onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
+              onTab={setRealmTab}
+              subject={subject}
+              tab={realmTab}
+            />
+            <EndTurn
+              actingId={currentPlayerId}
+              canEndTurn={turnOpen}
+              onEndTurn={events.endTurn}
+              title={turnCommitTitle(turnGate)}
+            />
+          </div>
 
-              <Tooltip
-                content={
-                  <MechanicsDetails
-                    blockedReason={turnOpen ? undefined : turnCommitTitle(turnGate)}
-                    heading="End Turn"
-                  >
-                    {turnOpen ? (
-                      <p className="mechanicsExplanation">{turnCommitTitle(turnGate)}</p>
-                    ) : null}
-                  </MechanicsDetails>
-                }
-                triggerClassName="turnDialTrigger"
+          {consultTab ? (
+            <aside aria-label="Consult" className="consult-sheet" data-c="consult-sheet">
+              <button
+                aria-label="Close"
+                className="consult-close"
+                onClick={() => setConsultTab(null)}
+                type="button"
               >
-                <TurnDial
-                  G={G}
-                  actingPlayerId={currentPlayerId}
-                  canEndTurn={turnOpen}
-                  onEndTurn={events.endTurn}
-                />
-              </Tooltip>
-
-              <ResourceGrid
-                order={CIVIC_RESOURCES}
-                tiles={G.board.tiles}
-                resources={viewer.resources}
-                deltas={projectedIncome}
-                breakdown={projectedIncomeBreakdown}
-                resetKey={`res-${viewerId}`}
-                happiness={happinessBreakdown(G, viewerId)}
-              />
-            </div>
-
-            <div className="topbarStatusCluster">
-              <ActiveEffectsList variant="board" />
-              <PlayerScoreboard
-                currentPlayerId={currentPlayerId}
-                onPlayerIDChange={onPlayerIDChange}
-                viewerId={viewerId}
-              />
-            </div>
-          </header>
-
-          {/* The KYKLOS ledger (ui-refit Step 2): a disc rail threaded on the left
-          spine, and the tab contents in a floating ivory card the rail opens. */}
-          <section className="workbench strategyWorkbench">
-            <LedgerRail
-              activeTab={ledgerRoute.view}
-              isOpen={isLedgerOpen}
-              onSelectTab={(tab) => {
-                // A disc opens the ledger to its tab; pressing the tab already showing
-                // closes it. So the same disc both reveals and dismisses.
-                setLedgerOpen((open) => !(open && tab === ledgerRoute.view));
-                setLedgerRoute(routeTo(tab));
-              }}
-            />
-
-            {isLedgerOpen ? (
-              <aside className="panel empirePanel intelPanel">
-                <EmpireIntelPanel
-                  activeTab={ledgerRoute.view}
-                  onBuildBuildingRequest={requestBuildBuilding}
-                  onBankSell={moves.bankSell}
-                  onBankBuy={moves.bankBuy}
-                  onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
-                />
-              </aside>
-            ) : null}
-
-            {/* The right consult rail + its floating card, mirroring the left ledger on the
-            far edge (two-panel.md). Independent of the ledger — both may be open. */}
-            <ConsultRail
-              activeTab={consultRoute.view}
-              isOpen={isConsultOpen}
-              onSelectTab={(tab) => {
-                setConsultOpen((open) => !(open && tab === consultRoute.view));
-                setConsultRoute(routeTo(tab));
-              }}
-            />
-
-            {isConsultOpen ? (
-              <aside className="panel consultPanel">
-                <ConsultPanel activeTab={consultRoute.view} codexTarget={codexTarget} />
-              </aside>
-            ) : null}
-          </section>
-
-          <CommandDock
-            canGrowPops={canGrowPops}
-            canMovePops={canMovePops}
-            canFoundColony={canFoundColony}
-            canUpgradeCity={canUpgradeCity}
-            canBuild={canBuild}
-            armedVerb={armedVerbOf(mapSelection.selection?.mode)}
-            chronicleTicker={latestChronicleLine}
-            // Grow / Move / Found / Build are map modes, not dialogs (refit scope 3):
-            // each arms the board and clears any open dialog, so nothing covers the answer.
-            onGrowPopRequest={() => armSelection({ kind: "growPop" })}
-            onMovePopsRequest={() => armSelection({ kind: "movePops" })}
-            onFoundColonyRequest={() => armSelection({ kind: "foundColony" })}
-            onBuildRequest={() => armSelection({ kind: "build" })}
-            // Calm and Venture ask no "which tile?" question — they stay dialogs.
-            onCalmRequest={() => setActiveModal({ kind: "calm" })}
-            onVentureRequest={() => setActiveModal({ kind: "venture" })}
-            onUpgradeCityRequest={() => setActiveModal({ kind: "upgradeCity" })}
-          />
+                ×
+              </button>
+              <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
+            </aside>
+          ) : null}
 
           {activeModal?.kind === "populationPrompt" ? (
             <PopulationPickerModal

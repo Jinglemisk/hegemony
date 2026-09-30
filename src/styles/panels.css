@@ -11,15 +11,9 @@
  *   · exactly ONE surface per page is allowed to raise its voice (the alarm)
  */
 
-/* ── Shared furniture ───────────────────────────────────────────────────────
-   The scroll region itself (`.intelBody`) belongs to the tablet FRAME and lives
-   in intel.css. It was declared a second time here, which is how its scrollbar
-   colour ended up disagreeing with the rule that owns it. */
-
 /* A page's section head: a hairline and a whispered caps line, never a box.
    `.pageSection` is the general name; `.ladderSection` is the Ladder's older
    one, kept until that page is next touched. */
-.ladderSection,
 .pageSection {
   margin: 14px 0 8px;
   padding-bottom: 5px;
@@ -83,31 +77,6 @@
   justify-content: flex-start;
   gap: 4px 11px;
   margin-left: 0;
-}
-
-/* The empire strip: four counts, identical on every act page. */
-.empireStrip {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 2px;
-}
-
-.est {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  color: var(--ink);
-}
-
-.est .icon {
-  align-self: center;
-  width: 1.0625rem;
-  height: 1.0625rem;
-  color: var(--ink-66);
-}
-
-.est .label {
-  color: var(--ink-63);
 }
 
 /* ── The alarm ───────────────────────────────────────────────────────────
@@ -601,11 +570,6 @@
   display: block;
   min-width: 0;
 }
-
-/* The price rides ON the button. It is the number that decides whether you press
-   and it used to live in a tooltip, so you had to hover a control to find out
-   what it would spend. Only the arithmetic behind the price — which settlement
-   pays, which discount applies — is still hover-only. */
 /* Half a 236px page, minus a gap: a rung has ~106px and everything on it — the
    step arrow, the verb, the signed price — has to live inside that. The minus
    sign the price wears (it is a cost, not takings) cost it 5px, which is what
@@ -874,10 +838,8 @@
 
 .bcardBlocked .bcardCostShort {
   color: var(--neg);
-  opacity: 1.82; /* 1 / 0.55 */
+  opacity: 1.82;
 }
-
-/* ── Market ───────────────────────────────────────────────────────────────── */
 
 /* The row wraps rather than squeezes. A stockpile reaches three digits by the
    middle of a game, and against a fixed-width count the trade block had 2px less

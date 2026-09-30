@@ -8,9 +8,8 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   await expect(page.getByRole("heading", { name: "Choose metropolis pops" })).toBeVisible();
   await page.getByRole("button", { name: "Place metropolis" }).click();
   await expect(page.getByRole("heading", { name: "Choose metropolis pops" })).toBeHidden();
-  // Whose turn it is lives on the turn dial in the top bar, and when the seat is
-  // not yours the dial is a status disc rather than a button — so the assertion
-  // is on its accessible name, which is the only place the sentence is written.
+  // Whose turn it is lives on the end-turn disc: when the seat is not yours it is
+  // a status disc rather than a button, so the assertion is on its accessible name.
   await expect(page.getByRole("img", { name: /Nikos is acting/ })).toBeVisible();
 
   await page.goto("/?dev=preload&seed=42");
