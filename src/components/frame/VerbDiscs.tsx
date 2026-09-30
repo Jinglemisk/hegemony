@@ -204,7 +204,8 @@ const isTyping = (target: EventTarget | null) =>
  * second fan) and closes --fan-linger after the pointer has left the span of
  * the disc and its open fans, so a far option stays open while the pointer
  * crosses the sea to it; a second fan is inside its option. A disc click
- * runs the group's primary option, or opens the fan; a click on an armed disc
+ * runs the group's primary option, or opens the fan when it has none or the
+ * rules refuse it (a touch screen has no hover); a click on an armed disc
  * gives the map back. Enter or ArrowUp on a disc opens its fan and moves focus
  * in; arrows walk a fan, Enter opens a second fan, Escape backs out one level.
  * The number keys act on the discs in order.
@@ -299,9 +300,9 @@ export function VerbDiscs({
     if (armed) {
       setPath([]);
       armed.run?.();
-    } else if (primary) {
+    } else if (primary?.enabled) {
       setPath([]);
-      if (primary.enabled) primary.run?.();
+      primary.run?.();
     } else if (within(pathRef.current, group.id)) {
       setPath([]);
     } else {

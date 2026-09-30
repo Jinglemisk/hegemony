@@ -35,12 +35,13 @@ export function useMapSelection({
   const clear = useCallback(() => setSelection(null), []);
 
   /** Arm a mode, or disarm it if the same choice is pressed again; a different
-   *  choice of the same verb (another pop, another building) re-arms. */
+   *  choice of the same verb (another pop, another building) re-arms. Move's
+   *  picked source is progress, not a choice, so pressing Move again cancels. */
   const arm = useCallback((mode: MapSelectionMode) => {
+    const choice = (m: MapSelectionMode) =>
+      JSON.stringify(m.kind === "movePops" ? { kind: m.kind } : m);
     setSelection((current) =>
-      current && JSON.stringify(current.mode) === JSON.stringify(mode)
-        ? null
-        : { mode, target: null },
+      current && choice(current.mode) === choice(mode) ? null : { mode, target: null },
     );
   }, []);
 
