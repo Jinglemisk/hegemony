@@ -645,6 +645,8 @@
   height: var(--area-h);
   padding: var(--body-top) var(--body-right) var(--s-4) var(--s-4);
   display: grid;
+  /* the body takes the sheet's height and no more: a long page scrolls inside */
+  grid-template-rows: minmax(0, 1fr);
   font: var(--t-body) / var(--l-body) var(--f-body);
   background: var(--bone);
   border-top-right-radius: var(--area-curve);

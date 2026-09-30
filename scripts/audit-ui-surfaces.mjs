@@ -41,18 +41,23 @@ const realmTab = (p, tab) => p.locator(".realm-tabs").getByRole("tab", { name: t
 const consultButton = (p, tab) => p.locator(`.consult-btn[aria-label="${tab}"]`).first();
 const verb = (p, name) => p.locator(`.verb-btn[aria-label^="${name}"]`).first();
 
-/** Open a verb's option: a single-option disc acts on its click; a fan opens first. */
-const pressVerb = async (p, group, option) => {
+/** Open a verb's fan from the keyboard (Enter never runs the disc's own
+ *  option), then take each named option in turn: a second fan, or the act. */
+const pressVerb = async (p, group, options = []) => {
   const disc = verb(p, group);
-  if (!(await disc.count()) || (await disc.getAttribute("aria-disabled")) === "true") return;
-  await disc.click().catch(() => {});
-  if (option) {
-    const item = p.getByRole("menuitem", { name: new RegExp(`^${option}`) }).first();
-    if ((await item.count()) && (await item.getAttribute("aria-disabled")) !== "true") {
-      await item.click().catch(() => {});
-    }
+  if (!(await disc.count())) return;
+  await disc.focus().catch(() => {});
+  await p.keyboard.press("Enter");
+  await p.waitForTimeout(400);
+  for (const option of options) {
+    const item = p
+      .locator(`.is-open > .fan > .fan-item > .fan-btn[aria-label^="${option}."]`)
+      .first();
+    if (!(await item.count()) || (await item.getAttribute("aria-disabled")) === "true") break;
+    await item.click().catch(() => {});
+    await p.waitForTimeout(400);
   }
-  await p.waitForTimeout(600);
+  await p.waitForTimeout(400);
 };
 
 const closeConsult = async (p, tab) => {
@@ -117,7 +122,7 @@ export const SURFACES = [
   {
     name: "targeting-grow",
     go: async (p) => {
-      await pressVerb(p, "Grow");
+      await pressVerb(p, "Grow", ["Slave"]);
     },
     after: async (p) => {
       await p.keyboard.press("Escape");
@@ -127,7 +132,7 @@ export const SURFACES = [
   {
     name: "targeting-build",
     go: async (p) => {
-      await pressVerb(p, "Build");
+      await pressVerb(p, "Build", ["Freemen"]);
     },
     after: async (p) => {
       await p.keyboard.press("Escape");
@@ -135,11 +140,33 @@ export const SURFACES = [
     },
   },
   {
-    name: "calm",
+    name: "fan-civic",
     go: async (p) => {
-      await pressVerb(p, "Civic", "Calm");
+      await pressVerb(p, "Civic");
     },
     after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(300);
+    },
+  },
+  {
+    name: "fan-build-slaves",
+    go: async (p) => {
+      await pressVerb(p, "Build", ["Slaves"]);
+    },
+    after: async (p) => {
+      await p.keyboard.press("Escape");
+      await p.keyboard.press("Escape");
+      await p.waitForTimeout(300);
+    },
+  },
+  {
+    name: "fan-exchange-wood",
+    go: async (p) => {
+      await pressVerb(p, "Exchange", ["Wood"]);
+    },
+    after: async (p) => {
+      await p.keyboard.press("Escape");
       await p.keyboard.press("Escape");
       await p.waitForTimeout(300);
     },
@@ -147,7 +174,7 @@ export const SURFACES = [
   {
     name: "venture-pick",
     go: async (p) => {
-      await pressVerb(p, "Civic", "Venture");
+      await pressVerb(p, "Civic", ["Venture"]);
     },
   },
   {

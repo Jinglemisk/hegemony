@@ -28,7 +28,6 @@ import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelectio
 import { useMapSelection } from "./board/map/useMapSelection";
 import { armedVerbOf, isTurnOpen, turnCommitTitle } from "./board/command/verbs";
 import type { VerbContext } from "./board/command/verbs";
-import { CalmModal } from "./board/modals/CalmModal";
 import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
 import { ConsultPanel } from "./board/ledger/ConsultPanel";
@@ -78,7 +77,6 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
 type ActiveModal =
   | { kind: "populationPrompt"; placement: SetupPlacement; tileId: string }
   | { kind: "upgradeCity" }
-  | { kind: "calm" }
   | { kind: "venture" };
 
 export function HegemonyBoard({
@@ -398,19 +396,21 @@ export function HegemonyBoard({
 
           <div className="hud hud-bottom">
             <RealmPanel
-              armed={armedVerbOf(mapSelection.selection?.mode)}
-              groups={discGroups(verbContext, {
-                // Grow / Move / Found / Build arm the map; nothing covers the answer.
-                onGrowPopRequest: () => armSelection({ kind: "growPop" }),
-                onMovePopsRequest: () => armSelection({ kind: "movePops" }),
-                onFoundColonyRequest: () => armSelection({ kind: "foundColony" }),
-                onBuildRequest: () => armSelection({ kind: "build" }),
-                onCalmRequest: () => setActiveModal({ kind: "calm" }),
-                onVentureRequest: () => setActiveModal({ kind: "venture" }),
-                onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
-                onLadder: () => setRealmTab("pops"),
-                onMarket: () => setRealmTab("market"),
-              })}
+              groups={discGroups(
+                verbContext,
+                {
+                  // The fans arm the map for the exact choice; nothing covers the answer.
+                  onArm: armSelection,
+                  onMovePopsRequest: () => armSelection({ kind: "movePops" }),
+                  onFoundColonyRequest: () => armSelection({ kind: "foundColony" }),
+                  onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
+                  onVentureRequest: () => setActiveModal({ kind: "venture" }),
+                  onCalm: moves.civicCalm,
+                  onBankBuy: moves.bankBuy,
+                  onBankSell: moves.bankSell,
+                },
+                mapSelection.selection?.mode ?? null,
+              )}
               onBankBuy={moves.bankBuy}
               onBankSell={moves.bankSell}
               onBuildBuildingRequest={requestBuildBuilding}
@@ -487,6 +487,7 @@ export function HegemonyBoard({
                   return (
                     <GrowPopPopover
                       anchor={anchor}
+                      initialPop={mode.pop}
                       onCancel={mapSelection.clear}
                       onConfirm={(target, pop) => {
                         moves.growPop(target, pop);
@@ -501,6 +502,7 @@ export function HegemonyBoard({
                   return (
                     <BuildPopover
                       anchor={anchor}
+                      initialBuildingId={mode.buildingId}
                       onCancel={mapSelection.clear}
                       onConfirm={(target, buildingId, claimVertexId) => {
                         requestBuildBuilding(target, buildingId, claimVertexId);
@@ -569,7 +571,6 @@ export function HegemonyBoard({
               }}
             />
           ) : null}
-          {activeModal?.kind === "calm" ? <CalmModal onClose={closeModal} /> : null}
           {activeModal?.kind === "venture" ? <VentureModal onClose={closeModal} /> : null}
           {G.pendingRiot || riotResultOpen ? (
             <RiotModal

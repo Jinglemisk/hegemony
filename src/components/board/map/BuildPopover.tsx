@@ -18,11 +18,14 @@ import { TileSubject } from "../TileSubject";
 export function BuildPopover({
   tileId,
   anchor,
+  initialBuildingId,
   onCancel,
   onConfirm,
 }: {
   tileId: string;
   anchor: DOMRect;
+  /** The building the Build fan picked, if it picked one. */
+  initialBuildingId?: BuildingId;
   onCancel: () => void;
   onConfirm: (tileId: string, buildingId: BuildingId, claimVertexId?: string) => void;
 }) {
@@ -30,7 +33,10 @@ export function BuildPopover({
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
   const options = getBuildBuildingOptions(G, playerID, tileId);
   const [buildingId, setBuildingId] = useState<BuildingId>(
-    () => options.find(({ status }) => status.can)?.building.id ?? options[0].building.id,
+    () =>
+      initialBuildingId ??
+      options.find(({ status }) => status.can)?.building.id ??
+      options[0].building.id,
   );
   // The Port claims one adjacent good; with two reachable, the pick is the
   // player's (a typed command field, never an engine default) — so it is a
