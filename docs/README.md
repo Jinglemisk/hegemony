@@ -23,7 +23,7 @@ precedes full multiplayer.
 
 | Plan                                                | Phase    | Status    | Position                                                                         |
 | --------------------------------------------------- | -------- | --------- | -------------------------------------------------------------------------------- |
-| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 1: the Hybrid arc frame on `feat/v2`                                        |
+| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 2: the verb discs and fans; Step 1 shipped (#79)                            |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze |
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged            |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                        |

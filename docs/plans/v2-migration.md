@@ -182,7 +182,7 @@ selectors, so a rule change updates one selector, not three views.
 1280, 1440 and 1920 with the gate script's results; the owner approves the look before the
 next step.
 
-- [ ] **Step 1 · Frame.** Replace the old in-match shell with the Hybrid arc frame, wired to
+- [x] **Step 1 · Frame.** ([#79](https://github.com/Jinglemisk/hegemony/pull/79): the gate passes at 1280/1440/1920 on the real app; a `?dev=bots` game plays to victory in the shell.) Replace the old in-match shell with the Hybrid arc frame, wired to
       today's engine: the top bar with rivals and their tooltip, the pannable map, the realm
       panel with its tabs and the settlement's three-column view, and end turn. Port the
       mock's tokens into `src/styles` and delete the old shell's components and CSS.
