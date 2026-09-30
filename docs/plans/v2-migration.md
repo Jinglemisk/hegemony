@@ -208,7 +208,7 @@ next step.
       riot and revolt marks; Q77 decides which at Step 5.
       Exit: bots play a full game in the new shell; browser smoke passes; `ui:audit` and
       `ui:conduct` pass or are updated to the new addresses.
-- [ ] **Step 2 · Verb discs and fans.** The six discs as one data-driven component, since the
+- [x] **Step 2 · Verb discs and fans.** ([#80](https://github.com/Jinglemisk/hegemony/pull/80): a test holds the fans to the engine's legal moves both ways; the gate passes at 1280/1440/1920 with fan hover shots.) The six discs as one data-driven component, since the
       disc count must not be hard-coded, with the fan behaviour above, wired to today's legal
       moves and a full keyboard path. Exit: every legal verb is reachable by mouse and by
       keyboard; no fan leaves the screen or covers a city name from 1280 to 1920.
