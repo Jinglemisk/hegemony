@@ -79,7 +79,7 @@ export function RealmPanel({
 
   return (
     <section aria-label="Realm" className="realm" data-c="realm" data-exclude>
-      <VerbDiscs armed={armed} groups={groups} />
+      <VerbDiscs armed={armed} groups={groups} store={G.players[viewerId].resources} />
       <div className="realm-body">
         <header className="realm-head" data-c="realm-head">
           <span

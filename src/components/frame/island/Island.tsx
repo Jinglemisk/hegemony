@@ -427,12 +427,15 @@ function IslandComponent({
   highlightTileIds,
   placementActive = false,
   onTileAction,
+  onViewChange,
 }: {
   G: HegemonyState;
   selectedTileId: string | null;
   highlightTileIds?: readonly string[];
   placementActive?: boolean;
   onTileAction: (tileId: string) => void;
+  /** The player moved the map: anything anchored to a tile's old position is stale. */
+  onViewChange?: () => void;
 }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -464,11 +467,18 @@ function IslandComponent({
     });
   }, [G.board.tiles, G.board.luxuries, G.definition.content]);
 
-  // The island's extent in hex units, and the boxes the fit must keep clear.
+  // The island's extent in hex units, and the boxes the fit must keep clear. Keyed on
+  // the board's shape, not on the tiles array: every move that touches a tile gives
+  // that array a new identity, and the view must not re-fit (and snap back) for it.
+  const shape = G.board.tiles.map((tile) => `${tile.q},${tile.r}`).join(";");
   const tileBoxes = useMemo<UnitBox[]>(
     () =>
-      centers.map(({ x, y }) => [x / HEX - SQ3 / 2, x / HEX + SQ3 / 2, y / HEX - 1, y / HEX + 1]),
-    [centers],
+      shape.split(";").map((cell) => {
+        const [q, r] = cell.split(",").map(Number);
+        const { x, y } = hexCenter(q, r, 1);
+        return [x - SQ3 / 2, x + SQ3 / 2, y - 1, y + 1];
+      }),
+    [shape],
   );
   const boxesAt = useCallback(
     (s: number): UnitBox[] => {
@@ -526,6 +536,12 @@ function IslandComponent({
     svg.style.setProperty("--b-scale", (s / HEX).toFixed(4));
     layoutLabels(svg, s);
   }, [extent]);
+  // The fit reads the latest boxes (moorings change as goods are claimed) without
+  // re-running on every change: it runs on mount, on resize and when fonts land.
+  const boxesRef = useRef(boxesAt);
+  useLayoutEffect(() => {
+    boxesRef.current = boxesAt;
+  }, [boxesAt]);
   const fit = useCallback(() => {
     const exclusions = [...document.querySelectorAll("[data-exclude]")]
       .map((el) => el.getBoundingClientRect())
@@ -535,12 +551,12 @@ function IslandComponent({
       height: innerHeight,
       gap: tokenPx("--board-gap") || 8,
       exclusions,
-      boxesAt,
+      boxesAt: boxesRef.current,
     });
     base.current = result ?? { s: 24, cx: innerWidth / 2, cy: innerHeight / 2 };
     view.current = { x: 0, y: 0, z: 1 };
     apply();
-  }, [boxesAt, apply]);
+  }, [apply]);
 
   useLayoutEffect(() => {
     fit();
@@ -564,6 +580,10 @@ function IslandComponent({
 
   // Drag to pan, wheel to zoom about the pointer, 0 to return to the opening view.
   const dragged = useRef(false);
+  const onViewChangeRef = useRef(onViewChange);
+  useLayoutEffect(() => {
+    onViewChangeRef.current = onViewChange;
+  }, [onViewChange]);
   useEffect(() => {
     const stage = stageRef.current;
     const svg = svgRef.current;
@@ -593,6 +613,7 @@ function IslandComponent({
         dragged.current = true;
         stage.classList.add("is-panning");
         setHover(null);
+        onViewChangeRef.current?.();
       }
       view.current.x = drag.vx + dx;
       view.current.y = drag.vy + dy;
@@ -602,6 +623,10 @@ function IslandComponent({
       if (drag && e.pointerId === drag.id) {
         drag = null;
         stage.classList.remove("is-panning");
+        // The click that ends a drag fires before timers run; after it, clicks count again.
+        window.setTimeout(() => {
+          dragged.current = false;
+        });
       }
     };
     const wheel = (e: WheelEvent) => {
@@ -619,6 +644,7 @@ function IslandComponent({
       v.y += (e.clientY - cy) * (1 - k);
       v.z = z;
       apply();
+      onViewChangeRef.current?.();
     };
     const key = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;

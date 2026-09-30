@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import type { Resources } from "../../game/types";
+import { canPay } from "../../ui/frameFormat";
 import type { VerbId } from "../board/command/verbs";
 import type { DiscGroup, DiscOption } from "./discs";
 import { Ico, Price } from "./parts";
@@ -7,7 +9,7 @@ import { Ico, Price } from "./parts";
 const tokenPx = (name: string) =>
   parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
 
-function OptionPrice({ option }: { option: DiscOption }) {
+function OptionPrice({ option, store }: { option: DiscOption; store: Resources }) {
   if (option.prices.length === 0) {
     return option.text ? <>{option.text}</> : null;
   }
@@ -17,7 +19,7 @@ function OptionPrice({ option }: { option: DiscOption }) {
       {option.prices.map((amounts, i) => (
         <span className="price-alt" key={i}>
           {i > 0 ? <span className="price-or">·</span> : null}
-          <Price amounts={amounts} short={!option.enabled} />
+          <Price amounts={amounts} short={!canPay(store, amounts)} />
         </span>
       ))}
     </>
@@ -55,7 +57,16 @@ function placeFan(li: HTMLLIElement) {
   });
 }
 
-export function VerbDiscs({ groups, armed }: { groups: DiscGroup[]; armed: VerbId | null }) {
+export function VerbDiscs({
+  groups,
+  armed,
+  store,
+}: {
+  groups: DiscGroup[];
+  armed: VerbId | null;
+  /** The viewer's resources: a price reads short only when this cannot pay it. */
+  store: Resources;
+}) {
   const [open, setOpen] = useState<string | null>(null);
   const listRef = useRef<HTMLOListElement | null>(null);
 
@@ -121,7 +132,7 @@ export function VerbDiscs({ groups, armed }: { groups: DiscGroup[]; armed: VerbI
               <span className="verb-name" data-c="verb-name" data-exclude>
                 <span className="verb-name-k">{group.label}</span>
                 <span className="verb-name-p">
-                  {single ? <OptionPrice option={single} /> : "Pick one"}
+                  {single ? <OptionPrice option={single} store={store} /> : "Pick one"}
                 </span>
               </span>
             </button>
@@ -153,7 +164,7 @@ export function VerbDiscs({ groups, armed }: { groups: DiscGroup[]; armed: VerbI
                       <span className="fan-label">
                         <span className="fan-k">{option.label}</span>
                         <span className="fan-p">
-                          <OptionPrice option={option} />
+                          <OptionPrice option={option} store={store} />
                         </span>
                       </span>
                     </button>

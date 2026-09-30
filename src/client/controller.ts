@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DEV_ROTATION_SEEDS, GAME_CONFIG } from "../game/config";
 import { mulberry32 } from "../game/core/rng";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
@@ -223,28 +223,31 @@ const BOT_TICK_MS = 250;
 
 /** `?dev=bots`: the sim's policy plays every seat, one whole turn per tick, through the
  *  same `playTurn` the headless batch uses, so the shell renders a real bot game. */
-function useBotTable(
-  G: HegemonyState,
-  setG: (next: (previous: HegemonyState) => HegemonyState) => void,
-) {
+function useBotTable(G: HegemonyState, setG: (next: HegemonyState) => void) {
   const [policy] = useState(() => {
     const params =
       typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
     return params?.get("dev") === "bots" ? resolvePolicy(params.get("policy") ?? "master") : null;
   });
-  const rng = useRef(createSimRng(deriveBotSeed(G.seed)));
+  // One bot stream per game seed, as `runGame` derives it.
+  const rng = useMemo(() => createSimRng(deriveBotSeed(G.seed)), [G.seed]);
 
   useEffect(() => {
     if (!policy || G.phase === "gameOver") {
       return;
     }
 
-    const tick = window.setTimeout(
-      () => setG((previous) => playTurn(previous, policy, rng.current)),
-      BOT_TICK_MS,
-    );
+    // The turn is played here, not in a state updater: StrictMode runs updaters
+    // twice, which would spend the bot stream twice per tick.
+    const tick = window.setTimeout(() => {
+      try {
+        setG(playTurn(G, policy, rng));
+      } catch (error) {
+        console.error("dev bots stopped:", error);
+      }
+    }, BOT_TICK_MS);
     return () => window.clearTimeout(tick);
-  }, [G, policy, setG]);
+  }, [G, policy, rng, setG]);
 }
 
 /** Read-only projection of the turn fields now living on {@link HegemonyState}, kept for the UI's convenience. */

@@ -1,4 +1,4 @@
-import type { Resource } from "../game/types";
+import type { Resource, Resources } from "../game/types";
 
 /** The frame's number and icon vocabulary, shared by its components. */
 
@@ -61,3 +61,10 @@ export const BUILDING_ICON: Record<string, string> = {
   gymnasion: "buildings/gymnasion",
   port: "events/voyage",
 };
+
+/** Whether a store covers a price: a price is short only when it cannot be paid. */
+export function canPay(store: Resources, amounts: Partial<Resources>) {
+  return (Object.entries(amounts) as Array<[Resource, number]>).every(
+    ([resource, n]) => store[resource] >= n,
+  );
+}

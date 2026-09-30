@@ -363,6 +363,9 @@ export function HegemonyBoard({
               mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds
             }
             onTileAction={handleTileAction}
+            // A popover pinned to a tile's old spot closes when the map moves;
+            // the mode stays armed, so the next click re-opens it in place.
+            onViewChange={() => setMapSelectionTarget(null)}
             placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
             selectedTileId={selectedTileId}
           />
