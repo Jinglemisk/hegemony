@@ -61,6 +61,9 @@ const armedLeaf = (options: DiscOption[]): DiscOption | undefined =>
     option.options ? (armedLeaf(option.options) ?? []) : option.armed ? option : [],
   )[0];
 
+/** How much nearer, in pixels, a block must sit than an arc to be chosen. */
+const BLOCK_COST = 64;
+
 type Box = { l: number; t: number; r: number; b: number };
 
 /** An option's circle and its label, relative to the circle's centre. */
@@ -78,7 +81,7 @@ function fanShapes(item: HTMLElement, d: number): Array<[number, number, number,
  * around the host's centre, aimed at the island's centre (a second fan: straight
  * out from the disc through its option). The arc may turn up to a right angle
  * either way and widen; the cheapest placement wins in which no circle or label
- * leaves the screen, overlaps another, or touches the chrome, a settlement's
+ * leaves the screen, overlaps another, or touches the sheet (by its curve), the chrome, a settlement's
  * mark (its seal and name), a mooring, or the open disc's hint. A second fan also keeps clear of the first fan's
  * circles and labels, so its peers stay in reach. When nothing clears the
  * settlements, they leave the walls first, then the gap between peers.
@@ -109,9 +112,14 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
     r: r.right + gap,
     b: r.bottom + gap,
   });
-  const chrome = [...document.querySelectorAll("[data-exclude]")].map((el) =>
+  // The sheet walls by its own shape below; its box would wall off the sea
+  // outside its curve, where the curve's discs open.
+  const chrome = [...document.querySelectorAll("[data-exclude]:not(.realm)")].map((el) =>
     pad(el.getBoundingClientRect()),
   );
+  const realm = group.closest(".realm");
+  const sheet = realm?.getBoundingClientRect();
+  const curve = realm ? parseFloat(getComputedStyle(realm).borderTopRightRadius) || 0 : 0;
   // The open disc's name tab reads as its hint: wall off the wider of the two.
   const plate = group.querySelector(".verb-name")!.getBoundingClientRect();
   const hintW = (group.querySelector<HTMLElement>(".verb-name-p")?.offsetWidth ?? 0) + 2 * gap;
@@ -140,41 +148,86 @@ function placeFan(host: HTMLElement, fanAt: WeakMap<Element, [number, number]>) 
     b: q.b + by,
   });
   const hit = (a: Box, z: Box) => a.l < z.r && a.r > z.l && a.t < z.b && a.b > z.t;
+  /** Whether a box touches the sheet's paper: its box, less the sea outside the curve. */
+  const onSheet = (q: Box) => {
+    if (!sheet || !hit(q, pad(sheet))) return false;
+    const ax = sheet.right - curve;
+    const ay = sheet.top + curve;
+    if (q.l < ax || q.b > ay) return true;
+    const px = Math.min(Math.max(ax, q.l), q.r);
+    const py = Math.min(Math.max(ay, q.t), q.b);
+    return Math.hypot(px - ax, py - ay) < curve + gap;
+  };
   const boxes = ([x, y]: [number, number], k: number) =>
     shapes[k].map(([l, t, r, b]) => ({ l: x + l, t: y + t, r: x + r, b: y + b }));
   const onScreen = (q: Box) =>
     q.l >= gap && q.t >= gap && q.r <= innerWidth - gap && q.b <= innerHeight - gap;
   const rho0 = (second ? d : disc.width) / 2 + gap + d / 2;
 
+  // Every layout a fan may take, cheapest first within its family: circles on
+  // an arc around the host, or, where the sea beside a disc is too narrow for
+  // an arc, a compact block of rows beside it. Cost is the options' mean
+  // distance from the host, plus two pixels per degree turned from the aim; a
+  // block pays BLOCK_COST more, so the arc wins wherever it fits nearby.
+  const labelW = Math.max(d, ...shapes.map((shape) => shape[1][2] - shape[1][0]));
+  const itemH = Math.max(...shapes.map((shape) => shape[1][3])) + d / 2;
+  const turnOf = (angle: number) => Math.abs(((((angle - aim) * 180) / Math.PI + 540) % 360) - 180);
+  const meanFrom = (ps: Array<[number, number]>) =>
+    ps.reduce((sum, [x, y]) => sum + Math.hypot(x - cx, y - cy), 0) / ps.length;
+
   const search = (walls: Box[], apart: number) => {
-    // Cost: one degree of turn weighs as much as two pixels of radius.
-    let best: { cost: number; ps: Array<[number, number]> } | null = null;
+    type Layout = { cost: number; ps: Array<[number, number]> };
+    let best: Layout | null = null;
+    const fits = (ps: Array<[number, number]>) => {
+      const bs = ps.map(boxes);
+      return bs.every((qs, k) =>
+        qs.every(
+          (q) =>
+            onScreen(q) &&
+            !onSheet(q) &&
+            !walls.some((z) => hit(q, z)) &&
+            bs.every((os, j) => j === k || os.every((o) => !hit(grow(q, apart), o))),
+        ),
+      );
+    };
+    const offer = (cost: number, ps: () => Array<[number, number]>) => {
+      if (best && cost >= best.cost) return;
+      const at = ps();
+      if (fits(at)) best = { cost, ps: at };
+    };
+
     for (let rho = rho0; rho < rho0 + innerHeight / 2; rho += gap) {
       const step = n > 1 ? 2 * Math.asin(Math.min(1, chord / (2 * rho))) : 0;
       for (let turn = -90; turn <= 90; turn += 5) {
-        const cost = Math.abs(turn) + (rho - rho0) / 2;
-        if (best && cost >= best.cost) continue;
         const a0 = aim + (turn * Math.PI) / 180 - (step * (n - 1)) / 2;
-        const ps = items.map(
-          (_, k) =>
-            [cx + rho * Math.cos(a0 + k * step), cy + rho * Math.sin(a0 + k * step)] as [
-              number,
-              number,
-            ],
+        offer(rho + 2 * Math.abs(turn), () =>
+          items.map((_, k) => [
+            cx + rho * Math.cos(a0 + k * step),
+            cy + rho * Math.sin(a0 + k * step),
+          ]),
         );
-        const bs = ps.map(boxes);
-        const ok = bs.every((qs, k) =>
-          qs.every(
-            (q) =>
-              onScreen(q) &&
-              !walls.some((z) => hit(q, z)) &&
-              bs.every((os, j) => j === k || os.every((o) => !hit(grow(q, apart), o))),
-          ),
-        );
-        if (ok) best = { cost, ps };
       }
     }
-    return best?.ps ?? null;
+    for (let cols = 1; cols <= n; cols += 1) {
+      const rows = Math.ceil(n / cols);
+      const w = cols * (labelW + gap);
+      const h = rows * (itemH + gap);
+      const cells = items.map((_, k): [number, number] => [
+        (k % cols) * (labelW + gap) + (labelW + gap) / 2 - w / 2,
+        Math.floor(k / cols) * (itemH + gap) + d / 2 + gap / 2 - h / 2,
+      ]);
+      for (let angle = -180; angle < 180; angle += 10) {
+        const phi = (angle * Math.PI) / 180;
+        for (let rho = rho0; rho < rho0 + innerHeight / 2; rho += gap) {
+          const bx = cx + rho * Math.cos(phi);
+          const by = cy + rho * Math.sin(phi);
+          const ps = cells.map(([x, y]): [number, number] => [bx + x, by + y]);
+          offer(meanFrom(ps) + 2 * turnOf(phi) + BLOCK_COST, () => ps);
+        }
+      }
+    }
+    // `best` is written inside `offer`, which flow analysis cannot see.
+    return (best as Layout | null)?.ps ?? null;
   };
 
   // Peers keep a gap apart, as they keep from everything else; when nothing
