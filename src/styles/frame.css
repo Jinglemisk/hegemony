@@ -100,29 +100,33 @@
   --fillet: var(--s-4); /* the concave join of the ticker tab and the bar */
   --board-gap: 8px; /* = --s-2; clearance between the island and the chrome, read by the fit */
   --sheet-w: calc(var(--u) * 100); /* 400: the consult sheet */
-  --page-max: calc(var(--u) * 60); /* 240: a realm page's height before it scrolls */
 
-  /* The realm sheet. Its edge is one path: the straight top run, then one
-     quarter-circle (--area-curve) down to the right side. Six discs sit on it
-     at equal arc lengths (--verb-pitch), the first and last --verb-inset from
-     its ends, each centre on the edge. Width, radius and inset keep every box
-     gap between neighbouring discs over 64 and no two disc edges 1 to 3px
-     apart. --body-top clears the discs and their names; --body-right clears
-     the last disc's name. */
-  --area-w: calc(var(--u) * 132); /* 528 */
-  --area-curve: calc(var(--u) * 49); /* 196 */
+  /* The realm sheet: a fixed box whose top-right corner is one large
+     quarter-circle. Its edge is one path from the screen's left edge to the
+     screen's bottom: the straight top run, the quarter-circle (--area-curve),
+     then the straight right side. Six discs sit on it at equal arc lengths
+     (--verb-pitch), the first and last the same --verb-inset from the path's two
+     ends, so Grow stands as far from the left edge as Exchange from the bottom.
+     --body-top clears the discs and their names; --body-right clears the discs
+     that ride the curve and the side. */
+  --area-w: calc(var(--u) * 124); /* 496 */
+  --area-h: calc(var(--u) * 92); /* 368 */
+  --area-curve: calc(var(--u) * 64); /* 256 */
   --verb-n: 6;
-  --verb-inset: calc(var(--u) * 9); /* 36: half a name plate, so the first name stays on screen */
+  --verb-inset: calc(var(--u) * 14); /* 56: a disc and its name clear of the edge */
   --edge: shape(
     from 0 0,
     hline to calc(var(--area-w) - var(--area-curve)),
-    arc to var(--area-w) var(--area-curve) of var(--area-curve) cw
+    arc to var(--area-w) var(--area-curve) of var(--area-curve) cw,
+    vline to var(--area-h)
   );
-  --edge-len: calc(var(--area-w) - var(--area-curve) + var(--area-curve) * pi / 2);
+  --edge-len: calc(
+    var(--area-w) + var(--area-h) - 2 * var(--area-curve) + var(--area-curve) * pi / 2
+  );
   --verb-pitch: calc((var(--edge-len) - 2 * var(--verb-inset)) / (var(--verb-n) - 1));
   --verb-name-w: calc(var(--verb-d) + var(--s-6));
   --body-top: calc(var(--verb-d) / 2 + var(--s-1) + var(--name-h) + var(--s-3));
-  --body-right: calc(var(--u) * 12); /* 48 */
+  --body-right: calc(var(--u) * 16); /* 64 */
 
   /* ---- colour: base.css defines the palette (sea, paper, ink, glazes, terrain);
      the frame adds only its translucent shades ---------------------------- */
@@ -168,10 +172,11 @@
 /* 1920-class viewports: the realm and end turn step up a tier */
 @media (min-width: 1680px) {
   :root {
-    --area-w: calc(var(--u) * 168); /* 672 */
-    --area-curve: calc(var(--u) * 53); /* 212 */
-    --verb-inset: calc(var(--u) * 11); /* 44 */
-    --body-right: calc(var(--u) * 15); /* 60 */
+    --area-w: calc(var(--u) * 156); /* 624 */
+    --area-h: calc(var(--u) * 112); /* 448 */
+    --area-curve: calc(var(--u) * 80); /* 320 */
+    --verb-inset: calc(var(--u) * 16); /* 64: the disc edge 32 from the screen edge */
+    --body-right: calc(var(--u) * 20); /* 80 */
     --verb-d: calc(var(--u) * 16); /* 64 */
     --name-h: var(--lh-24);
     --fan-d: calc(var(--u) * 12); /* 48 */
@@ -288,7 +293,6 @@
 
 /* Raised paper: an ivory face on a hairline, for layers that float over the table
    and for the labels that sit across the sheet's edge (disc names, fan labels). */
-.ticker-more,
 .sharedTooltip,
 .verb-name,
 .fan-label {
@@ -598,13 +602,23 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ticker-more {
+/* The earlier lines drop out of the tab itself: the same paper and width, one
+   hairline under the current line, and the tab's rounded corner moves down to
+   the bottom of the history. */
+.ticker .ticker-more {
   display: none;
   position: absolute;
-  top: calc(100% + var(--s-1));
+  top: 100%;
   left: 0;
-  width: var(--tip-w);
-  padding: var(--s-2) var(--s-3);
+  width: 100%;
+  padding: var(--s-2) var(--s-4) var(--s-3);
+  background: var(--bone);
+  box-shadow: inset 0 var(--rule) 0 var(--ink-12);
+  border-bottom-right-radius: var(--fillet);
+}
+.ticker:hover,
+.ticker:focus-visible {
+  border-bottom-right-radius: 0;
 }
 .ticker:hover .ticker-more,
 .ticker:focus-visible .ticker-more {
@@ -628,10 +642,9 @@
   left: 0;
   bottom: 0;
   width: var(--area-w);
-  min-height: calc(var(--area-curve) + var(--verb-d));
+  height: var(--area-h);
   padding: var(--body-top) var(--body-right) var(--s-4) var(--s-4);
   display: grid;
-  align-items: start;
   font: var(--t-body) / var(--l-body) var(--f-body);
   background: var(--bone);
   border-top-right-radius: var(--area-curve);
@@ -1330,8 +1343,10 @@
   color: var(--ink);
 }
 /* A long page scrolls inside the sheet rather than pushing it up the screen. */
+/* The sheet is a fixed size: a long page scrolls inside it. */
 .realm-page {
-  max-height: var(--page-max);
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 .col-yield-i {
