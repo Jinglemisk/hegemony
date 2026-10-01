@@ -69,12 +69,6 @@ export function luxuryHappinessBonus(G: HegemonyState, playerID: PlayerId): numb
   return activeClaims(G, playerID).length * G.ruleset.economy.luxury.happinessPerGood;
 }
 
-/** stored happiness + the luxury offset — what the riot thresholds and (per Q44)
- *  the Beloved metric actually test. */
-export function effectiveHappiness(G: HegemonyState, playerID: PlayerId): number {
-  return G.players[playerID].resources.happiness + luxuryHappinessBonus(G, playerID);
-}
-
 /** The unclaimed goods a Port in a settlement on `tileId` could seize. */
 export function claimableLuxuriesAt(G: HegemonyState, tileId: string): LuxuryAsset[] {
   return G.board.luxuries.filter((asset) => asset.owner === null && asset.tileIds.includes(tileId));

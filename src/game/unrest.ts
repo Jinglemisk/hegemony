@@ -1,7 +1,8 @@
 import type { HegemonyState, PlayerId } from "./types";
 import { formatRuleNumber } from "./core/format";
 import { addLog, getPlayerName } from "./core/query";
-import { effectiveHappiness, luxuryHappinessBonus, tickLuxurySuppression } from "./luxury";
+import { effectiveHappiness, happinessContributions } from "./happiness";
+import { tickLuxurySuppression } from "./luxury";
 import { startRiot } from "./riot";
 
 /**
@@ -58,9 +59,11 @@ export function applyUnrestUpkeep(G: HegemonyState, playerID: PlayerId) {
 
   // 2. Deadly unrest thresholds — severe first, mutually exclusive. A threshold
   //    starts a riot (blocking the turn on the table) instead of removing pops.
-  //    EFFECTIVE happiness is tested (Q43): active luxuries are a standing floor
-  //    that can hold a player above the riot line without touching the bank.
+  //    EFFECTIVE happiness is tested (Q43): active luxuries and this year's calm
+  //    stand beside the bank and can hold a player above the riot line. Calm has
+  //    then done its work: it lasts until the buyer's next turn starts.
   const effective = effectiveHappiness(G, playerID);
+  player.calmActive = false;
   if (effective <= rules.severeThreshold) {
     startRiot(G, playerID, "revolt");
   } else if (effective <= rules.popLossThreshold) {
@@ -74,7 +77,7 @@ export type UnrestTier = "calm" | "discontent" | "unrest" | "revolt";
 
 export interface UnrestStatus {
   tier: UnrestTier;
-  /** EFFECTIVE happiness — stored + luxury offset — the number the thresholds test.
+  /** EFFECTIVE happiness — stored + luxuries + calm — the number the thresholds test.
    *  Kept under the historical name so every consumer judges by the real line. */
   happiness: number;
   /** The stored bank alone, for the raw / bonus / effective breakdown every
@@ -82,6 +85,8 @@ export interface UnrestStatus {
   storedHappiness: number;
   /** The standing luxury offset (active goods × happinessPerGood). */
   luxuryBonus: number;
+  /** Calm bought this year: counted until the player's next turn starts. */
+  calmBonus: number;
   /** Whether the current happiness would put the player on the riot table next upkeep. */
   riotAtRisk: boolean;
   /** Count of active timed happiness modifiers still ticking. */
@@ -93,8 +98,10 @@ export interface UnrestStatus {
 export function unrestStatus(G: HegemonyState, playerID: PlayerId): UnrestStatus {
   const player = G.players[playerID];
   const storedHappiness = player.resources.happiness;
-  const luxuryBonus = luxuryHappinessBonus(G, playerID);
-  const happiness = storedHappiness + luxuryBonus;
+  const terms = happinessContributions(G, playerID);
+  const luxuryBonus = terms.find((term) => term.id === "luxuries")?.amount ?? 0;
+  const calmBonus = terms.find((term) => term.id === "calm")?.amount ?? 0;
+  const happiness = storedHappiness + luxuryBonus + calmBonus;
   const rules = G.ruleset.economy.unrest;
 
   let tier: UnrestTier = "calm";
@@ -112,6 +119,7 @@ export function unrestStatus(G: HegemonyState, playerID: PlayerId): UnrestStatus
     happiness,
     storedHappiness,
     luxuryBonus,
+    calmBonus,
     riotAtRisk: tier === "unrest" || tier === "revolt",
     timedModifiers: player.timedHappinessModifiers.length,
     totalDeaths: player.popsLostToUnrest + player.popsLostToHunger,

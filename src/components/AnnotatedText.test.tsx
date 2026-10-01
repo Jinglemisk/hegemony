@@ -37,14 +37,11 @@ const AUTHORED_NAMES = [
  */
 const NAME_IS_THE_TERM = new Set([
   "Marketplace",
-  "Temple",
-  "Workshop",
-  "Granary",
+  "Estate",
   "Forum",
-  "Aqueduct",
-  "Odeon",
-  "Villa",
-  "Gymnasion",
+  "Temple",
+  "Granary",
+  "Port",
   "Riot",
 ]);
 

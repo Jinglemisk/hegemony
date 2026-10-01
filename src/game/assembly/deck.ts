@@ -277,7 +277,7 @@ const PERDICCAS_LAWS: LawCard[] = [
         action: "buildBuilding",
         // The stone-led roster — the engine's own "wood = economic, stone = civic"
         // grammar (data.ts), so "civic buildings" needs no new classification field.
-        buildingIds: ["temple", "forum", "aqueduct", "odeon", "gymnasion"],
+        buildingIds: ["temple", "forum"],
         resource: "stone",
         amount: -4,
       },

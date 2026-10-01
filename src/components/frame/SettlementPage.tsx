@@ -1,5 +1,5 @@
 import { getBuilding } from "../../game/content";
-import { popIncome } from "../../game/economy/income";
+import { settlementClassColumn } from "../../game/economy/income";
 import {
   settlementBuildingSlots,
   settlementCapacity,
@@ -8,9 +8,11 @@ import {
   settlementSlots,
   settlementWorkingSlaves,
 } from "../../game/settlement";
+import { getBuildBuildingOptions } from "../../game/status";
 import type { HegemonyState, HexTile, PopType, Resource, Settlement } from "../../game/types";
 import { BUILDING_ICON, RESOURCE_ICON, sign } from "../../ui/frameFormat";
-import { getBuildingBenefitText } from "../board/helpers";
+import { getLuxuryGood } from "../../game/content";
+import { presentBuildingEffects } from "../../ui/effects";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Ico } from "./parts";
 import { PlaceSeal } from "./realm/PlaceSeal";
@@ -25,10 +27,11 @@ const nonZero = (income: Record<Resource, number>) =>
   (Object.entries(income) as Array<[Resource, number]>).filter(([, n]) => n !== 0);
 
 /**
- * The subject settlement: a meta line, three pop columns (count and what the
- * class makes here), and a line per building plus the open slots, which the
- * slaves work. Every number comes from the engine's own formulas: the per-class
- * yield is `popIncome`, and the slots are the settlement selectors'.
+ * The subject settlement: a meta line, three pop columns (count, what one pop of
+ * the class makes here, and what the class makes in all), and a line per building
+ * plus the open slots, which the slaves work. Every number comes from the engine:
+ * the columns are `settlementClassColumn`, and the slots are the settlement
+ * selectors'. A class building raises its column's "×" from 1 to 2.
  */
 export function SettlementPage({
   G,
@@ -44,13 +47,15 @@ export function SettlementPage({
 }) {
   const primary = tile.resource?.type ?? null;
   const pops = settlement.pops.slaves + settlement.pops.freemen + settlement.pops.citizens;
-  const capacity = settlementCapacity(settlement, G.ruleset, G.definition.content);
+  const capacity = settlementCapacity(settlement, G.ruleset);
   const slots = settlementSlots(tile, settlement);
   const open = settlementOpenSlots(tile, settlement);
   const working = settlementWorkingSlaves(tile, settlement);
   const idle = settlementIdleSlaves(tile, settlement);
+  // A city with an open slot, or a colony the engine would let raise its Port.
   const canRaise =
-    settlementBuildingSlots(tile, settlement, G.ruleset) > settlement.buildings.length;
+    settlementBuildingSlots(tile, settlement, G.ruleset) > settlement.buildings.length ||
+    getBuildBuildingOptions(G, settlement.owner, tile.id).some(({ status }) => status.can);
 
   return (
     <>
@@ -81,13 +86,26 @@ export function SettlementPage({
       <div className="settle-cols" data-c="settle-cols">
         {COLUMNS.map(({ pop, label, icon }) => {
           const count = settlement.pops[pop];
-          const made = nonZero(
-            popIncome(pop, count, primary, G.ruleset, pop === "slaves" ? working : count),
+          const column = settlementClassColumn(
+            tile,
+            settlement,
+            pop,
+            G.ruleset,
+            G.definition.content,
           );
+          const made = nonZero(column.income);
 
           return (
             <div className="settle-col" data-c="settle-col" key={pop}>
-              <span className="col-head caps">{label}</span>
+              <span className="col-head caps">
+                {label}
+                <b
+                  className={column.raisedBy ? "is-raised" : undefined}
+                  title={column.raisedBy ? `Raised by the ${column.raisedBy}` : undefined}
+                >
+                  ×{column.perPop}
+                </b>
+              </span>
               <Ico path={icon} size="tile" />
               <span className="col-count num">{count}</span>
               <span className="col-yield">
@@ -114,14 +132,24 @@ export function SettlementPage({
       <ul className="ground" data-c="settle-lines">
         {settlement.buildings.map((id, index) => {
           const building = getBuilding(G.definition.content, id);
+          // A standing building states its one fact; the Port's is the good it claimed.
+          const claimed = G.board.luxuries
+            .filter((asset) => asset.claimedAtSettlementId === settlement.id)
+            .map((asset) => getLuxuryGood(G.definition.content, asset.goodId)?.name ?? asset.goodId)
+            .join(", ");
+          const fact =
+            id === "port"
+              ? claimed
+                ? `Claims ${claimed}`
+                : "Its claim is gone"
+              : building
+                ? presentBuildingEffects(building.effects).text
+                : "";
           return (
-            // v1 lets a settlement raise the same building twice.
             <li className="g-line" data-c="settle-line" key={`${id}-${index}`}>
               <Ico path={BUILDING_ICON[id] ?? "buildings/build"} size="ui" />
               {building?.name ?? id}
-              {building ? (
-                <span>{getBuildingBenefitText(G, settlement.owner, tile, building)}</span>
-              ) : null}
+              {fact ? <span>{fact}</span> : null}
             </li>
           );
         })}

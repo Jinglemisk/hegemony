@@ -3,7 +3,6 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createModeDefinition } from "../game/definition";
 import { POLITICIANS, RESOLUTION_CARDS } from "../game/assembly/deck";
-import { getPromotePopStatus } from "../game/civic";
 import { getAuthoredGameContent, getBuildings, getTerrainDeck } from "../game/content";
 import {
   PLAYER_EVENT_CARDS,
@@ -13,8 +12,6 @@ import {
   RIOT_TABLE,
 } from "../game/data";
 import { settlementNetYield } from "../game/economy/income";
-import { getGrowPopStatus } from "../game/status";
-import { settlementCapacity } from "../game/settlement";
 import { materialTile, owned, scenario } from "../game/testing/scenario";
 import type { EventEffect } from "../game/types";
 import { Aggregator } from "../sim/telemetry";
@@ -263,31 +260,17 @@ describe("feature and content parity manifests", () => {
     const base = settlementNetYield(land, settlement, G.ruleset);
     const primary = land.resource.type;
 
-    expect(incomeWith("marketplace").gold - base.gold).toBe(6);
-    const temple = incomeWith("temple");
-    expect(temple.influence - base.influence).toBe(2);
-    expect(temple.happiness - base.happiness).toBe(1);
-    expect(land.slots).toBe(3);
-    expect(incomeWith("workshop")[primary] - base[primary]).toBe(2);
-    expect(incomeWith("granary").food - base.food).toBe(2);
+    // Three freemen, two citizens, two working slaves: a class building adds one each.
+    expect(incomeWith("marketplace").gold - base.gold).toBe(3);
     expect(incomeWith("forum").influence - base.influence).toBe(2);
-    expect(incomeWith("odeon").happiness - base.happiness).toBe(2);
-    expect(incomeWith("villa")[primary] - base[primary]).toBe(2);
-
-    settlement.buildings = [];
-    const baseCapacity = settlementCapacity(settlement, G.ruleset);
-    settlement.buildings = ["aqueduct"];
-    expect(settlementCapacity(settlement, G.ruleset) - baseCapacity).toBe(4);
-
-    settlement.buildings = [];
-    const baseGrowFood = getGrowPopStatus(G, "0", land.id, "slaves").cost?.food ?? 0;
-    settlement.buildings = ["granary"];
-    expect(getGrowPopStatus(G, "0", land.id, "slaves").cost?.food).toBe(baseGrowFood - 2);
-
-    settlement.buildings = [];
-    const basePromoteFood = getPromotePopStatus(G, "0", land.id, "slaves").cost?.food ?? 0;
-    settlement.buildings = ["gymnasion"];
-    expect(getPromotePopStatus(G, "0", land.id, "slaves").cost?.food).toBe(basePromoteFood - 2);
+    expect(land.slots).toBe(3);
+    expect(incomeWith("estate")[primary] - base[primary]).toBe(2);
+    const temple = incomeWith("temple");
+    expect(temple.influence - base.influence).toBe(0);
+    expect(temple.happiness - base.happiness).toBe(1);
+    expect(incomeWith("granary").food - base.food).toBe(2);
+    // The Port's fact is its claim; it adds nothing to a settlement's income.
+    expect(incomeWith("port")).toEqual(base);
   });
 
   it("zero-fills manifested building and event content in telemetry", () => {

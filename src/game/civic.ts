@@ -1,10 +1,9 @@
-import { getBuildings } from "./content";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName, getTile } from "./core/query";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
-import type { HegemonyState, PlayerId, PopType, Resource, Resources, Settlement } from "./types";
+import type { HegemonyState, PlayerId, PopType } from "./types";
 import { applyLawActionCost } from "./assembly/laws";
 
 /**
@@ -52,8 +51,9 @@ export function getCivicCalmStatus(
   return { can: reasons.length === 0, reasons, cost };
 }
 
-/** One `civicCalm` seam, two payments (D7): Stabilize Province (influence) or
- *  Bread & Circuses (gold), both +`happiness` and both burning the same shared throttle. */
+/** One `civicCalm` seam, two payments: Stabilize Province (influence) or Bread &
+ *  Circuses (gold). Both add `happiness` until the buyer's next turn starts and burn
+ *  the same shared throttle. */
 export function civicCalm(
   G: HegemonyState,
   playerID: PlayerId,
@@ -67,46 +67,15 @@ export function civicCalm(
 
   const player = G.players[playerID];
   payCost(player.resources, status.cost ?? {});
-  player.resources.happiness += G.ruleset.civicCalm.happiness;
+  // Calm is not banked: it stands beside the bank until this player's next upkeep.
+  player.calmActive = true;
   player.civicCalmUsedThisTurn = true;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} ${payment === "influence" ? "stabilized the province" : "staged bread & circuses"} (+${G.ruleset.civicCalm.happiness} happiness).`,
+    `${getPlayerName(G, playerID)} ${payment === "influence" ? "stabilized the province" : "staged bread & circuses"} (+${G.ruleset.civicCalm.happiness} happiness until their next turn).`,
     playerID,
   );
   return MOVE_OK;
-}
-
-/** Total promotion-cost reduction from a settlement's buildings (the Gymnasion) — the
- *  civic counterpart to the Granary's grow-pop food discount (economy/cost.ts). */
-function settlementPromoteDiscount(G: HegemonyState, settlement: Settlement): number {
-  return settlement.buildings.reduce((sum, buildingId) => {
-    const building = getBuildings(G.definition.content).find(
-      (candidate) => candidate.id === buildingId,
-    );
-
-    return (
-      sum +
-      (building?.effects ?? []).reduce(
-        (effectSum, effect) =>
-          effect.type === "promoteCostReduction" ? effectSum + effect.amount : effectSum,
-        0,
-      )
-    );
-  }, 0);
-}
-
-/** Cut `discount` off whichever resource(s) a promotion costs, floored at zero. */
-function discountPromoteCost(cost: Partial<Resources>, discount: number): Partial<Resources> {
-  if (discount <= 0) {
-    return { ...cost };
-  }
-
-  const out: Partial<Resources> = {};
-  for (const [resource, amount] of Object.entries(cost) as Array<[Resource, number]>) {
-    out[resource] = Math.max(0, amount - discount);
-  }
-  return out;
 }
 
 export function getPromotePopStatus(
@@ -117,15 +86,9 @@ export function getPromotePopStatus(
 ): ActionStatus {
   const settlement = getOwnedSettlement(G, tileId, playerID);
   const baseCost = G.ruleset.ladder.promoteCosts[from as "slaves" | "freemen"] ?? {};
-  // Buildings discount first (the Gymnasion), then the Assembly's standing Laws —
-  // Grain Dole cheapens every promotion, Manumission Law only the slave's.
-  const cost = applyLawActionCost(
-    G,
-    playerID,
-    "promotePop",
-    discountPromoteCost(baseCost, settlement ? settlementPromoteDiscount(G, settlement) : 0),
-    { pop: from },
-  );
+  // The Assembly's standing Laws reprice it: Grain Dole cheapens every promotion,
+  // Manumission Law only the slave's.
+  const cost = applyLawActionCost(G, playerID, "promotePop", { ...baseCost }, { pop: from });
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("The ladder is a gameplay action.");
@@ -203,8 +166,8 @@ export function promotePop(
   return MOVE_OK;
 }
 
-/** Fall one rung: citizen→freeman or freeman→slave (influence; the freeman's fall
- *  also costs happiness). Free and throttle-exempt during your own riot. */
+/** Fall one rung: citizen→freeman or freeman→slave, for influence. Free and
+ *  throttle-exempt during your own riot. */
 export function demotePop(
   G: HegemonyState,
   playerID: PlayerId,
@@ -224,8 +187,6 @@ export function demotePop(
   payCost(G.players[playerID].resources, status.cost ?? {});
 
   if (!duringOwnRiot) {
-    G.players[playerID].resources.happiness -=
-      G.ruleset.ladder.demoteHappinessPenalty[from as "citizens" | "freemen"];
     G.players[playerID].ladderUsedThisTurn = true;
   }
 

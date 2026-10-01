@@ -45,9 +45,11 @@ describe("work slots", () => {
 
     const income = settlementNetYield(forest, city, DEFAULT_RULESET);
     expect(income.wood).toBe(3);
-    // Slaves eat nothing, and the idle ones still count toward unrest.
+    // Slaves eat nothing. Their unrest is the realm's line, idle ones included.
     expect(income.food).toBe(0);
-    expect(income.happiness).toBe(-2.5);
+    expect(
+      calculateIncomeBreakdown(G, "0").find((line) => line.resource === "happiness")?.amount,
+    ).toBe(-2);
   });
 
   it("prints no yield on the tile: an empty settlement makes nothing", () => {
@@ -83,12 +85,12 @@ describe("work slots", () => {
 
     expect(settlementBuildingSlots(land, capital, G.ruleset)).toBe(land.slots);
 
-    for (const building of ["forum", "temple", "odeon", "granary"].slice(0, land.slots)) {
+    for (const building of ["forum", "temple", "granary", "marketplace"].slice(0, land.slots)) {
       expect(buildBuilding(G, "0", capitalTile, building as "forum").ok).toBe(true);
     }
 
-    expect(getBuildBuildingStatus(G, "0", capitalTile, "marketplace").reasons).toContain(
-      "No building slots available.",
+    expect(getBuildBuildingStatus(G, "0", capitalTile, "estate").reasons).toContain(
+      "No slots available.",
     );
     expect(settlementOpenSlots(land, capital)).toBe(0);
   });

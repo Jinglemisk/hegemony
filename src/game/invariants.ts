@@ -2,6 +2,7 @@ import { PLAYER_IDS } from "./data";
 import { getPlayerEventCards, getResolutionCards, getSeasonalEventCards } from "./content";
 import type { BallotItem, PoliticianId } from "./assembly/types";
 import type { EventCard, HegemonyState, Pops, Settlement } from "./types";
+import { playerPieces } from "./settlement";
 import { COMMAND_SCHEMA_VERSION, STATE_SCHEMA_VERSION } from "./version";
 
 export interface InvariantViolation {
@@ -103,6 +104,25 @@ export function collectInvariantViolations(
     if ((G.players[playerID]?.resources.food ?? 0) < 0) {
       add("resources.foodDebt", `players.${playerID}.resources.food`, "food cannot go negative");
     }
+    // Pieces are conserved: nobody stands more colonies or cities than their supply.
+    if (G.players[playerID] && G.ruleset?.pieces) {
+      const pieces = playerPieces(G, playerID);
+      if (pieces.colonies > pieces.colonySupply) {
+        add(
+          "pieces.colonies",
+          `players.${playerID}.settlements`,
+          `${pieces.colonies} colonies stand against a supply of ${pieces.colonySupply}`,
+        );
+      }
+      if (pieces.cities > pieces.citySupply) {
+        add(
+          "pieces.cities",
+          `players.${playerID}.settlements`,
+          `${pieces.cities} cities stand against a supply of ${pieces.citySupply}`,
+        );
+      }
+    }
+
     if (new Set(indexed).size !== indexed.length) {
       add(
         "settlement.indexDuplicate",

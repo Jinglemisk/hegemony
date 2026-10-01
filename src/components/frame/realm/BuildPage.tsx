@@ -1,5 +1,6 @@
 import {
   claimableLuxuriesAt,
+  getBuildBuildingOptions,
   getBuildBuildingStatus,
   getBuildings,
   getLuxuryGood,
@@ -59,9 +60,16 @@ export function BuildPage({
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const names = settlementNames(G.board.tiles);
   const store = G.players[playerID].resources;
-  const slotted = holdings.map((holding) => ({ holding, ...slotsOf(holding, G.ruleset) }));
-  const ground = slotted.filter((entry) => entry.slots > 0);
-  const bare = slotted.filter((entry) => entry.slots === 0);
+  // A place to raise in is a city, or a colony the engine would let raise its Port.
+  const slotted = holdings.map((holding) => ({
+    holding,
+    ...slotsOf(holding, G.ruleset),
+    portOnly:
+      holding.settlement.kind === "colony" &&
+      getBuildBuildingOptions(G, playerID, holding.tile.id).some(({ status }) => status.can),
+  }));
+  const ground = slotted.filter((entry) => entry.slots > 0 || entry.portOnly);
+  const bare = slotted.filter((entry) => entry.slots === 0 && !entry.portOnly);
   const target =
     ground.find((entry) => entry.holding.tile.id === targetTileId) ??
     ground.find((entry) => entry.open > 0) ??
@@ -73,7 +81,7 @@ export function BuildPage({
     <>
       <div aria-label="Raise in" className="targets" data-c="targets" role="radiogroup">
         <span className="caps">Raise in</span>
-        {ground.map(({ holding, open }) => (
+        {ground.map(({ holding, open, portOnly }) => (
           <button
             aria-checked={holding === target?.holding}
             className="target"
@@ -83,11 +91,14 @@ export function BuildPage({
             type="button"
           >
             <span className="target-name">{names.get(holding.settlement.id)}</span>
-            <span className="cap">{open > 0 ? `${open} open` : "full"}</span>
+            <span className="cap">{portOnly ? "a Port" : open > 0 ? `${open} open` : "full"}</span>
           </button>
         ))}
         {bare.length > 0 ? (
-          <span className="target-none cap" title={`No building slots: ${bareNames.join(", ")}`}>
+          <span
+            className="target-none cap"
+            title={`A colony raises nothing but a Port on the coast: ${bareNames.join(", ")}`}
+          >
             {bare.length === 1 ? bareNames[0] : `${bare.length} colonies`} · no ground
           </span>
         ) : null}

@@ -187,24 +187,14 @@ export const GLYPHS = {
 
   /* ── Buildings ─────────────────────────────────────────────────────────────
      Each is the building's own architecture, never a generic "structure" box:
-     the player learns nine rooflines, and the Build tab stops being a word list. */
+     the player learns six rooflines, and the Build tab stops being a word list. */
   marketplace: [p("M4 10h16M5 10V6h14v4M6 10v10h12V10m-9 4h6")],
   temple: [TEMPLE_FRONT],
-  workshop: [box(4, 12, 7, 8), box(13, 6, 7, 14), p("M7.5 12V8.5L11 6")],
   granary: [p("M5 20V9l7-5 7 5v11M9 20v-6h6v6M5 20h14")],
   /* The scales — the forum is where things are weighed and argued, and the same
      glyph carries the bank's exchange rate for exactly that reason. */
   forum: [p("M12 4v3m0 0L5 9m7-2 7 2M5 9l-2 5h6L7 9zm14 0-2 5h6l-2-5zM12 7v13m-4 0h8")],
-  aqueduct: [
-    p("M2 5h20M2 8h20M4 8v12M20 8v12M2 20h20"),
-    p("M7 20v-4.6a2.2 2.2 0 0 1 4.4 0V20M12.6 20v-4.6a2.2 2.2 0 0 1 4.4 0V20"),
-  ],
-  odeon: [p("M4 19c2-6 6-9 8-9s6 3 8 9M12 10V5m-3 2.5L12 5l3 2.5")],
-  villa: [p("M4 20h16M6 20v-8h12v8M4 12l8-5 8 5M9.5 20v-4h3.5v4")],
-  /* The peristyle court, in plan: a colonnade around an open yard, with the way
-     in at the bottom. The first draft was a running track and read as an eye,
-     which the omen already owns. */
-  gymnasion: [box(3.5, 3.5, 17, 17), box(8, 8, 8, 8), p("M10.5 20.5h3")],
+  estate: [p("M4 20h16M6 20v-8h12v8M4 12l8-5 8 5M9.5 20v-4h3.5v4")],
   /* The anchor — the Port's whole effect happens off-shore (it claims a moored
      luxury good), so its mark is the mooring, not another roofline. */
   port: [c(12, 5.5, 2.2), p("M12 7.7V19M8.5 10.5h7"), p("M5 14c0 4 3 6.5 7 6.5s7-2.5 7-6.5")],
@@ -343,7 +333,6 @@ export const GLYPHS = {
      filled part. */
   fraction: [c(12, 12, 8.5), fill("M12 3.5a8.5 8.5 0 0 1 0 17z")],
   threshold: [p("M3 13h18"), p("M6.5 20v-4m5.5 4V8m5.5 12v-9")],
-  capacity: [p("M6.5 4.5h11l-1.5 15h-8z"), p("M7.7 12.5h8.6")],
   starvation: [WHEAT, SLASH],
   crowd: [
     c(6, 10, 2.2),

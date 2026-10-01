@@ -155,3 +155,36 @@ export function bankBuy(
   );
   return MOVE_OK;
 }
+
+/** The Dole: influence buys food through the bank, at a worse rate than gold. */
+export function getDoleStatus(G: HegemonyState, playerID: PlayerId): ActionStatus {
+  const reasons: string[] = [];
+  const { influenceCost, food } = G.ruleset.dole;
+
+  if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
+  if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
+  if (G.players[playerID].resources.influence < influenceCost) {
+    reasons.push(`The Dole takes ${influenceCost} influence for ${food} food.`);
+  }
+
+  return { can: reasons.length === 0, reasons, cost: { influence: influenceCost } };
+}
+
+export function dole(G: HegemonyState, playerID: PlayerId): MoveResult {
+  const status = getDoleStatus(G, playerID);
+
+  if (!status.can) {
+    return invalid(...status.reasons);
+  }
+
+  const { influenceCost, food } = G.ruleset.dole;
+  const resources = G.players[playerID].resources;
+  resources.influence -= influenceCost;
+  resources.food += food;
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} bought ${food} food with ${influenceCost} influence: the Dole.`,
+    playerID,
+  );
+  return MOVE_OK;
+}

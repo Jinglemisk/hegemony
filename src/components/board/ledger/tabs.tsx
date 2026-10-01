@@ -28,7 +28,7 @@ export const LEDGER_TABS: Array<{
     src: TAB_PLACEHOLDERS.pops,
     title: "The Ladder",
   },
-  { tab: "buildings", label: "Build", glyph: "workshop", src: TAB_PLACEHOLDERS.buildings },
+  { tab: "buildings", label: "Build", glyph: "build", src: TAB_PLACEHOLDERS.buildings },
   // The market's glyph is the forum's scales: the bank is where things are
   // weighed, and drawing that twice with two pictures would be a lie.
   { tab: "market", label: "Market", glyph: "forum", src: TAB_PLACEHOLDERS.market },

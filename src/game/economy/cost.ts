@@ -1,5 +1,3 @@
-import { getAuthoredGameContent, getBuildings } from "../content";
-import type { GameContent } from "../content";
 import type {
   ActionCostDiscountTarget,
   BuildingId,
@@ -13,7 +11,6 @@ import type {
 } from "../types";
 import { addLog, getPlayerName } from "../core/query";
 import { clonePartialResources } from "../core/resources";
-import type { Ruleset } from "../ruleset";
 import { applyLawActionCost } from "../assembly/laws";
 
 /** Actions whose base cost can be modified by seasonal multipliers or event discounts. */
@@ -51,28 +48,9 @@ export function getAdjustedActionCost(
   return applyLawActionCost(G, playerID, action, adjusted, { buildingId });
 }
 
-export function getGrowPopCost(
-  settlement: Settlement,
-  pop: GrowablePop,
-  ruleset: Ruleset,
-  content: GameContent = getAuthoredGameContent(),
-): Partial<Resources> {
-  const baseCost = ruleset.growPopCosts[pop];
-  const discountedFood = Math.max(
-    0,
-    (baseCost.food ?? 0) - getGrowPopFoodDiscount(settlement, content),
-  );
-
-  return {
-    ...baseCost,
-    food: discountedFood,
-  };
-}
-
 /**
- * Grow cost after event grow-coupons (deck overhaul, ledger issue 5) on top of the
- * building discount. Grow coupons never ride the seasonal building-cost multiplier —
- * that lever prices construction, not mouths.
+ * Grow cost after event grow-coupons and standing Laws. Grow coupons never ride the
+ * seasonal building-cost multiplier: that lever prices construction, not mouths.
  */
 export function getDiscountedGrowPopCost(
   G: HegemonyState,
@@ -80,9 +58,7 @@ export function getDiscountedGrowPopCost(
   settlement: Settlement,
   pop: GrowablePop,
 ): Partial<Resources> {
-  const adjusted = clonePartialResources(
-    getGrowPopCost(settlement, pop, G.ruleset, G.definition.content),
-  );
+  const adjusted = clonePartialResources(G.ruleset.growPopCosts[pop]);
 
   for (const discount of getMatchingActionCostDiscounts(G, playerID, "growPop", undefined, pop)) {
     adjusted[discount.resource] = Math.max(0, (adjusted[discount.resource] ?? 0) - discount.amount);
@@ -94,21 +70,6 @@ export function getDiscountedGrowPopCost(
     scope: settlement.kind === "colony" ? "colony" : "city",
     pop,
   });
-}
-
-function getGrowPopFoodDiscount(settlement: Settlement, content: GameContent) {
-  return settlement.buildings.reduce((discount, buildingId) => {
-    const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
-
-    return (
-      discount +
-      (building?.effects ?? []).reduce(
-        (effectDiscount, effect) =>
-          effect.type === "growPopFoodDiscount" ? effectDiscount + effect.amount : effectDiscount,
-        0,
-      )
-    );
-  }, 0);
 }
 
 function getSeasonBuildingCostMultiplier(G: HegemonyState, action: CostedAction) {

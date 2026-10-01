@@ -274,9 +274,12 @@ describe("effective content and cost parity", () => {
     const units = (cost: Partial<Resources> | undefined) =>
       Object.values(cost ?? {}).reduce((sum, amount) => sum + amount, 0);
 
-    expect(found?.cost?.(context)).toEqual([{ amounts: getFoundColonyStatus(G, "0", "").cost }]);
+    // Each prints the engine's price, led by the pieces still in the supply.
+    expect(found?.cost?.(context)).toEqual([
+      { lead: "4 of 4 left", amounts: getFoundColonyStatus(G, "0", "").cost },
+    ]);
     expect(upgrade?.cost?.(context)).toEqual([
-      { amounts: getUpgradeColonyToCityStatus(G, "0", "").cost },
+      { lead: "3 of 3 left", amounts: getUpgradeColonyToCityStatus(G, "0", "").cost },
     ]);
 
     // The four verbs that used to print "varies" / "options" / "stakes". A dock

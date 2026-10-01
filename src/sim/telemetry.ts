@@ -252,6 +252,13 @@ export type BatchReport = {
       idleSlaveShare: number;
     }
   >;
+  /** The riot table: riots resolved per game, the share of player-turns that opened
+   *  on it, and the same counts season by season, so a report can cut the late game. */
+  riots: {
+    perGame: number;
+    turnShare: number;
+    bySeason: Array<{ season: number; riots: number; playerTurns: number }>;
+  };
   /** Wins credited to the POLICY that held each seat, over finished games — the
    *  seat-independent measure a rotated mixed-policy batch produces. Empty for a
    *  uniform batch (no seat policies recorded). */
@@ -356,6 +363,7 @@ const ASSEMBLY_VERBS = [
 const CURRENCY_VERBS = [
   "bankSell",
   "bankBuy",
+  "dole",
   "civicCalm",
   "promotePop",
   "demotePop",
@@ -373,6 +381,7 @@ export class Aggregator {
   private choicePicks: Record<string, number[]> = {};
   private movesByType: Partial<Record<GameCommandType, number>> = {};
   private currencyVerbs: Record<string, number> = {};
+  private riotsBySeason = new Map<number, number>();
   private assemblyVerbs: Record<string, number> = {};
   private assemblyInfluence = 0;
   private assembliesHeld = 0;
@@ -421,6 +430,10 @@ export class Aggregator {
 
   onMove(G: HegemonyState, player: PlayerId, move: GameCommand) {
     this.movesByType[move.type] = (this.movesByType[move.type] ?? 0) + 1;
+
+    if (move.type === "resolveRiot") {
+      this.riotsBySeason.set(G.season, (this.riotsBySeason.get(G.season) ?? 0) + 1);
+    }
 
     if (move.type === "buildBuilding") {
       this.buildings[move.buildingId] = (this.buildings[move.buildingId] ?? 0) + 1;
@@ -723,6 +736,24 @@ export class Aggregator {
       };
     }
 
+    // Every snapshot is one player-turn, so a season's snapshots are its turns.
+    const turnsBySeason = new Map<number, number>();
+    for (const snapshot of this.snapshots) {
+      turnsBySeason.set(snapshot.season, (turnsBySeason.get(snapshot.season) ?? 0) + 1);
+    }
+    const riotCount = [...this.riotsBySeason.values()].reduce((sum, count) => sum + count, 0);
+    const riots: BatchReport["riots"] = {
+      perGame: riotCount / games,
+      turnShare: this.snapshots.length > 0 ? riotCount / this.snapshots.length : 0,
+      bySeason: [...turnsBySeason.entries()]
+        .sort(([a], [b]) => a - b)
+        .map(([season, playerTurns]) => ({
+          season,
+          riots: this.riotsBySeason.get(season) ?? 0,
+          playerTurns,
+        })),
+    };
+
     const terminations: Record<GameTermination, number> = {
       victoryRace: 0,
       deckExhausted: 0,
@@ -820,6 +851,7 @@ export class Aggregator {
       perSeason,
       perSeat,
       hunger,
+      riots,
       buildings,
       luxuries,
       movesByType: Object.fromEntries(

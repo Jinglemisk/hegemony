@@ -23,6 +23,8 @@ function optionFor(command: GameCommand): string | null {
       return `buy-${command.material}`;
     case "bankSell":
       return `sell-${command.material}`;
+    case "dole":
+      return "dole";
     case "civicCalm":
       return `calm-${command.payment}`;
     case "promotePop":
@@ -42,6 +44,8 @@ const leaves = (options: DiscOption[]): DiscOption[] =>
 describe("verb fans", () => {
   it("offer every legal gameplay move, and nothing the engine refuses", () => {
     const G = scenario().opening().withResources("0", "wealthy").build();
+    // "Wealthy" holds no influence; the Dole and the influence calm need some.
+    G.players["0"].resources.influence = 20;
     G.pendingPlayerEvent = null;
     const legal = enumerateLegalCommands(G, "0");
     const has = (type: GameCommand["type"]) => legal.some((command) => command.type === type);
@@ -70,6 +74,7 @@ describe("verb fans", () => {
         onUpgradeCityRequest: noop,
         onVentureRequest: noop,
         onCalm: noop,
+        onDole: noop,
         onBankBuy: noop,
         onBankSell: noop,
       },

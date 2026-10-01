@@ -134,6 +134,10 @@ export const COMMAND_PARITY = {
     ),
     simulation: simulated("master-rule", "resolveStochasticByRule bank heuristic"),
   },
+  dole: {
+    frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
+    simulation: simulated("master-rule", "resolveStochasticByRule hunger rule"),
+  },
   civicCalm: {
     frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),

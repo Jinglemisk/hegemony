@@ -38,22 +38,9 @@ describe("low-number economy study invariants", () => {
     expect(setupPops).toBeLessThan(LOW_NUMBER_RULESET_PATCH.victory.minimums.citizens);
   });
 
-  it("leaves the terrain deck alone and locks deck counts and building copy limits", () => {
+  it("leaves the terrain deck and the building roster alone and locks deck counts", () => {
     expect(LOW_NUMBER_CONTENT.terrain).toEqual(getAuthoredGameContent().terrain);
-    expect(
-      Object.fromEntries(LOW_NUMBER_BUILDINGS.map((building) => [building.id, building.maxLevel])),
-    ).toEqual({
-      marketplace: 2,
-      temple: 2,
-      workshop: 2,
-      granary: 2,
-      forum: 2,
-      aqueduct: 1,
-      odeon: 2,
-      villa: 1,
-      gymnasion: 1,
-      port: 1,
-    });
+    expect(LOW_NUMBER_BUILDINGS).toEqual(getAuthoredGameContent().buildings);
 
     const copies = LOW_NUMBER_CONTENT.playerEvents.reduce((sum, card) => sum + card.count, 0);
     const harmful = LOW_NUMBER_CONTENT.playerEvents

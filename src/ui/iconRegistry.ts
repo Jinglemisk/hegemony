@@ -85,20 +85,13 @@ export const VERB_GLYPHS = {
   venture: "venture",
 } as const satisfies Record<VerbId, GlyphId>;
 
-/** Nine rooflines, nine drawings. The sprite atlas these replaced had four painted
- *  building cells and aliased five buildings onto them (forum→marketplace,
- *  aqueduct/villa→granary, odeon/gymnasion→temple) — which is what a family sitting
- *  outside the no-duplicate test looks like from the player's side of the screen. */
+/** Six buildings, six drawings: no two share a picture. */
 export const BUILDING_GLYPHS = {
   marketplace: "marketplace",
-  temple: "temple",
-  workshop: "workshop",
-  granary: "granary",
+  estate: "estate",
   forum: "forum",
-  aqueduct: "aqueduct",
-  odeon: "odeon",
-  villa: "villa",
-  gymnasion: "gymnasion",
+  temple: "temple",
+  granary: "granary",
   port: "port",
 } as const satisfies Record<BuildingId, GlyphId>;
 
@@ -178,18 +171,11 @@ export const DIRECTIVE_EFFECT_GLYPHS = {
   equalVotesNextAssembly: "equalVotes",
 } as const satisfies Record<DirectiveEffect["type"], GlyphId>;
 
-/** The three class bonuses are the three figures: a building that pays for
- *  freemen shows a freeman, not a coin. Who benefits is the point. */
+/** A class building's effect is its class's output, so it wears the yield mark. */
 export const BUILDING_EFFECT_GLYPHS = {
-  freemanGoldBonus: "freemen",
-  citizenInfluenceBonus: "citizens",
-  slavePrimaryResourceBonus: "slaves",
+  classOutput: "tileYield",
   income: "income",
   happiness: "happiness",
-  growPopFoodDiscount: "costDown",
-  popCapacityBonus: "capacity",
-  tilePrimaryResourceBonus: "tileYield",
-  promoteCostReduction: "promote",
 } as const satisfies Record<BuildingEffect["type"], GlyphId>;
 
 export const ACTIVE_EFFECT_MECHANIC_GLYPHS = {

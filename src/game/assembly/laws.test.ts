@@ -143,31 +143,31 @@ describe("standing laws reach the income pipeline", () => {
 describe("standing laws reprice actions", () => {
   it("actionCostDelta reaches found-colony", () => {
     const G = opening().build();
-    expect(getFoundColonyStatus(G, "0", HILL).cost).toMatchObject({ wood: 20, food: 2 });
+    expect(getFoundColonyStatus(G, "0", HILL).cost).toMatchObject({ wood: 4, food: 1 });
 
-    plantLaw(G, "colonial-charter"); // founding -10 wood
-    expect(getFoundColonyStatus(G, "0", HILL).cost).toMatchObject({ wood: 10, food: 2 });
+    plantLaw(G, "colonial-charter"); // founding -10 wood, which clamps v2's 4 at zero
+    expect(getFoundColonyStatus(G, "0", HILL).cost).toMatchObject({ wood: 0, food: 1 });
   });
 
   it("actionCostDelta reaches build-building — and never drives a cost below zero", () => {
     const G = opening().build();
-    expect(getBuildBuildingStatus(G, "0", P0_CAPITAL, "temple").cost).toMatchObject({ stone: 6 });
+    expect(getBuildBuildingStatus(G, "0", P0_CAPITAL, "temple").cost).toMatchObject({ stone: 3 });
 
     plantLaw(G, "public-works"); // buildings -3 wood AND -3 stone
     const cost = getBuildBuildingStatus(G, "0", P0_CAPITAL, "temple").cost;
 
-    expect(cost).toMatchObject({ stone: 3 });
+    expect(cost).toMatchObject({ stone: 0 });
     // The Temple costs no wood at all, so the -3 wood clamps at 0 rather than paying out.
     expect(cost?.wood ?? 0).toBe(0);
   });
 
   it("actionCostDelta reaches grow-pop, in both directions at once", () => {
     const G = opening().build();
-    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toEqual({ food: 7 });
+    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toEqual({ food: 3 });
 
     plantLaw(G, "tenant-rights"); // growing costs 3 less food but 2 more gold
     expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toMatchObject({
-      food: 4,
+      food: 0,
       gold: 2,
     });
   });
@@ -177,25 +177,25 @@ describe("standing laws reprice actions", () => {
     const G = opening().build();
     plantLaw(G, "guild-charter");
 
-    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toMatchObject({ food: 4 });
-    expect(getGrowPopStatus(G, "0", P0_COLONY, "freemen").cost).toMatchObject({ food: 9 });
+    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toMatchObject({ food: 0 });
+    expect(getGrowPopStatus(G, "0", P0_COLONY, "freemen").cost).toMatchObject({ food: 5 });
   });
 
   it("actionCostDelta reaches promote-pop, and a narrowed one only touches its own pop", () => {
     const G = opening().build();
-    expect(getPromotePopStatus(G, "0", P0_CAPITAL, "slaves").cost).toEqual({ food: 4 });
+    expect(getPromotePopStatus(G, "0", P0_CAPITAL, "slaves").cost).toEqual({ food: 2 });
 
     plantLaw(G, "grain-dole"); // every promotion is 1 food cheaper
-    expect(getPromotePopStatus(G, "0", P0_CAPITAL, "slaves").cost).toEqual({ food: 3 });
+    expect(getPromotePopStatus(G, "0", P0_CAPITAL, "slaves").cost).toEqual({ food: 1 });
 
     plantLaw(G, "manumission-law"); // ...and freeing a SLAVE specifically, 2 more
-    expect(getPromotePopStatus(G, "0", P0_CAPITAL, "slaves").cost).toEqual({ food: 1 });
+    expect(getPromotePopStatus(G, "0", P0_CAPITAL, "slaves").cost).toEqual({ food: 0 });
 
     // The freeman's climb costs gold, which the slave-narrowed Law never touches. Grain
     // Dole is unnarrowed so it DOES reach this promotion, but a -1 food on a cost with
     // no food line clamps to a harmless zero rather than discounting the gold.
     const freeman = getPromotePopStatus(G, "0", P0_CAPITAL, "freemen").cost;
-    expect(freeman).toMatchObject({ gold: 4 });
+    expect(freeman).toMatchObject({ gold: 2 });
     expect(freeman?.food ?? 0).toBe(0);
   });
 
@@ -210,17 +210,15 @@ describe("standing laws reprice actions", () => {
   it("actionCostMultiplier halves the colony upgrade (Enfranchise the Colonies)", () => {
     const G = opening().build();
     expect(getUpgradeColonyToCityStatus(G, "0", P0_COLONY).cost).toMatchObject({
-      wood: 30,
-      stone: 10,
-      food: 5,
+      wood: 3,
+      stone: 3,
     });
 
     plantLaw(G, "enfranchise-the-colonies");
-    // Halved and rounded UP — 5 food becomes 3, never 2.5.
+    // Halved and rounded UP — 3 becomes 2, never 1.5.
     expect(getUpgradeColonyToCityStatus(G, "0", P0_COLONY).cost).toMatchObject({
-      wood: 15,
-      stone: 5,
-      food: 3,
+      wood: 2,
+      stone: 2,
     });
   });
 });
@@ -260,7 +258,7 @@ describe("standing laws reach the bank and the colony charter", () => {
     plantLaw(G, "land-rush"); // your first colony each year is founded free of wood
 
     expect(hasLawFreeAction(G, "0", "foundColony")).toBe(true);
-    expect(getFoundColonyStatus(G, "0", HILL).cost).toMatchObject({ wood: 0, food: 2 });
+    expect(getFoundColonyStatus(G, "0", HILL).cost).toMatchObject({ wood: 0, food: 1 });
 
     expect(foundColony(G, "0", HILL, P0_CAPITAL, "slaves").ok).toBe(true);
 
@@ -313,6 +311,6 @@ describe("a Law is table-wide", () => {
     plantLaw(G, "colonial-charter", "0");
 
     // Player 3's capital sits at 0,2; -1,2 is the mountain next door.
-    expect(getFoundColonyStatus(G, "3", "-1,2").cost).toMatchObject({ wood: 10 });
+    expect(getFoundColonyStatus(G, "3", "-1,2").cost).toMatchObject({ wood: 0 });
   });
 });

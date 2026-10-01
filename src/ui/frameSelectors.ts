@@ -22,14 +22,19 @@ export type HappinessDisplay = {
   lines: Array<{ label: string; amount: number }>;
 };
 
-/** Today's rules: a bank, plus the standing luxury offset, tested against two thresholds. */
+/** Today's rules: a bank, plus the standing luxury offset and this year's calm,
+ *  tested against two thresholds. */
 export function happinessDisplay(G: HegemonyState, playerID: PlayerId): HappinessDisplay {
   const status = unrestStatus(G, playerID);
   const { popLossThreshold, severeThreshold } = G.ruleset.economy.unrest;
-  // Stored, the luxury bonus and the effective value are always shown together.
+  // Stored, the luxury bonus and the effective value are always shown together;
+  // calm joins them for the turn it lasts.
   const lines = [
     { label: "Stored", amount: status.storedHappiness },
     { label: "Luxuries", amount: status.luxuryBonus },
+    ...(status.calmBonus !== 0
+      ? [{ label: "Calm, until your next turn", amount: status.calmBonus }]
+      : []),
   ];
 
   return {

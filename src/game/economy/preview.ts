@@ -251,16 +251,8 @@ function createSettlementEconomyProjections(
         kind: settlement.kind,
         income: summarizeIncome(settlementBreakdown),
         pops: totalPops(settlement.pops),
-        capacity: settlementCapacity(
-          settlement,
-          incomeState.ruleset,
-          incomeState.definition.content,
-        ),
-        overCapacity: settlementOverCapacity(
-          settlement,
-          incomeState.ruleset,
-          incomeState.definition.content,
-        ),
+        capacity: settlementCapacity(settlement, incomeState.ruleset),
+        overCapacity: settlementOverCapacity(settlement, incomeState.ruleset),
         inTransitIn,
         inTransitOut,
       };

@@ -18,8 +18,8 @@ import { scenario } from "./testing/scenario";
  *   - exchanges count their net gain at full use; per-pop payouts count their floor
  *   - choice cards count their best option (players pick greedily)
  *
- * If a content edit moves EV or the harm share out of band, this test is the
- * tripwire — retune the deck, don't widen the band without a decision.
+ * If a content edit moves the harm share out of band, this test is the tripwire.
+ * The expected-value band went with v1's prices: Step 7 replaces this deck.
  */
 
 const COUPON_UTILIZATION = 0.5;
@@ -69,17 +69,6 @@ function cardValue(card: EventCard): number {
 
 describe("player deck tuning contract", () => {
   const copies = PLAYER_EVENT_CARDS.reduce((sum, card) => sum + card.count, 0);
-
-  it("expected value per draw lands near +2 resource-equivalents", () => {
-    const totalValue = PLAYER_EVENT_CARDS.reduce(
-      (sum, card) => sum + card.count * cardValue(card),
-      0,
-    );
-    const ev = totalValue / copies;
-
-    expect(ev).toBeGreaterThanOrEqual(1.7);
-    expect(ev).toBeLessThanOrEqual(2.5);
-  });
 
   it("roughly a quarter of the deck is harm", () => {
     const harmCopies = PLAYER_EVENT_CARDS.filter((card) => cardValue(card) < 0).reduce(
@@ -163,29 +152,30 @@ describe("grow coupons (actionCostDiscount on growPop)", () => {
     const capital = G.players["0"].settlements[0];
 
     expect(G.players["0"].actionCostDiscounts).toHaveLength(1);
-    expect(getGrowPopStatus(G, "0", capital, "freemen").cost).toMatchObject({ food: 3 });
+    // Willing Hands takes 4 food off a freeman who costs 3: the grow is free.
+    expect(getGrowPopStatus(G, "0", capital, "freemen").cost).toMatchObject({ food: 0 });
 
     const before = { ...G.players["0"].resources };
     expect(growPop(G, "0", capital, "freemen").ok).toBe(true);
-    expect(before.food - G.players["0"].resources.food).toBe(3);
+    expect(before.food - G.players["0"].resources.food).toBe(0);
     expect(G.players["0"].actionCostDiscounts).toHaveLength(0);
 
     // The coupon is spent — the next settlement grows at full price.
     const colony = G.players["0"].settlements[1];
-    expect(getGrowPopStatus(G, "0", colony, "freemen").cost).toMatchObject({ food: 7 });
+    expect(getGrowPopStatus(G, "0", colony, "freemen").cost).toMatchObject({ food: 3 });
   });
 
   it("ignores grows of a different pop type", () => {
     const G = drawCard("player-willing-hands");
     const capital = G.players["0"].settlements[0];
 
-    expect(getGrowPopStatus(G, "0", capital, "slaves").cost).toMatchObject({ food: 5 });
+    expect(getGrowPopStatus(G, "0", capital, "slaves").cost).toMatchObject({ food: 2 });
     expect(growPop(G, "0", capital, "slaves").ok).toBe(true);
 
     // The freeman coupon survived the slave grow.
     expect(G.players["0"].actionCostDiscounts).toHaveLength(1);
     const colony = G.players["0"].settlements[1];
-    expect(getGrowPopStatus(G, "0", colony, "freemen").cost).toMatchObject({ food: 3 });
+    expect(getGrowPopStatus(G, "0", colony, "freemen").cost).toMatchObject({ food: 0 });
   });
 });
 

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
+  EMPTY_POPS,
   GROWABLE_POPS,
+  POP_TYPES,
   calculateEconomyProjection,
   canPlaceColonyOnTile,
   getBuildBuildingOptions,
@@ -10,9 +12,9 @@ import {
   getActiveEffects,
   getFoundColonyStatus,
   getGrowPopStatus,
+  getMovePopsStatus,
   getUpgradeColonyToCityStatus,
   toPlayerId,
-  totalPops,
   unrestStatus,
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
@@ -172,11 +174,19 @@ export function HegemonyBoard({
       ),
     [G, viewerId],
   );
+  // Move is live when the engine would move one pop somewhere: it knows the
+  // once-a-turn limit, the price and the room at the far end.
   const canMovePops = useMemo(() => {
     const holdings = getOwnedHoldings(G, viewerId);
 
-    return (
-      holdings.length >= 2 && holdings.some(({ settlement }) => totalPops(settlement.pops) > 0)
+    return holdings.some((from) =>
+      holdings.some((to) =>
+        POP_TYPES.some(
+          (pop) =>
+            getMovePopsStatus(G, viewerId, from.tile.id, to.tile.id, { ...EMPTY_POPS, [pop]: 1 })
+              .can,
+        ),
+      ),
     );
   }, [G, viewerId]);
   // Build is live when some settlement could raise some building — the same engine
@@ -430,6 +440,7 @@ export function HegemonyBoard({
                   onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
                   onVentureRequest: () => setActiveModal({ kind: "venture" }),
                   onCalm: moves.civicCalm,
+                  onDole: moves.dole,
                   onBankBuy: moves.bankBuy,
                   onBankSell: moves.bankSell,
                 },

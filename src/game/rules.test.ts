@@ -193,7 +193,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     expect(income.food).toBe(-4);
   });
 
-  it("sums slave yields: +1 tile resource, -0.5 happiness each, and no food eaten", () => {
+  it("sums slave yields: +1 tile resource each, and no food eaten", () => {
     const state = fresh();
     const mat = materialTile(state);
     placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
@@ -203,7 +203,8 @@ describe("per-settlement income (settlementNetYield)", () => {
     const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
     expect(income[mat.resource.type]).toBe(2);
     expect(income.food).toBe(0);
-    expect(income.happiness).toBe(-1);
+    // Slaves cost happiness by the realm's count, not on a settlement's line.
+    expect(income.happiness).toBe(0);
   });
 
   it("applies a -1 happiness penalty per pop over capacity", () => {
@@ -211,13 +212,13 @@ describe("per-settlement income (settlementNetYield)", () => {
     const mat = materialTile(state);
     placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
     const settlement = owned(state, mat.id, "0");
-    // Capital capacity is 10; 12 citizens => 2 over capacity.
-    settlement.pops = { citizens: 12, freemen: 0, slaves: 0 };
+    // Capital capacity is 8; 10 citizens => 2 over capacity.
+    settlement.pops = { citizens: 10, freemen: 0, slaves: 0 };
 
     expect(settlementNetYield(mat, settlement, DEFAULT_RULESET).happiness).toBe(-2);
   });
 
-  it("Marketplace adds +2 gold per supported freeman (max 3)", () => {
+  it("a Marketplace raises every freeman here from 1 gold to 2", () => {
     const state = fresh();
     const mat = materialTile(state);
     placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
@@ -225,11 +226,10 @@ describe("per-settlement income (settlementNetYield)", () => {
     settlement.pops = { citizens: 0, freemen: 5, slaves: 0 };
     settlement.buildings = ["marketplace"];
 
-    // Base 5 freemen * 1 gold + Marketplace supports 3 * 2 gold = 5 + 6.
-    expect(settlementNetYield(mat, settlement, DEFAULT_RULESET).gold).toBe(11);
+    expect(settlementNetYield(mat, settlement, DEFAULT_RULESET).gold).toBe(10);
   });
 
-  it("Temple adds +1 flat happiness and +1 influence per supported citizen (max 2)", () => {
+  it("a Temple states +1 happiness and leaves the citizens' influence alone", () => {
     const state = fresh();
     const mat = materialTile(state);
     placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
@@ -238,7 +238,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     settlement.buildings = ["temple"];
 
     const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
-    expect(income.influence).toBe(3 + 2);
+    expect(income.influence).toBe(3);
     expect(income.happiness).toBe(1);
   });
 });
@@ -273,9 +273,9 @@ describe("city upgrade", () => {
     expect(upgraded.settlements).toHaveLength(1);
     expect(upgraded.settlements[0].owner).toBe("0");
     expect(upgraded.settlements[0].kind).toBe("city");
-    expect(state.players["0"].resources.wood).toBe(before.wood - 30);
-    expect(state.players["0"].resources.stone).toBe(before.stone - 10);
-    expect(state.players["0"].resources.food).toBe(before.food - 5);
+    expect(state.players["0"].resources.wood).toBe(before.wood - 3);
+    expect(state.players["0"].resources.stone).toBe(before.stone - 3);
+    expect(state.players["0"].resources.food).toBe(before.food);
     expect(state.players["1"].settlements).not.toContain("3,0");
   });
 
@@ -291,7 +291,7 @@ describe("city upgrade", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     // A mostly-slave colony: the old modal path could launder these into citizens
-    // during the upgrade, dodging promotion cost / Gymnasion / the ladder limit.
+    // during the upgrade, dodging the promotion cost and the ladder limit.
     const composition = { citizens: 0, freemen: 1, slaves: 2 };
     poke(state, "0", "3,0", "colony", composition);
     wealthy(state, "0");
@@ -309,12 +309,13 @@ describe("buildings", () => {
   it("builds a Marketplace on a city, paying its cost and consuming a slot", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
-    const beforeWood = state.players["0"].resources.wood;
+    const before = { ...state.players["0"].resources };
 
     const result = buildBuilding(state, "0", "0,0", "marketplace");
     expect(result.ok).toBe(true);
     expect(owned(state, "0,0", "0").buildings).toContain("marketplace");
-    expect(state.players["0"].resources.wood).toBe(beforeWood - 12);
+    expect(state.players["0"].resources.wood).toBe(before.wood - 3);
+    expect(state.players["0"].resources.gold).toBe(before.gold - 2);
   });
 
   it("cannot build on a colony (no building slots)", () => {
@@ -325,8 +326,8 @@ describe("buildings", () => {
   });
 });
 
-describe("civic buildings (2026-07-13 port — Forum from the PDF, Aqueduct/Odeon from the todo sketch)", () => {
-  it("Forum pays +2 flat influence income", () => {
+describe("the Forum", () => {
+  it("raises every citizen here from 1 influence to 2", () => {
     const state = fresh();
     placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
     wealthy(state, "0");
@@ -338,40 +339,7 @@ describe("civic buildings (2026-07-13 port — Forum from the PDF, Aqueduct/Odeo
       owned(state, "0,0", "0"),
       state.ruleset,
     );
-    expect(yieldWithForum.influence).toBe(1 + 2); // 1 citizen + the Forum's flat 2
-  });
-
-  it("Aqueduct raises the settlement's pop capacity by 4", () => {
-    const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
-    wealthy(state, "0");
-    owned(state, "0,0", "0").pops = { citizens: 0, freemen: 10, slaves: 0 };
-
-    // At the kind's cap of 10 growth is blocked — until the Aqueduct flows.
-    expect(growPop(state, "0", "0,0", "freemen").ok).toBe(false);
-    expect(buildBuilding(state, "0", "0,0", "aqueduct").ok).toBe(true);
-    expect(growPop(state, "0", "0,0", "freemen").ok).toBe(true);
-    expect(owned(state, "0,0", "0").pops.freemen).toBe(11);
-  });
-
-  it("Odeon pays +2 flat happiness", () => {
-    const state = fresh();
-    placeCapital(state, "0", "0,0", { citizens: 1, freemen: 2, slaves: 1 });
-    wealthy(state, "0");
-
-    const before = settlementNetYield(
-      tile(state, "0,0"),
-      owned(state, "0,0", "0"),
-      state.ruleset,
-    ).happiness;
-    expect(buildBuilding(state, "0", "0,0", "odeon").ok).toBe(true);
-    const after = settlementNetYield(
-      tile(state, "0,0"),
-      owned(state, "0,0", "0"),
-      state.ruleset,
-    ).happiness;
-
-    expect(after - before).toBe(2);
+    expect(yieldWithForum.influence).toBe(2);
   });
 });
 
@@ -384,7 +352,7 @@ describe("grow pop", () => {
     const result = growPop(state, "0", "0,0", "slaves");
     expect(result.ok).toBe(true);
     expect(owned(state, "0,0", "0").pops.slaves).toBe(2);
-    expect(state.players["0"].resources.food).toBe(beforeFood - 5);
+    expect(state.players["0"].resources.food).toBe(beforeFood - 2);
 
     // Second grow on the same settlement this turn is rejected.
     expect(growPop(state, "0", "0,0", "slaves").ok).toBe(false);

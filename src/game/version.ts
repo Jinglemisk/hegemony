@@ -11,8 +11,11 @@ export const ENGINE_VERSION = "0.1.0";
 /** v3 (v2 migration, Step 3): tiles carry slots and a resource type with no printed
  *  amount, and hunger replaces the food-deficit counter on the player. Saves from
  *  `main` are rejected, not migrated. */
-export const STATE_SCHEMA_VERSION = 3;
-export const COMMAND_SCHEMA_VERSION = 1;
+/** v4 (v2 migration, Step 4): the building roster is six, the ruleset carries pieces,
+ *  the Dole and the move price, and players carry the move and calm flags. v2 commands
+ *  add the Dole. Older saves are rejected, not migrated. */
+export const STATE_SCHEMA_VERSION = 4;
+export const COMMAND_SCHEMA_VERSION = 2;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

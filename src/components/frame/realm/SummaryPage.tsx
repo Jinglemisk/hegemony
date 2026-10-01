@@ -47,7 +47,7 @@ export function SummaryPage({
   const people = (pop: PopType) =>
     holdings.reduce((sum, { settlement }) => sum + settlement.pops[pop], 0);
   const capacity = holdings.reduce(
-    (sum, { settlement }) => sum + settlementCapacity(settlement, G.ruleset, G.definition.content),
+    (sum, { settlement }) => sum + settlementCapacity(settlement, G.ruleset),
     0,
   );
   const mood = unrestStatus(G, viewerId);
@@ -79,6 +79,7 @@ export function SummaryPage({
         <span className="cap">
           happiness, {MOOD[mood.tier]}
           {mood.luxuryBonus !== 0 ? ` · ${formatNumber(mood.luxuryBonus)} from luxuries` : ""}
+          {mood.calmBonus !== 0 ? ` · ${formatNumber(mood.calmBonus)} from calm` : ""}
         </span>
       </dd>
       <dt className="caps">Laurels</dt>

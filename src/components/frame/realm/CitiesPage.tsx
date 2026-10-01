@@ -79,8 +79,8 @@ export function CitiesPage({
         const { tile, settlement } = holding;
         const name = names.get(settlement.id) ?? "POLIS";
         const pops = totalPops(settlement.pops);
-        const capacity = settlementCapacity(settlement, G.ruleset, G.definition.content);
-        const over = settlementOverCapacity(settlement, G.ruleset, G.definition.content);
+        const capacity = settlementCapacity(settlement, G.ruleset);
+        const over = settlementOverCapacity(settlement, G.ruleset);
         const { slots, open } = slotsOf(holding, G.ruleset);
         const room = Math.max(0, capacity - pops);
         const census = POP_TYPES.map(

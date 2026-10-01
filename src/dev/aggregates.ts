@@ -48,20 +48,8 @@ export function describeBuildingEffect(effect: BuildingEffect): string {
       return `+${effect.amount} ${effect.resource}/turn`;
     case "happiness":
       return `+${effect.amount} happiness`;
-    case "freemanGoldBonus":
-      return `+${effect.amount} gold to your first ${effect.supportedPops} freemen`;
-    case "citizenInfluenceBonus":
-      return `+${effect.amount} influence to your first ${effect.supportedPops} citizens`;
-    case "slavePrimaryResourceBonus":
-      return `+${effect.amount} tile-material to your first ${effect.supportedPops} slaves`;
-    case "growPopFoodDiscount":
-      return `−${effect.amount} food to grow pops`;
-    case "popCapacityBonus":
-      return `+${effect.amount} pop capacity`;
-    case "tilePrimaryResourceBonus":
-      return `+${effect.amount} tile material / level`;
-    case "promoteCostReduction":
-      return `−${effect.amount} off social-ladder promotions`;
+    case "classOutput":
+      return `${effect.pop} here make ${effect.amount}`;
   }
 }
 

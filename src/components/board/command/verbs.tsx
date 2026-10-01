@@ -3,7 +3,11 @@ import { getCivicCalmStatus } from "../../../game/civic";
 import { getBuildings } from "../../../game/content";
 import { GROWABLE_POPS } from "../../../game/core/pops";
 import { getAdjustedActionCost, getDiscountedGrowPopCost } from "../../../game/economy/cost";
-import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
+import {
+  getFoundColonyStatus,
+  getUpgradeColonyToCityStatus,
+  playerPieces,
+} from "../../../game/rules";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../../game/types";
 import type { MapSelectionMode } from "../map/mapSelection";
 
@@ -181,32 +185,47 @@ export const VERBS: VerbSpec[] = [
   {
     id: "move",
     label: "Move",
-    cost: () => [{ lead: "free" }],
+    // A pop: the popover prices the travellers it is sent.
+    cost: ({ G }) => [{ lead: "a pop", amounts: G.ruleset.movePopCost }],
     arms: true,
     available: ({ canMovePops, armedVerb }) => canMovePops || armedVerb === "move",
-    hint: "Move pops between two owned settlements.",
-    blockedHint: "Requires at least two settlements.",
+    hint: "Move pops between two owned settlements, once a turn.",
+    blockedHint: "One move a turn, into a settlement with room, with food to pay for it.",
     select: (handlers) => handlers.onMovePopsRequest(),
   },
   {
     id: "found",
     label: "Found",
-    cost: ({ G, playerID }) => [{ amounts: getFoundColonyStatus(G, playerID, "").cost ?? {} }],
+    cost: ({ G, playerID }) => {
+      const { colonies, colonySupply } = playerPieces(G, playerID);
+      return [
+        {
+          lead: `${colonySupply - colonies} of ${colonySupply} left`,
+          amounts: getFoundColonyStatus(G, playerID, "").cost ?? {},
+        },
+      ];
+    },
     arms: true,
     available: ({ canFoundColony, armedVerb }) => canFoundColony || armedVerb === "found",
     hint: "Send a pop from an existing settlement to found a new colony.",
-    blockedHint: "Requires an open tile, a spare pop, and enough resources.",
+    blockedHint: "Requires a colony piece, an open tile, a spare pop, and enough resources.",
     select: (handlers) => handlers.onFoundColonyRequest(),
   },
   {
     id: "upgrade",
     label: "Upgrade",
-    cost: ({ G, playerID }) => [
-      { amounts: getUpgradeColonyToCityStatus(G, playerID, "").cost ?? {} },
-    ],
+    cost: ({ G, playerID }) => {
+      const { cities, citySupply } = playerPieces(G, playerID);
+      return [
+        {
+          lead: `${citySupply - cities} of ${citySupply} left`,
+          amounts: getUpgradeColonyToCityStatus(G, playerID, "").cost ?? {},
+        },
+      ];
+    },
     available: ({ canUpgradeCity }) => canUpgradeCity,
-    hint: "Upgrade one of your colonies into a city.",
-    blockedHint: "Requires an upgradeable colony and enough resources.",
+    hint: "Upgrade one of your colonies into a city. The colony piece comes back.",
+    blockedHint: "Requires a city piece, an upgradeable colony and enough resources.",
     select: (handlers) => handlers.onUpgradeCityRequest(),
   },
   {
@@ -230,7 +249,7 @@ export const VERBS: VerbSpec[] = [
       { amounts: getCivicCalmStatus(G, playerID, "gold").cost ?? {} },
     ],
     available: ({ calmUsed }) => !calmUsed,
-    hint: "Buy happiness: influence or gold, once per turn.",
+    hint: "Buy calm until your next turn: influence or gold, once per turn.",
     blockedHint: "One civic-calm action per turn — already used.",
     select: (handlers) => handlers.onCalmRequest(),
   },

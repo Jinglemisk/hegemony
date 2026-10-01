@@ -10,6 +10,7 @@ import {
   getCivicCalmStatus,
   getDemotePopStatus,
   getDiscountedGrowPopCost,
+  getDoleStatus,
   getGrowPopStatus,
   getPromotePopStatus,
   GROWABLE_POPS,
@@ -17,7 +18,13 @@ import {
   promotionTarget,
 } from "../../game/rules";
 import type { CivicCalmPayment } from "../../game/rules";
-import type { BuildingId, PopType, Resources, TradableMaterial } from "../../game/types";
+import type {
+  BuildingDefinition,
+  BuildingId,
+  PopType,
+  Resources,
+  TradableMaterial,
+} from "../../game/types";
 import { BUILDING_ICON, RESOURCE_ICON } from "../../ui/frameFormat";
 import { formatPopLabel } from "../../ui/formatters";
 import { VERBS, isTurnOpen, isVerbEnabled, verbTitle } from "../board/command/verbs";
@@ -74,6 +81,7 @@ export type DiscHandlers = Pick<
 > & {
   onArm: (mode: MapSelectionMode) => void;
   onCalm: (payment: CivicCalmPayment) => void;
+  onDole: () => void;
   onBankBuy: (material: TradableMaterial) => void;
   onBankSell: (material: TradableMaterial) => void;
 };
@@ -91,22 +99,19 @@ const POP_ICON: Record<PopType, string> = {
   citizens: "pops/citizens",
 };
 
-/**
- * Build's classes, after the pop each building serves; Civic holds the rest.
- * v1's roster has no class field, so the sheet names them here until the v2
- * roster lands with one.
- */
-const BUILD_CLASSES: Array<{ id: string; label: string; icon: string; buildings: BuildingId[] }> = [
-  { id: "slaves", label: "Slaves", icon: POP_ICON.slaves, buildings: ["workshop", "villa"] },
-  { id: "freemen", label: "Freemen", icon: POP_ICON.freemen, buildings: ["marketplace"] },
-  { id: "citizens", label: "Citizens", icon: POP_ICON.citizens, buildings: ["forum", "gymnasion"] },
-  {
-    id: "civic",
-    label: "Civic",
-    icon: "settlements/capital",
-    buildings: ["temple", "granary", "aqueduct", "odeon", "port"],
-  },
-];
+/** The class a building's column belongs to; a building with no column is Civic. */
+const CIVIC_CLASS = { id: "civic", label: "Civic", icon: "settlements/capital" };
+const POP_CLASS: Record<PopType, { id: string; label: string; icon: string }> = {
+  slaves: { id: "slaves", label: "Slaves", icon: POP_ICON.slaves },
+  freemen: { id: "freemen", label: "Freemen", icon: POP_ICON.freemen },
+  citizens: { id: "citizens", label: "Citizens", icon: POP_ICON.citizens },
+};
+const BUILD_CLASS_ORDER = [POP_CLASS.slaves, POP_CLASS.freemen, POP_CLASS.citizens, CIVIC_CLASS];
+
+function buildClassOf(building: BuildingDefinition) {
+  const column = building.effects.find((effect) => effect.type === "classOutput");
+  return column ? POP_CLASS[column.pop] : CIVIC_CLASS;
+}
 
 const cap = (text: string) => text[0].toUpperCase() + text.slice(1);
 const units = (cost: Partial<Resources>) =>
@@ -241,8 +246,11 @@ export function discGroups(
   };
 
   // A class with one building skips its second fan: the class is that building.
-  const build = BUILD_CLASSES.flatMap((buildClass) => {
-    const buildings = buildClass.buildings.flatMap((id) => building(id) ?? []);
+  const roster = getBuildings(G.definition.content);
+  const build = BUILD_CLASS_ORDER.flatMap((buildClass) => {
+    const buildings = roster
+      .filter((definition) => buildClassOf(definition).id === buildClass.id)
+      .flatMap((definition) => building(definition.id) ?? []);
     if (buildings.length === 0) return [];
     if (buildings.length === 1) {
       const [only] = buildings;
@@ -268,9 +276,21 @@ export function discGroups(
       icon: payment === "gold" ? "unrest/calm-verb" : "unrest/patronage",
       prices: [status.cost ?? {}],
       enabled: open && status.can,
-      hint: `+${G.ruleset.civicCalm.happiness} happiness, once a turn.`,
+      hint: `+${G.ruleset.civicCalm.happiness} happiness until your next turn, once a turn.`,
       run: () => handlers.onCalm(payment),
     };
+  };
+
+  const doleStatus = getDoleStatus(G, playerID);
+  const dole: DiscOption = {
+    id: "dole",
+    label: "The Dole",
+    icon: "unrest/bread-dole",
+    prices: [doleStatus.cost ?? {}],
+    gets: { food: G.ruleset.dole.food },
+    enabled: open && doleStatus.can,
+    hint: "Influence buys food.",
+    run: handlers.onDole,
   };
 
   const exchange = TRADABLE_MATERIALS.map((material) => {
@@ -354,7 +374,7 @@ export function discGroups(
       icon: "unrest/calm-verb",
       hint: "Pick one",
       primary: "calm-gold",
-      options: [calm("gold"), calm("influence"), verbOption("venture", context, handlers)],
+      options: [calm("gold"), calm("influence"), dole, verbOption("venture", context, handlers)],
     },
     {
       id: "exchange",

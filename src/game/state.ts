@@ -99,6 +99,8 @@ export function createInitialStateFromDefinition(
           civicCalmUsedThisTurn: false,
           ladderUsedThisTurn: false,
           ventureUsedThisTurn: false,
+          moveUsedThisTurn: false,
+          calmActive: false,
           lawFreeActionsUsedThisYear: [],
           incomeSuppressedTurns: 0,
         },

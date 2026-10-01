@@ -93,7 +93,6 @@ export function FoundColonyPopover({
           <article className="placementPreviewCard settlement-colony foundColonyPreview">
             <SettlementSummaryCard
               name="NEW COLONY"
-              content={G.definition.content}
               netYield={previewYield}
               ruleset={G.ruleset}
               settlement={previewSettlement}

@@ -477,43 +477,15 @@ export function presentDirectiveEffect(effect: DirectiveEffect): EffectPresentat
 
 export function presentBuildingEffect(effect: BuildingEffect): EffectPresentation {
   switch (effect.type) {
-    case "freemanGoldBonus":
+    case "classOutput":
       return {
-        text: `+${formatNumber(effect.amount)} Gold per freeman, up to ${effect.supportedPops}`,
-        tone: "positive",
-      };
-    case "citizenInfluenceBonus":
-      return {
-        text: `+${formatNumber(effect.amount)} Influence per citizen, up to ${effect.supportedPops}`,
-        tone: "positive",
-      };
-    case "slavePrimaryResourceBonus":
-      return {
-        text: `+${formatNumber(effect.amount)} tile resource per slave, up to ${effect.supportedPops}`,
+        text: `Each ${formatPopLabel(effect.pop, 1)} here makes ${formatNumber(effect.amount)}`,
         tone: "positive",
       };
     case "income":
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource] + " income");
     case "happiness":
       return signedPresentation(effect.amount, RESOURCE_LABELS.happiness);
-    // "costs -2 Food" has two readings — cheaper by 2, or a price of minus two —
-    // and a discount is exactly the case where the negative numeral is the
-    // ambiguous one. "2 less" is the phrasing the Assembly deck already uses,
-    // and it is a word shorter, which matters in a ~110px effect column.
-    case "growPopFoodDiscount":
-      return {
-        text: `Grow Pop costs ${formatNumber(effect.amount)} less Food here`,
-        tone: "positive",
-      };
-    case "popCapacityBonus":
-      return signedPresentation(effect.amount, "pop capacity");
-    case "tilePrimaryResourceBonus":
-      return signedPresentation(effect.amount, "tile resource income");
-    case "promoteCostReduction":
-      return {
-        text: `Promotions cost ${formatNumber(effect.amount)} less here`,
-        tone: "positive",
-      };
   }
 }
 

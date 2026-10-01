@@ -2,7 +2,7 @@ import { PLAYER_IDS } from "./data";
 import type { HegemonyState, GameOverReason, PlayerId, VictoryMetric } from "./types";
 import { totalPops } from "./core/pops";
 import { addLog, getPlayerName, getTile } from "./core/query";
-import { effectiveHappiness } from "./luxury";
+import { standingHappiness } from "./happiness";
 
 /**
  * The victory race (roadmap-appendix D1). Five public cards use "Most X, minimum Y":
@@ -70,10 +70,9 @@ export function victoryMetricValue(
       return wood + stone + gold + food;
     }
     case "happiness":
-      // Q44: active luxuries count toward Beloved — the metric reads EFFECTIVE
-      // happiness through the same selector the riot thresholds use.
+      // Q44: active luxuries count toward Beloved. Calm does not: it lasts a turn.
       return G.ruleset.economy.luxury.countsTowardBeloved
-        ? effectiveHappiness(G, playerID)
+        ? standingHappiness(G, playerID)
         : player.resources.happiness;
     case "cities":
     case "pops":

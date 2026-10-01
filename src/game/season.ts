@@ -14,6 +14,7 @@ export function resetTurnFlags(G: HegemonyState) {
     player.civicCalmUsedThisTurn = false;
     player.ladderUsedThisTurn = false;
     player.ventureUsedThisTurn = false;
+    player.moveUsedThisTurn = false;
   }
 }
 
