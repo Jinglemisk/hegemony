@@ -6,7 +6,7 @@ import { calculateEconomyProjection } from "../game/economy/preview";
 import type { EconomyPreview } from "../game/economy/preview";
 import { describeCommand, enumerateLegalOptions } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
-import { settlementCapacity } from "../game/settlement";
+import { settlementCapacity, settlementSlots } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import type { HegemonyState, PlayerId, Resources } from "../game/types";
 import { presentActiveEffects } from "../ui/effects";
@@ -140,7 +140,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
     const buildings =
       settlement.buildings.length > 0 ? ` · buildings: ${settlement.buildings.join(", ")}` : "";
     lines.push(
-      `  ${tileId} ${settlement.kind} on ${tile.terrain} (${tile.resource ? `${tile.resource.type} ${tile.resource.amount}` : "no yield"}) — ` +
+      `  ${tileId} ${settlement.kind} on ${tile.terrain} (${tile.resource ? tile.resource.type : "no resource"}, ${settlementSlots(tile, settlement)} slots) — ` +
         `pops ${totalPops(settlement.pops)}/${settlementCapacity(settlement, G.ruleset, G.definition.content)} ` +
         `(c${settlement.pops.citizens} f${settlement.pops.freemen} s${settlement.pops.slaves})${buildings}`,
     );
@@ -261,6 +261,19 @@ export function renderBatchReport(report: BatchReport): string {
         `discontent ${(lastSeason.unrestTierShares.discontent * 100).toFixed(0)}% / ` +
         `unrest ${(lastSeason.unrestTierShares.unrest * 100).toFixed(0)}% / ` +
         `revolt ${(lastSeason.unrestTierShares.revolt * 100).toFixed(0)}%`,
+    );
+  }
+
+  if (report.hunger) {
+    lines.push(
+      `Food under work slots: ${Object.entries(report.hunger)
+        .map(
+          ([seat, stats]) =>
+            `P${seat} hunger turns ${formatNumber(stats.hungerTurnsPerGame)}/game, ` +
+            `pops lost ${formatNumber(stats.popsLostPerGame)}/game, ` +
+            `idle slaves ${formatNumber(stats.idleSlavesMean)} (${(stats.idleSlaveShare * 100).toFixed(0)}%)`,
+        )
+        .join(" · ")}`,
     );
   }
 

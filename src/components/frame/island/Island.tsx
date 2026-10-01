@@ -2,8 +2,7 @@ import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useStat
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { getLuxuryGood } from "../../../game/content";
-import { settlementBuildingSlots } from "../../../game/rules";
-import type { Ruleset } from "../../../game/ruleset";
+import { settlementSlots, settlementWorkingSlaves } from "../../../game/settlement";
 import { luxuryEligibleVertices } from "../../../game/mapTopology";
 import type { HegemonyState, HexTile, PopType, Settlement } from "../../../game/types";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
@@ -245,7 +244,6 @@ function Tile({
   names,
   state,
   isTabStop,
-  ruleset,
   onAction,
   onFocus,
   onBlur,
@@ -258,7 +256,6 @@ function Tile({
   names: Map<string, string>;
   state: TileState;
   isTabStop: boolean;
-  ruleset: Ruleset;
   onAction: (tileId: string) => void;
   onFocus: (tileId: string, visible: boolean) => void;
   onBlur: () => void;
@@ -266,16 +263,14 @@ function Tile({
   onHover: (tileId: string | null, element?: Element) => void;
 }) {
   const [lead, second] = orderSettlements(tile.settlements);
-  const slots =
-    tile.terrain === "oracle"
-      ? 0
-      : lead
-        ? settlementBuildingSlots(tile, lead, ruleset)
-        : tile.buildingSlots;
+  // A settled tile draws its slots as pips: built, worked by a slave, or open. An
+  // empty tile prints the count beside what its slaves would make.
+  const slots = lead ? settlementSlots(tile, lead) : 0;
   const built = lead ? lead.buildings.length : 0;
-  const yieldLabel = tile.resource
-    ? `${tile.resource.amount} ${RESOURCE_LABELS[tile.resource.type].toLowerCase()}`
-    : "no yield";
+  const worked = lead ? settlementWorkingSlaves(tile, lead) : 0;
+  const slotLabel =
+    `${tile.slots} ${tile.slots === 1 ? "slot" : "slots"}` +
+    (tile.resource ? ` for ${RESOURCE_LABELS[tile.resource.type].toLowerCase()}` : "");
   const leadName = lead ? names.get(lead.id) : undefined;
   const className = [
     "tile-btn",
@@ -288,7 +283,7 @@ function Tile({
 
   return (
     <g
-      aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${yieldLabel}${leadName ? `, ${leadName}` : ""}`}
+      aria-label={`Hex ${tile.id}, ${tile.terrain} tile, ${slotLabel}${leadName ? `, ${leadName}` : ""}`}
       className={className}
       data-tile={tile.id}
       data-tile-id={tile.id}
@@ -322,14 +317,16 @@ function Tile({
             x="-24"
             y="-48"
           />
-          {tile.resource ? (
-            <g className="tile-yield" transform="translate(0,26)">
+          {tile.slots > 0 ? (
+            <g className="tile-slots" transform="translate(0,26)">
               <text className="yield-n" x="-4">
-                {tile.resource.amount}
+                {tile.slots}
               </text>
               <image
                 height="24"
-                href={rasterIcon(`resources/${tile.resource.type}`)}
+                href={rasterIcon(
+                  tile.resource ? `resources/${tile.resource.type}` : "settlements/slot",
+                )}
                 width="24"
                 x="2"
                 y="-19"
@@ -339,10 +336,10 @@ function Tile({
         </>
       )}
       {second ? <SharedSeal settlement={second} /> : null}
-      <g className="pips" transform={lead ? undefined : "translate(0,72)"}>
+      <g className="pips">
         {Array.from({ length: slots }, (_, i) => (
           <circle
-            className={`pip${i < built ? " built" : ""}`}
+            className={`pip${i < built ? " built" : i < built + worked ? " worked" : ""}`}
             cx={(i - (slots - 1) / 2) * 16}
             cy="0"
             key={i}
@@ -362,8 +359,8 @@ function tileTip(G: HegemonyState, tile: HexTile, names: Map<string, string>) {
       title: `${tile.terrain[0].toUpperCase()}${tile.terrain.slice(1)}`,
       sub: `Hex ${tile.id}`,
       rows: [
-        ["Yield", tile.resource ? `${tile.resource.amount} ${tile.resource.type}` : "none"],
-        ["Building slots", String(tile.buildingSlots)],
+        ["Slots", String(tile.slots)],
+        ["A slave makes", tile.resource ? `1 ${tile.resource.type}` : "nothing"],
       ] as Array<[string, string]>,
     };
   }
@@ -383,9 +380,10 @@ function tileTip(G: HegemonyState, tile: HexTile, names: Map<string, string>) {
           `Also ${PLAYER_GLAZES[other.owner].name}'s ${other.kind}`,
           names.get(other.id) ?? "",
         ]),
-      ...(tile.resource
-        ? [["Yield", `${tile.resource.amount} ${tile.resource.type}`] as [string, string]]
-        : []),
+      [
+        "Slots",
+        `${lead.buildings.length} built, ${settlementWorkingSlaves(tile, lead)} worked of ${settlementSlots(tile, lead)}`,
+      ],
     ],
   };
 }
@@ -735,7 +733,6 @@ function IslandComponent({
               key={tile.id}
               names={names}
               onAction={act}
-              ruleset={G.ruleset}
               onBlur={() => setFocusRing(null)}
               onFocus={(id, visible) => {
                 setRoving(id);

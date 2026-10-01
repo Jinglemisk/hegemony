@@ -92,6 +92,8 @@ export interface LuxuryAsset {
 export type Resources = Record<Resource, number>;
 
 export type Pops = Record<PopType, number>;
+/** The pops Grow can add. Citizens come only by promotion. */
+export type GrowablePop = Exclude<PopType, "citizens">;
 
 export type EventDeckKind = "seasonal" | "player";
 
@@ -244,9 +246,10 @@ export interface ActiveActionCostDiscount {
   consume: "nextMatchingAction";
 }
 
-export interface Yield {
+/** What a tile's working slaves make. The tile prints no amount: a slave on an open
+ *  slot makes 1 of it (v2 work slots). */
+export interface TileResource {
   type: MaterialResource;
-  amount: number;
 }
 
 // ── Event tables (roadmap-appendix D9/D10 · docs/archive/plans/event-tables.md) ─────────────
@@ -415,12 +418,12 @@ export interface HexTile {
   q: number;
   r: number;
   terrain: Terrain;
-  buildingSlots: number;
-  /** The land's first-order yield, or `null` for yield-less terrain (hills, oracle).
-   *  Null MUST mean no resource type — slave income multiplies `resource.type` by a
-   *  ruleset coefficient (not the amount), so `{ type, amount: 0 }` would leave slaves
-   *  productive and break the yield-less hill (terrain-economy.md precondition). */
-  resource: Yield | null;
+  /** One pool shared by buildings and working slaves (v2 work slots): each building
+   *  takes a slot, each open slot holds one working slave. */
+  slots: number;
+  /** What a working slave makes here, or `null` on terrain where slaves make nothing
+   *  (hills, oracle). */
+  resource: TileResource | null;
   settlements: Settlement[];
 }
 
@@ -450,16 +453,14 @@ export interface PlayerState {
   /** Derived location index for board traversal; persistent references use Settlement.id. */
   settlements: string[];
   collectedThisTurn: boolean;
-  hasCollectedGameplayIncome: boolean;
   grownSettlementsThisTurn: string[];
   actionCostDiscounts: ActiveActionCostDiscount[];
-  /** Consecutive turns this player has collected income at or below the food-deficit
-   *  threshold; drives the starvation pop-loss in the unrest upkeep. */
-  consecutiveFoodDeficitTurns: number;
   /** Active timed happiness penalties/bonuses, ticked down each of the player's turns. */
   timedHappinessModifiers: TimedHappinessModifier[];
-  /** Running total of pops lost to unrest & starvation — surfaced in the ledger. */
+  /** Running total of pops lost to riots — surfaced in the ledger. */
   popsLostToUnrest: number;
+  /** Running total of pops that left unfed at income. */
+  popsLostToHunger: number;
   /** Running total of pops gained inorganically from event cards (the `addPops`
    *  effect) — the ledger's "Gained" stat, paired with deaths. */
   popsGainedFromEvents: number;

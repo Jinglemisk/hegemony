@@ -4,7 +4,7 @@ import { buildBuilding, placeCapital } from "./actions";
 import { getBuildBuildingStatus } from "./status";
 import { promotePop, getPromotePopStatus } from "./civic";
 import { settlementNetYield } from "./economy/income";
-import { settlementTileYield } from "./settlement";
+import { settlementIdleSlaves, settlementWorkingSlaves } from "./settlement";
 import { enumerateLegalCommands } from "./legalMoves";
 import { createInitialState } from "./state";
 import { DEFAULT_RULESET } from "./ruleset";
@@ -44,7 +44,7 @@ describe("the oracle (Phase 2)", () => {
 
     expect(oracles).toHaveLength(1);
     expect(oracles[0].resource).toBeNull();
-    expect(oracles[0].buildingSlots).toBe(0);
+    expect(oracles[0].slots).toBe(0);
   });
 
   it("rejects a capital, and never appears in the setup enumeration", () => {
@@ -61,18 +61,18 @@ describe("the oracle (Phase 2)", () => {
 });
 
 describe("yield-less hills (Phase 2)", () => {
-  it("gives slaves nothing to work — no tile yield, no slave production", () => {
+  it("gives slaves nothing to work — every hill slave is idle", () => {
     const G = createInitialState(SEED);
     const hill = findTile(G, (tile) => tile.terrain === "hill");
     expect(hill.resource).toBeNull();
 
     const settlement = city({ citizens: 0, freemen: 0, slaves: 3 });
-    expect(settlementTileYield(hill, settlement, DEFAULT_RULESET)).toBe(0);
+    expect(settlementWorkingSlaves(hill, settlement)).toBe(0);
+    expect(settlementIdleSlaves(hill, settlement)).toBe(3);
 
     const income = settlementNetYield(hill, settlement, DEFAULT_RULESET);
-    // Slaves are inert on the hill: only their upkeep and unrest register.
-    expect(income.wood + income.stone + income.food + income.gold).toBe(-3); // 3 slaves × −1 food
-    expect(income.food).toBe(-3);
+    // Slaves make nothing on the hill and eat nothing: only their unrest registers.
+    expect(income.wood + income.stone + income.food + income.gold).toBe(0);
     expect(income.happiness).toBe(-1.5);
   });
 
@@ -85,10 +85,10 @@ describe("yield-less hills (Phase 2)", () => {
       city({ citizens: 1, freemen: 1, slaves: 0 }),
       DEFAULT_RULESET,
     );
-    // Citizen: +1 influence, +2 gold, −2 food. Freeman: +2 gold, −1 food.
+    // Citizen: +1 influence, −1 food. Freeman: +1 gold, −1 food.
     expect(income.influence).toBe(1);
-    expect(income.gold).toBe(4);
-    expect(income.food).toBe(-3);
+    expect(income.gold).toBe(1);
+    expect(income.food).toBe(-2);
   });
 });
 

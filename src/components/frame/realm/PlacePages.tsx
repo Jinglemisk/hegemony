@@ -22,7 +22,6 @@ function placeName(tile: HexTile, names: Map<string, string>) {
 export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: string) => void }) {
   const { G, viewerId, phase, isActive } = useGameUi();
   const colony = G.ruleset.settlements.colony;
-  const city = G.ruleset.settlements.city;
   const coastal = isCoastalTile(tile, G.board.tiles);
   const goods = G.board.luxuries.filter((asset) => asset.tileIds.includes(tile.id));
   const found = getFoundColonyStatus(G, viewerId, tile.id);
@@ -40,30 +39,22 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
       </p>
       <ul className="ground">
         <li className="g-line">
+          <Ico path="settlements/slot" size="ui" />
+          Slots
+          <span>
+            <b>{tile.slots}</b> for buildings and working slaves
+          </span>
+        </li>
+        <li className="g-line">
           <Ico path={`terrain/${tile.terrain}`} size="ui" />
           Land
           {tile.resource ? (
             <span>
-              <b>+{tile.resource.amount}</b> {tile.resource.type}
+              a slave on a slot makes <b>1</b> {tile.resource.type}
             </span>
           ) : (
-            <span>yields nothing</span>
+            <span>slaves make nothing here</span>
           )}
-        </li>
-        <li className="g-line">
-          <Ico path="settlements/slot" size="ui" />
-          Ground
-          <span>
-            {colony.canBuildBuildings ? (
-              <>
-                <b>{tile.buildingSlots + colony.buildingSlotBonus}</b> slots
-              </>
-            ) : (
-              <>
-                <b>{tile.buildingSlots + city.buildingSlotBonus}</b> slots as a city
-              </>
-            )}
-          </span>
         </li>
         <li className="g-line">
           <Ico path="pops/capacity" size="ui" />

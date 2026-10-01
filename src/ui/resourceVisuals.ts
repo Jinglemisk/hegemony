@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { Resource, Terrain, Yield } from "../game/types";
+import type { Resource, Terrain, TileResource } from "../game/types";
 
 export const RESOURCE_ORDER: Resource[] = [
   "wood",
@@ -112,9 +112,12 @@ export function resourceCssVars(resource: Resource): ResourceCssVars {
   return toCssVars(RESOURCE_VISUALS[resource]);
 }
 
-/** The right palette for a tile: its resource's if it yields, else its terrain's
+/** The right palette for a tile: its resource's if it has one, else its terrain's
  *  (hill / oracle). One code path so the map fill and the ledger chips never diverge. */
-export function tileCssVars(tile: { terrain: Terrain; resource: Yield | null }): ResourceCssVars {
+export function tileCssVars(tile: {
+  terrain: Terrain;
+  resource: TileResource | null;
+}): ResourceCssVars {
   if (tile.resource) {
     return resourceCssVars(tile.resource.type);
   }

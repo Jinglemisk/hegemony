@@ -19,8 +19,8 @@ import {
   settlementOverCapacity,
   settlementCapacity,
 } from "../settlement";
-import { calculateIncomeBreakdown, getFoodShortageStatus, summarizeIncome } from "./income";
-import type { FoodShortageStatus, IncomeContribution } from "./income";
+import { calculateIncomeBreakdown, getHungerStatus, summarizeIncome } from "./income";
+import type { HungerStatus, IncomeContribution } from "./income";
 import {
   buildBuilding,
   foundColony,
@@ -57,7 +57,7 @@ export type EconomyProjection = {
   income: Resources;
   breakdown: IncomeContribution[];
   projectedResources: Resources;
-  food: FoodShortageStatus;
+  food: HungerStatus;
   population: {
     pops: number;
     capacity: number;
@@ -111,7 +111,7 @@ export function calculateEconomyProjection(
     income,
     breakdown,
     projectedResources,
-    food: getFoodShortageStatus(incomeState, playerID, income.food),
+    food: getHungerStatus(incomeState, playerID, income.food),
     population: {
       ...population,
       overCapacity: Math.max(0, population.pops - population.capacity),

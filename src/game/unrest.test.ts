@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyUnrestUpkeep,
-  calculateIncome,
   drawPlayerEvent,
   getAddPopsEffect,
   getEventPopTargetTileIds,
@@ -44,8 +43,6 @@ const NONE: Pops = { citizens: 0, freemen: 0, slaves: 0 };
 describe("unrest upkeep", () => {
   it("parks a mild riot at the -5 threshold instead of removing pops (D9)", () => {
     const G = preloadedGame(SEED);
-    // Grace on -> the food-deficit path is skipped, isolating the threshold.
-    G.players["0"].hasCollectedGameplayIncome = false;
     setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
     G.players["0"].resources.happiness = -5;
 
@@ -60,7 +57,6 @@ describe("unrest upkeep", () => {
 
   it("parks a severe riot (revolt) at the -10 threshold — the rebound waits for the roll", () => {
     const G = preloadedGame(SEED);
-    G.players["0"].hasCollectedGameplayIncome = false;
     setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
     G.players["0"].resources.happiness = -12;
 
@@ -70,40 +66,8 @@ describe("unrest upkeep", () => {
     expect(G.players["0"].resources.happiness).toBe(-12);
   });
 
-  it("starves a pop after two consecutive food-deficit turns, then resets the counter", () => {
-    const G = preloadedGame(SEED);
-    // Grace off; huge citizen upkeep guarantees a deep food deficit regardless of tiles.
-    G.players["0"].hasCollectedGameplayIncome = true;
-    G.players["0"].resources.happiness = 0; // keep thresholds out of it
-    setPops(G, "0", { citizens: 8, freemen: 0, slaves: 0 }, NONE);
-    G.players["0"].consecutiveFoodDeficitTurns = 1;
-    expect(calculateIncome(G, "0").food).toBeLessThanOrEqual(-2);
-
-    const before = playerPopTotal(G, "0");
-    applyUnrestUpkeep(G, "0");
-
-    expect(playerPopTotal(G, "0")).toBe(before - 1);
-    expect(G.players["0"].consecutiveFoodDeficitTurns).toBe(0);
-  });
-
-  it("resets the deficit counter on a non-deficit turn (no pop lost)", () => {
-    const G = preloadedGame(SEED);
-    G.players["0"].hasCollectedGameplayIncome = true;
-    G.players["0"].resources.happiness = 0;
-    setPops(G, "0", { citizens: 0, freemen: 1, slaves: 0 }, NONE); // -1 food > -2 threshold
-    G.players["0"].consecutiveFoodDeficitTurns = 1;
-    expect(calculateIncome(G, "0").food).toBeGreaterThan(-2);
-
-    const before = playerPopTotal(G, "0");
-    applyUnrestUpkeep(G, "0");
-
-    expect(G.players["0"].consecutiveFoodDeficitTurns).toBe(0);
-    expect(playerPopTotal(G, "0")).toBe(before);
-  });
-
   it("applies a timed happiness modifier each turn, then expires it", () => {
     const G = preloadedGame(SEED);
-    G.players["0"].hasCollectedGameplayIncome = false; // isolate from the food path
     setPops(G, "0", { citizens: 3, freemen: 0, slaves: 0 }, NONE);
     G.players["0"].resources.happiness = 0;
     // -1/turn for 3 turns keeps happiness above the -5 threshold throughout.
@@ -133,7 +97,6 @@ describe("unrest upkeep", () => {
 
   it("does not drift happiness toward zero on its own", () => {
     const G = preloadedGame(SEED);
-    G.players["0"].hasCollectedGameplayIncome = false;
     setPops(G, "0", { citizens: 1, freemen: 0, slaves: 0 }, NONE);
     G.players["0"].resources.happiness = -3; // above the -5 threshold, no active cause
 

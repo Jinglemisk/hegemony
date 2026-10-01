@@ -120,7 +120,6 @@ const EVENT_CARD_ART: Record<string, string> = {
 // their own (docs/archive/notes/OVERNIGHT.md morning questions) — better a grain jar for Granary Rats
 // than everything falling back to the drought plate.
 Object.assign(EVENT_CARD_ART, {
-  "player-citizenship-rolls": EVENT_CARD_ART["player-new-citizen"],
   "player-willing-hands": EVENT_CARD_ART["player-free-settlers"],
   "player-slave-auction": EVENT_CARD_ART["player-captured-laborers"],
   "player-granary-rats": EVENT_CARD_ART["player-good-stores"],

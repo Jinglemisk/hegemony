@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  POP_TYPES,
+  GROWABLE_POPS,
   getBuildBuildingOptions,
   getBuildBuildingStatus,
   getDemotePopStatus,
@@ -89,7 +89,7 @@ export function useMapSelection({
 
       case "growPop": {
         // The picked pop, or any pop type being growable, offers the settlement.
-        const pops = selection.mode.pop ? [selection.mode.pop] : POP_TYPES;
+        const pops = selection.mode.pop ? [selection.mode.pop] : GROWABLE_POPS;
         return holdings
           .filter(({ tile }) => pops.some((pop) => getGrowPopStatus(G, playerID, tile.id, pop).can))
           .map(({ tile }) => tile.id);

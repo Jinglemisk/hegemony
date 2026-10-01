@@ -3,6 +3,7 @@ import type { GameContent } from "../content";
 import type {
   ActionCostDiscountTarget,
   BuildingId,
+  GrowablePop,
   HegemonyState,
   PlayerId,
   PopType,
@@ -52,7 +53,7 @@ export function getAdjustedActionCost(
 
 export function getGrowPopCost(
   settlement: Settlement,
-  pop: PopType,
+  pop: GrowablePop,
   ruleset: Ruleset,
   content: GameContent = getAuthoredGameContent(),
 ): Partial<Resources> {
@@ -77,7 +78,7 @@ export function getDiscountedGrowPopCost(
   G: HegemonyState,
   playerID: PlayerId,
   settlement: Settlement,
-  pop: PopType,
+  pop: GrowablePop,
 ): Partial<Resources> {
   const adjusted = clonePartialResources(
     getGrowPopCost(settlement, pop, G.ruleset, G.definition.content),

@@ -42,7 +42,7 @@ function iconOf(mechanic: ActiveEffectMechanic | undefined): string {
   switch (mechanic?.type) {
     case "suppressIncome":
       return "market/income-suppressed";
-    case "foodDeficitProgress":
+    case "hunger":
       return RESOURCE_ICON.food;
     case "timedHappiness":
       return RESOURCE_ICON.happiness;

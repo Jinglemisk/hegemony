@@ -37,18 +37,16 @@ export const LOW_NUMBER_RULESET_PATCH = {
   growPopCosts: {
     slaves: { food: 3 },
     freemen: { food: 4 },
-    citizens: { food: 5, gold: 1 },
   },
   popIncome: {
-    citizens: { flat: { influence: 1, gold: 1, food: -1 }, primaryResource: 0 },
+    citizens: { flat: { influence: 1, food: -1 }, primaryResource: 0 },
     freemen: { flat: { gold: 1, food: -1 }, primaryResource: 0 },
-    slaves: { flat: { food: -1, happiness: -0.5 }, primaryResource: 1 },
+    slaves: { flat: { happiness: -0.5 }, primaryResource: 1 },
   },
   economy: {
     foodStockpileHappinessDivisor: 3,
     foodStockpileHappinessCap: 1,
     stockpileFloors: { wood: 0, stone: 0, gold: 0, influence: 0 },
-    unrest: { foodDeficitThreshold: -1 },
     bank: {
       baseline: { sell: 2, buy: 2 },
       abundant: { sell: 3, buy: 2 },
@@ -368,28 +366,6 @@ export function createLowNumberContent(base: GameContent): GameContent {
     }),
   }));
 
-  content.terrain = content.terrain.map((tile) => {
-    if (!tile.resource) return tile;
-    const amount = tile.resource.amount;
-    const compressed =
-      tile.resource.type === "wood"
-        ? amount <= 2
-          ? 1
-          : 2
-        : tile.resource.type === "stone"
-          ? amount <= 3
-            ? 1
-            : amount <= 4
-              ? 2
-              : 3
-          : amount <= 2
-            ? 1
-            : amount <= 8
-              ? 2
-              : 3;
-    return { ...tile, resource: { ...tile.resource, amount: compressed } };
-  });
-
   content.seasonalEvents = content.seasonalEvents.map((card) => {
     const effects = card.effects.map(scaleEventEffect);
     return { ...card, text: rewriteEventText(card.text, card.effects, effects), effects };
@@ -404,7 +380,6 @@ export function createLowNumberContent(base: GameContent): GameContent {
             "player-new-citizen": 2,
             "player-free-settlers": 2,
             "player-captured-laborers": 2,
-            "player-citizenship-rolls": 6,
             "player-willing-hands": 6,
             "player-slave-auction": 4,
           } as Record<string, number>
@@ -425,7 +400,7 @@ export function createLowNumberContent(base: GameContent): GameContent {
 export const TUNING_PRESETS: Record<TuningPresetId, TuningPreset> = {
   "low-number-core-v1": {
     id: "low-number-core-v1",
-    label: "Low Numbers · 20W / 12S / 16F",
+    label: "Low Numbers",
     rulesetPatch: LOW_NUMBER_RULESET_PATCH,
     createContent: createLowNumberContent,
   },

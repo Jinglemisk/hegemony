@@ -134,7 +134,7 @@ export function gameplayActionDisabled(
 
 /** One consistent line for every settlement picker: the place's NAME and rank,
  *  the ground it stands on, and whether it shares the tile with a rival (shared
- *  yields are halved, and an upgrade would evict them). */
+ *  slots are split, and an upgrade would evict them). */
 export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: PlayerId): string {
   const own = tile.settlements.find((candidate) => candidate.owner === ownerID);
   const name = own ? settlementNameOf(G.board.tiles, own.id) : "Open ground";
@@ -144,9 +144,9 @@ export function settlementPickerLabel(G: HegemonyState, tile: HexTile, ownerID: 
     ? ` · shares tile with ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
     : "";
 
-  const yieldText = tile.resource ? `+${tile.resource.amount} ${tile.resource.type}` : "no yield";
+  const slotText = `${tile.slots} slots${tile.resource ? ` for ${tile.resource.type}` : ""}`;
 
-  return `${name}${kind ? ` · ${kind}` : ""} · ${capitalize(tile.terrain)} ${yieldText}${shared}`;
+  return `${name}${kind ? ` · ${kind}` : ""} · ${capitalize(tile.terrain)}, ${slotText}${shared}`;
 }
 
 export function createEmptyResources(): Resources {

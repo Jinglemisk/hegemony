@@ -53,7 +53,6 @@ function stateWithSettlement(pops: Pops = EMPTY_POPS): HegemonyState {
   G.players["0"].settlements.push(target.id);
   G.phase = "gameplay";
   G.currentPlayer = "0";
-  G.players["0"].hasCollectedGameplayIncome = true;
   return G;
 }
 
@@ -134,7 +133,6 @@ describe("canonical active-effect selector", () => {
   it("reports source, scope, mechanics, duration, and expiry for persistent state", () => {
     const G = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });
     G.players["0"].incomeSuppressedTurns = 1;
-    G.players["0"].consecutiveFoodDeficitTurns = 1;
     G.players["0"].timedHappinessModifiers = [timedModifier("Public Shame", -2, 2)];
     G.players["0"].actionCostDiscounts = [
       {
@@ -181,7 +179,7 @@ describe("canonical active-effect selector", () => {
     expect(kinds).toEqual(
       new Set([
         "incomeSuppression",
-        "foodDeficit",
+        "hunger",
         "timedHappiness",
         "seasonalModifier",
         "yearlyOmen",
@@ -229,7 +227,6 @@ describe("canonical active-effect selector", () => {
   it("expires countdown and coupon state at the same lifecycle boundaries it declares", () => {
     const G = stateWithSettlement();
     G.players["0"].resources.happiness = 20;
-    G.players["0"].hasCollectedGameplayIncome = false;
     G.players["0"].incomeSuppressedTurns = 1;
     G.players["0"].timedHappinessModifiers = [timedModifier("Passing Cloud", -1, 1)];
     G.players["0"].actionCostDiscounts = [
@@ -454,7 +451,7 @@ describe("frontend active-effect parity", () => {
 
 describe("simulation and AI active-effect parity", () => {
   it("clearly avoids skipped income by removing suppressed collections from its horizon", () => {
-    const safe = stateWithSettlement({ citizens: 1, freemen: 0, slaves: 0 });
+    const safe = stateWithSettlement({ citizens: 0, freemen: 1, slaves: 0 });
     const struck = structuredClone(safe);
     struck.players["0"].incomeSuppressedTurns = 1;
 
@@ -481,7 +478,6 @@ describe("simulation and AI active-effect parity", () => {
       const G = scenario().build();
       G.phase = "gameplay";
       G.currentPlayer = "0";
-      G.players["0"].hasCollectedGameplayIncome = true;
       Object.assign(G.players["0"].resources, {
         wood: 0,
         stone: 0,
@@ -502,29 +498,31 @@ describe("simulation and AI active-effect parity", () => {
     expect(choose(timedModifier("Shame", -2, 3)).type).toBe("civicCalm");
     expect(choose(timedModifier("Festival", 2, 3)).type).toBe("endTurn");
   });
-  it("handles the safe edge and the starvation edge deterministically", () => {
+  it("handles the safe edge and the hunger edge deterministically", () => {
     const safe = stateWithSettlement();
-    const deficit = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });
-    deficit.players["0"].consecutiveFoodDeficitTurns =
-      deficit.ruleset.economy.unrest.foodDeficitTurnsToStarve - 1;
+    const hungry = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });
+    // Ten mouths against eight stored food: two go unfed at the first income.
+    hungry.players["0"].resources.food = 8;
 
     expect(projectPolicyHorizon(safe, "0", 1).expectedStarvationPopLoss).toBe(0);
-    expect(projectPolicyHorizon(deficit, "0", 1).expectedStarvationPopLoss).toBe(
-      deficit.ruleset.economy.unrest.foodDeficitStarvePopLoss,
-    );
+    expect(projectPolicyHorizon(hungry, "0", 1).expectedStarvationPopLoss).toBe(2);
   });
 
-  it("recalculates food after projected starvation and matches the engine on the review case", () => {
+  it("recalculates food after projected hunger and matches the engine on the review case", () => {
     const G = stateWithSettlement({ citizens: 0, freemen: 3, slaves: 0 });
     const engine = structuredClone(G);
-    const before = engine.players["0"].popsLostToUnrest;
+    // No event cards: the review case is income alone.
+    engine.playerDrawPile = [];
+    engine.playerDiscardPile = [];
 
-    for (let upkeep = 0; upkeep < 6; upkeep += 1) {
-      applyUnrestUpkeep(engine, "0");
+    for (let income = 0; income < 6; income += 1) {
+      engine.players["0"].collectedThisTurn = false;
+      expect(collectIncome(engine, "0").ok).toBe(true);
     }
 
-    const actual = engine.players["0"].popsLostToUnrest - before;
-    expect(actual).toBe(2);
+    // Twelve food feeds three freemen for four incomes; the fifth leaves all three unfed.
+    const actual = engine.players["0"].popsLostToHunger;
+    expect(actual).toBe(3);
     expect(projectPolicyHorizon(G, "0", 6).expectedStarvationPopLoss).toBe(actual);
   });
   it("records the selector's exhaustive kind counts in snapshots", () => {

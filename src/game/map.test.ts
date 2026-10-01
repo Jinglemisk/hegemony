@@ -34,7 +34,7 @@ describe("hex map", () => {
     const oracle = tiles.filter((tile) => tile.terrain === "oracle");
     expect(oracle).toHaveLength(1);
     expect(oracle[0].id).toBe("0,1");
-    expect(oracle[0].buildingSlots).toBe(0);
+    expect(oracle[0].slots).toBe(0);
   });
 
   it("measures hex distance symmetrically from the center", () => {

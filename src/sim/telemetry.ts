@@ -13,7 +13,8 @@ import type { DefinitionIdentity } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
 import { activeClaims, luxuryHappinessBonus, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
-import { canPlaceColonyOnTile } from "../game/settlement";
+import { getOwnedSettlement, getTile } from "../game/core/query";
+import { canPlaceColonyOnTile, settlementIdleSlaves } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import { GAME_COMMAND_TYPES, type GameCommandType } from "../parity/commandParity";
 import {
@@ -55,7 +56,11 @@ export type PlayerSnapshot = {
   unrestTier: UnrestTier;
   /** 1 when the current happiness puts the player on the riot table next upkeep. */
   riotAtRisk: number;
-  deficitTurns: number;
+  slaves: number;
+  /** Slaves without an open work slot: on a full tile, or on a hill. */
+  idleSlaves: number;
+  /** Running total of pops that left unfed at income. */
+  popsLostToHunger: number;
   /** Persistent mechanical effects observed by the same selector used by the UI. */
   activeEffects: Record<ActiveEffectKind, number>;
   popsLostToUnrest: number;
@@ -98,7 +103,8 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       income,
       unrestTier: unrest.tier,
       riotAtRisk: unrest.riotAtRisk ? 1 : 0,
-      deficitTurns: player.consecutiveFoodDeficitTurns,
+      ...slaveCounts(G, playerID),
+      popsLostToHunger: player.popsLostToHunger,
       popsLostToUnrest: player.popsLostToUnrest,
       popsGainedFromEvents: player.popsGainedFromEvents,
       activeEffects: activeEffectCounts,
@@ -114,6 +120,23 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
     year: yearOf(G.season),
     players,
   };
+}
+
+function slaveCounts(G: HegemonyState, playerID: PlayerId) {
+  let slaves = 0;
+  let idleSlaves = 0;
+
+  for (const tileId of G.players[playerID].settlements) {
+    const tile = getTile(G, tileId);
+    const settlement = getOwnedSettlement(G, tileId, playerID);
+
+    if (tile && settlement) {
+      slaves += settlement.pops.slaves;
+      idleSlaves += settlementIdleSlaves(tile, settlement);
+    }
+  }
+
+  return { slaves, idleSlaves };
 }
 
 export type Percentiles = {
@@ -180,6 +203,7 @@ export type GameRow = {
   /** The seat holding Voice when the game ended, if its minimum was ever reached. */
   voiceHolder: PlayerId | null;
   popsLostToUnrest: Record<PlayerId, number>;
+  popsLostToHunger: Record<PlayerId, number>;
   /** Luxury goods (Phase 4): claims held / active and the standing happiness they
    *  contributed at game end — the Beloved-side of the feature's exit gate. */
   luxuries: Record<PlayerId, { goodsHeld: number; goodsActive: number; luxuryHappiness: number }>;
@@ -215,6 +239,19 @@ export type BatchReport = {
   perGame: GameRow[];
   perSeason: SeasonRow[];
   perSeat: Record<PlayerId, { winRate: number; capLeaderRate: number; meanFinalCards: number }>;
+  /** Food under work slots, per seat: how often income left mouths unfed, the pops
+   *  that left for it, and how many slaves had no slot to work. */
+  hunger: Record<
+    PlayerId,
+    {
+      /** Incomes that left at least one mouth unfed, per game. */
+      hungerTurnsPerGame: number;
+      popsLostPerGame: number;
+      /** Mean idle slaves over the seat's turn snapshots, and their share of its slaves. */
+      idleSlavesMean: number;
+      idleSlaveShare: number;
+    }
+  >;
   /** Wins credited to the POLICY that held each seat, over finished games — the
    *  seat-independent measure a rotated mixed-policy batch produces. Empty for a
    *  uniform batch (no seat policies recorded). */
@@ -508,6 +545,7 @@ export class Aggregator {
     const finalCards = {} as Record<PlayerId, number>;
     const finalAuthoredPasses = {} as Record<PlayerId, number>;
     const popsLostToUnrest = {} as Record<PlayerId, number>;
+    const popsLostToHunger = {} as Record<PlayerId, number>;
     const luxuries = {} as GameRow["luxuries"];
     const finalGold = {} as Record<PlayerId, number>;
 
@@ -515,6 +553,7 @@ export class Aggregator {
       finalCards[playerID] = playerStandings(G, playerID).victoryCards;
       finalAuthoredPasses[playerID] = G.assemblyPassedByPlayer[playerID];
       popsLostToUnrest[playerID] = G.players[playerID].popsLostToUnrest;
+      popsLostToHunger[playerID] = G.players[playerID].popsLostToHunger;
       luxuries[playerID] = {
         goodsHeld: ownedClaims(G, playerID).length,
         goodsActive: activeClaims(G, playerID).length,
@@ -544,6 +583,7 @@ export class Aggregator {
       finalAuthoredPasses,
       voiceHolder: G.voiceHolder,
       popsLostToUnrest,
+      popsLostToHunger,
       luxuries,
       finalGold,
     });
@@ -655,6 +695,34 @@ export class Aggregator {
       };
     }
 
+    // A hunger turn is a snapshot where the seat's running hunger loss rose: hunger
+    // strikes once, at the seat's own income.
+    const hunger = {} as BatchReport["hunger"];
+    const games = Math.max(1, this.games.length);
+    for (const playerID of PLAYER_IDS) {
+      let hungerTurns = 0;
+      let idle = 0;
+      let slaves = 0;
+      let previous: TurnSnapshot | null = null;
+
+      for (const snapshot of this.snapshots) {
+        const seat = snapshot.players[playerID];
+        const before = previous?.game === snapshot.game ? previous.players[playerID] : null;
+        if (seat.popsLostToHunger > (before?.popsLostToHunger ?? 0)) hungerTurns += 1;
+        idle += seat.idleSlaves;
+        slaves += seat.slaves;
+        previous = snapshot;
+      }
+
+      hunger[playerID] = {
+        hungerTurnsPerGame: hungerTurns / games,
+        popsLostPerGame:
+          this.games.reduce((sum, game) => sum + game.popsLostToHunger[playerID], 0) / games,
+        idleSlavesMean: this.snapshots.length > 0 ? idle / this.snapshots.length : 0,
+        idleSlaveShare: slaves > 0 ? idle / slaves : 0,
+      };
+    }
+
     const terminations: Record<GameTermination, number> = {
       victoryRace: 0,
       deckExhausted: 0,
@@ -751,6 +819,7 @@ export class Aggregator {
       perGame: this.games,
       perSeason,
       perSeat,
+      hunger,
       buildings,
       luxuries,
       movesByType: Object.fromEntries(
@@ -868,7 +937,9 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
     "incomeHappiness",
     "unrestTier",
     "riotAtRisk",
-    "deficitTurns",
+    "slaves",
+    "idleSlaves",
+    "popsLostToHunger",
     "popsLostToUnrest",
     "popsGainedFromEvents",
     ...ACTIVE_EFFECT_KINDS.map((kind) => "effect:" + kind),
@@ -905,7 +976,9 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
         player.income.happiness,
         player.unrestTier,
         player.riotAtRisk,
-        player.deficitTurns,
+        player.slaves,
+        player.idleSlaves,
+        player.popsLostToHunger,
         player.popsLostToUnrest,
         player.popsGainedFromEvents,
         ...ACTIVE_EFFECT_KINDS.map((kind) => player.activeEffects[kind]),

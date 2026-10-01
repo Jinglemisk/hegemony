@@ -7,7 +7,7 @@ import {
   addPops,
   clonePops,
   hasPops,
-  isExactPopSelection,
+  isSetupPopSelection,
   isPositivePopSelection,
   subtractPops,
 } from "./core/pops";
@@ -29,7 +29,9 @@ import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
 import { setupCapitalCount } from "./ruleset";
-import { calculateIncome } from "./economy/income";
+import { calculateIncome, getHungerStatus } from "./economy/income";
+import { applyHunger } from "./hunger";
+import { describeRemoval } from "./tables";
 import { consumeActionCostDiscounts } from "./economy/cost";
 import {
   getBuildBuildingStatus,
@@ -55,7 +57,11 @@ export function placeCapital(
     !tile ||
     player.settlements.length > 0 ||
     tile.settlements.length > 0 ||
-    !isExactPopSelection(pops, G.ruleset.placementPopCounts.capital)
+    !isSetupPopSelection(
+      pops,
+      G.ruleset.placementPopCounts.capital,
+      G.ruleset.placementCitizens.capital,
+    )
   ) {
     return invalid();
   }
@@ -102,7 +108,7 @@ export function placeCity(
     !tile ||
     !owesCity ||
     tile.settlements.length > 0 ||
-    !isExactPopSelection(pops, G.ruleset.placementPopCounts.city)
+    !isSetupPopSelection(pops, G.ruleset.placementPopCounts.city, G.ruleset.placementCitizens.city)
   ) {
     return invalid();
   }
@@ -153,7 +159,11 @@ export function placeColony(
     !tile ||
     !owesColony ||
     !canPlaceColonyOnTile(G, playerID, tile, "setup").can ||
-    !isExactPopSelection(pops, G.ruleset.placementPopCounts.colony)
+    !isSetupPopSelection(
+      pops,
+      G.ruleset.placementPopCounts.colony,
+      G.ruleset.placementCitizens.colony,
+    )
   ) {
     return invalid();
   }
@@ -317,23 +327,34 @@ export function collectIncome(
   if (player.incomeSuppressedTurns > 0) {
     player.incomeSuppressedTurns -= 1;
     player.collectedThisTurn = true;
-    player.hasCollectedGameplayIncome = true;
     addLog(G, `${getPlayerName(G, playerID)} collects nothing — the city is on strike.`, playerID);
     drawPlayerEvent(G, playerID);
     return MOVE_OK;
   }
 
   const income = calculateIncome(G, playerID);
+  const hunger = getHungerStatus(G, playerID, income.food);
   const beforeIncome = cloneResources(player.resources);
   applyResourceDeltaWithFloors(player.resources, income, G.ruleset.economy.stockpileFloors);
+  // Hunger leaves no debt: the granary is empty, never owing.
+  player.resources.food = Math.max(0, player.resources.food);
   const appliedIncome = diffResources(player.resources, beforeIncome);
   player.collectedThisTurn = true;
-  player.hasCollectedGameplayIncome = true;
   addLog(
     G,
     `${getPlayerName(G, playerID)} ${mode === "automatic" ? "automatically collected" : "collected"} income (${formatRuleResourceDelta(appliedIncome)}).`,
     playerID,
   );
+
+  if (hunger.unfed > 0) {
+    const left = applyHunger(G, playerID, hunger.unfed);
+    addLog(
+      G,
+      `${getPlayerName(G, playerID)} could not feed ${hunger.unfed} ${hunger.unfed === 1 ? "mouth" : "mouths"}: ${describeRemoval(left)} left.`,
+      playerID,
+    );
+  }
+
   drawPlayerEvent(G, playerID);
   return MOVE_OK;
 }

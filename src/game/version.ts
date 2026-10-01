@@ -8,7 +8,10 @@ export const ENGINE_VERSION = "0.1.0";
 /** v2 (Phase 4): the board carries the luxury-asset registry and the ruleset the
  *  `economy.luxury` block. Pre-luxury saves are rejected rather than limped along —
  *  their pinned rulesets cannot answer the new happiness questions. */
-export const STATE_SCHEMA_VERSION = 2;
+/** v3 (v2 migration, Step 3): tiles carry slots and a resource type with no printed
+ *  amount, and hunger replaces the food-deficit counter on the player. Saves from
+ *  `main` are rejected, not migrated. */
+export const STATE_SCHEMA_VERSION = 3;
 export const COMMAND_SCHEMA_VERSION = 1;
 
 export const SAVE_FORMAT_VERSION = 2;

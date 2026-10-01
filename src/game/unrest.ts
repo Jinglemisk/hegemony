@@ -1,10 +1,8 @@
 import type { HegemonyState, PlayerId } from "./types";
 import { formatRuleNumber } from "./core/format";
 import { addLog, getPlayerName } from "./core/query";
-import { calculateIncome } from "./economy/income";
 import { effectiveHappiness, luxuryHappinessBonus, tickLuxurySuppression } from "./luxury";
 import { startRiot } from "./riot";
-import { describeRemoval, removeRandomPops } from "./tables";
 
 /**
  * Unrest consequences. `happiness` is a per-player meter where higher is good and
@@ -15,8 +13,8 @@ import { describeRemoval, removeRandomPops } from "./tables";
  * resources are collected"). It (1) applies & ticks down timed happiness
  * modifiers, (2) starts a RIOT at the deadly-unrest thresholds — since D9 the
  * riot table (game/riot.ts) replaces the old flat random pop removal, so the
- * upkeep parks a pending riot and defers income until the player rolls — and
- * (3) advances the consecutive-food-deficit starvation counter.
+ * upkeep parks a pending riot and defers income until the player rolls. Hunger is
+ * not here: it strikes at income (game/hunger.ts).
  */
 
 /** The start-of-turn unrest step for `playerID`. Pure mutation on the draft state.
@@ -68,35 +66,6 @@ export function applyUnrestUpkeep(G: HegemonyState, playerID: PlayerId) {
   } else if (effective <= rules.popLossThreshold) {
     startRiot(G, playerID, "unrest");
   }
-
-  // 3. Consecutive food-deficit starvation. Honour the same first-income grace the
-  //    food-shortage happiness pressure uses, so a player is never punished before
-  //    they have collected income once.
-  const graceActive = G.ruleset.economy.firstIncomeFoodGrace && !player.hasCollectedGameplayIncome;
-
-  if (!graceActive) {
-    const netFood = calculateIncome(G, playerID).food;
-
-    if (netFood <= rules.foodDeficitThreshold) {
-      player.consecutiveFoodDeficitTurns += 1;
-
-      if (player.consecutiveFoodDeficitTurns >= rules.foodDeficitTurnsToStarve) {
-        const removed = removeRandomPops(G, playerID, rules.foodDeficitStarvePopLoss);
-        player.popsLostToUnrest += removed.total;
-        player.consecutiveFoodDeficitTurns = 0;
-
-        if (removed.total > 0) {
-          addLog(
-            G,
-            `${getPlayerName(G, playerID)} — starvation claims ${describeRemoval(removed)}.`,
-            playerID,
-          );
-        }
-      }
-    } else {
-      player.consecutiveFoodDeficitTurns = 0;
-    }
-  }
 }
 
 /** How close a player is to (or into) unrest, for the ledger's warning. Escalates:
@@ -117,9 +86,7 @@ export interface UnrestStatus {
   riotAtRisk: boolean;
   /** Count of active timed happiness modifiers still ticking. */
   timedModifiers: number;
-  /** Consecutive food-deficit turns accrued so far. */
-  deficitTurns: number;
-  /** Running total of pops already lost to unrest & starvation. */
+  /** Running total of pops already lost to riots and to hunger. */
   totalDeaths: number;
 }
 
@@ -147,7 +114,6 @@ export function unrestStatus(G: HegemonyState, playerID: PlayerId): UnrestStatus
     luxuryBonus,
     riotAtRisk: tier === "unrest" || tier === "revolt",
     timedModifiers: player.timedHappinessModifiers.length,
-    deficitTurns: player.consecutiveFoodDeficitTurns,
-    totalDeaths: player.popsLostToUnrest,
+    totalDeaths: player.popsLostToUnrest + player.popsLostToHunger,
   };
 }

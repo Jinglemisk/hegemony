@@ -3,7 +3,8 @@ import { GROW_POP_COSTS, PLAYER_EVENT_CARDS, SEASONAL_EVENT_CARDS } from "./data
 import { drawPlayerEvent, resolvePendingPlayerEvent } from "./events";
 import { growPop } from "./actions";
 import { getGrowPopStatus } from "./status";
-import type { EventCard, EventEffect, PopType, SeasonName } from "./types";
+import { DEFAULT_RULESET } from "./ruleset";
+import type { EventCard, EventEffect, PopType, Resources, SeasonName } from "./types";
 import { scenario } from "./testing/scenario";
 
 /**
@@ -23,8 +24,15 @@ import { scenario } from "./testing/scenario";
 
 const COUPON_UTILIZATION = 0.5;
 
+const sumCost = (cost: Partial<Resources>) =>
+  Object.values(cost).reduce((sum, amount) => sum + (amount ?? 0), 0);
+
+/** What the pop costs to make: its grow price, or for a citizen (never grown) a
+ *  freeman's grow price plus the promotion. */
 function popValue(pop: PopType): number {
-  return Object.values(GROW_POP_COSTS[pop]).reduce((sum, amount) => sum + (amount ?? 0), 0);
+  return pop === "citizens"
+    ? sumCost(GROW_POP_COSTS.freemen) + sumCost(DEFAULT_RULESET.ladder.promoteCosts.freemen)
+    : sumCost(GROW_POP_COSTS[pop]);
 }
 
 function effectValue(effect: EventEffect): number {
@@ -151,31 +159,30 @@ describe("grow coupons (actionCostDiscount on growPop)", () => {
   }
 
   it("discounts the next matching grow, then is consumed", () => {
-    const G = drawCard("player-citizenship-rolls");
+    const G = drawCard("player-willing-hands");
     const capital = G.players["0"].settlements[0];
 
-    expect(G.players["0"].actionCostDiscounts).toHaveLength(2);
-    expect(getGrowPopStatus(G, "0", capital, "citizens").cost).toMatchObject({ food: 4, gold: 1 });
+    expect(G.players["0"].actionCostDiscounts).toHaveLength(1);
+    expect(getGrowPopStatus(G, "0", capital, "freemen").cost).toMatchObject({ food: 3 });
 
     const before = { ...G.players["0"].resources };
-    expect(growPop(G, "0", capital, "citizens").ok).toBe(true);
-    expect(before.food - G.players["0"].resources.food).toBe(4);
-    expect(before.gold - G.players["0"].resources.gold).toBe(1);
+    expect(growPop(G, "0", capital, "freemen").ok).toBe(true);
+    expect(before.food - G.players["0"].resources.food).toBe(3);
     expect(G.players["0"].actionCostDiscounts).toHaveLength(0);
 
     // The coupon is spent — the next settlement grows at full price.
     const colony = G.players["0"].settlements[1];
-    expect(getGrowPopStatus(G, "0", colony, "citizens").cost).toMatchObject({ food: 9, gold: 2 });
+    expect(getGrowPopStatus(G, "0", colony, "freemen").cost).toMatchObject({ food: 7 });
   });
 
   it("ignores grows of a different pop type", () => {
     const G = drawCard("player-willing-hands");
     const capital = G.players["0"].settlements[0];
 
-    expect(getGrowPopStatus(G, "0", capital, "citizens").cost).toMatchObject({ food: 9, gold: 2 });
-    expect(growPop(G, "0", capital, "citizens").ok).toBe(true);
+    expect(getGrowPopStatus(G, "0", capital, "slaves").cost).toMatchObject({ food: 5 });
+    expect(growPop(G, "0", capital, "slaves").ok).toBe(true);
 
-    // The freeman coupon survived the citizen grow.
+    // The freeman coupon survived the slave grow.
     expect(G.players["0"].actionCostDiscounts).toHaveLength(1);
     const colony = G.players["0"].settlements[1];
     expect(getGrowPopStatus(G, "0", colony, "freemen").cost).toMatchObject({ food: 3 });

@@ -7,7 +7,14 @@ import {
 } from "./data";
 import { PLACEMENT_POP_COUNTS } from "./core/pops";
 import type { PoliticianId } from "./assembly/types";
-import type { PopType, Resource, Resources, SettlementKind, VictoryMetric } from "./types";
+import type {
+  GrowablePop,
+  PopType,
+  Resource,
+  Resources,
+  SettlementKind,
+  VictoryMetric,
+} from "./types";
 
 /** One bank rate pair: `sell` materials buy 1 gold; 1 material costs `buy` gold. */
 export interface BankRatePair {
@@ -68,13 +75,10 @@ export interface PopIncomeRule {
 
 export interface SettlementRule {
   popCapacity: number;
-  buildingSlotBonus: number;
   canBuildBuildings: boolean;
 }
 
 export interface EconomyRules {
-  /** Fraction of tile yield a colony keeps while sharing its tile with another colony. */
-  colonySharedTileYieldShare: number;
   /** Happiness lost per pop above a settlement's capacity. */
   overCapacityHappinessPerPop: number;
   /** Every N stored food grants +1 happiness at income time (0 disables). */
@@ -82,15 +86,13 @@ export interface EconomyRules {
   /** Ceiling on the food-stockpile happiness bonus, so hoards can't buy unlimited calm
    *  (roadmap-appendix D4). 0 disables the bonus outright. */
   foodStockpileHappinessCap: number;
-  /** Suppress food-shortage happiness pressure until a player's first gameplay income. */
-  firstIncomeFoodGrace: boolean;
   /** Unrest thresholds & penalties (mapped from the rulebook's positive "Unrest N"
    *  onto negative happiness). All evaluated in the start-of-turn unrest upkeep. */
   unrest: UnrestRules;
   /** Bank exchange rates & derivation (D6/Q14). */
   bank: BankRules;
-  /** Optional lower bounds applied by authoritative income/event/table resource
-   *  mutations. Costs remain affordability-gated and are never rescued by clamping. */
+  /** Lower bounds applied by authoritative income/event/table resource mutations.
+   *  Costs remain affordability-gated and are never rescued by clamping. */
   stockpileFloors: Partial<Record<Resource, number>>;
   /** Phase 4 luxury goods (docs/plans/luxury-goods.md). Slice 1 seats the coastal
    *  vertex markers; the Port, claims, and the happiness offset land in slice 2. */
@@ -124,12 +126,6 @@ export interface UnrestRules {
   severeRollModifier: number;
   severePopLossMultiplier: number;
   severeRebound: number;
-  /** Net food income at/below this counts as a deficit turn. */
-  foodDeficitThreshold: number;
-  /** Consecutive deficit turns that trigger a starvation pop loss (then the counter resets). */
-  foodDeficitTurnsToStarve: number;
-  /** Pops removed when the starvation counter fires. */
-  foodDeficitStarvePopLoss: number;
 }
 
 /** The victory race (roadmap-appendix D1): five public "Most X, minimum Y" cards; the
@@ -192,6 +188,9 @@ export interface AssemblyRules {
 export interface Ruleset {
   startingResources: Resources;
   placementPopCounts: Record<"city" | "capital" | "colony", number>;
+  /** Citizens each setup placement must hold, exactly. Setup's citizens are the only
+   *  ones never promoted. */
+  placementCitizens: Record<"city" | "capital" | "colony", number>;
   settlements: Record<SettlementKind, SettlementRule>;
   placement: PlacementRules;
   victory: VictoryRules;
@@ -199,7 +198,7 @@ export interface Ruleset {
     foundColony: Partial<Resources>;
     upgradeColonyToCity: Partial<Resources>;
   };
-  growPopCosts: Record<PopType, Partial<Resources>>;
+  growPopCosts: Record<GrowablePop, Partial<Resources>>;
   popIncome: Record<PopType, PopIncomeRule>;
   economy: EconomyRules;
   civicCalm: CivicCalmRules;
@@ -226,6 +225,7 @@ export interface Ruleset {
 export const DEFAULT_RULESET: Ruleset = {
   startingResources: STARTING_RESOURCES,
   placementPopCounts: PLACEMENT_POP_COUNTS,
+  placementCitizens: { capital: 1, city: 0, colony: 0 },
   settlements: SETTLEMENT_RULES,
   placement: {
     colonyContiguity: true,
@@ -245,26 +245,24 @@ export const DEFAULT_RULESET: Ruleset = {
   },
   actionCosts: ACTION_COSTS,
   growPopCosts: GROW_POP_COSTS,
+  // One pop, one output. A slave makes 1 of its tile's resource when it holds an open
+  // slot and eats nothing; a freeman makes 1 gold and a citizen 1 influence, and each
+  // eats 1 food.
   popIncome: {
-    citizens: { flat: { influence: 1, gold: 2, food: -2 }, primaryResource: 0 },
-    freemen: { flat: { gold: 2, food: -1 }, primaryResource: 0 },
-    slaves: { flat: { food: -1, happiness: -0.5 }, primaryResource: 1 },
+    citizens: { flat: { influence: 1, food: -1 }, primaryResource: 0 },
+    freemen: { flat: { gold: 1, food: -1 }, primaryResource: 0 },
+    slaves: { flat: { happiness: -0.5 }, primaryResource: 1 },
   },
   economy: {
-    colonySharedTileYieldShare: 0.5,
     overCapacityHappinessPerPop: 1,
     foodStockpileHappinessDivisor: 5,
     foodStockpileHappinessCap: 2,
-    firstIncomeFoodGrace: true,
     unrest: {
       popLossThreshold: -5,
       severeThreshold: -10,
       severeRollModifier: -2,
       severePopLossMultiplier: 2,
       severeRebound: -4,
-      foodDeficitThreshold: -2,
-      foodDeficitTurnsToStarve: 2,
-      foodDeficitStarvePopLoss: 1,
     },
     bank: {
       // PROVISIONAL rates (D6): baseline sell 3:1 / buy 2g; scarcity classes sit one
@@ -274,7 +272,9 @@ export const DEFAULT_RULESET: Ruleset = {
       abundant: { sell: 4, buy: 2 },
       scarce: { sell: 2, buy: 3 },
     },
-    stockpileFloors: {},
+    // Food never goes negative: hunger takes pops at income, and table and event
+    // losses stop at an empty granary.
+    stockpileFloors: { food: 0 },
     luxury: {
       coastalGoods: 6,
       randomPlacement: false,

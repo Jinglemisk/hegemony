@@ -1211,6 +1211,11 @@
 .island .pip.built {
   fill: var(--tile-rule);
 }
+/* a slot a slave works: tinted, where a building's is solid */
+.island .pip.worked {
+  fill: var(--tile-rule);
+  fill-opacity: var(--dim);
+}
 /* a settlement's seal: its rank's raster on ivory, ringed in the owner's glaze */
 .island .seal-disc {
   fill: var(--ivory);

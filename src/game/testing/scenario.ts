@@ -14,7 +14,7 @@ import type {
   Resources,
   Settlement,
   SettlementKind,
-  Yield,
+  TileResource,
 } from "../types";
 import { allocateEntityId } from "../entity";
 
@@ -44,14 +44,14 @@ export function owned(G: HegemonyState, tileId: string, owner: PlayerId): Settle
   return settlement;
 }
 
-/** A material-resource tile (wood/stone) so tile yield never collides with the
+/** A material-resource tile (wood/stone) so slave output never collides with the
  *  gold/food/influence/happiness columns the pop formulas write to. */
-export function materialTile(G: HegemonyState): HexTile & { resource: Yield } {
+export function materialTile(G: HegemonyState): HexTile & { resource: TileResource } {
   const found = G.board.tiles.find(
     (candidate) => candidate.resource?.type === "wood" || candidate.resource?.type === "stone",
   );
   if (!found?.resource) throw new Error("no material tile on the board");
-  return found as HexTile & { resource: Yield };
+  return found as HexTile & { resource: TileResource };
 }
 
 export type ScenarioOptions = {

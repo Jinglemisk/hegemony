@@ -99,8 +99,8 @@ export function UpgradeCityModal({
                         <strong>
                           {capitalize(tile.terrain)}
                           {tile.resource
-                            ? ` +${tile.resource.amount} ${tile.resource.type}`
-                            : " · no yield"}
+                            ? ` · ${tile.slots} slots, ${tile.resource.type}`
+                            : ` · ${tile.slots} slots`}
                         </strong>
                         <em>
                           {tile.id} · {totalPops(settlement.pops)}/

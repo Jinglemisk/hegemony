@@ -71,7 +71,6 @@ describe("rule-driven bank chains", () => {
       .opening()
       .build();
     G.pendingPlayerEvent = null;
-    G.players[G.currentPlayer].hasCollectedGameplayIncome = true;
     G.activeLaws.push({
       cardId: "aqueduct-levy",
       author: "0",
@@ -189,13 +188,12 @@ describe("policy unrest risk", () => {
     ["smart", smartPolicy],
     ["beam", beamPolicy],
   ] as const)(
-    "%s rejects an unsafe promotion but takes the supported equivalent",
+    "%s will not grow a freeman it cannot feed but grows the fed equivalent",
     (_name, policy) => {
-      expect(chooseFreemanPromotion(policy, 0).type).toBe("endTurn");
-      expect(chooseFreemanPromotion(policy, 30)).toMatchObject({
-        type: "promotePop",
-        from: "freemen",
-      });
+      // Seven food buys the freeman and leaves three mouths with an empty granary:
+      // all three leave at the next income. Unspent, it feeds the two for three.
+      expect(chooseFreemanGrowth(policy, 7).type).toBe("endTurn");
+      expect(chooseFreemanGrowth(policy, 60)).toMatchObject({ type: "growPop", pop: "freemen" });
     },
   );
 });
@@ -215,7 +213,6 @@ function projectionFixture(): HegemonyState {
   G.activeSeasonEvent = null;
   G.yearOmen = null;
   G.activeLaws = [];
-  player.hasCollectedGameplayIncome = true;
   Object.assign(player.resources, { food: 100, happiness: -4 });
   for (const [index, tileId] of player.settlements.entries()) {
     const settlement = G.board.tiles
@@ -244,18 +241,17 @@ function projectionFixture(): HegemonyState {
   return G;
 }
 
-function chooseFreemanPromotion(policy: typeof smartPolicy | typeof beamPolicy, food: number) {
+function chooseFreemanGrowth(policy: typeof smartPolicy | typeof beamPolicy, food: number) {
   const G = scenario({
     patch: {
       economy: {
-        firstIncomeFoodGrace: false,
         foodStockpileHappinessDivisor: 0,
       },
     },
   }).build();
   const player = G.players["0"];
   const tile = G.board.tiles.find((candidate) => candidate.resource?.type === "wood");
-  if (!tile) throw new Error("promotion fixture needs a wood tile");
+  if (!tile) throw new Error("growth fixture needs a wood tile");
 
   G.phase = "gameplay";
   G.currentPlayer = "0";
@@ -264,11 +260,10 @@ function chooseFreemanPromotion(policy: typeof smartPolicy | typeof beamPolicy, 
     tileId: tile.id,
     owner: "0",
     kind: "city",
-    buildings: ["gymnasion"],
+    buildings: [],
     pops: { citizens: 0, freemen: 2, slaves: 0 },
   });
   player.settlements = [tile.id];
-  player.hasCollectedGameplayIncome = true;
   Object.assign(player.resources, {
     wood: 0,
     stone: 0,
@@ -279,13 +274,13 @@ function chooseFreemanPromotion(policy: typeof smartPolicy | typeof beamPolicy, 
   });
 
   const moves = enumerateLegalCommands(G, "0");
-  const promotion = moves.find((move) => move.type === "promotePop" && move.from === "freemen");
+  const growth = moves.find((move) => move.type === "growPop" && move.pop === "freemen");
   const endTurnMove = moves.find((move) => move.type === "endTurn");
-  if (!promotion || !endTurnMove) {
-    throw new Error("promotion fixture did not enumerate its comparison moves");
+  if (!growth || !endTurnMove) {
+    throw new Error("growth fixture did not enumerate its comparison moves");
   }
 
-  return policy.choose(observe(G), [promotion, endTurnMove], createSimRng(1));
+  return policy.choose(observe(G), [growth, endTurnMove], createSimRng(1));
 }
 
 /** Cycle whole turns until the agora convenes (spring of Year 2+). Unattended seats can
@@ -580,7 +575,7 @@ describe("opening placement", () => {
 
     expect(command.type).toBe("placeCapital");
     const tile = getTile(G, (command as { tileId: string }).tileId)!;
-    expect(tile.resource).toEqual({ type: "food", amount: 10 });
+    expect(tile).toMatchObject({ id: "1,0", slots: 7, resource: { type: "food" } });
   });
 
   it("every search policy places identically — openings are a held constant in A/Bs", () => {
@@ -605,7 +600,7 @@ describe("opening placement", () => {
       expect(G.phase).toBe("gameplay");
       for (const player of Object.values(G.players)) {
         const capital = getTile(G, player.settlements[0])!;
-        expect(capital.resource?.amount ?? 0).toBeGreaterThan(0);
+        expect(capital.resource).not.toBeNull();
       }
     }
   });
@@ -619,12 +614,12 @@ describe("opening placement", () => {
 
   it("discounts frontier a rival can also reach", () => {
     const G = createInitialStateFromDefinition(definition, 5, "classic");
-    const site = getTile(G, "-2,1")!; // food 8, the second-best seat on the classic board
+    const site = getTile(G, "-2,1")!; // six-slot plains, the second-best seat on the classic board
     const legalCapitals = G.board.tiles.filter(
       (tile) =>
         tile.terrain !== "oracle" &&
         tile.id !== site.id &&
-        (tile.resource?.amount ?? 0) > 0 &&
+        tile.resource !== null &&
         hexDistance(tile, site) >= 2,
     );
     const nearby = legalCapitals.filter((tile) => hexDistance(tile, site) === 2);
@@ -633,7 +628,7 @@ describe("opening placement", () => {
     );
     expect(hexDistance(far, site)).toBeGreaterThanOrEqual(4);
 
-    const pops = { citizens: 4, freemen: 0, slaves: 0 };
+    const pops = { citizens: 1, freemen: 3, slaves: 0 };
     const place = (rivalTile: string) => {
       const first = transition(G.definition, G, "0", {
         type: "placeCapital",
