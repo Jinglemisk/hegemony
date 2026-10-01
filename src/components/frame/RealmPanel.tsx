@@ -20,7 +20,6 @@ import { MarketTab } from "../board/ledger/MarketTab";
 import { PopsTab } from "../board/ledger/PopsTab";
 import { UnrestAlarm } from "../board/ledger/UnrestAlarm";
 import type { LedgerTab } from "../board/types";
-import type { VerbId } from "../board/command/verbs";
 import type { DiscGroup } from "./discs";
 import { Ico } from "./parts";
 import { SettlementPage } from "./SettlementPage";
@@ -44,7 +43,6 @@ export function RealmPanel({
   onTab,
   subject,
   groups,
-  armed,
   onBuildBuildingRequest,
   onBankSell,
   onBankBuy,
@@ -55,7 +53,6 @@ export function RealmPanel({
   /** The settlement the subject tab is open on, when the viewer holds one. */
   subject: { tile: HexTile; settlement: Settlement } | null;
   groups: DiscGroup[];
-  armed: VerbId | null;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
@@ -79,7 +76,7 @@ export function RealmPanel({
 
   return (
     <section aria-label="Realm" className="realm" data-c="realm" data-exclude>
-      <VerbDiscs armed={armed} groups={groups} store={G.players[viewerId].resources} />
+      <VerbDiscs groups={groups} store={G.players[viewerId].resources} />
       <div className="realm-body">
         <header className="realm-head" data-c="realm-head">
           <span

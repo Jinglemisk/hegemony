@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   POP_TYPES,
   getBuildBuildingOptions,
+  getBuildBuildingStatus,
   getDemotePopStatus,
   getFoundColonyStatus,
   getGrowPopStatus,
@@ -33,10 +34,14 @@ export function useMapSelection({
 
   const clear = useCallback(() => setSelection(null), []);
 
-  /** Arm a mode, or disarm it if the same verb is pressed again. */
+  /** Arm a mode, or disarm it if the same choice is pressed again; a different
+   *  choice of the same verb (another pop, another building) re-arms. Move's
+   *  picked source is progress, not a choice, so pressing Move again cancels. */
   const arm = useCallback((mode: MapSelectionMode) => {
+    const choice = (m: MapSelectionMode) =>
+      JSON.stringify(m.kind === "movePops" ? { kind: m.kind } : m);
     setSelection((current) =>
-      current && current.mode.kind === mode.kind ? null : { mode, target: null },
+      current && choice(current.mode) === choice(mode) ? null : { mode, target: null },
     );
   }, []);
 
@@ -82,13 +87,13 @@ export function useMapSelection({
           .filter((tile) => getFoundColonyStatus(G, playerID, tile.id).can)
           .map((tile) => tile.id);
 
-      case "growPop":
-        // Any pop type being growable is enough to offer the settlement.
+      case "growPop": {
+        // The picked pop, or any pop type being growable, offers the settlement.
+        const pops = selection.mode.pop ? [selection.mode.pop] : POP_TYPES;
         return holdings
-          .filter(({ tile }) =>
-            POP_TYPES.some((pop) => getGrowPopStatus(G, playerID, tile.id, pop).can),
-          )
+          .filter(({ tile }) => pops.some((pop) => getGrowPopStatus(G, playerID, tile.id, pop).can))
           .map(({ tile }) => tile.id);
+      }
 
       case "movePops": {
         const { sourceTileId } = selection.mode;
@@ -102,13 +107,17 @@ export function useMapSelection({
               .map(({ tile }) => tile.id);
       }
 
-      case "build":
-        // Any building being buildable is enough to offer the settlement.
+      case "build": {
+        // The picked building, or any building being buildable, offers the settlement.
+        const { buildingId } = selection.mode;
         return holdings
           .filter(({ tile }) =>
-            getBuildBuildingOptions(G, playerID, tile.id).some(({ status }) => status.can),
+            buildingId
+              ? getBuildBuildingStatus(G, playerID, tile.id, buildingId).can
+              : getBuildBuildingOptions(G, playerID, tile.id).some(({ status }) => status.can),
           )
           .map(({ tile }) => tile.id);
+      }
 
       case "ladder": {
         const { kind, from } = selection.mode.request;

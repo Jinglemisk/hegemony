@@ -1,4 +1,4 @@
-import type { PopType } from "../../../game/types";
+import type { BuildingId, PopType } from "../../../game/types";
 
 /**
  * Map-first selection (refit scope 3 / selection rule 1).
@@ -25,12 +25,13 @@ import type { PopType } from "../../../game/types";
 export type MapSelectionMode =
   /** Send a pop out to a new colony: pick the destination. */
   | { kind: "foundColony" }
-  /** Which of my settlements grows? */
-  | { kind: "growPop" }
+  /** Which of my settlements grows? A fan may have picked the pop already. */
+  | { kind: "growPop"; pop?: PopType }
   /** Two-step: source settlement, then destination (refit scope 3). */
   | { kind: "movePops"; sourceTileId?: string }
-  /** Which settlement raises a building? The popover picks which building. */
-  | { kind: "build" }
+  /** Which settlement raises a building? A fan may have picked it already;
+   *  otherwise the popover does. */
+  | { kind: "build"; buildingId?: BuildingId }
   /** Which settlement pays for the promote/demote. */
   | { kind: "ladder"; request: { kind: "promote" | "demote"; from: PopType } };
 

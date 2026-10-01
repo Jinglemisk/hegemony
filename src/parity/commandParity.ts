@@ -121,18 +121,21 @@ export const COMMAND_PARITY = {
     simulation: simulated("master-forced-choice", "beamPlan → onePlyLookahead(scoreMaster)"),
   },
   bankSell: {
-    frontend: interactive("src/components/board/ledger/MarketTab.tsx"),
+    frontend: interactive(
+      "src/components/frame/discs.ts",
+      "src/components/board/ledger/MarketTab.tsx",
+    ),
     simulation: simulated("master-rule", "resolveStochasticByRule bank heuristic"),
   },
   bankBuy: {
-    frontend: interactive("src/components/board/ledger/MarketTab.tsx"),
+    frontend: interactive(
+      "src/components/frame/discs.ts",
+      "src/components/board/ledger/MarketTab.tsx",
+    ),
     simulation: simulated("master-rule", "resolveStochasticByRule bank heuristic"),
   },
   civicCalm: {
-    frontend: interactive(
-      "src/components/frame/VerbDiscs.tsx",
-      "src/components/board/modals/CalmModal.tsx",
-    ),
+    frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   promotePop: {

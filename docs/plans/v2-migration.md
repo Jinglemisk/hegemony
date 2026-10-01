@@ -139,6 +139,24 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - A rival's turn shows their glaze and blazon on the end-turn disc.
 - `?dev=bots` lets the sim's `master` policy play every seat in the browser.
 
+**Defaults picked in Step 2** (2026-09-30):
+
+- Grow lists Slave, Freeman and Citizen, since v1 still grows citizens; the click
+  grows a slave. The citizen option goes when the v2 rule lands.
+- Promote and Demote each open a second fan of rungs (slave to freeman, and so on),
+  because v1's ladder moves one named pop.
+- Build's classes over v1's roster: Slaves (Workshop, Villa), Freemen (Marketplace),
+  Citizens (Forum, Gymnasion), Civic (Temple, Granary, Aqueduct, Odeon, Port). A class
+  with one building is that building.
+- Civic's click calms with gold; Calm with influence and Venture sit beside it. Calm
+  acts at once, so its dialog is gone. Venture still opens its dialog to pick the
+  expedition and stake. The Dole arrives with its rule.
+- Exchange trades at once and closes the fan.
+- Picking a pop or a building arms the map for exactly that; the settlement's popover
+  opens on it. A click on an armed disc gives the map back.
+- Fans keep clear of every settlement's mark and every mooring, not only city names,
+  and stay open while the pointer is within their span.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.
@@ -190,7 +208,7 @@ next step.
       riot and revolt marks; Q77 decides which at Step 5.
       Exit: bots play a full game in the new shell; browser smoke passes; `ui:audit` and
       `ui:conduct` pass or are updated to the new addresses.
-- [ ] **Step 2 · Verb discs and fans.** The six discs as one data-driven component, since the
+- [x] **Step 2 · Verb discs and fans.** ([#80](https://github.com/Jinglemisk/hegemony/pull/80): a test holds the fans to the engine's legal moves both ways; the gate passes at 1280/1440/1920 with fan hover shots.) The six discs as one data-driven component, since the
       disc count must not be hard-coded, with the fan behaviour above, wired to today's legal
       moves and a full keyboard path. Exit: every legal verb is reachable by mouse and by
       keyboard; no fan leaves the screen or covers a city name from 1280 to 1920.

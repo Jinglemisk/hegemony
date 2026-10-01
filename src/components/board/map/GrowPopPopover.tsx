@@ -23,16 +23,19 @@ import { TilePopover } from "./TilePopover";
 export function GrowPopPopover({
   tileId,
   anchor,
+  initialPop = "citizens",
   onCancel,
   onConfirm,
 }: {
   tileId: string;
   anchor: DOMRect;
+  /** The pop the Grow fan picked, if it picked one. */
+  initialPop?: PopType;
   onCancel: () => void;
   onConfirm: (tileId: string, pop: PopType) => void;
 }) {
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
-  const [pop, setPop] = useState<PopType>("citizens");
+  const [pop, setPop] = useState<PopType>(initialPop);
 
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
   const status = getGrowPopStatus(G, playerID, tileId, pop);
