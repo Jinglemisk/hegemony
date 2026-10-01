@@ -71,7 +71,7 @@ export function LadderPage({
   const names = settlementNames(G.board.tiles);
   const count = (pop: PopType) =>
     holdings.reduce((total, { settlement }) => total + settlement.pops[pop], 0);
-  const history = `${player.grownSettlementsThisTurn.length} grown this turn · ${player.popsGainedFromEvents} gained from events · ${player.popsLostToUnrest} lost to unrest and starvation`;
+  const history = `${player.grownSettlementsThisTurn.length} grown this turn · ${player.popsGainedFromEvents} gained from events · ${player.popsLostToUnrest} lost to riots · ${player.popsLostToHunger} to hunger`;
 
   const step = (kind: "promote" | "demote", from: PopType, to: PopType) => {
     const status = kind === "promote" ? getPromotePopStatus : getDemotePopStatus;

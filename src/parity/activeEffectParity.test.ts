@@ -173,8 +173,13 @@ describe("canonical active-effect selector", () => {
     });
     G.pendingIsonomiaTarget = "0";
 
-    const effects = getActiveEffects(G, "0");
+    // A strike eats nothing, so the hunger warning waits for it to end: read the
+    // struck state and the same state once the strike is over.
+    const working = structuredClone(G);
+    working.players["0"].incomeSuppressedTurns = 0;
+    const effects = [...getActiveEffects(G, "0"), ...getActiveEffects(working, "0")];
     const kinds = new Set(effects.map((effect) => effect.kind));
+    expect(effectByKind(G, "hunger")).toHaveLength(0);
 
     expect(kinds).toEqual(
       new Set([

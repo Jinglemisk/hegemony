@@ -161,13 +161,14 @@ export function getActiveEffects(
   }
 
   // Hunger warns as soon as the granary drains, and counts the incomes it still
-  // covers; at zero the next income leaves `unfed` mouths and that many pops go.
+  // covers; at zero the next income leaves `unfed` mouths and that many pops go. A
+  // strike collects nothing and eats nothing, so the warning waits for it to end.
   const hunger = getHungerStatus(
     G,
     playerID,
     (context.income ?? calculateIncome(G, playerID)).food,
   );
-  if (hunger.income < 0) {
+  if (hunger.income < 0 && player.incomeSuppressedTurns === 0) {
     effects.push({
       id: "hunger:" + playerID,
       kind: "hunger",

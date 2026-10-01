@@ -10,6 +10,7 @@ import {
   popIncome,
   previewBuildBuilding,
   previewBuildingIncomeDelta,
+  settlementWorkingSlaves,
 } from "../../game/rules";
 import type {
   BuildingDefinition,
@@ -61,7 +62,14 @@ export function calculatePopEconomy(holdings: OwnedHolding[], ruleset: Ruleset):
     for (const pop of POP_TYPES) {
       addResources(
         economy[pop],
-        popIncome(pop, settlement.pops[pop], tile.resource?.type ?? null, ruleset),
+        popIncome(
+          pop,
+          settlement.pops[pop],
+          tile.resource?.type ?? null,
+          ruleset,
+          // Only slaves on an open slot make the tile's resource.
+          pop === "slaves" ? settlementWorkingSlaves(tile, settlement) : settlement.pops[pop],
+        ),
       );
     }
   }
