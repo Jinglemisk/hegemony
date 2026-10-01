@@ -55,14 +55,6 @@ export function settlementSlots(tile: HexTile, settlement: Settlement) {
   return index >= 0 && index < tile.slots % sharers ? share + 1 : share;
 }
 
-/** Slots a building may take: the settlement's slots where its kind can build. A
- *  colony has none; its one exception, the Port, takes a work slot instead. */
-export function settlementBuildingSlots(tile: HexTile, settlement: Settlement, ruleset: Ruleset) {
-  return ruleset.settlements[settlement.kind].canBuildBuildings
-    ? settlementSlots(tile, settlement)
-    : 0;
-}
-
 /** Slots left for slaves to work: every building takes one. */
 export function settlementOpenSlots(tile: HexTile, settlement: Settlement) {
   return Math.max(0, settlementSlots(tile, settlement) - settlement.buildings.length);

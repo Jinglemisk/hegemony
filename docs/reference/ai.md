@@ -64,7 +64,9 @@ nothing scores above the status quo. Forced situations (pending event) pick the
 best-scoring resolution.
 
 **`smart`** — the same one-ply search, but a richer score (pops by tier, materials
-by role, building room, Gymnasion synergy). See `evaluateSmart`.
+by role, and each open work slot priced as the slave who could work it, so a building
+on a plains slot costs the food that slave would grow). A pop the projection sees
+starve costs more than any pop is worth. See `evaluateSmart`.
 
 **`beam`** — a within-turn **beam search** over the `smart` score. A "decision" in
 Hegemony is not one move but a _sequence_ ending in endTurn (turns run up to 30

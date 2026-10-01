@@ -271,14 +271,6 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
                   onRevert={revert}
                 />
               ))}
-              <NumberField
-                label="max level"
-                path={`buildings.${building.id}.maxLevel`}
-                draft={draft}
-                presetId={presetId}
-                onChange={setValue}
-                onRevert={revert}
-              />
             </div>
             {buildingIndex < buildings.length - 1 && <hr className="tune-rule" />}
           </div>

@@ -123,7 +123,7 @@ export function UpgradeCityModal({
               <SettlementSummaryCard
                 name={settlementNameOf(G.board.tiles, selected.settlement.id)}
                 netYield={colonyYield}
-                ruleset={G.ruleset}
+                G={G}
                 settlement={selected.settlement}
                 tile={selected.tile}
               />

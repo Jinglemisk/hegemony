@@ -10,6 +10,7 @@ import { claimableLuxuriesAt } from "./luxury";
 import { isCoastalTile } from "./map";
 import { playerPieces } from "./settlement";
 import {
+  buildingGround,
   getBuildBuildingStatus,
   getFoundColonyStatus,
   getMovePopsStatus,
@@ -94,10 +95,13 @@ describe("colonies", () => {
     expect(getBuildBuildingStatus(G, "0", mooring.id, "granary").reasons).toContain(
       "A colony raises nothing but a Port.",
     );
+    // Its ground is the one Port, whether or not the price is in hand.
+    expect(buildingGround(G, "0", mooring.id)).toMatchObject({ slots: 1, built: 0, open: 1 });
 
     const claim = claimableLuxuriesAt(G, mooring.id)[0];
     expect(buildBuilding(G, "0", mooring.id, "port", claim.vertexId).ok).toBe(true);
     expect(G.board.luxuries.find((asset) => asset.id === claim.id)?.owner).toBe("0");
+    expect(buildingGround(G, "0", mooring.id)).toMatchObject({ slots: 1, built: 1, open: 0 });
   });
 });
 

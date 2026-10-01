@@ -81,7 +81,7 @@ export function CitiesPage({
         const pops = totalPops(settlement.pops);
         const capacity = settlementCapacity(settlement, G.ruleset);
         const over = settlementOverCapacity(settlement, G.ruleset);
-        const { slots, open } = slotsOf(holding, G.ruleset);
+        const { slots, open, raisable } = slotsOf(holding, G);
         const room = Math.max(0, capacity - pops);
         const census = POP_TYPES.map(
           (pop) => `${settlement.pops[pop]} ${formatPopLabel(pop, settlement.pops[pop])}`,
@@ -164,7 +164,7 @@ export function CitiesPage({
                         <span className="sock" key={`open-${i}`} />
                       ))}
                     </Tooltip>
-                    {open > 0 ? (
+                    {open > 0 && raisable > 0 ? (
                       <button className="link cap" onClick={() => onRaise(tile.id)} type="button">
                         raise
                       </button>

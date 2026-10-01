@@ -1,14 +1,13 @@
 import { getBuilding } from "../../game/content";
 import { settlementClassColumn } from "../../game/economy/income";
 import {
-  settlementBuildingSlots,
   settlementCapacity,
   settlementIdleSlaves,
   settlementOpenSlots,
   settlementSlots,
   settlementWorkingSlaves,
 } from "../../game/settlement";
-import { getBuildBuildingOptions } from "../../game/status";
+import { buildingGround } from "../../game/status";
 import type { HegemonyState, HexTile, PopType, Resource, Settlement } from "../../game/types";
 import { BUILDING_ICON, RESOURCE_ICON, sign } from "../../ui/frameFormat";
 import { getLuxuryGood } from "../../game/content";
@@ -52,10 +51,9 @@ export function SettlementPage({
   const open = settlementOpenSlots(tile, settlement);
   const working = settlementWorkingSlaves(tile, settlement);
   const idle = settlementIdleSlaves(tile, settlement);
-  // A city with an open slot, or a colony the engine would let raise its Port.
-  const canRaise =
-    settlementBuildingSlots(tile, settlement, G.ruleset) > settlement.buildings.length ||
-    getBuildBuildingOptions(G, settlement.owner, tile.id).some(({ status }) => status.can);
+  // The site would take another building: a city with a slot, or a colony its Port.
+  const ground = buildingGround(G, settlement.owner, tile.id);
+  const canRaise = ground.open > 0 && ground.raisable > 0;
 
   return (
     <>

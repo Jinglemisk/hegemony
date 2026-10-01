@@ -94,7 +94,7 @@ export function FoundColonyPopover({
             <SettlementSummaryCard
               name="NEW COLONY"
               netYield={previewYield}
-              ruleset={G.ruleset}
+              G={G}
               settlement={previewSettlement}
               tile={targetTile}
             />

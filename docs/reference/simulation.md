@@ -86,11 +86,12 @@ engine blocks everything else, including ending the turn.
 ### `move` / `end-turn` — act
 
 ```bash
-npm run sim -- move build <tile> <building>       # marketplace|temple|workshop|granary
+npm run sim -- move build <tile> <building>       # marketplace|estate|forum|temple|granary|port
 npm run sim -- move found <tile> <srcTile> <pop>  # pop: citizens|freemen|slaves (or c|f|s)
 npm run sim -- move upgrade <tile>
 npm run sim -- move grow <tile> <pop>
 npm run sim -- move pops <src> <dst> <popSpec>    # popSpec: citizens=1,slaves=2 (or c=1,s=2)
+npm run sim -- move dole                          # 3 influence for 1 food
 npm run sim -- move place-capital <tile> <popSpec>
 npm run sim -- move place-colony <tile> <popSpec>
 npm run sim -- move resolve [choiceIndex] [targetTile]
@@ -121,11 +122,12 @@ Works from any phase — bots will finish a manual setup too. Policies:
   from dominating; turns always self-terminate).
 - `greedy` — one-ply lookahead over a card-anchored positional score with a
   6-turn income projection. Deterministic. Blind to Phase 2's strategic layer: it
-  values pops tier-blind and materials flat, so it never promotes and never builds Villa/Gymnasion.
+  values pops tier-blind and materials flat, so it never promotes.
 - `smart` — same one-ply search, but the score weights pops BY TIER (a citizen is
-  worth far more than a slave), materials by role, building room, and the Gymnasion's
-  promotion synergy. So it climbs the social ladder, builds the Phase 2 buildings, and
-  favours slot-rich cities — the bot that actually exercises the terrain rework.
+  worth far more than a slave), materials by role, and each open work slot as the slave
+  who could work it. So it climbs the social ladder, raises the class buildings, and
+  keeps plains slots for the slaves that feed it. The Dole and the bank are played by
+  rule: it takes the Dole only while the next income would leave a mouth unfed.
   Deterministic.
 - `beam` — a within-turn **beam search** over the same `smart` score, so it values the
   within-turn sequences one-ply misses (build-then-promote and bank chains). It does
@@ -189,7 +191,7 @@ game/turn/player — pivot-table ready).
 - `--tune-preset low-number-core-v1` — resolves the shared development preset before
   the batch. Unknown IDs fail. `meta` records the ID and stable full-content hash.
 - `--tune-patch` — a dev tune-panel override map (the panel's "Copy patch" output):
-  A/Bs building content (Villa/Gymnasion strength, costs, level caps) and ruleset
+  A/Bs building content (costs and effect sizes) and ruleset
   scalars in one run. It applies after the preset; the manual patch and its separate
   hash land in `meta`.
 - `--seats p0,p1,p2,p3` — a policy per seat for mixed-policy tables. `--rotate` runs
@@ -210,6 +212,9 @@ The report contains:
   player-turn shares
 - `perSeat` — real `winRate` (finished games only), `capLeaderRate` (turn-capped
   games), and mean final cards per seat (first-player advantage check)
+- `riots` — riots resolved per game, the share of player-turns that opened on the riot
+  table, and the same counts season by season (`bySeason`), so a report can cut the
+  late game
 - `hunger` — food under work slots, per seat: incomes that left a mouth unfed per
   game, pops lost to hunger per game, mean idle slaves and their share of all slaves.
   The CSV carries `slaves`, `idleSlaves` and the running `popsLostToHunger` per row
@@ -228,7 +233,7 @@ The report contains:
   Directives and their target distribution, authored passes, prize resources, Voice claims
   and transfers, final Voice ownership/win correlation, authored-pass lead margin and
   concentration, **influence sunk**/game, and a per-verb breakdown
-- `currencyVerbs` — per-verb currency-move counts (bank / calm / ladder / venture / riot)
+- `currencyVerbs` — per-verb currency-move counts (bank / Dole / calm / ladder / venture / riot)
 - `upgrades` — colony→city upgrades per game
 
 Identical inputs produce byte-identical reports (minus `meta.generatedAt`).

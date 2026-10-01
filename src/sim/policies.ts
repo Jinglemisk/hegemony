@@ -131,7 +131,12 @@ function resolveStochasticByRule(G: HegemonyState, moves: GameCommand[]): GameCo
   // The Dole is the pressure valve: take it while the next income would leave a
   // mouth unfed, and not otherwise, since influence buys food at a poor rate.
   const dole = moves.find((move) => move.type === "dole");
-  if (dole && getHungerStatus(G, playerID, calculateIncome(G, playerID).food).unfed > 0) {
+  // A strike collects nothing, so it starves nobody either.
+  if (
+    dole &&
+    G.players[playerID].incomeSuppressedTurns === 0 &&
+    getHungerStatus(G, playerID, calculateIncome(G, playerID).food).unfed > 0
+  ) {
     return dole;
   }
 
@@ -771,24 +776,15 @@ export function placementFrontier(
   return { frontier, contested };
 }
 
-/** Unclaimed goods a Port could claim from the player's CITY tiles. Colonies don't
- *  count — they cannot raise buildings — which is exactly why placement is where
- *  the contested-claim race is decided: a capital seated on a mooring tile is a
- *  Port site for the whole game. */
+/** Unclaimed goods a Port could claim from the player's tiles. A colony counts: a
+ *  Port is the one building it may raise. Placement is where the contested-claim
+ *  race is decided, since a settlement seated on a mooring tile is a Port site for
+ *  the whole game. */
 function luxuryClaimReach(G: HegemonyState, playerID: PlayerId): number {
-  let reach = 0;
-
-  for (const tileId of G.players[playerID].settlements) {
-    const tile = getTile(G, tileId);
-    const holdsCity = tile?.settlements.some(
-      (settlement) => settlement.owner === playerID && settlement.kind !== "colony",
-    );
-    if (holdsCity) {
-      reach += claimableLuxuriesAt(G, tileId).length;
-    }
-  }
-
-  return reach;
+  return G.players[playerID].settlements.reduce(
+    (reach, tileId) => reach + claimableLuxuriesAt(G, tileId).length,
+    0,
+  );
 }
 
 /** A reachable future claim is a thumb on the scale, not a mandate: at half a

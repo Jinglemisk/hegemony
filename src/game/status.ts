@@ -3,6 +3,7 @@ import type {
   BuildingDefinition,
   BuildingId,
   HegemonyState,
+  HexTile,
   PlayerId,
   PopType,
   Pops,
@@ -144,7 +145,6 @@ export function getBuildBuildingStatus(
   const building = getBuildings(G.definition.content).find(
     (candidate) => candidate.id === buildingId,
   );
-  const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
   const status: ActionStatus = {
     can: false,
     reasons: [],
@@ -164,46 +164,7 @@ export function getBuildBuildingStatus(
   }
 
   addPendingEventReason(G, status);
-
-  // Every building takes one of the settlement's slots. A colony raises nothing but
-  // a Port, which takes one of its work slots.
-  if (!settlement) {
-    status.reasons.push("Requires your settlement on this tile.");
-  } else if (!G.ruleset.settlements[settlement.kind].canBuildBuildings && !building.colony) {
-    status.reasons.push("A colony raises nothing but a Port.");
-  } else if (settlement.buildings.includes(building.id)) {
-    status.reasons.push(`${building.name} is already built here.`);
-  } else if (settlement.buildings.length >= settlementSlots(tile, settlement)) {
-    status.reasons.push("No slots available.");
-  }
-
-  if (building.needsYield && !tile.resource) {
-    status.reasons.push(`${building.name} cannot stand on ${tile.terrain}: it yields nothing.`);
-  }
-
-  // The Port is the coastal-gated exception (Q47): its effect is the claim, so it
-  // is refused — with the authoritative why-not the UI renders — wherever there is
-  // no sea, nothing left to claim, or no room under the active cap.
-  if (building.id === "port" && tile) {
-    if (!isCoastalTile(tile, G.board.tiles)) {
-      status.reasons.push("A Port needs the coast — this settlement is inland.");
-    } else if (claimableLuxuriesAt(G, tileId).length === 0) {
-      status.reasons.push("No unclaimed luxury good adjoins this tile.");
-    }
-
-    if (!underActiveCap(G, playerID)) {
-      status.reasons.push(
-        `Your luxury trade is at its active cap (${G.ruleset.economy.luxury.activeCapPerPlayer}).`,
-      );
-    }
-
-    if (
-      claimVertexId !== undefined &&
-      !claimableLuxuriesAt(G, tileId).some((asset) => asset.vertexId === claimVertexId)
-    ) {
-      status.reasons.push("That good is not claimable from this tile.");
-    }
-  }
+  status.reasons.push(...buildSiteReasons(G, playerID, tile, building, claimVertexId));
 
   if (!canAfford(G.players[playerID].resources, status.cost ?? building.cost)) {
     status.reasons.push("Not enough resources.");
@@ -211,6 +172,88 @@ export function getBuildBuildingStatus(
 
   status.can = status.reasons.length === 0;
   return status;
+}
+
+/**
+ * Why this building cannot stand on this tile at all, whatever the player holds or
+ * is in the middle of: the site's own reasons. The price and a pending event are not
+ * among them.
+ */
+function buildSiteReasons(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tile: HexTile,
+  building: BuildingDefinition,
+  claimVertexId?: string,
+): string[] {
+  const reasons: string[] = [];
+  const settlement = tile.settlements.find((candidate) => candidate.owner === playerID);
+
+  // Every building takes one of the settlement's slots. A colony raises nothing but
+  // a Port, which takes one of its work slots.
+  if (!settlement) {
+    reasons.push("Requires your settlement on this tile.");
+  } else if (!G.ruleset.settlements[settlement.kind].canBuildBuildings && !building.colony) {
+    reasons.push("A colony raises nothing but a Port.");
+  } else if (settlement.buildings.includes(building.id)) {
+    reasons.push(`${building.name} is already built here.`);
+  } else if (settlement.buildings.length >= settlementSlots(tile, settlement)) {
+    reasons.push("No slots available.");
+  }
+
+  if (building.needsYield && !tile.resource) {
+    reasons.push(`${building.name} cannot stand on ${tile.terrain}: it yields nothing.`);
+  }
+
+  // The Port is the coastal-gated exception (Q47): its effect is the claim, so it
+  // is refused — with the authoritative why-not the UI renders — wherever there is
+  // no sea, nothing left to claim, or no room under the active cap.
+  if (building.id === "port") {
+    if (!isCoastalTile(tile, G.board.tiles)) {
+      reasons.push("A Port needs the coast — this settlement is inland.");
+    } else if (claimableLuxuriesAt(G, tile.id).length === 0) {
+      reasons.push("No unclaimed luxury good adjoins this tile.");
+    }
+
+    if (!underActiveCap(G, playerID)) {
+      reasons.push(
+        `Your luxury trade is at its active cap (${G.ruleset.economy.luxury.activeCapPerPlayer}).`,
+      );
+    }
+
+    if (
+      claimVertexId !== undefined &&
+      !claimableLuxuriesAt(G, tile.id).some((asset) => asset.vertexId === claimVertexId)
+    ) {
+      reasons.push("That good is not claimable from this tile.");
+    }
+  }
+
+  return reasons;
+}
+
+/**
+ * A settlement's ground for buildings: what stands, how many more the site would
+ * take, and the two together. A city's is its tile's slots. A colony has ground only
+ * for a Port: the one it holds, or the one its site would let it raise.
+ */
+export function buildingGround(G: HegemonyState, playerID: PlayerId, tileId: string) {
+  const tile = getTile(G, tileId);
+  const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
+
+  if (!tile || !settlement) {
+    return { slots: 0, built: 0, open: 0, raisable: 0 };
+  }
+
+  const built = settlement.buildings.length;
+  const raisable = getBuildings(G.definition.content).filter(
+    (building) => buildSiteReasons(G, playerID, tile, building).length === 0,
+  ).length;
+  const open = G.ruleset.settlements[settlement.kind].canBuildBuildings
+    ? Math.max(0, settlementSlots(tile, settlement) - built)
+    : raisable;
+
+  return { slots: built + open, built, open, raisable };
 }
 
 export type BuildBuildingOption = {

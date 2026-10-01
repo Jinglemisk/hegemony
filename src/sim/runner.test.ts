@@ -40,8 +40,10 @@ describe("runGame smoke", () => {
 
     const deathmatch = runGame({ seed: 42, mode: "deathmatch", policy: randomPolicy, turns: 8 });
     expect(deathmatch.phase).toBe("gameplay");
+    // Four are placed at setup. A rival's upgrade is cheap enough to happen inside
+    // eight turns, and it evicts a colony sharing the tile, so one may be gone.
     for (const player of Object.values(deathmatch.players)) {
-      expect(player.settlements.length).toBeGreaterThanOrEqual(4);
+      expect(player.settlements.length).toBeGreaterThanOrEqual(3);
     }
   }, 30_000);
 

@@ -5,13 +5,12 @@ import { calculateIncomeBreakdown, settlementNetYield } from "./economy/income";
 import { enumerateLegalCommands } from "./legalMoves";
 import { DEFAULT_RULESET } from "./ruleset";
 import {
-  settlementBuildingSlots,
   settlementIdleSlaves,
   settlementOpenSlots,
   settlementSlots,
   settlementWorkingSlaves,
 } from "./settlement";
-import { getBuildBuildingStatus, getGrowPopStatus } from "./status";
+import { buildingGround, getBuildBuildingStatus, getGrowPopStatus } from "./status";
 import { owned, scenario, tile } from "./testing/scenario";
 import { TEST_OPENING_SETUP } from "./config";
 import type { HegemonyState } from "./types";
@@ -83,7 +82,7 @@ describe("work slots", () => {
     const land = tile(G, capitalTile);
     const capital = owned(G, capitalTile, "0");
 
-    expect(settlementBuildingSlots(land, capital, G.ruleset)).toBe(land.slots);
+    expect(buildingGround(G, "0", capitalTile).slots).toBe(land.slots);
 
     for (const building of ["forum", "temple", "granary", "marketplace"].slice(0, land.slots)) {
       expect(buildBuilding(G, "0", capitalTile, building as "forum").ok).toBe(true);
@@ -102,7 +101,7 @@ describe("work slots", () => {
     const land = tile(G, BREADBASKET);
     const colony = owned(G, BREADBASKET, "0");
 
-    expect(settlementBuildingSlots(land, colony, G.ruleset)).toBe(0);
+    expect(buildingGround(G, "0", BREADBASKET).slots).toBe(0);
     expect(settlementWorkingSlaves(land, colony)).toBe(4);
     expect(settlementNetYield(land, colony, G.ruleset).food).toBe(4);
   });
@@ -148,7 +147,7 @@ describe("work slots", () => {
     const hill = tile(G, HILL);
     const city = owned(G, HILL, "0");
 
-    expect(settlementBuildingSlots(hill, city, G.ruleset)).toBe(3);
+    expect(buildingGround(G, "0", HILL).slots).toBe(3);
     expect(settlementWorkingSlaves(hill, city)).toBe(0);
     expect(settlementIdleSlaves(hill, city)).toBe(3);
   });
