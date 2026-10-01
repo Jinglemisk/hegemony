@@ -13,6 +13,7 @@ import {
   getUpgradeColonyToCityStatus,
   toPlayerId,
   totalPops,
+  unrestStatus,
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { PLAYER_NAMES } from "../game/data";
@@ -44,7 +45,8 @@ import { happinessDisplay } from "../ui/frameSelectors";
 import { Island } from "./frame/island/Island";
 import { TopBar } from "./frame/TopBar";
 import { Ticker } from "./frame/Ticker";
-import { RealmPanel, type RealmTab } from "./frame/RealmPanel";
+import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel";
+import { Alarms } from "./frame/Alarms";
 import { EndTurn } from "./frame/EndTurn";
 import { discGroups } from "./frame/discs";
 
@@ -96,8 +98,11 @@ export function HegemonyBoard({
   // Initialized to the omen standing at mount so a reload never re-announces it.
   const [seenOmenYear, setSeenOmenYear] = useState<number | null>(() => G.yearOmen?.year ?? null);
   // The realm sheet's page, and the consult page open on the right (null: none).
-  // The realm boots on your first settlement's page; picking another opens its page.
+  // The realm boots on its overview; picking a place on the map opens its page.
   const [realmTab, setRealmTab] = useState<RealmTab>("subject");
+  // What the map last picked, which the realm's last tab shows: the sea (the
+  // realm itself), a tile, or a luxury good's mooring.
+  const [subject, setSubject] = useState<RealmSubject>({ kind: "realm" });
   const [consultTab, setConsultTab] = useState<ConsultTab | null>(null);
   // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
   // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
@@ -288,6 +293,11 @@ export function HegemonyBoard({
         return;
       }
 
+      // Otherwise the pick becomes the realm's last page; an armed mode keeps
+      // the page it was armed from.
+      setSubject({ kind: "tile", tileId });
+      setRealmTab("subject");
+
       if (
         ctx.phase === "setupCapital" ||
         ctx.phase === "setupCity" ||
@@ -298,14 +308,8 @@ export function HegemonyBoard({
         setActiveModal({ kind: "populationPrompt", placement, tileId });
         return;
       }
-
-      // Picking one of your own settlements opens its page on the realm sheet.
-      const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
-      if (tile?.settlements.some((settlement) => settlement.owner === viewerId)) {
-        setRealmTab("subject");
-      }
     },
-    [mapSelection, setMapSelectionTarget, ctx.phase, G.board.tiles, viewerId],
+    [mapSelection, setMapSelectionTarget, ctx.phase],
   );
 
   const requestBuildBuilding = useCallback(
@@ -347,9 +351,13 @@ export function HegemonyBoard({
     calmUsed: viewer.civicCalmUsedThisTurn,
     ventureUsed: viewer.ventureUsedThisTurn,
   };
-  // The realm's subject: the viewer's settlement on the picked tile, else their first.
-  const holdings = getOwnedHoldings(G, viewerId);
-  const subject = holdings.find(({ tile }) => tile.id === selectedTileId) ?? holdings[0] ?? null;
+  // Found, from a tile's page: arm the mode and open its popover on that tile.
+  const foundHere = (tileId: string) => {
+    const element = document.querySelector(`[data-tile-id="${tileId}"]`);
+    if (!element) return;
+    if (mapSelection.selection?.mode.kind !== "foundColony") armSelection({ kind: "foundColony" });
+    setMapSelectionTarget({ tileId, anchor: element.getBoundingClientRect() });
+  };
 
   return (
     <GameUiProvider value={gameUi}>
@@ -360,6 +368,16 @@ export function HegemonyBoard({
             highlightTileIds={
               mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds
             }
+            onBackgroundAction={() => {
+              setSelectedTileId(null);
+              setSubject({ kind: "realm" });
+              setRealmTab("subject");
+            }}
+            onMooringAction={(vertexId) => {
+              setSelectedTileId(null);
+              setSubject({ kind: "mooring", vertexId });
+              setRealmTab("subject");
+            }}
             onTileAction={handleTileAction}
             // A popover pinned to a tile's old spot closes when the map moves;
             // the mode stays armed, so the next click re-opens it in place.
@@ -381,6 +399,12 @@ export function HegemonyBoard({
               viewerId={viewerId}
             />
             <Ticker log={G.log} />
+            <Alarms
+              content={G.definition.content}
+              effects={activeEffects}
+              popLossThreshold={G.ruleset.economy.unrest.popLossThreshold}
+              unrest={unrestStatus(G, viewerId)}
+            />
           </div>
 
           {isSetup || mapSelection.selection ? (
@@ -415,6 +439,12 @@ export function HegemonyBoard({
               onBankSell={moves.bankSell}
               onBuildBuildingRequest={requestBuildBuilding}
               onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
+              income={projectedIncome}
+              onFound={foundHere}
+              onSubject={(next) => {
+                setSubject(next);
+                setSelectedTileId(next.kind === "tile" ? next.tileId : null);
+              }}
               onTab={setRealmTab}
               subject={subject}
               tab={realmTab}

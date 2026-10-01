@@ -33,21 +33,6 @@
   transform: none;
 }
 
-.sharedTooltip.activeEffectsTooltip {
-  display: grid;
-  width: min(360px, calc(100vw - 20px));
-}
-
-.sharedTooltip.detailTooltip {
-  position: fixed;
-  width: min(260px, calc(100vw - 20px));
-  transform: none;
-}
-
-.sharedTooltip.detailTooltip.placement-above {
-  transform: none;
-}
-
 @keyframes sharedOverlayIn {
   from {
     opacity: 0;

@@ -915,13 +915,14 @@
 }
 
 .realm-tabs {
-  height: var(--row-h);
+  height: var(--hit);
+  flex: none;
   display: flex;
   gap: var(--s-4);
   box-shadow: inset 0 calc(var(--rule) * -1) 0 var(--ink-30);
 }
 .realm-tab {
-  height: var(--row-h);
+  height: var(--hit);
   min-width: var(--hit);
   display: flex;
   align-items: center;
@@ -953,10 +954,10 @@
 
 /* ---- the settlement page: meta line, three pop columns, building lines ---- */
 .realm-page {
-  padding-top: var(--s-3);
+  padding-top: var(--s-2);
   display: flex;
   flex-direction: column;
-  gap: var(--s-4);
+  gap: var(--s-2);
 }
 .settle-meta {
   display: flex;
@@ -1193,19 +1194,11 @@
 .island .tile.oracle {
   fill: var(--t-oracle);
 }
-.island .tile.owned {
-  stroke: var(--owner);
-  stroke-width: var(--b-own);
-}
 .island .tile-btn {
   cursor: pointer;
 }
 .island .tile-btn:hover .tile {
   filter: brightness(1.04);
-}
-.island .tile-btn.is-selected .tile {
-  stroke: var(--ink);
-  stroke-width: var(--b-sel);
 }
 .island .emblem {
   opacity: var(--dim);
@@ -1285,16 +1278,32 @@
    the printed yield (until v2 retires it), a rival's turn, the hold, the
    consult sheet and the map caption.
    ========================================================================== */
-.island .tile-btn:focus-visible {
+/* A tile takes focus on a click too; its ring (below) is the only mark. */
+.island .tile-btn:focus {
   outline: none;
 }
-.island .tile-btn:focus-visible .tile {
+/* A map mode is asking a question: the answers are ringed, the rest recede. */
+.island .rings {
+  pointer-events: none;
+}
+.island .ring {
+  fill: none;
+  stroke-linejoin: round;
+}
+.island .ring.is-owned {
+  stroke: var(--owner);
+  stroke-width: var(--b-own);
+}
+.island .ring.is-dimmed {
+  opacity: var(--dim);
+}
+.island .ring.is-candidate,
+.island .ring.is-focus {
   stroke: var(--ochre);
   stroke-width: var(--b-sel);
 }
-/* A map mode is asking a question: the answers are ringed, the rest recede. */
-.island .tile-btn.is-candidate .tile {
-  stroke: var(--ochre);
+.island .ring.is-selected {
+  stroke: var(--ink);
   stroke-width: var(--b-sel);
 }
 .island .tile-btn.is-dimmed {
@@ -1344,12 +1353,11 @@
 .realm-counts b {
   color: var(--ink);
 }
-/* A long page scrolls inside the sheet rather than pushing it up the screen. */
-/* The sheet is a fixed size: a long page scrolls inside it. */
+/* The sheet is a fixed size and its pages are written to fit it: nothing scrolls. */
 .realm-page {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
 }
 .col-yield-i {
   display: inline-flex;
@@ -1434,4 +1442,574 @@
   font: 500 var(--t-body) / var(--l-body) var(--f-sans);
   white-space: nowrap;
   pointer-events: none;
+}
+
+/* ============================================================================
+   The realm's pages, written to fit the sheet (the "fit" variant, 2026-10-01):
+   ledger lines one control or one caption tall, icons printed once at the head
+   of a column, the arithmetic behind hover. Nothing scrolls.
+   ========================================================================== */
+.realm {
+  --ln: calc(var(--u) * 6); /* 24: a ledger line */
+  --c-pop: calc(var(--u) * 10); /* 40 */
+  --c-gr: calc(var(--u) * 8); /* 32 */
+  --c-res: calc(var(--u) * 9); /* 36 */
+  --name-w: calc(var(--u) * 24); /* 96 */
+  --count-w: calc(var(--u) * 8); /* 32 */
+  --held-w: calc(var(--u) * 16); /* 64 */
+  --sum-k: calc(var(--u) * 22); /* 88: the overview's label column */
+}
+@media (min-width: 1680px) {
+  .realm {
+    --ln: calc(var(--u) * 8); /* 32 */
+    --c-pop: calc(var(--u) * 12);
+    --c-gr: calc(var(--u) * 10);
+    --c-res: calc(var(--u) * 11);
+    --name-w: calc(var(--u) * 28);
+    --count-w: calc(var(--u) * 10);
+    --held-w: calc(var(--u) * 20);
+    --sum-k: calc(var(--u) * 26);
+  }
+}
+.realm-page .cap {
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  color: var(--ink-66);
+  white-space: nowrap;
+}
+.realm-page .link {
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  color: var(--clay-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ink-30);
+  text-underline-offset: var(--rule-2);
+}
+button.link {
+  min-height: var(--hit);
+  margin-block: calc((var(--ln) - var(--hit)) / 2);
+  padding-inline: var(--s-1);
+}
+.realm-page .link:hover {
+  text-decoration-color: var(--clay);
+}
+.page-empty {
+  margin: 0;
+  color: var(--ink-66);
+}
+.seal.is-small {
+  flex: none;
+  width: var(--ic-chip);
+  height: var(--ic-chip);
+  font: 700 var(--t-cap) / 1 var(--f-name);
+}
+.chips {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  white-space: nowrap;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rule-2);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ---- Cities: a numbers line per place, a drawing line under it ------------ */
+.roster {
+  display: grid;
+}
+.r-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--c-pop) var(--c-gr) repeat(var(--nres), var(--c-res));
+  align-items: center;
+  height: var(--l-body);
+}
+.r-head {
+  box-shadow: inset 0 calc(var(--rule) * -1) 0 var(--ink-30);
+}
+.r-head > *,
+.r-a > .cell {
+  justify-self: end;
+}
+.r-head > :first-child {
+  justify-self: start;
+}
+.r-place-rows + .r-place-rows {
+  box-shadow: inset 0 var(--rule) 0 var(--ink-12);
+}
+.r-place {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+/* A name is a target: a control tall, reaching past its row's own line. */
+.r-name {
+  min-height: var(--hit);
+  margin-block: calc((var(--l-body) - var(--hit)) / 2);
+  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  letter-spacing: var(--track-name);
+  white-space: nowrap;
+}
+.r-name:hover {
+  color: var(--clay-ink);
+}
+.cell {
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+.cell small {
+  font-weight: 500;
+  color: var(--ink-66);
+}
+.r-b {
+  height: var(--ln);
+  padding-left: calc(var(--ic-chip) + var(--s-1));
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  white-space: nowrap;
+}
+.beads,
+.sockets {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rule-2);
+}
+.realm-page .bead {
+  width: var(--ic-16);
+  height: var(--ic-16);
+}
+.bead-room {
+  width: calc(var(--u) * 1.5);
+  height: var(--rule-2);
+  margin: 0 var(--rule);
+  background: var(--ink-30);
+}
+.sock {
+  width: var(--ic-16);
+  height: var(--ic-16);
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-45);
+}
+.sock.is-built {
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.sock .ico {
+  width: calc(var(--ic-16) - var(--rule-2));
+  height: calc(var(--ic-16) - var(--rule-2));
+}
+.r-state {
+  margin-left: auto;
+}
+
+/* ---- Ladder: the tiers, with each gap's two steps on the rung between ------ */
+.ladder {
+  display: flex;
+  flex-direction: column;
+}
+.tier-row {
+  height: var(--ln);
+  display: grid;
+  grid-template-columns: var(--ic-ui) var(--name-w) var(--count-w) minmax(0, 1fr);
+  column-gap: var(--s-2);
+  align-items: center;
+}
+.tier-name {
+  font: 700 var(--t-body) / var(--l-body) var(--f-body);
+  color: var(--clay-ink);
+}
+.tier-count {
+  justify-self: end;
+  font: 700 var(--t-lead) / var(--l-lead) var(--f-sans);
+}
+.tier-makes {
+  justify-self: end;
+}
+.rung {
+  height: var(--hit);
+  display: grid;
+  grid-template-columns: var(--ic-ui) auto auto;
+  justify-content: start;
+  column-gap: var(--s-2);
+  align-items: center;
+}
+.rung-rail {
+  justify-self: center;
+  width: var(--s-2);
+  height: 100%;
+  box-shadow:
+    inset var(--rule) 0 0 var(--ink-30),
+    inset calc(var(--rule) * -1) 0 0 var(--ink-30);
+}
+.rung-btn {
+  height: var(--hit);
+  padding: 0 var(--s-3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+  white-space: nowrap;
+}
+.rung-btn:hover:not([aria-disabled="true"]) {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.rung-v {
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.rung-t {
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  color: var(--ink-66);
+}
+.rung-btn[aria-disabled="true"] {
+  background: transparent;
+  color: var(--ink-66);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-12);
+  cursor: default;
+}
+.rung-btn[aria-disabled="true"] .ico {
+  opacity: var(--dim);
+}
+.lad-foot {
+  padding-top: var(--s-1);
+  box-shadow: inset 0 var(--rule) 0 var(--ink-30);
+}
+.lad-line {
+  height: var(--ln);
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  white-space: nowrap;
+}
+.lad-net {
+  margin-left: auto;
+}
+.where-g {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+/* ---- Build: the place to raise in, then every building as one cell -------- */
+.targets {
+  height: var(--hit);
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  white-space: nowrap;
+}
+.target {
+  height: var(--hit);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  color: var(--ink-66);
+}
+.target[aria-checked="true"] {
+  color: var(--ink);
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
+}
+.target-name {
+  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+.target .cap {
+  color: inherit;
+}
+.target-none {
+  margin-left: auto;
+}
+.bgrid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(5, var(--hit));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--s-4);
+}
+.bcell-trigger {
+  display: block;
+  min-width: 0;
+}
+.bcell {
+  width: 100%;
+  height: var(--hit);
+  display: grid;
+  grid-template-columns: var(--ic-ui) minmax(0, 1fr) auto;
+  grid-template-rows: var(--l-cap) var(--l-cap);
+  column-gap: var(--s-2);
+  align-content: center;
+  text-align: left;
+  box-shadow: inset 0 calc(var(--rule) * -1) 0 var(--ink-12);
+}
+.bcell > .ico {
+  grid-row: 1 / 3;
+  align-self: center;
+}
+.bn {
+  font: 500 var(--t-body) / var(--l-cap) var(--f-sans);
+  white-space: nowrap;
+}
+.bcell .price {
+  justify-self: end;
+}
+.bx {
+  grid-column: 2 / 4;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  color: var(--olive);
+  white-space: nowrap;
+}
+/* Inline icons in a page's text keep to its line. */
+.realm-page .richIcon {
+  width: var(--ic-16);
+  height: var(--ic-16);
+  vertical-align: text-bottom;
+}
+.bx.is-refused {
+  color: var(--clay-ink);
+}
+.bcell:hover:not([aria-disabled="true"]) {
+  background: var(--ivory);
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
+}
+.bcell[aria-disabled="true"] {
+  cursor: default;
+}
+.bcell[aria-disabled="true"] > .ico {
+  opacity: var(--dim);
+}
+.bcell[aria-disabled="true"] .bn {
+  color: var(--ink-66);
+}
+
+/* ---- Market: one row per good, Sell filled and Buy outlined --------------- */
+.mk-head {
+  height: var(--ln);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: inset 0 calc(var(--rule) * -1) 0 var(--ink-30);
+}
+.treasury,
+.held {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+.treasury .num,
+.held .num {
+  font: 700 var(--t-lead) / var(--l-lead) var(--f-sans);
+}
+.mk-rows {
+  padding-top: var(--s-1);
+  display: grid;
+  row-gap: var(--s-3);
+}
+.mk-row {
+  height: var(--hit);
+  display: grid;
+  grid-template-columns: var(--ic-ui) var(--held-w) minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--s-2);
+  align-items: center;
+}
+.mk-row.is-deficit .held,
+.mk-row.is-deficit .held .caps {
+  color: var(--clay-ink);
+}
+.trade-trigger {
+  display: block;
+  min-width: 0;
+}
+.trade {
+  width: 100%;
+  height: var(--hit);
+  padding: 0 var(--s-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  white-space: nowrap;
+}
+.trade-lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.trade.is-sell {
+  background: var(--ink);
+  color: var(--ivory);
+}
+.trade.is-buy {
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.trade.is-answer,
+.trade:hover:not([aria-disabled="true"]) {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.trade[aria-disabled="true"] {
+  opacity: var(--dim);
+  cursor: default;
+}
+.rate {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rule-2);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.rate-arr {
+  margin: 0 var(--rule-2);
+  opacity: 0.7;
+}
+
+/* ---- the place pages: overview, ground lines, lore, the act --------------- */
+.ground {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: max(var(--ln), var(--ic-ui));
+  column-gap: var(--s-4);
+}
+.g-line {
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+  white-space: nowrap;
+}
+.g-line.is-wide {
+  grid-column: 1 / -1;
+}
+.g-line span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink-66);
+}
+.g-line b {
+  color: var(--ink);
+}
+.summary {
+  margin: 0;
+  display: grid;
+  grid-template-columns: var(--sum-k) minmax(0, 1fr);
+  grid-auto-rows: minmax(var(--ln), auto);
+  align-items: center;
+}
+.summary dd {
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.summary .is-idle {
+  color: var(--ink-45);
+}
+.place-link {
+  min-height: var(--hit);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+.place-link:hover {
+  color: var(--clay-ink);
+}
+.lore {
+  margin: 0;
+  font: italic 400 var(--t-body) / var(--l-body) var(--f-body);
+}
+.lore-rule {
+  margin: 0;
+}
+/* The act, and under it why it is refused: a reason may run two lines. */
+.act-line {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-1);
+}
+.act-line .cap {
+  white-space: normal;
+}
+.act-btn {
+  flex: none;
+  height: var(--hit);
+  padding: 0 var(--s-3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.act-btn:hover:not([aria-disabled="true"]) {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.act-btn[aria-disabled="true"] {
+  color: var(--ink-66);
+  cursor: default;
+}
+
+/* ---- alarms: a disc per standing effect, beside the ticker tab ------------- */
+.alarms {
+  position: absolute;
+  top: var(--bar-h);
+  left: calc(var(--ticker-w) + var(--fillet) + var(--s-2));
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: var(--s-2);
+  list-style: none;
+}
+.alarm-disc {
+  --tone: var(--ink-30);
+  width: calc(var(--hit) * 2); /* 64 */
+  height: calc(var(--hit) * 2);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-round);
+  background: color-mix(in srgb, var(--tone) 16%, var(--ivory));
+  box-shadow: inset 0 0 0 var(--rule-2) var(--tone);
+}
+.alarm-disc .ico {
+  width: var(--ic-48);
+  height: var(--ic-48);
+}
+.alarm-disc.is-up {
+  --tone: var(--olive);
+}
+.alarm-disc.is-down {
+  --tone: var(--clay);
+}
+.alarm-disc.is-loud {
+  background: var(--clay-deep);
+}
+
+.island .moor[role="button"] {
+  cursor: pointer;
+}
+.island .moor-hit {
+  fill: transparent;
 }

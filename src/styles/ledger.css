@@ -6,11 +6,6 @@
   color: #b13a28;
 }
 
-.emptyState {
-  color: var(--muted);
-  margin: 0;
-}
-
 .modalBackdrop {
   position: fixed;
   inset: 0;

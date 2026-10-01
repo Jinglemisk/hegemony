@@ -35,23 +35,6 @@
   color: var(--subtle);
 }
 
-.detailTooltip {
-  position: fixed;
-  z-index: 1000;
-  display: grid;
-  gap: 5px;
-  width: min(260px, calc(100vw - 20px));
-  padding: 9px;
-  border: 1px solid rgb(36 25 16 / 40%);
-  border-radius: 8px;
-  color: var(--fg);
-  background: rgb(255 248 231 / 99%);
-  box-shadow: 0 18px 34px rgb(36 25 16 / 28%);
-  pointer-events: none;
-  transform: translateY(calc(-100% - 8px));
-  animation: detailTooltipIn 120ms ease-out;
-}
-
 @keyframes detailTooltipIn {
   from {
     opacity: 0;
@@ -60,20 +43,6 @@
   to {
     opacity: 1;
   }
-}
-
-.detailTooltip strong {
-  color: var(--fg);
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-}
-
-.detailTooltip em {
-  color: var(--muted);
-  font-size: 0.74rem;
-  font-style: normal;
-  line-height: 1.25;
 }
 
 .miniResourceIcon {

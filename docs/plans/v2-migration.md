@@ -155,7 +155,17 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - Picking a pop or a building arms the map for exactly that; the settlement's popover
   opens on it. A click on an armed disc gives the map back.
 - Fans keep clear of every settlement's mark and every mooring, not only city names,
-  and stay open while the pointer is within their span.
+  and stay open while the pointer is within their span. Where the sea beside a disc is
+  too narrow for an arc, a fan opens as a compact block beside it.
+- The realm's pages fit the sheet, with nothing scrolling (the owner's "fit" variant,
+  2026-10-01). Build picks the place first, then every building as one cell priced for
+  it; Cities, Ladder and Market are ledger rows.
+- The last realm tab shows whatever the map last picked: the sea gives the realm's
+  overview, a settlement its page (a rival's is read-only), an empty tile its ground
+  with a Found button, the oracle its lore and this year's sign, a mooring its good.
+- Standing effects (the unrest alarm, food deficit, the omen, timed moods) are discs
+  beside the ticker, tinted by sign, explained on hover. The season's modifier stays on
+  the season card and standing Laws stay in the Agora.
 
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
@@ -292,6 +302,7 @@ playtest, with the PR from `feat/v2` into `main` open for the owner to merge.
 - [ ] **Step 15 · QA and docs.** Full games by bots and Playwright at 1280, 1440 and 1920;
       the gate script rerun on the real app; `rules.md` rewritten for v2; reference docs
       updated; an owner playtest; the owner's decision on merging `feat/v2` into `main`.
+- [ ] **Step 16 · Refactor and optimize the code.**
 
 ## Step 11 decision rules
 
