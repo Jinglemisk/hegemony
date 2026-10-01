@@ -1,6 +1,5 @@
 import type { EmpireTab } from "../../components/board/types";
-import type { UnrestStatus } from "../../game/rules";
-import type { Terrain, TradableMaterial, VictoryMetric } from "../../game/types";
+import type { Terrain, VictoryMetric } from "../../game/types";
 import type { GlyphId } from "./glyphs";
 
 /**
@@ -123,32 +122,6 @@ export const VICTORY_PLACEHOLDERS: Record<VictoryMetric, string | undefined> = {
   stockpile: placeholder("victory/treasurer"),
   happiness: placeholder("victory/beloved"),
   voice: placeholder("victory/voice"),
-};
-
-/** The alarm's mask, per tier. Discontent has no icon of its own yet and wears
- *  the alarm's warning. */
-export const UNREST_TIER_PLACEHOLDERS: Record<UnrestStatus["tier"], string | undefined> = {
-  calm: placeholder("unrest/calm"),
-  discontent: placeholder("unrest/alarm"),
-  unrest: placeholder("unrest/unrest"),
-  revolt: placeholder("unrest/revolt"),
-};
-
-/** The bank's buttons: the material's own icon with a plus (buy) or minus (sell). */
-export const TRADE_PLACEHOLDERS: Record<
-  "buy" | "sell",
-  Record<TradableMaterial, string | undefined>
-> = {
-  buy: {
-    wood: placeholder("market/buy-wood"),
-    stone: placeholder("market/buy-stone"),
-    food: placeholder("market/buy-food"),
-  },
-  sell: {
-    wood: placeholder("market/sell-wood"),
-    stone: placeholder("market/sell-stone"),
-    food: placeholder("market/sell-food"),
-  },
 };
 
 /** Tabs whose raster is not the raster of the glyph they share with a noun. */
