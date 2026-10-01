@@ -302,6 +302,7 @@ playtest, with the PR from `feat/v2` into `main` open for the owner to merge.
 - [ ] **Step 15 · QA and docs.** Full games by bots and Playwright at 1280, 1440 and 1920;
       the gate script rerun on the real app; `rules.md` rewritten for v2; reference docs
       updated; an owner playtest; the owner's decision on merging `feat/v2` into `main`.
+- [ ] **Step 16 · Refactor and optimize the code.**
 
 ## Step 11 decision rules
 

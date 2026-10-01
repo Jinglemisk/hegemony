@@ -29,13 +29,14 @@ when it ships or when the owner rules it closed.
 
 ## The list
 
-| ID       | needs      | what                                          |
-| -------- | ---------- | --------------------------------------------- |
-| `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
-| `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
-| `V2-2`   | a pass     | The consult pages are v1 content              |
-| `V2-3`   | nothing    | A shared tile's second seal has no name plate |
-| `V2-4`   | Step 3     | Tiles still print their yield                 |
+| ID       | needs      | what                                           |
+| -------- | ---------- | ---------------------------------------------- |
+| `TYPE-1` | a decision | Two type sizes sit under spec, on purpose      |
+| `DUP-1`  | nothing    | Four repeated glossary words, judged and left  |
+| `V2-2`   | a pass     | The consult pages are v1 content               |
+| `V2-3`   | nothing    | A shared tile's second seal has no name plate  |
+| `V2-4`   | Step 3     | Tiles still print their yield                  |
+| `V2-5`   | a pass     | Alarms come from two sources, five are missing |
 
 ### v2 frame carry-overs (Steps 1–2, 2026-09-30 to 10-01)
 
@@ -48,6 +49,12 @@ when it ships or when the owner rules it closed.
 - **`V2-4`.** The v1 engine still gives tiles a printed amount, so the tile shows it
   beside the terrain emblem. Step 3 removes both. Fans keep clear of settlements and
   moorings but may open over a printed amount; those are `ui:audit`'s only rows.
+- **`V2-5`.** The discs beside the ticker read two sources: the engine's active
+  effects and the unrest status. One engine selector should return every alarm as
+  typed data (the UI picks icon, tone and words; the sim can read the same list),
+  and add five the owner asked for on 2026-10-01: a riot that struck last turn, a
+  rival one card from victory, the Assembly meeting next season, a settlement over
+  its walls, and a Port that could claim a free luxury.
 
 ### Shipped
 
