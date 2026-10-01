@@ -34,7 +34,7 @@ describe("bank rate derivation (D6/Q14)", () => {
 
   it("an evenly supplied board collapses to baseline everywhere", () => {
     const tile = (type: "wood" | "stone" | "food") =>
-      ({ resource: { type, amount: 4 } }) as Parameters<typeof deriveBankRates>[0][number];
+      ({ resource: { type } }) as Parameters<typeof deriveBankRates>[0][number];
     const rates = deriveBankRates(
       [tile("wood"), tile("stone"), tile("food")],
       DEFAULT_RULESET.economy.bank,

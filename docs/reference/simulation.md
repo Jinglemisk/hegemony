@@ -158,10 +158,10 @@ Works from any phase — bots will finish a manual setup too. Policies:
 
 The economic policies project six future upkeeps one step at a time through the
 canonical active-effect descriptors. Each step applies timed mood, burns suppressed
-collections, advances starvation, and recalculates authoritative income after projected
-pop loss. Starvation uses the mean state of the engine's uniform pop-removal bag, so the
-forecast responds when fewer pops repair the deficit without reading or advancing future
-game RNG.
+collections, runs hunger, and recalculates authoritative income after projected pop
+loss. Hunger draws no dice (freemen leave before citizens, from the fullest
+settlement), so the projection runs the engine's own rule and never reads or advances
+future game RNG.
 
 How the bots work, their limitations, and the path to CPU opponents with
 difficulty settings: **docs/reference/ai.md**.
@@ -210,13 +210,16 @@ The report contains:
   player-turn shares
 - `perSeat` — real `winRate` (finished games only), `capLeaderRate` (turn-capped
   games), and mean final cards per seat (first-player advantage check)
+- `hunger` — food under work slots, per seat: incomes that left a mouth unfed per
+  game, pops lost to hunger per game, mean idle slaves and their share of all slaves.
+  The CSV carries `slaves`, `idleSlaves` and the running `popsLostToHunger` per row
 - `terminations` — how games ended (the winRate denominator context)
 - `forced` — action-cap hits / forced resolutions / forced end-turns (previously hidden)
 - `winsByPolicy` — wins credited to each policy over finished games (mixed/rotated runs)
 - `movesByType` — zero-filled total and per-game counts for every typed legal move;
   this universal table makes missing or unexercised action paths visible
 - `activeEffects` — zero-filled observations, per-player-turn counts, and player-turn
-  prevalence for every canonical active-effect kind (suppression, deficit, timed
+  prevalence for every canonical active-effect kind (suppression, hunger, timed
   mood, seasonal/omen modifiers, discounts, Laws, and pending Directives)
 - `buildings` — build counts and per-game rates
 - `events` — draw counts by card id, and per-option pick counts for choice cards
@@ -250,7 +253,7 @@ Replays are byte-identical to the original run.
 {
   "version": 2,
   "engineVersion": "0.1.0",
-  "stateSchemaVersion": 1,
+  "stateSchemaVersion": 3,
   "commandSchemaVersion": 1,
   "seed": 42, // game seed: decks, board draws, unrest removals
   "mode": "standard",

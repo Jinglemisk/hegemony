@@ -9,7 +9,7 @@ import {
   SEASONAL_EVENT_CARDS,
 } from "../game/data";
 import { getCivicCalmStatus } from "../game/civic";
-import { POP_TYPES } from "../game/core/pops";
+import { GROWABLE_POPS } from "../game/core/pops";
 import { getDiscountedGrowPopCost } from "../game/economy/cost";
 import { calculateIncome, calculateIncomeBreakdown } from "../game/economy/income";
 import { drawSeasonalEvent, getEventEffectChoices } from "../game/events";
@@ -282,7 +282,7 @@ describe("effective content and cost parity", () => {
     // The four verbs that used to print "varies" / "options" / "stakes". A dock
     // price has to be a figure the press would really charge, so each is checked
     // against the engine query that charges it rather than against a literal.
-    const growFood = POP_TYPES.map(
+    const growFood = GROWABLE_POPS.map(
       (pop) => getDiscountedGrowPopCost(G, "0", owned(G, "0,0", "0"), pop).food ?? 0,
     );
     expect(priceOf("grow")).toEqual([

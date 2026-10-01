@@ -97,6 +97,14 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     evidence:
       "makes the master policy use calm against harmful mood and avoid it against beneficial mood",
   },
+  hungerResolution: {
+    implementation: "src/game/hunger.test.ts",
+    evidence: "one pop leaves per unfed mouth and food stays at zero",
+  },
+  workSlots: {
+    implementation: "src/game/workSlots.test.ts",
+    evidence: "a slave makes 1 of the terrain's resource from an open slot and nothing without one",
+  },
   unrestResolution: {
     implementation: "src/game/unrest.test.ts",
     evidence: "parks a severe riot (revolt) at the -10 threshold",
@@ -277,7 +285,7 @@ const active = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
 
 export const ACTIVE_EFFECT_MECHANIC_PARITY = {
   suppressIncome: active("activeEffectLifecycle", "activeEffectPolicy"),
-  foodDeficitProgress: active("activeEffectLifecycle", "activeEffectPolicy"),
+  hunger: active("activeEffectLifecycle", "activeEffectPolicy"),
   timedHappiness: active("activeEffectLifecycle", "activeEffectPolicy"),
   resourceIncome: active("activeEffectLifecycle", "activeEffectPolicy"),
   buildingCostMultiplier: active("activeEffectLifecycle"),
@@ -336,7 +344,6 @@ export const PLAYER_EVENT_CONTENT_IDS = [
   "player-new-citizen",
   "player-free-settlers",
   "player-captured-laborers",
-  "player-citizenship-rolls",
   "player-willing-hands",
   "player-slave-auction",
   "player-good-stores",
@@ -561,8 +568,27 @@ export const FEATURE_PARITY = {
   seasonalEvents: CONTENT_MANIFEST.seasonalEvents,
   playerEvents: CONTENT_MANIFEST.playerEvents,
   eventTables: CONTENT_MANIFEST.eventTables,
+  workSlots: {
+    ids: ["slots", "workingSlaves", "idleSlaves"],
+    engine: { implementation: "src/game/settlement.ts", evidence: "settlementWorkingSlaves" },
+    frontend: {
+      implementation: "src/components/frame/SettlementPage.tsx",
+      evidence: "settlementIdleSlaves",
+    },
+    simulation: { implementation: "src/sim/policies.ts", evidence: "tile.slots" },
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "idleSlaves" },
+    behaviorFixtures: ["workSlots"],
+  },
+  hunger: {
+    ids: ["hunger"],
+    engine: { implementation: "src/game/hunger.ts", evidence: "applyHunger" },
+    frontend: { implementation: "src/components/frame/Alarms.tsx", evidence: "hunger" },
+    simulation: { implementation: "src/sim/policies.ts", evidence: "applyHunger" },
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "popsLostToHunger" },
+    behaviorFixtures: ["hungerResolution", "activeEffectPolicy"],
+  },
   unrest: {
-    ids: ["foodDeficit", "riot", "revolt"],
+    ids: ["riot", "revolt"],
     engine: { implementation: "src/game/unrest.ts", evidence: "applyUnrestUpkeep" },
     frontend: {
       implementation: "src/components/board/modals/RiotModal.tsx",

@@ -1,7 +1,7 @@
 import type { Phase } from "../../../client/controller";
 import { getCivicCalmStatus } from "../../../game/civic";
 import { getBuildings } from "../../../game/content";
-import { POP_TYPES } from "../../../game/core/pops";
+import { GROWABLE_POPS } from "../../../game/core/pops";
 import { getAdjustedActionCost, getDiscountedGrowPopCost } from "../../../game/economy/cost";
 import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../../game/types";
@@ -116,11 +116,13 @@ function growFoodSpan(context: VerbContext): VerbPriceClause[] {
   const foods =
     settlements.length > 0
       ? settlements.flatMap((settlement) =>
-          POP_TYPES.map((pop) => getDiscountedGrowPopCost(G, playerID, settlement, pop).food ?? 0),
+          GROWABLE_POPS.map(
+            (pop) => getDiscountedGrowPopCost(G, playerID, settlement, pop).food ?? 0,
+          ),
         )
       : // Before the first settlement stands there is nothing to discount, so the
         // ruleset's undiscounted mouths are the honest quote.
-        POP_TYPES.map((pop) => G.ruleset.growPopCosts[pop].food ?? 0);
+        GROWABLE_POPS.map((pop) => G.ruleset.growPopCosts[pop].food ?? 0);
 
   return [{ span: { resource: "food", min: Math.min(...foods), max: Math.max(...foods) } }];
 }

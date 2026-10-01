@@ -22,7 +22,7 @@ describe("turn machine", () => {
       expect(G.players[id].settlements).toHaveLength(2);
     }
     // Player 0's turn-start income was auto-collected.
-    expect(G.players["0"].hasCollectedGameplayIncome).toBe(true);
+    expect(G.players["0"].collectedThisTurn).toBe(true);
   });
 
   it("wraps the active player 0 -> 1 -> 2 -> 3 -> 0", () => {

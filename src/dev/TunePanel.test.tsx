@@ -45,10 +45,10 @@ describe("TunePanel low-number preset", () => {
     const game = createInitialStateFromDefinition(resolved.definition, 42);
     const markup = renderToStaticMarkup(<TunePanel game={game} resetGame={() => undefined} />);
 
-    expect(markup).toContain("✓ Low Numbers · 20W / 12S / 16F");
+    expect(markup).toContain("✓ Low Numbers");
     expect(markup).toContain("preset active");
     expect(markup).toContain("Low-number core + 0 edits");
-    expect(markup).toContain("wood 20 · stone 12 · food 16");
+    expect(markup).toContain("37 tiles · 134 slots");
     expect(markup).toContain("Marketplace");
     expect(markup).toContain('value="6"');
   });

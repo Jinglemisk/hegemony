@@ -271,18 +271,16 @@ function presentActiveEffectMechanic(
         text: "No income for " + mechanic.turns + " collection" + (mechanic.turns === 1 ? "" : "s"),
         tone: "negative",
       };
-    case "foodDeficitProgress":
+    case "hunger":
       return {
         text:
           formatSignedNumber(mechanic.netFood) +
-          " food income · starvation " +
-          mechanic.current +
-          "/" +
-          mechanic.threshold +
-          (mechanic.graceActive ? " (first-income grace)" : "") +
-          " · -" +
-          mechanic.popLoss +
-          " pop at threshold",
+          " food income, " +
+          mechanic.stockpile +
+          " stored · " +
+          (mechanic.unfed > 0
+            ? mechanic.unfed + (mechanic.unfed === 1 ? " pop leaves" : " pops leave") + " at income"
+            : "one pop leaves per unfed mouth"),
         tone: "negative",
       };
     case "timedHappiness":
@@ -532,8 +530,10 @@ function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string
       return remaining + " income collection" + (remaining === 1 ? " remaining" : "s remaining");
     case "afterPlayerUpkeeps":
       return remaining + " upkeep" + (remaining === 1 ? " remaining" : "s remaining");
-    case "onFoodRecoveryOrStarvation":
-      return remaining + " deficient upkeep" + (remaining === 1 ? "" : "s") + " to threshold";
+    case "whenFed":
+      return remaining === 0
+        ? "Hunger at the next income"
+        : "Food lasts " + remaining + " more income" + (remaining === 1 ? "" : "s");
     case "atSeasonEnd":
       return "Until season end";
     case "atYearEnd":

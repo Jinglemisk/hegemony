@@ -1,7 +1,7 @@
 import { getResolutionCard } from "./content";
 import { getStandingEffectSources } from "./assembly/laws";
 import type { LawEffect } from "./assembly/types";
-import { calculateIncome } from "./economy/income";
+import { calculateIncome, getHungerStatus } from "./economy/income";
 import { scaledByPops } from "./settlement";
 import type {
   ActionCostDiscountTarget,
@@ -17,7 +17,7 @@ import type {
 /** Closed vocabulary used by frontend presentation and simulation telemetry. */
 export const ACTIVE_EFFECT_KINDS = [
   "incomeSuppression",
-  "foodDeficit",
+  "hunger",
   "timedHappiness",
   "seasonalModifier",
   "yearlyOmen",
@@ -69,7 +69,7 @@ export type ActiveEffectScope =
 export type ActiveEffectExpiry =
   | "afterIncomeCollections"
   | "afterPlayerUpkeeps"
-  | "onFoodRecoveryOrStarvation"
+  | "whenFed"
   | "atSeasonEnd"
   | "atYearEnd"
   | "afterMatchingActionOrTurnEnd"
@@ -81,7 +81,6 @@ export type ActiveEffectDuration = {
   unit:
     | "incomeCollections"
     | "playerUpkeeps"
-    | "deficitTurns"
     | "season"
     | "year"
     | "standing"
@@ -95,12 +94,12 @@ export type ActiveEffectDuration = {
 export type ActiveEffectMechanic =
   | { type: "suppressIncome"; turns: number }
   | {
-      type: "foodDeficitProgress";
-      current: number;
-      threshold: number;
+      /** Free pops eat more than comes in. `unfed` mouths go hungry at the next
+       *  income, and one pop leaves for each. */
+      type: "hunger";
       netFood: number;
-      popLoss: number;
-      graceActive: boolean;
+      stockpile: number;
+      unfed: number;
     }
   | { type: "timedHappiness"; amountPerTurn: number; turns: number }
   | { type: "resourceIncome"; resource: Resource; amount: number }
@@ -161,31 +160,31 @@ export function getActiveEffects(
     });
   }
 
-  const unrest = G.ruleset.economy.unrest;
-  const graceActive = G.ruleset.economy.firstIncomeFoodGrace && !player.hasCollectedGameplayIncome;
-  const netFood = (context.income ?? calculateIncome(G, playerID)).food;
-  if (netFood <= unrest.foodDeficitThreshold) {
+  // Hunger warns as soon as the granary drains, and counts the incomes it still
+  // covers; at zero the next income leaves `unfed` mouths and that many pops go. A
+  // strike collects nothing and eats nothing, so the warning waits for it to end.
+  const hunger = getHungerStatus(
+    G,
+    playerID,
+    (context.income ?? calculateIncome(G, playerID)).food,
+  );
+  if (hunger.income < 0 && player.incomeSuppressedTurns === 0) {
     effects.push({
-      id: "food-deficit:" + playerID,
-      kind: "foodDeficit",
-      source: { kind: "unrest", id: "food-deficit", label: "Food deficit" },
+      id: "hunger:" + playerID,
+      kind: "hunger",
+      source: { kind: "unrest", id: "hunger", label: "Hunger" },
       scope: { kind: "player", playerID },
       duration: {
-        unit: "deficitTurns",
-        remaining: Math.max(
-          0,
-          unrest.foodDeficitTurnsToStarve - player.consecutiveFoodDeficitTurns,
-        ),
-        expiry: "onFoodRecoveryOrStarvation",
+        unit: "incomeCollections",
+        remaining: Math.floor(hunger.stockpile / -hunger.income),
+        expiry: "whenFed",
       },
       mechanics: [
         {
-          type: "foodDeficitProgress",
-          current: player.consecutiveFoodDeficitTurns,
-          threshold: unrest.foodDeficitTurnsToStarve,
-          netFood,
-          popLoss: unrest.foodDeficitStarvePopLoss,
-          graceActive,
+          type: "hunger",
+          netFood: hunger.income,
+          stockpile: hunger.stockpile,
+          unfed: hunger.unfed,
         },
       ],
     });

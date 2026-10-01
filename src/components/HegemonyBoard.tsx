@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
-  POP_TYPES,
+  GROWABLE_POPS,
   calculateEconomyProjection,
   canPlaceColonyOnTile,
   getBuildBuildingOptions,
@@ -168,7 +168,7 @@ export function HegemonyBoard({
   const canGrowPops = useMemo(
     () =>
       getOwnedHoldings(G, viewerId).some(({ tile }) =>
-        POP_TYPES.some((pop) => getGrowPopStatus(G, viewerId, tile.id, pop).can),
+        GROWABLE_POPS.some((pop) => getGrowPopStatus(G, viewerId, tile.id, pop).can),
       ),
     [G, viewerId],
   );
@@ -476,8 +476,13 @@ export function HegemonyBoard({
               title={`Choose ${PLACEMENT_LABELS[activeModal.placement]} pops`}
               description={`Allocate exactly ${G.ruleset.placementPopCounts[activeModal.placement]} starting ${
                 G.ruleset.placementPopCounts[activeModal.placement] === 1 ? "pop" : "pops"
-              } before placing this ${PLACEMENT_LABELS[activeModal.placement]}.`}
+              } before placing this ${PLACEMENT_LABELS[activeModal.placement]}: ${
+                G.ruleset.placementCitizens[activeModal.placement] === 0
+                  ? "no citizens"
+                  : `${G.ruleset.placementCitizens[activeModal.placement]} citizen`
+              }, the rest slaves or freemen.`}
               requiredTotal={G.ruleset.placementPopCounts[activeModal.placement]}
+              requiredCitizens={G.ruleset.placementCitizens[activeModal.placement]}
               confirmLabel={`Place ${PLACEMENT_LABELS[activeModal.placement]}`}
               onCancel={() => setActiveModal(null)}
               onConfirm={(pops) => {

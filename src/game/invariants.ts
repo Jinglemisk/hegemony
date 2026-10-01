@@ -99,6 +99,10 @@ export function collectInvariantViolations(
         `index [${indexed.join(", ")}] disagrees with board [${boardOwned.join(", ")}]`,
       );
     }
+    // Hunger leaves no debt: unfed pops leave and the granary stays at zero.
+    if ((G.players[playerID]?.resources.food ?? 0) < 0) {
+      add("resources.foodDebt", `players.${playerID}.resources.food`, "food cannot go negative");
+    }
     if (new Set(indexed).size !== indexed.length) {
       add(
         "settlement.indexDuplicate",

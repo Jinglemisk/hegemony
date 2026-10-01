@@ -1,6 +1,13 @@
-import type { PopType, Pops } from "../types";
+import type { GrowablePop, PopType, Pops } from "../types";
 
 export const POP_TYPES: PopType[] = ["citizens", "freemen", "slaves"];
+
+/** The pops Grow can add. Citizens come only by promotion. */
+export const GROWABLE_POPS: GrowablePop[] = ["freemen", "slaves"];
+
+export function isGrowablePop(pop: PopType): pop is GrowablePop {
+  return pop !== "citizens";
+}
 
 export const EMPTY_POPS: Pops = {
   citizens: 0,
@@ -24,6 +31,12 @@ export function clonePops(pops: Pops): Pops {
 
 export function isExactPopSelection(pops: Pops, requiredTotal: number) {
   return isValidPopSelection(pops) && totalPops(pops) === requiredTotal;
+}
+
+/** A setup placement: exactly `requiredTotal` pops, exactly `requiredCitizens` of
+ *  them citizens; the rest are slaves or freemen as the player chooses. */
+export function isSetupPopSelection(pops: Pops, requiredTotal: number, requiredCitizens: number) {
+  return isExactPopSelection(pops, requiredTotal) && pops.citizens === requiredCitizens;
 }
 
 export function isPositivePopSelection(pops: Pops) {

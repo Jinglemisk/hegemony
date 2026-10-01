@@ -163,15 +163,12 @@ describe("standing laws reprice actions", () => {
 
   it("actionCostDelta reaches grow-pop, in both directions at once", () => {
     const G = opening().build();
-    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "citizens").cost).toMatchObject({
-      food: 9,
-      gold: 2,
-    });
+    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toEqual({ food: 7 });
 
     plantLaw(G, "tenant-rights"); // growing costs 3 less food but 2 more gold
-    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "citizens").cost).toMatchObject({
-      food: 6,
-      gold: 4,
+    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toMatchObject({
+      food: 4,
+      gold: 2,
     });
   });
 
@@ -180,8 +177,8 @@ describe("standing laws reprice actions", () => {
     const G = opening().build();
     plantLaw(G, "guild-charter");
 
-    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "citizens").cost).toMatchObject({ food: 6 });
-    expect(getGrowPopStatus(G, "0", P0_COLONY, "citizens").cost).toMatchObject({ food: 11 });
+    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toMatchObject({ food: 4 });
+    expect(getGrowPopStatus(G, "0", P0_COLONY, "freemen").cost).toMatchObject({ food: 9 });
   });
 
   it("actionCostDelta reaches promote-pop, and a narrowed one only touches its own pop", () => {

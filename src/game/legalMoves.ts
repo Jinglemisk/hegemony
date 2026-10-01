@@ -24,7 +24,7 @@ import { buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot
 import { fundExpedition, getFundExpeditionStatus } from "./ventures";
 import type { VentureStake } from "./ventures";
 import { getAuthoredGameContent, getExpeditionTables, getRiotTable } from "./content";
-import { EMPTY_POPS, POP_TYPES, totalPops } from "./core/pops";
+import { EMPTY_POPS, GROWABLE_POPS, POP_TYPES, totalPops } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
@@ -606,7 +606,7 @@ function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): Deriv
     return [];
   }
 
-  const compositions = popCompositions(G.ruleset.placementPopCounts.capital);
+  const compositions = setupPopCompositions(G, "capital");
   const moves: DerivedCommand[] = [];
 
   for (const tile of G.board.tiles) {
@@ -627,7 +627,7 @@ function enumerateCityPlacements(G: HegemonyState, playerID: PlayerId): DerivedC
     return [];
   }
 
-  const compositions = popCompositions(G.ruleset.placementPopCounts.city);
+  const compositions = setupPopCompositions(G, "city");
   const moves: DerivedCommand[] = [];
 
   for (const tile of G.board.tiles) {
@@ -654,7 +654,7 @@ function enumerateColonyPlacements(G: HegemonyState, playerID: PlayerId): Derive
     return [];
   }
 
-  const compositions = popCompositions(G.ruleset.placementPopCounts.colony);
+  const compositions = setupPopCompositions(G, "colony");
   const moves: DerivedCommand[] = [];
 
   for (const tile of G.board.tiles) {
@@ -737,7 +737,7 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
   }
 
   for (const tileId of ownedTileIds) {
-    for (const pop of POP_TYPES) {
+    for (const pop of GROWABLE_POPS) {
       const status = getGrowPopStatus(G, playerID, tileId, pop);
 
       if (status.can) {
@@ -854,6 +854,14 @@ function movePopsBundles(sourcePops: Pops): Pops[] {
   add({ ...sourcePops });
 
   return bundles;
+}
+
+/** The pop splits one setup placement allows: the ruleset's count for the kind, with
+ *  exactly its citizens. */
+function setupPopCompositions(G: HegemonyState, kind: "capital" | "city" | "colony"): Pops[] {
+  return popCompositions(G.ruleset.placementPopCounts[kind]).filter(
+    (pops) => pops.citizens === G.ruleset.placementCitizens[kind],
+  );
 }
 
 /**

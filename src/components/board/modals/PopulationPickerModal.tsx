@@ -6,12 +6,13 @@ import { PopulationStepper } from "./PopulationStepper";
 
 /**
  * "Which pops do you place?" — the setup draft's allocator. Takes no game state:
- * the caller already knows the required total, so this stays a pure picker.
+ * the caller already knows the required total and how many of them are citizens
+ * (setup fixes that), so this stays a pure picker over freemen and slaves.
  */
-function createDefaultSelection(requiredTotal: number): Pops {
+function createDefaultSelection(requiredTotal: number, requiredCitizens: number): Pops {
   return {
-    citizens: requiredTotal > 0 ? 1 : 0,
-    freemen: Math.max(0, requiredTotal - 1),
+    citizens: requiredCitizens,
+    freemen: Math.max(0, requiredTotal - requiredCitizens),
     slaves: 0,
   };
 }
@@ -20,6 +21,7 @@ export function PopulationPickerModal({
   title,
   description,
   requiredTotal,
+  requiredCitizens,
   initialPops,
   confirmLabel,
   onCancel,
@@ -28,16 +30,19 @@ export function PopulationPickerModal({
   title: string;
   description: string;
   requiredTotal: number;
+  requiredCitizens: number;
   initialPops?: Pops;
   confirmLabel: string;
   onCancel: () => void;
   onConfirm: (pops: Pops) => void;
 }) {
   const [pops, setPops] = useState<Pops>(() =>
-    initialPops ? clonePops(initialPops) : createDefaultSelection(requiredTotal),
+    initialPops ? clonePops(initialPops) : createDefaultSelection(requiredTotal, requiredCitizens),
   );
   const selectedTotal = totalPops(pops);
   const remaining = requiredTotal - selectedTotal;
+  const citizensOff = pops.citizens !== requiredCitizens;
+  const free = requiredTotal - requiredCitizens;
 
   return (
     <ModalShell
@@ -57,7 +62,7 @@ export function PopulationPickerModal({
 
       <PopulationStepper
         pops={pops}
-        maxByPop={{ citizens: requiredTotal, freemen: requiredTotal, slaves: requiredTotal }}
+        maxByPop={{ citizens: requiredCitizens, freemen: free, slaves: free }}
         onChange={setPops}
         totalLimit={requiredTotal}
       />
@@ -66,10 +71,12 @@ export function PopulationPickerModal({
         <span>
           Selected <strong>{selectedTotal}</strong>/<strong>{requiredTotal}</strong>
         </span>
-        <span className={remaining === 0 ? "positive" : "negative"}>
-          {remaining === 0
-            ? "Ready"
-            : `${Math.abs(remaining)} ${remaining > 0 ? "left" : "too many"}`}
+        <span className={remaining === 0 && !citizensOff ? "positive" : "negative"}>
+          {citizensOff
+            ? `Needs ${requiredCitizens} ${requiredCitizens === 1 ? "citizen" : "citizens"}`
+            : remaining === 0
+              ? "Ready"
+              : `${Math.abs(remaining)} ${remaining > 0 ? "left" : "too many"}`}
         </span>
       </div>
 
@@ -77,7 +84,7 @@ export function PopulationPickerModal({
         <button onClick={onCancel}>Cancel</button>
         <button
           className="primaryButton"
-          disabled={remaining !== 0}
+          disabled={remaining !== 0 || citizensOff}
           onClick={() => onConfirm(clonePops(pops))}
         >
           {confirmLabel}

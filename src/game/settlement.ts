@@ -63,27 +63,48 @@ export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
   );
 }
 
-export function settlementBuildingSlots(tile: HexTile, settlement: Settlement, ruleset: Ruleset) {
-  const rule = ruleset.settlements[settlement.kind];
+/**
+ * The tile slots this settlement holds. A settlement alone on its tile holds them all;
+ * colonies sharing a tile split them, and the colony founded first takes the odd one.
+ */
+export function settlementSlots(tile: HexTile, settlement: Settlement) {
+  const sharers = tile.settlements.length;
 
-  if (!rule.canBuildBuildings) {
-    return 0;
+  if (sharers <= 1) {
+    return tile.slots;
   }
 
-  return tile.buildingSlots + rule.buildingSlotBonus;
+  const index = tile.settlements.findIndex((candidate) => candidate.id === settlement.id);
+  const share = Math.floor(tile.slots / sharers);
+
+  return index >= 0 && index < tile.slots % sharers ? share + 1 : share;
 }
 
-export function settlementTileYield(tile: HexTile, settlement: Settlement, ruleset: Ruleset) {
-  if (!tile.resource) {
-    return 0;
-  }
+/** Slots a building may take: the settlement's slots where its kind can build. */
+export function settlementBuildingSlots(tile: HexTile, settlement: Settlement, ruleset: Ruleset) {
+  return ruleset.settlements[settlement.kind].canBuildBuildings
+    ? settlementSlots(tile, settlement)
+    : 0;
+}
 
-  const share =
-    settlement.kind === "colony" && tile.settlements.length > 1
-      ? ruleset.economy.colonySharedTileYieldShare
-      : 1;
+/** Slots left for slaves to work: every building takes one. */
+export function settlementOpenSlots(tile: HexTile, settlement: Settlement) {
+  return Math.max(0, settlementSlots(tile, settlement) - settlement.buildings.length);
+}
 
-  return Math.floor(tile.resource.amount * share);
+/**
+ * Slaves holding an open slot, each making 1 of the tile's resource. The rest sit
+ * idle. The engine assigns them; nobody picks which slave works. On terrain with no
+ * resource (hills) no slave works.
+ */
+export function settlementWorkingSlaves(tile: HexTile, settlement: Settlement) {
+  return tile.resource
+    ? Math.min(settlement.pops.slaves, settlementOpenSlots(tile, settlement))
+    : 0;
+}
+
+export function settlementIdleSlaves(tile: HexTile, settlement: Settlement) {
+  return settlement.pops.slaves - settlementWorkingSlaves(tile, settlement);
 }
 
 export function settlementIncomeSource(tile: HexTile, settlement: Settlement) {

@@ -53,13 +53,13 @@ describe("popCompositions", () => {
 });
 
 describe("setup enumeration", () => {
-  it("offers every empty non-city-adjacent tile times 10 compositions for the first capital", () => {
+  it("offers every empty non-city-adjacent tile times its one-citizen splits for the first capital", () => {
     const G = scenario().build();
     const moves = expectSound(G, "0");
 
-    // Empty board: all 36 non-oracle tiles are legal, 15 four-pop splits each
-    // (the oracle at 0,1 can never host a settlement).
-    expect(moves).toHaveLength(540);
+    // Empty board: all 36 non-oracle tiles are legal, and a four-pop capital with
+    // exactly one citizen splits four ways (the oracle at 0,1 can never host a settlement).
+    expect(moves).toHaveLength(144);
     expect(moves.every((move) => move.type === "placeCapital")).toBe(true);
   });
 
@@ -78,11 +78,11 @@ describe("setup enumeration", () => {
       moves.map((move) => (move.type === "placeCapital" ? move.tileId : "")),
     );
 
-    // 0,0 and its 6 neighbors are gone: 30 tiles * 15 compositions.
+    // 0,0 and its 6 neighbors are gone: 30 tiles * 4 compositions.
     expect(offeredTiles.has("0,0")).toBe(false);
     expect(offeredTiles.has("1,0")).toBe(false);
     expect(offeredTiles.has("-1,1")).toBe(false);
-    expect(moves).toHaveLength(450);
+    expect(moves).toHaveLength(120);
   });
 
   it("returns an empty list for off-turn players", () => {

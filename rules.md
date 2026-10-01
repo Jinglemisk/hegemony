@@ -13,26 +13,30 @@ out-produce your rivals.
 
 ## The board
 
-The island is a grid of 37 hex tiles. Most tiles have a terrain that produces one
-resource from the land, and the amount is printed on the tile:
+The island is a grid of 37 hex tiles. A tile prints two things: its terrain and a
+number of **slots**. The land makes nothing by itself. A slave working the tile makes
+1 of the terrain's resource:
 
 - **Forest** → Wood
 - **Mountain** → Stone
-- **Plains** → Food (the life currency — the breadbasket is the richest tile on the map)
-- **Hill** → _nothing._ Hills yield no resource at all, but carry the **best building
-  slots** on the board. They are elite building terrain: your citizens and freemen live
-  there fed from your shared food, while your slaves — who only work the land — sit idle.
-  The map's single 4-slot tile is a hill, at the contested centre.
-- **Oracle** → a single sacred hole. It yields nothing, has no building slots, and
-  **can never be settled** — a permanent gap that colony chains must route around.
+- **Plains** → Food, the only food grown on the island
+- **Hill** → _nothing._ A hill's slots hold buildings, and slaves there sit idle. Your
+  freemen and citizens live on a hill fed from your shared food.
+- **Oracle** → a single sacred hole. It has no slots and **can never be settled** — a
+  permanent gap that colony chains must route around.
 
-Gold is **never** printed on a tile. It comes only from your people (freemen and
-citizens), events, and trade — the wealth of a civilization, not of the land.
+Gold is **never** made by the land. It comes only from your freemen, events, and
+trade.
 
-Tiles also have a number of **building slots**, which limit how many buildings a
-settlement on that tile can hold. This makes the map a real question: settle the rich
-**breadbasket** (great food, few slots) or the yield-less **hilltop** (great building
-room, no food of its own)?
+**Slots are one pool, shared by buildings and working slaves.** Each open slot holds
+one working slave; each building takes a slot. A seven-slot plains with no buildings
+puts seven slaves to work for 7 food; raise one building and six can work. Slaves
+beyond the open slots sit **idle** and make nothing. Only slaves take slots: freemen
+and citizens need none.
+
+Slots run from 2 to 7. The big tiles are the landmarks: the seven-slot **breadbasket**,
+the six-slot **quarry**, the five-slot old-growth forests. So the map asks who lives
+where: fill a big plains with slaves and export food, or build on it and import.
 
 ## Resources
 
@@ -44,37 +48,35 @@ You keep track of six resources:
   province (civic calm), pays for demotions on the social ladder, buys riot
   insurance, and funds Assembly draws, repeals, bribes, and vetoes.
 - **Happiness** — the mood of your people. It is lifted by temples, stored food,
-  and civic calm, and dragged down by overcrowding and hunger.
+  and civic calm, and dragged down by slaves and overcrowding.
 
 You begin each game with **20 wood, 10 stone, 10 gold, 12 food**, and 0
 influence and happiness.
 
 ## Your people
 
-Every settlement is populated by three kinds of pop. Each one produces and
-consumes resources every turn:
+Every settlement is populated by three kinds of pop. One pop, one output:
 
-- **Citizen** — earns +2 gold and +1 influence, and eats 2 food.
-- **Freeman** — earns +2 gold, and eats 1 food.
-- **Slave** — produces +1 of the settlement tile's own resource, eats 1 food,
-  and nudges happiness down (they are worked hard).
+- **Slave** — makes 1 of the tile's resource when it holds an open slot, and eats
+  nothing. Every slave, working or idle, nudges happiness down.
+- **Freeman** — makes 1 gold, and eats 1 food.
+- **Citizen** — makes 1 influence, holds a vote in the Assembly, and eats 1 food.
 
-Each pop fills one unit of a settlement's population capacity.
+Each pop fills one unit of a settlement's population capacity. Citizens are never
+grown: after setup, every citizen is a freeman promoted on the social ladder.
 
 ## Settlements
 
 You hold three kinds of settlement:
 
-- **Capital** — your first and strongest settlement. It holds up to 10 pops and
-  can build (its tile's slots, plus 2). You have exactly one.
-- **City** — an upgraded colony. It holds up to 10 pops and can build (its tile's
-  slots, plus 2).
-- **Colony** — a small outpost. It holds up to 4 pops and cannot hold buildings.
-  Two colonies belonging to different players may share a single tile, but then
-  each of them collects only **half** that tile's resource.
-
-Every turn, a settlement collects its tile's printed resource on top of whatever
-its pops produce.
+- **Capital** — your first settlement. It holds up to 10 pops and builds on its
+  tile's slots, like any city. You have exactly one.
+- **City** — an upgraded colony. It holds up to 10 pops and builds on its tile's
+  slots.
+- **Colony** — a small outpost. It holds up to 4 pops and cannot hold buildings, so
+  every slot on its tile is a work slot. Two colonies belonging to different players
+  may share a single tile; they **split its slots**, and the colony founded first
+  takes the odd one.
 
 ## Setting up
 
@@ -83,11 +85,11 @@ metropolises go around the table one way (first player to last), founding coloni
 come back the other way, so whoever picked last picks first in the second round:
 
 1. Each player places their **metropolis** — their mother city — on an empty tile,
-   never adjacent to another city, and splits **4 starting pops** across citizens,
-   freemen, and slaves.
-2. In reverse order, each player places their **founding colony** (2 pops) — on
-   **any coastal tile** (the great colonization: your settlers sail), or on a tile
-   beside your metropolis.
+   never adjacent to another city, with **4 starting pops**: exactly **1 citizen**,
+   and 3 more split between freemen and slaves as you choose.
+2. In reverse order, each player places their **founding colony** (2 pops, freemen
+   or slaves) — on **any coastal tile** (the great colonization: your settlers
+   sail), or on a tile beside your metropolis.
 
 Then the game begins. Your metropolis is your only city at the start — your seat of
 building and population; it carries no special bonuses, only its head start. The
@@ -102,8 +104,9 @@ By default the island uses the classic authored layout; start the game with
 
 Play passes around the table. On your turn:
 
-1. **Income is collected automatically.** Every settlement adds its tile resource
-   plus its pops' production, minus their food upkeep.
+1. **Income is collected automatically.** Every settlement adds what its pops make,
+   and your freemen and citizens eat 1 food each. If the food runs short, **hunger**
+   strikes (see Happiness and food).
 2. **Resolve your event card**, if one was drawn for you (see Events below) — you
    must do this before anything else.
 3. **Take actions**, in any order you can afford:
@@ -116,8 +119,8 @@ Play passes around the table. On your turn:
      keeps the colony's pops and buildings, and drives off any enemy colony
      sharing that tile.
    - **Grow a pop** — add one pop to a settlement that still has room: a slave
-     costs 5 food, a freeman 7 food, and a citizen 9 food and 2 gold. Each
-     settlement can grow once per turn.
+     costs 5 food and a freeman 7 food. Citizens cannot be grown. Each settlement
+     can grow once per turn.
    - **Move pops** — shift pops between your own settlements.
    - **Build** — raise a building in a city or capital that has a free slot.
    - **Trade at the bank** — sell materials for gold or buy them with gold, as
@@ -177,8 +180,9 @@ a gamble, and it is _meant_ for whoever is behind and needs the swing.
 Buildings are raised in a city or capital (colonies cannot hold them). Building more
 than one of a kind stacks its bonus, but **every building has a level cap** — you can
 hold only so many copies of it in one settlement (shown as, e.g., "Granary 2/3"). No
-single flat bonus scales forever, so a slot-rich hill must **diversify** rather than
-stack four of the same thing.
+single flat bonus scales forever, so a hill must **diversify** rather than stack four
+of the same thing. Every building takes one of its tile's slots, and so one place
+where a slave could have worked.
 
 The pricing follows a grammar: **wood** raises economic buildings, **stone** raises
 civic ones, and **gold** the rare commercial extras. Food and influence never buy
@@ -187,16 +191,16 @@ buildings.
 - **Marketplace** (12 wood) — +2 gold per freeman, supporting up to 3 freemen.
 - **Temple** (6 stone) — +1 happiness, and +1 influence per citizen, supporting
   up to 2 citizens.
-- **Workshop** (12 wood) — +1 of the tile's resource per slave, supporting up to
-  3 slaves. (Worthless on a yield-less hill — the slaves have nothing to work.)
+- **Workshop** (12 wood) — +1 of the tile's resource per working slave, supporting
+  up to 3. It takes a slot, so it pays only where slaves still have slots to work,
+  and never on a hill.
 - **Granary** (12 wood, 2 stone) — +2 food each turn, and makes growing pops in
   that settlement cost 2 less food. Up to 3 levels.
 - **Forum** (4 stone, 8 wood) — +2 influence each turn, no citizens required.
 - **Aqueduct** (12 stone) — the settlement holds **4 more pops**.
 - **Odeon** (8 stone, 4 wood) — +2 happiness each turn.
 - **Villa** (12 wood, 4 gold) — **+2 of the tile's own resource** each turn, up to 2
-  levels. A direct investment in the land — strong on a landmark tile, useless on a
-  yield-less hill.
+  levels. It takes a slot a slave could have worked, and is useless on a hill.
 - **Gymnasion** (12 stone, 4 wood) — **promotions on the social ladder cost 2 less** in
   this settlement, the building that makes a citizen-heavy hill city affordable.
 - **Port** (20 wood, 5 stone, 10 gold) — claims one adjacent **luxury good** (below).
@@ -230,9 +234,12 @@ Happiness is your civilization's stability. It moves each turn:
   granaries calm the city; hoarding beyond that does not).
 - **Overcrowding** costs you: every pop over a settlement's capacity is -1
   happiness per turn.
-- **Hunger** costs you: if your food would fall below zero, the shortfall is
-  taken straight out of happiness. (Your very first income after setup is
-  forgiven this.)
+
+**Hunger** is separate from happiness, and calm cannot buy it off. If income cannot
+feed your freemen and citizens, **one pop leaves for each unfed mouth** and your food
+stays at zero: no debt carries over. Freemen leave before citizens, each from the
+settlement holding the most of them. Slaves eat nothing and never leave for hunger.
+Food never goes below zero: a sacked granary or a bad card stops at empty.
 
 When happiness turns **negative** it reads as unrest, and unrest has teeth. At the
 start of your turn — before you collect income — **effective happiness (stored plus
@@ -258,16 +265,13 @@ losses are **doubled**, and after the dust settles happiness rebounds to **−4*
 A plain riot never rebounds — it will fire again next turn unless you fix the
 cause (civic calm exists for exactly this).
 
-Lost pops are always chosen at random across your settlements — the mob decides,
-not you. Two other pressures round out the misery:
-
-- **Starvation:** if your food income is −2 or worse for **two turns running**, you
-  lose **1 pop**.
-- Some events sow **lingering unrest** — a penalty like "−2 happiness per turn for
-  3 turns" that bites at the start of each of your next few turns before fading.
+Pops lost to a riot are chosen at random across your settlements — the mob decides,
+not you. Some events also sow **lingering unrest** — a penalty like "−2 happiness per
+turn for 3 turns" that bites at the start of each of your next few turns before
+fading.
 
 Happiness never drifts back up on its own — you climb out of unrest by fixing its
-causes (feed your people, ease overcrowding, build Temples, buy calm). Losing pops
+causes (free or move slaves, ease overcrowding, build Temples, buy calm). Losing pops
 does at least shrink those causes, so a collapse tends to bottom out rather than
 spiral.
 

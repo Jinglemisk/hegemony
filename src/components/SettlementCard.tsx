@@ -5,10 +5,9 @@ import {
   settlementBuildingSlots,
   settlementOverCapacity,
   settlementCapacity,
-  settlementTileYield,
   totalPops,
 } from "../game/rules";
-import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
+import { RESOURCE_LABELS, formatResourceDelta } from "../ui/formatters";
 import { RESOURCE_ORDER, tileCssVars } from "../ui/resourceVisuals";
 import { BUILDING_GLYPHS, POP_GLYPHS, SETTLEMENT_GLYPHS, TERRAIN_GLYPHS } from "../ui/iconRegistry";
 import { TERRAIN_PLACEHOLDERS } from "../ui/icons/placeholders";
@@ -41,7 +40,6 @@ export function SettlementSummaryCard({
   const capacity = settlementCapacity(settlement, ruleset, content);
   const overCapacity = settlementOverCapacity(settlement, ruleset, content);
   const slots = settlementBuildingSlots(tile, settlement, ruleset);
-  const tileYield = settlementTileYield(tile, settlement, ruleset);
 
   return (
     <span className="holdingSummaryRows">
@@ -95,8 +93,8 @@ export function SettlementSummaryCard({
         style={tileCssVars(tile)}
         title={
           tile.resource
-            ? `${capitalize(tile.terrain)} tile yield ${formatSignedNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]}`
-            : `${capitalize(tile.terrain)} — no tile yield`
+            ? `${capitalize(tile.terrain)}: ${tile.slots} slots, slaves make ${RESOURCE_LABELS[tile.resource.type]}`
+            : `${capitalize(tile.terrain)}: ${tile.slots} slots, slaves make nothing`
         }
       >
         <span className="summaryTerrain" aria-hidden="true">

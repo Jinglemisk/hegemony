@@ -244,7 +244,9 @@ describe("feature and content parity manifests", () => {
     const G = builder.build();
     const land = materialTile(G);
     builder
-      .withSettlement("0", land.id, "city", { citizens: 2, freemen: 3, slaves: 3 })
+      // Two slaves on a three-slot tile: a building takes the third slot and both
+      // slaves keep working, so each delta below is the building's own.
+      .withSettlement("0", land.id, "city", { citizens: 2, freemen: 3, slaves: 2 })
       .mutate((state) => {
         state.phase = "gameplay";
         state.currentPlayer = "0";
@@ -265,7 +267,8 @@ describe("feature and content parity manifests", () => {
     const temple = incomeWith("temple");
     expect(temple.influence - base.influence).toBe(2);
     expect(temple.happiness - base.happiness).toBe(1);
-    expect(incomeWith("workshop")[primary] - base[primary]).toBe(3);
+    expect(land.slots).toBe(3);
+    expect(incomeWith("workshop")[primary] - base[primary]).toBe(2);
     expect(incomeWith("granary").food - base.food).toBe(2);
     expect(incomeWith("forum").influence - base.influence).toBe(2);
     expect(incomeWith("odeon").happiness - base.happiness).toBe(2);

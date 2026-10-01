@@ -19,6 +19,7 @@
  *   status         — get*Status action validators
  *   events         — event deck draw + the event-effect interpreter
  *   actions        — the mutating moves
+ *   hunger         — pops leaving when income cannot feed them
  *   season         — season / turn-flag lifecycle
  *   activeEffects  — canonical persistent-effect/status projection
  *   definition     — immutable per-match rules/content identity
@@ -50,6 +51,7 @@ export * from "./activeEffects";
 export * from "./tables";
 export * from "./luxury";
 export * from "./unrest";
+export * from "./hunger";
 export * from "./ventures";
 export * from "./score";
 export * from "./victory";

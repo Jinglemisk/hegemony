@@ -51,6 +51,7 @@ describe("shared tuning resolution", () => {
     expect(resolved.ruleset.civicCalm.goldCost).toBe(4);
     expect(resolved.ruleset.actionCosts.foundColony.wood).toBe(9);
     expect(resolved.ruleset.economy.stockpileFloors).toEqual({
+      food: 0,
       wood: 0,
       stone: 0,
       gold: 0,

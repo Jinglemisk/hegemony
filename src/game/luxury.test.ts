@@ -216,8 +216,7 @@ describe("activity, cap, and suppression", () => {
     expect(luxuryHappinessBonus(G, "0")).toBe(0);
     expect(activeClaims(G, "0")).toHaveLength(0);
 
-    // Keep the upkeep quiet: no riot, no starvation bookkeeping under grace.
-    G.players["0"].hasCollectedGameplayIncome = false;
+    // Keep the upkeep quiet: no riot.
     G.players["0"].resources.happiness = 0;
     applyUnrestUpkeep(G, "0");
 
@@ -229,7 +228,6 @@ describe("activity, cap, and suppression", () => {
 describe("effective happiness", () => {
   it("moves the riot threshold: two active goods hold -7 above the -5 line", () => {
     const G = preloadedGame(SEED);
-    G.players["0"].hasCollectedGameplayIncome = false;
     G.players["0"].resources.happiness = -7;
 
     for (const asset of G.board.luxuries.slice(0, 2)) {

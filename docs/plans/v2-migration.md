@@ -189,6 +189,34 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   beside the ticker, tinted by sign, explained on hover. The season's modifier stays on
   the season card and standing Laws stay in the Agora.
 
+**Defaults picked in Step 3** (2026-10-01):
+
+- Slot table, keyed off the yield each tile used to print. Plains 10→7, 8→6, 6→5,
+  4→4, 2→3 (38 slots); mountain 6→6, 4→4, 3→3, 2→3 (29); forest 4→5, 3→4, 2→3,
+  1→2 (51); hills stay 3, 3, 4, 3, 3; the oracle has none.
+- On a shared tile the colony founded first takes the odd slot.
+- Starting food stays 12.
+- Setup places exactly one citizen, in the capital. The other five starting pops are
+  slaves or freemen as the player chooses.
+- Nobody assigns slaves. Working slaves are the lesser of the slaves and the open
+  slots; the rest are idle and still count toward unrest.
+- Hunger picks for the player: freemen leave before citizens, each from the
+  settlement holding the most of them. It has no first-income grace, and food is
+  floored at zero for table and card losses too.
+- The hunger alarm shows while food income is negative, with the incomes the stock
+  still covers.
+- v1's buildings on the slot pool until Step 4: every building takes a slot, the
+  Workshop's bonus counts working slaves only, the Villa keeps its flat +2, and the
+  +2 slot bonus cities had is gone. Pop capacity stays 10 for a city and 4 for a
+  colony until Step 4.
+- The citizen grow coupon (Citizenship Rolls) left the player deck. New Citizen still
+  adds a citizen until Step 7 replaces the deck.
+- An empty tile prints its slot count beside its resource; a settled tile draws its
+  slots as pips, solid for a building, tinted for a working slave, hollow when open.
+- Bots value a tile by its slots, and their income projection runs the real hunger
+  rule.
+- The state schema is version 3. Saves from `main` are rejected.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.
@@ -249,7 +277,7 @@ next step.
 present Step 4's bot batch (riots per game, share of turns on the riot table) and ask Q77.
 Remind the owner to run `/code-review ultra` on `feat/v2`, which only they can launch.
 
-- [ ] **Step 3 · Pops and tiles.** Tiles print terrain and slots only, under the work-slot
+- [x] **Step 3 · Pops and tiles.** ([#82](https://github.com/Jinglemisk/hegemony/pull/82): a 40-game bot batch finishes with no illegal moves; per seat, 3.4 to 3.9 hunger turns and 5.2 to 6.9 pops lost a game, 22% to 41% of slaves idle, at v1's prices.) Tiles print terrain and slots only, under the work-slot
       ruling in Settled inputs: slots are shared by buildings and working slaves, a slave
       on an open slot yields 1 of the terrain's resource, and a slave without one is idle.
       Re-number the map's slots to roughly 2 to 7 with today's rich tiles highest, and drop

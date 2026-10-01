@@ -12,7 +12,7 @@ import {
   getDiscountedGrowPopCost,
   getGrowPopStatus,
   getPromotePopStatus,
-  POP_TYPES,
+  GROWABLE_POPS,
   demotionTarget,
   promotionTarget,
 } from "../../game/rules";
@@ -185,8 +185,9 @@ export function discGroups(
     };
   };
 
-  // Up the ladder, so the click's own option (a slave) comes first.
-  const grow = [...POP_TYPES].reverse().map((pop) =>
+  // Up the ladder, so the click's own option (a slave) comes first. Citizens are
+  // never grown: they come by promotion, under People.
+  const grow = [...GROWABLE_POPS].reverse().map((pop) =>
     arming(
       {
         id: `grow-${pop}`,

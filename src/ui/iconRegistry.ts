@@ -195,7 +195,7 @@ export const BUILDING_EFFECT_GLYPHS = {
 export const ACTIVE_EFFECT_MECHANIC_GLYPHS = {
   suppressIncome: "suppress",
   /** The grain, struck through. The one effect the player must never misread. */
-  foodDeficitProgress: "starvation",
+  hunger: "starvation",
   timedHappiness: "happiness",
   resourceIncome: "income",
   buildingCostMultiplier: "cross",

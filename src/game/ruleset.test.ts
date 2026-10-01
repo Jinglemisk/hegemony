@@ -8,14 +8,16 @@ import type { HegemonyState } from "./types";
 // Fixed seed so any deck draws during setup are reproducible.
 const SEED = 0xc0ffee;
 
-/** Place a metropolis of 3 citizens + 1 slave on the first wood tile. The slave's
- *  yield lands in wood, so the gold column stays a pure citizen readout. */
+/** A metropolis of 3 citizens + 1 slave on the first wood tile. The slave's yield
+ *  lands in wood, so the gold column stays a pure citizen readout. Setup allows one
+ *  citizen, so the other two are set after placing. */
 function capitalOfThreeCitizens(ruleset?: Ruleset): { G: HegemonyState; tileId: string } {
   const G = createInitialState(SEED, ruleset);
   const tile = G.board.tiles.find((candidate) => candidate.resource?.type === "wood");
   if (!tile) throw new Error("no wood tile on the board");
-  const result = placeCapital(G, "0", tile.id, { citizens: 3, freemen: 0, slaves: 1 });
+  const result = placeCapital(G, "0", tile.id, { citizens: 1, freemen: 2, slaves: 1 });
   expect(result.ok).toBe(true);
+  tile.settlements[0].pops = { citizens: 3, freemen: 0, slaves: 1 };
   return { G, tileId: tile.id };
 }
 
@@ -37,15 +39,15 @@ describe("ruleset seam", () => {
   });
 
   it("drives per-pop income from the ruleset (citizens' gold coefficient)", () => {
-    // Default: 3 citizens * 2 gold each = 6.
-    expect(calculateIncome(capitalOfThreeCitizens().G, "0").gold).toBe(6);
+    // Default: citizens make influence, not gold.
+    expect(calculateIncome(capitalOfThreeCitizens().G, "0").gold).toBe(0);
 
-    // A mode that doubles citizen gold to 4 each => 12.
+    // A mode that pays each citizen 4 gold => 12.
     const goldRush: Ruleset = {
       ...DEFAULT_RULESET,
       popIncome: {
         ...DEFAULT_RULESET.popIncome,
-        citizens: { flat: { influence: 1, gold: 4, food: -2 }, primaryResource: 0 },
+        citizens: { flat: { influence: 1, gold: 4, food: -1 }, primaryResource: 0 },
       },
     };
     expect(calculateIncome(capitalOfThreeCitizens(goldRush).G, "0").gold).toBe(12);

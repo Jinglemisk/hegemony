@@ -216,7 +216,7 @@ export function rollYearOmen(G: HegemonyState) {
   addLog(G, `The omen for Year ${yearOf(G.season)}: ${row.label}.`);
 }
 
-type RemovalSummary = { total: number; byType: Record<PopType, number> };
+export type RemovalSummary = { total: number; byType: Record<PopType, number> };
 
 /**
  * Remove `count` pops chosen uniformly at random from across the player's

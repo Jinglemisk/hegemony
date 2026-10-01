@@ -10,14 +10,16 @@ import type {
   Resources,
   Settlement,
 } from "../types";
-import { formatPopName, formatRuleNumber } from "../core/format";
+import { formatPopName } from "../core/format";
 import { getTile } from "../core/query";
 import { applyResourceDelta } from "../core/resources";
 import {
+  countPlayerPopType,
   scaledByPops,
+  settlementIdleSlaves,
   settlementIncomeSource,
   settlementOverCapacity,
-  settlementTileYield,
+  settlementWorkingSlaves,
 } from "../settlement";
 import type { Ruleset } from "../ruleset";
 import { getLawIncomeContributions } from "../assembly/laws";
@@ -40,14 +42,15 @@ export type IncomeContribution = {
   settlementId?: string;
 };
 
-export type FoodShortageStatus = {
+/** What the next income does to the granary. Free pops eat; when the food runs short,
+ *  one pop leaves per unfed mouth and the stockpile stays at zero. */
+export type HungerStatus = {
   stockpile: number;
   income: number;
+  /** Food after the next income, never below zero. */
   projectedStockpile: number;
-  rawPressure: number;
-  appliedPressure: number;
-  gracePreventedPressure: number;
-  firstTurnGraceActive: boolean;
+  /** Mouths the next income cannot feed. One pop leaves for each. */
+  unfed: number;
 };
 
 /**
@@ -55,6 +58,9 @@ export type FoodShortageStatus = {
  * and over-capacity pressure. This is the ONE definition of the per-pop yield
  * formula, driven by {@link Ruleset.popIncome} and shared by {@link settlementNetYield}
  * and the UI's pop / grow-pop projections so the engine and UI can never drift.
+ *
+ * `working` is how many of the `count` hold a work slot: only they make the tile's
+ * resource. It matters for slaves, whose idle ones still count toward unrest.
  */
 /**
  * `ruleset` is REQUIRED. It used to default to DEFAULT_RULESET, which silently
@@ -67,6 +73,7 @@ export function popIncome(
   count: number,
   primaryResource: Resource | null,
   ruleset: Ruleset,
+  working: number = count,
 ): Resources {
   const income: Resources = { ...EMPTY_RESOURCES };
   const rule = ruleset.popIncome[pop];
@@ -74,20 +81,20 @@ export function popIncome(
   for (const [resource, perPop] of Object.entries(rule.flat) as Array<[Resource, number]>) {
     income[resource] += perPop * count;
   }
-  // Yield-less tiles (hills, oracle) have no primary resource — slaves are inert there
-  // (terrain-economy.md); citizens/freemen still produce (their primaryResource is 0).
+  // Hills have no resource, so slaves make nothing there; freemen and citizens
+  // produce wherever they live.
   if (primaryResource) {
-    income[primaryResource] += rule.primaryResource * count;
+    income[primaryResource] += rule.primaryResource * working;
   }
 
   return income;
 }
 
 /**
- * Net resource income produced by a single settlement: tile yield + pop yields +
- * building effects. Mirrors the per-settlement portion of {@link calculateIncomeBreakdown}
- * without the player-level seasonal / food-shortage adjustments. Used to render the
- * settlement summary card.
+ * Net resource income produced by a single settlement: pop yields + building
+ * effects. Mirrors the per-settlement portion of {@link calculateIncomeBreakdown}
+ * without the player-level seasonal adjustments. Used to render the settlement
+ * summary card.
  */
 /** `ruleset` is REQUIRED for the same reason as {@link popIncome}: a default here
  *  lets a caller silently read the wrong ruleset. */
@@ -99,13 +106,14 @@ export function settlementNetYield(
 ): Resources {
   const income: Resources = { ...EMPTY_RESOURCES };
   const primary = tile.resource?.type ?? null;
+  const workingSlaves = settlementWorkingSlaves(tile, settlement);
 
-  if (primary) {
-    income[primary] += settlementTileYield(tile, settlement, ruleset);
-  }
   applyResourceDelta(income, popIncome("citizens", settlement.pops.citizens, primary, ruleset));
   applyResourceDelta(income, popIncome("freemen", settlement.pops.freemen, primary, ruleset));
-  applyResourceDelta(income, popIncome("slaves", settlement.pops.slaves, primary, ruleset));
+  applyResourceDelta(
+    income,
+    popIncome("slaves", settlement.pops.slaves, primary, ruleset, workingSlaves),
+  );
   income.happiness -=
     settlementOverCapacity(settlement, ruleset, content) *
     ruleset.economy.overCapacityHappinessPerPop;
@@ -116,6 +124,7 @@ export function settlementNetYield(
     settlement,
     settlementIncomeSource(tile, settlement),
     primary,
+    workingSlaves,
     content,
   );
 
@@ -143,24 +152,10 @@ export function calculateIncomeBreakdown(
       continue;
     }
 
-    const share =
-      settlement.kind === "colony" && tile.settlements.length > 1
-        ? ruleset.economy.colonySharedTileYieldShare
-        : 1;
     const settlementLabel = settlementIncomeSource(tile, settlement);
     const primary = tile.resource?.type ?? null;
-
-    // Yield-less tiles (hills, oracle) contribute no tile yield and no slave production —
-    // slaves are inert there; citizens/freemen produce regardless (terrain-economy.md).
-    if (primary) {
-      addIncomeContribution(contributions, income, {
-        resource: primary,
-        amount: settlementTileYield(tile, settlement, ruleset),
-        source: settlementLabel,
-        settlementId: settlement.id,
-        detail: `Tile yield${share < 1 ? " shared colony" : ""}`,
-      });
-    }
+    const workingSlaves = settlementWorkingSlaves(tile, settlement);
+    const idleSlaves = settlementIdleSlaves(tile, settlement);
 
     addIncomeContribution(contributions, income, {
       resource: "influence",
@@ -197,13 +192,16 @@ export function calculateIncomeBreakdown(
       settlementId: settlement.id,
       detail: `${settlement.pops.freemen} freeman pops upkeep`,
     });
+    // A slave makes the tile's resource only from an open slot; the rest are idle.
     if (primary) {
       addIncomeContribution(contributions, income, {
         resource: primary,
-        amount: settlement.pops.slaves * ruleset.popIncome.slaves.primaryResource,
+        amount: workingSlaves * ruleset.popIncome.slaves.primaryResource,
         source: settlementLabel,
         settlementId: settlement.id,
-        detail: `${settlement.pops.slaves} slave pops production`,
+        detail:
+          `${workingSlaves} working ${formatPopName("slaves", workingSlaves)}` +
+          (idleSlaves > 0 ? `, ${idleSlaves} idle` : ""),
       });
     }
     addIncomeContribution(contributions, income, {
@@ -236,6 +234,7 @@ export function calculateIncomeBreakdown(
       settlement,
       settlementLabel,
       primary,
+      workingSlaves,
       G.definition.content,
     );
   }
@@ -246,17 +245,6 @@ export function calculateIncomeBreakdown(
   // Law is a patch over the ruleset, and the surplus-conversion effect (a tariff on
   // the harvest) can only be assessed once the harvest is known.
   applyStandingLawIncomeEffects(G, playerID, contributions, income);
-
-  const foodShortage = getFoodShortageStatus(G, playerID, income.food);
-
-  if (foodShortage.appliedPressure < 0) {
-    addIncomeContribution(contributions, income, {
-      resource: "happiness",
-      amount: foodShortage.appliedPressure,
-      source: "Food shortage",
-      detail: `Projected food stockpile ${formatRuleNumber(foodShortage.projectedStockpile)}`,
-    });
-  }
 
   const divisor = ruleset.economy.foodStockpileHappinessDivisor;
   const cap = ruleset.economy.foodStockpileHappinessCap;
@@ -279,26 +267,23 @@ export function calculateIncomeBreakdown(
   return contributions;
 }
 
-export function getFoodShortageStatus(
+export function getHungerStatus(
   G: HegemonyState,
   playerID: PlayerId,
   foodIncome: number,
-): FoodShortageStatus {
+): HungerStatus {
   const stockpile = G.players[playerID].resources.food;
-  const projectedStockpile = stockpile + foodIncome;
-  const rawPressure = projectedStockpile < 0 ? projectedStockpile : 0;
-  const firstTurnGraceActive =
-    G.ruleset.economy.firstIncomeFoodGrace && !G.players[playerID].hasCollectedGameplayIncome;
-  const appliedPressure = firstTurnGraceActive ? 0 : rawPressure;
+  const after = stockpile + foodIncome;
+  // Only free pops eat, so only they can go unfed; a shortfall deeper than their
+  // number (an omen or a Law taking food) still stops at zero food.
+  const mouths =
+    countPlayerPopType(G, playerID, "freemen") + countPlayerPopType(G, playerID, "citizens");
 
   return {
     stockpile,
     income: foodIncome,
-    projectedStockpile,
-    rawPressure,
-    appliedPressure,
-    gracePreventedPressure: firstTurnGraceActive ? rawPressure : 0,
-    firstTurnGraceActive,
+    projectedStockpile: Math.max(0, after),
+    unfed: Math.min(mouths, Math.max(0, -after)),
   };
 }
 
@@ -401,6 +386,7 @@ function applyIncomeBuildingEffects(
   settlement: Settlement,
   settlementLabel: string,
   primaryResource: Resource | null,
+  workingSlaves: number,
   content: GameContent,
 ) {
   const popBonusSupport = {
@@ -478,10 +464,10 @@ function applyIncomeBuildingEffects(
     detail: `Temple supports ${supportedCitizens} ${formatPopName("citizens", supportedCitizens)}`,
   });
 
-  // The Workshop's slave bonus pays into the tile's material — a no-op on a yield-less
-  // tile (nothing for the slaves to work), so it only lands where there's a resource.
+  // The Workshop's bonus goes to slaves at work, so it pays nothing on a hill and
+  // nothing for idle slaves.
   if (primaryResource) {
-    const supportedSlaves = Math.min(settlement.pops.slaves, popBonusSupport.slaves.supportedPops);
+    const supportedSlaves = Math.min(workingSlaves, popBonusSupport.slaves.supportedPops);
     addIncomeContribution(contributions, income, {
       resource: primaryResource,
       amount: supportedSlaves * popBonusSupport.slaves.amount,

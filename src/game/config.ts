@@ -46,7 +46,8 @@ export type OpeningSetupPlacement = {
  * A legal scripted metropolis+founding-colony opening for the CLASSIC board (dev
  * preload + tests + sim "fixed" opening). Metropolis tiles are pairwise non-adjacent
  * (city rule); founding colonies sit on the coastal rim, so they are legal regardless
- * of distance (the founding voyage, roadmap-appendix Q12).
+ * of distance (the founding voyage, roadmap-appendix Q12). Each capital holds the one
+ * setup citizen; the colonies hold none.
  */
 export const TEST_OPENING_SETUP: OpeningSetupPlacement[] = [
   {
@@ -61,12 +62,12 @@ export const TEST_OPENING_SETUP: OpeningSetupPlacement[] = [
   },
   {
     playerID: "2",
-    capital: { tileId: "2,0", pops: { citizens: 0, freemen: 2, slaves: 2 } },
-    colony: { tileId: "-3,0", pops: { citizens: 1, freemen: 1, slaves: 0 } },
+    capital: { tileId: "2,0", pops: { citizens: 1, freemen: 1, slaves: 2 } },
+    colony: { tileId: "-3,0", pops: { citizens: 0, freemen: 1, slaves: 1 } },
   },
   {
     playerID: "3",
-    capital: { tileId: "0,2", pops: { citizens: 2, freemen: 1, slaves: 1 } },
+    capital: { tileId: "0,2", pops: { citizens: 1, freemen: 2, slaves: 1 } },
     colony: { tileId: "0,-3", pops: { citizens: 0, freemen: 2, slaves: 0 } },
   },
 ];

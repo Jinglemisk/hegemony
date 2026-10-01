@@ -1,4 +1,5 @@
-import { calculateIncome } from "../game/economy/income";
+import { calculateIncome, getHungerStatus } from "../game/economy/income";
+import { applyHunger } from "../game/hunger";
 import { getActiveEffects } from "../game/activeEffects";
 import { applyResourceDeltaWithFloors } from "../game/core/resources";
 import {
@@ -275,7 +276,6 @@ export function projectPolicyHorizon(
     (total, mechanic) => total + (mechanic.type === "suppressIncome" ? mechanic.turns : 0),
     0,
   );
-  let deficit = mechanics.find((mechanic) => mechanic.type === "foodDeficitProgress");
 
   for (let step = 0; step < horizon; step += 1) {
     for (const mechanic of mechanics) {
@@ -305,42 +305,25 @@ export function projectPolicyHorizon(
       unrest.mildRiotEvents += 1;
     }
 
-    const graceActive =
-      projectedState.ruleset.economy.firstIncomeFoodGrace && !player.hasCollectedGameplayIncome;
-
-    if (!graceActive) {
-      if (deficit) {
-        player.consecutiveFoodDeficitTurns += 1;
-
-        if (player.consecutiveFoodDeficitTurns >= deficit.threshold) {
-          const removed = removeExpectedStarvationPops(projectedState, playerID, deficit.popLoss);
-          expectedStarvationPopLoss += removed;
-          player.consecutiveFoodDeficitTurns = 0;
-
-          if (removed > 0) {
-            income = calculateIncome(projectedState, playerID);
-            deficit = getActiveEffects(projectedState, playerID, { income })
-              .flatMap((descriptor) => descriptor.mechanics)
-              .find((mechanic) => mechanic.type === "foodDeficitProgress");
-          }
-        }
-      } else {
-        player.consecutiveFoodDeficitTurns = 0;
-      }
-    }
-
     if (suppressedCollections > 0) {
       suppressedCollections -= 1;
       player.incomeSuppressedTurns = Math.max(0, player.incomeSuppressedTurns - 1);
     } else {
+      // Hunger is the engine's own rule and draws no dice, so the projection runs it
+      // for real: unfed pops leave, and later incomes are recomputed without them.
+      const unfed = getHungerStatus(projectedState, playerID, income.food).unfed;
       applyResourceDeltaWithFloors(
         player.resources,
         income,
         projectedState.ruleset.economy.stockpileFloors,
       );
-    }
+      player.resources.food = Math.max(0, player.resources.food);
 
-    player.hasCollectedGameplayIncome = true;
+      if (unfed > 0) {
+        expectedStarvationPopLoss += applyHunger(projectedState, playerID, unfed).total;
+        income = calculateIncome(projectedState, playerID);
+      }
+    }
   }
 
   return {
@@ -387,36 +370,6 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
       },
     },
   };
-}
-
-/**
- * Mean-state counterpart to the engine's uniform random pop bag. Scaling each
- * holding/type by its survival probability avoids peeking at future RNG while
- * letting canonical income recalculate after every projected starvation event.
- */
-function removeExpectedStarvationPops(G: HegemonyState, playerID: PlayerId, count: number): number {
-  const settlements = G.players[playerID].settlements
-    .map((tileId) =>
-      getTile(G, tileId)?.settlements.find((settlement) => settlement.owner === playerID),
-    )
-    .filter((settlement) => settlement !== undefined);
-  const total = settlements.reduce(
-    (sum, settlement) =>
-      sum + settlement.pops.citizens + settlement.pops.freemen + settlement.pops.slaves,
-    0,
-  );
-
-  if (total <= 0 || count <= 0) return 0;
-
-  const removed = Math.min(count, total);
-  const survivalRate = (total - removed) / total;
-  for (const settlement of settlements) {
-    for (const pop of ["citizens", "freemen", "slaves"] as const) {
-      settlement.pops[pop] *= survivalRate;
-    }
-  }
-
-  return removed;
 }
 
 /**
@@ -773,7 +726,8 @@ export function placementFrontier(
   const reachable: { amount: number; contested: boolean }[] = [];
 
   for (const tile of G.board.tiles) {
-    const amount = tile.resource?.amount ?? 0;
+    // A tile is worth the slaves it can put to work: its slots, where it has a resource.
+    const amount = tile.resource ? tile.slots : 0;
     if (amount === 0 || !canPlaceColonyOnTile(G, playerID, tile).can) {
       continue;
     }
@@ -1329,7 +1283,8 @@ function frontierValue(G: HegemonyState, playerID: PlayerId): number {
 
   for (const tile of G.board.tiles) {
     if (canPlaceColonyOnTile(G, playerID, tile).can) {
-      value += (tile.resource?.amount ?? 0) + (luxuryTiles.has(tile.id) ? LUXURY_FRONTIER_PULL : 0);
+      value +=
+        (tile.resource ? tile.slots : 0) + (luxuryTiles.has(tile.id) ? LUXURY_FRONTIER_PULL : 0);
     }
   }
 

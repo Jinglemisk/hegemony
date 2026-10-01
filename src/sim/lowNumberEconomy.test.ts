@@ -14,25 +14,8 @@ import {
 
 const LOW_NUMBER_CONTENT = createLowNumberContent(getAuthoredGameContent());
 const LOW_NUMBER_BUILDINGS = LOW_NUMBER_CONTENT.buildings;
-const LOW_NUMBER_TERRAIN_DECK = LOW_NUMBER_CONTENT.terrain;
 
 describe("low-number economy study invariants", () => {
-  it("keeps every printed tile yield in the 1–3 band", () => {
-    const amounts = LOW_NUMBER_TERRAIN_DECK.flatMap((tile) =>
-      tile.resource ? [tile.resource.amount] : [],
-    );
-    expect(Math.min(...amounts)).toBe(1);
-    expect(Math.max(...amounts)).toBe(3);
-  });
-
-  it("provides 16 total food without increasing the three-food ceiling", () => {
-    const food = LOW_NUMBER_TERRAIN_DECK.filter((tile) => tile.resource?.type === "food");
-    expect(food.reduce((total, tile) => total + (tile.resource?.amount ?? 0), 0)).toBe(16);
-    expect(food.map((tile) => tile.resource?.amount).sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual([
-      1, 2, 2, 2, 2, 2, 2, 3,
-    ]);
-  });
-
   it("keeps every individual action and building cost below 10", () => {
     const amounts = [
       ...Object.values(LOW_NUMBER_RULESET_PATCH.actionCosts).flatMap((cost) => Object.values(cost)),
@@ -55,18 +38,8 @@ describe("low-number economy study invariants", () => {
     expect(setupPops).toBeLessThan(LOW_NUMBER_RULESET_PATCH.victory.minimums.citizens);
   });
 
-  it("locks the terrain totals, deck counts, and building copy limits", () => {
-    const totals = LOW_NUMBER_TERRAIN_DECK.reduce(
-      (sum, tile) => {
-        if (tile.resource && tile.resource.type in sum) {
-          sum[tile.resource.type as keyof typeof sum] += tile.resource.amount;
-        }
-        return sum;
-      },
-      { wood: 0, stone: 0, food: 0 },
-    );
-    expect(LOW_NUMBER_TERRAIN_DECK).toHaveLength(37);
-    expect(totals).toEqual({ wood: 20, stone: 12, food: 16 });
+  it("leaves the terrain deck alone and locks deck counts and building copy limits", () => {
+    expect(LOW_NUMBER_CONTENT.terrain).toEqual(getAuthoredGameContent().terrain);
     expect(
       Object.fromEntries(LOW_NUMBER_BUILDINGS.map((building) => [building.id, building.maxLevel])),
     ).toEqual({
@@ -86,7 +59,7 @@ describe("low-number economy study invariants", () => {
     const harmful = LOW_NUMBER_CONTENT.playerEvents
       .filter((card) => presentEventEffects(card.effects).tone === "negative")
       .reduce((sum, card) => sum + card.count, 0);
-    expect(copies).toBe(83);
+    expect(copies).toBe(77);
     expect(harmful).toBe(21);
   });
 

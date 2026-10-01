@@ -2,13 +2,13 @@ import type {
   BuildingDefinition,
   EventCard,
   EventTableDefinition,
+  GrowablePop,
   LuxuryGoodDefinition,
   PlayerId,
-  PopType,
   Resources,
   SettlementKind,
   Terrain,
-  Yield,
+  TileResource,
 } from "./types";
 
 export const PLAYER_IDS: PlayerId[] = ["0", "1", "2", "3"];
@@ -50,16 +50,13 @@ export const ACTION_COSTS = {
   },
 } satisfies Record<string, Partial<Resources>>;
 
-export const GROW_POP_COSTS: Record<PopType, Partial<Resources>> = {
+/** Citizens are never grown: every citizen after setup is a promoted freeman. */
+export const GROW_POP_COSTS: Record<GrowablePop, Partial<Resources>> = {
   slaves: {
     food: 5,
   },
   freemen: {
     food: 7,
-  },
-  citizens: {
-    food: 9,
-    gold: 2,
   },
 };
 
@@ -67,23 +64,19 @@ export const SETTLEMENT_RULES: Record<
   SettlementKind,
   {
     popCapacity: number;
-    buildingSlotBonus: number;
     canBuildBuildings: boolean;
   }
 > = {
   capital: {
     popCapacity: 10,
-    buildingSlotBonus: 2,
     canBuildBuildings: true,
   },
   city: {
     popCapacity: 10,
-    buildingSlotBonus: 2,
     canBuildBuildings: true,
   },
   colony: {
     popCapacity: 4,
-    buildingSlotBonus: 0,
     canBuildBuildings: false,
   },
 };
@@ -388,70 +381,62 @@ export const LUXURY_GOODS: LuxuryGoodDefinition[] = [
   { id: "fine-linen", name: "Fine Linen", flavour: "riverine weaving" },
 ];
 
-// ── Terrain deck (Phase 2 "The land repriced", terrain-economy.md — LOCKED spec) ────
+// ── Terrain deck (v2 work slots, ruled 2026-10-01) ──────────────────────────────────
 //
-// 37 tiles / 65 slots / 0 tile-gold. Laid onto axialRadius(3) in this authoring order
-// (index → coord in `createInitialMap`). Aggregates, verified: forest 15 (18 slots,
-// 36 wood) < mountain 8 (11, 26 stone) < plains 8 (20, 44 food) < hill 5 (16, no yield)
-// — the slot-king ordering the rework is built around. Gold is now second-order only
-// (pops, events, trade), never the land.
+// 37 tiles laid onto axialRadius(3) in this authoring order (index → coord in
+// `createInitialMap`). A tile prints its terrain and a slot count, nothing else. The
+// slots are one pool shared by buildings and working slaves: each open slot holds one
+// slave making 1 of the terrain's resource, each building takes a slot.
 //
-// ANTI-PROPORTIONAL within each terrain (owner call 2026-07-18): yield and building
-// slots trade off — a rich tile is CRAMPED (extract it, can't build a metropolis on it),
-// a poor tile is ROOMY (cheap land to develop). So the breadbasket (food 10) has only 2
-// slots and the quarry (stone 6) only 1, while a food-2 or wood-1 tile gets 3/2. Every
-// tile now has a niche; none is strong-on-both ("2x-valued") or weak-on-both ("double-
-// doomed"). Verified: yield↔slot correlation is negative per terrain (forest −0.46,
-// mountain −0.75, plains −0.83). Per-terrain totals are unchanged (still the locked spec).
-//
-// Yield-less hills (`resource: null`) are the anti-proportional extreme: 0 yield, most
-// slots. The single `oracle` (0 slots, unsettleable) sits just off-centre at (0,1) — a
-// permanent hole contiguity chains must route around; the 4-slot hill takes the exact
-// centre (0,0). Landmarks (breadbasket, quarry, two old-growth forests) are neutral and
-// pairwise non-adjacent. This authored layout is the "classic" board — the live game now
-// shuffles by default (GAME_CONFIG), and the constrained shuffle is deferred.
+// Slot counts run 2 to 7 and follow the yields the old deck printed, so the old rich
+// tiles are the big ones: plains 10→7, 8→6, 6→5, 4→4, 2→3 (38 slots); mountain
+// 6→6, 4→4, 3→3, 2→3 (29); forest 4→5, 3→4, 2→3, 1→2 (51). Hills keep 3, 3, 4, 3, 3:
+// their slots hold buildings and their slaves make nothing (`resource: null`). The
+// oracle has no slots and cannot be settled. Landmarks (breadbasket, quarry, two
+// old-growth forests) are pairwise non-adjacent on this authored "classic" board; the
+// live game shuffles by default (GAME_CONFIG).
 export const TERRAIN_DECK: Array<{
   terrain: Terrain;
-  buildingSlots: number;
-  resource: Yield | null;
+  slots: number;
+  resource: TileResource | null;
 }> = [
-  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 2 } }, // (-3,0)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (-3,1)
-  { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 2 } }, // (-3,2)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (-3,3)
-  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 2 } }, // (-2,-1)
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 4 } }, // (-2,0)
-  { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 8 } }, // (-2,1)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 4 } }, // (-2,2) old-growth
-  { terrain: "hill", buildingSlots: 3, resource: null }, // (-2,3)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (-1,-2)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } }, // (-1,-1)
-  { terrain: "hill", buildingSlots: 3, resource: null }, // (-1,0)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } }, // (-1,1)
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 3 } }, // (-1,2)
-  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 1 } }, // (-1,3)
-  { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 4 } }, // (0,-3)
-  { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 6 } }, // (0,-2)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 4 } }, // (0,-1) old-growth
-  { terrain: "hill", buildingSlots: 4, resource: null }, // (0,0) — the 4-slot hill, contested centre
-  { terrain: "oracle", buildingSlots: 0, resource: null }, // (0,1) — the oracle, unsettleable
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 4 } }, // (0,2)
-  { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 4 } }, // (0,3)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (1,-3)
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 3 } }, // (1,-2)
-  { terrain: "hill", buildingSlots: 3, resource: null }, // (1,-1)
-  { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 10 } }, // (1,0) breadbasket — cramped
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (1,1)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (1,2)
-  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 2 } }, // (2,-3)
-  { terrain: "mountain", buildingSlots: 1, resource: { type: "stone", amount: 6 } }, // (2,-2) quarry — cramped
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 3 } }, // (2,-1)
-  { terrain: "plains", buildingSlots: 2, resource: { type: "food", amount: 6 } }, // (2,0)
-  { terrain: "hill", buildingSlots: 3, resource: null }, // (2,1)
-  { terrain: "forest", buildingSlots: 2, resource: { type: "wood", amount: 2 } }, // (3,-3)
-  { terrain: "mountain", buildingSlots: 2, resource: { type: "stone", amount: 2 } }, // (3,-2)
-  { terrain: "forest", buildingSlots: 1, resource: { type: "wood", amount: 2 } }, // (3,-1)
-  { terrain: "plains", buildingSlots: 3, resource: { type: "food", amount: 4 } }, // (3,0)
+  { terrain: "forest", slots: 3, resource: { type: "wood" } }, // (-3,0)
+  { terrain: "forest", slots: 3, resource: { type: "wood" } }, // (-3,1)
+  { terrain: "plains", slots: 3, resource: { type: "food" } }, // (-3,2)
+  { terrain: "forest", slots: 3, resource: { type: "wood" } }, // (-3,3)
+  { terrain: "mountain", slots: 3, resource: { type: "stone" } }, // (-2,-1)
+  { terrain: "mountain", slots: 4, resource: { type: "stone" } }, // (-2,0)
+  { terrain: "plains", slots: 6, resource: { type: "food" } }, // (-2,1)
+  { terrain: "forest", slots: 5, resource: { type: "wood" } }, // (-2,2) old-growth
+  { terrain: "hill", slots: 3, resource: null }, // (-2,3)
+  { terrain: "forest", slots: 3, resource: { type: "wood" } }, // (-1,-2)
+  { terrain: "forest", slots: 4, resource: { type: "wood" } }, // (-1,-1)
+  { terrain: "hill", slots: 3, resource: null }, // (-1,0)
+  { terrain: "forest", slots: 4, resource: { type: "wood" } }, // (-1,1)
+  { terrain: "mountain", slots: 3, resource: { type: "stone" } }, // (-1,2)
+  { terrain: "forest", slots: 2, resource: { type: "wood" } }, // (-1,3)
+  { terrain: "plains", slots: 4, resource: { type: "food" } }, // (0,-3)
+  { terrain: "plains", slots: 5, resource: { type: "food" } }, // (0,-2)
+  { terrain: "forest", slots: 5, resource: { type: "wood" } }, // (0,-1) old-growth
+  { terrain: "hill", slots: 4, resource: null }, // (0,0) — the 4-slot hill, contested centre
+  { terrain: "oracle", slots: 0, resource: null }, // (0,1) — the oracle, unsettleable
+  { terrain: "mountain", slots: 4, resource: { type: "stone" } }, // (0,2)
+  { terrain: "plains", slots: 4, resource: { type: "food" } }, // (0,3)
+  { terrain: "forest", slots: 3, resource: { type: "wood" } }, // (1,-3)
+  { terrain: "mountain", slots: 3, resource: { type: "stone" } }, // (1,-2)
+  { terrain: "hill", slots: 3, resource: null }, // (1,-1)
+  { terrain: "plains", slots: 7, resource: { type: "food" } }, // (1,0) breadbasket
+  { terrain: "forest", slots: 3, resource: { type: "wood" } }, // (1,1)
+  { terrain: "forest", slots: 3, resource: { type: "wood" } }, // (1,2)
+  { terrain: "mountain", slots: 3, resource: { type: "stone" } }, // (2,-3)
+  { terrain: "mountain", slots: 6, resource: { type: "stone" } }, // (2,-2) quarry
+  { terrain: "forest", slots: 4, resource: { type: "wood" } }, // (2,-1)
+  { terrain: "plains", slots: 5, resource: { type: "food" } }, // (2,0)
+  { terrain: "hill", slots: 3, resource: null }, // (2,1)
+  { terrain: "forest", slots: 3, resource: { type: "wood" } }, // (3,-3)
+  { terrain: "mountain", slots: 3, resource: { type: "stone" } }, // (3,-2)
+  { terrain: "forest", slots: 3, resource: { type: "wood" } }, // (3,-1)
+  { terrain: "plains", slots: 4, resource: { type: "food" } }, // (3,0)
 ];
 
 export const SEASONAL_EVENT_CARDS: EventCard[] = [
@@ -733,35 +718,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     flavor: "A column comes up from the harbour, roped at the wrist.",
     timing: "pendingChoice",
     effects: [{ type: "addPops", pop: "slaves", amount: 2, target: "ownedSettlementWithCapacity" }],
-  },
-  {
-    id: "player-citizenship-rolls",
-    deck: "player",
-    name: "Citizenship Rolls",
-    count: 4,
-    text: "The next citizen grown this turn costs -5 Food and -1 Gold.",
-    flavor: "The archon opens the rolls.",
-    timing: "immediate",
-    effects: [
-      {
-        type: "actionCostDiscount",
-        action: "growPop",
-        pop: "citizens",
-        resource: "food",
-        amount: 5,
-        duration: "turn",
-        consume: "nextMatchingAction",
-      },
-      {
-        type: "actionCostDiscount",
-        action: "growPop",
-        pop: "citizens",
-        resource: "gold",
-        amount: 1,
-        duration: "turn",
-        consume: "nextMatchingAction",
-      },
-    ],
   },
   {
     id: "player-willing-hands",

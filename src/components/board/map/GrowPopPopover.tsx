@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { POP_TYPES, getGrowPopStatus, previewGrowPopIncomeDelta } from "../../../game/rules";
+import { GROWABLE_POPS, getGrowPopStatus, previewGrowPopIncomeDelta } from "../../../game/rules";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { MechanicsDetails } from "../../MechanicsDetails";
@@ -23,7 +23,7 @@ import { TilePopover } from "./TilePopover";
 export function GrowPopPopover({
   tileId,
   anchor,
-  initialPop = "citizens",
+  initialPop = "slaves",
   onCancel,
   onConfirm,
 }: {
@@ -67,7 +67,7 @@ export function GrowPopPopover({
         role="group"
         aria-label="Pop type to grow"
       >
-        {POP_TYPES.map((candidate) => {
+        {GROWABLE_POPS.map((candidate) => {
           const candidateStatus = getGrowPopStatus(G, playerID, tileId, candidate);
           const reason = actionRequirementText(candidateStatus, phase, isActive);
           const blocked = gameplayActionDisabled(candidateStatus, phase, isActive);

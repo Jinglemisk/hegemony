@@ -113,29 +113,22 @@ function popIncomeText(G: HegemonyState, pop: PopType): string {
     }
   }
   if (rule.primaryResource) {
-    parts.push(`+${rule.primaryResource} of the tile's own material per pop`);
+    parts.push(`+${rule.primaryResource} of the tile's resource for each one on an open slot`);
   }
   return parts.join(" · ") || "no income";
 }
 
-/** Aggregate the terrain deck into per-kind ranges — count, yield, slot spread. */
+/** Aggregate the terrain deck into per-kind ranges — count and slot spread. */
 function terrainSummary(G: HegemonyState) {
-  const byKind = new Map<
-    Terrain,
-    { count: number; resource: Resource | null; yields: number[]; slots: number[] }
-  >();
+  const byKind = new Map<Terrain, { count: number; resource: Resource | null; slots: number[] }>();
   for (const tile of getTerrainDeck(G.definition.content)) {
     const existing = byKind.get(tile.terrain) ?? {
       count: 0,
       resource: tile.resource ? tile.resource.type : null,
-      yields: [] as number[],
       slots: [] as number[],
     };
     existing.count += 1;
-    existing.slots.push(tile.buildingSlots);
-    if (tile.resource) {
-      existing.yields.push(tile.resource.amount);
-    }
+    existing.slots.push(tile.slots);
     byKind.set(tile.terrain, existing);
   }
   const range = (values: number[]) => {
@@ -153,7 +146,6 @@ function terrainSummary(G: HegemonyState) {
         kind,
         count: data.count,
         resource: data.resource,
-        yield: range(data.yields),
         slots: range(data.slots),
       };
     });
@@ -241,9 +233,11 @@ const board: RuleChapter = {
     <div className="compendiumStack">
       <Entry id={anchor("board", "terrain")} title="Terrain">
         <Note>
-          The island is a field of hexes ringed by sea. Each land tile has a single <em>yield</em> —
-          the material a settlement there draws each turn — and a number of <em>building slots</em>.
-          Rich tiles are cramped, poor tiles roomy: yield and slots trade off within every terrain.
+          The island is a field of hexes ringed by sea. A land tile prints its terrain and a number
+          of <em>slots</em>, nothing else. The slots are one pool: each building takes one, and each
+          open slot holds one working slave, who makes 1 of the terrain's resource. Slaves beyond
+          the open slots sit idle. Two colonies on one tile split its slots, and the colony founded
+          first takes the odd one.
         </Note>
         <ul className="compendiumCostList">
           {terrainSummary(G).map((row) => (
@@ -259,10 +253,12 @@ const board: RuleChapter = {
                 {capitalize(row.kind)} <em className="ruleDim">×{row.count}</em>
               </span>
               <span className="compendiumCostValue">
-                {row.resource ? `yield ${row.yield} ${RESOURCE_LABELS[row.resource]}` : "no yield"}
+                {row.resource
+                  ? `slaves make ${RESOURCE_LABELS[row.resource]}`
+                  : "slaves make nothing"}
               </span>
               <span className="compendiumCostNote">
-                {row.slots === "0" ? "unsettleable" : `${row.slots} building slot(s)`}
+                {row.slots === "0" ? "unsettleable" : `${row.slots} slots`}
               </span>
             </li>
           ))}
@@ -270,9 +266,8 @@ const board: RuleChapter = {
       </Entry>
       <Entry id={anchor("board", "special")} title="Hills & the oracle">
         <Note>
-          <strong>Hills</strong> yield nothing but are slot-rich — a place to build, not to earn. A
-          slave on a yield-less tile earns nothing, so hills reward citizens and freemen over
-          slaves.
+          <strong>Hills</strong> have no resource: their slots hold buildings and their slaves make
+          nothing, so a hill city is freemen, citizens and buildings fed from elsewhere.
         </Note>
         <Note>
           The single <strong>oracle</strong> tile is sacred ground: it can never be settled, by
@@ -370,8 +365,9 @@ const population: RuleChapter = {
           ))}
         </DefList>
         <Note>
-          Citizens make influence and gold, freemen make gold, slaves mine the tile's own material —
-          but only on a tile that yields one. Every pop eats food.
+          One pop, one output. A slave on an open slot makes the tile's resource and eats nothing; a
+          freeman makes gold and a citizen influence, and each eats 1 food. Citizens are never
+          grown: every citizen after setup is a promoted freeman.
         </Note>
       </Entry>
       <Entry id={anchor("population", "capacity")} title="Capacity">
@@ -416,18 +412,16 @@ const settlements: RuleChapter = {
                 <span className="compendiumCostLabel">{capitalize(kind)}</span>
                 <span className="compendiumCostValue">{rule.popCapacity} pop cap</span>
                 <span className="compendiumCostNote">
-                  {rule.canBuildBuildings
-                    ? `builds (+${rule.buildingSlotBonus} slots)`
-                    : "no buildings"}
+                  {rule.canBuildBuildings ? "builds on its tile's slots" : "no buildings"}
                 </span>
               </li>
             );
           })}
         </ul>
         <Note>
-          You begin with a capital (a metropolis of {G.ruleset.placementPopCounts.capital} pops) and
-          one founding colony. Only cities and the capital may raise buildings; colonies work the
-          land and grow.
+          You begin with a capital (a metropolis of {G.ruleset.placementPopCounts.capital} pops,{" "}
+          {G.ruleset.placementCitizens.capital} of them a citizen) and one founding colony. Only
+          cities and the capital may raise buildings; in a colony every slot is a work slot.
         </Note>
       </Entry>
       <Entry id={anchor("settlements", "expansion")} title="Founding & upgrading">
@@ -718,9 +712,9 @@ const unrest: RuleChapter = {
           <Note>
             Stored food calms — every {G.ruleset.economy.foodStockpileHappinessDivisor} in the
             granary grants +1 happiness at income, up to +
-            {G.ruleset.economy.foodStockpileHappinessCap}. A shortage bites the other way:{" "}
-            {u.foodDeficitTurnsToStarve} straight turns of net food at or below{" "}
-            {u.foodDeficitThreshold} starve {u.foodDeficitStarvePopLoss} pop.
+            {G.ruleset.economy.foodStockpileHappinessCap}. Hunger bites the other way: when income
+            cannot feed your freemen and citizens, one pop leaves per unfed mouth and the granary
+            stays at zero. Freemen leave before citizens.
           </Note>
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">

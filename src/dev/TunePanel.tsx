@@ -3,7 +3,7 @@ import "./tunePanel.css";
 import { getBuildings, getTerrainDeck } from "../game/content";
 import type { HegemonyState } from "../game/types";
 import { CHROME_PLACEHOLDERS } from "../ui/icons/placeholders";
-import { buildingSummary, describeBuildingEffect, terrainStats, terrainTotals } from "./aggregates";
+import { buildingSummary, describeBuildingEffect, terrainStats } from "./aggregates";
 import {
   defaultValueAt,
   effectiveValueAt,
@@ -146,7 +146,6 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
   const buildings = getBuildings(game.definition.content);
   const deck = getTerrainDeck(game.definition.content);
   const stats = terrainStats(deck);
-  const totals = terrainTotals(deck);
 
   return (
     <aside className="tune-panel">
@@ -185,7 +184,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
           onClick={toggleLowNumbers}
           title="Toggle the development-only low-number-core-v1 preset and restart this seed."
         >
-          {preset ? "✓ " : ""}Low Numbers · 20W / 12S / 16F
+          {preset ? "✓ " : ""}Low Numbers
         </button>
         <span className={`tune-badge${preset ? " on" : ""}`}>
           {preset ? "preset active" : "standard values"}
@@ -221,7 +220,6 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
               <th>terrain</th>
               <th>tiles</th>
               <th>slots</th>
-              <th>Σ yield</th>
               <th>avg</th>
               <th>max</th>
             </tr>
@@ -232,16 +230,14 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
                 <td>{row.terrain}</td>
                 <td>{row.tiles}</td>
                 <td>{row.slots}</td>
-                <td>{row.totalYield || "—"}</td>
-                <td>{row.avgYield === undefined ? "—" : fmt(row.avgYield)}</td>
-                <td>{row.maxYield || "—"}</td>
+                <td>{fmt(row.slots / row.tiles)}</td>
+                <td>{row.maxSlots}</td>
               </tr>
             ))}
           </tbody>
         </table>
         <div className="tune-totals">
-          {totals.tiles} tiles · {totals.slots} slots · wood {totals.wood} · stone {totals.stone} ·
-          food {totals.food}
+          {deck.length} tiles · {stats.reduce((sum, row) => sum + row.slots, 0)} slots
         </div>
       </Section>
 

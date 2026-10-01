@@ -7,7 +7,7 @@ import type {
   PopType,
   Pops,
 } from "./types";
-import { hasPops, isPositivePopSelection, totalPops } from "./core/pops";
+import { hasPops, isGrowablePop, isPositivePopSelection, totalPops } from "./core/pops";
 import { getOwnedSettlement, getGrownSettlementsThisTurn, getTile } from "./core/query";
 import { canAfford } from "./core/resources";
 import type { ActionStatus } from "./core/results";
@@ -225,6 +225,11 @@ export function getGrowPopStatus(
     can: false,
     reasons: [],
   };
+
+  if (!isGrowablePop(pop)) {
+    status.reasons.push("Citizens come only by promotion.");
+    return status;
+  }
 
   if (!tile) {
     status.reasons.push("Select a settlement.");
