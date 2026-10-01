@@ -165,7 +165,12 @@ export function CitiesPage({
                       ))}
                     </Tooltip>
                     {open > 0 && raisable > 0 ? (
-                      <button className="link cap" onClick={() => onRaise(tile.id)} type="button">
+                      <button
+                        aria-label={`Raise a building in ${name}`}
+                        className="link cap"
+                        onClick={() => onRaise(tile.id)}
+                        type="button"
+                      >
                         raise
                       </button>
                     ) : (
