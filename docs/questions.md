@@ -4,7 +4,7 @@ Only unresolved owner decisions live here. Answer in chat or after `Answer:`; th
 answer is then incorporated into the affected plan and this entry is removed.
 Recommendations are defaults for discussion, not silent authorization.
 
-Last updated: 2026-09-28.
+Last updated: 2026-10-01.
 
 ## Q77 — Which happiness model ships at Step 5?
 
@@ -23,25 +23,5 @@ point gains and losses; cheaper, and the mock's level display becomes a bank dis
 
 **Recommendation:** The level. It is the paper's legibility core, happiness you can read
 off the board, and the shell already shows it.
-
-**Answer:**
-
-## Q78 — Should landmark tiles print a richer yield?
-
-**Context:** Under v2, two tiles of the same terrain differ only in slots, coast and
-location, because the printed amounts go (ruling of 2026-09-06, third round). Today's board
-has real landmarks: the breadbasket prints 10 food on 2 slots and the quarry 6 stone, a
-rich-but-cramped trade-off v2 flattens. The owner called the result anticlimactic on
-2026-09-29. Shared colony tiles, restored on 2026-09-28, would make any landmark a contested
-site.
-
-**Options:** Rich tiles set the slave value: a few landmarks print "slaves here make 2",
-and an Estate adds 1 more. Or tiles print their capacity, such as a rich plains holding 10
-pops and a poor one 6. Or a flat tile bonus such as "+2 food" whatever the pops. Or keep
-tiles flat.
-
-**Recommendation:** Rich tiles set the slave value, applied to today's landmarks (the
-breadbasket, the 6-food plains, the quarry) with their low slot counts kept. It is one
-printed number, read the same way as a class column's value.
 
 **Answer:**

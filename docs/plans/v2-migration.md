@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-09-30
+updated: 2026-10-01
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -93,11 +93,33 @@ After the independent audit (2026-09-28):
 - Hunger scales with the shortfall: one pop leaves per unfed mouth.
 - Victory is checked at the start of each player's own turn, as today, so the last seat in
   a year cannot win unanswered.
-- Two colonies of different players may share a tile, as today. Each yields by its own
-  pops, so the half-share goes with the printed yields. Upgrading one to a city evicts the
-  other, as today. Shared tiles keep the map from being walled off.
-- Tiles keep their terrain's resource type, their slot count and their coast; only the
-  printed amount goes.
+- Two colonies of different players may share a tile, as today. They split the tile's
+  slots (see the work-slot ruling below), so the half-share goes with the printed yields.
+  Upgrading one to a city evicts the other, as today. Shared tiles keep the map from being
+  walled off.
+- Tiles keep their terrain's resource type and their coast; the printed amount goes and the
+  slot counts are re-numbered by the work-slot ruling below.
+
+Work slots (2026-10-01, the answer to Q78, landmark tiles):
+
+- A tile's slots are one pool shared by buildings and working slaves. Each open slot holds
+  one working slave, who makes 1 of the terrain's resource; each building takes one slot.
+  Seven slots and no buildings is seven working slaves; raise one building and six can work.
+- Only slaves take slots. Freemen and citizens live in the settlement without one.
+- Slaves beyond the open slots sit idle and make nothing, as slaves on hills do today.
+- Slot counts are re-numbered from today's 1 to 4 to roughly 2 to 7. A landmark is a 6 or
+  7 and a poor tile a 2 or 3. Today's rich tiles get the high counts: the plains that print
+  10, 8, 6 and 6 food, and the 6-stone quarry. A landmark is a tile with many slots, and
+  nothing else is printed on it.
+- A colony cannot build, so all its tile's slots are work slots, capped by its 4 pops.
+- Two colonies sharing a tile split its slots, which makes a landmark a contested site.
+- The capital's flat 4 slots go. A capital uses its tile's number like any city.
+- Hills are unchanged: their slots hold buildings and their slaves make nothing.
+- The Estate takes a slot, so it costs one working slave and doubles the rest. It pays
+  only on a tile with 3 or more slots.
+- The risk is food. Plains slaves are the only food from land, and slots cap how many can
+  work. Hand arithmetic on today's map gives 20 plains slots for four players against 44
+  printed food today, so the plains are re-numbered upward. Step 4's bot batch checks it.
 - Luxuries stay uncapped; Step 11 measures whether they decide Beloved.
 
 **Shell.** The [Hybrid arc mock](../reference/design/shell-v2/mock/index.html), picked by
@@ -175,8 +197,6 @@ danger selector and the real-path previews, with their tests.
 
 - [Q77](../questions.md#q77--which-happiness-model-ships-at-step-5): which happiness model
   ships. Needed before Step 5; Steps 1–4 are written so they do not depend on it.
-- [Q78](../questions.md#q78--should-landmark-tiles-print-a-richer-yield): whether landmark
-  tiles print a richer yield. Needed before Step 3.
 - Step 11's thresholds are proposals the owner may change before it runs.
 
 ## Three-axis parity
@@ -225,17 +245,20 @@ next step.
 
 ### Stretch 2 · Core systems (Steps 3–4)
 
-**Before:** Q78 is answered. **Mode:** both steps in one session, back to back. **Stop:**
+**Before:** nothing; Q78 was answered on 2026-10-01. **Mode:** both steps in one session, back to back. **Stop:**
 present Step 4's bot batch (riots per game, share of turns on the riot table) and ask Q77.
 Remind the owner to run `/code-review ultra` on `feat/v2`, which only they can launch.
 
-- [ ] **Step 3 · Pops and tiles.** Settle Q78 first. Unless it says otherwise, tiles print
-      terrain and slots only. Slaves yield their
-      terrain's resource, hills yield nothing, and slaves eat nothing. Freemen make 1 gold;
+- [ ] **Step 3 · Pops and tiles.** Tiles print terrain and slots only, under the work-slot
+      ruling in Settled inputs: slots are shared by buildings and working slaves, a slave
+      on an open slot yields 1 of the terrain's resource, and a slave without one is idle.
+      Re-number the map's slots to roughly 2 to 7 with today's rich tiles highest, and drop
+      the capital's flat 4. Hills yield nothing and slaves eat nothing. Freemen make 1 gold;
       citizens make 1 influence and hold a vote; both eat 1 food. Hunger removes one pop per
       unfed mouth and food stays at zero. Two colonies of different players may share a
-      tile, each yielding by its own pops; an upgrade evicts the other. Citizens come only
-      by promotion.
+      tile and split its slots; an upgrade evicts the other. Citizens come only by
+      promotion. Record as defaults the re-numbered slot table, who takes the odd slot on a
+      shared tile, and the starting food (12 today, unruled for v2).
 - [ ] **Step 4 · Buildings and prices.** Marketplace, Estate and Forum raise their class
       column; Temple, Granary and Port state one fact each; one of each per settlement.
       Workshop and Villa merge into the Estate; Odeon, Aqueduct and Gymnasion are cut. One
@@ -243,7 +266,8 @@ Remind the owner to run `/code-review ultra` on `feat/v2`, which only they can l
       Piece supply: four colonies and three cities, and an upgrade returns the colony piece.
       Write Temples, luxuries, slaves and calm as happiness contributions that Step 5
       combines, not as bank changes. End with a bot batch showing whether today's bank still
-      slides without the food debt; that is Q77's evidence.
+      slides without the food debt; that is Q77's evidence. The same batch reports food
+      under work slots: turns with hunger, pops lost to it, and idle slaves, per seat.
 
 ### Stretch 3 · Remaining systems (Steps 5–10)
 
