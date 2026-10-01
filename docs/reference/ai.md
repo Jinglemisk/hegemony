@@ -112,7 +112,7 @@ score = 10 · VP(resources projected INCOME_HORIZON turns ahead)
 
 The projection advances each future upkeep and income collection in order. It
 uses the engine's own income and active-effect queries, including suppressed
-collections, timed happiness, and expected starvation loss. At every projected
+collections, timed happiness, and the pops hunger would take. At every projected
 upkeep it records the minimum happiness and any mild-riot or severe-revolt
 threshold crossing; a severe crossing applies the live ruleset's rebound before
 income resumes. This prevents a later recovery from hiding an earlier riot.
