@@ -277,7 +277,7 @@ next step.
 present Step 4's bot batch (riots per game, share of turns on the riot table) and ask Q77.
 Remind the owner to run `/code-review ultra` on `feat/v2`, which only they can launch.
 
-- [ ] **Step 3 · Pops and tiles.** Tiles print terrain and slots only, under the work-slot
+- [x] **Step 3 · Pops and tiles.** ([#82](https://github.com/Jinglemisk/hegemony/pull/82): a 40-game bot batch finishes with no illegal moves; per seat, 3.4 to 3.9 hunger turns and 5.2 to 6.9 pops lost a game, 22% to 41% of slaves idle, at v1's prices.) Tiles print terrain and slots only, under the work-slot
       ruling in Settled inputs: slots are shared by buildings and working slaves, a slave
       on an open slot yields 1 of the terrain's resource, and a slave without one is idle.
       Re-number the map's slots to roughly 2 to 7 with today's rich tiles highest, and drop
