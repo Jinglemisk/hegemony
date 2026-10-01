@@ -248,6 +248,7 @@ function Tile({
   ruleset,
   onAction,
   onFocus,
+  onBlur,
   onRove,
   onHover,
 }: {
@@ -259,7 +260,8 @@ function Tile({
   isTabStop: boolean;
   ruleset: Ruleset;
   onAction: (tileId: string) => void;
-  onFocus: (tileId: string) => void;
+  onFocus: (tileId: string, visible: boolean) => void;
+  onBlur: () => void;
   onRove: (fromId: string, key: string) => boolean;
   onHover: (tileId: string | null, element?: Element) => void;
 }) {
@@ -291,7 +293,8 @@ function Tile({
       data-tile={tile.id}
       data-tile-id={tile.id}
       onClick={() => onAction(tile.id)}
-      onFocus={() => onFocus(tile.id)}
+      onBlur={onBlur}
+      onFocus={(event) => onFocus(tile.id, event.currentTarget.matches(":focus-visible"))}
       onKeyDown={(event: ReactKeyboardEvent<SVGGElement>) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
@@ -306,11 +309,7 @@ function Tile({
       tabIndex={isTabStop ? 0 : -1}
       transform={`translate(${x.toFixed(1)},${y.toFixed(1)})`}
     >
-      <polygon
-        className={`tile ${tile.terrain}${lead ? " owned" : ""}`}
-        points={hexPoints(HEX)}
-        style={lead ? ({ "--owner": PLAYER_GLAZES[lead.owner].color } as CSSProperties) : undefined}
-      />
+      <polygon className={`tile ${tile.terrain}`} points={hexPoints(HEX)} />
       {lead ? (
         <SettlementMark name={leadName ?? "POLIS"} settlement={lead} />
       ) : (
@@ -688,6 +687,8 @@ function IslandComponent({
 
   // One tab stop for the board; arrows move it (it follows focus).
   const [roving, setRoving] = useState<string | null>(null);
+  // The tile the keyboard is on, ringed only when focus came by keyboard.
+  const [focusRing, setFocusRing] = useState<string | null>(null);
   const tabStop =
     (roving && centers.some(({ tile }) => tile.id === roving) ? roving : null) ??
     selectedTileId ??
@@ -735,7 +736,11 @@ function IslandComponent({
               names={names}
               onAction={act}
               ruleset={G.ruleset}
-              onFocus={setRoving}
+              onBlur={() => setFocusRing(null)}
+              onFocus={(id, visible) => {
+                setRoving(id);
+                setFocusRing(visible ? id : null);
+              }}
               onHover={onHover}
               onRove={rove}
               state={{
@@ -748,6 +753,45 @@ function IslandComponent({
               y={y}
             />
           ))}
+          {/* Every ring is drawn over all the tiles, so a later neighbour never
+              paints over the outer half of an edge: owners first, then the asked
+              answers, the pick, and the keyboard's focus on top. */}
+          <g aria-hidden="true" className="rings">
+            {centers.map(({ tile, x, y }) => {
+              const [lead] = orderSettlements(tile.settlements);
+              const dimmed = placementActive && !highlight.has(tile.id);
+              const at = `translate(${x.toFixed(1)},${y.toFixed(1)})`;
+              return lead ? (
+                <polygon
+                  className={`ring is-owned${dimmed ? " is-dimmed" : ""}`}
+                  key={tile.id}
+                  points={hexPoints(HEX)}
+                  style={{ "--owner": PLAYER_GLAZES[lead.owner].color } as CSSProperties}
+                  transform={at}
+                />
+              ) : null;
+            })}
+            {centers
+              .filter(({ tile }) => placementActive && highlight.has(tile.id))
+              .map(({ tile, x, y }) => (
+                <polygon
+                  className="ring is-candidate"
+                  key={tile.id}
+                  points={hexPoints(HEX)}
+                  transform={`translate(${x.toFixed(1)},${y.toFixed(1)})`}
+                />
+              ))}
+            {centers
+              .filter(({ tile }) => tile.id === selectedTileId || tile.id === focusRing)
+              .map(({ tile, x, y }) => (
+                <polygon
+                  className={`ring ${tile.id === focusRing ? "is-focus" : "is-selected"}`}
+                  key={tile.id}
+                  points={hexPoints(HEX)}
+                  transform={`translate(${x.toFixed(1)},${y.toFixed(1)})`}
+                />
+              ))}
+          </g>
           {moorings.map(({ asset, vertex, x, y, name, side }) => {
             const glaze = asset.owner ? PLAYER_GLAZES[asset.owner] : null;
             return (

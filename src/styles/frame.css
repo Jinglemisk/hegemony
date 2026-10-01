@@ -1194,19 +1194,11 @@
 .island .tile.oracle {
   fill: var(--t-oracle);
 }
-.island .tile.owned {
-  stroke: var(--owner);
-  stroke-width: var(--b-own);
-}
 .island .tile-btn {
   cursor: pointer;
 }
 .island .tile-btn:hover .tile {
   filter: brightness(1.04);
-}
-.island .tile-btn.is-selected .tile {
-  stroke: var(--ink);
-  stroke-width: var(--b-sel);
 }
 .island .emblem {
   opacity: var(--dim);
@@ -1286,16 +1278,32 @@
    the printed yield (until v2 retires it), a rival's turn, the hold, the
    consult sheet and the map caption.
    ========================================================================== */
-.island .tile-btn:focus-visible {
+/* A tile takes focus on a click too; its ring (below) is the only mark. */
+.island .tile-btn:focus {
   outline: none;
 }
-.island .tile-btn:focus-visible .tile {
+/* A map mode is asking a question: the answers are ringed, the rest recede. */
+.island .rings {
+  pointer-events: none;
+}
+.island .ring {
+  fill: none;
+  stroke-linejoin: round;
+}
+.island .ring.is-owned {
+  stroke: var(--owner);
+  stroke-width: var(--b-own);
+}
+.island .ring.is-dimmed {
+  opacity: var(--dim);
+}
+.island .ring.is-candidate,
+.island .ring.is-focus {
   stroke: var(--ochre);
   stroke-width: var(--b-sel);
 }
-/* A map mode is asking a question: the answers are ringed, the rest recede. */
-.island .tile-btn.is-candidate .tile {
-  stroke: var(--ochre);
+.island .ring.is-selected {
+  stroke: var(--ink);
   stroke-width: var(--b-sel);
 }
 .island .tile-btn.is-dimmed {
@@ -1933,13 +1941,18 @@ button.link {
 .lore-rule {
   margin: 0;
 }
+/* The act, and under it why it is refused: a reason may run two lines. */
 .act-line {
   display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  white-space: nowrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-1);
+}
+.act-line .cap {
+  white-space: normal;
 }
 .act-btn {
+  flex: none;
   height: var(--hit);
   padding: 0 var(--s-3);
   display: inline-flex;
@@ -1972,13 +1985,17 @@ button.link {
 }
 .alarm-disc {
   --tone: var(--ink-30);
-  width: var(--hit);
-  height: var(--hit);
+  width: calc(var(--hit) * 2); /* 64 */
+  height: calc(var(--hit) * 2);
   display: grid;
   place-items: center;
   border-radius: var(--r-round);
   background: color-mix(in srgb, var(--tone) 16%, var(--ivory));
   box-shadow: inset 0 0 0 var(--rule-2) var(--tone);
+}
+.alarm-disc .ico {
+  width: var(--ic-48);
+  height: var(--ic-48);
 }
 .alarm-disc.is-up {
   --tone: var(--olive);
