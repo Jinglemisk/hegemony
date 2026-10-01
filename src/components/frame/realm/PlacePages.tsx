@@ -42,18 +42,18 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
           <Ico path="settlements/slot" size="ui" />
           Slots
           <span>
-            <b>{tile.slots}</b> for buildings and working slaves
+            <b>{tile.slots}</b>
           </span>
         </li>
         <li className="g-line">
           <Ico path={`terrain/${tile.terrain}`} size="ui" />
-          Land
+          Slaves make
           {tile.resource ? (
             <span>
-              a slave on a slot makes <b>1</b> {tile.resource.type}
+              <b>1</b> {tile.resource.type} each
             </span>
           ) : (
-            <span>slaves make nothing here</span>
+            <span>nothing</span>
           )}
         </li>
         <li className="g-line">

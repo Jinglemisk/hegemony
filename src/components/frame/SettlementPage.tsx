@@ -138,11 +138,11 @@ export function SettlementPage({
           <span>
             {primary ? (
               <>
-                <b>{working}</b> of {open} worked for {primary}
+                <b>{working}</b> of {open} worked
               </>
             ) : (
               <>
-                <b>{open}</b> open, slaves make nothing on a hill
+                <b>{open}</b> open, none worked
               </>
             )}
           </span>
