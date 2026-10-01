@@ -98,7 +98,7 @@ export function HegemonyBoard({
   // Initialized to the omen standing at mount so a reload never re-announces it.
   const [seenOmenYear, setSeenOmenYear] = useState<number | null>(() => G.yearOmen?.year ?? null);
   // The realm sheet's page, and the consult page open on the right (null: none).
-  // The realm boots on your first settlement's page; picking another opens its page.
+  // The realm boots on its overview; picking a place on the map opens its page.
   const [realmTab, setRealmTab] = useState<RealmTab>("subject");
   // What the map last picked, which the realm's last tab shows: the sea (the
   // realm itself), a tile, or a luxury good's mooring.
@@ -271,8 +271,6 @@ export function HegemonyBoard({
   const handleTileAction = useCallback(
     (tileId: string) => {
       setSelectedTileId(tileId);
-      setSubject({ kind: "tile", tileId });
-      setRealmTab("subject");
 
       // A mode is armed: the click IS the answer (refit scope 3).
       if (mapSelection.selection) {
@@ -294,6 +292,11 @@ export function HegemonyBoard({
         setMapSelectionTarget({ tileId, anchor: element.getBoundingClientRect() });
         return;
       }
+
+      // Otherwise the pick becomes the realm's last page; an armed mode keeps
+      // the page it was armed from.
+      setSubject({ kind: "tile", tileId });
+      setRealmTab("subject");
 
       if (
         ctx.phase === "setupCapital" ||

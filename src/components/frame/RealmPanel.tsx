@@ -105,7 +105,10 @@ export function RealmPanel({
   onFound: (tileId: string) => void;
 }) {
   const { G, viewerId } = useGameUi();
-  const [buildTarget, setBuildTarget] = useState<string | null>(null);
+  // Build's place, as picked on its page; a new pick on the map lets it follow again.
+  const [picked, setPicked] = useState<{ subject: RealmSubject; tileId: string } | null>(null);
+  const buildTarget = picked?.subject === subject ? picked.tileId : null;
+  const setBuildTarget = (tileId: string) => setPicked({ subject, tileId });
   const glaze = PLAYER_GLAZES[viewerId];
   const holdings = getOwnedHoldings(G, viewerId);
   const cities = holdings.filter(({ settlement }) => settlement.kind !== "colony").length;
