@@ -444,7 +444,7 @@ export const CONTENT_MANIFEST = {
     ids: BUILDING_CONTENT_IDS,
     engine: { implementation: "src/game/content.ts", evidence: "getBuildings" },
     frontend: {
-      implementation: "src/components/board/ledger/BuildingsTab.tsx",
+      implementation: "src/components/frame/realm/BuildPage.tsx",
       evidence: "getBuildings",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "projectPolicyHorizon" },

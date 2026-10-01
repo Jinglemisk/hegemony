@@ -123,14 +123,14 @@ export const COMMAND_PARITY = {
   bankSell: {
     frontend: interactive(
       "src/components/frame/discs.ts",
-      "src/components/board/ledger/MarketTab.tsx",
+      "src/components/frame/realm/MarketPage.tsx",
     ),
     simulation: simulated("master-rule", "resolveStochasticByRule bank heuristic"),
   },
   bankBuy: {
     frontend: interactive(
       "src/components/frame/discs.ts",
-      "src/components/board/ledger/MarketTab.tsx",
+      "src/components/frame/realm/MarketPage.tsx",
     ),
     simulation: simulated("master-rule", "resolveStochasticByRule bank heuristic"),
   },

@@ -2,9 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { ActiveEffectsList } from "../components/ActiveEffectsList";
-import type { GameUi } from "../components/board/GameUiContext";
-import { GameUiProvider } from "../components/board/GameUiProvider";
+import { Alarms } from "../components/frame/Alarms";
 import { collectIncome } from "../game/actions";
 import { enactForEval, openAssembly } from "../game/assembly";
 import { consumeLawFreeAction } from "../game/assembly/laws";
@@ -32,7 +30,7 @@ import type {
   TableRollRecord,
   TimedHappinessModifier,
 } from "../game/types";
-import { applyUnrestUpkeep } from "../game/unrest";
+import { applyUnrestUpkeep, unrestStatus } from "../game/unrest";
 import { masterPolicy, projectPolicyHorizon } from "../sim/policies";
 import { createSimRng } from "../sim/rng";
 import { snapshotTurn } from "../sim/telemetry";
@@ -108,16 +106,13 @@ function plantLaw(G: HegemonyState, cardId: string, author: "0" | "1" = "0") {
   });
 }
 
-function renderActiveEffects(
-  G: HegemonyState,
-  activeEffects: ActiveEffectDescriptor[],
-  variant: "board" | "ledger",
-): string {
-  const value = { G, activeEffects } as GameUi;
+function renderAlarms(G: HegemonyState, activeEffects: ActiveEffectDescriptor[]): string {
   return renderToStaticMarkup(
-    createElement(GameUiProvider, {
-      value,
-      children: createElement(ActiveEffectsList, { variant }),
+    createElement(Alarms, {
+      content: G.definition.content,
+      effects: activeEffects,
+      popLossThreshold: G.ruleset.economy.unrest.popLossThreshold,
+      unrest: unrestStatus(G, "0"),
     }),
   );
 }
@@ -428,20 +423,16 @@ describe("persistent event content inventory", () => {
 });
 
 describe("frontend active-effect parity", () => {
-  it("renders the same canonical words through the actual board and ledger variants", () => {
+  it("renders the same canonical words through the realm's alarms", () => {
     const G = stateWithSettlement();
     G.players["0"].timedHappinessModifiers = [timedModifier("Public Shame", -2, 2)];
     const descriptors = getActiveEffects(G, "0");
-    const presentations = presentActiveEffects(descriptors);
-    const board = renderActiveEffects(G, descriptors, "board");
-    const ledger = renderActiveEffects(G, descriptors, "ledger");
+    const alarms = renderAlarms(G, descriptors);
 
-    expect(board).toContain('class="tooltipTrigger activeEffectsBoard"');
-    expect(board).toContain("aria-describedby=");
-    expect(ledger).toContain('class="activeEffectsLedger"');
-    for (const presentation of presentations) {
-      expect(board).toContain(presentation.accessibleText);
-      expect(ledger).toContain(presentation.accessibleText);
+    expect(alarms).toContain('class="alarms"');
+    for (const descriptor of descriptors) {
+      if (descriptor.kind === "seasonalModifier" || descriptor.kind === "standingLaw") continue;
+      expect(alarms).toContain(presentActiveEffect(descriptor).accessibleText);
     }
   });
 

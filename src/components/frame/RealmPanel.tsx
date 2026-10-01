@@ -1,29 +1,67 @@
+import { useState } from "react";
 import type { CSSProperties } from "react";
 import {
   activeClaims,
+  getLuxuryGood,
   luxuryHappinessBonus,
   ownedClaims,
   settlementCapacity,
   totalPops,
-  unrestStatus,
 } from "../../game/rules";
-import type { BuildingId, HexTile, PopType, Settlement, TradableMaterial } from "../../game/types";
+import type {
+  BuildingId,
+  HegemonyState,
+  HexTile,
+  LuxuryAsset,
+  PlayerId,
+  PopType,
+  Resources,
+  Settlement,
+  TradableMaterial,
+} from "../../game/types";
 import { victoryCardsHeld } from "../../game/victory";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { settlementNames } from "../../ui/settlementNames";
-import { ActiveEffectsList } from "../ActiveEffectsList";
 import { useGameUi } from "../board/GameUiContext";
-import { getOwnedHoldings } from "../board/helpers";
-import { BuildingsTab } from "../board/ledger/BuildingsTab";
-import { CitiesTab } from "../board/ledger/CitiesTab";
-import { MarketTab } from "../board/ledger/MarketTab";
-import { PopsTab } from "../board/ledger/PopsTab";
-import { UnrestAlarm } from "../board/ledger/UnrestAlarm";
+import { capitalize, getOwnedHoldings } from "../board/helpers";
 import type { LedgerTab } from "../board/types";
 import type { DiscGroup } from "./discs";
 import { Ico } from "./parts";
+import { BuildPage } from "./realm/BuildPage";
+import { CitiesPage } from "./realm/CitiesPage";
+import { LadderPage } from "./realm/LadderPage";
+import { MarketPage } from "./realm/MarketPage";
+import { LuxuryPage, OraclePage, TilePage } from "./realm/PlacePages";
+import { SummaryPage } from "./realm/SummaryPage";
 import { SettlementPage } from "./SettlementPage";
 import { VerbDiscs } from "./VerbDiscs";
+
+/** What the map last picked: the empty sea (the realm), a tile, or a mooring. */
+export type RealmSubject =
+  { kind: "realm" } | { kind: "tile"; tileId: string } | { kind: "mooring"; vertexId: string };
+
+type SubjectView =
+  | { kind: "realm" }
+  | { kind: "own"; tile: HexTile; settlement: Settlement }
+  | { kind: "rival"; tile: HexTile; settlement: Settlement }
+  | { kind: "oracle"; tile: HexTile }
+  | { kind: "land"; tile: HexTile }
+  | { kind: "luxury"; asset: LuxuryAsset };
+
+/** A pick, read against the board: your settlement there first, then a rival's, then the ground. */
+function viewOf(G: HegemonyState, viewerId: PlayerId, subject: RealmSubject): SubjectView {
+  if (subject.kind === "mooring") {
+    const asset = G.board.luxuries.find((candidate) => candidate.vertexId === subject.vertexId);
+    return asset ? { kind: "luxury", asset } : { kind: "realm" };
+  }
+  if (subject.kind === "realm") return { kind: "realm" };
+  const tile = G.board.tiles.find((candidate) => candidate.id === subject.tileId);
+  if (!tile) return { kind: "realm" };
+  const own = tile.settlements.find((settlement) => settlement.owner === viewerId);
+  if (own) return { kind: "own", tile, settlement: own };
+  if (tile.settlements[0]) return { kind: "rival", tile, settlement: tile.settlements[0] };
+  return tile.terrain === "oracle" ? { kind: "oracle", tile } : { kind: "land", tile };
+}
 
 export type RealmTab = LedgerTab | "subject";
 
@@ -36,29 +74,38 @@ const TABS: Array<{ tab: LedgerTab; label: string }> = [
 
 /**
  * The realm sheet, bottom left: the verb discs ride its curved edge; its body is
- * the ledger — the ruler's head, four pages and the subject settlement's page.
+ * the ledger — the ruler's head, four pages, and the page of whatever the map
+ * last picked: the realm itself (the sea), a settlement, a tile, the oracle or
+ * a luxury good. Nothing on any page scrolls.
  */
 export function RealmPanel({
   tab,
   onTab,
   subject,
+  onSubject,
   groups,
+  income,
   onBuildBuildingRequest,
   onBankSell,
   onBankBuy,
   onLadderRequest,
+  onFound,
 }: {
   tab: RealmTab;
   onTab: (tab: RealmTab) => void;
-  /** The settlement the subject tab is open on, when the viewer holds one. */
-  subject: { tile: HexTile; settlement: Settlement } | null;
+  subject: RealmSubject;
+  onSubject: (subject: RealmSubject) => void;
   groups: DiscGroup[];
+  /** The viewer's projected net income per turn. */
+  income: Resources;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
   onBankSell: (material: TradableMaterial) => void;
   onBankBuy: (material: TradableMaterial) => void;
   onLadderRequest: (request: { kind: "promote" | "demote"; from: PopType }) => void;
+  onFound: (tileId: string) => void;
 }) {
   const { G, viewerId } = useGameUi();
+  const [buildTarget, setBuildTarget] = useState<string | null>(null);
   const glaze = PLAYER_GLAZES[viewerId];
   const holdings = getOwnedHoldings(G, viewerId);
   const cities = holdings.filter(({ settlement }) => settlement.kind !== "colony").length;
@@ -71,8 +118,33 @@ export function RealmPanel({
   // Claimed luxury goods: how many are held, and how many are active right now.
   const claims = ownedClaims(G, viewerId);
   const active = activeClaims(G, viewerId);
-  const subjectName = subject ? settlementNames(G.board.tiles).get(subject.settlement.id) : null;
-  const shown: RealmTab = tab === "subject" && !subject ? "cities" : tab;
+  const names = settlementNames(G.board.tiles);
+  const view = viewOf(G, viewerId, subject);
+  const openTileId = view.kind === "own" ? view.tile.id : null;
+  const open = (tileId: string) => {
+    onSubject({ kind: "tile", tileId });
+    onTab("subject");
+  };
+  const raise = (tileId: string) => {
+    setBuildTarget(tileId);
+    onTab("buildings");
+  };
+  const subjectTab =
+    view.kind === "realm"
+      ? { icon: "chrome/dossier", label: "Overview" }
+      : view.kind === "own" || view.kind === "rival"
+        ? {
+            icon: `settlements/${view.settlement.kind}`,
+            label: names.get(view.settlement.id) ?? "POLIS",
+          }
+        : view.kind === "oracle"
+          ? { icon: "terrain/oracle", label: "Oracle" }
+          : view.kind === "land"
+            ? { icon: `terrain/${view.tile.terrain}`, label: capitalize(view.tile.terrain) }
+            : {
+                icon: "events/voyage",
+                label: getLuxuryGood(G.definition.content, view.asset.goodId)?.name ?? "Good",
+              };
 
   return (
     <section aria-label="Realm" className="realm" data-c="realm" data-exclude>
@@ -126,7 +198,7 @@ export function RealmPanel({
           {TABS.map(({ tab: id, label }) => (
             <button
               aria-controls="realm-page"
-              aria-selected={shown === id}
+              aria-selected={tab === id}
               className="realm-tab"
               data-c="tab"
               key={id}
@@ -137,42 +209,50 @@ export function RealmPanel({
               {label}
             </button>
           ))}
-          {subject ? (
-            <button
-              aria-controls="realm-page"
-              aria-selected={shown === "subject"}
-              className="realm-tab is-subject"
-              data-c="tab"
-              onClick={() => onTab("subject")}
-              role="tab"
-              type="button"
-            >
-              <Ico path={`settlements/${subject.settlement.kind}`} size="ui" />
-              <span className="realm-tab-name">{subjectName}</span>
-            </button>
-          ) : null}
+          <button
+            aria-controls="realm-page"
+            aria-selected={tab === "subject"}
+            className="realm-tab is-subject"
+            data-c="tab"
+            onClick={() => onTab("subject")}
+            role="tab"
+            type="button"
+          >
+            <Ico path={subjectTab.icon} size="ui" />
+            <span className="realm-tab-name">{subjectTab.label}</span>
+          </button>
         </nav>
         <section className="realm-page" data-c="realm-page" id="realm-page" role="tabpanel">
-          {shown === "subject" && subject ? (
-            <SettlementPage G={G} settlement={subject.settlement} tile={subject.tile} />
+          {tab === "subject" ? (
+            view.kind === "realm" ? (
+              <SummaryPage holdings={holdings} income={income} onOpen={open} />
+            ) : view.kind === "own" ? (
+              <SettlementPage G={G} onRaise={raise} settlement={view.settlement} tile={view.tile} />
+            ) : view.kind === "rival" ? (
+              <SettlementPage G={G} settlement={view.settlement} tile={view.tile} />
+            ) : view.kind === "oracle" ? (
+              <OraclePage />
+            ) : view.kind === "land" ? (
+              <TilePage onFound={onFound} tile={view.tile} />
+            ) : (
+              <LuxuryPage asset={view.asset} />
+            )
           ) : null}
-          {shown === "cities" ? (
-            <>
-              <UnrestAlarm
-                popLossThreshold={G.ruleset.economy.unrest.popLossThreshold}
-                status={unrestStatus(G, viewerId)}
-              />
-              <ActiveEffectsList variant="ledger" />
-              <CitiesTab holdings={holdings} onBuildBuildingRequest={onBuildBuildingRequest} />
-            </>
+          {tab === "cities" ? (
+            <CitiesPage holdings={holdings} onOpen={open} onRaise={raise} openTileId={openTileId} />
           ) : null}
-          {shown === "pops" ? (
-            <PopsTab holdings={holdings} onLadderRequest={onLadderRequest} />
+          {tab === "pops" ? (
+            <LadderPage holdings={holdings} income={income} onLadderRequest={onLadderRequest} />
           ) : null}
-          {shown === "buildings" ? (
-            <BuildingsTab holdings={holdings} onBuildBuildingRequest={onBuildBuildingRequest} />
+          {tab === "buildings" ? (
+            <BuildPage
+              holdings={holdings}
+              onBuildBuildingRequest={onBuildBuildingRequest}
+              onTarget={setBuildTarget}
+              targetTileId={buildTarget ?? openTileId}
+            />
           ) : null}
-          {shown === "market" ? <MarketTab onBankBuy={onBankBuy} onBankSell={onBankSell} /> : null}
+          {tab === "market" ? <MarketPage onBankBuy={onBankBuy} onBankSell={onBankSell} /> : null}
         </section>
       </div>
     </section>

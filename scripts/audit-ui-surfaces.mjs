@@ -60,6 +60,24 @@ const pressVerb = async (p, group, options = []) => {
   await p.waitForTimeout(400);
 };
 
+/** Pick the first tile whose name plate and label pass `test`, and wait for its page. */
+/* global document */
+const pickTile = async (p, test) => {
+  const id = await p.evaluate((source) => {
+    const fits = new Function(`return ${source}`)();
+    const tile = [...document.querySelectorAll(".island [data-tile-id]")].find((e) =>
+      fits(e.querySelector(".plate-text")?.textContent ?? "", e.getAttribute("aria-label") ?? ""),
+    );
+    return tile?.dataset.tileId ?? null;
+  }, test.toString());
+  if (id)
+    await p
+      .locator(`[data-tile-id="${id}"]`)
+      .click({ force: true })
+      .catch(() => {});
+  await p.waitForTimeout(400);
+};
+
 const closeConsult = async (p, tab) => {
   const t = consultButton(p, tab);
   if ((await t.count()) && (await t.getAttribute("aria-pressed")) === "true") {
@@ -244,28 +262,35 @@ export const SURFACES = [
     },
   },
   {
-    // The socket picker is the one control on Cities that neither auditor could
-    // see: `tab-cities` walks the page with every picker shut, so a surface that
-    // reports clean says nothing about the nine rows that open out of it. It
-    // starts from its own `goto` because it runs after the Assembly surfaces and
-    // inherits their scene otherwise.
-    name: "cities-socket-picker",
+    // The realm's last tab shows whatever the map last picked. These start from
+    // their own `goto` because they run after the Assembly surfaces and would
+    // inherit their scene otherwise.
+    name: "pick-rival",
     go: async (p) => {
       await p.goto(`${BASE}/?dev=preload&seed=42`, { waitUntil: "networkidle" });
       await p.waitForTimeout(1300);
       await dismissDialogs(p);
-      const tab = realmTab(p, "Cities");
-      if (await tab.count()) {
-        await tab.click().catch(() => {});
-        await p.waitForTimeout(500);
-      }
-      const socket = p.locator(".socketAdd").first();
-      if (await socket.count()) await socket.click().catch(() => {});
-      await p.waitForTimeout(500);
+      await pickTile(p, (plate) => plate && !["PHLIOUS", "NEMEA"].includes(plate));
     },
-    after: async (p) => {
-      await p.keyboard.press("Escape");
-      await p.waitForTimeout(300);
+  },
+  { name: "pick-land", go: (p) => pickTile(p, (plate, label) => !plate && !/oracle/i.test(label)) },
+  { name: "pick-oracle", go: (p) => pickTile(p, (_plate, label) => /oracle/i.test(label)) },
+  {
+    name: "pick-mooring",
+    go: async (p) => {
+      await p
+        .locator(".island .moor")
+        .first()
+        .click({ force: true })
+        .catch(() => {});
+      await p.waitForTimeout(400);
+    },
+  },
+  {
+    name: "pick-sea",
+    go: async (p) => {
+      await p.mouse.click(60, 300);
+      await p.waitForTimeout(400);
     },
   },
 ];

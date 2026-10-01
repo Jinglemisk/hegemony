@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { Resource, Resources } from "../../game/types";
-import { RESOURCE_ICON } from "../../ui/frameFormat";
+import { RESOURCE_ICON, sign, tone } from "../../ui/frameFormat";
+import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
 import { rasterIcon } from "../../ui/icons/placeholders";
 
 /**
@@ -44,6 +45,28 @@ export function Price({
       {parts.map(([resource, n]) => (
         <span className="price-part" key={resource}>
           <span>{n}</span>
+          <Ico path={RESOURCE_ICON[resource]} size="chip" />
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** What moves: one signed, toned number-and-icon per resource that is not zero. */
+export function Chips({
+  amounts,
+  empty = null,
+}: {
+  amounts: Partial<Resources>;
+  empty?: ReactNode;
+}) {
+  const moved = RESOURCE_ORDER.filter((resource) => (amounts[resource] ?? 0) !== 0);
+  if (moved.length === 0) return <>{empty}</>;
+  return (
+    <span className="chips">
+      {moved.map((resource) => (
+        <span className={`chip ${tone(amounts[resource] ?? 0)}`} key={resource}>
+          {sign(amounts[resource] ?? 0)}
           <Ico path={RESOURCE_ICON[resource]} size="chip" />
         </span>
       ))}

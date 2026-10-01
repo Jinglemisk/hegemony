@@ -5,6 +5,7 @@ import { GlyphMarks } from "../../../ui/icons/Icon";
 /** The mooring disc's radius and its name's offset, in island user units. */
 export const MOORING_RADIUS = 18;
 export const MOORING_LABEL_X = 26;
+const MOORING_HIT_RADIUS = 22;
 
 /**
  * A luxury good's mooring off the shared vertex of two coastal tiles: an ivory
@@ -19,6 +20,7 @@ export function LuxuryVertexMarker({
   ownerName,
   ownerColor,
   labelSide = "start",
+  onActivate,
 }: {
   vertex: Pick<LuxuryVertex, "id" | "tileIds">;
   x: number;
@@ -31,6 +33,8 @@ export function LuxuryVertexMarker({
   ownerColor?: string;
   /** Where the name sits: beside the disc (reading away from it) or over or under it. */
   labelSide?: "start" | "end" | "above" | "below";
+  /** Picking the mooring opens its good's page; without it the marker is a picture. */
+  onActivate?: () => void;
 }) {
   const [tileA, tileB] = vertex.tileIds;
   const subject = goodName ?? "Luxury mooring";
@@ -42,10 +46,24 @@ export function LuxuryVertexMarker({
       aria-label={label}
       className="moor"
       data-vertex-id={vertex.id}
-      role="img"
+      onClick={onActivate}
+      onKeyDown={
+        onActivate
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onActivate();
+              }
+            }
+          : undefined
+      }
+      role={onActivate ? "button" : "img"}
+      tabIndex={onActivate ? 0 : undefined}
       style={ownerColor ? ({ "--owner": ownerColor } as CSSProperties) : undefined}
       transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}
     >
+      {/* a pickable mooring reaches a hand's width at the smallest opening view */}
+      {onActivate ? <circle className="moor-hit" r={MOORING_HIT_RADIUS} /> : null}
       <circle className={`mooring${ownerColor ? " claimed" : ""}`} r={MOORING_RADIUS} />
       <g className="popg" transform="translate(-11 -11) scale(.92)">
         <GlyphMarks glyph="luxury" />

@@ -222,12 +222,12 @@ describe("feature and content parity manifests", () => {
         evidence: ["presentLawEffect", "presentDirectiveEffect", "MechanicsDetails"],
       },
       {
-        implementation: "src/components/board/ledger/BuildingChip.tsx",
-        evidence: ["presentBuildingEffect", "MechanicsDetails"],
+        implementation: "src/components/frame/realm/BuildPage.tsx",
+        evidence: ["presentBuildingEffects"],
       },
       {
-        implementation: "src/components/ActiveEffectsList.tsx",
-        evidence: ["presentActiveEffects", "MechanicsDetails"],
+        implementation: "src/components/frame/Alarms.tsx",
+        evidence: ["presentActiveEffect"],
       },
     ];
 

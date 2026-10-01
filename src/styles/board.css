@@ -13,20 +13,3 @@
  * Nothing on the board is coloured to mean good or bad. Status colour is a text
  * vocabulary and stays in the panels, beside a sign.
  */
-
-/* Every glazed disc carries an ivory keyline, on the board exactly as in the
-   roster: it is what lets a dark glaze survive on dark ground and a pale one
-   survive on bone. */
-.sealDisc {
-  fill: var(--glaze);
-  stroke: var(--ivory);
-  stroke-width: 1.8;
-}
-
-.sealGlyph {
-  fill: none;
-  stroke: var(--ivory);
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}

@@ -33,16 +33,16 @@ when it ships or when the owner rules it closed.
 | -------- | ---------- | --------------------------------------------- |
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
 | `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
-| `V2-2`   | a pass     | The realm and consult pages are v1 content    |
+| `V2-2`   | a pass     | The consult pages are v1 content              |
 | `V2-3`   | nothing    | A shared tile's second seal has no name plate |
 | `V2-4`   | Step 3     | Tiles still print their yield                 |
 
-### v2 frame carry-overs (Steps 1–2, 2026-09-30)
+### v2 frame carry-overs (Steps 1–2, 2026-09-30 to 10-01)
 
-- **`V2-2`.** The settlement page is built to the mock. The Cities, Ladder, Build and
-  Market pages and the four consult pages still render their v1 components (cards
-  inside the sheet), restyled only by the frame's tokens. Each wants the ledger
-  language of the settlement page.
+- **`V2-2`.** The realm's pages are rebuilt to fit the sheet with nothing scrolling
+  (2026-10-01). The four consult pages (Chronicle, Codex, Victory, Agora) still render
+  their v1 components, restyled only by the frame's tokens, and scroll inside their
+  sheet. Each wants the ledger language of the realm pages.
 - **`V2-3`.** A rival colony sharing a tile draws as a small seal on the tile's
   shoulder; its name is in the tile tooltip. Two plates side by side do not fit a hex.
 - **`V2-4`.** The v1 engine still gives tiles a printed amount, so the tile shows it

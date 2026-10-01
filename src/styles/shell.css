@@ -40,13 +40,6 @@
 
 /* ── The roster ───────────────────────────────────────────────────────────── */
 
-.roster {
-  display: flex;
-  gap: 11px;
-  align-items: center;
-  margin-left: auto;
-}
-
 .seat {
   display: flex;
   flex-direction: column;

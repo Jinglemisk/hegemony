@@ -427,6 +427,8 @@ function IslandComponent({
   highlightTileIds,
   placementActive = false,
   onTileAction,
+  onBackgroundAction,
+  onMooringAction,
   onViewChange,
 }: {
   G: HegemonyState;
@@ -434,6 +436,9 @@ function IslandComponent({
   highlightTileIds?: readonly string[];
   placementActive?: boolean;
   onTileAction: (tileId: string) => void;
+  /** A click on the sea, not on a tile or a mooring. */
+  onBackgroundAction?: () => void;
+  onMooringAction?: (vertexId: string) => void;
   /** The player moved the map: anything anchored to a tile's old position is stale. */
   onViewChange?: () => void;
 }) {
@@ -705,7 +710,15 @@ function IslandComponent({
   const tip = hoverTile ? tileTip(G, hoverTile, names) : null;
 
   return (
-    <div className="island-stage" ref={stageRef}>
+    <div
+      className="island-stage"
+      onClick={(event) => {
+        // A drag that ends on the sea is a pan; a click on a tile or mooring is theirs.
+        if (dragged.current || (event.target as Element).closest("[data-tile-id], .moor")) return;
+        onBackgroundAction?.();
+      }}
+      ref={stageRef}
+    >
       <svg
         aria-label="The island"
         className={`island${placementActive ? " is-placing" : ""}`}
@@ -742,6 +755,13 @@ function IslandComponent({
                 goodName={name || undefined}
                 key={vertex.id}
                 labelSide={side}
+                onActivate={
+                  onMooringAction
+                    ? () => {
+                        if (!dragged.current) onMooringAction(vertex.id);
+                      }
+                    : undefined
+                }
                 ownerColor={glaze?.color}
                 ownerName={glaze?.name}
                 vertex={vertex}
