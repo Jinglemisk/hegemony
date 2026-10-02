@@ -426,7 +426,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
       three luxuries go; calm is +2 for this year and luxuries are +2 each. A riot clears
       the tokens and then rolls; a revolt sends half the slaves away with no roll. Beloved
       reads the level without calm.
-- [ ] **Step 6 · Years and the year deck.** Seasons and the omen retire. A 14-card year deck
+- [x] **Step 6 · Years and the year deck.** ([#85](https://github.com/Jinglemisk/hegemony/pull/85): a 40-game bot batch finishes all fourteen years with no turn caps; 2 games end by the race and 38 by the deck; the riot table opens on 10.7% of player-turns after year 7. [Note](../reports/audits/2026-10-03-v2-step6-years.md).) Seasons and the omen retire. A 14-card year deck
       is the clock and the next card stays hidden. Victory is checked at the start of each
       player's own turn, as today, with the paper's minimums; Treasurer counts gold only; Voice is a level.
 - [ ] **Step 7 · Cards.** A player deck of twelve kinds in the four verbs. Ventures take one
