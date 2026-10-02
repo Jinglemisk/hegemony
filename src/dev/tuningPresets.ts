@@ -22,7 +22,7 @@ export const LOW_NUMBER_RULESET_PATCH = {
   },
   victory: {
     cardsToWin: 3,
-    minimums: { cities: 3, pops: 8, citizens: 6, gold: 40, happiness: 4, voice: 3 },
+    minimums: { cities: 3, pops: 8, citizens: 6, gold: 15, happiness: 4, voice: 3 },
   },
   actionCosts: {
     foundColony: { wood: 9, food: 1 },
@@ -81,11 +81,6 @@ function scaleEventEffect(effect: EventEffect): EventEffect {
   switch (copy.type) {
     case "resourceDelta":
       copy.amount = scaledMagnitude(copy.amount, isHappiness(copy.resource) ? 2 : 3);
-      break;
-    case "scaledResourceDelta":
-      copy.amountPerPops = scaledMagnitude(copy.amountPerPops, 2);
-      copy.popStep = Math.max(1, Math.ceil(copy.popStep / 2));
-      copy.minimum = scaledMagnitude(copy.minimum, 2);
       break;
     case "happinessDelta":
       copy.amount = scaledMagnitude(copy.amount, 2);
@@ -235,8 +230,6 @@ function eventTextNumbers(effect: EventEffect): number[] {
     case "happinessDelta":
     case "actionCostDiscount":
       return [effect.amount];
-    case "scaledResourceDelta":
-      return [effect.amountPerPops, effect.popStep, effect.minimum];
     case "timedHappinessDelta":
       return [effect.amountPerTurn, effect.turns];
     case "addPops":

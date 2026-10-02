@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   EXPEDITION_TABLES,
-  OMEN_TABLE,
   PLAYER_EVENT_CARDS,
   RIOT_TABLE,
   YEAR_CARDS,
@@ -22,56 +21,10 @@ import { presentEventEffect, presentTableEffect } from "./effects";
 describe("the flat sentence survives the split", () => {
   const eventCases: Array<[EventEffect, string]> = [
     [{ type: "resourceDelta", scope: "activePlayer", resource: "gold", amount: -3 }, "-3 Gold"],
-    [
-      {
-        type: "scaledResourceDelta",
-        scope: "activePlayer",
-        resource: "food",
-        amountPerPops: 2,
-        popStep: 3,
-        minimum: 1,
-      },
-      "+2 Food per 3 pops",
-    ],
     [{ type: "happinessDelta", scope: "activePlayer", amount: 2 }, "-1 Unrest token"],
-    [
-      {
-        type: "scaledHappinessDelta",
-        scope: "allPlayers",
-        amountPerPops: -1,
-        popStep: 4,
-        minimumMagnitude: 1,
-      },
-      "+1 Unrest token",
-    ],
-    [
-      {
-        type: "scaledHappinessDelta",
-        scope: "allPlayers",
-        amountPerPops: -1,
-        popStep: 4,
-        minimumMagnitude: 1,
-        duration: "season",
-      },
-      "-1 Happiness per 4 pops",
-    ],
     [
       { type: "timedHappinessDelta", scope: "activePlayer", amountPerTurn: -2, turns: 3 },
       "+1 Unrest token",
-    ],
-    [
-      {
-        type: "incomeModifier",
-        scope: "activePlayer",
-        resource: "wood",
-        amount: 1,
-        duration: "season",
-      },
-      "+1 Wood income",
-    ],
-    [
-      { type: "buildingCostMultiplier", multiplier: 2, duration: "season", excludes: [] },
-      "Double building costs this season",
     ],
     [
       { type: "addPops", pop: "citizens", amount: 1, target: "ownedSettlementWithCapacity" },
@@ -119,7 +72,6 @@ describe("the flat sentence survives the split", () => {
     [{ type: "destroyBuilding", popLossFallback: 1 }, "-1 building"],
     [{ type: "gainResource", resource: "gold", amount: 9 }, "+9 Gold"],
     [{ type: "gainPop", pop: "slaves", foodFallback: 2 }, "+1 slave"],
-    [{ type: "yearIncomeModifier", resource: "food", amount: -1 }, "-1 Food income, all year"],
   ];
 
   it.each(eventCases)("presents %o as its unchanged sentence", (effect, text) => {
@@ -133,9 +85,9 @@ describe("the flat sentence survives the split", () => {
 
 describe("the carved parts are drawn from that same sentence", () => {
   const authoredEventEffects = flatten(
-    [...YEAR_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
+    PLAYER_EVENT_CARDS.flatMap((card) => card.effects),
   );
-  const authoredTableEffects = [RIOT_TABLE, ...EXPEDITION_TABLES, OMEN_TABLE].flatMap((table) =>
+  const authoredTableEffects = [RIOT_TABLE, ...EXPEDITION_TABLES].flatMap((table) =>
     table.rows.flatMap((row) => row.effects),
   );
 

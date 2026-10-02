@@ -209,33 +209,6 @@ export const GLYPHS = {
     p("M9.5 21h5M12 18.5V21"),
   ],
 
-  /* ── The four seasons ──────────────────────────────────────────────────────
-     Read as a set on the season wheel, so they share a weight and each is a
-     single unmistakable idea: a shoot, the sun, a leaf, a flake. */
-  /* A bud, not a shoot: the Grow verb already owns the two-leaf sprout, and the
-     season wheel sits a few hundred pixels from the verb rail. */
-  spring: [
-    p("M12 21v-8"),
-    p(
-      "M12 16c-2.8 0-4.6-1.9-4.6-4.7 2.8 0 4.6 1.9 4.6 4.7zm0 2.6c2.3 0 3.8-1.6 3.8-3.9-2.3 0-3.8 1.6-3.8 3.9z",
-    ),
-    c(12, 7, 3),
-  ],
-  summer: [
-    c(12, 12, 4.2),
-    p(
-      "M12 3v2.6M12 18.4V21M3 12h2.6M18.4 12H21M5.6 5.6l1.9 1.9M16.5 16.5l1.9 1.9M18.4 5.6l-1.9 1.9M7.5 16.5l-1.9 1.9",
-    ),
-  ],
-  autumn: [
-    p("M5 19C5 11 11 5 19 5c0 8-6 14-14 14z"),
-    p("M19 5 9.5 14.5M14 8.5l.9 3.6M11 11.5l.9 3.6"),
-  ],
-  winter: [
-    p("M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"),
-    p("M12 6.6 9.6 4.6M12 6.6l2.4-2M12 17.4l-2.4 2M12 17.4l2.4 2"),
-  ],
-
   /* ── The Assembly ──────────────────────────────────────────────────────────
      The politics register's own furniture. None of these appears on the board —
      seeing one is how the player knows they are in the agora. */
@@ -264,7 +237,7 @@ export const GLYPHS = {
   kleistophenes: bust(p("M7 6.6c1.4-2.8 8.6-2.8 10 0M7 6.6 5.2 5.2M17 6.6l1.8-1.4")),
   stratokles: bust(p("M5.5 6.8h13M8.4 6.8c0-2.4 1.6-3.8 3.6-3.8s3.6 1.4 3.6 3.8")),
 
-  /* ── Tables and omens ──────────────────────────────────────────────────────── */
+  /* ── Tables ────────────────────────────────────────────────────────────────── */
   riot: [
     p(
       "M6 21v-8M6 13 3.5 9M6 13l2.5-4M12 21V11M12 11 9.2 6.6M12 11l2.8-4.4M18 21v-8M18 13l-2.5-4M18 13l2.5-4",
@@ -279,11 +252,6 @@ export const GLYPHS = {
       "M12 8.5c-1.8-1.8-3.8-2-5.2-.6 1.4 1.4 3.4 1.6 5.2.6zm0 0c1.8-1.8 3.8-2 5.2-.6-1.4 1.4-3.4 1.6-5.2.6z",
     ),
     p("M9.5 13c2.5 0 2.5 3 5 3M9.5 17c2.5 0 2.5 3 5 3"),
-  ],
-  omen: [
-    p("M2 12s4-6.5 10-6.5S22 12 22 12s-4 6.5-10 6.5S2 12 2 12z"),
-    c(12, 12, 3.2),
-    dot(12, 12, 1.3),
   ],
   /* Pips are drawn as rings, not filled dots: three solid masses would make the
      die the one glyph in the set that reads as a sticker, and at 14px a 1.6r ring
@@ -317,8 +285,6 @@ export const GLYPHS = {
   loss: [BOWL, p("M12 11V3m-3 3 3-3 3 3")],
   income: [CYCLE],
   suppress: [CYCLE, SLASH],
-  /* The year dial: a full turn with the four seasons ticked and a needle. */
-  yearCycle: [c(12, 12, 8), p("M12 4v2M20 12h-2M12 20v-2M4 12h2"), p("M12 12l4-4")],
   freeGrant: [CYCLE, p("M11 9v6m-3-3h6")],
   costDown: [PLINTH, p("M12 3v9m-3.5-3.5L12 12l3.5-3.5")],
   costUp: [PLINTH, p("M12 12V3m-3.5 3.5L12 3l3.5 3.5")],
@@ -343,12 +309,6 @@ export const GLYPHS = {
     ),
   ],
   perPop: [c(8, 8, 3), p("M2.5 19c.6-3.4 2.6-5 5.5-5s4.9 1.6 5.5 5"), p("M16 20v-6h6v6z")],
-  moodCrowd: [
-    p("M8 3c1.2.6 2.6.9 4 .9s2.8-.3 4-.9v3.4c0 2.6-1.7 4.4-4 4.4S8 9 8 6.4z"),
-    c(5, 17, 2.2),
-    c(12, 17, 2.2),
-    c(19, 17, 2.2),
-  ],
   popGain: [c(10, 9, 3.4), p("M4 20c.7-3.8 3-5.6 6-5.6s5.3 1.8 6 5.6"), p("M19 4v6M16 7h6")],
   popLoss: [c(10, 9, 3.4), p("M4 20c.7-3.8 3-5.6 6-5.6s5.3 1.8 6 5.6"), p("M16 7h6")],
   popIncome: [

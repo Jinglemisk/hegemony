@@ -11,7 +11,6 @@ import {
   placeCity,
   placeColony,
   resolveArrivingPops,
-  seasonName,
   settlementNetYield,
   startNewYear,
   upgradeColonyToCity,
@@ -340,44 +339,30 @@ describe("grow pop", () => {
   });
 });
 
-describe("season rollover", () => {
-  it("advances the season and resets per-turn flags", () => {
+describe("year rollover", () => {
+  it("advances the year and resets per-turn flags", () => {
     const state = fresh();
     state.players["0"].collectedThisTurn = true;
     state.players["0"].grownSettlementsThisTurn = ["0,0"];
-    const seasonBefore = state.year;
+    const yearBefore = state.year;
 
     startNewYear(state);
 
-    expect(state.year).toBe(seasonBefore + 1);
+    expect(state.year).toBe(yearBefore + 1);
     expect(state.players["0"].collectedThisTurn).toBe(false);
     expect(state.players["0"].grownSettlementsThisTurn).toEqual([]);
   });
 
-  it("draws a seasonal event that suits the current season, in every season", () => {
-    // Walk a couple of full years and assert each revealed card is legal for its season.
-    for (let season = 1; season <= 8; season += 1) {
-      const state = fresh();
-      state.year = season;
-
-      revealYearCard(state);
-
-      const card = state.activeYearCard?.card;
-      expect(card).toBeTruthy();
-      const suits =
-        !card?.seasons || card.seasons.length === 0 || card.seasons.includes(seasonName(season));
-      expect(suits).toBe(true);
-    }
-  });
-
-  it("never surfaces a winter-only card outside winter", () => {
-    // Civic Anxiety is tagged winter-only; a spring draw must not reveal it.
+  it("reveals the top card of the year deck and discards the last one", () => {
     const state = fresh();
-    state.year = 1; // spring
-
     revealYearCard(state);
+    const first = state.activeYearCard;
+    const next = state.yearDrawPile[0];
 
-    expect(state.activeYearCard?.card.id).not.toBe("season-civic-anxiety");
+    startNewYear(state);
+
+    expect(state.activeYearCard).toBe(next);
+    expect(state.yearDiscardPile).toEqual([first]);
   });
 });
 

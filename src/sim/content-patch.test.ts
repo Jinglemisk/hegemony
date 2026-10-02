@@ -4,7 +4,6 @@ import {
   getAuthoredGameContent,
   getBuildings,
   getExpeditionTables,
-  getOmenTable,
   getPlayerEventCards,
   getRiotTable,
   getResolutionCards,
@@ -56,7 +55,6 @@ describe("sim content/tune patching", () => {
     expect(getPlayerEventCards(preset)).toBe(preset.playerEvents);
     expect(getRiotTable(preset)).toBe(preset.riotTable);
     expect(getExpeditionTables(preset)).toBe(preset.expeditionTables);
-    expect(getOmenTable(preset)).toBe(preset.omenTable);
     expect(getResolutionCards(preset)).toBe(preset.resolutions);
 
     expect(getBuildings(authored)).toBe(authored.buildings);

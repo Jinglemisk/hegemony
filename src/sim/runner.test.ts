@@ -117,7 +117,8 @@ describe("runGame smoke", () => {
       mode: "standard",
       policy: greedy, // fallback (unused — every seat is named)
       seatPolicies: { "0": greedy, "1": smart, "2": smart, "3": smart },
-      turns: 8,
+      // Stay inside Year 1: an Assembly parks the turn on its opener while others act.
+      turns: 3,
     });
 
     const seat0 = calls.filter((call) => call.seat === "0");

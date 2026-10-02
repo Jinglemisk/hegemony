@@ -27,11 +27,10 @@ describe("scenario builder", () => {
     expect(G.pendingPlayerEvent?.playerID).toBe("0");
   });
 
-  it("stacked seasonal card is revealed by the opening when it suits the season", () => {
-    // timber-levies is spring-suited, so stacking it wins the opening's spring draw.
-    const G = scenario().stackSeasonalEvent("season-timber-levies").opening().build();
+  it("stacked year card is revealed by the opening", () => {
+    const G = scenario().stackYearCard("year-piracy").opening().build();
 
-    expect(G.activeYearCard?.card.id).toBe("season-timber-levies");
+    expect(G.activeYearCard?.id).toBe("year-piracy");
   });
 
   it("pokes state directly: settlements, pops, resources, happiness", () => {

@@ -37,7 +37,6 @@ export type EventEffectActiveEffectHandling =
  */
 export const EVENT_EFFECT_ACTIVE_EFFECT_HANDLING = {
   resourceDelta: "immediate",
-  scaledResourceDelta: "immediate",
   happinessDelta: "immediate",
   timedHappinessDelta: "immediate",
   addPops: "immediate",

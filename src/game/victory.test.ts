@@ -21,7 +21,7 @@ function giveLuxuries(G: HegemonyState, playerID: PlayerId, count: number) {
 const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", true);
 
 /**
- * These turn-structure tests cycle whole years to assert the season/opener machine.
+ * These turn-structure tests cycle whole years to assert the year/opener machine.
  * From spring of Year 2 the Assembly legitimately SUSPENDS that machine between the
  * season roll and the opener's turn, so running them under the default ruleset would
  * be measuring the agora, not the calendar. `firstYear: 0` disables the subsystem so
@@ -109,8 +109,8 @@ describe("victory card standings", () => {
   });
 });
 
-describe("the seasonal deck is a finite clock", () => {
-  it("never reshuffles the seasonal discard back in", () => {
+describe("the year deck is a finite clock", () => {
+  it("never reshuffles the year discard back in", () => {
     const G = scenario().opening().build();
     const total = G.yearDrawPile.length;
 
@@ -134,16 +134,16 @@ describe("the seasonal deck is a finite clock", () => {
       })
       .build();
     G.yearDrawPile = [];
-    const seasonBefore = G.year;
+    const yearBefore = G.year;
 
     startNewYear(G);
 
     expect(G.phase).toBe("gameOver");
     expect(G.gameOverReason).toBe("deckExhausted");
     expect(G.winner).toBe("3");
-    // The clock stops on the last season actually played — no phantom increment,
-    // which is what kept the sim's turn/season telemetry off by one.
-    expect(G.year).toBe(seasonBefore);
+    // The clock stops on the last year actually played — no phantom increment,
+    // which is what kept the sim's turn and year telemetry off by one.
+    expect(G.year).toBe(yearBefore);
   });
 });
 
@@ -167,37 +167,53 @@ describe("phase-0 turn structure", () => {
     ]);
   });
 
-  it("rotates the season opener each new year", () => {
+  it("moves the opener on one seat each year", () => {
     const G = assemblyFreeGame(SEED);
     expect(G.yearOpener).toBe("0");
 
-    // Play through year 1 (4 seasons × 4 turns). Season 5 is spring of year 2.
-    for (let turn = 0; turn < 16; turn += 1) {
+    for (let turn = 0; turn < 4; turn += 1) {
       clearPending(G);
       expect(endTurn(G).ok).toBe(true);
-      if (G.phase !== "gameplay") break;
     }
 
-    expect(G.year).toBe(5);
+    expect(G.year).toBe(2);
     expect(G.yearOpener).toBe("1");
     expect(G.currentPlayer).toBe("1");
   });
 
-  it("keeps four turns per season across the rotation boundary", () => {
+  it("gives every seat one turn a year across the rotation", () => {
     const G = assemblyFreeGame(SEED);
-    const seasonTurns = new Map<number, number>();
-    seasonTurns.set(G.year, 1);
+    const seatsByYear = new Map<number, string[]>();
+    seatsByYear.set(G.year, [G.currentPlayer]);
 
     for (let turn = 0; turn < 24 && G.phase === "gameplay"; turn += 1) {
       clearPending(G);
       expect(endTurn(G).ok).toBe(true);
-      seasonTurns.set(G.year, (seasonTurns.get(G.year) ?? 0) + 1);
+      seatsByYear.set(G.year, [...(seatsByYear.get(G.year) ?? []), G.currentPlayer]);
     }
 
-    for (const [season, turns] of seasonTurns) {
-      if (season === [...seasonTurns.keys()].pop()) continue; // last season may be partial
-      expect(turns, `season ${season}`).toBe(4);
+    const lastYear = [...seatsByYear.keys()].pop();
+    for (const [year, seats] of seatsByYear) {
+      if (year === lastYear) continue; // the last year may be partial
+      expect([...seats].sort(), `year ${year}`).toEqual(["0", "1", "2", "3"]);
     }
+  });
+
+  it("ends the game when the fourteen-card year deck is spent", () => {
+    const G = assemblyFreeGame(SEED);
+    expect(G.yearDrawPile.length + 1).toBe(14);
+
+    // Nobody may win the race here: the clock alone must end it.
+    G.ruleset = { ...G.ruleset, victory: { ...G.ruleset.victory, cardsToWin: 99 } };
+
+    for (let turn = 0; turn < 14 * 4 && G.phase === "gameplay"; turn += 1) {
+      clearPending(G);
+      expect(endTurn(G).ok).toBe(true);
+    }
+
+    expect(G.phase).toBe("gameOver");
+    expect(G.gameOverReason).toBe("deckExhausted");
+    expect(G.year).toBe(14);
   });
 });
 

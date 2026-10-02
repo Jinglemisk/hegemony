@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import { PLAYER_IDS } from "../data";
-import { yearOf } from "../core/calendar";
 import { collectIncome } from "../actions";
 import { owned, scenario, tile } from "../testing/scenario";
 import { closeAssembly, endTurn } from "../turn";
@@ -24,6 +23,7 @@ import {
 } from "./assembly";
 import { getAuthoredResolutionCard } from "./deck";
 import { authoredSteleCount, politicianStandings } from "./power";
+import { voiceHolder } from "../victory";
 
 /**
  * The Assembly's cadence and flow (design §1.1–§1.5).
@@ -160,7 +160,7 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
   it("holds no assembly at all through Year 1", () => {
     const G = scenario().opening().build();
 
-    for (let turn = 0; turn < 15; turn += 1) {
+    for (let turn = 0; turn < 3; turn += 1) {
       G.pendingPlayerEvent = null;
       G.pendingRiot = null;
       expect(endTurn(G).ok, `turn ${turn}`).toBe(true);
@@ -171,11 +171,10 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
     expect(G.assembliesHeld).toBe(0);
   });
 
-  it("convenes in the spring of Year 2, with a house resolution already on the bema", () => {
+  it("convenes as Year 2 opens, with a house resolution already on the bema", () => {
     const G = scenario().opening().build();
-    expect(playUntilAssembly(G)).toBe(16);
+    expect(playUntilAssembly(G)).toBe(4);
 
-    expect(G.year).toBe(5);
     expect(G.year).toBe(2);
     expect(G.assembly?.year).toBe(2);
     expect(G.assembly?.phase).toBe("proposal");
@@ -191,7 +190,7 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
 
   it("ends the turn successfully but does NOT open the opener's turn while the agora sits", () => {
     const G = scenario().opening().build();
-    playUntilAssembly(G, 15);
+    playUntilAssembly(G, 3);
     G.pendingPlayerEvent = null;
     G.pendingRiot = null;
     const turnBefore = G.turn;
@@ -199,7 +198,7 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
     expect(endTurn(G).ok).toBe(true);
 
     expect(G.assembly).not.toBeNull();
-    // The season rolled and the opener rotated, but nobody has taken a turn. Proposal
+    // The year turned and the opener moved on, but nobody has taken a turn. Proposal
     // is async, so `currentPlayer` just parks on the first undecided seat (the new
     // opener) for a headless driver; the UI lets any seat act.
     expect(G.yearOpener).toBe("1");
@@ -224,7 +223,7 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
     expect(G.turn).toBe(turnBefore + 1);
   });
 
-  it("convenes again the following spring, behind the rotated opener", () => {
+  it("convenes again two years on, behind the opener of that year", () => {
     const G = atAssembly();
     passRemainingSeats(G);
     expect(closeAssembly(G).ok).toBe(true);
@@ -232,13 +231,13 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
     playUntilAssembly(G);
 
     expect(G.phase).toBe("gameplay");
-    expect(G.year).toBe(9); // spring of Year 3
+    expect(G.year).toBe(4); // every other year
     expect(G.assembliesHeld).toBe(2);
-    // The year turned, so the opener turned with it — and the agora runs off the new one.
-    expect(G.yearOpener).toBe("2");
-    expect(G.assembly?.resumePlayer).toBe("2");
+    // The opener moves on a seat each year, and the agora runs off the new one.
+    expect(G.yearOpener).toBe("3");
+    expect(G.assembly?.resumePlayer).toBe("3");
     // The vote runs in turn order from the new opener.
-    expect(G.assembly?.voteOrder).toEqual(["2", "3", "0", "1"]);
+    expect(G.assembly?.voteOrder).toEqual(["3", "0", "1", "2"]);
   });
 
   it("is disabled outright by firstYear: 0", () => {
@@ -253,7 +252,7 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
       expect(G.assembly, `turn ${turn}`).toBeNull();
     }
 
-    // Well past spring of Year 2, when the agora would otherwise have convened.
+    // Well past Year 2, when the agora would otherwise have convened.
     expect(G.year).toBeGreaterThan(5);
     expect(G.assembliesHeld).toBe(0);
   });
@@ -470,7 +469,7 @@ describe("the ballot", () => {
 
     expect(author).toBe("0");
     expect(G.activeLaws).toHaveLength(1);
-    expect(G.activeLaws[0]).toMatchObject({ cardId: "land-reform", author: "0", enactedYear: 5 });
+    expect(G.activeLaws[0]).toMatchObject({ cardId: "land-reform", author: "0", enactedYear: 2 });
     // The stele is immediately the politician's power and the author's patronage.
     const demosthenes = politicianStandings(G).find((s) => s.politician.id === "demosthenes");
     expect(demosthenes).toMatchObject({ power: 1, patron: "0" });
@@ -625,25 +624,38 @@ describe("author prizes and permanent Voice progress", () => {
     },
   );
 
-  it("gives Voice to the first player at three, preserves it through a tie, then transfers on a strict lead", () => {
+  it("gives Voice to the sole leader in standing authored Laws, from two", () => {
     const G = atAssembly();
     const enactLaw = (cardId: string, proposer: PlayerId) =>
       enactForEval(G, { kind: "enact", card: getAuthoredResolutionCard(cardId)!, proposer });
 
-    ["land-reform", "public-works", "homestead-act"].forEach((cardId) => enactLaw(cardId, "0"));
-    expect(G.assemblyPassedByPlayer["0"]).toBe(3);
-    expect(G.voiceHolder).toBe("0");
+    enactLaw("land-reform", "0");
+    expect(voiceHolder(G)).toBeNull();
+    enactLaw("public-works", "0");
+    expect(voiceHolder(G)).toBe("0");
 
-    ["sacred-fields", "forum-rites", "colonial-charter"].forEach((cardId) => enactLaw(cardId, "1"));
-    expect(G.assemblyPassedByPlayer["1"]).toBe(3);
-    expect(G.voiceHolder).toBe("0");
+    // A rival who draws level takes it off the holder: a tie holds nothing.
+    ["sacred-fields", "forum-rites"].forEach((cardId) => enactLaw(cardId, "1"));
+    expect(voiceHolder(G)).toBeNull();
 
     enactLaw("festival-calendar", "1");
-    expect(G.assemblyPassedByPlayer["1"]).toBe(4);
-    expect(G.voiceHolder).toBe("1");
+    expect(voiceHolder(G)).toBe("1");
   });
 
-  it("does not decrement Voice progress when an authored Law leaves the board", () => {
+  it("takes Voice back when an authored Law is repealed", () => {
+    const G = atAssembly();
+    const enactLaw = (cardId: string, proposer: PlayerId) =>
+      enactForEval(G, { kind: "enact", card: getAuthoredResolutionCard(cardId)!, proposer });
+
+    ["land-reform", "public-works"].forEach((cardId) => enactLaw(cardId, "0"));
+    expect(voiceHolder(G)).toBe("0");
+
+    enactForEval(G, { kind: "repeal", cardId: "land-reform", proposer: "1" });
+
+    expect(voiceHolder(G)).toBeNull();
+  });
+
+  it("keeps the record of passes when an authored Law leaves the board", () => {
     const G = atAssembly();
     enactForEval(G, {
       kind: "enact",
@@ -658,7 +670,7 @@ describe("author prizes and permanent Voice progress", () => {
     expect(G.assemblyPassedByPlayer["0"]).toBe(count);
   });
 
-  it("preserves the displaced author's Voice progress when a Law is replaced", () => {
+  it("keeps the displaced author's record of passes when a Law is replaced", () => {
     const G = atAssembly();
     enactForEval(G, {
       kind: "enact",

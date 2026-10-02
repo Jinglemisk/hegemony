@@ -198,7 +198,6 @@ function projectionFixture(): HegemonyState {
   G.pendingPlayerEvent = null;
   G.pendingRiot = null;
   G.activeYearCard = null;
-  G.yearOmen = null;
   G.activeLaws = [];
   Object.assign(player.resources, { food: 100 });
   for (const [index, tileId] of player.settlements.entries()) {
@@ -446,7 +445,10 @@ describe("political policy", () => {
   });
 
   it("draws from Stratokles when his authored prize is the available line", () => {
-    const G = scenario({ seed: 11 }).opening().build();
+    // A Directive never counts toward Voice, so only the prize can make it worth a draw.
+    const G = scenario({ seed: 11, patch: { assembly: { prizes: { stratokles: { gold: 40 } } } } })
+      .opening()
+      .build();
     playUntilAssembly(G);
     expect(G.assembly?.phase).toBe("proposal");
 
@@ -483,7 +485,10 @@ describe("political policy", () => {
   });
 
   it("aims a Directive at the rival it hurts most", () => {
-    const G = scenario({ seed: 13 }).opening().build();
+    // The prize makes the Directive worth proposing; the target is the question.
+    const G = scenario({ seed: 13, patch: { assembly: { prizes: { stratokles: { gold: 40 } } } } })
+      .opening()
+      .build();
     playUntilAssembly(G);
     expect(G.assembly?.phase).toBe("proposal");
 

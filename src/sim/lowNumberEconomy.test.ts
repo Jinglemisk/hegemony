@@ -10,6 +10,7 @@ import {
   presentEventEffects,
   presentLawEffect,
   presentTableEffect,
+  presentYearCard,
 } from "../ui/effects";
 
 const LOW_NUMBER_CONTENT = createLowNumberContent(getAuthoredGameContent());
@@ -29,11 +30,11 @@ describe("low-number economy study invariants", () => {
 
   it("starts below every compressed resource/pop victory minimum", () => {
     const start = LOW_NUMBER_RULESET_PATCH.startingResources;
-    const stockpile = start.wood + start.stone + start.gold + start.food;
+    const gold = start.gold;
     const setupPops =
       LOW_NUMBER_RULESET_PATCH.placementPopCounts.capital +
       LOW_NUMBER_RULESET_PATCH.placementPopCounts.colony;
-    expect(stockpile).toBeLessThan(LOW_NUMBER_RULESET_PATCH.victory.minimums.stockpile);
+    expect(gold).toBeLessThan(LOW_NUMBER_RULESET_PATCH.victory.minimums.gold);
     expect(setupPops).toBeLessThan(LOW_NUMBER_RULESET_PATCH.victory.minimums.pops);
     expect(setupPops).toBeLessThan(LOW_NUMBER_RULESET_PATCH.victory.minimums.citizens);
   });
@@ -99,7 +100,7 @@ describe("low-number economy study invariants", () => {
     expect(first.resolutions).not.toBe(second.resolutions);
     expect(first).toEqual(second);
     expect(authored).toEqual(authoredSnapshot);
-    expect(first.omenTable).toEqual(authored.omenTable);
+    expect(first.yearCards).toEqual(authored.yearCards);
   });
 
   it("keeps every effective effect on the canonical presentation path", () => {
@@ -107,7 +108,10 @@ describe("low-number economy study invariants", () => {
       for (const effect of building.effects)
         expect(presentBuildingEffect(effect).text).not.toBe("");
     }
-    for (const card of [...LOW_NUMBER_CONTENT.yearCards, ...LOW_NUMBER_CONTENT.playerEvents]) {
+    for (const card of LOW_NUMBER_CONTENT.yearCards) {
+      expect(presentYearCard(card).text).not.toBe("");
+    }
+    for (const card of LOW_NUMBER_CONTENT.playerEvents) {
       expect(presentEventEffects(card.effects).text).not.toBe("");
     }
     for (const card of LOW_NUMBER_CONTENT.resolutions) {
@@ -120,7 +124,6 @@ describe("low-number economy study invariants", () => {
     for (const table of [
       LOW_NUMBER_CONTENT.riotTable,
       ...LOW_NUMBER_CONTENT.expeditionTables,
-      LOW_NUMBER_CONTENT.omenTable,
     ]) {
       for (const row of table.rows) {
         for (const effect of row.effects) expect(presentTableEffect(effect).text).not.toBe("");
@@ -134,9 +137,6 @@ describe("low-number economy study invariants", () => {
     expect(card("player-warehouse-fire")).toContain("Lose 2 Wood");
     expect(card("player-caravan-contacts")).toContain("up to 2 Wood for 3 Gold");
     expect(card("player-civic-petition")).toBe("Gain 1 Influence, or clear an Unrest token.");
-    expect(
-      LOW_NUMBER_CONTENT.yearCards.find((event) => event.id === "season-plague")?.text,
-    ).toContain("places an Unrest token");
   });
 
   it("keeps transformed resolution prose aligned with low-number mechanics", () => {

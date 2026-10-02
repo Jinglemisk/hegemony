@@ -101,14 +101,6 @@ export type EventEffect =
       amount: number;
     }
   | {
-      type: "scaledResourceDelta";
-      scope: EventScope;
-      resource: Resource;
-      amountPerPops: number;
-      popStep: number;
-      minimum: number;
-    }
-  | {
       type: "happinessDelta";
       scope: EventScope;
       amount: number;

@@ -177,12 +177,6 @@ export function presentEventEffect(
   switch (effect.type) {
     case "resourceDelta":
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
-    case "scaledResourceDelta":
-      return carve(signedTone(effect.amountPerPops), {
-        magnitude: formatSignedNumber(effect.amountPerPops),
-        subject: RESOURCE_LABELS[effect.resource],
-        condition: `per ${effect.popStep} pops`,
-      });
     case "happinessDelta":
       return presentUnrestToken(effect.amount);
     case "timedHappinessDelta":

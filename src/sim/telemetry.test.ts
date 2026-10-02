@@ -156,7 +156,12 @@ describe("Aggregator", () => {
     G.gameOverReason = "victoryRace";
     G.winner = "0";
     G.assemblyPassedByPlayer = { "0": 4, "1": 2, "2": 1, "3": 0 };
-    G.voiceHolder = "0";
+    G.activeLaws = ["land-reform", "public-works"].map((cardId, order) => ({
+      cardId,
+      author: "0",
+      enactedYear: G.year,
+      order,
+    }));
     aggregator.endGame(G);
 
     const report = aggregator.buildReport({

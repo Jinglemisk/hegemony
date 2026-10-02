@@ -21,7 +21,7 @@ import { applyHappinessSwing, describeHappinessSwing } from "./happiness";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { shuffleWithSeed } from "./core/rng";
-import { countPlayerPopType, scaledByPops, settlementCapacity } from "./settlement";
+import { countPlayerPopType, settlementCapacity } from "./settlement";
 
 export function drawPlayerEvent(G: HegemonyState, playerID: PlayerId) {
   const card = drawFromPlayerDeck(G);
@@ -160,22 +160,6 @@ function applyEventEffects(
           G,
           playerID,
           createResourceDelta(effect.resource, effect.amount),
-          card.name,
-        );
-      }
-    } else if (effect.type === "scaledResourceDelta") {
-      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        const amount = scaledByPops(
-          G,
-          playerID,
-          effect.amountPerPops,
-          effect.popStep,
-          effect.minimum,
-        );
-        applyEventResourceDelta(
-          G,
-          playerID,
-          createResourceDelta(effect.resource, amount),
           card.name,
         );
       }

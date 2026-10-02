@@ -110,8 +110,6 @@ export const EVENT_TABLE_GLYPHS = {
 export const EVENT_EFFECT_GLYPHS = {
   /** Your stores change, now. */
   resourceDelta: "stockpile",
-  /** Scaled by how many people you have — a crowd, not a person. */
-  scaledResourceDelta: "crowd",
   happinessDelta: "happiness",
   /** The distinguishing feature is that it ticks: the hourglass, not the mask. */
   timedHappinessDelta: "hourglass",
@@ -235,7 +233,6 @@ export type EffectIconTarget =
 export function eventBlowGlyph(effect: EventEffect): GlyphId {
   switch (effect.type) {
     case "resourceDelta":
-    case "scaledResourceDelta":
     case "resourceDeltaPerPop":
       return RESOURCE_GLYPHS[effect.resource];
     case "happinessDelta":

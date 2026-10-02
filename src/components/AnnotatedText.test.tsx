@@ -24,7 +24,6 @@ const AUTHORED_NAMES = [
   ...content.resolutions,
   ...POLITICIANS,
   content.riotTable,
-  content.omenTable,
   ...content.expeditionTables,
 ].map((authored) => authored.name);
 

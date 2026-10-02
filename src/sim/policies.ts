@@ -84,7 +84,9 @@ export function policyEconomyThresholds(ruleset: Ruleset) {
     lowGold: goldVentureStake * 2,
     woodStarved: colonyWoodCost,
     goldRich: colonyWoodCost,
-    materialScoreDivisor: Math.max(1, ruleset.victory.minimums.gold / 8),
+    // Treasurer's 30 gold stands where 80 banked materials stood, so the divisor
+    // keeps its old size: a tenth of the stores is one point.
+    materialScoreDivisor: Math.max(1, ruleset.victory.minimums.gold / 3),
   };
 }
 

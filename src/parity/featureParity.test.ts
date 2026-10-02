@@ -8,7 +8,6 @@ import {
   PLAYER_EVENT_CARDS,
   YEAR_CARDS,
   EXPEDITION_TABLES,
-  OMEN_TABLE,
   RIOT_TABLE,
 } from "../game/data";
 import { settlementNetYield } from "../game/economy/income";
@@ -22,6 +21,7 @@ import {
   presentEventEffect,
   presentLawEffect,
   presentTableEffect,
+  presentYearCard,
 } from "../ui/effects";
 
 import {
@@ -127,7 +127,7 @@ describe("feature and content parity manifests", () => {
   });
 
   it("matches every shipped content id and effect to the manifests", () => {
-    const tables = [RIOT_TABLE, ...EXPEDITION_TABLES, OMEN_TABLE];
+    const tables = [RIOT_TABLE, ...EXPEDITION_TABLES];
 
     expect(sorted(getBuildings(AUTHORED_CONTENT).map((building) => building.id))).toEqual(
       sorted(BUILDING_CONTENT_IDS),
@@ -156,7 +156,7 @@ describe("feature and content parity manifests", () => {
     }
 
     const eventEffects = flattenEventEffects(
-      [...YEAR_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
+      PLAYER_EVENT_CARDS.flatMap((card) => card.effects),
     );
     expect(unique(eventEffects.map((effect) => effect.type))).toEqual(
       sorted(Object.keys(EVENT_EFFECT_PARITY)),
@@ -190,11 +190,12 @@ describe("feature and content parity manifests", () => {
 
   it("projects every authored effect through a non-empty typed frontend presentation", () => {
     const eventEffects = flattenEventEffects(
-      [...YEAR_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
+      PLAYER_EVENT_CARDS.flatMap((card) => card.effects),
     );
     for (const effect of eventEffects) expectPresentation(presentEventEffect(effect));
+    for (const card of YEAR_CARDS) expectPresentation(presentYearCard(card));
 
-    for (const table of [RIOT_TABLE, ...EXPEDITION_TABLES, OMEN_TABLE]) {
+    for (const table of [RIOT_TABLE, ...EXPEDITION_TABLES]) {
       for (const effect of table.rows.flatMap((row) => row.effects)) {
         expectPresentation(presentTableEffect(effect));
       }
@@ -291,11 +292,11 @@ describe("feature and content parity manifests", () => {
 
     expect(Object.keys(report.buildings)).toEqual([...BUILDING_CONTENT_IDS]);
     expect(Object.keys(report.events.player)).toEqual([...PLAYER_EVENT_CONTENT_IDS]);
-    expect(Object.keys(report.events.seasonal)).toEqual([...YEAR_CARD_CONTENT_IDS]);
+    expect(Object.keys(report.events.year)).toEqual([...YEAR_CARD_CONTENT_IDS]);
     expect(
       Object.values(report.buildings).every((entry) => entry.built === 0 && entry.perGame === 0),
     ).toBe(true);
     expect(Object.values(report.events.player).every((count) => count === 0)).toBe(true);
-    expect(Object.values(report.events.seasonal).every((count) => count === 0)).toBe(true);
+    expect(Object.values(report.events.year).every((count) => count === 0)).toBe(true);
   });
 });

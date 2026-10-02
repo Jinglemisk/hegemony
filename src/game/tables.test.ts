@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EXPEDITION_TABLES, OMEN_TABLE, RIOT_TABLE } from "./data";
+import { EXPEDITION_TABLES, RIOT_TABLE } from "./data";
 import { calculateIncomeBreakdown } from "./economy/income";
 import { startNewYear } from "./year";
 import { rollOnTable } from "./tables";
@@ -171,61 +171,10 @@ describe("ventures (D10/Q16)", () => {
   });
 });
 
-describe("the yearly omen (PROVISIONAL, 2026-07-13)", () => {
-  it("stands from the game's first turn and modifies every player's income", () => {
-    const G = opening();
-
-    expect(G.yearOmen).not.toBeNull();
-    expect(G.yearOmen!.year).toBe(1);
-    expect(G.yearOmen!.record.tableId).toBe("omen");
-
-    const effect = G.yearOmen!.effects[0];
-    expect(effect.type).toBe("yearIncomeModifier");
-
-    // The income projection carries the omen for every player, not just the roller.
-    const omenLine = calculateIncomeBreakdown(G, "1").find(
-      (entry) => entry.detail === "Yearly omen",
-    );
-    expect(omenLine).toBeDefined();
-    if (effect.type === "yearIncomeModifier") {
-      expect(omenLine!.resource).toBe(effect.resource);
-      expect(omenLine!.amount).toBe(effect.amount);
-    }
-  });
-
-  it("a new year replaces the omen; the same year keeps it", () => {
-    const G = opening();
-    const first = G.yearOmen!;
-
-    startNewYear(G); // summer — same year
-    expect(G.yearOmen).toBe(first);
-
-    startNewYear(G); // autumn
-    startNewYear(G); // winter
-    startNewYear(G); // spring — year 2
-    expect(G.yearOmen).not.toBe(first);
-    expect(G.yearOmen!.year).toBe(2);
-  });
-
-  it("is symmetric on its face: table EV is zero and every row is ±1 of one resource", () => {
-    let ev = 0;
-
-    for (const row of OMEN_TABLE.rows) {
-      expect(row.effects).toHaveLength(1);
-      const effect = row.effects[0];
-      expect(effect.type).toBe("yearIncomeModifier");
-      if (effect.type === "yearIncomeModifier") {
-        expect(Math.abs(effect.amount)).toBe(1);
-        ev += effect.amount;
-      }
-    }
-
-    expect(ev).toBe(0);
-  });
-
+describe("table dice", () => {
   it("die size is table data: a d3 table never rolls above 3", () => {
     const d3: EventTableDefinition = {
-      id: "omen",
+      id: "riot",
       name: "Test d3",
       flavor: "",
       die: 3,

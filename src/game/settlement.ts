@@ -205,16 +205,3 @@ export function countPlayerPopType(G: HegemonyState, playerID: PlayerId, pop: Po
   }, 0);
 }
 
-export function scaledByPops(
-  G: HegemonyState,
-  playerID: PlayerId,
-  amountPerPops: number,
-  popStep: number,
-  minimumMagnitude: number,
-) {
-  const { pops } = playerPopulationTotals(G, playerID);
-  const scaled = Math.floor(pops / popStep) * amountPerPops;
-  const sign = amountPerPops < 0 ? -1 : 1;
-
-  return Math.abs(scaled) >= minimumMagnitude ? scaled : sign * minimumMagnitude;
-}

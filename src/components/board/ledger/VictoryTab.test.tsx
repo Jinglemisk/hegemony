@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { PLAYER_IDS } from "../../../game/data";
 import { scenario } from "../../../game/testing/scenario";
 import { victoryStandings } from "../../../game/victory";
-import type { HegemonyState } from "../../../game/types";
+import type { HegemonyState, PlayerId } from "../../../game/types";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { VictoryTab } from "./VictoryTab";
 
@@ -103,12 +103,14 @@ describe("the victory ledger against the rules", () => {
     expect(meterWidth(happiness)).toBe("0%");
   });
 
-  it("leaves Voice unheld while a rival leads the count but has not claimed it", () => {
+  const authoredLaws = (author: PlayerId, cardIds: string[]) =>
+    cardIds.map((cardId, order) => ({ cardId, author, enactedYear: 1, order }));
+
+  it("leaves Voice unheld while a rival leads the count below the minimum", () => {
     const G = scenario()
       .opening()
       .mutate((state) => {
-        state.assemblyPassedByPlayer[PLAYER_IDS[1]] = state.ruleset.victory.minimums.voice - 1;
-        state.voiceHolder = null;
+        state.activeLaws = authoredLaws(PLAYER_IDS[1], ["land-reform"]);
       })
       .build();
 
@@ -117,14 +119,14 @@ describe("the victory ledger against the rules", () => {
     expect(markOf(voice)).toBe("none:unheld");
   });
 
-  it("gives Voice to its holder even when a rival has drawn level", () => {
+  it("gives Voice to the sole leader in standing authored Laws", () => {
     const G = scenario()
       .opening()
       .mutate((state) => {
-        const minimum = state.ruleset.victory.minimums.voice;
-        state.assemblyPassedByPlayer[PLAYER_IDS[1]] = minimum;
-        state.assemblyPassedByPlayer[PLAYER_IDS[2]] = minimum;
-        state.voiceHolder = PLAYER_IDS[1];
+        state.activeLaws = [
+          ...authoredLaws(PLAYER_IDS[1], ["land-reform", "public-works"]),
+          ...authoredLaws(PLAYER_IDS[2], ["sacred-fields"]),
+        ];
       })
       .build();
 

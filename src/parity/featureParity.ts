@@ -21,7 +21,7 @@ export type ParityEvidence = {
 export const PARITY_BEHAVIOR_FIXTURES = {
   eventImmediate: {
     implementation: "src/parity/withinAxisParity.test.ts",
-    evidence: "binds immediate active-player seasonal effects to the seat that revealed them",
+    evidence: "applies a year card that acts once to every seat when it is revealed",
   },
   eventPersistent: {
     implementation: "src/parity/activeEffectParity.test.ts",
@@ -173,7 +173,6 @@ const event = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
 
 export const EVENT_EFFECT_PARITY = {
   resourceDelta: event("eventImmediate"),
-  scaledResourceDelta: event("eventImmediate"),
   happinessDelta: event("eventImmediate"),
   timedHappinessDelta: event("eventPersistent", "activeEffectPolicy"),
   addPops: event("eventImmediate"),
@@ -447,9 +446,9 @@ export const CONTENT_MANIFEST = {
     engine: { implementation: "src/game/year.ts", evidence: "revealYearCard" },
     frontend: {
       implementation: "src/components/frame/TopBar.tsx",
-      evidence: "presentEventEffects",
+      evidence: "presentYearCard",
     },
-    simulation: { implementation: "src/sim/policies.ts", evidence: "projectPolicyHorizon" },
+    simulation: { implementation: "src/sim/policies.ts", evidence: "activeYearCard: null" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "countYearCard" },
     behaviorFixtures: ["eventPersistent", "contentTelemetry"],
   },
