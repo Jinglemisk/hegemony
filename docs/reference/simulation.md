@@ -31,8 +31,8 @@ npm run sim -- show                 # full state: players, resources, settlement
 npm run sim -- legal                # numbered list of every legal move
 npm run sim -- move index 3         # apply move #3 from that list
 npm run sim -- end-turn
-npm run sim -- auto --turns 24      # let bots play six rounds
-npm run sim -- batch --games 50 --turns 40 --policy greedy   # balance report
+npm run sim -- auto --turns 24      # let bots play six years
+npm run sim -- batch --games 50 --turns 56 --policy greedy   # balance report
 ```
 
 ## Commands
@@ -114,7 +114,7 @@ npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam|political|se
                     [--bot-seed N] [--record script.json] [--quiet]
 ```
 
-Plays N player-turns (4 players → 4 turns per round) from the current save.
+Plays N player-turns (4 players → 4 turns per year) from the current save.
 Works from any phase — bots will finish a manual setup too. Policies:
 
 - `random` — uniform by move type, then within type (keeps big move families
@@ -140,12 +140,12 @@ Works from any phase — bots will finish a manual setup too. Policies:
 - `political` — the influence-aware bot (Phase 3-C). Same `smart` economy, but it plays
   the **Assembly**: it scores a resolution's DIFFERENTIAL impact (my gain minus the
   strongest rival's — "does this hurt me, help me, or help a rival more?") and draws /
-  proposes / votes / bribes / vetoes by that, atop permanent authored-and-passed progress
+  proposes / votes / bribes / vetoes by that, atop standing authored Laws
   toward Voice. Directive proposals evaluate each legal rival target separately. It reuses
   the engine's own enactment on clones,
   so it stays deterministic and reads no game RNG. A `political`-vs-`smart` A/B isolates
-  the political layer. Assemblies convene from Year 2, so use long games (`--turns 280`)
-  or the agora barely opens. See docs/archive/plans/influence-aware-ai.md and docs/reports/simulation/.
+  the political layer. Assemblies convene in Years 2, 4, 6, 8, 10, 12 and 14; `--turns 56` lets
+  the year deck finish. See docs/archive/plans/influence-aware-ai.md and docs/reports/simulation/.
 - `settler` — `smart` plus **map/expansion foresight**: a frontier term (the total yield of
   the tiles it could legally found a colony on _next_) so the one-ply search prefers
   placements that OPEN expansion — the second-order move the board-static scorer misses.
@@ -158,7 +158,7 @@ Works from any phase — bots will finish a manual setup too. Policies:
   remain future work. See docs/reports/audits/2026-07-23-ai-bot-parity.md.
 
 The economic policies project six future upkeeps one step at a time through the
-canonical active-effect descriptors. Each step applies timed mood, burns suppressed
+canonical active-effect descriptors. Each step burns suppressed
 collections, runs hunger, and recalculates authoritative income after projected pop
 loss. Hunger draws no dice (freemen leave before citizens, from the fullest
 settlement), so the projection runs the engine's own rule and never reads or advances
@@ -174,12 +174,25 @@ which cards come up.
 ### `batch` — balance simulation
 
 ```bash
-npm run sim -- batch --games 50 [--turns 40] [--policy random|greedy|smart|beam|political|settler|master]
+npm run sim -- batch --games 50 [--turns 56] [--policy random|greedy|smart|beam|political|settler|master]
                      [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
                      [--tune-preset low-number-core-v1] [--tune-patch p.json]
                      [--seats p0,p1,p2,p3] [--rotate] [--seed 1000]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
 ```
+
+The default batch cap is **56 player-turns**, enough for all fourteen years. Shorter
+caps are for partial experiments. Endings record `finalYear` and `winningTitles`
+(the titles held by a race winner). Telemetry includes the opening player-turn and
+excludes a terminal victory check with no income. For a full-game gate:
+
+```bash
+npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000
+```
+
+A riot's deferred income updates its existing snapshot, including on Year 14's
+last turn. Player draws are counted after that income, and a year-card reveal is
+counted even when the opener wins before collecting.
 
 Runs `--games` self-contained games (game _i_ uses seed `base+i`), aggregates,
 and writes a JSON report plus optional per-turn CSV (one row per
@@ -206,14 +219,14 @@ The report contains:
 - `perGame` — seed, `termination` (victoryRace|deckExhausted|turnCap), `winner`
   (null for turn-capped games), `leaderAtCap`, final cards + pops lost per player,
   and the seat→policy map for mixed runs
-- `perSeason` — end-of-season victory-card/pops/food/happiness percentiles (mean,
+- `perYear` — end-of-year victory-card/pops/food/happiness percentiles (mean,
   p10, median, p90) pooled across games and seats, plus unrest-tier and active-effect
   player-turn shares
 - `perSeat` — real `winRate` (finished games only), `capLeaderRate` (turn-capped
   games), and mean final cards per seat (first-player advantage check)
 - `riots` — riots resolved per game, revolts per game (`revoltsPerGame`), the share of
-  player-turns that opened on the riot table, and the same counts season by season
-  (`bySeason`), so a report can cut the late game. The CSV carries the level as
+  player-turns that opened on the riot table, and the same counts year by year
+  (`byYear`), so a report can cut the late game. The CSV carries the level as
   `happiness` and the `unrestTokens` count per row
 - `hunger` — food under work slots, per seat: incomes that left a mouth unfed per
   game, pops lost to hunger per game, mean idle slaves and their share of all slaves.
@@ -224,8 +237,8 @@ The report contains:
 - `movesByType` — zero-filled total and per-game counts for every typed legal move;
   this universal table makes missing or unexercised action paths visible
 - `activeEffects` — zero-filled observations, per-player-turn counts, and player-turn
-  prevalence for every canonical active-effect kind (suppression, hunger, timed
-  mood, seasonal/omen modifiers, discounts, Laws, and pending Directives)
+  prevalence for every canonical active-effect kind (suppression, hunger, the
+  year card, discounts, Laws, and pending Directives)
 - `buildings` — build counts and per-game rates
 - `events` — draw counts by card id, and per-option pick counts for choice cards
 - `finalCardsDistribution`
@@ -258,7 +271,7 @@ Replays are byte-identical to the original run.
 {
   "version": 2,
   "engineVersion": "0.1.0",
-  "stateSchemaVersion": 5,
+  "stateSchemaVersion": 6,
   "commandSchemaVersion": 2,
   "seed": 42, // game seed: decks, board draws, table rolls
   "mode": "standard",

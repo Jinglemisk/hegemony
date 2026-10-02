@@ -79,8 +79,8 @@ export function patronCount(G: HegemonyState, playerID: PlayerId): number {
   return politicianStandings(G).filter((standing) => standing.patron === playerID).length;
 }
 
-/** Total stelae currently visible for a player. Descriptive only: Voice uses the
- * permanent authored-and-passed ledger on state. */
+/** Total stelae currently visible for a player. Descriptive only: Voice counts standing authored Laws,
+ * excluding the monuments. */
 export function authoredSteleCount(G: HegemonyState, playerID: PlayerId): number {
   return (
     G.activeLaws.filter((law) => law.author === playerID).length +

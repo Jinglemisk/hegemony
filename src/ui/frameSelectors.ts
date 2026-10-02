@@ -27,7 +27,7 @@ function termLabel(G: HegemonyState, term: HappinessContribution): string {
     case "slaves":
       return `${capitalized(term.detail)}, 1 per ${G.ruleset.economy.slavesPerUnhappiness}`;
     case "calm":
-      return "Calm, until your next turn";
+      return "Calm, until year end";
     default:
       return capitalized(term.detail);
   }

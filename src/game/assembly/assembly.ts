@@ -1,7 +1,7 @@
 import { applyHappinessSwing, describeHappinessSwing } from "../happiness";
 import { PLAYER_IDS } from "../data";
+import { yearDeckSize } from "../year";
 import type { HegemonyState, PlayerId } from "../types";
-import { isNewYear, yearOf } from "../core/calendar";
 import { addLog, getPlayerName, getTile } from "../core/query";
 import { MOVE_OK, invalid } from "../core/results";
 import type { MoveResult } from "../core/results";
@@ -27,14 +27,13 @@ import type {
  *
  * The whole session lives on `G.assembly`. While it is non-null the turn machine is
  * SUSPENDED — `endTurn` hands control here instead of opening the next turn, and
- * `closeAssembly` hands it back. That is the same engine-state gating the yearly omen
- * uses, one level up: the Assembly cannot be opened, skipped or dismissed by a click,
- * because no click is what put it on screen.
+ * `closeAssembly` hands it back. The Assembly cannot be opened, skipped or dismissed
+ * by a click, because no click is what put it on screen.
  */
 
 // ── Cadence ───────────────────────────────────────────────────────────────────────
 
-/** Annual, each spring, from the ruleset's first assembly year (design default: Year 2).
+/** Every `everyYears` years, as the year opens, from the ruleset's first assembly year.
  *  `firstYear: 0` disables the whole subsystem, which is how the sim and the older
  *  test fixtures keep running an assembly-free game. */
 export function shouldOpenAssembly(G: HegemonyState): boolean {
@@ -43,15 +42,25 @@ export function shouldOpenAssembly(G: HegemonyState): boolean {
   return (
     rules.firstYear > 0 &&
     G.phase === "gameplay" &&
-    isNewYear(G.season) &&
-    yearOf(G.season) >= rules.firstYear &&
+    G.year >= rules.firstYear &&
+    (G.year - rules.firstYear) % Math.max(1, rules.everyYears) === 0 &&
     !G.assembly
   );
 }
 
-/** Turn order for this season — the opener leads, and everyone plays once. */
+/** The next sitting after this year; null when the Assembly is disabled. */
+export function nextAssemblyYear(G: HegemonyState): number | null {
+  const { firstYear, everyYears } = G.ruleset.assembly;
+  if (firstYear === 0) return null;
+  if (G.year < firstYear) return firstYear;
+  const cadence = Math.max(1, everyYears);
+  const next = firstYear + (Math.floor((G.year - firstYear) / cadence) + 1) * cadence;
+  return next <= yearDeckSize(G) ? next : null;
+}
+
+/** Turn order for this year — the opener leads, and everyone plays once. */
 function turnOrder(G: HegemonyState): PlayerId[] {
-  const start = PLAYER_IDS.indexOf(G.seasonOpener);
+  const start = PLAYER_IDS.indexOf(G.yearOpener);
   return PLAYER_IDS.map((_, index) => PLAYER_IDS[(start + index) % PLAYER_IDS.length]);
 }
 
@@ -96,7 +105,7 @@ function syncAssemblyActor(G: HegemonyState) {
  * Convene. One house card drops from a random politician's deck onto the ballot with
  * no author, so every assembly has something to argue about even if every seat passes;
  * then the seats fish and propose in REVERSE turn order (§1.3, fairness — the player
- * who acts last in the season speaks first in the agora).
+ * who acts last in the year speaks first in the agora).
  */
 export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
   const order = turnOrder(G);
@@ -105,8 +114,7 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
     PLAYER_IDS.reduce((all, id) => ({ ...all, [id]: value }), {} as Record<PlayerId, T>);
 
   G.assembly = {
-    year: yearOf(G.season),
-    season: G.season,
+    year: G.year,
     phase: "proposal",
     activePlayer: order[0],
     houseItem: houseCard
@@ -138,7 +146,7 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
   G.pendingIsonomiaTarget = null;
   G.assembliesHeld += 1;
 
-  addLog(G, `The Assembly convenes for the spring of Year ${yearOf(G.season)}.`);
+  addLog(G, `The Assembly convenes for Year ${G.year}.`);
 
   if (houseCard) {
     addLog(G, `A house resolution is laid on the bema: ${houseCard.name}.`);
@@ -752,7 +760,7 @@ function enact(G: HegemonyState, item: BallotItem) {
     G.tallyMonuments.push({
       cardId: item.card.id,
       author: item.proposer,
-      enactedSeason: G.season,
+      enactedYear: G.year,
       order: G.lawOrder++,
     });
     discardCard(G, item.card);
@@ -775,7 +783,7 @@ function enact(G: HegemonyState, item: BallotItem) {
   G.activeLaws.push({
     cardId: item.card.id,
     author: item.proposer,
-    enactedSeason: G.season,
+    enactedYear: G.year,
     order: G.lawOrder++,
   });
 
@@ -795,26 +803,9 @@ function recordAuthoredPass(G: HegemonyState, author: PlayerId, politician: Poli
     }
   }
 
+  // Voice is not paid here: it reads the standing Laws, so a passed Law counts for
+  // its author while it stands and a Directive never does.
   G.assemblyPassedByPlayer[author] += 1;
-  const minimum = G.ruleset.victory.minimums.voice;
-  const holder = G.voiceHolder;
-
-  if (holder === null) {
-    if (G.assemblyPassedByPlayer[author] >= minimum) {
-      G.voiceHolder = author;
-      addLog(G, `${getPlayerName(G, author)} claims the Voice of the Assembly.`, author);
-    }
-  } else if (
-    holder !== author &&
-    G.assemblyPassedByPlayer[author] > G.assemblyPassedByPlayer[holder]
-  ) {
-    G.voiceHolder = author;
-    addLog(
-      G,
-      `${getPlayerName(G, author)} surpasses ${getPlayerName(G, holder)} and takes the Voice.`,
-      author,
-    );
-  }
 }
 
 function formatPrize(prize: Partial<HegemonyState["players"][PlayerId]["resources"]>): string {

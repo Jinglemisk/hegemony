@@ -13,17 +13,13 @@ import {
   getActiveEffects,
   type ActiveEffectDescriptor,
 } from "../game/activeEffects";
-import { PLAYER_EVENT_CARDS, SEASONAL_EVENT_CARDS } from "../game/data";
+import { PLAYER_EVENT_CARDS, YEAR_CARDS } from "../game/data";
 import { calculateIncomeBreakdown } from "../game/economy/income";
 import { projectForPlayer } from "../game/projection";
-import {
-  drawSeasonalEvent,
-  getEventEffectChoices,
-  resolvePendingPlayerEvent,
-} from "../game/events";
-import { expireTurnEventModifiers, startNewSeason } from "../game/season";
+import { getEventEffectChoices, resolvePendingPlayerEvent } from "../game/events";
+import { expireTurnEventModifiers, revealYearCard, startNewYear } from "../game/year";
 import { materialTile, scenario } from "../game/testing/scenario";
-import type { EventCard, HegemonyState, Pops, TableRollRecord } from "../game/types";
+import type { HegemonyState, Pops, YearCard } from "../game/types";
 import { PLAYER_IDS } from "../game/data";
 import { unrestStatus } from "../game/unrest";
 import { masterPolicy, projectPolicyHorizon } from "../sim/policies";
@@ -51,36 +47,17 @@ function stateWithSettlement(pops: Pops = EMPTY_POPS): HegemonyState {
   return G;
 }
 
-function seasonalCard(effects: EventCard["effects"]): EventCard {
-  return {
-    id: "parity-season",
-    deck: "seasonal",
-    name: "Parity Season",
-    count: 1,
-    text: "Parity Season",
-    timing: "season",
-    effects,
-  };
-}
-
-function omenRecord(): TableRollRecord {
-  return {
-    tableId: "omen",
-    playerID: "0",
-    roll: 6,
-    modified: 6,
-    modifier: 0,
-    rowLabel: "Abundant harvest",
-    outcomes: [],
-    season: 1,
-  };
+function yearCard(id: string): YearCard {
+  const card = YEAR_CARDS.find((candidate) => candidate.id === id);
+  if (!card) throw new Error(`no year card ${id}`);
+  return card;
 }
 
 function plantLaw(G: HegemonyState, cardId: string, author: "0" | "1" = "0") {
   G.activeLaws.push({
     cardId,
     author,
-    enactedSeason: G.season,
+    enactedYear: G.year,
     order: G.lawOrder++,
   });
 }
@@ -94,11 +71,6 @@ function renderAlarms(G: HegemonyState, activeEffects: ActiveEffectDescriptor[])
       unrest: unrestStatus(G, "0"),
     }),
   );
-}
-
-function cardSeason(card: EventCard): number {
-  const numbers = { spring: 1, summer: 2, autumn: 3, winter: 4 };
-  return numbers[card.seasons?.[0] ?? "spring"];
 }
 
 function effectByKind(
@@ -125,29 +97,11 @@ describe("canonical active-effect selector", () => {
         consume: "nextMatchingAction",
       },
     ];
-    G.activeSeasonEvent = {
-      card: seasonalCard([
-        {
-          type: "incomeModifier",
-          scope: "activePlayer",
-          resource: "gold",
-          amount: 3,
-          duration: "season",
-        },
-      ]),
-      season: G.season,
-      playerID: "0",
-    };
-    G.yearOmen = {
-      record: omenRecord(),
-      label: "Abundant harvest",
-      year: 1,
-      effects: [{ type: "yearIncomeModifier", resource: "food", amount: 2 }],
-    };
+    G.activeYearCard = yearCard("year-piracy");
     G.activeLaws.push({
       cardId: "land-reform",
       author: "0",
-      enactedSeason: G.season,
+      enactedYear: G.year,
       order: G.lawOrder++,
     });
     G.pendingIsonomiaTarget = "0";
@@ -164,8 +118,7 @@ describe("canonical active-effect selector", () => {
       new Set([
         "incomeSuppression",
         "hunger",
-        "seasonalModifier",
-        "yearlyOmen",
+        "yearCard",
         "actionDiscount",
         "standingLaw",
         "nextAssembly",
@@ -180,31 +133,21 @@ describe("canonical active-effect selector", () => {
     }
   });
 
-  it("keeps active-player seasonal descriptors and income calculations on the revealing seat", () => {
-    const G = stateWithSettlement();
-    G.activeSeasonEvent = {
-      card: seasonalCard([
-        {
-          type: "incomeModifier",
-          scope: "activePlayer",
-          resource: "gold",
-          amount: 5,
-          duration: "season",
-        },
-      ]),
-      season: G.season,
-      playerID: "1",
-    };
+  it("describes the year's card for every seat, and the income engine takes the same term", () => {
+    const G = stateWithSettlement({ citizens: 0, freemen: 2, slaves: 0 });
+    G.activeYearCard = yearCard("year-piracy");
 
-    expect(effectByKind(G, "seasonalModifier", "0")).toHaveLength(0);
-    const descriptor = effectByKind(G, "seasonalModifier", "1")[0];
-    expect(descriptor.scope).toEqual({ kind: "activePlayer", playerID: "1" });
-    expect(descriptor.mechanics).toEqual([{ type: "resourceIncome", resource: "gold", amount: 5 }]);
+    for (const playerID of ["0", "1"] as const) {
+      const descriptor = effectByKind(G, "yearCard", playerID)[0];
+      expect(descriptor.scope).toEqual({ kind: "allPlayers" });
+      expect(descriptor.mechanics).toEqual([{ type: "zeroTerm", term: "freemenGold" }]);
+      expect(descriptor.duration.expiry).toBe("atYearEnd");
+    }
 
-    const contribution = calculateIncomeBreakdown(G, "1")
-      .filter((line) => line.source === "Parity Season" && line.resource === "gold")
+    const taken = calculateIncomeBreakdown(G, "0")
+      .filter((line) => line.detail.startsWith("Piracy") && line.resource === "gold")
       .reduce((sum, line) => sum + line.amount, 0);
-    expect(contribution).toBe(5);
+    expect(taken).toBe(-2);
   });
 
   it("expires countdown and coupon state at the same lifecycle boundaries it declares", () => {
@@ -230,14 +173,13 @@ describe("canonical active-effect selector", () => {
     expect(effectByKind(G, "actionDiscount")).toHaveLength(0);
   });
 
-  it("turns a timed happiness card into one Unrest token for everyone it names", () => {
-    const plague = SEASONAL_EVENT_CARDS.find((card) => card.id === "season-plague")!;
+  it("turns Plague into one Unrest token for everyone and leaves nothing standing", () => {
+    const plague = yearCard("year-plague");
     const G = stateWithSettlement();
-    G.season = cardSeason(plague);
-    G.activeSeasonEvent = null;
-    G.seasonalDrawPile = [plague];
+    G.activeYearCard = null;
+    G.yearDrawPile = [plague];
 
-    drawSeasonalEvent(G);
+    revealYearCard(G);
 
     // Nothing is left ticking: the token is the whole effect, and it is board state.
     expect(PLAYER_IDS.map((playerID) => G.players[playerID].unrestTokens)).toEqual([1, 1, 1, 1]);
@@ -259,39 +201,18 @@ describe("canonical active-effect selector", () => {
       true,
     );
 
-    G.season = 4;
-    startNewSeason(G);
+    G.year = 4;
+    startNewYear(G);
     expect(annual()).toBeDefined();
   });
 
-  it("expires season, omen, Law, and Isonomia descriptors through their engine lifecycles", () => {
+  it("expires year-card, Law, and Isonomia descriptors through their engine lifecycles", () => {
     const G = stateWithSettlement();
-    G.activeSeasonEvent = {
-      card: seasonalCard([
-        {
-          type: "incomeModifier",
-          scope: "allPlayers",
-          resource: "gold",
-          amount: 2,
-          duration: "season",
-        },
-      ]),
-      season: G.season,
-      playerID: "0",
-    };
-    G.yearOmen = {
-      record: omenRecord(),
-      label: "Old omen",
-      year: 1,
-      effects: [{ type: "yearIncomeModifier", resource: "food", amount: 2 }],
-    };
-    const seasonalId = effectByKind(G, "seasonalModifier")[0].id;
-    const omenId = effectByKind(G, "yearlyOmen")[0].id;
+    G.activeYearCard = yearCard("year-piracy");
+    const yearCardId = effectByKind(G, "yearCard")[0].id;
 
-    G.season = 4;
-    startNewSeason(G);
-    expect(getActiveEffects(G, "0").some((effect) => effect.id === seasonalId)).toBe(false);
-    expect(getActiveEffects(G, "0").some((effect) => effect.id === omenId)).toBe(false);
+    startNewYear(G);
+    expect(getActiveEffects(G, "0").some((effect) => effect.id === yearCardId)).toBe(false);
 
     plantLaw(G, "land-reform");
     expect(getActiveEffects(G, "0").some((effect) => effect.source.id === "land-reform")).toBe(
@@ -311,29 +232,18 @@ describe("canonical active-effect selector", () => {
 });
 
 describe("persistent event content inventory", () => {
-  it("projects every season-standing effect in authored seasonal content", () => {
+  it("projects every year card that zeroes a term, and no card that acts once", () => {
     let exercised = 0;
 
-    for (const card of SEASONAL_EVENT_CARDS) {
-      const expected = card.effects.filter((effect) => {
-        const handling = EVENT_EFFECT_ACTIVE_EFFECT_HANDLING[effect.type];
-        if (handling === "activeSeason") return true;
-        if (handling !== "activeSeasonWhenMarked") return false;
-        return (
-          (effect.type === "incomeModifier" || effect.type === "scaledHappinessDelta") &&
-          effect.duration === "season"
-        );
-      });
-      if (expected.length === 0) continue;
-
+    for (const card of YEAR_CARDS) {
       const G = stateWithSettlement({ citizens: 2, freemen: 1, slaves: 0 });
-      G.activeSeasonEvent = { card, season: G.season, playerID: "0" };
+      G.activeYearCard = card;
       const descriptors = getActiveEffects(G, "0").filter(
-        (effect) => effect.source.kind === "seasonalEvent" && effect.source.id === card.id,
+        (effect) => effect.source.kind === "yearCard" && effect.source.id === card.id,
       );
 
-      expect(descriptors, card.id).toHaveLength(expected.length);
-      exercised += expected.length;
+      expect(descriptors, card.id).toHaveLength(card.effect.type === "zeroTerm" ? 1 : 0);
+      exercised += descriptors.length;
     }
 
     expect(exercised).toBeGreaterThan(0);
@@ -375,7 +285,7 @@ describe("frontend active-effect parity", () => {
 
     expect(alarms).toContain('class="alarms"');
     for (const descriptor of descriptors) {
-      if (descriptor.kind === "seasonalModifier" || descriptor.kind === "standingLaw") continue;
+      if (descriptor.kind === "yearCard" || descriptor.kind === "standingLaw") continue;
       expect(alarms).toContain(presentActiveEffect(descriptor).accessibleText);
     }
   });
@@ -408,9 +318,10 @@ describe("simulation and AI active-effect parity", () => {
     expect(struckProjection.resources.gold).toBeLessThan(safeProjection.resources.gold);
   });
 
-  it("makes the master policy buy calm when the next upkeep would riot, and not otherwise", () => {
+  it("does not buy this year's calm to cover an upkeep in a later year", () => {
     const choose = (slaves: number) => {
       const G = stateWithSettlement({ citizens: 0, freemen: 0, slaves });
+      G.players["0"].collectedThisTurn = true;
       Object.assign(G.players["0"].resources, {
         wood: 0,
         stone: 0,
@@ -426,9 +337,19 @@ describe("simulation and AI active-effect parity", () => {
       );
     };
 
-    // Six slaves hold the level on the riot line every year; calm lifts this one.
-    expect(choose(6).type).toBe("civicCalm");
+    // Calm will have expired before the next upkeep, even on the riot line.
+    expect(choose(6).type).toBe("endTurn");
     expect(choose(0).type).toBe("endTurn");
+  });
+
+  it("uses the known year card only for an income still owed this year", () => {
+    const G = stateWithSettlement({ citizens: 0, freemen: 2, slaves: 0 });
+    G.activeYearCard = yearCard("year-piracy");
+    const before = G.players["0"].resources.gold;
+    G.players["0"].collectedThisTurn = false;
+    expect(projectPolicyHorizon(G, "0", 2).resources.gold).toBe(before + 2);
+    G.players["0"].collectedThisTurn = true;
+    expect(projectPolicyHorizon(G, "0", 2).resources.gold).toBe(before + 4);
   });
 
   it("handles the safe edge and the hunger edge deterministically", () => {

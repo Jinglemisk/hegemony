@@ -6,7 +6,7 @@ import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
 
 /**
  * The end of the game — the age closing, either because someone opened their
- * turn holding enough victory cards or because the seasonal deck (the clock) ran
+ * turn holding enough victory cards or because the year deck (the clock) ran
  * out and the tally resolved.
  *
  * `ceremony.css` names three moments that earn the dark table: a fate drawn, a
@@ -66,7 +66,7 @@ export function GameOverModal({
         <p className="tabletVoice body-em">
           {raced
             ? `${PLAYER_NAMES[winner]} opened their turn holding ${toWin} victory card${toWin === 1 ? "" : "s"}.`
-            : `The seasonal deck ran out — ${PLAYER_NAMES[winner]} held the most victory cards as the age closed.`}
+            : `The year deck ran out — ${PLAYER_NAMES[winner]} held the most victory cards as the age closed.`}
         </p>
       </header>
 

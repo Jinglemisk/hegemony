@@ -14,7 +14,7 @@ import { Ico, Tip } from "./parts";
  * effect beside the ticker tab, showing the resource it moves, tinted by which
  * way it moves it. The tooltip says what it is and how long it lasts.
  *
- * The season's own modifier is left out (the season card prints it) and so are
+ * The year card's own rule is left out (the year card prints it) and so are
  * the standing Laws (the Agora lists them): a disc here is something happening
  * to you now, not the constitution.
  */
@@ -46,10 +46,6 @@ function iconOf(mechanic: ActiveEffectMechanic | undefined): string {
       return "market/income-suppressed";
     case "hunger":
       return RESOURCE_ICON.food;
-    case "resourceIncome":
-      return RESOURCE_ICON[mechanic.resource];
-    case "buildingCostMultiplier":
-      return mechanic.multiplier > 1 ? "market/cost-up" : "market/cost-down";
     case "actionCostDiscount":
       return "market/cost-down";
     case "equalVotesNextAssembly":
@@ -67,7 +63,7 @@ const TONE: Record<EffectTone, string> = {
 };
 
 const SHOWN = (descriptor: ActiveEffectDescriptor) =>
-  descriptor.kind !== "seasonalModifier" && descriptor.kind !== "standingLaw";
+  descriptor.kind !== "yearCard" && descriptor.kind !== "standingLaw";
 
 export function Alarms({
   effects,
@@ -104,7 +100,7 @@ export function Alarms({
                         ? `${formatNumber(unrest.tokens)} Unrest ${unrest.tokens === 1 ? "token" : "tokens"}`
                         : null,
                       unrest.calmBonus !== 0
-                        ? `${formatSignedNumber(unrest.calmBonus)} from calm until your next turn`
+                        ? `${formatSignedNumber(unrest.calmBonus)} from calm this year`
                         : null,
                     ]
                       .filter(Boolean)

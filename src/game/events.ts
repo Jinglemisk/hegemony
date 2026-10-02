@@ -1,17 +1,6 @@
 import { PLAYER_IDS } from "./data";
-import type {
-  EventCard,
-  EventDeckKind,
-  EventEffect,
-  HegemonyState,
-  PlayerId,
-  Resource,
-  Resources,
-  SeasonName,
-} from "./types";
-import { seasonName } from "./core/calendar";
+import type { EventCard, EventEffect, HegemonyState, PlayerId, Resource, Resources } from "./types";
 import {
-  capitalize,
   formatPopName,
   formatRuleNumber,
   formatRuleResourceDelta,
@@ -24,26 +13,10 @@ import { applyHappinessSwing, describeHappinessSwing } from "./happiness";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { shuffleWithSeed } from "./core/rng";
-import { countPlayerPopType, scaledByPops, settlementCapacity } from "./settlement";
-
-export function drawSeasonalEvent(G: HegemonyState) {
-  const card = drawSeasonalCard(G, seasonName(G.season));
-
-  if (!card) {
-    addLog(G, "The Seasonal Event deck is empty.");
-    return;
-  }
-
-  G.activeSeasonEvent = { card, season: G.season, playerID: G.currentPlayer };
-  addLog(G, `Seasonal Event revealed: ${card.name}. ${card.text}`);
-
-  if (card.timing === "immediate") {
-    applyEventEffects(G, card, G.activeSeasonEvent.playerID, card.effects);
-  }
-}
+import { countPlayerPopType, settlementCapacity } from "./settlement";
 
 export function drawPlayerEvent(G: HegemonyState, playerID: PlayerId) {
-  const card = drawFromEventDeck(G, "player");
+  const card = drawFromPlayerDeck(G);
 
   if (!card) {
     addLog(G, "The Player Event deck is empty.");
@@ -126,41 +99,18 @@ export function getEventPopTargetTileIds(
   );
 }
 
-function drawFromEventDeck(G: HegemonyState, deck: EventDeckKind) {
-  const drawKey = deck === "seasonal" ? "seasonalDrawPile" : "playerDrawPile";
-  const discardKey = deck === "seasonal" ? "seasonalDiscardPile" : "playerDiscardPile";
-
-  if (G[drawKey].length === 0 && G[discardKey].length > 0) {
-    const reshuffled = shuffleWithSeed(G[discardKey], G.rng);
-    G[drawKey] = reshuffled.cards;
+/** The player deck reshuffles its discards when it runs out; only the year deck is
+ *  a clock. */
+function drawFromPlayerDeck(G: HegemonyState) {
+  if (G.playerDrawPile.length === 0 && G.playerDiscardPile.length > 0) {
+    const reshuffled = shuffleWithSeed(G.playerDiscardPile, G.rng);
+    G.playerDrawPile = reshuffled.cards;
     G.rng = reshuffled.state;
-    G[discardKey] = [];
-    addLog(G, `${capitalize(deck)} Event discard reshuffled into the draw pile.`);
+    G.playerDiscardPile = [];
+    addLog(G, "Player Event discard reshuffled into the draw pile.");
   }
 
-  return G[drawKey].shift() ?? null;
-}
-
-/**
- * Draw a seasonal card that suits the current season. The pile is pre-shuffled,
- * so taking the first suited card is a uniform random pick among suited cards —
- * season tags therefore only weight the deck, never force an outcome. The seasonal
- * deck NEVER reshuffles: it is the game's finite clock (roadmap-appendix D1) —
- * exactly one card leaves per season, and an empty pile ends the age.
- */
-function drawSeasonalCard(G: HegemonyState, season: SeasonName): EventCard | null {
-  const index = G.seasonalDrawPile.findIndex((card) => cardSuitsSeason(card, season));
-
-  if (index !== -1) {
-    return G.seasonalDrawPile.splice(index, 1)[0];
-  }
-
-  // Nothing left suits this season; take whatever is on top rather than stall the clock.
-  return G.seasonalDrawPile.shift() ?? null;
-}
-
-function cardSuitsSeason(card: EventCard, season: SeasonName): boolean {
-  return !card.seasons || card.seasons.length === 0 || card.seasons.includes(season);
+  return G.playerDrawPile.shift() ?? null;
 }
 
 function hasResolvablePendingOption(G: HegemonyState, playerID: PlayerId, card: EventCard) {
@@ -205,35 +155,10 @@ function applyEventEffects(
           card.name,
         );
       }
-    } else if (effect.type === "scaledResourceDelta") {
-      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        const amount = scaledByPops(
-          G,
-          playerID,
-          effect.amountPerPops,
-          effect.popStep,
-          effect.minimum,
-        );
-        applyEventResourceDelta(
-          G,
-          playerID,
-          createResourceDelta(effect.resource, amount),
-          card.name,
-        );
-      }
-    } else if (
-      effect.type === "happinessDelta" ||
-      effect.type === "timedHappinessDelta" ||
-      (effect.type === "scaledHappinessDelta" && effect.duration !== "season")
-    ) {
+    } else if (effect.type === "happinessDelta" || effect.type === "timedHappinessDelta") {
       // There is no bank for a one-shot to land in: a loss of any size places one
       // Unrest token and a gain clears one. Only the sign of the printed amount counts.
-      const amount =
-        effect.type === "happinessDelta"
-          ? effect.amount
-          : effect.type === "timedHappinessDelta"
-            ? effect.amountPerTurn
-            : effect.amountPerPops;
+      const amount = effect.type === "happinessDelta" ? effect.amount : effect.amountPerTurn;
 
       for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
         const swing = applyHappinessSwing(G, playerID, amount);
@@ -243,8 +168,6 @@ function applyEventEffects(
           playerID,
         );
       }
-    } else if (effect.type === "incomeModifier" || effect.type === "buildingCostMultiplier") {
-      addLog(G, `${card.name} modifier is active: ${card.text}`);
     } else if (effect.type === "addPops") {
       if (!activePlayerID || !targetTileId) {
         continue;
@@ -269,7 +192,7 @@ function applyEventEffects(
       }
 
       G.players[activePlayerID].actionCostDiscounts.push({
-        id: `${card.id}-${G.season}-${G.log.length}`,
+        id: `${card.id}-${G.year}-${G.log.length}`,
         sourceCardId: card.id,
         label: card.name,
         action: effect.action,

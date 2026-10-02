@@ -29,7 +29,7 @@ const METRIC_GLYPHS: Record<VictoryMetric, GlyphId> = {
   cities: "city",
   pops: "crowd",
   citizens: "citizens",
-  stockpile: "stockpile",
+  gold: "gold",
   happiness: "happiness",
   voice: "voice",
 };
@@ -57,13 +57,7 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
         </span>
       </p>
 
-      {standings.map(({ card, holder, minimum, values }) => {
-        const { leader: ahead, best } = soleLeader(values);
-        // Voice is not led, it is HELD: the first seat to the minimum keeps it
-        // through ties and loses it only when strictly exceeded, so until it is
-        // claimed nobody is ahead on it — it is unheld, the word the Agora prints.
-        const leader = holder ?? (card.metric === "voice" ? null : ahead);
-        const leadValue = holder === null ? best : values[holder];
+      {standings.map(({ card, holder, minimum, values, leader, leadingValue: leadValue }) => {
         // Clamped at BOTH ends. Happiness goes negative, and React drops a negative
         // width as an invalid style, which left the bar at its full-width default —
         // a laurel nobody was near drawing as a finished meter.
@@ -108,9 +102,7 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
                 {/* The disc carries WHOSE. With no sole leader there is no whose,
                     so the slot says the fact instead of naming a seat. */}
                 {leader === null ? (
-                  <span className="vcardNobody label">
-                    {card.metric === "voice" ? "unheld" : "tied"}
-                  </span>
+                  <span className="vcardNobody label">tied</span>
                 ) : (
                   <span
                     className="vcardGlaze label"
@@ -133,34 +125,4 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
       })}
     </div>
   );
-}
-
-/**
- * Who is ahead when nobody holds the card yet — the engine's own rule
- * (`victoryStandings` in src/game/victory.ts) with the minimum gate left off.
- *
- * That helper answers "who HOLDS this", which is null both for a tie and for a
- * leader still under the minimum; the card also wants to name who is ahead before
- * anyone qualifies. So this is the engine's reduce verbatim: a strict `>` takes the
- * lead and an equal value clears it, which is what makes a tie have no leader. The
- * `bestOf` it replaces seeded itself with seat 0 and kept it through every tie, so
- * on turn 0 — four seats, identical boards — five laurels named Damon.
- */
-function soleLeader(values: Record<PlayerId, number>): {
-  leader: PlayerId | null;
-  best: number;
-} {
-  let leader: PlayerId | null = null;
-  let best = -Infinity;
-
-  for (const playerID of PLAYER_IDS) {
-    if (values[playerID] > best) {
-      best = values[playerID];
-      leader = playerID;
-    } else if (values[playerID] === best) {
-      leader = null;
-    }
-  }
-
-  return { leader, best };
 }

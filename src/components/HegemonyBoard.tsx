@@ -18,8 +18,6 @@ import {
   unrestStatus,
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
-import { PLAYER_NAMES } from "../game/data";
-import { getOmenTable } from "../game/content";
 import { BuildPopover } from "./board/map/BuildPopover";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
 import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
@@ -31,7 +29,6 @@ import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelectio
 import { useMapSelection } from "./board/map/useMapSelection";
 import { armedVerbOf, isTurnOpen, turnCommitTitle } from "./board/command/verbs";
 import type { VerbContext } from "./board/command/verbs";
-import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
 import { ConsultPanel } from "./board/ledger/ConsultPanel";
 import type { ConsultTab } from "./board/types";
@@ -74,7 +71,7 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
  * Exactly one dialog owns the screen at a time — the union makes that a type
  * invariant instead of a rule six independent booleans could break. The
  * self-mounting dialogs are deliberately NOT here: riot, pending event, game
- * over and the omen mount off engine state (G.pendingRiot, G.pendingPlayerEvent,
+ * over mount off engine state (G.pendingRiot, G.pendingPlayerEvent,
  * ctx.phase), so they cannot be opened or closed by a click and must not be
  * modelled as UI intent.
  */
@@ -97,8 +94,6 @@ export function HegemonyBoard({
   const [gameOverDismissed, setGameOverDismissed] = useState(false);
   // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
   const [riotResultOpen, setRiotResultOpen] = useState(false);
-  // Initialized to the omen standing at mount so a reload never re-announces it.
-  const [seenOmenYear, setSeenOmenYear] = useState<number | null>(() => G.yearOmen?.year ?? null);
   // The realm sheet's page, and the consult page open on the right (null: none).
   // The realm boots on its overview; picking a place on the map opens its page.
   const [realmTab, setRealmTab] = useState<RealmTab>("subject");
@@ -628,34 +623,13 @@ export function HegemonyBoard({
             <GameOverModal G={G} onInspectBoard={() => setGameOverDismissed(true)} />
           ) : null}
           {G.pendingPlayerEvent ? <PendingPlayerEventModal /> : null}
-          {/* The Assembly TAKES OVER the table from spring of Year 2
+          {/* The Assembly TAKES OVER the table in a sitting year
           (assembly-politicians.md §1.2; owner ruling 2026-08-15). It mounts off
-          engine state like the omen, and it covers the whole viewport — bars,
+          engine state, and it covers the whole viewport — bars,
           rails and dock included. It therefore takes the seat switcher with it:
           the roster it covers is the only way a hotseat changes hands, and each
           of the scene's seat plaques performs that same act. */}
           {G.assembly ? <AssemblyPanel onTakeSeat={onPlayerIDChange} /> : null}
-          {G.yearOmen &&
-          G.yearOmen.year !== seenOmenYear &&
-          !G.pendingRiot &&
-          !G.pendingPlayerEvent &&
-          !G.assembly ? (
-            <EventTableModal
-              table={getOmenTable(G.definition.content)}
-              modifier={0}
-              result={G.yearOmen.record}
-              subtitle={`${PLAYER_NAMES[G.seasonOpener]} takes the auspices for Year ${G.yearOmen.year} — the sign stands over every polis until spring.`}
-              onDismiss={() => setSeenOmenYear(G.yearOmen?.year ?? null)}
-              footer={
-                <button
-                  className="primaryButton eventResolveButton"
-                  onClick={() => setSeenOmenYear(G.yearOmen?.year ?? null)}
-                >
-                  So Be It
-                </button>
-              }
-            />
-          ) : null}
         </main>
       </CodexLinkProvider>
     </GameUiProvider>

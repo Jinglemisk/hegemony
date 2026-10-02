@@ -19,12 +19,11 @@ const content = getAuthoredGameContent();
 
 const AUTHORED_NAMES = [
   ...content.buildings,
-  ...content.seasonalEvents,
+  ...content.yearCards,
   ...content.playerEvents,
   ...content.resolutions,
   ...POLITICIANS,
   content.riotTable,
-  content.omenTable,
   ...content.expeditionTables,
 ].map((authored) => authored.name);
 

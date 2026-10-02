@@ -36,7 +36,7 @@ export interface BankRules {
 }
 
 /** Civic calm: one action per turn, two payments, the same rise in the level. The bonus
- *  lasts until the buyer's next turn starts and is never banked. */
+ *  lasts until the year turns and is never banked. */
 export interface CivicCalmRules {
   happiness: number;
   influenceCost: number;
@@ -157,9 +157,11 @@ export interface PlacementRules {
  * veto 5.
  */
 export interface AssemblyRules {
-  /** Assemblies convene each spring from this year. **0 disables the subsystem**,
+  /** Assemblies convene as a year opens, from this year. **0 disables the subsystem**,
    *  which is how the headless sim and the pre-Assembly fixtures keep running. */
   firstYear: number;
+  /** Years from one sitting to the next: 2 is every other year. */
+  everyYears: number;
   /** Standing Laws the board holds before a new one must name one to replace (§1.5). */
   lawCap: number;
   /** One-time reward paid when a player's authored resolution passes. House Laws pay none. */
@@ -237,12 +239,11 @@ export const DEFAULT_RULESET: Ruleset = {
     // Design rule (roadmap-appendix D1, 2026-07-12): no card may be holdable at game
     // start or on the first turn — every minimum sits above anything a legal setup
     // plus one lucky opening turn can produce (start: 1 city + 1 colony, 6 pops,
-    // ≤6 citizens, 52 banked materials, a level of 0). Beloved's 4 is the paper's:
-    // the level is a small number, so v1's 10 could never be met.
+    // 1 citizen, 4 gold, a level of 0, no Laws). The minimums are the paper's
+    // (section 5.10). Treasurer counts gold only, and Voice counts the standing
+    // Laws a player authored.
     cardsToWin: 3,
-    // Voice is the permanent authored-and-passed Assembly ratchet. First to three
-    // holds it until another seat strictly exceeds the holder's count.
-    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 4, voice: 3 },
+    minimums: { cities: 3, pops: 14, citizens: 5, gold: 30, happiness: 4, voice: 2 },
   },
   actionCosts: ACTION_COSTS,
   growPopCosts: GROW_POP_COSTS,
@@ -285,10 +286,9 @@ export const DEFAULT_RULESET: Ruleset = {
   },
   ventureStakes: VENTURE_STAKES,
   assembly: {
-    // Spring of YEAR 2 (appendix Q27, corrected 2026-07-20 — not Year 3). The
-    // seasonal deck holds ~8 years and race wins land around Year 5, so a
-    // race-decided game sees ~4 assemblies and a grind to exhaustion up to ~7.
+    // Every other year from Year 2: up to seven sittings in a fourteen-year game.
     firstYear: 2,
+    everyYears: 2,
     lawCap: 6,
     // Material prizes are ~11–12% of one classic board's base production for that
     // resource (44 food / 36 wood / 26 stone). Stratokles pays gold: a prize is a

@@ -331,14 +331,7 @@
   /* The meander again, in ivory — the Assembly runs it across the dark. */
   --meander-ivory: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="9" viewBox="0 0 18 9"><path d="M1 8V1h12v4H7V3" fill="none" stroke="%23fff8e7" stroke-width="1.3"/></svg>');
 
-  /* The season wheel's four washes and the seal's fired gradient. Both are
-     ARTWORK colours — they name a season and a curved clay surface, not a state —
-     so they live in the table with everything else rather than as loose hexes in
-     a component sheet. */
-  --season-spring: #a8b26d;
-  --season-summer: #dfb46f;
-  --season-autumn: #cf9468;
-  --season-winter: #9db4ba;
+  /* The seal's fired gradient names a curved clay surface, not a state. */
   --clay-lit: #cd5124;
   --clay-shade: #a93c17;
   /* The alarm's two fired grounds — oxblood for the wound, ochre for the warning.

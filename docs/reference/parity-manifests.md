@@ -1,6 +1,6 @@
 # Parity manifests
 
-Last updated: 2026-08-04.
+Last updated: 2026-10-03.
 
 This reference defines the Phase 3.5 Step 2 enforcement boundary for consequential
 gameplay that is passive, automatic, content-driven, or read-only. It complements
@@ -15,9 +15,8 @@ the effective-value contract rather than replacing it.
 | Effects and content | `src/parity/featureParity.ts`                | A passive/automatic effect type or shipped content ID cannot silently miss an engine, frontend, simulation, telemetry, or behavioral route. |
 | Effective values    | `docs/reference/effective-values.md`         | A routed consumer cannot substitute authored defaults for the effective content or cost the engine uses.                                    |
 
-These layers intentionally overlap. A seasonal event may apply an immediate effect,
-create persistent state, change an action's effective cost, and alter a later policy
-decision. Each applicable layer must remain true.
+These layers intentionally overlap. A year card may change a level or income,
+create persistent state, and alter a policy decision. Each applicable layer must remain true.
 
 ## Canonical command boundary
 
@@ -66,11 +65,11 @@ unions; they are the presentation API for Step 3 and PR #57.
 
 | Family                 |                 Shipped IDs |
 | ---------------------- | --------------------------: |
-| Buildings              |                           9 |
+| Buildings              |                           6 |
 | Terrain kinds          |                           5 |
-| Seasonal events        |                          13 |
-| Player events          |                          26 |
-| Event tables           |                           5 |
+| Year cards             |          8 kinds, 14 copies |
+| Player events          |                          25 |
+| Event tables           |                           4 |
 | Riot-insurance options |                           3 |
 | Politicians            |                           4 |
 | Resolution cards       | 31 (24 Laws + 7 Directives) |
@@ -81,7 +80,7 @@ them with the live authored rosters, recursively inventories event choices, and
 compares every authored effect discriminator with its exhaustive registry. A new,
 removed, or renamed content item fails CI until the manifest is reconciled.
 
-Building, player-event, and seasonal-event telemetry is zero-filled from these
+Building, player-event, and year-card telemetry is zero-filled from these
 closed IDs. Unused content stays visible in reports instead of vanishing from the
 measurement vocabulary.
 
@@ -131,7 +130,7 @@ manifests remain the authoritative classification seam.
 
 `low-number-core-v1` preserves the authored ID/effect vocabulary while changing
 effective values. The reversible `GameContent` registry routes buildings, terrain,
-events, resolutions, riot/expedition tables, and the omen table through typed accessors across
+year cards, player events, resolutions and riot/expedition tables through typed accessors across
 engine, frontend, and simulation. Preset regression tests assert the authored manifest
 still matches exactly and every transformed effect has a non-empty canonical
 presentation. Browser and simulator resolve the same preset ID and content hash.

@@ -185,7 +185,7 @@ export interface ActiveLaw {
   /** The seat that enacted it. Null marks the unauthored house Law: it remains a
    *  standing rule and adds politician power, but grants no prize or Voice progress. */
   author: PlayerId | null;
-  enactedSeason: number;
+  enactedYear: number;
   order: number;
 }
 
@@ -197,7 +197,7 @@ export interface TallyMonument {
   cardId: string;
   /** Directives can only be authored by a player; the house draws Laws only. */
   author: PlayerId;
-  enactedSeason: number;
+  enactedYear: number;
   order: number;
 }
 
@@ -249,13 +249,11 @@ export type AssemblyPhase = "proposal" | "voting" | "closing";
 
 /**
  * A live Assembly. Its presence on {@link HegemonyState.assembly} is the gate: while
- * it is non-null the turn machine is suspended and the Assembly panel owns the sea —
- * the same engine-state mounting the yearly omen uses, so it can never be opened or
- * dismissed by a click.
+ * it is non-null the turn machine is suspended and the Assembly panel owns the sea,
+ * so it can never be opened or dismissed by a click.
  */
 export interface AssemblySession {
   year: number;
-  season: number;
   phase: AssemblyPhase;
   /** During voting: whose turn to cast. During proposal it tracks the first seat still
    *  to decide, purely so a headless driver has someone to play — the UI lets ANY
@@ -281,7 +279,7 @@ export interface AssemblySession {
   ballotIndex: number;
   /** Votes cast on the ballot item under consideration, in the order they landed. */
   votes: BallotVote[];
-  /** Vote order for the current item — turn order from the season opener. */
+  /** Vote order for the current item — turn order from the year's opener. */
   voteOrder: PlayerId[];
   voteIndex: number;
   bribesUsed: Record<PlayerId, number>;

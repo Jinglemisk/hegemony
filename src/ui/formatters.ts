@@ -1,8 +1,7 @@
 import { getAuthoredGameContent, getBuilding } from "../game/content";
 import type { GameContent } from "../game/content";
-import { seasonName, yearOf } from "../game/core/calendar";
 import { formatPopName, formatRuleNumber } from "../game/core/format";
-import type { BuildingId, PopType, Resource, Resources, SeasonName, Stat } from "../game/types";
+import type { BuildingId, PopType, Resource, Resources, Stat } from "../game/types";
 
 export const RESOURCE_LABELS: Record<Stat, string> = {
   wood: "Wood",
@@ -13,21 +12,9 @@ export const RESOURCE_LABELS: Record<Stat, string> = {
   happiness: "Happiness",
 };
 
-export const SEASON_LABELS: Record<SeasonName, string> = {
-  spring: "Spring",
-  summer: "Summer",
-  autumn: "Autumn",
-  winter: "Winter",
-};
-
-/** "Spring" — the season a given season index falls in. */
-export function seasonLabel(seasonIndex: number) {
-  return SEASON_LABELS[seasonName(seasonIndex)];
-}
-
-/** "Year 1" — the year a given season index falls in. */
-export function yearLabel(seasonIndex: number) {
-  return `Year ${yearOf(seasonIndex)}`;
+/** "Year 1". */
+export function yearLabel(year: number) {
+  return `Year ${year}`;
 }
 
 export function formatResourceCost(cost: Partial<Resources>) {
@@ -80,8 +67,8 @@ export function buildingName(
   return getBuilding(content, buildingId)?.name ?? buildingId;
 }
 
-/** Roman numerals, small-N only — the season clock counts years, and a game runs
- *  to single digits. Anything larger than the table below simply repeats X. */
+/** Roman numerals, small-N only — the year card counts years, and a game runs
+ *  for fourteen years. Anything larger than the table below simply repeats X. */
 const ROMAN: readonly (readonly [number, string])[] = [
   [10, "X"],
   [9, "IX"],

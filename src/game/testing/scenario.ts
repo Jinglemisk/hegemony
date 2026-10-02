@@ -173,13 +173,9 @@ export class ScenarioBuilder {
     return this;
   }
 
-  /**
-   * Rig the seasonal deck. Note the seasonal draw prefers cards suited to the
-   * current season — a stacked card only jumps the queue if it suits the season
-   * (or carries no season tags).
-   */
-  stackSeasonalEvent(cardId: string): this {
-    moveCardToTop(this.G.seasonalDrawPile, cardId);
+  /** Rig the year deck: the named card is the next one revealed. */
+  stackYearCard(cardId: string): this {
+    moveCardToTop(this.G.yearDrawPile, cardId);
     return this;
   }
 
@@ -194,7 +190,7 @@ export class ScenarioBuilder {
   }
 }
 
-function moveCardToTop(deck: HegemonyState["playerDrawPile"], cardId: string): void {
+function moveCardToTop(deck: Array<{ id: string }>, cardId: string): void {
   const index = deck.findIndex((candidate) => candidate.id === cardId);
   if (index < 0) throw new Error(`no event card ${cardId}`);
   const [card] = deck.splice(index, 1);

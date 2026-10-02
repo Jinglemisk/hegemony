@@ -4,7 +4,7 @@ import { allocateEntityId } from "./entity";
 import { selectLuxuryVertices } from "./mapTopology";
 import type { HegemonyState, HexTile, LuxuryAsset, PlayerId } from "./types";
 import type { Ruleset } from "./ruleset";
-import { addLog, getPlayerName } from "./core/query";
+import { addLog, getPlayerName, zeroedYearTerm } from "./core/query";
 import type { MoveResult } from "./core/results";
 import { MOVE_OK, invalid } from "./core/results";
 
@@ -58,8 +58,13 @@ export function activeClaims(G: HegemonyState, playerID: PlayerId): LuxuryAsset[
   return ownedClaims(G, playerID).filter((asset) => asset.suppressedTurns === 0);
 }
 
-/** The luxury term of the level: every active good adds `happinessPerGood`. */
+/** The luxury term of the level: every active good adds `happinessPerGood`, and
+ *  none of them counts in a Blockade year. */
 export function luxuryHappinessBonus(G: HegemonyState, playerID: PlayerId): number {
+  if (zeroedYearTerm(G) === "luxuryHappiness") {
+    return 0;
+  }
+
   return activeClaims(G, playerID).length * G.ruleset.economy.luxury.happinessPerGood;
 }
 

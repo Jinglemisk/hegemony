@@ -1,6 +1,5 @@
 import { PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
-import { yearOf } from "../../../game/core/calendar";
-import { getResolutionCard, politicianStandings } from "../../../game/assembly";
+import { getResolutionCard, nextAssemblyYear, politicianStandings } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState } from "../../../game/types";
 import { POLITICIAN_GLYPHS } from "../../../ui/iconRegistry";
@@ -44,7 +43,7 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
   const voice = victoryStandings(G).find((standing) => standing.card.metric === "voice");
   const voicePassed = voice ? Math.max(...PLAYER_IDS.map((id) => voice.values[id])) : 0;
   const rules = G.ruleset.assembly;
-  const nextYear = Math.max(rules.firstYear, yearOf(G.season) + (G.assembly ? 1 : 0));
+  const nextYear = nextAssemblyYear(G);
 
   return (
     <div className="agoraPage">
@@ -53,8 +52,8 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
         content={
           <MechanicsDetails heading={voice?.card.name ?? "Voice"}>
             <p className="mechanicsExplanation">
-              Claimed by the first player to author and pass {voice?.minimum} resolutions, and taken
-              only by a rival who strictly exceeds the holder. Repeal does not take them back.
+              Held by the sole leader in standing authored Laws, with at least {voice?.minimum}. A
+              tie awards nothing. Repeal and replacement take Laws off their author’s count.
             </p>
             <p className="mechanicsExplanation">
               The house has sat {spell(G.assembliesHeld)}{" "}
@@ -177,11 +176,7 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
       <div className="anchorRow">
         <span className="anchorKey label">Next assembly</span>
         <span className="anchorValue title">
-          {rules.firstYear === 0
-            ? "never"
-            : G.assembly
-              ? "sitting now"
-              : `spring, Year ${nextYear + (yearOf(G.season) >= rules.firstYear ? 1 : 0)}`}
+          {G.assembly ? "sitting now" : nextYear === null ? "never" : `Year ${nextYear}`}
         </span>
       </div>
     </div>

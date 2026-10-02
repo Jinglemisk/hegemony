@@ -40,7 +40,7 @@
 }
 
 /* One line, always. Wrapped, the key grew the anchor a second row and pushed it
-   down under the season dial — the last number on the page, hidden by a clock. */
+   down under the clock — the last number on the page. */
 .anchorKey {
   flex: none;
   color: var(--ink);
@@ -382,10 +382,7 @@
   font-style: normal;
 }
 
-/* "Spring, Year 2" is one date, and it broke after the comma into two lines that
-   read as two facts. The key is already nowrap and eats 110 of the tablet's 212px,
-   so the date cannot both stay whole and sit beside it: let the row break BETWEEN
-   the two instead — same two lines, but each one says a whole thing. */
+/* Keep the date whole; a narrow tablet may put it below its key. */
 .agoraPage .anchorRow {
   flex-wrap: wrap;
 }
@@ -395,7 +392,7 @@
 }
 
 /* ── Chronicle ────────────────────────────────────────────────────────────
-   Newest first, with the seasons as quiet rules between them. The page has no
+   Newest first, with the years as quiet rules between them. The page has no
    heading of its own: the tablet is already titled Chronicle, and a second one
    under it was the first thing a reader had to skip past. */
 
@@ -467,7 +464,7 @@
   scrollbar-color: var(--ink-30) transparent;
 }
 
-.chronSeason {
+.chronYear {
   margin: 13px 0 4px;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--ink-12);

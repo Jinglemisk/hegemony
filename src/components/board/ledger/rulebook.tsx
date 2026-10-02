@@ -5,11 +5,10 @@
 import type { ReactNode } from "react";
 import {
   getExpeditionTables,
-  getOmenTable,
   getPlayerEventCards,
   getRiotTable,
   getResolutionCards,
-  getSeasonalEventCards,
+  getYearCards,
 } from "../../../game/content";
 import {
   TRADABLE_MATERIALS,
@@ -169,22 +168,17 @@ const victory: RuleChapter = {
     // Polis Builder, Demos and Treasurer, so the rulebook did not name the cards
     // the rules deal out. Names, descriptions and the count all come from the
     // authored deck now, and the minimums from the ruleset beside it.
-    const boardCards = VICTORY_CARDS.filter((card) => card.metric !== "voice");
     return (
       <div className="compendiumStack">
         <Entry id={anchor("victory", "race")} title="The race">
           <Note>
             There are {spell(VICTORY_CARDS.length)} public victory cards, each awarded to the sole
             leader in one measure. Hold <strong>{victory.cardsToWin}</strong> of them at the{" "}
-            <em>start of your own turn</em> and you win at once. Ties award nothing on the{" "}
-            {spell(boardCards.length)} board metrics. Voice instead stays with its first qualifying
-            holder through ties and moves only when strictly exceeded. Those{" "}
-            {spell(boardCards.length)} measure what you have built; Voice measures the agora (see{" "}
-            <AnnotatedText text="Assembly" />
-            ).
+            <em>start of your own turn</em> and you win at once. A tie awards nothing, and every
+            card can be taken back: each reads what stands on the board now.
           </Note>
           <Note>
-            The seasonal deck is the game's clock (see <AnnotatedText text="Seasons" />
+            The year deck is the game's clock (see <AnnotatedText text="Years" />
             ). If it runs out before anyone holds {victory.cardsToWin}, the player holding the most
             cards wins — happiness then population break a tie.
           </Note>
@@ -716,9 +710,9 @@ const unrest: RuleChapter = {
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">
           <Note>
-            One civic calm per turn, both worth +{calm.happiness} happiness until your next turn
-            starts. It does not count toward Beloved of the People. These are base costs; the
-            payment picker shows effective costs:
+            One civic calm per turn, both worth +{calm.happiness} happiness this year. It expires
+            when the year turns and does not count toward Beloved of the People. These are base
+            costs; the payment picker shows effective costs:
           </Note>
           <DefList>
             <DefRow term="Stabilize Province">
@@ -745,71 +739,55 @@ const unrest: RuleChapter = {
   },
 };
 
-const seasons: RuleChapter = {
-  id: "seasons",
-  title: "Seasons & Omens",
-  blurb: "The seasonal clock, the yearly omen, and the two event decks.",
-  keywords: [
-    "season",
-    "year",
-    "omen",
-    "clock",
-    "deck",
-    "event",
-    "seasonal",
-    "player deck",
-    "draw",
-    "spring",
-    "winter",
-  ],
+const years: RuleChapter = {
+  id: "years",
+  title: "Years & Cards",
+  blurb: "The year deck that is the clock, and the player deck.",
+  keywords: ["year", "clock", "deck", "event", "year card", "player deck", "draw", "drought"],
   entries: [
-    { id: anchor("seasons", "clock"), label: "The clock" },
-    { id: anchor("seasons", "omen"), label: "The yearly omen" },
-    { id: anchor("seasons", "decks"), label: "The decks" },
+    { id: anchor("years", "clock"), label: "The clock" },
+    { id: anchor("years", "decks"), label: "The decks" },
   ],
-  Body: ({ G }) => (
-    <div className="compendiumStack">
-      <Entry id={anchor("seasons", "clock")} title="The clock">
-        <Note>
-          Time runs Spring → Summer → Autumn → Winter, four seasons a year. One seasonal card leaves
-          the deck each season and never returns — when the deck runs dry the age ends, so its
-          length is the game's length.
-        </Note>
-      </Entry>
-      <Entry id={anchor("seasons", "omen")} title="The yearly omen">
-        <p className="compendiumFlavor">{getOmenTable(G.definition.content).flavor}</p>
-        <EventTableRows
-          table={getOmenTable(G.definition.content)}
-          result={G.yearOmen?.record ?? null}
-        />
-        <Note>
-          Rolled publicly by the year's opener each spring; the sign stands over every polis until
-          the year turns.
-          {G.yearOmen ? ` This year's sign: ${G.yearOmen.label}.` : ""}
-        </Note>
-      </Entry>
-      <Entry id={anchor("seasons", "decks")} title="The decks">
-        <Note>
-          The <strong>seasonal deck</strong> (
-          {countCopies(getSeasonalEventCards(G.definition.content))} cards) is the shared clock; the{" "}
-          <strong>player deck</strong> ({countCopies(getPlayerEventCards(G.definition.content))}{" "}
-          cards) deals you a private card each income. Season tags only weight the draw toward
-          suited cards — a tendency, never a guarantee.
-        </Note>
-        <div className="codexCardGallery">
-          {getSeasonalEventCards(G.definition.content).map((card) => (
-            <RulebookCard card={card} key={card.id} showSeasons />
-          ))}
-        </div>
-        <p className="compendiumNote ruleDeckLabel">Player deck</p>
-        <div className="codexCardGallery">
-          {getPlayerEventCards(G.definition.content).map((card) => (
-            <RulebookCard card={card} key={card.id} />
-          ))}
-        </div>
-      </Entry>
-    </div>
-  ),
+  Body: ({ G }) => {
+    const yearCards = getYearCards(G.definition.content);
+
+    return (
+      <div className="compendiumStack">
+        <Entry id={anchor("years", "clock")} title="The clock">
+          <Note>
+            A year is one turn for every seat. As each year opens, the top card of the year deck is
+            turned up and stands for that year; the next card stays hidden. The seat that plays
+            first moves on one place each year.
+          </Note>
+          <Note>
+            The deck holds {countCopies(yearCards)} cards and is never reshuffled. When it runs dry
+            the age ends, so its length is the game's length.
+          </Note>
+        </Entry>
+        <Entry id={anchor("years", "decks")} title="The decks">
+          <Note>
+            Most year cards strike out one kind of income for every realm that has not yet collected
+            this year. Plague and Festival act once, on everyone, when they are turned up. The{" "}
+            <strong>player deck</strong> ({countCopies(getPlayerEventCards(G.definition.content))}{" "}
+            cards) deals you a private card each income.
+          </Note>
+          <DefList>
+            {yearCards.map((card) => (
+              <DefRow key={card.id} term={`${card.name} ×${card.count}`}>
+                {card.text}
+              </DefRow>
+            ))}
+          </DefList>
+          <p className="compendiumNote ruleDeckLabel">Player deck</p>
+          <div className="codexCardGallery">
+            {getPlayerEventCards(G.definition.content).map((card) => (
+              <RulebookCard card={card} key={card.id} />
+            ))}
+          </div>
+        </Entry>
+      </div>
+    );
+  },
 };
 
 const bank: RuleChapter = {
@@ -933,9 +911,10 @@ const assembly: RuleChapter = {
       <div className="compendiumStack">
         <Entry id={anchor("assembly", "when")} title="When it convenes">
           <Note>
-            The Assembly meets every spring from Year <strong>{rules.firstYear}</strong>, before the
-            year's opener takes their turn. Nothing else happens while it sits — the whole table
-            proposes and votes, then play resumes.
+            The Assembly meets every {rules.everyYears === 2 ? "other" : spell(rules.everyYears)}{" "}
+            year from Year <strong>{rules.firstYear}</strong>, before the year's opener takes their
+            turn. Nothing else happens while it sits — the whole table proposes and votes, then play
+            resumes.
           </Note>
           <Note>
             This is what <AnnotatedText text="Influence" /> is for. Everything the Assembly asks of
@@ -1042,10 +1021,9 @@ const assembly: RuleChapter = {
           </Note>
           <DefList>
             <DefRow term="Voice of the Assembly">
-              Every player-authored Law or Directive that passes permanently adds one to that
-              player's count. The first to <strong>{G.ruleset.victory.minimums.voice}</strong>{" "}
-              claims Voice; a rival must strictly exceed the holder to take it. Repeal and
-              replacement never reduce progress.
+              Held by whoever authored the most standing Laws, with at least{" "}
+              <strong>{G.ruleset.victory.minimums.voice}</strong>. A tie awards it to nobody. A
+              repeal or a replaced Law takes one off its author, and a Directive never counts.
             </DefRow>
           </DefList>
         </Entry>
@@ -1092,7 +1070,7 @@ const assembly: RuleChapter = {
 };
 
 /** A card in the rulebook's deck gallery: painted face + name + copies + effect. */
-function RulebookCard({ card, showSeasons = false }: { card: EventCard; showSeasons?: boolean }) {
+function RulebookCard({ card }: { card: EventCard }) {
   return (
     <figure className="codexGalleryCard">
       <img alt="" className="codexGalleryArt" loading="lazy" src={eventCardArtUrl(card)} />
@@ -1101,9 +1079,6 @@ function RulebookCard({ card, showSeasons = false }: { card: EventCard; showSeas
           {card.name}
           {card.count > 1 ? <em className="ruleDim"> ×{card.count}</em> : null}
         </strong>
-        {showSeasons && card.seasons && card.seasons.length > 0 ? (
-          <span className="codexGallerySeasons">{card.seasons.map(capitalize).join(" · ")}</span>
-        ) : null}
         <span className="codexGalleryText">
           <AnnotatedText text={card.text} />
         </span>
@@ -1112,12 +1087,12 @@ function RulebookCard({ card, showSeasons = false }: { card: EventCard; showSeas
   );
 }
 
-function countCopies(deck: EventCard[]) {
+function countCopies(deck: Array<{ count: number }>) {
   return deck.reduce((sum, card) => sum + card.count, 0);
 }
 
 /** The rulebook, in learn-order: win-condition first, then the board and its pieces,
- *  then the turn and everything you do in it, then the drama (unrest, seasons, luck). */
+ *  then the turn and everything you do in it, then the drama (unrest, years, luck). */
 export const RULEBOOK: RuleChapter[] = [
   victory,
   board,
@@ -1129,7 +1104,7 @@ export const RULEBOOK: RuleChapter[] = [
   buildings,
   luxuries,
   unrest,
-  seasons,
+  years,
   bank,
   ventures,
   // Last in learn-order: the Assembly reshapes every rule above it, so it only makes

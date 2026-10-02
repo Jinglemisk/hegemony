@@ -1,7 +1,7 @@
 import { PLAYER_IDS } from "./data";
-import { getPlayerEventCards, getResolutionCards, getSeasonalEventCards } from "./content";
+import { getPlayerEventCards, getResolutionCards, getYearCards } from "./content";
 import type { BallotItem, PoliticianId } from "./assembly/types";
-import type { EventCard, HegemonyState, Pops, Settlement } from "./types";
+import type { HegemonyState, Pops, Settlement } from "./types";
 import { playerPieces } from "./settlement";
 import { COMMAND_SCHEMA_VERSION, STATE_SCHEMA_VERSION } from "./version";
 
@@ -224,7 +224,7 @@ export function collectInvariantViolations(
   }
 
   if (options.strictCardConservation) {
-    validateEventCards(G, "seasonal", getSeasonalEventCards(G.definition.content), add);
+    validateEventCards(G, "year", getYearCards(G.definition.content), add);
     validateEventCards(G, "player", getPlayerEventCards(G.definition.content), add);
     validateResolutionCards(G, add);
   }
@@ -263,21 +263,21 @@ function sameMultiset(left: string[], right: string[]): boolean {
 
 function validateEventCards(
   G: HegemonyState,
-  deck: "seasonal" | "player",
-  definitions: EventCard[],
+  deck: "year" | "player",
+  definitions: Array<{ id: string; count: number }>,
   add: (code: string, path: string, message: string) => void,
 ) {
   const expected = new Map(definitions.map((card) => [card.id, card.count]));
   const actual = new Map<string, number>();
-  const count = (card: EventCard | undefined | null) => {
+  const count = (card: { id: string } | undefined | null) => {
     if (card) actual.set(card.id, (actual.get(card.id) ?? 0) + 1);
   };
 
-  const draw = deck === "seasonal" ? G.seasonalDrawPile : G.playerDrawPile;
-  const discard = deck === "seasonal" ? G.seasonalDiscardPile : G.playerDiscardPile;
+  const draw = deck === "year" ? G.yearDrawPile : G.playerDrawPile;
+  const discard = deck === "year" ? G.yearDiscardPile : G.playerDiscardPile;
   draw.forEach(count);
   discard.forEach(count);
-  if (deck === "seasonal") count(G.activeSeasonEvent?.card);
+  if (deck === "year") count(G.activeYearCard);
   else count(G.pendingPlayerEvent?.card);
 
   for (const [cardId, expectedCount] of expected) {
@@ -344,8 +344,8 @@ function validateAssembly(
   const session = G.assembly;
   if (!session) return;
 
-  if (session.year < 1 || session.season !== G.season) {
-    add("assembly.calendar", "assembly", "session must belong to the current season");
+  if (session.year < 1 || session.year !== G.year) {
+    add("assembly.calendar", "assembly", "session must belong to the current year");
   }
   if (
     new Set(session.voteOrder).size !== PLAYER_IDS.length ||

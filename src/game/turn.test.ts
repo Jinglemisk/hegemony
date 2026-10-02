@@ -42,17 +42,17 @@ describe("turn machine", () => {
     expect(G.turn).toBe(turnBefore + 1);
   });
 
-  it("starts a new season when play wraps back to player 0", () => {
+  it("starts a new year when every seat has played, led by the next opener", () => {
     const G = preloadedGame(1);
-    const seasonBefore = G.season;
+    const yearBefore = G.year;
 
     advanceTurn(G); // 0 -> 1
     advanceTurn(G); // 1 -> 2
     advanceTurn(G); // 2 -> 3
-    advanceTurn(G); // 3 -> 0 : new season
+    advanceTurn(G); // 3 -> new year, opened by seat 1
 
-    expect(G.currentPlayer).toBe("0");
-    expect(G.season).toBe(seasonBefore + 1);
+    expect(G.currentPlayer).toBe("1");
+    expect(G.year).toBe(yearBefore + 1);
   });
 
   it("refuses to end a turn while a player event is pending", () => {

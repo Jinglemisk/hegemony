@@ -2,10 +2,9 @@ import {
   BUILDINGS,
   EXPEDITION_TABLES,
   LUXURY_GOODS,
-  OMEN_TABLE,
   PLAYER_EVENT_CARDS,
   RIOT_TABLE,
-  SEASONAL_EVENT_CARDS,
+  YEAR_CARDS,
   TERRAIN_DECK,
 } from "./data";
 import { RESOLUTION_CARDS } from "./assembly/deck";
@@ -17,6 +16,7 @@ import type {
   EventTableDefinition,
   LuxuryGoodDefinition,
   LuxuryGoodId,
+  YearCard,
 } from "./types";
 
 export type TerrainDeck = typeof TERRAIN_DECK;
@@ -24,11 +24,10 @@ export type TerrainDeck = typeof TERRAIN_DECK;
 export interface GameContent {
   buildings: BuildingDefinition[];
   terrain: TerrainDeck;
-  seasonalEvents: EventCard[];
+  yearCards: YearCard[];
   playerEvents: EventCard[];
   riotTable: EventTableDefinition;
   expeditionTables: EventTableDefinition[];
-  omenTable: EventTableDefinition;
   resolutions: ResolutionCard[];
   luxuryGoods: LuxuryGoodDefinition[];
 }
@@ -36,11 +35,10 @@ export interface GameContent {
 const AUTHORED_CONTENT: GameContent = {
   buildings: BUILDINGS,
   terrain: TERRAIN_DECK,
-  seasonalEvents: SEASONAL_EVENT_CARDS,
+  yearCards: YEAR_CARDS,
   playerEvents: PLAYER_EVENT_CARDS,
   riotTable: RIOT_TABLE,
   expeditionTables: EXPEDITION_TABLES,
-  omenTable: OMEN_TABLE,
   resolutions: RESOLUTION_CARDS,
   luxuryGoods: LUXURY_GOODS,
 };
@@ -66,8 +64,8 @@ export function getTerrainDeck(content: GameContent): TerrainDeck {
   return content.terrain;
 }
 
-export function getSeasonalEventCards(content: GameContent): EventCard[] {
-  return content.seasonalEvents;
+export function getYearCards(content: GameContent): YearCard[] {
+  return content.yearCards;
 }
 
 export function getPlayerEventCards(content: GameContent): EventCard[] {
@@ -80,10 +78,6 @@ export function getRiotTable(content: GameContent): EventTableDefinition {
 
 export function getExpeditionTables(content: GameContent): EventTableDefinition[] {
   return content.expeditionTables;
-}
-
-export function getOmenTable(content: GameContent): EventTableDefinition {
-  return content.omenTable;
 }
 
 export function getResolutionCards(content: GameContent): ResolutionCard[] {

@@ -5,9 +5,8 @@ city-state into the dominant power of an island. You gather resources, grow your
 people, found colonies, upgrade them into cities, and raise buildings to
 out-produce your rivals.
 
-> This guide covers the game as it plays today. A few systems (luxury goods and
-> later-phase additions) are still being designed and are noted
-> where they come up.
+> This guide covers v2 through Step 6. Player cards, ventures and the Assembly
+> still use their bridges until Steps 7 and 8 replace them.
 
 ---
 
@@ -138,9 +137,8 @@ Play passes around the table. On your turn:
      often as you like (see The bank).
    - **The Dole** — **3 influence buys 1 food**, as often as you can pay.
    - **Civic calm** (once per turn) — **Stabilize Province** for 2 influence, or
-     stage **Bread & Circuses** for 2 gold. Either way: **+2 happiness until your
-     next turn starts**. Calm buys one year, and one calm action per turn is the
-     limit.
+     stage **Bread & Circuses** for 2 gold. Either way: **+2 happiness this year**, expiring when the year turns. One calm action per
+     turn is the limit.
    - **The social ladder** (one move per turn) — promote a slave to freeman for
      **2 food**, or a freeman to citizen for **2 gold**. Demote one step for
      **1 influence**. (During a riot, demotion is free — the mob forces it.)
@@ -148,14 +146,9 @@ Play passes around the table. On your turn:
      on an expedition table (see Ventures).
 4. **End your turn.**
 
-Once all four players have taken a turn, a new **season** begins and a fresh
-seasonal event is revealed. Play runs through the year in order — **Spring,
-Summer, Autumn, Winter** — and then a new year opens on Spring again, with the
-**first player rotating one seat** (the year turns, the order turns). Each season
-has its own mood: Spring and Summer tend to be kind (growth, building, trade),
-Autumn is the mixed harvest, and Winter leans harsh. That is a _tendency_, not a
-rule — Winter simply deals more hard-luck cards, so a mild Winter is still
-possible, and no season is ever guaranteed good or bad.
+A **year** is one turn for every seat. After all four have played, the next year
+begins and its card is revealed. The **first player moves on one seat** each year.
+The game lasts at most **fourteen years**; the next year card stays hidden.
 
 ## The bank
 
@@ -166,8 +159,7 @@ it in the realm's **Market** page and under the Exchange verb.
 - **Sell**: hand over the sell-rate of a material, take 1 gold.
 - **Buy**: pay the buy-rate in gold, take 1 of the material.
 - **No limit** on trades per turn — but every round trip pays the spread, so
-  trading always shrinks your total stockpile (the Treasurer card counts gold
-  too; the bank never inflates it).
+  trading always shrinks your total stockpile (Treasurer counts only your gold).
 
 The bank is a corridor, not a merchant — its fixed rates are the walls that
 player-to-player trade (a later phase) will negotiate inside.
@@ -233,14 +225,14 @@ and if the board does not change, neither does the level. A level of −3 this t
 - **+2** for every **luxury good** you hold.
 - **−1** for every **two slaves** in your realm; an odd slave costs nothing.
 - **−1** for every **Unrest token** on your realm.
-- **+2** if you bought **civic calm** since your last turn started.
+- **+2** if you bought **civic calm** this year.
 
 **Unrest tokens** are the one part that stays from turn to turn. Cards, Laws and
 Directives place them: any happiness loss a card names places one token, whatever
 its size, and any gain clears one. You cannot buy a token off. A riot or a revolt
 clears all of them.
 
-Some Laws and the season's card also name happiness ("every city costs 1
+Some Laws also name happiness ("every city costs 1
 happiness"). Each is one more line of the level for as long as it stands.
 
 **Hunger** is separate from happiness, and calm cannot buy it off. If income cannot
@@ -274,38 +266,40 @@ leave**, rounded down, and your Unrest tokens clear. Your turn then goes on.
 
 Because a riot spends the tokens that caused it, a riot from tokens does not come
 back. A level held down by slaves does: it riots every turn until you free or lose
-slaves, raise Temples, claim luxuries, or buy calm for the year.
+slaves, raise Temples, or claim luxuries. Calm expires before your next turn.
 
-## Events
+## Years and events
 
-Two decks of event cards bring swings of fortune:
+The **year deck** is fourteen cards, shuffled once from the game seed. Reveal one
+as each year opens; the next stays hidden from every player and bot. A card that
+zeroes a term lasts for that year. Plague and Festival act once when revealed.
 
-- **Seasonal events** are revealed at the start of each season and affect
-  everyone — for example, "all players gain 2 food this season." The season
-  shapes which of these come up: a good harvest is far likelier in Autumn than a
-  drought is, while Winter tips the odds the other way. No season is ever
-  entirely safe — spring can flood, summer can burn.
-- **Player events** are drawn for the active player and must be resolved before
-  you take your normal actions. Roughly three draws in four are good news —
-  windfalls, a choice like "gain 6 wood and place an Unrest token, or gain 2 wood
-  with no penalty," or a **grow coupon** that makes your next pop of a given type
-  cheap **this turn only**. The fourth is a bite: rats in the granary, bandits on
-  the roads, a warehouse fire. A loss can never take more than you have.
+| Card         | Copies | Effect                                                       |
+| ------------ | -----: | ------------------------------------------------------------ |
+| Drought      |      2 | Plains slaves make no food, including the Estate's raise.    |
+| Wildfire     |      2 | Forest slaves make no wood, including the Estate's raise.    |
+| Silent Mines |      1 | Mountain slaves make no stone, including the Estate's raise. |
+| Piracy       |      2 | Freemen make no gold, including the Marketplace's raise.     |
+| Ostracism    |      2 | Citizens make no influence, including the Forum's raise.     |
+| Blockade     |      1 | Luxuries give no happiness.                                  |
+| Plague       |      2 | Everyone places an Unrest token.                             |
+| Festival     |      2 | Everyone clears all their Unrest tokens.                     |
 
-Each spring the year's opener also rolls the **yearly omen** in public: one d6
-sign — kind rains, silent mines, a golden age — that adds or takes **1 of one
-resource from every player's income** until the year turns. It sits in the
-top-left event row beside the season and player cards all year; everyone plays
-under the same sky.
+Free pops still eat during Piracy and Ostracism. Granaries and standing Law income
+are separate terms. Income forecasts use this year's card while your income is
+still owed; after collection they show printed income for the unknown next year.
 
-Nothing here is secret except the shuffle: press the **Codex** disc on the left
-rail (or press `?`) to open the **Compendium** — victory standings, every dice table (the
-omen included), this board's bank rates, both decks' full composition, and a
-costs cheat-sheet.
+**Player events** are drawn at each income and must be resolved before your normal
+actions. The deck still has its old windfalls, choice cards, grow coupons and harms
+until the next migration step. It reshuffles its discards when empty. Losses stop
+at zero; one-shot happiness losses place one Unrest token and gains clear one.
+
+The top bar shows the year and its card. The **Codex** consult has the year deck,
+player deck, dice tables, bank rates and base costs.
 
 ## The Assembly
 
-At the start of each spring from Year 2 onward, normal play pauses while the Assembly
+At the start of every other year, beginning with Year 2, normal play pauses while the Assembly
 convenes. The house places one random **Law** on the ballot. Each player then decides in
 secret whether to pass, pay 3 influence to draw from a chosen politician, propose the
 drawn resolution, or pay 6 influence to propose repealing a standing Law. A redraw costs
@@ -322,31 +316,25 @@ one-time **Directives**; their author must name one rival before sealing the pro
 the target is revealed before voting. The house never draws a Directive. Politician power
 and patron labels describe the visible stelae only and grant no bonus.
 
-Every player-authored resolution that passes permanently adds one to that player's Voice
-record and immediately grants its politician's one-time prize: Demosthenes gives 5 food,
-Perdiccas 3 stone, Kleistophenes 4 wood, and Stratokles 2 gold. House Laws, failed or
-vetoed proposals, and repeals grant no prize or Voice progress. Repealing or replacing a
-Law never removes progress already earned.
+Every player-authored resolution that passes grants its politician's one-time
+prize: Demosthenes gives 5 food, Perdiccas 3 stone, Kleistophenes 4 wood, and
+Stratokles 2 gold. House Laws, failed or vetoed proposals, and repeals pay nothing.
+The record of passes remains, but **Voice** counts only the Laws you authored that
+still stand. A repeal or replacement takes one off that count; Directives add none.
 
 ## Winning — the victory race
 
-Six **victory cards** sit face-up from the first turn. Five read **"Most X,
-minimum Y"** and belong to the _sole leader_ in that category who also meets the
-minimum — ties, or leading below the minimum, leave those cards unheld:
+Six **victory cards** sit face-up from the first turn. Each belongs to the sole
+leader who meets its minimum. A tie or a lead below the minimum holds nothing.
 
-| Card                  | Condition                         | Minimum |
-| --------------------- | --------------------------------- | ------: |
-| Polis Builder         | most cities standing              |       3 |
-| Demos                 | most total pops                   |      16 |
-| Civic Elite           | most citizens                     |       8 |
-| Treasurer             | largest banked material stockpile |      80 |
-| Beloved of the People | highest happiness                 |      +4 |
-
-Beloved of the People reads your happiness level without calm, which lasts a year.
-
-The sixth card, **Voice of the Assembly**, uses the permanent Assembly record. The first
-player to pass 3 authored resolutions claims it. A tie does not dislodge the holder; a
-rival takes Voice only by strictly exceeding the holder's count.
+| Card                  | Condition                              | Minimum |
+| --------------------- | -------------------------------------- | ------: |
+| Polis Builder         | most cities standing                   |       3 |
+| Demos                 | most total pops                        |      14 |
+| Civic Elite           | most citizens                          |       5 |
+| Treasurer             | largest gold stock                     |      30 |
+| Beloved of the People | highest happiness level, calm excluded |       4 |
+| Voice of the Assembly | most standing Laws authored            |       2 |
 
 No card can be held at the start of the game — every minimum sits above anything
 your setup and first turn can produce. Holding a card is an achievement, never a
@@ -357,8 +345,7 @@ upgrades — the race to your third city is the long game.)
 check happens at your turn start, so the table always gets one full round to see
 you sitting at three and break a card off you.
 
-The **seasonal deck is the game's clock**: it never reshuffles, and one card
-leaves it every season. If it runs out before anyone wins the race, the age ends
-and **most victory cards held** takes the game (ties break on happiness, then
-population). Track the race in the ledger's **Victory** tab; the top bar shows how
-many seasons remain.
+The **year deck is the game's clock**. After the fourteenth year's last turn,
+**most victory cards held** wins. Ties break on happiness without calm, then total
+pops, then seat order. The final year card still counts. Track the race in the
+**Victory** consult; the top bar shows the year and cards remaining.

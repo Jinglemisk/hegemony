@@ -135,7 +135,7 @@ export type LawIncomeContribution = {
  * contributions the income breakdown can list line by line. `baseIncome` is the income
  * accumulated so far, which the surplus-conversion effect reads (a tariff on food can
  * only be assessed once the food income is known) — so this must be called AFTER the
- * settlement, building, seasonal and omen passes.
+ * settlement, building and year-card passes.
  */
 export function getLawIncomeContributions(
   G: HegemonyState,

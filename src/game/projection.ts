@@ -7,7 +7,7 @@ import { assertStateDefinition } from "./definition";
 import { PLAYER_IDS } from "./data";
 import { enumerateLegalOptions } from "./legalMoves";
 import type { LegalOption } from "./legalMoves";
-import type { EventCard, HegemonyState, PlayerId } from "./types";
+import type { EventCard, HegemonyState, PlayerId, YearCard } from "./types";
 
 /**
  * A presentation-compatible state whose secret-bearing collections have been
@@ -82,8 +82,12 @@ function redactState(state: HegemonyState, viewer: PlayerId | null): ProjectedGa
     // so both stay authority-only. Draw piles expose counts, never identities or order.
     draft.seed = 0;
     draft.rng = 0;
-    draft.seasonalDrawPile = hiddenEventDeck(draft.seasonalDrawPile);
-    draft.seasonalDiscardPile = canonicalEventDeck(draft.seasonalDiscardPile);
+    // The next year card stays hidden: the pile shows how many years are left and
+    // nothing else. The discards are every card already revealed, so they are public.
+    draft.yearDrawPile = draft.yearDrawPile.map(() => HIDDEN_YEAR_CARD);
+    draft.yearDiscardPile = [...draft.yearDiscardPile].sort((left, right) =>
+      left.id.localeCompare(right.id),
+    );
     draft.playerDrawPile = hiddenEventDeck(draft.playerDrawPile);
     draft.playerDiscardPile = canonicalEventDeck(draft.playerDiscardPile);
 
@@ -124,14 +128,23 @@ function redactState(state: HegemonyState, viewer: PlayerId | null): ProjectedGa
   }) as ProjectedGameState;
 }
 
+/** Stands in for every undrawn year card. Its effect is a placeholder the type needs;
+ *  nothing reads a hidden card's effect. */
+const HIDDEN_YEAR_CARD: YearCard = {
+  id: "__hidden_year__",
+  name: "Hidden card",
+  count: 1,
+  text: "",
+  effect: { type: "unrestTokens", change: "clearAll" },
+};
+
 function canonicalEventDeck(deck: EventCard[]): EventCard[] {
   return [...deck].sort((left, right) => left.id.localeCompare(right.id));
 }
 
 function hiddenEventDeck(deck: EventCard[]): EventCard[] {
-  return deck.map((card) => ({
+  return deck.map(() => ({
     id: "__hidden_event__",
-    deck: card.deck,
     name: "Hidden card",
     count: 1,
     text: "",

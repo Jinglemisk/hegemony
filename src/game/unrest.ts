@@ -24,16 +24,13 @@ export function applyUnrestUpkeep(G: HegemonyState, playerID: PlayerId) {
     return;
   }
 
-  const player = G.players[playerID];
   const rules = G.ruleset.economy.unrest;
 
   // Luxury denial ticks down first, so an expiring suppression relieves this turn.
   tickLuxurySuppression(G, playerID);
 
-  // The lines test the level with this year's calm in it. Calm has then done its
-  // work: it lasts until the buyer's next turn starts.
+  // Calm counts only in the year it was bought; the year boundary clears it.
   const level = happinessLevel(G, playerID);
-  player.calmActive = false;
 
   if (level <= rules.revoltThreshold) {
     revolt(G, playerID);
@@ -69,7 +66,7 @@ export interface UnrestStatus {
   happiness: number;
   /** The standing luxury term (active goods × happinessPerGood). */
   luxuryBonus: number;
-  /** Calm bought this year: counted until the player's next turn starts. */
+  /** Calm bought this year: counted until the year turns. */
   calmBonus: number;
   /** Unrest tokens on the realm. */
   tokens: number;

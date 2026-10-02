@@ -5,7 +5,6 @@ import type {
   HegemonyState,
   PlayerId,
   PopType,
-  Resource,
   Resources,
   Settlement,
 } from "../types";
@@ -13,7 +12,7 @@ import { addLog, getPlayerName } from "../core/query";
 import { clonePartialResources } from "../core/resources";
 import { applyLawActionCost } from "../assembly/laws";
 
-/** Actions whose base cost can be modified by seasonal multipliers or event discounts. */
+/** Actions whose base cost can be modified by event discounts or standing Laws. */
 export type CostedAction = ActionCostDiscountTarget | "upgradeColonyToCity";
 
 export function getAdjustedActionCost(
@@ -24,16 +23,6 @@ export function getAdjustedActionCost(
   buildingId?: BuildingId,
 ): Partial<Resources> {
   const adjusted = clonePartialResources(baseCost);
-  const multiplier = getSeasonBuildingCostMultiplier(G, action);
-
-  if (multiplier !== 1) {
-    for (const [resource, amount] of Object.entries(adjusted) as Array<
-      [Resource, number | undefined]
-    >) {
-      adjusted[resource] = Math.ceil((amount ?? 0) * multiplier);
-    }
-  }
-
   if (action === "buildBuilding" || action === "foundColony") {
     for (const discount of getMatchingActionCostDiscounts(G, playerID, action, buildingId)) {
       adjusted[discount.resource] = Math.max(
@@ -43,15 +32,12 @@ export function getAdjustedActionCost(
     }
   }
 
-  // Standing Laws reprice last, over the seasonal multiplier and event discounts —
+  // Standing Laws reprice last, over event discounts —
   // a Law is the most permanent modifier in the game, so it gets the final word.
   return applyLawActionCost(G, playerID, action, adjusted, { buildingId });
 }
 
-/**
- * Grow cost after event grow-coupons and standing Laws. Grow coupons never ride the
- * seasonal building-cost multiplier: that lever prices construction, not mouths.
- */
+/** Grow cost after event grow-coupons and standing Laws. */
 export function getDiscountedGrowPopCost(
   G: HegemonyState,
   playerID: PlayerId,
@@ -70,30 +56,6 @@ export function getDiscountedGrowPopCost(
     scope: settlement.kind === "colony" ? "colony" : "city",
     pop,
   });
-}
-
-function getSeasonBuildingCostMultiplier(G: HegemonyState, action: CostedAction) {
-  const card = G.activeSeasonEvent?.card;
-
-  if (!card) {
-    return 1;
-  }
-
-  return card.effects.reduce((multiplier, effect) => {
-    if (effect.type !== "buildingCostMultiplier" || effect.duration !== "season") {
-      return multiplier;
-    }
-
-    if (action === "foundColony" && effect.excludes.includes("foundColony")) {
-      return multiplier;
-    }
-
-    if (action === "upgradeColonyToCity" && effect.excludes.includes("upgradeColonyToCity")) {
-      return multiplier;
-    }
-
-    return multiplier * effect.multiplier;
-  }, 1);
 }
 
 function getMatchingActionCostDiscounts(

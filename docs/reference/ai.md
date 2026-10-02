@@ -115,11 +115,16 @@ score = 10 · VP(resources projected INCOME_HORIZON turns ahead)
 The projection advances each future upkeep and income collection in order. It
 uses the engine's own income and active-effect queries, including suppressed
 collections and the pops hunger would take. Happiness is a level, so the
-projection reads the engine's level at every upkeep: this year's calm counts at
-the first one only. A riot spends the Unrest tokens, so a riot caused by tokens is
+projection reads the engine's level at every upkeep: calm expires when the year turns
+and does not cover a future-year upkeep. A riot spends the Unrest tokens, so a riot caused by tokens is
 met once; a level held down by slaves is met at every upkeep of the horizon. A
 revolt draws no dice, so the projection runs it: half the slaves leave the
 projected board.
+
+The current year card applies only to income a seat still owes this year (for
+example, while the Assembly sits). Later incomes use printed values with no new
+card or token change assumed. This is a neutral forecast; the deck's seeded order
+never enters a decision.
 
 `projectedUnrestRisk` is deliberately a named strategic heuristic, not an
 expected riot-table payout. It uses the active ruleset's riot and revolt lines,
@@ -134,7 +139,7 @@ past Beloved's minimum.
 The rule-based stochastic chooser and the greedy/smart material evaluator also derive
 their affordability bands from the active ruleset. Venture reserves scale from the
 active stake, sell-surplus and material-starvation bands scale from the active colony
-cost, and material-score normalization scales from the active victory stockpile. This
+cost, and material-score normalization scales from the active Treasurer gold minimum. This
 keeps the same policies useful under `low-number-core-v1` without baking the preset
 into bot code; standard mode still resolves to its historical thresholds exactly.
 
@@ -196,5 +201,5 @@ npm run sim -- batch --games 10 --turns 24 --policy greedy --seed 100 --report .
 diff <(jq 'del(.meta.generatedAt)' .sim/before.json) <(jq 'del(.meta.generatedAt)' .sim/after.json)
 ```
 
-Watch `buildings`, `perSeason` happiness/food/unrest shares, `popsLostToUnrest`,
-and `finalVpDistribution`. See docs/reference/simulation.md for the full command surface.
+Watch `buildings`, `perYear` happiness/food/unrest shares, `popsLostToUnrest`,
+and `finalCardsDistribution`. See docs/reference/simulation.md for the full command surface.

@@ -1,5 +1,4 @@
 import type { LogEntry } from "../../game/types";
-import { yearOf } from "../../game/core/calendar";
 import { toRoman } from "../../ui/formatters";
 import { AnnotatedText } from "../AnnotatedText";
 
@@ -24,7 +23,7 @@ export function Ticker({ log }: { log: readonly LogEntry[] }) {
         <ol className="ticker-more" data-gate-skip>
           {rest.map((entry) => (
             <li key={entry.id}>
-              <span className="ticker-year">Year {toRoman(yearOf(entry.season))}</span>
+              <span className="ticker-year">Year {toRoman(entry.year)}</span>
               <AnnotatedText links={false} text={entry.message} />
             </li>
           ))}

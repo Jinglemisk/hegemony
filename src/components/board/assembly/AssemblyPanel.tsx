@@ -34,8 +34,8 @@ import { useSceneContainment } from "./useSceneContainment";
  *   the seats  four people, what each of them has done, and — for whoever is
  *              acting — everything they may do about it
  *
- * It mounts off `G.assembly` like the yearly omen mounts off `G.yearOmen` —
- * engine state, not UI intent, so no click can open or dismiss it.
+ * It mounts off `G.assembly`: engine state, not UI intent, so no click can open or
+ * dismiss it.
  */
 export function AssemblyPanel({ onTakeSeat }: { onTakeSeat: (playerID: PlayerId) => void }) {
   const { G, viewerId } = useGameUi();

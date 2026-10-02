@@ -10,6 +10,7 @@ import {
   POLITICIANS_BY_ID,
 } from "../../../game/assembly";
 import { happinessLevel } from "../../../game/happiness";
+import { victoryMetricValue, voiceHolder } from "../../../game/victory";
 import type {
   AssemblyResult,
   AssemblySession,
@@ -189,7 +190,7 @@ function LawSlab({
   monument = false,
 }: {
   G: HegemonyState;
-  law: { cardId: string; author: PlayerId | null; enactedSeason: number; order: number };
+  law: { cardId: string; author: PlayerId | null; enactedYear: number; order: number };
   monument?: boolean;
 }) {
   const card = getResolutionCard(G.definition.content, law.cardId);
@@ -795,10 +796,11 @@ function ClosingFloor({
   departed: DepartedLaws;
   session: AssemblySession;
 }) {
+  // Voice counts the Laws a seat authored that still stand.
+  const standing = (playerID: PlayerId) => victoryMetricValue(G, playerID, "voice");
+  const holder = voiceHolder(G);
   const ranked = [...PLAYER_IDS].sort(
-    (a, b) =>
-      G.assemblyPassedByPlayer[b] - G.assemblyPassedByPlayer[a] ||
-      PLAYER_IDS.indexOf(a) - PLAYER_IDS.indexOf(b),
+    (a, b) => standing(b) - standing(a) || PLAYER_IDS.indexOf(a) - PLAYER_IDS.indexOf(b),
   );
 
   return (
@@ -827,7 +829,7 @@ function ClosingFloor({
         <StandingColumn G={G} departed={departed} />
 
         <section className="asmRecap">
-          {/* "Voice ledger · authored resolutions passed" wrapped, orphaning
+          {/* "Voice ledger · standing Laws authored" wrapped, orphaning
             "PASSED" onto a line of its own in tracked caps. The heading names
             the thing; the column of numerals under it is self-evidently a count. */}
           <h4 className="asmStandingKey label">Voice ledger</h4>
@@ -841,16 +843,14 @@ function ClosingFloor({
               </span>
               <span className="asmVoiceRowName verb">{PLAYER_NAMES[playerID]}</span>
               <span className="asmVoiceRowNote caption">
-                {G.voiceHolder === playerID
-                  ? "holds Voice through ties"
+                {holder === playerID
+                  ? "holds Voice"
                   : `minimum ${G.ruleset.victory.minimums.voice}`}
               </span>
-              <b className="asmVoiceRowCount stat num">{G.assemblyPassedByPlayer[playerID]}</b>
+              <b className="asmVoiceRowCount stat num">{standing(playerID)}</b>
             </p>
           ))}
-          <p className="asmVoiceFoot body-em">
-            resolutions each seat has authored and carried, all sittings
-          </p>
+          <p className="asmVoiceFoot body-em">standing Laws each seat authored</p>
         </section>
       </div>
     </div>

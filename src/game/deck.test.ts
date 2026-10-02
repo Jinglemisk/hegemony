@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { GROW_POP_COSTS, PLAYER_EVENT_CARDS, SEASONAL_EVENT_CARDS } from "./data";
+import { GROW_POP_COSTS, PLAYER_EVENT_CARDS, YEAR_CARDS } from "./data";
 import { drawPlayerEvent, resolvePendingPlayerEvent } from "./events";
 import { growPop } from "./actions";
 import { getGrowPopStatus } from "./status";
 import { DEFAULT_RULESET } from "./ruleset";
-import type { EventCard, EventEffect, PopType, Resources, SeasonName } from "./types";
+import type { EventCard, EventEffect, PopType, Resources } from "./types";
 import { scenario } from "./testing/scenario";
 
 /**
@@ -104,30 +104,21 @@ describe("player deck tuning contract", () => {
   });
 });
 
-describe("seasonal deck safety", () => {
-  const SEASONS: SeasonName[] = ["spring", "summer", "autumn", "winter"];
+describe("the year deck", () => {
+  it("is fourteen cards in the paper's mix", () => {
+    const copies = Object.fromEntries(YEAR_CARDS.map((card) => [card.name, card.count]));
 
-  function isHarm(card: EventCard): boolean {
-    return card.effects.some((effect) => {
-      if (effect.type === "incomeModifier") return effect.amount < 0;
-      if (effect.type === "buildingCostMultiplier") return effect.multiplier > 1;
-      if (effect.type === "scaledHappinessDelta") return effect.amountPerPops < 0;
-      if (effect.type === "timedHappinessDelta") return effect.amountPerTurn < 0;
-      if (effect.type === "resourceDelta" || effect.type === "happinessDelta")
-        return effect.amount < 0;
-      return false;
+    expect(copies).toEqual({
+      Drought: 2,
+      Wildfire: 2,
+      "Silent Mines": 1,
+      Piracy: 2,
+      Ostracism: 2,
+      Blockade: 1,
+      Plague: 2,
+      Festival: 2,
     });
-  }
-
-  it("no season is auto-safe: every pool holds at least one harm card", () => {
-    for (const season of SEASONS) {
-      const pool = SEASONAL_EVENT_CARDS.filter(
-        (card) => !card.seasons || card.seasons.length === 0 || card.seasons.includes(season),
-      );
-      const harmCopies = pool.filter(isHarm).reduce((sum, card) => sum + card.count, 0);
-
-      expect(harmCopies, `${season} has no harm cards`).toBeGreaterThan(0);
-    }
+    expect(YEAR_CARDS.reduce((sum, card) => sum + card.count, 0)).toBe(14);
   });
 });
 

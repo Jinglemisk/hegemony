@@ -7,7 +7,6 @@ import type {
   EventTableId,
   PopType,
   Stat,
-  SeasonName,
   SettlementKind,
   TableEffect,
   Terrain,
@@ -68,13 +67,6 @@ export const TERRAIN_GLYPHS = {
   oracle: "oracle",
 } as const satisfies Record<Terrain, GlyphId>;
 
-export const SEASON_GLYPHS = {
-  spring: "spring",
-  summer: "summer",
-  autumn: "autumn",
-  winter: "winter",
-} as const satisfies Record<SeasonName, GlyphId>;
-
 export const VERB_GLYPHS = {
   grow: "grow",
   move: "move",
@@ -107,7 +99,6 @@ export const EVENT_TABLE_GLYPHS = {
   merchantConvoy: "convoy",
   grandEmbassy: "embassy",
   colonistsVoyage: "venture",
-  omen: "omen",
 } as const satisfies Record<EventTableId, GlyphId>;
 
 /* ── The effect grammar ─────────────────────────────────────────────────────
@@ -119,14 +110,9 @@ export const EVENT_TABLE_GLYPHS = {
 export const EVENT_EFFECT_GLYPHS = {
   /** Your stores change, now. */
   resourceDelta: "stockpile",
-  /** Scaled by how many people you have — a crowd, not a person. */
-  scaledResourceDelta: "crowd",
   happinessDelta: "happiness",
-  scaledHappinessDelta: "moodCrowd",
   /** The distinguishing feature is that it ticks: the hourglass, not the mask. */
   timedHappinessDelta: "hourglass",
-  incomeModifier: "income",
-  buildingCostMultiplier: "cross",
   addPops: "popGain",
   actionCostDiscount: "costDown",
   resourceExchange: "exchange",
@@ -142,8 +128,6 @@ export const TABLE_EFFECT_GLYPHS = {
   destroyBuilding: "ruin",
   gainResource: "gain",
   gainPop: "popGain",
-  /** A whole year of it — the year dial, not the plain income cycle. */
-  yearIncomeModifier: "yearCycle",
 } as const satisfies Record<TableEffect["type"], GlyphId>;
 
 export const LAW_EFFECT_GLYPHS = {
@@ -182,8 +166,8 @@ export const ACTIVE_EFFECT_MECHANIC_GLYPHS = {
   suppressIncome: "suppress",
   /** The grain, struck through. The one effect the player must never misread. */
   hunger: "starvation",
-  resourceIncome: "income",
-  buildingCostMultiplier: "cross",
+  /** The year's card strikes a whole term out. */
+  zeroTerm: "cross",
   actionCostDiscount: "costDown",
   standingLaw: "law",
   equalVotesNextAssembly: "equalVotes",
@@ -198,7 +182,6 @@ export const ICON_REGISTRY_FAMILIES = {
   pop: POP_GLYPHS,
   settlement: SETTLEMENT_GLYPHS,
   terrain: TERRAIN_GLYPHS,
-  season: SEASON_GLYPHS,
   verb: VERB_GLYPHS,
   building: BUILDING_GLYPHS,
   politician: POLITICIAN_GLYPHS,
@@ -250,12 +233,9 @@ export type EffectIconTarget =
 export function eventBlowGlyph(effect: EventEffect): GlyphId {
   switch (effect.type) {
     case "resourceDelta":
-    case "scaledResourceDelta":
     case "resourceDeltaPerPop":
-    case "incomeModifier":
       return RESOURCE_GLYPHS[effect.resource];
     case "happinessDelta":
-    case "scaledHappinessDelta":
     case "timedHappinessDelta":
       return RESOURCE_GLYPHS.happiness;
     default:

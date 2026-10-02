@@ -2,7 +2,7 @@ import { PLAYER_IDS, PLAYER_NAMES } from "./data";
 import {
   getAuthoredGameContent,
   getPlayerEventCards,
-  getSeasonalEventCards,
+  getYearCards,
   getTerrainDeck,
 } from "./content";
 import { createGameDefinition } from "./definition";
@@ -40,8 +40,8 @@ export function createInitialStateFromDefinition(
 ): HegemonyState {
   const { content, ruleset } = definition;
   let rng = seed >>> 0;
-  const seasonal = shuffleWithSeed(expandDeck(getSeasonalEventCards(content)), rng);
-  rng = seasonal.state;
+  const years = shuffleWithSeed(expandDeck(getYearCards(content)), rng);
+  rng = years.state;
   const player = shuffleWithSeed(expandDeck(getPlayerEventCards(content)), rng);
   rng = player.state;
 
@@ -73,7 +73,7 @@ export function createInitialStateFromDefinition(
     currentPlayer: "0",
     turn: 1,
     seed: seed >>> 0,
-    seasonOpener: "0",
+    yearOpener: "0",
     winner: null,
     gameOverReason: null,
     boardLayout,
@@ -109,22 +109,21 @@ export function createInitialStateFromDefinition(
       {} as HegemonyState["players"],
     ),
     transfers: [],
-    seasonalDrawPile: seasonal.cards,
-    seasonalDiscardPile: [],
+    yearDrawPile: years.cards,
+    yearDiscardPile: [],
     playerDrawPile: player.cards,
     playerDiscardPile: [],
-    activeSeasonEvent: null,
+    activeYearCard: null,
     lastPlayerEvent: null,
     pendingPlayerEvent: null,
     pendingRiot: null,
     lastTableRoll: null,
-    yearOmen: null,
     // The bank's per-material rates are a function of THIS board (Q14) — derived
     // once here, static for the whole game.
     bank: deriveBankRates(tiles, ruleset.economy.bank),
-    season: 1,
+    year: 1,
     rng,
-    log: [{ id: "start", season: 1, message: "Spring of Year 1 begins." }],
+    log: [{ id: "start", year: 1, message: "Year 1 begins." }],
     assembly: null,
     activeLaws: [],
     tallyMonuments: [],
@@ -132,7 +131,6 @@ export function createInitialStateFromDefinition(
     politicianDiscards: politicians.discards,
     lawOrder: 0,
     assemblyPassedByPlayer: { "0": 0, "1": 0, "2": 0, "3": 0 },
-    voiceHolder: null,
     pendingIsonomiaTarget: null,
     assembliesHeld: 0,
   };

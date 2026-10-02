@@ -231,7 +231,7 @@ export const VERBS: VerbSpec[] = [
       { amounts: getCivicCalmStatus(G, playerID, "gold").cost ?? {} },
     ],
     available: ({ calmUsed }) => !calmUsed,
-    hint: "Buy calm until your next turn: influence or gold, once per turn.",
+    hint: "Buy calm this year: influence or gold, once per turn.",
     blockedHint: "One civic-calm action per turn — already used.",
     select: (handlers) => handlers.onCalmRequest(),
   },

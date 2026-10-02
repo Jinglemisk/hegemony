@@ -115,7 +115,7 @@ export const VICTORY_PLACEHOLDERS: Record<VictoryMetric, string | undefined> = {
   cities: placeholder("victory/polis-builder"),
   pops: placeholder("victory/demos"),
   citizens: placeholder("victory/civic-elite"),
-  stockpile: placeholder("victory/treasurer"),
+  gold: placeholder("victory/treasurer"),
   happiness: placeholder("victory/beloved"),
   voice: placeholder("victory/voice"),
 };

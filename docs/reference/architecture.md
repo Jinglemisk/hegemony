@@ -32,7 +32,8 @@ state reaches a consumer. AI policies receive the same fair player observation v
 Post-transition invariants cover settlement indexes, population and transfers, card zones,
 Assembly state, stable definition identity, and compatibility versions. Saves and scripts
 distinguish unsupported historical versions from deterministic replay divergence. Supported
-recipes replay byte-for-byte.
+recipes replay byte-for-byte. Step 6 uses state schema 6 and command schema 2;
+older saves and scripts are rejected rather than migrating the retired clock.
 
 ## Mechanical gates
 

@@ -1,5 +1,5 @@
 import { getBuilding } from "../../game/content";
-import { settlementClassColumn } from "../../game/economy/income";
+import { settlementNextClassColumn } from "../../game/economy/income";
 import {
   settlementCapacity,
   settlementIdleSlaves,
@@ -29,8 +29,9 @@ const nonZero = (income: Record<Resource, number>) =>
  * The subject settlement: a meta line, three pop columns (count, what one pop of
  * the class makes here, and what the class makes in all), and a line per building
  * plus the open slots, which the slaves work. Every number comes from the engine:
- * the columns are `settlementClassColumn`, and the slots are the settlement
- * selectors'. A class building raises its column's "×" from 1 to 2.
+ * the columns are `settlementNextClassColumn`, and the slots are the settlement
+ * selectors'. A class building raises its column's "×" from 1 to 2, and the year's
+ * card strikes it to 0 for the income it bites.
  */
 export function SettlementPage({
   G,
@@ -84,13 +85,7 @@ export function SettlementPage({
       <div className="settle-cols" data-c="settle-cols">
         {COLUMNS.map(({ pop, label, icon }) => {
           const count = settlement.pops[pop];
-          const column = settlementClassColumn(
-            tile,
-            settlement,
-            pop,
-            G.ruleset,
-            G.definition.content,
-          );
+          const column = settlementNextClassColumn(G, tile, settlement, pop);
           const made = nonZero(column.income);
 
           return (
@@ -98,8 +93,16 @@ export function SettlementPage({
               <span className="col-head caps">
                 {label}
                 <b
-                  className={column.raisedBy ? "is-raised" : undefined}
-                  title={column.raisedBy ? `Raised by the ${column.raisedBy}` : undefined}
+                  className={
+                    column.zeroed ? "is-zeroed" : column.raisedBy ? "is-raised" : undefined
+                  }
+                  title={
+                    column.zeroed
+                      ? `${G.activeYearCard?.name}: ${G.activeYearCard?.text}`
+                      : column.raisedBy
+                        ? `Raised by the ${column.raisedBy}`
+                        : undefined
+                  }
                 >
                   ×{column.perPop}
                 </b>

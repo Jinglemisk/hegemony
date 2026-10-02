@@ -199,7 +199,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
         <button
           className={`tune-btn${startAtAssembly ? " primary" : ""}`}
           onClick={toggleStartAtAssembly}
-          title="Fast-forward every new game to the first Assembly — spring of Year 2, sixteen turns of seed-driven play already in. No more clicking End Turn to reach the rivalry layer."
+          title="Fast-forward every new game to the first Assembly — Year 2, four turns of seed-driven play already in. No more clicking End Turn to reach the rivalry layer."
         >
           {startAtAssembly ? "✓ " : ""}Start at Assembly
         </button>

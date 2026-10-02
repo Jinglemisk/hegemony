@@ -4,11 +4,10 @@ import {
   getAuthoredGameContent,
   getBuildings,
   getExpeditionTables,
-  getOmenTable,
   getPlayerEventCards,
   getRiotTable,
   getResolutionCards,
-  getSeasonalEventCards,
+  getYearCards,
   getTerrainDeck,
 } from "../game/content";
 import { BUILDINGS } from "../game/data";
@@ -52,11 +51,10 @@ describe("sim content/tune patching", () => {
     const preset = createLowNumberContent(authored);
     expect(getBuildings(preset)).toBe(preset.buildings);
     expect(getTerrainDeck(preset)).toBe(preset.terrain);
-    expect(getSeasonalEventCards(preset)).toBe(preset.seasonalEvents);
+    expect(getYearCards(preset)).toBe(preset.yearCards);
     expect(getPlayerEventCards(preset)).toBe(preset.playerEvents);
     expect(getRiotTable(preset)).toBe(preset.riotTable);
     expect(getExpeditionTables(preset)).toBe(preset.expeditionTables);
-    expect(getOmenTable(preset)).toBe(preset.omenTable);
     expect(getResolutionCards(preset)).toBe(preset.resolutions);
 
     expect(getBuildings(authored)).toBe(authored.buildings);

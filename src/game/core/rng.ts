@@ -1,6 +1,4 @@
-import type { EventCard } from "../types";
-
-export function expandDeck(cards: EventCard[]): EventCard[] {
+export function expandDeck<Card extends { count: number }>(cards: Card[]): Card[] {
   return cards.flatMap((card) => Array.from({ length: card.count }, () => card));
 }
 

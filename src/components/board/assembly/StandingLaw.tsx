@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { PLAYER_NAMES } from "../../../game/data";
-import { yearOf } from "../../../game/core/calendar";
 import { getResolutionCard } from "../../../game/assembly";
 import type { ActiveLaw, TallyMonument } from "../../../game/assembly";
 import type { GameContent } from "../../../game/content";
@@ -80,7 +79,7 @@ export function StandingLaw({
       ) : null}
 
       <span className="lawslabMeta label">
-        carried by {authorName(stele.author)} · Year {yearOf(stele.enactedSeason)}
+        carried by {authorName(stele.author)} · Year {stele.enactedYear}
         {monument ? " · monument" : ""}
       </span>
     </div>

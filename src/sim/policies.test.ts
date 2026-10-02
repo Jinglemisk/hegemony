@@ -74,7 +74,7 @@ describe("rule-driven bank chains", () => {
     G.activeLaws.push({
       cardId: "aqueduct-levy",
       author: "0",
-      enactedSeason: G.season,
+      enactedYear: G.year,
       order: G.lawOrder++,
     });
     Object.assign(G.players[G.currentPlayer].resources, {
@@ -197,8 +197,7 @@ function projectionFixture(): HegemonyState {
 
   G.pendingPlayerEvent = null;
   G.pendingRiot = null;
-  G.activeSeasonEvent = null;
-  G.yearOmen = null;
+  G.activeYearCard = null;
   G.activeLaws = [];
   Object.assign(player.resources, { food: 100 });
   for (const [index, tileId] of player.settlements.entries()) {
@@ -265,7 +264,7 @@ function chooseFreemanGrowth(policy: typeof smartPolicy | typeof beamPolicy, foo
   return policy.choose(observe(G), [growth, endTurnMove], createSimRng(1));
 }
 
-/** Cycle whole turns until the agora convenes (spring of Year 2+). Unattended seats can
+/** Cycle whole turns until the agora convenes (Year 2+). Unattended seats can
  *  pick up an event or riot on the way; both are dismissed exactly as the engine suites do. */
 function playUntilAssembly(G: HegemonyState, limit = 40): void {
   let turns = 0;
@@ -301,7 +300,7 @@ describe("policy evaluation is side-effect-free", () => {
     const hiddenVariant = structuredClone(G);
     hiddenVariant.seed += 999;
     hiddenVariant.rng ^= 0x7fffffff;
-    hiddenVariant.seasonalDrawPile.reverse();
+    hiddenVariant.yearDrawPile.reverse();
     hiddenVariant.playerDrawPile.reverse();
     for (const deck of Object.values(hiddenVariant.politicianDecks)) deck.reverse();
 
@@ -446,7 +445,10 @@ describe("political policy", () => {
   });
 
   it("draws from Stratokles when his authored prize is the available line", () => {
-    const G = scenario({ seed: 11 }).opening().build();
+    // A Directive never counts toward Voice, so only the prize can make it worth a draw.
+    const G = scenario({ seed: 11, patch: { assembly: { prizes: { stratokles: { gold: 40 } } } } })
+      .opening()
+      .build();
     playUntilAssembly(G);
     expect(G.assembly?.phase).toBe("proposal");
 
@@ -483,7 +485,10 @@ describe("political policy", () => {
   });
 
   it("aims a Directive at the rival it hurts most", () => {
-    const G = scenario({ seed: 13 }).opening().build();
+    // The prize makes the Directive worth proposing; the target is the question.
+    const G = scenario({ seed: 13, patch: { assembly: { prizes: { stratokles: { gold: 40 } } } } })
+      .opening()
+      .build();
     playUntilAssembly(G);
     expect(G.assembly?.phase).toBe("proposal");
 

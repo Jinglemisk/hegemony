@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { scenario } from "../testing/scenario";
 import { victoryStandings } from "../victory";
 import type { HegemonyState, PlayerId } from "../types";
-import { authoredSteleCount, patronCount, politicianStandings } from "./power";
+import { patronCount, politicianStandings } from "./power";
 import type { PoliticianId } from "./types";
 
 /**
@@ -21,7 +21,7 @@ const PERDICCAS_LAWS = ["guild-charter", "forum-rites", "civic-pride", "census-r
 
 function plantLaws(G: HegemonyState, cardIds: string[], author: PlayerId) {
   for (const cardId of cardIds) {
-    G.activeLaws.push({ cardId, author, enactedSeason: G.season, order: G.lawOrder++ });
+    G.activeLaws.push({ cardId, author, enactedYear: G.year, order: G.lawOrder++ });
   }
 }
 
@@ -31,7 +31,7 @@ function plantMonuments(G: HegemonyState, count: number, author: PlayerId) {
     G.tallyMonuments.push({
       cardId: "the-streets-burn",
       author,
-      enactedSeason: G.season,
+      enactedYear: G.year,
       order: G.lawOrder++,
     });
   }
@@ -115,7 +115,7 @@ describe("Voice of the Assembly (the 6th victory card)", () => {
   const voiceOf = (G: HegemonyState) =>
     victoryStandings(G).find((standing) => standing.card.metric === "voice");
 
-  it("is a sixth card in the standings, measured in permanent authored passes", () => {
+  it("is a sixth card in the standings, measured in standing authored Laws", () => {
     const G = scenario().opening().build();
     const standings = victoryStandings(G);
 
@@ -124,34 +124,33 @@ describe("Voice of the Assembly (the 6th victory card)", () => {
     expect(voiceOf(G)?.values).toMatchObject({ "0": 0, "1": 0, "2": 0, "3": 0 });
   });
 
-  it("uses the settled minimum of three", () => {
+  it("uses the paper's minimum of two", () => {
     const G = scenario().opening().build();
-    G.assemblyPassedByPlayer["0"] = 2;
-    expect(voiceOf(G)?.minimum).toBe(3);
+    plantLaws(G, DEMOSTHENES_LAWS.slice(0, 1), "0");
+    expect(voiceOf(G)?.minimum).toBe(2);
     expect(voiceOf(G)?.holder).toBeNull();
-    G.assemblyPassedByPlayer["0"] = 3;
-    G.voiceHolder = "0";
+    plantLaws(G, DEMOSTHENES_LAWS.slice(1, 2), "0");
     expect(voiceOf(G)?.holder).toBe("0");
   });
 
-  it("preserves the explicit holder through ties and changes only when the engine transfers it", () => {
-    const G = scenario().opening().build();
-    G.assemblyPassedByPlayer["0"] = 3;
-    G.assemblyPassedByPlayer["1"] = 3;
-    G.voiceHolder = "0";
-    expect(voiceOf(G)?.holder).toBe("0");
-    G.assemblyPassedByPlayer["1"] = 4;
-    G.voiceHolder = "1";
-    expect(voiceOf(G)?.holder).toBe("1");
-  });
-
-  it("does not infer Voice from visible patronage or stelae", () => {
+  it("is a level: a tie holds nothing, and a Law leaving the board takes it back", () => {
     const G = scenario().opening().build();
     plantLaws(G, DEMOSTHENES_LAWS.slice(0, 2), "0");
-    plantLaws(G, PERDICCAS_LAWS.slice(0, 2), "0");
-    expect(patronCount(G, "0")).toBe(2);
-    expect(authoredSteleCount(G, "0")).toBe(4);
-    expect(G.assemblyPassedByPlayer["0"]).toBe(0);
+    plantLaws(G, PERDICCAS_LAWS.slice(0, 2), "1");
+    expect(voiceOf(G)?.holder).toBeNull();
+
+    G.activeLaws.pop();
+    expect(voiceOf(G)?.holder).toBe("0");
+
+    G.activeLaws.shift();
+    expect(voiceOf(G)?.holder).toBeNull();
+  });
+
+  it("counts standing Laws, not monuments or passes", () => {
+    const G = scenario().opening().build();
+    plantMonuments(G, 3, "0");
+    G.assemblyPassedByPlayer["0"] = 3;
+    expect(voiceOf(G)?.values["0"]).toBe(0);
     expect(voiceOf(G)?.holder).toBeNull();
   });
 });

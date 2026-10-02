@@ -5,13 +5,12 @@ import {
   collectIncome,
   createInitialState,
   createInitialStateFromDefinition,
-  drawSeasonalEvent,
+  revealYearCard,
   expireTurnEventModifiers,
   placeCapital,
   placeColony,
   resolveArrivingPops,
-  rollYearOmen,
-  startNewSeason,
+  startNewYear,
 } from "./rules";
 import type { MoveResult } from "./rules";
 import { checkVictoryAtTurnStart } from "./victory";
@@ -73,7 +72,7 @@ function setupPhaseFor(kind: SettlementKind): Phase {
  * (roadmap-appendix D3c): round 0 goes 0→3, round 1 goes 3→0, and so on — the
  * player who picks last in one round picks first in the next. Once every player
  * has placed everything the ruleset's setup list owes, gameplay begins with the
- * season opener.
+ * year's opener.
  */
 export function advanceSetupTurn(G: HegemonyState) {
   G.turn += 1;
@@ -93,10 +92,10 @@ export function advanceSetupTurn(G: HegemonyState) {
   }
 
   G.phase = "gameplay";
-  G.currentPlayer = G.seasonOpener;
+  G.currentPlayer = G.yearOpener;
 }
 
-/** Start-of-turn automation for the current gameplay player: reveal a seasonal event,
+/** Start-of-turn automation for the current gameplay player: reveal the year's card,
  *  check the victory race, then upkeep + income. When the upkeep starts a riot the
  *  income is DEFERRED — resolveRiot collects it once the table has spoken. */
 export function beginGameplayTurn(G: HegemonyState) {
@@ -104,14 +103,9 @@ export function beginGameplayTurn(G: HegemonyState) {
     return;
   }
 
-  if (!G.activeSeasonEvent) {
-    drawSeasonalEvent(G);
-  }
-
-  // Year 1's omen: the game opens in spring, so the first opener takes the auspices
-  // the moment gameplay begins. Later years roll theirs in startNewSeason.
-  if (!G.yearOmen) {
-    rollYearOmen(G);
+  // Year 1's card: later years reveal theirs in startNewYear.
+  if (!G.activeYearCard) {
+    revealYearCard(G);
   }
 
   checkVictoryAtTurnStart(G);
@@ -128,8 +122,8 @@ export function beginGameplayTurn(G: HegemonyState) {
 }
 
 /**
- * End the current gameplay turn: expire discounts, roll the season when play returns
- * to the season opener (rotating the opener each new year), then begin the next turn —
+ * End the current gameplay turn: expire discounts, turn the year when play returns
+ * to the year's opener (the opener then moves on one seat), then begin the next turn —
  * arrivals, the victory-race check, unrest upkeep, income.
  */
 export function endTurn(G: HegemonyState): MoveResult {
@@ -142,19 +136,19 @@ export function endTurn(G: HegemonyState): MoveResult {
 
   expireTurnEventModifiers(G, current);
 
-  if (next === G.seasonOpener) {
-    startNewSeason(G);
+  if (next === G.yearOpener) {
+    startNewYear(G);
 
     if (G.phase !== "gameplay") {
-      // The seasonal deck (the clock) ran out — the exhaustion tally ended the game.
+      // The year deck (the clock) ran out — the exhaustion tally ended the game.
       return { ok: true };
     }
 
-    // A new year rotates the opener (handled in startNewSeason); the new opener
-    // leads the season, and everyone still plays exactly once per season.
-    next = G.seasonOpener;
+    // A new year moves the opener on (handled in startNewYear); the new opener
+    // leads the year, and everyone still plays exactly once a year.
+    next = G.yearOpener;
 
-    // Spring of Year 2 onward, the Assembly sits BEFORE the opener plays (§1.1). It
+    // In a sitting year the Assembly sits BEFORE the opener plays (§1.1). It
     // suspends the turn machine rather than sharing it: we hand control to the agora
     // and remember whose turn we owe, and `closeAssembly` opens that turn for real.
     if (shouldOpenAssembly(G)) {
@@ -170,7 +164,7 @@ export function endTurn(G: HegemonyState): MoveResult {
 /**
  * Open one player's turn: arrivals, the victory-race check, unrest upkeep, income.
  * Extracted from {@link endTurn} because the Assembly suspends play *between* the
- * season roll and the opener's turn — so `closeAssembly` needs to run exactly this
+ * year turning and the opener's turn — so `closeAssembly` needs to run exactly this
  * sequence, and there must be only one copy of it.
  */
 export function beginTurnFor(G: HegemonyState, playerID: PlayerId) {
@@ -192,8 +186,8 @@ export function beginTurnFor(G: HegemonyState, playerID: PlayerId) {
 }
 
 /**
- * Dismiss the Assembly's closing recap and hand play back to the season opener. The
- * Voice and prizes resolve with each ballot item, so closing only resumes the turn.
+ * Dismiss the Assembly's closing recap and hand play back to the year's opener.
+ * Prizes resolve with each ballot item, so closing only resumes the turn.
  */
 export function closeAssembly(G: HegemonyState): MoveResult {
   const session = G.assembly;

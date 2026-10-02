@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-02
+updated: 2026-10-03
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -36,7 +36,7 @@ Every step:
 - Builds the step and updates the shell panels it touches.
 - Passes `npm run check`, `npm run lint`, `npm run test:run`, `npm run test:parity`, and a
   bot batch through `npm run sim` (commands in [simulation](../reference/simulation.md)).
-- Runs `/code-review` at medium effort on its own diff and fixes what it finds.
+- Is built by a `codex exec` worker, which reviews its own diff; the session leads and verifies.
 - Opens a PR into `feat/v2`, titled like "(Feature) v2 step 3: pops and tiles", with a short
   body per the owner's PR style. Its last commit ticks the step's box here with the PR
   number and a one-line evidence note.
@@ -45,10 +45,10 @@ Every step:
 
 Standing rules:
 
-- When a stretch runs several steps, each step runs in a fresh subagent briefed with this
+- When a stretch runs several steps, each step runs in one `codex exec` run briefed with this
   plan and that step, one after another, so the session's own context stays small. Steps
   never run in parallel, except Step 14 when the owner asks for it.
-- Early stop: a check that still fails after a second attempt, a conflict with Settled
+- Early stop: the same failure surviving two real fixes, a conflict with Settled
   inputs, or a rule with no simple default. Otherwise, when a step meets a rule the paper
   leaves unstated (how half a slave rounds, riot thresholds, whether the capital uses a
   city piece, starting stocks, first-seat rotation), it picks the simplest default,
@@ -298,6 +298,46 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   off the riot line.
 - The state schema is version 5.
 
+**Defaults picked in Step 6** (2026-10-03):
+
+- Seat 0 opens Year 1. The opener moves on one seat each year, and every seat takes
+  exactly one turn. The first card is revealed after setup; later cards are revealed
+  before the Assembly and the opener's turn. Victory stays at each player's turn
+  start, before unrest and income, under the settled ruling.
+- A terrain card zeroes the working-slave column on that terrain, including the
+  Estate's raise. Piracy and Ostracism zero the freeman gold and citizen influence
+  columns, including their class buildings. Mouths still eat. Flat building income
+  and standing Law terms remain; Laws apply after the year card until Step 8.
+- Income forecasts use the current card only for a seat that has not collected this
+  year. After collection, the shell and bots use printed income for the next year,
+  whose card is hidden. Bots assume no new card or token change in later years and
+  never read the draw pile. Blockade counts in the current happiness level for every
+  seat throughout the year.
+- Calm is +2 for the year in which it was bought and clears for every buyer when the
+  year turns, before any new-year riot test. It never counts for Beloved or the final
+  tiebreak. With one turn per seat per year, it cannot cover the buyer's next upkeep;
+  bots no longer buy it for that purpose.
+- Voice follows the other five titles: a sole leader at the minimum holds it; a tie
+  holds nothing. Only standing authored Laws count; repeal and replacement reduce
+  their author's count. Directives and the permanent pass record do not count.
+- After Year 14's last turn, tally the titles with the final year card still active.
+  Ties break on happiness without calm, then total pops, then seat order. The clock
+  stays on Year 14. The year deck never reshuffles; the player deck still does.
+- The Assembly meets in Years 2, 4, 6, 8, 10, 12 and 14. Until Step 8 its house
+  resolution, six-Law cap, prices, citizen votes, bribes and veto remain. Annual Law
+  coupons refresh when the year turns. Existing turn-counted effects now count
+  player-turns in years. Player cards and ventures wait for Step 7; riot insurance
+  stays as shipped. Ideas still wait for Step 9.
+- The legacy low-number dev preset keeps its own title minimums: 3 cities, 8 pops,
+  6 citizens, 15 gold, happiness 4 and Voice 3. It leaves the year deck unchanged.
+- The state schema is version 6; older saves and scripts are rejected. The command
+  schema stays 2. The batch's default turn cap is 56, enough for all fourteen years.
+- Telemetry includes the opening player-turn and excludes a terminal victory check
+  that collected no income. A deck finish counts the completed final turn. It reports
+  years and the winning titles, so late riots mean Years 8 to 14. A riot's deferred
+  income updates that turn's snapshot and records its new player-card draw, including
+  on the final turn. A year-card reveal still counts when the opener wins before income.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.
@@ -386,7 +426,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
       three luxuries go; calm is +2 for this year and luxuries are +2 each. A riot clears
       the tokens and then rolls; a revolt sends half the slaves away with no roll. Beloved
       reads the level without calm.
-- [ ] **Step 6 · Years and the year deck.** Seasons and the omen retire. A 14-card year deck
+- [x] **Step 6 · Years and the year deck.** ([#85](https://github.com/Jinglemisk/hegemony/pull/85): a 40-game bot batch finishes all fourteen years with no turn caps; 2 games end by the race and 38 by the deck; the riot table opens on 10.7% of player-turns after year 7. [Note](../reports/audits/2026-10-03-v2-step6-years.md).) Seasons and the omen retire. A 14-card year deck
       is the clock and the next card stays hidden. Victory is checked at the start of each
       player's own turn, as today, with the paper's minimums; Treasurer counts gold only; Voice is a level.
 - [ ] **Step 7 · Cards.** A player deck of twelve kinds in the four verbs. Ventures take one

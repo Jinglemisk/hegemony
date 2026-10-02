@@ -1,6 +1,6 @@
 # Effective content and costs
 
-Last updated: 2026-08-04.
+Last updated: 2026-10-03.
 
 This is the living contract for values that can differ from authored defaults. It
 records the Phase 3.5 Step 1 inventory. Step 2's compile-time and behavioral
@@ -14,7 +14,7 @@ Step 3 presentation components consume both contracts.
   creation and returned by the typed content accessors. With no development preset
   or override, it is authored content.
 - A **base cost** comes from the active ruleset or effective content before local,
-  seasonal, event, or standing-Law modifiers. Game modes and tuning patches are
+  event or standing-Law modifiers. Game modes and tuning patches are
   already reflected in this value.
 - An **effective cost** is `ActionStatus.cost` from the authoritative `get*Status`
   query for the acting player and selected target/option.
@@ -28,8 +28,8 @@ must label them as base costs and explain that modifiers appear at the action.
 | ----------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | Buildings   | `getBuildings(definition.content)`, `getBuilding(definition.content, id)`, and target-specific `getBuildBuildingOptions()` | Build legality/execution, income, settlement capacity/slots, growth and promotion discounts, table destruction | Board availability, map selection, Build popover, Cities/Buildings ledgers, Codex, building labels and benefit text | Legal-move enumeration and policy evaluation through the same engine income/status paths |
 | Terrain     | `getTerrainDeck(definition.content)`                                                                                       | Initial map/state creation and shuffle                                                                         | Codex terrain aggregates                                                                                            | Game setup and tuning runs through engine map creation                                   |
-| Events      | `getSeasonalEventCards(definition.content)` and `getPlayerEventCards(definition.content)`                                  | Deck creation, resolution, active effects and logs                                                             | Topbar, pending-event dialog and Codex                                                                              | Seeded decks, policy execution and zero-filled telemetry                                 |
-| Tables      | `getRiotTable(definition.content)`, `getExpeditionTables(definition.content)`, and `getOmenTable(definition.content)`      | Legal moves, insurance, ventures, rolls and yearly omen state                                                  | Riot/Venture modals, topbar, result rows and Codex                                                                  | Policy risk, execution and telemetry                                                     |
+| Events      | `getYearCards(definition.content)` and `getPlayerEventCards(definition.content)`                                           | Deck creation, resolution, active effects and logs                                                             | Topbar, pending-event dialog and Codex                                                                              | Seeded decks, policy execution and zero-filled telemetry                                 |
+| Tables      | `getRiotTable(definition.content)` and `getExpeditionTables(definition.content)`                                           | Legal moves, insurance, ventures, and rolls                                                                    | Riot/Venture modals, topbar, result rows and Codex                                                                  | Policy risk, execution and telemetry                                                     |
 | Resolutions | `getResolutionCards(definition.content)` and `getResolutionCard(definition.content, id)`                                   | Politician decks, Law modifiers, Directive resolution and logs                                                 | Assembly cards, target previews, ledgers and Codex                                                                  | Seeded decks, real-engine enactment evaluation and Assembly telemetry                    |
 
 Runtime consumers must not import authored content constants directly. Authored
@@ -94,7 +94,7 @@ part of its validation, while the real-device checklist remains an owner gate in
 ## Regression contract
 
 `src/parity/withinAxisParity.test.ts` applies a tuned building definition together
-with a seasonal multiplier and event coupon, then proves that the paired query,
+with an event coupon, then proves that the paired query,
 frontend-facing label, legal move, execution payment, and resulting income agree.
 It also proves that the smart policy reverses a build decision when effective
 building economics reverse. Existing status, legal-move, preview, and parity suites

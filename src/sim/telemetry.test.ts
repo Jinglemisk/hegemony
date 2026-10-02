@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { ACTIVE_EFFECT_KINDS } from "../game/activeEffects";
 import { createModeDefinition } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
+import { resolveRiot, startRiot } from "../game/riot";
+import { scenario } from "../game/testing/scenario";
 import { randomPolicy } from "./policies";
 import { runGame } from "./runner";
 import { Aggregator, percentiles, snapshotTurn, snapshotsToCsv } from "./telemetry";
@@ -81,14 +83,57 @@ describe("snapshotTurn", () => {
 });
 
 describe("Aggregator", () => {
+  it("counts deferred hunger and the new draw on the final turn without duplicating it", () => {
+    const G = scenario()
+      .stackYearCard("year-drought")
+      .opening()
+      .withResources("0", { food: 0 })
+      .mutate((state) => {
+        state.year = 14;
+        state.pendingPlayerEvent = null;
+        state.players["0"].collectedThisTurn = false;
+        state.players["0"].popsLostToHunger = 0;
+      })
+      .build();
+    startRiot(G, "0");
+    G.pendingRiot!.boughtInsurance = ["breadDole", "patronage", "concession"];
+    const aggregator = new Aggregator();
+    aggregator.beginGame(0, 42, G);
+    expect(resolveRiot(G, "0").ok).toBe(true);
+    expect(G.players["0"].popsLostToHunger).toBeGreaterThan(0);
+    aggregator.onMove(G, "0", { type: "resolveRiot" });
+    G.phase = "gameOver";
+    G.gameOverReason = "deckExhausted";
+    G.winner = "0";
+    aggregator.onTurnEnd(G);
+    aggregator.endGame(G);
+    const report = aggregator.buildReport({
+      games: 1,
+      turns: 56,
+      policy: "random",
+      mode: "standard",
+      boardLayout: "classic",
+      opening: "policy",
+      baseSeed: 42,
+      botSeedRule: "test",
+      rulesetPatch: null,
+      definition: TEST_DEFINITION,
+      generatedAt: "test",
+    });
+    expect(aggregator.allSnapshots()).toHaveLength(1);
+    expect(report.hunger["0"].hungerTurnsPerGame).toBe(1);
+    expect(Object.values(report.events.player).reduce((sum, count) => sum + count, 0)).toBe(1);
+    expect(report.riots.byYear).toEqual([{ year: 14, riots: 1, playerTurns: 1 }]);
+  });
+
   it("aggregates games, snapshots, seats, and event counts", () => {
     const turns = 12;
     const { aggregator, report } = runAggregated(2, turns);
 
     expect(report.perGame).toHaveLength(2);
     expect(report.perGame[0].turnsPlayed).toBe(turns);
-    // One snapshot per player-turn per game.
-    expect(aggregator.allSnapshots()).toHaveLength(2 * turns);
+    // The opening turn and each newly opened turn are observed, including at a cap.
+    expect(aggregator.allSnapshots()).toHaveLength(2 * (turns + 1));
 
     // Every turn draws a player event, plus the bootstrap draw per game.
     const playerEventCount = Object.values(report.events.player).reduce(
@@ -111,12 +156,12 @@ describe("Aggregator", () => {
     );
     expect(totalCapLeaderRate).toBeCloseTo(1);
 
-    // Season rows exist and pool both games once a season completed in both.
-    expect(report.perSeason.length).toBeGreaterThan(0);
-    expect(report.perSeason[0].games).toBe(2);
+    // Year rows pool both games once a year completed in both.
+    expect(report.perYear.length).toBeGreaterThan(0);
+    expect(report.perYear[0].games).toBe(2);
 
     // Unrest tier shares are a distribution.
-    const shares = report.perSeason[0].unrestTierShares;
+    const shares = report.perYear[0].unrestTierShares;
     expect(shares.calm + shares.discontent + shares.unrest + shares.revolt).toBeCloseTo(1);
 
     expect(Object.keys(report.activeEffects)).toEqual([...ACTIVE_EFFECT_KINDS]);
@@ -155,8 +200,17 @@ describe("Aggregator", () => {
     G.phase = "gameOver";
     G.gameOverReason = "victoryRace";
     G.winner = "0";
+    // The opener won after a year-card reveal but before income or a player draw.
+    G.year += 1;
+    G.activeYearCard = G.yearDrawPile.shift()!;
+    aggregator.onTurnEnd(G);
     G.assemblyPassedByPlayer = { "0": 4, "1": 2, "2": 1, "3": 0 };
-    G.voiceHolder = "0";
+    G.activeLaws = ["land-reform", "public-works"].map((cardId, order) => ({
+      cardId,
+      author: "0",
+      enactedYear: G.year,
+      order,
+    }));
     aggregator.endGame(G);
 
     const report = aggregator.buildReport({
@@ -176,6 +230,8 @@ describe("Aggregator", () => {
     expect(report.perGame[0].termination).toBe("victoryRace");
     expect(report.perGame[0].winner).toBe("0");
     expect(report.perGame[0].leaderAtCap).toBeNull();
+    expect(aggregator.allSnapshots()).toHaveLength(1);
+    expect(Object.values(report.events.year).reduce((sum, count) => sum + count, 0)).toBe(2);
     expect(report.perGame[0].voiceHolder).toBe("0");
     expect(report.perGame[0].finalAuthoredPasses).toEqual({ "0": 4, "1": 2, "2": 1, "3": 0 });
     expect(report.terminations).toEqual({ victoryRace: 1, deckExhausted: 0, turnCap: 0 });
@@ -264,7 +320,8 @@ describe("Aggregator", () => {
     const csv = snapshotsToCsv(aggregator.allSnapshots());
     const lines = csv.split("\n");
 
-    expect(lines).toHaveLength(1 + 8 * PLAYER_IDS.length);
+    // The opening turn plus eight newly opened turns are observed at a turn cap.
+    expect(lines).toHaveLength(1 + 9 * PLAYER_IDS.length);
     expect(lines[0].startsWith("game,seed,turn,")).toBe(true);
     // Every row has the same column count as the header.
     const columns = lines[0].split(",").length;

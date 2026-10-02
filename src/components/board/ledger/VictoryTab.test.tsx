@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { PLAYER_IDS } from "../../../game/data";
 import { scenario } from "../../../game/testing/scenario";
 import { victoryStandings } from "../../../game/victory";
-import type { HegemonyState } from "../../../game/types";
+import type { HegemonyState, PlayerId } from "../../../game/types";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { VictoryTab } from "./VictoryTab";
 
@@ -63,21 +63,13 @@ describe("the victory ledger against the rules", () => {
 
     expect(cards).toHaveLength(standings.length);
 
-    standings.forEach(({ card, values, holder }, index) => {
-      const best = Math.max(...PLAYER_IDS.map((id) => values[id]));
-      const atBest = PLAYER_IDS.filter((id) => values[id] === best);
-      // Voice belongs to its holder, never to whoever is ahead on the count.
-      const named =
-        card.metric === "voice" ? holder : (holder ?? (atBest.length === 1 ? atBest[0] : null));
-
+    standings.forEach(({ leader }, index) => {
       expect(markOf(cards[index])).toBe(
-        named === null
-          ? `none:${card.metric === "voice" ? "unheld" : "tied"}`
-          : `glaze:${PLAYER_GLAZES[named].blazon}`,
+        leader === null ? "none:tied" : `glaze:${PLAYER_GLAZES[leader].blazon}`,
       );
     });
 
-    // The opening deals every seat the same board, so the five board metrics are
+    // The opening deals every seat the same board, so all six metrics are
     // tied by construction — the state the old seat-0 tiebreak read as "Damon".
     const tied = standings.filter(
       ({ values }) => PLAYER_IDS.filter((id) => values[id] === values[PLAYER_IDS[0]]).length > 1,
@@ -103,28 +95,30 @@ describe("the victory ledger against the rules", () => {
     expect(meterWidth(happiness)).toBe("0%");
   });
 
-  it("leaves Voice unheld while a rival leads the count but has not claimed it", () => {
+  const authoredLaws = (author: PlayerId, cardIds: string[]) =>
+    cardIds.map((cardId, order) => ({ cardId, author, enactedYear: 1, order }));
+
+  it("leaves Voice unheld while a rival leads the count below the minimum", () => {
     const G = scenario()
       .opening()
       .mutate((state) => {
-        state.assemblyPassedByPlayer[PLAYER_IDS[1]] = state.ruleset.victory.minimums.voice - 1;
-        state.voiceHolder = null;
+        state.activeLaws = authoredLaws(PLAYER_IDS[1], ["land-reform"]);
       })
       .build();
 
     const voice = render(G)[victoryStandings(G).findIndex((s) => s.card.metric === "voice")];
 
-    expect(markOf(voice)).toBe("none:unheld");
+    expect(markOf(voice)).toBe(`glaze:${PLAYER_GLAZES[PLAYER_IDS[1]].blazon}`);
   });
 
-  it("gives Voice to its holder even when a rival has drawn level", () => {
+  it("gives Voice to the sole leader in standing authored Laws", () => {
     const G = scenario()
       .opening()
       .mutate((state) => {
-        const minimum = state.ruleset.victory.minimums.voice;
-        state.assemblyPassedByPlayer[PLAYER_IDS[1]] = minimum;
-        state.assemblyPassedByPlayer[PLAYER_IDS[2]] = minimum;
-        state.voiceHolder = PLAYER_IDS[1];
+        state.activeLaws = [
+          ...authoredLaws(PLAYER_IDS[1], ["land-reform", "public-works"]),
+          ...authoredLaws(PLAYER_IDS[2], ["sacred-fields"]),
+        ];
       })
       .build();
 

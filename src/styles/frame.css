@@ -181,7 +181,7 @@
     --name-h: var(--lh-24);
     --fan-d: calc(var(--u) * 12); /* 48 */
     --fan-w: calc(var(--u) * 28); /* 112 */
-    --clock-w: calc(var(--u) * 100); /* 400: room for the season card's rule */
+    --clock-w: calc(var(--u) * 100); /* 400: room for the year card's rule */
     --disc-end: calc(var(--u) * 20); /* 80 */
     --endturn-w: calc(var(--u) * 28); /* 112 */
     --endturn-h: calc(var(--u) * 30); /* 120 */
@@ -363,6 +363,7 @@
 }
 
 .year {
+  flex: none;
   height: var(--hit);
   display: flex;
   align-items: center;
@@ -382,11 +383,15 @@
 }
 .yearcard {
   position: relative;
+  flex: 1;
+  min-width: 0;
   height: var(--hit);
   padding: 0 var(--s-2);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(2, var(--l-cap));
   align-items: center;
-  gap: var(--s-2);
+  gap: 0;
 }
 .yearcard::before,
 .rivals::before {
@@ -399,23 +404,18 @@
   background: var(--ink-30);
 }
 .yearcard-name {
-  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  font: 700 var(--t-body) / var(--l-cap) var(--f-name);
   letter-spacing: var(--track-name);
   white-space: nowrap;
-}
-.yearcard {
-  min-width: 0;
-}
-.yearcard-name,
-.yearcard-rule {
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .yearcard-rule {
   display: flex;
   align-items: center;
   white-space: nowrap;
   font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+}
+.yearcard-rule .richIcon {
+  vertical-align: top;
 }
 .yearcard-x {
   font: 700 var(--t-body) / var(--l-body) var(--f-sans);
@@ -1006,6 +1006,9 @@
 }
 .col-head b.is-raised {
   color: var(--olive);
+}
+.col-head b.is-zeroed {
+  color: var(--clay-ink);
 }
 .settle-col .ico {
   align-self: center;

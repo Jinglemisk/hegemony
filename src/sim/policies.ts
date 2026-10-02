@@ -26,7 +26,7 @@ import type { GameCommand } from "../game/legalMoves";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { activeClaims, claimableLuxuriesAt, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
-import { victoryCardsHeld } from "../game/victory";
+import { victoryCardsHeld, victoryMetricValue, voiceHolder } from "../game/victory";
 import type { HegemonyState, PlayerId, Pops } from "../game/types";
 import type { PlayerView } from "../game/projection";
 import type { Ruleset } from "../game/ruleset";
@@ -84,7 +84,9 @@ export function policyEconomyThresholds(ruleset: Ruleset) {
     lowGold: goldVentureStake * 2,
     woodStarved: colonyWoodCost,
     goldRich: colonyWoodCost,
-    materialScoreDivisor: Math.max(1, ruleset.victory.minimums.stockpile / 8),
+    // Treasurer's 30 gold stands where 80 banked materials stood, so the divisor
+    // keeps its old size: a tenth of the stores is one point.
+    materialScoreDivisor: Math.max(1, ruleset.victory.minimums.gold / 3),
   };
 }
 
@@ -108,7 +110,7 @@ function resolveStochasticByRule(G: HegemonyState, moves: GameCommand[]): GameCo
   }
 
   // Ventures are stochastic too — a gold-rich bot funds one expedition a turn
-  // (season-cycled so sims exercise all three tables), never peeking the roll.
+  // (cycled by year so sims exercise all three tables), never peeking the roll.
   const goldVentures = moves.filter(
     (move): move is Extract<GameCommand, { type: "fundExpedition" }> =>
       move.type === "fundExpedition" && move.stake === "gold",
@@ -117,7 +119,7 @@ function resolveStochasticByRule(G: HegemonyState, moves: GameCommand[]): GameCo
     goldVentures.length > 0 &&
     G.players[playerID].resources.gold >= thresholds.ventureGoldReserve
   ) {
-    return goldVentures[G.season % goldVentures.length];
+    return goldVentures[G.year % goldVentures.length];
   }
 
   // The Dole is the pressure valve: take it while the next income would leave a
@@ -260,7 +262,7 @@ export type PolicyProjection = {
 /**
  * The reference policies' canonical future-state projection. Ordinary recurring
  * modifiers already flow through calculateIncome; the active-effect selector adds
- * state that income alone cannot express: skipped collections, future timed mood,
+ * state that income alone cannot express: skipped collections
  * and accumulated starvation progress.
  */
 export function projectPolicyHorizon(
@@ -288,11 +290,8 @@ export function projectPolicyHorizon(
   for (let step = 0; step < horizon; step += 1) {
     // The engine checks unrest at every start-of-turn upkeep, before income. The
     // level is a state, so a bad one is met again at every upkeep of the horizon
-    // until something on the board changes. Calm counts at the next upkeep only.
-    const level =
-      step === 0
-        ? happinessLevel(projectedState, playerID)
-        : standingHappiness(projectedState, playerID);
+    // until something on the board changes. Each future upkeep is in a later year.
+    const level = happinessLevel(projectedState, playerID);
     unrest.minimumHappiness = Math.min(unrest.minimumHappiness, level);
     const upkeepRisk = evaluatePolicyUnrestRisk(projectedState.ruleset, level);
     unrest.riskPenalty += upkeepRisk.scorePenalty;
@@ -331,9 +330,14 @@ export function projectPolicyHorizon(
 
       if (unfed > 0) {
         expectedStarvationPopLoss += applyHunger(projectedState, playerID, unfed).total;
-        income = calculateIncome(projectedState, playerID);
       }
     }
+
+    // The next projected upkeep is in another year. Its card is still hidden.
+    projectedState.activeYearCard = null;
+    player.calmActive = false;
+    player.collectedThisTurn = false;
+    income = calculateIncome(projectedState, playerID);
   }
 
   return {
@@ -354,6 +358,10 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
 
   return {
     ...G,
+    // A seat waiting for its turn (during the Assembly) still owes this year's
+    // known income. After collection, future years use printed income as the
+    // neutral estimate, without reading the hidden deck.
+    activeYearCard: originalPlayer.collectedThisTurn ? null : G.activeYearCard,
     board: {
       ...G.board,
       tiles: G.board.tiles.map((tile) =>
@@ -373,6 +381,7 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
       ...G.players,
       [playerID]: {
         ...originalPlayer,
+        calmActive: originalPlayer.collectedThisTurn ? false : originalPlayer.calmActive,
         resources: { ...originalPlayer.resources },
       },
     },
@@ -440,7 +449,7 @@ export function evaluatePolicyUnrestRisk(ruleset: Ruleset, happiness: number): P
  * term prices the nonlinear riot and revolt thresholds.
  *
  * The projection runs through calculateIncome — the engine's own formula — so
- * the score sees food-shortage pressure, building income, and seasonal modifiers
+ * the score sees food-shortage pressure, building income and standing Laws
  * without duplicating any of them.
  */
 /** Score per point of the standing level. The level holds every turn, so a point is
@@ -881,7 +890,7 @@ export function choosePlacement(G: HegemonyState, moves: GameCommand[], rng: Sim
 // so a political-vs-smart A/B isolates the political layer. See docs/archive/plans/influence-aware-ai.md.
 
 /** How heavily the agora weighs against the ordinary economy — modest, the economy is the
- *  spine. Only shapes the bot's NON-assembly turns (valuing passed resolutions toward Voice); the
+ *  spine. Only shapes the bot's NON-assembly turns (valuing standing authored Laws toward Voice); the
  *  Assembly decisions themselves are made by the heuristics below. Sim-tuned. */
 const POLITICS_WEIGHT = 8;
 
@@ -890,11 +899,11 @@ function playerIds(G: HegemonyState): PlayerId[] {
 }
 
 /**
- * A seat's permanent authored-and-passed progress toward Voice, on the smart-score scale.
+ * A seat's standing authored Laws, its progress toward Voice, on the smart-score scale.
  * The actual held victory card is already priced by evaluateSmart; this values the path.
  */
 function politicalStanding(G: HegemonyState, me: PlayerId): number {
-  const mine = G.assemblyPassedByPlayer[me];
+  const mine = victoryMetricValue(G, me, "voice");
   // Progress matters, but it is not itself a victory card. The actual threshold
   // crossing is already worth a full card in `evaluateSmart`; overpricing every
   // preliminary pass made political seats reject virtually every rival-authored
@@ -1108,9 +1117,9 @@ function assessVote(
   );
   // An open Voice claim is a coalition milestone, not an automatic catastrophe. If it
   // does not complete the rival's race, remove the generic card jump from the voting
-  // comparison; the proposal's Law/Directive, prize, and permanent lead still count.
+  // comparison; the proposal's Law/Directive, prize, and standing lead still count.
   const rivalClaimsOpenVoice =
-    G.voiceHolder === null && clone.voiceHolder !== null && clone.voiceHolder !== me;
+    voiceHolder(G) === null && voiceHolder(clone) !== null && voiceHolder(clone) !== me;
   const voteDelta = delta + (rivalClaimsOpenVoice ? SMART_VICTORY_CARD_VALUE : 0);
   return {
     delta,
@@ -1208,7 +1217,7 @@ function chooseDrawRepealOrPass(
     }
   }
 
-  // Every authored pass advances the same Voice ledger. Compare each deck's full
+  // Only standing authored Laws advance Voice. Compare each deck's full
   // unordered composition, including its prize and the best rival target/replacement,
   // so Stratokles is a real comeback line without peeking at the shuffled top card.
   let bestDraw: GameCommand | null = null;

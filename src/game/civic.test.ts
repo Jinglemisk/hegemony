@@ -33,7 +33,7 @@ describe("civic calm", () => {
     }
   });
 
-  it("holds off a riot at the buyer's next upkeep, then is spent", () => {
+  it("counts throughout the current year, including any upkeep in that year", () => {
     const G = scenario()
       .opening()
       .mutate(clearPending)
@@ -44,10 +44,10 @@ describe("civic calm", () => {
     expect(civicCalm(G, "0", "gold").ok).toBe(true);
     applyUnrestUpkeep(G, "0");
 
-    // -4 + 2 stands above the -3 line, so no riot; the bonus is gone afterwards.
+    // -4 + 2 stands above the -3 line; upkeep does not expire the bonus.
     expect(G.pendingRiot).toBeNull();
-    expect(G.players["0"].calmActive).toBe(false);
-    expect(happinessLevel(G, "0")).toBe(-4);
+    expect(G.players["0"].calmActive).toBe(true);
+    expect(happinessLevel(G, "0")).toBe(-2);
   });
 
   it("shares one throttle across both payments — calm must not stack", () => {

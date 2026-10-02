@@ -38,14 +38,11 @@ export type Phase = "setupCapital" | "setupCity" | "setupColony" | "gameplay" | 
 export type BoardLayout = "classic" | "shuffled";
 
 /** The scoreboard metrics victory cards race on (see game/victory.ts). `voice` is the
- *  Assembly's permanent authored-and-passed ratchet. */
-export type VictoryMetric = "cities" | "pops" | "citizens" | "stockpile" | "happiness" | "voice";
+ *  count of standing Laws a player authored. */
+export type VictoryMetric = "cities" | "pops" | "citizens" | "gold" | "happiness" | "voice";
 
-/** Why the game ended: a player held enough victory cards or the seasonal deck ran out. */
+/** Why the game ended: a player held enough victory cards or the year deck ran out. */
 export type GameOverReason = "victoryRace" | "deckExhausted";
-
-/** The four seasons, in the order they cycle each year (a year always opens on spring). */
-export type SeasonName = "spring" | "summer" | "autumn" | "winter";
 
 export type BuildingId = "marketplace" | "estate" | "forum" | "temple" | "granary" | "port";
 
@@ -90,9 +87,7 @@ export type Pops = Record<PopType, number>;
 /** The pops Grow can add. Citizens come only by promotion. */
 export type GrowablePop = Exclude<PopType, "citizens">;
 
-export type EventDeckKind = "seasonal" | "player";
-
-export type EventTiming = "immediate" | "season" | "pendingChoice" | "turn";
+export type EventTiming = "immediate" | "pendingChoice" | "turn";
 
 export type EventScope = "activePlayer" | "allPlayers";
 
@@ -106,25 +101,9 @@ export type EventEffect =
       amount: number;
     }
   | {
-      type: "scaledResourceDelta";
-      scope: EventScope;
-      resource: Resource;
-      amountPerPops: number;
-      popStep: number;
-      minimum: number;
-    }
-  | {
       type: "happinessDelta";
       scope: EventScope;
       amount: number;
-    }
-  | {
-      type: "scaledHappinessDelta";
-      scope: EventScope;
-      amountPerPops: number;
-      popStep: number;
-      minimumMagnitude: number;
-      duration?: "season";
     }
   | {
       /** v1's timed unrest. Like every one-shot happiness effect it now places or
@@ -133,19 +112,6 @@ export type EventEffect =
       scope: EventScope;
       amountPerTurn: number;
       turns: number;
-    }
-  | {
-      type: "incomeModifier";
-      scope: EventScope;
-      resource: Resource;
-      amount: number;
-      duration: "season" | "turn";
-    }
-  | {
-      type: "buildingCostMultiplier";
-      multiplier: number;
-      duration: "season";
-      excludes: Array<"foundColony" | "upgradeColonyToCity">;
     }
   | {
       type: "addPops";
@@ -186,7 +152,6 @@ export type EventEffect =
 
 export interface EventCard {
   id: string;
-  deck: EventDeckKind;
   name: string;
   count: number;
   text: string;
@@ -202,22 +167,35 @@ export interface EventCard {
   flavor?: string;
   timing: EventTiming;
   effects: EventEffect[];
-  /**
-   * Seasons this card may surface in (seasonal deck only). The seasonal draw
-   * prefers cards that suit the current season, so tagging weights the deck —
-   * e.g. tagging the harsh cards to winter makes winter draw *more* of them
-   * without ever guaranteeing them. Omitted / empty means "any season".
-   */
-  seasons?: SeasonName[];
 }
 
 export type EventDeck = EventCard[];
 
-export interface ActiveSeasonEvent {
-  card: EventCard;
-  season: number;
-  /** Seat whose turn revealed the card; authoritative for activePlayer-scoped effects. */
-  playerID: PlayerId;
+/** The one term of income or happiness a year card zeroes for the whole table. */
+export type YearTerm =
+  | "plainsFood"
+  | "forestWood"
+  | "mountainStone"
+  | "freemenGold"
+  | "citizenInfluence"
+  | "luxuryHappiness";
+
+/** What a year card does: zero one term for the year, or move every realm's Unrest
+ *  tokens once when it is revealed. */
+export type YearCardEffect =
+  { type: "zeroTerm"; term: YearTerm } | { type: "unrestTokens"; change: "placeOne" | "clearAll" };
+
+/** A card of the year deck, the game's clock. One is revealed as each year opens and
+ *  stands until the year turns. */
+export interface YearCard {
+  id: string;
+  name: string;
+  count: number;
+  /** The rule sentence: what the card does this year. */
+  text: string;
+  /** Presentation only, as on an {@link EventCard}. */
+  flavor?: string;
+  effect: YearCardEffect;
 }
 
 export interface PendingPlayerEvent {
@@ -247,9 +225,9 @@ export interface TileResource {
 //
 // Dice-and-table as one reusable, data-driven component: a table is content data,
 // `rollOnTable` (game/tables.ts) is the only engine seam, and every instance — riot,
-// the expeditions, future omens — shares the same UI modal.
+// the expeditions — shares the same UI modal.
 
-export type EventTableId = "riot" | "merchantConvoy" | "grandEmbassy" | "colonistsVoyage" | "omen";
+export type EventTableId = "riot" | "merchantConvoy" | "grandEmbassy" | "colonistsVoyage";
 
 /** The closed effect vocabulary a table row may apply. Each effect with an impossible
  *  happy path carries its explicit fallback (no building → pops, no room → food). */
@@ -259,9 +237,6 @@ export type TableEffect =
   | { type: "destroyBuilding"; popLossFallback: number }
   | { type: "gainResource"; resource: Resource; amount: number }
   | { type: "gainPop"; pop: PopType; foodFallback: number }
-  /** Year-long, table-wide income modifier — the omen's vocabulary. Applying the
-   *  effect is a no-op at roll time; the income engine reads it off G.yearOmen. */
-  | { type: "yearIncomeModifier"; resource: Resource; amount: number }
   | { type: "none" };
 
 export interface EventTableRow {
@@ -314,22 +289,12 @@ export interface TableRollRecord {
   rowLabel: string;
   /** Human-readable lines for each applied effect. */
   outcomes: string[];
-  season: number;
+  year: number;
 }
 
 /** Per-material bank rates: `sell` materials buy 1 gold; 1 material costs `buy` gold.
  *  Derived once at game creation (roadmap-appendix Q14) and static all game. */
 export type BankRates = Record<TradableMaterial, { sell: number; buy: number }>;
-
-/** The year's standing omen (PROVISIONAL, 2026-07-13): rolled publicly by the year's
- *  opener each spring, one modest symmetric modifier hanging over the whole table
- *  until the year turns. The record keeps the roll for the announcement modal. */
-export interface YearOmen {
-  record: TableRollRecord;
-  label: string;
-  year: number;
-  effects: TableEffect[];
-}
 
 export interface Settlement {
   /** Stable match-local identity used by persistence and future ownership transfers. */
@@ -401,6 +366,8 @@ export interface PlayerState {
   resources: Resources;
   /** Derived location index for board traversal; persistent references use Settlement.id. */
   settlements: string[];
+  /** Income collected this year. Cleared when the year turns, so it also says whose
+   *  next income still falls under this year's card. */
   collectedThisTurn: boolean;
   grownSettlementsThisTurn: string[];
   actionCostDiscounts: ActiveActionCostDiscount[];
@@ -423,8 +390,7 @@ export interface PlayerState {
   ladderUsedThisTurn: boolean;
   ventureUsedThisTurn: boolean;
   moveUsedThisTurn: boolean;
-  /** Calm bought since this player's last upkeep. It counts toward happiness until
-   *  their next turn starts, and is never banked. */
+  /** Calm bought this year. It expires when the year turns and is never banked. */
   calmActive: boolean;
   /** Free-action coupons a standing Law grants once a year (Monumental Code, Land
    *  Rush) that this player has already spent. Cleared when the year turns. */
@@ -446,7 +412,8 @@ export interface PopulationTransfer {
 
 export interface LogEntry {
   id: string;
-  season: number;
+  /** The year the line was written in. */
+  year: number;
   message: string;
   /**
    * Which seat this line concerns.
@@ -479,8 +446,8 @@ export interface HegemonyState {
   turn: number;
   /** The seed this game was created from — shown in the UI, embedded in bug reports. */
   seed: number;
-  /** The player who opens the current season; rotates one seat every new year (spring). */
-  seasonOpener: PlayerId;
+  /** The player who opens the current year; the seat moves on one each year. */
+  yearOpener: PlayerId;
   /** Set when the game ends — the victor of the race, or the exhaustion tally. */
   winner: PlayerId | null;
   gameOverReason: GameOverReason | null;
@@ -495,33 +462,34 @@ export interface HegemonyState {
   board: HegemonyBoard;
   players: Record<PlayerId, PlayerState>;
   transfers: PopulationTransfer[];
-  seasonalDrawPile: EventDeck;
-  seasonalDiscardPile: EventDeck;
+  /** The year deck, the game's clock: fourteen cards dealt once and never reshuffled.
+   *  The order is hidden; an empty pile when the year turns ends the game. */
+  yearDrawPile: YearCard[];
+  yearDiscardPile: YearCard[];
   playerDrawPile: EventDeck;
   playerDiscardPile: EventDeck;
-  activeSeasonEvent: ActiveSeasonEvent | null;
+  /** This year's card, retained for the final tally. Null before gameplay starts. */
+  activeYearCard: YearCard | null;
   lastPlayerEvent: EventCard | null;
   pendingPlayerEvent: PendingPlayerEvent | null;
   /** A riot blocking the current turn (income deferred until it resolves). */
   pendingRiot: PendingRiot | null;
   /** The most recent event-table roll, for the UI's outcome display. */
   lastTableRoll: TableRollRecord | null;
-  /** The standing yearly omen — rolled each spring, cleared by the next roll. */
-  yearOmen: YearOmen | null;
   /** This game's bank rates — derived from the board at creation, static after. */
   bank: BankRates;
-  season: number;
+  /** The year being played, from 1. A year is one turn for every seat. */
+  year: number;
   /** Serialized mulberry32 PRNG state; advanced on each deck shuffle so draws are reproducible from the initial seed. */
   rng: number;
   log: LogEntry[];
 
   // ── The Assembly (Phase 3-B · docs/archive/plans/assembly-politicians.md) ────────────────
   //
-  // Politician power and descriptive patrons remain board-derived. Voice deliberately
-  // diverges: authored-and-passed progress is permanent after repeal or replacement.
+  // Politician power, descriptive patrons and Voice are all board-derived.
 
-  /** The Assembly in session. Non-null SUSPENDS the turn machine — the same
-   *  engine-state gate the yearly omen uses, so no click can open or dismiss it. */
+  /** The Assembly in session. Non-null SUSPENDS the turn machine, so no click can
+   *  open or dismiss it. */
   assembly: AssemblySession | null;
   /** Standing Laws — the stelae in the agora. Consulted by the income, cost, bank and
    *  happiness pipelines through `assembly/laws.ts`. */
@@ -535,10 +503,9 @@ export interface HegemonyState {
   /** Monotonic enactment counter, so "the most recently enacted Law" is exact even
    *  when two pass in the same assembly. */
   lawOrder: number;
-  /** Permanent authored-and-passed resolution count, including Directives. */
+  /** Authored resolutions passed, Directives included. For telemetry and the
+   *  Assembly's record; Voice reads the standing Laws instead. */
   assemblyPassedByPlayer: Record<PlayerId, number>;
-  /** First seat to reach the Voice minimum; changes only when strictly exceeded. */
-  voiceHolder: PlayerId | null;
   /** Rival targeted by a passed Isonomia; consumed when the next Assembly convenes. */
   pendingIsonomiaTarget: PlayerId | null;
   /** How many assemblies have convened — the panel's "Nth of the game" subtitle. */

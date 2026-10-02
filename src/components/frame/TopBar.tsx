@@ -1,11 +1,10 @@
 import type { CSSProperties } from "react";
 import { PLAYER_IDS } from "../../game/data";
-import { seasonName, yearOf } from "../../game/core/calendar";
-import { getEventEffectChoices } from "../../game/rules";
+import { yearDeckSize } from "../../game/year";
 import type { IncomeContribution } from "../../game/economy/income";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../game/types";
-import { joinEffectPresentations, presentEventEffects, presentTableEffect } from "../../ui/effects";
-import { RESOURCE_LABELS, SEASON_LABELS, toRoman } from "../../ui/formatters";
+import { presentYearCard } from "../../ui/effects";
+import { RESOURCE_LABELS, toRoman } from "../../ui/formatters";
 import { gaugeStops, publicCensus } from "../../ui/frameSelectors";
 import type { HappinessDisplay } from "../../ui/frameSelectors";
 import { CONSULT, RESOURCE_ICON, sign, tone } from "../../ui/frameFormat";
@@ -21,64 +20,46 @@ const PURSE: Resource[] = ["wood", "stone", "food", "gold", "influence"];
 /** Pips the gauge has room for; the tooltip prints the true count. */
 const MAX_TOKEN_PIPS = 6;
 
-/** The year and the season's card: the clock at the bar's left end. */
+/** The year and its card: the clock at the bar's left end. */
 function Clock({ G }: { G: HegemonyState }) {
-  const year = yearOf(G.season);
-  const season = SEASON_LABELS[seasonName(G.season)];
-  const totalYears = Math.max(year, Math.ceil((G.season + G.seasonalDrawPile.length) / 4));
-  const card = G.activeSeasonEvent?.card ?? null;
-  const omen = G.yearOmen;
+  const year = G.year;
+  const left = G.yearDrawPile.length;
+  const totalYears = yearDeckSize(G);
+  const card = G.activeYearCard;
 
   return (
     <div className="clock" data-c="clock">
       <Tooltip
-        ariaLabel={`Year ${year} of ${totalYears}, ${season}`}
+        ariaLabel={`Year ${year} of ${totalYears}`}
         content={
-          <Tip sub={season} title={`Year ${toRoman(year)}`}>
+          <Tip sub={`of ${toRoman(totalYears)}`} title={`Year ${toRoman(year)}`}>
             <p className="tip-body">
-              Year {toRoman(year)} of {toRoman(totalYears)}. {G.seasonalDrawPile.length} season
-              cards left; the game ends when the deck is spent.
+              A year is one turn for every seat. {left} {left === 1 ? "card is" : "cards are"} left
+              in the year deck and the next one is hidden. The game ends when the deck is spent.
             </p>
-            {omen ? (
-              <p className="tip-body">
-                <b>{omen.label}</b> stands over the year:{" "}
-                <EffectLine
-                  effect={joinEffectPresentations(omen.effects.map(presentTableEffect))}
-                  links={false}
-                />
-              </p>
-            ) : null}
           </Tip>
         }
         focusable
         triggerClassName="year"
       >
         <span className="year-n">Year {toRoman(year)}</span>
-        <span className="year-of">{season}</span>
+        <span className="year-of">of {toRoman(totalYears)}</span>
       </Tooltip>
       {card ? (
         <Tooltip
-          ariaLabel={`This season's card: ${card.name}`}
+          ariaLabel={`This year's card: ${card.name}`}
           content={
-            <Tip sub="This season's card" title={card.name}>
-              {card.text ? <p className="tip-body">{card.text}</p> : null}
+            <Tip sub="This year's card" title={card.name}>
+              <p className="tip-body">{card.text}</p>
+              {card.flavor ? <p className="tip-body">{card.flavor}</p> : null}
             </Tip>
           }
           focusable
           triggerClassName="yearcard"
         >
-          <span className="yearcard-name" data-truncates="summary">
-            {card.name}
-          </span>
-          <span className="yearcard-rule" data-truncates="summary">
-            <EffectLine
-              effect={joinEffectPresentations(
-                getEventEffectChoices(card).map((effects) =>
-                  presentEventEffects(effects, G.definition.content),
-                ),
-              )}
-              links={false}
-            />
+          <span className="yearcard-name">{card.name}</span>
+          <span className="yearcard-rule">
+            <EffectLine effect={presentYearCard(card)} links={false} />
           </span>
         </Tooltip>
       ) : null}
