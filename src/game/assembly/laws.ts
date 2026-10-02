@@ -398,15 +398,18 @@ export function applyLawBankRate(
 
 /**
  * What the standing Laws add to or take from the player's happiness level, one line
- * per Law effect. v1's Laws name happiness per settlement, per pop or by a stockpile
+ * per Law. v1's Laws name happiness per settlement, per pop or by a stockpile
  * threshold; each is a standing term of the level until Step 8 rewrites the Laws.
+ * A Law with two happiness effects (Civic Pride) is one line: their sum.
  */
 export function getLawHappinessContributions(
   G: HegemonyState,
   playerID: PlayerId,
 ): Array<{ amount: number; label: string }> {
-  return getStandingEffects(G, playerID).flatMap((effect) => {
-    let amount = 0;
+  const byLaw = new Map<string, number>();
+
+  for (const effect of getStandingEffects(G, playerID)) {
+    let amount: number;
 
     if (effect.type === "settlementIncome" && effect.resource === "happiness") {
       amount = scaled(
@@ -421,10 +424,15 @@ export function getLawHappinessContributions(
         G.players[playerID].resources[effect.resource] >= effect.threshold
           ? effect.atOrAbove
           : effect.below;
+    } else {
+      continue;
     }
 
-    return amount === 0 ? [] : [{ amount, label: effectLabel(G, playerID, effect) }];
-  });
+    const label = effectLabel(G, playerID, effect);
+    byLaw.set(label, (byLaw.get(label) ?? 0) + amount);
+  }
+
+  return [...byLaw].map(([label, amount]) => ({ label, amount }));
 }
 
 /** The riders a Law hangs on founding a colony (Frontier Spirit). */

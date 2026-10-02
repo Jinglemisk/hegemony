@@ -124,6 +124,14 @@ describe("standing laws reach the income pipeline", () => {
     expect(happinessLevel(G, "0")).toBe(secure - 4);
   });
 
+  it("a Law with two happiness effects is one line of the level", () => {
+    // Civic Pride: +1 per city, −1 per colony. The opening holds one of each.
+    const G = opening().build();
+    plantLaw(G, "civic-pride");
+
+    expect(getLawHappinessContributions(G, "0")).toEqual([{ label: "Civic Pride", amount: 0 }]);
+  });
+
   it("surplusConversion (Agrarian Tariff) only pays above the floor", () => {
     // "Every 2 food gathered above 10 pays 1 gold". The tariff reads the income as it
     // stands, so the test feeds the pipeline a known harvest rather than guessing one.
