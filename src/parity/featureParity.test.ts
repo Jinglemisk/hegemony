@@ -4,12 +4,7 @@ import { describe, expect, it } from "vitest";
 import { createModeDefinition } from "../game/definition";
 import { POLITICIANS, RESOLUTION_CARDS } from "../game/assembly/deck";
 import { getAuthoredGameContent, getBuildings, getTerrainDeck } from "../game/content";
-import {
-  PLAYER_EVENT_CARDS,
-  YEAR_CARDS,
-  EXPEDITION_TABLES,
-  RIOT_TABLE,
-} from "../game/data";
+import { PLAYER_EVENT_CARDS, YEAR_CARDS, EXPEDITION_TABLES, RIOT_TABLE } from "../game/data";
 import { settlementNetYield } from "../game/economy/income";
 import { settlementBuildingHappiness } from "../game/happiness";
 import { materialTile, owned, scenario } from "../game/testing/scenario";
@@ -135,9 +130,7 @@ describe("feature and content parity manifests", () => {
     expect(unique(getTerrainDeck(AUTHORED_CONTENT).map((entry) => entry.terrain))).toEqual(
       sorted(TERRAIN_CONTENT_IDS),
     );
-    expect(sorted(YEAR_CARDS.map((card) => card.id))).toEqual(
-      sorted(YEAR_CARD_CONTENT_IDS),
-    );
+    expect(sorted(YEAR_CARDS.map((card) => card.id))).toEqual(sorted(YEAR_CARD_CONTENT_IDS));
     expect(sorted(PLAYER_EVENT_CARDS.map((card) => card.id))).toEqual(
       sorted(PLAYER_EVENT_CONTENT_IDS),
     );
@@ -155,9 +148,7 @@ describe("feature and content parity manifests", () => {
       expect(entry.ids).toHaveLength(new Set(entry.ids).size);
     }
 
-    const eventEffects = flattenEventEffects(
-      PLAYER_EVENT_CARDS.flatMap((card) => card.effects),
-    );
+    const eventEffects = flattenEventEffects(PLAYER_EVENT_CARDS.flatMap((card) => card.effects));
     expect(unique(eventEffects.map((effect) => effect.type))).toEqual(
       sorted(Object.keys(EVENT_EFFECT_PARITY)),
     );
@@ -189,9 +180,7 @@ describe("feature and content parity manifests", () => {
   });
 
   it("projects every authored effect through a non-empty typed frontend presentation", () => {
-    const eventEffects = flattenEventEffects(
-      PLAYER_EVENT_CARDS.flatMap((card) => card.effects),
-    );
+    const eventEffects = flattenEventEffects(PLAYER_EVENT_CARDS.flatMap((card) => card.effects));
     for (const effect of eventEffects) expectPresentation(presentEventEffect(effect));
     for (const card of YEAR_CARDS) expectPresentation(presentYearCard(card));
 

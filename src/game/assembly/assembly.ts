@@ -1,5 +1,6 @@
 import { applyHappinessSwing, describeHappinessSwing } from "../happiness";
 import { PLAYER_IDS } from "../data";
+import { yearDeckSize } from "../year";
 import type { HegemonyState, PlayerId } from "../types";
 import { addLog, getPlayerName, getTile } from "../core/query";
 import { MOVE_OK, invalid } from "../core/results";
@@ -45,6 +46,16 @@ export function shouldOpenAssembly(G: HegemonyState): boolean {
     (G.year - rules.firstYear) % Math.max(1, rules.everyYears) === 0 &&
     !G.assembly
   );
+}
+
+/** The next sitting after this year; null when the Assembly is disabled. */
+export function nextAssemblyYear(G: HegemonyState): number | null {
+  const { firstYear, everyYears } = G.ruleset.assembly;
+  if (firstYear === 0) return null;
+  if (G.year < firstYear) return firstYear;
+  const cadence = Math.max(1, everyYears);
+  const next = firstYear + (Math.floor((G.year - firstYear) / cadence) + 1) * cadence;
+  return next <= yearDeckSize(G) ? next : null;
 }
 
 /** Turn order for this year — the opener leads, and everyone plays once. */

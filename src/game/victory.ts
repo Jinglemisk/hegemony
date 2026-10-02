@@ -103,6 +103,9 @@ export interface VictoryCardStanding {
   minimum: number;
   /** The sole leader at or above the minimum, or null (tied / nobody qualifies). */
   holder: PlayerId | null;
+  /** The sole leader before the minimum gate, or null on a tie. */
+  leader: PlayerId | null;
+  leadingValue: number;
   values: Record<PlayerId, number>;
 }
 
@@ -127,7 +130,14 @@ export function victoryStandings(G: HegemonyState): VictoryCardStanding[] {
       }
     }
 
-    return { card, minimum, holder: holder !== null && best >= minimum ? holder : null, values };
+    return {
+      card,
+      minimum,
+      holder: holder !== null && best >= minimum ? holder : null,
+      leader: holder,
+      leadingValue: best,
+      values,
+    };
   });
 }
 

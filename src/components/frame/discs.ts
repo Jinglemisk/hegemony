@@ -281,7 +281,7 @@ export function discGroups(
       icon: payment === "gold" ? "unrest/calm-verb" : "unrest/patronage",
       prices: [status.cost ?? {}],
       enabled: open && status.can,
-      hint: `+${G.ruleset.civicCalm.happiness} happiness until your next turn, once a turn.`,
+      hint: `+${G.ruleset.civicCalm.happiness} happiness this year, once a turn.`,
       run: () => handlers.onCalm(payment),
     };
   };

@@ -87,8 +87,8 @@ describe("Aggregator", () => {
 
     expect(report.perGame).toHaveLength(2);
     expect(report.perGame[0].turnsPlayed).toBe(turns);
-    // One snapshot per player-turn per game.
-    expect(aggregator.allSnapshots()).toHaveLength(2 * turns);
+    // The opening turn and each newly opened turn are observed, including at a cap.
+    expect(aggregator.allSnapshots()).toHaveLength(2 * (turns + 1));
 
     // Every turn draws a player event, plus the bootstrap draw per game.
     const playerEventCount = Object.values(report.events.player).reduce(
@@ -111,7 +111,7 @@ describe("Aggregator", () => {
     );
     expect(totalCapLeaderRate).toBeCloseTo(1);
 
-    // Season rows exist and pool both games once a season completed in both.
+    // Year rows pool both games once a year completed in both.
     expect(report.perYear.length).toBeGreaterThan(0);
     expect(report.perYear[0].games).toBe(2);
 
@@ -269,7 +269,8 @@ describe("Aggregator", () => {
     const csv = snapshotsToCsv(aggregator.allSnapshots());
     const lines = csv.split("\n");
 
-    expect(lines).toHaveLength(1 + 8 * PLAYER_IDS.length);
+    // The opening turn plus eight newly opened turns are observed at a turn cap.
+    expect(lines).toHaveLength(1 + 9 * PLAYER_IDS.length);
     expect(lines[0].startsWith("game,seed,turn,")).toBe(true);
     // Every row has the same column count as the header.
     const columns = lines[0].split(",").length;

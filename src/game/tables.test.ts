@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import { EXPEDITION_TABLES, RIOT_TABLE } from "./data";
-import { calculateIncomeBreakdown } from "./economy/income";
-import { startNewYear } from "./year";
 import { rollOnTable } from "./tables";
 import { fundExpedition } from "./ventures";
 import { scenario } from "./testing/scenario";

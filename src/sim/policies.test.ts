@@ -264,7 +264,7 @@ function chooseFreemanGrowth(policy: typeof smartPolicy | typeof beamPolicy, foo
   return policy.choose(observe(G), [growth, endTurnMove], createSimRng(1));
 }
 
-/** Cycle whole turns until the agora convenes (spring of Year 2+). Unattended seats can
+/** Cycle whole turns until the agora convenes (Year 2+). Unattended seats can
  *  pick up an event or riot on the way; both are dismissed exactly as the engine suites do. */
 function playUntilAssembly(G: HegemonyState, limit = 40): void {
   let turns = 0;

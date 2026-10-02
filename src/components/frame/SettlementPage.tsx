@@ -95,9 +95,7 @@ export function SettlementPage({
           );
           // This year's card takes the column's whole output at the next income.
           const zeroed = loss?.pop === pop ? loss : null;
-          const made = nonZero(
-            zeroed ? { ...column.income, [zeroed.resource]: 0 } : column.income,
-          );
+          const made = nonZero(zeroed ? { ...column.income, [zeroed.resource]: 0 } : column.income);
 
           return (
             <div className="settle-col" data-c="settle-col" key={pop}>

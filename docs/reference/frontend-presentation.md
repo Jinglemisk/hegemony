@@ -87,7 +87,7 @@ and event decision data becomes visible.
 Assembly action buttons use the same tooltip semantics as command verbs and map
 actions. Repeal, full-board replacement, and required rival-target choices use the
 shared popover. The ballot visibly records a Directive's target and each authored
-resolution displays its active-ruleset prize. Voice, its permanent per-seat progress,
+resolution displays its active-ruleset prize. Voice, its standing authored-Law count,
 politician power, descriptive patrons, proposed cards, standing stelae, and Directive
 monuments are keyboard-inspectable board objects with accessible labels.
 

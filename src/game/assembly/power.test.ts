@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { scenario } from "../testing/scenario";
 import { victoryStandings } from "../victory";
 import type { HegemonyState, PlayerId } from "../types";
-import { authoredSteleCount, patronCount, politicianStandings } from "./power";
+import { patronCount, politicianStandings } from "./power";
 import type { PoliticianId } from "./types";
 
 /**

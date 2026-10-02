@@ -318,9 +318,10 @@ describe("simulation and AI active-effect parity", () => {
     expect(struckProjection.resources.gold).toBeLessThan(safeProjection.resources.gold);
   });
 
-  it("makes the master policy buy calm when the next upkeep would riot, and not otherwise", () => {
+  it("does not buy this year's calm to cover an upkeep in a later year", () => {
     const choose = (slaves: number) => {
       const G = stateWithSettlement({ citizens: 0, freemen: 0, slaves });
+      G.players["0"].collectedThisTurn = true;
       Object.assign(G.players["0"].resources, {
         wood: 0,
         stone: 0,
@@ -336,9 +337,19 @@ describe("simulation and AI active-effect parity", () => {
       );
     };
 
-    // Six slaves hold the level on the riot line every year; calm lifts this one.
-    expect(choose(6).type).toBe("civicCalm");
+    // Calm will have expired before the next upkeep, even on the riot line.
+    expect(choose(6).type).toBe("endTurn");
     expect(choose(0).type).toBe("endTurn");
+  });
+
+  it("uses the known year card only for an income still owed this year", () => {
+    const G = stateWithSettlement({ citizens: 0, freemen: 2, slaves: 0 });
+    G.activeYearCard = yearCard("year-piracy");
+    const before = G.players["0"].resources.gold;
+    G.players["0"].collectedThisTurn = false;
+    expect(projectPolicyHorizon(G, "0", 2).resources.gold).toBe(before + 2);
+    G.players["0"].collectedThisTurn = true;
+    expect(projectPolicyHorizon(G, "0", 2).resources.gold).toBe(before + 4);
   });
 
   it("handles the safe edge and the hunger edge deterministically", () => {

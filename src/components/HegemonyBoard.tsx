@@ -18,7 +18,6 @@ import {
   unrestStatus,
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
-import { PLAYER_NAMES } from "../game/data";
 import { BuildPopover } from "./board/map/BuildPopover";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
 import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
@@ -30,7 +29,6 @@ import { selectionCaption, type MapSelectionMode } from "./board/map/mapSelectio
 import { useMapSelection } from "./board/map/useMapSelection";
 import { armedVerbOf, isTurnOpen, turnCommitTitle } from "./board/command/verbs";
 import type { VerbContext } from "./board/command/verbs";
-import { EventTableModal } from "./board/modals/EventTableModal";
 import { GameOverModal } from "./board/modals/GameOverModal";
 import { ConsultPanel } from "./board/ledger/ConsultPanel";
 import type { ConsultTab } from "./board/types";

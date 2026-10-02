@@ -68,7 +68,7 @@ export function buildingName(
 }
 
 /** Roman numerals, small-N only — the year card counts years, and a game runs
- *  to single digits. Anything larger than the table below simply repeats X. */
+ *  for fourteen years. Anything larger than the table below simply repeats X. */
 const ROMAN: readonly (readonly [number, string])[] = [
   [10, "X"],
   [9, "IX"],

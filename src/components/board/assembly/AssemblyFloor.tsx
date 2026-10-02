@@ -850,9 +850,7 @@ function ClosingFloor({
               <b className="asmVoiceRowCount stat num">{standing(playerID)}</b>
             </p>
           ))}
-          <p className="asmVoiceFoot body-em">
-            resolutions each seat has authored and carried, all sittings
-          </p>
+          <p className="asmVoiceFoot body-em">standing Laws each seat authored</p>
         </section>
       </div>
     </div>

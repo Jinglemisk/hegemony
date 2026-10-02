@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  EXPEDITION_TABLES,
-  PLAYER_EVENT_CARDS,
-  RIOT_TABLE,
-  YEAR_CARDS,
-} from "../game/data";
+import { EXPEDITION_TABLES, PLAYER_EVENT_CARDS, RIOT_TABLE } from "../game/data";
 import type { EventEffect, TableEffect } from "../game/types";
 import { presentEventEffect, presentTableEffect } from "./effects";
 
@@ -84,9 +79,7 @@ describe("the flat sentence survives the split", () => {
 });
 
 describe("the carved parts are drawn from that same sentence", () => {
-  const authoredEventEffects = flatten(
-    PLAYER_EVENT_CARDS.flatMap((card) => card.effects),
-  );
+  const authoredEventEffects = flatten(PLAYER_EVENT_CARDS.flatMap((card) => card.effects));
   const authoredTableEffects = [RIOT_TABLE, ...EXPEDITION_TABLES].flatMap((table) =>
     table.rows.flatMap((row) => row.effects),
   );

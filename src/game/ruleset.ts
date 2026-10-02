@@ -36,7 +36,7 @@ export interface BankRules {
 }
 
 /** Civic calm: one action per turn, two payments, the same rise in the level. The bonus
- *  lasts until the buyer's next turn starts and is never banked. */
+ *  lasts until the year turns and is never banked. */
 export interface CivicCalmRules {
   happiness: number;
   influenceCost: number;

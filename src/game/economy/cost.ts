@@ -5,7 +5,6 @@ import type {
   HegemonyState,
   PlayerId,
   PopType,
-  Resource,
   Resources,
   Settlement,
 } from "../types";

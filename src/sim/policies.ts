@@ -290,11 +290,8 @@ export function projectPolicyHorizon(
   for (let step = 0; step < horizon; step += 1) {
     // The engine checks unrest at every start-of-turn upkeep, before income. The
     // level is a state, so a bad one is met again at every upkeep of the horizon
-    // until something on the board changes. Calm counts at the next upkeep only.
-    const level =
-      step === 0
-        ? happinessLevel(projectedState, playerID)
-        : standingHappiness(projectedState, playerID);
+    // until something on the board changes. Each future upkeep is in a later year.
+    const level = happinessLevel(projectedState, playerID);
     unrest.minimumHappiness = Math.min(unrest.minimumHappiness, level);
     const upkeepRisk = evaluatePolicyUnrestRisk(projectedState.ruleset, level);
     unrest.riskPenalty += upkeepRisk.scorePenalty;
@@ -336,6 +333,12 @@ export function projectPolicyHorizon(
         income = calculateIncome(projectedState, playerID);
       }
     }
+
+    // The next projected upkeep is in another year. Its card is still hidden.
+    projectedState.activeYearCard = null;
+    player.calmActive = false;
+    player.collectedThisTurn = false;
+    income = calculateIncome(projectedState, playerID);
   }
 
   return {
@@ -356,10 +359,10 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
 
   return {
     ...G,
-    // This year's card was paid at the income that opened the turn. Every income in
-    // the projection falls in a later year, under a card nobody has seen, so the
-    // projection plans on printed income and never looks at the deck.
-    activeYearCard: null,
+    // A seat waiting for its turn (during the Assembly) still owes this year's
+    // known income. After collection, future years use printed income as the
+    // neutral estimate, without reading the hidden deck.
+    activeYearCard: originalPlayer.collectedThisTurn ? null : G.activeYearCard,
     board: {
       ...G.board,
       tiles: G.board.tiles.map((tile) =>
@@ -379,6 +382,7 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
       ...G.players,
       [playerID]: {
         ...originalPlayer,
+        calmActive: originalPlayer.collectedThisTurn ? false : originalPlayer.calmActive,
         resources: { ...originalPlayer.resources },
       },
     },
@@ -887,7 +891,7 @@ export function choosePlacement(G: HegemonyState, moves: GameCommand[], rng: Sim
 // so a political-vs-smart A/B isolates the political layer. See docs/archive/plans/influence-aware-ai.md.
 
 /** How heavily the agora weighs against the ordinary economy — modest, the economy is the
- *  spine. Only shapes the bot's NON-assembly turns (valuing passed resolutions toward Voice); the
+ *  spine. Only shapes the bot's NON-assembly turns (valuing standing authored Laws toward Voice); the
  *  Assembly decisions themselves are made by the heuristics below. Sim-tuned. */
 const POLITICS_WEIGHT = 8;
 
@@ -1114,7 +1118,7 @@ function assessVote(
   );
   // An open Voice claim is a coalition milestone, not an automatic catastrophe. If it
   // does not complete the rival's race, remove the generic card jump from the voting
-  // comparison; the proposal's Law/Directive, prize, and permanent lead still count.
+  // comparison; the proposal's Law/Directive, prize, and standing lead still count.
   const rivalClaimsOpenVoice =
     voiceHolder(G) === null && voiceHolder(clone) !== null && voiceHolder(clone) !== me;
   const voteDelta = delta + (rivalClaimsOpenVoice ? SMART_VICTORY_CARD_VALUE : 0);
@@ -1214,7 +1218,7 @@ function chooseDrawRepealOrPass(
     }
   }
 
-  // Every authored pass advances the same Voice ledger. Compare each deck's full
+  // Only standing authored Laws advance Voice. Compare each deck's full
   // unordered composition, including its prize and the best rival target/replacement,
   // so Stratokles is a real comeback line without peeking at the shuffled top card.
   let bestDraw: GameCommand | null = null;

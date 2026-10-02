@@ -11,6 +11,7 @@ export function resetTurnFlags(G: HegemonyState) {
     player.ladderUsedThisTurn = false;
     player.ventureUsedThisTurn = false;
     player.moveUsedThisTurn = false;
+    player.calmActive = false;
   }
 }
 
@@ -37,17 +38,17 @@ export function revealYearCard(G: HegemonyState) {
 }
 
 export function startNewYear(G: HegemonyState) {
-  if (G.activeYearCard) {
-    G.yearDiscardPile.push(G.activeYearCard);
-    G.activeYearCard = null;
-  }
-
   // The year deck is the game's clock and never reshuffles. When it is spent the age
   // ends and the victory-card tally resolves, before anything advances, so the
   // game-over state sits on the last year actually played.
   if (G.yearDrawPile.length === 0) {
     resolveDeckExhaustion(G);
     return;
+  }
+
+  if (G.activeYearCard) {
+    G.yearDiscardPile.push(G.activeYearCard);
+    G.activeYearCard = null;
   }
 
   G.year += 1;
@@ -66,6 +67,11 @@ export function startNewYear(G: HegemonyState) {
   }
 
   revealYearCard(G);
+}
+
+/** The clock's full deck size, including the card not yet revealed during setup. */
+export function yearDeckSize(G: HegemonyState): number {
+  return G.definition.content.yearCards.reduce((total, card) => total + card.count, 0);
 }
 
 export function expireTurnEventModifiers(G: HegemonyState, playerID: PlayerId) {

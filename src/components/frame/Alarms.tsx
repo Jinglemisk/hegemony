@@ -100,7 +100,7 @@ export function Alarms({
                         ? `${formatNumber(unrest.tokens)} Unrest ${unrest.tokens === 1 ? "token" : "tokens"}`
                         : null,
                       unrest.calmBonus !== 0
-                        ? `${formatSignedNumber(unrest.calmBonus)} from calm until your next turn`
+                        ? `${formatSignedNumber(unrest.calmBonus)} from calm this year`
                         : null,
                     ]
                       .filter(Boolean)

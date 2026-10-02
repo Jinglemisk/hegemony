@@ -52,7 +52,7 @@ export function getCivicCalmStatus(
 }
 
 /** One `civicCalm` seam, two payments: Stabilize Province (influence) or Bread &
- *  Circuses (gold). Both add `happiness` until the buyer's next turn starts and burn
+ *  Circuses (gold). Both add `happiness` until the year turns and burn
  *  the same shared throttle. */
 export function civicCalm(
   G: HegemonyState,
@@ -67,13 +67,12 @@ export function civicCalm(
 
   const player = G.players[playerID];
   payCost(player.resources, status.cost ?? {});
-  // Calm lasts a year: it stands until the riot test that opens this player's next
-  // turn has counted it. Ending it with the year card would end it before any test.
+  // Calm is a level bonus for this year; the year boundary clears it.
   player.calmActive = true;
   player.civicCalmUsedThisTurn = true;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} ${payment === "influence" ? "stabilized the province" : "staged bread & circuses"} (+${G.ruleset.civicCalm.happiness} happiness for a year).`,
+    `${getPlayerName(G, playerID)} ${payment === "influence" ? "stabilized the province" : "staged bread & circuses"} (+${G.ruleset.civicCalm.happiness} happiness this year).`,
     playerID,
   );
   return MOVE_OK;

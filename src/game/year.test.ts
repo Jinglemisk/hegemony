@@ -8,7 +8,7 @@ import { endTurn } from "./turn";
 import type { HegemonyState, YearCard } from "./types";
 import { unrestStatus } from "./unrest";
 import { victoryMetricValue, victoryStandings } from "./victory";
-import { revealYearCard } from "./year";
+import { revealYearCard, startNewYear, yearDeckSize } from "./year";
 
 /** A game mid-year with no Assembly, nothing pending and no card in play. */
 function game(): HegemonyState {
@@ -116,7 +116,7 @@ describe("Plague and Festival", () => {
 });
 
 describe("calm lasts a year", () => {
-  it("is still counted at the riot test that opens the buyer's next turn", () => {
+  it("expires for every buyer when the year turns, before their next riot test", () => {
     const G = game();
     const player = G.players["0"];
     player.resources.gold = 10;
@@ -136,14 +136,39 @@ describe("calm lasts a year", () => {
       G.yearDrawPile = G.yearDrawPile.map(() => yearCard(G, "year-piracy"));
       expect(endTurn(G).ok).toBe(true);
       turns += 1;
+      if (turns < 4) expect(player.calmActive).toBe(true);
+      else expect(player.calmActive).toBe(false);
     } while ((G.currentPlayer as string) !== "0");
 
     expect(turns).toBe(7);
     expect(G.year).toBe(2);
-    // The turn opened with calm counted, so no riot, and then the calm was spent.
-    expect(G.pendingRiot).toBeNull();
+    // The next turn is in a new year, so its riot test has no calm left to count.
+    expect(G.pendingRiot).toMatchObject({ playerID: "0" });
     expect(player.calmActive).toBe(false);
-    expect(unrestStatus(G, "0").tier).toBe("unrest");
+  });
+
+  it("expires for the last seat as well, and preserves the last card for the final tally", () => {
+    const G = game();
+    for (const player of Object.values(G.players)) player.calmActive = true;
+    standCard(G, "year-piracy");
+    startNewYear(G);
+    expect(Object.values(G.players).every((player) => !player.calmActive)).toBe(true);
+
+    standCard(G, "year-blockade");
+    G.year = 14;
+    G.yearDrawPile = [];
+    const lastCard = G.activeYearCard;
+    startNewYear(G);
+    expect(G.phase).toBe("gameOver");
+    expect(G.activeYearCard).toBe(lastCard);
+    expect(G.year).toBe(14);
+  });
+
+  it("shows fourteen years both before and after the opening reveal", () => {
+    const G = scenario().build();
+    expect(yearDeckSize(G)).toBe(14);
+    revealYearCard(G);
+    expect(yearDeckSize(G)).toBe(14);
   });
 });
 

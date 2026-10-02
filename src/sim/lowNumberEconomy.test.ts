@@ -121,10 +121,7 @@ describe("low-number economy study invariants", () => {
         for (const effect of card.effects) expect(presentDirectiveEffect(effect).text).not.toBe("");
       }
     }
-    for (const table of [
-      LOW_NUMBER_CONTENT.riotTable,
-      ...LOW_NUMBER_CONTENT.expeditionTables,
-    ]) {
+    for (const table of [LOW_NUMBER_CONTENT.riotTable, ...LOW_NUMBER_CONTENT.expeditionTables]) {
       for (const row of table.rows) {
         for (const effect of row.effects) expect(presentTableEffect(effect).text).not.toBe("");
       }

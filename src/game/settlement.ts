@@ -204,4 +204,3 @@ export function countPlayerPopType(G: HegemonyState, playerID: PlayerId, pop: Po
     return count + (settlement?.pops[pop] ?? 0);
   }, 0);
 }
-

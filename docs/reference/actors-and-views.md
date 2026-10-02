@@ -1,6 +1,6 @@
 # Actors and views
 
-Last updated: 2026-08-04.
+Last updated: 2026-10-03.
 
 This is the living contract between authoritative match state and any browser, bot,
 spectator, or future network client. Commands cross `transition`; observations cross a
@@ -38,7 +38,8 @@ The projection preserves board, public resources, settlements, Laws, revealed ba
 discards, results, and public logs. It removes or canonicalizes authority-only information:
 
 - seed and serialized RNG are replaced with zero;
-- draw piles preserve counts only, using opaque card identifiers;
+- draw piles preserve counts only, using opaque card identifiers; the next year card
+  is hidden from every seat, spectators and bots alike;
 - another seat's held Assembly card and sealed proposal are null during proposal;
 - spectators see no held card or sealed proposal;
 - a pending Player Event is visible only to its decision owner; other views receive a generic

@@ -27,9 +27,7 @@ export const ACTIVE_EFFECT_KINDS = [
 export type ActiveEffectKind = (typeof ACTIVE_EFFECT_KINDS)[number];
 
 export type EventEffectActiveEffectHandling =
-  | "immediate"
-  | "materializedActionDiscount"
-  | "container";
+  "immediate" | "materializedActionDiscount" | "container";
 
 /**
  * Exhaustive inventory of how every event-effect variant reaches active status.
@@ -68,13 +66,7 @@ export type ActiveEffectExpiry =
   | "atNextAssembly";
 
 export type ActiveEffectDuration = {
-  unit:
-    | "incomeCollections"
-    | "playerUpkeeps"
-    | "year"
-    | "standing"
-    | "matchingAction"
-    | "assembly";
+  unit: "incomeCollections" | "playerUpkeeps" | "year" | "standing" | "matchingAction" | "assembly";
   /** Null means the effect is conditional/standing rather than countdown-based. */
   remaining: number | null;
   expiry: ActiveEffectExpiry;

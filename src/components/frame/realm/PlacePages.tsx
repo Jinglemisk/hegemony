@@ -1,11 +1,9 @@
 import { getFoundColonyStatus, getLuxuryGood } from "../../../game/rules";
 import { isCoastalTile } from "../../../game/map";
 import type { HexTile, LuxuryAsset } from "../../../game/types";
-import { joinEffectPresentations, presentTableEffect } from "../../../ui/effects";
 import { RESOURCE_ICON } from "../../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { settlementNames } from "../../../ui/settlementNames";
-import { EffectLine } from "../../EffectLine";
 import { useGameUi } from "../../board/GameUiContext";
 import { Ico, Price } from "../parts";
 

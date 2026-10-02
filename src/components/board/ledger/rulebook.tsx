@@ -710,10 +710,9 @@ const unrest: RuleChapter = {
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">
           <Note>
-            One civic calm per turn, both worth +{calm.happiness} happiness for a year: it lasts
-            until your next turn has opened and been tested for a riot. It does not count toward
-            Beloved of the People. These are base costs; the
-            payment picker shows effective costs:
+            One civic calm per turn, both worth +{calm.happiness} happiness this year. It expires
+            when the year turns and does not count toward Beloved of the People. These are base
+            costs; the payment picker shows effective costs:
           </Note>
           <DefList>
             <DefRow term="Stabilize Province">
@@ -756,8 +755,8 @@ const years: RuleChapter = {
       <div className="compendiumStack">
         <Entry id={anchor("years", "clock")} title="The clock">
           <Note>
-            A year is one turn for every seat. As each year opens, the top card of the year deck
-            is turned up and stands for that year; the next card stays hidden. The seat that plays
+            A year is one turn for every seat. As each year opens, the top card of the year deck is
+            turned up and stands for that year; the next card stays hidden. The seat that plays
             first moves on one place each year.
           </Note>
           <Note>
@@ -767,11 +766,10 @@ const years: RuleChapter = {
         </Entry>
         <Entry id={anchor("years", "decks")} title="The decks">
           <Note>
-            Most year cards strike out one kind of income for every realm that has not yet
-            collected this year. Plague and Festival act once, on everyone, when they are turned
-            up. The <strong>player deck</strong> (
-            {countCopies(getPlayerEventCards(G.definition.content))} cards) deals you a private
-            card each income.
+            Most year cards strike out one kind of income for every realm that has not yet collected
+            this year. Plague and Festival act once, on everyone, when they are turned up. The{" "}
+            <strong>player deck</strong> ({countCopies(getPlayerEventCards(G.definition.content))}{" "}
+            cards) deals you a private card each income.
           </Note>
           <DefList>
             {yearCards.map((card) => (
@@ -915,8 +913,8 @@ const assembly: RuleChapter = {
           <Note>
             The Assembly meets every {rules.everyYears === 2 ? "other" : spell(rules.everyYears)}{" "}
             year from Year <strong>{rules.firstYear}</strong>, before the year's opener takes their
-            turn. Nothing else happens while it sits — the whole table
-            proposes and votes, then play resumes.
+            turn. Nothing else happens while it sits — the whole table proposes and votes, then play
+            resumes.
           </Note>
           <Note>
             This is what <AnnotatedText text="Influence" /> is for. Everything the Assembly asks of

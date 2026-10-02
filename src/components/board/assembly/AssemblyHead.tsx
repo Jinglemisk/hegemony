@@ -100,11 +100,11 @@ function headline(G: HegemonyState, session: AssemblySession): { title: string; 
 
   return {
     title: "The Assembly",
-    sub: `${ordinal(G.assembliesHeld)} of the game · spring of Year ${toRoman(session.year)}`,
+    sub: `${ordinal(G.assembliesHeld)} of the game · Year ${toRoman(session.year)}`,
   };
 }
 
-/** Voice is a permanent standing, so it sits in the corner and never moves. */
+/** Voice reads the standing authored Laws. */
 function VoicePlaque({ G }: { G: HegemonyState }) {
   const voice = victoryStandings(G).find((standing) => standing.card.metric === "voice");
   const holder = voice?.holder ?? null;
@@ -115,13 +115,13 @@ function VoicePlaque({ G }: { G: HegemonyState }) {
       ariaLabel={`Voice of the Assembly: ${glaze ? glaze.name : "unheld"}`}
       content={
         <MechanicsDetails
-          duration="Permanent until strictly exceeded"
+          duration="While the authored Laws stand"
           heading="Voice of the Assembly"
           source="Victory standing"
         >
           <p className="mechanicsExplanation">
-            The first player to pass {voice?.minimum ?? G.ruleset.victory.minimums.voice} authored
-            resolutions claims Voice. Ties do not dislodge its holder.
+            The sole leader in standing authored Laws holds Voice, with at least{" "}
+            {voice?.minimum ?? G.ruleset.victory.minimums.voice}. A tie awards nothing.
           </p>
         </MechanicsDetails>
       }

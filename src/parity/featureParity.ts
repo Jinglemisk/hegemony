@@ -93,7 +93,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   activeEffectPolicy: {
     implementation: "src/parity/activeEffectParity.test.ts",
-    evidence: "makes the master policy buy calm when the next upkeep would riot, and not otherwise",
+    evidence: "does not buy this year's calm to cover an upkeep in a later year",
   },
   hungerResolution: {
     implementation: "src/game/hunger.test.ts",
@@ -448,7 +448,10 @@ export const CONTENT_MANIFEST = {
       implementation: "src/components/frame/TopBar.tsx",
       evidence: "presentYearCard",
     },
-    simulation: { implementation: "src/sim/policies.ts", evidence: "activeYearCard: null" },
+    simulation: {
+      implementation: "src/sim/policies.ts",
+      evidence: "originalPlayer.collectedThisTurn ? null : G.activeYearCard",
+    },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "countYearCard" },
     behaviorFixtures: ["eventPersistent", "contentTelemetry"],
   },

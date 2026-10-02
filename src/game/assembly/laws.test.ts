@@ -278,7 +278,7 @@ describe("standing laws reach the bank and the colony charter", () => {
     expect(hasLawFreeAction(G, "0", "foundColony")).toBe(false);
     expect(G.players["0"].lawFreeActionsUsedThisYear).toContain("foundColony");
 
-    // Roll into spring of Year 2 — a once-a-year coupon refreshes with the year.
+    // Turn the year — a once-a-year coupon refreshes with the year.
     G.year = 4;
     startNewYear(G);
 

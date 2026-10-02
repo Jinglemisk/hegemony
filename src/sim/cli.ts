@@ -712,7 +712,7 @@ function cmdBatch(flags: Flags) {
   }
 
   const games = requirePositiveInt(flags.games, "--games");
-  const turns = flags.turns !== undefined ? requirePositiveInt(flags.turns, "--turns") : 40;
+  const turns = flags.turns !== undefined ? requirePositiveInt(flags.turns, "--turns") : 56;
   const policy = resolvePolicy(typeof flags.policy === "string" ? flags.policy : "random");
   const seats = parseSeats(flags);
   const rotate = Boolean(flags.rotate);

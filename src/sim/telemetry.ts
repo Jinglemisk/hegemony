@@ -16,7 +16,7 @@ import { getOwnedSettlement, getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementIdleSlaves } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import { standingHappiness } from "../game/happiness";
-import { voiceHolder } from "../game/victory";
+import { victoryStandings, voiceHolder } from "../game/victory";
 import { GAME_COMMAND_TYPES, type GameCommandType } from "../parity/commandParity";
 import {
   BUILDING_CONTENT_IDS,
@@ -198,9 +198,11 @@ export type GameRow = {
   /** Which policy sat in each seat this game (mixed-policy tables); absent for uniform runs. */
   seatPolicies?: Record<PlayerId, string>;
   finalCards: Record<PlayerId, number>;
+  /** The titles held by the winner at a victory-race finish; empty for other endings. */
+  winningTitles: string[];
   /** Permanent authored-and-passed Assembly progress when the game ended. */
   finalAuthoredPasses: Record<PlayerId, number>;
-  /** The seat holding Voice when the game ended, if its minimum was ever reached. */
+  /** The seat holding Voice when the game ended. */
   voiceHolder: PlayerId | null;
   popsLostToUnrest: Record<PlayerId, number>;
   popsLostToHunger: Record<PlayerId, number>;
@@ -428,6 +430,7 @@ export class Aggregator {
     // The opening already revealed year 1's card and player 0's first draw.
     this.countYearCard(G);
     this.countPlayerDraw(G);
+    this.snapshots.push(snapshotTurn(G, this.game, this.seed));
   }
 
   onMove(G: HegemonyState, player: PlayerId, move: GameCommand) {
@@ -518,7 +521,7 @@ export class Aggregator {
     // Deck exhaustion ends the game mid-endTurn WITHOUT advancing the turn or the year (see
     // startNewYear): no new player-turn happened here, so recording one would
     // duplicate the final turn, undercount turnsPlayed, and re-count the prior draw.
-    if (G.phase === "gameOver" && G.gameOverReason === "deckExhausted") {
+    if (G.phase === "gameOver") {
       return;
     }
 
@@ -527,11 +530,7 @@ export class Aggregator {
       this.countYearCard(G);
     }
 
-    // A terminal victory-race turn advanced the turn (a real snapshot) but ended
-    // before income/draw, so there is no fresh player event to count here.
-    if (G.phase !== "gameOver") {
-      this.countPlayerDraw(G);
-    }
+    this.countPlayerDraw(G);
 
     this.snapshots.push(snapshotTurn(G, this.game, this.seed));
   }
@@ -542,8 +541,7 @@ export class Aggregator {
   }
 
   endGame(G: HegemonyState) {
-    // Standing Laws remain board-derived; authored Voice progress is intentionally
-    // permanent state and survives repeal/replacement.
+    // The record of passes survives repeal; Voice reads standing Laws only.
     this.assembliesHeld += G.assembliesHeld;
     this.lawsStandingAtEnd.push(G.activeLaws.length);
     this.directivesPassed += G.tallyMonuments.length;
@@ -590,13 +588,19 @@ export class Aggregator {
     this.games.push({
       game: this.game,
       seed: this.seed,
-      turnsPlayed: G.turn - this.startTurn,
+      turnsPlayed: G.turn - this.startTurn + (termination === "deckExhausted" ? 1 : 0),
       finalYear: G.year,
       termination,
       winner: finished ? G.winner : null,
       leaderAtCap: finished ? null : this.leaderByTiebreak(G, finalCards),
       seatPolicies: this.gameSeatPolicies ?? undefined,
       finalCards,
+      winningTitles:
+        termination === "victoryRace"
+          ? victoryStandings(G)
+              .filter((standing) => standing.holder === G.winner)
+              .map((standing) => standing.card.name)
+          : [],
       finalAuthoredPasses,
       voiceHolder: voiceHolder(G),
       popsLostToUnrest,

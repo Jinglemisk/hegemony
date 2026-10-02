@@ -1,14 +1,6 @@
 import { PLAYER_IDS } from "./data";
-import type {
-  EventCard,
-  EventEffect,
-  HegemonyState,
-  PlayerId,
-  Resource,
-  Resources,
-} from "./types";
+import type { EventCard, EventEffect, HegemonyState, PlayerId, Resource, Resources } from "./types";
 import {
-  capitalize,
   formatPopName,
   formatRuleNumber,
   formatRuleResourceDelta,

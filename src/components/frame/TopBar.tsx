@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { PLAYER_IDS } from "../../game/data";
+import { yearDeckSize } from "../../game/year";
 import type { IncomeContribution } from "../../game/economy/income";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../game/types";
 import { presentYearCard } from "../../ui/effects";
@@ -23,7 +24,7 @@ const MAX_TOKEN_PIPS = 6;
 function Clock({ G }: { G: HegemonyState }) {
   const year = G.year;
   const left = G.yearDrawPile.length;
-  const totalYears = year + left;
+  const totalYears = yearDeckSize(G);
   const card = G.activeYearCard;
 
   return (

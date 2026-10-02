@@ -2,13 +2,7 @@ import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../game/activ
 import type { DirectiveEffect, LawEffect } from "../game/assembly/types";
 import { getAuthoredGameContent } from "../game/content";
 import type { GameContent } from "../game/content";
-import type {
-  BuildingEffect,
-  EventEffect,
-  TableEffect,
-  YearCard,
-  YearTerm,
-} from "../game/types";
+import type { BuildingEffect, EventEffect, TableEffect, YearCard, YearTerm } from "../game/types";
 import {
   RESOURCE_LABELS,
   buildingName,

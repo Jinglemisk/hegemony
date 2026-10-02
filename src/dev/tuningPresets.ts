@@ -316,7 +316,6 @@ export function createLowNumberContent(base: GameContent): GameContent {
 
   scaleTable(content.riotTable);
   content.expeditionTables.forEach(scaleTable);
-  // Yearly omens remain their authored, indivisible ±1 values.
 
   return content;
 }

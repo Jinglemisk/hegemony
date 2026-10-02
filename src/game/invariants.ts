@@ -1,7 +1,7 @@
 import { PLAYER_IDS } from "./data";
 import { getPlayerEventCards, getResolutionCards, getYearCards } from "./content";
 import type { BallotItem, PoliticianId } from "./assembly/types";
-import type { EventCard, HegemonyState, Pops, Settlement } from "./types";
+import type { HegemonyState, Pops, Settlement } from "./types";
 import { playerPieces } from "./settlement";
 import { COMMAND_SCHEMA_VERSION, STATE_SCHEMA_VERSION } from "./version";
 

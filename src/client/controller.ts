@@ -59,7 +59,7 @@ function createGameFromUrl(): HegemonyState {
     G = autoPlayOpening(G, params?.get("opening") === "random");
   }
 
-  // `?dev=assembly` fast-forwards to the first Assembly. The agora sits in the spring
+  // `?dev=assembly` fast-forwards to the first Assembly. The agora sits at the start
   // of Year 2 — sixteen turns in — and neither a playtest nor a browser check should
   // have to click through a whole year to reach the feature under test. The TUNE panel's
   // "Start at Assembly" toggle sets the same fast-forward as a sticky dev flag, so a plain
@@ -152,7 +152,7 @@ function fastForwardToAssembly(initial: HegemonyState): HegemonyState {
 
     const step = mulberry32(rngState);
     rngState = step.state;
-    // Bias hard toward ending the turn: the point is to reach spring of Year 2, not
+    // Bias hard toward ending the turn: the point is to reach Year 2, not
     // to play a good game on the way there.
     const endTurnCommand = commands.find((command) => command.type === "endTurn");
     const command =

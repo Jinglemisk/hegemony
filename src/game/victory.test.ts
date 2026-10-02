@@ -22,8 +22,8 @@ const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", t
 
 /**
  * These turn-structure tests cycle whole years to assert the year/opener machine.
- * From spring of Year 2 the Assembly legitimately SUSPENDS that machine between the
- * season roll and the opener's turn, so running them under the default ruleset would
+ * From Year 2 the Assembly legitimately SUSPENDS that machine between the
+ * year turning and the opener's turn, so running them under the default ruleset would
  * be measuring the agora, not the calendar. `firstYear: 0` disables the subsystem so
  * they keep testing exactly what they were written to test — the Assembly's own
  * cadence has its own suite in assembly/assembly.test.ts.

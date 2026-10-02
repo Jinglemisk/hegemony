@@ -183,8 +183,7 @@ export type YearTerm =
 /** What a year card does: zero one term for the year, or move every realm's Unrest
  *  tokens once when it is revealed. */
 export type YearCardEffect =
-  | { type: "zeroTerm"; term: YearTerm }
-  | { type: "unrestTokens"; change: "placeOne" | "clearAll" };
+  { type: "zeroTerm"; term: YearTerm } | { type: "unrestTokens"; change: "placeOne" | "clearAll" };
 
 /** A card of the year deck, the game's clock. One is revealed as each year opens and
  *  stands until the year turns. */
@@ -391,8 +390,7 @@ export interface PlayerState {
   ladderUsedThisTurn: boolean;
   ventureUsedThisTurn: boolean;
   moveUsedThisTurn: boolean;
-  /** Calm bought since this player's last upkeep. It counts toward happiness until
-   *  their next turn starts, and is never banked. */
+  /** Calm bought this year. It expires when the year turns and is never banked. */
   calmActive: boolean;
   /** Free-action coupons a standing Law grants once a year (Monumental Code, Land
    *  Rush) that this player has already spent. Cleared when the year turns. */
@@ -470,7 +468,7 @@ export interface HegemonyState {
   yearDiscardPile: YearCard[];
   playerDrawPile: EventDeck;
   playerDiscardPile: EventDeck;
-  /** This year's card. Null only before gameplay starts. */
+  /** This year's card, retained for the final tally. Null before gameplay starts. */
   activeYearCard: YearCard | null;
   lastPlayerEvent: EventCard | null;
   pendingPlayerEvent: PendingPlayerEvent | null;

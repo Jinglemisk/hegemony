@@ -400,9 +400,7 @@ describe("deterministic rng", () => {
   it("produces identical initial deck order for the same seed", () => {
     const a = createInitialState(42);
     const b = createInitialState(42);
-    expect(a.yearDrawPile.map((card) => card.id)).toEqual(
-      b.yearDrawPile.map((card) => card.id),
-    );
+    expect(a.yearDrawPile.map((card) => card.id)).toEqual(b.yearDrawPile.map((card) => card.id));
     expect(a.playerDrawPile.map((card) => card.id)).toEqual(
       b.playerDrawPile.map((card) => card.id),
     );

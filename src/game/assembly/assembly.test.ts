@@ -20,6 +20,7 @@ import {
   enactForEval,
   nextDrawCost,
   openAssembly,
+  nextAssemblyYear,
 } from "./assembly";
 import { getAuthoredResolutionCard } from "./deck";
 import { authoredSteleCount, politicianStandings } from "./power";
@@ -29,7 +30,7 @@ import { voiceHolder } from "../victory";
  * The Assembly's cadence and flow (design §1.1–§1.5).
  *
  * The agora is not a screen a player opens: it is engine state that SUSPENDS the turn
- * machine between the season roll and the opener's turn. So most of this suite drives
+ * machine between the year turning and the opener's turn. So most of this suite drives
  * the real turn loop to reach it, and then drives the real proposal / ballot verbs —
  * the only pokes are the ones that make a random draw deterministic.
  */
@@ -156,7 +157,17 @@ const SIX_LAWS = [
   "homestead-act",
 ];
 
-describe("cadence: the Assembly sits each spring from the ruleset's first year", () => {
+describe("cadence: the Assembly sits every other year from the ruleset's first year", () => {
+  it("reports the next sitting from the same cadence the turn machine uses", () => {
+    const G = scenario().build();
+    expect(nextAssemblyYear(G)).toBe(2);
+    G.year = 2;
+    expect(nextAssemblyYear(G)).toBe(4);
+    G.year = 3;
+    expect(nextAssemblyYear(G)).toBe(4);
+    G.year = 14;
+    expect(nextAssemblyYear(G)).toBeNull();
+  });
   it("holds no assembly at all through Year 1", () => {
     const G = scenario().opening().build();
 
@@ -603,7 +614,7 @@ describe("the Law cap", () => {
   });
 });
 
-describe("author prizes and permanent Voice progress", () => {
+describe("author prizes, pass records and standing Voice", () => {
   it.each([
     ["land-reform", "food", 5],
     ["public-works", "stone", 3],
@@ -896,7 +907,7 @@ describe("the house resolution", () => {
   it("plants an UNAUTHORED stele — nobody gains patronage from it", () => {
     // The house card is the one resolution no seat proposed, so it belongs to no seat.
     // It lends its politician power (the stele is standing) but hands nobody patronage,
-    // prize, or permanent Voice progress.
+    // prize, or authored pass record.
     const G = atAssembly();
     reopenWithHouseCard(G, "land-reform");
     expect(G.assembly!.houseItem?.proposer).toBeNull();

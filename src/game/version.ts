@@ -17,7 +17,9 @@ export const ENGINE_VERSION = "0.1.0";
 /** v5 (v2 migration, Step 5): happiness is a level derived from the board. Players
  *  hold no happiness and no timed moods; they carry a count of Unrest tokens. Older
  *  saves are rejected, not migrated. */
-export const STATE_SCHEMA_VERSION = 5;
+/** v6 (v2 migration, Step 6): the year deck replaces seasons and the omen; Voice
+ *  reads standing Laws. Older saves are rejected, not migrated. */
+export const STATE_SCHEMA_VERSION = 6;
 export const COMMAND_SCHEMA_VERSION = 2;
 
 export const SAVE_FORMAT_VERSION = 2;

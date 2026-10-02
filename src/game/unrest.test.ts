@@ -81,10 +81,10 @@ describe("the happiness level", () => {
     expect(happinessLevel(G, "0")).toBe(-1);
     expect(standingHappiness(G, "0")).toBe(-3);
 
-    // Calm holds the riot off at this upkeep, then it is spent.
+    // Calm counts at an upkeep in the same year; the year boundary expires it.
     applyUnrestUpkeep(G, "0");
     expect(G.pendingRiot).toBeNull();
-    expect(happinessLevel(G, "0")).toBe(-3);
+    expect(happinessLevel(G, "0")).toBe(-1);
   });
 
   it("turns a one-shot loss into one token and a gain into one token cleared", () => {
