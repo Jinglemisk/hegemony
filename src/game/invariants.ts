@@ -104,6 +104,22 @@ export function collectInvariantViolations(
     if ((G.players[playerID]?.resources.food ?? 0) < 0) {
       add("resources.foodDebt", `players.${playerID}.resources.food`, "food cannot go negative");
     }
+    // Happiness is derived, never held: no stock of it, and a whole count of tokens.
+    if (G.players[playerID] && "happiness" in G.players[playerID].resources) {
+      add(
+        "happiness.stored",
+        `players.${playerID}.resources.happiness`,
+        "happiness is a level read off the board and cannot be stored",
+      );
+    }
+    const tokens = G.players[playerID]?.unrestTokens;
+    if (G.players[playerID] && !(Number.isSafeInteger(tokens) && (tokens ?? -1) >= 0)) {
+      add(
+        "happiness.tokens",
+        `players.${playerID}.unrestTokens`,
+        "must be a non-negative safe integer",
+      );
+    }
     // Pieces are conserved: nobody stands more colonies or cities than their supply.
     if (G.players[playerID] && G.ruleset?.pieces) {
       const pieces = playerPieces(G, playerID);

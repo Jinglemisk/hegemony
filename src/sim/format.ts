@@ -118,7 +118,8 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
       (projection.population.inTransit > 0
         ? ` (+${projection.population.inTransit} in transit)`
         : "") +
-      ` · ${unrest.tier}${unrest.riotAtRisk ? " (riot table at next upkeep)" : ""}`,
+      ` · happiness ${formatNumber(unrest.happiness)}, ${unrest.tokens} Unrest ${unrest.tokens === 1 ? "token" : "tokens"}` +
+      ` · ${unrest.tier}${unrest.riotAtRisk ? (unrest.tier === "revolt" ? " (revolt at next upkeep)" : " (riot table at next upkeep)") : ""}`,
     `  resources: ${Object.entries(player.resources)
       .map(([resource, amount]) => `${resource} ${formatNumber(amount)}`)
       .join(" · ")}`,
@@ -280,7 +281,8 @@ export function renderBatchReport(report: BatchReport): string {
   if (report.riots) {
     lines.push(
       `Riots: ${formatNumber(report.riots.perGame)}/game · the riot table opens ` +
-        `${(report.riots.turnShare * 100).toFixed(1)}% of player-turns`,
+        `${(report.riots.turnShare * 100).toFixed(1)}% of player-turns · ` +
+        `revolts ${formatNumber(report.riots.revoltsPerGame)}/game`,
     );
   }
 

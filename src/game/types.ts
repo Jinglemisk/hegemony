@@ -15,12 +15,17 @@ export type PlayerId = "0" | "1" | "2" | "3";
  *  that expansion must route around (Phase 2, terrain-economy.md). */
 export type Terrain = "mountain" | "hill" | "forest" | "plains" | "oracle";
 
-export type Resource = "wood" | "stone" | "gold" | "food" | "influence" | "happiness";
+/** What a player stockpiles. Happiness is not here: it is a level read off the board
+ *  each turn and never held (see game/happiness.ts). */
+export type Resource = "wood" | "stone" | "gold" | "food" | "influence";
 
-export type MaterialResource = Exclude<Resource, "influence" | "happiness">;
+/** A resource or happiness: what a Law, a card or an icon can name. */
+export type Stat = Resource | "happiness";
+
+export type MaterialResource = Exclude<Resource, "influence">;
 
 /** What the bank exchanges against gold (roadmap-appendix D6/Q14): the tile-yield
- *  materials. Gold is the unit of account, influence/happiness are civic — never traded. */
+ *  materials. Gold is the unit of account and influence is civic: neither is traded. */
 export type TradableMaterial = Exclude<MaterialResource, "gold">;
 
 export type PopType = "citizens" | "freemen" | "slaves";
@@ -122,12 +127,8 @@ export type EventEffect =
       duration?: "season";
     }
   | {
-      /**
-       * Unrest that bites for a fixed number of the affected player's turns: it
-       * pushes `amountPerTurn` onto happiness during each of that player's next
-       * `turns` upkeeps, then expires. Stored as a {@link TimedHappinessModifier}
-       * on the player and ticked in the unrest upkeep — see `game/unrest.ts`.
-       */
+      /** v1's timed unrest. Like every one-shot happiness effect it now places or
+       *  clears one Unrest token when drawn; Step 7's deck replaces it. */
       type: "timedHappinessDelta";
       scope: EventScope;
       amountPerTurn: number;
@@ -293,14 +294,10 @@ export interface EventTableDefinition {
   insurance?: TableInsuranceOption[];
 }
 
-/** Escalation tier of a pending riot — maps the unrest thresholds (≤ −5 / ≤ −10). */
-export type RiotTier = "unrest" | "revolt";
-
 /** A riot waiting on the table: blocks the turn (income deferred, endTurn illegal)
  *  until the player rolls. Insurance is declared here, before the die. */
 export interface PendingRiot {
   playerID: PlayerId;
-  tier: RiotTier;
   boughtInsurance: RiotInsuranceId[];
 }
 
@@ -398,18 +395,6 @@ export interface HegemonyBoard {
   luxuries: LuxuryAsset[];
 }
 
-/** A happiness penalty (or bonus) that applies for a fixed number of the owning
- *  player's turns, then expires. Created by the `timedHappinessDelta` event
- *  effect and ticked down in the unrest upkeep. */
-export interface TimedHappinessModifier {
-  amountPerTurn: number;
-  turnsRemaining: number;
-  sourceCardId: string;
-  sourceName: string;
-  sourceDeck: EventDeckKind;
-  sourceScope: EventScope;
-}
-
 export interface PlayerState {
   id: PlayerId;
   name: string;
@@ -419,10 +404,14 @@ export interface PlayerState {
   collectedThisTurn: boolean;
   grownSettlementsThisTurn: string[];
   actionCostDiscounts: ActiveActionCostDiscount[];
-  /** Active timed happiness penalties/bonuses, ticked down each of the player's turns. */
-  timedHappinessModifiers: TimedHappinessModifier[];
-  /** Running total of pops lost to riots — surfaced in the ledger. */
+  /** Unrest tokens on this realm: the one part of happiness that is board state.
+   *  Cards, Laws and Directives place them; a riot, a revolt or a kind card clears
+   *  them. Each takes 1 from the level and none can be bought off. */
+  unrestTokens: number;
+  /** Running total of pops lost to riots and revolts — surfaced in the ledger. */
   popsLostToUnrest: number;
+  /** Running total of revolts this realm has been through. */
+  revolts: number;
   /** Running total of pops that left unfed at income. */
   popsLostToHunger: number;
   /** Running total of pops gained inorganically from event cards (the `addPops`

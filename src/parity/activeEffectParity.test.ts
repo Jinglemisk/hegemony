@@ -23,14 +23,9 @@ import {
 } from "../game/events";
 import { expireTurnEventModifiers, startNewSeason } from "../game/season";
 import { materialTile, scenario } from "../game/testing/scenario";
-import type {
-  EventCard,
-  HegemonyState,
-  Pops,
-  TableRollRecord,
-  TimedHappinessModifier,
-} from "../game/types";
-import { applyUnrestUpkeep, unrestStatus } from "../game/unrest";
+import type { EventCard, HegemonyState, Pops, TableRollRecord } from "../game/types";
+import { PLAYER_IDS } from "../game/data";
+import { unrestStatus } from "../game/unrest";
 import { masterPolicy, projectPolicyHorizon } from "../sim/policies";
 import { createSimRng } from "../sim/rng";
 import { snapshotTurn } from "../sim/telemetry";
@@ -81,21 +76,6 @@ function omenRecord(): TableRollRecord {
   };
 }
 
-function timedModifier(
-  sourceName: string,
-  amountPerTurn: number,
-  turnsRemaining: number,
-): TimedHappinessModifier {
-  return {
-    amountPerTurn,
-    turnsRemaining,
-    sourceCardId: "test-" + sourceName.toLowerCase().replaceAll(" ", "-"),
-    sourceName,
-    sourceDeck: "player",
-    sourceScope: "activePlayer",
-  };
-}
-
 function plantLaw(G: HegemonyState, cardId: string, author: "0" | "1" = "0") {
   G.activeLaws.push({
     cardId,
@@ -110,7 +90,7 @@ function renderAlarms(G: HegemonyState, activeEffects: ActiveEffectDescriptor[])
     createElement(Alarms, {
       content: G.definition.content,
       effects: activeEffects,
-      popLossThreshold: G.ruleset.economy.unrest.popLossThreshold,
+      riotThreshold: G.ruleset.economy.unrest.riotThreshold,
       unrest: unrestStatus(G, "0"),
     }),
   );
@@ -133,7 +113,6 @@ describe("canonical active-effect selector", () => {
   it("reports source, scope, mechanics, duration, and expiry for persistent state", () => {
     const G = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });
     G.players["0"].incomeSuppressedTurns = 1;
-    G.players["0"].timedHappinessModifiers = [timedModifier("Public Shame", -2, 2)];
     G.players["0"].actionCostDiscounts = [
       {
         id: "coupon",
@@ -185,7 +164,6 @@ describe("canonical active-effect selector", () => {
       new Set([
         "incomeSuppression",
         "hunger",
-        "timedHappiness",
         "seasonalModifier",
         "yearlyOmen",
         "actionDiscount",
@@ -231,9 +209,7 @@ describe("canonical active-effect selector", () => {
 
   it("expires countdown and coupon state at the same lifecycle boundaries it declares", () => {
     const G = stateWithSettlement();
-    G.players["0"].resources.happiness = 20;
     G.players["0"].incomeSuppressedTurns = 1;
-    G.players["0"].timedHappinessModifiers = [timedModifier("Passing Cloud", -1, 1)];
     G.players["0"].actionCostDiscounts = [
       {
         id: "expiring",
@@ -250,14 +226,11 @@ describe("canonical active-effect selector", () => {
     collectIncome(G, "0", "automatic");
     expect(effectByKind(G, "incomeSuppression")).toHaveLength(0);
 
-    applyUnrestUpkeep(G, "0");
-    expect(effectByKind(G, "timedHappiness")).toHaveLength(0);
-
     expireTurnEventModifiers(G, "0");
     expect(effectByKind(G, "actionDiscount")).toHaveLength(0);
   });
 
-  it("keeps timed-event card identity, deck, and original scope from real resolution", () => {
+  it("turns a timed happiness card into one Unrest token for everyone it names", () => {
     const plague = SEASONAL_EVENT_CARDS.find((card) => card.id === "season-plague")!;
     const G = stateWithSettlement();
     G.season = cardSeason(plague);
@@ -266,14 +239,9 @@ describe("canonical active-effect selector", () => {
 
     drawSeasonalEvent(G);
 
-    const descriptor = effectByKind(G, "timedHappiness")[0];
-    expect(descriptor.source).toEqual({
-      kind: "seasonalEvent",
-      id: "season-plague",
-      label: "Plague",
-    });
-    expect(descriptor.scope).toEqual({ kind: "allPlayers" });
-    expect(effectByKind(G, "timedHappiness", "1")[0].source.id).toBe("season-plague");
+    // Nothing is left ticking: the token is the whole effect, and it is board state.
+    expect(PLAYER_IDS.map((playerID) => G.players[playerID].unrestTokens)).toEqual([1, 1, 1, 1]);
+    expect(getActiveEffects(G, "0").some((effect) => effect.source.id === plague.id)).toBe(false);
   });
 
   it("shows an annual Law coupon only while it is unspent and refreshes it at the new year", () => {
@@ -371,16 +339,14 @@ describe("persistent event content inventory", () => {
     expect(exercised).toBeGreaterThan(0);
   });
 
-  it("materializes every authored player timed effect and discount through event resolution", () => {
+  it("materializes every authored player discount through event resolution", () => {
     let exercised = 0;
 
     for (const card of PLAYER_EVENT_CARDS) {
       for (const [choiceIndex, effects] of getEventEffectChoices(card).entries()) {
         const expected = effects.filter((effect) => {
           const handling = EVENT_EFFECT_ACTIVE_EFFECT_HANDLING[effect.type];
-          return (
-            handling === "materializedTimedHappiness" || handling === "materializedActionDiscount"
-          );
+          return handling === "materializedActionDiscount";
         });
         if (expected.length === 0) continue;
 
@@ -398,36 +364,12 @@ describe("persistent event content inventory", () => {
 
     expect(exercised).toBeGreaterThan(0);
   });
-
-  it("materializes every authored seasonal timed effect through the real draw path", () => {
-    let exercised = 0;
-
-    for (const card of SEASONAL_EVENT_CARDS) {
-      const expected = card.effects.filter(
-        (effect) =>
-          EVENT_EFFECT_ACTIVE_EFFECT_HANDLING[effect.type] === "materializedTimedHappiness",
-      );
-      if (expected.length === 0) continue;
-
-      const G = stateWithSettlement();
-      G.season = cardSeason(card);
-      G.activeSeasonEvent = null;
-      G.seasonalDrawPile = [card];
-      drawSeasonalEvent(G);
-      const descriptors = getActiveEffects(G, "0").filter((effect) => effect.source.id === card.id);
-
-      expect(descriptors, card.id).toHaveLength(expected.length);
-      exercised += expected.length;
-    }
-
-    expect(exercised).toBeGreaterThan(0);
-  });
 });
 
 describe("frontend active-effect parity", () => {
   it("renders the same canonical words through the realm's alarms", () => {
     const G = stateWithSettlement();
-    G.players["0"].timedHappinessModifiers = [timedModifier("Public Shame", -2, 2)];
+    G.players["0"].incomeSuppressedTurns = 1;
     const descriptors = getActiveEffects(G, "0");
     const alarms = renderAlarms(G, descriptors);
 
@@ -466,34 +408,16 @@ describe("simulation and AI active-effect parity", () => {
     expect(struckProjection.resources.gold).toBeLessThan(safeProjection.resources.gold);
   });
 
-  it("clearly values beneficial timed mood and prices harmful timed mood", () => {
-    const base = stateWithSettlement();
-    const blessed = structuredClone(base);
-    const harmed = structuredClone(base);
-    blessed.players["0"].timedHappinessModifiers = [timedModifier("Festival", 2, 2)];
-    harmed.players["0"].timedHappinessModifiers = [timedModifier("Shame", -2, 2)];
-
-    const neutral = projectPolicyHorizon(base, "0", 2).resources.happiness;
-    expect(projectPolicyHorizon(blessed, "0", 2).resources.happiness).toBe(neutral + 4);
-    expect(projectPolicyHorizon(harmed, "0", 2).resources.happiness).toBe(neutral - 4);
-  });
-
-  it("makes the master policy use calm against harmful mood and avoid it against beneficial mood", () => {
-    const choose = (modifier: TimedHappinessModifier) => {
-      const G = scenario().build();
-      G.phase = "gameplay";
-      G.currentPlayer = "0";
+  it("makes the master policy buy calm when the next upkeep would riot, and not otherwise", () => {
+    const choose = (slaves: number) => {
+      const G = stateWithSettlement({ citizens: 0, freemen: 0, slaves });
       Object.assign(G.players["0"].resources, {
         wood: 0,
         stone: 0,
         gold: 0,
         food: 0,
         influence: 4,
-        // One step above the riot line: calm lasts a single upkeep, so it is worth
-        // buying only when the next one would cross.
-        happiness: -4,
       });
-      G.players["0"].timedHappinessModifiers = [modifier];
 
       return masterPolicy.choose(
         projectForPlayer(G.definition, G, "0"),
@@ -502,9 +426,11 @@ describe("simulation and AI active-effect parity", () => {
       );
     };
 
-    expect(choose(timedModifier("Shame", -2, 3)).type).toBe("civicCalm");
-    expect(choose(timedModifier("Festival", 2, 3)).type).toBe("endTurn");
+    // Six slaves hold the level on the riot line every year; calm lifts this one.
+    expect(choose(6).type).toBe("civicCalm");
+    expect(choose(0).type).toBe("endTurn");
   });
+
   it("handles the safe edge and the hunger edge deterministically", () => {
     const safe = stateWithSettlement();
     const hungry = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });

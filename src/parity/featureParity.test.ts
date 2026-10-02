@@ -12,6 +12,7 @@ import {
   RIOT_TABLE,
 } from "../game/data";
 import { settlementNetYield } from "../game/economy/income";
+import { settlementBuildingHappiness } from "../game/happiness";
 import { materialTile, owned, scenario } from "../game/testing/scenario";
 import type { EventEffect } from "../game/types";
 import { Aggregator } from "../sim/telemetry";
@@ -267,7 +268,7 @@ describe("feature and content parity manifests", () => {
     expect(incomeWith("estate")[primary] - base[primary]).toBe(2);
     const temple = incomeWith("temple");
     expect(temple.influence - base.influence).toBe(0);
-    expect(temple.happiness - base.happiness).toBe(1);
+    expect(settlementBuildingHappiness(G, settlement)).toBe(1);
     expect(incomeWith("granary").food - base.food).toBe(2);
     // The Port's fact is its claim; it adds nothing to a settlement's income.
     expect(incomeWith("port")).toEqual(base);

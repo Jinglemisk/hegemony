@@ -293,15 +293,15 @@ const resources: RuleChapter = {
     "stockpile",
     "economy",
   ],
-  entries: [{ id: anchor("resources", "six"), label: "The six" }],
+  entries: [{ id: anchor("resources", "six"), label: "The five" }],
   Body: () => (
     <div className="compendiumStack">
-      <Entry id={anchor("resources", "six")} title="The six">
+      <Entry id={anchor("resources", "six")} title="The five">
         <Note>
-          Four are <em>spendable stock</em> drawn from land and pops: wood, stone, food and gold.
-          Two are <em>meters</em>, not stock — influence (civic weight) and happiness (public mood).
-          Gold is the unit the bank trades in; it comes from pops, trade and events, never from a
-          tile.
+          Four are drawn from land and pops: wood, stone, food and gold. The fifth, influence, is
+          civic weight. Gold is the unit the bank trades in; it comes from pops, trade and events,
+          never from a tile. Happiness is not a stock: it is a level read off the board (see
+          Happiness &amp; Unrest).
         </Note>
         <DefList>
           {RESOURCE_ORDER.map((resource) => (
@@ -317,12 +317,10 @@ const resources: RuleChapter = {
               {resource === "wood" || resource === "stone"
                 ? "A building material, mined from the land by pops."
                 : resource === "food"
-                  ? "Feeds pops each turn; a stored surplus also calms, a shortage stirs unrest."
+                  ? "Feeds freemen and citizens each turn; one pop leaves for every mouth it cannot feed."
                   : resource === "gold"
                     ? "The coin of trade — earned by pops and events, the bank's only medium."
-                    : resource === "influence"
-                      ? "Civic weight: spent on demotions, calm and the Dole; its great sink is the Assembly."
-                      : "The public mood; negative happiness brings riots, high happiness wins a card."}
+                    : "Civic weight: spent on demotions, calm and the Dole; its great sink is the Assembly."}
             </DefRow>
           ))}
         </DefList>
@@ -373,9 +371,7 @@ const population: RuleChapter = {
       <Entry id={anchor("population", "capacity")} title="Capacity">
         <Note>
           A settlement holds only so many pops (see <AnnotatedText text="Settlements" />
-          ), and no building raises the cap. Growing and moving stop at it. A settlement pushed past
-          it anyway costs <strong>−{G.ruleset.economy.overCapacityHappinessPerPop}</strong>{" "}
-          happiness per pop over the line each turn.
+          ), and no building raises the cap. Growing and moving stop at it.
         </Note>
       </Entry>
     </div>
@@ -609,7 +605,7 @@ const buildings: RuleChapter = {
 const luxuries: RuleChapter = {
   id: "luxuries",
   title: "Luxury Goods",
-  blurb: "Six coastal goods, claimed by Ports, that raise your effective happiness.",
+  blurb: "Six coastal goods, claimed by Ports, that raise your happiness.",
   keywords: [
     "luxury",
     "luxuries",
@@ -648,16 +644,14 @@ const luxuries: RuleChapter = {
             ) : null}{" "}
             raised in a settlement on either tile claims it — a colony may raise one too. The first
             Port wins, and a claimed good never leaves its owner except by trade. A Port needs the
-            coast, an unclaimed good adjacent, and room under your active cap.
+            coast and an unclaimed good adjacent.
           </Note>
         </Entry>
         <Entry id={anchor("luxuries", "offset")} title="The standing offset">
           <Note>
-            Every active good adds +{lux.happinessPerGood} to your EFFECTIVE happiness — a standing
-            floor, never banked. Riot and revolt thresholds and{" "}
-            {lux.countsTowardBeloved ? "the Beloved of the People laurel" : "nothing else"} test the
-            effective number. At most {lux.activeCapPerPlayer} goods are active at once; goods past
-            the cap stay owned but inactive — trade assets, not dead weight.
+            Every good you hold adds +{lux.happinessPerGood} to your happiness for as long as you
+            hold it, and there is no limit on how many count. The riot and revolt lines and the
+            Beloved of the People laurel both read it.
           </Note>
         </Entry>
         <Entry id={anchor("luxuries", "roster")} title="The six goods">
@@ -693,7 +687,7 @@ const unrest: RuleChapter = {
     "bread",
   ],
   entries: [
-    { id: anchor("unrest", "pressure"), label: "Food & mood" },
+    { id: anchor("unrest", "pressure"), label: "The level" },
     { id: anchor("unrest", "calm"), label: "Buying calm" },
     { id: anchor("unrest", "riot"), label: "The riot table" },
   ],
@@ -702,26 +696,29 @@ const unrest: RuleChapter = {
     const calm = G.ruleset.civicCalm;
     return (
       <div className="compendiumStack">
-        <Entry id={anchor("unrest", "pressure")} title="Food & mood">
+        <Entry id={anchor("unrest", "pressure")} title="The level">
           <Note>
-            Each income, every Temple adds +1 happiness to your store and every{" "}
-            {G.ruleset.economy.slavesPerUnhappiness} slaves in your realm take 1 from it. Luxuries
-            and bought calm are never stored: they stand beside the store and count toward the
-            thresholds below.
+            Happiness is a level you read off the board, and nothing is saved up. Count +1 for every
+            Temple and +{G.ruleset.economy.luxury.happinessPerGood} for every luxury, then take 1
+            for every {G.ruleset.economy.slavesPerUnhappiness} slaves in your realm and 1 for every
+            Unrest token. Calm bought this year adds +{calm.happiness}. If nothing on the board
+            changes, the level is the same next turn.
           </Note>
           <Note>
-            Stored food calms — every {G.ruleset.economy.foodStockpileHappinessDivisor} in the
-            granary grants +1 happiness at income, up to +
-            {G.ruleset.economy.foodStockpileHappinessCap}. Hunger bites the other way: when income
-            cannot feed your freemen and citizens, one pop leaves per unfed mouth and the granary
-            stays at zero. Freemen leave before citizens.
+            Unrest tokens are the one part that stays. Cards, Laws and Directives place them: a
+            happiness loss of any size places one token, and a gain clears one. They cannot be
+            bought off. A riot or a revolt clears them all.
+          </Note>
+          <Note>
+            Hunger is separate: when income cannot feed your freemen and citizens, one pop leaves
+            per unfed mouth and the granary stays at zero. Freemen leave before citizens.
           </Note>
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">
           <Note>
             One civic calm per turn, both worth +{calm.happiness} happiness until your next turn
-            starts. Calm is not stored, and it does not count toward Beloved of the People. These
-            are base costs; the payment picker shows effective costs:
+            starts. It does not count toward Beloved of the People. These are base costs; the
+            payment picker shows effective costs:
           </Note>
           <DefList>
             <DefRow term="Stabilize Province">
@@ -734,9 +731,11 @@ const unrest: RuleChapter = {
         </Entry>
         <Entry id={anchor("unrest", "riot")} title="The riot table">
           <Note>
-            At EFFECTIVE happiness (stored + luxuries + calm) ≤ {u.popLossThreshold} at your turn
-            start, a riot rolls before income — declare insurance first (each once, +1 to the roll).
-            A revolt (≤ {u.severeThreshold}) rolls at {u.severeRollModifier} and doubles pop losses.
+            At a level of {u.riotThreshold} or below when your turn starts, your Unrest tokens clear
+            and a riot rolls before income. Declare insurance first (each once, +1 to the roll); the
+            concession demotes a citizen. Pop losses take slaves first, then freemen, then citizens.
+            At {u.revoltThreshold} or below it is a revolt instead: half your slaves leave, rounded
+            down, your tokens clear, and nothing is rolled.
           </Note>
           <p className="compendiumFlavor">{getRiotTable(G.definition.content).flavor}</p>
           <EventTableRows table={getRiotTable(G.definition.content)} result={null} />

@@ -1,8 +1,8 @@
-import type { Resource, Resources } from "../game/types";
+import type { Resource, Resources, Stat } from "../game/types";
 
 /** The frame's number and icon vocabulary, shared by its components. */
 
-export const RESOURCE_ICON: Record<Resource, string> = {
+export const RESOURCE_ICON: Record<Stat, string> = {
   wood: "resources/wood",
   stone: "resources/stone",
   food: "resources/food",

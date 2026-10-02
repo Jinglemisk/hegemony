@@ -31,10 +31,12 @@ const UNREST_WORD: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
   revolt: "Revolt",
 };
 
-function consequenceOf(tier: Exclude<UnrestStatus["tier"], "calm">, popLossThreshold: number) {
-  if (tier === "revolt") return "Rolls the severe riot table every turn until happiness recovers.";
-  if (tier === "unrest") return "Rolls the riot table every turn until happiness recovers.";
-  return `Pops start dying at ${formatNumber(popLossThreshold)} happiness.`;
+function consequenceOf(tier: Exclude<UnrestStatus["tier"], "calm">, riotThreshold: number) {
+  if (tier === "revolt")
+    return "Half your slaves leave at your next upkeep, and your Unrest tokens clear.";
+  if (tier === "unrest")
+    return "Your next upkeep clears your Unrest tokens and rolls the riot table.";
+  return `A riot starts at ${formatNumber(riotThreshold)} happiness.`;
 }
 
 /** The resource a mechanic moves, as the disc's picture. */
@@ -44,8 +46,6 @@ function iconOf(mechanic: ActiveEffectMechanic | undefined): string {
       return "market/income-suppressed";
     case "hunger":
       return RESOURCE_ICON.food;
-    case "timedHappiness":
-      return RESOURCE_ICON.happiness;
     case "resourceIncome":
       return RESOURCE_ICON[mechanic.resource];
     case "buildingCostMultiplier":
@@ -72,12 +72,12 @@ const SHOWN = (descriptor: ActiveEffectDescriptor) =>
 export function Alarms({
   effects,
   unrest,
-  popLossThreshold,
+  riotThreshold,
   content,
 }: {
   effects: readonly ActiveEffectDescriptor[];
   unrest: UnrestStatus;
-  popLossThreshold: number;
+  riotThreshold: number;
   content: GameContent;
 }) {
   const shown = effects.filter(SHOWN);
@@ -93,19 +93,22 @@ export function Alarms({
       {tier ? (
         <li>
           <Tooltip
-            ariaLabel={`${UNREST_WORD[tier]}, happiness ${formatNumber(unrest.happiness)}. ${consequenceOf(tier, popLossThreshold)}`}
+            ariaLabel={`${UNREST_WORD[tier]}, happiness ${formatNumber(unrest.happiness)}. ${consequenceOf(tier, riotThreshold)}`}
             content={
               <Tip sub={`happiness ${formatNumber(unrest.happiness)}`} title={UNREST_WORD[tier]}>
-                <p className="tip-body">{consequenceOf(tier, popLossThreshold)}</p>
-                {unrest.luxuryBonus !== 0 || unrest.calmBonus !== 0 ? (
+                <p className="tip-body">{consequenceOf(tier, riotThreshold)}</p>
+                {unrest.tokens !== 0 || unrest.calmBonus !== 0 ? (
                   <p className="tip-body">
-                    {formatNumber(unrest.storedHappiness)} stored
-                    {unrest.luxuryBonus !== 0
-                      ? `, ${formatSignedNumber(unrest.luxuryBonus)} from luxuries`
-                      : ""}
-                    {unrest.calmBonus !== 0
-                      ? `, ${formatSignedNumber(unrest.calmBonus)} from calm until your next turn`
-                      : ""}
+                    {[
+                      unrest.tokens !== 0
+                        ? `${formatNumber(unrest.tokens)} Unrest ${unrest.tokens === 1 ? "token" : "tokens"}`
+                        : null,
+                      unrest.calmBonus !== 0
+                        ? `${formatSignedNumber(unrest.calmBonus)} from calm until your next turn`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
                     .
                   </p>
                 ) : null}

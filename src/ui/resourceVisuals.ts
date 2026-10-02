@@ -1,14 +1,7 @@
 import type { CSSProperties } from "react";
-import type { Resource, Terrain, TileResource } from "../game/types";
+import type { Resource, Stat, Terrain, TileResource } from "../game/types";
 
-export const RESOURCE_ORDER: Resource[] = [
-  "wood",
-  "stone",
-  "gold",
-  "food",
-  "influence",
-  "happiness",
-];
+export const RESOURCE_ORDER: Resource[] = ["wood", "stone", "gold", "food", "influence"];
 
 type ResourceVisual = {
   color: string;
@@ -68,7 +61,7 @@ export const RESOURCE_VISUALS = {
     line: "rgb(47 125 70 / 50%)",
     shadow: "rgb(47 125 70 / 26%)",
   },
-} satisfies Record<Resource, ResourceVisual>;
+} satisfies Record<Stat, ResourceVisual>;
 
 // Yield-less terrains (Phase 2) have no resource to colour by, so they carry their own
 // palette. Hills read as bare, sun-baked building land (warm ochre-clay); the oracle
@@ -108,7 +101,7 @@ function toCssVars(visual: ResourceVisual): ResourceCssVars {
   };
 }
 
-export function resourceCssVars(resource: Resource): ResourceCssVars {
+export function resourceCssVars(resource: Stat): ResourceCssVars {
   return toCssVars(RESOURCE_VISUALS[resource]);
 }
 

@@ -70,10 +70,8 @@ export function victoryMetricValue(
       return wood + stone + gold + food;
     }
     case "happiness":
-      // Q44: active luxuries count toward Beloved. Calm does not: it lasts a turn.
-      return G.ruleset.economy.luxury.countsTowardBeloved
-        ? standingHappiness(G, playerID)
-        : player.resources.happiness;
+      // Beloved reads the level without calm, which lasts a year.
+      return standingHappiness(G, playerID);
     case "cities":
     case "pops":
     case "citizens": {
@@ -182,7 +180,7 @@ export function resolveDeckExhaustion(G: HegemonyState) {
     const cards = victoryCardsHeld(G, b) - victoryCardsHeld(G, a);
     if (cards !== 0) return cards;
 
-    const happiness = G.players[b].resources.happiness - G.players[a].resources.happiness;
+    const happiness = standingHappiness(G, b) - standingHappiness(G, a);
     if (happiness !== 0) return happiness;
 
     const pops = victoryMetricValue(G, b, "pops") - victoryMetricValue(G, a, "pops");

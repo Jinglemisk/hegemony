@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  applyHappinessSwing,
   applyUnrestUpkeep,
   drawPlayerEvent,
   getAddPopsEffect,
   getEventPopTargetTileIds,
+  happinessContributions,
+  happinessLevel,
   resolvePendingPlayerEvent,
+  standingHappiness,
   totalPops,
   unrestStatus,
 } from "./rules";
@@ -40,86 +44,111 @@ function setPops(G: HegemonyState, id: PlayerId, capital: Pops, colony: Pops) {
 
 const NONE: Pops = { citizens: 0, freemen: 0, slaves: 0 };
 
-describe("unrest upkeep", () => {
-  it("parks a mild riot at the -5 threshold instead of removing pops (D9)", () => {
+describe("the happiness level", () => {
+  it("is read off the board: Temples up, half the slaves and every token down", () => {
     const G = preloadedGame(SEED);
-    setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
-    G.players["0"].resources.happiness = -5;
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 2 });
+    ownedSettlements(G, "0")[0].buildings = ["temple"];
+    G.players["0"].unrestTokens = 1;
+
+    // +1 Temple, −2 for five slaves (the odd one is free), −1 token.
+    expect(happinessLevel(G, "0")).toBe(-2);
+    expect(happinessContributions(G, "0").map((term) => [term.id, term.amount])).toEqual([
+      ["temples", 1],
+      ["luxuries", 0],
+      ["slaves", -2],
+      ["tokens", -1],
+      ["calm", 0],
+    ]);
+  });
+
+  it("does not move on its own: the same board gives the same level next turn", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 4 }, NONE);
+
+    applyUnrestUpkeep(G, "0");
+    applyUnrestUpkeep(G, "0");
+
+    expect(happinessLevel(G, "0")).toBe(-2);
+    expect(G.pendingRiot).toBeNull();
+  });
+
+  it("counts calm for the year it was bought and leaves it out of Beloved", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 6 }, NONE);
+    G.players["0"].calmActive = true;
+
+    expect(happinessLevel(G, "0")).toBe(-1);
+    expect(standingHappiness(G, "0")).toBe(-3);
+
+    // Calm holds the riot off at this upkeep, then it is spent.
+    applyUnrestUpkeep(G, "0");
+    expect(G.pendingRiot).toBeNull();
+    expect(happinessLevel(G, "0")).toBe(-3);
+  });
+
+  it("turns a one-shot loss into one token and a gain into one token cleared", () => {
+    const G = preloadedGame(SEED);
+
+    applyHappinessSwing(G, "0", -3);
+    applyHappinessSwing(G, "0", -1);
+    expect(G.players["0"].unrestTokens).toBe(2);
+
+    applyHappinessSwing(G, "0", 5);
+    expect(G.players["0"].unrestTokens).toBe(1);
+    applyHappinessSwing(G, "0", 1);
+    applyHappinessSwing(G, "0", 1);
+    expect(G.players["0"].unrestTokens).toBe(0);
+  });
+});
+
+describe("unrest upkeep", () => {
+  it("at −3 clears the tokens and parks a riot, removing nobody until the roll", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 3, freemen: 3, slaves: 0 }, NONE);
+    G.players["0"].unrestTokens = 3;
 
     const before = playerPopTotal(G, "0");
     applyUnrestUpkeep(G, "0");
 
-    // The riot table replaces the old flat removal: nothing is lost until the roll.
-    expect(G.pendingRiot).toMatchObject({ playerID: "0", tier: "unrest", boughtInsurance: [] });
+    expect(G.pendingRiot).toEqual({ playerID: "0", boughtInsurance: [] });
     expect(playerPopTotal(G, "0")).toBe(before);
-    expect(G.players["0"].resources.happiness).toBe(-5);
+    expect(G.players["0"].unrestTokens).toBe(0);
+    expect(happinessLevel(G, "0")).toBe(0);
   });
 
-  it("parks a severe riot (revolt) at the -10 threshold — the rebound waits for the roll", () => {
+  it("at −6 revolts: half the slaves leave, the tokens clear, nothing is rolled", () => {
     const G = preloadedGame(SEED);
-    setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
-    G.players["0"].resources.happiness = -12;
+    setPops(G, "0", { citizens: 1, freemen: 1, slaves: 5 }, { citizens: 0, freemen: 0, slaves: 4 });
+    G.players["0"].unrestTokens = 2;
+    const rng = G.rng;
 
+    // −4 for nine slaves, −2 tokens.
+    expect(happinessLevel(G, "0")).toBe(-6);
     applyUnrestUpkeep(G, "0");
 
-    expect(G.pendingRiot).toMatchObject({ playerID: "0", tier: "revolt" });
-    expect(G.players["0"].resources.happiness).toBe(-12);
-  });
-
-  it("applies a timed happiness modifier each turn, then expires it", () => {
-    const G = preloadedGame(SEED);
-    setPops(G, "0", { citizens: 3, freemen: 0, slaves: 0 }, NONE);
-    G.players["0"].resources.happiness = 0;
-    // -1/turn for 3 turns keeps happiness above the -5 threshold throughout.
-    G.players["0"].timedHappinessModifiers = [
-      {
-        amountPerTurn: -1,
-        turnsRemaining: 3,
-        sourceCardId: "player-civil-discord",
-        sourceName: "Civil Discord",
-        sourceDeck: "player",
-        sourceScope: "activePlayer",
-      },
-    ];
-
-    applyUnrestUpkeep(G, "0");
-    expect(G.players["0"].resources.happiness).toBe(-1);
-    applyUnrestUpkeep(G, "0");
-    expect(G.players["0"].resources.happiness).toBe(-2);
-    applyUnrestUpkeep(G, "0");
-    expect(G.players["0"].resources.happiness).toBe(-3);
-    expect(G.players["0"].timedHappinessModifiers).toHaveLength(0);
-
-    // Expired: a fourth upkeep no longer moves happiness.
-    applyUnrestUpkeep(G, "0");
-    expect(G.players["0"].resources.happiness).toBe(-3);
-  });
-
-  it("does not drift happiness toward zero on its own", () => {
-    const G = preloadedGame(SEED);
-    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 0 }, NONE);
-    G.players["0"].resources.happiness = -3; // above the -5 threshold, no active cause
-
-    applyUnrestUpkeep(G, "0");
-
-    expect(G.players["0"].resources.happiness).toBe(-3);
+    expect(G.pendingRiot).toBeNull();
+    expect(G.rng).toBe(rng);
+    expect(ownedSettlements(G, "0").map((settlement) => settlement.pops.slaves)).toEqual([2, 3]);
+    expect(G.players["0"]).toMatchObject({ unrestTokens: 0, popsLostToUnrest: 4, revolts: 1 });
+    expect(playerPopTotal(G, "0")).toBe(7);
   });
 });
 
 describe("unrest status (ledger warning)", () => {
-  it("classifies the happiness tier and riot risk", () => {
+  it("classifies the level's tier and riot risk", () => {
     const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 0 }, NONE);
 
-    G.players["0"].resources.happiness = 3;
     expect(unrestStatus(G, "0").tier).toBe("calm");
 
-    G.players["0"].resources.happiness = -2;
+    G.players["0"].unrestTokens = 2;
     expect(unrestStatus(G, "0")).toMatchObject({ tier: "discontent", riotAtRisk: false });
 
-    G.players["0"].resources.happiness = -5;
-    expect(unrestStatus(G, "0")).toMatchObject({ tier: "unrest", riotAtRisk: true });
+    G.players["0"].unrestTokens = 3;
+    expect(unrestStatus(G, "0")).toMatchObject({ tier: "unrest", riotAtRisk: true, tokens: 3 });
 
-    G.players["0"].resources.happiness = -10;
+    G.players["0"].unrestTokens = 6;
     expect(unrestStatus(G, "0")).toMatchObject({ tier: "revolt", riotAtRisk: true });
   });
 });

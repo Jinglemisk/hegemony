@@ -20,6 +20,7 @@ import {
 import { totalPops } from "./core/pops";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { applyResourceDeltaWithFloors, createResourceDelta } from "./core/resources";
+import { applyHappinessSwing, describeHappinessSwing } from "./happiness";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { shuffleWithSeed } from "./core/rng";
@@ -220,39 +221,25 @@ function applyEventEffects(
           card.name,
         );
       }
-    } else if (effect.type === "happinessDelta") {
+    } else if (
+      effect.type === "happinessDelta" ||
+      effect.type === "timedHappinessDelta" ||
+      (effect.type === "scaledHappinessDelta" && effect.duration !== "season")
+    ) {
+      // There is no bank for a one-shot to land in: a loss of any size places one
+      // Unrest token and a gain clears one. Only the sign of the printed amount counts.
+      const amount =
+        effect.type === "happinessDelta"
+          ? effect.amount
+          : effect.type === "timedHappinessDelta"
+            ? effect.amountPerTurn
+            : effect.amountPerPops;
+
       for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        applyEventResourceDelta(
-          G,
-          playerID,
-          createResourceDelta("happiness", effect.amount),
-          card.name,
-        );
-      }
-    } else if (effect.type === "scaledHappinessDelta" && effect.duration !== "season") {
-      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        const amount = scaledByPops(
-          G,
-          playerID,
-          effect.amountPerPops,
-          effect.popStep,
-          effect.minimumMagnitude,
-        );
-        applyEventResourceDelta(G, playerID, createResourceDelta("happiness", amount), card.name);
-      }
-    } else if (effect.type === "timedHappinessDelta") {
-      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        G.players[playerID].timedHappinessModifiers.push({
-          amountPerTurn: effect.amountPerTurn,
-          turnsRemaining: effect.turns,
-          sourceCardId: card.id,
-          sourceName: card.name,
-          sourceDeck: card.deck,
-          sourceScope: effect.scope,
-        });
+        const swing = applyHappinessSwing(G, playerID, amount);
         addLog(
           G,
-          `${getPlayerName(G, playerID)} will feel ${formatRuleNumber(effect.amountPerTurn)} happiness per turn from ${card.name} for ${effect.turns} turns.`,
+          `${getPlayerName(G, playerID)} resolved ${card.name}: ${describeHappinessSwing(swing)}.`,
           playerID,
         );
       }
@@ -350,10 +337,9 @@ function applyEventResourceDelta(
 ) {
   const resources = G.players[playerID].resources;
 
-  // Harm cards can't take what isn't there: stocks clamp at zero. Happiness is the
-  // exception — it is a ledger that goes negative by design (unrest).
+  // Harm cards can't take what isn't there: stocks clamp at zero.
   for (const [resource, amount] of Object.entries(delta) as Array<[Resource, number]>) {
-    if (resource !== "happiness" && amount < 0) {
+    if (amount < 0) {
       const floor = G.ruleset.economy.stockpileFloors[resource] ?? 0;
       delta[resource] = -Math.min(-amount, Math.max(0, resources[resource] - floor));
     }

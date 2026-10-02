@@ -2,9 +2,9 @@ import { getAuthoredGameContent, getBuilding } from "../game/content";
 import type { GameContent } from "../game/content";
 import { seasonName, yearOf } from "../game/core/calendar";
 import { formatPopName, formatRuleNumber } from "../game/core/format";
-import type { BuildingId, PopType, Resource, Resources, SeasonName } from "../game/types";
+import type { BuildingId, PopType, Resource, Resources, SeasonName, Stat } from "../game/types";
 
-export const RESOURCE_LABELS: Record<Resource, string> = {
+export const RESOURCE_LABELS: Record<Stat, string> = {
   wood: "Wood",
   stone: "Stone",
   gold: "Gold",

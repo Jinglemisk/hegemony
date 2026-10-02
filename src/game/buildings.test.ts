@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildBuilding, collectIncome, movePops, upgradeColonyToCity } from "./actions";
 import { dole } from "./bank";
 import { calculateIncome, settlementNetYield } from "./economy/income";
-import { BANKED_HAPPINESS, happinessContributions } from "./happiness";
+import { happinessContributions, happinessLevel } from "./happiness";
 import { collectInvariantViolations } from "./invariants";
 import { enumerateLegalCommands } from "./legalMoves";
 import { claimableLuxuriesAt } from "./luxury";
@@ -213,7 +213,7 @@ describe("the Dole", () => {
 });
 
 describe("happiness as named terms", () => {
-  it("counts Temples, luxuries, slaves and calm, and banks only Temples and slaves", () => {
+  it("counts Temples, luxuries, slaves, tokens and calm, and income stores none of it", () => {
     const G = scenario()
       .withSettlement("0", FOREST, "city", { citizens: 0, freemen: 0, slaves: 5 })
       .withResources("0", { food: 0 })
@@ -223,21 +223,21 @@ describe("happiness as named terms", () => {
         draft.board.luxuries[0].owner = "0";
         draft.board.luxuries[0].claimedAtSettlementId = owned(draft, FOREST, "0").id;
         draft.players["0"].calmActive = true;
+        draft.players["0"].unrestTokens = 1;
       })
       .build();
 
     const terms = Object.fromEntries(
       happinessContributions(G, "0").map((term) => [term.id, term.amount]),
     );
-    // One Temple, one luxury at +2, five slaves at 1 per two, calm at +2.
-    expect(terms).toEqual({ temples: 1, luxuries: 2, slaves: -2, calm: 2 });
+    // One Temple, one luxury at +2, five slaves at 1 per two, one token, calm at +2.
+    expect(terms).toEqual({ temples: 1, luxuries: 2, slaves: -2, tokens: -1, calm: 2 });
+    expect(happinessLevel(G, "0")).toBe(2);
+    expect(calculateIncome(G, "0")).not.toHaveProperty("happiness");
 
-    const banked = happinessContributions(G, "0")
-      .filter((term) => BANKED_HAPPINESS.includes(term.id))
-      .reduce((sum, term) => sum + term.amount, 0);
-    expect(calculateIncome(G, "0").happiness).toBe(banked);
-
+    // Collecting income leaves the level where the board puts it.
     expect(collectIncome(G, "0").ok).toBe(true);
-    expect(G.players["0"].resources.happiness).toBe(-1);
+    expect(happinessLevel(G, "0")).toBe(2);
+    expect(G.players["0"].resources).not.toHaveProperty("happiness");
   });
 });

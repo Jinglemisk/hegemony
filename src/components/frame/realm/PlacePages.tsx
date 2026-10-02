@@ -159,7 +159,6 @@ export function LuxuryPage({ asset }: { asset: LuxuryAsset }) {
           Worth
           <span>
             <b>+{rules.happinessPerGood}</b> happiness while active
-            {rules.countsTowardBeloved ? ", toward Beloved" : ""}
           </span>
         </li>
         <li className="g-line is-wide">

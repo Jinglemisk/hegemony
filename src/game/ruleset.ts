@@ -35,7 +35,7 @@ export interface BankRules {
   scarce: BankRatePair;
 }
 
-/** Civic calm: one action per turn, two payments, the same +happiness. The bonus
+/** Civic calm: one action per turn, two payments, the same rise in the level. The bonus
  *  lasts until the buyer's next turn starts and is never banked. */
 export interface CivicCalmRules {
   happiness: number;
@@ -92,17 +92,9 @@ export interface SettlementRule {
 }
 
 export interface EconomyRules {
-  /** Happiness lost per pop above a settlement's capacity. */
-  overCapacityHappinessPerPop: number;
-  /** Every this many slaves in a realm cost 1 happiness, rounded down. */
+  /** Every this many slaves in a realm take 1 from the level, rounded down. */
   slavesPerUnhappiness: number;
-  /** Every N stored food grants +1 happiness at income time (0 disables). */
-  foodStockpileHappinessDivisor: number;
-  /** Ceiling on the food-stockpile happiness bonus, so hoards can't buy unlimited calm
-   *  (roadmap-appendix D4). 0 disables the bonus outright. */
-  foodStockpileHappinessCap: number;
-  /** Unrest thresholds & penalties (mapped from the rulebook's positive "Unrest N"
-   *  onto negative happiness). All evaluated in the start-of-turn unrest upkeep. */
+  /** The level's two lines, tested in the start-of-turn unrest upkeep. */
   unrest: UnrestRules;
   /** Bank exchange rates & derivation (D6/Q14). */
   bank: BankRules;
@@ -120,27 +112,15 @@ export interface LuxuryRules {
   /** Marker distribution: false = evenly spaced around the coast, true = a seeded
    *  random draw. A `?tune` A/B dial today, a game-setup option later. */
   randomPlacement: boolean;
-  /** Effective-happiness offset per ACTIVE good (Q43: a standing floor, never banked). */
+  /** What each active good adds to the level. */
   happinessPerGood: number;
-  /** Goods active at once per player; the rest stay owned-but-inactive trade assets. */
-  activeCapPerPlayer: number;
-  /** Q44: whether the offset also feeds the Beloved of the People victory metric. */
-  countsTowardBeloved: boolean;
 }
 
-/** Tunables for the unrest (negative-happiness) consequence system. Since D9 the
- *  thresholds trigger the riot TABLE (game/riot.ts) rather than flat pop removal;
- *  the old popLossCount/severePopLossCount fields fell away with that change. */
+/** The level's two lines. At or below the first a riot rolls on the riot table
+ *  (game/riot.ts); at or below the second a revolt sends half the slaves away. */
 export interface UnrestRules {
-  /** Happiness at/below this starts a mild riot at the player's next upkeep (no rebound). */
-  popLossThreshold: number;
-  /** Happiness at/below this starts a severe riot instead: the roll takes
-   *  `severeRollModifier`, pop losses ×`severePopLossMultiplier`, then happiness is
-   *  reset to `severeRebound`. Checked before the milder threshold. */
-  severeThreshold: number;
-  severeRollModifier: number;
-  severePopLossMultiplier: number;
-  severeRebound: number;
+  riotThreshold: number;
+  revoltThreshold: number;
 }
 
 /** The victory race (roadmap-appendix D1): five public "Most X, minimum Y" cards; the
@@ -257,11 +237,12 @@ export const DEFAULT_RULESET: Ruleset = {
     // Design rule (roadmap-appendix D1, 2026-07-12): no card may be holdable at game
     // start or on the first turn — every minimum sits above anything a legal setup
     // plus one lucky opening turn can produce (start: 1 city + 1 colony, 6 pops,
-    // ≤6 citizens, 52 banked materials, 0 happiness).
+    // ≤6 citizens, 52 banked materials, a level of 0). Beloved's 4 is the paper's:
+    // the level is a small number, so v1's 10 could never be met.
     cardsToWin: 3,
     // Voice is the permanent authored-and-passed Assembly ratchet. First to three
     // holds it until another seat strictly exceeds the holder's count.
-    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 10, voice: 3 },
+    minimums: { cities: 3, pops: 16, citizens: 8, stockpile: 80, happiness: 4, voice: 3 },
   },
   actionCosts: ACTION_COSTS,
   growPopCosts: GROW_POP_COSTS,
@@ -278,17 +259,8 @@ export const DEFAULT_RULESET: Ruleset = {
     slaves: { flat: {}, primaryResource: 1 },
   },
   economy: {
-    overCapacityHappinessPerPop: 1,
     slavesPerUnhappiness: 2,
-    foodStockpileHappinessDivisor: 5,
-    foodStockpileHappinessCap: 2,
-    unrest: {
-      popLossThreshold: -5,
-      severeThreshold: -10,
-      severeRollModifier: -2,
-      severePopLossMultiplier: 2,
-      severeRebound: -4,
-    },
+    unrest: { riotThreshold: -3, revoltThreshold: -6 },
     bank: {
       // One price per verb: every material sells 3 for 1 gold and costs 2 gold. The
       // scarcity classes stay as a knob for sims.
@@ -304,8 +276,6 @@ export const DEFAULT_RULESET: Ruleset = {
       coastalGoods: 6,
       randomPlacement: false,
       happinessPerGood: 2,
-      activeCapPerPlayer: 3,
-      countsTowardBeloved: true,
     },
   },
   civicCalm: { happiness: 2, influenceCost: 2, goldCost: 2 },
@@ -321,12 +291,13 @@ export const DEFAULT_RULESET: Ruleset = {
     firstYear: 2,
     lawCap: 6,
     // Material prizes are ~11–12% of one classic board's base production for that
-    // resource (44 food / 36 wood / 26 stone). Happiness uses civic-track scaling.
+    // resource (44 food / 36 wood / 26 stone). Stratokles pays gold: a prize is a
+    // stock, and happiness is no longer one.
     prizes: {
       demosthenes: { food: 5 },
       perdiccas: { stone: 3 },
       kleistophenes: { wood: 4 },
-      stratokles: { happiness: 2 },
+      stratokles: { gold: 2 },
     },
     drawCost: 3,
     redrawCost: 3,

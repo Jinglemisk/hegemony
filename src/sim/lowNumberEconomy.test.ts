@@ -68,14 +68,14 @@ describe("low-number economy study invariants", () => {
         demosthenes: { food: 2 },
         perdiccas: { stone: 2 },
         kleistophenes: { wood: 3 },
-        stratokles: { happiness: 1 },
+        stratokles: { gold: 1 },
       },
     });
     expect(ruleset.victory.minimums.cities).toBe(3);
     expect(ruleset.victory.minimums.voice).toBe(3);
     const streets = LOW_NUMBER_CONTENT.resolutions.find((card) => card.id === "the-streets-burn")!;
     expect(streets.kind === "directive" && streets.effects[0]).toMatchObject({ amount: -2 });
-    expect(streets.text).toContain("lose 2 happiness");
+    expect(streets.text).toContain("place an Unrest token");
     const bread = LOW_NUMBER_CONTENT.resolutions.find((card) => card.id === "bread-and-circuses")!;
     expect(bread.kind === "directive" && bread.effects).toMatchObject([
       { amount: 2 },
@@ -133,10 +133,10 @@ describe("low-number economy study invariants", () => {
       LOW_NUMBER_CONTENT.playerEvents.find((candidate) => candidate.id === id)!.text;
     expect(card("player-warehouse-fire")).toContain("Lose 2 Wood");
     expect(card("player-caravan-contacts")).toContain("up to 2 Wood for 3 Gold");
-    expect(card("player-civic-petition")).toBe("Gain 1 Influence, or gain 1 Happiness.");
+    expect(card("player-civic-petition")).toBe("Gain 1 Influence, or clear an Unrest token.");
     expect(
       LOW_NUMBER_CONTENT.seasonalEvents.find((event) => event.id === "season-plague")?.text,
-    ).toContain("loses 1 Happiness");
+    ).toContain("places an Unrest token");
   });
 
   it("keeps transformed resolution prose aligned with low-number mechanics", () => {

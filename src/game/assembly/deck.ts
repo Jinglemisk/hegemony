@@ -333,7 +333,7 @@ const KLEISTOPHENES_LAWS: LawCard[] = [
     politician: "kleistophenes",
     kind: "law",
     name: "Frontier Spirit",
-    text: "Founding a colony grants a freeman, but costs 2 happiness.",
+    text: "Founding a colony grants a freeman, but places an Unrest token.",
     tradeOff: "expansion has a human cost",
     effects: [{ type: "onFoundColony", grantPop: "freemen", happiness: -2 }],
   },
@@ -412,7 +412,7 @@ const STRATOKLES_DIRECTIVES: DirectiveCard[] = [
     kind: "directive",
     faction: "mob",
     name: "The Streets Burn",
-    text: "Choose a rival. They lose 3 happiness.",
+    text: "Choose a rival. They place an Unrest token.",
     effects: [{ type: "resourceDelta", resource: "happiness", amount: -3 }],
   },
   {
@@ -439,7 +439,7 @@ const STRATOKLES_DIRECTIVES: DirectiveCard[] = [
     kind: "directive",
     faction: "mob",
     name: "Bread and Circuses",
-    text: "Choose a rival. They gain 3 happiness and lose 5 gold.",
+    text: "Choose a rival. They clear an Unrest token and lose 5 gold.",
     effects: [
       { type: "resourceDelta", resource: "happiness", amount: 3 },
       { type: "resourceDelta", resource: "gold", amount: -5 },

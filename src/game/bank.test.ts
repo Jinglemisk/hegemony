@@ -100,7 +100,7 @@ describe("bank trades", () => {
 
   it("stays shut while a riot is pending — income comes before commerce", () => {
     const G = scenario().opening().mutate(clearPending).build();
-    G.pendingRiot = { playerID: "0", tier: "unrest", boughtInsurance: [] };
+    G.pendingRiot = { playerID: "0", boughtInsurance: [] };
 
     expect(bankSell(G, "0", "wood").ok).toBe(false);
     expect(bankBuy(G, "0", "wood").ok).toBe(false);

@@ -1,13 +1,23 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateIncome, createInitialState, startNewSeason } from "./rules";
+import { createInitialState, startNewSeason } from "./rules";
 import { scenario } from "./testing/scenario";
 import { createGame, endTurn } from "./turn";
 import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
 import { checkVictoryAtTurnStart, victoryCardsHeld, victoryStandings } from "./victory";
-import type { HegemonyState } from "./types";
+import type { HegemonyState, PlayerId } from "./types";
 
 const SEED = 0xc0ffee;
+
+/** Hand a player `count` unclaimed luxury goods: +2 happiness each. */
+function giveLuxuries(G: HegemonyState, playerID: PlayerId, count: number) {
+  G.board.luxuries
+    .filter((asset) => asset.owner === null)
+    .slice(0, count)
+    .forEach((asset) => {
+      asset.owner = playerID;
+    });
+}
 const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", true);
 
 /**
@@ -48,14 +58,18 @@ describe("victory card standings", () => {
   });
 
   it("leading below the minimum holds nothing", () => {
-    const G = scenario().opening().withHappiness("2", 9).build();
+    const G = scenario()
+      .opening()
+      .mutate((draft) => giveLuxuries(draft, "2", 3))
+      .withHappiness("2", 3)
+      .build();
 
-    // Player 2 leads happiness outright, but the minimum is +10.
+    // Player 2 leads happiness outright, but the minimum is +4.
     const happiness = victoryStandings(G).find((standing) => standing.card.metric === "happiness");
-    expect(happiness?.values["2"]).toBe(9);
+    expect(happiness?.values["2"]).toBe(3);
     expect(happiness?.holder).toBeNull();
 
-    G.players["2"].resources.happiness = 10;
+    G.players["2"].unrestTokens -= 1;
     const after = victoryStandings(G).find((standing) => standing.card.metric === "happiness");
     expect(after?.holder).toBe("2");
   });
@@ -74,10 +88,10 @@ describe("victory card standings", () => {
       .opening()
       .withSettlement("0", "0,0", "city", { citizens: 6, freemen: 4, slaves: 0 })
       .withSettlement("0", "1,-2", "city", { citizens: 0, freemen: 0, slaves: 0 })
-      .withHappiness("0", 12)
+      .mutate((draft) => giveLuxuries(draft, "0", 4))
       .build();
 
-    // Player 0: 3 cities (min 3) · 16 pops (min 16, sole lead) · happiness 12 (min 10).
+    // Player 0: 3 cities (min 3) · 16 pops (min 16, sole lead) · four luxuries (min 4).
     expect(victoryCardsHeld(G, "0")).toBeGreaterThanOrEqual(3);
 
     checkVictoryAtTurnStart(G);
@@ -111,7 +125,14 @@ describe("the seasonal deck is a finite clock", () => {
   it("resolves the exhaustion tally when the deck runs out: cards tie at zero, happiness decides", () => {
     // Nobody reaches a minimum from the opening, so cards tie at 0 and the tally
     // falls through to the happiness tiebreak.
-    const G = scenario().opening().withHappiness("3", 40).build();
+    const G = scenario()
+      .opening()
+      .mutate((draft) => {
+        for (const rival of ["0", "1", "2"] as const) {
+          draft.players[rival].unrestTokens = 5;
+        }
+      })
+      .build();
     G.seasonalDrawPile = [];
     const seasonBefore = G.season;
 
@@ -177,23 +198,6 @@ describe("phase-0 turn structure", () => {
       if (season === [...seasonTurns.keys()].pop()) continue; // last season may be partial
       expect(turns, `season ${season}`).toBe(4);
     }
-  });
-});
-
-describe("stockpile happiness cap", () => {
-  it("caps the food-stockpile bonus at the ruleset cap", () => {
-    const G = scenario().opening().build();
-    G.players["1"].resources.food = 60; // uncapped would be +12
-
-    const income = calculateIncome(G, "1");
-    const uncappedPortion = Math.floor(60 / G.ruleset.economy.foodStockpileHappinessDivisor);
-    expect(uncappedPortion).toBeGreaterThan(G.ruleset.economy.foodStockpileHappinessCap);
-
-    // The happiness income contains at most the cap from the stockpile; verify by
-    // comparing against the same position with a modest 10-food stockpile (= +2).
-    G.players["1"].resources.food = 10;
-    const modest = calculateIncome(G, "1");
-    expect(income.happiness).toBe(modest.happiness);
   });
 });
 

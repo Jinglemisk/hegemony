@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { civicCalm, demotePop, promotePop } from "./civic";
-import { effectiveHappiness, standingHappiness } from "./happiness";
+import { happinessLevel, standingHappiness } from "./happiness";
 import { applyUnrestUpkeep } from "./unrest";
 import { scenario, owned } from "./testing/scenario";
 import { TEST_OPENING_SETUP } from "./config";
@@ -15,21 +15,19 @@ const clearPending = (draft: HegemonyState) => {
 const P0_CAPITAL = TEST_OPENING_SETUP[0].capital.tileId;
 
 describe("civic calm", () => {
-  it("2 influence or 2 gold buys +2 that is never banked", () => {
+  it("2 influence or 2 gold buys +2 that Beloved does not read", () => {
     for (const payment of ["influence", "gold"] as const) {
       const G = scenario()
         .opening()
         .mutate(clearPending)
         .withResources("0", { [payment]: 2 })
         .build();
-      const banked = G.players["0"].resources.happiness;
-      const before = effectiveHappiness(G, "0");
+      const before = happinessLevel(G, "0");
 
       expect(civicCalm(G, "0", payment).ok).toBe(true);
 
       expect(G.players["0"].resources[payment]).toBe(0);
-      expect(G.players["0"].resources.happiness).toBe(banked);
-      expect(effectiveHappiness(G, "0")).toBe(before + 2);
+      expect(happinessLevel(G, "0")).toBe(before + 2);
       // Beloved reads happiness without it: calm cannot buy a victory card.
       expect(standingHappiness(G, "0")).toBe(before);
     }
@@ -40,16 +38,16 @@ describe("civic calm", () => {
       .opening()
       .mutate(clearPending)
       .withResources("0", { gold: 2 })
-      .withHappiness("0", -6)
+      .withHappiness("0", -4)
       .build();
 
     expect(civicCalm(G, "0", "gold").ok).toBe(true);
     applyUnrestUpkeep(G, "0");
 
-    // -6 + 2 stands above the -5 line, so no riot; the bonus is gone afterwards.
+    // -4 + 2 stands above the -3 line, so no riot; the bonus is gone afterwards.
     expect(G.pendingRiot).toBeNull();
     expect(G.players["0"].calmActive).toBe(false);
-    expect(effectiveHappiness(G, "0")).toBe(-6);
+    expect(happinessLevel(G, "0")).toBe(-4);
   });
 
   it("shares one throttle across both payments — calm must not stack", () => {
@@ -100,13 +98,12 @@ describe("the social ladder (D8)", () => {
       .setPops("0", P0_CAPITAL, { citizens: 0, freemen: 2, slaves: 0 })
       .withResources("0", { influence: 1 })
       .build();
-    const happiness = G.players["0"].resources.happiness;
 
     expect(demotePop(G, "0", P0_CAPITAL, "freemen").ok).toBe(true);
 
     expect(owned(G, P0_CAPITAL, "0").pops).toEqual({ citizens: 0, freemen: 1, slaves: 1 });
     expect(G.players["0"].resources.influence).toBe(0);
-    expect(G.players["0"].resources.happiness).toBe(happiness);
+    expect(G.players["0"].unrestTokens).toBe(0);
   });
 
   it("one ladder move per turn, shared between promote and demote", () => {
@@ -129,12 +126,10 @@ describe("the social ladder (D8)", () => {
       .setPops("0", P0_CAPITAL, { citizens: 2, freemen: 1, slaves: 0 })
       .withResources("0", { influence: 0 })
       .build();
-    G.pendingRiot = { playerID: "0", tier: "unrest", boughtInsurance: [] };
-    const happiness = G.players["0"].resources.happiness;
+    G.pendingRiot = { playerID: "0", boughtInsurance: [] };
 
     // No influence, still legal.
     expect(demotePop(G, "0", P0_CAPITAL, "freemen").ok).toBe(true);
-    expect(G.players["0"].resources.happiness).toBe(happiness);
     expect(G.players["0"].ladderUsedThisTurn).toBe(false);
 
     // But only for the rioting player — everyone else waits out the blockade.

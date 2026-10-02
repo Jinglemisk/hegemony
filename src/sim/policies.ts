@@ -1,17 +1,14 @@
 import { calculateIncome, getHungerStatus } from "../game/economy/income";
 import { applyHunger } from "../game/hunger";
+import { happinessLevel, standingHappiness } from "../game/happiness";
+import { removePops } from "../game/tables";
 import { getActiveEffects } from "../game/activeEffects";
 import { applyResourceDeltaWithFloors } from "../game/core/resources";
-import {
-  getAuthoredGameContent,
-  getResolutionCard,
-  getResolutionCards,
-  getRiotTable,
-} from "../game/content";
-import type { GameContent } from "../game/content";
+import { getResolutionCard, getResolutionCards } from "../game/content";
 import { getTile } from "../game/core/query";
 import {
   canPlaceColonyOnTile,
+  countPlayerPopType,
   settlementCapacity,
   settlementOpenSlots,
   settlementWorkingSlaves,
@@ -27,12 +24,7 @@ import {
 import type { AssemblySession, BallotItem, ResolutionCard } from "../game/assembly";
 import type { GameCommand } from "../game/legalMoves";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
-import {
-  activeClaims,
-  claimableLuxuriesAt,
-  luxuryHappinessBonus,
-  ownedClaims,
-} from "../game/luxury";
+import { activeClaims, claimableLuxuriesAt, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
 import { victoryCardsHeld } from "../game/victory";
 import type { HegemonyState, PlayerId, Pops } from "../game/types";
@@ -249,9 +241,9 @@ export const smartPolicy: Policy = {
 };
 
 /** How many turns of income the greedy score projects forward. The horizon is
- *  what lets one-ply search see delayed payoffs: a granary's +2 food/turn or a
- *  temple's +1 happiness/turn are invisible at the moment of purchase and only
- *  become worth their cost when multiplied out. */
+ *  what lets one-ply search see delayed payoffs: a class building's raise is
+ *  invisible at the moment of purchase and only becomes worth its cost when
+ *  multiplied out. */
 const INCOME_HORIZON = 6;
 export type PolicyUnrestExposure = {
   minimumHappiness: number;
@@ -279,14 +271,8 @@ export function projectPolicyHorizon(
   const projectedState = createPolicyProjectionState(G, playerID);
   const player = projectedState.players[playerID];
   let expectedStarvationPopLoss = 0;
-  // The luxury standing offset (Q43): a constant floor over the whole horizon —
-  // claims don't move during a projection — read through the engine's own selector
-  // so the risk term tests the same EFFECTIVE line the riot upkeep does.
-  const luxuryBonus = luxuryHappinessBonus(G, playerID);
-  // Calm bought this turn stands for the next upkeep only.
-  const calmBonus = player.calmActive ? G.ruleset.civicCalm.happiness : 0;
   const unrest: PolicyUnrestExposure = {
-    minimumHappiness: player.resources.happiness + luxuryBonus + calmBonus,
+    minimumHappiness: happinessLevel(projectedState, playerID),
     mildRiotEvents: 0,
     severeRiotEvents: 0,
     riskPenalty: 0,
@@ -300,29 +286,33 @@ export function projectPolicyHorizon(
   );
 
   for (let step = 0; step < horizon; step += 1) {
-    for (const mechanic of mechanics) {
-      if (mechanic.type === "timedHappiness" && step < mechanic.turns) {
-        player.resources.happiness += mechanic.amountPerTurn;
-      }
-    }
-
-    // The engine checks unrest at every start-of-turn upkeep, before income.
-    // Record every exposure rather than judging only the terminal happiness.
-    const standing = player.resources.happiness + luxuryBonus + (step === 0 ? calmBonus : 0);
-    unrest.minimumHappiness = Math.min(unrest.minimumHappiness, standing);
-    const upkeepRisk = evaluatePolicyUnrestRisk(
-      projectedState.ruleset,
-      standing,
-      projectedState.definition.content,
-    );
+    // The engine checks unrest at every start-of-turn upkeep, before income. The
+    // level is a state, so a bad one is met again at every upkeep of the horizon
+    // until something on the board changes. Calm counts at the next upkeep only.
+    const level =
+      step === 0
+        ? happinessLevel(projectedState, playerID)
+        : standingHappiness(projectedState, playerID);
+    unrest.minimumHappiness = Math.min(unrest.minimumHappiness, level);
+    const upkeepRisk = evaluatePolicyUnrestRisk(projectedState.ruleset, level);
     unrest.riskPenalty += upkeepRisk.scorePenalty;
 
     if (upkeepRisk.tier === "revolt") {
+      // A revolt draws no dice, so the projection runs it: half the slaves leave
+      // and the tokens clear.
       unrest.severeRiotEvents += 1;
-      // Severe riots always rebound after resolution, independent of the roll.
-      player.resources.happiness = projectedState.ruleset.economy.unrest.severeRebound;
+      removePops(
+        projectedState,
+        playerID,
+        Math.floor(countPlayerPopType(projectedState, playerID, "slaves") / 2),
+        ["slaves"],
+      );
+      player.unrestTokens = 0;
+      income = calculateIncome(projectedState, playerID);
     } else if (upkeepRisk.tier === "unrest") {
+      // A riot spends the tokens; what the table then takes is unknown.
       unrest.mildRiotEvents += 1;
+      player.unrestTokens = 0;
     }
 
     if (suppressedCollections > 0) {
@@ -384,9 +374,6 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
       [playerID]: {
         ...originalPlayer,
         resources: { ...originalPlayer.resources },
-        timedHappinessModifiers: originalPlayer.timedHappinessModifiers.map((modifier) => ({
-          ...modifier,
-        })),
       },
     },
   };
@@ -403,10 +390,8 @@ export const POLICY_UNREST_WEIGHTS = {
   bufferMaxPenalty: 10,
   /** Historical evaluator charged about 50 score at the default mild threshold. */
   mildRiotPenalty: 50,
-  /** A revolt always retains at least one mild-riot unit of strategic danger. */
-  severeMultiplierFloor: 1,
-  /** How strongly the public severe roll shift scales the revolt penalty. */
-  severeRollShiftWeight: 1,
+  /** A revolt takes half the slaves outright, so it is charged as two riots. */
+  revoltMultiplier: 2,
 } as const;
 
 export type PolicyUnrestRisk = {
@@ -419,42 +404,28 @@ export type PolicyUnrestRisk = {
  * consequences. This is a deterministic strategic ramp, not an expected riot-table
  * payout: conditional resources, buildings, insurance, and future RNG stay unknown.
  */
-export function evaluatePolicyUnrestRisk(
-  ruleset: Ruleset,
-  happiness: number,
-  content: GameContent = getAuthoredGameContent(),
-): PolicyUnrestRisk {
+export function evaluatePolicyUnrestRisk(ruleset: Ruleset, happiness: number): PolicyUnrestRisk {
   const unrest = ruleset.economy.unrest;
-  const bufferWidth = Math.max(1, unrest.popLossThreshold - unrest.severeThreshold);
+  const bufferWidth = Math.max(1, unrest.riotThreshold - unrest.revoltThreshold);
 
-  if (happiness > unrest.popLossThreshold) {
-    const proximity = Math.max(0, 1 - (happiness - unrest.popLossThreshold) / bufferWidth);
+  if (happiness > unrest.riotThreshold) {
+    const proximity = Math.max(0, 1 - (happiness - unrest.riotThreshold) / bufferWidth);
     return {
       tier: proximity > 0 ? "buffer" : "safe",
       scorePenalty: POLICY_UNREST_WEIGHTS.bufferMaxPenalty * proximity,
     };
   }
 
-  if (happiness > unrest.severeThreshold) {
+  if (happiness > unrest.revoltThreshold) {
     return {
       tier: "unrest",
       scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty,
     };
   }
 
-  const die = getRiotTable(content).die ?? 6;
-  const popLossSeverity = Math.max(
-    POLICY_UNREST_WEIGHTS.severeMultiplierFloor,
-    unrest.severePopLossMultiplier,
-  );
-  const rollShiftSeverity = Math.max(
-    0.5,
-    1 - (POLICY_UNREST_WEIGHTS.severeRollShiftWeight * unrest.severeRollModifier) / die,
-  );
-
   return {
     tier: "revolt",
-    scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty * popLossSeverity * rollShiftSeverity,
+    scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty * POLICY_UNREST_WEIGHTS.revoltMultiplier,
   };
 }
 
@@ -469,9 +440,25 @@ export function evaluatePolicyUnrestRisk(
  * term prices the nonlinear riot and revolt thresholds.
  *
  * The projection runs through calculateIncome — the engine's own formula — so
- * the score sees food-shortage pressure, the stockpile happiness bonus,
- * building income, and seasonal modifiers without duplicating any of them.
+ * the score sees food-shortage pressure, building income, and seasonal modifiers
+ * without duplicating any of them.
  */
+/** Score per point of the standing level. The level holds every turn, so a point is
+ *  worth about what +1 happiness a turn was over half the horizon. */
+const LEVEL_WEIGHT = INCOME_HORIZON;
+
+/**
+ * What the standing level is worth, calm left out as Beloved leaves it out. Capped a
+ * little past Beloved's minimum: below the cap it prices the card and distance from
+ * the riot line, and past it more happiness buys nothing. The unrest risk term prices
+ * the lines themselves.
+ */
+function levelValue(G: HegemonyState, playerID: PlayerId): number {
+  const cap = G.ruleset.victory.minimums.happiness + 2;
+
+  return LEVEL_WEIGHT * Math.min(standingHappiness(G, playerID), cap);
+}
+
 function evaluate(G: HegemonyState, playerID: PlayerId): number {
   const player = G.players[playerID];
   const projection = projectPolicyHorizon(G, playerID);
@@ -486,16 +473,10 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
     standings.pops +
     Math.floor(material / materialDivisor) -
     2 * projection.expectedStarvationPopLoss;
-  // Cap the happiness reward: below the cap it prices riot avoidance and the
-  // Beloved card (min +10); past it, more calm is wasted coin — an uncapped term
-  // had greedy bots pumping civic calm to +95 happiness. EFFECTIVE happiness (the
-  // luxury offset included) is what the thresholds and Beloved actually read.
-  const projectedHappiness = Math.min(projected.happiness + luxuryHappinessBonus(G, playerID), 15);
-
   return (
     100 * victoryCardsHeld(G, playerID) +
     10 * heuristic +
-    2 * projectedHappiness +
+    levelValue(G, playerID) +
     player.resources.influence -
     projection.unrest.riskPenalty
   );
@@ -511,8 +492,8 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
 const SMART_POP_WEIGHT = { citizens: 3, freemen: 2, slaves: 1.2 };
 const SMART_MATERIAL_WEIGHT = { food: 0.4, wood: 0.6, stone: 0.85, gold: 1 };
 const SMART_VICTORY_CARD_VALUE = 120;
-/** Score per ACTIVE luxury good: its +2 offset × the 6-turn horizon × the happiness
- *  term's ×2, times a permanence premium — the claim outlives any projection
+/** Score per ACTIVE luxury good, on top of what its +2 adds to the level: a
+ *  permanence premium — the claim outlives any projection
  *  horizon, is a monopoly (denied to rivals), and is the future trade currency.
  *  At ~36 versus the Port's ~33-score cost the build clears without dominating
  *  every other verb; the A/B campaigns own the fine tuning. */
@@ -591,12 +572,10 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
     LUXURY_HORIZON_WEIGHT * active +
     (LUXURY_HORIZON_WEIGHT / 2) * (ownedClaims(G, playerID).length - active);
 
-  const projectedHappiness = Math.min(projected.happiness + luxuryHappinessBonus(G, playerID), 15);
-
   return (
     SMART_VICTORY_CARD_VALUE * victoryCardsHeld(G, playerID) +
     10 * heuristic +
-    2 * projectedHappiness +
+    levelValue(G, playerID) +
     2 * player.resources.influence +
     luxuryValue -
     projection.unrest.riskPenalty

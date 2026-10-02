@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildBuilding, growPop, upgradeColonyToCity } from "./actions";
 import { calculateIncomeBreakdown, settlementNetYield } from "./economy/income";
+import { happinessContributions } from "./happiness";
 import { enumerateLegalCommands } from "./legalMoves";
 import { DEFAULT_RULESET } from "./ruleset";
 import {
@@ -46,9 +47,7 @@ describe("work slots", () => {
     expect(income.wood).toBe(3);
     // Slaves eat nothing. Their unrest is the realm's line, idle ones included.
     expect(income.food).toBe(0);
-    expect(
-      calculateIncomeBreakdown(G, "0").find((line) => line.resource === "happiness")?.amount,
-    ).toBe(-2);
+    expect(happinessContributions(G, "0").find((term) => term.id === "slaves")?.amount).toBe(-2);
   });
 
   it("prints no yield on the tile: an empty settlement makes nothing", () => {

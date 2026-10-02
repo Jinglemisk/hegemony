@@ -1,3 +1,4 @@
+import { applyHappinessSwing, describeHappinessSwing } from "../happiness";
 import { PLAYER_IDS } from "../data";
 import type { HegemonyState, PlayerId } from "../types";
 import { isNewYear, yearOf } from "../core/calendar";
@@ -868,9 +869,19 @@ function applyDirectiveEffect(
 ) {
   switch (effect.type) {
     case "resourceDelta": {
+      if (effect.resource === "happiness") {
+        const swing = applyHappinessSwing(G, target, effect.amount);
+        addLog(
+          G,
+          `${card.name}: ${getPlayerName(G, target)} ${describeHappinessSwing(swing)}.`,
+          target,
+        );
+        break;
+      }
+
       const resources = G.players[target].resources;
       const amount =
-        effect.resource === "happiness" || effect.amount >= 0
+        effect.amount >= 0
           ? effect.amount
           : -Math.min(-effect.amount, Math.max(0, resources[effect.resource]));
       resources[effect.resource] += amount;

@@ -609,7 +609,7 @@ describe("author prizes and permanent Voice progress", () => {
     ["land-reform", "food", 5],
     ["public-works", "stone", 3],
     ["homestead-act", "wood", 4],
-    ["the-streets-burn", "happiness", 2],
+    ["the-streets-burn", "gold", 2],
   ] as const)(
     "pays %s's politician prize exactly once to its author",
     (cardId, resource, amount) => {
@@ -713,16 +713,15 @@ describe("Directives: one-time and rival-targeted", () => {
     expect(G.players["3"].resources.food).toBe(11);
   });
 
-  it("The Streets Burn takes 3 happiness only from its rival, into the negative", () => {
+  it("The Streets Burn places one Unrest token on its rival and nobody else", () => {
     const G = atAssembly();
-    const before = PLAYER_IDS.map((playerID) => G.players[playerID].resources.happiness);
-    G.players["1"].resources.happiness = 1;
+    const before = PLAYER_IDS.map((playerID) => G.players[playerID].unrestTokens);
 
     carryResolution(G, "the-streets-burn", undefined, "0", "1");
 
-    expect(G.players["1"].resources.happiness).toBe(-2);
-    expect(G.players["0"].resources.happiness).toBe(before[0] + 2); // Stratokles author prize
-    expect(G.players["3"].resources.happiness).toBe(before[3]);
+    expect(PLAYER_IDS.map((playerID) => G.players[playerID].unrestTokens)).toEqual(
+      before.map((tokens, seat) => tokens + (seat === 1 ? 1 : 0)),
+    );
   });
 
   it("General Strike suppresses one income collection for its chosen rival", () => {
@@ -735,7 +734,6 @@ describe("Directives: one-time and rival-targeted", () => {
     expect(G.players["2"].incomeSuppressedTurns).toBe(0);
 
     // The strike costs the income, not the tempo: the turn still opens and passes.
-    G.players["1"].resources.happiness = 5; // keep the upkeep from starting a riot
     const gold = G.players["1"].resources.gold;
     expect(closeAssembly(G).ok).toBe(true);
 
@@ -773,13 +771,13 @@ describe("Directives: one-time and rival-targeted", () => {
     const G = atAssembly();
     G.players["0"].resources.gold = 12;
     G.players["1"].resources.gold = 2;
-    const targetHappiness = G.players["1"].resources.happiness;
+    G.players["1"].unrestTokens = 2;
 
     carryResolution(G, "bread-and-circuses", undefined, "0", "1");
 
-    expect(G.players["1"].resources.happiness).toBe(targetHappiness + 3);
+    expect(G.players["1"].unrestTokens).toBe(1);
     expect(G.players["1"].resources.gold).toBe(0);
-    expect(G.players["0"].resources.gold).toBe(12);
+    expect(G.players["0"].resources.gold).toBe(14); // 12 and Stratokles's author prize
   });
 
   it("The Stele Is Broken throws down the target's newest authored standing Law", () => {

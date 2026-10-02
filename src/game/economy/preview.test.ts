@@ -62,7 +62,7 @@ describe("income previews come from the engine", () => {
   it("answers even when the action is unaffordable — the whole reason it exists", () => {
     const G = scenario().opening().build();
     // Strip the treasury bare: the player could never pay for this.
-    G.players["0"].resources = { wood: 0, stone: 0, gold: 0, food: 0, influence: 0, happiness: 0 };
+    G.players["0"].resources = { wood: 0, stone: 0, gold: 0, food: 0, influence: 0 };
 
     // A Granary still yields its food; the preview must say so on a dead button.
     expect(previewBuildingIncomeDelta(G, "0", FIRST_CITY, "granary").food).toBeGreaterThan(0);

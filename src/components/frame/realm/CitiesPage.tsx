@@ -90,7 +90,7 @@ export function CitiesPage({
           pops === 0
             ? "stands empty"
             : over > 0
-              ? `over its walls · −${over} happiness`
+              ? "over its walls"
               : pops >= capacity
                 ? "at capacity"
                 : null;

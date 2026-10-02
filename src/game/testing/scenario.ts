@@ -1,3 +1,4 @@
+import { standingHappiness } from "../happiness";
 import { TEST_OPENING_SETUP } from "../config";
 import { placeCapital, placeColony } from "../actions";
 import { clonePops } from "../core/pops";
@@ -126,7 +127,6 @@ export class ScenarioBuilder {
         gold: 200,
         food: 200,
         influence: 0,
-        happiness: 0,
       });
     } else {
       Object.assign(target, resources);
@@ -135,8 +135,16 @@ export class ScenarioBuilder {
     return this;
   }
 
-  withHappiness(playerID: PlayerId, happiness: number): this {
-    this.G.players[playerID].resources.happiness = happiness;
+  /** Place the Unrest tokens that bring the player's standing level down to `level`.
+   *  The level is derived, so a test cannot set it higher than the board gives. */
+  withHappiness(playerID: PlayerId, level: number): this {
+    const tokens =
+      standingHappiness(this.G, playerID) + this.G.players[playerID].unrestTokens - level;
+
+    if (tokens < 0) {
+      throw new Error(`the board gives player ${playerID} less than ${level} happiness`);
+    }
+    this.G.players[playerID].unrestTokens = tokens;
     return this;
   }
 

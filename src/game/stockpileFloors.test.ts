@@ -73,7 +73,6 @@ describe("configured stockpile floors", () => {
       gold: 0,
       food: 1,
       influence: 0,
-      happiness: 0,
     };
     const delta: Resources = {
       wood: -3,
@@ -81,11 +80,10 @@ describe("configured stockpile floors", () => {
       gold: 0,
       food: -3,
       influence: -3,
-      happiness: -3,
     };
     applyResourceDeltaWithFloors(resources, delta, { wood: 0, influence: 0 });
 
-    expect(resources).toMatchObject({ wood: 0, food: -2, influence: 0, happiness: -3 });
+    expect(resources).toMatchObject({ wood: 0, food: -2, influence: 0 });
     expect(canAfford(resources, { wood: 1 })).toBe(false);
   });
 });
