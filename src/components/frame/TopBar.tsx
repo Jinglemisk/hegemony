@@ -57,10 +57,8 @@ function Clock({ G }: { G: HegemonyState }) {
           focusable
           triggerClassName="yearcard"
         >
-          <span className="yearcard-name" data-truncates="summary">
-            {card.name}
-          </span>
-          <span className="yearcard-rule" data-truncates="summary">
+          <span className="yearcard-name">{card.name}</span>
+          <span className="yearcard-rule">
             <EffectLine effect={presentYearCard(card)} links={false} />
           </span>
         </Tooltip>

@@ -539,11 +539,10 @@ export const YEAR_TERM_LABELS: Record<YearTerm, string> = {
   luxuryHappiness: "Luxuries give no happiness",
 };
 
-/** A year card as one presented line: the term it zeroes, or what it does to the
- *  Unrest tokens. */
+/** The clock's compact effect line; the year counter and tooltip give its duration. */
 export function presentYearCard(card: YearCard): EffectPresentation {
   if (card.effect.type === "zeroTerm") {
-    return { text: `${YEAR_TERM_LABELS[card.effect.term]} this year`, tone: "negative" };
+    return { text: YEAR_TERM_LABELS[card.effect.term], tone: "negative" };
   }
 
   return card.effect.change === "placeOne"
