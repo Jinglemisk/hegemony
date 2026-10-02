@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-01.
+Last updated: 2026-10-02.
 
 ## Now
 
@@ -23,7 +23,7 @@ precedes full multiplayer.
 
 | Plan                                                | Phase    | Status    | Position                                                                         |
 | --------------------------------------------------- | -------- | --------- | -------------------------------------------------------------------------------- |
-| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 4: buildings and prices; Step 3 shipped (#82)                               |
+| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 5: happiness, blocked on Q77; Step 4 shipped (#83)                          |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze |
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged            |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                        |

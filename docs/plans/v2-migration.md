@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-01
+updated: 2026-10-02
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -327,7 +327,7 @@ Remind the owner to run `/code-review ultra` on `feat/v2`, which only they can l
       tile and split its slots; an upgrade evicts the other. Citizens come only by
       promotion. Record as defaults the re-numbered slot table, who takes the odd slot on a
       shared tile, and the starting food (12 today, unruled for v2).
-- [ ] **Step 4 · Buildings and prices.** Marketplace, Estate and Forum raise their class
+- [x] **Step 4 · Buildings and prices.** ([#83](https://github.com/Jinglemisk/hegemony/pull/83): a 40-game bot batch finishes with no illegal moves; the riot table opens on 15% of player-turns, 19% without the food-stockpile bonus and 5% with calm banked; hunger takes 6.2 to 7.9 pops a seat-game and is the bots' doing. [Report](../reports/simulation/2026-10-02-v2-step4-bank-and-food.md).) Marketplace, Estate and Forum raise their class
       column; Temple, Granary and Port state one fact each; one of each per settlement.
       Workshop and Villa merge into the Estate; Odeon, Aqueduct and Gymnasion are cut. One
       price per verb, per the paper's section 5.6, including the Dole and the paid pop move.
