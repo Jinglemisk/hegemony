@@ -28,12 +28,11 @@ import {
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
-import { applyHappinessSwing, describeHappinessSwing } from "./happiness";
+import { applyUnrestTokenChange, describeUnrestTokenChange } from "./happiness";
 import { setupCapitalCount } from "./ruleset";
 import { calculateIncome, getHungerStatus } from "./economy/income";
 import { applyHunger } from "./hunger";
 import { describeRemoval } from "./tables";
-import { consumeActionCostDiscounts } from "./economy/cost";
 import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
@@ -42,7 +41,7 @@ import {
   getUpgradeColonyToCityStatus,
 } from "./status";
 import { drawPlayerEvent } from "./events";
-import { consumeLawFreeAction, getFoundColonyRiders } from "./assembly/laws";
+import { getFoundColonyRiders } from "./assembly/laws";
 import { allocateEntityId } from "./entity";
 
 export function placeCapital(
@@ -207,10 +206,6 @@ export function foundColony(
   }
 
   payCost(G.players[playerID].resources, status.cost ?? G.ruleset.actionCosts.foundColony);
-  consumeActionCostDiscounts(G, playerID, "foundColony");
-  // Spend the year's free-colony coupon (Land Rush) only now the move has committed —
-  // a refused founding must never burn it.
-  consumeLawFreeAction(G, playerID, "foundColony");
   addColony(G, playerID, tile, EMPTY_POPS, colonyId);
   applyFoundColonyRiders(G, playerID, tile);
   addLog(
@@ -237,9 +232,9 @@ function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexT
       }
     }
 
-    if (rider.happiness) {
-      const swing = applyHappinessSwing(G, playerID, rider.happiness);
-      addLog(G, `${rider.label}: the parting ${describeHappinessSwing(swing)}.`);
+    if (rider.unrestTokens) {
+      const swing = applyUnrestTokenChange(G, playerID, rider.unrestTokens);
+      addLog(G, `${rider.label}: the parting ${describeUnrestTokenChange(swing)}.`);
     }
   }
 }
@@ -397,8 +392,6 @@ export function buildBuilding(
   }
 
   payCost(G.players[playerID].resources, status.cost ?? building.cost);
-  consumeActionCostDiscounts(G, playerID, "buildBuilding", building.id);
-  consumeLawFreeAction(G, playerID, "buildBuilding");
   settlement.buildings.push(building.id);
 
   if (claim) {
@@ -437,7 +430,6 @@ export function growPop(
   }
 
   payCost(G.players[playerID].resources, status.cost);
-  consumeActionCostDiscounts(G, playerID, "growPop", undefined, pop);
   settlement.pops[pop] += 1;
   markSettlementGrown(G, playerID, tileId);
   addLog(

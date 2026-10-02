@@ -130,13 +130,8 @@ const TOKEN_PATTERN = new RegExp(
  * matching them verbatim (case included) needs no capitalisation heuristic,
  * which would have misfired on every sentence start and every player name.
  *
- * Two filters keep the list honest, and both matter:
- *
- * · Only titles that a term can actually collide with are listed — a name the
- *   tokeniser never matches has nothing to protect.
- * · A title that IS the term is left alone. "Ada built Granary." names the
- *   granary and means the granary, so the glyph there is right; only a compound
- *   like "Granary Rats", where the word no longer denotes the thing, is muted.
+ * Card titles are protected even when a title is also a glossary term, such as
+ * Patronage. Buildings that name the glossary term itself still get their glyph.
  *
  * Derived at module load, so authoring a new card extends the list for free —
  * and `AnnotatedText.test.tsx` walks every authored name to prove it.
@@ -156,7 +151,11 @@ const PROPER_NAMES: string[] = (() => {
     .map((authored) => authored.name)
     .filter((name) => {
       TOKEN_PATTERN.lastIndex = 0;
-      return TOKEN_PATTERN.test(name) && !(name.toLowerCase() in TOKEN_MAP);
+      return (
+        TOKEN_PATTERN.test(name) &&
+        (!(name.toLowerCase() in TOKEN_MAP) ||
+          content.playerEvents.some((card) => card.name === name))
+      );
     })
     .sort((a, b) => b.length - a.length);
 })();

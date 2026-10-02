@@ -29,14 +29,14 @@ describe("behavioral command-consumer parity", () => {
     moves.buildBuilding("tile-a", "marketplace");
     moves.growPop("tile-a", "citizens");
     moves.movePops("tile-a", "tile-b", pops);
-    moves.resolvePendingPlayerEvent("tile-a", 2);
+    moves.resolvePendingPlayerEvent("tile-a");
     moves.bankSell("wood");
     moves.bankBuy("stone");
     moves.dole();
     moves.civicCalm("influence");
     moves.promotePop("tile-a", "freemen");
     moves.demotePop("tile-a", "citizens");
-    moves.fundExpedition("merchantConvoy", "gold");
+    moves.fundExpedition("merchantConvoy");
     moves.buyRiotInsurance("concession", { tileId: "tile-a", from: "citizens" });
     moves.resolveRiot();
     moves.assemblyDraw("1", "demosthenes");
@@ -74,7 +74,7 @@ describe("behavioral command-consumer parity", () => {
         actor: undefined,
       },
       {
-        command: { type: "resolveEvent", choiceIndex: 2, targetTileId: "tile-a" },
+        command: { type: "resolveEvent", targetTileId: "tile-a" },
         actor: undefined,
       },
       { command: { type: "bankSell", material: "wood" }, actor: undefined },
@@ -90,7 +90,7 @@ describe("behavioral command-consumer parity", () => {
         actor: undefined,
       },
       {
-        command: { type: "fundExpedition", expeditionId: "merchantConvoy", stake: "gold" },
+        command: { type: "fundExpedition", expeditionId: "merchantConvoy" },
         actor: undefined,
       },
       {

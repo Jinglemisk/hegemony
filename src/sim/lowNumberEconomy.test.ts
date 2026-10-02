@@ -47,8 +47,8 @@ describe("low-number economy study invariants", () => {
     const harmful = LOW_NUMBER_CONTENT.playerEvents
       .filter((card) => presentEventEffects(card.effects).tone === "negative")
       .reduce((sum, card) => sum + card.count, 0);
-    expect(copies).toBe(77);
-    expect(harmful).toBe(21);
+    expect(copies).toBe(40);
+    expect(harmful).toBe(12);
   });
 
   it("compresses Assembly prizes and resolution magnitudes without mutating authored content", () => {
@@ -75,11 +75,14 @@ describe("low-number economy study invariants", () => {
     expect(ruleset.victory.minimums.cities).toBe(3);
     expect(ruleset.victory.minimums.voice).toBe(3);
     const streets = LOW_NUMBER_CONTENT.resolutions.find((card) => card.id === "the-streets-burn")!;
-    expect(streets.kind === "directive" && streets.effects[0]).toMatchObject({ amount: -2 });
+    expect(streets.kind === "directive" && streets.effects[0]).toMatchObject({
+      type: "unrestTokens",
+      change: "placeOne",
+    });
     expect(streets.text).toContain("place an Unrest token");
     const bread = LOW_NUMBER_CONTENT.resolutions.find((card) => card.id === "bread-and-circuses")!;
     expect(bread.kind === "directive" && bread.effects).toMatchObject([
-      { amount: 2 },
+      { type: "unrestTokens", change: "clearOne" },
       { amount: -2 },
     ]);
     expect(RESOLUTION_CARDS).toEqual(resolutionsBefore);
@@ -128,12 +131,9 @@ describe("low-number economy study invariants", () => {
     }
   });
 
-  it("rewrites numeric event prose to the same effective values", () => {
-    const card = (id: string) =>
-      LOW_NUMBER_CONTENT.playerEvents.find((candidate) => candidate.id === id)!.text;
-    expect(card("player-warehouse-fire")).toContain("Lose 2 Wood");
-    expect(card("player-caravan-contacts")).toContain("up to 2 Wood for 3 Gold");
-    expect(card("player-civic-petition")).toBe("Gain 1 Influence, or clear an Unrest token.");
+  it("leaves the new small player deck and ventures as authored", () => {
+    expect(LOW_NUMBER_CONTENT.playerEvents).toEqual(getAuthoredGameContent().playerEvents);
+    expect(LOW_NUMBER_CONTENT.expeditionTables).toEqual(getAuthoredGameContent().expeditionTables);
   });
 
   it("keeps transformed resolution prose aligned with low-number mechanics", () => {

@@ -49,11 +49,11 @@ describe("game definitions", () => {
     });
     let standardGame = createInitialStateFromDefinition(standard, 41);
     let lowNumberGame = createInitialStateFromDefinition(lowNumber, 41);
-    // The preset rewrites the cards, so one card's text tells the two packages apart.
-    const goodStores = (content: GameContent) =>
-      content.playerEvents.find((card) => card.id === "player-good-stores")?.text;
-    const standardText = goodStores(standard.content);
-    const lowNumberText = goodStores(lowNumber.content);
+    // The preset still rewrites Laws, so their text tells the packages apart.
+    const cultOfDemeter = (content: GameContent) =>
+      content.resolutions.find((card) => card.id === "cult-of-demeter")?.text;
+    const standardText = cultOfDemeter(standard.content);
+    const lowNumberText = cultOfDemeter(lowNumber.content);
 
     expect(standard.identity.id).not.toBe(lowNumber.identity.id);
     expect(standardText).not.toBe(lowNumberText);
@@ -75,8 +75,8 @@ describe("game definitions", () => {
 
     expect(standardGame.definitionId).toBe(standard.identity.id);
     expect(lowNumberGame.definitionId).toBe(lowNumber.identity.id);
-    expect(goodStores(standardGame.definition.content)).toBe(standardText);
-    expect(goodStores(lowNumberGame.definition.content)).toBe(lowNumberText);
+    expect(cultOfDemeter(standardGame.definition.content)).toBe(standardText);
+    expect(cultOfDemeter(lowNumberGame.definition.content)).toBe(lowNumberText);
   });
 
   it("rejects a state whose pinned definition identity drifts", () => {

@@ -46,8 +46,6 @@ function iconOf(mechanic: ActiveEffectMechanic | undefined): string {
       return "market/income-suppressed";
     case "hunger":
       return RESOURCE_ICON.food;
-    case "actionCostDiscount":
-      return "market/cost-down";
     case "equalVotesNextAssembly":
       return "assembly/vote";
     default:

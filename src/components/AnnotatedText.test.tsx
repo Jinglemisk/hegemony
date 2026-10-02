@@ -7,8 +7,8 @@ import { getAuthoredGameContent } from "../game/content";
 
 /**
  * The annotator matches a WORD, and the chronicle hands it whole sentences with
- * card names sitting inside them — so "Theron resolved Granary Rats: -3 Food"
- * drew the granary BUILDING glyph beside a card about vermin.
+ * card names sitting inside them. A card named Patronage is not the riot-insurance
+ * action of the same name, so the title must stay plain.
  *
  * This walks every title the game ships, because that failure returns silently
  * the moment someone authors a card called "Temple Fire" or "Colony Levy". It
@@ -57,13 +57,13 @@ function escaped(text: string) {
 describe("AnnotatedText", () => {
   it("annotates the vocabulary around a card name", () => {
     const markup = renderToStaticMarkup(
-      <AnnotatedText links={false} text="Theron resolved Granary Rats: -3 food." />,
+      <AnnotatedText links={false} text="Theron resolved Patronage: +2 influence." />,
     );
 
     // The title survives whole — no glyph, no chip, no capitalisation of its words.
-    expect(markup).toContain("Theron resolved Granary Rats");
+    expect(markup).toContain("Theron resolved Patronage");
     // The sentence's own noun is still annotated, right beside it.
-    expect(markup).toContain("Food");
+    expect(markup).toContain("Influence");
     expect(markup).toContain("richToken");
   });
 
@@ -92,7 +92,7 @@ describe("AnnotatedText", () => {
   it("renders no interactive control when links are off", () => {
     const markup = renderToStaticMarkup(
       <CodexLinkProvider value={{ openCodexTo: () => undefined }}>
-        <AnnotatedText links={false} text="Damon resolved Warehouse Fire: -5 wood." />
+        <AnnotatedText links={false} text="Damon resolved Fire: -2 wood." />
       </CodexLinkProvider>,
     );
 

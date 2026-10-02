@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { RESOLUTION_CARDS } from "../game/assembly/deck";
-import { PLAYER_IDS } from "../game/data";
+import { PLAYER_IDS, PLAYER_EVENT_CARDS } from "../game/data";
 import { projectForPlayer } from "../game/projection";
 import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
 import { LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
@@ -39,9 +39,9 @@ function observe(G: HegemonyState, player = G.currentPlayer) {
 describe("policy denomination capabilities", () => {
   it("derives thresholds from the active ruleset while preserving standard behavior", () => {
     expect(policyEconomyThresholds(DEFAULT_RULESET)).toEqual({
-      ventureGoldReserve: 25,
+      ventureGoldReserve: 10,
       sellSurplus: 8,
-      lowGold: 10,
+      lowGold: 4,
       woodStarved: 4,
       goldRich: 4,
       materialScoreDivisor: 10,
@@ -638,5 +638,34 @@ describe("opening placement", () => {
     const nearScores = nearby.map((tile) => evaluatePlacement(place(tile.id), "1"));
     expect(Math.max(...nearScores)).toBeLessThanOrEqual(farScore);
     expect(Math.min(...nearScores)).toBeLessThan(farScore);
+  });
+});
+
+describe("v2 card scoring", () => {
+  it("places a captured slave where it feeds a hungry citizen, using legal resolutions", () => {
+    const initial = scenario().build();
+    const plains = initial.board.tiles.find((tile) => tile.terrain === "plains")!;
+    const hill = initial.board.tiles.find((tile) => tile.terrain === "hill")!;
+    const G = scenario()
+      .withSettlement("0", plains.id, "capital", { citizens: 1, freemen: 0, slaves: 0 })
+      .withSettlement("0", hill.id, "colony", { citizens: 0, freemen: 0, slaves: 0 })
+      .withResources("0", { wood: 0, stone: 0, gold: 0, food: 0, influence: 0 })
+      .mutate((state) => {
+        state.phase = "gameplay";
+        state.currentPlayer = "0";
+        state.activeYearCard = null;
+        state.pendingPlayerEvent = {
+          card: PLAYER_EVENT_CARDS.find((card) => card.id === "player-captured-laborers")!,
+          playerID: "0",
+        };
+      })
+      .build();
+    const commands = enumerateLegalCommands(G, "0");
+    expect(commands).toHaveLength(2);
+    for (const policy of [smartPolicy, masterPolicy]) {
+      const command = policy.choose(observe(G), commands, createSimRng(1));
+      expect(command).toEqual({ type: "resolveEvent", targetTileId: plains.id });
+      expect(transition(G.definition, G, "0", command).ok).toBe(true);
+    }
   });
 });

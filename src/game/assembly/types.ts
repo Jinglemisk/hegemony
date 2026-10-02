@@ -1,11 +1,11 @@
 import type {
   BuildingId,
-  MaterialResource,
   PlayerId,
   PopType,
   Resource,
   Stat,
   TradableMaterial,
+  UnrestTokenChange,
 } from "../types";
 
 /**
@@ -102,16 +102,15 @@ export type LawEffect =
   | { type: "actionCostMultiplier"; action: LawCostedAction; multiplier: number }
   /** Shift a material's bank rate by whole steps in the holder's favour. */
   | { type: "bankRateStep"; material: TradableMaterial; steps: number }
-  /** The first matching action each YEAR is free of the named resources. */
-  | { type: "yearlyFreeAction"; action: LawCostedAction; resources: MaterialResource[] }
   /** Riders that fire when a colony is founded (Frontier Spirit). */
-  | { type: "onFoundColony"; grantPop?: PopType; happiness?: number };
+  | { type: "onFoundColony"; grantPop?: PopType; unrestTokens?: UnrestTokenChange };
 
 /** Stratokles's one-time vocabulary. Every Directive is aimed at one rival chosen by
  * the author before the proposal is sealed; the target travels with the ballot item. */
 export type DirectiveEffect =
   /** A flat delta on the chosen rival. */
-  | { type: "resourceDelta"; resource: Stat; amount: number }
+  | { type: "resourceDelta"; resource: Resource; amount: number }
+  | { type: "unrestTokens"; change: UnrestTokenChange }
   /** The chosen rival loses a fraction of a stored resource, rounded down to a whole unit. */
   | { type: "resourceFraction"; resource: Resource; fraction: number }
   /** The chosen rival loses pops from their largest settlement. */

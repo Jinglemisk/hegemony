@@ -68,15 +68,15 @@ unions; they are the presentation API for Step 3 and PR #57.
 | Buildings              |                           6 |
 | Terrain kinds          |                           5 |
 | Year cards             |          8 kinds, 14 copies |
-| Player events          |                          25 |
+| Player events          |         12 kinds, 40 copies |
 | Event tables           |                           4 |
 | Riot-insurance options |                           3 |
 | Politicians            |                           4 |
-| Resolution cards       | 31 (24 Laws + 7 Directives) |
+| Resolution cards       | 29 (22 Laws + 7 Directives) |
 | Victory cards          |                           6 |
 
 The IDs are deliberately explicit. `src/parity/featureParity.test.ts` compares
-them with the live authored rosters, recursively inventories event choices, and
+them with the live authored rosters, inventories the flat event effects, and
 compares every authored effect discriminator with its exhaustive registry. A new,
 removed, or renamed content item fails CI until the manifest is reconciled.
 

@@ -1,114 +1,34 @@
 import { describe, expect, it } from "vitest";
-import { GROW_POP_COSTS, PLAYER_EVENT_CARDS, YEAR_CARDS } from "./data";
-import { drawPlayerEvent, resolvePendingPlayerEvent } from "./events";
-import { growPop } from "./actions";
-import { getGrowPopStatus } from "./status";
-import { DEFAULT_RULESET } from "./ruleset";
-import type { EventCard, EventEffect, PopType, Resources } from "./types";
-import { scenario } from "./testing/scenario";
+import { PLAYER_EVENT_CARDS, YEAR_CARDS } from "./data";
+import { drawPlayerEvent, getEventPopTargets, resolvePendingPlayerEvent } from "./events";
+import { happinessLevel } from "./happiness";
+import { enactForEval } from "./assembly";
+import { getAuthoredResolutionCard } from "./assembly/deck";
+import { enumerateLegalCommands, transition } from "./legalMoves";
+import { revealYearCard } from "./year";
+import { owned, scenario } from "./testing/scenario";
+import type { EventCard } from "./types";
 
-/**
- * The deck-tuning contract (balance.html ledger issues 5/10/12). The valuation is
- * the balance report's own basis so the EV guard stays comparable to its findings:
- *
- *   - every resource unit (wood/stone/gold/food/influence/happiness) counts 1
- *   - a free pop counts its full grow cost (it also dodges the growth throttle)
- *   - a grow coupon counts its face saving × 0.5 — it expires end of turn, so
- *     roughly half of them land on a turn where growing is affordable and legal
- *   - exchanges count their net gain at full use; per-pop payouts count their floor
- *   - choice cards count their best option (players pick greedily)
- *
- * If a content edit moves the harm share out of band, this test is the tripwire.
- * The expected-value band went with v1's prices: Step 7 replaces this deck.
- */
-
-const COUPON_UTILIZATION = 0.5;
-
-const sumCost = (cost: Partial<Resources>) =>
-  Object.values(cost).reduce((sum, amount) => sum + (amount ?? 0), 0);
-
-/** What the pop costs to make: its grow price, or for a citizen (never grown) a
- *  freeman's grow price plus the promotion. */
-function popValue(pop: PopType): number {
-  return pop === "citizens"
-    ? sumCost(GROW_POP_COSTS.freemen) + sumCost(DEFAULT_RULESET.ladder.promoteCosts.freemen)
-    : sumCost(GROW_POP_COSTS[pop]);
+function card(id: string): EventCard {
+  return PLAYER_EVENT_CARDS.find((entry) => entry.id === `player-${id}`)!;
 }
 
-function effectValue(effect: EventEffect): number {
-  switch (effect.type) {
-    case "resourceDelta":
-    case "happinessDelta":
-      return effect.amount;
-    case "timedHappinessDelta":
-      return effect.amountPerTurn * effect.turns;
-    case "addPops":
-      return popValue(effect.pop) * effect.amount;
-    case "actionCostDiscount":
-      return effect.amount * COUPON_UTILIZATION;
-    case "resourceExchange":
-      return Math.floor(effect.maxAmount * effect.ratio) - effect.maxAmount;
-    case "resourceDeltaPerPop":
-      return effect.minimum;
-    case "choice":
-      return Math.max(
-        ...effect.options.map((option) =>
-          option.reduce((sum, entry) => sum + effectValue(entry), 0),
-        ),
-      );
-    default:
-      throw new Error(
-        `deck valuation has no rule for effect type ${(effect as { type: string }).type}`,
-      );
-  }
+function game() {
+  return scenario()
+    .withSettlement("0", "0,0", "capital", { citizens: 1, freemen: 1, slaves: 0 })
+    .withSettlement("0", "3,0", "colony", { citizens: 0, freemen: 0, slaves: 4 })
+    .withSettlement("1", "-2,0", "capital", { citizens: 1, freemen: 0, slaves: 0 })
+    .mutate((G) => {
+      G.phase = "gameplay";
+      G.currentPlayer = "0";
+      G.activeYearCard = null;
+    })
+    .build();
 }
-
-function cardValue(card: EventCard): number {
-  return card.effects.reduce((sum, effect) => sum + effectValue(effect), 0);
-}
-
-describe("player deck tuning contract", () => {
-  const copies = PLAYER_EVENT_CARDS.reduce((sum, card) => sum + card.count, 0);
-
-  it("roughly a quarter of the deck is harm", () => {
-    const harmCopies = PLAYER_EVENT_CARDS.filter((card) => cardValue(card) < 0).reduce(
-      (sum, card) => sum + card.count,
-      0,
-    );
-    const harmShare = harmCopies / copies;
-
-    expect(harmShare).toBeGreaterThanOrEqual(0.22);
-    expect(harmShare).toBeLessThanOrEqual(0.28);
-  });
-
-  it("no choice card has a dominated option (every option is within reach of the best)", () => {
-    for (const card of PLAYER_EVENT_CARDS) {
-      for (const effect of card.effects) {
-        if (effect.type !== "choice") {
-          continue;
-        }
-
-        const optionValues = effect.options.map((option) =>
-          option.reduce((sum, entry) => sum + effectValue(entry), 0),
-        );
-        const best = Math.max(...optionValues);
-
-        for (const value of optionValues) {
-          // An option worth under a third of the best pick is dead weight. The band
-          // is set by Emergency Labor, the model shape: its safe option (2 wood) is
-          // 40% of its greedy option (5) — situational, not strictly worse.
-          expect(value, `${card.name} carries a dominated option`).toBeGreaterThanOrEqual(best / 3);
-        }
-      }
-    }
-  });
-});
 
 describe("the year deck", () => {
   it("is fourteen cards in the paper's mix", () => {
-    const copies = Object.fromEntries(YEAR_CARDS.map((card) => [card.name, card.count]));
-
-    expect(copies).toEqual({
+    expect(Object.fromEntries(YEAR_CARDS.map((entry) => [entry.name, entry.count]))).toEqual({
       Drought: 2,
       Wildfire: 2,
       "Silent Mines": 1,
@@ -118,92 +38,131 @@ describe("the year deck", () => {
       Plague: 2,
       Festival: 2,
     });
-    expect(YEAR_CARDS.reduce((sum, card) => sum + card.count, 0)).toBe(14);
+    expect(YEAR_CARDS.reduce((sum, entry) => sum + entry.count, 0)).toBe(14);
   });
 });
 
-describe("grow coupons (actionCostDiscount on growPop)", () => {
-  function drawCard(cardId: string) {
-    const G = scenario()
-      .opening()
-      .mutate((state) => {
-        state.pendingPlayerEvent = null;
-      })
-      .withResources("0", "wealthy")
-      .build();
-
-    G.playerDrawPile.unshift(PLAYER_EVENT_CARDS.find((card) => card.id === cardId)!);
-    drawPlayerEvent(G, "0");
-    expect(resolvePendingPlayerEvent(G, "0").ok).toBe(true);
-    return G;
-  }
-
-  it("discounts the next matching grow, then is consumed", () => {
-    const G = drawCard("player-willing-hands");
-    const capital = G.players["0"].settlements[0];
-
-    expect(G.players["0"].actionCostDiscounts).toHaveLength(1);
-    // Willing Hands takes 4 food off a freeman who costs 3: the grow is free.
-    expect(getGrowPopStatus(G, "0", capital, "freemen").cost).toMatchObject({ food: 0 });
-
-    const before = { ...G.players["0"].resources };
-    expect(growPop(G, "0", capital, "freemen").ok).toBe(true);
-    expect(before.food - G.players["0"].resources.food).toBe(0);
-    expect(G.players["0"].actionCostDiscounts).toHaveLength(0);
-
-    // The coupon is spent — the next settlement grows at full price.
-    const colony = G.players["0"].settlements[1];
-    expect(getGrowPopStatus(G, "0", colony, "freemen").cost).toMatchObject({ food: 3 });
-  });
-
-  it("ignores grows of a different pop type", () => {
-    const G = drawCard("player-willing-hands");
-    const capital = G.players["0"].settlements[0];
-
-    expect(getGrowPopStatus(G, "0", capital, "slaves").cost).toMatchObject({ food: 2 });
-    expect(growPop(G, "0", capital, "slaves").ok).toBe(true);
-
-    // The freeman coupon survived the slave grow.
-    expect(G.players["0"].actionCostDiscounts).toHaveLength(1);
-    const colony = G.players["0"].settlements[1];
-    expect(getGrowPopStatus(G, "0", colony, "freemen").cost).toMatchObject({ food: 0 });
-  });
-});
-
-describe("harm card mechanics", () => {
-  it("losses clamp at zero — a harm card never drives a stock negative", () => {
-    const G = scenario()
-      .opening()
-      .mutate((state) => {
-        state.pendingPlayerEvent = null;
-      })
-      .withResources("0", { food: 1 })
-      .build();
-
-    G.playerDrawPile.unshift(PLAYER_EVENT_CARDS.find((card) => card.id === "player-granary-rats")!);
-    drawPlayerEvent(G, "0");
-    expect(resolvePendingPlayerEvent(G, "0").ok).toBe(true);
-
-    expect(G.players["0"].resources.food).toBe(0);
-  });
-
-  it("fractional exchange payouts round down", () => {
-    const G = scenario()
-      .opening()
-      .mutate((state) => {
-        state.pendingPlayerEvent = null;
-      })
-      .withResources("0", { wood: 3, gold: 0 })
-      .build();
-
-    G.playerDrawPile.unshift(
-      PLAYER_EVENT_CARDS.find((card) => card.id === "player-caravan-contacts")!,
+describe("v2 player deck", () => {
+  it("has the paper's twelve kinds and forty explicit copies", () => {
+    expect(
+      Object.fromEntries(PLAYER_EVENT_CARDS.map((entry) => [entry.name, entry.count])),
+    ).toEqual({
+      "Good Stores": 4,
+      Timber: 4,
+      Shipment: 4,
+      Profit: 4,
+      Patronage: 4,
+      "Free Settlers": 3,
+      "Captured Laborers": 3,
+      Rats: 3,
+      Bandits: 3,
+      Fire: 3,
+      "Local Unrest": 3,
+      "Public Calm": 2,
+    });
+    expect(PLAYER_EVENT_CARDS.reduce((sum, entry) => sum + entry.count, 0)).toBe(40);
+    expect(PLAYER_EVENT_CARDS.every((entry) => entry.effects.length === 1)).toBe(true);
+    expect(new Set(PLAYER_EVENT_CARDS.map((entry) => entry.effects[0].type))).toEqual(
+      new Set(["resourceDelta", "addPops", "unrestTokens"]),
     );
-    drawPlayerEvent(G, "0");
-    // Option B: exchange up to 4 wood at 1.5 — with 3 wood that's floor(4.5) = 4 gold.
-    expect(resolvePendingPlayerEvent(G, "0", undefined, 1).ok).toBe(true);
+  });
 
-    expect(G.players["0"].resources.wood).toBe(0);
-    expect(G.players["0"].resources.gold).toBe(4);
+  it("pays flat gains and floors each harm at the held stock", () => {
+    for (const [id, resource] of [
+      ["good-stores", "food"],
+      ["timber", "wood"],
+      ["shipment", "stone"],
+      ["profit", "gold"],
+      ["patronage", "influence"],
+    ] as const) {
+      const G = game();
+      const before = G.players["0"].resources[resource];
+      G.pendingPlayerEvent = { card: card(id), playerID: "0" };
+      expect(resolvePendingPlayerEvent(G, "0").ok).toBe(true);
+      expect(G.players["0"].resources[resource]).toBe(before + 2);
+    }
+    for (const [id, resource] of [
+      ["rats", "food"],
+      ["bandits", "gold"],
+      ["fire", "wood"],
+    ] as const) {
+      const G = game();
+      G.players["0"].resources[resource] = 1;
+      G.pendingPlayerEvent = { card: card(id), playerID: "0" };
+      expect(resolvePendingPlayerEvent(G, "0").ok).toBe(true);
+      expect(G.players["0"].resources[resource]).toBe(0);
+    }
+  });
+
+  it("places only slaves or freemen in an owned settlement with room, through legal commands", () => {
+    for (const [id, pop] of [
+      ["free-settlers", "freemen"],
+      ["captured-laborers", "slaves"],
+    ] as const) {
+      const G = game();
+      G.playerDrawPile = [card(id)];
+      drawPlayerEvent(G, "0");
+      expect(enumerateLegalCommands(G, "0")).toEqual([
+        { type: "resolveEvent", targetTileId: "0,0" },
+      ]);
+      expect(resolvePendingPlayerEvent(G, "1", "-2,0").ok).toBe(false);
+      expect(resolvePendingPlayerEvent(G, "0", "3,0").ok).toBe(false);
+      expect(resolvePendingPlayerEvent(G, "0", "-2,0").ok).toBe(false);
+      const before = owned(G, "0,0", "0").pops[pop];
+      const result = transition(G.definition, G, "0", {
+        type: "resolveEvent",
+        targetTileId: "0,0",
+      });
+      expect(result.ok).toBe(true);
+      if (!result.ok) continue;
+      expect(owned(result.state, "0,0", "0").pops[pop]).toBe(before + 1);
+      expect(owned(result.state, "0,0", "0").pops.citizens).toBe(1);
+      expect(result.state.players["0"].popsGainedFromEvents).toBe(1);
+      expect(result.state.pendingPlayerEvent).toBeNull();
+      const effect = card(id).effects[0];
+      if (effect.type !== "addPops") throw new Error("not a pop card");
+      expect(getEventPopTargets(G, "0", effect)).toEqual([
+        { tileId: "0,0", filled: 2, capacity: 8, room: 6 },
+      ]);
+    }
+  });
+
+  it("discards a pop card when no settlement has room and reshuffles only the player deck", () => {
+    const G = game();
+    owned(G, "0,0", "0").pops.freemen = 7;
+    G.playerDrawPile = [];
+    G.playerDiscardPile = [card("free-settlers")];
+    const years = structuredClone(G.yearDrawPile);
+    drawPlayerEvent(G, "0");
+    expect(G.pendingPlayerEvent).toBeNull();
+    expect(G.lastPlayerEvent?.id).toBe("player-free-settlers");
+    expect(G.playerDiscardPile).toEqual([card("free-settlers")]);
+    expect(G.yearDrawPile).toEqual(years);
+  });
+
+  it("token cards place one, clear one and clear all through their real paths", () => {
+    const G = game();
+    G.players["0"].unrestTokens = 1;
+    const level = happinessLevel(G, "0");
+    G.pendingPlayerEvent = { card: card("local-unrest"), playerID: "0" };
+    expect(resolvePendingPlayerEvent(G, "0").ok).toBe(true);
+    expect(G.players["0"].unrestTokens).toBe(2);
+    expect(happinessLevel(G, "0")).toBe(level - 1);
+    G.pendingPlayerEvent = { card: card("public-calm"), playerID: "0" };
+    resolvePendingPlayerEvent(G, "0");
+    expect(G.players["0"].unrestTokens).toBe(1);
+    const directive = getAuthoredResolutionCard("the-streets-burn")!;
+    enactForEval(G, { kind: "enact", card: directive, proposer: "1", target: "0" });
+    expect(G.players["0"].unrestTokens).toBe(2);
+    expect(G.players["1"].unrestTokens).toBe(0);
+    G.yearDrawPile = YEAR_CARDS.filter((entry) => entry.name === "Plague");
+    revealYearCard(G);
+    expect(Object.values(G.players).map((player) => player.unrestTokens)).toEqual([3, 1, 1, 1]);
+    G.yearDrawPile = YEAR_CARDS.filter((entry) => entry.name === "Festival");
+    revealYearCard(G);
+    expect(Object.values(G.players).map((player) => player.unrestTokens)).toEqual([0, 0, 0, 0]);
+    G.pendingPlayerEvent = { card: card("public-calm"), playerID: "0" };
+    resolvePendingPlayerEvent(G, "0");
+    expect(G.players["0"].unrestTokens).toBe(0);
   });
 });

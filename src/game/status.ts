@@ -31,7 +31,7 @@ import {
 } from "./settlement";
 import { claimableLuxuriesAt } from "./luxury";
 import { isCoastalTile } from "./map";
-import { getAdjustedActionCost, getDiscountedGrowPopCost } from "./economy/cost";
+import { getAdjustedActionCost, getGrowPopCost } from "./economy/cost";
 
 export function getFoundColonyStatus(
   G: HegemonyState,
@@ -302,7 +302,7 @@ export function getGrowPopStatus(
     return status;
   }
 
-  status.cost = getDiscountedGrowPopCost(G, playerID, settlement, pop);
+  status.cost = getGrowPopCost(G, playerID, settlement, pop);
 
   if (getGrownSettlementsThisTurn(G, playerID).includes(tileId)) {
     status.reasons.push("Already grew a pop here this turn.");

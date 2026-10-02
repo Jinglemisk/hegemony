@@ -8,7 +8,6 @@ import { PLAYER_EVENT_CARDS, YEAR_CARDS, EXPEDITION_TABLES, RIOT_TABLE } from ".
 import { settlementNetYield } from "../game/economy/income";
 import { settlementBuildingHappiness } from "../game/happiness";
 import { materialTile, owned, scenario } from "../game/testing/scenario";
-import type { EventEffect } from "../game/types";
 import { Aggregator } from "../sim/telemetry";
 import {
   presentBuildingEffect,
@@ -51,14 +50,6 @@ function sorted(values: readonly string[]): string[] {
 
 function unique(values: readonly string[]): string[] {
   return sorted([...new Set(values)]);
-}
-
-function flattenEventEffects(effects: readonly EventEffect[]): EventEffect[] {
-  return effects.flatMap((effect) =>
-    effect.type === "choice"
-      ? [effect, ...effect.options.flatMap((option) => flattenEventEffects(option))]
-      : [effect],
-  );
 }
 
 function expectPresentation(presentation: { text: string; tone: string }): void {
@@ -148,7 +139,7 @@ describe("feature and content parity manifests", () => {
       expect(entry.ids).toHaveLength(new Set(entry.ids).size);
     }
 
-    const eventEffects = flattenEventEffects(PLAYER_EVENT_CARDS.flatMap((card) => card.effects));
+    const eventEffects = PLAYER_EVENT_CARDS.flatMap((card) => card.effects);
     expect(unique(eventEffects.map((effect) => effect.type))).toEqual(
       sorted(Object.keys(EVENT_EFFECT_PARITY)),
     );
@@ -180,7 +171,7 @@ describe("feature and content parity manifests", () => {
   });
 
   it("projects every authored effect through a non-empty typed frontend presentation", () => {
-    const eventEffects = flattenEventEffects(PLAYER_EVENT_CARDS.flatMap((card) => card.effects));
+    const eventEffects = PLAYER_EVENT_CARDS.flatMap((card) => card.effects);
     for (const effect of eventEffects) expectPresentation(presentEventEffect(effect));
     for (const card of YEAR_CARDS) expectPresentation(presentYearCard(card));
 

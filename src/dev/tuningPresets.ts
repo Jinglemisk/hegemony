@@ -1,7 +1,7 @@
 import type { GameContent } from "../game/content";
 import type { DirectiveEffect, LawEffect, ResolutionCard } from "../game/assembly/types";
 import type { RulesetPatch } from "../game/ruleset";
-import type { EventEffect, EventTableDefinition, Resource, Stat } from "../game/types";
+import type { EventTableDefinition, Resource, Stat } from "../game/types";
 
 export type TuningPresetId = "low-number-core-v1";
 
@@ -50,7 +50,6 @@ export const LOW_NUMBER_RULESET_PATCH = {
     promoteCosts: { slaves: { food: 2 }, freemen: { gold: 2 } },
     demoteCosts: { citizens: { influence: 1 }, freemen: { influence: 2 } },
   },
-  ventureStakes: { gold: { gold: 2 }, wood: { wood: 3 } },
   assembly: {
     prizes: {
       demosthenes: { food: 2 },
@@ -75,39 +74,6 @@ function isHappiness(resource: Stat) {
   return resource === "happiness";
 }
 
-function scaleEventEffect(effect: EventEffect): EventEffect {
-  const copy = structuredClone(effect);
-
-  switch (copy.type) {
-    case "resourceDelta":
-      copy.amount = scaledMagnitude(copy.amount, isHappiness(copy.resource) ? 2 : 3);
-      break;
-    case "happinessDelta":
-      copy.amount = scaledMagnitude(copy.amount, 2);
-      break;
-    case "timedHappinessDelta":
-      copy.amountPerTurn = scaledMagnitude(copy.amountPerTurn, 2);
-      break;
-    case "addPops":
-      copy.amount = Math.max(1, Math.ceil(copy.amount / 2));
-      break;
-    case "actionCostDiscount":
-      copy.amount = scaledMagnitude(copy.amount, 3);
-      break;
-    case "resourceExchange":
-      copy.maxAmount = Math.max(1, Math.round(copy.maxAmount / 2));
-      break;
-    case "resourceDeltaPerPop":
-      copy.minimum = Math.max(1, Math.round(copy.minimum / 2));
-      break;
-    case "choice":
-      copy.options = copy.options.map((option) => option.map(scaleEventEffect));
-      break;
-  }
-
-  return copy;
-}
-
 function scaleLawEffect(effect: LawEffect): LawEffect {
   const copy = structuredClone(effect);
 
@@ -128,13 +94,11 @@ function scaleLawEffect(effect: LawEffect): LawEffect {
       copy.above = Math.max(1, Math.round(copy.above / 3));
       break;
     case "onFoundColony":
-      if (copy.happiness) copy.happiness = scaledMagnitude(copy.happiness, 2);
       break;
     case "flatIncome":
     case "popPrimaryIncome":
     case "actionCostMultiplier":
     case "bankRateStep":
-    case "yearlyFreeAction":
       break;
   }
 
@@ -168,16 +132,16 @@ function mechanicalNumbers(effect: LawEffect | DirectiveEffect): number[] {
     case "bankRateStep":
       return [effect.steps];
     case "onFoundColony":
-      return effect.happiness ? [effect.happiness] : [];
+      return [];
     case "resourceDelta":
       return [effect.amount];
     case "resourceFraction":
+    case "unrestTokens":
       return [];
     case "losePopFromLargest":
       return [effect.count];
     case "suppressIncome":
       return [effect.turns];
-    case "yearlyFreeAction":
     case "repealNewestTargetLaw":
     case "equalVotesNextAssembly":
       return [];
@@ -224,53 +188,6 @@ function scaleResolution(card: ResolutionCard): ResolutionCard {
   } as ResolutionCard;
 }
 
-function eventTextNumbers(effect: EventEffect): number[] {
-  switch (effect.type) {
-    case "resourceDelta":
-    case "happinessDelta":
-    case "actionCostDiscount":
-      return [effect.amount];
-    case "timedHappinessDelta":
-      return [effect.amountPerTurn, effect.turns];
-    case "addPops":
-      return [effect.amount];
-    case "resourceExchange":
-      return [effect.maxAmount, Math.floor(effect.maxAmount * effect.ratio)];
-    case "resourceDeltaPerPop":
-      return [effect.amountPerPop, effect.minimum];
-    case "choice":
-      return effect.options.flatMap((option) => option.flatMap(eventTextNumbers));
-  }
-}
-
-/** Authored event prose contains the same mechanical numbers as its typed effects.
- *  Rewrite those occurrences in order so flavor remains intact without contradicting
- *  the canonical effective rows rendered beside it. */
-function rewriteEventText(text: string, before: EventEffect[], after: EventEffect[]): string {
-  const original = before.flatMap(eventTextNumbers);
-  const effective = after.flatMap(eventTextNumbers);
-  let output = text;
-  let from = 0;
-
-  for (let index = 0; index < Math.min(original.length, effective.length); index += 1) {
-    const magnitude = String(Math.abs(original[index])).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pattern = new RegExp(`[+-]?${magnitude}(?![\\d.])`, "g");
-    pattern.lastIndex = from;
-    const match = pattern.exec(output);
-    if (!match) continue;
-    if (original[index] === effective[index]) {
-      from = match.index + match[0].length;
-      continue;
-    }
-    const sign = match[0].startsWith("-") ? "-" : match[0].startsWith("+") ? "+" : "";
-    const replacement = `${sign}${Math.abs(effective[index])}`;
-    output = `${output.slice(0, match.index)}${replacement}${output.slice(match.index + match[0].length)}`;
-    from = match.index + replacement.length;
-  }
-
-  return output;
-}
-
 function scaleTable(table: EventTableDefinition): void {
   for (const row of table.rows) {
     for (const effect of row.effects) {
@@ -292,30 +209,11 @@ function scaleTable(table: EventTableDefinition): void {
 export function createLowNumberContent(base: GameContent): GameContent {
   const content = structuredClone(base);
 
-  // Buildings and the year deck stay as authored: v2's roster is already single
+  // Buildings, player cards, ventures and the year deck stay as authored: v2's roster is already single
   // digits, and a year card carries no number to scale.
-  content.playerEvents = content.playerEvents.map((card) => {
-    const effects = card.effects.map(scaleEventEffect);
-    return {
-      ...card,
-      count:
-        (
-          {
-            "player-new-citizen": 2,
-            "player-free-settlers": 2,
-            "player-captured-laborers": 2,
-            "player-willing-hands": 6,
-            "player-slave-auction": 4,
-          } as Record<string, number>
-        )[card.id] ?? card.count,
-      text: rewriteEventText(card.text, card.effects, effects),
-      effects,
-    };
-  });
   content.resolutions = content.resolutions.map(scaleResolution);
 
   scaleTable(content.riotTable);
-  content.expeditionTables.forEach(scaleTable);
 
   return content;
 }

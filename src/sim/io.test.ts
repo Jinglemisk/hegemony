@@ -111,4 +111,27 @@ describe("save definition hydration", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+  it.each([{ stateSchemaVersion: 6 }, { commandSchemaVersion: 2 }])(
+    "rejects a prior-step save with %o",
+    (versions) => {
+      const directory = mkdtempSync(join(tmpdir(), "hegemony-old-cards-"));
+      const path = join(directory, "game.json");
+      try {
+        const definition = resolveTuning(GAME_MODES.standard.ruleset, null).definition;
+        const state = createInitialStateFromDefinition(definition, 42);
+        writeFileSync(
+          path,
+          JSON.stringify({
+            version: SAVE_FORMAT_VERSION,
+            ...CURRENT_RECIPE_VERSIONS,
+            ...versions,
+            state: { ...state, ...versions },
+          }),
+        );
+        expect(() => loadGame(path)).toThrow(UnsupportedVersionError);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    },
+  );
 });

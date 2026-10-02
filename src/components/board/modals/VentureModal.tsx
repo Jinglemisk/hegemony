@@ -2,7 +2,6 @@ import { useState } from "react";
 import { AnnotatedText } from "../../AnnotatedText";
 import { RESOURCE_LABELS, formatNumber, formatResourceCost } from "../../../ui/formatters";
 import { getFundExpeditionStatus } from "../../../game/rules";
-import type { VentureStake } from "../../../game/rules";
 import { getExpeditionTables } from "../../../game/content";
 import type { Resource } from "../../../game/types";
 import { presentTableEffect } from "../../../ui/effects";
@@ -19,12 +18,11 @@ import { useGameUi } from "../GameUiContext";
 export function VentureModal({ onClose }: { onClose: () => void }) {
   const { G, viewerId: playerID, isActive, moves } = useGameUi();
   const [expeditionIndex, setExpeditionIndex] = useState(0);
-  const [stake, setStake] = useState<VentureStake>("gold");
   const [rolled, setRolled] = useState(false);
 
   const expeditionTables = getExpeditionTables(G.definition.content);
   const table = expeditionTables[expeditionIndex];
-  const status = getFundExpeditionStatus(G, playerID, table.id, stake);
+  const status = getFundExpeditionStatus(G, playerID, table.id);
   const result = rolled && G.lastTableRoll?.playerID === playerID ? G.lastTableRoll : null;
   const resultTable = result
     ? (expeditionTables.find((candidate) => candidate.id === result.tableId) ?? table)
@@ -34,7 +32,7 @@ export function VentureModal({ onClose }: { onClose: () => void }) {
   // losses" — it is the stake, gone. The tablet cannot know that from `none`
   // alone (the riot table's `none` is mercy), so the venture states it, built
   // from the cost the engine actually took rather than a literal that would
-  // drift the day `ruleset.ventureStakes` changes.
+  // drift the day `ruleset.ventureCost` changes.
   const [staked, stakeAmount] = (Object.entries(status.cost ?? {}) as Array<[Resource, number]>)
     .filter(([, amount]) => amount)
     .at(0) ?? [undefined, 0];
@@ -96,7 +94,7 @@ export function VentureModal({ onClose }: { onClose: () => void }) {
               title={status.reasons.join(" ") || undefined}
               onClick={() => {
                 setRolled(true);
-                moves.fundExpedition(table.id, stake);
+                moves.fundExpedition(table.id);
               }}
             >
               Fund &amp; Roll
@@ -121,27 +119,6 @@ export function VentureModal({ onClose }: { onClose: () => void }) {
                 <span className="caption">{candidate.flavor}</span>
               </button>
             ))}
-          </div>
-
-          <div className="ceremonyPicks ventureStakeRow" role="group" aria-label="Stake">
-            {(Object.keys(G.ruleset.ventureStakes) as VentureStake[]).map((candidate) => {
-              const candidateStatus = getFundExpeditionStatus(G, playerID, table.id, candidate);
-
-              return (
-                <button
-                  aria-pressed={candidate === stake}
-                  className={
-                    candidate === stake ? "ceremonyPick ceremonyPickTaken" : "ceremonyPick"
-                  }
-                  key={candidate}
-                  onClick={() => setStake(candidate)}
-                >
-                  <strong className="title">
-                    Stake · <AnnotatedText text={formatResourceCost(candidateStatus.cost ?? {})} />
-                  </strong>
-                </button>
-              );
-            })}
           </div>
         </div>
       ) : null}

@@ -5,7 +5,6 @@ import { foundColony } from "../actions";
 import { getPlayerBankRate } from "../bank";
 import { getPromotePopStatus } from "../civic";
 import { calculateIncome, calculateIncomeBreakdown } from "../economy/income";
-import { startNewYear } from "../year";
 import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
@@ -15,7 +14,7 @@ import {
 import { owned, scenario } from "../testing/scenario";
 import type { HegemonyState, PlayerId } from "../types";
 import { happinessLevel } from "../happiness";
-import { getLawHappinessContributions, getLawIncomeContributions, hasLawFreeAction } from "./laws";
+import { getLawHappinessContributions, getLawIncomeContributions } from "./laws";
 
 /**
  * The standing-modifier layer — the one genuinely new engine seam the Assembly needs.
@@ -263,27 +262,6 @@ describe("standing laws reach the bank and the colony charter", () => {
     const rate = getPlayerBankRate(G, "0", "stone");
     expect(rate).toEqual({ sell: 1, buy: 2 });
     expect(rate.sell * rate.buy).toBeGreaterThan(1);
-  });
-
-  it("yearlyFreeAction is spent once and refreshes when the year turns", () => {
-    const G = opening().build();
-    plantLaw(G, "land-rush"); // your first colony each year is founded free of wood
-
-    expect(hasLawFreeAction(G, "0", "foundColony")).toBe(true);
-    expect(getFoundColonyStatus(G, "0", HILL).cost).toMatchObject({ wood: 0, food: 1 });
-
-    expect(foundColony(G, "0", HILL, P0_CAPITAL, "slaves").ok).toBe(true);
-
-    // The coupon burns on the founding that commits, so the next colony pays in full.
-    expect(hasLawFreeAction(G, "0", "foundColony")).toBe(false);
-    expect(G.players["0"].lawFreeActionsUsedThisYear).toContain("foundColony");
-
-    // Turn the year — a once-a-year coupon refreshes with the year.
-    G.year = 4;
-    startNewYear(G);
-
-    expect(G.year).toBe(5);
-    expect(hasLawFreeAction(G, "0", "foundColony")).toBe(true);
   });
 
   it("onFoundColony grants the pop and places an Unrest token (Frontier Spirit)", () => {

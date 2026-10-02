@@ -13,8 +13,8 @@ Step 3 presentation components consume both contracts.
 - **Effective content** is the complete `GameContent` package fixed before game
   creation and returned by the typed content accessors. With no development preset
   or override, it is authored content.
-- A **base cost** comes from the active ruleset or effective content before local,
-  event or standing-Law modifiers. Game modes and tuning patches are
+- A **base cost** comes from the active ruleset or effective content before
+  standing-Law modifiers. Game modes and tuning patches are
   already reflected in this value.
 - An **effective cost** is `ActionStatus.cost` from the authoritative `get*Status`
   query for the acting player and selected target/option.
@@ -24,13 +24,13 @@ must label them as base costs and explain that modifiers appear at the action.
 
 ## Effective-content inventory
 
-| Content     | Authoritative query                                                                                                        | Engine consumers                                                                                               | Frontend consumers                                                                                                  | Simulation consumers                                                                     |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Buildings   | `getBuildings(definition.content)`, `getBuilding(definition.content, id)`, and target-specific `getBuildBuildingOptions()` | Build legality/execution, income, settlement capacity/slots, growth and promotion discounts, table destruction | Board availability, map selection, Build popover, Cities/Buildings ledgers, Codex, building labels and benefit text | Legal-move enumeration and policy evaluation through the same engine income/status paths |
-| Terrain     | `getTerrainDeck(definition.content)`                                                                                       | Initial map/state creation and shuffle                                                                         | Codex terrain aggregates                                                                                            | Game setup and tuning runs through engine map creation                                   |
-| Events      | `getYearCards(definition.content)` and `getPlayerEventCards(definition.content)`                                           | Deck creation, resolution, active effects and logs                                                             | Topbar, pending-event dialog and Codex                                                                              | Seeded decks, policy execution and zero-filled telemetry                                 |
-| Tables      | `getRiotTable(definition.content)` and `getExpeditionTables(definition.content)`                                           | Legal moves, insurance, ventures, and rolls                                                                    | Riot/Venture modals, topbar, result rows and Codex                                                                  | Policy risk, execution and telemetry                                                     |
-| Resolutions | `getResolutionCards(definition.content)` and `getResolutionCard(definition.content, id)`                                   | Politician decks, Law modifiers, Directive resolution and logs                                                 | Assembly cards, target previews, ledgers and Codex                                                                  | Seeded decks, real-engine enactment evaluation and Assembly telemetry                    |
+| Content     | Authoritative query                                                                                                        | Engine consumers                                                                 | Frontend consumers                                                                                                  | Simulation consumers                                                                     |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Buildings   | `getBuildings(definition.content)`, `getBuilding(definition.content, id)`, and target-specific `getBuildBuildingOptions()` | Build legality/execution, income, settlement slots, happiness, table destruction | Board availability, map selection, Build popover, Cities/Buildings ledgers, Codex, building labels and benefit text | Legal-move enumeration and policy evaluation through the same engine income/status paths |
+| Terrain     | `getTerrainDeck(definition.content)`                                                                                       | Initial map/state creation and shuffle                                           | Codex terrain aggregates                                                                                            | Game setup and tuning runs through engine map creation                                   |
+| Events      | `getYearCards(definition.content)` and `getPlayerEventCards(definition.content)`                                           | Deck creation, resolution, active effects and logs                               | Topbar, pending-event dialog and Codex                                                                              | Seeded decks, policy execution and zero-filled telemetry                                 |
+| Tables      | `getRiotTable(definition.content)` and `getExpeditionTables(definition.content)`                                           | Legal moves, insurance, ventures, and rolls                                      | Riot/Venture modals, topbar, result rows and Codex                                                                  | Policy risk, execution and telemetry                                                     |
+| Resolutions | `getResolutionCards(definition.content)` and `getResolutionCard(definition.content, id)`                                   | Politician decks, Law modifiers, Directive resolution and logs                   | Assembly cards, target previews, ledgers and Codex                                                                  | Seeded decks, real-engine enactment evaluation and Assembly telemetry                    |
 
 Runtime consumers must not import authored content constants directly. Authored
 constants remain appropriate for definition construction, immutable comparison tests,
@@ -67,13 +67,14 @@ command transition.
 | Promote / demote       | `getPromotePopStatus()` / `getDemotePopStatus()`                                              | Execution and legal moves reuse the status                         | Ladder target picker shows the status cost                                         | Codex labels ladder prices as base costs                                |
 | Bank buy / sell        | `getBankBuyStatus()` / `getBankSellStatus()`                                                  | Execution and legal moves reuse player-specific Law-adjusted rates | Market buttons render the status costs                                             | Codex labels board-derived rates as base rates                          |
 | Civic calm             | `getCivicCalmStatus()`                                                                        | Execution and legal moves reuse the selected payment status        | Calm payment choices render the status cost; pre-choice command says `options`     | Codex labels both payments as base costs                                |
-| Venture                | `getFundExpeditionStatus()`                                                                   | Execution and legal moves reuse the selected stake status          | Stake choices render the status cost; pre-choice command says `stakes`             | Codex labels both stakes as base stakes                                 |
+| Venture                | `getFundExpeditionStatus()`                                                                   | Execution and legal moves reuse the expedition status              | Venture modal and Civic fan show the single status cost                            | Codex labels the single venture cost                                    |
 | Riot insurance         | `getBuyRiotInsuranceStatus()`                                                                 | Execution and legal moves reuse the table option status            | Riot choices use the same option/status                                            | Riot table is the base reference                                        |
 | Assembly participation | `nextDrawCost()` and the Assembly legal-option/status rules                                   | Execution, legal options, policy and telemetry share derived costs | Live Assembly controls read the same rules/session queries                         | Codex labels active-ruleset participation prices as base costs          |
 
 Pre-target command summaries only print a number when the engine can answer it
 without a target. Target-dependent or alternative-payment actions say `varies`,
-`options`, or `stakes`; their chooser shows the exact effective cost.
+or `options`; their chooser shows the exact effective cost. Ventures have one
+quoted cost and only choose the expedition.
 
 ## Step 3 integration status
 
@@ -93,8 +94,8 @@ part of its validation, while the real-device checklist remains an owner gate in
 
 ## Regression contract
 
-`src/parity/withinAxisParity.test.ts` applies a tuned building definition together
-with an event coupon, then proves that the paired query,
+`src/parity/withinAxisParity.test.ts` applies a tuned building definition
+and proves that the paired query,
 frontend-facing label, legal move, execution payment, and resulting income agree.
 It also proves that the smart policy reverses a build decision when effective
 building economics reverse. Existing status, legal-move, preview, and parity suites

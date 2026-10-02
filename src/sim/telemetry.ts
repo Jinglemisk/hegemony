@@ -293,8 +293,6 @@ export type BatchReport = {
     player: Record<PlayerEventContentId, number>;
     /** Every year card's id is present, including zeroes. */
     year: Record<YearCardContentId, number>;
-    /** For choice cards: how often each option index was picked. */
-    choicePicks: Record<string, number[]>;
   };
   /** Phase 1 exit-gate instrument: how often each currency verb fired (total and
    *  per game) — a verb at ~0 per game is a dead currency talking. */
@@ -382,7 +380,6 @@ export class Aggregator {
   private buildings: Record<string, number> = {};
   private playerEvents: Record<string, number> = {};
   private yearCards: Record<string, number> = {};
-  private choicePicks: Record<string, number[]> = {};
   private movesByType: Partial<Record<GameCommandType, number>> = {};
   private currencyVerbs: Record<string, number> = {};
   private riotsByYear = new Map<number, number>();
@@ -506,13 +503,6 @@ export class Aggregator {
     // them); track them so a deeper search shows up in the report.
     if (move.type === "upgradeColonyToCity") {
       this.upgrades += 1;
-    }
-
-    // The resolved card is still on lastPlayerEvent (nothing draws between
-    // the reveal and its resolution).
-    if (move.type === "resolveEvent" && G.lastPlayerEvent) {
-      const picks = (this.choicePicks[G.lastPlayerEvent.id] ??= []);
-      picks[move.choiceIndex] = (picks[move.choiceIndex] ?? 0) + 1;
     }
   }
 
@@ -883,7 +873,6 @@ export class Aggregator {
         year: Object.fromEntries(
           YEAR_CARD_CONTENT_IDS.map((eventId) => [eventId, this.yearCards[eventId] ?? 0]),
         ) as BatchReport["events"]["year"],
-        choicePicks: this.choicePicks,
       },
       currencyVerbs: Object.fromEntries(
         CURRENCY_VERBS.map((verb) => {

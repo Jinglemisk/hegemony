@@ -19,8 +19,10 @@ export const ENGINE_VERSION = "0.1.0";
  *  saves are rejected, not migrated. */
 /** v6 (v2 migration, Step 6): the year deck replaces seasons and the omen; Voice
  *  reads standing Laws. Older saves are rejected, not migrated. */
-export const STATE_SCHEMA_VERSION = 6;
-export const COMMAND_SCHEMA_VERSION = 2;
+/** v7 (Step 7): twelve player-card kinds, explicit token verbs, no coupon state.
+ *  Command v3 removes card choice and venture stake arguments. */
+export const STATE_SCHEMA_VERSION = 7;
+export const COMMAND_SCHEMA_VERSION = 3;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

@@ -1,7 +1,7 @@
 import type { PoliticianId } from "../game/assembly";
 import { transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
-import type { CivicCalmPayment, VentureStake } from "../game/rules";
+import type { CivicCalmPayment } from "../game/rules";
 import type {
   BuildingId,
   EventTableId,
@@ -22,14 +22,14 @@ export type GameMoves = {
   buildBuilding: (tileId: string, buildingId: BuildingId, claimVertexId?: string) => void;
   growPop: (tileId: string, pop: PopType) => void;
   movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
-  resolvePendingPlayerEvent: (targetTileId?: string, choiceIndex?: number) => void;
+  resolvePendingPlayerEvent: (targetTileId?: string) => void;
   bankSell: (material: TradableMaterial) => void;
   bankBuy: (material: TradableMaterial) => void;
   dole: () => void;
   civicCalm: (payment: CivicCalmPayment) => void;
   promotePop: (tileId: string, from: PopType) => void;
   demotePop: (tileId: string, from: PopType) => void;
-  fundExpedition: (expeditionId: EventTableId, stake: VentureStake) => void;
+  fundExpedition: (expeditionId: EventTableId) => void;
   buyRiotInsurance: (
     optionId: RiotInsuranceId,
     demoteTarget?: { tileId: string; from: PopType },
@@ -75,16 +75,15 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     growPop: (tileId, pop) => dispatch({ type: "growPop", tileId, pop }),
     movePops: (sourceTileId, targetTileId, pops) =>
       dispatch({ type: "movePops", sourceTileId, targetTileId, pops }),
-    resolvePendingPlayerEvent: (targetTileId, choiceIndex = 0) =>
-      dispatch({ type: "resolveEvent", choiceIndex, ...(targetTileId ? { targetTileId } : {}) }),
+    resolvePendingPlayerEvent: (targetTileId) =>
+      dispatch({ type: "resolveEvent", ...(targetTileId ? { targetTileId } : {}) }),
     bankSell: (material) => dispatch({ type: "bankSell", material }),
     bankBuy: (material) => dispatch({ type: "bankBuy", material }),
     dole: () => dispatch({ type: "dole" }),
     civicCalm: (payment) => dispatch({ type: "civicCalm", payment }),
     promotePop: (tileId, from) => dispatch({ type: "promotePop", tileId, from }),
     demotePop: (tileId, from) => dispatch({ type: "demotePop", tileId, from }),
-    fundExpedition: (expeditionId, stake) =>
-      dispatch({ type: "fundExpedition", expeditionId, stake }),
+    fundExpedition: (expeditionId) => dispatch({ type: "fundExpedition", expeditionId }),
     buyRiotInsurance: (optionId, demoteTarget) =>
       dispatch({ type: "buyRiotInsurance", optionId, ...(demoteTarget ? { demoteTarget } : {}) }),
     resolveRiot: () => dispatch({ type: "resolveRiot" }),

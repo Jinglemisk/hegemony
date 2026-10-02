@@ -13,7 +13,7 @@
  *   core/format    — human-readable rule strings
  *   settlement     — settlement + population domain queries
  *   economy/income — the income engine (single source of the per-pop yield formula)
- *   economy/cost   — action cost + event discount subsystem
+ *   economy/cost   — action costs under standing Laws
  *   economy/preview— economy projections + action previews
  *   status         — get*Status action validators
  *   events         — event deck draw + the event-effect interpreter

@@ -28,7 +28,7 @@ const dismissDialogs = async (p) => {
     if (!(await d.count())) return;
     const btn = d
       .getByRole("button", {
-        name: /^(Endure It|Take It|Take the .+|So Be It|Resolve Choice|Place Pops|Continue|Close)$/,
+        name: /^(Endure It|Take It|Take the .+|So Be It|Place Pop|Place Unrest|Clear Unrest|Continue|Close)$/,
       })
       .first();
     if (!(await btn.count())) return;

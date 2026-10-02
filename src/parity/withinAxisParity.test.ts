@@ -9,9 +9,8 @@ import {
 } from "../game/data";
 import { getCivicCalmStatus } from "../game/civic";
 import { GROWABLE_POPS } from "../game/core/pops";
-import { getDiscountedGrowPopCost } from "../game/economy/cost";
+import { getGrowPopCost } from "../game/economy/cost";
 import { calculateIncome, calculateIncomeBreakdown } from "../game/economy/income";
-import { getEventEffectChoices } from "../game/events";
 import { revealYearCard } from "../game/year";
 import { owned, scenario } from "../game/testing/scenario";
 import type { BuildingDefinition, HegemonyState, Resources } from "../game/types";
@@ -71,18 +70,16 @@ describe("backend-to-backend parity", () => {
 });
 
 describe("frontend-to-frontend parity", () => {
-  it("presents every event-card option through one non-empty effect vocabulary", () => {
+  it("presents every event card through one non-empty effect vocabulary", () => {
     for (const card of YEAR_CARDS) {
       const presentation = presentYearCard(card);
       expect(presentation.text.trim(), card.id).not.toBe("");
       expect(["positive", "negative"], card.id).toContain(presentation.tone);
     }
     for (const card of PLAYER_EVENT_CARDS) {
-      for (const effects of getEventEffectChoices(card)) {
-        const presentation = presentEventEffects(effects);
-        expect(presentation.text.trim(), card.id).not.toBe("");
-        expect(["positive", "negative", "muted", "neutral"], card.id).toContain(presentation.tone);
-      }
+      const presentation = presentEventEffects(card.effects);
+      expect(presentation.text.trim(), card.id).not.toBe("");
+      expect(["positive", "negative", "muted", "neutral"], card.id).toContain(presentation.tone);
     }
   });
 
@@ -161,22 +158,12 @@ describe("effective content and cost parity", () => {
     });
     const G = gameplayCity();
     pinBuildings(G, tuned);
-    G.players["0"].actionCostDiscounts.push({
-      id: "market-coupon",
-      sourceCardId: "market-coupon",
-      label: "Market coupon",
-      action: "buildBuilding",
-      buildingId: "marketplace",
-      resource: "wood",
-      amount: 3,
-      consume: "nextMatchingAction",
-    });
 
     const option = getBuildBuildingOptions(G, "0", "0,0").find(
       ({ building }) => building.id === "marketplace",
     );
     expect(option?.building.name).toBe("Agora Market");
-    expect(option?.status.cost).toEqual({ wood: 4, stone: 2 });
+    expect(option?.status.cost).toEqual({ wood: 7, stone: 2 });
     expect(buildingName("marketplace", G.definition.content)).toBe("Agora Market");
 
     const legalOption = enumerateLegalOptions(G, "0").find(
@@ -184,7 +171,7 @@ describe("effective content and cost parity", () => {
     );
     expect(legalOption).toMatchObject({
       command: { type: "buildBuilding", buildingId: "marketplace" },
-      cost: { wood: 4, stone: 2 },
+      cost: { wood: 7, stone: 2 },
     });
 
     const beforeResources = { ...G.players["0"].resources };
@@ -194,7 +181,7 @@ describe("effective content and cost parity", () => {
       : { ok: false as const, reasons: ["missing option"] };
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.state.players["0"].resources.wood).toBe(beforeResources.wood - 4);
+    expect(result.state.players["0"].resources.wood).toBe(beforeResources.wood - 7);
     expect(result.state.players["0"].resources.stone).toBe(beforeResources.stone - 2);
     expect(owned(result.state, "0,0", "0").buildings).toContain("marketplace");
     expect(calculateIncome(result.state, "0").gold - beforeIncome).toBe(9);
@@ -202,15 +189,6 @@ describe("effective content and cost parity", () => {
 
   it("quotes every dock price off the engine, targets-dependent ones included", () => {
     const G = gameplayCity();
-    G.players["0"].actionCostDiscounts.push({
-      id: "found-coupon",
-      sourceCardId: "found-coupon",
-      label: "Found coupon",
-      action: "foundColony",
-      resource: "wood",
-      amount: 2,
-      consume: "nextMatchingAction",
-    });
     const context = commandContext(G);
     const found = VERBS.find((verb) => verb.id === "found");
     const upgrade = VERBS.find((verb) => verb.id === "upgrade");
@@ -228,7 +206,7 @@ describe("effective content and cost parity", () => {
     // price has to be a figure the press would really charge, so each is checked
     // against the engine query that charges it rather than against a literal.
     const growFood = GROWABLE_POPS.map(
-      (pop) => getDiscountedGrowPopCost(G, "0", owned(G, "0,0", "0"), pop).food ?? 0,
+      (pop) => getGrowPopCost(G, "0", owned(G, "0,0", "0"), pop).food ?? 0,
     );
     expect(priceOf("grow")).toEqual([
       { span: { resource: "food", min: Math.min(...growFood), max: Math.max(...growFood) } },
@@ -248,7 +226,7 @@ describe("effective content and cost parity", () => {
     expect(priceOf("venture")).toEqual([
       {
         lead: "stake",
-        amounts: getFundExpeditionStatus(G, "0", EXPEDITION_TABLES[0].id, "gold").cost,
+        amounts: getFundExpeditionStatus(G, "0", EXPEDITION_TABLES[0].id).cost,
       },
     ]);
   });

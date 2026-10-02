@@ -446,16 +446,11 @@ function cmdMove(positionals: string[], file: string) {
           tileId: requireTileId(args[0], "tile"),
           pops: parsePops(args[1]),
         };
-      case "resolve": {
-        // Accept "resolve", "resolve 1", "resolve -2,1", "resolve 1 -2,1".
-        if (args[0] !== undefined && TILE_ID.test(args[0])) {
-          return { type: "resolveEvent", choiceIndex: 0, targetTileId: args[0] };
-        }
-        const choiceIndex = args[0] !== undefined ? requireInt(args[0], "choice index") : 0;
-        const targetTileId =
-          args[1] !== undefined ? requireTileId(args[1], "target tile") : undefined;
-        return { type: "resolveEvent", choiceIndex, targetTileId };
-      }
+      case "resolve":
+        return {
+          type: "resolveEvent",
+          ...(args[0] !== undefined ? { targetTileId: requireTileId(args[0], "target tile") } : {}),
+        };
       case "bank-sell":
         return findLegal(
           save.state,
@@ -493,8 +488,8 @@ function cmdMove(positionals: string[], file: string) {
       case "venture":
         return findLegal(
           save.state,
-          (move) => move.type === "fundExpedition" && move.stake === args[0],
-          `venture ${args[0] ?? "<gold|wood>"}`,
+          (move) => move.type === "fundExpedition" && move.expeditionId === args[0],
+          `venture ${args[0] ?? "<expeditionId>"}`,
         );
       case "insure":
         return findLegal(
@@ -837,10 +832,10 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              pops <srcTile> <dstTile> <popSpec>     popSpec: citizens=1,slaves=2 (or c=1,s=2)
              promote <tile> <pop> | demote <tile> <pop>
              bank-sell <material> | bank-buy <material>
-             calm | dole | venture <gold|wood> | insure [optionId] | resolve-riot
+             calm | dole | venture <expeditionId> | insure [optionId] | resolve-riot
              place-capital <tile> <popSpec>
              place-colony <tile> <popSpec>
-             resolve [choiceIndex] [targetTile]
+             resolve [targetTile]
              index <N>                     apply the Nth move from \`legal\`
   end-turn
   auto       [--turns N] [--policy ${POLICY_IDS}] [--record s.json] [--quiet]

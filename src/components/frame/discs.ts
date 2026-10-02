@@ -9,7 +9,7 @@ import {
   getBuildings,
   getCivicCalmStatus,
   getDemotePopStatus,
-  getDiscountedGrowPopCost,
+  getGrowPopCost,
   getDoleStatus,
   getGrowPopStatus,
   getPromotePopStatus,
@@ -205,9 +205,7 @@ export function discGroups(
         icon: POP_ICON[pop],
         ...quote(
           holdings.length > 0
-            ? holdings.map(({ settlement }) =>
-                getDiscountedGrowPopCost(G, playerID, settlement, pop),
-              )
+            ? holdings.map(({ settlement }) => getGrowPopCost(G, playerID, settlement, pop))
             : [G.ruleset.growPopCosts[pop]],
         ),
         hint: `Choose a settlement to grow a ${formatPopLabel(pop, 1)}.`,

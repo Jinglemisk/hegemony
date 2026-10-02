@@ -338,6 +338,34 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   income updates that turn's snapshot and records its new player-card draw, including
   on the final turn. A year-card reveal still counts when the opener wins before income.
 
+**Defaults picked in Step 7** (2026-10-03):
+
+- Use the player-deck table's explicit counts: 40 cards, with 12 harmful copies
+  (30%), despite the paper's "one harmful copy in four" summary. Good Stores is
+  food, Timber wood, Shipment stone, Profit gold and Patronage influence. Rats
+  takes food, Bandits gold and Fire wood; every resource card gains or loses 2.
+- Keep the drawn-card confirmation. Free Settlers adds one freeman and Captured
+  Laborers one slave, with the player picking an owned settlement with room. If
+  none has room, discard the card with no substitute reward. These gains bypass
+  the settlement's normal growth limit, as before.
+- Ventures keep a d6 and lose the stake on 1–2. Merchant Convoy pays 2 gold on
+  3–5 and 4 on 6: expected return 5/3 gold against the 2-gold stake. Grand Embassy
+  pays 1 influence on 3–4 and 2 on 5–6. Colonists' Voyage pays 2 food on 3–4,
+  3 on 5, and one freeman plus 2 food on 6. The jackpot keeps its seeded random
+  settlement placement and, if none has room, its extra 2-food fallback.
+- Retire Monumental Code and Land Rush now: both depend on annual coupons and both
+  are absent from Appendix B's Step 8 roster. The Assembly otherwise keeps its
+  current flow. Bread and Circuses and Frontier Spirit use explicit token verbs
+  with the same effect until Step 8 rewrites or cuts them. The Streets Burn
+  places one token through the same effect as Local Unrest and Plague; Festival
+  clears all, while Public Calm clears one and stops at zero.
+- The low-number dev preset leaves the new player deck, venture price and payouts
+  as authored. Existing card art is reused for the corresponding new kinds until
+  Step 14; card faces use the paper's rules text without new flavor copy. The state
+  schema is 7 and command schema 3; older saves and scripts are
+  rejected. Event resolution no longer takes a choice index, and a venture takes
+  an expedition only.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.

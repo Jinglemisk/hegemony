@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  applyHappinessSwing,
+  applyUnrestTokenChange,
   applyUnrestUpkeep,
   drawPlayerEvent,
   getAddPopsEffect,
@@ -87,17 +87,17 @@ describe("the happiness level", () => {
     expect(happinessLevel(G, "0")).toBe(-1);
   });
 
-  it("turns a one-shot loss into one token and a gain into one token cleared", () => {
+  it("places one token and clears one without going below zero", () => {
     const G = preloadedGame(SEED);
 
-    applyHappinessSwing(G, "0", -3);
-    applyHappinessSwing(G, "0", -1);
+    applyUnrestTokenChange(G, "0", "placeOne");
+    applyUnrestTokenChange(G, "0", "placeOne");
     expect(G.players["0"].unrestTokens).toBe(2);
 
-    applyHappinessSwing(G, "0", 5);
+    applyUnrestTokenChange(G, "0", "clearOne");
     expect(G.players["0"].unrestTokens).toBe(1);
-    applyHappinessSwing(G, "0", 1);
-    applyHappinessSwing(G, "0", 1);
+    applyUnrestTokenChange(G, "0", "clearOne");
+    applyUnrestTokenChange(G, "0", "clearOne");
     expect(G.players["0"].unrestTokens).toBe(0);
   });
 });

@@ -285,16 +285,10 @@ export const GLYPHS = {
   loss: [BOWL, p("M12 11V3m-3 3 3-3 3 3")],
   income: [CYCLE],
   suppress: [CYCLE, SLASH],
-  freeGrant: [CYCLE, p("M11 9v6m-3-3h6")],
   costDown: [PLINTH, p("M12 3v9m-3.5-3.5L12 12l3.5-3.5")],
   costUp: [PLINTH, p("M12 12V3m-3.5 3.5L12 3l3.5 3.5")],
   cross: [p("M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5")],
-  exchange: [p("M4 9h13.5M14 5.5 17.5 9 14 12.5"), p("M20 15H6.5M10 11.5 6.5 15 10 18.5")],
   convert: [p("M3.5 4h17l-6.5 7.5V20l-4-2.5v-6z")],
-  choice: [
-    p("M12 21v-7L6.5 8.5V4M12 14l5.5-5.5V4"),
-    p("M4.5 5.5 6.5 3.5 8.5 5.5M15.5 5.5 17.5 3.5 19.5 5.5"),
-  ],
   /* Half the jar, taken. The one solid mass earns its place: the fraction IS the
      filled part. */
   fraction: [c(12, 12, 8.5), fill("M12 3.5a8.5 8.5 0 0 1 0 17z")],
@@ -308,7 +302,6 @@ export const GLYPHS = {
       "M3 20c0-2.6 1.4-4 3-4s3 1.4 3 4M9 20c0-3.2 1.4-5 3-5s3 1.8 3 5M15 20c0-2.6 1.4-4 3-4s3 1.4 3 4",
     ),
   ],
-  perPop: [c(8, 8, 3), p("M2.5 19c.6-3.4 2.6-5 5.5-5s4.9 1.6 5.5 5"), p("M16 20v-6h6v6z")],
   popGain: [c(10, 9, 3.4), p("M4 20c.7-3.8 3-5.6 6-5.6s5.3 1.8 6 5.6"), p("M19 4v6M16 7h6")],
   popLoss: [c(10, 9, 3.4), p("M4 20c.7-3.8 3-5.6 6-5.6s5.3 1.8 6 5.6"), p("M16 7h6")],
   popIncome: [

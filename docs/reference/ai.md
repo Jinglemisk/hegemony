@@ -137,11 +137,12 @@ holds every turn, so it is weighted at the horizon's length and capped a little
 past Beloved's minimum.
 
 The rule-based stochastic chooser and the greedy/smart material evaluator also derive
-their affordability bands from the active ruleset. Venture reserves scale from the
-active stake, sell-surplus and material-starvation bands scale from the active colony
-cost, and material-score normalization scales from the active Treasurer gold minimum. This
-keeps the same policies useful under `low-number-core-v1` without baking the preset
-into bot code; standard mode still resolves to its historical thresholds exactly.
+their affordability bands from the active ruleset. The venture reserve is five
+stakes (10 gold under v2). Sell-surplus and material-starvation bands scale from the
+colony cost, and material-score normalization scales from the Treasurer minimum.
+The new player cards resolve through the real engine during evaluation, so token
+changes and free-pop placement use the same happiness and hunger projections as
+normal actions. Bots never value retired card kinds or peek at a venture roll.
 
 **Why the horizon exists** (empirical, seeds 100–109, 10×24-turn batches):
 the pre-horizon score (`10·VP + 0.5·materialIncome + 2·happiness`) priced

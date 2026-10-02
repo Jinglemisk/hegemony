@@ -5,19 +5,16 @@ import { describe, expect, it } from "vitest";
 import { Alarms } from "../components/frame/Alarms";
 import { collectIncome } from "../game/actions";
 import { enactForEval, openAssembly } from "../game/assembly";
-import { consumeLawFreeAction } from "../game/assembly/laws";
 import {
   ACTIVE_EFFECT_KINDS,
-  EVENT_EFFECT_ACTIVE_EFFECT_HANDLING,
   countActiveEffectsByKind,
   getActiveEffects,
   type ActiveEffectDescriptor,
 } from "../game/activeEffects";
-import { PLAYER_EVENT_CARDS, YEAR_CARDS } from "../game/data";
+import { YEAR_CARDS } from "../game/data";
 import { calculateIncomeBreakdown } from "../game/economy/income";
 import { projectForPlayer } from "../game/projection";
-import { getEventEffectChoices, resolvePendingPlayerEvent } from "../game/events";
-import { expireTurnEventModifiers, revealYearCard, startNewYear } from "../game/year";
+import { revealYearCard, startNewYear } from "../game/year";
 import { materialTile, scenario } from "../game/testing/scenario";
 import type { HegemonyState, Pops, YearCard } from "../game/types";
 import { PLAYER_IDS } from "../game/data";
@@ -85,18 +82,6 @@ describe("canonical active-effect selector", () => {
   it("reports source, scope, mechanics, duration, and expiry for persistent state", () => {
     const G = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });
     G.players["0"].incomeSuppressedTurns = 1;
-    G.players["0"].actionCostDiscounts = [
-      {
-        id: "coupon",
-        sourceCardId: "craftsmen-guild",
-        label: "Craftsmen's Guild",
-        action: "buildBuilding",
-        buildingId: "estate",
-        resource: "stone",
-        amount: 2,
-        consume: "nextMatchingAction",
-      },
-    ];
     G.activeYearCard = yearCard("year-piracy");
     G.activeLaws.push({
       cardId: "land-reform",
@@ -115,14 +100,7 @@ describe("canonical active-effect selector", () => {
     expect(effectByKind(G, "hunger")).toHaveLength(0);
 
     expect(kinds).toEqual(
-      new Set([
-        "incomeSuppression",
-        "hunger",
-        "yearCard",
-        "actionDiscount",
-        "standingLaw",
-        "nextAssembly",
-      ]),
+      new Set(["incomeSuppression", "hunger", "yearCard", "standingLaw", "nextAssembly"]),
     );
 
     for (const effect of effects) {
@@ -150,27 +128,13 @@ describe("canonical active-effect selector", () => {
     expect(taken).toBe(-2);
   });
 
-  it("expires countdown and coupon state at the same lifecycle boundaries it declares", () => {
+  it("expires income suppression at the lifecycle boundary it declares", () => {
     const G = stateWithSettlement();
     G.players["0"].incomeSuppressedTurns = 1;
-    G.players["0"].actionCostDiscounts = [
-      {
-        id: "expiring",
-        sourceCardId: "expiring",
-        label: "Expiring Coupon",
-        action: "foundColony",
-        resource: "wood",
-        amount: 2,
-        consume: "nextMatchingAction",
-      },
-    ];
 
     expect(effectByKind(G, "incomeSuppression")[0].duration.expiry).toBe("afterIncomeCollections");
     collectIncome(G, "0", "automatic");
     expect(effectByKind(G, "incomeSuppression")).toHaveLength(0);
-
-    expireTurnEventModifiers(G, "0");
-    expect(effectByKind(G, "actionDiscount")).toHaveLength(0);
   });
 
   it("turns Plague into one Unrest token for everyone and leaves nothing standing", () => {
@@ -184,26 +148,6 @@ describe("canonical active-effect selector", () => {
     // Nothing is left ticking: the token is the whole effect, and it is board state.
     expect(PLAYER_IDS.map((playerID) => G.players[playerID].unrestTokens)).toEqual([1, 1, 1, 1]);
     expect(getActiveEffects(G, "0").some((effect) => effect.source.id === plague.id)).toBe(false);
-  });
-
-  it("shows an annual Law coupon only while it is unspent and refreshes it at the new year", () => {
-    const G = stateWithSettlement();
-    plantLaw(G, "monumental-code");
-
-    const annual = () =>
-      getActiveEffects(G, "0").find((effect) => effect.id.includes("annual:buildBuilding"));
-    expect(annual()?.duration.expiry).toBe("afterMatchingLawActionOrYearEnd");
-    expect(presentActiveEffect(annual()!).duration).toBe("Until used or year end");
-
-    consumeLawFreeAction(G, "0", "buildBuilding");
-    expect(annual()).toBeUndefined();
-    expect(getActiveEffects(G, "0").some((effect) => effect.source.id === "monumental-code")).toBe(
-      true,
-    );
-
-    G.year = 4;
-    startNewYear(G);
-    expect(annual()).toBeDefined();
   });
 
   it("expires year-card, Law, and Isonomia descriptors through their engine lifecycles", () => {
@@ -244,32 +188,6 @@ describe("persistent event content inventory", () => {
 
       expect(descriptors, card.id).toHaveLength(card.effect.type === "zeroTerm" ? 1 : 0);
       exercised += descriptors.length;
-    }
-
-    expect(exercised).toBeGreaterThan(0);
-  });
-
-  it("materializes every authored player discount through event resolution", () => {
-    let exercised = 0;
-
-    for (const card of PLAYER_EVENT_CARDS) {
-      for (const [choiceIndex, effects] of getEventEffectChoices(card).entries()) {
-        const expected = effects.filter((effect) => {
-          const handling = EVENT_EFFECT_ACTIVE_EFFECT_HANDLING[effect.type];
-          return handling === "materializedActionDiscount";
-        });
-        if (expected.length === 0) continue;
-
-        const G = stateWithSettlement();
-        G.pendingPlayerEvent = { card, playerID: "0" };
-        expect(resolvePendingPlayerEvent(G, "0", undefined, choiceIndex).ok, card.id).toBe(true);
-        const descriptors = getActiveEffects(G, "0").filter(
-          (effect) => effect.source.id === card.id,
-        );
-
-        expect(descriptors, card.id + " option " + choiceIndex).toHaveLength(expected.length);
-        exercised += expected.length;
-      }
     }
 
     expect(exercised).toBeGreaterThan(0);

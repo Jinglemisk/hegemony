@@ -2,7 +2,7 @@ import { getBuilding } from "./content";
 import { getOwnedSettlement, zeroedYearTerm } from "./core/query";
 import { getLawHappinessContributions } from "./assembly/laws";
 import { activeClaims, luxuryHappinessBonus } from "./luxury";
-import type { HegemonyState, PlayerId, Settlement } from "./types";
+import type { HegemonyState, PlayerId, Settlement, UnrestTokenChange } from "./types";
 
 /**
  * Happiness is a level: a number read off the board each turn and never stored.
@@ -105,27 +105,21 @@ export function standingHappiness(G: HegemonyState, playerID: PlayerId): number 
   );
 }
 
-/**
- * A one-shot happiness gain or loss from a card, a Law's rider or a Directive. With
- * no bank to pay into, a loss of any size places one Unrest token and a gain of any
- * size clears one. Returns the change in tokens.
- */
-export function applyHappinessSwing(G: HegemonyState, playerID: PlayerId, amount: number): number {
+/** Apply the printed token verb. Clear-one floors at zero; Festival clears all. */
+export function applyUnrestTokenChange(
+  G: HegemonyState,
+  playerID: PlayerId,
+  change: UnrestTokenChange,
+): number {
   const player = G.players[playerID];
   const before = player.unrestTokens;
-
-  if (amount < 0) {
-    player.unrestTokens += 1;
-  } else if (amount > 0) {
-    player.unrestTokens = Math.max(0, before - 1);
-  }
-
+  player.unrestTokens =
+    change === "placeOne" ? before + 1 : change === "clearAll" ? 0 : Math.max(0, before - 1);
   return player.unrestTokens - before;
 }
 
-/** How a swing reads in the log: "places an Unrest token" or "clears an Unrest token". */
-export function describeHappinessSwing(change: number): string {
+export function describeUnrestTokenChange(change: number): string {
   if (change > 0) return "places an Unrest token";
-  if (change < 0) return "clears an Unrest token";
+  if (change < 0) return `clears ${-change === 1 ? "an Unrest token" : `${-change} Unrest tokens`}`;
   return "finds no Unrest token to clear";
 }

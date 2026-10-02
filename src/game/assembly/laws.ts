@@ -2,6 +2,7 @@ import type {
   HegemonyState,
   PlayerId,
   PopType,
+  UnrestTokenChange,
   Resource,
   Resources,
   SettlementKind,
@@ -311,58 +312,11 @@ export function applyLawActionCost(
     adjusted[effect.resource] = Math.max(0, (adjusted[effect.resource] ?? 0) + effect.amount);
   }
 
-  // A free-action coupon zeroes the named resources outright — checked, not consumed,
-  // here; `consumeLawFreeAction` spends it once the action actually commits.
-  if (hasLawFreeAction(G, playerID, action)) {
-    for (const resource of freeActionResources(effects, action)) {
-      adjusted[resource] = 0;
-    }
-  }
-
   return adjusted;
 }
 
 function scopeOverlaps(a: SettlementScope, b: SettlementScope): boolean {
   return a === "all" || b === "all" || a === b;
-}
-
-function freeActionResources(effects: LawEffect[], action: LawCostedAction): Resource[] {
-  const resources: Resource[] = [];
-
-  for (const effect of effects) {
-    if (effect.type === "yearlyFreeAction" && effect.action === action) {
-      resources.push(...effect.resources);
-    }
-  }
-
-  return resources;
-}
-
-/** True when the player still holds an unspent free-action coupon for this action. */
-export function hasLawFreeAction(
-  G: HegemonyState,
-  playerID: PlayerId,
-  action: LawCostedAction,
-): boolean {
-  if (G.players[playerID].lawFreeActionsUsedThisYear.includes(action)) {
-    return false;
-  }
-
-  return getStandingEffects(G, playerID).some(
-    (effect) => effect.type === "yearlyFreeAction" && effect.action === action,
-  );
-}
-
-/** Spend the year's free-action coupon. Called by the action AFTER it commits, so a
- *  refused move never burns the coupon. */
-export function consumeLawFreeAction(
-  G: HegemonyState,
-  playerID: PlayerId,
-  action: LawCostedAction,
-) {
-  if (hasLawFreeAction(G, playerID, action)) {
-    G.players[playerID].lawFreeActionsUsedThisYear.push(action);
-  }
 }
 
 /** A Law's shift to a bank rate, in whole steps in the trader's favour: a better sell
@@ -437,13 +391,13 @@ export function getLawHappinessContributions(
 
 /** The riders a Law hangs on founding a colony (Frontier Spirit). */
 export function getFoundColonyRiders(G: HegemonyState, playerID: PlayerId) {
-  const riders: Array<{ grantPop?: PopType; happiness?: number; label: string }> = [];
+  const riders: Array<{ grantPop?: PopType; unrestTokens?: UnrestTokenChange; label: string }> = [];
 
   for (const effect of getStandingEffects(G, playerID)) {
     if (effect.type === "onFoundColony") {
       riders.push({
         grantPop: effect.grantPop,
-        happiness: effect.happiness,
+        unrestTokens: effect.unrestTokens,
         label: effectLabel(G, playerID, effect),
       });
     }
