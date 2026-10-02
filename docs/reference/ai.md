@@ -107,23 +107,29 @@ resets the log, so each clone is ~an order of magnitude lighter than a full
 
 ```
 score = 10 · VP(resources projected INCOME_HORIZON turns ahead)
-      +  2 · projectedHappiness
+      +  6 · standingLevel      (capped at Beloved's minimum + 2)
       +  1 · influence          (INCOME_HORIZON = 6)
       -  projectedUnrestRisk
 ```
 
 The projection advances each future upkeep and income collection in order. It
 uses the engine's own income and active-effect queries, including suppressed
-collections, timed happiness, and the pops hunger would take. At every projected
-upkeep it records the minimum happiness and any mild-riot or severe-revolt
-threshold crossing; a severe crossing applies the live ruleset's rebound before
-income resumes. This prevents a later recovery from hiding an earlier riot.
+collections and the pops hunger would take. Happiness is a level, so the
+projection reads the engine's level at every upkeep: this year's calm counts at
+the first one only. A riot spends the Unrest tokens, so a riot caused by tokens is
+met once; a level held down by slaves is met at every upkeep of the horizon. A
+revolt draws no dice, so the projection runs it: half the slaves leave the
+projected board.
 
 `projectedUnrestRisk` is deliberately a named strategic heuristic, not an
-expected riot-table payout. It uses the active ruleset thresholds, severe pop-loss
-multiplier, severe roll modifier, and rebound. It does not guess whether a future
-conditional resource/building loss or insurance purchase will apply, and it never
-reads the seeded future die roll.
+expected riot-table payout. It uses the active ruleset's riot and revolt lines,
+charges a riot 50, a revolt twice that, and a sliding caution cost just above the
+riot line. It does not guess whether a future conditional resource/building loss
+or insurance purchase will apply, and it never reads the seeded future die roll.
+
+`standingLevel` is the level without calm, as Beloved reads it. A point of it
+holds every turn, so it is weighted at the horizon's length and capped a little
+past Beloved's minimum.
 
 The rule-based stochastic chooser and the greedy/smart material evaluator also derive
 their affordability bands from the active ruleset. Venture reserves scale from the

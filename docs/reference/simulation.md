@@ -46,8 +46,7 @@ npm run sim -- new --seed 42 [--mode standard|fastStart|deathmatch]
                   [--bot-seed N] [--file path]
 ```
 
-- `--seed` drives **everything**: deck shuffles, random placements, unrest pop
-  removal. Same seed → same game, always. Omitting it picks (and prints) one.
+- `--seed` drives **everything**: deck shuffles, random placements, table rolls. Same seed → same game, always. Omitting it picks (and prints) one.
 - Openings: `policy` (default) places capitals and founding colonies with the
   shared placement evaluator — the same brain the bots play with, so a reload
   or a batch starts from a sane opening; `random` draws uniformly among legal
@@ -61,7 +60,7 @@ npm run sim -- new --seed 42 [--mode standard|fastStart|deathmatch]
   ```json
   {
     "actionCosts": { "foundColony": { "wood": 15, "food": 2 } },
-    "economy": { "unrest": { "popLossThreshold": -6 } }
+    "economy": { "unrest": { "riotThreshold": -4 } }
   }
   ```
 
@@ -212,9 +211,10 @@ The report contains:
   player-turn shares
 - `perSeat` — real `winRate` (finished games only), `capLeaderRate` (turn-capped
   games), and mean final cards per seat (first-player advantage check)
-- `riots` — riots resolved per game, the share of player-turns that opened on the riot
-  table, and the same counts season by season (`bySeason`), so a report can cut the
-  late game
+- `riots` — riots resolved per game, revolts per game (`revoltsPerGame`), the share of
+  player-turns that opened on the riot table, and the same counts season by season
+  (`bySeason`), so a report can cut the late game. The CSV carries the level as
+  `happiness` and the `unrestTokens` count per row
 - `hunger` — food under work slots, per seat: incomes that left a mouth unfed per
   game, pops lost to hunger per game, mean idle slaves and their share of all slaves.
   The CSV carries `slaves`, `idleSlaves` and the running `popsLostToHunger` per row
@@ -258,9 +258,9 @@ Replays are byte-identical to the original run.
 {
   "version": 2,
   "engineVersion": "0.1.0",
-  "stateSchemaVersion": 3,
-  "commandSchemaVersion": 1,
-  "seed": 42, // game seed: decks, board draws, unrest removals
+  "stateSchemaVersion": 5,
+  "commandSchemaVersion": 2,
+  "seed": 42, // game seed: decks, board draws, table rolls
   "mode": "standard",
   "rulesetPatch": null, // deep-merged over the mode's ruleset
   "definition": {
@@ -305,7 +305,7 @@ dead-code, formatting, bounded-test, and browser-smoke enforcement is now shippe
     .opening() // scripted 4-player opening → gameplay
     .withResources("0", "wealthy")
     .withSettlement("2", "0,0", "city", { citizens: 2, freemen: 1, slaves: 0 })
-    .withHappiness("2", -7)
+    .withHappiness("2", -2) // places the Unrest tokens that bring the level to −2
     .build();
   ```
 
