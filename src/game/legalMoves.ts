@@ -30,19 +30,13 @@ import {
 import type { CivicCalmPayment } from "./civic";
 import { CONCESSION_FROM, buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
 import { fundExpedition, getFundExpeditionStatus } from "./ventures";
-import type { VentureStake } from "./ventures";
 import { getAuthoredGameContent, getExpeditionTables, getRiotTable } from "./content";
 import { EMPTY_POPS, GROWABLE_POPS, POP_TYPES, totalPops } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
 import { getOwnedSettlement } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
-import {
-  getAddPopsEffect,
-  getEventEffectChoices,
-  getEventPopTargetTileIds,
-  resolvePendingPlayerEvent,
-} from "./events";
+import { getAddPopsEffect, getEventPopTargetTileIds, resolvePendingPlayerEvent } from "./events";
 import { setupCapitalCount } from "./ruleset";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
 import {
@@ -127,7 +121,7 @@ export type GameCommand =
     }
   | { type: "growPop"; tileId: string; pop: PopType }
   | { type: "movePops"; sourceTileId: string; targetTileId: string; pops: Pops }
-  | { type: "resolveEvent"; choiceIndex: number; targetTileId?: string }
+  | { type: "resolveEvent"; targetTileId?: string }
   | { type: "bankSell"; material: TradableMaterial }
   | { type: "bankBuy"; material: TradableMaterial }
   /** The Dole: influence for food. */
@@ -135,7 +129,7 @@ export type GameCommand =
   | { type: "civicCalm"; payment: CivicCalmPayment }
   | { type: "promotePop"; tileId: string; from: PopType }
   | { type: "demotePop"; tileId: string; from: PopType }
-  | { type: "fundExpedition"; expeditionId: EventTableId; stake: VentureStake }
+  | { type: "fundExpedition"; expeditionId: EventTableId }
   | {
       type: "buyRiotInsurance";
       optionId: RiotInsuranceId;
@@ -278,7 +272,7 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
     case "movePops":
       return movePops(G, playerID, move.sourceTileId, move.targetTileId, move.pops);
     case "resolveEvent":
-      return resolvePendingPlayerEvent(G, playerID, move.targetTileId, move.choiceIndex);
+      return resolvePendingPlayerEvent(G, playerID, move.targetTileId);
     case "bankSell":
       return bankSell(G, playerID, move.material);
     case "bankBuy":
@@ -292,7 +286,7 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
     case "demotePop":
       return demotePop(G, playerID, move.tileId, move.from);
     case "fundExpedition":
-      return fundExpedition(G, playerID, move.expeditionId, move.stake);
+      return fundExpedition(G, playerID, move.expeditionId);
     case "buyRiotInsurance":
       return buyRiotInsurance(G, playerID, move.optionId, move.demoteTarget);
     case "resolveRiot":
@@ -509,7 +503,7 @@ export function describeCommand(
     case "movePops":
       return `move ${formatPops(move.pops)} from ${move.sourceTileId} to ${move.targetTileId}${formatCost(cost)}`;
     case "resolveEvent":
-      return `resolve pending event (choice ${move.choiceIndex})${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
+      return `resolve pending event${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
     case "bankSell":
       return `sell ${Object.values(cost)[0] ?? 1} ${move.material} to the bank for 1 gold`;
     case "bankBuy":
@@ -523,7 +517,7 @@ export function describeCommand(
     case "demotePop":
       return `demote a ${formatPopName(move.from, 1)} on ${move.tileId}${formatCost(cost)}`;
     case "fundExpedition":
-      return `fund the ${move.expeditionId} staking ${move.stake}${formatCost(cost)}`;
+      return `fund the ${move.expeditionId}${formatCost(cost)}`;
     case "buyRiotInsurance":
       return `declare riot insurance: ${move.optionId}${move.demoteTarget ? ` (demoting a ${formatPopName(move.demoteTarget.from, 1)} on ${move.demoteTarget.tileId})` : ""}`;
     case "resolveRiot":
@@ -595,22 +589,12 @@ function enumerateEventResolutions(G: HegemonyState, playerID: PlayerId): Derive
     return [];
   }
 
-  const moves: DerivedCommand[] = [];
-
-  getEventEffectChoices(pending.card).forEach((effects, choiceIndex) => {
-    const popEffect = getAddPopsEffect(effects);
-
-    if (!popEffect) {
-      moves.push({ type: "resolveEvent", choiceIndex });
-      return;
-    }
-
-    for (const targetTileId of getEventPopTargetTileIds(G, playerID, popEffect)) {
-      moves.push({ type: "resolveEvent", choiceIndex, targetTileId });
-    }
-  });
-
-  return moves;
+  const popEffect = getAddPopsEffect(pending.card.effects);
+  if (!popEffect) return [{ type: "resolveEvent" }];
+  return getEventPopTargetTileIds(G, playerID, popEffect).map((targetTileId) => ({
+    type: "resolveEvent",
+    targetTileId,
+  }));
 }
 
 function enumerateCapitalPlacements(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
@@ -828,17 +812,9 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
   }
 
   for (const table of getExpeditionTables(G.definition.content)) {
-    for (const stake of ["gold", "wood"] as const) {
-      const status = getFundExpeditionStatus(G, playerID, table.id, stake);
-      if (status.can) {
-        moves.push({
-          type: "fundExpedition",
-          expeditionId: table.id,
-          stake,
-          cost: status.cost ?? {},
-        });
-      }
-    }
+    const status = getFundExpeditionStatus(G, playerID, table.id);
+    if (status.can)
+      moves.push({ type: "fundExpedition", expeditionId: table.id, cost: status.cost ?? {} });
   }
 
   moves.push({ type: "endTurn" });

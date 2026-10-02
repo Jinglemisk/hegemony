@@ -2,7 +2,14 @@ import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../game/activ
 import type { DirectiveEffect, LawEffect } from "../game/assembly/types";
 import { getAuthoredGameContent } from "../game/content";
 import type { GameContent } from "../game/content";
-import type { BuildingEffect, EventEffect, TableEffect, YearCard, YearTerm } from "../game/types";
+import type {
+  BuildingEffect,
+  EventEffect,
+  TableEffect,
+  YearCard,
+  YearTerm,
+  UnrestTokenChange,
+} from "../game/types";
 import {
   RESOURCE_LABELS,
   buildingName,
@@ -35,8 +42,6 @@ export type EffectPresentation = {
   subject?: string;
   /** When or how it lands, demoted beneath the subject. */
   condition?: string;
-  /** How many turns it stands, when it is timed — drives the duration strip. */
-  turns?: number;
 };
 
 /**
@@ -45,12 +50,11 @@ export type EffectPresentation = {
  * By default `text` is the parts joined in order, so the flat sentence is
  * PRODUCED by the split rather than maintained beside it and the two cannot
  * drift. `text` is passed explicitly only where the flat wording and the carved
- * wording genuinely differ — a timed blow says "for 3 turns" in prose and says
- * it with pips in a ceremony, so its condition is the *when*, not the *how long*.
+ * wording differ.
  */
 function carve(
   tone: EffectTone,
-  parts: { magnitude?: string; subject?: string; condition?: string; turns?: number },
+  parts: { magnitude?: string; subject?: string; condition?: string },
   text = [parts.magnitude, parts.subject, parts.condition].filter(Boolean).join(" "),
 ): EffectPresentation {
   return { text, tone, ...parts };
@@ -63,11 +67,8 @@ export type ActiveEffectPresentation = EffectPresentation & {
   accessibleText: string;
 };
 
-export function presentEventEffects(
-  effects: readonly EventEffect[],
-  content: GameContent = getAuthoredGameContent(),
-): EffectPresentation {
-  const presented = effects.map((effect) => presentEventEffect(effect, content));
+export function presentEventEffects(effects: readonly EventEffect[]): EffectPresentation {
+  const presented = effects.map((effect) => presentEventEffect(effect));
 
   // A card that does ONE thing keeps that effect's parts, so the ceremony can
   // carve them. Two effects joined by " / " have no single number to be about,
@@ -127,12 +128,13 @@ export function joinEffectPresentations(
   };
 }
 
-/** A one-shot happiness effect. The level has no bank, so the engine places one
- *  Unrest token for a loss of any size and clears one for a gain. */
-function presentUnrestToken(amount: number): EffectPresentation {
-  return amount < 0
-    ? carve("negative", { magnitude: "+1", subject: "Unrest token" })
-    : carve("positive", { magnitude: "-1", subject: "Unrest token" });
+/** The token operation printed on the card. */
+function presentUnrestToken(change: UnrestTokenChange, realm = "your realm"): EffectPresentation {
+  return carve(change === "placeOne" ? "negative" : "positive", {
+    magnitude: change === "clearAll" ? "All" : change === "placeOne" ? "+1" : "-1",
+    subject: change === "clearAll" ? "Unrest tokens" : "Unrest token",
+    condition: change === "placeOne" ? `placed on ${realm}` : `cleared from ${realm}`,
+  });
 }
 
 export function presentTableEffect(effect: TableEffect): EffectPresentation {
@@ -164,17 +166,12 @@ export function presentTableEffect(effect: TableEffect): EffectPresentation {
   }
 }
 
-export function presentEventEffect(
-  effect: EventEffect,
-  content: GameContent = getAuthoredGameContent(),
-): EffectPresentation {
+export function presentEventEffect(effect: EventEffect): EffectPresentation {
   switch (effect.type) {
     case "resourceDelta":
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
-    case "happinessDelta":
-      return presentUnrestToken(effect.amount);
-    case "timedHappinessDelta":
-      return presentUnrestToken(effect.amountPerTurn);
+    case "unrestTokens":
+      return presentUnrestToken(effect.change);
     case "addPops":
       return carve(
         "positive",
@@ -185,40 +182,6 @@ export function presentEventEffect(
         },
         `Add ${effect.amount} ${formatPopLabel(effect.pop, effect.amount)}`,
       );
-    case "actionCostDiscount": {
-      const target = effect.buildingId
-        ? buildingName(effect.buildingId, content)
-        : effect.action === "foundColony"
-          ? "colony"
-          : effect.action === "growPop"
-            ? `${effect.pop ? formatPopLabel(effect.pop, 1) : "pop"} grown`
-            : "building";
-
-      return carve(
-        "positive",
-        {
-          magnitude: `-${formatNumber(effect.amount)}`,
-          subject: RESOURCE_LABELS[effect.resource],
-          condition: `on your next ${target}`,
-        },
-        `Next ${target}: -${formatNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]}`,
-      );
-    }
-    case "resourceExchange":
-      return {
-        text: `Exchange up to ${effect.maxAmount} ${RESOURCE_LABELS[effect.from]} for ${Math.floor(
-          effect.maxAmount * effect.ratio,
-        )} ${RESOURCE_LABELS[effect.to]}`,
-        tone: "neutral",
-      };
-    case "resourceDeltaPerPop":
-      return carve(signedTone(effect.amountPerPop), {
-        magnitude: formatSignedNumber(effect.amountPerPop),
-        subject: RESOURCE_LABELS[effect.resource],
-        condition: `per ${formatPopLabel(effect.pop, 1)}, minimum ${effect.minimum}`,
-      });
-    case "choice":
-      return { text: "Choose one option", tone: "neutral" };
   }
 }
 
@@ -246,24 +209,6 @@ function presentActiveEffectMechanic(
       };
     case "zeroTerm":
       return { text: YEAR_TERM_LABELS[mechanic.term], tone: "negative" };
-    case "actionCostDiscount": {
-      const target = mechanic.buildingId
-        ? buildingName(mechanic.buildingId, content)
-        : mechanic.action === "growPop" && mechanic.pop
-          ? formatPopLabel(mechanic.pop, 1) + " growth"
-          : actionLabel(mechanic.action);
-
-      return {
-        text:
-          "Next " +
-          target +
-          ": -" +
-          formatNumber(mechanic.amount) +
-          " " +
-          RESOURCE_LABELS[mechanic.resource],
-        tone: "positive",
-      };
-    }
     case "standingLaw":
       return presentLawEffect(mechanic.effect, content);
     case "equalVotesNextAssembly":
@@ -366,23 +311,14 @@ export function presentLawEffect(
           (Math.abs(effect.steps) === 1 ? "" : "s"),
         tone: signedTone(effect.steps),
       };
-    case "yearlyFreeAction":
-      return {
-        text:
-          "First " +
-          actionLabel(effect.action) +
-          " each year: free " +
-          effect.resources.map((resource) => RESOURCE_LABELS[resource]).join(" + "),
-        tone: "positive",
-      };
     case "onFoundColony": {
       const rewards = [
         effect.grantPop ? "+1 " + formatPopLabel(effect.grantPop, 1) : null,
-        effect.happiness ? presentUnrestToken(effect.happiness).text : null,
+        effect.unrestTokens ? presentUnrestToken(effect.unrestTokens).text : null,
       ].filter(Boolean);
       return {
         text: "On founding a colony: " + rewards.join(" + "),
-        tone: (effect.happiness ?? 0) < 0 && !effect.grantPop ? "negative" : "positive",
+        tone: effect.unrestTokens === "placeOne" && !effect.grantPop ? "negative" : "positive",
       };
     }
   }
@@ -391,9 +327,9 @@ export function presentLawEffect(
 export function presentDirectiveEffect(effect: DirectiveEffect): EffectPresentation {
   switch (effect.type) {
     case "resourceDelta":
-      return effect.resource === "happiness"
-        ? presentUnrestToken(effect.amount)
-        : signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
+      return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
+    case "unrestTokens":
+      return presentUnrestToken(effect.change, "the target's realm");
     case "resourceFraction":
       return {
         text: `Lose ${formatNumber(effect.fraction * 100)}% stored ${RESOURCE_LABELS[effect.resource]}`,
@@ -441,18 +377,12 @@ function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string
   switch (descriptor.duration.expiry) {
     case "afterIncomeCollections":
       return remaining + " income collection" + (remaining === 1 ? " remaining" : "s remaining");
-    case "afterPlayerUpkeeps":
-      return remaining + " upkeep" + (remaining === 1 ? " remaining" : "s remaining");
     case "whenFed":
       return remaining === 0
         ? "Hunger at the next income"
         : "Food lasts " + remaining + " more income" + (remaining === 1 ? "" : "s");
     case "atYearEnd":
       return "Until year end";
-    case "afterMatchingActionOrTurnEnd":
-      return "Until used or turn end";
-    case "afterMatchingLawActionOrYearEnd":
-      return "Until used or year end";
     case "whenRepealed":
       return "Until repealed";
     case "atNextAssembly":

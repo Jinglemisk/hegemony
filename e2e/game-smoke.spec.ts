@@ -18,10 +18,10 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   const decisionTitle = await forcedDecision.getByRole("heading").textContent();
   await forcedDecision
     // A fate's commit verb takes the card's mood now — you ENDURE a wound and
-    // TAKE a gift, by name when the gift has one ("Take the Gold"); only a choice or
-    // a placement keeps a procedural label.
+    // TAKE a gift, by name when the gift has one ("Take the Gold"). Pop and token
+    // cards name their placement or clearing operation.
     .getByRole("button", {
-      name: /^(Endure It|Take It|Take the .+|So Be It|Place Pops|Resolve Choice)$/,
+      name: /^(Endure It|Take It|Take the .+|So Be It|Place Pop|Place Unrest|Clear Unrest)$/,
     })
     .click();
   await expect(forcedDecision).toBeHidden();

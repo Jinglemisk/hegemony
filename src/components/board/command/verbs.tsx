@@ -1,8 +1,10 @@
+import { getFundExpeditionStatus } from "../../../game/ventures";
+import { getExpeditionTables } from "../../../game/content";
 import type { Phase } from "../../../client/controller";
 import { getCivicCalmStatus } from "../../../game/civic";
 import { getBuildings } from "../../../game/content";
 import { GROWABLE_POPS } from "../../../game/core/pops";
-import { getAdjustedActionCost, getDiscountedGrowPopCost } from "../../../game/economy/cost";
+import { getAdjustedActionCost, getGrowPopCost } from "../../../game/economy/cost";
 import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../../game/types";
 import type { MapSelectionMode } from "../map/mapSelection";
@@ -108,7 +110,7 @@ const totalUnits = (cost: Partial<Resources>) =>
   Object.values(cost).reduce((sum: number, amount) => sum + (amount ?? 0), 0);
 
 /** Grow's food price across every settlement × pop type the player could grow.
- *  Building discounts, event coupons and Standing Laws are already inside the
+ *  Standing Laws are already inside the
  *  engine's own number — this only takes its ends. */
 function growFoodSpan(context: VerbContext): VerbPriceClause[] {
   const { G, playerID } = context;
@@ -116,9 +118,7 @@ function growFoodSpan(context: VerbContext): VerbPriceClause[] {
   const foods =
     settlements.length > 0
       ? settlements.flatMap((settlement) =>
-          GROWABLE_POPS.map(
-            (pop) => getDiscountedGrowPopCost(G, playerID, settlement, pop).food ?? 0,
-          ),
+          GROWABLE_POPS.map((pop) => getGrowPopCost(G, playerID, settlement, pop).food ?? 0),
         )
       : // Before the first settlement stands there is nothing to discount, so the
         // ruleset's undiscounted mouths are the honest quote.
@@ -239,10 +239,19 @@ export const VERBS: VerbSpec[] = [
     id: "venture",
     label: "Venture",
     // Every expedition posts the same stake, so it is quotable before you pick
-    // one — `ruleset.ventureStakes` is the field `getFundExpeditionStatus` reads.
-    cost: ({ G }) => [{ lead: "stake", amounts: G.ruleset.ventureStakes.gold }],
+    // one — `ruleset.ventureCost` is the field `getFundExpeditionStatus` reads.
+    cost: ({ G, playerID }) => [
+      {
+        lead: "stake",
+        amounts: getFundExpeditionStatus(
+          G,
+          playerID,
+          getExpeditionTables(G.definition.content)[0].id,
+        ).cost,
+      },
+    ],
     available: ({ ventureUsed }) => !ventureUsed,
-    hint: "Fund an expedition: stake gold or wood, roll the table.",
+    hint: "Fund an expedition: post the stake, roll the table.",
     blockedHint: "One venture per turn — the ships are already out.",
     select: (handlers) => handlers.onVentureRequest(),
   },

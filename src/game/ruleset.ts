@@ -3,7 +3,7 @@ import {
   GROW_POP_COSTS,
   SETTLEMENT_RULES,
   STARTING_RESOURCES,
-  VENTURE_STAKES,
+  VENTURE_COST,
 } from "./data";
 import { PLACEMENT_POP_COUNTS } from "./core/pops";
 import type { PoliticianId } from "./assembly/types";
@@ -205,8 +205,8 @@ export interface Ruleset {
   economy: EconomyRules;
   civicCalm: CivicCalmRules;
   ladder: LadderRules;
-  /** Venture stakes (D10) — either posts any expedition. */
-  ventureStakes: Record<"gold" | "wood", Partial<Resources>>;
+  /** One stake posts any expedition. */
+  ventureCost: Partial<Resources>;
   /** The Assembly & Politicians layer (Phase 3-B). */
   assembly: AssemblyRules;
   /**
@@ -284,7 +284,7 @@ export const DEFAULT_RULESET: Ruleset = {
     promoteCosts: { slaves: { food: 2 }, freemen: { gold: 2 } },
     demoteCosts: { citizens: { influence: 1 }, freemen: { influence: 1 } },
   },
-  ventureStakes: VENTURE_STAKES,
+  ventureCost: VENTURE_COST,
   assembly: {
     // Every other year from Year 2: up to seven sittings in a fourteen-year game.
     firstYear: 2,

@@ -47,14 +47,12 @@ function directionsOf(effect: LawEffect): number[] {
       return [effect.multiplier < 1 ? 1 : -1];
     case "bankRateStep":
       return [Math.sign(effect.steps)];
-    case "yearlyFreeAction":
-      return [1];
     case "surplusConversion":
       return [1];
     case "thresholdHappiness":
       return [Math.sign(effect.atOrAbove), Math.sign(effect.below)];
     case "onFoundColony":
-      return [effect.grantPop ? 1 : 0, Math.sign(effect.happiness ?? 0)];
+      return [effect.grantPop ? 1 : 0, effect.unrestTokens === "placeOne" ? -1 : 0];
   }
 }
 
@@ -79,14 +77,14 @@ describe("the politician roster", () => {
   });
 });
 
-describe("the 31-card starter deck", () => {
-  it("holds exactly 31 cards: 8 Laws each for the three regulars, 7 Directives for Stratokles", () => {
-    expect(RESOLUTION_CARDS).toHaveLength(31);
+describe("the 29-card bridge deck", () => {
+  it("holds 22 Laws and 7 Directives after the coupon Laws retire", () => {
+    expect(RESOLUTION_CARDS).toHaveLength(29);
     expect(RESOLUTION_DECKS.demosthenes).toHaveLength(8);
-    expect(RESOLUTION_DECKS.perdiccas).toHaveLength(8);
-    expect(RESOLUTION_DECKS.kleistophenes).toHaveLength(8);
+    expect(RESOLUTION_DECKS.perdiccas).toHaveLength(7);
+    expect(RESOLUTION_DECKS.kleistophenes).toHaveLength(7);
     expect(RESOLUTION_DECKS.stratokles).toHaveLength(7);
-    expect(laws).toHaveLength(24);
+    expect(laws).toHaveLength(22);
     expect(directives).toHaveLength(7);
   });
 

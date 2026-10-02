@@ -34,7 +34,7 @@ describe("configured stockpile floors", () => {
       .withResources("0", { wood: 3 })
       .build();
     const card = getPlayerEventCards(G.definition.content).find(
-      (candidate) => candidate.id === "player-warehouse-fire",
+      (candidate) => candidate.id === "player-fire",
     )!;
     G.pendingPlayerEvent = { card, playerID: "0" };
 

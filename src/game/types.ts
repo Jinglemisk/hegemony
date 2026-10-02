@@ -1,12 +1,6 @@
 import type { Ruleset } from "./ruleset";
 import type { GameDefinition } from "./definition";
-import type {
-  ActiveLaw,
-  AssemblySession,
-  LawCostedAction,
-  PoliticianId,
-  TallyMonument,
-} from "./assembly/types";
+import type { ActiveLaw, AssemblySession, PoliticianId, TallyMonument } from "./assembly/types";
 
 export type PlayerId = "0" | "1" | "2" | "3";
 
@@ -87,68 +81,12 @@ export type Pops = Record<PopType, number>;
 /** The pops Grow can add. Citizens come only by promotion. */
 export type GrowablePop = Exclude<PopType, "citizens">;
 
-export type EventTiming = "immediate" | "pendingChoice" | "turn";
-
-export type EventScope = "activePlayer" | "allPlayers";
-
-export type ActionCostDiscountTarget = "buildBuilding" | "foundColony" | "growPop";
+export type UnrestTokenChange = "placeOne" | "clearOne" | "clearAll";
 
 export type EventEffect =
-  | {
-      type: "resourceDelta";
-      scope: EventScope;
-      resource: Resource;
-      amount: number;
-    }
-  | {
-      type: "happinessDelta";
-      scope: EventScope;
-      amount: number;
-    }
-  | {
-      /** v1's timed unrest. Like every one-shot happiness effect it now places or
-       *  clears one Unrest token when drawn; Step 7's deck replaces it. */
-      type: "timedHappinessDelta";
-      scope: EventScope;
-      amountPerTurn: number;
-      turns: number;
-    }
-  | {
-      type: "addPops";
-      pop: PopType;
-      amount: number;
-      target: "ownedSettlementWithCapacity";
-    }
-  | {
-      type: "actionCostDiscount";
-      action: ActionCostDiscountTarget;
-      buildingId?: BuildingId;
-      /** For `growPop` discounts: only grows of this pop type match (grow coupons). */
-      pop?: PopType;
-      resource: Resource;
-      amount: number;
-      duration: "turn";
-      consume: "nextMatchingAction";
-    }
-  | {
-      type: "resourceExchange";
-      from: Resource;
-      to: Resource;
-      maxAmount: number;
-      ratio: number;
-    }
-  | {
-      type: "resourceDeltaPerPop";
-      scope: EventScope;
-      resource: Resource;
-      pop: PopType;
-      amountPerPop: number;
-      minimum: number;
-    }
-  | {
-      type: "choice";
-      options: EventEffect[][];
-    };
+  | { type: "resourceDelta"; resource: Resource; amount: number }
+  | { type: "addPops"; pop: GrowablePop; amount: number; target: "ownedSettlementWithCapacity" }
+  | { type: "unrestTokens"; change: UnrestTokenChange };
 
 export interface EventCard {
   id: string;
@@ -165,7 +103,6 @@ export interface EventCard {
    * blanked. Authored in `data.ts`; see `PendingPlayerEventModal` for the slot.
    */
   flavor?: string;
-  timing: EventTiming;
   effects: EventEffect[];
 }
 
@@ -183,7 +120,8 @@ export type YearTerm =
 /** What a year card does: zero one term for the year, or move every realm's Unrest
  *  tokens once when it is revealed. */
 export type YearCardEffect =
-  { type: "zeroTerm"; term: YearTerm } | { type: "unrestTokens"; change: "placeOne" | "clearAll" };
+  | { type: "zeroTerm"; term: YearTerm }
+  | { type: "unrestTokens"; change: Exclude<UnrestTokenChange, "clearOne"> };
 
 /** A card of the year deck, the game's clock. One is revealed as each year opens and
  *  stands until the year turns. */
@@ -201,18 +139,6 @@ export interface YearCard {
 export interface PendingPlayerEvent {
   card: EventCard;
   playerID: PlayerId;
-}
-
-export interface ActiveActionCostDiscount {
-  id: string;
-  sourceCardId: string;
-  label: string;
-  action: ActionCostDiscountTarget;
-  buildingId?: BuildingId;
-  pop?: PopType;
-  resource: Resource;
-  amount: number;
-  consume: "nextMatchingAction";
 }
 
 /** What a tile's working slaves make. The tile prints no amount: a slave on an open
@@ -370,7 +296,6 @@ export interface PlayerState {
    *  next income still falls under this year's card. */
   collectedThisTurn: boolean;
   grownSettlementsThisTurn: string[];
-  actionCostDiscounts: ActiveActionCostDiscount[];
   /** Unrest tokens on this realm: the one part of happiness that is board state.
    *  Cards, Laws and Directives place them; a riot, a revolt or a kind card clears
    *  them. Each takes 1 from the level and none can be bought off. */
@@ -392,9 +317,6 @@ export interface PlayerState {
   moveUsedThisTurn: boolean;
   /** Calm bought this year. It expires when the year turns and is never banked. */
   calmActive: boolean;
-  /** Free-action coupons a standing Law grants once a year (Monumental Code, Land
-   *  Rush) that this player has already spent. Cleared when the year turns. */
-  lawFreeActionsUsedThisYear: LawCostedAction[];
   /** Turns of income Stratokles's General Strike has taken away. Decremented at the
    *  moment income would have been collected, so the strike costs exactly one turn. */
   incomeSuppressedTurns: number;

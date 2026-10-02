@@ -338,6 +338,34 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   income updates that turn's snapshot and records its new player-card draw, including
   on the final turn. A year-card reveal still counts when the opener wins before income.
 
+**Defaults picked in Step 7** (2026-10-03):
+
+- Use the player-deck table's explicit counts: 40 cards, with 12 harmful copies
+  (30%), despite the paper's "one harmful copy in four" summary. Good Stores is
+  food, Timber wood, Shipment stone, Profit gold and Patronage influence. Rats
+  takes food, Bandits gold and Fire wood; every resource card gains or loses 2.
+- Keep the drawn-card confirmation. Free Settlers adds one freeman and Captured
+  Laborers one slave, with the player picking an owned settlement with room. If
+  none has room, discard the card with no substitute reward. These gains bypass
+  the settlement's normal growth limit, as before.
+- Ventures keep a d6 and lose the stake on 1–2. Merchant Convoy pays 2 gold on
+  3–5 and 4 on 6: expected return 5/3 gold against the 2-gold stake. Grand Embassy
+  pays 1 influence on 3–4 and 2 on 5–6. Colonists' Voyage pays 2 food on 3–4,
+  3 on 5, and one freeman plus 2 food on 6. The jackpot keeps its seeded random
+  settlement placement and, if none has room, its extra 2-food fallback.
+- Retire Monumental Code and Land Rush now: both depend on annual coupons and both
+  are absent from Appendix B's Step 8 roster. The Assembly otherwise keeps its
+  current flow. Bread and Circuses and Frontier Spirit use explicit token verbs
+  with the same effect until Step 8 rewrites or cuts them. The Streets Burn
+  places one token through the same effect as Local Unrest and Plague; Festival
+  clears all, while Public Calm clears one and stops at zero.
+- The low-number dev preset leaves the new player deck, venture price and payouts
+  as authored. Existing card art is reused for the corresponding new kinds until
+  Step 14; card faces use the paper's rules text without new flavor copy. The state
+  schema is 7 and command schema 3; older saves and scripts are
+  rejected. Event resolution no longer takes a choice index, and a venture takes
+  an expedition only.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.
@@ -429,7 +457,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
 - [x] **Step 6 · Years and the year deck.** ([#85](https://github.com/Jinglemisk/hegemony/pull/85): a 40-game bot batch finishes all fourteen years with no turn caps; 2 games end by the race and 38 by the deck; the riot table opens on 10.7% of player-turns after year 7. [Note](../reports/audits/2026-10-03-v2-step6-years.md).) Seasons and the omen retire. A 14-card year deck
       is the clock and the next card stays hidden. Victory is checked at the start of each
       player's own turn, as today, with the paper's minimums; Treasurer counts gold only; Voice is a level.
-- [ ] **Step 7 · Cards.** A player deck of twelve kinds in the four verbs. Ventures take one
+- [x] **Step 7 · Cards.** ([#86](https://github.com/Jinglemisk/hegemony/pull/86): a 40-game bot batch finishes all fourteen years with no turn caps, all 40 by the deck; 4.1 riots a game and the riot table on 7.5% of player-turns after year 7; 7.5 ventures a game; the gate passes at 1280/1440/1920 and the conduct audit drops to 24 rows.) A player deck of twelve kinds in the four verbs. Ventures take one
       stake of 2 gold. Coupons, choice cards and per-pop scaling go.
       The token cards (Plague, Festival, Local Unrest, Public Calm, The Streets Burn)
       place and clear Unrest tokens as the paper draws them.

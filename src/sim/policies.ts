@@ -77,7 +77,7 @@ const RULE_DRIVEN_MOVE_TYPES: ReadonlySet<GameCommand["type"]> = new Set([
 
 export function policyEconomyThresholds(ruleset: Ruleset) {
   const colonyWoodCost = ruleset.actionCosts.foundColony.wood ?? 0;
-  const goldVentureStake = ruleset.ventureStakes.gold.gold ?? 0;
+  const goldVentureStake = ruleset.ventureCost.gold ?? 0;
   return {
     ventureGoldReserve: goldVentureStake * 5,
     sellSurplus: colonyWoodCost * 2,
@@ -113,7 +113,7 @@ function resolveStochasticByRule(G: HegemonyState, moves: GameCommand[]): GameCo
   // (cycled by year so sims exercise all three tables), never peeking the roll.
   const goldVentures = moves.filter(
     (move): move is Extract<GameCommand, { type: "fundExpedition" }> =>
-      move.type === "fundExpedition" && move.stake === "gold",
+      move.type === "fundExpedition",
   );
   if (
     goldVentures.length > 0 &&

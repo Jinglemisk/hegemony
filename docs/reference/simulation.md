@@ -93,7 +93,8 @@ npm run sim -- move pops <src> <dst> <popSpec>    # popSpec: citizens=1,slaves=2
 npm run sim -- move dole                          # 3 influence for 1 food
 npm run sim -- move place-capital <tile> <popSpec>
 npm run sim -- move place-colony <tile> <popSpec>
-npm run sim -- move resolve [choiceIndex] [targetTile]
+npm run sim -- move resolve [targetTile]
+npm run sim -- move venture <expeditionId>        # merchantConvoy|grandEmbassy|colonistsVoyage
 npm run sim -- move index <N>
 npm run sim -- end-turn
 ```
@@ -238,9 +239,10 @@ The report contains:
   this universal table makes missing or unexercised action paths visible
 - `activeEffects` — zero-filled observations, per-player-turn counts, and player-turn
   prevalence for every canonical active-effect kind (suppression, hunger, the
-  year card, discounts, Laws, and pending Directives)
+  year card, Laws, and pending Directives)
 - `buildings` — build counts and per-game rates
-- `events` — draw counts by card id, and per-option pick counts for choice cards
+- `events` — draw counts by the twelve player-card kinds and eight year-card kinds;
+  retired card IDs and choice-pick telemetry are gone
 - `finalCardsDistribution`
 - `assembly` — agora engagement: assemblies held/game, Laws enacted / removed / standing,
   Directives and their target distribution, authored passes, prize resources, Voice claims
@@ -271,8 +273,8 @@ Replays are byte-identical to the original run.
 {
   "version": 2,
   "engineVersion": "0.1.0",
-  "stateSchemaVersion": 6,
-  "commandSchemaVersion": 2,
+  "stateSchemaVersion": 7,
+  "commandSchemaVersion": 3,
   "seed": 42, // game seed: decks, board draws, table rolls
   "mode": "standard",
   "rulesetPatch": null, // deep-merged over the mode's ruleset
@@ -292,10 +294,8 @@ Replays are byte-identical to the original run.
 The save is a _recipe_: replaying `history` from its pinned definition and seed
 reproduces `state` byte-for-byte. Saves double as shareable bug reports and
 balance scenarios. Loading re-hashes the definition and rejects tampering, unsupported
-schema versions, or a recipe/state mismatch. Legacy v1 saves are migrated on load:
-missing definitions are hydrated from their embedded ruleset plus authored content,
-legacy command costs are discarded, and settlement IDs are derived deterministically
-from placement history. New writes always use v2.
+schema versions, or a recipe/state mismatch. Step 7 uses state schema 7 and command
+schema 3 and rejects older recipes. The save container format remains v2.
 
 **Phase 3.6 architecture:** definition pinning, the canonical atomic transition, workflow
 actors/projections, stable settlement and transfer IDs, versioned recipes, legacy migration,
@@ -314,7 +314,7 @@ dead-code, formatting, bounded-test, and browser-smoke enforcement is now shippe
 
   ```ts
   const G = scenario({ seed: 7, mode: "fastStart" })
-    .stackPlayerEvent("player-new-citizen") // rig the next draw (before .opening()!)
+    .stackPlayerEvent("player-free-settlers") // rig the next draw (before .opening()!)
     .opening() // scripted 4-player opening → gameplay
     .withResources("0", "wealthy")
     .withSettlement("2", "0,0", "city", { citizens: 2, freemen: 1, slaves: 0 })
@@ -334,7 +334,5 @@ dead-code, formatting, bounded-test, and browser-smoke enforcement is now shippe
   turn start) or deck exhaustion set `phase: "gameOver"` with a `gameOverReason`.
   The `--turns` cap is only a ceiling for truncated experiments — a turn-capped
   game is recorded as `termination: "turnCap"` and is NOT counted as a win.
-- `batch` trims each game's log to 200 entries (transfer/discount ids embed the
-  log length, so trimmed and untrimmed runs differ in those cosmetic ids —
-  never in rules outcomes). `auto` and manual play never trim, so saves stay
-  byte-replayable.
+- `batch` trims each game's log to 200 entries without changing entity IDs or rules
+  outcomes. `auto` and manual play never trim, so saves stay byte-replayable.

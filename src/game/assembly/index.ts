@@ -2,7 +2,7 @@
  * The Assembly & Politicians layer (Phase 3-B · docs/archive/plans/assembly-politicians.md).
  *
  *   types    — the state shapes, the LawEffect / DirectiveEffect vocabularies
- *   deck     — the four politicians and the 31-card starter deck (content)
+ *   deck     — the four politicians and the 29-card bridge deck (content)
  *   laws     — the standing-modifier layer the economy pipelines consult
  *   power    — board-derived power and descriptive patrons
  *   assembly — cadence, the proposal round, the ballot, enactment

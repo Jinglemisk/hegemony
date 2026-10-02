@@ -49,24 +49,3 @@ export function CeremonyBlow({
     </div>
   );
 }
-
-const SPELLED = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
-
-/**
- * How long it stands, as bars rather than a clause. Duration was already in the
- * data (`timedHappinessDelta.turns`) and was being dissolved into prose; a row
- * of clay bars at falling opacity is countable at a glance, which "for 3 turns"
- * is not.
- */
-export function DurationStrip({ turns }: { turns: number }) {
-  return (
-    <div className="turnStrip">
-      {Array.from({ length: turns }, (_, index) => (
-        <i aria-hidden="true" className="turnBar" key={index} />
-      ))}
-      <span className="turnCaption caption">
-        {SPELLED[turns] ?? turns} {turns === 1 ? "turn" : "turns"}
-      </span>
-    </div>
-  );
-}

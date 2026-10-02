@@ -1,107 +1,15 @@
-import { PLAYER_IDS } from "./data";
 import type { EventCard, EventEffect, HegemonyState, PlayerId, Resource, Resources } from "./types";
-import {
-  formatPopName,
-  formatRuleNumber,
-  formatRuleResourceDelta,
-  formatTileLabel,
-} from "./core/format";
+import { formatPopName, formatRuleResourceDelta, formatTileLabel } from "./core/format";
 import { totalPops } from "./core/pops";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { applyResourceDeltaWithFloors, createResourceDelta } from "./core/resources";
-import { applyHappinessSwing, describeHappinessSwing } from "./happiness";
+import { applyUnrestTokenChange, describeUnrestTokenChange } from "./happiness";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { shuffleWithSeed } from "./core/rng";
-import { countPlayerPopType, settlementCapacity } from "./settlement";
+import { settlementCapacity } from "./settlement";
 
 export function drawPlayerEvent(G: HegemonyState, playerID: PlayerId) {
-  const card = drawFromPlayerDeck(G);
-
-  if (!card) {
-    addLog(G, "The Player Event deck is empty.");
-    return;
-  }
-
-  G.lastPlayerEvent = card;
-  addLog(
-    G,
-    `${getPlayerName(G, playerID)} received Player Event card ${card.name}. ${card.text}`,
-    playerID,
-  );
-
-  if (!hasResolvablePendingOption(G, playerID, card)) {
-    G.playerDiscardPile.push(card);
-    addLog(G, `${card.name} had no legal resolution and was discarded.`);
-    return;
-  }
-
-  // No log line here. The modal that opens IS the notice, and a chronicle entry
-  // saying "must resolve X" duplicated the "received X" line above it and the
-  // "resolved X: -5 wood" line below — four entries for one event.
-  G.pendingPlayerEvent = { card, playerID };
-}
-
-export function resolvePendingPlayerEvent(
-  G: HegemonyState,
-  playerID: PlayerId,
-  targetTileId?: string,
-  choiceIndex = 0,
-): MoveResult {
-  const pending = G.pendingPlayerEvent;
-
-  if (!pending || pending.playerID !== playerID) {
-    return invalid();
-  }
-
-  const choices = getEventEffectChoices(pending.card);
-  const effects = choices[choiceIndex];
-
-  if (!effects) {
-    return invalid();
-  }
-
-  const popEffect = getAddPopsEffect(effects);
-
-  if (popEffect) {
-    if (!targetTileId || !canAddEventPopsToSettlement(G, playerID, targetTileId, popEffect)) {
-      return invalid();
-    }
-  }
-
-  applyEventEffects(G, pending.card, playerID, effects, targetTileId);
-  G.playerDiscardPile.push(pending.card);
-  G.pendingPlayerEvent = null;
-  return MOVE_OK;
-}
-
-export function getEventEffectChoices(card: EventCard): EventEffect[][] {
-  const choiceEffect = card.effects.find(
-    (effect): effect is Extract<EventEffect, { type: "choice" }> => effect.type === "choice",
-  );
-
-  return choiceEffect ? choiceEffect.options : [card.effects];
-}
-
-export function getAddPopsEffect(effects: EventEffect[]) {
-  return effects.find(
-    (effect): effect is Extract<EventEffect, { type: "addPops" }> => effect.type === "addPops",
-  );
-}
-
-export function getEventPopTargetTileIds(
-  G: HegemonyState,
-  playerID: PlayerId,
-  effect: Extract<EventEffect, { type: "addPops" }>,
-) {
-  return G.players[playerID].settlements.filter((tileId) =>
-    canAddEventPopsToSettlement(G, playerID, tileId, effect),
-  );
-}
-
-/** The player deck reshuffles its discards when it runs out; only the year deck is
- *  a clock. */
-function drawFromPlayerDeck(G: HegemonyState) {
   if (G.playerDrawPile.length === 0 && G.playerDiscardPile.length > 0) {
     const reshuffled = shuffleWithSeed(G.playerDiscardPile, G.rng);
     G.playerDrawPile = reshuffled.cards;
@@ -109,144 +17,108 @@ function drawFromPlayerDeck(G: HegemonyState) {
     G.playerDiscardPile = [];
     addLog(G, "Player Event discard reshuffled into the draw pile.");
   }
-
-  return G.playerDrawPile.shift() ?? null;
+  const card = G.playerDrawPile.shift();
+  if (!card) return;
+  G.lastPlayerEvent = card;
+  addLog(
+    G,
+    `${getPlayerName(G, playerID)} received Player Event card ${card.name}. ${card.text}`,
+    playerID,
+  );
+  const popEffect = getAddPopsEffect(card.effects);
+  if (popEffect && getEventPopTargetTileIds(G, playerID, popEffect).length === 0) {
+    G.playerDiscardPile.push(card);
+    addLog(G, `${card.name} had no settlement with room and was discarded.`, playerID);
+    return;
+  }
+  G.pendingPlayerEvent = { card, playerID };
 }
 
-function hasResolvablePendingOption(G: HegemonyState, playerID: PlayerId, card: EventCard) {
-  return getEventEffectChoices(card).some((effects) => {
-    const popEffect = getAddPopsEffect(effects);
+export function resolvePendingPlayerEvent(
+  G: HegemonyState,
+  playerID: PlayerId,
+  targetTileId?: string,
+): MoveResult {
+  const pending = G.pendingPlayerEvent;
+  if (!pending || pending.playerID !== playerID) return invalid();
+  const popEffect = getAddPopsEffect(pending.card.effects);
+  if (
+    popEffect &&
+    (!targetTileId || !getEventPopTargetTileIds(G, playerID, popEffect).includes(targetTileId))
+  )
+    return invalid();
+  applyEventEffects(G, pending.card, playerID, targetTileId);
+  G.playerDiscardPile.push(pending.card);
+  G.pendingPlayerEvent = null;
+  return MOVE_OK;
+}
 
-    return !popEffect || getEventPopTargetTileIds(G, playerID, popEffect).length > 0;
+export function getAddPopsEffect(effects: readonly EventEffect[]) {
+  return effects.find(
+    (effect): effect is Extract<EventEffect, { type: "addPops" }> => effect.type === "addPops",
+  );
+}
+
+/** The same capacity projection feeds the picker and legal commands. */
+export function getEventPopTargets(
+  G: HegemonyState,
+  playerID: PlayerId,
+  effect: Extract<EventEffect, { type: "addPops" }>,
+) {
+  return G.players[playerID].settlements.flatMap((tileId) => {
+    const settlement = getOwnedSettlement(G, tileId, playerID);
+    if (!settlement) return [];
+    const capacity = settlementCapacity(settlement, G.ruleset);
+    const filled = totalPops(settlement.pops);
+    const room = Math.max(0, capacity - filled);
+    return room >= effect.amount ? [{ tileId, capacity, filled, room }] : [];
   });
 }
 
-function canAddEventPopsToSettlement(
+export function getEventPopTargetTileIds(
   G: HegemonyState,
   playerID: PlayerId,
-  tileId: string,
   effect: Extract<EventEffect, { type: "addPops" }>,
 ) {
-  const settlement = getOwnedSettlement(G, tileId, playerID);
-
-  return settlement
-    ? totalPops(settlement.pops) + effect.amount <= settlementCapacity(settlement, G.ruleset)
-    : false;
+  return getEventPopTargets(G, playerID, effect).map((target) => target.tileId);
 }
 
 function applyEventEffects(
   G: HegemonyState,
   card: EventCard,
-  activePlayerID: PlayerId | null,
-  effects: EventEffect[],
+  playerID: PlayerId,
   targetTileId?: string,
 ) {
-  for (const effect of effects) {
-    if (effect.type === "choice") {
-      continue;
-    }
-
-    if (effect.type === "resourceDelta") {
-      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
+  for (const effect of card.effects) {
+    switch (effect.type) {
+      case "resourceDelta":
         applyEventResourceDelta(
           G,
           playerID,
           createResourceDelta(effect.resource, effect.amount),
           card.name,
         );
-      }
-    } else if (effect.type === "happinessDelta" || effect.type === "timedHappinessDelta") {
-      // There is no bank for a one-shot to land in: a loss of any size places one
-      // Unrest token and a gain clears one. Only the sign of the printed amount counts.
-      const amount = effect.type === "happinessDelta" ? effect.amount : effect.amountPerTurn;
-
-      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        const swing = applyHappinessSwing(G, playerID, amount);
+        break;
+      case "unrestTokens": {
+        const change = applyUnrestTokenChange(G, playerID, effect.change);
         addLog(
           G,
-          `${getPlayerName(G, playerID)} resolved ${card.name}: ${describeHappinessSwing(swing)}.`,
+          `${getPlayerName(G, playerID)} resolved ${card.name}: ${describeUnrestTokenChange(change)}.`,
           playerID,
         );
+        break;
       }
-    } else if (effect.type === "addPops") {
-      if (!activePlayerID || !targetTileId) {
-        continue;
-      }
-
-      const settlement = getOwnedSettlement(G, targetTileId, activePlayerID);
-
-      if (!settlement) {
-        continue;
-      }
-
-      settlement.pops[effect.pop] += effect.amount;
-      G.players[activePlayerID].popsGainedFromEvents += effect.amount;
-      addLog(
-        G,
-        `${getPlayerName(G, activePlayerID)} added ${effect.amount} ${formatPopName(effect.pop, effect.amount)} to ${formatTileLabel(G, targetTileId)} from ${card.name}.`,
-        activePlayerID,
-      );
-    } else if (effect.type === "actionCostDiscount") {
-      if (!activePlayerID) {
-        continue;
-      }
-
-      G.players[activePlayerID].actionCostDiscounts.push({
-        id: `${card.id}-${G.year}-${G.log.length}`,
-        sourceCardId: card.id,
-        label: card.name,
-        action: effect.action,
-        buildingId: effect.buildingId,
-        pop: effect.pop,
-        resource: effect.resource,
-        amount: effect.amount,
-        consume: effect.consume,
-      });
-      addLog(
-        G,
-        `${getPlayerName(G, activePlayerID)} gained a ${formatRuleNumber(effect.amount)} ${effect.resource} discount from ${card.name}.`,
-        activePlayerID,
-      );
-    } else if (effect.type === "resourceExchange") {
-      if (!activePlayerID) {
-        continue;
-      }
-
-      const player = G.players[activePlayerID];
-      const floor = G.ruleset.economy.stockpileFloors[effect.from] ?? 0;
-      const exchanged = Math.min(
-        effect.maxAmount,
-        Math.max(0, player.resources[effect.from] - floor),
-      );
-      // Non-integer ratios round the payout down — a short-stocked trade never mints fractions.
-      const received = Math.floor(exchanged * effect.ratio);
-      applyResourceDeltaWithFloors(
-        player.resources,
-        createResourceDelta(effect.from, -exchanged),
-        G.ruleset.economy.stockpileFloors,
-      );
-      applyResourceDeltaWithFloors(
-        player.resources,
-        createResourceDelta(effect.to, received),
-        G.ruleset.economy.stockpileFloors,
-      );
-      addLog(
-        G,
-        `${getPlayerName(G, activePlayerID)} exchanged ${formatRuleNumber(exchanged)} ${effect.from} for ${formatRuleNumber(
-          received,
-        )} ${effect.to} from ${card.name}.`,
-        activePlayerID,
-      );
-    } else if (effect.type === "resourceDeltaPerPop") {
-      for (const playerID of scopedPlayerIds(effect.scope, activePlayerID)) {
-        const popCount = countPlayerPopType(G, playerID, effect.pop);
-        const amount = Math.max(effect.minimum, popCount * effect.amountPerPop);
-        applyEventResourceDelta(
+      case "addPops": {
+        const settlement = targetTileId && getOwnedSettlement(G, targetTileId, playerID);
+        if (!settlement) break;
+        settlement.pops[effect.pop] += effect.amount;
+        G.players[playerID].popsGainedFromEvents += effect.amount;
+        addLog(
           G,
+          `${getPlayerName(G, playerID)} added ${effect.amount} ${formatPopName(effect.pop, effect.amount)} to ${formatTileLabel(G, targetTileId!)} from ${card.name}.`,
           playerID,
-          createResourceDelta(effect.resource, amount),
-          card.name,
         );
+        break;
       }
     }
   }
@@ -259,23 +131,16 @@ function applyEventResourceDelta(
   source: string,
 ) {
   const resources = G.players[playerID].resources;
-
-  // Harm cards can't take what isn't there: stocks clamp at zero.
   for (const [resource, amount] of Object.entries(delta) as Array<[Resource, number]>) {
     if (amount < 0) {
       const floor = G.ruleset.economy.stockpileFloors[resource] ?? 0;
       delta[resource] = -Math.min(-amount, Math.max(0, resources[resource] - floor));
     }
   }
-
   applyResourceDeltaWithFloors(resources, delta, G.ruleset.economy.stockpileFloors);
   addLog(
     G,
     `${getPlayerName(G, playerID)} resolved ${source}: ${formatRuleResourceDelta(delta)}.`,
     playerID,
   );
-}
-
-function scopedPlayerIds(scope: "activePlayer" | "allPlayers", activePlayerID: PlayerId | null) {
-  return scope === "allPlayers" ? PLAYER_IDS : activePlayerID ? [activePlayerID] : [];
 }

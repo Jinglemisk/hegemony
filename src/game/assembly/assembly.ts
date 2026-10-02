@@ -1,4 +1,4 @@
-import { applyHappinessSwing, describeHappinessSwing } from "../happiness";
+import { applyUnrestTokenChange, describeUnrestTokenChange } from "../happiness";
 import { PLAYER_IDS } from "../data";
 import { yearDeckSize } from "../year";
 import type { HegemonyState, PlayerId } from "../types";
@@ -860,16 +860,6 @@ function applyDirectiveEffect(
 ) {
   switch (effect.type) {
     case "resourceDelta": {
-      if (effect.resource === "happiness") {
-        const swing = applyHappinessSwing(G, target, effect.amount);
-        addLog(
-          G,
-          `${card.name}: ${getPlayerName(G, target)} ${describeHappinessSwing(swing)}.`,
-          target,
-        );
-        break;
-      }
-
       const resources = G.players[target].resources;
       const amount =
         effect.amount >= 0
@@ -877,6 +867,16 @@ function applyDirectiveEffect(
           : -Math.min(-effect.amount, Math.max(0, resources[effect.resource]));
       resources[effect.resource] += amount;
       addLog(G, `${card.name}: ${getPlayerName(G, target)} bears the decree.`, target);
+      break;
+    }
+
+    case "unrestTokens": {
+      const change = applyUnrestTokenChange(G, target, effect.change);
+      addLog(
+        G,
+        `${card.name}: ${getPlayerName(G, target)} ${describeUnrestTokenChange(change)}.`,
+        target,
+      );
       break;
     }
 

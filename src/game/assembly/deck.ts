@@ -1,7 +1,7 @@
 import type { DirectiveCard, LawCard, Politician, PoliticianId, ResolutionCard } from "./types";
 
 /**
- * The Assembly's content tables — the four politicians and the 31-card starter deck
+ * The Assembly's content tables — the four politicians and the 29-card bridge deck
  * (docs/archive/plans/assembly-politicians.md Appendix A).
  *
  * This is CONTENT, not balance: the "what exists". Every magnitude here is a
@@ -241,18 +241,6 @@ const PERDICCAS_LAWS: LawCard[] = [
     ],
   },
   {
-    id: "monumental-code",
-    politician: "perdiccas",
-    kind: "law",
-    name: "Monumental Code",
-    text: "Your first building each year costs no wood, but every colony loses 1 wood income.",
-    tradeOff: "build up, strip the frontier",
-    effects: [
-      { type: "yearlyFreeAction", action: "buildBuilding", resources: ["wood"] },
-      { type: "settlementIncome", scope: "colony", resource: "wood", amount: -1 },
-    ],
-  },
-  {
     id: "census-rolls",
     politician: "perdiccas",
     kind: "law",
@@ -335,7 +323,7 @@ const KLEISTOPHENES_LAWS: LawCard[] = [
     name: "Frontier Spirit",
     text: "Founding a colony grants a freeman, but places an Unrest token.",
     tradeOff: "expansion has a human cost",
-    effects: [{ type: "onFoundColony", grantPop: "freemen", happiness: -2 }],
+    effects: [{ type: "onFoundColony", grantPop: "freemen", unrestTokens: "placeOne" }],
   },
   {
     id: "pioneer-levy",
@@ -359,23 +347,6 @@ const KLEISTOPHENES_LAWS: LawCard[] = [
     effects: [
       { type: "actionCostDelta", action: "foundColony", resource: "food", amount: -5 },
       { type: "actionCostDelta", action: "growPop", scope: "city", resource: "food", amount: 1 },
-    ],
-  },
-  {
-    id: "land-rush",
-    politician: "kleistophenes",
-    kind: "law",
-    // DEVIATION from Appendix A, deliberate: the design line reads "first colony/year
-    // free of stone & gold", but founding costs neither (ACTION_COSTS.foundColony is
-    // wood 20 + food 2) — the line predates the Phase-2 repricing and would have made
-    // this card a literal no-op. Retuned to wood, which is what founding actually
-    // costs, keeping the card's intent (one free colony a year) intact.
-    name: "Land Rush",
-    text: "Your first colony each year is founded free of wood, but buildings cost 2 more.",
-    tradeOff: "expansion over construction",
-    effects: [
-      { type: "yearlyFreeAction", action: "foundColony", resources: ["wood"] },
-      { type: "actionCostDelta", action: "buildBuilding", resource: "wood", amount: 2 },
     ],
   },
   {
@@ -413,7 +384,7 @@ const STRATOKLES_DIRECTIVES: DirectiveCard[] = [
     faction: "mob",
     name: "The Streets Burn",
     text: "Choose a rival. They place an Unrest token.",
-    effects: [{ type: "resourceDelta", resource: "happiness", amount: -3 }],
+    effects: [{ type: "unrestTokens", change: "placeOne" }],
   },
   {
     id: "general-strike",
@@ -441,7 +412,7 @@ const STRATOKLES_DIRECTIVES: DirectiveCard[] = [
     name: "Bread and Circuses",
     text: "Choose a rival. They clear an Unrest token and lose 5 gold.",
     effects: [
-      { type: "resourceDelta", resource: "happiness", amount: 3 },
+      { type: "unrestTokens", change: "clearOne" },
       { type: "resourceDelta", resource: "gold", amount: -5 },
     ],
   },

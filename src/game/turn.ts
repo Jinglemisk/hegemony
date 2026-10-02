@@ -6,7 +6,6 @@ import {
   createInitialState,
   createInitialStateFromDefinition,
   revealYearCard,
-  expireTurnEventModifiers,
   placeCapital,
   placeColony,
   resolveArrivingPops,
@@ -133,8 +132,6 @@ export function endTurn(G: HegemonyState): MoveResult {
 
   const current = G.currentPlayer;
   let next = nextPlayer(current);
-
-  expireTurnEventModifiers(G, current);
 
   if (next === G.yearOpener) {
     startNewYear(G);

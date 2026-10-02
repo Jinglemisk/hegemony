@@ -108,17 +108,9 @@ export const EVENT_TABLE_GLYPHS = {
    same thing twice in a way colour-blind players cannot read. */
 
 export const EVENT_EFFECT_GLYPHS = {
-  /** Your stores change, now. */
   resourceDelta: "stockpile",
-  happinessDelta: "happiness",
-  /** The distinguishing feature is that it ticks: the hourglass, not the mask. */
-  timedHappinessDelta: "hourglass",
+  unrestTokens: "happiness",
   addPops: "popGain",
-  actionCostDiscount: "costDown",
-  resourceExchange: "exchange",
-  /** Per single pop, with a floor — one figure and its share. */
-  resourceDeltaPerPop: "perPop",
-  choice: "choice",
 } as const satisfies Record<EventEffect["type"], GlyphId>;
 
 export const TABLE_EFFECT_GLYPHS = {
@@ -142,11 +134,11 @@ export const LAW_EFFECT_GLYPHS = {
   actionCostMultiplier: "cross",
   /** The bank's scales, which are the forum's scales — one idea. */
   bankRateStep: "forum",
-  yearlyFreeAction: "freeGrant",
   onFoundColony: "found",
 } as const satisfies Record<LawEffect["type"], GlyphId>;
 
 export const DIRECTIVE_EFFECT_GLYPHS = {
+  unrestTokens: "happiness",
   resourceDelta: "stockpile",
   resourceFraction: "fraction",
   losePopFromLargest: "popLoss",
@@ -168,7 +160,6 @@ export const ACTIVE_EFFECT_MECHANIC_GLYPHS = {
   hunger: "starvation",
   /** The year's card strikes a whole term out. */
   zeroTerm: "cross",
-  actionCostDiscount: "costDown",
   standingLaw: "law",
   equalVotesNextAssembly: "equalVotes",
 } as const satisfies Record<ActiveEffectMechanic["type"], GlyphId>;
@@ -233,10 +224,8 @@ export type EffectIconTarget =
 export function eventBlowGlyph(effect: EventEffect): GlyphId {
   switch (effect.type) {
     case "resourceDelta":
-    case "resourceDeltaPerPop":
       return RESOURCE_GLYPHS[effect.resource];
-    case "happinessDelta":
-    case "timedHappinessDelta":
+    case "unrestTokens":
       return RESOURCE_GLYPHS.happiness;
     default:
       return EVENT_EFFECT_GLYPHS[effect.type];

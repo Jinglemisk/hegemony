@@ -509,7 +509,7 @@ const ladder: RuleChapter = {
         <Entry id={anchor("ladder", "grow")} title="Growing">
           <Note>
             Grow adds one new pop to a settlement — once per settlement per turn. These are base
-            costs; the action picker shows the effective cost after local and active discounts.
+            costs; the action picker shows the effective cost under standing Laws.
           </Note>
           <DefList>
             {(
@@ -845,10 +845,8 @@ const ventures: RuleChapter = {
     <div className="compendiumStack">
       <Entry id={anchor("ventures", "expeditions")} title="Expeditions">
         <Note>
-          One venture per turn: post a base stake —{" "}
-          {formatResourceCost(G.ruleset.ventureStakes.gold)} or{" "}
-          {formatResourceCost(G.ruleset.ventureStakes.wood)} — pick any expedition, and roll. The
-          stake picker shows effective costs; the stake is paid win or lose.
+          One venture per turn: stake {formatResourceCost(G.ruleset.ventureCost)}, pick an
+          expedition, and roll. The stake is paid win or lose.
         </Note>
         {getExpeditionTables(G.definition.content).map((table) => (
           <div key={table.id} className="ruleVenture">

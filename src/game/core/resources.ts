@@ -48,10 +48,6 @@ export function diffResources(after: Resources, before: Resources): Resources {
   );
 }
 
-export function clonePartialResources(resources: Partial<Resources>): Partial<Resources> {
-  return { ...resources };
-}
-
 export function createResourceDelta(resource: Resource, amount: number): Resources {
   return {
     ...EMPTY_RESOURCES,

@@ -5,8 +5,8 @@ city-state into the dominant power of an island. You gather resources, grow your
 people, found colonies, upgrade them into cities, and raise buildings to
 out-produce your rivals.
 
-> This guide covers v2 through Step 6. Player cards, ventures and the Assembly
-> still use their bridges until Steps 7 and 8 replace them.
+> This guide covers v2 through Step 7. The Assembly keeps its remaining bridges
+> until Step 8 replaces them.
 
 ---
 
@@ -142,7 +142,7 @@ Play passes around the table. On your turn:
    - **The social ladder** (one move per turn) — promote a slave to freeman for
      **2 food**, or a freeman to citizen for **2 gold**. Demote one step for
      **1 influence**. (During a riot, demotion is free — the mob forces it.)
-   - **Fund an expedition** (once per turn) — stake **5 gold or 8 wood** and roll
+   - **Fund an expedition** (once per turn) — stake **2 gold** and roll
      on an expedition table (see Ventures).
 4. **End your turn.**
 
@@ -169,16 +169,17 @@ one way influence reaches the granary, and it is priced worse than gold on purpo
 
 ## Ventures — Fund an Expedition
 
-Once per turn, stake **5 gold or 8 wood**, choose an expedition, and roll a d6.
+Once per turn, stake **2 gold**, choose an expedition, and roll a d6.
 The stake is spent win or lose; the low rolls simply return nothing:
 
-- **Merchant Convoy** — 3–4: 5 gold · 5–6: 9 gold.
-- **Grand Embassy** — 3–4: 3 influence · 5–6: 6 influence.
-- **Colonists' Voyage** — 3–4: 5 food · 5: 8 food · **6: settlers arrive** (+1
+- **Merchant Convoy** — 3–5: 2 gold · 6: 4 gold.
+- **Grand Embassy** — 3–4: 1 influence · 5–6: 2 influence.
+- **Colonists' Voyage** — 3–4: 2 food · 5: 3 food · **6: settlers arrive** (+1
   freeman in a settlement with room, +2 food).
 
-Every table pays out slightly less than it costs on average — the expedition is
-a gamble, and it is _meant_ for whoever is behind and needs the swing.
+On the settler jackpot, the destination is drawn among your settlements with room.
+If all are full, gain 2 extra food instead. The Convoy returns 5/3 gold on average
+against the 2-gold stake; the other tables pay in food, influence or a freeman.
 
 ## Buildings
 
@@ -289,10 +290,28 @@ Free pops still eat during Piracy and Ostracism. Granaries and standing Law inco
 are separate terms. Income forecasts use this year's card while your income is
 still owed; after collection they show printed income for the unknown next year.
 
-**Player events** are drawn at each income and must be resolved before your normal
-actions. The deck still has its old windfalls, choice cards, grow coupons and harms
-until the next migration step. It reshuffles its discards when empty. Losses stop
-at zero; one-shot happiness losses place one Unrest token and gains clear one.
+**Player events** are drawn at each income and resolved before normal actions.
+The deck has twelve kinds and forty copies; it reshuffles its discards when empty.
+Losses stop at zero. There are no coupons, effect choices or per-pop payouts.
+
+| Card              | Copies | Effect                                             |
+| ----------------- | -----: | -------------------------------------------------- |
+| Good Stores       |      4 | Gain 2 food.                                       |
+| Timber            |      4 | Gain 2 wood.                                       |
+| Shipment          |      4 | Gain 2 stone.                                      |
+| Profit            |      4 | Gain 2 gold.                                       |
+| Patronage         |      4 | Gain 2 influence.                                  |
+| Free Settlers     |      3 | Gain one freeman in an owned settlement with room. |
+| Captured Laborers |      3 | Gain one slave in an owned settlement with room.   |
+| Rats              |      3 | Lose 2 food.                                       |
+| Bandits           |      3 | Lose 2 gold.                                       |
+| Fire              |      3 | Lose 2 wood.                                       |
+| Local Unrest      |      3 | Place one Unrest token.                            |
+| Public Calm       |      2 | Clear one Unrest token; zero stays zero.           |
+
+Pick the settlement for a pop card. If all your settlements are full, discard it
+without a reward. The card does not use the settlement's normal growth allowance;
+it never grants a citizen. Twelve of the forty copies are harmful.
 
 The top bar shows the year and its card. The **Codex** consult has the year deck,
 player deck, dice tables, bank rates and base costs.
@@ -319,6 +338,8 @@ and patron labels describe the visible stelae only and grant no bonus.
 Every player-authored resolution that passes grants its politician's one-time
 prize: Demosthenes gives 5 food, Perdiccas 3 stone, Kleistophenes 4 wood, and
 Stratokles 2 gold. House Laws, failed or vetoed proposals, and repeals pay nothing.
+Monumental Code and Land Rush have retired with annual coupons. The Streets Burn
+places one Unrest token on its target; the other Assembly rules await Step 8.
 The record of passes remains, but **Voice** counts only the Laws you authored that
 still stand. A repeal or replacement takes one off that count; Directives add none.
 

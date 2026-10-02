@@ -21,9 +21,7 @@ describe("workflow actor eligibility", () => {
     expect(currentWorkflow(G)).toBe("eventDecision");
     expect(eligibleActors(G)).toEqual(["2"]);
     expect(commandActorEligibility(G, "2", { type: "endTurn" }).eligible).toBe(false);
-    expect(commandActorEligibility(G, "2", { type: "resolveEvent", choiceIndex: 0 }).eligible).toBe(
-      true,
-    );
+    expect(commandActorEligibility(G, "2", { type: "resolveEvent" }).eligible).toBe(true);
   });
 
   it("admits every undecided Assembly proposer, then only the sequential voter and closer", () => {
@@ -95,22 +93,20 @@ describe("player and spectator projections", () => {
     expect(spectator.legalOptions).toEqual([]);
   });
 
-  it("keeps a pending event choice private to its actor", () => {
-    const G = scenario().stackPlayerEvent("player-temple-donation").opening().build();
+  it("keeps a pending player card private to its actor", () => {
+    const G = scenario().stackPlayerEvent("player-patronage").opening().build();
     expect(G.pendingPlayerEvent?.playerID).toBe("0");
     const actor = projectForPlayer(G.definition, G, "0");
     const rival = projectForPlayer(G.definition, G, "1");
     const spectator = projectForSpectator(G.definition, G);
 
-    expect(actor.state.pendingPlayerEvent?.card.id).toBe("player-temple-donation");
+    expect(actor.state.pendingPlayerEvent?.card.id).toBe("player-patronage");
     expect(actor.legalOptions.every(({ command }) => command.type === "resolveEvent")).toBe(true);
     expect(rival.state.pendingPlayerEvent).toBeNull();
     expect(rival.state.lastPlayerEvent).toBeNull();
     expect(rival.legalOptions).toEqual([]);
     expect(spectator.state.pendingPlayerEvent).toBeNull();
-    expect(spectator.state.log.some((entry) => entry.message.includes("Temple Donation"))).toBe(
-      false,
-    );
+    expect(spectator.state.log.some((entry) => entry.message.includes("Patronage"))).toBe(false);
     expect(spectator.workflow).toBe("eventDecision");
     expect(spectator.eligibleActors).toEqual(["0"]);
   });

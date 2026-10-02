@@ -72,7 +72,7 @@ export function FoundColonyPopover({
     G.definition.content,
   );
   // Fall back to the LIVE ruleset, never the ACTION_COSTS default: the status cost
-  // has discounts and standing Laws already applied, and the ruleset itself is
+  // has standing Laws already applied, and the ruleset itself is
   // patchable (R7). This branch is defensive — the status always carries a cost.
   const cost =
     getFoundColonyStatus(G, playerID, targetTile.id).cost ?? G.ruleset.actionCosts.foundColony;

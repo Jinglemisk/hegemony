@@ -2,71 +2,32 @@ import { getResolutionCard } from "./content";
 import { getStandingEffectSources } from "./assembly/laws";
 import type { LawEffect } from "./assembly/types";
 import { calculateIncome, getHungerStatus } from "./economy/income";
-import type {
-  ActionCostDiscountTarget,
-  BuildingId,
-  EventEffect,
-  HegemonyState,
-  PlayerId,
-  PopType,
-  Resource,
-  Resources,
-  YearTerm,
-} from "./types";
+import type { HegemonyState, PlayerId, Resources, YearTerm } from "./types";
 
 /** Closed vocabulary used by frontend presentation and simulation telemetry. */
 export const ACTIVE_EFFECT_KINDS = [
   "incomeSuppression",
   "hunger",
   "yearCard",
-  "actionDiscount",
   "standingLaw",
   "nextAssembly",
 ] as const;
 
 export type ActiveEffectKind = (typeof ACTIVE_EFFECT_KINDS)[number];
 
-export type EventEffectActiveEffectHandling =
-  "immediate" | "materializedActionDiscount" | "container";
-
-/**
- * Exhaustive inventory of how every event-effect variant reaches active status.
- * Adding a new EventEffect is a type error until its parity path is classified.
- */
-export const EVENT_EFFECT_ACTIVE_EFFECT_HANDLING = {
-  resourceDelta: "immediate",
-  happinessDelta: "immediate",
-  timedHappinessDelta: "immediate",
-  addPops: "immediate",
-  actionCostDiscount: "materializedActionDiscount",
-  resourceExchange: "immediate",
-  resourceDeltaPerPop: "immediate",
-  choice: "container",
-} as const satisfies Record<EventEffect["type"], EventEffectActiveEffectHandling>;
-
 export type ActiveEffectSource = {
-  kind: "directive" | "unrest" | "yearCard" | "playerEvent" | "law";
+  kind: "directive" | "unrest" | "yearCard" | "law";
   id: string;
   label: string;
 };
 
-export type ActiveEffectScope =
-  | { kind: "player"; playerID: PlayerId }
-  | { kind: "allPlayers" }
-  | { kind: "activePlayer"; playerID: PlayerId };
+export type ActiveEffectScope = { kind: "player"; playerID: PlayerId } | { kind: "allPlayers" };
 
 export type ActiveEffectExpiry =
-  | "afterIncomeCollections"
-  | "afterPlayerUpkeeps"
-  | "whenFed"
-  | "atYearEnd"
-  | "afterMatchingActionOrTurnEnd"
-  | "afterMatchingLawActionOrYearEnd"
-  | "whenRepealed"
-  | "atNextAssembly";
+  "afterIncomeCollections" | "whenFed" | "atYearEnd" | "whenRepealed" | "atNextAssembly";
 
 export type ActiveEffectDuration = {
-  unit: "incomeCollections" | "playerUpkeeps" | "year" | "standing" | "matchingAction" | "assembly";
+  unit: "incomeCollections" | "year" | "standing" | "assembly";
   /** Null means the effect is conditional/standing rather than countdown-based. */
   remaining: number | null;
   expiry: ActiveEffectExpiry;
@@ -83,14 +44,6 @@ export type ActiveEffectMechanic =
       unfed: number;
     }
   | { type: "zeroTerm"; term: YearTerm }
-  | {
-      type: "actionCostDiscount";
-      action: ActionCostDiscountTarget;
-      buildingId?: BuildingId;
-      pop?: PopType;
-      resource: Resource;
-      amount: number;
-    }
   | { type: "standingLaw"; effect: LawEffect }
   | { type: "equalVotesNextAssembly"; votes: number };
 
@@ -167,77 +120,15 @@ export function getActiveEffects(
 
   addYearCardEffect(G, effects);
 
-  for (const discount of player.actionCostDiscounts) {
-    effects.push({
-      id: "action-discount:" + discount.id,
-      kind: "actionDiscount",
-      source: {
-        kind: "playerEvent",
-        id: discount.sourceCardId,
-        label: discount.label,
-      },
-      scope: { kind: "player", playerID },
-      duration: {
-        unit: "matchingAction",
-        remaining: 1,
-        expiry: "afterMatchingActionOrTurnEnd",
-      },
-      mechanics: [
-        {
-          type: "actionCostDiscount",
-          action: discount.action,
-          buildingId: discount.buildingId,
-          pop: discount.pop,
-          resource: discount.resource,
-          amount: discount.amount,
-        },
-      ],
-    });
-  }
-
   for (const source of getStandingEffectSources(G, playerID)) {
-    const standingEffects = source.effects.filter((effect) => effect.type !== "yearlyFreeAction");
-
-    if (standingEffects.length > 0) {
-      effects.push({
-        id: source.kind + ":" + source.id,
-        kind: "standingLaw",
-        source: {
-          kind: "law",
-          id: source.id,
-          label: source.label,
-        },
-        scope: { kind: "allPlayers" },
-        duration: {
-          unit: "standing",
-          remaining: null,
-          expiry: "whenRepealed",
-        },
-        mechanics: standingEffects.map((effect) => ({ type: "standingLaw", effect })),
-      });
-    }
-
-    for (const effect of source.effects) {
-      if (
-        effect.type !== "yearlyFreeAction" ||
-        player.lawFreeActionsUsedThisYear.includes(effect.action)
-      ) {
-        continue;
-      }
-
-      effects.push({
-        id: source.kind + ":" + source.id + ":annual:" + effect.action,
-        kind: "standingLaw",
-        source: { kind: "law", id: source.id, label: source.label },
-        scope: { kind: "player", playerID },
-        duration: {
-          unit: "matchingAction",
-          remaining: 1,
-          expiry: "afterMatchingLawActionOrYearEnd",
-        },
-        mechanics: [{ type: "standingLaw", effect }],
-      });
-    }
+    effects.push({
+      id: source.kind + ":" + source.id,
+      kind: "standingLaw",
+      source: { kind: "law", id: source.id, label: source.label },
+      scope: { kind: "allPlayers" },
+      duration: { unit: "standing", remaining: null, expiry: "whenRepealed" },
+      mechanics: source.effects.map((effect) => ({ type: "standingLaw", effect })),
+    });
   }
 
   if (G.pendingIsonomiaTarget === playerID) {

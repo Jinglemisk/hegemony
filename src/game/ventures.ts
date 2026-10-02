@@ -7,21 +7,16 @@ import { rollOnTable } from "./tables";
 import type { EventTableId, HegemonyState, PlayerId } from "./types";
 
 /**
- * Ventures (roadmap-appendix D10/Q16): "Fund an Expedition" — stake gold or wood,
- * pick one of the three expedition tables, roll. Each table sits ≈ −7% EV in
- * gold-equivalents: the self-selecting catch-up casino. One venture per player per
- * turn, open from turn 1 — a catch-up mechanism must be reachable by whoever is behind.
+ * Stake 2 gold, choose an expedition, roll for a small windfall.
+ * One venture per player per turn, open from turn 1.
  */
-
-export type VentureStake = "gold" | "wood";
 
 export function getFundExpeditionStatus(
   G: HegemonyState,
   playerID: PlayerId,
   expeditionId: EventTableId,
-  stake: VentureStake,
 ): ActionStatus {
-  const cost = G.ruleset.ventureStakes[stake];
+  const cost = G.ruleset.ventureCost;
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("Expeditions sail during gameplay.");
@@ -40,9 +35,8 @@ export function fundExpedition(
   G: HegemonyState,
   playerID: PlayerId,
   expeditionId: EventTableId,
-  stake: VentureStake,
 ): MoveResult {
-  const status = getFundExpeditionStatus(G, playerID, expeditionId, stake);
+  const status = getFundExpeditionStatus(G, playerID, expeditionId);
   const table = getExpeditionTables(G.definition.content).find(
     (candidate) => candidate.id === expeditionId,
   );
@@ -54,9 +48,7 @@ export function fundExpedition(
   const player = G.players[playerID];
   payCost(player.resources, status.cost ?? {});
   player.ventureUsedThisTurn = true;
-  // Read the stake back off the actual cost, not a literal — the amounts live in
-  // ruleset.ventureStakes, and a hardcoded "5 gold" would drift the moment they change
-  // (post-sprint-debt §2.6).
+  // Logs and the UI read the same cost.
   const stakeText = Object.entries(status.cost ?? {})
     .filter(([, amount]) => amount)
     .map(([resource, amount]) => `${amount} ${resource}`)

@@ -20,16 +20,17 @@ export type ParityEvidence = {
 
 export const PARITY_BEHAVIOR_FIXTURES = {
   eventImmediate: {
-    implementation: "src/parity/withinAxisParity.test.ts",
-    evidence: "applies a year card that acts once to every seat when it is revealed",
-  },
-  eventPersistent: {
-    implementation: "src/parity/activeEffectParity.test.ts",
-    evidence: "materializes every authored player discount through event resolution",
-  },
-  eventChoice: {
     implementation: "src/game/deck.test.ts",
-    evidence: "no choice card has a dominated option",
+    evidence: "pays flat gains and floors each harm at the held stock",
+  },
+  eventPops: {
+    implementation: "src/game/deck.test.ts",
+    evidence:
+      "places only slaves or freemen in an owned settlement with room, through legal commands",
+  },
+  eventTokens: {
+    implementation: "src/game/deck.test.ts",
+    evidence: "token cards place one, clear one and clear all through their real paths",
   },
   tableResolution: {
     implementation: "src/game/tables.test.ts",
@@ -50,10 +51,6 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   lawBank: {
     implementation: "src/game/assembly/laws.test.ts",
     evidence: "bankRateStep shifts the rate one whole step",
-  },
-  lawAnnual: {
-    implementation: "src/game/assembly/laws.test.ts",
-    evidence: "yearlyFreeAction is spent once and refreshes when the year turns",
   },
   lawFounding: {
     implementation: "src/game/assembly/laws.test.ts",
@@ -89,7 +86,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   activeEffectLifecycle: {
     implementation: "src/parity/activeEffectParity.test.ts",
-    evidence: "expires countdown and coupon state at the same lifecycle boundaries it declares",
+    evidence: "expires income suppression at the lifecycle boundary it declares",
   },
   activeEffectPolicy: {
     implementation: "src/parity/activeEffectParity.test.ts",
@@ -164,7 +161,7 @@ function coverage(
 const eventArgs = [
   { implementation: "src/game/events.ts", evidence: "applyEventEffects" },
   { implementation: "src/ui/effects.ts", evidence: "presentEventEffect" },
-  { implementation: "src/game/activeEffects.ts", evidence: "EVENT_EFFECT_ACTIVE_EFFECT_HANDLING" },
+  { implementation: "src/game/projection.ts", evidence: "pendingPlayerEvent" },
   { implementation: "src/sim/policies.ts", evidence: "onePlyLookahead" },
   { implementation: "src/sim/telemetry.ts", evidence: "events" },
 ] as const;
@@ -173,13 +170,8 @@ const event = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
 
 export const EVENT_EFFECT_PARITY = {
   resourceDelta: event("eventImmediate"),
-  happinessDelta: event("eventImmediate"),
-  timedHappinessDelta: event("eventPersistent", "activeEffectPolicy"),
-  addPops: event("eventImmediate"),
-  actionCostDiscount: event("eventPersistent"),
-  resourceExchange: event("eventImmediate"),
-  resourceDeltaPerPop: event("eventImmediate"),
-  choice: event("eventChoice"),
+  unrestTokens: event("eventTokens"),
+  addPops: event("eventPops"),
 } as const satisfies Record<EventEffect["type"], EffectParityCoverage>;
 
 const tableArgs = [
@@ -221,7 +213,6 @@ export const LAW_EFFECT_PARITY = {
   actionCostDelta: law("lawCost", "policyAssembly"),
   actionCostMultiplier: law("lawCost", "policyAssembly"),
   bankRateStep: law("lawBank", "policyAssembly"),
-  yearlyFreeAction: law("lawAnnual", "policyAssembly"),
   onFoundColony: law("lawFounding", "policyAssembly"),
 } as const satisfies Record<LawEffect["type"], EffectParityCoverage>;
 
@@ -236,6 +227,7 @@ const directive = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
   coverage(...directiveArgs, ...fixtures);
 
 export const DIRECTIVE_EFFECT_PARITY = {
+  unrestTokens: directive("eventTokens"),
   resourceDelta: directive("directiveResources", "policyAssembly"),
   resourceFraction: directive("directiveFraction", "policyAssembly"),
   losePopFromLargest: directive("directivePops", "policyAssembly"),
@@ -274,7 +266,6 @@ export const ACTIVE_EFFECT_MECHANIC_PARITY = {
   suppressIncome: active("activeEffectLifecycle", "activeEffectPolicy"),
   hunger: active("activeEffectLifecycle", "activeEffectPolicy"),
   zeroTerm: active("activeEffectLifecycle", "activeEffectPolicy"),
-  actionCostDiscount: active("activeEffectLifecycle"),
   standingLaw: active("activeEffectLifecycle", "policyAssembly"),
   equalVotesNextAssembly: active("activeEffectLifecycle", "policyAssembly"),
 } as const satisfies Record<ActiveEffectMechanic["type"], EffectParityCoverage>;
@@ -317,31 +308,18 @@ export const YEAR_CARD_CONTENT_IDS = [
 ] as const;
 
 export const PLAYER_EVENT_CONTENT_IDS = [
-  "player-new-citizen",
+  "player-good-stores",
+  "player-timber",
+  "player-shipment",
+  "player-profit",
+  "player-patronage",
   "player-free-settlers",
   "player-captured-laborers",
-  "player-willing-hands",
-  "player-slave-auction",
-  "player-good-stores",
-  "player-timber-windfall",
-  "player-merchant-profit",
-  "player-stone-shipment",
+  "player-rats",
+  "player-bandits",
+  "player-fire",
   "player-local-unrest",
   "player-public-calm",
-  "player-civil-discord",
-  "player-granary-rats",
-  "player-banditry",
-  "player-warehouse-fire",
-  "player-quarry-collapse",
-  "player-patronage-network",
-  "player-emergency-labor",
-  "player-granary-surplus",
-  "player-civic-petition",
-  "player-skilled-mason",
-  "player-caravan-contacts",
-  "player-forest-crews",
-  "player-temple-donation",
-  "player-market-day",
 ] as const;
 
 export const EVENT_TABLE_CONTENT_IDS = [
@@ -378,7 +356,6 @@ export const LAW_CONTENT_IDS = [
   "forum-rites",
   "civic-pride",
   "aqueduct-levy",
-  "monumental-code",
   "census-rolls",
   "master-builders",
   "homestead-act",
@@ -387,7 +364,6 @@ export const LAW_CONTENT_IDS = [
   "frontier-spirit",
   "pioneer-levy",
   "manifest-destiny",
-  "land-rush",
   "rural-bloc",
 ] as const;
 
@@ -453,7 +429,7 @@ export const CONTENT_MANIFEST = {
       evidence: "originalPlayer.collectedThisTurn ? null : G.activeYearCard",
     },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "countYearCard" },
-    behaviorFixtures: ["eventPersistent", "contentTelemetry"],
+    behaviorFixtures: ["eventTokens", "contentTelemetry"],
   },
   playerEvents: {
     ids: PLAYER_EVENT_CONTENT_IDS,
@@ -463,8 +439,8 @@ export const CONTENT_MANIFEST = {
       evidence: "presentEventEffects",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "onePlyLookahead" },
-    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "choicePicks" },
-    behaviorFixtures: ["eventImmediate", "eventChoice", "contentTelemetry"],
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "countPlayerDraw" },
+    behaviorFixtures: ["eventImmediate", "eventPops", "eventTokens", "contentTelemetry"],
   },
   eventTables: {
     ids: EVENT_TABLE_CONTENT_IDS,

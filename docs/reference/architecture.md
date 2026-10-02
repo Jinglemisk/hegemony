@@ -32,8 +32,9 @@ state reaches a consumer. AI policies receive the same fair player observation v
 Post-transition invariants cover settlement indexes, population and transfers, card zones,
 Assembly state, stable definition identity, and compatibility versions. Saves and scripts
 distinguish unsupported historical versions from deterministic replay divergence. Supported
-recipes replay byte-for-byte. Step 6 uses state schema 6 and command schema 2;
-older saves and scripts are rejected rather than migrating the retired clock.
+recipes replay byte-for-byte. Step 7 uses state schema 7 and command schema 3. Older saves and scripts are
+rejected. Event resolution takes only an optional settlement target; ventures take
+an expedition, with their single cost read from the ruleset. Coupon state is gone.
 
 ## Mechanical gates
 

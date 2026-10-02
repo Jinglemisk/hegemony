@@ -19,11 +19,11 @@ describe("scenario builder", () => {
 
   it("stacked player card is the next draw", () => {
     // Stack before opening() so player 0's bootstrap income draws it.
-    const G = scenario().stackPlayerEvent("player-new-citizen").opening().build();
+    const G = scenario().stackPlayerEvent("player-free-settlers").opening().build();
 
-    expect(G.lastPlayerEvent?.id).toBe("player-new-citizen");
-    // An addPops card with capacity available blocks as a pending choice.
-    expect(G.pendingPlayerEvent?.card.id).toBe("player-new-citizen");
+    expect(G.lastPlayerEvent?.id).toBe("player-free-settlers");
+    // A pop card with room available blocks until its settlement is picked.
+    expect(G.pendingPlayerEvent?.card.id).toBe("player-free-settlers");
     expect(G.pendingPlayerEvent?.playerID).toBe("0");
   });
 
