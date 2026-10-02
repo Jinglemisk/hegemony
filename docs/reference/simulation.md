@@ -190,6 +190,10 @@ excludes a terminal victory check with no income. For a full-game gate:
 npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000
 ```
 
+A riot's deferred income updates its existing snapshot, including on Year 14's
+last turn. Player draws are counted after that income, and a year-card reveal is
+counted even when the opener wins before collecting.
+
 Runs `--games` self-contained games (game _i_ uses seed `base+i`), aggregates,
 and writes a JSON report plus optional per-turn CSV (one row per
 game/turn/player — pivot-table ready).

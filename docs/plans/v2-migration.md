@@ -48,7 +48,7 @@ Standing rules:
 - When a stretch runs several steps, each step runs in one `codex exec` run briefed with this
   plan and that step, one after another, so the session's own context stays small. Steps
   never run in parallel, except Step 14 when the owner asks for it.
-- Early stop: a check that still fails after a second attempt, a conflict with Settled
+- Early stop: the same failure surviving two real fixes, a conflict with Settled
   inputs, or a rule with no simple default. Otherwise, when a step meets a rule the paper
   leaves unstated (how half a slave rounds, riot thresholds, whether the capital uses a
   city piece, starting stocks, first-seat rotation), it picks the simplest default,
@@ -318,23 +318,25 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   tiebreak. With one turn per seat per year, it cannot cover the buyer's next upkeep;
   bots no longer buy it for that purpose.
 - Voice follows the other five titles: a sole leader at the minimum holds it; a tie
-  holds nothing. Only standing authored Laws count, including after repeal or
-  replacement. Directives and the permanent pass record do not count.
+  holds nothing. Only standing authored Laws count; repeal and replacement reduce
+  their author's count. Directives and the permanent pass record do not count.
 - After Year 14's last turn, tally the titles with the final year card still active.
   Ties break on happiness without calm, then total pops, then seat order. The clock
   stays on Year 14. The year deck never reshuffles; the player deck still does.
 - The Assembly meets in Years 2, 4, 6, 8, 10, 12 and 14. Until Step 8 its house
   resolution, six-Law cap, prices, citizen votes, bribes and veto remain. Annual Law
   coupons refresh when the year turns. Existing turn-counted effects now count
-  player-turns in years; the player cards and riot insurance wait for Step 7, and
-  the Ideas still wait for Step 9.
+  player-turns in years. Player cards and ventures wait for Step 7; riot insurance
+  stays as shipped. Ideas still wait for Step 9.
 - The legacy low-number dev preset keeps its own title minimums: 3 cities, 8 pops,
   6 citizens, 15 gold, happiness 4 and Voice 3. It leaves the year deck unchanged.
 - The state schema is version 6; older saves and scripts are rejected. The command
   schema stays 2. The batch's default turn cap is 56, enough for all fourteen years.
 - Telemetry includes the opening player-turn and excludes a terminal victory check
   that collected no income. A deck finish counts the completed final turn. It reports
-  years and the winning titles, so late riots mean Years 8 to 14.
+  years and the winning titles, so late riots mean Years 8 to 14. A riot's deferred
+  income updates that turn's snapshot and records its new player-card draw, including
+  on the final turn. A year-card reveal still counts when the opener wins before income.
 
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory

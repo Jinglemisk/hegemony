@@ -114,7 +114,7 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
         ) : null}
         {groups.map((group) => (
           <div key={`${group.year}-${group.rows[0].entry.id}`}>
-            <div className="chronSeason label">{yearLabel(group.year)}</div>
+            <div className="chronYear label">{yearLabel(group.year)}</div>
             {group.rows.map(({ entry, player }) => (
               <p
                 className={player ? "entry entryOwned body" : "entry body"}

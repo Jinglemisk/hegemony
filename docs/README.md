@@ -15,6 +15,9 @@ session with "continue the v2 migration" in the `hegemony-v2` worktree.
 
 **Owner blockers:** none.
 
+Step 6's [verification handoff](reports/audits/2026-10-03-v2-step6-years.md) lists
+the sandbox-blocked bot batch and browser gates for the leader to run.
+
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
 precedes full multiplayer.

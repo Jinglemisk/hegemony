@@ -190,6 +190,23 @@ export function settlementNextYield(
   return income;
 }
 
+/** A class column at the owner's next income, with the year card applied. */
+export function settlementNextClassColumn(
+  G: HegemonyState,
+  tile: HexTile,
+  settlement: Settlement,
+  pop: PopType,
+) {
+  const column = settlementClassColumn(tile, settlement, pop, G.ruleset, G.definition.content);
+  const loss = yearCardLoss(G, tile, settlement);
+  const zeroed = loss?.pop === pop;
+  if (zeroed) {
+    column.income[loss.resource] = 0;
+    column.perPop = 0;
+  }
+  return { ...column, zeroed };
+}
+
 export function calculateIncome(G: HegemonyState, playerID: PlayerId): Resources {
   return summarizeIncome(calculateIncomeBreakdown(G, playerID));
 }

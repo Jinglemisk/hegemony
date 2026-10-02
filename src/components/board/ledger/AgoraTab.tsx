@@ -176,7 +176,7 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
       <div className="anchorRow">
         <span className="anchorKey label">Next assembly</span>
         <span className="anchorValue title">
-          {nextYear === null ? "never" : G.assembly ? "sitting now" : `Year ${nextYear}`}
+          {G.assembly ? "sitting now" : nextYear === null ? "never" : `Year ${nextYear}`}
         </span>
       </div>
     </div>

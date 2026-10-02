@@ -1,5 +1,5 @@
 import { getBuilding } from "../../game/content";
-import { settlementClassColumn, yearCardLoss } from "../../game/economy/income";
+import { settlementNextClassColumn } from "../../game/economy/income";
 import {
   settlementCapacity,
   settlementIdleSlaves,
@@ -29,7 +29,7 @@ const nonZero = (income: Record<Resource, number>) =>
  * The subject settlement: a meta line, three pop columns (count, what one pop of
  * the class makes here, and what the class makes in all), and a line per building
  * plus the open slots, which the slaves work. Every number comes from the engine:
- * the columns are `settlementClassColumn`, and the slots are the settlement
+ * the columns are `settlementNextClassColumn`, and the slots are the settlement
  * selectors'. A class building raises its column's "×" from 1 to 2, and the year's
  * card strikes it to 0 for the income it bites.
  */
@@ -55,7 +55,6 @@ export function SettlementPage({
   // The site would take another building: a city with a slot, or a colony its Port.
   const ground = buildingGround(G, settlement.owner, tile.id);
   const canRaise = ground.open > 0 && ground.raisable > 0;
-  const loss = yearCardLoss(G, tile, settlement);
 
   return (
     <>
@@ -86,32 +85,26 @@ export function SettlementPage({
       <div className="settle-cols" data-c="settle-cols">
         {COLUMNS.map(({ pop, label, icon }) => {
           const count = settlement.pops[pop];
-          const column = settlementClassColumn(
-            tile,
-            settlement,
-            pop,
-            G.ruleset,
-            G.definition.content,
-          );
-          // This year's card takes the column's whole output at the next income.
-          const zeroed = loss?.pop === pop ? loss : null;
-          const made = nonZero(zeroed ? { ...column.income, [zeroed.resource]: 0 } : column.income);
+          const column = settlementNextClassColumn(G, tile, settlement, pop);
+          const made = nonZero(column.income);
 
           return (
             <div className="settle-col" data-c="settle-col" key={pop}>
               <span className="col-head caps">
                 {label}
                 <b
-                  className={zeroed ? "is-zeroed" : column.raisedBy ? "is-raised" : undefined}
+                  className={
+                    column.zeroed ? "is-zeroed" : column.raisedBy ? "is-raised" : undefined
+                  }
                   title={
-                    zeroed
+                    column.zeroed
                       ? `${G.activeYearCard?.name}: ${G.activeYearCard?.text}`
                       : column.raisedBy
                         ? `Raised by the ${column.raisedBy}`
                         : undefined
                   }
                 >
-                  ×{zeroed ? 0 : column.perPop}
+                  ×{column.perPop}
                 </b>
               </span>
               <Ico path={icon} size="tile" />

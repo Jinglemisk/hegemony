@@ -74,7 +74,7 @@ export function saveTuningPresetId(id: TuningPresetId | null): void {
 // A persistent dev toggle, kept OUT of the tuning override map (which is for balance A/B
 // that translates to a code patch). When on, every new game is fast-forwarded to the
 // first Assembly — Year 2, four turns of seed-driven play in — so playtesting
-// the rivalry layer never begins with sixteen End Turn clicks. Set from the TUNE panel;
+// the rivalry layer never begins with four End Turn clicks. Set from the TUNE panel;
 // read by the controller at game creation. Same effect as the `?dev=assembly` URL param,
 // but sticky across reloads.
 

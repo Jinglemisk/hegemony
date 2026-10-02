@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { civicCalm } from "./civic";
-import { calculateIncome, settlementNextYield } from "./economy/income";
+import { calculateIncome, settlementNextClassColumn, settlementNextYield } from "./economy/income";
 import { happinessLevel } from "./happiness";
 import { owned, scenario, tile } from "./testing/scenario";
 import { endTurn } from "./turn";
@@ -55,6 +55,11 @@ describe("year cards that zero a term", () => {
 
     expect(calculateIncome(G, "0").food).toBe(0);
     expect(settlementNextYield(G, land, settlement).food).toBe(0);
+    expect(settlementNextClassColumn(G, land, settlement, "slaves")).toMatchObject({
+      perPop: 0,
+      zeroed: true,
+      income: { food: 0 },
+    });
   });
 
   it("Piracy and Ostracism leave the mouths to feed", () => {

@@ -438,6 +438,13 @@ export class Aggregator {
 
     if (move.type === "resolveRiot") {
       this.riotsByYear.set(G.year, (this.riotsByYear.get(G.year) ?? 0) + 1);
+      // The opening snapshot preceded this turn's deferred income. Replace it,
+      // so hunger on the final player-turn is counted without inventing a turn.
+      const opening = this.snapshots.at(-1);
+      if (opening?.game === this.game && opening.turn === G.turn) {
+        this.snapshots[this.snapshots.length - 1] = snapshotTurn(G, this.game, this.seed);
+      }
+      this.countPlayerDraw(G);
     }
 
     if (move.type === "buildBuilding") {
@@ -518,16 +525,17 @@ export class Aggregator {
   }
 
   onTurnEnd(G: HegemonyState) {
+    // A new year's card is public even if the opener wins before collecting.
+    if (G.year !== this.lastYear) {
+      this.lastYear = G.year;
+      this.countYearCard(G);
+    }
+
     // Deck exhaustion ends the game mid-endTurn WITHOUT advancing the turn or the year (see
     // startNewYear): no new player-turn happened here, so recording one would
     // duplicate the final turn, undercount turnsPlayed, and re-count the prior draw.
     if (G.phase === "gameOver") {
       return;
-    }
-
-    if (G.year !== this.lastYear) {
-      this.lastYear = G.year;
-      this.countYearCard(G);
     }
 
     this.countPlayerDraw(G);
@@ -939,6 +947,7 @@ export class Aggregator {
   }
 
   private countPlayerDraw(G: HegemonyState) {
+    if (G.pendingRiot || !G.players[G.currentPlayer].collectedThisTurn) return;
     const card = G.lastPlayerEvent;
     if (card) {
       this.playerEvents[card.id] = (this.playerEvents[card.id] ?? 0) + 1;

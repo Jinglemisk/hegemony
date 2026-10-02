@@ -262,7 +262,7 @@ export type PolicyProjection = {
 /**
  * The reference policies' canonical future-state projection. Ordinary recurring
  * modifiers already flow through calculateIncome; the active-effect selector adds
- * state that income alone cannot express: skipped collections, future timed mood,
+ * state that income alone cannot express: skipped collections
  * and accumulated starvation progress.
  */
 export function projectPolicyHorizon(
@@ -330,7 +330,6 @@ export function projectPolicyHorizon(
 
       if (unfed > 0) {
         expectedStarvationPopLoss += applyHunger(projectedState, playerID, unfed).total;
-        income = calculateIncome(projectedState, playerID);
       }
     }
 

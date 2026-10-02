@@ -1056,13 +1056,6 @@
   line-height: 1.2;
 }
 
-.codexGallerySeasons {
-  color: var(--muted);
-  font-size: 0.6rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 .codexGalleryText {
   color: var(--muted);
   font-size: 0.68rem;

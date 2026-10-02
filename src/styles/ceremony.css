@@ -554,7 +554,7 @@
 }
 
 /* A lacquer cube with ivory pips — an object you rolled, not a number you were
-   given. The glow is the one place ochre appears outside the season wheel. */
+   given. The glow draws the eye to the result. */
 .lacquerDie {
   display: grid;
   place-items: center;
