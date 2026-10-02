@@ -80,9 +80,14 @@ with the owner's rulings in its section 8, plus these later rulings:
 - One Temple and one Granary per settlement, like every building (2026-09-25).
 - No per-player cap on active luxuries; each counts +2 happiness (2026-09-25).
 - Setup keeps one citizen; every later citizen comes by promotion (2026-09-25).
-- Happiness: open as [Q77](../questions.md#q77--which-happiness-model-ships-at-step-5).
-  The bank-first ruling of 2026-09-06 conflicts with the token cards and the mock's level
-  display.
+- Happiness is the level (2026-10-02, the answer to Q77): a state read off the board each
+  turn, never banked. Level = Temples + 2 per luxury − half the slaves − Unrest tokens,
+  +2 if calm was bought this year. A level of −3 this turn is −3 next turn if nothing
+  changes. Riot at −3 or below, revolt at −6 or below, per the paper's section 5.7. This
+  replaces the bank-first ruling of 2026-09-06: Step 4's batch showed the bank slides
+  ([report](../reports/simulation/2026-10-02-v2-step4-bank-and-food.md)).
+- No `/code-review ultra` on this migration (owner, 2026-10-02). Each step's own
+  medium-effort review is the review.
 - National Ideas follow [their plan](national-ideas.md): one picked at setup, one bought
   with influence.
 - Luxury goods as shipped on `main`: coastal only, claimed by a Port that is never free.
@@ -263,8 +268,6 @@ danger selector and the real-path previews, with their tests.
 
 ## Open owner questions
 
-- [Q77](../questions.md#q77--which-happiness-model-ships-at-step-5): which happiness model
-  ships. Needed before Step 5; Steps 1–4 are written so they do not depend on it.
 - Step 11's thresholds are proposals the owner may change before it runs.
 
 ## Three-axis parity
@@ -286,8 +289,8 @@ selectors, so a rule change updates one selector, not three views.
   two-level Build and Exchange choices are canonical commands with derived legal options.
 - Actors: the Assembly stays multi-seat and meets every other year.
 - Projections: the rival tooltip reads only the public projection.
-- Invariants: pieces are conserved (four colonies and three cities per player), the
-  happiness bank stays within −10 to +10, and food never goes negative.
+- Invariants: pieces are conserved (four colonies and three cities per player), happiness
+  is derived and never stored, and food never goes negative.
 - The year deck replaces seasons and the omen as the clock.
 
 ## Steps
@@ -315,7 +318,6 @@ next step.
 
 **Before:** nothing; Q78 was answered on 2026-10-01. **Mode:** both steps in one session, back to back. **Stop:**
 present Step 4's bot batch (riots per game, share of turns on the riot table) and ask Q77.
-Remind the owner to run `/code-review ultra` on `feat/v2`, which only they can launch.
 
 - [x] **Step 3 · Pops and tiles.** ([#82](https://github.com/Jinglemisk/hegemony/pull/82): a 40-game bot batch finishes with no illegal moves; per seat, 3.4 to 3.9 hunger turns and 5.2 to 6.9 pops lost a game, 22% to 41% of slaves idle, at v1's prices.) Tiles print terrain and slots only, under the work-slot
       ruling in Settled inputs: slots are shared by buildings and working slaves, a slave
@@ -339,20 +341,22 @@ Remind the owner to run `/code-review ultra` on `feat/v2`, which only they can l
 
 ### Stretch 3 · Remaining systems (Steps 5–10)
 
-**Before:** Q77 is answered. **Mode:** all six steps back to back; this stretch may run
+**Before:** nothing; Q77 was answered on 2026-10-02. **Mode:** all six steps back to back; this stretch may run
 unattended overnight. **Stop:** a summary of the commits and every default picked.
 
-- [ ] **Step 5 · Happiness.** The model Q77 picks: the clamped bank (integers from −10 to
-      +10, riot and revolt per the paper's fallback) or the level with Unrest tokens (the
-      paper's section 5.7). Either way the food-stockpile bonus goes, calm is +2 for this
-      year, and luxuries are +2 each with no cap.
+- [ ] **Step 5 · Happiness.** The level with Unrest tokens, per the paper's section 5.7
+      and the ruling in Settled inputs. Nothing is stored: the level is derived each turn
+      from Step 4's named terms. The stored bank, the food-stockpile bonus and the cap of
+      three luxuries go; calm is +2 for this year and luxuries are +2 each. A riot clears
+      the tokens and then rolls; a revolt sends half the slaves away with no roll. Beloved
+      reads the level without calm.
 - [ ] **Step 6 · Years and the year deck.** Seasons and the omen retire. A 14-card year deck
       is the clock and the next card stays hidden. Victory is checked at the start of each
       player's own turn, as today, with the paper's minimums; Treasurer counts gold only; Voice is a level.
 - [ ] **Step 7 · Cards.** A player deck of twelve kinds in the four verbs. Ventures take one
       stake of 2 gold. Coupons, choice cards and per-pop scaling go.
-      If Q77 picks the bank, the token cards (Plague, Festival, Local Unrest, Public Calm,
-      The Streets Burn) become plain happiness gains and losses.
+      The token cards (Plague, Festival, Local Unrest, Public Calm, The Streets Burn)
+      place and clear Unrest tokens as the paper draws them.
 - [ ] **Step 8 · Assembly and Laws.** It meets every other year and votes on player proposals
       only. At most four Laws stand, the oldest is replaced, and a new Law has a minimum
       tenure. One vote per seat plus one per citizen, up to two bought votes, no veto. The
@@ -367,8 +371,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
 ### Stretch 4 · Sim gate (Step 11)
 
 **Mode:** one session. **Stop:** the dated report, with a proposed remedy for each failing
-rule; the owner decides, including whether Step 12 runs. Remind the owner to run
-`/code-review ultra` on `feat/v2`.
+rule; the owner decides.
 
 - [ ] **Step 11 · Sim gate.** Run batches on the baseline seeds, compare with the
       [2026-09-05 baseline](../reports/simulation/2026-09-05-shallow-economy-baseline.md),
@@ -379,13 +382,11 @@ rule; the owner decides, including whether Step 12 runs. Remind the owner to run
 
 ### Stretch 5 · Finish (Steps 12–15)
 
-**Mode:** Steps 12–14 back to back, as in Stretch 3; Step 14 may instead run in parallel at
+**Mode:** Steps 13–14 back to back, as in Stretch 3; Step 14 may instead run in parallel at
 any time in its own worktree when the owner asks. **Stop:** Step 15 ends at the owner's
 playtest, with the PR from `feat/v2` into `main` open for the owner to merge.
 
-- [ ] **Step 12 · Level model, only if Q77 picked the bank and Step 11 calls for it.** Unrest tokens and year cards
-      that zero a term, per the paper's section 5.7.
-
+- [x] **Step 12 · Level model.** Dropped: Q77 picked the level, so Step 5 builds it.
 - [ ] **Step 13 · Ceremony surfaces.** The year-card reveal, the Assembly sitting, hunger and
       riot moments, victory, and the National Idea pick, designed in the app in the mock's
       language.
@@ -402,7 +403,7 @@ Proposed thresholds; the owner may change them before Step 11 runs.
 
 | Question                        | Rule                                                                                                                       | If it fails                                                               |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Does the bank still slide?      | Under the bank, the riot table is reached on at most 10% of turns after year 7                                             | Build Step 12                                                             |
+| Do riots stay rare?             | The riot table is reached on at most 10% of turns after year 7                                                             | Retune the level's terms or the token cards                               |
 | Does influence plateau?         | Median influence stock grows by at most 5 a year from year 10 to year 14                                                   | Raise the propose and repeal prices first                                 |
 | Is every build viable?          | Each personality wins between 20% and 45% of games                                                                         | Rework the weakest build, and check whether missing trade is the real gap |
 | Does the leader run away?       | The round-5 income leader wins at most 40% of games, and the leader holds at most 2.5 times the laggard's stock at year 10 | Report, with a proposed catch-up rule                                     |
