@@ -15,14 +15,11 @@ import { getTile } from "../core/query";
 import { applyResourceDelta } from "../core/resources";
 import {
   countPlayerPopType,
-  scaledByPops,
   settlementIdleSlaves,
   settlementIncomeSource,
-  settlementOverCapacity,
   settlementWorkingSlaves,
 } from "../settlement";
 import type { Ruleset } from "../ruleset";
-import { slaveUnhappiness } from "../happiness";
 import { getLawIncomeContributions } from "../assembly/laws";
 
 export type IncomeContribution = {
@@ -115,8 +112,6 @@ export function settlementNetYield(
     income,
     popIncome("slaves", settlement.pops.slaves, primary, ruleset, workingSlaves),
   );
-  income.happiness -=
-    settlementOverCapacity(settlement, ruleset) * ruleset.economy.overCapacityHappinessPerPop;
 
   applyIncomeBuildingEffects(
     [],
@@ -212,21 +207,6 @@ export function calculateIncomeBreakdown(
       settlementId: settlement.id,
       detail: `${settlement.pops.slaves} slave pops upkeep`,
     });
-    addIncomeContribution(contributions, income, {
-      resource: "happiness",
-      amount: settlement.pops.slaves * coeff("slaves", "happiness"),
-      source: settlementLabel,
-      settlementId: settlement.id,
-      detail: `${settlement.pops.slaves} slave pops pressure`,
-    });
-    addIncomeContribution(contributions, income, {
-      resource: "happiness",
-      amount:
-        settlementOverCapacity(settlement, ruleset) * -ruleset.economy.overCapacityHappinessPerPop,
-      source: settlementLabel,
-      settlementId: settlement.id,
-      detail: "Over capacity pressure",
-    });
 
     applyIncomeBuildingEffects(
       contributions,
@@ -240,39 +220,12 @@ export function calculateIncomeBreakdown(
     );
   }
 
-  // Slaves cost happiness by the realm's count, so the line belongs to no settlement.
-  const slaves = countPlayerPopType(G, playerID, "slaves");
-  addIncomeContribution(contributions, income, {
-    resource: "happiness",
-    amount: -slaveUnhappiness(G, slaves),
-    source: "Slaves",
-    detail: `${slaves} ${formatPopName("slaves", slaves)}, 1 per ${ruleset.economy.slavesPerUnhappiness}`,
-  });
-
   applySeasonalIncomeEffects(G, playerID, contributions, income);
   applyYearOmenIncomeEffects(G, contributions, income);
   // Standing Laws land AFTER the settlement, building, seasonal and omen passes: a
   // Law is a patch over the ruleset, and the surplus-conversion effect (a tariff on
   // the harvest) can only be assessed once the harvest is known.
   applyStandingLawIncomeEffects(G, playerID, contributions, income);
-
-  const divisor = ruleset.economy.foodStockpileHappinessDivisor;
-  const cap = ruleset.economy.foodStockpileHappinessCap;
-  const uncapped = divisor > 0 ? Math.floor(G.players[playerID].resources.food / divisor) : 0;
-  // Capped so hoarded food can't buy unlimited calm (roadmap-appendix D4).
-  const foodStockpileHappiness = Math.min(uncapped, cap);
-
-  if (foodStockpileHappiness > 0) {
-    addIncomeContribution(contributions, income, {
-      resource: "happiness",
-      amount: foodStockpileHappiness,
-      source: "Food stockpile",
-      detail:
-        uncapped > cap
-          ? `Every ${divisor} stored food improves happiness (capped at +${cap})`
-          : `Every ${divisor} stored food improves happiness (up to +${cap})`,
-    });
-  }
 
   return contributions;
 }
@@ -361,23 +314,6 @@ function applySeasonalIncomeEffects(
         source: card.name,
         detail: "Seasonal event",
       });
-    } else if (
-      effect.type === "scaledHappinessDelta" &&
-      effect.duration === "season" &&
-      effectAppliesToPlayer(effect.scope, playerID, activeEvent.playerID)
-    ) {
-      addIncomeContribution(contributions, income, {
-        resource: "happiness",
-        amount: scaledByPops(
-          G,
-          playerID,
-          effect.amountPerPops,
-          effect.popStep,
-          effect.minimumMagnitude,
-        ),
-        source: card.name,
-        detail: "Seasonal event",
-      });
     }
   }
 }
@@ -404,9 +340,13 @@ function applyIncomeBuildingEffects(
     const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
 
     for (const effect of building?.effects ?? []) {
-      if (effect.type === "income" || effect.type === "happiness") {
+      // A Temple's happiness is a term of the level, not income (game/happiness.ts).
+      if (effect.type === "happiness") {
+        continue;
+      }
+      if (effect.type === "income") {
         addIncomeContribution(contributions, income, {
-          resource: effect.type === "income" ? effect.resource : "happiness",
+          resource: effect.resource,
           amount: effect.amount,
           source: settlementLabel,
           settlementId: settlement.id,

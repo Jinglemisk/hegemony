@@ -39,13 +39,13 @@ describe("scenario builder", () => {
       .withSettlement("2", "0,0", "city", { citizens: 2, freemen: 1, slaves: 0 })
       .setPops("2", "0,0", { citizens: 4, freemen: 0, slaves: 1 })
       .withResources("2", "wealthy")
-      .withHappiness("2", -7)
+      .withHappiness("2", -5)
       .build();
 
     expect(G.players["2"].settlements).toEqual(["0,0"]);
     expect(owned(G, "0,0", "2").pops).toEqual({ citizens: 4, freemen: 0, slaves: 1 });
     expect(G.players["2"].resources.wood).toBe(200);
-    expect(G.players["2"].resources.happiness).toBe(-7);
+    expect(G.players["2"].unrestTokens).toBe(5);
   });
 
   it("applies mode and ruleset patch", () => {

@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { buyRiotInsurance, resolveRiot } from "./riot";
 import { endTurn } from "./turn";
 import { applyUnrestUpkeep } from "./unrest";
+import { happinessLevel } from "./happiness";
+import { removePops } from "./tables";
 import { scenario } from "./testing/scenario";
 import { TEST_OPENING_SETUP } from "./config";
 import type { HegemonyState } from "./types";
@@ -18,13 +20,18 @@ function totalPopsOf(G: HegemonyState, playerID: "0"): number {
   }, 0);
 }
 
-/** An opening where player 0 is mid-riot: happiness pushed down, upkeep run. */
-function riotingGame(happiness: number) {
+/** Enough Unrest tokens to put player 0's level exactly on the riot line. */
+function tokensForRiot(G: HegemonyState): number {
+  return happinessLevel(G, "0") - G.ruleset.economy.unrest.riotThreshold;
+}
+
+/** An opening where player 0 is mid-riot: tokens placed, upkeep run. */
+function riotingGame() {
   const G = scenario()
     .opening()
     .mutate((draft) => {
       draft.pendingPlayerEvent = null;
-      draft.players["0"].resources.happiness = happiness;
+      draft.players["0"].unrestTokens = tokensForRiot(draft);
     })
     .build();
   applyUnrestUpkeep(G, "0");
@@ -33,7 +40,7 @@ function riotingGame(happiness: number) {
 
 describe("the riot blocks the turn (D9)", () => {
   it("endTurn is illegal while the riot stands; resolving unblocks it", () => {
-    const G = riotingGame(-6);
+    const G = riotingGame();
 
     expect(G.pendingRiot).not.toBeNull();
     expect(endTurn(G).ok).toBe(false);
@@ -51,7 +58,7 @@ describe("the riot blocks the turn (D9)", () => {
       .build();
     // Simulate the next upkeep finding a riot: flags as at turn start.
     G.players["0"].collectedThisTurn = false;
-    G.players["0"].resources.happiness = -6;
+    G.players["0"].unrestTokens = tokensForRiot(G);
     applyUnrestUpkeep(G, "0");
 
     expect(G.players["0"].collectedThisTurn).toBe(false);
@@ -65,7 +72,7 @@ describe("the riot blocks the turn (D9)", () => {
 
 describe("riot insurance", () => {
   it("each option once per riot, all three stack to +3", () => {
-    const G = riotingGame(-6);
+    const G = riotingGame();
     G.players["0"].resources.food = 4;
     G.players["0"].resources.influence = 3;
 
@@ -82,7 +89,7 @@ describe("riot insurance", () => {
   });
 
   it("the concession demotes the named pop for free", () => {
-    const G = riotingGame(-6);
+    const G = riotingGame();
     const capital = G.board.tiles
       .find((tile) => tile.id === P0_CAPITAL)!
       .settlements.find((candidate) => candidate.owner === "0")!;
@@ -99,10 +106,19 @@ describe("riot insurance", () => {
     ).toBe(false);
   });
 
-  it("full insurance makes mild-tier pop loss impossible (worst case is food or gold)", () => {
+  it("the concession takes a citizen and nobody else", () => {
+    const G = riotingGame();
+
+    expect(buyRiotInsurance(G, "0", "concession", { tileId: P0_CAPITAL, from: "freemen" }).ok).toBe(
+      false,
+    );
+    expect(G.pendingRiot?.boughtInsurance).toEqual([]);
+  });
+
+  it("full insurance makes pop loss impossible (worst case is food or gold)", () => {
     // Deliberate design (Q15): min roll 1 + 3 = 4 — granary (row 4) is the floor.
     for (let attempt = 0; attempt < 8; attempt += 1) {
-      const G = riotingGame(-6);
+      const G = riotingGame();
       G.players["0"].resources.food = 20;
       G.players["0"].resources.influence = 10;
       G.players["0"].resources.gold = 20;
@@ -124,44 +140,44 @@ describe("riot insurance", () => {
   });
 });
 
-describe("the severe tier", () => {
-  it("rolls at -2, doubles pop losses, and rebounds happiness to -4", () => {
-    const G = riotingGame(-12);
-    expect(G.pendingRiot?.tier).toBe("revolt");
-    const before = totalPopsOf(G, "0");
+describe("the roll", () => {
+  it("clears the tokens that caused it, so the same riot does not fire again", () => {
+    const G = riotingGame();
 
-    expect(resolveRiot(G, "0").ok).toBe(true);
+    expect(G.players["0"].unrestTokens).toBe(0);
+    resolveRiot(G, "0");
+    G.players["0"].collectedThisTurn = false;
+    applyUnrestUpkeep(G, "0");
 
-    const roll = G.lastTableRoll!;
-    expect(roll.modifier).toBe(-2);
-    expect(roll.modified).toBe(Math.max(1, roll.roll - 2));
-    expect(G.players["0"].resources.happiness).toBe(-4);
+    expect(G.pendingRiot).toBeNull();
+  });
 
-    // Doubling: whatever pops the landed row takes, the tally matches and is even
-    // when the row is a pure pop-loss row.
-    const lost = before - totalPopsOf(G, "0");
-    expect(G.players["0"].popsLostToUnrest).toBe(lost);
-    if (roll.modified === 2 || roll.modified === 3) {
-      expect(lost).toBe(roll.modified === 2 ? 4 : 2);
-    }
+  it("takes slaves before freemen and freemen before citizens", () => {
+    const G = scenario().opening().build();
+    const capital = G.board.tiles
+      .find((tile) => tile.id === P0_CAPITAL)!
+      .settlements.find((candidate) => candidate.owner === "0")!;
+    capital.pops = { citizens: 2, freemen: 2, slaves: 1 };
+    const slaves = G.players["0"].settlements.reduce(
+      (sum, tileId) =>
+        sum +
+        G.board.tiles
+          .find((tile) => tile.id === tileId)!
+          .settlements.find((candidate) => candidate.owner === "0")!.pops.slaves,
+      0,
+    );
+
+    // One more than every slave in the realm: the last loss falls on a freeman.
+    expect(removePops(G, "0", slaves + 1).byType).toEqual({ citizens: 0, freemen: 1, slaves });
   });
 
   it("is deterministic for a fixed seed", () => {
     const run = () => {
-      const G = riotingGame(-12);
+      const G = riotingGame();
       resolveRiot(G, "0");
       return { roll: G.lastTableRoll?.roll, pops: totalPopsOf(G, "0"), log: G.log.length };
     };
 
     expect(run()).toEqual(run());
-  });
-
-  it("a mild riot never rebounds — it can re-fire next upkeep (civic calm's job)", () => {
-    const G = riotingGame(-6);
-
-    resolveRiot(G, "0");
-
-    // Whatever the roll took, the meter itself was not reset upward.
-    expect(G.players["0"].resources.happiness).toBeLessThanOrEqual(-6);
   });
 });

@@ -412,7 +412,7 @@ export function HegemonyBoard({
             <Alarms
               content={G.definition.content}
               effects={activeEffects}
-              popLossThreshold={G.ruleset.economy.unrest.popLossThreshold}
+              riotThreshold={G.ruleset.economy.unrest.riotThreshold}
               unrest={unrestStatus(G, viewerId)}
             />
           </div>

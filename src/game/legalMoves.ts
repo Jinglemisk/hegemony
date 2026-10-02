@@ -28,7 +28,7 @@ import {
   promotePop,
 } from "./civic";
 import type { CivicCalmPayment } from "./civic";
-import { buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
+import { CONCESSION_FROM, buyRiotInsurance, getBuyRiotInsuranceStatus, resolveRiot } from "./riot";
 import { fundExpedition, getFundExpeditionStatus } from "./ventures";
 import type { VentureStake } from "./ventures";
 import { getAuthoredGameContent, getExpeditionTables, getRiotTable } from "./content";
@@ -560,7 +560,7 @@ function formatCost(cost: Partial<Resources>): string {
 }
 
 /** The riot's forced menu: each unbought, affordable insurance (the concession once
- *  per legal demote target), and always the roll itself. */
+ *  per settlement with a citizen to demote), and always the roll itself. */
 function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): DerivedCommand[] {
   const moves: DerivedCommand[] = [];
 
@@ -575,14 +575,12 @@ function enumerateRiotMoves(G: HegemonyState, playerID: PlayerId): DerivedComman
     }
 
     for (const tileId of G.players[playerID].settlements) {
-      for (const from of DEMOTE_FROM) {
-        if (getDemotePopStatus(G, playerID, tileId, from).can) {
-          moves.push({
-            type: "buyRiotInsurance",
-            optionId: option.id,
-            demoteTarget: { tileId, from },
-          });
-        }
+      if (getDemotePopStatus(G, playerID, tileId, CONCESSION_FROM).can) {
+        moves.push({
+          type: "buyRiotInsurance",
+          optionId: option.id,
+          demoteTarget: { tileId, from: CONCESSION_FROM },
+        });
       }
     }
   }

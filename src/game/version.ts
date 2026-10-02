@@ -14,7 +14,10 @@ export const ENGINE_VERSION = "0.1.0";
 /** v4 (v2 migration, Step 4): the building roster is six, the ruleset carries pieces,
  *  the Dole and the move price, and players carry the move and calm flags. v2 commands
  *  add the Dole. Older saves are rejected, not migrated. */
-export const STATE_SCHEMA_VERSION = 4;
+/** v5 (v2 migration, Step 5): happiness is a level derived from the board. Players
+ *  hold no happiness and no timed moods; they carry a count of Unrest tokens. Older
+ *  saves are rejected, not migrated. */
+export const STATE_SCHEMA_VERSION = 5;
 export const COMMAND_SCHEMA_VERSION = 2;
 
 export const SAVE_FORMAT_VERSION = 2;

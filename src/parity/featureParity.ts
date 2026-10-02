@@ -25,8 +25,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   eventPersistent: {
     implementation: "src/parity/activeEffectParity.test.ts",
-    evidence:
-      "materializes every authored player timed effect and discount through event resolution",
+    evidence: "materializes every authored player discount through event resolution",
   },
   eventChoice: {
     implementation: "src/game/deck.test.ts",
@@ -58,7 +57,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   lawFounding: {
     implementation: "src/game/assembly/laws.test.ts",
-    evidence: "onFoundColony grants the pop and takes the happiness",
+    evidence: "onFoundColony grants the pop and places an Unrest token",
   },
   directiveResources: {
     implementation: "src/game/assembly/assembly.test.ts",
@@ -94,8 +93,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   activeEffectPolicy: {
     implementation: "src/parity/activeEffectParity.test.ts",
-    evidence:
-      "makes the master policy use calm against harmful mood and avoid it against beneficial mood",
+    evidence: "makes the master policy buy calm when the next upkeep would riot, and not otherwise",
   },
   hungerResolution: {
     implementation: "src/game/hunger.test.ts",
@@ -107,7 +105,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   unrestResolution: {
     implementation: "src/game/unrest.test.ts",
-    evidence: "parks a severe riot (revolt) at the -10 threshold",
+    evidence: "at −6 revolts: half the slaves leave, the tokens clear, nothing is rolled",
   },
   victoryResolution: {
     implementation: "src/game/victory.test.ts",
@@ -135,7 +133,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   luxuryActivity: {
     implementation: "src/game/luxury.test.ts",
-    evidence: "keeps goods over the active cap owned but inactive, deterministically",
+    evidence: "counts every good a player holds: there is no cap",
   },
 } as const satisfies Record<string, ParityEvidence>;
 
@@ -280,7 +278,6 @@ const active = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
 export const ACTIVE_EFFECT_MECHANIC_PARITY = {
   suppressIncome: active("activeEffectLifecycle", "activeEffectPolicy"),
   hunger: active("activeEffectLifecycle", "activeEffectPolicy"),
-  timedHappiness: active("activeEffectLifecycle", "activeEffectPolicy"),
   resourceIncome: active("activeEffectLifecycle", "activeEffectPolicy"),
   buildingCostMultiplier: active("activeEffectLifecycle"),
   actionCostDiscount: active("activeEffectLifecycle"),

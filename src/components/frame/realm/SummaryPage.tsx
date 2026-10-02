@@ -78,6 +78,9 @@ export function SummaryPage({
         </span>
         <span className="cap">
           happiness, {MOOD[mood.tier]}
+          {mood.tokens !== 0
+            ? ` · ${formatNumber(mood.tokens)} Unrest ${mood.tokens === 1 ? "token" : "tokens"}`
+            : ""}
           {mood.luxuryBonus !== 0 ? ` · ${formatNumber(mood.luxuryBonus)} from luxuries` : ""}
           {mood.calmBonus !== 0 ? ` · ${formatNumber(mood.calmBonus)} from calm` : ""}
         </span>

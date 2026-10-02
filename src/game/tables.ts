@@ -5,7 +5,7 @@ import { settlementCapacity } from "./settlement";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { applyResourceDeltaWithFloors, createResourceDelta } from "./core/resources";
-import { mulberry32, shuffleWithSeed } from "./core/rng";
+import { mulberry32 } from "./core/rng";
 import type {
   EventTableDefinition,
   HegemonyState,
@@ -25,10 +25,8 @@ import type {
  */
 
 export interface RollOptions {
-  /** Net roll modifier — insurance (+1 each) and the severe-riot tier (−2). */
+  /** Net roll modifier: riot insurance adds 1 for each option bought. */
   modifier?: number;
-  /** Multiplies every pop-loss amount (the severe riot doubles them). */
-  popLossMultiplier?: number;
 }
 
 export interface RollResult {
@@ -55,7 +53,7 @@ export function rollOnTable(
   G: HegemonyState,
   playerID: PlayerId,
   table: EventTableDefinition,
-  { modifier = 0, popLossMultiplier = 1 }: RollOptions = {},
+  { modifier = 0 }: RollOptions = {},
 ): RollResult {
   const die = table.die ?? 6;
   const roll = rollDie(G, die);
@@ -75,7 +73,7 @@ export function rollOnTable(
   let popsRemoved = 0;
 
   for (const effect of row.effects) {
-    const applied = applyTableEffect(G, playerID, effect, popLossMultiplier);
+    const applied = applyTableEffect(G, playerID, effect);
     popsRemoved += applied.popsRemoved;
     outcomes.push(...applied.outcomes);
   }
@@ -98,7 +96,6 @@ function applyTableEffect(
   G: HegemonyState,
   playerID: PlayerId,
   effect: TableEffect,
-  popLossMultiplier: number,
 ): { outcomes: string[]; popsRemoved: number } {
   const player = G.players[playerID];
   const name = getPlayerName(G, playerID);
@@ -108,7 +105,7 @@ function applyTableEffect(
       return { outcomes: ["No losses."], popsRemoved: 0 };
 
     case "losePops": {
-      const removed = removeRandomPops(G, playerID, effect.count * popLossMultiplier);
+      const removed = removePops(G, playerID, effect.count);
       const text =
         removed.total > 0 ? `Lost ${describeRemoval(removed)}.` : "No pops left to lose.";
       addLog(G, `${name} — ${text}`);
@@ -129,7 +126,7 @@ function applyTableEffect(
 
       // The bribe pattern: coming up short is paid in blood on top of the coin.
       if (paid < effect.amount && effect.popLossIfShort) {
-        const removed = removeRandomPops(G, playerID, effect.popLossIfShort * popLossMultiplier);
+        const removed = removePops(G, playerID, effect.popLossIfShort);
         popsRemoved = removed.total;
         if (removed.total > 0) {
           outcomes.push(`Couldn't pay in full — lost ${describeRemoval(removed)}.`);
@@ -150,7 +147,7 @@ function applyTableEffect(
 
       // Nothing to burn: the fallback pops are lost instead, so a buildingless
       // player's roll 1 stays strictly worse than roll 2's two pops never inverting.
-      const removed = removeRandomPops(G, playerID, effect.popLossFallback * popLossMultiplier);
+      const removed = removePops(G, playerID, effect.popLossFallback);
       const text =
         removed.total > 0
           ? `No buildings to burn — lost ${describeRemoval(removed)} instead.`
@@ -218,56 +215,49 @@ export function rollYearOmen(G: HegemonyState) {
 
 export type RemovalSummary = { total: number; byType: Record<PopType, number> };
 
+/** The order a table's pop losses fall in: slaves first, then freemen, then citizens. */
+const TABLE_LOSS_ORDER: PopType[] = ["slaves", "freemen", "citizens"];
+
 /**
- * Remove `count` pops chosen uniformly at random from across the player's
- * settlements, using the seeded RNG on the state (never Math.random — the state
- * must stay serializable and replayable). Removing pops can leave a settlement at
- * zero pops; the settlement itself is left standing. (Moved here from unrest.ts —
- * it is the `losePops` interpreter; unrest re-imports it.)
+ * Remove `count` pops, taking the classes in `order`: every pop of the first class
+ * goes before any of the next. Each leaves the settlement holding the most of its
+ * class, the earliest founded on a tie, so the same state always loses the same
+ * pops. A settlement left at zero pops still stands. Riots, revolts and hunger all
+ * remove pops through here.
  */
-export function removeRandomPops(
+export function removePops(
   G: HegemonyState,
   playerID: PlayerId,
   count: number,
+  order: PopType[] = TABLE_LOSS_ORDER,
 ): RemovalSummary {
   const summary: RemovalSummary = { total: 0, byType: { citizens: 0, freemen: 0, slaves: 0 } };
+  const settlements = G.players[playerID].settlements.flatMap(
+    (tileId) => getOwnedSettlement(G, tileId, playerID) ?? [],
+  );
 
-  if (count <= 0) {
-    return summary;
-  }
+  for (let lost = 0; lost < count; lost += 1) {
+    const pop = order.find((candidate) => fullest(settlements, candidate));
+    const settlement = pop && fullest(settlements, pop);
 
-  // One token per existing pop — a flat bag we can shuffle and draw from.
-  const tokens: Array<{ settlement: Settlement; pop: PopType }> = [];
-  for (const tileId of G.players[playerID].settlements) {
-    const settlement = getOwnedSettlement(G, tileId, playerID);
-
-    if (!settlement) {
-      continue;
+    if (!pop || !settlement) {
+      break;
     }
 
-    for (const pop of POP_TYPES) {
-      for (let i = 0; i < settlement.pops[pop]; i += 1) {
-        tokens.push({ settlement, pop });
-      }
-    }
-  }
-
-  if (tokens.length === 0) {
-    return summary;
-  }
-
-  const shuffled = shuffleWithSeed(tokens, G.rng);
-  G.rng = shuffled.state;
-
-  const removeCount = Math.min(count, shuffled.cards.length);
-  for (let i = 0; i < removeCount; i += 1) {
-    const token = shuffled.cards[i];
-    token.settlement.pops[token.pop] -= 1;
-    summary.byType[token.pop] += 1;
+    settlement.pops[pop] -= 1;
+    summary.byType[pop] += 1;
     summary.total += 1;
   }
 
   return summary;
+}
+
+/** The settlement holding the most pops of one class; the earliest founded on a tie. */
+function fullest(settlements: Settlement[], pop: PopType): Settlement | undefined {
+  return settlements.reduce<Settlement | undefined>(
+    (best, settlement) => (settlement.pops[pop] > (best?.pops[pop] ?? 0) ? settlement : best),
+    undefined,
+  );
 }
 
 /** "2 slaves, 1 freeman" — nonzero pop types in a stable order, using the shared pop labels. */

@@ -22,7 +22,6 @@ function beforeIncome(mutate: (G: HegemonyState) => void = () => {}): HegemonySt
     .mutate((draft) => {
       draft.pendingPlayerEvent = null;
       draft.players["0"].collectedThisTurn = false;
-      draft.players["0"].resources.happiness = 0;
       mutate(draft);
     })
     .build();

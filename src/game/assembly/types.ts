@@ -4,6 +4,7 @@ import type {
   PlayerId,
   PopType,
   Resource,
+  Stat,
   TradableMaterial,
 } from "../types";
 
@@ -52,16 +53,17 @@ export type LawCostedAction =
  * and `step: 3` is "+1 per 3 citizens".
  */
 export type LawEffect =
-  /** Income per settlement of a scope. `resource: "happiness"` expresses civic mood. */
+  /** Income per settlement of a scope. `resource: "happiness"` is a standing term of
+   *  the level, not income. */
   | {
       type: "settlementIncome";
       scope: SettlementScope;
-      resource: Resource;
+      resource: Stat;
       amount: number;
       step?: number;
     }
   /** Income per pop of a type — the per-pop coefficient lever. */
-  | { type: "popIncome"; pop: PopType; resource: Resource; amount: number; step?: number }
+  | { type: "popIncome"; pop: PopType; resource: Stat; amount: number; step?: number }
   /** Per-pop delta into the settlement TILE's own material — the slave-production lever.
    *  Dead on a yield-less tile (hill / oracle), exactly like the base coefficient. */
   | { type: "popPrimaryIncome"; pop: PopType; amount: number }
@@ -109,7 +111,7 @@ export type LawEffect =
  * the author before the proposal is sealed; the target travels with the ballot item. */
 export type DirectiveEffect =
   /** A flat delta on the chosen rival. */
-  | { type: "resourceDelta"; resource: Resource; amount: number }
+  | { type: "resourceDelta"; resource: Stat; amount: number }
   /** The chosen rival loses a fraction of a stored resource, rounded down to a whole unit. */
   | { type: "resourceFraction"; resource: Resource; fraction: number }
   /** The chosen rival loses pops from their largest settlement. */

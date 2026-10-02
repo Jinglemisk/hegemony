@@ -14,7 +14,8 @@ import {
 } from "../status";
 import { owned, scenario } from "../testing/scenario";
 import type { HegemonyState, PlayerId } from "../types";
-import { getLawIncomeContributions, hasLawFreeAction } from "./laws";
+import { happinessLevel } from "../happiness";
+import { getLawHappinessContributions, getLawIncomeContributions, hasLawFreeAction } from "./laws";
 
 /**
  * The standing-modifier layer — the one genuinely new engine seam the Assembly needs.
@@ -71,12 +72,15 @@ describe("standing laws reach the income pipeline", () => {
       .withResources("0", { food: 100 })
       .build();
     const before = calculateIncome(G, "0");
+    const level = happinessLevel(G, "0");
 
     plantLaw(G, "sacred-fields");
     const after = calculateIncome(G, "0");
 
     expect(after.food - before.food).toBe(7);
-    expect(after.happiness - before.happiness).toBe(-2);
+    // A Law's happiness is a standing term of the level, not income.
+    expect(happinessLevel(G, "0") - level).toBe(-2);
+    expect(after).not.toHaveProperty("happiness");
   });
 
   it("popPrimaryIncome is dead on a yield-less hill and live on a yielding tile", () => {
@@ -108,16 +112,24 @@ describe("standing laws reach the income pipeline", () => {
     plantLaw(G, "cult-of-demeter"); // hold 15+ food for +2 happiness, below it -2
 
     G.players["0"].resources.food = 15;
-    const atThreshold = getLawIncomeContributions(G, "0", { ...EMPTY_RESOURCES });
+    const atThreshold = getLawHappinessContributions(G, "0");
     expect(atThreshold.find((line) => line.label === "Cult of Demeter")?.amount).toBe(2);
-    const secure = calculateIncome(G, "0").happiness;
+    const secure = happinessLevel(G, "0");
 
     G.players["0"].resources.food = 14;
-    const below = getLawIncomeContributions(G, "0", { ...EMPTY_RESOURCES });
+    const below = getLawHappinessContributions(G, "0");
     expect(below.find((line) => line.label === "Cult of Demeter")?.amount).toBe(-2);
 
-    // And the flip survives the full pipeline, not just the layer's own accounting.
-    expect(calculateIncome(G, "0").happiness).toBeLessThan(secure);
+    // And the flip reaches the level, not just the layer's own accounting.
+    expect(happinessLevel(G, "0")).toBe(secure - 4);
+  });
+
+  it("a Law with two happiness effects is one line of the level", () => {
+    // Civic Pride: +1 per city, −1 per colony. The opening holds one of each.
+    const G = opening().build();
+    plantLaw(G, "civic-pride");
+
+    expect(getLawHappinessContributions(G, "0")).toEqual([{ label: "Civic Pride", amount: 0 }]);
   });
 
   it("surplusConversion (Agrarian Tariff) only pays above the floor", () => {
@@ -274,16 +286,15 @@ describe("standing laws reach the bank and the colony charter", () => {
     expect(hasLawFreeAction(G, "0", "foundColony")).toBe(true);
   });
 
-  it("onFoundColony grants the pop and takes the happiness (Frontier Spirit)", () => {
+  it("onFoundColony grants the pop and places an Unrest token (Frontier Spirit)", () => {
     const G = opening().withResources("0", "wealthy").build();
     plantLaw(G, "frontier-spirit");
-    const happiness = G.players["0"].resources.happiness;
 
     expect(foundColony(G, "0", HILL, P0_CAPITAL, "slaves").ok).toBe(true);
 
     // The seed pop is still in transit; the freeman the charter grants is already there.
     expect(owned(G, HILL, "0").pops.freemen).toBe(1);
-    expect(G.players["0"].resources.happiness).toBe(happiness - 2);
+    expect(G.players["0"].unrestTokens).toBe(1);
   });
 });
 

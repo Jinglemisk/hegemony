@@ -16,6 +16,7 @@ import { playerStandings } from "../game/score";
 import { getOwnedSettlement, getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementIdleSlaves } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
+import { standingHappiness } from "../game/happiness";
 import { GAME_COMMAND_TYPES, type GameCommandType } from "../parity/commandParity";
 import {
   BUILDING_CONTENT_IDS,
@@ -53,6 +54,9 @@ export type PlayerSnapshot = {
   inTransit: number;
   resources: Resources;
   income: Resources;
+  /** The happiness level, this year's calm included: what the riot line tests. */
+  happiness: number;
+  unrestTokens: number;
   unrestTier: UnrestTier;
   /** 1 when the current happiness puts the player on the riot table next upkeep. */
   riotAtRisk: number;
@@ -101,6 +105,8 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       inTransit,
       resources: { ...player.resources },
       income,
+      happiness: unrest.happiness,
+      unrestTokens: unrest.tokens,
       unrestTier: unrest.tier,
       riotAtRisk: unrest.riotAtRisk ? 1 : 0,
       ...slaveCounts(G, playerID),
@@ -256,6 +262,8 @@ export type BatchReport = {
    *  on it, and the same counts season by season, so a report can cut the late game. */
   riots: {
     perGame: number;
+    /** Revolts per game: the lower line, where half the slaves leave with no roll. */
+    revoltsPerGame: number;
     turnShare: number;
     bySeason: Array<{ season: number; riots: number; playerTurns: number }>;
   };
@@ -382,6 +390,7 @@ export class Aggregator {
   private movesByType: Partial<Record<GameCommandType, number>> = {};
   private currencyVerbs: Record<string, number> = {};
   private riotsBySeason = new Map<number, number>();
+  private revolts = 0;
   private assemblyVerbs: Record<string, number> = {};
   private assemblyInfluence = 0;
   private assembliesHeld = 0;
@@ -394,7 +403,6 @@ export class Aggregator {
     gold: 0,
     food: 0,
     influence: 0,
-    happiness: 0,
   };
   private directiveTargets: Record<PlayerId, number> = { "0": 0, "1": 0, "2": 0, "3": 0 };
   private voiceClaims = 0;
@@ -566,6 +574,7 @@ export class Aggregator {
       finalCards[playerID] = playerStandings(G, playerID).victoryCards;
       finalAuthoredPasses[playerID] = G.assemblyPassedByPlayer[playerID];
       popsLostToUnrest[playerID] = G.players[playerID].popsLostToUnrest;
+      this.revolts += G.players[playerID].revolts;
       popsLostToHunger[playerID] = G.players[playerID].popsLostToHunger;
       luxuries[playerID] = {
         goodsHeld: ownedClaims(G, playerID).length,
@@ -608,7 +617,7 @@ export class Aggregator {
     return [...PLAYER_IDS].sort((a, b) => {
       const cards = finalCards[b] - finalCards[a];
       if (cards !== 0) return cards;
-      const happiness = G.players[b].resources.happiness - G.players[a].resources.happiness;
+      const happiness = standingHappiness(G, b) - standingHappiness(G, a);
       if (happiness !== 0) return happiness;
       const pops = playerStandings(G, b).pops - playerStandings(G, a).pops;
       if (pops !== 0) return pops;
@@ -673,7 +682,7 @@ export class Aggregator {
           victoryCards: percentiles(values((player) => player.victoryCards)),
           pops: percentiles(values((player) => player.pops + player.inTransit)),
           food: percentiles(values((player) => player.resources.food)),
-          happiness: percentiles(values((player) => player.resources.happiness)),
+          happiness: percentiles(values((player) => player.happiness)),
           unrestTierShares: tierShares,
           activeEffectShares,
         };
@@ -744,6 +753,7 @@ export class Aggregator {
     const riotCount = [...this.riotsBySeason.values()].reduce((sum, count) => sum + count, 0);
     const riots: BatchReport["riots"] = {
       perGame: riotCount / games,
+      revoltsPerGame: this.revolts / games,
       turnShare: this.snapshots.length > 0 ? riotCount / this.snapshots.length : 0,
       bySeason: [...turnsBySeason.entries()]
         .sort(([a], [b]) => a - b)
@@ -961,12 +971,12 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
     "food",
     "influence",
     "happiness",
+    "unrestTokens",
     "incomeWood",
     "incomeStone",
     "incomeGold",
     "incomeFood",
     "incomeInfluence",
-    "incomeHappiness",
     "unrestTier",
     "riotAtRisk",
     "slaves",
@@ -999,13 +1009,13 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
         player.resources.gold,
         player.resources.food,
         player.resources.influence,
-        player.resources.happiness,
+        player.happiness,
+        player.unrestTokens,
         player.income.wood,
         player.income.stone,
         player.income.gold,
         player.income.food,
         player.income.influence,
-        player.income.happiness,
         player.unrestTier,
         player.riotAtRisk,
         player.slaves,

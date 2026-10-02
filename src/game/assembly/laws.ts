@@ -131,7 +131,7 @@ export type LawIncomeContribution = {
 };
 
 /**
- * Every standing income / happiness modifier the player is under, as discrete
+ * Every standing income modifier the player is under, as discrete
  * contributions the income breakdown can list line by line. `baseIncome` is the income
  * accumulated so far, which the surplus-conversion effect reads (a tariff on food can
  * only be assessed once the food income is known) — so this must be called AFTER the
@@ -154,6 +154,7 @@ export function getLawIncomeContributions(
   for (const effect of effects) {
     switch (effect.type) {
       case "settlementIncome": {
+        if (effect.resource === "happiness") break;
         const count = countSettlementsInScope(G, playerID, effect.scope);
         contributions.push({
           resource: effect.resource,
@@ -163,6 +164,7 @@ export function getLawIncomeContributions(
         break;
       }
       case "popIncome": {
+        if (effect.resource === "happiness") break;
         const count = countPops(G, playerID, effect.pop);
         contributions.push({
           resource: effect.resource,
@@ -199,15 +201,6 @@ export function getLawIncomeContributions(
           label: label(effect),
         });
         break;
-      case "thresholdHappiness": {
-        const held = G.players[playerID].resources[effect.resource];
-        contributions.push({
-          resource: "happiness",
-          amount: held >= effect.threshold ? effect.atOrAbove : effect.below,
-          label: label(effect),
-        });
-        break;
-      }
       default:
         break;
     }
@@ -401,6 +394,45 @@ export function applyLawBankRate(
   // an infinite legal-move loop for any optimizer). Preserve one unit of spread at
   // the floor; the Law still improves the sell side from 2 to 1.
   return sell === 1 && buy === 1 ? { sell, buy: 2 } : { sell, buy };
+}
+
+/**
+ * What the standing Laws add to or take from the player's happiness level, one line
+ * per Law. v1's Laws name happiness per settlement, per pop or by a stockpile
+ * threshold; each is a standing term of the level until Step 8 rewrites the Laws.
+ * A Law with two happiness effects (Civic Pride) is one line: their sum.
+ */
+export function getLawHappinessContributions(
+  G: HegemonyState,
+  playerID: PlayerId,
+): Array<{ amount: number; label: string }> {
+  const byLaw = new Map<string, number>();
+
+  for (const effect of getStandingEffects(G, playerID)) {
+    let amount: number;
+
+    if (effect.type === "settlementIncome" && effect.resource === "happiness") {
+      amount = scaled(
+        countSettlementsInScope(G, playerID, effect.scope),
+        effect.amount,
+        effect.step,
+      );
+    } else if (effect.type === "popIncome" && effect.resource === "happiness") {
+      amount = scaled(countPops(G, playerID, effect.pop), effect.amount, effect.step);
+    } else if (effect.type === "thresholdHappiness") {
+      amount =
+        G.players[playerID].resources[effect.resource] >= effect.threshold
+          ? effect.atOrAbove
+          : effect.below;
+    } else {
+      continue;
+    }
+
+    const label = effectLabel(G, playerID, effect);
+    byLaw.set(label, (byLaw.get(label) ?? 0) + amount);
+  }
+
+  return [...byLaw].map(([label, amount]) => ({ label, amount }));
 }
 
 /** The riders a Law hangs on founding a colony (Frontier Spirit). */

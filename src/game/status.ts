@@ -29,7 +29,7 @@ import {
   settlementCapacity,
   settlementSlots,
 } from "./settlement";
-import { claimableLuxuriesAt, underActiveCap } from "./luxury";
+import { claimableLuxuriesAt } from "./luxury";
 import { isCoastalTile } from "./map";
 import { getAdjustedActionCost, getDiscountedGrowPopCost } from "./economy/cost";
 
@@ -213,12 +213,6 @@ function buildSiteReasons(
       reasons.push("A Port needs the coast — this settlement is inland.");
     } else if (claimableLuxuriesAt(G, tile.id).length === 0) {
       reasons.push("No unclaimed luxury good adjoins this tile.");
-    }
-
-    if (!underActiveCap(G, playerID)) {
-      reasons.push(
-        `Your luxury trade is at its active cap (${G.ruleset.economy.luxury.activeCapPerPlayer}).`,
-      );
     }
 
     if (

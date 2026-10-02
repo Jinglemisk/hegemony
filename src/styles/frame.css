@@ -453,11 +453,9 @@
   width: var(--level-w);
   margin-left: var(--s-4);
 }
-/* Level gauge: −6 … +6. Revolt band −6…−3, riot warning −3…0, calm above 0;
-   the tick is the current level (--level carries the data). */
-/* The happiness gauge, for either model: its ends are the display's floor and
-   ceiling; revolt is clay, the riot band ochre, calm above. --g-revolt, --g-riot
-   and --g-value are fractions of its width (the data it carries). */
+/* The happiness gauge: its ends are the display's floor and ceiling; revolt is clay,
+   the riot band ochre, calm above. --g-revolt, --g-riot and --g-value are fractions
+   of its width (the data it carries). */
 .gauge {
   position: relative;
   width: var(--gauge-w);
@@ -470,6 +468,19 @@
     var(--ink-12) calc(var(--g-riot) * 100%)
   );
   box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+/* One clay pip per Unrest token, above the gauge. */
+.gauge-tokens {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + var(--s-1) + var(--rule));
+  display: flex;
+  gap: var(--rule-2);
+}
+.gauge-token {
+  width: var(--u);
+  height: var(--u);
+  background: var(--clay);
 }
 .gauge::after {
   content: "";

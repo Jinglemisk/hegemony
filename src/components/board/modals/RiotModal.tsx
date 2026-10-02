@@ -1,13 +1,12 @@
 import { useMemo, useState } from "react";
 import {
-  DEMOTE_FROM,
+  CONCESSION_FROM,
   getBuyRiotInsuranceStatus,
   getDemotePopStatus,
   getTile,
   insuranceRollBonus,
 } from "../../../game/rules";
 import { getRiotTable } from "../../../game/content";
-import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { presentTableEffect } from "../../../ui/effects";
 import { POP_GLYPHS } from "../../../ui/iconRegistry";
@@ -40,24 +39,18 @@ export function RiotModal({
   const isActive = viewerCanAct && playerID === currentPlayerId;
   const pending = G.pendingRiot;
   const riotTable = getRiotTable(G.definition.content);
-  const severe = pending?.tier === "revolt";
-  const tierModifier = severe ? G.ruleset.economy.unrest.severeRollModifier : 0;
-  const modifier =
-    insuranceRollBonus(pending?.boughtInsurance ?? [], G.definition.content) + tierModifier;
+  const modifier = insuranceRollBonus(pending?.boughtInsurance ?? [], G.definition.content);
 
-  // Concession targets: every owned settlement × demotable pop with a body to spare.
+  // Concession targets: every owned settlement with a citizen to demote.
   const demoteTargets = useMemo(() => {
     if (!pending) {
       return [];
     }
 
     return G.players[playerID].settlements.flatMap((tileId) =>
-      DEMOTE_FROM.filter((from) => getDemotePopStatus(G, playerID, tileId, from).can).map(
-        (from) => ({
-          tileId,
-          from: from as PopType,
-        }),
-      ),
+      getDemotePopStatus(G, playerID, tileId, CONCESSION_FROM).can
+        ? [{ tileId, from: CONCESSION_FROM }]
+        : [],
     );
   }, [G, playerID, pending]);
   const [demoteChoice, setDemoteChoice] = useState(0);
@@ -85,11 +78,7 @@ export function RiotModal({
       table={riotTable}
       modifier={modifier}
       result={result}
-      subtitle={
-        severe
-          ? `${G.players[playerID].name} faces a REVOLT — roll at ${tierModifier}, pop losses doubled, happiness rebounds to ${G.ruleset.economy.unrest.severeRebound}.`
-          : `${G.players[playerID].name} faces a riot. Income waits until the table has spoken.`
-      }
+      subtitle={`${G.players[playerID].name} faces a riot. Its Unrest tokens clear; income waits until the table has spoken.`}
       footer={
         pending ? (
           <button
@@ -113,7 +102,7 @@ export function RiotModal({
             const bought = pending.boughtInsurance.includes(option.id);
             const status = getBuyRiotInsuranceStatus(G, playerID, option.id);
             const costText = option.demotesPop
-              ? "demote 1 pop (free — the mob demands it)"
+              ? "demote 1 citizen (free — the mob demands it)"
               : Object.entries(option.cost)
                   .map(([resource, amount]) => `-${amount} ${resource}`)
                   .join(", ");
@@ -138,7 +127,7 @@ export function RiotModal({
                       riot blocks by design (Q15), so the board it covers cannot
                       be the picker. */}
                   <TileListbox
-                    ariaLabel="Pop to demote"
+                    ariaLabel="Citizen to demote"
                     className="riotConcessionList"
                     onChange={(value) => setDemoteChoice(Number(value))}
                     options={demoteTargets.map((candidate, index) => {

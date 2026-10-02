@@ -99,11 +99,14 @@ describe("rule-driven bank chains", () => {
 
 describe("policy unrest risk", () => {
   const risk = (happiness: number) => evaluatePolicyUnrestRisk(DEFAULT_RULESET, happiness);
-  const mild = DEFAULT_RULESET.economy.unrest.popLossThreshold;
-  const severe = DEFAULT_RULESET.economy.unrest.severeThreshold;
+  const mild = DEFAULT_RULESET.economy.unrest.riotThreshold;
+  const severe = DEFAULT_RULESET.economy.unrest.revoltThreshold;
 
-  it("classifies just above, at, and below the live mild-riot threshold", () => {
-    expect(risk(mild + 1)).toEqual({ tier: "buffer", scorePenalty: 8 });
+  it("classifies just above, at, and below the live riot line", () => {
+    expect(risk(mild + 1).tier).toBe("buffer");
+    expect(risk(mild + 1).scorePenalty).toBeCloseTo(
+      (POLICY_UNREST_WEIGHTS.bufferMaxPenalty * 2) / 3,
+    );
     expect(risk(mild)).toEqual({
       tier: "unrest",
       scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty,
@@ -114,74 +117,63 @@ describe("policy unrest risk", () => {
     });
   });
 
-  it("classifies just above, at, and below the live severe-revolt threshold", () => {
+  it("classifies just above, at, and below the live revolt line", () => {
     expect(risk(severe + 1)).toEqual({
       tier: "unrest",
       scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty,
     });
-    expect(risk(severe)).toMatchObject({ tier: "revolt" });
-    expect(risk(severe).scorePenalty).toBeCloseTo(400 / 3);
+    expect(risk(severe)).toEqual({
+      tier: "revolt",
+      scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty * POLICY_UNREST_WEIGHTS.revoltMultiplier,
+    });
     expect(risk(severe - 1)).toEqual(risk(severe));
   });
 
-  it("keeps mild-event weight independent while following severe ruleset consequences", () => {
+  it("follows the ruleset's lines", () => {
     const shifted = deriveRuleset(DEFAULT_RULESET, {
-      economy: {
-        unrest: {
-          popLossThreshold: -3,
-          severeThreshold: -7,
-        },
-      },
-    });
-    const harsher = deriveRuleset(shifted, {
-      economy: {
-        unrest: {
-          severeRollModifier: -3,
-          severePopLossMultiplier: 3,
-        },
-      },
+      economy: { unrest: { riotThreshold: -1, revoltThreshold: -8 } },
     });
 
-    expect(evaluatePolicyUnrestRisk(shifted, -3).scorePenalty).toBe(
-      POLICY_UNREST_WEIGHTS.mildRiotPenalty,
-    );
-    expect(evaluatePolicyUnrestRisk(harsher, -3)).toEqual(evaluatePolicyUnrestRisk(shifted, -3));
-    expect(evaluatePolicyUnrestRisk(harsher, -7).scorePenalty).toBeGreaterThan(
-      evaluatePolicyUnrestRisk(shifted, -7).scorePenalty,
-    );
+    expect(evaluatePolicyUnrestRisk(shifted, -1).tier).toBe("unrest");
+    expect(evaluatePolicyUnrestRisk(shifted, -6).tier).toBe("unrest");
+    expect(evaluatePolicyUnrestRisk(shifted, -8).tier).toBe("revolt");
   });
 
-  it("records a transient threshold crossing even when terminal happiness recovers", () => {
+  it("a riot from tokens is met once: it spends them and the level recovers", () => {
     const G = projectionFixture();
+    G.players["0"].unrestTokens = 3;
     const projection = projectPolicyHorizon(G, "0", 3);
 
-    expect(projection.resources.happiness).toBe(0);
     expect(projection.unrest).toMatchObject({
-      minimumHappiness: -6,
+      minimumHappiness: -3,
       mildRiotEvents: 1,
       severeRiotEvents: 0,
     });
-    expect(projection.unrest.riskPenalty).toBeGreaterThan(
-      risk(projection.resources.happiness).scorePenalty,
-    );
+    expect(projection.unrest.riskPenalty).toBe(POLICY_UNREST_WEIGHTS.mildRiotPenalty);
+    // The projection works on a copy: the live tokens are untouched.
+    expect(G.players["0"].unrestTokens).toBe(3);
   });
 
-  it("applies the configured severe rebound before projected income resumes", () => {
+  it("a level held down by slaves is met at every upkeep of the horizon", () => {
     const G = projectionFixture();
-    G.ruleset = deriveRuleset(G.ruleset, {
-      economy: { unrest: { severeRebound: 1 } },
-    });
-    G.players["0"].resources.happiness = severe + 1;
-    G.players["0"].timedHappinessModifiers[0].amountPerTurn = -2;
-    const projection = projectPolicyHorizon(G, "0", 1);
+    slavesInCapital(G, 6);
+    const projection = projectPolicyHorizon(G, "0", 3);
 
+    expect(projection.unrest).toMatchObject({ minimumHappiness: -3, mildRiotEvents: 3 });
+  });
+
+  it("runs a revolt for real: half the slaves leave the projected board", () => {
+    const G = projectionFixture();
+    slavesInCapital(G, 12);
+    const projection = projectPolicyHorizon(G, "0", 2);
+
+    // Twelve slaves revolt at −6; the six left riot at −3.
     expect(projection.unrest).toMatchObject({
-      minimumHappiness: severe - 1,
-      mildRiotEvents: 0,
+      minimumHappiness: -6,
       severeRiotEvents: 1,
+      mildRiotEvents: 1,
     });
-    expect(projection.resources.happiness).toBe(G.ruleset.economy.unrest.severeRebound + 2);
-    expect(evaluatePolicyUnrestRisk(G.ruleset, severe)).toEqual(risk(severe));
+    expect(slavesInCapital(G)).toBe(12);
   });
 
   it.each([
@@ -198,14 +190,9 @@ describe("policy unrest risk", () => {
   );
 });
 
+/** Player 0 with one freeman, no slaves, no Temples and food to spare: a level of 0. */
 function projectionFixture(): HegemonyState {
-  const G = scenario({
-    patch: {
-      economy: { foodStockpileHappinessDivisor: 0 },
-    },
-  })
-    .opening()
-    .build();
+  const G = scenario().opening().build();
   const player = G.players["0"];
 
   G.pendingPlayerEvent = null;
@@ -213,7 +200,7 @@ function projectionFixture(): HegemonyState {
   G.activeSeasonEvent = null;
   G.yearOmen = null;
   G.activeLaws = [];
-  Object.assign(player.resources, { food: 100, happiness: -4 });
+  Object.assign(player.resources, { food: 100 });
   for (const [index, tileId] of player.settlements.entries()) {
     const settlement = G.board.tiles
       .find((tile) => tile.id === tileId)
@@ -224,31 +211,27 @@ function projectionFixture(): HegemonyState {
         freemen: index === 0 ? 1 : 0,
         slaves: 0,
       };
-      settlement.buildings = index === 0 ? ["temple", "temple"] : [];
+      settlement.buildings = [];
     }
   }
-  player.timedHappinessModifiers = [
-    {
-      amountPerTurn: -2,
-      turnsRemaining: 1,
-      sourceCardId: "test-transient-unrest",
-      sourceName: "Transient unrest",
-      sourceDeck: "player",
-      sourceScope: "activePlayer",
-    },
-  ];
 
   return G;
 }
 
+/** Read, or first set, the slaves in player 0's first settlement. */
+function slavesInCapital(G: HegemonyState, slaves?: number): number {
+  const settlement = G.board.tiles
+    .find((tile) => tile.id === G.players["0"].settlements[0])!
+    .settlements.find((candidate) => candidate.owner === "0")!;
+
+  if (slaves !== undefined) {
+    settlement.pops.slaves = slaves;
+  }
+  return settlement.pops.slaves;
+}
+
 function chooseFreemanGrowth(policy: typeof smartPolicy | typeof beamPolicy, food: number) {
-  const G = scenario({
-    patch: {
-      economy: {
-        foodStockpileHappinessDivisor: 0,
-      },
-    },
-  }).build();
+  const G = scenario().build();
   const player = G.players["0"];
   const tile = G.board.tiles.find((candidate) => candidate.resource?.type === "wood");
   if (!tile) throw new Error("growth fixture needs a wood tile");
@@ -270,7 +253,6 @@ function chooseFreemanGrowth(policy: typeof smartPolicy | typeof beamPolicy, foo
     gold: 2,
     food,
     influence: 0,
-    happiness: 0,
   });
 
   const moves = enumerateLegalCommands(G, "0");

@@ -18,6 +18,9 @@ import { Ico, Tip, TipLedger, TipWarn } from "./parts";
 
 const PURSE: Resource[] = ["wood", "stone", "food", "gold", "influence"];
 
+/** Pips the gauge has room for; the tooltip prints the true count. */
+const MAX_TOKEN_PIPS = 6;
+
 /** The year and the season's card: the clock at the bar's left end. */
 function Clock({ G }: { G: HegemonyState }) {
   const year = yearOf(G.season);
@@ -127,18 +130,19 @@ function ResourceCell({
 }
 
 /**
- * Happiness, drawn for either model (Q77): the value, and a gauge whose bands mark
- * where riot and revolt start. A bank and a level share this display; only the
- * selector that feeds it changes.
+ * Happiness: the level, a gauge whose bands mark where riot and revolt start, and
+ * one pip above the gauge for each Unrest token on the realm.
  */
 export function HappinessGauge({ display }: { display: HappinessDisplay }) {
   const stops = gaugeStops(display);
+  const atRevolt = display.value <= display.revoltAt;
   const atRiot = display.value <= display.riotAt;
-  const noun = display.model === "bank" ? "Happiness" : "Level";
+  const noun = "Happiness";
+  const tokens = `${display.tokens} Unrest ${display.tokens === 1 ? "token" : "tokens"}`;
 
   return (
     <Tooltip
-      ariaLabel={`${noun} ${sign(display.value)}; riot at ${sign(display.riotAt)}, revolt at ${sign(display.revoltAt)}`}
+      ariaLabel={`${noun} ${sign(display.value)}, ${tokens}; riot at ${sign(display.riotAt)}, revolt at ${sign(display.revoltAt)}`}
       content={
         <Tip
           sub={`Riot at ${sign(display.riotAt)} · revolt at ${sign(display.revoltAt)}`}
@@ -154,7 +158,15 @@ export function HappinessGauge({ display }: { display: HappinessDisplay }) {
               { key: "total", label: noun, value: sign(display.value), total: true },
             ]}
           />
-          {atRiot ? <TipWarn>The riot table is rolled at your next upkeep</TipWarn> : null}
+          <p className="tip-body">
+            Read off the board each turn; nothing is saved up. Unrest tokens stay until a riot, a
+            revolt or a card clears them.
+          </p>
+          {atRevolt ? (
+            <TipWarn>Half your slaves leave at your next upkeep</TipWarn>
+          ) : atRiot ? (
+            <TipWarn>The riot table is rolled at your next upkeep</TipWarn>
+          ) : null}
         </Tip>
       }
       focusable
@@ -171,7 +183,15 @@ export function HappinessGauge({ display }: { display: HappinessDisplay }) {
             "--g-revolt": stops.revolt,
           } as CSSProperties
         }
-      />
+      >
+        {display.tokens > 0 ? (
+          <span className="gauge-tokens" data-tokens={display.tokens}>
+            {Array.from({ length: Math.min(display.tokens, MAX_TOKEN_PIPS) }, (_, pip) => (
+              <i className="gauge-token" key={pip} />
+            ))}
+          </span>
+        ) : null}
+      </span>
     </Tooltip>
   );
 }

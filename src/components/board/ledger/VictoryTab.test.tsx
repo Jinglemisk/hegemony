@@ -90,7 +90,7 @@ describe("the victory ledger against the rules", () => {
       .opening()
       .mutate((state) => {
         PLAYER_IDS.forEach((id, seat) => {
-          state.players[id].resources.happiness = -1 - seat;
+          state.players[id].unrestTokens = 10 + seat;
         });
       })
       .build();

@@ -272,7 +272,7 @@ describe("transition boundary guard", () => {
       .opening()
       .mutate((draft) => {
         draft.pendingPlayerEvent = null;
-        draft.players["0"].resources.happiness = -8;
+        draft.players["0"].unrestTokens = 4;
       })
       .build();
     applyUnrestUpkeep(G, "0");

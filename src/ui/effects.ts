@@ -127,6 +127,14 @@ export function joinEffectPresentations(
   };
 }
 
+/** A one-shot happiness effect. The level has no bank, so the engine places one
+ *  Unrest token for a loss of any size and clears one for a gain. */
+function presentUnrestToken(amount: number): EffectPresentation {
+  return amount < 0
+    ? carve("negative", { magnitude: "+1", subject: "Unrest token" })
+    : carve("positive", { magnitude: "-1", subject: "Unrest token" });
+}
+
 export function presentTableEffect(effect: TableEffect): EffectPresentation {
   switch (effect.type) {
     case "none":
@@ -180,27 +188,18 @@ export function presentEventEffect(
         condition: `per ${effect.popStep} pops`,
       });
     case "happinessDelta":
-      return signedPresentation(effect.amount, RESOURCE_LABELS.happiness);
+      return presentUnrestToken(effect.amount);
     case "scaledHappinessDelta":
-      return carve(signedTone(effect.amountPerPops), {
-        magnitude: formatSignedNumber(effect.amountPerPops),
-        subject: RESOURCE_LABELS.happiness,
-        condition: `per ${effect.popStep} pops`,
-      });
+      // The season's card stands as a term of the level; any other is a one-shot.
+      return effect.duration === "season"
+        ? carve(signedTone(effect.amountPerPops), {
+            magnitude: formatSignedNumber(effect.amountPerPops),
+            subject: RESOURCE_LABELS.happiness,
+            condition: `per ${effect.popStep} pops`,
+          })
+        : presentUnrestToken(effect.amountPerPops);
     case "timedHappinessDelta":
-      // The one presenter whose two registers genuinely differ. The flat
-      // sentence has to say how long it lasts; a ceremony says that with pips,
-      // so the carved condition is the WHEN and `turns` carries the duration.
-      return carve(
-        signedTone(effect.amountPerTurn),
-        {
-          magnitude: formatSignedNumber(effect.amountPerTurn),
-          subject: RESOURCE_LABELS.happiness,
-          condition: "at each of your upkeeps",
-          turns: effect.turns,
-        },
-        `${formatSignedNumber(effect.amountPerTurn)} ${RESOURCE_LABELS.happiness} per turn for ${effect.turns} turns`,
-      );
+      return presentUnrestToken(effect.amountPerTurn);
     case "incomeModifier":
       return carve(signedTone(effect.amount), {
         magnitude: formatSignedNumber(effect.amount),
@@ -283,18 +282,14 @@ function presentActiveEffectMechanic(
             : "one pop leaves per unfed mouth"),
         tone: "negative",
       };
-    case "timedHappiness":
-      return {
-        text: formatSignedNumber(mechanic.amountPerTurn) + " happiness per upkeep",
-        tone: signedTone(mechanic.amountPerTurn),
-      };
     case "resourceIncome":
       return {
         text:
           formatSignedNumber(mechanic.amount) +
           " " +
           RESOURCE_LABELS[mechanic.resource] +
-          " income",
+          // Happiness is a level, not a stock that collects income.
+          (mechanic.resource === "happiness" ? "" : " income"),
         tone: signedTone(mechanic.amount),
       };
     case "buildingCostMultiplier":
@@ -439,7 +434,7 @@ export function presentLawEffect(
     case "onFoundColony": {
       const rewards = [
         effect.grantPop ? "+1 " + formatPopLabel(effect.grantPop, 1) : null,
-        effect.happiness ? formatSignedNumber(effect.happiness) + " happiness" : null,
+        effect.happiness ? presentUnrestToken(effect.happiness).text : null,
       ].filter(Boolean);
       return {
         text: "On founding a colony: " + rewards.join(" + "),
@@ -452,7 +447,9 @@ export function presentLawEffect(
 export function presentDirectiveEffect(effect: DirectiveEffect): EffectPresentation {
   switch (effect.type) {
     case "resourceDelta":
-      return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
+      return effect.resource === "happiness"
+        ? presentUnrestToken(effect.amount)
+        : signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
     case "resourceFraction":
       return {
         text: `Lose ${formatNumber(effect.fraction * 100)}% stored ${RESOURCE_LABELS[effect.resource]}`,

@@ -12,13 +12,13 @@ import type {
   PopType,
   Resource,
   Resources,
+  Stat,
 } from "./types";
 
 /** Closed vocabulary used by frontend presentation and simulation telemetry. */
 export const ACTIVE_EFFECT_KINDS = [
   "incomeSuppression",
   "hunger",
-  "timedHappiness",
   "seasonalModifier",
   "yearlyOmen",
   "actionDiscount",
@@ -30,7 +30,6 @@ export type ActiveEffectKind = (typeof ACTIVE_EFFECT_KINDS)[number];
 
 export type EventEffectActiveEffectHandling =
   | "immediate"
-  | "materializedTimedHappiness"
   | "materializedActionDiscount"
   | "activeSeason"
   | "activeSeasonWhenMarked"
@@ -45,7 +44,7 @@ export const EVENT_EFFECT_ACTIVE_EFFECT_HANDLING = {
   scaledResourceDelta: "immediate",
   happinessDelta: "immediate",
   scaledHappinessDelta: "activeSeasonWhenMarked",
-  timedHappinessDelta: "materializedTimedHappiness",
+  timedHappinessDelta: "immediate",
   incomeModifier: "activeSeasonWhenMarked",
   buildingCostMultiplier: "activeSeason",
   addPops: "immediate",
@@ -101,8 +100,7 @@ export type ActiveEffectMechanic =
       stockpile: number;
       unfed: number;
     }
-  | { type: "timedHappiness"; amountPerTurn: number; turns: number }
-  | { type: "resourceIncome"; resource: Resource; amount: number }
+  | { type: "resourceIncome"; resource: Stat; amount: number }
   | {
       type: "buildingCostMultiplier";
       multiplier: number;
@@ -185,34 +183,6 @@ export function getActiveEffects(
           netFood: hunger.income,
           stockpile: hunger.stockpile,
           unfed: hunger.unfed,
-        },
-      ],
-    });
-  }
-
-  for (const [index, modifier] of player.timedHappinessModifiers.entries()) {
-    effects.push({
-      id: "timed-happiness:" + playerID + ":" + index + ":" + modifier.sourceCardId,
-      kind: "timedHappiness",
-      source: {
-        kind: modifier.sourceDeck === "seasonal" ? "seasonalEvent" : "playerEvent",
-        id: modifier.sourceCardId,
-        label: modifier.sourceName,
-      },
-      scope:
-        modifier.sourceScope === "allPlayers"
-          ? { kind: "allPlayers" }
-          : { kind: "player", playerID },
-      duration: {
-        unit: "playerUpkeeps",
-        remaining: modifier.turnsRemaining,
-        expiry: "afterPlayerUpkeeps",
-      },
-      mechanics: [
-        {
-          type: "timedHappiness",
-          amountPerTurn: modifier.amountPerTurn,
-          turns: modifier.turnsRemaining,
         },
       ],
     });

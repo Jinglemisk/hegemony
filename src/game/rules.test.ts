@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildBuilding,
-  calculateIncome,
   createInitialState,
   drawSeasonalEvent,
   foundColony,
   growPop,
+  happinessLevel,
   placeCapital,
   placeCity,
   placeColony,
@@ -89,7 +89,6 @@ function wealthy(state: HegemonyState, playerID: PlayerId) {
     gold: 200,
     food: 200,
     influence: 0,
-    happiness: 0,
   };
 }
 
@@ -176,7 +175,6 @@ describe("per-settlement income (settlementNetYield)", () => {
     expect(income.influence).toBe(3);
     expect(income.gold).toBe(0);
     expect(income.food).toBe(-3);
-    expect(income.happiness).toBe(0);
     // The land makes nothing by itself: no slave, no resource.
     expect(income[mat.resource.type]).toBe(0);
   });
@@ -203,19 +201,6 @@ describe("per-settlement income (settlementNetYield)", () => {
     const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
     expect(income[mat.resource.type]).toBe(2);
     expect(income.food).toBe(0);
-    // Slaves cost happiness by the realm's count, not on a settlement's line.
-    expect(income.happiness).toBe(0);
-  });
-
-  it("applies a -1 happiness penalty per pop over capacity", () => {
-    const state = fresh();
-    const mat = materialTile(state);
-    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
-    const settlement = owned(state, mat.id, "0");
-    // Capital capacity is 8; 10 citizens => 2 over capacity.
-    settlement.pops = { citizens: 10, freemen: 0, slaves: 0 };
-
-    expect(settlementNetYield(mat, settlement, DEFAULT_RULESET).happiness).toBe(-2);
   });
 
   it("a Marketplace raises every freeman here from 1 gold to 2", () => {
@@ -229,7 +214,7 @@ describe("per-settlement income (settlementNetYield)", () => {
     expect(settlementNetYield(mat, settlement, DEFAULT_RULESET).gold).toBe(10);
   });
 
-  it("a Temple states +1 happiness and leaves the citizens' influence alone", () => {
+  it("a Temple adds 1 to the level, is no income, and leaves the citizens' influence alone", () => {
     const state = fresh();
     const mat = materialTile(state);
     placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
@@ -239,19 +224,8 @@ describe("per-settlement income (settlementNetYield)", () => {
 
     const income = settlementNetYield(mat, settlement, DEFAULT_RULESET);
     expect(income.influence).toBe(3);
-    expect(income.happiness).toBe(1);
-  });
-});
-
-describe("player income & happiness (calculateIncome)", () => {
-  it("adds +1 happiness per 5 stored food", () => {
-    const state = fresh();
-    const mat = materialTile(state);
-    placeCapital(state, "0", mat.id, { citizens: 1, freemen: 2, slaves: 1 });
-    owned(state, mat.id, "0").pops = { citizens: 0, freemen: 0, slaves: 0 };
-
-    // Starting food is 12 => floor(12 / 5) = 2 happiness.
-    expect(calculateIncome(state, "0").happiness).toBe(2);
+    expect(income).not.toHaveProperty("happiness");
+    expect(happinessLevel(state, "0")).toBe(1);
   });
 });
 

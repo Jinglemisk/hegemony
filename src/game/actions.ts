@@ -28,6 +28,7 @@ import {
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
+import { applyHappinessSwing, describeHappinessSwing } from "./happiness";
 import { setupCapitalCount } from "./ruleset";
 import { calculateIncome, getHungerStatus } from "./economy/income";
 import { applyHunger } from "./hunger";
@@ -221,7 +222,7 @@ export function foundColony(
 }
 
 /** Standing Laws that hang a rider on founding (Frontier Spirit: a freeman comes with
- *  the charter, and the city pays for it in happiness). */
+ *  the charter, and the city pays for it with an Unrest token). */
 function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
   for (const rider of getFoundColonyRiders(G, playerID)) {
     if (rider.grantPop) {
@@ -237,8 +238,8 @@ function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexT
     }
 
     if (rider.happiness) {
-      G.players[playerID].resources.happiness += rider.happiness;
-      addLog(G, `${rider.label}: the parting costs ${Math.abs(rider.happiness)} happiness.`);
+      const swing = applyHappinessSwing(G, playerID, rider.happiness);
+      addLog(G, `${rider.label}: the parting ${describeHappinessSwing(swing)}.`);
     }
   }
 }

@@ -1,50 +1,56 @@
-import { unrestStatus } from "../game/rules";
+import { happinessContributions } from "../game/rules";
+import type { HappinessContribution } from "../game/rules";
 import type { HegemonyState, PlayerId } from "../game/types";
 
 /**
- * What the frame's happiness display draws, whichever model the rules run.
- *
- * v2 has not settled its happiness model yet (Q77): a clamped bank, or a level
- * rebuilt each year with Unrest tokens. The display takes this shape either way —
- * a value, the range its gauge spans, where riot and revolt start, and the lines
- * that add up to the value — so Step 5 swaps the selector, not the component.
+ * What the frame's happiness display draws: the level, the range its gauge spans,
+ * where riot and revolt start, and the terms that add up to the level.
  */
 export type HappinessDisplay = {
-  model: "bank" | "level";
   value: number;
   /** The gauge's ends. The value's tick is clamped inside them. */
   floor: number;
   ceiling: number;
   /** At or below this, the riot table is rolled. */
   riotAt: number;
-  /** At or below this, the riot is severe (a revolt). */
+  /** At or below this, the realm revolts: half its slaves leave. */
   revoltAt: number;
+  /** Unrest tokens on the realm, each worth −1 until a riot or a card clears them. */
+  tokens: number;
   lines: Array<{ label: string; amount: number }>;
 };
 
-/** Today's rules: a bank, plus the standing luxury offset and this year's calm,
- *  tested against two thresholds. */
+const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+
+function termLabel(G: HegemonyState, term: HappinessContribution): string {
+  switch (term.id) {
+    case "slaves":
+      return `${capitalized(term.detail)}, 1 per ${G.ruleset.economy.slavesPerUnhappiness}`;
+    case "calm":
+      return "Calm, until your next turn";
+    default:
+      return capitalized(term.detail);
+  }
+}
+
+/** The level and its terms. Temples, luxuries, slaves and tokens are always listed,
+ *  so a player sees what the level is made of even at zero; the rest only when they
+ *  count. */
 export function happinessDisplay(G: HegemonyState, playerID: PlayerId): HappinessDisplay {
-  const status = unrestStatus(G, playerID);
-  const { popLossThreshold, severeThreshold } = G.ruleset.economy.unrest;
-  // Stored, the luxury bonus and the effective value are always shown together;
-  // calm joins them for the turn it lasts.
-  const lines = [
-    { label: "Stored", amount: status.storedHappiness },
-    { label: "Luxuries", amount: status.luxuryBonus },
-    ...(status.calmBonus !== 0
-      ? [{ label: "Calm, until your next turn", amount: status.calmBonus }]
-      : []),
-  ];
+  const terms = happinessContributions(G, playerID);
+  const { riotThreshold, revoltThreshold } = G.ruleset.economy.unrest;
+  const always: Array<HappinessContribution["id"]> = ["temples", "luxuries", "slaves", "tokens"];
 
   return {
-    model: "bank",
-    value: status.happiness,
-    floor: severeThreshold,
-    ceiling: -severeThreshold,
-    riotAt: popLossThreshold,
-    revoltAt: severeThreshold,
-    lines,
+    value: terms.reduce((sum, term) => sum + term.amount, 0),
+    floor: revoltThreshold,
+    ceiling: -revoltThreshold,
+    riotAt: riotThreshold,
+    revoltAt: revoltThreshold,
+    tokens: G.players[playerID].unrestTokens,
+    lines: terms
+      .filter((term) => term.amount !== 0 || always.includes(term.id))
+      .map((term) => ({ label: termLabel(G, term), amount: term.amount })),
   };
 }
 

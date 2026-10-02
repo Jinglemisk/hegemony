@@ -1,7 +1,7 @@
 import type { GameContent } from "../game/content";
 import type { DirectiveEffect, LawEffect, ResolutionCard } from "../game/assembly/types";
 import type { RulesetPatch } from "../game/ruleset";
-import type { EventEffect, EventTableDefinition, Resource } from "../game/types";
+import type { EventEffect, EventTableDefinition, Resource, Stat } from "../game/types";
 
 export type TuningPresetId = "low-number-core-v1";
 
@@ -13,7 +13,7 @@ export type TuningPreset = {
 };
 
 export const LOW_NUMBER_RULESET_PATCH = {
-  startingResources: { wood: 9, stone: 5, gold: 4, food: 6, influence: 0, happiness: 0 },
+  startingResources: { wood: 9, stone: 5, gold: 4, food: 6, influence: 0 },
   placementPopCounts: { capital: 2, city: 2, colony: 1 },
   settlements: {
     capital: { popCapacity: 5 },
@@ -22,7 +22,7 @@ export const LOW_NUMBER_RULESET_PATCH = {
   },
   victory: {
     cardsToWin: 3,
-    minimums: { cities: 3, pops: 8, citizens: 6, stockpile: 40, happiness: 10, voice: 3 },
+    minimums: { cities: 3, pops: 8, citizens: 6, stockpile: 40, happiness: 4, voice: 3 },
   },
   actionCosts: {
     foundColony: { wood: 9, food: 1 },
@@ -38,8 +38,6 @@ export const LOW_NUMBER_RULESET_PATCH = {
     slaves: { flat: {}, primaryResource: 1 },
   },
   economy: {
-    foodStockpileHappinessDivisor: 3,
-    foodStockpileHappinessCap: 1,
     stockpileFloors: { wood: 0, stone: 0, gold: 0, influence: 0 },
     bank: {
       baseline: { sell: 2, buy: 2 },
@@ -58,7 +56,7 @@ export const LOW_NUMBER_RULESET_PATCH = {
       demosthenes: { food: 2 },
       perdiccas: { stone: 2 },
       kleistophenes: { wood: 3 },
-      stratokles: { happiness: 1 },
+      stratokles: { gold: 1 },
     },
     drawCost: 1,
     redrawCost: 1,
@@ -73,7 +71,7 @@ function scaledMagnitude(value: number, divisor: number): number {
   return Math.sign(value) * Math.max(1, Math.round(Math.abs(value) / divisor));
 }
 
-function isHappiness(resource: Resource) {
+function isHappiness(resource: Stat) {
   return resource === "happiness";
 }
 

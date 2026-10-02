@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { POLITICIANS } from "../game/assembly/deck";
 import { getAuthoredGameContent } from "../game/content";
 import { capitalize } from "../game/core/format";
-import type { BuildingId, PopType, Resource, SettlementKind } from "../game/types";
+import type { BuildingId, PopType, SettlementKind, Stat } from "../game/types";
 import { resourceCssVars } from "../ui/resourceVisuals";
 import { useCodexLink, type CodexLink } from "./codexLink";
 import {
@@ -22,7 +22,7 @@ import type { GlyphId } from "../ui/icons/glyphs";
  */
 
 type Token =
-  | { type: "resource"; key: Resource }
+  | { type: "resource"; key: Stat }
   | { type: "pop"; key: PopType }
   | { type: "building"; key: BuildingId }
   | { type: "settlement"; key: SettlementKind }

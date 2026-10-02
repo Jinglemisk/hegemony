@@ -9,6 +9,7 @@ import {
   lawNeedsReplacement,
   POLITICIANS_BY_ID,
 } from "../../../game/assembly";
+import { happinessLevel } from "../../../game/happiness";
 import type {
   AssemblyResult,
   AssemblySession,
@@ -754,8 +755,8 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
 function targetSummary(G: HegemonyState, card: ResolutionCard, target: PlayerId): string {
   if (card.id === "grain-riot") return `${G.players[target].resources.food} food stored`;
   if (card.id === "bread-and-circuses")
-    return `${G.players[target].resources.gold} gold · ${G.players[target].resources.happiness} happiness`;
-  if (card.id === "the-streets-burn") return `${G.players[target].resources.happiness} happiness`;
+    return `${G.players[target].resources.gold} gold · ${happinessLevel(G, target)} happiness`;
+  if (card.id === "the-streets-burn") return `${happinessLevel(G, target)} happiness`;
   if (card.id === "the-stele-is-broken") {
     const laws = G.activeLaws.filter((law) => law.author === target).length;
     return `${laws} authored standing Law${laws === 1 ? "" : "s"}`;

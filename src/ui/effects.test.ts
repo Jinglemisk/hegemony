@@ -33,7 +33,7 @@ describe("the flat sentence survives the split", () => {
       },
       "+2 Food per 3 pops",
     ],
-    [{ type: "happinessDelta", scope: "activePlayer", amount: 2 }, "+2 Happiness"],
+    [{ type: "happinessDelta", scope: "activePlayer", amount: 2 }, "-1 Unrest token"],
     [
       {
         type: "scaledHappinessDelta",
@@ -42,11 +42,22 @@ describe("the flat sentence survives the split", () => {
         popStep: 4,
         minimumMagnitude: 1,
       },
+      "+1 Unrest token",
+    ],
+    [
+      {
+        type: "scaledHappinessDelta",
+        scope: "allPlayers",
+        amountPerPops: -1,
+        popStep: 4,
+        minimumMagnitude: 1,
+        duration: "season",
+      },
       "-1 Happiness per 4 pops",
     ],
     [
       { type: "timedHappinessDelta", scope: "activePlayer", amountPerTurn: -2, turns: 3 },
-      "-2 Happiness per turn for 3 turns",
+      "+1 Unrest token",
     ],
     [
       {
@@ -149,15 +160,9 @@ describe("the carved parts are drawn from that same sentence", () => {
     }
   });
 
-  it("carries a turn count only where the effect is actually timed", () => {
+  it("carries no turn count: no authored effect is timed any more", () => {
     for (const effect of authoredEventEffects) {
-      const turns = presentEventEffect(effect).turns;
-
-      if (effect.type === "timedHappinessDelta") {
-        expect(turns, effect.type).toBe(effect.turns);
-      } else {
-        expect(turns, effect.type).toBeUndefined();
-      }
+      expect(presentEventEffect(effect).turns, effect.type).toBeUndefined();
     }
   });
 });

@@ -28,7 +28,6 @@ export const STARTING_RESOURCES: Resources = {
   gold: 4,
   food: 12,
   influence: 0,
-  happiness: 0,
 };
 
 export const EMPTY_RESOURCES: Resources = {
@@ -37,7 +36,6 @@ export const EMPTY_RESOURCES: Resources = {
   gold: 0,
   food: 0,
   influence: 0,
-  happiness: 0,
 };
 
 export const ACTION_COSTS = {
@@ -107,17 +105,17 @@ export const RIOT_TABLE: EventTableDefinition = {
     {
       roll: 4,
       label: "Granary sacked",
-      effects: [{ type: "loseResource", resource: "food", amount: 6 }],
+      effects: [{ type: "loseResource", resource: "food", amount: 3 }],
     },
     {
       roll: 5,
       label: "Bribe demanded",
-      effects: [{ type: "loseResource", resource: "gold", amount: 6, popLossIfShort: 1 }],
+      effects: [{ type: "loseResource", resource: "gold", amount: 3, popLossIfShort: 1 }],
     },
     { roll: 6, label: "The mob disperses", effects: [{ type: "none" }] },
   ],
   // All three may each be bought once per riot (Q15) — full insurance shifts every
-  // mild-tier roll to 4+, converting catastrophe into taxation. Severe (−2) still bites.
+  // roll to 4+, converting catastrophe into taxation.
   insurance: [
     { id: "breadDole", label: "Bread dole", cost: { food: 4 }, modifier: 1 },
     { id: "concession", label: "Concession", cost: {}, demotesPop: true, modifier: 1 },
@@ -490,7 +488,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     deck: "seasonal",
     name: "Civic Anxiety",
     count: 2,
-    text: "Each player suffers -2 Happiness per 10 pops, minimum -2, during income collection this season.",
+    text: "Each player's happiness is 2 lower per 10 pops, at least 2 lower, this season.",
     flavor: "Something is wrong and nobody can name it. The porticoes stay crowded late.",
     seasons: ["winter"],
     timing: "season",
@@ -510,7 +508,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     deck: "seasonal",
     name: "Festival Games",
     count: 2,
-    text: "Each player gains 2 Happiness per 10 pops, minimum 2 Happiness.",
+    text: "Each player clears an Unrest token.",
     flavor: "Oil, sand, and a whole city on the banking, shouting.",
     seasons: ["spring", "summer"],
     timing: "immediate",
@@ -584,7 +582,7 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
     deck: "seasonal",
     name: "Plague",
     count: 2,
-    text: "Every player loses 2 Happiness at the start of each of their next 3 turns.",
+    text: "Every player places an Unrest token.",
     flavor: "Sickness spreads.",
     seasons: ["autumn", "winter"],
     timing: "immediate",
@@ -751,7 +749,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Local Unrest",
     count: 4,
-    text: "Lose 2 Happiness.",
+    text: "Place an Unrest token.",
     flavor: "Voices in the agora, and none of them yours.",
     timing: "immediate",
     effects: [{ type: "happinessDelta", scope: "activePlayer", amount: -2 }],
@@ -761,7 +759,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Public Calm",
     count: 4,
-    text: "Gain 2 Happiness.",
+    text: "Clear an Unrest token.",
     flavor: "Quiet streets. The market keeps its ordinary hours.",
     timing: "immediate",
     effects: [{ type: "happinessDelta", scope: "activePlayer", amount: 2 }],
@@ -771,7 +769,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Civil Discord",
     count: 3,
-    text: "Lose 2 Happiness at the start of each of your next 3 turns.",
+    text: "Place an Unrest token.",
     flavor: "The wells crack. The assembly mutters.",
     timing: "immediate",
     effects: [{ type: "timedHappinessDelta", scope: "activePlayer", amountPerTurn: -2, turns: 3 }],
@@ -811,7 +809,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Quarry Collapse",
     count: 2,
-    text: "Lose 3 Stone and 1 Happiness.",
+    text: "Lose 3 Stone and place an Unrest token.",
     flavor: "A gallery falls in.",
     timing: "immediate",
     effects: [
@@ -834,7 +832,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Emergency Labor",
     count: 3,
-    text: "Gain 6 Wood and lose 1 Happiness, or gain 2 Wood with no penalty.",
+    text: "Gain 6 Wood and place an Unrest token, or gain 2 Wood with no penalty.",
     flavor: "Every hand that can hold an axe is sent up to the trees.",
     timing: "pendingChoice",
     effects: [
@@ -873,7 +871,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Civic Petition",
     count: 3,
-    text: "Gain 2 Influence, or gain 2 Happiness.",
+    text: "Gain 2 Influence, or clear an Unrest token.",
     flavor: "A wax tablet passes down the benches, gathering names.",
     timing: "pendingChoice",
     effects: [
@@ -963,7 +961,7 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
     deck: "player",
     name: "Temple Donation",
     count: 1,
-    text: "Gain 3 Happiness, or the next Temple built this turn costs -5 Stone.",
+    text: "Clear an Unrest token, or the next Temple built this turn costs -5 Stone.",
     flavor: "The god's house gets its share, and the city watches you give it.",
     timing: "pendingChoice",
     effects: [

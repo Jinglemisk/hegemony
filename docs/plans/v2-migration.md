@@ -262,6 +262,42 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   to starve above any pop's worth, and take the Dole only when the next income would
   leave a mouth unfed.
 
+**Defaults picked in Step 5** (2026-10-02):
+
+- The lines are tested at the start of the player's turn, before income, with this
+  year's calm counted. "This year" is until the buyer's next turn starts, as in Step 4,
+  until Step 6 brings years.
+- A one-shot happiness gain or loss has no bank to land in. A loss of any size places
+  one Unrest token and a gain clears one: v1's player cards, the Directives and the
+  Frontier Spirit rider all work this way. v1's timed moods (Plague, Civil Discord)
+  place one token when drawn and nothing ticks afterwards.
+- Happiness that a standing Law or the season's card names (per city, per pop, the Cult
+  of Demeter threshold, Civic Anxiety) is one more term of the level while it stands,
+  until Steps 6 and 8 rewrite them.
+- A revolt takes half the slaves, rounded down, each from the settlement holding the
+  most. The tokens clear, nothing is rolled, the turn goes on and income is collected.
+  There is no riot in the same turn.
+- Riot losses take slaves, then freemen, then citizens, each from the settlement
+  holding the most, so only the table roll draws dice.
+- The riot table takes 3 food or 3 gold, as the paper has it. Its insurance prices
+  stay (4 food, 3 influence), and the concession demotes a citizen only.
+- Beloved's minimum is the paper's 4, since the level is a small number. The
+  deck-exhaustion tiebreak reads the level without calm.
+- Stratokles's prize is 2 gold: a prize is a stock and happiness is no longer one.
+- The over-capacity happiness penalty is gone with the population term. Capacity is a
+  hard cap.
+- The luxury cap and the "counts toward Beloved" dial are gone. Happiness is not a
+  resource: no stock, no income line, no price can name it.
+- Players carry a count of revolts, for telemetry.
+- The gauge spans −6 to +6 and draws one pip per token above it, up to six. Its
+  tooltip lists Temples, luxuries, slaves and tokens always, and the other terms when
+  they count. A revolt has no ceremony yet: it is a Chronicle line until Step 13.
+- Bots score each point of the standing level at 6, up to Beloved's minimum plus 2.
+  They charge a riot 50 and a revolt 100 at each upkeep of the six-turn horizon, and
+  run a revolt for real in the projection. They buy calm when it keeps the next upkeep
+  off the riot line.
+- The state schema is version 5.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.
@@ -344,7 +380,7 @@ present Step 4's bot batch (riots per game, share of turns on the riot table) an
 **Before:** nothing; Q77 was answered on 2026-10-02. **Mode:** all six steps back to back; this stretch may run
 unattended overnight. **Stop:** a summary of the commits and every default picked.
 
-- [ ] **Step 5 · Happiness.** The level with Unrest tokens, per the paper's section 5.7
+- [x] **Step 5 · Happiness.** ([#84](https://github.com/Jinglemisk/hegemony/pull/84): a 40-game bot batch finishes with no illegal moves; 4.3 riots and 0.5 revolts a game; the riot table opens on 3.4% of player-turns, 1.7% in rounds 8 to 14 and 4.2% after round 7, against Step 4's 15.0% and 14.8%; hunger takes 8.5 to 9.1 pops a seat-game.) The level with Unrest tokens, per the paper's section 5.7
       and the ruling in Settled inputs. Nothing is stored: the level is derived each turn
       from Step 4's named terms. The stored bank, the food-stockpile bonus and the cap of
       three luxuries go; calm is +2 for this year and luxuries are +2 each. A riot clears

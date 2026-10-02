@@ -139,7 +139,7 @@ describe("Aggregator", () => {
         wood: expect.any(Number),
         stone: expect.any(Number),
         food: expect.any(Number),
-        happiness: expect.any(Number),
+        gold: expect.any(Number),
       }),
     );
   });

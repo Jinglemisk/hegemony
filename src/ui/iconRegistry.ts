@@ -6,7 +6,7 @@ import type {
   EventEffect,
   EventTableId,
   PopType,
-  Resource,
+  Stat,
   SeasonName,
   SettlementKind,
   TableEffect,
@@ -44,7 +44,7 @@ export const RESOURCE_GLYPHS = {
   food: "food",
   influence: "influence",
   happiness: "happiness",
-} as const satisfies Record<Resource, GlyphId>;
+} as const satisfies Record<Stat, GlyphId>;
 
 export const POP_GLYPHS = {
   citizens: "citizens",
@@ -182,7 +182,6 @@ export const ACTIVE_EFFECT_MECHANIC_GLYPHS = {
   suppressIncome: "suppress",
   /** The grain, struck through. The one effect the player must never misread. */
   hunger: "starvation",
-  timedHappiness: "happiness",
   resourceIncome: "income",
   buildingCostMultiplier: "cross",
   actionCostDiscount: "costDown",

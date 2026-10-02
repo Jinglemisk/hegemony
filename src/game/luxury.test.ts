@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildBuilding } from "./actions";
 import { collectInvariantViolations } from "./invariants";
-import { effectiveHappiness } from "./happiness";
+import { happinessLevel, standingHappiness } from "./happiness";
 import {
   activeClaims,
   claimableLuxuriesAt,
@@ -12,7 +12,6 @@ import {
 } from "./luxury";
 import { isCoastalTile } from "./map";
 import { getBuildBuildingStatus } from "./status";
-import { DEFAULT_RULESET } from "./ruleset";
 import { createGame } from "./turn";
 import { applyUnrestUpkeep, unrestStatus } from "./unrest";
 import { victoryMetricValue } from "./victory";
@@ -165,13 +164,13 @@ describe("the Port and the claim", () => {
     expect(status.can).toBe(false);
   });
 
-  it("never mutates the stored happiness bank when a good is claimed", () => {
+  it("raises the level by the good's worth the moment it is claimed", () => {
     const { G, tileId } = gameWithPortSite();
-    const before = G.players["0"].resources.happiness;
+    const before = happinessLevel(G, "0");
 
     expect(buildBuilding(G, "0", tileId, "port").ok).toBe(true);
-    expect(G.players["0"].resources.happiness).toBe(before);
     expect(luxuryHappinessBonus(G, "0")).toBe(G.ruleset.economy.luxury.happinessPerGood);
+    expect(happinessLevel(G, "0")).toBe(before + G.ruleset.economy.luxury.happinessPerGood);
   });
 
   it("trade changes only the owner; the claim origin still names the first Port", () => {
@@ -185,7 +184,7 @@ describe("the Port and the claim", () => {
   });
 });
 
-describe("activity, cap, and suppression", () => {
+describe("activity and suppression", () => {
   function grantGoods(G: HegemonyState, playerID: PlayerId, count: number) {
     for (const asset of G.board.luxuries.slice(0, count)) {
       asset.owner = playerID;
@@ -193,17 +192,13 @@ describe("activity, cap, and suppression", () => {
     }
   }
 
-  it("keeps goods over the active cap owned but inactive, deterministically", () => {
+  it("counts every good a player holds: there is no cap", () => {
     const G = preloadedGame(SEED);
-    const cap = G.ruleset.economy.luxury.activeCapPerPlayer;
-    grantGoods(G, "0", cap + 2);
+    grantGoods(G, "0", 5);
 
-    expect(ownedClaims(G, "0")).toHaveLength(cap + 2);
-    const active = activeClaims(G, "0");
-    expect(active).toHaveLength(cap);
-    // Same state, same active set: stable asset-id order decides, not iteration luck.
-    expect(activeClaims(G, "0").map((asset) => asset.id)).toEqual(active.map((asset) => asset.id));
-    expect(luxuryHappinessBonus(G, "0")).toBe(cap * G.ruleset.economy.luxury.happinessPerGood);
+    expect(ownedClaims(G, "0")).toHaveLength(5);
+    expect(activeClaims(G, "0")).toHaveLength(5);
+    expect(luxuryHappinessBonus(G, "0")).toBe(5 * G.ruleset.economy.luxury.happinessPerGood);
   });
 
   it("suppression removes the bonus and expiry at upkeep restores it", () => {
@@ -216,8 +211,6 @@ describe("activity, cap, and suppression", () => {
     expect(luxuryHappinessBonus(G, "0")).toBe(0);
     expect(activeClaims(G, "0")).toHaveLength(0);
 
-    // Keep the upkeep quiet: no riot.
-    G.players["0"].resources.happiness = 0;
     applyUnrestUpkeep(G, "0");
 
     expect(asset.suppressedTurns).toBe(0);
@@ -225,115 +218,53 @@ describe("activity, cap, and suppression", () => {
   });
 });
 
-describe("effective happiness", () => {
-  it("moves the riot threshold: two active goods hold -7 above the -5 line", () => {
-    const G = preloadedGame(SEED);
-    G.players["0"].resources.happiness = -7;
-
-    for (const asset of G.board.luxuries.slice(0, 2)) {
+describe("luxuries in the level", () => {
+  function grant(G: HegemonyState, count: number) {
+    for (const asset of G.board.luxuries.slice(0, count)) {
       asset.owner = "0";
       asset.claimedAtSettlementId = "settlement-rigged";
     }
-    expect(effectiveHappiness(G, "0")).toBe(-3);
+  }
+
+  it("hold a realm above the riot line, and losing them drops it back", () => {
+    const G = preloadedGame(SEED);
+    grant(G, 2);
+    // Enough tokens to riot without the goods' +4.
+    G.players["0"].unrestTokens = standingHappiness(G, "0") - 1;
+    expect(happinessLevel(G, "0")).toBe(1);
 
     applyUnrestUpkeep(G, "0");
     expect(G.pendingRiot).toBeNull();
 
-    // Strip the goods: the same stored bank now riots.
+    // Strip the goods: the same board now riots.
     for (const asset of G.board.luxuries) {
       asset.owner = null;
       asset.claimedAtSettlementId = null;
     }
+    expect(happinessLevel(G, "0")).toBe(-3);
     applyUnrestUpkeep(G, "0");
-    expect(G.pendingRiot).toMatchObject({ playerID: "0", tier: "unrest" });
+    expect(G.pendingRiot).toMatchObject({ playerID: "0" });
   });
 
-  it("feeds the Beloved metric (Q44) — and stops when the dial is off", () => {
+  it("feed the Beloved metric", () => {
     const G = preloadedGame(SEED);
-    G.players["0"].resources.happiness = 3;
-    G.board.luxuries[0].owner = "0";
-    G.board.luxuries[0].claimedAtSettlementId = "settlement-rigged";
+    const before = victoryMetricValue(G, "0", "happiness");
+    grant(G, 1);
 
-    expect(victoryMetricValue(G, "0", "happiness")).toBe(5);
-
-    // The dial is pinned per match, so the off case is a differently-created game.
-    const off = structuredClone(DEFAULT_RULESET);
-    off.economy.luxury.countsTowardBeloved = false;
-    const G2 = createGame(SEED, off, "classic", true);
-    G2.players["0"].resources.happiness = 3;
-    G2.board.luxuries[0].owner = "0";
-    G2.board.luxuries[0].claimedAtSettlementId = "settlement-rigged";
-    expect(victoryMetricValue(G2, "0", "happiness")).toBe(3);
+    expect(victoryMetricValue(G, "0", "happiness")).toBe(before + 2);
   });
 
-  it("shows all three numbers in the unrest status — raw, bonus, effective", () => {
+  it("show in the unrest status beside the level they are part of", () => {
     const G = preloadedGame(SEED);
-    G.players["0"].resources.happiness = -6;
-    G.board.luxuries[0].owner = "0";
-    G.board.luxuries[0].claimedAtSettlementId = "settlement-rigged";
+    grant(G, 1);
+    const tokens = standingHappiness(G, "0") + 2;
+    G.players["0"].unrestTokens = tokens;
 
     const status = unrestStatus(G, "0");
-    expect(status.storedHappiness).toBe(-6);
     expect(status.luxuryBonus).toBe(2);
-    expect(status.happiness).toBe(-4);
-    // The tier judges by the effective line, so the offset visibly averts unrest.
+    expect(status.tokens).toBe(tokens);
+    expect(status.happiness).toBe(-2);
+    // Without the good the level would sit below the riot line.
     expect(status.tier).toBe("discontent");
-  });
-});
-
-describe("the bot knows the verb", () => {
-  it("enumerates the Port claim explicitly and the master policy takes it", async () => {
-    const { masterPolicy } = await import("../sim/policies");
-    const { createSimRng } = await import("../sim/rng");
-    const { projectForPlayer } = await import("../game/projection");
-    const { enumerateLegalCommands } = await import("./legalMoves");
-
-    const { G, asset, tileId } = gameWithPortSite();
-    G.currentPlayer = "0";
-
-    const commands = enumerateLegalCommands(G, "0");
-    const portCommand = commands.find(
-      (command) => command.type === "buildBuilding" && command.buildingId === "port",
-    );
-    expect(portCommand).toMatchObject({ tileId, claimVertexId: asset.vertexId });
-
-    // The behavioral floor (the Assembly lesson — the verb ships with a bot that
-    // uses it): offered the claim against passing, the composed policy builds the
-    // Port, and executing its choice through the engine completes the claim.
-    // Whether the Port outbids founding yet another colony mid-game is balance,
-    // owned by the Phase 4 exit A/Bs — luxuries are late-game infrastructure.
-    const { transition } = await import("./legalMoves");
-    const endTurn = commands.find((command) => command.type === "endTurn")!;
-    const choice = masterPolicy.choose(
-      projectForPlayer(G.definition, G, "0"),
-      [portCommand!, endTurn],
-      createSimRng(7),
-    );
-    expect(choice).toMatchObject({ type: "buildBuilding", buildingId: "port" });
-
-    const applied = transition(G.definition, G, "0", choice);
-    expect(applied.ok).toBe(true);
-    if (applied.ok) {
-      const claimed = applied.state.board.luxuries.find((entry) => entry.id === asset.id);
-      expect(claimed?.owner).toBe("0");
-    }
-  });
-});
-
-describe("invariants", () => {
-  it("rejects duplicate ownership of one good and an owner without a claim origin", () => {
-    const G = preloadedGame(SEED);
-    G.board.luxuries[0].owner = "0";
-
-    const violations = collectInvariantViolations(G);
-    expect(violations.some((violation) => violation.code === "luxury.origin")).toBe(true);
-  });
-
-  it("rejects a duplicated good", () => {
-    const G = preloadedGame(SEED);
-    G.board.luxuries[1].goodId = G.board.luxuries[0].goodId;
-
-    const violations = collectInvariantViolations(G);
-    expect(violations.some((violation) => violation.code === "luxury.unique")).toBe(true);
   });
 });
