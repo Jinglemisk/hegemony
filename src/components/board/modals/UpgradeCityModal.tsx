@@ -122,9 +122,8 @@ export function UpgradeCityModal({
               <span className="placementPreviewTag">Upgrading this colony</span>
               <SettlementSummaryCard
                 name={settlementNameOf(G.board.tiles, selected.settlement.id)}
-                content={G.definition.content}
                 netYield={colonyYield}
-                ruleset={G.ruleset}
+                G={G}
                 settlement={selected.settlement}
                 tile={selected.tile}
               />

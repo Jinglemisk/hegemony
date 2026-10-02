@@ -181,11 +181,12 @@ export const VERBS: VerbSpec[] = [
   {
     id: "move",
     label: "Move",
-    cost: () => [{ lead: "free" }],
+    // A pop: the popover prices the travellers it is sent.
+    cost: ({ G }) => [{ lead: "a pop", amounts: G.ruleset.movePopCost }],
     arms: true,
     available: ({ canMovePops, armedVerb }) => canMovePops || armedVerb === "move",
-    hint: "Move pops between two owned settlements.",
-    blockedHint: "Requires at least two settlements.",
+    hint: "Move pops between two owned settlements, once a turn.",
+    blockedHint: "One move a turn, into a settlement with room, with food to pay for it.",
     select: (handlers) => handlers.onMovePopsRequest(),
   },
   {
@@ -195,7 +196,7 @@ export const VERBS: VerbSpec[] = [
     arms: true,
     available: ({ canFoundColony, armedVerb }) => canFoundColony || armedVerb === "found",
     hint: "Send a pop from an existing settlement to found a new colony.",
-    blockedHint: "Requires an open tile, a spare pop, and enough resources.",
+    blockedHint: "Requires a colony piece, an open tile, a spare pop, and enough resources.",
     select: (handlers) => handlers.onFoundColonyRequest(),
   },
   {
@@ -205,8 +206,8 @@ export const VERBS: VerbSpec[] = [
       { amounts: getUpgradeColonyToCityStatus(G, playerID, "").cost ?? {} },
     ],
     available: ({ canUpgradeCity }) => canUpgradeCity,
-    hint: "Upgrade one of your colonies into a city.",
-    blockedHint: "Requires an upgradeable colony and enough resources.",
+    hint: "Upgrade one of your colonies into a city. The colony piece comes back.",
+    blockedHint: "Requires a city piece, an upgradeable colony and enough resources.",
     select: (handlers) => handlers.onUpgradeCityRequest(),
   },
   {
@@ -230,7 +231,7 @@ export const VERBS: VerbSpec[] = [
       { amounts: getCivicCalmStatus(G, playerID, "gold").cost ?? {} },
     ],
     available: ({ calmUsed }) => !calmUsed,
-    hint: "Buy happiness: influence or gold, once per turn.",
+    hint: "Buy calm until your next turn: influence or gold, once per turn.",
     blockedHint: "One civic-calm action per turn — already used.",
     select: (handlers) => handlers.onCalmRequest(),
   },

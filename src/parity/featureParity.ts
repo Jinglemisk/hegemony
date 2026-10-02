@@ -262,15 +262,9 @@ const building = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
   coverage(...buildingArgs, ...fixtures);
 
 export const BUILDING_EFFECT_PARITY = {
-  freemanGoldBonus: building("buildingEffects"),
-  citizenInfluenceBonus: building("buildingEffects"),
-  slavePrimaryResourceBonus: building("buildingEffects"),
+  classOutput: building("buildingEffects"),
   income: building("buildingEffects"),
   happiness: building("buildingEffects"),
-  growPopFoodDiscount: building("buildingEffects"),
-  popCapacityBonus: building("buildingEffects"),
-  tilePrimaryResourceBonus: building("buildingEffects"),
-  promoteCostReduction: building("buildingEffects"),
 } as const satisfies Record<BuildingEffect["type"], EffectParityCoverage>;
 
 const activeArgs = [
@@ -296,14 +290,10 @@ export const ACTIVE_EFFECT_MECHANIC_PARITY = {
 
 export const BUILDING_CONTENT_IDS = [
   "marketplace",
-  "temple",
-  "workshop",
-  "granary",
+  "estate",
   "forum",
-  "aqueduct",
-  "odeon",
-  "villa",
-  "gymnasion",
+  "temple",
+  "granary",
   "port",
 ] as const satisfies readonly BuildingId[];
 

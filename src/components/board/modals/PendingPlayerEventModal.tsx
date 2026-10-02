@@ -77,7 +77,7 @@ function settlementRoom(G: HegemonyState, tileId: string, playerID: PlayerId) {
     return { title: tileId, detail: "", isCity: false };
   }
 
-  const capacity = settlementCapacity(settlement, G.ruleset, G.definition.content);
+  const capacity = settlementCapacity(settlement, G.ruleset);
   const filled = totalPops(settlement.pops);
   const rivals = tile.settlements.filter((candidate) => candidate.owner !== playerID);
   const shared = rivals.length

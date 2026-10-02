@@ -52,13 +52,9 @@ export const CONSULT: Array<{
 export const BUILDING_ICON: Record<string, string> = {
   marketplace: "buildings/marketplace",
   temple: "buildings/temple",
-  workshop: "buildings/workshop",
   granary: "buildings/granary",
   forum: "buildings/forum",
-  aqueduct: "buildings/aqueduct",
-  odeon: "buildings/odeon",
-  villa: "buildings/villa",
-  gymnasion: "buildings/gymnasion",
+  estate: "buildings/villa",
   port: "events/voyage",
 };
 

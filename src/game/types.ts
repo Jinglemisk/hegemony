@@ -42,17 +42,7 @@ export type GameOverReason = "victoryRace" | "deckExhausted";
 /** The four seasons, in the order they cycle each year (a year always opens on spring). */
 export type SeasonName = "spring" | "summer" | "autumn" | "winter";
 
-export type BuildingId =
-  | "marketplace"
-  | "temple"
-  | "workshop"
-  | "granary"
-  | "forum"
-  | "aqueduct"
-  | "odeon"
-  | "villa"
-  | "gymnasion"
-  | "port";
+export type BuildingId = "marketplace" | "estate" | "forum" | "temple" | "granary" | "port";
 
 /** The six coastal luxury goods (docs/plans/luxury-goods.md §6, Q32). */
 export type LuxuryGoodId =
@@ -355,21 +345,15 @@ export interface Settlement {
   pops: Pops;
 }
 
+/** A building either raises one class column's printed value in its settlement or
+ *  states one flat fact. The Port's fact is its luxury claim, so it has no effect row. */
 export type BuildingEffect =
   | {
-      type: "freemanGoldBonus";
+      /** Every pop of `pop` here makes `amount` instead of 1. For slaves that is the
+       *  working slaves, so it pays nothing on a hill. */
+      type: "classOutput";
+      pop: PopType;
       amount: number;
-      supportedPops: number;
-    }
-  | {
-      type: "citizenInfluenceBonus";
-      amount: number;
-      supportedPops: number;
-    }
-  | {
-      type: "slavePrimaryResourceBonus";
-      amount: number;
-      supportedPops: number;
     }
   | {
       type: "income";
@@ -379,38 +363,18 @@ export type BuildingEffect =
   | {
       type: "happiness";
       amount: number;
-    }
-  | {
-      type: "growPopFoodDiscount";
-      amount: number;
-    }
-  | {
-      /** Raises the settlement's pop capacity (the Aqueduct). */
-      type: "popCapacityBonus";
-      amount: number;
-    }
-  | {
-      /** Flat bonus to the settlement tile's own material income (the Villa). Null on a
-       *  yield-less tile — worthless on a hill/oracle, which is the intended divergence. */
-      type: "tilePrimaryResourceBonus";
-      amount: number;
-    }
-  | {
-      /** Cuts the cost of a social-ladder promotion made in this settlement (the
-       *  Gymnasion): −`amount` off whichever resource the promotion costs. */
-      type: "promoteCostReduction";
-      amount: number;
     };
 
+/** One of each per settlement. */
 export interface BuildingDefinition {
   id: BuildingId;
   name: string;
   cost: Partial<Resources>;
   effects: BuildingEffect[];
-  /** Cap on copies (levels) of this building in one settlement — every building is
-   *  capped (owner ruling 2026-07-15: "they cant scale forever"). Level = copies, each
-   *  eats a slot; a 4-slot hill must diversify rather than stack one flat effect. */
-  maxLevel: number;
+  /** A coastal colony may raise it. Every other building needs a city. */
+  colony?: true;
+  /** Needs a tile whose slaves make something, so it cannot stand on a hill. */
+  needsYield?: true;
 }
 
 export interface HexTile {
@@ -464,11 +428,15 @@ export interface PlayerState {
   /** Running total of pops gained inorganically from event cards (the `addPops`
    *  effect) — the ledger's "Gained" stat, paired with deaths. */
   popsGainedFromEvents: number;
-  /** Once-per-turn throttles for the Phase 1 currency verbs (roadmap-appendix D7/D8/D10):
-   *  one civic-calm action, one ladder move, one venture. Reset with the turn flags. */
+  /** Once-per-turn throttles: one civic-calm action, one ladder move, one venture,
+   *  one paid pop move. Reset with the turn flags. */
   civicCalmUsedThisTurn: boolean;
   ladderUsedThisTurn: boolean;
   ventureUsedThisTurn: boolean;
+  moveUsedThisTurn: boolean;
+  /** Calm bought since this player's last upkeep. It counts toward happiness until
+   *  their next turn starts, and is never banked. */
+  calmActive: boolean;
   /** Free-action coupons a standing Law grants once a year (Monumental Code, Land
    *  Rush) that this player has already spent. Cleared when the year turns. */
   lawFreeActionsUsedThisYear: LawCostedAction[];

@@ -49,7 +49,7 @@ describe("game modes / ruleset seam", () => {
 
   it("registers standard, fast-start, and deathmatch modes", () => {
     expect(GAME_MODES.standard.ruleset.setup).toEqual(["capital", "colony"]);
-    expect(GAME_MODES.fastStart.ruleset.startingResources.wood).toBe(40);
+    expect(GAME_MODES.fastStart.ruleset.startingResources.wood).toBe(16);
     expect(GAME_MODES.fastStart.ruleset.setup).toEqual(["capital", "colony"]);
     expect(GAME_MODES.deathmatch.ruleset.setup).toEqual(["capital", "colony", "colony", "colony"]);
     expect(setupCapitalCount(GAME_MODES.deathmatch.ruleset)).toBe(1);

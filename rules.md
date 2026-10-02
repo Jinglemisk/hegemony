@@ -45,12 +45,12 @@ You keep track of six resources:
 - **Wood, Stone, Gold, Food** — the material goods you spend to expand and build.
   Gold doubles as the **unit of account at the bank** (see The bank, below).
 - **Influence** — a political currency earned by your citizens. It stabilizes the
-  province (civic calm), pays for demotions on the social ladder, buys riot
-  insurance, and funds Assembly draws, repeals, bribes, and vetoes.
-- **Happiness** — the mood of your people. It is lifted by temples, stored food,
-  and civic calm, and dragged down by slaves and overcrowding.
+  province (civic calm), pays for demotions on the social ladder, buys food through
+  the Dole, buys riot insurance, and funds Assembly draws, repeals, bribes, and vetoes.
+- **Happiness** — the mood of your people. It is lifted by temples, luxuries, stored
+  food, and civic calm, and dragged down by slaves and overcrowding.
 
-You begin each game with **20 wood, 10 stone, 10 gold, 12 food**, and 0
+You begin each game with **8 wood, 4 stone, 4 gold, 12 food**, and 0
 influence and happiness.
 
 ## Your people
@@ -58,7 +58,7 @@ influence and happiness.
 Every settlement is populated by three kinds of pop. One pop, one output:
 
 - **Slave** — makes 1 of the tile's resource when it holds an open slot, and eats
-  nothing. Every slave, working or idle, nudges happiness down.
+  nothing. Every two slaves in your realm, working or idle, cost 1 happiness a turn.
 - **Freeman** — makes 1 gold, and eats 1 food.
 - **Citizen** — makes 1 influence, holds a vote in the Assembly, and eats 1 food.
 
@@ -69,14 +69,22 @@ grown: after setup, every citizen is a freeman promoted on the social ladder.
 
 You hold three kinds of settlement:
 
-- **Capital** — your first settlement. It holds up to 10 pops and builds on its
+- **Capital** — your first settlement. It holds up to 8 pops and builds on its
   tile's slots, like any city. You have exactly one.
-- **City** — an upgraded colony. It holds up to 10 pops and builds on its tile's
+- **City** — an upgraded colony. It holds up to 8 pops and builds on its tile's
   slots.
-- **Colony** — a small outpost. It holds up to 4 pops and cannot hold buildings, so
-  every slot on its tile is a work slot. Two colonies belonging to different players
-  may share a single tile; they **split its slots**, and the colony founded first
-  takes the odd one.
+- **Colony** — a small outpost. It holds up to 4 pops and raises no buildings, so
+  every slot on its tile is a work slot. The one exception is a **Port** on the coast,
+  which takes one of those slots. Two colonies belonging to different players may
+  share a single tile; they **split its slots**, and the colony founded first takes
+  the odd one.
+
+Nothing raises a settlement's capacity.
+
+**Pieces.** You have **4 colony pieces and 3 city pieces**; the capital is its own
+piece. Upgrading a colony hands its colony piece back. So once four colonies stand,
+the only way to found another is to make one of them a city, and after three upgrades
+your cities are all placed.
 
 ## Setting up
 
@@ -110,28 +118,32 @@ Play passes around the table. On your turn:
 2. **Resolve your event card**, if one was drawn for you (see Events below) — you
    must do this before anything else.
 3. **Take actions**, in any order you can afford:
-   - **Found a colony** — 20 wood and 2 food. Sends one pop out to settle a new
-     tile, which must **border one of your settlements** (colonies count, so your
-     frontier chains outward tile by tile) — **or lie on the coast, if you already
-     hold any coastal settlement**: the sea connects every shore, so a coastal
-     power may sail to found colonies anywhere along the rim.
-   - **Upgrade a colony into a city** — 30 wood, 10 stone, and 5 food. The city
-     keeps the colony's pops and buildings, and drives off any enemy colony
-     sharing that tile.
+   - **Found a colony** — 4 wood, 1 food and a colony piece. Sends one pop out to
+     settle a new tile; that pop moves free. The tile must **border one of your
+     settlements** (colonies count, so your frontier chains outward tile by tile) —
+     **or lie on the coast, if you already hold any coastal settlement**: the sea
+     connects every shore, so a coastal power may sail to found colonies anywhere
+     along the rim.
+   - **Upgrade a colony into a city** — 3 wood, 3 stone and a city piece. The city
+     keeps the colony's pops and buildings, drives off any enemy colony sharing
+     that tile, and hands the colony piece back.
    - **Grow a pop** — add one pop to a settlement that still has room: a slave
-     costs 5 food and a freeman 7 food. Citizens cannot be grown. Each settlement
+     costs 2 food and a freeman 3 food. Citizens cannot be grown. Each settlement
      can grow once per turn.
-   - **Move pops** — shift pops between your own settlements.
+   - **Move pops** (one move per turn) — shift pops between your own settlements
+     for **1 food a pop**. The target must have room, and they arrive at the start
+     of your next turn.
    - **Build** — raise a building in a city or capital that has a free slot.
    - **Trade at the bank** — sell materials for gold or buy them with gold, as
      often as you like (see The bank).
-   - **Civic calm** (once per turn) — **Stabilize Province** for 4 influence, or
-     stage **Bread & Circuses** for 6 gold. Either way: **+3 happiness**. One calm
-     action per turn — contentment cannot be stacked by decree.
+   - **The Dole** — **3 influence buys 1 food**, as often as you can pay.
+   - **Civic calm** (once per turn) — **Stabilize Province** for 2 influence, or
+     stage **Bread & Circuses** for 2 gold. Either way: **+2 happiness until your
+     next turn starts**. Calm is never stored, and one calm action per turn is the
+     limit.
    - **The social ladder** (one move per turn) — promote a slave to freeman for
-     **4 food**, or a freeman to citizen for **4 gold**. Demote a citizen to
-     freeman for **2 influence**, or a freeman to slave for **3 influence and −1
-     happiness**. (During a riot, demotion is free — the mob forces it.)
+     **2 food**, or a freeman to citizen for **2 gold**. Demote one step for
+     **1 influence**. (During a riot, demotion is free — the mob forces it.)
    - **Fund an expedition** (once per turn) — stake **5 gold or 8 wood** and roll
      on an expedition table (see Ventures).
 4. **End your turn.**
@@ -148,10 +160,8 @@ possible, and no season is ever guaranteed good or bad.
 ## The bank
 
 The bank trades materials against gold — never material for material. Its rates
-are set by **this board's supply** when the game begins and never move: on the
-classic island, plentiful wood (the most common tile) sells 4-for-1-gold, while
-stone and food sit at the baseline 3-for-1 / 2 gold. (A shuffled board prices
-itself.) Find it in the ledger's **Market** tab.
+never move: every material **sells 3 for 1 gold** and **costs 2 gold to buy**. Find
+it in the realm's **Market** page and under the Exchange verb.
 
 - **Sell**: hand over the sell-rate of a material, take 1 gold.
 - **Buy**: pay the buy-rate in gold, take 1 of the material.
@@ -161,6 +171,9 @@ itself.) Find it in the ledger's **Market** tab.
 
 The bank is a corridor, not a merchant — its fixed rates are the walls that
 player-to-player trade (a later phase) will negotiate inside.
+
+**The Dole** runs through the same corridor: **3 influence buys 1 food**. It is the
+one way influence reaches the granary, and it is priced worse than gold on purpose.
 
 ## Ventures — Fund an Expedition
 
@@ -177,42 +190,30 @@ a gamble, and it is _meant_ for whoever is behind and needs the swing.
 
 ## Buildings
 
-Buildings are raised in a city or capital (colonies cannot hold them). Building more
-than one of a kind stacks its bonus, but **every building has a level cap** — you can
-hold only so many copies of it in one settlement (shown as, e.g., "Granary 2/3"). No
-single flat bonus scales forever, so a hill must **diversify** rather than stack four
-of the same thing. Every building takes one of its tile's slots, and so one place
-where a slave could have worked.
+Buildings are raised in a city or capital. **One of each per settlement**: the way
+to more gold is more freemen, not a second Marketplace. Every building takes one of
+its tile's slots, and so one place where a slave could have worked.
 
-The pricing follows a grammar: **wood** raises economic buildings, **stone** raises
-civic ones, and **gold** the rare commercial extras. Food and influence never buy
-buildings.
+Three buildings raise a class: every pop of that class in the settlement makes 2
+instead of 1. The other three state one fact.
 
-- **Marketplace** (12 wood) — +2 gold per freeman, supporting up to 3 freemen.
-- **Temple** (6 stone) — +1 happiness, and +1 influence per citizen, supporting
-  up to 2 citizens.
-- **Workshop** (12 wood) — +1 of the tile's resource per working slave, supporting
-  up to 3. It takes a slot, so it pays only where slaves still have slots to work,
-  and never on a hill.
-- **Granary** (12 wood, 2 stone) — +2 food each turn, and makes growing pops in
-  that settlement cost 2 less food. Up to 3 levels.
-- **Forum** (4 stone, 8 wood) — +2 influence each turn, no citizens required.
-- **Aqueduct** (12 stone) — the settlement holds **4 more pops**.
-- **Odeon** (8 stone, 4 wood) — +2 happiness each turn.
-- **Villa** (12 wood, 4 gold) — **+2 of the tile's own resource** each turn, up to 2
-  levels. It takes a slot a slave could have worked, and is useless on a hill.
-- **Gymnasion** (12 stone, 4 wood) — **promotions on the social ladder cost 2 less** in
-  this settlement, the building that makes a citizen-heavy hill city affordable.
-- **Port** (20 wood, 5 stone, 10 gold) — claims one adjacent **luxury good** (below).
-  Coastal cities only, and only while an unclaimed good adjoins the tile and you have
-  room under your active cap.
+- **Marketplace** (3 wood, 2 gold) — freemen here make 2 gold.
+- **Estate** (4 wood) — working slaves here make 2 of the tile's resource. It
+  cannot stand on a hill. It takes a slot itself, so it pays only where at least
+  two slaves still have slots to work.
+- **Forum** (3 stone) — citizens here make 2 influence.
+- **Temple** (3 stone) — +1 happiness each turn.
+- **Granary** (4 wood) — +2 food each turn.
+- **Port** (4 gold, 2 stone) — claims one adjacent **luxury good** (below). It needs
+  the coast, an unclaimed good adjoining the tile, and room under your active cap. A
+  colony may raise one; it is the only building a colony can hold.
 
 ## Luxury goods
 
 Six named goods — Tyrian Dye, Pearls, Coral, Glassware, Incense, Fine Linen — sit
 moored off the coast, each at a point shared by **two** coastal tiles. A **Port**
-raised in a city on either tile claims the good; **the first Port wins**, and the
-good stays claimed for the rest of the game. Each good is unique: one copy, one
+raised in a settlement on either tile claims the good; **the first Port wins**, and
+the good stays claimed for the rest of the game. Each good is unique: one copy, one
 owner.
 
 Every **active** good raises your **effective happiness** by +2 — a standing floor,
@@ -221,16 +222,17 @@ laurel all test the effective number, so wherever happiness is shown you see the
 stored figure, the luxury offset, and the effective total. At most **3** goods are
 active at once; goods past the cap stay owned but inactive.
 
-The intended play: slaves cost −0.5 happiness each per turn, so three active goods
-offset twelve slaves. Luxuries buy the right to expand ugly, not calm itself.
+The intended play: every two slaves cost 1 happiness a turn, and a luxury lifts the
+line that loss is measured against. Luxuries buy the right to expand ugly, not calm
+itself.
 
 ## Happiness and food
 
 Happiness is your civilization's stability. It moves each turn:
 
-- Every **slave** lowers it a little.
-- **Temples** raise it, and stored **food** helps — for every 5 food you are
-  holding, you gain +1 happiness when income is collected, **up to +2** (full
+- Every **two slaves** in your realm lower it by 1; an odd slave costs nothing.
+- Each **Temple** raises it by 1, and stored **food** helps — for every 5 food you
+  are holding, you gain +1 happiness when income is collected, **up to +2** (full
   granaries calm the city; hoarding beyond that does not).
 - **Overcrowding** costs you: every pop over a settlement's capacity is -1
   happiness per turn.
@@ -242,9 +244,9 @@ settlement holding the most of them. Slaves eat nothing and never leave for hung
 Food never goes below zero: a sacked granary or a bad card stops at empty.
 
 When happiness turns **negative** it reads as unrest, and unrest has teeth. At the
-start of your turn — before you collect income — **effective happiness (stored plus
-your luxury offset) at −5 or lower puts you on the riot table**. Your turn stops
-until the die is rolled:
+start of your turn — before you collect income — **effective happiness (stored, plus
+your luxury offset, plus calm bought last turn) at −5 or lower puts you on the riot
+table**. Your turn stops until the die is rolled:
 
 | Roll | Outcome                                                                              |
 | ---: | ------------------------------------------------------------------------------------ |
@@ -263,7 +265,7 @@ riot can no longer cost you pops — you have converted catastrophe into taxatio
 **At −10 or lower the riot is a revolt:** the roll takes a **−2** penalty, all pop
 losses are **doubled**, and after the dust settles happiness rebounds to **−4**.
 A plain riot never rebounds — it will fire again next turn unless you fix the
-cause (civic calm exists for exactly this).
+cause. Civic calm holds the line for one turn; it does not raise what is stored.
 
 Pops lost to a riot are chosen at random across your settlements — the mob decides,
 not you. Some events also sow **lingering unrest** — a penalty like "−2 happiness per
@@ -340,6 +342,9 @@ minimum — ties, or leading below the minimum, leave those cards unheld:
 | Civic Elite           | most citizens                     |       8 |
 | Treasurer             | largest banked material stockpile |      80 |
 | Beloved of the People | highest happiness                 |     +10 |
+
+Beloved of the People reads stored happiness plus your luxuries. Calm bought for the
+turn does not count.
 
 The sixth card, **Voice of the Assembly**, uses the permanent Assembly record. The first
 player to pass 3 authored resolutions claims it. A tie does not dislodge the holder; a

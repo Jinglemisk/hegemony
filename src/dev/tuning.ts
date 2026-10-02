@@ -17,9 +17,8 @@ import type { TuningPresetId } from "./tuningPresets";
  *
  * Path grammar (the leaf is always a number or boolean):
  *   ruleset.<...>                      e.g. ruleset.actionCosts.foundColony.wood
- *   buildings.<id>.cost.<resource>     e.g. buildings.villa.cost.wood
- *   buildings.<id>.maxLevel
- *   buildings.<id>.effects.<i>.amount  e.g. buildings.gymnasion.effects.0.amount
+ *   buildings.<id>.cost.<resource>     e.g. buildings.estate.cost.wood
+ *   buildings.<id>.effects.<i>.amount  e.g. buildings.estate.effects.0.amount
  */
 
 export type OverrideValue = number | boolean;

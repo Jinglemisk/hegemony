@@ -54,7 +54,7 @@ describe("ruleset seam", () => {
   });
 
   it("reads settlement pop capacity from the ruleset", () => {
-    expect(settlementPopCapacity("capital", DEFAULT_RULESET)).toBe(10);
+    expect(settlementPopCapacity("capital", DEFAULT_RULESET)).toBe(8);
 
     const spacious: Ruleset = {
       ...DEFAULT_RULESET,

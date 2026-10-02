@@ -141,7 +141,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
       settlement.buildings.length > 0 ? ` · buildings: ${settlement.buildings.join(", ")}` : "";
     lines.push(
       `  ${tileId} ${settlement.kind} on ${tile.terrain} (${tile.resource ? tile.resource.type : "no resource"}, ${settlementSlots(tile, settlement)} slots) — ` +
-        `pops ${totalPops(settlement.pops)}/${settlementCapacity(settlement, G.ruleset, G.definition.content)} ` +
+        `pops ${totalPops(settlement.pops)}/${settlementCapacity(settlement, G.ruleset)} ` +
         `(c${settlement.pops.citizens} f${settlement.pops.freemen} s${settlement.pops.slaves})${buildings}`,
     );
   }
@@ -274,6 +274,13 @@ export function renderBatchReport(report: BatchReport): string {
             `idle slaves ${formatNumber(stats.idleSlavesMean)} (${(stats.idleSlaveShare * 100).toFixed(0)}%)`,
         )
         .join(" · ")}`,
+    );
+  }
+
+  if (report.riots) {
+    lines.push(
+      `Riots: ${formatNumber(report.riots.perGame)}/game · the riot table opens ` +
+        `${(report.riots.turnShare * 100).toFixed(1)}% of player-turns`,
     );
   }
 

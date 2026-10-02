@@ -479,6 +479,11 @@ export function VerbDiscs({
               >
                 <span className="fan-disc">
                   <Ico path={option.icon} size="tile" />
+                  {option.left === undefined ? null : (
+                    <span aria-hidden="true" className="verb-count">
+                      {option.left}
+                    </span>
+                  )}
                 </span>
                 <span className="fan-label">
                   <span className="fan-k">{option.label}</span>
@@ -563,6 +568,11 @@ export function VerbDiscs({
                     {hotkey}
                   </span>
                 ) : null}
+                {group.left === undefined ? null : (
+                  <span aria-hidden="true" className="verb-count">
+                    {group.left}
+                  </span>
+                )}
               </span>
               <span className="verb-name" data-c="verb-name" data-exclude {...gate.name}>
                 <span className="verb-name-k">{group.label}</span>

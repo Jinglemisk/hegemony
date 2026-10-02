@@ -248,7 +248,7 @@ function parsePatch(flags: Flags): RulesetPatch | null {
 }
 
 /** `--tune-patch p.json` reads the dev tune-panel override map (dot-path → value),
- *  so a batch can A/B building content (Villa/Gymnasion strength, costs, level caps)
+ *  so a batch can A/B building content (costs and effect sizes)
  *  and ruleset scalars in the same shape the panel's "Copy patch" produces. */
 function parseTune(flags: Flags): OverrideMap | null {
   if (typeof flags["tune-patch"] !== "string") {
@@ -486,6 +486,8 @@ function cmdMove(positionals: string[], file: string) {
           "demote",
         );
       }
+      case "dole":
+        return findLegal(save.state, (move) => move.type === "dole", "the Dole");
       case "calm":
         return findLegal(save.state, (move) => move.type === "civicCalm", "civic calm");
       case "venture":
@@ -835,7 +837,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              pops <srcTile> <dstTile> <popSpec>     popSpec: citizens=1,slaves=2 (or c=1,s=2)
              promote <tile> <pop> | demote <tile> <pop>
              bank-sell <material> | bank-buy <material>
-             calm | venture <gold|wood> | insure [optionId] | resolve-riot
+             calm | dole | venture <gold|wood> | insure [optionId] | resolve-riot
              place-capital <tile> <popSpec>
              place-colony <tile> <popSpec>
              resolve [choiceIndex] [targetTile]

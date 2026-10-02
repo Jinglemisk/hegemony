@@ -370,9 +370,7 @@ export function buildBuilding(
   const building = getBuildings(G.definition.content).find(
     (candidate) => candidate.id === buildingId,
   );
-  const settlement = tile?.settlements.find(
-    (candidate) => candidate.owner === playerID && candidate.kind !== "colony",
-  );
+  const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
   const status = getBuildBuildingStatus(G, playerID, tileId, buildingId, claimVertexId);
 
   if (!tile || !building || !settlement || !status.can) {
@@ -462,7 +460,14 @@ export function movePops(
     return invalid(...status.reasons);
   }
 
-  return schedulePopulationTransfer(G, playerID, sourceTileId, targetTileId, pops);
+  const moved = schedulePopulationTransfer(G, playerID, sourceTileId, targetTileId, pops);
+
+  if (moved.ok) {
+    payCost(G.players[playerID].resources, status.cost ?? {});
+    G.players[playerID].moveUsedThisTurn = true;
+  }
+
+  return moved;
 }
 
 export function resolveArrivingPops(G: HegemonyState, playerID: PlayerId) {

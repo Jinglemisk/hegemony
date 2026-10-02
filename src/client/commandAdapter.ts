@@ -25,6 +25,7 @@ export type GameMoves = {
   resolvePendingPlayerEvent: (targetTileId?: string, choiceIndex?: number) => void;
   bankSell: (material: TradableMaterial) => void;
   bankBuy: (material: TradableMaterial) => void;
+  dole: () => void;
   civicCalm: (payment: CivicCalmPayment) => void;
   promotePop: (tileId: string, from: PopType) => void;
   demotePop: (tileId: string, from: PopType) => void;
@@ -78,6 +79,7 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
       dispatch({ type: "resolveEvent", choiceIndex, ...(targetTileId ? { targetTileId } : {}) }),
     bankSell: (material) => dispatch({ type: "bankSell", material }),
     bankBuy: (material) => dispatch({ type: "bankBuy", material }),
+    dole: () => dispatch({ type: "dole" }),
     civicCalm: (payment) => dispatch({ type: "civicCalm", payment }),
     promotePop: (tileId, from) => dispatch({ type: "promotePop", tileId, from }),
     demotePop: (tileId, from) => dispatch({ type: "demotePop", tileId, from }),

@@ -1,8 +1,6 @@
-import type { Ruleset } from "../game/ruleset";
-import type { GameContent } from "../game/content";
-import type { HexTile, Resources, Settlement } from "../game/types";
+import type { HegemonyState, HexTile, Resources, Settlement } from "../game/types";
 import {
-  settlementBuildingSlots,
+  buildingGround,
   settlementOverCapacity,
   settlementCapacity,
   totalPops,
@@ -25,21 +23,19 @@ export function SettlementSummaryCard({
   tile,
   settlement,
   netYield,
-  ruleset,
-  content,
+  G,
 }: {
   tile: HexTile;
   settlement: Settlement;
   /** The place's name, from ui/settlementNames. */
   name: string;
   netYield: Resources;
-  ruleset: Ruleset;
-  content: GameContent;
+  G: HegemonyState;
 }) {
   const popTotal = totalPops(settlement.pops);
-  const capacity = settlementCapacity(settlement, ruleset, content);
-  const overCapacity = settlementOverCapacity(settlement, ruleset, content);
-  const slots = settlementBuildingSlots(tile, settlement, ruleset);
+  const capacity = settlementCapacity(settlement, G.ruleset);
+  const overCapacity = settlementOverCapacity(settlement, G.ruleset);
+  const { slots } = buildingGround(G, settlement.owner, tile.id);
 
   return (
     <span className="holdingSummaryRows">

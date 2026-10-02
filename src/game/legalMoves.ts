@@ -8,7 +8,15 @@ import {
   placeColony,
   upgradeColonyToCity,
 } from "./actions";
-import { TRADABLE_MATERIALS, bankBuy, bankSell, getBankBuyStatus, getBankSellStatus } from "./bank";
+import {
+  TRADABLE_MATERIALS,
+  bankBuy,
+  bankSell,
+  dole,
+  getBankBuyStatus,
+  getBankSellStatus,
+  getDoleStatus,
+} from "./bank";
 import {
   DEMOTE_FROM,
   PROMOTE_FROM,
@@ -122,6 +130,8 @@ export type GameCommand =
   | { type: "resolveEvent"; choiceIndex: number; targetTileId?: string }
   | { type: "bankSell"; material: TradableMaterial }
   | { type: "bankBuy"; material: TradableMaterial }
+  /** The Dole: influence for food. */
+  | { type: "dole" }
   | { type: "civicCalm"; payment: CivicCalmPayment }
   | { type: "promotePop"; tileId: string; from: PopType }
   | { type: "demotePop"; tileId: string; from: PopType }
@@ -273,6 +283,8 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
       return bankSell(G, playerID, move.material);
     case "bankBuy":
       return bankBuy(G, playerID, move.material);
+    case "dole":
+      return dole(G, playerID);
     case "civicCalm":
       return civicCalm(G, playerID, move.payment);
     case "promotePop":
@@ -495,13 +507,15 @@ export function describeCommand(
     case "growPop":
       return `grow 1 ${formatPopName(move.pop, 1)} on ${move.tileId}${formatCost(cost)}`;
     case "movePops":
-      return `move ${formatPops(move.pops)} from ${move.sourceTileId} to ${move.targetTileId}`;
+      return `move ${formatPops(move.pops)} from ${move.sourceTileId} to ${move.targetTileId}${formatCost(cost)}`;
     case "resolveEvent":
       return `resolve pending event (choice ${move.choiceIndex})${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
     case "bankSell":
       return `sell ${Object.values(cost)[0] ?? 1} ${move.material} to the bank for 1 gold`;
     case "bankBuy":
       return `buy 1 ${move.material} from the bank${formatCost(cost)}`;
+    case "dole":
+      return `take the Dole${formatCost(cost)}`;
     case "civicCalm":
       return `${move.payment === "influence" ? "stabilize province" : "bread & circuses"}${formatCost(cost)}`;
     case "promotePop":
@@ -758,8 +772,16 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
       }
 
       for (const pops of movePopsBundles(source.pops)) {
-        if (getMovePopsStatus(G, playerID, sourceTileId, targetTileId, pops).can) {
-          moves.push({ type: "movePops", sourceTileId, targetTileId, pops });
+        const status = getMovePopsStatus(G, playerID, sourceTileId, targetTileId, pops);
+
+        if (status.can) {
+          moves.push({
+            type: "movePops",
+            sourceTileId,
+            targetTileId,
+            pops,
+            cost: status.cost ?? {},
+          });
         }
       }
     }
@@ -777,6 +799,11 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
     if (buy.can) {
       moves.push({ type: "bankBuy", material, cost: buy.cost ?? {} });
     }
+  }
+
+  const doleStatus = getDoleStatus(G, playerID);
+  if (doleStatus.can) {
+    moves.push({ type: "dole", cost: doleStatus.cost ?? {} });
   }
 
   for (const payment of ["influence", "gold"] as const) {

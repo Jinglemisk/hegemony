@@ -10,7 +10,13 @@ import {
 } from "../game/content";
 import type { GameContent } from "../game/content";
 import { getTile } from "../game/core/query";
-import { canPlaceColonyOnTile, settlementBuildingSlots } from "../game/settlement";
+import {
+  canPlaceColonyOnTile,
+  settlementCapacity,
+  settlementOpenSlots,
+  settlementWorkingSlaves,
+} from "../game/settlement";
+import { totalPops } from "../game/core/pops";
 import {
   availableLawReplacementIds,
   currentVoteWeight,
@@ -65,14 +71,16 @@ export const randomPolicy: Policy = {
 };
 
 /** Move types handled by explicit policy rules rather than generic search. Stochastic
- * moves stay out to prevent RNG peeking; unit bank moves stay out because independently
- * optimizing both sides of a multi-step exchange can create wasteful buy/sell churn. */
+ * moves stay out to prevent RNG peeking; unit bank moves (the Dole among them) stay out
+ * because independently optimizing both sides of a multi-step exchange can create
+ * wasteful buy/sell churn. */
 const RULE_DRIVEN_MOVE_TYPES: ReadonlySet<GameCommand["type"]> = new Set([
   "fundExpedition",
   "resolveRiot",
   "buyRiotInsurance",
   "bankBuy",
   "bankSell",
+  "dole",
 ]);
 
 export function policyEconomyThresholds(ruleset: Ruleset) {
@@ -118,6 +126,18 @@ function resolveStochasticByRule(G: HegemonyState, moves: GameCommand[]): GameCo
     G.players[playerID].resources.gold >= thresholds.ventureGoldReserve
   ) {
     return goldVentures[G.season % goldVentures.length];
+  }
+
+  // The Dole is the pressure valve: take it while the next income would leave a
+  // mouth unfed, and not otherwise, since influence buys food at a poor rate.
+  const dole = moves.find((move) => move.type === "dole");
+  // A strike collects nothing, so it starves nobody either.
+  if (
+    dole &&
+    G.players[playerID].incomeSuppressedTurns === 0 &&
+    getHungerStatus(G, playerID, calculateIncome(G, playerID).food).unfed > 0
+  ) {
+    return dole;
   }
 
   // Bank chains (sell surplus → buy the missing colony wood) are invisible to one-ply
@@ -215,8 +235,8 @@ export const greedyPolicy: Policy = {
 /**
  * The slot- and promotion-aware bot (2026-07-18). Same search as greedy, but its
  * evaluation actually values Phase 2's strategic layer — so sims exercise the
- * mechanics greedy is blind to: it climbs the social ladder, builds the Villa and
- * Gymnasion, and prefers slot-rich cities. See {@link evaluateSmart}.
+ * mechanics greedy is blind to: it climbs the social ladder, builds the class
+ * buildings, and keeps plains slots for the slaves that feed it. See {@link evaluateSmart}.
  */
 export const smartPolicy: Policy = {
   name: "smart",
@@ -263,8 +283,10 @@ export function projectPolicyHorizon(
   // claims don't move during a projection — read through the engine's own selector
   // so the risk term tests the same EFFECTIVE line the riot upkeep does.
   const luxuryBonus = luxuryHappinessBonus(G, playerID);
+  // Calm bought this turn stands for the next upkeep only.
+  const calmBonus = player.calmActive ? G.ruleset.civicCalm.happiness : 0;
   const unrest: PolicyUnrestExposure = {
-    minimumHappiness: player.resources.happiness + luxuryBonus,
+    minimumHappiness: player.resources.happiness + luxuryBonus + calmBonus,
     mildRiotEvents: 0,
     severeRiotEvents: 0,
     riskPenalty: 0,
@@ -286,13 +308,11 @@ export function projectPolicyHorizon(
 
     // The engine checks unrest at every start-of-turn upkeep, before income.
     // Record every exposure rather than judging only the terminal happiness.
-    unrest.minimumHappiness = Math.min(
-      unrest.minimumHappiness,
-      player.resources.happiness + luxuryBonus,
-    );
+    const standing = player.resources.happiness + luxuryBonus + (step === 0 ? calmBonus : 0);
+    unrest.minimumHappiness = Math.min(unrest.minimumHappiness, standing);
     const upkeepRisk = evaluatePolicyUnrestRisk(
       projectedState.ruleset,
-      player.resources.happiness + luxuryBonus,
+      standing,
       projectedState.definition.content,
     );
     unrest.riskPenalty += upkeepRisk.scorePenalty;
@@ -485,9 +505,9 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
 // citizen is worth far more than a slave — income + the Civic Elite card), so a
 // promotion is score-positive and the one-ply search will climb the ladder. Materials
 // are weighted by role (gold liquid, stone the scarce civic currency, food the
-// consumed one) instead of greedy's flat material/10, so wood/stone boosters (the
-// Villa) and stone civics register. And it prices building room + the Gymnasion's
-// promotion synergy, so slot-rich cities and the ladder building get built.
+// consumed one) instead of greedy's flat material/10, so the Estate and the stone
+// civics register. And it prices an open work slot as the slave who could work it,
+// so a building on a plains slot costs the food that slave would have grown.
 const SMART_POP_WEIGHT = { citizens: 3, freemen: 2, slaves: 1.2 };
 const SMART_MATERIAL_WEIGHT = { food: 0.4, wood: 0.6, stone: 0.85, gold: 1 };
 const SMART_VICTORY_CARD_VALUE = 120;
@@ -497,6 +517,12 @@ const SMART_VICTORY_CARD_VALUE = 120;
  *  At ~36 versus the Port's ~33-score cost the build clears without dominating
  *  every other verb; the A/B campaigns own the fine tuning. */
 const LUXURY_HORIZON_WEIGHT = INCOME_HORIZON * 2 * 3;
+/** A pop the horizon sees starve costs more than any pop is worth (a citizen is 3),
+ *  so growing or promoting a mouth that cannot be fed never scores. */
+const STARVED_POP_WEIGHT = 4;
+/** An open slot no slave works yet is priced as the slave who could work it: a
+ *  building raised there costs one of the tile's resource a turn. */
+const LATENT_SLOT_SHARE = 1;
 
 function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
   const player = G.players[playerID];
@@ -506,8 +532,7 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
   let cities = 0;
   let colonies = 0;
   let weightedPops = 0;
-  let citySlots = 0;
-  let gymSynergy = 0;
+  let latentWork = 0;
 
   for (const tileId of player.settlements) {
     const tile = getTile(G, tileId);
@@ -525,16 +550,20 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
       colonies += 1;
     } else {
       cities += 1;
-      // Latent build capacity — rewards upgrading colonies onto slot-rich tiles.
-      citySlots += settlementBuildingSlots(tile, settlement, G.ruleset);
-      // The Gymnasion only pays off if there are pops to promote; rewarding the
-      // pairing is what makes one-ply build it (its discount is otherwise invisible).
-      if (
-        settlement.buildings.includes("gymnasion") &&
-        settlement.pops.slaves + settlement.pops.freemen > 0
-      ) {
-        gymSynergy += 1;
-      }
+    }
+
+    // Work a slave could still take up: open slots nobody works. A building spends
+    // one of them. A colony cannot build, so its spare slots count only as far as
+    // it has room for the slaves.
+    if (tile.resource) {
+      const unworked =
+        settlementOpenSlots(tile, settlement) - settlementWorkingSlaves(tile, settlement);
+      const room = settlementCapacity(settlement, G.ruleset) - totalPops(settlement.pops);
+      latentWork +=
+        Math.max(0, settlement.kind === "colony" ? Math.min(unworked, room) : unworked) *
+        SMART_MATERIAL_WEIGHT[tile.resource.type] *
+        INCOME_HORIZON *
+        LATENT_SLOT_SHARE;
     }
   }
 
@@ -548,10 +577,8 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
     6 * cities +
     3 * colonies +
     weightedPops +
-    material / 8 +
-    0.4 * citySlots +
-    3 * gymSynergy -
-    2 * projection.expectedStarvationPopLoss;
+    (material + latentWork) / 8 -
+    STARVED_POP_WEIGHT * projection.expectedStarvationPopLoss;
 
   // Luxury claims (Phase 4). The +2 standing offset alone would price a claimed
   // good like one turn of a Temple and the Port would never repay its 20w/5s/10g —
@@ -749,24 +776,15 @@ export function placementFrontier(
   return { frontier, contested };
 }
 
-/** Unclaimed goods a Port could claim from the player's CITY tiles. Colonies don't
- *  count — they cannot raise buildings — which is exactly why placement is where
- *  the contested-claim race is decided: a capital seated on a mooring tile is a
- *  Port site for the whole game. */
+/** Unclaimed goods a Port could claim from the player's tiles. A colony counts: a
+ *  Port is the one building it may raise. Placement is where the contested-claim
+ *  race is decided, since a settlement seated on a mooring tile is a Port site for
+ *  the whole game. */
 function luxuryClaimReach(G: HegemonyState, playerID: PlayerId): number {
-  let reach = 0;
-
-  for (const tileId of G.players[playerID].settlements) {
-    const tile = getTile(G, tileId);
-    const holdsCity = tile?.settlements.some(
-      (settlement) => settlement.owner === playerID && settlement.kind !== "colony",
-    );
-    if (holdsCity) {
-      reach += claimableLuxuriesAt(G, tileId).length;
-    }
-  }
-
-  return reach;
+  return G.players[playerID].settlements.reduce(
+    (reach, tileId) => reach + claimableLuxuriesAt(G, tileId).length,
+    0,
+  );
 }
 
 /** A reachable future claim is a thumb on the scale, not a mandate: at half a

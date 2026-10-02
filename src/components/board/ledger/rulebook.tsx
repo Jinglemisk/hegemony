@@ -321,7 +321,7 @@ const resources: RuleChapter = {
                   : resource === "gold"
                     ? "The coin of trade — earned by pops and events, the bank's only medium."
                     : resource === "influence"
-                      ? "Civic weight: spent on demotions and calm; its great sink is the Assembly."
+                      ? "Civic weight: spent on demotions, calm and the Dole; its great sink is the Assembly."
                       : "The public mood; negative happiness brings riots, high happiness wins a card."}
             </DefRow>
           ))}
@@ -373,9 +373,9 @@ const population: RuleChapter = {
       <Entry id={anchor("population", "capacity")} title="Capacity">
         <Note>
           A settlement holds only so many pops (see <AnnotatedText text="Settlements" />
-          ). Pushing past its capacity costs{" "}
-          <strong>−{G.ruleset.economy.overCapacityHappinessPerPop}</strong> happiness per pop over
-          the line each turn, so an Aqueduct that raises the cap pays for itself in calm.
+          ), and no building raises the cap. Growing and moving stop at it. A settlement pushed past
+          it anyway costs <strong>−{G.ruleset.economy.overCapacityHappinessPerPop}</strong>{" "}
+          happiness per pop over the line each turn.
         </Note>
       </Entry>
     </div>
@@ -412,7 +412,9 @@ const settlements: RuleChapter = {
                 <span className="compendiumCostLabel">{capitalize(kind)}</span>
                 <span className="compendiumCostValue">{rule.popCapacity} pop cap</span>
                 <span className="compendiumCostNote">
-                  {rule.canBuildBuildings ? "builds on its tile's slots" : "no buildings"}
+                  {rule.canBuildBuildings
+                    ? "builds on its tile's slots"
+                    : "no buildings but a Port on the coast"}
                 </span>
               </li>
             );
@@ -421,21 +423,27 @@ const settlements: RuleChapter = {
         <Note>
           You begin with a capital (a metropolis of {G.ruleset.placementPopCounts.capital} pops,{" "}
           {G.ruleset.placementCitizens.capital} of them a citizen) and one founding colony. Only
-          cities and the capital may raise buildings; in a colony every slot is a work slot.
+          cities and the capital may raise buildings; in a colony every slot is a work slot, and the
+          one thing it may raise is a Port on the coast.
+        </Note>
+        <Note>
+          Your pieces are {G.ruleset.pieces.colonies} colonies and {G.ruleset.pieces.cities} cities;
+          the capital is its own piece. Upgrading a colony hands its piece back, so once every
+          colony piece stands the way to expand again is to make one of them a city.
         </Note>
       </Entry>
       <Entry id={anchor("settlements", "expansion")} title="Founding & upgrading">
         <DefList>
           <DefRow term="Found a colony">
             <strong>Base cost:</strong>{" "}
-            <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.foundColony)} /> — beside
-            an owned settlement, or on any coastal tile if you hold a coast (sailing, not
-            teleporting).
+            <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.foundColony)} /> and a
+            colony piece — beside an owned settlement, or on any coastal tile if you hold a coast
+            (sailing, not teleporting). The pop you send moves free.
           </DefRow>
           <DefRow term="Upgrade colony → city">
             <strong>Base cost:</strong>{" "}
-            <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.upgradeColonyToCity)} /> —
-            lifts the pop cap and unlocks building.
+            <AnnotatedText text={formatResourceCost(G.ruleset.actionCosts.upgradeColonyToCity)} />{" "}
+            and a city piece — lifts the pop cap, unlocks building, and returns the colony piece.
           </DefRow>
         </DefList>
       </Entry>
@@ -474,15 +482,15 @@ const turn: RuleChapter = {
           drawn event or a riot resolves first, before you may act.
         </Note>
         <Note>
-          The verbs are Grow, Move, Found, Upgrade, Build, Calm and Venture. Anything that targets
-          the map — founding, growing, moving, promoting — is a click on the board itself.
+          The verbs are Grow, Move, Found, Upgrade, Build, Calm, the Dole and Venture. Anything that
+          targets the map — founding, growing, moving, promoting — is a click on the board itself.
         </Note>
       </Entry>
       <Entry id={anchor("turn", "throttles")} title="Per-turn limits">
         <Note>
           Some actions are throttled so a turn can't do everything at once: one grow per settlement,
-          one ladder move, one civic calm, and one venture per turn. Founding, upgrading and
-          building are limited only by what you can pay.
+          one ladder move, one pop move, one civic calm, and one venture per turn. Founding,
+          upgrading and building are limited by what you can pay and by your pieces.
         </Note>
       </Entry>
     </div>
@@ -492,21 +500,12 @@ const turn: RuleChapter = {
 const ladder: RuleChapter = {
   id: "ladder",
   title: "Growing & the Ladder",
-  blurb: "Grow new pops, and promote or demote them up and down the classes.",
-  keywords: [
-    "grow",
-    "promote",
-    "demote",
-    "ladder",
-    "class",
-    "gymnasion",
-    "slave",
-    "freeman",
-    "citizen",
-  ],
+  blurb: "Grow new pops, promote or demote them, and move them between settlements.",
+  keywords: ["grow", "promote", "demote", "ladder", "class", "move", "slave", "freeman", "citizen"],
   entries: [
     { id: anchor("ladder", "grow"), label: "Growing" },
     { id: anchor("ladder", "ladder"), label: "The ladder" },
+    { id: anchor("ladder", "move"), label: "Moving" },
   ],
   Body: ({ G }) => {
     const promotes = Object.entries(G.ruleset.ladder.promoteCosts) as Array<
@@ -537,9 +536,8 @@ const ladder: RuleChapter = {
         <Entry id={anchor("ladder", "ladder")} title="The ladder">
           <Note>
             One ladder move per turn: promote a pop up a class, or demote it down. Promotion buys
-            civic standing; demotion frees labour but can sting morale (the Gymnasion cheapens
-            promotion in its city). The list below shows base costs; the picker shows each effective
-            cost.
+            civic standing; demotion frees labour. The list below shows base costs; the picker shows
+            each effective cost.
           </Note>
           <DefList>
             {promotes.map(([pop, cost]) => (
@@ -547,19 +545,19 @@ const ladder: RuleChapter = {
                 <AnnotatedText text={formatResourceCost(cost)} />
               </DefRow>
             ))}
-            {demotes.map(([pop, cost]) => {
-              const penalty =
-                G.ruleset.ladder.demoteHappinessPenalty[
-                  pop as keyof typeof G.ruleset.ladder.demoteHappinessPenalty
-                ];
-              return (
-                <DefRow key={`d-${pop}`} term={`Demote ${formatPopLabel(pop, 1)}`}>
-                  <AnnotatedText text={formatResourceCost(cost)} />
-                  {penalty ? ` · −${penalty} happiness` : ""}
-                </DefRow>
-              );
-            })}
+            {demotes.map(([pop, cost]) => (
+              <DefRow key={`d-${pop}`} term={`Demote ${formatPopLabel(pop, 1)}`}>
+                <AnnotatedText text={formatResourceCost(cost)} />
+              </DefRow>
+            ))}
           </DefList>
+        </Entry>
+        <Entry id={anchor("ladder", "move")} title="Moving">
+          <Note>
+            One move per turn carries pops between two of your settlements for{" "}
+            <AnnotatedText text={formatResourceCost(G.ruleset.movePopCost)} /> a pop. The target
+            must have room, and they arrive at the start of your next turn.
+          </Note>
         </Entry>
       </div>
     );
@@ -569,29 +567,26 @@ const ladder: RuleChapter = {
 const buildings: RuleChapter = {
   id: "buildings",
   title: "Buildings",
-  blurb: "The building roster — costs, effects and level caps.",
+  blurb: "The building roster: costs and effects, one of each per settlement.",
   keywords: [
     "building",
     "buildings",
     "marketplace",
     "temple",
-    "workshop",
+    "estate",
     "granary",
     "forum",
-    "aqueduct",
-    "odeon",
-    "villa",
-    "gymnasion",
+    "port",
     "cost",
-    "level",
   ],
   entries: [{ id: anchor("buildings", "roster"), label: "The roster" }],
   Body: ({ G }) => (
     <div className="compendiumStack">
       <Entry id={anchor("buildings", "roster")} title="The roster">
         <Note>
-          Cities and the capital raise buildings into their slots. Every building's effect caps at
-          its max level. Roster prices below are base costs; build controls show effective costs.
+          Cities and the capital raise buildings into their slots, one of each per settlement. Each
+          building takes a slot a slave could work. A colony raises nothing but a Port on the coast.
+          Roster prices below are base costs; build controls show effective costs.
         </Note>
         <ul className="compendiumCostList">
           {getBuildings(G.definition.content).map((building) => (
@@ -602,7 +597,6 @@ const buildings: RuleChapter = {
               </span>
               <span className="compendiumCostNote">
                 <AnnotatedText text={presentBuildingEffects(building.effects).text} />
-                {typeof building.maxLevel === "number" ? ` · max level ${building.maxLevel}` : ""}
               </span>
             </li>
           ))}
@@ -652,9 +646,9 @@ const luxuries: RuleChapter = {
                 (base cost <AnnotatedText text={formatResourceCost(port.cost)} />)
               </>
             ) : null}{" "}
-            raised in a city on either tile claims it — the first Port wins, and a claimed good
-            never leaves its owner except by trade. A Port needs the coast, an unclaimed good
-            adjacent, and room under your active cap.
+            raised in a settlement on either tile claims it — a colony may raise one too. The first
+            Port wins, and a claimed good never leaves its owner except by trade. A Port needs the
+            coast, an unclaimed good adjacent, and room under your active cap.
           </Note>
         </Entry>
         <Entry id={anchor("luxuries", "offset")} title="The standing offset">
@@ -684,7 +678,7 @@ const luxuries: RuleChapter = {
 const unrest: RuleChapter = {
   id: "unrest",
   title: "Happiness & Unrest",
-  blurb: "Food pressure, the calm you can buy, and the riot table.",
+  blurb: "What happiness is made of, the calm you can buy, and the riot table.",
   keywords: [
     "happiness",
     "unrest",
@@ -710,6 +704,12 @@ const unrest: RuleChapter = {
       <div className="compendiumStack">
         <Entry id={anchor("unrest", "pressure")} title="Food & mood">
           <Note>
+            Each income, every Temple adds +1 happiness to your store and every{" "}
+            {G.ruleset.economy.slavesPerUnhappiness} slaves in your realm take 1 from it. Luxuries
+            and bought calm are never stored: they stand beside the store and count toward the
+            thresholds below.
+          </Note>
+          <Note>
             Stored food calms — every {G.ruleset.economy.foodStockpileHappinessDivisor} in the
             granary grants +1 happiness at income, up to +
             {G.ruleset.economy.foodStockpileHappinessCap}. Hunger bites the other way: when income
@@ -719,8 +719,9 @@ const unrest: RuleChapter = {
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">
           <Note>
-            One civic calm per turn, both worth +{calm.happiness} happiness. These are base costs;
-            the payment picker shows effective costs:
+            One civic calm per turn, both worth +{calm.happiness} happiness until your next turn
+            starts. Calm is not stored, and it does not count toward Beloved of the People. These
+            are base costs; the payment picker shows effective costs:
           </Note>
           <DefList>
             <DefRow term="Stabilize Province">
@@ -733,7 +734,7 @@ const unrest: RuleChapter = {
         </Entry>
         <Entry id={anchor("unrest", "riot")} title="The riot table">
           <Note>
-            At EFFECTIVE happiness (stored + the luxury offset) ≤ {u.popLossThreshold} at your turn
+            At EFFECTIVE happiness (stored + luxuries + calm) ≤ {u.popLossThreshold} at your turn
             start, a riot rolls before income — declare insurance first (each once, +1 to the roll).
             A revolt (≤ {u.severeThreshold}) rolls at {u.severeRollModifier} and doubles pop losses.
           </Note>
@@ -825,6 +826,10 @@ const bank: RuleChapter = {
           Gold is the unit of account — the bank never barters, and every round trip pays the
           spread. These are the board's base rates; trade controls show each player's effective rate
           after standing Laws.
+        </Note>
+        <Note>
+          The Dole: {G.ruleset.dole.influenceCost} influence buys {G.ruleset.dole.food} food. It is
+          influence's one way to the granary, priced worse than gold on purpose.
         </Note>
         {TRADABLE_MATERIALS.map((material) => {
           const rate = G.bank[material];

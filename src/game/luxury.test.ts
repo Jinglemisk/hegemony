@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { buildBuilding } from "./actions";
 import { collectInvariantViolations } from "./invariants";
+import { effectiveHappiness } from "./happiness";
 import {
   activeClaims,
   claimableLuxuriesAt,
-  effectiveHappiness,
   luxuryHappinessBonus,
   ownedClaims,
   transferLuxury,

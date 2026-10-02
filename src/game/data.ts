@@ -20,10 +20,12 @@ export const PLAYER_NAMES: Record<PlayerId, string> = {
   "3": "Kyros",
 };
 
+/** Food is Step 3's 12. Wood, stone and gold are v1's 20, 10 and 10 scaled by the
+ *  same two fifths the grow price fell by. */
 export const STARTING_RESOURCES: Resources = {
-  wood: 20,
-  stone: 10,
-  gold: 10,
+  wood: 8,
+  stone: 4,
+  gold: 4,
   food: 12,
   influence: 0,
   happiness: 0,
@@ -40,23 +42,22 @@ export const EMPTY_RESOURCES: Resources = {
 
 export const ACTION_COSTS = {
   foundColony: {
-    wood: 20,
-    food: 2,
+    wood: 4,
+    food: 1,
   },
   upgradeColonyToCity: {
-    wood: 30,
-    stone: 10,
-    food: 5,
+    wood: 3,
+    stone: 3,
   },
 } satisfies Record<string, Partial<Resources>>;
 
 /** Citizens are never grown: every citizen after setup is a promoted freeman. */
 export const GROW_POP_COSTS: Record<GrowablePop, Partial<Resources>> = {
   slaves: {
-    food: 5,
+    food: 2,
   },
   freemen: {
-    food: 7,
+    food: 3,
   },
 };
 
@@ -68,11 +69,11 @@ export const SETTLEMENT_RULES: Record<
   }
 > = {
   capital: {
-    popCapacity: 10,
+    popCapacity: 8,
     canBuildBuildings: true,
   },
   city: {
-    popCapacity: 10,
+    popCapacity: 8,
     canBuildBuildings: true,
   },
   colony: {
@@ -271,102 +272,48 @@ export const OMEN_TABLE: EventTableDefinition = {
   ],
 };
 
-// `maxLevel` = copies allowed in one settlement (owner ruling 2026-07-15: every
-// building is capped — "they cant scale forever"). Level 1 is the standalone civic
-// (Gymnasion, one gymnasium per polis); the pop-support buildings extend their cap
-// with a second copy; the flat-effect buildings (Granary/Forum/Aqueduct/Odeon) are
-// capped so a slot-rich hill must diversify rather than stack one flat bonus. Numbers
-// are sim-tunable — the grammar (wood = economic, stone = civic) is not.
+// One of each per settlement. Marketplace, Estate and Forum raise their class column
+// from 1 to 2; Temple and Granary state one flat fact; the Port's fact is its claim on
+// one adjacent luxury, so its effects are empty. Wood buys the economic buildings and
+// stone the civic ones.
 export const BUILDINGS: BuildingDefinition[] = [
   {
     id: "marketplace",
     name: "Marketplace",
-    cost: { wood: 12 },
-    effects: [{ type: "freemanGoldBonus", amount: 2, supportedPops: 3 }],
-    maxLevel: 2,
+    cost: { wood: 3, gold: 2 },
+    effects: [{ type: "classOutput", pop: "freemen", amount: 2 }],
+  },
+  {
+    id: "estate",
+    name: "Estate",
+    cost: { wood: 4 },
+    effects: [{ type: "classOutput", pop: "slaves", amount: 2 }],
+    needsYield: true,
+  },
+  {
+    id: "forum",
+    name: "Forum",
+    cost: { stone: 3 },
+    effects: [{ type: "classOutput", pop: "citizens", amount: 2 }],
   },
   {
     id: "temple",
     name: "Temple",
-    cost: { stone: 6 },
-    effects: [
-      { type: "happiness", amount: 1 },
-      { type: "citizenInfluenceBonus", amount: 1, supportedPops: 2 },
-    ],
-    maxLevel: 2,
-  },
-  {
-    id: "workshop",
-    name: "Workshop",
-    cost: { wood: 12 },
-    effects: [{ type: "slavePrimaryResourceBonus", amount: 1, supportedPops: 3 }],
-    maxLevel: 2,
+    cost: { stone: 3 },
+    effects: [{ type: "happiness", amount: 1 }],
   },
   {
     id: "granary",
     name: "Granary",
-    cost: { wood: 12, stone: 2 },
-    effects: [
-      { type: "income", resource: "food", amount: 2 },
-      { type: "growPopFoodDiscount", amount: 2 },
-    ],
-    maxLevel: 3,
+    cost: { wood: 4 },
+    effects: [{ type: "income", resource: "food", amount: 2 }],
   },
-  // ── Civic buildings ported 2026-07-13 (overnight item 4, Hegemony.pdf + todo
-  //    sketch). Prices PROVISIONAL except the Forum's, which is the PDF's own.
-  {
-    id: "forum",
-    name: "Forum",
-    cost: { stone: 4, wood: 8 },
-    effects: [{ type: "income", resource: "influence", amount: 2 }],
-    maxLevel: 2,
-  },
-  {
-    id: "aqueduct",
-    name: "Aqueduct",
-    cost: { stone: 12 },
-    effects: [{ type: "popCapacityBonus", amount: 4 }],
-    maxLevel: 2,
-  },
-  {
-    id: "odeon",
-    name: "Odeon",
-    cost: { stone: 8, wood: 4 },
-    effects: [{ type: "happiness", amount: 2 }],
-    maxLevel: 2,
-  },
-  // ── Phase 2 roster (terrain-economy.md · appendix Q25). Two buildings, no tier
-  //    vocabulary, no upkeep. The Villa intensifies the land itself — worthless on a
-  //    yield-less hill, which is the soft, emergent build divergence the terrain rework
-  //    is built to produce. The Gymnasion is the first building to touch the social
-  //    ladder (Phase 1's newest system), where citizens were literally manufactured.
-  {
-    id: "villa",
-    name: "Villa",
-    // +2/level (sim-tuned up from the spec's sketch "+1", which never paid back its
-    // wood+gold within a reasonable horizon — a dead building). Two copies = +4 on a
-    // landmark tile: a real investment in the land, competitive with the Granary.
-    cost: { wood: 12, gold: 4 },
-    effects: [{ type: "tilePrimaryResourceBonus", amount: 2 }],
-    maxLevel: 2,
-  },
-  {
-    id: "gymnasion",
-    name: "Gymnasion",
-    cost: { stone: 12, wood: 4 },
-    effects: [{ type: "promoteCostReduction", amount: 2 }],
-    maxLevel: 1,
-  },
-  // ── Phase 4 (luxury-goods.md §3.2). The Port's effect is the CLAIM — it seizes one
-  //    adjacent coastal luxury good — so its effects array is deliberately empty: no
-  //    income line, no flat bonus. Coast-gated and adjacency-gated in status.ts.
-  //    Deliberately cheap (Q46): luxuries are a happiness feature, not a gold sink.
   {
     id: "port",
     name: "Port",
-    cost: { wood: 20, stone: 5, gold: 10 },
+    cost: { gold: 4, stone: 2 },
     effects: [],
-    maxLevel: 1,
+    colony: true,
   },
 ];
 

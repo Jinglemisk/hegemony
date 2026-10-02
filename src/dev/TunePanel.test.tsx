@@ -50,6 +50,6 @@ describe("TunePanel low-number preset", () => {
     expect(markup).toContain("Low-number core + 0 edits");
     expect(markup).toContain("37 tiles · 134 slots");
     expect(markup).toContain("Marketplace");
-    expect(markup).toContain('value="6"');
+    expect(markup).toContain('value="3"');
   });
 });

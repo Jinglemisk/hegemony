@@ -32,6 +32,7 @@ describe("behavioral command-consumer parity", () => {
     moves.resolvePendingPlayerEvent("tile-a", 2);
     moves.bankSell("wood");
     moves.bankBuy("stone");
+    moves.dole();
     moves.civicCalm("influence");
     moves.promotePop("tile-a", "freemen");
     moves.demotePop("tile-a", "citizens");
@@ -78,6 +79,7 @@ describe("behavioral command-consumer parity", () => {
       },
       { command: { type: "bankSell", material: "wood" }, actor: undefined },
       { command: { type: "bankBuy", material: "stone" }, actor: undefined },
+      { command: { type: "dole" }, actor: undefined },
       { command: { type: "civicCalm", payment: "influence" }, actor: undefined },
       {
         command: { type: "promotePop", tileId: "tile-a", from: "freemen" },

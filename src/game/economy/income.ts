@@ -22,6 +22,7 @@ import {
   settlementWorkingSlaves,
 } from "../settlement";
 import type { Ruleset } from "../ruleset";
+import { slaveUnhappiness } from "../happiness";
 import { getLawIncomeContributions } from "../assembly/laws";
 
 export type IncomeContribution = {
@@ -115,8 +116,7 @@ export function settlementNetYield(
     popIncome("slaves", settlement.pops.slaves, primary, ruleset, workingSlaves),
   );
   income.happiness -=
-    settlementOverCapacity(settlement, ruleset, content) *
-    ruleset.economy.overCapacityHappinessPerPop;
+    settlementOverCapacity(settlement, ruleset) * ruleset.economy.overCapacityHappinessPerPop;
 
   applyIncomeBuildingEffects(
     [],
@@ -125,6 +125,7 @@ export function settlementNetYield(
     settlementIncomeSource(tile, settlement),
     primary,
     workingSlaves,
+    ruleset,
     content,
   );
 
@@ -221,8 +222,7 @@ export function calculateIncomeBreakdown(
     addIncomeContribution(contributions, income, {
       resource: "happiness",
       amount:
-        settlementOverCapacity(settlement, ruleset, G.definition.content) *
-        -ruleset.economy.overCapacityHappinessPerPop,
+        settlementOverCapacity(settlement, ruleset) * -ruleset.economy.overCapacityHappinessPerPop,
       source: settlementLabel,
       settlementId: settlement.id,
       detail: "Over capacity pressure",
@@ -235,9 +235,19 @@ export function calculateIncomeBreakdown(
       settlementLabel,
       primary,
       workingSlaves,
+      ruleset,
       G.definition.content,
     );
   }
+
+  // Slaves cost happiness by the realm's count, so the line belongs to no settlement.
+  const slaves = countPlayerPopType(G, playerID, "slaves");
+  addIncomeContribution(contributions, income, {
+    resource: "happiness",
+    amount: -slaveUnhappiness(G, slaves),
+    source: "Slaves",
+    detail: `${slaves} ${formatPopName("slaves", slaves)}, 1 per ${ruleset.economy.slavesPerUnhappiness}`,
+  });
 
   applySeasonalIncomeEffects(G, playerID, contributions, income);
   applyYearOmenIncomeEffects(G, contributions, income);
@@ -387,95 +397,95 @@ function applyIncomeBuildingEffects(
   settlementLabel: string,
   primaryResource: Resource | null,
   workingSlaves: number,
+  ruleset: Ruleset,
   content: GameContent,
 ) {
-  const popBonusSupport = {
-    freemen: { supportedPops: 0, amount: 0 },
-    citizens: { supportedPops: 0, amount: 0 },
-    slaves: { supportedPops: 0, amount: 0 },
-  };
-  // The Villa's flat boost to the tile's own material — accumulated across copies
-  // (levels), paid only when the tile actually yields (dead on hills/oracle).
-  let tilePrimaryBonus = 0;
+  for (const buildingId of settlement.buildings) {
+    const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
+
+    for (const effect of building?.effects ?? []) {
+      if (effect.type === "income" || effect.type === "happiness") {
+        addIncomeContribution(contributions, income, {
+          resource: effect.type === "income" ? effect.resource : "happiness",
+          amount: effect.amount,
+          source: settlementLabel,
+          settlementId: settlement.id,
+          detail: building?.name ?? buildingId,
+        });
+        continue;
+      }
+
+      // A class building raises its column's printed value: every pop of the class
+      // here makes `amount` instead of the base. For slaves that is the working
+      // ones, so an Estate pays nothing for idle slaves or on a hill.
+      const pops = effect.pop === "slaves" ? workingSlaves : settlement.pops[effect.pop];
+
+      for (const [resource, base] of classOutputs(effect.pop, primaryResource, ruleset)) {
+        addIncomeContribution(contributions, income, {
+          resource,
+          amount: pops * (effect.amount - base),
+          source: settlementLabel,
+          settlementId: settlement.id,
+          detail: `${building?.name ?? buildingId}: ${pops} ${formatPopName(effect.pop, pops)} make ${effect.amount}`,
+        });
+      }
+    }
+  }
+}
+
+/** What one pop of a class makes before any building: the positive lines of its rule. */
+function classOutputs(
+  pop: PopType,
+  primaryResource: Resource | null,
+  ruleset: Ruleset,
+): Array<[Resource, number]> {
+  const rule = ruleset.popIncome[pop];
+
+  return [
+    ...(Object.entries(rule.flat) as Array<[Resource, number]>).filter(([, per]) => per > 0),
+    ...(primaryResource && rule.primaryResource > 0
+      ? ([[primaryResource, rule.primaryResource]] as Array<[Resource, number]>)
+      : []),
+  ];
+}
+
+/**
+ * One class column of a settlement: what each pop of the class makes here, the
+ * building that raised it, and the class's whole income with that raise in it. The
+ * settlement page prints its three columns from this.
+ */
+export function settlementClassColumn(
+  tile: HexTile,
+  settlement: Settlement,
+  pop: PopType,
+  ruleset: Ruleset,
+  content: GameContent = getAuthoredGameContent(),
+): { perPop: number; raisedBy: string | null; income: Resources } {
+  const primary = tile.resource?.type ?? null;
+  const working =
+    pop === "slaves" ? settlementWorkingSlaves(tile, settlement) : settlement.pops[pop];
+  const income = popIncome(pop, settlement.pops[pop], primary, ruleset, working);
+  const outputs = classOutputs(pop, primary, ruleset);
+  let perPop = outputs[0]?.[1] ?? 0;
+  let raisedBy: string | null = null;
 
   for (const buildingId of settlement.buildings) {
     const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
 
     for (const effect of building?.effects ?? []) {
-      if (effect.type === "income") {
-        addIncomeContribution(contributions, income, {
-          resource: effect.resource,
-          amount: effect.amount,
-          source: settlementLabel,
-          settlementId: settlement.id,
-          detail: building?.name ?? buildingId,
-        });
-      } else if (effect.type === "happiness") {
-        addIncomeContribution(contributions, income, {
-          resource: "happiness",
-          amount: effect.amount,
-          source: settlementLabel,
-          settlementId: settlement.id,
-          detail: building?.name ?? buildingId,
-        });
-      } else if (effect.type === "freemanGoldBonus") {
-        popBonusSupport.freemen.supportedPops += effect.supportedPops;
-        popBonusSupport.freemen.amount = effect.amount;
-      } else if (effect.type === "citizenInfluenceBonus") {
-        popBonusSupport.citizens.supportedPops += effect.supportedPops;
-        popBonusSupport.citizens.amount = effect.amount;
-      } else if (effect.type === "slavePrimaryResourceBonus") {
-        popBonusSupport.slaves.supportedPops += effect.supportedPops;
-        popBonusSupport.slaves.amount = effect.amount;
-      } else if (effect.type === "tilePrimaryResourceBonus") {
-        tilePrimaryBonus += effect.amount;
+      if (effect.type !== "classOutput" || effect.pop !== pop || outputs.length === 0) {
+        continue;
       }
+
+      for (const [resource, base] of outputs) {
+        income[resource] += working * (effect.amount - base);
+      }
+      perPop = effect.amount;
+      raisedBy = building?.name ?? buildingId;
     }
   }
 
-  if (primaryResource && tilePrimaryBonus > 0) {
-    addIncomeContribution(contributions, income, {
-      resource: primaryResource,
-      amount: tilePrimaryBonus,
-      source: settlementLabel,
-      settlementId: settlement.id,
-      detail: "Villa",
-    });
-  }
-
-  const supportedFreemen = Math.min(settlement.pops.freemen, popBonusSupport.freemen.supportedPops);
-  addIncomeContribution(contributions, income, {
-    resource: "gold",
-    amount: supportedFreemen * popBonusSupport.freemen.amount,
-    source: settlementLabel,
-    settlementId: settlement.id,
-    detail: `Marketplace supports ${supportedFreemen} ${formatPopName("freemen", supportedFreemen)}`,
-  });
-
-  const supportedCitizens = Math.min(
-    settlement.pops.citizens,
-    popBonusSupport.citizens.supportedPops,
-  );
-  addIncomeContribution(contributions, income, {
-    resource: "influence",
-    amount: supportedCitizens * popBonusSupport.citizens.amount,
-    source: settlementLabel,
-    settlementId: settlement.id,
-    detail: `Temple supports ${supportedCitizens} ${formatPopName("citizens", supportedCitizens)}`,
-  });
-
-  // The Workshop's bonus goes to slaves at work, so it pays nothing on a hill and
-  // nothing for idle slaves.
-  if (primaryResource) {
-    const supportedSlaves = Math.min(workingSlaves, popBonusSupport.slaves.supportedPops);
-    addIncomeContribution(contributions, income, {
-      resource: primaryResource,
-      amount: supportedSlaves * popBonusSupport.slaves.amount,
-      source: settlementLabel,
-      settlementId: settlement.id,
-      detail: `Workshop supports ${supportedSlaves} ${formatPopName("slaves", supportedSlaves)}`,
-    });
-  }
+  return { perPop, raisedBy, income };
 }
 
 export function addIncomeContribution(

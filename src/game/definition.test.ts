@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { createLowNumberContent, LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
-import { getAuthoredGameContent, getBuilding } from "./content";
+import { getAuthoredGameContent } from "./content";
+import type { GameContent } from "./content";
 import {
   canonicalJson,
   createGameDefinition,
@@ -48,11 +49,14 @@ describe("game definitions", () => {
     });
     let standardGame = createInitialStateFromDefinition(standard, 41);
     let lowNumberGame = createInitialStateFromDefinition(lowNumber, 41);
-    const standardVillaWood = getBuilding(standard.content, "villa")?.cost.wood;
-    const lowNumberVillaWood = getBuilding(lowNumber.content, "villa")?.cost.wood;
+    // The preset rewrites the cards, so one card's text tells the two packages apart.
+    const goodStores = (content: GameContent) =>
+      content.playerEvents.find((card) => card.id === "player-good-stores")?.text;
+    const standardText = goodStores(standard.content);
+    const lowNumberText = goodStores(lowNumber.content);
 
     expect(standard.identity.id).not.toBe(lowNumber.identity.id);
-    expect(standardVillaWood).not.toBe(lowNumberVillaWood);
+    expect(standardText).not.toBe(lowNumberText);
 
     // Alternate real engine transitions so neither match can depend on whichever
     // definition another caller resolved most recently.
@@ -71,12 +75,8 @@ describe("game definitions", () => {
 
     expect(standardGame.definitionId).toBe(standard.identity.id);
     expect(lowNumberGame.definitionId).toBe(lowNumber.identity.id);
-    expect(getBuilding(standardGame.definition.content, "villa")?.cost.wood).toBe(
-      standardVillaWood,
-    );
-    expect(getBuilding(lowNumberGame.definition.content, "villa")?.cost.wood).toBe(
-      lowNumberVillaWood,
-    );
+    expect(goodStores(standardGame.definition.content)).toBe(standardText);
+    expect(goodStores(lowNumberGame.definition.content)).toBe(lowNumberText);
   });
 
   it("rejects a state whose pinned definition identity drifts", () => {

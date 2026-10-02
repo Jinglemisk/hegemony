@@ -51,7 +51,7 @@ describe("scenario builder", () => {
   it("applies mode and ruleset patch", () => {
     const G = scenario({ mode: "fastStart", patch: { placementPopCounts: { colony: 2 } } }).build();
 
-    expect(G.players["0"].resources.wood).toBe(40);
+    expect(G.players["0"].resources.wood).toBe(16);
     expect(G.ruleset.placementPopCounts.colony).toBe(2);
     // Untouched values survive the patch.
     expect(G.ruleset.placementPopCounts.city).toBe(3);

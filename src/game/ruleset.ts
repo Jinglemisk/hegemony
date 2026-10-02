@@ -35,7 +35,8 @@ export interface BankRules {
   scarce: BankRatePair;
 }
 
-/** Civic calm (D7): one action per turn, two payments, same +happiness. */
+/** Civic calm: one action per turn, two payments, the same +happiness. The bonus
+ *  lasts until the buyer's next turn starts and is never banked. */
 export interface CivicCalmRules {
   happiness: number;
   influenceCost: number;
@@ -46,8 +47,20 @@ export interface CivicCalmRules {
 export interface LadderRules {
   promoteCosts: Record<"slaves" | "freemen", Partial<Resources>>;
   demoteCosts: Record<"citizens" | "freemen", Partial<Resources>>;
-  /** Happiness lost on a paid demotion, per source pop (riot demotions skip this). */
-  demoteHappinessPenalty: Record<"citizens" | "freemen", number>;
+}
+
+/** The piece supply: what one player may have standing at once. An upgrade turns a
+ *  colony piece into a city piece and hands the colony piece back. The capital is its
+ *  own piece and counts against neither. */
+export interface PieceRules {
+  colonies: number;
+  cities: number;
+}
+
+/** The Dole: influence buys food through the bank, at a worse rate than gold. */
+export interface DoleRules {
+  influenceCost: number;
+  food: number;
 }
 
 /**
@@ -81,6 +94,8 @@ export interface SettlementRule {
 export interface EconomyRules {
   /** Happiness lost per pop above a settlement's capacity. */
   overCapacityHappinessPerPop: number;
+  /** Every this many slaves in a realm cost 1 happiness, rounded down. */
+  slavesPerUnhappiness: number;
   /** Every N stored food grants +1 happiness at income time (0 disables). */
   foodStockpileHappinessDivisor: number;
   /** Ceiling on the food-stockpile happiness bonus, so hoards can't buy unlimited calm
@@ -199,6 +214,11 @@ export interface Ruleset {
     upgradeColonyToCity: Partial<Resources>;
   };
   growPopCosts: Record<GrowablePop, Partial<Resources>>;
+  /** The paid pop move: this much per pop, one move a turn. The pop sent to found a
+   *  colony moves free. */
+  movePopCost: Partial<Resources>;
+  pieces: PieceRules;
+  dole: DoleRules;
   popIncome: Record<PopType, PopIncomeRule>;
   economy: EconomyRules;
   civicCalm: CivicCalmRules;
@@ -245,16 +265,21 @@ export const DEFAULT_RULESET: Ruleset = {
   },
   actionCosts: ACTION_COSTS,
   growPopCosts: GROW_POP_COSTS,
+  movePopCost: { food: 1 },
+  pieces: { colonies: 4, cities: 3 },
+  dole: { influenceCost: 3, food: 1 },
   // One pop, one output. A slave makes 1 of its tile's resource when it holds an open
   // slot and eats nothing; a freeman makes 1 gold and a citizen 1 influence, and each
-  // eats 1 food.
+  // eats 1 food. Slaves cost happiness by the realm's count, not per pop: see
+  // `economy.slavesPerUnhappiness`.
   popIncome: {
     citizens: { flat: { influence: 1, food: -1 }, primaryResource: 0 },
     freemen: { flat: { gold: 1, food: -1 }, primaryResource: 0 },
-    slaves: { flat: { happiness: -0.5 }, primaryResource: 1 },
+    slaves: { flat: {}, primaryResource: 1 },
   },
   economy: {
     overCapacityHappinessPerPop: 1,
+    slavesPerUnhappiness: 2,
     foodStockpileHappinessDivisor: 5,
     foodStockpileHappinessCap: 2,
     unrest: {
@@ -265,9 +290,9 @@ export const DEFAULT_RULESET: Ruleset = {
       severeRebound: -4,
     },
     bank: {
-      // PROVISIONAL rates (D6): baseline sell 3:1 / buy 2g; scarcity classes sit one
-      // step off. The derivation default is the sim A/B's pick (docs/reports/simulation/).
-      derivation: "scarcity",
+      // One price per verb: every material sells 3 for 1 gold and costs 2 gold. The
+      // scarcity classes stay as a knob for sims.
+      derivation: "uniform",
       baseline: { sell: 3, buy: 2 },
       abundant: { sell: 4, buy: 2 },
       scarce: { sell: 2, buy: 3 },
@@ -283,11 +308,10 @@ export const DEFAULT_RULESET: Ruleset = {
       countsTowardBeloved: true,
     },
   },
-  civicCalm: { happiness: 3, influenceCost: 4, goldCost: 6 },
+  civicCalm: { happiness: 2, influenceCost: 2, goldCost: 2 },
   ladder: {
-    promoteCosts: { slaves: { food: 4 }, freemen: { gold: 4 } },
-    demoteCosts: { citizens: { influence: 2 }, freemen: { influence: 3 } },
-    demoteHappinessPenalty: { citizens: 0, freemen: 1 },
+    promoteCosts: { slaves: { food: 2 }, freemen: { gold: 2 } },
+    demoteCosts: { citizens: { influence: 1 }, freemen: { influence: 1 } },
   },
   ventureStakes: VENTURE_STAKES,
   assembly: {
@@ -392,7 +416,7 @@ export const GAME_MODES: Record<
     label: "Fast Start",
     description: "Open with a richer treasury so expansion comes sooner.",
     ruleset: deriveRuleset(DEFAULT_RULESET, {
-      startingResources: { wood: 40, stone: 20, gold: 20, food: 30 },
+      startingResources: { wood: 16, stone: 8, gold: 8, food: 24 },
     }),
   },
   deathmatch: {

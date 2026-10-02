@@ -40,10 +40,10 @@ describe("policy denomination capabilities", () => {
   it("derives thresholds from the active ruleset while preserving standard behavior", () => {
     expect(policyEconomyThresholds(DEFAULT_RULESET)).toEqual({
       ventureGoldReserve: 25,
-      sellSurplus: 40,
+      sellSurplus: 8,
       lowGold: 10,
-      woodStarved: 20,
-      goldRich: 20,
+      woodStarved: 4,
+      goldRich: 4,
       materialScoreDivisor: 10,
     });
     expect(
@@ -79,7 +79,7 @@ describe("rule-driven bank chains", () => {
     });
     Object.assign(G.players[G.currentPlayer].resources, {
       wood: 0,
-      stone: 40,
+      stone: 14,
       gold: 8,
       food: 0,
     });
@@ -190,9 +190,9 @@ describe("policy unrest risk", () => {
   ] as const)(
     "%s will not grow a freeman it cannot feed but grows the fed equivalent",
     (_name, policy) => {
-      // Seven food buys the freeman and leaves three mouths with an empty granary:
-      // all three leave at the next income. Unspent, it feeds the two for three.
-      expect(chooseFreemanGrowth(policy, 7).type).toBe("endTurn");
+      // Three food buys the freeman and leaves three mouths with an empty granary:
+      // all three leave at the next income. Unspent, it feeds the two for a turn.
+      expect(chooseFreemanGrowth(policy, 3).type).toBe("endTurn");
       expect(chooseFreemanGrowth(policy, 60)).toMatchObject({ type: "growPop", pop: "freemen" });
     },
   );

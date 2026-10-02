@@ -1,5 +1,3 @@
-import { getAuthoredGameContent, getBuildings } from "./content";
-import type { GameContent } from "./content";
 import { hexDistance, isCoastalTile } from "./map";
 import type { HegemonyState, HexTile, PlayerId, PopType, Settlement } from "./types";
 import { capitalize } from "./core/format";
@@ -8,41 +6,18 @@ import { getOwnedSettlement, getTile } from "./core/query";
 import type { ActionStatus } from "./core/results";
 import type { Ruleset } from "./ruleset";
 
-/** The kind's baseline capacity — use for previews of a settlement that doesn't
- *  exist yet (upgrade meters). Real settlements go through {@link settlementCapacity}
- *  so building bonuses (Aqueduct) count. */
+/** The kind's capacity, for previews of a settlement that does not exist yet. */
 export function settlementPopCapacity(kind: Settlement["kind"], ruleset: Ruleset) {
   return ruleset.settlements[kind].popCapacity;
 }
 
-/** A real settlement's capacity: the kind's baseline plus building bonuses. */
-export function settlementCapacity(
-  settlement: Settlement,
-  ruleset: Ruleset,
-  content: GameContent = getAuthoredGameContent(),
-) {
-  const bonus = settlement.buildings.reduce((sum, buildingId) => {
-    const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
-
-    return (
-      sum +
-      (building?.effects ?? []).reduce(
-        (effectSum, effect) =>
-          effect.type === "popCapacityBonus" ? effectSum + effect.amount : effectSum,
-        0,
-      )
-    );
-  }, 0);
-
-  return settlementPopCapacity(settlement.kind, ruleset) + bonus;
+/** A settlement's pop capacity: its kind's, and nothing raises it. */
+export function settlementCapacity(settlement: Settlement, ruleset: Ruleset) {
+  return settlementPopCapacity(settlement.kind, ruleset);
 }
 
-export function settlementOverCapacity(
-  settlement: Settlement,
-  ruleset: Ruleset,
-  content: GameContent = getAuthoredGameContent(),
-) {
-  return Math.max(0, totalPops(settlement.pops) - settlementCapacity(settlement, ruleset, content));
+export function settlementOverCapacity(settlement: Settlement, ruleset: Ruleset) {
+  return Math.max(0, totalPops(settlement.pops) - settlementCapacity(settlement, ruleset));
 }
 
 export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
@@ -56,7 +31,7 @@ export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
       }
 
       totals.pops += totalPops(settlement.pops);
-      totals.capacity += settlementCapacity(settlement, G.ruleset, G.definition.content);
+      totals.capacity += settlementCapacity(settlement, G.ruleset);
       return totals;
     },
     { pops: 0, capacity: 0 },
@@ -78,13 +53,6 @@ export function settlementSlots(tile: HexTile, settlement: Settlement) {
   const share = Math.floor(tile.slots / sharers);
 
   return index >= 0 && index < tile.slots % sharers ? share + 1 : share;
-}
-
-/** Slots a building may take: the settlement's slots where its kind can build. */
-export function settlementBuildingSlots(tile: HexTile, settlement: Settlement, ruleset: Ruleset) {
-  return ruleset.settlements[settlement.kind].canBuildBuildings
-    ? settlementSlots(tile, settlement)
-    : 0;
 }
 
 /** Slots left for slaves to work: every building takes one. */
@@ -109,6 +77,32 @@ export function settlementIdleSlaves(tile: HexTile, settlement: Settlement) {
 
 export function settlementIncomeSource(tile: HexTile, settlement: Settlement) {
   return `${capitalize(settlement.kind)} on ${tile.terrain} ${tile.id}`;
+}
+
+/**
+ * The pieces a player has standing against their supply. Setup's colonies use colony
+ * pieces. The capital is its own piece, so the cities setup places are not counted.
+ */
+export function playerPieces(G: HegemonyState, playerID: PlayerId) {
+  const kinds = G.players[playerID].settlements.flatMap(
+    (tileId) => getOwnedSettlement(G, tileId, playerID)?.kind ?? [],
+  );
+  const colonies = kinds.filter((kind) => kind === "colony").length;
+  const setupCities = G.ruleset.setup.filter((kind) => kind !== "colony").length;
+
+  return {
+    colonies,
+    cities: Math.max(0, kinds.length - colonies - setupCities),
+    colonySupply: G.ruleset.pieces.colonies,
+    citySupply: G.ruleset.pieces.cities,
+  };
+}
+
+/** Pops on their way to a settlement: they hold room there until they arrive. */
+export function popsInTransitTo(G: HegemonyState, settlementId: string) {
+  return G.transfers
+    .filter((transfer) => transfer.toSettlementId === settlementId)
+    .reduce((sum, transfer) => sum + totalPops(transfer.pops), 0);
 }
 
 export function isAdjacentToCity(G: HegemonyState, tile: HexTile) {

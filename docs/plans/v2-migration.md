@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-01
+updated: 2026-10-02
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -217,6 +217,46 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   rule.
 - The state schema is version 3. Saves from `main` are rejected.
 
+**Defaults picked in Step 4** (2026-10-02):
+
+- Starting stocks are 8 wood, 4 stone and 4 gold: v1's 20, 10 and 10 scaled by the two
+  fifths the grow price fell by. Food stays 12. Fast Start doubles all four.
+- The capital is its own piece and counts against neither supply. Setup's colony uses a
+  colony piece, and a colony a rival's upgrade evicts gives its piece back.
+- One of each per settlement is the rule, so the per-building level cap is gone.
+- A Port in a colony takes one of the colony's slots. A colony evicted by a rival's
+  upgrade keeps the good its Port claimed, as a burned Port does today.
+- The Estate is refused on a hill.
+- One move a turn carries any number of pops at 1 food each. The target needs room,
+  counting pops already on their way, and they arrive next turn as before.
+- The Dole has no limit per turn.
+- The bank prices every material alike: sell 3 for 1 gold, buy 1 for 2. The scarcity
+  classes stay as a knob for sims.
+- A demotion costs 1 influence on either rung and no happiness.
+- Calm is 2 gold or 2 influence for +2 until the buyer's next turn starts. It is not
+  banked and Beloved does not count it.
+- Every two slaves in a realm cost 1 happiness a turn, rounded down, so half a slave
+  rounds in the player's favour.
+- Happiness terms: Temples and slaves are paid into today's bank at each income, and
+  luxuries and calm stand beside it. The food-stockpile bonus and the cap of three
+  active luxuries stay until Step 5.
+- Left at v1's scale for the steps that own them: the two event decks, the riot table
+  and its insurance, venture stakes, Laws and Assembly prices, victory minimums.
+- A save, script or tune patch that names a cut building is rejected, not migrated.
+  The state schema is version 4 and the command schema version 2 (the Dole).
+- The low-number dev preset leaves the building roster as authored.
+- Build's classes come from each building's column: Slaves is the Estate, Freemen the
+  Marketplace, Citizens the Forum, and Civic holds Temple, Granary and Port. Civic's
+  fan adds the Dole. Found and Upgrade carry the pieces left as a count on their
+  discs, and Expand's disc carries the colony count, as the mock draws them. A
+  settlement's column head prints ×1, or ×2 once its class building stands.
+- The Estate wears the Villa's raster until Step 14.
+- An open fan may cover an empty tile's slot count. It still keeps clear of every
+  settlement's mark and every mooring.
+- Bots price an open work slot as the slave who could work it, weigh a pop they expect
+  to starve above any pop's worth, and take the Dole only when the next income would
+  leave a mouth unfed.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.
@@ -287,7 +327,7 @@ Remind the owner to run `/code-review ultra` on `feat/v2`, which only they can l
       tile and split its slots; an upgrade evicts the other. Citizens come only by
       promotion. Record as defaults the re-numbered slot table, who takes the odd slot on a
       shared tile, and the starting food (12 today, unruled for v2).
-- [ ] **Step 4 · Buildings and prices.** Marketplace, Estate and Forum raise their class
+- [x] **Step 4 · Buildings and prices.** ([#83](https://github.com/Jinglemisk/hegemony/pull/83): a 40-game bot batch finishes with no illegal moves; the riot table opens on 15% of player-turns, 19% without the food-stockpile bonus and 5% with calm banked; hunger takes 6.2 to 7.9 pops a seat-game and is the bots' doing. [Report](../reports/simulation/2026-10-02-v2-step4-bank-and-food.md).) Marketplace, Estate and Forum raise their class
       column; Temple, Granary and Port state one fact each; one of each per settlement.
       Workshop and Villa merge into the Estate; Odeon, Aqueduct and Gymnasion are cut. One
       price per verb, per the paper's section 5.6, including the Dole and the paid pop move.

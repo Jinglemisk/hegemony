@@ -47,7 +47,6 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
   crowd: placeholder("pops/crowd"),
   popGain: placeholder("pops/pop-gain"),
   popLoss: placeholder("pops/pop-loss"),
-  capacity: placeholder("pops/capacity"),
   // Grow adds a pop; the owner approved the one picture for both.
   grow: placeholder("pops/pop-gain"),
   move: placeholder("pops/move"),
@@ -60,13 +59,10 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
 
   marketplace: placeholder("buildings/marketplace"),
   temple: placeholder("buildings/temple"),
-  workshop: placeholder("buildings/workshop"),
   granary: placeholder("buildings/granary"),
   forum: placeholder("buildings/forum"),
-  aqueduct: placeholder("buildings/aqueduct"),
-  odeon: placeholder("buildings/odeon"),
-  villa: placeholder("buildings/villa"),
-  gymnasion: placeholder("buildings/gymnasion"),
+  // The Estate wears the Villa's raster until Step 14 draws its own.
+  estate: placeholder("buildings/villa"),
   build: placeholder("buildings/build"),
   ruin: placeholder("buildings/ruin"),
 

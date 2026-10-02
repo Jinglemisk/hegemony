@@ -11,25 +11,25 @@ const clearPending = (draft: HegemonyState) => {
 };
 
 describe("bank rate derivation (D6/Q14)", () => {
-  it("classes the classic board by tile supply: wood abundant, stone & food baseline", () => {
+  it("prices every material at baseline by default: one price per verb", () => {
     const G = scenario().opening().mutate(clearPending).build();
+
+    for (const material of ["wood", "stone", "food"] as const) {
+      expect(G.bank[material]).toEqual({ sell: 3, buy: 2 });
+    }
+  });
+
+  it("the scarcity knob classes the classic board by tile supply: wood abundant", () => {
+    const G = scenario({ patch: { economy: { bank: { derivation: "scarcity" } } } })
+      .opening()
+      .mutate(clearPending)
+      .build();
 
     // Phase 2 composition: 15 wood tiles, 8 stone, 8 food. Wood is strictly most common
     // (abundant); stone and food tie at 8, so neither is strictly rarest → both baseline.
     expect(G.bank.wood).toEqual(DEFAULT_RULESET.economy.bank.abundant);
     expect(G.bank.stone).toEqual(DEFAULT_RULESET.economy.bank.baseline);
     expect(G.bank.food).toEqual(DEFAULT_RULESET.economy.bank.baseline);
-  });
-
-  it("uniform derivation prices everything at baseline", () => {
-    const G = scenario({ patch: { economy: { bank: { derivation: "uniform" } } } })
-      .opening()
-      .mutate(clearPending)
-      .build();
-
-    for (const material of ["wood", "stone", "food"] as const) {
-      expect(G.bank[material]).toEqual(DEFAULT_RULESET.economy.bank.baseline);
-    }
   });
 
   it("an evenly supplied board collapses to baseline everywhere", () => {
@@ -46,18 +46,18 @@ describe("bank rate derivation (D6/Q14)", () => {
   });
 
   it("rates are static: the ruleset knob changes games, never a game in flight", () => {
-    const scarcity = scenario().opening().mutate(clearPending).build();
-    const uniform = scenario({ patch: { economy: { bank: { derivation: "uniform" } } } })
+    const scarcity = scenario({ patch: { economy: { bank: { derivation: "scarcity" } } } })
       .opening()
       .mutate(clearPending)
       .build();
+    const uniform = scenario().opening().mutate(clearPending).build();
 
     expect(scarcity.bank.wood.sell).not.toBe(uniform.bank.wood.sell);
     // deriveRuleset merges cleanly — the knob is data, not code.
     expect(
-      deriveRuleset(DEFAULT_RULESET, { economy: { bank: { derivation: "uniform" } } }).economy.bank
+      deriveRuleset(DEFAULT_RULESET, { economy: { bank: { derivation: "scarcity" } } }).economy.bank
         .derivation,
-    ).toBe("uniform");
+    ).toBe("scarcity");
   });
 });
 

@@ -97,10 +97,16 @@ export function Alarms({
             content={
               <Tip sub={`happiness ${formatNumber(unrest.happiness)}`} title={UNREST_WORD[tier]}>
                 <p className="tip-body">{consequenceOf(tier, popLossThreshold)}</p>
-                {unrest.luxuryBonus !== 0 ? (
+                {unrest.luxuryBonus !== 0 || unrest.calmBonus !== 0 ? (
                   <p className="tip-body">
-                    {formatNumber(unrest.storedHappiness)} stored,{" "}
-                    {formatSignedNumber(unrest.luxuryBonus)} from luxuries.
+                    {formatNumber(unrest.storedHappiness)} stored
+                    {unrest.luxuryBonus !== 0
+                      ? `, ${formatSignedNumber(unrest.luxuryBonus)} from luxuries`
+                      : ""}
+                    {unrest.calmBonus !== 0
+                      ? `, ${formatSignedNumber(unrest.calmBonus)} from calm until your next turn`
+                      : ""}
+                    .
                   </p>
                 ) : null}
               </Tip>

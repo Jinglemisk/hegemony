@@ -225,8 +225,8 @@ describe("gameplay enumeration", () => {
     expect(types.has("buildBuilding")).toBe(false);
     expect(types.has("upgradeColonyToCity")).toBe(false);
     expect(types.has("growPop")).toBe(false);
-    // Free actions survive.
-    expect(types.has("movePops")).toBe(true);
+    // A move costs food too; only ending the turn is free.
+    expect(types.has("movePops")).toBe(false);
     expect(types.has("endTurn")).toBe(true);
   });
 

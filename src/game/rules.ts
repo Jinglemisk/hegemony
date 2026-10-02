@@ -20,6 +20,7 @@
  *   events         — event deck draw + the event-effect interpreter
  *   actions        — the mutating moves
  *   hunger         — pops leaving when income cannot feed them
+ *   happiness      — the named terms a realm's happiness is made of
  *   season         — season / turn-flag lifecycle
  *   activeEffects  — canonical persistent-effect/status projection
  *   definition     — immutable per-match rules/content identity
@@ -50,6 +51,7 @@ export * from "./season";
 export * from "./activeEffects";
 export * from "./tables";
 export * from "./luxury";
+export * from "./happiness";
 export * from "./unrest";
 export * from "./hunger";
 export * from "./ventures";

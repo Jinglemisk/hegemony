@@ -1,13 +1,7 @@
 import type { GameContent } from "../game/content";
 import type { DirectiveEffect, LawEffect, ResolutionCard } from "../game/assembly/types";
 import type { RulesetPatch } from "../game/ruleset";
-import type {
-  BuildingDefinition,
-  BuildingId,
-  EventEffect,
-  EventTableDefinition,
-  Resource,
-} from "../game/types";
+import type { EventEffect, EventTableDefinition, Resource } from "../game/types";
 
 export type TuningPresetId = "low-number-core-v1";
 
@@ -32,7 +26,7 @@ export const LOW_NUMBER_RULESET_PATCH = {
   },
   actionCosts: {
     foundColony: { wood: 9, food: 1 },
-    upgradeColonyToCity: { wood: 9, stone: 6, food: 3 },
+    upgradeColonyToCity: { wood: 9, stone: 6 },
   },
   growPopCosts: {
     slaves: { food: 3 },
@@ -41,7 +35,7 @@ export const LOW_NUMBER_RULESET_PATCH = {
   popIncome: {
     citizens: { flat: { influence: 1, food: -1 }, primaryResource: 0 },
     freemen: { flat: { gold: 1, food: -1 }, primaryResource: 0 },
-    slaves: { flat: { happiness: -0.5 }, primaryResource: 1 },
+    slaves: { flat: {}, primaryResource: 1 },
   },
   economy: {
     foodStockpileHappinessDivisor: 3,
@@ -73,32 +67,6 @@ export const LOW_NUMBER_RULESET_PATCH = {
     vetoCost: 2,
   },
 } satisfies RulesetPatch;
-
-const BUILDING_COSTS: Record<BuildingId, BuildingDefinition["cost"]> = {
-  marketplace: { wood: 6 },
-  temple: { stone: 5 },
-  workshop: { wood: 6 },
-  granary: { wood: 6, stone: 2 },
-  forum: { wood: 4, stone: 4 },
-  aqueduct: { stone: 7 },
-  odeon: { wood: 2, stone: 5 },
-  villa: { wood: 6, gold: 2 },
-  gymnasion: { wood: 2, stone: 7 },
-  port: { wood: 9, stone: 3, gold: 5 },
-};
-
-const BUILDING_MAX: Record<BuildingId, number> = {
-  marketplace: 2,
-  temple: 2,
-  workshop: 2,
-  granary: 2,
-  forum: 2,
-  aqueduct: 1,
-  odeon: 2,
-  villa: 1,
-  gymnasion: 1,
-  port: 1,
-};
 
 function scaledMagnitude(value: number, divisor: number): number {
   if (value === 0) return 0;
@@ -348,24 +316,7 @@ function scaleTable(table: EventTableDefinition): void {
 export function createLowNumberContent(base: GameContent): GameContent {
   const content = structuredClone(base);
 
-  content.buildings = content.buildings.map((building) => ({
-    ...building,
-    cost: { ...BUILDING_COSTS[building.id] },
-    maxLevel: BUILDING_MAX[building.id],
-    effects: building.effects.map((effect) => {
-      switch (effect.type) {
-        case "freemanGoldBonus":
-        case "citizenInfluenceBonus":
-        case "slavePrimaryResourceBonus":
-          return { ...effect, amount: 1, supportedPops: 1 };
-        case "popCapacityBonus":
-          return { ...effect, amount: 2 };
-        default:
-          return "amount" in effect ? { ...effect, amount: 1 } : effect;
-      }
-    }),
-  }));
-
+  // Buildings stay as authored: v2's roster is already single digits.
   content.seasonalEvents = content.seasonalEvents.map((card) => {
     const effects = card.effects.map(scaleEventEffect);
     return { ...card, text: rewriteEventText(card.text, card.effects, effects), effects };

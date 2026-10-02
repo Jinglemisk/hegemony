@@ -294,9 +294,12 @@ const PROBE = () => {
       if (share < 0.18) continue; // a hair of overlap is a shadow, not a bug
       // The map is a canvas under the chrome (owner ruling, 2026-09-27): island
       // text beneath a floating layer is covered, not colliding, and is counted
-      // apart. Except under a fan: an open fan must never cover a city name.
+      // apart. Except under a fan: an open fan must never cover a settlement's
+      // mark or a mooring. An empty tile's slot count is ground like any other.
       const onIsland = (el) => Boolean(el.closest("svg.island"));
-      if (onIsland(a) !== onIsland(b) && !(onIsland(a) ? b : a).closest(".fan")) {
+      const [land, chrome] = onIsland(a) ? [a, b] : [b, a];
+      const fanOverMark = chrome.closest(".fan") && !land.closest(".tile-slots");
+      if (onIsland(a) !== onIsland(b) && !fanOverMark) {
         out.push({
           kind: "COVERED",
           el: describe(a),

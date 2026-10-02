@@ -140,7 +140,7 @@ describe("canonical active-effect selector", () => {
         sourceCardId: "craftsmen-guild",
         label: "Craftsmen's Guild",
         action: "buildBuilding",
-        buildingId: "workshop",
+        buildingId: "estate",
         resource: "stone",
         amount: 2,
         consume: "nextMatchingAction",
@@ -448,7 +448,7 @@ describe("frontend active-effect parity", () => {
 
     expect(guild.text).toContain("grow pop in cities: -3 Food cost");
     expect(guild.text).toContain("grow pop in colonies: +2 Food cost");
-    for (const building of ["Temple", "Forum", "Aqueduct", "Odeon", "Gymnasion"]) {
+    for (const building of ["Temple", "Forum"]) {
       expect(builders.text).toContain(building);
     }
   });
@@ -489,7 +489,9 @@ describe("simulation and AI active-effect parity", () => {
         gold: 0,
         food: 0,
         influence: 4,
-        happiness: 0,
+        // One step above the riot line: calm lasts a single upkeep, so it is worth
+        // buying only when the next one would cross.
+        happiness: -4,
       });
       G.players["0"].timedHappinessModifiers = [modifier];
 

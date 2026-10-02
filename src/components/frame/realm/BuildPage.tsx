@@ -59,7 +59,8 @@ export function BuildPage({
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const names = settlementNames(G.board.tiles);
   const store = G.players[playerID].resources;
-  const slotted = holdings.map((holding) => ({ holding, ...slotsOf(holding, G.ruleset) }));
+  // A place to raise in is a city, or a colony whose site holds or would take a Port.
+  const slotted = holdings.map((holding) => ({ holding, ...slotsOf(holding, G) }));
   const ground = slotted.filter((entry) => entry.slots > 0);
   const bare = slotted.filter((entry) => entry.slots === 0);
   const target =
@@ -87,7 +88,10 @@ export function BuildPage({
           </button>
         ))}
         {bare.length > 0 ? (
-          <span className="target-none cap" title={`No building slots: ${bareNames.join(", ")}`}>
+          <span
+            className="target-none cap"
+            title={`A colony raises nothing but a Port on the coast: ${bareNames.join(", ")}`}
+          >
             {bare.length === 1 ? bareNames[0] : `${bare.length} colonies`} · no ground
           </span>
         ) : null}
