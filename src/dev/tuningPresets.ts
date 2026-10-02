@@ -22,7 +22,7 @@ export const LOW_NUMBER_RULESET_PATCH = {
   },
   victory: {
     cardsToWin: 3,
-    minimums: { cities: 3, pops: 8, citizens: 6, stockpile: 40, happiness: 4, voice: 3 },
+    minimums: { cities: 3, pops: 8, citizens: 6, gold: 40, happiness: 4, voice: 3 },
   },
   actionCosts: {
     foundColony: { wood: 9, food: 1 },
@@ -90,16 +90,8 @@ function scaleEventEffect(effect: EventEffect): EventEffect {
     case "happinessDelta":
       copy.amount = scaledMagnitude(copy.amount, 2);
       break;
-    case "scaledHappinessDelta":
-      copy.amountPerPops = scaledMagnitude(copy.amountPerPops, 2);
-      copy.popStep = Math.max(1, Math.ceil(copy.popStep / 2));
-      copy.minimumMagnitude = Math.max(1, Math.round(copy.minimumMagnitude / 2));
-      break;
     case "timedHappinessDelta":
       copy.amountPerTurn = scaledMagnitude(copy.amountPerTurn, 2);
-      break;
-    case "incomeModifier":
-      copy.amount = scaledMagnitude(copy.amount, isHappiness(copy.resource) ? 2 : 3);
       break;
     case "addPops":
       copy.amount = Math.max(1, Math.ceil(copy.amount / 2));
@@ -115,8 +107,6 @@ function scaleEventEffect(effect: EventEffect): EventEffect {
       break;
     case "choice":
       copy.options = copy.options.map((option) => option.map(scaleEventEffect));
-      break;
-    case "buildingCostMultiplier":
       break;
   }
 
@@ -244,12 +234,9 @@ function eventTextNumbers(effect: EventEffect): number[] {
     case "resourceDelta":
     case "happinessDelta":
     case "actionCostDiscount":
-    case "incomeModifier":
       return [effect.amount];
     case "scaledResourceDelta":
       return [effect.amountPerPops, effect.popStep, effect.minimum];
-    case "scaledHappinessDelta":
-      return [effect.amountPerPops, effect.popStep, effect.minimumMagnitude];
     case "timedHappinessDelta":
       return [effect.amountPerTurn, effect.turns];
     case "addPops":
@@ -260,8 +247,6 @@ function eventTextNumbers(effect: EventEffect): number[] {
       return [effect.amountPerPop, effect.minimum];
     case "choice":
       return effect.options.flatMap((option) => option.flatMap(eventTextNumbers));
-    case "buildingCostMultiplier":
-      return [];
   }
 }
 
@@ -314,11 +299,8 @@ function scaleTable(table: EventTableDefinition): void {
 export function createLowNumberContent(base: GameContent): GameContent {
   const content = structuredClone(base);
 
-  // Buildings stay as authored: v2's roster is already single digits.
-  content.seasonalEvents = content.seasonalEvents.map((card) => {
-    const effects = card.effects.map(scaleEventEffect);
-    return { ...card, text: rewriteEventText(card.text, card.effects, effects), effects };
-  });
+  // Buildings and the year deck stay as authored: v2's roster is already single
+  // digits, and a year card carries no number to scale.
   content.playerEvents = content.playerEvents.map((card) => {
     const effects = card.effects.map(scaleEventEffect);
     return {

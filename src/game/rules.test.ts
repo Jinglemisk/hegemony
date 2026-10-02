@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildBuilding,
   createInitialState,
-  drawSeasonalEvent,
+  revealYearCard,
   foundColony,
   growPop,
   happinessLevel,
@@ -13,7 +13,7 @@ import {
   resolveArrivingPops,
   seasonName,
   settlementNetYield,
-  startNewSeason,
+  startNewYear,
   upgradeColonyToCity,
 } from "./rules";
 import { allocateEntityId } from "./entity";
@@ -345,11 +345,11 @@ describe("season rollover", () => {
     const state = fresh();
     state.players["0"].collectedThisTurn = true;
     state.players["0"].grownSettlementsThisTurn = ["0,0"];
-    const seasonBefore = state.season;
+    const seasonBefore = state.year;
 
-    startNewSeason(state);
+    startNewYear(state);
 
-    expect(state.season).toBe(seasonBefore + 1);
+    expect(state.year).toBe(seasonBefore + 1);
     expect(state.players["0"].collectedThisTurn).toBe(false);
     expect(state.players["0"].grownSettlementsThisTurn).toEqual([]);
   });
@@ -358,11 +358,11 @@ describe("season rollover", () => {
     // Walk a couple of full years and assert each revealed card is legal for its season.
     for (let season = 1; season <= 8; season += 1) {
       const state = fresh();
-      state.season = season;
+      state.year = season;
 
-      drawSeasonalEvent(state);
+      revealYearCard(state);
 
-      const card = state.activeSeasonEvent?.card;
+      const card = state.activeYearCard?.card;
       expect(card).toBeTruthy();
       const suits =
         !card?.seasons || card.seasons.length === 0 || card.seasons.includes(seasonName(season));
@@ -373,11 +373,11 @@ describe("season rollover", () => {
   it("never surfaces a winter-only card outside winter", () => {
     // Civic Anxiety is tagged winter-only; a spring draw must not reveal it.
     const state = fresh();
-    state.season = 1; // spring
+    state.year = 1; // spring
 
-    drawSeasonalEvent(state);
+    revealYearCard(state);
 
-    expect(state.activeSeasonEvent?.card.id).not.toBe("season-civic-anxiety");
+    expect(state.activeYearCard?.card.id).not.toBe("season-civic-anxiety");
   });
 });
 
@@ -415,8 +415,8 @@ describe("deterministic rng", () => {
   it("produces identical initial deck order for the same seed", () => {
     const a = createInitialState(42);
     const b = createInitialState(42);
-    expect(a.seasonalDrawPile.map((card) => card.id)).toEqual(
-      b.seasonalDrawPile.map((card) => card.id),
+    expect(a.yearDrawPile.map((card) => card.id)).toEqual(
+      b.yearDrawPile.map((card) => card.id),
     );
     expect(a.playerDrawPile.map((card) => card.id)).toEqual(
       b.playerDrawPile.map((card) => card.id),
@@ -426,8 +426,8 @@ describe("deterministic rng", () => {
   it("produces different deck order for different seeds", () => {
     const a = createInitialState(1);
     const b = createInitialState(2);
-    expect(a.seasonalDrawPile.map((card) => card.id)).not.toEqual(
-      b.seasonalDrawPile.map((card) => card.id),
+    expect(a.yearDrawPile.map((card) => card.id)).not.toEqual(
+      b.yearDrawPile.map((card) => card.id),
     );
   });
 });

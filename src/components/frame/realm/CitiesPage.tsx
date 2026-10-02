@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import {
   POP_TYPES,
   settlementCapacity,
-  settlementNetYield,
+  settlementNextYield,
   settlementOverCapacity,
   totalPops,
 } from "../../../game/rules";
@@ -54,7 +54,7 @@ export function CitiesPage({
 
   const rows = holdings.map((holding) => ({
     holding,
-    net: settlementNetYield(holding.tile, holding.settlement, G.ruleset, G.definition.content),
+    net: settlementNextYield(G, holding.tile, holding.settlement),
   }));
   const moved = RESOURCE_ORDER.filter((resource) => rows.some(({ net }) => net[resource] !== 0));
   const grid = { "--nres": moved.length } as CSSProperties;

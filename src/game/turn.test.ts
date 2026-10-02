@@ -44,7 +44,7 @@ describe("turn machine", () => {
 
   it("starts a new season when play wraps back to player 0", () => {
     const G = preloadedGame(1);
-    const seasonBefore = G.season;
+    const seasonBefore = G.year;
 
     advanceTurn(G); // 0 -> 1
     advanceTurn(G); // 1 -> 2
@@ -52,7 +52,7 @@ describe("turn machine", () => {
     advanceTurn(G); // 3 -> 0 : new season
 
     expect(G.currentPlayer).toBe("0");
-    expect(G.season).toBe(seasonBefore + 1);
+    expect(G.year).toBe(seasonBefore + 1);
   });
 
   it("refuses to end a turn while a player event is pending", () => {

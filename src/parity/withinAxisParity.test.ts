@@ -6,13 +6,13 @@ import {
   OMEN_TABLE,
   PLAYER_EVENT_CARDS,
   RIOT_TABLE,
-  SEASONAL_EVENT_CARDS,
+  YEAR_CARDS,
 } from "../game/data";
 import { getCivicCalmStatus } from "../game/civic";
 import { GROWABLE_POPS } from "../game/core/pops";
 import { getDiscountedGrowPopCost } from "../game/economy/cost";
 import { calculateIncome, calculateIncomeBreakdown } from "../game/economy/income";
-import { drawSeasonalEvent, getEventEffectChoices } from "../game/events";
+import { revealYearCard, getEventEffectChoices } from "../game/events";
 import { owned, scenario } from "../game/testing/scenario";
 import type {
   BuildingDefinition,
@@ -73,14 +73,14 @@ describe("backend-to-backend parity", () => {
       { type: "resourceDelta", scope: "activePlayer", resource: "gold", amount: 3 },
     ]);
     G.currentPlayer = "2";
-    G.seasonalDrawPile = [card];
+    G.yearDrawPile = [card];
     const before = Object.fromEntries(
       Object.entries(G.players).map(([playerID, player]) => [playerID, player.resources.gold]),
     );
 
-    drawSeasonalEvent(G);
+    revealYearCard(G);
 
-    expect(G.activeSeasonEvent?.playerID).toBe("2");
+    expect(G.activeYearCard?.playerID).toBe("2");
     expect(G.players["2"].resources.gold).toBe(before["2"] + 3);
     expect(G.players["0"].resources.gold).toBe(before["0"]);
     expect(G.players["1"].resources.gold).toBe(before["1"]);
@@ -99,9 +99,9 @@ describe("backend-to-backend parity", () => {
       },
     ]);
     G.currentPlayer = "1";
-    G.seasonalDrawPile = [card];
+    G.yearDrawPile = [card];
 
-    drawSeasonalEvent(G);
+    revealYearCard(G);
 
     expect(seasonalContribution(G, "1", card.name, "gold")).toBe(5);
     expect(seasonalContribution(G, "0", card.name, "gold")).toBe(0);
@@ -112,7 +112,7 @@ describe("backend-to-backend parity", () => {
 
 describe("frontend-to-frontend parity", () => {
   it("presents every event-card option through one non-empty effect vocabulary", () => {
-    for (const card of [...SEASONAL_EVENT_CARDS, ...PLAYER_EVENT_CARDS]) {
+    for (const card of [...YEAR_CARDS, ...PLAYER_EVENT_CARDS]) {
       for (const effects of getEventEffectChoices(card)) {
         const presentation = presentEventEffects(effects);
         expect(presentation.text.trim(), card.id).not.toBe("");
@@ -196,7 +196,7 @@ describe("effective content and cost parity", () => {
     });
     const G = gameplayCity();
     pinBuildings(G, tuned);
-    G.activeSeasonEvent = {
+    G.activeYearCard = {
       card: {
         id: "double-build-cost",
         deck: "seasonal",
@@ -213,7 +213,7 @@ describe("effective content and cost parity", () => {
           },
         ],
       },
-      season: G.season,
+      season: G.year,
       playerID: "0",
     };
     G.players["0"].actionCostDiscounts.push({

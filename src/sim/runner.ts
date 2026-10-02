@@ -24,7 +24,7 @@ import { buildNewGame } from "./setup";
 export const MAX_ACTIONS_PER_TURN = 30;
 
 /**
- * An Assembly runs entirely inside the season opener's turn (turn.ts): `endTurn` opens it
+ * An Assembly runs entirely inside the year opener's turn (turn.ts): `endTurn` opens it
  * and returns *before* `G.turn` advances, and `closeAssembly` does the increment — so all
  * four seats fish, propose and vote at one constant `G.turn`, inside a single {@link playTurn}.
  * A fully-engaged agora (draws, bribes, a vote on every ballot item × four seats) far

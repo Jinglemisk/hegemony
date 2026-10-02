@@ -26,7 +26,7 @@ import type { GameCommand } from "../game/legalMoves";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { activeClaims, claimableLuxuriesAt, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
-import { victoryCardsHeld } from "../game/victory";
+import { victoryCardsHeld, victoryMetricValue, voiceHolder } from "../game/victory";
 import type { HegemonyState, PlayerId, Pops } from "../game/types";
 import type { PlayerView } from "../game/projection";
 import type { Ruleset } from "../game/ruleset";
@@ -84,7 +84,7 @@ export function policyEconomyThresholds(ruleset: Ruleset) {
     lowGold: goldVentureStake * 2,
     woodStarved: colonyWoodCost,
     goldRich: colonyWoodCost,
-    materialScoreDivisor: Math.max(1, ruleset.victory.minimums.stockpile / 8),
+    materialScoreDivisor: Math.max(1, ruleset.victory.minimums.gold / 8),
   };
 }
 
@@ -108,7 +108,7 @@ function resolveStochasticByRule(G: HegemonyState, moves: GameCommand[]): GameCo
   }
 
   // Ventures are stochastic too — a gold-rich bot funds one expedition a turn
-  // (season-cycled so sims exercise all three tables), never peeking the roll.
+  // (cycled by year so sims exercise all three tables), never peeking the roll.
   const goldVentures = moves.filter(
     (move): move is Extract<GameCommand, { type: "fundExpedition" }> =>
       move.type === "fundExpedition" && move.stake === "gold",
@@ -117,7 +117,7 @@ function resolveStochasticByRule(G: HegemonyState, moves: GameCommand[]): GameCo
     goldVentures.length > 0 &&
     G.players[playerID].resources.gold >= thresholds.ventureGoldReserve
   ) {
-    return goldVentures[G.season % goldVentures.length];
+    return goldVentures[G.year % goldVentures.length];
   }
 
   // The Dole is the pressure valve: take it while the next income would leave a
@@ -354,6 +354,10 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
 
   return {
     ...G,
+    // This year's card was paid at the income that opened the turn. Every income in
+    // the projection falls in a later year, under a card nobody has seen, so the
+    // projection plans on printed income and never looks at the deck.
+    activeYearCard: null,
     board: {
       ...G.board,
       tiles: G.board.tiles.map((tile) =>
@@ -440,7 +444,7 @@ export function evaluatePolicyUnrestRisk(ruleset: Ruleset, happiness: number): P
  * term prices the nonlinear riot and revolt thresholds.
  *
  * The projection runs through calculateIncome — the engine's own formula — so
- * the score sees food-shortage pressure, building income, and seasonal modifiers
+ * the score sees food-shortage pressure, building income and standing Laws
  * without duplicating any of them.
  */
 /** Score per point of the standing level. The level holds every turn, so a point is
@@ -890,11 +894,11 @@ function playerIds(G: HegemonyState): PlayerId[] {
 }
 
 /**
- * A seat's permanent authored-and-passed progress toward Voice, on the smart-score scale.
+ * A seat's standing authored Laws, its progress toward Voice, on the smart-score scale.
  * The actual held victory card is already priced by evaluateSmart; this values the path.
  */
 function politicalStanding(G: HegemonyState, me: PlayerId): number {
-  const mine = G.assemblyPassedByPlayer[me];
+  const mine = victoryMetricValue(G, me, "voice");
   // Progress matters, but it is not itself a victory card. The actual threshold
   // crossing is already worth a full card in `evaluateSmart`; overpricing every
   // preliminary pass made political seats reject virtually every rival-authored
@@ -1110,7 +1114,7 @@ function assessVote(
   // does not complete the rival's race, remove the generic card jump from the voting
   // comparison; the proposal's Law/Directive, prize, and permanent lead still count.
   const rivalClaimsOpenVoice =
-    G.voiceHolder === null && clone.voiceHolder !== null && clone.voiceHolder !== me;
+    voiceHolder(G) === null && voiceHolder(clone) !== null && voiceHolder(clone) !== me;
   const voteDelta = delta + (rivalClaimsOpenVoice ? SMART_VICTORY_CARD_VALUE : 0);
   return {
     delta,

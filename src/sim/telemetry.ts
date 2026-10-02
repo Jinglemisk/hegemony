@@ -1,5 +1,4 @@
 import type { OpeningKind } from "./io";
-import { seasonName, yearOf } from "../game/core/calendar";
 import { totalPops } from "../game/core/pops";
 import { calculateIncome } from "../game/economy/income";
 import {
@@ -17,13 +16,14 @@ import { getOwnedSettlement, getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementIdleSlaves } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import { standingHappiness } from "../game/happiness";
+import { voiceHolder } from "../game/victory";
 import { GAME_COMMAND_TYPES, type GameCommandType } from "../parity/commandParity";
 import {
   BUILDING_CONTENT_IDS,
   PLAYER_EVENT_CONTENT_IDS,
-  SEASONAL_EVENT_CONTENT_IDS,
+  YEAR_CARD_CONTENT_IDS,
   type PlayerEventContentId,
-  type SeasonalEventContentId,
+  type YearCardContentId,
 } from "../parity/featureParity";
 import type { UnrestTier } from "../game/unrest";
 import type {
@@ -75,8 +75,6 @@ export type TurnSnapshot = {
   game: number;
   seed: number;
   turn: number;
-  season: number;
-  seasonName: string;
   year: number;
   players: Record<PlayerId, PlayerSnapshot>;
 };
@@ -121,9 +119,7 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
     game,
     seed,
     turn: G.turn,
-    season: G.season,
-    seasonName: seasonName(G.season),
-    year: yearOf(G.season),
+    year: G.year,
     players,
   };
 }
@@ -174,9 +170,7 @@ export function percentiles(values: number[]): Percentiles {
   };
 }
 
-export type SeasonRow = {
-  season: number;
-  seasonName: string;
+export type YearRow = {
   year: number;
   games: number;
   victoryCards: Percentiles;
@@ -195,7 +189,7 @@ export type GameRow = {
   game: number;
   seed: number;
   turnsPlayed: number;
-  finalSeason: number;
+  finalYear: number;
   termination: GameTermination;
   /** The real winner — null for turn-capped (unfinished) games. */
   winner: PlayerId | null;
@@ -243,7 +237,7 @@ export type BatchReport = {
     generatedAt: string;
   };
   perGame: GameRow[];
-  perSeason: SeasonRow[];
+  perYear: YearRow[];
   perSeat: Record<PlayerId, { winRate: number; capLeaderRate: number; meanFinalCards: number }>;
   /** Food under work slots, per seat: how often income left mouths unfed, the pops
    *  that left for it, and how many slaves had no slot to work. */
@@ -259,13 +253,13 @@ export type BatchReport = {
     }
   >;
   /** The riot table: riots resolved per game, the share of player-turns that opened
-   *  on it, and the same counts season by season, so a report can cut the late game. */
+   *  on it, and the same counts year by year, so a report can cut the late game. */
   riots: {
     perGame: number;
     /** Revolts per game: the lower line, where half the slaves leave with no roll. */
     revoltsPerGame: number;
     turnShare: number;
-    bySeason: Array<{ season: number; riots: number; playerTurns: number }>;
+    byYear: Array<{ year: number; riots: number; playerTurns: number }>;
   };
   /** Wins credited to the POLICY that held each seat, over finished games — the
    *  seat-independent measure a rotated mixed-policy batch produces. Empty for a
@@ -295,8 +289,8 @@ export type BatchReport = {
   events: {
     /** Every shipped player-event id is present, including zeroes. */
     player: Record<PlayerEventContentId, number>;
-    /** Every shipped seasonal-event id is present, including zeroes. */
-    seasonal: Record<SeasonalEventContentId, number>;
+    /** Every year card's id is present, including zeroes. */
+    year: Record<YearCardContentId, number>;
     /** For choice cards: how often each option index was picked. */
     choicePicks: Record<string, number[]>;
   };
@@ -385,11 +379,11 @@ export class Aggregator {
   private games: GameRow[] = [];
   private buildings: Record<string, number> = {};
   private playerEvents: Record<string, number> = {};
-  private seasonalEvents: Record<string, number> = {};
+  private yearCards: Record<string, number> = {};
   private choicePicks: Record<string, number[]> = {};
   private movesByType: Partial<Record<GameCommandType, number>> = {};
   private currencyVerbs: Record<string, number> = {};
-  private riotsBySeason = new Map<number, number>();
+  private riotsByYear = new Map<number, number>();
   private revolts = 0;
   private assemblyVerbs: Record<string, number> = {};
   private assemblyInfluence = 0;
@@ -419,20 +413,20 @@ export class Aggregator {
   private game = -1;
   private seed = 0;
   private startTurn = 1;
-  private lastSeason = 0;
+  private lastYear = 0;
   private gameSeatPolicies: Record<PlayerId, string> | null = null;
 
   beginGame(game: number, seed: number, G: HegemonyState, seatPolicies?: Record<PlayerId, string>) {
     this.game = game;
     this.seed = seed;
     this.startTurn = G.turn;
-    this.lastSeason = G.season;
+    this.lastYear = G.year;
     this.gameSeatPolicies = seatPolicies ?? null;
-    this.lastVoiceHolder = G.voiceHolder;
+    this.lastVoiceHolder = voiceHolder(G);
     this.lastAssemblyResultKey = null;
 
-    // The opening already revealed season 1's card and player 0's first draw.
-    this.countSeasonal(G);
+    // The opening already revealed year 1's card and player 0's first draw.
+    this.countYearCard(G);
     this.countPlayerDraw(G);
   }
 
@@ -440,7 +434,7 @@ export class Aggregator {
     this.movesByType[move.type] = (this.movesByType[move.type] ?? 0) + 1;
 
     if (move.type === "resolveRiot") {
-      this.riotsBySeason.set(G.season, (this.riotsBySeason.get(G.season) ?? 0) + 1);
+      this.riotsByYear.set(G.year, (this.riotsByYear.get(G.year) ?? 0) + 1);
     }
 
     if (move.type === "buildBuilding") {
@@ -489,12 +483,13 @@ export class Aggregator {
       }
     }
 
-    if (G.voiceHolder !== this.lastVoiceHolder) {
-      if (G.voiceHolder) {
+    const voice = voiceHolder(G);
+    if (voice !== this.lastVoiceHolder) {
+      if (voice) {
         this.voiceClaims += 1;
         if (this.lastVoiceHolder) this.voiceTransfers += 1;
       }
-      this.lastVoiceHolder = G.voiceHolder;
+      this.lastVoiceHolder = voice;
     }
 
     // Colony→city upgrades are the sharpest one-ply blind spot (bots rarely save for
@@ -520,16 +515,16 @@ export class Aggregator {
   }
 
   onTurnEnd(G: HegemonyState) {
-    // Deck exhaustion ends the game mid-endTurn WITHOUT advancing turn/season (see
-    // startNewSeason): no new player-turn happened here, so recording one would
+    // Deck exhaustion ends the game mid-endTurn WITHOUT advancing the turn or the year (see
+    // startNewYear): no new player-turn happened here, so recording one would
     // duplicate the final turn, undercount turnsPlayed, and re-count the prior draw.
     if (G.phase === "gameOver" && G.gameOverReason === "deckExhausted") {
       return;
     }
 
-    if (G.season !== this.lastSeason) {
-      this.lastSeason = G.season;
-      this.countSeasonal(G);
+    if (G.year !== this.lastYear) {
+      this.lastYear = G.year;
+      this.countYearCard(G);
     }
 
     // A terminal victory-race turn advanced the turn (a real snapshot) but ended
@@ -596,14 +591,14 @@ export class Aggregator {
       game: this.game,
       seed: this.seed,
       turnsPlayed: G.turn - this.startTurn,
-      finalSeason: G.season,
+      finalYear: G.year,
       termination,
       winner: finished ? G.winner : null,
       leaderAtCap: finished ? null : this.leaderByTiebreak(G, finalCards),
       seatPolicies: this.gameSeatPolicies ?? undefined,
       finalCards,
       finalAuthoredPasses,
-      voiceHolder: G.voiceHolder,
+      voiceHolder: voiceHolder(G),
       popsLostToUnrest,
       popsLostToHunger,
       luxuries,
@@ -630,23 +625,23 @@ export class Aggregator {
   }
 
   buildReport(meta: BatchReport["meta"]): BatchReport {
-    // Season rows use only each game's LAST snapshot of that season
-    // (end-of-season state), pooled across games and seats.
-    const seasonBuckets = new Map<number, TurnSnapshot[]>();
+    // Year rows use only each game's LAST snapshot of that year (end-of-year
+    // state), pooled across games and seats.
+    const yearBuckets = new Map<number, TurnSnapshot[]>();
 
     const tails = new Map<string, TurnSnapshot>();
     for (const snapshot of this.snapshots) {
-      tails.set(`${snapshot.game}:${snapshot.season}`, snapshot);
+      tails.set(`${snapshot.game}:${snapshot.year}`, snapshot);
     }
     for (const snapshot of tails.values()) {
-      const bucket = seasonBuckets.get(snapshot.season) ?? [];
+      const bucket = yearBuckets.get(snapshot.year) ?? [];
       bucket.push(snapshot);
-      seasonBuckets.set(snapshot.season, bucket);
+      yearBuckets.set(snapshot.year, bucket);
     }
 
-    const perSeason: SeasonRow[] = [...seasonBuckets.entries()]
+    const perYear: YearRow[] = [...yearBuckets.entries()]
       .sort(([a], [b]) => a - b)
-      .map(([season, snapshots]) => {
+      .map(([year, snapshots]) => {
         const values = (select: (player: PlayerSnapshot) => number) =>
           snapshots.flatMap((snapshot) =>
             PLAYER_IDS.map((playerID) => select(snapshot.players[playerID])),
@@ -675,9 +670,7 @@ export class Aggregator {
         }
 
         return {
-          season,
-          seasonName: snapshots[0].seasonName,
-          year: snapshots[0].year,
+          year,
           games: snapshots.length,
           victoryCards: percentiles(values((player) => player.victoryCards)),
           pops: percentiles(values((player) => player.pops + player.inTransit)),
@@ -745,21 +738,21 @@ export class Aggregator {
       };
     }
 
-    // Every snapshot is one player-turn, so a season's snapshots are its turns.
-    const turnsBySeason = new Map<number, number>();
+    // Every snapshot is one player-turn, so a year's snapshots are its turns.
+    const turnsByYear = new Map<number, number>();
     for (const snapshot of this.snapshots) {
-      turnsBySeason.set(snapshot.season, (turnsBySeason.get(snapshot.season) ?? 0) + 1);
+      turnsByYear.set(snapshot.year, (turnsByYear.get(snapshot.year) ?? 0) + 1);
     }
-    const riotCount = [...this.riotsBySeason.values()].reduce((sum, count) => sum + count, 0);
+    const riotCount = [...this.riotsByYear.values()].reduce((sum, count) => sum + count, 0);
     const riots: BatchReport["riots"] = {
       perGame: riotCount / games,
       revoltsPerGame: this.revolts / games,
       turnShare: this.snapshots.length > 0 ? riotCount / this.snapshots.length : 0,
-      bySeason: [...turnsBySeason.entries()]
+      byYear: [...turnsByYear.entries()]
         .sort(([a], [b]) => a - b)
-        .map(([season, playerTurns]) => ({
-          season,
-          riots: this.riotsBySeason.get(season) ?? 0,
+        .map(([year, playerTurns]) => ({
+          year,
+          riots: this.riotsByYear.get(year) ?? 0,
           playerTurns,
         })),
     };
@@ -858,7 +851,7 @@ export class Aggregator {
     return {
       meta,
       perGame: this.games,
-      perSeason,
+      perYear,
       perSeat,
       hunger,
       riots,
@@ -875,9 +868,9 @@ export class Aggregator {
         player: Object.fromEntries(
           PLAYER_EVENT_CONTENT_IDS.map((eventId) => [eventId, this.playerEvents[eventId] ?? 0]),
         ) as BatchReport["events"]["player"],
-        seasonal: Object.fromEntries(
-          SEASONAL_EVENT_CONTENT_IDS.map((eventId) => [eventId, this.seasonalEvents[eventId] ?? 0]),
-        ) as BatchReport["events"]["seasonal"],
+        year: Object.fromEntries(
+          YEAR_CARD_CONTENT_IDS.map((eventId) => [eventId, this.yearCards[eventId] ?? 0]),
+        ) as BatchReport["events"]["year"],
         choicePicks: this.choicePicks,
       },
       currencyVerbs: Object.fromEntries(
@@ -934,10 +927,10 @@ export class Aggregator {
     };
   }
 
-  private countSeasonal(G: HegemonyState) {
-    const card = G.activeSeasonEvent?.card;
+  private countYearCard(G: HegemonyState) {
+    const card = G.activeYearCard;
     if (card) {
-      this.seasonalEvents[card.id] = (this.seasonalEvents[card.id] ?? 0) + 1;
+      this.yearCards[card.id] = (this.yearCards[card.id] ?? 0) + 1;
     }
   }
 
@@ -955,8 +948,6 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
     "game",
     "seed",
     "turn",
-    "season",
-    "seasonName",
     "year",
     "player",
     "victoryCards",
@@ -994,8 +985,6 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
         snapshot.game,
         snapshot.seed,
         snapshot.turn,
-        snapshot.season,
-        snapshot.seasonName,
         snapshot.year,
         playerID,
         player.victoryCards,

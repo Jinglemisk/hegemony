@@ -107,7 +107,7 @@ describe("low-number economy study invariants", () => {
       for (const effect of building.effects)
         expect(presentBuildingEffect(effect).text).not.toBe("");
     }
-    for (const card of [...LOW_NUMBER_CONTENT.seasonalEvents, ...LOW_NUMBER_CONTENT.playerEvents]) {
+    for (const card of [...LOW_NUMBER_CONTENT.yearCards, ...LOW_NUMBER_CONTENT.playerEvents]) {
       expect(presentEventEffects(card.effects).text).not.toBe("");
     }
     for (const card of LOW_NUMBER_CONTENT.resolutions) {
@@ -135,7 +135,7 @@ describe("low-number economy study invariants", () => {
     expect(card("player-caravan-contacts")).toContain("up to 2 Wood for 3 Gold");
     expect(card("player-civic-petition")).toBe("Gain 1 Influence, or clear an Unrest token.");
     expect(
-      LOW_NUMBER_CONTENT.seasonalEvents.find((event) => event.id === "season-plague")?.text,
+      LOW_NUMBER_CONTENT.yearCards.find((event) => event.id === "season-plague")?.text,
     ).toContain("places an Unrest token");
   });
 

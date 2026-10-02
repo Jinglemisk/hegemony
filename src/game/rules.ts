@@ -11,17 +11,16 @@
  *   core/query     — board / player / log accessors
  *   core/rng       — deterministic PRNG + deck helpers
  *   core/format    — human-readable rule strings
- *   core/calendar  — season-name / year derivation from the season counter
  *   settlement     — settlement + population domain queries
  *   economy/income — the income engine (single source of the per-pop yield formula)
- *   economy/cost   — action cost + seasonal multiplier + event discount subsystem
+ *   economy/cost   — action cost + event discount subsystem
  *   economy/preview— economy projections + action previews
  *   status         — get*Status action validators
  *   events         — event deck draw + the event-effect interpreter
  *   actions        — the mutating moves
  *   hunger         — pops leaving when income cannot feed them
  *   happiness      — the named terms a realm's happiness is made of
- *   season         — season / turn-flag lifecycle
+ *   year           — year / turn-flag lifecycle
  *   activeEffects  — canonical persistent-effect/status projection
  *   definition     — immutable per-match rules/content identity
  *   state          — createInitialState
@@ -38,7 +37,6 @@ export * from "./core/resources";
 export * from "./core/query";
 export * from "./core/rng";
 export * from "./core/format";
-export * from "./core/calendar";
 export * from "./settlement";
 export * from "./economy/income";
 export * from "./economy/cost";
@@ -47,7 +45,7 @@ export * from "./status";
 export * from "./events";
 export * from "./actions";
 export * from "./riot";
-export * from "./season";
+export * from "./year";
 export * from "./activeEffects";
 export * from "./tables";
 export * from "./luxury";

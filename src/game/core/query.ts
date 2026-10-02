@@ -1,5 +1,5 @@
 import { PLAYER_IDS } from "../data";
-import type { HegemonyState, PlayerId, Settlement } from "../types";
+import type { HegemonyState, PlayerId, Settlement, YearTerm } from "../types";
 
 export function getTile(G: HegemonyState, tileId: string) {
   return G.board.tiles.find((tile) => tile.id === tileId);
@@ -32,8 +32,8 @@ export function toPlayerId(value: string | null | undefined): PlayerId {
  *  done to. See LogEntry.about for why the subject rather than the author. */
 export function addLog(G: HegemonyState, message: string, about?: PlayerId) {
   G.log.push({
-    id: `${G.season}-${G.log.length}-${message}`,
-    season: G.season,
+    id: `${G.year}-${G.log.length}-${message}`,
+    year: G.year,
     message,
     ...(about ? { about } : {}),
   });
@@ -47,4 +47,11 @@ export function markSettlementGrown(G: HegemonyState, playerID: PlayerId, tileId
   const player = G.players[playerID];
 
   player.grownSettlementsThisTurn = [...(player.grownSettlementsThisTurn ?? []), tileId];
+}
+
+/** The term this year's card zeroes for the whole table, or null. */
+export function zeroedYearTerm(G: HegemonyState): YearTerm | null {
+  const effect = G.activeYearCard?.effect;
+
+  return effect?.type === "zeroTerm" ? effect.term : null;
 }

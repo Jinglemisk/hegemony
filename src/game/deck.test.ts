@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GROW_POP_COSTS, PLAYER_EVENT_CARDS, SEASONAL_EVENT_CARDS } from "./data";
+import { GROW_POP_COSTS, PLAYER_EVENT_CARDS, YEAR_CARDS } from "./data";
 import { drawPlayerEvent, resolvePendingPlayerEvent } from "./events";
 import { growPop } from "./actions";
 import { getGrowPopStatus } from "./status";
@@ -121,7 +121,7 @@ describe("seasonal deck safety", () => {
 
   it("no season is auto-safe: every pool holds at least one harm card", () => {
     for (const season of SEASONS) {
-      const pool = SEASONAL_EVENT_CARDS.filter(
+      const pool = YEAR_CARDS.filter(
         (card) => !card.seasons || card.seasons.length === 0 || card.seasons.includes(season),
       );
       const harmCopies = pool.filter(isHarm).reduce((sum, card) => sum + card.count, 0);

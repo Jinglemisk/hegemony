@@ -74,7 +74,7 @@ describe("rule-driven bank chains", () => {
     G.activeLaws.push({
       cardId: "aqueduct-levy",
       author: "0",
-      enactedSeason: G.season,
+      enactedYear: G.year,
       order: G.lawOrder++,
     });
     Object.assign(G.players[G.currentPlayer].resources, {
@@ -197,7 +197,7 @@ function projectionFixture(): HegemonyState {
 
   G.pendingPlayerEvent = null;
   G.pendingRiot = null;
-  G.activeSeasonEvent = null;
+  G.activeYearCard = null;
   G.yearOmen = null;
   G.activeLaws = [];
   Object.assign(player.resources, { food: 100 });
@@ -301,7 +301,7 @@ describe("policy evaluation is side-effect-free", () => {
     const hiddenVariant = structuredClone(G);
     hiddenVariant.seed += 999;
     hiddenVariant.rng ^= 0x7fffffff;
-    hiddenVariant.seasonalDrawPile.reverse();
+    hiddenVariant.yearDrawPile.reverse();
     hiddenVariant.playerDrawPile.reverse();
     for (const deck of Object.values(hiddenVariant.politicianDecks)) deck.reverse();
 

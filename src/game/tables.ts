@@ -1,5 +1,4 @@
-import { getBuildings, getOmenTable } from "./content";
-import { yearOf } from "./core/calendar";
+import { getBuildings } from "./content";
 import { POP_TYPES, totalPops } from "./core/pops";
 import { settlementCapacity } from "./settlement";
 import { formatPopName } from "./core/format";
@@ -18,7 +17,7 @@ import type {
 
 /**
  * The event-table engine seam (docs/archive/plans/event-tables.md): one function rolls every
- * dice table in the game — riot, expeditions, future omens. Tables are content data
+ * dice table in the game — riot and the expeditions. Tables are content data
  * ({@link ./data}); this module owns the die, the modifier/clamp arithmetic, and the
  * effect interpreter. All randomness runs through the game's own mulberry32 state so
  * a table roll is as replayable as a deck shuffle.
@@ -86,7 +85,7 @@ export function rollOnTable(
     modifier,
     rowLabel: row.label,
     outcomes,
-    season: G.season,
+    year: G.year,
   };
   G.lastTableRoll = record;
   return { record, popsRemoved };
@@ -186,31 +185,7 @@ function applyTableEffect(
       addLog(G, `${name} — ${text}`);
       return { outcomes: [text], popsRemoved: 0 };
     }
-
-    case "yearIncomeModifier": {
-      // Persistent, not immediate: the income engine reads it off G.yearOmen while
-      // the omen stands. Rolling only announces it.
-      const sign = effect.amount > 0 ? "+" : "";
-      const text = `All players: ${sign}${effect.amount} ${effect.resource} income while the omen stands.`;
-      return { outcomes: [text], popsRemoved: 0 };
-    }
   }
-}
-
-/**
- * The year's opener takes the auspices (PROVISIONAL): one public roll on the omen
- * table, standing over every polis until the next spring replaces it. Called at
- * gameplay start (year 1) and on each new year's season turn.
- */
-export function rollYearOmen(G: HegemonyState) {
-  const omenTable = getOmenTable(G.definition.content);
-  const { record } = rollOnTable(G, G.seasonOpener, omenTable);
-  const row =
-    omenTable.rows.find((candidate) => candidate.roll === record.modified) ??
-    omenTable.rows[omenTable.rows.length - 1];
-
-  G.yearOmen = { record, label: row.label, year: yearOf(G.season), effects: row.effects };
-  addLog(G, `The omen for Year ${yearOf(G.season)}: ${row.label}.`);
 }
 
 export type RemovalSummary = { total: number; byType: Record<PopType, number> };

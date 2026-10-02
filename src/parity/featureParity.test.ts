@@ -6,7 +6,7 @@ import { POLITICIANS, RESOLUTION_CARDS } from "../game/assembly/deck";
 import { getAuthoredGameContent, getBuildings, getTerrainDeck } from "../game/content";
 import {
   PLAYER_EVENT_CARDS,
-  SEASONAL_EVENT_CARDS,
+  YEAR_CARDS,
   EXPEDITION_TABLES,
   OMEN_TABLE,
   RIOT_TABLE,
@@ -41,7 +41,7 @@ import {
   POLITICIAN_CONTENT_IDS,
   RESOLUTION_CONTENT_IDS,
   RIOT_INSURANCE_CONTENT_IDS,
-  SEASONAL_EVENT_CONTENT_IDS,
+  YEAR_CARD_CONTENT_IDS,
   TABLE_EFFECT_PARITY,
   TERRAIN_CONTENT_IDS,
   VICTORY_CARD_CONTENT_IDS,
@@ -135,8 +135,8 @@ describe("feature and content parity manifests", () => {
     expect(unique(getTerrainDeck(AUTHORED_CONTENT).map((entry) => entry.terrain))).toEqual(
       sorted(TERRAIN_CONTENT_IDS),
     );
-    expect(sorted(SEASONAL_EVENT_CARDS.map((card) => card.id))).toEqual(
-      sorted(SEASONAL_EVENT_CONTENT_IDS),
+    expect(sorted(YEAR_CARDS.map((card) => card.id))).toEqual(
+      sorted(YEAR_CARD_CONTENT_IDS),
     );
     expect(sorted(PLAYER_EVENT_CARDS.map((card) => card.id))).toEqual(
       sorted(PLAYER_EVENT_CONTENT_IDS),
@@ -156,7 +156,7 @@ describe("feature and content parity manifests", () => {
     }
 
     const eventEffects = flattenEventEffects(
-      [...SEASONAL_EVENT_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
+      [...YEAR_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
     );
     expect(unique(eventEffects.map((effect) => effect.type))).toEqual(
       sorted(Object.keys(EVENT_EFFECT_PARITY)),
@@ -190,7 +190,7 @@ describe("feature and content parity manifests", () => {
 
   it("projects every authored effect through a non-empty typed frontend presentation", () => {
     const eventEffects = flattenEventEffects(
-      [...SEASONAL_EVENT_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
+      [...YEAR_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
     );
     for (const effect of eventEffects) expectPresentation(presentEventEffect(effect));
 
@@ -291,7 +291,7 @@ describe("feature and content parity manifests", () => {
 
     expect(Object.keys(report.buildings)).toEqual([...BUILDING_CONTENT_IDS]);
     expect(Object.keys(report.events.player)).toEqual([...PLAYER_EVENT_CONTENT_IDS]);
-    expect(Object.keys(report.events.seasonal)).toEqual([...SEASONAL_EVENT_CONTENT_IDS]);
+    expect(Object.keys(report.events.seasonal)).toEqual([...YEAR_CARD_CONTENT_IDS]);
     expect(
       Object.values(report.buildings).every((entry) => entry.built === 0 && entry.perGame === 0),
     ).toBe(true);

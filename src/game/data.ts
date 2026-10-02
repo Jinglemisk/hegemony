@@ -1,6 +1,7 @@
 import type {
   BuildingDefinition,
   EventCard,
+  YearCard,
   EventTableDefinition,
   GrowablePop,
   LuxuryGoodDefinition,
@@ -226,50 +227,6 @@ export const VENTURE_STAKES: Record<"gold" | "wood", Partial<Resources>> = {
   wood: { wood: 8 },
 };
 
-/** The yearly omen (PROVISIONAL, 2026-07-13 — numbers await the user's eyes): rolled
- *  publicly by the year's opener each spring. Symmetric, modest, year-long: ±1 of one
- *  resource per income, all players — drama and table texture, never a swing. Three
- *  ill signs, three fair, so the table EV sits at ~0. */
-export const OMEN_TABLE: EventTableDefinition = {
-  id: "omen",
-  name: "Yearly Omen",
-  flavor:
-    "At the year's first light the auspices are taken — one sign hangs over every polis until winter's end.",
-  die: 6,
-  rows: [
-    {
-      roll: 1,
-      label: "Lean kine",
-      effects: [{ type: "yearIncomeModifier", resource: "food", amount: -1 }],
-    },
-    {
-      roll: 2,
-      label: "Silent mines",
-      effects: [{ type: "yearIncomeModifier", resource: "gold", amount: -1 }],
-    },
-    {
-      roll: 3,
-      label: "Blighted groves",
-      effects: [{ type: "yearIncomeModifier", resource: "wood", amount: -1 }],
-    },
-    {
-      roll: 4,
-      label: "Kind rains",
-      effects: [{ type: "yearIncomeModifier", resource: "food", amount: 1 }],
-    },
-    {
-      roll: 5,
-      label: "Rich seams",
-      effects: [{ type: "yearIncomeModifier", resource: "stone", amount: 1 }],
-    },
-    {
-      roll: 6,
-      label: "A golden age",
-      effects: [{ type: "yearIncomeModifier", resource: "gold", amount: 1 }],
-    },
-  ],
-};
-
 // One of each per settlement. Marketplace, Estate and Forum raise their class column
 // from 1 to 2; Temple and Granary state one flat fact; the Port's fact is its claim on
 // one adjacent luxury, so its effects are empty. Wood buys the economic buildings and
@@ -384,241 +341,76 @@ export const TERRAIN_DECK: Array<{
   { terrain: "plains", slots: 4, resource: { type: "food" } }, // (3,0)
 ];
 
-export const SEASONAL_EVENT_CARDS: EventCard[] = [
+// ── Year deck (direction paper §6.2) ────────────────────────────────────────────────
+//
+// The clock: fourteen cards, dealt once in a seeded order, the next one hidden. Each
+// card exposes one kind of player by zeroing one term for the whole table for the
+// year; Plague and Festival move every realm's Unrest tokens once, when revealed.
+
+export const YEAR_CARDS: YearCard[] = [
   {
-    id: "season-drought",
-    deck: "seasonal",
+    id: "year-drought",
     name: "Drought",
-    count: 4,
-    text: "All players get -2 Food income this season.",
-    flavor: "The riverbed shows its stones, and the sky stays white.",
-    seasons: ["autumn", "winter"],
-    timing: "season",
-    effects: [
-      {
-        type: "incomeModifier",
-        scope: "allPlayers",
-        resource: "food",
-        amount: -2,
-        duration: "season",
-      },
-    ],
-  },
-  {
-    id: "season-bountiful-harvest",
-    deck: "seasonal",
-    name: "Bountiful Harvest",
-    count: 4,
-    text: "All players get +2 Food income this season.",
-    flavor: "The carts come in loaded. The threshing floors do not empty.",
-    seasons: ["summer", "autumn"],
-    timing: "season",
-    effects: [
-      {
-        type: "incomeModifier",
-        scope: "allPlayers",
-        resource: "food",
-        amount: 2,
-        duration: "season",
-      },
-    ],
-  },
-  {
-    id: "season-timber-levies",
-    deck: "seasonal",
-    name: "Timber Levies",
-    count: 3,
-    text: "Each player gains 2 Wood per 6 pops, minimum 4 Wood.",
-    flavor: "Every village sends its share of timber down to the yards.",
-    seasons: ["spring", "summer", "winter"],
-    timing: "immediate",
-    effects: [
-      {
-        type: "scaledResourceDelta",
-        scope: "allPlayers",
-        resource: "wood",
-        amountPerPops: 2,
-        popStep: 6,
-        minimum: 4,
-      },
-    ],
-  },
-  {
-    id: "season-quarry-contracts",
-    deck: "seasonal",
-    name: "Quarry Contracts",
-    count: 3,
-    text: "Each player gains 2 Stone per 6 pops, minimum 4 Stone.",
-    flavor: "The quarries are let out for the season, and the dust never settles.",
-    seasons: ["summer", "autumn"],
-    timing: "immediate",
-    effects: [
-      {
-        type: "scaledResourceDelta",
-        scope: "allPlayers",
-        resource: "stone",
-        amountPerPops: 2,
-        popStep: 6,
-        minimum: 4,
-      },
-    ],
-  },
-  {
-    id: "season-grain-tithe",
-    deck: "seasonal",
-    name: "Grain Tithe",
-    count: 3,
-    text: "Each player gains 2 Food per 6 pops, minimum 4 Food.",
-    flavor: "A measure from every household, sealed and counted at the gate.",
-    seasons: ["spring", "autumn", "winter"],
-    timing: "immediate",
-    effects: [
-      {
-        type: "scaledResourceDelta",
-        scope: "allPlayers",
-        resource: "food",
-        amountPerPops: 2,
-        popStep: 6,
-        minimum: 4,
-      },
-    ],
-  },
-  {
-    id: "season-civic-anxiety",
-    deck: "seasonal",
-    name: "Civic Anxiety",
     count: 2,
-    text: "Each player's happiness is 2 lower per 10 pops, at least 2 lower, this season.",
-    flavor: "Something is wrong and nobody can name it. The porticoes stay crowded late.",
-    seasons: ["winter"],
-    timing: "season",
-    effects: [
-      {
-        type: "scaledHappinessDelta",
-        scope: "allPlayers",
-        amountPerPops: -2,
-        popStep: 10,
-        minimumMagnitude: 2,
-        duration: "season",
-      },
-    ],
+    text: "Plains grow no food this year.",
+    flavor: "The fields crack. The granaries are counted twice.",
+    effect: { type: "zeroTerm", term: "plainsFood" },
   },
   {
-    id: "season-festival-games",
-    deck: "seasonal",
-    name: "Festival Games",
-    count: 2,
-    text: "Each player clears an Unrest token.",
-    flavor: "Oil, sand, and a whole city on the banking, shouting.",
-    seasons: ["spring", "summer"],
-    timing: "immediate",
-    effects: [
-      {
-        type: "scaledHappinessDelta",
-        scope: "allPlayers",
-        amountPerPops: 2,
-        popStep: 10,
-        minimumMagnitude: 2,
-      },
-    ],
-  },
-  {
-    id: "season-scarce-labor",
-    deck: "seasonal",
-    name: "Scarce Labor",
-    count: 2,
-    text: "Building costs, excluding colony founding and city upgrades, are doubled this season.",
-    flavor: "The good crews are all promised elsewhere.",
-    seasons: ["autumn", "winter"],
-    timing: "season",
-    effects: [
-      {
-        type: "buildingCostMultiplier",
-        multiplier: 2,
-        duration: "season",
-        excludes: ["foundColony", "upgradeColonyToCity"],
-      },
-    ],
-  },
-  {
-    id: "season-skilled-artisans",
-    deck: "seasonal",
-    name: "Skilled Artisans",
-    count: 2,
-    text: "Building costs, excluding colony founding and city upgrades, are halved this season, rounded up.",
-    flavor: "Workshops full of men who have done this a hundred times.",
-    seasons: ["spring", "summer"],
-    timing: "season",
-    effects: [
-      {
-        type: "buildingCostMultiplier",
-        multiplier: 0.5,
-        duration: "season",
-        excludes: ["foundColony", "upgradeColonyToCity"],
-      },
-    ],
-  },
-  {
-    id: "season-open-markets",
-    deck: "seasonal",
-    name: "Open Markets",
-    count: 2,
-    text: "All players get +2 Gold income this season.",
-    flavor: "Foreign sails in the harbour, and the quays stay busy past dusk.",
-    seasons: ["summer", "autumn"],
-    timing: "season",
-    effects: [
-      {
-        type: "incomeModifier",
-        scope: "allPlayers",
-        resource: "gold",
-        amount: 2,
-        duration: "season",
-      },
-    ],
-  },
-  {
-    id: "season-plague",
-    deck: "seasonal",
-    name: "Plague",
-    count: 2,
-    text: "Every player places an Unrest token.",
-    flavor: "Sickness spreads.",
-    seasons: ["autumn", "winter"],
-    timing: "immediate",
-    effects: [{ type: "timedHappinessDelta", scope: "allPlayers", amountPerTurn: -2, turns: 3 }],
-  },
-  {
-    // Ledger issue 10: no season is auto-safe. Spring keeps its boon tendency — this
-    // is the one cloud in it.
-    id: "season-spring-floods",
-    deck: "seasonal",
-    name: "Spring Floods",
-    count: 2,
-    text: "All players lose 3 Food.",
-    flavor: "The rivers burst their banks.",
-    seasons: ["spring"],
-    timing: "immediate",
-    effects: [{ type: "resourceDelta", scope: "allPlayers", resource: "food", amount: -3 }],
-  },
-  {
-    id: "season-wildfire",
-    deck: "seasonal",
+    id: "year-wildfire",
     name: "Wildfire",
     count: 2,
-    text: "All players get -2 Wood income this season.",
+    text: "Forests yield no wood this year.",
     flavor: "Tinder-dry groves burn.",
-    seasons: ["summer"],
-    timing: "season",
-    effects: [
-      {
-        type: "incomeModifier",
-        scope: "allPlayers",
-        resource: "wood",
-        amount: -2,
-        duration: "season",
-      },
-    ],
+    effect: { type: "zeroTerm", term: "forestWood" },
+  },
+  {
+    id: "year-silent-mines",
+    name: "Silent Mines",
+    count: 1,
+    text: "Mountains yield no stone this year.",
+    flavor: "The galleries are flooded and the picks hang on their pegs.",
+    effect: { type: "zeroTerm", term: "mountainStone" },
+  },
+  {
+    id: "year-piracy",
+    name: "Piracy",
+    count: 2,
+    text: "Freemen yield no gold this year.",
+    flavor: "No cargo leaves harbour without a second ship to guard it.",
+    effect: { type: "zeroTerm", term: "freemenGold" },
+  },
+  {
+    id: "year-ostracism",
+    name: "Ostracism",
+    count: 2,
+    text: "Citizens yield no influence this year.",
+    flavor: "The potsherds are counted and the loudest voices sent away.",
+    effect: { type: "zeroTerm", term: "citizenInfluence" },
+  },
+  {
+    id: "year-blockade",
+    name: "Blockade",
+    count: 1,
+    text: "Luxuries give no happiness this year.",
+    flavor: "The dye and the incense sit in the holds.",
+    effect: { type: "zeroTerm", term: "luxuryHappiness" },
+  },
+  {
+    id: "year-plague",
+    name: "Plague",
+    count: 2,
+    text: "Everyone places an Unrest token.",
+    flavor: "The sickness comes by sea and spares no quarter of the city.",
+    effect: { type: "unrestTokens", change: "placeOne" },
+  },
+  {
+    id: "year-festival",
+    name: "Festival",
+    count: 2,
+    text: "Everyone clears their Unrest tokens.",
+    flavor: "Garlands on every door, and old quarrels left at the gate.",
+    effect: { type: "unrestTokens", change: "clearAll" },
   },
 ];
 
@@ -632,7 +424,6 @@ export const SEASONAL_EVENT_CARDS: EventCard[] = [
 export const PLAYER_EVENT_CARDS: EventCard[] = [
   {
     id: "player-new-citizen",
-    deck: "player",
     name: "New Citizen",
     count: 4,
     text: "Add 1 citizen to one owned settlement with available capacity.",
@@ -644,7 +435,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-free-settlers",
-    deck: "player",
     name: "Free Settlers",
     count: 4,
     text: "Add 1 freeman to one owned settlement with available capacity.",
@@ -656,7 +446,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-captured-laborers",
-    deck: "player",
     name: "Captured Laborers",
     count: 3,
     text: "Add 2 slaves to one owned settlement with available capacity.",
@@ -666,7 +455,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-willing-hands",
-    deck: "player",
     name: "Willing Hands",
     count: 4,
     text: "The next freeman grown this turn costs -4 Food.",
@@ -686,7 +474,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-slave-auction",
-    deck: "player",
     name: "Slave Auction",
     count: 3,
     text: "The next slave grown this turn costs -3 Food.",
@@ -706,7 +493,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-good-stores",
-    deck: "player",
     name: "Good Stores",
     count: 4,
     text: "Gain 3 Food.",
@@ -716,7 +502,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-timber-windfall",
-    deck: "player",
     name: "Timber Windfall",
     count: 4,
     text: "Gain 3 Wood.",
@@ -726,7 +511,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-merchant-profit",
-    deck: "player",
     name: "Merchant Profit",
     count: 4,
     text: "Gain 3 Gold.",
@@ -736,7 +520,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-stone-shipment",
-    deck: "player",
     name: "Stone Shipment",
     count: 4,
     text: "Gain 3 Stone.",
@@ -746,7 +529,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-local-unrest",
-    deck: "player",
     name: "Local Unrest",
     count: 4,
     text: "Place an Unrest token.",
@@ -756,7 +538,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-public-calm",
-    deck: "player",
     name: "Public Calm",
     count: 4,
     text: "Clear an Unrest token.",
@@ -766,7 +547,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-civil-discord",
-    deck: "player",
     name: "Civil Discord",
     count: 3,
     text: "Place an Unrest token.",
@@ -776,7 +556,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-granary-rats",
-    deck: "player",
     name: "Granary Rats",
     count: 5,
     text: "Lose 3 Food.",
@@ -786,7 +565,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-banditry",
-    deck: "player",
     name: "Banditry",
     count: 3,
     text: "Lose 4 Gold.",
@@ -796,7 +574,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-warehouse-fire",
-    deck: "player",
     name: "Warehouse Fire",
     count: 4,
     text: "Lose 5 Wood.",
@@ -806,7 +583,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-quarry-collapse",
-    deck: "player",
     name: "Quarry Collapse",
     count: 2,
     text: "Lose 3 Stone and place an Unrest token.",
@@ -819,7 +595,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-patronage-network",
-    deck: "player",
     name: "Patronage Network",
     count: 3,
     text: "Gain 3 Influence.",
@@ -829,7 +604,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-emergency-labor",
-    deck: "player",
     name: "Emergency Labor",
     count: 3,
     text: "Gain 6 Wood and place an Unrest token, or gain 2 Wood with no penalty.",
@@ -850,7 +624,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-granary-surplus",
-    deck: "player",
     name: "Granary Surplus",
     count: 3,
     text: "Gain 4 Food, or add 1 freeman to a settlement with available capacity.",
@@ -868,7 +641,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-civic-petition",
-    deck: "player",
     name: "Civic Petition",
     count: 3,
     text: "Gain 2 Influence, or clear an Unrest token.",
@@ -886,7 +658,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-skilled-mason",
-    deck: "player",
     name: "Skilled Mason",
     count: 2,
     text: "Gain 4 Stone, or the next building built this turn costs -5 Stone.",
@@ -913,7 +684,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-caravan-contacts",
-    deck: "player",
     name: "Caravan Contacts",
     count: 2,
     text: "Gain 4 Gold, or exchange up to 4 Wood for 6 Gold.",
@@ -931,7 +701,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-forest-crews",
-    deck: "player",
     name: "Forest Crews",
     count: 2,
     text: "Gain 4 Wood, or the next colony founded this turn costs -6 Wood.",
@@ -958,7 +727,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-temple-donation",
-    deck: "player",
     name: "Temple Donation",
     count: 1,
     text: "Clear an Unrest token, or the next Temple built this turn costs -5 Stone.",
@@ -986,7 +754,6 @@ export const PLAYER_EVENT_CARDS: EventCard[] = [
   },
   {
     id: "player-market-day",
-    deck: "player",
     name: "Market Day",
     count: 1,
     text: "Gain 3 Gold, or gain 1 Gold per freeman, minimum 2 Gold.",

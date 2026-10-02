@@ -2,7 +2,13 @@ import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../game/activ
 import type { DirectiveEffect, LawEffect } from "../game/assembly/types";
 import { getAuthoredGameContent } from "../game/content";
 import type { GameContent } from "../game/content";
-import type { BuildingEffect, EventEffect, TableEffect } from "../game/types";
+import type {
+  BuildingEffect,
+  EventEffect,
+  TableEffect,
+  YearCard,
+  YearTerm,
+} from "../game/types";
 import {
   RESOURCE_LABELS,
   buildingName,
@@ -161,16 +167,6 @@ export function presentTableEffect(effect: TableEffect): EffectPresentation {
       });
     case "gainPop":
       return carve("positive", { magnitude: "+1", subject: formatPopLabel(effect.pop, 1) });
-    case "yearIncomeModifier":
-      return carve(
-        effect.amount >= 0 ? "positive" : "negative",
-        {
-          magnitude: formatSignedNumber(effect.amount),
-          subject: `${RESOURCE_LABELS[effect.resource]} income`,
-          condition: "all year",
-        },
-        `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]} income, all year`,
-      );
   }
 }
 
@@ -189,30 +185,8 @@ export function presentEventEffect(
       });
     case "happinessDelta":
       return presentUnrestToken(effect.amount);
-    case "scaledHappinessDelta":
-      // The season's card stands as a term of the level; any other is a one-shot.
-      return effect.duration === "season"
-        ? carve(signedTone(effect.amountPerPops), {
-            magnitude: formatSignedNumber(effect.amountPerPops),
-            subject: RESOURCE_LABELS.happiness,
-            condition: `per ${effect.popStep} pops`,
-          })
-        : presentUnrestToken(effect.amountPerPops);
     case "timedHappinessDelta":
       return presentUnrestToken(effect.amountPerTurn);
-    case "incomeModifier":
-      return carve(signedTone(effect.amount), {
-        magnitude: formatSignedNumber(effect.amount),
-        subject: `${RESOURCE_LABELS[effect.resource]} income`,
-      });
-    case "buildingCostMultiplier":
-      return {
-        text:
-          effect.multiplier > 1
-            ? "Double building costs this season"
-            : "Halve building costs this season",
-        tone: effect.multiplier > 1 ? "negative" : "positive",
-      };
     case "addPops":
       return carve(
         "positive",
@@ -282,26 +256,8 @@ function presentActiveEffectMechanic(
             : "one pop leaves per unfed mouth"),
         tone: "negative",
       };
-    case "resourceIncome":
-      return {
-        text:
-          formatSignedNumber(mechanic.amount) +
-          " " +
-          RESOURCE_LABELS[mechanic.resource] +
-          // Happiness is a level, not a stock that collects income.
-          (mechanic.resource === "happiness" ? "" : " income"),
-        tone: signedTone(mechanic.amount),
-      };
-    case "buildingCostMultiplier":
-      return {
-        text:
-          "Building costs ×" +
-          formatNumber(mechanic.multiplier) +
-          (mechanic.excludes.length > 0
-            ? " (excludes " + mechanic.excludes.map(actionLabel).join(", ") + ")"
-            : ""),
-        tone: mechanic.multiplier < 1 ? "positive" : mechanic.multiplier > 1 ? "negative" : "muted",
-      };
+    case "zeroTerm":
+      return { text: YEAR_TERM_LABELS[mechanic.term], tone: "negative" };
     case "actionCostDiscount": {
       const target = mechanic.buildingId
         ? buildingName(mechanic.buildingId, content)
@@ -503,8 +459,6 @@ function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string
       return remaining === 0
         ? "Hunger at the next income"
         : "Food lasts " + remaining + " more income" + (remaining === 1 ? "" : "s");
-    case "atSeasonEnd":
-      return "Until season end";
     case "atYearEnd":
       return "Until year end";
     case "afterMatchingActionOrTurnEnd":
@@ -585,4 +539,26 @@ function combineTones(effects: readonly EffectPresentation[]): EffectTone {
   }
 
   return tones.size === 1 ? [...tones][0] : "neutral";
+}
+
+/** What each zeroed term means, in the words the year cards print. */
+export const YEAR_TERM_LABELS: Record<YearTerm, string> = {
+  plainsFood: "Plains grow no food",
+  forestWood: "Forests yield no wood",
+  mountainStone: "Mountains yield no stone",
+  freemenGold: "Freemen yield no gold",
+  citizenInfluence: "Citizens yield no influence",
+  luxuryHappiness: "Luxuries give no happiness",
+};
+
+/** A year card as one presented line: the term it zeroes, or what it does to the
+ *  Unrest tokens. */
+export function presentYearCard(card: YearCard): EffectPresentation {
+  if (card.effect.type === "zeroTerm") {
+    return { text: `${YEAR_TERM_LABELS[card.effect.term]} this year`, tone: "negative" };
+  }
+
+  return card.effect.change === "placeOne"
+    ? { text: "Everyone places an Unrest token", tone: "negative" }
+    : { text: "Everyone clears their Unrest tokens", tone: "positive" };
 }

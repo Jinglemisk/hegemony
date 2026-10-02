@@ -67,12 +67,13 @@ export function civicCalm(
 
   const player = G.players[playerID];
   payCost(player.resources, status.cost ?? {});
-  // Calm is not banked: it stands beside the bank until this player's next upkeep.
+  // Calm lasts a year: it stands until the riot test that opens this player's next
+  // turn has counted it. Ending it with the year card would end it before any test.
   player.calmActive = true;
   player.civicCalmUsedThisTurn = true;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} ${payment === "influence" ? "stabilized the province" : "staged bread & circuses"} (+${G.ruleset.civicCalm.happiness} happiness until their next turn).`,
+    `${getPlayerName(G, playerID)} ${payment === "influence" ? "stabilized the province" : "staged bread & circuses"} (+${G.ruleset.civicCalm.happiness} happiness for a year).`,
     playerID,
   );
   return MOVE_OK;

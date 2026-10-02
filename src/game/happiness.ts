@@ -1,8 +1,7 @@
 import { getBuilding } from "./content";
-import { getOwnedSettlement } from "./core/query";
+import { getOwnedSettlement, zeroedYearTerm } from "./core/query";
 import { getLawHappinessContributions } from "./assembly/laws";
-import { luxuryHappinessBonus } from "./luxury";
-import { scaledByPops } from "./settlement";
+import { activeClaims, luxuryHappinessBonus } from "./luxury";
 import type { HegemonyState, PlayerId, Settlement } from "./types";
 
 /**
@@ -13,11 +12,10 @@ import type { HegemonyState, PlayerId, Settlement } from "./types";
  * A level of −3 this turn is −3 next turn if nothing on the board changes. The only
  * part that persists is the count of Unrest tokens on the player.
  *
- * Standing Laws and the season's card still name happiness at v1's scale. Until the
- * steps that own them rewrite them, each counts as one more term of the level.
+ * Standing Laws still name happiness at v1's scale. Until Step 8 rewrites them, each
+ * counts as one more term of the level.
  */
-export type HappinessContributionId =
-  "temples" | "luxuries" | "slaves" | "tokens" | "calm" | "law" | "season";
+export type HappinessContributionId = "temples" | "luxuries" | "slaves" | "tokens" | "calm" | "law";
 
 export interface HappinessContribution {
   id: HappinessContributionId;
@@ -62,16 +60,17 @@ export function happinessContributions(
     0,
   );
   const slaves = settlements.reduce((sum, settlement) => sum + settlement.pops.slaves, 0);
-  const luxuries = luxuryHappinessBonus(G, playerID);
-  const perGood = G.ruleset.economy.luxury.happinessPerGood;
-  const goods = perGood > 0 ? luxuries / perGood : 0;
+  const goods = activeClaims(G, playerID).length;
+  const blockade = zeroedYearTerm(G) === "luxuryHappiness" ? G.activeYearCard?.name : null;
 
   return [
     { id: "temples", amount: temples, detail: "Temples" },
     {
       id: "luxuries",
-      amount: luxuries,
-      detail: `${goods} ${goods === 1 ? "luxury" : "luxuries"}`,
+      amount: luxuryHappinessBonus(G, playerID),
+      detail:
+        `${goods} ${goods === 1 ? "luxury" : "luxuries"}` +
+        (blockade ? `, none counted this year (${blockade})` : ""),
     },
     { id: "slaves", amount: -slaveUnhappiness(G, slaves), detail: `${slaves} slaves` },
     {
@@ -82,41 +81,14 @@ export function happinessContributions(
     {
       id: "calm",
       amount: player.calmActive ? G.ruleset.civicCalm.happiness : 0,
-      detail: "Calm bought this year",
+      detail: "Calm, for a year",
     },
     ...getLawHappinessContributions(G, playerID).map((law): HappinessContribution => ({
       id: "law",
       amount: law.amount,
       detail: law.label,
     })),
-    ...seasonHappiness(G, playerID),
   ];
-}
-
-/** The season card's standing happiness line (Civic Anxiety). Years replace seasons
- *  in Step 6. */
-function seasonHappiness(G: HegemonyState, playerID: PlayerId): HappinessContribution[] {
-  const active = G.activeSeasonEvent;
-
-  return (active?.card?.effects ?? []).flatMap((effect): HappinessContribution[] =>
-    effect.type === "scaledHappinessDelta" &&
-    effect.duration === "season" &&
-    (effect.scope === "allPlayers" || playerID === active?.playerID)
-      ? [
-          {
-            id: "season",
-            amount: scaledByPops(
-              G,
-              playerID,
-              effect.amountPerPops,
-              effect.popStep,
-              effect.minimumMagnitude,
-            ),
-            detail: active?.card?.name ?? "Season",
-          },
-        ]
-      : [],
-  );
 }
 
 /** The level the riot and revolt lines test: every term, this year's calm included. */

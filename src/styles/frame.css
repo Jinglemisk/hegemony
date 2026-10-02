@@ -181,7 +181,7 @@
     --name-h: var(--lh-24);
     --fan-d: calc(var(--u) * 12); /* 48 */
     --fan-w: calc(var(--u) * 28); /* 112 */
-    --clock-w: calc(var(--u) * 100); /* 400: room for the season card's rule */
+    --clock-w: calc(var(--u) * 100); /* 400: room for the year card's rule */
     --disc-end: calc(var(--u) * 20); /* 80 */
     --endturn-w: calc(var(--u) * 28); /* 112 */
     --endturn-h: calc(var(--u) * 30); /* 120 */
@@ -1006,6 +1006,9 @@
 }
 .col-head b.is-raised {
   color: var(--olive);
+}
+.col-head b.is-zeroed {
+  color: var(--clay-ink);
 }
 .settle-col .ico {
   align-self: center;

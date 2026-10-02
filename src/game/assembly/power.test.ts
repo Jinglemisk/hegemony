@@ -21,7 +21,7 @@ const PERDICCAS_LAWS = ["guild-charter", "forum-rites", "civic-pride", "census-r
 
 function plantLaws(G: HegemonyState, cardIds: string[], author: PlayerId) {
   for (const cardId of cardIds) {
-    G.activeLaws.push({ cardId, author, enactedSeason: G.season, order: G.lawOrder++ });
+    G.activeLaws.push({ cardId, author, enactedYear: G.year, order: G.lawOrder++ });
   }
 }
 
@@ -31,7 +31,7 @@ function plantMonuments(G: HegemonyState, count: number, author: PlayerId) {
     G.tallyMonuments.push({
       cardId: "the-streets-burn",
       author,
-      enactedSeason: G.season,
+      enactedYear: G.year,
       order: G.lawOrder++,
     });
   }

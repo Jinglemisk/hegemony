@@ -1,6 +1,5 @@
 import { getActiveEffects } from "../game/activeEffects";
 import { getTile } from "../game/rules";
-import { seasonName, yearOf } from "../game/core/calendar";
 import { totalPops } from "../game/core/pops";
 import { calculateEconomyProjection } from "../game/economy/preview";
 import type { EconomyPreview } from "../game/economy/preview";
@@ -33,14 +32,12 @@ export function formatResourceDelta(resources: Resources): string {
 
 export function renderHeader(G: HegemonyState): string {
   const lines = [
-    `Turn ${G.turn} — ${seasonName(G.season)} of year ${yearOf(G.season)} (season ${G.season}) · phase ${G.phase} · ` +
+    `Turn ${G.turn} — year ${G.year} · phase ${G.phase} · ` +
       `current: player ${G.currentPlayer} (${G.players[G.currentPlayer].name})`,
   ];
 
-  if (G.activeSeasonEvent) {
-    lines.push(
-      `Seasonal event: ${G.activeSeasonEvent.card.name} — ${G.activeSeasonEvent.card.text}`,
-    );
+  if (G.activeYearCard) {
+    lines.push(`Year card: ${G.activeYearCard.name} — ${G.activeYearCard.text}`);
   }
 
   if (G.pendingPlayerEvent) {
@@ -168,7 +165,7 @@ export function renderLegal(G: HegemonyState): string {
 export function renderLog(G: HegemonyState, tail: number): string {
   return G.log
     .slice(-tail)
-    .map((entry) => `[s${entry.season}] ${entry.message}`)
+    .map((entry) => `[y${entry.year}] ${entry.message}`)
     .join("\n");
 }
 
@@ -252,16 +249,16 @@ export function renderBatchReport(report: BatchReport): string {
     );
   }
 
-  const lastSeason = report.perSeason[report.perSeason.length - 1];
-  if (lastSeason) {
+  const lastYear = report.perYear[report.perYear.length - 1];
+  if (lastYear) {
     lines.push(
-      `Season ${lastSeason.season} (${lastSeason.seasonName} y${lastSeason.year}): ` +
-        `pops mean ${formatNumber(lastSeason.pops.mean)} · food mean ${formatNumber(lastSeason.food.mean)} · ` +
-        `happiness mean ${formatNumber(lastSeason.happiness.mean)} · ` +
-        `unrest shares calm ${(lastSeason.unrestTierShares.calm * 100).toFixed(0)}% / ` +
-        `discontent ${(lastSeason.unrestTierShares.discontent * 100).toFixed(0)}% / ` +
-        `unrest ${(lastSeason.unrestTierShares.unrest * 100).toFixed(0)}% / ` +
-        `revolt ${(lastSeason.unrestTierShares.revolt * 100).toFixed(0)}%`,
+      `Year ${lastYear.year}: ` +
+        `pops mean ${formatNumber(lastYear.pops.mean)} · food mean ${formatNumber(lastYear.food.mean)} · ` +
+        `happiness mean ${formatNumber(lastYear.happiness.mean)} · ` +
+        `unrest shares calm ${(lastYear.unrestTierShares.calm * 100).toFixed(0)}% / ` +
+        `discontent ${(lastYear.unrestTierShares.discontent * 100).toFixed(0)}% / ` +
+        `unrest ${(lastYear.unrestTierShares.unrest * 100).toFixed(0)}% / ` +
+        `revolt ${(lastYear.unrestTierShares.revolt * 100).toFixed(0)}%`,
     );
   }
 

@@ -1019,7 +1019,7 @@
   margin-top: 6px;
 }
 
-/* The deck gallery inside the Seasons chapter: compact one-per-row card faces. */
+/* The deck gallery inside the Years chapter: compact one-per-row card faces. */
 .codexCardGallery {
   display: grid;
   gap: 6px;

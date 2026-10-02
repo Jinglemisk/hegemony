@@ -31,7 +31,7 @@ describe("scenario builder", () => {
     // timber-levies is spring-suited, so stacking it wins the opening's spring draw.
     const G = scenario().stackSeasonalEvent("season-timber-levies").opening().build();
 
-    expect(G.activeSeasonEvent?.card.id).toBe("season-timber-levies");
+    expect(G.activeYearCard?.card.id).toBe("season-timber-levies");
   });
 
   it("pokes state directly: settlements, pops, resources, happiness", () => {

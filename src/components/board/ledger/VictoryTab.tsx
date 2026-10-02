@@ -29,7 +29,7 @@ const METRIC_GLYPHS: Record<VictoryMetric, GlyphId> = {
   cities: "city",
   pops: "crowd",
   citizens: "citizens",
-  stockpile: "stockpile",
+  gold: "gold",
   happiness: "happiness",
   voice: "voice",
 };

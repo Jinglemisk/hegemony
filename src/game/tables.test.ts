@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { EXPEDITION_TABLES, OMEN_TABLE, RIOT_TABLE } from "./data";
 import { calculateIncomeBreakdown } from "./economy/income";
-import { startNewSeason } from "./season";
+import { startNewYear } from "./year";
 import { rollOnTable } from "./tables";
 import { fundExpedition } from "./ventures";
 import { scenario } from "./testing/scenario";
@@ -197,12 +197,12 @@ describe("the yearly omen (PROVISIONAL, 2026-07-13)", () => {
     const G = opening();
     const first = G.yearOmen!;
 
-    startNewSeason(G); // summer — same year
+    startNewYear(G); // summer — same year
     expect(G.yearOmen).toBe(first);
 
-    startNewSeason(G); // autumn
-    startNewSeason(G); // winter
-    startNewSeason(G); // spring — year 2
+    startNewYear(G); // autumn
+    startNewYear(G); // winter
+    startNewYear(G); // spring — year 2
     expect(G.yearOmen).not.toBe(first);
     expect(G.yearOmen!.year).toBe(2);
   });

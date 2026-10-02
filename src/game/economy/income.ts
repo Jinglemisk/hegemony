@@ -9,9 +9,11 @@ import type {
   Resource,
   Resources,
   Settlement,
+  Terrain,
+  YearTerm,
 } from "../types";
 import { formatPopName } from "../core/format";
-import { getTile } from "../core/query";
+import { getTile, zeroedYearTerm } from "../core/query";
 import { applyResourceDelta } from "../core/resources";
 import {
   countPlayerPopType,
@@ -89,10 +91,8 @@ export function popIncome(
 }
 
 /**
- * Net resource income produced by a single settlement: pop yields + building
- * effects. Mirrors the per-settlement portion of {@link calculateIncomeBreakdown}
- * without the player-level seasonal adjustments. Used to render the settlement
- * summary card.
+ * Net resource income a settlement prints: pop yields + building effects, before
+ * the year's card. {@link settlementYieldThisYear} is what it pays this year.
  */
 /** `ruleset` is REQUIRED for the same reason as {@link popIncome}: a default here
  *  lets a caller silently read the wrong ruleset. */
@@ -123,6 +123,69 @@ export function settlementNetYield(
     ruleset,
     content,
   );
+
+  return income;
+}
+
+/** The class column each year card zeroes. A terrain card only bites on that terrain. */
+const YEAR_TERM_COLUMNS: Record<
+  Exclude<YearTerm, "luxuryHappiness">,
+  { pop: PopType; resource: Resource; terrain?: Terrain }
+> = {
+  plainsFood: { pop: "slaves", resource: "food", terrain: "plains" },
+  forestWood: { pop: "slaves", resource: "wood", terrain: "forest" },
+  mountainStone: { pop: "slaves", resource: "stone", terrain: "mountain" },
+  freemenGold: { pop: "freemen", resource: "gold" },
+  citizenInfluence: { pop: "citizens", resource: "influence" },
+};
+
+/**
+ * What this year's card takes from one settlement's next income: the whole of the
+ * class column it zeroes, the building's raise included. Null when the card zeroes
+ * nothing here, or when the owner has already collected this year: their next income
+ * falls under next year's card, which nobody has seen.
+ */
+export function yearCardLoss(
+  G: HegemonyState,
+  tile: HexTile,
+  settlement: Settlement,
+): { pop: PopType; resource: Resource; amount: number } | null {
+  const term = zeroedYearTerm(G);
+
+  if (!term || term === "luxuryHappiness" || G.players[settlement.owner].collectedThisTurn) {
+    return null;
+  }
+
+  const column = YEAR_TERM_COLUMNS[term];
+
+  if (column.terrain && tile.terrain !== column.terrain) {
+    return null;
+  }
+
+  const amount = settlementClassColumn(
+    tile,
+    settlement,
+    column.pop,
+    G.ruleset,
+    G.definition.content,
+  ).income[column.resource];
+
+  return amount > 0 ? { pop: column.pop, resource: column.resource, amount } : null;
+}
+
+/** What a settlement pays at its owner's next income: what it prints, less what the
+ *  year's card zeroes. */
+export function settlementNextYield(
+  G: HegemonyState,
+  tile: HexTile,
+  settlement: Settlement,
+): Resources {
+  const income = settlementNetYield(tile, settlement, G.ruleset, G.definition.content);
+  const loss = yearCardLoss(G, tile, settlement);
+
+  if (loss) {
+    income[loss.resource] -= loss.amount;
+  }
 
   return income;
 }
@@ -218,11 +281,21 @@ export function calculateIncomeBreakdown(
       ruleset,
       G.definition.content,
     );
+
+    // The year's card takes its whole term back as one line that names the card.
+    const loss = yearCardLoss(G, tile, settlement);
+    if (loss) {
+      addIncomeContribution(contributions, income, {
+        resource: loss.resource,
+        amount: -loss.amount,
+        source: settlementLabel,
+        settlementId: settlement.id,
+        detail: `${G.activeYearCard?.name}: ${G.activeYearCard?.text}`,
+      });
+    }
   }
 
-  applySeasonalIncomeEffects(G, playerID, contributions, income);
-  applyYearOmenIncomeEffects(G, contributions, income);
-  // Standing Laws land AFTER the settlement, building, seasonal and omen passes: a
+  // Standing Laws land AFTER the settlement, building and year-card passes: a
   // Law is a patch over the ruleset, and the surplus-conversion effect (a tariff on
   // the harvest) can only be assessed once the harvest is known.
   applyStandingLawIncomeEffects(G, playerID, contributions, income);
@@ -238,7 +311,7 @@ export function getHungerStatus(
   const stockpile = G.players[playerID].resources.food;
   const after = stockpile + foodIncome;
   // Only free pops eat, so only they can go unfed; a shortfall deeper than their
-  // number (an omen or a Law taking food) still stops at zero food.
+  // number (a Law taking food) still stops at zero food.
   const mouths =
     countPlayerPopType(G, playerID, "freemen") + countPlayerPopType(G, playerID, "citizens");
 
@@ -269,61 +342,6 @@ function applyStandingLawIncomeEffects(
       detail: "Standing law",
     });
   }
-}
-
-/** The standing yearly omen (always symmetric — every player collects under it). */
-function applyYearOmenIncomeEffects(
-  G: HegemonyState,
-  contributions: IncomeContribution[],
-  income: Resources,
-) {
-  for (const effect of G.yearOmen?.effects ?? []) {
-    if (effect.type === "yearIncomeModifier") {
-      addIncomeContribution(contributions, income, {
-        resource: effect.resource,
-        amount: effect.amount,
-        source: `Omen: ${G.yearOmen?.label}`,
-        detail: "Yearly omen",
-      });
-    }
-  }
-}
-
-function applySeasonalIncomeEffects(
-  G: HegemonyState,
-  playerID: PlayerId,
-  contributions: IncomeContribution[],
-  income: Resources,
-) {
-  const activeEvent = G.activeSeasonEvent;
-  const card = activeEvent?.card;
-
-  if (!card) {
-    return;
-  }
-
-  for (const effect of card.effects) {
-    if (
-      effect.type === "incomeModifier" &&
-      effect.duration === "season" &&
-      effectAppliesToPlayer(effect.scope, playerID, activeEvent.playerID)
-    ) {
-      addIncomeContribution(contributions, income, {
-        resource: effect.resource,
-        amount: effect.amount,
-        source: card.name,
-        detail: "Seasonal event",
-      });
-    }
-  }
-}
-
-function effectAppliesToPlayer(
-  scope: "activePlayer" | "allPlayers",
-  playerID: PlayerId,
-  activePlayerID: PlayerId,
-) {
-  return scope === "allPlayers" || playerID === activePlayerID;
 }
 
 function applyIncomeBuildingEffects(

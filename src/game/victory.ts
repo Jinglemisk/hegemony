@@ -5,14 +5,14 @@ import { addLog, getPlayerName, getTile } from "./core/query";
 import { standingHappiness } from "./happiness";
 
 /**
- * The victory race (roadmap-appendix D1). Five public cards use "Most X, minimum Y":
- * only the sole leader at the minimum holds one. Voice is the sixth and keeps its
- * first-to-minimum holder through ties until strictly exceeded. Holding
- * `ruleset.victory.cardsToWin` cards at the start of your own turn wins immediately.
+ * The victory race (roadmap-appendix D1). Six public cards use "Most X, minimum Y":
+ * only the sole leader at the minimum holds one. Every card is a level read off the
+ * board, so each can be broken off its holder. Holding `ruleset.victory.cardsToWin`
+ * cards at the start of your own turn wins immediately.
  *
- * The seasonal event deck is the failsafe clock: it no longer reshuffles, and if it
- * runs out before anyone wins the race, most cards held takes the game (tiebreak:
- * happiness, then pops, then seat order).
+ * The year deck is the clock: it never reshuffles, and if it runs out before anyone
+ * wins the race, most cards held takes the game (tiebreak: happiness, then pops,
+ * then seat order).
  *
  * Minimums live in `ruleset.victory` so game length is a data dial, not code.
  */
@@ -37,8 +37,8 @@ export const VICTORY_CARDS: VictoryCardDefinition[] = [
   {
     id: "treasurer",
     name: "Treasurer",
-    metric: "stockpile",
-    description: "Largest banked material stockpile",
+    metric: "gold",
+    description: "Largest gold stock",
   },
   {
     id: "beloved",
@@ -50,7 +50,7 @@ export const VICTORY_CARDS: VictoryCardDefinition[] = [
     id: "voice",
     name: "Voice of the Assembly",
     metric: "voice",
-    description: "Most authored resolutions passed",
+    description: "Most standing Laws authored",
   },
 ];
 
@@ -64,11 +64,10 @@ export function victoryMetricValue(
 
   switch (metric) {
     case "voice":
-      return G.assemblyPassedByPlayer[playerID];
-    case "stockpile": {
-      const { wood, stone, gold, food } = player.resources;
-      return wood + stone + gold + food;
-    }
+      // A level, not a tally: a repeal or a replaced Law takes it back off its author.
+      return G.activeLaws.filter((law) => law.author === playerID).length;
+    case "gold":
+      return player.resources.gold;
     case "happiness":
       // Beloved reads the level without calm, which lasts a year.
       return standingHappiness(G, playerID);
@@ -116,19 +115,6 @@ export function victoryStandings(G: HegemonyState): VictoryCardStanding[] {
       {} as Record<PlayerId, number>,
     );
 
-    // Voice is Largest-Army-style ownership: the first seat to reach the minimum
-    // keeps it through ties and loses it only when strictly exceeded. That history
-    // cannot be reconstructed from current values, so the holder is explicit state.
-    if (card.metric === "voice") {
-      const holder = G.voiceHolder;
-      return {
-        card,
-        minimum,
-        holder: holder !== null && values[holder] >= minimum ? holder : null,
-        values,
-      };
-    }
-
     let holder: PlayerId | null = null;
     let best = -Infinity;
 
@@ -143,6 +129,11 @@ export function victoryStandings(G: HegemonyState): VictoryCardStanding[] {
 
     return { card, minimum, holder: holder !== null && best >= minimum ? holder : null, values };
   });
+}
+
+/** Who holds Voice of the Assembly, or null. */
+export function voiceHolder(G: HegemonyState): PlayerId | null {
+  return victoryStandings(G).find((standing) => standing.card.metric === "voice")?.holder ?? null;
 }
 
 export function victoryCardsHeld(G: HegemonyState, playerID: PlayerId): number {
@@ -168,7 +159,7 @@ export function checkVictoryAtTurnStart(G: HegemonyState) {
 }
 
 /**
- * The failsafe ending: the seasonal deck (the clock) is exhausted. Most victory cards
+ * The failsafe ending: the year deck (the clock) is exhausted. Most victory cards
  * held wins; ties break on happiness, then total pops, then seat order.
  */
 export function resolveDeckExhaustion(G: HegemonyState) {
@@ -189,7 +180,7 @@ export function resolveDeckExhaustion(G: HegemonyState) {
     return PLAYER_IDS.indexOf(a) - PLAYER_IDS.indexOf(b);
   });
 
-  addLog(G, "The seasons have run their course — the age ends.");
+  addLog(G, "The years have run their course. The age ends.");
   endGame(G, ranked[0], "deckExhausted");
 }
 

@@ -144,7 +144,7 @@ function carryResolution(
 }
 
 function plantLaw(G: HegemonyState, cardId: string, author: PlayerId | null = "0") {
-  G.activeLaws.push({ cardId, author, enactedSeason: G.season, order: G.lawOrder++ });
+  G.activeLaws.push({ cardId, author, enactedYear: G.year, order: G.lawOrder++ });
 }
 
 const SIX_LAWS = [
@@ -167,7 +167,7 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
       expect(G.assembly, `turn ${turn}`).toBeNull();
     }
 
-    expect(yearOf(G.season)).toBe(1);
+    expect(G.year).toBe(1);
     expect(G.assembliesHeld).toBe(0);
   });
 
@@ -175,8 +175,8 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
     const G = scenario().opening().build();
     expect(playUntilAssembly(G)).toBe(16);
 
-    expect(G.season).toBe(5);
-    expect(yearOf(G.season)).toBe(2);
+    expect(G.year).toBe(5);
+    expect(G.year).toBe(2);
     expect(G.assembly?.year).toBe(2);
     expect(G.assembly?.phase).toBe("proposal");
     expect(G.assembliesHeld).toBe(1);
@@ -202,7 +202,7 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
     // The season rolled and the opener rotated, but nobody has taken a turn. Proposal
     // is async, so `currentPlayer` just parks on the first undecided seat (the new
     // opener) for a headless driver; the UI lets any seat act.
-    expect(G.seasonOpener).toBe("1");
+    expect(G.yearOpener).toBe("1");
     expect(G.assembly?.resumePlayer).toBe("1");
     expect(G.currentPlayer).toBe("1");
     expect(G.turn).toBe(turnBefore);
@@ -232,10 +232,10 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
     playUntilAssembly(G);
 
     expect(G.phase).toBe("gameplay");
-    expect(G.season).toBe(9); // spring of Year 3
+    expect(G.year).toBe(9); // spring of Year 3
     expect(G.assembliesHeld).toBe(2);
     // The year turned, so the opener turned with it — and the agora runs off the new one.
-    expect(G.seasonOpener).toBe("2");
+    expect(G.yearOpener).toBe("2");
     expect(G.assembly?.resumePlayer).toBe("2");
     // The vote runs in turn order from the new opener.
     expect(G.assembly?.voteOrder).toEqual(["2", "3", "0", "1"]);
@@ -254,7 +254,7 @@ describe("cadence: the Assembly sits each spring from the ruleset's first year",
     }
 
     // Well past spring of Year 2, when the agora would otherwise have convened.
-    expect(G.season).toBeGreaterThan(5);
+    expect(G.year).toBeGreaterThan(5);
     expect(G.assembliesHeld).toBe(0);
   });
 });
@@ -470,7 +470,7 @@ describe("the ballot", () => {
 
     expect(author).toBe("0");
     expect(G.activeLaws).toHaveLength(1);
-    expect(G.activeLaws[0]).toMatchObject({ cardId: "land-reform", author: "0", enactedSeason: 5 });
+    expect(G.activeLaws[0]).toMatchObject({ cardId: "land-reform", author: "0", enactedYear: 5 });
     // The stele is immediately the politician's power and the author's patronage.
     const demosthenes = politicianStandings(G).find((s) => s.politician.id === "demosthenes");
     expect(demosthenes).toMatchObject({ power: 1, patron: "0" });

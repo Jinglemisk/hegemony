@@ -4,7 +4,7 @@ import {
   OMEN_TABLE,
   PLAYER_EVENT_CARDS,
   RIOT_TABLE,
-  SEASONAL_EVENT_CARDS,
+  YEAR_CARDS,
 } from "../game/data";
 import type { EventEffect, TableEffect } from "../game/types";
 import { presentEventEffect, presentTableEffect } from "./effects";
@@ -133,7 +133,7 @@ describe("the flat sentence survives the split", () => {
 
 describe("the carved parts are drawn from that same sentence", () => {
   const authoredEventEffects = flatten(
-    [...SEASONAL_EVENT_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
+    [...YEAR_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
   );
   const authoredTableEffects = [RIOT_TABLE, ...EXPEDITION_TABLES, OMEN_TABLE].flatMap((table) =>
     table.rows.flatMap((row) => row.effects),

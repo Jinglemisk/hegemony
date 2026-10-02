@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createInitialState, startNewSeason } from "./rules";
+import { createInitialState, startNewYear } from "./rules";
 import { scenario } from "./testing/scenario";
 import { createGame, endTurn } from "./turn";
 import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
@@ -112,14 +112,14 @@ describe("victory card standings", () => {
 describe("the seasonal deck is a finite clock", () => {
   it("never reshuffles the seasonal discard back in", () => {
     const G = scenario().opening().build();
-    const total = G.seasonalDrawPile.length;
+    const total = G.yearDrawPile.length;
 
     for (let i = 0; i < 5; i += 1) {
-      startNewSeason(G);
+      startNewYear(G);
     }
 
-    expect(G.seasonalDrawPile.length).toBe(total - 5);
-    expect(G.seasonalDiscardPile.length).toBeGreaterThan(0);
+    expect(G.yearDrawPile.length).toBe(total - 5);
+    expect(G.yearDiscardPile.length).toBeGreaterThan(0);
   });
 
   it("resolves the exhaustion tally when the deck runs out: cards tie at zero, happiness decides", () => {
@@ -133,17 +133,17 @@ describe("the seasonal deck is a finite clock", () => {
         }
       })
       .build();
-    G.seasonalDrawPile = [];
-    const seasonBefore = G.season;
+    G.yearDrawPile = [];
+    const seasonBefore = G.year;
 
-    startNewSeason(G);
+    startNewYear(G);
 
     expect(G.phase).toBe("gameOver");
     expect(G.gameOverReason).toBe("deckExhausted");
     expect(G.winner).toBe("3");
     // The clock stops on the last season actually played — no phantom increment,
     // which is what kept the sim's turn/season telemetry off by one.
-    expect(G.season).toBe(seasonBefore);
+    expect(G.year).toBe(seasonBefore);
   });
 });
 
@@ -169,7 +169,7 @@ describe("phase-0 turn structure", () => {
 
   it("rotates the season opener each new year", () => {
     const G = assemblyFreeGame(SEED);
-    expect(G.seasonOpener).toBe("0");
+    expect(G.yearOpener).toBe("0");
 
     // Play through year 1 (4 seasons × 4 turns). Season 5 is spring of year 2.
     for (let turn = 0; turn < 16; turn += 1) {
@@ -178,20 +178,20 @@ describe("phase-0 turn structure", () => {
       if (G.phase !== "gameplay") break;
     }
 
-    expect(G.season).toBe(5);
-    expect(G.seasonOpener).toBe("1");
+    expect(G.year).toBe(5);
+    expect(G.yearOpener).toBe("1");
     expect(G.currentPlayer).toBe("1");
   });
 
   it("keeps four turns per season across the rotation boundary", () => {
     const G = assemblyFreeGame(SEED);
     const seasonTurns = new Map<number, number>();
-    seasonTurns.set(G.season, 1);
+    seasonTurns.set(G.year, 1);
 
     for (let turn = 0; turn < 24 && G.phase === "gameplay"; turn += 1) {
       clearPending(G);
       expect(endTurn(G).ok).toBe(true);
-      seasonTurns.set(G.season, (seasonTurns.get(G.season) ?? 0) + 1);
+      seasonTurns.set(G.year, (seasonTurns.get(G.year) ?? 0) + 1);
     }
 
     for (const [season, turns] of seasonTurns) {

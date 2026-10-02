@@ -5,7 +5,7 @@ import { foundColony } from "../actions";
 import { getPlayerBankRate } from "../bank";
 import { getPromotePopStatus } from "../civic";
 import { calculateIncome, calculateIncomeBreakdown } from "../economy/income";
-import { startNewSeason } from "../season";
+import { startNewYear } from "../year";
 import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
@@ -37,7 +37,7 @@ const HILL = "-1,0"; // yield-less, and adjacent to P0's capital so it is legall
 
 /** Plant a standing Law exactly as {@link enact} would, minus the vote. */
 function plantLaw(G: HegemonyState, cardId: string, author: PlayerId = "0") {
-  G.activeLaws.push({ cardId, author, enactedSeason: G.season, order: G.lawOrder++ });
+  G.activeLaws.push({ cardId, author, enactedYear: G.year, order: G.lawOrder++ });
 }
 
 /** An opening with no pending event in the way of the action verbs under test. */
@@ -279,10 +279,10 @@ describe("standing laws reach the bank and the colony charter", () => {
     expect(G.players["0"].lawFreeActionsUsedThisYear).toContain("foundColony");
 
     // Roll into spring of Year 2 — a once-a-year coupon refreshes with the year.
-    G.season = 4;
-    startNewSeason(G);
+    G.year = 4;
+    startNewYear(G);
 
-    expect(G.season).toBe(5);
+    expect(G.year).toBe(5);
     expect(hasLawFreeAction(G, "0", "foundColony")).toBe(true);
   });
 

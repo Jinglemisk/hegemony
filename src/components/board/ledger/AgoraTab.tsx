@@ -1,5 +1,4 @@
 import { PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
-import { yearOf } from "../../../game/core/calendar";
 import { getResolutionCard, politicianStandings } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState } from "../../../game/types";
@@ -44,7 +43,7 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
   const voice = victoryStandings(G).find((standing) => standing.card.metric === "voice");
   const voicePassed = voice ? Math.max(...PLAYER_IDS.map((id) => voice.values[id])) : 0;
   const rules = G.ruleset.assembly;
-  const nextYear = Math.max(rules.firstYear, yearOf(G.season) + (G.assembly ? 1 : 0));
+  const nextYear = Math.max(rules.firstYear, G.year + (G.assembly ? 1 : 0));
 
   return (
     <div className="agoraPage">
@@ -181,7 +180,7 @@ export function AgoraTab({ G }: { G: HegemonyState }) {
             ? "never"
             : G.assembly
               ? "sitting now"
-              : `spring, Year ${nextYear + (yearOf(G.season) >= rules.firstYear ? 1 : 0)}`}
+              : `spring, Year ${nextYear + (G.year >= rules.firstYear ? 1 : 0)}`}
         </span>
       </div>
     </div>

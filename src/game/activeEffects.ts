@@ -2,7 +2,6 @@ import { getResolutionCard } from "./content";
 import { getStandingEffectSources } from "./assembly/laws";
 import type { LawEffect } from "./assembly/types";
 import { calculateIncome, getHungerStatus } from "./economy/income";
-import { scaledByPops } from "./settlement";
 import type {
   ActionCostDiscountTarget,
   BuildingId,
@@ -12,15 +11,14 @@ import type {
   PopType,
   Resource,
   Resources,
-  Stat,
+  YearTerm,
 } from "./types";
 
 /** Closed vocabulary used by frontend presentation and simulation telemetry. */
 export const ACTIVE_EFFECT_KINDS = [
   "incomeSuppression",
   "hunger",
-  "seasonalModifier",
-  "yearlyOmen",
+  "yearCard",
   "actionDiscount",
   "standingLaw",
   "nextAssembly",
@@ -31,8 +29,6 @@ export type ActiveEffectKind = (typeof ACTIVE_EFFECT_KINDS)[number];
 export type EventEffectActiveEffectHandling =
   | "immediate"
   | "materializedActionDiscount"
-  | "activeSeason"
-  | "activeSeasonWhenMarked"
   | "container";
 
 /**
@@ -43,10 +39,7 @@ export const EVENT_EFFECT_ACTIVE_EFFECT_HANDLING = {
   resourceDelta: "immediate",
   scaledResourceDelta: "immediate",
   happinessDelta: "immediate",
-  scaledHappinessDelta: "activeSeasonWhenMarked",
   timedHappinessDelta: "immediate",
-  incomeModifier: "activeSeasonWhenMarked",
-  buildingCostMultiplier: "activeSeason",
   addPops: "immediate",
   actionCostDiscount: "materializedActionDiscount",
   resourceExchange: "immediate",
@@ -55,7 +48,7 @@ export const EVENT_EFFECT_ACTIVE_EFFECT_HANDLING = {
 } as const satisfies Record<EventEffect["type"], EventEffectActiveEffectHandling>;
 
 export type ActiveEffectSource = {
-  kind: "directive" | "unrest" | "seasonalEvent" | "omen" | "playerEvent" | "law";
+  kind: "directive" | "unrest" | "yearCard" | "playerEvent" | "law";
   id: string;
   label: string;
 };
@@ -69,7 +62,6 @@ export type ActiveEffectExpiry =
   | "afterIncomeCollections"
   | "afterPlayerUpkeeps"
   | "whenFed"
-  | "atSeasonEnd"
   | "atYearEnd"
   | "afterMatchingActionOrTurnEnd"
   | "afterMatchingLawActionOrYearEnd"
@@ -80,7 +72,6 @@ export type ActiveEffectDuration = {
   unit:
     | "incomeCollections"
     | "playerUpkeeps"
-    | "season"
     | "year"
     | "standing"
     | "matchingAction"
@@ -100,12 +91,7 @@ export type ActiveEffectMechanic =
       stockpile: number;
       unfed: number;
     }
-  | { type: "resourceIncome"; resource: Stat; amount: number }
-  | {
-      type: "buildingCostMultiplier";
-      multiplier: number;
-      excludes: Array<"foundColony" | "upgradeColonyToCity">;
-    }
+  | { type: "zeroTerm"; term: YearTerm }
   | {
       type: "actionCostDiscount";
       action: ActionCostDiscountTarget;
@@ -188,8 +174,7 @@ export function getActiveEffects(
     });
   }
 
-  addSeasonalEffects(G, playerID, effects);
-  addOmenEffects(G, effects);
+  addYearCardEffect(G, effects);
 
   for (const discount of player.actionCostDiscounts) {
     effects.push({
@@ -286,111 +271,23 @@ export function getActiveEffects(
   return effects;
 }
 
-function addSeasonalEffects(
-  G: HegemonyState,
-  playerID: PlayerId,
-  effects: ActiveEffectDescriptor[],
-) {
-  const active = G.activeSeasonEvent;
-  if (!active) return;
+/** The year's card, while it zeroes a term. Plague and Festival act once when revealed
+ *  and leave nothing standing. */
+function addYearCardEffect(G: HegemonyState, effects: ActiveEffectDescriptor[]) {
+  const card = G.activeYearCard;
 
-  const scopeFor = (scope: "activePlayer" | "allPlayers"): ActiveEffectScope =>
-    scope === "allPlayers"
-      ? { kind: "allPlayers" }
-      : { kind: "activePlayer", playerID: active.playerID };
-
-  for (const [index, effect] of active.card.effects.entries()) {
-    const handling = EVENT_EFFECT_ACTIVE_EFFECT_HANDLING[effect.type];
-
-    if (handling !== "activeSeason" && handling !== "activeSeasonWhenMarked") {
-      continue;
-    }
-
-    if (
-      effect.type === "incomeModifier" &&
-      effect.duration === "season" &&
-      (effect.scope === "allPlayers" || active.playerID === playerID)
-    ) {
-      effects.push({
-        id: "season:" + active.season + ":" + active.card.id + ":" + index,
-        kind: "seasonalModifier",
-        source: {
-          kind: "seasonalEvent",
-          id: active.card.id,
-          label: active.card.name,
-        },
-        scope: scopeFor(effect.scope),
-        duration: { unit: "season", remaining: 1, expiry: "atSeasonEnd" },
-        mechanics: [{ type: "resourceIncome", resource: effect.resource, amount: effect.amount }],
-      });
-    } else if (
-      effect.type === "scaledHappinessDelta" &&
-      effect.duration === "season" &&
-      (effect.scope === "allPlayers" || active.playerID === playerID)
-    ) {
-      effects.push({
-        id: "season:" + active.season + ":" + active.card.id + ":" + index,
-        kind: "seasonalModifier",
-        source: {
-          kind: "seasonalEvent",
-          id: active.card.id,
-          label: active.card.name,
-        },
-        scope: scopeFor(effect.scope),
-        duration: { unit: "season", remaining: 1, expiry: "atSeasonEnd" },
-        mechanics: [
-          {
-            type: "resourceIncome",
-            resource: "happiness",
-            amount: scaledByPops(
-              G,
-              playerID,
-              effect.amountPerPops,
-              effect.popStep,
-              effect.minimumMagnitude,
-            ),
-          },
-        ],
-      });
-    } else if (effect.type === "buildingCostMultiplier" && effect.duration === "season") {
-      effects.push({
-        id: "season:" + active.season + ":" + active.card.id + ":" + index,
-        kind: "seasonalModifier",
-        source: {
-          kind: "seasonalEvent",
-          id: active.card.id,
-          label: active.card.name,
-        },
-        scope: { kind: "allPlayers" },
-        duration: { unit: "season", remaining: 1, expiry: "atSeasonEnd" },
-        mechanics: [
-          {
-            type: "buildingCostMultiplier",
-            multiplier: effect.multiplier,
-            excludes: effect.excludes,
-          },
-        ],
-      });
-    }
+  if (card?.effect.type !== "zeroTerm") {
+    return;
   }
-}
 
-function addOmenEffects(G: HegemonyState, effects: ActiveEffectDescriptor[]) {
-  const omen = G.yearOmen;
-  if (!omen) return;
-
-  for (const [index, effect] of omen.effects.entries()) {
-    if (effect.type !== "yearIncomeModifier") continue;
-
-    effects.push({
-      id: "omen:" + omen.year + ":" + omen.record.roll + ":" + index,
-      kind: "yearlyOmen",
-      source: { kind: "omen", id: String(omen.record.roll), label: omen.label },
-      scope: { kind: "allPlayers" },
-      duration: { unit: "year", remaining: 1, expiry: "atYearEnd" },
-      mechanics: [{ type: "resourceIncome", resource: effect.resource, amount: effect.amount }],
-    });
-  }
+  effects.push({
+    id: "year:" + G.year + ":" + card.id,
+    kind: "yearCard",
+    source: { kind: "yearCard", id: card.id, label: card.name },
+    scope: { kind: "allPlayers" },
+    duration: { unit: "year", remaining: 1, expiry: "atYearEnd" },
+    mechanics: [{ type: "zeroTerm", term: card.effect.term }],
+  });
 }
 
 export function countActiveEffectsByKind(

@@ -1,6 +1,6 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import type { HegemonyState, LogEntry, PlayerId } from "../../../game/types";
-import { seasonLabel, yearLabel } from "../../../ui/formatters";
+import { yearLabel } from "../../../ui/formatters";
 import { PLAYER_GLAZE_LIST, glazeOf } from "../../../ui/playerGlazes";
 import { AnnotatedText } from "../../AnnotatedText";
 
@@ -62,15 +62,15 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
 
   const visible = filter === "all" ? tagged : tagged.filter((row) => row.player === filter);
 
-  // Fold consecutive entries from the same season under one heading.
-  const groups: Array<{ season: number; rows: TaggedEntry[] }> = [];
+  // Fold consecutive entries from the same year under one heading.
+  const groups: Array<{ year: number; rows: TaggedEntry[] }> = [];
   for (const row of visible) {
     const current = groups[groups.length - 1];
 
-    if (current && current.season === row.entry.season) {
+    if (current && current.year === row.entry.year) {
       current.rows.push(row);
     } else {
-      groups.push({ season: row.entry.season, rows: [row] });
+      groups.push({ year: row.entry.year, rows: [row] });
     }
   }
 
@@ -113,10 +113,8 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
           <p className="chronicleEmpty body-em">No deeds recorded here yet.</p>
         ) : null}
         {groups.map((group) => (
-          <div key={`${group.season}-${group.rows[0].entry.id}`}>
-            <div className="chronSeason label">
-              {seasonLabel(group.season)} · {yearLabel(group.season)}
-            </div>
+          <div key={`${group.year}-${group.rows[0].entry.id}`}>
+            <div className="chronSeason label">{yearLabel(group.year)}</div>
             {group.rows.map(({ entry, player }) => (
               <p
                 className={player ? "entry entryOwned body" : "entry body"}

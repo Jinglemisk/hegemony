@@ -112,11 +112,11 @@ describe("Aggregator", () => {
     expect(totalCapLeaderRate).toBeCloseTo(1);
 
     // Season rows exist and pool both games once a season completed in both.
-    expect(report.perSeason.length).toBeGreaterThan(0);
-    expect(report.perSeason[0].games).toBe(2);
+    expect(report.perYear.length).toBeGreaterThan(0);
+    expect(report.perYear[0].games).toBe(2);
 
     // Unrest tier shares are a distribution.
-    const shares = report.perSeason[0].unrestTierShares;
+    const shares = report.perYear[0].unrestTierShares;
     expect(shares.calm + shares.discontent + shares.unrest + shares.revolt).toBeCloseTo(1);
 
     expect(Object.keys(report.activeEffects)).toEqual([...ACTIVE_EFFECT_KINDS]);

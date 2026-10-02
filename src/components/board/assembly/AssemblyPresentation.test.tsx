@@ -157,7 +157,7 @@ describe("Assembly pickers", () => {
   it("opens the repeal picker as a labelled dialog and restores keyboard focus on Escape", () => {
     const G = scenario().build();
     G.players["0"].resources.influence = 20;
-    G.activeLaws.push({ cardId: "grain-dole", author: "0", enactedSeason: G.season, order: 0 });
+    G.activeLaws.push({ cardId: "grain-dole", author: "0", enactedYear: G.year, order: 0 });
     openAssembly(G, "0");
     const proposeRepeal = vi.fn();
     const value = {
@@ -213,7 +213,7 @@ describe("Assembly pickers", () => {
       G.activeLaws.push({
         cardId: card.id,
         author: "0",
-        enactedSeason: G.season,
+        enactedYear: G.year,
         order: index,
       });
     });
@@ -448,13 +448,13 @@ describe("The Assembly scene", () => {
     const G = scenario().build();
     const laws = RESOLUTION_CARDS.filter((card) => card.kind === "law").slice(0, 2);
     laws.forEach((card, index) => {
-      G.activeLaws.push({ cardId: card.id, author: "0", enactedSeason: G.season, order: index });
+      G.activeLaws.push({ cardId: card.id, author: "0", enactedYear: G.year, order: index });
     });
     const directive = RESOLUTION_CARDS.find((card) => card.kind === "directive")!;
     G.tallyMonuments.push({
       cardId: directive.id,
       author: "1",
-      enactedSeason: G.season,
+      enactedYear: G.year,
       order: 0,
     });
     openAssembly(G, "0");
@@ -495,7 +495,7 @@ describe("The Assembly scene", () => {
     const G = scenario().build();
     const laws = RESOLUTION_CARDS.filter((card) => card.kind === "law").slice(0, 2);
     laws.forEach((card, index) => {
-      G.activeLaws.push({ cardId: card.id, author: "0", enactedSeason: G.season, order: index });
+      G.activeLaws.push({ cardId: card.id, author: "0", enactedYear: G.year, order: index });
     });
     openAssembly(G, "0");
     const value = { G, viewerId: "0", moves: {} } as unknown as GameUi;
@@ -542,7 +542,7 @@ describe("The Assembly scene", () => {
     vi.useFakeTimers();
     const G = scenario().build();
     const only = RESOLUTION_CARDS.find((card) => card.kind === "law")!;
-    G.activeLaws.push({ cardId: only.id, author: "0", enactedSeason: G.season, order: 0 });
+    G.activeLaws.push({ cardId: only.id, author: "0", enactedYear: G.year, order: 0 });
     openAssembly(G, "0");
     const value = { G, viewerId: "0", moves: {} } as unknown as GameUi;
     const draw = () =>
@@ -586,7 +586,7 @@ describe("The Assembly scene", () => {
     const G = scenario().build();
     const laws = RESOLUTION_CARDS.filter((card) => card.kind === "law").slice(0, 2);
     laws.forEach((card, index) => {
-      G.activeLaws.push({ cardId: card.id, author: "0", enactedSeason: G.season, order: index });
+      G.activeLaws.push({ cardId: card.id, author: "0", enactedYear: G.year, order: index });
     });
     openAssembly(G, "0");
     const value = { G, viewerId: "0", moves: {} } as unknown as GameUi;

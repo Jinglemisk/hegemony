@@ -175,10 +175,7 @@ export const EVENT_EFFECT_PARITY = {
   resourceDelta: event("eventImmediate"),
   scaledResourceDelta: event("eventImmediate"),
   happinessDelta: event("eventImmediate"),
-  scaledHappinessDelta: event("eventImmediate", "eventPersistent"),
   timedHappinessDelta: event("eventPersistent", "activeEffectPolicy"),
-  incomeModifier: event("eventPersistent", "activeEffectPolicy"),
-  buildingCostMultiplier: event("eventPersistent"),
   addPops: event("eventImmediate"),
   actionCostDiscount: event("eventPersistent"),
   resourceExchange: event("eventImmediate"),
@@ -203,7 +200,6 @@ export const TABLE_EFFECT_PARITY = {
   destroyBuilding: table("tableFallbacks"),
   gainResource: table("tableResolution"),
   gainPop: table("tableResolution", "tableFallbacks"),
-  yearIncomeModifier: table("tableResolution", "activeEffectPolicy"),
 } as const satisfies Record<TableEffect["type"], EffectParityCoverage>;
 
 const lawArgs = [
@@ -278,8 +274,7 @@ const active = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
 export const ACTIVE_EFFECT_MECHANIC_PARITY = {
   suppressIncome: active("activeEffectLifecycle", "activeEffectPolicy"),
   hunger: active("activeEffectLifecycle", "activeEffectPolicy"),
-  resourceIncome: active("activeEffectLifecycle", "activeEffectPolicy"),
-  buildingCostMultiplier: active("activeEffectLifecycle"),
+  zeroTerm: active("activeEffectLifecycle", "activeEffectPolicy"),
   actionCostDiscount: active("activeEffectLifecycle"),
   standingLaw: active("activeEffectLifecycle", "policyAssembly"),
   equalVotesNextAssembly: active("activeEffectLifecycle", "policyAssembly"),
@@ -311,20 +306,15 @@ export const TERRAIN_CONTENT_IDS = [
   "oracle",
 ] as const satisfies readonly Terrain[];
 
-export const SEASONAL_EVENT_CONTENT_IDS = [
-  "season-drought",
-  "season-bountiful-harvest",
-  "season-timber-levies",
-  "season-quarry-contracts",
-  "season-grain-tithe",
-  "season-civic-anxiety",
-  "season-festival-games",
-  "season-scarce-labor",
-  "season-skilled-artisans",
-  "season-open-markets",
-  "season-plague",
-  "season-spring-floods",
-  "season-wildfire",
+export const YEAR_CARD_CONTENT_IDS = [
+  "year-drought",
+  "year-wildfire",
+  "year-silent-mines",
+  "year-piracy",
+  "year-ostracism",
+  "year-blockade",
+  "year-plague",
+  "year-festival",
 ] as const;
 
 export const PLAYER_EVENT_CONTENT_IDS = [
@@ -360,7 +350,6 @@ export const EVENT_TABLE_CONTENT_IDS = [
   "merchantConvoy",
   "grandEmbassy",
   "colonistsVoyage",
-  "omen",
 ] as const satisfies readonly EventTableId[];
 
 export const RIOT_INSURANCE_CONTENT_IDS = [
@@ -453,15 +442,15 @@ export const CONTENT_MANIFEST = {
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "frontierTiles" },
     behaviorFixtures: ["contentInventory"],
   },
-  seasonalEvents: {
-    ids: SEASONAL_EVENT_CONTENT_IDS,
-    engine: { implementation: "src/game/events.ts", evidence: "drawSeasonalEvent" },
+  yearCards: {
+    ids: YEAR_CARD_CONTENT_IDS,
+    engine: { implementation: "src/game/year.ts", evidence: "revealYearCard" },
     frontend: {
       implementation: "src/components/frame/TopBar.tsx",
       evidence: "presentEventEffects",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "projectPolicyHorizon" },
-    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "seasonal" },
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "countYearCard" },
     behaviorFixtures: ["eventPersistent", "contentTelemetry"],
   },
   playerEvents: {
@@ -546,13 +535,13 @@ export const CONTENT_MANIFEST = {
   },
 } as const satisfies Record<string, ContentManifestEntry>;
 
-export type SeasonalEventContentId = (typeof SEASONAL_EVENT_CONTENT_IDS)[number];
+export type YearCardContentId = (typeof YEAR_CARD_CONTENT_IDS)[number];
 export type PlayerEventContentId = (typeof PLAYER_EVENT_CONTENT_IDS)[number];
 
 export const FEATURE_PARITY = {
   terrainEconomy: CONTENT_MANIFEST.terrain,
   buildingEconomy: CONTENT_MANIFEST.buildings,
-  seasonalEvents: CONTENT_MANIFEST.seasonalEvents,
+  yearCards: CONTENT_MANIFEST.yearCards,
   playerEvents: CONTENT_MANIFEST.playerEvents,
   eventTables: CONTENT_MANIFEST.eventTables,
   workSlots: {

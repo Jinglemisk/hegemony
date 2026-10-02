@@ -96,11 +96,8 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
   );
 }
 
-/** The oracle: sacred ground, and the sign it gave this year. */
+/** The oracle: sacred ground that nobody may settle. */
 export function OraclePage() {
-  const { G } = useGameUi();
-  const omen = G.yearOmen;
-
   return (
     <>
       <p className="settle-meta caps">
@@ -115,19 +112,6 @@ export function OraclePage() {
         and come down with riddles; the wise build their year on the answer.
       </p>
       <p className="lore-rule cap">No one may found, raise or settle on it, by any act or event.</p>
-      {omen ? (
-        <p className="g-line">
-          <Ico path="events/die" size="ui" />
-          This year&rsquo;s sign
-          <span>
-            <b>{omen.label}</b>{" "}
-            <EffectLine
-              effect={joinEffectPresentations(omen.effects.map(presentTableEffect))}
-              links={false}
-            />
-          </span>
-        </p>
-      ) : null}
     </>
   );
 }

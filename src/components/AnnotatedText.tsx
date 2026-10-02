@@ -71,14 +71,12 @@ const TOKEN_MAP: Record<string, Token> = {
   settlement: { type: "settlement", key: "city" },
   settlements: { type: "settlement", key: "city" },
   // Concept terms — no glyph, just a clay keyword that opens its chapter.
-  card: { type: "concept", chapter: "seasons" },
-  cards: { type: "concept", chapter: "seasons" },
-  event: { type: "concept", chapter: "seasons" },
-  events: { type: "concept", chapter: "seasons" },
-  season: { type: "concept", chapter: "seasons" },
-  seasons: { type: "concept", chapter: "seasons" },
-  omen: { type: "concept", chapter: "seasons" },
-  omens: { type: "concept", chapter: "seasons" },
+  card: { type: "concept", chapter: "years" },
+  cards: { type: "concept", chapter: "years" },
+  event: { type: "concept", chapter: "years" },
+  events: { type: "concept", chapter: "years" },
+  year: { type: "concept", chapter: "years" },
+  years: { type: "concept", chapter: "years" },
   venture: { type: "concept", chapter: "ventures" },
   ventures: { type: "concept", chapter: "ventures" },
   expedition: { type: "concept", chapter: "ventures" },
@@ -148,12 +146,11 @@ const PROPER_NAMES: string[] = (() => {
 
   return [
     ...content.buildings,
-    ...content.seasonalEvents,
+    ...content.yearCards,
     ...content.playerEvents,
     ...content.resolutions,
     ...POLITICIANS,
     content.riotTable,
-    content.omenTable,
     ...content.expeditionTables,
   ]
     .map((authored) => authored.name)
