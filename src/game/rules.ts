@@ -28,6 +28,7 @@
  * This file re-exports the public surface so existing `./rules` imports keep working.
  * New code is free to import directly from the module it needs.
  */
+export * from "./ideas";
 export * from "./bank";
 export * from "./civic";
 export * from "./content";

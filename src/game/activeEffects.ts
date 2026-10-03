@@ -10,13 +10,14 @@ export const ACTIVE_EFFECT_KINDS = [
   "hunger",
   "yearCard",
   "standingLaw",
+  "standingIdea",
   "nextAssembly",
 ] as const;
 
 export type ActiveEffectKind = (typeof ACTIVE_EFFECT_KINDS)[number];
 
 export type ActiveEffectSource = {
-  kind: "directive" | "unrest" | "yearCard" | "law";
+  kind: "directive" | "unrest" | "yearCard" | "law" | "idea";
   id: string;
   label: string;
 };
@@ -24,7 +25,12 @@ export type ActiveEffectSource = {
 export type ActiveEffectScope = { kind: "player"; playerID: PlayerId } | { kind: "allPlayers" };
 
 export type ActiveEffectExpiry =
-  "afterIncomeCollections" | "whenFed" | "atYearEnd" | "whenRepealed" | "atNextAssembly";
+  | "afterIncomeCollections"
+  | "whenFed"
+  | "atYearEnd"
+  | "whenRepealed"
+  | "atNextAssembly"
+  | "permanent";
 
 export type ActiveEffectDuration = {
   unit: "incomeCollections" | "year" | "standing" | "assembly";
@@ -123,10 +129,14 @@ export function getActiveEffects(
   for (const source of getStandingEffectSources(G, playerID)) {
     effects.push({
       id: source.kind + ":" + source.id,
-      kind: "standingLaw",
-      source: { kind: "law", id: source.id, label: source.label },
-      scope: { kind: "allPlayers" },
-      duration: { unit: "standing", remaining: null, expiry: "whenRepealed" },
+      kind: source.kind === "idea" ? "standingIdea" : "standingLaw",
+      source: { kind: source.kind, id: source.id, label: source.label },
+      scope: source.kind === "idea" ? { kind: "player", playerID } : { kind: "allPlayers" },
+      duration: {
+        unit: "standing",
+        remaining: null,
+        expiry: source.kind === "idea" ? "permanent" : "whenRepealed",
+      },
       mechanics: source.effects.map((effect) => ({ type: "standingLaw", effect })),
     });
   }

@@ -1,3 +1,4 @@
+import { ideaSlotBonus, occupiedBuildingSlots, colonyPieceBonus } from "./ideaRules";
 import { effectiveRuleset, hasLawRule, type RulesSource } from "./assembly/laws";
 import { hexDistance, isCoastalTile } from "./map";
 import type {
@@ -57,7 +58,10 @@ export function settlementSlots(tile: HexTile, settlement: Settlement, source?: 
     settlement.kind === "colony"
       ? 0
       : Number(hasLawRule(source, "masterBuilders")) - Number(hasLawRule(source, "homesteadAct"));
-  const slots = Math.max(settlement.buildings.length, tile.slots + cityDelta);
+  const slots = Math.max(
+    occupiedBuildingSlots(source, settlement),
+    tile.slots + cityDelta + ideaSlotBonus(source, settlement),
+  );
   const sharers = tile.settlements.length;
 
   if (sharers <= 1) {
@@ -72,7 +76,10 @@ export function settlementSlots(tile: HexTile, settlement: Settlement, source?: 
 
 /** Slots left for slaves to work: every building takes one. */
 export function settlementOpenSlots(tile: HexTile, settlement: Settlement, source?: RulesSource) {
-  return Math.max(0, settlementSlots(tile, settlement, source) - settlement.buildings.length);
+  return Math.max(
+    0,
+    settlementSlots(tile, settlement, source) - occupiedBuildingSlots(source, settlement),
+  );
 }
 
 /**
@@ -118,14 +125,15 @@ export function playerPieces(G: HegemonyState, playerID: PlayerId) {
   const setupCities = G.ruleset.setup.filter((kind) => kind !== "colony").length;
   const cities = Math.max(0, kinds.length - colonies - setupCities);
 
+  const colonySupply = G.ruleset.pieces.colonies + colonyPieceBonus(G, playerID);
   return {
     colonies,
     cities,
-    colonySupply: G.ruleset.pieces.colonies,
-    colonyLimit: Math.max(0, G.ruleset.pieces.colonies - Number(hasLawRule(G, "masterBuilders"))),
+    colonySupply,
+    colonyLimit: Math.max(0, colonySupply - Number(hasLawRule(G, "masterBuilders"))),
     coloniesRemaining: Math.max(
       0,
-      G.ruleset.pieces.colonies - Number(hasLawRule(G, "masterBuilders")) - colonies,
+      colonySupply - Number(hasLawRule(G, "masterBuilders")) - colonies,
     ),
     citySupply: G.ruleset.pieces.cities,
     citiesRemaining: Math.max(0, G.ruleset.pieces.cities - cities),

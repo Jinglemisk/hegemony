@@ -1,3 +1,4 @@
+import { takeNationalIdea } from "./ideas";
 import { GAME_CONFIG, TEST_OPENING_SETUP } from "./config";
 import { PLAYER_IDS } from "./data";
 import {
@@ -90,8 +91,8 @@ export function advanceSetupTurn(G: HegemonyState) {
     }
   }
 
-  G.phase = "gameplay";
-  G.currentPlayer = G.yearOpener;
+  G.phase = "setupIdeas";
+  G.currentPlayer = "0";
 }
 
 /** Start-of-turn automation for the current gameplay player: reveal the year's card,
@@ -210,7 +211,7 @@ function runPreloadOpeningSetup(G: HegemonyState) {
 
   let guard = 0;
 
-  while (G.phase !== "gameplay") {
+  while (G.phase !== "setupIdeas") {
     if (guard++ > 16) {
       throw new Error("Invalid test setup: setup did not converge.");
     }
@@ -235,5 +236,6 @@ function runPreloadOpeningSetup(G: HegemonyState) {
     advanceSetupTurn(G);
   }
 
+  for (const id of PLAYER_IDS) takeNationalIdea(G, id, "assembly-brokers");
   beginGameplayTurn(G);
 }

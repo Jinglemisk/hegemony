@@ -1,3 +1,4 @@
+import { getNationalIdeas, IDEA_PURCHASE_COST } from "../../../game/ideas";
 /* This is the Codex's rules CONTENT module (a chapter registry), not a hot-reloadable
    component file — it deliberately exports data (RULEBOOK) alongside the small inline
    render helpers, so Fast Refresh's one-kind-of-export rule doesn't apply. */
@@ -1059,6 +1060,36 @@ const assembly: RuleChapter = {
   },
 };
 
+const ideas: RuleChapter = {
+  id: "ideas",
+  title: "National Ideas",
+  blurb: "One setup choice and one influence purchase.",
+  keywords: ["Idea", "setup", "Civic", "asymmetry"],
+  entries: [{ id: "roster", label: "The Ideas" }],
+  Body: ({ G }) => (
+    <div className="ruleChapterBody">
+      <p>
+        After placement, secretly choose one Idea; every seat's choice reveals before Year 1. Buy
+        one distinct second Idea during your turn through Civic → Ideas for{" "}
+        {formatResourceCost(IDEA_PURCHASE_COST)}. Ideas remain public and cannot be replaced; other
+        seats may hold the same ones.
+      </p>
+      <Entry id={anchor("ideas", "roster")} title="The Ideas">
+        <dl>
+          {getNationalIdeas(G).map((idea) => (
+            <div key={idea.id}>
+              <dt>
+                <strong>{idea.name}</strong>
+              </dt>
+              <dd>{idea.text}</dd>
+            </div>
+          ))}
+        </dl>
+      </Entry>
+    </div>
+  ),
+};
+
 /** A card in the rulebook's deck gallery: painted face + name + copies + effect. */
 function RulebookCard({ card }: { card: EventCard }) {
   return (
@@ -1093,6 +1124,7 @@ export const RULEBOOK: RuleChapter[] = [
   ladder,
   buildings,
   luxuries,
+  ideas,
   unrest,
   years,
   bank,

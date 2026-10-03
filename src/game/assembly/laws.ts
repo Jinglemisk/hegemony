@@ -13,17 +13,27 @@ import { getTile } from "../core/query";
 import type { LawCostedAction, LawEffect, LawRule, ResolutionCard } from "./types";
 
 export type RulesSource = Ruleset | HegemonyState;
-export type StandingEffectSource = { kind: "law"; id: string; label: string; effects: LawEffect[] };
+export type StandingEffectSource = {
+  kind: "law" | "idea";
+  id: string;
+  label: string;
+  effects: LawEffect[];
+};
 export function getStandingEffectSources(
   G: HegemonyState,
-  _playerID: PlayerId,
+  playerID: PlayerId,
 ): StandingEffectSource[] {
-  return G.activeLaws.flatMap((active) => {
+  const laws: StandingEffectSource[] = G.activeLaws.flatMap((active) => {
     const card = getResolutionCard(G.definition.content, active.cardId);
     return card?.kind === "law"
       ? [{ kind: "law" as const, id: card.id, label: card.name, effects: card.effects }]
       : [];
   });
+  const ideas: StandingEffectSource[] = G.players[playerID].nationalIdeas.flatMap((owned) => {
+    const idea = G.definition.content.nationalIdeas.find((i) => i.id === owned.id);
+    return idea ? [{ kind: "idea", id: idea.id, label: idea.name, effects: idea.effects }] : [];
+  });
+  return [...laws, ...ideas];
 }
 export function getStandingEffects(G: HegemonyState, playerID: PlayerId): LawEffect[] {
   return getStandingEffectSources(G, playerID).flatMap((source) => source.effects);
@@ -144,7 +154,9 @@ export function getLawHappinessContributions(
 export function getFoundColonyRiders(G: HegemonyState, playerID: PlayerId) {
   return getStandingEffectSources(G, playerID).flatMap((source) =>
     source.effects.flatMap((effect) =>
-      effect.type === "onFoundColony" ? [{ grantPop: effect.grantPop, label: source.label }] : [],
+      effect.type === "onFoundColony"
+        ? [{ grantPop: effect.grantPop, amount: effect.amount ?? 1, label: source.label }]
+        : [],
     ),
   );
 }

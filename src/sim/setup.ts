@@ -9,7 +9,7 @@ import type { GameModeId } from "../game/ruleset";
 import { createInitialStateFromDefinition } from "../game/state";
 import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
 import type { OpeningKind, RulesetPatch } from "./io";
-import { choosePlacement } from "./policies";
+import { chooseIdea, choosePlacement } from "./policies";
 import type { SimRng } from "./rng";
 
 export type NewGameOptions = {
@@ -22,7 +22,7 @@ export type NewGameOptions = {
   /** Terrain layout. Defaults to "classic" so historical balance runs stay
    *  reproducible; realistic runs pass "shuffled" to match the live game. */
   boardLayout?: BoardLayout;
-  /** Breaks placement ties (policy) or draws placements (random); unused for fixed/manual. */
+  /** Breaks placement ties (policy) or draws placements (random); also scores fixed-opening Ideas; unused for manual. */
   simRng: SimRng;
   /** Called once per applied setup move, for history recording. */
   onMove?: (G: HegemonyState, player: PlayerId, command: GameCommand) => void;
@@ -69,6 +69,14 @@ export function buildNewGame({
         throw new Error(`fixed opening did not converge (mode ${mode})`);
       }
 
+      if (G.phase === "setupIdeas") {
+        G = applyRecorded(
+          G,
+          chooseIdea(G, enumerateLegalCommands(G, G.currentPlayer), simRng),
+          onMove,
+        );
+        continue;
+      }
       const placement = TEST_OPENING_SETUP.find(
         (candidate) => candidate.playerID === G.currentPlayer,
       );

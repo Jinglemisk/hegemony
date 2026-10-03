@@ -1,3 +1,4 @@
+import { votePurchaseLimit } from "../ideaRules";
 import { applyUnrestTokenChange, describeUnrestTokenChange } from "../happiness";
 import { PLAYER_IDS } from "../data";
 import { yearDeckSize } from "../year";
@@ -508,8 +509,8 @@ export function getAssemblyBuyVoteStatus(
   const reason =
     !session || session.phase !== "voting" || session.voteOrder[session.voteIndex] !== playerID
       ? "You can only buy votes when it is your turn to cast."
-      : session.bribesUsed[playerID] >= rules.briberyCap
-        ? `At most ${rules.briberyCap} votes bought per sitting.`
+      : session.bribesUsed[playerID] >= votePurchaseLimit(G, playerID)
+        ? `At most ${votePurchaseLimit(G, playerID)} votes bought per sitting.`
         : G.players[playerID].resources[payment] < rules.briberyCost
           ? `Requires ${rules.briberyCost} ${payment}.`
           : null;

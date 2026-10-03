@@ -61,11 +61,15 @@ export function BuildPage({
   const store = G.players[playerID].resources;
   // A place to raise in is a city, or a colony whose site holds or would take a Port.
   const slotted = holdings.map((holding) => ({ holding, ...slotsOf(holding, G) }));
-  const ground = slotted.filter((entry) => entry.slots > 0);
-  const bare = slotted.filter((entry) => entry.slots === 0);
+  const ground = slotted.filter(
+    (entry) => entry.slots > 0 || entry.built > 0 || entry.raisable > 0,
+  );
+  const bare = slotted.filter(
+    (entry) => entry.slots === 0 && entry.built === 0 && entry.raisable === 0,
+  );
   const target =
     ground.find((entry) => entry.holding.tile.id === targetTileId) ??
-    ground.find((entry) => entry.open > 0) ??
+    ground.find((entry) => entry.raisable > 0) ??
     ground[0];
   const shut = !isActive ? "not your turn" : phase !== "gameplay" ? "not in this phase" : null;
   const bareNames = bare.map(({ holding }) => names.get(holding.settlement.id) ?? "POLIS");
@@ -74,7 +78,7 @@ export function BuildPage({
     <>
       <div aria-label="Raise in" className="targets" data-c="targets" role="radiogroup">
         <span className="caps">Raise in</span>
-        {ground.map(({ holding, open }) => (
+        {ground.map(({ holding, open, raisable }) => (
           <button
             aria-checked={holding === target?.holding}
             className="target"
@@ -84,7 +88,9 @@ export function BuildPage({
             type="button"
           >
             <span className="target-name">{names.get(holding.settlement.id)}</span>
-            <span className="cap">{open > 0 ? `${open} open` : "full"}</span>
+            <span className="cap">
+              {open > 0 ? `${open} open` : raisable > 0 ? "site available" : "full"}
+            </span>
           </button>
         ))}
         {bare.length > 0 ? (

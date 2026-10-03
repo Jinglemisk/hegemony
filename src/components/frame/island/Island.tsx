@@ -1,3 +1,4 @@
+import { occupiedBuildingSlots } from "../../../game/ideaRules";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -273,7 +274,7 @@ function Tile({
   // A settled tile draws its slots as pips: built, worked by a slave, or open. An
   // empty tile prints the count beside what its slaves would make.
   const slots = lead ? settlementSlots(tile, lead, G) : 0;
-  const built = lead ? lead.buildings.length : 0;
+  const built = lead ? occupiedBuildingSlots(G, lead) : 0;
   const worked = lead ? settlementWorkingSlaves(tile, lead, G) : 0;
   const primary = settlementSlaveResource(tile, G);
   const slotLabel =
@@ -389,7 +390,7 @@ function tileTip(G: HegemonyState, tile: HexTile, names: Map<string, string>) {
         ]),
       [
         "Slots",
-        `${lead.buildings.length} built, ${settlementWorkingSlaves(tile, lead, G)} worked of ${settlementSlots(tile, lead, G)}`,
+        `${occupiedBuildingSlots(G, lead)} slots built, ${settlementWorkingSlaves(tile, lead, G)} worked of ${settlementSlots(tile, lead, G)}`,
       ],
     ],
   };

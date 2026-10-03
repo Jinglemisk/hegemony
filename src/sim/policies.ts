@@ -1,6 +1,9 @@
+import { ideaForEval, playerNationalIdeas } from "../game/ideas";
+import { playerDole, votePurchaseLimit } from "../game/ideaRules";
+import { playerPieces } from "../game/settlement";
 import { calculateIncome, getHungerStatus } from "../game/economy/income";
 import { applyHunger } from "../game/hunger";
-import { happinessLevel, standingHappiness } from "../game/happiness";
+import { happinessLevel, slaveUnhappiness, standingHappiness } from "../game/happiness";
 import { removePops } from "../game/tables";
 import { getActiveEffects } from "../game/activeEffects";
 import { applyResourceDeltaWithFloors } from "../game/core/resources";
@@ -485,7 +488,8 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
     100 * victoryCardsHeld(G, playerID) +
     10 * heuristic +
     levelValue(G, playerID) +
-    player.resources.influence -
+    player.resources.influence +
+    ideaOpportunityValue(G, playerID) -
     projection.unrest.riskPenalty
   );
 }
@@ -586,7 +590,8 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
     10 * heuristic +
     levelValue(G, playerID) +
     2 * player.resources.influence +
-    luxuryValue -
+    luxuryValue +
+    ideaOpportunityValue(G, playerID) -
     projection.unrest.riskPenalty
   );
 }
@@ -714,7 +719,12 @@ export const beamPolicy: Policy = {
 // See docs/archive/plans/policy-placement.md.
 
 export function isSetupPhase(G: HegemonyState): boolean {
-  return G.phase === "setupCapital" || G.phase === "setupCity" || G.phase === "setupColony";
+  return (
+    G.phase === "setupIdeas" ||
+    G.phase === "setupCapital" ||
+    G.phase === "setupCity" ||
+    G.phase === "setupColony"
+  );
 }
 
 /** How many frontier tiles a placement is credited with. Colonies are founded one at a
@@ -845,6 +855,7 @@ function scorePlacements(
  * sites and compositions do not always resolve to the lowest tile id.
  */
 export function choosePlacement(G: HegemonyState, moves: GameCommand[], rng: SimRng): GameCommand {
+  if (G.phase === "setupIdeas") return chooseIdea(G, moves, rng);
   const byTile = new Map<string, Placement[]>();
   for (const move of moves) {
     if ("tileId" in move && "pops" in move) {
@@ -1084,8 +1095,8 @@ function chooseVote(
     const affordable =
       price > 0
         ? Math.floor(purse.gold / price) + Math.floor(purse.influence / price)
-        : G.ruleset.assembly.briberyCap;
-    const available = Math.min(affordable, G.ruleset.assembly.briberyCap - session.bribesUsed[me]);
+        : votePurchaseLimit(G, me);
+    const available = Math.min(affordable, votePurchaseLimit(G, me) - session.bribesUsed[me]);
     if (needed > 0 && needed <= available) {
       return bribe;
     }
@@ -1383,4 +1394,74 @@ export function resolvePolicy(id: string): Policy {
   }
 
   return policy;
+}
+
+export function chooseIdea(G: HegemonyState, moves: GameCommand[], rng: SimRng): GameCommand {
+  const me = G.currentPlayer;
+  let best: GameCommand[] = [];
+  let value = -Infinity;
+  for (const move of moves) {
+    if (move.type !== "pickIdea") continue;
+    const candidate = ideaForEval(G, me, move.ideaId, move.target);
+    const score = scoreMaster(candidate, me);
+    if (score > value) {
+      value = score;
+      best = [move];
+    } else if (score === value) best.push(move);
+  }
+  if (!best.length) throw new Error("No legal Idea pick.");
+  return best.length === 1 ? best[0] : rng.pick(best);
+}
+
+function ideaOpportunityValue(G: HegemonyState, me: PlayerId): number {
+  const years = Math.max(0, Math.min(INCOME_HORIZON, 14 - G.year));
+  const effects = playerNationalIdeas(G, me).flatMap((idea) => idea.effects);
+  if (!effects.length || !years) return 0;
+  const pieces = playerPieces(G, me);
+  const roomToExpand =
+    effects.some((e) => e.type === "colonyPieces" || e.type === "onFoundColony") &&
+    placementFrontier(G, me).frontier > 0;
+  let value = 0;
+  for (const e of effects) {
+    if (e.type === "realmIncome" && e.resource === "influence") value += 2 * e.amount * years;
+    if (e.type === "colonyPieces" && roomToExpand)
+      value +=
+        ((10 * e.amount * years) / INCOME_HORIZON) *
+        (pieces.colonies >= G.ruleset.pieces.colonies - 1 ? 3 : 1);
+    if (e.type === "onUpgradeCity") {
+      const upgrades = G.players[me].settlements.filter((id) =>
+        getTile(G, id)?.settlements.some((s) => s.owner === me && s.kind === "colony"),
+      ).length;
+      value += 12 * Math.min(upgrades, pieces.citiesRemaining, years);
+    }
+    if (e.type === "onFoundColony" && roomToExpand) {
+      const pops = (e.amount ?? 1) * Math.min(pieces.coloniesRemaining, years);
+      let opportunity = 6 * pops;
+      // Future grants owe the same standing-level cost as slaves already on the
+      // board. Pricing only their population reward made Slave Colonies win every
+      // opening even when its immediate grant lowered the ordinary score.
+      if (e.grantPop === "slaves") {
+        const slaves = countPlayerPopType(G, me, "slaves");
+        const loss = slaveUnhappiness(G, slaves + pops) - slaveUnhappiness(G, slaves);
+        const level = standingHappiness(G, me);
+        const cap = G.ruleset.victory.minimums.happiness + 2;
+        opportunity -= LEVEL_WEIGHT * (Math.min(level, cap) - Math.min(level - loss, cap));
+      }
+      value += Math.max(0, opportunity);
+    }
+    if (e.type === "dolePrice") {
+      const food = calculateIncome(G, me).food;
+      value +=
+        2 *
+        Math.max(0, G.ruleset.dole.influenceCost - playerDole(G, me).influenceCost) *
+        Math.min(Math.max(0, -food), 3) *
+        years;
+    }
+    if (
+      e.type === "votePurchaseLimit" &&
+      G.players[me].resources.influence + G.players[me].resources.gold >= 6
+    )
+      value += 4 * Math.ceil(years / 2);
+  }
+  return value;
 }

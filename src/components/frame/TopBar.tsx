@@ -1,3 +1,4 @@
+import { playerNationalIdeas } from "../../game/ideas";
 import type { CSSProperties } from "react";
 import { PLAYER_IDS } from "../../game/data";
 import { currentVoteWeight } from "../../game/assembly";
@@ -225,6 +226,11 @@ function Rival({
               { key: "voice", label: "Voice", value: voiceHolder(G) === id ? "held" : "unheld" },
             ]}
           />
+          {playerNationalIdeas(G, id).map((idea) => (
+            <p className="tip-body" key={idea.id}>
+              <strong>{idea.name}</strong> · {idea.text}
+            </p>
+          ))}
         </Tip>
       }
       preferredPlacement="below"

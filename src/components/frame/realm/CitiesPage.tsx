@@ -1,3 +1,4 @@
+import { occupiedBuildingSlots } from "../../../game/ideaRules";
 import type { CSSProperties } from "react";
 import {
   POP_TYPES,
@@ -66,7 +67,7 @@ export function CitiesPage({
         <span title="Pops of capacity">
           <Ico path="pops/capacity" size="chip" />
         </span>
-        <span title="Buildings raised of slots">
+        <span title="Building slots occupied">
           <Ico path="settlements/slot" size="chip" />
         </span>
         {moved.map((resource) => (
@@ -81,7 +82,7 @@ export function CitiesPage({
         const pops = totalPops(settlement.pops);
         const capacity = settlementCapacity(settlement, G);
         const over = settlementOverCapacity(settlement, G);
-        const { slots, open, raisable } = slotsOf(holding, G);
+        const { slots, built, open, raisable } = slotsOf(holding, G);
         const room = Math.max(0, capacity - pops);
         const census = POP_TYPES.map(
           (pop) => `${settlement.pops[pop]} ${formatPopLabel(pop, settlement.pops[pop])}`,
@@ -113,7 +114,7 @@ export function CitiesPage({
               <span className="cell">
                 {slots > 0 ? (
                   <>
-                    {settlement.buildings.length}
+                    {occupiedBuildingSlots(G, settlement)}
                     <small>/{slots}</small>
                   </>
                 ) : (
@@ -139,13 +140,16 @@ export function CitiesPage({
                   ))}
                 </span>
                 {room > 0 ? <span className="cap">{room} room</span> : null}
-                {slots === 0 ? (
+                {slots === 0 && built === 0 && raisable === 0 ? (
                   <span className="cap">no ground to build on</span>
                 ) : (
                   <>
                     <Tooltip
                       content={
-                        <Tip sub={`${settlement.buildings.length} of ${slots} raised`} title={name}>
+                        <Tip
+                          sub={`${occupiedBuildingSlots(G, settlement)} of ${slots} slots occupied`}
+                          title={name}
+                        >
                           <p className="tip-body">
                             {settlement.buildings.length > 0
                               ? settlement.buildings.join(", ")
@@ -164,7 +168,7 @@ export function CitiesPage({
                         <span className="sock" key={`open-${i}`} />
                       ))}
                     </Tooltip>
-                    {open > 0 && raisable > 0 ? (
+                    {raisable > 0 ? (
                       <button
                         aria-label={`Raise a building in ${name}`}
                         className="link cap"

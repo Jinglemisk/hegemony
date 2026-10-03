@@ -33,6 +33,8 @@ describe("behavioral command-consumer parity", () => {
     moves.bankSell("wood");
     moves.bankBuy("stone");
     moves.dole();
+    moves.pickIdea("2", "good-harvest");
+    moves.buyIdea("treasury-grant");
     moves.civicCalm("influence");
     moves.promotePop("tile-a", "freemen");
     moves.demotePop("tile-a", "citizens");
@@ -79,6 +81,8 @@ describe("behavioral command-consumer parity", () => {
       { command: { type: "bankSell", material: "wood" }, actor: undefined },
       { command: { type: "bankBuy", material: "stone" }, actor: undefined },
       { command: { type: "dole" }, actor: undefined },
+      { command: { type: "pickIdea", ideaId: "good-harvest" }, actor: "2" },
+      { command: { type: "buyIdea", ideaId: "treasury-grant" }, actor: undefined },
       { command: { type: "civicCalm", payment: "influence" }, actor: undefined },
       {
         command: { type: "promotePop", tileId: "tile-a", from: "freemen" },

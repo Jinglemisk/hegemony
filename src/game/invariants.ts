@@ -89,6 +89,28 @@ export function collectInvariantViolations(
   }
 
   for (const playerID of PLAYER_IDS) {
+    const ideas = G.players[playerID]?.nationalIdeas;
+    if (
+      !Array.isArray(ideas) ||
+      ideas.length > 2 ||
+      new Set(ideas.map((i) => i.id)).size !== ideas.length ||
+      ideas.some(
+        (i) =>
+          !G.definition.content.nationalIdeas.some((d) => d.id === i.id) ||
+          !["setup", "purchase"].includes(i.acquired) ||
+          !Number.isSafeInteger(i.year) ||
+          i.year < 1 ||
+          i.year > G.year,
+      ) ||
+      ideas.filter((i) => i.acquired === "setup").length > 1 ||
+      ideas.filter((i) => i.acquired === "purchase").length > 1
+    ) {
+      add(
+        "ideas.ownership",
+        `players.${playerID}.nationalIdeas`,
+        "requires at most one setup Idea and one distinct purchase from the pinned catalog",
+      );
+    }
     const indexed = G.players[playerID]?.settlements ?? [];
     const boardOwned = G.board.tiles
       .filter((tile) => tile.settlements.some((settlement) => settlement.owner === playerID))

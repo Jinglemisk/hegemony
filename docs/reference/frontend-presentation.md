@@ -72,7 +72,7 @@ renderers using `ModalShell`, `Popover`, and `MechanicsDetails` as appropriate.
 Assembly remains an Assembly workflow and trade remains a negotiation workflow; this is
 not a generic rules scripting engine. The shared layer owns only presentation, actor,
 focus, cancellation/expiry, and public/private projection contracts. Luxury claim choices,
-trade responses, and National Idea drafts use it rather than creating feature-private
+trade responses, and National Idea picks use it rather than creating feature-private
 overlay infrastructure.
 
 Controls dispatch canonical `GameCommand` values through `src/client/controller.ts` and

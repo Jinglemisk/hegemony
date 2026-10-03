@@ -61,7 +61,9 @@ const TONE: Record<EffectTone, string> = {
 };
 
 const SHOWN = (descriptor: ActiveEffectDescriptor) =>
-  descriptor.kind !== "yearCard" && descriptor.kind !== "standingLaw";
+  descriptor.kind !== "yearCard" &&
+  descriptor.kind !== "standingLaw" &&
+  descriptor.kind !== "standingIdea";
 
 export function Alarms({
   effects,

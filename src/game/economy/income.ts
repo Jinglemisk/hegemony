@@ -27,6 +27,7 @@ import {
   getLawIncomeContributions,
   effectiveRuleset,
   getStandingEffects,
+  getStandingEffectSources,
   hasLawRule,
   type RulesSource,
 } from "../assembly/laws";
@@ -336,6 +337,16 @@ export function calculateIncomeBreakdown(
   // the harvest) can only be assessed once the harvest is known.
   applyStandingLawIncomeEffects(G, playerID, contributions, income);
 
+  for (const source of getStandingEffectSources(G, playerID)) {
+    for (const effect of source.effects)
+      if (effect.type === "realmIncome")
+        addIncomeContribution(contributions, income, {
+          resource: effect.resource,
+          amount: effect.amount,
+          source: source.label,
+          detail: "National Idea",
+        });
+  }
   return contributions;
 }
 

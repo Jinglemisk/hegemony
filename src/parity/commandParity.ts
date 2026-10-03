@@ -138,6 +138,17 @@ export const COMMAND_PARITY = {
     frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
     simulation: simulated("master-rule", "resolveStochasticByRule hunger rule"),
   },
+  pickIdea: {
+    frontend: interactive("src/components/board/modals/IdeasModal.tsx"),
+    simulation: simulated("setup-driver", "chooseIdea → scoreMaster"),
+  },
+  buyIdea: {
+    frontend: interactive(
+      "src/components/board/modals/IdeasModal.tsx",
+      "src/components/frame/discs.ts",
+    ),
+    simulation: simulated("master-search", "beamPlan → scoreMaster"),
+  },
   civicCalm: {
     frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
     simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),

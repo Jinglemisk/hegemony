@@ -210,3 +210,14 @@ diff <(jq 'del(.meta.generatedAt)' .sim/before.json) <(jq 'del(.meta.generatedAt
 
 Watch `buildings`, `perYear` happiness/food/unrest shares, `popsLostToUnrest`,
 and `finalCardsDistribution`. See docs/reference/simulation.md for the full command surface.
+
+## National Ideas (v2 Step 9)
+
+All non-random policies score legal setup picks with the master scorer, on a board
+containing only their own prospective choice; secret rival picks and the year draw
+order cannot affect it. Purchase commands enter the policy's ordinary deterministic
+search, including their 6-influence cost and immediate grants. The shared scorer
+prices permanent income and open slots through the real projections; opportunity
+values account for Dole savings, extra pieces, founding, upgrades and bought votes.
+Future opportunity uses the existing six-year horizon bounded by remaining years.
+Step 10 supplies personality preferences; Step 11 measures spread and dominance.

@@ -116,6 +116,11 @@ export const PARITY_BEHAVIOR_FIXTURES = {
     implementation: "src/sim/policies.test.ts",
     evidence: "plays complete games across seeds without deadlocking through the agora",
   },
+  ideaRules: { implementation: "src/game/ideas.test.ts", evidence: "twelve National Ideas" },
+  ideaPolicy: {
+    implementation: "src/sim/ideasPolicy.test.ts",
+    evidence: "scores setup Ideas and in-play purchases",
+  },
   luxuryClaims: {
     implementation: "src/game/luxury.test.ts",
     evidence: "claims the adjacent good through the ownership seam — first Port wins",
@@ -195,7 +200,26 @@ const lawArgs = [
 const law = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
   coverage(...lawArgs, ...fixtures);
 
+const idea = () =>
+  coverage(
+    { implementation: "src/game/ideaRules.ts", evidence: "getStandingEffects" },
+    { implementation: "src/components/board/modals/IdeasModal.tsx", evidence: "getNationalIdeas" },
+    { implementation: "src/game/projection.ts", evidence: "setupIdeaPicks" },
+    { implementation: "src/sim/policies.ts", evidence: "ideaOpportunityValue" },
+    { implementation: "src/sim/telemetry.ts", evidence: "nationalIdeas" },
+    "ideaRules",
+    "ideaPolicy",
+  );
 export const LAW_EFFECT_PARITY = {
+  realmIncome: idea(),
+  extraSlots: idea(),
+  colonyPieces: idea(),
+  acquirePop: idea(),
+  acquireResource: idea(),
+  onUpgradeCity: idea(),
+  dolePrice: idea(),
+  slotExempt: idea(),
+  votePurchaseLimit: idea(),
   rule: law("lawIncome", "lawCost", "policyAssembly"),
   actionCost: law("lawCost", "policyAssembly"),
   calmPayment: law("lawCost", "policyAssembly"),
@@ -379,7 +403,33 @@ export type ContentManifestEntry = {
   behaviorFixtures: NonEmptyList<ParityBehaviorFixtureId>;
 };
 
+export const NATIONAL_IDEA_CONTENT_IDS = [
+  "good-harvest",
+  "public-dole",
+  "urban-planning",
+  "capital-works",
+  "civic-tradition",
+  "frontier-charter",
+  "new-settlers",
+  "city-pioneers",
+  "slave-colonies",
+  "harbour-planning",
+  "treasury-grant",
+  "assembly-brokers",
+] as const;
+
 export const CONTENT_MANIFEST = {
+  nationalIdeas: {
+    ids: NATIONAL_IDEA_CONTENT_IDS,
+    engine: { implementation: "src/game/ideas.ts", evidence: "takeNationalIdea" },
+    frontend: {
+      implementation: "src/components/board/modals/IdeasModal.tsx",
+      evidence: "getNationalIdeas",
+    },
+    simulation: { implementation: "src/sim/policies.ts", evidence: "chooseIdea" },
+    telemetry: { implementation: "src/sim/telemetry.ts", evidence: "nationalIdeas" },
+    behaviorFixtures: ["ideaRules", "ideaPolicy"],
+  },
   buildings: {
     ids: BUILDING_CONTENT_IDS,
     engine: { implementation: "src/game/content.ts", evidence: "getBuildings" },
@@ -499,6 +549,7 @@ export type YearCardContentId = (typeof YEAR_CARD_CONTENT_IDS)[number];
 export type PlayerEventContentId = (typeof PLAYER_EVENT_CONTENT_IDS)[number];
 
 export const FEATURE_PARITY = {
+  nationalIdeas: CONTENT_MANIFEST.nationalIdeas,
   terrainEconomy: CONTENT_MANIFEST.terrain,
   buildingEconomy: CONTENT_MANIFEST.buildings,
   yearCards: CONTENT_MANIFEST.yearCards,

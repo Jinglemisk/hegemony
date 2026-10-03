@@ -1,3 +1,4 @@
+import { buildingSlotCost, occupiedBuildingSlots } from "./ideaRules";
 import { hasLawRule } from "./assembly/laws";
 import { getBuildings } from "./content";
 import type {
@@ -201,7 +202,10 @@ function buildSiteReasons(
     reasons.push("A colony raises nothing but a Port.");
   } else if (settlement.buildings.includes(building.id)) {
     reasons.push(`${building.name} is already built here.`);
-  } else if (settlement.buildings.length >= settlementSlots(tile, settlement, G)) {
+  } else if (
+    occupiedBuildingSlots(G, settlement) + buildingSlotCost(G, playerID, building.id) >
+    settlementSlots(tile, settlement, G)
+  ) {
     reasons.push("No slots available.");
   }
 
@@ -262,11 +266,13 @@ export function buildingGround(G: HegemonyState, playerID: PlayerId, tileId: str
           0,
           (settlement.kind === "colony" && hasLawRule(G, "homesteadAct")
             ? Math.min(1, settlementSlots(tile, settlement, G))
-            : settlementSlots(tile, settlement, G)) - built,
+            : settlementSlots(tile, settlement, G)) - occupiedBuildingSlots(G, settlement),
         )
-      : raisable;
+      : raisable > 0
+        ? buildingSlotCost(G, playerID, "port")
+        : 0;
 
-  return { slots: built + open, built, open, raisable };
+  return { slots: occupiedBuildingSlots(G, settlement) + open, built, open, raisable };
 }
 
 export type BuildBuildingOption = {

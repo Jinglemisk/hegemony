@@ -7,6 +7,8 @@ import {
   YEAR_CARDS,
   TERRAIN_DECK,
 } from "./data";
+import { NATIONAL_IDEAS } from "./nationalIdeas";
+import type { NationalIdeaDefinition } from "./ideaTypes";
 import { RESOLUTION_CARDS } from "./assembly/deck";
 import type { ResolutionCard } from "./assembly/types";
 import type {
@@ -22,6 +24,7 @@ import type {
 export type TerrainDeck = typeof TERRAIN_DECK;
 
 export interface GameContent {
+  nationalIdeas: NationalIdeaDefinition[];
   buildings: BuildingDefinition[];
   terrain: TerrainDeck;
   yearCards: YearCard[];
@@ -33,6 +36,7 @@ export interface GameContent {
 }
 
 const AUTHORED_CONTENT: GameContent = {
+  nationalIdeas: NATIONAL_IDEAS,
   buildings: BUILDINGS,
   terrain: TERRAIN_DECK,
   yearCards: YEAR_CARDS,

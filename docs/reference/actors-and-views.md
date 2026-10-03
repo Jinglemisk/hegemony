@@ -62,3 +62,13 @@ public zones; a rival's hidden card remains a possible card rather than becoming
 Regression coverage proves that changing only hidden seed/RNG/deck order cannot change a master
 policy decision, that player and spectator redactions differ exactly by ownership, and that
 asynchronous Assembly commands pass or fail through the public transition according to workflow.
+
+## National Idea choices
+
+After placement, `setupIdeas` allows every seat without a locked pick to submit
+`pickIdea`. The headless driver parks `currentPlayer` on the first unfinished seat,
+while the shell may act as any unfinished seat. Only the viewer's locked choice is
+projected. Ownership and acquisition effects reveal together when every seat has
+chosen, before Year 1's reveal and income; no choice-bearing log exists before then.
+During play `buyIdea` is an ordinary current-seat action. Held Ideas are permanent
+public ownership, so realm pages, rival tooltips and telemetry use the same selector.

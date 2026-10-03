@@ -40,6 +40,8 @@ import {
   getUpgradeColonyToCityStatus,
 } from "./status";
 import { drawPlayerEvent } from "./events";
+import { ideaRoom } from "./ideas";
+import { getStandingEffects } from "./assembly/laws";
 import { getFoundColonyRiders } from "./assembly/laws";
 import { allocateEntityId } from "./entity";
 
@@ -215,18 +217,20 @@ export function foundColony(
   return MOVE_OK;
 }
 
-/** Frontier Spirit grants a slave at founding; the sent pop still arrives next turn. */
+/** Law and Idea riders use room left after the sent pop, which arrives next turn. */
 function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
   for (const rider of getFoundColonyRiders(G, playerID)) {
     if (rider.grantPop) {
       const settlement = getOwnedSettlement(G, tile.id, playerID);
 
       if (settlement) {
-        settlement.pops[rider.grantPop] += 1;
-        addLog(
-          G,
-          `${rider.label}: a ${formatPopName(rider.grantPop, 1)} sails with the colonists.`,
-        );
+        const granted = Math.min(rider.amount, ideaRoom(G, settlement));
+        settlement.pops[rider.grantPop] += granted;
+        if (granted > 0)
+          addLog(
+            G,
+            `${rider.label}: ${granted} ${formatPopName(rider.grantPop, granted)} ${granted === 1 ? "sails" : "sail"} with the colonists.`,
+          );
       }
     }
   }
@@ -253,6 +257,9 @@ export function upgradeColonyToCity(
     .map((candidate) => candidate.owner);
   tile.settlements = tile.settlements.filter((candidate) => candidate.owner === playerID);
   settlement.kind = "city";
+  for (const effect of getStandingEffects(G, playerID))
+    if (effect.type === "onUpgradeCity" && ideaRoom(G, settlement) > 0)
+      settlement.pops[effect.grantPop] += 1;
 
   for (const displacedPlayer of displacedPlayers) {
     G.players[displacedPlayer].settlements = G.players[displacedPlayer].settlements.filter(

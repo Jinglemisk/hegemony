@@ -19,6 +19,7 @@ import {
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { BuildPopover } from "./board/map/BuildPopover";
+import { IdeasModal } from "./board/modals/IdeasModal";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
 import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
 import { FoundColonyPopover } from "./board/modals/FoundColonyPopover";
@@ -78,7 +79,8 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
 type ActiveModal =
   | { kind: "populationPrompt"; placement: SetupPlacement; tileId: string }
   | { kind: "upgradeCity" }
-  | { kind: "venture" };
+  | { kind: "venture" }
+  | { kind: "ideas" };
 
 export function HegemonyBoard({
   G,
@@ -368,115 +370,125 @@ export function HegemonyBoard({
     <GameUiProvider value={gameUi}>
       <CodexLinkProvider value={codexLink}>
         <main className="frame">
-          <Island
-            G={G}
-            highlightTileIds={
-              mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds
-            }
-            onBackgroundAction={() => {
-              setSelectedTileId(null);
-              setSubject({ kind: "realm" });
-              setRealmTab("subject");
-            }}
-            onMooringAction={(vertexId) => {
-              setSelectedTileId(null);
-              setSubject({ kind: "mooring", vertexId });
-              setRealmTab("subject");
-            }}
-            onTileAction={handleTileAction}
-            // A popover pinned to a tile's old spot closes when the map moves;
-            // the mode stays armed, so the next click re-opens it in place.
-            onViewChange={() => setMapSelectionTarget(null)}
-            placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
-            selectedTileId={selectedTileId}
-          />
+          {G.phase !== "setupIdeas" ? (
+            <>
+              <Island
+                G={G}
+                highlightTileIds={
+                  mapSelection.selection ? mapSelection.candidateTileIds : setupColonyValidTileIds
+                }
+                onBackgroundAction={() => {
+                  setSelectedTileId(null);
+                  setSubject({ kind: "realm" });
+                  setRealmTab("subject");
+                }}
+                onMooringAction={(vertexId) => {
+                  setSelectedTileId(null);
+                  setSubject({ kind: "mooring", vertexId });
+                  setRealmTab("subject");
+                }}
+                onTileAction={handleTileAction}
+                // A popover pinned to a tile's old spot closes when the map moves;
+                // the mode stays armed, so the next click re-opens it in place.
+                onViewChange={() => setMapSelectionTarget(null)}
+                placementActive={Boolean(mapSelection.selection) || ctx.phase === "setupColony"}
+                selectedTileId={selectedTileId}
+              />
 
-          <div className="hud hud-top">
-            <TopBar
-              G={G}
-              actingId={currentPlayerId}
-              breakdown={projectedIncomeBreakdown}
-              consultOpen={consultTab}
-              happiness={happinessDisplay(G, viewerId)}
-              income={projectedIncome}
-              onConsult={(tab) => setConsultTab((open) => (open === tab ? null : tab))}
-              onSeat={onPlayerIDChange}
-              viewerId={viewerId}
-            />
-            <Ticker log={G.log} />
-            <Alarms
-              content={G.definition.content}
-              effects={activeEffects}
-              riotThreshold={G.ruleset.economy.unrest.riotThreshold}
-              unrest={unrestStatus(G, viewerId)}
-            />
-          </div>
+              <div className="hud hud-top">
+                <TopBar
+                  G={G}
+                  actingId={currentPlayerId}
+                  breakdown={projectedIncomeBreakdown}
+                  consultOpen={consultTab}
+                  happiness={happinessDisplay(G, viewerId)}
+                  income={projectedIncome}
+                  onConsult={(tab) => setConsultTab((open) => (open === tab ? null : tab))}
+                  onSeat={onPlayerIDChange}
+                  viewerId={viewerId}
+                />
+                <Ticker log={G.log} />
+                <Alarms
+                  content={G.definition.content}
+                  effects={activeEffects}
+                  riotThreshold={G.ruleset.economy.unrest.riotThreshold}
+                  unrest={unrestStatus(G, viewerId)}
+                />
+              </div>
 
-          {isSetup || mapSelection.selection ? (
-            <div className="map-caption" role="status">
-              {mapSelection.selection
-                ? selectionCaption(
-                    mapSelection.selection.mode,
-                    mapSelection.candidateTileIds.length,
-                  )
-                : pendingSetupCopy}
-            </div>
+              {isSetup || mapSelection.selection ? (
+                <div className="map-caption" role="status">
+                  {mapSelection.selection
+                    ? selectionCaption(
+                        mapSelection.selection.mode,
+                        mapSelection.candidateTileIds.length,
+                      )
+                    : pendingSetupCopy}
+                </div>
+              ) : null}
+
+              <div className="hud hud-bottom">
+                <RealmPanel
+                  groups={discGroups(
+                    verbContext,
+                    {
+                      // The fans arm the map for the exact choice; nothing covers the answer.
+                      onArm: armSelection,
+                      onMovePopsRequest: () => armSelection({ kind: "movePops" }),
+                      onFoundColonyRequest: () => armSelection({ kind: "foundColony" }),
+                      onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
+                      onVentureRequest: () => setActiveModal({ kind: "venture" }),
+                      onCalm: moves.civicCalm,
+                      onDole: moves.dole,
+                      onIdeasRequest: () => setActiveModal({ kind: "ideas" }),
+                      onBankBuy: moves.bankBuy,
+                      onBankSell: moves.bankSell,
+                    },
+                    mapSelection.selection?.mode ?? null,
+                  )}
+                  onBankBuy={moves.bankBuy}
+                  onBankSell={moves.bankSell}
+                  onBuildBuildingRequest={requestBuildBuilding}
+                  onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
+                  income={projectedIncome}
+                  onFound={foundHere}
+                  onSubject={(next) => {
+                    setSubject(next);
+                    setSelectedTileId(next.kind === "tile" ? next.tileId : null);
+                  }}
+                  onTab={setRealmTab}
+                  subject={subject}
+                  tab={realmTab}
+                />
+                <EndTurn
+                  actingId={currentPlayerId}
+                  canEndTurn={turnOpen}
+                  onEndTurn={events.endTurn}
+                  title={turnCommitTitle(turnGate)}
+                />
+              </div>
+
+              {consultTab ? (
+                <aside aria-label="Consult" className="consult-sheet" data-c="consult-sheet">
+                  <button
+                    aria-label="Close"
+                    className="consult-close"
+                    onClick={() => setConsultTab(null)}
+                    type="button"
+                  >
+                    ×
+                  </button>
+                  <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
+                </aside>
+              ) : null}
+            </>
           ) : null}
 
-          <div className="hud hud-bottom">
-            <RealmPanel
-              groups={discGroups(
-                verbContext,
-                {
-                  // The fans arm the map for the exact choice; nothing covers the answer.
-                  onArm: armSelection,
-                  onMovePopsRequest: () => armSelection({ kind: "movePops" }),
-                  onFoundColonyRequest: () => armSelection({ kind: "foundColony" }),
-                  onUpgradeCityRequest: () => setActiveModal({ kind: "upgradeCity" }),
-                  onVentureRequest: () => setActiveModal({ kind: "venture" }),
-                  onCalm: moves.civicCalm,
-                  onDole: moves.dole,
-                  onBankBuy: moves.bankBuy,
-                  onBankSell: moves.bankSell,
-                },
-                mapSelection.selection?.mode ?? null,
-              )}
-              onBankBuy={moves.bankBuy}
-              onBankSell={moves.bankSell}
-              onBuildBuildingRequest={requestBuildBuilding}
-              onLadderRequest={(request) => armSelection({ kind: "ladder", request })}
-              income={projectedIncome}
-              onFound={foundHere}
-              onSubject={(next) => {
-                setSubject(next);
-                setSelectedTileId(next.kind === "tile" ? next.tileId : null);
-              }}
-              onTab={setRealmTab}
-              subject={subject}
-              tab={realmTab}
-            />
-            <EndTurn
-              actingId={currentPlayerId}
-              canEndTurn={turnOpen}
-              onEndTurn={events.endTurn}
-              title={turnCommitTitle(turnGate)}
-            />
-          </div>
-
-          {consultTab ? (
-            <aside aria-label="Consult" className="consult-sheet" data-c="consult-sheet">
-              <button
-                aria-label="Close"
-                className="consult-close"
-                onClick={() => setConsultTab(null)}
-                type="button"
-              >
-                ×
-              </button>
-              <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
-            </aside>
+          {G.phase === "setupIdeas" ? (
+            <IdeasModal key={viewerId} onNextSeat={() => onPlayerIDChange(G.currentPlayer)} />
+          ) : activeModal?.kind === "ideas" ? (
+            <IdeasModal onClose={closeModal} />
           ) : null}
-
           {activeModal?.kind === "populationPrompt" ? (
             <PopulationPickerModal
               title={`Choose ${PLACEMENT_LABELS[activeModal.placement]} pops`}

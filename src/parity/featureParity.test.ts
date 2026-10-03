@@ -23,6 +23,7 @@ import {
   BUILDING_CONTENT_IDS,
   BUILDING_EFFECT_PARITY,
   CONTENT_MANIFEST,
+  NATIONAL_IDEA_CONTENT_IDS,
   DIRECTIVE_CONTENT_IDS,
   DIRECTIVE_EFFECT_PARITY,
   EVENT_EFFECT_PARITY,
@@ -114,6 +115,9 @@ describe("feature and content parity manifests", () => {
 
   it("matches every shipped content id and effect to the manifests", () => {
     const tables = [RIOT_TABLE, ...EXPEDITION_TABLES];
+    expect(sorted(AUTHORED_CONTENT.nationalIdeas.map((idea) => idea.id))).toEqual(
+      sorted(NATIONAL_IDEA_CONTENT_IDS),
+    );
 
     expect(sorted(getBuildings(AUTHORED_CONTENT).map((building) => building.id))).toEqual(
       sorted(BUILDING_CONTENT_IDS),
@@ -155,9 +159,13 @@ describe("feature and content parity manifests", () => {
     const directives = RESOLUTION_CARDS.filter((card) => card.kind === "directive");
     expect(sorted(laws.map((card) => card.id))).toEqual(sorted(LAW_CONTENT_IDS));
     expect(sorted(directives.map((card) => card.id))).toEqual(sorted(DIRECTIVE_CONTENT_IDS));
-    expect(unique(laws.flatMap((card) => card.effects.map((effect) => effect.type)))).toEqual(
-      sorted(Object.keys(LAW_EFFECT_PARITY)),
-    );
+    expect(
+      unique(
+        [...laws, ...AUTHORED_CONTENT.nationalIdeas].flatMap((card) =>
+          card.effects.map((effect) => effect.type),
+        ),
+      ),
+    ).toEqual(sorted(Object.keys(LAW_EFFECT_PARITY)));
     expect(unique(directives.flatMap((card) => card.effects.map((effect) => effect.type)))).toEqual(
       sorted(Object.keys(DIRECTIVE_EFFECT_PARITY)),
     );

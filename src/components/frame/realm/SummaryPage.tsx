@@ -1,3 +1,6 @@
+import { playerNationalIdeas } from "../../../game/ideas";
+import { Tooltip } from "../../overlays/Tooltip";
+import { Tip } from "../parts";
 import {
   POP_TYPES,
   activeClaims,
@@ -105,6 +108,26 @@ export function SummaryPage({
             </span>
           ))
         )}
+      </dd>
+      <dt className="caps">Ideas</dt>
+      <dd className="realm-ideas">
+        {playerNationalIdeas(G, viewerId).map((idea) => (
+          <Tooltip
+            key={idea.id}
+            focusable
+            ariaLabel={`${idea.name}: ${idea.text}`}
+            content={
+              <Tip sub="National Idea" title={idea.name}>
+                <p className="tip-body">{idea.text}</p>
+              </Tip>
+            }
+          >
+            <span className="cap">{idea.name}</span>
+          </Tooltip>
+        ))}
+        {playerNationalIdeas(G, viewerId).length === 0 ? (
+          <span className="cap">none chosen</span>
+        ) : null}
       </dd>
       <dt className="caps">Places</dt>
       <dd>

@@ -246,6 +246,33 @@ export function presentLawEffect(
           (effect.pop ? ` (${formatPopLabel(effect.pop, 1)})` : ""),
         tone: "neutral",
       };
+    case "realmIncome":
+      return signedPresentation(effect.amount, `${effect.resource} at yearly income`);
+    case "extraSlots":
+      return {
+        text: `${effect.scope === "capital" ? "Capital" : "Cities"} gain ${effect.amount} work slot`,
+        tone: "positive",
+      };
+    case "colonyPieces":
+      return { text: `${effect.amount} extra colony piece`, tone: "positive" };
+    case "acquirePop":
+      return { text: "Add one slave or freeman when taking this Idea", tone: "positive" };
+    case "acquireResource":
+      return signedPresentation(effect.amount, `${effect.resource} when taking this Idea`);
+    case "onUpgradeCity":
+      return {
+        text: `Upgrading adds one ${formatPopLabel(effect.grantPop, 1)} if there is room`,
+        tone: "positive",
+      };
+    case "dolePrice":
+      return { text: `The Dole costs ${effect.amount} influence`, tone: "positive" };
+    case "slotExempt":
+      return {
+        text: `${buildingName(effect.building, content)} takes no work slot`,
+        tone: "positive",
+      };
+    case "votePurchaseLimit":
+      return { text: `Buy up to ${effect.amount} votes per Assembly`, tone: "positive" };
     case "calmPayment":
       return { text: `Gold calm instead costs ${effect.amount} food`, tone: "neutral" };
     case "colonyCapacity":
@@ -264,7 +291,7 @@ export function presentLawEffect(
       };
     case "onFoundColony":
       return {
-        text: `Founding grants a free ${formatPopLabel(effect.grantPop, 1)}`,
+        text: `Founding grants ${effect.amount ?? 1} ${formatPopLabel(effect.grantPop, effect.amount ?? 1)} as room allows`,
         tone: "positive",
       };
   }
@@ -324,6 +351,8 @@ function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string
         : "Food lasts " + remaining + " more income" + (remaining === 1 ? "" : "s");
     case "atYearEnd":
       return "Until year end";
+    case "permanent":
+      return "For the rest of the game";
     case "whenRepealed":
       return "Until repealed";
     case "atNextAssembly":

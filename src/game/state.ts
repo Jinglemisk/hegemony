@@ -70,6 +70,7 @@ export function createInitialStateFromDefinition(
     ...CURRENT_RECIPE_VERSIONS,
     nextEntityId: identity.nextEntityId,
     phase: "setupCapital",
+    setupIdeaPicks: { "0": null, "1": null, "2": null, "3": null },
     currentPlayer: "0",
     turn: 1,
     seed: seed >>> 0,
@@ -86,6 +87,7 @@ export function createInitialStateFromDefinition(
         ...players,
         [playerId]: {
           id: playerId,
+          nationalIdeas: [],
           name: PLAYER_NAMES[playerId],
           resources: { ...ruleset.startingResources },
           settlements: [],
