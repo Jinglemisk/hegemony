@@ -30,13 +30,28 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   // commit the gesture exists to refuse, so pressing one must leave the turn
   // where it was before the hold is exercised for real.
   const endTurn = page.getByRole("button", { name: /^End turn/i });
+  await expect(endTurn).toHaveAccessibleName(
+    "End turn — press and hold. Ending now starts a riot at −3.",
+  );
+  const riot = page.getByRole("dialog", { name: "Riot", exact: true });
   await endTurn.focus();
   await page.keyboard.press("Enter");
   await expect(endTurn).toBeVisible();
+  await expect(riot).toBeHidden();
 
   await page.keyboard.down("Enter");
   await page.waitForTimeout(900);
   await page.keyboard.up("Enter");
+
+  // Local Unrest leaves Damon at −3: the turn-end riot blocks the handoff
+  // until he rolls, then its result stays open for him to read.
+  await expect(riot).toBeVisible();
+  await expect(riot).toContainText("Damon faces a riot at turn end.");
+  await expect(page.getByRole("img", { name: /Nikos is acting/ })).toHaveCount(0);
+  await riot.getByRole("button", { name: "Roll the Die", exact: true }).click();
+  await expect(riot.getByRole("heading", { name: "Bribe demanded", exact: true })).toBeVisible();
+  await riot.getByRole("button", { name: "Endure It", exact: true }).click();
+  await expect(riot).toBeHidden();
   await expect(page.getByRole("img", { name: /Nikos is acting/ })).toBeVisible();
 
   await page.reload();

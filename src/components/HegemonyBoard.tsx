@@ -234,11 +234,11 @@ export function HegemonyBoard({
     },
     [armMapSelection],
   );
-  // Handing the turn over closes everything the previous seat had open.
+  // The handoff closes the previous seat's choices. A riot result stays open
+  // until dismissed, even though its roll has already passed the turn.
   useEffect(() => {
     setActiveModal(null);
     clearMapSelection();
-    setRiotResultOpen(false);
   }, [ctx.phase, ctx.currentPlayer, clearMapSelection]);
 
   // A drawn event takes the screen: dismiss the player's own dialogs behind it.
