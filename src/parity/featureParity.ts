@@ -42,27 +42,19 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   lawIncome: {
     implementation: "src/game/assembly/laws.test.ts",
-    evidence: "settlementIncome pays per settlement in its scope",
+    evidence: "Civic Pride pays one flat happiness line",
   },
   lawCost: {
     implementation: "src/game/assembly/laws.test.ts",
-    evidence: "actionCostDelta reaches build-building",
-  },
-  lawBank: {
-    implementation: "src/game/assembly/laws.test.ts",
-    evidence: "bankRateStep shifts the rate one whole step",
+    evidence: "price Laws state growth, calm, founding, upgrading and building prices",
   },
   lawFounding: {
     implementation: "src/game/assembly/laws.test.ts",
-    evidence: "onFoundColony grants the pop and places an Unrest token",
+    evidence: "Frontier Spirit grants a slave on the real founding path",
   },
   directiveResources: {
     implementation: "src/game/assembly/assembly.test.ts",
-    evidence: "Bread and Circuses pays and charges only its target",
-  },
-  directiveFraction: {
-    implementation: "src/game/assembly/assembly.test.ts",
-    evidence: "Grain Riot halves only the chosen rival's stored food",
+    evidence: "Grain Riot takes 3 food only from its target",
   },
   directiveSuppression: {
     implementation: "src/game/assembly/assembly.test.ts",
@@ -74,11 +66,11 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   directiveRepeal: {
     implementation: "src/game/assembly/assembly.test.ts",
-    evidence: "The Stele Is Broken throws down the target's newest authored standing Law",
+    evidence: "The Stele Is Broken removes the newest authored Law only after tenure",
   },
   directiveVotes: {
     implementation: "src/game/assembly/assembly.test.ts",
-    evidence: "Isonomia fixes only its target at one base vote in the next Assembly",
+    evidence: "Isonomia fixes the next sitting's base vote at one",
   },
   buildingEffects: {
     implementation: "src/parity/featureParity.test.ts",
@@ -204,15 +196,13 @@ const law = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
   coverage(...lawArgs, ...fixtures);
 
 export const LAW_EFFECT_PARITY = {
+  rule: law("lawIncome", "lawCost", "policyAssembly"),
+  actionCost: law("lawCost", "policyAssembly"),
+  calmPayment: law("lawCost", "policyAssembly"),
+  colonyCapacity: law("lawCost", "policyAssembly"),
+  buildingFood: law("lawIncome", "policyAssembly"),
+  happiness: law("lawIncome", "policyAssembly"),
   settlementIncome: law("lawIncome", "policyAssembly"),
-  popIncome: law("lawIncome", "policyAssembly"),
-  popPrimaryIncome: law("lawIncome", "policyAssembly"),
-  flatIncome: law("lawIncome", "policyAssembly"),
-  thresholdHappiness: law("lawIncome", "policyAssembly"),
-  surplusConversion: law("lawIncome", "policyAssembly"),
-  actionCostDelta: law("lawCost", "policyAssembly"),
-  actionCostMultiplier: law("lawCost", "policyAssembly"),
-  bankRateStep: law("lawBank", "policyAssembly"),
   onFoundColony: law("lawFounding", "policyAssembly"),
 } as const satisfies Record<LawEffect["type"], EffectParityCoverage>;
 
@@ -229,7 +219,6 @@ const directive = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
 export const DIRECTIVE_EFFECT_PARITY = {
   unrestTokens: directive("eventTokens"),
   resourceDelta: directive("directiveResources", "policyAssembly"),
-  resourceFraction: directive("directiveFraction", "policyAssembly"),
   losePopFromLargest: directive("directivePops", "policyAssembly"),
   suppressIncome: directive("directiveSuppression", "activeEffectPolicy", "policyAssembly"),
   repealNewestTargetLaw: directive("directiveRepeal", "policyAssembly"),
@@ -343,27 +332,21 @@ export const POLITICIAN_CONTENT_IDS = [
 ] as const satisfies readonly PoliticianId[];
 
 export const LAW_CONTENT_IDS = [
-  "grain-dole",
   "land-reform",
   "sacred-fields",
-  "manumission-law",
-  "festival-calendar",
-  "agrarian-tariff",
+  "manumission",
   "tenant-rights",
-  "cult-of-demeter",
+  "grain-levy",
+  "festival-calendar",
   "public-works",
   "guild-charter",
   "forum-rites",
   "civic-pride",
-  "aqueduct-levy",
-  "census-rolls",
   "master-builders",
   "homestead-act",
   "colonial-charter",
-  "enfranchise-the-colonies",
   "frontier-spirit",
-  "pioneer-levy",
-  "manifest-destiny",
+  "harbour-dues",
   "rural-bloc",
 ] as const;
 
@@ -372,7 +355,6 @@ export const DIRECTIVE_CONTENT_IDS = [
   "the-streets-burn",
   "general-strike",
   "the-mob-rises",
-  "bread-and-circuses",
   "the-stele-is-broken",
   "isonomia",
 ] as const;
@@ -564,11 +546,6 @@ export const FEATURE_PARITY = {
     ...CONTENT_MANIFEST.resolutions,
     ids: DIRECTIVE_CONTENT_IDS,
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "directivesPassed" },
-    behaviorFixtures: [
-      "directiveResources",
-      "directiveFraction",
-      "directiveSuppression",
-      "policyAssembly",
-    ],
+    behaviorFixtures: ["directiveResources", "directiveSuppression", "policyAssembly"],
   },
 } as const satisfies Record<string, ContentManifestEntry>;

@@ -3,8 +3,7 @@ import type {
   PlayerId,
   PopType,
   Resource,
-  Stat,
-  TradableMaterial,
+  Resources,
   UnrestTokenChange,
 } from "../types";
 
@@ -41,69 +40,32 @@ export type SettlementScope = "all" | "city" | "colony";
 export type LawCostedAction =
   "foundColony" | "upgradeColonyToCity" | "buildBuilding" | "growPop" | "promotePop" | "demotePop";
 
-/**
- * The closed vocabulary a standing Law is built from. Every entry is a patch over a
- * lever the engine already owns (`Ruleset.popIncome`, `actionCosts`, `growPopCosts`,
- * `ladder`, `economy.bank`, happiness), so a Law never needs bespoke engine code —
- * the standing-modifier layer in `laws.ts` reads these and the income / cost / bank
- * pipelines consult it.
- *
- * `step` on the scaled entries is the divisor: `amount` is paid once per `step`
- * whole units, so `step: 1` (the default) is the plain per-settlement / per-pop case
- * and `step: 3` is "+1 per 3 citizens".
- */
+export type LawRule =
+  | "landReform"
+  | "manumission"
+  | "grainLevy"
+  | "guildCharter"
+  | "forumRites"
+  | "masterBuilders"
+  | "homesteadAct"
+  | "ruralBloc";
+
+/** Standing rule patches. Prices state a whole resulting cost, never a delta. */
 export type LawEffect =
-  /** Income per settlement of a scope. `resource: "happiness"` is a standing term of
-   *  the level, not income. */
+  | { type: "rule"; rule: LawRule }
   | {
-      type: "settlementIncome";
-      scope: SettlementScope;
-      resource: Stat;
-      amount: number;
-      step?: number;
-    }
-  /** Income per pop of a type — the per-pop coefficient lever. */
-  | { type: "popIncome"; pop: PopType; resource: Stat; amount: number; step?: number }
-  /** Per-pop delta into the settlement TILE's own material — the slave-production lever.
-   *  Dead on a yield-less tile (hill / oracle), exactly like the base coefficient. */
-  | { type: "popPrimaryIncome"; pop: PopType; amount: number }
-  /** A flat, player-wide income delta — the blunt lever. */
-  | { type: "flatIncome"; resource: Resource; amount: number }
-  /** Happiness that flips on a stockpile threshold (Cult of Demeter). */
-  | {
-      type: "thresholdHappiness";
-      resource: Resource;
-      threshold: number;
-      atOrAbove: number;
-      below: number;
-    }
-  /** Convert income surplus above a floor into another resource (Agrarian Tariff):
-   *  every `per` units of `from` income beyond `above` pays `amount` of `to`. */
-  | {
-      type: "surplusConversion";
-      from: Resource;
-      above: number;
-      per: number;
-      to: Resource;
-      amount: number;
-    }
-  /** Reprice an action. `scope` narrows grow-pop to cities or colonies, `pop` narrows a
-   *  ladder move to one source pop, `buildingIds` narrows a build to named buildings. */
-  | {
-      type: "actionCostDelta";
+      type: "actionCost";
       action: LawCostedAction;
-      resource: Resource;
-      amount: number;
-      scope?: SettlementScope;
+      cost: Partial<Resources>;
       pop?: PopType;
       buildingIds?: BuildingId[];
     }
-  /** Scale an action's whole cost (Enfranchise the Colonies: ×0.5). Applied before deltas. */
-  | { type: "actionCostMultiplier"; action: LawCostedAction; multiplier: number }
-  /** Shift a material's bank rate by whole steps in the holder's favour. */
-  | { type: "bankRateStep"; material: TradableMaterial; steps: number }
-  /** Riders that fire when a colony is founded (Frontier Spirit). */
-  | { type: "onFoundColony"; grantPop?: PopType; unrestTokens?: UnrestTokenChange };
+  | { type: "calmPayment"; resource: "food"; amount: number }
+  | { type: "colonyCapacity"; amount: number }
+  | { type: "buildingFood"; building: BuildingId; amount: number }
+  | { type: "happiness"; amount: number }
+  | { type: "settlementIncome"; scope: SettlementScope; resource: Resource; amount: number }
+  | { type: "onFoundColony"; grantPop: PopType };
 
 /** Stratokles's one-time vocabulary. Every Directive is aimed at one rival chosen by
  * the author before the proposal is sealed; the target travels with the ballot item. */
@@ -111,8 +73,6 @@ export type DirectiveEffect =
   /** A flat delta on the chosen rival. */
   | { type: "resourceDelta"; resource: Resource; amount: number }
   | { type: "unrestTokens"; change: UnrestTokenChange }
-  /** The chosen rival loses a fraction of a stored resource, rounded down to a whole unit. */
-  | { type: "resourceFraction"; resource: Resource; fraction: number }
   /** The chosen rival loses pops from their largest settlement. */
   | { type: "losePopFromLargest"; count: number }
   /** The chosen rival collects no income for this many upcoming turns. */
@@ -181,9 +141,8 @@ export type Politician =
  */
 export interface ActiveLaw {
   cardId: string;
-  /** The seat that enacted it. Null marks the unauthored house Law: it remains a
-   *  standing rule and adds politician power, but grants no prize or Voice progress. */
-  author: PlayerId | null;
+  /** The seat whose proposal passed. */
+  author: PlayerId;
   enactedYear: number;
   order: number;
 }
@@ -194,7 +153,7 @@ export interface ActiveLaw {
  */
 export interface TallyMonument {
   cardId: string;
-  /** Directives can only be authored by a player; the house draws Laws only. */
+  /** The seat whose Directive passed. */
   author: PlayerId;
   enactedYear: number;
   order: number;
@@ -205,10 +164,8 @@ export type BallotItem =
   | {
       kind: "enact";
       card: ResolutionCard;
-      /** null for the house card, which no seat authored. */
-      proposer: PlayerId | null;
-      /** At the Law cap, the active Law this proposal would replace (§1.5). */
-      replaces?: string;
+      /** The seat that sealed this proposal. */
+      proposer: PlayerId;
       /** Required for a Directive and always a rival of its proposer. */
       target?: PlayerId;
     }
@@ -217,9 +174,9 @@ export type BallotItem =
 export interface BallotVote {
   playerID: PlayerId;
   yea: boolean;
-  /** Total votes cast — citizens (or 1 under Isonomia) plus any bought. */
+  /** Total votes cast — seat and citizens (or 1 under Isonomia) plus any bought. */
   weight: number;
-  /** How many of `weight` were bought with influence. */
+  /** How many of `weight` were bought with gold or influence. */
   bribed: number;
 }
 
@@ -229,13 +186,12 @@ export interface AssemblyResult {
   yea: number;
   nay: number;
   votes: BallotVote[];
-  vetoedBy?: PlayerId;
   /** One chronicle-ready line describing what the Assembly decided. */
   summary: string;
 }
 
 /** A card a seat is holding during the proposal round — secret to every other seat. */
-export type HeldCard = { card: ResolutionCard; draws: number };
+export type HeldCard = { card: ResolutionCard };
 
 /**
  * The two phases (§1.3). Proposal is now **asynchronous** (owner ruling, 2026-07-20):
@@ -261,11 +217,9 @@ export interface AssemblySession {
   activePlayer: PlayerId;
 
   // ── Proposal (async) ──────────────────────────────────────────────────────────
-  /** The house resolution — public on the bema from the start (no seat authored it). */
-  houseItem: BallotItem | null;
   /** Each seat's secret drawn card, or null. Hidden from everyone else until proposed. */
   held: Record<PlayerId, HeldCard | null>;
-  /** Draws each seat has made this assembly — the escalating fishing sink is per-seat. */
+  /** Draws each seat has made this assembly — zero or one per seat. */
   draws: Record<PlayerId, number>;
   /** Each seat's finalized proposal (an enact or a repeal), or null if they passed —
    *  kept secret until voting, then folded into {@link ballot} in turn order. */
@@ -282,7 +236,6 @@ export interface AssemblySession {
   voteOrder: PlayerId[];
   voteIndex: number;
   bribesUsed: Record<PlayerId, number>;
-  vetoUsed: Record<PlayerId, number>;
   results: AssemblyResult[];
   /** The one rival whose base vote Isonomia fixes at one for this Assembly. */
   isonomiaTarget: PlayerId | null;

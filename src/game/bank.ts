@@ -3,7 +3,6 @@ import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
 import type { BankRules } from "./ruleset";
 import type { BankRates, HegemonyState, HexTile, PlayerId, TradableMaterial } from "./types";
-import { applyLawBankRate } from "./assembly/laws";
 
 /**
  * The bank exchange (roadmap-appendix D6/Q14): a gold-mediated static market. Sell
@@ -71,7 +70,7 @@ export function getPlayerBankRate(
   playerID: PlayerId,
   material: TradableMaterial,
 ) {
-  return applyLawBankRate(G, playerID, material, G.bank[material]);
+  return G.bank[material];
 }
 
 export function getBankSellStatus(

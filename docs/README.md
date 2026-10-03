@@ -15,9 +15,9 @@ session with "continue the v2 migration" in the `hegemony-v2` worktree.
 
 **Owner blockers:** none.
 
-Step 7 is implemented in the working tree and awaits the lead's bot batch, browser
-audits and shell gate. Its defaults are in the migration plan; Step 8 is next after
-verification and merge.
+Step 7 merged in #86. Step 8 is implemented in the working tree and awaits the
+lead's bot batch, browser audits and shell gate. Its defaults are in the migration
+plan; Step 9 follows verification and merge.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
@@ -27,7 +27,7 @@ precedes full multiplayer.
 
 | Plan                                                | Phase    | Status    | Position                                                                         |
 | --------------------------------------------------- | -------- | --------- | -------------------------------------------------------------------------------- |
-| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 8: Assembly and Laws; Steps 1 to 7 shipped (#79 to #86)                     |
+| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 9: National Ideas; Steps 1 to 8 shipped (#79 to #87)                        |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze |
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged            |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                        |

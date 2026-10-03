@@ -2,11 +2,10 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
 import {
-  availableLawReplacementIds,
-  activeLawIds,
   baseVoteWeight,
   getResolutionCard,
-  lawNeedsReplacement,
+  lawProposalReason,
+  lawReplacementIds,
   POLITICIANS_BY_ID,
 } from "../../../game/assembly";
 import { happinessLevel } from "../../../game/happiness";
@@ -81,10 +80,9 @@ function ProposalFloor({
   const { viewerId } = useGameUi();
   const held = session.held[viewerId];
   const sealed = session.proposals[viewerId];
-  const house = session.houseItem;
 
   return (
-    <div className="asmFloor">
+    <div className={`asmFloor asmFloorProposal${!held && !sealed ? " is-empty" : ""}`}>
       <div className="asmCardWrap">
         {held ? (
           <LawCardFace
@@ -96,8 +94,6 @@ function ProposalFloor({
           />
         ) : sealed ? (
           <BallotFace G={G} item={sealed} kickerPrefix="Sealed" />
-        ) : house ? (
-          <BallotFace G={G} item={house} kickerPrefix="A house law" />
         ) : (
           <p className="asmFloorEmpty body-em">Nothing lies on the bema.</p>
         )}
@@ -190,7 +186,7 @@ function LawSlab({
   monument = false,
 }: {
   G: HegemonyState;
-  law: { cardId: string; author: PlayerId | null; enactedYear: number; order: number };
+  law: { cardId: string; author: PlayerId; enactedYear: number; order: number };
   monument?: boolean;
 }) {
   const card = getResolutionCard(G.definition.content, law.cardId);
@@ -344,7 +340,7 @@ function pile(count: number, side: "yea" | "nay" | "ghost"): ReactNode[] {
 }
 
 /** The running read on a close card — the thing a player would otherwise compute in
- *  their head before deciding whether to spend a bribe or a veto. */
+ *  their head before deciding whether to spend a bought vote. */
 function voteNote(
   G: HegemonyState,
   session: AssemblySession,
@@ -388,7 +384,7 @@ function BallotFace({
   }
 
   const orator = POLITICIANS_BY_ID[item.card.politician].name;
-  const by = item.proposer ? PLAYER_NAMES[item.proposer] : "the house";
+  const by = PLAYER_NAMES[item.proposer];
 
   return (
     <LawCardFace
@@ -417,7 +413,7 @@ function LawCardFace({
   G: HegemonyState;
   card: ResolutionCard;
   kicker: string;
-  proposer: PlayerId | null;
+  proposer: PlayerId;
   target?: PlayerId;
   actions?: ReactNode;
 }) {
@@ -606,15 +602,14 @@ export function ResolutionEffect({ card }: { card: ResolutionCard }) {
 
 function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard }) {
   const { moves, viewerId } = useGameUi();
-  const [replacementAnchor, setReplacementAnchor] = useState<DOMRect | null>(null);
-  const alreadyStanding = card.kind === "law" && activeLawIds(G).includes(card.id);
-  const needsReplacement = card.kind === "law" && lawNeedsReplacement(G);
-  const replacementCandidates = availableLawReplacementIds(G);
+  const [targetAnchor, setTargetAnchor] = useState<DOMRect | null>(null);
+  const blocked = lawProposalReason(G, card);
+  const replacements = lawReplacementIds(G, card);
 
-  if (alreadyStanding) {
+  if (blocked) {
     return (
       <>
-        <span className="asmBlocked label">Already stands</span>
+        <span className="asmBlocked label">{blocked}</span>
         <AssemblyAction
           className="asmAct is-ghost verb-lg"
           enabled
@@ -638,18 +633,18 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
             enabled
             explanation="Choose one rival, then seal this Directive. The target is revealed with the ballot before voting begins."
             heading={`Target ${card.name}`}
-            onClick={(event) => setReplacementAnchor(event.currentTarget.getBoundingClientRect())}
+            onClick={(event) => setTargetAnchor(event.currentTarget.getBoundingClientRect())}
             triggerClassName="asmActTrigger"
           >
             Choose rival ▾
           </AssemblyAction>
-          {replacementAnchor ? (
+          {targetAnchor ? (
             <Popover
-              anchor={replacementAnchor}
+              anchor={targetAnchor}
               ariaLabel={`Choose the rival targeted by ${card.name}`}
               className="assemblyMenuPopover"
               measureKey={viewerId}
-              onDismiss={() => setReplacementAnchor(null)}
+              onDismiss={() => setTargetAnchor(null)}
               preferredPlacement="above"
             >
               <div className="asmMenu asmTargetMenu">
@@ -659,8 +654,8 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
                     <li key={target}>
                       <button
                         onClick={() => {
-                          moves.assemblyPropose(viewerId, undefined, target);
-                          setReplacementAnchor(null);
+                          moves.assemblyPropose(viewerId, target);
+                          setTargetAnchor(null);
                         }}
                         type="button"
                       >
@@ -678,59 +673,15 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
             </Popover>
           ) : null}
         </>
-      ) : needsReplacement ? (
-        <>
-          <AssemblyAction
-            className="asmAct is-primary verb-lg"
-            enabled
-            explanation="Add this Law to the ballot. Because the standing-Law board is full or its remaining slots are reserved, choose the Law it would replace if passed."
-            heading={`Propose ${card.name}`}
-            onClick={(event) => setReplacementAnchor(event.currentTarget.getBoundingClientRect())}
-            triggerClassName="asmActTrigger"
-          >
-            <Icon glyph="law" size="verb" src={ASSEMBLY_PLACEHOLDERS.propose} />
-            Propose ▾
-          </AssemblyAction>
-          {replacementAnchor ? (
-            <Popover
-              anchor={replacementAnchor}
-              ariaLabel={`Choose the standing Law ${card.name} would replace`}
-              className="assemblyMenuPopover"
-              measureKey={G.activeLaws.length}
-              onDismiss={() => setReplacementAnchor(null)}
-              preferredPlacement="above"
-            >
-              <div className="asmMenu">
-                <p className="asmMenuHead">Reserve the Law this proposal would replace</p>
-                <ul aria-label="Standing Laws available for replacement" className="asmMenuChoices">
-                  {replacementCandidates.map((cardId) => (
-                    <li key={cardId}>
-                      <button
-                        onClick={() => {
-                          moves.assemblyPropose(viewerId, cardId);
-                          setReplacementAnchor(null);
-                        }}
-                        type="button"
-                      >
-                        <span className="asmMenuName">
-                          {getResolutionCard(G.definition.content, cardId)?.name ?? cardId}
-                        </span>
-                        <span className="asmMenuMeta">
-                          {getResolutionCard(G.definition.content, cardId)?.text}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Popover>
-          ) : null}
-        </>
       ) : (
         <AssemblyAction
           className="asmAct is-primary verb-lg"
           enabled
-          explanation="Add this held resolution to the Assembly ballot. It is revealed after every seat has decided."
+          explanation={
+            replacements.length
+              ? `If passed, replaces ${replacements.map((id) => getResolutionCard(G.definition.content, id)?.name).join(" and ")}.`
+              : "Seal this proposal. It is revealed after every seat has decided."
+          }
           heading={`Propose ${card.name}`}
           onClick={() => moves.assemblyPropose(viewerId)}
           triggerClassName="asmActTrigger"
@@ -755,8 +706,6 @@ function ProposeDiscard({ G, card }: { G: HegemonyState; card: ResolutionCard })
 
 function targetSummary(G: HegemonyState, card: ResolutionCard, target: PlayerId): string {
   if (card.id === "grain-riot") return `${G.players[target].resources.food} food stored`;
-  if (card.id === "bread-and-circuses")
-    return `${G.players[target].resources.gold} gold · ${happinessLevel(G, target)} happiness`;
   if (card.id === "the-streets-burn") return `${happinessLevel(G, target)} happiness`;
   if (card.id === "the-stele-is-broken") {
     const laws = G.activeLaws.filter((law) => law.author === target).length;
@@ -816,9 +765,7 @@ function ClosingFloor({
                 <li className={`is-${outcomeOf(result)}`} key={index}>
                   <span className="asmResultVerdict label">{OUTCOME_WORDS[outcomeOf(result)]}</span>
                   <span className="asmResultText body">{result.summary}</span>
-                  <span className="asmResultTally stat num">
-                    {result.vetoedBy ? "—" : `${result.yea}–${result.nay}`}
-                  </span>
+                  <span className="asmResultTally stat num">{`${result.yea}–${result.nay}`}</span>
                 </li>
               ))}
             </ul>
@@ -857,23 +804,20 @@ function ClosingFloor({
   );
 }
 
-type Outcome = "enacted" | "struck" | "fallen";
+type Outcome = "enacted" | "fallen";
 
 /** The word the house would say. It is the news, so it is set as a verdict and
  *  not left to be inferred from whether 5–0 or 0–5 came first. */
 const OUTCOME_WORDS: Record<Outcome, string> = {
   enacted: "Enacted",
-  struck: "Vetoed",
   fallen: "Falls",
 };
 
 function outcomeOf(result: AssemblyResult): Outcome {
-  return result.vetoedBy ? "struck" : result.passed ? "enacted" : "fallen";
+  return result.passed ? "enacted" : "fallen";
 }
 
-/** What the agora looks like now the sitting has risen. "0 of 6 stelae planted.
- *  6 slots of headroom." is a status field read aloud; this is the same two facts
- *  said the way the rest of the scene talks. */
+/** The standing record after the sitting has risen. */
 function steleNote(G: HegemonyState): string {
   const cap = G.ruleset.assembly.lawCap;
   const standing = G.activeLaws.length;
@@ -883,7 +827,7 @@ function steleNote(G: HegemonyState): string {
   }
 
   if (standing >= cap) {
-    return `Every stone is carved. A new Law must now name the one it tears down.`;
+    return `Every stone is carved. A new Law replaces the oldest when its tenure ends.`;
   }
 
   return `${standing} of ${cap} stones carved — ${cap - standing} still bare.`;

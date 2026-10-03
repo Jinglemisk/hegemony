@@ -146,40 +146,24 @@ export interface PlacementRules {
   cityExclusionRadius: number;
 }
 
-/**
- * The Assembly's dials (docs/archive/plans/assembly-politicians.md §5). Every number the
- * rivalry layer turns on lives here, because the design's own note is that the
- * *shape* is locked and the *numbers* want the `?tune` panel and the sim — the sink
- * depth in particular is called out as "the most important A/B".
- *
- * The costs reproduce the approved visual reference's own figures
- * (docs/reference/design/showcases/assembly-mode-showcase.html): draw 3, bribe 10 capped at 2,
- * veto 5.
- */
+/** Assembly cadence, prices and prizes. */
 export interface AssemblyRules {
   /** Assemblies convene as a year opens, from this year. **0 disables the subsystem**,
    *  which is how the headless sim and the pre-Assembly fixtures keep running. */
   firstYear: number;
   /** Years from one sitting to the next: 2 is every other year. */
   everyYears: number;
-  /** Standing Laws the board holds before a new one must name one to replace (§1.5). */
+  /** Standing Laws before a new one replaces the oldest. */
   lawCap: number;
-  /** One-time reward paid when a player's authored resolution passes. House Laws pay none. */
+  /** One-time reward paid when a player's authored resolution passes. */
   prizes: Record<PoliticianId, Partial<Resources>>;
   /** Influence for the first draw of your proposal turn. */
   drawCost: number;
-  /** Influence for every draw after it — the fishing sink (§1.4). */
-  redrawCost: number;
   /** Influence to put a repeal of a standing Law on the ballot. */
   repealCost: number;
-  /** Influence per bought vote, and the per-player ceiling for one assembly. */
+  /** Gold or influence per bought vote, and the per-player ceiling for one assembly. */
   briberyCost: number;
   briberyCap: number;
-  /** Influence to strike the resolution under vote. */
-  vetoCost: number;
-  vetoesPerAssembly: number;
-  /** Whether a tied vote carries. The design's default is that ties FAIL. */
-  tiesPass: boolean;
 }
 
 export interface Ruleset {
@@ -289,24 +273,18 @@ export const DEFAULT_RULESET: Ruleset = {
     // Every other year from Year 2: up to seven sittings in a fourteen-year game.
     firstYear: 2,
     everyYears: 2,
-    lawCap: 6,
-    // Material prizes are ~11–12% of one classic board's base production for that
-    // resource (44 food / 36 wood / 26 stone). Stratokles pays gold: a prize is a
-    // stock, and happiness is no longer one.
+    lawCap: 4,
+    // Small stock prizes; Stratokles keeps the Step 5 gold ruling.
     prizes: {
-      demosthenes: { food: 5 },
-      perdiccas: { stone: 3 },
-      kleistophenes: { wood: 4 },
+      demosthenes: { food: 2 },
+      perdiccas: { stone: 2 },
+      kleistophenes: { wood: 2 },
       stratokles: { gold: 2 },
     },
-    drawCost: 3,
-    redrawCost: 3,
-    repealCost: 6,
-    briberyCost: 10,
+    drawCost: 2,
+    repealCost: 3,
+    briberyCost: 2,
     briberyCap: 2,
-    vetoCost: 5,
-    vetoesPerAssembly: 1,
-    tiesPass: false,
   },
   setup: ["capital", "colony"],
 };

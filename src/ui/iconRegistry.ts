@@ -123,24 +123,19 @@ export const TABLE_EFFECT_GLYPHS = {
 } as const satisfies Record<TableEffect["type"], GlyphId>;
 
 export const LAW_EFFECT_GLYPHS = {
+  rule: "law",
+  actionCost: "costDown",
+  calmPayment: "calm",
+  colonyCapacity: "colony",
+  buildingFood: "food",
+  happiness: "happiness",
   settlementIncome: "cityIncome",
-  popIncome: "popIncome",
-  /** What the ground itself gives, per pop working it. */
-  popPrimaryIncome: "tileYield",
-  flatIncome: "income",
-  thresholdHappiness: "threshold",
-  surplusConversion: "convert",
-  actionCostDelta: "costDown",
-  actionCostMultiplier: "cross",
-  /** The bank's scales, which are the forum's scales — one idea. */
-  bankRateStep: "forum",
   onFoundColony: "found",
 } as const satisfies Record<LawEffect["type"], GlyphId>;
 
 export const DIRECTIVE_EFFECT_GLYPHS = {
   unrestTokens: "happiness",
   resourceDelta: "stockpile",
-  resourceFraction: "fraction",
   losePopFromLargest: "popLoss",
   suppressIncome: "suppress",
   repealNewestTargetLaw: "repeal",

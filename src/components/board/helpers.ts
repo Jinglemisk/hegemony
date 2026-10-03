@@ -2,15 +2,13 @@ import { EMPTY_RESOURCES } from "../../game/data";
 import { capitalize } from "../../game/core/format";
 import type { Phase } from "../../client/controller";
 import type { ActionStatus } from "../../game/rules";
-import type { Ruleset } from "../../game/ruleset";
 import {
   POP_TYPES,
   claimableLuxuriesAt,
   getLuxuryGood,
-  popIncome,
+  settlementNextClassColumn,
   previewBuildBuilding,
   previewBuildingIncomeDelta,
-  settlementWorkingSlaves,
 } from "../../game/rules";
 import type {
   BuildingDefinition,
@@ -51,7 +49,7 @@ export function getOwnedHoldings(G: HegemonyState, playerID: PlayerId): OwnedHol
  * default parameter quietly substituted DEFAULT_RULESET — so under a patched
  * ruleset this tab reported numbers the engine never paid (R7).
  */
-export function calculatePopEconomy(holdings: OwnedHolding[], ruleset: Ruleset): PopEconomy {
+export function calculatePopEconomy(holdings: OwnedHolding[], G: HegemonyState): PopEconomy {
   const economy: PopEconomy = {
     citizens: createEmptyResources(),
     freemen: createEmptyResources(),
@@ -60,17 +58,7 @@ export function calculatePopEconomy(holdings: OwnedHolding[], ruleset: Ruleset):
 
   for (const { tile, settlement } of holdings) {
     for (const pop of POP_TYPES) {
-      addResources(
-        economy[pop],
-        popIncome(
-          pop,
-          settlement.pops[pop],
-          tile.resource?.type ?? null,
-          ruleset,
-          // Only slaves on an open slot make the tile's resource.
-          pop === "slaves" ? settlementWorkingSlaves(tile, settlement) : settlement.pops[pop],
-        ),
-      );
+      addResources(economy[pop], settlementNextClassColumn(G, tile, settlement, pop).income);
     }
   }
 

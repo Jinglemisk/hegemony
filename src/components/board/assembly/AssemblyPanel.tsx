@@ -53,7 +53,7 @@ export function AssemblyPanel({ onTakeSeat }: { onTakeSeat: (playerID: PlayerId)
 
   // The engine advances to the next ballot card the instant a vote resolves, so there
   // was no beat to read the outcome. This holds the just-decided result on screen for
-  // a couple of seconds — the "passed / failed / vetoed" feedback the playtest wanted.
+  // a couple of seconds — the "passed / failed" feedback the playtest wanted.
   const resultCount = session?.results.length ?? 0;
   const [flash, setFlash] = useState<{ result: AssemblyResult; key: number } | null>(null);
   const seenResults = useRef(resultCount);
@@ -116,17 +116,15 @@ function ResultFlash({ G, result }: { G: HegemonyState; result: AssemblyResult }
     result.item.kind === "repeal"
       ? `Repeal ${getResolutionCard(G.definition.content, result.item.cardId)?.name ?? result.item.cardId}`
       : result.item.card.name;
-  const verdict = result.vetoedBy ? "vetoed" : result.passed ? "passed" : "failed";
+  const verdict = result.passed ? "passed" : "failed";
 
   return (
     <div className={`asmFlash is-${verdict}`} role="status">
       <span className="asmFlashName verb-lg">{name}</span>
       <span className="asmFlashVerdict label">{verdict}</span>
-      {result.vetoedBy ? null : (
-        <span className="asmFlashTally stat num">
-          {result.yea}–{result.nay}
-        </span>
-      )}
+      <span className="asmFlashTally stat num">
+        {result.yea}–{result.nay}
+      </span>
     </div>
   );
 }

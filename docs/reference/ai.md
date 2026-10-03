@@ -80,10 +80,9 @@ Because `endTurn` is not a branch, the beam cannot project income into a later a
 or deliberately save for a future city; `INCOME_HORIZON` only estimates passive
 income, upkeep, and unrest inside the state score.
 
-**`political`** — the `smart` economy plus dedicated Assembly heuristics: it values
-political standing, compares a resolution's benefit to the strongest rival's, and makes
-draw/propose/repeal/vote/bribe/veto decisions. Outside the Assembly it returns to one-ply
-search, so it does not inherit `beam`'s depth.
+**`political`** — the `smart` economy plus standing-authorship valuation. It uses
+the shared Assembly strategy described below. Outside the Assembly it returns to
+one-ply search, so it does not inherit `beam`'s depth.
 
 **`master`** — the cumulative whole-game policy. It uses the political Assembly handler;
 everywhere else it runs the `beam` over a combined score: `smart` economy + political
@@ -91,6 +90,13 @@ standing + PR #41's low-weight one-step expansion-frontier signal. In lineage te
 `beam`, `political`, and the off-branch `settler` experiment are sibling specialists;
 `master` is their first composition. It does not yet add cross-turn saving, general rival
 replies, multi-hop route search, or chance expected value.
+
+Every non-random policy now uses the same Assembly handler. A bot draws from the
+unordered public composition, scores real engine enactments on clones, proposes
+useful Laws and supports coalitions with small private costs. It blocks a rival's
+winning title and buys votes only when the predicted public coalition needs them
+and its purse can fund the full gap. Author prizes and standing Voice progress
+count; Directives never add Voice. No handler reads hidden card order.
 
 _Determinism / anti-peek (the crux):_ the game RNG lives inside state (`G.rng`), so
 applying a stochastic move in a clone would reveal _this game's_ seeded roll. The beam

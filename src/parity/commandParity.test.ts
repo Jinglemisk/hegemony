@@ -51,6 +51,6 @@ describe("three-axis move parity gate", () => {
 
     expect(Object.keys(report.movesByType)).toEqual(GAME_COMMAND_TYPES);
     expect(report.movesByType.endTurn).toEqual({ count: 1, perGame: 1 });
-    expect(report.movesByType.assemblyVeto).toEqual({ count: 0, perGame: 0 });
+    expect(report.movesByType.assemblyBribe).toEqual({ count: 0, perGame: 0 });
   });
 });

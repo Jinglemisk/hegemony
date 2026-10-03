@@ -39,7 +39,13 @@ function termLabel(G: HegemonyState, term: HappinessContribution): string {
 export function happinessDisplay(G: HegemonyState, playerID: PlayerId): HappinessDisplay {
   const terms = happinessContributions(G, playerID);
   const { riotThreshold, revoltThreshold } = G.ruleset.economy.unrest;
-  const always: Array<HappinessContribution["id"]> = ["temples", "luxuries", "slaves", "tokens"];
+  const always: Array<HappinessContribution["id"]> = [
+    "temples",
+    "luxuries",
+    "slaves",
+    "tokens",
+    "law",
+  ];
 
   return {
     value: terms.reduce((sum, term) => sum + term.amount, 0),

@@ -33,8 +33,8 @@ export function SettlementSummaryCard({
   G: HegemonyState;
 }) {
   const popTotal = totalPops(settlement.pops);
-  const capacity = settlementCapacity(settlement, G.ruleset);
-  const overCapacity = settlementOverCapacity(settlement, G.ruleset);
+  const capacity = settlementCapacity(settlement, G);
+  const overCapacity = settlementOverCapacity(settlement, G);
   const { slots } = buildingGround(G, settlement.owner, tile.id);
 
   return (

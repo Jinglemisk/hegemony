@@ -5,9 +5,10 @@ import type { HegemonyState, PlayerId } from "../types";
 import { addLog, getPlayerName, getTile } from "../core/query";
 import { MOVE_OK, invalid } from "../core/results";
 import type { MoveResult } from "../core/results";
-import { mulberry32, shuffleWithSeed } from "../core/rng";
+import { shuffleWithSeed } from "../core/rng";
 import { totalPops } from "../core/pops";
 import { POLITICIANS } from "./deck";
+import { hasLawRule, isPriceLaw } from "./laws";
 import { getResolutionCard, getResolutionCards } from "../content";
 import { getAuthoredGameContent } from "../content";
 import type { GameContent } from "../content";
@@ -102,14 +103,10 @@ function syncAssemblyActor(G: HegemonyState) {
 }
 
 /**
- * Convene. One house card drops from a random politician's deck onto the ballot with
- * no author, so every assembly has something to argue about even if every seat passes;
- * then the seats fish and propose in REVERSE turn order (§1.3, fairness — the player
- * who acts last in the year speaks first in the agora).
+ * Convene for secret player proposals only. With no proposals, the sitting closes.
  */
 export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
   const order = turnOrder(G);
-  const houseCard = drawHouseCard(G);
   const perSeat = <T>(value: T) =>
     PLAYER_IDS.reduce((all, id) => ({ ...all, [id]: value }), {} as Record<PlayerId, T>);
 
@@ -117,14 +114,6 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
     year: G.year,
     phase: "proposal",
     activePlayer: order[0],
-    houseItem: houseCard
-      ? {
-          kind: "enact",
-          card: houseCard,
-          proposer: null,
-          replaces: houseCard.kind === "law" ? houseReplacementTarget(G) : undefined,
-        }
-      : null,
     held: perSeat(null),
     draws: perSeat(0),
     proposals: perSeat<BallotItem | null>(null),
@@ -135,7 +124,6 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
     voteOrder: order,
     voteIndex: 0,
     bribesUsed: perSeat(0),
-    vetoUsed: perSeat(0),
     results: [],
     // Isonomia names one rival at the previous Assembly and fixes only that seat's
     // base vote at one for this sitting.
@@ -148,10 +136,6 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
 
   addLog(G, `The Assembly convenes for Year ${G.year}.`);
 
-  if (houseCard) {
-    addLog(G, `A house resolution is laid on the bema: ${houseCard.name}.`);
-  }
-
   if (G.assembly.isonomiaTarget) {
     addLog(
       G,
@@ -161,67 +145,6 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
   }
 
   syncAssemblyActor(G);
-}
-
-/**
- * The house card: a random Law politician's top card, drawn with the game's own PRNG so
- * the assembly is reproducible from the seed like every other draw.
- *
- * It must clear the SAME gate a proposed card clears. Nothing about being unauthored
- * exempts it: a house Law that duplicates a standing one would put the same stele on
- * the board twice — doubling its effects and its politician's power off a single card
- * — and one that ignores the cap would quietly take the board past its own ceiling.
- * A duplicate is discarded and redrawn; the cap is handled at the ballot, where the
- * house names its replacement like anyone else.
- */
-function drawHouseCard(G: HegemonyState): ResolutionCard | null {
-  const standing = activeLawIds(G);
-  const lawPoliticians = POLITICIANS.filter((politician) => politician.kind === "law");
-
-  // Bounded: with 24 Laws and a cap of ~6 a clean draw is near-certain, but a rigged
-  // or heavily-drained deck must not spin here.
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const step = mulberry32(G.rng);
-    G.rng = step.state;
-    const politician = lawPoliticians[Math.floor(step.value * lawPoliticians.length)].id;
-    const card = drawFromPoliticianDeck(G, politician) ?? drawFromAnyLawDeck(G);
-
-    if (!card) {
-      return null;
-    }
-
-    if (card.kind === "law" && !standing.includes(card.id)) {
-      return card;
-    }
-
-    // Already inscribed in the agora — back to the pile, and try again.
-    discardCard(G, card);
-  }
-
-  return null;
-}
-
-/** The stele a house Law displaces when the board is already full. The OLDEST standing
- *  Law: with no author to make the choice, the house defers to age rather than picking
- *  a side, and the board self-manages instead of deadlocking. */
-function houseReplacementTarget(G: HegemonyState): string | undefined {
-  if (!isAtLawCap(G)) {
-    return undefined;
-  }
-
-  return [...G.activeLaws].sort((a, b) => a.order - b.order)[0]?.cardId;
-}
-
-function drawFromAnyLawDeck(G: HegemonyState): ResolutionCard | null {
-  for (const politician of POLITICIANS.filter((candidate) => candidate.kind === "law")) {
-    const card = drawFromPoliticianDeck(G, politician.id);
-
-    if (card) {
-      return card;
-    }
-  }
-
-  return null;
 }
 
 /**
@@ -259,17 +182,15 @@ function canAct(G: HegemonyState, playerID: PlayerId): boolean {
   return Boolean(session && session.phase === "proposal" && !session.proposalDone[playerID]);
 }
 
-/** What a seat would pay for its next fish: the opening draw, then the redraw price for
- *  every card after it — the escalating sink is per-seat (§1.4). */
-export function nextDrawCost(G: HegemonyState, playerID: PlayerId): number {
+/** The once-per-sitting draw price. */
+export function nextDrawCost(G: HegemonyState, _playerID: PlayerId): number {
   const session = G.assembly;
 
   if (!session) {
     return 0;
   }
 
-  const rules = G.ruleset.assembly;
-  return session.draws[playerID] === 0 ? rules.drawCost : rules.redrawCost;
+  return G.ruleset.assembly.drawCost;
 }
 
 /**
@@ -277,6 +198,27 @@ export function nextDrawCost(G: HegemonyState, playerID: PlayerId): number {
  * it in secret. Picking the politician but not the card preserves deck identity and
  * lets the seat pursue a particular author prize without cherry-picking an effect.
  */
+export function getAssemblyDrawStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  politician: PoliticianId,
+) {
+  const price = nextDrawCost(G, playerID);
+  const session = G.assembly;
+  const reason = !canAct(G, playerID)
+    ? "You have already spoken this sitting."
+    : session!.held[playerID]
+      ? "Resolve the held card first."
+      : session!.draws[playerID] > 0
+        ? "One draw per seat per sitting."
+        : G.players[playerID].resources.influence < price
+          ? `Requires ${price} influence.`
+          : !G.politicianDecks[politician]?.length && !G.politicianDiscards[politician]?.length
+            ? "That politician has no cards left to draw."
+            : null;
+  return { can: reason === null, reason, price, cost: { influence: price } };
+}
+
 export function assemblyDraw(
   G: HegemonyState,
   playerID: PlayerId,
@@ -284,19 +226,9 @@ export function assemblyDraw(
 ): MoveResult {
   const session = G.assembly;
 
-  if (!canAct(G, playerID)) {
-    return invalid("You have already spoken this assembly.");
-  }
-
-  if (session!.held[playerID]) {
-    return invalid("Discard or propose the card you are holding first.");
-  }
-
-  const cost = nextDrawCost(G, playerID);
-
-  if (G.players[playerID].resources.influence < cost) {
-    return invalid(`Drawing costs ${cost} influence.`);
-  }
+  const status = getAssemblyDrawStatus(G, playerID, politician);
+  if (!status.can) return invalid(status.reason!);
+  const cost = status.price;
 
   const card = drawFromPoliticianDeck(G, politician);
 
@@ -306,7 +238,7 @@ export function assemblyDraw(
 
   G.players[playerID].resources.influence -= cost;
   session!.draws[playerID] += 1;
-  session!.held[playerID] = { card, draws: session!.draws[playerID] };
+  session!.held[playerID] = { card };
   addLog(
     G,
     `${getPlayerName(G, playerID)} paid ${cost} influence to sound out ${politicianName(politician)}.`,
@@ -315,7 +247,7 @@ export function assemblyDraw(
   return MOVE_OK;
 }
 
-/** Throw the fish back. Costs nothing by itself — the price is the next draw. */
+/** Discard the draw. Its price is sunk; there is no second draw. */
 export function assemblyDiscardHeld(G: HegemonyState, playerID: PlayerId): MoveResult {
   const session = G.assembly;
 
@@ -329,7 +261,7 @@ export function assemblyDiscardHeld(G: HegemonyState, playerID: PlayerId): MoveR
   return MOVE_OK;
 }
 
-/** True when the board is full and a new Law must name one to replace (§1.5). */
+/** True when a new Law would automatically replace the oldest. */
 export function isAtLawCap(G: HegemonyState): boolean {
   return G.activeLaws.length >= G.ruleset.assembly.lawCap;
 }
@@ -339,48 +271,42 @@ export function activeLawIds(G: HegemonyState): string[] {
   return G.activeLaws.map((law) => law.cardId);
 }
 
-/** Law enactments already sealed for this sitting. Unreplaced items consume the
- * remaining headroom even before votes resolve, preventing simultaneous proposals
- * from collectively overflowing the standing-Law cap. */
-function pendingLawItems(G: HegemonyState): Array<Extract<BallotItem, { kind: "enact" }>> {
-  const session = G.assembly;
-  if (!session) return [];
-
-  return [session.houseItem, ...Object.values(session.proposals)].filter(
-    (item): item is Extract<BallotItem, { kind: "enact" }> =>
-      item?.kind === "enact" && item.card.kind === "law",
-  );
+/** A new Law survives this sitting and the sitting immediately after it. */
+export function lawCanBeRemoved(G: HegemonyState, cardId: string): boolean {
+  const law = G.activeLaws.find((active) => active.cardId === cardId);
+  return Boolean(law && G.year > law.enactedYear + Math.max(1, G.ruleset.assembly.everyYears));
+}
+export function repealableLawIds(G: HegemonyState): string[] {
+  return activeLawIds(G).filter((id) => lawCanBeRemoved(G, id));
+}
+/** Automatic casualties, recomputed when the vote resolves. At the cap the oldest
+ * leaves; a new price Law also replaces the previous price Law. */
+export function lawReplacementIds(G: HegemonyState, card: ResolutionCard): string[] {
+  if (card.kind !== "law") return [];
+  const ids: string[] = [];
+  if (isAtLawCap(G)) {
+    const oldest = [...G.activeLaws].sort((a, b) => a.order - b.order)[0];
+    if (oldest) ids.push(oldest.cardId);
+  }
+  if (isPriceLaw(card)) {
+    for (const law of G.activeLaws) {
+      const standing = getResolutionCard(G.definition.content, law.cardId);
+      if (standing && isPriceLaw(standing)) ids.push(law.cardId);
+    }
+  }
+  return [...new Set(ids)];
+}
+export function lawProposalReason(G: HegemonyState, card: ResolutionCard): string | null {
+  if (card.kind !== "law") return null;
+  if (activeLawIds(G).includes(card.id)) return "That Law already stands.";
+  if (lawReplacementIds(G, card).some((id) => !lawCanBeRemoved(G, id)))
+    return "A Law this would replace is still in its minimum tenure.";
+  return null;
 }
 
-/** Whether the next Law proposal must reserve a standing Law as its casualty. */
-export function lawNeedsReplacement(G: HegemonyState): boolean {
-  const pendingWithoutReplacement = pendingLawItems(G).filter((item) => !item.replaces).length;
-  return G.activeLaws.length + pendingWithoutReplacement >= G.ruleset.assembly.lawCap;
-}
-
-/** Standing Laws not already reserved by another sealed proposal. */
-export function availableLawReplacementIds(G: HegemonyState): string[] {
-  const reserved = new Set(
-    pendingLawItems(G)
-      .map((item) => item.replaces)
-      .filter((cardId): cardId is string => Boolean(cardId)),
-  );
-  return activeLawIds(G).filter((cardId) => !reserved.has(cardId));
-}
-
-/**
- * Put the held card on the ballot. At the Law cap—or when earlier sealed Laws reserve
- * all remaining slots—the proposal must name an available active Law
- * to replace, which is what keeps the board self-managing without deadlocking: the
- * agora can always accept a new idea, it just has to choose what to tear down for it.
- *
- * Directives never consume a cap slot (a tally monument is not a rule), so they never
- * need a replacement.
- */
 export function assemblyPropose(
   G: HegemonyState,
   playerID: PlayerId,
-  replaces?: string,
   target?: PlayerId,
 ): MoveResult {
   const session = G.assembly;
@@ -391,19 +317,8 @@ export function assemblyPropose(
 
   const card = session!.held[playerID]!.card;
 
-  if (card.kind === "law" && activeLawIds(G).includes(card.id)) {
-    return invalid(`${card.name} already stands on the board.`);
-  }
-
-  const needsReplacement = card.kind === "law" && lawNeedsReplacement(G);
-
-  if (needsReplacement) {
-    if (!replaces || !availableLawReplacementIds(G).includes(replaces)) {
-      return invalid(
-        "The board is full or its remaining slots are reserved — name an available standing Law this one would replace.",
-      );
-    }
-  }
+  const reason = lawProposalReason(G, card);
+  if (reason) return invalid(reason);
 
   if (
     card.kind === "directive" &&
@@ -416,7 +331,6 @@ export function assemblyPropose(
     kind: "enact",
     card,
     proposer: playerID,
-    replaces: needsReplacement ? replaces : undefined,
     target: card.kind === "directive" ? target : undefined,
   };
   session!.held[playerID] = null;
@@ -434,6 +348,23 @@ export function assemblyPropose(
  * law is as political as passing one, so whoever a Law is hurting has to marshal a
  * coalition rather than simply buy their way out. It consumes the seat's one proposal.
  */
+export function getAssemblyRepealStatus(G: HegemonyState, playerID: PlayerId, cardId?: string) {
+  const price = G.ruleset.assembly.repealCost;
+  const reason = !canAct(G, playerID)
+    ? "You have already spoken this sitting."
+    : cardId
+      ? !lawCanBeRemoved(G, cardId)
+        ? "That Law is absent or still in its minimum tenure."
+        : null
+      : repealableLawIds(G).length === 0
+        ? "No standing Law can be repealed."
+        : null;
+  const blocked =
+    reason ??
+    (G.players[playerID].resources.influence < price ? `Requires ${price} influence.` : null);
+  return { can: blocked === null, reason: blocked, price, cost: { influence: price } };
+}
+
 export function assemblyProposeRepeal(
   G: HegemonyState,
   playerID: PlayerId,
@@ -441,19 +372,9 @@ export function assemblyProposeRepeal(
 ): MoveResult {
   const session = G.assembly;
 
-  if (!canAct(G, playerID)) {
-    return invalid();
-  }
-
-  if (!activeLawIds(G).includes(cardId)) {
-    return invalid("That Law is not standing.");
-  }
-
-  const cost = G.ruleset.assembly.repealCost;
-
-  if (G.players[playerID].resources.influence < cost) {
-    return invalid(`Proposing a repeal costs ${cost} influence.`);
-  }
+  const status = getAssemblyRepealStatus(G, playerID, cardId);
+  if (!status.can) return invalid(status.reason!);
+  const cost = status.price;
 
   G.players[playerID].resources.influence -= cost;
 
@@ -510,14 +431,13 @@ function finalizeProposal(G: HegemonyState, playerID: PlayerId) {
 /**
  * Assemble the ballot and open the vote. The proposals were secret and arrived in
  * whatever real-time order the seats acted; the ballot orders them deterministically —
- * the house card first, then each seat's proposal in turn order — so the vote sequence
+ * each seat's proposal in turn order — so the vote sequence
  * never depends on who happened to click first.
  */
 function beginVoting(G: HegemonyState) {
   const session = G.assembly!;
 
   session.ballot = [
-    ...(session.houseItem ? [session.houseItem] : []),
     ...session.voteOrder
       .map((seat) => session.proposals[seat])
       .filter((item): item is BallotItem => item !== null),
@@ -542,7 +462,7 @@ function beginVoting(G: HegemonyState) {
   syncAssemblyActor(G);
 }
 
-/** A seat's base voting strength: their citizens, or exactly one when Isonomia names them. */
+/** A seat's base voting strength: one plus their citizens, or exactly one when Isonomia names them. */
 export function baseVoteWeight(G: HegemonyState, playerID: PlayerId): number {
   if (G.assembly?.isonomiaTarget === playerID) {
     return 1;
@@ -560,7 +480,13 @@ export function baseVoteWeight(G: HegemonyState, playerID: PlayerId): number {
     }
   }
 
-  return citizens;
+  const rural = hasLawRule(G, "ruralBloc")
+    ? G.players[playerID].settlements.reduce((sum, tileId) => {
+        const settlement = getTile(G, tileId)?.settlements.find((s) => s.owner === playerID);
+        return sum + (settlement ? (settlement.kind === "colony" ? 1 : -1) : 0);
+      }, 0)
+    : 0;
+  return Math.max(1, 1 + citizens + rural);
 }
 
 /** Votes bought so far plus the base — what this seat would cast right now. */
@@ -571,27 +497,41 @@ export function currentVoteWeight(G: HegemonyState, playerID: PlayerId): number 
 /**
  * Buy a vote. Capped per player per assembly so a hoard cannot simply buy any outcome.
  */
-export function assemblyBribe(G: HegemonyState, playerID: PlayerId): MoveResult {
+export function getAssemblyBuyVoteStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  payment: "gold" | "influence",
+) {
   const session = G.assembly;
   const rules = G.ruleset.assembly;
+  const cost = { [payment]: rules.briberyCost };
+  const reason =
+    !session || session.phase !== "voting" || session.voteOrder[session.voteIndex] !== playerID
+      ? "You can only buy votes when it is your turn to cast."
+      : session.bribesUsed[playerID] >= rules.briberyCap
+        ? `At most ${rules.briberyCap} votes bought per sitting.`
+        : G.players[playerID].resources[payment] < rules.briberyCost
+          ? `Requires ${rules.briberyCost} ${payment}.`
+          : null;
+  return { can: reason === null, reason, cost, price: rules.briberyCost };
+}
 
-  if (!session || session.phase !== "voting" || session.voteOrder[session.voteIndex] !== playerID) {
-    return invalid("You can only buy votes when it is your turn to cast.");
-  }
+export function assemblyBribe(
+  G: HegemonyState,
+  playerID: PlayerId,
+  payment: "gold" | "influence",
+): MoveResult {
+  if (!["gold", "influence"].includes(payment)) return invalid("Choose gold or influence.");
+  const status = getAssemblyBuyVoteStatus(G, playerID, payment);
+  if (!status.can) return invalid(status.reason!);
+  const session = G.assembly!;
+  const rules = G.ruleset.assembly;
 
-  if (session.bribesUsed[playerID] >= rules.briberyCap) {
-    return invalid(`You may buy at most ${rules.briberyCap} votes per assembly.`);
-  }
-
-  if (G.players[playerID].resources.influence < rules.briberyCost) {
-    return invalid(`A vote costs ${rules.briberyCost} influence.`);
-  }
-
-  G.players[playerID].resources.influence -= rules.briberyCost;
+  G.players[playerID].resources[payment] -= rules.briberyCost;
   session.bribesUsed[playerID] += 1;
   addLog(
     G,
-    `${getPlayerName(G, playerID)} buys a vote for ${rules.briberyCost} influence.`,
+    `${getPlayerName(G, playerID)} buys a vote for ${rules.briberyCost} ${payment}.`,
     playerID,
   );
   return MOVE_OK;
@@ -625,7 +565,7 @@ export function assemblyVote(G: HegemonyState, playerID: PlayerId, yea: boolean)
   session.voteIndex += 1;
 
   if (session.voteIndex >= session.voteOrder.length) {
-    resolveBallotItem(G, null);
+    resolveBallotItem(G);
   } else {
     syncAssemblyActor(G);
   }
@@ -633,35 +573,8 @@ export function assemblyVote(G: HegemonyState, playerID: PlayerId, yea: boolean)
   return MOVE_OK;
 }
 
-/**
- * Strike the resolution under vote outright, once per assembly. Spending it costs the
- * seat their own vote on the item — a veto is a walkout, not a free extra lever.
- */
-export function assemblyVeto(G: HegemonyState, playerID: PlayerId): MoveResult {
-  const session = G.assembly;
-  const rules = G.ruleset.assembly;
-
-  if (!session || session.phase !== "voting" || session.voteOrder[session.voteIndex] !== playerID) {
-    return invalid("You can only veto when it is your turn to cast.");
-  }
-
-  if (session.vetoUsed[playerID] >= rules.vetoesPerAssembly) {
-    return invalid("You have already used your veto this assembly.");
-  }
-
-  if (G.players[playerID].resources.influence < rules.vetoCost) {
-    return invalid(`A veto costs ${rules.vetoCost} influence.`);
-  }
-
-  G.players[playerID].resources.influence -= rules.vetoCost;
-  session.vetoUsed[playerID] += 1;
-  addLog(G, `${getPlayerName(G, playerID)} vetoes the resolution before the house.`, playerID);
-  resolveBallotItem(G, playerID);
-  return MOVE_OK;
-}
-
 /** Tally, enact or reject, then move to the next item — or close the assembly. */
-function resolveBallotItem(G: HegemonyState, vetoedBy: PlayerId | null) {
+function resolveBallotItem(G: HegemonyState) {
   const session = G.assembly!;
   const item = session.ballot[session.ballotIndex];
   const yea = session.votes
@@ -670,9 +583,14 @@ function resolveBallotItem(G: HegemonyState, vetoedBy: PlayerId | null) {
   const nay = session.votes
     .filter((vote) => !vote.yea)
     .reduce((total, vote) => total + vote.weight, 0);
-  // Simple majority; a tie FAILS unless the ruleset says otherwise (§1.3).
-  const passed =
-    vetoedBy === null && (yea > nay || (yea === nay && G.ruleset.assembly.tiesPass && yea > 0));
+  // A tie fails. Earlier ballot items may make this proposal illegal.
+  const blockedReason =
+    item.kind === "repeal"
+      ? lawCanBeRemoved(G, item.cardId)
+        ? null
+        : "The Law is absent or protected by minimum tenure."
+      : lawProposalReason(G, item.card);
+  const passed = yea > nay && blockedReason === null;
 
   const result: AssemblyResult = {
     item,
@@ -680,8 +598,10 @@ function resolveBallotItem(G: HegemonyState, vetoedBy: PlayerId | null) {
     yea,
     nay,
     votes: [...session.votes],
-    vetoedBy: vetoedBy ?? undefined,
-    summary: summarize(G, item, passed, vetoedBy),
+    summary:
+      yea > nay && blockedReason
+        ? `The proposal cannot take effect. ${blockedReason}`
+        : summarize(G, item, passed),
   };
 
   if (passed) {
@@ -704,20 +624,11 @@ function resolveBallotItem(G: HegemonyState, vetoedBy: PlayerId | null) {
   syncAssemblyActor(G);
 }
 
-function summarize(
-  G: HegemonyState,
-  item: BallotItem,
-  passed: boolean,
-  vetoedBy: PlayerId | null,
-): string {
+function summarize(G: HegemonyState, item: BallotItem, passed: boolean): string {
   const name =
     item.kind === "repeal"
       ? (getResolutionCard(G.definition.content, item.cardId)?.name ?? item.cardId)
       : item.card.name;
-
-  if (vetoedBy) {
-    return `${getPlayerName(G, vetoedBy)} struck ${name} from the ballot.`;
-  }
 
   if (item.kind === "repeal") {
     return passed
@@ -729,7 +640,7 @@ function summarize(
     return `${name} is voted down.`;
   }
 
-  const reward = item.proposer ? formatPrize(G.ruleset.assembly.prizes[item.card.politician]) : "";
+  const reward = formatPrize(G.ruleset.assembly.prizes[item.card.politician]);
   const prize = reward ? ` ${getPlayerName(G, item.proposer!)} receives ${reward}.` : "";
 
   return item.card.kind === "law"
@@ -746,7 +657,7 @@ function reject(G: HegemonyState, item: BallotItem) {
 /** What a passing vote actually does to the board. */
 function enact(G: HegemonyState, item: BallotItem) {
   if (item.kind === "repeal") {
-    removeLaw(G, item.cardId);
+    if (lawCanBeRemoved(G, item.cardId)) removeLaw(G, item.cardId);
     return;
   }
 
@@ -768,17 +679,8 @@ function enact(G: HegemonyState, item: BallotItem) {
     return;
   }
 
-  if (item.replaces) {
-    removeLaw(G, item.replaces);
-  }
-
-  // Defensive invariant for imported/legacy sessions. Normal proposals reserve
-  // enough unique casualties before voting, but an old save must never overfill the
-  // board merely because it predates that reservation state.
-  if (G.activeLaws.length >= G.ruleset.assembly.lawCap) {
-    const oldest = [...G.activeLaws].sort((a, b) => a.order - b.order)[0];
-    if (oldest) removeLaw(G, oldest.cardId);
-  }
+  if (lawProposalReason(G, item.card)) return;
+  for (const cardId of lawReplacementIds(G, item.card)) removeLaw(G, cardId);
 
   G.activeLaws.push({
     cardId: item.card.id,
@@ -787,9 +689,7 @@ function enact(G: HegemonyState, item: BallotItem) {
     order: G.lawOrder++,
   });
 
-  if (item.proposer) {
-    recordAuthoredPass(G, item.proposer, item.card.politician);
-  }
+  recordAuthoredPass(G, item.proposer, item.card.politician);
 }
 
 function recordAuthoredPass(G: HegemonyState, author: PlayerId, politician: PoliticianId) {
@@ -880,18 +780,6 @@ function applyDirectiveEffect(
       break;
     }
 
-    case "resourceFraction": {
-      const resources = G.players[target].resources;
-      const lost = Math.floor(Math.max(0, resources[effect.resource]) * effect.fraction);
-      resources[effect.resource] -= lost;
-      addLog(
-        G,
-        `${card.name}: ${getPlayerName(G, target)} loses ${lost} ${effect.resource}.`,
-        target,
-      );
-      break;
-    }
-
     case "losePopFromLargest":
       loseFromLargestSettlement(G, target, effect.count, card.name);
       break;
@@ -906,10 +794,10 @@ function applyDirectiveEffect(
         .filter((law) => law.author === target)
         .sort((a, b) => b.order - a.order)[0];
 
-      if (!newest) {
+      if (!newest || !lawCanBeRemoved(G, newest.cardId)) {
         addLog(
           G,
-          `${card.name}: ${getPlayerName(G, target)} had no authored stele left standing.`,
+          `${card.name}: ${getPlayerName(G, target)} had no authored stele whose tenure had ended.`,
           target,
         );
         break;

@@ -284,7 +284,7 @@ function addPopToSettlementWithRoom(
   for (const tileId of G.players[playerID].settlements) {
     const settlement = getOwnedSettlement(G, tileId, playerID);
 
-    if (settlement && totalPops(settlement.pops) < settlementCapacity(settlement, G.ruleset)) {
+    if (settlement && totalPops(settlement.pops) < settlementCapacity(settlement, G)) {
       candidates.push(settlement);
     }
   }

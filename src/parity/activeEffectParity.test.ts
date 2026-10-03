@@ -162,6 +162,7 @@ describe("canonical active-effect selector", () => {
     expect(getActiveEffects(G, "0").some((effect) => effect.source.id === "land-reform")).toBe(
       true,
     );
+    G.year += 4;
     enactForEval(G, { kind: "repeal", cardId: "land-reform", proposer: "0" });
     expect(getActiveEffects(G, "0").some((effect) => effect.source.id === "land-reform")).toBe(
       false,
@@ -216,11 +217,10 @@ describe("frontend active-effect parity", () => {
     const guild = presentations.find((effect) => effect.source === "Guild Charter")!;
     const builders = presentations.find((effect) => effect.source === "Master Builders")!;
 
-    expect(guild.text).toContain("grow pop in cities: -3 Food cost");
-    expect(guild.text).toContain("grow pop in colonies: +2 Food cost");
-    for (const building of ["Temple", "Forum"]) {
-      expect(builders.text).toContain(building);
-    }
+    expect(guild.text).toContain("capital may grow twice");
+    expect(guild.text).toContain("colonies may not grow");
+    expect(builders.text).toContain("Cities gain one building slot");
+    expect(builders.text).toContain("one fewer colony piece");
   });
 });
 

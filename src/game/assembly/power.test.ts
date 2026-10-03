@@ -17,7 +17,7 @@ import type { PoliticianId } from "./types";
  */
 
 const DEMOSTHENES_LAWS = ["land-reform", "sacred-fields", "festival-calendar", "tenant-rights"];
-const PERDICCAS_LAWS = ["guild-charter", "forum-rites", "civic-pride", "census-rolls"];
+const PERDICCAS_LAWS = ["guild-charter", "forum-rites", "civic-pride", "master-builders"];
 
 function plantLaws(G: HegemonyState, cardIds: string[], author: PlayerId) {
   for (const cardId of cardIds) {

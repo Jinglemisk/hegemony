@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  EMPTY_POPS,
   POP_TYPES,
   formatPops,
   getFoundColonyStatus,
   getTile,
-  settlementNetYield,
   totalPops,
 } from "../../../game/rules";
-import type { PopType, Settlement } from "../../../game/types";
+import { previewFoundedSettlement } from "../../../game/economy/preview";
+import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { SettlementSummaryCard } from "../../SettlementCard";
 import { POP_GLYPHS, SETTLEMENT_GLYPHS } from "../../../ui/iconRegistry";
@@ -57,26 +56,15 @@ export function FoundColonyPopover({
     return null;
   }
 
-  const previewSettlement: Settlement = {
-    id: "preview-settlement",
-    tileId: targetTile.id,
-    owner: playerID,
-    kind: "colony",
-    buildings: [],
-    pops: { ...EMPTY_POPS, [pop]: 1 },
-  };
-  const previewYield = settlementNetYield(
-    targetTile,
-    previewSettlement,
-    G.ruleset,
-    G.definition.content,
-  );
+  const preview = source
+    ? previewFoundedSettlement(G, playerID, tileId, source.tile.id, pop)
+    : null;
   // Fall back to the LIVE ruleset, never the ACTION_COSTS default: the status cost
   // has standing Laws already applied, and the ruleset itself is
   // patchable (R7). This branch is defensive — the status always carries a cost.
   const cost =
     getFoundColonyStatus(G, playerID, targetTile.id).cost ?? G.ruleset.actionCosts.foundColony;
-  const canConfirm = Boolean(source && source.pops[pop] > 0);
+  const canConfirm = preview !== null;
 
   return (
     <TilePopover
@@ -90,15 +78,17 @@ export function FoundColonyPopover({
         <p className="placementEmptyState">No settlement has a pop to spare for a new colony.</p>
       ) : (
         <>
-          <article className="placementPreviewCard settlement-colony foundColonyPreview">
-            <SettlementSummaryCard
-              name="NEW COLONY"
-              netYield={previewYield}
-              G={G}
-              settlement={previewSettlement}
-              tile={targetTile}
-            />
-          </article>
+          {preview ? (
+            <article className="placementPreviewCard settlement-colony foundColonyPreview">
+              <SettlementSummaryCard
+                name="NEW COLONY"
+                netYield={preview.income}
+                G={preview.state}
+                settlement={preview.settlement}
+                tile={preview.tile}
+              />
+            </article>
+          ) : null}
 
           <section className="placementSection">
             <span className="placementSectionLabel">Send a pop from</span>

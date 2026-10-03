@@ -68,7 +68,7 @@ export function getEventPopTargets(
   return G.players[playerID].settlements.flatMap((tileId) => {
     const settlement = getOwnedSettlement(G, tileId, playerID);
     if (!settlement) return [];
-    const capacity = settlementCapacity(settlement, G.ruleset);
+    const capacity = settlementCapacity(settlement, G);
     const filled = totalPops(settlement.pops);
     const room = Math.max(0, capacity - filled);
     return room >= effect.amount ? [{ tileId, capacity, filled, room }] : [];

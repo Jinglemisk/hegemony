@@ -1,4 +1,9 @@
-import { getFoundColonyStatus, getLuxuryGood } from "../../../game/rules";
+import {
+  getFoundColonyStatus,
+  getLuxuryGood,
+  settlementPopCapacity,
+  tileSlaveColumn,
+} from "../../../game/rules";
 import { isCoastalTile } from "../../../game/map";
 import type { HexTile, LuxuryAsset } from "../../../game/types";
 import { RESOURCE_ICON } from "../../../ui/frameFormat";
@@ -19,7 +24,8 @@ function placeName(tile: HexTile, names: Map<string, string>) {
  */
 export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: string) => void }) {
   const { G, viewerId, phase, isActive } = useGameUi();
-  const colony = G.ruleset.settlements.colony;
+  const capacity = settlementPopCapacity("colony", G);
+  const column = tileSlaveColumn(G, tile);
   const coastal = isCoastalTile(tile, G.board.tiles);
   const goods = G.board.luxuries.filter((asset) => asset.tileIds.includes(tile.id));
   const found = getFoundColonyStatus(G, viewerId, tile.id);
@@ -46,9 +52,9 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
         <li className="g-line">
           <Ico path={`terrain/${tile.terrain}`} size="ui" />
           Slaves make
-          {tile.resource ? (
+          {column.resource ? (
             <span>
-              <b>1</b> {tile.resource.type} each
+              <b>{column.perPop}</b> {column.resource} each
             </span>
           ) : (
             <span>nothing</span>
@@ -58,7 +64,7 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
           <Ico path="pops/capacity" size="ui" />
           Room
           <span>
-            <b>{colony.popCapacity}</b> pops as a colony
+            <b>{capacity}</b> pops as a colony
           </span>
         </li>
         <li className="g-line">

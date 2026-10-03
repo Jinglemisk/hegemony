@@ -1,5 +1,8 @@
 import type { CSSProperties } from "react";
 import { PLAYER_IDS } from "../../game/data";
+import { currentVoteWeight } from "../../game/assembly";
+import { victoryMetricValue, voiceHolder } from "../../game/victory";
+import { happinessLevel } from "../../game/happiness";
 import { yearDeckSize } from "../../game/year";
 import type { IncomeContribution } from "../../game/economy/income";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../game/types";
@@ -207,6 +210,19 @@ function Rival({
               { key: "c", label: "Citizens", value: census.citizens, icon: "pops/citizens" },
               { key: "ci", label: "Cities", value: census.cities, icon: "settlements/city" },
               { key: "co", label: "Colonies", value: census.colonies, icon: "settlements/colony" },
+              {
+                key: "hap",
+                label: "Happiness",
+                value: happinessLevel(G, id),
+                icon: "resources/happiness",
+              },
+              {
+                key: "laws",
+                label: "Authored Laws standing",
+                value: victoryMetricValue(G, id, "voice"),
+              },
+              { key: "votes", label: "Assembly votes", value: currentVoteWeight(G, id) },
+              { key: "voice", label: "Voice", value: voiceHolder(G) === id ? "held" : "unheld" },
             ]}
           />
         </Tip>

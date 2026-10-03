@@ -73,6 +73,7 @@ export function AssemblyAction({
     >
       <button
         aria-disabled={!enabled}
+        aria-label={typeof heading === "string" ? heading : undefined}
         className={className}
         onClick={enabled ? onClick : undefined}
         type="button"

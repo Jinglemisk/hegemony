@@ -75,7 +75,7 @@ describe("player and spectator projections", () => {
     openAssembly(G, G.currentPlayer);
     const held = getResolutionCard(G.definition.content, "land-reform")!;
     const proposed = getResolutionCard(G.definition.content, "public-works")!;
-    G.assembly!.held["0"] = { card: held, draws: 1 };
+    G.assembly!.held["0"] = { card: held };
     G.assembly!.proposals["1"] = { kind: "enact", card: proposed, proposer: "1" };
 
     const player0 = projectForPlayer(G.definition, G, "0");

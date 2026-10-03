@@ -132,7 +132,6 @@ describe("the glyph set is drawn by one hand", () => {
       "repeal",
       "ostrakon",
       "bema",
-      "veto",
       "bribe",
       "die",
       "laurel",

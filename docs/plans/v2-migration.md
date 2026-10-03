@@ -366,6 +366,73 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   rejected. Event resolution no longer takes a choice index, and a venture takes
   an expedition only.
 
+**Defaults picked in Step 8** (2026-10-03):
+
+- Resolve conflicts by Settled inputs, then section 5.9's limits, then Appendix B.
+  Civic Pride's per-city happiness conflicts with 5.9: it gives flat +1 happiness
+  per realm, while each city pays 1 gold a year (lead ruling). Manumission changes
+  the existing slave count rather than adding a new per-thing term: count slaves
+  three times, then round down by the existing divisor. Show the extra charge as
+  one Law line, including zero; Civic Pride is also one line.
+- One 2-influence draw per seat per sitting; no redraw. Discarding or passing does
+  not refund it. A seat may instead pay the separate 3-influence repeal price,
+  including after drawing or discarding. Proposals stay secret until all seats finish.
+- Minimum tenure protects the enactment sitting and the next sitting, so Year 2
+  Laws first become removable in Year 6. Apply it to automatic replacements and
+  The Stele Is Broken too. Stele targets only the newest authored Law and does
+  nothing if that Law is protected; it never falls back to an older one. There is
+  no delayed repeal. Recheck legality at each ballot's resolution; a majority for
+  an item made illegal by an earlier vote has no effect, no prize and is discarded.
+- At the cap replace the oldest by enactment order. A new price Law also replaces
+  the standing price Law, deduplicating if it is the oldest. Both may leave when
+  they differ; either being protected blocks the proposal. Every Law changing an
+  action, growth or calm price counts toward the single-price-Law limit.
+- Public Works' wood discount conflicts with 5.9's whole-price limit: print and
+  charge 3 wood for an Estate or Granary, 2 wood and 2 gold for a Marketplace.
+  Other buildings keep their base prices. Tenant Rights states 2 gold per slave
+  growth and 3 per freeman; Festival Calendar replaces gold calm with 2 food,
+  keeping the influence option. Colonial Charter keeps the founding pop and
+  1-food amount, removes wood, and makes upgrading 6 stone only. Harbour Dues
+  removes gold from the Port but keeps 2 stone, obeying the settled non-free Port;
+  its Marketplace price is 3 wood and 4 gold. Whole Law prices stay fixed under
+  tuning presets rather than applying a discount to a patched base.
+- Capacity and slot cuts protect existing pops and buildings, including Ports.
+  They block new growth, transfers or construction beyond the new limit, with no
+  over-capacity count or penalty. Already committed transfers still arrive. Homestead Act's one colony building includes a Port.
+  Master Builders lowers the placement limit to three colonies; physical supply
+  stays four and an existing fourth colony stays. City changes include capitals.
+- Land Reform changes working slaves to food, including hills, and only forbids
+  new Estates. Existing Estates keep their raise. Laws patch class columns before
+  year cards: Drought stops plains food; Wildfire and Silent Mines stop only wood
+  and stone, so Land Reform food on those terrains survives. Sacred Fields food
+  is flat building income. Forum Rites sets citizen influence to 2, with no extra
+  Forum raise; colony freemen make no gold but still eat. Grain Levy freemen eat
+  nothing and cannot leave for hunger.
+- Guild Charter gives the setup capital two paid growths; other cities keep one
+  and colonies zero. The capital is the first setup city in the existing holding
+  order; modes starting with colonies have no capital. Pop cards and founding
+  gains still bypass paid growth. Frontier Spirit grants its slave without Unrest.
+- Rural Bloc's base vote has a floor of one; city deductions include the capital.
+  Isonomia fixes the target's base to one only at the next sitting. Bought votes
+  still add, at most two purchases per seat per sitting across both currencies;
+  they apply to every remaining ballot. Ties fail.
+- The three regular author prizes are 2 of their resource (food, stone, wood).
+  Stratokles stays 2 gold, as settled in Step 5; the paper gives no exact prize
+  amount. No prize for a repeal, failure or ineligible majority. Bread and Circuses
+  is cut; the calm action keeps its name. The Mob Rises keeps the existing
+  largest-holding tie order and slaves-first removal.
+- Every non-random policy uses the shared Assembly strategy. Draws value unordered
+  public deck composition; votes tolerate small private costs to form coalitions,
+  block a rival's winning title, and buy only affordable pivotal votes. Draw and
+  proposal thresholds are zero, repeal 12, vote-purchase magnitude 8, and coalition
+  tolerance 12 on the existing score scale; influence is spent before gold. Telemetry
+  reports per-seat proposals, Law passes, standing authorship, passed Directives,
+  vote purchases, Voice claims and table-turn observations of Voice held. The CSV
+  includes standing authorship and Voice held. The low-number preset leaves the
+  new Assembly content, prices and prizes as authored; other tuning dials stay.
+- State schema 8 and command schema 4 reject older saves and scripts. Remove house
+  items, vetoes and chosen replacements; a bought-vote command names its payment.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.
@@ -461,7 +528,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
       stake of 2 gold. Coupons, choice cards and per-pop scaling go.
       The token cards (Plague, Festival, Local Unrest, Public Calm, The Streets Burn)
       place and clear Unrest tokens as the paper draws them.
-- [ ] **Step 8 · Assembly and Laws.** It meets every other year and votes on player proposals
+- [x] **Step 8 · Assembly and Laws.** ([#87](https://github.com/Jinglemisk/hegemony/pull/87): a 40-game bot batch finishes with no turn caps; every seat passes about 1.8 Laws a game and Voice is held at 88% of game ends; riots fall to 1.0 a game, 1.8% of player-turns after year 7; the gate passes on the Assembly screen at 1280/1440/1920.) It meets every other year and votes on player proposals
       only. At most four Laws stand, the oldest is replaced, and a new Law has a minimum
       tenure. One vote per seat plus one per citizen, up to two bought votes, no veto. The
       paper's Appendix B Laws and Directives, under its three global limits.

@@ -44,7 +44,7 @@ export function UpgradeCityModal({
   const selected = candidates.find((entry) => entry.tile.id === tileId) ?? candidates[0];
 
   const colonyYield = selected
-    ? settlementNetYield(selected.tile, selected.settlement, G.ruleset, G.definition.content)
+    ? settlementNetYield(selected.tile, selected.settlement, G, G.definition.content)
     : null;
   const preview = selected ? previewUpgradeColonyToCity(G, playerID, selected.tile.id) : null;
   // Live ruleset, not the ACTION_COSTS default — see FoundColonyPopover (R7).
@@ -104,7 +104,7 @@ export function UpgradeCityModal({
                         </strong>
                         <em>
                           {tile.id} · {totalPops(settlement.pops)}/
-                          {settlementPopCapacity("colony", G.ruleset)}
+                          {settlementPopCapacity("colony", G)}
                           {rivals.length > 0
                             ? ` · evicts ${rivals.map((candidate) => G.players[candidate.owner].name).join(", ")}`
                             : ""}
@@ -140,8 +140,8 @@ export function UpgradeCityModal({
             <span className="placementUpgradeStat">
               <em>Capacity</em>
               <strong>
-                {settlementPopCapacity("colony", G.ruleset)} <span className="meterSlash">→</span>{" "}
-                {settlementPopCapacity("city", G.ruleset)}
+                {settlementPopCapacity("colony", G)} <span className="meterSlash">→</span>{" "}
+                {settlementPopCapacity("city", G)}
               </strong>
             </span>
             <span className="placementUpgradeStat">
