@@ -86,6 +86,12 @@ with the owner's rulings in its section 8, plus these later rulings:
   changes. Riot at −3 or below, revolt at −6 or below, per the paper's section 5.7. This
   replaces the bank-first ruling of 2026-09-06: Step 4's batch showed the bank slides
   ([report](../reports/simulation/2026-10-02-v2-step4-bank-and-food.md)).
+- Riots and revolts are checked at the end of the player's own turn, before it passes
+  (owner ruling, 2026-10-03). The player can buy calm, build a Temple, or change their
+  pops before the check. Ending at −3 or below starts a riot; at −6 or below, a revolt.
+  Calm bought this turn counts, including for the last seat before the year turns.
+  Victory stays at turn start; income and hunger keep their timing. This supersedes
+  the start-of-turn check in Steps 5 and 6.
 - No `/code-review ultra` on this migration (owner, 2026-10-02). Each step's own
   medium-effort review is the review.
 - National Ideas follow [their plan](national-ideas.md): one picked at setup, one bought
@@ -238,8 +244,9 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - The bank prices every material alike: sell 3 for 1 gold, buy 1 for 2. The scarcity
   classes stay as a knob for sims.
 - A demotion costs 1 influence on either rung and no happiness.
-- Calm is 2 gold or 2 influence for +2 until the buyer's next turn starts. It is not
-  banked and Beloved does not count it.
+- Calm is 2 gold or 2 influence for +2 this year (Step 6 replaces the original
+  next-turn expiry). It is not banked and Beloved does not count it. The owner
+  ruling of 2026-10-03 makes it cover the buyer's turn-end check.
 - Every two slaves in a realm cost 1 happiness a turn, rounded down, so half a slave
   rounds in the player's favour.
 - Happiness terms: Temples and slaves are paid into today's bank at each income, and
@@ -264,9 +271,9 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 
 **Defaults picked in Step 5** (2026-10-02):
 
-- The lines are tested at the start of the player's turn, before income, with this
-  year's calm counted. "This year" is until the buyer's next turn starts, as in Step 4,
-  until Step 6 brings years.
+- The lines are tested at the end of the player's own turn, before it passes, with
+  this year's calm counted (owner ruling, 2026-10-03, superseding the original
+  start-of-turn default). Step 6 defines calm's expiry as the year boundary.
 - A one-shot happiness gain or loss has no bank to land in. A loss of any size places
   one Unrest token and a gain clears one: v1's player cards, the Directives and the
   Frontier Spirit rider all work this way. v1's timed moods (Plague, Civil Discord)
@@ -275,7 +282,7 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   of Demeter threshold, Civic Anxiety) is one more term of the level while it stands,
   until Steps 6 and 8 rewrite them.
 - A revolt takes half the slaves, rounded down, each from the settlement holding the
-  most. The tokens clear, nothing is rolled, the turn goes on and income is collected.
+  most. The tokens clear, nothing is rolled, and the turn passes.
   There is no riot in the same turn.
 - Riot losses take slaves, then freemen, then citizens, each from the settlement
   holding the most, so only the table roll draws dice.
@@ -293,9 +300,10 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   tooltip lists Temples, luxuries, slaves and tokens always, and the other terms when
   they count. A revolt has no ceremony yet: it is a Chronicle line until Step 13.
 - Bots score each point of the standing level at 6, up to Beloved's minimum plus 2.
-  They charge a riot 50 and a revolt 100 at each upkeep of the six-turn horizon, and
-  run a revolt for real in the projection. They buy calm when it keeps the next upkeep
-  off the riot line.
+  They charge a riot 50 and a revolt 100 at turn end, including the current turn
+  and later turns in the six-income horizon, and run a revolt in the projection.
+  They buy calm when it keeps the current check off the riot line (owner ruling,
+  2026-10-03). It never counts for Beloved.
 - The state schema is version 5.
 
 **Defaults picked in Step 6** (2026-10-03):
@@ -303,7 +311,7 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - Seat 0 opens Year 1. The opener moves on one seat each year, and every seat takes
   exactly one turn. The first card is revealed after setup; later cards are revealed
   before the Assembly and the opener's turn. Victory stays at each player's turn
-  start, before unrest and income, under the settled ruling.
+  start, before income, under the settled ruling. Unrest is checked at turn end.
 - A terrain card zeroes the working-slave column on that terrain, including the
   Estate's raise. Piracy and Ostracism zero the freeman gold and citizen influence
   columns, including their class buildings. Mouths still eat. Flat building income
@@ -315,8 +323,8 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   seat throughout the year.
 - Calm is +2 for the year in which it was bought and clears for every buyer when the
   year turns, before any new-year riot test. It never counts for Beloved or the final
-  tiebreak. With one turn per seat per year, it cannot cover the buyer's next upkeep;
-  bots no longer buy it for that purpose.
+  tiebreak. Under the owner ruling of 2026-10-03, it covers the buyer's current
+  turn-end check; bots weigh it against that visible riot or revolt.
 - Voice follows the other five titles: a sole leader at the minimum holds it; a tie
   holds nothing. Only standing authored Laws count; repeal and replacement reduce
   their author's count. Directives and the permanent pass record do not count.
@@ -334,9 +342,10 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   schema stays 2. The batch's default turn cap is 56, enough for all fourteen years.
 - Telemetry includes the opening player-turn and excludes a terminal victory check
   that collected no income. A deck finish counts the completed final turn. It reports
-  years and the winning titles, so late riots mean Years 8 to 14. A riot's deferred
-  income updates that turn's snapshot and records its new player-card draw, including
-  on the final turn. A year-card reveal still counts when the opener wins before income.
+  years and the winning titles, so late riots mean Years 8 to 14. Income, hunger
+  and the player-card draw are recorded at turn start. A riot belongs to the year
+  recorded by its roll, even if resolution opens a new year or the final tally.
+  A year-card reveal still counts when the opener wins before income.
 
 **Defaults picked in Step 7** (2026-10-03):
 
@@ -525,8 +534,9 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   Latent work is bounded by available population room, including committed arrivals.
   Upgrade/founding grant opportunities scale by pop weights, Dole savings by
   influence, extra votes by politics, and future slaves pay the weighted level cost.
-- Keep the settled calm rule. After collection it expires before the next upkeep
-  and cannot count for Beloved, so its absence is genuine balance for Step 11.
+- Calm remains active through the current turn-end check, then expires at year
+  end (owner ruling, 2026-10-03). It cannot count for Beloved. The earlier bot
+  assumption that calm bought after collection protects no check is superseded.
   No Idea has a selection quota. Capital Works is weakly dominated by Urban
   Planning at the same price; Harbour Planning, Treasury Grant and Assembly
   Brokers are evaluated through slot/claim opportunities, actual gold use and

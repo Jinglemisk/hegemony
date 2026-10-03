@@ -197,8 +197,8 @@ export interface EventTableDefinition {
   insurance?: TableInsuranceOption[];
 }
 
-/** A riot waiting on the table: blocks the turn (income deferred, endTurn illegal)
- *  until the player rolls. Insurance is declared here, before the die. */
+/** A riot at a committed turn end: blocks handoff until insurance and the roll
+ *  resolve. Ordinary actions and another endTurn are illegal. */
 export interface PendingRiot {
   playerID: PlayerId;
   boughtInsurance: RiotInsuranceId[];
@@ -398,7 +398,7 @@ export interface HegemonyState {
   activeYearCard: YearCard | null;
   lastPlayerEvent: EventCard | null;
   pendingPlayerEvent: PendingPlayerEvent | null;
-  /** A riot blocking the current turn (income deferred until it resolves). */
+  /** A riot blocking the committed turn's handoff until it resolves. */
   pendingRiot: PendingRiot | null;
   /** The most recent event-table roll, for the UI's outcome display. */
   lastTableRoll: TableRollRecord | null;

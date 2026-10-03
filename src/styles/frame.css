@@ -1109,6 +1109,19 @@
   white-space: nowrap;
 }
 
+.endturn-warning {
+  position: absolute;
+  bottom: 0;
+  width: var(--endturn-w);
+  color: var(--clay-deep);
+  font: 700 var(--t-12) / var(--price-h) var(--f-sans);
+  text-align: center;
+  white-space: nowrap;
+}
+.endturn.is-danger .endturn-label {
+  color: var(--clay-deep);
+}
+
 /* ============================================================================
    Tooltip (one layer, placed by script)
    ========================================================================== */

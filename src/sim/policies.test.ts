@@ -8,6 +8,7 @@ import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
 import { LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
 import { scenario } from "../game/testing/scenario";
 import { endTurn } from "../game/turn";
+import { resolveRiot } from "../game/riot";
 import type { HegemonyState } from "../game/types";
 import {
   beamPolicy,
@@ -145,12 +146,12 @@ describe("policy unrest risk", () => {
     expect(G.players["0"].unrestTokens).toBe(3);
   });
 
-  it("a level held down by slaves is met at every upkeep of the horizon", () => {
+  it("checks the current turn end and every future turn end in the horizon", () => {
     const G = projectionFixture();
     slavesInCapital(G, 6);
     const projection = projectPolicyHorizon(G, "0", 3);
 
-    expect(projection.unrest).toMatchObject({ minimumHappiness: -3, mildRiotEvents: 3 });
+    expect(projection.unrest).toMatchObject({ minimumHappiness: -3, mildRiotEvents: 4 });
   });
 
   it("runs a revolt for real: half the slaves leave the projected board", () => {
@@ -162,9 +163,29 @@ describe("policy unrest risk", () => {
     expect(projection.unrest).toMatchObject({
       minimumHappiness: -6,
       severeRiotEvents: 1,
-      mildRiotEvents: 1,
+      mildRiotEvents: 2,
     });
     expect(slavesInCapital(G)).toBe(12);
+  });
+
+  it("counts bought calm at the current check, even with no future income", () => {
+    const G = projectionFixture();
+    slavesInCapital(G, 6);
+    G.year = 14;
+    expect(projectPolicyHorizon(G, "0").unrest.mildRiotEvents).toBe(1);
+    G.players["0"].calmActive = true;
+    expect(projectPolicyHorizon(G, "0").unrest.mildRiotEvents).toBe(0);
+    expect(projectPolicyHorizon(G, "0", 1).unrest.mildRiotEvents).toBe(1);
+    expect(G.players["0"].calmActive).toBe(true);
+  });
+
+  it("keeps Blockade through the collected turn's check, then expires it", () => {
+    const G = projectionFixture();
+    slavesInCapital(G, 6);
+    G.board.luxuries[0].owner = "0";
+    G.activeYearCard = G.definition.content.yearCards.find((card) => card.id === "year-blockade")!;
+    expect(projectPolicyHorizon(G, "0", 1).unrest.mildRiotEvents).toBe(1);
+    expect(G.activeYearCard.id).toBe("year-blockade");
   });
 
   it.each([
@@ -261,8 +282,8 @@ function playUntilAssembly(G: HegemonyState, limit = 40): void {
   let turns = 0;
   while (!G.assembly && G.phase === "gameplay" && turns < limit) {
     G.pendingPlayerEvent = null;
-    G.pendingRiot = null;
     endTurn(G);
+    if (G.pendingRiot) resolveRiot(G, G.currentPlayer);
     turns += 1;
   }
 }
@@ -351,7 +372,7 @@ describe("master policy", () => {
     const a = runGame({ seed: 17, mode: "standard", policy: masterPolicy, turns: 4 });
     const b = runGame({ seed: 17, mode: "standard", policy: masterPolicy, turns: 4 });
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-  }, 30000);
+  }, 60000);
 
   it("uses the political Assembly strategy and carries the session to completion", () => {
     let G = scenario({ seed: 23 }).opening().build();

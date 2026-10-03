@@ -468,9 +468,10 @@ const turn: RuleChapter = {
     <div className="compendiumStack">
       <Entry id={anchor("turn", "flow")} title="The flow">
         <Note>
-          A turn resolves in order: <strong>income</strong> (every settlement earns and eats, food
-          and unrest settle), then your <strong>actions</strong>, then <strong>End Turn</strong>. A
-          drawn event or a riot resolves first, before you may act.
+          A turn resolves in order: <strong>victory</strong>, then <strong>income</strong> (every
+          settlement earns and eats, hunger settles), your drawn <strong>event</strong>, your
+          <strong> actions</strong>, then <strong>End Turn</strong>. Riots and revolts are checked
+          when you end your turn, before it passes.
         </Note>
         <Note>
           The verbs are Grow, Move, Found, Upgrade, Build, Calm, the Dole and Venture. Anything that
@@ -726,11 +727,11 @@ const unrest: RuleChapter = {
         </Entry>
         <Entry id={anchor("unrest", "riot")} title="The riot table">
           <Note>
-            At a level of {u.riotThreshold} or below when your turn starts, your Unrest tokens clear
-            and a riot rolls before income. Declare insurance first (each once, +1 to the roll); the
-            concession demotes a citizen. Pop losses take slaves first, then freemen, then citizens.
-            At {u.revoltThreshold} or below it is a revolt instead: half your slaves leave, rounded
-            down, your tokens clear, and nothing is rolled.
+            At a level of {u.riotThreshold} or below when you end your turn, your Unrest tokens
+            clear and a riot rolls before the turn passes. Declare insurance first (each once, +1 to
+            the roll); the concession demotes a citizen. Pop losses take slaves first, then freemen,
+            then citizens. At {u.revoltThreshold} or below it is a revolt instead: half your slaves
+            leave, rounded down, your tokens clear, and nothing is rolled.
           </Note>
           <p className="compendiumFlavor">{getRiotTable(G.definition.content).flavor}</p>
           <EventTableRows table={getRiotTable(G.definition.content)} result={null} />

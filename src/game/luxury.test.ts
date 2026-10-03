@@ -12,8 +12,8 @@ import {
 } from "./luxury";
 import { isCoastalTile } from "./map";
 import { getBuildBuildingStatus } from "./status";
-import { createGame } from "./turn";
-import { applyUnrestUpkeep, unrestStatus } from "./unrest";
+import { beginTurnFor, createGame } from "./turn";
+import { applyUnrestAtTurnEnd, unrestStatus } from "./unrest";
 import { victoryMetricValue } from "./victory";
 import type { HegemonyState, LuxuryAsset, PlayerId } from "./types";
 
@@ -201,7 +201,7 @@ describe("activity and suppression", () => {
     expect(luxuryHappinessBonus(G, "0")).toBe(5 * G.ruleset.economy.luxury.happinessPerGood);
   });
 
-  it("suppression removes the bonus and expiry at upkeep restores it", () => {
+  it("suppression expires at turn start, before the turn-end check", () => {
     const G = preloadedGame(SEED);
     grantGoods(G, "0", 1);
     const asset = ownedClaims(G, "0")[0];
@@ -211,7 +211,7 @@ describe("activity and suppression", () => {
     expect(luxuryHappinessBonus(G, "0")).toBe(0);
     expect(activeClaims(G, "0")).toHaveLength(0);
 
-    applyUnrestUpkeep(G, "0");
+    beginTurnFor(G, "0");
 
     expect(asset.suppressedTurns).toBe(0);
     expect(luxuryHappinessBonus(G, "0")).toBe(2);
@@ -233,7 +233,7 @@ describe("luxuries in the level", () => {
     G.players["0"].unrestTokens = standingHappiness(G, "0") - 1;
     expect(happinessLevel(G, "0")).toBe(1);
 
-    applyUnrestUpkeep(G, "0");
+    applyUnrestAtTurnEnd(G, "0");
     expect(G.pendingRiot).toBeNull();
 
     // Strip the goods: the same board now riots.
@@ -242,7 +242,7 @@ describe("luxuries in the level", () => {
       asset.claimedAtSettlementId = null;
     }
     expect(happinessLevel(G, "0")).toBe(-3);
-    applyUnrestUpkeep(G, "0");
+    applyUnrestAtTurnEnd(G, "0");
     expect(G.pendingRiot).toMatchObject({ playerID: "0" });
   });
 

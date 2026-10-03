@@ -2,7 +2,6 @@ import type { HegemonyState, PlayerId } from "./types";
 import { addLog, getPlayerName } from "./core/query";
 import { countPlayerPopType } from "./settlement";
 import { happinessContributions, happinessLevel } from "./happiness";
-import { tickLuxurySuppression } from "./luxury";
 import { startRiot } from "./riot";
 import { describeRemoval, removePops } from "./tables";
 
@@ -10,24 +9,20 @@ import { describeRemoval, removePops } from "./tables";
  * Unrest consequences. Happiness is a level derived from the board (game/happiness.ts);
  * this module gives its two lines teeth.
  *
- * {@link applyUnrestUpkeep} runs once per player, at the start of their turn and
- * before their income is collected. At the riot line it clears the realm's Unrest
- * tokens and parks a riot on the table (game/riot.ts), which blocks the turn until
+ * {@link applyUnrestAtTurnEnd} runs once per player, when they commit to ending
+ * their turn. At the riot line it clears the realm's Unrest tokens and parks a
+ * riot on the table (game/riot.ts), which blocks the handoff until
  * the player rolls. At the revolt line nothing is rolled: half the slaves leave and
  * the tokens clear. Hunger is not here: it strikes at income (game/hunger.ts).
  */
 
-/** The start-of-turn unrest step for `playerID`. Pure mutation on the draft state.
- *  May leave a {@link PendingRiot} on the state — callers defer income while it stands. */
-export function applyUnrestUpkeep(G: HegemonyState, playerID: PlayerId) {
+/** The turn-end check for `playerID`. May leave a riot awaiting insurance and a roll. */
+export function applyUnrestAtTurnEnd(G: HegemonyState, playerID: PlayerId) {
   if (G.phase !== "gameplay") {
     return;
   }
 
   const rules = G.ruleset.economy.unrest;
-
-  // Luxury denial ticks down first, so an expiring suppression relieves this turn.
-  tickLuxurySuppression(G, playerID);
 
   // Calm counts only in the year it was bought; the year boundary clears it.
   const level = happinessLevel(G, playerID);
@@ -40,7 +35,7 @@ export function applyUnrestUpkeep(G: HegemonyState, playerID: PlayerId) {
 }
 
 /** A revolt is determinate: half the slaves leave, rounded down, and the Unrest
- *  tokens clear. No roll, and the turn goes on. */
+ *  tokens clear. No roll, and the turn passes. */
 function revolt(G: HegemonyState, playerID: PlayerId) {
   const player = G.players[playerID];
   const leaving = Math.floor(countPlayerPopType(G, playerID, "slaves") / 2);
@@ -51,7 +46,7 @@ function revolt(G: HegemonyState, playerID: PlayerId) {
   player.revolts += 1;
   addLog(
     G,
-    `${getPlayerName(G, playerID)}'s realm revolts: ${left.total > 0 ? `${describeRemoval(left)} walk away` : "no slaves are left to walk away"}, and the Unrest tokens clear.`,
+    `${getPlayerName(G, playerID)}'s realm revolts at turn end: ${left.total > 0 ? `${describeRemoval(left)} walk away` : "no slaves are left to walk away"}, and the Unrest tokens clear.`,
     playerID,
   );
 }
@@ -70,7 +65,7 @@ export interface UnrestStatus {
   calmBonus: number;
   /** Unrest tokens on the realm. */
   tokens: number;
-  /** Whether the level would start a riot or a revolt at the next upkeep. */
+  /** Whether ending the player's turn at this level starts a riot or a revolt. */
   riotAtRisk: boolean;
   /** Running total of pops already lost to riots, revolts and hunger. */
   totalDeaths: number;

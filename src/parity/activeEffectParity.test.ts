@@ -24,6 +24,13 @@ import { createSimRng } from "../sim/rng";
 import { snapshotTurn } from "../sim/telemetry";
 import { presentActiveEffect, presentActiveEffects } from "../ui/effects";
 import { allocateEntityId } from "../game/entity";
+import { EndTurn } from "../components/frame/EndTurn";
+import { endTurnWarning } from "../ui/frameSelectors";
+import { RiotModal } from "../components/board/modals/RiotModal";
+import { GameUiContext } from "../components/board/GameUiContext";
+import { createCommandEvents, createCommandMoves } from "../client/commandAdapter";
+import { endTurn } from "../game/turn";
+import { resolveRiot } from "../game/riot";
 
 const EMPTY_POPS: Pops = { citizens: 0, freemen: 0, slaves: 0 };
 
@@ -236,7 +243,7 @@ describe("simulation and AI active-effect parity", () => {
     expect(struckProjection.resources.gold).toBeLessThan(safeProjection.resources.gold);
   });
 
-  it("does not buy this year's calm to cover an upkeep in a later year", () => {
+  it("buys this year's calm to cover the current turn-end check", () => {
     const choose = (slaves: number) => {
       const G = stateWithSettlement({ citizens: 0, freemen: 0, slaves });
       G.players["0"].collectedThisTurn = true;
@@ -255,9 +262,59 @@ describe("simulation and AI active-effect parity", () => {
       );
     };
 
-    // Calm will have expired before the next upkeep, even on the riot line.
-    expect(choose(6).type).toBe("endTurn");
+    expect(choose(6).type).toBe("civicCalm");
     expect(choose(0).type).toBe("endTurn");
+  });
+
+  it.each([
+    [-3, "riot"],
+    [-6, "revolt"],
+  ] as const)("shows the level %s warning before committing", (level, consequence) => {
+    const G = stateWithSettlement();
+    G.players["0"].unrestTokens = -level;
+    const html = renderToStaticMarkup(
+      createElement(EndTurn, {
+        actingId: "0",
+        canEndTurn: true,
+        title: "Press and hold to end your turn.",
+        warning: endTurnWarning(G, "0"),
+        onEndTurn: () => {},
+      }),
+    );
+    expect(html).toContain(`Starts ${consequence}`);
+    expect(html).toContain(`Ending now starts a ${consequence} at −${-level}.`);
+    expect(html).toContain("is-danger");
+  });
+
+  it("keeps the riot result with its owner after the next turn opens", () => {
+    const G = scenario().opening().withHappiness("0", -3).build();
+    G.pendingPlayerEvent = null;
+    expect(endTurn(G).ok).toBe(true);
+    expect(resolveRiot(G, "0").ok).toBe(true);
+    expect(G.currentPlayer).toBe("1");
+    const dispatch = () => {};
+    const html = renderToStaticMarkup(
+      createElement(
+        GameUiContext.Provider,
+        {
+          value: {
+            G,
+            currentPlayerId: "1",
+            viewerId: "0",
+            viewer: G.players["0"],
+            activeEffects: [],
+            phase: G.phase,
+            isActive: false,
+            hasPendingPlayerEvent: true,
+            moves: createCommandMoves(dispatch),
+            events: createCommandEvents(dispatch),
+          },
+        },
+        createElement(RiotModal, { onRolled: dispatch, onDismissResult: dispatch }),
+      ),
+    );
+    expect(html).toContain(`${G.players["0"].name} faces a riot at turn end.`);
+    expect(html).not.toContain(`${G.players["1"].name} faces a riot`);
   });
 
   it("uses the known year card only for an income still owed this year", () => {

@@ -41,7 +41,7 @@ import { GameUiProvider } from "./board/GameUiProvider";
 import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
 import { getOwnedHoldings } from "./board/helpers";
-import { happinessDisplay } from "../ui/frameSelectors";
+import { endTurnWarning, happinessDisplay } from "../ui/frameSelectors";
 import { Island } from "./frame/island/Island";
 import { TopBar } from "./frame/TopBar";
 import { Ticker } from "./frame/Ticker";
@@ -465,6 +465,7 @@ export function HegemonyBoard({
                   canEndTurn={turnOpen}
                   onEndTurn={events.endTurn}
                   title={turnCommitTitle(turnGate)}
+                  warning={endTurnWarning(G, currentPlayerId)}
                 />
               </div>
 
@@ -631,17 +632,17 @@ export function HegemonyBoard({
               onDismissResult={() => setRiotResultOpen(false)}
             />
           ) : null}
-          {ctx.phase === "gameOver" && !gameOverDismissed ? (
+          {ctx.phase === "gameOver" && !gameOverDismissed && !riotResultOpen ? (
             <GameOverModal G={G} onInspectBoard={() => setGameOverDismissed(true)} />
           ) : null}
-          {G.pendingPlayerEvent ? <PendingPlayerEventModal /> : null}
+          {G.pendingPlayerEvent && !riotResultOpen ? <PendingPlayerEventModal /> : null}
           {/* The Assembly TAKES OVER the table in a sitting year
           (assembly-politicians.md §1.2; owner ruling 2026-08-15). It mounts off
           engine state, and it covers the whole viewport — bars,
           rails and dock included. It therefore takes the seat switcher with it:
           the roster it covers is the only way a hotseat changes hands, and each
           of the scene's seat plaques performs that same act. */}
-          {G.assembly ? <AssemblyPanel onTakeSeat={onPlayerIDChange} /> : null}
+          {G.assembly && !riotResultOpen ? <AssemblyPanel onTakeSeat={onPlayerIDChange} /> : null}
         </main>
       </CodexLinkProvider>
     </GameUiProvider>

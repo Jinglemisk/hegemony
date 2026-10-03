@@ -148,9 +148,9 @@ export function HappinessGauge({ display }: { display: HappinessDisplay }) {
             revolt or a card clears them.
           </p>
           {atRevolt ? (
-            <TipWarn>Half your slaves leave at your next upkeep</TipWarn>
+            <TipWarn>Half your slaves leave if you end your turn at this level</TipWarn>
           ) : atRiot ? (
-            <TipWarn>The riot table is rolled at your next upkeep</TipWarn>
+            <TipWarn>Ending your turn at this level starts a riot</TipWarn>
           ) : null}
         </Tip>
       }

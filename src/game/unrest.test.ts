@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyUnrestTokenChange,
-  applyUnrestUpkeep,
+  applyUnrestAtTurnEnd,
   drawPlayerEvent,
   getAddPopsEffect,
   getEventPopTargetTileIds,
@@ -66,8 +66,8 @@ describe("the happiness level", () => {
     const G = preloadedGame(SEED);
     setPops(G, "0", { citizens: 1, freemen: 0, slaves: 4 }, NONE);
 
-    applyUnrestUpkeep(G, "0");
-    applyUnrestUpkeep(G, "0");
+    applyUnrestAtTurnEnd(G, "0");
+    applyUnrestAtTurnEnd(G, "0");
 
     expect(happinessLevel(G, "0")).toBe(-2);
     expect(G.pendingRiot).toBeNull();
@@ -81,8 +81,8 @@ describe("the happiness level", () => {
     expect(happinessLevel(G, "0")).toBe(-1);
     expect(standingHappiness(G, "0")).toBe(-3);
 
-    // Calm counts at an upkeep in the same year; the year boundary expires it.
-    applyUnrestUpkeep(G, "0");
+    // Calm counts at turn end in the same year; the year boundary expires it.
+    applyUnrestAtTurnEnd(G, "0");
     expect(G.pendingRiot).toBeNull();
     expect(happinessLevel(G, "0")).toBe(-1);
   });
@@ -102,14 +102,14 @@ describe("the happiness level", () => {
   });
 });
 
-describe("unrest upkeep", () => {
+describe("turn-end unrest", () => {
   it("at −3 clears the tokens and parks a riot, removing nobody until the roll", () => {
     const G = preloadedGame(SEED);
     setPops(G, "0", { citizens: 3, freemen: 3, slaves: 0 }, NONE);
     G.players["0"].unrestTokens = 3;
 
     const before = playerPopTotal(G, "0");
-    applyUnrestUpkeep(G, "0");
+    applyUnrestAtTurnEnd(G, "0");
 
     expect(G.pendingRiot).toEqual({ playerID: "0", boughtInsurance: [] });
     expect(playerPopTotal(G, "0")).toBe(before);
@@ -125,7 +125,7 @@ describe("unrest upkeep", () => {
 
     // −4 for nine slaves, −2 tokens.
     expect(happinessLevel(G, "0")).toBe(-6);
-    applyUnrestUpkeep(G, "0");
+    applyUnrestAtTurnEnd(G, "0");
 
     expect(G.pendingRiot).toBeNull();
     expect(G.rng).toBe(rng);

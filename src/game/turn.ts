@@ -2,7 +2,7 @@ import { takeNationalIdea } from "./ideas";
 import { GAME_CONFIG, TEST_OPENING_SETUP } from "./config";
 import { PLAYER_IDS } from "./data";
 import {
-  applyUnrestUpkeep,
+  applyUnrestAtTurnEnd,
   collectIncome,
   createInitialState,
   createInitialStateFromDefinition,
@@ -14,6 +14,7 @@ import {
 } from "./rules";
 import type { MoveResult } from "./rules";
 import { checkVictoryAtTurnStart } from "./victory";
+import { tickLuxurySuppression } from "./luxury";
 import { openAssembly, shouldOpenAssembly } from "./assembly/assembly";
 import { GAME_MODES } from "./ruleset";
 import type { Ruleset } from "./ruleset";
@@ -95,9 +96,8 @@ export function advanceSetupTurn(G: HegemonyState) {
   G.currentPlayer = "0";
 }
 
-/** Start-of-turn automation for the current gameplay player: reveal the year's card,
- *  check the victory race, then upkeep + income. When the upkeep starts a riot the
- *  income is DEFERRED — resolveRiot collects it once the table has spoken. */
+/** Start-of-turn automation: reveal the year's card, check victory, expire luxury
+ *  suppression, then collect income (including hunger and the player-card draw). */
 export function beginGameplayTurn(G: HegemonyState) {
   if (G.phase !== "gameplay") {
     return;
@@ -114,23 +114,25 @@ export function beginGameplayTurn(G: HegemonyState) {
     return;
   }
 
-  applyUnrestUpkeep(G, G.currentPlayer);
-
-  if (!G.pendingRiot) {
-    collectIncome(G, G.currentPlayer, "automatic");
-  }
+  tickLuxurySuppression(G, G.currentPlayer);
+  collectIncome(G, G.currentPlayer, "automatic");
 }
 
 /**
- * End the current gameplay turn: expire discounts, turn the year when play returns
- * to the year's opener (the opener then moves on one seat), then begin the next turn —
- * arrivals, the victory-race check, unrest upkeep, income.
+ * Commit the current turn: test unrest before the player, year or Assembly changes.
+ * A riot suspends the handoff until its insurance and roll have resolved.
  */
 export function endTurn(G: HegemonyState): MoveResult {
   if (G.phase !== "gameplay" || G.pendingPlayerEvent || G.pendingRiot || G.assembly) {
     return { ok: false, reasons: [] };
   }
 
+  applyUnrestAtTurnEnd(G, G.currentPlayer);
+  return G.pendingRiot ? { ok: true } : finishTurn(G);
+}
+
+/** Pass a committed turn, after its riot or revolt. The unrest check must not run twice. */
+export function finishTurn(G: HegemonyState): MoveResult {
   const current = G.currentPlayer;
   let next = nextPlayer(current);
 
@@ -160,7 +162,7 @@ export function endTurn(G: HegemonyState): MoveResult {
 }
 
 /**
- * Open one player's turn: arrivals, the victory-race check, unrest upkeep, income.
+ * Open one player's turn: arrivals, victory, luxury expiry, income and hunger.
  * Extracted from {@link endTurn} because the Assembly suspends play *between* the
  * year turning and the opener's turn — so `closeAssembly` needs to run exactly this
  * sequence, and there must be only one copy of it.
@@ -176,11 +178,8 @@ export function beginTurnFor(G: HegemonyState, playerID: PlayerId) {
     return;
   }
 
-  applyUnrestUpkeep(G, playerID);
-
-  if (!G.pendingRiot) {
-    collectIncome(G, playerID, "automatic");
-  }
+  tickLuxurySuppression(G, playerID);
+  collectIncome(G, playerID, "automatic");
 }
 
 /**

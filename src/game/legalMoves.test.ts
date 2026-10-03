@@ -4,7 +4,6 @@ import { enumerateLegalCommands, popCompositions, transition } from "./legalMove
 import type { GameCommand } from "./legalMoves";
 import { totalPops } from "./core/pops";
 import { scenario } from "./testing/scenario";
-import { applyUnrestUpkeep } from "./unrest";
 import type { HegemonyState, PlayerId } from "./types";
 
 /** Compatibility helper for legacy scenario tests that advance one mutable fixture. */
@@ -272,7 +271,8 @@ describe("transition boundary guard", () => {
         draft.players["0"].unrestTokens = 4;
       })
       .build();
-    applyUnrestUpkeep(G, "0");
+    expect(enumerateLegalCommands(G, "0").some((move) => move.type === "civicCalm")).toBe(true);
+    expect(applyTestCommand(G, "0", { type: "endTurn" }).ok).toBe(true);
     expect(G.pendingRiot?.playerID).toBe("0");
 
     expect(applyTestCommand(structuredClone(G), "0", { type: "endTurn" }).ok).toBe(false);

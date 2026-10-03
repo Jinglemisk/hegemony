@@ -77,7 +77,7 @@ export class ScenarioBuilder {
   /**
    * Replay the scripted 4-player metropolis+colony opening through the real mutators
    * (snake order, driven by the setup machine), landing in gameplay with the opener's
-   * first turn already bootstrapped (upkeep + income + event draw — so a pending event
+   * first turn already bootstrapped (income + hunger + event draw — so a pending event
    * may be waiting). Stack any deck riggings BEFORE calling this if they should
    * influence that first draw.
    */

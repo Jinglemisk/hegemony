@@ -146,7 +146,8 @@ By default the island uses the classic authored layout; start the game with
 
 ## Taking a turn
 
-Play passes around the table. On your turn:
+Play passes around the table. Victory is checked at the start of your own turn,
+before income. On your turn:
 
 1. **Income is collected automatically.** Every settlement adds what its pops make,
    and your freemen and citizens eat 1 food each. If the food runs short, **hunger**
@@ -181,7 +182,8 @@ Play passes around the table. On your turn:
      **1 influence**. (During a riot, demotion is free — the mob forces it.)
    - **Fund an expedition** (once per turn) — stake **2 gold** and roll
      on an expedition table (see Ventures).
-4. **End your turn.**
+4. **End your turn.** Check your level before the turn passes: **−3 or below
+   starts a riot**, **−6 or below a revolt**. Calm bought this turn counts.
 
 A **year** is one turn for every seat. After all four have played, the next year
 begins and its card is revealed. The **first player moves on one seat** each year.
@@ -281,8 +283,9 @@ settlement holding the most of them. Slaves eat nothing and never leave for hung
 nothing and cannot leave for hunger.
 Food never goes below zero: a sacked granary or a bad card stops at empty.
 
-At the start of your turn, before you collect income, a level of **−3 or lower is a
-riot**. Your Unrest tokens clear, and your turn stops until the die is rolled:
+At the end of your own turn, before it passes, a level of **−3 or lower is a
+riot**. You have the turn to buy calm, build a Temple, or change your pops first.
+Your Unrest tokens clear, and the turn waits for insurance and the roll:
 
 | Roll | Outcome                                                                              |
 | ---: | ------------------------------------------------------------------------------------ |
@@ -302,11 +305,12 @@ Pops lost to a riot are **slaves first**, then freemen, then citizens, each from
 settlement holding the most of them.
 
 **At −6 or lower it is a revolt instead.** Nothing is rolled: **half your slaves
-leave**, rounded down, and your Unrest tokens clear. Your turn then goes on.
+leave**, rounded down, and your Unrest tokens clear. The turn then passes.
 
 Because a riot spends the tokens that caused it, a riot from tokens does not come
 back. A level held down by slaves does: it riots every turn until you free or lose
-slaves, raise Temples, or claim luxuries. Calm expires before your next turn.
+slaves, raise Temples, or claim luxuries. Calm bought this turn covers its end-of-turn
+check, then expires when the year turns, including for the last seat.
 
 ## Years and events
 

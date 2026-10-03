@@ -84,9 +84,11 @@ stay unchanged.
 
 Forecast at most six incomes, bounded by the years remaining. This year's card
 applies only to a seat that has not collected; later incomes use printed values.
-The projection runs engine hunger and deterministic revolts, clears tokens after
-a projected riot, and recalculates income after pop losses or the year's card
-expires. Otherwise it reuses income through the horizon; stocks and tokens do
+The projection checks the current turn end, with calm and the current year card
+still active, even when no future incomes remain. Later turns collect income and
+resolve engine hunger before their turn-end checks. It runs deterministic revolts,
+clears tokens after a projected riot, and recalculates income after pop losses or
+the year's card expires. Otherwise it reuses income through the horizon; stocks and tokens do
 not change printed yields. It assumes no future card or token changes.
 Influence uses projected income too, so a Forum pays back
 through its actual citizen column; Civic Tradition needs no duplicate future bonus.
@@ -105,10 +107,13 @@ the last food. The horizon can justify a larger reserve. There is no hard-coded 
 Latent slave slots count only where population room remains, including transfers
 already committed to that settlement.
 
-Calm enters search at its engine price. Under the settled Step 6 rule it expires
-before the next upkeep and never counts for Beloved. Buying it after collection
-cannot improve survival or a title, so a bot normally declines it. Making calm
-useful in that position is a Step 11 rules/balance question.
+Calm enters search at its engine price. The owner ruling of 2026-10-03 puts riots
+and revolts at turn end, so calm bought after income protects the current check.
+It expires at the year boundary and never counts for Beloved. Bots weigh calm,
+Temples and ladder changes against the visible turn-end risk. Forced riots still
+use legal insurance and the roll; resolving one passes the committed turn.
+The current check charges only an actual riot or revolt. A safe current level
+needs no proximity penalty; future turns keep the existing buffer estimate.
 
 ## Setup, Ideas and the Assembly
 

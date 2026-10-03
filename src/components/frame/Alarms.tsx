@@ -33,9 +33,9 @@ const UNREST_WORD: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
 
 function consequenceOf(tier: Exclude<UnrestStatus["tier"], "calm">, riotThreshold: number) {
   if (tier === "revolt")
-    return "Half your slaves leave at your next upkeep, and your Unrest tokens clear.";
+    return "Half your slaves leave if you end your turn at this level, and your Unrest tokens clear.";
   if (tier === "unrest")
-    return "Your next upkeep clears your Unrest tokens and rolls the riot table.";
+    return "Ending your turn at this level clears your Unrest tokens and starts the riot table.";
   return `A riot starts at ${formatNumber(riotThreshold)} happiness.`;
 }
 

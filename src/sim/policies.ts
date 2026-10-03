@@ -314,25 +314,17 @@ export function projectPolicyHorizon(
     severeRiotEvents: 0,
     riskPenalty: 0,
   };
-  let income = calculateIncome(projectedState, playerID);
-  const activeEffects = getActiveEffects(projectedState, playerID, { income });
-  const mechanics = activeEffects.flatMap((descriptor) => descriptor.mechanics);
-  let suppressedCollections = mechanics.reduce(
-    (total, mechanic) => total + (mechanic.type === "suppressIncome" ? mechanic.turns : 0),
-    0,
-  );
-
-  for (let step = 0; step < horizon; step += 1) {
-    let popsChanged = false;
-    // The engine checks unrest at every start-of-turn upkeep, before income. The
-    // level is a state, so a bad one is met again at every upkeep of the horizon
-    // until something on the board changes. Each future upkeep is in a later year.
+  // A collected income does not end the current year: calm and Blockade still
+  // count at this turn's check, even when no future incomes remain.
+  const checkTurnEnd = (currentTurn = false) => {
     const level = happinessLevel(projectedState, playerID);
     unrest.minimumHappiness = Math.min(unrest.minimumHappiness, level);
-    const upkeepRisk = evaluatePolicyUnrestRisk(projectedState.ruleset, level);
-    unrest.riskPenalty += upkeepRisk.scorePenalty;
+    const risk = evaluatePolicyUnrestRisk(projectedState.ruleset, level);
+    // No more income or draw precedes the current check. A safe level here has
+    // no proximity penalty; later years still price their uncertain buffer.
+    if (!currentTurn || risk.tier !== "buffer") unrest.riskPenalty += risk.scorePenalty;
 
-    if (upkeepRisk.tier === "revolt") {
+    if (risk.tier === "revolt") {
       // A revolt draws no dice, so the projection runs it: half the slaves leave
       // and the tokens clear.
       unrest.severeRiotEvents += 1;
@@ -343,13 +335,37 @@ export function projectPolicyHorizon(
         ["slaves"],
       );
       player.unrestTokens = 0;
-      popsChanged = true;
-      income = calculateIncome(projectedState, playerID);
-    } else if (upkeepRisk.tier === "unrest") {
+      return true;
+    } else if (risk.tier === "unrest") {
       // A riot spends the tokens; what the table then takes is unknown.
       unrest.mildRiotEvents += 1;
       player.unrestTokens = 0;
     }
+    return false;
+  };
+
+  const expireYear = () => {
+    projectedState.activeYearCard = null;
+    player.calmActive = false;
+    player.collectedThisTurn = false;
+  };
+
+  if (player.collectedThisTurn) {
+    if (G.phase === "gameplay" && G.currentPlayer === playerID && !G.assembly && !G.pendingRiot)
+      checkTurnEnd(true);
+    expireYear();
+  }
+
+  let income = calculateIncome(projectedState, playerID);
+  const activeEffects = getActiveEffects(projectedState, playerID, { income });
+  const mechanics = activeEffects.flatMap((descriptor) => descriptor.mechanics);
+  let suppressedCollections = mechanics.reduce(
+    (total, mechanic) => total + (mechanic.type === "suppressIncome" ? mechanic.turns : 0),
+    0,
+  );
+
+  for (let step = 0; step < horizon; step += 1) {
+    let popsChanged = false;
 
     if (suppressedCollections > 0) {
       suppressedCollections -= 1;
@@ -371,11 +387,11 @@ export function projectPolicyHorizon(
       }
     }
 
-    // The next projected upkeep is in another year. Its card is still hidden.
+    // Income and hunger happen first; the resulting board is checked at turn end.
+    popsChanged = checkTurnEnd() || popsChanged;
+    // The next projected income is in another year. Its card is still hidden.
     const yearCardExpired = projectedState.activeYearCard !== null;
-    projectedState.activeYearCard = null;
-    player.calmActive = false;
-    player.collectedThisTurn = false;
+    expireYear();
     // Stocks and tokens do not affect printed income. Reuse the authoritative
     // result until hunger/revolt changes pops or this year's card expires.
     if (step + 1 < horizon && (popsChanged || yearCardExpired))
@@ -400,10 +416,6 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
 
   return {
     ...G,
-    // A seat waiting for its turn (during the Assembly) still owes this year's
-    // known income. After collection, future years use printed income as the
-    // neutral estimate, without reading the hidden deck.
-    activeYearCard: originalPlayer.collectedThisTurn ? null : G.activeYearCard,
     board: {
       ...G.board,
       tiles: G.board.tiles.map((tile) =>
@@ -423,7 +435,6 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
       ...G.players,
       [playerID]: {
         ...originalPlayer,
-        calmActive: originalPlayer.collectedThisTurn ? false : originalPlayer.calmActive,
         resources: { ...originalPlayer.resources },
       },
     },
