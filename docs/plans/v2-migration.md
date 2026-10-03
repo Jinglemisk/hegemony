@@ -461,16 +461,23 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - Setup choices happen after placement. Every uncommitted seat may choose in any
   order; choices remain secret, then reveal and take effect together before Year 1's
   card and income. One distinct later Idea costs 6 influence as a turn action, with
-  no swap or third acquisition. The dev preload chooses Assembly Brokers for each
-  seat; fixed sim openings fix placement only and score the Ideas. Normal browser
-  auto-placement stops at the human picker; bot and Assembly shortcuts score picks.
+  no swap or third acquisition. Fixed openings fix placement only and score Ideas.
+- Fast starts skip the picker and score every seat's setup Idea, including the human,
+  with the shared bot scorer and its seed-derived RNG. This applies to URL quick games
+  (`?seed=N`), Fast Start (`?mode=fastStart` or the configured mode), dev rotation
+  starts, scripted preload, bot and Assembly shortcuts, and active dev tuning presets.
+  Random placement still scores Ideas. Normal new games keep the picker after manual
+  placement. `?setup=manual` preserves that flow even with a pinned seed or preset;
+  `?setup=ideas` auto-places and opens the picker for review.
 - Civic's **Ideas** option beside the existing influence verbs opens a flat
   two-column picker. Names and full rule sentences come from pinned content;
   New Settlers also asks for its pop and settlement. Held Ideas appear in the realm
   overview and the rival tooltip. Step 13 adds ceremony; Step 14 owns final icons.
-  The blocking setup picker replaces the map and HUD with a plain dialog naming
-  the choosing seat. Its 80px rows and footer fit at 1280×720; the New Settlers
-  selector shares the footer. The in-play dialog uses the takeover layer.
+  The blocking setup picker replaces the map and HUD with a centred paper page
+  naming the choosing seat. It fills the viewport without a scrim or nested plate;
+  TUNE is hidden. Its 80px rows and footer fit at 1280×720; the New Settlers selector
+  shares the footer. A selected row has a clay mark and a Selected label; the commit
+  uses the shell's primary button. The in-play dialog uses the takeover layer.
 - Non-random bots use the master scorer for setup picks and their normal search for
   purchases. Future Idea opportunity uses the existing six-year scoring horizon,
   bounded by years left; no personality weights before Step 10. Opportunity scores

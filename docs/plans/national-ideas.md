@@ -79,9 +79,10 @@ The full Step 9 default block lives in the [migration plan](v2-migration.md#sett
 
 ## Shell and simulation
 
-Normal browser auto-placement stops for a human Idea choice; bot and Assembly shortcuts
-score the choices. The setup picker is a plain dialog naming the choosing seat,
-with the map and HUD absent during the blocking choice. Its flat two-column list
+Fast starts score every seat's setup Idea, including the human; the routes and explicit
+picker overrides are in the migration plan's Step 9 defaults. Normal manual setup
+keeps the picker. The setup picker is a centred viewport page naming the choosing seat,
+with the map, HUD and TUNE absent during the blocking choice. Its flat two-column list
 uses 80px rows; New Settlers shares the footer rather than adding height. Choices stay secret until
 all seats lock, then reveal and apply together before the first year card. During play,
 **Ideas** in Civic opens the same list beside Calm with influence and the Dole. A purchase
