@@ -12,9 +12,10 @@ Each seat picks one permanent Idea after placement and buys one more for 6 influ
 during play. Ideas are public once setup choices reveal. Different seats may hold the
 same Idea; a seat cannot take an Idea twice or replace one it holds.
 
-Step 9 is implemented in the working tree. The lead still runs the forty-game batch,
-the browser audits and the shell gate before shipping. Step 13 owns the setup ceremony;
-Step 10 adds personality weights and Step 11 measures the pick spread.
+Step 9's first pass is committed as `4eb34a1`. The forty-game smart batch finished
+without caps, but every setup pick was Slave Colonies. Scorer and shell fixes are
+in the working tree for the lead's rerun. Step 13 owns the setup ceremony; Step 10
+adds personality weights and Step 11 measures the pick spread.
 
 ## Settled inputs
 
@@ -79,7 +80,9 @@ The full Step 9 default block lives in the [migration plan](v2-migration.md#sett
 ## Shell and simulation
 
 Normal browser auto-placement stops for a human Idea choice; bot and Assembly shortcuts
-score the choices. The setup picker is a flat two-column list of full sentences; choices stay secret until
+score the choices. The setup picker is a plain dialog naming the choosing seat,
+with the map and HUD absent during the blocking choice. Its flat two-column list
+uses 80px rows; New Settlers shares the footer rather than adding height. Choices stay secret until
 all seats lock, then reveal and apply together before the first year card. During play,
 **Ideas** in Civic opens the same list beside Calm with influence and the Dole. A purchase
 closes it. New Settlers alone asks for a pop and settlement. No new verb disc.
@@ -89,6 +92,26 @@ names and sentences from the public projection. The Codex lists the pinned roste
 Bots score legal setup choices through the master scorer and search purchases as ordinary
 legal moves. Opportunity values price future founding, upgrades, Dole savings, pieces and
 votes; Step 10 supplies build preferences. Bots never read the next year card.
+
+The first smart batch picked Slave Colonies 160 times out of 160. A score breakdown
+on seeds 42, 1000 and 1001 showed a unique 34-point gain in all twelve sampled
+openings: −2 from the immediate effect, plus 36 for six possible future slaves.
+The future term omitted those slaves' three-point standing-level loss, worth 18
+points under the existing scorer. Charging that cost lowers the gain to 16,
+behind Civic Tradition and Public Dole at 24. This was scorer bias, rather than
+an exact tie or evidence that the rule is stronger. The grant remains two slaves;
+the other opportunity weights remain unchanged. Step 10 and Step 11 still own
+personality preferences and measured balance, including Ideas that remain unused.
+
+The five unused Ideas were Public Dole, Urban Planning, Capital Works, Harbour
+Planning and Assembly Brokers. In the sampled openings Dole scored 24, the two
+slot Ideas 3 each, and Harbour/Brokers 0. The setup grant also fed Slave Colonies'
+holders, reducing later Dole savings. A 6-influence purchase costs 12 scorer
+points: one extra slot usually falls below that, Harbour needs an existing Port,
+and Brokers' three projected extra votes are worth 12 before that cost. Capital
+Works also offers less scope than Urban Planning at the same price. These are
+the shared scorer's current preferences; the rerun should record their spread
+without requiring every Idea to be used or changing the rules to force it.
 
 Telemetry zero-fills all twelve Ideas with setup picks, purchases, holder counts, wins and
 holder win rates. Counts include capped games; win rates use finished seat-games only.

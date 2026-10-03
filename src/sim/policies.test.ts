@@ -26,7 +26,7 @@ import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
 import { buildNewGame } from "./setup";
 import { getTile } from "../game/core/query";
-import { voiceHolder } from "../game/victory";
+import { victoryCardsHeld, voiceHolder } from "../game/victory";
 import { hexDistance } from "../game/map";
 import { createGameDefinition } from "../game/definition";
 import { getAuthoredGameContent } from "../game/content";
@@ -426,7 +426,13 @@ describe("political policy", () => {
         },
       });
       expect(G.phase).toBe("gameOver");
-      expect(G.year).toBe(14);
+      if (G.gameOverReason === "deckExhausted") expect(G.year).toBe(14);
+      else {
+        expect(G.gameOverReason).toBe("victoryRace");
+        expect(G.year).toBeLessThanOrEqual(14);
+        expect(G.winner).not.toBeNull();
+        expect(victoryCardsHeld(G, G.winner!)).toBeGreaterThanOrEqual(G.ruleset.victory.cardsToWin);
+      }
     }
     expect(capped).toBe(0);
     expect([...passedSeats].sort()).toEqual([...PLAYER_IDS]);

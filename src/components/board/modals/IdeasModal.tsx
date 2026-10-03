@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getNationalIdeas } from "../../../game/ideas";
+import { getPlayerName } from "../../../game/core/query";
 import type { NationalIdeaId, IdeaPopChoice } from "../../../game/ideaTypes";
 import { enumerateLegalOptions } from "../../../game/legalMoves";
 import { settlementNames } from "../../../ui/settlementNames";
@@ -39,9 +40,16 @@ export function IdeasModal({
   const names = settlementNames(G.board.tiles);
   const locked = setup && Boolean(G.setupIdeaPicks[viewerId]);
   return (
-    <ModalShell className="ideas-modal" labelledBy="ideas-heading" onDismiss={onClose}>
+    <ModalShell
+      backdropClassName="ideas-backdrop"
+      className="ideas-modal"
+      labelledBy="ideas-heading"
+      onDismiss={onClose}
+    >
       <header className="ideas-heading" data-c="ideas-heading">
-        <h2 id="ideas-heading">{setup ? "Choose a National Idea" : "Buy a National Idea"}</h2>
+        <h2 id="ideas-heading">
+          {setup ? `${getPlayerName(G, viewerId)} · Choose a National Idea` : "Buy a National Idea"}
+        </h2>
         <p>
           {setup
             ? "Each seat chooses one; choices reveal together before Year 1."
@@ -77,31 +85,31 @@ export function IdeasModal({
           ))}
         </div>
       )}
-      {popChoices.length > 0 ? (
-        <label className="idea-target">
-          New settler
-          <select
-            aria-label="New Settlers pop and settlement"
-            value={target ? `${target.tileId}:${target.pop}` : ""}
-            onChange={(event) =>
-              setTarget(popChoices.find((t) => `${t.tileId}:${t.pop}` === event.target.value))
-            }
-          >
-            <option value="">Choose a pop and settlement</option>
-            {popChoices.map((t) => {
-              const s = G.board.tiles
-                .find((tile) => tile.id === t.tileId)
-                ?.settlements.find((s) => s.owner === viewerId);
-              return (
-                <option key={`${t.tileId}:${t.pop}`} value={`${t.tileId}:${t.pop}`}>
-                  {t.pop === "slaves" ? "Slave" : "Freeman"} · {s ? names.get(s.id) : t.tileId}
-                </option>
-              );
-            })}
-          </select>
-        </label>
-      ) : null}
       <footer className="ideas-footer" data-c="ideas-footer">
+        {popChoices.length > 0 ? (
+          <label className="idea-target">
+            New settler
+            <select
+              aria-label="New Settlers pop and settlement"
+              value={target ? `${target.tileId}:${target.pop}` : ""}
+              onChange={(event) =>
+                setTarget(popChoices.find((t) => `${t.tileId}:${t.pop}` === event.target.value))
+              }
+            >
+              <option value="">Choose a pop and settlement</option>
+              {popChoices.map((t) => {
+                const s = G.board.tiles
+                  .find((tile) => tile.id === t.tileId)
+                  ?.settlements.find((s) => s.owner === viewerId);
+                return (
+                  <option key={`${t.tileId}:${t.pop}`} value={`${t.tileId}:${t.pop}`}>
+                    {t.pop === "slaves" ? "Slave" : "Freeman"} · {s ? names.get(s.id) : t.tileId}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+        ) : null}
         {onClose ? (
           <button onClick={onClose} type="button">
             Close Ideas

@@ -16,6 +16,33 @@ function board(food: number, slaves: number, freemen: number) {
 }
 
 describe("scores setup Ideas and in-play purchases", () => {
+  it("charges future colony slaves their standing-level cost", () => {
+    const G = scenario()
+      .withSettlement("0", "-2,0", "city", { citizens: 1, slaves: 3, freemen: 0 })
+      .withSettlement("0", "-1,0", "colony", { citizens: 0, slaves: 4, freemen: 0 })
+      .withResources("0", { food: 50, influence: 6 })
+      .build();
+    G.phase = "setupIdeas";
+    const choices = [
+      { type: "pickIdea" as const, ideaId: "slave-colonies" as const },
+      { type: "pickIdea" as const, ideaId: "civic-tradition" as const },
+    ];
+    // The full colony receives no immediate grant. Six future slaves were worth
+    // 36 gross points, but lose three levels (18 points); Civic is worth 24.
+    expect(chooseIdea(G, choices, createSimRng(1))).toEqual(choices[1]);
+  });
+  it("still picks colony slaves when their immediate food prevents starvation", () => {
+    const G = scenario()
+      .withSettlement("0", "0,-3", "colony", { citizens: 0, slaves: 0, freemen: 2 })
+      .withResources("0", { food: 0, influence: 6 })
+      .build();
+    G.phase = "setupIdeas";
+    const choices = [
+      { type: "pickIdea" as const, ideaId: "slave-colonies" as const },
+      { type: "pickIdea" as const, ideaId: "civic-tradition" as const },
+    ];
+    expect(chooseIdea(G, choices, createSimRng(1))).toEqual(choices[0]);
+  });
   it("picks food for an unfed civic realm and influence for one that already feeds itself", () => {
     const starving = board(0, 0, 2);
     const fed = board(30, 3, 0);

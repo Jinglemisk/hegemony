@@ -192,17 +192,22 @@ For the Step 9 handoff, run these jobs separately:
 
 ```bash
 step9_out=$(mktemp -d)
-npm run sim -- batch --games 40 --turns 56 --policy master --seed 1000 --report "$step9_out/batch.json" --csv "$step9_out/batch.csv"
+npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000 --report "$step9_out/batch.json" --csv "$step9_out/batch.csv"
 npm run dev -- --port 5199
 npm run ui:audit
 npm run ui:conduct
-node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?seed=42' --out "$step9_out/gates"
+node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?dev=preload&seed=42' --click '.fateCard .ceremonyCommit' --out "$step9_out/gates"
+node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?dev=assembly4&seed=42' --out "$step9_out/gates-asm"
+node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?seed=42' --out "$step9_out/gates-idea"
 ```
 
-Look for forty Year-14 finishes, no action caps or illegal commands, four setup
+Look for forty finishes by the title race or Year-14 deck end, no action caps or illegal commands, four setup
 picks per game, at most one purchase per seat, and the per-Idea setup, purchase,
 and holder win-rate table. Inspect purchases against the holder's food balance,
 work slots, expansion room and Assembly plans; no fixed favourite is required.
+The setup scorer now charges future slaves their standing-level loss; check that
+Slave Colonies no longer wins every setup through its old gross-only bonus.
+Do not require every Idea to be used: Step 10 adds preferences and Step 11 measures balance.
 Normal browser openings stop at the setup picker. Audit that picker, the Civic
 Ideas purchase picker, realm names and rival rules at 1280, 1440 and 1920, including
 New Settlers' target select. For the purchase audit, open Civic → Ideas after a

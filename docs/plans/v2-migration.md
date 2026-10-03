@@ -468,6 +468,9 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   two-column picker. Names and full rule sentences come from pinned content;
   New Settlers also asks for its pop and settlement. Held Ideas appear in the realm
   overview and the rival tooltip. Step 13 adds ceremony; Step 14 owns final icons.
+  The blocking setup picker replaces the map and HUD with a plain dialog naming
+  the choosing seat. Its 80px rows and footer fit at 1280×720; the New Settlers
+  selector shares the footer. The in-play dialog uses the takeover layer.
 - Non-random bots use the master scorer for setup picks and their normal search for
   purchases. Future Idea opportunity uses the existing six-year scoring horizon,
   bounded by years left; no personality weights before Step 10. Opportunity scores
@@ -475,8 +478,12 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   (30 when near the base cap); 12 per possible upgrade; 6 per possible founding pop;
   twice the Dole saving for up to three missing food per year; and 4 per remaining
   Assembly for the extra vote when the purse can buy three. Only available frontier,
-  pieces and owned colonies count. Telemetry counts acquisition routes from ownership, including
-  capped games, and holder wins per finished seat-game, zero-filled for all twelve.
+  pieces and owned colonies count. Future slave grants subtract their standing-level
+  cost, using the engine's slave penalty and the scorer's existing level weight and
+  cap; opportunity never falls below zero. This fixes the gross future reward that
+  drove 160 of 160 setup picks to Slave Colonies, without changing its rules.
+  Telemetry counts acquisition routes from ownership, including capped games, and
+  holder wins per finished seat-game, zero-filled for all twelve.
 - State schema 9 and command schema 5 reject earlier saves and scripts.
 
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take

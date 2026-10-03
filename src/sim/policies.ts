@@ -3,7 +3,7 @@ import { playerDole, votePurchaseLimit } from "../game/ideaRules";
 import { playerPieces } from "../game/settlement";
 import { calculateIncome, getHungerStatus } from "../game/economy/income";
 import { applyHunger } from "../game/hunger";
-import { happinessLevel, standingHappiness } from "../game/happiness";
+import { happinessLevel, slaveUnhappiness, standingHappiness } from "../game/happiness";
 import { removePops } from "../game/tables";
 import { getActiveEffects } from "../game/activeEffects";
 import { applyResourceDeltaWithFloors } from "../game/core/resources";
@@ -1434,8 +1434,21 @@ function ideaOpportunityValue(G: HegemonyState, me: PlayerId): number {
       ).length;
       value += 12 * Math.min(upgrades, pieces.citiesRemaining, years);
     }
-    if (e.type === "onFoundColony" && roomToExpand)
-      value += 6 * (e.amount ?? 1) * Math.min(pieces.coloniesRemaining, years);
+    if (e.type === "onFoundColony" && roomToExpand) {
+      const pops = (e.amount ?? 1) * Math.min(pieces.coloniesRemaining, years);
+      let opportunity = 6 * pops;
+      // Future grants owe the same standing-level cost as slaves already on the
+      // board. Pricing only their population reward made Slave Colonies win every
+      // opening even when its immediate grant lowered the ordinary score.
+      if (e.grantPop === "slaves") {
+        const slaves = countPlayerPopType(G, me, "slaves");
+        const loss = slaveUnhappiness(G, slaves + pops) - slaveUnhappiness(G, slaves);
+        const level = standingHappiness(G, me);
+        const cap = G.ruleset.victory.minimums.happiness + 2;
+        opportunity -= LEVEL_WEIGHT * (Math.min(level, cap) - Math.min(level - loss, cap));
+      }
+      value += Math.max(0, opportunity);
+    }
     if (e.type === "dolePrice") {
       const food = calculateIncome(G, me).food;
       value +=
