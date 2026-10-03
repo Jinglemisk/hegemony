@@ -433,6 +433,52 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - State schema 8 and command schema 4 reject older saves and scripts. Remove house
   items, vetoes and chosen replacements; a bought-vote command names its payment.
 
+**Defaults picked in Step 9** (2026-10-03):
+
+- The rewritten twelve-row roster in the National Ideas plan replaces v1. Good
+  Harvest is flat 2 food and Civic Tradition flat 2 influence at yearly income;
+  class-zeroing year cards leave them, and General Strike takes them. Public Dole
+  replaces gold upkeep with the whole price of 2 influence for the existing 1 food.
+- Urban Planning adds one shared work slot to every city, including the capital;
+  Capital Works adds one to the first setup city only (none in colony-only modes).
+  Slots stack with Law changes, never change pop capacity, and may hold a building
+  or a slave. Frontier Charter adds one physical colony piece and one placement;
+  Master Builders still cuts the placement limit only.
+- New Settlers grants a chosen slave or freeman in a chosen owned settlement;
+  citizens remain promotion-only. City Pioneers grants one freeman on upgrade if
+  there is room. Slave Colonies adds two slaves to existing colonies on acquisition
+  and newly founded colonies, as room allows. Room includes committed transfers;
+  at founding the sent pop and Law riders reserve room first. These grants bypass
+  paid growth, and an upgrade still returns its colony piece.
+- Harbour Planning replaces the retired free luxury trader: Ports take zero work
+  slots, but still pay their full price and claim a coastal luxury. A Law's
+  building-count limit still counts a Port. Treasury Grant pays 4 gold once on
+  acquisition, scaling the old 20 to v2 stocks. All acquisition grants work on
+  either the setup pick or the purchase; none has a deferred or consumable token.
+- Assembly Brokers replaces proposal cancellation, which conflicts with no veto:
+  it permits a third bought vote at the existing price in either currency, through
+  every remaining ballot in that sitting; no fourth vote purchase.
+- Setup choices happen after placement. Every uncommitted seat may choose in any
+  order; choices remain secret, then reveal and take effect together before Year 1's
+  card and income. One distinct later Idea costs 6 influence as a turn action, with
+  no swap or third acquisition. The dev preload chooses Assembly Brokers for each
+  seat; fixed sim openings fix placement only and score the Ideas. Normal browser
+  auto-placement stops at the human picker; bot and Assembly shortcuts score picks.
+- Civic's **Ideas** option beside the existing influence verbs opens a flat
+  two-column picker. Names and full rule sentences come from pinned content;
+  New Settlers also asks for its pop and settlement. Held Ideas appear in the realm
+  overview and the rival tooltip. Step 13 adds ceremony; Step 14 owns final icons.
+- Non-random bots use the master scorer for setup picks and their normal search for
+  purchases. Future Idea opportunity uses the existing six-year scoring horizon,
+  bounded by years left; no personality weights before Step 10. Opportunity scores
+  are 4 per year for Civic Tradition; 10 for an extra colony piece across the horizon
+  (30 when near the base cap); 12 per possible upgrade; 6 per possible founding pop;
+  twice the Dole saving for up to three missing food per year; and 4 per remaining
+  Assembly for the extra vote when the purse can buy three. Only available frontier,
+  pieces and owned colonies count. Telemetry counts acquisition routes from ownership, including
+  capped games, and holder wins per finished seat-game, zero-filled for all twelve.
+- State schema 9 and command schema 5 reject earlier saves and scripts.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.

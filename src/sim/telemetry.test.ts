@@ -14,6 +14,7 @@ const TEST_DEFINITION = createModeDefinition("standard").identity;
 
 function runAggregated(games: number, turns: number) {
   const aggregator = new Aggregator();
+  let deferredDraws = 0;
 
   for (let game = 0; game < games; game += 1) {
     const seed = 500 + game;
@@ -28,6 +29,7 @@ function runAggregated(games: number, turns: number) {
         onTurnEnd: (state) => aggregator.onTurnEnd(state),
       },
     });
+    if (!G.players[G.currentPlayer].collectedThisTurn) deferredDraws += 1;
     aggregator.endGame(G);
   }
 
@@ -45,7 +47,7 @@ function runAggregated(games: number, turns: number) {
     generatedAt: "test",
   };
 
-  return { aggregator, report: aggregator.buildReport(meta) };
+  return { aggregator, report: aggregator.buildReport(meta), deferredDraws };
 }
 
 describe("percentiles", () => {
@@ -128,19 +130,19 @@ describe("Aggregator", () => {
 
   it("aggregates games, snapshots, seats, and event counts", () => {
     const turns = 12;
-    const { aggregator, report } = runAggregated(2, turns);
+    const { aggregator, report, deferredDraws } = runAggregated(2, turns);
 
     expect(report.perGame).toHaveLength(2);
     expect(report.perGame[0].turnsPlayed).toBe(turns);
     // The opening turn and each newly opened turn are observed, including at a cap.
     expect(aggregator.allSnapshots()).toHaveLength(2 * (turns + 1));
 
-    // Every turn draws a player event, plus the bootstrap draw per game.
+    // Each collected income draws; a riot or Assembly at the cap can defer the final draw.
     const playerEventCount = Object.values(report.events.player).reduce(
       (sum, count) => sum + count,
       0,
     );
-    expect(playerEventCount).toBe(2 * (turns + 1));
+    expect(playerEventCount).toBe(2 * (turns + 1) - deferredDraws);
 
     // These short games all hit the turn cap — not wins. Real win rate is 0; the
     // cap-leader rate carries the distribution instead.

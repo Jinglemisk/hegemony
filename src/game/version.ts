@@ -23,8 +23,9 @@ export const ENGINE_VERSION = "0.1.0";
  *  Command v3 removes card choice and venture stake arguments. */
 /** v8 (Step 8): player-only Assembly, Appendix B effects, no veto/replacement choice.
  * Command v4 names the vote payment. Older saves are rejected. */
-export const STATE_SCHEMA_VERSION = 8;
-export const COMMAND_SCHEMA_VERSION = 4;
+/** v9 (Step 9): public Ideas, concealed setup picks; command v5 adds pick/buy. */
+export const STATE_SCHEMA_VERSION = 9;
+export const COMMAND_SCHEMA_VERSION = 5;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

@@ -13,7 +13,11 @@ import type {
   TradableMaterial,
 } from "../game/types";
 
+import type { NationalIdeaId, IdeaPopChoice } from "../game/ideaTypes";
+
 export type GameMoves = {
+  pickIdea: (playerID: PlayerId, ideaId: NationalIdeaId, target?: IdeaPopChoice) => void;
+  buyIdea: (ideaId: NationalIdeaId, target?: IdeaPopChoice) => void;
   placeCapital: (tileId: string, pops: Pops) => void;
   placeCity: (tileId: string, pops: Pops) => void;
   placeColony: (tileId: string, pops: Pops) => void;
@@ -79,6 +83,10 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     bankSell: (material) => dispatch({ type: "bankSell", material }),
     bankBuy: (material) => dispatch({ type: "bankBuy", material }),
     dole: () => dispatch({ type: "dole" }),
+    pickIdea: (playerID, ideaId, target) =>
+      dispatch({ type: "pickIdea", ideaId, ...(target ? { target } : {}) }, playerID),
+    buyIdea: (ideaId, target) =>
+      dispatch({ type: "buyIdea", ideaId, ...(target ? { target } : {}) }),
     civicCalm: (payment) => dispatch({ type: "civicCalm", payment }),
     promotePop: (tileId, from) => dispatch({ type: "promotePop", tileId, from }),
     demotePop: (tileId, from) => dispatch({ type: "demotePop", tileId, from }),

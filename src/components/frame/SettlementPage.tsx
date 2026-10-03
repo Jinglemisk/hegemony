@@ -1,3 +1,4 @@
+import { occupiedBuildingSlots } from "../../game/ideaRules";
 import { getBuilding } from "../../game/content";
 import { settlementNextClassColumn } from "../../game/economy/income";
 import {
@@ -55,7 +56,7 @@ export function SettlementPage({
   const idle = settlementIdleSlaves(tile, settlement, G);
   // The site would take another building: a city with a slot, or a colony its Port.
   const ground = buildingGround(G, settlement.owner, tile.id);
-  const canRaise = ground.open > 0 && ground.raisable > 0;
+  const canRaise = ground.raisable > 0;
 
   return (
     <>
@@ -80,7 +81,7 @@ export function SettlementPage({
         </span>
         <span className="meta-i">
           <Ico path="settlements/slot" size="chip" />
-          <b>{settlement.buildings.length + working}</b>of {slots} slots
+          <b>{occupiedBuildingSlots(G, settlement) + working}</b>of {slots} slots
         </span>
       </p>
       <div className="settle-cols" data-c="settle-cols">

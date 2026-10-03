@@ -11,6 +11,7 @@ import {
   getDemotePopStatus,
   getGrowPopCost,
   getDoleStatus,
+  getTakeIdeaStatus,
   getGrowPopStatus,
   getPromotePopStatus,
   GROWABLE_POPS,
@@ -87,6 +88,7 @@ export type DiscHandlers = Pick<
   onArm: (mode: MapSelectionMode) => void;
   onCalm: (payment: CivicCalmPayment) => void;
   onDole: () => void;
+  onIdeasRequest?: () => void;
   onBankBuy: (material: TradableMaterial) => void;
   onBankSell: (material: TradableMaterial) => void;
 };
@@ -312,6 +314,17 @@ export function discGroups(
     run: handlers.onDole,
   };
 
+  const ideasStatus = getTakeIdeaStatus(G, playerID);
+  const ideas: DiscOption = {
+    id: "ideas",
+    label: "Ideas",
+    icon: "pops/citizens",
+    prices: [ideasStatus.cost],
+    enabled: open && ideasStatus.can,
+    hint: ideasStatus.reasons.join(" ") || "Buy your second National Idea.",
+    run: handlers.onIdeasRequest,
+  };
+
   const exchange = TRADABLE_MATERIALS.map((material) => {
     const buy = getBankBuyStatus(G, playerID, material);
     const sell = getBankSellStatus(G, playerID, material);
@@ -394,7 +407,13 @@ export function discGroups(
       icon: "unrest/calm-verb",
       hint: "Pick one",
       primary: "calm-gold",
-      options: [calm("gold"), calm("influence"), dole, verbOption("venture", context, handlers)],
+      options: [
+        calm("gold"),
+        calm("influence"),
+        dole,
+        ideas,
+        verbOption("venture", context, handlers),
+      ],
     },
     {
       id: "exchange",

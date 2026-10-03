@@ -188,22 +188,27 @@ excludes a terminal victory check with no income. For a full-game gate:
 npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000
 ```
 
-For the Step 8 handoff, run:
+For the Step 9 handoff, run these jobs separately:
 
 ```bash
-step8_out=$(mktemp -d)
-npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000 --report "$step8_out/batch.json" --csv "$step8_out/batch.csv"
+step9_out=$(mktemp -d)
+npm run sim -- batch --games 40 --turns 56 --policy master --seed 1000 --report "$step9_out/batch.json" --csv "$step9_out/batch.csv"
 npm run dev -- --port 5199
 npm run ui:audit
 npm run ui:conduct
-node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?dev=assembly4&seed=42' --out "$step8_out/gates"
+node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?seed=42' --out "$step9_out/gates"
 ```
 
-Run heavy jobs separately. Look for forty Year-14 finishes, no action caps or
-illegal commands, passing authored Laws from every seat across the batch, Voice
-held, and purposeful vote purchases. Check the four-Law cap, one standing price
-Law and per-seat Directive counts. Audit proposal, casting and closing states at
-1280, 1440 and 1920; conduct must not exceed the brief's 25-row baseline.
+Look for forty Year-14 finishes, no action caps or illegal commands, four setup
+picks per game, at most one purchase per seat, and the per-Idea setup, purchase,
+and holder win-rate table. Inspect purchases against the holder's food balance,
+work slots, expansion room and Assembly plans; no fixed favourite is required.
+Normal browser openings stop at the setup picker. Audit that picker, the Civic
+Ideas purchase picker, realm names and rival rules at 1280, 1440 and 1920, including
+New Settlers' target select. For the purchase audit, open Civic → Ideas after a
+seat has earned 6 influence. Conduct must not exceed the
+brief's 25-row baseline. Scripted preload keeps neutral Assembly Brokers picks;
+Assembly and bot shortcuts choose through the scorer.
 
 A riot's deferred income updates its existing snapshot, including on Year 14's
 last turn. Player draws are counted after that income, and a year-card reveal is
@@ -253,7 +258,10 @@ The report contains:
   this universal table makes missing or unexercised action paths visible
 - `activeEffects` — zero-filled observations, per-player-turn counts, and player-turn
   prevalence for every canonical active-effect kind (suppression, hunger, the
-  year card, Laws, and pending Directives)
+  year card, Laws, Ideas, and pending Directives)
+- `nationalIdeas` — setup picks, in-play purchases, finished holder seat-games, wins
+  and holder win rate per Idea, including zeroes. Each game records ownership and
+  acquisition route; capped games count acquisitions but never holder wins.
 - `buildings` — build counts and per-game rates
 - `events` — draw counts by the twelve player-card kinds and eight year-card kinds;
   retired card IDs and choice-pick telemetry are gone
@@ -291,8 +299,8 @@ Replays are byte-identical to the original run.
 {
   "version": 2,
   "engineVersion": "0.1.0",
-  "stateSchemaVersion": 7,
-  "commandSchemaVersion": 3,
+  "stateSchemaVersion": 9,
+  "commandSchemaVersion": 5,
   "seed": 42, // game seed: decks, board draws, table rolls
   "mode": "standard",
   "rulesetPatch": null, // deep-merged over the mode's ruleset
@@ -312,8 +320,8 @@ Replays are byte-identical to the original run.
 The save is a _recipe_: replaying `history` from its pinned definition and seed
 reproduces `state` byte-for-byte. Saves double as shareable bug reports and
 balance scenarios. Loading re-hashes the definition and rejects tampering, unsupported
-schema versions, or a recipe/state mismatch. Step 8 uses state schema 8 and command
-schema 4 and rejects older recipes. The save container format remains v2.
+schema versions, or a recipe/state mismatch. Step 9 uses state schema 9 and command
+schema 5 and rejects older recipes. The save container format remains v2.
 
 **Phase 3.6 architecture:** definition pinning, the canonical atomic transition, workflow
 actors/projections, stable settlement and transfer IDs, versioned recipes, legacy migration,

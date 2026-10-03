@@ -5,7 +5,7 @@ city-state into the dominant power of an island. You gather resources, grow your
 people, found colonies, upgrade them into cities, and raise buildings to
 out-produce your rivals.
 
-> This guide covers v2 through Step 8.
+> This guide covers v2 through Step 9.
 
 ---
 
@@ -50,6 +50,35 @@ Happiness is not a resource. It is a **level** you read off the board each turn 
 Happiness and food): Temples and luxuries raise it, slaves and Unrest tokens lower it.
 
 You begin each game with **8 wood, 4 stone, 4 gold, 12 food**, and 0 influence.
+
+## National Ideas
+
+After placement, each seat secretly chooses one Idea; choices reveal together before
+Year 1 and take effect immediately. During your turn, **Civic → Ideas** buys a second
+Idea for **6 influence**. You cannot take the same Idea twice or replace one. Other
+seats may choose the same Ideas. Your realm page and rivals' tooltips show them.
+
+| Idea             | Rule                                                                                                 |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| Good Harvest     | Your realm gains 2 food at each year's income.                                                       |
+| Public Dole      | Your Dole buys 1 food for 2 influence.                                                               |
+| Urban Planning   | Each of your cities has one extra work slot.                                                         |
+| Capital Works    | Your capital has one extra work slot.                                                                |
+| Civic Tradition  | Your realm gains 2 influence at each year's income.                                                  |
+| Frontier Charter | You have one extra colony piece.                                                                     |
+| New Settlers     | When you take this Idea, add one slave or freeman to an owned settlement with room.                  |
+| City Pioneers    | Upgrading a colony adds one freeman to that city if it has room.                                     |
+| Slave Colonies   | Add two slaves to your colonies when you take this Idea and when you found a colony, as room allows. |
+| Harbour Planning | Your Ports take no work slot.                                                                        |
+| Treasury Grant   | When you take this Idea, gain 4 gold.                                                                |
+| Assembly Brokers | You may buy a third vote at each Assembly.                                                           |
+
+City slots include the capital. Capital Works uses your first setup city. Pop grants
+reserve room for pops already travelling; founding Law grants come before Slave
+Colonies. Grants bypass paid growth. Harbour Planning keeps the Port's price and
+claim, and a Law limiting building counts still counts it. Whole-realm food and
+influence survive year cards that zero class columns; a General Strike takes all
+income. One-shot grants work on the later purchase too.
 
 ## Your people
 

@@ -90,7 +90,7 @@ export class ScenarioBuilder {
 
     let guard = 0;
 
-    while (G.phase !== "gameplay") {
+    while (G.phase !== "setupIdeas") {
       if (guard++ > 16) {
         throw new Error("scenario opening: setup did not converge");
       }
@@ -113,6 +113,8 @@ export class ScenarioBuilder {
       advanceSetupTurn(G);
     }
 
+    G.phase = "gameplay";
+    G.currentPlayer = G.yearOpener;
     beginGameplayTurn(G);
     return this;
   }

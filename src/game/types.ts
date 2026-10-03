@@ -26,7 +26,8 @@ export type PopType = "citizens" | "freemen" | "slaves";
 
 export type SettlementKind = "capital" | "city" | "colony";
 
-export type Phase = "setupCapital" | "setupCity" | "setupColony" | "gameplay" | "gameOver";
+export type Phase =
+  "setupIdeas" | "setupCapital" | "setupCity" | "setupColony" | "gameplay" | "gameOver";
 
 /** How the terrain deck is laid onto the board: the fixed authored layout, or a seeded shuffle. */
 export type BoardLayout = "classic" | "shuffled";
@@ -287,6 +288,7 @@ export interface HegemonyBoard {
 }
 
 export interface PlayerState {
+  nationalIdeas: import("./ideaTypes").NationalIdeaOwnership[];
   id: PlayerId;
   name: string;
   resources: Resources;
@@ -364,6 +366,7 @@ export interface HegemonyState {
   /** Monotonic source for stable match-local entity identities. */
   nextEntityId: number;
   phase: Phase;
+  setupIdeaPicks: Record<PlayerId, import("./ideaTypes").SetupIdeaPick | null>;
   currentPlayer: PlayerId;
   turn: number;
   /** The seed this game was created from — shown in the UI, embedded in bug reports. */

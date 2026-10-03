@@ -19,6 +19,7 @@ import {
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { BuildPopover } from "./board/map/BuildPopover";
+import { IdeasModal } from "./board/modals/IdeasModal";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
 import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
 import { FoundColonyPopover } from "./board/modals/FoundColonyPopover";
@@ -78,7 +79,8 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
 type ActiveModal =
   | { kind: "populationPrompt"; placement: SetupPlacement; tileId: string }
   | { kind: "upgradeCity" }
-  | { kind: "venture" };
+  | { kind: "venture" }
+  | { kind: "ideas" };
 
 export function HegemonyBoard({
   G,
@@ -436,6 +438,7 @@ export function HegemonyBoard({
                   onVentureRequest: () => setActiveModal({ kind: "venture" }),
                   onCalm: moves.civicCalm,
                   onDole: moves.dole,
+                  onIdeasRequest: () => setActiveModal({ kind: "ideas" }),
                   onBankBuy: moves.bankBuy,
                   onBankSell: moves.bankSell,
                 },
@@ -477,6 +480,11 @@ export function HegemonyBoard({
             </aside>
           ) : null}
 
+          {G.phase === "setupIdeas" ? (
+            <IdeasModal key={viewerId} onNextSeat={() => onPlayerIDChange(G.currentPlayer)} />
+          ) : activeModal?.kind === "ideas" ? (
+            <IdeasModal onClose={closeModal} />
+          ) : null}
           {activeModal?.kind === "populationPrompt" ? (
             <PopulationPickerModal
               title={`Choose ${PLACEMENT_LABELS[activeModal.placement]} pops`}

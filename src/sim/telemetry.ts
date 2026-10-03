@@ -1,3 +1,5 @@
+import { NATIONAL_IDEAS, playerNationalIdeas } from "../game/ideas";
+import type { NationalIdeaId, NationalIdeaOwnership } from "../game/ideaTypes";
 import type { OpeningKind } from "./io";
 import { totalPops } from "../game/core/pops";
 import { calculateIncome } from "../game/economy/income";
@@ -227,6 +229,7 @@ export type GameRow = {
   leaderAtCap: PlayerId | null;
   /** Which policy sat in each seat this game (mixed-policy tables); absent for uniform runs. */
   seatPolicies?: Record<PlayerId, string>;
+  nationalIdeas: Record<PlayerId, NationalIdeaOwnership[]>;
   finalCards: Record<PlayerId, number>;
   /** The titles held by the winner at a victory-race finish; empty for other endings. */
   winningTitles: string[];
@@ -270,6 +273,10 @@ export type BatchReport = {
     generatedAt: string;
   };
   perGame: GameRow[];
+  nationalIdeas: Record<
+    NationalIdeaId,
+    { setupPicks: number; purchases: number; holders: number; wins: number; winRate: number }
+  >;
   perYear: YearRow[];
   perSeat: Record<PlayerId, { winRate: number; capLeaderRate: number; meanFinalCards: number }>;
   /** Food under work slots, per seat: how often income left mouths unfed, the pops
@@ -641,6 +648,12 @@ export class Aggregator {
       winner: finished ? G.winner : null,
       leaderAtCap: finished ? null : this.leaderByTiebreak(G, finalCards),
       seatPolicies: this.gameSeatPolicies ?? undefined,
+      nationalIdeas: Object.fromEntries(
+        PLAYER_IDS.map((id) => [
+          id,
+          playerNationalIdeas(G, id).map(({ id, acquired, year }) => ({ id, acquired, year })),
+        ]),
+      ) as GameRow["nationalIdeas"],
       finalCards,
       winningTitles:
         termination === "victoryRace"
@@ -903,6 +916,29 @@ export class Aggregator {
     return {
       meta,
       perGame: this.games,
+      nationalIdeas: Object.fromEntries(
+        NATIONAL_IDEAS.map((idea) => {
+          let setupPicks = 0,
+            purchases = 0,
+            holders = 0,
+            wins = 0;
+          for (const game of this.games)
+            for (const id of PLAYER_IDS) {
+              const held = game.nationalIdeas[id].find((i) => i.id === idea.id);
+              if (!held) continue;
+              if (held.acquired === "setup") setupPicks++;
+              else purchases++;
+              if (game.termination !== "turnCap") {
+                holders++;
+                if (game.winner === id) wins++;
+              }
+            }
+          return [
+            idea.id,
+            { setupPicks, purchases, holders, wins, winRate: holders ? wins / holders : 0 },
+          ];
+        }),
+      ) as BatchReport["nationalIdeas"],
       perYear,
       perSeat,
       hunger,

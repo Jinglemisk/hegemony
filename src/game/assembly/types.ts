@@ -65,7 +65,16 @@ export type LawEffect =
   | { type: "buildingFood"; building: BuildingId; amount: number }
   | { type: "happiness"; amount: number }
   | { type: "settlementIncome"; scope: SettlementScope; resource: Resource; amount: number }
-  | { type: "onFoundColony"; grantPop: PopType };
+  | { type: "onFoundColony"; grantPop: PopType; amount?: number }
+  | { type: "realmIncome"; resource: Resource; amount: number }
+  | { type: "extraSlots"; scope: "city" | "capital"; amount: number }
+  | { type: "colonyPieces"; amount: number }
+  | { type: "acquirePop" }
+  | { type: "acquireResource"; resource: Resource; amount: number }
+  | { type: "onUpgradeCity"; grantPop: PopType }
+  | { type: "dolePrice"; amount: number }
+  | { type: "slotExempt"; building: BuildingId }
+  | { type: "votePurchaseLimit"; amount: number };
 
 /** Stratokles's one-time vocabulary. Every Directive is aimed at one rival chosen by
  * the author before the proposal is sealed; the target travels with the ballot item. */

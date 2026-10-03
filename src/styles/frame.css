@@ -2032,3 +2032,94 @@ button.link {
 .island .moor-hit {
   fill: transparent;
 }
+
+/* Ideas keep the shell's flat rows and printed rule sentences. */
+.ideas-modal.logModal {
+  width: min(1024px, calc(100vw - 64px));
+  max-width: 1024px;
+  padding: 24px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border-radius: 0;
+  background: var(--ivory);
+  backdrop-filter: none;
+}
+.ideas-heading h2 {
+  margin: 0;
+  font-family: var(--f-name);
+  font-size: 24px;
+}
+.ideas-heading p {
+  margin: 8px 0 16px;
+  font-size: 16px;
+}
+.ideas-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+}
+.idea-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  min-height: 64px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  white-space: normal;
+}
+.idea-choice strong {
+  font-size: 18px;
+  line-height: 24px;
+}
+.idea-choice span {
+  font-size: 16px;
+  line-height: 20px;
+}
+.idea-choice[aria-pressed="true"] {
+  background: var(--bone);
+  box-shadow: inset 4px 0 var(--clay);
+}
+.idea-choice:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: -2px;
+}
+.idea-target {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 16px;
+}
+.idea-target select {
+  min-height: 32px;
+  font: inherit;
+}
+.ideas-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+.ideas-footer button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  font-size: 16px;
+}
+.summary dd.realm-ideas {
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  overflow: visible;
+  white-space: normal;
+}
+.realm-ideas .tooltipTrigger {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}

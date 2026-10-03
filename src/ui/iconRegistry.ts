@@ -131,6 +131,15 @@ export const LAW_EFFECT_GLYPHS = {
   happiness: "happiness",
   settlementIncome: "cityIncome",
   onFoundColony: "found",
+  realmIncome: "income",
+  extraSlots: "build",
+  colonyPieces: "plus",
+  acquirePop: "popGain",
+  acquireResource: "gold",
+  onUpgradeCity: "upgrade",
+  dolePrice: "treasury",
+  slotExempt: "port",
+  votePurchaseLimit: "bribe",
 } as const satisfies Record<LawEffect["type"], GlyphId>;
 
 export const DIRECTIVE_EFFECT_GLYPHS = {

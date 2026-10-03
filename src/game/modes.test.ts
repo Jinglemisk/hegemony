@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { takeNationalIdea } from "./ideas";
 import { PLAYER_IDS } from "./data";
 import { createInitialState, placeCapital, placeCity, placeColony } from "./rules";
 import { DEFAULT_RULESET, GAME_MODES, deriveRuleset, setupCapitalCount } from "./ruleset";
@@ -30,6 +31,10 @@ function runSetup(G: HegemonyState) {
   let guard = 0;
   while (G.phase !== "gameplay" && guard++ < 500) {
     const player = G.currentPlayer;
+    if (G.phase === "setupIdeas") {
+      expect(takeNationalIdea(G, player, "assembly-brokers").ok).toBe(true);
+      continue;
+    }
     const kind = G.ruleset.setup[G.players[player].settlements.length];
     expect(placeAny(G, player, kind)).toBe(true);
     advanceSetupTurn(G);

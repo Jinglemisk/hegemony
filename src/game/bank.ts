@@ -1,3 +1,4 @@
+import { playerDole } from "./ideaRules";
 import { addLog, getPlayerName } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
@@ -158,7 +159,7 @@ export function bankBuy(
 /** The Dole: influence buys food through the bank, at a worse rate than gold. */
 export function getDoleStatus(G: HegemonyState, playerID: PlayerId): ActionStatus {
   const reasons: string[] = [];
-  const { influenceCost, food } = G.ruleset.dole;
+  const { influenceCost, food } = playerDole(G, playerID);
 
   if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
   if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
@@ -176,7 +177,7 @@ export function dole(G: HegemonyState, playerID: PlayerId): MoveResult {
     return invalid(...status.reasons);
   }
 
-  const { influenceCost, food } = G.ruleset.dole;
+  const { influenceCost, food } = playerDole(G, playerID);
   const resources = G.players[playerID].resources;
   resources.influence -= influenceCost;
   resources.food += food;

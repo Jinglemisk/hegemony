@@ -40,7 +40,7 @@ resolution boundaries instead of inventing one lossy universal effect type.
 | ------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | `EVENT_EFFECT_PARITY`           | `EventEffect["type"]`          | Engine application, frontend presentation, policy observation/value, telemetry, behavioral fixture                    |
 | `TABLE_EFFECT_PARITY`           | `TableEffect["type"]`          | Table resolution, frontend presentation, stochastic policy rule, telemetry, behavioral fixture                        |
-| `LAW_EFFECT_PARITY`             | `LawEffect["type"]`            | Standing-law engine path, frontend presentation, policy observation/value, Assembly telemetry, behavioral fixture     |
+| `LAW_EFFECT_PARITY`             | `LawEffect["type"]`            | Standing Law and personal Idea engine paths, frontend presentation, policy value, telemetry, behavioral fixture       |
 | `DIRECTIVE_EFFECT_PARITY`       | `DirectiveEffect["type"]`      | One-time Assembly resolution, frontend presentation, policy observation/value, Assembly telemetry, behavioral fixture |
 | `BUILDING_EFFECT_PARITY`        | `BuildingEffect["type"]`       | Effective-content engine query, frontend presentation, policy projection, building telemetry, behavioral fixture      |
 | `ACTIVE_EFFECT_MECHANIC_PARITY` | `ActiveEffectMechanic["type"]` | Persistent-state query, frontend presentation, policy projection, prevalence telemetry, lifecycle/behavior fixture    |
@@ -49,7 +49,9 @@ Phase 4–5 extend this family deliberately rather than creating feature-private
 
 - `LUXURY_EFFECT_PARITY` for claim, suppression, derived activity, happiness, and transfer;
 - `TRADE_WORKFLOW_PARITY` for propose, reject, counter, accept, cancel/expiry, and atomic settlement;
-- `NATIONAL_IDEA_EFFECT_PARITY` for every persistent or consumable typed Idea effect.
+- `LAW_EFFECT_PARITY` also covers the shared typed Idea effects in Step 9, with
+  focused rule, setup/purchase policy, public projection and telemetry fixtures.
+  Ideas have no consumable effect path.
 
 The v1 mechanics-freeze inventory verifies those registries plus the final Resolution
 effect catalog before multiplayer begins.
@@ -74,6 +76,7 @@ unions; they are the presentation API for Step 3 and PR #57.
 | Politicians            |                           4 |
 | Resolution cards       | 29 (22 Laws + 7 Directives) |
 | Victory cards          |                           6 |
+| National Ideas         |                          12 |
 
 The IDs are deliberately explicit. `src/parity/featureParity.test.ts` compares
 them with the live authored rosters, inventories the flat event effects, and

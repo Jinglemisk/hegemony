@@ -1,3 +1,5 @@
+import { getNationalIdeas, getTakeIdeaStatus, ideaPopTargets, takeNationalIdea } from "./ideas";
+import type { NationalIdeaId, IdeaPopChoice } from "./ideaTypes";
 import {
   buildBuilding,
   foundColony,
@@ -127,6 +129,8 @@ export type GameCommand =
   | { type: "bankBuy"; material: TradableMaterial }
   /** The Dole: influence for food. */
   | { type: "dole" }
+  | { type: "pickIdea"; ideaId: NationalIdeaId; target?: IdeaPopChoice }
+  | { type: "buyIdea"; ideaId: NationalIdeaId; target?: IdeaPopChoice }
   | { type: "civicCalm"; payment: CivicCalmPayment }
   | { type: "promotePop"; tileId: string; from: PopType }
   | { type: "demotePop"; tileId: string; from: PopType }
@@ -187,6 +191,8 @@ function enumerateDerivedCommands(G: HegemonyState, playerID: PlayerId): Derived
   }
 
   switch (G.phase) {
+    case "setupIdeas":
+      return enumerateIdeaCommands(G, playerID, "pickIdea");
     case "setupCapital":
       return enumerateCapitalPlacements(G, playerID);
     case "setupCity":
@@ -259,6 +265,14 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
           beginGameplayTurn(G);
         }
       }
+      return result;
+    }
+    case "pickIdea":
+    case "buyIdea": {
+      if ((move.type === "pickIdea") !== (G.phase === "setupIdeas"))
+        return invalid("Wrong Idea action.");
+      const result = takeNationalIdea(G, playerID, move.ideaId, move.target);
+      if (result.ok && move.type === "pickIdea" && G.phase === "gameplay") beginGameplayTurn(G);
       return result;
     }
     case "foundColony":
@@ -478,6 +492,9 @@ export function describeCommand(
       return `sell ${Object.values(cost)[0] ?? 1} ${move.material} to the bank for 1 gold`;
     case "bankBuy":
       return `buy 1 ${move.material} from the bank${formatCost(cost)}`;
+    case "pickIdea":
+    case "buyIdea":
+      return `${move.type === "pickIdea" ? "choose" : "buy"} ${content.nationalIdeas.find((i) => i.id === move.ideaId)?.name ?? move.ideaId}${formatCost(cost)}`;
     case "dole":
       return `take the Dole${formatCost(cost)}`;
     case "civicCalm":
@@ -785,6 +802,7 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
       moves.push({ type: "fundExpedition", expeditionId: table.id, cost: status.cost ?? {} });
   }
 
+  moves.push(...enumerateIdeaCommands(G, playerID, "buyIdea"));
   moves.push({ type: "endTurn" });
   return moves;
 }
@@ -850,3 +868,22 @@ export function popCompositions(total: number): Pops[] {
   return compositions;
 }
 import { produce } from "immer";
+
+function enumerateIdeaCommands(
+  G: HegemonyState,
+  playerID: PlayerId,
+  type: "pickIdea" | "buyIdea",
+): DerivedCommand[] {
+  if (!getTakeIdeaStatus(G, playerID).can) return [];
+  return getNationalIdeas(G).flatMap((idea) => {
+    const targets = idea.effects.some((e) => e.type === "acquirePop")
+      ? ideaPopTargets(G, playerID)
+      : [undefined];
+    return targets.flatMap((target) => {
+      const status = getTakeIdeaStatus(G, playerID, idea.id, target);
+      return status.can
+        ? [{ type, ideaId: idea.id, ...(target ? { target } : {}), cost: status.cost }]
+        : [];
+    });
+  });
+}

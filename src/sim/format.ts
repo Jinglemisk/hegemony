@@ -1,3 +1,4 @@
+import { playerNationalIdeas } from "../game/ideas";
 import { getActiveEffects } from "../game/activeEffects";
 import { getTile } from "../game/rules";
 import { totalPops } from "../game/core/pops";
@@ -69,6 +70,11 @@ export function renderProjection(G: HegemonyState, playerID: PlayerId): string {
   const lines = [
     `Economy projection — player ${playerID} (${G.players[playerID].name})`,
     `  income: ${formatResourceDelta(projection.income)}`,
+    `  Ideas: ${
+      playerNationalIdeas(G, playerID)
+        .map((i) => `${i.name} (${i.acquired})`)
+        .join(" · ") || "none"
+    }`,
   ];
 
   const bySource = new Map<string, string[]>();
@@ -121,6 +127,11 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
       .map(([resource, amount]) => `${resource} ${formatNumber(amount)}`)
       .join(" · ")}`,
     `  income: ${formatResourceDelta(projection.income)}`,
+    `  Ideas: ${
+      playerNationalIdeas(G, playerID)
+        .map((i) => `${i.name} (${i.acquired})`)
+        .join(" · ") || "none"
+    }`,
   ];
 
   if (activeEffects.length > 0) {
@@ -290,6 +301,12 @@ export function renderBatchReport(report: BatchReport): string {
   if (observedEffects) {
     lines.push("Active effects (share of player-turns): " + observedEffects);
   }
+
+  lines.push("National Ideas (setup / bought / holder win rate):");
+  for (const [id, stats] of Object.entries(report.nationalIdeas))
+    lines.push(
+      `  ${id}: ${stats.setupPicks} / ${stats.purchases} / ${(stats.winRate * 100).toFixed(1)}% (${stats.wins}/${stats.holders})`,
+    );
 
   const buildings = Object.entries(report.buildings)
     .sort(([, a], [, b]) => b.built - a.built)

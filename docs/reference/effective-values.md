@@ -112,3 +112,13 @@ to settlement selectors. Happiness remains derived, with one line per Law that
 changes it. Whole Law prices replace base costs through action-status queries.
 Capacity, slot and colony-placement cuts keep existing holdings. The low-number
 preset leaves these resolutions, participation prices and prizes as authored.
+
+## National Ideas
+
+The match pins the twelve Idea definitions. Per-seat public ownership adds typed
+sources to `getStandingEffectSources`, alongside table-wide Laws. Slot usage counts
+occupied slots: Harbour Planning Ports occupy zero while remaining real buildings
+for Law building-count limits. Piece supply, Dole prices, yearly realm income and
+vote-purchase limits are engine selectors. Acquisition and founding/upgrade grants
+use the same capacity and transit-room checks. See [the player guide](../../rules.md#national-ideas)
+for the roster and [the plan](../plans/national-ideas.md) for the defaults.

@@ -56,7 +56,12 @@ function createGameFromUrl(): HegemonyState {
   let G = createGameFromDefinition(definition, seed, boardLayout, false);
 
   if (!manualSetup && GAME_CONFIG.autoOpeningForDev) {
-    G = autoPlayOpening(G, params?.get("opening") === "random");
+    const dev = params?.get("dev") ?? "";
+    const chooseIdeas =
+      dev === "bots" ||
+      dev.startsWith("assembly") ||
+      (import.meta.env.DEV && loadStartAtAssembly());
+    G = autoPlayOpening(G, params?.get("opening") === "random", chooseIdeas);
   }
 
   // `?dev=assembly` fast-forwards to the first Assembly. The agora sits at the start
@@ -192,20 +197,25 @@ function nextRotationSeed(): number {
 
 /** Play the opening the sim way — the shared placement policy, or a uniform draw when
  *  asked — with a bot stream derived from the game seed exactly as `runGame` does, so
- *  the browser and the headless sim place identically for a seed. Lands in gameplay. */
-function autoPlayOpening(initial: HegemonyState, uniform: boolean): HegemonyState {
+ *  the browser and the headless sim place identically for a seed. Human seats stop at the Idea picker. */
+function autoPlayOpening(
+  initial: HegemonyState,
+  uniform: boolean,
+  chooseIdeas: boolean,
+): HegemonyState {
   let G = initial;
   const rng = createSimRng(deriveBotSeed(G.seed));
   let guard = 0;
 
-  while (G.phase !== "gameplay" && guard++ < 64) {
+  while (G.phase !== "gameplay" && (chooseIdeas || G.phase !== "setupIdeas") && guard++ < 64) {
     const commands = enumerateLegalCommands(G, G.currentPlayer);
 
     if (commands.length === 0) {
       return G; // leave whatever remains to manual play rather than crash
     }
 
-    const command = uniform ? rng.pick(commands) : choosePlacement(G, commands, rng);
+    const command =
+      uniform && G.phase !== "setupIdeas" ? rng.pick(commands) : choosePlacement(G, commands, rng);
     const result = transition(G.definition, G, G.currentPlayer, command);
     if (!result.ok) {
       return G;

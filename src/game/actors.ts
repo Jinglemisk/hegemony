@@ -61,6 +61,9 @@ export function eligibleActors(G: HegemonyState): PlayerId[] {
     case "assemblyClosing":
       return G.assembly ? [G.assembly.activePlayer] : [];
     case "setup":
+      return G.phase === "setupIdeas"
+        ? PLAYER_IDS.filter((id) => !G.setupIdeaPicks[id])
+        : [G.currentPlayer];
     case "turn":
       return [G.currentPlayer];
   }
@@ -107,6 +110,7 @@ function commandMatchesWorkflow(
       return type === "assemblyClose";
     case "setup":
       return (
+        (G.phase === "setupIdeas" && type === "pickIdea") ||
         (G.phase === "setupCapital" && type === "placeCapital") ||
         (G.phase === "setupCity" && type === "placeCity") ||
         (G.phase === "setupColony" && type === "placeColony")
@@ -117,6 +121,7 @@ function commandMatchesWorkflow(
         type !== "resolveEvent" &&
         type !== "buyRiotInsurance" &&
         type !== "resolveRiot" &&
+        type !== "pickIdea" &&
         type !== "placeCapital" &&
         type !== "placeCity" &&
         type !== "placeColony"
