@@ -218,10 +218,13 @@ export function AnnotatedText({
   text,
   className,
   links = true,
+  linkContext,
 }: {
   text: string;
   className?: string;
   links?: boolean;
+  /** Identifies repeated glossary controls when several cards share a term. */
+  linkContext?: string;
 }) {
   const contextCodexLink = useCodexLink();
   const codexLink = links ? contextCodexLink : null;
@@ -236,13 +239,13 @@ export function AnnotatedText({
     let name: RegExpExecArray | null;
 
     while ((name = PROPER_NAME_PATTERN.exec(text)) !== null) {
-      annotateInto(nodes, text.slice(cursor, name.index), cursor, codexLink);
+      annotateInto(nodes, text.slice(cursor, name.index), cursor, codexLink, linkContext);
       nodes.push(name[0]);
       cursor = name.index + name[0].length;
     }
   }
 
-  annotateInto(nodes, text.slice(cursor), cursor, codexLink);
+  annotateInto(nodes, text.slice(cursor), cursor, codexLink, linkContext);
 
   return <span className={className}>{nodes.map(signPlainText)}</span>;
 }
@@ -253,6 +256,7 @@ function annotateInto(
   text: string,
   offset: number,
   codexLink: CodexLink | null,
+  linkContext?: string,
 ) {
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -285,6 +289,7 @@ function annotateInto(
           className="richToken richTokenLink"
           key={key}
           role="button"
+          aria-label={linkContext ? `${label} rules for ${linkContext}` : undefined}
           tabIndex={0}
           onClick={(event) => {
             event.stopPropagation();

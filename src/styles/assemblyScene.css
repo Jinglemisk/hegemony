@@ -80,6 +80,18 @@
   --asm-clause: 1.03125rem;
 }
 
+/* The scene's glyphs use the shell's physical sizes at every viewport. */
+.asmScene .icon-inline {
+  width: 16px;
+  height: 16px;
+}
+
+.asmScene .icon-verb,
+.asmScene .icon-rail {
+  width: 24px;
+  height: 24px;
+}
+
 .asmStage {
   position: relative;
   display: flex;
@@ -155,6 +167,7 @@
   position: absolute;
   top: 0;
   right: 0;
+  min-height: 32px;
 }
 
 .asmVoice {
@@ -404,6 +417,7 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
+  min-height: 32px;
   padding: 10px 0;
   border: 0;
   border-radius: 4px;
@@ -426,13 +440,11 @@
 .asmDrawCost {
   color: inherit;
 }
-/* The pips are 9px tall and the row is focusable — it carries the orator's power
-   tooltip — so the TRIGGER takes 2.5.8's 24px and the pips sit centred in it. The
-   old 10px margin is folded into that height, so the stele grows 6px, not 15. */
+/* Power pips stay small; their focusable tooltip row takes the shell's 32px target. */
 .asmPipsTrigger {
   align-items: center;
   justify-content: center;
-  min-height: 24px;
+  min-height: 32px;
   margin-top: 1px;
 }
 
@@ -734,6 +746,14 @@
   scrollbar-width: none;
 }
 
+.asmFloorProposal .asmStanding {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  width: calc(600px * var(--ui-scale));
+}
+
 .asmStanding::-webkit-scrollbar {
   display: none;
 }
@@ -742,6 +762,11 @@
   margin: 0 0 10px;
   color: var(--ivory-45);
   letter-spacing: 0.26em;
+}
+
+.asmFloorProposal .asmStandingKey {
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
 }
 
 .asmStandingKey + .asmStandingKey,
@@ -753,6 +778,7 @@
 
 .asmSlabTrigger {
   display: block;
+  min-width: 0;
 }
 
 /* The slab is the same component the Agora renders — one law, three lives — so
@@ -761,6 +787,11 @@
   border-left-color: var(--ivory-45);
   background: rgb(255 248 231 / 8%);
   color: var(--ivory);
+}
+
+.asmFloorProposal .lawslab {
+  height: 100%;
+  margin-bottom: 0;
 }
 
 .asmStanding .lawslab .lawslabText {
@@ -778,6 +809,16 @@
 
 .asmStanding .richToken {
   color: var(--ivory);
+}
+
+/* Inline glossary targets take their own line height, so adjacent lines never
+   share a clickable area. The slabs gain width instead of shrinking their text. */
+.asmScene .richTokenLink {
+  display: inline-flex;
+  align-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  vertical-align: middle;
 }
 
 /* The stelae still bare. Dashed and empty, because "five stand empty" is a fact
@@ -1704,6 +1745,26 @@
 }
 
 @media (max-height: 820px) {
+  .asmStage {
+    gap: 8px;
+  }
+
+  .asmStele {
+    padding-block: 12px;
+  }
+
+  /* An empty bema leaves the width for the standing record. A single row of
+     stones keeps all four Law slots above the seats on a short screen. */
+  .asmFloor.is-empty .asmCardWrap {
+    width: 220px;
+  }
+
+  .asmFloor.is-empty .asmStanding {
+    flex: 1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: 1000px;
+  }
+
   .asmLawFace {
     padding-top: 12px;
   }

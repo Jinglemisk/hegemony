@@ -59,7 +59,7 @@ export function StandingLaw({
       {falling ? <SteleCrack /> : null}
       <b className="title">{card.name}</b>
       <span className="lawslabText caption">
-        <AnnotatedText text={card.text} />
+        <AnnotatedText linkContext={card.name} text={card.text} />
       </span>
 
       <span className="lawslabMeta label">

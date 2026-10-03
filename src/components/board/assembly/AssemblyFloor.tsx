@@ -82,7 +82,7 @@ function ProposalFloor({
   const sealed = session.proposals[viewerId];
 
   return (
-    <div className="asmFloor">
+    <div className={`asmFloor asmFloorProposal${!held && !sealed ? " is-empty" : ""}`}>
       <div className="asmCardWrap">
         {held ? (
           <LawCardFace
