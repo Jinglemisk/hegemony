@@ -27,7 +27,7 @@ precedes full multiplayer.
 
 | Plan                                                | Phase    | Status    | Position                                                                         |
 | --------------------------------------------------- | -------- | --------- | -------------------------------------------------------------------------------- |
-| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 8: Assembly and Laws; Steps 1 to 7 shipped (#79 to #86)                     |
+| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 9: National Ideas; Steps 1 to 8 shipped (#79 to #87)                        |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze |
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged            |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                        |

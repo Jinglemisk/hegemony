@@ -528,7 +528,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
       stake of 2 gold. Coupons, choice cards and per-pop scaling go.
       The token cards (Plague, Festival, Local Unrest, Public Calm, The Streets Burn)
       place and clear Unrest tokens as the paper draws them.
-- [ ] **Step 8 · Assembly and Laws.** It meets every other year and votes on player proposals
+- [x] **Step 8 · Assembly and Laws.** ([#87](https://github.com/Jinglemisk/hegemony/pull/87): a 40-game bot batch finishes with no turn caps; every seat passes about 1.8 Laws a game and Voice is held at 88% of game ends; riots fall to 1.0 a game, 1.8% of player-turns after year 7; the gate passes on the Assembly screen at 1280/1440/1920.) It meets every other year and votes on player proposals
       only. At most four Laws stand, the oldest is replaced, and a new Law has a minimum
       tenure. One vote per seat plus one per citizen, up to two bought votes, no veto. The
       paper's Appendix B Laws and Directives, under its three global limits.
