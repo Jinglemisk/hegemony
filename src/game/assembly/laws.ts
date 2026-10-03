@@ -1,3 +1,4 @@
+import { current, isDraft } from "immer";
 import type {
   BuildingId,
   HegemonyState,
@@ -11,6 +12,9 @@ import type { Ruleset } from "../ruleset";
 import { getResolutionCard } from "../content";
 import { getTile } from "../core/query";
 import type { LawCostedAction, LawEffect, LawRule, ResolutionCard } from "./types";
+import type { GameContent } from "../content";
+import type { ActiveLaw } from "./types";
+import type { NationalIdeaOwnership } from "../ideaTypes";
 
 export type RulesSource = Ruleset | HegemonyState;
 export type StandingEffectSource = {
@@ -19,24 +23,61 @@ export type StandingEffectSource = {
   label: string;
   effects: LawEffect[];
 };
-export function getStandingEffectSources(
-  G: HegemonyState,
-  playerID: PlayerId,
-): StandingEffectSource[] {
-  const laws: StandingEffectSource[] = G.activeLaws.flatMap((active) => {
-    const card = getResolutionCard(G.definition.content, active.cardId);
+type StandingQueries = { sources: StandingEffectSource[]; effects: LawEffect[] };
+const standingQueries = new WeakMap<
+  GameContent,
+  WeakMap<ActiveLaw[], WeakMap<NationalIdeaOwnership[], StandingQueries>>
+>();
+function snapshot<T>(value: T): T {
+  return isDraft(value) ? current(value) : value;
+}
+
+/** Only immutable inputs are memoized. Mutable fixtures and changed drafts are
+ * derived afresh; no cache is written into game state. */
+function standingQuery(G: HegemonyState, playerID: PlayerId): StandingQueries {
+  const content = snapshot(G.definition.content);
+  const activeLaws = snapshot(G.activeLaws);
+  const nationalIdeas = snapshot(G.players[playerID].nationalIdeas);
+  const cached = standingQueries.get(content)?.get(activeLaws)?.get(nationalIdeas);
+  if (cached) return cached;
+  const laws: StandingEffectSource[] = activeLaws.flatMap((active) => {
+    const card = getResolutionCard(content, active.cardId);
     return card?.kind === "law"
       ? [{ kind: "law" as const, id: card.id, label: card.name, effects: card.effects }]
       : [];
   });
-  const ideas: StandingEffectSource[] = G.players[playerID].nationalIdeas.flatMap((owned) => {
-    const idea = G.definition.content.nationalIdeas.find((i) => i.id === owned.id);
+  const ideas: StandingEffectSource[] = nationalIdeas.flatMap((owned) => {
+    const idea = content.nationalIdeas.find((i) => i.id === owned.id);
     return idea ? [{ kind: "idea", id: idea.id, label: idea.name, effects: idea.effects }] : [];
   });
-  return [...laws, ...ideas];
+  const sources = [...laws, ...ideas];
+  const result = { sources, effects: sources.flatMap((source) => source.effects) };
+  if (
+    Object.isFrozen(content) &&
+    Object.isFrozen(content.resolutions) &&
+    Object.isFrozen(content.nationalIdeas) &&
+    Object.isFrozen(activeLaws) &&
+    activeLaws.every(Object.isFrozen) &&
+    Object.isFrozen(nationalIdeas) &&
+    nationalIdeas.every(Object.isFrozen)
+  ) {
+    let byLaws = standingQueries.get(content);
+    if (!byLaws) standingQueries.set(content, (byLaws = new WeakMap()));
+    let byIdeas = byLaws.get(activeLaws);
+    if (!byIdeas) byLaws.set(activeLaws, (byIdeas = new WeakMap()));
+    byIdeas.set(nationalIdeas, result);
+  }
+  return result;
+}
+export function getStandingEffectSources(
+  G: HegemonyState,
+  playerID: PlayerId,
+): StandingEffectSource[] {
+  // Keep query results caller-owned, as before memoization.
+  return standingQuery(G, playerID).sources.map((source) => ({ ...source }));
 }
 export function getStandingEffects(G: HegemonyState, playerID: PlayerId): LawEffect[] {
-  return getStandingEffectSources(G, playerID).flatMap((source) => source.effects);
+  return standingQuery(G, playerID).effects.slice();
 }
 export function hasLawRule(source: RulesSource | undefined, rule: LawRule): boolean {
   return Boolean(

@@ -18,7 +18,7 @@ import { getOwnedSettlement, getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementIdleSlaves } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import { standingHappiness } from "../game/happiness";
-import { victoryStandings, victoryMetricValue, voiceHolder } from "../game/victory";
+import { VICTORY_CARDS, victoryStandings, victoryMetricValue, voiceHolder } from "../game/victory";
 import { GAME_COMMAND_TYPES, type GameCommandType } from "../parity/commandParity";
 import {
   BUILDING_CONTENT_IDS,
@@ -231,6 +231,7 @@ export type GameRow = {
   seatPolicies?: Record<PlayerId, string>;
   nationalIdeas: Record<PlayerId, NationalIdeaOwnership[]>;
   finalCards: Record<PlayerId, number>;
+  finalTitles: Record<PlayerId, string[]>;
   /** The titles held by the winner at a victory-race finish; empty for other endings. */
   winningTitles: string[];
   /** Permanent authored-and-passed Assembly progress when the game ended. */
@@ -303,8 +304,21 @@ export type BatchReport = {
   };
   /** Wins credited to the POLICY that held each seat, over finished games — the
    *  seat-independent measure a rotated mixed-policy batch produces. Empty for a
-   *  uniform batch (no seat policies recorded). */
+   *  callers that record no seat policies; the CLI records uniform seats too. */
   winsByPolicy: Record<string, { games: number; wins: number; winRate: number }>;
+  /** Finished seat-games are the denominator, including uniform runs. Capped
+   * seats are counted separately and excluded from wins/cards/title statistics. */
+  perPolicy: Record<
+    string,
+    {
+      finishedSeatGames: number;
+      cappedSeatGames: number;
+      wins: number;
+      winRate: number;
+      finalCards: Percentiles;
+      finalTitles: Record<string, number>;
+    }
+  >;
   /** Universal action telemetry. Every GameCommand type is present, including zeroes,
    *  so newly added or unexercised actions cannot disappear from a report. */
   movesByType: Record<GameCommandType, { count: number; perGame: number }>;
@@ -655,6 +669,14 @@ export class Aggregator {
         ]),
       ) as GameRow["nationalIdeas"],
       finalCards,
+      finalTitles: Object.fromEntries(
+        PLAYER_IDS.map((id) => [
+          id,
+          victoryStandings(G)
+            .filter((standing) => standing.holder === id)
+            .map((standing) => standing.card.id),
+        ]),
+      ) as Record<PlayerId, string[]>,
       winningTitles:
         termination === "victoryRace"
           ? victoryStandings(G)
@@ -847,6 +869,34 @@ export class Aggregator {
       entry.winRate = entry.games > 0 ? entry.wins / entry.games : 0;
     }
 
+    const perPolicy: BatchReport["perPolicy"] = {};
+    const policyCards: Record<string, number[]> = {};
+    for (const game of this.games) {
+      for (const seat of PLAYER_IDS) {
+        const name = game.seatPolicies?.[seat] ?? meta.policy;
+        const entry = (perPolicy[name] ??= {
+          finishedSeatGames: 0,
+          cappedSeatGames: 0,
+          wins: 0,
+          winRate: 0,
+          finalCards: percentiles([]),
+          finalTitles: Object.fromEntries(VICTORY_CARDS.map((card) => [card.id, 0])),
+        });
+        if (game.termination === "turnCap") {
+          entry.cappedSeatGames += 1;
+          continue;
+        }
+        entry.finishedSeatGames += 1;
+        if (game.winner === seat) entry.wins += 1;
+        (policyCards[name] ??= []).push(game.finalCards[seat]);
+        for (const title of game.finalTitles[seat]) entry.finalTitles[title] += 1;
+      }
+    }
+    for (const [name, entry] of Object.entries(perPolicy)) {
+      entry.winRate = entry.finishedSeatGames ? entry.wins / entry.finishedSeatGames : 0;
+      entry.finalCards = percentiles(policyCards[name] ?? []);
+    }
+
     const buildings = Object.fromEntries(
       BUILDING_CONTENT_IDS.map((buildingId) => {
         const built = this.buildings[buildingId] ?? 0;
@@ -1017,6 +1067,7 @@ export class Aggregator {
         this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalCards[playerID])),
       ),
       winsByPolicy,
+      perPolicy,
       terminations,
       forced: {
         actionCapHits: this.actionCapHits,

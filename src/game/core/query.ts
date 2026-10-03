@@ -1,8 +1,24 @@
+import { isDraft, original } from "immer";
 import { PLAYER_IDS } from "../data";
-import type { HegemonyState, PlayerId, Settlement, YearTerm } from "../types";
+import type { HegemonyState, HexTile, PlayerId, Settlement, YearTerm } from "../types";
+
+const tilePositions = new WeakMap<HexTile[], Map<string, number>>();
 
 export function getTile(G: HegemonyState, tileId: string) {
-  return G.board.tiles.find((tile) => tile.id === tileId);
+  const tiles = G.board.tiles;
+  const base = isDraft(tiles) ? original(tiles)! : tiles;
+  if (Object.isFrozen(base)) {
+    let positions = tilePositions.get(base);
+    if (!positions) {
+      positions = new Map(base.map((tile, index) => [tile.id, index]));
+      tilePositions.set(base, positions);
+    }
+    const position = positions.get(tileId);
+    // Tiles never move within a match. Still fall back if a draft has changed
+    // the array: read the current tile, never the immutable cached tile object.
+    if (position !== undefined && tiles[position]?.id === tileId) return tiles[position];
+  }
+  return tiles.find((tile) => tile.id === tileId);
 }
 
 export function getOwnedSettlement(G: HegemonyState, tileId: string, playerID: PlayerId) {

@@ -175,7 +175,7 @@ const tableArgs = [
   { implementation: "src/game/tables.ts", evidence: "applyTableEffect" },
   { implementation: "src/ui/effects.ts", evidence: "presentTableEffect" },
   { implementation: "src/game/types.ts", evidence: "lastTableRoll" },
-  { implementation: "src/sim/policies.ts", evidence: "resolveStochasticByRule" },
+  { implementation: "src/sim/policies.ts", evidence: "onePlyLookahead" },
   { implementation: "src/sim/telemetry.ts", evidence: "movesByType" },
 ] as const;
 const table = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
@@ -481,7 +481,7 @@ export const CONTENT_MANIFEST = {
       implementation: "src/components/board/modals/EventTableModal.tsx",
       evidence: "presentTableEffect",
     },
-    simulation: { implementation: "src/sim/policies.ts", evidence: "resolveStochasticByRule" },
+    simulation: { implementation: "src/sim/policies.ts", evidence: "onePlyLookahead" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "movesByType" },
     behaviorFixtures: ["tableResolution"],
   },
@@ -492,7 +492,7 @@ export const CONTENT_MANIFEST = {
       implementation: "src/components/board/modals/RiotModal.tsx",
       evidence: "insurance",
     },
-    simulation: { implementation: "src/sim/policies.ts", evidence: "resolveStochasticByRule" },
+    simulation: { implementation: "src/sim/policies.ts", evidence: "resolveRiotByRule" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "buyRiotInsurance" },
     behaviorFixtures: ["tableResolution"],
   },

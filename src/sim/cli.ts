@@ -303,6 +303,8 @@ function cmdNew(flags: Flags, file: string) {
     opening,
     boardLayout,
     simRng,
+    policy: typeof flags.policy === "string" ? resolvePolicy(flags.policy) : undefined,
+    seatPolicies: parseSeats(flags)?.policies,
     onMove: (_G, player, command) => history.push({ player, command }),
   });
 
@@ -638,14 +640,21 @@ function cmdAuto(flags: Flags, file: string) {
   const rng = createSimRng(botSeed);
   const quiet = Boolean(flags.quiet);
 
-  save.state = runTurns(save.state, policy, rng, turns, {
-    onMove: (_G, player, command) => {
-      save.history.push({ player, command });
-      if (!quiet) {
-        console.log(`player ${player}: ${describeCommand(command, _G.definition.content)}`);
-      }
+  save.state = runTurns(
+    save.state,
+    policy,
+    rng,
+    turns,
+    {
+      onMove: (_G, player, command) => {
+        save.history.push({ player, command });
+        if (!quiet) {
+          console.log(`player ${player}: ${describeCommand(command, _G.definition.content)}`);
+        }
+      },
     },
-  });
+    { seatPolicies: parseSeats(flags)?.policies },
+  );
 
   save.botRngState = rng.state();
   saveGame(file, save);
@@ -758,7 +767,17 @@ function cmdBatch(flags: Flags) {
           turns,
           trimLogTo: 200,
           hooks: {
-            onGameStart: (state) => aggregator.beginGame(currentGame, seed, state, seatNames),
+            onGameStart: (state) =>
+              aggregator.beginGame(
+                currentGame,
+                seed,
+                state,
+                seatNames ??
+                  (Object.fromEntries(PLAYER_IDS.map((id) => [id, policy.name])) as Record<
+                    PlayerId,
+                    string
+                  >),
+              ),
             onMove: (state, player, move) => aggregator.onMove(state, player, move),
             onTurnEnd: (state) => aggregator.onTurnEnd(state),
             onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
@@ -819,6 +838,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
 
   new        --seed N [--mode standard|fastStart|deathmatch] [--ruleset-patch p.json]
              [--manual-setup | --opening policy|random|fixed] [--bot-seed N] [--board classic|shuffled]
+             [--policy ${POLICY_IDS}] [--seats ${POLICY_IDS}×4]
   show       [--json] [--player 0..3]
   log        [--tail N]
   legal      [--json]                      list this player's legal moves, indexed
@@ -838,7 +858,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              resolve [targetTile]
              index <N>                     apply the Nth move from \`legal\`
   end-turn
-  auto       [--turns N] [--policy ${POLICY_IDS}] [--record s.json] [--quiet]
+  auto       [--turns N] [--policy ${POLICY_IDS}] [--seats ${POLICY_IDS}×4] [--record s.json] [--quiet]
   batch      --games N [--turns N] [--policy ${POLICY_IDS}] [--seed N] [--board classic|shuffled]
              [--opening policy|random]
              [--ruleset-patch p.json] [--tune-preset low-number-core-v1] [--tune-patch p.json]

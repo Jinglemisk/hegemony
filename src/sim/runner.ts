@@ -55,6 +55,8 @@ export type SimHooks = {
 export type PlayTurnOptions = {
   /** Safety cap before the turn is force-ended (tests shrink this). */
   maxActions?: number;
+  /** Select the acting seat on every action, including inside an Assembly. */
+  seatPolicies?: Partial<Record<PlayerId, Policy>>;
 };
 
 /** Simulator seam for the canonical command transition; exported for parity proof. */
@@ -91,7 +93,8 @@ export function playTurn(
       throw new SimDeadlockError(deadlockMessage(G, player));
     }
 
-    const command = policy.choose(projectForPlayer(G.definition, G, player), commands, rng);
+    const active = options.seatPolicies?.[player] ?? policy;
+    const command = active.choose(projectForPlayer(G.definition, G, player), commands, rng);
     const result = applySimCommand(G, player, command);
 
     if (!result.ok) {
@@ -157,9 +160,6 @@ function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
 export type RunTurnsOptions = PlayTurnOptions & {
   /** Keep only the last N log entries after each turn (batch mode); omit to keep everything. */
   trimLogTo?: number;
-  /** Per-seat policy override for mixed-policy tables; the uniform `policy` arg is the
-   *  fallback for any seat not named here. */
-  seatPolicies?: Partial<Record<PlayerId, Policy>>;
 };
 
 export function runTurns(
@@ -174,9 +174,7 @@ export function runTurns(
   const stopAt = current.turn + turns;
 
   while (current.turn < stopAt && current.phase !== "gameOver") {
-    // A single playTurn is one seat's turn, so pick that seat's policy (mixed tables).
-    const active = options.seatPolicies?.[current.currentPlayer] ?? policy;
-    current = playTurn(current, active, rng, hooks, options);
+    current = playTurn(current, policy, rng, hooks, options);
 
     if (options.trimLogTo !== undefined && current.log.length > options.trimLogTo) {
       current = produce(current, (draft) => {
@@ -229,6 +227,8 @@ export function runGame({
     opening,
     boardLayout,
     simRng: rng,
+    policy,
+    seatPolicies,
     onMove: hooks.onMove,
   });
 

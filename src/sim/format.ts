@@ -260,6 +260,18 @@ export function renderBatchReport(report: BatchReport): string {
     );
   }
 
+  for (const [name, stats] of Object.entries(report.perPolicy)) {
+    lines.push(
+      `${name}: ${stats.wins}/${stats.finishedSeatGames} seat wins (${(100 * stats.winRate).toFixed(1)}%); ` +
+        `final cards mean ${formatNumber(stats.finalCards.mean)}; capped seats ${stats.cappedSeatGames}`,
+    );
+    lines.push(
+      `  Final titles: ${Object.entries(stats.finalTitles)
+        .map(([title, count]) => `${title} ${count}`)
+        .join(" · ")}`,
+    );
+  }
+
   const lastYear = report.perYear[report.perYear.length - 1];
   if (lastYear) {
     lines.push(

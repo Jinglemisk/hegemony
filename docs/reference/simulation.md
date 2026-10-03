@@ -43,6 +43,7 @@ npm run sim -- batch --games 50 --turns 56 --policy greedy   # balance report
 npm run sim -- new --seed 42 [--mode standard|fastStart|deathmatch]
                   [--ruleset-patch patch.json]
                   [--manual-setup | --opening policy|random|fixed]
+                  [--policy master|slaver|civic|trader] [--seats p0,p1,p2,p3]
                   [--bot-seed N] [--file path]
 ```
 
@@ -111,8 +112,8 @@ must be resolved (`move resolve`) before anything else.
 ### `auto` — bot play
 
 ```bash
-npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam|political|settler|master]
-                    [--bot-seed N] [--record script.json] [--quiet]
+npm run sim -- auto [--turns 40] [--policy random|greedy|smart|beam|political|settler|master|slaver|civic|trader]
+                    [--seats p0,p1,p2,p3] [--bot-seed N] [--record script.json] [--quiet]
 ```
 
 Plays N player-turns (4 players → 4 turns per year) from the current save.
@@ -126,18 +127,17 @@ Works from any phase — bots will finish a manual setup too. Policies:
 - `smart` — same one-ply search, but the score weights pops BY TIER (a citizen is
   worth far more than a slave), materials by role, and each open work slot as the slave
   who could work it. So it climbs the social ladder, raises the class buildings, and
-  keeps plains slots for the slaves that feed it. The Dole and the bank are played by
-  rule: it takes the Dole only while the next income would leave a mouth unfed.
+  keeps plains slots for the slaves that feed it. Bank and Dole moves enter search;
+  a food-reserve term makes individual purchases useful before they cover a deficit.
   Deterministic.
 - `beam` — a within-turn **beam search** over the same `smart` score, so it values the
   within-turn sequences one-ply misses (build-then-promote and bank chains). It does
   not search through `endTurn`, so the six-turn income projection is state evaluation,
   not income-to-future-action planning.
-  Branches only on RNG-free moves — it never reads the seeded die/deck, so it stays
-  deterministic (record→replay is byte-identical, proving zero game RNG consumed) and
-  plays the stochastic families (riot/venture/bank) by the same hard-coded rules as
-  one-ply. Stronger but slower — a `smart`-vs-`beam` A/B isolates search depth from
-  evaluation. See docs/reference/ai.md and docs/reports/simulation/ for the head-to-head.
+  Searches bank moves and evaluates ventures as chance leaves using every public
+  outcome, independently of the live die/deck stream. Forced riots keep the shared
+  insurance handler. Record→replay remains deterministic. A `smart`-vs-`beam` A/B
+  isolates search depth from evaluation. See docs/reference/ai.md and docs/reports/simulation/ for the head-to-head.
 - `political` — `smart` economy plus standing-authorship valuation outside the
   Assembly. All non-random policies share its Assembly handler: draw and propose
   useful cards, support coalitions, block a winning rival, and buy affordable
@@ -152,10 +152,12 @@ Works from any phase — bots will finish a manual setup too. Policies:
   planning, `political`'s Assembly strategy and rival-aware resolution scoring, plus the
   measured one-step expansion-frontier signal from `settler`. This is the strongest single
   policy for whole-game runs. It combines all EXISTING specialist knowledge; cross-turn
-  saving, general opponent replies, multi-hop route planning, and chance expected value
-  remain future work. See docs/reports/audits/2026-07-23-ai-bot-parity.md.
+  saving, general opponent replies and multi-hop route planning remain future work.
+- `slaver`, `civic`, `trader` — the master search and shared political scorer with
+  different weights. Those weights apply to placement, Idea picks and purchases,
+  economic moves and Assembly choices. See the [weight table](ai.md).
 
-The economic policies project six future upkeeps one step at a time through the
+The economic policies project up to six remaining incomes one step at a time through the
 canonical active-effect descriptors. Each step burns suppressed
 collections, runs hunger, and recalculates authoritative income after projected pop
 loss. Hunger draws no dice (freemen leave before citizens, from the fullest
@@ -172,7 +174,7 @@ which cards come up.
 ### `batch` — balance simulation
 
 ```bash
-npm run sim -- batch --games 50 [--turns 56] [--policy random|greedy|smart|beam|political|settler|master]
+npm run sim -- batch --games 50 [--turns 56] [--policy random|greedy|smart|beam|political|settler|master|slaver|civic|trader]
                      [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
                      [--tune-preset low-number-core-v1] [--tune-patch p.json]
                      [--seats p0,p1,p2,p3] [--rotate] [--seed 1000]
@@ -188,32 +190,64 @@ excludes a terminal victory check with no income. For a full-game gate:
 npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000
 ```
 
-For the Step 9 handoff, run these jobs separately:
+For the Step 10 handoff, run these jobs separately:
 
 ```bash
-step9_out=$(mktemp -d)
-npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000 --report "$step9_out/batch.json" --csv "$step9_out/batch.csv"
+step10_out=$(mktemp -d)
+# Ten seeds × four cyclic seat rotations = forty actual games.
+npm run sim -- batch --games 10 --turns 56 --seats slaver,civic,trader,master --rotate --seed 1000 --report "$step10_out/batch.json" --csv "$step10_out/batch.csv"
 npm run dev -- --port 5199
 npm run ui:audit
 npm run ui:conduct
-node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?dev=preload&seed=42' --click '.fateCard .ceremonyCommit' --out "$step9_out/gates"
-node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?dev=assembly4&seed=42' --out "$step9_out/gates-asm"
-node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?seed=42' --out "$step9_out/gates-idea"
+node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?dev=preload&seed=42' --click '.fateCard .ceremonyCommit' --out "$step10_out/gates"
+node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?dev=assembly4&seed=42' --out "$step10_out/gates-asm"
 ```
 
-Look for forty finishes by the title race or Year-14 deck end, no action caps or illegal commands, four setup
-picks per game, at most one purchase per seat, and the per-Idea setup, purchase,
-and holder win-rate table. Inspect purchases against the holder's food balance,
-work slots, expansion room and Assembly plans; no fixed favourite is required.
-The setup scorer now charges future slaves their standing-level loss; check that
-Slave Colonies no longer wins every setup through its old gross-only bonus.
-Do not require every Idea to be used: Step 10 adds preferences and Step 11 measures balance.
-Normal browser openings stop at the setup picker. Audit that picker, the Civic
-Ideas purchase picker, realm names and rival rules at 1280, 1440 and 1920, including
-New Settlers' target select. For the purchase audit, open Civic → Ideas after a
-seat has earned 6 influence. Conduct must not exceed the
-brief's 25-row baseline. Scripted preload keeps neutral Assembly Brokers picks;
-Assembly and bot shortcuts choose through the scorer.
+Look for forty finishes by the title race or Year-14 deck end, no action caps or
+illegal commands, four setup picks per game, and at most one Idea purchase per seat.
+In `perPolicy`, compare wins, all six final titles and final-card distributions.
+Check that slaves/Estates, citizens/Forums/Laws and freemen/Marketplaces/Ports
+appear in their builds, that bank moves fund useful actions, and that hunger falls
+when a seat can pay for food. Venture counts need not be even: bots now choose
+expected value, rather than cycling tables. Calm may remain unused: it expires
+before the next upkeep under Step 6 and cannot take Beloved. Capital Works is
+weakly dominated by Urban Planning; other unused Ideas need context, not quotas.
+Step 11 owns the 20–45% win-rate decision and any balance changes.
+
+Time the forty-game rotation before starting Step 11's larger conditions. The
+runtime target is under twenty minutes on one core. The performance follow-up
+keeps width 3, depth 4 and all public venture outcomes; cached queries and scores
+must preserve choices, full-game finishes and the absence of action caps.
+
+The 2026-10-03 performance follow-up ran those forty rotations serially through
+the runner and CLI telemetry hooks in a scratch Vitest harness: 17 minutes
+6 seconds, no caps, and the same 13/14/5/8 wins for slaver/civic/trader/master.
+The mixed seed-1000 game also matched all 425 commands and resulting states
+against the original engine and AI. The lead still times the CLI itself.
+
+For Step 11's minimum sixty rotated games per condition, use `--games 15 --rotate`
+with the same four named seats and baseline seeds. `--games` counts base seeds;
+rotation multiplies the actual games by four and records that total in `meta.games`.
+Rotation is cyclic, not all 24 permutations. Repeating a personality in two seats
+counts two finished seat-games per game; `perPolicy.winRate` uses that denominator.
+A neutral `master` fourth seat gives each personality equal exposure.
+
+Uniform and mixed examples:
+
+```bash
+example_out=$(mktemp -d)
+npm run sim -- new --seed 42 --policy slaver --file "$example_out/slaver.json"
+npm run sim -- auto --turns 56 --policy slaver --file "$example_out/slaver.json"
+npm run sim -- new --seed 42 --seats slaver,civic,trader,master --file "$example_out/mixed.json"
+npm run sim -- auto --turns 56 --seats slaver,civic,trader,master --file "$example_out/mixed.json"
+```
+
+Seat choices are command-line options, not new save fields: repeat them on `auto`.
+Random openings stay uniform; policy openings use each seat's personality, and
+fixed openings keep their scripted placements but score Ideas by seat.
+`?dev=bots&seed=42` still runs `master` in every browser seat; the lead should let
+one game finish. Audit and shell gates must retain the 25-row conduct ceiling and
+pass at 1280, 1440 and 1920. No shell components change in Step 10.
 
 A riot's deferred income updates its existing snapshot, including on Year 14's
 last turn. Player draws are counted after that income, and a year-card reveal is
@@ -232,7 +266,7 @@ game/turn/player — pivot-table ready).
   scalars in one run. It applies after the preset; the manual patch and its separate
   hash land in `meta`.
 - `--seats p0,p1,p2,p3` — a policy per seat for mixed-policy tables. `--rotate` runs
-  each seed through every seat permutation, cancelling first-player advantage.
+  each seed through four cyclic seat rotations, cancelling first-player advantage.
 
 The report contains:
 
@@ -258,7 +292,8 @@ The report contains:
   The CSV carries `slaves`, `idleSlaves` and the running `popsLostToHunger` per row
 - `terminations` — how games ended (the winRate denominator context)
 - `forced` — action-cap hits / forced resolutions / forced end-turns (previously hidden)
-- `winsByPolicy` — wins credited to each policy over finished games (mixed/rotated runs)
+- `winsByPolicy` — wins credited to each policy over finished games, including
+  uniform CLI batches
 - `movesByType` — zero-filled total and per-game counts for every typed legal move;
   this universal table makes missing or unexercised action paths visible
 - `activeEffects` — zero-filled observations, per-player-turn counts, and player-turn
@@ -270,6 +305,11 @@ The report contains:
 - `buildings` — build counts and per-game rates
 - `events` — draw counts by the twelve player-card kinds and eight year-card kinds;
   retired card IDs and choice-pick telemetry are gone
+- `perPolicy` — finished/capped seat-game counts, wins and win rate, final victory
+  card percentiles and zero-filled final title counts per policy/personality.
+  Includes uniform batches. Capped seats contribute only to the cap count.
+  `perGame.finalTitles` names the engine-derived title IDs held by every seat at
+  the end; this includes deck finishes and caps for inspection.
 - `finalCardsDistribution`
 - `assembly` — agora engagement: assemblies held/game, Laws enacted / removed / standing,
   Directives and their target distribution, authored passes, prize resources, Voice claims
@@ -325,7 +365,7 @@ Replays are byte-identical to the original run.
 The save is a _recipe_: replaying `history` from its pinned definition and seed
 reproduces `state` byte-for-byte. Saves double as shareable bug reports and
 balance scenarios. Loading re-hashes the definition and rejects tampering, unsupported
-schema versions, or a recipe/state mismatch. Step 9 uses state schema 9 and command
+schema versions, or a recipe/state mismatch. Step 10 keeps state schema 9 and command
 schema 5 and rejects older recipes. The save container format remains v2.
 
 **Phase 3.6 architecture:** definition pinning, the canonical atomic transition, workflow

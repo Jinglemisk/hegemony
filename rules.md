@@ -5,7 +5,7 @@ city-state into the dominant power of an island. You gather resources, grow your
 people, found colonies, upgrade them into cities, and raise buildings to
 out-produce your rivals.
 
-> This guide covers v2 through Step 9.
+> This guide covers v2 through Step 10.
 
 ---
 
@@ -437,3 +437,11 @@ The **year deck is the game's clock**. After the fourteenth year's last turn,
 **most victory cards held** wins. Ties break on happiness without calm, then total
 pops, then seat order. The final year card still counts. Track the race in the
 **Victory** consult; the top bar shows the year and cards remaining.
+
+## Development bots
+
+`?dev=bots` runs the shared master policy in all browser seats. Headless sims can
+seat `slaver`, `civic` and `trader` by name: they favour slaves and Estates,
+citizens and the Assembly, or freemen and coastal trade. They use the same legal
+commands, buy fitting Ideas, and search bank trades and ventures. See the
+[simulation reference](docs/reference/simulation.md) for mixed and rotated batches.
