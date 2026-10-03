@@ -5,12 +5,13 @@ import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
 import type { BoardLayout, HegemonyState, Phase, PlayerId } from "../game/types";
 import { createGameFromDefinition } from "../game/turn";
-import { GAME_MODES } from "../game/ruleset";
-import { loadStartAtAssembly, resolveTunedDefinition } from "../dev/tuning";
+import { GAME_MODES, type GameModeId } from "../game/ruleset";
+import { loadStartAtAssembly, loadTuningPresetId, resolveTunedDefinition } from "../dev/tuning";
 import { createBrowserSeed } from "./seed";
 import { choosePlacement, resolvePolicy } from "../sim/policies";
 import { playTurn } from "../sim/runner";
 import { createSimRng, deriveBotSeed } from "../sim/rng";
+import { buildNewGame } from "../sim/setup";
 import { createCommandEvents, createCommandMoves, reduceGameCommand } from "./commandAdapter";
 
 export type { GameEvents, GameMoves } from "./commandAdapter";
@@ -19,8 +20,10 @@ export type { Phase } from "../game/types";
 
 /**
  * URL-driven game options, so a browser session can pick the board and seed without a
- * lobby: `?board=shuffled&seed=42` for a randomized layout, `?setup=manual` to place
- * the opening towns by hand, `?dev=preload` to replay the fixed scripted opening,
+ * lobby: `?board=shuffled&seed=42` for a quick game on a randomized layout,
+ * `?mode=fastStart` for the richer treasury, `?setup=manual` to place the opening
+ * towns by hand, `?setup=ideas` to auto-place but keep the Idea picker,
+ * `?dev=preload` to replay the fixed scripted placements,
  * `?opening=random` for the old uniform draw instead of policy placement, and
  * `?dev=bots` to let the sim's bots play every seat (`&policy=` picks which, `master`
  * by default) — a whole game played through the shell, one turn per tick.
@@ -28,7 +31,7 @@ export type { Phase } from "../game/types";
  * Default dev behavior: the opening is auto-played by the sim's placement policy (the
  * same brain the bots use, seeded from the game seed), and the seed rotates through
  * {@link DEV_ROTATION_SEEDS} on every reload — testing never starts at "place your
- * capital" unless asked to.
+ * capital" unless asked to. Quick starts also score every seat's setup Idea.
  */
 function createGameFromUrl(): HegemonyState {
   const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
@@ -40,28 +43,49 @@ function createGameFromUrl(): HegemonyState {
     Number.isFinite(seedParam) && params?.get("seed") ? seedParam >>> 0 : undefined;
   const matchSeed = pinnedSeed ?? createBrowserSeed();
   const manualSetup = params?.get("setup") === "manual";
+  const keepIdeaPicker = params?.get("setup") === "ideas";
+  const modeParam = params?.get("mode");
+  const mode: GameModeId =
+    modeParam === "standard" || modeParam === "fastStart" || modeParam === "deathmatch"
+      ? modeParam
+      : GAME_CONFIG.mode;
+  const dev = params?.get("dev") ?? "";
   const preload = params?.get("dev") === "preload" || GAME_CONFIG.preloadOpeningSetupForTesting;
+  const startAtAssembly = import.meta.env.DEV && loadStartAtAssembly();
+  const devAutoOpening = import.meta.env.DEV && GAME_CONFIG.autoOpeningForDev;
+  const autoOpening =
+    !manualSetup &&
+    (keepIdeaPicker ||
+      pinnedSeed !== undefined ||
+      mode === "fastStart" ||
+      preload ||
+      dev === "bots" ||
+      /^assembly([2-7])?$/.test(dev) ||
+      startAtAssembly ||
+      (import.meta.env.DEV && loadTuningPresetId() !== null) ||
+      devAutoOpening);
 
   // Resolve one immutable definition before state creation. Existing matches keep their
   // pinned package even if the tuning controls are changed for the next reset.
-  const definition = resolveTunedDefinition(GAME_MODES[GAME_CONFIG.mode].ruleset);
+  const definition = resolveTunedDefinition(GAME_MODES[mode].ruleset);
 
-  if (preload) {
-    // The scripted opening only fits the classic board's tiles.
-    return createGameFromDefinition(definition, matchSeed, "classic", true);
+  if (preload && autoOpening && !keepIdeaPicker) {
+    // Fix placement only; Ideas use the same scorer as other quick starts.
+    return buildNewGame({
+      definition,
+      seed: matchSeed,
+      mode,
+      boardLayout: "classic",
+      opening: "fixed",
+      simRng: createSimRng(deriveBotSeed(matchSeed)),
+    });
   }
 
-  const seed =
-    pinnedSeed ?? (GAME_CONFIG.autoOpeningForDev && !manualSetup ? nextRotationSeed() : matchSeed);
+  const seed = pinnedSeed ?? (autoOpening && devAutoOpening ? nextRotationSeed() : matchSeed);
   let G = createGameFromDefinition(definition, seed, boardLayout, false);
 
-  if (!manualSetup && GAME_CONFIG.autoOpeningForDev) {
-    const dev = params?.get("dev") ?? "";
-    const chooseIdeas =
-      dev === "bots" ||
-      dev.startsWith("assembly") ||
-      (import.meta.env.DEV && loadStartAtAssembly());
-    G = autoPlayOpening(G, params?.get("opening") === "random", chooseIdeas);
+  if (autoOpening) {
+    G = autoPlayOpening(G, params?.get("opening") === "random", !keepIdeaPicker);
   }
 
   // `?dev=assembly` fast-forwards to the first Assembly. The agora sits at the start
@@ -69,12 +93,13 @@ function createGameFromUrl(): HegemonyState {
   // have to click through a whole year to reach the feature under test. The TUNE panel's
   // "Start at Assembly" toggle sets the same fast-forward as a sticky dev flag, so a plain
   // map regen (reload or Apply) lands there too — no URL param, no sixteen End Turn clicks.
-  if (params?.get("dev") === "assembly" || (import.meta.env.DEV && loadStartAtAssembly())) {
+  if (!manualSetup && !keepIdeaPicker && (dev === "assembly" || startAtAssembly)) {
     G = fastForwardToAssembly(G);
   }
 
   // Later sittings expose standing Laws; Year 8 includes eligible Year 4 repeals.
-  const laterSitting = Number(params?.get("dev")?.match(/^assembly([2-7])$/)?.[1] ?? 0);
+  const laterSitting =
+    !manualSetup && !keepIdeaPicker ? Number(dev.match(/^assembly([2-7])$/)?.[1] ?? 0) : 0;
   if (laterSitting) {
     G = fastForwardToAssembly(G);
     for (let sitting = 1; sitting < laterSitting; sitting++) {
@@ -197,7 +222,8 @@ function nextRotationSeed(): number {
 
 /** Play the opening the sim way — the shared placement policy, or a uniform draw when
  *  asked — with a bot stream derived from the game seed exactly as `runGame` does, so
- *  the browser and the headless sim place identically for a seed. Human seats stop at the Idea picker. */
+ *  the browser and the headless sim place identically for a seed. Only an explicit
+ *  picker preview stops before Ideas; quick starts score every seat, including the human. */
 function autoPlayOpening(
   initial: HegemonyState,
   uniform: boolean,

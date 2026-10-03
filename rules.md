@@ -58,6 +58,14 @@ Year 1 and take effect immediately. During your turn, **Civic → Ideas** buys a
 Idea for **6 influence**. You cannot take the same Idea twice or replace one. Other
 seats may choose the same Ideas. Your realm page and rivals' tooltips show them.
 
+Fast starts choose the setup Idea automatically for every seat, including the human,
+using the bots' scorer, deterministically for the game seed. This applies to URL quick
+games (`?seed=N`), Fast Start mode (`?mode=fastStart`), dev rotation starts, scripted
+preload, bot and Assembly shortcuts, and active dev tuning presets. They open on the
+map, or at the requested Assembly, without the picker. Normal new games keep the
+picker after placement. `?setup=manual` keeps manual placement and Idea choice even
+with a seed or preset; `?setup=ideas` auto-places and opens the picker for review.
+
 | Idea             | Rule                                                                                                 |
 | ---------------- | ---------------------------------------------------------------------------------------------------- |
 | Good Harvest     | Your realm gains 2 food at each year's income.                                                       |

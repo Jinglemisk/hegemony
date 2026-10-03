@@ -100,6 +100,8 @@
   --fillet: var(--s-4); /* the concave join of the ticker tab and the bar */
   --board-gap: 8px; /* = --s-2; clearance between the island and the chrome, read by the fit */
   --sheet-w: calc(var(--u) * 100); /* 400: the consult sheet */
+  --ideas-w: calc(var(--u) * 256); /* 1024: two columns of printed rules */
+  --idea-row-h: calc(var(--u) * 20); /* 80: name and two rule lines */
 
   /* The realm sheet: a fixed box whose top-right corner is one large
      quarter-circle. Its edge is one path from the screen's left edge to the
@@ -2033,104 +2035,156 @@ button.link {
   fill: transparent;
 }
 
-/* Ideas keep the shell's flat rows and printed rule sentences. */
+/* Setup owns the viewport, like the map frame. The in-play picker keeps a scrim;
+   setup is one paper page, with no sea well or dialog plate behind its rows. */
 .modalBackdrop.ideas-backdrop {
   z-index: var(--z-takeover);
-  align-items: flex-start;
-  padding: 24px 32px;
+  align-items: center;
+  padding: var(--s-6);
+}
+.modalBackdrop.ideas-setup {
+  background: var(--bone);
 }
 .ideas-modal.logModal {
-  width: min(1024px, calc(100vw - 64px));
-  max-width: 1024px;
-  padding: 24px;
-  max-height: calc(100vh - 48px);
+  width: 100%;
+  max-width: var(--ideas-w);
+  min-height: 0;
+  padding: var(--s-6);
+  max-height: 100%;
   overflow-y: auto;
   border: 0;
   border-radius: 0;
   background: var(--ivory);
-  box-shadow: inset 0 0 0 1px var(--line);
+  box-shadow: none;
   backdrop-filter: none;
+}
+.ideas-setup .ideas-modal {
+  padding: 0;
+  background: none;
 }
 .ideas-heading {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
 }
 .ideas-heading h2 {
   margin: 0;
   font-family: var(--f-name);
-  font-size: 24px;
-  line-height: 32px;
+  font-size: var(--t-24);
+  line-height: var(--lh-32);
 }
 .ideas-heading p {
   margin: 0;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: var(--t-16);
+  line-height: var(--lh-24);
 }
 .ideas-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: 80px;
-  column-gap: 24px;
+  grid-auto-rows: minmax(var(--idea-row-h), auto);
+  column-gap: var(--s-6);
 }
 .idea-choice {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 4px 12px;
-  min-height: 80px;
+  gap: var(--s-1);
+  padding: var(--s-1) var(--s-3);
+  min-height: var(--idea-row-h);
   border: 0;
   border-radius: 0;
   background: transparent;
-  box-shadow: inset 0 -1px var(--line);
+  box-shadow: inset 0 calc(-1 * var(--rule)) var(--line);
   text-align: left;
   white-space: normal;
 }
 .idea-choice strong {
-  font-size: 18px;
-  line-height: 24px;
+  font-size: var(--t-20);
+  line-height: var(--lh-24);
 }
 .idea-choice span {
-  font-size: 16px;
-  line-height: 20px;
+  font-size: var(--t-16);
+  line-height: var(--lh-20);
+}
+.idea-choice-name {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.idea-choice .idea-selected {
+  flex: none;
+  color: var(--clay-ink);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
 }
 .idea-choice[aria-pressed="true"] {
   background: var(--bone);
   box-shadow:
-    inset 4px 0 var(--clay),
-    inset 0 -1px var(--line);
+    inset var(--s-1) 0 var(--clay),
+    inset 0 calc(-1 * var(--rule)) var(--line);
+}
+.ideas-setup .idea-choice[aria-pressed="true"] {
+  background: var(--ivory);
+}
+.idea-choice:hover:not(:disabled) {
+  color: var(--clay-ink);
+}
+.idea-choice:disabled {
+  opacity: var(--dim);
 }
 .idea-choice:focus-visible {
-  outline: 2px solid var(--clay);
-  outline-offset: -2px;
+  outline: var(--rule-2) solid var(--clay);
+  outline-offset: calc(-1 * var(--rule-2));
 }
 .idea-target {
   display: flex;
   align-items: center;
   flex: 1;
   min-width: 0;
-  gap: 16px;
-  font-size: 16px;
+  gap: var(--s-4);
+  font-size: var(--t-16);
 }
 .idea-target select {
   min-width: 0;
-  min-height: 32px;
+  min-height: var(--hit);
   font: inherit;
 }
 .ideas-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
-  gap: 16px;
-  margin-top: 24px;
+  gap: var(--s-4);
+  margin-top: var(--s-6);
 }
 .ideas-footer button {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 40px;
-  font-size: 16px;
+  gap: var(--s-3);
+  min-height: var(--row-h);
+  font-size: var(--t-16);
+}
+.ideas-footer .primaryButton {
+  padding: 0 var(--s-4);
+  border: 0;
+  border-radius: 0;
+  color: var(--ivory);
+  background: var(--clay);
+}
+.ideas-footer .primaryButton:hover:not(:disabled) {
+  background: var(--clay-deep);
+  box-shadow: none;
+  transform: none;
+}
+@media (max-width: 760px) {
+  .ideas-list {
+    grid-template-columns: 1fr;
+  }
+  .idea-target {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
 }
 .summary dd.realm-ideas {
   flex-wrap: wrap;

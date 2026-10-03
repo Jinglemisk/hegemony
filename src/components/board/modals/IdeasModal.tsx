@@ -41,7 +41,7 @@ export function IdeasModal({
   const locked = setup && Boolean(G.setupIdeaPicks[viewerId]);
   return (
     <ModalShell
-      backdropClassName="ideas-backdrop"
+      backdropClassName={`ideas-backdrop${setup ? " ideas-setup" : ""}`}
       className="ideas-modal"
       labelledBy="ideas-heading"
       onDismiss={onClose}
@@ -79,7 +79,10 @@ export function IdeasModal({
               }}
               type="button"
             >
-              <strong>{idea.name}</strong>
+              <span className="idea-choice-name">
+                <strong>{idea.name}</strong>
+                {selected === idea.id ? <span className="idea-selected">✓ Selected</span> : null}
+              </span>
               <span>{idea.text}</span>
             </button>
           ))}
@@ -116,11 +119,12 @@ export function IdeasModal({
           </button>
         ) : null}
         {locked ? (
-          <button onClick={onNextSeat} type="button">
+          <button className="primaryButton" onClick={onNextSeat} type="button">
             Next seat
           </button>
         ) : (
           <button
+            className="primaryButton"
             data-idea-confirm
             disabled={!choice}
             onClick={() => {

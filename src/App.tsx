@@ -29,7 +29,9 @@ export function App() {
         onPlayerIDChange={setPlayerID}
         playerID={playerID}
       />
-      {import.meta.env.DEV && <TunePanel game={game.G} resetGame={handleReset} />}
+      {import.meta.env.DEV && game.G.phase !== "setupIdeas" && (
+        <TunePanel game={game.G} resetGame={handleReset} />
+      )}
     </>
   );
 }
