@@ -1,223 +1,142 @@
-# Bot Players — How the AI Works
+# Bot players
 
-Status: **sim-grade bots**, built for balance batches and headless testing — not
-yet game AI. This doc records how they work and the path to real CPU opponents
-with difficulty settings, so that work starts from a map instead of an
-excavation. (Deliberately parked for now; see todo.md → Tooling.)
+The bots are simulation policies for balance batches and browser development.
+Step 10 adds `slaver`, `civic` and `trader` as weight vectors over the shared
+political scorer and master search. They are not separate implementations.
+The [outcome-driven AI plan](../plans/outcome-driven-ai.md) remains future work.
 
-## Architecture
+## Contract
 
-Everything an AI needs is behind one seam, and any future CPU player should
-drive the same one:
+`Policy.choose(view, commands, rng)` receives the acting seat's `PlayerView` and
+engine-enumerated commands. Costs, yields, capacity, happiness, Ideas, Laws and
+victory titles come from engine selectors. Each hypothetical action uses the
+canonical transition; execution uses that same transition in the browser and sim.
 
-- **`src/game/legalMoves.ts`** — `enumerateLegalCommands(G, player)` returns
-  intent-only commands validated by the engine's status predicates;
-  `transition(definition, G, player, command)` applies one atomically. A bot never
-  submits effective costs or re-derives rules.
-- **`src/sim/policies.ts`** — the brain. `Policy = { name, choose(view, commands, rng) }`:
-  given the acting seat's projection and legal commands, return one. That interface is the whole
-  contract; new AIs are new entries in the `POLICIES` registry.
-- **`src/sim/runner.ts`** — the body. `playTurn` loops choose→apply until the
-  turn ends (action cap of 30 force-ends stuck turns); `runGame` wires setup +
-  turns + hooks. The runner, CLI (`auto`/`batch`), and tests all share it.
+The view hides the seed, game RNG, draw order, next year card, rival private
+Assembly cards and secret setup picks. Choices are pure functions of the view,
+commands and injected bot RNG. Placement and Idea ties use that bot stream;
+ordinary search ties keep enumeration order. Bot randomness never changes the
+game's card or die stream. `?dev=bots` still uses `master` for every browser seat.
 
-The browser, simulation, and replay share the atomic `GameCommand` transition. Every policy
-receives `PlayerView`, the same redacted observation used by the browser: draw identities,
-deck order, seed/RNG, rival Assembly hands/proposals, and private pending events never reach
-policy code. Political draw valuation uses a public uncertainty pool rather than the actual
-deck. Existing policies remain deterministic baselines across that boundary.
+## Policies
 
-### Determinism contract
+- `random`: choose a move type uniformly, then a command within that type.
+- `greedy`: one-ply search over the simpler population/material score.
+- `smart`: one-ply search with class, material, work-slot and luxury values.
+- `beam`: smart score with width 3, depth 4 search within the current turn.
+- `political`: smart score plus standing authored Laws, using one-ply search.
+- `settler`: smart score plus the one-step expansion frontier, using one-ply search.
+- `master`: political score plus the frontier, using the beam.
+- `slaver`, `civic`, `trader`: master with the following initial weights.
 
-Policies must be pure functions of `(view, commands, rng)`. No `Math.random`, no
-`Date`, no hidden state. All randomness comes from the injected `SimRng` — a
-mulberry32 stream separate from the game's deck RNG, so changing a policy never
-changes which cards come up. Tie-breaks follow enumeration order. This is what
-makes batches byte-reproducible and games replayable; keep it true for CPU
-players too (seed their rng from the game seed).
+These are starting preferences. Step 11 measures whether each build can win.
 
-### Setup is more policy calls
+| Weight                | Master | Slaver | Civic | Trader |
+| --------------------- | -----: | -----: | ----: | -----: |
+| Slave                 |    1.2 |    4.5 |   1.2 |    1.2 |
+| Freeman               |      2 |    1.5 |     2 |      4 |
+| Citizen               |      3 |    1.5 |   4.5 |    1.5 |
+| Food                  |    0.4 |    0.4 |   0.4 |    0.4 |
+| Wood                  |    0.6 |      1 |   0.5 |    0.5 |
+| Stone                 |   0.85 |      1 |   1.2 |    0.7 |
+| Gold                  |      1 |    0.8 |     1 |    1.8 |
+| City                  |      6 |      8 |     6 |      6 |
+| Colony                |      3 |      4 |     3 |      3 |
+| Standing happiness    |      6 |      4 |     8 |      6 |
+| Influence             |      2 |      2 |     3 |    1.5 |
+| Active luxury         |     36 |     36 |    36 |     54 |
+| Standing authored Law |      8 |      4 |    16 |      4 |
+| Frontier              |      2 |      2 |     2 |      2 |
 
-Capitals and founding colonies go through the same `choose` seam: during the setup
-phases every search policy branches to one shared `choosePlacement` — a one-ply
-clone→apply→score over the legal placements, so a `smart`-vs-`settler` batch differs
-only after setup. The score is `evaluateSmart` of the placed state (once the pops sit
-on the tile, the income projection is the site score) plus a _bounded_ frontier —
-the top three yields the seat could found on next, with gameplay geometry so a
-coastal seat sees the leapfrog coast — minus the part of that frontier a rival could
-also settle. It runs in two passes (rank tiles by their most even pop split, then
-score every split on the top three tiles) so a capital costs ~80 transitions rather
-than ~540. `random` keeps its uniform pick. The browser's dev auto-opening calls the
-same routine with a bot stream derived from the game seed, so the browser and the
-sim place identically for a seed. See `docs/archive/plans/policy-placement.md`.
+Population, city and colony weights are multiplied by 10. Projected materials
+and latent work are multiplied by 10/8. Influence, happiness, luxury and Law
+weights apply directly; every held victory card is worth 120 for all personalities.
+An inactive owned luxury keeps half its weight. The standing-level cap is the
+Beloved minimum plus two. Unrest and hunger costs stay shared.
 
-## Current policies
+The slaver values slaves, Estates' real production, yielding slots and expansion.
+The civic values citizens, Forums' influence, Temples and standing Laws toward
+Voice. The trader values freemen, Marketplaces' gold, Ports and luxuries. Buildings
+have no personality bonus: their changes to income, slots and happiness carry
+the value. Each build can convert through the bank and choose ventures in search.
 
-**`random`** — two-stage uniform: pick among the distinct move _types_ present,
-then uniformly within that type. Grouping keeps huge move families (movePops,
-foundColony) from swamping the draw and gives endTurn ~1/k odds per action, so
-turns always terminate. Use: chaos monkey, smoke tests, cheap batch noise.
+## Search and forecasts
 
-**`greedy`** — one-ply lookahead: for each candidate move, `structuredClone`
-the state, apply the move, score the result, keep the best; end the turn when
-nothing scores above the status quo. Forced situations (pending event) pick the
-best-scoring resolution.
+All optional economic actions enter search, including unit bank buys and sells,
+the Dole, calm, Ideas and ventures. A bank sale can unlock a building or promotion
+later in the same four-action search. Forced riots keep the shared insurance/roll
+handler; search never evaluates the live riot roll.
 
-**`smart`** — the same one-ply search, but a richer score (pops by tier, materials
-by role, and each open work slot priced as the slave who could work it, so a building
-on a plains slot costs the food that slave would grow). A pop the projection sees
-starve costs more than any pop is worth. See `evaluateSmart`.
+Ventures are chance leaves at every search depth. Score every public die face,
+and every uniform settlement destination for the Voyage jackpot, with its actual
+probability. Synthetic RNG seeds reproduce those outcomes through canonical
+transitions independently of the game's RNG. Compare the expected score with the
+other branches; after execution, observe the real roll and replan. This supports
+bank-to-venture sequences without expanding subsequent turns or a chance tree.
+A negative mean gold payout can still be useful near a title threshold. Equal
+positions at the same depth are expanded once, and equal venture outcomes share
+one score; logs and the last roll display do not distinguish positions.
 
-**`beam`** — a within-turn **beam search** over the `smart` score. A "decision" in
-Hegemony is not one move but a _sequence_ ending in endTurn (turns run up to 30
-actions), and one-ply is greedy per step — it can't value a locally-worse first move
-that unlocks a much better second (build-then-promote or
-sell-then-buy-then-build). The beam expands each frontier node by every branchable
-move, scores the resulting state, keeps the best `W` (=3) nodes per depth up to `D`
-(=4), and commits the FIRST action of the best sequence found, re-planning each ply.
-Same evaluation as smart, so a smart-vs-beam A/B isolates search depth from scoring.
-Because `endTurn` is not a branch, the beam cannot project income into a later action
-or deliberately save for a future city; `INCOME_HORIZON` only estimates passive
-income, upkeep, and unrest inside the state score.
+Forecast at most six incomes, bounded by the years remaining. This year's card
+applies only to a seat that has not collected; later incomes use printed values.
+The projection runs engine hunger and deterministic revolts, clears tokens after
+a projected riot, and recalculates income after pop losses. It assumes no future
+card or token changes. Influence uses projected income too, so a Forum pays back
+through its actual citizen column; Civic Tradition needs no duplicate future bonus.
 
-**`political`** — the `smart` economy plus standing-authorship valuation. It uses
-the shared Assembly strategy described below. Outside the Assembly it returns to
-one-ply search, so it does not inherit `beam`'s depth.
+A projected lost pop costs 60, above every personality's population weight.
+For a realm with food consumption and another income remaining, reserve food
+for one forecast shortfall plus two against the player deck's food loss. Each
+unit missing from that target costs 14. This makes unit buys and Dole purchases
+useful before a whole shortage is covered, and discourages selling or spending
+the last food. The horizon can justify a larger reserve. There is no hard-coded trade order.
+Latent slave slots count only where population room remains, including transfers
+already committed to that settlement.
 
-**`master`** — the cumulative whole-game policy. It uses the political Assembly handler;
-everywhere else it runs the `beam` over a combined score: `smart` economy + political
-standing + PR #41's low-weight one-step expansion-frontier signal. In lineage terms,
-`beam`, `political`, and the off-branch `settler` experiment are sibling specialists;
-`master` is their first composition. It does not yet add cross-turn saving, general rival
-replies, multi-hop route search, or chance expected value.
+Calm enters search at its engine price. Under the settled Step 6 rule it expires
+before the next upkeep and never counts for Beloved. Buying it after collection
+cannot improve survival or a title, so a bot normally declines it. Making calm
+useful in that position is a Step 11 rules/balance question.
 
-Every non-random policy now uses the same Assembly handler. A bot draws from the
-unordered public composition, scores real engine enactments on clones, proposes
-useful Laws and supports coalitions with small private costs. It blocks a rival's
-winning title and buys votes only when the predicted public coalition needs them
-and its purse can fund the full gap. Author prizes and standing Voice progress
-count; Directives never add Voice. No handler reads hidden card order.
+## Setup, Ideas and the Assembly
 
-_Determinism / anti-peek (the crux):_ the game RNG lives inside state (`G.rng`), so
-applying a stochastic move in a clone would reveal _this game's_ seeded roll. The beam
-branches ONLY on the RNG-free move set — it excludes fundExpedition / riot / bank
-(played by the shared `resolveStochasticByRule` rules) and endTurn — so no clone ever
-advances `G.rng`. Non-peeking is therefore structural, not a patch: it's asserted per
-branch (`draft.rng === rngBefore`) and proven end-to-end by record→replay being
-byte-identical. `cloneForSearch` shares the immutable game definition, its ruleset
-alias, and event decks by reference and
-resets the log, so each clone is ~an order of magnitude lighter than a full
-`structuredClone`.
+Policy openings use each seat's own personality for placements and secret Idea
+picks. Fixed openings fix placement only; Ideas still use the seat's scorer.
+Random openings choose uniformly. New games without a named policy retain the
+neutral placement/Idea scorer. Ordinary purchases enter the seat's normal search.
+Immediate grants and permanent income use real transitions/projections. Future
+pieces, founding grants, upgrade grants, Dole savings and extra votes use the
+Step 9 opportunity estimates, scaled by the relevant personality weights. Future
+slave grants also pay their standing-level cost.
 
-### The evaluation function (the part worth tuning)
+All non-random policies use one Assembly handler. It scores real enactments and
+repeals, draws against unordered public composition, supports modest private
+costs to form coalitions, blocks a rival's winning title, and buys only affordable
+pivotal votes. The acting personality weights both its own and rival score changes;
+coalition prediction assumes that same public scoring lens for uncast votes.
+Mixed tables route every Assembly action to its actual seat, including when a
+sitting spans one opener's player-turn.
 
-```
-score = 10 · VP(resources projected INCOME_HORIZON turns ahead)
-      +  6 · standingLevel      (capped at Beloved's minimum + 2)
-      +  1 · influence          (INCOME_HORIZON = 6)
-      -  projectedUnrestRisk
-```
+Capital Works adds no benefit that Urban Planning lacks when both are available:
+Urban Planning covers the capital and later cities at the same price. Harbour
+Planning credits a saved slot at the ordinary projected material value for an
+owned unclaimed Port site; if the site has no building slot left, use half a
+luxury's weight for opening that claim instead. Count at most one prospective
+site per distinct claimable good, keeping the most valuable sites. Existing Ports
+use their real slot value. Treasury Grant matters when gold can fund a move or
+take Treasurer; Assembly Brokers values future third-vote opportunities at the
+personality's politics weight. No Idea receives a fixed selection quota. Step 11
+should distinguish missing opportunity from weak or dominated content when reading
+unused Ideas.
 
-The projection advances each future upkeep and income collection in order. It
-uses the engine's own income and active-effect queries, including suppressed
-collections and the pops hunger would take. Happiness is a level, so the
-projection reads the engine's level at every upkeep: calm expires when the year turns
-and does not cover a future-year upkeep. A riot spends the Unrest tokens, so a riot caused by tokens is
-met once; a level held down by slaves is met at every upkeep of the horizon. A
-revolt draws no dice, so the projection runs it: half the slaves leave the
-projected board.
+## Limits and validation
 
-The current year card applies only to income a seat still owes this year (for
-example, while the Assembly sits). Later incomes use printed values with no new
-card or token change assumed. This is a neutral forecast; the deck's seeded order
-never enters a decision.
+Search cannot save deliberately across turns, model general rival replies, or
+plan multi-hop routes. Riot severity and future Idea opportunities are heuristics.
+Venture expectation is exact for the shipped public tables; it does not implement
+the outcome-driven AI program. Focused tests cover build preferences, food rescue,
+bank-to-Port sequences, venture odds and title decisions, Idea picks/purchases,
+private-information invariance, seat routing and telemetry denominators.
 
-`projectedUnrestRisk` is deliberately a named strategic heuristic, not an
-expected riot-table payout. It uses the active ruleset's riot and revolt lines,
-charges a riot 50, a revolt twice that, and a sliding caution cost just above the
-riot line. It does not guess whether a future conditional resource/building loss
-or insurance purchase will apply, and it never reads the seeded future die roll.
-
-`standingLevel` is the level without calm, as Beloved reads it. A point of it
-holds every turn, so it is weighted at the horizon's length and capped a little
-past Beloved's minimum.
-
-The rule-based stochastic chooser and the greedy/smart material evaluator also derive
-their affordability bands from the active ruleset. The venture reserve is five
-stakes (10 gold under v2). Sell-surplus and material-starvation bands scale from the
-colony cost, and material-score normalization scales from the Treasurer minimum.
-The new player cards resolve through the real engine during evaluation, so token
-changes and free-pop placement use the same happiness and hunger projections as
-normal actions. Bots never value retired card kinds or peek at a venture roll.
-
-**Why the horizon exists** (empirical, seeds 100–109, 10×24-turn batches):
-the pre-horizon score (`10·VP + 0.5·materialIncome + 2·happiness`) priced
-spending at ~10× and future income at 0.5×, so bots built 4 buildings in 10
-games (zero granaries, zero temples) and rode a food/happiness death spiral:
-mean happiness −5.4 by season 7, half the seats in unrest/revolt, 102 pops
-dead. With the horizon: 123 buildings, happiness +19, 80% calm, half the
-deaths, _higher_ final VP. Same seeds — only the scoring changed. Moral: the
-spiral was bot myopia, and evaluation quality is the difference between a
-batch that measures the game and one that measures the bot.
-
-## Known limitations (read before trusting a batch)
-
-- **No cross-turn plan search**: the beam can sequence up to four RNG-free actions in
-  the current turn, but cannot choose `endTurn`, receive income, observe rival turns,
-  and continue toward a later action. Anything requiring intentional saving is
-  undervalued.
-- **No spatial strategy**: colony/movePops targets are scored only by immediate
-  economics, not position, denial, or future city sites.
-- **No opponent model**: bots never consider the other three players.
-- **Heuristic riot severity**: projected threshold crossings are priced, but the
-  evaluator does not branch over future insurance decisions or conditional
-  resource/building losses. Those require chance expectation and future policy
-  modeling; the current score intentionally stops short of pretending otherwise.
-- `choose()` costs ~candidates × `structuredClone(G)` per action. Fine headless;
-  budget it before running inside the UI thread.
-
-## Path to CPU opponents with difficulty settings
-
-Difficulty = a `POLICIES` registry entry. The natural ladder, cheapest first:
-
-1. **Easy** — `random`, or "noisy greedy": score as greedy, pick uniformly
-   among the top-N moves (N is the difficulty dial).
-2. **Medium** — `greedy` as-is.
-3. **Hard** — `beam` (shipped): a within-turn beam search over the action
-   _sequence_ (turns are multi-action, which one-ply ignores). Room to go further
-   still: 2-ply opponent replies, or short rollouts reusing `runTurns` as the playout.
-4. **Personalities** — same evaluate, different weight vectors (expander:
-   pops/colonies up; builder: income up; zealot: happiness/influence up).
-   Cheap asymmetry, pairs well with the national-ideas roadmap item.
-
-In-game integration target: human and CPU clients consume the same player-safe legal
-options and submit the selected `GameCommand` through the same engine transition. The
-CPU receives a fair observation rather than full deck/RNG secrets, and its decision RNG
-and policy version are recorded for replay. If evaluation cost grows, move `choose()` to
-a worker without moving rules or authority out of the engine/server boundary.
-
-## The tuning loop
-
-Evaluation changes are tested like rules changes: run the same seeded batch
-before and after and diff the reports —
-
-```bash
-npm run sim -- batch --games 10 --turns 24 --policy greedy --seed 100 --report .sim/before.json
-# ...edit evaluate() in src/sim/policies.ts...
-npm run sim -- batch --games 10 --turns 24 --policy greedy --seed 100 --report .sim/after.json
-diff <(jq 'del(.meta.generatedAt)' .sim/before.json) <(jq 'del(.meta.generatedAt)' .sim/after.json)
-```
-
-Watch `buildings`, `perYear` happiness/food/unrest shares, `popsLostToUnrest`,
-and `finalCardsDistribution`. See docs/reference/simulation.md for the full command surface.
-
-## National Ideas (v2 Step 9)
-
-All non-random policies score legal setup picks with the master scorer, on a board
-containing only their own prospective choice; secret rival picks and the year draw
-order cannot affect it. Purchase commands enter the policy's ordinary deterministic
-search, including their 6-influence cost and immediate grants. The shared scorer
-prices permanent income and open slots through the real projections; opportunity
-values account for Dole savings, extra pieces, founding, upgrades and bought votes.
-Future opportunity uses the existing six-year horizon bounded by remaining years.
-Step 10 supplies personality preferences; Step 11 measures spread and dominance.
+Use the rotated [simulation commands](simulation.md) for full-game evidence.
+Record seeds, definitions, policies and opening type before interpreting balance.

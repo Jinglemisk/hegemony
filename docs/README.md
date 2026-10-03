@@ -15,9 +15,10 @@ session with "continue the v2 migration" in the `hegemony-v2` worktree.
 
 **Owner blockers:** none.
 
-Step 8 merged in #87. Step 9 is implemented in the working tree and awaits the
-lead's bot batch, browser audits and shell gate. Its defaults and the rewritten
-Ideas roster are in the migration and National Ideas plans; Step 10 follows shipping.
+Steps 1 to 9 are merged into `feat/v2`, most recently #88. Step 10 is implemented
+in the working tree: personality weights, bank/venture search and per-policy
+telemetry. The lead runs the bot batch, browser audits and shell gate before
+shipping. Step 11 then measures build viability and balance.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
@@ -27,12 +28,12 @@ precedes full multiplayer.
 
 | Plan                                                | Phase    | Status    | Position                                                                         |
 | --------------------------------------------------- | -------- | --------- | -------------------------------------------------------------------------------- |
-| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 10: bot personalities; Steps 1 to 9 shipped (#79 to #88)                    |
+| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 10 built; lead verifies; Step 11 sim gate follows                           |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze |
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged            |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                        |
 | [Player trade](plans/player-trade.md)               | 4        | `blocked` | V1 after luxuries; full negotiation ships before the mechanics freeze            |
-| [National Ideas](plans/national-ideas.md)           | v2       | `active`  | Step 9 built; twelve v2 rules, setup pick and influence purchase; lead verifies  |
+| [National Ideas](plans/national-ideas.md)           | v2       | `active`  | Step 9 shipped (#88); twelve v2 rules, setup pick and influence purchase         |
 | [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer              |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature

@@ -486,6 +486,55 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   holder wins per finished seat-game, zero-filled for all twelve.
 - State schema 9 and command schema 5 reject earlier saves and scripts.
 
+**Defaults picked in Step 10** (2026-10-03):
+
+- Keep one master search and political scorer. Slaver, civic and trader are the
+  weight vectors in the [AI reference](../reference/ai.md), applied to placements,
+  setup Ideas, purchases and Assembly decisions as well as ordinary turns. Held
+  cards remain 120; starvation costs 60 per projected lost pop for every personality.
+  Every Assembly action uses its acting seat's policy; coalition prediction uses
+  the acting personality's scoring lens for all public seat comparisons.
+- Keep beam width 3 and depth 4. Bank trades, the Dole and calm enter ordinary
+  search. Ventures are chance leaves at every depth: enumerate the public die
+  and uniform Voyage destinations via canonical transitions with synthetic seeds,
+  compare expected scores, then replan after the real roll. Forced riots retain
+  the shared insurance handler. Score improvements need to exceed 1e-8 so floating
+  point round trips cannot make a neutral exchange appear profitable. Deduplicate
+  equal positions at the same beam depth and score equivalent venture outcomes
+  once, ignoring logs and the last roll display in the comparison.
+- Reserve one forecast food shortfall plus 2 food against the player deck's loss,
+  charging 14 per missing unit when food consumption and future income exist.
+  Meeting the reserve adds no reward for a larger food deficit. The ordinary
+  horizon may justify more. Forecast at most six remaining
+  incomes; include projected influence so Forums and Civic Tradition pay back
+  through real income, removing the duplicate Idea-only influence estimate.
+  Latent work is bounded by available population room, including committed arrivals.
+  Upgrade/founding grant opportunities scale by pop weights, Dole savings by
+  influence, extra votes by politics, and future slaves pay the weighted level cost.
+- Keep the settled calm rule. After collection it expires before the next upkeep
+  and cannot count for Beloved, so its absence is genuine balance for Step 11.
+  No Idea has a selection quota. Capital Works is weakly dominated by Urban
+  Planning at the same price; Harbour Planning, Treasury Grant and Assembly
+  Brokers are evaluated through slot/claim opportunities, actual gold use and
+  future votes. For an owned unclaimed Port site, Harbour Planning credits a
+  future saved slot at the ordinary 10/8 material weight over the remaining horizon;
+  if no building slot remains, use half a luxury's weight for opening the claim
+  instead. Cap prospective Port sites at the number of distinct claimable goods,
+  keeping the most valuable sites. Existing Ports are valued by their real slots.
+  Step 11 decides any remaining content weakness.
+- `new`, `auto` and `batch` accept personalities by policy or seat name. Named
+  policy openings use each seat's scorer; fixed placements still score Ideas by
+  seat; random openings stay uniform. Unnamed `new` uses the neutral setup scorer.
+  CLI seat choices are not saved and must be repeated on `auto`. Existing rotation
+  is four cyclic seat assignments per seed; ten seeds make forty games. Use master
+  as the neutral fourth seat for equal personality exposure.
+- Telemetry reports final title IDs for every seat and finished-seat win rates,
+  final card distributions and zero-filled title counts per policy, including
+  uniform batches. Capped seats are counted separately and excluded from result
+  statistics. Duplicate personalities count once per seat occupied.
+- No game state or command shape changes: schemas stay state 9 / command 5.
+  `?dev=bots` stays master in all seats. No shell changes.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.

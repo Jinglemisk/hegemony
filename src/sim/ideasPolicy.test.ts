@@ -73,6 +73,9 @@ describe("scores setup Ideas and in-play purchases", () => {
       masterPolicy.choose(projectForPlayer(G.definition, G, "0"), moves, createSimRng(1)),
     ).toEqual({ type: "buyIdea", ideaId: "treasury-grant" });
     const poor = structuredClone(G);
+    // After the final collection no income or food rescue remains. Before that
+    // collection the Grant can now fund bank food and save this citizen.
+    poor.players["0"].collectedThisTurn = true;
     Object.assign(poor.players["0"].resources, { gold: 0, wood: 0, stone: 0, food: 0 });
     expect(
       masterPolicy.choose(projectForPlayer(poor.definition, poor, "0"), moves, createSimRng(1)),
