@@ -637,7 +637,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
 - [x] **Step 9 · National Ideas.** ([#88](https://github.com/Jinglemisk/hegemony/pull/88): a 40-game bot batch finishes with no turn caps, 7 games by the race; bots pick two Ideas at setup and buy five, and four Ideas are never taken; riots 1.6 a game, 3.4% of player-turns after year 7; the gate passes on the map and the Assembly, and the setup picker, a page with no map, has no defects.) First rewrite the Ideas in v2 terms, since seasons, the
       veto, per-pop scaling and gold upkeep no longer exist; then build them per
       [their plan](national-ideas.md).
-- [ ] **Step 10 · Bot personalities.** Slaver, civic and trader as weight vectors over the
+- [x] **Step 10 · Bot personalities.** ([#90](https://github.com/Jinglemisk/hegemony/pull/90): a rotated batch of slaver, civic, trader and master, 10 seeds × 4 rotations, finishes with no turn caps; wins are slaver 33%, civic 35%, trader 13%, master 20%; riots 4.7 a game, 10.7% of player-turns after year 7; the batch took 86 minutes on one core.) Slaver, civic and trader as weight vectors over the
       political scorer, with bank and venture moves inside the search, so each personality
       can actually pursue its build.
 
