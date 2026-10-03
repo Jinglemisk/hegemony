@@ -1,6 +1,7 @@
 import type { Ruleset } from "./ruleset";
 import type { GameDefinition } from "./definition";
 import type { ActiveLaw, AssemblySession, PoliticianId, TallyMonument } from "./assembly/types";
+import type { SetupIdeaPick } from "./ideaTypes";
 
 export type PlayerId = "0" | "1" | "2" | "3";
 
@@ -366,7 +367,7 @@ export interface HegemonyState {
   /** Monotonic source for stable match-local entity identities. */
   nextEntityId: number;
   phase: Phase;
-  setupIdeaPicks: Record<PlayerId, import("./ideaTypes").SetupIdeaPick | null>;
+  setupIdeaPicks: Record<PlayerId, SetupIdeaPick | null>;
   currentPlayer: PlayerId;
   turn: number;
   /** The seed this game was created from — shown in the UI, embedded in bug reports. */
