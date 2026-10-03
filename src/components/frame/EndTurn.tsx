@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import type { PlayerId } from "../../game/types";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Tooltip } from "../overlays/Tooltip";
-import { Ico, Tip } from "./parts";
+import { Ico, Tip, TipWarn } from "./parts";
 
 const HOLD_MS = 620;
 
@@ -61,12 +61,14 @@ export function EndTurn({
   actingId,
   canEndTurn,
   title,
+  warning,
   onEndTurn,
 }: {
   actingId: PlayerId;
   /** Whether the viewer may commit right now (seat, phase and pending events). */
   canEndTurn: boolean;
   title: string;
+  warning: { label: string; message: string } | null;
   onEndTurn: () => void;
 }) {
   const { progress, begin, cancel } = useHoldToCommit(onEndTurn, canEndTurn);
@@ -97,14 +99,15 @@ export function EndTurn({
       content={
         <Tip title="End turn">
           <p className="tip-body">{title}</p>
+          {warning ? <TipWarn>{warning.message}</TipWarn> : null}
         </Tip>
       }
       preferredPlacement="above"
       triggerClassName="endturn-anchor"
     >
       <button
-        aria-label="End turn — press and hold."
-        className={`endturn${progress > 0 ? " is-held" : ""}`}
+        aria-label={`End turn — press and hold.${warning ? ` ${warning.message}` : ""}`}
+        className={`endturn${progress > 0 ? " is-held" : ""}${warning ? " is-danger" : ""}`}
         data-c="endturn"
         data-exclude
         onBlur={cancel}
@@ -131,6 +134,7 @@ export function EndTurn({
         <span className="endturn-label" data-c="chip">
           End turn
         </span>
+        {warning ? <span className="endturn-warning">{warning.label}</span> : null}
       </button>
     </Tooltip>
   );

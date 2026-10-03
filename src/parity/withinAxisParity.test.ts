@@ -31,6 +31,7 @@ import type { VerbContext } from "../components/board/command/verbs";
 import { buildingName } from "../ui/formatters";
 import { smartPolicy } from "../sim/policies";
 import { createSimRng } from "../sim/rng";
+import { endTurnWarning } from "../ui/frameSelectors";
 
 describe("backend-to-backend parity", () => {
   it("applies a year card that acts once to every seat when it is revealed", () => {
@@ -70,6 +71,27 @@ describe("backend-to-backend parity", () => {
 });
 
 describe("frontend-to-frontend parity", () => {
+  it("warns at the engine's turn-end thresholds and clears after buying calm", () => {
+    const G = scenario({
+      patch: { economy: { unrest: { riotThreshold: -2, revoltThreshold: -5 } } },
+    })
+      .opening()
+      .withHappiness("0", -2)
+      .build();
+    expect(endTurnWarning(G, "0")).toEqual({
+      label: "Starts riot",
+      message: "Ending now starts a riot at −2.",
+    });
+    G.players["0"].calmActive = true;
+    expect(endTurnWarning(G, "0")).toBeNull();
+    G.players["0"].calmActive = false;
+    G.players["0"].unrestTokens += 3;
+    expect(endTurnWarning(G, "0")).toEqual({
+      label: "Starts revolt",
+      message: "Ending now starts a revolt at −5.",
+    });
+  });
+
   it("presents every event card through one non-empty effect vocabulary", () => {
     for (const card of YEAR_CARDS) {
       const presentation = presentYearCard(card);

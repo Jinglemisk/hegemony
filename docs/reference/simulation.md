@@ -209,8 +209,11 @@ In `perPolicy`, compare wins, all six final titles and final-card distributions.
 Check that slaves/Estates, citizens/Forums/Laws and freemen/Marketplaces/Ports
 appear in their builds, that bank moves fund useful actions, and that hunger falls
 when a seat can pay for food. Venture counts need not be even: bots now choose
-expected value, rather than cycling tables. Calm may remain unused: it expires
-before the next upkeep under Step 6 and cannot take Beloved. Capital Works is
+expected value, rather than cycling tables. Under the owner ruling of 2026-10-03,
+calm covers the buyer's current turn-end check and still cannot take Beloved.
+Compare `currencyVerbs.civicCalm` (calm bought), `riots.perGame` and
+`riots.revoltsPerGame` with the earlier batch; look for legal calm purchases when
+a +2 lift avoids a visible riot or revolt, and fewer riots per game. Capital Works is
 weakly dominated by Urban Planning; other unused Ideas need context, not quotas.
 Step 11 owns the 20–45% win-rate decision and any balance changes.
 
@@ -249,9 +252,12 @@ fixed openings keep their scripted placements but score Ideas by seat.
 one game finish. Audit and shell gates must retain the 25-row conduct ceiling and
 pass at 1280, 1440 and 1920. No shell components change in Step 10.
 
-A riot's deferred income updates its existing snapshot, including on Year 14's
-last turn. Player draws are counted after that income, and a year-card reveal is
-counted even when the opener wins before collecting.
+Income, hunger and the player draw are recorded at turn start, including on
+Year 14's last turn. Riots and revolts are checked at the acting player's turn end,
+before the handoff, year boundary, Assembly or final tally. A riot roll records
+its original player and year even when resolution opens the next turn. The next
+income/draw is counted once when that turn opens. A year-card reveal is counted
+even when the opener wins before collecting.
 
 Runs `--games` self-contained games (game _i_ uses seed `base+i`), aggregates,
 and writes a JSON report plus optional per-turn CSV (one row per
@@ -284,7 +290,7 @@ The report contains:
 - `perSeat` — real `winRate` (finished games only), `capLeaderRate` (turn-capped
   games), and mean final cards per seat (first-player advantage check)
 - `riots` — riots resolved per game, revolts per game (`revoltsPerGame`), the share of
-  player-turns that opened on the riot table, and the same counts year by year
+  player-turns that ended on the riot table, and the same counts year by year
   (`byYear`), so a report can cut the late game. The CSV carries the level as
   `happiness` and the `unrestTokens` count per row
 - `hunger` — food under work slots, per seat: incomes that left a mouth unfed per

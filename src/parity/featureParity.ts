@@ -82,7 +82,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   activeEffectPolicy: {
     implementation: "src/parity/activeEffectParity.test.ts",
-    evidence: "does not buy this year's calm to cover an upkeep in a later year",
+    evidence: "buys this year's calm to cover the current turn-end check",
   },
   hungerResolution: {
     implementation: "src/game/hunger.test.ts",
@@ -458,7 +458,7 @@ export const CONTENT_MANIFEST = {
     },
     simulation: {
       implementation: "src/sim/policies.ts",
-      evidence: "originalPlayer.collectedThisTurn ? null : G.activeYearCard",
+      evidence: "expireYear",
     },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "countYearCard" },
     behaviorFixtures: ["eventTokens", "contentTelemetry"],
@@ -576,7 +576,7 @@ export const FEATURE_PARITY = {
   },
   unrest: {
     ids: ["riot", "revolt"],
-    engine: { implementation: "src/game/unrest.ts", evidence: "applyUnrestUpkeep" },
+    engine: { implementation: "src/game/unrest.ts", evidence: "applyUnrestAtTurnEnd" },
     frontend: {
       implementation: "src/components/board/modals/RiotModal.tsx",
       evidence: "pendingRiot",

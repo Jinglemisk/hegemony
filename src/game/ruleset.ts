@@ -94,7 +94,7 @@ export interface SettlementRule {
 export interface EconomyRules {
   /** Every this many slaves in a realm take 1 from the level, rounded down. */
   slavesPerUnhappiness: number;
-  /** The level's two lines, tested in the start-of-turn unrest upkeep. */
+  /** The level's two lines, tested at the end of the player's own turn. */
   unrest: UnrestRules;
   /** Bank exchange rates & derivation (D6/Q14). */
   bank: BankRules;

@@ -115,13 +115,18 @@ export function playTurn(
   return forceEndTurn(G, hooks);
 }
 
-/** Action cap hit: resolve any pending event (first option) or pending riot (roll,
- *  no more insurance), then end the turn. */
+/** Action cap hit: resolve the event, commit endTurn, then roll any resulting riot
+ *  without more insurance. A roll may itself complete the turn. */
 function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
   let G = initial;
   let forcedResolutions = 0;
+  const startTurn = G.turn;
 
-  for (let guard = 0; (G.pendingPlayerEvent || G.pendingRiot) && guard < 4; guard += 1) {
+  for (
+    let guard = 0;
+    guard < 6 && G.turn === startTurn && G.phase !== "gameOver" && !G.assembly;
+    guard += 1
+  ) {
     const player = G.currentPlayer;
     const resolutions = enumerateLegalCommands(G, player);
 
@@ -129,8 +134,12 @@ function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
       throw new SimDeadlockError(deadlockMessage(G, player));
     }
 
-    // Riot enumeration lists insurance first and the roll last — forced turns roll.
-    const forced = resolutions.find((move) => move.type === "resolveRiot") ?? resolutions[0];
+    const pending = G.pendingPlayerEvent || G.pendingRiot;
+    // Resolve a pending choice, otherwise commit; committing may start a riot.
+    const forced = pending
+      ? (resolutions.find((move) => move.type === "resolveRiot") ?? resolutions[0])
+      : resolutions.find((move) => move.type === "endTurn");
+    if (!forced) throw new SimEnumerationError(`no forced endTurn on turn ${G.turn}`);
 
     const result = applySimCommand(G, player, forced);
     if (!result.ok) {
@@ -138,22 +147,12 @@ function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
     }
 
     G = result.state;
-    forcedResolutions += 1;
+    if (pending) forcedResolutions += 1;
     hooks.onMove?.(G, player, forced);
   }
 
-  const player = G.currentPlayer;
-  const endTurn: GameCommand = { type: "endTurn" };
-
-  const result = applySimCommand(G, player, endTurn);
-  if (!result.ok) {
-    throw new SimEnumerationError(`forced endTurn failed on turn ${G.turn} (phase ${G.phase})`);
-  }
-  G = result.state;
-
   hooks.onForceEndTurn?.(G, forcedResolutions);
-  hooks.onMove?.(G, player, endTurn);
-  hooks.onTurnEnd?.(G);
+  if (G.turn !== startTurn || G.phase === "gameOver") hooks.onTurnEnd?.(G);
   return G;
 }
 

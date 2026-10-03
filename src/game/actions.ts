@@ -311,15 +311,14 @@ export function collectIncome(
 ): MoveResult {
   const player = G.players[playerID];
 
-  // A pending riot defers income (the rulebook removes pops before collection) —
-  // resolveRiot calls back in here once the table has spoken.
+  // Income belongs to turn start; a committed turn awaiting its riot cannot collect.
   if (player.collectedThisTurn || G.pendingPlayerEvent || G.pendingRiot) {
     return invalid();
   }
 
   // Stratokles's General Strike: the work stops. The turn still passes — the strike
   // costs exactly the income, not the tempo — and the counter burns down here rather
-  // than in the upkeep so a deferred (riot-blocked) collection still loses its turn.
+  // than in the turn-end unrest check.
   if (player.incomeSuppressedTurns > 0) {
     player.incomeSuppressedTurns -= 1;
     player.collectedThisTurn = true;

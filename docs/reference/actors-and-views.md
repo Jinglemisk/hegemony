@@ -16,7 +16,7 @@ gameplay actor, but it is not treated as universal authorization.
 | Setup             | `currentPlayer`              | Placement for the exact setup phase      |
 | Normal turn       | `currentPlayer`              | Economy/population actions and `endTurn` |
 | Player event      | Decision owner               | `resolveEvent`                           |
-| Riot              | Decision owner               | Insurance or `resolveRiot`               |
+| Riot at turn end  | Decision owner               | Insurance or `resolveRiot`               |
 | Assembly proposal | Every undecided seat         | Draw, discard, propose, repeal, or pass  |
 | Assembly voting   | Current sequential voter     | Buy a vote or cast a vote                |
 | Assembly closing  | Suspended turn's active seat | `assemblyClose`                          |

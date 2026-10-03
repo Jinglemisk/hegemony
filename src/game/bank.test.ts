@@ -98,7 +98,7 @@ describe("bank trades", () => {
     }
   });
 
-  it("stays shut while a riot is pending — income comes before commerce", () => {
+  it("stays shut while a committed turn awaits its riot", () => {
     const G = scenario().opening().mutate(clearPending).build();
     G.pendingRiot = { playerID: "0", boughtInsurance: [] };
 

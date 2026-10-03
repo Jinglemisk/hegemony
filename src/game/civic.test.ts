@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { civicCalm, demotePop, promotePop } from "./civic";
 import { happinessLevel, standingHappiness } from "./happiness";
-import { applyUnrestUpkeep } from "./unrest";
+import { applyUnrestAtTurnEnd } from "./unrest";
 import { scenario, owned } from "./testing/scenario";
 import { TEST_OPENING_SETUP } from "./config";
 import type { HegemonyState } from "./types";
@@ -33,7 +33,7 @@ describe("civic calm", () => {
     }
   });
 
-  it("counts throughout the current year, including any upkeep in that year", () => {
+  it("counts throughout the current year, including the buyer's turn-end check", () => {
     const G = scenario()
       .opening()
       .mutate(clearPending)
@@ -42,9 +42,9 @@ describe("civic calm", () => {
       .build();
 
     expect(civicCalm(G, "0", "gold").ok).toBe(true);
-    applyUnrestUpkeep(G, "0");
+    applyUnrestAtTurnEnd(G, "0");
 
-    // -4 + 2 stands above the -3 line; upkeep does not expire the bonus.
+    // -4 + 2 stands above the -3 line; turn end does not expire the bonus.
     expect(G.pendingRiot).toBeNull();
     expect(G.players["0"].calmActive).toBe(true);
     expect(happinessLevel(G, "0")).toBe(-2);

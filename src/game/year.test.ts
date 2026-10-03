@@ -121,7 +121,7 @@ describe("Plague and Festival", () => {
 });
 
 describe("calm lasts a year", () => {
-  it("expires for every buyer when the year turns, before their next riot test", () => {
+  it("covers the buyer's turn-end check, then expires before next year's actions", () => {
     const G = game();
     const player = G.players["0"];
     player.resources.gold = 10;
@@ -147,8 +147,25 @@ describe("calm lasts a year", () => {
 
     expect(turns).toBe(7);
     expect(G.year).toBe(2);
-    // The next turn is in a new year, so its riot test has no calm left to count.
+    // The next turn starts without a riot; the buyer still has time to repair it.
+    expect(G.pendingRiot).toBeNull();
+    expect(unrestStatus(G, "0").tier).toBe("unrest");
+    expect(player.calmActive).toBe(false);
+    G.pendingPlayerEvent = null;
+    expect(endTurn(G).ok).toBe(true);
     expect(G.pendingRiot).toMatchObject({ playerID: "0" });
+  });
+
+  it("covers the last seat's check before the year boundary clears calm", () => {
+    const G = game();
+    G.currentPlayer = "3";
+    const player = G.players["3"];
+    player.unrestTokens = happinessLevel(G, "3") - G.ruleset.economy.unrest.riotThreshold;
+    player.resources.gold = 2;
+    expect(civicCalm(G, "3", "gold").ok).toBe(true);
+    expect(endTurn(G).ok).toBe(true);
+    expect(G.year).toBe(2);
+    expect(G.pendingRiot).toBeNull();
     expect(player.calmActive).toBe(false);
   });
 

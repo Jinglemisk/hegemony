@@ -5,6 +5,7 @@ import { scenario } from "./testing/scenario";
 import { createGame, endTurn } from "./turn";
 import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
 import { checkVictoryAtTurnStart, victoryCardsHeld, victoryStandings } from "./victory";
+import { resolveRiot } from "./riot";
 import type { HegemonyState, PlayerId } from "./types";
 
 const SEED = 0xc0ffee;
@@ -31,11 +32,13 @@ const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", t
 const assemblyFreeGame = (seed: number) =>
   createGame(seed, deriveRuleset(DEFAULT_RULESET, { assembly: { firstYear: 0 } }), "classic", true);
 
-function clearPending(G: HegemonyState) {
+function advanceTurn(G: HegemonyState) {
   G.pendingPlayerEvent = null;
   // These turn-structure tests cycle whole years; a bot-less player can riot along
-  // the way (D9) — dismiss it, the riot flow has its own suite (riot.test.ts).
-  G.pendingRiot = null;
+  // the way. Complete that turn-end roll before counting the next turn.
+  const result = endTurn(G);
+  if (G.pendingRiot) return resolveRiot(G, G.currentPlayer);
+  return result;
 }
 
 describe("victory card standings", () => {
@@ -172,8 +175,7 @@ describe("phase-0 turn structure", () => {
     expect(G.yearOpener).toBe("0");
 
     for (let turn = 0; turn < 4; turn += 1) {
-      clearPending(G);
-      expect(endTurn(G).ok).toBe(true);
+      expect(advanceTurn(G).ok).toBe(true);
     }
 
     expect(G.year).toBe(2);
@@ -187,8 +189,7 @@ describe("phase-0 turn structure", () => {
     seatsByYear.set(G.year, [G.currentPlayer]);
 
     for (let turn = 0; turn < 24 && G.phase === "gameplay"; turn += 1) {
-      clearPending(G);
-      expect(endTurn(G).ok).toBe(true);
+      expect(advanceTurn(G).ok).toBe(true);
       seatsByYear.set(G.year, [...(seatsByYear.get(G.year) ?? []), G.currentPlayer]);
     }
 
@@ -207,8 +208,7 @@ describe("phase-0 turn structure", () => {
     G.ruleset = { ...G.ruleset, victory: { ...G.ruleset.victory, cardsToWin: 99 } };
 
     for (let turn = 0; turn < 14 * 4 && G.phase === "gameplay"; turn += 1) {
-      clearPending(G);
-      expect(endTurn(G).ok).toBe(true);
+      expect(advanceTurn(G).ok).toBe(true);
     }
 
     expect(G.phase).toBe("gameOver");

@@ -1,6 +1,18 @@
-import { happinessContributions } from "../game/rules";
+import { happinessContributions, unrestStatus } from "../game/rules";
+import { sign } from "./frameFormat";
 import type { HappinessContribution } from "../game/rules";
 import type { HegemonyState, PlayerId } from "../game/types";
+
+/** The committed turn's consequence, using the engine's current level and thresholds. */
+export function endTurnWarning(G: HegemonyState, playerID: PlayerId) {
+  const status = unrestStatus(G, playerID);
+  if (!status.riotAtRisk) return null;
+  const revolt = status.tier === "revolt";
+  return {
+    label: revolt ? "Starts revolt" : "Starts riot",
+    message: `Ending now starts a ${revolt ? "revolt" : "riot"} at ${sign(status.happiness)}.`,
+  };
+}
 
 /**
  * What the frame's happiness display draws: the level, the range its gauge spans,

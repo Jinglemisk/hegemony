@@ -60,7 +60,7 @@ export type PlayerSnapshot = {
   happiness: number;
   unrestTokens: number;
   unrestTier: UnrestTier;
-  /** 1 when the current happiness puts the player on the riot table next upkeep. */
+  /** 1 when ending the player's turn at this level starts a riot or revolt. */
   riotAtRisk: number;
   slaves: number;
   /** Slaves without an open work slot: on a full tile, or on a hill. */
@@ -293,7 +293,7 @@ export type BatchReport = {
       idleSlaveShare: number;
     }
   >;
-  /** The riot table: riots resolved per game, the share of player-turns that opened
+  /** The riot table: riots resolved per game, the share of player-turns ending
    *  on it, and the same counts year by year, so a report can cut the late game. */
   riots: {
     perGame: number;
@@ -491,14 +491,10 @@ export class Aggregator {
     this.movesByType[move.type] = (this.movesByType[move.type] ?? 0) + 1;
 
     if (move.type === "resolveRiot") {
-      this.riotsByYear.set(G.year, (this.riotsByYear.get(G.year) ?? 0) + 1);
-      // The opening snapshot preceded this turn's deferred income. Replace it,
-      // so hunger on the final player-turn is counted without inventing a turn.
-      const opening = this.snapshots.at(-1);
-      if (opening?.game === this.game && opening.turn === G.turn) {
-        this.snapshots[this.snapshots.length - 1] = snapshotTurn(G, this.game, this.seed);
-      }
-      this.countPlayerDraw(G);
+      // Resolution can turn the year or open the next seat. The roll records
+      // the original year; the next income/draw is observed by onTurnEnd.
+      const year = G.lastTableRoll!.year;
+      this.riotsByYear.set(year, (this.riotsByYear.get(year) ?? 0) + 1);
     }
 
     if (move.type === "buildBuilding") {

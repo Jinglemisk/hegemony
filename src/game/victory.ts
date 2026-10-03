@@ -152,7 +152,7 @@ export function victoryCardsHeld(G: HegemonyState, playerID: PlayerId): number {
 
 /**
  * The start-of-turn win check: if the player opening their turn holds enough cards,
- * the game ends on the spot. Runs before upkeep/income — the table had a full round
+ * the game ends on the spot. Runs before income — the table had a full round
  * to break a card off them.
  */
 export function checkVictoryAtTurnStart(G: HegemonyState) {

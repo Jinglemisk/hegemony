@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { buyRiotInsurance, resolveRiot } from "./riot";
-import { endTurn } from "./turn";
-import { applyUnrestUpkeep } from "./unrest";
+import { beginTurnFor, endTurn } from "./turn";
+import { applyUnrestAtTurnEnd } from "./unrest";
 import { happinessLevel } from "./happiness";
+import { civicCalm } from "./civic";
+import { buildBuilding } from "./actions";
 import { removePops } from "./tables";
-import { scenario } from "./testing/scenario";
+import { owned, scenario } from "./testing/scenario";
 import { TEST_OPENING_SETUP } from "./config";
 import type { HegemonyState } from "./types";
 
@@ -25,7 +27,7 @@ function tokensForRiot(G: HegemonyState): number {
   return happinessLevel(G, "0") - G.ruleset.economy.unrest.riotThreshold;
 }
 
-/** An opening where player 0 is mid-riot: tokens placed, upkeep run. */
+/** An opening where player 0 has committed to ending in a riot. */
 function riotingGame() {
   const G = scenario()
     .opening()
@@ -34,39 +36,91 @@ function riotingGame() {
       draft.players["0"].unrestTokens = tokensForRiot(draft);
     })
     .build();
-  applyUnrestUpkeep(G, "0");
+  expect(endTurn(G).ok).toBe(true);
   return G;
 }
 
-describe("the riot blocks the turn (D9)", () => {
-  it("endTurn is illegal while the riot stands; resolving unblocks it", () => {
+describe("the riot blocks the turn-end handoff", () => {
+  it("keeps the acting player until the roll, then passes without another check", () => {
     const G = riotingGame();
+    const turn = G.turn;
 
     expect(G.pendingRiot).not.toBeNull();
     expect(endTurn(G).ok).toBe(false);
+    expect(G.currentPlayer).toBe("0");
+    expect(G.turn).toBe(turn);
 
     expect(resolveRiot(G, "0").ok).toBe(true);
     expect(G.pendingRiot).toBeNull();
+    expect(G.currentPlayer).toBe("1");
+    expect(G.turn).toBe(turn + 1);
+    expect(G.players["1"].collectedThisTurn).toBe(true);
   });
 
-  it("defers income until the table has spoken, then collects it", () => {
-    const G = scenario()
-      .opening()
-      .mutate((draft) => {
-        draft.pendingPlayerEvent = null;
-      })
-      .build();
-    // Simulate the next upkeep finding a riot: flags as at turn start.
+  it("collects income and draws before actions, with no second collection after the riot", () => {
+    const G = scenario().opening().build();
+    G.pendingPlayerEvent = null;
     G.players["0"].collectedThisTurn = false;
     G.players["0"].unrestTokens = tokensForRiot(G);
-    applyUnrestUpkeep(G, "0");
-
-    expect(G.players["0"].collectedThisTurn).toBe(false);
-
-    expect(resolveRiot(G, "0").ok).toBe(true);
-
-    // resolveRiot runs the deferred automatic collection.
+    beginTurnFor(G, "0");
+    expect(G.pendingRiot).toBeNull();
     expect(G.players["0"].collectedThisTurn).toBe(true);
+    expect(G.pendingPlayerEvent).toMatchObject({ playerID: "0" });
+    G.pendingPlayerEvent = null;
+    expect(endTurn(G).ok).toBe(true);
+    expect(resolveRiot(G, "0").ok).toBe(true);
+    expect(
+      G.log.filter((entry) => entry.about === "0" && entry.message.includes("collected")),
+    ).toHaveLength(2);
+    expect(G.pendingPlayerEvent).toMatchObject({ playerID: "1" });
+    expect(
+      G.log.some((entry) => entry.message.includes("riot must be faced before the turn passes")),
+    ).toBe(true);
+  });
+
+  it.each(["calm", "Temple"])("lets %s repair the level before the turn-end check", (repair) => {
+    const G = scenario().opening().withHappiness("0", -3).withResources("0", "wealthy").build();
+    G.pendingPlayerEvent = null;
+    const repaired =
+      repair === "calm" ? civicCalm(G, "0", "gold") : buildBuilding(G, "0", P0_CAPITAL, "temple");
+    expect(repaired.ok).toBe(true);
+    expect(happinessLevel(G, "0")).toBeGreaterThan(-3);
+    expect(endTurn(G).ok).toBe(true);
+    expect(G.pendingRiot).toBeNull();
+    expect(G.currentPlayer).toBe("1");
+  });
+
+  it("waits for the last seat's riot before turning the year and opening the Assembly", () => {
+    const G = scenario().opening().withHappiness("3", -3).build();
+    G.currentPlayer = "3";
+    G.pendingPlayerEvent = null;
+    const year = G.year;
+    expect(endTurn(G).ok).toBe(true);
+    expect(G.pendingRiot?.playerID).toBe("3");
+    expect(G.year).toBe(year);
+    expect(G.assembly).toBeNull();
+    expect(resolveRiot(G, "3").ok).toBe(true);
+    expect(G.year).toBe(year + 1);
+    expect(G.assembly?.resumePlayer).toBe("1");
+    expect(G.lastTableRoll).toMatchObject({ playerID: "3", year });
+  });
+
+  it("revolts at turn end before the final tally, even if the losses leave a riot level", () => {
+    const G = scenario().opening().withResources("0", { food: 100 }).build();
+    G.pendingPlayerEvent = null;
+    owned(G, P0_CAPITAL, "0").pops = { citizens: 0, freemen: 0, slaves: 8 };
+    owned(G, G.players["0"].settlements[1], "0").pops = { citizens: 0, freemen: 0, slaves: 4 };
+    G.year = 14;
+    G.yearOpener = "1"; // Seat 0 is last.
+    G.yearDrawPile = [];
+    expect(happinessLevel(G, "0")).toBe(-6);
+    expect(endTurn(G).ok).toBe(true);
+    expect(G.players["0"]).toMatchObject({ revolts: 1, popsLostToUnrest: 6 });
+    expect(happinessLevel(G, "0")).toBe(-3);
+    expect(G.pendingRiot).toBeNull();
+    expect(G.lastTableRoll).toBeNull();
+    expect(G.phase).toBe("gameOver");
+    expect(G.gameOverReason).toBe("deckExhausted");
   });
 });
 
@@ -147,7 +201,7 @@ describe("the roll", () => {
     expect(G.players["0"].unrestTokens).toBe(0);
     resolveRiot(G, "0");
     G.players["0"].collectedThisTurn = false;
-    applyUnrestUpkeep(G, "0");
+    applyUnrestAtTurnEnd(G, "0");
 
     expect(G.pendingRiot).toBeNull();
   });

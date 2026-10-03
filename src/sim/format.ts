@@ -122,7 +122,7 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
         ? ` (+${projection.population.inTransit} in transit)`
         : "") +
       ` · happiness ${formatNumber(unrest.happiness)}, ${unrest.tokens} Unrest ${unrest.tokens === 1 ? "token" : "tokens"}` +
-      ` · ${unrest.tier}${unrest.riotAtRisk ? (unrest.tier === "revolt" ? " (revolt at next upkeep)" : " (riot table at next upkeep)") : ""}`,
+      ` · ${unrest.tier}${unrest.riotAtRisk ? (unrest.tier === "revolt" ? " (revolt at turn end)" : " (riot table at turn end)") : ""}`,
     `  resources: ${Object.entries(player.resources)
       .map(([resource, amount]) => `${resource} ${formatNumber(amount)}`)
       .join(" · ")}`,

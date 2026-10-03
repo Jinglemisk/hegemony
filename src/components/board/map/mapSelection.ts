@@ -17,7 +17,7 @@ import type { BuildingId, PopType } from "../../../game/types";
  * 3 lists both as map-first, but scope 4 carves them back out ("a list genuinely
  * beats the map … inside the deliberately-blocking riot modal") and scope 4 wins,
  * because the contradiction resolves by force rather than taste: both dialogs
- * BLOCK by design (Q15 — income defers until the riot resolves), so the board
+ * BLOCK by design (Q15 — the committed turn waits for its riot), so the board
  * they cover cannot be the picker. They use {@link TileListbox} instead, which is
  * exactly the case scope 4 built it for.
  */

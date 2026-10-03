@@ -189,11 +189,41 @@ describe("shared personality search", () => {
     },
   );
 
-  it("keeps calm out of next-year survival and Beloved", () => {
-    const G = realm({ citizens: 0, freemen: 0, slaves: 6 });
+  it.each([...names, "master"] as const)(
+    "%s buys legal calm to avoid the visible turn-end riot",
+    (name) => {
+      const G = realm({ citizens: 0, freemen: 0, slaves: 6 });
+      Object.assign(G.players["0"].resources, {
+        food: 0,
+        wood: 0,
+        stone: 0,
+        influence: 0,
+        gold: 2,
+      });
+      const moves = enumerateLegalCommands(G, "0").filter(
+        (m) => m.type === "endTurn" || m.type === "civicCalm",
+      );
+      const move = POLICIES[name].choose(
+        projectForPlayer(G.definition, G, "0"),
+        moves,
+        createSimRng(1),
+      );
+      expect(move).toEqual({ type: "civicCalm", payment: "gold" });
+      const result = transition(G.definition, G, "0", move);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const end = transition(G.definition, result.state, "0", { type: "endTurn" });
+      expect(end.ok).toBe(true);
+      if (end.ok) expect(end.state.pendingRiot).toBeNull();
+    },
+  );
+
+  it.each(names)("%s declines calm when no turn-end riot needs it", (name) => {
+    const G = realm({ citizens: 0, freemen: 0, slaves: 4 });
     Object.assign(G.players["0"].resources, { food: 0, wood: 0, stone: 0, influence: 0, gold: 2 });
-    const move = choose("slaver", G, (m) => m.type === "endTurn" || m.type === "civicCalm");
-    expect(move).toEqual({ type: "endTurn" });
+    expect(choose(name, G, (m) => m.type === "endTurn" || m.type === "civicCalm")).toEqual({
+      type: "endTurn",
+    });
   });
 
   it.each(names)(

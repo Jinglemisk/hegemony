@@ -1,4 +1,4 @@
-import { collectIncome } from "./actions";
+import { finishTurn } from "./turn";
 import { demotePop } from "./civic";
 import { getAuthoredGameContent, getRiotTable } from "./content";
 import { addLog, getPlayerName } from "./core/query";
@@ -10,9 +10,9 @@ import type { HegemonyState, PlayerId, PopType, RiotInsuranceId } from "./types"
 
 /**
  * The riot flow (roadmap-appendix D9): the first event-table instance. When unrest
- * upkeep finds the level at the riot line it clears the realm's Unrest tokens and
- * parks a {@link PendingRiot} on the state — the turn BLOCKS (income deferred,
- * endTurn illegal) until the player declares insurance and rolls.
+ * at turn end finds the level at the riot line it clears the realm's Unrest tokens
+ * and parks a {@link PendingRiot} on the state. Only insurance and the roll are
+ * legal until resolution passes the committed turn.
  *
  * All three insurance options may each be bought once per riot (max +3). Full
  * insurance makes a riot's pop losses impossible — deliberately: it converts
@@ -29,7 +29,7 @@ export function startRiot(G: HegemonyState, playerID: PlayerId) {
   G.pendingRiot = { playerID, boughtInsurance: [] };
   addLog(
     G,
-    `${getPlayerName(G, playerID)}'s province erupts — a riot must be faced before income is collected. Its Unrest tokens clear.`,
+    `${getPlayerName(G, playerID)}'s province erupts at turn end — a riot must be faced before the turn passes. Its Unrest tokens clear.`,
     playerID,
   );
 }
@@ -125,7 +125,7 @@ export function insuranceRollBonus(
 
 /**
  * Face the table: roll with insurance (+1 each). Pop losses take slaves first.
- * Resolving unblocks the turn and runs the deferred income collection.
+ * Resolving completes the committed turn, without another unrest check or income.
  */
 export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
   const status = getResolveRiotStatus(G, playerID);
@@ -141,6 +141,5 @@ export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
 
   G.players[playerID].popsLostToUnrest += popsRemoved;
   G.pendingRiot = null;
-  collectIncome(G, playerID, "automatic");
-  return MOVE_OK;
+  return finishTurn(G);
 }

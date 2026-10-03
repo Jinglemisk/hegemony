@@ -19,7 +19,7 @@ import { TileListbox } from "../TileListbox";
 
 /**
  * The riot instance of the shared event-table modal (D9). Blocking: it mounts while
- * `G.pendingRiot` stands (income is deferred, endTurn illegal) and stays up one more
+ * `G.pendingRiot` stands (the committed turn cannot pass) and stays up one more
  * beat after the roll so the outcome can be read — the parent owns that via
  * `resultOpen` / `onDismissResult`.
  */
@@ -33,9 +33,9 @@ export function RiotModal({
   const { G, currentPlayerId, isActive: viewerCanAct, moves } = useGameUi();
   // A riot belongs to the seat that triggered it, not to whoever is being viewed —
   // so this modal derives its own owner and its own right-to-act rather than taking
-  // the viewer's. Falls back to the current seat for the result beat, after
-  // `pendingRiot` has already cleared.
-  const playerID = G.pendingRiot?.playerID ?? currentPlayerId;
+  // the viewer's. The result still belongs to that seat after the turn has passed.
+  const result = !G.pendingRiot && G.lastTableRoll?.tableId === "riot" ? G.lastTableRoll : null;
+  const playerID = G.pendingRiot?.playerID ?? result?.playerID ?? currentPlayerId;
   const isActive = viewerCanAct && playerID === currentPlayerId;
   const pending = G.pendingRiot;
   const riotTable = getRiotTable(G.definition.content);
@@ -55,7 +55,6 @@ export function RiotModal({
   }, [G, playerID, pending]);
   const [demoteChoice, setDemoteChoice] = useState(0);
 
-  const result = !pending && G.lastTableRoll?.tableId === "riot" ? G.lastTableRoll : null;
   // The verb is the outcome, and it comes from the shared mood map rather than
   // the word "Continue" — a riot is something you endure, not something you
   // navigate past.
@@ -78,7 +77,7 @@ export function RiotModal({
       table={riotTable}
       modifier={modifier}
       result={result}
-      subtitle={`${G.players[playerID].name} faces a riot. Its Unrest tokens clear; income waits until the table has spoken.`}
+      subtitle={`${G.players[playerID].name} faces a riot at turn end. Its Unrest tokens clear; the turn passes after the roll.`}
       footer={
         pending ? (
           <button

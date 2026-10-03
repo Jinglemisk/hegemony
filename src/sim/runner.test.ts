@@ -4,6 +4,7 @@ import type { Policy, PolicyId } from "./policies";
 import { greedyPolicy, randomPolicy } from "./policies";
 import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
+import { scenario } from "../game/testing/scenario";
 
 // Several full games per test; the policy opening costs ~0.4 s of placement search per
 // game on top of play, so these get a timeout that survives a loaded machine.
@@ -131,6 +132,35 @@ describe("runGame smoke", () => {
 });
 
 describe("action cap", () => {
+  it.each([false, true])(
+    "completes exactly one turn when the cap finds a riot (already pending: %s)",
+    (pending) => {
+      const G = scenario().opening().withHappiness("0", -3).build();
+      G.pendingPlayerEvent = null;
+      if (pending) {
+        G.players["0"].unrestTokens = 0;
+        G.pendingRiot = { playerID: "0", boughtInsurance: [] };
+      }
+      const moves: string[] = [];
+      const forced: number[] = [];
+      const next = playTurn(
+        G,
+        randomPolicy,
+        createSimRng(1),
+        {
+          onMove: (_state, _player, command) => moves.push(command.type),
+          onForceEndTurn: (_state, count) => forced.push(count),
+        },
+        { maxActions: 0 },
+      );
+      expect(next.turn).toBe(G.turn + 1);
+      expect(next.currentPlayer).toBe("1");
+      expect(next.pendingRiot).toBeNull();
+      expect(moves).toEqual(pending ? ["resolveRiot"] : ["endTurn", "resolveRiot"]);
+      expect(forced).toEqual([1]);
+    },
+  );
+
   it("force-ends the turn against a policy that never ends it", () => {
     const stubborn: Policy = {
       name: "random",

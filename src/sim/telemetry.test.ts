@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { ACTIVE_EFFECT_KINDS } from "../game/activeEffects";
 import { createModeDefinition } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
-import { resolveRiot, startRiot } from "../game/riot";
+import { resolveRiot } from "../game/riot";
+import { beginTurnFor, endTurn } from "../game/turn";
 import { scenario } from "../game/testing/scenario";
 import { randomPolicy } from "./policies";
 import { runGame } from "./runner";
@@ -85,28 +86,27 @@ describe("snapshotTurn", () => {
 });
 
 describe("Aggregator", () => {
-  it("counts deferred hunger and the new draw on the final turn without duplicating it", () => {
+  it("keeps turn-start hunger and the draw when the final turn ends in a riot", () => {
     const G = scenario()
+      .withResources("0", { food: 0 })
       .stackYearCard("year-drought")
       .opening()
-      .withResources("0", { food: 0 })
+      .withHappiness("0", -3)
       .mutate((state) => {
         state.year = 14;
+        state.yearOpener = "1";
+        state.yearDrawPile = [];
         state.pendingPlayerEvent = null;
-        state.players["0"].collectedThisTurn = false;
-        state.players["0"].popsLostToHunger = 0;
       })
       .build();
-    startRiot(G, "0");
-    G.pendingRiot!.boughtInsurance = ["breadDole", "patronage", "concession"];
     const aggregator = new Aggregator();
     aggregator.beginGame(0, 42, G);
+    expect(endTurn(G).ok).toBe(true);
+    aggregator.onMove(G, "0", { type: "endTurn" });
     expect(resolveRiot(G, "0").ok).toBe(true);
     expect(G.players["0"].popsLostToHunger).toBeGreaterThan(0);
     aggregator.onMove(G, "0", { type: "resolveRiot" });
-    G.phase = "gameOver";
-    G.gameOverReason = "deckExhausted";
-    G.winner = "0";
+    expect(G.gameOverReason).toBe("deckExhausted");
     aggregator.onTurnEnd(G);
     aggregator.endGame(G);
     const report = aggregator.buildReport({
@@ -128,6 +128,42 @@ describe("Aggregator", () => {
     expect(report.riots.byYear).toEqual([{ year: 14, riots: 1, playerTurns: 1 }]);
   });
 
+  it("attributes a last-seat riot to the old year and counts the next draw once", () => {
+    const G = scenario({ patch: { assembly: { firstYear: 0 } } })
+      .opening()
+      .build();
+    G.pendingPlayerEvent = null;
+    beginTurnFor(G, "3");
+    G.pendingPlayerEvent = null;
+    G.players["3"].unrestTokens += 3;
+    const aggregator = new Aggregator();
+    aggregator.beginGame(0, 42, G);
+    expect(endTurn(G).ok).toBe(true);
+    expect(resolveRiot(G, "3").ok).toBe(true);
+    expect(G.year).toBe(2);
+    aggregator.onMove(G, "3", { type: "resolveRiot" });
+    aggregator.onTurnEnd(G);
+    aggregator.endGame(G);
+    const report = aggregator.buildReport({
+      games: 1,
+      turns: 2,
+      policy: "random",
+      mode: "standard",
+      boardLayout: "classic",
+      opening: "fixed",
+      baseSeed: 42,
+      botSeedRule: "test",
+      rulesetPatch: null,
+      definition: G.definition.identity,
+      generatedAt: "test",
+    });
+    expect(report.riots.byYear).toEqual([
+      { year: 1, riots: 1, playerTurns: 1 },
+      { year: 2, riots: 0, playerTurns: 1 },
+    ]);
+    expect(Object.values(report.events.player).reduce((sum, count) => sum + count, 0)).toBe(2);
+  });
+
   it("aggregates games, snapshots, seats, and event counts", () => {
     const turns = 12;
     const { aggregator, report, deferredDraws } = runAggregated(2, turns);
@@ -137,7 +173,7 @@ describe("Aggregator", () => {
     // The opening turn and each newly opened turn are observed, including at a cap.
     expect(aggregator.allSnapshots()).toHaveLength(2 * (turns + 1));
 
-    // Each collected income draws; a riot or Assembly at the cap can defer the final draw.
+    // Each collected income draws; an Assembly at the cap can delay the final draw.
     const playerEventCount = Object.values(report.events.player).reduce(
       (sum, count) => sum + count,
       0,
