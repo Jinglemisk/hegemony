@@ -1,4 +1,5 @@
 import type { ActiveEffectDescriptor, ActiveEffectMechanic } from "../game/activeEffects";
+import { ruleLawText } from "../game/assembly/laws";
 import type { DirectiveEffect, LawEffect } from "../game/assembly/types";
 import { getAuthoredGameContent } from "../game/content";
 import type { GameContent } from "../game/content";
@@ -14,6 +15,7 @@ import {
   RESOURCE_LABELS,
   buildingName,
   formatNumber,
+  formatResourceCost,
   formatPopLabel,
   formatSignedNumber,
 } from "./formatters";
@@ -225,102 +227,46 @@ export function presentLawEffect(
   content: GameContent = getAuthoredGameContent(),
 ): EffectPresentation {
   switch (effect.type) {
+    case "rule":
+      return { text: ruleLawText(effect.rule, content), tone: "neutral" };
+    case "actionCost":
+      return {
+        text:
+          (effect.buildingIds?.map((id) => buildingName(id, content)).join(" / ") ??
+            {
+              foundColony: "Found a colony",
+              upgradeColonyToCity: "Upgrade a colony",
+              buildBuilding: "Build",
+              growPop: "Grow",
+              promotePop: "Promote",
+              demotePop: "Demote",
+            }[effect.action]) +
+          " costs " +
+          (Object.keys(effect.cost).length ? formatResourceCost(effect.cost) : "nothing") +
+          (effect.pop ? ` (${formatPopLabel(effect.pop, 1)})` : ""),
+        tone: "neutral",
+      };
+    case "calmPayment":
+      return { text: `Gold calm instead costs ${effect.amount} food`, tone: "neutral" };
+    case "colonyCapacity":
+      return { text: `Colonies hold ${effect.amount} pops; existing pops stay`, tone: "negative" };
+    case "buildingFood":
+      return {
+        text: `${buildingName(effect.building, content)} grows ${effect.amount} food`,
+        tone: "positive",
+      };
+    case "happiness":
+      return signedPresentation(effect.amount, "happiness to the realm");
     case "settlementIncome":
       return {
-        text:
-          formatSignedNumber(effect.amount) +
-          " " +
-          RESOURCE_LABELS[effect.resource] +
-          " per " +
-          settlementScopeLabel(effect.scope) +
-          (effect.step && effect.step > 1 ? " / " + effect.step : ""),
+        text: `${formatSignedNumber(effect.amount)} ${RESOURCE_LABELS[effect.resource]} per ${effect.scope}`,
         tone: signedTone(effect.amount),
       };
-    case "popIncome":
+    case "onFoundColony":
       return {
-        text:
-          formatSignedNumber(effect.amount) +
-          " " +
-          RESOURCE_LABELS[effect.resource] +
-          " per " +
-          (effect.step && effect.step > 1 ? effect.step + " " : "") +
-          formatPopLabel(effect.pop, effect.step ?? 1),
-        tone: signedTone(effect.amount),
+        text: `Founding grants a free ${formatPopLabel(effect.grantPop, 1)}`,
+        tone: "positive",
       };
-    case "popPrimaryIncome":
-      return {
-        text:
-          formatSignedNumber(effect.amount) + " tile resource per " + formatPopLabel(effect.pop, 1),
-        tone: signedTone(effect.amount),
-      };
-    case "flatIncome":
-      return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource] + " income");
-    case "thresholdHappiness":
-      return {
-        text:
-          formatSignedNumber(effect.atOrAbove) +
-          " happiness at " +
-          effect.threshold +
-          " " +
-          RESOURCE_LABELS[effect.resource] +
-          "; " +
-          formatSignedNumber(effect.below) +
-          " below",
-        tone:
-          signedTone(effect.atOrAbove) === signedTone(effect.below)
-            ? signedTone(effect.atOrAbove)
-            : "neutral",
-      };
-    case "surplusConversion":
-      return {
-        text:
-          formatSignedNumber(effect.amount) +
-          " " +
-          RESOURCE_LABELS[effect.to] +
-          " per " +
-          effect.per +
-          " " +
-          RESOURCE_LABELS[effect.from] +
-          " income above " +
-          effect.above,
-        tone: signedTone(effect.amount),
-      };
-    case "actionCostDelta":
-      return {
-        text:
-          lawActionCostTarget(effect, content) +
-          ": " +
-          formatSignedNumber(effect.amount) +
-          " " +
-          RESOURCE_LABELS[effect.resource] +
-          " cost",
-        tone: signedTone(-effect.amount),
-      };
-    case "actionCostMultiplier":
-      return {
-        text: actionLabel(effect.action) + " costs ×" + formatNumber(effect.multiplier),
-        tone: effect.multiplier < 1 ? "positive" : effect.multiplier > 1 ? "negative" : "muted",
-      };
-    case "bankRateStep":
-      return {
-        text:
-          RESOURCE_LABELS[effect.material] +
-          " bank rate " +
-          formatSignedNumber(effect.steps) +
-          " step" +
-          (Math.abs(effect.steps) === 1 ? "" : "s"),
-        tone: signedTone(effect.steps),
-      };
-    case "onFoundColony": {
-      const rewards = [
-        effect.grantPop ? "+1 " + formatPopLabel(effect.grantPop, 1) : null,
-        effect.unrestTokens ? presentUnrestToken(effect.unrestTokens).text : null,
-      ].filter(Boolean);
-      return {
-        text: "On founding a colony: " + rewards.join(" + "),
-        tone: effect.unrestTokens === "placeOne" && !effect.grantPop ? "negative" : "positive",
-      };
-    }
   }
 }
 
@@ -330,11 +276,6 @@ export function presentDirectiveEffect(effect: DirectiveEffect): EffectPresentat
       return signedPresentation(effect.amount, RESOURCE_LABELS[effect.resource]);
     case "unrestTokens":
       return presentUnrestToken(effect.change, "the target's realm");
-    case "resourceFraction":
-      return {
-        text: `Lose ${formatNumber(effect.fraction * 100)}% stored ${RESOURCE_LABELS[effect.resource]}`,
-        tone: "negative",
-      };
     case "losePopFromLargest":
       return {
         text: `-${formatNumber(effect.count)} ${effect.count === 1 ? "pop" : "pops"} from largest settlement`,
@@ -388,57 +329,6 @@ function presentActiveEffectDuration(descriptor: ActiveEffectDescriptor): string
     case "atNextAssembly":
       return "At the next Assembly";
   }
-}
-
-function actionLabel(action: string): string {
-  const labels: Record<string, string> = {
-    buildBuilding: "build",
-    foundColony: "found colony",
-    growPop: "grow pop",
-    upgradeColonyToCity: "upgrade colony",
-    promotePop: "promote pop",
-    demotePop: "demote pop",
-  };
-  return labels[action] ?? action;
-}
-
-function lawActionCostTarget(
-  effect: Extract<LawEffect, { type: "actionCostDelta" }>,
-  content: GameContent,
-): string {
-  let target = actionLabel(effect.action);
-
-  if (effect.scope) {
-    target += " in " + settlementScopePlural(effect.scope);
-  }
-
-  if (effect.pop) {
-    target += " (" + formatPopLabel(effect.pop, 1) + " only)";
-  }
-
-  if (effect.buildingIds?.length) {
-    target +=
-      " (" +
-      joinHumanList(effect.buildingIds.map((buildingId) => buildingName(buildingId, content))) +
-      " only)";
-  }
-
-  return target;
-}
-
-function settlementScopePlural(scope: "all" | "city" | "colony"): string {
-  if (scope === "all") return "all settlements";
-  return scope === "city" ? "cities" : "colonies";
-}
-
-function joinHumanList(items: string[]): string {
-  if (items.length < 2) return items[0] ?? "";
-  if (items.length === 2) return items.join(" and ");
-  return items.slice(0, -1).join(", ") + ", and " + items.at(-1);
-}
-
-function settlementScopeLabel(scope: "all" | "city" | "colony"): string {
-  return scope === "all" ? "settlement" : scope;
 }
 
 function signedPresentation(amount: number, label: string): EffectPresentation {

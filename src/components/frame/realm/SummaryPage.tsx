@@ -47,7 +47,7 @@ export function SummaryPage({
   const people = (pop: PopType) =>
     holdings.reduce((sum, { settlement }) => sum + settlement.pops[pop], 0);
   const capacity = holdings.reduce(
-    (sum, { settlement }) => sum + settlementCapacity(settlement, G.ruleset),
+    (sum, { settlement }) => sum + settlementCapacity(settlement, G),
     0,
   );
   const mood = unrestStatus(G, viewerId);

@@ -50,18 +50,19 @@ import { claimableLuxuriesAt } from "./luxury";
 import { advanceSetupTurn, beginGameplayTurn, closeAssembly, endTurn } from "./turn";
 import {
   activeLawIds,
-  availableLawReplacementIds,
+  lawProposalReason,
+  repealableLawIds,
   assemblyBribe,
+  getAssemblyBuyVoteStatus,
+  getAssemblyDrawStatus,
+  getAssemblyRepealStatus,
   assemblyDiscardHeld,
   assemblyDraw,
   assemblyPass,
   assemblyPropose,
   assemblyProposeRepeal,
-  assemblyVeto,
   assemblyVote,
   getResolutionCard,
-  lawNeedsReplacement,
-  nextDrawCost,
   POLITICIANS,
 } from "./assembly";
 import type { PoliticianId } from "./assembly";
@@ -141,12 +142,11 @@ export type GameCommand =
   //    off until the house rises.
   | { type: "assemblyDraw"; politician: PoliticianId }
   | { type: "assemblyDiscardHeld" }
-  | { type: "assemblyPropose"; replaces?: string; target?: PlayerId }
+  | { type: "assemblyPropose"; target?: PlayerId }
   | { type: "assemblyProposeRepeal"; cardId: string }
   | { type: "assemblyPass" }
-  | { type: "assemblyBribe" }
+  | { type: "assemblyBribe"; payment: "gold" | "influence" }
   | { type: "assemblyVote"; yea: boolean }
-  | { type: "assemblyVeto" }
   | { type: "assemblyClose" }
   | { type: "endTurn" };
 
@@ -296,17 +296,15 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
     case "assemblyDiscardHeld":
       return assemblyDiscardHeld(G, playerID);
     case "assemblyPropose":
-      return assemblyPropose(G, playerID, move.replaces, move.target);
+      return assemblyPropose(G, playerID, move.target);
     case "assemblyProposeRepeal":
       return assemblyProposeRepeal(G, playerID, move.cardId);
     case "assemblyPass":
       return assemblyPass(G, playerID);
     case "assemblyBribe":
-      return assemblyBribe(G, playerID);
+      return assemblyBribe(G, playerID, move.payment);
     case "assemblyVote":
       return assemblyVote(G, playerID, move.yea);
-    case "assemblyVeto":
-      return assemblyVeto(G, playerID);
     case "assemblyClose":
       return closeAssembly(G);
     case "endTurn":
@@ -389,8 +387,6 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
   }
 
   const moves: DerivedCommand[] = [];
-  const rules = G.ruleset.assembly;
-  const influence = G.players[playerID].resources.influence;
 
   if (session.phase === "closing") {
     // Closing is single-actor: only the seat play returns to may dismiss the recap.
@@ -403,16 +399,13 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
       return [];
     }
 
-    if (session.bribesUsed[playerID] < rules.briberyCap && influence >= rules.briberyCost) {
-      moves.push({ type: "assemblyBribe", cost: { influence: rules.briberyCost } });
+    for (const payment of ["gold", "influence"] as const) {
+      const status = getAssemblyBuyVoteStatus(G, playerID, payment);
+      if (status.can) moves.push({ type: "assemblyBribe", payment, cost: status.cost });
     }
 
     moves.push({ type: "assemblyVote", yea: true });
     moves.push({ type: "assemblyVote", yea: false });
-
-    if (session.vetoUsed[playerID] < rules.vetoesPerAssembly && influence >= rules.vetoCost) {
-      moves.push({ type: "assemblyVeto", cost: { influence: rules.vetoCost } });
-    }
 
     return moves;
   }
@@ -430,16 +423,10 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
     const card = held.card;
     const standing = activeLawIds(G);
 
-    if (card.kind === "directive" || !standing.includes(card.id)) {
+    if (card.kind === "directive" || (!standing.includes(card.id) && !lawProposalReason(G, card))) {
       if (card.kind === "directive") {
         for (const target of PLAYER_IDS.filter((rival) => rival !== playerID)) {
           moves.push({ type: "assemblyPropose", target });
-        }
-      } else if (lawNeedsReplacement(G)) {
-        // At the cap a proposal must name its casualty — one move per candidate, so
-        // the choice of what to tear down is itself an enumerated decision.
-        for (const cardId of availableLawReplacementIds(G)) {
-          moves.push({ type: "assemblyPropose", replaces: cardId });
         }
       } else {
         moves.push({ type: "assemblyPropose" });
@@ -448,32 +435,15 @@ function enumerateAssemblyMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
 
     moves.push({ type: "assemblyDiscardHeld" });
   } else {
-    const drawCost = nextDrawCost(G, playerID);
-
-    if (influence >= drawCost) {
-      for (const politician of POLITICIANS) {
-        if (
-          G.politicianDecks[politician.id].length > 0 ||
-          G.politicianDiscards[politician.id].length > 0
-        ) {
-          moves.push({
-            type: "assemblyDraw",
-            politician: politician.id,
-            cost: { influence: drawCost },
-          });
-        }
-      }
+    for (const politician of POLITICIANS) {
+      const status = getAssemblyDrawStatus(G, playerID, politician.id);
+      if (status.can)
+        moves.push({ type: "assemblyDraw", politician: politician.id, cost: status.cost });
     }
-
-    if (influence >= rules.repealCost) {
-      for (const cardId of activeLawIds(G)) {
-        moves.push({
-          type: "assemblyProposeRepeal",
-          cardId,
-          cost: { influence: rules.repealCost },
-        });
-      }
-    }
+  }
+  for (const cardId of repealableLawIds(G)) {
+    const status = getAssemblyRepealStatus(G, playerID, cardId);
+    if (status.can) moves.push({ type: "assemblyProposeRepeal", cardId, cost: status.cost });
   }
 
   moves.push({ type: "assemblyPass" });
@@ -527,17 +497,15 @@ export function describeCommand(
     case "assemblyDiscardHeld":
       return "set the drawn resolution aside";
     case "assemblyPropose":
-      return `propose the drawn resolution${move.target ? ` against ${move.target}` : ""}${move.replaces ? ` in place of ${move.replaces}` : ""}`;
+      return `propose the drawn resolution${move.target ? ` against ${move.target}` : ""}`;
     case "assemblyProposeRepeal":
       return `move to repeal ${getResolutionCard(content, move.cardId)?.name ?? move.cardId}${formatCost(cost)}`;
     case "assemblyPass":
       return "hold your peace";
     case "assemblyBribe":
-      return `buy a vote${formatCost(cost)}`;
+      return `buy a vote with ${move.payment}${formatCost(cost)}`;
     case "assemblyVote":
       return `vote ${move.yea ? "yea" : "nay"}`;
-    case "assemblyVeto":
-      return `veto the resolution${formatCost(cost)}`;
     case "assemblyClose":
       return "rise from the Assembly";
     case "endTurn":

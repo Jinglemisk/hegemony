@@ -28,7 +28,6 @@ import {
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
-import { applyUnrestTokenChange, describeUnrestTokenChange } from "./happiness";
 import { setupCapitalCount } from "./ruleset";
 import { calculateIncome, getHungerStatus } from "./economy/income";
 import { applyHunger } from "./hunger";
@@ -216,8 +215,7 @@ export function foundColony(
   return MOVE_OK;
 }
 
-/** Standing Laws that hang a rider on founding (Frontier Spirit: a freeman comes with
- *  the charter, and the city pays for it with an Unrest token). */
+/** Frontier Spirit grants a slave at founding; the sent pop still arrives next turn. */
 function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexTile) {
   for (const rider of getFoundColonyRiders(G, playerID)) {
     if (rider.grantPop) {
@@ -230,11 +228,6 @@ function applyFoundColonyRiders(G: HegemonyState, playerID: PlayerId, tile: HexT
           `${rider.label}: a ${formatPopName(rider.grantPop, 1)} sails with the colonists.`,
         );
       }
-    }
-
-    if (rider.unrestTokens) {
-      const swing = applyUnrestTokenChange(G, playerID, rider.unrestTokens);
-      addLog(G, `${rider.label}: the parting ${describeUnrestTokenChange(swing)}.`);
     }
   }
 }

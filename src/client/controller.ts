@@ -68,17 +68,14 @@ function createGameFromUrl(): HegemonyState {
     G = fastForwardToAssembly(G);
   }
 
-  // `?dev=assembly2` goes one sitting further, and it is a TEST AFFORDANCE, not a
-  // rule: it plays the first Assembly out through the same legal-command path and
-  // stops at the next one. The first Assembly always convenes at 0 of 6 laws with
-  // every orator on zero, so the six-law cap, a stele with more than one pip, a
-  // repeal on the ballot and a non-empty voice ledger were all unreachable in a
-  // browser — reviewable only by playing sixteen turns and then a whole sitting
-  // by hand. Nothing here touches the engine; it drives it.
-  if (params?.get("dev") === "assembly2") {
+  // Later sittings expose standing Laws; Year 8 includes eligible Year 4 repeals.
+  const laterSitting = Number(params?.get("dev")?.match(/^assembly([2-7])$/)?.[1] ?? 0);
+  if (laterSitting) {
     G = fastForwardToAssembly(G);
-    G = playOutAssembly(G);
-    G = fastForwardToAssembly(G);
+    for (let sitting = 1; sitting < laterSitting; sitting++) {
+      G = playOutAssembly(G);
+      G = fastForwardToAssembly(G);
+    }
   }
 
   return G;

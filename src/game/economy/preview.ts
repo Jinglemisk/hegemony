@@ -19,7 +19,12 @@ import {
   settlementOverCapacity,
   settlementCapacity,
 } from "../settlement";
-import { calculateIncomeBreakdown, getHungerStatus, summarizeIncome } from "./income";
+import {
+  calculateIncomeBreakdown,
+  getHungerStatus,
+  summarizeIncome,
+  settlementNetYield,
+} from "./income";
 import type { HungerStatus, IncomeContribution } from "./income";
 import {
   buildBuilding,
@@ -103,6 +108,7 @@ export function calculateEconomyProjection(
     incomeState.ruleset.economy.stockpileFloors,
   );
   const population = playerPopulationTotals(incomeState, playerID);
+  const settlements = createSettlementEconomyProjections(incomeState, G, playerID, breakdown);
   const transfers = G.transfers.filter((transfer) => transfer.owner === playerID);
   const inTransit = transfers.reduce((total, transfer) => total + totalPops(transfer.pops), 0);
 
@@ -114,10 +120,10 @@ export function calculateEconomyProjection(
     food: getHungerStatus(incomeState, playerID, income.food),
     population: {
       ...population,
-      overCapacity: Math.max(0, population.pops - population.capacity),
+      overCapacity: settlements.reduce((sum, place) => sum + place.overCapacity, 0),
       inTransit,
     },
-    settlements: createSettlementEconomyProjections(incomeState, G, playerID, breakdown),
+    settlements,
   };
 }
 
@@ -147,6 +153,29 @@ export function previewFoundColony(
   return previewEconomyAction(G, playerID, "Found Colony", (draft) =>
     foundColony(draft, playerID, tileId, sourceTileId, pop),
   );
+}
+
+/** The new holding after its founding pop arrives, through the real founding path. */
+export function previewFoundedSettlement(
+  G: HegemonyState,
+  playerID: PlayerId,
+  tileId: string,
+  sourceTileId: string,
+  pop: PopType,
+) {
+  const draft = structuredClone(G);
+  if (!foundColony(draft, playerID, tileId, sourceTileId, pop).ok) return null;
+  resolveArrivingPops(draft, playerID);
+  const tile = getTile(draft, tileId);
+  const settlement = getOwnedSettlement(draft, tileId, playerID);
+  return tile && settlement
+    ? {
+        state: draft,
+        tile,
+        settlement,
+        income: settlementNetYield(tile, settlement, draft, draft.definition.content),
+      }
+    : null;
 }
 
 export function previewUpgradeColonyToCity(
@@ -237,7 +266,9 @@ function createSettlementEconomyProjections(
       }
 
       const source = settlementIncomeSource(tile, settlement);
-      const settlementBreakdown = breakdown.filter((entry) => entry.source === source);
+      const settlementBreakdown = breakdown.filter(
+        (entry) => entry.settlementId === settlement.id || entry.source === source,
+      );
       const inTransitIn = transfers
         .filter((transfer) => transfer.toTileId === tileId)
         .reduce((total, transfer) => total + totalPops(transfer.pops), 0);
@@ -251,8 +282,8 @@ function createSettlementEconomyProjections(
         kind: settlement.kind,
         income: summarizeIncome(settlementBreakdown),
         pops: totalPops(settlement.pops),
-        capacity: settlementCapacity(settlement, incomeState.ruleset),
-        overCapacity: settlementOverCapacity(settlement, incomeState.ruleset),
+        capacity: settlementCapacity(settlement, incomeState),
+        overCapacity: settlementOverCapacity(settlement, incomeState),
         inTransitIn,
         inTransitOut,
       };

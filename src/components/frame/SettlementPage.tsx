@@ -5,6 +5,7 @@ import {
   settlementIdleSlaves,
   settlementOpenSlots,
   settlementSlots,
+  settlementSlaveResource,
   settlementWorkingSlaves,
 } from "../../game/settlement";
 import { buildingGround } from "../../game/status";
@@ -45,13 +46,13 @@ export function SettlementPage({
   /** Open Build on this place; absent for a rival's settlement, which is read-only. */
   onRaise?: (tileId: string) => void;
 }) {
-  const primary = tile.resource?.type ?? null;
+  const primary = settlementSlaveResource(tile, G);
   const pops = settlement.pops.slaves + settlement.pops.freemen + settlement.pops.citizens;
-  const capacity = settlementCapacity(settlement, G.ruleset);
-  const slots = settlementSlots(tile, settlement);
-  const open = settlementOpenSlots(tile, settlement);
-  const working = settlementWorkingSlaves(tile, settlement);
-  const idle = settlementIdleSlaves(tile, settlement);
+  const capacity = settlementCapacity(settlement, G);
+  const slots = settlementSlots(tile, settlement, G);
+  const open = settlementOpenSlots(tile, settlement, G);
+  const working = settlementWorkingSlaves(tile, settlement, G);
+  const idle = settlementIdleSlaves(tile, settlement, G);
   // The site would take another building: a city with a slot, or a colony its Port.
   const ground = buildingGround(G, settlement.owner, tile.id);
   const canRaise = ground.open > 0 && ground.raisable > 0;

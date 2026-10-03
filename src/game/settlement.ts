@@ -1,23 +1,33 @@
+import { effectiveRuleset, hasLawRule, type RulesSource } from "./assembly/laws";
 import { hexDistance, isCoastalTile } from "./map";
-import type { HegemonyState, HexTile, PlayerId, PopType, Settlement } from "./types";
+import type {
+  HegemonyState,
+  HexTile,
+  PlayerId,
+  PopType,
+  Settlement,
+  MaterialResource,
+} from "./types";
 import { capitalize } from "./core/format";
 import { totalPops } from "./core/pops";
 import { getOwnedSettlement, getTile } from "./core/query";
 import type { ActionStatus } from "./core/results";
-import type { Ruleset } from "./ruleset";
 
 /** The kind's capacity, for previews of a settlement that does not exist yet. */
-export function settlementPopCapacity(kind: Settlement["kind"], ruleset: Ruleset) {
-  return ruleset.settlements[kind].popCapacity;
+export function settlementPopCapacity(kind: Settlement["kind"], source: RulesSource) {
+  return effectiveRuleset(source).settlements[kind].popCapacity;
 }
 
 /** A settlement's pop capacity: its kind's, and nothing raises it. */
-export function settlementCapacity(settlement: Settlement, ruleset: Ruleset) {
+export function settlementCapacity(settlement: Settlement, ruleset: RulesSource) {
   return settlementPopCapacity(settlement.kind, ruleset);
 }
 
-export function settlementOverCapacity(settlement: Settlement, ruleset: Ruleset) {
-  return Math.max(0, totalPops(settlement.pops) - settlementCapacity(settlement, ruleset));
+export function settlementOverCapacity(settlement: Settlement, ruleset: RulesSource) {
+  // A capacity cut blocks new arrivals; it never penalizes existing pops.
+  return "activeLaws" in ruleset
+    ? 0
+    : Math.max(0, totalPops(settlement.pops) - settlementCapacity(settlement, ruleset));
 }
 
 export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
@@ -31,7 +41,7 @@ export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
       }
 
       totals.pops += totalPops(settlement.pops);
-      totals.capacity += settlementCapacity(settlement, G.ruleset);
+      totals.capacity += settlementCapacity(settlement, G);
       return totals;
     },
     { pops: 0, capacity: 0 },
@@ -42,22 +52,27 @@ export function playerPopulationTotals(G: HegemonyState, playerID: PlayerId) {
  * The tile slots this settlement holds. A settlement alone on its tile holds them all;
  * colonies sharing a tile split them, and the colony founded first takes the odd one.
  */
-export function settlementSlots(tile: HexTile, settlement: Settlement) {
+export function settlementSlots(tile: HexTile, settlement: Settlement, source?: RulesSource) {
+  const cityDelta =
+    settlement.kind === "colony"
+      ? 0
+      : Number(hasLawRule(source, "masterBuilders")) - Number(hasLawRule(source, "homesteadAct"));
+  const slots = Math.max(settlement.buildings.length, tile.slots + cityDelta);
   const sharers = tile.settlements.length;
 
   if (sharers <= 1) {
-    return tile.slots;
+    return slots;
   }
 
   const index = tile.settlements.findIndex((candidate) => candidate.id === settlement.id);
-  const share = Math.floor(tile.slots / sharers);
+  const share = Math.floor(slots / sharers);
 
-  return index >= 0 && index < tile.slots % sharers ? share + 1 : share;
+  return index >= 0 && index < slots % sharers ? share + 1 : share;
 }
 
 /** Slots left for slaves to work: every building takes one. */
-export function settlementOpenSlots(tile: HexTile, settlement: Settlement) {
-  return Math.max(0, settlementSlots(tile, settlement) - settlement.buildings.length);
+export function settlementOpenSlots(tile: HexTile, settlement: Settlement, source?: RulesSource) {
+  return Math.max(0, settlementSlots(tile, settlement, source) - settlement.buildings.length);
 }
 
 /**
@@ -65,14 +80,26 @@ export function settlementOpenSlots(tile: HexTile, settlement: Settlement) {
  * idle. The engine assigns them; nobody picks which slave works. On terrain with no
  * resource (hills) no slave works.
  */
-export function settlementWorkingSlaves(tile: HexTile, settlement: Settlement) {
-  return tile.resource
-    ? Math.min(settlement.pops.slaves, settlementOpenSlots(tile, settlement))
+/** The actual resource of the working-slave column, after standing rules. */
+export function settlementSlaveResource(
+  tile: HexTile,
+  source?: RulesSource,
+): MaterialResource | null {
+  return hasLawRule(source, "landReform") ? "food" : (tile.resource?.type ?? null);
+}
+
+export function settlementWorkingSlaves(
+  tile: HexTile,
+  settlement: Settlement,
+  source?: RulesSource,
+) {
+  return settlementSlaveResource(tile, source)
+    ? Math.min(settlement.pops.slaves, settlementOpenSlots(tile, settlement, source))
     : 0;
 }
 
-export function settlementIdleSlaves(tile: HexTile, settlement: Settlement) {
-  return settlement.pops.slaves - settlementWorkingSlaves(tile, settlement);
+export function settlementIdleSlaves(tile: HexTile, settlement: Settlement, source?: RulesSource) {
+  return settlement.pops.slaves - settlementWorkingSlaves(tile, settlement, source);
 }
 
 export function settlementIncomeSource(tile: HexTile, settlement: Settlement) {
@@ -89,12 +116,19 @@ export function playerPieces(G: HegemonyState, playerID: PlayerId) {
   );
   const colonies = kinds.filter((kind) => kind === "colony").length;
   const setupCities = G.ruleset.setup.filter((kind) => kind !== "colony").length;
+  const cities = Math.max(0, kinds.length - colonies - setupCities);
 
   return {
     colonies,
-    cities: Math.max(0, kinds.length - colonies - setupCities),
+    cities,
     colonySupply: G.ruleset.pieces.colonies,
+    colonyLimit: Math.max(0, G.ruleset.pieces.colonies - Number(hasLawRule(G, "masterBuilders"))),
+    coloniesRemaining: Math.max(
+      0,
+      G.ruleset.pieces.colonies - Number(hasLawRule(G, "masterBuilders")) - colonies,
+    ),
     citySupply: G.ruleset.pieces.cities,
+    citiesRemaining: Math.max(0, G.ruleset.pieces.cities - cities),
   };
 }
 

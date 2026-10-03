@@ -67,7 +67,7 @@ export function LadderPage({
 }) {
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
   const player = G.players[playerID];
-  const economy = calculatePopEconomy(holdings, G.ruleset);
+  const economy = calculatePopEconomy(holdings, G);
   const names = settlementNames(G.board.tiles);
   const count = (pop: PopType) =>
     holdings.reduce((total, { settlement }) => total + settlement.pops[pop], 0);

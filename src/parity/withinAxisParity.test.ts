@@ -205,12 +205,14 @@ describe("effective content and cost parity", () => {
     // The four verbs that used to print "varies" / "options" / "stakes". A dock
     // price has to be a figure the press would really charge, so each is checked
     // against the engine query that charges it rather than against a literal.
-    const growFood = GROWABLE_POPS.map(
-      (pop) => getGrowPopCost(G, "0", owned(G, "0,0", "0"), pop).food ?? 0,
-    );
+    const growFood = GROWABLE_POPS.map((pop) => getGrowPopCost(G, "0", pop).food ?? 0);
     expect(priceOf("grow")).toEqual([
       { span: { resource: "food", min: Math.min(...growFood), max: Math.max(...growFood) } },
     ]);
+
+    G.activeLaws.push({ cardId: "tenant-rights", author: "0", enactedYear: G.year, order: 0 });
+    expect(priceOf("grow")).toEqual([{ span: { resource: "gold", min: 2, max: 3 } }]);
+    G.activeLaws = [];
 
     const [floor] = priceOf("build");
     const cheapest = Math.min(

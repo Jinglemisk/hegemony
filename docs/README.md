@@ -15,9 +15,9 @@ session with "continue the v2 migration" in the `hegemony-v2` worktree.
 
 **Owner blockers:** none.
 
-Step 7 is implemented in the working tree and awaits the lead's bot batch, browser
-audits and shell gate. Its defaults are in the migration plan; Step 8 is next after
-verification and merge.
+Step 7 merged in #86. Step 8 is implemented in the working tree and awaits the
+lead's bot batch, browser audits and shell gate. Its defaults are in the migration
+plan; Step 9 follows verification and merge.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze

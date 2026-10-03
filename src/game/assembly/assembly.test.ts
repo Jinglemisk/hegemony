@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-
 import { PLAYER_IDS } from "../data";
 import { collectIncome } from "../actions";
-import { owned, scenario, tile } from "../testing/scenario";
-import { closeAssembly, endTurn } from "../turn";
-import { enumerateLegalCommands, transition } from "../legalMoves";
+import { closeAssembly } from "../turn";
+import { enumerateLegalCommands } from "../legalMoves";
+import { owned, scenario } from "../testing/scenario";
+import { voiceHolder } from "../victory";
 import type { HegemonyState, PlayerId } from "../types";
+import { getAuthoredResolutionCard } from "./deck";
 import {
   assemblyBribe,
   assemblyDiscardHeld,
@@ -13,967 +14,207 @@ import {
   assemblyPass,
   assemblyPropose,
   assemblyProposeRepeal,
-  assemblyVeto,
   assemblyVote,
   baseVoteWeight,
-  currentVoteWeight,
   enactForEval,
-  nextDrawCost,
+  lawCanBeRemoved,
   openAssembly,
-  nextAssemblyYear,
+  shouldOpenAssembly,
 } from "./assembly";
-import { getAuthoredResolutionCard } from "./deck";
-import { authoredSteleCount, politicianStandings } from "./power";
-import { voiceHolder } from "../victory";
 
-/**
- * The Assembly's cadence and flow (design §1.1–§1.5).
- *
- * The agora is not a screen a player opens: it is engine state that SUSPENDS the turn
- * machine between the year turning and the opener's turn. So most of this suite drives
- * the real turn loop to reach it, and then drives the real proposal / ballot verbs —
- * the only pokes are the ones that make a random draw deterministic.
- */
-
-/** Cycle whole turns until the agora convenes. An unattended seat can pick up a player
- *  event or a riot on the way; both are dismissed exactly as victory.test.ts does. */
-function playUntilAssembly(G: HegemonyState, limit = 40): number {
-  let turns = 0;
-
-  while (!G.assembly && G.phase === "gameplay" && turns < limit) {
-    G.pendingPlayerEvent = null;
-    G.pendingRiot = null;
-    endTurn(G);
-    turns += 1;
-  }
-
-  return turns;
-}
-
-/** Zero the seat's citizens everywhere, then seat `count` in their first settlement —
- *  vote weight is citizens, so the ballot tests need them exact. */
-function setCitizens(G: HegemonyState, playerID: PlayerId, count: number) {
-  for (const tileId of G.players[playerID].settlements) {
-    owned(G, tileId, playerID).pops.citizens = 0;
-  }
-
-  owned(G, G.players[playerID].settlements[0], playerID).pops.citizens = count;
-}
-
-/**
- * The agora at the moment it convenes. Two normalisations: the random house resolution
- * is lifted off the bema so each test owns the ballot outright, and every seat is
- * seated with exactly one citizen — a year of unattended turns can starve a seat's
- * citizens away, and a house where nobody can vote passes nothing.
- */
-function atAssembly(options?: Parameters<typeof scenario>[0]): HegemonyState {
-  const G = scenario(options).opening().build();
-  playUntilAssembly(G);
-
-  if (!G.assembly) {
-    throw new Error("the assembly never convened");
-  }
-
-  // Clear the house card so each test owns the bema outright (the async proposal keeps
-  // it on `houseItem`, not the — still empty — `ballot`).
-  G.assembly.houseItem = null;
-
-  for (const playerID of PLAYER_IDS) {
-    setCitizens(G, playerID, 1);
-  }
-
+function sitting(year = 2) {
+  const G = scenario().opening().withResources("0", { influence: 30 }).build();
+  G.year = year;
+  G.pendingPlayerEvent = null;
+  G.pendingRiot = null;
+  openAssembly(G, "0");
   return G;
 }
-
-/** Put a known card on top of its politician's deck so a fish is deterministic. */
-function stackResolution(G: HegemonyState, cardId: string) {
-  const card = getAuthoredResolutionCard(cardId)!;
-  const deck = G.politicianDecks[card.politician];
-  const at = deck.indexOf(cardId);
-
-  if (at >= 0) {
-    deck.splice(at, 1);
-  }
-
-  deck.unshift(cardId);
+function propose(G: HegemonyState, id: string, by: PlayerId = "0", target?: PlayerId) {
+  const card = getAuthoredResolutionCard(id)!;
+  G.politicianDecks[card.politician] = [
+    id,
+    ...G.politicianDecks[card.politician].filter((c) => c !== id),
+  ];
+  expect(assemblyDraw(G, by, card.politician).ok).toBe(true);
+  expect(assemblyPropose(G, by, target).ok).toBe(true);
+}
+function pass(G: HegemonyState) {
+  while (G.assembly!.phase === "proposal") expect(assemblyPass(G, G.currentPlayer).ok).toBe(true);
+}
+function vote(G: HegemonyState, yea = true) {
+  while (G.assembly!.phase === "voting")
+    expect(assemblyVote(G, G.currentPlayer, yea).ok).toBe(true);
+}
+function plant(G: HegemonyState, cardId: string, author: PlayerId = "0", enactedYear = 0) {
+  G.activeLaws.push({ cardId, author, enactedYear, order: G.lawOrder++ });
+}
+function carry(G: HegemonyState, id: string, target: PlayerId = "1") {
+  propose(G, id, "0", target);
+  pass(G);
+  vote(G);
 }
 
-/** A seat fishes the named card out and seals it as its proposal. Proposal is async, so
- *  the seat is explicit — it defaults to player 0, which the author assertions expect. */
-function proposeCard(
-  G: HegemonyState,
-  cardId: string,
-  replaces?: string,
-  by: PlayerId = "0",
-  target: PlayerId = PLAYER_IDS.find((id) => id !== by)!,
-) {
-  stackResolution(G, cardId);
-  G.players[by].resources.influence += G.ruleset.assembly.drawCost;
-
-  expect(assemblyDraw(G, by, getAuthoredResolutionCard(cardId)!.politician).ok).toBe(true);
-
-  return { proposer: by, result: assemblyPropose(G, by, replaces, target) };
-}
-
-/** Every still-undecided seat holds its peace. `activePlayer` parks on the first
- *  undecided seat, so passing it repeatedly walks the whole round to a close. */
-function passRemainingSeats(G: HegemonyState) {
-  while (G.assembly!.phase === "proposal") {
-    expect(assemblyPass(G, G.assembly!.activePlayer).ok).toBe(true);
-  }
-}
-
-function voteEverything(G: HegemonyState, yea: boolean) {
-  while (G.assembly!.phase === "voting") {
-    expect(assemblyVote(G, G.assembly!.activePlayer, yea).ok).toBe(true);
-  }
-}
-
-/** Seal a proposal, let the rest hold their peace, then carry it. */
-function carryResolution(
-  G: HegemonyState,
-  cardId: string,
-  replaces?: string,
-  by: PlayerId = "0",
-  target: PlayerId = PLAYER_IDS.find((id) => id !== by)!,
-): PlayerId {
-  const { proposer, result } = proposeCard(G, cardId, replaces, by, target);
-  expect(result.ok).toBe(true);
-  passRemainingSeats(G);
-  voteEverything(G, true);
-  return proposer;
-}
-
-function plantLaw(G: HegemonyState, cardId: string, author: PlayerId | null = "0") {
-  G.activeLaws.push({ cardId, author, enactedYear: G.year, order: G.lawOrder++ });
-}
-
-const SIX_LAWS = [
-  "land-reform",
-  "sacred-fields",
-  "festival-calendar",
-  "public-works",
-  "forum-rites",
-  "homestead-act",
-];
-
-describe("cadence: the Assembly sits every other year from the ruleset's first year", () => {
-  it("reports the next sitting from the same cadence the turn machine uses", () => {
-    const G = scenario().build();
-    expect(nextAssemblyYear(G)).toBe(2);
-    G.year = 2;
-    expect(nextAssemblyYear(G)).toBe(4);
-    G.year = 3;
-    expect(nextAssemblyYear(G)).toBe(4);
-    G.year = 14;
-    expect(nextAssemblyYear(G)).toBeNull();
-  });
-  it("holds no assembly at all through Year 1", () => {
+describe("v2 Assembly", () => {
+  it("meets in even years 2 to 14 and votes only on player proposals", () => {
     const G = scenario().opening().build();
-
-    for (let turn = 0; turn < 3; turn += 1) {
-      G.pendingPlayerEvent = null;
-      G.pendingRiot = null;
-      expect(endTurn(G).ok, `turn ${turn}`).toBe(true);
-      expect(G.assembly, `turn ${turn}`).toBeNull();
+    for (let year = 1; year <= 14; year++) {
+      G.year = year;
+      expect(shouldOpenAssembly(G)).toBe(year % 2 === 0);
     }
-
-    expect(G.year).toBe(1);
-    expect(G.assembliesHeld).toBe(0);
+    const rng = G.rng;
+    const decks = structuredClone(G.politicianDecks);
+    openAssembly(G, "0");
+    pass(G);
+    expect(G.rng).toBe(rng);
+    expect(G.politicianDecks).toEqual(decks);
+    expect(G.assembly!.ballot).toEqual([]);
+    expect(G.assembly!.phase).toBe("closing");
   });
-
-  it("convenes as Year 2 opens, with a house resolution already on the bema", () => {
-    const G = scenario().opening().build();
-    expect(playUntilAssembly(G)).toBe(4);
-
-    expect(G.year).toBe(2);
-    expect(G.assembly?.year).toBe(2);
-    expect(G.assembly?.phase).toBe("proposal");
-    expect(G.assembliesHeld).toBe(1);
-    // Something is always on the bema, so an assembly where every seat passes still
-    // has something to argue about. It rides `houseItem` until the vote assembles the
-    // ballot, so no player proposal is revealed early.
-    expect(G.assembly?.houseItem).not.toBeNull();
-    expect(G.assembly?.houseItem?.kind).toBe("enact");
-    expect(G.assembly?.houseItem?.kind === "enact" && G.assembly.houseItem.card.kind).toBe("law");
-    expect(G.assembly?.ballot).toHaveLength(0);
+  it("charges one 2-influence draw, permits a secret proposal, and has no redraw", () => {
+    const G = sitting();
+    const before = G.players["0"].resources.influence;
+    expect(assemblyDraw(G, "0", "perdiccas").ok).toBe(true);
+    expect(G.players["0"].resources.influence).toBe(before - 2);
+    expect(assemblyDiscardHeld(G, "0").ok).toBe(true);
+    expect(assemblyDraw(G, "0", "perdiccas").ok).toBe(false);
+    expect(enumerateLegalCommands(G, "0").some((m) => m.type === "assemblyDraw")).toBe(false);
+    expect(assemblyPass(G, "0").ok).toBe(true);
   });
-
-  it("ends the turn successfully but does NOT open the opener's turn while the agora sits", () => {
-    const G = scenario().opening().build();
-    playUntilAssembly(G, 3);
-    G.pendingPlayerEvent = null;
-    G.pendingRiot = null;
-    const turnBefore = G.turn;
-
-    expect(endTurn(G).ok).toBe(true);
-
-    expect(G.assembly).not.toBeNull();
-    // The year turned and the opener moved on, but nobody has taken a turn. Proposal
-    // is async, so `currentPlayer` just parks on the first undecided seat (the new
-    // opener) for a headless driver; the UI lets any seat act.
-    expect(G.yearOpener).toBe("1");
-    expect(G.assembly?.resumePlayer).toBe("1");
-    expect(G.currentPlayer).toBe("1");
-    expect(G.turn).toBe(turnBefore);
-    // ...and the turn machine stays suspended: endTurn is refused outright.
-    expect(endTurn(G).ok).toBe(false);
-  });
-
-  it("hands play back to the seat it interrupted when it closes", () => {
-    const G = atAssembly();
-    // Nothing is on the bema, so the house rises without a vote.
-    passRemainingSeats(G);
-    expect(G.assembly?.phase).toBe("closing");
-    const turnBefore = G.turn;
-
-    expect(closeAssembly(G).ok).toBe(true);
-
-    expect(G.assembly).toBeNull();
-    expect(G.currentPlayer).toBe("1");
-    expect(G.turn).toBe(turnBefore + 1);
-  });
-
-  it("convenes again two years on, behind the opener of that year", () => {
-    const G = atAssembly();
-    passRemainingSeats(G);
-    expect(closeAssembly(G).ok).toBe(true);
-
-    playUntilAssembly(G);
-
-    expect(G.phase).toBe("gameplay");
-    expect(G.year).toBe(4); // every other year
-    expect(G.assembliesHeld).toBe(2);
-    // The opener moves on a seat each year, and the agora runs off the new one.
-    expect(G.yearOpener).toBe("3");
-    expect(G.assembly?.resumePlayer).toBe("3");
-    // The vote runs in turn order from the new opener.
-    expect(G.assembly?.voteOrder).toEqual(["3", "0", "1", "2"]);
-  });
-
-  it("is disabled outright by firstYear: 0", () => {
-    const G = scenario({ patch: { assembly: { firstYear: 0 } } })
-      .opening()
-      .build();
-
-    for (let turn = 0; turn < 24 && G.phase === "gameplay"; turn += 1) {
-      G.pendingPlayerEvent = null;
-      G.pendingRiot = null;
-      endTurn(G);
-      expect(G.assembly, `turn ${turn}`).toBeNull();
-    }
-
-    // Well past Year 2, when the agora would otherwise have convened.
-    expect(G.year).toBeGreaterThan(5);
-    expect(G.assembliesHeld).toBe(0);
-  });
-});
-
-describe("the proposal round", () => {
-  it("exposes and transitions an undecided rival's async command", () => {
-    const G = atAssembly();
-    const actor: PlayerId = "2";
-    expect(G.currentPlayer).not.toBe(actor);
-    const command = enumerateLegalCommands(G, actor).find(
-      (candidate) => candidate.type === "assemblyPass",
-    );
-
-    expect(command).toBeDefined();
-    if (!command) return;
-    const result = transition(G.definition, G, actor, command);
-
-    expect(result.ok).toBe(true);
-    expect(G.assembly?.proposalDone[actor]).toBe(false);
-    if (!result.ok) return;
-    expect(result.state.assembly?.proposalDone[actor]).toBe(true);
-  });
-
-  it("is asynchronous — any undecided seat may act, in any order", () => {
-    const G = atAssembly();
-
-    // Year 2's opener is player 1, so the vote runs 1→2→3→0. Proposal has no order at
-    // all — currentPlayer only parks on the first undecided seat for a headless driver.
-    expect(G.assembly?.voteOrder).toEqual(["1", "2", "3", "0"]);
-    expect(G.assembly?.activePlayer).toBe("1");
-    expect(G.assembly?.proposalDone).toEqual({ "0": false, "1": false, "2": false, "3": false });
-
-    // A seat other than the parked one may act right away, and finalizes only itself.
-    expect(assemblyPass(G, "2").ok).toBe(true);
-    expect(G.assembly?.proposalDone["2"]).toBe(true);
-    expect(G.assembly?.proposalDone["1"]).toBe(false);
-    // A finalized seat cannot act again.
-    expect(assemblyPass(G, "2").ok).toBe(false);
-    // currentPlayer still parks on the first undecided seat (the opener).
-    expect(G.assembly?.activePlayer).toBe("1");
-  });
-
-  it("charges the draw cost, then the redraw price for every fish after it — per seat", () => {
-    const G = atAssembly({ patch: { assembly: { drawCost: 2, redrawCost: 5 } } });
-    const proposer: PlayerId = "2";
-    G.players[proposer].resources.influence = 20;
-
-    expect(nextDrawCost(G, proposer)).toBe(2);
-    expect(assemblyDraw(G, proposer, "demosthenes").ok).toBe(true);
-    expect(G.players[proposer].resources.influence).toBe(18);
-
-    // Throwing the fish back is free; the price is what the NEXT one costs.
-    expect(assemblyDiscardHeld(G, proposer).ok).toBe(true);
-    expect(nextDrawCost(G, proposer)).toBe(5);
-    // Another seat's fishing count is independent — this is the opener's first draw.
-    expect(nextDrawCost(G, "1")).toBe(2);
-    expect(assemblyDraw(G, proposer, "demosthenes").ok).toBe(true);
-    expect(G.players[proposer].resources.influence).toBe(13);
-  });
-
-  it("refuses a fish the seat cannot pay for", () => {
-    const G = atAssembly();
-    const proposer: PlayerId = "1";
-    G.players[proposer].resources.influence = G.ruleset.assembly.drawCost - 1;
-
-    expect(assemblyDraw(G, proposer, "demosthenes").ok).toBe(false);
-  });
-
-  it("holds the drawn card until it is discarded or proposed, and one at a time", () => {
-    const G = atAssembly();
-    const proposer: PlayerId = "1";
-    G.players[proposer].resources.influence = 20;
-    stackResolution(G, "land-reform");
-
-    expect(assemblyDraw(G, proposer, "demosthenes").ok).toBe(true);
-    expect(G.assembly?.held[proposer]?.card.id).toBe("land-reform");
-    // Fishing again while holding is refused — a seat looks at one card at a time.
-    expect(assemblyDraw(G, proposer, "demosthenes").ok).toBe(false);
-
-    expect(assemblyDiscardHeld(G, proposer).ok).toBe(true);
-    expect(G.assembly?.held[proposer]).toBeNull();
-    // A discarded fish goes back to its politician's pile — four seats fishing for
-    // seven years would otherwise strip the agora bare.
-    expect(G.politicianDiscards.demosthenes).toContain("land-reform");
-
-    stackResolution(G, "land-reform");
-    expect(assemblyDraw(G, proposer, "demosthenes").ok).toBe(true);
-    expect(assemblyPropose(G, proposer).ok).toBe(true);
-    // The sealed proposal is secret on the seat's own slot until the vote assembles it.
-    expect(G.assembly?.proposals[proposer]?.kind).toBe("enact");
-    expect(G.assembly?.held[proposer]).toBeNull();
-    expect(G.assembly?.proposalDone[proposer]).toBe(true);
-  });
-
-  it("lets a penniless seat hold their peace — passing is always legal", () => {
-    const G = atAssembly();
-    const proposer: PlayerId = "1";
-    G.players[proposer].resources.influence = 0;
-
-    expect(assemblyDraw(G, proposer, "demosthenes").ok).toBe(false);
-    expect(assemblyPass(G, proposer).ok).toBe(true);
-  });
-
-  it("gives each seat exactly one proposal", () => {
-    const G = atAssembly();
-    const { proposer } = proposeCard(G, "land-reform");
-
-    // Their say is spent: they can neither fish nor speak again this assembly.
-    expect(G.assembly?.proposalDone[proposer]).toBe(true);
-    expect(assemblyDraw(G, proposer, "demosthenes").ok).toBe(false);
-    expect(assemblyPropose(G, proposer).ok).toBe(false);
-    expect(assemblyPass(G, proposer).ok).toBe(false);
-  });
-
-  it("refuses to re-propose a Law that already stands", () => {
-    const G = atAssembly();
-    plantLaw(G, "land-reform");
-
-    const { proposer } = proposeCard(G, "land-reform");
-    expect(G.assembly?.held[proposer]?.card.id).toBe("land-reform");
-    expect(assemblyPropose(G, proposer).ok).toBe(false);
-  });
-
-  it("seals a repeal for the repeal price, spending the seat's proposal", () => {
-    const G = atAssembly();
-    plantLaw(G, "land-reform", "3");
-    const proposer: PlayerId = "1";
-    G.players[proposer].resources.influence = G.ruleset.assembly.repealCost;
-
-    expect(assemblyProposeRepeal(G, proposer, "sacred-fields").ok).toBe(false); // not standing
-    expect(assemblyProposeRepeal(G, proposer, "land-reform").ok).toBe(true);
-
-    expect(G.players[proposer].resources.influence).toBe(0);
-    expect(G.assembly?.proposals[proposer]).toEqual({
-      kind: "repeal",
-      cardId: "land-reform",
-      proposer,
-    });
-    expect(G.assembly?.proposalDone[proposer]).toBe(true);
-  });
-
-  it("rises without a vote when nothing was laid before the house", () => {
-    const G = atAssembly();
-    passRemainingSeats(G);
-
-    expect(G.assembly?.phase).toBe("closing");
-    expect(G.assembly?.results).toHaveLength(0);
-  });
-});
-
-describe("the ballot", () => {
-  it("votes one item at a time, in turn order", () => {
-    const G = atAssembly();
-    proposeCard(G, "land-reform");
-    passRemainingSeats(G);
-
-    expect(G.assembly?.phase).toBe("voting");
-    expect(G.assembly?.activePlayer).toBe("1");
-    // Voting out of turn is refused: every vote lands openly, in order, so the last
-    // voter is a kingmaker on a close card.
-    expect(assemblyVote(G, "2", true).ok).toBe(false);
-    expect(assemblyVote(G, "1", true).ok).toBe(true);
-    expect(G.assembly?.activePlayer).toBe("2");
-  });
-
-  it("weighs a vote in citizens", () => {
-    const G = atAssembly();
-    setCitizens(G, "1", 3);
-    setCitizens(G, "2", 0);
-    proposeCard(G, "land-reform");
-    passRemainingSeats(G);
-
-    expect(baseVoteWeight(G, "1")).toBe(3);
-    expect(baseVoteWeight(G, "2")).toBe(0);
-
-    expect(assemblyVote(G, "1", true).ok).toBe(true);
-    expect(G.assembly?.votes[0]).toMatchObject({ playerID: "1", yea: true, weight: 3, bribed: 0 });
-  });
-
-  it("fails a tie by default", () => {
-    const G = atAssembly();
-    proposeCard(G, "land-reform");
-    passRemainingSeats(G);
-
-    // One citizen apiece, voting 1→2→3→0: two for, two against.
-    expect(assemblyVote(G, "1", true).ok).toBe(true);
-    expect(assemblyVote(G, "2", true).ok).toBe(true);
-    expect(assemblyVote(G, "3", false).ok).toBe(true);
-    expect(assemblyVote(G, "0", false).ok).toBe(true);
-
-    const result = G.assembly!.results[0];
-    expect(result).toMatchObject({ yea: 2, nay: 2, passed: false });
+  it("counts the seat and every citizen, buys two votes with either payment, and fails ties", () => {
+    const G = sitting();
+    propose(G, "guild-charter");
+    G.players["1"].resources.influence = 2;
+    propose(G, "frontier-spirit", "1");
+    pass(G);
+    for (const id of PLAYER_IDS)
+      for (const tile of G.players[id].settlements) owned(G, tile, id).pops.citizens = 0;
+    expect(baseVoteWeight(G, "0")).toBe(1);
+    G.players["0"].resources.gold = 2;
+    expect(assemblyBribe(G, "0", "gold").ok).toBe(true);
+    expect(assemblyBribe(G, "0", "influence").ok).toBe(true);
+    expect(assemblyBribe(G, "0", "influence").ok).toBe(false);
+    expect(assemblyBribe(G, "1", "gold").ok).toBe(false);
+    expect(assemblyVote(G, "0", true).ok).toBe(true);
+    for (let i = 0; i < 3; i++) expect(assemblyVote(G, G.currentPlayer, false).ok).toBe(true);
+    expect(G.assembly!.results[0]).toMatchObject({ yea: 3, nay: 3, passed: false });
     expect(G.activeLaws).toHaveLength(0);
+    expect(G.assembly!.results[0].votes[0]).toMatchObject({ weight: 3, bribed: 2 });
+    // Bought votes carry to the next ballot, while the sitting-wide cap remains spent.
+    expect(G.assembly!.phase).toBe("voting");
+    expect(assemblyBribe(G, "0", "influence").ok).toBe(false);
+    vote(G);
+    expect(G.assembly!.results[1].votes[0]).toMatchObject({ weight: 3, bribed: 2 });
   });
-
-  it("carries a tie when the ruleset says ties pass", () => {
-    const G = atAssembly({ patch: { assembly: { tiesPass: true } } });
-    proposeCard(G, "land-reform");
-    passRemainingSeats(G);
-
-    expect(assemblyVote(G, "1", true).ok).toBe(true);
-    expect(assemblyVote(G, "2", true).ok).toBe(true);
-    expect(assemblyVote(G, "3", false).ok).toBe(true);
-    expect(assemblyVote(G, "0", false).ok).toBe(true);
-
-    expect(G.assembly?.results[0]).toMatchObject({ yea: 2, nay: 2, passed: true });
-    expect(G.activeLaws.map((law) => law.cardId)).toEqual(["land-reform"]);
-  });
-
-  it("stands a passed Law in the agora under its proposer's name", () => {
-    const G = atAssembly();
-    const author = carryResolution(G, "land-reform");
-
-    expect(author).toBe("0");
-    expect(G.activeLaws).toHaveLength(1);
-    expect(G.activeLaws[0]).toMatchObject({ cardId: "land-reform", author: "0", enactedYear: 2 });
-    // The stele is immediately the politician's power and the author's patronage.
-    const demosthenes = politicianStandings(G).find((s) => s.politician.id === "demosthenes");
-    expect(demosthenes).toMatchObject({ power: 1, patron: "0" });
-  });
-
-  it("sells votes up to the per-assembly cap, and only on your own turn to cast", () => {
-    const G = atAssembly();
-    const rules = G.ruleset.assembly;
-    proposeCard(G, "land-reform");
-    passRemainingSeats(G);
-    G.players["1"].resources.influence = rules.briberyCost * (rules.briberyCap + 1);
-
-    // The cap is what stops a hoard from simply becoming votes at scale.
-    for (let bought = 0; bought < rules.briberyCap; bought += 1) {
-      expect(assemblyBribe(G, "1").ok, `bribe ${bought}`).toBe(true);
-    }
-    expect(assemblyBribe(G, "1").ok).toBe(false);
-    expect(assemblyBribe(G, "2").ok).toBe(false); // not their turn to cast
-
-    expect(currentVoteWeight(G, "1")).toBe(1 + rules.briberyCap);
-    expect(assemblyVote(G, "1", true).ok).toBe(true);
-    expect(G.assembly?.votes[0]).toMatchObject({
-      weight: 1 + rules.briberyCap,
-      bribed: rules.briberyCap,
-    });
-  });
-
-  it("lets one veto strike the resolution outright, at the cost of the vetoer's own vote", () => {
-    const G = atAssembly();
-    const authorFood = G.players["0"].resources.food;
-    proposeCard(G, "land-reform");
-    passRemainingSeats(G);
-    G.players["1"].resources.influence = G.ruleset.assembly.vetoCost * 2;
-
-    expect(assemblyVeto(G, "1").ok).toBe(true);
-
-    const result = G.assembly!.results[0];
-    expect(result).toMatchObject({ passed: false, vetoedBy: "1" });
-    // A walkout, not a free extra lever: nobody else even got to cast.
-    expect(result.votes).toHaveLength(0);
-    expect(G.activeLaws).toHaveLength(0);
-    expect(G.players["0"].resources.food).toBe(authorFood);
-    expect(G.assemblyPassedByPlayer["0"]).toBe(0);
-    expect(G.assembly?.phase).toBe("closing");
-  });
-
-  it("returns a voted-down card to its politician's discard pile", () => {
-    const G = atAssembly();
-    const authorFood = G.players["0"].resources.food;
-    proposeCard(G, "land-reform");
-    passRemainingSeats(G);
-    voteEverything(G, false);
-
-    expect(G.activeLaws).toHaveLength(0);
-    expect(G.politicianDiscards.demosthenes).toContain("land-reform");
-    expect(G.assembly?.results[0]).toMatchObject({ passed: false, yea: 0, nay: 4 });
-    expect(G.players["0"].resources.food).toBe(authorFood);
-    expect(G.assemblyPassedByPlayer["0"]).toBe(0);
-  });
-
-  it("strikes a standing Law when a repeal carries, returning it to the pile", () => {
-    const G = atAssembly();
-    plantLaw(G, "land-reform", "3");
-    const proposer = G.assembly!.activePlayer;
-    G.players[proposer].resources.influence = G.ruleset.assembly.repealCost;
-
-    expect(assemblyProposeRepeal(G, proposer, "land-reform").ok).toBe(true);
-    passRemainingSeats(G);
-    voteEverything(G, true);
-
-    expect(G.activeLaws).toHaveLength(0);
-    expect(G.politicianDiscards.demosthenes).toContain("land-reform");
-  });
-});
-
-describe("the Law cap", () => {
-  it("reserves unique casualties when simultaneous proposals fill the remaining slots", () => {
-    const G = atAssembly();
-    for (const cardId of SIX_LAWS.slice(0, 4)) {
-      plantLaw(G, cardId, "3");
-    }
-
-    expect(proposeCard(G, "forum-rites", undefined, "0").result.ok).toBe(true);
-    expect(proposeCard(G, "homestead-act", undefined, "1").result.ok).toBe(true);
-    expect(proposeCard(G, "civic-pride", undefined, "2").result.ok).toBe(false);
-    expect(assemblyPropose(G, "2", "land-reform").ok).toBe(true);
-
-    const fourth = proposeCard(G, "colonial-charter", undefined, "3");
-    expect(fourth.result.ok).toBe(false);
-    const replacements = enumerateLegalCommands(G, "3")
-      .filter((move) => move.type === "assemblyPropose")
-      .map((move) => move.replaces);
-    expect(replacements).not.toContain("land-reform");
-    expect(assemblyPropose(G, "3", "sacred-fields").ok).toBe(true);
-
-    voteEverything(G, true);
-
-    expect(G.activeLaws).toHaveLength(G.ruleset.assembly.lawCap);
-    expect(G.activeLaws.map((law) => law.cardId)).not.toContain("land-reform");
-    expect(G.activeLaws.map((law) => law.cardId)).not.toContain("sacred-fields");
-  });
-
-  it("refuses a new Law until the proposal names one to tear down", () => {
-    const G = atAssembly();
-    for (const cardId of SIX_LAWS) {
-      plantLaw(G, cardId, "3");
-    }
-
-    expect(G.activeLaws).toHaveLength(G.ruleset.assembly.lawCap);
-
-    const { proposer, result } = proposeCard(G, "civic-pride");
-    expect(result.ok).toBe(false);
-    expect(result.ok === false && result.reasons[0]).toContain("board is full");
-    // Naming a Law that is not standing is no better than naming none.
-    expect(assemblyPropose(G, proposer, "colonial-charter").ok).toBe(false);
-    expect(assemblyPropose(G, proposer, "land-reform").ok).toBe(true);
-  });
-
-  it("actually removes the replaced Law when the replacement carries", () => {
-    const G = atAssembly();
-    for (const cardId of SIX_LAWS) {
-      plantLaw(G, cardId, "3");
-    }
-
-    carryResolution(G, "civic-pride", "land-reform");
-
-    expect(G.activeLaws).toHaveLength(6);
-    expect(G.activeLaws.map((law) => law.cardId)).toContain("civic-pride");
-    expect(G.activeLaws.map((law) => law.cardId)).not.toContain("land-reform");
-    expect(G.politicianDiscards.demosthenes).toContain("land-reform");
-  });
-});
-
-describe("author prizes, pass records and standing Voice", () => {
-  it.each([
-    ["land-reform", "food", 5],
-    ["public-works", "stone", 3],
-    ["homestead-act", "wood", 4],
-    ["the-streets-burn", "gold", 2],
-  ] as const)(
-    "pays %s's politician prize exactly once to its author",
-    (cardId, resource, amount) => {
-      const G = atAssembly();
-      const authorBefore = G.players["0"].resources[resource];
-      const rivalBefore = G.players["2"].resources[resource];
-
-      carryResolution(G, cardId, undefined, "0", "1");
-
-      expect(G.players["0"].resources[resource]).toBe(authorBefore + amount);
-      expect(G.players["2"].resources[resource]).toBe(rivalBefore);
-      expect(G.assemblyPassedByPlayer["0"]).toBe(1);
-    },
-  );
-
-  it("gives Voice to the sole leader in standing authored Laws, from two", () => {
-    const G = atAssembly();
-    const enactLaw = (cardId: string, proposer: PlayerId) =>
-      enactForEval(G, { kind: "enact", card: getAuthoredResolutionCard(cardId)!, proposer });
-
-    enactLaw("land-reform", "0");
-    expect(voiceHolder(G)).toBeNull();
-    enactLaw("public-works", "0");
-    expect(voiceHolder(G)).toBe("0");
-
-    // A rival who draws level takes it off the holder: a tie holds nothing.
-    ["sacred-fields", "forum-rites"].forEach((cardId) => enactLaw(cardId, "1"));
-    expect(voiceHolder(G)).toBeNull();
-
-    enactLaw("festival-calendar", "1");
+  it("replaces the oldest at four and protects tenure through the following sitting", () => {
+    const G = sitting(4);
+    for (const id of ["land-reform", "guild-charter", "forum-rites", "frontier-spirit"])
+      plant(G, id, "1", 2);
+    expect(lawCanBeRemoved(G, "land-reform")).toBe(false);
+    expect(assemblyProposeRepeal(G, "0", "land-reform").ok).toBe(false);
+    G.year = 6;
+    carry(G, "civic-pride");
+    expect(G.activeLaws.map((l) => l.cardId)).toEqual([
+      "guild-charter",
+      "forum-rites",
+      "frontier-spirit",
+      "civic-pride",
+    ]);
     expect(voiceHolder(G)).toBe("1");
+    expect(lawCanBeRemoved(G, "civic-pride")).toBe(false);
   });
-
-  it("takes Voice back when an authored Law is repealed", () => {
-    const G = atAssembly();
-    const enactLaw = (cardId: string, proposer: PlayerId) =>
-      enactForEval(G, { kind: "enact", card: getAuthoredResolutionCard(cardId)!, proposer });
-
-    ["land-reform", "public-works"].forEach((cardId) => enactLaw(cardId, "0"));
-    expect(voiceHolder(G)).toBe("0");
-
-    enactForEval(G, { kind: "repeal", cardId: "land-reform", proposer: "1" });
-
-    expect(voiceHolder(G)).toBeNull();
-  });
-
-  it("keeps the record of passes when an authored Law leaves the board", () => {
-    const G = atAssembly();
-    enactForEval(G, {
-      kind: "enact",
-      card: getAuthoredResolutionCard("land-reform")!,
-      proposer: "0",
-    });
-    const count = G.assemblyPassedByPlayer["0"];
-
-    enactForEval(G, { kind: "repeal", cardId: "land-reform", proposer: "1" });
-
-    expect(G.activeLaws).toHaveLength(0);
-    expect(G.assemblyPassedByPlayer["0"]).toBe(count);
-  });
-
-  it("keeps the displaced author's record of passes when a Law is replaced", () => {
-    const G = atAssembly();
-    enactForEval(G, {
-      kind: "enact",
-      card: getAuthoredResolutionCard("land-reform")!,
-      proposer: "0",
-    });
-
-    enactForEval(G, {
-      kind: "enact",
-      card: getAuthoredResolutionCard("public-works")!,
-      proposer: "1",
-      replaces: "land-reform",
-    });
-
-    expect(G.activeLaws.map((law) => law.cardId)).toEqual(["public-works"]);
+  it("keeps one price Law, rechecks tenure between ballots and never rewards an invalid enactment", () => {
+    const G = sitting(6);
+    plant(G, "tenant-rights", "1", 2);
+    propose(G, "sacred-fields");
+    G.players["1"].resources.influence = 20;
+    propose(G, "festival-calendar", "1");
+    pass(G);
+    vote(G);
+    expect(G.activeLaws.map((l) => l.cardId)).toEqual(["sacred-fields"]);
+    expect(G.assembly!.results.map((r) => r.passed)).toEqual([true, false]);
     expect(G.assemblyPassedByPlayer["0"]).toBe(1);
-    expect(G.assemblyPassedByPlayer["1"]).toBe(1);
+    expect(G.assemblyPassedByPlayer["1"]).toBe(0);
+    expect(G.politicianDiscards.demosthenes).toContain("festival-calendar");
+  });
+  it("charges 3 influence for eligible repeal and lowers standing Voice", () => {
+    const G = sitting(6);
+    plant(G, "guild-charter");
+    plant(G, "forum-rites");
+    expect(voiceHolder(G)).toBe("0");
+    expect(assemblyProposeRepeal(G, "0", "guild-charter").ok).toBe(true);
+    expect(G.players["0"].resources.influence).toBe(27);
+    pass(G);
+    vote(G);
+    expect(voiceHolder(G)).toBeNull();
   });
 });
 
-describe("Directives: one-time and rival-targeted", () => {
-  it("requires one rival and records the target on the sealed ballot item", () => {
-    const G = atAssembly();
-    const proposer = G.currentPlayer;
-    stackResolution(G, "grain-riot");
-    G.players[proposer].resources.influence += G.ruleset.assembly.drawCost;
-    expect(assemblyDraw(G, proposer, "stratokles").ok).toBe(true);
-    expect(
-      enumerateLegalCommands(G, proposer)
-        .filter((move) => move.type === "assemblyPropose")
-        .map((move) => move.target),
-    ).toEqual(PLAYER_IDS.filter((id) => id !== proposer));
-    expect(assemblyPropose(G, proposer).ok).toBe(false);
-    expect(assemblyPropose(G, proposer, undefined, proposer).ok).toBe(false);
-    expect(assemblyPropose(G, proposer, undefined, "2").ok).toBe(true);
-    expect(G.assembly?.proposals[proposer]).toMatchObject({ target: "2" });
+describe("Directives", () => {
+  it("Grain Riot takes 3 food only from its target and floors at zero", () => {
+    const G = sitting();
+    G.players["1"].resources.food = 2;
+    const other = G.players["2"].resources.food;
+    const gold = G.players["0"].resources.gold;
+    carry(G, "grain-riot");
+    expect(G.players["1"].resources.food).toBe(0);
+    expect(G.players["2"].resources.food).toBe(other);
+    expect(G.tallyMonuments).toHaveLength(1);
+    expect(voiceHolder(G)).toBeNull();
+    expect(G.players["0"].resources.gold).toBe(gold + 2);
   });
-
-  it("Grain Riot halves only the chosen rival's stored food", () => {
-    const G = atAssembly();
-    G.players["0"].resources.food = 10;
-    G.players["1"].resources.food = 7;
-    G.players["2"].resources.food = 0;
-    G.players["3"].resources.food = 21;
-
-    carryResolution(G, "grain-riot", undefined, "0", "3");
-
-    // Whole resources only: the loss rounds down and leaves the odd remainder.
-    expect(G.players["0"].resources.food).toBe(10);
-    expect(G.players["1"].resources.food).toBe(7);
-    expect(G.players["2"].resources.food).toBe(0);
-    expect(G.players["3"].resources.food).toBe(11);
+  it("The Streets Burn places one token on the named rival", () => {
+    const G = sitting();
+    const before = G.players["1"].unrestTokens;
+    carry(G, "the-streets-burn");
+    expect(G.players["1"].unrestTokens).toBe(before + 1);
   });
-
-  it("The Streets Burn places one Unrest token on its rival and nobody else", () => {
-    const G = atAssembly();
-    const before = PLAYER_IDS.map((playerID) => G.players[playerID].unrestTokens);
-
-    carryResolution(G, "the-streets-burn", undefined, "0", "1");
-
-    expect(PLAYER_IDS.map((playerID) => G.players[playerID].unrestTokens)).toEqual(
-      before.map((tokens, seat) => tokens + (seat === 1 ? 1 : 0)),
-    );
-  });
-
   it("General Strike suppresses one income collection for its chosen rival", () => {
-    const G = atAssembly();
-
-    carryResolution(G, "general-strike", undefined, "0", "1");
-
-    expect(G.players["1"].incomeSuppressedTurns).toBe(1);
-    expect(G.players["0"].incomeSuppressedTurns).toBe(0);
-    expect(G.players["2"].incomeSuppressedTurns).toBe(0);
-
-    // The strike costs the income, not the tempo: the turn still opens and passes.
-    const gold = G.players["1"].resources.gold;
-    expect(closeAssembly(G).ok).toBe(true);
-
-    expect(G.currentPlayer).toBe("1");
-    expect(G.players["1"].resources.gold).toBe(gold);
-    expect(G.players["1"].collectedThisTurn).toBe(true);
-    expect(G.players["1"].incomeSuppressedTurns).toBe(0);
-
-    // ...and the next collection is normal again.
+    const G = sitting();
+    carry(G, "general-strike");
     G.players["1"].collectedThisTurn = false;
     G.pendingPlayerEvent = null;
+    const before = G.players["1"].resources.gold;
     expect(collectIncome(G, "1").ok).toBe(true);
-    expect(G.players["1"].resources.gold).toBeGreaterThan(gold);
+    expect(G.players["1"].resources.gold).toBe(before);
+    expect(G.players["1"].incomeSuppressedTurns).toBe(0);
   });
-
-  it("The Mob Rises takes a pop from the rival's largest settlement, lowest rung first", () => {
-    const G = atAssembly();
-    // Player 1's metropolis is the bigger holding, and it has a slave to give up.
-    G.players["1"].settlements.forEach((tileId) => {
-      owned(G, tileId, "1").pops = { citizens: 0, freemen: 0, slaves: 0 };
+  it("The Mob Rises takes a pop from the rival's largest settlement", () => {
+    const G = sitting();
+    const large = owned(G, G.players["1"].settlements[0], "1");
+    large.pops = { citizens: 1, freemen: 1, slaves: 2 };
+    carry(G, "the-mob-rises");
+    expect(large.pops).toEqual({ citizens: 1, freemen: 1, slaves: 1 });
+  });
+  it("The Stele Is Broken removes the newest authored Law only after tenure", () => {
+    const G = sitting(6);
+    plant(G, "guild-charter", "1", 2);
+    plant(G, "forum-rites", "1", 4);
+    enactForEval(G, {
+      kind: "enact",
+      card: getAuthoredResolutionCard("the-stele-is-broken")!,
+      proposer: "0",
+      target: "1",
     });
-    const [large, small] = G.players["1"].settlements;
-    owned(G, large, "1").pops = { citizens: 1, freemen: 1, slaves: 2 };
-    owned(G, small, "1").pops = { citizens: 0, freemen: 1, slaves: 0 };
-
-    carryResolution(G, "the-mob-rises", undefined, "0", "1");
-
-    expect(owned(G, large, "1").pops).toEqual({ citizens: 1, freemen: 1, slaves: 1 });
-    expect(owned(G, small, "1").pops.freemen).toBe(1);
-    expect(G.players["1"].popsLostToUnrest).toBeGreaterThanOrEqual(1);
-    expect(G.players["0"].popsLostToUnrest).toBe(0);
+    expect(G.activeLaws).toHaveLength(2);
+    G.year = 8;
+    carry(G, "the-stele-is-broken");
+    expect(G.activeLaws.map((l) => l.cardId)).toEqual(["guild-charter"]);
   });
-
-  it("Bread and Circuses pays and charges only its target, clamped at an empty purse", () => {
-    const G = atAssembly();
-    G.players["0"].resources.gold = 12;
-    G.players["1"].resources.gold = 2;
-    G.players["1"].unrestTokens = 2;
-
-    carryResolution(G, "bread-and-circuses", undefined, "0", "1");
-
-    expect(G.players["1"].unrestTokens).toBe(1);
-    expect(G.players["1"].resources.gold).toBe(0);
-    expect(G.players["0"].resources.gold).toBe(14); // 12 and Stratokles's author prize
-  });
-
-  it("The Stele Is Broken throws down the target's newest authored standing Law", () => {
-    const G = atAssembly();
-    plantLaw(G, "land-reform", "1");
-    plantLaw(G, "public-works", "3"); // globally newer, but authored by another rival
-    plantLaw(G, "sacred-fields", "1");
-
-    carryResolution(G, "the-stele-is-broken", undefined, "0", "1");
-
-    expect(G.activeLaws.map((law) => law.cardId)).toEqual(["land-reform", "public-works"]);
-    expect(G.politicianDiscards.demosthenes).toContain("sacred-fields");
-  });
-
-  it("The Stele Is Broken is a legal no-op when the agora is empty", () => {
-    const G = atAssembly();
-
-    carryResolution(G, "the-stele-is-broken");
-
-    expect(G.activeLaws).toHaveLength(0);
-    expect(G.tallyMonuments).toHaveLength(1);
-    expect(G.log.some((entry) => entry.message.includes("no authored stele left standing"))).toBe(
-      true,
-    );
-  });
-
-  it("Isonomia fixes only its target at one base vote in the next Assembly, then is spent", () => {
-    const G = atAssembly();
-    setCitizens(G, "3", 4);
-    setCitizens(G, "2", 3);
-
-    carryResolution(G, "isonomia", undefined, "0", "3");
-
-    // It changes nothing about the assembly that passed it.
-    expect(G.assembly?.isonomiaTarget).toBeNull();
-    expect(baseVoteWeight(G, "3")).toBe(4);
-    expect(G.pendingIsonomiaTarget).toBe("3");
-
-    // A whole year later, the legacy lands on the assembly it was aimed at.
-    expect(closeAssembly(G).ok).toBe(true);
-    playUntilAssembly(G);
-
-    expect(G.assembly?.isonomiaTarget).toBe("3");
-    setCitizens(G, "2", 3);
-    expect(baseVoteWeight(G, "3")).toBe(1);
-    expect(baseVoteWeight(G, "2")).toBe(3);
-    expect(G.pendingIsonomiaTarget).toBeNull();
-
-    // ...and the assembly after that weighs citizens again.
-    passRemainingSeats(G);
-    voteEverything(G, false);
-    expect(closeAssembly(G).ok).toBe(true);
-    playUntilAssembly(G);
-    expect(G.assembly?.isonomiaTarget).toBeNull();
-  });
-
-  it("plants a permanent tally monument that costs no Law-cap slot", () => {
-    const G = atAssembly();
-    for (const cardId of SIX_LAWS) {
-      plantLaw(G, cardId, "3");
-    }
-
-    // At the cap, and yet a Directive needs no `replaces` at all — a monument is
-    // momentum, not a rule.
-    carryResolution(G, "the-streets-burn");
-
-    expect(G.activeLaws).toHaveLength(6);
-    expect(G.tallyMonuments).toHaveLength(1);
-    expect(G.tallyMonuments[0]).toMatchObject({ cardId: "the-streets-burn", author: "0" });
-    expect(politicianStandings(G).find((s) => s.politician.id === "stratokles")).toMatchObject({
-      power: 1,
-      patron: "0",
-    });
-    // The card itself goes back to the pile: the monument is the record, not the card.
-    expect(G.politicianDiscards.stratokles).toContain("the-streets-burn");
-  });
-
-  it("does nothing at all when it is voted down", () => {
-    const G = atAssembly();
-    G.players["1"].resources.food = 10;
-
-    proposeCard(G, "grain-riot", undefined, "0", "1");
-    passRemainingSeats(G);
-    voteEverything(G, false);
-
-    expect(G.players["1"].resources.food).toBe(10);
-    expect(G.tallyMonuments).toHaveLength(0);
-    expect(G.politicianDiscards.stratokles).toContain("grain-riot");
-  });
-});
-
-describe("the house resolution", () => {
-  /** Re-convene with every deck rigged, so the random house draw is a known card. */
-  function reopenWithHouseCard(G: HegemonyState, cardId: string) {
+  it("Isonomia fixes the next sitting's base vote at one and then expires", () => {
+    const G = sitting();
+    carry(G, "isonomia", "1");
+    expect(G.pendingIsonomiaTarget).toBe("1");
+    expect(G.assembly!.isonomiaTarget).toBeNull();
+    closeAssembly(G);
     G.assembly = null;
-
-    for (const politician of ["demosthenes", "perdiccas", "kleistophenes", "stratokles"] as const) {
-      G.politicianDecks[politician].unshift(cardId);
-    }
-
-    openAssembly(G, "1");
-  }
-
-  it("plants an UNAUTHORED stele — nobody gains patronage from it", () => {
-    // The house card is the one resolution no seat proposed, so it belongs to no seat.
-    // It lends its politician power (the stele is standing) but hands nobody patronage,
-    // prize, or authored pass record.
-    const G = atAssembly();
-    reopenWithHouseCard(G, "land-reform");
-    expect(G.assembly!.houseItem?.proposer).toBeNull();
-
-    passRemainingSeats(G);
-    voteEverything(G, true);
-
-    expect(G.activeLaws[0]).toMatchObject({ cardId: "land-reform", author: null });
-
-    const demosthenes = politicianStandings(G).find((s) => s.politician.id === "demosthenes")!;
-    expect(demosthenes.power).toBe(1);
-    expect(demosthenes.patron).toBeNull();
-    expect(authoredSteleCount(G, "1")).toBe(0);
-    expect(G.assemblyPassedByPlayer["1"]).toBe(0);
-  });
-
-  // Design §1.3: "Passed Laws plant a stele on the board (respecting the cap /
-  // replace-at-cap)". The house card clears the same gate a proposed one does — at the
-  // cap it names the OLDEST standing Law as its casualty, since with no author there is
-  // nobody to make the choice and deferring to age picks no side.
-  it("respects the Law cap like any other proposal", () => {
-    const G = atAssembly();
-
-    for (const cardId of SIX_LAWS) {
-      plantLaw(G, cardId, "3");
-    }
-
-    reopenWithHouseCard(G, "colonial-charter");
-    passRemainingSeats(G);
-    voteEverything(G, true);
-
-    expect(G.activeLaws.length).toBeLessThanOrEqual(G.ruleset.assembly.lawCap);
-  });
-
-  // Design §1.3: "A Law already active on the board can't be re-enacted." A duplicate
-  // house draw is discarded and redrawn — were it allowed to stand twice, its effects
-  // would apply twice (getStandingEffects walks G.activeLaws entry by entry) and its
-  // politician would bank two stelae of power off a single card.
-  it("never re-enacts a Law that already stands", () => {
-    const G = atAssembly();
-    plantLaw(G, "land-reform", "3");
-
-    reopenWithHouseCard(G, "land-reform");
-    passRemainingSeats(G);
-    voteEverything(G, true);
-
-    expect(G.activeLaws.filter((law) => law.cardId === "land-reform")).toHaveLength(1);
-  });
-});
-
-describe("the board keeps its shape across an assembly", () => {
-  it("never leaves a tile without the settlements the players still own", () => {
-    // A guard on the pokes above: everything the flow tests do goes through the real
-    // verbs, so the board must still be internally consistent at the end of one.
-    const G = atAssembly();
-    carryResolution(G, "land-reform");
-    passRemainingSeats(G);
-    expect(closeAssembly(G).ok).toBe(true);
-
-    for (const playerID of PLAYER_IDS) {
-      for (const tileId of G.players[playerID].settlements) {
-        expect(
-          tile(G, tileId).settlements.some((s) => s.owner === playerID),
-          `${playerID}/${tileId}`,
-        ).toBe(true);
-      }
-    }
+    G.year = 4;
+    openAssembly(G, "0");
+    expect(baseVoteWeight(G, "1")).toBe(1);
+    expect(G.pendingIsonomiaTarget).toBeNull();
+    G.assembly = null;
+    G.year = 6;
+    openAssembly(G, "0");
+    expect(baseVoteWeight(G, "1")).toBeGreaterThan(1);
   });
 });

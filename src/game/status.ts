@@ -1,3 +1,4 @@
+import { hasLawRule } from "./assembly/laws";
 import { getBuildings } from "./content";
 import type {
   BuildingDefinition,
@@ -63,9 +64,9 @@ export function getFoundColonyStatus(
   }
 
   const pieces = playerPieces(G, playerID);
-  if (pieces.colonies >= pieces.colonySupply) {
+  if (pieces.colonies >= pieces.colonyLimit) {
     status.reasons.push(
-      `All ${pieces.colonySupply} colony pieces are placed. Upgrade a colony to free one.`,
+      `All ${pieces.colonyLimit} colony pieces are placed. Upgrade a colony to free one.`,
     );
   }
 
@@ -83,8 +84,7 @@ export function getUpgradeColonyToCityStatus(
     can: false,
     reasons: [],
     // Routed through the cost pipeline like every other action so the Assembly's
-    // Laws can reach it — Colonial Charter taxes the upgrade and Enfranchise the
-    // Colonies halves it, and both must show in the preview the player reads.
+    // Colonial Charter must show in the preview the player reads.
     cost: getAdjustedActionCost(
       G,
       playerID,
@@ -193,13 +193,26 @@ function buildSiteReasons(
   // a Port, which takes one of its work slots.
   if (!settlement) {
     reasons.push("Requires your settlement on this tile.");
-  } else if (!G.ruleset.settlements[settlement.kind].canBuildBuildings && !building.colony) {
+  } else if (
+    !G.ruleset.settlements[settlement.kind].canBuildBuildings &&
+    !hasLawRule(G, "homesteadAct") &&
+    !building.colony
+  ) {
     reasons.push("A colony raises nothing but a Port.");
   } else if (settlement.buildings.includes(building.id)) {
     reasons.push(`${building.name} is already built here.`);
-  } else if (settlement.buildings.length >= settlementSlots(tile, settlement)) {
+  } else if (settlement.buildings.length >= settlementSlots(tile, settlement, G)) {
     reasons.push("No slots available.");
   }
+
+  if (building.id === "estate" && hasLawRule(G, "landReform"))
+    reasons.push("Land Reform forbids new Estates.");
+  if (
+    settlement?.kind === "colony" &&
+    hasLawRule(G, "homesteadAct") &&
+    settlement.buildings.length >= 1
+  )
+    reasons.push("Homestead Act permits one building per colony.");
 
   if (building.needsYield && !tile.resource) {
     reasons.push(`${building.name} cannot stand on ${tile.terrain}: it yields nothing.`);
@@ -243,9 +256,15 @@ export function buildingGround(G: HegemonyState, playerID: PlayerId, tileId: str
   const raisable = getBuildings(G.definition.content).filter(
     (building) => buildSiteReasons(G, playerID, tile, building).length === 0,
   ).length;
-  const open = G.ruleset.settlements[settlement.kind].canBuildBuildings
-    ? Math.max(0, settlementSlots(tile, settlement) - built)
-    : raisable;
+  const open =
+    G.ruleset.settlements[settlement.kind].canBuildBuildings || hasLawRule(G, "homesteadAct")
+      ? Math.max(
+          0,
+          (settlement.kind === "colony" && hasLawRule(G, "homesteadAct")
+            ? Math.min(1, settlementSlots(tile, settlement, G))
+            : settlementSlots(tile, settlement, G)) - built,
+        )
+      : raisable;
 
   return { slots: built + open, built, open, raisable };
 }
@@ -302,11 +321,26 @@ export function getGrowPopStatus(
     return status;
   }
 
-  status.cost = getGrowPopCost(G, playerID, settlement, pop);
+  status.cost = getGrowPopCost(G, playerID, pop);
 
-  if (getGrownSettlementsThisTurn(G, playerID).includes(tileId)) {
-    status.reasons.push("Already grew a pop here this turn.");
-  }
+  const grown = getGrownSettlementsThisTurn(G, playerID).filter((id) => id === tileId).length;
+  const isCapital =
+    G.ruleset.setup[0] !== "colony" && G.players[playerID].settlements[0] === tileId;
+  const limit = hasLawRule(G, "guildCharter")
+    ? settlement.kind === "colony"
+      ? 0
+      : isCapital
+        ? 2
+        : 1
+    : 1;
+  if (grown >= limit)
+    status.reasons.push(
+      limit === 0
+        ? "Guild Charter forbids growth in colonies."
+        : limit === 1
+          ? "Already grew a pop here this turn."
+          : "At most two growths here per turn.",
+    );
 
   if (!settlementHasRoom(G, settlement, 1)) {
     status.reasons.push("Settlement is at population capacity.");
@@ -383,7 +417,7 @@ export function getMovePopsStatus(
 function settlementHasRoom(G: HegemonyState, settlement: Settlement, count: number) {
   return (
     totalPops(settlement.pops) + popsInTransitTo(G, settlement.id) + count <=
-    settlementCapacity(settlement, G.ruleset)
+    settlementCapacity(settlement, G)
   );
 }
 

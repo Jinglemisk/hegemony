@@ -1,454 +1,288 @@
-import type { DirectiveCard, LawCard, Politician, PoliticianId, ResolutionCard } from "./types";
+import type { Politician, PoliticianId, ResolutionCard } from "./types";
 
-/**
- * The Assembly's content tables — the four politicians and the 29-card bridge deck
- * (docs/archive/plans/assembly-politicians.md Appendix A).
- *
- * This is CONTENT, not balance: the "what exists". Every magnitude here is a
- * provisional number the `?tune` panel and `npm run sim` are expected to move — the
- * grammar is what is fixed. That grammar, per the design's north star, is that **every
- * Law carries a trade-off**: a "−x, but +y" that favours some builds and hurts others,
- * so a vote is a referendum on which strategy the table backs rather than a rubber
- * stamp. A Law with only upside is a bug in this file.
- *
- * The three regular decks are sets of UNIQUE Laws — a politician's deck size is
- * therefore also their power ceiling. Stratokles alone deals in rival-targeted
- * Directives, which resolve once.
- */
-
-export const POLITICIANS: Politician[] = [
+/** Appendix B, read under section 5.9's global limits. */
+export const RESOLUTION_CARDS: ResolutionCard[] = [
   {
-    id: "demosthenes",
-    name: "Demosthenes",
-    epithet: "Agricultural Reformer",
-    creed: "The land feeds the city, and the citizen who works it is owed his place in it.",
     kind: "law",
-    // Bread from the whole country, paid for by the crowd it feeds.
-    tendency: [
-      { type: "settlementIncome", scope: "all", resource: "food", amount: 1 },
-      { type: "popIncome", pop: "citizens", resource: "happiness", amount: -1, step: 3 },
-    ],
-  },
-  {
-    id: "perdiccas",
-    name: "Perdiccas",
-    epithet: "Urban Planner",
-    creed: "Build upward. A polis is measured in stone, not in miles.",
-    kind: "law",
-    // Cheap stone in the city, and the countryside pays for it.
-    tendency: [
-      { type: "actionCostDelta", action: "buildBuilding", resource: "stone", amount: -3 },
-      { type: "settlementIncome", scope: "colony", resource: "happiness", amount: -1 },
-    ],
-  },
-  {
-    id: "kleistophenes",
-    name: "Kleistophenes",
-    epithet: "Rural Expansionist",
-    creed: "Every horizon is a farm not yet planted. Send them out.",
-    kind: "law",
-    // Send them out cheaply; the cities carry the cost.
-    tendency: [
-      { type: "actionCostDelta", action: "foundColony", resource: "wood", amount: -10 },
-      { type: "settlementIncome", scope: "city", resource: "gold", amount: -1 },
-    ],
-  },
-  {
-    id: "stratokles",
-    name: "Stratokles",
-    epithet: "Cunning Populist",
-    creed: "The demos is patient until it is not. I merely tell them when.",
-    kind: "directive",
-    // He does not legislate. He points at a rival and the street does the rest.
-    tendency: [
-      { type: "resourceFraction", resource: "food", fraction: 0.5 },
-      { type: "losePopFromLargest", count: 1 },
-    ],
-  },
-];
-
-export const POLITICIANS_BY_ID: Record<PoliticianId, Politician> = POLITICIANS.reduce(
-  (all, politician) => ({ ...all, [politician.id]: politician }),
-  {} as Record<PoliticianId, Politician>,
-);
-
-/** Demosthenes — the agrarian / citizen order. Food, the land, the social ladder. */
-const DEMOSTHENES_LAWS: LawCard[] = [
-  {
-    id: "grain-dole",
     politician: "demosthenes",
-    kind: "law",
-    name: "Grain Dole",
-    text: "Promotions cost 1 less food, but slaves produce 1 less.",
-    tradeOff: "citizen-rush vs slave-extraction",
-    effects: [
-      { type: "actionCostDelta", action: "promotePop", resource: "food", amount: -1 },
-      { type: "popPrimaryIncome", pop: "slaves", amount: -1 },
-    ],
-  },
-  {
     id: "land-reform",
-    politician: "demosthenes",
-    kind: "law",
     name: "Land Reform",
-    text: "Every settlement yields 1 more food, but cities yield 1 less gold.",
-    tradeOff: "agrarian-wide vs urban-gold",
-    effects: [
-      { type: "settlementIncome", scope: "all", resource: "food", amount: 1 },
-      { type: "settlementIncome", scope: "city", resource: "gold", amount: -1 },
-    ],
+    text: "Slaves grow food on any terrain, but Estates may not be built.",
+    tradeOff: "Slaves grow food on any terrain, but Estates may not be built.",
+    effects: [{ type: "rule", rule: "landReform" }],
   },
   {
+    kind: "law",
+    politician: "demosthenes",
     id: "sacred-fields",
-    politician: "demosthenes",
-    kind: "law",
     name: "Sacred Fields",
-    text: "Each citizen yields 1 more food, but every 3 citizens cost 1 happiness.",
-    tradeOff: "food-growth vs contentment",
+    text: "Temples also grow 2 food, but cost 6 stone.",
+    tradeOff: "Temples also grow 2 food, but cost 6 stone.",
     effects: [
-      { type: "popIncome", pop: "citizens", resource: "food", amount: 1 },
-      { type: "popIncome", pop: "citizens", resource: "happiness", amount: -1, step: 3 },
+      { type: "buildingFood", building: "temple", amount: 2 },
+      { type: "actionCost", action: "buildBuilding", buildingIds: ["temple"], cost: { stone: 6 } },
     ],
   },
   {
-    id: "manumission-law",
-    politician: "demosthenes",
     kind: "law",
-    name: "Manumission Law",
-    text: "Freeing a slave costs 2 less food, but every 2 slaves cost 1 happiness.",
-    tradeOff: "free labour vs slavery",
-    effects: [
-      {
-        type: "actionCostDelta",
-        action: "promotePop",
-        pop: "slaves",
-        resource: "food",
-        amount: -2,
-      },
-      { type: "popIncome", pop: "slaves", resource: "happiness", amount: -1, step: 2 },
-    ],
-  },
-  {
-    id: "festival-calendar",
     politician: "demosthenes",
-    kind: "law",
-    name: "Festival Calendar",
-    text: "Every settlement gains 1 happiness, but loses 1 gold income.",
-    tradeOff: "bread over coin",
+    id: "manumission",
+    name: "Manumission",
+    text: "Promoting a slave is free, but slaves count three times for unrest.",
+    tradeOff: "Promoting a slave is free, but slaves count three times for unrest.",
     effects: [
-      { type: "settlementIncome", scope: "all", resource: "happiness", amount: 1 },
-      { type: "settlementIncome", scope: "all", resource: "gold", amount: -1 },
+      { type: "rule", rule: "manumission" },
+      { type: "actionCost", action: "promotePop", pop: "slaves", cost: {} },
     ],
   },
   {
-    id: "agrarian-tariff",
+    kind: "law",
     politician: "demosthenes",
-    kind: "law",
-    name: "Agrarian Tariff",
-    text: "Every 2 food gathered above 10 a turn pays 1 gold, but wood income drops 1.",
-    tradeOff: "food surplus vs timber",
-    effects: [
-      { type: "surplusConversion", from: "food", above: 10, per: 2, to: "gold", amount: 1 },
-      { type: "flatIncome", resource: "wood", amount: -1 },
-    ],
-  },
-  {
     id: "tenant-rights",
-    politician: "demosthenes",
-    kind: "law",
     name: "Tenant Rights",
-    text: "Growing a pop costs 3 less food, but 2 more gold.",
-    tradeOff: "feed mouths, pay in coin",
+    text: "Growing a slave costs 2 gold; growing a freeman costs 3 gold.",
+    tradeOff: "Growing a slave costs 2 gold; growing a freeman costs 3 gold.",
     effects: [
-      { type: "actionCostDelta", action: "growPop", resource: "food", amount: -3 },
-      { type: "actionCostDelta", action: "growPop", resource: "gold", amount: 2 },
+      { type: "actionCost", action: "growPop", pop: "slaves", cost: { gold: 2 } },
+      { type: "actionCost", action: "growPop", pop: "freemen", cost: { gold: 3 } },
     ],
   },
   {
-    id: "cult-of-demeter",
+    kind: "law",
     politician: "demosthenes",
-    kind: "law",
-    name: "Cult of Demeter",
-    text: "Hold 15 or more food for 2 happiness; fall below it and lose 2.",
-    tradeOff: "rewards food security, punishes the hand-to-mouth",
-    effects: [
-      { type: "thresholdHappiness", resource: "food", threshold: 15, atOrAbove: 2, below: -2 },
-    ],
+    id: "grain-levy",
+    name: "Grain Levy",
+    text: "Freemen eat no food, but Marketplaces do nothing.",
+    tradeOff: "Freemen eat no food, but Marketplaces do nothing.",
+    effects: [{ type: "rule", rule: "grainLevy" }],
   },
-];
-
-/** Perdiccas — tall, dense, built. Kleistophenes's mirror; they clash by design. */
-const PERDICCAS_LAWS: LawCard[] = [
   {
+    kind: "law",
+    politician: "demosthenes",
+    id: "festival-calendar",
+    name: "Festival Calendar",
+    text: "Civic calm costs 2 food or 2 influence.",
+    tradeOff: "Civic calm costs 2 food or 2 influence.",
+    effects: [{ type: "calmPayment", resource: "food", amount: 2 }],
+  },
+  {
+    kind: "law",
+    politician: "perdiccas",
     id: "public-works",
-    politician: "perdiccas",
-    kind: "law",
     name: "Public Works",
-    text: "Buildings cost 3 less wood and stone, but every city costs 1 happiness.",
-    tradeOff: "builders who eat unhappiness",
-    effects: [
-      { type: "actionCostDelta", action: "buildBuilding", resource: "wood", amount: -3 },
-      { type: "actionCostDelta", action: "buildBuilding", resource: "stone", amount: -3 },
-      { type: "settlementIncome", scope: "city", resource: "happiness", amount: -1 },
-    ],
-  },
-  {
-    id: "guild-charter",
-    politician: "perdiccas",
-    kind: "law",
-    name: "Guild Charter",
-    text: "Growing a pop costs 3 less food in cities, but 2 more in colonies.",
-    tradeOff: "tall vs wide",
-    effects: [
-      { type: "actionCostDelta", action: "growPop", scope: "city", resource: "food", amount: -3 },
-      { type: "actionCostDelta", action: "growPop", scope: "colony", resource: "food", amount: 2 },
-    ],
-  },
-  {
-    id: "forum-rites",
-    politician: "perdiccas",
-    kind: "law",
-    name: "Forum Rites",
-    text: "Every city yields 1 more influence, but 1 less food.",
-    tradeOff: "cities as political engines",
-    effects: [
-      { type: "settlementIncome", scope: "city", resource: "influence", amount: 1 },
-      { type: "settlementIncome", scope: "city", resource: "food", amount: -1 },
-    ],
-  },
-  {
-    id: "civic-pride",
-    politician: "perdiccas",
-    kind: "law",
-    name: "Civic Pride",
-    text: "Every city gains 1 happiness, but every colony loses 1.",
-    tradeOff: "urban contentment vs the frontier",
-    effects: [
-      { type: "settlementIncome", scope: "city", resource: "happiness", amount: 1 },
-      { type: "settlementIncome", scope: "colony", resource: "happiness", amount: -1 },
-    ],
-  },
-  {
-    id: "aqueduct-levy",
-    politician: "perdiccas",
-    kind: "law",
-    name: "Aqueduct Levy",
-    text: "The stone bank rate improves one step, but wood income drops 1.",
-    tradeOff: "stone-builders vs timber",
-    effects: [
-      { type: "bankRateStep", material: "stone", steps: 1 },
-      { type: "flatIncome", resource: "wood", amount: -1 },
-    ],
-  },
-  {
-    id: "census-rolls",
-    politician: "perdiccas",
-    kind: "law",
-    name: "Census Rolls",
-    text: "Every city yields 1 more gold, but costs 1 happiness.",
-    tradeOff: "urban taxation",
-    effects: [
-      { type: "settlementIncome", scope: "city", resource: "gold", amount: 1 },
-      { type: "settlementIncome", scope: "city", resource: "happiness", amount: -1 },
-    ],
-  },
-  {
-    id: "master-builders",
-    politician: "perdiccas",
-    kind: "law",
-    name: "Master Builders",
-    text: "Civic buildings cost 4 less stone, but founding a colony costs 5 more wood.",
-    tradeOff: "cities over sprawl",
+    text: "Estates and Granaries cost 3 wood; Marketplaces cost 2 wood and 2 gold. Colonies hold 3 pops.",
+    tradeOff:
+      "Estates and Granaries cost 3 wood; Marketplaces cost 2 wood and 2 gold. Colonies hold 3 pops.",
     effects: [
       {
-        type: "actionCostDelta",
+        type: "actionCost",
         action: "buildBuilding",
-        // The stone-led roster — the engine's own "wood = economic, stone = civic"
-        // grammar (data.ts), so "civic buildings" needs no new classification field.
-        buildingIds: ["temple", "forum"],
-        resource: "stone",
-        amount: -4,
+        buildingIds: ["estate", "granary"],
+        cost: { wood: 3 },
       },
-      { type: "actionCostDelta", action: "foundColony", resource: "wood", amount: 5 },
+      {
+        type: "actionCost",
+        action: "buildBuilding",
+        buildingIds: ["marketplace"],
+        cost: { wood: 2, gold: 2 },
+      },
+      { type: "colonyCapacity", amount: 3 },
     ],
   },
-];
-
-/** Kleistophenes — wide, frontier, sprawl. Perdiccas's mirror. */
-const KLEISTOPHENES_LAWS: LawCard[] = [
   {
-    id: "homestead-act",
-    politician: "kleistophenes",
     kind: "law",
-    name: "Homestead Act",
-    text: "Every colony yields 1 more wood, but cities yield 1 less gold.",
-    tradeOff: "wide vs tall",
+    politician: "perdiccas",
+    id: "guild-charter",
+    name: "Guild Charter",
+    text: "Your capital may grow twice per turn, but colonies may not grow.",
+    tradeOff: "Your capital may grow twice per turn, but colonies may not grow.",
+    effects: [{ type: "rule", rule: "guildCharter" }],
+  },
+  {
+    kind: "law",
+    politician: "perdiccas",
+    id: "forum-rites",
+    name: "Forum Rites",
+    text: "Citizens produce 2 influence everywhere, but freemen produce nothing in colonies.",
+    tradeOff: "Citizens produce 2 influence everywhere, but freemen produce nothing in colonies.",
+    effects: [{ type: "rule", rule: "forumRites" }],
+  },
+  {
+    kind: "law",
+    politician: "perdiccas",
+    id: "civic-pride",
+    name: "Civic Pride",
+    text: "Your realm gains 1 happiness, but each city pays 1 gold a year.",
+    tradeOff: "Your realm gains 1 happiness, but each city pays 1 gold a year.",
     effects: [
-      { type: "settlementIncome", scope: "colony", resource: "wood", amount: 1 },
+      { type: "happiness", amount: 1 },
       { type: "settlementIncome", scope: "city", resource: "gold", amount: -1 },
     ],
   },
   {
+    kind: "law",
+    politician: "perdiccas",
+    id: "master-builders",
+    name: "Master Builders",
+    text: "Cities gain one building slot, but you may place one fewer colony piece.",
+    tradeOff: "Cities gain one building slot, but you may place one fewer colony piece.",
+    effects: [{ type: "rule", rule: "masterBuilders" }],
+  },
+  {
+    kind: "law",
+    politician: "kleistophenes",
+    id: "homestead-act",
+    name: "Homestead Act",
+    text: "Colonies may hold one building, but cities lose one slot.",
+    tradeOff: "Colonies may hold one building, but cities lose one slot.",
+    effects: [{ type: "rule", rule: "homesteadAct" }],
+  },
+  {
+    kind: "law",
+    politician: "kleistophenes",
     id: "colonial-charter",
-    politician: "kleistophenes",
-    kind: "law",
     name: "Colonial Charter",
-    text: "Founding a colony costs 10 less wood, but upgrading one costs 10 more.",
-    tradeOff: "found more, consolidate less",
+    text: "Founding a colony costs 1 food and a pop; upgrading one costs 6 stone.",
+    tradeOff: "Founding a colony costs 1 food and a pop; upgrading one costs 6 stone.",
     effects: [
-      { type: "actionCostDelta", action: "foundColony", resource: "wood", amount: -10 },
-      { type: "actionCostDelta", action: "upgradeColonyToCity", resource: "wood", amount: 10 },
+      { type: "actionCost", action: "foundColony", cost: { food: 1 } },
+      { type: "actionCost", action: "upgradeColonyToCity", cost: { stone: 6 } },
     ],
   },
   {
-    id: "enfranchise-the-colonies",
-    politician: "kleistophenes",
     kind: "law",
-    name: "Enfranchise the Colonies",
-    // The balance experiment the design flags (§5): the greedy-vs-smart sim found
-    // NEITHER bot ever upgrades a colony into a city at current pricing. Halving the
-    // upgrade is the natural lever to revive that dead path — a resolution doing
-    // double duty as a live A/B.
-    text: "Upgrading a colony to a city costs half, but every city costs 1 happiness.",
-    tradeOff: "revives the dead colony→city path",
-    effects: [
-      { type: "actionCostMultiplier", action: "upgradeColonyToCity", multiplier: 0.5 },
-      { type: "settlementIncome", scope: "city", resource: "happiness", amount: -1 },
-    ],
-  },
-  {
+    politician: "kleistophenes",
     id: "frontier-spirit",
-    politician: "kleistophenes",
-    kind: "law",
     name: "Frontier Spirit",
-    text: "Founding a colony grants a freeman, but places an Unrest token.",
-    tradeOff: "expansion has a human cost",
-    effects: [{ type: "onFoundColony", grantPop: "freemen", unrestTokens: "placeOne" }],
-  },
-  {
-    id: "pioneer-levy",
-    politician: "kleistophenes",
-    kind: "law",
-    name: "Pioneer Levy",
-    text: "Every colony yields 1 more food, but every city 1 less.",
-    tradeOff: "rural vs urban food",
+    text: "Founding a colony grants a free slave, but colonies hold 3 pops.",
+    tradeOff: "Founding a colony grants a free slave, but colonies hold 3 pops.",
     effects: [
-      { type: "settlementIncome", scope: "colony", resource: "food", amount: 1 },
-      { type: "settlementIncome", scope: "city", resource: "food", amount: -1 },
+      { type: "onFoundColony", grantPop: "slaves" },
+      { type: "colonyCapacity", amount: 3 },
     ],
   },
   {
-    id: "manifest-destiny",
-    politician: "kleistophenes",
     kind: "law",
-    name: "Manifest Destiny",
-    text: "Founding a colony costs 5 less food, but growing a pop in a city costs 1 more.",
-    tradeOff: "cheap to found, costly to densify",
+    politician: "kleistophenes",
+    id: "harbour-dues",
+    name: "Harbour Dues",
+    text: "Ports cost 2 stone; Marketplaces cost 3 wood and 4 gold.",
+    tradeOff: "Ports cost 2 stone; Marketplaces cost 3 wood and 4 gold.",
     effects: [
-      { type: "actionCostDelta", action: "foundColony", resource: "food", amount: -5 },
-      { type: "actionCostDelta", action: "growPop", scope: "city", resource: "food", amount: 1 },
+      { type: "actionCost", action: "buildBuilding", buildingIds: ["port"], cost: { stone: 2 } },
+      {
+        type: "actionCost",
+        action: "buildBuilding",
+        buildingIds: ["marketplace"],
+        cost: { wood: 3, gold: 4 },
+      },
     ],
   },
   {
+    kind: "law",
+    politician: "kleistophenes",
     id: "rural-bloc",
-    politician: "kleistophenes",
-    kind: "law",
     name: "Rural Bloc",
-    text: "Every 2 colonies yield 1 influence, but every city loses 1.",
-    tradeOff: "a rural political base against the urban one",
-    effects: [
-      { type: "settlementIncome", scope: "colony", resource: "influence", amount: 1, step: 2 },
-      { type: "settlementIncome", scope: "city", resource: "influence", amount: -1 },
-    ],
+    text: "Each colony casts one vote, but each city casts one fewer.",
+    tradeOff: "Each colony casts one vote, but each city casts one fewer.",
+    effects: [{ type: "rule", rule: "ruralBloc" }],
   },
-];
-
-/**
- * Stratokles — one-time upheavals aimed at a rival chosen by the author. The target
- * is revealed with the proposal, before the first vote is cast.
- */
-const STRATOKLES_DIRECTIVES: DirectiveCard[] = [
   {
+    kind: "directive",
+    politician: "stratokles",
+    faction: "mob",
     id: "grain-riot",
-    politician: "stratokles",
-    kind: "directive",
-    faction: "mob",
     name: "Grain Riot",
-    text: "Choose a rival. They lose half their stored food, rounded down.",
-    effects: [{ type: "resourceFraction", resource: "food", fraction: 0.5 }],
+    text: "Choose a rival. They lose 3 food.",
+    effects: [{ type: "resourceDelta", resource: "food", amount: -3 }],
   },
   {
-    id: "the-streets-burn",
-    politician: "stratokles",
     kind: "directive",
+    politician: "stratokles",
     faction: "mob",
+    id: "the-streets-burn",
     name: "The Streets Burn",
     text: "Choose a rival. They place an Unrest token.",
     effects: [{ type: "unrestTokens", change: "placeOne" }],
   },
   {
-    id: "general-strike",
-    politician: "stratokles",
     kind: "directive",
+    politician: "stratokles",
     faction: "mob",
+    id: "general-strike",
     name: "General Strike",
-    text: "Choose a rival. They collect no income on their next turn.",
+    text: "Choose a rival. They collect no income next turn.",
     effects: [{ type: "suppressIncome", turns: 1 }],
   },
   {
-    id: "the-mob-rises",
-    politician: "stratokles",
     kind: "directive",
+    politician: "stratokles",
     faction: "mob",
+    id: "the-mob-rises",
     name: "The Mob Rises",
     text: "Choose a rival. They lose a pop from their largest settlement.",
     effects: [{ type: "losePopFromLargest", count: 1 }],
   },
   {
-    id: "bread-and-circuses",
-    politician: "stratokles",
     kind: "directive",
+    politician: "stratokles",
     faction: "mob",
-    name: "Bread and Circuses",
-    text: "Choose a rival. They clear an Unrest token and lose 5 gold.",
-    effects: [
-      { type: "unrestTokens", change: "clearOne" },
-      { type: "resourceDelta", resource: "gold", amount: -5 },
-    ],
-  },
-  {
     id: "the-stele-is-broken",
-    politician: "stratokles",
-    kind: "directive",
-    faction: "agitator",
     name: "The Stele Is Broken",
-    text: "Choose a rival. Their newest standing Law is torn down; if none stands, nothing happens.",
+    text: "Choose a rival. Their newest authored Law is repealed if its minimum tenure has ended.",
     effects: [{ type: "repealNewestTargetLaw" }],
   },
   {
-    id: "isonomia",
-    politician: "stratokles",
     kind: "directive",
-    faction: "agitator",
+    politician: "stratokles",
+    faction: "mob",
+    id: "isonomia",
     name: "Isonomia",
-    text: "Choose a rival. At the next Assembly they have exactly 1 base vote.",
+    text: "Choose a rival. They have one base vote at the next Assembly.",
     effects: [{ type: "equalVotesNextAssembly" }],
   },
 ];
-
-/** The full 31-card deck, by politician. Deck size = that politician's power ceiling. */
-export const RESOLUTION_DECKS: Record<PoliticianId, ResolutionCard[]> = {
-  demosthenes: DEMOSTHENES_LAWS,
-  perdiccas: PERDICCAS_LAWS,
-  kleistophenes: KLEISTOPHENES_LAWS,
-  stratokles: STRATOKLES_DIRECTIVES,
-};
-
-export const RESOLUTION_CARDS: ResolutionCard[] = POLITICIANS.flatMap(
-  (politician) => RESOLUTION_DECKS[politician.id],
-);
-
-/** Authored-deck lookup for content-definition and deck tests, never runtime resolution. */
+export const POLITICIANS: Politician[] = [
+  {
+    id: "demosthenes",
+    name: "Demosthenes",
+    epithet: "Agricultural Reformer",
+    creed: "Food, labour and the social ladder.",
+    kind: "law",
+    tendency: [{ type: "rule", rule: "landReform" }],
+  },
+  {
+    id: "perdiccas",
+    name: "Perdiccas",
+    epithet: "Urban Planner",
+    creed: "Capital growth and city buildings.",
+    kind: "law",
+    tendency: [{ type: "rule", rule: "guildCharter" }],
+  },
+  {
+    id: "kleistophenes",
+    name: "Kleistophenes",
+    epithet: "Rural Expansionist",
+    creed: "Colonies, their buildings and their votes.",
+    kind: "law",
+    tendency: [{ type: "rule", rule: "homesteadAct" }],
+  },
+  {
+    id: "stratokles",
+    name: "Stratokles",
+    epithet: "Cunning Populist",
+    creed: "Directives aimed at a rival.",
+    kind: "directive",
+    tendency: [{ type: "resourceDelta", resource: "food", amount: -3 }],
+  },
+];
+export const POLITICIANS_BY_ID = Object.fromEntries(POLITICIANS.map((p) => [p.id, p])) as Record<
+  PoliticianId,
+  Politician
+>;
+export const RESOLUTION_DECKS = Object.fromEntries(
+  POLITICIANS.map((p) => [p.id, RESOLUTION_CARDS.filter((c) => c.politician === p.id)]),
+) as Record<PoliticianId, ResolutionCard[]>;
 export function getAuthoredResolutionCard(cardId: string): ResolutionCard | null {
-  return RESOLUTION_CARDS.find((card) => card.id === cardId) ?? null;
+  return RESOLUTION_CARDS.find((c) => c.id === cardId) ?? null;
 }

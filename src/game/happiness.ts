@@ -12,8 +12,7 @@ import type { HegemonyState, PlayerId, Settlement, UnrestTokenChange } from "./t
  * A level of −3 this turn is −3 next turn if nothing on the board changes. The only
  * part that persists is the count of Unrest tokens on the player.
  *
- * Standing Laws still name happiness at v1's scale. Until Step 8 rewrites them, each
- * counts as one more term of the level.
+ * Each standing Law that changes happiness contributes one extra line.
  */
 export type HappinessContributionId = "temples" | "luxuries" | "slaves" | "tokens" | "calm" | "law";
 

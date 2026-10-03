@@ -5,8 +5,7 @@ city-state into the dominant power of an island. You gather resources, grow your
 people, found colonies, upgrade them into cities, and raise buildings to
 out-produce your rivals.
 
-> This guide covers v2 through Step 7. The Assembly keeps its remaining bridges
-> until Step 8 replaces them.
+> This guide covers v2 through Step 8.
 
 ---
 
@@ -39,13 +38,13 @@ where: fill a big plains with slaves and export food, or build on it and import.
 
 ## Resources
 
-You keep track of six resources:
+You keep track of five resources:
 
 - **Wood, Stone, Gold, Food** — the material goods you spend to expand and build.
   Gold doubles as the **unit of account at the bank** (see The bank, below).
 - **Influence** — a political currency earned by your citizens. It stabilizes the
   province (civic calm), pays for demotions on the social ladder, buys food through
-  the Dole, buys riot insurance, and funds Assembly draws, repeals, bribes, and vetoes.
+  the Dole, buys riot insurance, and funds Assembly draws, repeals and bought votes.
 
 Happiness is not a resource. It is a **level** you read off the board each turn (see
 Happiness and food): Temples and luxuries raise it, slaves and Unrest tokens lower it.
@@ -78,7 +77,8 @@ You hold three kinds of settlement:
   share a single tile; they **split its slots**, and the colony founded first takes
   the odd one.
 
-Nothing raises a settlement's capacity.
+Laws can change capacity, slots and building permission. A cut blocks new additions;
+existing pops and buildings stay, and committed transfers still arrive.
 
 **Pieces.** You have **4 colony pieces and 3 city pieces**; the capital is its own
 piece. Upgrading a colony hands its colony piece back. So once four colonies stand,
@@ -228,18 +228,20 @@ and if the board does not change, neither does the level. A level of −3 this t
 - **−1** for every **Unrest token** on your realm.
 - **+2** if you bought **civic calm** this year.
 
-**Unrest tokens** are the one part that stays from turn to turn. Cards, Laws and
+**Unrest tokens** are the one part that stays from turn to turn. Cards and
 Directives place them: any happiness loss a card names places one token, whatever
 its size, and any gain clears one. You cannot buy a token off. A riot or a revolt
 clears all of them.
 
-Some Laws also name happiness ("every city costs 1
-happiness"). Each is one more line of the level for as long as it stands.
+Civic Pride adds one flat +1 happiness line. Manumission counts each slave three
+times in the existing slave term; its extra charge is a separate Law line. Neither
+stores happiness.
 
 **Hunger** is separate from happiness, and calm cannot buy it off. If income cannot
 feed your freemen and citizens, **one pop leaves for each unfed mouth** and your food
 stays at zero: no debt carries over. Freemen leave before citizens, each from the
-settlement holding the most of them. Slaves eat nothing and never leave for hunger.
+settlement holding the most of them. Slaves eat nothing and never leave for hunger. Under Grain Levy freemen also eat
+nothing and cannot leave for hunger.
 Food never goes below zero: a sacked granary or a bad card stops at empty.
 
 At the start of your turn, before you collect income, a level of **−3 or lower is a
@@ -286,8 +288,11 @@ zeroes a term lasts for that year. Plague and Festival act once when revealed.
 | Plague       |      2 | Everyone places an Unrest token.                             |
 | Festival     |      2 | Everyone clears all their Unrest tokens.                     |
 
-Free pops still eat during Piracy and Ostracism. Granaries and standing Law income
-are separate terms. Income forecasts use this year's card while your income is
+Free pops still eat during Piracy and Ostracism, except freemen under Grain Levy.
+Laws change the columns before the year card. Drought still stops plains food under
+Land Reform; Wildfire and Silent Mines stop only wood and stone, so food made on
+forests or mountains survives. Granary and Sacred Fields food, and Civic Pride
+upkeep, are separate terms. Income forecasts use this year's card while your income is
 still owed; after collection they show printed income for the unknown next year.
 
 **Player events** are drawn at each income and resolved before normal actions.
@@ -318,30 +323,63 @@ player deck, dice tables, bank rates and base costs.
 
 ## The Assembly
 
-At the start of every other year, beginning with Year 2, normal play pauses while the Assembly
-convenes. The house places one random **Law** on the ballot. Each player then decides in
-secret whether to pass, pay 3 influence to draw from a chosen politician, propose the
-drawn resolution, or pay 6 influence to propose repealing a standing Law. A redraw costs
-another 3 influence.
+The Assembly meets in Years **2, 4, 6, 8, 10, 12 and 14**. Normal play pauses.
+Each player secretly chooses: pass, pay **2 influence** to draw one card from a
+politician and propose it, or pay **3 influence** to propose an eligible repeal.
+You may discard the draw and pass; there is no second draw. Only player proposals
+reach the ballot, so a sitting has zero to four items.
 
-The Assembly then reveals every proposal and votes on each item in order. Your base vote
-equals your citizens. During your vote you may buy up to two extra votes for 10 influence
-each, or spend 5 influence on your once-per-Assembly veto. A simple majority passes and a
-tie fails. No more than six Laws can stand; a new Law proposed at the cap must name the Law
-it will replace.
+Reveal the proposals and vote on each in turn order. Each seat casts **one vote
+plus one per citizen**. During your vote you may buy at most **two votes per
+sitting**, for **2 gold or 2 influence each**, in any mix. They count on every
+remaining ballot. A simple majority passes; a tie fails.
 
-Demosthenes, Perdiccas, and Kleistophenes offer standing table-wide Laws. Stratokles offers
-one-time **Directives**; their author must name one rival before sealing the proposal, and
-the target is revealed before voting. The house never draws a Directive. Politician power
-and patron labels describe the visible stelae only and grant no bonus.
+At most **four Laws** stand. A new Law at the cap replaces the oldest automatically.
+A Law survives its own sitting and the following one: a Law passed in Year 2 can
+first leave in Year 6. This protects it from repeal, replacement and The Stele Is
+Broken. At most **one price Law** stands; a new one replaces the previous price
+Law as well as the oldest if the cap requires it. A protected replacement blocks
+the proposal. Earlier votes can make a later item ineligible; then it has no effect
+or prize even if it wins a majority.
 
-Every player-authored resolution that passes grants its politician's one-time
-prize: Demosthenes gives 5 food, Perdiccas 3 stone, Kleistophenes 4 wood, and
-Stratokles 2 gold. House Laws, failed or vetoed proposals, and repeals pay nothing.
-Monumental Code and Land Rush have retired with annual coupons. The Streets Burn
-places one Unrest token on its target; the other Assembly rules await Step 8.
-The record of passes remains, but **Voice** counts only the Laws you authored that
-still stand. A repeal or replacement takes one off that count; Directives add none.
+Laws apply to every realm. Cities include capitals. Capacity, slot and piece cuts
+leave existing holdings standing and block further additions. Each passing
+resolution pays its author a small prize: **2 food** from Demosthenes, **2 stone**
+from Perdiccas, **2 wood** from Kleistophenes, or **2 gold** from Stratokles.
+Repeals and failed proposals pay nothing. Politician power and patrons are records,
+with no bonus. **Voice** counts only authored Laws still standing; Directives add none.
+
+| Politician    | Law               | Standing rule                                                                                                             |
+| ------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Demosthenes   | Land Reform       | Working slaves make food on any terrain, including hills. No new Estates; existing ones keep working.                     |
+| Demosthenes   | Sacred Fields     | Temples also make 2 food; a Temple costs 6 stone.                                                                         |
+| Demosthenes   | Manumission       | Slave promotion is free; slaves count three times for unrest, rounded after counting.                                     |
+| Demosthenes   | Tenant Rights     | Grow a slave for 2 gold or a freeman for 3 gold.                                                                          |
+| Demosthenes   | Grain Levy        | Freemen eat no food; Marketplaces do nothing.                                                                             |
+| Demosthenes   | Festival Calendar | Calm costs 2 food or 2 influence.                                                                                         |
+| Perdiccas     | Public Works      | Estates and Granaries cost 3 wood; Marketplaces cost 2 wood and 2 gold. Colonies hold 3 pops. Other building prices stay. |
+| Perdiccas     | Guild Charter     | The capital may grow twice per turn; other cities once, colonies never.                                                   |
+| Perdiccas     | Forum Rites       | Citizens make 2 influence everywhere; Forums add nothing further. Colony freemen make no gold, but still eat.             |
+| Perdiccas     | Civic Pride       | Flat +1 happiness per realm; each city pays 1 gold a year.                                                                |
+| Perdiccas     | Master Builders   | Cities gain one slot; only three colony pieces may be placed. Existing fourth colonies stay.                              |
+| Kleistophenes | Homestead Act     | Colonies may hold one building, including a Port; cities lose one slot.                                                   |
+| Kleistophenes | Colonial Charter  | Found for 1 food and a pop; upgrade for 6 stone. Pieces and placement rules still apply.                                  |
+| Kleistophenes | Frontier Spirit   | Founding grants a free slave, without Unrest; colonies hold 3 pops.                                                       |
+| Kleistophenes | Harbour Dues      | Ports cost 2 stone; Marketplaces cost 3 wood and 4 gold. A Port still needs a coast and an unclaimed good.                |
+| Kleistophenes | Rural Bloc        | +1 vote per colony, −1 per city; at least one base vote.                                                                  |
+
+Stratokles offers six one-time **Directives**. Choose one rival before sealing the
+proposal; the target is revealed before voting. They consume no Law slot and leave
+a permanent record. Their cards return to the discard pile for later reuse.
+
+| Directive           | Effect on the chosen rival                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Grain Riot          | Lose 3 food, stopping at zero.                                                                               |
+| The Streets Burn    | Place one Unrest token.                                                                                      |
+| General Strike      | Skip the next income collection.                                                                             |
+| The Mob Rises       | Lose one pop from the largest settlement: slaves first, then freemen, then citizens; ties use holding order. |
+| The Stele Is Broken | Remove their newest authored Law only if its minimum tenure has ended. No older fallback.                    |
+| Isonomia            | One base vote at the next sitting, then expires. Bought votes still count.                                   |
 
 ## Winning — the victory race
 

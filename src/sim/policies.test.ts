@@ -26,6 +26,7 @@ import { createSimRng } from "./rng";
 import { playTurn, runGame } from "./runner";
 import { buildNewGame } from "./setup";
 import { getTile } from "../game/core/query";
+import { voiceHolder } from "../game/victory";
 import { hexDistance } from "../game/map";
 import { createGameDefinition } from "../game/definition";
 import { getAuthoredGameContent } from "../game/content";
@@ -72,7 +73,7 @@ describe("rule-driven bank chains", () => {
       .build();
     G.pendingPlayerEvent = null;
     G.activeLaws.push({
-      cardId: "aqueduct-levy",
+      cardId: "civic-pride",
       author: "0",
       enactedYear: G.year,
       order: G.lawOrder++,
@@ -397,6 +398,41 @@ describe("master policy", () => {
 // runner (it once did: an engaged agora blew past the single-turn action cap and the
 // force-end tried an endTurn that is illegal while the agora stands).
 describe("political policy", () => {
+  it("smart bots author passing Laws, hold Voice and finish without action caps", () => {
+    const passedSeats = new Set<string>();
+    const voices = new Set<string>();
+    let capped = 0;
+    for (const seed of [1, 2, 3]) {
+      const G = runGame({
+        seed,
+        mode: "standard",
+        policy: smartPolicy,
+        turns: 56,
+        hooks: {
+          onMove: (state) => {
+            for (const id of PLAYER_IDS)
+              if (
+                state.assemblyPassedByPlayer[id] > 0 &&
+                state.activeLaws.some((law) => law.author === id)
+              )
+                passedSeats.add(id);
+            const holder = voiceHolder(state);
+            if (holder) voices.add(holder);
+            expect(state.activeLaws.length).toBeLessThanOrEqual(4);
+          },
+          onForceEndTurn: () => {
+            capped++;
+          },
+        },
+      });
+      expect(G.phase).toBe("gameOver");
+      expect(G.year).toBe(14);
+    }
+    expect(capped).toBe(0);
+    expect([...passedSeats].sort()).toEqual([...PLAYER_IDS]);
+    expect(voices.size).toBeGreaterThan(0);
+  }, 90000);
+
   it("is deterministic across assemblies: same seed twice → byte-identical game", () => {
     const a = runGame({ seed: 21, mode: "standard", policy: politicalPolicy, turns: 60 });
     const b = runGame({ seed: 21, mode: "standard", policy: politicalPolicy, turns: 60 });
@@ -498,7 +534,6 @@ describe("political policy", () => {
     for (const rival of rivals) G.players[rival].resources.food = rival === target ? 200 : 0;
     G.assembly!.held[me] = {
       card: RESOLUTION_CARDS.find((card) => card.id === "grain-riot")!,
-      draws: 1,
     };
 
     const choice = politicalPolicy.choose(

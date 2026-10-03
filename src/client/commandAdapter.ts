@@ -37,12 +37,11 @@ export type GameMoves = {
   resolveRiot: () => void;
   assemblyDraw: (playerID: PlayerId, politician: PoliticianId) => void;
   assemblyDiscardHeld: (playerID: PlayerId) => void;
-  assemblyPropose: (playerID: PlayerId, replaces?: string, target?: PlayerId) => void;
+  assemblyPropose: (playerID: PlayerId, target?: PlayerId) => void;
   assemblyProposeRepeal: (playerID: PlayerId, cardId: string) => void;
   assemblyPass: (playerID: PlayerId) => void;
-  assemblyBribe: (playerID: PlayerId) => void;
+  assemblyBribe: (playerID: PlayerId, payment: "gold" | "influence") => void;
   assemblyVote: (playerID: PlayerId, yea: boolean) => void;
-  assemblyVeto: (playerID: PlayerId) => void;
   assemblyClose: () => void;
 };
 
@@ -90,21 +89,13 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     assemblyDraw: (playerID, politician) =>
       dispatch({ type: "assemblyDraw", politician }, playerID),
     assemblyDiscardHeld: (playerID) => dispatch({ type: "assemblyDiscardHeld" }, playerID),
-    assemblyPropose: (playerID, replaces, target) =>
-      dispatch(
-        {
-          type: "assemblyPropose",
-          ...(replaces ? { replaces } : {}),
-          ...(target ? { target } : {}),
-        },
-        playerID,
-      ),
+    assemblyPropose: (playerID, target) =>
+      dispatch({ type: "assemblyPropose", ...(target ? { target } : {}) }, playerID),
     assemblyProposeRepeal: (playerID, cardId) =>
       dispatch({ type: "assemblyProposeRepeal", cardId }, playerID),
     assemblyPass: (playerID) => dispatch({ type: "assemblyPass" }, playerID),
-    assemblyBribe: (playerID) => dispatch({ type: "assemblyBribe" }, playerID),
+    assemblyBribe: (playerID, payment) => dispatch({ type: "assemblyBribe", payment }, playerID),
     assemblyVote: (playerID, yea) => dispatch({ type: "assemblyVote", yea }, playerID),
-    assemblyVeto: (playerID) => dispatch({ type: "assemblyVeto" }, playerID),
     assemblyClose: () => dispatch({ type: "assemblyClose" }),
   };
 }

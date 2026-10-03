@@ -2,7 +2,12 @@ import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useStat
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { getLuxuryGood } from "../../../game/content";
-import { settlementSlots, settlementWorkingSlaves } from "../../../game/settlement";
+import { tileSlaveColumn } from "../../../game/economy/income";
+import {
+  settlementSlaveResource,
+  settlementSlots,
+  settlementWorkingSlaves,
+} from "../../../game/settlement";
 import { luxuryEligibleVertices } from "../../../game/mapTopology";
 import type { HegemonyState, HexTile, PopType, Settlement } from "../../../game/types";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
@@ -238,6 +243,7 @@ function SharedSeal({ settlement }: { settlement: Settlement }) {
 type TileState = { selected: boolean; candidate: boolean; dimmed: boolean };
 
 function Tile({
+  G,
   tile,
   x,
   y,
@@ -250,6 +256,7 @@ function Tile({
   onRove,
   onHover,
 }: {
+  G: HegemonyState;
   tile: HexTile;
   x: number;
   y: number;
@@ -265,12 +272,13 @@ function Tile({
   const [lead, second] = orderSettlements(tile.settlements);
   // A settled tile draws its slots as pips: built, worked by a slave, or open. An
   // empty tile prints the count beside what its slaves would make.
-  const slots = lead ? settlementSlots(tile, lead) : 0;
+  const slots = lead ? settlementSlots(tile, lead, G) : 0;
   const built = lead ? lead.buildings.length : 0;
-  const worked = lead ? settlementWorkingSlaves(tile, lead) : 0;
+  const worked = lead ? settlementWorkingSlaves(tile, lead, G) : 0;
+  const primary = settlementSlaveResource(tile, G);
   const slotLabel =
     `${tile.slots} ${tile.slots === 1 ? "slot" : "slots"}` +
-    (tile.resource ? ` for ${RESOURCE_LABELS[tile.resource.type].toLowerCase()}` : "");
+    (primary ? ` for ${RESOURCE_LABELS[primary].toLowerCase()}` : "");
   const leadName = lead ? names.get(lead.id) : undefined;
   const className = [
     "tile-btn",
@@ -324,9 +332,7 @@ function Tile({
               </text>
               <image
                 height="24"
-                href={rasterIcon(
-                  tile.resource ? `resources/${tile.resource.type}` : "settlements/slot",
-                )}
+                href={rasterIcon(primary ? `resources/${primary}` : "settlements/slot")}
                 width="24"
                 x="2"
                 y="-19"
@@ -355,12 +361,13 @@ function tileTip(G: HegemonyState, tile: HexTile, names: Map<string, string>) {
   const settlements = orderSettlements(tile.settlements);
 
   if (settlements.length === 0) {
+    const column = tileSlaveColumn(G, tile);
     return {
       title: `${tile.terrain[0].toUpperCase()}${tile.terrain.slice(1)}`,
       sub: `Hex ${tile.id}`,
       rows: [
         ["Slots", String(tile.slots)],
-        ["A slave makes", tile.resource ? `1 ${tile.resource.type}` : "nothing"],
+        ["A slave makes", column.resource ? `${column.perPop} ${column.resource}` : "nothing"],
       ] as Array<[string, string]>,
     };
   }
@@ -382,7 +389,7 @@ function tileTip(G: HegemonyState, tile: HexTile, names: Map<string, string>) {
         ]),
       [
         "Slots",
-        `${lead.buildings.length} built, ${settlementWorkingSlaves(tile, lead)} worked of ${settlementSlots(tile, lead)}`,
+        `${lead.buildings.length} built, ${settlementWorkingSlaves(tile, lead, G)} worked of ${settlementSlots(tile, lead, G)}`,
       ],
     ],
   };
@@ -729,6 +736,7 @@ function IslandComponent({
         <g>
           {centers.map(({ tile, x, y }) => (
             <Tile
+              G={G}
               isTabStop={tile.id === tabStop}
               key={tile.id}
               names={names}

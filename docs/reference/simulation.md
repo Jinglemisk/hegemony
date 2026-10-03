@@ -138,15 +138,12 @@ Works from any phase — bots will finish a manual setup too. Policies:
   plays the stochastic families (riot/venture/bank) by the same hard-coded rules as
   one-ply. Stronger but slower — a `smart`-vs-`beam` A/B isolates search depth from
   evaluation. See docs/reference/ai.md and docs/reports/simulation/ for the head-to-head.
-- `political` — the influence-aware bot (Phase 3-C). Same `smart` economy, but it plays
-  the **Assembly**: it scores a resolution's DIFFERENTIAL impact (my gain minus the
-  strongest rival's — "does this hurt me, help me, or help a rival more?") and draws /
-  proposes / votes / bribes / vetoes by that, atop standing authored Laws
-  toward Voice. Directive proposals evaluate each legal rival target separately. It reuses
-  the engine's own enactment on clones,
-  so it stays deterministic and reads no game RNG. A `political`-vs-`smart` A/B isolates
-  the political layer. Assemblies convene in Years 2, 4, 6, 8, 10, 12 and 14; `--turns 56` lets
-  the year deck finish. See docs/archive/plans/influence-aware-ai.md and docs/reports/simulation/.
+- `political` — `smart` economy plus standing-authorship valuation outside the
+  Assembly. All non-random policies share its Assembly handler: draw and propose
+  useful cards, support coalitions, block a winning rival, and buy affordable
+  pivotal votes. It evaluates real engine enactment on clones and reads unordered
+  public card composition. Directives score each legal rival target. Assemblies
+  convene in Years 2, 4, 6, 8, 10, 12 and 14; `--turns 56` lets the year deck finish.
 - `settler` — `smart` plus **map/expansion foresight**: a frontier term (the total yield of
   the tiles it could legally found a colony on _next_) so the one-ply search prefers
   placements that OPEN expansion — the second-order move the board-static scorer misses.
@@ -190,6 +187,23 @@ excludes a terminal victory check with no income. For a full-game gate:
 ```bash
 npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000
 ```
+
+For the Step 8 handoff, run:
+
+```bash
+step8_out=$(mktemp -d)
+npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000 --report "$step8_out/batch.json" --csv "$step8_out/batch.csv"
+npm run dev -- --port 5199
+npm run ui:audit
+npm run ui:conduct
+node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?dev=assembly4&seed=42' --out "$step8_out/gates"
+```
+
+Run heavy jobs separately. Look for forty Year-14 finishes, no action caps or
+illegal commands, passing authored Laws from every seat across the batch, Voice
+held, and purposeful vote purchases. Check the four-Law cap, one standing price
+Law and per-seat Directive counts. Audit proposal, casting and closing states at
+1280, 1440 and 1920; conduct must not exceed the brief's 25-row baseline.
 
 A riot's deferred income updates its existing snapshot, including on Year 14's
 last turn. Player draws are counted after that income, and a year-card reveal is
@@ -247,7 +261,11 @@ The report contains:
 - `assembly` — agora engagement: assemblies held/game, Laws enacted / removed / standing,
   Directives and their target distribution, authored passes, prize resources, Voice claims
   and transfers, final Voice ownership/win correlation, authored-pass lead margin and
-  concentration, **influence sunk**/game, and a per-verb breakdown
+  concentration, gold and influence spent/game, votes bought and a per-verb breakdown.
+  `assembly.perSeat` gives counts and per-game rates for Laws proposed and passed,
+  authored Laws standing at game end, passed Directives, votes bought, Voice claims
+  and table-turn observations of Voice held. CSV snapshots include standing
+  authorship and whether each seat holds Voice.
 - `currencyVerbs` — per-verb currency-move counts (bank / Dole / calm / ladder / venture / riot)
 - `upgrades` — colony→city upgrades per game
 
@@ -294,8 +312,8 @@ Replays are byte-identical to the original run.
 The save is a _recipe_: replaying `history` from its pinned definition and seed
 reproduces `state` byte-for-byte. Saves double as shareable bug reports and
 balance scenarios. Loading re-hashes the definition and rejects tampering, unsupported
-schema versions, or a recipe/state mismatch. Step 7 uses state schema 7 and command
-schema 3 and rejects older recipes. The save container format remains v2.
+schema versions, or a recipe/state mismatch. Step 8 uses state schema 8 and command
+schema 4 and rejects older recipes. The save container format remains v2.
 
 **Phase 3.6 architecture:** definition pinning, the canonical atomic transition, workflow
 actors/projections, stable settlement and transfer IDs, versioned recipes, legacy migration,

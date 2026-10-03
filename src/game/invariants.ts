@@ -314,7 +314,6 @@ function validateResolutionCards(
 
   const session = G.assembly;
   if (session?.phase === "proposal") {
-    countItem(session.houseItem);
     Object.values(session.held).forEach((held) => held && countId(held.card.id));
     Object.values(session.proposals).forEach(countItem);
   } else if (session?.phase === "voting") {

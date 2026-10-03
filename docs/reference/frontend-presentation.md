@@ -117,9 +117,12 @@ The Step 1 reconciliation preserves `getBuildings()`, `getBuilding()`,
 definition with its target-specific status, show `status.cost` as the effective action
 cost, and label roster/reference prices as base costs. Command summaries retain the
 acting `playerID` and use honest `varies`, `options`, or `stakes` labels until the
-engine can quote a concrete target or payment. Assembly draw, repeal, bribe, and veto
-explanations continue to read the same session/ruleset values used by Assembly
-execution and legal moves; Step 1 did not add separate Assembly action-status APIs.
+engine can quote a concrete target or payment. Assembly draw and repeal explanations read `getAssemblyDrawStatus()` and
+`getAssemblyRepealStatus()`. Vote purchases
+use `getAssemblyBuyVoteStatus()` for price, availability and blocked reason in both
+payments. Replacement is automatic and minimum tenure comes from
+`lawProposalReason()` and `repealableLawIds()`. Controls have distinct accessible
+names; the scene has no house item or veto.
 
 The Step 2 reconciliation consumes `CONTENT_MANIFEST`, `FEATURE_PARITY`, the exhaustive
 effect registries in `src/parity/featureParity.ts`, and active-effect descriptors in

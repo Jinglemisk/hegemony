@@ -1,6 +1,10 @@
 import type { MouseEventHandler, ReactNode } from "react";
 import { PLAYER_NAMES } from "../../../game/data";
-import { activeLawIds, getResolutionCard } from "../../../game/assembly";
+import {
+  repealableLawIds,
+  getResolutionCard,
+  getAssemblyRepealStatus,
+} from "../../../game/assembly";
 import type { AssemblySession } from "../../../game/assembly";
 import type { HegemonyState } from "../../../game/types";
 import { Popover } from "../../overlays/Popover";
@@ -37,10 +41,8 @@ export function AssemblyFoot({
   onMenu: (menu: AssemblyMenu) => void;
 }) {
   const { moves, viewerId } = useGameUi();
-  const rules = G.ruleset.assembly;
-  const influence = G.players[viewerId].resources.influence;
-  const held = Boolean(session.held[viewerId]);
-  const standing = activeLawIds(G);
+  const repeal = getAssemblyRepealStatus(G, viewerId);
+  const standing = repealableLawIds(G);
 
   if (session.phase === "voting") {
     return null;
@@ -72,18 +74,10 @@ export function AssemblyFoot({
     <div className="asmFoot">
       <div className="asmSelectWrap">
         <Verb
-          armed={standing.length > 0 && influence >= rules.repealCost && !held}
-          blockedReason={
-            held
-              ? "Resolve the card you are holding first."
-              : standing.length === 0
-                ? "No standing Law can be repealed."
-                : influence < rules.repealCost
-                  ? `Requires ${rules.repealCost} influence.`
-                  : undefined
-          }
-          cost={`${rules.repealCost} influence`}
-          effectiveCost={{ influence: rules.repealCost }}
+          armed={repeal.can}
+          blockedReason={repeal.reason ?? undefined}
+          cost={`${repeal.price} influence`}
+          effectiveCost={repeal.cost}
           explanation="Put the removal of a standing Law on the ballot. The motion is voted like any other resolution."
           icon={glyphPlaceholder("repeal") ? <Icon glyph="repeal" size="verb" /> : <RepealIcon />}
           label="Repeal"
@@ -134,7 +128,7 @@ export function AssemblyFoot({
       <Verb
         armed
         cost="say nothing"
-        explanation="Finalize your proposal turn without adding a card. The house card still goes to the vote."
+        explanation="Finalize your proposal turn without adding a card. If nobody proposes, the sitting closes without a vote."
         icon={
           ASSEMBLY_PLACEHOLDERS.pass ? (
             <Icon glyph="maskPlain" size="verb" src={ASSEMBLY_PLACEHOLDERS.pass} />

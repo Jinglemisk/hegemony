@@ -157,7 +157,7 @@ describe("Assembly pickers", () => {
   it("opens the repeal picker as a labelled dialog and restores keyboard focus on Escape", () => {
     const G = scenario().build();
     G.players["0"].resources.influence = 20;
-    G.activeLaws.push({ cardId: "grain-dole", author: "0", enactedYear: G.year, order: 0 });
+    G.activeLaws.push({ cardId: "land-reform", author: "0", enactedYear: G.year - 4, order: 0 });
     openAssembly(G, "0");
     const proposeRepeal = vi.fn();
     const value = {
@@ -193,7 +193,7 @@ describe("Assembly pickers", () => {
     const choice = choices.querySelector<HTMLButtonElement>("button")!;
     expect(dialog.querySelector('[role="menu"]')).toBeNull();
     expect(dialog.querySelector('[role="menuitem"]')).toBeNull();
-    expect(choice.textContent).toContain("Grain Dole");
+    expect(choice.textContent).toContain("Land Reform");
     expect(choice.tabIndex).toBe(0);
     expect(document.activeElement).toBe(dialog);
 
@@ -204,71 +204,11 @@ describe("Assembly pickers", () => {
     expect(proposeRepeal).not.toHaveBeenCalled();
   });
 
-  it("uses a labelled native-button list for a full-board replacement", () => {
-    const G = scenario().build();
-    const laws = RESOLUTION_CARDS.filter((card) => card.kind === "law");
-    const standing = laws.slice(0, G.ruleset.assembly.lawCap);
-    const candidate = laws[G.ruleset.assembly.lawCap];
-    standing.forEach((card, index) => {
-      G.activeLaws.push({
-        cardId: card.id,
-        author: "0",
-        enactedYear: G.year,
-        order: index,
-      });
-    });
-    openAssembly(G, "0");
-    G.assembly!.held["0"] = { card: candidate, draws: 1 };
-    const propose = vi.fn();
-    const value = {
-      G,
-      viewerId: "0",
-      moves: {
-        assemblyDiscardHeld: vi.fn(),
-        assemblyPropose: propose,
-      },
-    } as unknown as GameUi;
-
-    act(() => {
-      root.render(
-        <GameUiProvider value={value}>
-          <AssemblyFloor G={G} session={G.assembly!} />
-        </GameUiProvider>,
-      );
-    });
-
-    const opener = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
-      button.textContent?.includes("Propose"),
-    )!;
-    act(() => {
-      opener.focus();
-      opener.click();
-    });
-
-    const dialog = document.body.querySelector<HTMLElement>("[role=dialog]")!;
-    const choices = dialog.querySelector<HTMLUListElement>(
-      'ul[aria-label="Standing Laws available for replacement"]',
-    )!;
-    const buttons = [...choices.querySelectorAll<HTMLButtonElement>("button")];
-    const houseItem = G.assembly!.houseItem;
-    const houseReservation = houseItem?.kind === "enact" ? houseItem.replaces : undefined;
-    expect(dialog.querySelector('[role="menu"]')).toBeNull();
-    expect(dialog.querySelector('[role="menuitem"]')).toBeNull();
-    expect(houseReservation).toBeTruthy();
-    expect(buttons).toHaveLength(G.ruleset.assembly.lawCap - 1);
-    expect(buttons.map((button) => button.textContent)).not.toContain(
-      RESOLUTION_CARDS.find((card) => card.id === houseReservation)?.name,
-    );
-    expect(buttons.every((button) => button.tabIndex === 0)).toBe(true);
-    expect(document.activeElement).toBe(dialog);
-    expect(propose).not.toHaveBeenCalled();
-  });
-
   it("requires a labelled rival choice before sealing a Directive", () => {
     const G = scenario().build();
     const directive = RESOLUTION_CARDS.find((card) => card.kind === "directive")!;
     openAssembly(G, "0");
-    G.assembly!.held["0"] = { card: directive, draws: 1 };
+    G.assembly!.held["0"] = { card: directive };
     const propose = vi.fn();
     const value = {
       G,
@@ -303,14 +243,14 @@ describe("Assembly pickers", () => {
 
     const rival = buttons.find((button) => button.textContent?.includes("Nikos"))!;
     act(() => rival.click());
-    expect(propose).toHaveBeenCalledWith("0", undefined, "1");
+    expect(propose).toHaveBeenCalledWith("0", "1");
   });
 });
 
 describe("The Assembly scene", () => {
   it("gives a law's trade-off two line-level clauses, with `but` inside the cost", () => {
     const law = RESOLUTION_CARDS.find(
-      (card): card is LawCard => card.kind === "law" && card.text.includes(", but "),
+      (card): card is LawCard => card.kind === "law" && card.id === "civic-pride",
     )!;
 
     act(() => root.render(<ResolutionEffect card={law} />));
@@ -421,7 +361,7 @@ describe("The Assembly scene", () => {
     session.phase = "voting";
     session.voteOrder = [...PLAYER_IDS];
     session.voteIndex = 0;
-    session.ballot = session.houseItem ? [session.houseItem] : [];
+    session.ballot = [{ kind: "enact", card: RESOLUTION_CARDS[0], proposer: "0" }];
     const value = { G, viewerId: "0", moves: {} } as unknown as GameUi;
 
     act(() => {
@@ -437,10 +377,10 @@ describe("The Assembly scene", () => {
     expect(choices).toHaveLength(4);
     expect(choices.some((label) => /^Yea/.test(label))).toBe(true);
     expect(choices.some((label) => /^Nay/.test(label))).toBe(true);
-    expect(choices.some((label) => /^Veto/.test(label))).toBe(true);
+    expect(choices.filter((label) => /^\+1 vote/.test(label))).toHaveLength(2);
     // Bribe used to live in a dock at the foot, one surface away from the vote
     // it buys. It belongs on the seat that is casting.
-    expect(choices.some((label) => /^Bribe/.test(label))).toBe(true);
+    expect(choices.some((label) => /^Veto/.test(label))).toBe(false);
     expect(container.querySelector(".asmSeatCue")?.textContent).toContain("Casts now");
   });
 
@@ -542,7 +482,7 @@ describe("The Assembly scene", () => {
     vi.useFakeTimers();
     const G = scenario().build();
     const only = RESOLUTION_CARDS.find((card) => card.kind === "law")!;
-    G.activeLaws.push({ cardId: only.id, author: "0", enactedYear: G.year, order: 0 });
+    G.activeLaws.push({ cardId: only.id, author: "0", enactedYear: G.year - 4, order: 0 });
     openAssembly(G, "0");
     const value = { G, viewerId: "0", moves: {} } as unknown as GameUi;
     const draw = () =>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { nextDrawCost, politicianStandings } from "../../../game/assembly";
+import { getAssemblyDrawStatus, politicianStandings } from "../../../game/assembly";
 import type { Politician, PoliticianStanding } from "../../../game/assembly";
 import type { HegemonyState, Resource } from "../../../game/types";
 import { presentDirectiveEffect, presentLawEffect } from "../../../ui/effects";
@@ -37,20 +37,13 @@ export function AssemblyColonnade({ G }: { G: HegemonyState }) {
   // A seat draws only while proposing, before it has finalized, and while it is not
   // already holding a card it must first resolve.
   const proposing = session?.phase === "proposal" && !session.proposalDone[viewerId];
-  const holding = Boolean(session?.held[viewerId]);
-  const drawCost = session ? nextDrawCost(G, viewerId) : 0;
 
   return (
     <div className="asmColonnade">
       {standings.map((standing) => (
         <Stele
-          canDraw={
-            Boolean(proposing) && !holding && G.players[viewerId].resources.influence >= drawCost
-          }
           drawArmed={Boolean(proposing)}
-          drawCost={drawCost}
           G={G}
-          holding={holding}
           key={standing.politician.id}
           standing={standing}
         />
@@ -63,22 +56,15 @@ function Stele({
   G,
   standing,
   drawArmed,
-  canDraw,
-  drawCost,
-  holding,
 }: {
   G: HegemonyState;
   standing: PoliticianStanding;
   drawArmed: boolean;
-  canDraw: boolean;
-  drawCost: number;
-  holding: boolean;
 }) {
   const { politician, power } = standing;
   const { moves, viewerId } = useGameUi();
   const isDemagogue = politician.kind === "directive";
-  const deckLeft =
-    G.politicianDecks[politician.id].length + G.politicianDiscards[politician.id].length;
+  const draw = getAssemblyDrawStatus(G, viewerId, politician.id);
   const tendency: EffectPresentation[] =
     politician.kind === "law"
       ? politician.tendency.map((effect) => presentLawEffect(effect, G.definition.content))
@@ -125,11 +111,9 @@ function Stele({
 
       {drawArmed ? (
         <DrawSeal
-          canDraw={canDraw && deckLeft > 0}
-          cost={drawCost}
-          deckLeft={deckLeft}
-          holding={holding}
-          influence={G.players[viewerId].resources.influence}
+          canDraw={draw.can}
+          cost={draw.price}
+          blockedReason={draw.reason ?? undefined}
           onDraw={() => moves.assemblyDraw(viewerId, politician.id)}
           politician={politician}
         />
@@ -227,29 +211,16 @@ function PrizeAmount({ prize }: { prize: Partial<Record<Resource, number>> }) {
 function DrawSeal({
   politician,
   cost,
-  deckLeft,
   canDraw,
-  holding,
-  influence,
+  blockedReason,
   onDraw,
 }: {
   politician: Politician;
   cost: number;
-  deckLeft: number;
   canDraw: boolean;
-  holding: boolean;
-  influence: number;
+  blockedReason?: string;
   onDraw: () => void;
 }) {
-  const blockedReason =
-    deckLeft === 0
-      ? `${politician.name}'s deck is spent.`
-      : holding
-        ? "Resolve the card you are holding first."
-        : influence < cost
-          ? `Requires ${cost} influence.`
-          : undefined;
-
   return (
     <AssemblyAction
       blockedReason={blockedReason}

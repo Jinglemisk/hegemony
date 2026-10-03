@@ -1,305 +1,226 @@
 import { describe, expect, it } from "vitest";
-
-import { EMPTY_RESOURCES } from "../data";
-import { foundColony } from "../actions";
-import { getPlayerBankRate } from "../bank";
-import { getPromotePopStatus } from "../civic";
-import { calculateIncome, calculateIncomeBreakdown } from "../economy/income";
+import { scenario, owned, tile } from "../testing/scenario";
+import { foundColony, growPop } from "../actions";
+import {
+  calculateIncome,
+  calculateIncomeBreakdown,
+  settlementNextClassColumn,
+  settlementNextYield,
+  tileSlaveColumn,
+} from "../economy/income";
 import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
   getGrowPopStatus,
   getUpgradeColonyToCityStatus,
 } from "../status";
-import { owned, scenario } from "../testing/scenario";
-import type { HegemonyState, PlayerId } from "../types";
+import { getCivicCalmStatus, getPromotePopStatus } from "../civic";
 import { happinessLevel } from "../happiness";
-import { getLawHappinessContributions, getLawIncomeContributions } from "./laws";
-
-/**
- * The standing-modifier layer — the one genuinely new engine seam the Assembly needs.
- *
- * Every other content system applies its effect once, when a card resolves; a Law is a
- * patch that hangs over the ruleset until it is repealed, so the income, cost, bank and
- * happiness pipelines have to CONSULT it every time they compute. These tests all ask
- * the same question in different pipelines: does the stele in the agora actually reach
- * the number the player reads?
- *
- * Laws are planted straight onto `G.activeLaws` here rather than voted in — the
- * enactment path has its own suite in assembly.test.ts, and going through a whole
- * ballot to test an income formula would be testing the ballot twice.
- */
-
-const P0_CAPITAL = "-2,0"; // mountain, stone 4 — a yielding tile
-const P0_COLONY = "3,0"; // plains, food 4
-const HILL = "-1,0"; // yield-less, and adjacent to P0's capital so it is legally settleable
-
-/** Plant a standing Law exactly as {@link enact} would, minus the vote. */
-function plantLaw(G: HegemonyState, cardId: string, author: PlayerId = "0") {
-  G.activeLaws.push({ cardId, author, enactedYear: G.year, order: G.lawOrder++ });
-}
-
-/** An opening with no pending event in the way of the action verbs under test. */
-function opening(patch?: Parameters<typeof scenario>[0]) {
-  return scenario(patch)
+import { buildingGround } from "../status";
+import { playerPieces, settlementCapacity, settlementSlots } from "../settlement";
+import { applyHunger } from "../hunger";
+import { calculateEconomyProjection, previewFoundedSettlement } from "../economy/preview";
+import { baseVoteWeight } from "./assembly";
+import { getLawHappinessContributions } from "./laws";
+import type { HegemonyState } from "../types";
+function opening() {
+  return scenario()
     .opening()
-    .mutate((draft) => {
-      draft.pendingPlayerEvent = null;
-    });
+    .withResources("0", { wood: 100, stone: 100, food: 100, gold: 100, influence: 100 })
+    .mutate((G) => {
+      G.pendingPlayerEvent = null;
+    })
+    .build();
 }
+function law(G: HegemonyState, cardId: string) {
+  G.activeLaws.push({ cardId, author: "0", enactedYear: G.year, order: G.lawOrder++ });
+}
+const cap = "-2,0",
+  colony = "3,0";
 
-describe("standing laws reach the income pipeline", () => {
-  it("settlementIncome pays per settlement in its scope", () => {
-    // Player 0 opens with a metropolis and a colony: 2 settlements, 1 of them a city.
-    // Land Reform is +1 food on `all` and -1 gold on `city`, so the two scopes must
-    // count differently off the same board.
-    const G = opening().withResources("0", { food: 100 }).build();
-    const before = calculateIncome(G, "0");
-
-    plantLaw(G, "land-reform");
-    const after = calculateIncome(G, "0");
-
-    expect(after.food - before.food).toBe(2);
-    expect(after.gold - before.gold).toBe(-1);
+describe("standing Laws", () => {
+  it("rule Laws change columns before the year card without stacking Forums or Marketplaces", () => {
+    const G = opening();
+    const city = owned(G, cap, "0"),
+      farm = owned(G, colony, "0");
+    city.pops = { citizens: 2, freemen: 1, slaves: 1 };
+    city.buildings = ["forum", "marketplace"];
+    farm.pops = { citizens: 1, freemen: 2, slaves: 1 };
+    farm.buildings = ["marketplace"];
+    law(G, "forum-rites");
+    expect(settlementNextClassColumn(G, tile(G, colony), farm, "freemen").perPop).toBe(0);
+    expect(settlementNextClassColumn(G, tile(G, cap), city, "citizens").perPop).toBe(2);
+    expect(settlementNextClassColumn(G, tile(G, colony), farm, "freemen").perPop).toBe(0);
+    law(G, "grain-levy");
+    expect(settlementNextClassColumn(G, tile(G, cap), city, "freemen")).toMatchObject({
+      perPop: 1,
+      income: { food: 0, gold: 1 },
+    });
+    G.players["0"].collectedThisTurn = false;
+    G.activeYearCard = {
+      id: "test",
+      name: "Ostracism",
+      count: 1,
+      text: "",
+      effect: { type: "zeroTerm", term: "citizenInfluence" },
+    };
+    expect(calculateIncome(G, "0").influence).toBe(0);
   });
-
-  it("popIncome scales with `step` — 'every 3 citizens' is floored, not rounded", () => {
-    // Sacred Fields: +1 food per citizen, -1 happiness per 3 citizens. With 7 citizens
-    // that is +7 food and floor(7/3) = -2 happiness, not -2.33.
-    const G = opening()
-      .setPops("0", P0_CAPITAL, { citizens: 7, freemen: 0, slaves: 0 })
-      .withResources("0", { food: 100 })
-      .build();
-    const before = calculateIncome(G, "0");
-    const level = happinessLevel(G, "0");
-
-    plantLaw(G, "sacred-fields");
-    const after = calculateIncome(G, "0");
-
-    expect(after.food - before.food).toBe(7);
-    // A Law's happiness is a standing term of the level, not income.
-    expect(happinessLevel(G, "0") - level).toBe(-2);
-    expect(after).not.toHaveProperty("happiness");
-  });
-
-  it("popPrimaryIncome is dead on a yield-less hill and live on a yielding tile", () => {
-    // Grain Dole's -1 per slave is paid into the settlement TILE's own material, so it
-    // is inert on a hill for exactly the same reason the base slave coefficient is.
-    const G = opening()
-      .setPops("0", P0_CAPITAL, { citizens: 1, freemen: 0, slaves: 2 })
-      .setPops("0", P0_COLONY, { citizens: 0, freemen: 1, slaves: 0 })
-      .withSettlement("0", HILL, "colony", { citizens: 0, freemen: 0, slaves: 3 })
-      .build();
-    const before = calculateIncome(G, "0");
-
-    plantLaw(G, "grain-dole");
-    const after = calculateIncome(G, "0");
-
-    // The capital's 2 slaves cost 2 stone; the hill's 3 slaves cost nothing at all.
-    expect(after.stone - before.stone).toBe(-2);
-
-    const lines = getLawIncomeContributions(G, "0", { ...EMPTY_RESOURCES }).filter(
-      (contribution) => contribution.label === "Grain Dole",
+  it("Land Reform changes working slaves to food on hills too and preserves existing Estates", () => {
+    const G = opening();
+    const city = owned(G, cap, "0");
+    city.pops = { citizens: 0, freemen: 0, slaves: 2 };
+    city.buildings = ["estate"];
+    law(G, "land-reform");
+    expect(settlementNextYield(G, tile(G, cap), city).food).toBe(4);
+    expect(getBuildBuildingStatus(G, "0", cap, "estate").reasons.join(" ")).toContain(
+      "Land Reform",
     );
-    // One line per settlement that HAS a primary resource — the hill produces none.
-    expect(lines).toHaveLength(2);
-    expect(lines.map((line) => line.resource).sort()).toEqual(["food", "stone"]);
+    const ground = tile(G, cap);
+    ground.terrain = "hill";
+    ground.resource = null;
+    city.buildings = [];
+    expect(settlementNextYield(G, ground, city).food).toBe(2);
+    expect(tileSlaveColumn(G, ground)).toEqual({ resource: "food", perPop: 1 });
   });
-
-  it("thresholdHappiness flips at the threshold", () => {
-    const G = opening().build();
-    plantLaw(G, "cult-of-demeter"); // hold 15+ food for +2 happiness, below it -2
-
-    G.players["0"].resources.food = 15;
-    const atThreshold = getLawHappinessContributions(G, "0");
-    expect(atThreshold.find((line) => line.label === "Cult of Demeter")?.amount).toBe(2);
-    const secure = happinessLevel(G, "0");
-
-    G.players["0"].resources.food = 14;
-    const below = getLawHappinessContributions(G, "0");
-    expect(below.find((line) => line.label === "Cult of Demeter")?.amount).toBe(-2);
-
-    // And the flip reaches the level, not just the layer's own accounting.
-    expect(happinessLevel(G, "0")).toBe(secure - 4);
-  });
-
-  it("a Law with two happiness effects is one line of the level", () => {
-    // Civic Pride: +1 per city, −1 per colony. The opening holds one of each.
-    const G = opening().build();
-    plantLaw(G, "civic-pride");
-
-    expect(getLawHappinessContributions(G, "0")).toEqual([{ label: "Civic Pride", amount: 0 }]);
-  });
-
-  it("surplusConversion (Agrarian Tariff) only pays above the floor", () => {
-    // "Every 2 food gathered above 10 pays 1 gold". The tariff reads the income as it
-    // stands, so the test feeds the pipeline a known harvest rather than guessing one.
-    const G = opening().build();
-    plantLaw(G, "agrarian-tariff");
-
-    const rich = getLawIncomeContributions(G, "0", { ...EMPTY_RESOURCES, food: 16 });
-    expect(rich.find((line) => line.resource === "gold")?.amount).toBe(3); // floor(6 / 2)
-
-    const atFloor = getLawIncomeContributions(G, "0", { ...EMPTY_RESOURCES, food: 10 });
-    expect(atFloor.find((line) => line.resource === "gold")).toBeUndefined();
-
-    const lean = getLawIncomeContributions(G, "0", { ...EMPTY_RESOURCES, food: 4 });
-    expect(lean.find((line) => line.resource === "gold")).toBeUndefined();
-
-    // The trade-off half of the card is unconditional either way.
-    expect(lean.find((line) => line.resource === "wood")?.amount).toBe(-1);
-  });
-});
-
-describe("standing laws reprice actions", () => {
-  it("actionCostDelta reaches found-colony", () => {
-    const G = opening().build();
-    expect(getFoundColonyStatus(G, "0", HILL).cost).toMatchObject({ wood: 4, food: 1 });
-
-    plantLaw(G, "colonial-charter"); // founding -10 wood, which clamps v2's 4 at zero
-    expect(getFoundColonyStatus(G, "0", HILL).cost).toMatchObject({ wood: 0, food: 1 });
-  });
-
-  it("actionCostDelta reaches build-building — and never drives a cost below zero", () => {
-    const G = opening().build();
-    expect(getBuildBuildingStatus(G, "0", P0_CAPITAL, "temple").cost).toMatchObject({ stone: 3 });
-
-    plantLaw(G, "public-works"); // buildings -3 wood AND -3 stone
-    const cost = getBuildBuildingStatus(G, "0", P0_CAPITAL, "temple").cost;
-
-    expect(cost).toMatchObject({ stone: 0 });
-    // The Temple costs no wood at all, so the -3 wood clamps at 0 rather than paying out.
-    expect(cost?.wood ?? 0).toBe(0);
-  });
-
-  it("actionCostDelta reaches grow-pop, in both directions at once", () => {
-    const G = opening().build();
-    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toEqual({ food: 3 });
-
-    plantLaw(G, "tenant-rights"); // growing costs 3 less food but 2 more gold
-    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toMatchObject({
-      food: 0,
-      gold: 2,
+  it("Land Reform food survives Wildfire in both the class head and income forecast", () => {
+    const G = opening();
+    const ground = tile(G, cap),
+      city = owned(G, cap, "0");
+    ground.terrain = "forest";
+    ground.resource = { type: "wood" };
+    city.pops = { citizens: 0, freemen: 0, slaves: 2 };
+    G.players["0"].collectedThisTurn = false;
+    law(G, "land-reform");
+    G.activeYearCard = {
+      id: "test",
+      name: "Wildfire",
+      count: 1,
+      text: "",
+      effect: { type: "zeroTerm", term: "forestWood" },
+    };
+    expect(settlementNextClassColumn(G, ground, city, "slaves")).toMatchObject({
+      perPop: 1,
+      income: { food: 2, wood: 0 },
     });
+    expect(settlementNextYield(G, ground, city).food).toBe(2);
   });
-
-  it("actionCostDelta narrowed by settlement scope only bites in that scope", () => {
-    // Guild Charter is the tall/wide axis: -3 food in cities, +2 in colonies.
-    const G = opening().build();
-    plantLaw(G, "guild-charter");
-
-    expect(getGrowPopStatus(G, "0", P0_CAPITAL, "freemen").cost).toMatchObject({ food: 0 });
-    expect(getGrowPopStatus(G, "0", P0_COLONY, "freemen").cost).toMatchObject({ food: 5 });
+  it("Sacred Fields pays Temple food and states the whole building price", () => {
+    const G = opening();
+    law(G, "sacred-fields");
+    expect(getBuildBuildingStatus(G, "0", cap, "temple").cost).toEqual({ stone: 6 });
+    const city = owned(G, cap, "0");
+    city.buildings = ["temple"];
+    expect(
+      calculateIncomeBreakdown(G, "0").find((e) => e.detail.includes("Temple food"))?.amount,
+    ).toBe(2);
   });
-
-  it("actionCostDelta reaches promote-pop, and a narrowed one only touches its own pop", () => {
-    const G = opening().build();
-    expect(getPromotePopStatus(G, "0", P0_CAPITAL, "slaves").cost).toEqual({ food: 2 });
-
-    plantLaw(G, "grain-dole"); // every promotion is 1 food cheaper
-    expect(getPromotePopStatus(G, "0", P0_CAPITAL, "slaves").cost).toEqual({ food: 1 });
-
-    plantLaw(G, "manumission-law"); // ...and freeing a SLAVE specifically, 2 more
-    expect(getPromotePopStatus(G, "0", P0_CAPITAL, "slaves").cost).toEqual({ food: 0 });
-
-    // The freeman's climb costs gold, which the slave-narrowed Law never touches. Grain
-    // Dole is unnarrowed so it DOES reach this promotion, but a -1 food on a cost with
-    // no food line clamps to a harmless zero rather than discounting the gold.
-    const freeman = getPromotePopStatus(G, "0", P0_CAPITAL, "freemen").cost;
-    expect(freeman).toMatchObject({ gold: 2 });
-    expect(freeman?.food ?? 0).toBe(0);
+  it("price Laws state growth, calm, founding, upgrading and building prices", () => {
+    const G = opening();
+    law(G, "tenant-rights");
+    expect(getGrowPopStatus(G, "0", cap, "slaves").cost).toEqual({ gold: 2 });
+    expect(getGrowPopStatus(G, "0", cap, "freemen").cost).toEqual({ gold: 3 });
+    G.activeLaws = [];
+    law(G, "festival-calendar");
+    expect(getCivicCalmStatus(G, "0", "gold").cost).toEqual({ food: 2 });
+    expect(getCivicCalmStatus(G, "0", "influence").cost).toEqual({ influence: 2 });
+    G.activeLaws = [];
+    law(G, "colonial-charter");
+    expect(getFoundColonyStatus(G, "0", "-1,0").cost).toEqual({ food: 1 });
+    expect(getUpgradeColonyToCityStatus(G, "0", colony).cost).toEqual({ stone: 6 });
+    G.activeLaws = [];
+    law(G, "public-works");
+    expect(getBuildBuildingStatus(G, "0", cap, "estate").cost).toEqual({ wood: 3 });
+    expect(getBuildBuildingStatus(G, "0", cap, "marketplace").cost).toEqual({ wood: 2, gold: 2 });
+    G.activeLaws = [];
+    law(G, "harbour-dues");
+    expect(getBuildBuildingStatus(G, "0", colony, "port").cost).toEqual({ stone: 2 });
+    expect(getBuildBuildingStatus(G, "0", cap, "marketplace").cost).toEqual({ wood: 3, gold: 4 });
   });
-
-  it("clamps a repriced cost at zero rather than paying the player to act", () => {
-    // A cheap ruleset plus Manumission Law's -2 food would take the promotion to -1.
-    const G = opening({ patch: { ladder: { promoteCosts: { slaves: { food: 1 } } } } }).build();
-    plantLaw(G, "manumission-law");
-
-    expect(getPromotePopStatus(G, "0", P0_CAPITAL, "slaves").cost).toEqual({ food: 0 });
-  });
-
-  it("actionCostMultiplier halves the colony upgrade (Enfranchise the Colonies)", () => {
-    const G = opening().build();
-    expect(getUpgradeColonyToCityStatus(G, "0", P0_COLONY).cost).toMatchObject({
-      wood: 3,
-      stone: 3,
+  it("Civic Pride pays one flat happiness line and city upkeep; Manumission changes counted slaves", () => {
+    const G = opening();
+    const before = happinessLevel(G, "0");
+    law(G, "civic-pride");
+    expect(happinessLevel(G, "0")).toBe(before + 1);
+    expect(getLawHappinessContributions(G, "0")).toEqual([{ label: "Civic Pride", amount: 1 }]);
+    expect(calculateIncomeBreakdown(G, "0").find((e) => e.source === "Civic Pride")).toMatchObject({
+      resource: "gold",
+      amount: -1,
     });
-
-    plantLaw(G, "enfranchise-the-colonies");
-    // Halved and rounded UP — 3 becomes 2, never 1.5.
-    expect(getUpgradeColonyToCityStatus(G, "0", P0_COLONY).cost).toMatchObject({
-      wood: 2,
-      stone: 2,
-    });
+    G.activeLaws = [];
+    owned(G, cap, "0").pops.slaves = 3;
+    owned(G, colony, "0").pops.slaves = 0;
+    law(G, "manumission");
+    expect(getPromotePopStatus(G, "0", cap, "slaves").cost).toEqual({});
+    expect(getLawHappinessContributions(G, "0")).toEqual([{ label: "Manumission", amount: -3 }]);
   });
-});
-
-describe("standing laws reach the bank and the colony charter", () => {
-  it("bankRateStep shifts the rate one whole step in the trader's favour", () => {
-    const G = opening().build();
-    const board = G.bank.stone;
-    expect(getPlayerBankRate(G, "0", "stone")).toEqual(board);
-
-    plantLaw(G, "aqueduct-levy"); // stone improves one step
-    expect(getPlayerBankRate(G, "0", "stone")).toEqual({
-      sell: Math.max(1, board.sell - 1),
-      buy: Math.max(1, board.buy - 1),
-    });
-    // Only the material the Law names moves.
-    expect(getPlayerBankRate(G, "0", "wood")).toEqual(G.bank.wood);
-  });
-
-  it("preserves bank friction when Low Numbers and Aqueduct Levy meet at the floor", () => {
-    const G = opening({
-      patch: {
-        economy: {
-          bank: { derivation: "uniform", baseline: { sell: 2, buy: 2 } },
-        },
-      },
-    }).build();
-    plantLaw(G, "aqueduct-levy");
-
-    const rate = getPlayerBankRate(G, "0", "stone");
-    expect(rate).toEqual({ sell: 1, buy: 2 });
-    expect(rate.sell * rate.buy).toBeGreaterThan(1);
-  });
-
-  it("onFoundColony grants the pop and places an Unrest token (Frontier Spirit)", () => {
-    const G = opening().withResources("0", "wealthy").build();
-    plantLaw(G, "frontier-spirit");
-
-    expect(foundColony(G, "0", HILL, P0_CAPITAL, "slaves").ok).toBe(true);
-
-    // The seed pop is still in transit; the freeman the charter grants is already there.
-    expect(owned(G, HILL, "0").pops.freemen).toBe(1);
-    expect(G.players["0"].unrestTokens).toBe(1);
-  });
-});
-
-describe("a Law is table-wide", () => {
-  it("binds a seat that never authored it and never voted for it", () => {
-    // The whole point of a vote is that the loser lives under the result: player 2's
-    // board is the same shape as player 0's (a metropolis and a colony), so the same
-    // Law pays them the same way.
-    const G = opening().withResources("2", { food: 100 }).build();
-    const before = calculateIncome(G, "2");
-
-    plantLaw(G, "land-reform", "0");
-    const after = calculateIncome(G, "2");
-
-    expect(after.food - before.food).toBe(2);
-    expect(after.gold - before.gold).toBe(-1);
-    // ...and it is named on their breakdown, so they can see whose stele is doing it.
-    expect(calculateIncomeBreakdown(G, "2").some((line) => line.source === "Land Reform")).toBe(
-      true,
+  it("city upkeep reaches settlement projections and Grain Levy exempts freemen from hunger", () => {
+    const G = opening();
+    law(G, "civic-pride");
+    const projection = calculateEconomyProjection(G, "0", { resolveTransfers: true });
+    expect(projection.settlements.reduce((sum, place) => sum + place.income.gold, 0)).toBe(
+      projection.income.gold,
     );
+    G.activeLaws = [];
+    law(G, "grain-levy");
+    const city = owned(G, cap, "0");
+    city.pops = { citizens: 1, freemen: 4, slaves: 0 };
+    owned(G, colony, "0").pops = { citizens: 0, freemen: 2, slaves: 0 };
+    applyHunger(G, "0", 1);
+    expect(city.pops).toEqual({ citizens: 0, freemen: 4, slaves: 0 });
   });
-
-  it("reprices actions for every seat, not just the author's", () => {
-    const G = opening().build();
-    plantLaw(G, "colonial-charter", "0");
-
-    // Player 3's capital sits at 0,2; -1,2 is the mountain next door.
-    expect(getFoundColonyStatus(G, "3", "-1,2").cost).toMatchObject({ wood: 0 });
+  it("capacity, slots and piece cuts block new additions while keeping everything standing", () => {
+    const G = opening();
+    const farm = owned(G, colony, "0");
+    farm.pops.slaves = 4;
+    farm.pops.freemen = farm.pops.citizens = 0;
+    law(G, "public-works");
+    expect(settlementCapacity(farm, G)).toBe(3);
+    expect(getGrowPopStatus(G, "0", colony, "slaves").can).toBe(false);
+    expect(farm.pops.slaves).toBe(4);
+    const projection = calculateEconomyProjection(G, "0");
+    expect(projection.population.overCapacity).toBe(0);
+    expect(projection.settlements.every((place) => place.overCapacity === 0)).toBe(true);
+    G.activeLaws = [];
+    law(G, "homestead-act");
+    const city = owned(G, cap, "0");
+    city.buildings = ["temple", "forum", "granary", "estate"];
+    expect(settlementSlots(tile(G, cap), city, G)).toBeGreaterThanOrEqual(city.buildings.length);
+    expect(getBuildBuildingStatus(G, "0", colony, "temple").can).toBe(true);
+    expect(buildingGround(G, "0", colony).slots).toBe(1);
+    farm.buildings = ["temple"];
+    expect(getBuildBuildingStatus(G, "0", colony, "forum").can).toBe(false);
+    G.activeLaws = [];
+    law(G, "master-builders");
+    expect(playerPieces(G, "0")).toMatchObject({ colonySupply: 4, colonyLimit: 3 });
+    expect(settlementSlots(tile(G, cap), city, G)).toBe(tile(G, cap).slots + 1);
+  });
+  it("Guild Charter grants a second capital growth and forbids colony growth", () => {
+    const G = opening();
+    law(G, "guild-charter");
+    expect(growPop(G, "0", cap, "slaves").ok).toBe(true);
+    expect(growPop(G, "0", cap, "slaves").ok).toBe(true);
+    expect(growPop(G, "0", cap, "slaves").ok).toBe(false);
+    expect(getGrowPopStatus(G, "0", colony, "slaves").can).toBe(false);
+  });
+  it("Frontier Spirit grants a slave on the real founding path without a token", () => {
+    const G = opening();
+    law(G, "frontier-spirit");
+    const tokens = G.players["0"].unrestTokens;
+    expect(previewFoundedSettlement(G, "0", "-1,0", cap, "freemen")?.settlement.pops).toMatchObject(
+      { freemen: 1, slaves: 1 },
+    );
+    expect(foundColony(G, "0", "-1,0", cap, "freemen").ok).toBe(true);
+    expect(owned(G, "-1,0", "0").pops.slaves).toBe(1);
+    expect(G.players["0"].unrestTokens).toBe(tokens);
+  });
+  it("Rural Bloc adds colony votes and subtracts city votes with a floor of one", () => {
+    const G = opening();
+    const before = baseVoteWeight(G, "0");
+    law(G, "rural-bloc");
+    expect(baseVoteWeight(G, "0")).toBe(before);
+    owned(G, colony, "0").kind = "city";
+    owned(G, cap, "0").pops.citizens = 0;
+    expect(baseVoteWeight(G, "0")).toBe(1);
   });
 });

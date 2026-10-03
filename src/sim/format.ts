@@ -5,7 +5,7 @@ import { calculateEconomyProjection } from "../game/economy/preview";
 import type { EconomyPreview } from "../game/economy/preview";
 import { describeCommand, enumerateLegalOptions } from "../game/legalMoves";
 import { playerStandings } from "../game/score";
-import { settlementCapacity, settlementSlots } from "../game/settlement";
+import { settlementSlaveResource, settlementCapacity, settlementSlots } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import type { HegemonyState, PlayerId, Resources } from "../game/types";
 import { presentActiveEffects } from "../ui/effects";
@@ -138,8 +138,8 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
     const buildings =
       settlement.buildings.length > 0 ? ` · buildings: ${settlement.buildings.join(", ")}` : "";
     lines.push(
-      `  ${tileId} ${settlement.kind} on ${tile.terrain} (${tile.resource ? tile.resource.type : "no resource"}, ${settlementSlots(tile, settlement)} slots) — ` +
-        `pops ${totalPops(settlement.pops)}/${settlementCapacity(settlement, G.ruleset)} ` +
+      `  ${tileId} ${settlement.kind} on ${tile.terrain} (${settlementSlaveResource(tile, G) ?? "no resource"}, ${settlementSlots(tile, settlement, G)} slots) — ` +
+        `pops ${totalPops(settlement.pops)}/${settlementCapacity(settlement, G)} ` +
         `(c${settlement.pops.citizens} f${settlement.pops.freemen} s${settlement.pops.slaves})${buildings}`,
     );
   }
@@ -315,10 +315,6 @@ export function renderBatchReport(report: BatchReport): string {
     );
   }
 
-  // The Assembly line is the instrument for the design's most important A/B: whether
-  // influence's main sink is deep enough and whether anything reaches the board.
-  // Assembly verbs at ~0 means the bots are ignoring the agora, which is the expected
-  // reading until the influence-aware AI of Phase 3-C lands.
   if (report.assembly) {
     const { assembly } = report;
     lines.push(
@@ -333,6 +329,12 @@ export function renderBatchReport(report: BatchReport): string {
         `top authored share ${(assembly.authoredPassLeaderShare.mean * 100).toFixed(0)}% · ` +
         `influence sunk ${formatNumber(assembly.influenceSpent.perGame)}/game`,
     );
+
+    for (const [id, { perGame: seat }] of Object.entries(assembly.perSeat)) {
+      lines.push(
+        `  Seat ${id}: Laws proposed ${formatNumber(seat.lawsProposed)}, passed ${formatNumber(seat.lawsPassed)}, standing ${formatNumber(seat.authoredLawsStanding)} · Directives ${formatNumber(seat.directivesPlayed)} · votes bought ${formatNumber(seat.votesBought)} · Voice claims ${formatNumber(seat.voiceClaims)}, held ${formatNumber(seat.voiceHeldTurns)} table-turns/game`,
+      );
+    }
 
     const assemblyVerbs = Object.entries(assembly.verbs)
       .filter(([, value]) => value.count > 0)

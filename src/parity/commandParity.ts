@@ -199,10 +199,6 @@ export const COMMAND_PARITY = {
     frontend: interactive("src/components/board/assembly/AssemblySeats.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
-  assemblyVeto: {
-    frontend: interactive("src/components/board/assembly/AssemblySeats.tsx"),
-    simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
-  },
   assemblyClose: {
     frontend: interactive("src/components/board/assembly/AssemblyFoot.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),

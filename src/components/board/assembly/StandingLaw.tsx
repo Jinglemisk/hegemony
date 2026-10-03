@@ -4,8 +4,6 @@ import { getResolutionCard } from "../../../game/assembly";
 import type { ActiveLaw, TallyMonument } from "../../../game/assembly";
 import type { GameContent } from "../../../game/content";
 import type { PlayerId } from "../../../game/types";
-import { presentLawEffect } from "../../../ui/effects";
-import { EffectIcon } from "../../../ui/icons/EffectIcon";
 import { AnnotatedText } from "../../AnnotatedText";
 import { SteleCrack } from "./AssemblyIcons";
 
@@ -63,20 +61,6 @@ export function StandingLaw({
       <span className="lawslabText caption">
         <AnnotatedText text={card.text} />
       </span>
-
-      {/* The effects in icon grammar, beside the sentence rather than instead of
-          it: the Agora is the one place where reading the whole clause is the
-          point, and the glyphs are what let you find the one you meant. */}
-      {card.kind === "law" ? (
-        <span className="lawslabEffects">
-          {card.effects.map((effect, index) => (
-            <span className="effectRow" key={index}>
-              <EffectIcon effect={effect} family="law" />
-              <span className="caption">{presentLawEffect(effect, content).text}</span>
-            </span>
-          ))}
-        </span>
-      ) : null}
 
       <span className="lawslabMeta label">
         carried by {authorName(stele.author)} · Year {stele.enactedYear}
@@ -137,8 +121,6 @@ export function FallingLaw({
   return <StandingLaw content={content} falling stele={stele} />;
 }
 
-/** The house resolution has no author — it stands in the agora and lends its
- *  politician power, but it is nobody's stele. */
-function authorName(author: PlayerId | null): string {
-  return author ? PLAYER_NAMES[author] : "the house";
+function authorName(author: PlayerId): string {
+  return PLAYER_NAMES[author];
 }

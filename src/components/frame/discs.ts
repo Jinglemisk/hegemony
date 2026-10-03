@@ -203,11 +203,7 @@ export function discGroups(
         id: `grow-${pop}`,
         label: cap(formatPopLabel(pop, 1)),
         icon: POP_ICON[pop],
-        ...quote(
-          holdings.length > 0
-            ? holdings.map(({ settlement }) => getGrowPopCost(G, playerID, settlement, pop))
-            : [G.ruleset.growPopCosts[pop]],
-        ),
+        prices: [getGrowPopCost(G, playerID, pop)],
         hint: `Choose a settlement to grow a ${formatPopLabel(pop, 1)}.`,
       },
       { kind: "growPop", pop },
@@ -286,20 +282,20 @@ export function discGroups(
 
   // Each piece supply is a count on its option's disc, and said in its hint.
   const pieces = playerPieces(G, playerID);
-  const piece = (option: DiscOption, placed: number, supply: number, name: string) => ({
+  const piece = (option: DiscOption, remaining: number, supply: number, name: string) => ({
     ...option,
-    left: supply - placed,
-    hint: `${option.hint} ${supply - placed} of ${supply} ${name} pieces left.`,
+    left: remaining,
+    hint: `${option.hint} ${remaining} of ${supply} ${name} pieces left.`,
   });
   const found = piece(
     verbOption("found", context, handlers),
-    pieces.colonies,
-    pieces.colonySupply,
+    pieces.coloniesRemaining,
+    pieces.colonyLimit,
     "colony",
   );
   const upgrade = piece(
     verbOption("upgrade", context, handlers),
-    pieces.cities,
+    pieces.citiesRemaining,
     pieces.citySupply,
     "city",
   );

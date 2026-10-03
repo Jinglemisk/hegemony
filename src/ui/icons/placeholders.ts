@@ -82,7 +82,6 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
 
   law: placeholder("assembly/law"),
   repeal: placeholder("assembly/repeal"),
-  veto: placeholder("assembly/veto"),
   bribe: placeholder("assembly/bribe"),
   voice: placeholder("assembly/voice"),
   bema: placeholder("assembly/agora"),

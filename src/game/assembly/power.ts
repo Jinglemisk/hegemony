@@ -20,7 +20,7 @@ import type { PoliticianId, PoliticianStanding } from "./types";
 
 /** Stelae standing for one politician: active Laws for the three regulars, permanent
  *  tally monuments for Stratokles. */
-function steleAuthors(G: HegemonyState, politician: PoliticianId): Array<PlayerId | null> {
+function steleAuthors(G: HegemonyState, politician: PoliticianId): PlayerId[] {
   if (politician === "stratokles") {
     return G.tallyMonuments.map((monument) => monument.author);
   }
@@ -40,8 +40,6 @@ function cardPolitician(G: HegemonyState, cardId: string): PoliticianId | null {
  */
 export function politicianStandings(G: HegemonyState): PoliticianStanding[] {
   return POLITICIANS.map((politician) => {
-    // `authors` may contain nulls (the house resolution). Those count toward POWER —
-    // the stele is standing — but toward nobody's patronage.
     const authors = steleAuthors(G, politician.id);
     const authored = PLAYER_IDS.reduce(
       (all, playerID) => ({
@@ -77,13 +75,4 @@ export function politicianStandings(G: HegemonyState): PoliticianStanding[] {
 /** How many descriptive patron labels a player currently holds. */
 export function patronCount(G: HegemonyState, playerID: PlayerId): number {
   return politicianStandings(G).filter((standing) => standing.patron === playerID).length;
-}
-
-/** Total stelae currently visible for a player. Descriptive only: Voice counts standing authored Laws,
- * excluding the monuments. */
-export function authoredSteleCount(G: HegemonyState, playerID: PlayerId): number {
-  return (
-    G.activeLaws.filter((law) => law.author === playerID).length +
-    G.tallyMonuments.filter((monument) => monument.author === playerID).length
-  );
 }

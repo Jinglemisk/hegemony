@@ -104,7 +104,6 @@ const TOKEN_MAP: Record<string, Token> = {
   patron: { type: "concept", chapter: "assembly" },
   patronage: { type: "concept", chapter: "assembly" },
   repeal: { type: "concept", chapter: "assembly" },
-  veto: { type: "concept", chapter: "assembly" },
   agora: { type: "concept", chapter: "assembly" },
 };
 

@@ -4,7 +4,7 @@ import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
 import type { HegemonyState, PlayerId, PopType } from "./types";
-import { applyLawActionCost } from "./assembly/laws";
+import { applyLawActionCost, getStandingEffects } from "./assembly/laws";
 
 /**
  * The civic verbs (roadmap-appendix D7/D8): calm the province, or move a pop up and
@@ -32,8 +32,15 @@ export function getCivicCalmStatus(
   payment: CivicCalmPayment,
 ): ActionStatus {
   const rules = G.ruleset.civicCalm;
+  const foodPayment = getStandingEffects(G, playerID).find(
+    (effect) => effect.type === "calmPayment",
+  );
   const cost =
-    payment === "influence" ? { influence: rules.influenceCost } : { gold: rules.goldCost };
+    payment === "influence"
+      ? { influence: rules.influenceCost }
+      : foodPayment
+        ? { food: foodPayment.amount }
+        : { gold: rules.goldCost };
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("Calm is a gameplay action.");
@@ -41,11 +48,7 @@ export function getCivicCalmStatus(
   if (G.players[playerID].civicCalmUsedThisTurn)
     reasons.push("One civic-calm action per turn — calm must not stack.");
   if (!canAfford(G.players[playerID].resources, cost)) {
-    reasons.push(
-      payment === "influence"
-        ? `Stabilizing takes ${rules.influenceCost} influence.`
-        : `Bread & circuses cost ${rules.goldCost} gold.`,
-    );
+    reasons.push("Not enough resources for calm.");
   }
 
   return { can: reasons.length === 0, reasons, cost };

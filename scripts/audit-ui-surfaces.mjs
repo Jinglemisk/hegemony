@@ -223,20 +223,22 @@ export const SURFACES = [
     },
   },
   {
-    // The FIRST Assembly always convenes at 0 of 6 laws with every orator on zero,
-    // so half of this surface — the law cap, a stele carrying more than one pip, a
-    // repeal that is actually armed, a voice ledger with a number in it — never
-    // appeared in either auditor. `?dev=assembly2` plays the first sitting out and
-    // stops at the second, which is where all of that is standing.
+    // Year 8 exposes standing Laws and eligible Year 4 repeals.
     name: "assembly-standing",
     go: async (p) => {
-      await p.goto(`${BASE}/?dev=assembly2&seed=42`, { waitUntil: "networkidle" });
+      await p.goto(`${BASE}/?dev=assembly4&seed=42`, { waitUntil: "networkidle" });
       await p.waitForTimeout(2200);
     },
   },
   {
     name: "assembly-vote",
     go: async (p) => {
+      // Year 4 seats can afford a draw. A Directive has no protected replacement.
+      await p.goto(`${BASE}/?dev=assembly2&seed=42`, { waitUntil: "networkidle" });
+      await p.waitForTimeout(1400);
+      await p.getByRole("button", { name: "Draw from Stratokles", exact: true }).click();
+      await p.getByRole("button", { name: /^Target / }).click();
+      await p.locator(".asmTargetMenu .asmMenuChoices button").first().click();
       for (let round = 0; round < 6; round += 1) {
         const pass = p.getByRole("button", { name: /^Pass/i }).first();
         if (await pass.count()) {
@@ -256,7 +258,7 @@ export const SURFACES = [
             await p.waitForTimeout(320);
           }
         }
-        if (await p.locator(".voteTally").count()) break;
+        if (await p.getByRole("button", { name: "Vote Yea", exact: true }).count()) break;
       }
       await p.waitForTimeout(400);
     },

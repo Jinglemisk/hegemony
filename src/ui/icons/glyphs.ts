@@ -40,7 +40,6 @@ export type GlyphShape =
     };
 
 const p = (d: string): GlyphShape => ({ kind: "path", d });
-const fill = (d: string): GlyphShape => ({ kind: "path", d, solid: true });
 const c = (cx: number, cy: number, r: number): GlyphShape => ({ kind: "circle", cx, cy, r });
 const dot = (cx: number, cy: number, r: number): GlyphShape => ({
   kind: "circle",
@@ -222,7 +221,6 @@ export const GLYPHS = {
   repeal: [STELE, p("M12.5 8.5 10.5 13.5l3 1-2 7")],
   ostrakon: [p("M6 8.5 11.5 4l7 3-1.2 8.5L11 20 5.5 15z")],
   bema: [p("M3 20h18M5.5 20v-3h13v3M7.5 17v-3h9v3M9.5 14v-3h5v3")],
-  veto: [c(12, 12, 8.5), p("M6 18 18 6")],
   bribe: [p("M6 8.5h12l1.5 11.5H4.5z"), p("M9 8.5V7a3 3 0 0 1 6 0v1.5"), p("M12 12.5v4")],
 
   /* ── The four orators ──────────────────────────────────────────────────────
@@ -288,11 +286,6 @@ export const GLYPHS = {
   costDown: [PLINTH, p("M12 3v9m-3.5-3.5L12 12l3.5-3.5")],
   costUp: [PLINTH, p("M12 12V3m-3.5 3.5L12 3l3.5 3.5")],
   cross: [p("M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5")],
-  convert: [p("M3.5 4h17l-6.5 7.5V20l-4-2.5v-6z")],
-  /* Half the jar, taken. The one solid mass earns its place: the fraction IS the
-     filled part. */
-  fraction: [c(12, 12, 8.5), fill("M12 3.5a8.5 8.5 0 0 1 0 17z")],
-  threshold: [p("M3 13h18"), p("M6.5 20v-4m5.5 4V8m5.5 12v-9")],
   starvation: [WHEAT, SLASH],
   crowd: [
     c(6, 10, 2.2),
@@ -304,11 +297,6 @@ export const GLYPHS = {
   ],
   popGain: [c(10, 9, 3.4), p("M4 20c.7-3.8 3-5.6 6-5.6s5.3 1.8 6 5.6"), p("M19 4v6M16 7h6")],
   popLoss: [c(10, 9, 3.4), p("M4 20c.7-3.8 3-5.6 6-5.6s5.3 1.8 6 5.6"), p("M16 7h6")],
-  popIncome: [
-    c(8, 8, 3),
-    p("M2.5 19c.6-3.4 2.6-5 5.5-5s4.9 1.6 5.5 5"),
-    p("M19 7v8m-2.5-2.5L19 15l2.5-2.5"),
-  ],
   cityIncome: [
     p("M3 18h11M4.5 18v-7m8 7v-7M2.5 11 8.5 7l6 4z"),
     p("M19 6v9m-2.5-2.5L19 15l2.5-2.5"),

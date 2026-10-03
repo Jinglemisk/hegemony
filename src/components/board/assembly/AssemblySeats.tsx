@@ -1,5 +1,9 @@
 import { PLAYER_IDS } from "../../../game/data";
-import { baseVoteWeight } from "../../../game/assembly";
+import {
+  baseVoteWeight,
+  currentVoteWeight,
+  getAssemblyBuyVoteStatus,
+} from "../../../game/assembly";
 import type { AssemblySession } from "../../../game/assembly";
 import type { HegemonyState, PlayerId } from "../../../game/types";
 import { RESOURCE_GLYPHS } from "../../../ui/iconRegistry";
@@ -23,7 +27,7 @@ import { AssemblyAction } from "./AssemblyPresentation";
  *   scratched on a fired sherd means "this one has spoken"; a blank sherd means
  *   "still deliberating". A vote nobody has cast is *pending*, not missing.
  * · **The seat that is acting holds ALL its choices.** During the ballot the
- *   caster's plaque widens and lights, and Yea, Nay, Veto and Bribe sit on it
+ *   caster's plaque widens and lights, and Yea, Nay and both vote payments sit on it
  *   together. Bribe used to be exiled to a dock at the bottom of the panel,
  *   physically separated from the vote it modifies — you had to buy the vote in
  *   one place and cast it in another.
@@ -218,49 +222,22 @@ function seatState(
 
 /** "Casts now · 2 votes" — the line every plaque uses for the seat on the floor,
  *  whether or not the viewer happens to be sitting in it. */
-function castingCue(G: HegemonyState, session: AssemblySession, playerID: PlayerId): string {
-  const weight = baseVoteWeight(G, playerID) + session.bribesUsed[playerID];
+function castingCue(G: HegemonyState, _session: AssemblySession, playerID: PlayerId): string {
+  const weight = currentVoteWeight(G, playerID);
   return `Casts now · ${weight} vote${weight === 1 ? "" : "s"}`;
 }
 
-/**
- * Where a seat's weight comes from — the answer to "Casts now · 0 votes", which
- * used to be printed with no explanation and no recourse. Vote weight is the
- * seat's CITIZEN count, so a player holding only freemen and slaves is given the
- * floor with nothing to cast, and nothing on screen said why.
- */
-function weightNote(
-  G: HegemonyState,
-  session: AssemblySession,
-  playerID: PlayerId,
-  canBribe: boolean,
-): string {
+/** Base weight includes the seat, citizens and standing voting rules. */
+function weightNote(G: HegemonyState, session: AssemblySession, playerID: PlayerId): string {
   const bought = session.bribesUsed[playerID];
-  const bribes = bought > 0 ? `, ${bought} bought` : "";
-
-  if (session.isonomiaTarget === playerID) {
-    return `Isonomia holds you to one vote${bribes}`;
-  }
-
-  if (baseVoteWeight(G, playerID) === 0) {
-    // Never offer a way out that is already shut: on the first ballot of a game
-    // the bribe is usually unaffordable, and "buy one below" beside a greyed
-    // Bribe would be the second thing on this plaque to mislead.
-    return bought > 0
-      ? `no citizens — ${bought} bought`
-      : canBribe
-        ? "no citizens, no voice — buy one below"
-        : "no citizens, no voice";
-  }
-
-  return `one vote per citizen${bribes}`;
+  return `${baseVoteWeight(G, playerID)} base${bought ? `, ${bought} bought` : ""}`;
 }
 
 /**
  * The seat that is casting, held by the viewer: one wide lit plaque carrying all
  * four choices at once — the two votes as filled lacquer, the two purchases as
  * outlines with their prices. Yea and Nay are the same shape a thumb apart, which
- * is deliberate; Veto and Bribe are a different shape because they cost money.
+ * is deliberate; the purchases are outlines because they have a price.
  *
  * The plaque explains ITSELF. A player handed the floor with 0 votes and both
  * purchases greyed out was given no reason for either, and the reasons only
@@ -276,16 +253,8 @@ function CastingSeat({
   session: AssemblySession;
 }) {
   const { moves } = useGameUi();
-  const rules = G.ruleset.assembly;
   const glaze = PLAYER_GLAZES[playerID];
-  const influence = G.players[playerID].resources.influence;
-  const weight = baseVoteWeight(G, playerID) + session.bribesUsed[playerID];
-
-  const vetoSpent = session.vetoUsed[playerID] >= rules.vetoesPerAssembly;
-  const canVeto = !vetoSpent && influence >= rules.vetoCost;
-  const bribesSpent = session.bribesUsed[playerID] >= rules.briberyCap;
-  const canBribe = !bribesSpent && influence >= rules.briberyCost;
-
+  const weight = currentVoteWeight(G, playerID);
   return (
     <div aria-current="true" className="asmSeat asmSeatCasting is-you">
       <span className="asmGlaze title" style={{ background: glaze.color }}>
@@ -297,7 +266,7 @@ function CastingSeat({
           <span className="visuallyHidden">, your seat</span>
         </span>
         <span className="asmSeatCue label">{castingCue(G, session, playerID)}</span>
-        <span className="asmSeatWhy caption">{weightNote(G, session, playerID, canBribe)}</span>
+        <span className="asmSeatWhy caption">{weightNote(G, session, playerID)}</span>
       </span>
 
       <AssemblyAction
@@ -321,71 +290,28 @@ function CastingSeat({
         Nay
       </AssemblyAction>
 
-      <AssemblyAction
-        blockedReason={
-          vetoSpent
-            ? `The limit is ${rules.vetoesPerAssembly} veto${rules.vetoesPerAssembly === 1 ? "" : "es"} per Assembly.`
-            : `Requires ${rules.vetoCost} influence.`
-        }
-        className="asmVote is-minor verb"
-        effectiveCost={{ influence: rules.vetoCost }}
-        enabled={canVeto}
-        explanation="Strike this resolution outright. Using a veto also costs your vote on it."
-        heading="Veto"
-        onClick={() => moves.assemblyVeto(playerID)}
-        triggerClassName="asmVoteTrigger"
-      >
-        <Icon glyph="veto" size="verb" />
-        Veto
-        <PurchaseChip cost={rules.vetoCost} held={influence} spent={vetoSpent} />
-      </AssemblyAction>
-      <AssemblyAction
-        blockedReason={
-          bribesSpent
-            ? `The limit is ${rules.briberyCap} bribes per Assembly.`
-            : `Requires ${rules.briberyCost} influence.`
-        }
-        className="asmVote is-minor verb"
-        effectiveCost={{ influence: rules.briberyCost }}
-        enabled={canBribe}
-        explanation={`Buy one extra vote before casting, up to ${rules.briberyCap} per Assembly.`}
-        heading="Bribe"
-        onClick={() => moves.assemblyBribe(playerID)}
-        triggerClassName="asmVoteTrigger"
-      >
-        <Icon glyph="bribe" size="verb" />
-        Bribe +1
-        <PurchaseChip cost={rules.briberyCost} held={influence} spent={bribesSpent} />
-      </AssemblyAction>
+      {(["gold", "influence"] as const).map((payment) => {
+        const status = getAssemblyBuyVoteStatus(G, playerID, payment);
+        return (
+          <AssemblyAction
+            key={payment}
+            blockedReason={status.reason ?? undefined}
+            className="asmVote is-minor verb"
+            effectiveCost={status.cost}
+            enabled={status.can}
+            explanation="Buy one extra vote for every remaining ballot this sitting. At most two purchases in total."
+            heading={`Buy vote with ${payment}`}
+            onClick={() => moves.assemblyBribe(playerID, payment)}
+            triggerClassName="asmVoteTrigger"
+          >
+            +1 vote
+            <small className="asmVoteCost stat num">
+              {status.price}
+              <Icon glyph={RESOURCE_GLYPHS[payment]} />
+            </small>
+          </AssemblyAction>
+        );
+      })}
     </div>
-  );
-}
-
-/**
- * The price on a purchase, and — when the purchase is inert — the reason it is.
- *
- * Veto and Bribe are routinely both greyed out on the very first ballot, and a
- * greyed slab with a price on it is indistinguishable from one you simply have
- * not clicked. The chip says which of the two walls you are against: a spent
- * allowance, or a shortfall you could still fix by collecting influence.
- */
-function PurchaseChip({ cost, held, spent }: { cost: number; held: number; spent: boolean }) {
-  if (spent) {
-    return <small className="asmVoteWhy caption">none left</small>;
-  }
-
-  if (held < cost) {
-    return (
-      <small className="asmVoteWhy caption num">
-        {cost - held} <Icon glyph={RESOURCE_GLYPHS.influence} /> short
-      </small>
-    );
-  }
-
-  return (
-    <small className="asmVoteCost stat num">
-      {cost}
-      <Icon glyph={RESOURCE_GLYPHS.influence} />
-    </small>
   );
 }

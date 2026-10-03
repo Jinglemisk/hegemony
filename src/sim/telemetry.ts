@@ -16,7 +16,7 @@ import { getOwnedSettlement, getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementIdleSlaves } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
 import { standingHappiness } from "../game/happiness";
-import { victoryStandings, voiceHolder } from "../game/victory";
+import { victoryStandings, victoryMetricValue, voiceHolder } from "../game/victory";
 import { GAME_COMMAND_TYPES, type GameCommandType } from "../parity/commandParity";
 import {
   BUILDING_CONTENT_IDS,
@@ -69,6 +69,8 @@ export type PlayerSnapshot = {
   activeEffects: Record<ActiveEffectKind, number>;
   popsLostToUnrest: number;
   popsGainedFromEvents: number;
+  authoredLawsStanding: number;
+  voiceHeld: number;
 };
 
 export type TurnSnapshot = {
@@ -111,6 +113,8 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       popsLostToHunger: player.popsLostToHunger,
       popsLostToUnrest: player.popsLostToUnrest,
       popsGainedFromEvents: player.popsGainedFromEvents,
+      authoredLawsStanding: victoryMetricValue(G, playerID, "voice"),
+      voiceHeld: voiceHolder(G) === playerID ? 1 : 0,
       activeEffects: activeEffectCounts,
     };
   }
@@ -134,7 +138,7 @@ function slaveCounts(G: HegemonyState, playerID: PlayerId) {
 
     if (tile && settlement) {
       slaves += settlement.pops.slaves;
-      idleSlaves += settlementIdleSlaves(tile, settlement);
+      idleSlaves += settlementIdleSlaves(tile, settlement, G);
     }
   }
 
@@ -185,6 +189,32 @@ export type YearRow = {
  *  game stopped at the turn cap has no winner — only a leaderAtCap heuristic. */
 export type GameTermination = GameOverReason | "turnCap";
 
+export type AssemblySeatTelemetry = {
+  lawsProposed: number;
+  lawsPassed: number;
+  authoredLawsStanding: number;
+  directivesPlayed: number;
+  votesBought: number;
+  voiceClaims: number;
+  voiceHeldTurns: number;
+};
+function emptyAssemblySeats(): Record<PlayerId, AssemblySeatTelemetry> {
+  return Object.fromEntries(
+    PLAYER_IDS.map((id) => [
+      id,
+      {
+        lawsProposed: 0,
+        lawsPassed: 0,
+        authoredLawsStanding: 0,
+        directivesPlayed: 0,
+        votesBought: 0,
+        voiceClaims: 0,
+        voiceHeldTurns: 0,
+      },
+    ]),
+  ) as Record<PlayerId, AssemblySeatTelemetry>;
+}
+
 export type GameRow = {
   game: number;
   seed: number;
@@ -202,6 +232,7 @@ export type GameRow = {
   winningTitles: string[];
   /** Permanent authored-and-passed Assembly progress when the game ended. */
   finalAuthoredPasses: Record<PlayerId, number>;
+  assemblySeats: Record<PlayerId, AssemblySeatTelemetry>;
   /** The seat holding Voice when the game ended. */
   voiceHolder: PlayerId | null;
   popsLostToUnrest: Record<PlayerId, number>;
@@ -323,6 +354,9 @@ export type BatchReport = {
    * near zero means the sink exists but nothing it buys ever reaches the board.
    */
   assembly: {
+    perSeat: Record<PlayerId, { count: AssemblySeatTelemetry; perGame: AssemblySeatTelemetry }>;
+    votesBought: { count: number; perGame: number };
+    goldSpent: { count: number; perGame: number };
     held: { count: number; perGame: number };
     lawsEnacted: { count: number; perGame: number };
     directivesPassed: { count: number; perGame: number };
@@ -358,7 +392,6 @@ const ASSEMBLY_VERBS = [
   "assemblyPass",
   "assemblyBribe",
   "assemblyVote",
-  "assemblyVeto",
 ] as const;
 
 /** The Phase 1 currency verbs, in report order. */
@@ -386,6 +419,8 @@ export class Aggregator {
   private revolts = 0;
   private assemblyVerbs: Record<string, number> = {};
   private assemblyInfluence = 0;
+  private assemblyGold = 0;
+  private assemblySeats = emptyAssemblySeats();
   private assembliesHeld = 0;
   private lawsEnacted = 0;
   private directivesPassed = 0;
@@ -423,6 +458,7 @@ export class Aggregator {
     this.gameSeatPolicies = seatPolicies ?? null;
     this.lastVoiceHolder = voiceHolder(G);
     this.lastAssemblyResultKey = null;
+    this.assemblySeats = emptyAssemblySeats();
 
     // The opening already revealed year 1's card and player 0's first draw.
     this.countYearCard(G);
@@ -457,17 +493,20 @@ export class Aggregator {
       // Commands never carry prices. Measure the authoritative amount the engine
       // just charged from the live rules and post-command Assembly counters.
       if (move.type === "assemblyDraw") {
-        this.assemblyInfluence +=
-          (G.assembly?.draws[player] ?? 0) <= 1
-            ? G.ruleset.assembly.drawCost
-            : G.ruleset.assembly.redrawCost;
+        this.assemblyInfluence += G.ruleset.assembly.drawCost;
       } else if (move.type === "assemblyProposeRepeal") {
         this.assemblyInfluence += G.ruleset.assembly.repealCost;
       } else if (move.type === "assemblyBribe") {
-        this.assemblyInfluence += G.ruleset.assembly.briberyCost;
-      } else if (move.type === "assemblyVeto") {
-        this.assemblyInfluence += G.ruleset.assembly.vetoCost;
+        if (move.payment === "influence") this.assemblyInfluence += G.ruleset.assembly.briberyCost;
+        else this.assemblyGold += G.ruleset.assembly.briberyCost;
+        this.assemblySeats[player].votesBought += 1;
       }
+      if (
+        move.type === "assemblyPropose" &&
+        G.assembly?.proposals[player]?.kind === "enact" &&
+        G.assembly.proposals[player].card.kind === "law"
+      )
+        this.assemblySeats[player].lawsProposed += 1;
     }
 
     const results = G.assembly?.results;
@@ -477,6 +516,9 @@ export class Aggregator {
         this.lastAssemblyResultKey = key;
         const result = results[results.length - 1];
         if (result.passed && result.item.kind === "enact" && result.item.proposer) {
+          const seat = this.assemblySeats[result.item.proposer];
+          if (result.item.card.kind === "law") seat.lawsPassed += 1;
+          else seat.directivesPlayed += 1;
           const prize = G.ruleset.assembly.prizes[result.item.card.politician];
           for (const [resource, amount] of Object.entries(prize) as Array<
             [keyof Resources, number | undefined]
@@ -494,6 +536,7 @@ export class Aggregator {
     if (voice !== this.lastVoiceHolder) {
       if (voice) {
         this.voiceClaims += 1;
+        this.assemblySeats[voice].voiceClaims += 1;
         if (this.lastVoiceHolder) this.voiceTransfers += 1;
       }
       this.lastVoiceHolder = voice;
@@ -583,6 +626,12 @@ export class Aggregator {
       ? (G.gameOverReason as GameOverReason)
       : "turnCap";
 
+    for (const id of PLAYER_IDS) {
+      this.assemblySeats[id].authoredLawsStanding = victoryMetricValue(G, id, "voice");
+      this.assemblySeats[id].voiceHeldTurns = this.snapshots
+        .filter((s) => s.game === this.game)
+        .reduce((sum, s) => sum + s.players[id].voiceHeld, 0);
+    }
     this.games.push({
       game: this.game,
       seed: this.seed,
@@ -600,6 +649,7 @@ export class Aggregator {
               .map((standing) => standing.card.name)
           : [],
       finalAuthoredPasses,
+      assemblySeats: structuredClone(this.assemblySeats),
       voiceHolder: voiceHolder(G),
       popsLostToUnrest,
       popsLostToHunger,
@@ -881,6 +931,23 @@ export class Aggregator {
         }),
       ),
       assembly: {
+        perSeat: Object.fromEntries(
+          PLAYER_IDS.map((id) => {
+            const count = emptyAssemblySeats()[id];
+            for (const game of this.games)
+              for (const key of Object.keys(count) as Array<keyof AssemblySeatTelemetry>)
+                count[key] += game.assemblySeats[id][key];
+            const perGame = Object.fromEntries(
+              Object.entries(count).map(([key, value]) => [
+                key,
+                this.games.length ? value / this.games.length : 0,
+              ]),
+            ) as AssemblySeatTelemetry;
+            return [id, { count, perGame }];
+          }),
+        ) as BatchReport["assembly"]["perSeat"],
+        votesBought: this.perGameCount(this.assemblyVerbs.assemblyBribe ?? 0),
+        goldSpent: this.perGameCount(this.assemblyGold),
         held: this.perGameCount(this.assembliesHeld),
         lawsEnacted: this.perGameCount(this.lawsEnacted),
         directivesPassed: this.perGameCount(this.directivesPassed),
@@ -965,6 +1032,8 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
     "influence",
     "happiness",
     "unrestTokens",
+    "authoredLawsStanding",
+    "voiceHeld",
     "incomeWood",
     "incomeStone",
     "incomeGold",
@@ -1002,6 +1071,8 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
         player.resources.influence,
         player.happiness,
         player.unrestTokens,
+        player.authoredLawsStanding,
+        player.voiceHeld,
         player.income.wood,
         player.income.stone,
         player.income.gold,

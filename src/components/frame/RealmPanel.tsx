@@ -114,7 +114,7 @@ export function RealmPanel({
   const cities = holdings.filter(({ settlement }) => settlement.kind !== "colony").length;
   const pops = holdings.reduce((sum, { settlement }) => sum + totalPops(settlement.pops), 0);
   const capacity = holdings.reduce(
-    (sum, { settlement }) => sum + settlementCapacity(settlement, G.ruleset),
+    (sum, { settlement }) => sum + settlementCapacity(settlement, G),
     0,
   );
   const laurels = victoryCardsHeld(G, viewerId);

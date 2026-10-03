@@ -1,3 +1,4 @@
+import { effectiveRuleset } from "./assembly/laws";
 import type { HegemonyState, PlayerId } from "./types";
 import { removePops } from "./tables";
 import type { RemovalSummary } from "./tables";
@@ -8,7 +9,11 @@ import type { RemovalSummary } from "./tables";
  * settlement holding the most of its class. Slaves eat nothing and never leave.
  */
 export function applyHunger(G: HegemonyState, playerID: PlayerId, unfed: number): RemovalSummary {
-  const summary = removePops(G, playerID, unfed, ["freemen", "citizens"]);
+  const rules = effectiveRuleset(G);
+  const mouths = (["freemen", "citizens"] as const).filter(
+    (pop) => (rules.popIncome[pop].flat.food ?? 0) < 0,
+  );
+  const summary = removePops(G, playerID, unfed, mouths);
 
   G.players[playerID].popsLostToHunger += summary.total;
   return summary;

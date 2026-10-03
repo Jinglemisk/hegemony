@@ -18,7 +18,7 @@ gameplay actor, but it is not treated as universal authorization.
 | Player event      | Decision owner               | `resolveEvent`                           |
 | Riot              | Decision owner               | Insurance or `resolveRiot`               |
 | Assembly proposal | Every undecided seat         | Draw, discard, propose, repeal, or pass  |
-| Assembly voting   | Current sequential voter     | Bribe, vote, or veto                     |
+| Assembly voting   | Current sequential voter     | Buy a vote or cast a vote                |
 | Assembly closing  | Suspended turn's active seat | `assemblyClose`                          |
 | Game over         | Nobody                       | None                                     |
 

@@ -29,7 +29,6 @@ const ASSEMBLY_PROPOSAL_COMMANDS: ReadonlySet<GameCommand["type"]> = new Set([
 const ASSEMBLY_VOTE_COMMANDS: ReadonlySet<GameCommand["type"]> = new Set([
   "assemblyBribe",
   "assemblyVote",
-  "assemblyVeto",
 ]);
 
 /** The current workflow, independent of which seat happens to be parked in currentPlayer. */

@@ -3,8 +3,7 @@ import { getExpeditionTables } from "../../../game/content";
 import type { Phase } from "../../../client/controller";
 import { getCivicCalmStatus } from "../../../game/civic";
 import { getBuildings } from "../../../game/content";
-import { GROWABLE_POPS } from "../../../game/core/pops";
-import { getAdjustedActionCost, getGrowPopCost } from "../../../game/economy/cost";
+import { getAdjustedActionCost, getGrowPopPriceSpans } from "../../../game/economy/cost";
 import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../../game/types";
 import type { MapSelectionMode } from "../map/mapSelection";
@@ -99,32 +98,13 @@ export type VerbPriceClause = {
  *  query reads, so the dock can never quote a price the press does not charge. */
 export type VerbCost = (context: VerbContext) => VerbPriceClause[];
 
-/** The settlements a target-dependent price is a range over. */
-function ownedSettlements(G: HegemonyState, playerID: PlayerId) {
-  return G.board.tiles.flatMap((tile) =>
-    tile.settlements.filter((settlement) => settlement.owner === playerID),
-  );
-}
-
 const totalUnits = (cost: Partial<Resources>) =>
   Object.values(cost).reduce((sum: number, amount) => sum + (amount ?? 0), 0);
 
-/** Grow's food price across every settlement × pop type the player could grow.
- *  Standing Laws are already inside the
- *  engine's own number — this only takes its ends. */
-function growFoodSpan(context: VerbContext): VerbPriceClause[] {
-  const { G, playerID } = context;
-  const settlements = ownedSettlements(G, playerID);
-  const foods =
-    settlements.length > 0
-      ? settlements.flatMap((settlement) =>
-          GROWABLE_POPS.map((pop) => getGrowPopCost(G, playerID, settlement, pop).food ?? 0),
-        )
-      : // Before the first settlement stands there is nothing to discount, so the
-        // ruleset's undiscounted mouths are the honest quote.
-        GROWABLE_POPS.map((pop) => G.ruleset.growPopCosts[pop].food ?? 0);
-
-  return [{ span: { resource: "food", min: Math.min(...foods), max: Math.max(...foods) } }];
+/** Growth prices come from the same Law-aware engine query as the action. */
+function growCostSpan({ G, playerID }: VerbContext): VerbPriceClause[] {
+  const spans = getGrowPopPriceSpans(G, playerID);
+  return spans.length ? spans.map((span) => ({ span })) : [{ lead: "free" }];
 }
 
 /** The cheapest building on the roster, priced the way `getBuildBuildingStatus`
@@ -168,7 +148,7 @@ export const VERBS: VerbSpec[] = [
   {
     id: "grow",
     label: "Grow",
-    cost: growFoodSpan,
+    cost: growCostSpan,
     arms: true,
     // Stays clickable while armed so the same button cancels the map mode.
     available: ({ canGrowPops, armedVerb }) => canGrowPops || armedVerb === "grow",

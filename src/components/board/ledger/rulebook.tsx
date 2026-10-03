@@ -879,7 +879,6 @@ const assembly: RuleChapter = {
     "ballot",
     "bribe",
     "bribery",
-    "veto",
     "repeal",
     "patron",
     "patronage",
@@ -916,17 +915,16 @@ const assembly: RuleChapter = {
           </Note>
           <Note>
             This is what <AnnotatedText text="Influence" /> is for. Everything the Assembly asks of
-            you — drawing, proposing, bribing, vetoing, repealing — is paid in influence, and
-            nothing else in the game spends it at this scale. Participation prices in this reference
-            are base costs; Assembly controls show effective costs.
+            you to draw or repeal is paid in influence. Extra votes take gold or influence.
+            Participation prices in this reference are base costs; Assembly controls show effective
+            costs.
           </Note>
         </Entry>
 
         <Entry id={anchor("assembly", "propose")} title="Proposing">
           <Note>
-            One unauthored house <strong>Law</strong> drops onto the ballot on its own. Directives
-            are never drawn by the house. Every player then decides independently and in secret
-            whether to add one resolution.
+            Every player decides independently and in secret whether to propose one resolution or
+            pass. There is no house resolution.
           </Note>
           <DefList>
             <DefRow term="Draw">
@@ -934,9 +932,8 @@ const assembly: RuleChapter = {
               <em>you choose</em>. The politician is your pick; the card is not. You see it in
               secret.
             </DefRow>
-            <DefRow term="Fish again">
-              Set the card aside and draw another for <strong>{rules.redrawCost}</strong> influence,
-              as often as you can afford.
+            <DefRow term="One draw">
+              You may propose your draw or discard it and pass. No redraw.
             </DefRow>
             <DefRow term="Propose">
               Seal the card for the ballot. A Stratokles Directive must name one rival; both card
@@ -959,21 +956,14 @@ const assembly: RuleChapter = {
           </Note>
           <DefList>
             <DefRow term="Your votes">
-              One per <AnnotatedText text="citizen" /> you hold. Nothing else on the board grants a
-              vote.
+              One seat vote plus one per <AnnotatedText text="citizen" />. Rural Bloc changes
+              settlement votes. Isonomia fixes its target’s base at one.
             </DefRow>
-            <DefRow term="Majority">
-              More yea than nay carries. {rules.tiesPass ? "A tie carries." : "A tie fails."}
-            </DefRow>
+            <DefRow term="Majority">More yea than nay carries. A tie fails.</DefRow>
             <DefRow term="Bribe">
-              <strong>{rules.briberyCost}</strong> influence buys one extra vote, up to{" "}
+              <strong>{rules.briberyCost}</strong> gold or influence buys one extra vote, up to{" "}
               <strong>{rules.briberyCap}</strong> per player per assembly. The cap is what stops a
               hoard from simply buying the outcome.
-            </DefRow>
-            <DefRow term="Veto">
-              <strong>{rules.vetoCost}</strong> influence strikes the resolution outright,{" "}
-              {rules.vetoesPerAssembly === 1 ? "once" : `${rules.vetoesPerAssembly} times`} per
-              assembly. It costs you your own vote on it.
             </DefRow>
           </DefList>
         </Entry>
@@ -997,16 +987,18 @@ const assembly: RuleChapter = {
           </Note>
           <DefList>
             <DefRow term="The cap">
-              <strong>{rules.lawCap}</strong> Laws may stand at once. At the cap, a new Law must
-              name the one it replaces. Stratokles's monuments take no slot — they are not rules.
+              <strong>{rules.lawCap}</strong> Laws may stand at once. At the cap, a passed Law
+              automatically replaces the oldest. A new price Law also replaces the standing price
+              Law. Stratokles's monuments take no slot — they are not rules.
             </DefRow>
             <DefRow term="Uniqueness">A Law already standing cannot be enacted again.</DefRow>
             <DefRow term="Removal">
-              Only a repeal, or a replacement at the cap, takes a Law off the board.
+              A new Law is protected through the following sitting, including against replacement
+              and The Stele Is Broken. Capacity or slot cuts keep existing pops and buildings.
             </DefRow>
             <DefRow term="Author prize">
-              A player whose resolution passes immediately receives that politician's prize. House
-              Laws, failed votes, vetoes, and repeal motions pay nothing.
+              A player whose resolution passes immediately receives that politician's prize. Failed
+              votes and repeal motions pay nothing.
             </DefRow>
           </DefList>
         </Entry>

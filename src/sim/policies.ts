@@ -12,15 +12,10 @@ import {
   settlementCapacity,
   settlementOpenSlots,
   settlementWorkingSlaves,
+  settlementSlaveResource,
 } from "../game/settlement";
 import { totalPops } from "../game/core/pops";
-import {
-  availableLawReplacementIds,
-  currentVoteWeight,
-  enactForEval,
-  lawNeedsReplacement,
-  nextDrawCost,
-} from "../game/assembly";
+import { currentVoteWeight, enactForEval, lawProposalReason, nextDrawCost } from "../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../game/assembly";
 import type { GameCommand } from "../game/legalMoves";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
@@ -219,6 +214,8 @@ function onePlyLookahead(
 export const greedyPolicy: Policy = {
   name: "greedy",
   choose(view, moves, rng) {
+    if (view.state.assembly)
+      return resolveAssemblyByHeuristic(view.state, view.state.assembly, moves);
     if (isSetupPhase(view.state)) {
       return choosePlacement(view.state, moves, rng);
     }
@@ -235,6 +232,8 @@ export const greedyPolicy: Policy = {
 export const smartPolicy: Policy = {
   name: "smart",
   choose(view, moves, rng) {
+    if (view.state.assembly)
+      return resolveAssemblyByHeuristic(view.state, view.state.assembly, moves);
     if (isSetupPhase(view.state)) {
       return choosePlacement(view.state, moves, rng);
     }
@@ -545,13 +544,14 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId): number {
     // Work a slave could still take up: open slots nobody works. A building spends
     // one of them. A colony cannot build, so its spare slots count only as far as
     // it has room for the slaves.
-    if (tile.resource) {
+    const primary = settlementSlaveResource(tile, G);
+    if (primary) {
       const unworked =
-        settlementOpenSlots(tile, settlement) - settlementWorkingSlaves(tile, settlement);
-      const room = settlementCapacity(settlement, G.ruleset) - totalPops(settlement.pops);
+        settlementOpenSlots(tile, settlement, G) - settlementWorkingSlaves(tile, settlement, G);
+      const room = settlementCapacity(settlement, G) - totalPops(settlement.pops);
       latentWork +=
         Math.max(0, settlement.kind === "colony" ? Math.min(unworked, room) : unworked) *
-        SMART_MATERIAL_WEIGHT[tile.resource.type] *
+        SMART_MATERIAL_WEIGHT[primary] *
         INCOME_HORIZON *
         LATENT_SLOT_SHARE;
     }
@@ -695,6 +695,8 @@ function beamPlan(
 export const beamPolicy: Policy = {
   name: "beam",
   choose(view, moves, rng) {
+    if (view.state.assembly)
+      return resolveAssemblyByHeuristic(view.state, view.state.assembly, moves);
     if (isSetupPhase(view.state)) {
       return choosePlacement(view.state, moves, rng);
     }
@@ -949,20 +951,18 @@ function deltaIfEnacted(G: HegemonyState, before: Scores, item: BallotItem, me: 
 
 // Assembly heuristic tunables — sim-tuned to the smart-score scale, where a single
 // income Law shifts a beneficiary's score by ~tens (10 × the projected income delta / 8).
-// Bribes (10 inf) and vetoes (5 inf) are the real influence drains, so their bars sit high:
-// the bot spends only when a resolution genuinely swings the race, not on every signal.
-const PROPOSE_THRESHOLD = 6; // propose iff the private prize/progress covers a merely neutral Law
-const REPEAL_THRESHOLD = 25; // repeal (6 inf) only a standing Law that is clearly hostile
-const BRIBE_MAGNITUDE = 45; // buy votes only when the outcome genuinely swings the race
-const VETO_MAGNITUDE = 180; // reserve the once-yearly veto for a collapse-scale swing
+// Buy votes only when they can change the outcome; reserve repeals for harmful Laws.
+const PROPOSE_THRESHOLD = 0; // propose iff the private prize/progress covers a merely neutral Law
+const REPEAL_THRESHOLD = 12; // repeal (3 influence) only a standing Law that is clearly hostile
+const BRIBE_MAGNITUDE = 8; // buy votes only when the outcome genuinely swings the race
 // A repeated legislature needs room for coalitions: support a measure that is only
 // modestly better for its author, while still blocking material harm and Voice-clinching
 // swings. This roughly covers one preliminary Voice tick plus a normal author prize.
 const VOTE_COALITION_TOLERANCE = 12;
-const DRAW_THRESHOLD = 2;
+const DRAW_THRESHOLD = 0;
 const MAX_DRAWS = 1; // draw once and commit — fishing (redraw-after-discard) just burns influence
 
-/** Best legal target/replacement value for one known card. This is used only while
+/** Best legal target value for one known card. This is used only while
  * evaluating a deck's unordered public composition; it never reads the top card. */
 function bestProposalDelta(
   G: HegemonyState,
@@ -970,15 +970,12 @@ function bestProposalDelta(
   card: ResolutionCard,
   me: PlayerId,
 ): number {
+  if (lawProposalReason(G, card)) return -Infinity;
   const items: BallotItem[] = [];
 
   if (card.kind === "directive") {
     for (const target of playerIds(G)) {
       if (target !== me) items.push({ kind: "enact", card, proposer: me, target });
-    }
-  } else if (lawNeedsReplacement(G)) {
-    for (const cardId of availableLawReplacementIds(G)) {
-      items.push({ kind: "enact", card, proposer: me, replaces: cardId });
     }
   } else {
     items.push({ kind: "enact", card, proposer: me });
@@ -1000,7 +997,10 @@ function expectedDeckDelta(
 
   if (cards.length === 0) return -Infinity;
   return (
-    cards.reduce((sum, card) => sum + bestProposalDelta(G, before, card, me), 0) / cards.length
+    cards.reduce((sum, card) => {
+      const value = bestProposalDelta(G, before, card, me);
+      return sum + (Number.isFinite(value) ? Math.max(0, value) : 0);
+    }, 0) / cards.length
   );
 }
 
@@ -1018,10 +1018,8 @@ function observablePoliticianPool(
   const knownOutsideDeck = new Set<string>([
     ...G.politicianDiscards[politician],
     ...G.activeLaws.map((law) => law.cardId),
-    ...G.tallyMonuments.map((monument) => monument.cardId),
   ]);
   const session = G.assembly;
-  if (session?.houseItem?.kind === "enact") knownOutsideDeck.add(session.houseItem.card.id);
   for (const item of session?.ballot ?? []) {
     if (item.kind === "enact") knownOutsideDeck.add(item.card.id);
   }
@@ -1070,24 +1068,24 @@ function chooseVote(
   const before = scoreEveryone(G);
   const assessment = assessVote(G, before, item, me);
 
-  // A resolution that wins the race for a rival, transfers Voice away from me, or is
-  // otherwise catastrophic is worth the once-yearly walkout. Merely granting a rival
-  // their first Voice card is contested with votes/bribes, not veto-locked forever.
-  const veto = moves.find((move) => move.type === "assemblyVeto");
-  if (veto && (assessment.rivalCompletesRace || assessment.delta <= -VETO_MAGNITUDE)) {
-    return veto;
-  }
-
   // Buy only a pivotal vote. The old magnitude-only rule spent two bribes even when
   // the projected coalition already carried—or could not be rescued—which made
   // political participation lose on avoidable private cost.
-  const bribe = moves.find((move) => move.type === "assemblyBribe");
+  const bribe =
+    moves.find((move) => move.type === "assemblyBribe" && move.payment === "influence") ??
+    moves.find((move) => move.type === "assemblyBribe");
   if (bribe && Math.abs(assessment.voteDelta) >= BRIBE_MAGNITUDE) {
     const tally = projectedPlainVote(G, session, item, before);
     const needed = assessment.yea
       ? Math.max(0, tally.nay - tally.yea + 1)
       : Math.max(0, tally.yea - tally.nay);
-    const available = G.ruleset.assembly.briberyCap - session.bribesUsed[me];
+    const price = G.ruleset.assembly.briberyCost;
+    const purse = G.players[me].resources;
+    const affordable =
+      price > 0
+        ? Math.floor(purse.gold / price) + Math.floor(purse.influence / price)
+        : G.ruleset.assembly.briberyCap;
+    const available = Math.min(affordable, G.ruleset.assembly.briberyCap - session.bribesUsed[me]);
     if (needed > 0 && needed <= available) {
       return bribe;
     }
@@ -1125,7 +1123,11 @@ function assessVote(
     delta,
     voteDelta,
     rivalCompletesRace,
-    yea: !rivalCompletesRace && voteDelta >= -VOTE_COALITION_TOLERANCE,
+    yea:
+      !rivalCompletesRace &&
+      (item.proposer === me
+        ? delta >= -VOTE_COALITION_TOLERANCE
+        : scorePolitical(clone, me) - before[me] >= -VOTE_COALITION_TOLERANCE),
   };
 }
 
@@ -1168,7 +1170,6 @@ function chooseProposeOrDiscard(
       kind: "enact",
       card,
       proposer: me,
-      replaces: move.replaces,
       target: move.target,
     };
     const delta = deltaIfEnacted(G, before, item, me);
@@ -1236,7 +1237,7 @@ function chooseDrawRepealOrPass(
     }
   }
 
-  const drawBuffer = G.ruleset.assembly.drawCost * 2;
+  const drawBuffer = 0;
   const canDraw =
     bestDraw !== null &&
     bestDrawValue > DRAW_THRESHOLD &&
@@ -1256,12 +1257,11 @@ function chooseDrawRepealOrPass(
 export const politicalPolicy: Policy = {
   name: "political",
   choose(view, moves, rng) {
+    if (view.state.assembly)
+      return resolveAssemblyByHeuristic(view.state, view.state.assembly, moves);
     const G = view.state;
     if (isSetupPhase(G)) {
       return choosePlacement(G, moves, rng);
-    }
-    if (G.assembly) {
-      return resolveAssemblyByHeuristic(G, G.assembly, moves);
     }
     return onePlyLookahead(G, moves, scorePolitical);
   },
@@ -1317,6 +1317,8 @@ function evaluateSettler(G: HegemonyState, playerID: PlayerId): number {
 export const settlerPolicy: Policy = {
   name: "settler",
   choose(view, moves, rng) {
+    if (view.state.assembly)
+      return resolveAssemblyByHeuristic(view.state, view.state.assembly, moves);
     if (isSetupPhase(view.state)) {
       return choosePlacement(view.state, moves, rng);
     }
@@ -1350,12 +1352,11 @@ function scoreMaster(G: HegemonyState, playerID: PlayerId): number {
 export const masterPolicy: Policy = {
   name: "master",
   choose(view, moves, rng) {
+    if (view.state.assembly)
+      return resolveAssemblyByHeuristic(view.state, view.state.assembly, moves);
     const G = view.state;
     if (isSetupPhase(G)) {
       return choosePlacement(G, moves, rng);
-    }
-    if (G.assembly) {
-      return resolveAssemblyByHeuristic(G, G.assembly, moves);
     }
 
     return beamPlan(G, moves, scoreMaster);
