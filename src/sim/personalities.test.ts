@@ -109,6 +109,19 @@ describe("shared personality search", () => {
     ).toMatchObject({ type: "buildBuilding", buildingId: "port" });
   });
 
+  it("searches past a sole costly Forum to find its promotion payoff", () => {
+    const G = realm({ citizens: 0, freemen: 1, slaves: 2 });
+    owned(G, "-2,0", "0").buildings.push("temple");
+    Object.assign(G.players["0"].resources, { wood: 0, stone: 3, gold: 2, influence: 0 });
+    expect(
+      choose(
+        "civic",
+        G,
+        (m) => m.type === "endTurn" || (m.type === "buildBuilding" && m.buildingId === "forum"),
+      ),
+    ).toMatchObject({ type: "buildBuilding", buildingId: "forum" });
+  });
+
   it("scores a venture to reach Treasurer but refuses its negative gold expectation away from the title", () => {
     const G = realm({ citizens: 0, freemen: 0, slaves: 0 });
     G.year = 14;

@@ -214,6 +214,17 @@ before the next upkeep under Step 6 and cannot take Beloved. Capital Works is
 weakly dominated by Urban Planning; other unused Ideas need context, not quotas.
 Step 11 owns the 20–45% win-rate decision and any balance changes.
 
+Time the forty-game rotation before starting Step 11's larger conditions. The
+runtime target is under twenty minutes on one core. The performance follow-up
+keeps width 3, depth 4 and all public venture outcomes; cached queries and scores
+must preserve choices, full-game finishes and the absence of action caps.
+
+The 2026-10-03 performance follow-up ran those forty rotations serially through
+the runner and CLI telemetry hooks in a scratch Vitest harness: 17 minutes
+6 seconds, no caps, and the same 13/14/5/8 wins for slaver/civic/trader/master.
+The mixed seed-1000 game also matched all 425 commands and resulting states
+against the original engine and AI. The lead still times the CLI itself.
+
 For Step 11's minimum sixty rotated games per condition, use `--games 15 --rotate`
 with the same four named seats and baseline seeds. `--games` counts base seeds;
 rotation multiplies the actual games by four and records that total in `meta.games`.

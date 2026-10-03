@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { produce } from "immer";
 
 import { createLowNumberContent, LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
 import { getAuthoredGameContent } from "./content";
 import {
   canonicalJson,
+  assertStateDefinition,
   createGameDefinition,
   createModeDefinition,
   hydrateGameDefinition,
@@ -91,5 +93,14 @@ describe("game definitions", () => {
 
     expect(next.definition).toBe(game.definition);
     expect(next.ruleset).toBe(next.definition.ruleset);
+  });
+
+  it("still rejects a ruleset changed inside an Immer draft", () => {
+    const game = createInitialStateFromDefinition(createModeDefinition("standard"), 17);
+    produce(game, (draft) => {
+      assertStateDefinition(draft);
+      draft.ruleset.victory.minimums.gold += 1;
+      expect(() => assertStateDefinition(draft)).toThrow(/ruleset alias/);
+    });
   });
 });

@@ -142,28 +142,47 @@ function searchOutcomes(G: HegemonyState, move: GameCommand): SearchOutcome[] {
   }
   return [{ state: result.state, probability: 1 }];
 }
-/** Logs and the last die display do not affect any continuation or score. */
+/** Within one gameplay search, terrain, decks, year, Laws and definition are
+ * constant. Only these fields change under the optional economic commands.
+ * Keep real entity IDs and action flags; omit logs and the last die display. */
 function searchPositionKey(state: HegemonyState) {
-  return JSON.stringify({
-    ...state,
-    definition: undefined,
-    ruleset: undefined,
-    log: undefined,
-    lastTableRoll: undefined,
-  });
+  return JSON.stringify([
+    state.nextEntityId,
+    state.board.tiles.flatMap((tile) => tile.settlements),
+    state.board.luxuries.map((good) => [
+      good.owner,
+      good.suppressedTurns,
+      good.claimedAtSettlementId,
+    ]),
+    state.players,
+    state.transfers,
+  ]);
 }
-function expectedScore(outcomes: SearchOutcome[], score: Scorer, player: PlayerId) {
-  if (outcomes.length === 1) return score(outcomes[0].state, player);
+
+/** Local to a decision: repeated bank paths and equivalent venture outcomes
+ * share a value across depths without pruning any continuation. */
+function searchEvaluation(score: Scorer, player: PlayerId) {
+  const keys = new WeakMap<HegemonyState, string>();
   const values = new Map<string, number>();
-  return outcomes.reduce((sum, outcome) => {
-    const key = searchPositionKey(outcome.state);
+  const keyOf = (state: HegemonyState) => {
+    let key = keys.get(state);
+    if (key === undefined) keys.set(state, (key = searchPositionKey(state)));
+    return key;
+  };
+  const valueOf = (state: HegemonyState) => {
+    const key = keyOf(state);
     let value = values.get(key);
     if (value === undefined) {
-      value = score(outcome.state, player);
+      value = score(state, player);
       values.set(key, value);
     }
-    return sum + outcome.probability * value;
-  }, 0);
+    return value;
+  };
+  return { keyOf, valueOf };
+}
+function expectedScore(outcomes: SearchOutcome[], valueOf: (state: HegemonyState) => number) {
+  if (outcomes.length === 1) return valueOf(outcomes[0].state);
+  return outcomes.reduce((sum, outcome) => sum + outcome.probability * valueOf(outcome.state), 0);
 }
 
 /**
@@ -194,14 +213,15 @@ function onePlyLookahead(
     return endTurn;
   }
 
-  const before = score(G, playerID);
+  const evaluation = searchEvaluation(score, playerID);
+  const before = evaluation.valueOf(G);
   let best: GameCommand | null = null;
   let bestDelta = -Infinity;
 
   for (const move of candidates) {
     const outcomes = searchOutcomes(G, move);
     if (!outcomes.length) continue;
-    const delta = expectedScore(outcomes, score, playerID) - before;
+    const delta = expectedScore(outcomes, evaluation.valueOf) - before;
 
     if (delta > bestDelta) {
       bestDelta = delta;
@@ -303,6 +323,7 @@ export function projectPolicyHorizon(
   );
 
   for (let step = 0; step < horizon; step += 1) {
+    let popsChanged = false;
     // The engine checks unrest at every start-of-turn upkeep, before income. The
     // level is a state, so a bad one is met again at every upkeep of the horizon
     // until something on the board changes. Each future upkeep is in a later year.
@@ -322,6 +343,7 @@ export function projectPolicyHorizon(
         ["slaves"],
       );
       player.unrestTokens = 0;
+      popsChanged = true;
       income = calculateIncome(projectedState, playerID);
     } else if (upkeepRisk.tier === "unrest") {
       // A riot spends the tokens; what the table then takes is unknown.
@@ -345,14 +367,19 @@ export function projectPolicyHorizon(
 
       if (unfed > 0) {
         expectedStarvationPopLoss += applyHunger(projectedState, playerID, unfed).total;
+        popsChanged = true;
       }
     }
 
     // The next projected upkeep is in another year. Its card is still hidden.
+    const yearCardExpired = projectedState.activeYearCard !== null;
     projectedState.activeYearCard = null;
     player.calmActive = false;
     player.collectedThisTurn = false;
-    income = calculateIncome(projectedState, playerID);
+    // Stocks and tokens do not affect printed income. Reuse the authoritative
+    // result until hunger/revolt changes pops or this year's card expires.
+    if (step + 1 < horizon && (popsChanged || yearCardExpired))
+      income = calculateIncome(projectedState, playerID);
   }
 
   return {
@@ -651,7 +678,17 @@ function beamPlan(
     return endTurn;
   }
 
-  const rootScore = score(G, playerID);
+  const evaluation = searchEvaluation(score, playerID);
+  const rootScore = evaluation.valueOf(G);
+  const soleRootOutcomes = rootMoves.length === 1 ? searchOutcomes(G, rootMoves[0]) : null;
+  // If the only optional first move already improves the position, deeper
+  // continuations cannot change which first move wins. A costly first move
+  // still gets the whole beam so it can unlock a later payoff.
+  if (
+    soleRootOutcomes?.length &&
+    expectedScore(soleRootOutcomes, evaluation.valueOf) > rootScore + 1e-8
+  )
+    return rootMoves[0];
   type Node = { state: HegemonyState; firstMove: GameCommand | null; score: number };
   let frontier: Node[] = [{ state: G, firstMove: null, score: rootScore }];
   let best: { firstMove: GameCommand | null; score: number } = {
@@ -666,15 +703,16 @@ function beamPlan(
       const candidateMoves =
         depth === 0 ? rootMoves : branchable(enumerateLegalCommands(node.state, playerID));
       for (const move of candidateMoves) {
-        const outcomes = searchOutcomes(node.state, move);
+        const outcomes =
+          depth === 0 && soleRootOutcomes ? soleRootOutcomes : searchOutcomes(node.state, move);
         if (!outcomes.length) continue;
         if (move.type !== "fundExpedition") {
-          const key = searchPositionKey(outcomes[0].state);
+          const key = evaluation.keyOf(outcomes[0].state);
           if (seen.has(key)) continue;
           seen.add(key);
         }
         const firstMove = node.firstMove ?? move;
-        const nextScore = expectedScore(outcomes, score, playerID);
+        const nextScore = expectedScore(outcomes, evaluation.valueOf);
         // Ventures are chance leaves inside the search at every depth. Replan
         // after observing the actual roll, rather than expanding fictional rolls.
         if (move.type !== "fundExpedition")

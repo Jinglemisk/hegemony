@@ -1,3 +1,4 @@
+import { current, isDraft } from "immer";
 import { getAuthoredGameContent } from "./content";
 import type { GameContent } from "./content";
 import { GAME_MODES } from "./ruleset";
@@ -168,13 +169,14 @@ export function assertStateDefinition(state: {
       `game definition mismatch: state requires ${String(state.definitionId)}, carries ${state.definition.identity.id}`,
     );
   }
-  // Immer may expose two distinct draft proxies for the same shared object while a
-  // browser transition is executing. Fast-path the normal shared reference, then
-  // compare its small ruleset payload only for adapters that cannot preserve aliases.
-  if (
-    state.ruleset !== state.definition.ruleset &&
-    stableDefinitionHash(state.ruleset) !== state.definition.identity.rulesetHash
-  ) {
+  // Two Immer proxies can wrap the same unchanged ruleset. current() returns
+  // their shared base without copying, but snapshots a modified draft so the
+  // fallback still detects a ruleset change.
+  const rules = isDraft(state.ruleset) ? current(state.ruleset) : state.ruleset;
+  const pinned = isDraft(state.definition.ruleset)
+    ? current(state.definition.ruleset)
+    : state.definition.ruleset;
+  if (rules !== pinned && stableDefinitionHash(rules) !== state.definition.identity.rulesetHash) {
     throw new Error("game ruleset alias does not reference the state's pinned definition");
   }
 }

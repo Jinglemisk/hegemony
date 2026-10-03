@@ -15,10 +15,8 @@ session with "continue the v2 migration" in the `hegemony-v2` worktree.
 
 **Owner blockers:** none.
 
-Steps 1 to 9 are merged into `feat/v2`, most recently #88. Step 10 is implemented
-in the working tree: personality weights, bank/venture search and per-policy
-telemetry. The lead runs the bot batch, browser audits and shell gate before
-shipping. Step 11 then measures build viability and balance.
+Steps 1 to 10 are merged into `feat/v2` (#79 to #90). Step 11, the sim gate, measures
+build viability and balance and waits for the owner's go.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze

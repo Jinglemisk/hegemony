@@ -74,15 +74,27 @@ transitions independently of the game's RNG. Compare the expected score with the
 other branches; after execution, observe the real roll and replan. This supports
 bank-to-venture sequences without expanding subsequent turns or a chance tree.
 A negative mean gold payout can still be useful near a title threshold. Equal
-positions at the same depth are expanded once, and equal venture outcomes share
-one score; logs and the last roll display do not distinguish positions.
+positions at the same depth are expanded once. Scores are shared across depths
+and venture outcomes within one decision, keyed by the economic fields that can
+change during that search. Logs and the last roll display do not distinguish
+positions. When the only optional first move already improves the score, return
+it immediately: deeper search cannot change that first move. A costly first move
+still gets the full search to find a later payoff. Width, depth, odds and tie order
+stay unchanged.
 
 Forecast at most six incomes, bounded by the years remaining. This year's card
 applies only to a seat that has not collected; later incomes use printed values.
 The projection runs engine hunger and deterministic revolts, clears tokens after
-a projected riot, and recalculates income after pop losses. It assumes no future
-card or token changes. Influence uses projected income too, so a Forum pays back
+a projected riot, and recalculates income after pop losses or the year's card
+expires. Otherwise it reuses income through the horizon; stocks and tokens do
+not change printed yields. It assumes no future card or token changes.
+Influence uses projected income too, so a Forum pays back
 through its actual citizen column; Civic Tradition needs no duplicate future bonus.
+
+Engine queries reuse immutable Law/Idea effects and tile indexes. Changed drafts
+and mutable fixtures still read their current inputs. Definition checks unwrap
+unchanged draft aliases before hashing. These caches remove repeated work from
+candidate transitions and Assembly forecasts without changing rules or saved state.
 
 A projected lost pop costs 60, above every personality's population weight.
 For a realm with food consumption and another income remaining, reserve food

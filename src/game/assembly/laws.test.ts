@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { produce } from "immer";
 import { scenario, owned, tile } from "../testing/scenario";
 import { foundColony, growPop } from "../actions";
 import {
@@ -21,7 +22,7 @@ import { playerPieces, settlementCapacity, settlementSlots } from "../settlement
 import { applyHunger } from "../hunger";
 import { calculateEconomyProjection, previewFoundedSettlement } from "../economy/preview";
 import { baseVoteWeight } from "./assembly";
-import { getLawHappinessContributions } from "./laws";
+import { getLawHappinessContributions, getStandingEffects, getStandingEffectSources } from "./laws";
 import type { HegemonyState } from "../types";
 function opening() {
   return scenario()
@@ -39,6 +40,33 @@ const cap = "-2,0",
   colony = "3,0";
 
 describe("standing Laws", () => {
+  it("keeps cached Laws and Ideas seat-specific, caller-owned and current inside drafts", () => {
+    const G = produce(opening(), (draft) => {
+      law(draft, "grain-levy");
+      draft.players["1"].nationalIdeas.push({ id: "civic-tradition", acquired: "setup", year: 1 });
+    });
+    expect(getStandingEffects(G, "0")).toContainEqual({ type: "rule", rule: "grainLevy" });
+    expect(getStandingEffects(G, "1")).toContainEqual({
+      type: "realmIncome",
+      resource: "influence",
+      amount: 2,
+    });
+    expect(getStandingEffects(G, "0")).not.toContainEqual({
+      type: "realmIncome",
+      resource: "influence",
+      amount: 2,
+    });
+    getStandingEffects(G, "0").length = 0;
+    getStandingEffectSources(G, "0")[0].label = "changed by caller";
+    expect(getStandingEffectSources(G, "0")[0].label).toBe("Grain Levy");
+    produce(G, (draft) => {
+      draft.activeLaws[0].cardId = "forum-rites";
+      draft.players["1"].nationalIdeas = [];
+      expect(getStandingEffects(draft, "0")).toContainEqual({ type: "rule", rule: "forumRites" });
+      expect(getStandingEffects(draft, "1")).toEqual(getStandingEffects(draft, "0"));
+    });
+    expect(getStandingEffects(G, "0")).toContainEqual({ type: "rule", rule: "grainLevy" });
+  });
   it("rule Laws change columns before the year card without stacking Forums or Marketplaces", () => {
     const G = opening();
     const city = owned(G, cap, "0"),

@@ -502,6 +502,13 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   point round trips cannot make a neutral exchange appear profitable. Deduplicate
   equal positions at the same beam depth and score equivalent venture outcomes
   once, ignoring logs and the last roll display in the comparison.
+- Performance follow-up: share economic-position scores across depths within one
+  decision, and return a sole improving first move without expanding its
+  continuations. Costly first moves retain the full beam. Reuse projected income
+  until pop losses or the active year card's expiry changes it. Memoize immutable
+  engine queries, unwrap draft ruleset aliases before hashing, and reuse the
+  numeric luxury comparator. Keep all weights, width/depth, venture outcomes and
+  tie order unchanged; no test timeout increases.
 - Reserve one forecast food shortfall plus 2 food against the player deck's loss,
   charging 14 per missing unit when food consumption and future income exist.
   Meeting the reserve adds no reward for a larger food deficit. The ordinary

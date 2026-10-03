@@ -46,11 +46,12 @@ export function createLuxuryAssets(
   }));
 }
 
+const assetIdOrder = new Intl.Collator(undefined, { numeric: true });
 /** Every asset the player owns, in stable asset-id order. */
 export function ownedClaims(G: HegemonyState, playerID: PlayerId): LuxuryAsset[] {
   return G.board.luxuries
     .filter((asset) => asset.owner === playerID)
-    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+    .sort((a, b) => assetIdOrder.compare(a.id, b.id));
 }
 
 /** The player's active goods: owned and unsuppressed. There is no cap on how many. */
