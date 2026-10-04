@@ -308,6 +308,16 @@ The report contains:
 - `nationalIdeas` — setup picks, in-play purchases, finished holder seat-games, wins
   and holder win rate per Idea, including zeroes. Each game records ownership and
   acquisition route; capped games count acquisitions but never holder wins.
+- `reach` — zero-filled use counts for every command, building, player card,
+  year card, venture, Law and Directive (proposed and passed), Idea (setup and
+  bought), calm payment, bank trade per material, ladder rung, growth, bought vote,
+  riot insurance and politician draw, in total and per policy with per-seat-game
+  rates. The summary prints every item under 0.2 a game as "Low reach". A zero is a
+  bot that cannot see the move, a weak move, or a move that does nothing; the
+  [reach audit](../reports/simulation/2026-10-04-v2-ai-reach-audit.md) shows how to tell.
+- `classes` — slave, freeman and citizen percentiles per policy over all snapshots
+- `drawSwings` — each resolved player card's immediate change in resources, pops and
+  Unrest tokens, against that seat's projected income at the draw
 - `buildings` — build counts and per-game rates
 - `events` — draw counts by the twelve player-card kinds and eight year-card kinds;
   retired card IDs and choice-pick telemetry are gone
