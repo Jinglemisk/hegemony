@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-03.
+Last updated: 2026-10-05.
 
 ## Now
 
@@ -13,7 +13,7 @@ Last updated: 2026-10-03.
 in the Hybrid arc shell, built on `feat/v2` while `main` keeps today's game. Start every
 session with "continue the v2 migration" in the `hegemony-v2` worktree.
 
-**Owner blockers:** none.
+**Owner blockers:** none. Open: [Q79](questions.md), settlements eating with food as a level.
 
 Steps 1 to 10 are merged into `feat/v2` (#79 to #90). Step 11, the sim gate, measures
 build viability and balance and waits for the owner's go.

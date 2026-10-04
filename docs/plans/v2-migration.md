@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-04
+updated: 2026-10-05
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -566,6 +566,8 @@ danger selector and the real-path previews, with their tests.
 ## Open owner questions
 
 - Step 11's thresholds are proposals the owner may change before it runs.
+- [Q79](../questions.md): should settlements eat instead of pops, with food as a level
+  like happiness? Open; it does not block Steps 13 and 14.
 
 ## Three-axis parity
 
