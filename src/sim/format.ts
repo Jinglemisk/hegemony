@@ -320,6 +320,21 @@ export function renderBatchReport(report: BatchReport): string {
       `  ${id}: ${stats.setupPicks} / ${stats.purchases} / ${(stats.winRate * 100).toFixed(1)}% (${stats.wins}/${stats.holders})`,
     );
 
+  // The reach audit: an action or content ID no seat uses is a bot bug, a weak
+  // option or a rule hole until a fixture says which.
+  if (report.reach) {
+    const games = report.perGame.length || 1;
+    const policies = Object.keys(report.reach.perPolicy);
+    const low = Object.entries(report.reach.total).filter(([, n]) => n / games < 0.2);
+    lines.push(`Low reach (under 0.2/game; ${policies.join(" / ")}): ${low.length} items`);
+    for (const [id, n] of low)
+      lines.push(
+        `  ${id}: ${n} total (` +
+          policies.map((p) => report.reach.perPolicy[p].counts[id] ?? 0).join(" / ") +
+          ")",
+      );
+  }
+
   const buildings = Object.entries(report.buildings)
     .sort(([, a], [, b]) => b.built - a.built)
     .map(([buildingId, stats]) => `${buildingId} ${formatNumber(stats.perGame)}/game`)

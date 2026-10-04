@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-03
+updated: 2026-10-04
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -670,7 +670,10 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
 **Mode:** one session. **Stop:** the dated report, with a proposed remedy for each failing
 rule; the owner decides.
 
-- [ ] **Step 11 · Sim gate.** Run batches on the baseline seeds, compare with the
+- [ ] **Step 11 · Sim gate.** First phase: AI reach audit: every action and every piece of
+      content is used by some personality in a rotated batch, or a fixture proves the bot
+      takes it when it is clearly best; bot bugs found are fixed before Step 11's batches.
+      Run batches on the baseline seeds, compare with the
       [2026-09-05 baseline](../reports/simulation/2026-09-05-shallow-economy-baseline.md),
       apply the decision rules below, and save a dated report. First commit the class and
       draw telemetry the baseline relied on, and rerun the v1 baseline with food floored at
