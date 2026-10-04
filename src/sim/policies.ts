@@ -1005,8 +1005,13 @@ function competitiveDelta(
 ): number {
   const rivals = playerIds(after).filter((player) => player !== me);
   const myGain = score(after, me) - before[me];
-  const bestRivalGain = Math.max(...rivals.map((rival) => score(after, rival) - before[rival]));
-  return myGain - bestRivalGain;
+  const gains = rivals.map((rival) => score(after, rival) - before[rival]);
+  const bestRivalGain = Math.max(...gains);
+  // The best rival gain alone never sees harm: a Directive that costs the leading
+  // rival a winning title scored only its prize. Count the leader's loss against me.
+  const leader = rivals.reduce((a, b) => (before[b] > before[a] ? b : a));
+  const leaderLoss = Math.min(0, gains[rivals.indexOf(leader)] - myGain);
+  return myGain - bestRivalGain - leaderLoss;
 }
 
 /** Score "what if this ballot item carried" as a competitive delta, on a full clone —

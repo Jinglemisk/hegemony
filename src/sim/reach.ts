@@ -26,7 +26,7 @@ export const REACH_IDS = [
   ...["bankBuy", "bankSell"].flatMap((verb) =>
     ["wood", "stone", "food"].map((resource) => `${verb}:${resource}`),
   ),
-  ...["gold", "influence", "food"].map((id) => `calm:${id}`),
+  ...["gold", "influence"].map((id) => `calm:${id}`),
   "promote:slaves",
   "promote:freemen",
   "demote:citizens",
