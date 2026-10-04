@@ -131,6 +131,10 @@ repeals, draws against unordered public composition, supports modest private
 costs to form coalitions, blocks a rival's winning title, and buys only affordable
 pivotal votes. The acting personality weights both its own and rival score changes;
 coalition prediction assumes that same public scoring lens for uncast votes.
+A ballot item is worth the seat's own gain minus the best rival gain, plus any loss
+it inflicts on the leading rival beyond the seat's own. Without that last term a
+Directive was worth only its prize, since an untouched rival's zero gain hid the
+target's loss, and no bot drew from Stratokles even to stop a winning Voice.
 Mixed tables route every Assembly action to its actual seat, including when a
 sitting spans one opener's player-turn.
 

@@ -1,3 +1,4 @@
+import { emptyReachCounts, moveReachIds, type ReachReport } from "./reach";
 import { NATIONAL_IDEAS, playerNationalIdeas } from "../game/ideas";
 import type { NationalIdeaId, NationalIdeaOwnership } from "../game/ideaTypes";
 import type { OpeningKind } from "./io";
@@ -63,6 +64,8 @@ export type PlayerSnapshot = {
   /** 1 when ending the player's turn at this level starts a riot or revolt. */
   riotAtRisk: number;
   slaves: number;
+  freemen: number;
+  citizens: number;
   /** Slaves without an open work slot: on a full tile, or on a hill. */
   idleSlaves: number;
   /** Running total of pops that left unfed at income. */
@@ -112,6 +115,8 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       unrestTier: unrest.tier,
       riotAtRisk: unrest.riotAtRisk ? 1 : 0,
       ...slaveCounts(G, playerID),
+      freemen: classCount(G, playerID, "freemen"),
+      citizens: classCount(G, playerID, "citizens"),
       popsLostToHunger: player.popsLostToHunger,
       popsLostToUnrest: player.popsLostToUnrest,
       popsGainedFromEvents: player.popsGainedFromEvents,
@@ -129,6 +134,27 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
     players,
   };
 }
+
+function classCount(G: HegemonyState, player: PlayerId, pop: "freemen" | "citizens") {
+  return G.players[player].settlements.reduce(
+    (sum, id) => sum + (getOwnedSettlement(G, id, player)?.pops[pop] ?? 0),
+    0,
+  );
+}
+
+export type DrawSwing = {
+  game: number;
+  year: number;
+  player: PlayerId;
+  policy: string;
+  card: string;
+  resources: Resources;
+  pops: number;
+  unrestTokens: number;
+  materialMagnitude: number;
+  incomeMagnitude: number;
+  ratio: number | null;
+};
 
 function slaveCounts(G: HegemonyState, playerID: PlayerId) {
   let slaves = 0;
@@ -274,6 +300,11 @@ export type BatchReport = {
     generatedAt: string;
   };
   perGame: GameRow[];
+  reach: { total: Record<string, number>; perPolicy: Record<string, ReachReport> };
+  /** Immediate resolution changes against the draw-position projected income, not a decision counterfactual. */
+  drawSwings: DrawSwing[];
+  classes: Record<string, { slaves: Percentiles; freemen: Percentiles; citizens: Percentiles }>;
+
   nationalIdeas: Record<
     NationalIdeaId,
     { setupPicks: number; purchases: number; holders: number; wins: number; winRate: number }
@@ -430,6 +461,20 @@ const CURRENCY_VERBS = [
 
 export class Aggregator {
   private snapshots: TurnSnapshot[] = [];
+  private reachTotal = emptyReachCounts();
+  private reachByPolicy: Record<string, Record<string, number>> = {};
+  private setupMoves: Array<{ state: HegemonyState; player: PlayerId; move: GameCommand }> = [];
+  private previousState?: HegemonyState;
+  private drawSwings: DrawSwing[] = [];
+  private countReach(player: PlayerId, ids: string[]) {
+    const policy = this.gameSeatPolicies?.[player] ?? "unassigned";
+    const counts = (this.reachByPolicy[policy] ??= emptyReachCounts());
+    for (const id of ids) {
+      counts[id] = (counts[id] ?? 0) + 1;
+      this.reachTotal[id] = (this.reachTotal[id] ?? 0) + 1;
+    }
+  }
+
   private games: GameRow[] = [];
   private buildings: Record<string, number> = {};
   private playerEvents: Record<string, number> = {};
@@ -480,6 +525,10 @@ export class Aggregator {
     this.lastVoiceHolder = voiceHolder(G);
     this.lastAssemblyResultKey = null;
     this.assemblySeats = emptyAssemblySeats();
+    for (const { state, player, move } of this.setupMoves)
+      this.countReach(player, moveReachIds(state, player, move));
+    this.setupMoves = [];
+    this.previousState = G;
 
     // The opening already revealed year 1's card and player 0's first draw.
     this.countYearCard(G);
@@ -488,6 +537,40 @@ export class Aggregator {
   }
 
   onMove(G: HegemonyState, player: PlayerId, move: GameCommand) {
+    if (["placeCapital", "placeCity", "placeColony", "pickIdea"].includes(move.type)) {
+      this.setupMoves.push({ state: G, player, move });
+    } else {
+      this.countReach(player, moveReachIds(G, player, move, this.previousState));
+      if (move.type === "resolveEvent" && this.previousState?.pendingPlayerEvent) {
+        const before = this.previousState;
+        const old = before.players[player];
+        const now = G.players[player];
+        const resources = Object.fromEntries(
+          Object.keys(old.resources).map((key) => {
+            const resource = key as keyof Resources;
+            return [resource, now.resources[resource] - old.resources[resource]];
+          }),
+        ) as Resources;
+        const magnitude = (r: Resources) =>
+          Object.values(r).reduce((sum, n) => sum + Math.abs(n), 0);
+        const incomeMagnitude = magnitude(calculateIncome(before, player));
+        const materialMagnitude = magnitude(resources);
+        this.drawSwings.push({
+          game: this.game,
+          year: before.year,
+          player,
+          policy: this.gameSeatPolicies?.[player] ?? "unassigned",
+          card: before.pendingPlayerEvent!.card.id,
+          resources,
+          pops: playerStandings(G, player).pops - playerStandings(before, player).pops,
+          unrestTokens: now.unrestTokens - old.unrestTokens,
+          materialMagnitude,
+          incomeMagnitude,
+          ratio: incomeMagnitude ? materialMagnitude / incomeMagnitude : null,
+        });
+      }
+      this.previousState = G;
+    }
     this.movesByType[move.type] = (this.movesByType[move.type] ?? 0) + 1;
 
     if (move.type === "resolveRiot") {
@@ -533,6 +616,9 @@ export class Aggregator {
         this.lastAssemblyResultKey = key;
         const result = results[results.length - 1];
         if (result.passed && result.item.kind === "enact" && result.item.proposer) {
+          this.countReach(result.item.proposer, [
+            `${result.item.card.kind}:${result.item.card.id}`,
+          ]);
           const seat = this.assemblySeats[result.item.proposer];
           if (result.item.card.kind === "law") seat.lawsPassed += 1;
           else seat.directivesPlayed += 1;
@@ -959,7 +1045,36 @@ export class Aggregator {
       ),
     };
 
+    const reachPolicies: Record<string, ReachReport> = {};
+    const classes: BatchReport["classes"] = {};
+    for (const [name, entry] of Object.entries(perPolicy)) {
+      const counts =
+        this.reachByPolicy[name] ?? this.reachByPolicy.unassigned ?? emptyReachCounts();
+      const seatGames = entry.finishedSeatGames + entry.cappedSeatGames;
+      reachPolicies[name] = {
+        seatGames,
+        counts,
+        perSeatGame: Object.fromEntries(
+          Object.entries(counts).map(([id, count]) => [id, seatGames ? count / seatGames : 0]),
+        ),
+      };
+      const samples = this.snapshots.flatMap((snapshot) =>
+        PLAYER_IDS.filter(
+          (id) =>
+            (this.games.find((game) => game.game === snapshot.game)?.seatPolicies?.[id] ??
+              meta.policy) === name,
+        ).map((id) => snapshot.players[id]),
+      );
+      classes[name] = {
+        slaves: percentiles(samples.map((s) => s.slaves)),
+        freemen: percentiles(samples.map((s) => s.freemen)),
+        citizens: percentiles(samples.map((s) => s.citizens)),
+      };
+    }
     return {
+      reach: { total: this.reachTotal, perPolicy: reachPolicies },
+      classes,
+      drawSwings: this.drawSwings,
       meta,
       perGame: this.games,
       nationalIdeas: Object.fromEntries(
@@ -1081,6 +1196,8 @@ export class Aggregator {
   private countYearCard(G: HegemonyState) {
     const card = G.activeYearCard;
     if (card) {
+      // Every seat observes the public year card; do not credit only the opener.
+      for (const player of PLAYER_IDS) this.countReach(player, [`year:${card.id}`]);
       this.yearCards[card.id] = (this.yearCards[card.id] ?? 0) + 1;
     }
   }
@@ -1089,6 +1206,7 @@ export class Aggregator {
     if (G.pendingRiot || !G.players[G.currentPlayer].collectedThisTurn) return;
     const card = G.lastPlayerEvent;
     if (card) {
+      this.countReach(G.currentPlayer, [`playerDraw:${card.id}`]);
       this.playerEvents[card.id] = (this.playerEvents[card.id] ?? 0) + 1;
     }
   }
@@ -1125,6 +1243,8 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
     "unrestTier",
     "riotAtRisk",
     "slaves",
+    "freemen",
+    "citizens",
     "idleSlaves",
     "popsLostToHunger",
     "popsLostToUnrest",
@@ -1164,6 +1284,8 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
         player.unrestTier,
         player.riotAtRisk,
         player.slaves,
+        player.freemen,
+        player.citizens,
         player.idleSlaves,
         player.popsLostToHunger,
         player.popsLostToUnrest,
