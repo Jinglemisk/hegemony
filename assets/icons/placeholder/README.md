@@ -9,7 +9,7 @@ One file per game concept, named for the concept, grouped by family. Generated b
 `icon-preview/composites.py`.
 
 Every file is run through `icon-preview/polish.py` on the way here: the wiki art
-is trimmed to its own ink, rescaled so all 94 carry the same optical weight,
+is trimmed to its own ink, rescaled so all 104 carry the same optical weight,
 normalized to one 128px canvas, and given a dark rim and ground shadow so pale
 subjects (marble buildings, the dove) hold their edge against parchment. Raw
 downloads reached the UI as a ragged row of smudges at 26px; that is what this
@@ -19,4 +19,4 @@ Wiring: `src/ui/icons/placeholders.ts` maps a glyph id (or a concept the glyph
 set does not distinguish) to a file here; `Icon` renders the raster when one is
 mapped and the vector glyph otherwise.
 
-94 files.
+104 files.

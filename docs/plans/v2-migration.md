@@ -262,7 +262,7 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   fan adds the Dole. Found and Upgrade carry the pieces left as a count on their
   discs, and Expand's disc carries the colony count, as the mock draws them. A
   settlement's column head prints ×1, or ×2 once its class building stands.
-- The Estate wears the Villa's raster until Step 14.
+- The Estate has its own placeholder raster since Step 14.
 - An open fan may cover an empty tile's slot count. It still keeps clear of every
   settlement's mark and every mooring.
 - Bots price an open work slot as the slave who could work it, weigh a pop they expect
@@ -692,7 +692,7 @@ playtest, with the PR from `feat/v2` into `main` open for the owner to merge.
 - [ ] **Step 13 · Ceremony surfaces.** The year-card reveal, the Assembly sitting, hunger and
       riot moments, victory, and the National Idea pick, designed in the app in the mock's
       language.
-- [ ] **Step 14 · Icons.** Rasters for new concepts (year cards, unrest, pieces, the Estate,
+- [x] **Step 14 · Icons.** ([#94](https://github.com/Jinglemisk/hegemony/pull/94): ten Imperator placeholders for the v2 concepts, picked 2026-10-05; the gate passes at 1280/1440/1920. Year, threshold and National Idea rasters are exported but unwired, since the frame has no icon slot for them.) Rasters for new concepts (year cards, unrest, pieces, the Estate,
       the Dole) through the icon pipeline, as placeholders until the owner approves them.
 - [ ] **Step 15 · QA and docs.** Full games by bots and Playwright at 1280, 1440 and 1920;
       the gate script rerun on the real app; `rules.md` rewritten for v2; reference docs
