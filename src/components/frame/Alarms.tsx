@@ -20,7 +20,7 @@ import { Ico, Tip } from "./parts";
  */
 
 const UNREST_ICON: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
-  discontent: "unrest/alarm",
+  discontent: "unrest/discontent",
   unrest: "unrest/unrest",
   revolt: "unrest/revolt",
 };

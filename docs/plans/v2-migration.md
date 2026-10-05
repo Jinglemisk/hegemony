@@ -262,7 +262,7 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   fan adds the Dole. Found and Upgrade carry the pieces left as a count on their
   discs, and Expand's disc carries the colony count, as the mock draws them. A
   settlement's column head prints ×1, or ×2 once its class building stands.
-- The Estate wears the Villa's raster until Step 14.
+- The Estate has its own placeholder raster since Step 14.
 - An open fan may cover an empty tile's slot count. It still keeps clear of every
   settlement's mark and every mooring.
 - Bots price an open work slot as the slave who could work it, weigh a pop they expect

@@ -38,6 +38,7 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
   happiness: placeholder("resources/happiness"),
   unhappiness: placeholder("resources/unhappiness"),
   stockpile: placeholder("resources/stockpile"),
+  luxury: placeholder("resources/luxury"),
 
   citizens: placeholder("pops/citizens"),
   freemen: placeholder("pops/freemen"),
@@ -61,8 +62,8 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
   temple: placeholder("buildings/temple"),
   granary: placeholder("buildings/granary"),
   forum: placeholder("buildings/forum"),
-  // The Estate wears the Villa's raster until Step 14 draws its own.
-  estate: placeholder("buildings/villa"),
+  estate: placeholder("buildings/estate"),
+  port: placeholder("buildings/port"),
   build: placeholder("buildings/build"),
   ruin: placeholder("buildings/ruin"),
 
@@ -85,6 +86,13 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
   bribe: placeholder("assembly/bribe"),
   voice: placeholder("assembly/voice"),
   bema: placeholder("assembly/agora"),
+  directive: placeholder("assembly/directive"),
+  stele: placeholder("assembly/stele"),
+  // One Orator for every politician until each has a portrait.
+  demosthenes: placeholder("assembly/politician"),
+  kleistophenes: placeholder("assembly/politician"),
+  perdiccas: placeholder("assembly/politician"),
+  stratokles: placeholder("assembly/politician"),
 
   die: placeholder("events/die"),
   venture: placeholder("events/venture"),
