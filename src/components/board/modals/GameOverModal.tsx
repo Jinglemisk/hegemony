@@ -63,7 +63,7 @@ export function GameOverModal({
         </h2>
         <p className="tabletVoice body-em">
           {raced
-            ? `${you ? "You" : name(winner)} opened their turn holding ${toWin} titles.`
+            ? `${you ? "You opened your" : `${name(winner)} opened their`} turn holding ${toWin} titles.`
             : "The year deck is spent. Most titles wins."}
         </p>
       </header>
