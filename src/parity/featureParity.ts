@@ -453,7 +453,7 @@ export const CONTENT_MANIFEST = {
     ids: YEAR_CARD_CONTENT_IDS,
     engine: { implementation: "src/game/year.ts", evidence: "revealYearCard" },
     frontend: {
-      implementation: "src/components/frame/TopBar.tsx",
+      implementation: "src/components/board/modals/YearCardModal.tsx",
       evidence: "presentYearCard",
     },
     simulation: {

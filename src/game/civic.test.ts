@@ -126,7 +126,12 @@ describe("the social ladder (D8)", () => {
       .setPops("0", P0_CAPITAL, { citizens: 2, freemen: 1, slaves: 0 })
       .withResources("0", { influence: 0 })
       .build();
-    G.pendingRiot = { playerID: "0", boughtInsurance: [] };
+    G.pendingRiot = {
+      playerID: "0",
+      boughtInsurance: [],
+      tokensCleared: 0,
+      concessionTileId: null,
+    };
 
     // No influence, still legal.
     expect(demotePop(G, "0", P0_CAPITAL, "freemen").ok).toBe(true);

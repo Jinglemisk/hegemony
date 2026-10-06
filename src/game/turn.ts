@@ -64,6 +64,28 @@ export function nextPlayer(playerID: PlayerId): PlayerId {
   return PLAYER_IDS[(index + 1) % PLAYER_IDS.length];
 }
 
+/**
+ * The seats who act before `seat`'s next turn starts, in order: the seat playing now
+ * (unless it is `seat`), then each turn start after it. When the year turns the new
+ * opener follows the last seat, as {@link finishTurn} plays it.
+ */
+export function seatsBefore(G: HegemonyState, seat: PlayerId): PlayerId[] {
+  const seats: PlayerId[] = G.currentPlayer === seat ? [] : [G.currentPlayer];
+  let opener = G.yearOpener;
+  let at = G.currentPlayer;
+  for (let guard = 0; guard < PLAYER_IDS.length * 2; guard += 1) {
+    let next = nextPlayer(at);
+    if (next === opener) {
+      opener = nextPlayer(opener);
+      next = opener;
+    }
+    if (next === seat) break;
+    if (!seats.includes(next)) seats.push(next);
+    at = next;
+  }
+  return seats;
+}
+
 function setupPhaseFor(kind: SettlementKind): Phase {
   return kind === "capital" ? "setupCapital" : kind === "city" ? "setupCity" : "setupColony";
 }

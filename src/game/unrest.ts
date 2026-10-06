@@ -1,4 +1,7 @@
-import type { HegemonyState, PlayerId } from "./types";
+import { produce } from "immer";
+import type { HegemonyState, PlayerId, Resources } from "./types";
+import { civicCalm, getCivicCalmStatus } from "./civic";
+import type { CivicCalmPayment } from "./civic";
 import { addLog, getPlayerName } from "./core/query";
 import { countPlayerPopType } from "./settlement";
 import { happinessContributions, happinessLevel } from "./happiness";
@@ -38,8 +41,9 @@ export function applyUnrestAtTurnEnd(G: HegemonyState, playerID: PlayerId) {
  *  tokens clear. No roll, and the turn passes. */
 function revolt(G: HegemonyState, playerID: PlayerId) {
   const player = G.players[playerID];
-  const leaving = Math.floor(countPlayerPopType(G, playerID, "slaves") / 2);
-  const left = removePops(G, playerID, leaving, ["slaves"]);
+  const slaves = countPlayerPopType(G, playerID, "slaves");
+  const left = removePops(G, playerID, Math.floor(slaves / 2), ["slaves"]);
+  const tokensCleared = player.unrestTokens;
 
   player.unrestTokens = 0;
   player.popsLostToUnrest += left.total;
@@ -48,6 +52,7 @@ function revolt(G: HegemonyState, playerID: PlayerId) {
     G,
     `${getPlayerName(G, playerID)}'s realm revolts at turn end: ${left.total > 0 ? `${describeRemoval(left)} walk away` : "no slaves are left to walk away"}, and the Unrest tokens clear.`,
     playerID,
+    { kind: "revolt", slaves, left: left.left, tokensCleared, level: happinessLevel(G, playerID) },
   );
 }
 
@@ -95,5 +100,61 @@ export function unrestStatus(G: HegemonyState, playerID: PlayerId): UnrestStatus
     tokens: player.unrestTokens,
     riotAtRisk: tier === "unrest" || tier === "revolt",
     totalDeaths: player.popsLostToUnrest + player.popsLostToHunger,
+  };
+}
+
+/** What ending the turn now sets off, and what calm bought first would change. */
+export interface TurnEndUnrest {
+  outcome: "riot" | "revolt";
+  level: number;
+  tokens: number;
+  /** Slaves now, and how many a revolt sends away. */
+  slaves: number;
+  leaving: number;
+  /** The first calm the seat can buy that changes the outcome, with the level it
+   *  reaches and what ending then sets off; null when no calm helps. */
+  calm: {
+    payment: CivicCalmPayment;
+    cost: Partial<Resources>;
+    level: number;
+    outcome: "riot" | "none";
+  } | null;
+}
+
+function outcomeAt(G: HegemonyState, level: number): "riot" | "revolt" | "none" {
+  const rules = G.ruleset.economy.unrest;
+  return level <= rules.revoltThreshold ? "revolt" : level <= rules.riotThreshold ? "riot" : "none";
+}
+
+/** The end-turn confirm's facts: null when ending now starts neither a riot nor a
+ *  revolt. Calm is tried through the real action on a draft, gold before influence. */
+export function turnEndUnrest(G: HegemonyState, playerID: PlayerId): TurnEndUnrest | null {
+  const level = happinessLevel(G, playerID);
+  const outcome = outcomeAt(G, level);
+  if (outcome === "none") return null;
+
+  const slaves = countPlayerPopType(G, playerID, "slaves");
+  let calm: TurnEndUnrest["calm"] = null;
+  for (const payment of ["gold", "influence"] as const) {
+    const status = getCivicCalmStatus(G, playerID, payment);
+    if (!status.can) continue;
+    const after = happinessLevel(
+      produce(G, (draft) => void civicCalm(draft, playerID, payment)),
+      playerID,
+    );
+    const then = outcomeAt(G, after);
+    if (then !== outcome && then !== "revolt") {
+      calm = { payment, cost: status.cost ?? {}, level: after, outcome: then };
+      break;
+    }
+  }
+
+  return {
+    outcome,
+    level,
+    tokens: G.players[playerID].unrestTokens,
+    slaves,
+    leaving: Math.floor(slaves / 2),
+    calm,
   };
 }

@@ -74,8 +74,20 @@ not a generic rules scripting engine. The shared layer owns only presentation, a
 focus, cancellation/expiry, and public/private projection contracts. Luxury claim choices,
 trade responses, National Idea picks and the hunger choice use it rather than creating
 feature-private overlay infrastructure. A rival's public moment (its hunger, its Idea
-purchase) lands as a toast in the lane under the ticker: the engine tags the Chronicle
-line with a `LogMoment`, and `src/components/frame/moments.tsx` queues and words it.
+purchase, its riot or revolt) lands as a toast in the lane under the ticker: the engine
+tags the Chronicle line with a `LogMoment`, and `src/components/frame/moments.tsx` queues
+and words it. Each seat keeps its own place in the log, so in hotseat a seat taking the
+screen reads what the others did since its last look. Title changes toast every seat,
+read off `titleChanges`.
+
+One moment owns the screen at a time, in the engine's order: the last seat's riot result
+or revolt card, the year card, the game's end, then the pass-the-seat cover; the Assembly,
+hunger and the fate card wait behind them (`HegemonyBoard`). The year card's face reads what
+the engine recorded as the card turned (the `yearCard` moment), and the riot and revolt
+cards read their moments, so nothing on them is recomputed after the turn has passed. End
+turn's confirm at the riot and revolt lines reads `turnEndUnrest`, which tries calm through
+the real action on a draft. Bots never wait on any of these: against bots the year card,
+the cover and the seat's own cards do not show.
 
 Controls dispatch canonical `GameCommand` values through `src/client/controller.ts` and
 render engine-derived legal-option/status projections. They never call domain mutators

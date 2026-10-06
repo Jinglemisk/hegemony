@@ -6,6 +6,7 @@ import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
 import type { BoardLayout, HegemonyState, Phase, PlayerId } from "../game/types";
 import { createGameFromDefinition, nextPlayer } from "../game/turn";
+import { happinessLevel } from "../game/happiness";
 import { ideaDraftOrder } from "../game/ideas";
 import { calculateIncome } from "../game/economy/income";
 import { getOwnedSettlement } from "../game/core/query";
@@ -38,7 +39,14 @@ export type { Phase } from "../game/types";
  * draft), `?dev=draft-done` (the draft read back after its last pick), `?dev=hunger`
  * (the second seat's hunger card), `?dev=hunger-ahead` (the warning a turn ahead),
  * `?dev=toasts` (a rival's hunger and purchase, toasted to the third seat) and
- * `?dev=ideas` (the third seat's purchase list after that rival bought).
+ * `?dev=ideas` (the third seat's purchase list after that rival bought). Part B's:
+ * `?dev=year` (Year II's card, Plague, before the Assembly), `?dev=year-back` (its
+ * back, held), `?dev=year-term` (Year III's card, Drought), `?dev=riot-confirm` and
+ * `?dev=revolt-confirm` (End turn's confirm at each line), `?dev=riot` (the riot
+ * sheet), `?dev=riot-result`, `?dev=revolt` (the revolt card), `?dev=rival-unrest` (a
+ * rival's riot and another's revolt, toasted), `?dev=threat` (a rival holding three
+ * titles, with the title toasts), `?dev=race` and `?dev=age-end` (the two tablets) and
+ * `?dev=pass` (the pass-the-seat cover).
  *
  * Default dev behavior: the opening is auto-played by the sim's placement policy (the
  * same brain the bots use, seeded from the game seed), and the seed rotates through
@@ -156,7 +164,114 @@ const MOMENT_QUERIES: Record<string, (G: HegemonyState) => HegemonyState> = {
       draft.players[draft.currentPlayer].resources.influence = 9;
     });
   },
+  year: (G) => {
+    DEV_SHELL.yearReveal = true;
+    return toNextYear(G, "year-plague");
+  },
+  "year-back": (G) => {
+    DEV_SHELL.yearReveal = true;
+    DEV_SHELL.yearBack = true;
+    return toNextYear(G, "year-plague");
+  },
+  "year-term": (G) => {
+    DEV_SHELL.yearReveal = true;
+    return toNextYear(playOutAssembly(toNextYear(G, "year-plague")), "year-drought");
+  },
+  "riot-confirm": (G) => {
+    DEV_SHELL.endTurnConfirm = true;
+    return atLevel(clearFate(G), G.ruleset.economy.unrest.riotThreshold);
+  },
+  "revolt-confirm": (G) => {
+    DEV_SHELL.endTurnConfirm = true;
+    return atLevel(clearFate(G), G.ruleset.economy.unrest.revoltThreshold);
+  },
+  riot: (G) => apply(atLevel(clearFate(G), G.ruleset.economy.unrest.riotThreshold), END_TURN),
+  "riot-result": (G) => {
+    const seat = G.currentPlayer;
+    const rioting = apply(atLevel(clearFate(G), G.ruleset.economy.unrest.riotThreshold), END_TURN);
+    DEV_SHELL.riotResult = true;
+    DEV_SHELL.viewer = seat;
+    return apply(rioting, { type: "resolveRiot" });
+  },
+  revolt: (G) => {
+    const start = atLevel(clearFate(G), G.ruleset.economy.unrest.revoltThreshold);
+    DEV_SHELL.viewer = start.currentPlayer;
+    DEV_SHELL.momentsFrom = start.log.length;
+    return apply(start, END_TURN);
+  },
+  "rival-unrest": (G) => {
+    const { riotThreshold, revoltThreshold } = G.ruleset.economy.unrest;
+    const riot = apply(atLevel(clearFate(G), riotThreshold), END_TURN);
+    DEV_SHELL.toastReplayFrom = riot.log.length;
+    const next = apply(riot, { type: "resolveRiot" });
+    return clearFate(apply(atLevel(clearFate(next), revoltThreshold), END_TURN));
+  },
+  threat: (G) => {
+    DEV_SHELL.titlesFrom = G;
+    return threaten(clearFate(G), nextPlayer(G.currentPlayer));
+  },
+  race: (G) => {
+    DEV_SHELL.viewer = G.currentPlayer;
+    return endCurrentTurn(threaten(G, nextPlayer(G.currentPlayer)));
+  },
+  "age-end": (G) => {
+    let last = produce(G, (draft) => {
+      draft.year = draft.yearDrawPile.length + 1;
+      draft.yearDrawPile = [];
+    });
+    for (let guard = 0; last.phase === "gameplay" && guard < 8; guard++)
+      last = endCurrentTurn(last);
+    DEV_SHELL.viewer = last.winner;
+    return last;
+  },
+  pass: (G) => {
+    DEV_SHELL.passCover = true;
+    return G;
+  },
 };
+
+const END_TURN: GameCommand = { type: "endTurn" };
+
+/** Put the named card on top of the year deck and play the year out to it. */
+function toNextYear(initial: HegemonyState, cardId: string): HegemonyState {
+  let G = produce(initial, (draft) => {
+    const index = draft.yearDrawPile.findIndex((card) => card.id === cardId);
+    if (index > 0) draft.yearDrawPile.unshift(...draft.yearDrawPile.splice(index, 1));
+  });
+  const year = G.year;
+  for (let guard = 0; G.year === year && G.phase === "gameplay" && guard < 8; guard++)
+    G = endCurrentTurn(G);
+  return G;
+}
+
+/** Set the current seat's Unrest tokens so its level sits exactly on `level`. */
+function atLevel(G: HegemonyState, level: number): HegemonyState {
+  return produce(G, (draft) => {
+    const seat = draft.players[draft.currentPlayer];
+    seat.unrestTokens = Math.max(
+      0,
+      seat.unrestTokens + happinessLevel(draft, draft.currentPlayer) - level,
+    );
+  });
+}
+
+/** Give a seat 31 gold and enough citizens in its capital to lead the pops and the
+ *  citizens past their minimums: Treasurer, Demos and Civic Elite. */
+function threaten(G: HegemonyState, seat: PlayerId): HegemonyState {
+  return produce(G, (draft) => {
+    const { minimums } = draft.ruleset.victory;
+    const player = draft.players[seat];
+    player.resources.gold = minimums.gold + 1;
+    const capital = getOwnedSettlement(draft, player.settlements[0], seat)!;
+    const pops = () =>
+      player.settlements.reduce(
+        (sum, tileId) => sum + totalPops(getOwnedSettlement(draft, tileId, seat)!.pops),
+        0,
+      );
+    while (pops() < minimums.pops + 1 || capital.pops.citizens < minimums.citizens + 1)
+      capital.pops.citizens += 1;
+  });
+}
 
 /** The starved second seat takes the default hunger choice and buys an Idea, then
  *  the third seat's turn opens with its own fate card cleared. */
@@ -172,7 +287,47 @@ export const DEV_SHELL: {
   draftSummary: boolean;
   ideasOpen: boolean;
   toastReplayFrom: number | null;
-} = { draftSummary: false, ideasOpen: false, toastReplayFrom: null };
+  /** Show the current year's card as if it had just turned; hold its back. */
+  yearReveal: boolean;
+  yearBack: boolean;
+  endTurnConfirm: boolean;
+  riotResult: boolean;
+  passCover: boolean;
+  /** Read the seat's own moments (the revolt card) from this log index. */
+  momentsFrom: number | null;
+  /** Toast title changes since this state. */
+  titlesFrom: HegemonyState | null;
+  viewer: PlayerId | null;
+} = {
+  draftSummary: false,
+  ideasOpen: false,
+  toastReplayFrom: null,
+  yearReveal: false,
+  yearBack: false,
+  endTurnConfirm: false,
+  riotResult: false,
+  passCover: false,
+  momentsFrom: null,
+  titlesFrom: null,
+  viewer: null,
+};
+
+/** Whether the shell seats two or more people at one screen: every game but `?dev=bots`. */
+const HOTSEAT =
+  typeof window === "undefined" ||
+  new URLSearchParams(window.location.search).get("dev") !== "bots";
+
+/**
+ * The private moment the screen is about to belong to, as a key that changes with each
+ * one: a seat's turn, or a seat's Assembly proposal. Null in a public phase (setup, the
+ * Idea draft, the vote, the house rising, the game's end). In hotseat each new key is
+ * handed over behind the pass-the-seat cover.
+ */
+export function privateMoment(G: HegemonyState): string | null {
+  if (G.phase !== "gameplay") return null;
+  if (!G.assembly) return `turn:${G.turn}`;
+  return G.assembly.phase === "proposal" ? `proposal:${G.assembly.year}:${G.currentPlayer}` : null;
+}
 
 function apply(G: HegemonyState, command: GameCommand): HegemonyState {
   const result = transition(G.definition, G, G.currentPlayer, command);
@@ -402,18 +557,17 @@ function deriveContext(G: HegemonyState): LocalContext {
 }
 
 export function useHegemonyGame() {
-  const [playerID, setPlayerID] = useState<PlayerId>("0");
   const [G, setG] = useState<HegemonyState>(createGameFromUrl);
+  const [playerID, setPlayerID] = useState<PlayerId>(() => DEV_SHELL.viewer ?? G.currentPlayer);
 
+  const moment = privateMoment(G);
   useEffect(() => {
-    // The async assembly proposal lets every seat act at once, so the viewer stays put
-    // and switches by hand; snapping it to currentPlayer would fight that. Every other
-    // phase is single-actor, so the viewer follows the turn as before.
-    if (G.assembly?.phase === "proposal") {
-      return;
-    }
+    // The viewer follows the seat the game waits on. In hotseat a private moment (a
+    // turn, an Assembly proposal) is handed over by the pass-the-seat cover instead,
+    // and the game's end stays with whoever was looking.
+    if (G.phase === "gameOver" || (HOTSEAT && moment)) return;
     setPlayerID(G.currentPlayer);
-  }, [G.currentPlayer, G.assembly?.phase]);
+  }, [G.currentPlayer, G.phase, moment]);
 
   const moves = useMemo(
     () =>
@@ -445,6 +599,7 @@ export function useHegemonyGame() {
     moves,
     events,
     resetGame,
+    hotseat: HOTSEAT,
     isActive: view.eligibleActors.includes(playerID),
   };
 }

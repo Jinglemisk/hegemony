@@ -42,7 +42,7 @@ export function AssemblySeats({
 }: {
   G: HegemonyState;
   session: AssemblySession;
-  onTakeSeat: (playerID: PlayerId) => void;
+  onTakeSeat?: (playerID: PlayerId) => void;
 }) {
   const { viewerId } = useGameUi();
   const voting = session.phase === "voting";
@@ -96,7 +96,8 @@ function SeatPlaque({
   session: AssemblySession;
   viewerId: PlayerId;
   lit: boolean;
-  onTakeSeat: (playerID: PlayerId) => void;
+  /** Absent while the seats are private: the plaque then only reads. */
+  onTakeSeat?: (playerID: PlayerId) => void;
 }) {
   const glaze = PLAYER_GLAZES[playerID];
   const isViewer = playerID === viewerId;
@@ -110,8 +111,15 @@ function SeatPlaque({
       aria-current={casting ? "true" : undefined}
       aria-pressed={isViewer}
       className={`asmSeat${lit ? " is-lit" : ""}${isViewer ? " is-you" : ""}`}
-      onClick={() => onTakeSeat(playerID)}
-      title={isViewer ? `${glaze.name}, your seat` : `Take ${glaze.name}'s seat`}
+      disabled={!onTakeSeat}
+      onClick={() => onTakeSeat?.(playerID)}
+      title={
+        isViewer
+          ? `${glaze.name}, your seat`
+          : onTakeSeat
+            ? `Take ${glaze.name}'s seat`
+            : glaze.name
+      }
       type="button"
     >
       <span className="asmGlaze title" style={{ background: glaze.color }}>

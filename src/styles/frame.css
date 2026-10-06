@@ -184,7 +184,7 @@
     --name-h: var(--lh-24);
     --fan-d: calc(var(--u) * 12); /* 48 */
     --fan-w: calc(var(--u) * 28); /* 112 */
-    --clock-w: calc(var(--u) * 100); /* 400: room for the year card's rule */
+    --clock-w: calc(var(--u) * 100); /* 400 */
     --disc-end: calc(var(--u) * 20); /* 80 */
     --endturn-w: calc(var(--u) * 28); /* 112 */
     --endturn-h: calc(var(--u) * 30); /* 120 */
@@ -311,7 +311,6 @@
   white-space: nowrap;
 }
 /* Bar controls are flat until hovered: the bar is one control tall. */
-.yearcard:hover,
 .consult-btn:hover,
 .res:hover,
 .level:hover,
@@ -384,19 +383,14 @@
   text-transform: uppercase;
   color: var(--ink-66);
 }
-.yearcard {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  height: var(--hit);
-  padding: 0 var(--s-2);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: repeat(2, var(--l-cap));
+.year-left {
+  display: flex;
   align-items: center;
-  gap: 0;
+  gap: var(--s-1);
+  margin-left: var(--s-2);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  color: var(--ink-66);
 }
-.yearcard::before,
 .rivals::before {
   content: "";
   position: absolute;
@@ -405,24 +399,6 @@
   bottom: var(--s-1);
   width: var(--rule);
   background: var(--ink-30);
-}
-.yearcard-name {
-  font: 700 var(--t-body) / var(--l-cap) var(--f-name);
-  letter-spacing: var(--track-name);
-  white-space: nowrap;
-}
-.yearcard-rule {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
-}
-.yearcard-rule .richIcon {
-  vertical-align: top;
-}
-.yearcard-x {
-  font: 700 var(--t-body) / var(--l-body) var(--f-sans);
-  color: var(--clay-ink);
 }
 
 .res,
@@ -2422,4 +2398,257 @@ button.link {
   display: inline-flex;
   align-items: center;
   min-height: var(--hit);
+}
+
+/* ---- the year card, closed: the first alarm disc, its subject as a badge ---- */
+.alarm-disc.is-year {
+  position: relative;
+  padding: 0;
+  border: 0;
+  --tone: var(--clay);
+}
+.alarm-disc.is-year > .ico {
+  width: var(--ic-48);
+  height: var(--ic-48);
+}
+.alarm-badge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: var(--s-8);
+  height: var(--s-8);
+  border-radius: var(--r-round);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.alarm-badge .ico {
+  width: var(--ic-24);
+  height: var(--ic-24);
+}
+.tip-act {
+  margin-top: var(--s-1);
+  color: var(--clay-ink);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+}
+
+/* ---- the threat: three titles, one turn start from the race ---------------- */
+.threat {
+  position: relative;
+}
+.threat > .alarm-disc {
+  padding: 0;
+  border: 0;
+}
+.threat > .alarm-disc .ico {
+  width: var(--ic-48);
+  height: var(--ic-48);
+}
+.threat-panel {
+  position: absolute;
+  top: calc(var(--hit) * 2 + var(--s-2));
+  left: 0;
+  width: calc(var(--u) * 150); /* 600 */
+  border-radius: var(--s-2);
+  background: var(--ivory);
+  box-shadow:
+    inset 0 0 0 var(--rule) var(--ink-30),
+    var(--shadow-float);
+}
+.threat-seat + .threat-seat {
+  border-top: var(--rule) solid var(--ink-30);
+}
+.threat-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  background: var(--bone);
+  border-radius: var(--s-2) var(--s-2) 0 0;
+}
+.threat-glaze.idea-seat {
+  width: var(--s-12);
+  height: var(--s-12);
+  font: 700 var(--t-20) / var(--lh-24) var(--f-name);
+}
+.threat-words,
+.threat-row-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.threat-title {
+  font: 700 var(--t-20) / var(--lh-24) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+.threat-words .caption,
+.threat-row-words .caption,
+.threat-gap {
+  color: var(--ink-66);
+  font: 400 var(--t-14) / var(--lh-20) var(--f-sans);
+}
+.threat-rows {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4) var(--s-4);
+}
+.threat-rows li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--s-2);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+}
+.threat-row-words b {
+  font: 700 var(--t-16) / var(--lh-20) var(--f-name);
+}
+.threat-gap {
+  max-width: calc(var(--u) * 64);
+  text-align: right;
+}
+.threat-rows li.is-yours {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.threat-rows li.is-yours .threat-gap {
+  color: var(--clay-ink);
+  font-weight: 700;
+}
+
+/* ---- End turn's confirm at the riot and revolt lines ----------------------- */
+.endturn-confirm {
+  position: absolute;
+  right: var(--s-4);
+  bottom: calc(var(--endturn-h) + var(--s-4));
+  width: calc(var(--u) * 96); /* 384 */
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border-radius: var(--s-2);
+  background: var(--ivory);
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--clay),
+    var(--shadow-float);
+}
+.endturn-confirm.is-revolt {
+  box-shadow:
+    inset 0 0 0 var(--rule-2) var(--clay-deep),
+    var(--shadow-float);
+}
+.confirm-kicker {
+  color: var(--clay-ink);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.confirm-title {
+  margin: 0;
+  font: 700 var(--t-20) / var(--lh-24) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+.endturn-confirm .confirm-body {
+  font: 400 var(--t-16) / var(--lh-24) var(--f-body);
+}
+.endturn-confirm .confirm-calm {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--s-1);
+  background: var(--bone);
+  font: 400 var(--t-14) / var(--lh-20) var(--f-body);
+}
+.confirm-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--s-12);
+  padding: 0 var(--s-4);
+  border: 0;
+  border-radius: var(--s-1);
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-30);
+  font: 700 var(--t-14) / var(--lh-20) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.confirm-btn.is-primary {
+  color: var(--ivory);
+  background: var(--clay);
+  box-shadow: none;
+}
+.confirm-btn:hover {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.confirm-btn.is-primary:hover {
+  background: var(--clay-deep);
+}
+
+/* ---- Passing the seat: the whole screen in the next seat's glaze ----------- */
+.pass-seat {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-ceremony);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-6);
+  padding: var(--s-6);
+  color: var(--ivory);
+  text-align: center;
+  background: radial-gradient(
+    ellipse at 50% 38%,
+    color-mix(in srgb, var(--owner) 72%, var(--vase-black)) 0%,
+    color-mix(in srgb, var(--owner) 30%, var(--vase-black)) 45%,
+    var(--vase-black) 100%
+  );
+}
+.pass-disc {
+  display: grid;
+  place-items: center;
+  width: calc(var(--u) * 30); /* 120 */
+  height: calc(var(--u) * 30);
+  border-radius: var(--r-round);
+  color: var(--ivory);
+  background: var(--owner);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--ivory);
+  font: 700 calc(var(--u) * 14) / 1 var(--f-name);
+}
+.pass-disc.ink-dark {
+  color: var(--ink);
+}
+.pass-name {
+  margin: 0;
+  font: 700 calc(var(--u) * 10) / calc(var(--u) * 12) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+.pass-body {
+  max-width: calc(var(--u) * 110); /* 440 */
+  margin: 0;
+  color: var(--ivory);
+  font: 400 var(--t-20) / var(--lh-28) var(--f-body);
+}
+.pass-ready {
+  min-height: var(--s-12);
+  padding: 0 var(--s-8);
+  border: 0;
+  border-radius: var(--s-1);
+  color: var(--ivory);
+  background: var(--clay);
+  box-shadow: 0 var(--s-1) var(--s-3) rgb(0 0 0 / 40%);
+  font: 700 var(--t-16) / var(--lh-20) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.pass-ready:hover {
+  background: var(--clay-lit);
 }

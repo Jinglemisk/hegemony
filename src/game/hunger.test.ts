@@ -71,7 +71,10 @@ describe("hunger", () => {
     expect(G.pendingHunger).toBeNull();
     expect(G.players["0"].popsLostToHunger).toBe(2);
     expect(G.playerDrawPile).toHaveLength(deck - 1);
-    expect(G.log.find((entry) => entry.moment)?.moment).toEqual({ kind: "hunger", leave });
+    expect(G.log.find((entry) => entry.moment?.kind === "hunger")?.moment).toEqual({
+      kind: "hunger",
+      leave,
+    });
     expect(collectInvariantViolations(G)).toEqual([]);
   });
 

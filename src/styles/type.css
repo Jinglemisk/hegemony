@@ -79,13 +79,36 @@
   text-transform: none;
 }
 
-/* The hunger card keeps the shell's 12px floor as the ceremony register scales. */
-.hungerCard .label {
+/* Step 13's ceremony cards keep the shell's 12px floor as the register scales. */
+.hungerCard .label,
+.lossCard .label,
+.yearCard .label,
+.riotSheet .label,
+.ageEnd .label,
+.yearBack + .deckEcho {
   font-size: max(12px, 0.6875rem);
 }
 
-.hungerCard .caption {
+.hungerCard .caption,
+.lossCard .caption,
+.yearCard .caption,
+.riotSheet .caption,
+.ageEnd .caption {
   font-size: max(12px, 0.78125rem);
+}
+
+.ageEnd .verb,
+.riotSheet .verb,
+.lossCard .verb,
+.yearCard .verb {
+  font-size: max(12px, 0.75rem);
+}
+
+.ageEnd .verb.verb-lg,
+.riotSheet .verb.verb-lg,
+.lossCard .verb.verb-lg,
+.yearCard .verb.verb-lg {
+  font-size: max(12px, 0.8125rem);
 }
 
 /* Assembly labels and controls must stay readable as the scene scales down. */

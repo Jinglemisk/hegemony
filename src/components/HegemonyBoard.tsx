@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DEV_SHELL } from "../client/controller";
+import { DEV_SHELL, privateMoment } from "../client/controller";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
   EMPTY_POPS,
@@ -16,7 +16,9 @@ import {
   getMovePopsStatus,
   getUpgradeColonyToCityStatus,
   toPlayerId,
+  turnEndUnrest,
   unrestStatus,
+  victoryThreats,
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { BuildPopover } from "./board/map/BuildPopover";
@@ -37,6 +39,8 @@ import { ConsultPanel } from "./board/ledger/ConsultPanel";
 import type { ConsultTab } from "./board/types";
 import { PendingPlayerEventModal } from "./board/modals/PendingPlayerEventModal";
 import { RiotModal } from "./board/modals/RiotModal";
+import { RevoltModal } from "./board/modals/RevoltModal";
+import { YearCardModal } from "./board/modals/YearCardModal";
 import { VentureModal } from "./board/modals/VentureModal";
 import { AssemblyPanel } from "./board/assembly/AssemblyPanel";
 import { GameUiProvider } from "./board/GameUiProvider";
@@ -48,7 +52,9 @@ import { Island } from "./frame/island/Island";
 import { TopBar } from "./frame/TopBar";
 import { Ticker } from "./frame/Ticker";
 import { ToastLane } from "./frame/Toasts";
-import { useMomentToasts } from "./frame/moments";
+import { useMomentToasts, useOwnMoment } from "./frame/moments";
+import { PassSeat } from "./frame/PassSeat";
+import { ThreatAlarm, YearDisc } from "./frame/MomentDiscs";
 import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel";
 import { Alarms } from "./frame/Alarms";
 import { EndTurn } from "./frame/EndTurn";
@@ -62,6 +68,8 @@ type BoardProps = {
   playerID: PlayerId;
   onPlayerIDChange: (playerID: PlayerId) => void;
   isActive: boolean;
+  /** Two or more people share the screen: private moments pass behind a cover. */
+  hotseat: boolean;
 };
 
 type SetupPlacement = "capital" | "city" | "colony";
@@ -94,6 +102,7 @@ export function HegemonyBoard({
   playerID = "0",
   onPlayerIDChange,
   isActive,
+  hotseat,
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   // `?dev=ideas` opens on the purchase list.
@@ -102,7 +111,22 @@ export function HegemonyBoard({
   );
   const [gameOverDismissed, setGameOverDismissed] = useState(false);
   // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
-  const [riotResultOpen, setRiotResultOpen] = useState(false);
+  const [riotResultOpen, setRiotResultOpen] = useState(DEV_SHELL.riotResult);
+  // The last year whose card has been read; a later year shows its card first. Bots
+  // never wait for it, and a game opened mid-year starts on it read.
+  const [yearRead, setYearRead] = useState(() =>
+    (G.phase !== "gameplay" && G.phase !== "gameOver") || DEV_SHELL.draftSummary
+      ? 0
+      : DEV_SHELL.yearReveal
+        ? G.year - 1
+        : G.year,
+  );
+  const [yearFaceOpen, setYearFaceOpen] = useState(false);
+  // The private moment last handed over (see `privateMoment`): a new one waits behind
+  // the pass-the-seat cover. A game opened mid-turn starts handed over.
+  const [handedOver, setHandedOver] = useState(() =>
+    DEV_SHELL.passCover || DEV_SHELL.viewer ? null : privateMoment(G),
+  );
   // The draft is read back once its last pick lands, until the opener turns the year.
   const [draftDone, setDraftDone] = useState(DEV_SHELL.draftSummary);
   const [seenPhase, setSeenPhase] = useState(ctx.phase);
@@ -136,7 +160,36 @@ export function HegemonyBoard({
   const turnGate = { isActive, phase: ctx.phase, hasPendingPlayerEvent };
   const turnOpen = isTurnOpen(turnGate);
   const activeEffects = useMemo(() => getActiveEffects(G, viewerId), [G, viewerId]);
-  const toasts = useMomentToasts(G, viewerId, DEV_SHELL.toastReplayFrom);
+  const toasts = useMomentToasts(G, viewerId, DEV_SHELL.toastReplayFrom, DEV_SHELL.titlesFrom);
+  // A revolt is the seat's own card in hotseat; against bots it is only a toast.
+  const revolt = useOwnMoment(G, viewerId, "revolt", hotseat, DEV_SHELL.momentsFrom);
+  const threats = useMemo(() => victoryThreats(G), [G]);
+
+  // One moment owns the screen at a time, in the order the engine ran them: the last
+  // seat's riot or revolt, the year card, the game's end; then the pass-the-seat cover
+  // before a private moment; behind it the Assembly, hunger and the fate card.
+  const riotShown = Boolean(G.pendingRiot) || riotResultOpen;
+  const revoltShown = !riotShown && Boolean(revolt.entry);
+  const yearShown =
+    hotseat &&
+    !riotShown &&
+    !revoltShown &&
+    !draftDone &&
+    G.phase !== "setupIdeas" &&
+    Boolean(G.activeYearCard) &&
+    G.year > yearRead;
+  const gameOverShown =
+    ctx.phase === "gameOver" && !gameOverDismissed && !riotShown && !revoltShown && !yearShown;
+  const moment = privateMoment(G);
+  const coverShown =
+    hotseat &&
+    moment !== null &&
+    moment !== handedOver &&
+    !riotShown &&
+    !revoltShown &&
+    !yearShown &&
+    !draftDone;
+  const momentAhead = riotShown || revoltShown || yearShown || coverShown || draftDone;
   const gameUi = useMemo<GameUi>(
     () => ({
       G,
@@ -389,7 +442,18 @@ export function HegemonyBoard({
     <GameUiProvider value={gameUi}>
       <CodexLinkProvider value={codexLink}>
         <main className="frame">
-          {G.phase !== "setupIdeas" && !draftDone ? (
+          {coverShown ? (
+            <PassSeat
+              onReady={() => {
+                setHandedOver(moment);
+                onPlayerIDChange(currentPlayerId);
+              }}
+              previous={viewerId}
+              proposal={G.assembly?.phase === "proposal"}
+              seat={currentPlayerId}
+            />
+          ) : null}
+          {G.phase !== "setupIdeas" && !draftDone && !coverShown ? (
             <>
               <Island
                 G={G}
@@ -424,6 +488,7 @@ export function HegemonyBoard({
                   income={projectedIncome}
                   onConsult={(tab) => setConsultTab((open) => (open === tab ? null : tab))}
                   onSeat={onPlayerIDChange}
+                  threats={threats.map((threat) => threat.seat)}
                   viewerId={viewerId}
                 />
                 <Ticker log={G.log} />
@@ -432,6 +497,17 @@ export function HegemonyBoard({
                   content={G.definition.content}
                   effects={activeEffects}
                   hunger={hungerForecast(G, viewerId)}
+                  lead={
+                    <>
+                      <ThreatAlarm
+                        G={G}
+                        defaultOpen={Boolean(DEV_SHELL.titlesFrom)}
+                        threats={threats}
+                        viewerId={viewerId}
+                      />
+                      <YearDisc G={G} onOpen={() => setYearFaceOpen(true)} />
+                    </>
+                  }
                   riotThreshold={G.ruleset.economy.unrest.riotThreshold}
                   unrest={unrestStatus(G, viewerId)}
                 />
@@ -484,8 +560,11 @@ export function HegemonyBoard({
                 <EndTurn
                   actingId={currentPlayerId}
                   canEndTurn={turnOpen}
+                  confirmOpen={DEV_SHELL.endTurnConfirm}
+                  onCalm={moves.civicCalm}
                   onEndTurn={events.endTurn}
                   title={turnCommitTitle(turnGate)}
+                  unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
                   warning={endTurnWarning(G, currentPlayerId)}
                 />
               </div>
@@ -649,28 +728,45 @@ export function HegemonyBoard({
             />
           ) : null}
           {activeModal?.kind === "venture" ? <VentureModal onClose={closeModal} /> : null}
-          {G.pendingRiot || riotResultOpen ? (
+          {riotShown ? (
             <RiotModal
               onRolled={() => setRiotResultOpen(true)}
               onDismissResult={() => setRiotResultOpen(false)}
             />
           ) : null}
-          {ctx.phase === "gameOver" && !gameOverDismissed && !riotResultOpen ? (
-            <GameOverModal G={G} onInspectBoard={() => setGameOverDismissed(true)} />
+          {revoltShown && revolt.entry ? (
+            <RevoltModal entry={revolt.entry} onClose={revolt.dismiss} />
           ) : null}
-          {G.pendingHunger && !riotResultOpen ? (
+          {yearShown ? (
+            <YearCardModal
+              holdBack={DEV_SHELL.yearBack}
+              onClose={() => setYearRead(G.year)}
+              reveal
+            />
+          ) : yearFaceOpen && !momentAhead ? (
+            <YearCardModal onClose={() => setYearFaceOpen(false)} reveal={false} />
+          ) : null}
+          {gameOverShown ? (
+            <GameOverModal
+              G={G}
+              onInspectBoard={() => setGameOverDismissed(true)}
+              viewerId={viewerId}
+            />
+          ) : null}
+          {G.pendingHunger && !momentAhead ? (
             <HungerModal key={`${G.pendingHunger.playerID}-${ctx.turn}`} />
           ) : null}
-          {G.pendingPlayerEvent && !riotResultOpen && !draftDone ? (
-            <PendingPlayerEventModal />
-          ) : null}
+          {G.pendingPlayerEvent && !momentAhead ? <PendingPlayerEventModal /> : null}
           {/* The Assembly TAKES OVER the table in a sitting year
           (assembly-politicians.md §1.2; owner ruling 2026-08-15). It mounts off
           engine state, and it covers the whole viewport — bars,
-          rails and dock included. It therefore takes the seat switcher with it:
-          the roster it covers is the only way a hotseat changes hands, and each
-          of the scene's seat plaques performs that same act. */}
-          {G.assembly && !riotResultOpen ? <AssemblyPanel onTakeSeat={onPlayerIDChange} /> : null}
+          rails and dock included. Its seat plaques switch seats in the public
+          phases; a proposal is private, and its seat comes by the cover. */}
+          {G.assembly && !momentAhead ? (
+            <AssemblyPanel
+              onTakeSeat={hotseat && G.assembly.phase === "proposal" ? undefined : onPlayerIDChange}
+            />
+          ) : null}
         </main>
       </CodexLinkProvider>
     </GameUiProvider>

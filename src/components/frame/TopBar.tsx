@@ -7,14 +7,12 @@ import { happinessLevel } from "../../game/happiness";
 import { yearDeckSize } from "../../game/year";
 import type { IncomeContribution } from "../../game/economy/income";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../game/types";
-import { presentYearCard } from "../../ui/effects";
 import { RESOURCE_LABELS, toRoman } from "../../ui/formatters";
 import { gaugeStops, publicCensus } from "../../ui/frameSelectors";
 import type { HappinessDisplay } from "../../ui/frameSelectors";
 import { CONSULT, RESOURCE_ICON, sign, tone } from "../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { settlementNames } from "../../ui/settlementNames";
-import { EffectLine } from "../EffectLine";
 import { Tooltip } from "../overlays/Tooltip";
 import type { ConsultTab } from "../board/types";
 import { Ico, Tip, TipLedger, TipWarn } from "./parts";
@@ -24,17 +22,17 @@ const PURSE: Resource[] = ["wood", "stone", "food", "gold", "influence"];
 /** Pips the gauge has room for; the tooltip prints the true count. */
 const MAX_TOKEN_PIPS = 6;
 
-/** The year and its card: the clock at the bar's left end. */
+/** The year and the cards left: the clock at the bar's left end. The year's card
+ *  itself leads the alarms row. */
 function Clock({ G }: { G: HegemonyState }) {
   const year = G.year;
   const left = G.yearDrawPile.length;
   const totalYears = yearDeckSize(G);
-  const card = G.activeYearCard;
 
   return (
     <div className="clock" data-c="clock">
       <Tooltip
-        ariaLabel={`Year ${year} of ${totalYears}`}
+        ariaLabel={`Year ${year} of ${totalYears}, ${left} ${left === 1 ? "card" : "cards"} left`}
         content={
           <Tip sub={`of ${toRoman(totalYears)}`} title={`Year ${toRoman(year)}`}>
             <p className="tip-body">
@@ -48,25 +46,11 @@ function Clock({ G }: { G: HegemonyState }) {
       >
         <span className="year-n">Year {toRoman(year)}</span>
         <span className="year-of">of {toRoman(totalYears)}</span>
+        <span className="year-left">
+          <Ico path="events/year" size="chip" />
+          {left} left
+        </span>
       </Tooltip>
-      {card ? (
-        <Tooltip
-          ariaLabel={`This year's card: ${card.name}`}
-          content={
-            <Tip sub="This year's card" title={card.name}>
-              <p className="tip-body">{card.text}</p>
-              {card.flavor ? <p className="tip-body">{card.flavor}</p> : null}
-            </Tip>
-          }
-          focusable
-          triggerClassName="yearcard"
-        >
-          <span className="yearcard-name">{card.name}</span>
-          <span className="yearcard-rule">
-            <EffectLine effect={presentYearCard(card)} links={false} />
-          </span>
-        </Tooltip>
-      ) : null}
     </div>
   );
 }
@@ -186,12 +170,15 @@ function Rival({
   id,
   acting,
   viewing,
+  threat,
   onSelect,
 }: {
   G: HegemonyState;
   id: PlayerId;
   acting: boolean;
   viewing: boolean;
+  /** Holds enough titles to win when its next turn starts. */
+  threat: boolean;
   onSelect: (id: PlayerId) => void;
 }) {
   const glaze = PLAYER_GLAZES[id];
@@ -238,7 +225,7 @@ function Rival({
       <button
         aria-label={`${glaze.name}${acting ? ", acting" : ""}${viewing ? ", your seat" : ", take this seat"}`}
         aria-pressed={viewing}
-        className={`rival${acting ? " is-acting" : ""}${viewing ? " is-viewing" : ""}`}
+        className={`rival${acting ? " is-acting" : ""}${threat ? " is-threat" : ""}${viewing ? " is-viewing" : ""}`}
         data-c="rival"
         onClick={() => onSelect(id)}
         style={{ "--owner": glaze.color } as CSSProperties}
@@ -275,6 +262,7 @@ export function TopBar({
   breakdown,
   happiness,
   consultOpen,
+  threats,
   onConsult,
   onSeat,
 }: {
@@ -285,6 +273,8 @@ export function TopBar({
   breakdown: readonly IncomeContribution[];
   happiness: HappinessDisplay;
   consultOpen: ConsultTab | null;
+  /** Seats one turn start from winning the race. */
+  threats: readonly PlayerId[];
   onConsult: (tab: ConsultTab) => void;
   onSeat: (id: PlayerId) => void;
 }) {
@@ -341,6 +331,7 @@ export function TopBar({
               id={id}
               key={id}
               onSelect={onSeat}
+              threat={threats.includes(id)}
               viewing={id === viewerId}
             />
           ))}

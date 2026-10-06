@@ -3,9 +3,17 @@ import { describe, expect, it } from "vitest";
 
 import { createInitialState, startNewYear } from "./rules";
 import { scenario } from "./testing/scenario";
-import { createGame, endTurn } from "./turn";
+import { createGame, endTurn, seatsBefore } from "./turn";
 import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
-import { checkVictoryAtTurnStart, victoryCardsHeld, victoryStandings } from "./victory";
+import {
+  ageEndRanking,
+  checkVictoryAtTurnStart,
+  titleChanges,
+  titleHolders,
+  victoryCardsHeld,
+  victoryStandings,
+  victoryThreats,
+} from "./victory";
 import { resolveRiot } from "./riot";
 import type { HegemonyState, PlayerId } from "./types";
 
@@ -112,6 +120,32 @@ describe("victory card standings", () => {
     expect(G.gameOverReason).toBe("victoryRace");
   });
 
+  it("names the threat, the title changes and who acts before the threat's turn", () => {
+    const before = scenario().opening().build();
+    const G = scenario()
+      .opening()
+      .withSettlement("0", "0,0", "city", { citizens: 6, freemen: 4, slaves: 0 })
+      .withSettlement("0", "1,-2", "city", { citizens: 0, freemen: 0, slaves: 0 })
+      .mutate((draft) => giveLuxuries(draft, "0", 4))
+      .build();
+
+    const changes = titleChanges(G, titleHolders(before));
+    expect(changes.length).toBe(victoryCardsHeld(G, "0"));
+    expect(changes.every((change) => change.from === null && change.to === "0")).toBe(true);
+
+    const [threat] = victoryThreats(G);
+    expect(threat.seat).toBe("0");
+    expect(threat.titles.map((title) => title.card.id)).toEqual(
+      victoryStandings(G)
+        .filter((standing) => standing.holder === "0")
+        .map((standing) => standing.card.id),
+    );
+    // Seat 0 is playing now; the other three play before its next turn starts.
+    expect(G.currentPlayer).toBe("0");
+    expect(seatsBefore(G, "0")).toEqual(["1", "2", "3"]);
+    expect(seatsBefore(G, "2")).toEqual(["0", "1"]);
+  });
+
   it("does not end the game below three cards", () => {
     const G = scenario().opening().build();
     checkVictoryAtTurnStart(G);
@@ -152,6 +186,8 @@ describe("the year deck is a finite clock", () => {
     expect(G.phase).toBe("gameOver");
     expect(G.gameOverReason).toBe("deckExhausted");
     expect(G.winner).toBe("3");
+    expect(ageEndRanking(G)).toMatchObject({ decidedBy: "happiness" });
+    expect(ageEndRanking(G).rows[0].seat).toBe("3");
     // The clock stops on the last year actually played — no phantom increment,
     // which is what kept the sim's turn and year telemetry off by one.
     expect(G.year).toBe(yearBefore);

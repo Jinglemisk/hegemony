@@ -32,7 +32,8 @@ afterEach(() => {
   container.remove();
 });
 
-it("keeps Damon's turn-end riot result open before Nikos's next event", () => {
+it("queues Damon's riot result, then the pass-the-seat cover, before Nikos's event", () => {
+  vi.useFakeTimers();
   let G = buildNewGame({
     seed: 42,
     mode: "standard",
@@ -61,6 +62,7 @@ it("keeps Damon's turn-end riot result open before Nikos's next event", () => {
         playerID={G.currentPlayer}
         onPlayerIDChange={() => {}}
         isActive
+        hotseat
       />,
     );
   }
@@ -74,12 +76,19 @@ it("keeps Damon's turn-end riot result open before Nikos's next event", () => {
 
   expect(G.currentPlayer).toBe("1");
   expect(G.pendingPlayerEvent?.card.name).toBe("Shipment");
+  // The die lands on the sheet, then the result card says what it cost.
   expect(dialog().querySelector("h2")?.textContent).toBe("Riot");
-  expect(dialog().textContent).toContain("Damon faces a riot at turn end.");
-  expect(dialog().querySelector("h3")?.textContent).toBe("Bribe demanded");
-  expect(dialog().querySelector('[role="status"]')?.textContent).toBe("Lost 3 gold.");
+  act(() => vi.advanceTimersByTime(2000));
+  expect(dialog().querySelector("h2")?.textContent).toBe("Bribe demanded");
+  expect(dialog().textContent).toContain("Lost 3 gold.");
+  expect(dialog().textContent).toContain("Then: Nikos’s turn");
   act(() => button("Endure It").click());
 
+  // Nikos's turn is private: it waits behind the cover, and his fate card behind that.
+  expect(dialog().querySelector("h1")?.textContent).toBe("Nikos’s seat");
+  expect(container.textContent).not.toContain("Shipment");
+  act(() => button("I am Nikos · show my seat").click());
   expect(dialog().querySelector("h2")?.textContent).toBe("Shipment");
   expect(container.querySelector('[role="img"][aria-label="Nikos is acting."]')).not.toBeNull();
+  vi.useRealTimers();
 });

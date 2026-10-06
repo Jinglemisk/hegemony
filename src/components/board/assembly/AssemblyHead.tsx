@@ -1,7 +1,7 @@
 import { PLAYER_NAMES } from "../../../game/data";
 import type { AssemblyPhase, AssemblySession } from "../../../game/assembly";
 import type { HegemonyState } from "../../../game/types";
-import { toRoman } from "../../../ui/formatters";
+import { ordinal, toRoman } from "../../../ui/formatters";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { victoryStandings } from "../../../game/victory";
 import { MechanicsDetails } from "../../MechanicsDetails";
@@ -146,10 +146,4 @@ function VoicePlaque({ G }: { G: HegemonyState }) {
       </div>
     </Tooltip>
   );
-}
-
-function ordinal(count: number): string {
-  const suffix =
-    count % 100 >= 11 && count % 100 <= 13 ? "th" : (["th", "st", "nd", "rd"][count % 10] ?? "th");
-  return `${count}${suffix}`;
 }

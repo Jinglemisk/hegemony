@@ -1,7 +1,8 @@
-import type { HegemonyState } from "./types";
+import type { HegemonyState, PlayerId, Resources, YearCardImpact } from "./types";
 import { PLAYER_IDS } from "./data";
-import { addLog, getPlayerName } from "./core/query";
-import { applyUnrestTokenChange } from "./happiness";
+import { addLog, getOwnedSettlement, getPlayerName, getTile } from "./core/query";
+import { applyUnrestTokenChange, happinessLevel } from "./happiness";
+import { yearCardLoss } from "./economy/income";
 import { resolveDeckExhaustion } from "./victory";
 
 export function resetTurnFlags(G: HegemonyState) {
@@ -19,7 +20,8 @@ export function resetTurnFlags(G: HegemonyState) {
 /**
  * Turn the top card of the year deck face up. A card that zeroes a term stands until
  * the year turns and is read by the income and happiness selectors; Plague and
- * Festival act once, here, on every realm.
+ * Festival act once, here, on every realm. The Chronicle line carries what the card
+ * did to each seat as it turned, for the year card's face.
  */
 export function revealYearCard(G: HegemonyState) {
   const card = G.yearDrawPile.shift();
@@ -28,14 +30,44 @@ export function revealYearCard(G: HegemonyState) {
     return;
   }
 
+  const before = Object.fromEntries(
+    PLAYER_IDS.map((playerID) => [playerID, happinessLevel(G, playerID)]),
+  ) as Record<PlayerId, number>;
   G.activeYearCard = card;
-  addLog(G, `The year's card is ${card.name}: ${card.text}`);
 
   if (card.effect.type === "unrestTokens") {
     for (const playerID of PLAYER_IDS) {
       applyUnrestTokenChange(G, playerID, card.effect.change);
     }
   }
+
+  const impact = Object.fromEntries(
+    PLAYER_IDS.map((playerID) => [
+      playerID,
+      {
+        before: before[playerID],
+        after: happinessLevel(G, playerID),
+        loss: realmLoss(G, playerID),
+      },
+    ]),
+  ) as YearCardImpact;
+  addLog(G, `The year's card is ${card.name}: ${card.text}`, undefined, {
+    kind: "yearCard",
+    cardId: card.id,
+    impact,
+  });
+}
+
+/** What the standing year card takes from a realm's next income, summed. */
+function realmLoss(G: HegemonyState, playerID: PlayerId): Partial<Resources> {
+  const loss: Partial<Resources> = {};
+  for (const tileId of G.players[playerID].settlements) {
+    const tile = getTile(G, tileId);
+    const settlement = getOwnedSettlement(G, tileId, playerID);
+    const taken = tile && settlement ? yearCardLoss(G, tile, settlement) : null;
+    if (taken) loss[taken.resource] = (loss[taken.resource] ?? 0) + taken.amount;
+  }
+  return loss;
 }
 
 export function startNewYear(G: HegemonyState) {

@@ -43,15 +43,25 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   await page.waitForTimeout(900);
   await page.keyboard.up("Enter");
 
-  // Local Unrest leaves Damon at −3: the turn-end riot blocks the handoff
-  // until he rolls, then its result stays open for him to read.
+  // Local Unrest leaves Damon at −3: the hold opens the confirm at the riot line,
+  // the last chance to buy calm, instead of ending.
+  const confirm = page.getByRole("dialog", { name: "Ending your turn starts a riot" });
+  await expect(confirm).toBeVisible();
+  await expect(riot).toBeHidden();
+  await confirm.getByRole("button", { name: "Face the riot" }).click();
+
+  // The riot blocks the handoff until Damon rolls, then its result stays open for him.
   await expect(riot).toBeVisible();
-  await expect(riot).toContainText("Damon faces a riot at turn end.");
+  await expect(riot).toContainText("Turn end · Damon’s realm");
   await expect(page.getByRole("img", { name: /Nikos is acting/ })).toHaveCount(0);
   await riot.getByRole("button", { name: "Roll the Die", exact: true }).click();
-  await expect(riot.getByRole("heading", { name: "Bribe demanded", exact: true })).toBeVisible();
-  await riot.getByRole("button", { name: "Endure It", exact: true }).click();
-  await expect(riot).toBeHidden();
+  const result = page.getByRole("dialog", { name: "Bribe demanded", exact: true });
+  await expect(result).toBeVisible();
+  await result.getByRole("button", { name: "Endure It", exact: true }).click();
+  await expect(result).toBeHidden();
+
+  // Nikos's turn is private: the pass-the-seat cover hands him the screen.
+  await page.getByRole("button", { name: "I am Nikos · show my seat" }).click();
   await expect(page.getByRole("img", { name: /Nikos is acting/ })).toBeVisible();
 
   await page.reload();

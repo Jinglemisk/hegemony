@@ -57,6 +57,13 @@ ballot, they are public and the voting view exposes them normally.
 execute commands, but React receives only the active seat's projection. Switching the viewer
 reprojects; it does not mutate or transfer authority.
 
+In hotseat (every browser game but `?dev=bots`) the viewer follows the seat the game waits on
+only through public phases: setup, the Idea draft, the vote and the house rising. A private
+moment, a seat's turn or its Assembly proposal (`privateMoment`), is handed over behind the
+pass-the-seat cover, which stands in for the whole frame. Proposals run one seat at a time in
+turn order (`assembly.activePlayer`), and the seat plaques cannot switch seats while they do,
+so no seat reads another's drawn card. The game's end stays with whoever was looking.
+
 `src/sim/runner.ts` likewise projects before every policy decision. Search can transition the
 sanitized state for deterministic, RNG-free branches, but cannot observe real entropy or deck
 order. Political draw evaluation constructs an uncertainty pool from authored content and

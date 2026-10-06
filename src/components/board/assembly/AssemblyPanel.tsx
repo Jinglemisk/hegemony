@@ -37,7 +37,12 @@ import { useSceneContainment } from "./useSceneContainment";
  * It mounts off `G.assembly`: engine state, not UI intent, so no click can open or
  * dismiss it.
  */
-export function AssemblyPanel({ onTakeSeat }: { onTakeSeat: (playerID: PlayerId) => void }) {
+export function AssemblyPanel({
+  onTakeSeat,
+}: {
+  /** Absent while the seats are private (a hotseat proposal): the plaques only read. */
+  onTakeSeat?: (playerID: PlayerId) => void;
+}) {
   const { G, viewerId } = useGameUi();
   const session = G.assembly;
   const [menu, setMenu] = useState<AssemblyMenu>(null);

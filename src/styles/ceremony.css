@@ -258,7 +258,8 @@
    The fate card's material with no painting: the head, the blow band, then one
    full-bleed hairlined row per settlement holding pops that eat. A pop is a
    round toggle; the marked ones take the wound's band and ring. */
-.hungerCard {
+.hungerCard,
+.lossCard {
   width: min(560px, calc(100vw - 32px));
   padding: 24px 32px;
 }
@@ -267,7 +268,8 @@
   margin: 4px 0 2px;
 }
 
-.hungerCard > .blowBand {
+.hungerCard > .blowBand,
+.lossCard > .blowBand {
   margin: 16px -32px 0;
   padding: 12px 32px;
 }
@@ -346,6 +348,328 @@
   justify-content: space-between;
   gap: 12px;
   margin: 16px 0 12px;
+  color: var(--ink-63);
+}
+
+/* ── A loss card: a riot's result, a revolt ──────────────────────────────────
+   The hunger card's frame with no picker: one line per thing it cost. */
+.lossLines {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 0 0;
+  list-style: none;
+  text-align: left;
+}
+
+.lossLines li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 400 var(--t-16) / var(--lh-24) var(--f-body);
+}
+
+.lossLines li.is-muted {
+  color: var(--ink-63);
+}
+
+/* ── The year card ───────────────────────────────────────────────────────────
+   The fate card's frame. Its back carries the year's numeral; its face a shorter
+   painting, so the four seats' row and the footer fit at 720 tall. The art is a
+   background: a painting, not an icon. */
+.yearBack {
+  background: none;
+  box-shadow: none;
+}
+
+.yearBack-face {
+  display: grid;
+  place-items: center;
+  width: 280px;
+  height: 400px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: var(--bone);
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 0 96px,
+      rgb(244 230 200 / 35%) 97px 99px,
+      transparent 100px
+    ),
+    linear-gradient(160deg, var(--clay-deep), var(--vase-black));
+  box-shadow:
+    0 0 0 1px rgb(36 25 16 / 55%),
+    0 0 0 5px var(--mood-ring),
+    0 42px 110px rgb(0 0 0 / 75%);
+  animation: yearTurn 400ms ease-out both;
+}
+
+.yearBack-n {
+  font: 700 72px / 1 var(--f-name);
+  letter-spacing: 0.06em;
+}
+
+/* The deck turns its top card: it comes in edge-on and squares up. */
+@keyframes yearTurn {
+  from {
+    transform: rotateY(-90deg) scale(0.94);
+  }
+}
+
+.yearArt {
+  position: relative;
+  height: clamp(140px, 22vh, 220px);
+  background-position: center 30%;
+  background-size: cover;
+}
+
+.yearArt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgb(36 25 16 / 22%),
+    transparent 30%,
+    transparent 62%,
+    rgb(255 248 231 / 94%) 96%
+  );
+}
+
+.yearImpact {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0 0 8px;
+  padding: 6px 0 0;
+  list-style: none;
+}
+
+.yearImpact li {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 4px 0;
+  border-radius: 6px;
+}
+
+.yearImpact li.is-you {
+  background: var(--mood-band);
+}
+
+.yearImpact-lv {
+  font-size: var(--t-16);
+  line-height: var(--lh-24);
+}
+
+.yearImpact .caption {
+  color: var(--ink-63);
+}
+
+.yearImpact .yearImpact-warn {
+  color: var(--neg);
+  font-weight: 700;
+}
+
+.yearFoot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 4px 0 12px;
+  color: var(--ink-63);
+}
+
+.ceremonyCommit.is-dark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(180deg, var(--lacquer-lit), var(--vase-black));
+}
+
+/* ── The riot sheet ──────────────────────────────────────────────────────────
+   Insurance on the left, the table on the right: each declaration strikes the
+   rows it puts out of reach, so the trade reads as rows, not arithmetic. */
+.riotSheet {
+  display: grid;
+  width: min(960px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  border-radius: 8px;
+  background: var(--ivory);
+  box-shadow:
+    0 0 0 1px rgb(36 25 16 / 55%),
+    0 0 0 5px var(--mood-ring),
+    0 42px 110px rgb(0 0 0 / 75%);
+  text-align: left;
+}
+
+.sheetHead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--ink-12);
+  background: var(--bone);
+}
+
+.sheetTitle h2 {
+  margin: 0;
+}
+
+.sheetBody {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  padding: 16px 24px;
+}
+
+.sheetSec {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--ink-63);
+  letter-spacing: 0.2em;
+}
+
+.sheetNote {
+  margin: 8px 0 0;
+  color: var(--ink-63);
+}
+
+.sheetFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px 16px;
+  border-top: 1px solid var(--ink-12);
+  color: var(--ink-63);
+}
+
+.sheetFoot .ceremonyCommit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  padding: 12px 24px;
+}
+
+.sheetCol .oddsRows {
+  margin: 0;
+}
+
+/* The sheet's glyphs use the shell's physical sizes at every viewport. */
+.riotSheet .icon-inline {
+  width: 16px;
+  height: 16px;
+}
+
+.oddsRowOut {
+  opacity: 0.42;
+}
+
+.oddsRowOut .oddsLabel {
+  text-decoration: line-through;
+}
+
+.insRows {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.insRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--ink-30);
+}
+
+.insRow.is-on {
+  background: rgb(94 110 58 / 10%);
+  box-shadow: inset 0 0 0 2px var(--olive);
+}
+
+.insRow.is-off {
+  opacity: 0.55;
+}
+
+.insWords {
+  display: grid;
+  min-width: 0;
+}
+
+.insWords .caption {
+  color: var(--ink-63);
+}
+
+.insPick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.insPick select {
+  min-height: 32px;
+  border: 1px solid var(--ink-30);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--ivory);
+  font: 700 var(--t-14) / var(--lh-20) var(--f-sans);
+}
+
+.insCheck {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  color: var(--ivory);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 2px var(--ink-30);
+  font: 700 var(--t-20) / 1 var(--f-sans);
+}
+
+.insCheck:not(:disabled):hover {
+  box-shadow: inset 0 0 0 2px var(--olive);
+}
+
+.insCheck[aria-pressed="true"] {
+  background: var(--olive);
+  box-shadow: none;
+}
+
+.insCleared {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.riotRoll {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+}
+
+.riotSum {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.riotSumMute {
   color: var(--ink-63);
 }
 
@@ -747,10 +1071,38 @@
 }
 
 .ageWho .caption {
-  overflow: hidden;
   color: var(--ink-63);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.ageTitles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.ageTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ageTiebreak {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.tabletFoot.ageActs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ageActs .ceremonyCommit {
+  width: auto;
+  padding: 15px 32px;
 }
 
 .ageCards {
@@ -767,30 +1119,6 @@
 .ageSeatCrowned .ageRank,
 .ageSeatCrowned .ageCards {
   color: var(--clay-ink);
-}
-
-/* The riot's insurance slots are picks too, but they sit in a stack that also
-   carries a heading and a listbox — so they keep the tablet's own gutter rather
-   than bleeding, and are parted by the same hairlines. */
-.ceremony .riotInsuranceStack {
-  gap: 0;
-  margin-bottom: 18px;
-  text-align: left;
-}
-
-.ceremony .riotInsuranceStack > .label {
-  padding-bottom: 6px;
-  color: var(--ink-63);
-}
-
-.ceremony .riotInsuranceRow {
-  align-items: start;
-}
-
-/* Short on purpose: the list belongs to the concession slot beside it, and a
-   tall one leaves a lake of ivory between that slot and the next. */
-.ceremony .riotConcessionList {
-  max-height: 84px;
 }
 
 .tabletFoot {
@@ -998,6 +1326,7 @@
 @media (prefers-reduced-motion: reduce) {
   .modalBackdrop.ceremonyScrim,
   .fateCard,
+  .yearBack-face,
   .ceremonyTablet,
   .lacquerDie,
   .dramaOutcome .label,

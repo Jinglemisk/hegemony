@@ -206,6 +206,10 @@ export interface EventTableDefinition {
 export interface PendingRiot {
   playerID: PlayerId;
   boughtInsurance: RiotInsuranceId[];
+  /** The Unrest tokens the riot cleared when it started, for the riot sheet. */
+  tokensCleared: number;
+  /** Where the concession demoted its citizen, once declared. */
+  concessionTileId: string | null;
 }
 
 /** The last table roll, kept on state so the UI can show the outcome after the move
@@ -345,13 +349,40 @@ export type HungerPop = "freemen" | "citizens";
 /** One pop leaving one settlement. A hunger choice lists one entry per pop. */
 export type HungerLeave = { tileId: string; pop: HungerPop };
 
+/** One pop of any class leaving one settlement: a riot's or a revolt's loss. */
+export type PopLeave = { tileId: string; pop: PopType };
+
+/** Each seat's happiness level just before and just after a year card turned, and the
+ *  income its card takes from the seat's realm this year. */
+export type YearCardImpact = Record<
+  PlayerId,
+  { before: number; after: number; loss: Partial<Resources> }
+>;
+
 /**
  * A public moment the shell shows a rival as a toast, beside the Chronicle line.
  * Add a kind where the engine writes the line; the shell's toast lane names it.
  */
 export type LogMoment =
   | { kind: "hunger"; leave: HungerLeave[] }
-  | { kind: "ideaBought"; ideaId: import("./ideaTypes").NationalIdeaId };
+  | { kind: "ideaBought"; ideaId: import("./ideaTypes").NationalIdeaId }
+  | {
+      kind: "riot";
+      roll: number;
+      modifier: number;
+      modified: number;
+      rowLabel: string;
+      outcomes: string[];
+      left: PopLeave[];
+      insurance: RiotInsuranceId[];
+      concessionTileId: string | null;
+      tokensCleared: number;
+      /** The seat's happiness level once the riot resolved. */
+      level: number;
+    }
+  | { kind: "revolt"; slaves: number; left: PopLeave[]; tokensCleared: number; level: number }
+  /** The year's card, turned: no toast, read by the year card's face. */
+  | { kind: "yearCard"; cardId: string; impact: YearCardImpact };
 
 export interface LogEntry {
   id: string;

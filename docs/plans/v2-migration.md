@@ -610,6 +610,41 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   queries: `?setup=ideas`, `?dev=draft`, `?dev=draft-done`, `?dev=ideas`, `?dev=hunger`,
   `?dev=hunger-ahead`, `?dev=toasts`.
 - State schema 10 and command schema 6 reject older saves and scripts.
+- Part B (the ceremonies around the turn). Every browser game but `?dev=bots` is hotseat:
+  the shell seats no bots beside people, so "two or more human seats" means every seat.
+  The viewer follows the waiting seat through public phases; a seat's turn and its
+  Assembly proposal are handed over behind the pass-the-seat cover, keyed by the turn or
+  the proposing seat. Proposals run one seat at a time in turn order, and the seat
+  plaques are read-only while they do. A game opened mid-turn starts handed over.
+- The game's end stays with whoever was looking, so the race tablet reads "You rule"
+  only for the viewer who won. Its "New game" opens a fresh game without the URL's
+  options.
+- The engine records each realm's level before and after a year card turns, and the
+  income the card takes, on the reveal's Chronicle line; the card's face reads that.
+  A riot's roll line and a revolt's line carry the moment too (roll, insurance, the
+  concession's settlement, tokens cleared, where each pop left, the level after), so
+  the result card and the rivals' toast read them after the turn has passed.
+- Year I's card shows after the draft page closes; a game opened mid-year shows no card
+  until the year turns. Clicking the alarm disc reopens the face with a Close commit.
+- End turn's confirm offers calm only when it changes the outcome, gold before
+  influence, tried through the real action on a draft; without such a calm it offers
+  only the plain choice. Escape or a click away cancels it.
+- The riot result card's blow carries the engine's outcome lines; the table rows have
+  no per-row flavour, so the card has no voice line. Each insurance is declared by its
+  check box at once, as the engine pays it now; the concession names its settlement
+  in a menu.
+- The threat panel shows each held title's nearest challenger and how far short of a
+  tie they are; it does not judge reach. "Seats before" walks turn order across the
+  year boundary. Several threats share one disc.
+- Toasts: each seat keeps its own place in the log and its own title snapshot, so a
+  seat taking the screen reads what changed since its last look; a new viewer drops
+  the last viewer's unread toasts. A title falling to nobody reads "Nobody holds it now".
+- Year cards reuse the retired season paintings. Rivals' riot and hunger toasts mark no
+  settlement on the map.
+- Gate queries: `?dev=year`, `?dev=year-back`, `?dev=year-term`, `?dev=riot-confirm`,
+  `?dev=revolt-confirm`, `?dev=riot`, `?dev=riot-result`, `?dev=revolt`,
+  `?dev=rival-unrest`, `?dev=threat`, `?dev=race`, `?dev=age-end`, `?dev=pass`. No schema
+  change beyond Part A's: the riot's pending state gained two fields within state 10.
 
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory

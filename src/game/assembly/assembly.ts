@@ -60,6 +60,15 @@ export function nextAssemblyYear(G: HegemonyState): number | null {
   return next <= yearDeckSize(G) ? next : null;
 }
 
+/** How many times the Assembly sits in a whole game: every sitting year the year
+ *  deck reaches. */
+export function assemblySittings(G: HegemonyState): number {
+  const { firstYear, everyYears } = G.ruleset.assembly;
+  const years = yearDeckSize(G);
+  if (firstYear === 0 || firstYear > years) return 0;
+  return Math.floor((years - firstYear) / Math.max(1, everyYears)) + 1;
+}
+
 /** Turn order for this year — the opener leads, and everyone plays once. */
 function turnOrder(G: HegemonyState): PlayerId[] {
   const start = PLAYER_IDS.indexOf(G.yearOpener);
