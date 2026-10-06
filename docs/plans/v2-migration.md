@@ -796,7 +796,7 @@ any time in its own worktree when the owner asks. **Stop:** Step 15 ends at the 
 playtest, with the PR from `feat/v2` into `main` open for the owner to merge.
 
 - [x] **Step 12 · Level model.** Dropped: Q77 picked the level, so Step 5 builds it.
-- [ ] **Step 13 · Ceremony surfaces.** The year-card reveal, the Assembly sitting, hunger and
+- [x] **Step 13 · Ceremony surfaces.** ([#95](https://github.com/Jinglemisk/hegemony/pull/95): a rotated 40-game batch finishes with no turn caps, 6 by the race and 34 by the deck; every game drafts four distinct Ideas; riots 1.9 a game, the table on 3.5% of player-turns; every new surface passes the gate at 1280/1440/1920 and ui:audit shows 0 defects.) The year-card reveal, the Assembly sitting, hunger and
       riot moments, victory, and the National Idea draft, designed in the app in the mock's
       language, to the [ceremony design](https://claude.ai/artifact/Wxe7eJMJjccaGUwc1fWMsN)
       and the Step 13 rulings above. The Idea draft and the hunger pick are rule changes too.
