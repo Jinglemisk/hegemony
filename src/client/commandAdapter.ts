@@ -6,6 +6,7 @@ import type {
   BuildingId,
   EventTableId,
   HegemonyState,
+  HungerLeave,
   PlayerId,
   PopType,
   Pops,
@@ -27,6 +28,7 @@ export type GameMoves = {
   growPop: (tileId: string, pop: PopType) => void;
   movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
   resolvePendingPlayerEvent: (targetTileId?: string) => void;
+  resolveHunger: (leave: HungerLeave[]) => void;
   bankSell: (material: TradableMaterial) => void;
   bankBuy: (material: TradableMaterial) => void;
   dole: () => void;
@@ -80,6 +82,7 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
       dispatch({ type: "movePops", sourceTileId, targetTileId, pops }),
     resolvePendingPlayerEvent: (targetTileId) =>
       dispatch({ type: "resolveEvent", ...(targetTileId ? { targetTileId } : {}) }),
+    resolveHunger: (leave) => dispatch({ type: "resolveHunger", leave }),
     bankSell: (material) => dispatch({ type: "bankSell", material }),
     bankBuy: (material) => dispatch({ type: "bankBuy", material }),
     dole: () => dispatch({ type: "dole" }),

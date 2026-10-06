@@ -254,6 +254,101 @@
   box-shadow: inset 3px 0 0 var(--mood-ink);
 }
 
+/* ── Hunger: the card that asks who leaves ───────────────────────────────────
+   The fate card's material with no painting: the head, the blow band, then one
+   full-bleed hairlined row per settlement holding pops that eat. A pop is a
+   round toggle; the marked ones take the wound's band and ring. */
+.hungerCard {
+  width: min(560px, calc(100vw - 32px));
+  padding: 24px 32px;
+}
+
+.hungerHead h2 {
+  margin: 4px 0 2px;
+}
+
+.hungerCard > .blowBand {
+  margin: 16px -32px 0;
+  padding: 12px 32px;
+}
+
+.hungerPick {
+  display: grid;
+  margin: 0 -32px;
+  text-align: left;
+}
+
+.hungerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 32px;
+  border-bottom: 1px solid var(--ink-12);
+}
+
+.hungerPlace {
+  font: 700 var(--t-16) / var(--lh-20) var(--f-name);
+}
+
+.hungerPops {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.hungerPop {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ink-30);
+}
+
+.hungerPop:not(:disabled):hover {
+  background: var(--ink-07);
+}
+
+.hungerPop[aria-pressed="true"] {
+  background: var(--mood-band);
+  box-shadow: inset 0 0 0 2px var(--mood-ink);
+}
+
+.hungerPop[aria-pressed="true"] .ico {
+  opacity: 0.45;
+}
+
+.hungerCount {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 8px 32px 0;
+  color: var(--ink-63);
+}
+
+.hungerCount b {
+  color: var(--mood-ink);
+  white-space: nowrap;
+}
+
+.hungerCount b.is-met {
+  color: var(--pos);
+}
+
+.hungerFoot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 12px;
+  color: var(--ink-63);
+}
+
 /* ── The blow ────────────────────────────────────────────────────────────────
    What the moment does to you, in three ranks: the effect's own glyph, the
    carved figure, and the subject over its condition. The figure is the largest

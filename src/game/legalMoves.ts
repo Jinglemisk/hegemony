@@ -39,6 +39,7 @@ import { getOwnedSettlement } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { getAddPopsEffect, getEventPopTargetTileIds, resolvePendingPlayerEvent } from "./events";
+import { hungerLeaveOptions, resolveHunger } from "./hunger";
 import { setupCapitalCount } from "./ruleset";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
 import {
@@ -74,6 +75,7 @@ import type {
   BuildingId,
   EventTableId,
   HegemonyState,
+  HungerLeave,
   PlayerId,
   PopType,
   Pops,
@@ -125,6 +127,8 @@ export type GameCommand =
   | { type: "growPop"; tileId: string; pop: PopType }
   | { type: "movePops"; sourceTileId: string; targetTileId: string; pops: Pops }
   | { type: "resolveEvent"; targetTileId?: string }
+  /** Hunger: which freemen or citizens leave, one entry per pop. */
+  | { type: "resolveHunger"; leave: HungerLeave[] }
   | { type: "bankSell"; material: TradableMaterial }
   | { type: "bankBuy"; material: TradableMaterial }
   /** The Dole: influence for food. */
@@ -174,6 +178,10 @@ function enumerateDerivedCommands(G: HegemonyState, playerID: PlayerId): Derived
   assertStateDefinition(G);
   if (!eligibleActors(G).includes(playerID)) {
     return [];
+  }
+
+  if (G.pendingHunger) {
+    return hungerLeaveOptions(G, playerID).map((leave) => ({ type: "resolveHunger", leave }));
   }
 
   if (G.pendingPlayerEvent) {
@@ -287,6 +295,8 @@ function applyCommandMutable(G: HegemonyState, playerID: PlayerId, move: GameCom
       return movePops(G, playerID, move.sourceTileId, move.targetTileId, move.pops);
     case "resolveEvent":
       return resolvePendingPlayerEvent(G, playerID, move.targetTileId);
+    case "resolveHunger":
+      return resolveHunger(G, playerID, move.leave);
     case "bankSell":
       return bankSell(G, playerID, move.material);
     case "bankBuy":
@@ -488,6 +498,8 @@ export function describeCommand(
       return `move ${formatPops(move.pops)} from ${move.sourceTileId} to ${move.targetTileId}${formatCost(cost)}`;
     case "resolveEvent":
       return `resolve pending event${move.targetTileId ? ` targeting ${move.targetTileId}` : ""}`;
+    case "resolveHunger":
+      return `send away ${move.leave.map((l) => `1 ${formatPopName(l.pop, 1)} from ${l.tileId}`).join(", ")}`;
     case "bankSell":
       return `sell ${Object.values(cost)[0] ?? 1} ${move.material} to the bank for 1 gold`;
     case "bankBuy":

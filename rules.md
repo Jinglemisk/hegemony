@@ -53,10 +53,13 @@ You begin each game with **8 wood, 4 stone, 4 gold, 12 food**, and 0 influence.
 
 ## National Ideas
 
-After placement, each seat secretly chooses one Idea; choices reveal together before
-Year 1 and take effect immediately. During your turn, **Civic → Ideas** buys a second
-Idea for **6 influence**. You cannot take the same Idea twice or replace one. Other
-seats may choose the same Ideas. Your realm page and rivals' tooltips show them.
+After placement, the seats **draft** one Idea each, in turn, continuing the placement
+snake (in the standard game: Damon, Nikos, Theron, Kyros). Every pick is public the
+moment it is made and takes effect at once, and **an Idea belongs to one seat only**:
+once taken, nobody else can pick or buy it. During your turn, **Civic → Ideas** buys a
+second Idea for **6 influence**, from the Ideas no seat holds. You cannot replace an
+Idea. The picker shows each holder's mark (tagged with the year if bought), and your
+realm page and rivals' tooltips list them.
 
 Fast starts choose the setup Idea automatically for every seat, including the human,
 using the bots' scorer, deterministically for the game seed. This applies to URL quick
@@ -151,7 +154,7 @@ before income. On your turn:
 
 1. **Income is collected automatically.** Every settlement adds what its pops make,
    and your freemen and citizens eat 1 food each. If the food runs short, **hunger**
-   strikes (see Happiness and food).
+   strikes and you choose who leaves (see Happiness and food).
 2. **Resolve your event card**, if one was drawn for you (see Events below) — you
    must do this before anything else.
 3. **Take actions**, in any order you can afford:
@@ -278,9 +281,13 @@ stores happiness.
 
 **Hunger** is separate from happiness, and calm cannot buy it off. If income cannot
 feed your freemen and citizens, **one pop leaves for each unfed mouth** and your food
-stays at zero: no debt carries over. Freemen leave before citizens, each from the
-settlement holding the most of them. Slaves eat nothing and never leave for hunger. Under Grain Levy freemen also eat
-nothing and cannot leave for hunger.
+stays at zero: no debt carries over. **You choose which freemen or citizens leave**, and
+from which settlements; the card opens with the cheapest loss chosen (freemen before
+citizens, each from the settlement holding the most), so one click confirms it. Hunger
+comes before your fate card. Slaves eat nothing and never leave for hunger. Under Grain
+Levy freemen also eat nothing and cannot leave for hunger. The turn before, the hunger
+alarm and End turn warn you how many mouths your next income leaves unfed, with the
+Dole's and the bank's food prices, while you can still buy food.
 Food never goes below zero: a sacked granary or a bad card stops at empty.
 
 At the end of your own turn, before it passes, a level of **−3 or lower is a

@@ -1,5 +1,6 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { defaultHungerLeave, resolveHunger } from "../game/hunger";
 import { describe, expect, it } from "vitest";
 
 import { Alarms } from "../components/frame/Alarms";
@@ -73,6 +74,7 @@ function renderAlarms(G: HegemonyState, activeEffects: ActiveEffectDescriptor[])
       effects: activeEffects,
       riotThreshold: G.ruleset.economy.unrest.riotThreshold,
       unrest: unrestStatus(G, "0"),
+      hunger: null,
     }),
   );
 }
@@ -347,6 +349,12 @@ describe("simulation and AI active-effect parity", () => {
     for (let income = 0; income < 6; income += 1) {
       engine.players["0"].collectedThisTurn = false;
       expect(collectIncome(engine, "0").ok).toBe(true);
+      // The seat's choice is the projection's freemen-first default.
+      const pending = engine.pendingHunger;
+      if (pending)
+        expect(resolveHunger(engine, "0", defaultHungerLeave(engine, "0", pending.unfed)).ok).toBe(
+          true,
+        );
     }
 
     // Twelve food feeds three freemen for four incomes; the fifth leaves all three unfed.

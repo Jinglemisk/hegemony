@@ -1,10 +1,17 @@
+import { produce } from "immer";
 import { useEffect, useMemo, useState } from "react";
 import { DEV_ROTATION_SEEDS, GAME_CONFIG } from "../game/config";
 import { mulberry32 } from "../game/core/rng";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
 import type { BoardLayout, HegemonyState, Phase, PlayerId } from "../game/types";
-import { createGameFromDefinition } from "../game/turn";
+import { createGameFromDefinition, nextPlayer } from "../game/turn";
+import { ideaDraftOrder } from "../game/ideas";
+import { calculateIncome } from "../game/economy/income";
+import { getOwnedSettlement } from "../game/core/query";
+import { totalPops } from "../game/core/pops";
+import { settlementCapacity } from "../game/settlement";
+import type { GameCommand } from "../game/legalMoves";
 import { GAME_MODES, type GameModeId } from "../game/ruleset";
 import { loadStartAtAssembly, loadTuningPresetId, resolveTunedDefinition } from "../dev/tuning";
 import { createBrowserSeed } from "./seed";
@@ -27,6 +34,11 @@ export type { Phase } from "../game/types";
  * `?opening=random` for the old uniform draw instead of policy placement, and
  * `?dev=bots` to let the sim's bots play every seat (`&policy=` picks which, `master`
  * by default) — a whole game played through the shell, one turn per tick.
+ * Step 13's moments have their own: `?dev=draft` (the last seat choosing in the Idea
+ * draft), `?dev=draft-done` (the draft read back after its last pick), `?dev=hunger`
+ * (the second seat's hunger card), `?dev=hunger-ahead` (the warning a turn ahead),
+ * `?dev=toasts` (a rival's hunger and purchase, toasted to the third seat) and
+ * `?dev=ideas` (the third seat's purchase list after that rival bought).
  *
  * Default dev behavior: the opening is auto-played by the sim's placement policy (the
  * same brain the bots use, seeded from the game seed), and the seed rotates through
@@ -60,6 +72,7 @@ function createGameFromUrl(): HegemonyState {
       mode === "fastStart" ||
       preload ||
       dev === "bots" ||
+      Object.hasOwn(MOMENT_QUERIES, dev) ||
       /^assembly([2-7])?$/.test(dev) ||
       startAtAssembly ||
       (import.meta.env.DEV && loadTuningPresetId() !== null) ||
@@ -85,7 +98,11 @@ function createGameFromUrl(): HegemonyState {
   let G = createGameFromDefinition(definition, seed, boardLayout, false);
 
   if (autoOpening) {
-    G = autoPlayOpening(G, params?.get("opening") === "random", !keepIdeaPicker);
+    G = autoPlayOpening(G, params?.get("opening") === "random", !keepIdeaPicker && dev !== "draft");
+  }
+
+  if (!manualSetup && Object.hasOwn(MOMENT_QUERIES, dev)) {
+    G = MOMENT_QUERIES[dev](G);
   }
 
   // `?dev=assembly` fast-forwards to the first Assembly. The agora sits at the start
@@ -109,6 +126,96 @@ function createGameFromUrl(): HegemonyState {
   }
 
   return G;
+}
+
+/** Dev shortcuts to Step 13's moments for the gate script. Each plays real commands
+ *  from a quick start; `?dev=hunger` and `?dev=toasts` also empty one seat's granary. */
+const MOMENT_QUERIES: Record<string, (G: HegemonyState) => HegemonyState> = {
+  draft: (G) => {
+    // Every seat but the last takes its Idea by the bots' scorer.
+    const rng = createSimRng(deriveBotSeed(G.seed));
+    while (G.phase === "setupIdeas" && G.currentPlayer !== ideaDraftOrder(G).at(-1))
+      G = apply(G, choosePlacement(G, enumerateLegalCommands(G, G.currentPlayer), rng));
+    return G;
+  },
+  "draft-done": (G) => {
+    DEV_SHELL.draftSummary = true;
+    return G;
+  },
+  hunger: (G) => starveNextSeat(G),
+  "hunger-ahead": (G) => starve(clearFate(G), G.currentPlayer),
+  toasts: (G) => {
+    const start = starveNextSeat(G);
+    DEV_SHELL.toastReplayFrom = start.log.length;
+    return rivalHungerAndPurchase(start);
+  },
+  ideas: (G) => {
+    DEV_SHELL.ideasOpen = true;
+    const seat = rivalHungerAndPurchase(starveNextSeat(G));
+    return produce(seat, (draft) => {
+      draft.players[draft.currentPlayer].resources.influence = 9;
+    });
+  },
+};
+
+/** The starved second seat takes the default hunger choice and buys an Idea, then
+ *  the third seat's turn opens with its own fate card cleared. */
+function rivalHungerAndPurchase(start: HegemonyState): HegemonyState {
+  let next = clearFate(apply(start, enumerateLegalCommands(start, start.currentPlayer)[0]));
+  const buy = enumerateLegalCommands(next, next.currentPlayer).find((c) => c.type === "buyIdea");
+  if (buy) next = apply(next, buy);
+  return clearFate(endCurrentTurn(next));
+}
+
+/** One-shot shell flags the moment queries set for the board's first render. */
+export const DEV_SHELL: {
+  draftSummary: boolean;
+  ideasOpen: boolean;
+  toastReplayFrom: number | null;
+} = { draftSummary: false, ideasOpen: false, toastReplayFrom: null };
+
+function apply(G: HegemonyState, command: GameCommand): HegemonyState {
+  const result = transition(G.definition, G, G.currentPlayer, command);
+  return result.ok ? result.state : G;
+}
+
+/** Resolve the current seat's drawn fate card, if any. */
+function clearFate(G: HegemonyState): HegemonyState {
+  const fate = enumerateLegalCommands(G, G.currentPlayer).find((c) => c.type === "resolveEvent");
+  return fate ? apply(G, fate) : G;
+}
+
+/** Resolve whatever the current seat owes, then hold its End turn. */
+function endCurrentTurn(initial: HegemonyState): HegemonyState {
+  let G = initial;
+  const seat = G.currentPlayer;
+  for (let guard = 0; G.currentPlayer === seat && G.phase === "gameplay" && guard < 12; guard++) {
+    const commands = enumerateLegalCommands(G, seat);
+    const command = commands.find((c) => c.type === "endTurn") ?? commands[0];
+    if (!command) break;
+    G = apply(G, command);
+  }
+  return G;
+}
+
+/** Give a seat more mouths than its next income feeds, two short, with 6 influence
+ *  to buy an Idea. */
+function starve(initial: HegemonyState, seat: PlayerId): HegemonyState {
+  return produce(initial, (draft) => {
+    const capital = getOwnedSettlement(draft, draft.players[seat].settlements[0], seat)!;
+    while (
+      calculateIncome(draft, seat).food > -2 &&
+      totalPops(capital.pops) < settlementCapacity(capital, draft)
+    )
+      capital.pops.freemen += 1;
+    draft.players[seat].resources.food = 0;
+    draft.players[seat].resources.influence = 6;
+  });
+}
+
+/** Starve the next seat and pass the turn to it: its income leaves two mouths unfed. */
+function starveNextSeat(G: HegemonyState): HegemonyState {
+  return endCurrentTurn(starve(G, nextPlayer(G.currentPlayer)));
 }
 
 /** Resolve the sitting that is open, biased toward landing Laws on the board: draw,

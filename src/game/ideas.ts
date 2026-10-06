@@ -1,6 +1,6 @@
 import { produce } from "immer";
 import type { HegemonyState, PlayerId, Settlement } from "./types";
-import type { IdeaPopChoice, NationalIdeaId } from "./ideaTypes";
+import type { IdeaPopChoice, NationalIdeaId, NationalIdeaOwnership } from "./ideaTypes";
 import { PLAYER_IDS } from "./data";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
 import { totalPops } from "./core/pops";
@@ -28,6 +28,52 @@ export function ideaPopTargets(G: HegemonyState, playerID: PlayerId): IdeaPopCho
       : [];
   });
 }
+/**
+ * The setup draft's seat order. Placement runs a snake, one round per setup
+ * placement (0→3, then 3→0, ...); the draft is the next round of that snake.
+ */
+export function ideaDraftOrder(G: HegemonyState): PlayerId[] {
+  return G.ruleset.setup.length % 2 === 0 ? [...PLAYER_IDS] : [...PLAYER_IDS].reverse();
+}
+
+/** The seat holding an Idea, if any. An Idea is held by one seat only. */
+export function ideaHolder(G: HegemonyState, ideaId: NationalIdeaId): PlayerId | null {
+  return PLAYER_IDS.find((id) => G.players[id].nationalIdeas.some((o) => o.id === ideaId)) ?? null;
+}
+
+/** Every held Idea with its holder and how it was taken, for the picker and the rival tooltip. */
+export function ideaHolders(G: HegemonyState) {
+  const holders = new Map<NationalIdeaId, NationalIdeaOwnership & { playerID: PlayerId }>();
+  for (const playerID of PLAYER_IDS)
+    for (const owned of G.players[playerID].nationalIdeas)
+      holders.set(owned.id, { ...owned, playerID });
+  return holders;
+}
+
+export type IdeaDraftSeat = {
+  playerID: PlayerId;
+  /** The seat's setup pick, once made. */
+  ideaId: NationalIdeaId | null;
+  state: "picked" | "choosing" | "waiting";
+};
+
+/** The draft as everyone sees it: the seats in order, what each took, who is choosing. */
+export function ideaDraft(G: HegemonyState): IdeaDraftSeat[] {
+  return ideaDraftOrder(G).map((playerID) => {
+    const ideaId =
+      G.players[playerID].nationalIdeas.find((o) => o.acquired === "setup")?.id ?? null;
+    return {
+      playerID,
+      ideaId,
+      state: ideaId
+        ? "picked"
+        : G.phase === "setupIdeas" && G.currentPlayer === playerID
+          ? "choosing"
+          : "waiting",
+    };
+  });
+}
+
 export function getTakeIdeaStatus(
   G: HegemonyState,
   playerID: PlayerId,
@@ -38,16 +84,22 @@ export function getTakeIdeaStatus(
   const reasons: string[] = [];
   const cost = setup ? {} : IDEA_PURCHASE_COST;
   const owns = G.players[playerID].nationalIdeas;
-  if (setup ? G.setupIdeaPicks[playerID] !== null : G.phase !== "gameplay")
-    reasons.push("Choose one Idea at setup, then buy one in play.");
+  if (setup ? owns.length > 0 || G.currentPlayer !== playerID : G.phase !== "gameplay")
+    reasons.push("Take one Idea in your turn of the draft, then buy one in play.");
   if (!setup && (owns.length !== 1 || owns[0].acquired !== "setup"))
     reasons.push("You may buy one Idea after your setup pick.");
-  if (G.assembly || G.pendingPlayerEvent || G.pendingRiot)
+  if (G.assembly || G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
     reasons.push("Finish the pending decision first.");
   if (!canAfford(G.players[playerID].resources, cost)) reasons.push("An Idea costs 6 influence.");
   const idea = getNationalIdeas(G).find((idea) => idea.id === ideaId);
   if (ideaId !== undefined && !idea) reasons.push("Choose an Idea.");
-  if (owns.some((owned) => owned.id === ideaId)) reasons.push("You already hold this Idea.");
+  const holder = ideaId === undefined ? null : ideaHolder(G, ideaId);
+  if (holder)
+    reasons.push(
+      holder === playerID
+        ? "You already hold this Idea."
+        : `${getPlayerName(G, holder)} holds this Idea.`,
+    );
   if (idea?.effects.some((e) => e.type === "acquirePop")) {
     const targets = ideaPopTargets(G, playerID);
     if (!target || !targets.some((t) => t.tileId === target.tileId && t.pop === target.pop))
@@ -64,17 +116,12 @@ export function takeNationalIdea(
   const status = getTakeIdeaStatus(G, playerID, ideaId, target);
   if (!status.can) return invalid(...status.reasons);
   if (G.phase === "setupIdeas") {
-    G.setupIdeaPicks[playerID] = { ideaId, ...(target ? { target } : {}) };
-    const waiting = PLAYER_IDS.find((id) => !G.setupIdeaPicks[id]);
+    // An open draft: the pick lands at once, in public, and the next seat chooses.
+    acquireIdea(G, playerID, ideaId, "setup", target);
+    const waiting = ideaDraftOrder(G).find((id) => G.players[id].nationalIdeas.length === 0);
     if (waiting) G.currentPlayer = waiting;
     else {
-      // Reveal the simultaneous choices together, before Year 1's card or income.
       G.phase = "gameplay";
-      for (const id of PLAYER_IDS) {
-        const pick = G.setupIdeaPicks[id]!;
-        acquireIdea(G, id, pick.ideaId, "setup", pick.target);
-      }
-      G.setupIdeaPicks = { "0": null, "1": null, "2": null, "3": null };
       G.currentPlayer = G.yearOpener;
     }
   } else {
@@ -109,6 +156,7 @@ function acquireIdea(
     G,
     `${getPlayerName(G, playerID)} ${acquired === "setup" ? "chose" : "bought"} ${idea.name}: ${idea.text}`,
     playerID,
+    acquired === "purchase" ? { kind: "ideaBought", ideaId } : undefined,
   );
 }
 export function ideaRoom(G: HegemonyState, settlement: Settlement) {
@@ -120,7 +168,7 @@ export function ideaRoom(G: HegemonyState, settlement: Settlement) {
   );
 }
 
-/** Score a legal setup choice without revealing other choices or drawing a card. */
+/** Score a legal setup choice without drawing a card. */
 export function ideaForEval(
   G: HegemonyState,
   playerID: PlayerId,

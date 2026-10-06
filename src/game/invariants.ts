@@ -88,6 +88,11 @@ export function collectInvariantViolations(
     }
   }
 
+  const heldIdeas = PLAYER_IDS.flatMap((id) => G.players[id]?.nationalIdeas ?? []).map((i) => i.id);
+  if (new Set(heldIdeas).size !== heldIdeas.length) {
+    add("ideas.exclusive", "players.*.nationalIdeas", "an Idea is held by one seat only");
+  }
+
   for (const playerID of PLAYER_IDS) {
     const ideas = G.players[playerID]?.nationalIdeas;
     if (

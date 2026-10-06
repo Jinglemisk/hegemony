@@ -102,6 +102,7 @@
   --sheet-w: calc(var(--u) * 100); /* 400: the consult sheet */
   --ideas-w: calc(var(--u) * 256); /* 1024: two columns of printed rules */
   --idea-row-h: calc(var(--u) * 20); /* 80: name and two rule lines */
+  --draft-w: calc(var(--u) * 60); /* 240: the draft order beside the Idea rows */
 
   /* The realm sheet: a fixed box whose top-right corner is one large
      quarter-circle. Its edge is one path from the screen's left edge to the
@@ -1144,6 +1145,12 @@
 .tip-row {
   display: contents;
 }
+.tip-fix {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: 400 var(--t-body) / var(--l-body) var(--f-body);
+}
 .tip-body {
   font: 400 var(--t-body) / var(--l-body) var(--f-body);
 }
@@ -2048,14 +2055,17 @@ button.link {
   fill: transparent;
 }
 
-/* Setup owns the viewport, like the map frame. The in-play picker keeps a scrim;
-   setup is one paper page, with no sea well or dialog plate behind its rows. */
+/* The National Idea list. Setup owns the viewport, like the map frame: the open
+   draft is one paper page with its order strip beside the rows, no sea well or
+   dialog plate. The in-play purchase keeps a scrim. */
 .modalBackdrop.ideas-backdrop {
   z-index: var(--z-takeover);
   align-items: center;
   padding: var(--s-6);
 }
+/* Top-aligned: a centred page lands its edges off the 4px grid at some heights. */
 .modalBackdrop.ideas-setup {
+  align-items: flex-start;
   background: var(--bone);
 }
 .ideas-modal.logModal {
@@ -2071,26 +2081,60 @@ button.link {
   box-shadow: none;
   backdrop-filter: none;
 }
-.ideas-setup .ideas-modal {
+.ideas-setup .ideas-modal.logModal {
+  max-width: calc(var(--ideas-w) + var(--s-8) + var(--draft-w));
   padding: 0;
   background: none;
+}
+.draft {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--draft-w);
+  gap: var(--s-8);
 }
 .ideas-heading {
   display: flex;
   flex-direction: column;
-  gap: var(--s-2);
+  gap: var(--s-1);
   margin-bottom: var(--s-4);
 }
-.ideas-heading h2 {
+.ideas-kicker {
+  margin: 0;
+  color: var(--clay-ink);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.ideas-heading h2,
+.ideas-title h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
   margin: 0;
   font-family: var(--f-name);
   font-size: var(--t-24);
   line-height: var(--lh-32);
 }
-.ideas-heading p {
+.ideas-heading p,
+.ideas-title p {
   margin: 0;
+  color: var(--ink-66);
   font-size: var(--t-16);
   line-height: var(--lh-24);
+}
+.ideas-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-bottom: var(--s-4);
+}
+.ideas-title {
+  flex: 1;
+  min-width: 0;
+}
+.ideas-close {
+  min-height: var(--hit);
+  padding: 0 var(--s-4);
+  font-size: var(--t-16);
 }
 .ideas-list {
   display: grid;
@@ -2099,9 +2143,10 @@ button.link {
   column-gap: var(--s-6);
 }
 .idea-choice {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-1);
+  display: grid;
+  grid-template-columns: var(--ic-tile) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
   padding: var(--s-1) var(--s-3);
   min-height: var(--idea-row-h);
   border: 0;
@@ -2111,32 +2156,56 @@ button.link {
   text-align: left;
   white-space: normal;
 }
-.idea-choice strong {
+.idea-words {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+.idea-words strong {
   font-size: var(--t-20);
   line-height: var(--lh-24);
 }
-.idea-choice span {
-  font-size: var(--t-16);
+.idea-words span {
+  font-size: var(--t-14);
   line-height: var(--lh-20);
 }
-.idea-choice-name {
+.idea-hold {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-end;
   gap: var(--s-2);
 }
-.idea-choice .idea-selected {
-  flex: none;
+.idea-mark {
   color: var(--clay-ink);
   font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-.idea-choice[aria-pressed="true"] {
+.idea-mark.is-taken {
+  color: var(--ink-63);
+}
+.idea-mark.is-own {
+  color: var(--porphyra);
+}
+/* A taken Idea keeps its holder's mark at full strength; the rest of it dims. */
+.idea-choice.is-taken:disabled {
+  opacity: 1;
+}
+.idea-choice.is-taken .idea-icon,
+.idea-choice.is-taken .idea-words {
+  opacity: var(--dim);
+}
+.idea-choice[aria-pressed="true"],
+.idea-choice.is-fresh {
   background: var(--bone);
   box-shadow:
     inset var(--s-1) 0 var(--clay),
     inset 0 calc(-1 * var(--rule)) var(--line);
 }
-.ideas-setup .idea-choice[aria-pressed="true"] {
+.ideas-setup .idea-choice[aria-pressed="true"],
+.ideas-setup .idea-choice.is-fresh {
   background: var(--ivory);
 }
 .idea-choice:hover:not(:disabled) {
@@ -2145,9 +2214,43 @@ button.link {
 .idea-choice:disabled {
   opacity: var(--dim);
 }
+/* Read back with no controls (a rival choosing, the finished draft), an untaken
+   Idea is not unavailable: only the taken ones dim. */
+.idea-choice.is-fresh:disabled,
+.idea-choice.is-own:disabled,
+.ideas-list.is-view .idea-choice:disabled {
+  opacity: 1;
+}
 .idea-choice:focus-visible {
   outline: var(--rule-2) solid var(--clay);
   outline-offset: calc(-1 * var(--rule-2));
+}
+/* A seat's mark: its glaze and blazon. A bought Idea's mark carries the year. */
+.idea-seat {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--ic-ui);
+  height: var(--ic-ui);
+  border-radius: var(--r-round);
+  color: var(--ivory);
+  background: var(--owner);
+  box-shadow:
+    inset 0 0 0 var(--rule) var(--ivory-70),
+    0 0 0 var(--rule) var(--ink-66);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-name);
+}
+.idea-seat[data-year]::after {
+  content: attr(data-year);
+  position: absolute;
+  right: calc(-1 * var(--s-2));
+  bottom: calc(-1 * var(--s-1));
+  padding: 0 var(--s-1);
+  border-radius: var(--s-1);
+  color: var(--ivory);
+  background: var(--ink);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
 }
 .idea-target {
   display: flex;
@@ -2168,7 +2271,14 @@ button.link {
   justify-content: flex-end;
   align-items: center;
   gap: var(--s-4);
-  margin-top: var(--s-6);
+  margin-top: var(--s-4);
+}
+.ideas-legend {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink-66);
+  font-size: var(--t-14);
+  line-height: var(--lh-20);
 }
 .ideas-footer button {
   display: flex;
@@ -2189,7 +2299,57 @@ button.link {
   box-shadow: none;
   transform: none;
 }
+/* The draft order: who took what, who is choosing, who is next. */
+.draft-order {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding-top: var(--s-2);
+}
+.draft-order ol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.draft-seat {
+  display: grid;
+  grid-template-columns: var(--s-4) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-12);
+}
+.draft-seat.is-now {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.draft-n {
+  color: var(--ink-63);
+  font: 700 var(--t-16) / var(--lh-20) var(--f-name);
+}
+.draft-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.draft-who b {
+  font: 700 var(--t-14) / var(--lh-20) var(--f-name);
+}
+.draft-what {
+  color: var(--ink-63);
+  font: 700 var(--t-14) / var(--lh-20) var(--f-sans);
+}
+.draft-what.is-picked {
+  color: var(--pos);
+}
+.draft-what.is-choosing {
+  color: var(--clay-ink);
+}
 @media (max-width: 760px) {
+  .draft,
   .ideas-list {
     grid-template-columns: 1fr;
   }
@@ -2197,6 +2357,59 @@ button.link {
     flex-basis: 100%;
     flex-wrap: wrap;
     gap: var(--s-2);
+  }
+}
+
+/* The toast lane: one moment another seat had, under the ticker, then gone. */
+.toast-lane {
+  position: absolute;
+  top: calc(var(--bar-h) + var(--hit) + var(--s-4));
+  left: var(--s-4);
+  width: var(--ticker-w);
+}
+.toast {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3) var(--s-4);
+  border: 0;
+  border-radius: var(--s-2);
+  color: var(--ink);
+  background: var(--ivory);
+  text-align: left;
+  animation: toastIn 240ms var(--ease-out) both;
+}
+.toast .idea-seat {
+  width: var(--ic-tile);
+  height: var(--ic-tile);
+}
+.toast-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: var(--t-14);
+  line-height: var(--lh-20);
+}
+.toast-words b {
+  font-family: var(--f-name);
+}
+.toast-kicker {
+  color: var(--ink-63);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--s-2)));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
   }
 }
 .summary dd.realm-ideas {

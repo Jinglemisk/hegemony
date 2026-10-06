@@ -1,3 +1,4 @@
+import { defaultHungerLeave, resolveHunger } from "./hunger";
 import { describe, expect, it } from "vitest";
 
 import { createInitialState, startNewYear } from "./rules";
@@ -33,6 +34,13 @@ const assemblyFreeGame = (seed: number) =>
   createGame(seed, deriveRuleset(DEFAULT_RULESET, { assembly: { firstYear: 0 } }), "classic", true);
 
 function advanceTurn(G: HegemonyState) {
+  // Hunger waits on its seat's choice; take the freemen-first default.
+  if (G.pendingHunger)
+    resolveHunger(
+      G,
+      G.currentPlayer,
+      defaultHungerLeave(G, G.currentPlayer, G.pendingHunger.unfed),
+    );
   G.pendingPlayerEvent = null;
   // These turn-structure tests cycle whole years; a bot-less player can riot along
   // the way. Complete that turn-end roll before counting the next turn.

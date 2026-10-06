@@ -72,8 +72,10 @@ renderers using `ModalShell`, `Popover`, and `MechanicsDetails` as appropriate.
 Assembly remains an Assembly workflow and trade remains a negotiation workflow; this is
 not a generic rules scripting engine. The shared layer owns only presentation, actor,
 focus, cancellation/expiry, and public/private projection contracts. Luxury claim choices,
-trade responses, and National Idea picks use it rather than creating feature-private
-overlay infrastructure.
+trade responses, National Idea picks and the hunger choice use it rather than creating
+feature-private overlay infrastructure. A rival's public moment (its hunger, its Idea
+purchase) lands as a toast in the lane under the ticker: the engine tags the Chronicle
+line with a `LogMoment`, and `src/components/frame/moments.tsx` queues and words it.
 
 Controls dispatch canonical `GameCommand` values through `src/client/controller.ts` and
 render engine-derived legal-option/status projections. They never call domain mutators

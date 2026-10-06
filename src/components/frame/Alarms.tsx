@@ -7,6 +7,7 @@ import { formatNumber, formatSignedNumber } from "../../ui/formatters";
 import { EffectLine } from "../EffectLine";
 import { Tooltip } from "../overlays/Tooltip";
 import type { GameContent } from "../../game/content";
+import type { HungerForecast } from "../../ui/frameSelectors";
 import { Ico, Tip } from "./parts";
 
 /**
@@ -70,11 +71,14 @@ export function Alarms({
   unrest,
   riotThreshold,
   content,
+  hunger,
 }: {
   effects: readonly ActiveEffectDescriptor[];
   unrest: UnrestStatus;
   riotThreshold: number;
   content: GameContent;
+  /** Mouths the next income leaves unfed: the hunger disc turns loud a turn early. */
+  hunger: HungerForecast | null;
 }) {
   const shown = effects.filter(SHOWN);
 
@@ -119,6 +123,34 @@ export function Alarms({
       ) : null}
       {shown.map((descriptor) => {
         const effect = presentActiveEffect(descriptor, content);
+        if (descriptor.kind === "hunger" && hunger) {
+          const mouths = `${hunger.unfed} ${hunger.unfed === 1 ? "mouth" : "mouths"}`;
+          return (
+            <li key={descriptor.id}>
+              <Tooltip
+                ariaLabel={`Hunger: ${mouths} unfed at your next income.`}
+                content={
+                  <Tip sub="next income · your next turn" title={`Hunger: ${mouths} unfed`}>
+                    <p className="tip-body">
+                      {hunger.unfed === 1 ? "One pop leaves" : `${hunger.unfed} pops leave`}, and
+                      you choose which.
+                    </p>
+                    {hunger.fixes.map((fix) => (
+                      <p className="tip-fix" key={fix.icon}>
+                        <Ico path={fix.icon} size="chip" />
+                        {fix.text}
+                      </p>
+                    ))}
+                  </Tip>
+                }
+                focusable
+                triggerClassName="alarm-disc is-down is-loud"
+              >
+                <Ico path="unrest/starvation" size="ui" />
+              </Tooltip>
+            </li>
+          );
+        }
         return (
           <li key={descriptor.id}>
             <Tooltip

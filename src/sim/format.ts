@@ -41,6 +41,12 @@ export function renderHeader(G: HegemonyState): string {
     lines.push(`Year card: ${G.activeYearCard.name} — ${G.activeYearCard.text}`);
   }
 
+  if (G.pendingHunger) {
+    lines.push(
+      `PENDING: player ${G.pendingHunger.playerID} must choose ${G.pendingHunger.unfed} unfed ${G.pendingHunger.unfed === 1 ? "pop" : "pops"} to leave (see: legal)`,
+    );
+  }
+
   if (G.pendingPlayerEvent) {
     lines.push(
       `PENDING: player ${G.pendingPlayerEvent.playerID} must resolve ${G.pendingPlayerEvent.card.name} — ${G.pendingPlayerEvent.card.text}`,

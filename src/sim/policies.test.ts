@@ -725,3 +725,31 @@ describe("v2 card scoring", () => {
     }
   });
 });
+
+describe("hunger choice", () => {
+  it("bots pick who leaves with their scorer, from the legal splits, and play on", () => {
+    const G = scenario()
+      .withSettlement("0", "-2,0", "city", { citizens: 2, freemen: 2, slaves: 1 })
+      .withResources("0", { food: 0 })
+      .mutate((state) => {
+        state.phase = "gameplay";
+        state.currentPlayer = "0";
+        state.players["0"].collectedThisTurn = true;
+        state.pendingHunger = { playerID: "0", unfed: 2 };
+      })
+      .build();
+    const commands = enumerateLegalCommands(G, "0");
+    expect(commands.map((c) => c.type)).toEqual([
+      "resolveHunger",
+      "resolveHunger",
+      "resolveHunger",
+    ]);
+    for (const policy of [smartPolicy, masterPolicy]) {
+      const command = policy.choose(observe(G), commands, createSimRng(1));
+      expect(commands).toContainEqual(command);
+      const result = transition(G.definition, G, "0", command);
+      expect(result.ok).toBe(true);
+      if (result.ok) expect(result.state.pendingHunger).toBeNull();
+    }
+  });
+});

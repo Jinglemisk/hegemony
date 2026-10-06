@@ -44,7 +44,8 @@ export function getCivicCalmStatus(
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("Calm is a gameplay action.");
-  if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
+  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
+    reasons.push("Resolve the pending event first.");
   if (G.players[playerID].civicCalmUsedThisTurn)
     reasons.push("One civic-calm action per turn — calm must not stack.");
   if (!canAfford(G.players[playerID].resources, cost)) {
@@ -95,7 +96,8 @@ export function getPromotePopStatus(
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("The ladder is a gameplay action.");
-  if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
+  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
+    reasons.push("Resolve the pending event first.");
   if (!PROMOTE_FROM.includes(from as "slaves" | "freemen"))
     reasons.push("Only slaves and freemen can rise.");
   if (G.players[playerID].ladderUsedThisTurn) reasons.push("One ladder move per turn.");
@@ -128,7 +130,7 @@ export function getDemotePopStatus(
   const settlement = getOwnedSettlement(G, tileId, playerID);
 
   if (G.phase !== "gameplay") reasons.push("The ladder is a gameplay action.");
-  if (G.pendingPlayerEvent) reasons.push("Resolve the pending event first.");
+  if (G.pendingPlayerEvent || G.pendingHunger) reasons.push("Resolve the pending event first.");
   if (G.pendingRiot && !duringOwnRiot) reasons.push("Resolve the pending riot first.");
   if (!DEMOTE_FROM.includes(from as "citizens" | "freemen"))
     reasons.push("Only citizens and freemen can fall.");

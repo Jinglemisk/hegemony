@@ -1,3 +1,4 @@
+import { defaultHungerLeave, resolveHunger } from "../game/hunger";
 import { describe, expect, it } from "vitest";
 
 import { ACTIVE_EFFECT_KINDS } from "../game/activeEffects";
@@ -101,6 +102,11 @@ describe("Aggregator", () => {
       .build();
     const aggregator = new Aggregator();
     aggregator.beginGame(0, 42, G);
+    // Hunger waits on the seat's choice; the draw follows it.
+    const leave = defaultHungerLeave(G, "0", G.pendingHunger!.unfed);
+    expect(resolveHunger(G, "0", leave).ok).toBe(true);
+    G.pendingPlayerEvent = null;
+    aggregator.onMove(G, "0", { type: "resolveHunger", leave });
     expect(endTurn(G).ok).toBe(true);
     aggregator.onMove(G, "0", { type: "endTurn" });
     expect(resolveRiot(G, "0").ok).toBe(true);

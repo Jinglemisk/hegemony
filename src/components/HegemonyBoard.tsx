@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DEV_SHELL } from "../client/controller";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
   EMPTY_POPS,
@@ -20,6 +21,7 @@ import {
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { BuildPopover } from "./board/map/BuildPopover";
 import { IdeasModal } from "./board/modals/IdeasModal";
+import { HungerModal } from "./board/modals/HungerModal";
 import { PopulationPickerModal } from "./board/modals/PopulationPickerModal";
 import { UpgradeCityModal } from "./board/modals/UpgradeCityModal";
 import { FoundColonyPopover } from "./board/modals/FoundColonyPopover";
@@ -41,10 +43,12 @@ import { GameUiProvider } from "./board/GameUiProvider";
 import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
 import { getOwnedHoldings } from "./board/helpers";
-import { endTurnWarning, happinessDisplay } from "../ui/frameSelectors";
+import { endTurnWarning, happinessDisplay, hungerForecast } from "../ui/frameSelectors";
 import { Island } from "./frame/island/Island";
 import { TopBar } from "./frame/TopBar";
 import { Ticker } from "./frame/Ticker";
+import { ToastLane } from "./frame/Toasts";
+import { useMomentToasts } from "./frame/moments";
 import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel";
 import { Alarms } from "./frame/Alarms";
 import { EndTurn } from "./frame/EndTurn";
@@ -92,10 +96,20 @@ export function HegemonyBoard({
   isActive,
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
-  const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
+  // `?dev=ideas` opens on the purchase list.
+  const [activeModal, setActiveModal] = useState<ActiveModal | null>(
+    DEV_SHELL.ideasOpen ? { kind: "ideas" } : null,
+  );
   const [gameOverDismissed, setGameOverDismissed] = useState(false);
   // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
   const [riotResultOpen, setRiotResultOpen] = useState(false);
+  // The draft is read back once its last pick lands, until the opener turns the year.
+  const [draftDone, setDraftDone] = useState(DEV_SHELL.draftSummary);
+  const [seenPhase, setSeenPhase] = useState(ctx.phase);
+  if (seenPhase !== ctx.phase) {
+    setSeenPhase(ctx.phase);
+    if (seenPhase === "setupIdeas") setDraftDone(true);
+  }
   // The realm sheet's page, and the consult page open on the right (null: none).
   // The realm boots on its overview; picking a place on the map opens its page.
   const [realmTab, setRealmTab] = useState<RealmTab>("subject");
@@ -115,12 +129,14 @@ export function HegemonyBoard({
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
-  const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent);
+  // Hunger waiting on its choice blocks the turn exactly as a drawn fate card does.
+  const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent || G.pendingHunger);
   // The one gate the turn dial needs. It is the same gate every verb sits behind
   // (verbs.tsx), asked without a board fact in sight.
   const turnGate = { isActive, phase: ctx.phase, hasPendingPlayerEvent };
   const turnOpen = isTurnOpen(turnGate);
   const activeEffects = useMemo(() => getActiveEffects(G, viewerId), [G, viewerId]);
+  const toasts = useMomentToasts(G, viewerId, DEV_SHELL.toastReplayFrom);
   const gameUi = useMemo<GameUi>(
     () => ({
       G,
@@ -236,7 +252,10 @@ export function HegemonyBoard({
   );
   // The handoff closes the previous seat's choices. A riot result stays open
   // until dismissed, even though its roll has already passed the turn.
+  const handoff = useRef({ phase: ctx.phase, player: ctx.currentPlayer });
   useEffect(() => {
+    if (handoff.current.phase === ctx.phase && handoff.current.player === ctx.currentPlayer) return;
+    handoff.current = { phase: ctx.phase, player: ctx.currentPlayer };
     setActiveModal(null);
     clearMapSelection();
   }, [ctx.phase, ctx.currentPlayer, clearMapSelection]);
@@ -370,7 +389,7 @@ export function HegemonyBoard({
     <GameUiProvider value={gameUi}>
       <CodexLinkProvider value={codexLink}>
         <main className="frame">
-          {G.phase !== "setupIdeas" ? (
+          {G.phase !== "setupIdeas" && !draftDone ? (
             <>
               <Island
                 G={G}
@@ -408,9 +427,11 @@ export function HegemonyBoard({
                   viewerId={viewerId}
                 />
                 <Ticker log={G.log} />
+                <ToastLane onDismiss={toasts.dismiss} toast={toasts.toast} />
                 <Alarms
                   content={G.definition.content}
                   effects={activeEffects}
+                  hunger={hungerForecast(G, viewerId)}
                   riotThreshold={G.ruleset.economy.unrest.riotThreshold}
                   unrest={unrestStatus(G, viewerId)}
                 />
@@ -486,7 +507,9 @@ export function HegemonyBoard({
           ) : null}
 
           {G.phase === "setupIdeas" ? (
-            <IdeasModal key={viewerId} onNextSeat={() => onPlayerIDChange(G.currentPlayer)} />
+            <IdeasModal key={viewerId} />
+          ) : draftDone ? (
+            <IdeasModal draftDone onClose={() => setDraftDone(false)} />
           ) : activeModal?.kind === "ideas" ? (
             <IdeasModal onClose={closeModal} />
           ) : null}
@@ -635,7 +658,12 @@ export function HegemonyBoard({
           {ctx.phase === "gameOver" && !gameOverDismissed && !riotResultOpen ? (
             <GameOverModal G={G} onInspectBoard={() => setGameOverDismissed(true)} />
           ) : null}
-          {G.pendingPlayerEvent && !riotResultOpen ? <PendingPlayerEventModal /> : null}
+          {G.pendingHunger && !riotResultOpen ? (
+            <HungerModal key={`${G.pendingHunger.playerID}-${ctx.turn}`} />
+          ) : null}
+          {G.pendingPlayerEvent && !riotResultOpen && !draftDone ? (
+            <PendingPlayerEventModal />
+          ) : null}
           {/* The Assembly TAKES OVER the table in a sitting year
           (assembly-politicians.md §1.2; owner ruling 2026-08-15). It mounts off
           engine state, and it covers the whole viewport — bars,

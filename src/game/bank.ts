@@ -83,7 +83,8 @@ export function getBankSellStatus(
   const rate = getPlayerBankRate(G, playerID, material);
 
   if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
-  if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
+  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
+    reasons.push("Resolve the pending event first.");
   if (G.players[playerID].resources[material] < rate.sell) {
     reasons.push(`Selling takes ${rate.sell} ${material} for 1 gold.`);
   }
@@ -100,7 +101,8 @@ export function getBankBuyStatus(
   const rate = getPlayerBankRate(G, playerID, material);
 
   if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
-  if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
+  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
+    reasons.push("Resolve the pending event first.");
   if (G.players[playerID].resources.gold < rate.buy) {
     reasons.push(`Buying 1 ${material} costs ${rate.buy} gold.`);
   }
@@ -162,7 +164,8 @@ export function getDoleStatus(G: HegemonyState, playerID: PlayerId): ActionStatu
   const { influenceCost, food } = playerDole(G, playerID);
 
   if (G.phase !== "gameplay") reasons.push("The bank opens with gameplay.");
-  if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
+  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
+    reasons.push("Resolve the pending event first.");
   if (G.players[playerID].resources.influence < influenceCost) {
     reasons.push(`The Dole takes ${influenceCost} influence for ${food} food.`);
   }

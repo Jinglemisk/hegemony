@@ -1,7 +1,6 @@
 import type { Ruleset } from "./ruleset";
 import type { GameDefinition } from "./definition";
 import type { ActiveLaw, AssemblySession, PoliticianId, TallyMonument } from "./assembly/types";
-import type { SetupIdeaPick } from "./ideaTypes";
 
 export type PlayerId = "0" | "1" | "2" | "3";
 
@@ -136,6 +135,11 @@ export interface YearCard {
   /** Presentation only, as on an {@link EventCard}. */
   flavor?: string;
   effect: YearCardEffect;
+}
+
+export interface PendingHunger {
+  playerID: PlayerId;
+  unfed: number;
 }
 
 export interface PendingPlayerEvent {
@@ -335,6 +339,20 @@ export interface PopulationTransfer {
   pops: Pops;
 }
 
+/** The classes hunger can send away: free pops that eat. Slaves eat nothing. */
+export type HungerPop = "freemen" | "citizens";
+
+/** One pop leaving one settlement. A hunger choice lists one entry per pop. */
+export type HungerLeave = { tileId: string; pop: HungerPop };
+
+/**
+ * A public moment the shell shows a rival as a toast, beside the Chronicle line.
+ * Add a kind where the engine writes the line; the shell's toast lane names it.
+ */
+export type LogMoment =
+  | { kind: "hunger"; leave: HungerLeave[] }
+  | { kind: "ideaBought"; ideaId: import("./ideaTypes").NationalIdeaId };
+
 export interface LogEntry {
   id: string;
   /** The year the line was written in. */
@@ -357,6 +375,8 @@ export interface LogEntry {
    * Nothing in the rules reads it.
    */
   about?: PlayerId;
+  /** Set when the line is a moment the shell toasts to the other seats. */
+  moment?: LogMoment;
 }
 
 export interface HegemonyState {
@@ -367,7 +387,6 @@ export interface HegemonyState {
   /** Monotonic source for stable match-local entity identities. */
   nextEntityId: number;
   phase: Phase;
-  setupIdeaPicks: Record<PlayerId, SetupIdeaPick | null>;
   currentPlayer: PlayerId;
   turn: number;
   /** The seed this game was created from — shown in the UI, embedded in bug reports. */
@@ -400,6 +419,9 @@ export interface HegemonyState {
   pendingPlayerEvent: PendingPlayerEvent | null;
   /** A riot blocking the committed turn's handoff until it resolves. */
   pendingRiot: PendingRiot | null;
+  /** Hunger waiting on its seat: the income just collected left `unfed` mouths, and the
+   *  seat chooses which freemen or citizens leave before its fate card is drawn. */
+  pendingHunger: PendingHunger | null;
   /** The most recent event-table roll, for the UI's outcome display. */
   lastTableRoll: TableRollRecord | null;
   /** This game's bank rates — derived from the board at creation, static after. */

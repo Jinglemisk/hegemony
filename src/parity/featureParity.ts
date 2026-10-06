@@ -86,7 +86,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   hungerResolution: {
     implementation: "src/game/hunger.test.ts",
-    evidence: "one pop leaves per unfed mouth and food stays at zero",
+    evidence: "waits for the seat to choose who leaves",
   },
   workSlots: {
     implementation: "src/game/workSlots.test.ts",
@@ -204,7 +204,7 @@ const idea = () =>
   coverage(
     { implementation: "src/game/ideaRules.ts", evidence: "getStandingEffects" },
     { implementation: "src/components/board/modals/IdeasModal.tsx", evidence: "getNationalIdeas" },
-    { implementation: "src/game/projection.ts", evidence: "setupIdeaPicks" },
+    { implementation: "src/game/ideas.ts", evidence: "ideaHolder" },
     { implementation: "src/sim/policies.ts", evidence: "ideaOpportunityValue" },
     { implementation: "src/sim/telemetry.ts", evidence: "nationalIdeas" },
     "ideaRules",
@@ -568,8 +568,11 @@ export const FEATURE_PARITY = {
   },
   hunger: {
     ids: ["hunger"],
-    engine: { implementation: "src/game/hunger.ts", evidence: "applyHunger" },
-    frontend: { implementation: "src/components/frame/Alarms.tsx", evidence: "hunger" },
+    engine: { implementation: "src/game/hunger.ts", evidence: "resolveHunger" },
+    frontend: {
+      implementation: "src/components/board/modals/HungerModal.tsx",
+      evidence: "moves.resolveHunger",
+    },
     simulation: { implementation: "src/sim/policies.ts", evidence: "applyHunger" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "popsLostToHunger" },
     behaviorFixtures: ["hungerResolution", "activeEffectPolicy"],

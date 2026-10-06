@@ -1,3 +1,4 @@
+import type { NationalIdeaId } from "../game/ideaTypes";
 import type { Resource, Resources, Stat } from "../game/types";
 
 /** The frame's number and icon vocabulary, shared by its components. */
@@ -56,6 +57,22 @@ export const BUILDING_ICON: Record<string, string> = {
   forum: "buildings/forum",
   estate: "buildings/villa",
   port: "events/voyage",
+};
+
+/** Each National Idea's raster: the thing it gives. */
+export const IDEA_ICON: Record<NationalIdeaId, string> = {
+  "good-harvest": "resources/food",
+  "public-dole": "resources/influence",
+  "urban-planning": "settlements/city",
+  "capital-works": "settlements/capital",
+  "civic-tradition": "resources/influence",
+  "frontier-charter": "settlements/colony",
+  "new-settlers": "pops/freemen",
+  "city-pioneers": "settlements/upgrade",
+  "slave-colonies": "pops/slaves",
+  "harbour-planning": "resources/luxury",
+  "treasury-grant": "resources/gold",
+  "assembly-brokers": "assembly/bribe",
 };
 
 /** Whether a store covers a price: a price is short only when it cannot be paid. */

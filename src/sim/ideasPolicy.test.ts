@@ -81,18 +81,28 @@ describe("scores setup Ideas and in-play purchases", () => {
       masterPolicy.choose(projectForPlayer(poor.definition, poor, "0"), moves, createSimRng(1)),
     ).toEqual({ type: "endTurn" });
   });
-  it("does not consult the hidden year order or the other seats' setup picks", () => {
+  it("does not consult the hidden year order and scores only the Ideas left", () => {
     const G = board(30, 3, 0);
     const altered = structuredClone(G);
     altered.yearDrawPile.reverse();
     altered.rng = 99;
-    altered.setupIdeaPicks["2"] = { ideaId: "treasury-grant" };
     const choices = enumerateLegalCommands(G, "0");
     const view = projectForPlayer(G.definition, G, "0");
     const other = projectForPlayer(altered.definition, altered, "0");
-    expect(masterPolicy.choose(view, choices, createSimRng(2))).toEqual(
-      masterPolicy.choose(other, choices, createSimRng(2)),
+    const pick = masterPolicy.choose(view, choices, createSimRng(2));
+    expect(pick).toEqual(masterPolicy.choose(other, choices, createSimRng(2)));
+    if (pick.type !== "pickIdea") throw new Error("expected an Idea pick");
+    // A rival took the favourite earlier in the draft: the bot picks among the rest.
+    const taken = structuredClone(G);
+    taken.players["1"].nationalIdeas = [{ id: pick.ideaId, acquired: "setup", year: 1 }];
+    const left = enumerateLegalCommands(taken, "0");
+    const second = masterPolicy.choose(
+      projectForPlayer(taken.definition, taken, "0"),
+      left,
+      createSimRng(2),
     );
+    expect(second.type).toBe("pickIdea");
+    expect(second.type === "pickIdea" && second.ideaId).not.toBe(pick.ideaId);
   });
   it("zero-fills every Idea and counts holder wins only in finished games", () => {
     const G = board(30, 1, 0);

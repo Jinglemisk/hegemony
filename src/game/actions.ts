@@ -30,8 +30,6 @@ import type { MoveResult } from "./core/results";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
 import { setupCapitalCount } from "./ruleset";
 import { calculateIncome, getHungerStatus } from "./economy/income";
-import { applyHunger } from "./hunger";
-import { describeRemoval } from "./tables";
 import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
@@ -312,7 +310,7 @@ export function collectIncome(
   const player = G.players[playerID];
 
   // Income belongs to turn start; a committed turn awaiting its riot cannot collect.
-  if (player.collectedThisTurn || G.pendingPlayerEvent || G.pendingRiot) {
+  if (player.collectedThisTurn || G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger) {
     return invalid();
   }
 
@@ -341,13 +339,15 @@ export function collectIncome(
     playerID,
   );
 
+  // Hunger waits for its seat to choose who leaves; the fate card follows it.
   if (hunger.unfed > 0) {
-    const left = applyHunger(G, playerID, hunger.unfed);
+    G.pendingHunger = { playerID, unfed: hunger.unfed };
     addLog(
       G,
-      `${getPlayerName(G, playerID)} could not feed ${hunger.unfed} ${hunger.unfed === 1 ? "mouth" : "mouths"}: ${describeRemoval(left)} left.`,
+      `${getPlayerName(G, playerID)} cannot feed ${hunger.unfed} ${hunger.unfed === 1 ? "mouth" : "mouths"}.`,
       playerID,
     );
+    return MOVE_OK;
   }
 
   drawPlayerEvent(G, playerID);

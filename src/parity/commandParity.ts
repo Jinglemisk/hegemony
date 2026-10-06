@@ -120,6 +120,10 @@ export const COMMAND_PARITY = {
     frontend: interactive("src/components/board/modals/PendingPlayerEventModal.tsx"),
     simulation: simulated("master-forced-choice", "beamPlan → onePlyLookahead(scoreMaster)"),
   },
+  resolveHunger: {
+    frontend: interactive("src/components/board/modals/HungerModal.tsx"),
+    simulation: simulated("master-forced-choice", "beamPlan → onePlyLookahead(scoreMaster)"),
+  },
   bankSell: {
     frontend: interactive(
       "src/components/frame/discs.ts",

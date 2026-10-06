@@ -577,6 +577,40 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - No game state or command shape changes: schemas stay state 9 / command 5.
   `?dev=bots` stays master in all seats. No shell changes.
 
+**Defaults picked in Step 13** (2026-10-06):
+
+- The Idea draft continues the placement snake: placement runs one round per setup
+  placement, 0→3 then 3→0, and the draft is the next round. Every shipped mode places an
+  even number of times, so the draft runs 0→3; an odd count would run 3→0.
+- A pick lands at once with its grants, before the next seat chooses. The draft page
+  stays after the last pick, read-only with that pick lit, until the opener turns the
+  first year. In hotseat the page follows the turn, so the next seat finds the last pick
+  already marked; the shell has no live "rival is choosing" view because it seats no bots
+  beside humans. The scripted preload drafts Assembly Brokers, City Pioneers, Harbour
+  Planning and Frontier Charter in seat order, since one Idea no longer fits all four.
+- Hunger holds the turn on `pendingHunger` between income and the fate card. The choice
+  names one settlement and class per pop that leaves, only from classes that eat under
+  the standing Laws. A Chronicle line notes the strike; the line naming who left carries
+  the rival toast.
+- The freemen-first rule stays as the card's preselection and as the fallback where no
+  one chooses: the bots' income projection.
+- Bots weigh each split of the loss between the eating classes, every pop from the
+  settlement holding the most of its class, without the fate card drawn after. Ties
+  keep freemen-first, which enumeration lists first.
+- Telemetry counts one hunger turn per hunger choice and records the player draw when
+  the choice resolves.
+- The warning a turn ahead reads the hunger alarm's own forecast: the alarm turns loud
+  with the starvation raster and lists the Dole's and the bank's food prices, and End
+  turn carries "Hunger ahead" unless a riot or revolt warning outranks it.
+- Rival moments are `LogMoment`s on Chronicle lines. The toast lane under the ticker
+  queues those about other seats as they land, one at a time for four seconds; a click
+  dismisses one. A seat's own moment is a card, not a toast.
+- Dialogs over the frame (the hunger card, the purchase list) carry no `data-c`, like
+  the fate card; the draft page owns the viewport and is gated as a layout. Gate
+  queries: `?setup=ideas`, `?dev=draft`, `?dev=draft-done`, `?dev=ideas`, `?dev=hunger`,
+  `?dev=hunger-ahead`, `?dev=toasts`.
+- State schema 10 and command schema 6 reject older saves and scripts.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.

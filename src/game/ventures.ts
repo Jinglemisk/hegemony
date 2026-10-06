@@ -20,7 +20,8 @@ export function getFundExpeditionStatus(
   const reasons: string[] = [];
 
   if (G.phase !== "gameplay") reasons.push("Expeditions sail during gameplay.");
-  if (G.pendingPlayerEvent || G.pendingRiot) reasons.push("Resolve the pending event first.");
+  if (G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
+    reasons.push("Resolve the pending event first.");
   if (!getExpeditionTables(G.definition.content).some((table) => table.id === expeditionId))
     reasons.push("No such expedition.");
   if (G.players[playerID].ventureUsedThisTurn) reasons.push("One venture per turn.");

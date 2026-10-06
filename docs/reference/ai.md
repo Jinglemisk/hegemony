@@ -12,8 +12,8 @@ engine-enumerated commands. Costs, yields, capacity, happiness, Ideas, Laws and
 victory titles come from engine selectors. Each hypothetical action uses the
 canonical transition; execution uses that same transition in the browser and sim.
 
-The view hides the seed, game RNG, draw order, next year card, rival private
-Assembly cards and secret setup picks. Choices are pure functions of the view,
+The view hides the seed, game RNG, draw order, next year card and rival private
+Assembly cards. Setup Idea picks are public as they land. Choices are pure functions of the view,
 commands and injected bot RNG. Placement and Idea ties use that bot stream;
 ordinary search ties keep enumeration order. Bot randomness never changes the
 game's card or die stream. `?dev=bots` still uses `master` for every browser seat.
@@ -86,7 +86,7 @@ Forecast at most six incomes, bounded by the years remaining. This year's card
 applies only to a seat that has not collected; later incomes use printed values.
 The projection checks the current turn end, with calm and the current year card
 still active, even when no future incomes remain. Later turns collect income and
-resolve engine hunger before their turn-end checks. It runs deterministic revolts,
+resolve engine hunger, freemen first, before their turn-end checks. It runs deterministic revolts,
 clears tokens after a projected riot, and recalculates income after pop losses or
 the year's card expires. Otherwise it reuses income through the horizon; stocks and tokens do
 not change printed yields. It assumes no future card or token changes.
@@ -115,10 +115,18 @@ use legal insurance and the roll; resolving one passes the committed turn.
 The current check charges only an actual riot or revolt. A safe current level
 needs no proximity penalty; future turns keep the existing buffer estimate.
 
+## Hunger
+
+When its income leaves mouths unfed, a bot weighs each legal split of the loss
+between freemen and citizens (each pop from the settlement holding the most) with
+its scorer, without seeing the fate card drawn after the choice. Ties keep the
+freemen-first default, which enumeration lists first.
+
 ## Setup, Ideas and the Assembly
 
-Policy openings use each seat's own personality for placements and secret Idea
-picks. Fixed openings fix placement only; Ideas still use the seat's scorer.
+Policy openings use each seat's own personality for placements and its pick in
+the open Idea draft, scoring only the Ideas still untaken; purchases likewise
+search only untaken Ideas. Fixed openings fix placement only; Ideas still use the seat's scorer.
 Random openings choose uniformly. New games without a named policy retain the
 neutral placement/Idea scorer. Ordinary purchases enter the seat's normal search.
 Immediate grants and permanent income use real transitions/projections. Future

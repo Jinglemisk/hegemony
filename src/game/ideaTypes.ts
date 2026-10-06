@@ -30,7 +30,3 @@ export interface IdeaPopChoice {
   tileId: string;
   pop: GrowablePop;
 }
-export interface SetupIdeaPick {
-  ideaId: NationalIdeaId;
-  target?: IdeaPopChoice;
-}

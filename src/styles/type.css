@@ -79,6 +79,15 @@
   text-transform: none;
 }
 
+/* The hunger card keeps the shell's 12px floor as the ceremony register scales. */
+.hungerCard .label {
+  font-size: max(12px, 0.6875rem);
+}
+
+.hungerCard .caption {
+  font-size: max(12px, 0.78125rem);
+}
+
 /* Assembly labels and controls must stay readable as the scene scales down. */
 .asmScene .label {
   font-size: max(12px, 0.6875rem);

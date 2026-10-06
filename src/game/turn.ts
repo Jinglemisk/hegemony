@@ -1,4 +1,4 @@
-import { takeNationalIdea } from "./ideas";
+import { ideaDraftOrder, takeNationalIdea } from "./ideas";
 import { GAME_CONFIG, TEST_OPENING_SETUP } from "./config";
 import { PLAYER_IDS } from "./data";
 import {
@@ -72,8 +72,8 @@ function setupPhaseFor(kind: SettlementKind): Phase {
  * Advance the setup machine one placement. Setup runs in SNAKE order
  * (roadmap-appendix D3c): round 0 goes 0→3, round 1 goes 3→0, and so on — the
  * player who picks last in one round picks first in the next. Once every player
- * has placed everything the ruleset's setup list owes, gameplay begins with the
- * year's opener.
+ * has placed everything the ruleset's setup list owes, the National Idea draft runs
+ * as the snake's next round; gameplay then begins with the year's opener.
  */
 export function advanceSetupTurn(G: HegemonyState) {
   G.turn += 1;
@@ -93,7 +93,7 @@ export function advanceSetupTurn(G: HegemonyState) {
   }
 
   G.phase = "setupIdeas";
-  G.currentPlayer = "0";
+  G.currentPlayer = ideaDraftOrder(G)[0];
 }
 
 /** Start-of-turn automation: reveal the year's card, check victory, expire luxury
@@ -123,7 +123,13 @@ export function beginGameplayTurn(G: HegemonyState) {
  * A riot suspends the handoff until its insurance and roll have resolved.
  */
 export function endTurn(G: HegemonyState): MoveResult {
-  if (G.phase !== "gameplay" || G.pendingPlayerEvent || G.pendingRiot || G.assembly) {
+  if (
+    G.phase !== "gameplay" ||
+    G.pendingPlayerEvent ||
+    G.pendingRiot ||
+    G.pendingHunger ||
+    G.assembly
+  ) {
     return { ok: false, reasons: [] };
   }
 
@@ -200,6 +206,13 @@ export function closeAssembly(G: HegemonyState): MoveResult {
   return { ok: true };
 }
 
+const PRELOAD_IDEAS = [
+  "assembly-brokers",
+  "city-pioneers",
+  "harbour-planning",
+  "frontier-charter",
+] as const;
+
 /** Replay the scripted metropolis+colony opening through the real machine (dev preload). */
 function runPreloadOpeningSetup(G: HegemonyState) {
   // The scripted opening supplies one metropolis + one founding colony per player, so
@@ -235,6 +248,7 @@ function runPreloadOpeningSetup(G: HegemonyState) {
     advanceSetupTurn(G);
   }
 
-  for (const id of PLAYER_IDS) takeNationalIdea(G, id, "assembly-brokers");
+  // The draft is exclusive, so each seat takes a different low-impact Idea.
+  for (const ideaId of PRELOAD_IDEAS) takeNationalIdea(G, G.currentPlayer, ideaId);
   beginGameplayTurn(G);
 }
