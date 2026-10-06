@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-03
+updated: 2026-10-06
 ---
 
 # National Ideas
@@ -21,8 +21,9 @@ adds personality weights and Step 11 measures the pick spread.
 
 - The migration's [Settled inputs](v2-migration.md#settled-inputs) override the
   [direction paper](../reports/balance/2026-09-05-shallow-economy.md).
-- One simultaneous secret pick after placement, with effect before Year 1; one later
-  purchase with influence. Two Ideas total, no draft or exclusive ownership.
+- Superseded 2026-10-06 (owner): setup is an open draft in turn order and each Idea is
+  held by one seat; Step 13 builds it. Two Ideas per seat total, as before. The
+  original rule was one simultaneous secret pick with no exclusive ownership.
 - The capital gets one slot from Idea 4 and Idea 6 adds a physical colony piece.
 - The old free luxury trader is retired. Ports still need the coast, claim a luxury,
   and cost resources. There is no veto or gold upkeep.

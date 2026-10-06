@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-05
+updated: 2026-10-06
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -97,6 +97,24 @@ with the owner's rulings in its section 8, plus these later rulings:
 - National Ideas follow [their plan](national-ideas.md): one picked at setup, one bought
   with influence.
 - Luxury goods as shipped on `main`: coastal only, claimed by a Port that is never free.
+
+Step 13 rulings (owner, 2026-10-06), from the
+[ceremony design](https://claude.ai/artifact/Wxe7eJMJjccaGUwc1fWMsN), which is Step 13's spec:
+
+- National Ideas are an open draft. Seats pick in turn, continuing the placement snake,
+  and each pick is public at once with the picker's icon beside the Idea. An Idea is held
+  by one seat only, so in-play purchases come from the Ideas still untaken. This replaces
+  the secret simultaneous pick.
+- Hunger: the player picks which freemen or citizens leave, by settlement; the card opens
+  with freemen preselected. Slaves eat nothing and are not offered. Bots choose with their
+  scorer. This replaces the engine's freemen-first pick and matches the paper's section 5.3.
+- The Assembly is a modal over the shell, not a takeover. Minimised, it is read-only: the
+  map, realm and consult pages read normally, with no actions and end turn locked.
+- The year card shrinks into the first disc of the alarms row; the top bar keeps only the
+  year and the cards left.
+- A pass-the-seat screen covers the hand-off between human seats before an Assembly
+  proposal and a turn start. It never shows against bots.
+- A revolt with no slaves costs nothing beyond clearing the tokens. This is intended.
 
 After the independent audit (2026-09-28):
 
@@ -690,8 +708,9 @@ playtest, with the PR from `feat/v2` into `main` open for the owner to merge.
 
 - [x] **Step 12 · Level model.** Dropped: Q77 picked the level, so Step 5 builds it.
 - [ ] **Step 13 · Ceremony surfaces.** The year-card reveal, the Assembly sitting, hunger and
-      riot moments, victory, and the National Idea pick, designed in the app in the mock's
-      language.
+      riot moments, victory, and the National Idea draft, designed in the app in the mock's
+      language, to the [ceremony design](https://claude.ai/artifact/Wxe7eJMJjccaGUwc1fWMsN)
+      and the Step 13 rulings above. The Idea draft and the hunger pick are rule changes too.
 - [x] **Step 14 · Icons.** ([#94](https://github.com/Jinglemisk/hegemony/pull/94): ten Imperator placeholders for the v2 concepts, picked 2026-10-05; the gate passes at 1280/1440/1920. Year, threshold and National Idea rasters are exported but unwired, since the frame has no icon slot for them.) Rasters for new concepts (year cards, unrest, pieces, the Estate,
       the Dole) through the icon pipeline, as placeholders until the owner approves them.
 - [ ] **Step 15 · QA and docs.** Full games by bots and Playwright at 1280, 1440 and 1920;
