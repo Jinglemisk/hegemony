@@ -84,6 +84,7 @@ export function RealmPanel({
   subject,
   onSubject,
   groups,
+  locked = false,
   income,
   onBuildBuildingRequest,
   onBankSell,
@@ -96,6 +97,8 @@ export function RealmPanel({
   subject: RealmSubject;
   onSubject: (subject: RealmSubject) => void;
   groups: DiscGroup[];
+  /** Every verb is locked: the Assembly sits. */
+  locked?: boolean;
   /** The viewer's projected net income per turn. */
   income: Resources;
   onBuildBuildingRequest: (tileId: string, buildingId: BuildingId) => void;
@@ -151,7 +154,7 @@ export function RealmPanel({
 
   return (
     <section aria-label="Realm" className="realm" data-c="realm" data-exclude>
-      <VerbDiscs groups={groups} store={G.players[viewerId].resources} />
+      <VerbDiscs groups={groups} locked={locked} store={G.players[viewerId].resources} />
       <div className="realm-body">
         <header className="realm-head" data-c="realm-head">
           <span

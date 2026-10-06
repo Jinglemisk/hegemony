@@ -40,7 +40,10 @@ discards, results, and public logs. It removes or canonicalizes authority-only i
 - seed and serialized RNG are replaced with zero;
 - draw piles preserve counts only, using opaque card identifiers; the next year card
   is hidden from every seat, spectators and bots alike;
-- another seat's held Assembly card and sealed proposal are null during proposal;
+- another seat's held Assembly card, sealed proposal and set-aside draw are null during
+  proposal; a discarded draw waits in `assembly.setAside` and reaches its politician's
+  discard pile only when the ballot is read, and a sealed repeal's log line does not
+  name its Law;
 - spectators see no held card or sealed proposal;
 - a pending Player Event is visible only to its decision owner; other views receive a generic
   workflow/log indication until it resolves.
@@ -61,8 +64,8 @@ In hotseat (every browser game but `?dev=bots`) the viewer follows the seat the 
 only through public phases: setup, the Idea draft, the vote and the house rising. A private
 moment, a seat's turn or its Assembly proposal (`privateMoment`), is handed over behind the
 pass-the-seat cover, which stands in for the whole frame. Proposals run one seat at a time in
-turn order (`assembly.activePlayer`), and the seat plaques cannot switch seats while they do,
-so no seat reads another's drawn card. The game's end stays with whoever was looking.
+turn order (`assembly.activePlayer`), and the sitting has no seat switcher, so no seat
+reads another's drawn card. The game's end stays with whoever was looking.
 
 `src/sim/runner.ts` likewise projects before every policy decision. Search can transition the
 sanitized state for deterministic, RNG-free branches, but cannot observe real entropy or deck

@@ -237,29 +237,22 @@ export const SURFACES = [
       await p.goto(`${BASE}/?dev=assembly2&seed=42`, { waitUntil: "networkidle" });
       await p.waitForTimeout(1400);
       await p.getByRole("button", { name: "Draw from Stratokles", exact: true }).click();
-      await p.getByRole("button", { name: /^Target / }).click();
-      await p.locator(".asmTargetMenu .asmMenuChoices button").first().click();
-      for (let round = 0; round < 6; round += 1) {
-        const pass = p.getByRole("button", { name: /^Pass/i }).first();
-        if (await pass.count()) {
-          await pass.click().catch(() => {});
-          await p.waitForTimeout(400);
-        }
-        const seats = p.locator(".asmSeat, .roster .seat");
-        for (let i = 0, n = await seats.count(); i < n; i += 1) {
-          await seats
-            .nth(i)
-            .click()
-            .catch(() => {});
-          await p.waitForTimeout(180);
-          const again = p.getByRole("button", { name: /^Pass/i }).first();
-          if (await again.count()) {
-            await again.click().catch(() => {});
-            await p.waitForTimeout(320);
-          }
-        }
-        if (await p.getByRole("button", { name: "Vote Yea", exact: true }).count()) break;
+      await p.locator(".sit-pick").first().click();
+      await p.getByRole("button", { name: /^Seal against/ }).click();
+      // The other seats propose in turn behind the pass-the-seat cover and hold their peace.
+      for (let seat = 0; seat < 4; seat += 1) {
+        const cover = p.locator(".pass-ready");
+        if (await cover.count()) await cover.click().catch(() => {});
+        await p.waitForTimeout(320);
+        const peace = p.getByRole("button", { name: "Hold your peace", exact: true });
+        if (!(await peace.count())) break;
+        await peace.click().catch(() => {});
+        await p.waitForTimeout(320);
       }
+      await p
+        .getByRole("button", { name: /^Open the vote/ })
+        .click()
+        .catch(() => {});
       await p.waitForTimeout(400);
     },
   },

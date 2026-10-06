@@ -98,19 +98,25 @@ and event decision data becomes visible.
 
 ## Assembly presentation
 
-Assembly action buttons use the same tooltip semantics as command verbs and map
-actions. Repeal, full-board replacement, and required rival-target choices use the
-shared popover. The ballot visibly records a Directive's target and each authored
-resolution displays its active-ruleset prize. Voice, its standing authored-Law count,
-politician power, descriptive patrons, proposed cards, standing stelae, and Directive
-monuments are keyboard-inspectable board objects with accessible labels.
+The sitting is a modal over the shell (`AssemblySitting`), and the map, top bar and realm
+stay drawn behind its light scrim. `useSitting` reads the engine's three phases as six
+stages: the proposal choice, the drawn card, the ballot read, the vote, an item's result
+and the house rising. The ballot read and each result are shell beats the engine does
+not wait for. Minimise (or Escape) folds any stage to the dock under the ticker, where
+rivals' toasts sit otherwise; the dock or Escape restores the same stage. While the
+Assembly sits the shell only reads: the board's turn gate carries `inAssembly`, so the
+verb discs wear a lock, end turn reads "In Assembly" and the realm pages' actions are
+off.
 
-The Assembly maps each discriminated card effect through the canonical
-`presentLawEffect` or `presentDirectiveEffect` adapter in `src/ui/effects.ts` and sends
-those rows to `MechanicsDetails`. Law cards identify their trade-off and remain in
-force until repealed if passed. Directives identify their one-time rival effect; their
-monument is permanent board history, not a persistent rule. The UI never offers a
-Directive as a house resolution and never lets its author target themselves.
+Every figure comes from the engine: draw, repeal and purchase status, the Law a draw
+would replace (`lawReplacementIds`), a Directive's effect on each rival
+(`previewDirective`, run on a copy of the board), the base vote's parts
+(`voteWeightParts`) and the vote outlook (`voteOutlook`, `restCanTurn`), which the
+"what your vote does" line words from public numbers. A standing Law's tooltip maps its
+typed effects through `presentLawEffect` or `presentDirectiveEffect` into
+`MechanicsDetails`. A seat watching another cast sees the same vote with no controls;
+in hotseat the viewer follows the caster, so that form shows only when the viewer and
+the caster differ.
 
 ## Required regression coverage
 

@@ -111,23 +111,6 @@
   font-size: max(12px, 0.8125rem);
 }
 
-/* Assembly labels and controls must stay readable as the scene scales down. */
-.asmScene .label {
-  font-size: max(12px, 0.6875rem);
-}
-
-.asmScene .verb {
-  font-size: max(12px, 0.75rem);
-}
-
-.asmScene .verb.verb-lg {
-  font-size: max(12px, 0.8125rem);
-}
-
-.asmScene .caption {
-  font-size: max(12px, 0.78125rem);
-}
-
 .body {
   font-size: 0.9375rem; /* 15px */
   font-weight: 400;

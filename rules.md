@@ -396,6 +396,15 @@ plus one per citizen**. During your vote you may buy at most **two votes per
 sitting**, for **2 gold or 2 influence each**, in any mix. They count on every
 remaining ballot. A simple majority passes; a tie fails.
 
+A drawn card, kept or discarded, and a sealed repeal stay with their seat until the
+ballot is read; everyone sees only who has sealed. On screen the sitting is a sheet
+over the map. Each seat proposes in turn order behind the pass-the-seat screen, the
+ballot is read out, and each vote shows what your votes would make the tally and
+whether the seats after you can still turn it. Every item ends on its result, and
+the sitting ends on a recap of the verdicts, the standing Laws and Voice. Minimise
+the sheet to read the map, your realm or the consult pages; nothing can be done
+until you return to it.
+
 At most **four Laws** stand. A new Law at the cap replaces the oldest automatically.
 A Law survives its own sitting and the following one: a Law passed in Year 2 can
 first leave in Year 6. This protects it from repeal, replacement and The Stele Is

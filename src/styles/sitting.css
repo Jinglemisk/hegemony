@@ -1,0 +1,618 @@
+/* The Assembly sitting: a modal over the shell, after the ceremony design. The scrim
+   is light so the map reads behind it; minimised, the sitting is the dock under the
+   ticker, where the rivals' toasts sit when it is not. Sizes come from the frame's
+   tokens, so the sheet fits 1280 × 720 without scrolling. */
+
+.modalBackdrop.sitting-scrim {
+  z-index: var(--z-takeover);
+  align-items: flex-start;
+  padding: calc(var(--bar-h) + var(--hit) + var(--s-4)) var(--s-16) var(--s-4);
+  background: rgb(24 18 16 / 38%);
+}
+
+.sitting.logModal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: calc(var(--u) * 290);
+  max-height: 100%;
+  padding: 0;
+  overflow-y: auto;
+  border: 0;
+  border-radius: var(--s-2);
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: 0 var(--s-6) var(--s-16) rgb(0 0 0 / 45%);
+  backdrop-filter: none;
+  text-align: left;
+}
+
+/* ── Head and foot ─────────────────────────────────────────────────────────── */
+
+.sit-head,
+.sit-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-6);
+  background: var(--bone);
+}
+.sit-head {
+  border-bottom: var(--rule) solid var(--line);
+}
+.sit-foot {
+  justify-content: space-between;
+  margin-top: auto;
+  border-top: var(--rule) solid var(--line);
+}
+.sit-title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.sit-kicker,
+.sit-sec,
+.sit-epithet,
+.sit-rail li,
+.sit-btn,
+.sit-verdict,
+.sit-by {
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.sit-kicker,
+.sit-epithet {
+  color: var(--clay-ink);
+}
+.sit-title h2 {
+  margin: 0;
+  font: 700 var(--t-24) / var(--lh-32) var(--f-name);
+  letter-spacing: var(--track-name);
+}
+.sit-sub {
+  color: var(--ink-66);
+  font: italic var(--t-14) / var(--lh-20) var(--f-body);
+}
+.sit-rail {
+  display: flex;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sit-rail li {
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--s-4);
+  color: var(--ink-63);
+}
+.sit-rail li.is-done {
+  color: var(--olive);
+}
+.sit-rail li.is-now {
+  color: var(--ivory);
+  background: var(--ink);
+}
+
+/* ── Controls ──────────────────────────────────────────────────────────────── */
+
+.sit-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--hit);
+  padding: 0 var(--s-4);
+  border: var(--rule) solid var(--ink-45);
+  border-radius: var(--s-1);
+  color: var(--ink);
+  background: var(--ivory);
+  white-space: nowrap;
+}
+.sit-btn:not(:disabled):hover,
+.sit-btn[aria-pressed="true"] {
+  border-color: var(--clay);
+  color: var(--clay-ink);
+}
+.sit-btn:disabled {
+  opacity: var(--dim);
+}
+.sit-btn.is-primary,
+.sit-btn.is-nay {
+  border-color: var(--clay-shade);
+  color: var(--ivory);
+  background: var(--clay-ink);
+}
+.sit-btn.is-primary:not(:disabled):hover,
+.sit-btn.is-nay:not(:disabled):hover {
+  color: var(--ivory);
+  background: var(--clay-deep);
+}
+.sit-btn.is-yea {
+  border-color: var(--olive);
+  color: var(--olive);
+}
+.sit-btn .price {
+  text-transform: none;
+}
+.sit-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+.sit-acts.is-end {
+  justify-content: flex-end;
+}
+.sit-acts.is-split {
+  justify-content: space-between;
+}
+
+/* ── Body ──────────────────────────────────────────────────────────────────── */
+
+.sit-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-6);
+}
+.sit-sec {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  color: var(--ink-63);
+}
+.sit-name {
+  font: 700 var(--t-16) / var(--lh-20) var(--f-name);
+}
+.sit-text {
+  margin: 0;
+  font: var(--t-14) / var(--lh-20) var(--f-body);
+}
+.sit-note,
+.sit-prize {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1);
+  margin: 0;
+  color: var(--ink-66);
+  font: var(--t-12) / var(--lh-16) var(--f-sans);
+}
+.sit-warn {
+  margin: 0;
+  color: var(--clay-ink);
+  font: var(--t-14) / var(--lh-20) var(--f-body);
+}
+.sit-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.sit-pols,
+.sit-laws {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+.sit-pol,
+.sit-law {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-3);
+  border-radius: var(--s-1);
+}
+.sit-pol {
+  box-shadow: inset 0 0 0 var(--rule) var(--line);
+}
+.sit-pol .sit-prize {
+  margin-top: auto;
+}
+.sit-pol .sit-btn {
+  margin-top: var(--s-1);
+}
+
+/* A standing Law is a stele: dark stone, light letters. */
+.sit-law {
+  color: var(--ivory);
+  background: var(--lacquer-lit);
+  text-align: left;
+}
+.sit-law .sit-by {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: auto;
+  color: var(--ivory-70);
+}
+.sit-law.is-target {
+  cursor: pointer;
+  box-shadow: 0 0 0 var(--rule-2) var(--clay);
+}
+.sit-law.is-target:hover {
+  background: var(--ink);
+}
+.sit-law.is-new {
+  box-shadow: 0 0 0 var(--rule-2) var(--clay);
+}
+.sit-law.is-gone {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+.sit-law.is-empty {
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-63);
+  background: none;
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-45);
+  font: italic var(--t-14) / var(--lh-20) var(--f-body);
+}
+.sit-law-tip {
+  display: flex;
+}
+.sit-law-tip > .sit-law {
+  flex: 1;
+}
+
+/* ── The drawn card ────────────────────────────────────────────────────────── */
+
+.sit-drawn {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: start;
+  gap: var(--s-6);
+}
+.sit-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border-radius: var(--s-1);
+  box-shadow: inset 0 0 0 var(--rule) var(--line);
+}
+.sit-card-name {
+  font: 700 var(--t-24) / var(--lh-32) var(--f-name);
+}
+.sit-lock {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--s-4);
+  color: var(--porphyra);
+  background: var(--bone);
+  font: var(--t-12) / var(--lh-16) var(--f-sans);
+}
+.sit-pick {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--s-12);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--s-1);
+  box-shadow: inset 0 0 0 var(--rule) var(--line);
+  text-align: left;
+}
+.sit-pick b {
+  font: 700 var(--t-16) / var(--lh-20) var(--f-name);
+}
+.sit-pick[aria-pressed="true"] {
+  background: var(--bone);
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.sit-pick-fx {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s-3);
+  font: var(--t-14) / var(--lh-20) var(--f-sans);
+}
+.sit-pick-fx > span,
+.sit-item-side > span,
+.sit-fx > span {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+/* ── The ballot and the recap ──────────────────────────────────────────────── */
+
+.sit-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sit-item {
+  display: grid;
+  grid-template-columns: var(--s-6) auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--s-1);
+  box-shadow: inset 0 0 0 var(--rule) var(--line);
+}
+.sit-item.is-quiet {
+  background: var(--bone);
+}
+.sit-no {
+  color: var(--ink-63);
+  font: 700 var(--t-20) / var(--lh-24) var(--f-name);
+  text-align: center;
+}
+.sit-item-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.sit-item-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+.sit-item-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-1);
+  color: var(--ink-66);
+  font: var(--t-12) / var(--lh-16) var(--f-sans);
+  text-align: right;
+}
+
+/* ── The vote ──────────────────────────────────────────────────────────────── */
+
+.sit-tally {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--s-6);
+}
+.sit-side {
+  display: flex;
+  flex-direction: column;
+}
+.sit-side b {
+  font: 700 calc(var(--t-24) * 2) / calc(var(--lh-24) * 2) var(--f-name);
+}
+.sit-side.is-yea,
+.sit-side.is-yea .sit-sec {
+  color: var(--olive);
+}
+.sit-side.is-nay,
+.sit-side.is-nay .sit-sec {
+  align-items: flex-end;
+  color: var(--clay-ink);
+}
+.sit-beam-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  padding-bottom: var(--s-2);
+}
+.sit-beam {
+  display: flex;
+  width: 100%;
+  height: var(--s-3);
+  overflow: hidden;
+  border-radius: var(--s-2);
+  background: var(--ink-12);
+}
+.sit-beam i {
+  flex-basis: 0;
+}
+.sit-beam i.is-yea {
+  background: var(--olive);
+}
+.sit-beam i.is-nay {
+  background: var(--clay);
+}
+.sit-order {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sit-order li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--s-1);
+  box-shadow: inset 0 0 0 var(--rule) var(--line);
+}
+.sit-order li .idea-seat {
+  grid-row: span 2;
+}
+.sit-order li.is-now {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--clay);
+}
+.sit-order b {
+  font: 700 var(--t-14) / var(--lh-20) var(--f-name);
+}
+.sit-order-v {
+  color: var(--ink-66);
+  font: var(--t-12) / var(--lh-16) var(--f-sans);
+}
+.sit-order-v.is-yea {
+  color: var(--olive);
+}
+.sit-order-v.is-nay {
+  color: var(--clay-ink);
+}
+.sit-order.is-row {
+  display: flex;
+  justify-content: center;
+}
+.sit-mine {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-6);
+  padding: var(--s-4);
+  border-radius: var(--s-1);
+  background: var(--bone);
+}
+.sit-mine-n {
+  display: flex;
+  flex-direction: column;
+}
+.sit-mine-n b {
+  font: 700 var(--t-28) / var(--lh-32) var(--f-name);
+}
+.sit-what {
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--s-1);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-12);
+  font: var(--t-14) / var(--lh-20) var(--f-body);
+}
+
+/* ── An item's result ──────────────────────────────────────────────────────── */
+
+.sit-result {
+  align-items: center;
+  text-align: center;
+}
+.sit-verdict {
+  display: inline-flex;
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--s-1);
+  color: var(--ivory);
+}
+.sit-verdict.is-yea {
+  background: var(--olive);
+}
+.sit-verdict.is-nay {
+  background: var(--clay-ink);
+}
+.sit-headline {
+  margin: 0;
+  font: 700 var(--t-28) / var(--lh-32) var(--f-name);
+}
+.sit-result .sit-law {
+  width: calc(var(--u) * 80);
+}
+.sit-fx {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  text-align: left;
+}
+
+/* ── The seat strip ────────────────────────────────────────────────────────── */
+
+.sit-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sit-seats li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-3) var(--s-1) var(--s-1);
+  border-radius: var(--s-6);
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--line);
+}
+.sit-seats li.is-you {
+  box-shadow: inset 0 0 0 var(--rule-2) var(--porphyra);
+}
+.sit-seats li > span {
+  display: flex;
+  flex-direction: column;
+}
+.sit-seats b {
+  font: 700 var(--t-12) / var(--lh-16) var(--f-name);
+}
+.sit-seats li > span > span {
+  color: var(--ink-66);
+  font: var(--t-12) / var(--lh-16) var(--f-sans);
+}
+
+/* ── The dock ──────────────────────────────────────────────────────────────── */
+
+.sit-dock {
+  position: absolute;
+  top: calc(var(--bar-h) + var(--hit) + var(--s-4));
+  left: var(--s-4);
+  display: grid;
+  grid-template-areas:
+    "icon words words"
+    "seats seats back";
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  width: var(--ticker-w);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--s-2);
+  color: var(--ivory);
+  background: var(--ink);
+  text-align: left;
+}
+.sit-dock > .ico {
+  grid-area: icon;
+}
+.sit-dock-words {
+  display: flex;
+  grid-area: words;
+  flex-direction: column;
+  min-width: 0;
+}
+.sit-dock-words b {
+  font: 700 var(--t-14) / var(--lh-20) var(--f-name);
+}
+.sit-dock-words span {
+  color: var(--ivory-70);
+  font: var(--t-12) / var(--lh-16) var(--f-sans);
+}
+.sit-dock-seats {
+  display: flex;
+  grid-area: seats;
+  gap: var(--s-3);
+}
+.sit-dock-seat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: 700 var(--t-12) / var(--lh-16) var(--f-sans);
+}
+.sit-dock-back {
+  grid-area: back;
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--s-1);
+  background: var(--clay-ink);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.sit-dock:hover .sit-dock-back {
+  background: var(--clay);
+}
+
+/* Minimised, every verb disc wears a lock: the sitting owns the actions. */
+.verb-lock {
+  position: absolute;
+  top: 0;
+  left: 0;
+}

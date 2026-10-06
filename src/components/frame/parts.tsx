@@ -1,8 +1,9 @@
-import type { ReactNode } from "react";
-import type { Resource, Resources } from "../../game/types";
+import type { CSSProperties, ReactNode } from "react";
+import type { PlayerId, Resource, Resources } from "../../game/types";
 import { RESOURCE_ICON, sign, tone } from "../../ui/frameFormat";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
 import { rasterIcon } from "../../ui/icons/placeholders";
+import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 
 /**
  * The frame's atoms, after the Hybrid arc mock: a raster icon at one of the four
@@ -27,6 +28,21 @@ export function Ico({
       className={`ico ico-${size}${className ? ` ${className}` : ""}`}
       src={rasterIcon(path)}
     />
+  );
+}
+
+/** A seat's glaze disc with its blazon. A bought Idea's mark carries the year. */
+export function SeatMark({ playerID, year }: { playerID: PlayerId; year?: number }) {
+  const glaze = PLAYER_GLAZES[playerID];
+  return (
+    <span
+      className="idea-seat"
+      data-year={year === undefined ? undefined : `Y${year}`}
+      style={{ "--owner": glaze.color } as CSSProperties}
+      title={glaze.name}
+    >
+      {glaze.blazon}
+    </span>
   );
 }
 

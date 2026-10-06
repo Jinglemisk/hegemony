@@ -500,8 +500,8 @@ export const CONTENT_MANIFEST = {
     ids: POLITICIAN_CONTENT_IDS,
     engine: { implementation: "src/game/assembly/deck.ts", evidence: "POLITICIANS" },
     frontend: {
-      implementation: "src/components/board/assembly/AssemblyColonnade.tsx",
-      evidence: "politician",
+      implementation: "src/components/board/assembly/AssemblySitting.tsx",
+      evidence: "POLITICIANS",
     },
     simulation: {
       implementation: "src/sim/policies.ts",
@@ -514,8 +514,8 @@ export const CONTENT_MANIFEST = {
     ids: RESOLUTION_CONTENT_IDS,
     engine: { implementation: "src/game/assembly/deck.ts", evidence: "RESOLUTION_CARDS" },
     frontend: {
-      implementation: "src/components/board/assembly/AssemblyFloor.tsx",
-      evidence: "ResolutionEffect",
+      implementation: "src/components/board/assembly/AssemblySitting.tsx",
+      evidence: "ResolutionDetails",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "deltaIfEnacted" },
     telemetry: { implementation: "src/sim/telemetry.ts", evidence: "assembly" },

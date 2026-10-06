@@ -122,6 +122,7 @@ function redactState(state: HegemonyState, viewer: PlayerId | null): ProjectedGa
         if (playerID !== viewer) {
           draft.assembly.held[playerID] = null;
           draft.assembly.proposals[playerID] = null;
+          draft.assembly.setAside[playerID] = null;
         }
       }
     }

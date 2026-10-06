@@ -128,6 +128,7 @@ export function openAssembly(G: HegemonyState, resumePlayer: PlayerId) {
     draws: perSeat(0),
     proposals: perSeat<BallotItem | null>(null),
     proposalDone: perSeat(false),
+    setAside: perSeat<string | null>(null),
     ballot: [],
     ballotIndex: 0,
     votes: [],
@@ -177,6 +178,16 @@ function drawFromPoliticianDeck(G: HegemonyState, politician: PoliticianId): Res
 
 function discardCard(G: HegemonyState, card: ResolutionCard) {
   G.politicianDiscards[card.politician].push(card.id);
+}
+
+/** A draw is secret until the ballot is read, a discarded one included: it waits face
+ *  down with its seat, and `beginVoting` lays it on the discard pile. */
+function setAsideHeld(G: HegemonyState, playerID: PlayerId) {
+  const session = G.assembly!;
+  const held = session.held[playerID];
+  if (!held) return;
+  session.setAside[playerID] = held.card.id;
+  session.held[playerID] = null;
 }
 
 // ── Proposal phase (async) ──────────────────────────────────────────────────────────
@@ -265,8 +276,7 @@ export function assemblyDiscardHeld(G: HegemonyState, playerID: PlayerId): MoveR
     return invalid();
   }
 
-  discardCard(G, session!.held[playerID]!.card);
-  session!.held[playerID] = null;
+  setAsideHeld(G, playerID);
   addLog(G, `${getPlayerName(G, playerID)} set the drawn resolution aside.`, playerID);
   return MOVE_OK;
 }
@@ -387,16 +397,13 @@ export function assemblyProposeRepeal(
   const cost = status.price;
 
   G.players[playerID].resources.influence -= cost;
+  setAsideHeld(G, playerID);
 
-  if (session!.held[playerID]) {
-    discardCard(G, session!.held[playerID]!.card);
-    session!.held[playerID] = null;
-  }
-
+  // The Law it names stays sealed until the ballot is read; the price is public.
   session!.proposals[playerID] = { kind: "repeal", cardId, proposer: playerID };
   addLog(
     G,
-    `${getPlayerName(G, playerID)} moves to strike ${getResolutionCard(G.definition.content, cardId)?.name ?? cardId} from the record.`,
+    `${getPlayerName(G, playerID)} pays ${cost} influence to seal a motion of repeal.`,
     playerID,
   );
   finalizeProposal(G, playerID);
@@ -412,11 +419,7 @@ export function assemblyPass(G: HegemonyState, playerID: PlayerId): MoveResult {
     return invalid();
   }
 
-  if (session!.held[playerID]) {
-    discardCard(G, session!.held[playerID]!.card);
-    session!.held[playerID] = null;
-  }
-
+  setAsideHeld(G, playerID);
   session!.proposals[playerID] = null;
   addLog(G, `${getPlayerName(G, playerID)} holds their peace.`, playerID);
   finalizeProposal(G, playerID);
@@ -447,6 +450,13 @@ function finalizeProposal(G: HegemonyState, playerID: PlayerId) {
 function beginVoting(G: HegemonyState) {
   const session = G.assembly!;
 
+  for (const seat of session.voteOrder) {
+    const cardId = session.setAside[seat];
+    const card = cardId ? getResolutionCard(G.definition.content, cardId) : null;
+    if (card) discardCard(G, card);
+    session.setAside[seat] = null;
+  }
+
   session.ballot = [
     ...session.voteOrder
       .map((seat) => session.proposals[seat])
@@ -472,13 +482,12 @@ function beginVoting(G: HegemonyState) {
   syncAssemblyActor(G);
 }
 
-/** A seat's base voting strength: one plus their citizens, or exactly one when Isonomia names them. */
-export function baseVoteWeight(G: HegemonyState, playerID: PlayerId): number {
-  if (G.assembly?.isonomiaTarget === playerID) {
-    return 1;
-  }
-
+/** What a seat's base vote is made of: the seat, its citizens, and the Rural Bloc's
+ *  colonies-minus-cities when that Law stands. Isonomia overrides all of it with one. */
+export function voteWeightParts(G: HegemonyState, playerID: PlayerId) {
   let citizens = 0;
+  let rural = 0;
+  const bloc = hasLawRule(G, "ruralBloc");
 
   for (const tileId of G.players[playerID].settlements) {
     const settlement = getTile(G, tileId)?.settlements.find(
@@ -487,21 +496,55 @@ export function baseVoteWeight(G: HegemonyState, playerID: PlayerId): number {
 
     if (settlement) {
       citizens += settlement.pops.citizens;
+      if (bloc) rural += settlement.kind === "colony" ? 1 : -1;
     }
   }
 
-  const rural = hasLawRule(G, "ruralBloc")
-    ? G.players[playerID].settlements.reduce((sum, tileId) => {
-        const settlement = getTile(G, tileId)?.settlements.find((s) => s.owner === playerID);
-        return sum + (settlement ? (settlement.kind === "colony" ? 1 : -1) : 0);
-      }, 0)
-    : 0;
-  return Math.max(1, 1 + citizens + rural);
+  return { citizens, rural, isonomia: G.assembly?.isonomiaTarget === playerID };
+}
+
+/** A seat's base voting strength: one plus their citizens, or exactly one when Isonomia names them. */
+export function baseVoteWeight(G: HegemonyState, playerID: PlayerId): number {
+  const { citizens, rural, isonomia } = voteWeightParts(G, playerID);
+  return isonomia ? 1 : Math.max(1, 1 + citizens + rural);
 }
 
 /** Votes bought so far plus the base — what this seat would cast right now. */
 export function currentVoteWeight(G: HegemonyState, playerID: PlayerId): number {
   return baseVoteWeight(G, playerID) + (G.assembly?.bribesUsed[playerID] ?? 0);
+}
+
+/** Votes a seat may still buy this sitting: the cap left, and no more than it can pay. */
+export function votesLeftToBuy(G: HegemonyState, playerID: PlayerId): number {
+  const price = G.ruleset.assembly.briberyCost;
+  const { gold, influence } = G.players[playerID].resources;
+  const affordable =
+    price > 0 ? Math.floor(gold / price) + Math.floor(influence / price) : Infinity;
+  const capLeft = votePurchaseLimit(G, playerID) - (G.assembly?.bribesUsed[playerID] ?? 0);
+  return Math.max(0, Math.min(capLeft, affordable));
+}
+
+/**
+ * The open vote on the current item, read off public numbers: the tally so far, the
+ * caster's votes now, and every seat still to cast with its votes now and at most.
+ * A tie fails, so a yea majority must be strictly larger.
+ */
+export function voteOutlook(G: HegemonyState) {
+  const session = G.assembly;
+  if (!session || session.phase !== "voting") return null;
+  const tally = (yea: boolean) =>
+    session.votes.filter((vote) => vote.yea === yea).reduce((sum, vote) => sum + vote.weight, 0);
+  const waiting = session.voteOrder.slice(session.voteIndex).map((playerID) => {
+    const weight = currentVoteWeight(G, playerID);
+    return { playerID, weight, most: weight + votesLeftToBuy(G, playerID) };
+  });
+  const [caster, ...rest] = waiting;
+  return { yea: tally(true), nay: tally(false), caster, rest };
+}
+
+/** Whether the seats still to cast could carry a ballot now at `yea` to `nay`, or sink it. */
+export function restCanTurn(yea: number, nay: number, restMost: number): boolean {
+  return yea > nay ? nay + restMost >= yea : yea + restMost > nay;
 }
 
 /**
@@ -628,10 +671,22 @@ function resolveBallotItem(G: HegemonyState) {
 
   if (session.ballotIndex >= session.ballot.length) {
     session.phase = "closing";
-    addLog(G, "The Assembly rises.");
+    // The sitting's recap is one Chronicle entry, to be read again later.
+    const verdicts = session.results.map(
+      (done) =>
+        `${ballotItemName(G, done.item)} ${done.passed ? "carried" : "fell"} ${done.yea}–${done.nay}`,
+    );
+    addLog(G, `The Assembly rises: ${verdicts.join("; ")}.`);
   }
 
   syncAssemblyActor(G);
+}
+
+/** A ballot item as the house names it: the card, or "Repeal" and the Law it strikes. */
+export function ballotItemName(G: HegemonyState, item: BallotItem): string {
+  return item.kind === "repeal"
+    ? `Repeal ${getResolutionCard(G.definition.content, item.cardId)?.name ?? item.cardId}`
+    : item.card.name;
 }
 
 function summarize(G: HegemonyState, item: BallotItem, passed: boolean): string {
@@ -734,6 +789,18 @@ function formatPrize(prize: Partial<HegemonyState["players"][PlayerId]["resource
  */
 export function enactForEval(G: HegemonyState, item: BallotItem): void {
   enact(G, item);
+}
+
+/** The board as it would stand if this Directive carried against `target`: a copy,
+ *  for the proposer to see what the card does to each rival before sealing it. */
+export function previewDirective(
+  G: HegemonyState,
+  card: DirectiveCard,
+  target: PlayerId,
+): HegemonyState {
+  const after = structuredClone(G);
+  applyDirective(after, card, target);
+  return after;
 }
 
 /** Take a Law off the board and return its card to its politician's discard pile, so

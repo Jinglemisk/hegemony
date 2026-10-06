@@ -42,7 +42,8 @@ import { RiotModal } from "./board/modals/RiotModal";
 import { RevoltModal } from "./board/modals/RevoltModal";
 import { YearCardModal } from "./board/modals/YearCardModal";
 import { VentureModal } from "./board/modals/VentureModal";
-import { AssemblyPanel } from "./board/assembly/AssemblyPanel";
+import { AssemblyDock, AssemblySitting } from "./board/assembly/AssemblySitting";
+import { useSitting } from "./board/assembly/sitting";
 import { GameUiProvider } from "./board/GameUiProvider";
 import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
@@ -101,7 +102,7 @@ export function HegemonyBoard({
   events,
   playerID = "0",
   onPlayerIDChange,
-  isActive,
+  isActive: seatActive,
   hotseat,
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
@@ -153,11 +154,15 @@ export function HegemonyBoard({
   const currentPlayerId = toPlayerId(ctx.currentPlayer);
   const viewerId = toPlayerId(playerID);
   const viewer = G.players[viewerId];
+  // While the Assembly sits the shell only reads: the sitting owns every action.
+  const sitting = useSitting(G, viewerId);
+  const inAssembly = Boolean(G.assembly);
+  const isActive = seatActive && !inAssembly;
   // Hunger waiting on its choice blocks the turn exactly as a drawn fate card does.
   const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent || G.pendingHunger);
   // The one gate the turn dial needs. It is the same gate every verb sits behind
   // (verbs.tsx), asked without a board fact in sight.
-  const turnGate = { isActive, phase: ctx.phase, hasPendingPlayerEvent };
+  const turnGate = { isActive, phase: ctx.phase, hasPendingPlayerEvent, inAssembly };
   const turnOpen = isTurnOpen(turnGate);
   const activeEffects = useMemo(() => getActiveEffects(G, viewerId), [G, viewerId]);
   const toasts = useMomentToasts(G, viewerId, DEV_SHELL.toastReplayFrom, DEV_SHELL.titlesFrom);
@@ -421,6 +426,7 @@ export function HegemonyBoard({
     phase: ctx.phase,
     isActive,
     hasPendingPlayerEvent,
+    inAssembly,
     canGrowPops,
     canMovePops,
     canFoundColony,
@@ -492,7 +498,11 @@ export function HegemonyBoard({
                   viewerId={viewerId}
                 />
                 <Ticker log={G.log} />
-                <ToastLane onDismiss={toasts.dismiss} toast={toasts.toast} />
+                {sitting?.minimised ? (
+                  <AssemblyDock sitting={sitting} />
+                ) : (
+                  <ToastLane onDismiss={toasts.dismiss} toast={toasts.toast} />
+                )}
                 <Alarms
                   content={G.definition.content}
                   effects={activeEffects}
@@ -526,6 +536,7 @@ export function HegemonyBoard({
 
               <div className="hud hud-bottom">
                 <RealmPanel
+                  locked={inAssembly}
                   groups={discGroups(
                     verbContext,
                     {
@@ -564,6 +575,7 @@ export function HegemonyBoard({
                   onCalm={moves.civicCalm}
                   onEndTurn={events.endTurn}
                   title={turnCommitTitle(turnGate)}
+                  waitingLabel={inAssembly ? "In Assembly" : undefined}
                   unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
                   warning={endTurnWarning(G, currentPlayerId)}
                 />
@@ -757,15 +769,11 @@ export function HegemonyBoard({
             <HungerModal key={`${G.pendingHunger.playerID}-${ctx.turn}`} />
           ) : null}
           {G.pendingPlayerEvent && !momentAhead ? <PendingPlayerEventModal /> : null}
-          {/* The Assembly TAKES OVER the table in a sitting year
-          (assembly-politicians.md §1.2; owner ruling 2026-08-15). It mounts off
-          engine state, and it covers the whole viewport — bars,
-          rails and dock included. Its seat plaques switch seats in the public
-          phases; a proposal is private, and its seat comes by the cover. */}
-          {G.assembly && !momentAhead ? (
-            <AssemblyPanel
-              onTakeSeat={hotseat && G.assembly.phase === "proposal" ? undefined : onPlayerIDChange}
-            />
+          {/* The Assembly sits in a modal over the shell. It mounts off engine state;
+          minimised, it is the dock under the ticker. A proposal is private, and its
+          seat comes by the cover. */}
+          {sitting && !sitting.minimised && !momentAhead ? (
+            <AssemblySitting sitting={sitting} />
           ) : null}
         </main>
       </CodexLinkProvider>

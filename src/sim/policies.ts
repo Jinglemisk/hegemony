@@ -1115,6 +1115,8 @@ function observablePoliticianPool(
   }
   const held = session?.held[me];
   if (held) knownOutsideDeck.add(held.card.id);
+  const setAside = session?.setAside[me];
+  if (setAside) knownOutsideDeck.add(setAside);
   const proposal = session?.proposals[me];
   if (proposal?.kind === "enact") knownOutsideDeck.add(proposal.card.id);
 

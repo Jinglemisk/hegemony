@@ -1,31 +1,14 @@
 import { useState } from "react";
-import type { CSSProperties } from "react";
 import { IDEA_PURCHASE_COST, getNationalIdeas, ideaDraft, ideaHolders } from "../../../game/ideas";
 import type { NationalIdeaId, IdeaPopChoice } from "../../../game/ideaTypes";
 import { enumerateLegalOptions } from "../../../game/legalMoves";
-import type { HegemonyState, PlayerId } from "../../../game/types";
+import type { HegemonyState } from "../../../game/types";
 import { IDEA_ICON } from "../../../ui/frameFormat";
 import { formatNumber } from "../../../ui/formatters";
-import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { settlementNames } from "../../../ui/settlementNames";
 import { useGameUi } from "../GameUiContext";
-import { Chips, Ico } from "../../frame/parts";
+import { Chips, Ico, SeatMark } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
-
-/** A seat's glaze disc with its blazon, the mark every holder carries in the list. */
-function SeatMark({ playerID, year }: { playerID: PlayerId; year?: number }) {
-  const glaze = PLAYER_GLAZES[playerID];
-  return (
-    <span
-      className="idea-seat"
-      data-year={year === undefined ? undefined : `Y${year}`}
-      style={{ "--owner": glaze.color } as CSSProperties}
-      title={glaze.name}
-    >
-      {glaze.blazon}
-    </span>
-  );
-}
 
 const COUNT = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 

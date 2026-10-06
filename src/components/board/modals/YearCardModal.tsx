@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
 import { PLAYER_IDS } from "../../../game/data";
 import { assemblySittings, nextAssemblyYear } from "../../../game/assembly";
 import { yearDeckSize } from "../../../game/year";
-import type { LogMoment, PlayerId, Resource, YearCard, YearTerm } from "../../../game/types";
+import type { LogMoment, Resource, YearCard, YearTerm } from "../../../game/types";
 import { presentYearCard } from "../../../ui/effects";
 import type { EffectPresentation } from "../../../ui/effects";
 import { ordinal, toRoman } from "../../../ui/formatters";
 import { sign, yearCardIcon } from "../../../ui/frameFormat";
-import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
-import { Chips, Ico } from "../../frame/parts";
+import { Chips, Ico, SeatMark } from "../../frame/parts";
 import { yearCardArtUrl } from "../events";
 import { useGameUi } from "../GameUiContext";
 import { CeremonyBlow } from "./CeremonyBlow";
@@ -171,7 +169,7 @@ export function YearCardModal({
                     : null;
               return (
                 <li className={seat === viewerId ? "is-you" : undefined} key={seat}>
-                  <Seat seat={seat} />
+                  <SeatMark playerID={seat} />
                   {line}
                   <span className={warn ? "yearImpact-warn caption" : "caption"}>
                     {warn ?? (seat === viewerId ? "you" : G.players[seat].name)}
@@ -216,14 +214,5 @@ export function YearCardModal({
         </button>
       </div>
     </ModalShell>
-  );
-}
-
-function Seat({ seat }: { seat: PlayerId }) {
-  const glaze = PLAYER_GLAZES[seat];
-  return (
-    <span className="idea-seat" style={{ "--owner": glaze.color } as CSSProperties}>
-      {glaze.blazon}
-    </span>
   );
 }

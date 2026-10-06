@@ -228,7 +228,50 @@ const MOMENT_QUERIES: Record<string, (G: HegemonyState) => HegemonyState> = {
     DEV_SHELL.passCover = true;
     return G;
   },
+  // The fourth sitting, its proposals sealed: the ballot read, one item voted but for
+  // its last seat, and the house risen.
+  "assembly-ballot": (G) => sealProposals(G),
+  "assembly-vote": (G) => castVotes(sealProposals(G), 1),
+  "assembly-rises": (G) => castVotes(sealProposals(G), 0),
 };
+
+/** Reach the fourth sitting and seal a Directive, a repeal, a Law and a silence, so the
+ *  ballot carries every kind of item. */
+function sealProposals(initial: HegemonyState): HegemonyState {
+  let G = fastForwardToAssembly(initial);
+  for (let sitting = 1; sitting < 4; sitting++) G = fastForwardToAssembly(playOutAssembly(G));
+  G = produce(G, (draft) => {
+    for (const player of Object.values(draft.players))
+      player.resources.influence = Math.max(player.resources.influence, 6);
+  });
+  const plan = ["stratokles", "repeal", "perdiccas", "pass"];
+  for (let guard = 0; G.assembly?.phase === "proposal" && guard < 12; guard++) {
+    const commands = enumerateLegalCommands(G, G.currentPlayer);
+    const pick = (type: GameCommand["type"]) => commands.find((c) => c.type === type);
+    const step = plan[G.assembly.voteOrder.indexOf(G.currentPlayer)];
+    const draw = commands.find((c) => c.type === "assemblyDraw" && c.politician === step);
+    const command =
+      pick("assemblyPropose") ??
+      draw ??
+      (step === "repeal" ? pick("assemblyProposeRepeal") : undefined) ??
+      pick("assemblyPass");
+    if (!command) break;
+    G = apply(G, command);
+  }
+  return G;
+}
+
+/** Cast votes, yea and nay in turn, until `left` votes remain in the sitting's first
+ *  item, or until the house rises when `left` is 0. */
+function castVotes(initial: HegemonyState, left: number): HegemonyState {
+  let G = initial;
+  for (let guard = 0; G.assembly?.phase === "voting" && guard < 40; guard++) {
+    const { voteIndex, voteOrder } = G.assembly;
+    if (left && voteOrder.length - voteIndex <= left) break;
+    G = apply(G, { type: "assemblyVote", yea: voteIndex % 2 === 0 });
+  }
+  return G;
+}
 
 const END_TURN: GameCommand = { type: "endTurn" };
 

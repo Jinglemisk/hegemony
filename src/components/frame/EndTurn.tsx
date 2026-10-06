@@ -71,6 +71,7 @@ export function EndTurn({
   warning,
   unrest,
   confirmOpen = false,
+  waitingLabel,
   onEndTurn,
   onCalm,
 }: {
@@ -83,6 +84,8 @@ export function EndTurn({
   unrest: TurnEndUnrest | null;
   /** Open the confirm at once (a dev shortcut for the gate). */
   confirmOpen?: boolean;
+  /** What the waiting seal says instead of the acting seat's name. */
+  waitingLabel?: string;
   onEndTurn: () => void;
   onCalm: (payment: CivicCalmPayment) => void;
 }) {
@@ -96,7 +99,7 @@ export function EndTurn({
   if (!canEndTurn) {
     return (
       <div
-        aria-label={`${acting.name} is acting.`}
+        aria-label={waitingLabel ? `${waitingLabel}. ${title}` : `${acting.name} is acting.`}
         className="endturn is-waiting"
         data-c="endturn"
         data-exclude
@@ -107,7 +110,7 @@ export function EndTurn({
           <span className="endturn-blazon">{acting.blazon}</span>
         </span>
         <span className="endturn-label" data-c="chip">
-          {acting.name}
+          {waitingLabel ?? acting.name}
         </span>
       </div>
     );

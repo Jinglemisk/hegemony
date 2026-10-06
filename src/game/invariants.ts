@@ -343,6 +343,7 @@ function validateResolutionCards(
   if (session?.phase === "proposal") {
     Object.values(session.held).forEach((held) => held && countId(held.card.id));
     Object.values(session.proposals).forEach(countItem);
+    Object.values(session.setAside).forEach((cardId) => cardId && countId(cardId));
   } else if (session?.phase === "voting") {
     session.ballot.slice(session.ballotIndex).forEach(countItem);
   }

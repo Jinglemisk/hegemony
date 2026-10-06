@@ -271,7 +271,7 @@ every other surface does — today it is unreachable, locked inside a JPEG-ish P
 tests pinning exact CSS expression strings — a token _value_ change is free, a
 token _rename_ is not. And the plate currently supplies the map's contrast against
 the bone tablets; a flat texture may need the tablets' shadow doing more work.
-Check the Assembly too, whose full-bleed floor sits over this ground.
+Check the Assembly too, whose sheet shows this ground through a light scrim.
 
 ## ICON-1 — the fourth icon system · **shipped**
 

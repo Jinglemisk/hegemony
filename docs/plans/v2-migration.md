@@ -645,6 +645,26 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   `?dev=revolt-confirm`, `?dev=riot`, `?dev=riot-result`, `?dev=revolt`,
   `?dev=rival-unrest`, `?dev=threat`, `?dev=race`, `?dev=age-end`, `?dev=pass`. No schema
   change beyond Part A's: the riot's pending state gained two fields within state 10.
+- Part C (the Assembly sitting). The ballot read and each item's result are beats the
+  shell holds, not engine phases; a game opened mid-sitting does not replay results
+  already decided. Minimise, or Escape, folds any stage to a dock in the toast lane
+  under the ticker rather than over the map as drawn, so it never covers the island;
+  toasts wait while it shows. The dock or Escape restores the same stage; a click on
+  the scrim does nothing.
+- A discarded draw waits face down with its seat (`assembly.setAside`) and reaches the
+  discard pile when the ballot is read; a sealed repeal's Chronicle line names no Law.
+  Both were public before. The house rising writes one recap line with every verdict.
+- "What your vote does" reads `voteOutlook`: a seat still to cast counts "up to" the
+  votes it can still buy and pay for, not only the cap. A Directive's effect on each
+  rival comes from running it on a copy of the board. The result beat names the prize
+  and how Voice moved, not per-Law consequence prose, which the cards do not carry.
+- The viewer follows the caster in hotseat and no bots sit beside people, so the
+  "watching a rival cast" form (the vote without controls) shows only when the viewer
+  and the caster differ; nothing in the shell makes them differ today.
+- The ticker cuts its newest line at a word with an ellipsis to fit the tab, so a long
+  Chronicle line no longer runs on under whatever lies beside it.
+- Gate queries: `?dev=assembly-ballot`, `?dev=assembly-vote`, `?dev=assembly-rises`. No
+  schema change beyond Part A's: the Assembly session gained `setAside` within state 10.
 
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory

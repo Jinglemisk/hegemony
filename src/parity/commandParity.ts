@@ -187,35 +187,35 @@ export const COMMAND_PARITY = {
     simulation: simulated("master-rule", "resolveStochasticByRule riot fallback"),
   },
   assemblyDraw: {
-    frontend: interactive("src/components/board/assembly/AssemblyColonnade.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyDiscardHeld: {
-    frontend: interactive("src/components/board/assembly/AssemblyFloor.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyPropose: {
-    frontend: interactive("src/components/board/assembly/AssemblyFloor.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyProposeRepeal: {
-    frontend: interactive("src/components/board/assembly/AssemblyFoot.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyPass: {
-    frontend: interactive("src/components/board/assembly/AssemblyFoot.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyBribe: {
-    frontend: interactive("src/components/board/assembly/AssemblySeats.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyVote: {
-    frontend: interactive("src/components/board/assembly/AssemblySeats.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   assemblyClose: {
-    frontend: interactive("src/components/board/assembly/AssemblyFoot.tsx"),
+    frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
     simulation: simulated("master-assembly", "masterPolicy → resolveAssemblyByHeuristic"),
   },
   endTurn: {
