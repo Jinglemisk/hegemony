@@ -24,8 +24,10 @@ export const ENGINE_VERSION = "0.1.0";
 /** v8 (Step 8): player-only Assembly, Appendix B effects, no veto/replacement choice.
  * Command v4 names the vote payment. Older saves are rejected. */
 /** v9 (Step 9): public Ideas, concealed setup picks; command v5 adds pick/buy. */
-export const STATE_SCHEMA_VERSION = 9;
-export const COMMAND_SCHEMA_VERSION = 5;
+/** v10 (Step 13): an open Idea draft with no setup-pick store, pending hunger, and log
+ *  moments. Command v6 adds the hunger choice. Older saves are rejected. */
+export const STATE_SCHEMA_VERSION = 10;
+export const COMMAND_SCHEMA_VERSION = 6;
 
 export const SAVE_FORMAT_VERSION = 2;
 export const SCRIPT_FORMAT_VERSION = 2;

@@ -118,6 +118,18 @@ describe("Plague and Festival", () => {
     revealYearCard(G);
     expect(Object.values(G.players).map((player) => player.unrestTokens)).toEqual([0, 0, 0, 0]);
   });
+
+  it("record each realm's level as the card turned, for the card's face", () => {
+    const G = game();
+    G.yearDrawPile.unshift(yearCard(G, "year-plague"));
+    const before = happinessLevel(G, "2");
+    revealYearCard(G);
+
+    const moment = G.log.at(-1)?.moment;
+    expect(moment).toMatchObject({ kind: "yearCard", cardId: "year-plague" });
+    if (moment?.kind !== "yearCard") throw new Error("no year card moment");
+    expect(moment.impact["2"]).toEqual({ before, after: before - 1, loss: {} });
+  });
 });
 
 describe("calm lasts a year", () => {

@@ -70,7 +70,6 @@ export function createInitialStateFromDefinition(
     ...CURRENT_RECIPE_VERSIONS,
     nextEntityId: identity.nextEntityId,
     phase: "setupCapital",
-    setupIdeaPicks: { "0": null, "1": null, "2": null, "3": null },
     currentPlayer: "0",
     turn: 1,
     seed: seed >>> 0,
@@ -117,6 +116,7 @@ export function createInitialStateFromDefinition(
     lastPlayerEvent: null,
     pendingPlayerEvent: null,
     pendingRiot: null,
+    pendingHunger: null,
     lastTableRoll: null,
     // The bank's per-material rates are a function of THIS board (Q14) — derived
     // once here, static for the whole game.

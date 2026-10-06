@@ -5,6 +5,7 @@ import type { HegemonyState, PlayerId } from "./types";
 export type WorkflowKind =
   | "setup"
   | "turn"
+  | "hungerDecision"
   | "eventDecision"
   | "riotDecision"
   | "assemblyProposal"
@@ -34,6 +35,7 @@ const ASSEMBLY_VOTE_COMMANDS: ReadonlySet<GameCommand["type"]> = new Set([
 /** The current workflow, independent of which seat happens to be parked in currentPlayer. */
 export function currentWorkflow(G: HegemonyState): WorkflowKind {
   if (G.phase === "gameOver") return "gameOver";
+  if (G.pendingHunger) return "hungerDecision";
   if (G.pendingPlayerEvent) return "eventDecision";
   if (G.pendingRiot) return "riotDecision";
   if (G.assembly?.phase === "proposal") return "assemblyProposal";
@@ -48,6 +50,8 @@ export function eligibleActors(G: HegemonyState): PlayerId[] {
   switch (currentWorkflow(G)) {
     case "gameOver":
       return [];
+    case "hungerDecision":
+      return G.pendingHunger ? [G.pendingHunger.playerID] : [];
     case "eventDecision":
       return G.pendingPlayerEvent ? [G.pendingPlayerEvent.playerID] : [];
     case "riotDecision":
@@ -61,9 +65,6 @@ export function eligibleActors(G: HegemonyState): PlayerId[] {
     case "assemblyClosing":
       return G.assembly ? [G.assembly.activePlayer] : [];
     case "setup":
-      return G.phase === "setupIdeas"
-        ? PLAYER_IDS.filter((id) => !G.setupIdeaPicks[id])
-        : [G.currentPlayer];
     case "turn":
       return [G.currentPlayer];
   }
@@ -98,6 +99,8 @@ function commandMatchesWorkflow(
   switch (workflow) {
     case "gameOver":
       return false;
+    case "hungerDecision":
+      return type === "resolveHunger";
     case "eventDecision":
       return type === "resolveEvent";
     case "riotDecision":
@@ -119,6 +122,7 @@ function commandMatchesWorkflow(
       return (
         !type.startsWith("assembly") &&
         type !== "resolveEvent" &&
+        type !== "resolveHunger" &&
         type !== "buyRiotInsurance" &&
         type !== "resolveRiot" &&
         type !== "pickIdea" &&

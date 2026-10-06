@@ -434,7 +434,7 @@ function scaleCost(cost: Partial<Resources>, times: number): Partial<Resources> 
 }
 
 function addPendingEventReason(G: HegemonyState, status: ActionStatus) {
-  if (G.pendingPlayerEvent) {
+  if (G.pendingPlayerEvent || G.pendingHunger) {
     status.reasons.push("Resolve the pending player event first.");
   }
 }

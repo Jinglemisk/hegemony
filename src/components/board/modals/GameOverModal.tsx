@@ -1,34 +1,27 @@
-import { PLAYER_NAMES, PLAYER_IDS } from "../../../game/data";
-import { victoryCardsHeld, victoryStandings } from "../../../game/victory";
-import type { HegemonyState } from "../../../game/types";
-import { ModalShell } from "./ModalShell";
+import { PLAYER_IDS } from "../../../game/data";
+import { ageEndRanking, victoryCardsHeld, victoryStandings } from "../../../game/victory";
+import type { HegemonyState, PlayerId } from "../../../game/types";
+import { toRoman } from "../../../ui/formatters";
+import { TITLE_SHORT, numberWord, sign } from "../../../ui/frameFormat";
 import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
+import { Ico } from "../../frame/parts";
+import { ModalShell } from "./ModalShell";
 
 /**
- * The end of the game — the age closing, either because someone opened their
- * turn holding enough victory cards or because the year deck (the clock) ran
- * out and the tally resolved.
- *
- * `ceremony.css` names three moments that earn the dark table: a fate drawn, a
- * die cast, and the age ending. This was the third one, and it was rendering in
- * the plain `logModal` register with a header bar and a secondary button — the
- * flattest surface in the build, and the last thing a player sees. It is a
- * TABLET now: the age is read and laid down, in the same bone the venture is
- * cut from, at the clay `rite` weather. Not a gift and not a wound — three
- * players lost, and the dialog is not addressed to any one seat.
- *
- * Blocking with no Escape stays: the result is not something you dismiss, you
- * leave it through "Inspect the Board".
- *
- * Each seat travels with its glaze AND its blazon, because a glaze never travels
- * alone — this was a bare colour dot, the same break that was flagged and fixed
- * for the Assembly's seats, on the one screen where the four are compared.
+ * The end of the game: someone opened their turn holding enough titles (the race),
+ * or the year deck ran out and the tally resolved (the age). A tablet in the `rite`
+ * weather, worded for the winner when the viewer won and by name otherwise. Every
+ * seat shows its titles; after the age, one line names the tiebreak that decided
+ * it. Blocking with no Escape: the player leaves through "Inspect the board", or
+ * starts a new game.
  */
 export function GameOverModal({
   G,
+  viewerId,
   onInspectBoard,
 }: {
   G: HegemonyState;
+  viewerId: PlayerId;
   onInspectBoard: () => void;
 }) {
   const winner = G.winner;
@@ -38,16 +31,19 @@ export function GameOverModal({
   }
 
   const standings = victoryStandings(G);
-  // The seat that took it leads, even on a tie — a race can be won at the same
-  // card count everyone else is on, and the winner listed third under a heading
-  // that names them reads as a bug.
-  const ranked = [...PLAYER_IDS].sort(
-    (a, b) =>
-      Number(b === winner) - Number(a === winner) ||
-      victoryCardsHeld(G, b) - victoryCardsHeld(G, a),
-  );
   const raced = G.gameOverReason === "victoryRace";
-  const toWin = G.ruleset.victory.cardsToWin;
+  const tally = raced ? null : ageEndRanking(G);
+  // The race's winner leads even on a count others share; the age follows its tally.
+  const ranked = tally
+    ? tally.rows.map((row) => row.seat)
+    : [...PLAYER_IDS].sort(
+        (a, b) =>
+          Number(b === winner) - Number(a === winner) ||
+          victoryCardsHeld(G, b) - victoryCardsHeld(G, a),
+      );
+  const you = winner === viewerId;
+  const name = (seat: PlayerId) => G.players[seat].name;
+  const toWin = numberWord(G.ruleset.victory.cardsToWin);
 
   return (
     <ModalShell
@@ -58,25 +54,23 @@ export function GameOverModal({
     >
       <header className="tabletHead">
         <span className="tabletKicker label">
-          {raced ? "The race is won" : "The age has ended"}
+          {raced
+            ? `The race is won · Year ${toRoman(G.year)}`
+            : `The age has ended · after Year ${toRoman(G.year)}`}
         </span>
         <h2 className="display display-xl" id="game-over-title">
-          {PLAYER_NAMES[winner]} rules the Hegemony
+          {you ? "You rule" : `${name(winner)} rules`} the Hegemony
         </h2>
         <p className="tabletVoice body-em">
           {raced
-            ? `${PLAYER_NAMES[winner]} opened their turn holding ${toWin} victory card${toWin === 1 ? "" : "s"}.`
-            : `The year deck ran out — ${PLAYER_NAMES[winner]} held the most victory cards as the age closed.`}
+            ? `${you ? "You opened your" : `${name(winner)} opened their`} turn holding ${toWin} titles.`
+            : "The year deck is spent. Most titles wins."}
         </p>
       </header>
 
       <ol className="ageStandings">
         {ranked.map((id, index) => {
-          const held = standings
-            .filter((standing) => standing.holder === id)
-            .map((standing) => standing.card.name);
-          const cards = victoryCardsHeld(G, id);
-
+          const held = standings.filter((standing) => standing.holder === id);
           return (
             <li className={id === winner ? "ageSeat ageSeatCrowned" : "ageSeat"} key={id}>
               <span className="ageRank num stat">{index + 1}</span>
@@ -84,20 +78,75 @@ export function GameOverModal({
                 {PLAYER_GLAZES[id].blazon}
               </span>
               <span className="ageWho">
-                <b className="title">{PLAYER_NAMES[id]}</b>
-                <span className="caption">{held.join(" · ") || "no cards held"}</span>
+                <b className="title">
+                  {name(id)}
+                  {id === viewerId ? " · you" : ""}
+                </b>
+                <span className="ageTitles caption">
+                  {held.length
+                    ? held.map(({ card }) => (
+                        <span className="ageTitle" key={card.id}>
+                          <Ico path={`victory/${card.id}`} size="ui" />
+                          {TITLE_SHORT[card.id] ?? card.name}
+                        </span>
+                      ))
+                    : "no titles held"}
+                </span>
               </span>
-              <span className="ageCards num stat-lg">{cards}</span>
+              <span className="ageCards num stat-lg">{held.length}</span>
             </li>
           );
         })}
       </ol>
 
-      <footer className="tabletFoot">
-        <button className="ceremonyCommit verb verb-lg" onClick={onInspectBoard} type="button">
-          Inspect the Board
+      {tally && tally.decidedBy !== "titles" ? (
+        <p className="ageTiebreak body">
+          <Ico path={TIEBREAK_ICON[tally.decidedBy]} size="ui" />
+          {tiebreakLine(tally, viewerId, name)}
+        </p>
+      ) : null}
+
+      <footer className="tabletFoot ageActs">
+        <button className="ghostVerb verb" onClick={onInspectBoard} type="button">
+          Inspect the board
+        </button>
+        <button
+          className="ceremonyCommit verb verb-lg"
+          onClick={() => window.location.assign(window.location.pathname)}
+          type="button"
+        >
+          New game
         </button>
       </footer>
     </ModalShell>
   );
+}
+
+const TIEBREAK_ICON = {
+  titles: "victory/laurel",
+  happiness: "resources/happiness",
+  pops: "pops/crowd",
+  seat: "victory/laurel",
+} as const;
+
+/** "Tied on two titles. You win on happiness: +4 to Damon's +1." */
+function tiebreakLine(
+  tally: ReturnType<typeof ageEndRanking>,
+  viewerId: PlayerId,
+  name: (seat: PlayerId) => string,
+): string {
+  const [first, second] = tally.rows;
+  const winner = first.seat === viewerId ? "You win" : `${name(first.seat)} wins`;
+  const rival = second.seat === viewerId ? "your" : `${name(second.seat)}’s`;
+  const tied = first.titles
+    ? `Tied on ${numberWord(first.titles)} ${first.titles === 1 ? "title" : "titles"}`
+    : "Tied with no titles";
+  switch (tally.decidedBy) {
+    case "happiness":
+      return `${tied}. ${winner} on happiness: ${sign(first.happiness)} to ${rival} ${sign(second.happiness)}.`;
+    case "pops":
+      return `${tied}, and on happiness. ${winner} on pops: ${first.pops} to ${rival} ${second.pops}.`;
+    default:
+      return `${tied}, and on happiness and pops. ${winner} on seat order.`;
+  }
 }

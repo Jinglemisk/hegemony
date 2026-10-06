@@ -32,7 +32,7 @@
 @import "./styles/board.css";
 @import "./styles/panels.css";
 @import "./styles/ceremony.css";
-@import "./styles/assemblyScene.css";
 /* The v2 frame (Hybrid arc): the shell every match is played in. */
 @import "./styles/frame.css";
+@import "./styles/sitting.css";
 @import "./styles/responsive.css";

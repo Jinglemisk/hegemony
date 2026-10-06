@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buyRiotInsurance, resolveRiot } from "./riot";
+import { buyRiotInsurance, resolveRiot, riotRollReach } from "./riot";
 import { beginTurnFor, endTurn } from "./turn";
 import { applyUnrestAtTurnEnd } from "./unrest";
 import { happinessLevel } from "./happiness";
@@ -158,6 +158,32 @@ describe("riot insurance", () => {
     expect(
       buyRiotInsurance(G, "0", "concession", { tileId: P0_CAPITAL, from: "citizens" }).ok,
     ).toBe(false);
+  });
+
+  it("the roll's line carries the riot, its insurance and the reach it bought", () => {
+    const G = riotingGame();
+    const tokens = G.pendingRiot!.tokensCleared;
+    expect(tokens).toBeGreaterThan(0);
+    const capital = owned(G, P0_CAPITAL, "0");
+    capital.pops.citizens = 2;
+    expect(
+      buyRiotInsurance(G, "0", "concession", { tileId: P0_CAPITAL, from: "citizens" }).ok,
+    ).toBe(true);
+    // One insurance strikes the 1 row; the 6 stays the top.
+    expect(riotRollReach(G, 1)).toEqual({ lowest: 2, highest: 6 });
+
+    expect(resolveRiot(G, "0").ok).toBe(true);
+    const line = G.log.find((entry) => entry.moment?.kind === "riot")!;
+    expect(line.about).toBe("0");
+    expect(line.moment).toMatchObject({
+      kind: "riot",
+      roll: G.lastTableRoll!.roll,
+      modifier: 1,
+      modified: G.lastTableRoll!.modified,
+      insurance: ["concession"],
+      concessionTileId: P0_CAPITAL,
+      tokensCleared: tokens,
+    });
   });
 
   it("the concession takes a citizen and nobody else", () => {

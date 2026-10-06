@@ -26,6 +26,8 @@ export type VerbContext = {
   phase: Phase;
   isActive: boolean;
   hasPendingPlayerEvent: boolean;
+  /** The Assembly sits: the shell reads, and nothing acts until it rises. */
+  inAssembly?: boolean;
   canGrowPops: boolean;
   canMovePops: boolean;
   canFoundColony: boolean;
@@ -246,11 +248,18 @@ export const VERBS: VerbSpec[] = [
  * VerbContext to ask "is it my move?" was how the same three conditions came to
  * be written twice.
  */
-export type TurnGate = Pick<VerbContext, "isActive" | "phase" | "hasPendingPlayerEvent">;
+export type TurnGate = Pick<
+  VerbContext,
+  "isActive" | "phase" | "hasPendingPlayerEvent" | "inAssembly"
+>;
 
 export function isTurnOpen(gate: TurnGate) {
-  return gate.isActive && gate.phase === "gameplay" && !gate.hasPendingPlayerEvent;
+  return (
+    gate.isActive && gate.phase === "gameplay" && !gate.hasPendingPlayerEvent && !gate.inAssembly
+  );
 }
+
+const IN_ASSEMBLY = "The Assembly is sitting: return to it to act.";
 
 /** The shared gate every verb sits behind, in one place. */
 export function isVerbEnabled(verb: VerbSpec, context: VerbContext) {
@@ -258,6 +267,7 @@ export function isVerbEnabled(verb: VerbSpec, context: VerbContext) {
 }
 
 export function verbTitle(verb: VerbSpec, context: VerbContext) {
+  if (context.inAssembly) return IN_ASSEMBLY;
   if (context.hasPendingPlayerEvent) {
     return "Resolve the pending player event first.";
   }
@@ -269,6 +279,7 @@ export function verbTitle(verb: VerbSpec, context: VerbContext) {
 
 /** The end-turn explanation, blocked or not, without a VerbContext to build. */
 export function turnCommitTitle(gate: TurnGate) {
+  if (gate.inAssembly) return IN_ASSEMBLY;
   if (gate.hasPendingPlayerEvent) {
     return "Resolve the pending player event first.";
   }

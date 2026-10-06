@@ -266,8 +266,11 @@ const isTyping = (target: EventTarget | null) =>
 export function VerbDiscs({
   groups,
   store,
+  locked = false,
 }: {
   groups: DiscGroup[];
+  /** The Assembly sits: each disc wears a lock and its fan only reads. */
+  locked?: boolean;
   /** The viewer's resources: a price reads short only when this cannot pay it. */
   store: Resources;
 }) {
@@ -573,6 +576,7 @@ export function VerbDiscs({
                     {group.left}
                   </span>
                 )}
+                {locked ? <Ico className="verb-lock" path="unrest/locked" size="chip" /> : null}
               </span>
               <span className="verb-name" data-c="verb-name" data-exclude {...gate.name}>
                 <span className="verb-name-k">{group.label}</span>

@@ -542,25 +542,9 @@
   font-size: 0.78rem;
 }
 
-.riotInsuranceStack,
 .ventureControls {
   display: grid;
   gap: 7px;
-}
-
-.riotInsuranceRow {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 46%);
-  gap: 6px;
-  align-items: stretch;
-}
-
-.riotInsuranceRow select {
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--panel);
-  font-size: 0.72rem;
 }
 
 /* Table-row effect chips — card-style icon+number summaries with gain/loss color
@@ -1091,11 +1075,6 @@
 .tileListboxRow[aria-selected="true"] {
   border-color: var(--clay);
   background: var(--panel-soft);
-}
-
-/* The riot's concession list sits beside its button, so it stays short. */
-.riotConcessionList {
-  max-height: 116px;
 }
 
 /* Map-first popovers name their target tile up top — the board already shows

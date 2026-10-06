@@ -235,6 +235,9 @@ export interface AssemblySession {
   proposals: Record<PlayerId, BallotItem | null>;
   /** Whether each seat has finalized its proposal decision. All true → voting begins. */
   proposalDone: Record<PlayerId, boolean>;
+  /** A draw its seat discarded, kept face down with that seat until the ballot is read,
+   *  then laid on its politician's discard pile. */
+  setAside: Record<PlayerId, string | null>;
 
   // ── Voting (sequential) ───────────────────────────────────────────────────────
   ballot: BallotItem[];

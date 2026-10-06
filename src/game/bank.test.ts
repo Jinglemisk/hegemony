@@ -100,7 +100,12 @@ describe("bank trades", () => {
 
   it("stays shut while a committed turn awaits its riot", () => {
     const G = scenario().opening().mutate(clearPending).build();
-    G.pendingRiot = { playerID: "0", boughtInsurance: [] };
+    G.pendingRiot = {
+      playerID: "0",
+      boughtInsurance: [],
+      tokensCleared: 0,
+      concessionTileId: null,
+    };
 
     expect(bankSell(G, "0", "wood").ok).toBe(false);
     expect(bankBuy(G, "0", "wood").ok).toBe(false);

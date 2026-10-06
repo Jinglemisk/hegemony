@@ -707,7 +707,8 @@ const unrest: RuleChapter = {
           </Note>
           <Note>
             Hunger is separate: when income cannot feed your freemen and citizens, one pop leaves
-            per unfed mouth and the granary stays at zero. Freemen leave before citizens.
+            per unfed mouth and the granary stays at zero. You choose which freemen or citizens
+            leave; the card opens with freemen chosen first.
           </Note>
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">
@@ -1070,10 +1071,10 @@ const ideas: RuleChapter = {
   Body: ({ G }) => (
     <div className="ruleChapterBody">
       <p>
-        After placement, secretly choose one Idea; every seat's choice reveals before Year 1. Buy
-        one distinct second Idea during your turn through Civic → Ideas for{" "}
-        {formatResourceCost(IDEA_PURCHASE_COST)}. Ideas remain public and cannot be replaced; other
-        seats may hold the same ones.
+        After placement, the seats draft one Idea each, in turn, continuing the placement snake.
+        Each pick is public at once, and an Idea belongs to one seat only. Buy a second Idea from
+        the untaken ones during your turn through Civic → Ideas for{" "}
+        {formatResourceCost(IDEA_PURCHASE_COST)}. Ideas cannot be replaced.
       </p>
       <Entry id={anchor("ideas", "roster")} title="The Ideas">
         <dl>

@@ -1,6 +1,6 @@
 import { isDraft, original } from "immer";
 import { PLAYER_IDS } from "../data";
-import type { HegemonyState, HexTile, PlayerId, Settlement, YearTerm } from "../types";
+import type { HegemonyState, HexTile, LogMoment, PlayerId, Settlement, YearTerm } from "../types";
 
 const tilePositions = new WeakMap<HexTile[], Map<string, number>>();
 
@@ -46,12 +46,13 @@ export function toPlayerId(value: string | null | undefined): PlayerId {
 
 /** `about` is the seat the line concerns — the one who acted, or the one it was
  *  done to. See LogEntry.about for why the subject rather than the author. */
-export function addLog(G: HegemonyState, message: string, about?: PlayerId) {
+export function addLog(G: HegemonyState, message: string, about?: PlayerId, moment?: LogMoment) {
   G.log.push({
     id: `${G.year}-${G.log.length}-${message}`,
     year: G.year,
     message,
     ...(about ? { about } : {}),
+    ...(moment ? { moment } : {}),
   });
 }
 

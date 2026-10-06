@@ -1,16 +1,8 @@
 /* ==========================================================================
  * The Assembly's REFERENCE pages — the Agora tab and the Codex's roster.
  *
- * Deliberately NOT the scene's visual language. `assemblyScene.css` owns the
- * house sitting: a full-bleed night takeover with its own register. These two
- * are pages you *consult*, and they read like the ledger's other pages, with
- * aegean used only to mark what is political.
- *
- * This file used to carry the scene's layout as well, with assemblyScene.css
- * restyling it in place — two sheets disagreeing about who owned what, which is
- * how a monument's dashed-clay treatment came to sit on `.tally`, a selector
- * nothing emitted and a name the vote tally also wanted. The scene's rules all
- * moved; what is left here is what the two reference pages actually spend.
+ * The sitting itself is `sitting.css`. These two are pages you *consult*, and they
+ * read like the ledger's other pages, with aegean used only to mark what is political.
  *
  * Known and NOT fixed here: the Codex roster below still sets 8px and 10.5px,
  * which is the illegible register the overhaul exists to remove. Fixing it means

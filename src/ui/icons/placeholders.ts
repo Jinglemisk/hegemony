@@ -135,11 +135,6 @@ export const TAB_PLACEHOLDERS: Partial<Record<EmpireTab, string | undefined>> = 
   victory: placeholder("chrome/tab-victory"),
 };
 
-export const ASSEMBLY_PLACEHOLDERS = {
-  propose: placeholder("assembly/propose"),
-  pass: placeholder("assembly/pass"),
-} as const;
-
 export const CHROME_PLACEHOLDERS = {
   settings: placeholder("chrome/settings"),
 } as const;

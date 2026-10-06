@@ -26,13 +26,22 @@ function placeAny(G: HegemonyState, playerID: PlayerId, kind: SettlementKind): b
   return false;
 }
 
+// The draft is exclusive: each seat takes its own Idea.
+const DRAFT = [
+  "assembly-brokers",
+  "city-pioneers",
+  "harbour-planning",
+  "frontier-charter",
+] as const;
+
 // Drive a full setup for whatever ruleset the game was created with, one placement per turn.
 function runSetup(G: HegemonyState) {
   let guard = 0;
   while (G.phase !== "gameplay" && guard++ < 500) {
     const player = G.currentPlayer;
     if (G.phase === "setupIdeas") {
-      expect(takeNationalIdea(G, player, "assembly-brokers").ok).toBe(true);
+      const ideaId = DRAFT[Number(player)];
+      expect(takeNationalIdea(G, player, ideaId).ok).toBe(true);
       continue;
     }
     const kind = G.ruleset.setup[G.players[player].settlements.length];

@@ -11,6 +11,7 @@ import {
   resolvePendingPlayerEvent,
   standingHappiness,
   totalPops,
+  turnEndUnrest,
   unrestStatus,
 } from "./rules";
 import { PLAYER_EVENT_CARDS } from "./data";
@@ -111,7 +112,12 @@ describe("turn-end unrest", () => {
     const before = playerPopTotal(G, "0");
     applyUnrestAtTurnEnd(G, "0");
 
-    expect(G.pendingRiot).toEqual({ playerID: "0", boughtInsurance: [] });
+    expect(G.pendingRiot).toEqual({
+      playerID: "0",
+      boughtInsurance: [],
+      tokensCleared: 3,
+      concessionTileId: null,
+    });
     expect(playerPopTotal(G, "0")).toBe(before);
     expect(G.players["0"].unrestTokens).toBe(0);
     expect(happinessLevel(G, "0")).toBe(0);
@@ -132,6 +138,52 @@ describe("turn-end unrest", () => {
     expect(ownedSettlements(G, "0").map((settlement) => settlement.pops.slaves)).toEqual([2, 3]);
     expect(G.players["0"]).toMatchObject({ unrestTokens: 0, popsLostToUnrest: 4, revolts: 1 });
     expect(playerPopTotal(G, "0")).toBe(7);
+    // The Chronicle line carries the revolt for the seat's card and the rivals' toast.
+    const [capital, colony] = ownedSettlements(G, "0");
+    expect(G.log.at(-1)?.moment).toEqual({
+      kind: "revolt",
+      slaves: 9,
+      left: [
+        { tileId: capital.tileId, pop: "slaves" },
+        { tileId: capital.tileId, pop: "slaves" },
+        { tileId: colony.tileId, pop: "slaves" },
+        { tileId: capital.tileId, pop: "slaves" },
+      ],
+      tokensCleared: 2,
+      level: happinessLevel(G, "0"),
+    });
+  });
+});
+
+describe("the end-turn confirm", () => {
+  it("names the outcome and offers only a calm that changes it", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 1, freemen: 1, slaves: 0 }, NONE);
+    G.pendingPlayerEvent = null;
+    G.players["0"].resources.gold = 2;
+    G.players["0"].resources.influence = 0;
+
+    G.players["0"].unrestTokens = 2;
+    expect(turnEndUnrest(G, "0")).toBeNull();
+
+    // At −3, calm (+2) holds the line.
+    G.players["0"].unrestTokens = 3;
+    expect(turnEndUnrest(G, "0")).toMatchObject({
+      outcome: "riot",
+      level: -3,
+      calm: { payment: "gold", cost: { gold: 2 }, level: -1, outcome: "none" },
+    });
+
+    // At −6 it lifts to −4: a riot instead of a revolt.
+    G.players["0"].unrestTokens = 6;
+    expect(turnEndUnrest(G, "0")).toMatchObject({
+      outcome: "revolt",
+      calm: { level: -4, outcome: "riot" },
+    });
+
+    // At −8 calm changes nothing, so it is not offered.
+    G.players["0"].unrestTokens = 8;
+    expect(turnEndUnrest(G, "0")?.calm).toBeNull();
   });
 });
 

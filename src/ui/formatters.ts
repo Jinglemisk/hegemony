@@ -90,3 +90,10 @@ export function toRoman(value: number): string {
 
   return numerals || "—";
 }
+
+/** 1st, 2nd, 3rd, 11th. */
+export function ordinal(count: number): string {
+  const suffix =
+    count % 100 >= 11 && count % 100 <= 13 ? "th" : (["th", "st", "nd", "rd"][count % 10] ?? "th");
+  return `${count}${suffix}`;
+}

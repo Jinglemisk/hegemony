@@ -53,10 +53,13 @@ You begin each game with **8 wood, 4 stone, 4 gold, 12 food**, and 0 influence.
 
 ## National Ideas
 
-After placement, each seat secretly chooses one Idea; choices reveal together before
-Year 1 and take effect immediately. During your turn, **Civic → Ideas** buys a second
-Idea for **6 influence**. You cannot take the same Idea twice or replace one. Other
-seats may choose the same Ideas. Your realm page and rivals' tooltips show them.
+After placement, the seats **draft** one Idea each, in turn, continuing the placement
+snake (in the standard game: Damon, Nikos, Theron, Kyros). Every pick is public the
+moment it is made and takes effect at once, and **an Idea belongs to one seat only**:
+once taken, nobody else can pick or buy it. During your turn, **Civic → Ideas** buys a
+second Idea for **6 influence**, from the Ideas no seat holds. You cannot replace an
+Idea. The picker shows each holder's mark (tagged with the year if bought), and your
+realm page and rivals' tooltips list them.
 
 Fast starts choose the setup Idea automatically for every seat, including the human,
 using the bots' scorer, deterministically for the game seed. This applies to URL quick
@@ -151,7 +154,7 @@ before income. On your turn:
 
 1. **Income is collected automatically.** Every settlement adds what its pops make,
    and your freemen and citizens eat 1 food each. If the food runs short, **hunger**
-   strikes (see Happiness and food).
+   strikes and you choose who leaves (see Happiness and food).
 2. **Resolve your event card**, if one was drawn for you (see Events below) — you
    must do this before anything else.
 3. **Take actions**, in any order you can afford:
@@ -183,11 +186,22 @@ before income. On your turn:
    - **Fund an expedition** (once per turn) — stake **2 gold** and roll
      on an expedition table (see Ventures).
 4. **End your turn.** Check your level before the turn passes: **−3 or below
-   starts a riot**, **−6 or below a revolt**. Calm bought this turn counts.
+   starts a riot**, **−6 or below a revolt**. Calm bought this turn counts. At either
+   line, holding End turn opens a confirm first: it offers calm, with its price, when
+   calm would change what happens, and the plain choice to face it.
 
 A **year** is one turn for every seat. After all four have played, the next year
-begins and its card is revealed. The **first player moves on one seat** each year.
-The game lasts at most **fourteen years**; the next year card stays hidden.
+begins and its card is revealed: the card turns over mid-screen and shows what it
+does to each realm. In an Assembly year its button convenes the Assembly. Closed, the
+card waits as the first disc of the alarms row until the year turns; click it to read
+it again. The **first player moves on one seat** each year. The game lasts at most
+**fourteen years**; the next year card stays hidden.
+
+**Passing the seat.** When several people share one screen, a cover in the next
+seat's colour hides the table before each seat's turn and before each seat's Assembly
+proposal, so nobody reads another's fate card or drawn Law. Public moments (the year
+card, the Idea draft, votes, riots, the end of the game) need no cover, and a game of
+bots never shows it.
 
 ## The bank
 
@@ -278,9 +292,13 @@ stores happiness.
 
 **Hunger** is separate from happiness, and calm cannot buy it off. If income cannot
 feed your freemen and citizens, **one pop leaves for each unfed mouth** and your food
-stays at zero: no debt carries over. Freemen leave before citizens, each from the
-settlement holding the most of them. Slaves eat nothing and never leave for hunger. Under Grain Levy freemen also eat
-nothing and cannot leave for hunger.
+stays at zero: no debt carries over. **You choose which freemen or citizens leave**, and
+from which settlements; the card opens with the cheapest loss chosen (freemen before
+citizens, each from the settlement holding the most), so one click confirms it. Hunger
+comes before your fate card. Slaves eat nothing and never leave for hunger. Under Grain
+Levy freemen also eat nothing and cannot leave for hunger. The turn before, the hunger
+alarm and End turn warn you how many mouths your next income leaves unfed, with the
+Dole's and the bank's food prices, while you can still buy food.
 Food never goes below zero: a sacked granary or a bad card stops at empty.
 
 At the end of your own turn, before it passes, a level of **−3 or lower is a
@@ -299,13 +317,16 @@ Your Unrest tokens clear, and the turn waits for insurance and the roll:
 Before rolling you may **declare insurance** — each option once per riot, each
 adding **+1 to your roll**: a **bread dole** (4 food), a **concession** (demote
 one citizen, free), or **patronage** (3 influence). Declare all three and a riot can
-no longer cost you pops.
+no longer cost you pops. The riot sheet strikes the rows each declaration puts out of
+reach; after the roll a card lists what the riot cost, and the other seats see it as
+a note under the Chronicle.
 
 Pops lost to a riot are **slaves first**, then freemen, then citizens, each from the
 settlement holding the most of them.
 
 **At −6 or lower it is a revolt instead.** Nothing is rolled: **half your slaves
-leave**, rounded down, and your Unrest tokens clear. The turn then passes.
+leave**, rounded down, and your Unrest tokens clear. With no slaves it costs only the
+tokens. The turn then passes, and a card shows where each slave left from.
 
 Because a riot spends the tokens that caused it, a riot from tokens does not come
 back. A level held down by slaves does: it riots every turn until you free or lose
@@ -375,6 +396,15 @@ plus one per citizen**. During your vote you may buy at most **two votes per
 sitting**, for **2 gold or 2 influence each**, in any mix. They count on every
 remaining ballot. A simple majority passes; a tie fails.
 
+A drawn card, kept or discarded, and a sealed repeal stay with their seat until the
+ballot is read; everyone sees only who has sealed. On screen the sitting is a sheet
+over the map. Each seat proposes in turn order behind the pass-the-seat screen, the
+ballot is read out, and each vote shows what your votes would make the tally and
+whether the seats after you can still turn it. Every item ends on its result, and
+the sitting ends on a recap of the verdicts, the standing Laws and Voice. Minimise
+the sheet to read the map, your realm or the consult pages; nothing can be done
+until you return to it.
+
 At most **four Laws** stand. A new Law at the cap replaces the oldest automatically.
 A Law survives its own sitting and the following one: a Law passed in Year 2 can
 first leave in Year 6. This protects it from repeal, replacement and The Stele Is
@@ -443,12 +473,16 @@ upgrades — the race to your third city is the long game.)
 
 **Hold any 3 cards at the start of your own turn and you win on the spot.** The
 check happens at your turn start, so the table always gets one full round to see
-you sitting at three and break a card off you.
+you sitting at three and break a card off you. Every change of holder is announced
+to all seats, and while a seat holds three, a loud **threshold** disc leads everyone's
+alarms row: its panel lists each card that seat holds, the nearest challenger and how
+far short of a tie they are, since a tie takes a card from everyone.
 
 The **year deck is the game's clock**. After the fourteenth year's last turn,
 **most victory cards held** wins. Ties break on happiness without calm, then total
-pops, then seat order. The final year card still counts. Track the race in the
-**Victory** consult; the top bar shows the year and cards remaining.
+pops, then seat order, and the final tablet names the tiebreak that decided it. The
+final year card still counts. Track the race in the **Victory** consult; the top bar
+shows the year and cards remaining.
 
 ## Development bots
 

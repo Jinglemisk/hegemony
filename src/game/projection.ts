@@ -117,14 +117,12 @@ function redactState(state: HegemonyState, viewer: PlayerId | null): ProjectedGa
       draft.pendingPlayerEvent = null;
     }
 
-    if (draft.phase === "setupIdeas") {
-      for (const id of PLAYER_IDS) if (id !== viewer) draft.setupIdeaPicks[id] = null;
-    }
     if (draft.assembly?.phase === "proposal") {
       for (const playerID of PLAYER_IDS) {
         if (playerID !== viewer) {
           draft.assembly.held[playerID] = null;
           draft.assembly.proposals[playerID] = null;
+          draft.assembly.setAside[playerID] = null;
         }
       }
     }

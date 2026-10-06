@@ -1,6 +1,13 @@
 import { buildingGround } from "./status";
 import { describe, expect, it } from "vitest";
-import { NATIONAL_IDEAS, takeNationalIdea, playerNationalIdeas } from "./ideas";
+import {
+  NATIONAL_IDEAS,
+  ideaDraft,
+  ideaDraftOrder,
+  ideaHolder,
+  playerNationalIdeas,
+  takeNationalIdea,
+} from "./ideas";
 import type { NationalIdeaId, IdeaPopChoice } from "./ideaTypes";
 import { owned, scenario, tile } from "./testing/scenario";
 import { calculateIncome, calculateIncomeBreakdown } from "./economy/income";
@@ -202,33 +209,68 @@ describe("twelve National Ideas", () => {
 });
 
 describe("Idea ownership and acquisition", () => {
-  it("conceals independent setup picks until all four lock, then reveals before Year 1", () => {
+  it("runs an open draft in snake order: each pick lands publicly and is gone for the rest", () => {
     let G = realm();
     G.players["0"].nationalIdeas = [];
     G.phase = "setupIdeas";
-    for (const id of ["0", "1", "2"] as const) {
-      const result = transition(G.definition, G, id, {
-        type: "pickIdea",
-        ideaId: "treasury-grant",
-      });
+    G.currentPlayer = ideaDraftOrder(G)[0];
+    expect(ideaDraftOrder(G)).toEqual(["0", "1", "2", "3"]);
+    expect(transition(G.definition, G, "1", { type: "pickIdea", ideaId: "good-harvest" }).ok).toBe(
+      false,
+    );
+    const gold = G.players["0"].resources.gold;
+    const first = transition(G.definition, G, "0", { type: "pickIdea", ideaId: "treasury-grant" });
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    G = first.state;
+    // The pick and its grant land at once, and every seat sees them.
+    expect(G.players["0"].resources.gold).toBe(gold + 4);
+    expect(G.currentPlayer).toBe("1");
+    const rival = projectForPlayer(G.definition, G, "2").state;
+    expect(playerNationalIdeas(rival, "0").map((i) => i.id)).toEqual(["treasury-grant"]);
+    expect(ideaDraft(G).map((seat) => seat.state)).toEqual([
+      "picked",
+      "choosing",
+      "waiting",
+      "waiting",
+    ]);
+    expect(
+      enumerateLegalCommands(G, "1").some(
+        (c) => c.type === "pickIdea" && c.ideaId === "treasury-grant",
+      ),
+    ).toBe(false);
+    expect(
+      transition(G.definition, G, "1", { type: "pickIdea", ideaId: "treasury-grant" }).ok,
+    ).toBe(false);
+    for (const [id, ideaId] of [
+      ["1", "good-harvest"],
+      ["2", "civic-tradition"],
+    ] as const) {
+      const result = transition(G.definition, G, id, { type: "pickIdea", ideaId });
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       G = result.state;
       expect(G.activeYearCard).toBeNull();
-      expect(G.players[id].nationalIdeas).toEqual([]);
     }
-    const publicView = projectForSpectator(G.definition, G);
-    expect(Object.values(publicView.state.setupIdeaPicks)).toEqual([null, null, null, null]);
-    const viewer = projectForPlayer(G.definition, G, "1");
-    expect(viewer.state.setupIdeaPicks["1"]?.ideaId).toBe("treasury-grant");
-    expect(viewer.state.setupIdeaPicks["0"]).toBeNull();
-    const final = transition(G.definition, G, "3", { type: "pickIdea", ideaId: "treasury-grant" });
+    const final = transition(G.definition, G, "3", { type: "pickIdea", ideaId: "public-dole" });
     expect(final.ok).toBe(true);
     if (!final.ok) return;
     expect(final.state.phase).toBe("gameplay");
     expect(final.state.activeYearCard).not.toBeNull();
-    for (const id of ["0", "1", "2", "3"] as const)
-      expect(playerNationalIdeas(final.state, id)).toHaveLength(1);
+    expect(ideaHolder(final.state, "public-dole")).toBe("3");
+  });
+  it("continues the snake: an odd number of placement rounds drafts from the last seat", () => {
+    const G = realm();
+    const odd = { ...G, ruleset: { ...G.ruleset, setup: ["capital", "colony", "colony"] } };
+    expect(ideaDraftOrder(odd as typeof G)).toEqual(["3", "2", "1", "0"]);
+  });
+  it("offers only untaken Ideas for purchase", () => {
+    const G = realm();
+    G.players["1"].nationalIdeas = [{ id: "good-harvest", acquired: "setup", year: 1 }];
+    expect(takeNationalIdea(G, "0", "good-harvest").ok).toBe(false);
+    const buys = enumerateLegalCommands(G, "0").filter((c) => c.type === "buyIdea");
+    expect(buys.some((c) => c.type === "buyIdea" && c.ideaId === "good-harvest")).toBe(false);
+    expect(buys.length).toBeGreaterThan(0);
   });
   it("charges 6 influence for one distinct purchase and exposes it publicly as a permanent personal rule", () => {
     const G = realm();

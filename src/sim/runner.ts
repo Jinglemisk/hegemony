@@ -134,7 +134,7 @@ function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
       throw new SimDeadlockError(deadlockMessage(G, player));
     }
 
-    const pending = G.pendingPlayerEvent || G.pendingRiot;
+    const pending = G.pendingHunger || G.pendingPlayerEvent || G.pendingRiot;
     // Resolve a pending choice, otherwise commit; committing may start a riot.
     const forced = pending
       ? (resolutions.find((move) => move.type === "resolveRiot") ?? resolutions[0])

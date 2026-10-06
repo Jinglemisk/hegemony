@@ -30,6 +30,7 @@ describe("behavioral command-consumer parity", () => {
     moves.growPop("tile-a", "citizens");
     moves.movePops("tile-a", "tile-b", pops);
     moves.resolvePendingPlayerEvent("tile-a");
+    moves.resolveHunger([{ tileId: "tile-a", pop: "freemen" }]);
     moves.bankSell("wood");
     moves.bankBuy("stone");
     moves.dole();
@@ -76,6 +77,10 @@ describe("behavioral command-consumer parity", () => {
       },
       {
         command: { type: "resolveEvent", targetTileId: "tile-a" },
+        actor: undefined,
+      },
+      {
+        command: { type: "resolveHunger", leave: [{ tileId: "tile-a", pop: "freemen" }] },
         actor: undefined,
       },
       { command: { type: "bankSell", material: "wood" }, actor: undefined },

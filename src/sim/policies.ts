@@ -2,7 +2,7 @@ import { ideaForEval, ideaRoom, playerNationalIdeas } from "../game/ideas";
 import { playerDole, votePurchaseLimit } from "../game/ideaRules";
 import { playerPieces } from "../game/settlement";
 import { calculateIncome, calculateIncomeBreakdown, getHungerStatus } from "../game/economy/income";
-import { applyHunger } from "../game/hunger";
+import { applyHunger, hungerForEval } from "../game/hunger";
 import { happinessLevel, slaveUnhappiness, standingHappiness } from "../game/happiness";
 import { removePops } from "../game/tables";
 import { ventureOutcomes } from "./chance";
@@ -135,6 +135,9 @@ function resolveRiotByRule(moves: GameCommand[]): GameCommand | null {
 type SearchOutcome = { state: HegemonyState; probability: number };
 function searchOutcomes(G: HegemonyState, move: GameCommand): SearchOutcome[] {
   if (move.type === "fundExpedition") return ventureOutcomes(G, G.currentPlayer, move);
+  // The fate card drawn after hunger is hidden: score the loss alone.
+  if (move.type === "resolveHunger")
+    return [{ state: hungerForEval(G, G.currentPlayer, move.leave), probability: 1 }];
   const result = transition(G.definition, G, G.currentPlayer, move);
   if (!result.ok) return [];
   if (result.state.rng !== G.rng) {
@@ -382,7 +385,7 @@ export function projectPolicyHorizon(
       player.resources.food = Math.max(0, player.resources.food);
 
       if (unfed > 0) {
-        expectedStarvationPopLoss += applyHunger(projectedState, playerID, unfed).total;
+        expectedStarvationPopLoss += applyHunger(projectedState, playerID, unfed);
         popsChanged = true;
       }
     }
@@ -1112,6 +1115,8 @@ function observablePoliticianPool(
   }
   const held = session?.held[me];
   if (held) knownOutsideDeck.add(held.card.id);
+  const setAside = session?.setAside[me];
+  if (setAside) knownOutsideDeck.add(setAside);
   const proposal = session?.proposals[me];
   if (proposal?.kind === "enact") knownOutsideDeck.add(proposal.card.id);
 

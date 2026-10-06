@@ -9,6 +9,7 @@ import type {
   EventTableDefinition,
   HegemonyState,
   PlayerId,
+  PopLeave,
   PopType,
   Settlement,
   TableEffect,
@@ -32,6 +33,8 @@ export interface RollResult {
   record: TableRollRecord;
   /** Total pops removed by the roll's effects — the riot adds this to popsLostToUnrest. */
   popsRemoved: number;
+  /** Each pop the roll removed, by settlement. */
+  left: PopLeave[];
 }
 
 /** One die of any size through the game's seeded PRNG state — the die size is table
@@ -69,11 +72,11 @@ export function rollOnTable(
   );
 
   const outcomes: string[] = [];
-  let popsRemoved = 0;
+  const left: PopLeave[] = [];
 
   for (const effect of row.effects) {
     const applied = applyTableEffect(G, playerID, effect);
-    popsRemoved += applied.popsRemoved;
+    left.push(...applied.left);
     outcomes.push(...applied.outcomes);
   }
 
@@ -88,27 +91,27 @@ export function rollOnTable(
     year: G.year,
   };
   G.lastTableRoll = record;
-  return { record, popsRemoved };
+  return { record, popsRemoved: left.length, left };
 }
 
 function applyTableEffect(
   G: HegemonyState,
   playerID: PlayerId,
   effect: TableEffect,
-): { outcomes: string[]; popsRemoved: number } {
+): { outcomes: string[]; left: PopLeave[] } {
   const player = G.players[playerID];
   const name = getPlayerName(G, playerID);
 
   switch (effect.type) {
     case "none":
-      return { outcomes: ["No losses."], popsRemoved: 0 };
+      return { outcomes: ["No losses."], left: [] };
 
     case "losePops": {
       const removed = removePops(G, playerID, effect.count);
       const text =
         removed.total > 0 ? `Lost ${describeRemoval(removed)}.` : "No pops left to lose.";
       addLog(G, `${name} — ${text}`);
-      return { outcomes: [text], popsRemoved: removed.total };
+      return { outcomes: [text], left: removed.left };
     }
 
     case "loseResource": {
@@ -121,19 +124,19 @@ function applyTableEffect(
         G.ruleset.economy.stockpileFloors,
       );
       const outcomes = [`Lost ${paid} ${effect.resource}.`];
-      let popsRemoved = 0;
+      let left: PopLeave[] = [];
 
       // The bribe pattern: coming up short is paid in blood on top of the coin.
       if (paid < effect.amount && effect.popLossIfShort) {
         const removed = removePops(G, playerID, effect.popLossIfShort);
-        popsRemoved = removed.total;
+        left = removed.left;
         if (removed.total > 0) {
           outcomes.push(`Couldn't pay in full — lost ${describeRemoval(removed)}.`);
         }
       }
 
       addLog(G, `${name} — ${outcomes.join(" ")}`);
-      return { outcomes, popsRemoved };
+      return { outcomes, left };
     }
 
     case "destroyBuilding": {
@@ -141,7 +144,7 @@ function applyTableEffect(
 
       if (destroyed) {
         addLog(G, `${name} — ${destroyed} burns to the ground.`);
-        return { outcomes: [`${destroyed} destroyed.`], popsRemoved: 0 };
+        return { outcomes: [`${destroyed} destroyed.`], left: [] };
       }
 
       // Nothing to burn: the fallback pops are lost instead, so a buildingless
@@ -152,7 +155,7 @@ function applyTableEffect(
           ? `No buildings to burn — lost ${describeRemoval(removed)} instead.`
           : "Nothing left to lose.";
       addLog(G, `${name} — ${text}`);
-      return { outcomes: [text], popsRemoved: removed.total };
+      return { outcomes: [text], left: removed.left };
     }
 
     case "gainResource": {
@@ -163,7 +166,7 @@ function applyTableEffect(
       );
       const text = `Gained ${effect.amount} ${effect.resource}.`;
       addLog(G, `${name} — ${text}`);
-      return { outcomes: [text], popsRemoved: 0 };
+      return { outcomes: [text], left: [] };
     }
 
     case "gainPop": {
@@ -173,7 +176,7 @@ function applyTableEffect(
         player.popsGainedFromEvents += 1;
         const text = `1 ${formatPopName(effect.pop, 1)} settles in ${settled}.`;
         addLog(G, `${name} — ${text}`);
-        return { outcomes: [text], popsRemoved: 0 };
+        return { outcomes: [text], left: [] };
       }
 
       applyResourceDeltaWithFloors(
@@ -183,12 +186,17 @@ function applyTableEffect(
       );
       const text = `No settlement has room — the settlers leave ${effect.foodFallback} food and sail on.`;
       addLog(G, `${name} — ${text}`);
-      return { outcomes: [text], popsRemoved: 0 };
+      return { outcomes: [text], left: [] };
     }
   }
 }
 
-export type RemovalSummary = { total: number; byType: Record<PopType, number> };
+export type RemovalSummary = {
+  total: number;
+  byType: Record<PopType, number>;
+  /** Each pop removed, by settlement, in the order it left. */
+  left: PopLeave[];
+};
 
 /** The order a table's pop losses fall in: slaves first, then freemen, then citizens. */
 const TABLE_LOSS_ORDER: PopType[] = ["slaves", "freemen", "citizens"];
@@ -206,7 +214,11 @@ export function removePops(
   count: number,
   order: PopType[] = TABLE_LOSS_ORDER,
 ): RemovalSummary {
-  const summary: RemovalSummary = { total: 0, byType: { citizens: 0, freemen: 0, slaves: 0 } };
+  const summary: RemovalSummary = {
+    total: 0,
+    byType: { citizens: 0, freemen: 0, slaves: 0 },
+    left: [],
+  };
   const settlements = G.players[playerID].settlements.flatMap(
     (tileId) => getOwnedSettlement(G, tileId, playerID) ?? [],
   );
@@ -222,6 +234,7 @@ export function removePops(
     settlement.pops[pop] -= 1;
     summary.byType[pop] += 1;
     summary.total += 1;
+    summary.left.push({ tileId: settlement.tileId, pop });
   }
 
   return summary;

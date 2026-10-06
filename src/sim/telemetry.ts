@@ -499,6 +499,8 @@ export class Aggregator {
     influence: 0,
   };
   private directiveTargets: Record<PlayerId, number> = { "0": 0, "1": 0, "2": 0, "3": 0 };
+  /** Incomes that left a mouth unfed: each ends in one hunger choice. */
+  private hungerTurns: Record<PlayerId, number> = { "0": 0, "1": 0, "2": 0, "3": 0 };
   private voiceClaims = 0;
   private voiceTransfers = 0;
   private lastVoiceHolder: PlayerId | null = null;
@@ -541,6 +543,10 @@ export class Aggregator {
       this.setupMoves.push({ state: G, player, move });
     } else {
       this.countReach(player, moveReachIds(G, player, move, this.previousState));
+      if (move.type === "resolveHunger") {
+        this.hungerTurns[player] += 1;
+        this.countPlayerDraw(G);
+      }
       if (move.type === "resolveEvent" && this.previousState?.pendingPlayerEvent) {
         const before = this.previousState;
         const old = before.players[player];
@@ -879,27 +885,21 @@ export class Aggregator {
       };
     }
 
-    // A hunger turn is a snapshot where the seat's running hunger loss rose: hunger
-    // strikes once, at the seat's own income.
+    // A hunger turn is one hunger choice: hunger strikes once, at the seat's own income.
     const hunger = {} as BatchReport["hunger"];
     const games = Math.max(1, this.games.length);
     for (const playerID of PLAYER_IDS) {
-      let hungerTurns = 0;
       let idle = 0;
       let slaves = 0;
-      let previous: TurnSnapshot | null = null;
 
       for (const snapshot of this.snapshots) {
         const seat = snapshot.players[playerID];
-        const before = previous?.game === snapshot.game ? previous.players[playerID] : null;
-        if (seat.popsLostToHunger > (before?.popsLostToHunger ?? 0)) hungerTurns += 1;
         idle += seat.idleSlaves;
         slaves += seat.slaves;
-        previous = snapshot;
       }
 
       hunger[playerID] = {
-        hungerTurnsPerGame: hungerTurns / games,
+        hungerTurnsPerGame: this.hungerTurns[playerID] / games,
         popsLostPerGame:
           this.games.reduce((sum, game) => sum + game.popsLostToHunger[playerID], 0) / games,
         idleSlavesMean: this.snapshots.length > 0 ? idle / this.snapshots.length : 0,
@@ -1203,7 +1203,8 @@ export class Aggregator {
   }
 
   private countPlayerDraw(G: HegemonyState) {
-    if (G.pendingRiot || !G.players[G.currentPlayer].collectedThisTurn) return;
+    // Hunger waiting on its choice holds the draw back until it resolves.
+    if (G.pendingRiot || G.pendingHunger || !G.players[G.currentPlayer].collectedThisTurn) return;
     const card = G.lastPlayerEvent;
     if (card) {
       this.countReach(G.currentPlayer, [`playerDraw:${card.id}`]);

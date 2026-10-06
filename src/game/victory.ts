@@ -168,6 +168,38 @@ export function checkVictoryAtTurnStart(G: HegemonyState) {
   }
 }
 
+/** One seat in the age-end tally, with the three numbers its rank is read off. */
+export interface TallyRow {
+  seat: PlayerId;
+  titles: number;
+  happiness: number;
+  pops: number;
+}
+
+/**
+ * The age-end tally: most victory cards held, then happiness without calm, then total
+ * pops, then seat order. `decidedBy` names the first of those that separates the
+ * leader from the next seat.
+ */
+export function ageEndRanking(G: HegemonyState): {
+  rows: TallyRow[];
+  decidedBy: "titles" | "happiness" | "pops" | "seat";
+} {
+  const rows = PLAYER_IDS.map((seat) => ({
+    seat,
+    titles: victoryCardsHeld(G, seat),
+    happiness: standingHappiness(G, seat),
+    pops: victoryMetricValue(G, seat, "pops"),
+  }));
+  const keys = ["titles", "happiness", "pops"] as const;
+  rows.sort((a, b) => {
+    for (const key of keys) if (a[key] !== b[key]) return b[key] - a[key];
+    return PLAYER_IDS.indexOf(a.seat) - PLAYER_IDS.indexOf(b.seat);
+  });
+  const decidedBy = keys.find((key) => rows[0][key] !== rows[1]?.[key]) ?? "seat";
+  return { rows, decidedBy };
+}
+
 /**
  * The failsafe ending: the year deck (the clock) is exhausted. Most victory cards
  * held wins; ties break on happiness, then total pops, then seat order.
@@ -177,21 +209,87 @@ export function resolveDeckExhaustion(G: HegemonyState) {
     return;
   }
 
-  const ranked = [...PLAYER_IDS].sort((a, b) => {
-    const cards = victoryCardsHeld(G, b) - victoryCardsHeld(G, a);
-    if (cards !== 0) return cards;
-
-    const happiness = standingHappiness(G, b) - standingHappiness(G, a);
-    if (happiness !== 0) return happiness;
-
-    const pops = victoryMetricValue(G, b, "pops") - victoryMetricValue(G, a, "pops");
-    if (pops !== 0) return pops;
-
-    return PLAYER_IDS.indexOf(a) - PLAYER_IDS.indexOf(b);
-  });
-
   addLog(G, "The years have run their course. The age ends.");
-  endGame(G, ranked[0], "deckExhausted");
+  endGame(G, ageEndRanking(G).rows[0].seat, "deckExhausted");
+}
+
+/** Who holds each title, by card id. */
+export type TitleHolders = Record<string, PlayerId | null>;
+
+export function titleHolders(G: HegemonyState): TitleHolders {
+  return Object.fromEntries(
+    victoryStandings(G).map((standing) => [standing.card.id, standing.holder]),
+  );
+}
+
+/** The best value among the seats other than `seat`, and whose it is (the first in
+ *  seat order on a tie). */
+function runnerUp(standing: VictoryCardStanding, seat: PlayerId | null) {
+  let best: { seat: PlayerId; value: number } | null = null;
+  for (const id of PLAYER_IDS) {
+    if (id !== seat && (!best || standing.values[id] > best.value))
+      best = { seat: id, value: standing.values[id] };
+  }
+  return best;
+}
+
+export interface TitleChange {
+  card: VictoryCardDefinition;
+  from: PlayerId | null;
+  to: PlayerId | null;
+  /** The new holder's value, or the tied leaders' when the title fell to nobody. */
+  value: number;
+  minimum: number;
+  /** The best value beside the new holder's (or beside the old holder's on a fall). */
+  runnerUp: { seat: PlayerId; value: number } | null;
+}
+
+/** Every title whose holder differs from `before`, a fall to nobody included. */
+export function titleChanges(G: HegemonyState, before: TitleHolders): TitleChange[] {
+  return victoryStandings(G)
+    .filter((standing) => (before[standing.card.id] ?? null) !== standing.holder)
+    .map((standing) => {
+      const from = before[standing.card.id] ?? null;
+      return {
+        card: standing.card,
+        from,
+        to: standing.holder,
+        value: standing.holder ? standing.values[standing.holder] : standing.leadingValue,
+        minimum: standing.minimum,
+        runnerUp: runnerUp(standing, standing.holder ?? from),
+      };
+    });
+}
+
+/** A seat holding enough titles to win at the start of its next turn, unless the
+ *  table breaks one first: each title it holds with the nearest challenger. */
+export interface VictoryThreat {
+  seat: PlayerId;
+  titles: Array<{
+    card: VictoryCardDefinition;
+    value: number;
+    runnerUp: { seat: PlayerId; value: number } | null;
+  }>;
+}
+
+export function victoryThreats(G: HegemonyState): VictoryThreat[] {
+  if (G.phase !== "gameplay") return [];
+  const standings = victoryStandings(G);
+  return PLAYER_IDS.flatMap((seat) => {
+    const held = standings.filter((standing) => standing.holder === seat);
+    return held.length >= G.ruleset.victory.cardsToWin
+      ? [
+          {
+            seat,
+            titles: held.map((standing) => ({
+              card: standing.card,
+              value: standing.values[seat],
+              runnerUp: runnerUp(standing, seat),
+            })),
+          },
+        ]
+      : [];
+  });
 }
 
 function endGame(G: HegemonyState, winner: PlayerId, reason: GameOverReason) {

@@ -7,6 +7,7 @@ import { owned, scenario } from "../testing/scenario";
 import { voiceHolder } from "../victory";
 import type { HegemonyState, PlayerId } from "../types";
 import { getAuthoredResolutionCard } from "./deck";
+import type { DirectiveCard } from "./types";
 import {
   assemblyBribe,
   assemblyDiscardHeld,
@@ -19,8 +20,12 @@ import {
   enactForEval,
   lawCanBeRemoved,
   openAssembly,
+  previewDirective,
+  restCanTurn,
   shouldOpenAssembly,
+  voteOutlook,
 } from "./assembly";
+import { projectForPlayer } from "../projection";
 
 function sitting(year = 2) {
   const G = scenario().opening().withResources("0", { influence: 30 }).build();
@@ -147,6 +152,70 @@ describe("v2 Assembly", () => {
     pass(G);
     vote(G);
     expect(voiceHolder(G)).toBeNull();
+  });
+});
+
+describe("What the sitting keeps secret", () => {
+  it("keeps a discarded draw and a sealed repeal with their seat until the ballot is read", () => {
+    const G = sitting(6);
+    plant(G, "guild-charter", "1", 2);
+    const card = G.politicianDecks.perdiccas[0];
+    expect(assemblyDraw(G, "0", "perdiccas").ok).toBe(true);
+    expect(assemblyDiscardHeld(G, "0").ok).toBe(true);
+    G.players["1"].resources.influence = 3;
+    expect(assemblyProposeRepeal(G, "1", "guild-charter").ok).toBe(true);
+
+    const rival = projectForPlayer(G.definition, structuredClone(G), "2").state;
+    expect(rival.politicianDiscards.perdiccas).not.toContain(card);
+    expect(rival.assembly!.setAside["0"]).toBeNull();
+    expect(rival.assembly!.proposals["1"]).toBeNull();
+    expect(JSON.stringify(rival.log)).not.toContain("Guild Charter");
+    expect(
+      projectForPlayer(G.definition, structuredClone(G), "0").state.assembly!.setAside["0"],
+    ).toBe(card);
+
+    pass(G);
+    expect(G.assembly!.phase).toBe("voting");
+    const read = projectForPlayer(G.definition, structuredClone(G), "2").state;
+    expect(read.politicianDiscards.perdiccas).toContain(card);
+    expect(read.assembly!.ballot).toEqual([
+      { kind: "repeal", cardId: "guild-charter", proposer: "1" },
+    ]);
+  });
+});
+
+describe("The vote as the seats read it", () => {
+  it("counts the tally, the caster and each seat still to cast at most", () => {
+    const G = sitting();
+    propose(G, "guild-charter");
+    pass(G);
+    for (const id of PLAYER_IDS)
+      for (const tile of G.players[id].settlements) owned(G, tile, id).pops.citizens = 0;
+    G.players["1"].resources = { ...G.players["1"].resources, gold: 2, influence: 0 };
+    expect(assemblyVote(G, "0", true).ok).toBe(true);
+    const outlook = voteOutlook(G)!;
+    expect(outlook).toMatchObject({
+      yea: 1,
+      nay: 0,
+      caster: { playerID: "1", weight: 1, most: 2 },
+    });
+    expect(outlook.rest.map((seat) => seat.playerID)).toEqual(["2", "3"]);
+    // A tie fails: at 2 to 1 a single uncast vote can still sink it, at 3 to 1 it cannot.
+    expect(restCanTurn(2, 1, 1)).toBe(true);
+    expect(restCanTurn(3, 1, 1)).toBe(false);
+    expect(restCanTurn(1, 1, 1)).toBe(true);
+    expect(restCanTurn(1, 2, 1)).toBe(false);
+  });
+  it("previews a Directive on a copy of the board", () => {
+    const G = sitting();
+    G.players["1"].resources.food = 5;
+    const after = previewDirective(
+      G,
+      getAuthoredResolutionCard("grain-riot") as DirectiveCard,
+      "1",
+    );
+    expect(after.players["1"].resources.food).toBe(2);
+    expect(G.players["1"].resources.food).toBe(5);
   });
 });
 

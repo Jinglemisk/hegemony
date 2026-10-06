@@ -1,4 +1,4 @@
-import type { EventCard } from "../../game/types";
+import type { EventCard, YearCard } from "../../game/types";
 
 // Existing art stays until Step 14.
 const EVENT_CARD_ART: Record<string, string> = {
@@ -50,4 +50,33 @@ const EVENT_CARD_ART: Record<string, string> = {
 
 export function eventCardArtUrl(card: EventCard): string {
   return EVENT_CARD_ART[card.id] ?? EVENT_CARD_ART["player-good-stores"];
+}
+
+// The year deck reuses the retired season paintings.
+const YEAR_CARD_ART: Record<string, string> = {
+  "year-drought": new URL("../../../assets/event-cards/season-drought.webp", import.meta.url).href,
+  "year-wildfire": new URL("../../../assets/event-cards/season-timber-levies.webp", import.meta.url)
+    .href,
+  "year-silent-mines": new URL(
+    "../../../assets/event-cards/season-quarry-contracts.webp",
+    import.meta.url,
+  ).href,
+  "year-piracy": new URL("../../../assets/event-cards/season-open-markets.webp", import.meta.url)
+    .href,
+  "year-ostracism": new URL(
+    "../../../assets/event-cards/season-skilled-artisans.webp",
+    import.meta.url,
+  ).href,
+  "year-blockade": new URL("../../../assets/event-cards/season-scarce-labor.webp", import.meta.url)
+    .href,
+  "year-plague": new URL("../../../assets/event-cards/season-civic-anxiety.webp", import.meta.url)
+    .href,
+  "year-festival": new URL(
+    "../../../assets/event-cards/season-festival-games.webp",
+    import.meta.url,
+  ).href,
+};
+
+export function yearCardArtUrl(card: YearCard): string {
+  return YEAR_CARD_ART[card.id] ?? YEAR_CARD_ART["year-drought"];
 }

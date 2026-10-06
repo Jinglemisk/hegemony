@@ -160,9 +160,10 @@ Works from any phase — bots will finish a manual setup too. Policies:
 The economic policies project up to six remaining incomes one step at a time through the
 canonical active-effect descriptors. Each step burns suppressed
 collections, runs hunger, and recalculates authoritative income after projected pop
-loss. Hunger draws no dice (freemen leave before citizens, from the fullest
-settlement), so the projection runs the engine's own rule and never reads or advances
-future game RNG.
+loss. Hunger draws no dice: the projection applies the engine's freemen-first default
+(freemen before citizens, from the fullest settlement), the same choice the hunger
+card opens with, and never reads or advances future game RNG. At the table the
+hungry seat chooses; bots score the legal splits (see [AI](ai.md#hunger)).
 
 How the bots work, their limitations, and the path to CPU opponents with
 difficulty settings: **docs/reference/ai.md**.
@@ -252,8 +253,9 @@ fixed openings keep their scripted placements but score Ideas by seat.
 one game finish. Audit and shell gates must retain the 25-row conduct ceiling and
 pass at 1280, 1440 and 1920. No shell components change in Step 10.
 
-Income, hunger and the player draw are recorded at turn start, including on
-Year 14's last turn. Riots and revolts are checked at the acting player's turn end,
+Income and the player draw are recorded at turn start, including on Year 14's last
+turn. When income leaves mouths unfed, the draw is recorded when the hunger choice
+resolves, and each hunger choice counts as one hunger turn. Riots and revolts are checked at the acting player's turn end,
 before the handoff, year boundary, Assembly or final tally. A riot roll records
 its original player and year even when resolution opens the next turn. The next
 income/draw is counted once when that turn opens. A year-card reveal is counted

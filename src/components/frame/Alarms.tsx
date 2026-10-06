@@ -7,6 +7,8 @@ import { formatNumber, formatSignedNumber } from "../../ui/formatters";
 import { EffectLine } from "../EffectLine";
 import { Tooltip } from "../overlays/Tooltip";
 import type { GameContent } from "../../game/content";
+import type { HungerForecast } from "../../ui/frameSelectors";
+import type { ReactNode } from "react";
 import { Ico, Tip } from "./parts";
 
 /**
@@ -14,9 +16,10 @@ import { Ico, Tip } from "./parts";
  * effect beside the ticker tab, showing the resource it moves, tinted by which
  * way it moves it. The tooltip says what it is and how long it lasts.
  *
- * The year card's own rule is left out (the year card prints it) and so are
- * the standing Laws (the Agora lists them): a disc here is something happening
- * to you now, not the constitution.
+ * The year card leads the row as its own disc (`lead`, with the victory threat
+ * before it), so its active-effect line is left out here; so are the standing Laws
+ * (the Agora lists them): a disc here is something happening to you now, not the
+ * constitution.
  */
 
 const UNREST_ICON: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
@@ -70,22 +73,29 @@ export function Alarms({
   unrest,
   riotThreshold,
   content,
+  hunger,
+  lead = null,
 }: {
   effects: readonly ActiveEffectDescriptor[];
   unrest: UnrestStatus;
   riotThreshold: number;
   content: GameContent;
+  /** Mouths the next income leaves unfed: the hunger disc turns loud a turn early. */
+  hunger: HungerForecast | null;
+  /** Discs that lead the row: the victory threat, then this year's card. */
+  lead?: ReactNode;
 }) {
   const shown = effects.filter(SHOWN);
 
   const tier = unrest.tier === "calm" ? null : unrest.tier;
 
-  if (shown.length === 0 && !tier) {
+  if (shown.length === 0 && !tier && !lead) {
     return null;
   }
 
   return (
     <ul aria-label="Alarms" className="alarms" data-c="alarms" data-exclude>
+      {lead}
       {tier ? (
         <li>
           <Tooltip
@@ -119,6 +129,34 @@ export function Alarms({
       ) : null}
       {shown.map((descriptor) => {
         const effect = presentActiveEffect(descriptor, content);
+        if (descriptor.kind === "hunger" && hunger) {
+          const mouths = `${hunger.unfed} ${hunger.unfed === 1 ? "mouth" : "mouths"}`;
+          return (
+            <li key={descriptor.id}>
+              <Tooltip
+                ariaLabel={`Hunger: ${mouths} unfed at your next income.`}
+                content={
+                  <Tip sub="next income · your next turn" title={`Hunger: ${mouths} unfed`}>
+                    <p className="tip-body">
+                      {hunger.unfed === 1 ? "One pop leaves" : `${hunger.unfed} pops leave`}, and
+                      you choose which.
+                    </p>
+                    {hunger.fixes.map((fix) => (
+                      <p className="tip-fix" key={fix.icon}>
+                        <Ico path={fix.icon} size="chip" />
+                        {fix.text}
+                      </p>
+                    ))}
+                  </Tip>
+                }
+                focusable
+                triggerClassName="alarm-disc is-down is-loud"
+              >
+                <Ico path="unrest/starvation" size="ui" />
+              </Tooltip>
+            </li>
+          );
+        }
         return (
           <li key={descriptor.id}>
             <Tooltip

@@ -1,5 +1,6 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { defaultHungerLeave, resolveHunger } from "../game/hunger";
 import { describe, expect, it } from "vitest";
 
 import { Alarms } from "../components/frame/Alarms";
@@ -18,7 +19,7 @@ import { revealYearCard, startNewYear } from "../game/year";
 import { materialTile, scenario } from "../game/testing/scenario";
 import type { HegemonyState, Pops, YearCard } from "../game/types";
 import { PLAYER_IDS } from "../game/data";
-import { unrestStatus } from "../game/unrest";
+import { turnEndUnrest, unrestStatus } from "../game/unrest";
 import { masterPolicy, projectPolicyHorizon } from "../sim/policies";
 import { createSimRng } from "../sim/rng";
 import { snapshotTurn } from "../sim/telemetry";
@@ -73,6 +74,7 @@ function renderAlarms(G: HegemonyState, activeEffects: ActiveEffectDescriptor[])
       effects: activeEffects,
       riotThreshold: G.ruleset.economy.unrest.riotThreshold,
       unrest: unrestStatus(G, "0"),
+      hunger: null,
     }),
   );
 }
@@ -278,12 +280,18 @@ describe("simulation and AI active-effect parity", () => {
         canEndTurn: true,
         title: "Press and hold to end your turn.",
         warning: endTurnWarning(G, "0"),
+        unrest: turnEndUnrest(G, "0"),
+        confirmOpen: true,
         onEndTurn: () => {},
+        onCalm: () => {},
       }),
     );
     expect(html).toContain(`Starts ${consequence}`);
     expect(html).toContain(`Ending now starts a ${consequence} at −${-level}.`);
     expect(html).toContain("is-danger");
+    // The hold opens the confirm at the line, with the plain choice to face it.
+    expect(html).toContain(`the ${consequence} line`);
+    expect(html).toContain(consequence === "riot" ? "Face the riot" : "Revolt");
   });
 
   it("keeps the riot result with its owner after the next turn opens", () => {
@@ -313,8 +321,10 @@ describe("simulation and AI active-effect parity", () => {
         createElement(RiotModal, { onRolled: dispatch, onDismissResult: dispatch }),
       ),
     );
-    expect(html).toContain(`${G.players["0"].name} faces a riot at turn end.`);
-    expect(html).not.toContain(`${G.players["1"].name} faces a riot`);
+    // The result card reads seat 0's riot although seat 1's turn has opened.
+    expect(html).toContain(`Riot · rolled ${G.lastTableRoll!.roll}`);
+    expect(html).toContain(G.lastTableRoll!.rowLabel);
+    expect(html).toContain(`Then: ${G.players["1"].name}’s turn`);
   });
 
   it("uses the known year card only for an income still owed this year", () => {
@@ -347,6 +357,12 @@ describe("simulation and AI active-effect parity", () => {
     for (let income = 0; income < 6; income += 1) {
       engine.players["0"].collectedThisTurn = false;
       expect(collectIncome(engine, "0").ok).toBe(true);
+      // The seat's choice is the projection's freemen-first default.
+      const pending = engine.pendingHunger;
+      if (pending)
+        expect(resolveHunger(engine, "0", defaultHungerLeave(engine, "0", pending.unfed)).ok).toBe(
+          true,
+        );
     }
 
     // Twelve food feeds three freemen for four incomes; the fifth leaves all three unfed.

@@ -15,8 +15,8 @@ session with "continue the v2 migration" in the `hegemony-v2` worktree.
 
 **Owner blockers:** none. Open: [Q79](questions.md), settlements eating with food as a level.
 
-Steps 1 to 10 are merged into `feat/v2` (#79 to #90). Step 11, the sim gate, measures
-build viability and balance and waits for the owner's go.
+Steps 1 to 10, 13 and 14 are merged into `feat/v2` (#79 to #90, #94, #95). Step 11, the sim
+gate, measures build viability and balance and waits for the owner's go.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
@@ -24,15 +24,15 @@ precedes full multiplayer.
 
 ## Active plans
 
-| Plan                                                | Phase    | Status    | Position                                                                         |
-| --------------------------------------------------- | -------- | --------- | -------------------------------------------------------------------------------- |
-| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 11: the sim gate; Steps 1 to 10 and 14 shipped (#79 to #90, #94)            |
-| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze |
-| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged            |
-| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                        |
-| [Player trade](plans/player-trade.md)               | 4        | `blocked` | V1 after luxuries; full negotiation ships before the mechanics freeze            |
-| [National Ideas](plans/national-ideas.md)           | v2       | `active`  | Step 9 shipped (#88); twelve v2 rules, setup pick and influence purchase         |
-| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer              |
+| Plan                                                | Phase    | Status    | Position                                                                          |
+| --------------------------------------------------- | -------- | --------- | --------------------------------------------------------------------------------- |
+| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 11: the sim gate; Steps 1 to 10, 13 and 14 shipped (#79 to #90, #94, #95)    |
+| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze  |
+| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged             |
+| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                         |
+| [Player trade](plans/player-trade.md)               | 4        | `blocked` | V1 after luxuries; full negotiation ships before the mechanics freeze             |
+| [National Ideas](plans/national-ideas.md)           | v2       | `active`  | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
+| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer               |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature
 from [the plan template](plans/_template.md).

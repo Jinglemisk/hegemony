@@ -2,6 +2,7 @@ import { finishTurn } from "./turn";
 import { demotePop } from "./civic";
 import { getAuthoredGameContent, getRiotTable } from "./content";
 import { addLog, getPlayerName } from "./core/query";
+import { happinessLevel } from "./happiness";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
@@ -25,8 +26,9 @@ export const CONCESSION_FROM: PopType = "citizens";
 
 export function startRiot(G: HegemonyState, playerID: PlayerId) {
   // The riot spends the tokens that caused it, so unrest corrects itself.
+  const tokensCleared = G.players[playerID].unrestTokens;
   G.players[playerID].unrestTokens = 0;
-  G.pendingRiot = { playerID, boughtInsurance: [] };
+  G.pendingRiot = { playerID, boughtInsurance: [], tokensCleared, concessionTileId: null };
   addLog(
     G,
     `${getPlayerName(G, playerID)}'s province erupts at turn end — a riot must be faced before the turn passes. Its Unrest tokens clear.`,
@@ -85,6 +87,8 @@ export function buyRiotInsurance(
     if (!demoted.ok) {
       return demoted;
     }
+
+    G.pendingRiot.concessionTileId = demoteTarget.tileId;
   } else {
     payCost(G.players[playerID].resources, option.cost);
   }
@@ -123,9 +127,22 @@ export function insuranceRollBonus(
   }, 0);
 }
 
+/** The rows a roll can land on with this modifier: the clamp keeps every roll on the
+ *  table, so insurance puts the lowest rows out of reach. */
+export function riotRollReach(
+  G: HegemonyState,
+  modifier: number,
+): { lowest: number; highest: number } {
+  const die = getRiotTable(G.definition.content).die ?? 6;
+  const clamp = (roll: number) => Math.min(die, Math.max(1, roll));
+  return { lowest: clamp(1 + modifier), highest: clamp(die + modifier) };
+}
+
 /**
  * Face the table: roll with insurance (+1 each). Pop losses take slaves first.
  * Resolving completes the committed turn, without another unrest check or income.
+ * The roll's Chronicle line carries the riot as a moment, for the seat's result card
+ * and the other seats' toast.
  */
 export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
   const status = getResolveRiotStatus(G, playerID);
@@ -135,11 +152,28 @@ export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
     return invalid(...status.reasons);
   }
 
-  const { popsRemoved } = rollOnTable(G, playerID, getRiotTable(G.definition.content), {
-    modifier: insuranceRollBonus(pending.boughtInsurance, G.definition.content),
-  });
+  const rollLine = G.log.length;
+  const { record, popsRemoved, left } = rollOnTable(
+    G,
+    playerID,
+    getRiotTable(G.definition.content),
+    { modifier: insuranceRollBonus(pending.boughtInsurance, G.definition.content) },
+  );
 
   G.players[playerID].popsLostToUnrest += popsRemoved;
   G.pendingRiot = null;
+  G.log[rollLine].moment = {
+    kind: "riot",
+    roll: record.roll,
+    modifier: record.modifier,
+    modified: record.modified,
+    rowLabel: record.rowLabel,
+    outcomes: record.outcomes,
+    left,
+    insurance: pending.boughtInsurance,
+    concessionTileId: pending.concessionTileId,
+    tokensCleared: pending.tokensCleared,
+    level: happinessLevel(G, playerID),
+  };
   return finishTurn(G);
 }

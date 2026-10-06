@@ -139,7 +139,12 @@ describe("action cap", () => {
       G.pendingPlayerEvent = null;
       if (pending) {
         G.players["0"].unrestTokens = 0;
-        G.pendingRiot = { playerID: "0", boughtInsurance: [] };
+        G.pendingRiot = {
+          playerID: "0",
+          boughtInsurance: [],
+          tokensCleared: 0,
+          concessionTileId: null,
+        };
       }
       const moves: string[] = [];
       const forced: number[] = [];

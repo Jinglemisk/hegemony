@@ -1,16 +1,61 @@
-import { happinessContributions, unrestStatus } from "../game/rules";
+import {
+  getActiveEffects,
+  getBankBuyStatus,
+  happinessContributions,
+  unrestStatus,
+} from "../game/rules";
+import { playerDole } from "../game/ideaRules";
 import { sign } from "./frameFormat";
 import type { HappinessContribution } from "../game/rules";
 import type { HegemonyState, PlayerId } from "../game/types";
 
-/** The committed turn's consequence, using the engine's current level and thresholds. */
+/** The committed turn's consequence, using the engine's current level and thresholds.
+ *  A riot or revolt starts now, so it outranks hunger at the next income. */
 export function endTurnWarning(G: HegemonyState, playerID: PlayerId) {
   const status = unrestStatus(G, playerID);
-  if (!status.riotAtRisk) return null;
-  const revolt = status.tier === "revolt";
+  if (status.riotAtRisk) {
+    const revolt = status.tier === "revolt";
+    return {
+      label: revolt ? "Starts revolt" : "Starts riot",
+      message: `Ending now starts a ${revolt ? "revolt" : "riot"} at ${sign(status.happiness)}.`,
+    };
+  }
+  const hunger = hungerForecast(G, playerID);
+  return hunger
+    ? {
+        label: "Hunger ahead",
+        message: `${hunger.unfed} ${hunger.unfed === 1 ? "mouth goes" : "mouths go"} unfed at your next income.`,
+      }
+    : null;
+}
+
+export type HungerForecast = {
+  unfed: number;
+  /** What would feed the shortfall now, with its price and what the seat holds. */
+  fixes: Array<{ icon: string; text: string }>;
+};
+
+/**
+ * Hunger a turn ahead: the engine's forecast of the next income (the hunger alarm's
+ * own mechanic) and the two ways to buy food before it lands.
+ */
+export function hungerForecast(G: HegemonyState, playerID: PlayerId): HungerForecast | null {
+  const hunger = getActiveEffects(G, playerID)
+    .flatMap((descriptor) => descriptor.mechanics)
+    .find((mechanic) => mechanic.type === "hunger");
+  if (!hunger || hunger.unfed === 0) return null;
+  const { food, influenceCost } = playerDole(G, playerID);
+  const bank = getBankBuyStatus(G, playerID, "food").cost?.gold ?? 0;
+  const held = G.players[playerID].resources;
   return {
-    label: revolt ? "Starts revolt" : "Starts riot",
-    message: `Ending now starts a ${revolt ? "revolt" : "riot"} at ${sign(status.happiness)}.`,
+    unfed: hunger.unfed,
+    fixes: [
+      {
+        icon: "resources/influence",
+        text: `Dole: ${food} food for ${influenceCost} influence (you hold ${held.influence})`,
+      },
+      { icon: "resources/gold", text: `Bank: 1 food for ${bank} gold (you hold ${held.gold})` },
+    ],
   };
 }
 

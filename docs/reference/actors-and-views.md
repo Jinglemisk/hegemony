@@ -40,10 +40,16 @@ discards, results, and public logs. It removes or canonicalizes authority-only i
 - seed and serialized RNG are replaced with zero;
 - draw piles preserve counts only, using opaque card identifiers; the next year card
   is hidden from every seat, spectators and bots alike;
-- another seat's held Assembly card and sealed proposal are null during proposal;
+- another seat's held Assembly card, sealed proposal and set-aside draw are null during
+  proposal; a discarded draw waits in `assembly.setAside` and reaches its politician's
+  discard pile only when the ballot is read, and a sealed repeal's log line does not
+  name its Law;
 - spectators see no held card or sealed proposal;
 - a pending Player Event is visible only to its decision owner; other views receive a generic
   workflow/log indication until it resolves.
+
+A pending hunger choice is public: every view sees which seat must send how many pops away,
+and the chosen pops in the Chronicle once they leave.
 
 Discard identities remain public and are sorted canonically. Once Assembly proposals enter the
 ballot, they are public and the voting view exposes them normally.
@@ -53,6 +59,13 @@ ballot, they are public and the voting view exposes them normally.
 `src/client/controller.ts` retains authoritative state in its local adapter so hot-seat play can
 execute commands, but React receives only the active seat's projection. Switching the viewer
 reprojects; it does not mutate or transfer authority.
+
+In hotseat (every browser game but `?dev=bots`) the viewer follows the seat the game waits on
+only through public phases: setup, the Idea draft, the vote and the house rising. A private
+moment, a seat's turn or its Assembly proposal (`privateMoment`), is handed over behind the
+pass-the-seat cover, which stands in for the whole frame. Proposals run one seat at a time in
+turn order (`assembly.activePlayer`), and the sitting has no seat switcher, so no seat
+reads another's drawn card. The game's end stays with whoever was looking.
 
 `src/sim/runner.ts` likewise projects before every policy decision. Search can transition the
 sanitized state for deterministic, RNG-free branches, but cannot observe real entropy or deck
@@ -65,10 +78,18 @@ asynchronous Assembly commands pass or fail through the public transition accord
 
 ## National Idea choices
 
-After placement, `setupIdeas` allows every seat without a locked pick to submit
-`pickIdea`. The headless driver parks `currentPlayer` on the first unfinished seat,
-while the shell may act as any unfinished seat. Only the viewer's locked choice is
-projected. Ownership and acquisition effects reveal together when every seat has
-chosen, before Year 1's reveal and income; no choice-bearing log exists before then.
-During play `buyIdea` is an ordinary current-seat action. Held Ideas are permanent
-public ownership, so realm pages, rival tooltips and telemetry use the same selector.
+After placement, `setupIdeas` is an open draft: only `currentPlayer` may submit
+`pickIdea`, in the placement snake's next round. A pick lands at once, with its
+acquisition effects, and is public to every view; an Idea held by any seat cannot be
+picked or bought by another. During play `buyIdea` is an ordinary current-seat action
+over the untaken Ideas. Held Ideas are permanent public ownership, so the picker, realm
+pages, rival tooltips and telemetry use the same selectors (`ideaHolders`, `ideaDraft`).
+
+## Hunger choices
+
+When an income leaves mouths unfed, `pendingHunger` holds the turn for its seat, the way
+a pending fate card does: `resolveHunger` is that seat's only legal command, and it names
+exactly as many freemen or citizens as the shortfall, one entry per pop. The fate card is
+drawn after it. Enumeration offers bots each split between the eating classes, every pop
+from the settlement holding the most of its class; the shell's card may pick any
+settlement.

@@ -318,7 +318,7 @@ export function discGroups(
   const ideas: DiscOption = {
     id: "ideas",
     label: "Ideas",
-    icon: "pops/citizens",
+    icon: "assembly/national-idea",
     prices: [ideasStatus.cost],
     enabled: open && ideasStatus.can,
     hint: ideasStatus.reasons.join(" ") || "Buy your second National Idea.",
