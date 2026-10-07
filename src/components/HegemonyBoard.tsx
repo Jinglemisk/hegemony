@@ -21,6 +21,7 @@ import {
   victoryThreats,
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
+import { yearDeckSize } from "../game/year";
 import { BuildPopover } from "./board/map/BuildPopover";
 import { IdeasModal } from "./board/modals/IdeasModal";
 import { HungerModal } from "./board/modals/HungerModal";
@@ -54,7 +55,8 @@ import { TopBar } from "./frame/TopBar";
 import { Ticker } from "./frame/Ticker";
 import { ToastLane } from "./frame/Toasts";
 import { useMomentToasts, useOwnMoment } from "./frame/moments";
-import { PassSeat } from "./frame/PassSeat";
+import { SettingsPanel } from "./frame/SettingsPanel";
+import { TurnNotice } from "./frame/TurnNotice";
 import { ThreatAlarm, YearDisc } from "./frame/MomentDiscs";
 import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel";
 import { Alarms } from "./frame/Alarms";
@@ -69,8 +71,11 @@ type BoardProps = {
   playerID: PlayerId;
   onPlayerIDChange: (playerID: PlayerId) => void;
   isActive: boolean;
-  /** Two or more people share the screen: private moments pass behind a cover. */
+  /** People play at this screen; false only when bots play alone. */
   hotseat: boolean;
+  /** The setting: a notice names each turn and proposal before its seat begins. */
+  turnNotice: boolean;
+  onTurnNoticeChange: (on: boolean) => void;
 };
 
 type SetupPlacement = "capital" | "city" | "colony";
@@ -104,6 +109,8 @@ export function HegemonyBoard({
   onPlayerIDChange,
   isActive: seatActive,
   hotseat,
+  turnNotice,
+  onTurnNoticeChange,
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   // `?dev=ideas` opens on the purchase list.
@@ -123,10 +130,10 @@ export function HegemonyBoard({
         : G.year,
   );
   const [yearFaceOpen, setYearFaceOpen] = useState(false);
-  // The private moment last handed over (see `privateMoment`): a new one waits behind
-  // the pass-the-seat cover. A game opened mid-turn starts handed over.
+  // The private moment last begun (see `privateMoment`): a new one waits behind the
+  // turn notice. A game opened mid-turn starts begun.
   const [handedOver, setHandedOver] = useState(() =>
-    DEV_SHELL.passCover || DEV_SHELL.viewer ? null : privateMoment(G),
+    DEV_SHELL.turnNotice || DEV_SHELL.viewer ? null : privateMoment(G),
   );
   // The draft is read back once its last pick lands, until the opener turns the year.
   const [draftDone, setDraftDone] = useState(DEV_SHELL.draftSummary);
@@ -142,12 +149,14 @@ export function HegemonyBoard({
   // realm itself), a tile, or a luxury good's mooring.
   const [subject, setSubject] = useState<RealmSubject>({ kind: "realm" });
   const [consultTab, setConsultTab] = useState<ConsultTab | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
   // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
   // the target chapter is unchanged (you clicked away and clicked the link again).
   const [codexTarget, setCodexTarget] = useState<{ chapter: string; nonce: number } | null>(null);
   const openCodexTo = useCallback((chapter: string) => {
     setCodexTarget((current) => ({ chapter, nonce: (current?.nonce ?? 0) + 1 }));
+    setSettingsOpen(false);
     setConsultTab("codex");
   }, []);
   const codexLink = useMemo(() => ({ openCodexTo }), [openCodexTo]);
@@ -171,7 +180,7 @@ export function HegemonyBoard({
   const threats = useMemo(() => victoryThreats(G), [G]);
 
   // One moment owns the screen at a time, in the order the engine ran them: the last
-  // seat's riot or revolt, the year card, the game's end; then the pass-the-seat cover
+  // seat's riot or revolt, the year card, the game's end; then the turn notice
   // before a private moment; behind it the Assembly, hunger and the fate card.
   const riotShown = Boolean(G.pendingRiot) || riotResultOpen;
   const revoltShown = !riotShown && Boolean(revolt.entry);
@@ -186,15 +195,16 @@ export function HegemonyBoard({
   const gameOverShown =
     ctx.phase === "gameOver" && !gameOverDismissed && !riotShown && !revoltShown && !yearShown;
   const moment = privateMoment(G);
-  const coverShown =
+  const noticeShown =
     hotseat &&
+    turnNotice &&
     moment !== null &&
     moment !== handedOver &&
     !riotShown &&
     !revoltShown &&
     !yearShown &&
     !draftDone;
-  const momentAhead = riotShown || revoltShown || yearShown || coverShown || draftDone;
+  const momentAhead = riotShown || revoltShown || yearShown || noticeShown || draftDone;
   const gameUi = useMemo<GameUi>(
     () => ({
       G,
@@ -343,6 +353,7 @@ export function HegemonyBoard({
       }
 
       if (event.key === "?") {
+        setSettingsOpen(false);
         setConsultTab((open) => (open === "codex" ? null : "codex"));
       }
       // Escape is ModalShell's job — every dialog gets it from the one place.
@@ -448,18 +459,7 @@ export function HegemonyBoard({
     <GameUiProvider value={gameUi}>
       <CodexLinkProvider value={codexLink}>
         <main className="frame">
-          {coverShown ? (
-            <PassSeat
-              onReady={() => {
-                setHandedOver(moment);
-                onPlayerIDChange(currentPlayerId);
-              }}
-              previous={viewerId}
-              proposal={G.assembly?.phase === "proposal"}
-              seat={currentPlayerId}
-            />
-          ) : null}
-          {G.phase !== "setupIdeas" && !draftDone && !coverShown ? (
+          {G.phase !== "setupIdeas" && !draftDone ? (
             <>
               <Island
                 G={G}
@@ -492,7 +492,15 @@ export function HegemonyBoard({
                   consultOpen={consultTab}
                   happiness={happinessDisplay(G, viewerId)}
                   income={projectedIncome}
-                  onConsult={(tab) => setConsultTab((open) => (open === tab ? null : tab))}
+                  onConsult={(tab) => {
+                    setSettingsOpen(false);
+                    setConsultTab((open) => (open === tab ? null : tab));
+                  }}
+                  onSettings={() => {
+                    setConsultTab(null);
+                    setSettingsOpen((open) => !open);
+                  }}
+                  settingsOpen={settingsOpen}
                   onSeat={onPlayerIDChange}
                   threats={threats.map((threat) => threat.seat)}
                   viewerId={viewerId}
@@ -592,6 +600,25 @@ export function HegemonyBoard({
                     ×
                   </button>
                   <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
+                </aside>
+              ) : settingsOpen ? (
+                <aside aria-label="Settings" className="consult-sheet is-short">
+                  <button
+                    aria-label="Close"
+                    className="consult-close"
+                    onClick={() => setSettingsOpen(false)}
+                    type="button"
+                  >
+                    ×
+                  </button>
+                  <SettingsPanel
+                    onTurnNotice={(on) => {
+                      // Turned on mid-turn, the notice starts with the next turn.
+                      if (on) setHandedOver(moment);
+                      onTurnNoticeChange(on);
+                    }}
+                    turnNotice={turnNotice}
+                  />
                 </aside>
               ) : null}
             </>
@@ -771,9 +798,21 @@ export function HegemonyBoard({
           {G.pendingPlayerEvent && !momentAhead ? <PendingPlayerEventModal /> : null}
           {/* The Assembly sits in a modal over the shell. It mounts off engine state;
           minimised, it is the dock under the ticker. A proposal is private, and its
-          seat comes by the cover. */}
+          seat begins it at the turn notice. */}
           {sitting && !sitting.minimised && !momentAhead ? (
             <AssemblySitting sitting={sitting} />
+          ) : null}
+          {noticeShown ? (
+            <TurnNotice
+              onBegin={() => {
+                setHandedOver(moment);
+                onPlayerIDChange(currentPlayerId);
+              }}
+              proposal={G.assembly?.phase === "proposal"}
+              seat={currentPlayerId}
+              totalYears={yearDeckSize(G)}
+              year={G.year}
+            />
           ) : null}
         </main>
       </CodexLinkProvider>

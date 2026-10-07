@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-06
+updated: 2026-10-07
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -112,8 +112,14 @@ Step 13 rulings (owner, 2026-10-06), from the
   map, realm and consult pages read normally, with no actions and end turn locked.
 - The year card shrinks into the first disc of the alarms row; the top bar keeps only the
   year and the cards left.
-- A pass-the-seat screen covers the hand-off between human seats before an Assembly
-  proposal and a turn start. It never shows against bots.
+- A turn notice, a small card over the table reading "Nikos's turn" or "Nikos's
+  proposal" with one Begin button, comes before each turn and each Assembly proposal
+  (owner, 2026-10-07). It replaces the full-screen pass-the-seat cover approved on
+  2026-10-06, which every browser game showed and which read as hotseat only; the notice
+  is worded to suit a networked game too. The screen stays with the last seat until
+  Begin, so the next seat's fate card and Assembly draw still wait behind it. A switch
+  under Settings in the top bar turns the notice off, and the screen then follows the
+  turn at once. It never shows against bots.
 - A revolt with no slaves costs nothing beyond clearing the tokens. This is intended.
 
 After the independent audit (2026-09-28):
@@ -613,8 +619,9 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - Part B (the ceremonies around the turn). Every browser game but `?dev=bots` is hotseat:
   the shell seats no bots beside people, so "two or more human seats" means every seat.
   The viewer follows the waiting seat through public phases; a seat's turn and its
-  Assembly proposal are handed over behind the pass-the-seat cover, keyed by the turn or
-  the proposing seat. Proposals run one seat at a time in turn order, and the seat
+  Assembly proposal change hands at the turn notice, keyed by the turn or the proposing
+  seat. The notice setting is kept per browser, on by default; turned on mid-turn, it
+  starts with the next turn. Proposals run one seat at a time in turn order, and the seat
   plaques are read-only while they do. A game opened mid-turn starts handed over.
 - The game's end stays with whoever was looking, so the race tablet reads "You rule"
   only for the viewer who won. Its "New game" opens a fresh game without the URL's
@@ -643,7 +650,7 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   settlement on the map.
 - Gate queries: `?dev=year`, `?dev=year-back`, `?dev=year-term`, `?dev=riot-confirm`,
   `?dev=revolt-confirm`, `?dev=riot`, `?dev=riot-result`, `?dev=revolt`,
-  `?dev=rival-unrest`, `?dev=threat`, `?dev=race`, `?dev=age-end`, `?dev=pass`. No schema
+  `?dev=rival-unrest`, `?dev=threat`, `?dev=race`, `?dev=age-end`, `?dev=turn-notice`. No schema
   change beyond Part A's: the riot's pending state gained two fields within state 10.
 - Part C (the Assembly sitting). The ballot read and each item's result are beats the
   shell holds, not engine phases; a game opened mid-sitting does not replay results

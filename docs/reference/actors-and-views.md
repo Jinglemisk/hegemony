@@ -60,10 +60,12 @@ ballot, they are public and the voting view exposes them normally.
 execute commands, but React receives only the active seat's projection. Switching the viewer
 reprojects; it does not mutate or transfer authority.
 
-In hotseat (every browser game but `?dev=bots`) the viewer follows the seat the game waits on
-only through public phases: setup, the Idea draft, the vote and the house rising. A private
-moment, a seat's turn or its Assembly proposal (`privateMoment`), is handed over behind the
-pass-the-seat cover, which stands in for the whole frame. Proposals run one seat at a time in
+When people play (every browser game but `?dev=bots`) and the turn notice is on, the viewer
+follows the seat the game waits on only through public phases: setup, the Idea draft, the vote
+and the house rising. A private moment, a seat's turn or its Assembly proposal
+(`privateMoment`), changes hands at the turn notice: the viewer, and so the projection, stays
+the last seat's until Begin. With the notice off in Settings, the viewer follows the seat at
+once. Proposals run one seat at a time in
 turn order (`assembly.activePlayer`), and the sitting has no seat switcher, so no seat
 reads another's drawn card. The game's end stays with whoever was looking.
 

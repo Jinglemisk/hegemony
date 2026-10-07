@@ -92,7 +92,7 @@ list (80px rows) and, beside it, the draft order strip naming who took what, who
 choosing and who is next. A taken row carries its holder's mark and dims. A pick lands
 at once with its one-off grants (Treasury Grant's gold, Slave Colonies' slaves) and the
 next seat chooses; in hotseat the page follows the turn, so the next seat finds the pick
-already marked. No pass-the-seat screen is needed, since picks are public. After the
+already marked. No turn notice is needed, since picks are public. After the
 last pick the page stays, read-only, with the last pick lit, until the opener turns the
 first year. During play, **Ideas** in Civic opens the same list as a sheet over the
 frame with the price, what you hold and how many Ideas are left; a bought Idea's mark

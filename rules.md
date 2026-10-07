@@ -197,11 +197,12 @@ card waits as the first disc of the alarms row until the year turns; click it to
 it again. The **first player moves on one seat** each year. The game lasts at most
 **fourteen years**; the next year card stays hidden.
 
-**Passing the seat.** When several people share one screen, a cover in the next
-seat's colour hides the table before each seat's turn and before each seat's Assembly
-proposal, so nobody reads another's fate card or drawn Law. Public moments (the year
-card, the Idea draft, votes, riots, the end of the game) need no cover, and a game of
-bots never shows it.
+**The turn notice.** Before each seat's turn and each seat's Assembly proposal, a small
+card names whose it is and waits for Begin. Until then the screen stays with the last
+seat, so nobody reads another's fate card or drawn Law. Public moments (the year card,
+the Idea draft, votes, riots, the end of the game) have no notice, and a game of bots
+never shows it. Settings, in the top bar, turns the notice off; the screen then follows
+the turn at once.
 
 ## The bank
 
@@ -398,7 +399,7 @@ remaining ballot. A simple majority passes; a tie fails.
 
 A drawn card, kept or discarded, and a sealed repeal stay with their seat until the
 ballot is read; everyone sees only who has sealed. On screen the sitting is a sheet
-over the map. Each seat proposes in turn order behind the pass-the-seat screen, the
+over the map. Each seat proposes in turn order after its turn notice, the
 ballot is read out, and each vote shows what your votes would make the tally and
 whether the seats after you can still turn it. Every item ends on its result, and
 the sitting ends on a recap of the verdicts, the standing Laws and Voice. Minimise

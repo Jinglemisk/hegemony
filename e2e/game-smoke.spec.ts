@@ -60,8 +60,9 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   await result.getByRole("button", { name: "Endure It", exact: true }).click();
   await expect(result).toBeHidden();
 
-  // Nikos's turn is private: the pass-the-seat cover hands him the screen.
-  await page.getByRole("button", { name: "I am Nikos · show my seat" }).click();
+  // The turn notice names Nikos's turn; the screen is Nikos's once it begins.
+  const notice = page.getByRole("dialog", { name: "Nikos’s turn", exact: true });
+  await notice.getByRole("button", { name: "Begin", exact: true }).click();
   await expect(page.getByRole("img", { name: /Nikos is acting/ })).toBeVisible();
 
   await page.reload();
