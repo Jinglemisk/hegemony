@@ -34,7 +34,7 @@ afterEach(() => {
   container.remove();
 });
 
-it("queues Damon's riot result, then the pass-the-seat cover, before Nikos's event", () => {
+it("queues Damon's riot result, then the turn notice, before Nikos's event", () => {
   vi.useFakeTimers();
   let G = buildNewGame({
     seed: 42,
@@ -54,17 +54,24 @@ it("queues Damon's riot result, then the pass-the-seat cover, before Nikos's eve
   };
   const moves = createCommandMoves(dispatch);
   const events = createCommandEvents(dispatch);
+  // As in the app: the screen stays with the last seat until the next one begins.
+  let viewer: PlayerId = "0";
   function renderBoard() {
     root.render(
       <HegemonyBoard
-        G={G}
+        G={projectForPlayer(G.definition, structuredClone(G), viewer).state}
         ctx={{ phase: G.phase, currentPlayer: G.currentPlayer, turn: G.turn }}
         moves={moves}
         events={events}
-        playerID={G.currentPlayer}
-        onPlayerIDChange={() => {}}
+        playerID={viewer}
+        onPlayerIDChange={(next) => {
+          viewer = next;
+          renderBoard();
+        }}
+        onTurnNoticeChange={() => {}}
         isActive
         hotseat
+        turnNotice
       />,
     );
   }
@@ -86,10 +93,10 @@ it("queues Damon's riot result, then the pass-the-seat cover, before Nikos's eve
   expect(dialog().textContent).toContain("Then: Nikos’s turn");
   act(() => button("Endure It").click());
 
-  // Nikos's turn is private: it waits behind the cover, and his fate card behind that.
-  expect(dialog().querySelector("h1")?.textContent).toBe("Nikos’s seat");
+  // The turn notice names Nikos's turn; the fate card drawn for it waits behind it.
+  expect(dialog().querySelector("h2")?.textContent).toBe("Nikos’s turn");
   expect(container.textContent).not.toContain("Shipment");
-  act(() => button("I am Nikos · show my seat").click());
+  act(() => button("Begin").click());
   expect(dialog().querySelector("h2")?.textContent).toBe("Shipment");
   expect(container.querySelector('[role="img"][aria-label="Nikos is acting."]')).not.toBeNull();
   vi.useRealTimers();
@@ -124,8 +131,10 @@ it("seats the Assembly in a modal that folds to a read-only dock and keeps a dra
         events={events}
         playerID={viewer}
         onPlayerIDChange={() => {}}
+        onTurnNoticeChange={() => {}}
         isActive
         hotseat
+        turnNotice
       />,
     );
   }

@@ -262,8 +262,10 @@ export function TopBar({
   breakdown,
   happiness,
   consultOpen,
+  settingsOpen,
   threats,
   onConsult,
+  onSettings,
   onSeat,
 }: {
   G: HegemonyState;
@@ -273,9 +275,11 @@ export function TopBar({
   breakdown: readonly IncomeContribution[];
   happiness: HappinessDisplay;
   consultOpen: ConsultTab | null;
+  settingsOpen: boolean;
   /** Seats one turn start from winning the race. */
   threats: readonly PlayerId[];
   onConsult: (tab: ConsultTab) => void;
+  onSettings: () => void;
   onSeat: (id: PlayerId) => void;
 }) {
   const store = G.players[viewerId].resources;
@@ -322,6 +326,26 @@ export function TopBar({
               </button>
             </Tooltip>
           ))}
+          <Tooltip
+            content={
+              settingsOpen ? null : (
+                <Tip sub="This screen" title="Settings">
+                  <p className="tip-body">The turn notice.</p>
+                </Tip>
+              )
+            }
+          >
+            <button
+              aria-label="Settings"
+              aria-pressed={settingsOpen}
+              className={`consult-btn settings-btn${settingsOpen ? " is-on" : ""}`}
+              data-c="settings-btn"
+              onClick={onSettings}
+              type="button"
+            >
+              <Ico path="chrome/settings" size="ui" />
+            </button>
+          </Tooltip>
         </nav>
         <div aria-label="Rulers" className="rivals" data-c="rivals" role="group">
           {PLAYER_IDS.map((id) => (

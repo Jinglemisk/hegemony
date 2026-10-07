@@ -478,6 +478,11 @@
 .consult {
   gap: var(--s-1);
 }
+/* Settings stands a step apart from the consult pages; at 1280 that step also
+   leaves the purse 32 clear of the court. */
+.settings-btn {
+  margin-left: var(--s-2);
+}
 .rivals {
   gap: var(--s-1);
   position: relative;
@@ -2592,63 +2597,80 @@ button.link {
   background: var(--clay-deep);
 }
 
-/* ---- Passing the seat: the whole screen in the next seat's glaze ----------- */
-.pass-seat {
-  position: fixed;
-  inset: 0;
+/* ---- The turn notice: whose turn comes next, on a small card over the table -- */
+.modalBackdrop.turn-scrim {
   z-index: var(--z-ceremony);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s-6);
-  padding: var(--s-6);
-  color: var(--ivory);
-  text-align: center;
-  background: radial-gradient(
-    ellipse at 50% 38%,
-    color-mix(in srgb, var(--owner) 72%, var(--vase-black)) 0%,
-    color-mix(in srgb, var(--owner) 30%, var(--vase-black)) 45%,
-    var(--vase-black) 100%
-  );
+  background: rgb(24 18 16 / 38%);
 }
-.pass-disc {
+.turn-notice.logModal {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  width: auto;
+  min-width: calc(var(--u) * 80); /* 320 */
+  padding: var(--s-8) var(--s-12) var(--s-6);
+  border: 0;
+  border-radius: var(--s-2);
+  color: var(--ink);
+  background: var(--ivory);
+  box-shadow: 0 var(--s-6) var(--s-16) rgb(0 0 0 / 45%);
+  backdrop-filter: none;
+  text-align: center;
+}
+.turn-disc {
   display: grid;
   place-items: center;
-  width: calc(var(--u) * 30); /* 120 */
-  height: calc(var(--u) * 30);
+  width: var(--s-16);
+  height: var(--s-16);
+  margin-bottom: var(--s-2);
   border-radius: var(--r-round);
   color: var(--ivory);
   background: var(--owner);
-  box-shadow: inset 0 0 0 var(--rule-2) var(--ivory);
-  font: 700 calc(var(--u) * 14) / 1 var(--f-name);
+  font: 700 var(--t-28) / 1 var(--f-name);
 }
-.pass-disc.ink-dark {
+.turn-disc.ink-dark {
   color: var(--ink);
 }
-.pass-name {
-  margin: 0;
-  font: 700 calc(var(--u) * 10) / calc(var(--u) * 12) var(--f-name);
-  letter-spacing: var(--track-name);
-}
-.pass-body {
-  max-width: calc(var(--u) * 110); /* 440 */
-  margin: 0;
-  color: var(--ivory);
-  font: 400 var(--t-20) / var(--lh-28) var(--f-body);
-}
-.pass-ready {
-  min-height: var(--s-12);
-  padding: 0 var(--s-8);
-  border: 0;
-  border-radius: var(--s-1);
-  color: var(--ivory);
-  background: var(--clay);
-  box-shadow: 0 var(--s-1) var(--s-3) rgb(0 0 0 / 40%);
-  font: 700 var(--t-16) / var(--lh-20) var(--f-sans);
+.turn-kicker {
+  color: var(--clay-ink);
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-sans);
   letter-spacing: var(--track-caps);
   text-transform: uppercase;
 }
-.pass-ready:hover {
-  background: var(--clay-lit);
+.turn-title {
+  margin: 0 0 var(--s-4);
+  font: 700 var(--t-28) / var(--lh-32) var(--f-name);
+  letter-spacing: var(--track-name);
+  white-space: nowrap;
+}
+.turn-notice .confirm-btn {
+  min-width: calc(var(--u) * 40); /* 160 */
+  justify-content: center;
+}
+
+/* ---- Settings: a short sheet where the consult pages open ------------------ */
+.consult-sheet.is-short {
+  bottom: auto;
+}
+.settings-title {
+  margin: 0 0 var(--s-2);
+  padding-right: var(--hit);
+  font: 700 var(--t-16) / var(--lh-24) var(--f-name);
+  letter-spacing: var(--track-name);
+  text-transform: uppercase;
+}
+.setting {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+}
+.setting-words {
+  display: grid;
+  flex: 1;
+  gap: var(--s-1);
+  font: 400 var(--t-body) / var(--l-body) var(--f-body);
+}
+.setting-words b {
+  font: 700 var(--t-16) / var(--lh-20) var(--f-name);
 }

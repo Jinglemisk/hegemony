@@ -239,10 +239,10 @@ export const SURFACES = [
       await p.getByRole("button", { name: "Draw from Stratokles", exact: true }).click();
       await p.locator(".sit-pick").first().click();
       await p.getByRole("button", { name: /^Seal against/ }).click();
-      // The other seats propose in turn behind the pass-the-seat cover and hold their peace.
+      // The other seats propose in turn, each after its turn notice, and hold their peace.
       for (let seat = 0; seat < 4; seat += 1) {
-        const cover = p.locator(".pass-ready");
-        if (await cover.count()) await cover.click().catch(() => {});
+        const begin = p.locator(".turn-notice .confirm-btn");
+        if (await begin.count()) await begin.click().catch(() => {});
         await p.waitForTimeout(320);
         const peace = p.getByRole("button", { name: "Hold your peace", exact: true });
         if (!(await peace.count())) break;
