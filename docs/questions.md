@@ -34,4 +34,10 @@ short design note with numbers first, then test it as a sim condition beside tod
 before adopting it. It does not block Steps 13 and 14, but hunger moments in Step 13 depend
 on it.
 
+**Research (2026-10-06):** [the Q79 note](reports/balance/2026-10-06-q79-food.md) recommends
+neither switch: free pops keep eating and food stays a stock, but hunger is checked at the end
+of the player's own turn, beside the riot check, instead of at income. In five 40-game
+batches this cut pops lost to hunger from 2.7 to 0.6 a seat-game with expansion unchanged;
+settlements eating cut colony founding by a third to a half and slaver wins to 8–10%.
+
 **Answer:**
