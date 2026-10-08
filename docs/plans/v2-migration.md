@@ -127,6 +127,15 @@ After the independent audit (2026-09-28):
 
 - The shell is still built before the systems.
 - Hunger scales with the shortfall: one pop leaves per unfed mouth.
+- Hunger is checked at the end of the player's own turn, before the riot check (owner,
+  2026-10-08, the answer to Q79). Who eats and what food is stay as they are: freemen and
+  citizens eat 1 each, slaves eat nothing, and food is a banked stock. Income may take the
+  stock below zero during its owner's turn, and the board shows the shortfall; the player
+  can cover it (bank, Dole, Granary) before ending the turn. Ending short, one pop of the
+  player's choice leaves per missing food and food returns to zero. Settlements eating and
+  food as a level were rejected on the
+  [Q79 note](../reports/balance/2026-10-06-q79-food.md)'s evidence. This supersedes
+  Step 3's hunger at income; Step 17 builds it.
 - Victory is checked at the start of each player's own turn, as today, so the last seat in
   a year cannot win unanswered.
 - Two colonies of different players may share a tile, as today. They split the tile's
@@ -680,8 +689,6 @@ danger selector and the real-path previews, with their tests.
 ## Open owner questions
 
 - Step 11's thresholds are proposals the owner may change before it runs.
-- [Q79](../questions.md): should settlements eat instead of pops, with food as a level
-  like happiness? Open; it does not block Steps 13 and 14.
 
 ## Three-axis parity
 
@@ -781,11 +788,20 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
       political scorer, with bank and venture moves inside the search, so each personality
       can actually pursue its build.
 
-### Stretch 4 · Sim gate (Step 11)
+### Stretch 4 · Sim gate (Steps 17 and 11)
 
-**Mode:** one session. **Stop:** the dated report, with a proposed remedy for each failing
-rule; the owner decides.
+**Before:** Step 17 is merged, so the gate measures the final hunger rule. **Mode:** one
+session. **Stop:** the dated report, with a proposed remedy for each failing rule; the
+owner decides.
 
+- [ ] **Step 17 · Hunger at turn end.** The Q79 ruling in Settled inputs, per the
+      [Q79 note](../reports/balance/2026-10-06-q79-food.md)'s option E and its cost
+      section. Engine: income stops applying hunger; food may sit below zero only during
+      its owner's turn, and turn end settles it before the riot check. Losses at income
+      never raise a negative stock. Shell: the food figure shows the shortfall, End turn
+      warns about it as it does at the riot line, and the Step 13 hunger card opens at
+      turn end with a way back to buy food. Bots settle hunger at turn end in their
+      projection. `rules.md` and the reference docs follow.
 - [ ] **Step 11 · Sim gate.** First phase: AI reach audit: every action and every piece of
       content is used by some personality in a rotated batch, or a fixture proves the bot
       takes it when it is clearly best; bot bugs found are fixed before Step 11's batches.
