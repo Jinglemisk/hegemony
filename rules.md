@@ -197,12 +197,11 @@ card waits as the first disc of the alarms row until the year turns; click it to
 it again. The **first player moves on one seat** each year. The game lasts at most
 **fourteen years**; the next year card stays hidden.
 
-**The turn notice.** Before each seat's turn and each seat's Assembly proposal, a small
-card names whose it is and waits for Begin. Until then the screen stays with the last
-seat, so nobody reads another's fate card or drawn Law. Public moments (the year card,
-the Idea draft, votes, riots, the end of the game) have no notice, and a game of bots
-never shows it. Settings, in the top bar, turns the notice off; the screen then follows
-the turn at once.
+**The turn notice.** When several people share one screen, a small card before each
+seat's turn and each seat's Assembly proposal says to pass the screen and names whose it
+is, then waits for Begin. Until then the screen stays with the last seat, so nobody reads
+another's fate card or drawn Law. Public moments (the year card, the Idea draft, votes,
+riots, the end of the game) have no notice, and a game of bots never shows it.
 
 ## The bank
 

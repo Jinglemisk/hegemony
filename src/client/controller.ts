@@ -1,5 +1,5 @@
 import { produce } from "immer";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DEV_ROTATION_SEEDS, GAME_CONFIG } from "../game/config";
 import { mulberry32 } from "../game/core/rng";
 import { enumerateLegalCommands, transition } from "../game/legalMoves";
@@ -355,7 +355,10 @@ export const DEV_SHELL: {
   viewer: null,
 };
 
-/** Whether people play at this screen: every game but `?dev=bots`. */
+/**
+ * Hotseat: people share this screen and take the seats in turn. It is the only way
+ * people play today, so it is every game but `?dev=bots`.
+ */
 const HOTSEAT =
   typeof window === "undefined" ||
   new URLSearchParams(window.location.search).get("dev") !== "bots";
@@ -363,24 +366,13 @@ const HOTSEAT =
 /**
  * The private moment the screen is about to belong to, as a key that changes with each
  * one: a seat's turn, or a seat's Assembly proposal. Null in a public phase (setup, the
- * Idea draft, the vote, the house rising, the game's end). With the turn notice on,
- * each new key waits behind it until its seat begins.
+ * Idea draft, the vote, the house rising, the game's end). In hotseat each new key
+ * waits behind the turn notice until its seat begins.
  */
 export function privateMoment(G: HegemonyState): string | null {
   if (G.phase !== "gameplay") return null;
   if (!G.assembly) return `turn:${G.turn}`;
   return G.assembly.phase === "proposal" ? `proposal:${G.assembly.year}:${G.currentPlayer}` : null;
-}
-
-const TURN_NOTICE_KEY = "hegemony.turnNotice";
-
-/** The turn notice setting: on unless this browser turned it off. */
-function readTurnNotice(): boolean {
-  try {
-    return window.localStorage.getItem(TURN_NOTICE_KEY) !== "off";
-  } catch {
-    return true;
-  }
 }
 
 function apply(G: HegemonyState, command: GameCommand): HegemonyState {
@@ -614,24 +606,14 @@ export function useHegemonyGame() {
   const [G, setG] = useState<HegemonyState>(createGameFromUrl);
   const [playerID, setPlayerID] = useState<PlayerId>(() => DEV_SHELL.viewer ?? G.currentPlayer);
 
-  const [turnNotice, setTurnNoticeState] = useState(readTurnNotice);
-  const setTurnNotice = useCallback((on: boolean) => {
-    setTurnNoticeState(on);
-    try {
-      window.localStorage.setItem(TURN_NOTICE_KEY, on ? "on" : "off");
-    } catch {
-      // The setting then lasts for this page only.
-    }
-  }, []);
-
   const moment = privateMoment(G);
   useEffect(() => {
-    // The viewer follows the seat the game waits on. With the turn notice on, a
-    // private moment (a turn, an Assembly proposal) changes hands when its seat
-    // begins it there instead, and the game's end stays with whoever was looking.
-    if (G.phase === "gameOver" || (HOTSEAT && turnNotice && moment)) return;
+    // The viewer follows the seat the game waits on. In hotseat a private moment (a
+    // turn, an Assembly proposal) changes hands at the turn notice instead, when its
+    // seat begins it, and the game's end stays with whoever was looking.
+    if (G.phase === "gameOver" || (HOTSEAT && moment)) return;
     setPlayerID(G.currentPlayer);
-  }, [G.currentPlayer, G.phase, moment, turnNotice]);
+  }, [G.currentPlayer, G.phase, moment]);
 
   const moves = useMemo(
     () =>
@@ -664,8 +646,6 @@ export function useHegemonyGame() {
     events,
     resetGame,
     hotseat: HOTSEAT,
-    turnNotice,
-    setTurnNotice,
     isActive: view.eligibleActors.includes(playerID),
   };
 }

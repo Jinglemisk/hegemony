@@ -21,7 +21,6 @@ import {
   victoryThreats,
 } from "../game/rules";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
-import { yearDeckSize } from "../game/year";
 import { BuildPopover } from "./board/map/BuildPopover";
 import { IdeasModal } from "./board/modals/IdeasModal";
 import { HungerModal } from "./board/modals/HungerModal";
@@ -55,7 +54,6 @@ import { TopBar } from "./frame/TopBar";
 import { Ticker } from "./frame/Ticker";
 import { ToastLane } from "./frame/Toasts";
 import { useMomentToasts, useOwnMoment } from "./frame/moments";
-import { SettingsPanel } from "./frame/SettingsPanel";
 import { TurnNotice } from "./frame/TurnNotice";
 import { ThreatAlarm, YearDisc } from "./frame/MomentDiscs";
 import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel";
@@ -71,11 +69,8 @@ type BoardProps = {
   playerID: PlayerId;
   onPlayerIDChange: (playerID: PlayerId) => void;
   isActive: boolean;
-  /** People play at this screen; false only when bots play alone. */
+  /** People share this screen, seat by seat; false only when bots play alone. */
   hotseat: boolean;
-  /** The setting: a notice names each turn and proposal before its seat begins. */
-  turnNotice: boolean;
-  onTurnNoticeChange: (on: boolean) => void;
 };
 
 type SetupPlacement = "capital" | "city" | "colony";
@@ -109,8 +104,6 @@ export function HegemonyBoard({
   onPlayerIDChange,
   isActive: seatActive,
   hotseat,
-  turnNotice,
-  onTurnNoticeChange,
 }: BoardProps) {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   // `?dev=ideas` opens on the purchase list.
@@ -149,14 +142,12 @@ export function HegemonyBoard({
   // realm itself), a tile, or a luxury good's mooring.
   const [subject, setSubject] = useState<RealmSubject>({ kind: "realm" });
   const [consultTab, setConsultTab] = useState<ConsultTab | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   // Deep-links (two-panel.md piece 4): a Codex-term click opens the consult panel's
   // rulebook at a chapter. The nonce lets the same term re-navigate the codex even if
   // the target chapter is unchanged (you clicked away and clicked the link again).
   const [codexTarget, setCodexTarget] = useState<{ chapter: string; nonce: number } | null>(null);
   const openCodexTo = useCallback((chapter: string) => {
     setCodexTarget((current) => ({ chapter, nonce: (current?.nonce ?? 0) + 1 }));
-    setSettingsOpen(false);
     setConsultTab("codex");
   }, []);
   const codexLink = useMemo(() => ({ openCodexTo }), [openCodexTo]);
@@ -197,7 +188,6 @@ export function HegemonyBoard({
   const moment = privateMoment(G);
   const noticeShown =
     hotseat &&
-    turnNotice &&
     moment !== null &&
     moment !== handedOver &&
     !riotShown &&
@@ -353,7 +343,6 @@ export function HegemonyBoard({
       }
 
       if (event.key === "?") {
-        setSettingsOpen(false);
         setConsultTab((open) => (open === "codex" ? null : "codex"));
       }
       // Escape is ModalShell's job — every dialog gets it from the one place.
@@ -492,15 +481,7 @@ export function HegemonyBoard({
                   consultOpen={consultTab}
                   happiness={happinessDisplay(G, viewerId)}
                   income={projectedIncome}
-                  onConsult={(tab) => {
-                    setSettingsOpen(false);
-                    setConsultTab((open) => (open === tab ? null : tab));
-                  }}
-                  onSettings={() => {
-                    setConsultTab(null);
-                    setSettingsOpen((open) => !open);
-                  }}
-                  settingsOpen={settingsOpen}
+                  onConsult={(tab) => setConsultTab((open) => (open === tab ? null : tab))}
                   onSeat={onPlayerIDChange}
                   threats={threats.map((threat) => threat.seat)}
                   viewerId={viewerId}
@@ -600,25 +581,6 @@ export function HegemonyBoard({
                     ×
                   </button>
                   <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
-                </aside>
-              ) : settingsOpen ? (
-                <aside aria-label="Settings" className="consult-sheet is-short">
-                  <button
-                    aria-label="Close"
-                    className="consult-close"
-                    onClick={() => setSettingsOpen(false)}
-                    type="button"
-                  >
-                    ×
-                  </button>
-                  <SettingsPanel
-                    onTurnNotice={(on) => {
-                      // Turned on mid-turn, the notice starts with the next turn.
-                      if (on) setHandedOver(moment);
-                      onTurnNoticeChange(on);
-                    }}
-                    turnNotice={turnNotice}
-                  />
                 </aside>
               ) : null}
             </>
@@ -810,8 +772,6 @@ export function HegemonyBoard({
               }}
               proposal={G.assembly?.phase === "proposal"}
               seat={currentPlayerId}
-              totalYears={yearDeckSize(G)}
-              year={G.year}
             />
           ) : null}
         </main>
