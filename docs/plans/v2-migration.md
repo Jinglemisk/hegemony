@@ -822,7 +822,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
 session. **Stop:** the dated report, with a proposed remedy for each failing rule; the
 owner decides.
 
-- [ ] **Step 17 · Hunger at turn end.** The Q79 ruling in Settled inputs, per the
+- [x] **Step 17 · Hunger at turn end.** ([#99](https://github.com/Jinglemisk/hegemony/pull/99): a rotated 40-game batch finishes with no turn caps, 3 by the race and 37 by the deck; pops lost to hunger fall from 3.3–3.7 to 0.5–0.8 a seat-game and hunger turns from 1.2–1.4 to 0.3–0.4, against Step 13's batch; riots 2.3 a game, the table on 4.1% of player-turns; wins slaver 33%, civic 20%, trader 15%, master 33%; three bot turns hit the 30-action limit, each a seat with about 100 gold buying 12 to 19 missing food one unit at a time; the hunger card and the short turn pass the gate at 1280/1440/1920 and ui:audit shows 0 defects.) The Q79 ruling in Settled inputs, per the
       [Q79 note](../reports/balance/2026-10-06-q79-food.md)'s option E and its cost
       section. Engine: income stops applying hunger; food may sit below zero only during
       its owner's turn, and turn end settles it before the riot check. Losses at income
