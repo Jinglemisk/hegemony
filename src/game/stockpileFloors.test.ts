@@ -9,7 +9,7 @@ import { materialTile, scenario } from "./testing/scenario";
 import type { EventTableDefinition, Resources } from "./types";
 
 describe("configured stockpile floors", () => {
-  it("clamps real income without changing the calculated food deficit", () => {
+  it("lets income, and only income, take food below its floor", () => {
     const builder = scenario({ patch: { economy: { stockpileFloors: { food: 0 } } } });
     const G = builder.build();
     const tile = materialTile(G);
@@ -23,9 +23,9 @@ describe("configured stockpile floors", () => {
       });
 
     expect(collectIncome(G, "0").ok).toBe(true);
-    expect(G.players["0"].resources.food).toBe(0);
+    expect(G.players["0"].resources.food).toBe(-4);
     expect(G.log.find((entry) => entry.message.includes("collected income"))?.message).toContain(
-      "-1 food",
+      "-5 food",
     );
   });
 

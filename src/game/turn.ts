@@ -13,6 +13,7 @@ import {
   startNewYear,
 } from "./rules";
 import type { MoveResult } from "./rules";
+import { unfedAtTurnEnd } from "./economy/income";
 import { checkVictoryAtTurnStart } from "./victory";
 import { tickLuxurySuppression } from "./luxury";
 import { openAssembly, shouldOpenAssembly } from "./assembly/assembly";
@@ -119,7 +120,7 @@ export function advanceSetupTurn(G: HegemonyState) {
 }
 
 /** Start-of-turn automation: reveal the year's card, check victory, expire luxury
- *  suppression, then collect income (including hunger and the player-card draw). */
+ *  suppression, then collect income (including the player-card draw). */
 export function beginGameplayTurn(G: HegemonyState) {
   if (G.phase !== "gameplay") {
     return;
@@ -141,8 +142,8 @@ export function beginGameplayTurn(G: HegemonyState) {
 }
 
 /**
- * Commit the current turn: test unrest before the player, year or Assembly changes.
- * A riot suspends the handoff until its insurance and roll have resolved.
+ * Commit the current turn. A seat that ends short of food first chooses who leaves;
+ * {@link commitTurn} follows that choice, or runs at once when everyone is fed.
  */
 export function endTurn(G: HegemonyState): MoveResult {
   if (
@@ -154,6 +155,24 @@ export function endTurn(G: HegemonyState): MoveResult {
   ) {
     return { ok: false, reasons: [] };
   }
+
+  const unfed = unfedAtTurnEnd(G, G.currentPlayer);
+  if (unfed > 0) {
+    G.pendingHunger = { playerID: G.currentPlayer, unfed };
+    return { ok: true };
+  }
+
+  return commitTurn(G);
+}
+
+/**
+ * Hunger is settled: test unrest before the player, year or Assembly changes.
+ * A riot suspends the handoff until its insurance and roll have resolved.
+ */
+export function commitTurn(G: HegemonyState): MoveResult {
+  // No food debt leaves the turn, also when no free pop was there to pay for it.
+  const resources = G.players[G.currentPlayer].resources;
+  resources.food = Math.max(0, resources.food);
 
   applyUnrestAtTurnEnd(G, G.currentPlayer);
   return G.pendingRiot ? { ok: true } : finishTurn(G);
@@ -190,7 +209,7 @@ export function finishTurn(G: HegemonyState): MoveResult {
 }
 
 /**
- * Open one player's turn: arrivals, victory, luxury expiry, income and hunger.
+ * Open one player's turn: arrivals, victory, luxury expiry and income.
  * Extracted from {@link endTurn} because the Assembly suspends play *between* the
  * year turning and the opener's turn — so `closeAssembly` needs to run exactly this
  * sequence, and there must be only one copy of it.

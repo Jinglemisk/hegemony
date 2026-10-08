@@ -340,7 +340,7 @@ describe("simulation and AI active-effect parity", () => {
   it("handles the safe edge and the hunger edge deterministically", () => {
     const safe = stateWithSettlement();
     const hungry = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });
-    // Ten mouths against eight stored food: two go unfed at the first income.
+    // Ten mouths against eight stored food: the first turn ends two short.
     hungry.players["0"].resources.food = 8;
 
     expect(projectPolicyHorizon(safe, "0", 1).expectedStarvationPopLoss).toBe(0);
@@ -355,9 +355,11 @@ describe("simulation and AI active-effect parity", () => {
     engine.playerDiscardPile = [];
 
     for (let income = 0; income < 6; income += 1) {
+      engine.currentPlayer = "0";
       engine.players["0"].collectedThisTurn = false;
       expect(collectIncome(engine, "0").ok).toBe(true);
-      // The seat's choice is the projection's freemen-first default.
+      expect(endTurn(engine).ok).toBe(true);
+      // Ending short, the seat's choice is the projection's freemen-first default.
       const pending = engine.pendingHunger;
       if (pending)
         expect(resolveHunger(engine, "0", defaultHungerLeave(engine, "0", pending.unfed)).ok).toBe(
@@ -365,7 +367,7 @@ describe("simulation and AI active-effect parity", () => {
         );
     }
 
-    // Twelve food feeds three freemen for four incomes; the fifth leaves all three unfed.
+    // Twelve food feeds three freemen for four incomes; the fifth turn ends three short.
     const actual = engine.players["0"].popsLostToHunger;
     expect(actual).toBe(3);
     expect(projectPolicyHorizon(G, "0", 6).expectedStarvationPopLoss).toBe(actual);

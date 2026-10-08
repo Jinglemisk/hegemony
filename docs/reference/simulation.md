@@ -159,8 +159,8 @@ Works from any phase — bots will finish a manual setup too. Policies:
 
 The economic policies project up to six remaining incomes one step at a time through the
 canonical active-effect descriptors. Each step burns suppressed
-collections, runs hunger, and recalculates authoritative income after projected pop
-loss. Hunger draws no dice: the projection applies the engine's freemen-first default
+collections, settles hunger at the projected turn end, and recalculates authoritative
+income after projected pop loss. Hunger draws no dice: the projection applies the engine's freemen-first default
 (freemen before citizens, from the fullest settlement), the same choice the hunger
 card opens with, and never reads or advances future game RNG. At the table the
 hungry seat chooses; bots score the legal splits (see [AI](ai.md#hunger)).
@@ -254,8 +254,8 @@ one game finish. Audit and shell gates must retain the 25-row conduct ceiling an
 pass at 1280, 1440 and 1920. No shell components change in Step 10.
 
 Income and the player draw are recorded at turn start, including on Year 14's last
-turn. When income leaves mouths unfed, the draw is recorded when the hunger choice
-resolves, and each hunger choice counts as one hunger turn. Riots and revolts are checked at the acting player's turn end,
+turn. Each hunger choice counts as one hunger turn: it is made when a seat ends its
+turn short of food. Riots and revolts are checked at the acting player's turn end, after hunger and
 before the handoff, year boundary, Assembly or final tally. A riot roll records
 its original player and year even when resolution opens the next turn. The next
 income/draw is counted once when that turn opens. A year-card reveal is counted
@@ -295,7 +295,7 @@ The report contains:
   player-turns that ended on the riot table, and the same counts year by year
   (`byYear`), so a report can cut the late game. The CSV carries the level as
   `happiness` and the `unrestTokens` count per row
-- `hunger` — food under work slots, per seat: incomes that left a mouth unfed per
+- `hunger` — food under work slots, per seat: turns that ended short of food per
   game, pops lost to hunger per game, mean idle slaves and their share of all slaves.
   The CSV carries `slaves`, `idleSlaves` and the running `popsLostToHunger` per row
 - `terminations` — how games ended (the winRate denominator context)

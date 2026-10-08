@@ -315,7 +315,7 @@ export interface PlayerState {
   popsLostToUnrest: number;
   /** Running total of revolts this realm has been through. */
   revolts: number;
-  /** Running total of pops that left unfed at income. */
+  /** Running total of pops that left unfed at turn end. */
   popsLostToHunger: number;
   /** Running total of pops gained inorganically from event cards (the `addPops`
    *  effect) — the ledger's "Gained" stat, paired with deaths. */
@@ -450,8 +450,8 @@ export interface HegemonyState {
   pendingPlayerEvent: PendingPlayerEvent | null;
   /** A riot blocking the committed turn's handoff until it resolves. */
   pendingRiot: PendingRiot | null;
-  /** Hunger waiting on its seat: the income just collected left `unfed` mouths, and the
-   *  seat chooses which freemen or citizens leave before its fate card is drawn. */
+  /** Hunger waiting on its seat: it ended its turn `unfed` food short, and chooses
+   *  which freemen or citizens leave before the riot check and the hand-off. */
   pendingHunger: PendingHunger | null;
   /** The most recent event-table roll, for the UI's outcome display. */
   lastTableRoll: TableRollRecord | null;

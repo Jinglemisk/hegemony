@@ -50,14 +50,15 @@ export type IncomeContribution = {
   settlementId?: string;
 };
 
-/** What the next income does to the granary. Free pops eat; when the food runs short,
- *  one pop leaves per unfed mouth and the stockpile stays at zero. */
+/** Where the granary stands. Free pops eat at income, which may take food below zero.
+ *  Ending the turn short, one pop leaves per missing food and food returns to zero. */
 export type HungerStatus = {
+  /** Food held now. Below zero only during its owner's turn. */
   stockpile: number;
   income: number;
-  /** Food after the next income, never below zero. */
+  /** Food after the next income; below zero is a shortfall to cover on that turn. */
   projectedStockpile: number;
-  /** Mouths the next income cannot feed. One pop leaves for each. */
+  /** Pops that leave if the turn ended now. */
   unfed: number;
 };
 
@@ -350,15 +351,10 @@ export function calculateIncomeBreakdown(
   return contributions;
 }
 
-export function getHungerStatus(
-  G: HegemonyState,
-  playerID: PlayerId,
-  foodIncome: number,
-): HungerStatus {
-  const stockpile = G.players[playerID].resources.food;
-  const after = stockpile + foodIncome;
+/** Pops that leave if `playerID` ended the turn now: one per missing food. */
+export function unfedAtTurnEnd(G: HegemonyState, playerID: PlayerId): number {
   // Only free pops eat, so only they can go unfed; a shortfall deeper than their
-  // number (a Law taking food) still stops at zero food.
+  // number (a Law taking food) still ends at zero food.
   const mouths = (["freemen", "citizens"] as const).reduce(
     (sum, pop) =>
       sum +
@@ -367,12 +363,22 @@ export function getHungerStatus(
         : 0),
     0,
   );
+  return Math.min(mouths, Math.max(0, -G.players[playerID].resources.food));
+}
+
+export function getHungerStatus(
+  G: HegemonyState,
+  playerID: PlayerId,
+  foodIncome: number,
+): HungerStatus {
+  const stockpile = G.players[playerID].resources.food;
 
   return {
     stockpile,
     income: foodIncome,
-    projectedStockpile: Math.max(0, after),
-    unfed: Math.min(mouths, Math.max(0, -after)),
+    // A shortfall is settled at turn end, so the next income starts from zero at worst.
+    projectedStockpile: Math.max(0, stockpile) + foodIncome,
+    unfed: unfedAtTurnEnd(G, playerID),
   };
 }
 

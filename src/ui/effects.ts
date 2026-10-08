@@ -202,11 +202,15 @@ function presentActiveEffectMechanic(
         text:
           formatSignedNumber(mechanic.netFood) +
           " food income, " +
-          mechanic.stockpile +
-          " stored · " +
+          (mechanic.stockpile < 0
+            ? -mechanic.stockpile + " short"
+            : mechanic.stockpile + " stored") +
+          " · " +
           (mechanic.unfed > 0
-            ? mechanic.unfed + (mechanic.unfed === 1 ? " pop leaves" : " pops leave") + " at income"
-            : "one pop leaves per unfed mouth"),
+            ? mechanic.unfed +
+              (mechanic.unfed === 1 ? " pop leaves" : " pops leave") +
+              " at turn end"
+            : "one pop leaves per food short at turn end"),
         tone: "negative",
       };
     case "zeroTerm":

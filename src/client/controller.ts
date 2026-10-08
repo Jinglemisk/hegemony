@@ -37,7 +37,7 @@ export type { Phase } from "../game/types";
  * by default) — a whole game played through the shell, one turn per tick.
  * Step 13's moments have their own: `?dev=draft` (the last seat choosing in the Idea
  * draft), `?dev=draft-done` (the draft read back after its last pick), `?dev=hunger`
- * (the second seat's hunger card), `?dev=hunger-ahead` (the warning a turn ahead),
+ * (the second seat's hunger card at End turn), `?dev=hunger-short` (its turn, two short),
  * `?dev=toasts` (a rival's hunger and purchase, toasted to the third seat) and
  * `?dev=ideas` (the third seat's purchase list after that rival bought). Part B's:
  * `?dev=year` (Year II's card, Plague, before the Assembly), `?dev=year-back` (its
@@ -150,8 +150,11 @@ const MOMENT_QUERIES: Record<string, (G: HegemonyState) => HegemonyState> = {
     DEV_SHELL.draftSummary = true;
     return G;
   },
-  hunger: (G) => starveNextSeat(G),
-  "hunger-ahead": (G) => starve(clearFate(G), G.currentPlayer),
+  hunger: (G) => {
+    DEV_SHELL.hungerAsk = true;
+    return clearFate(starveNextSeat(G));
+  },
+  "hunger-short": (G) => clearFate(starveNextSeat(G)),
   toasts: (G) => {
     const start = starveNextSeat(G);
     DEV_SHELL.toastReplayFrom = start.log.length;
@@ -316,10 +319,10 @@ function threaten(G: HegemonyState, seat: PlayerId): HegemonyState {
   });
 }
 
-/** The starved second seat takes the default hunger choice and buys an Idea, then
- *  the third seat's turn opens with its own fate card cleared. */
+/** The starved second seat buys an Idea and ends its turn short, taking the default
+ *  hunger choice; then the third seat's turn opens with its own fate card cleared. */
 function rivalHungerAndPurchase(start: HegemonyState): HegemonyState {
-  let next = clearFate(apply(start, enumerateLegalCommands(start, start.currentPlayer)[0]));
+  let next = clearFate(start);
   const buy = enumerateLegalCommands(next, next.currentPlayer).find((c) => c.type === "buyIdea");
   if (buy) next = apply(next, buy);
   return clearFate(endCurrentTurn(next));
@@ -334,6 +337,8 @@ export const DEV_SHELL: {
   yearReveal: boolean;
   yearBack: boolean;
   endTurnConfirm: boolean;
+  /** Open the hunger card as if End turn had just been held. */
+  hungerAsk: boolean;
   riotResult: boolean;
   turnNotice: boolean;
   /** Read the seat's own moments (the revolt card) from this log index. */
@@ -348,6 +353,7 @@ export const DEV_SHELL: {
   yearReveal: false,
   yearBack: false,
   endTurnConfirm: false,
+  hungerAsk: false,
   riotResult: false,
   turnNotice: false,
   momentsFrom: null,
@@ -414,7 +420,7 @@ function starve(initial: HegemonyState, seat: PlayerId): HegemonyState {
   });
 }
 
-/** Starve the next seat and pass the turn to it: its income leaves two mouths unfed. */
+/** Starve the next seat and pass the turn to it: its income leaves it two food short. */
 function starveNextSeat(G: HegemonyState): HegemonyState {
   return endCurrentTurn(starve(G, nextPlayer(G.currentPlayer)));
 }

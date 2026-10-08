@@ -7,7 +7,7 @@ import { formatNumber, formatSignedNumber } from "../../ui/formatters";
 import { EffectLine } from "../EffectLine";
 import { Tooltip } from "../overlays/Tooltip";
 import type { GameContent } from "../../game/content";
-import type { HungerForecast } from "../../ui/frameSelectors";
+import type { HungerShortfall } from "../../ui/frameSelectors";
 import type { ReactNode } from "react";
 import { Ico, Tip } from "./parts";
 
@@ -80,8 +80,8 @@ export function Alarms({
   unrest: UnrestStatus;
   riotThreshold: number;
   content: GameContent;
-  /** Mouths the next income leaves unfed: the hunger disc turns loud a turn early. */
-  hunger: HungerForecast | null;
+  /** Food short now: the hunger disc turns loud until the seat covers it. */
+  hunger: HungerShortfall | null;
   /** Discs that lead the row: the victory threat, then this year's card. */
   lead?: ReactNode;
 }) {
@@ -130,16 +130,18 @@ export function Alarms({
       {shown.map((descriptor) => {
         const effect = presentActiveEffect(descriptor, content);
         if (descriptor.kind === "hunger" && hunger) {
-          const mouths = `${hunger.unfed} ${hunger.unfed === 1 ? "mouth" : "mouths"}`;
+          const leaving = hunger.unfed === 1 ? "One pop leaves" : `${hunger.unfed} pops leave`;
           return (
             <li key={descriptor.id}>
               <Tooltip
-                ariaLabel={`Hunger: ${mouths} unfed at your next income.`}
+                ariaLabel={`Hunger: ${hunger.short} food short at turn end. ${leaving} unless you buy food first.`}
                 content={
-                  <Tip sub="next income · your next turn" title={`Hunger: ${mouths} unfed`}>
+                  <Tip
+                    sub="when you end your turn"
+                    title={`Hunger: ${hunger.short} short at turn end`}
+                  >
                     <p className="tip-body">
-                      {hunger.unfed === 1 ? "One pop leaves" : `${hunger.unfed} pops leave`}, and
-                      you choose which.
+                      {leaving} unless you buy food first. You choose which.
                     </p>
                     {hunger.fixes.map((fix) => (
                       <p className="tip-fix" key={fix.icon}>

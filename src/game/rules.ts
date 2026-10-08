@@ -18,7 +18,7 @@
  *   status         — get*Status action validators
  *   events         — event deck draw + the event-effect interpreter
  *   actions        — the mutating moves
- *   hunger         — pops leaving when income cannot feed them
+ *   hunger         — pops leaving when a turn ends short of food
  *   happiness      — the named terms a realm's happiness is made of
  *   year           — year / turn-flag lifecycle
  *   activeEffects  — canonical persistent-effect/status projection

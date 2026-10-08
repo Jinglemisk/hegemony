@@ -727,7 +727,7 @@ describe("v2 card scoring", () => {
 });
 
 describe("hunger choice", () => {
-  it("bots pick who leaves with their scorer, from the legal splits, and play on", () => {
+  it("bots pick who leaves with their scorer, from the legal splits", () => {
     const G = scenario()
       .withSettlement("0", "-2,0", "city", { citizens: 2, freemen: 2, slaves: 1 })
       .withResources("0", { food: 0 })

@@ -42,8 +42,8 @@ export type ActiveEffectDuration = {
 export type ActiveEffectMechanic =
   | { type: "suppressIncome"; turns: number }
   | {
-      /** Free pops eat more than comes in. `unfed` mouths go hungry at the next
-       *  income, and one pop leaves for each. */
+      /** Free pops eat more than comes in, or food is already short. `unfed` pops
+       *  leave if the turn ended now. */
       type: "hunger";
       netFood: number;
       stockpile: number;
@@ -95,14 +95,15 @@ export function getActiveEffects(
   }
 
   // Hunger warns as soon as the granary drains, and counts the incomes it still
-  // covers; at zero the next income leaves `unfed` mouths and that many pops go. A
-  // strike collects nothing and eats nothing, so the warning waits for it to end.
+  // covers. Food below zero means `unfed` pops leave when this turn ends. A strike
+  // collects nothing and eats nothing, so the drain warning waits for it to end.
   const hunger = getHungerStatus(
     G,
     playerID,
     (context.income ?? calculateIncome(G, playerID)).food,
   );
-  if (hunger.income < 0 && player.incomeSuppressedTurns === 0) {
+  const draining = hunger.income < 0 && player.incomeSuppressedTurns === 0;
+  if (draining || hunger.stockpile < 0) {
     effects.push({
       id: "hunger:" + playerID,
       kind: "hunger",
@@ -110,7 +111,8 @@ export function getActiveEffects(
       scope: { kind: "player", playerID },
       duration: {
         unit: "incomeCollections",
-        remaining: Math.floor(hunger.stockpile / -hunger.income),
+        remaining:
+          hunger.income < 0 ? Math.floor(Math.max(0, hunger.stockpile) / -hunger.income) : 0,
         expiry: "whenFed",
       },
       mechanics: [

@@ -11,7 +11,7 @@ import type {
 } from "../types";
 import { totalPops } from "../core/pops";
 import { getOwnedSettlement, getTile } from "../core/query";
-import { applyResourceDeltaWithFloors, cloneResources, diffResources } from "../core/resources";
+import { applyIncome, cloneResources, diffResources } from "../core/resources";
 import type { MoveResult } from "../core/results";
 import {
   playerPopulationTotals,
@@ -102,11 +102,7 @@ export function calculateEconomyProjection(
   const breakdown = calculateIncomeBreakdown(incomeState, playerID);
   const income = summarizeIncome(breakdown);
   const projectedResources = cloneResources(incomeState.players[playerID].resources);
-  applyResourceDeltaWithFloors(
-    projectedResources,
-    income,
-    incomeState.ruleset.economy.stockpileFloors,
-  );
+  applyIncome(projectedResources, income, incomeState.ruleset.economy.stockpileFloors);
   const population = playerPopulationTotals(incomeState, playerID);
   const settlements = createSettlementEconomyProjections(incomeState, G, playerID, breakdown);
   const transfers = G.transfers.filter((transfer) => transfer.owner === playerID);

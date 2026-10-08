@@ -9,37 +9,43 @@ import { sign } from "./frameFormat";
 import type { HappinessContribution } from "../game/rules";
 import type { HegemonyState, PlayerId } from "../game/types";
 
-/** The committed turn's consequence, using the engine's current level and thresholds.
- *  A riot or revolt starts now, so it outranks hunger at the next income. */
+/** The committed turn's consequences, using the engine's current stock, level and
+ *  thresholds. Hunger is settled first, then the riot or revolt: the label names the
+ *  riot when both wait, and the message names both. */
 export function endTurnWarning(G: HegemonyState, playerID: PlayerId) {
   const status = unrestStatus(G, playerID);
+  const hunger = hungerShortfall(G, playerID);
+  const leaving = hunger
+    ? `${hunger.unfed} ${hunger.unfed === 1 ? "pop leaves" : "pops leave"}`
+    : null;
+  const hungerMessage = hunger
+    ? `Ending now, ${leaving}: you are ${hunger.short} food short.`
+    : null;
   if (status.riotAtRisk) {
     const revolt = status.tier === "revolt";
+    const unrest = `Ending now starts a ${revolt ? "revolt" : "riot"} at ${sign(status.happiness)}.`;
     return {
       label: revolt ? "Starts revolt" : "Starts riot",
-      message: `Ending now starts a ${revolt ? "revolt" : "riot"} at ${sign(status.happiness)}.`,
+      message: hungerMessage ? `${hungerMessage} ${unrest}` : unrest,
     };
   }
-  const hunger = hungerForecast(G, playerID);
-  return hunger
-    ? {
-        label: "Hunger ahead",
-        message: `${hunger.unfed} ${hunger.unfed === 1 ? "mouth goes" : "mouths go"} unfed at your next income.`,
-      }
-    : null;
+  return hungerMessage ? { label: leaving!, message: hungerMessage } : null;
 }
 
-export type HungerForecast = {
+export type HungerShortfall = {
+  /** Food missing now. */
+  short: number;
+  /** Pops that leave if the turn ended now: one per missing food, while mouths last. */
   unfed: number;
   /** What would feed the shortfall now, with its price and what the seat holds. */
   fixes: Array<{ icon: string; text: string }>;
 };
 
 /**
- * Hunger a turn ahead: the engine's forecast of the next income (the hunger alarm's
- * own mechanic) and the two ways to buy food before it lands.
+ * Food short during the seat's own turn: what ending now takes (the hunger alarm's
+ * own mechanic) and the two ways to buy food first.
  */
-export function hungerForecast(G: HegemonyState, playerID: PlayerId): HungerForecast | null {
+export function hungerShortfall(G: HegemonyState, playerID: PlayerId): HungerShortfall | null {
   const hunger = getActiveEffects(G, playerID)
     .flatMap((descriptor) => descriptor.mechanics)
     .find((mechanic) => mechanic.type === "hunger");
@@ -48,6 +54,7 @@ export function hungerForecast(G: HegemonyState, playerID: PlayerId): HungerFore
   const bank = getBankBuyStatus(G, playerID, "food").cost?.gold ?? 0;
   const held = G.players[playerID].resources;
   return {
+    short: -hunger.stockpile,
     unfed: hunger.unfed,
     fixes: [
       {

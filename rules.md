@@ -153,8 +153,9 @@ Play passes around the table. Victory is checked at the start of your own turn,
 before income. On your turn:
 
 1. **Income is collected automatically.** Every settlement adds what its pops make,
-   and your freemen and citizens eat 1 food each. If the food runs short, **hunger**
-   strikes and you choose who leaves (see Happiness and food).
+   and your freemen and citizens eat 1 food each. Eating can take your food **below
+   zero**: nobody leaves yet, and you have this turn to buy the food back (see
+   Happiness and food).
 2. **Resolve your event card**, if one was drawn for you (see Events below) — you
    must do this before anything else.
 3. **Take actions**, in any order you can afford:
@@ -185,10 +186,13 @@ before income. On your turn:
      **1 influence**. (During a riot, demotion is free — the mob forces it.)
    - **Fund an expedition** (once per turn) — stake **2 gold** and roll
      on an expedition table (see Ventures).
-4. **End your turn.** Check your level before the turn passes: **−3 or below
-   starts a riot**, **−6 or below a revolt**. Calm bought this turn counts. At either
-   line, holding End turn opens a confirm first: it offers calm, with its price, when
-   calm would change what happens, and the plain choice to face it.
+4. **End your turn.** Two checks run before the turn passes, in this order.
+   **Hunger:** if your food is below zero, one pop leaves per missing food and you
+   choose which; holding End turn opens that card, and Go back returns you to your
+   turn to buy food instead. **Happiness:** **−3 or below starts a riot**, **−6 or
+   below a revolt**. Calm bought this turn counts. At either line, holding End turn
+   opens a confirm first: it offers calm, with its price, when calm would change what
+   happens, and the plain choice to face it.
 
 A **year** is one turn for every seat. After all four have played, the next year
 begins and its card is revealed: the card turns over mid-screen and shows what it
@@ -290,16 +294,22 @@ Civic Pride adds one flat +1 happiness line. Manumission counts each slave three
 times in the existing slave term; its extra charge is a separate Law line. Neither
 stores happiness.
 
-**Hunger** is separate from happiness, and calm cannot buy it off. If income cannot
-feed your freemen and citizens, **one pop leaves for each unfed mouth** and your food
-stays at zero: no debt carries over. **You choose which freemen or citizens leave**, and
-from which settlements; the card opens with the cheapest loss chosen (freemen before
-citizens, each from the settlement holding the most), so one click confirms it. Hunger
-comes before your fate card. Slaves eat nothing and never leave for hunger. Under Grain
-Levy freemen also eat nothing and cannot leave for hunger. The turn before, the hunger
-alarm and End turn warn you how many mouths your next income leaves unfed, with the
-Dole's and the bank's food prices, while you can still buy food.
-Food never goes below zero: a sacked granary or a bad card stops at empty.
+**Hunger** is separate from happiness, and calm cannot buy it off. Your freemen and
+citizens eat at income, and that is the one thing that takes your food **below zero**.
+A food figure in red is a shortfall, not a debt you carry: you have the rest of that
+turn to cover it with the bank, the Dole or anything else that gives food. While you
+are short you cannot pay a food cost. The hunger alarm and End turn show how many pops
+would leave, with the Dole's and the bank's food prices.
+
+If you end your turn still short, **one pop leaves for each missing food** and your food
+returns to zero, before the riot check. **You choose which freemen or citizens leave**,
+and from which settlements; the card opens with the cheapest loss chosen (freemen
+before citizens, each from the settlement holding the most), so one click confirms it,
+and Go back returns you to your turn. Slaves eat nothing and never leave for hunger.
+Under Grain Levy freemen also eat nothing and cannot leave for hunger.
+
+Nothing else takes food below zero: a sacked granary or a bad card stops at empty, and
+while you are short such a loss takes nothing more.
 
 At the end of your own turn, before it passes, a level of **−3 or lower is a
 riot**. You have the turn to buy calm, build a Temple, or change your pops first.

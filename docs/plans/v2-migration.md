@@ -682,6 +682,34 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - Gate queries: `?dev=assembly-ballot`, `?dev=assembly-vote`, `?dev=assembly-rises`. No
   schema change beyond Part A's: the Assembly session gained `setAside` within state 10.
 
+**Defaults picked in Step 17** (2026-10-08):
+
+- Ending the turn is the hunger check. A seat that ends short keeps the turn until it
+  names who leaves (`endTurn` sets `pendingHunger`; `resolveHunger` sets food to zero, runs
+  the riot check and passes the turn). There is no new command: the shell opens the hunger
+  card before it sends `endTurn`, so Go back costs nothing, and confirming sends both.
+- At the riot or revolt line the riot confirm comes first and the hunger card second. The
+  engine settles hunger before the riot check either way.
+- While food is below zero a food cost cannot be paid, a card or table loss of food takes
+  nothing, and a gain counts against the shortfall. Income is the only thing that takes
+  food below zero.
+- A shortfall deeper than the free pops (a Law taking food) takes every free pop and then
+  returns to zero.
+- The hunger alarm is loud only while food is below zero and reads "N short at turn end",
+  with the Dole's and the bank's prices. Step 13's warning a turn ahead is gone: the player
+  now has the whole turn to react. The quiet alarm still shows while food income is
+  negative.
+- End turn's label reads "N pops leave". At the riot line the riot label stays and the
+  tooltip names both.
+- The food figure shows a shortfall as a negative number in clay, with the underline a
+  store that runs short next turn already has.
+- State schema 11 rejects older saves: a v10 save can hold a hunger pick taken at income.
+  The command schema stays 6.
+- Telemetry counts a hunger turn when a turn ends short. The bots' projection settles
+  hunger at every projected turn end, the current one included.
+- Gate queries: `?dev=hunger` (the card at End turn) and `?dev=hunger-short` (the turn, two
+  short). `?dev=hunger-ahead` is gone.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.

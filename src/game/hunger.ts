@@ -1,10 +1,10 @@
 import { produce } from "immer";
 import { effectiveRuleset } from "./assembly/laws";
-import { drawPlayerEvent } from "./events";
 import { formatPopName } from "./core/format";
 import { addLog, getOwnedSettlement, getPlayerName } from "./core/query";
-import { MOVE_OK, invalid } from "./core/results";
+import { invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
+import { commitTurn } from "./turn";
 import type { HegemonyState, HungerLeave, HungerPop, PlayerId, Pops } from "./types";
 
 /** The classes that eat under the standing Laws, freemen first. */
@@ -103,7 +103,7 @@ export function getResolveHungerStatus(
   return { can: reasons.length === 0, reasons };
 }
 
-/** The chosen pops leave, food stays at zero, and the turn moves on to its fate card. */
+/** The chosen pops leave, food returns to zero, and the turn ends with its riot check. */
 export function resolveHunger(
   G: HegemonyState,
   playerID: PlayerId,
@@ -119,11 +119,10 @@ export function resolveHunger(
     playerID,
     { kind: "hunger", leave: [...leave] },
   );
-  drawPlayerEvent(G, playerID);
-  return MOVE_OK;
+  return commitTurn(G);
 }
 
-/** Score a hunger choice without drawing the fate card that follows it. */
+/** Score a hunger choice without the riot check and hand-off that follow it. */
 export function hungerForEval(G: HegemonyState, playerID: PlayerId, leave: readonly HungerLeave[]) {
   return produce(G, (draft) => {
     removeHungerLeave(draft, playerID, leave);
@@ -141,6 +140,7 @@ export function applyHunger(G: HegemonyState, playerID: PlayerId, unfed: number)
 function removeHungerLeave(G: HegemonyState, playerID: PlayerId, leave: readonly HungerLeave[]) {
   for (const { tileId, pop } of leave) getOwnedSettlement(G, tileId, playerID)!.pops[pop] -= 1;
   G.players[playerID].popsLostToHunger += leave.length;
+  G.players[playerID].resources.food = 0;
 }
 
 function describeLeave(leave: readonly HungerLeave[]): string {
