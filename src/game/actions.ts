@@ -19,17 +19,12 @@ import {
   getTile,
   markSettlementGrown,
 } from "./core/query";
-import {
-  applyResourceDeltaWithFloors,
-  cloneResources,
-  diffResources,
-  payCost,
-} from "./core/resources";
+import { applyIncome, cloneResources, diffResources, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
 import { setupCapitalCount } from "./ruleset";
-import { calculateIncome, getHungerStatus } from "./economy/income";
+import { calculateIncome } from "./economy/income";
 import {
   getBuildBuildingStatus,
   getFoundColonyStatus,
@@ -326,11 +321,9 @@ export function collectIncome(
   }
 
   const income = calculateIncome(G, playerID);
-  const hunger = getHungerStatus(G, playerID, income.food);
   const beforeIncome = cloneResources(player.resources);
-  applyResourceDeltaWithFloors(player.resources, income, G.ruleset.economy.stockpileFloors);
-  // Hunger leaves no debt: the granary is empty, never owing.
-  player.resources.food = Math.max(0, player.resources.food);
+  // Food may go below zero here: the seat has its turn to cover it before hunger.
+  applyIncome(player.resources, income, G.ruleset.economy.stockpileFloors);
   const appliedIncome = diffResources(player.resources, beforeIncome);
   player.collectedThisTurn = true;
   addLog(
@@ -338,17 +331,6 @@ export function collectIncome(
     `${getPlayerName(G, playerID)} ${mode === "automatic" ? "automatically collected" : "collected"} income (${formatRuleResourceDelta(appliedIncome)}).`,
     playerID,
   );
-
-  // Hunger waits for its seat to choose who leaves; the fate card follows it.
-  if (hunger.unfed > 0) {
-    G.pendingHunger = { playerID, unfed: hunger.unfed };
-    addLog(
-      G,
-      `${getPlayerName(G, playerID)} cannot feed ${hunger.unfed} ${hunger.unfed === 1 ? "mouth" : "mouths"}.`,
-      playerID,
-    );
-    return MOVE_OK;
-  }
 
   drawPlayerEvent(G, playerID);
   return MOVE_OK;

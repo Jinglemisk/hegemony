@@ -69,3 +69,32 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   await expect(page.getByRole("dialog").getByRole("heading")).toHaveText(decisionTitle ?? "");
   await expect(page.getByRole("img", { name: /Damon is acting/ })).toBeVisible();
 });
+
+test("ending a turn short of food asks who leaves, with a way back", async ({ page }) => {
+  await page.goto("/?dev=hunger-short&seed=42");
+
+  const endTurn = page.getByRole("button", { name: /^End turn/i });
+  await expect(endTurn).toHaveAccessibleName(
+    "End turn — press and hold. Ending now, 2 pops leave: you are 2 food short.",
+  );
+  const hold = async () => {
+    await endTurn.focus();
+    await page.keyboard.down("Enter");
+    await page.waitForTimeout(900);
+    await page.keyboard.up("Enter");
+  };
+
+  // The hold opens the hunger card instead of ending. Going back keeps the turn,
+  // so the food can still be bought.
+  const hunger = page.getByRole("dialog", { name: "Hunger", exact: true });
+  await hold();
+  await expect(hunger).toBeVisible();
+  await hunger.getByRole("button", { name: "Go back" }).click();
+  await expect(hunger).toBeHidden();
+  await expect(endTurn).toBeVisible();
+
+  await hold();
+  await hunger.getByRole("button", { name: "Let them go" }).click();
+  await expect(hunger).toBeHidden();
+  await expect(page.getByRole("dialog", { name: /s turn$/ })).toBeVisible();
+});

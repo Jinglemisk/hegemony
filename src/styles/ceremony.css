@@ -351,6 +351,16 @@
   color: var(--ink-63);
 }
 
+/* Go back beside the commit: the way out to buy food takes its own width. */
+.hungerActs {
+  display: flex;
+  gap: 12px;
+}
+
+.hungerActs .ceremonyCommit {
+  flex: 1;
+}
+
 /* ── A loss card: a riot's result, a revolt ──────────────────────────────────
    The hunger card's frame with no picker: one line per thing it cost. */
 .lossLines {

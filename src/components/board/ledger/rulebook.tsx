@@ -469,9 +469,9 @@ const turn: RuleChapter = {
       <Entry id={anchor("turn", "flow")} title="The flow">
         <Note>
           A turn resolves in order: <strong>victory</strong>, then <strong>income</strong> (every
-          settlement earns and eats, hunger settles), your drawn <strong>event</strong>, your
-          <strong> actions</strong>, then <strong>End Turn</strong>. Riots and revolts are checked
-          when you end your turn, before it passes.
+          settlement earns and eats), your drawn <strong>event</strong>, your
+          <strong> actions</strong>, then <strong>End Turn</strong>. Hunger, then riots and revolts,
+          are checked when you end your turn, before it passes.
         </Note>
         <Note>
           The verbs are Grow, Move, Found, Upgrade, Build, Calm, the Dole and Venture. Anything that
@@ -706,9 +706,10 @@ const unrest: RuleChapter = {
             bought off. A riot or a revolt clears them all.
           </Note>
           <Note>
-            Hunger is separate: when income cannot feed your freemen and citizens, one pop leaves
-            per unfed mouth and the granary stays at zero. You choose which freemen or citizens
-            leave; the card opens with freemen chosen first.
+            Hunger is separate. Your freemen and citizens eat at income, which can take your food
+            below zero. You have that turn to buy the food back. If you end the turn short, one pop
+            leaves per missing food and food returns to zero, before the riot check. You choose
+            which freemen or citizens leave; the card opens with freemen chosen first.
           </Note>
         </Entry>
         <Entry id={anchor("unrest", "calm")} title="Buying calm">

@@ -66,14 +66,17 @@ function ResourceCell({
   delta: number;
   lines: Array<{ key: string; label: string; amount: number }>;
 }) {
-  const short = value + delta < 0;
+  // Only food goes below zero, and only until its owner's turn ends.
+  const owed = Math.max(0, -value);
+  const short = owed > 0 || value + delta < 0;
   const label = RESOURCE_LABELS[resource];
+  const store = owed ? `${owed} short` : `${value} in store`;
 
   return (
     <Tooltip
-      ariaLabel={`${label} ${value}, ${sign(delta)} next turn${short ? ", short" : ""}`}
+      ariaLabel={`${label} ${owed ? store : value}, ${sign(delta)} next turn${short && !owed ? ", short" : ""}`}
       content={
-        <Tip sub={`${value} in store · ${sign(delta)} next turn`} title={label}>
+        <Tip sub={`${store} · ${sign(delta)} next turn`} title={label}>
           {lines.length > 0 ? (
             <TipLedger
               rows={lines.map((line) => ({
@@ -85,14 +88,20 @@ function ResourceCell({
           ) : (
             <p className="tip-body">No income or expense.</p>
           )}
-          {short ? <TipWarn>Short next turn</TipWarn> : null}
+          {owed ? (
+            <TipWarn>
+              {owed} short: a pop leaves for each when you end your turn. Buy food first.
+            </TipWarn>
+          ) : short ? (
+            <TipWarn>Short next turn</TipWarn>
+          ) : null}
         </Tip>
       }
       focusable
       triggerClassName={`res${short ? " is-short" : ""}`}
     >
       <Ico path={RESOURCE_ICON[resource]} size="ui" />
-      <span className="res-val num">{value}</span>
+      <span className="res-val num">{owed ? sign(value) : value}</span>
       <span className={`res-delta ${tone(delta)}`}>{sign(delta)}</span>
     </Tooltip>
   );

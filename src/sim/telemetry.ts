@@ -68,7 +68,7 @@ export type PlayerSnapshot = {
   citizens: number;
   /** Slaves without an open work slot: on a full tile, or on a hill. */
   idleSlaves: number;
-  /** Running total of pops that left unfed at income. */
+  /** Running total of pops that left unfed at turn end. */
   popsLostToHunger: number;
   /** Persistent mechanical effects observed by the same selector used by the UI. */
   activeEffects: Record<ActiveEffectKind, number>;
@@ -311,12 +311,12 @@ export type BatchReport = {
   >;
   perYear: YearRow[];
   perSeat: Record<PlayerId, { winRate: number; capLeaderRate: number; meanFinalCards: number }>;
-  /** Food under work slots, per seat: how often income left mouths unfed, the pops
+  /** Food under work slots, per seat: how often a turn ended short of food, the pops
    *  that left for it, and how many slaves had no slot to work. */
   hunger: Record<
     PlayerId,
     {
-      /** Incomes that left at least one mouth unfed, per game. */
+      /** Turns that ended at least one food short, per game. */
       hungerTurnsPerGame: number;
       popsLostPerGame: number;
       /** Mean idle slaves over the seat's turn snapshots, and their share of its slaves. */
@@ -499,7 +499,7 @@ export class Aggregator {
     influence: 0,
   };
   private directiveTargets: Record<PlayerId, number> = { "0": 0, "1": 0, "2": 0, "3": 0 };
-  /** Incomes that left a mouth unfed: each ends in one hunger choice. */
+  /** Turns that ended short of food: each ends in one hunger choice. */
   private hungerTurns: Record<PlayerId, number> = { "0": 0, "1": 0, "2": 0, "3": 0 };
   private voiceClaims = 0;
   private voiceTransfers = 0;
@@ -543,10 +543,7 @@ export class Aggregator {
       this.setupMoves.push({ state: G, player, move });
     } else {
       this.countReach(player, moveReachIds(G, player, move, this.previousState));
-      if (move.type === "resolveHunger") {
-        this.hungerTurns[player] += 1;
-        this.countPlayerDraw(G);
-      }
+      if (move.type === "resolveHunger") this.hungerTurns[player] += 1;
       if (move.type === "resolveEvent" && this.previousState?.pendingPlayerEvent) {
         const before = this.previousState;
         const old = before.players[player];
@@ -885,7 +882,7 @@ export class Aggregator {
       };
     }
 
-    // A hunger turn is one hunger choice: hunger strikes once, at the seat's own income.
+    // A hunger turn is one hunger choice: hunger strikes once, at the seat's own turn end.
     const hunger = {} as BatchReport["hunger"];
     const games = Math.max(1, this.games.length);
     for (const playerID of PLAYER_IDS) {
@@ -1203,8 +1200,7 @@ export class Aggregator {
   }
 
   private countPlayerDraw(G: HegemonyState) {
-    // Hunger waiting on its choice holds the draw back until it resolves.
-    if (G.pendingRiot || G.pendingHunger || !G.players[G.currentPlayer].collectedThisTurn) return;
+    if (G.pendingRiot || !G.players[G.currentPlayer].collectedThisTurn) return;
     const card = G.lastPlayerEvent;
     if (card) {
       this.countReach(G.currentPlayer, [`playerDraw:${card.id}`]);

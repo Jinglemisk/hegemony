@@ -89,9 +89,12 @@ pages, rival tooltips and telemetry use the same selectors (`ideaHolders`, `idea
 
 ## Hunger choices
 
-When an income leaves mouths unfed, `pendingHunger` holds the turn for its seat, the way
-a pending fate card does: `resolveHunger` is that seat's only legal command, and it names
-exactly as many freemen or citizens as the shortfall, one entry per pop. The fate card is
-drawn after it. Enumeration offers bots each split between the eating classes, every pop
-from the settlement holding the most of its class; the shell's card may pick any
-settlement.
+Income may take a seat's food below zero; the seat plays its turn with the shortfall
+and can buy it back. When it ends the turn still short, `endTurn` sets `pendingHunger`
+instead of passing the turn: `resolveHunger` is then that seat's only legal command, and
+it names exactly as many freemen or citizens as the shortfall, one entry per pop. Food
+returns to zero, and the riot check and the hand-off follow. Enumeration offers bots each
+split between the eating classes, every pop from the settlement holding the most of its
+class; the shell's card may pick any settlement. The shell opens its card before it sends
+`endTurn`, so Go back costs nothing; confirming sends `endTurn` and `resolveHunger`
+together.

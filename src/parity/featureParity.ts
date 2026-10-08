@@ -86,7 +86,7 @@ export const PARITY_BEHAVIOR_FIXTURES = {
   },
   hungerResolution: {
     implementation: "src/game/hunger.test.ts",
-    evidence: "waits for the seat to choose who leaves",
+    evidence: "asks who leaves when the turn ends short",
   },
   workSlots: {
     implementation: "src/game/workSlots.test.ts",
@@ -570,7 +570,7 @@ export const FEATURE_PARITY = {
     ids: ["hunger"],
     engine: { implementation: "src/game/hunger.ts", evidence: "resolveHunger" },
     frontend: {
-      implementation: "src/components/board/modals/HungerModal.tsx",
+      implementation: "src/components/HegemonyBoard.tsx",
       evidence: "moves.resolveHunger",
     },
     simulation: { implementation: "src/sim/policies.ts", evidence: "applyHunger" },

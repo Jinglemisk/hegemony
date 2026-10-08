@@ -1,13 +1,13 @@
 import { ideaForEval, ideaRoom, playerNationalIdeas } from "../game/ideas";
 import { playerDole, votePurchaseLimit } from "../game/ideaRules";
 import { playerPieces } from "../game/settlement";
-import { calculateIncome, calculateIncomeBreakdown, getHungerStatus } from "../game/economy/income";
+import { calculateIncome, calculateIncomeBreakdown, unfedAtTurnEnd } from "../game/economy/income";
 import { applyHunger, hungerForEval } from "../game/hunger";
 import { happinessLevel, slaveUnhappiness, standingHappiness } from "../game/happiness";
 import { removePops } from "../game/tables";
 import { ventureOutcomes } from "./chance";
 import { getActiveEffects } from "../game/activeEffects";
-import { applyResourceDeltaWithFloors } from "../game/core/resources";
+import { applyIncome } from "../game/core/resources";
 import { getResolutionCard, getResolutionCards } from "../game/content";
 import { getTile } from "../game/core/query";
 import {
@@ -135,7 +135,7 @@ function resolveRiotByRule(moves: GameCommand[]): GameCommand | null {
 type SearchOutcome = { state: HegemonyState; probability: number };
 function searchOutcomes(G: HegemonyState, move: GameCommand): SearchOutcome[] {
   if (move.type === "fundExpedition") return ventureOutcomes(G, G.currentPlayer, move);
-  // The fate card drawn after hunger is hidden: score the loss alone.
+  // The riot check and hand-off after hunger are the projection's: score the loss alone.
   if (move.type === "resolveHunger")
     return [{ state: hungerForEval(G, G.currentPlayer, move.leave), probability: 1 }];
   const result = transition(G.definition, G, G.currentPlayer, move);
@@ -317,6 +317,16 @@ export function projectPolicyHorizon(
     severeRiotEvents: 0,
     riskPenalty: 0,
   };
+  // Hunger is the engine's own rule and draws no dice, so the projection runs it
+  // for real: a turn that ends short loses a pop per missing food, and later incomes
+  // are recomputed without them.
+  const settleHunger = () => {
+    const unfed = unfedAtTurnEnd(projectedState, playerID);
+    player.resources.food = Math.max(0, player.resources.food);
+    if (unfed === 0) return false;
+    expectedStarvationPopLoss += applyHunger(projectedState, playerID, unfed);
+    return true;
+  };
   // A collected income does not end the current year: calm and Blockade still
   // count at this turn's check, even when no future incomes remain.
   const checkTurnEnd = (currentTurn = false) => {
@@ -354,6 +364,8 @@ export function projectPolicyHorizon(
   };
 
   if (player.collectedThisTurn) {
+    // Food short now is what this turn's end takes, unless the seat buys it back first.
+    settleHunger();
     if (G.phase === "gameplay" && G.currentPlayer === playerID && !G.assembly && !G.pendingRiot)
       checkTurnEnd(true);
     expireYear();
@@ -368,29 +380,17 @@ export function projectPolicyHorizon(
   );
 
   for (let step = 0; step < horizon; step += 1) {
-    let popsChanged = false;
+    let popsChanged: boolean;
 
     if (suppressedCollections > 0) {
       suppressedCollections -= 1;
       player.incomeSuppressedTurns = Math.max(0, player.incomeSuppressedTurns - 1);
     } else {
-      // Hunger is the engine's own rule and draws no dice, so the projection runs it
-      // for real: unfed pops leave, and later incomes are recomputed without them.
-      const unfed = getHungerStatus(projectedState, playerID, income.food).unfed;
-      applyResourceDeltaWithFloors(
-        player.resources,
-        income,
-        projectedState.ruleset.economy.stockpileFloors,
-      );
-      player.resources.food = Math.max(0, player.resources.food);
-
-      if (unfed > 0) {
-        expectedStarvationPopLoss += applyHunger(projectedState, playerID, unfed);
-        popsChanged = true;
-      }
+      applyIncome(player.resources, income, projectedState.ruleset.economy.stockpileFloors);
     }
 
-    // Income and hunger happen first; the resulting board is checked at turn end.
+    // Income first; the turn then ends with hunger and the unrest check, in that order.
+    popsChanged = settleHunger();
     popsChanged = checkTurnEnd() || popsChanged;
     // The next projected income is in another year. Its card is still hidden.
     const yearCardExpired = projectedState.activeYearCard !== null;

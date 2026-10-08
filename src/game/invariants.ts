@@ -127,9 +127,16 @@ export function collectInvariantViolations(
         `index [${indexed.join(", ")}] disagrees with board [${boardOwned.join(", ")}]`,
       );
     }
-    // Hunger leaves no debt: unfed pops leave and the granary stays at zero.
-    if ((G.players[playerID]?.resources.food ?? 0) < 0) {
-      add("resources.foodDebt", `players.${playerID}.resources.food`, "food cannot go negative");
+    // Food is short only inside its owner's own turn: ending the turn settles it
+    // before the riot check, so no debt reaches a rival's turn or the Assembly.
+    const ownTurn =
+      G.phase === "gameplay" && G.currentPlayer === playerID && !G.pendingRiot && !G.assembly;
+    if ((G.players[playerID]?.resources.food ?? 0) < 0 && !ownTurn) {
+      add(
+        "resources.foodDebt",
+        `players.${playerID}.resources.food`,
+        "food cannot be negative outside its owner's turn",
+      );
     }
     // Happiness is derived, never held: no stock of it, and a whole count of tokens.
     if (G.players[playerID] && "happiness" in G.players[playerID].resources) {

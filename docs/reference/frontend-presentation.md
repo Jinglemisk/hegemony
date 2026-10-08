@@ -81,8 +81,10 @@ screen reads what the others did since its last look. Title changes toast every 
 read off `titleChanges`.
 
 One moment owns the screen at a time, in the engine's order: the last seat's riot result
-or revolt card, the year card, the game's end, then the turn notice; the Assembly,
-hunger and the fate card wait behind them (`HegemonyBoard`). The year card's face reads what
+or revolt card, the year card, the game's end, then the turn notice; the Assembly
+and the fate card wait behind them (`HegemonyBoard`). The hunger card belongs to End turn:
+a seat that is short of food gets it when it holds End turn, with Go back to return to the
+turn, and the turn ends only when it confirms who leaves. The year card's face reads what
 the engine recorded as the card turned (the `yearCard` moment), and the riot and revolt
 cards read their moments, so nothing on them is recomputed after the turn has passed. End
 turn's confirm at the riot and revolt lines reads `turnEndUnrest`, which tries calm through

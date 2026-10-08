@@ -26,7 +26,10 @@ export const ENGINE_VERSION = "0.1.0";
 /** v9 (Step 9): public Ideas, concealed setup picks; command v5 adds pick/buy. */
 /** v10 (Step 13): an open Idea draft with no setup-pick store, pending hunger, and log
  *  moments. Command v6 adds the hunger choice. Older saves are rejected. */
-export const STATE_SCHEMA_VERSION = 10;
+/** v11 (Step 17): hunger is settled at turn end, and food may be below zero during
+ *  its owner's turn. A v10 save can hold a hunger pick taken at income, so older
+ *  saves are rejected. Commands are unchanged. */
+export const STATE_SCHEMA_VERSION = 11;
 export const COMMAND_SCHEMA_VERSION = 6;
 
 export const SAVE_FORMAT_VERSION = 2;

@@ -48,7 +48,7 @@ import { GameUiProvider } from "./board/GameUiProvider";
 import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
 import { getOwnedHoldings } from "./board/helpers";
-import { endTurnWarning, happinessDisplay, hungerForecast } from "../ui/frameSelectors";
+import { endTurnWarning, happinessDisplay, hungerShortfall } from "../ui/frameSelectors";
 import { Island } from "./frame/island/Island";
 import { TopBar } from "./frame/TopBar";
 import { Ticker } from "./frame/Ticker";
@@ -125,6 +125,7 @@ export function HegemonyBoard({
   const [yearFaceOpen, setYearFaceOpen] = useState(false);
   // The private moment last begun (see `privateMoment`): a new one waits behind the
   // turn notice. A game opened mid-turn starts begun.
+  const [hungerAsk, setHungerAsk] = useState(DEV_SHELL.hungerAsk);
   const [handedOver, setHandedOver] = useState(() =>
     DEV_SHELL.turnNotice || DEV_SHELL.viewer ? null : privateMoment(G),
   );
@@ -160,6 +161,8 @@ export function HegemonyBoard({
   const isActive = seatActive && !inAssembly;
   // Hunger waiting on its choice blocks the turn exactly as a drawn fate card does.
   const hasPendingPlayerEvent = Boolean(G.pendingPlayerEvent || G.pendingHunger);
+  // Food short now: End turn opens the hunger card first, with a way back to buy food.
+  const shortfall = hungerShortfall(G, viewerId);
   // The one gate the turn dial needs. It is the same gate every verb sits behind
   // (verbs.tsx), asked without a board fact in sight.
   const turnGate = { isActive, phase: ctx.phase, hasPendingPlayerEvent, inAssembly };
@@ -172,7 +175,7 @@ export function HegemonyBoard({
 
   // One moment owns the screen at a time, in the order the engine ran them: the last
   // seat's riot or revolt, the year card, the game's end; then the turn notice
-  // before a private moment; behind it the Assembly, hunger and the fate card.
+  // before a private moment; behind it the Assembly and the fate card.
   const riotShown = Boolean(G.pendingRiot) || riotResultOpen;
   const revoltShown = !riotShown && Boolean(revolt.entry);
   const yearShown =
@@ -495,7 +498,7 @@ export function HegemonyBoard({
                 <Alarms
                   content={G.definition.content}
                   effects={activeEffects}
-                  hunger={hungerForecast(G, viewerId)}
+                  hunger={shortfall}
                   lead={
                     <>
                       <ThreatAlarm
@@ -562,7 +565,7 @@ export function HegemonyBoard({
                   canEndTurn={turnOpen}
                   confirmOpen={DEV_SHELL.endTurnConfirm}
                   onCalm={moves.civicCalm}
-                  onEndTurn={events.endTurn}
+                  onEndTurn={() => (shortfall ? setHungerAsk(true) : events.endTurn())}
                   title={turnCommitTitle(turnGate)}
                   waitingLabel={inAssembly ? "In Assembly" : undefined}
                   unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}
@@ -754,8 +757,25 @@ export function HegemonyBoard({
               viewerId={viewerId}
             />
           ) : null}
-          {G.pendingHunger && !momentAhead ? (
-            <HungerModal key={`${G.pendingHunger.playerID}-${ctx.turn}`} />
+          {/* Asked from End turn, the card ends the turn and names who leaves in one
+          go. A turn already committed (a restored game) only waits for the names. */}
+          {G.pendingHunger?.playerID === viewerId && !momentAhead ? (
+            <HungerModal
+              key={`pending-${ctx.turn}`}
+              onCommit={moves.resolveHunger}
+              unfed={G.pendingHunger.unfed}
+            />
+          ) : hungerAsk && turnOpen && shortfall ? (
+            <HungerModal
+              key={`ask-${ctx.turn}-${shortfall.unfed}`}
+              onBack={() => setHungerAsk(false)}
+              onCommit={(leave) => {
+                setHungerAsk(false);
+                events.endTurn();
+                moves.resolveHunger(leave);
+              }}
+              unfed={shortfall.unfed}
+            />
           ) : null}
           {G.pendingPlayerEvent && !momentAhead ? <PendingPlayerEventModal /> : null}
           {/* The Assembly sits in a modal over the shell. It mounts off engine state;

@@ -85,8 +85,9 @@ stay unchanged.
 Forecast at most six incomes, bounded by the years remaining. This year's card
 applies only to a seat that has not collected; later incomes use printed values.
 The projection checks the current turn end, with calm and the current year card
-still active, even when no future incomes remain. Later turns collect income and
-resolve engine hunger, freemen first, before their turn-end checks. It runs deterministic revolts,
+still active, even when no future incomes remain. Every projected turn end, the current
+one included, settles engine hunger first (one pop per missing food, freemen first), so a
+bot sees a shortfall in its own turn and can buy food. It runs deterministic revolts,
 clears tokens after a projected riot, and recalculates income after pop losses or
 the year's card expires. Otherwise it reuses income through the horizon; stocks and tokens do
 not change printed yields. It assumes no future card or token changes.
@@ -117,10 +118,9 @@ needs no proximity penalty; future turns keep the existing buffer estimate.
 
 ## Hunger
 
-When its income leaves mouths unfed, a bot weighs each legal split of the loss
+When it ends a turn short of food, a bot weighs each legal split of the loss
 between freemen and citizens (each pop from the settlement holding the most) with
-its scorer, without seeing the fate card drawn after the choice. Ties keep the
-freemen-first default, which enumeration lists first.
+its scorer. Ties keep the freemen-first default, which enumeration lists first.
 
 ## Setup, Ideas and the Assembly
 

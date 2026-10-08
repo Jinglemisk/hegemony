@@ -16,7 +16,7 @@ import { describeRemoval, removePops } from "./tables";
  * their turn. At the riot line it clears the realm's Unrest tokens and parks a
  * riot on the table (game/riot.ts), which blocks the handoff until
  * the player rolls. At the revolt line nothing is rolled: half the slaves leave and
- * the tokens clear. Hunger is not here: it strikes at income (game/hunger.ts).
+ * the tokens clear. Hunger is not here: it is settled just before (game/hunger.ts).
  */
 
 /** The turn-end check for `playerID`. May leave a riot awaiting insurance and a roll. */

@@ -24,25 +24,31 @@ const key = (tileId: string, pop: HungerPop) => `${tileId}:${pop}`;
  * layout checks measure the frame's panels, and still check this card's text,
  * icons and hit targets.
  *
- * Hunger at income: the granary could not feed every mouth, and the seat chooses
- * who leaves, one pop per unfed mouth, by settlement. It opens on the engine's
- * cheapest loss (freemen first) and commits only at the exact count.
+ * Hunger at turn end: the seat ends its turn short of food and chooses who leaves,
+ * one pop per missing food, by settlement. It opens on the engine's cheapest loss
+ * (freemen first) and commits only at the exact count. Opened from End turn it
+ * offers the way back, so the seat can still buy food.
  */
-export function HungerModal() {
-  const { G, viewerId, isActive, moves } = useGameUi();
-  const pending = G.pendingHunger;
+export function HungerModal({
+  unfed,
+  onBack,
+  onCommit,
+}: {
+  /** Pops that must leave. */
+  unfed: number;
+  /** Close without ending the turn. Absent once the turn is committed. */
+  onBack?: () => void;
+  onCommit: (leave: HungerLeave[]) => void;
+}) {
+  const { G, viewerId, isActive } = useGameUi();
   const [counts, setCounts] = useState<Counts>(() => {
     const preselected: Counts = {};
-    if (pending)
-      for (const { tileId, pop } of defaultHungerLeave(G, pending.playerID, pending.unfed))
-        preselected[key(tileId, pop)] = (preselected[key(tileId, pop)] ?? 0) + 1;
+    for (const { tileId, pop } of defaultHungerLeave(G, viewerId, unfed))
+      preselected[key(tileId, pop)] = (preselected[key(tileId, pop)] ?? 0) + 1;
     return preselected;
   });
 
-  if (!pending || pending.playerID !== viewerId) return null;
-
   const mouths = hungerMouths(G);
-  const unfed = pending.unfed;
   const chosen = Object.values(counts).reduce((sum, n) => sum + n, 0);
   const rows = G.players[viewerId].settlements.flatMap((tileId) => {
     const settlement = getOwnedSettlement(G, tileId, viewerId);
@@ -69,15 +75,17 @@ export function HungerModal() {
       backdropClassName="eventModalBackdrop"
       ceremony="wound"
       className="fateCard hungerCard"
+      dismissOnBackdrop={false}
       labelledBy="hunger-title"
+      onDismiss={onBack}
     >
       <header className="hungerHead">
-        <span className="fateKicker label">A lean year · your income</span>
+        <span className="fateKicker label">A lean year · the end of your turn</span>
         <h2 className="display display-xl" id="hunger-title">
           Hunger
         </h2>
         <p className="fateVoice body-em">
-          The granary is empty. {words(unfed)[0].toUpperCase() + words(unfed).slice(1)}{" "}
+          The granary is short. {words(unfed)[0].toUpperCase() + words(unfed).slice(1)}{" "}
           {unfed === 1 ? "household" : "households"} must leave before the next harvest.
         </p>
       </header>
@@ -129,17 +137,24 @@ export function HungerModal() {
       </div>
 
       <p className="hungerFoot caption">
-        <span>Next: your fate card</span>
-        <span>Food stays at 0 · no debt</span>
+        <span>Next: your turn ends</span>
+        <span>Food returns to 0 · no debt</span>
       </p>
-      <button
-        className="ceremonyCommit verb verb-lg"
-        disabled={!isActive || chosen !== unfed}
-        onClick={() => moves.resolveHunger(leave)}
-        type="button"
-      >
-        Let them go
-      </button>
+      <div className="hungerActs">
+        {onBack ? (
+          <button className="ghostVerb verb" onClick={onBack} type="button">
+            Go back
+          </button>
+        ) : null}
+        <button
+          className="ceremonyCommit verb verb-lg"
+          disabled={!isActive || chosen !== unfed}
+          onClick={() => onCommit(leave)}
+          type="button"
+        >
+          Let them go
+        </button>
+      </div>
     </ModalShell>
   );
 }

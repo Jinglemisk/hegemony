@@ -128,7 +128,7 @@ without requiring every Idea to be used or changing the rules to force it.
 Telemetry zero-fills all twelve Ideas with setup picks, purchases, holder counts, wins and
 holder win rates. Counts include capped games; win rates use finished seat-games only.
 A consumed acquisition grant still belongs to its holder and counts in this denominator.
-Step 13's state schema 10 and command schema 6 reject earlier saves and scripts.
+Step 17's state schema 11 and command schema 6 reject earlier saves and scripts.
 
 ## Acceptance and validation
 

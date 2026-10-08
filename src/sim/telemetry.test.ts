@@ -87,7 +87,7 @@ describe("snapshotTurn", () => {
 });
 
 describe("Aggregator", () => {
-  it("keeps turn-start hunger and the draw when the final turn ends in a riot", () => {
+  it("keeps turn-end hunger and the draw when the final turn ends in a riot", () => {
     const G = scenario()
       .withResources("0", { food: 0 })
       .stackYearCard("year-drought")
@@ -102,13 +102,12 @@ describe("Aggregator", () => {
       .build();
     const aggregator = new Aggregator();
     aggregator.beginGame(0, 42, G);
-    // Hunger waits on the seat's choice; the draw follows it.
-    const leave = defaultHungerLeave(G, "0", G.pendingHunger!.unfed);
-    expect(resolveHunger(G, "0", leave).ok).toBe(true);
-    G.pendingPlayerEvent = null;
-    aggregator.onMove(G, "0", { type: "resolveHunger", leave });
     expect(endTurn(G).ok).toBe(true);
     aggregator.onMove(G, "0", { type: "endTurn" });
+    // The seat ended short: its choice comes before the riot check.
+    const leave = defaultHungerLeave(G, "0", G.pendingHunger!.unfed);
+    expect(resolveHunger(G, "0", leave).ok).toBe(true);
+    aggregator.onMove(G, "0", { type: "resolveHunger", leave });
     expect(resolveRiot(G, "0").ok).toBe(true);
     expect(G.players["0"].popsLostToHunger).toBeGreaterThan(0);
     aggregator.onMove(G, "0", { type: "resolveRiot" });

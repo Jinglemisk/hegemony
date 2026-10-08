@@ -682,6 +682,34 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - Gate queries: `?dev=assembly-ballot`, `?dev=assembly-vote`, `?dev=assembly-rises`. No
   schema change beyond Part A's: the Assembly session gained `setAside` within state 10.
 
+**Defaults picked in Step 17** (2026-10-08):
+
+- Ending the turn is the hunger check. A seat that ends short keeps the turn until it
+  names who leaves (`endTurn` sets `pendingHunger`; `resolveHunger` sets food to zero, runs
+  the riot check and passes the turn). There is no new command: the shell opens the hunger
+  card before it sends `endTurn`, so Go back costs nothing, and confirming sends both.
+- At the riot or revolt line the riot confirm comes first and the hunger card second. The
+  engine settles hunger before the riot check either way.
+- While food is below zero a food cost cannot be paid, a card or table loss of food takes
+  nothing, and a gain counts against the shortfall. Income is the only thing that takes
+  food below zero.
+- A shortfall deeper than the free pops (a Law taking food) takes every free pop and then
+  returns to zero.
+- The hunger alarm is loud only while food is below zero and reads "N short at turn end",
+  with the Dole's and the bank's prices. Step 13's warning a turn ahead is gone: the player
+  now has the whole turn to react. The quiet alarm still shows while food income is
+  negative.
+- End turn's label reads "N pops leave". At the riot line the riot label stays and the
+  tooltip names both.
+- The food figure shows a shortfall as a negative number in clay, with the underline a
+  store that runs short next turn already has.
+- State schema 11 rejects older saves: a v10 save can hold a hunger pick taken at income.
+  The command schema stays 6.
+- Telemetry counts a hunger turn when a turn ends short. The bots' projection settles
+  hunger at every projected turn end, the current one included.
+- Gate queries: `?dev=hunger` (the card at End turn) and `?dev=hunger-short` (the turn, two
+  short). `?dev=hunger-ahead` is gone.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.
@@ -794,7 +822,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
 session. **Stop:** the dated report, with a proposed remedy for each failing rule; the
 owner decides.
 
-- [ ] **Step 17 · Hunger at turn end.** The Q79 ruling in Settled inputs, per the
+- [x] **Step 17 · Hunger at turn end.** ([#99](https://github.com/Jinglemisk/hegemony/pull/99): a rotated 40-game batch finishes with no turn caps, 3 by the race and 37 by the deck; pops lost to hunger fall from 3.3–3.7 to 0.5–0.8 a seat-game and hunger turns from 1.2–1.4 to 0.3–0.4, against Step 13's batch; riots 2.3 a game, the table on 4.1% of player-turns; wins slaver 33%, civic 20%, trader 15%, master 33%; three bot turns hit the 30-action limit, each a seat with about 100 gold buying 12 to 19 missing food one unit at a time; the hunger card and the short turn pass the gate at 1280/1440/1920 and ui:audit shows 0 defects.) The Q79 ruling in Settled inputs, per the
       [Q79 note](../reports/balance/2026-10-06-q79-food.md)'s option E and its cost
       section. Engine: income stops applying hunger; food may sit below zero only during
       its owner's turn, and turn end settles it before the riot check. Losses at income
