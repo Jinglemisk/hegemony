@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-07
+updated: 2026-10-08
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -112,14 +112,15 @@ Step 13 rulings (owner, 2026-10-06), from the
   map, realm and consult pages read normally, with no actions and end turn locked.
 - The year card shrinks into the first disc of the alarms row; the top bar keeps only the
   year and the cards left.
-- A turn notice, a small card over the table reading "Nikos's turn" or "Nikos's
-  proposal" with one Begin button, comes before each turn and each Assembly proposal
-  (owner, 2026-10-07). It replaces the full-screen pass-the-seat cover approved on
-  2026-10-06, which every browser game showed and which read as hotseat only; the notice
-  is worded to suit a networked game too. The screen stays with the last seat until
-  Begin, so the next seat's fate card and Assembly draw still wait behind it. A switch
-  under Settings in the top bar turns the notice off, and the screen then follows the
-  turn at once. It never shows against bots.
+- A turn notice comes before each turn and each Assembly proposal: a small card over
+  the table with one Begin button. Its wording belongs to the mode of play (owner,
+  2026-10-08). Hotseat, where people share one screen and take the seats in turn, is the
+  only mode today, and there the card reads "Pass the screen" above "Nikos's turn" or
+  "Nikos's proposal". When the game is played over a network the same notice will read
+  "It's Nikos's turn" and never the pass-the-screen line. The card replaces the
+  full-screen pass-the-seat cover approved on 2026-10-06. The screen stays with the last
+  seat until Begin, so the next seat's fate card and Assembly draw wait behind it. It
+  has no on/off switch and never shows against bots.
 - A revolt with no slaves costs nothing beyond clearing the tokens. This is intended.
 
 After the independent audit (2026-09-28):
@@ -620,8 +621,7 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   the shell seats no bots beside people, so "two or more human seats" means every seat.
   The viewer follows the waiting seat through public phases; a seat's turn and its
   Assembly proposal change hands at the turn notice, keyed by the turn or the proposing
-  seat. The notice setting is kept per browser, on by default; turned on mid-turn, it
-  starts with the next turn. Proposals run one seat at a time in turn order, and the seat
+  seat. Proposals run one seat at a time in turn order, and the seat
   plaques are read-only while they do. A game opened mid-turn starts handed over.
 - The game's end stays with whoever was looking, so the race tablet reads "You rule"
   only for the viewer who won. Its "New game" opens a fresh game without the URL's

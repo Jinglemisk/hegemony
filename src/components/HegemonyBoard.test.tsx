@@ -68,10 +68,8 @@ it("queues Damon's riot result, then the turn notice, before Nikos's event", () 
           viewer = next;
           renderBoard();
         }}
-        onTurnNoticeChange={() => {}}
         isActive
         hotseat
-        turnNotice
       />,
     );
   }
@@ -95,6 +93,7 @@ it("queues Damon's riot result, then the turn notice, before Nikos's event", () 
 
   // The turn notice names Nikos's turn; the fate card drawn for it waits behind it.
   expect(dialog().querySelector("h2")?.textContent).toBe("Nikos’s turn");
+  expect(dialog().textContent).toContain("Pass the screen");
   expect(container.textContent).not.toContain("Shipment");
   act(() => button("Begin").click());
   expect(dialog().querySelector("h2")?.textContent).toBe("Shipment");
@@ -131,10 +130,8 @@ it("seats the Assembly in a modal that folds to a read-only dock and keeps a dra
         events={events}
         playerID={viewer}
         onPlayerIDChange={() => {}}
-        onTurnNoticeChange={() => {}}
         isActive
         hotseat
-        turnNotice
       />,
     );
   }

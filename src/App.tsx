@@ -4,18 +4,8 @@ import { useHegemonyGame } from "./client/controller";
 import { TunePanel } from "./dev/TunePanel";
 
 export function App() {
-  const {
-    game,
-    playerID,
-    setPlayerID,
-    moves,
-    events,
-    resetGame,
-    isActive,
-    hotseat,
-    turnNotice,
-    setTurnNotice,
-  } = useHegemonyGame();
+  const { game, playerID, setPlayerID, moves, events, resetGame, isActive, hotseat } =
+    useHegemonyGame();
 
   // A remount key for the board. `resetGame` re-rolls the SAME seed with new params for a
   // clean A/B (controller.ts), but `HegemonyBoard` lazily seeds UI state at mount only
@@ -39,9 +29,7 @@ export function App() {
         isActive={isActive}
         moves={moves}
         onPlayerIDChange={setPlayerID}
-        onTurnNoticeChange={setTurnNotice}
         playerID={playerID}
-        turnNotice={turnNotice}
       />
       {import.meta.env.DEV && game.G.phase !== "setupIdeas" && (
         <TunePanel game={game.G} resetGame={handleReset} />

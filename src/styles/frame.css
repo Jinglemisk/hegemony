@@ -478,11 +478,6 @@
 .consult {
   gap: var(--s-1);
 }
-/* Settings stands a step apart from the consult pages; at 1280 that step also
-   leaves the purse 32 clear of the court. */
-.settings-btn {
-  margin-left: var(--s-2);
-}
 .rivals {
   gap: var(--s-1);
   position: relative;
@@ -2646,31 +2641,4 @@ button.link {
 .turn-notice .confirm-btn {
   min-width: calc(var(--u) * 40); /* 160 */
   justify-content: center;
-}
-
-/* ---- Settings: a short sheet where the consult pages open ------------------ */
-.consult-sheet.is-short {
-  bottom: auto;
-}
-.settings-title {
-  margin: 0 0 var(--s-2);
-  padding-right: var(--hit);
-  font: 700 var(--t-16) / var(--lh-24) var(--f-name);
-  letter-spacing: var(--track-name);
-  text-transform: uppercase;
-}
-.setting {
-  display: flex;
-  align-items: center;
-  gap: var(--s-4);
-  padding: var(--s-3) 0;
-}
-.setting-words {
-  display: grid;
-  flex: 1;
-  gap: var(--s-1);
-  font: 400 var(--t-body) / var(--l-body) var(--f-body);
-}
-.setting-words b {
-  font: 700 var(--t-16) / var(--lh-20) var(--f-name);
 }
