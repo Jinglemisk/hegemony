@@ -807,6 +807,33 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - The summary prints the riot share from year 8 and the influence medians from year
   10, the windows Step 11's rules name.
 
+**Defaults picked in Step 19** (2026-10-10):
+
+- Batch: `--jobs N` starts N copies of the sim command as worker processes
+  (`child_process.fork`), not threads. A worker gets the parent's own flags, so it
+  builds the same rules and seats, and is sent one game at a time: its index, seed and
+  seating. It prints nothing; the parent prints progress.
+- Batch: every game is played into an aggregator of its own, with one job too, and the
+  parent adds the games up in game order. One job and many jobs build the report with
+  the same code; only the process that played a game differs.
+- Batch: the aggregator's running totals moved into one plain object that adds up
+  (`BatchData`): moves by type, buildings, cards drawn, reach, the Assembly totals,
+  revolts, upgrades and forced turns, beside the game rows, turn snapshots and draw
+  swings. Percentiles, year rows and per-personality figures were already built from
+  rows and snapshots at report time; they now run over the merged ones.
+- Batch: a free worker takes the next game. Fixed shares would leave the fast cores
+  waiting for the slow ones.
+- Batch: N is capped at the cores less one and at the number of games, and the batch
+  prints a line when it lowers N. `meta` does not record N, or two reports of the same
+  batch would differ.
+- Batch: the progress lines keep their wording. They count the seeds finished, which
+  with workers is the order they finish in.
+- Batch: a worker that stops early stops the batch with no report. A partial report
+  would read as a smaller batch.
+- Batch: the parallel fixture plays two seeds through four seatings on the one-ply
+  policies (`random,greedy,smart,political`), eight full games that all finish, in
+  about 35 seconds for both runs. The personalities take about 25 seconds a game.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.

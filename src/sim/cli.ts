@@ -1,6 +1,9 @@
+import { fork } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { availableParallelism } from "node:os";
 import { dirname } from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 import { createCliSeed } from "./seed";
 import {
@@ -53,6 +56,7 @@ import { replayScript, scriptFromSave } from "./script";
 import type { ScriptFile } from "./script";
 import { buildNewGame } from "./setup";
 import { Aggregator, snapshotsToCsv } from "./telemetry";
+import type { BatchData } from "./telemetry";
 import { CURRENT_RECIPE_VERSIONS, SAVE_FORMAT_VERSION } from "../game/version";
 
 /**
@@ -69,7 +73,7 @@ process.stdout.on("error", (error: NodeJS.ErrnoException) => {
   throw error;
 });
 
-const BOOLEAN_FLAGS = new Set(["json", "quiet", "manual-setup", "help", "rotate"]);
+const BOOLEAN_FLAGS = new Set(["json", "quiet", "manual-setup", "help", "rotate", "worker"]);
 
 type Flags = Record<string, string | boolean>;
 
@@ -722,6 +726,12 @@ function writeJson(path: string, value: unknown) {
   writeFileSync(path, JSON.stringify(value, null, 2));
 }
 
+/** One game of a batch: its place in the serial order, its seed and its seating. */
+type BatchGame = { index: number; seed: number; rotation: number };
+
+/** One core is left for the parent process and the rest of the machine. */
+const MAX_JOBS = Math.max(1, availableParallelism() - 1);
+
 function cmdBatch(flags: Flags) {
   if (flags.games === undefined) {
     fail("batch needs --games <N>");
@@ -747,74 +757,90 @@ function cmdBatch(flags: Flags) {
   const presetId = parseTuningPreset(flags);
   const resolved = resolveTuning(GAME_MODES[mode].ruleset, presetId, tune ?? {}, patch);
   const effectivePatch = resolved.rulesetPatch;
+  const asked = flags.jobs !== undefined ? requirePositiveInt(flags.jobs, "--jobs") : 1;
+
+  /** Plays one game into an Aggregator of its own. A game depends on nothing but its
+   *  seed and seating, so its data is the same whichever process plays it. */
+  const play = ({ index, seed, rotation }: BatchGame): BatchData => {
+    const aggregator = new Aggregator();
+    const seatPolicies = seats ? rotateSeats(seats.policies, rotation) : undefined;
+    const seatNames = seats ? rotateSeats(seats.names, rotation) : undefined;
+
+    const G = runGame({
+      seed,
+      mode,
+      patch: effectivePatch,
+      definition: resolved.definition,
+      opening,
+      boardLayout,
+      policy,
+      seatPolicies,
+      turns,
+      trimLogTo: 200,
+      hooks: {
+        onGameStart: (state) =>
+          aggregator.beginGame(
+            index,
+            seed,
+            state,
+            seatNames ??
+              (Object.fromEntries(PLAYER_IDS.map((id) => [id, policy.name])) as Record<
+                PlayerId,
+                string
+              >),
+          ),
+        onMove: (state, player, move) => aggregator.onMove(state, player, move),
+        onTurnEnd: (state) => aggregator.onTurnEnd(state),
+        onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
+      },
+    });
+
+    aggregator.endGame(G);
+    return aggregator.data;
+  };
+
+  // A worker process, started below with the parent's own flags. It says it is ready,
+  // then plays each game it is sent and hands the data back. It prints nothing.
+  if (flags.worker) {
+    process.on("message", (game) => process.send!(play(game as BatchGame)));
+    process.send!(null);
+    return;
+  }
+
   const baseSeed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createCliSeed();
   const reportPath = typeof flags.report === "string" ? flags.report : ".sim/report.json";
   const csvPath = typeof flags.csv === "string" ? flags.csv : undefined;
+  const logEvery = games <= 20 ? 1 : 10;
+  // Rotation reseats each policy through every seat on the SAME seed to cancel
+  // first-player advantage; without it, one game per base seed. A rotation that
+  // repeats a seating is the same game again, so only the distinct ones run.
+  const rotations = seats && rotate ? distinctRotations(seats.names) : [0];
+  if (rotate && rotations.length < PLAYER_IDS.length) {
+    console.log(
+      `--rotate: ${rotations.length} of ${PLAYER_IDS.length} seatings differ; each seed plays ${rotations.length === 1 ? "once" : `${rotations.length} games`}.`,
+    );
+  }
 
-  {
+  const queue: BatchGame[] = [];
+  for (let base = 0; base < games; base += 1) {
+    for (const rotation of rotations) {
+      queue.push({ index: queue.length, seed: (baseSeed + base) >>> 0, rotation });
+    }
+  }
+
+  /** Each finished game's data, in the order the games finished. */
+  const played: BatchData[] = [];
+  const gamesLeft = Array.from({ length: games }, () => rotations.length);
+  let seedsDone = 0;
+
+  const writeReport = () => {
+    // `absorb` adds the games in game order, so the report is the same however they
+    // were shared out and whichever finished first.
     const aggregator = new Aggregator();
-    const logEvery = games <= 20 ? 1 : 10;
-    // Rotation reseats each policy through every seat on the SAME seed to cancel
-    // first-player advantage; without it, one game per base seed. A rotation that
-    // repeats a seating is the same game again, so only the distinct ones run.
-    const rotations = seats && rotate ? distinctRotations(seats.names) : [0];
-    if (rotate && rotations.length < PLAYER_IDS.length) {
-      console.log(
-        `--rotate: ${rotations.length} of ${PLAYER_IDS.length} seatings differ; each seed plays ${rotations.length === 1 ? "once" : `${rotations.length} games`}.`,
-      );
-    }
-
-    let gameIndex = 0;
-    for (let base = 0; base < games; base += 1) {
-      const seed = (baseSeed + base) >>> 0;
-
-      for (const r of rotations) {
-        const seatPolicies = seats ? rotateSeats(seats.policies, r) : undefined;
-        const seatNames = seats ? rotateSeats(seats.names, r) : undefined;
-        const currentGame = gameIndex;
-
-        const G = runGame({
-          seed,
-          mode,
-          patch: effectivePatch,
-          definition: resolved.definition,
-          opening,
-          boardLayout,
-          policy,
-          seatPolicies,
-          turns,
-          trimLogTo: 200,
-          hooks: {
-            onGameStart: (state) =>
-              aggregator.beginGame(
-                currentGame,
-                seed,
-                state,
-                seatNames ??
-                  (Object.fromEntries(PLAYER_IDS.map((id) => [id, policy.name])) as Record<
-                    PlayerId,
-                    string
-                  >),
-              ),
-            onMove: (state, player, move) => aggregator.onMove(state, player, move),
-            onTurnEnd: (state) => aggregator.onTurnEnd(state),
-            onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
-          },
-        });
-
-        aggregator.endGame(G);
-        gameIndex += 1;
-      }
-
-      if ((base + 1) % logEvery === 0) {
-        console.log(
-          `seed ${base + 1}/${games} done (${rotations.length > 1 ? `${rotations.length} rotations, ` : ""}seed ${seed})`,
-        );
-      }
-    }
+    aggregator.absorb(played);
 
     const report = aggregator.buildReport({
-      games: gameIndex,
+      games: queue.length,
       turns,
       policy: seats ? "mixed" : policy.name,
       mode,
@@ -846,6 +872,64 @@ function cmdBatch(flags: Flags) {
     }
 
     console.log("\n" + renderBatchReport(report));
+  };
+
+  /** Files a finished game. Workers finish seeds out of order, so the progress line
+   *  counts the seeds done and names the one that finished last. */
+  const finished = (game: BatchGame, data: BatchData) => {
+    played.push(data);
+
+    const base = Math.floor(game.index / rotations.length);
+    gamesLeft[base] -= 1;
+    if (gamesLeft[base] > 0) return;
+
+    seedsDone += 1;
+    if (seedsDone % logEvery === 0) {
+      console.log(
+        `seed ${seedsDone}/${games} done (${rotations.length > 1 ? `${rotations.length} rotations, ` : ""}seed ${game.seed})`,
+      );
+    }
+    if (seedsDone === games) writeReport();
+  };
+
+  const jobs = Math.min(asked, MAX_JOBS, queue.length);
+  if (asked > MAX_JOBS) {
+    console.log(`--jobs ${asked}: capped at ${MAX_JOBS}, this machine's cores less one.`);
+  }
+
+  if (jobs === 1) {
+    for (const game of queue) finished(game, play(game));
+    return;
+  }
+
+  console.log(`Playing ${queue.length} games on ${jobs} worker processes.`);
+  let next = 0;
+  const workers = Array.from({ length: jobs }, () =>
+    fork(fileURLToPath(import.meta.url), [...process.argv.slice(2), "--worker"], {
+      serialization: "advanced",
+    }),
+  );
+  // However the parent ends, no worker is left playing a game nobody will read.
+  process.on("exit", () => workers.forEach((worker) => worker.kill()));
+
+  for (const worker of workers) {
+    let game: BatchGame | undefined;
+
+    // The first message says the worker is ready; each later one is the data of the
+    // game it was sent. A free worker takes the next game, so a slow core plays fewer.
+    worker.on("message", (data) => {
+      if (game) finished(game, data as BatchData);
+      game = queue[next];
+      next += 1;
+      if (game) worker.send(game);
+      else worker.disconnect();
+    });
+
+    worker.on("exit", (code, signal) => {
+      if (code !== 0) {
+        fail(`A batch worker stopped early (${signal ?? `exit code ${code}`}); no report written.`);
+      }
+    });
   }
 }
 
@@ -885,6 +969,8 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              [--opening policy|random]
              [--ruleset-patch p.json] [--tune-preset low-number-core-v1] [--tune-patch p.json]
              [--seats ${POLICY_IDS}×4] [--rotate]
+             [--jobs N]                    worker processes to play the games on: 1 by default,
+                                           at most the cores less one (${MAX_JOBS} here); same report
              [--report r.json] [--csv t.csv]
   replay     --script s.json [--out save.json]
 

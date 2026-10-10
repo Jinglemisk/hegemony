@@ -13,7 +13,7 @@ import type { HegemonyState, PlayerId } from "../game/types";
 import { randomPolicy } from "./policies";
 import { runGame } from "./runner";
 import { Aggregator, percentiles, snapshotTurn, snapshotsToCsv } from "./telemetry";
-import type { BatchReport } from "./telemetry";
+import type { BatchData, BatchReport } from "./telemetry";
 
 const TEST_DEFINITION = createModeDefinition("standard").identity;
 
@@ -421,6 +421,55 @@ describe("Aggregator", () => {
     for (const line of lines) {
       expect(line.split(",")).toHaveLength(columns);
     }
+  });
+
+  it("builds the same report and CSV from games gathered apart, in whatever order they come", () => {
+    // Three full games. The seat names shift each game, as a rotated batch shifts them.
+    const names = Object.values(SEATS);
+    const observe = (aggregator: Aggregator, game: number) => {
+      const seed = 700 + game;
+      const seats = Object.fromEntries(
+        PLAYER_IDS.map((id, seat) => [id, names[(seat + game) % names.length]]),
+      ) as Record<PlayerId, string>;
+      const G = runGame({
+        seed,
+        mode: "standard",
+        policy: randomPolicy,
+        turns: 56,
+        hooks: {
+          onGameStart: (state) => aggregator.beginGame(game, seed, state, seats),
+          onMove: (state, player, move) => aggregator.onMove(state, player, move),
+          onTurnEnd: (state) => aggregator.onTurnEnd(state),
+          onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
+        },
+      });
+      aggregator.endGame(G);
+    };
+    const csv = (aggregator: Aggregator, report: BatchReport) =>
+      snapshotsToCsv(aggregator.allSnapshots(), report.perGame, aggregator.finalSnapshots());
+
+    const together = new Aggregator();
+    const apart: BatchData[] = [];
+    for (const game of [0, 1, 2]) {
+      observe(together, game);
+      // One Aggregator a game, as a worker process plays it. The clone stands for the
+      // trip back to the parent, and the last game comes back first.
+      const own = new Aggregator();
+      observe(own, game);
+      apart.unshift(structuredClone(own.data));
+    }
+    const merged = new Aggregator();
+    merged.absorb(apart);
+
+    const meta = { ...META, games: 3 };
+    const report = together.buildReport(meta);
+    const mergedReport = merged.buildReport(meta);
+
+    expect(report.perGame.map((row) => row.game)).toEqual([0, 1, 2]);
+    expect(mergedReport).toEqual(report);
+    // toEqual does not look at key order; the written file does.
+    expect(JSON.stringify(mergedReport)).toBe(JSON.stringify(report));
+    expect(csv(merged, mergedReport)).toBe(csv(together, report));
   });
 });
 
