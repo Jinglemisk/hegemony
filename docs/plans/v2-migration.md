@@ -930,7 +930,7 @@ proposed remedy for each failing rule; the owner decides.
       warns about it as it does at the riot line, and the Step 13 hunger card opens at
       turn end with a way back to buy food. Bots settle hunger at turn end in their
       projection. `rules.md` and the reference docs follow.
-- [ ] **Step 18 · Sim parity, the bugs.** From the
+- [x] **Step 18 · Sim parity, the bugs.** ([#100](https://github.com/Jinglemisk/hegemony/pull/100): a rotated 40-game batch finishes with no turn caps and no forced turns, 3 by the race and 37 by the deck; wins slaver 30%, civic 23%, trader 30%, master 18%, against Step 17's 33%, 20%, 15% and 33%; 19 of 37 deck games fall to the tiebreak, which the report now records; riots 2.4 a game, the table on 6.5% of turns from year 8; repeals filed rise from 125 to 227, since a leader's loss now counts in full; the trader loses 1.45 pops a seat-game to hunger while the forecast still buys no food; ui:audit shows 0 defects.) From the
       [sim parity audit](../reports/simulation/2026-10-10-v2-sim-parity-audit.md). The two
       rulings of 2026-10-10 in Settled inputs: pops on the move count, and no stock below
       zero. Every row the audit marks as a bug: the Assembly's double-counted gain, the food
