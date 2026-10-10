@@ -2,6 +2,7 @@ import {
   getActiveEffects,
   getBankBuyStatus,
   happinessContributions,
+  popsInTransit,
   unrestStatus,
 } from "../game/rules";
 import { playerDole } from "../game/ideaRules";
@@ -140,9 +141,10 @@ export type Census = {
   colonies: number;
 };
 
-/** A seat's public position: what anyone at the table can count on the board. */
+/** A seat's public position: what anyone at the table can count on the board. Pops
+ *  on the move are counted: they are still in the realm. */
 export function publicCensus(G: HegemonyState, playerID: PlayerId): Census {
-  const census: Census = { slaves: 0, freemen: 0, citizens: 0, cities: 0, colonies: 0 };
+  const census: Census = { ...popsInTransit(G, playerID), cities: 0, colonies: 0 };
 
   for (const tile of G.board.tiles) {
     for (const settlement of tile.settlements) {

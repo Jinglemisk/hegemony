@@ -401,9 +401,9 @@ export type BatchReport = {
    * the balance question the design flags as the most important A/B: is the sink
    * deep enough, and is anything actually passing?
    *
-   * `verbs` counting near zero means the bots are ignoring the agora entirely (which
-   * is expected until the influence-aware AI of Phase 3-C lands), and `lawsStanding`
-   * near zero means the sink exists but nothing it buys ever reaches the board.
+   * `verbs` counting near zero means the bots are ignoring the agora entirely, and
+   * `lawsStanding` near zero means the sink exists but nothing it buys ever reaches
+   * the board.
    */
   assembly: {
     perSeat: Record<PlayerId, { count: AssemblySeatTelemetry; perGame: AssemblySeatTelemetry }>;

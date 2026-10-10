@@ -21,6 +21,8 @@ import { buildNewGame } from "./setup";
  * the turn cap remains as a ceiling for truncated experiments.
  */
 
+/** Actions a seat may take before it ends its turn. What follows an accepted endTurn
+ *  (the hunger pick, riot insurance and the roll) is not counted. */
 export const MAX_ACTIONS_PER_TURN = 30;
 
 /**
@@ -85,7 +87,15 @@ export function playTurn(
 
   // While the agora is open the turn is really a bounded multi-seat sub-process, not one
   // seat's gameplay turn — give it room rather than force-ending (which is illegal mid-assembly).
-  for (let action = 0; action < (G.assembly ? MAX_ACTIONS_PER_ASSEMBLY : maxActions); action += 1) {
+  // The same room covers what follows an accepted endTurn: the hunger pick and the riot
+  // choices are the engine's and bounded, and the seat keeps them. A forced end is a
+  // turn that would not end by itself.
+  let ended = false;
+  for (
+    let action = 0;
+    action < (ended || G.assembly ? MAX_ACTIONS_PER_ASSEMBLY : maxActions);
+    action += 1
+  ) {
     const player = G.currentPlayer;
     const commands = enumerateLegalCommands(G, player);
 
@@ -104,6 +114,7 @@ export function playTurn(
     }
 
     G = result.state;
+    ended ||= command.type === "endTurn";
     hooks.onMove?.(G, player, command);
 
     if (G.phase === "gameOver" || G.turn !== startTurn) {

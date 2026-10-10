@@ -44,15 +44,21 @@ These are starting preferences. Step 11 measures whether each build can win.
 | Colony                |      3 |      4 |     3 |      3 |
 | Standing happiness    |      6 |      4 |     8 |      6 |
 | Influence             |      2 |      2 |     3 |    1.5 |
-| Active luxury         |     36 |     36 |    36 |     54 |
+| Claimed luxury        |      6 |      6 |     6 |      9 |
 | Standing authored Law |      8 |      4 |    16 |      4 |
 | Frontier              |      2 |      2 |     2 |      2 |
 
 Population, city and colony weights are multiplied by 10. Projected materials
 and latent work are multiplied by 10/8. Influence, happiness, luxury and Law
 weights apply directly; every held victory card is worth 120 for all personalities.
-An inactive owned luxury keeps half its weight. The standing-level cap is the
+Pops on the move count in the population sum. The standing-level cap is the
 Beloved minimum plus two. Unrest and hunger costs stay shared.
+
+A claimed good's +2 is priced by the level weight, point for point with a Temple.
+The luxury weight is what comes on top: 6 a good, so a good is worth 18 where two
+Temples are worth 12. It pays for what the level term cannot see: a good keeps
+its worth past the level cap, where Beloved is decided, and a good claimed is one
+no rival can claim. The weight was 36 until Step 18, sized against v1's Port price.
 
 The slaver values slaves, Estates' real production, yielding slots and expansion.
 The civic values citizens, Forums' influence, Temples and standing Laws toward
@@ -87,9 +93,11 @@ applies only to a seat that has not collected; later incomes use printed values.
 The projection checks the current turn end, with calm and the current year card
 still active, even when no future incomes remain. Every projected turn end, the current
 one included, settles engine hunger first (one pop per missing food, freemen first), so a
-bot sees a shortfall in its own turn and can buy food. It runs deterministic revolts,
-clears tokens after a projected riot, and recalculates income after pop losses or
-the year's card expires. Otherwise it reuses income through the horizon; stocks and tokens do
+bot sees a shortfall in its own turn and can buy food. Pops on the move arrive before
+the first forecast income. Until then the current check reads them as the engine does:
+their slaves count for the level and hunger cannot take them. It runs deterministic
+revolts, clears tokens after a projected riot, and recalculates income after pop losses
+or the year's card expires. Otherwise it reuses income through the horizon; stocks and tokens do
 not change printed yields. It assumes no future card or token changes.
 Influence uses projected income too, so a Forum pays back
 through its actual citizen column; Civic Tradition needs no duplicate future bonus.
@@ -100,11 +108,13 @@ unchanged draft aliases before hashing. These caches remove repeated work from
 candidate transitions and Assembly forecasts without changing rules or saved state.
 
 A projected lost pop costs 60, above every personality's population weight.
-For a realm with food consumption and another income remaining, reserve food
-for one forecast shortfall plus two against the player deck's food loss. Each
-unit missing from that target costs 14. This makes unit buys and Dole purchases
-useful before a whole shortage is covered, and discourages selling or spending
-the last food. The horizon can justify a larger reserve. There is no hard-coded trade order.
+There is no food reserve. Hunger is settled at turn end, so a seat that income
+leaves short buys food on that turn at the same price: food held ahead of the
+shortfall buys no safety. Each food a seat is short of now costs 14, which gives
+a single bank or Dole purchase its value before the whole shortfall is covered.
+The forecast alone gives none: it does not buy food, so a pop fed this turn
+starves in a later forecast year and the count is the same. Step 19 makes the
+forecast buy food. There is no hard-coded trade order.
 Latent slave slots count only where population room remains, including transfers
 already committed to that settlement.
 
@@ -122,6 +132,15 @@ When it ends a turn short of food, a bot weighs each legal split of the loss
 between freemen and citizens (each pop from the settlement holding the most) with
 its scorer. Ties keep the freemen-first default, which enumeration lists first.
 
+## The last citizen
+
+No bot gives up its last citizen while it has another choice. Search does not
+weigh the demotion of a realm's only citizen, nor a hunger split that takes every
+citizen. The scorer prices a citizen by its pop weight and influence income and
+not by its vote, so the trader, which weights a freeman higher, demoted its setup
+citizen in 39 of 40 games and then played without influence, a second Idea or a
+second vote. A value for the vote is Step 19's.
+
 ## Setup, Ideas and the Assembly
 
 Policy openings use each seat's own personality for placements and its pick in
@@ -132,17 +151,26 @@ neutral placement/Idea scorer. Ordinary purchases enter the seat's normal search
 Immediate grants and permanent income use real transitions/projections. Future
 pieces, founding grants, upgrade grants, Dole savings and extra votes use the
 Step 9 opportunity estimates, scaled by the relevant personality weights. Future
-slave grants also pay their standing-level cost.
+slave grants also pay their standing-level cost, tripled under Manumission.
+Frontier Charter reads the colony limit Master Builders leaves. City Pioneers
+counts only colonies the engine would let upgrade: none beside a city. Public
+Dole's saving is one Dole a year for each of the realm's first two mouths,
+whatever its food income, so a holder is never paid for being short.
+
+Placement adds 6 for a colony that could still be upgraded, scaled by the city
+weight. A founding colony beside a city can never become one, so between
+comparable sites the open coast wins.
 
 All non-random policies use one Assembly handler. It scores real enactments and
 repeals, draws against unordered public composition, supports modest private
 costs to form coalitions, blocks a rival's winning title, and buys only affordable
 pivotal votes. The acting personality weights both its own and rival score changes;
 coalition prediction assumes that same public scoring lens for uncast votes.
-A ballot item is worth the seat's own gain minus the best rival gain, plus any loss
-it inflicts on the leading rival beyond the seat's own. Without that last term a
-Directive was worth only its prize, since an untouched rival's zero gain hid the
-target's loss, and no bot drew from Stratokles even to stop a winning Voice.
+A ballot item is worth the seat's own gain minus the best rival gain, plus what
+the leading rival loses. Without that last term a Directive was worth only its
+prize, since an untouched rival's zero gain hid the target's loss, and no bot drew
+from Stratokles even to stop a winning Voice. An untouched leader adds nothing, so
+the seat's own gain counts once.
 Mixed tables route every Assembly action to its actual seat, including when a
 sitting spans one opener's player-turn.
 

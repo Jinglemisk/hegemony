@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { collectIncome } from "./actions";
 import { applyResourceDeltaWithFloors, canAfford } from "./core/resources";
+import { calculateIncome } from "./economy/income";
 import { getPlayerEventCards } from "./content";
 import { resolvePendingPlayerEvent } from "./events";
 import { rollOnTable } from "./tables";
@@ -27,6 +28,24 @@ describe("configured stockpile floors", () => {
     expect(G.log.find((entry) => entry.message.includes("collected income"))?.message).toContain(
       "-5 food",
     );
+  });
+
+  it("holds every other stock at zero: Civic Pride takes no gold a seat does not have", () => {
+    const builder = scenario();
+    const G = builder.build();
+    builder
+      .withSettlement("0", materialTile(G).id, "capital", { citizens: 0, freemen: 0, slaves: 0 })
+      .withResources("0", { gold: 0 })
+      .mutate((state) => {
+        state.phase = "gameplay";
+        state.currentPlayer = "0";
+        state.pendingPlayerEvent = null;
+        state.activeLaws.push({ cardId: "civic-pride", author: "1", enactedYear: 1, order: 0 });
+      });
+
+    expect(calculateIncome(G, "0").gold).toBe(-1);
+    expect(collectIncome(G, "0").ok).toBe(true);
+    expect(G.players["0"].resources.gold).toBe(0);
   });
 
   it("uses the same floor for event losses and reports the applied amount", () => {

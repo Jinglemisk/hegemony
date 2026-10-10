@@ -258,9 +258,7 @@ export function describeRemoval(summary: RemovalSummary): string {
 }
 
 /** Burn one random owned building (seeded). Returns its display name, or null if the
- *  player owns none. Because a settlement's `buildings` are copies (levels), splicing
- *  one out already IS the downgrade — a level-3 Granary drops to level 2 rather than
- *  vanishing, only the last copy is truly destroyed (Phase 2 level model). */
+ *  player owns none. A settlement holds one of each building, so the one burned is gone. */
 function destroyRandomBuilding(G: HegemonyState, playerID: PlayerId): string | null {
   const owned: Array<{ settlement: Settlement; index: number }> = [];
 

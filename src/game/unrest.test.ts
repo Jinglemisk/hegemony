@@ -8,14 +8,19 @@ import {
   getEventPopTargetTileIds,
   happinessContributions,
   happinessLevel,
+  movePops,
   resolvePendingPlayerEvent,
   standingHappiness,
   totalPops,
   turnEndUnrest,
+  unfedAtTurnEnd,
   unrestStatus,
 } from "./rules";
+import { baseVoteWeight } from "./assembly";
 import { PLAYER_EVENT_CARDS } from "./data";
-import { createGame } from "./turn";
+import { resolveHunger } from "./hunger";
+import { createGame, endTurn } from "./turn";
+import { victoryMetricValue } from "./victory";
 import type { HegemonyState, PlayerId, Pops, Settlement } from "./types";
 
 // Opt into the scripted 4-player two-city opening (dev preload, off by default), so
@@ -152,6 +157,80 @@ describe("turn-end unrest", () => {
       tokensCleared: 2,
       level: happinessLevel(G, "0"),
     });
+  });
+});
+
+describe("pops on the move", () => {
+  it("still count for the level: moving a slave off the riot line avoids nothing", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 5 }, { citizens: 0, freemen: 0, slaves: 1 });
+    G.pendingPlayerEvent = null;
+    G.players["0"].resources.food = 10;
+    const [capital, colony] = ownedSettlements(G, "0");
+
+    expect(happinessLevel(G, "0")).toBe(-3);
+    expect(movePops(G, "0", capital.tileId, colony.tileId, { ...NONE, slaves: 1 }).ok).toBe(true);
+
+    // Five stand and one is on the road: the realm still holds six.
+    expect(capital.pops.slaves + colony.pops.slaves).toBe(5);
+    expect(happinessContributions(G, "0").find((term) => term.id === "slaves")).toEqual({
+      id: "slaves",
+      amount: -3,
+      detail: "6 slaves (1 on the move)",
+    });
+    expect(endTurn(G).ok).toBe(true);
+    expect(G.pendingRiot).toMatchObject({ playerID: "0" });
+  });
+
+  it("still count for the titles and the vote, but hunger cannot take them", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 2, freemen: 1, slaves: 0 }, NONE);
+    G.pendingPlayerEvent = null;
+    G.players["0"].resources.food = 10;
+    const [capital, colony] = ownedSettlements(G, "0");
+    const before = {
+      pops: victoryMetricValue(G, "0", "pops"),
+      citizens: victoryMetricValue(G, "0", "citizens"),
+      votes: baseVoteWeight(G, "0"),
+    };
+
+    expect(movePops(G, "0", capital.tileId, colony.tileId, { ...NONE, citizens: 1 }).ok).toBe(true);
+    expect({
+      pops: victoryMetricValue(G, "0", "pops"),
+      citizens: victoryMetricValue(G, "0", "citizens"),
+      votes: baseVoteWeight(G, "0"),
+    }).toEqual(before);
+
+    // Three food short with two mouths standing: two leave, and the turn can end.
+    G.players["0"].resources.food = -3;
+    expect(unfedAtTurnEnd(G, "0")).toBe(2);
+    expect(endTurn(G).ok).toBe(true);
+    expect(
+      resolveHunger(G, "0", [
+        { tileId: capital.tileId, pop: "freemen" },
+        { tileId: capital.tileId, pop: "citizens" },
+      ]).ok,
+    ).toBe(true);
+    expect(G.currentPlayer).toBe("1");
+  });
+
+  it("count toward a revolt's half, which is taken from the settlements", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 12 }, NONE);
+    G.pendingPlayerEvent = null;
+    G.players["0"].resources.food = 10;
+    const [capital, colony] = ownedSettlements(G, "0");
+    expect(movePops(G, "0", capital.tileId, colony.tileId, { ...NONE, slaves: 1 }).ok).toBe(true);
+
+    // Twelve slaves, one of them on the road: six leave the eleven that stand.
+    expect(turnEndUnrest(structuredClone(G), "0")).toMatchObject({
+      outcome: "revolt",
+      slaves: 12,
+      leaving: 6,
+    });
+    applyUnrestAtTurnEnd(G, "0");
+    expect(capital.pops.slaves).toBe(5);
+    expect(G.transfers).toHaveLength(1);
   });
 });
 

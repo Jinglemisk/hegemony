@@ -1,6 +1,15 @@
 import { isDraft, original } from "immer";
 import { PLAYER_IDS } from "../data";
-import type { HegemonyState, HexTile, LogMoment, PlayerId, Settlement, YearTerm } from "../types";
+import type {
+  HegemonyState,
+  HexTile,
+  LogMoment,
+  PlayerId,
+  Pops,
+  Settlement,
+  YearTerm,
+} from "../types";
+import { addPops } from "./pops";
 
 const tilePositions = new WeakMap<HexTile[], Map<string, number>>();
 
@@ -25,6 +34,30 @@ export function getOwnedSettlement(G: HegemonyState, tileId: string, playerID: P
   const tile = getTile(G, tileId);
 
   return tile?.settlements.find((settlement) => settlement.owner === playerID);
+}
+
+/** A realm's pops on the move, by class. They arrive at the start of its next turn. */
+export function popsInTransit(G: HegemonyState, playerID: PlayerId): Pops {
+  const pops: Pops = { citizens: 0, freemen: 0, slaves: 0 };
+  for (const transfer of G.transfers) {
+    if (transfer.owner === playerID) addPops(pops, transfer.pops);
+  }
+  return pops;
+}
+
+/**
+ * A realm's pops by class: those standing in its settlements and those on the move.
+ * A pop in transit is still in its realm (owner ruling, 2026-10-10), so happiness, the
+ * titles and the vote all count it. Only a pop standing in a settlement can be taken:
+ * hunger, riots and revolts never reach one on the move.
+ */
+export function realmPops(G: HegemonyState, playerID: PlayerId): Pops {
+  const pops = popsInTransit(G, playerID);
+  for (const tileId of G.players[playerID].settlements) {
+    const settlement = getOwnedSettlement(G, tileId, playerID);
+    if (settlement) addPops(pops, settlement.pops);
+  }
+  return pops;
 }
 
 /** Resolve a persistent settlement reference without assuming its board-array position. */

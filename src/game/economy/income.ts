@@ -354,7 +354,9 @@ export function calculateIncomeBreakdown(
 /** Pops that leave if `playerID` ended the turn now: one per missing food. */
 export function unfedAtTurnEnd(G: HegemonyState, playerID: PlayerId): number {
   // Only free pops eat, so only they can go unfed; a shortfall deeper than their
-  // number (a Law taking food) still ends at zero food.
+  // number (a Law taking food) still ends at zero food. A pop on the move is not
+  // counted: the hunger pick takes pops from settlements, so counting one would ask
+  // for a pick the seat cannot make.
   const mouths = (["freemen", "citizens"] as const).reduce(
     (sum, pop) =>
       sum +

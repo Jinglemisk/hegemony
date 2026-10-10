@@ -90,8 +90,7 @@ export function getPromotePopStatus(
 ): ActionStatus {
   const settlement = getOwnedSettlement(G, tileId, playerID);
   const baseCost = G.ruleset.ladder.promoteCosts[from as "slaves" | "freemen"] ?? {};
-  // The Assembly's standing Laws reprice it: Grain Dole cheapens every promotion,
-  // Manumission Law only the slave's.
+  // The Assembly's standing Laws reprice it: Manumission makes a slave's promotion free.
   const cost = applyLawActionCost(G, playerID, "promotePop", { ...baseCost }, { pop: from });
   const reasons: string[] = [];
 

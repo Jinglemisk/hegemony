@@ -295,8 +295,9 @@ const resources: RuleChapter = {
         <Note>
           Four are drawn from land and pops: wood, stone, food and gold. The fifth, influence, is
           civic weight. Gold is the unit the bank trades in; it comes from pops, trade and events,
-          never from a tile. Happiness is not a stock: it is a level read off the board (see
-          Happiness &amp; Unrest).
+          never from a tile. No stock goes below zero, except food during your own turn: a charge
+          takes what you hold and no more. Happiness is not a stock: it is a level read off the
+          board (see Happiness &amp; Unrest).
         </Note>
         <DefList>
           {RESOURCE_ORDER.map((resource) => (
@@ -548,7 +549,9 @@ const ladder: RuleChapter = {
           <Note>
             One move per turn carries pops between two of your settlements for{" "}
             <AnnotatedText text={formatResourceCost(G.ruleset.movePopCost)} /> a pop. The target
-            must have room, and they arrive at the start of your next turn.
+            must have room, and they arrive at the start of your next turn. Pops on the move are
+            still in your realm: their slaves count against your happiness, and all of them count
+            for your titles and your votes.
           </Note>
         </Entry>
       </div>

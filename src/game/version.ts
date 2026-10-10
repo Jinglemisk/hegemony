@@ -29,7 +29,10 @@ export const ENGINE_VERSION = "0.1.0";
 /** v11 (Step 17): hunger is settled at turn end, and food may be below zero during
  *  its owner's turn. A v10 save can hold a hunger pick taken at income, so older
  *  saves are rejected. Commands are unchanged. */
-export const STATE_SCHEMA_VERSION = 11;
+/** v12 (Step 18): pops on the move count for happiness, the titles and the vote, and
+ *  no stock but food goes below zero. A v11 recording replays differently, so older
+ *  saves are rejected. Commands are unchanged. */
+export const STATE_SCHEMA_VERSION = 12;
 export const COMMAND_SCHEMA_VERSION = 6;
 
 export const SAVE_FORMAT_VERSION = 2;

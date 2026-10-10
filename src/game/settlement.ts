@@ -239,6 +239,9 @@ export function playerHasMovablePop(G: HegemonyState, playerID: PlayerId) {
   });
 }
 
+/** Pops of one class standing in the player's settlements: the ones hunger, a riot or
+ *  a revolt can take. Rules that count the realm use `realmPops`, which adds those on
+ *  the move. */
 export function countPlayerPopType(G: HegemonyState, playerID: PlayerId, pop: PopType) {
   return G.players[playerID].settlements.reduce((count, tileId) => {
     const settlement = getOwnedSettlement(G, tileId, playerID);

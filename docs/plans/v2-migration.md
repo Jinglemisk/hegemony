@@ -716,6 +716,65 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - Gate queries: `?dev=hunger` (the card at End turn) and `?dev=hunger-short` (the turn, two
   short). `?dev=hunger-ahead` is gone.
 
+**Defaults picked in Step 18** (2026-10-10):
+
+- Pops on the move are counted in five places: the level's slave term, with
+  Manumission's line beside it; Demos and Civic Elite; the base vote; the top bar's
+  census; and a revolt's half. One selector (`realmPops`) gives the count.
+- They are not counted where a pop must be taken or must stand somewhere. Hunger counts
+  and takes only pops standing in a settlement, so a pick can always be made. A riot,
+  a revolt and The Mob Rises take pops from settlements only. Income needs no change:
+  pops arrive before their owner's next income.
+- A revolt's half counts slaves on the move, and those who leave are taken from the
+  settlements. Counted the old way, moving slaves out before a revolt cut the loss.
+- The realm panel's own counts (people, heads against room, the ladder's tiers) still
+  show pops standing in settlements. The happiness line names the rest: "6 slaves (1 on
+  the move)". The sim's roster count (`playerStandings`) is also unchanged, with pops
+  in transit in their own column.
+- Wood, stone, gold and influence stop at 0 in the base ruleset, as food does outside
+  income. Civic Pride's card text stays as printed; `rules.md` says the charge takes
+  what the realm holds. The Low Numbers preset keeps its own floors line, now the same
+  as the base.
+- State schema 12 rejects older saves and scripts: both rulings change how a recorded
+  game replays. The command schema stays 6.
+- A ballot item is worth the seat's own gain, minus the best rival gain, plus the
+  leading rival's loss. The thresholds (repeal 12, bought vote 8, tolerance 12) are
+  unchanged.
+- The food reserve is gone: nothing is held against the next income. One term stays in
+  its place, 14 for each food the seat is short of now. With no term at all a seat
+  with 100 gold and 7 food short bought nothing and lost 7 pops: the forecast does not
+  buy food, so feeding a pop this turn only moves its loss to a later forecast year.
+  Step 19's forecast should make the term unnecessary.
+- The forecast delivers a seat's pops on the move with the engine's own arrival rule,
+  before its first forecast income. The scorers count them in the population sum.
+- Public Dole's saving is priced at one Dole a year for each of the realm's first two
+  mouths, whatever its food income. Two is what the opening's deficit gave the old term,
+  so draft values stay at civic 36, master 24, trader 18; a realm with one mouth gets
+  half.
+- City Pioneers counts only colonies that do not stand beside a city. Placement adds 6
+  (times the city weight over the default's) for such a colony, the size of a good
+  frontier tile. Over the audit's 40 setups founding colonies beside a city fall from 76
+  to 50. About 22 of those are cut before scoring by the top-three shortlist, which
+  ranks tiles on the one-freeman, one-slave split; the shortlist is unchanged.
+- The luxury weight is 6, and 9 for the trader (was 36 and 54). A good's +2 already
+  counts in the level term at 6 a point, so a good is worth 18 against two Temples' 12:
+  a point of luxury happiness costs 1.5 Temple points, down from 4. The 6 that stays
+  pays for what the level term cannot see: a good keeps its worth past the level cap,
+  where Beloved is decided, and a good claimed is one no rival can claim. It also
+  offsets the frontier pull a claim gives up. At level 0 or above a Port is now close
+  to break-even, and it is still raised below 0, where the riot buffer pays for it.
+- Land Reform's food on hills counts in both frontier terms. Future slave grants read
+  Manumission's triple count. Frontier Charter reads the colony limit Master Builders
+  leaves.
+- The 30-action limit counts a seat's actions up to its accepted `endTurn`. After it
+  the loop keeps the Assembly's guard of 500.
+- No bot sheds its last citizen while another choice remains: search leaves out the
+  demotion of a realm's only citizen and any hunger split that takes every citizen. It
+  is a rule in the search for every policy but `random`, not a value in the scorer.
+- The projection's `mildRiotEvents`, `severeRiotEvents` and `mildRiotPenalty` are now
+  `riotEvents`, `revoltEvents` and `riotPenalty`. Two stale rows name lines in the
+  2026-10-04 reach audit; reports are not edited, so they stand.
+
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory
 danger selector and the real-path previews, with their tests.
@@ -746,7 +805,7 @@ selectors, so a rule change updates one selector, not three views.
 - Actors: the Assembly stays multi-seat and meets every other year.
 - Projections: the rival tooltip reads only the public projection.
 - Invariants: pieces are conserved (four colonies and three cities per player), happiness
-  is derived and never stored, and food never goes negative.
+  is derived and never stored, and no stock goes below zero but food during its owner's turn.
 - The year deck replaces seasons and the omen as the clock.
 
 ## Steps

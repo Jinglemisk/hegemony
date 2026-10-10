@@ -123,7 +123,7 @@ export interface UnrestRules {
   revoltThreshold: number;
 }
 
-/** The victory race (roadmap-appendix D1): five public "Most X, minimum Y" cards; the
+/** The victory race (roadmap-appendix D1): six public "Most X, minimum Y" cards; the
  *  sole leader above the minimum holds a card, and holding `cardsToWin` at the start of
  *  your own turn wins the game. Minimums are the game-length dial. */
 export interface VictoryRules {
@@ -149,7 +149,7 @@ export interface PlacementRules {
 /** Assembly cadence, prices and prizes. */
 export interface AssemblyRules {
   /** Assemblies convene as a year opens, from this year. **0 disables the subsystem**,
-   *  which is how the headless sim and the pre-Assembly fixtures keep running. */
+   *  which a fixture can use to play on without a sitting. */
   firstYear: number;
   /** Years from one sitting to the next: 2 is every other year. */
   everyYears: number;
@@ -254,9 +254,10 @@ export const DEFAULT_RULESET: Ruleset = {
       abundant: { sell: 4, buy: 2 },
       scarce: { sell: 2, buy: 3 },
     },
-    // Food never goes negative: hunger takes pops at income, and table and event
-    // losses stop at an empty granary.
-    stockpileFloors: { food: 0 },
+    // No stock goes below zero: a charge takes what the seat holds and no more. Food
+    // is the one exception. Income may take it below zero during its owner's turn
+    // (core/resources `applyIncome`), and turn end settles the shortfall as hunger.
+    stockpileFloors: { food: 0, wood: 0, stone: 0, gold: 0, influence: 0 },
     luxury: {
       coastalGoods: 6,
       randomPlacement: false,

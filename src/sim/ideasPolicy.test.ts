@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { scenario } from "../game/testing/scenario";
 import { enumerateLegalCommands } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
-import { chooseIdea, masterPolicy } from "./policies";
+import type { NationalIdeaId } from "../game/ideaTypes";
+import { chooseIdea, evaluatePlacement, masterPolicy, PERSONALITY_WEIGHTS } from "./policies";
 import { createSimRng } from "./rng";
 import { Aggregator } from "./telemetry";
 
@@ -30,6 +31,91 @@ describe("scores setup Ideas and in-play purchases", () => {
     // The full colony receives no immediate grant. Six future slaves were worth
     // 36 gross points, but lose three levels (18 points); Civic is worth 24.
     expect(chooseIdea(G, choices, createSimRng(1))).toEqual(choices[1]);
+  });
+  it("triples that cost under Manumission", () => {
+    // Four goods put the level two above the cap, so six future slaves cost one
+    // counted point: 36 − 6 beats Civic's 24. Tripled they cost seven, and lose.
+    const build = () => {
+      const G = scenario()
+        .withSettlement("0", "-2,0", "city", { citizens: 1, slaves: 0, freemen: 0 })
+        .withSettlement("0", "-1,0", "colony", { citizens: 0, slaves: 0, freemen: 4 })
+        .withResources("0", { food: 80, influence: 6 })
+        .build();
+      G.phase = "setupIdeas";
+      for (const good of G.board.luxuries.slice(0, 4)) good.owner = "0";
+      return G;
+    };
+    const choices = [
+      { type: "pickIdea" as const, ideaId: "slave-colonies" as const },
+      { type: "pickIdea" as const, ideaId: "civic-tradition" as const },
+    ];
+    expect(chooseIdea(build(), choices, createSimRng(1))).toEqual(choices[0]);
+    const manumission = build();
+    manumission.activeLaws.push({ cardId: "manumission", author: "1", enactedYear: 1, order: 0 });
+    expect(chooseIdea(manumission, choices, createSimRng(1))).toEqual(choices[1]);
+  });
+  it("prices Frontier Charter against the colony limit Master Builders leaves", () => {
+    // Two colonies stand. Master Builders cuts the limit to three, so the extra piece
+    // is already one colony from mattering: 30 beats Civic's 24.
+    const build = () => {
+      const G = scenario()
+        .withSettlement("0", "-2,0", "city", { citizens: 1, slaves: 0, freemen: 0 })
+        .withSettlement("0", "-1,0", "colony", { citizens: 0, slaves: 1, freemen: 0 })
+        .withSettlement("0", "-2,1", "colony", { citizens: 0, slaves: 1, freemen: 0 })
+        .withResources("0", { food: 80, influence: 6 })
+        .build();
+      G.phase = "setupIdeas";
+      return G;
+    };
+    const choices = [
+      { type: "pickIdea" as const, ideaId: "frontier-charter" as const },
+      { type: "pickIdea" as const, ideaId: "civic-tradition" as const },
+    ];
+    expect(chooseIdea(build(), choices, createSimRng(1))).toEqual(choices[1]);
+    const cut = build();
+    cut.activeLaws.push({ cardId: "master-builders", author: "1", enactedYear: 1, order: 0 });
+    expect(chooseIdea(cut, choices, createSimRng(1))).toEqual(choices[0]);
+  });
+  it("credits City Pioneers only for a colony the engine would let upgrade", () => {
+    // The trader's 24 for one upgrade beats Civic Tradition's 18. A colony beside
+    // the capital can never be upgraded, so there the Idea is worth nothing.
+    const pick = (colonyTile: string) => {
+      const G = scenario()
+        .withSettlement("0", "-2,0", "capital", { citizens: 1, slaves: 0, freemen: 0 })
+        .withSettlement("0", colonyTile, "colony", { citizens: 0, slaves: 2, freemen: 0 })
+        .withResources("0", { food: 80, influence: 6 })
+        .build();
+      G.phase = "setupIdeas";
+      const choices = [
+        { type: "pickIdea" as const, ideaId: "city-pioneers" as const },
+        { type: "pickIdea" as const, ideaId: "civic-tradition" as const },
+      ];
+      return chooseIdea(G, choices, createSimRng(1), PERSONALITY_WEIGHTS.trader);
+    };
+    expect(pick("0,-3")).toMatchObject({ ideaId: "city-pioneers" });
+    expect(pick("-2,1")).toMatchObject({ ideaId: "civic-tradition" });
+  });
+  it("does not pay a Public Dole holder for a food deficit", () => {
+    // Three mouths and no food grown, with food banked past the horizon. Good
+    // Harvest's two food a year must be worth as much to the Dole's holder as to
+    // a seat without it.
+    const score = (held: NationalIdeaId[]) => {
+      const G = scenario()
+        .withSettlement("0", "-2,0", "city", { citizens: 1, slaves: 0, freemen: 2 })
+        .withResources("0", { food: 80, influence: 6 })
+        .build();
+      G.phase = "gameplay";
+      G.players["0"].collectedThisTurn = true;
+      G.activeYearCard = null;
+      G.players["0"].nationalIdeas = held.map((id) => ({ id, acquired: "setup", year: 1 }));
+      return evaluatePlacement(G, "0");
+    };
+    const toHolder = score(["public-dole", "good-harvest"]) - score(["public-dole"]);
+    const toOther = score(["good-harvest"]) - score([]);
+    expect(toOther).toBeGreaterThan(0);
+    expect(toHolder).toBeCloseTo(toOther);
+    // The Idea still has a value of its own: two Doles a year, one influence saved each.
+    expect(score(["public-dole"]) - score([])).toBe(24);
   });
   it("still picks colony slaves when their immediate food prevents starvation", () => {
     const G = scenario()

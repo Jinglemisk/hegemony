@@ -128,8 +128,8 @@ Works from any phase — bots will finish a manual setup too. Policies:
   worth far more than a slave), materials by role, and each open work slot as the slave
   who could work it. So it climbs the social ladder, raises the class buildings, and
   keeps plains slots for the slaves that feed it. Bank and Dole moves enter search;
-  a food-reserve term makes individual purchases useful before they cover a deficit.
-  Deterministic.
+  each food the seat is short of now has a price, so it buys what it lacks and
+  holds none ahead. Deterministic.
 - `beam` — a within-turn **beam search** over the same `smart` score, so it values the
   within-turn sequences one-ply misses (build-then-promote and bank chains). It does
   not search through `endTurn`, so the six-turn income projection is state evaluation,
@@ -158,7 +158,8 @@ Works from any phase — bots will finish a manual setup too. Policies:
   economic moves and Assembly choices. See the [weight table](ai.md).
 
 The economic policies project up to six remaining incomes one step at a time through the
-canonical active-effect descriptors. Each step burns suppressed
+canonical active-effect descriptors. Pops on the move arrive before the first of them.
+Each step burns suppressed
 collections, settles hunger at the projected turn end, and recalculates authoritative
 income after projected pop loss. Hunger draws no dice: the projection applies the engine's freemen-first default
 (freemen before citizens, from the fullest settlement), the same choice the hunger
@@ -207,8 +208,9 @@ node docs/reference/design/shell-v2/gates.mjs http://127.0.0.1:5199 --query '?de
 Look for forty finishes by the title race or Year-14 deck end, no action caps or
 illegal commands, four setup picks per game, and at most one Idea purchase per seat.
 In `perPolicy`, compare wins, all six final titles and final-card distributions.
-Check that slaves/Estates, citizens/Forums/Laws and freemen/Marketplaces/Ports
-appear in their builds, that bank moves fund useful actions, and that hunger falls
+Check whether slaves/Estates, citizens/Forums/Laws and freemen/Marketplaces/Ports
+appear in their builds (the trader raised 12 Marketplaces in the 40 games of Step 17's
+batch), that bank moves fund useful actions, and that hunger falls
 when a seat can pay for food. Venture counts need not be even: bots now choose
 expected value, rather than cycling tables. Under the owner ruling of 2026-10-03,
 calm covers the buyer's current turn-end check and still cannot take Beloved.
@@ -299,7 +301,9 @@ The report contains:
   game, pops lost to hunger per game, mean idle slaves and their share of all slaves.
   The CSV carries `slaves`, `idleSlaves` and the running `popsLostToHunger` per row
 - `terminations` — how games ended (the winRate denominator context)
-- `forced` — action-cap hits / forced resolutions / forced end-turns (previously hidden)
+- `forced` — action-cap hits / forced resolutions / forced end-turns (previously hidden).
+  The cap counts a seat's actions up to its `endTurn`; the hunger pick and riot choices
+  that follow are the seat's own and are not counted
 - `winsByPolicy` — wins credited to each policy over finished games, including
   uniform CLI batches
 - `movesByType` — zero-filled total and per-game counts for every typed legal move;

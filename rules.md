@@ -5,7 +5,7 @@ city-state into the dominant power of an island. You gather resources, grow your
 people, found colonies, upgrade them into cities, and raise buildings to
 out-produce your rivals.
 
-> This guide covers v2 through Step 10.
+> This guide covers v2 through Step 18.
 
 ---
 
@@ -45,6 +45,10 @@ You keep track of five resources:
 - **Influence** — a political currency earned by your citizens. It stabilizes the
   province (civic calm), pays for demotions on the social ladder, buys food through
   the Dole, buys riot insurance, and funds Assembly draws, repeals and bought votes.
+
+**No stock goes below zero.** A charge or a loss takes what you hold and no more.
+Food is the one exception: income may take it below zero during your own turn (see
+Happiness and food).
 
 Happiness is not a resource. It is a **level** you read off the board each turn (see
 Happiness and food): Temples and luxuries raise it, slaves and Unrest tokens lower it.
@@ -96,7 +100,8 @@ income. One-shot grants work on the later purchase too.
 Every settlement is populated by three kinds of pop. One pop, one output:
 
 - **Slave** — makes 1 of the tile's resource when it holds an open slot, and eats
-  nothing. Every two slaves in your realm, working or idle, take 1 from your happiness.
+  nothing. Every two slaves in your realm, working, idle or on the move, take 1 from
+  your happiness.
 - **Freeman** — makes 1 gold, and eats 1 food.
 - **Citizen** — makes 1 influence, holds a vote in the Assembly, and eats 1 food.
 
@@ -141,7 +146,9 @@ come back the other way, so whoever picked last picks first in the second round:
 Then the game begins. Your metropolis is your only city at the start — your seat of
 building and population; it carries no special bonuses, only its head start. The
 founding colony is your second pole, waiting to be grown or upgraded into your
-first daughter city. (Some modes change the opening — _deathmatch_ places three
+first daughter city. Cities may never stand side by side, so a colony beside any
+city, your metropolis included, can never be upgraded: only one founded on the open
+coast can become a city. (Some modes change the opening — _deathmatch_ places three
 colonies.)
 
 By default the island uses the classic authored layout; start the game with
@@ -165,7 +172,8 @@ before income. On your turn:
      **or lie on the coast, if you already hold any coastal settlement**: the sea
      connects every shore, so a coastal power may sail to found colonies anywhere
      along the rim.
-   - **Upgrade a colony into a city** — 3 wood, 3 stone and a city piece. The city
+   - **Upgrade a colony into a city** — 3 wood, 3 stone and a city piece. The
+     colony must not stand beside a city: cities are never adjacent. The city
      keeps the colony's pops and buildings, drives off any enemy colony sharing
      that tile, and hands the colony piece back.
    - **Grow a pop** — add one pop to a settlement that still has room: a slave
@@ -173,7 +181,9 @@ before income. On your turn:
      can grow once per turn.
    - **Move pops** (one move per turn) — shift pops between your own settlements
      for **1 food a pop**. The target must have room, and they arrive at the start
-     of your next turn.
+     of your next turn. **Pops on the move are still in your realm**: their slaves
+     count against your happiness, and all of them count for Demos, Civic Elite and
+     your votes. The same holds for the pop sent to found a colony.
    - **Build** — raise a building in a city or capital that has a free slot.
    - **Trade at the bank** — sell materials for gold or buy them with gold, as
      often as you like (see The bank).
@@ -281,7 +291,8 @@ and if the board does not change, neither does the level. A level of −3 this t
 
 - **+1** for every **Temple**.
 - **+2** for every **luxury good** you hold.
-- **−1** for every **two slaves** in your realm; an odd slave costs nothing.
+- **−1** for every **two slaves** in your realm, those on the move included; an odd
+  slave costs nothing.
 - **−1** for every **Unrest token** on your realm.
 - **+2** if you bought **civic calm** this year.
 
@@ -327,16 +338,17 @@ Your Unrest tokens clear, and the turn waits for insurance and the roll:
 Before rolling you may **declare insurance** — each option once per riot, each
 adding **+1 to your roll**: a **bread dole** (4 food), a **concession** (demote
 one citizen, free), or **patronage** (3 influence). Declare all three and a riot can
-no longer cost you pops. The riot sheet strikes the rows each declaration puts out of
-reach; after the roll a card lists what the riot cost, and the other seats see it as
-a note under the Chronicle.
+cost you a pop only through the bribe, when you cannot pay its 3 gold in full. The
+riot sheet strikes the rows each declaration puts out of reach; after the roll a card
+lists what the riot cost, and the other seats see it as a note under the Chronicle.
 
 Pops lost to a riot are **slaves first**, then freemen, then citizens, each from the
 settlement holding the most of them.
 
 **At −6 or lower it is a revolt instead.** Nothing is rolled: **half your slaves
 leave**, rounded down, and your Unrest tokens clear. With no slaves it costs only the
-tokens. The turn then passes, and a card shows where each slave left from.
+tokens. Slaves on the move count toward the half, and those who leave are taken from
+your settlements. The turn then passes, and a card shows where each slave left from.
 
 Because a riot spends the tokens that caused it, a riot from tokens does not come
 back. A level held down by slaves does: it riots every turn until you free or lose
@@ -402,9 +414,9 @@ You may discard the draw and pass; there is no second draw. Only player proposal
 reach the ballot, so a sitting has zero to four items.
 
 Reveal the proposals and vote on each in turn order. Each seat casts **one vote
-plus one per citizen**. During your vote you may buy at most **two votes per
-sitting**, for **2 gold or 2 influence each**, in any mix. They count on every
-remaining ballot. A simple majority passes; a tie fails.
+plus one per citizen**, citizens on the move included. During your vote you may buy
+at most **two votes per sitting**, for **2 gold or 2 influence each**, in any mix.
+They count on every remaining ballot. A simple majority passes; a tie fails.
 
 A drawn card, kept or discarded, and a sealed repeal stay with their seat until the
 ballot is read; everyone sees only who has sealed. On screen the sitting is a sheet
@@ -441,7 +453,7 @@ with no bonus. **Voice** counts only authored Laws still standing; Directives ad
 | Perdiccas     | Public Works      | Estates and Granaries cost 3 wood; Marketplaces cost 2 wood and 2 gold. Colonies hold 3 pops. Other building prices stay. |
 | Perdiccas     | Guild Charter     | The capital may grow twice per turn; other cities once, colonies never.                                                   |
 | Perdiccas     | Forum Rites       | Citizens make 2 influence everywhere; Forums add nothing further. Colony freemen make no gold, but still eat.             |
-| Perdiccas     | Civic Pride       | Flat +1 happiness per realm; each city pays 1 gold a year.                                                                |
+| Perdiccas     | Civic Pride       | Flat +1 happiness per realm; each city pays 1 gold a year, as far as the realm's gold goes.                               |
 | Perdiccas     | Master Builders   | Cities gain one slot; only three colony pieces may be placed. Existing fourth colonies stay.                              |
 | Kleistophenes | Homestead Act     | Colonies may hold one building, including a Port; cities lose one slot.                                                   |
 | Kleistophenes | Colonial Charter  | Found for 1 food and a pop; upgrade for 6 stone. Pieces and placement rules still apply.                                  |
@@ -499,5 +511,5 @@ shows the year and cards remaining.
 `?dev=bots` runs the shared master policy in all browser seats. Headless sims can
 seat `slaver`, `civic` and `trader` by name: they favour slaves and Estates,
 citizens and the Assembly, or freemen and coastal trade. They use the same legal
-commands, buy fitting Ideas, and search bank trades and ventures. See the
+commands and search Idea purchases, bank trades and ventures. See the
 [simulation reference](docs/reference/simulation.md) for mixed and rotated batches.

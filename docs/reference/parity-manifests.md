@@ -74,7 +74,7 @@ unions; they are the presentation API for Step 3 and PR #57.
 | Event tables           |                           4 |
 | Riot-insurance options |                           3 |
 | Politicians            |                           4 |
-| Resolution cards       | 29 (22 Laws + 7 Directives) |
+| Resolution cards       | 22 (16 Laws + 6 Directives) |
 | Victory cards          |                           6 |
 | National Ideas         |                          12 |
 

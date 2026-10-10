@@ -10,7 +10,7 @@ import type {
 } from "../types";
 import type { Ruleset } from "../ruleset";
 import { getResolutionCard } from "../content";
-import { getTile } from "../core/query";
+import { getTile, realmPops } from "../core/query";
 import type { LawCostedAction, LawEffect, LawRule, ResolutionCard } from "./types";
 import type { GameContent } from "../content";
 import type { ActiveLaw } from "./types";
@@ -164,17 +164,18 @@ export function getLawIncomeContributions(
     }),
   );
 }
+/** How many times a slave counts for unrest: three under Manumission. */
+export function slaveUnrestCount(source: RulesSource): number {
+  return hasLawRule(source, "manumission") ? 3 : 1;
+}
 /** One line per Law. Manumission changes the existing slave count, with its extra
  * charge shown separately so the level's ledger still explains the total. */
 export function getLawHappinessContributions(
   G: HegemonyState,
   playerID: PlayerId,
 ): Array<{ amount: number; label: string }> {
-  const slaves = G.players[playerID].settlements.reduce(
-    (sum, tileId) =>
-      sum + (getTile(G, tileId)?.settlements.find((s) => s.owner === playerID)?.pops.slaves ?? 0),
-    0,
-  );
+  // The count the slave term uses: slaves on the move included.
+  const { slaves } = realmPops(G, playerID);
   const per = G.ruleset.economy.slavesPerUnhappiness;
   return getStandingEffectSources(G, playerID).flatMap((source) => {
     let amount = 0;
@@ -185,7 +186,8 @@ export function getLawHappinessContributions(
         namesHappiness = true;
       }
       if (effect.type === "rule" && effect.rule === "manumission") {
-        amount -= per > 0 ? Math.floor((3 * slaves) / per) - Math.floor(slaves / per) : 0;
+        amount -=
+          per > 0 ? Math.floor((slaveUnrestCount(G) * slaves) / per) - Math.floor(slaves / per) : 0;
         namesHappiness = true;
       }
     }

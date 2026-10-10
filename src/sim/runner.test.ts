@@ -166,6 +166,39 @@ describe("action cap", () => {
     },
   );
 
+  it("does not count the riot choices that follow an accepted endTurn", () => {
+    const G = scenario().opening().withHappiness("0", -3).build();
+    G.pendingPlayerEvent = null;
+    Object.assign(G.players["0"].resources, { food: 10, influence: 10 });
+    // Ends at once, then takes every insurance on offer before the roll.
+    const ender: Policy = {
+      name: "random",
+      choose: (_view, moves) =>
+        moves.find((move) => move.type === "endTurn") ??
+        moves.find((move) => move.type === "buyRiotInsurance") ??
+        moves[0],
+    };
+    const moves: string[] = [];
+    let forced = 0;
+    const next = playTurn(
+      G,
+      ender,
+      createSimRng(1),
+      {
+        onMove: (_state, _player, command) => moves.push(command.type),
+        onForceEndTurn: () => (forced += 1),
+      },
+      { maxActions: 1 },
+    );
+
+    // The one counted action was endTurn. The seat still chose its insurance.
+    expect(moves[0]).toBe("endTurn");
+    expect(moves.filter((move) => move === "buyRiotInsurance").length).toBeGreaterThan(0);
+    expect(moves.at(-1)).toBe("resolveRiot");
+    expect(forced).toBe(0);
+    expect(next.turn).toBe(G.turn + 1);
+  });
+
   it("force-ends the turn against a policy that never ends it", () => {
     const stubborn: Policy = {
       name: "random",

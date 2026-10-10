@@ -129,18 +129,18 @@ export const COMMAND_PARITY = {
       "src/components/frame/discs.ts",
       "src/components/frame/realm/MarketPage.tsx",
     ),
-    simulation: simulated("master-rule", "resolveStochasticByRule bank heuristic"),
+    simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   bankBuy: {
     frontend: interactive(
       "src/components/frame/discs.ts",
       "src/components/frame/realm/MarketPage.tsx",
     ),
-    simulation: simulated("master-rule", "resolveStochasticByRule bank heuristic"),
+    simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   dole: {
     frontend: interactive("src/components/frame/VerbDiscs.tsx", "src/components/frame/discs.ts"),
-    simulation: simulated("master-rule", "resolveStochasticByRule hunger rule"),
+    simulation: simulated("master-search", "masterPolicy → beamPlan(scoreMaster)"),
   },
   pickIdea: {
     frontend: interactive("src/components/board/modals/IdeasModal.tsx"),
@@ -176,15 +176,15 @@ export const COMMAND_PARITY = {
       "src/components/frame/VerbDiscs.tsx",
       "src/components/board/modals/VentureModal.tsx",
     ),
-    simulation: simulated("master-rule", "resolveStochasticByRule venture heuristic"),
+    simulation: simulated("master-search", "beamPlan → searchOutcomes → ventureOutcomes"),
   },
   buyRiotInsurance: {
     frontend: interactive("src/components/board/modals/RiotModal.tsx"),
-    simulation: simulated("master-rule", "resolveStochasticByRule riot-insurance heuristic"),
+    simulation: simulated("master-rule", "resolveRiotByRule insurance"),
   },
   resolveRiot: {
     frontend: interactive("src/components/board/modals/RiotModal.tsx"),
-    simulation: simulated("master-rule", "resolveStochasticByRule riot fallback"),
+    simulation: simulated("master-rule", "resolveRiotByRule roll"),
   },
   assemblyDraw: {
     frontend: interactive("src/components/board/assembly/AssemblySitting.tsx"),
