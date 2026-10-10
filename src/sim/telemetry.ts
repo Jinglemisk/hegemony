@@ -13,13 +13,19 @@ import type { ActiveEffectKind } from "../game/activeEffects";
 import type { GameCommand } from "../game/legalMoves";
 import type { DefinitionIdentity } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
-import { activeClaims, luxuryHappinessBonus, ownedClaims } from "../game/luxury";
+import { getAddPopsEffect } from "../game/events";
+import { activeClaims, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
 import { getOwnedSettlement, getTile } from "../game/core/query";
 import { canPlaceColonyOnTile, settlementIdleSlaves } from "../game/settlement";
 import { unrestStatus } from "../game/unrest";
-import { standingHappiness } from "../game/happiness";
-import { VICTORY_CARDS, victoryStandings, victoryMetricValue, voiceHolder } from "../game/victory";
+import {
+  VICTORY_CARDS,
+  ageEndRanking,
+  victoryStandings,
+  victoryMetricValue,
+  voiceHolder,
+} from "../game/victory";
 import { GAME_COMMAND_TYPES, type GameCommandType } from "../parity/commandParity";
 import {
   BUILDING_CONTENT_IDS,
@@ -76,6 +82,8 @@ export type PlayerSnapshot = {
   popsGainedFromEvents: number;
   authoredLawsStanding: number;
   voiceHeld: number;
+  /** Luxury goods held and not suppressed. A Blockade year still counts them. */
+  activeLuxuries: number;
 };
 
 export type TurnSnapshot = {
@@ -83,6 +91,10 @@ export type TurnSnapshot = {
   seed: number;
   turn: number;
   year: number;
+  /** The seat whose turn this is. */
+  actingSeat: PlayerId;
+  /** The seat holding Beloved of the People, or null. */
+  belovedHolder: PlayerId | null;
   players: Record<PlayerId, PlayerSnapshot>;
 };
 
@@ -122,6 +134,7 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       popsGainedFromEvents: player.popsGainedFromEvents,
       authoredLawsStanding: victoryMetricValue(G, playerID, "voice"),
       voiceHeld: voiceHolder(G) === playerID ? 1 : 0,
+      activeLuxuries: activeClaims(G, playerID).length,
       activeEffects: activeEffectCounts,
     };
   }
@@ -131,6 +144,9 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
     seed,
     turn: G.turn,
     year: G.year,
+    actingSeat: G.currentPlayer,
+    belovedHolder:
+      victoryStandings(G).find((standing) => standing.card.id === "beloved")?.holder ?? null,
     players,
   };
 }
@@ -154,7 +170,134 @@ export type DrawSwing = {
   materialMagnitude: number;
   incomeMagnitude: number;
   ratio: number | null;
+  /** What the seat's stock changed by at this turn's income, under this year's card
+   *  and after the floors. Null when the turn's opening was not observed. */
+  collected: Resources | null;
+  /** The gains in `collected`, summed. Food upkeep is not income, so a loss adds nothing. */
+  collectedMagnitude: number;
+  /** `materialMagnitude` over `collectedMagnitude`: the swing against the income the
+   *  seat collected this turn. Null when it collected nothing. */
+  collectedRatio: number | null;
 };
+
+/** The spread of a set of draws. Pop and token cards move no resource, so they are
+ *  counted in their own units instead of as a ratio of zero. */
+export type DrawSwingSummary = {
+  /** Player cards drawn, and those of them discarded because no settlement had room. */
+  draws: number;
+  discarded: number;
+  /** Cards that moved a resource, and the spread of their `collectedRatio`. */
+  resourceCards: number;
+  collectedRatio: Percentiles;
+  /** Cards that moved pops, and the pops they moved. */
+  popCards: number;
+  popsMoved: number;
+  /** Cards that placed or cleared Unrest tokens, and the tokens they moved. */
+  tokenCards: number;
+  tokensMoved: number;
+  /** Resolved cards that changed nothing: a loss with nothing to take, or no token to clear. */
+  unchanged: number;
+};
+
+/** Where influence goes. `draws` is the Assembly draw, the price of proposing;
+ *  `patronage` is the riot insurance. */
+export const INFLUENCE_SINKS = [
+  "dole",
+  "ideas",
+  "calm",
+  "votes",
+  "patronage",
+  "draws",
+  "repeals",
+  "demotions",
+] as const;
+export type InfluenceSink = (typeof INFLUENCE_SINKS)[number];
+
+/** The sink a command pays into, if it can cost influence at all. */
+function influenceSink(move: GameCommand): InfluenceSink | null {
+  switch (move.type) {
+    case "dole":
+      return "dole";
+    case "buyIdea":
+      return "ideas";
+    case "civicCalm":
+      return "calm";
+    case "assemblyBribe":
+      return "votes";
+    case "assemblyDraw":
+      return "draws";
+    case "assemblyProposeRepeal":
+      return "repeals";
+    case "demotePop":
+      return "demotions";
+    case "buyRiotInsurance":
+      // The concession is a forced demotion; the bread dole costs food.
+      return move.optionId === "concession" ? "demotions" : "patronage";
+    default:
+      return null;
+  }
+}
+
+/** Food bought from the bank and the Dole, and what it cost. */
+export type FoodBought = {
+  bankBuys: number;
+  doles: number;
+  food: number;
+  gold: number;
+  influence: number;
+};
+
+/** One seat's counts in one game. The batch totals and the per-personality figures
+ *  are both summed from these. */
+export type SeatCounts = {
+  /** Turns that ended short of food: each ends in one hunger choice. */
+  hungerTurns: number;
+  /** The year of each riot the seat rolled, and of each revolt. */
+  riotYears: number[];
+  revoltYears: number[];
+  /** Passed Directives aimed at this seat. */
+  directivesAimedAt: number;
+  /** Player cards drawn, and those discarded because no settlement had room. */
+  cardsDrawn: number;
+  cardsDiscarded: number;
+  /** Influence paid, by sink: what the seat's stock fell by at each purchase. */
+  influenceSpent: Record<InfluenceSink, number>;
+  /** Food bought while the stock was below zero, and at zero or above. */
+  foodBought: { coveringShortfall: FoodBought; buyingAhead: FoodBought };
+};
+
+function emptyFoodBought(): FoodBought {
+  return { bankBuys: 0, doles: 0, food: 0, gold: 0, influence: 0 };
+}
+
+function emptySeatCounts(): Record<PlayerId, SeatCounts> {
+  const empty = (): SeatCounts => ({
+    hungerTurns: 0,
+    riotYears: [],
+    revoltYears: [],
+    directivesAimedAt: 0,
+    cardsDrawn: 0,
+    cardsDiscarded: 0,
+    influenceSpent: Object.fromEntries(INFLUENCE_SINKS.map((sink) => [sink, 0])) as Record<
+      InfluenceSink,
+      number
+    >,
+    foodBought: { coveringShortfall: emptyFoodBought(), buyingAhead: emptyFoodBought() },
+  });
+  return Object.fromEntries(PLAYER_IDS.map((id) => [id, empty()])) as Record<PlayerId, SeatCounts>;
+}
+
+/** A seat's stock after a command, less its stock before it. */
+function resourceChange(before: HegemonyState, after: HegemonyState, player: PlayerId): Resources {
+  const old = before.players[player].resources;
+  const now = after.players[player].resources;
+  return Object.fromEntries(
+    Object.keys(old).map((key) => {
+      const resource = key as keyof Resources;
+      return [resource, now[resource] - old[resource]];
+    }),
+  ) as Resources;
+}
 
 function slaveCounts(G: HegemonyState, playerID: PlayerId) {
   let slaves = 0;
@@ -209,9 +352,18 @@ export type YearRow = {
   pops: Percentiles;
   food: Percentiles;
   happiness: Percentiles;
+  gold: Percentiles;
+  /** The influence stock, pooled, and the same for each personality's seats. */
+  influence: Percentiles;
+  influenceByPolicy: Record<string, Percentiles>;
   unrestTierShares: Record<UnrestTier, number>;
   activeEffectShares: Record<ActiveEffectKind, number>;
 };
+
+/** What decided a finished game: the title race, or at the deck's end the titles
+ *  held or the first tiebreak that separated the top two seats. */
+export type GameDecision = "race" | "titles" | "happiness" | "pops" | "seat";
+const GAME_DECISIONS: GameDecision[] = ["race", "titles", "happiness", "pops", "seat"];
 
 /** How a game ended. A real result (victoryRace/deckExhausted) names a winner; a
  *  game stopped at the turn cap has no winner — only a leaderAtCap heuristic. */
@@ -225,22 +377,30 @@ export type AssemblySeatTelemetry = {
   votesBought: number;
   voiceClaims: number;
   voiceHeldTurns: number;
+  /** Repeals the seat filed, and how the vote on each went. */
+  repealsProposed: number;
+  repealsPassed: number;
+  repealsFailed: number;
 };
+function emptyAssemblySeat(): AssemblySeatTelemetry {
+  return {
+    lawsProposed: 0,
+    lawsPassed: 0,
+    authoredLawsStanding: 0,
+    directivesPlayed: 0,
+    votesBought: 0,
+    voiceClaims: 0,
+    voiceHeldTurns: 0,
+    repealsProposed: 0,
+    repealsPassed: 0,
+    repealsFailed: 0,
+  };
+}
 function emptyAssemblySeats(): Record<PlayerId, AssemblySeatTelemetry> {
-  return Object.fromEntries(
-    PLAYER_IDS.map((id) => [
-      id,
-      {
-        lawsProposed: 0,
-        lawsPassed: 0,
-        authoredLawsStanding: 0,
-        directivesPlayed: 0,
-        votesBought: 0,
-        voiceClaims: 0,
-        voiceHeldTurns: 0,
-      },
-    ]),
-  ) as Record<PlayerId, AssemblySeatTelemetry>;
+  return Object.fromEntries(PLAYER_IDS.map((id) => [id, emptyAssemblySeat()])) as Record<
+    PlayerId,
+    AssemblySeatTelemetry
+  >;
 }
 
 export type GameRow = {
@@ -272,7 +432,36 @@ export type GameRow = {
   luxuries: Record<PlayerId, { goodsHeld: number; goodsActive: number; luxuryHappiness: number }>;
   /** End-of-game banked gold per seat — monitored, not judged (Q46: no gold sink). */
   finalGold: Record<PlayerId, number>;
+  /** What decided a finished game; null for a turn-capped one. */
+  decidedBy: GameDecision | null;
+  /** The year cards in the order they turned. */
+  yearCards: string[];
+  /** Each seat's counts for this game: what a merge of reports would sum. */
+  seatCounts: Record<PlayerId, SeatCounts>;
 };
+
+/** Turns a seat began short of food, and the food it bought in each state. */
+export type FoodPurchases = {
+  /** Turns the acting seat began with food below zero, after income. */
+  turnsBegunShort: number;
+  /** Bought with the stock below zero. */
+  coveringShortfall: FoodBought;
+  /** Bought at zero or above. */
+  buyingAhead: FoodBought;
+};
+
+/** Beloved against the luxury leader, over the turn snapshots in which it was held. */
+export type BelovedLuxury = {
+  turnsHeld: number;
+  /** The holder had more active luxuries than every other seat. */
+  soleLuxuryLeader: number;
+  soleLuxuryLeaderShare: number;
+  /** The holder had at least one, and no seat had more. */
+  luxuryLeaderOrTied: number;
+  luxuryLeaderOrTiedShare: number;
+};
+
+export type RiotYearRow = { year: number; riots: number; playerTurns: number; revolts: number };
 
 export type BatchReport = {
   meta: {
@@ -297,17 +486,30 @@ export type BatchReport = {
     /** Base seat→policy assignment for a mixed-policy batch (null for a uniform run).
      *  With --rotate the per-game assignment varies; see perGame[].seatPolicies. */
     seatPolicies?: Record<PlayerId, string> | null;
+    /** Seatings played per seed: 1 without --rotate, otherwise the distinct cyclic
+     *  rotations of the base seating (4 for four different seats). */
+    rotations?: number;
     generatedAt: string;
   };
   perGame: GameRow[];
   reach: { total: Record<string, number>; perPolicy: Record<string, ReachReport> };
   /** Immediate resolution changes against the draw-position projected income, not a decision counterfactual. */
   drawSwings: DrawSwing[];
+  /** The spread of `drawSwings`, pooled and per personality. */
+  drawSwingSummary: { total: DrawSwingSummary; perPolicy: Record<string, DrawSwingSummary> };
   classes: Record<string, { slaves: Percentiles; freemen: Percentiles; citizens: Percentiles }>;
 
   nationalIdeas: Record<
     NationalIdeaId,
-    { setupPicks: number; purchases: number; holders: number; wins: number; winRate: number }
+    {
+      setupPicks: number;
+      purchases: number;
+      holders: number;
+      wins: number;
+      winRate: number;
+      /** Finished holder seat-games and wins by the holder's personality. */
+      perPolicy: Record<string, { holders: number; wins: number; winRate: number }>;
+    }
   >;
   perYear: YearRow[];
   perSeat: Record<PlayerId, { winRate: number; capLeaderRate: number; meanFinalCards: number }>;
@@ -324,6 +526,19 @@ export type BatchReport = {
       idleSlaveShare: number;
     }
   >;
+  /** The same four figures per personality, over the seat-games it played. A seat
+   *  mixes personalities once seats rotate; this does not. */
+  hungerPerPolicy: Record<
+    string,
+    {
+      hungerTurnsPerSeatGame: number;
+      popsLostPerSeatGame: number;
+      idleSlavesMean: number;
+      idleSlaveShare: number;
+    }
+  >;
+  /** Turns begun short of food and the food bought, pooled and per personality. */
+  foodPurchases: { total: FoodPurchases; perPolicy: Record<string, FoodPurchases> };
   /** The riot table: riots resolved per game, the share of player-turns ending
    *  on it, and the same counts year by year, so a report can cut the late game. */
   riots: {
@@ -331,7 +546,21 @@ export type BatchReport = {
     /** Revolts per game: the lower line, where half the slaves leave with no roll. */
     revoltsPerGame: number;
     turnShare: number;
-    byYear: Array<{ year: number; riots: number; playerTurns: number }>;
+    byYear: RiotYearRow[];
+    /** Per personality: `playerTurns` are the turns its own seats took that year. */
+    perPolicy: Record<
+      string,
+      { riotsPerSeatGame: number; revoltsPerSeatGame: number; byYear: RiotYearRow[] }
+    >;
+  };
+  /** Rule 5: how often Beloved's holder is also the luxury leader, pooled and by the
+   *  holder's personality. Both readings of a tie are given. */
+  beloved: { total: BelovedLuxury; perPolicy: Record<string, BelovedLuxury> };
+  /** Influence paid by sink, pooled and per personality. `assembly.influenceSpent`
+   *  is the three Assembly sinks at their base prices. */
+  influenceSpent: {
+    total: Record<InfluenceSink, { count: number; perGame: number }>;
+    perPolicy: Record<string, Record<InfluenceSink, { count: number; perSeatGame: number }>>;
   };
   /** Wins credited to the POLICY that held each seat, over finished games — the
    *  seat-independent measure a rotated mixed-policy batch produces. Empty for a
@@ -346,6 +575,9 @@ export type BatchReport = {
       cappedSeatGames: number;
       wins: number;
       winRate: number;
+      /** The wins split by what decided the game. `happiness`, `pops` and `seat`
+       *  are tiebreak wins at the deck's end. */
+      winsDecidedBy: Record<GameDecision, number>;
       finalCards: Percentiles;
       finalTitles: Record<string, number>;
     }
@@ -386,7 +618,7 @@ export type BatchReport = {
   terminations: Record<GameTermination, number>;
   /** Turns the runner had to force-end at the per-turn action cap — previously
    *  invisible. actionCapHits == forcedEndTurns; forcedResolutions counts pending
-   *  events/riots that had to be force-resolved first. */
+   *  events, hunger picks and riots that had to be force-resolved first. */
   forced: {
     actionCapHits: number;
     forcedResolutions: number;
@@ -407,6 +639,8 @@ export type BatchReport = {
    */
   assembly: {
     perSeat: Record<PlayerId, { count: AssemblySeatTelemetry; perGame: AssemblySeatTelemetry }>;
+    /** The seat figures summed by personality, and per seat-game it played. */
+    perPolicy: Record<string, { count: AssemblySeatTelemetry; perSeatGame: AssemblySeatTelemetry }>;
     votesBought: { count: number; perGame: number };
     goldSpent: { count: number; perGame: number };
     held: { count: number; perGame: number };
@@ -415,6 +649,14 @@ export type BatchReport = {
     authoredPassed: { count: number; perGame: number };
     prizesGranted: Resources;
     directiveTargets: Record<PlayerId, number>;
+    /** Passed Directives by the personality they were aimed at. */
+    directiveTargetsPerPolicy: Record<string, number>;
+    /** Repeals filed, and how the vote on each went. */
+    repeals: {
+      proposed: { count: number; perGame: number };
+      passed: { count: number; perGame: number };
+      failed: { count: number; perGame: number };
+    };
     voiceClaims: { count: number; perGame: number };
     voiceTransfers: { count: number; perGame: number };
     /** Games that ended with Voice claimed; `perGame` is the share of all games. */
@@ -481,7 +723,6 @@ export class Aggregator {
   private yearCards: Record<string, number> = {};
   private movesByType: Partial<Record<GameCommandType, number>> = {};
   private currencyVerbs: Record<string, number> = {};
-  private riotsByYear = new Map<number, number>();
   private revolts = 0;
   private assemblyVerbs: Record<string, number> = {};
   private assemblyInfluence = 0;
@@ -499,8 +740,13 @@ export class Aggregator {
     influence: 0,
   };
   private directiveTargets: Record<PlayerId, number> = { "0": 0, "1": 0, "2": 0, "3": 0 };
-  /** Turns that ended short of food: each ends in one hunger choice. */
-  private hungerTurns: Record<PlayerId, number> = { "0": 0, "1": 0, "2": 0, "3": 0 };
+  /** The game in progress, seat by seat; endGame stores it on the game's row. */
+  private seatCounts = emptySeatCounts();
+  private gameYearCards: string[] = [];
+  /** What the acting seat's stock changed by at this turn's income. */
+  private collected: Resources | null = null;
+  /** One snapshot of each game's last state, for the CSV. */
+  private finals: TurnSnapshot[] = [];
   private voiceClaims = 0;
   private voiceTransfers = 0;
   private lastVoiceHolder: PlayerId | null = null;
@@ -527,6 +773,15 @@ export class Aggregator {
     this.lastVoiceHolder = voiceHolder(G);
     this.lastAssemblyResultKey = null;
     this.assemblySeats = emptyAssemblySeats();
+    this.seatCounts = emptySeatCounts();
+    this.gameYearCards = [];
+    // The last setup move opened turn 1 with the opener's income. Its own maker is
+    // left out: a setup Idea can pay gold in the same step.
+    const [beforeOpening, opening] = this.setupMoves.slice(-2);
+    this.collected =
+      opening && opening.player !== G.currentPlayer
+        ? resourceChange(beforeOpening.state, G, G.currentPlayer)
+        : null;
     for (const { state, player, move } of this.setupMoves)
       this.countReach(player, moveReachIds(state, player, move));
     this.setupMoves = [];
@@ -542,22 +797,25 @@ export class Aggregator {
     if (["placeCapital", "placeCity", "placeColony", "pickIdea"].includes(move.type)) {
       this.setupMoves.push({ state: G, player, move });
     } else {
-      this.countReach(player, moveReachIds(G, player, move, this.previousState));
-      if (move.type === "resolveHunger") this.hungerTurns[player] += 1;
-      if (move.type === "resolveEvent" && this.previousState?.pendingPlayerEvent) {
-        const before = this.previousState;
+      const before = this.previousState;
+      this.countReach(player, moveReachIds(G, player, move, before));
+      if (move.type === "resolveHunger") this.seatCounts[player].hungerTurns += 1;
+      if (before) this.countSpending(before, G, player, move);
+      // A revolt has no command of its own: the turn-end check runs inside this one.
+      if (before && G.players[player].revolts > before.players[player].revolts)
+        this.seatCounts[player].revoltYears.push(before.year);
+      if (move.type === "resolveEvent" && before?.pendingPlayerEvent) {
         const old = before.players[player];
         const now = G.players[player];
-        const resources = Object.fromEntries(
-          Object.keys(old.resources).map((key) => {
-            const resource = key as keyof Resources;
-            return [resource, now.resources[resource] - old.resources[resource]];
-          }),
-        ) as Resources;
+        const resources = resourceChange(before, G, player);
         const magnitude = (r: Resources) =>
           Object.values(r).reduce((sum, n) => sum + Math.abs(n), 0);
         const incomeMagnitude = magnitude(calculateIncome(before, player));
         const materialMagnitude = magnitude(resources);
+        const collectedMagnitude = Object.values(this.collected ?? {}).reduce(
+          (sum, n) => sum + Math.max(0, n),
+          0,
+        );
         this.drawSwings.push({
           game: this.game,
           year: before.year,
@@ -570,8 +828,15 @@ export class Aggregator {
           materialMagnitude,
           incomeMagnitude,
           ratio: incomeMagnitude ? materialMagnitude / incomeMagnitude : null,
+          collected: this.collected,
+          collectedMagnitude,
+          collectedRatio: collectedMagnitude ? materialMagnitude / collectedMagnitude : null,
         });
       }
+      // A command that opens the next turn also pays that seat its income, and
+      // nothing else in the step touches its stock.
+      if (before && G.turn !== before.turn && G.phase === "gameplay")
+        this.collected = resourceChange(before, G, G.currentPlayer);
       this.previousState = G;
     }
     this.movesByType[move.type] = (this.movesByType[move.type] ?? 0) + 1;
@@ -579,8 +844,7 @@ export class Aggregator {
     if (move.type === "resolveRiot") {
       // Resolution can turn the year or open the next seat. The roll records
       // the original year; the next income/draw is observed by onTurnEnd.
-      const year = G.lastTableRoll!.year;
-      this.riotsByYear.set(year, (this.riotsByYear.get(year) ?? 0) + 1);
+      this.seatCounts[player].riotYears.push(G.lastTableRoll!.year);
     }
 
     if (move.type === "buildBuilding") {
@@ -604,6 +868,7 @@ export class Aggregator {
         else this.assemblyGold += G.ruleset.assembly.briberyCost;
         this.assemblySeats[player].votesBought += 1;
       }
+      if (move.type === "assemblyProposeRepeal") this.assemblySeats[player].repealsProposed += 1;
       if (
         move.type === "assemblyPropose" &&
         G.assembly?.proposals[player]?.kind === "enact" &&
@@ -618,6 +883,11 @@ export class Aggregator {
       if (key !== this.lastAssemblyResultKey) {
         this.lastAssemblyResultKey = key;
         const result = results[results.length - 1];
+        if (result.item.kind === "repeal") {
+          const seat = this.assemblySeats[result.item.proposer];
+          if (result.passed) seat.repealsPassed += 1;
+          else seat.repealsFailed += 1;
+        }
         if (result.passed && result.item.kind === "enact" && result.item.proposer) {
           this.countReach(result.item.proposer, [
             `${result.item.card.kind}:${result.item.card.id}`,
@@ -633,6 +903,7 @@ export class Aggregator {
           }
           if (result.item.card.kind === "directive" && result.item.target) {
             this.directiveTargets[result.item.target] += 1;
+            this.seatCounts[result.item.target].directivesAimedAt += 1;
           }
         }
       }
@@ -652,6 +923,33 @@ export class Aggregator {
     // them); track them so a deeper search shows up in the report.
     if (move.type === "upgradeColonyToCity") {
       this.upgrades += 1;
+    }
+  }
+
+  /** Influence paid and food bought, read off what the command did to the seat's
+   *  stock, so a price an Idea or a Law changed is counted as paid. */
+  private countSpending(
+    before: HegemonyState,
+    G: HegemonyState,
+    player: PlayerId,
+    move: GameCommand,
+  ) {
+    const seat = this.seatCounts[player];
+    const change = resourceChange(before, G, player);
+    const sink = influenceSink(move);
+    if (sink) seat.influenceSpent[sink] += Math.max(0, -change.influence);
+
+    if (move.type === "dole" || (move.type === "bankBuy" && move.material === "food")) {
+      // Below zero the seat is covering a shortfall; at zero or above it buys ahead.
+      const bought =
+        before.players[player].resources.food < 0
+          ? seat.foodBought.coveringShortfall
+          : seat.foodBought.buyingAhead;
+      if (move.type === "dole") bought.doles += 1;
+      else bought.bankBuys += 1;
+      bought.food += change.food;
+      bought.gold += Math.max(0, -change.gold);
+      bought.influence += Math.max(0, -change.influence);
     }
   }
 
@@ -716,10 +1014,13 @@ export class Aggregator {
       popsLostToUnrest[playerID] = G.players[playerID].popsLostToUnrest;
       this.revolts += G.players[playerID].revolts;
       popsLostToHunger[playerID] = G.players[playerID].popsLostToHunger;
+      const goodsActive = activeClaims(G, playerID).length;
       luxuries[playerID] = {
         goodsHeld: ownedClaims(G, playerID).length,
-        goodsActive: activeClaims(G, playerID).length,
-        luxuryHappiness: luxuryHappinessBonus(G, playerID),
+        goodsActive,
+        // What the goods are worth in a year that counts them: a game whose last
+        // card is Blockade would otherwise read 0.
+        luxuryHappiness: goodsActive * G.ruleset.economy.luxury.happinessPerGood,
       };
       finalGold[playerID] = G.players[playerID].resources.gold;
     }
@@ -731,6 +1032,16 @@ export class Aggregator {
     const termination: GameTermination = finished
       ? (G.gameOverReason as GameOverReason)
       : "turnCap";
+    // The engine's own tally: the deck's end ranks the state it stopped on, so the
+    // same call names what decided the game, and the leader of a game cut short.
+    const tally = ageEndRanking(G);
+    const decidedBy: GameDecision | null =
+      termination === "victoryRace"
+        ? "race"
+        : termination === "deckExhausted"
+          ? tally.decidedBy
+          : null;
+    this.finals.push(snapshotTurn(G, this.game, this.seed));
 
     for (const id of PLAYER_IDS) {
       this.assemblySeats[id].authoredLawsStanding = victoryMetricValue(G, id, "voice");
@@ -745,7 +1056,7 @@ export class Aggregator {
       finalYear: G.year,
       termination,
       winner: finished ? G.winner : null,
-      leaderAtCap: finished ? null : this.leaderByTiebreak(G, finalCards),
+      leaderAtCap: finished ? null : tally.rows[0].seat,
       seatPolicies: this.gameSeatPolicies ?? undefined,
       nationalIdeas: Object.fromEntries(
         PLAYER_IDS.map((id) => [
@@ -775,30 +1086,37 @@ export class Aggregator {
       popsLostToHunger,
       luxuries,
       finalGold,
+      decidedBy,
+      yearCards: this.gameYearCards,
+      seatCounts: this.seatCounts,
     });
-  }
-
-  /** The deck-exhaustion tiebreak (cards → happiness → pops → seat), reused to name a
-   *  cut-off game's leaderAtCap without counting it as a win. */
-  private leaderByTiebreak(G: HegemonyState, finalCards: Record<PlayerId, number>): PlayerId {
-    return [...PLAYER_IDS].sort((a, b) => {
-      const cards = finalCards[b] - finalCards[a];
-      if (cards !== 0) return cards;
-      const happiness = standingHappiness(G, b) - standingHappiness(G, a);
-      if (happiness !== 0) return happiness;
-      const pops = playerStandings(G, b).pops - playerStandings(G, a).pops;
-      if (pops !== 0) return pops;
-      return PLAYER_IDS.indexOf(a) - PLAYER_IDS.indexOf(b);
-    })[0];
   }
 
   allSnapshots(): TurnSnapshot[] {
     return this.snapshots;
   }
 
+  /** Each ended game's last state, one snapshot a game. */
+  finalSnapshots(): TurnSnapshot[] {
+    return this.finals;
+  }
+
   buildReport(meta: BatchReport["meta"]): BatchReport {
-    // Year rows use only each game's LAST snapshot of that year (end-of-year
-    // state), pooled across games and seats.
+    // Once seats rotate, the personality in a seat changes from game to game.
+    const gameRows = new Map(this.games.map((game) => [game.game, game]));
+    const policyOf = (game: number, seat: PlayerId) =>
+      gameRows.get(game)?.seatPolicies?.[seat] ?? meta.policy;
+    /** The seat-games one personality played, or every seat-game with no name. */
+    const seatGamesOf = (name?: string) =>
+      this.games.flatMap((game) =>
+        PLAYER_IDS.filter((seat) => name === undefined || policyOf(game.game, seat) === name).map(
+          (seat) => ({ game, seat, counts: game.seatCounts[seat] }),
+        ),
+      );
+
+    // Year rows use only each game's LAST snapshot of that year, pooled across games
+    // and seats. That is the start of the year's last turn: its seat has collected
+    // and not yet acted.
     const yearBuckets = new Map<number, TurnSnapshot[]>();
 
     const tails = new Map<string, TurnSnapshot>();
@@ -841,6 +1159,15 @@ export class Aggregator {
           }
         }
 
+        const influence: Record<string, number[]> = {};
+        for (const snapshot of snapshots) {
+          for (const playerID of PLAYER_IDS) {
+            (influence[policyOf(snapshot.game, playerID)] ??= []).push(
+              snapshot.players[playerID].resources.influence,
+            );
+          }
+        }
+
         return {
           year,
           games: snapshots.length,
@@ -848,6 +1175,11 @@ export class Aggregator {
           pops: percentiles(values((player) => player.pops + player.inTransit)),
           food: percentiles(values((player) => player.resources.food)),
           happiness: percentiles(values((player) => player.happiness)),
+          gold: percentiles(values((player) => player.resources.gold)),
+          influence: percentiles(values((player) => player.resources.influence)),
+          influenceByPolicy: Object.fromEntries(
+            Object.entries(influence).map(([name, stocks]) => [name, percentiles(stocks)]),
+          ),
           unrestTierShares: tierShares,
           activeEffectShares,
         };
@@ -896,7 +1228,8 @@ export class Aggregator {
       }
 
       hunger[playerID] = {
-        hungerTurnsPerGame: this.hungerTurns[playerID] / games,
+        hungerTurnsPerGame:
+          this.games.reduce((sum, game) => sum + game.seatCounts[playerID].hungerTurns, 0) / games,
         popsLostPerGame:
           this.games.reduce((sum, game) => sum + game.popsLostToHunger[playerID], 0) / games,
         idleSlavesMean: this.snapshots.length > 0 ? idle / this.snapshots.length : 0,
@@ -904,23 +1237,32 @@ export class Aggregator {
       };
     }
 
-    // Every snapshot is one player-turn, so a year's snapshots are its turns.
-    const turnsByYear = new Map<number, number>();
-    for (const snapshot of this.snapshots) {
-      turnsByYear.set(snapshot.year, (turnsByYear.get(snapshot.year) ?? 0) + 1);
-    }
-    const riotCount = [...this.riotsByYear.values()].reduce((sum, count) => sum + count, 0);
+    // Every snapshot is one player-turn, so a year's snapshots are its turns. The
+    // same rows are cut per personality: its seats' riots, revolts and own turns.
+    const riotYears = (name?: string): RiotYearRow[] => {
+      const rows = new Map<number, RiotYearRow>();
+      const row = (year: number) => {
+        if (!rows.has(year)) rows.set(year, { year, riots: 0, playerTurns: 0, revolts: 0 });
+        return rows.get(year)!;
+      };
+      for (const snapshot of this.snapshots) {
+        if (name === undefined || policyOf(snapshot.game, snapshot.actingSeat) === name)
+          row(snapshot.year).playerTurns += 1;
+      }
+      for (const { counts } of seatGamesOf(name)) {
+        for (const year of counts.riotYears) row(year).riots += 1;
+        for (const year of counts.revoltYears) row(year).revolts += 1;
+      }
+      return [...rows.values()].sort((a, b) => a.year - b.year);
+    };
+    const riotsByYear = riotYears();
+    const riotCount = riotsByYear.reduce((sum, row) => sum + row.riots, 0);
     const riots: BatchReport["riots"] = {
       perGame: riotCount / games,
       revoltsPerGame: this.revolts / games,
       turnShare: this.snapshots.length > 0 ? riotCount / this.snapshots.length : 0,
-      byYear: [...turnsByYear.entries()]
-        .sort(([a], [b]) => a - b)
-        .map(([year, playerTurns]) => ({
-          year,
-          riots: this.riotsByYear.get(year) ?? 0,
-          playerTurns,
-        })),
+      byYear: riotsByYear,
+      perPolicy: {},
     };
 
     const terminations: Record<GameTermination, number> = {
@@ -958,6 +1300,10 @@ export class Aggregator {
           cappedSeatGames: 0,
           wins: 0,
           winRate: 0,
+          winsDecidedBy: Object.fromEntries(GAME_DECISIONS.map((key) => [key, 0])) as Record<
+            GameDecision,
+            number
+          >,
           finalCards: percentiles([]),
           finalTitles: Object.fromEntries(VICTORY_CARDS.map((card) => [card.id, 0])),
         });
@@ -966,7 +1312,10 @@ export class Aggregator {
           continue;
         }
         entry.finishedSeatGames += 1;
-        if (game.winner === seat) entry.wins += 1;
+        if (game.winner === seat) {
+          entry.wins += 1;
+          if (game.decidedBy) entry.winsDecidedBy[game.decidedBy] += 1;
+        }
         (policyCards[name] ??= []).push(game.finalCards[seat]);
         for (const title of game.finalTitles[seat]) entry.finalTitles[title] += 1;
       }
@@ -975,6 +1324,146 @@ export class Aggregator {
       entry.winRate = entry.finishedSeatGames ? entry.wins / entry.finishedSeatGames : 0;
       entry.finalCards = percentiles(policyCards[name] ?? []);
     }
+
+    const foodPurchases = (name?: string): FoodPurchases => {
+      const total: FoodPurchases = {
+        turnsBegunShort: 0,
+        coveringShortfall: emptyFoodBought(),
+        buyingAhead: emptyFoodBought(),
+      };
+      for (const snapshot of this.snapshots) {
+        const seat = snapshot.actingSeat;
+        if (name !== undefined && policyOf(snapshot.game, seat) !== name) continue;
+        if (snapshot.players[seat].resources.food < 0) total.turnsBegunShort += 1;
+      }
+      for (const { counts } of seatGamesOf(name)) {
+        for (const state of ["coveringShortfall", "buyingAhead"] as const) {
+          for (const key of Object.keys(total[state]) as Array<keyof FoodBought>)
+            total[state][key] += counts.foodBought[state][key];
+        }
+      }
+      return total;
+    };
+
+    // A seat with no good leads nothing, so "leader or tied" needs at least one.
+    const belovedLuxury = (name?: string): BelovedLuxury => {
+      let turnsHeld = 0;
+      let sole = 0;
+      let tied = 0;
+      for (const snapshot of this.snapshots) {
+        const holder = snapshot.belovedHolder;
+        if (!holder || (name !== undefined && policyOf(snapshot.game, holder) !== name)) continue;
+        const own = snapshot.players[holder].activeLuxuries;
+        const rivals = Math.max(
+          ...PLAYER_IDS.filter((id) => id !== holder).map(
+            (id) => snapshot.players[id].activeLuxuries,
+          ),
+        );
+        turnsHeld += 1;
+        if (own > rivals) sole += 1;
+        if (own > 0 && own >= rivals) tied += 1;
+      }
+      return {
+        turnsHeld,
+        soleLuxuryLeader: sole,
+        soleLuxuryLeaderShare: turnsHeld ? sole / turnsHeld : 0,
+        luxuryLeaderOrTied: tied,
+        luxuryLeaderOrTiedShare: turnsHeld ? tied / turnsHeld : 0,
+      };
+    };
+
+    const drawSwingSummary = (name?: string): DrawSwingSummary => {
+      const seats = seatGamesOf(name);
+      const rows = this.drawSwings.filter(
+        (row) => name === undefined || policyOf(row.game, row.player) === name,
+      );
+      const resourceCards = rows.filter((row) => row.materialMagnitude > 0);
+      const popCards = rows.filter((row) => row.pops !== 0);
+      const tokenCards = rows.filter((row) => row.unrestTokens !== 0);
+      return {
+        draws: seats.reduce((sum, { counts }) => sum + counts.cardsDrawn, 0),
+        discarded: seats.reduce((sum, { counts }) => sum + counts.cardsDiscarded, 0),
+        resourceCards: resourceCards.length,
+        collectedRatio: percentiles(resourceCards.flatMap((row) => row.collectedRatio ?? [])),
+        popCards: popCards.length,
+        popsMoved: popCards.reduce((sum, row) => sum + Math.abs(row.pops), 0),
+        tokenCards: tokenCards.length,
+        tokensMoved: tokenCards.reduce((sum, row) => sum + Math.abs(row.unrestTokens), 0),
+        unchanged: rows.length - new Set([...resourceCards, ...popCards, ...tokenCards]).size,
+      };
+    };
+
+    // The per-personality figures: each is summed over the seat-games a personality
+    // played, whichever seat it sat in.
+    const hungerPerPolicy: BatchReport["hungerPerPolicy"] = {};
+    const assemblyPerPolicy: BatchReport["assembly"]["perPolicy"] = {};
+    const directiveTargetsPerPolicy: Record<string, number> = {};
+    const influencePerPolicy: BatchReport["influenceSpent"]["perPolicy"] = {};
+    const foodPerPolicy: Record<string, FoodPurchases> = {};
+    const belovedPerPolicy: Record<string, BelovedLuxury> = {};
+    const drawSwingsPerPolicy: Record<string, DrawSwingSummary> = {};
+    for (const name of Object.keys(perPolicy)) {
+      const seats = seatGamesOf(name);
+      const sum = (pick: (seat: (typeof seats)[number]) => number) =>
+        seats.reduce((total, seat) => total + pick(seat), 0);
+
+      let idle = 0;
+      let slaves = 0;
+      let samples = 0;
+      for (const snapshot of this.snapshots) {
+        for (const seat of PLAYER_IDS) {
+          if (policyOf(snapshot.game, seat) !== name) continue;
+          idle += snapshot.players[seat].idleSlaves;
+          slaves += snapshot.players[seat].slaves;
+          samples += 1;
+        }
+      }
+      hungerPerPolicy[name] = {
+        hungerTurnsPerSeatGame: sum(({ counts }) => counts.hungerTurns) / seats.length,
+        popsLostPerSeatGame: sum(({ game, seat }) => game.popsLostToHunger[seat]) / seats.length,
+        idleSlavesMean: samples > 0 ? idle / samples : 0,
+        idleSlaveShare: slaves > 0 ? idle / slaves : 0,
+      };
+      riots.perPolicy[name] = {
+        riotsPerSeatGame: sum(({ counts }) => counts.riotYears.length) / seats.length,
+        revoltsPerSeatGame: sum(({ counts }) => counts.revoltYears.length) / seats.length,
+        byYear: riotYears(name),
+      };
+
+      const count = emptyAssemblySeat();
+      for (const key of Object.keys(count) as Array<keyof AssemblySeatTelemetry>)
+        count[key] = sum(({ game, seat }) => game.assemblySeats[seat][key]);
+      assemblyPerPolicy[name] = {
+        count,
+        perSeatGame: Object.fromEntries(
+          Object.entries(count).map(([key, value]) => [key, value / seats.length]),
+        ) as AssemblySeatTelemetry,
+      };
+      directiveTargetsPerPolicy[name] = sum(({ counts }) => counts.directivesAimedAt);
+      influencePerPolicy[name] = Object.fromEntries(
+        INFLUENCE_SINKS.map((sink) => {
+          const spent = sum(({ counts }) => counts.influenceSpent[sink]);
+          return [sink, { count: spent, perSeatGame: spent / seats.length }];
+        }),
+      ) as BatchReport["influenceSpent"]["perPolicy"][string];
+      foodPerPolicy[name] = foodPurchases(name);
+      belovedPerPolicy[name] = belovedLuxury(name);
+      drawSwingsPerPolicy[name] = drawSwingSummary(name);
+    }
+
+    const everySeatGame = seatGamesOf();
+    const influenceTotal = Object.fromEntries(
+      INFLUENCE_SINKS.map((sink) => [
+        sink,
+        this.perGameCount(
+          everySeatGame.reduce((sum, { counts }) => sum + counts.influenceSpent[sink], 0),
+        ),
+      ]),
+    ) as BatchReport["influenceSpent"]["total"];
+    const repeals = (key: "repealsProposed" | "repealsPassed" | "repealsFailed") =>
+      this.perGameCount(
+        everySeatGame.reduce((sum, { game, seat }) => sum + game.assemblySeats[seat][key], 0),
+      );
 
     const buildings = Object.fromEntries(
       BUILDING_CONTENT_IDS.map((buildingId) => {
@@ -1072,6 +1561,7 @@ export class Aggregator {
       reach: { total: this.reachTotal, perPolicy: reachPolicies },
       classes,
       drawSwings: this.drawSwings,
+      drawSwingSummary: { total: drawSwingSummary(), perPolicy: drawSwingsPerPolicy },
       meta,
       perGame: this.games,
       nationalIdeas: Object.fromEntries(
@@ -1080,6 +1570,9 @@ export class Aggregator {
             purchases = 0,
             holders = 0,
             wins = 0;
+          // Each personality drafts the same Idea most games, so the pooled rate is
+          // mostly one personality's win rate. The split shows which.
+          const byPolicy: Record<string, { holders: number; wins: number; winRate: number }> = {};
           for (const game of this.games)
             for (const id of PLAYER_IDS) {
               const held = game.nationalIdeas[id].find((i) => i.id === idea.id);
@@ -1087,20 +1580,41 @@ export class Aggregator {
               if (held.acquired === "setup") setupPicks++;
               else purchases++;
               if (game.termination !== "turnCap") {
+                const entry = (byPolicy[policyOf(game.game, id)] ??= {
+                  holders: 0,
+                  wins: 0,
+                  winRate: 0,
+                });
                 holders++;
-                if (game.winner === id) wins++;
+                entry.holders++;
+                if (game.winner === id) {
+                  wins++;
+                  entry.wins++;
+                }
               }
             }
+          for (const entry of Object.values(byPolicy)) entry.winRate = entry.wins / entry.holders;
           return [
             idea.id,
-            { setupPicks, purchases, holders, wins, winRate: holders ? wins / holders : 0 },
+            {
+              setupPicks,
+              purchases,
+              holders,
+              wins,
+              winRate: holders ? wins / holders : 0,
+              perPolicy: byPolicy,
+            },
           ];
         }),
       ) as BatchReport["nationalIdeas"],
       perYear,
       perSeat,
       hunger,
+      hungerPerPolicy,
+      foodPurchases: { total: foodPurchases(), perPolicy: foodPerPolicy },
       riots,
+      beloved: { total: belovedLuxury(), perPolicy: belovedPerPolicy },
+      influenceSpent: { total: influenceTotal, perPolicy: influencePerPolicy },
       buildings,
       luxuries,
       movesByType: Object.fromEntries(
@@ -1140,6 +1654,7 @@ export class Aggregator {
             return [id, { count, perGame }];
           }),
         ) as BatchReport["assembly"]["perSeat"],
+        perPolicy: assemblyPerPolicy,
         votesBought: this.perGameCount(this.assemblyVerbs.assemblyBribe ?? 0),
         goldSpent: this.perGameCount(this.assemblyGold),
         held: this.perGameCount(this.assembliesHeld),
@@ -1148,6 +1663,12 @@ export class Aggregator {
         authoredPassed: this.perGameCount(this.authoredPassed),
         prizesGranted: { ...this.prizesGranted },
         directiveTargets: { ...this.directiveTargets },
+        directiveTargetsPerPolicy,
+        repeals: {
+          proposed: repeals("repealsProposed"),
+          passed: repeals("repealsPassed"),
+          failed: repeals("repealsFailed"),
+        },
         voiceClaims: this.perGameCount(this.voiceClaims),
         voiceTransfers: this.perGameCount(this.voiceTransfers),
         voiceHoldersAtEnd: this.perGameCount(voiceHoldersAtEnd),
@@ -1196,6 +1717,7 @@ export class Aggregator {
       // Every seat observes the public year card; do not credit only the opener.
       for (const player of PLAYER_IDS) this.countReach(player, [`year:${card.id}`]);
       this.yearCards[card.id] = (this.yearCards[card.id] ?? 0) + 1;
+      this.gameYearCards.push(card.id);
     }
   }
 
@@ -1205,12 +1727,27 @@ export class Aggregator {
     if (card) {
       this.countReach(G.currentPlayer, [`playerDraw:${card.id}`]);
       this.playerEvents[card.id] = (this.playerEvents[card.id] ?? 0) + 1;
+      const seat = this.seatCounts[G.currentPlayer];
+      seat.cardsDrawn += 1;
+      // A pop card with no settlement to take the pop is discarded at the draw.
+      if (getAddPopsEffect(card.effects) && !G.pendingPlayerEvent) seat.cardsDiscarded += 1;
     }
   }
 }
 
-/** Flatten snapshots to CSV — one row per (game, turn, player). */
-export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
+/**
+ * Flatten snapshots to CSV — one row per (game, turn, player). `games` fills each
+ * seat's personality and the game's winner. `finals` adds each game's last state
+ * after its turns, one row a seat, marked `final`. Columns added since the first
+ * version sit at the end, so the older ones keep their places.
+ */
+export function snapshotsToCsv(
+  snapshots: TurnSnapshot[],
+  games: GameRow[] = [],
+  finals: TurnSnapshot[] = [],
+): string {
+  const gameRows = new Map(games.map((game) => [game.game, game]));
+  const lastStates = new Set(finals);
   const header = [
     "game",
     "seed",
@@ -1247,11 +1784,20 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
     "popsLostToUnrest",
     "popsGainedFromEvents",
     ...ACTIVE_EFFECT_KINDS.map((kind) => "effect:" + kind),
+    "policy",
+    "actingSeat",
+    "winner",
+    "final",
+    "belovedHolder",
+    "activeLuxuries",
   ];
 
-  const rows = snapshots.flatMap((snapshot) =>
+  // The sort is stable: a game's turns stay in order and its last state follows them.
+  const ordered = [...snapshots, ...finals].sort((a, b) => a.game - b.game);
+  const rows = ordered.flatMap((snapshot) =>
     PLAYER_IDS.map((playerID) => {
       const player = snapshot.players[playerID];
+      const game = gameRows.get(snapshot.game);
       return [
         snapshot.game,
         snapshot.seed,
@@ -1288,6 +1834,12 @@ export function snapshotsToCsv(snapshots: TurnSnapshot[]): string {
         player.popsLostToUnrest,
         player.popsGainedFromEvents,
         ...ACTIVE_EFFECT_KINDS.map((kind) => player.activeEffects[kind]),
+        game?.seatPolicies?.[playerID] ?? "",
+        snapshot.actingSeat,
+        game?.winner ?? "",
+        lastStates.has(snapshot) ? 1 : 0,
+        snapshot.belovedHolder ?? "",
+        player.activeLuxuries,
       ].join(",");
     }),
   );

@@ -223,6 +223,7 @@ describe("scores setup Ideas and in-play purchases", () => {
       holders: 2,
       wins: 1,
       winRate: 0.5,
+      perPolicy: { master: { holders: 2, wins: 1, winRate: 0.5 } },
     });
     expect(report.nationalIdeas["treasury-grant"]).toEqual({
       setupPicks: 0,
@@ -230,6 +231,7 @@ describe("scores setup Ideas and in-play purchases", () => {
       holders: 1,
       wins: 1,
       winRate: 1,
+      perPolicy: { master: { holders: 1, wins: 1, winRate: 1 } },
     });
     expect(report.nationalIdeas["capital-works"].winRate).toBe(0);
   });

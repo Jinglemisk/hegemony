@@ -774,6 +774,38 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - The projection's `mildRiotEvents`, `severeRiotEvents` and `mildRiotPenalty` are now
   `riotEvents`, `revoltEvents` and `riotPenalty`. Two stale rows name lines in the
   2026-10-04 reach audit; reports are not edited, so they stand.
+- Report: a draw's swing is set against what the seat collected that turn, the gains
+  in its stock at income. Food upkeep is a loss, so it adds nothing to that sum. The
+  old `ratio` stays beside the new `collectedRatio`.
+- Report: pop and token cards are counted in their own units (pops moved, tokens
+  moved) in `drawSwingSummary`. No resource value is given to a pop or a token: that
+  needs an owner ruling, so there is no single ratio over all twelve kinds.
+- Report: the luxury leader is given both ways. The sole leader has more active goods
+  than every other seat. "Leader or tied" needs at least one good, so four seats with
+  none do not count as a tie. Goods count in a Blockade year, when they add nothing.
+- Report: influence spent is what the seat's stock fell by at each purchase, so a
+  price an Idea or a Law changed is counted as paid. Demotions are an eighth sink
+  beside the seven named; a riot concession counts as a demotion.
+- Report: a food purchase covers a shortfall when the stock was below zero before it,
+  and buys ahead at zero or above. The bank and the Dole are both counted.
+- Report: end-of-game luxury happiness is what the active goods are worth in a year
+  that counts them, so a last year under Blockade no longer reads 0.
+- Report: each game row carries its per-seat counts (`seatCounts`), and the pooled and
+  per-personality figures are summed from the rows. Step 19's merge can then work from
+  game rows alone.
+- Report: which class left at a hunger pick is a reach ID (`hunger:freemen`,
+  `hunger:citizens`), which gives the total and the per-personality count at once.
+- Report: year-card telemetry is the card order on each game row. What a card did to
+  each seat is not aggregated.
+- Report: no count was added for "a move that changed the turn-end check". Pops on the
+  move now count for the level, so a move no longer changes that check. The riot
+  detail row (level, roll, insurance per riot) is left for later.
+- `--rotate` plays only the seatings that differ: four identical seats play each seed
+  once. `meta.rotations` records the number.
+- The CSV's new columns are added at the end, so the old ones keep their places. The
+  last-state rows are marked `final`.
+- The summary prints the riot share from year 8 and the influence medians from year
+  10, the windows Step 11's rules name.
 
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory

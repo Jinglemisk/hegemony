@@ -33,6 +33,9 @@ export const REACH_IDS = [
   "demote:freemen",
   "grow:slaves",
   "grow:freemen",
+  // One count for each pop a hunger pick sends away, by its class.
+  "hunger:freemen",
+  "hunger:citizens",
   "votes:gold",
   "votes:influence",
   ...RIOT_INSURANCE_CONTENT_IDS.map((id) => `insurance:${id}`),
@@ -82,6 +85,9 @@ export function moveReachIds(
       break;
     case "growPop":
       ids.push(`grow:${move.pop}`);
+      break;
+    case "resolveHunger":
+      for (const { pop } of move.leave) ids.push(`hunger:${pop}`);
       break;
     case "assemblyBribe":
       ids.push(`votes:${move.payment}`);
