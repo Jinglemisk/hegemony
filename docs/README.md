@@ -13,11 +13,13 @@ Last updated: 2026-10-05.
 in the Hybrid arc shell, built on `feat/v2` while `main` keeps today's game. Start every
 session with "continue the v2 migration" in the `hegemony-v2` worktree.
 
-**Owner blockers:** none. Q79 is answered (2026-10-08): pops keep eating, food stays a stock,
-and hunger moves to the end of the player's own turn.
+**Owner blockers:** none. Q80, the shape of Step 11, is open but blocks nothing until Step
+11 runs.
 
-Steps 1 to 10, 13, 14 and 17 are merged into `feat/v2` (#79 to #90, #94, #95, #99). Step 11,
-the sim gate, is next: it measures build viability and balance and waits for the owner's go.
+Steps 1 to 10, 13, 14 and 17 are merged into `feat/v2` (#79 to #90, #94, #95, #99). The
+[sim parity audit](reports/simulation/2026-10-10-v2-sim-parity-audit.md) found the bots and
+the batch report out of step with the rules, so Steps 18 and 19 fix them before Step 11, the
+sim gate, which waits for the owner's go.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
@@ -27,7 +29,7 @@ precedes full multiplayer.
 
 | Plan                                                | Phase    | Status    | Position                                                                          |
 | --------------------------------------------------- | -------- | --------- | --------------------------------------------------------------------------------- |
-| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 11, the sim gate, is next; Steps 1 to 10, 13, 14 and 17 shipped (#79 to #99) |
+| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 18, sim parity, is next; Steps 1 to 10, 13, 14 and 17 shipped (#79 to #99)   |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze  |
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged             |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                         |

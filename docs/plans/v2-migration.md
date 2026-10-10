@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-08
+updated: 2026-10-10
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -136,6 +136,12 @@ After the independent audit (2026-09-28):
   food as a level were rejected on the
   [Q79 note](../reports/balance/2026-10-06-q79-food.md)'s evidence. This supersedes
   Step 3's hunger at income; Step 17 builds it.
+- Pops on the move count (owner, 2026-10-10). A pop in transit is still in its realm: its
+  slaves count toward happiness and its pops toward the titles that count pops. Before, a
+  slave moved for 1 food was off the count at the riot check.
+- No stock goes below zero, except food during its owner's turn (owner, 2026-10-10). Only
+  food had a floor, so Civic Pride's 1 gold a city took gold below zero. A charge now takes
+  what the seat holds and no more.
 - Victory is checked at the start of each player's own turn, as today, so the last seat in
   a year cannot win unanswered.
 - Two colonies of different players may share a tile, as today. They split the tile's
@@ -717,6 +723,8 @@ danger selector and the real-path previews, with their tests.
 ## Open owner questions
 
 - Step 11's thresholds are proposals the owner may change before it runs.
+- Q80: the shape of Step 11 (the runaway-leader rule's wording, the number of games, the v1
+  comparison). It does not block Steps 18 and 19.
 
 ## Three-axis parity
 
@@ -816,11 +824,12 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
       political scorer, with bank and venture moves inside the search, so each personality
       can actually pursue its build.
 
-### Stretch 4 · Sim gate (Steps 17 and 11)
+### Stretch 4 · Sim gate (Steps 17 to 19 and 11)
 
-**Before:** Step 17 is merged, so the gate measures the final hunger rule. **Mode:** one
-session. **Stop:** the dated report, with a proposed remedy for each failing rule; the
-owner decides.
+**Before:** Steps 17 to 19 are merged, so the gate measures the final hunger rule with
+bots that play the rules as built, and Q80 is answered. **Mode:** Steps 18 and 19 one after
+the other; Step 11 in one session, on the owner's go. **Stop:** the dated report, with a
+proposed remedy for each failing rule; the owner decides.
 
 - [x] **Step 17 · Hunger at turn end.** ([#99](https://github.com/Jinglemisk/hegemony/pull/99): a rotated 40-game batch finishes with no turn caps, 3 by the race and 37 by the deck; pops lost to hunger fall from 3.3–3.7 to 0.5–0.8 a seat-game and hunger turns from 1.2–1.4 to 0.3–0.4, against Step 13's batch; riots 2.3 a game, the table on 4.1% of player-turns; wins slaver 33%, civic 20%, trader 15%, master 33%; three bot turns hit the 30-action limit, each a seat with about 100 gold buying 12 to 19 missing food one unit at a time; the hunger card and the short turn pass the gate at 1280/1440/1920 and ui:audit shows 0 defects.) The Q79 ruling in Settled inputs, per the
       [Q79 note](../reports/balance/2026-10-06-q79-food.md)'s option E and its cost
@@ -830,6 +839,25 @@ owner decides.
       warns about it as it does at the riot line, and the Step 13 hunger card opens at
       turn end with a way back to buy food. Bots settle hunger at turn end in their
       projection. `rules.md` and the reference docs follow.
+- [ ] **Step 18 · Sim parity, the bugs.** From the
+      [sim parity audit](../reports/simulation/2026-10-10-v2-sim-parity-audit.md). The two
+      rulings of 2026-10-10 in Settled inputs: pops on the move count, and no stock below
+      zero. Every row the audit marks as a bug: the Assembly's double-counted gain, the food
+      reserve, pops in transit in the projection, Public Dole, City Pioneers, the luxury
+      weight, the three Laws that read a base number, and the action limit after End turn.
+      Two small gaps with them: the setup colony beside a city, and the trader shedding its
+      only citizen. The report fields Step 11 needs: how each game was decided, the Beloved
+      holder and luxuries per turn, influence per year, per-personality hunger, riots and
+      Assembly figures, the CSV's personality and winner columns, and draw swings for pop
+      and token cards. Stale comments and docs the audit lists.
+- [ ] **Step 19 · Sim parity, the gaps.** The audit's medium gaps: the projection buys food
+      before pops leave; a riot is priced from the riot table, and insurance by what it
+      saves; a vote and held influence have value outside a sitting; rival harm is priced on
+      the rival's terms; the draft follows the personality's weights and sees rivals; Laws
+      get a rough value for the prices and rules they change; the Treasurer and Beloved
+      chases; the small enumeration and weight gaps left over. Batches run in parallel
+      across cores and their reports merge. Left out: planning toward a third title, a
+      proper value per Law, and the v1 baseline.
 - [ ] **Step 11 · Sim gate.** First phase: AI reach audit: every action and every piece of
       content is used by some personality in a rotated batch, or a fixture proves the bot
       takes it when it is clearly best; bot bugs found are fixed before Step 11's batches.
