@@ -101,8 +101,8 @@ import { assertGameInvariants } from "./invariants";
  * themselves re-check — so an enumerated move always applies cleanly. movePops is
  * enumerated as a bounded set of strategically meaningful bundles per source→target
  * pair (a single pop of each type, the whole stack of each type, and the entire
- * settlement — deduplicated), so a bot can relocate a garrison or seed a colony in
- * one action instead of several. collectIncome is never enumerated (it happens
+ * settlement — deduplicated). A seat has one move a turn, so a bundle is all it can
+ * send that turn. collectIncome is never enumerated (it happens
  * automatically at the start of every gameplay turn).
  */
 

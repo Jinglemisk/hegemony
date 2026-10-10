@@ -1,7 +1,7 @@
 import { PLAYER_IDS } from "./data";
 import type { HegemonyState, GameOverReason, PlayerId, VictoryMetric } from "./types";
 import { totalPops } from "./core/pops";
-import { addLog, getPlayerName, getTile } from "./core/query";
+import { addLog, getPlayerName, getTile, popsInTransit } from "./core/query";
 import { standingHappiness } from "./happiness";
 
 /**
@@ -74,9 +74,11 @@ export function victoryMetricValue(
     case "cities":
     case "pops":
     case "citizens": {
+      // A pop on the move is still in its realm: Demos and Civic Elite count it.
+      const moving = popsInTransit(G, playerID);
       let cities = 0;
-      let pops = 0;
-      let citizens = 0;
+      let pops = totalPops(moving);
+      let citizens = moving.citizens;
 
       for (const tileId of player.settlements) {
         const tile = getTile(G, tileId);

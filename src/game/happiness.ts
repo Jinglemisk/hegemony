@@ -1,5 +1,5 @@
 import { getBuilding } from "./content";
-import { getOwnedSettlement, zeroedYearTerm } from "./core/query";
+import { getOwnedSettlement, popsInTransit, zeroedYearTerm } from "./core/query";
 import { getLawHappinessContributions } from "./assembly/laws";
 import { activeClaims, luxuryHappinessBonus } from "./luxury";
 import type { HegemonyState, PlayerId, Settlement, UnrestTokenChange } from "./types";
@@ -37,7 +37,8 @@ export function settlementBuildingHappiness(G: HegemonyState, settlement: Settle
   );
 }
 
-/** Every two slaves in the realm cost 1 happiness; an odd slave costs nothing. */
+/** Every two slaves in the realm cost 1 happiness; an odd slave costs nothing. The
+ *  realm's slaves include those on the move. */
 export function slaveUnhappiness(G: HegemonyState, slaves: number): number {
   const per = G.ruleset.economy.slavesPerUnhappiness;
 
@@ -58,7 +59,9 @@ export function happinessContributions(
     (sum, settlement) => sum + settlementBuildingHappiness(G, settlement),
     0,
   );
-  const slaves = settlements.reduce((sum, settlement) => sum + settlement.pops.slaves, 0);
+  // A slave on the move is still in the realm, so a move cannot take it off the count.
+  const moving = popsInTransit(G, playerID).slaves;
+  const slaves = settlements.reduce((sum, settlement) => sum + settlement.pops.slaves, 0) + moving;
   const goods = activeClaims(G, playerID).length;
   const blockade = zeroedYearTerm(G) === "luxuryHappiness" ? G.activeYearCard?.name : null;
 
@@ -71,7 +74,11 @@ export function happinessContributions(
         `${goods} ${goods === 1 ? "luxury" : "luxuries"}` +
         (blockade ? `, none counted this year (${blockade})` : ""),
     },
-    { id: "slaves", amount: -slaveUnhappiness(G, slaves), detail: `${slaves} slaves` },
+    {
+      id: "slaves",
+      amount: -slaveUnhappiness(G, slaves),
+      detail: `${slaves} slaves` + (moving ? ` (${moving} on the move)` : ""),
+    },
     {
       id: "tokens",
       amount: -player.unrestTokens,

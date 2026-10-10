@@ -115,8 +115,9 @@ export const RIOT_TABLE: EventTableDefinition = {
     },
     { roll: 6, label: "The mob disperses", effects: [{ type: "none" }] },
   ],
-  // All three may each be bought once per riot (Q15) — full insurance shifts every
-  // roll to 4+, converting catastrophe into taxation.
+  // All three may each be bought once per riot (Q15). Full insurance shifts every roll
+  // to 4+: no pop is lost outright, though row 5 still takes one from a seat that
+  // cannot pay its 3 gold.
   insurance: [
     { id: "breadDole", label: "Bread dole", cost: { food: 4 }, modifier: 1 },
     { id: "concession", label: "Concession", cost: {}, demotesPop: true, modifier: 1 },

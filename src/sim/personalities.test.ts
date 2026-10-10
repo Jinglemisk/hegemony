@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { happinessLevel } from "../game/happiness";
 import { enumerateLegalCommands, transition, type GameCommand } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
 import { owned, scenario } from "../game/testing/scenario";
@@ -62,7 +63,29 @@ describe("shared personality search", () => {
     expect(transition(G.definition, G, "0", move).ok).toBe(true);
   });
 
-  it.each(names)("%s covers hunger with the bank or Dole and stops with a reserve", (name) => {
+  it("the trader keeps its only citizen from the standard opening", () => {
+    // It weights a freeman above a citizen, so on points alone it would pay the one
+    // influence to demote the citizen setup gave it, and lose its vote and influence.
+    const G = scenario().opening().build();
+    G.pendingPlayerEvent = null;
+    G.players["0"].resources.influence = 3;
+    const keep = (m: GameCommand) =>
+      m.type === "endTurn" || (m.type === "demotePop" && m.from === "citizens");
+    expect(enumerateLegalCommands(G, "0").filter(keep)).toHaveLength(2);
+    expect(choose("trader", G, keep)).toEqual({ type: "endTurn" });
+
+    // Short one food, it lets a freeman go before the citizen.
+    const hungry = structuredClone(G);
+    hungry.players["0"].resources.food = -1;
+    const short = transition(hungry.definition, hungry, "0", { type: "endTurn" });
+    if (!short.ok) throw new Error(short.reasons.join("; "));
+    expect(choose("trader", short.state, () => true)).toMatchObject({
+      type: "resolveHunger",
+      leave: [{ pop: "freemen" }],
+    });
+  });
+
+  it.each(names)("%s covers a coming shortfall with the bank or the Dole", (name) => {
     for (const payment of ["gold", "influence"] as const) {
       let G = realm({ citizens: 1, freemen: 1, slaves: 0 });
       Object.assign(G.players["0"].resources, { food: 0, gold: 0, influence: 0, [payment]: 30 });
@@ -85,8 +108,45 @@ describe("shared personality search", () => {
     }
   });
 
+  it.each([...names, "master"] as const)(
+    "%s buys the food it is short of now and holds none ahead",
+    (name) => {
+      for (const payment of ["gold", "influence"] as const) {
+        // A full city of eight mouths, eight food short after income. The same
+        // shortfall comes every year, and nothing is bought against it.
+        let G = realm({ citizens: 1, freemen: 7, slaves: 0 });
+        G.year = 5;
+        Object.assign(G.players["0"].resources, {
+          food: -8,
+          wood: 0,
+          stone: 0,
+          gold: 0,
+          influence: 0,
+          [payment]: 100,
+        });
+        let fed = 0;
+        for (let action = 0; action < 30; action++) {
+          const move = POLICIES[name].choose(
+            projectForPlayer(G.definition, G, "0"),
+            enumerateLegalCommands(G, "0"),
+            createSimRng(1),
+          );
+          if (move.type === "endTurn") break;
+          if (move.type === "dole" || (move.type === "bankBuy" && move.material === "food")) fed++;
+          const result = transition(G.definition, G, "0", move);
+          if (!result.ok) throw new Error(result.reasons.join("; "));
+          G = result.state;
+        }
+        expect(fed).toBe(8);
+        expect(G.players["0"].resources.food).toBeGreaterThanOrEqual(0);
+      }
+    },
+    30000,
+  );
+
   it("sequences selling wood into a Port for the trader", () => {
-    const G = realm({ citizens: 0, freemen: 0, slaves: 0 });
+    // Four slaves hold the level at −2, so the Port's +2 is worth its price.
+    const G = realm({ citizens: 0, freemen: 0, slaves: 4 });
     const asset = G.board.luxuries.find((good) => good.owner === null)!;
     const tile = G.board.tiles.find((tile) => tile.id === asset.tileIds[0])!;
     const home = owned(G, "-2,0", "0");
@@ -216,6 +276,26 @@ describe("shared personality search", () => {
       expect(end.ok).toBe(true);
       if (end.ok) expect(end.state.pendingRiot).toBeNull();
     },
+  );
+
+  it.each([...names, "master"] as const)(
+    "%s at the riot line raises a legal, affordable Port",
+    (name) => {
+      // Six slaves hold the level at −3. The Port's good is the cheapest lasting +2:
+      // 4 gold and 2 stone, where two Temples would take 6 stone and two settlements.
+      const G = scenario()
+        .withSettlement("0", "-2,-1", "city", { citizens: 1, freemen: 0, slaves: 6 })
+        .withResources("0", { food: 20, wood: 0, stone: 2, gold: 4, influence: 0 })
+        .build();
+      G.phase = "gameplay";
+      G.players["0"].collectedThisTurn = true;
+      G.activeYearCard = null;
+      expect(happinessLevel(G, "0")).toBe(G.ruleset.economy.unrest.riotThreshold);
+      const next = playTurn(G, POLICIES[name], createSimRng(1));
+      expect(owned(next, "-2,-1", "0").buildings).toContain("port");
+      expect(next.turn).toBeGreaterThan(G.turn);
+    },
+    30000,
   );
 
   it.each(names)("%s declines calm when no turn-end riot needs it", (name) => {

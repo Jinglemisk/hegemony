@@ -2,7 +2,7 @@ import { produce } from "immer";
 import type { HegemonyState, PlayerId, Resources } from "./types";
 import { civicCalm, getCivicCalmStatus } from "./civic";
 import type { CivicCalmPayment } from "./civic";
-import { addLog, getPlayerName } from "./core/query";
+import { addLog, getPlayerName, realmPops } from "./core/query";
 import { countPlayerPopType } from "./settlement";
 import { happinessContributions, happinessLevel } from "./happiness";
 import { startRiot } from "./riot";
@@ -38,10 +38,11 @@ export function applyUnrestAtTurnEnd(G: HegemonyState, playerID: PlayerId) {
 }
 
 /** A revolt is determinate: half the slaves leave, rounded down, and the Unrest
- *  tokens clear. No roll, and the turn passes. */
+ *  tokens clear. No roll, and the turn passes. The half counts slaves on the move,
+ *  as the level does; those who leave are taken from the settlements. */
 function revolt(G: HegemonyState, playerID: PlayerId) {
   const player = G.players[playerID];
-  const slaves = countPlayerPopType(G, playerID, "slaves");
+  const { slaves } = realmPops(G, playerID);
   const left = removePops(G, playerID, Math.floor(slaves / 2), ["slaves"]);
   const tokensCleared = player.unrestTokens;
 
@@ -133,7 +134,7 @@ export function turnEndUnrest(G: HegemonyState, playerID: PlayerId): TurnEndUnre
   const outcome = outcomeAt(G, level);
   if (outcome === "none") return null;
 
-  const slaves = countPlayerPopType(G, playerID, "slaves");
+  const { slaves } = realmPops(G, playerID);
   let calm: TurnEndUnrest["calm"] = null;
   for (const payment of ["gold", "influence"] as const) {
     const status = getCivicCalmStatus(G, playerID, payment);
@@ -154,7 +155,8 @@ export function turnEndUnrest(G: HegemonyState, playerID: PlayerId): TurnEndUnre
     level,
     tokens: G.players[playerID].unrestTokens,
     slaves,
-    leaving: Math.floor(slaves / 2),
+    // Only slaves standing in a settlement can be taken.
+    leaving: Math.min(Math.floor(slaves / 2), countPlayerPopType(G, playerID, "slaves")),
     calm,
   };
 }

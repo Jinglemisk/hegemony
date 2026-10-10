@@ -7,15 +7,19 @@ import { projectForPlayer } from "../game/projection";
 import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
 import { LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
 import { scenario } from "../game/testing/scenario";
+import { movePops } from "../game/actions";
 import { endTurn } from "../game/turn";
 import { resolveRiot } from "../game/riot";
 import type { HegemonyState } from "../game/types";
 import {
   beamPolicy,
+  competitiveDelta,
   evaluatePlacement,
   evaluatePolicyUnrestRisk,
   greedyPolicy,
   masterPolicy,
+  placementFrontier,
+  POLICIES,
   POLICY_UNREST_WEIGHTS,
   politicalPolicy,
   policyEconomyThresholds,
@@ -29,6 +33,7 @@ import { buildNewGame } from "./setup";
 import { getTile } from "../game/core/query";
 import { victoryCardsHeld, voiceHolder } from "../game/victory";
 import { hexDistance } from "../game/map";
+import { isAdjacentToCity } from "../game/settlement";
 import { createGameDefinition } from "../game/definition";
 import { getAuthoredGameContent } from "../game/content";
 import { GAME_MODES } from "../game/ruleset";
@@ -101,22 +106,22 @@ describe("policy unrest risk", () => {
     );
     expect(risk(mild)).toEqual({
       tier: "unrest",
-      scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty,
+      scorePenalty: POLICY_UNREST_WEIGHTS.riotPenalty,
     });
     expect(risk(mild - 1)).toEqual({
       tier: "unrest",
-      scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty,
+      scorePenalty: POLICY_UNREST_WEIGHTS.riotPenalty,
     });
   });
 
   it("classifies just above, at, and below the live revolt line", () => {
     expect(risk(severe + 1)).toEqual({
       tier: "unrest",
-      scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty,
+      scorePenalty: POLICY_UNREST_WEIGHTS.riotPenalty,
     });
     expect(risk(severe)).toEqual({
       tier: "revolt",
-      scorePenalty: POLICY_UNREST_WEIGHTS.mildRiotPenalty * POLICY_UNREST_WEIGHTS.revoltMultiplier,
+      scorePenalty: POLICY_UNREST_WEIGHTS.riotPenalty * POLICY_UNREST_WEIGHTS.revoltMultiplier,
     });
     expect(risk(severe - 1)).toEqual(risk(severe));
   });
@@ -138,10 +143,10 @@ describe("policy unrest risk", () => {
 
     expect(projection.unrest).toMatchObject({
       minimumHappiness: -3,
-      mildRiotEvents: 1,
-      severeRiotEvents: 0,
+      riotEvents: 1,
+      revoltEvents: 0,
     });
-    expect(projection.unrest.riskPenalty).toBe(POLICY_UNREST_WEIGHTS.mildRiotPenalty);
+    expect(projection.unrest.riskPenalty).toBe(POLICY_UNREST_WEIGHTS.riotPenalty);
     // The projection works on a copy: the live tokens are untouched.
     expect(G.players["0"].unrestTokens).toBe(3);
   });
@@ -151,7 +156,7 @@ describe("policy unrest risk", () => {
     slavesInCapital(G, 6);
     const projection = projectPolicyHorizon(G, "0", 3);
 
-    expect(projection.unrest).toMatchObject({ minimumHappiness: -3, mildRiotEvents: 4 });
+    expect(projection.unrest).toMatchObject({ minimumHappiness: -3, riotEvents: 4 });
   });
 
   it("runs a revolt for real: half the slaves leave the projected board", () => {
@@ -162,8 +167,8 @@ describe("policy unrest risk", () => {
     // Twelve slaves revolt at −6; the six left riot at −3.
     expect(projection.unrest).toMatchObject({
       minimumHappiness: -6,
-      severeRiotEvents: 1,
-      mildRiotEvents: 2,
+      revoltEvents: 1,
+      riotEvents: 2,
     });
     expect(slavesInCapital(G)).toBe(12);
   });
@@ -172,10 +177,10 @@ describe("policy unrest risk", () => {
     const G = projectionFixture();
     slavesInCapital(G, 6);
     G.year = 14;
-    expect(projectPolicyHorizon(G, "0").unrest.mildRiotEvents).toBe(1);
+    expect(projectPolicyHorizon(G, "0").unrest.riotEvents).toBe(1);
     G.players["0"].calmActive = true;
-    expect(projectPolicyHorizon(G, "0").unrest.mildRiotEvents).toBe(0);
-    expect(projectPolicyHorizon(G, "0", 1).unrest.mildRiotEvents).toBe(1);
+    expect(projectPolicyHorizon(G, "0").unrest.riotEvents).toBe(0);
+    expect(projectPolicyHorizon(G, "0", 1).unrest.riotEvents).toBe(1);
     expect(G.players["0"].calmActive).toBe(true);
   });
 
@@ -184,7 +189,7 @@ describe("policy unrest risk", () => {
     slavesInCapital(G, 6);
     G.board.luxuries[0].owner = "0";
     G.activeYearCard = G.definition.content.yearCards.find((card) => card.id === "year-blockade")!;
-    expect(projectPolicyHorizon(G, "0", 1).unrest.mildRiotEvents).toBe(1);
+    expect(projectPolicyHorizon(G, "0", 1).unrest.riotEvents).toBe(1);
     expect(G.activeYearCard.id).toBe("year-blockade");
   });
 
@@ -200,6 +205,48 @@ describe("policy unrest risk", () => {
       expect(chooseFreemanGrowth(policy, 60)).toMatchObject({ type: "growPop", pop: "freemen" });
     },
   );
+});
+
+describe("pops on the move", () => {
+  it("keeps a moved slave on the count: the move does not change the projected riots", () => {
+    const G = projectionFixture();
+    slavesInCapital(G, 6);
+    const [capital, colony] = G.players["0"].settlements;
+    expect(projectPolicyHorizon(G, "0", 3).unrest.riotEvents).toBe(4);
+    expect(movePops(G, "0", capital, colony, { citizens: 0, freemen: 0, slaves: 1 }).ok).toBe(true);
+    // Five stand and one is on the road. It counts now and arrives before the next income.
+    expect(projectPolicyHorizon(G, "0", 3).unrest.riotEvents).toBe(4);
+    expect(G.transfers).toHaveLength(1);
+  });
+
+  it.each([
+    ["master", masterPolicy],
+    ["slaver", POLICIES.slaver],
+    ["civic", POLICIES.civic],
+    ["trader", POLICIES.trader],
+  ] as const)("%s moves an idle hill slave to an open plains slot", (_name, policy) => {
+    // The hill makes nothing. On the plains the slave makes 1 food a turn, for the
+    // realm's last food: nothing can follow the move, so it stands on its own value.
+    const G = scenario()
+      .withSettlement("0", "0,-2", "city", { citizens: 0, freemen: 0, slaves: 1 })
+      .withSettlement("0", "-1,0", "colony", { citizens: 0, freemen: 0, slaves: 1 })
+      .withResources("0", { food: 1, wood: 0, stone: 0, gold: 0, influence: 0 })
+      .build();
+    G.phase = "gameplay";
+    G.currentPlayer = "0";
+    G.players["0"].collectedThisTurn = true;
+    G.activeYearCard = null;
+    const moves = enumerateLegalCommands(G, "0").filter(
+      (move) =>
+        move.type === "endTurn" || (move.type === "movePops" && move.sourceTileId === "-1,0"),
+    );
+    expect(policy.choose(observe(G), moves, createSimRng(1))).toEqual({
+      type: "movePops",
+      sourceTileId: "-1,0",
+      targetTileId: "0,-2",
+      pops: { citizens: 0, freemen: 0, slaves: 1 },
+    });
+  });
 });
 
 /** Player 0 with one freeman, no slaves, no Temples and food to spare: a level of 0. */
@@ -409,6 +456,20 @@ describe("master policy", () => {
 // runner (it once did: an engaged agora blew past the single-turn action cap and the
 // force-end tried an endTurn that is illegal while the agora stands).
 describe("political policy", () => {
+  it("values a ballot item once: own gain, less the best rival gain, plus the leader's loss", () => {
+    const G = scenario().build();
+    const before = { "0": 50, "1": 80, "2": 60, "3": 40 };
+    const value = (gains: Partial<typeof before>) =>
+      competitiveDelta(before, G, "0", (_state, player) => before[player] + (gains[player] ?? 0));
+
+    // A neutral Law: the untouched leader adds nothing to the seat's own gain.
+    expect(value({ "0": 19 })).toBe(19);
+    // A Directive on the leader counts its loss; on another rival, only the prize.
+    expect(value({ "0": 2, "1": -30 })).toBe(32);
+    expect(value({ "0": 2, "2": -30 })).toBe(2);
+    expect(value({ "0": 5, "3": 12 })).toBe(-7);
+  });
+
   it("smart bots author passing Laws, hold Voice and finish without action caps", () => {
     const passedSeats = new Set<string>();
     const voices = new Set<string>();
@@ -653,6 +714,43 @@ describe("opening placement", () => {
       buildNewGame({ seed: 42, mode: "standard", opening: "policy", simRng: createSimRng(7) });
 
     expect(JSON.stringify(build())).toBe(JSON.stringify(build()));
+  });
+
+  it("founds the setup colony away from a city when a comparable site is open", () => {
+    let G = createInitialStateFromDefinition(definition, 5, "classic");
+    const capitals = { "0": "-2,0", "1": "0,-2", "2": "2,0", "3": "0,2" } as const;
+    while (G.phase === "setupCapital") {
+      const placed = transition(G.definition, G, G.currentPlayer, {
+        type: "placeCapital",
+        tileId: capitals[G.currentPlayer],
+        pops: { citizens: 1, freemen: 1, slaves: 2 },
+      });
+      if (!placed.ok) throw new Error(placed.reasons.join());
+      G = placed.state;
+    }
+
+    // Seat 3 weighs four-slot plains beside a capital against three-slot plains on the
+    // open coast. A colony beside a city can never be upgraded, so the open site wins.
+    const command = masterPolicy.choose(
+      observe(G),
+      enumerateLegalCommands(G, G.currentPlayer),
+      createSimRng(1),
+    );
+    expect(command).toMatchObject({ type: "placeColony", tileId: "-3,2" });
+    expect(isAdjacentToCity(G, getTile(G, "-3,2")!)).toBe(false);
+    expect(isAdjacentToCity(G, getTile(G, "0,-3")!)).toBe(true);
+  });
+
+  it("counts a hill's slots in the frontier once Land Reform lets its slaves grow food", () => {
+    // From the forest at 0,-1 the best three sites are plains (5), forest (4) and,
+    // under Land Reform, the four-slot hill instead of a three-slot mountain.
+    const G = scenario()
+      .withSettlement("0", "0,-1", "city", { citizens: 1, freemen: 0, slaves: 0 })
+      .build();
+    G.phase = "gameplay";
+    expect(placementFrontier(G, "0").frontier).toBe(12);
+    G.activeLaws.push({ cardId: "land-reform", author: "1", enactedYear: 1, order: 0 });
+    expect(placementFrontier(G, "0").frontier).toBe(13);
   });
 
   it("discounts frontier a rival can also reach", () => {

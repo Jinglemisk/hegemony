@@ -3,7 +3,7 @@ import { applyUnrestTokenChange, describeUnrestTokenChange } from "../happiness"
 import { PLAYER_IDS } from "../data";
 import { yearDeckSize } from "../year";
 import type { HegemonyState, PlayerId } from "../types";
-import { addLog, getPlayerName, getTile } from "../core/query";
+import { addLog, getPlayerName, getTile, popsInTransit } from "../core/query";
 import { MOVE_OK, invalid } from "../core/results";
 import type { MoveResult } from "../core/results";
 import { shuffleWithSeed } from "../core/rng";
@@ -485,7 +485,8 @@ function beginVoting(G: HegemonyState) {
 /** What a seat's base vote is made of: the seat, its citizens, and the Rural Bloc's
  *  colonies-minus-cities when that Law stands. Isonomia overrides all of it with one. */
 export function voteWeightParts(G: HegemonyState, playerID: PlayerId) {
-  let citizens = 0;
+  // A citizen on the move still votes.
+  let citizens = popsInTransit(G, playerID).citizens;
   let rural = 0;
   const bloc = hasLawRule(G, "ruralBloc");
 

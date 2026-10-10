@@ -239,6 +239,18 @@ function rotateSeats<T>(base: Record<PlayerId, T>, r: number): Record<PlayerId, 
   return out;
 }
 
+/** The shifts of a seating that differ from one another. Four different seats give
+ *  four; four identical seats give one, since every rotation is the same game. */
+function distinctRotations(names: Record<PlayerId, string>): number[] {
+  const seen = new Set<string>();
+  return PLAYER_IDS.map((_, r) => r).filter((r) => {
+    const seating = Object.values(rotateSeats(names, r)).join(",");
+    if (seen.has(seating)) return false;
+    seen.add(seating);
+    return true;
+  });
+}
+
 function parsePatch(flags: Flags): RulesetPatch | null {
   if (typeof flags["ruleset-patch"] !== "string") {
     return null;
@@ -743,14 +755,20 @@ function cmdBatch(flags: Flags) {
     const aggregator = new Aggregator();
     const logEvery = games <= 20 ? 1 : 10;
     // Rotation reseats each policy through every seat on the SAME seed to cancel
-    // first-player advantage; without it, one game per base seed.
-    const rotations = seats && rotate ? PLAYER_IDS.length : 1;
+    // first-player advantage; without it, one game per base seed. A rotation that
+    // repeats a seating is the same game again, so only the distinct ones run.
+    const rotations = seats && rotate ? distinctRotations(seats.names) : [0];
+    if (rotate && rotations.length < PLAYER_IDS.length) {
+      console.log(
+        `--rotate: ${rotations.length} of ${PLAYER_IDS.length} seatings differ; each seed plays ${rotations.length === 1 ? "once" : `${rotations.length} games`}.`,
+      );
+    }
 
     let gameIndex = 0;
     for (let base = 0; base < games; base += 1) {
       const seed = (baseSeed + base) >>> 0;
 
-      for (let r = 0; r < rotations; r += 1) {
+      for (const r of rotations) {
         const seatPolicies = seats ? rotateSeats(seats.policies, r) : undefined;
         const seatNames = seats ? rotateSeats(seats.names, r) : undefined;
         const currentGame = gameIndex;
@@ -790,7 +808,7 @@ function cmdBatch(flags: Flags) {
 
       if ((base + 1) % logEvery === 0) {
         console.log(
-          `seed ${base + 1}/${games} done (${rotations > 1 ? `${rotations} rotations, ` : ""}seed ${seed})`,
+          `seed ${base + 1}/${games} done (${rotations.length > 1 ? `${rotations.length} rotations, ` : ""}seed ${seed})`,
         );
       }
     }
@@ -803,6 +821,7 @@ function cmdBatch(flags: Flags) {
       boardLayout,
       opening,
       seatPolicies: seats ? seats.names : null,
+      rotations: rotations.length,
       baseSeed,
       botSeedRule: "seed ^ 0x9e3779b9",
       rulesetPatch: effectivePatch,
@@ -819,7 +838,10 @@ function cmdBatch(flags: Flags) {
 
     if (csvPath) {
       mkdirSync(dirname(csvPath), { recursive: true });
-      writeFileSync(csvPath, snapshotsToCsv(aggregator.allSnapshots()));
+      writeFileSync(
+        csvPath,
+        snapshotsToCsv(aggregator.allSnapshots(), report.perGame, aggregator.finalSnapshots()),
+      );
       console.log(`Turn snapshots written to ${csvPath}.`);
     }
 

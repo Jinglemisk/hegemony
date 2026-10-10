@@ -190,6 +190,9 @@ export const TABLE_EFFECT_PARITY = {
   gainPop: table("tableResolution", "tableFallbacks"),
 } as const satisfies Record<TableEffect["type"], EffectParityCoverage>;
 
+// `deltaIfEnacted` is the route every Law and Directive is scored through, on a clone
+// the engine has enacted it on. It is a route, not yet a value, for a price Law, a calm
+// payment and Isonomia: those change nothing a static position shows, so they score 0.
 const lawArgs = [
   { implementation: "src/game/assembly/laws.ts", evidence: "getStandingEffects" },
   { implementation: "src/ui/effects.ts", evidence: "presentLawEffect" },
@@ -200,22 +203,24 @@ const lawArgs = [
 const law = (...fixtures: NonEmptyList<ParityBehaviorFixtureId>) =>
   coverage(...lawArgs, ...fixtures);
 
-const idea = () =>
+/** `valuation` names what prices the effect in the bots' score. An effect the
+ *  projection or the real post-pick state already carries has no opportunity term. */
+const idea = (valuation = "ideaOpportunityValue") =>
   coverage(
     { implementation: "src/game/ideaRules.ts", evidence: "getStandingEffects" },
     { implementation: "src/components/board/modals/IdeasModal.tsx", evidence: "getNationalIdeas" },
     { implementation: "src/game/ideas.ts", evidence: "ideaHolder" },
-    { implementation: "src/sim/policies.ts", evidence: "ideaOpportunityValue" },
+    { implementation: "src/sim/policies.ts", evidence: valuation },
     { implementation: "src/sim/telemetry.ts", evidence: "nationalIdeas" },
     "ideaRules",
     "ideaPolicy",
   );
 export const LAW_EFFECT_PARITY = {
-  realmIncome: idea(),
-  extraSlots: idea(),
+  realmIncome: idea("projectPolicyHorizon"),
+  extraSlots: idea("projectPolicyHorizon"),
   colonyPieces: idea(),
-  acquirePop: idea(),
-  acquireResource: idea(),
+  acquirePop: idea("ideaForEval"),
+  acquireResource: idea("ideaForEval"),
   onUpgradeCity: idea(),
   dolePrice: idea(),
   slotExempt: idea(),
