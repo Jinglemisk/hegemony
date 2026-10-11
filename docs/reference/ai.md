@@ -52,7 +52,15 @@ Population, city and colony weights are multiplied by 10. Projected materials
 and latent work are multiplied by 10/8. Influence, happiness, luxury and Law
 weights apply directly; every held victory card is worth 120 for all personalities.
 Pops on the move count in the population sum. The standing-level cap is the
-Beloved minimum plus two. Unrest and hunger costs stay shared.
+Beloved minimum plus two. A starved pop costs every build the same; a riot and a
+revolt are charged at the build's own weights.
+
+A slave with no slot to work carries half the slave weight. It is still a head for
+Demos and the tiebreak and can be moved or promoted, but it makes nothing and
+costs the level like any other. At the full weight an idle slave was worth as much
+as a working one, so filling an open slot with it paid nothing: with the move's 1
+food it scored below leaving both as they were. A slave on the move is read where
+it is going: it works there if a slot is open.
 
 A claimed good's +2 is priced by the level weight, point for point with a Temple.
 The luxury weight is what comes on top: 6 a good, so a good is worth 18 where two
@@ -70,8 +78,11 @@ the value. Each build can convert through the bank and choose ventures in search
 
 All optional economic actions enter search, including unit bank buys and sells,
 the Dole, calm, Ideas and ventures. A bank sale can unlock a building or promotion
-later in the same four-action search. Forced riots keep the shared insurance/roll
-handler; search never evaluates the live riot roll.
+later in the same four-action search. A seat has one move a turn, so the engine
+offers a few bundles for each pair of settlements: one pop of a class, all of a
+class, everyone, and as many slaves as the target has slots open. The last is the
+one that puts two of four idle slaves to work. A riot on the table has its own
+handler, below; search never evaluates the live riot roll.
 
 Ventures are chance leaves at every search depth. Score every public die face,
 and every uniform settlement destination for the Voyage jackpot, with its actual
@@ -96,9 +107,36 @@ one included, settles engine hunger first (one pop per missing food, freemen fir
 bot sees a shortfall in its own turn and can buy food. Pops on the move arrive before
 the first forecast income. Until then the current check reads them as the engine does:
 their slaves count for the level and hunger cannot take them. It runs deterministic
-revolts, clears tokens after a projected riot, and recalculates income after pop losses
-or the year's card expires. Otherwise it reuses income through the horizon; stocks and tokens do
-not change printed yields. It assumes no future card or token changes.
+revolts, runs a riot at its table's expected loss, and recalculates income after pop
+losses or the year's card expires. Otherwise it reuses income through the horizon;
+stocks and tokens do not change printed yields. It assumes no future card or token
+changes.
+
+On a later forecast turn the seat buys the food it is short of before anyone
+leaves: bank food for gold or the Dole for influence, at the prices the engine
+charges that seat, the cheaper first by its own weights. Only what it cannot pay
+for starves. The gold and influence leave the forecast stocks, so a realm fed from
+the bank is seen to hold less. Before this every eater beyond what the land grew
+starved in the forecast whatever the seat held, and no build grew past its food
+line. Two turns are left out. The current turn is not bought for: that food the
+seat has to buy itself, now. And setup does not count on the bank: it picks land
+for fourteen years and the forecast sees six, so a starting store and six years of
+gold would make any site look fed.
+
+Past the six-year horizon the forecast follows only the food and what pays for it, to
+the game's last year: the closing income each year, the shortfall bought the same way,
+and a pop gone for each food the stocks cannot pay for. It reports them as
+`starvedAfterHorizon`, each counted by the share of its remaining incomes that the pop
+misses, and the score charges them at the starved-pop weight. So a seat does not grow
+an eater its gold feeds for six years and loses in the seventh, and it still feeds the
+pops it has for as long as it can pay.
+
+A realm that buys its food each year also keeps one year's purchases in hand
+(`leanYearValue`). Drought stops the plains' food and Piracy the freemen's gold; in
+such a year the income that pays for the shortfall does not come. Each food of the
+standing shortfall that the seat's food, gold and influence could not cover is charged
+as a pop lost, weighted by the share of those cards in the year deck. A realm its own
+land feeds is charged nothing.
 Influence uses projected income too, so a Forum pays back
 through its actual citizen column; Civic Tradition needs no duplicate future bonus.
 
@@ -110,21 +148,51 @@ candidate transitions and Assembly forecasts without changing rules or saved sta
 A projected lost pop costs 60, above every personality's population weight.
 There is no food reserve. Hunger is settled at turn end, so a seat that income
 leaves short buys food on that turn at the same price: food held ahead of the
-shortfall buys no safety. Each food a seat is short of now costs 14, which gives
-a single bank or Dole purchase its value before the whole shortfall is covered.
-The forecast alone gives none: it does not buy food, so a pop fed this turn
-starves in a later forecast year and the count is the same. Step 19 makes the
-forecast buy food. There is no hard-coded trade order.
+shortfall buys no safety, and the forecast buys the same food in the year it is
+needed, so buying it early scores nothing. Each food a seat is short of now also
+costs 74, on top of the pop the forecast sees leave. The forecast counts pops lost
+and not when. So a seat whose gold could not feed everyone through the forecast
+let pops go while it could still pay. At the old charge of 14, with 20 gold and
+six short, it bought four food and kept 12 gold for the others; with no charge,
+with 4 gold and three short, it bought wood. The charge outweighs one more pop
+lost in a later year, 60, and the dearest food a build can buy, the civic's Dole
+at 9, so a seat that can pay feeds its pops first. From zero food its search can
+reach the slave that would feed them; from six short it cannot. A short seat also
+funds the Colonists' Voyage: its 2 gold bring 1.5 food on average against the
+bank's one. There is no hard-coded trade order.
 Latent slave slots count only where population room remains, including transfers
 already committed to that settlement.
 
 Calm enters search at its engine price. The owner ruling of 2026-10-03 puts riots
 and revolts at turn end, so calm bought after income protects the current check.
 It expires at the year boundary and never counts for Beloved. Bots weigh calm,
-Temples and ladder changes against the visible turn-end risk. Forced riots still
-use legal insurance and the roll; resolving one passes the committed turn.
-The current check charges only an actual riot or revolt. A safe current level
-needs no proximity penalty; future turns keep the existing buffer estimate.
+Temples and ladder changes against the visible turn-end risk.
+
+A riot is charged what the riot table is expected to take, read from the engine's
+table: every face at equal odds. The pops are charged at the weight of the class
+the table takes next (slaves first), a burned building at what the seat would pay
+to raise it again, and the food and gold at what the realm could hand over. With
+no building to burn or under 3 gold the table takes a pop more often, and the
+charge follows. For the default weights a riot that takes slaves costs about 10,
+and 30 or more for the slaver; it was a flat 50. The pops also leave the forecast
+board once the expected losses add up to a whole one, so a level that six slaves
+hold at −3 riots twice and then stands at −2 with five. Before, it rioted at
+every check to the horizon: 350. A revolt is run as the engine runs it and charged
+the slaves it sends away. A level one step above the riot line is charged a fifth
+of a riot at each later turn end, a level two steps above half that: the chance
+that a token card or a lost good pushes it over. The current check charges only
+an actual riot or revolt.
+
+So calm is bought where it avoids a riot inside the forecast, such as in the last
+year or in a Blockade year. A riot that six slaves bring every year is faced by
+the builds that weigh a slave lightly: calm would only move it a year.
+
+At the riot table a bot buys the insurance that leaves it best off and rolls when
+none pays, the concession included. The forecast charges the pending riot at the
+insurance bought so far, so an option is worth the loss it saves at the seat's
+weights, less its price. The rule used to buy the bread dole and patronage
+whenever it could pay and never the concession. No bot concedes its last citizen.
+Resolving the riot passes the committed turn.
 
 ## Hunger
 
@@ -136,7 +204,8 @@ its scorer. Ties keep the freemen-first default, which enumeration lists first.
 
 No bot gives up its last citizen while it has another choice. Search does not
 weigh the demotion of a realm's only citizen, nor a hunger split that takes every
-citizen. The scorer prices a citizen by its pop weight and influence income and
+citizen, and the riot handler does not weigh the concession that would demote it.
+The scorer prices a citizen by its pop weight and influence income and
 not by its vote, so the trader, which weights a freeman higher, demoted its setup
 citizen in 39 of 40 games and then played without influence, a second Idea or a
 second vote. A value for the vote is Step 19's.
@@ -159,7 +228,14 @@ whatever its food income, so a holder is never paid for being short.
 
 Placement adds 6 for a colony that could still be upgraded, scaled by the city
 weight. A founding colony beside a city can never become one, so between
-comparable sites the open coast wins.
+comparable sites the open coast wins. A capital is chosen from the three tiles
+that rank best on their most even pop split. The founding colony is scored on
+every split of every tile: ranked on the even split alone, a tile worth two
+slaves fell out of the top three, and the colony went beside a city on a worse
+score.
+
+The frontier term is nothing for a seat with no colony piece left. An upgrade
+frees a piece and brings it back.
 
 All non-random policies use one Assembly handler. It scores real enactments and
 repeals, draws against unordered public composition, supports modest private
@@ -189,7 +265,9 @@ unused Ideas.
 ## Limits and validation
 
 Search cannot save deliberately across turns, model general rival replies, or
-plan multi-hop routes. Riot severity and future Idea opportunities are heuristics.
+plan multi-hop routes. The forecast buys food and loses pops to riots, and nothing
+else: it does not buy calm, grow slaves or raise a building in a later year. The
+risk of standing near the riot line and future Idea opportunities are heuristics.
 Venture expectation is exact for the shipped public tables; it does not implement
 the outcome-driven AI program. Focused tests cover build preferences, food rescue,
 bank-to-Port sequences, venture odds and title decisions, Idea picks/purchases,

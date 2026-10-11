@@ -129,14 +129,17 @@ Works from any phase — bots will finish a manual setup too. Policies:
   who could work it. So it climbs the social ladder, raises the class buildings, and
   keeps plains slots for the slaves that feed it. Bank and Dole moves enter search;
   each food the seat is short of now has a price, so it buys what it lacks and
-  holds none ahead. Deterministic.
+  holds none ahead. Its forecast buys the food later years lack from its gold and
+  influence, so a seat that can pay for imports grows past what its land feeds.
+  Deterministic.
 - `beam` — a within-turn **beam search** over the same `smart` score, so it values the
   within-turn sequences one-ply misses (build-then-promote and bank chains). It does
   not search through `endTurn`, so the six-turn income projection is state evaluation,
   not income-to-future-action planning.
   Searches bank moves and evaluates ventures as chance leaves using every public
-  outcome, independently of the live die/deck stream. Forced riots keep the shared
-  insurance handler. Record→replay remains deterministic. A `smart`-vs-`beam` A/B
+  outcome, independently of the live die/deck stream. A riot on the table has one
+  shared handler: it buys the insurance that saves more than it costs and then
+  rolls. Record→replay remains deterministic. A `smart`-vs-`beam` A/B
   isolates search depth from evaluation. See docs/reference/ai.md and docs/reports/simulation/ for the head-to-head.
 - `political` — `smart` economy plus standing-authorship valuation outside the
   Assembly. All non-random policies share its Assembly handler: draw and propose
@@ -165,6 +168,11 @@ income after projected pop loss. Hunger draws no dice: the projection applies th
 (freemen before citizens, from the fullest settlement), the same choice the hunger
 card opens with, and never reads or advances future game RNG. At the table the
 hungry seat chooses; bots score the legal splits (see [AI](ai.md#hunger)).
+Before anyone leaves, a later step buys the missing food from the seat's projected
+gold and influence at its own bank and Dole prices, and the stocks fall by what
+was paid. The current turn and setup are not bought for. A projected riot is
+charged the riot table's expected loss at the seat's weights, and the pops it is
+expected to take leave the projected board once they add up to a whole one.
 
 How the bots work, their limitations, and the path to CPU opponents with
 difficulty settings: **docs/reference/ai.md**.
@@ -179,7 +187,7 @@ which cards come up.
 npm run sim -- batch --games 50 [--turns 56] [--policy random|greedy|smart|beam|political|settler|master|slaver|civic|trader]
                      [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
                      [--tune-preset low-number-core-v1] [--tune-patch p.json]
-                     [--seats p0,p1,p2,p3] [--rotate] [--seed 1000]
+                     [--seats p0,p1,p2,p3] [--rotate] [--seed 1000] [--jobs N]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
 ```
 
@@ -216,12 +224,15 @@ expected value, rather than cycling tables. Under the owner ruling of 2026-10-03
 calm covers the buyer's current turn-end check and still cannot take Beloved.
 Compare `currencyVerbs.civicCalm` (calm bought), `riots.perGame` and
 `riots.revoltsPerGame` with the earlier batch; look for legal calm purchases when
-a +2 lift avoids a visible riot or revolt, and fewer riots per game. Capital Works is
+a +2 lift avoids a visible riot or revolt. Since Step 19 a riot is charged what
+the riot table takes, so expect less calm and more riots than in the batches
+before it: a riot that calm would only move a year is faced. Capital Works is
 weakly dominated by Urban Planning; other unused Ideas need context, not quotas.
 Step 11 owns the 20–45% win-rate decision and any balance changes.
 
 Time the forty-game rotation before starting Step 11's larger conditions. The
-runtime target is under twenty minutes on one core. The performance follow-up
+runtime target is under twenty minutes on one core; `--jobs 4` plays the same forty
+games on four worker processes and writes the same report. The performance follow-up
 keeps width 3, depth 4 and all public venture outcomes; cached queries and scores
 must preserve choices, full-game finishes and the absence of action caps.
 
@@ -270,7 +281,9 @@ even when the opener wins before collecting.
 
 Runs `--games` self-contained games (game _i_ uses seed `base+i`), aggregates,
 and writes a JSON report plus optional per-turn CSV (one row per
-game/turn/player — pivot-table ready).
+game/turn/player — pivot-table ready). Each game is gathered by itself and the
+games are added up in game order, so every figure in the report is built from the
+whole batch's game rows, turn snapshots and counts.
 
 Each CSV row is one seat at the start of one player-turn, after the acting seat's
 income and before it acts. After a game's turns come four more rows, one a seat, with
@@ -292,6 +305,15 @@ same on all four rows) and `activeLuxuries`.
 - `--seats p0,p1,p2,p3` — a policy per seat for mixed-policy tables. `--rotate` runs
   each seed through its distinct cyclic seat rotations (four for four different
   seats), cancelling first-player advantage.
+- `--jobs N` — plays the games on N worker processes and still writes one report and
+  one CSV. The default is 1: every game runs in the command's own process. N is capped
+  at the machine's cores less one (the help text gives the number) and at the number
+  of games. A free worker takes the next game, so a slow core plays fewer. A game
+  depends only on its seed and seating and keeps the index it has in a serial run, so
+  the report and the CSV are the same for any N; `meta` does not record N. Progress
+  lines count the seeds finished and name the one that finished last, which with
+  workers is not always seed order. If a worker stops early the batch stops and writes
+  no report.
 
 The report contains:
 
@@ -441,9 +463,9 @@ Step 11's rules read from one rotated report, with no second script:
 The summary prints each of these. The runaway-leader rule is not covered: its terms
 wait for an owner answer (Q80).
 
-Identical inputs produce byte-identical reports (minus `meta.generatedAt`).
-Compare two patches by running two batches with the same `--seed` and diffing
-the reports.
+Identical inputs produce byte-identical reports (minus `meta.generatedAt`), and
+the same CSV, whatever `--jobs` is. Compare two patches by running two batches with
+the same `--seed` and diffing the reports.
 
 ### `replay` — regression net
 

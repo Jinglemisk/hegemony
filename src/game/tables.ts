@@ -199,7 +199,7 @@ export type RemovalSummary = {
 };
 
 /** The order a table's pop losses fall in: slaves first, then freemen, then citizens. */
-const TABLE_LOSS_ORDER: PopType[] = ["slaves", "freemen", "citizens"];
+export const TABLE_LOSS_ORDER: PopType[] = ["slaves", "freemen", "citizens"];
 
 /**
  * Remove `count` pops, taking the classes in `order`: every pop of the first class

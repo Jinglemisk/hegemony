@@ -701,68 +701,132 @@ const CURRENCY_VERBS = [
   "resolveRiot",
 ] as const;
 
+/**
+ * What a batch gathers across its games, as plain data: lists that append and counts
+ * that sum. Every figure in the report is built from it, so a batch can be shared out:
+ * a worker process hands back the data of each game it played and the parent adds
+ * them in game order (`Aggregator.absorb`).
+ */
+export type BatchData = {
+  snapshots: TurnSnapshot[];
+  /** One snapshot of each game's last state, for the CSV. */
+  finals: TurnSnapshot[];
+  games: GameRow[];
+  drawSwings: DrawSwing[];
+  reachTotal: Record<string, number>;
+  reachByPolicy: Record<string, Record<string, number>>;
+  buildings: Record<string, number>;
+  playerEvents: Record<string, number>;
+  yearCards: Record<string, number>;
+  movesByType: Record<string, number>;
+  currencyVerbs: Record<string, number>;
+  revolts: number;
+  assemblyVerbs: Record<string, number>;
+  assemblyInfluence: number;
+  assemblyGold: number;
+  assembliesHeld: number;
+  lawsEnacted: number;
+  lawsRemoved: number;
+  lawsStandingAtEnd: number[];
+  directivesPassed: number;
+  authoredPassed: number;
+  prizesGranted: Resources;
+  directiveTargets: Record<PlayerId, number>;
+  voiceClaims: number;
+  voiceTransfers: number;
+  upgrades: number;
+  actionCapHits: number;
+  forcedResolutions: number;
+  forcedEndTurns: number;
+};
+
+function emptyBatchData(): BatchData {
+  return {
+    snapshots: [],
+    finals: [],
+    games: [],
+    drawSwings: [],
+    reachTotal: emptyReachCounts(),
+    reachByPolicy: {},
+    buildings: {},
+    playerEvents: {},
+    yearCards: {},
+    movesByType: {},
+    currencyVerbs: {},
+    revolts: 0,
+    assemblyVerbs: {},
+    assemblyInfluence: 0,
+    assemblyGold: 0,
+    assembliesHeld: 0,
+    lawsEnacted: 0,
+    lawsRemoved: 0,
+    lawsStandingAtEnd: [],
+    directivesPassed: 0,
+    authoredPassed: 0,
+    prizesGranted: { wood: 0, stone: 0, gold: 0, food: 0, influence: 0 },
+    directiveTargets: { "0": 0, "1": 0, "2": 0, "3": 0 },
+    voiceClaims: 0,
+    voiceTransfers: 0,
+    upgrades: 0,
+    actionCapHits: 0,
+    forcedResolutions: 0,
+    forcedEndTurns: 0,
+  };
+}
+
+type Addable = number | unknown[] | { [key: string]: Addable };
+
+/** Adds `from` to `into`: counts sum, lists append, and a map is added key by key,
+ *  with a new key placed after the ones already there. */
+function addInto(into: { [key: string]: Addable }, from: { [key: string]: Addable }) {
+  for (const [key, value] of Object.entries(from)) {
+    if (typeof value === "number") {
+      into[key] = ((into[key] as number | undefined) ?? 0) + value;
+    } else if (Array.isArray(value)) {
+      const list = (into[key] ??= []) as unknown[];
+      for (const item of value) list.push(item);
+    } else {
+      addInto((into[key] ??= {}) as { [key: string]: Addable }, value);
+    }
+  }
+}
+
 export class Aggregator {
-  private snapshots: TurnSnapshot[] = [];
-  private reachTotal = emptyReachCounts();
-  private reachByPolicy: Record<string, Record<string, number>> = {};
+  /** Everything gathered so far. The other fields hold the game in progress. */
+  readonly data = emptyBatchData();
   private setupMoves: Array<{ state: HegemonyState; player: PlayerId; move: GameCommand }> = [];
   private previousState?: HegemonyState;
-  private drawSwings: DrawSwing[] = [];
   private countReach(player: PlayerId, ids: string[]) {
     const policy = this.gameSeatPolicies?.[player] ?? "unassigned";
-    const counts = (this.reachByPolicy[policy] ??= emptyReachCounts());
+    const counts = (this.data.reachByPolicy[policy] ??= emptyReachCounts());
     for (const id of ids) {
       counts[id] = (counts[id] ?? 0) + 1;
-      this.reachTotal[id] = (this.reachTotal[id] ?? 0) + 1;
+      this.data.reachTotal[id] = (this.data.reachTotal[id] ?? 0) + 1;
     }
   }
 
-  private games: GameRow[] = [];
-  private buildings: Record<string, number> = {};
-  private playerEvents: Record<string, number> = {};
-  private yearCards: Record<string, number> = {};
-  private movesByType: Partial<Record<GameCommandType, number>> = {};
-  private currencyVerbs: Record<string, number> = {};
-  private revolts = 0;
-  private assemblyVerbs: Record<string, number> = {};
-  private assemblyInfluence = 0;
-  private assemblyGold = 0;
   private assemblySeats = emptyAssemblySeats();
-  private assembliesHeld = 0;
-  private lawsEnacted = 0;
-  private directivesPassed = 0;
-  private authoredPassed = 0;
-  private prizesGranted: Resources = {
-    wood: 0,
-    stone: 0,
-    gold: 0,
-    food: 0,
-    influence: 0,
-  };
-  private directiveTargets: Record<PlayerId, number> = { "0": 0, "1": 0, "2": 0, "3": 0 };
   /** The game in progress, seat by seat; endGame stores it on the game's row. */
   private seatCounts = emptySeatCounts();
   private gameYearCards: string[] = [];
   /** What the acting seat's stock changed by at this turn's income. */
   private collected: Resources | null = null;
-  /** One snapshot of each game's last state, for the CSV. */
-  private finals: TurnSnapshot[] = [];
-  private voiceClaims = 0;
-  private voiceTransfers = 0;
   private lastVoiceHolder: PlayerId | null = null;
   private lastAssemblyResultKey: string | null = null;
-  private lawsRemoved = 0;
-  private lawsStandingAtEnd: number[] = [];
-  private upgrades = 0;
-  private actionCapHits = 0;
-  private forcedResolutions = 0;
-  private forcedEndTurns = 0;
 
   private game = -1;
   private seed = 0;
   private startTurn = 1;
   private lastYear = 0;
   private gameSeatPolicies: Record<PlayerId, string> | null = null;
+
+  /** Adds games played apart, one `BatchData` a game. Whatever order they are given
+   *  in, they are added in game order: workers finish out of order, and the report
+   *  lists games, turns and draws as they were added. */
+  absorb(games: BatchData[]) {
+    const index = (data: BatchData) => data.games[0].game;
+    for (const data of [...games].sort((a, b) => index(a) - index(b))) addInto(this.data, data);
+  }
 
   beginGame(game: number, seed: number, G: HegemonyState, seatPolicies?: Record<PlayerId, string>) {
     this.game = game;
@@ -790,7 +854,7 @@ export class Aggregator {
     // The opening already revealed year 1's card and player 0's first draw.
     this.countYearCard(G);
     this.countPlayerDraw(G);
-    this.snapshots.push(snapshotTurn(G, this.game, this.seed));
+    this.data.snapshots.push(snapshotTurn(G, this.game, this.seed));
   }
 
   onMove(G: HegemonyState, player: PlayerId, move: GameCommand) {
@@ -816,7 +880,7 @@ export class Aggregator {
           (sum, n) => sum + Math.max(0, n),
           0,
         );
-        this.drawSwings.push({
+        this.data.drawSwings.push({
           game: this.game,
           year: before.year,
           player,
@@ -839,7 +903,7 @@ export class Aggregator {
         this.collected = resourceChange(before, G, G.currentPlayer);
       this.previousState = G;
     }
-    this.movesByType[move.type] = (this.movesByType[move.type] ?? 0) + 1;
+    this.data.movesByType[move.type] = (this.data.movesByType[move.type] ?? 0) + 1;
 
     if (move.type === "resolveRiot") {
       // Resolution can turn the year or open the next seat. The roll records
@@ -848,24 +912,25 @@ export class Aggregator {
     }
 
     if (move.type === "buildBuilding") {
-      this.buildings[move.buildingId] = (this.buildings[move.buildingId] ?? 0) + 1;
+      this.data.buildings[move.buildingId] = (this.data.buildings[move.buildingId] ?? 0) + 1;
     }
 
     if ((CURRENCY_VERBS as readonly string[]).includes(move.type)) {
-      this.currencyVerbs[move.type] = (this.currencyVerbs[move.type] ?? 0) + 1;
+      this.data.currencyVerbs[move.type] = (this.data.currencyVerbs[move.type] ?? 0) + 1;
     }
 
     if ((ASSEMBLY_VERBS as readonly string[]).includes(move.type)) {
-      this.assemblyVerbs[move.type] = (this.assemblyVerbs[move.type] ?? 0) + 1;
+      this.data.assemblyVerbs[move.type] = (this.data.assemblyVerbs[move.type] ?? 0) + 1;
       // Commands never carry prices. Measure the authoritative amount the engine
       // just charged from the live rules and post-command Assembly counters.
       if (move.type === "assemblyDraw") {
-        this.assemblyInfluence += G.ruleset.assembly.drawCost;
+        this.data.assemblyInfluence += G.ruleset.assembly.drawCost;
       } else if (move.type === "assemblyProposeRepeal") {
-        this.assemblyInfluence += G.ruleset.assembly.repealCost;
+        this.data.assemblyInfluence += G.ruleset.assembly.repealCost;
       } else if (move.type === "assemblyBribe") {
-        if (move.payment === "influence") this.assemblyInfluence += G.ruleset.assembly.briberyCost;
-        else this.assemblyGold += G.ruleset.assembly.briberyCost;
+        if (move.payment === "influence")
+          this.data.assemblyInfluence += G.ruleset.assembly.briberyCost;
+        else this.data.assemblyGold += G.ruleset.assembly.briberyCost;
         this.assemblySeats[player].votesBought += 1;
       }
       if (move.type === "assemblyProposeRepeal") this.assemblySeats[player].repealsProposed += 1;
@@ -899,10 +964,10 @@ export class Aggregator {
           for (const [resource, amount] of Object.entries(prize) as Array<
             [keyof Resources, number | undefined]
           >) {
-            this.prizesGranted[resource] += amount ?? 0;
+            this.data.prizesGranted[resource] += amount ?? 0;
           }
           if (result.item.card.kind === "directive" && result.item.target) {
-            this.directiveTargets[result.item.target] += 1;
+            this.data.directiveTargets[result.item.target] += 1;
             this.seatCounts[result.item.target].directivesAimedAt += 1;
           }
         }
@@ -912,9 +977,9 @@ export class Aggregator {
     const voice = voiceHolder(G);
     if (voice !== this.lastVoiceHolder) {
       if (voice) {
-        this.voiceClaims += 1;
+        this.data.voiceClaims += 1;
         this.assemblySeats[voice].voiceClaims += 1;
-        if (this.lastVoiceHolder) this.voiceTransfers += 1;
+        if (this.lastVoiceHolder) this.data.voiceTransfers += 1;
       }
       this.lastVoiceHolder = voice;
     }
@@ -922,7 +987,7 @@ export class Aggregator {
     // Colony→city upgrades are the sharpest one-ply blind spot (bots rarely save for
     // them); track them so a deeper search shows up in the report.
     if (move.type === "upgradeColonyToCity") {
-      this.upgrades += 1;
+      this.data.upgrades += 1;
     }
   }
 
@@ -956,9 +1021,9 @@ export class Aggregator {
   /** The runner hit the per-turn action cap and force-ended the turn. Previously
    *  silent; surfaced so balance runs can see how often bots stall out. */
   onForceEndTurn(_G: HegemonyState, forcedResolutions: number) {
-    this.actionCapHits += 1;
-    this.forcedResolutions += forcedResolutions;
-    this.forcedEndTurns += 1;
+    this.data.actionCapHits += 1;
+    this.data.forcedResolutions += forcedResolutions;
+    this.data.forcedEndTurns += 1;
   }
 
   onTurnEnd(G: HegemonyState) {
@@ -977,20 +1042,20 @@ export class Aggregator {
 
     this.countPlayerDraw(G);
 
-    this.snapshots.push(snapshotTurn(G, this.game, this.seed));
+    this.data.snapshots.push(snapshotTurn(G, this.game, this.seed));
   }
 
   /** total + per-finished-game, the shape every count in this report uses. */
   private perGameCount(count: number) {
-    return { count, perGame: this.games.length > 0 ? count / this.games.length : 0 };
+    return { count, perGame: this.data.games.length > 0 ? count / this.data.games.length : 0 };
   }
 
   endGame(G: HegemonyState) {
     // The record of passes survives repeal; Voice reads standing Laws only.
-    this.assembliesHeld += G.assembliesHeld;
-    this.lawsStandingAtEnd.push(G.activeLaws.length);
-    this.directivesPassed += G.tallyMonuments.length;
-    this.authoredPassed += Object.values(G.assemblyPassedByPlayer).reduce(
+    this.data.assembliesHeld += G.assembliesHeld;
+    this.data.lawsStandingAtEnd.push(G.activeLaws.length);
+    this.data.directivesPassed += G.tallyMonuments.length;
+    this.data.authoredPassed += Object.values(G.assemblyPassedByPlayer).reduce(
       (sum, count) => sum + count,
       0,
     );
@@ -998,8 +1063,8 @@ export class Aggregator {
     // simply the ones that were not monuments — and whatever is no longer standing
     // was repealed, replaced at the cap, or thrown down by Stratokles.
     const enacted = G.lawOrder - G.tallyMonuments.length;
-    this.lawsEnacted += enacted;
-    this.lawsRemoved += enacted - G.activeLaws.length;
+    this.data.lawsEnacted += enacted;
+    this.data.lawsRemoved += enacted - G.activeLaws.length;
 
     const finalCards = {} as Record<PlayerId, number>;
     const finalAuthoredPasses = {} as Record<PlayerId, number>;
@@ -1012,7 +1077,7 @@ export class Aggregator {
       finalCards[playerID] = playerStandings(G, playerID).victoryCards;
       finalAuthoredPasses[playerID] = G.assemblyPassedByPlayer[playerID];
       popsLostToUnrest[playerID] = G.players[playerID].popsLostToUnrest;
-      this.revolts += G.players[playerID].revolts;
+      this.data.revolts += G.players[playerID].revolts;
       popsLostToHunger[playerID] = G.players[playerID].popsLostToHunger;
       const goodsActive = activeClaims(G, playerID).length;
       luxuries[playerID] = {
@@ -1041,15 +1106,15 @@ export class Aggregator {
         : termination === "deckExhausted"
           ? tally.decidedBy
           : null;
-    this.finals.push(snapshotTurn(G, this.game, this.seed));
+    this.data.finals.push(snapshotTurn(G, this.game, this.seed));
 
     for (const id of PLAYER_IDS) {
       this.assemblySeats[id].authoredLawsStanding = victoryMetricValue(G, id, "voice");
-      this.assemblySeats[id].voiceHeldTurns = this.snapshots
+      this.assemblySeats[id].voiceHeldTurns = this.data.snapshots
         .filter((s) => s.game === this.game)
         .reduce((sum, s) => sum + s.players[id].voiceHeld, 0);
     }
-    this.games.push({
+    this.data.games.push({
       game: this.game,
       seed: this.seed,
       turnsPlayed: G.turn - this.startTurn + (termination === "deckExhausted" ? 1 : 0),
@@ -1093,22 +1158,22 @@ export class Aggregator {
   }
 
   allSnapshots(): TurnSnapshot[] {
-    return this.snapshots;
+    return this.data.snapshots;
   }
 
   /** Each ended game's last state, one snapshot a game. */
   finalSnapshots(): TurnSnapshot[] {
-    return this.finals;
+    return this.data.finals;
   }
 
   buildReport(meta: BatchReport["meta"]): BatchReport {
     // Once seats rotate, the personality in a seat changes from game to game.
-    const gameRows = new Map(this.games.map((game) => [game.game, game]));
+    const gameRows = new Map(this.data.games.map((game) => [game.game, game]));
     const policyOf = (game: number, seat: PlayerId) =>
       gameRows.get(game)?.seatPolicies?.[seat] ?? meta.policy;
     /** The seat-games one personality played, or every seat-game with no name. */
     const seatGamesOf = (name?: string) =>
-      this.games.flatMap((game) =>
+      this.data.games.flatMap((game) =>
         PLAYER_IDS.filter((seat) => name === undefined || policyOf(game.game, seat) === name).map(
           (seat) => ({ game, seat, counts: game.seatCounts[seat] }),
         ),
@@ -1120,7 +1185,7 @@ export class Aggregator {
     const yearBuckets = new Map<number, TurnSnapshot[]>();
 
     const tails = new Map<string, TurnSnapshot>();
-    for (const snapshot of this.snapshots) {
+    for (const snapshot of this.data.snapshots) {
       tails.set(`${snapshot.game}:${snapshot.year}`, snapshot);
     }
     for (const snapshot of tails.values()) {
@@ -1186,17 +1251,17 @@ export class Aggregator {
       });
 
     // Real win rate is over FINISHED games only; a turn-capped game is not a win.
-    const finishedGames = this.games.filter((game) => game.termination !== "turnCap");
-    const cappedGames = this.games.filter((game) => game.termination === "turnCap");
-    const voiceHoldersAtEnd = this.games.filter((game) => game.voiceHolder !== null).length;
+    const finishedGames = this.data.games.filter((game) => game.termination !== "turnCap");
+    const cappedGames = this.data.games.filter((game) => game.termination === "turnCap");
+    const voiceHoldersAtEnd = this.data.games.filter((game) => game.voiceHolder !== null).length;
     const voiceHolderWins = finishedGames.filter(
       (game) => game.voiceHolder !== null && game.winner === game.voiceHolder,
     ).length;
-    const authoredPassLeadMargins = this.games.map((game) => {
+    const authoredPassLeadMargins = this.data.games.map((game) => {
       const counts = Object.values(game.finalAuthoredPasses).sort((a, b) => b - a);
       return counts[0] - counts[1];
     });
-    const authoredPassLeaderShares = this.games.map((game) => {
+    const authoredPassLeaderShares = this.data.games.map((game) => {
       const counts = Object.values(game.finalAuthoredPasses);
       const total = counts.reduce((sum, count) => sum + count, 0);
       return total > 0 ? Math.max(...counts) / total : 0;
@@ -1206,7 +1271,7 @@ export class Aggregator {
     for (const playerID of PLAYER_IDS) {
       const wins = finishedGames.filter((game) => game.winner === playerID).length;
       const capLeads = cappedGames.filter((game) => game.leaderAtCap === playerID).length;
-      const cards = this.games.map((game) => game.finalCards[playerID]);
+      const cards = this.data.games.map((game) => game.finalCards[playerID]);
       perSeat[playerID] = {
         winRate: finishedGames.length > 0 ? wins / finishedGames.length : 0,
         capLeaderRate: cappedGames.length > 0 ? capLeads / cappedGames.length : 0,
@@ -1216,12 +1281,12 @@ export class Aggregator {
 
     // A hunger turn is one hunger choice: hunger strikes once, at the seat's own turn end.
     const hunger = {} as BatchReport["hunger"];
-    const games = Math.max(1, this.games.length);
+    const games = Math.max(1, this.data.games.length);
     for (const playerID of PLAYER_IDS) {
       let idle = 0;
       let slaves = 0;
 
-      for (const snapshot of this.snapshots) {
+      for (const snapshot of this.data.snapshots) {
         const seat = snapshot.players[playerID];
         idle += seat.idleSlaves;
         slaves += seat.slaves;
@@ -1229,10 +1294,11 @@ export class Aggregator {
 
       hunger[playerID] = {
         hungerTurnsPerGame:
-          this.games.reduce((sum, game) => sum + game.seatCounts[playerID].hungerTurns, 0) / games,
+          this.data.games.reduce((sum, game) => sum + game.seatCounts[playerID].hungerTurns, 0) /
+          games,
         popsLostPerGame:
-          this.games.reduce((sum, game) => sum + game.popsLostToHunger[playerID], 0) / games,
-        idleSlavesMean: this.snapshots.length > 0 ? idle / this.snapshots.length : 0,
+          this.data.games.reduce((sum, game) => sum + game.popsLostToHunger[playerID], 0) / games,
+        idleSlavesMean: this.data.snapshots.length > 0 ? idle / this.data.snapshots.length : 0,
         idleSlaveShare: slaves > 0 ? idle / slaves : 0,
       };
     }
@@ -1245,7 +1311,7 @@ export class Aggregator {
         if (!rows.has(year)) rows.set(year, { year, riots: 0, playerTurns: 0, revolts: 0 });
         return rows.get(year)!;
       };
-      for (const snapshot of this.snapshots) {
+      for (const snapshot of this.data.snapshots) {
         if (name === undefined || policyOf(snapshot.game, snapshot.actingSeat) === name)
           row(snapshot.year).playerTurns += 1;
       }
@@ -1259,8 +1325,8 @@ export class Aggregator {
     const riotCount = riotsByYear.reduce((sum, row) => sum + row.riots, 0);
     const riots: BatchReport["riots"] = {
       perGame: riotCount / games,
-      revoltsPerGame: this.revolts / games,
-      turnShare: this.snapshots.length > 0 ? riotCount / this.snapshots.length : 0,
+      revoltsPerGame: this.data.revolts / games,
+      turnShare: this.data.snapshots.length > 0 ? riotCount / this.data.snapshots.length : 0,
       byYear: riotsByYear,
       perPolicy: {},
     };
@@ -1270,7 +1336,7 @@ export class Aggregator {
       deckExhausted: 0,
       turnCap: 0,
     };
-    for (const game of this.games) {
+    for (const game of this.data.games) {
       terminations[game.termination] += 1;
     }
 
@@ -1292,7 +1358,7 @@ export class Aggregator {
 
     const perPolicy: BatchReport["perPolicy"] = {};
     const policyCards: Record<string, number[]> = {};
-    for (const game of this.games) {
+    for (const game of this.data.games) {
       for (const seat of PLAYER_IDS) {
         const name = game.seatPolicies?.[seat] ?? meta.policy;
         const entry = (perPolicy[name] ??= {
@@ -1331,7 +1397,7 @@ export class Aggregator {
         coveringShortfall: emptyFoodBought(),
         buyingAhead: emptyFoodBought(),
       };
-      for (const snapshot of this.snapshots) {
+      for (const snapshot of this.data.snapshots) {
         const seat = snapshot.actingSeat;
         if (name !== undefined && policyOf(snapshot.game, seat) !== name) continue;
         if (snapshot.players[seat].resources.food < 0) total.turnsBegunShort += 1;
@@ -1350,7 +1416,7 @@ export class Aggregator {
       let turnsHeld = 0;
       let sole = 0;
       let tied = 0;
-      for (const snapshot of this.snapshots) {
+      for (const snapshot of this.data.snapshots) {
         const holder = snapshot.belovedHolder;
         if (!holder || (name !== undefined && policyOf(snapshot.game, holder) !== name)) continue;
         const own = snapshot.players[holder].activeLuxuries;
@@ -1374,7 +1440,7 @@ export class Aggregator {
 
     const drawSwingSummary = (name?: string): DrawSwingSummary => {
       const seats = seatGamesOf(name);
-      const rows = this.drawSwings.filter(
+      const rows = this.data.drawSwings.filter(
         (row) => name === undefined || policyOf(row.game, row.player) === name,
       );
       const resourceCards = rows.filter((row) => row.materialMagnitude > 0);
@@ -1410,7 +1476,7 @@ export class Aggregator {
       let idle = 0;
       let slaves = 0;
       let samples = 0;
-      for (const snapshot of this.snapshots) {
+      for (const snapshot of this.data.snapshots) {
         for (const seat of PLAYER_IDS) {
           if (policyOf(snapshot.game, seat) !== name) continue;
           idle += snapshot.players[seat].idleSlaves;
@@ -1467,20 +1533,20 @@ export class Aggregator {
 
     const buildings = Object.fromEntries(
       BUILDING_CONTENT_IDS.map((buildingId) => {
-        const built = this.buildings[buildingId] ?? 0;
+        const built = this.data.buildings[buildingId] ?? 0;
         return [
           buildingId,
-          { built, perGame: this.games.length > 0 ? built / this.games.length : 0 },
+          { built, perGame: this.data.games.length > 0 ? built / this.data.games.length : 0 },
         ];
       }),
     ) as BatchReport["buildings"];
 
-    const playerTurnCount = this.snapshots.length * PLAYER_IDS.length;
+    const playerTurnCount = this.data.snapshots.length * PLAYER_IDS.length;
     const activeEffects = Object.fromEntries(
       ACTIVE_EFFECT_KINDS.map((kind) => {
         let observations = 0;
         let playerTurnsWithEffect = 0;
-        for (const snapshot of this.snapshots) {
+        for (const snapshot of this.data.snapshots) {
           for (const playerID of PLAYER_IDS) {
             const count = snapshot.players[playerID].activeEffects[kind];
             observations += count;
@@ -1500,22 +1566,22 @@ export class Aggregator {
       }),
     ) as BatchReport["activeEffects"];
 
-    const perSeatLuxuries = this.games.flatMap((game) =>
+    const perSeatLuxuries = this.data.games.flatMap((game) =>
       PLAYER_IDS.map((playerID) => game.luxuries[playerID]),
     );
     const luxuries: BatchReport["luxuries"] = {
       claimedPerGame:
-        this.games.length > 0
-          ? this.games.reduce(
+        this.data.games.length > 0
+          ? this.data.games.reduce(
               (sum, game) =>
                 sum +
                 PLAYER_IDS.reduce((held, playerID) => held + game.luxuries[playerID].goodsHeld, 0),
               0,
-            ) / this.games.length
+            ) / this.data.games.length
           : 0,
       activePerGame:
-        this.games.length > 0
-          ? this.games.reduce(
+        this.data.games.length > 0
+          ? this.data.games.reduce(
               (sum, game) =>
                 sum +
                 PLAYER_IDS.reduce(
@@ -1523,11 +1589,11 @@ export class Aggregator {
                   0,
                 ),
               0,
-            ) / this.games.length
+            ) / this.data.games.length
           : 0,
       happinessPerSeatMean: percentiles(perSeatLuxuries.map((entry) => entry.luxuryHappiness)).mean,
       endGoldDistribution: percentiles(
-        this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalGold[playerID])),
+        this.data.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalGold[playerID])),
       ),
     };
 
@@ -1535,7 +1601,7 @@ export class Aggregator {
     const classes: BatchReport["classes"] = {};
     for (const [name, entry] of Object.entries(perPolicy)) {
       const counts =
-        this.reachByPolicy[name] ?? this.reachByPolicy.unassigned ?? emptyReachCounts();
+        this.data.reachByPolicy[name] ?? this.data.reachByPolicy.unassigned ?? emptyReachCounts();
       const seatGames = entry.finishedSeatGames + entry.cappedSeatGames;
       reachPolicies[name] = {
         seatGames,
@@ -1544,10 +1610,10 @@ export class Aggregator {
           Object.entries(counts).map(([id, count]) => [id, seatGames ? count / seatGames : 0]),
         ),
       };
-      const samples = this.snapshots.flatMap((snapshot) =>
+      const samples = this.data.snapshots.flatMap((snapshot) =>
         PLAYER_IDS.filter(
           (id) =>
-            (this.games.find((game) => game.game === snapshot.game)?.seatPolicies?.[id] ??
+            (this.data.games.find((game) => game.game === snapshot.game)?.seatPolicies?.[id] ??
               meta.policy) === name,
         ).map((id) => snapshot.players[id]),
       );
@@ -1558,12 +1624,12 @@ export class Aggregator {
       };
     }
     return {
-      reach: { total: this.reachTotal, perPolicy: reachPolicies },
+      reach: { total: this.data.reachTotal, perPolicy: reachPolicies },
       classes,
-      drawSwings: this.drawSwings,
+      drawSwings: this.data.drawSwings,
       drawSwingSummary: { total: drawSwingSummary(), perPolicy: drawSwingsPerPolicy },
       meta,
-      perGame: this.games,
+      perGame: this.data.games,
       nationalIdeas: Object.fromEntries(
         NATIONAL_IDEAS.map((idea) => {
           let setupPicks = 0,
@@ -1573,7 +1639,7 @@ export class Aggregator {
           // Each personality drafts the same Idea most games, so the pooled rate is
           // mostly one personality's win rate. The split shows which.
           const byPolicy: Record<string, { holders: number; wins: number; winRate: number }> = {};
-          for (const game of this.games)
+          for (const game of this.data.games)
             for (const id of PLAYER_IDS) {
               const held = game.nationalIdeas[id].find((i) => i.id === idea.id);
               if (!held) continue;
@@ -1620,57 +1686,63 @@ export class Aggregator {
       movesByType: Object.fromEntries(
         GAME_COMMAND_TYPES.map((moveType) => [
           moveType,
-          this.perGameCount(this.movesByType[moveType] ?? 0),
+          this.perGameCount(this.data.movesByType[moveType] ?? 0),
         ]),
       ) as BatchReport["movesByType"],
       activeEffects,
       events: {
         player: Object.fromEntries(
-          PLAYER_EVENT_CONTENT_IDS.map((eventId) => [eventId, this.playerEvents[eventId] ?? 0]),
+          PLAYER_EVENT_CONTENT_IDS.map((eventId) => [
+            eventId,
+            this.data.playerEvents[eventId] ?? 0,
+          ]),
         ) as BatchReport["events"]["player"],
         year: Object.fromEntries(
-          YEAR_CARD_CONTENT_IDS.map((eventId) => [eventId, this.yearCards[eventId] ?? 0]),
+          YEAR_CARD_CONTENT_IDS.map((eventId) => [eventId, this.data.yearCards[eventId] ?? 0]),
         ) as BatchReport["events"]["year"],
       },
       currencyVerbs: Object.fromEntries(
         CURRENCY_VERBS.map((verb) => {
-          const count = this.currencyVerbs[verb] ?? 0;
-          return [verb, { count, perGame: this.games.length > 0 ? count / this.games.length : 0 }];
+          const count = this.data.currencyVerbs[verb] ?? 0;
+          return [
+            verb,
+            { count, perGame: this.data.games.length > 0 ? count / this.data.games.length : 0 },
+          ];
         }),
       ),
       assembly: {
         perSeat: Object.fromEntries(
           PLAYER_IDS.map((id) => {
             const count = emptyAssemblySeats()[id];
-            for (const game of this.games)
+            for (const game of this.data.games)
               for (const key of Object.keys(count) as Array<keyof AssemblySeatTelemetry>)
                 count[key] += game.assemblySeats[id][key];
             const perGame = Object.fromEntries(
               Object.entries(count).map(([key, value]) => [
                 key,
-                this.games.length ? value / this.games.length : 0,
+                this.data.games.length ? value / this.data.games.length : 0,
               ]),
             ) as AssemblySeatTelemetry;
             return [id, { count, perGame }];
           }),
         ) as BatchReport["assembly"]["perSeat"],
         perPolicy: assemblyPerPolicy,
-        votesBought: this.perGameCount(this.assemblyVerbs.assemblyBribe ?? 0),
-        goldSpent: this.perGameCount(this.assemblyGold),
-        held: this.perGameCount(this.assembliesHeld),
-        lawsEnacted: this.perGameCount(this.lawsEnacted),
-        directivesPassed: this.perGameCount(this.directivesPassed),
-        authoredPassed: this.perGameCount(this.authoredPassed),
-        prizesGranted: { ...this.prizesGranted },
-        directiveTargets: { ...this.directiveTargets },
+        votesBought: this.perGameCount(this.data.assemblyVerbs.assemblyBribe ?? 0),
+        goldSpent: this.perGameCount(this.data.assemblyGold),
+        held: this.perGameCount(this.data.assembliesHeld),
+        lawsEnacted: this.perGameCount(this.data.lawsEnacted),
+        directivesPassed: this.perGameCount(this.data.directivesPassed),
+        authoredPassed: this.perGameCount(this.data.authoredPassed),
+        prizesGranted: { ...this.data.prizesGranted },
+        directiveTargets: { ...this.data.directiveTargets },
         directiveTargetsPerPolicy,
         repeals: {
           proposed: repeals("repealsProposed"),
           passed: repeals("repealsPassed"),
           failed: repeals("repealsFailed"),
         },
-        voiceClaims: this.perGameCount(this.voiceClaims),
-        voiceTransfers: this.perGameCount(this.voiceTransfers),
+        voiceClaims: this.perGameCount(this.data.voiceClaims),
+        voiceTransfers: this.perGameCount(this.data.voiceTransfers),
         voiceHoldersAtEnd: this.perGameCount(voiceHoldersAtEnd),
         voiceHolderWins: {
           count: voiceHolderWins,
@@ -1679,34 +1751,34 @@ export class Aggregator {
         },
         authoredPassLeadMargin: percentiles(authoredPassLeadMargins),
         authoredPassLeaderShare: percentiles(authoredPassLeaderShares),
-        lawsRemoved: this.perGameCount(this.lawsRemoved),
-        lawsStanding: percentiles(this.lawsStandingAtEnd).mean,
-        influenceSpent: this.perGameCount(this.assemblyInfluence),
+        lawsRemoved: this.perGameCount(this.data.lawsRemoved),
+        lawsStanding: percentiles(this.data.lawsStandingAtEnd).mean,
+        influenceSpent: this.perGameCount(this.data.assemblyInfluence),
         verbs: Object.fromEntries(
           ASSEMBLY_VERBS.map((verb) => {
-            const count = this.assemblyVerbs[verb] ?? 0;
+            const count = this.data.assemblyVerbs[verb] ?? 0;
             return [
               verb,
-              { count, perGame: this.games.length > 0 ? count / this.games.length : 0 },
+              { count, perGame: this.data.games.length > 0 ? count / this.data.games.length : 0 },
             ];
           }),
         ),
       },
       finalCardsDistribution: percentiles(
-        this.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalCards[playerID])),
+        this.data.games.flatMap((game) => PLAYER_IDS.map((playerID) => game.finalCards[playerID])),
       ),
       winsByPolicy,
       perPolicy,
       terminations,
       forced: {
-        actionCapHits: this.actionCapHits,
-        forcedResolutions: this.forcedResolutions,
-        forcedEndTurns: this.forcedEndTurns,
-        perGame: this.games.length > 0 ? this.actionCapHits / this.games.length : 0,
+        actionCapHits: this.data.actionCapHits,
+        forcedResolutions: this.data.forcedResolutions,
+        forcedEndTurns: this.data.forcedEndTurns,
+        perGame: this.data.games.length > 0 ? this.data.actionCapHits / this.data.games.length : 0,
       },
       upgrades: {
-        count: this.upgrades,
-        perGame: this.games.length > 0 ? this.upgrades / this.games.length : 0,
+        count: this.data.upgrades,
+        perGame: this.data.games.length > 0 ? this.data.upgrades / this.data.games.length : 0,
       },
     };
   }
@@ -1716,7 +1788,7 @@ export class Aggregator {
     if (card) {
       // Every seat observes the public year card; do not credit only the opener.
       for (const player of PLAYER_IDS) this.countReach(player, [`year:${card.id}`]);
-      this.yearCards[card.id] = (this.yearCards[card.id] ?? 0) + 1;
+      this.data.yearCards[card.id] = (this.data.yearCards[card.id] ?? 0) + 1;
       this.gameYearCards.push(card.id);
     }
   }
@@ -1726,7 +1798,7 @@ export class Aggregator {
     const card = G.lastPlayerEvent;
     if (card) {
       this.countReach(G.currentPlayer, [`playerDraw:${card.id}`]);
-      this.playerEvents[card.id] = (this.playerEvents[card.id] ?? 0) + 1;
+      this.data.playerEvents[card.id] = (this.data.playerEvents[card.id] ?? 0) + 1;
       const seat = this.seatCounts[G.currentPlayer];
       seat.cardsDrawn += 1;
       // A pop card with no settlement to take the pop is discarded at the draw.

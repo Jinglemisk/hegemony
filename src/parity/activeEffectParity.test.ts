@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { Alarms } from "../components/frame/Alarms";
 import { collectIncome } from "../game/actions";
+import { bankBuy } from "../game/bank";
 import { enactForEval, openAssembly } from "../game/assembly";
 import {
   ACTIVE_EFFECT_KINDS,
@@ -248,6 +249,8 @@ describe("simulation and AI active-effect parity", () => {
   it("buys this year's calm to cover the current turn-end check", () => {
     const choose = (slaves: number) => {
       const G = stateWithSettlement({ citizens: 0, freemen: 0, slaves });
+      // The last year, so calm avoids the riot and does not only put it off.
+      G.year = 14;
       G.players["0"].collectedThisTurn = true;
       Object.assign(G.players["0"].resources, {
         wood: 0,
@@ -340,15 +343,20 @@ describe("simulation and AI active-effect parity", () => {
   it("handles the safe edge and the hunger edge deterministically", () => {
     const safe = stateWithSettlement();
     const hungry = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });
-    // Ten mouths against eight stored food: the first turn ends two short.
-    hungry.players["0"].resources.food = 8;
+    // Ten mouths and nothing in store: the first turn ends ten short. The ten
+    // influence the citizens made buy three food by the Dole, and seven leave.
+    Object.assign(hungry.players["0"].resources, { food: 0, gold: 0, influence: 0 });
+    const projection = projectPolicyHorizon(hungry, "0", 1);
 
     expect(projectPolicyHorizon(safe, "0", 1).expectedStarvationPopLoss).toBe(0);
-    expect(projectPolicyHorizon(hungry, "0", 1).expectedStarvationPopLoss).toBe(2);
+    expect(projection.expectedStarvationPopLoss).toBe(7);
+    expect(projection.resources).toMatchObject({ food: 0, influence: 1 });
   });
 
   it("recalculates food after projected hunger and matches the engine on the review case", () => {
     const G = stateWithSettlement({ citizens: 0, freemen: 3, slaves: 0 });
+    // Nothing in store: three freemen earn 3 gold a year, and 2 gold buys one food.
+    Object.assign(G.players["0"].resources, { food: 0, gold: 0, influence: 0 });
     const engine = structuredClone(G);
     // No event cards: the review case is income alone.
     engine.playerDrawPile = [];
@@ -358,6 +366,9 @@ describe("simulation and AI active-effect parity", () => {
       engine.currentPlayer = "0";
       engine.players["0"].collectedThisTurn = false;
       expect(collectIncome(engine, "0").ok).toBe(true);
+      // The seat buys the food it can pay for before it ends the turn, as the
+      // projection does on its behalf.
+      while (engine.players["0"].resources.food < 0 && bankBuy(engine, "0", "food").ok);
       expect(endTurn(engine).ok).toBe(true);
       // Ending short, the seat's choice is the projection's freemen-first default.
       const pending = engine.pendingHunger;
@@ -367,10 +378,13 @@ describe("simulation and AI active-effect parity", () => {
         );
     }
 
-    // Twelve food feeds three freemen for four incomes; the fifth turn ends three short.
+    // The first year's 3 gold buys one food and two freemen leave. The last one's
+    // gold feeds him in the second year and falls 1 short in the third.
     const actual = engine.players["0"].popsLostToHunger;
+    const projection = projectPolicyHorizon(G, "0", 6);
     expect(actual).toBe(3);
-    expect(projectPolicyHorizon(G, "0", 6).expectedStarvationPopLoss).toBe(actual);
+    expect(projection.expectedStarvationPopLoss).toBe(actual);
+    expect(projection.resources.gold).toBe(engine.players["0"].resources.gold);
   });
   it("records the selector's exhaustive kind counts in snapshots", () => {
     const G = stateWithSettlement();

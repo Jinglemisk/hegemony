@@ -1,19 +1,24 @@
 import { ideaForEval, ideaRoom, playerNationalIdeas } from "../game/ideas";
 import { playerDole, votePurchaseLimit } from "../game/ideaRules";
+import { getPlayerBankRate } from "../game/bank";
 import { playerPieces } from "../game/settlement";
 import { calculateIncome, unfedAtTurnEnd } from "../game/economy/income";
 import { applyHunger, hungerForEval, hungerMouths } from "../game/hunger";
 import { happinessLevel, slaveUnhappiness, standingHappiness } from "../game/happiness";
-import { removePops } from "../game/tables";
+import { TABLE_LOSS_ORDER, removePops } from "../game/tables";
+import { insuranceRollBonus } from "../game/riot";
+import { getAdjustedActionCost } from "../game/economy/cost";
 import { ventureOutcomes } from "./chance";
 import { getActiveEffects } from "../game/activeEffects";
 import { applyIncome } from "../game/core/resources";
-import { getResolutionCard, getResolutionCards } from "../game/content";
+import { getBuilding, getResolutionCard, getResolutionCards, getRiotTable } from "../game/content";
 import { totalPops } from "../game/core/pops";
-import { getTile, popsInTransit, realmPops } from "../game/core/query";
+import { getOwnedSettlement, getTile, popsInTransit, realmPops } from "../game/core/query";
 import { resolveArrivingPops } from "../game/actions";
+import { yearDeckSize } from "../game/year";
 import {
   canPlaceColonyOnTile,
+  countPlayerPopType,
   isAdjacentToCity,
   settlementOpenSlots,
   settlementWorkingSlaves,
@@ -32,7 +37,15 @@ import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { claimableLuxuriesAt, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
 import { victoryCardsHeld, victoryMetricValue, voiceHolder } from "../game/victory";
-import type { HegemonyState, PlayerId, Pops } from "../game/types";
+import type {
+  BuildingId,
+  HegemonyState,
+  PlayerId,
+  Pops,
+  PopType,
+  Resource,
+  Resources,
+} from "../game/types";
 import type { PlayerView } from "../game/projection";
 import type { Ruleset } from "../game/ruleset";
 import type { SimRng } from "./rng";
@@ -133,12 +146,34 @@ export function policyEconomyThresholds(ruleset: Ruleset) {
   return { materialScoreDivisor: Math.max(1, ruleset.victory.minimums.gold / 3) };
 }
 
-function resolveRiotByRule(moves: GameCommand[]): GameCommand | null {
+/**
+ * A riot on the table: buy the insurance that leaves the seat best off, the concession
+ * included, and roll when none pays. The forecast charges the pending riot what its
+ * table is expected to take at the insurance bought so far, so an option is worth what
+ * it saves at the seat's weights, less its price.
+ */
+function resolveRiotByRule(
+  G: HegemonyState,
+  moves: GameCommand[],
+  score: Scorer,
+): GameCommand | null {
   const riot = moves.find((move) => move.type === "resolveRiot");
-  return riot
-    ? (moves.find((move) => move.type === "buyRiotInsurance" && move.optionId !== "concession") ??
-        riot)
-    : null;
+  if (!riot) return null;
+  const playerID = G.currentPlayer;
+  let best: GameCommand = riot;
+  let bestScore = score(G, playerID);
+
+  for (const move of moves) {
+    if (move.type !== "buyRiotInsurance" || shedsLastCitizen(G, move)) continue;
+    const result = transition(G.definition, G, playerID, move);
+    if (!result.ok) continue;
+    const value = score(result.state, playerID);
+    if (value > bestScore + 1e-8) {
+      bestScore = value;
+      best = move;
+    }
+  }
+  return best;
 }
 
 /**
@@ -149,6 +184,7 @@ function resolveRiotByRule(moves: GameCommand[]): GameCommand | null {
 function shedsLastCitizen(G: HegemonyState, move: GameCommand): boolean {
   const { citizens } = realmPops(G, G.currentPlayer);
   if (move.type === "demotePop") return move.from === "citizens" && citizens === 1;
+  if (move.type === "buyRiotInsurance") return move.demoteTarget !== undefined && citizens === 1;
   if (move.type === "resolveHunger")
     return citizens > 0 && move.leave.filter((left) => left.pop === "citizens").length >= citizens;
   return false;
@@ -234,7 +270,7 @@ function onePlyLookahead(
 ): GameCommand {
   const playerID = G.currentPlayer;
 
-  const byRule = resolveRiotByRule(moves);
+  const byRule = resolveRiotByRule(G, moves, score);
   if (byRule) {
     return byRule;
   }
@@ -315,30 +351,53 @@ export type PolicyUnrestExposure = {
   riskPenalty: number;
 };
 export type PolicyProjection = {
+  /** The stocks as the horizon closes. */
   resources: HegemonyState["players"][PlayerId]["resources"];
+  /** The seat's next income as printed, before any year card it has not seen. */
+  income: Pick<Resources, "food" | "gold">;
   expectedStarvationPopLoss: number;
+  /** Pops the seat cannot feed between the horizon and the game's last year, each
+   *  counted by the share of its remaining incomes that the pop misses. */
+  starvedAfterHorizon: number;
   unrest: PolicyUnrestExposure;
 };
 
-/** Incomes the seat still collects inside the horizon, this year's included if it
- *  has not collected yet. */
+/** What one unit of a stock adds to the smart score: materials are weighted, divided
+ *  by 8 and multiplied by 10 with the rest of the heuristic; influence counts as is. */
+function stockValue(weights: ScoreWeights, resource: Resource): number {
+  return resource === "influence" ? weights.influence : (10 / 8) * weights.materials[resource];
+}
+
+/** What one pop adds to the smart score: its class weight, multiplied by 10 with the
+ *  rest of the heuristic. */
+function popValue(weights: ScoreWeights, pop: PopType): number {
+  return 10 * weights.pops[pop];
+}
+
+/** Incomes the seat still collects in the game, this year's included if it has not
+ *  collected yet. */
+function incomesLeftInGame(G: HegemonyState, playerID: PlayerId) {
+  return Math.max(0, yearDeckSize(G) - G.year + (G.players[playerID].collectedThisTurn ? 0 : 1));
+}
+
+/** The incomes inside the horizon. */
 function incomeYearsLeft(G: HegemonyState, playerID: PlayerId) {
-  return Math.max(
-    0,
-    Math.min(INCOME_HORIZON, 14 - G.year + (G.players[playerID].collectedThisTurn ? 0 : 1)),
-  );
+  return Math.min(INCOME_HORIZON, incomesLeftInGame(G, playerID));
 }
 
 /**
  * The reference policies' canonical future-state projection. Ordinary recurring
  * modifiers already flow through calculateIncome; the active-effect selector adds
  * what income alone cannot express: a skipped collection. Each projected turn end
- * settles hunger and then checks the riot and revolt lines, as the engine does.
+ * settles hunger and then checks the riot and revolt lines, as the engine does. The
+ * seat's weights decide what the forecast has to price: which food is cheaper to buy,
+ * and what a riot or a revolt takes.
  */
 export function projectPolicyHorizon(
   G: HegemonyState,
   playerID: PlayerId,
   horizon = incomeYearsLeft(G, playerID),
+  weights = DEFAULT_WEIGHTS,
 ): PolicyProjection {
   const projectedState = createPolicyProjectionState(G, playerID);
   const player = projectedState.players[playerID];
@@ -349,15 +408,62 @@ export function projectPolicyHorizon(
     revoltEvents: 0,
     riskPenalty: 0,
   };
+  // On a later turn the seat would buy the food it is short of before anyone leaves:
+  // from the bank with gold or by the Dole with influence, at its own prices, the
+  // cheaper first by its weights. The stocks pay, so a realm fed from the bank is seen
+  // to hold less gold, and only what it cannot pay for starves. The current turn is
+  // left alone: that food the seat has to buy itself, and a forecast that bought it
+  // would spend gold the seat still counts as held. Setup is left alone too. It picks
+  // land for fourteen years and the forecast sees six, so a starting store and six
+  // years of gold would make any site look fed.
+  const buysFood = G.phase === "gameplay";
+  const foodSources = () => {
+    const dole = playerDole(projectedState, playerID);
+    const bank = getPlayerBankRate(projectedState, playerID, "food").buy;
+    return [
+      { stock: "gold" as const, price: bank, food: 1 },
+      { stock: "influence" as const, price: dole.influenceCost, food: dole.food },
+    ]
+      .filter((source) => source.food > 0)
+      .sort(
+        (a, b) =>
+          (a.price * stockValue(weights, a.stock)) / a.food -
+          (b.price * stockValue(weights, b.stock)) / b.food,
+      );
+  };
+  const buyFood = () => {
+    for (const source of foodSources())
+      while (player.resources.food < 0 && player.resources[source.stock] >= source.price) {
+        player.resources[source.stock] -= source.price;
+        player.resources.food += source.food;
+      }
+  };
   // Hunger is the engine's own rule and draws no dice, so the projection runs it
   // for real: a turn that ends short loses a pop per missing food, and later incomes
   // are recomputed without them.
-  const settleHunger = () => {
+  const settleHunger = (canBuy = buysFood) => {
+    if (player.resources.food >= 0) return false;
+    if (canBuy && unfedAtTurnEnd(projectedState, playerID) > 0) buyFood();
     const unfed = unfedAtTurnEnd(projectedState, playerID);
     player.resources.food = Math.max(0, player.resources.food);
     if (unfed === 0) return false;
     expectedStarvationPopLoss += applyHunger(projectedState, playerID, unfed);
     return true;
+  };
+  // A riot spends the tokens and is charged what its table is expected to take. The
+  // pops also leave the projected board, slaves first, once the expected losses add up
+  // to a whole one: a level the slaves hold down recovers when enough of them are gone.
+  let riotPopsOwed = 0;
+  const faceRiot = (modifier = 0) => {
+    const riot = expectedRiot(projectedState, playerID, weights, modifier);
+    unrest.riotEvents += 1;
+    unrest.riskPenalty += riot.cost;
+    player.unrestTokens = 0;
+    riotPopsOwed += riot.pops;
+    // The small allowance keeps three riots of two thirds from rounding to one pop.
+    const leaving = Math.floor(riotPopsOwed + 1e-9);
+    riotPopsOwed -= leaving;
+    return leaving > 0 && removePops(projectedState, playerID, leaving).total > 0;
   };
   // A collected income does not end the current year: calm and Blockade still
   // count at this turn's check, even when no future incomes remain.
@@ -365,27 +471,30 @@ export function projectPolicyHorizon(
     const level = happinessLevel(projectedState, playerID);
     unrest.minimumHappiness = Math.min(unrest.minimumHappiness, level);
     const risk = evaluatePolicyUnrestRisk(projectedState.ruleset, level);
-    // No more income or draw precedes the current check. A safe level here has
-    // no proximity penalty; later years still price their uncertain buffer.
-    if (!currentTurn || risk.tier !== "buffer") unrest.riskPenalty += risk.scorePenalty;
 
     if (risk.tier === "revolt") {
       // A revolt draws no dice, so the projection runs it: half the slaves leave
       // and the tokens clear. The half counts slaves on the move, as the engine's does.
+      // It is charged the slaves it takes, at the seat's weight for a slave.
       unrest.revoltEvents += 1;
-      removePops(
+      const left = removePops(
         projectedState,
         playerID,
         Math.floor(realmPops(projectedState, playerID).slaves / 2),
         ["slaves"],
       );
+      unrest.riskPenalty += left.total * popValue(weights, "slaves");
       player.unrestTokens = 0;
       return true;
-    } else if (risk.tier === "unrest") {
-      // A riot spends the tokens; what the table then takes is unknown.
-      unrest.riotEvents += 1;
-      player.unrestTokens = 0;
     }
+    if (risk.tier === "unrest") return faceRiot();
+    // No more income or draw precedes the current check. A safe level here has
+    // no proximity penalty; later years still price their uncertain buffer.
+    if (risk.tier === "buffer" && !currentTurn)
+      unrest.riskPenalty +=
+        POLICY_UNREST_WEIGHTS.bufferRiotShare *
+        risk.proximity *
+        expectedRiot(projectedState, playerID, weights).cost;
     return false;
   };
 
@@ -397,9 +506,13 @@ export function projectPolicyHorizon(
 
   if (player.collectedThisTurn) {
     // Food short now is what this turn's end takes, unless the seat buys it back first.
-    settleHunger();
-    if (G.phase === "gameplay" && G.currentPlayer === playerID && !G.assembly && !G.pendingRiot)
-      checkTurnEnd(true);
+    settleHunger(false);
+    if (G.phase === "gameplay" && G.currentPlayer === playerID && !G.assembly) {
+      // A riot already on the table is this turn's check, at the insurance bought so far.
+      if (G.pendingRiot)
+        faceRiot(insuranceRollBonus(G.pendingRiot.boughtInsurance, G.definition.content));
+      else checkTurnEnd(true);
+    }
     expireYear();
   }
 
@@ -408,6 +521,7 @@ export function projectPolicyHorizon(
   resolveArrivingPops(projectedState, playerID);
 
   let income = calculateIncome(projectedState, playerID);
+  const nextIncome = { food: income.food, gold: income.gold };
   const activeEffects = getActiveEffects(projectedState, playerID, { income });
   const mechanics = activeEffects.flatMap((descriptor) => descriptor.mechanics);
   let suppressedCollections = mechanics.reduce(
@@ -415,6 +529,7 @@ export function projectPolicyHorizon(
     0,
   );
 
+  let incomeStale = false;
   for (let step = 0; step < horizon; step += 1) {
     let popsChanged: boolean;
 
@@ -433,13 +548,48 @@ export function projectPolicyHorizon(
     expireYear();
     // Stocks and tokens do not affect printed income. Reuse the authoritative
     // result until hunger/revolt changes pops or this year's card expires.
-    if (step + 1 < horizon && (popsChanged || yearCardExpired))
+    incomeStale = popsChanged || yearCardExpired;
+    if (step + 1 < horizon && incomeStale) {
       income = calculateIncome(projectedState, playerID);
+      incomeStale = false;
+    }
+  }
+
+  const resources = { ...player.resources };
+
+  // Past the horizon only the food and what pays for it are followed, to the game's
+  // last year: the closing income each year, the shortfall bought as above, and a pop
+  // gone for each food the stocks cannot pay for. A pop that leaves stops eating; what
+  // it made stays in the sum. Without this a seat grows an eater its gold feeds for
+  // six years and loses him in the seventh. A pop lost that late is charged for the
+  // incomes it misses and not as one lost today, so the seat still feeds the pops it
+  // has for as long as it can pay.
+  let starvedAfterHorizon = 0;
+  const incomesLeft = incomesLeftInGame(G, playerID);
+  const yearsBeyond = buysFood ? incomesLeft - horizon : 0;
+  if (yearsBeyond > 0) {
+    if (incomeStale) income = calculateIncome(projectedState, playerID);
+    let mouths = hungerMouths(projectedState).reduce(
+      (sum, pop) => sum + countPlayerPopType(projectedState, playerID, pop),
+      0,
+    );
+    const carried = { ...income };
+    for (let year = 0; year < yearsBeyond && carried.food < 0 && mouths > 0; year += 1) {
+      applyIncome(player.resources, carried, projectedState.ruleset.economy.stockpileFloors);
+      buyFood();
+      const unfed = Math.min(mouths, Math.max(0, -player.resources.food));
+      player.resources.food = Math.max(0, player.resources.food);
+      starvedAfterHorizon += (unfed * (yearsBeyond - year)) / incomesLeft;
+      mouths -= unfed;
+      carried.food += unfed;
+    }
   }
 
   return {
-    resources: { ...player.resources },
+    resources,
+    income: nextIncome,
     expectedStarvationPopLoss,
+    starvedAfterHorizon,
     unrest,
   };
 }
@@ -483,29 +633,103 @@ function createPolicyProjectionState(G: HegemonyState, playerID: PlayerId): Hege
 }
 
 /**
- * Named strategic weights for unrest exposure. These are deliberately heuristic:
- * exact riot outcomes depend on resources, buildings, insurance, and a future die
- * roll. The policy instead prices the known act of entering each tier without
- * pretending to know which conditional table effects will fire.
+ * What one riot is expected to take from a realm, read off the engine's riot table:
+ * every face of its die at equal odds, shifted by the insurance bought. `pops` is the
+ * expected number lost. `cost` is the whole loss at the seat's weights: those pops at
+ * the weight of the class the table takes next, a burned building at what the seat
+ * would pay to raise one again, and the stocks at what the realm could hand over.
+ */
+function expectedRiot(
+  G: HegemonyState,
+  playerID: PlayerId,
+  weights: ScoreWeights,
+  modifier = 0,
+): { pops: number; cost: number } {
+  const table = getRiotTable(G.definition.content);
+  const die = table.die ?? 6;
+  const held = G.players[playerID].resources;
+  const settlements = G.players[playerID].settlements.flatMap(
+    (tileId) => getOwnedSettlement(G, tileId, playerID) ?? [],
+  );
+  const buildings = settlements.flatMap((settlement) => settlement.buildings);
+  let pops = 0;
+  let cost = 0;
+
+  for (let roll = 1; roll <= die; roll += 1) {
+    const modified = Math.min(die, Math.max(1, roll + modifier));
+    const row = table.rows.find((candidate) => candidate.roll === modified) ?? table.rows.at(-1)!;
+    for (const effect of row.effects) {
+      if (effect.type === "losePops") pops += effect.count / die;
+      if (effect.type === "destroyBuilding") {
+        // The table burns one building at random: the mean price of those standing.
+        if (buildings.length === 0) pops += effect.popLossFallback / die;
+        else
+          cost +=
+            buildings.reduce((sum, id) => sum + buildingPrice(G, playerID, weights, id), 0) /
+            buildings.length /
+            die;
+      }
+      if (effect.type === "loseResource") {
+        const floor = G.ruleset.economy.stockpileFloors[effect.resource] ?? 0;
+        const paid = Math.min(effect.amount, Math.max(0, held[effect.resource] - floor));
+        cost += (paid * stockValue(weights, effect.resource)) / die;
+        if (paid < effect.amount) pops += (effect.popLossIfShort ?? 0) / die;
+      }
+    }
+  }
+
+  const taken = TABLE_LOSS_ORDER.find((pop) =>
+    settlements.some((settlement) => settlement.pops[pop] > 0),
+  );
+  return { pops, cost: cost + (taken ? pops * popValue(weights, taken) : 0) };
+}
+
+/** What the seat would pay to raise a building again, at its weights. */
+function buildingPrice(
+  G: HegemonyState,
+  playerID: PlayerId,
+  weights: ScoreWeights,
+  buildingId: BuildingId,
+): number {
+  const price = getAdjustedActionCost(
+    G,
+    playerID,
+    "buildBuilding",
+    getBuilding(G.definition.content, buildingId)?.cost ?? {},
+    buildingId,
+  );
+  return (Object.keys(price) as Resource[]).reduce(
+    (sum, resource) => sum + (price[resource] ?? 0) * stockValue(weights, resource),
+    0,
+  );
+}
+
+/**
+ * Named strategic weights for unrest exposure. A riot and a revolt are charged what
+ * they take ({@link expectedRiot}, and the slaves a revolt sends away). What stays a
+ * heuristic is the risk of standing near the riot line.
  */
 export const POLICY_UNREST_WEIGHTS = {
-  /** The most one projected turn end costs for standing just above the riot line. */
-  bufferMaxPenalty: 10,
-  /** What a projected riot costs, whatever the table would take. */
-  riotPenalty: 50,
-  /** A revolt takes half the slaves outright, so it is charged as two riots. */
-  revoltMultiplier: 2,
+  /**
+   * A level one step above the riot line is charged this share of a riot at each
+   * projected turn end, and less with each step further off. It stands for the chance
+   * that a token card or a lost good pushes the level over the line: the projection
+   * deals no cards. A fifth is the share the old flat numbers gave it, 10 against 50.
+   */
+  bufferRiotShare: 0.2,
 } as const;
 
 export type PolicyUnrestRisk = {
   tier: "safe" | "buffer" | "unrest" | "revolt";
-  scorePenalty: number;
+  /** How near a level above the riot line stands to it: 1 at the line, 0 a buffer's
+   *  width (the gap between the two lines) away. */
+  proximity: number;
 };
 
 /**
- * Classify one projected turn end using live ruleset thresholds and the revolt's
- * consequences. This is a deterministic strategic ramp, not an expected riot-table
- * payout: conditional resources, buildings, insurance, and future RNG stay unknown.
+ * Classify one projected turn end using the live ruleset thresholds, with the engine's
+ * comparisons. The projection prices the tier: a riot at its table's expected loss, a
+ * revolt at the slaves it takes, and the buffer as a share of a riot.
  */
 export function evaluatePolicyUnrestRisk(ruleset: Ruleset, happiness: number): PolicyUnrestRisk {
   const unrest = ruleset.economy.unrest;
@@ -513,23 +737,10 @@ export function evaluatePolicyUnrestRisk(ruleset: Ruleset, happiness: number): P
 
   if (happiness > unrest.riotThreshold) {
     const proximity = Math.max(0, 1 - (happiness - unrest.riotThreshold) / bufferWidth);
-    return {
-      tier: proximity > 0 ? "buffer" : "safe",
-      scorePenalty: POLICY_UNREST_WEIGHTS.bufferMaxPenalty * proximity,
-    };
+    return { tier: proximity > 0 ? "buffer" : "safe", proximity };
   }
 
-  if (happiness > unrest.revoltThreshold) {
-    return {
-      tier: "unrest",
-      scorePenalty: POLICY_UNREST_WEIGHTS.riotPenalty,
-    };
-  }
-
-  return {
-    tier: "revolt",
-    scorePenalty: POLICY_UNREST_WEIGHTS.riotPenalty * POLICY_UNREST_WEIGHTS.revoltMultiplier,
-  };
+  return { tier: happiness > unrest.revoltThreshold ? "unrest" : "revolt", proximity: 1 };
 }
 
 /**
@@ -575,7 +786,7 @@ function evaluate(G: HegemonyState, playerID: PlayerId): number {
     standings.pops +
     totalPops(popsInTransit(G, playerID)) +
     Math.floor(material / materialDivisor) -
-    2 * projection.expectedStarvationPopLoss;
+    2 * (projection.expectedStarvationPopLoss + projection.starvedAfterHorizon);
   return (
     100 * victoryCardsHeld(G, playerID) +
     10 * heuristic +
@@ -599,15 +810,75 @@ const STARVED_POP_WEIGHT = 6;
 /** An open slot no slave works yet is priced as the slave who could work it: a
  *  building raised there costs one of the tile's resource a turn. */
 const LATENT_SLOT_SHARE = 1;
+/** A slave with no slot to work carries this share of the slave weight. It is still a
+ *  head for Demos and the tiebreak, and can be moved or promoted, but it makes nothing
+ *  and costs the level like any other. At the full weight an idle slave was worth as
+ *  much as a working one, so nothing paid for moving it to an open slot. */
+const IDLE_SLAVE_SHARE = 0.5;
 
 /**
- * Each food the seat is short of right now costs this much, so a single bank or Dole
- * purchase has value before the whole shortfall is covered. The forecast alone gives
- * none: a pop fed this turn starves in a later forecast year, and the count is the same.
- * Nothing is held ahead of need. Food is below zero only on the seat's own turn, after
+ * Each food the seat is short of right now costs this much, on top of the pop the
+ * forecast sees leave. The forecast counts pops lost and not when. So a seat whose gold
+ * cannot feed everyone through the forecast would let a pop go now and keep the gold
+ * for the others, and a pop that leaves in a later year anyway would not be fed today.
+ * A seat that can pay feeds its pops first: from zero food the search can reach the
+ * slave that would feed them, and from six short it cannot. The charge has to outweigh
+ * one more pop lost later and the dearest food a build can buy, the civic's Dole at 9.
+ * Nothing is held ahead of need: food is below zero only on the seat's own turn, after
  * income, and that is when it buys.
  */
-const FOOD_SHORT_WEIGHT = 14;
+const FOOD_SHORT_WEIGHT = 10 * STARVED_POP_WEIGHT + 14;
+
+/** The share of the year deck that brings a lean year: Drought stops the plains' food
+ *  and Piracy the freemen's gold. The deck's order is hidden; its make-up is not. */
+function leanYearChance(G: HegemonyState): number {
+  const cards = G.definition.content.yearCards;
+  const lean = cards.reduce(
+    (count, card) =>
+      card.effect.type === "zeroTerm" &&
+      (card.effect.term === "plainsFood" || card.effect.term === "freemenGold")
+        ? count + card.count
+        : count,
+    0,
+  );
+  return lean / Math.max(1, yearDeckSize(G));
+}
+
+/**
+ * What a lean year is expected to cost a realm that buys its food and holds nothing
+ * back. Such a realm pays for its standing shortfall out of each year's income, and in
+ * a lean year the harvest or the gold does not come. It needs one year's purchases in
+ * hand: each food of the shortfall its stocks could not cover is a pop gone, weighted
+ * by the chance of such a year. The cover is whatever would pay, food in store or the
+ * gold and influence that buy it, so nothing is parked in food. A realm its own land
+ * feeds is charged nothing.
+ *
+ * Without this a build that imports spends its last gold every turn: in the batch
+ * that showed it, the trader lost pops on 44 turns and could pay on none of them.
+ */
+function leanYearValue(
+  G: HegemonyState,
+  playerID: PlayerId,
+  income: PolicyProjection["income"],
+  weights: ScoreWeights,
+): number {
+  const shortfall = -income.food;
+  if (shortfall <= 0 || G.phase !== "gameplay" || incomesLeftInGame(G, playerID) === 0) return 0;
+  const eaters = hungerMouths(G);
+  const mouths = eaters.reduce((sum, pop) => sum + countPlayerPopType(G, playerID, pop), 0);
+
+  const stocks = G.players[playerID].resources;
+  const bank = getPlayerBankRate(G, playerID, "food").buy;
+  const dole = playerDole(G, playerID);
+  const cover =
+    Math.max(0, stocks.food) +
+    Math.floor(stocks.gold / bank) +
+    (dole.food > 0 ? Math.floor(stocks.influence / dole.influenceCost) * dole.food : 0);
+  const uncovered = Math.min(mouths, shortfall - cover);
+  if (uncovered <= 0) return 0;
+
+  return -leanYearChance(G) * uncovered * (10 * STARVED_POP_WEIGHT + popValue(weights, eaters[0]));
+}
 
 function foodShortfallValue(G: HegemonyState, playerID: PlayerId): number {
   return -FOOD_SHORT_WEIGHT * Math.max(0, -G.players[playerID].resources.food);
@@ -615,17 +886,16 @@ function foodShortfallValue(G: HegemonyState, playerID: PlayerId): number {
 
 function evaluateSmart(G: HegemonyState, playerID: PlayerId, weights = DEFAULT_WEIGHTS): number {
   const player = G.players[playerID];
-  const projection = projectPolicyHorizon(G, playerID);
+  const projection = projectPolicyHorizon(G, playerID, undefined, weights);
   const projected = projection.resources;
 
   // Pops on the move are still the realm's. Left out, a move reads as a pop lost.
+  // A slave on the move is counted below, where it is going: it works there or sits idle.
   const moving = popsInTransit(G, playerID);
   let cities = 0;
   let colonies = 0;
   let weightedPops =
-    weights.pops.citizens * moving.citizens +
-    weights.pops.freemen * moving.freemen +
-    weights.pops.slaves * moving.slaves;
+    weights.pops.citizens * moving.citizens + weights.pops.freemen * moving.freemen;
   let latentWork = 0;
 
   for (const tileId of player.settlements) {
@@ -635,10 +905,22 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId, weights = DEFAULT_W
       continue;
     }
 
+    // Slaves fill the open slots of land that yields; the rest are idle.
+    const primary = settlementSlaveResource(tile, G);
+    const slots = primary ? settlementOpenSlots(tile, settlement, G) : 0;
+    const slaves =
+      settlement.pops.slaves +
+      G.transfers.reduce(
+        (sum, transfer) =>
+          sum + (transfer.toSettlementId === settlement.id ? transfer.pops.slaves : 0),
+        0,
+      );
+    const working = Math.min(slaves, slots);
+
     weightedPops +=
       weights.pops.citizens * settlement.pops.citizens +
       weights.pops.freemen * settlement.pops.freemen +
-      weights.pops.slaves * settlement.pops.slaves;
+      weights.pops.slaves * (working + IDLE_SLAVE_SHARE * (slaves - working));
 
     if (settlement.kind === "colony") {
       colonies += 1;
@@ -649,13 +931,10 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId, weights = DEFAULT_W
     // Work a slave could still take up: open slots nobody works. A building spends
     // one of them. A colony cannot build, so its spare slots count only as far as
     // it has room for the slaves.
-    const primary = settlementSlaveResource(tile, G);
     if (primary) {
-      const unworked =
-        settlementOpenSlots(tile, settlement, G) - settlementWorkingSlaves(tile, settlement, G);
       const room = ideaRoom(G, settlement);
       latentWork +=
-        Math.max(0, Math.min(unworked, room)) *
+        Math.max(0, Math.min(slots - working, room)) *
         weights.materials[primary] *
         incomeYearsLeft(G, playerID) *
         LATENT_SLOT_SHARE;
@@ -673,7 +952,7 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId, weights = DEFAULT_W
     weights.colonies * colonies +
     weightedPops +
     (material + latentWork) / 8 -
-    STARVED_POP_WEIGHT * projection.expectedStarvationPopLoss;
+    STARVED_POP_WEIGHT * (projection.expectedStarvationPopLoss + projection.starvedAfterHorizon);
 
   // A good's +2 is already priced by the level term, point for point with a Temple.
   // This adds what that term cannot see: a good keeps its worth past the level cap,
@@ -687,6 +966,7 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId, weights = DEFAULT_W
     weights.influence * projected.influence +
     luxuryValue +
     foodShortfallValue(G, playerID) +
+    leanYearValue(G, playerID, projection.income, weights) +
     ideaOpportunityValue(G, playerID, weights) -
     projection.unrest.riskPenalty
   );
@@ -714,7 +994,7 @@ function beamPlan(
   const playerID = G.currentPlayer;
 
   // A forced riot keeps the shared insurance handler; optional ventures are searched.
-  const byRule = resolveRiotByRule(moves);
+  const byRule = resolveRiotByRule(G, moves, score);
   if (byRule) {
     return byRule;
   }
@@ -957,10 +1237,10 @@ function scorePlacements(
 }
 
 /**
- * One-ply over the legal placements, in two passes so a capital decision costs ~80
- * transitions instead of ~540: rank tiles by their most even pop split, then score every
- * split on the top few tiles. Exact ties are broken with the injected rng so symmetric
- * sites and compositions do not always resolve to the lowest tile id.
+ * One-ply over the legal placements. A capital is chosen in two passes: rank tiles by
+ * their most even pop split, then score every split on the top few tiles. A founding
+ * colony is scored on every split of every tile. Exact ties are broken with the injected
+ * rng so symmetric sites and compositions do not always resolve to the lowest tile id.
  */
 export function choosePlacement(
   G: HegemonyState,
@@ -976,8 +1256,11 @@ export function choosePlacement(
     }
   }
 
+  // The founding colony skips the shortlist. Ranked on the even split alone, a tile
+  // worth two slaves fell out of the top three, and with it most of the open sites the
+  // upgrade term favours: the colony then went beside a city on a worse score.
   let candidates: GameCommand[] = moves;
-  if (byTile.size > PLACEMENT_TOP_TILES) {
+  if (G.phase !== "setupColony" && byTile.size > PLACEMENT_TOP_TILES) {
     const ranked = scorePlacements(G, [...byTile.values()].map(representativeSplit), weights).sort(
       (a, b) => b.score - a.score,
     );
@@ -1433,7 +1716,10 @@ export const politicalPolicy: Policy = {
 /** Total yield on the player's next legally reachable settlement frontier. This is the
  * measured-low-weight signal from `settler`: it nudges WHICH direction to expand without
  * overpowering the income model into founding unsustainable extra colonies. */
-function frontierValue(G: HegemonyState, playerID: PlayerId): number {
+export function frontierValue(G: HegemonyState, playerID: PlayerId): number {
+  // No colony piece left, no frontier to settle: the engine refuses the founding. An
+  // upgrade frees a piece and brings the frontier back.
+  if (playerPieces(G, playerID).coloniesRemaining === 0) return 0;
   // Unclaimed goods make their two claim tiles worth expanding toward — the
   // contested-claim race is won at settlement time, turns before a Port can go up.
   const luxuryTiles = new Set(
