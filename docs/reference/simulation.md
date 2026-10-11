@@ -129,14 +129,17 @@ Works from any phase — bots will finish a manual setup too. Policies:
   who could work it. So it climbs the social ladder, raises the class buildings, and
   keeps plains slots for the slaves that feed it. Bank and Dole moves enter search;
   each food the seat is short of now has a price, so it buys what it lacks and
-  holds none ahead. Deterministic.
+  holds none ahead. Its forecast buys the food later years lack from its gold and
+  influence, so a seat that can pay for imports grows past what its land feeds.
+  Deterministic.
 - `beam` — a within-turn **beam search** over the same `smart` score, so it values the
   within-turn sequences one-ply misses (build-then-promote and bank chains). It does
   not search through `endTurn`, so the six-turn income projection is state evaluation,
   not income-to-future-action planning.
   Searches bank moves and evaluates ventures as chance leaves using every public
-  outcome, independently of the live die/deck stream. Forced riots keep the shared
-  insurance handler. Record→replay remains deterministic. A `smart`-vs-`beam` A/B
+  outcome, independently of the live die/deck stream. A riot on the table has one
+  shared handler: it buys the insurance that saves more than it costs and then
+  rolls. Record→replay remains deterministic. A `smart`-vs-`beam` A/B
   isolates search depth from evaluation. See docs/reference/ai.md and docs/reports/simulation/ for the head-to-head.
 - `political` — `smart` economy plus standing-authorship valuation outside the
   Assembly. All non-random policies share its Assembly handler: draw and propose
@@ -165,6 +168,11 @@ income after projected pop loss. Hunger draws no dice: the projection applies th
 (freemen before citizens, from the fullest settlement), the same choice the hunger
 card opens with, and never reads or advances future game RNG. At the table the
 hungry seat chooses; bots score the legal splits (see [AI](ai.md#hunger)).
+Before anyone leaves, a later step buys the missing food from the seat's projected
+gold and influence at its own bank and Dole prices, and the stocks fall by what
+was paid. The current turn and setup are not bought for. A projected riot is
+charged the riot table's expected loss at the seat's weights, and the pops it is
+expected to take leave the projected board once they add up to a whole one.
 
 How the bots work, their limitations, and the path to CPU opponents with
 difficulty settings: **docs/reference/ai.md**.
@@ -216,7 +224,9 @@ expected value, rather than cycling tables. Under the owner ruling of 2026-10-03
 calm covers the buyer's current turn-end check and still cannot take Beloved.
 Compare `currencyVerbs.civicCalm` (calm bought), `riots.perGame` and
 `riots.revoltsPerGame` with the earlier batch; look for legal calm purchases when
-a +2 lift avoids a visible riot or revolt, and fewer riots per game. Capital Works is
+a +2 lift avoids a visible riot or revolt. Since Step 19 a riot is charged what
+the riot table takes, so expect less calm and more riots than in the batches
+before it: a riot that calm would only move a year is faced. Capital Works is
 weakly dominated by Urban Planning; other unused Ideas need context, not quotas.
 Step 11 owns the 20–45% win-rate decision and any balance changes.
 

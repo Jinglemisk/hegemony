@@ -833,6 +833,114 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - Batch: the parallel fixture plays two seeds through four seatings on the one-ply
   policies (`random,greedy,smart,political`), eight full games that all finish, in
   about 35 seconds for both runs. The personalities take about 25 seconds a game.
+- Forecast food: on a later forecast turn a seat buys the food it is short of before a
+  pop leaves, bank food for gold or the Dole for influence, at the prices the engine
+  charges that seat. The cheaper comes first by the seat's own weights (a gold is worth
+  1.25 times its gold weight, an influence its influence weight); a tie goes to the bank.
+  What it pays leaves the forecast stocks.
+- Forecast food: the current turn is not bought for; that food the seat buys itself.
+  Tried the other way, with a small charge to make the seat act, the forecast spent gold
+  the seat still counted as held: a trader at exactly Treasurer's 30 gold kept the
+  title and let three pops go.
+- Forecast food: setup does not count on the bank. It picks land for fourteen years and
+  the forecast sees six, so a starting store and six years of gold make any site look
+  fed: tried with the bank open, every civic capital in the 40 setups went to a mountain
+  and every slaver capital to a forest.
+- The charge for food short now stays, and is 74 a food: the 60 of a starved pop and
+  the old 14. With no charge the three checks hold where the gold lasts: 100 gold and
+  seven short buys seven, a full city at zero food in year 13 buys none where it bought
+  eight a year early, and a seat with nothing still sees its pops go. They fail where
+  it does not last. The forecast counts pops lost and not when. At the old 14, a seat
+  with 20 gold and six short bought four food and kept 12 gold for the pops it could
+  feed to the horizon; with no charge, one with 4 gold and three short bought wood.
+  The charge has to outweigh one more pop lost later and the dearest food, the civic's
+  Dole at 9. The mixed-game fixture now checks that no seat ends a turn short while it
+  can still pay for a food.
+- A seat grows an eater its land cannot feed when its gold lasts the forecast. A
+  bank-fed freeman costs 1 gold a year more than he makes; a pop that starves inside
+  the forecast still costs 60, so one whose food runs out in year four is not grown.
+- The food is followed past the six-year forecast to the game's last year. The first
+  batch showed why: the trader grew freemen its gold fed for six years and lost them in
+  the seventh, 3.60 pops a seat-game against 1.45 before. Past the horizon only the
+  sums run: the closing income each year, the shortfall bought as inside the forecast,
+  and a pop gone for each food the stocks cannot pay for. A pop that leaves stops
+  eating; the gold it made stays in the sum. The stocks the forecast reports are still
+  the ones at the horizon.
+- A pop lost past the horizon is charged by the share of its remaining incomes that it
+  misses, not as a whole pop. Charged whole, a seat with 100 gold and eight food short
+  let two pops go at once to spare others later, and the slaver stopped buying
+  patronage. Inside the horizon a starved pop still costs the full 60 whenever it
+  leaves; the two charges meet unevenly at the horizon.
+- Following the food to the last year did not fix the trader. Its turn data showed the
+  cause: it ended every turn with no gold, and on all 44 turns where it lost pops its
+  gold could not pay for the shortfall. Those were lean years: Drought stops the
+  plains' food and Piracy the freemen's gold, 4 of the 14 year cards. Step 18's reason
+  for dropping the food reserve, that the same food can be bought a turn later at the
+  same price, left out the years when the income that buys it does not come.
+- A realm that buys its food each year keeps one year's purchases in hand. Each food of
+  its standing shortfall that its stocks could not cover is charged as a pop lost,
+  weighted by the share of lean years in the year deck. Food in store, gold and
+  influence all count as cover, so nothing is parked in food. A realm its own land
+  feeds is charged nothing: charged for a failed harvest too, every build hoarded and
+  18 fixtures broke.
+- Five batches of 40 games on the same seeds, by what the forecast does about food:
+
+  |                                                    | Trader pops lost a seat-game | Treasurer held | Wins: slaver / civic / trader / master |
+  | -------------------------------------------------- | ---------------------------- | -------------- | -------------------------------------- |
+  | Step 18: buys none                                 | 1.45                         | 24             | 30 / 23 / 30 / 18%                     |
+  | Buys food                                          | 3.60                         | 14             | 35 / 18 / 25 / 23%                     |
+  | Buys food, followed to year 14                     | 3.92                         | 14             | 33 / 20 / 28 / 20%                     |
+  | The same with the lean-year reserve (kept)         | 1.90                         | 12             | 40 / 23 / 15 / 23%                     |
+  | Buys none, with this step's riot and setup changes | 0.78                         | 29             | 35 / 0 / 45 / 20%                      |
+
+  A freeman fed from the bank costs 2 gold a year and makes 1, so importing loses
+  money, and the trader's weights still turn gold into freemen at the cost of its own
+  title. With no food bought in the forecast the trader does best and the civic, which
+  feeds its citizens by the Dole, wins nothing. The kept version is the one in which
+  every build can play; the trader's taste for freemen it must feed is part C's row 32.
+  The win split moves by 15 to 45 points between these versions on the same rules, so
+  Step 11's win-rate rule reads the bots' weights at least as much as the rules.
+
+- A riot is charged the riot table's expected loss with no insurance: every face at
+  equal odds. Pops are priced at the weight of the class the table takes next, a burned
+  building at the mean price of the seat's buildings under its Laws, food and gold at
+  what the seat holds. Row 1 takes a second pop with nothing to burn and row 5 a pop
+  under 3 gold, as in the engine.
+- The pops a riot is expected to take leave the forecast board when they add up to a
+  whole one. The food, gold and building are charged and stay: half a food short would
+  starve a whole pop in the hunger step, and which building burns is not known.
+- A revolt is charged the slaves it sends away, at the seat's slave weight. It was two
+  riots. A revolt with no slaves now costs nothing, as the ruling in Settled inputs has it.
+- Standing above the riot line is charged a share of a riot at each later turn end: a
+  fifth at one step, less further off. It was a flat 10 against a riot of 50. Left flat,
+  two turns one step above the line would cost more than the riot itself.
+- Calm is now bought where it avoids a riot inside the forecast (the last year, a
+  Blockade year). The civic, the trader and master face a riot that six slaves bring
+  every year: calm only moves it. The slaver, who weighs a slave at 45, still buys it.
+- Riot insurance: the forecast charges a pending riot at the insurance bought so far,
+  and the handler buys the option that scores best, one at a time, or rolls. It does
+  not look ahead to a pair. No bot concedes its last citizen.
+- Pinned fixtures changed for the riot table: a slave-held level riots twice in the
+  forecast and not four times; the calm fixtures moved to year 14; the Port fixture
+  lost its food, since with 2 food a slave is promoted and the level leaves the line;
+  the hunger fixtures in the parity file now buy food as the forecast does; the Urban
+  Planning fixture feeds citizens by the Dole, since freemen's gold now buys the food.
+- A slave with no slot to work carries half the slave weight, and a slave on the move
+  is read where it is going. This one number answers two audit rows: idle slaves at the
+  full weight, and an open slot priced as a worked one. The price of an open slot is
+  unchanged, so a building on an unworked plains slot costs what it did.
+- Moves: the added bundle is as many slaves as the target has slots open, unworked and
+  on land that yields. On a hill it is not offered.
+- The frontier term is nothing for a seat with no colony piece left.
+- Setup: the shortlist already scored the upgrade term. Open sites were cut because it
+  ranked each tile on its most even split, where a mountain worth two slaves ranks low.
+  The founding colony now skips the shortlist and every split of every tile is scored;
+  over the 40 setups colonies beside a city fall from 50 to 22. Capitals keep the
+  shortlist: without it the slaver's capital leaves the plains in 37 of 40 setups and
+  the civic's in all 40.
+- Setup after the riot change: two slaves cost the level less than they did, so the
+  civic's capital stands on a mountain with two slaves in 9 of the 40 setups. The other
+  capitals are where they were.
 
 **Salvage.** The branch `archive/asymmetric-shell-rebuild` holds the August rebuild. Take
 only its engine pieces, by diff, when a step needs them: the advisory selectors, the victory

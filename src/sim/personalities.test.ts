@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { getPlayerBankRate } from "../game/bank";
 import { happinessLevel } from "../game/happiness";
+import { playerDole } from "../game/ideaRules";
 import { enumerateLegalCommands, transition, type GameCommand } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
 import { owned, scenario } from "../game/testing/scenario";
-import type { HegemonyState } from "../game/types";
+import type { HegemonyState, Pops } from "../game/types";
 import { ventureOutcomes } from "./chance";
 import { POLICIES, type PersonalityId } from "./policies";
 import { createSimRng } from "./rng";
@@ -22,9 +24,35 @@ function realm(pops = { citizens: 1, freemen: 2, slaves: 2 }) {
   G.activeYearCard = null;
   return G;
 }
-function choose(name: PersonalityId, G: HegemonyState, keep: (move: GameCommand) => boolean) {
+function choose(
+  name: PersonalityId | "master",
+  G: HegemonyState,
+  keep: (move: GameCommand) => boolean,
+) {
   const moves = enumerateLegalCommands(G, "0").filter(keep);
   return POLICIES[name].choose(projectForPlayer(G.definition, G, "0"), moves, createSimRng(1));
+}
+
+/** Play the seat's choices until it ends its turn; the turn itself is not ended. */
+function playOwnTurn(name: PersonalityId | "master", start: HegemonyState) {
+  let G = start;
+  const moves: GameCommand[] = [];
+  for (let action = 0; action < 30; action++) {
+    const move = POLICIES[name].choose(
+      projectForPlayer(G.definition, G, "0"),
+      enumerateLegalCommands(G, "0"),
+      createSimRng(1),
+    );
+    if (move.type === "endTurn") break;
+    moves.push(move);
+    const result = transition(G.definition, G, "0", move);
+    if (!result.ok) throw new Error(result.reasons.join("; "));
+    G = result.state;
+  }
+  const foodBought = moves.filter(
+    (move) => move.type === "dole" || (move.type === "bankBuy" && move.material === "food"),
+  ).length;
+  return { G, moves, foodBought };
 }
 
 describe("shared personality search", () => {
@@ -85,36 +113,13 @@ describe("shared personality search", () => {
     });
   });
 
-  it.each(names)("%s covers a coming shortfall with the bank or the Dole", (name) => {
-    for (const payment of ["gold", "influence"] as const) {
-      let G = realm({ citizens: 1, freemen: 1, slaves: 0 });
-      Object.assign(G.players["0"].resources, { food: 0, gold: 0, influence: 0, [payment]: 30 });
-      const keep = (m: GameCommand) =>
-        m.type === "endTurn" ||
-        (m.type === "bankBuy" && m.material === "food") ||
-        m.type === "dole";
-      let buys = 0;
-      for (; buys < 20; buys++) {
-        const move = choose(name, G, keep);
-        if (move.type === "endTurn") break;
-        expect(move.type).toBe(payment === "gold" ? "bankBuy" : "dole");
-        const result = transition(G.definition, G, "0", move);
-        expect(result.ok).toBe(true);
-        if (!result.ok) throw new Error(result.reasons.join("; "));
-        G = result.state;
-      }
-      expect(G.players["0"].resources.food).toBeGreaterThanOrEqual(4);
-      expect(buys).toBeLessThan(20);
-    }
-  });
-
   it.each([...names, "master"] as const)(
     "%s buys the food it is short of now and holds none ahead",
     (name) => {
       for (const payment of ["gold", "influence"] as const) {
         // A full city of eight mouths, eight food short after income. The same
         // shortfall comes every year, and nothing is bought against it.
-        let G = realm({ citizens: 1, freemen: 7, slaves: 0 });
+        const G = realm({ citizens: 1, freemen: 7, slaves: 0 });
         G.year = 5;
         Object.assign(G.players["0"].resources, {
           food: -8,
@@ -124,24 +129,127 @@ describe("shared personality search", () => {
           influence: 0,
           [payment]: 100,
         });
-        let fed = 0;
-        for (let action = 0; action < 30; action++) {
-          const move = POLICIES[name].choose(
-            projectForPlayer(G.definition, G, "0"),
-            enumerateLegalCommands(G, "0"),
-            createSimRng(1),
-          );
-          if (move.type === "endTurn") break;
-          if (move.type === "dole" || (move.type === "bankBuy" && move.material === "food")) fed++;
-          const result = transition(G.definition, G, "0", move);
-          if (!result.ok) throw new Error(result.reasons.join("; "));
-          G = result.state;
-        }
-        expect(fed).toBe(8);
-        expect(G.players["0"].resources.food).toBeGreaterThanOrEqual(0);
+        const turn = playOwnTurn(name, G);
+        expect(turn.foodBought).toBe(8);
+        expect(turn.G.players["0"].resources.food).toBeGreaterThanOrEqual(0);
       }
     },
     30000,
+  );
+
+  it.each([...names, "master"] as const)(
+    "%s buys no food ahead of a shortfall it can pay for when it comes",
+    (name) => {
+      for (const payment of ["gold", "influence"] as const) {
+        // The same city in year 13, fed this turn and eight short at the last income.
+        // The food costs the same then, so buying it now only parks the stock in food.
+        // Before the forecast bought food, all eight were bought a year early.
+        const G = realm({ citizens: 1, freemen: 7, slaves: 0 });
+        G.year = 13;
+        Object.assign(G.players["0"].resources, {
+          food: 0,
+          wood: 0,
+          stone: 0,
+          gold: 0,
+          influence: 0,
+          [payment]: 100,
+        });
+        expect(playOwnTurn(name, G).foodBought).toBe(0);
+      }
+    },
+    30000,
+  );
+
+  it.each([...names, "master"] as const)(
+    "%s feeds its pops this turn though its gold cannot keep them fed",
+    (name) => {
+      // Seven mouths on a mountain, three short, 4 gold and nothing coming that could
+      // feed them all next year. The forecast loses them whether they eat today or
+      // not, so only the charge for food short now pays for the purchase. Without it
+      // the gold went to wood, stone or a promotion and three pops left.
+      const doomed = realm({ citizens: 1, freemen: 6, slaves: 0 });
+      doomed.year = 5;
+      Object.assign(doomed.players["0"].resources, {
+        food: -3,
+        wood: 0,
+        stone: 0,
+        gold: 4,
+        influence: 0,
+      });
+      // All 4 gold goes to food: one from the bank, and a Colonists' Voyage, whose 2
+      // gold bring 1.5 food on average against the bank's one.
+      const last = playOwnTurn(name, doomed);
+      expect(last.moves).toEqual([
+        { type: "bankBuy", material: "food" },
+        { type: "fundExpedition", expeditionId: "colonistsVoyage" },
+      ]);
+      expect(last.G.players["0"].resources.gold).toBe(0);
+
+      // An importer in year 8: nine mouths, three plains slaves, six short every year
+      // against 8 gold of income. Its 20 gold cannot feed everyone to the horizon, and
+      // the forecast would sooner lose two pops now than run out later. Fed, the seat
+      // stands at zero food, where the search can reach the slave that feeds them.
+      const importer = scenario()
+        .withSettlement("0", "-2,1", "city", { citizens: 1, freemen: 4, slaves: 3 })
+        .withSettlement("0", "0,-2", "city", { citizens: 0, freemen: 4, slaves: 0 })
+        .withResources("0", { food: -6, wood: 0, stone: 0, gold: 20, influence: 0 })
+        .build();
+      importer.phase = "gameplay";
+      importer.year = 8;
+      importer.players["0"].collectedThisTurn = true;
+      importer.activeYearCard = null;
+      const turn = playOwnTurn(name, importer);
+      expect(turn.foodBought).toBeGreaterThanOrEqual(6);
+      expect(turn.G.players["0"].resources.food).toBeGreaterThanOrEqual(0);
+    },
+    30000,
+  );
+
+  it.each([...names, "master"] as const)(
+    "%s grows a freeman past its food line only when its gold feeds him to the last year",
+    (name) => {
+      // Three freemen and one plains slave: two food short every year, bought from the
+      // bank with the freemen's gold. A fourth freeman makes it three short: 6 gold of
+      // food against 4 of income, so 2 gold a year out of the stock.
+      const choice = (
+        year: number,
+        gold: number,
+        pops = { citizens: 0, freemen: 3, slaves: 1 },
+      ) => {
+        const G = scenario()
+          .withSettlement("0", "-2,1", "city", pops)
+          .withResources("0", { food: 3, wood: 0, stone: 0, gold, influence: 0 })
+          .build();
+        G.phase = "gameplay";
+        G.year = year;
+        G.players["0"].collectedThisTurn = true;
+        G.activeYearCard = null;
+        return choose(
+          name,
+          G,
+          (m) => m.type === "endTurn" || (m.type === "growPop" && m.pop === "freemen"),
+        );
+      };
+      const grows = { type: "growPop", pop: "freemen" };
+
+      // Year 2 leaves twelve incomes: 24 gold feeds him to year 14, and 28 is in hand.
+      expect(choice(2, 28)).toMatchObject(grows);
+      // 14 gold lasts seven years. Six of them are the forecast, which grew him and
+      // then lost him: the food is now followed to the game's last year.
+      expect(choice(2, 14)).toEqual({ type: "endTurn" });
+      // From year 9 the same 14 gold lasts to the end.
+      expect(choice(9, 14)).toMatchObject(grows);
+      // Inside the forecast as before: 6 gold runs out in the fourth year.
+      expect(choice(5, 6)).toEqual({ type: "endTurn" });
+      // A seat whose land feeds it needs no gold: three plains slaves feed the third
+      // freeman, in year 2 as in any other.
+      expect(choice(2, 0, { citizens: 0, freemen: 2, slaves: 3 })).toMatchObject(grows);
+      // A realm that buys its food keeps a year's purchases in hand against a lean
+      // year. In year 12 two incomes are left: 4 gold feeds the fourth freeman to the
+      // end, and buys two of the three food a year he would leave the realm short.
+      expect(choice(12, 4)).toEqual({ type: "endTurn" });
+      expect(choice(12, 20)).toMatchObject(grows);
+    },
   );
 
   it("sequences selling wood into a Port for the trader", () => {
@@ -252,7 +360,10 @@ describe("shared personality search", () => {
   it.each([...names, "master"] as const)(
     "%s buys legal calm to avoid the visible turn-end riot",
     (name) => {
+      // The last year: calm is the whole riot avoided. Earlier it only moves a riot
+      // that six slaves bring every year, until the riots have taken one of them.
       const G = realm({ citizens: 0, freemen: 0, slaves: 6 });
+      G.year = 14;
       Object.assign(G.players["0"].resources, {
         food: 0,
         wood: 0,
@@ -283,9 +394,11 @@ describe("shared personality search", () => {
     (name) => {
       // Six slaves hold the level at −3. The Port's good is the cheapest lasting +2:
       // 4 gold and 2 stone, where two Temples would take 6 stone and two settlements.
+      // There is no food for the ladder: with 2 food a slave is promoted instead, the
+      // level stands at −2, and at the riot table's prices that is cure enough.
       const G = scenario()
-        .withSettlement("0", "-2,-1", "city", { citizens: 1, freemen: 0, slaves: 6 })
-        .withResources("0", { food: 20, wood: 0, stone: 2, gold: 4, influence: 0 })
+        .withSettlement("0", "-2,-1", "city", { citizens: 0, freemen: 0, slaves: 6 })
+        .withResources("0", { food: 0, wood: 0, stone: 2, gold: 4, influence: 0 })
         .build();
       G.phase = "gameplay";
       G.players["0"].collectedThisTurn = true;
@@ -298,12 +411,85 @@ describe("shared personality search", () => {
     30000,
   );
 
+  it.each(["civic", "trader", "master"] as const)(
+    "%s faces a riot that calm would only move a year",
+    (name) => {
+      // Six slaves in year 5. The riot table takes a slave here, which a slaver weighs
+      // at 45 and the others at 12. Calm costs 2 gold and the same riot comes next
+      // year, so only the slaver pays to put it off.
+      const G = realm({ citizens: 0, freemen: 0, slaves: 6 });
+      G.year = 5;
+      Object.assign(G.players["0"].resources, {
+        food: 0,
+        wood: 0,
+        stone: 0,
+        influence: 0,
+        gold: 2,
+      });
+      expect(choose(name, G, (m) => m.type === "endTurn" || m.type === "civicCalm")).toEqual({
+        type: "endTurn",
+      });
+    },
+  );
+
   it.each(names)("%s declines calm when no turn-end riot needs it", (name) => {
     const G = realm({ citizens: 0, freemen: 0, slaves: 4 });
     Object.assign(G.players["0"].resources, { food: 0, wood: 0, stone: 0, influence: 0, gold: 2 });
     expect(choose(name, G, (m) => m.type === "endTurn" || m.type === "civicCalm")).toEqual({
       type: "endTurn",
     });
+  });
+
+  /** End the turn at the riot line and list the insurance the seat buys before it rolls. */
+  function insuranceBought(name: PersonalityId | "master", pops: Pops) {
+    const start = realm(pops);
+    Object.assign(start.players["0"].resources, {
+      food: 10,
+      wood: 0,
+      stone: 0,
+      gold: 6,
+      influence: 6,
+    });
+    const ended = transition(start.definition, start, "0", { type: "endTurn" });
+    if (!ended.ok || !ended.state.pendingRiot) throw new Error("the fixture does not riot");
+    let G = ended.state;
+    const bought: string[] = [];
+    for (let action = 0; action < 4; action++) {
+      const move = POLICIES[name].choose(
+        projectForPlayer(G.definition, G, "0"),
+        enumerateLegalCommands(G, "0"),
+        createSimRng(1),
+      );
+      if (move.type !== "buyRiotInsurance") {
+        expect(move).toEqual({ type: "resolveRiot" });
+        break;
+      }
+      bought.push(move.optionId);
+      const result = transition(G.definition, G, "0", move);
+      if (!result.ok) throw new Error(result.reasons.join("; "));
+      G = result.state;
+    }
+    return bought;
+  }
+
+  it.each(["civic", "trader", "master"] as const)(
+    "%s buys riot insurance only where it saves more than it costs",
+    (name) => {
+      // Six slaves hold the level at −3 and nothing can burn. The bread dole's +1 saves
+      // a third of a slave for 4 spare food. Patronage's next +1 saves another third
+      // for 3 influence, and the slave it saves is the one whose loss ends the riots.
+      // The rule used to buy both. The only citizen is not conceded.
+      expect(insuranceBought(name, { citizens: 1, freemen: 0, slaves: 6 })).toEqual(["breadDole"]);
+    },
+  );
+
+  it("the slaver concedes a citizen to save a slave", () => {
+    // A citizen and a freeman weigh the same to the slaver and a slave three times as
+    // much, so the demotion is the cheapest +1 on the table. The rule never took it.
+    expect(insuranceBought("slaver", { citizens: 2, freemen: 0, slaves: 6 })).toEqual([
+      "concession",
+      "patronage",
+    ]);
   });
 
   it.each(names)(
@@ -320,6 +506,8 @@ describe("shared personality search", () => {
 
   it("finishes a mixed personality game without illegal moves or action caps", () => {
     let caps = 0;
+    // Turns a seat ended short of food while it could still pay for one.
+    let shortWithMeans = 0;
     const G = runGame({
       seed: 1000,
       mode: "standard",
@@ -331,10 +519,22 @@ describe("shared personality search", () => {
         "3": POLICIES.master,
       },
       turns: 56,
-      hooks: { onForceEndTurn: () => caps++ },
+      hooks: {
+        onForceEndTurn: () => caps++,
+        onMove: (state, player, command) => {
+          if (command.type !== "endTurn" || state.pendingHunger?.playerID !== player) return;
+          const held = state.players[player].resources;
+          if (
+            held.gold >= getPlayerBankRate(state, player, "food").buy ||
+            held.influence >= playerDole(state, player).influenceCost
+          )
+            shortWithMeans++;
+        },
+      },
     });
     expect(G.phase).toBe("gameOver");
     expect(caps).toBe(0);
+    expect(shortWithMeans).toBe(0);
     if (G.gameOverReason === "deckExhausted") expect(G.year).toBe(14);
     else expect(G.gameOverReason).toBe("victoryRace");
   }, 300000);

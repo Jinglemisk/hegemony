@@ -3,7 +3,7 @@ import { openAssembly } from "../game/assembly";
 import { happinessLevel } from "../game/happiness";
 import { enumerateLegalCommands, type GameCommand } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
-import { scenario } from "../game/testing/scenario";
+import { owned, scenario } from "../game/testing/scenario";
 import type { HegemonyState } from "../game/types";
 import { victoryCardsHeld, voiceHolder } from "../game/victory";
 import { POLICIES, type PersonalityId } from "./policies";
@@ -44,9 +44,12 @@ const buys = (ideaId: string) => (m: GameCommand) =>
 
 describe("the AI reach audit", () => {
   it.each(names)("%s buys Urban Planning when the city's extra slot feeds the realm", (name) => {
-    // Six plains slots and seven slaves: one idles. Four colony freemen and the
-    // citizen eat five; six working slaves leave one mouth short.
-    const G = oneMouthShort({ tileId: "-2,1", slaves: 7 }, 6);
+    // Four plains slots and five slaves: one idles, and five slaves keep the level
+    // above the riot line. Four colony citizens and the city's eat five, so four
+    // working slaves leave one mouth short. Citizens make no gold: the forecast feeds
+    // that mouth by the Dole every year, which costs more than the Idea.
+    const G = oneMouthShort({ tileId: "0,-3", slaves: 5 }, 0);
+    owned(G, "-3,0", "0").pops.citizens = 4;
     expect(choose(name, G, buys("urban-planning"))).toMatchObject({
       type: "buyIdea",
       ideaId: "urban-planning",

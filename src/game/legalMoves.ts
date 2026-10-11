@@ -35,13 +35,19 @@ import { fundExpedition, getFundExpeditionStatus } from "./ventures";
 import { getAuthoredGameContent, getExpeditionTables, getRiotTable } from "./content";
 import { EMPTY_POPS, GROWABLE_POPS, POP_TYPES, totalPops } from "./core/pops";
 import { formatPopName, formatPops } from "./core/format";
-import { getOwnedSettlement } from "./core/query";
+import { getOwnedSettlement, getTile } from "./core/query";
 import { MOVE_OK, invalid } from "./core/results";
 import type { MoveResult } from "./core/results";
 import { getAddPopsEffect, getEventPopTargetTileIds, resolvePendingPlayerEvent } from "./events";
 import { hungerLeaveOptions, resolveHunger } from "./hunger";
 import { setupCapitalCount } from "./ruleset";
-import { canPlaceColonyOnTile, isAdjacentToCity } from "./settlement";
+import {
+  canPlaceColonyOnTile,
+  isAdjacentToCity,
+  settlementOpenSlots,
+  settlementSlaveResource,
+  settlementWorkingSlaves,
+} from "./settlement";
 import {
   getBuildBuildingOptions,
   getFoundColonyStatus,
@@ -100,9 +106,10 @@ import { assertGameInvariants } from "./invariants";
  * Enumeration reuses the get*Status validators — the same predicates the moves
  * themselves re-check — so an enumerated move always applies cleanly. movePops is
  * enumerated as a bounded set of strategically meaningful bundles per source→target
- * pair (a single pop of each type, the whole stack of each type, and the entire
- * settlement — deduplicated). A seat has one move a turn, so a bundle is all it can
- * send that turn. collectIncome is never enumerated (it happens
+ * pair (a single pop of each type, the whole stack of each type, the entire
+ * settlement, and as many slaves as the target has slots open — deduplicated). A seat
+ * has one move a turn, so a bundle is all it can send that turn. collectIncome is never
+ * enumerated (it happens
  * automatically at the start of every gameplay turn).
  */
 
@@ -750,7 +757,16 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
         continue;
       }
 
-      for (const pops of movePopsBundles(source.pops)) {
+      const targetTile = getTile(G, targetTileId);
+      const target = getOwnedSettlement(G, targetTileId, playerID);
+      // Slots a slave could take up at the target: open, on working land, and unworked.
+      const openSlots =
+        targetTile && target && settlementSlaveResource(targetTile, G)
+          ? settlementOpenSlots(targetTile, target, G) -
+            settlementWorkingSlaves(targetTile, target, G)
+          : 0;
+
+      for (const pops of movePopsBundles(source.pops, openSlots)) {
         const status = getMovePopsStatus(G, playerID, sourceTileId, targetTileId, pops);
 
         if (status.can) {
@@ -822,11 +838,12 @@ function enumerateGameplayMoves(G: HegemonyState, playerID: PlayerId): DerivedCo
 /**
  * The bounded set of movePops selections offered from a source settlement: a single pop
  * of each present type (fine control), the whole stack of each type (relocate one class),
- * and the entire population (seed a colony / abandon). Deduplicated, so a source holding a
- * single pop yields exactly one move. getMovePopsStatus still gates each selection on
- * target capacity, so overflowing bundles are dropped by the caller.
+ * the entire population (seed a colony / abandon), and as many slaves as the target has
+ * slots open for them (two of four slaves to a site with two free slots). Deduplicated,
+ * so a source holding a single pop yields exactly one move. getMovePopsStatus still gates
+ * each selection on target capacity, so overflowing bundles are dropped by the caller.
  */
-function movePopsBundles(sourcePops: Pops): Pops[] {
+function movePopsBundles(sourcePops: Pops, targetOpenSlots: number): Pops[] {
   const bundles: Pops[] = [];
   const seen = new Set<string>();
 
@@ -851,6 +868,8 @@ function movePopsBundles(sourcePops: Pops): Pops[] {
   }
   // The entire settlement — seed a colony or abandon in one action.
   add({ ...sourcePops });
+  // The slaves the target can put to work: any more would sit idle there.
+  add({ ...EMPTY_POPS, slaves: Math.min(sourcePops.slaves, Math.max(0, targetOpenSlots)) });
 
   return bundles;
 }

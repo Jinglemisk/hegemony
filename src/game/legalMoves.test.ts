@@ -211,6 +211,30 @@ describe("gameplay enumeration", () => {
     expect(applyTestCommand(structuredClone(G), "0", bundle!).ok).toBe(true);
   });
 
+  it("offers as many slaves as the target has slots open, beside one and all", () => {
+    // Four idle slaves in a hill city; a plains city working two of its four slots.
+    const G = scenario()
+      .withSettlement("0", "0,-3", "city", { citizens: 1, freemen: 0, slaves: 2 })
+      .withSettlement("0", "-1,0", "city", { citizens: 0, freemen: 0, slaves: 4 })
+      .withResources("0", { food: 4 })
+      .build();
+    G.phase = "gameplay";
+    G.players["0"].collectedThisTurn = true;
+    const slavesSent = (sourceTileId: string) =>
+      enumerateLegalCommands(G, "0")
+        .flatMap((move) =>
+          move.type === "movePops" && move.sourceTileId === sourceTileId ? [move.pops.slaves] : [],
+        )
+        .sort();
+
+    // One, all four, and the two the plains can put to work.
+    expect(slavesSent("-1,0")).toEqual([1, 2, 4]);
+    // A hill has no slot to work, so nothing is added that way: the citizen alone, one
+    // slave, both slaves, everyone.
+    expect(slavesSent("0,-3")).toEqual([0, 1, 2, 2]);
+    expectSound(G, "0");
+  });
+
   it("drops every costed move when the player cannot afford anything", () => {
     const G = openingInGameplay();
     Object.assign(G.players["0"].resources, { wood: 0, stone: 0, gold: 0, food: 0 });
