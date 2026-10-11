@@ -898,8 +898,13 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   title. With no food bought in the forecast the trader does best and the civic, which
   feeds its citizens by the Dole, wins nothing. The kept version is the one in which
   every build can play; the trader's taste for freemen it must feed is part C's row 32.
-  The win split moves by 15 to 45 points between these versions on the same rules, so
-  Step 11's win-rate rule reads the bots' weights at least as much as the rules.
+  Between these versions, on the same rules, the trader's win rate moves 30 points and
+  the civic's 23, so Step 11's win-rate rule reads the bots' weights at least as much as
+  the rules.
+
+- Owner, 2026-10-11: the step ships with the economy part and the parallel batches. The
+  Assembly and Ideas parts are dropped, since more tuning would move the win split again
+  without saying anything about the rules.
 
 - A riot is charged the riot table's expected loss with no insurance: every face at
   equal odds. Pops are priced at the weight of the class the table takes next, a burned
@@ -950,7 +955,8 @@ danger selector and the real-path previews, with their tests.
 
 - Step 11's thresholds are proposals the owner may change before it runs.
 - Q80: the shape of Step 11 (the runaway-leader rule's wording, the number of games, the v1
-  comparison). It does not block Steps 18 and 19.
+  comparison, and whether win rates stay a rule). It holds the first batch with one policy
+  in all four seats, where seat 0 wins 55%. Step 11 waits for it.
 
 ## Three-axis parity
 
@@ -1076,14 +1082,16 @@ proposed remedy for each failing rule; the owner decides.
       holder and luxuries per turn, influence per year, per-personality hunger, riots and
       Assembly figures, the CSV's personality and winner columns, and draw swings for pop
       and token cards. Stale comments and docs the audit lists.
-- [ ] **Step 19 · Sim parity, the gaps.** The audit's medium gaps: the projection buys food
-      before pops leave; a riot is priced from the riot table, and insurance by what it
-      saves; a vote and held influence have value outside a sitting; rival harm is priced on
-      the rival's terms; the draft follows the personality's weights and sees rivals; Laws
-      get a rough value for the prices and rules they change; the Treasurer and Beloved
-      chases; the small enumeration and weight gaps left over. Batches run in parallel
-      across cores and their reports merge. Left out: planning toward a third title, a
-      proper value per Law, and the v1 baseline.
+- [x] **Step 19 · Sim parity, the gaps.** ([#101](https://github.com/Jinglemisk/hegemony/pull/101): a rotated 40-game batch finishes with no turn caps, 3 by the race and 37 by the deck; wins slaver 40%, civic 23%, trader 15%, master 23%, against Step 18's 30%, 23%, 30% and 18%; riots 5.3 a game against 2.4, the table on 11.8% of turns from year 8 and on 27.4% of the slaver's, over Step 11's 10% limit; the trader loses 1.90 pops a seat-game to hunger against 1.45; idle slaves fall to 1 to 4%; repeals filed 194; seat 0 wins 45% of games against 25%, with Slave Colonies as its first Idea in 30 of 40, which Q80 follows up; 40 games on four workers take 332 s and write the serial run's report; ui:audit shows 0 defects.) From the
+      [sim parity audit](../reports/simulation/2026-10-10-v2-sim-parity-audit.md). Shipped:
+      the projection buys food before pops leave and keeps a reserve for lean years; a riot
+      is priced from the riot table, and insurance by what it saves; idle slaves move to
+      open slots; batches run in parallel across cores and their reports merge. Dropped by
+      the owner on 2026-10-11, after the five batches in the Step 19 defaults: a vote and
+      held influence valued outside a sitting; rival harm priced on the rival's terms; the
+      draft following the personality's weights and seeing rivals; a rough value for Laws;
+      the Treasurer and Beloved chases. Those rows stay open in the audit. Left out from
+      the start: planning toward a third title, a proper value per Law, and the v1 baseline.
 - [ ] **Step 11 · Sim gate.** First phase: AI reach audit: every action and every piece of
       content is used by some personality in a rotated batch, or a fixture proves the bot
       takes it when it is clearly best; bot bugs found are fixed before Step 11's batches.
