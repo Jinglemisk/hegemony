@@ -22,6 +22,7 @@ import {
 } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
 import { getAuthoredGameContent } from "../game/content";
+import { createGameDefinition } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
 import { GAME_MODES } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
@@ -283,6 +284,26 @@ function parseTuningPreset(flags: Flags): TuningPresetId | null {
     );
   }
   return value;
+}
+
+/** `--without-ideas all|id,id` names the National Ideas a batch plays without. The draft
+ *  needs an Idea a seat, so what is left is either none or at least one each. */
+function parseWithoutIdeas(flags: Flags, ideas: { id: string }[]): string[] | null {
+  const value = flags["without-ideas"];
+  if (value === undefined) return null;
+  const known = ideas.map((idea) => idea.id);
+  const left = value === "all" ? known : String(value).split(",");
+  const unknown = left.filter((id) => !known.includes(id));
+  if (unknown.length > 0) {
+    fail(
+      `--without-ideas: unknown Idea ${unknown.join(", ")} (expected all, or: ${known.join(", ")})`,
+    );
+  }
+  const kept = known.length - new Set(left).size;
+  if (kept > 0 && kept < PLAYER_IDS.length) {
+    fail(`--without-ideas leaves ${kept} Ideas: the draft needs ${PLAYER_IDS.length}, or none`);
+  }
+  return known.filter((id) => left.includes(id));
 }
 
 function parseOpening(flags: Flags, allowed: OpeningKind[]): OpeningKind {
@@ -757,6 +778,18 @@ function cmdBatch(flags: Flags) {
   const presetId = parseTuningPreset(flags);
   const resolved = resolveTuning(GAME_MODES[mode].ruleset, presetId, tune ?? {}, patch);
   const effectivePatch = resolved.rulesetPatch;
+  const withoutIdeas = parseWithoutIdeas(flags, resolved.content.nationalIdeas);
+  const definition = withoutIdeas
+    ? createGameDefinition({
+        ruleset: resolved.ruleset,
+        content: {
+          ...resolved.content,
+          nationalIdeas: resolved.content.nationalIdeas.filter(
+            (idea) => !withoutIdeas.includes(idea.id),
+          ),
+        },
+      })
+    : resolved.definition;
   const asked = flags.jobs !== undefined ? requirePositiveInt(flags.jobs, "--jobs") : 1;
 
   /** Plays one game into an Aggregator of its own. A game depends on nothing but its
@@ -770,7 +803,7 @@ function cmdBatch(flags: Flags) {
       seed,
       mode,
       patch: effectivePatch,
-      definition: resolved.definition,
+      definition,
       opening,
       boardLayout,
       policy,
@@ -851,7 +884,8 @@ function cmdBatch(flags: Flags) {
       baseSeed,
       botSeedRule: "seed ^ 0x9e3779b9",
       rulesetPatch: effectivePatch,
-      definition: resolved.definition.identity,
+      definition: definition.identity,
+      withoutIdeas,
       tunePatch: tune ?? null,
       tunePatchHash: resolved.manualPatchHash,
       tuningPresetId: resolved.presetId,
@@ -969,6 +1003,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              [--opening policy|random]
              [--ruleset-patch p.json] [--tune-preset low-number-core-v1] [--tune-patch p.json]
              [--seats ${POLICY_IDS}×4] [--rotate]
+             [--without-ideas all|id,id]   play without those National Ideas
              [--jobs N]                    worker processes to play the games on: 1 by default,
                                            at most the cores less one (${MAX_JOBS} here); same report
              [--report r.json] [--csv t.csv]

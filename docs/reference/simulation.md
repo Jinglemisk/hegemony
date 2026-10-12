@@ -188,6 +188,7 @@ npm run sim -- batch --games 50 [--turns 56] [--policy random|greedy|smart|beam|
                      [--mode …] [--board classic|shuffled] [--ruleset-patch p.json]
                      [--tune-preset low-number-core-v1] [--tune-patch p.json]
                      [--seats p0,p1,p2,p3] [--rotate] [--seed 1000] [--jobs N]
+                     [--without-ideas all|id,id]
                      [--report .sim/report.json] [--csv .sim/turns.csv]
 ```
 
@@ -305,6 +306,10 @@ same on all four rows) and `activeLuxuries`.
 - `--seats p0,p1,p2,p3` — a policy per seat for mixed-policy tables. `--rotate` runs
   each seed through its distinct cyclic seat rotations (four for four different
   seats), cancelling first-player advantage.
+- `--without-ideas all|id,id` — takes those National Ideas out of the batch's content.
+  With `all` the setup draft is skipped and nothing is bought in play. A partial list
+  must leave an Idea for every seat. `meta.withoutIdeas` records the list, and the
+  definition ID changes with the content.
 - `--jobs N` — plays the games on N worker processes and still writes one report and
   one CSV. The default is 1: every game runs in the command's own process. N is capped
   at the machine's cores less one (the help text gives the number) and at the number

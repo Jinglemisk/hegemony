@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { getAuthoredGameContent } from "./content";
+import { createGameDefinition } from "./definition";
 import { takeNationalIdea } from "./ideas";
 import { PLAYER_IDS } from "./data";
 import { createInitialState, placeCapital, placeCity, placeColony } from "./rules";
 import { DEFAULT_RULESET, GAME_MODES, deriveRuleset, setupCapitalCount } from "./ruleset";
+import { createInitialStateFromDefinition } from "./state";
 import { advanceSetupTurn } from "./turn";
 import type { HegemonyState, PlayerId, Pops, SettlementKind } from "./types";
 
@@ -77,6 +80,19 @@ describe("game modes / ruleset seam", () => {
     for (const id of PLAYER_IDS) {
       expect(G.players[id].settlements).toHaveLength(2);
     }
+  });
+
+  it("a game whose content has no Ideas goes from setup to play with no draft", () => {
+    const definition = createGameDefinition({
+      ruleset: GAME_MODES.standard.ruleset,
+      content: { ...getAuthoredGameContent(), nationalIdeas: [] },
+    });
+    const G = createInitialStateFromDefinition(definition, 1);
+    runSetup(G);
+
+    expect(G.phase).toBe("gameplay");
+    expect(G.currentPlayer).toBe(G.yearOpener);
+    expect(PLAYER_IDS.flatMap((id) => G.players[id].nationalIdeas)).toEqual([]);
   });
 
   it("deathmatch setup: the data-driven sequence makes each player place one capital and three colonies", () => {

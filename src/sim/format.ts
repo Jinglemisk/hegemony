@@ -254,6 +254,10 @@ export function renderBatchReport(report: BatchReport): string {
       .join(" · ")}`,
   ];
 
+  if (report.meta.withoutIdeas) {
+    lines.push(`Played without these National Ideas: ${report.meta.withoutIdeas.join(", ")}`);
+  }
+
   if (report.meta.tunePatchHash) {
     lines.push(`Manual tuning patch: ${report.meta.tunePatchHash}`);
   }

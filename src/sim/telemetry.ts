@@ -477,6 +477,8 @@ export type BatchReport = {
     rulesetPatch: unknown;
     /** Exact rules/content provenance shared by every game in this batch. */
     definition: DefinitionIdentity;
+    /** The National Ideas `--without-ideas` took out of the batch's content (null when none). */
+    withoutIdeas?: string[] | null;
     /** The dev tune-panel override map applied to content/ruleset for this run (null when
      *  none), plus a stable fingerprint — so a batch's content is identifiable and A/B-able. */
     tunePatch?: unknown;
