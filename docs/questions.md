@@ -4,7 +4,7 @@ Only unresolved owner decisions live here. Answer in chat or after `Answer:`; th
 answer is then incorporated into the affected plan and this entry is removed.
 Recommendations are defaults for discussion, not silent authorization.
 
-Last updated: 2026-10-11.
+Last updated: 2026-10-12.
 
 ## Q80 — What shape should Step 11 take?
 
@@ -40,20 +40,38 @@ B answers the question the rule was written for. The win-rate rule is the only o
 backport is the largest item in the audit and v1 is not coming back, so its numbers would
 change no decision.
 
-**First same-policy batch (2026-10-11):** 40 games with the master bot in all four seats,
-seeds 1000 to 1039, on Step 19's build.
+**Same-policy batches (2026-10-11 and 12):** 40 games each with the master bot in all
+four seats, seeds 1000 to 1039, on Step 19's build. `--without-ideas` takes Ideas out of a
+batch.
 
-- Seat 0 wins 55% (22 of 40); the others win 13%, 15% and 18%. Seat 0 drafts Slave Colonies
-  in every game and has the highest income at year 5 in 23 games. On Step 18's build the
-  mixed table's seats won 25%, 25%, 30% and 20%, and Slave Colonies was a late pick. The
-  batch cannot tell the Idea from the seat, which also picks land first and moves first.
-- The seat with the most pops at year 5 wins 24 of 39 games. Year 5's income leader wins
-  16 of the 33 games that have one.
-- 35 games end by the deck and 5 by the race. The winner holds one title in 15 games, two
-  in 19 and three in 6. About 2.5 of the six titles are held when a game ends; Treasurer
-  is never held and Beloved in 3 games.
-- Riots fall on 7.6% of turns from year 8, 4.8 a game. Median influence grows from 23 to
-  43 between years 10 and 14, 5 a year. Beloved's holder is the sole luxury leader on 42%
-  of the turns it is held.
+|                                           | All twelve Ideas   | No Slave Colonies  | No Ideas           |
+| ----------------------------------------- | ------------------ | ------------------ | ------------------ |
+| Wins by seat, first to fourth             | 55 / 13 / 15 / 18% | 33 / 23 / 18 / 28% | 23 / 25 / 15 / 38% |
+| Pops at the end of year 1, seat 0, others | 11.2, 6.3          | 6.7, 6.4           | 6.4, 6.2           |
+| Pops a seat at year 14                    | 15.3               | 14.2               | 13.0               |
+| Ended by the deck, by the race            | 35, 5              | 35, 5              | 37, 3              |
+| Winner holds one, two, three titles       | 15, 19, 6          | 17, 18, 5          | 21, 15, 4          |
+| Decided by the tiebreak                   | 11                 | 14                 | 14                 |
+| Riot turns from year 8                    | 7.6%               | 7.4%               | 7.8%               |
+| Median influence a year, years 10 to 14   | +5.0               | +5.3               | +3.3               |
+| Turns begun short of food, of 2,240       | 730                | 662                | 738                |
+| Dole uses a game                          | 52.5               | 51.9               | 48.3               |
+| Pops lost to hunger a seat-game           | 0.41               | 0.27               | 0.61               |
+
+- Slave Colonies makes the first seat's edge. Seat 0 drafts it in every game with all
+  twelve Ideas, founds two colonies on its first turn and holds 11 pops against 6 at the
+  end of year 1. Without the Idea seat 0 wins 13 of 40, and with no Ideas 9 of 40. On Step
+  18's build the mixed table's seats were even and Slave Colonies was a late pick; Step
+  19's bots put the slaves to work.
+- The fourth seat's 38% with no Ideas is 15 wins where 10 are expected, which 40 games
+  cannot tell from chance.
+- With no Ideas a seat grows from 6 pops to 13 in fourteen years. A third of all turns
+  begin short of food, and the Dole covers it: 145 of the 208 influence a table spends in
+  a game buys food.
+- Games run to the deck with or without Ideas, and the winner most often holds one or two
+  titles. About 2.5 of the six titles are held when a game ends. Treasurer is never held,
+  and a table builds 0.1 Marketplaces a game.
+- With all twelve Ideas the seat with the most pops at year 5 wins 24 of 39 games; with
+  none, 12 of 29.
 
 **Answer:**

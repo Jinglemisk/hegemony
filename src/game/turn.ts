@@ -1,4 +1,4 @@
-import { ideaDraftOrder, takeNationalIdea } from "./ideas";
+import { getNationalIdeas, ideaDraftOrder, takeNationalIdea } from "./ideas";
 import { GAME_CONFIG, TEST_OPENING_SETUP } from "./config";
 import { PLAYER_IDS } from "./data";
 import {
@@ -96,7 +96,8 @@ function setupPhaseFor(kind: SettlementKind): Phase {
  * (roadmap-appendix D3c): round 0 goes 0→3, round 1 goes 3→0, and so on — the
  * player who picks last in one round picks first in the next. Once every player
  * has placed everything the ruleset's setup list owes, the National Idea draft runs
- * as the snake's next round; gameplay then begins with the year's opener.
+ * as the snake's next round; gameplay then begins with the year's opener. A game
+ * whose content has no Ideas (a sim batch can ask for one) has no draft.
  */
 export function advanceSetupTurn(G: HegemonyState) {
   G.turn += 1;
@@ -113,6 +114,12 @@ export function advanceSetupTurn(G: HegemonyState) {
         return;
       }
     }
+  }
+
+  if (getNationalIdeas(G).length === 0) {
+    G.phase = "gameplay";
+    G.currentPlayer = G.yearOpener;
+    return;
   }
 
   G.phase = "setupIdeas";
