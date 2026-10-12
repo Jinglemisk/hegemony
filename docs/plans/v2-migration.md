@@ -955,8 +955,11 @@ danger selector and the real-path previews, with their tests.
 
 - Step 11's thresholds are proposals the owner may change before it runs.
 - Q80: the shape of Step 11 (the runaway-leader rule's wording, the number of games, the v1
-  comparison, and whether win rates stay a rule). It holds the first batch with one policy
-  in all four seats, where seat 0 wins 55%. Step 11 waits for it.
+  comparison, and whether win rates stay a rule). It holds three batches with one policy
+  in all four seats. Step 11 waits for it.
+- Slave Colonies: with four identical bots the seat that drafts it wins 55% of games, and
+  23% to 33% once it is out of the pool (the batches under Q80). The remedy is the
+  owner's.
 
 ## Three-axis parity
 
