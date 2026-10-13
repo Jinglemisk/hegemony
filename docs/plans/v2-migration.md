@@ -960,6 +960,11 @@ danger selector and the real-path previews, with their tests.
 - Slave Colonies: with four identical bots the seat that drafts it wins 55% of games, and
   23% to 33% once it is out of the pool (the batches under Q80). The remedy is the
   owner's.
+- Step 20 moved the mixed table's win rates again, the slaver's from 40% to 18%, by
+  changing how the bots plan and no rule. It bears on Q80's win-rate option. The
+  economy findings of 2026-10-12 (food, influence, titles, gold) are to be read again on
+  Step 20's build before any rule changes; the owner takes influence and Slave Colonies
+  last.
 
 ## Three-axis parity
 
@@ -1059,7 +1064,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
       political scorer, with bank and venture moves inside the search, so each personality
       can actually pursue its build.
 
-### Stretch 4 · Sim gate (Steps 17 to 19 and 11)
+### Stretch 4 · Sim gate (Steps 17 to 20 and 11)
 
 **Before:** Steps 17 to 19 are merged, so the gate measures the final hunger rule with
 bots that play the rules as built, and Q80 is answered. **Mode:** Steps 18 and 19 one after
@@ -1095,6 +1100,16 @@ proposed remedy for each failing rule; the owner decides.
       draft following the personality's weights and seeing rivals; a rough value for Laws;
       the Treasurer and Beloved chases. Those rows stay open in the audit. Left out from
       the start: planning toward a third title, a proper value per Law, and the v1 baseline.
+- [x] **Step 20 · Bots buy calm ahead and save toward a purchase.** ([#103](https://github.com/Jinglemisk/hegemony/pull/103): four masters with no Ideas, 40 games, against the 2026-10-12 batch: realms that never cut wood 112 to 55 of 160, wood 0.23 to 0.84 a turn, cities a realm 1.38 to 1.78, Polis Builder held at the end in 17 games against 4, the winner holding two titles or more in 30 games against 19, turns begun short of food 738 to 630, Dole uses 48 to 41 a game, riots 4.8 to 4.0 a game; the calm part alone: calm bought 1.4 to 3.5 times a game, slaves a realm 5.0 to 5.1; the rotated mixed batch: wins slaver 18%, civic 18%, trader 35%, master 30%, against Step 19's 40%, 23%, 15% and 23%, and 30%, 15%, 25%, 30% with the calm part alone; riots 6.1 a game against 5.3, the table on 11.3% of turns from year 8; 4 games by the race; in the one mixed game timed the search scored 84,000 positions against 42,000, and the two mixed batches took 965 s and 1,126 s.) Asked for
+      by the owner on 2026-10-12, after the Q80 batches showed the master bot cutting no
+      wood and holding five slaves. The forecast knew one later purchase, food. It now
+      buys calm in later years where the seat would riot and can pay. The master and the
+      personalities also value the best purchase their stocks are on course to pay for,
+      so wood is cut toward a city, an Estate or a Granary. Not done: a seat that makes
+      none of a material does not save gold to buy it, and 55 of 160 realms still cut no
+      wood. Granaries stay rare (39 in 40 games against 33): the wood goes to cities and
+      Estates. Realms still hold about five slaves: after income a realm has under 2
+      food on three turns in four, so it can seldom pay to grow one.
 - [ ] **Step 11 · Sim gate.** First phase: AI reach audit: every action and every piece of
       content is used by some personality in a rotated batch, or a fixture proves the bot
       takes it when it is clearly best; bot bugs found are fixed before Step 11's batches.
