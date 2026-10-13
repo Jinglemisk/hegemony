@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getPlayerBankRate } from "../game/bank";
+import { getTile } from "../game/core/query";
 import { happinessLevel } from "../game/happiness";
 import { playerDole } from "../game/ideaRules";
 import { enumerateLegalCommands, transition, type GameCommand } from "../game/legalMoves";
@@ -456,6 +457,36 @@ describe("shared personality search", () => {
       expect(moves).toContainEqual({ type: "growPop", tileId: "-2,1", pop: "slaves" });
       expect(moves).toContainEqual({ type: "civicCalm", payment: "influence" });
       expect(owned(after, "-2,1", "0").pops.slaves).toBe(6);
+    },
+  );
+
+  it.each(["civic", "trader", "master"] as const)(
+    "%s grows the slave that cuts wood for what it is saving toward",
+    (name) => {
+      // A plains capital with its Temple and Forum up, an empty mountain colony and an
+      // empty forest colony, and food for one slave. Nothing is left to buy with stone
+      // alone: the Granary, the Estate, the Marketplace and the forest colony's upgrade
+      // all wait for wood, and the realm makes none. At the flat weights a stone is
+      // worth more than a wood, so the slave used to go to the quarry every time.
+      const G = scenario()
+        .withSettlement("0", "-2,1", "city", { citizens: 2, freemen: 0, slaves: 3 })
+        .withSettlement("0", "-2,0", "colony", { citizens: 0, freemen: 0, slaves: 0 })
+        .withSettlement("0", "-3,0", "colony", { citizens: 0, freemen: 0, slaves: 0 })
+        .withResources("0", { food: 2, wood: 0, stone: 0, gold: 0, influence: 0 })
+        .build();
+      owned(G, "-2,1", "0").buildings.push("temple", "forum");
+      G.phase = "gameplay";
+      G.year = 3;
+      G.players["0"].collectedThisTurn = true;
+      G.activeYearCard = null;
+      expect(getTile(G, "-2,0")?.terrain).toBe("mountain");
+      expect(getTile(G, "-3,0")?.terrain).toBe("forest");
+
+      expect(choose(name, G, (m) => m.type === "endTurn" || m.type === "growPop")).toEqual({
+        type: "growPop",
+        tileId: "-3,0",
+        pop: "slaves",
+      });
     },
   );
 

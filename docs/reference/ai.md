@@ -132,6 +132,18 @@ slaves than its Temples and goods covered: four masters bought calm 0.35 times a
 seat-game with 2 influence in hand on 80% of their turns. The same two turns are
 left out: this turn's calm is the seat's to buy, and setup buys none.
 
+The master and the three personalities also count what a seat is saving toward. At
+each choice the seat lists every building, upgrade and colony a full store could buy,
+with what each would add to its score where it holds the price and no more. A state
+is then worth the best of those still open, for the share of the forecast left once
+its stocks and their income reach the price: the next year at the soonest, so buying
+is always worth more than holding the price, and never where the realm is short of a
+material it makes none of. Before this a stock was worth its flat weight whatever it
+could buy, and the search plans inside one turn, so nothing made wood worth cutting
+toward a Granary four years off. Four masters cut 0.2 wood a turn, sold two fifths of
+their stone to the bank and stood at four settlements from year 2. The other policies
+are left as they were, so the earlier comparisons between them still hold.
+
 Past the six-year horizon the forecast follows only the food and what pays for it, to
 the game's last year: the closing income each year, the shortfall bought the same way,
 and a pop gone for each food the stocks cannot pay for. It reports them as
@@ -276,8 +288,10 @@ unused Ideas.
 
 ## Limits and validation
 
-Search cannot save deliberately across turns, model general rival replies, or
-plan multi-hop routes. The forecast buys food and calm and loses pops to riots, and
+Search cannot plan a sequence across turns, model general rival replies, or plan
+multi-hop routes. Saving is a value on the stocks and not a plan: a seat that makes
+none of a material does not save gold to buy it at the bank, and does not found a
+forest colony in order to cut wood later. The forecast buys food and calm and loses pops to riots, and
 nothing else: it does not grow slaves or raise a building in a later year. The
 risk of standing near the riot line and future Idea opportunities are heuristics.
 Venture expectation is exact for the shipped public tables; it does not implement
