@@ -415,8 +415,8 @@ describe("shared personality search", () => {
     "%s faces a riot that calm would only move a year",
     (name) => {
       // Six slaves in year 5. The riot table takes a slave here, which a slaver weighs
-      // at 45 and the others at 12. Calm costs 2 gold and the same riot comes next
-      // year, so only the slaver pays to put it off.
+      // at 45 and the others at 12. Calm costs 2 gold, the realm makes none to buy it
+      // again, and the same riot comes next year: only the slaver pays to put it off.
       const G = realm({ citizens: 0, freemen: 0, slaves: 6 });
       G.year = 5;
       Object.assign(G.players["0"].resources, {
@@ -432,6 +432,33 @@ describe("shared personality search", () => {
     },
   );
 
+  it.each(["trader", "master"] as const)(
+    "%s grows a slave past the riot line when it can go on buying calm for it",
+    (name) => {
+      // Five plains slaves feed five of six citizens and hold the level at −2. A sixth
+      // feeds the last citizen and takes the level to −3: calm every year, 2 of the 6
+      // influence the citizens make, against a Dole every year without him. The
+      // forecast used to read calm as bought once and gone, so the sixth slave was a
+      // riot a year and no seat grew him. The civic still does not: it weighs the
+      // influence and the standing level half as much again.
+      const G = scenario()
+        .withSettlement("0", "-2,1", "city", { citizens: 2, freemen: 0, slaves: 5 })
+        .withSettlement("0", "-3,2", "colony", { citizens: 4, freemen: 0, slaves: 0 })
+        .withResources("0", { food: 2, wood: 0, stone: 0, gold: 0, influence: 6 })
+        .build();
+      G.phase = "gameplay";
+      G.year = 5;
+      G.players["0"].collectedThisTurn = true;
+      G.activeYearCard = null;
+      expect(happinessLevel(G, "0")).toBe(G.ruleset.economy.unrest.riotThreshold + 1);
+
+      const { G: after, moves } = playOwnTurn(name, G);
+      expect(moves).toContainEqual({ type: "growPop", tileId: "-2,1", pop: "slaves" });
+      expect(moves).toContainEqual({ type: "civicCalm", payment: "influence" });
+      expect(owned(after, "-2,1", "0").pops.slaves).toBe(6);
+    },
+  );
+
   it.each(names)("%s declines calm when no turn-end riot needs it", (name) => {
     const G = realm({ citizens: 0, freemen: 0, slaves: 4 });
     Object.assign(G.players["0"].resources, { food: 0, wood: 0, stone: 0, influence: 0, gold: 2 });
@@ -441,10 +468,10 @@ describe("shared personality search", () => {
   });
 
   /** End the turn at the riot line and list the insurance the seat buys before it rolls. */
-  function insuranceBought(name: PersonalityId | "master", pops: Pops) {
+  function insuranceBought(name: PersonalityId | "master", pops: Pops, food = 10) {
     const start = realm(pops);
     Object.assign(start.players["0"].resources, {
-      food: 10,
+      food,
       wood: 0,
       stone: 0,
       gold: 6,
@@ -476,10 +503,14 @@ describe("shared personality search", () => {
     "%s buys riot insurance only where it saves more than it costs",
     (name) => {
       // Six slaves hold the level at −3 and nothing can burn. The bread dole's +1 saves
-      // a third of a slave for 4 spare food. Patronage's next +1 saves another third
-      // for 3 influence, and the slave it saves is the one whose loss ends the riots.
-      // The rule used to buy both. The only citizen is not conceded.
-      expect(insuranceBought(name, { citizens: 1, freemen: 0, slaves: 6 })).toEqual(["breadDole"]);
+      // a third of a slave for 4 food, where the food is spare: 30 feeds the citizen to
+      // the last year. With 10 it is not, now that the forecast keeps the gold and the
+      // influence for calm, and the dole is left. Patronage's next +1 saves another
+      // third for 3 influence, and the slave it saves is the one whose loss ends the
+      // riots. The rule used to buy both. The only citizen is not conceded.
+      const pops = { citizens: 1, freemen: 0, slaves: 6 };
+      expect(insuranceBought(name, pops, 30)).toEqual(["breadDole"]);
+      expect(insuranceBought(name, pops)).toEqual([]);
     },
   );
 

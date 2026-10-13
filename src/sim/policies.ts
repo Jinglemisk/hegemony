@@ -10,7 +10,8 @@ import { insuranceRollBonus } from "../game/riot";
 import { getAdjustedActionCost } from "../game/economy/cost";
 import { ventureOutcomes } from "./chance";
 import { getActiveEffects } from "../game/activeEffects";
-import { applyIncome } from "../game/core/resources";
+import { applyIncome, canAfford, payCost } from "../game/core/resources";
+import { getCivicCalmStatus } from "../game/civic";
 import { getBuilding, getResolutionCard, getResolutionCards, getRiotTable } from "../game/content";
 import { totalPops } from "../game/core/pops";
 import { getOwnedSettlement, getTile, popsInTransit, realmPops } from "../game/core/query";
@@ -389,9 +390,10 @@ function incomeYearsLeft(G: HegemonyState, playerID: PlayerId) {
  * The reference policies' canonical future-state projection. Ordinary recurring
  * modifiers already flow through calculateIncome; the active-effect selector adds
  * what income alone cannot express: a skipped collection. Each projected turn end
- * settles hunger and then checks the riot and revolt lines, as the engine does. The
- * seat's weights decide what the forecast has to price: which food is cheaper to buy,
- * and what a riot or a revolt takes.
+ * settles hunger and then checks the riot and revolt lines, as the engine does. On a
+ * later turn the seat is taken to buy the food it is short of and the calm that keeps
+ * it off those lines. The seat's weights decide what the forecast has to price: which
+ * food and which calm is cheaper to buy, and what a riot or a revolt takes.
  */
 export function projectPolicyHorizon(
   G: HegemonyState,
@@ -416,7 +418,7 @@ export function projectPolicyHorizon(
   // would spend gold the seat still counts as held. Setup is left alone too. It picks
   // land for fourteen years and the forecast sees six, so a starting store and six
   // years of gold would make any site look fed.
-  const buysFood = G.phase === "gameplay";
+  const buysLater = G.phase === "gameplay";
   const foodSources = () => {
     const dole = playerDole(projectedState, playerID);
     const bank = getPlayerBankRate(projectedState, playerID, "food").buy;
@@ -441,7 +443,7 @@ export function projectPolicyHorizon(
   // Hunger is the engine's own rule and draws no dice, so the projection runs it
   // for real: a turn that ends short loses a pop per missing food, and later incomes
   // are recomputed without them.
-  const settleHunger = (canBuy = buysFood) => {
+  const settleHunger = (canBuy = buysLater) => {
     if (player.resources.food >= 0) return false;
     if (canBuy && unfedAtTurnEnd(projectedState, playerID) > 0) buyFood();
     const unfed = unfedAtTurnEnd(projectedState, playerID);
@@ -498,6 +500,35 @@ export function projectPolicyHorizon(
     return false;
   };
 
+  // On a later turn the seat would also buy calm when its level stands at a line and
+  // calm moves it off: once a year, the cheaper payment first by its weights, from the
+  // stocks. Without this a slave past the standing level read as a riot in every year
+  // of the forecast, whatever the seat held, so no realm kept more slaves than its
+  // Temples and goods covered. Like the food, this turn's calm is the seat's to buy.
+  let calmCosts: Array<Partial<Resources>> | null = null;
+  const buyCalm = () => {
+    if (!buysLater || player.calmActive) return;
+    const ruleset = projectedState.ruleset;
+    const level = happinessLevel(projectedState, playerID);
+    const tier = evaluatePolicyUnrestRisk(ruleset, level).tier;
+    if (tier === "safe" || tier === "buffer") return;
+    if (evaluatePolicyUnrestRisk(ruleset, level + ruleset.civicCalm.happiness).tier === tier)
+      return;
+
+    const worth = (cost: Partial<Resources>) =>
+      (Object.keys(cost) as Resource[]).reduce(
+        (sum, resource) => sum + (cost[resource] ?? 0) * stockValue(weights, resource),
+        0,
+      );
+    calmCosts ??= (["influence", "gold"] as const)
+      .map((payment) => getCivicCalmStatus(projectedState, playerID, payment).cost ?? {})
+      .sort((a, b) => worth(a) - worth(b));
+    const cost = calmCosts.find((candidate) => canAfford(player.resources, candidate));
+    if (!cost) return;
+    payCost(player.resources, cost);
+    player.calmActive = true;
+  };
+
   const expireYear = () => {
     projectedState.activeYearCard = null;
     player.calmActive = false;
@@ -542,6 +573,7 @@ export function projectPolicyHorizon(
 
     // Income first; the turn then ends with hunger and the unrest check, in that order.
     popsChanged = settleHunger();
+    buyCalm();
     popsChanged = checkTurnEnd() || popsChanged;
     // The next projected income is in another year. Its card is still hidden.
     const yearCardExpired = projectedState.activeYearCard !== null;
@@ -566,7 +598,7 @@ export function projectPolicyHorizon(
   // has for as long as it can pay.
   let starvedAfterHorizon = 0;
   const incomesLeft = incomesLeftInGame(G, playerID);
-  const yearsBeyond = buysFood ? incomesLeft - horizon : 0;
+  const yearsBeyond = buysLater ? incomesLeft - horizon : 0;
   if (yearsBeyond > 0) {
     if (incomeStale) income = calculateIncome(projectedState, playerID);
     let mouths = hungerMouths(projectedState).reduce(
