@@ -10,7 +10,8 @@ import { insuranceRollBonus } from "../game/riot";
 import { getAdjustedActionCost } from "../game/economy/cost";
 import { ventureOutcomes } from "./chance";
 import { getActiveEffects } from "../game/activeEffects";
-import { applyIncome } from "../game/core/resources";
+import { applyIncome, canAfford, payCost } from "../game/core/resources";
+import { getCivicCalmStatus } from "../game/civic";
 import { getBuilding, getResolutionCard, getResolutionCards, getRiotTable } from "../game/content";
 import { totalPops } from "../game/core/pops";
 import { getOwnedSettlement, getTile, popsInTransit, realmPops } from "../game/core/query";
@@ -33,7 +34,7 @@ import {
 } from "../game/assembly";
 import type { AssemblySession, BallotItem, ResolutionCard } from "../game/assembly";
 import type { GameCommand } from "../game/legalMoves";
-import { enumerateLegalCommands, transition } from "../game/legalMoves";
+import { enumerateLegalCommands, enumerateLegalOptions, transition } from "../game/legalMoves";
 import { claimableLuxuriesAt, ownedClaims } from "../game/luxury";
 import { playerStandings } from "../game/score";
 import { victoryCardsHeld, victoryMetricValue, voiceHolder } from "../game/victory";
@@ -389,9 +390,10 @@ function incomeYearsLeft(G: HegemonyState, playerID: PlayerId) {
  * The reference policies' canonical future-state projection. Ordinary recurring
  * modifiers already flow through calculateIncome; the active-effect selector adds
  * what income alone cannot express: a skipped collection. Each projected turn end
- * settles hunger and then checks the riot and revolt lines, as the engine does. The
- * seat's weights decide what the forecast has to price: which food is cheaper to buy,
- * and what a riot or a revolt takes.
+ * settles hunger and then checks the riot and revolt lines, as the engine does. On a
+ * later turn the seat is taken to buy the food it is short of and the calm that keeps
+ * it off those lines. The seat's weights decide what the forecast has to price: which
+ * food and which calm is cheaper to buy, and what a riot or a revolt takes.
  */
 export function projectPolicyHorizon(
   G: HegemonyState,
@@ -416,7 +418,7 @@ export function projectPolicyHorizon(
   // would spend gold the seat still counts as held. Setup is left alone too. It picks
   // land for fourteen years and the forecast sees six, so a starting store and six
   // years of gold would make any site look fed.
-  const buysFood = G.phase === "gameplay";
+  const buysLater = G.phase === "gameplay";
   const foodSources = () => {
     const dole = playerDole(projectedState, playerID);
     const bank = getPlayerBankRate(projectedState, playerID, "food").buy;
@@ -441,7 +443,7 @@ export function projectPolicyHorizon(
   // Hunger is the engine's own rule and draws no dice, so the projection runs it
   // for real: a turn that ends short loses a pop per missing food, and later incomes
   // are recomputed without them.
-  const settleHunger = (canBuy = buysFood) => {
+  const settleHunger = (canBuy = buysLater) => {
     if (player.resources.food >= 0) return false;
     if (canBuy && unfedAtTurnEnd(projectedState, playerID) > 0) buyFood();
     const unfed = unfedAtTurnEnd(projectedState, playerID);
@@ -498,6 +500,35 @@ export function projectPolicyHorizon(
     return false;
   };
 
+  // On a later turn the seat would also buy calm when its level stands at a line and
+  // calm moves it off: once a year, the cheaper payment first by its weights, from the
+  // stocks. Without this a slave past the standing level read as a riot in every year
+  // of the forecast, whatever the seat held, so no realm kept more slaves than its
+  // Temples and goods covered. Like the food, this turn's calm is the seat's to buy.
+  let calmCosts: Array<Partial<Resources>> | null = null;
+  const buyCalm = () => {
+    if (!buysLater || player.calmActive) return;
+    const ruleset = projectedState.ruleset;
+    const level = happinessLevel(projectedState, playerID);
+    const tier = evaluatePolicyUnrestRisk(ruleset, level).tier;
+    if (tier === "safe" || tier === "buffer") return;
+    if (evaluatePolicyUnrestRisk(ruleset, level + ruleset.civicCalm.happiness).tier === tier)
+      return;
+
+    const worth = (cost: Partial<Resources>) =>
+      (Object.keys(cost) as Resource[]).reduce(
+        (sum, resource) => sum + (cost[resource] ?? 0) * stockValue(weights, resource),
+        0,
+      );
+    calmCosts ??= (["influence", "gold"] as const)
+      .map((payment) => getCivicCalmStatus(projectedState, playerID, payment).cost ?? {})
+      .sort((a, b) => worth(a) - worth(b));
+    const cost = calmCosts.find((candidate) => canAfford(player.resources, candidate));
+    if (!cost) return;
+    payCost(player.resources, cost);
+    player.calmActive = true;
+  };
+
   const expireYear = () => {
     projectedState.activeYearCard = null;
     player.calmActive = false;
@@ -542,6 +573,7 @@ export function projectPolicyHorizon(
 
     // Income first; the turn then ends with hunger and the unrest check, in that order.
     popsChanged = settleHunger();
+    buyCalm();
     popsChanged = checkTurnEnd() || popsChanged;
     // The next projected income is in another year. Its card is still hidden.
     const yearCardExpired = projectedState.activeYearCard !== null;
@@ -566,7 +598,7 @@ export function projectPolicyHorizon(
   // has for as long as it can pay.
   let starvedAfterHorizon = 0;
   const incomesLeft = incomesLeftInGame(G, playerID);
-  const yearsBeyond = buysFood ? incomesLeft - horizon : 0;
+  const yearsBeyond = buysLater ? incomesLeft - horizon : 0;
   if (yearsBeyond > 0) {
     if (incomeStale) income = calculateIncome(projectedState, playerID);
     let mouths = hungerMouths(projectedState).reduce(
@@ -884,7 +916,12 @@ function foodShortfallValue(G: HegemonyState, playerID: PlayerId): number {
   return -FOOD_SHORT_WEIGHT * Math.max(0, -G.players[playerID].resources.food);
 }
 
-function evaluateSmart(G: HegemonyState, playerID: PlayerId, weights = DEFAULT_WEIGHTS): number {
+function evaluateSmart(
+  G: HegemonyState,
+  playerID: PlayerId,
+  weights = DEFAULT_WEIGHTS,
+  wants: Want[] = NO_WANTS,
+): number {
   const player = G.players[playerID];
   const projection = projectPolicyHorizon(G, playerID, undefined, weights);
   const projected = projection.resources;
@@ -967,9 +1004,134 @@ function evaluateSmart(G: HegemonyState, playerID: PlayerId, weights = DEFAULT_W
     luxuryValue +
     foodShortfallValue(G, playerID) +
     leanYearValue(G, playerID, projection.income, weights) +
-    ideaOpportunityValue(G, playerID, weights) -
+    ideaOpportunityValue(G, playerID, weights) +
+    savingValue(G, playerID, wants, projected) -
     projection.unrest.riskPenalty
   );
+}
+
+// ── Saving toward a purchase ─────────────────────────────────────────────────────────
+//
+// The search plans inside one turn and the score counts a stock at a flat weight, so
+// nothing told a seat that wood it cannot spend today is a Granary in four years. Four
+// masters cut 0.2 wood a turn, sold two fifths of their stone to the bank, built 0.8
+// Granaries a game and stood at four settlements from year 2. A want is a purchase
+// the seat could make if it held the materials. A state is worth the best want its
+// stocks and their income are on course to pay for, for the share of the forecast the
+// purchase would then stand.
+
+/** A purchase open to the seat, paid for or not. */
+type Want = {
+  command: Extract<GameCommand, { type: "buildBuilding" | "upgradeColonyToCity" | "foundColony" }>;
+  cost: Partial<Resources>;
+  /** What buying it adds to the seat's score, its price at the flat weights taken off. */
+  gain: number;
+};
+const NO_WANTS: Want[] = [];
+
+/** The materials a seat saves. Food is bought as it is needed. */
+const SAVED: Resource[] = ["wood", "stone", "gold"];
+/** More of each material than any purchase costs, to list what a full store could buy. */
+const FULL_STORE = 99;
+
+function withStocks(G: HegemonyState, playerID: PlayerId, add: Partial<Resources>): HegemonyState {
+  const player = G.players[playerID];
+  const resources = { ...player.resources };
+  for (const resource of Object.keys(add) as Resource[]) resources[resource] += add[resource] ?? 0;
+  return { ...G, players: { ...G.players, [playerID]: { ...player, resources } } };
+}
+
+/**
+ * The buildings, upgrades and colonies the seat could buy with a full store, each with
+ * what it would add to `score`, the largest gain first. What it can pay for now is
+ * listed too: the wood a second colony spends is the wood a Granary was waiting for,
+ * and where that colony stands decides whether more comes. The gain is measured where
+ * the seat holds the price and no more: with a full store a Granary would feed pops the
+ * spare food already fed. One colony is weighed per tile, sent the pop the seat weighs
+ * least.
+ */
+function purchaseWants(G: HegemonyState, me: PlayerId, score: Scorer, weights: ScoreWeights) {
+  const held = G.players[me].resources;
+  const full = withStocks(G, me, {
+    wood: FULL_STORE,
+    stone: FULL_STORE,
+    gold: FULL_STORE,
+    food: FULL_STORE,
+  });
+  const colonies = new Map<string, Omit<Want, "gain">>();
+  const purchases: Array<Omit<Want, "gain">> = [];
+  for (const { command, cost = {} } of enumerateLegalOptions(full, me)) {
+    if (command.type === "buildBuilding" || command.type === "upgradeColonyToCity")
+      purchases.push({ command, cost });
+    if (command.type === "foundColony") {
+      const sent = colonies.get(command.tileId)?.command;
+      if (
+        sent?.type !== "foundColony" ||
+        popValue(weights, command.pop) < popValue(weights, sent.pop)
+      )
+        colonies.set(command.tileId, { command, cost });
+    }
+  }
+
+  const wants: Want[] = [];
+  let unspent: number | null = null;
+  for (const { command, cost } of [...purchases, ...colonies.values()]) {
+    const short: Partial<Resources> = {};
+    let paid = true;
+    for (const resource of Object.keys(cost) as Resource[]) {
+      short[resource] = Math.max(0, (cost[resource] ?? 0) - held[resource]);
+      if (short[resource]) paid = false;
+    }
+    const before = paid ? G : withStocks(G, me, short);
+    const bought = transition(G.definition, before, me, command);
+    if (!bought.ok) continue;
+    const gain = score(bought.state, me) - (paid ? (unspent ??= score(G, me)) : score(before, me));
+    if (gain > 0) wants.push({ command, cost, gain });
+  }
+  return wants.sort((a, b) => b.gain - a.gain);
+}
+
+/**
+ * What the seat is saving toward: the best want still open, counted for the years of
+ * the forecast left once its price is in hand. A want bought this turn is in the score
+ * itself, so one still open waits a year at least, and buying is always worth more
+ * than holding the price. A material the realm is short of and makes none of puts the
+ * want out of reach.
+ */
+function savingValue(
+  G: HegemonyState,
+  playerID: PlayerId,
+  wants: Want[],
+  projected: Resources,
+): number {
+  if (wants.length === 0) return 0;
+  const years = incomeYearsLeft(G, playerID);
+  const held = G.players[playerID].resources;
+  let coloniesLeft: boolean | null = null;
+  let best = 0;
+
+  for (const { command, cost, gain } of wants) {
+    // The gains fall from here: a year off, none of the rest beats the best so far.
+    if (gain * (years - 1) <= best * years) break;
+    const settlement = getOwnedSettlement(G, command.tileId, playerID);
+    const open =
+      command.type === "buildBuilding"
+        ? !!settlement && !settlement.buildings.includes(command.buildingId)
+        : command.type === "upgradeColonyToCity"
+          ? settlement?.kind === "colony"
+          : !settlement && (coloniesLeft ??= playerPieces(G, playerID).coloniesRemaining > 0);
+    if (!open) continue;
+
+    let wait = 1;
+    for (const resource of SAVED) {
+      const short = (cost[resource] ?? 0) - held[resource];
+      if (short <= 0) continue;
+      const yearly = (projected[resource] - held[resource]) / years;
+      wait = yearly > 0 ? Math.max(wait, Math.ceil(short / yearly)) : Infinity;
+    }
+    if (wait < years) best = Math.max(best, (gain * (years - wait)) / years);
+  }
+  return best;
 }
 
 /** Tunables for the within-turn beam search. Kept small so batch runtime stays sane; the
@@ -1316,8 +1478,15 @@ function politicalStanding(G: HegemonyState, me: PlayerId): number {
 }
 
 /** The political bot's positional score: the smart economy plus its agora standing. */
-function scorePolitical(G: HegemonyState, playerID: PlayerId, weights = DEFAULT_WEIGHTS): number {
-  return evaluateSmart(G, playerID, weights) + weights.politics * politicalStanding(G, playerID);
+function scorePolitical(
+  G: HegemonyState,
+  playerID: PlayerId,
+  weights = DEFAULT_WEIGHTS,
+  wants = NO_WANTS,
+): number {
+  return (
+    evaluateSmart(G, playerID, weights, wants) + weights.politics * politicalStanding(G, playerID)
+  );
 }
 
 type Scores = Record<PlayerId, number>;
@@ -1775,8 +1944,29 @@ export const settlerPolicy: Policy = {
 // economy + political standing + frontier value, searched with the beam during normal
 // play, while the dedicated political heuristic runs the Assembly.
 
-function scoreMaster(G: HegemonyState, playerID: PlayerId, weights = DEFAULT_WEIGHTS): number {
-  return scorePolitical(G, playerID, weights) + weights.frontier * frontierValue(G, playerID);
+function scoreMaster(
+  G: HegemonyState,
+  playerID: PlayerId,
+  weights = DEFAULT_WEIGHTS,
+  wants = NO_WANTS,
+): number {
+  return (
+    scorePolitical(G, playerID, weights, wants) + weights.frontier * frontierValue(G, playerID)
+  );
+}
+
+/** The master family's turn: the beam over the master score, with what the seat is
+ *  saving toward counted in. Wants are listed where the seat is free to act. */
+function planTurn(G: HegemonyState, moves: GameCommand[], weights: ScoreWeights): GameCommand {
+  const me = G.currentPlayer;
+  const score: Scorer = (state, player) => scoreMaster(state, player, weights);
+  const wants = moves.some((move) => move.type === "endTurn")
+    ? purchaseWants(G, me, score, weights)
+    : NO_WANTS;
+  if (wants.length === 0) return beamPlan(G, moves, score);
+  return beamPlan(G, moves, (state, player) =>
+    scoreMaster(state, player, weights, player === me ? wants : NO_WANTS),
+  );
 }
 
 /**
@@ -1785,10 +1975,12 @@ function scoreMaster(G: HegemonyState, playerID: PlayerId, weights = DEFAULT_WEI
  * - `smart` economic / population / building evaluation;
  * - `beam` within-turn sequencing (W=3, D=4);
  * - `political` Assembly decisions and political standing;
- * - `settler` one-step expansion-frontier signal.
+ * - `settler` one-step expansion-frontier signal;
+ * - a value on what the seat is saving toward ({@link savingValue}), which no
+ *   specialist has.
  *
- * This deliberately does NOT claim capabilities that no specialist has built yet:
- * cross-turn saving, general opponent replies or multi-hop route search.
+ * This deliberately does NOT claim capabilities that nobody has built yet: a plan
+ * across turns, general opponent replies or multi-hop route search.
  */
 export const masterPolicy: Policy = {
   name: "master",
@@ -1800,7 +1992,7 @@ export const masterPolicy: Policy = {
       return choosePlacement(G, moves, rng);
     }
 
-    return beamPlan(G, moves, scoreMaster);
+    return planTurn(G, moves, DEFAULT_WEIGHTS);
   },
 };
 
@@ -1813,7 +2005,7 @@ function personalityPolicy(name: PersonalityId): Policy {
       const G = view.state;
       if (G.assembly) return resolveAssemblyByHeuristic(G, G.assembly, moves, score);
       if (isSetupPhase(G)) return choosePlacement(G, moves, rng, weights);
-      return beamPlan(G, moves, score);
+      return planTurn(G, moves, weights);
     },
   };
 }

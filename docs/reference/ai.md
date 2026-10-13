@@ -123,6 +123,27 @@ seat has to buy itself, now. And setup does not count on the bank: it picks land
 for fourteen years and the forecast sees six, so a starting store and six years of
 gold would make any site look fed.
 
+On a later forecast turn the seat also buys calm when its level stands at the riot
+or the revolt line and calm moves it off: once a year, at the price the engine
+charges that seat, the cheaper payment first by its own weights, from the forecast
+stocks and after the food. Before this a slave past the standing level read as a
+riot in every year of the forecast whatever the seat held, so no realm kept more
+slaves than its Temples and goods covered: four masters bought calm 0.35 times a
+seat-game with 2 influence in hand on 80% of their turns. The same two turns are
+left out: this turn's calm is the seat's to buy, and setup buys none.
+
+The master and the three personalities also count what a seat is saving toward. At
+each choice the seat lists every building, upgrade and colony a full store could buy,
+with what each would add to its score where it holds the price and no more. A state
+is then worth the best of those still open, for the share of the forecast left once
+its stocks and their income reach the price: the next year at the soonest, so buying
+is always worth more than holding the price, and never where the realm is short of a
+material it makes none of. Before this a stock was worth its flat weight whatever it
+could buy, and the search plans inside one turn, so nothing made wood worth cutting
+toward a Granary four years off. Four masters cut 0.2 wood a turn, sold two fifths of
+their stone to the bank and stood at four settlements from year 2. The other policies
+are left as they were, so the earlier comparisons between them still hold.
+
 Past the six-year horizon the forecast follows only the food and what pays for it, to
 the game's last year: the closing income each year, the shortfall bought the same way,
 and a pop gone for each food the stocks cannot pay for. It reports them as
@@ -176,16 +197,19 @@ no building to burn or under 3 gold the table takes a pop more often, and the
 charge follows. For the default weights a riot that takes slaves costs about 10,
 and 30 or more for the slaver; it was a flat 50. The pops also leave the forecast
 board once the expected losses add up to a whole one, so a level that six slaves
-hold at −3 riots twice and then stands at −2 with five. Before, it rioted at
+hold at −3, in a realm that cannot pay for calm, riots twice and then stands at −2
+with five. Before, it rioted at
 every check to the horizon: 350. A revolt is run as the engine runs it and charged
 the slaves it sends away. A level one step above the riot line is charged a fifth
 of a riot at each later turn end, a level two steps above half that: the chance
 that a token card or a lost good pushes it over. The current check charges only
 an actual riot or revolt.
 
-So calm is bought where it avoids a riot inside the forecast, such as in the last
-year or in a Blockade year. A riot that six slaves bring every year is faced by
-the builds that weigh a slave lightly: calm would only move it a year.
+So calm is bought where it avoids a riot inside the forecast: in the last year, in
+a Blockade year, and in any year by a seat that can go on paying for it, which then
+grows the slaves calm makes room for. A realm with nothing to buy calm again faces
+the riot that six slaves bring every year, unless it weighs a slave heavily: calm
+would only move it a year.
 
 At the riot table a bot buys the insurance that leaves it best off and rolls when
 none pays, the concession included. The forecast charges the pending riot at the
@@ -264,9 +288,11 @@ unused Ideas.
 
 ## Limits and validation
 
-Search cannot save deliberately across turns, model general rival replies, or
-plan multi-hop routes. The forecast buys food and loses pops to riots, and nothing
-else: it does not buy calm, grow slaves or raise a building in a later year. The
+Search cannot plan a sequence across turns, model general rival replies, or plan
+multi-hop routes. Saving is a value on the stocks and not a plan: a seat that makes
+none of a material does not save gold to buy it at the bank, and does not found a
+forest colony in order to cut wood later. The forecast buys food and calm and loses pops to riots, and
+nothing else: it does not grow slaves or raise a building in a later year. The
 risk of standing near the riot line and future Idea opportunities are heuristics.
 Venture expectation is exact for the shipped public tables; it does not implement
 the outcome-driven AI program. Focused tests cover build preferences, food rescue,

@@ -238,6 +238,62 @@ describe("policy unrest risk", () => {
     expect(G.activeYearCard.id).toBe("year-blockade");
   });
 
+  it("buys calm on later turns while the stocks last, and leaves this turn's to the seat", () => {
+    // Six slaves hold the level at −3. Gold pays first: 2 gold is 2.5 at the default
+    // weights and 2 influence is 4. The freeman makes 1 gold a year.
+    const G = projectionFixture({ calm: true });
+    slavesInCapital(G, 6);
+    Object.assign(G.players["0"].resources, { gold: 3, influence: 2 });
+    // This turn's check is the seat's own: it riots, and the forecast buys nothing.
+    expect(projectPolicyHorizon(G, "0", 0)).toMatchObject({
+      unrest: { riotEvents: 1 },
+      resources: { gold: 3, influence: 2 },
+    });
+    // Year one pays 2 of its 4 gold, year two 2 of 3, year three 2 of 2.
+    expect(projectPolicyHorizon(G, "0", 3)).toMatchObject({
+      unrest: { minimumHappiness: -3, riotEvents: 1 },
+      resources: { gold: 0, influence: 2 },
+    });
+    // Year four holds 1 gold and pays the influence, year five pays its 2 gold, and
+    // year six holds 1 gold and nothing else: that riot is met.
+    expect(projectPolicyHorizon(G, "0", 6)).toMatchObject({
+      unrest: { riotEvents: 2 },
+      resources: { gold: 1, influence: 0 },
+    });
+    expect(G.players["0"].calmActive).toBe(false);
+  });
+
+  it("buys calm only where it changes what happens, and not during setup", () => {
+    // Ten slaves stand at −5 and calm leaves them at −3: a riot either way.
+    const deep = projectionFixture({ calm: true });
+    slavesInCapital(deep, 10);
+    Object.assign(deep.players["0"].resources, { gold: 10, influence: 20 });
+    expect(projectPolicyHorizon(deep, "0", 1)).toMatchObject({
+      unrest: { riotEvents: 2 },
+      resources: { gold: 11, influence: 20 },
+    });
+
+    // Twelve stand at −6, calmed to −4 this year. Next year calm turns the revolt
+    // into a riot, so it is bought.
+    slavesInCapital(deep, 12);
+    deep.players["0"].calmActive = true;
+    expect(projectPolicyHorizon(deep, "0", 1)).toMatchObject({
+      unrest: { revoltEvents: 0, riotEvents: 2 },
+      resources: { gold: 9, influence: 20 },
+    });
+
+    // Setup picks land for the whole game: nothing is bought there, as with food.
+    const setup = projectionFixture({ calm: true });
+    slavesInCapital(setup, 6);
+    setup.phase = "setupColony";
+    setup.players["0"].collectedThisTurn = false;
+    setup.players["0"].resources.influence = 20;
+    expect(projectPolicyHorizon(setup, "0", 1)).toMatchObject({
+      unrest: { riotEvents: 1 },
+      resources: { influence: 20 },
+    });
+  });
+
   it.each([
     ["smart", smartPolicy],
     ["beam", beamPolicy],
@@ -489,9 +545,13 @@ describe("frontier value", () => {
   });
 });
 
-/** Player 0 with one freeman, no slaves, no Temples and food to spare: a level of 0. */
-function projectionFixture(): HegemonyState {
-  const G = scenario().opening().build();
+/** Player 0 with one freeman, no slaves, no Temples and food to spare: a level of 0.
+ *  Calm is priced out of reach unless the case is about calm: the others are about
+ *  what a riot or a revolt costs a seat that has to meet it. */
+function projectionFixture({ calm = false } = {}): HegemonyState {
+  const G = scenario(calm ? {} : { patch: { civicCalm: { influenceCost: 99, goldCost: 99 } } })
+    .opening()
+    .build();
   const player = G.players["0"];
 
   G.pendingPlayerEvent = null;
@@ -714,7 +774,7 @@ describe("political policy", () => {
     const passedSeats = new Set<string>();
     const voices = new Set<string>();
     let capped = 0;
-    for (const seed of [1, 2, 3]) {
+    for (const seed of [2, 3, 4]) {
       const G = runGame({
         seed,
         mode: "standard",

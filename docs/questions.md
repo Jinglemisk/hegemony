@@ -73,5 +73,12 @@ batch.
   and a table builds 0.1 Marketplaces a game.
 - With all twelve Ideas the seat with the most pops at year 5 wins 24 of 39 games; with
   none, 12 of 29.
+- Step 20 (2026-10-13) changed how the bots plan, and the no-Ideas column reads
+  differently on its build: 630 turns begun short of food, 40.7 Dole uses a game, pops
+  lost to hunger 0.46 a seat-game, 13.3 pops a seat at year 14, riot turns from year 8
+  at 5.4%, 38 games by the deck and 2 by the race, the winner holding one, two, three
+  titles in 10, 28 and 2 games, 11 decided by the tiebreak, wins by seat 23 / 30 / 13 /
+  35%. Polis Builder is held at the end of 17 games where it was 4. The other two
+  columns have not been run again.
 
 **Answer:**
