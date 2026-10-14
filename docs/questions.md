@@ -62,7 +62,8 @@ batch.
   twelve Ideas, founds two colonies on its first turn and holds 11 pops against 6 at the
   end of year 1. Without the Idea seat 0 wins 13 of 40, and with no Ideas 9 of 40. On Step
   18's build the mixed table's seats were even and Slave Colonies was a late pick; Step
-  19's bots put the slaves to work.
+  19's bots put the slaves to work. Step 21 cut it to one slave per founding: on Step 20's
+  bots seat wins went from 24, 8, 3 and 5 of 40 to 14, 6, 10 and 10.
 - The fourth seat's 38% with no Ideas is 15 wins where 10 are expected, which 40 games
   cannot tell from chance.
 - With no Ideas a seat grows from 6 pops to 13 in fourteen years. A third of all turns

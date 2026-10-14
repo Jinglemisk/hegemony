@@ -15,11 +15,12 @@ session with "continue the v2 migration" in the `hegemony-v2` worktree.
 
 **Owner blockers:** Q80, the shape of Step 11, which is the next step.
 
-Steps 1 to 10, 13, 14 and 17 to 20 are merged into `feat/v2` (#79 to #90, #94, #95, #99
-to #103). The [sim parity audit](reports/simulation/2026-10-10-v2-sim-parity-audit.md) found
+Steps 1 to 10, 13, 14 and 17 to 21 are merged into `feat/v2` (#79 to #90, #94, #95, #99
+to #104). The [sim parity audit](reports/simulation/2026-10-10-v2-sim-parity-audit.md) found
 the bots and the batch report out of step with the rules. Step 18 fixed the bugs and Step 19
 the economy gaps; its Assembly and Ideas parts were dropped. Step 20 has the bots buy calm
-ahead and save toward a purchase, which moved the mixed table's win rates again. Step 11,
+ahead and save toward a purchase, which moved the mixed table's win rates again. Step 21
+cuts Slave Colonies to one slave per founding, which ended the first seat's lead. Step 11,
 the sim gate, is next and waits for the owner's go and Q80.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
@@ -30,7 +31,7 @@ precedes full multiplayer.
 
 | Plan                                                | Phase    | Status    | Position                                                                                               |
 | --------------------------------------------------- | -------- | --------- | ------------------------------------------------------------------------------------------------------ |
-| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 11, the sim gate, is next on the owner's go; Steps 1 to 10, 13, 14 and 17 to 20 shipped (to #103) |
+| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 11, the sim gate, is next on the owner's go; Steps 1 to 10, 13, 14 and 17 to 21 shipped (to #104) |
 | [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze                       |
 | [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged                                  |
 | [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                                              |

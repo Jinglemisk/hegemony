@@ -16,25 +16,34 @@ function board(food: number, slaves: number, freemen: number) {
   return G;
 }
 
+const colonyChoices = [
+  { type: "pickIdea" as const, ideaId: "slave-colonies" as const },
+  { type: "pickIdea" as const, ideaId: "frontier-charter" as const },
+];
+
 describe("scores setup Ideas and in-play purchases", () => {
   it("charges future colony slaves their standing-level cost", () => {
-    const G = scenario()
-      .withSettlement("0", "-2,0", "city", { citizens: 1, slaves: 3, freemen: 0 })
-      .withSettlement("0", "-1,0", "colony", { citizens: 0, slaves: 4, freemen: 0 })
-      .withResources("0", { food: 50, influence: 6 })
-      .build();
-    G.phase = "setupIdeas";
-    const choices = [
-      { type: "pickIdea" as const, ideaId: "slave-colonies" as const },
-      { type: "pickIdea" as const, ideaId: "civic-tradition" as const },
-    ];
-    // The full colony receives no immediate grant. Six future slaves were worth
-    // 36 gross points, but lose three levels (18 points); Civic is worth 24.
-    expect(chooseIdea(G, choices, createSimRng(1))).toEqual(choices[1]);
+    // Three future slaves outweigh Frontier Charter's extra piece for a realm with no
+    // slaves; a realm already holding seven pays their standing-level cost, and they lose.
+    const pick = (citySlaves: number, colonySlaves: number) => {
+      const G = scenario()
+        .withSettlement("0", "-2,0", "city", { citizens: 1, slaves: citySlaves, freemen: 0 })
+        .withSettlement("0", "-1,0", "colony", {
+          citizens: 0,
+          slaves: colonySlaves,
+          freemen: 4 - colonySlaves,
+        })
+        .withResources("0", { food: 50, influence: 6 })
+        .build();
+      G.phase = "setupIdeas";
+      return chooseIdea(G, colonyChoices, createSimRng(1));
+    };
+    expect(pick(0, 0)).toEqual(colonyChoices[0]);
+    expect(pick(3, 4)).toEqual(colonyChoices[1]);
   });
   it("triples that cost under Manumission", () => {
-    // Four goods put the level two above the cap, so six future slaves cost one
-    // counted point: 36 − 6 beats Civic's 24. Tripled they cost seven, and lose.
+    // Four goods put the level two above the cap, so three future slaves cost nothing
+    // counted and beat Frontier Charter. Tripled, they cost enough to lose.
     const build = () => {
       const G = scenario()
         .withSettlement("0", "-2,0", "city", { citizens: 1, slaves: 0, freemen: 0 })
@@ -45,14 +54,10 @@ describe("scores setup Ideas and in-play purchases", () => {
       for (const good of G.board.luxuries.slice(0, 4)) good.owner = "0";
       return G;
     };
-    const choices = [
-      { type: "pickIdea" as const, ideaId: "slave-colonies" as const },
-      { type: "pickIdea" as const, ideaId: "civic-tradition" as const },
-    ];
-    expect(chooseIdea(build(), choices, createSimRng(1))).toEqual(choices[0]);
+    expect(chooseIdea(build(), colonyChoices, createSimRng(1))).toEqual(colonyChoices[0]);
     const manumission = build();
     manumission.activeLaws.push({ cardId: "manumission", author: "1", enactedYear: 1, order: 0 });
-    expect(chooseIdea(manumission, choices, createSimRng(1))).toEqual(choices[1]);
+    expect(chooseIdea(manumission, colonyChoices, createSimRng(1))).toEqual(colonyChoices[1]);
   });
   it("prices Frontier Charter against the colony limit Master Builders leaves", () => {
     // Two colonies stand. Master Builders cuts the limit to three, so the extra piece
@@ -116,18 +121,6 @@ describe("scores setup Ideas and in-play purchases", () => {
     expect(toHolder).toBeCloseTo(toOther);
     // The Idea still has a value of its own: two Doles a year, one influence saved each.
     expect(score(["public-dole"]) - score([])).toBe(24);
-  });
-  it("still picks colony slaves when their immediate food prevents starvation", () => {
-    const G = scenario()
-      .withSettlement("0", "0,-3", "colony", { citizens: 0, slaves: 0, freemen: 2 })
-      .withResources("0", { food: 0, influence: 6 })
-      .build();
-    G.phase = "setupIdeas";
-    const choices = [
-      { type: "pickIdea" as const, ideaId: "slave-colonies" as const },
-      { type: "pickIdea" as const, ideaId: "civic-tradition" as const },
-    ];
-    expect(chooseIdea(G, choices, createSimRng(1))).toEqual(choices[0]);
   });
   it("picks food for an unfed civic realm and influence for one that already feeds itself", () => {
     const starving = board(0, 0, 2);

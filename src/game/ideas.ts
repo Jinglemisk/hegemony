@@ -144,13 +144,6 @@ function acquireIdea(
       G.players[playerID].resources[effect.resource] += effect.amount;
     if (effect.type === "acquirePop" && target)
       getOwnedSettlement(G, target.tileId, playerID)!.pops[target.pop] += 1;
-    if (effect.type === "onFoundColony") {
-      for (const tileId of G.players[playerID].settlements) {
-        const s = getOwnedSettlement(G, tileId, playerID)!;
-        if (s.kind === "colony")
-          s.pops[effect.grantPop] += Math.min(effect.amount ?? 1, ideaRoom(G, s));
-      }
-    }
   }
   addLog(
     G,

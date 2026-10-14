@@ -2099,8 +2099,8 @@ function ideaOpportunityValue(G: HegemonyState, me: PlayerId, weights = DEFAULT_
       const pops = (e.amount ?? 1) * Math.min(pieces.coloniesRemaining, years);
       let opportunity = 6 * pops * (weights.pops[e.grantPop] / DEFAULT_WEIGHTS.pops[e.grantPop]);
       // Future grants owe the same standing-level cost as slaves already on the
-      // board. Pricing only their population reward made Slave Colonies win every
-      // opening even when its immediate grant lowered the ordinary score.
+      // board. Pricing only their population reward once made Slave Colonies win
+      // every opening.
       if (e.grantPop === "slaves") {
         // The realm's count under the standing Laws: Manumission counts each slave
         // three times, and a slave on the move counts.
