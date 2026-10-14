@@ -52,8 +52,8 @@ export const NATIONAL_IDEAS: NationalIdeaDefinition[] = [
   {
     id: "slave-colonies",
     name: "Slave Colonies",
-    text: "Add two slaves to your colonies when you take this Idea and when you found a colony, as room allows.",
-    effects: [{ type: "onFoundColony", grantPop: "slaves", amount: 2 }],
+    text: "When you found a colony, add one slave there, as room allows.",
+    effects: [{ type: "onFoundColony", grantPop: "slaves", amount: 1 }],
   },
   {
     id: "harbour-planning",

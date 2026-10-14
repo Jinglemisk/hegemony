@@ -34,20 +34,20 @@ weights. Step 13 replaced the secret pick with the open draft (owner ruling,
 
 Each row is the full player-facing sentence, also stored in the match content.
 
-| #   | Idea             | Rule                                                                                                 |
-| --- | ---------------- | ---------------------------------------------------------------------------------------------------- |
-| 1   | Good Harvest     | Your realm gains 2 food at each year's income.                                                       |
-| 2   | Public Dole      | Your Dole buys 1 food for 2 influence.                                                               |
-| 3   | Urban Planning   | Each of your cities has one extra work slot.                                                         |
-| 4   | Capital Works    | Your capital has one extra work slot.                                                                |
-| 5   | Civic Tradition  | Your realm gains 2 influence at each year's income.                                                  |
-| 6   | Frontier Charter | You have one extra colony piece.                                                                     |
-| 7   | New Settlers     | When you take this Idea, add one slave or freeman to an owned settlement with room.                  |
-| 8   | City Pioneers    | Upgrading a colony adds one freeman to that city if it has room.                                     |
-| 9   | Slave Colonies   | Add two slaves to your colonies when you take this Idea and when you found a colony, as room allows. |
-| 10  | Harbour Planning | Your Ports take no work slot.                                                                        |
-| 11  | Treasury Grant   | When you take this Idea, gain 4 gold.                                                                |
-| 12  | Assembly Brokers | You may buy a third vote at each Assembly.                                                           |
+| #   | Idea             | Rule                                                                                |
+| --- | ---------------- | ----------------------------------------------------------------------------------- |
+| 1   | Good Harvest     | Your realm gains 2 food at each year's income.                                      |
+| 2   | Public Dole      | Your Dole buys 1 food for 2 influence.                                              |
+| 3   | Urban Planning   | Each of your cities has one extra work slot.                                        |
+| 4   | Capital Works    | Your capital has one extra work slot.                                               |
+| 5   | Civic Tradition  | Your realm gains 2 influence at each year's income.                                 |
+| 6   | Frontier Charter | You have one extra colony piece.                                                    |
+| 7   | New Settlers     | When you take this Idea, add one slave or freeman to an owned settlement with room. |
+| 8   | City Pioneers    | Upgrading a colony adds one freeman to that city if it has room.                    |
+| 9   | Slave Colonies   | When you found a colony, add one slave there, as room allows.                       |
+| 10  | Harbour Planning | Your Ports take no work slot.                                                       |
+| 11  | Treasury Grant   | When you take this Idea, gain 4 gold.                                               |
+| 12  | Assembly Brokers | You may buy a third vote at each Assembly.                                          |
 
 ## Defaults and interactions
 
@@ -62,8 +62,9 @@ The full Step 9 default block lives in the [migration plan](v2-migration.md#sett
   building-count limits still count it and its price and claim stay unchanged.
 - New Settlers never grants a citizen. Both acquisition grants apply on the purchase
   too; they do not consume growth or ladder actions. Room counts pops in transit.
-- Slave Colonies also grants to existing colonies on acquisition. At founding, the
-  sent pop's reserved room and Law riders come first; grants stop at capacity.
+- Slave Colonies grants at founding only (owner, 2026-10-14; it once also granted two
+  slaves to every colony on acquisition). The sent pop's reserved room and Law riders
+  come first; the grant stops at capacity.
   City Pioneers grants a freeman at upgrade only, and skips it if there is no room.
 - Frontier Charter raises physical supply and placement limit by one; Master Builders
   still cuts only the placement limit. Upgrading and eviction return pieces as usual.
@@ -90,7 +91,7 @@ drafts in seat order 0→3. The draft page fills the viewport with no map, HUD o
 kicker with the pick number, the choosing seat's mark and name, the flat two-column
 list (80px rows) and, beside it, the draft order strip naming who took what, who is
 choosing and who is next. A taken row carries its holder's mark and dims. A pick lands
-at once with its one-off grants (Treasury Grant's gold, Slave Colonies' slaves) and the
+at once with its one-off grants (Treasury Grant's gold, New Settlers' pop) and the
 next seat chooses; in hotseat the page follows the turn, so the next seat finds the pick
 already marked. No turn notice is needed, since picks are public. After the
 last pick the page stays, read-only, with the last pick lit, until the opener turns the

@@ -142,6 +142,12 @@ After the independent audit (2026-09-28):
 - No stock goes below zero, except food during its owner's turn (owner, 2026-10-10). Only
   food had a floor, so Civic Pride's 1 gold a city took gold below zero. A charge now takes
   what the seat holds and no more.
+- Slave Colonies grants one slave to each colony its holder founds, and nothing on taking
+  it (owner, 2026-10-14). Its old grant, two slaves to every colony on taking it and two
+  on each founding, gave the first seat 24 of 40 wins with four identical bots.
+- Number tuning waits for player trade (owner, 2026-10-13). Trade gives surplus food a
+  price, so the food shortage, the balance between Ideas and a late use for influence are
+  read again once trade ships with a simple trading bot.
 - Victory is checked at the start of each player's own turn, as today, so the last seat in
   a year cannot win unanswered.
 - Two colonies of different players may share a tile, as today. They split the tile's
@@ -495,8 +501,8 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
   Master Builders still cuts the placement limit only.
 - New Settlers grants a chosen slave or freeman in a chosen owned settlement;
   citizens remain promotion-only. City Pioneers grants one freeman on upgrade if
-  there is room. Slave Colonies adds two slaves to existing colonies on acquisition
-  and newly founded colonies, as room allows. Room includes committed transfers;
+  there is room. Slave Colonies adds one slave to each colony its holder founds, as
+  room allows, and nothing on acquisition (Step 21). Room includes committed transfers;
   at founding the sent pop and Law riders reserve room first. These grants bypass
   paid growth, and an upgrade still returns its colony piece.
 - Harbour Planning replaces the retired free luxury trader: Ports take zero work
@@ -957,14 +963,13 @@ danger selector and the real-path previews, with their tests.
 - Q80: the shape of Step 11 (the runaway-leader rule's wording, the number of games, the v1
   comparison, and whether win rates stay a rule). It holds three batches with one policy
   in all four seats. Step 11 waits for it.
-- Slave Colonies: with four identical bots the seat that drafts it wins 55% of games, and
-  23% to 33% once it is out of the pool (the batches under Q80). The remedy is the
-  owner's.
 - Step 20 moved the mixed table's win rates again, the slaver's from 40% to 18%, by
-  changing how the bots plan and no rule. It bears on Q80's win-rate option. The
-  economy findings of 2026-10-12 (food, influence, titles, gold) are to be read again on
-  Step 20's build before any rule changes; the owner takes influence and Slave Colonies
-  last.
+  changing how the bots plan and no rule. It bears on Q80's win-rate option.
+- Influence: with Slave Colonies fixed, the median stock grows about 4 a year from year
+  10, under Step 11's limit of 5. Late in a game a realm earns about 10 a year and can
+  spend about 5.5 outside the Dole, so the pile returns once food stops being short. Its
+  late use waits for trade, with the food rule.
+- Player trade: after the merge of `feat/v2`, as planned, or before Step 15.
 
 ## Three-axis parity
 
@@ -1064,7 +1069,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
       political scorer, with bank and venture moves inside the search, so each personality
       can actually pursue its build.
 
-### Stretch 4 · Sim gate (Steps 17 to 20 and 11)
+### Stretch 4 · Sim gate (Steps 17 to 21 and 11)
 
 **Before:** Steps 17 to 19 are merged, so the gate measures the final hunger rule with
 bots that play the rules as built, and Q80 is answered. **Mode:** Steps 18 and 19 one after
@@ -1110,6 +1115,11 @@ proposed remedy for each failing rule; the owner decides.
       wood. Granaries stay rare (39 in 40 games against 33): the wood goes to cities and
       Estates. Realms still hold about five slaves: after income a realm has under 2
       food on three turns in four, so it can seldom pay to grow one.
+- [x] **Step 21 · Slave Colonies grants one slave per founding.** ([#104](https://github.com/Jinglemisk/hegemony/pull/104): four masters with all twelve Ideas, 40 games on seeds 1000 to 1039, against the same batch on Step 20's build: wins by seat 14, 6, 10 and 10 against 24, 8, 3 and 5; seat 0's pops at the end of year 1 6.5 against 11.2, the others 6.4; Slave Colonies taken in 10 games, all by seat 2, which won 4; with the Idea out of the pool 14, 10, 7 and 9; median influence growth from year 10 to 14 +4.2 a year against +6.1; Good Harvest's holders win 17 of 38.) Asked for
+      by the owner on 2026-10-14. The old text gave two slaves to every colony on taking
+      the Idea and two on each founding. The first seat took it in every game, founded two
+      colonies on its first turn and held 11 pops against 6 after year 1, a lead that never
+      closed. The new text has City Pioneers' shape: one pop, at founding only.
 - [ ] **Step 11 · Sim gate.** First phase: AI reach audit: every action and every piece of
       content is used by some personality in a rotated batch, or a fixture proves the bot
       takes it when it is clearly best; bot bugs found are fixed before Step 11's batches.

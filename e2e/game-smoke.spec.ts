@@ -12,7 +12,8 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   // a status disc rather than a button, so the assertion is on its accessible name.
   await expect(page.getByRole("img", { name: /Nikos is acting/ })).toBeVisible();
 
-  await page.goto("/?dev=preload&seed=42");
+  // Seed 311: the scripted opening leaves Damon one Local Unrest short of the riot line.
+  await page.goto("/?dev=preload&seed=311");
   const forcedDecision = page.getByRole("dialog");
   await expect(forcedDecision).toBeVisible();
   const decisionTitle = await forcedDecision.getByRole("heading").textContent();
@@ -55,7 +56,7 @@ test("setup, forced decision, normal command, and deterministic reload", async (
   await expect(riot).toContainText("Turn end · Damon’s realm");
   await expect(page.getByRole("img", { name: /Nikos is acting/ })).toHaveCount(0);
   await riot.getByRole("button", { name: "Roll the Die", exact: true }).click();
-  const result = page.getByRole("dialog", { name: "Bribe demanded", exact: true });
+  const result = page.getByRole("dialog", { name: "Blood in the streets", exact: true });
   await expect(result).toBeVisible();
   await result.getByRole("button", { name: "Endure It", exact: true }).click();
   await expect(result).toBeHidden();

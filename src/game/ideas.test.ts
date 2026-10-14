@@ -147,15 +147,15 @@ describe("twelve National Ideas", () => {
     expect(owned(G, "0,0", "0").pops.freemen).toBe(2);
     expect(playerPieces(G, "0").coloniesRemaining).toBe(before + 1);
   });
-  it("Slave Colonies grants existing and new colonies slaves within capacity, preserving room for the sent pop", () => {
+  it("Slave Colonies grants one slave to each new colony, beside the sent pop, and none on taking it", () => {
     const G = realm();
     buy(G, "slave-colonies");
-    expect(owned(G, "0,0", "0").pops.slaves).toBe(2);
+    expect(owned(G, "0,0", "0").pops.slaves).toBe(0);
     const command = enumerateLegalCommands(G, "0").find((c) => c.type === "foundColony");
     expect(command?.type).toBe("foundColony");
     if (command?.type !== "foundColony") return;
     expect(foundColony(G, "0", command.tileId, command.sourceTileId, command.pop).ok).toBe(true);
-    expect(owned(G, command.tileId, "0").pops.slaves).toBe(2);
+    expect(owned(G, command.tileId, "0").pops.slaves).toBe(1);
     expect(G.transfers.find((t) => t.toTileId === command.tileId)?.pops[command.pop]).toBe(1);
   });
   it("Harbour Planning leaves Port prices and claims intact while using no work slot", () => {

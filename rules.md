@@ -73,20 +73,20 @@ map, or at the requested Assembly, without the picker. Normal new games keep the
 picker after placement. `?setup=manual` keeps manual placement and Idea choice even
 with a seed or preset; `?setup=ideas` auto-places and opens the picker for review.
 
-| Idea             | Rule                                                                                                 |
-| ---------------- | ---------------------------------------------------------------------------------------------------- |
-| Good Harvest     | Your realm gains 2 food at each year's income.                                                       |
-| Public Dole      | Your Dole buys 1 food for 2 influence.                                                               |
-| Urban Planning   | Each of your cities has one extra work slot.                                                         |
-| Capital Works    | Your capital has one extra work slot.                                                                |
-| Civic Tradition  | Your realm gains 2 influence at each year's income.                                                  |
-| Frontier Charter | You have one extra colony piece.                                                                     |
-| New Settlers     | When you take this Idea, add one slave or freeman to an owned settlement with room.                  |
-| City Pioneers    | Upgrading a colony adds one freeman to that city if it has room.                                     |
-| Slave Colonies   | Add two slaves to your colonies when you take this Idea and when you found a colony, as room allows. |
-| Harbour Planning | Your Ports take no work slot.                                                                        |
-| Treasury Grant   | When you take this Idea, gain 4 gold.                                                                |
-| Assembly Brokers | You may buy a third vote at each Assembly.                                                           |
+| Idea             | Rule                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| Good Harvest     | Your realm gains 2 food at each year's income.                                      |
+| Public Dole      | Your Dole buys 1 food for 2 influence.                                              |
+| Urban Planning   | Each of your cities has one extra work slot.                                        |
+| Capital Works    | Your capital has one extra work slot.                                               |
+| Civic Tradition  | Your realm gains 2 influence at each year's income.                                 |
+| Frontier Charter | You have one extra colony piece.                                                    |
+| New Settlers     | When you take this Idea, add one slave or freeman to an owned settlement with room. |
+| City Pioneers    | Upgrading a colony adds one freeman to that city if it has room.                    |
+| Slave Colonies   | When you found a colony, add one slave there, as room allows.                       |
+| Harbour Planning | Your Ports take no work slot.                                                       |
+| Treasury Grant   | When you take this Idea, gain 4 gold.                                               |
+| Assembly Brokers | You may buy a third vote at each Assembly.                                          |
 
 City slots include the capital. Capital Works uses your first setup city. Pop grants
 reserve room for pops already travelling; founding Law grants come before Slave

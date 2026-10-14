@@ -44,6 +44,10 @@ it("queues Damon's riot result, then the turn notice, before Nikos's event", () 
     simRng: createSimRng(deriveBotSeed(42)),
   });
   expect(G.pendingPlayerEvent?.card.name).toBe("Local Unrest");
+  // The fixed opening's Idea no longer grants Damon slaves; two tokens put the realm
+  // back at the riot line.
+  G = structuredClone(G);
+  G.players["0"].unrestTokens += 2;
   G = reduceGameCommand(G, "0", { type: "resolveEvent" });
   G = reduceGameCommand(G, "0", { type: "endTurn" });
   expect(G.pendingRiot?.playerID).toBe("0");
