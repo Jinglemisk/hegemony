@@ -599,14 +599,15 @@
   scroll-margin-top: 96px;
 }
 
+/* A heading is the ledger's caps rule, like a realm page's column head. */
 .compendiumEntry h3 {
   margin: 0;
-  padding-bottom: 3px;
-  border-bottom: 1px solid rgb(143 46 19 / 30%);
-  font-family: var(--font-display);
-  font-size: 0.86rem;
-  letter-spacing: 0.04em;
+  padding-bottom: var(--s-1);
+  box-shadow: inset 0 calc(var(--rule) * -1) 0 var(--ink-30);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
+  color: var(--ink-66);
 }
 
 .compendiumFlavor {
@@ -628,9 +629,8 @@
   grid-template-columns: 22px auto minmax(0, 1fr);
   gap: 9px;
   align-items: center;
-  padding: 6px 8px;
-  border-left: 2px solid rgb(143 46 19 / 26%);
-  font-size: 0.8rem;
+  padding-block: var(--s-1);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
 }
 
 .compendiumBankRow span {
@@ -639,7 +639,6 @@
 
 .compendiumCostList {
   display: grid;
-  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -649,10 +648,23 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 2px 10px;
-  align-items: baseline;
-  padding: 4px 8px;
-  border-left: 2px solid rgb(143 46 19 / 26%);
-  font-size: 0.78rem;
+  align-items: center;
+  padding-block: var(--s-1);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+}
+
+/* Rows of a list are ruled like a ledger's lines, not flagged one by one. */
+.compendiumCostRow + .compendiumCostRow,
+.ruleDefRow + .ruleDefRow,
+.codexGalleryCard + .codexGalleryCard {
+  box-shadow: inset 0 var(--rule) 0 var(--ink-12);
+}
+
+/* An icon taller than the line sits beside its words, not above them. */
+.compendiumCostLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
 }
 
 .compendiumCostValue {
@@ -662,8 +674,7 @@
 
 .compendiumCostNote {
   grid-column: 1 / -1;
-  color: var(--muted);
-  font-size: 0.72rem;
+  color: var(--ink-66);
 }
 
 /* Codex navigation (2026-07-19): the section chips + a sub-entry jump strip, pinned
@@ -677,48 +688,43 @@
      whole track (and every note) wider than the panel. */
   min-width: 0;
   margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--ledger-rule);
-  background: var(--ivory);
+  padding-bottom: var(--s-1);
+  box-shadow: inset 0 calc(var(--rule) * -1) 0 var(--ink-30);
+  background: var(--bone);
 }
 
 .codexJump {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  column-gap: var(--s-3);
 }
 
-/* A pill the reader steers the book with, so it takes 2.5.8's 24px floor. The
-   text stays where it was: the extra height is centred around it, not added
-   under it. */
+/* Tabs the reader steers the book with, like the realm's page tabs: words, the
+   open one underlined in clay. 24px tall for 2.5.8's floor. */
 .codexJumpLink {
   display: inline-flex;
   align-items: center;
-  min-height: 24px;
-  padding: 2px 8px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: var(--ink-07);
+  min-height: var(--ic-24);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
   color: var(--ink-66);
-  font-family: var(--disp);
-  font-size: 0.6rem;
-  letter-spacing: 0.03em;
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
   cursor: pointer;
 }
 
 .codexJumpLink:not(:disabled):hover {
   box-shadow: none;
   transform: none;
-  background: var(--ink-12);
+  background: none;
   color: var(--ink);
 }
 
 .codexJumpLinkActive,
 .codexJumpLinkActive:not(:disabled):hover {
-  border-color: var(--clay);
-  background: transparent;
-  color: var(--clay-ink);
-  font-weight: 700;
+  color: var(--ink);
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
 }
 
 /* Rulebook (2026-07-19): the whole ruleset in the Codex, chapters in learn-order,
@@ -729,22 +735,22 @@
   margin-bottom: 8px;
 }
 
+/* A ruled line to write on, not a boxed field. */
 .codexSearchInput {
   width: 100%;
-  min-height: 0;
-  padding: 6px 10px;
-  border: 1px solid var(--ledger-rule-strong, rgb(36 25 16 / 22%));
-  border-radius: 8px;
-  background: var(--ink-07);
+  min-height: var(--ic-24);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: inset 0 calc(var(--rule) * -1) 0 var(--ink-30);
+  background: none;
   color: var(--ink);
-  font-family: var(--body);
-  font-size: 0.78rem;
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
 }
 
 .codexSearchInput:focus {
   outline: none;
-  border-color: var(--clay);
-  background: var(--ivory);
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
 }
 
 .codexSearchResults {
@@ -811,24 +817,28 @@
 .codexContentsToggle {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--s-2);
   width: 100%;
   min-height: 0;
-  padding: 6px 9px;
-  border: 1px solid var(--ledger-rule);
-  border-radius: 8px;
+  padding: var(--s-1) 0;
+  border: 0;
+  border-radius: 0;
   color: var(--ink);
-  background: var(--ink-07);
+  background: none;
   text-align: left;
   cursor: pointer;
 }
 
 .codexContentsToggle:not(:disabled):hover,
 .codexContentsToggle.on {
-  border-color: var(--clay);
-  background: var(--ivory);
+  background: none;
   box-shadow: none;
   transform: none;
+}
+
+.codexContentsToggle:hover b,
+.codexContentsToggle.on b {
+  color: var(--clay-ink);
 }
 
 /* The chapter's place in the book, carried as a Roman numeral in a fired disc —
@@ -860,7 +870,9 @@
 
 .codexContentsOf {
   display: block;
-  color: var(--ink-63);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  color: var(--ink-66);
 }
 
 .codexContentsCaret {
@@ -950,7 +962,6 @@
 /* A defined-term list — a rule name and its sourced value/description. */
 .ruleDefList {
   display: grid;
-  gap: 5px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -961,15 +972,13 @@
   grid-template-columns: minmax(96px, 38%) minmax(0, 1fr);
   gap: 4px 10px;
   align-items: baseline;
-  padding: 3px 8px;
-  border-left: 2px solid rgb(143 46 19 / 26%);
-  font-size: 0.78rem;
+  padding-block: var(--s-1);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
 }
 
 .ruleDefTerm {
-  font-family: var(--font-display);
-  font-size: 0.74rem;
-  letter-spacing: 0.01em;
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-name);
+  letter-spacing: var(--track-name);
 }
 
 .ruleResTerm {
@@ -979,8 +988,7 @@
 }
 
 .ruleDefBody {
-  color: var(--muted);
-  line-height: 1.4;
+  color: var(--ink-66);
 }
 
 .ruleDim {
@@ -1006,7 +1014,6 @@
 /* The deck gallery inside the Years chapter: compact one-per-row card faces. */
 .codexCardGallery {
   display: grid;
-  gap: 6px;
 }
 
 .codexGalleryCard {
@@ -1015,8 +1022,7 @@
   gap: 9px;
   align-items: start;
   margin: 0;
-  padding: 4px 6px;
-  border-left: 2px solid rgb(143 46 19 / 26%);
+  padding-block: var(--s-1);
 }
 
 .codexGalleryArt {
@@ -1035,15 +1041,13 @@
 }
 
 .codexGalleryCard strong {
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  line-height: 1.2;
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-name);
+  letter-spacing: var(--track-name);
 }
 
 .codexGalleryText {
-  color: var(--muted);
-  font-size: 0.68rem;
-  line-height: 1.35;
+  color: var(--ink-66);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
 }
 
 /* ── The one custom listbox (refit scope 4 / selection rule 2) ───────────────
