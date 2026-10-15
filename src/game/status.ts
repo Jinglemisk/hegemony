@@ -244,6 +244,30 @@ function buildSiteReasons(
 }
 
 /**
+ * The player's settlements whose site would take a Port that claims a free luxury,
+ * whatever the player holds, and whether the player can pay for one now.
+ */
+export function portClaimSites(G: HegemonyState, playerID: PlayerId) {
+  const port = getBuildings(G.definition.content).find((building) => building.id === "port");
+  if (!port) return [];
+  const cost = getAdjustedActionCost(G, playerID, "buildBuilding", port.cost, port.id);
+  return G.players[playerID].settlements.flatMap((tileId) => {
+    const tile = getTile(G, tileId);
+    if (!tile || buildSiteReasons(G, playerID, tile, port).length > 0) return [];
+    const settlement = tile.settlements.find((candidate) => candidate.owner === playerID)!;
+    return [
+      {
+        tileId,
+        settlementId: settlement.id,
+        luxuries: claimableLuxuriesAt(G, tileId),
+        cost,
+        affordable: canAfford(G.players[playerID].resources, cost),
+      },
+    ];
+  });
+}
+
+/**
  * A settlement's ground for buildings: what stands, how many more the site would
  * take, and the two together. A city's is its tile's slots. A colony has ground only
  * for a Port: the one it holds, or the one its site would let it raise.

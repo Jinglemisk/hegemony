@@ -498,7 +498,8 @@ check happens at your turn start, so the table always gets one full round to see
 you sitting at three and break a card off you. Every change of holder is announced
 to all seats, and while a seat holds three, a loud **threshold** disc leads everyone's
 alarms row: its panel lists each card that seat holds, the nearest challenger and how
-far short of a tie they are, since a tie takes a card from everyone.
+far short of a tie they are, since a tie takes a card from everyone. A quieter laurel
+disc names any rival one card short of that.
 
 The **year deck is the game's clock**. After the fourteenth year's last turn,
 **most victory cards held** wins. Ties break on happiness without calm, then total

@@ -45,8 +45,9 @@ export type { Phase } from "../game/types";
  * `?dev=revolt-confirm` (End turn's confirm at each line), `?dev=riot` (the riot
  * sheet), `?dev=riot-result`, `?dev=revolt` (the revolt card), `?dev=rival-unrest` (a
  * rival's riot and another's revolt, toasted), `?dev=threat` (a rival holding three
- * titles, with the title toasts), `?dev=race` and `?dev=age-end` (the two tablets) and
- * `?dev=turn-notice` (the turn notice).
+ * titles, with the title toasts), `?dev=race` and `?dev=age-end` (the two tablets),
+ * `?dev=turn-notice` (the turn notice) and `?dev=alarms` (a rival one title short, and
+ * the seat with gold and stone for a Port).
  *
  * Default dev behavior: the opening is auto-played by the sim's placement policy (the
  * same brain the bots use, seeded from the game seed), and the seed rotates through
@@ -212,6 +213,14 @@ const MOMENT_QUERIES: Record<string, (G: HegemonyState) => HegemonyState> = {
   threat: (G) => {
     DEV_SHELL.titlesFrom = G;
     return threaten(clearFate(G), nextPlayer(G.currentPlayer));
+  },
+  alarms: (G) => {
+    const seat = G.currentPlayer;
+    const rival = nextPlayer(seat);
+    return produce(threaten(clearFate(G), rival), (draft) => {
+      draft.players[rival].resources.gold = 0;
+      Object.assign(draft.players[seat].resources, { gold: 9, stone: 9 });
+    });
   },
   race: (G) => {
     DEV_SHELL.viewer = G.currentPlayer;

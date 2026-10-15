@@ -2023,6 +2023,9 @@ button.link {
 .alarm-disc.is-loud {
   background: var(--clay-deep);
 }
+.alarm-disc.is-up.is-loud {
+  background: var(--olive);
+}
 
 .island .moor[role="button"] {
   cursor: pointer;
