@@ -1665,6 +1665,33 @@ button.link {
   box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
 }
 
+/* ---- Chronicle: a caps rule per year, a line per deed under its seat's seal - */
+.chron-year {
+  padding-block: var(--s-3) var(--s-1);
+}
+.chron-row {
+  margin: 0;
+  display: grid;
+  grid-template-columns: var(--ic-chip) minmax(0, 1fr);
+  column-gap: var(--s-2);
+  align-items: start;
+  padding-block: var(--s-1);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+}
+.chron-row + .chron-row {
+  box-shadow: inset 0 var(--rule) 0 var(--ink-12);
+}
+.chron-seal .idea-seat {
+  width: var(--ic-chip);
+  height: var(--ic-chip);
+}
+/* In the log a term is not emphasis: the glyph is the information, and a highlight
+   on nearly every noun says nothing. The signed numbers keep their olive and oxblood. */
+.chron-text .richToken {
+  color: inherit;
+  font-weight: inherit;
+}
+
 /* ---- Ladder: the tiers, with each gap's two steps on the rung between ------ */
 .ladder {
   display: flex;

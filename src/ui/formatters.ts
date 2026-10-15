@@ -14,7 +14,7 @@ export const RESOURCE_LABELS: Record<Stat, string> = {
 
 /** "Year 1". */
 export function yearLabel(year: number) {
-  return `Year ${year}`;
+  return `Year ${toRoman(year)}`;
 }
 
 export function formatResourceCost(cost: Partial<Resources>) {

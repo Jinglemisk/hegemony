@@ -47,11 +47,3 @@
   flex-wrap: wrap;
   gap: 5px;
 }
-
-.chronicleEmpty {
-  margin: 0;
-  padding: 8px 2px;
-  color: var(--muted);
-  font-size: 0.76rem;
-  font-style: italic;
-}

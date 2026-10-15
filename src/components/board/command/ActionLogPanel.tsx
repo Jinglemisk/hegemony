@@ -1,14 +1,16 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import type { HegemonyState, LogEntry, PlayerId } from "../../../game/types";
 import { yearLabel } from "../../../ui/formatters";
-import { PLAYER_GLAZE_LIST, glazeOf } from "../../../ui/playerGlazes";
+import { PLAYER_GLAZE_LIST } from "../../../ui/playerGlazes";
 import { AnnotatedText } from "../../AnnotatedText";
+import { SeatMark } from "../../frame/parts";
 
 type Filter = PlayerId | "all";
 type TaggedEntry = { entry: LogEntry; player: PlayerId | null };
 
 /**
- * The chronicle — what happened, newest first, in the game's own voice.
+ * The chronicle — what happened, newest first, in the game's own voice, as a ledger
+ * like the realm's pages: a caps rule per year, a line per deed with its seat's seal.
  *
  * Three things were wrong with it and all three are fixed here:
  *
@@ -109,18 +111,13 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
       </div>
 
       <div className="chronicleList" tabIndex={0}>
-        {groups.length === 0 ? (
-          <p className="chronicleEmpty body-em">No deeds recorded here yet.</p>
-        ) : null}
+        {groups.length === 0 ? <p className="page-empty">No deeds recorded here yet.</p> : null}
         {groups.map((group) => (
           <div key={`${group.year}-${group.rows[0].entry.id}`}>
-            <div className="chronYear label">{yearLabel(group.year)}</div>
+            <div className="r-head chron-year caps">{yearLabel(group.year)}</div>
             {group.rows.map(({ entry, player }) => (
-              <p
-                className={player ? "entry entryOwned body" : "entry body"}
-                key={entry.id}
-                style={player ? ({ "--line-color": glazeOf(player) } as CSSProperties) : undefined}
-              >
+              <p className="chron-row" key={entry.id}>
+                <span className="chron-seal">{player ? <SeatMark playerID={player} /> : null}</span>
                 {/* Annotated, but NOT linked. Every noun the annotator knows —
                     wood, food, colony, freeman, event, card — became a Codex
                     button, so a single screen of log carried a dozen tabbable
@@ -130,7 +127,9 @@ export function ActionLogPanel({ G }: { G: HegemonyState }) {
                     through. The chronicle is a RECORD: the glyph belongs, the
                     link does not. Every one of those terms is still a link on
                     the pages where you act on it. */}
-                <AnnotatedText links={false} text={entry.message} />
+                <span className="chron-text">
+                  <AnnotatedText links={false} text={entry.message} />
+                </span>
               </p>
             ))}
           </div>
