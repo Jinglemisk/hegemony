@@ -1146,6 +1146,9 @@ playtest, with the PR from `feat/v2` into `main` open for the owner to merge.
 - [ ] **Step 15 · QA and docs.** Full games by bots and Playwright at 1280, 1440 and 1920;
       the gate script rerun on the real app; `rules.md` rewritten for v2; reference docs
       updated; an owner playtest; the owner's decision on merging `feat/v2` into `main`.
+      Owner, 2026-10-15: the alarms row from one engine list (#106) and the four consult
+      pages in the realm pages' style land before the merge; the full-game browser test
+      waits, as does Step 11, which now runs after player trade (owner, 2026-10-14).
 - [ ] **Step 16 · Refactor and optimize the code.**
 
 ## Step 11 decision rules

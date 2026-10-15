@@ -17,9 +17,9 @@ import {
   getUpgradeColonyToCityStatus,
   toPlayerId,
   turnEndUnrest,
-  unrestStatus,
   victoryThreats,
 } from "../game/rules";
+import { realmAlarms } from "../game/alarms";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { BuildPopover } from "./board/map/BuildPopover";
 import { IdeasModal } from "./board/modals/IdeasModal";
@@ -55,7 +55,6 @@ import { Ticker } from "./frame/Ticker";
 import { ToastLane } from "./frame/Toasts";
 import { useMomentToasts, useOwnMoment } from "./frame/moments";
 import { TurnNotice } from "./frame/TurnNotice";
-import { ThreatAlarm, YearDisc } from "./frame/MomentDiscs";
 import { RealmPanel, type RealmSubject, type RealmTab } from "./frame/RealmPanel";
 import { Alarms } from "./frame/Alarms";
 import { EndTurn } from "./frame/EndTurn";
@@ -172,6 +171,7 @@ export function HegemonyBoard({
   // A revolt is the seat's own card in hotseat; against bots it is only a toast.
   const revolt = useOwnMoment(G, viewerId, "revolt", hotseat, DEV_SHELL.momentsFrom);
   const threats = useMemo(() => victoryThreats(G), [G]);
+  const alarms = useMemo(() => realmAlarms(G, viewerId), [G, viewerId]);
 
   // One moment owns the screen at a time, in the order the engine ran them: the last
   // seat's riot or revolt, the year card, the game's end; then the turn notice
@@ -496,22 +496,12 @@ export function HegemonyBoard({
                   <ToastLane onDismiss={toasts.dismiss} toast={toasts.toast} />
                 )}
                 <Alarms
-                  content={G.definition.content}
-                  effects={activeEffects}
+                  alarms={alarms}
+                  G={G}
                   hunger={shortfall}
-                  lead={
-                    <>
-                      <ThreatAlarm
-                        G={G}
-                        defaultOpen={Boolean(DEV_SHELL.titlesFrom)}
-                        threats={threats}
-                        viewerId={viewerId}
-                      />
-                      <YearDisc G={G} onOpen={() => setYearFaceOpen(true)} />
-                    </>
-                  }
-                  riotThreshold={G.ruleset.economy.unrest.riotThreshold}
-                  unrest={unrestStatus(G, viewerId)}
+                  onOpenYear={() => setYearFaceOpen(true)}
+                  threatOpen={Boolean(DEV_SHELL.titlesFrom)}
+                  viewerId={viewerId}
                 />
               </div>
 

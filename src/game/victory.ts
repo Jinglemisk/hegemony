@@ -275,11 +275,21 @@ export interface VictoryThreat {
 }
 
 export function victoryThreats(G: HegemonyState): VictoryThreat[] {
+  return seatsHolding(G, (count) => count >= G.ruleset.victory.cardsToWin);
+}
+
+/** Seats one title short of the race: a title more, and they win at their next turn. */
+export function oneTitleShort(G: HegemonyState): VictoryThreat[] {
+  const short = G.ruleset.victory.cardsToWin - 1;
+  return short > 0 ? seatsHolding(G, (count) => count === short) : [];
+}
+
+function seatsHolding(G: HegemonyState, holds: (count: number) => boolean): VictoryThreat[] {
   if (G.phase !== "gameplay") return [];
   const standings = victoryStandings(G);
   return PLAYER_IDS.flatMap((seat) => {
     const held = standings.filter((standing) => standing.holder === seat);
-    return held.length >= G.ruleset.victory.cardsToWin
+    return holds(held.length)
       ? [
           {
             seat,

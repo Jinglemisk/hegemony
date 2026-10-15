@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import { seatsBefore } from "../../game/turn";
 import type { VictoryThreat } from "../../game/victory";
 import type { HegemonyState, PlayerId, VictoryMetric } from "../../game/types";
-import { toRoman } from "../../ui/formatters";
+import { listed, toRoman } from "../../ui/formatters";
 import { numberWord, titleValue, yearCardIcon } from "../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Tooltip } from "../overlays/Tooltip";
@@ -48,9 +48,6 @@ export function YearDisc({ G, onOpen }: { G: HegemonyState; onOpen: () => void }
 function shortBy(metric: VictoryMetric, gap: number): string {
   return metric === "happiness" ? `${gap} happiness` : titleValue(metric, gap);
 }
-
-const listed = (names: string[]) =>
-  names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 
 /**
  * The threat: a seat holds enough titles to win when its next turn starts. A loud

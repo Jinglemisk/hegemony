@@ -4,6 +4,7 @@ import { defaultHungerLeave, resolveHunger } from "../game/hunger";
 import { describe, expect, it } from "vitest";
 
 import { Alarms } from "../components/frame/Alarms";
+import { realmAlarms } from "../game/alarms";
 import { collectIncome } from "../game/actions";
 import { bankBuy } from "../game/bank";
 import { enactForEval, openAssembly } from "../game/assembly";
@@ -20,7 +21,7 @@ import { revealYearCard, startNewYear } from "../game/year";
 import { materialTile, scenario } from "../game/testing/scenario";
 import type { HegemonyState, Pops, YearCard } from "../game/types";
 import { PLAYER_IDS } from "../game/data";
-import { turnEndUnrest, unrestStatus } from "../game/unrest";
+import { turnEndUnrest } from "../game/unrest";
 import { masterPolicy, projectPolicyHorizon } from "../sim/policies";
 import { createSimRng } from "../sim/rng";
 import { snapshotTurn } from "../sim/telemetry";
@@ -68,14 +69,14 @@ function plantLaw(G: HegemonyState, cardId: string, author: "0" | "1" = "0") {
   });
 }
 
-function renderAlarms(G: HegemonyState, activeEffects: ActiveEffectDescriptor[]): string {
+function renderAlarms(G: HegemonyState): string {
   return renderToStaticMarkup(
     createElement(Alarms, {
-      content: G.definition.content,
-      effects: activeEffects,
-      riotThreshold: G.ruleset.economy.unrest.riotThreshold,
-      unrest: unrestStatus(G, "0"),
+      G,
+      viewerId: "0",
+      alarms: realmAlarms(G, "0"),
       hunger: null,
+      onOpenYear: () => {},
     }),
   );
 }
@@ -210,7 +211,7 @@ describe("frontend active-effect parity", () => {
     const G = stateWithSettlement();
     G.players["0"].incomeSuppressedTurns = 1;
     const descriptors = getActiveEffects(G, "0");
-    const alarms = renderAlarms(G, descriptors);
+    const alarms = renderAlarms(G);
 
     expect(alarms).toContain('class="alarms"');
     for (const descriptor of descriptors) {

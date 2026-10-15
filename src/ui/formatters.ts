@@ -77,6 +77,10 @@ const ROMAN: readonly (readonly [number, string])[] = [
   [1, "I"],
 ];
 
+/** "Demos, Civic Elite and Voice". */
+export const listed = (names: string[]) =>
+  names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+
 export function toRoman(value: number): string {
   let remaining = Math.max(0, Math.floor(value));
   let numerals = "";
