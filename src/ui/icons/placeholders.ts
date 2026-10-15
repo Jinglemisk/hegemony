@@ -1,5 +1,5 @@
 import type { EmpireTab } from "../../components/board/types";
-import type { Terrain, VictoryMetric } from "../../game/types";
+import type { Terrain } from "../../game/types";
 import type { GlyphId } from "./glyphs";
 
 /**
@@ -115,16 +115,6 @@ export const TERRAIN_PLACEHOLDERS: Record<Terrain, string | undefined> = {
   mountain: placeholder("terrain/mountain"),
   hill: placeholder("terrain/hill"),
   oracle: placeholder("terrain/oracle"),
-};
-
-/** One picture per victory card, not the metric's own resource glyph. */
-export const VICTORY_PLACEHOLDERS: Record<VictoryMetric, string | undefined> = {
-  cities: placeholder("victory/polis-builder"),
-  pops: placeholder("victory/demos"),
-  citizens: placeholder("victory/civic-elite"),
-  gold: placeholder("victory/treasurer"),
-  happiness: placeholder("victory/beloved"),
-  voice: placeholder("victory/voice"),
 };
 
 /** Tabs whose raster is not the raster of the glyph they share with a noun. */
