@@ -7,21 +7,14 @@ import { PLAYER_IDS } from "../../../game/data";
 import { scenario } from "../../../game/testing/scenario";
 import { victoryStandings } from "../../../game/victory";
 import type { HegemonyState, PlayerId } from "../../../game/types";
-import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { VictoryTab } from "./VictoryTab";
 
 /**
  * The victory ledger is the one panel that answers "is anyone about to win", so
  * the only thing worth pinning about it is that it cannot say something the rules
- * do not. Two ways it did:
- *
- *  · it named a sole leader on a tie, because its own tiebreak started from seat 0;
- *  · it drew a negative metric as a completed meter, because a negative width is
- *    an invalid style and React drops it, leaving the bar at its full-width default.
- *
- * Both are read off the DOM here rather than off a helper's return value: the
- * defect lived in what the panel PAINTED, and a unit test of the maths would have
- * passed through it.
+ * do not. It once named a sole leader on a tie, because its own tiebreak started
+ * from seat 0. Marks are read off the DOM here rather than off a helper's return
+ * value: the defect lived in what the panel PAINTED.
  */
 
 let container: HTMLDivElement;
@@ -41,58 +34,33 @@ afterEach(() => {
 
 function render(G: HegemonyState) {
   act(() => root.render(<VictoryTab G={G} playerID={PLAYER_IDS[0]} />));
-  return [...container.querySelectorAll(".vcard")];
+  return [...container.querySelectorAll("[data-title]")];
 }
 
-function markOf(card: Element): string {
-  const glaze = card.querySelector(".vcardGlaze");
-  return glaze
-    ? `glaze:${glaze.textContent}`
-    : `none:${card.querySelector(".vcardNobody")?.textContent}`;
-}
-
-function meterWidth(card: Element): string | undefined {
-  return (card.querySelector(".vcardMeter i") as HTMLElement | null)?.style.width;
+/** The seat whose cell the row marks, and how: held, leading, or nothing (a tie). */
+function markOf(row: Element): string {
+  const cells = [...row.querySelectorAll(".r-a .cell")];
+  const held = cells.findIndex((cell) => cell.classList.contains("is-held"));
+  const lead = cells.findIndex((cell) => cell.classList.contains("is-lead"));
+  return held >= 0 ? `held:${PLAYER_IDS[held]}` : lead >= 0 ? `lead:${PLAYER_IDS[lead]}` : "none";
 }
 
 describe("the victory ledger against the rules", () => {
-  it("names a glaze only where the engine has a sole leader, and a tie where it does not", () => {
+  it("marks a seat only where the engine has a sole leader, and nobody on a tie", () => {
     const G = scenario().opening().build();
     const standings = victoryStandings(G);
-    const cards = render(G);
+    const rows = render(G);
 
-    expect(cards).toHaveLength(standings.length);
-
-    standings.forEach(({ leader }, index) => {
-      expect(markOf(cards[index])).toBe(
-        leader === null ? "none:tied" : `glaze:${PLAYER_GLAZES[leader].blazon}`,
+    expect(rows).toHaveLength(standings.length);
+    standings.forEach(({ holder, leader }, index) => {
+      expect(markOf(rows[index])).toBe(
+        holder ? `held:${holder}` : leader ? `lead:${leader}` : "none",
       );
     });
 
-    // The opening deals every seat the same board, so all six metrics are
-    // tied by construction — the state the old seat-0 tiebreak read as "Damon".
-    const tied = standings.filter(
-      ({ values }) => PLAYER_IDS.filter((id) => values[id] === values[PLAYER_IDS[0]]).length > 1,
-    );
-    expect(tied.length).toBeGreaterThan(0);
-  });
-
-  it("draws an empty meter when the leading value is below zero", () => {
-    const G = scenario()
-      .opening()
-      .mutate((state) => {
-        PLAYER_IDS.forEach((id, seat) => {
-          state.players[id].unrestTokens = 10 + seat;
-        });
-      })
-      .build();
-
-    const happiness =
-      render(G)[victoryStandings(G).findIndex((s) => s.card.metric === "happiness")];
-
-    expect(happiness.querySelector(".vcardLead")?.textContent).toContain("-1");
-    // Not "" and not "-10%": an unset width is what painted the full bar.
-    expect(meterWidth(happiness)).toBe("0%");
+    // The opening deals every seat the same board, so metrics are tied by
+    // construction: the state the old seat-0 tiebreak read as "Damon".
+    expect(standings.some(({ leader }) => leader === null)).toBe(true);
   });
 
   const authoredLaws = (author: PlayerId, cardIds: string[]) =>
@@ -108,7 +76,7 @@ describe("the victory ledger against the rules", () => {
 
     const voice = render(G)[victoryStandings(G).findIndex((s) => s.card.metric === "voice")];
 
-    expect(markOf(voice)).toBe(`glaze:${PLAYER_GLAZES[PLAYER_IDS[1]].blazon}`);
+    expect(markOf(voice)).toBe(`lead:${PLAYER_IDS[1]}`);
   });
 
   it("gives Voice to the sole leader in standing authored Laws", () => {
@@ -124,6 +92,6 @@ describe("the victory ledger against the rules", () => {
 
     const voice = render(G)[victoryStandings(G).findIndex((s) => s.card.metric === "voice")];
 
-    expect(markOf(voice)).toBe(`glaze:${PLAYER_GLAZES[PLAYER_IDS[1]].blazon}`);
+    expect(markOf(voice)).toBe(`held:${PLAYER_IDS[1]}`);
   });
 });

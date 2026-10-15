@@ -1466,7 +1466,9 @@
    ledger lines one control or one caption tall, icons printed once at the head
    of a column, the arithmetic behind hover. Nothing scrolls.
    ========================================================================== */
-.realm {
+/* The consult sheet's ledgers (Victory) share the realm's columns. */
+.realm,
+.consult-sheet {
   --ln: calc(var(--u) * 6); /* 24: a ledger line */
   --c-pop: calc(var(--u) * 10); /* 40 */
   --c-gr: calc(var(--u) * 8); /* 32 */
@@ -1477,7 +1479,8 @@
   --sum-k: calc(var(--u) * 22); /* 88: the overview's label column */
 }
 @media (min-width: 1680px) {
-  .realm {
+  .realm,
+  .consult-sheet {
     --ln: calc(var(--u) * 8); /* 32 */
     --c-pop: calc(var(--u) * 12);
     --c-gr: calc(var(--u) * 10);
@@ -1622,6 +1625,44 @@ button.link {
 }
 .r-state {
   margin-left: auto;
+}
+
+/* ---- Victory: a numbers line per title, every seat's value under its seal ---- */
+.v-held {
+  padding-block: var(--s-2);
+}
+.r-grid.v-grid {
+  grid-template-columns: minmax(0, 1fr) repeat(4, var(--c-gr));
+}
+.r-grid.v-grid > * + * {
+  justify-self: center;
+}
+.r-grid.v-grid.r-head {
+  height: auto;
+  padding-bottom: var(--s-1);
+}
+.v-grid .idea-seat {
+  width: var(--ic-24);
+  height: var(--ic-24);
+  opacity: 0.7;
+}
+.v-grid .is-you .idea-seat {
+  opacity: 1;
+}
+.v-name {
+  font: 700 var(--t-body) / var(--l-body) var(--f-name);
+  letter-spacing: var(--track-name);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cell.is-lead {
+  text-decoration: underline;
+  text-underline-offset: var(--rule-2);
+}
+.cell.is-held {
+  color: var(--clay-ink);
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
 }
 
 /* ---- Ladder: the tiers, with each gap's two steps on the rung between ------ */
