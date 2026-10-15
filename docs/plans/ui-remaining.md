@@ -37,6 +37,7 @@ when it ships or when the owner rules it closed.
 | `V2-3`   | nothing    | A shared tile's second seal has no name plate  |
 | `V2-4`   | Step 3     | Tiles still print their yield                  |
 | `V2-5`   | a pass     | Alarms come from two sources, five are missing |
+| `V2-6`   | a decision | The focus ring is close to Nikos's glaze       |
 
 ### v2 frame carry-overs (Steps 1–2, 2026-09-30 to 10-01)
 
@@ -55,6 +56,12 @@ when it ships or when the owner rules it closed.
   and add five the owner asked for on 2026-10-01: a riot that struck last turn, a
   rival one card from victory, the Assembly meeting next season, a settlement over
   its walls, and a Port that could claim a free luxury.
+- **`V2-6`.** A tile focused by keyboard gets an ochre ring (`--ochre`, 6px) drawn over
+  the tiles, and a map mode's answers are ringed in the same ochre. Nikos's owner ring
+  is Melichron (#dfa437, 5px), so on Nikos's tiles focus barely changes the border.
+  `ui:conduct` cannot judge colour against a neighbour; it only checks that focus
+  changes something. Options: an ink rule inside the ochre ring, or a ring colour no
+  glaze is near.
 
 ### Shipped
 
@@ -366,8 +373,8 @@ changing the scale rule, not by exempting one element.
 
 ## DUP-1 — five repeated glossary words
 
-`ui:conduct`'s five remaining rows: `Gold` five times in a venture's odds table,
-`Food` four times on the Assembly floor, and so on. Each links to the same
+`ui:conduct`'s remaining rows (two on 2026-10-15): `Gold` four times in a venture's
+odds table, on the pick and on the roll. Each links to the same
 rulebook chapter, and each is read **in its sentence**, which is what actually
 disambiguates it.
 
