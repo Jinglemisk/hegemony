@@ -42,8 +42,9 @@ when it ships or when the owner rules it closed.
 
 - **`V2-2`.** The realm's pages are rebuilt to fit the sheet with nothing scrolling
   (2026-10-01). Victory is a ledger too (2026-10-15): a row per title, a column per
-  seat. Chronicle, Codex and Agora still render their v1 components, restyled only by
-  the frame's tokens, and scroll inside their sheet. Each wants the same language.
+  seat. So is the Chronicle: a caps rule per year, a line per deed under its seat's
+  seal. Codex and Agora still render their v1 components, restyled only by the
+  frame's tokens, and scroll inside their sheet. Each wants the same language.
 - **`V2-3`.** A rival colony sharing a tile draws as a small seal on the tile's
   shoulder; its name is in the tile tooltip. Two plates side by side do not fit a hex.
 - **`V2-4`.** The v1 engine still gives tiles a printed amount, so the tile shows it
