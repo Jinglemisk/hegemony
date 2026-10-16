@@ -16,37 +16,11 @@ export const RESOURCE_ICON: Record<Stat, string> = {
 export const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0");
 export const tone = (n: number) => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-/** The consult pages the bar opens, in order. */
-export const CONSULT: Array<{
-  tab: "chronicle" | "codex" | "victory" | "agora";
-  label: string;
-  icon: string;
-  blurb: string;
-}> = [
-  {
-    tab: "chronicle",
-    label: "Chronicle",
-    icon: "chrome/chronicle",
-    blurb: "Every event, newest first.",
-  },
-  {
-    tab: "codex",
-    label: "Codex",
-    icon: "chrome/codex",
-    blurb: "The rules, generated from the engine.",
-  },
-  {
-    tab: "victory",
-    label: "Victory",
-    icon: "victory/laurel",
-    blurb: "The victory cards and who holds them.",
-  },
-  {
-    tab: "agora",
-    label: "Agora",
-    icon: "assembly/agora",
-    blurb: "The standing Laws and the Assembly's calendar.",
-  },
+/** The consult pages the right strip opens, in order. The Chronicle is the ticker's. */
+export const CONSULT: Array<{ tab: "codex" | "victory" | "agora"; label: string; icon: string }> = [
+  { tab: "codex", label: "Codex", icon: "chrome/codex" },
+  { tab: "victory", label: "Victory", icon: "victory/laurel" },
+  { tab: "agora", label: "Agora", icon: "assembly/agora" },
 ];
 
 /** Each building's raster; the Port is the voyage until it has its own. */

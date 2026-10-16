@@ -1,32 +1,44 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { LogEntry } from "../../game/types";
-import { toRoman } from "../../ui/formatters";
+import type { KeyboardEvent } from "react";
+import type { HegemonyState } from "../../game/types";
 import { AnnotatedText } from "../AnnotatedText";
+import { ActionLogPanel } from "../board/command/ActionLogPanel";
 
-const HISTORY = 5;
-
-/** The Chronicle's newest line, a tab hanging from the bar; the lines before it open below. */
-export function Ticker({ log }: { log: readonly LogEntry[] }) {
-  const [latest, ...rest] = log.slice(-(HISTORY + 1)).reverse();
+/**
+ * The Chronicle: its newest line on a tab hanging from the bar's left end. Pressing the
+ * tab drops the whole log out of it, filterable and scrolling, until it is pressed again.
+ */
+export function Ticker({ G }: { G: HegemonyState }) {
+  const [open, setOpen] = useState(false);
+  const latest = G.log[G.log.length - 1];
+  const closeOnEscape = (event: KeyboardEvent) => {
+    if (event.key === "Escape" && open) {
+      event.stopPropagation();
+      setOpen(false);
+    }
+  };
 
   return (
     <aside
-      aria-label="Latest in the Chronicle"
-      className="ticker"
+      aria-label="Chronicle"
+      className={`ticker${open ? " is-open" : ""}`}
       data-c="ticker"
       data-exclude
-      tabIndex={0}
+      onKeyDown={closeOnEscape}
     >
-      <FittedLine key={latest?.id} text={latest?.message ?? "The table is set."} />
-      {rest.length > 0 ? (
-        <ol className="ticker-more" data-gate-skip>
-          {rest.map((entry) => (
-            <li key={entry.id}>
-              <span className="ticker-year">Year {toRoman(entry.year)}</span>
-              <AnnotatedText links={false} text={entry.message} />
-            </li>
-          ))}
-        </ol>
+      <button
+        aria-expanded={open}
+        className="ticker-head"
+        onClick={() => setOpen((value) => !value)}
+        title={open ? "Close the Chronicle" : "Open the Chronicle"}
+        type="button"
+      >
+        <FittedLine key={latest?.id} text={latest?.message ?? "The table is set."} />
+      </button>
+      {open ? (
+        <div className="ticker-more" data-gate-skip>
+          <ActionLogPanel G={G} />
+        </div>
       ) : null}
     </aside>
   );

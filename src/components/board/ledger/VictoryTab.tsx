@@ -65,5 +65,5 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
 function standingLine(G: HegemonyState, { holder, leader, minimum }: VictoryCardStanding) {
   if (holder) return `held by ${G.players[holder].name}`;
   if (leader) return `${G.players[leader].name} leads, short of ${formatNumber(minimum)}`;
-  return "tied, nobody holds it";
+  return "tied";
 }

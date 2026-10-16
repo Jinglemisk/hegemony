@@ -226,8 +226,7 @@
 .fan-btn,
 .consult-btn,
 .rival,
-.endturn,
-.consult-close {
+.endturn {
   color: inherit;
   transition: none;
 }
@@ -311,7 +310,6 @@
   white-space: nowrap;
 }
 /* Bar controls are flat until hovered: the bar is one control tall. */
-.consult-btn:hover,
 .res:hover,
 .level:hover,
 .year:hover {
@@ -471,28 +469,17 @@
   background: var(--ink);
 }
 
-.consult,
 .rivals {
   display: flex;
-}
-.consult {
-  gap: var(--s-1);
-}
-.rivals {
   gap: var(--s-1);
   position: relative;
-}
-.consult-btn {
-  width: var(--hit);
-  height: var(--hit);
-  display: grid;
-  place-items: center;
 }
 .consult-btn .ico,
 .realm-tab .ico {
   filter: var(--at-rest);
 }
 .consult-btn:hover .ico,
+.consult-btn.is-on .ico,
 .realm-tab:hover .ico,
 .realm-tab.is-on .ico {
   filter: none;
@@ -540,10 +527,6 @@
   left: 0;
   width: var(--ticker-w);
   height: var(--hit);
-  padding: 0 var(--s-4);
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
   background: var(--bone);
   border-bottom-right-radius: var(--fillet);
 }
@@ -561,10 +544,19 @@
     var(--bone) var(--fillet)
   );
 }
-/* more lines wait below: a down-caret at the tab's right end */
-.ticker::before {
+.ticker-head {
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--s-4);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: inherit;
+  text-align: left;
+}
+/* the whole Chronicle waits below: a down-caret at the tab's right end */
+.ticker-head::after {
   content: "";
-  order: 1;
   flex: none;
   margin-left: auto;
   width: var(--caret);
@@ -572,13 +564,8 @@
   background: var(--ink-66);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
-.ticker-year {
-  flex: none;
-  width: var(--ticker-label);
-  font: 700 var(--t-cap) / var(--l-cap) var(--f-name);
-  letter-spacing: var(--track-caps);
-  color: var(--clay-ink);
-  white-space: nowrap;
+.ticker.is-open .ticker-head::after {
+  transform: rotate(180deg);
 }
 /* Inline icons in the bar's text take the chip size. */
 .hud .richIcon {
@@ -592,32 +579,71 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* The earlier lines drop out of the tab itself: the same paper and width, one
-   hairline under the current line, and the tab's rounded corner moves down to
-   the bottom of the history. */
-.ticker .ticker-more {
-  display: none;
+/* The Chronicle drops out of the tab itself: the same paper and width, one hairline
+   under the current line, and the tab's rounded corner moves down to the bottom of
+   the log. It stops short of the realm sheet and scrolls inside. */
+.ticker-more {
   position: absolute;
   top: 100%;
   left: 0;
   width: 100%;
-  padding: var(--s-2) var(--s-4) var(--s-3);
+  max-height: calc(100vh - var(--bar-h) - var(--hit) - var(--area-h) - var(--s-6));
+  padding: 0 var(--s-4) var(--s-3);
+  display: flex;
+  flex-direction: column;
   background: var(--bone);
   box-shadow: inset 0 var(--rule) 0 var(--ink-12);
   border-bottom-right-radius: var(--fillet);
 }
-.ticker:hover,
-.ticker:focus-visible {
+.ticker.is-open {
   border-bottom-right-radius: 0;
 }
-.ticker:hover .ticker-more,
-.ticker:focus-visible .ticker-more {
-  display: grid;
-  gap: var(--s-1);
-}
-.ticker-more li {
+
+/* ---- consult strip: the ticker's mirror, a tab hanging from the bar's right end - */
+.consult-strip {
+  position: absolute;
+  top: var(--bar-h);
+  right: 0;
+  width: var(--ticker-w);
+  height: var(--hit);
+  padding: 0 var(--s-4);
   display: flex;
-  gap: var(--s-2);
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bone);
+  border-bottom-left-radius: var(--fillet);
+}
+.consult-strip::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 100%;
+  width: var(--fillet);
+  height: var(--fillet);
+  background: radial-gradient(
+    circle at 0 100%,
+    transparent calc(var(--fillet) - var(--rule)),
+    var(--bone) var(--fillet)
+  );
+}
+.consult-strip.is-open {
+  border-bottom-left-radius: 0;
+}
+/* Words, like the realm's page tabs: the open page's name underlined in clay. */
+.consult-btn {
+  height: var(--hit);
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: 500 var(--t-body) / var(--l-body) var(--f-sans);
+  color: var(--ink-66);
+}
+.consult-btn:hover,
+.consult-btn.is-on {
+  color: var(--ink);
+}
+.consult-btn.is-on {
+  box-shadow: inset 0 calc(var(--rule-2) * -1) 0 var(--clay);
 }
 
 /* ============================================================================
@@ -1414,35 +1440,30 @@
   bottom: 0;
 }
 
-/* The consult sheet: Chronicle, Codex, Victory and Agora, on the right under the bar. */
+/* The consult page, dropped out of the right strip: the same paper and width, one
+   hairline under the strip, the strip's rounded corner moved down to its foot. It
+   sits outside the HUD, so it carries the HUD's shadow itself, clipped at the top
+   where it joins the strip. As tall as its page, down to the end-turn disc at most;
+   the Codex always takes the full drop, so turning a chapter never moves its foot. */
 .consult-sheet {
+  --drop: calc(100vh - var(--bar-h) - var(--hit) - var(--endturn-h) - var(--s-2));
   position: fixed;
   z-index: var(--z-bar);
-  top: calc(var(--bar-h) + var(--s-2));
-  right: var(--s-2);
-  bottom: calc(var(--endturn-h) + var(--s-2));
-  width: var(--sheet-w);
-  padding: var(--s-4);
-  overflow-y: auto;
+  top: calc(var(--bar-h) + var(--hit));
+  right: 0;
+  width: var(--ticker-w);
+  max-height: var(--drop);
+  padding: var(--s-2) var(--s-4) var(--s-4);
+  display: flex;
+  flex-direction: column;
   background: var(--bone);
+  box-shadow: inset 0 var(--rule) 0 var(--ink-12);
+  border-bottom-left-radius: var(--fillet);
   filter: var(--shadow-chrome);
+  clip-path: inset(0 calc(-1 * var(--s-6)) calc(-1 * var(--s-6)) calc(-1 * var(--s-6)));
 }
-.consult-close {
-  position: absolute;
-  top: var(--s-2);
-  right: var(--s-2);
-  z-index: 1;
-  width: var(--hit);
-  height: var(--hit);
-  font: 700 var(--t-20) / var(--hit) var(--f-sans);
-  color: var(--ink-66);
-}
-/* The page's own header leaves the close button its corner. */
-.consult-sheet .ledgerCardTitle {
-  padding-right: var(--hit);
-}
-.consult-close:hover {
-  color: var(--ink);
+.consult-sheet[data-tab="codex"] {
+  height: var(--drop);
 }
 
 /* What the board is asking, on raised paper under the ticker, over open sea. */
@@ -1628,11 +1649,22 @@ button.link {
 }
 
 /* ---- Victory: a numbers line per title, every seat's value under its seal ---- */
+/* The page is as wide as its sheet: a long caption line ends in an ellipsis rather
+   than pushing the seat columns out past the edge. */
+.victoryPage {
+  grid-template-columns: minmax(0, 1fr);
+}
+.victoryPage .r-b .cap {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .v-held {
   padding-block: var(--s-2);
 }
+/* Seat columns a seal wide and a little more, so the longest title names fit. */
 .r-grid.v-grid {
-  grid-template-columns: minmax(0, 1fr) repeat(4, var(--c-gr));
+  grid-template-columns: minmax(0, 1fr) repeat(4, calc(var(--u) * 7));
 }
 .r-grid.v-grid > * + * {
   justify-self: center;

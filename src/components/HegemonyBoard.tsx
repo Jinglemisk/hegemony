@@ -51,6 +51,7 @@ import { getOwnedHoldings } from "./board/helpers";
 import { endTurnWarning, happinessDisplay, hungerShortfall } from "../ui/frameSelectors";
 import { Island } from "./frame/island/Island";
 import { TopBar } from "./frame/TopBar";
+import { ConsultStrip } from "./frame/ConsultStrip";
 import { Ticker } from "./frame/Ticker";
 import { ToastLane } from "./frame/Toasts";
 import { useMomentToasts, useOwnMoment } from "./frame/moments";
@@ -481,15 +482,18 @@ export function HegemonyBoard({
                   G={G}
                   actingId={currentPlayerId}
                   breakdown={projectedIncomeBreakdown}
-                  consultOpen={consultTab}
                   happiness={happinessDisplay(G, viewerId)}
                   income={projectedIncome}
-                  onConsult={(tab) => setConsultTab((open) => (open === tab ? null : tab))}
                   onSeat={onPlayerIDChange}
                   threats={threats.map((threat) => threat.seat)}
                   viewerId={viewerId}
                 />
-                <Ticker log={G.log} />
+                <Ticker G={G} />
+                <ConsultStrip
+                  onClose={() => setConsultTab(null)}
+                  onConsult={(tab) => setConsultTab((open) => (open === tab ? null : tab))}
+                  open={consultTab}
+                />
                 {sitting?.minimised ? (
                   <AssemblyDock sitting={sitting} />
                 ) : (
@@ -564,15 +568,18 @@ export function HegemonyBoard({
               </div>
 
               {consultTab ? (
-                <aside aria-label="Consult" className="consult-sheet" data-c="consult-sheet">
-                  <button
-                    aria-label="Close"
-                    className="consult-close"
-                    onClick={() => setConsultTab(null)}
-                    type="button"
-                  >
-                    ×
-                  </button>
+                <aside
+                  aria-label="Consult"
+                  className="consult-sheet"
+                  data-c="consult-sheet"
+                  data-tab={consultTab}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      event.stopPropagation();
+                      setConsultTab(null);
+                    }
+                  }}
+                >
                   <ConsultPanel activeTab={consultTab} codexTarget={codexTarget} />
                 </aside>
               ) : null}

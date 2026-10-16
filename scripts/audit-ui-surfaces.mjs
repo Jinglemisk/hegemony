@@ -20,7 +20,7 @@ export const SIZES = [
 // ── surfaces ─────────────────────────────────────────────────────────────────
 // The realm sheet's pages (tabs) and the bar's consult pages (toggle buttons).
 const LEFT = ["Cities", "Ladder", "Build", "Market"];
-const RIGHT = ["Chronicle", "Codex", "Victory", "Agora"];
+const RIGHT = ["Codex", "Victory", "Agora"];
 
 const dismissDialogs = async (p) => {
   for (let i = 0; i < 4; i += 1) {
@@ -78,6 +78,15 @@ const pickTile = async (p, test) => {
   await p.waitForTimeout(400);
 };
 
+/** The Chronicle drops from the ticker; it stays open until its tab is pressed again. */
+const setChronicle = async (p, open) => {
+  const t = p.locator(".ticker-head");
+  if ((await t.count()) && ((await t.getAttribute("aria-expanded")) === "true") !== open) {
+    await t.click().catch(() => {});
+    await p.waitForTimeout(250);
+  }
+};
+
 const closeConsult = async (p, tab) => {
   const t = consultButton(p, tab);
   if ((await t.count()) && (await t.getAttribute("aria-pressed")) === "true") {
@@ -112,9 +121,17 @@ export const SURFACES = [
       await p.waitForTimeout(500);
     },
   })),
+  {
+    name: "tab-chronicle",
+    go: async (p) => {
+      await setChronicle(p, true);
+      await p.waitForTimeout(250);
+    },
+  },
   ...RIGHT.map((tab) => ({
     name: `tab-${tab.toLowerCase()}`,
     go: async (p) => {
+      await setChronicle(p, false);
       const t = consultButton(p, tab);
       if ((await t.count()) && (await t.getAttribute("aria-pressed")) !== "true") {
         await t.click().catch(() => {});
