@@ -31,33 +31,38 @@ export function VictoryTab({ G, playerID }: { G: HegemonyState; playerID: Player
           </span>
         ))}
       </div>
-      {standings.map((standing) => {
-        const { card, holder, leader, minimum, values } = standing;
-        return (
-          <div className="r-place-rows" data-title={card.id} key={card.id}>
-            <div className="r-grid v-grid r-a">
-              <span className="r-place">
-                <Ico path={`victory/${card.id}`} size="chip" />
-                <b className="v-name">{card.name}</b>
-              </span>
-              {PLAYER_IDS.map((id) => (
-                <span
-                  className={`cell${id === holder ? " is-held" : id === leader ? " is-lead" : ""}`}
-                  key={id}
-                >
-                  {formatNumber(values[id]).replace("-", "−")}
-                </span>
-              ))}
-            </div>
-            <div className="r-b">
-              <span className="cap">
-                {card.description.toLowerCase()}, min {formatNumber(minimum)} ·{" "}
-                {standingLine(G, standing)}
-              </span>
-            </div>
-          </div>
-        );
-      })}
+      {standings.map((standing) => (
+        <TitleRow G={G} key={standing.card.id} standing={standing} />
+      ))}
+    </div>
+  );
+}
+
+/** One title's numbers line and sub-line. The Agora ends on Voice's. */
+export function TitleRow({ G, standing }: { G: HegemonyState; standing: VictoryCardStanding }) {
+  const { card, holder, leader, minimum, values } = standing;
+  return (
+    <div className="r-place-rows" data-title={card.id}>
+      <div className="r-grid v-grid r-a">
+        <span className="r-place">
+          <Ico path={`victory/${card.id}`} size="chip" />
+          <b className="v-name">{card.name}</b>
+        </span>
+        {PLAYER_IDS.map((id) => (
+          <span
+            className={`cell${id === holder ? " is-held" : id === leader ? " is-lead" : ""}`}
+            key={id}
+          >
+            {formatNumber(values[id]).replace("-", "−")}
+          </span>
+        ))}
+      </div>
+      <div className="r-b">
+        <span className="cap">
+          {card.description.toLowerCase()}, min {formatNumber(minimum)} ·{" "}
+          {standingLine(G, standing)}
+        </span>
+      </div>
     </div>
   );
 }

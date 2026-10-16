@@ -1,8 +1,6 @@
 /* ==========================================================================
- * The Assembly's REFERENCE pages — the Agora tab and the Codex's roster.
- *
- * The sitting itself is `sitting.css`. These two are pages you *consult*, and they
- * read like the ledger's other pages, with aegean used only to mark what is political.
+ * The Assembly's chapter in the Codex. The sitting itself is `sitting.css`; the
+ * Agora page is a ledger in frame.css.
  *
  * Known and NOT fixed here: the Codex roster below still sets 8px and 10.5px,
  * which is the illegible register the overhaul exists to remove. Fixing it means
@@ -10,15 +8,6 @@
  * pass, not this sheet's — a size cannot be corrected from here without breaking
  * the rule that type.css owns sizes.
  * ========================================================================== */
-
-/* ── The Agora — the Assembly's standing record, as a right-rail page ─────── */
-
-.agoraPage {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-width: 0;
-}
 
 /* The Codex's Assembly chapter — the politician roster and its card lists. */
 .rulePolitician {
