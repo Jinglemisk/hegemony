@@ -142,9 +142,16 @@ export const SURFACES = [
   {
     name: "codex-cards",
     go: async (p) => {
-      const t = p.getByRole("button", { name: /^The Cards$/i }).first();
-      if (await t.count()) await t.click().catch(() => {});
-      await p.waitForTimeout(400);
+      // The Codex opens on its contents page; a chapter is one click from there.
+      const codex = consultButton(p, "Codex");
+      if ((await codex.count()) && (await codex.getAttribute("aria-pressed")) !== "true") {
+        await codex.click().catch(() => {});
+      }
+      for (const name of [/How to Win/i, /^The Cards$/i]) {
+        const t = p.getByRole("button", { name }).first();
+        if (await t.count()) await t.click().catch(() => {});
+        await p.waitForTimeout(400);
+      }
     },
   },
   {

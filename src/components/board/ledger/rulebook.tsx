@@ -51,8 +51,10 @@ import { EventTableRows } from "../modals/EventTableModal";
 
 export type RuleChapter = {
   id: string;
-  /** Chapter title — the nav chip + heading. */
+  /** Chapter title — its contents button and the open chapter's heading. */
   title: string;
+  /** Its raster on the Codex contents page. */
+  icon: string;
   /** One-line "what this chapter is", for the search dropdown. */
   blurb: string;
   /** Extra search terms beyond the title/sub-headings (rule nouns a player might type). */
@@ -156,6 +158,7 @@ function terrainSummary(G: HegemonyState) {
 const victory: RuleChapter = {
   id: "victory",
   title: "How to Win",
+  icon: "victory/laurel",
   blurb: "The victory race — the public cards and how to hold them.",
   keywords: ["win", "victory", "cards", "minimum", "race", "endgame", "lead"],
   entries: [
@@ -205,6 +208,7 @@ const victory: RuleChapter = {
 const board: RuleChapter = {
   id: "board",
   title: "The Board",
+  icon: "terrain/plains",
   blurb: "The island's terrain — what each kind yields and how much it can hold.",
   keywords: [
     "terrain",
@@ -276,6 +280,7 @@ const board: RuleChapter = {
 const resources: RuleChapter = {
   id: "resources",
   title: "Resources",
+  icon: "resources/stockpile",
   blurb: "The six resources — the four you spend and the two meters.",
   keywords: [
     "wood",
@@ -328,6 +333,7 @@ const resources: RuleChapter = {
 const population: RuleChapter = {
   id: "population",
   title: "Population",
+  icon: "pops/crowd",
   blurb: "Citizens, freemen and slaves — what each earns, eats and needs.",
   keywords: [
     "pops",
@@ -377,6 +383,7 @@ const population: RuleChapter = {
 const settlements: RuleChapter = {
   id: "settlements",
   title: "Settlements",
+  icon: "settlements/city",
   blurb: "Capitals, cities and colonies — capacities and what each can do.",
   keywords: [
     "capital",
@@ -446,6 +453,7 @@ const settlements: RuleChapter = {
 const turn: RuleChapter = {
   id: "turn",
   title: "The Turn",
+  icon: "market/income",
   blurb: "Income, then your actions, then end — and the once-per-turn limits.",
   keywords: [
     "turn",
@@ -493,6 +501,7 @@ const turn: RuleChapter = {
 const ladder: RuleChapter = {
   id: "ladder",
   title: "Growing & the Ladder",
+  icon: "pops/promote",
   blurb: "Grow new pops, promote or demote them, and move them between settlements.",
   keywords: ["grow", "promote", "demote", "ladder", "class", "move", "slave", "freeman", "citizen"],
   entries: [
@@ -562,6 +571,7 @@ const ladder: RuleChapter = {
 const buildings: RuleChapter = {
   id: "buildings",
   title: "Buildings",
+  icon: "buildings/build",
   blurb: "The building roster: costs and effects, one of each per settlement.",
   keywords: [
     "building",
@@ -604,6 +614,7 @@ const buildings: RuleChapter = {
 const luxuries: RuleChapter = {
   id: "luxuries",
   title: "Luxury Goods",
+  icon: "resources/luxury",
   blurb: "Six coastal goods, claimed by Ports, that raise your happiness.",
   keywords: [
     "luxury",
@@ -671,6 +682,7 @@ const luxuries: RuleChapter = {
 const unrest: RuleChapter = {
   id: "unrest",
   title: "Happiness & Unrest",
+  icon: "unrest/riot",
   blurb: "What happiness is made of, the calm you can buy, and the riot table.",
   keywords: [
     "happiness",
@@ -749,6 +761,7 @@ const unrest: RuleChapter = {
 const years: RuleChapter = {
   id: "years",
   title: "Years & Cards",
+  icon: "events/die",
   blurb: "The year deck that is the clock, and the player deck.",
   keywords: ["year", "clock", "deck", "event", "year card", "player deck", "draw", "drought"],
   entries: [
@@ -800,6 +813,7 @@ const years: RuleChapter = {
 const bank: RuleChapter = {
   id: "bank",
   title: "The Bank",
+  icon: "resources/gold",
   blurb: "This board's exchange rates and the spread you pay to trade.",
   keywords: ["bank", "trade", "market", "exchange", "rate", "sell", "buy", "gold", "spread"],
   entries: [{ id: anchor("bank", "rates"), label: "Rates" }],
@@ -835,6 +849,7 @@ const bank: RuleChapter = {
 const ventures: RuleChapter = {
   id: "ventures",
   title: "Ventures",
+  icon: "events/venture",
   blurb: "The three expeditions, their stakes, and the odds.",
   keywords: [
     "venture",
@@ -870,6 +885,7 @@ const ventures: RuleChapter = {
 const assembly: RuleChapter = {
   id: "assembly",
   title: "The Assembly",
+  icon: "assembly/agora",
   blurb: "The agora: politicians, resolutions, voting, and the laws that stand.",
   keywords: [
     "assembly",
@@ -1069,6 +1085,7 @@ const assembly: RuleChapter = {
 const ideas: RuleChapter = {
   id: "ideas",
   title: "National Ideas",
+  icon: "assembly/stele",
   blurb: "One setup choice and one influence purchase.",
   keywords: ["Idea", "setup", "Civic", "asymmetry"],
   entries: [{ id: "roster", label: "The Ideas" }],

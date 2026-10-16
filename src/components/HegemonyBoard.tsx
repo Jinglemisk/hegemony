@@ -347,6 +347,7 @@ export function HegemonyBoard({
       }
 
       if (event.key === "?") {
+        setCodexTarget(null);
         setConsultTab((open) => (open === "codex" ? null : "codex"));
       }
       // Escape is ModalShell's job — every dialog gets it from the one place.
@@ -491,7 +492,11 @@ export function HegemonyBoard({
                 <Ticker G={G} />
                 <ConsultStrip
                   onClose={() => setConsultTab(null)}
-                  onConsult={(tab) => setConsultTab((open) => (open === tab ? null : tab))}
+                  onConsult={(tab) => {
+                    // Only a term link opens the Codex at a chapter; the strip opens its contents.
+                    setCodexTarget(null);
+                    setConsultTab((open) => (open === tab ? null : tab));
+                  }}
                   open={consultTab}
                 />
                 {sitting?.minimised ? (
