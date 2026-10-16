@@ -1,7 +1,7 @@
 ---
 status: active
 phase: "v2"
-updated: 2026-10-10
+updated: 2026-10-16
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
@@ -969,7 +969,8 @@ danger selector and the real-path previews, with their tests.
   10, under Step 11's limit of 5. Late in a game a realm earns about 10 a year and can
   spend about 5.5 outside the Dole, so the pile returns once food stops being short. Its
   late use waits for trade, with the food rule.
-- Player trade: after the merge of `feat/v2`, as planned, or before Step 15.
+- Player trade: after the merge of `feat/v2`, as planned, or before it. Step 11 waits for
+  trade (owner, 2026-10-14), so it moves with it.
 
 ## Three-axis parity
 
@@ -1149,6 +1150,12 @@ playtest, with the PR from `feat/v2` into `main` open for the owner to merge.
       Owner, 2026-10-15: the alarms row from one engine list (#106) and the four consult
       pages in the realm pages' style land before the merge; the full-game browser test
       waits, as does Step 11, which now runs after player trade (owner, 2026-10-14).
+      Done by 2026-10-16: the conduct audit sees the map's focus ring (#105); the alarms
+      row (#106); Victory, the Chronicle, the Codex and the Agora as ledgers, the
+      Chronicle dropping from a strip on the left and the other three from one on the
+      right, the Codex opening on a page of chapter buttons (#107 to #113); `ui:audit`
+      0 defects on 28 surfaces at three widths and `ui:conduct` 2 judged rows; `rules.md`
+      current through Step 21. Left: the owner's playtest and merge decision.
 - [ ] **Step 16 · Refactor and optimize the code.**
 
 ## Step 11 decision rules

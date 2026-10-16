@@ -2,15 +2,16 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-09-30
+updated: 2026-10-16
 ---
 
 # UI — what is genuinely left
 
-The triage run closed everything the two checkers can see: `ui:audit` reports **0**
-geometric defects across 19 surfaces at three widths, `ui:conduct` reports **5**,
-and every suite is green. [The defect ledger](../archive/plans/ui-triage.md) records how that was
-reached and what was found along the way.
+The triage run closed everything the two checkers can see. On 2026-10-16 `ui:audit`
+reports **0** geometric defects across 28 surfaces at three widths, `ui:conduct`
+reports **2**, both `DUP-1`, and every suite is green.
+[The defect ledger](../archive/plans/ui-triage.md) records how that was reached and
+what was found along the way.
 
 This file is the other half — the work that is **not** a defect. Some of it needs
 an owner decision, some of it is a feature the overhaul never built, and some of
@@ -33,14 +34,17 @@ when it ships or when the owner rules it closed.
 | -------- | ---------- | --------------------------------------------- |
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
 | `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
-| `V2-2`   | a pass     | The consult pages are v1 content              |
 | `V2-3`   | nothing    | A shared tile's second seal has no name plate |
-| `V2-4`   | Step 3     | Tiles still print their yield                 |
-| `V2-6`   | a decision | The focus ring is close to Nikos's glaze      |
 
 ### v2 frame carry-overs (Steps 1–2, 2026-09-30 to 10-01)
 
-- **`V2-2`.** The realm's pages are rebuilt to fit the sheet with nothing scrolling
+- **`V2-3`.** A rival colony sharing a tile draws as a small seal on the tile's
+  shoulder; its name is in the tile tooltip. Two plates side by side do not fit a hex.
+
+### Shipped or closed
+
+- **`V2-2` · the consult pages in the realm pages' style** (2026-10-15 and 16, #107 to
+  #113). The realm's pages are rebuilt to fit the sheet with nothing scrolling
   (2026-10-01). Victory is a ledger too (2026-10-15): a row per title, a column per
   seat. So is the Chronicle: a caps rule per year, a line per deed under its seat's
   seal. The Codex keeps its book but takes the ledger's chrome: caps rules for
@@ -53,20 +57,13 @@ when it ships or when the owner rules it closed.
   which replaced the bar's four page icons. The Codex opens on a contents page,
   every chapter a large button with the search above them, and each chapter has a
   way back to it; that replaced the chapter dropdown.
-- **`V2-3`.** A rival colony sharing a tile draws as a small seal on the tile's
-  shoulder; its name is in the tile tooltip. Two plates side by side do not fit a hex.
-- **`V2-4`.** The v1 engine still gives tiles a printed amount, so the tile shows it
-  beside the terrain emblem. Step 3 removes both. Fans keep clear of settlements and
-  moorings but may open over a printed amount; those are `ui:audit`'s only rows.
-- **`V2-6`.** A tile focused by keyboard gets an ochre ring (`--ochre`, 6px) drawn over
-  the tiles, and a map mode's answers are ringed in the same ochre. Nikos's owner ring
-  is Melichron (#dfa437, 5px), so on Nikos's tiles focus barely changes the border.
-  `ui:conduct` cannot judge colour against a neighbour; it only checks that focus
-  changes something. Options: an ink rule inside the ochre ring, or a ring colour no
-  glaze is near.
-
-### Shipped
-
+- **`V2-4` · tiles print slots, not a yield** (Step 3, #82). The tile shows its slot
+  count beside the terrain emblem, and the fan rows `ui:audit` raised over the old
+  printed amount went with it.
+- **`V2-6` · the focus ring beside Nikos's glaze**, closed by the owner on 2026-10-16
+  with no change. A tile focused by keyboard gets an ochre ring (`--ochre`, 6px), and
+  Nikos's owner ring is Melichron (#dfa437, 5px), so on Nikos's tiles focus barely
+  changes the border. Only keyboard play sees it.
 - **`V2-5` · the alarms row from one engine list** (2026-10-15). `realmAlarms` returns
   every disc as typed data, and the row adds three the owner asked for on 2026-10-01:
   a rival one title short, the Assembly sitting next year, and a Port that could claim

@@ -5,7 +5,7 @@ city-state into the dominant power of an island. You gather resources, grow your
 people, found colonies, upgrade them into cities, and raise buildings to
 out-produce your rivals.
 
-> This guide covers v2 through Step 18.
+> This guide covers v2 through Step 21.
 
 ---
 
@@ -441,6 +441,8 @@ resolution pays its author a small prize: **2 food** from Demosthenes, **2 stone
 from Perdiccas, **2 wood** from Kleistophenes, or **2 gold** from Stratokles.
 Repeals and failed proposals pay nothing. Politician power and patrons are records,
 with no bonus. **Voice** counts only authored Laws still standing; Directives add none.
+The **Agora** consult shows, at any time, when the house sits next, the standing Laws,
+each politician's Laws and monuments by seat, and Voice.
 
 | Politician    | Law               | Standing rule                                                                                                             |
 | ------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
