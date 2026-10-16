@@ -25,7 +25,7 @@ function ConsultPanelComponent({
       <div className="intelBody">
         {activeTab === "codex" ? <CodexTab G={G} target={codexTarget} /> : null}
         {activeTab === "victory" ? <VictoryTab G={G} playerID={viewerId} /> : null}
-        {activeTab === "agora" ? <AgoraTab G={G} /> : null}
+        {activeTab === "agora" ? <AgoraTab G={G} playerID={viewerId} /> : null}
       </div>
     </div>
   );

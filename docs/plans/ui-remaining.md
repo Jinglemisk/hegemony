@@ -44,8 +44,9 @@ when it ships or when the owner rules it closed.
   (2026-10-01). Victory is a ledger too (2026-10-15): a row per title, a column per
   seat. So is the Chronicle: a caps rule per year, a line per deed under its seat's
   seal. The Codex keeps its book but takes the ledger's chrome: caps rules for
-  headings, ruled rows for its lists, word tabs for its sub-headings. The Agora still
-  renders its v1 component and wants the same language.
+  headings, ruled rows for its lists, word tabs for its sub-headings. The Agora is a
+  ledger as well (2026-10-16): the next sitting, the standing Laws, each orator's
+  stelae counted by seat, and the Voice title's row from Victory under them.
   Owner, 2026-10-16: the two strips under the bar mirror each other. The Chronicle
   drops from the ticker on the left, filterable and scrolling, and is no longer a
   consult page; Codex, Victory and Agora drop from a matching strip on the right,
