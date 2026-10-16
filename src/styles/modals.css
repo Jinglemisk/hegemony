@@ -728,8 +728,7 @@
 }
 
 /* Rulebook (2026-07-19): the whole ruleset in the Codex, chapters in learn-order,
-   with a search that jumps to any topic. Search box + dropdown live in the sticky
-   codexNav; the chapter chips scroll horizontally so a dozen fit one row. */
+   with a search on the contents page that jumps to any topic. */
 .codexSearch {
   position: relative;
   margin-bottom: 8px;
@@ -804,47 +803,107 @@
   font-size: 0.72rem;
 }
 
-/* The contents (2026-08-15). Thirteen chapters cannot be a tab row in a 220px
-   tablet — as a row, ten of them sat past the right edge at every width, the
-   furthest by 1013px, so two thirds of the rulebook could not be reached at all.
-   A book solves this with a contents page, and so does this: the closed control
-   is one line naming the chapter you are in, and it opens the whole list. */
-.codexContents {
-  position: relative;
-  margin-bottom: 8px;
+/* The contents page (owner, 2026-10-16). The Codex opens on its chapters as large
+   buttons, two to a row, and every chapter has a way back here. It replaced a
+   dropdown list that fifteen chapters made a hunt every time. */
+.codexShelf {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.codexContentsToggle {
+.codexShelfBtn {
   display: flex;
   align-items: center;
   gap: var(--s-2);
   width: 100%;
-  min-height: 0;
-  padding: var(--s-1) 0;
-  border: 0;
-  border-radius: 0;
+  height: 100%;
+  min-height: calc(var(--u) * 16); /* 64, a two-line title */
+  padding: var(--s-2);
+  border-radius: var(--s-2);
   color: var(--ink);
-  background: none;
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--ink-12);
   text-align: left;
-  cursor: pointer;
 }
 
-.codexContentsToggle:not(:disabled):hover,
-.codexContentsToggle.on {
-  background: none;
-  box-shadow: none;
+.codexShelfBtn:not(:disabled):hover {
   transform: none;
+  background: var(--ivory);
+  box-shadow: inset 0 0 0 var(--rule) var(--clay);
 }
 
-.codexContentsToggle:hover b,
-.codexContentsToggle.on b {
+.codexShelfWords {
+  min-width: 0;
+}
+
+.codexShelfNum {
+  display: block;
+  color: var(--ink-66);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+}
+
+.codexShelfWords b {
+  display: block;
+  font: 700 var(--t-cap) / var(--l-cap) var(--f-name);
+  letter-spacing: var(--track-name);
+  text-transform: uppercase;
+}
+
+.codexShelfBtn:hover b {
   color: var(--clay-ink);
 }
 
-/* The chapter's place in the book, carried as a Roman numeral in a fired disc —
-   the same mark the contents list uses, so the closed control is a row of the
-   list that stayed behind. */
-.codexContentsNumeral {
+/* Inside a chapter: the way back on the left, where you are on the right. */
+.codexChapterHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-2);
+}
+
+.codexBack {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: var(--ic-24);
+  color: var(--ink-66);
+  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+
+.codexBack:not(:disabled):hover {
+  transform: none;
+  box-shadow: none;
+  background: none;
+  color: var(--clay-ink);
+}
+
+.codexBackCaret {
+  transform: scaleX(-1);
+}
+
+.codexChapterWhere {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+/* A long title takes a second line rather than losing its end. */
+.codexChapterWhere b {
+  text-align: right;
+}
+
+/* The chapter's place in the book, carried as a Roman numeral in a fired disc. */
+.codexNumeral {
   display: grid;
   place-items: center;
   flex: none;
@@ -854,109 +913,6 @@
   color: var(--ivory);
   background: var(--clay);
   letter-spacing: 0;
-}
-
-.codexContentsWhere {
-  min-width: 0;
-  overflow: hidden;
-}
-
-.codexContentsWhere b {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.codexContentsOf {
-  display: block;
-  font: 500 var(--t-cap) / var(--l-cap) var(--f-sans);
-  letter-spacing: var(--track-caps);
-  color: var(--ink-66);
-}
-
-.codexContentsCaret {
-  flex: none;
-  margin-left: auto;
-  color: var(--ink-63);
-  transition: transform 140ms ease;
-}
-
-.codexContentsToggle.on .codexContentsCaret {
-  transform: rotate(180deg);
-}
-
-/* Dropped like the search results, so opening the contents never pushes the rules
-   you are reading down the page. Its own scroll: thirteen chapters are taller than
-   the tablet, and a contents page you cannot reach the end of is the bug again. */
-.codexContentsList {
-  position: absolute;
-  z-index: 5;
-  top: calc(100% + 3px);
-  right: 0;
-  left: 0;
-  max-height: min(52vh, 440px);
-  margin: 0;
-  padding: 4px;
-  overflow-y: auto;
-  border: 1px solid var(--ledger-rule);
-  border-radius: 8px;
-  background: var(--ivory);
-  box-shadow: var(--float);
-  list-style: none;
-  scrollbar-color: var(--ink-30) transparent;
-}
-
-.codexContentsRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  width: 100%;
-  min-height: 0;
-  padding: 6px 7px;
-  border: 0;
-  border-radius: 6px;
-  color: var(--ink);
-  background: none;
-  text-align: left;
-  cursor: pointer;
-}
-
-.codexContentsRow:not(:disabled):hover {
-  background: var(--ink-07);
-  box-shadow: none;
-  transform: none;
-}
-
-/* Where you are, in the book's own colour. No second box — the row simply inks. */
-.codexContentsRow.on b {
-  color: var(--clay-ink);
-}
-
-.codexContentsRow .codexContentsNumeral {
-  margin-top: 1px;
-  color: var(--ink-66);
-  background: var(--ink-12);
-}
-
-.codexContentsRow.on .codexContentsNumeral {
-  color: var(--ivory);
-  background: var(--clay);
-}
-
-.codexContentsEntry {
-  min-width: 0;
-}
-
-.codexContentsEntry b {
-  display: block;
-}
-
-.codexContentsBlurb {
-  display: block;
-  margin-top: 1px;
-  color: var(--ink-66);
-  line-height: 1.35;
 }
 
 /* A defined-term list — a rule name and its sourced value/description. */
