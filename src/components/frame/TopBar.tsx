@@ -10,11 +10,10 @@ import type { HegemonyState, PlayerId, Resource, Resources } from "../../game/ty
 import { RESOURCE_LABELS, toRoman } from "../../ui/formatters";
 import { gaugeStops, publicCensus } from "../../ui/frameSelectors";
 import type { HappinessDisplay } from "../../ui/frameSelectors";
-import { CONSULT, RESOURCE_ICON, sign, tone } from "../../ui/frameFormat";
+import { RESOURCE_ICON, sign, tone } from "../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { settlementNames } from "../../ui/settlementNames";
 import { Tooltip } from "../overlays/Tooltip";
-import type { ConsultTab } from "../board/types";
 import { Ico, Tip, TipLedger, TipWarn } from "./parts";
 
 const PURSE: Resource[] = ["wood", "stone", "food", "gold", "influence"];
@@ -270,9 +269,7 @@ export function TopBar({
   income,
   breakdown,
   happiness,
-  consultOpen,
   threats,
-  onConsult,
   onSeat,
 }: {
   G: HegemonyState;
@@ -281,10 +278,8 @@ export function TopBar({
   income: Resources;
   breakdown: readonly IncomeContribution[];
   happiness: HappinessDisplay;
-  consultOpen: ConsultTab | null;
   /** Seats one turn start from winning the race. */
   threats: readonly PlayerId[];
-  onConsult: (tab: ConsultTab) => void;
   onSeat: (id: PlayerId) => void;
 }) {
   const store = G.players[viewerId].resources;
@@ -306,32 +301,6 @@ export function TopBar({
         <HappinessGauge display={happiness} />
       </div>
       <div className="court" data-c="court">
-        <nav aria-label="Consult" className="consult" data-c="consult">
-          {CONSULT.map(({ tab, label, icon, blurb }) => (
-            <Tooltip
-              content={
-                // Once its page is open the icon has said what it is.
-                consultOpen === tab ? null : (
-                  <Tip sub="Consult" title={label}>
-                    <p className="tip-body">{blurb}</p>
-                  </Tip>
-                )
-              }
-              key={tab}
-            >
-              <button
-                aria-label={label}
-                aria-pressed={consultOpen === tab}
-                className={`consult-btn${consultOpen === tab ? " is-on" : ""}`}
-                data-c="consult-btn"
-                onClick={() => onConsult(tab)}
-                type="button"
-              >
-                <Ico path={icon} size="ui" />
-              </button>
-            </Tooltip>
-          ))}
-        </nav>
         <div aria-label="Rulers" className="rivals" data-c="rivals" role="group">
           {PLAYER_IDS.map((id) => (
             <Rival

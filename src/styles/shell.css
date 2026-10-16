@@ -70,31 +70,3 @@
 
 /* Hovering a tablet used to raise it above the rest of the chrome. It is docked
    now; there is nothing to raise it over. */
-
-.ledgerCardTitle {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-bottom: 0;
-  padding-bottom: 9px;
-  border-bottom: 1px solid var(--ink-12);
-}
-
-.ledgerCardTitle .titleIcon {
-  width: 1.1875rem;
-  height: 1.1875rem;
-}
-
-.ledgerCardTitle h2 {
-  flex: 1;
-  margin: 0;
-}
-
-/* The header's right-hand slot (proto.css `.panel-h .count`): how many of the
-   thing this page lists. It belongs on the page it counts, not on a 15px rail
-   badge that a three-digit number cannot fit inside. */
-.ledgerCardTitle .panelCount {
-  margin-left: auto;
-  color: var(--ink-63);
-  font-weight: 600;
-}

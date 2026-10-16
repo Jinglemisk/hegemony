@@ -46,6 +46,10 @@ when it ships or when the owner rules it closed.
   seal. The Codex keeps its book but takes the ledger's chrome: caps rules for
   headings, ruled rows for its lists, word tabs for its sub-headings. The Agora still
   renders its v1 component and wants the same language.
+  Owner, 2026-10-16: the two strips under the bar mirror each other. The Chronicle
+  drops from the ticker on the left, filterable and scrolling, and is no longer a
+  consult page; Codex, Victory and Agora drop from a matching strip on the right,
+  which replaced the bar's four page icons.
 - **`V2-3`.** A rival colony sharing a tile draws as a small seal on the tile's
   shoulder; its name is in the tile tooltip. Two plates side by side do not fit a hex.
 - **`V2-4`.** The v1 engine still gives tiles a printed amount, so the tile shows it

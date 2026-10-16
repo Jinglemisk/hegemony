@@ -1,4 +1,3 @@
-import type { EmpireTab } from "../../components/board/types";
 import type { Terrain } from "../../game/types";
 import type { GlyphId } from "./glyphs";
 
@@ -115,14 +114,6 @@ export const TERRAIN_PLACEHOLDERS: Record<Terrain, string | undefined> = {
   mountain: placeholder("terrain/mountain"),
   hill: placeholder("terrain/hill"),
   oracle: placeholder("terrain/oracle"),
-};
-
-/** Tabs whose raster is not the raster of the glyph they share with a noun. */
-export const TAB_PLACEHOLDERS: Partial<Record<EmpireTab, string | undefined>> = {
-  pops: placeholder("pops/crowd"),
-  buildings: placeholder("chrome/tab-build"),
-  market: placeholder("chrome/tab-market"),
-  victory: placeholder("chrome/tab-victory"),
 };
 
 export const CHROME_PLACEHOLDERS = {

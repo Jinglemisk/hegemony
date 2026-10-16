@@ -549,18 +549,3 @@ button:focus-visible {
   padding: 16px;
   scrollbar-color: var(--clay) transparent;
 }
-
-.panelTitle {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--line);
-}
-
-.titleIcon {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 auto;
-}
