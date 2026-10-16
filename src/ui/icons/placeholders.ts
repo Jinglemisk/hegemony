@@ -13,6 +13,10 @@ import type { GlyphId } from "./glyphs";
  * it cover what the glyph set folds together on purpose (forest is the wood
  * tree; the Victory tab is the laurel; one mask for every unrest tier) and the
  * owner chose to tell apart; their call sites pass the result as `src`.
+ *
+ * Painted bronze (`assets/icons/bronze/`, SVG) is the owner's chosen house style
+ * (2026-10-16): a bronze icon at the same `family/concept` path wins over the
+ * placeholder, so the two sets mix until bronze covers everything.
  */
 const FILES = import.meta.glob("../../../assets/icons/placeholder/**/*.png", {
   eager: true,
@@ -20,8 +24,17 @@ const FILES = import.meta.glob("../../../assets/icons/placeholder/**/*.png", {
   import: "default",
 }) as Record<string, string>;
 
+const BRONZE = import.meta.glob("../../../assets/icons/bronze/**/*.svg", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
 function placeholder(path: string): string | undefined {
-  return FILES[`../../../assets/icons/placeholder/${path}.png`];
+  return (
+    BRONZE[`../../../assets/icons/bronze/${path}.svg`] ??
+    FILES[`../../../assets/icons/placeholder/${path}.png`]
+  );
 }
 
 /** A raster by its `family/name` path, for the v2 frame, whose icon slots name the

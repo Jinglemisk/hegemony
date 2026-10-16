@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Citizens — laurel-crowned bust</title>
+<defs>
+<linearGradient id="a-citizens-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-citizens-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+<linearGradient id="a-citizens-olive" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8b976"/><stop offset="0.48" stop-color="#7d8f51"/><stop offset="1" stop-color="#48542c"/></linearGradient>
+</defs>
+<path d="M23 34H41L43 41Q55 42 57 58H7Q9 42 21 41Z" fill="url(#a-citizens-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M23 32H41V42L32 49L23 42Z" fill="url(#a-citizens-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 19Q16 7 32 7Q48 7 47 19V30Q44 40 32 42Q20 40 17 30Z" fill="url(#a-citizens-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M35 14Q45 14 45 23V30Q42 37 34 40L37 29Z" fill="#895438"/>
+<path d="M17 22V17Q16 7 32 7Q47 7 47 19L38 15L29 17L24 14L23 23Z" fill="#51351f"/>
+<path d="M18 33C9 29 6 20 6 13L15 17Q8 9 13 6Q22 8 23 15L19 24L24 27Z" fill="url(#a-citizens-olive)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M46 33C55 29 58 20 58 13L49 17Q56 9 51 6Q42 8 41 15L45 24L40 27Z" fill="url(#a-citizens-olive)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 15L19 28M52 15L45 28" fill="none" stroke="#d3dba5" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M26 25H29M36 25H39M32 25L30 32L34 32M28 36H35" fill="none" stroke="#714c34" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 48L22 43L32 49L43 42L48 45L32 55Z" fill="#c9b48c"/>
+<path d="M17 49L14 56M25 51L24 57M42 50L47 56" fill="none" stroke="#aa9572" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M40 31L44 29Q41 36 35 38L35 35ZM43 46L49 47Q53 51 55 57H47L45 52Z" fill="#806c50"/>
+<path d="M47 23L53 19Q53 27 46 30L44 28ZM17 25L19 28L18 31L13 28Z" fill="#344321"/>
+<path d="M10 18L12 22M13 9L17 12M44 14L48 10M22 20L27 19M12 50Q14 45 20 44" fill="none" stroke="#e4dfb3" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M25 10L31 9L36 10" fill="none" stroke="#9f7448" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 23L17 23M47 22L51 21M28 54L31 56" fill="none" stroke="#66783e" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M23 26L24 30" fill="none" stroke="#f4d2aa" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
