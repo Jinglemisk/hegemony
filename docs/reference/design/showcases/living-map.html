@@ -808,6 +808,11 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     const p = [[0, 0, -t], [0, h, -t], [l, h / 2, -t], [0, 0, t], [0, h, t], [l, h / 2, t]];
     return solid([[p[0], p[1], p[2]], [p[3], p[4], p[5]], [p[0], p[1], p[4]], [p[0], p[4], p[3]], [p[1], p[2], p[5]], [p[1], p[5], p[4]], [p[0], p[2], p[5]], [p[0], p[5], p[3]]]);
   };
+  G.crag = () => {
+    const a = [-0.15, 0, -0.1], b = [0.12, 0, -0.12], c = [0.16, 0, 0.11], d = [-0.14, 0, 0.13];
+    const A = [-0.09, 0.34, -0.05], B = [0.045, 0.52, -0.03], C = [0.075, 0.3, 0.06], D = [-0.05, 0.27, 0.09];
+    return solid([[a, b, B], [a, B, A], [b, c, C], [b, C, B], [c, d, D], [c, D, C], [d, a, A], [d, A, D], [A, B, C], [A, C, D], [a, d, c], [a, c, b]]);
+  };
   function bake(geo) {
     const g = geo.index ? geo.toNonIndexed() : geo;
     const out = new T.BufferGeometry();
@@ -872,6 +877,23 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     add(roof, G.gable(w * 1.1, d * 1.18, w * 0.48), x, y + w * 0.7, z, { ry });
   }
   const quiet = { line: false };
+  function sheaf(add, x, y, z, k) {
+    add("wheat", G.cyl(0.027 * k, 0.034 * k, 0.09 * k, 7), x, y, z, quiet);
+    add("wheat", G.cone(0.031 * k, 0.065 * k, 7), x, y + 0.09 * k, z);
+    add("bark", G.torus(0.021 * k, 0.004 * k), x, y + 0.052 * k, z, { rx: Math.PI / 2, line: false });
+  }
+  function wheatRows(add, crop) {
+    // Stems and ears are baked into each patch, then the whole patch is instanced.
+    for (let row = 0; row < 4; row++) {
+      const z = (row - 1.5) * 0.07;
+      add("earth", G.box(0.32, 0.012, 0.026), 0, 0, z, quiet);
+      for (let i = 0; i < 7; i++) {
+        const x = (i - 3) * 0.045, h = 0.065 + ((i + row) % 3) * 0.012;
+        add("stubble", G.cyl(0.0028, 0.0035, h, 4), x, 0.009, z, quiet);
+        add(crop, G.cyl(0.005, 0.008, 0.04, 5), x + 0.003, h, z, { rz: -0.14, line: false });
+      }
+    }
+  }
   const TPL = {
     capital: template((add) => {
       add("rock", G.cyl(0.43, 0.48, 0.07, 7), 0, 0, 0);
@@ -985,26 +1007,37 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     }),
     // Slots: a stone plinth carries a building; a smaller disc is a worked slot; a ring is an open one.
     nodeBig: template((add) => { add("stone", G.cyl(0.14, 0.15, 0.018, 18)); }),
-    disc_forest: template((add) => { add("earth", G.cyl(0.085, 0.09, 0.012, 14)); }),
-    disc_mountain: template((add) => { add("quarry", G.cyl(0.085, 0.09, 0.012, 14)); }),
-    disc_plains: template((add) => { add("stubble", G.cyl(0.085, 0.09, 0.012, 14)); }),
+    disc_forest: template((add) => { add("earth", G.cyl(0.105, 0.115, 0.018, 14)); }),
+    disc_mountain: template((add) => { add("quarry", G.cyl(0.105, 0.115, 0.018, 14)); }),
+    disc_plains: template((add) => { add("stubble", G.cyl(0.105, 0.115, 0.018, 14)); }),
     plot: template((add) => { add("rule", G.torus(0.062, 0.0085), 0, 0.005, 0, { rx: Math.PI / 2, line: false }); }),
     // What a worked slot shows: cut logs in forest, a quarry face on mountains, a stubble field on plains.
     cut_forest: template((add) => {
-      for (const [x, z] of [[-0.045, -0.035], [0.04, -0.045], [-0.02, 0.05]]) add("bark", G.cyl(0.011, 0.013, 0.016, 6), x, 0, z, quiet);
-      add("timber", G.log(0.009, 0.075), 0.01, 0, 0.0, quiet);
-      add("timber", G.log(0.009, 0.075), 0.01, 0, 0.02, quiet);
-      add("timber", G.log(0.009, 0.07), 0.01, 0.016, 0.01, quiet);
+      for (const [x, z] of [[-0.065, -0.045], [0.065, -0.045]]) {
+        add("bark", G.cyl(0.022, 0.028, 0.045, 7), x, 0, z);
+        add("timber", G.cyl(0.019, 0.019, 0.003, 7), x, 0.045, z, quiet);
+      }
+      add("bark", G.log(0.019, 0.13), 0, 0, 0.015);
+      add("bark", G.log(0.019, 0.13), 0, 0, 0.055);
+      add("timber", G.log(0.017, 0.135), 0, 0.033, 0.035);
     }),
     cut_mountain: template((add) => {
-      add("rock", G.box(0.09, 0.05, 0.025), 0, 0, -0.045);
-      add("stone", G.box(0.045, 0.03, 0.04), -0.025, 0, 0.01);
-      add("stone", G.box(0.035, 0.022, 0.03), 0.03, 0, 0.025);
+      // An open excavation: high back and return walls, a shaded floor and two cut benches.
+      add("rock", G.box(0.18, 0.18, 0.055), 0, 0, -0.065);
+      add("rock", G.box(0.045, 0.13, 0.13), -0.075, 0, 0.005);
+      add("quarry", G.box(0.13, 0.14, 0.009), 0.01, 0.015, -0.032, quiet);
+      add("earth", G.box(0.13, 0.006, 0.12), 0.018, 0, 0.025, quiet);
+      add("quarry", G.box(0.12, 0.045, 0.035), 0.015, 0.005, -0.005);
+      add("stone", G.box(0.07, 0.022, 0.035), 0.025, 0.005, 0.04);
+      for (const x of [-0.025, 0.025, 0.065]) add("rock", G.box(0.003, 0.11, 0.002), x, 0.04, -0.026, quiet);
+      add("quarry", G.box(0.036, 0.033, 0.032), 0.072, 0, 0.07, { ry: 0.3 });
     }),
     cut_plains: template((add) => {
-      add("wheat", G.box(0.1, 0.01, 0.06), 0, 0, -0.005, quiet);
-      add("wheat", G.cone(0.013, 0.04, 5), -0.05, 0, 0.04, quiet);
-      add("wheat", G.cone(0.012, 0.035, 5), 0.055, 0, 0.035, quiet);
+      for (let row = 0; row < 3; row++) for (let i = 0; i < 5; i++) {
+        add("wheat", G.cyl(0.0025, 0.003, 0.023, 4), (i - 2) * 0.032, 0, (row - 1) * 0.04, quiet);
+      }
+      sheaf(add, -0.047, 0, -0.01, 0.7);
+      sheaf(add, 0.05, 0, 0.04, 0.6);
     }),
     // Pops: silhouette tells the class, owner glaze only on a sash, a cap or a waistband.
     citizen: template((add) => {
@@ -1030,19 +1063,48 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
       add("wheat", G.cyl(0.009, 0.007, 0.016, 6), -0.038, 0.042, 0, quiet);
       add("wheat", G.cyl(0.009, 0.007, 0.016, 6), 0.038, 0.042, 0, quiet);
     }),
-    // Terrain: low, unoutlined, muted, so seals and plates stay on top.
-    tree: template((add) => {
-      add("bark", G.cyl(0.006, 0.008, 0.032, 5), 0, 0, 0, quiet);
-      add("leafSoft", G.ball(0.04, 7, 5), 0, 0.062, 0, { sy: 0.85, line: false });
+    // Broad crowns, exposed trunks and tiered silhouettes read even at the opening zoom.
+    olive: template((add) => {
+      add("bark", G.cyl(0.017, 0.028, 0.24, 7), 0, 0, 0, { rz: -0.1 });
+      add("bark", G.cyl(0.009, 0.016, 0.13, 6), 0, 0.15, 0, { rz: 0.65 });
+      add("bark", G.cyl(0.009, 0.016, 0.13, 6), 0.015, 0.15, 0, { rz: -0.75 });
+      add("leafDark", G.ball(0.105, 8, 6), 0, 0.285, 0.025, { sx: 1.25, sy: 0.85 });
+      add("leafSoft", G.ball(0.105, 8, 6), -0.075, 0.325, -0.015, { sx: 1.05, sy: 0.85 });
+      add("leafSoft", G.ball(0.095, 8, 6), 0.075, 0.33, 0.005, { sy: 0.9 });
+      add("leaf", G.ball(0.09, 8, 6), -0.01, 0.385, -0.035, { sx: 1.15, sy: 0.8 });
     }),
     cypress: template((add) => {
-      add("bark", G.cyl(0.005, 0.006, 0.016, 5), 0, 0, 0, quiet);
-      add("leafDark", G.cone(0.023, 0.105, 7), 0, 0.012, 0, quiet);
+      add("bark", G.cyl(0.012, 0.021, 0.2, 6), 0, 0, 0);
+      add("leafDark", G.ball(0.085, 8, 6), 0, 0.32, 0, { sy: 2.2 });
+      add("leafDark", G.cone(0.076, 0.38, 8), 0, 0.3, 0);
+      add("leafSoft", G.cone(0.048, 0.24, 8), -0.008, 0.46, -0.008, quiet);
     }),
-    rock: template((add) => { add("crag", new T.IcosahedronGeometry(1, 0), 0, 0.3, 0, quiet); }),
-    fieldRipe: template((add) => { add("wheat", G.box(1, 1, 1), 0, 0, 0, quiet); }),
-    fieldGreen: template((add) => { add("fieldGreen", G.box(1, 1, 1), 0, 0, 0, quiet); }),
-    scrub: template((add) => { add("leafDark", G.ball(1, 6, 4), 0, 0.2, 0, quiet); }),
+    pine: template((add) => {
+      add("bark", G.cyl(0.014, 0.025, 0.42, 7), 0, 0, 0);
+      add("leafDark", G.cone(0.16, 0.24, 9), 0, 0.18, 0);
+      add("leafSoft", G.cone(0.135, 0.23, 9), 0, 0.31, 0, { ry: 0.3 });
+      add("leaf", G.cone(0.095, 0.22, 9), 0, 0.44, 0, { ry: 0.15 });
+    }),
+    rock: template((add) => {
+      add("crag", G.crag(), 0, 0, 0);
+      add("stone", G.crag(), 0.12, 0, 0.045, { sx: 0.65, sy: 0.58, sz: 0.7, ry: 0.65 });
+      add("rock", G.crag(), -0.1, 0, 0.08, { sx: 0.6, sy: 0.35, sz: 0.6, ry: -0.4 });
+    }),
+    boulder: template((add) => {
+      add("crag", new T.IcosahedronGeometry(0.1, 0), 0, 0.06, 0, { sx: 1.3, sy: 0.85 });
+      add("stone", new T.IcosahedronGeometry(0.06, 0), 0.09, 0.035, 0.04, { sy: 0.7 });
+    }),
+    fieldRipe: template((add) => {
+      wheatRows(add, "wheat");
+      sheaf(add, 0.14, 0, 0.13, 0.85);
+    }),
+    fieldGreen: template((add) => { wheatRows(add, "fieldGreen"); }),
+    scrub: template((add) => {
+      add("bark", G.cyl(0.006, 0.014, 0.07, 5), 0, 0, 0, quiet);
+      add("leafDark", G.ball(0.073, 7, 5), 0, 0.075, 0, { sx: 1.2, sy: 0.8 });
+      add("leafSoft", G.ball(0.053, 7, 5), -0.05, 0.095, -0.02, { sy: 0.85 });
+      add("leafSoft", G.ball(0.047, 7, 5), 0.055, 0.065, 0.015, { sy: 0.8 });
+    }),
     // The Oracle (Delphi): a tholos on a stepped platform, always visible; omphalos, tripod over the cleft and laurel come in close.
     oracleCore: template((add) => {
       add("stone", G.cyl(0.34, 0.36, 0.025, 20), 0, 0, 0);
@@ -1094,23 +1156,30 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     for (let i = spots.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
     const take = (n) => spots.splice(0, n), items = [];
     if (t.terrain === "forest") {
-      take(8 + Math.floor(r() * 4)).forEach(([x, z], i) => items.push({ type: r() < 0.4 ? "cypress" : "tree", x, z, s: 0.8 + r() * 0.45, ry: r() * 6.28, key: `${t.id}:t${i}` }));
+      // Grow three overlapping groves on the lattice, leaving paths between their crowns.
+      const anchors = take(3);
+      anchors.forEach(([ax, az], grove) => {
+        spots.sort((a, b) => Math.hypot(a[0] - ax, a[1] - az) - Math.hypot(b[0] - ax, b[1] - az));
+        const type = ["olive", "pine", "cypress"][Math.floor(r() * 3)];
+        [[ax, az], ...take(4 + Math.floor(r() * 2))].forEach(([x, z], i) => {
+          const species = i % 3 ? type : ["olive", "pine", "cypress"][(grove + i) % 3], k = 0.85 + r() * 0.3;
+          items.push({ type: species, x, z, s: k, radius: (species === "cypress" ? 0.09 : 0.19) * k, ry: r() * 6.28, key: `${t.id}:t${grove}:${i}` });
+        });
+      });
     } else if (t.terrain === "mountain") {
       take(4 + Math.floor(r() * 2)).forEach(([x, z], i) => {
-        const k = 0.04 + r() * 0.035;
-        items.push({ type: "rock", x, z, sx: k * (1 + r() * 0.5), sy: k * (0.7 + r() * 0.5), sz: k, ry: r() * 6.28, key: `${t.id}:r${i}` });
+        const k = 0.7 + r() * 0.4;
+        items.push({ type: "rock", x, z, sx: k, sy: k * (0.8 + r() * 0.5), sz: k, radius: k * 0.29, ry: r() * 6.28, key: `${t.id}:r${i}` });
       });
     } else if (t.terrain === "plains") {
-      take(2).forEach(([x, z], i) => {
-        const ry = r() * Math.PI;
-        for (let k = 0; k < 3; k++) {
-          const dz = (k - 1) * 0.055;
-          items.push({ type: k % 2 ? "fieldGreen" : "fieldRipe", x: x + dz * Math.sin(ry), z: z + dz * Math.cos(ry), cx: x, cz: z, sx: 0.22, sy: 0.008, sz: 0.045, ry, key: `${t.id}:f${i}` });
-        }
+      const ry = r() * Math.PI, patches = [];
+      for (const p of spots) if (patches.length < 3 && patches.every(([x, z]) => Math.hypot(x - p[0], z - p[1]) > 0.48)) patches.push(p);
+      patches.forEach(([x, z], i) => {
+        items.push({ type: i === 1 ? "fieldGreen" : "fieldRipe", x, z, s: 0.95 + r() * 0.15, radius: 0.25, ry, key: `${t.id}:f${i}` });
       });
     } else if (t.terrain === "hill") {
-      take(3).forEach(([x, z], i) => { const k = 0.03 + r() * 0.015; items.push({ type: "scrub", x, z, sx: k * 1.3, sy: k * 0.7, sz: k, ry: 0, key: `${t.id}:s${i}` }); });
-      take(2).forEach(([x, z], i) => { const k = 0.04 + r() * 0.02; items.push({ type: "rock", x, z, sx: k, sy: k * 0.7, sz: k * 1.2, ry: r() * 6.28, key: `${t.id}:b${i}` }); });
+      take(6).forEach(([x, z], i) => { const k = 0.85 + r() * 0.4; items.push({ type: "scrub", x, z, s: k, radius: k * 0.11, ry: r() * 6.28, key: `${t.id}:s${i}` }); });
+      take(3).forEach(([x, z], i) => { const k = 0.8 + r() * 0.5; items.push({ type: "boulder", x, z, s: k, radius: k * 0.16, ry: r() * 6.28, key: `${t.id}:b${i}` }); });
     }
     return items;
   }
@@ -1118,11 +1187,16 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
   function clears(item, t, here) {
     if (!here || !here.length) return false;
     const lx = item.cx === undefined ? item.x : item.cx, lz = item.cz === undefined ? item.z : item.cz;
-    const wx = t.x + lx, wz = t.y + lz;
-    for (const s of here) for (const n of s.nodes) if (Math.hypot(wx - n.x, wz - n.z) < (n.kind === "big" ? 0.21 : 0.14)) return true;
+    const wx = t.x + lx, wz = t.y + lz, radius = item.radius;
+    for (const s of here) for (const n of s.nodes) if (Math.hypot(wx - n.x, wz - n.z) < (n.kind === "big" ? 0.21 : n.kind === "small" ? 0.18 : 0.085) + radius) return true;
     if (here.some((s) => s.kind !== "colony")) return !(Math.hypot(lx, lz) > 0.62 && hash01(`keep:${item.key}`) < 0.45);
-    for (const s of here) if (Math.hypot(wx - s.centre.x, wz - s.centre.z) < 0.34) return true;
+    for (const s of here) if (Math.hypot(wx - s.centre.x, wz - s.centre.z) < 0.32 + radius) return true;
     return hash01(`thin:${item.key}`) > 0.8;
+  }
+
+  function decorHeight(item, here) {
+    // The south-side plate gets a low margin; crowns elsewhere retain their full height.
+    return here && here.length && Math.abs(item.x) < 0.48 + item.radius && item.z > 0.26 ? 0.42 : 1;
   }
 
   // ---------- slot nodes round each settlement; the name plate keeps the south side ----------
@@ -1277,7 +1351,7 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
             } else put(n.building, { x: n.x, y: H_TILE + 0.018, z: n.z, s: 0.78 });
           } else if (n.kind === "small") {
             put(`disc_${t.terrain}`, { x: n.x, y: H_TILE, z: n.z });
-            put(`cut_${t.terrain}`, { x: n.x, y: H_TILE + 0.012, z: n.z, ry: -n.a });
+            put(`cut_${t.terrain}`, { x: n.x, y: H_TILE + 0.018, z: n.z, ry: -n.a });
           } else put("plot", { x: n.x, y: H_TILE, z: n.z });
         }
       });
@@ -1297,10 +1371,11 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     // terrain decor, cleared by what stands on the tile
     const D = {};
     for (const t of tiles) for (const it of decorFor(t)) {
-      if (clears(it, t, sc.atTile.get(t.id))) continue;
-      (D[it.type] = D[it.type] || []).push({ x: t.x + it.x, y: H_TILE, z: t.y + it.z, s: it.s, sx: it.sx, sy: it.sy, sz: it.sz, ry: it.ry });
+      const here = sc.atTile.get(t.id);
+      if (clears(it, t, here)) continue;
+      (D[it.type] = D[it.type] || []).push({ x: t.x + it.x, y: H_TILE, z: t.y + it.z, s: it.s, sx: it.sx, sy: (it.sy || it.s || 1) * decorHeight(it, here), sz: it.sz, ry: it.ry });
     }
-    for (const k of Object.keys(D)) instance(TPL[k], D[k], { layer: "terrain", shadow: k === "tree" || k === "cypress" || k === "rock" });
+    for (const k of Object.keys(D)) instance(TPL[k], D[k], { layer: "terrain" });
     sc.decor = Object.values(D).reduce((n, l) => n + l.length, 0);
 
     // the Oracle: never settled, no slots, so no nodes; a fixed landmark in every band
@@ -1378,8 +1453,8 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
       const near = [...new Set(sc.list.filter((o) => o.seat === s.seat && dist(o.tile, s.tile) === 1).map((o) => o.tile))];
       const inner = s.kind === "capital" ? 0.5 : s.kind === "city" ? 0.42 : 0.3;
       const color = SEATS[s.seat].color;
-      const add = (cls, tag, extra) => figs[cls].push({ color, phase: hash01(`${s.name}:${tag}`) * 6.28, ...extra });
-      s.nodes.filter((n) => n.kind === "small").forEach((n, i) => add("slave", `w${i}`, { mode: "work", node: n, wx: n.x - 0.1 * Math.cos(n.a), wz: n.z - 0.1 * Math.sin(n.a) }));
+      const add = (cls, tag, extra) => figs[cls].push({ color, scale: cls === "slave" ? 1.18 : 1, phase: hash01(`${s.name}:${tag}`) * 6.28, ...extra });
+      s.nodes.filter((n) => n.kind === "small").forEach((n, i) => add("slave", `w${i}`, { mode: "work", node: n, wx: n.x - 0.145 * Math.cos(n.a), wz: n.z - 0.145 * Math.sin(n.a) }));
       for (let i = 0; i < s.plan.idle; i++) add("slave", `i${i}`, { mode: "walk", plan: walkPlan(`${s.name}:s${i}`, s.tile, near, inner) });
       for (let i = 0; i < s.pops[1]; i++) add("freeman", `f${i}`, { mode: "walk", plan: walkPlan(`${s.name}:f${i}`, s.tile, near, inner) });
       for (let i = 0; i < s.pops[0]; i++) add("citizen", `c${i}`, { mode: "walk", plan: walkPlan(`${s.name}:c${i}`, s.tile, near, inner) });
@@ -1457,7 +1532,8 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
             if (w.moving) y += Math.abs(Math.sin(time * 9 + f.phase)) * 0.004;
           }
           eF.set(bend, Math.atan2(fx, fz), 0);
-          tmpM.compose(v3.set(x, y, z), q4.setFromEuler(eF), s3.set(FIG_S, FIG_S, FIG_S));
+          const k = FIG_S * (f.scale || 1);
+          tmpM.compose(v3.set(x, y, z), q4.setFromEuler(eF), s3.set(k, k, k));
           for (const im of d.meshes) im.setMatrixAt(i, tmpM);
         });
       } else if (d.kind === "laurel") {
@@ -1586,9 +1662,9 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     // Colony names wait one notch past the opening zoom: on a full late-game board they crowd the cities.
     const names = smooth(T_FIT + 0.02, T_FIT + 0.1, t);
     const layers = {
-      terrain: { landmark: close, landmarkVapour: close, slots: mid, detail: close, terrain: close, pops: close, passengers: mid, lifeShips: close, lifeAmb: close, ports: mid, moves: mid, events: 1, tradeRoutes: 0 },
+      terrain: { landmark: close, landmarkVapour: close, slots: mid, detail: close, terrain: 1, pops: close, passengers: mid, lifeShips: close, lifeAmb: close, ports: mid, moves: mid, events: 1, tradeRoutes: 0 },
       political: { landmark: 0, landmarkVapour: 0, slots: 0, detail: 0, terrain: 0, pops: 0, passengers: 0, lifeShips: 0, lifeAmb: 0, ports: 0, moves: 0, events: 0, tradeRoutes: 0 },
-      economy: { landmark: close, landmarkVapour: close, slots: 1, detail: close, terrain: close * 0.3, pops: close * 0.3, passengers: 0, lifeShips: 0, lifeAmb: 0, ports: 1, moves: 0, events: 0, tradeRoutes: 0 },
+      economy: { landmark: close, landmarkVapour: close, slots: 1, detail: close, terrain: 0.35, pops: close * 0.3, passengers: 0, lifeShips: 0, lifeAmb: 0, ports: 1, moves: 0, events: 0, tradeRoutes: 0 },
       unrest: { landmark: 0, landmarkVapour: 0, slots: 0, detail: 0, terrain: 0, pops: 0, passengers: 0, lifeShips: 0, lifeAmb: 0, ports: 0, moves: 0, events: 1, tradeRoutes: 0 },
       trade: { landmark: 0, landmarkVapour: 0, slots: 0, detail: 0, terrain: 0, pops: 0, passengers: 1, lifeShips: 1, lifeAmb: 0, ports: 1, moves: 1, events: 0, tradeRoutes: 1 },
     }[mode];
@@ -1612,6 +1688,7 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
     for (const c of world.children) {
       const L = c.userData.layer;
       if (L) c.visible = (layers[L] === undefined ? 1 : layers[L]) > 0.01;
+      if (L === "terrain") c.castShadow = mode === "terrain" && c.material.side !== T.BackSide;
     }
   }
   function tileColour(t, wash) {
@@ -2018,6 +2095,7 @@ h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; 
   buildScenario(document.querySelector('input[name="scenario"]:checked').value);
 })();
 </script>
+
 
 </body>
 </html>
