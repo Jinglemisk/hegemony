@@ -1,0 +1,2023 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Hegemony Map Camera</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@500;700&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Cinzel:wght@600;700&display=swap">
+<style>
+/* Layout: one dark map table. Header line, switchers, the live 3D island at full width,
+   the legend for the active map mode, then a short course of action. Single deliberate
+   dark look, so every colour is set here and color-scheme is dark. */
+:root {
+  color-scheme: dark;
+  --table: #181210;
+  --bone: #ece2ce;
+  --bone-dim: rgb(236 226 206 / 72%);
+  --rule: rgb(236 226 206 / 14%);
+  --rule-2: rgb(236 226 206 / 28%);
+  --kiln: #dd7448;
+  --kiln-wash: rgb(221 116 72 / 9%);
+  --ochre: #d98a35;
+  --ivory: #fff8e7;
+  --ink: #241910;
+  --sea: #206e7c;
+  --sea-lit: #2e8a9a;
+  --sea-deep: #17505c;
+  --f-name: "Cinzel", Copperplate, Georgia, serif;
+  --f-body: "Alegreya", "Iowan Old Style", Palatino, Georgia, serif;
+  --f-sans: "Alegreya Sans", "Gill Sans", Helvetica, Arial, sans-serif;
+  --t-cap: 12px;
+  --t-small: 14px;
+  --t-body: 17px;
+  --t-h2: 22px;
+  --t-h1: clamp(28px, 4.6vw, 40px);
+}
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+body { background: var(--table); color: var(--bone); font: 400 var(--t-body)/1.55 var(--f-body); }
+:focus-visible { outline: 2px solid var(--ochre); outline-offset: 2px; }
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 72px;
+  display: grid;
+  gap: 28px;
+}
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.mast { display: grid; gap: 6px; }
+h1 { margin: 0; font: 700 var(--t-h1)/1.1 var(--f-name); letter-spacing: .03em; color: var(--ivory); text-wrap: balance; }
+.settled { margin: 0; font: 500 var(--t-small)/1.45 var(--f-sans); color: var(--bone-dim); }
+.settled b { color: var(--kiln); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: var(--t-cap); margin-right: 6px; }
+
+.demo { display: grid; gap: 0; }
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding-block: 0 12px; }
+.seg { display: flex; flex-wrap: wrap; margin: 0; padding: 0; border: 1px solid var(--rule-2); min-width: 0; }
+.seg legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.seg label { position: relative; display: block; cursor: pointer; }
+.seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seg span { display: block; padding: 7px 12px; font: 700 var(--t-small)/1.2 var(--f-sans); color: var(--bone); white-space: nowrap; }
+.seg span small, .seg span kbd { font: 500 12px/1 var(--f-sans); color: var(--bone-dim); margin-left: 6px; }
+.seg span kbd { display: inline-block; min-width: 1.4em; padding: 1px 4px; border: 1px solid var(--rule-2); border-radius: 2px; text-align: center; }
+.seg label + label span { border-left: 1px solid var(--rule-2); }
+.seg input:checked + span { background: var(--bone); color: var(--ink); }
+.seg input:checked + span small, .seg input:checked + span kbd { color: rgb(36 25 16 / 70%); border-color: rgb(36 25 16 / 30%); }
+.seg input:focus-visible + span { outline: 2px solid var(--ochre); outline-offset: -2px; }
+.top-note { margin: 0; font: 500 var(--t-small)/1.3 var(--f-sans); color: var(--bone-dim); }
+
+.stage {
+  position: relative;
+  height: clamp(400px, 66vh, 680px);
+  overflow: hidden;
+  border: 1px solid var(--rule-2);
+  background: var(--sea) radial-gradient(ellipse at 60% 40%, var(--sea-lit) 0%, var(--sea) 50%, var(--sea-deep) 100%);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+.stage.is-panning { cursor: grabbing; }
+.stage:focus-visible { outline: 2px solid var(--ochre); outline-offset: -2px; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--ivory); font: 500 16px/1.4 var(--f-sans); }
+
+/* the HTML layer: upright at every angle; each kind fades with the zoom band and the mode */
+.overlay { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; --lab: 12px;
+  --a-colony: 1; --a-cityplate: 1; --a-pips: 1; --a-yield: 1; --a-ecoC: 0; --a-ecoF: 0; --a-ecoE: 0; --a-goodname: 1; --a-ship: 1; --a-realm: 0; --a-event: 1; --a-unrest: 0; --a-port: 0; --a-popsline: 0; --a-plates: 1; }
+.overlay > * { position: absolute; left: 0; top: 0; }
+.plate {
+  display: grid; justify-items: center; gap: 2px;
+  padding: .3em .55em .25em;
+  background: var(--ivory); color: var(--ink);
+  border: 1px solid var(--ink); border-radius: 1px;
+  box-shadow: 0 1px 3px rgb(10 34 41 / 40%);
+  white-space: nowrap;
+  opacity: var(--a-plates);
+}
+.plate.city { opacity: calc(var(--a-plates) * var(--a-cityplate)); }
+.plate.colony { opacity: calc(var(--a-plates) * var(--a-colony)); }
+.pl-row { display: flex; align-items: center; gap: .45em; }
+.pl-name { font: 700 var(--lab)/1 var(--f-name); letter-spacing: .04em; }
+.overlay:not(.pips-on) .plate .pips { display: none; }
+.overlay:not(.pops-on) .pl-pops { display: none; }
+.pl-name i { font-style: normal; opacity: .45; margin: 0 .35em; }
+.plate.capital .pl-name { font-size: calc(var(--lab) * 1.1); }
+.pl-pops { font: 700 calc(var(--lab) * .9)/1.1 var(--f-sans); color: rgb(36 25 16 / 72%); opacity: var(--a-popsline); }
+.pips { display: flex; gap: 3px; align-items: center; opacity: var(--a-pips); }
+.pips i { display: block; width: .62em; height: .62em; border-radius: 50%; border: 1.5px solid var(--ink); font-size: var(--lab); }
+.pips i.b { background: var(--ink); border-radius: 1px; }
+.pips i.w { background: rgb(36 25 16 / 42%); }
+.pips u { display: block; width: 1px; height: .8em; background: rgb(36 25 16 / 40%); margin: 0 2px; font-size: var(--lab); }
+.yield { font: 700 calc(var(--lab) * .95)/1.25 var(--f-sans); color: var(--ink); background: rgb(255 248 231 / 82%); padding: 0 .4em; border-radius: 1px; white-space: nowrap; opacity: var(--a-yield); }
+.yield.oracle { font: italic 500 var(--lab)/1.25 var(--f-body); }
+.moor { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.m-name { font: 700 calc(var(--lab) * .92)/1 var(--f-sans); color: var(--ivory); text-shadow: 0 0 2px var(--sea-deep), 0 0 5px var(--sea-deep); }
+.m-name b { display: inline-block; width: .7em; height: .7em; margin-right: .35em; border-radius: 50%; background: var(--own); box-shadow: 0 0 0 1.5px var(--ivory); vertical-align: -.05em; }
+.moor { opacity: var(--a-goodname); }
+.m-name small { font-weight: 500; opacity: .8; margin-left: .3em; }
+.chip {
+  display: flex; align-items: center; gap: 6px; padding: 3px 9px 3px 4px;
+  background: rgb(24 18 16 / 84%); color: var(--ivory); border: 1px solid rgb(255 248 231 / 30%); border-radius: 2px;
+  font: 700 calc(var(--lab) * .95)/1.1 var(--f-sans); white-space: nowrap;
+}
+.chip img { width: 22px; height: 22px; }
+.chip small { font-weight: 500; opacity: .8; }
+.chip.event { opacity: var(--a-event); }
+.chip.ship { padding: 2px 7px; font-weight: 500; opacity: var(--a-ship); }
+.chip.portchip { opacity: var(--a-port); }
+.chip.unrest { opacity: var(--a-unrest); border-width: 2px; }
+.chip.unrest.calm { border-color: #a8b877; }
+.chip.unrest.uneasy { border-color: #e2a558; }
+.chip.unrest.riot { border-color: #e8846b; }
+.chip.unrest.revolt { border-color: #ff5a3c; background: rgb(60 14 6 / 92%); }
+.realm { display: grid; justify-items: center; gap: 2px; opacity: var(--a-realm); text-align: center; }
+.realm b { font: 700 calc(var(--lab) * 2)/1 var(--f-name); letter-spacing: .14em; color: var(--ivory); text-shadow: 0 0 3px var(--ink), 0 0 10px var(--ink), 0 2px 2px var(--ink); }
+.realm small { font: 700 calc(var(--lab) * .95)/1.2 var(--f-sans); color: var(--ivory); text-shadow: 0 0 3px var(--ink), 0 0 6px var(--ink); letter-spacing: .04em; }
+.eco {
+  display: grid; justify-items: center; gap: 3px; padding: 4px 7px;
+  background: rgb(255 248 231 / 92%); color: var(--ink); border: 1px solid var(--ink); border-radius: 2px;
+  font: 700 calc(var(--lab) * .92)/1.1 var(--f-sans); white-space: nowrap; opacity: var(--a-ecoF);
+  box-shadow: 0 1px 3px rgb(10 34 41 / 40%);
+}
+.eco.compact { display: flex; align-items: center; gap: 4px; padding: 2px 6px; opacity: var(--a-ecoC); }
+.eco.compact img { width: 1.5em; height: 1.5em; }
+.eco.compact em { font-style: normal; font-weight: 500; color: rgb(36 25 16 / 70%); }
+.eco.compact u { display: block; width: 1px; height: 1.1em; background: rgb(36 25 16 / 35%); margin: 0 2px; }
+.eco .en { font: 700 calc(var(--lab) * .9)/1 var(--f-name); letter-spacing: .04em; }
+.eco .row { display: flex; align-items: center; gap: 5px; }
+.eco .row img { width: 1.5em; height: 1.5em; }
+.eco .row em { font-style: normal; font-weight: 500; color: rgb(36 25 16 / 70%); }
+.eco .bl i { font-style: normal; font-weight: 500; font-size: .85em; padding: 0 3px; border: 1px solid rgb(36 25 16 / 35%); border-radius: 2px; }
+.eco .pips { opacity: 1; }
+.eco.empty { background: rgb(255 248 231 / 70%); border-color: rgb(36 25 16 / 40%); opacity: var(--a-ecoE); padding: 1px 6px; }
+.eco hr { width: 100%; border: 0; border-top: 1px solid rgb(36 25 16 / 25%); margin: 1px 0; }
+.compass {
+  position: absolute; right: 12px; top: 12px; width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgb(255 248 231 / 50%); background: rgb(23 80 92 / 55%);
+  z-index: 2; pointer-events: none; display: grid; place-items: start center;
+}
+.compass b { margin-top: 3px; font: 700 12px/1 var(--f-name); color: var(--ivory); }
+.compass i { position: absolute; left: 50%; top: 17px; width: 2px; height: 14px; margin-left: -1px; background: var(--ivory); opacity: .7; }
+.tilekeys { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.tilekeys button { position: absolute; left: 0; top: 0; width: 2px; height: 2px; padding: 0; border: 0; opacity: 0; }
+
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; padding-block: 14px 10px; border-bottom: 1px solid var(--rule); }
+.cam { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.disc {
+  width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--ink);
+  background: var(--ivory); color: var(--ink); cursor: pointer;
+  font: 700 18px/1 var(--f-sans); display: grid; place-items: center; padding: 0;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 35%);
+}
+.disc:hover { background: #f4e6c8; }
+.txt-btn { height: 36px; padding: 0 14px; border: 1px solid var(--rule-2); background: transparent; color: var(--bone); font: 700 var(--t-small)/1 var(--f-sans); letter-spacing: .04em; cursor: pointer; }
+.txt-btn:hover { border-color: var(--bone); }
+.readout { margin: 0 0 0 auto; display: flex; flex-wrap: wrap; gap: 6px 16px; font: 500 var(--t-small)/1.2 var(--f-sans); font-variant-numeric: tabular-nums; color: var(--bone-dim); }
+.readout b { color: var(--ivory); font-weight: 700; }
+.bands { display: inline-flex; gap: 0; border: 1px solid var(--rule-2); vertical-align: middle; }
+.bands i { font-style: normal; padding: 1px 7px; font-size: 12px; color: var(--bone-dim); }
+.bands i + i { border-left: 1px solid var(--rule-2); }
+.bands i.on { background: var(--bone); color: var(--ink); font-weight: 700; }
+.under { display: grid; gap: 10px; padding-block: 12px 0; font-size: var(--t-small); line-height: 1.5; }
+.under p { margin: 0; max-width: 96ch; }
+.picked { color: var(--ivory); font-family: var(--f-sans); font-weight: 500; font-size: 15px; }
+.mode-note { color: var(--bone); font-family: var(--f-sans); }
+.mode-note b { color: var(--kiln); }
+.scn { display: grid; gap: 8px; padding: 12px 14px; border-left: 2px solid var(--kiln); background: var(--kiln-wash); }
+.scn-chips { display: flex; flex-wrap: wrap; gap: 6px 16px; font-family: var(--f-sans); color: var(--ivory); }
+.scn-chips span { display: inline-flex; align-items: center; gap: 6px; }
+.scn-chips img { width: 26px; height: 26px; }
+.help, .src { color: var(--bone-dim); }
+.legend-h { margin: 6px 0 0; font: 700 var(--t-cap)/1.3 var(--f-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kiln); }
+.legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: 8px 20px; margin: 0; padding: 0; list-style: none; font-family: var(--f-sans); }
+.legend li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 0 10px; align-items: center; }
+.legend li > img, .legend li > svg, .legend li > .sw2 { width: 34px; height: 34px; grid-row: span 2; }
+.legend b { color: var(--ivory); font-weight: 700; }
+.legend span { color: var(--bone-dim); font-size: 13px; line-height: 1.35; }
+.sw2 { display: block; border-radius: 3px; border: 1px solid var(--rule-2); }
+.seats { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--bone-dim); font-family: var(--f-sans); }
+.seat { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 14px; border-radius: 50%; background: var(--ivory); box-shadow: inset 0 0 0 3px var(--c); }
+
+.coa { display: grid; grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); gap: 10px 36px; align-items: start; padding-top: 18px; border-top: 1px solid var(--rule); }
+.coa h2 { margin: 0; font: 700 var(--t-h2)/1.2 var(--f-name); letter-spacing: .03em; color: var(--ivory); text-wrap: balance; }
+.coa .body { display: grid; gap: 12px; max-width: 74ch; min-width: 0; font-size: 16px; line-height: 1.5; }
+.coa p { margin: 0; }
+.coa b { color: var(--ivory); }
+.coa ol { margin: 0; padding-left: 1.4em; display: grid; gap: 7px; }
+.coa ol li::marker { font: 700 14px var(--f-name); color: var(--kiln); }
+.coa code { font: 500 .88em/1 ui-monospace, Menlo, Consolas, monospace; color: var(--bone); }
+
+@media (max-width: 760px) {
+  .coa { grid-template-columns: minmax(0, 1fr); }
+  .readout { margin-left: 0; }
+}
+@media (max-width: 480px) {
+  .seg span { padding: 7px 9px; font-size: 13px; }
+  .seg span small, .seg span kbd { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="page">
+  <header class="mast">
+    <h1>Hegemony Map Camera</h1>
+    <p class="settled"><b>Settled</b>three.js · turn ±15°, stays where left · tilt 20° rising to 45° · raised island, every tile the same height · owner, 2026-10-16/17</p>
+  </header>
+
+  <section class="demo" aria-labelledby="demo-h">
+    <h2 id="demo-h" class="vh">Living map prototype</h2>
+    <div class="top">
+      <fieldset class="seg" id="scenarios">
+        <legend>Scenario</legend>
+        <label><input type="radio" name="scenario" id="scn-opening" value="opening"><span>Opening<small>Year 1</small></span></label>
+        <label><input type="radio" name="scenario" id="scn-mid" value="mid" checked><span>Mid-game<small>Year 6</small></span></label>
+        <label><input type="radio" name="scenario" id="scn-late" value="late"><span>Late game<small>Year 12</small></span></label>
+      </fieldset>
+      <fieldset class="seg" id="modes">
+        <legend>Map mode</legend>
+        <label><input type="radio" name="mode" id="mode-terrain" value="terrain" checked><span>Terrain<kbd>1</kbd></span></label>
+        <label><input type="radio" name="mode" id="mode-political" value="political"><span>Political<kbd>2</kbd></span></label>
+        <label><input type="radio" name="mode" id="mode-economy" value="economy"><span>Economy<kbd>3</kbd></span></label>
+        <label><input type="radio" name="mode" id="mode-unrest" value="unrest"><span>Unrest<kbd>4</kbd></span></label>
+        <label><input type="radio" name="mode" id="mode-trade" value="trade"><span>Trade<kbd>5</kbd></span></label>
+      </fieldset>
+      <p class="top-note" id="topNote"></p>
+    </div>
+    <div class="stage" id="stage" tabindex="0" role="application" aria-roledescription="map" aria-label="Island map" aria-describedby="help">
+      <canvas id="gl"></canvas>
+      <div class="overlay" id="overlay" aria-hidden="true"></div>
+      <div class="compass" id="compass" aria-hidden="true"><b>N</b><i></i></div>
+      <div class="tilekeys" id="tilekeys" role="group" aria-label="Tiles"></div>
+      <p class="fallback" id="fallback" hidden>three.js did not load in this view, so the map cannot draw.</p>
+    </div>
+
+    <div class="bar">
+      <div class="cam">
+        <button type="button" class="disc" id="zoomOut" aria-label="Zoom out">−</button>
+        <button type="button" class="disc" id="zoomIn" aria-label="Zoom in">+</button>
+        <button type="button" class="disc" id="turnL" aria-label="Turn left 5 degrees">↺</button>
+        <button type="button" class="disc" id="turnR" aria-label="Turn right 5 degrees">↻</button>
+        <button type="button" class="txt-btn" id="reset">Reset view</button>
+      </div>
+      <p class="readout">
+        <span>Zoom <b id="outZoom">1.0×</b></span>
+        <span>Tilt <b id="outTilt">20°</b></span>
+        <span>Turn <b id="outTurn">0°</b></span>
+        <span>Band <span class="bands" id="outBands"><i>Far</i><i class="on">Middle</i><i>Close</i></span> <small id="outEdges"></small></span>
+      </p>
+    </div>
+
+    <div class="under">
+      <p class="picked" id="picked" aria-live="polite">Click a tile to select it.</p>
+      <p class="mode-note" id="modeNote"></p>
+      <div class="scn" id="scnPanel">
+        <p id="scnText"></p>
+        <div class="scn-chips" id="scnChips"></div>
+      </div>
+      <p class="help" id="help">Drag to pan. Wheel or pinch to zoom toward the pointer; detail fades in and out at each band edge. Keys 1 to 5 switch the map mode. Q and E, the turn buttons or a two-finger twist turn the map up to 15° either way. With the map focused, arrows pan, + and − zoom, 0 resets. Tab once more to walk the tiles with the arrow keys; Enter selects.</p>
+      <div class="seats" aria-label="Seats">
+        <span class="seat"><i class="sw" style="--c:#2f5d9e"></i>Δ Damon · Kyanos</span>
+        <span class="seat"><i class="sw" style="--c:#dfa437"></i>Ν Nikos · Melichron</span>
+        <span class="seat"><i class="sw" style="--c:#7c4d79"></i>Θ Theron · Porphyra</span>
+        <span class="seat"><i class="sw" style="--c:#a83226"></i>Κ Kyros · Kinnabari</span>
+      </div>
+      <p class="legend-h" id="legendH">Legend</p>
+      <ul class="legend" id="legend"></ul>
+      <p class="src">The island is the engine's classic layout: 37 hexes with their real terrain and slots, and the six goods at one of the engine's even spacings. The settlements are an invented game that follows the player guide: cities never adjacent, colonies at 4 pops or fewer, Ports only on the coast, first Port wins. Slots, yields and happiness are counted with the guide's rules. Trees, rocks, fields and walking paths come from the board and seed 42, so the same state always looks the same; one figure stands for each pop.</p>
+    </div>
+  </section>
+
+  <section class="coa" aria-labelledby="coa-h">
+    <h2 id="coa-h">Course of action</h2>
+    <div class="body">
+      <p><b>Build the living map as its own track behind a board flag, one PR per slice. Every slice is a pure function of engine state, the camera and the match seed, so balance work never waits on it and cannot be broken by it.</b></p>
+      <ol>
+        <li><b>Board shell.</b> Prisms, sea, camera, picking, hidden tile buttons, HTML name plates. Reads tiles (q, r, terrain, slots) and each settlement's kind, owner and name. Done when the smoke test and both UI audits pass on the 3D board.</li>
+        <li><b>Zoom bands.</b> One band function of the camera drives every layer's fade and the HUD. Far: owner wash, seals and names. Middle: slots and yield chips. Close: the living detail. View state only; reads nothing new.</li>
+        <li><b>Settlements, Ports and goods.</b> Reads settlement buildings, <code>isCoastalTile</code>, <code>G.board.luxuries</code> and their owners.</li>
+        <li><b>Slot nodes.</b> Reads <code>settlementSlots</code>, <code>occupiedBuildingSlots</code> and <code>settlementWorkingSlaves</code>, the selectors behind today's pips, so the map cannot disagree with the rules.</li>
+        <li><b>Terrain and clearing.</b> A pure decor function of terrain, the settlement kinds on the tile and the seed, unit-tested for stable output.</li>
+        <li><b>Pops.</b> One figure per pop from settlement pops; ships carry <code>G.transfers</code>.</li>
+        <li><b>Map modes.</b> Political reads owners. Economy reads <code>tileSlaveColumn</code> and <code>settlementNetYield</code>, the ledger's own numbers. Unrest reads <code>happinessContributions</code>, <code>unrestTokens</code> and the ruleset's riot and revolt lines. Trade reads luxuries, Ports, <code>claimableLuxuriesAt</code> and transfers.</li>
+        <li><b>Sea life, then the switch.</b> Cosmetic ships, gulls and smoke from seed and clock. Make the 3D board the default and retire the SVG board.</li>
+      </ol>
+      <p><b>Approve first:</b> the band edges and what each band shows; the five modes and their keys; the slot-node grammar (big node a building, small node a worked slave, ring an open slot, idle slaves off-node); the three pop silhouettes; and the clearing rule (a colony clears its centre, a city keeps a few trees at its edge).</p>
+      <p><b>Risks.</b> Readability: the bands are the guard, and nothing outlined may sit below the middle band. Performance: measured on an M2 only; integrated graphics are untested, and figures are capped by the 8-pop city limit. Hidden tile layer: its buttons must follow every camera move and name slots, pops and the active mode's number, or screen readers lose what the map shows. Tests and audits: jsdom cannot draw WebGL, so selectors and the decor function carry unit tests and Playwright reads the DOM layer.</p>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  "use strict";
+  const T = window.THREE;
+  const $ = (id) => document.getElementById(id);
+  const stage = $("stage"), canvas = $("gl"), overlay = $("overlay"), compass = $("compass"), keys = $("tilekeys");
+  if (!T) { $("fallback").hidden = false; canvas.hidden = true; return; }
+
+  // ---------- camera and zoom-band constants ----------
+  const SQ3 = Math.sqrt(3), DEG = Math.PI / 180;
+  const FOV = 34 * DEG;
+  const TILT_FIT = 20 * DEG, TILT_MAX = 45 * DEG;
+  const ROT_MAX = 15 * DEG, ROT_STEP = 5 * DEG;
+  const Z_MIN = 0.6, Z_MAX = 4.8;
+  const T_FIT = Math.log(1 / Z_MIN) / Math.log(Z_MAX / Z_MIN);
+  // Bands on the same 0..1 detail scale as the tilt: far | middle | close. Detail fades across ±BW.
+  const E1 = 0.16, E2 = 0.42, BW = 0.05;
+  const zoomAt = (e) => Z_MIN * Math.pow(Z_MAX / Z_MIN, e);
+  const PAN_R = 4.8, WW = 14.4, WH = 12.4;
+  const H_TILE = 0.2, R_TOP = 0.955, R_OWN = 0.84;
+  const MAIN_Z = -0.08, NODE_R = 0.64, FIG_S = 1.25, SEED = 42;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  // ---------- the classic island (engine terrain deck, axialRadius(3) order) ----------
+  const DECK = [
+    [-3, 0, "forest", 3], [-3, 1, "forest", 3], [-3, 2, "plains", 3], [-3, 3, "forest", 3],
+    [-2, -1, "mountain", 3], [-2, 0, "mountain", 4], [-2, 1, "plains", 6], [-2, 2, "forest", 5], [-2, 3, "hill", 3],
+    [-1, -2, "forest", 3], [-1, -1, "forest", 4], [-1, 0, "hill", 3], [-1, 1, "forest", 4], [-1, 2, "mountain", 3], [-1, 3, "forest", 2],
+    [0, -3, "plains", 4], [0, -2, "plains", 5], [0, -1, "forest", 5], [0, 0, "hill", 4], [0, 1, "oracle", 0], [0, 2, "mountain", 4], [0, 3, "plains", 4],
+    [1, -3, "forest", 3], [1, -2, "mountain", 3], [1, -1, "hill", 3], [1, 0, "plains", 7], [1, 1, "forest", 3], [1, 2, "forest", 3],
+    [2, -3, "mountain", 3], [2, -2, "mountain", 6], [2, -1, "forest", 4], [2, 0, "plains", 5], [2, 1, "hill", 3],
+    [3, -3, "forest", 3], [3, -2, "mountain", 3], [3, -1, "forest", 3], [3, 0, "plains", 4],
+  ];
+  const RES = { forest: "wood", plains: "food", mountain: "stone", hill: null, oracle: null };
+  const GLAZE = { plains: "#d8be73", forest: "#75824a", hill: "#c08243", mountain: "#a8a290", oracle: "#ede4cd" };
+  const BONE = "#e2d4b6";
+  const DIRS = [[1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]];
+  const SEATS = [
+    { name: "Damon", glaze: "Kyanos", color: "#2f5d9e", blazon: "Δ" },
+    { name: "Nikos", glaze: "Melichron", color: "#dfa437", blazon: "Ν" },
+    { name: "Theron", glaze: "Porphyra", color: "#7c4d79", blazon: "Θ" },
+    { name: "Kyros", glaze: "Kinnabari", color: "#a83226", blazon: "Κ" },
+  ];
+  const BUILD_NAME = { temple: "Temple", granary: "Granary", marketplace: "Marketplace", estate: "Estate", port: "Port" };
+  const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const mix = (a, b, k) => { const A = hexRgb(a), B = hexRgb(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, "0")).join(""); };
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  const title = (s) => s.charAt(0) + s.slice(1).toLowerCase();
+  const plane = (q, r) => ({ x: SQ3 * (q + r / 2), y: 1.5 * r });
+  const dist = (a, b) => (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
+  const minus = (n) => String(n).replace("-", "−");
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  const tiles = DECK.map(([q, r, terrain, slots], i) => ({ i, id: `${q},${r}`, q, r, terrain, slots, res: RES[terrain], ...plane(q, r) }));
+  const byId = new Map(tiles.map((t) => [t.id, t]));
+  for (const t of tiles) {
+    t.coastal = DIRS.some(([dq, dr]) => !byId.has(`${t.q + dq},${t.r + dr}`));
+    t.near = mix(GLAZE[t.terrain], BONE, 0.5);
+  }
+
+  // Seeded randomness: the same board and seed always look the same.
+  function rng(key) {
+    let h = 2166136261 ^ SEED;
+    for (let i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
+    let a = h >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const hash01 = (key) => rng(key)();
+
+  // ---------- the six goods: coastal vertices shared by two tiles, one even spacing ----------
+  const GOODS = [
+    ["Tyrian Dye", "-2,-1", "-1,-2"], ["Pearls", "1,-3", "2,-3"], ["Coral", "3,-2", "3,-1"],
+    ["Glassware", "1,2", "2,1"], ["Incense", "-2,3", "-1,3"], ["Fine Linen", "-3,1", "-3,2"],
+  ].map(([name, a, b]) => {
+    const A = byId.get(a), B = byId.get(b);
+    const common = DIRS.map(([dq, dr]) => ({ q: A.q + dq, r: A.r + dr })).filter((c) => dist(c, B) === 1);
+    const sea = common.find((c) => !byId.has(`${c.q},${c.r}`));
+    const s = plane(sea.q, sea.r);
+    const vx = (A.x + B.x + s.x) / 3, vy = (A.y + B.y + s.y) / 3;
+    const len = Math.hypot(s.x - vx, s.y - vy);
+    return { name, tiles: [a, b], vx, vy, sx: s.x, sy: s.y, x: vx + ((s.x - vx) / len) * 0.62, y: vy + ((s.y - vy) / len) * 0.62 };
+  });
+
+  // ---------- three moments of one game ----------
+  // [seat, kind, name, tile, [citizens, freemen, slaves], buildings]; moved pops are freemen.
+  const SCENARIOS = {
+    opening: {
+      year: 1, tokens: {},
+      text: "Four metropolises, none adjacent, and four founding colonies on the open coast, where they can later become cities. Damon and Nikos have each founded a second colony beside their capitals. Nothing is built: every slot is open or worked, and all six goods sit unclaimed.",
+      settle: [
+        [0, "capital", "ARGOS", "-2,0", [1, 1, 1], []], [0, "colony", "THERMON", "-3,2", [0, 1, 1], []], [0, "colony", "PYLOS", "-1,-1", [0, 1, 0], []],
+        [1, "capital", "NAXOS", "2,-2", [1, 1, 1], []], [1, "colony", "EPHYRA", "3,-1", [0, 0, 2], []], [1, "colony", "SAMOS", "2,-1", [0, 0, 1], []],
+        [2, "capital", "LINDOS", "1,0", [1, 2, 1], []], [2, "colony", "MEGARA", "2,1", [0, 1, 1], []],
+        [3, "capital", "GORTYN", "0,2", [1, 1, 2], []], [3, "colony", "CHALKIS", "-2,3", [0, 2, 0], []],
+      ],
+      moves: [], riot: null, titles: null,
+    },
+    mid: {
+      year: 6, tokens: { 2: 1 },
+      text: "Thermon, Megara and Ephyra are cities now; Ephyra has cleared most of its forest. Damon's Delos and Nikos's Abdera share the plains at 0,-3 and split its 4 slots. Ports at Thermon, Ephyra and Iolkos hold Fine Linen, Coral and Glassware. Every building type stands somewhere. Damon ships 2 pops from Thermon to Delos, and Theron carries an Unrest token.",
+      settle: [
+        [0, "capital", "ARGOS", "-2,0", [2, 2, 2], ["temple", "marketplace"]], [0, "city", "THERMON", "-3,2", [1, 2, 2], ["port", "granary"]],
+        [0, "colony", "PYLOS", "-1,-1", [0, 1, 2], []], [0, "colony", "DELOS", "0,-3", [0, 1, 1], []],
+        [1, "capital", "NAXOS", "2,-2", [2, 3, 2], ["estate", "marketplace", "granary"]], [1, "city", "EPHYRA", "3,-1", [1, 1, 2], ["port"]],
+        [1, "colony", "SAMOS", "2,-1", [0, 0, 2], []], [1, "colony", "ABDERA", "0,-3", [0, 0, 2], []],
+        [2, "capital", "LINDOS", "1,0", [2, 3, 3], ["granary", "marketplace", "estate"]], [2, "city", "MEGARA", "2,1", [1, 2, 1], ["temple"]],
+        [2, "colony", "IOLKOS", "1,2", [0, 1, 1], ["port"]],
+        [3, "capital", "GORTYN", "0,2", [1, 2, 3], ["temple", "estate"]], [3, "colony", "CHALKIS", "-2,3", [0, 1, 2], []],
+        [3, "colony", "TEGEA", "-1,2", [0, 0, 2], []],
+      ],
+      moves: [[0, "THERMON", "DELOS", 2]], riot: null, titles: null,
+    },
+    late: {
+      year: 12, tokens: { 1: 2 },
+      text: "21 settlements on 20 tiles. Damon holds Polis Builder, Demos and Civic Elite, so he wins at the start of his next turn unless a rival breaks one; Nikos holds Treasurer and 2 Unrest tokens. Kyros's realm riots at happiness −4: 13 slaves, no Temple, one good. On the hill cities of Chalkis and Megara slaves stand idle, because hills make nothing. Every good is claimed.",
+      settle: [
+        [0, "capital", "ARGOS", "-2,0", [3, 3, 2], ["temple", "marketplace", "granary"]], [0, "city", "THERMON", "-3,2", [1, 3, 3], ["port", "estate"]],
+        [0, "city", "OLYNTHOS", "-1,-2", [2, 2, 2], ["port"]], [0, "colony", "PYLOS", "-1,-1", [0, 1, 3], []],
+        [0, "colony", "DELOS", "0,-3", [0, 2, 2], []], [0, "colony", "KORONE", "-3,0", [0, 1, 2], []],
+        [1, "capital", "NAXOS", "2,-2", [2, 4, 2], ["estate", "marketplace", "granary", "temple"]], [1, "city", "EPHYRA", "3,-1", [1, 3, 1], ["port", "marketplace"]],
+        [1, "colony", "SAMOS", "2,-1", [0, 1, 2], []], [1, "colony", "ABDERA", "0,-3", [0, 1, 1], []], [1, "colony", "ZANKLE", "1,-3", [0, 1, 1], ["port"]],
+        [2, "capital", "LINDOS", "1,0", [2, 3, 3], ["granary", "marketplace", "estate", "temple"]], [2, "city", "MEGARA", "2,1", [1, 3, 1], ["temple", "granary"]],
+        [2, "colony", "IOLKOS", "1,2", [0, 1, 2], ["port"]], [2, "colony", "HALIKA", "3,0", [0, 1, 2], []], [2, "colony", "NEMEA", "1,1", [0, 0, 2], []],
+        [3, "capital", "GORTYN", "0,2", [1, 3, 4], ["estate", "granary"]], [3, "city", "CHALKIS", "-2,3", [1, 2, 3], ["port"]],
+        [3, "colony", "TEGEA", "-1,2", [0, 1, 2], []], [3, "colony", "BOURA", "-1,3", [0, 1, 2], []], [3, "colony", "RHODOS", "0,3", [0, 2, 2], []],
+      ],
+      moves: [[1, "EPHYRA", "ZANKLE", 2], [0, "THERMON", "KORONE", 1]],
+      riot: { seat: 3, level: -4 },
+      titles: { seat: 0, cards: ["Polis Builder", "Demos", "Civic Elite"] },
+    },
+  };
+  const ICON = {
+    city: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5DaXR5IOKAlCB0b3dlcnMsIGdhdGUgYW5kIGNsdXN0ZXJlZCByb29mczwvdGl0bGU+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtY2l0eS1tYXJibGUiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmY4ZTkiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNmN2VjZDIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNjOWI0OGMiLz48L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtY2l0eS1jbGF5IiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZTVhMjY4Ii8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjYzA4MjQzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjOGI0ZDI4Ii8+PC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJhLWNpdHktc3RvbmUiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlMWQ5YzUiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNiOWIwOWEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM4MTdhNjgiLz48L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxwYXRoIGQ9Ik0xNyAyOVYxN0wzMCA3TDQzIDE3VjI5WiIgZmlsbD0idXJsKCNhLWNpdHktbWFyYmxlKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xNyAxOEwzMCA3TDQzIDE4WiIgZmlsbD0idXJsKCNhLWNpdHktY2xheSkiLz4KPHBhdGggZD0iTTMxIDMwVjIyTDQzIDEzTDU1IDIyVjMzWiIgZmlsbD0idXJsKCNhLWNpdHktbWFyYmxlKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zMiAyMkw0MyAxM0w1NCAyMloiIGZpbGw9InVybCgjYS1jaXR5LWNsYXkpIi8+CjxwYXRoIGQ9Ik03IDE5SDE1VjI1SDIxVjE5SDI2VjM1SDM4VjI0SDQ0VjMwSDUwVjI0SDU3VjU4SDdaIiBmaWxsPSJ1cmwoI2EtY2l0eS1tYXJibGUpIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTE4IDI3SDI1VjU3SDE4Wk00OSAzMkg1NlY1N0g0OVoiIGZpbGw9IiNjOWI0OGMiLz4KPHBhdGggZD0iTTIxIDM0SDI3VjM5SDM2VjM0SDQzVjU4SDIxWiIgZmlsbD0idXJsKCNhLWNpdHktc3RvbmUpIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTI3IDU4VjQ5UTI3IDQyIDMyIDQyUTM3IDQyIDM3IDQ5VjU4WiIgZmlsbD0iIzNhMmExZSIvPgo8cGF0aCBkPSJNMTAgMzVIMTdNMTAgNDZIMTdNNDYgNDBINTNNNDYgNTBINTMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2I0OWM3NiIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTIxIDIwSDMyTTM5IDI2SDQ1IiBmaWxsPSJub25lIiBzdHJva2U9IiNiNDljNzYiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMCAyOVYzMk00MSAzOVY0MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmOGU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yMiAyOEgyNVYzM0gyMlpNMTkgMzlIMjFWNTdIMTlaTTUzIDMzSDU2VjU3SDQ0VjU0SDUzWk0zOSA0Mkg0MlY1N0gzOVoiIGZpbGw9IiM5Yzg3NjUiLz4KPHBhdGggZD0iTTMxIDEwTDQwIDE3SDM0Wk00NCAxNkw1MSAyMUg0NloiIGZpbGw9IiM4YjRkMjgiLz4KPHBhdGggZD0iTTI0IDM5SDI3VjQzTDI0IDQ3WiIgZmlsbD0iIzcwNjY1MSIvPgo8cGF0aCBkPSJNOCAyMUgxMk04IDI4VjUzTTM5IDI2SDQyTTIzIDM2SDI1TTIyIDE2TDI5IDEwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmY4ZTkiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTEyIDM5TDE0IDQwTTQ1IDQ1TDQ4IDQ0TTMwIDM5SDM0IiBmaWxsPSJub25lIiBzdHJva2U9IiNiNDljNzYiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yNCAxNkwyNyAxNE0zOSAyMUw0MiAxOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZThiMzdjIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=", colony: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5Db2xvbnkg4oCUIG9uZSBnYWJsZWQgaG91c2UgYmVoaW5kIGEgcGFsaXNhZGU8L3RpdGxlPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJhLWNvbG9ueS1tYXJibGUiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmY4ZTkiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNmN2VjZDIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNjOWI0OGMiLz48L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtY29sb255LXdvb2QiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlY2QzYTAiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNjMTlhNjEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM4YjYzM2IiLz48L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtY29sb255LWJhcmsiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNiZDhjNTUiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiM4ZjVlMzUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1MTM1MWYiLz48L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxwYXRoIGQ9Ik00MyA2SDQ4VjMwSDQzWiIgZmlsbD0idXJsKCNhLWNvbG9ueS1iYXJrKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik00NyA2SDU4LjVMNTQuNSAxMkw1OC41IDE3SDQ3WiIgZmlsbD0idXJsKCNhLWNvbG9ueS13b29kKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik00OCAxM0g1NUw1NyAxNkg0OFoiIGZpbGw9IiM4YjYzM2IiLz4KPHBhdGggZD0iTTQ5IDhINTZNNDQgOVYxOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjNkZGEwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMyAzNEwzMCAyMUw1MSAzNFY1MUgxM1oiIGZpbGw9InVybCgjYS1jb2xvbnktbWFyYmxlKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik02IDMyTDMwIDEzTDU4IDM0TDUxIDM5TDMwIDI1TDEzIDM5WiIgZmlsbD0idXJsKCNhLWNvbG9ueS13b29kKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zMCAxNEw1NyAzNEw1MSAzN0wzMCAyM1oiIGZpbGw9IiM4YjYzM2IiLz4KPHBhdGggZD0iTTI2IDMzSDM3VjQ4SDI2WiIgZmlsbD0iIzNhMmExZSIvPgo8cGF0aCBkPSJNNiA1OFY0NEwxMSAzOEwxNiA0NFY0OUgxOVY0MkwyNCAzNkwyOSA0MlY0OUgzNVY0Mkw0MCAzNkw0NSA0MlY0OUg0OFY0NEw1MyAzOEw1OCA0NFY1OFoiIGZpbGw9InVybCgjYS1jb2xvbnktYmFyaykiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNyA1MEg1N1Y1NUg3WiIgZmlsbD0idXJsKCNhLWNvbG9ueS13b29kKSIvPgo8cGF0aCBkPSJNMTEgNDRWNDhNMjQgNDJWNDhNNDAgNDJWNDhNNTMgNDRWNDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VjZDNhMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTE2IDUzVjU3TTI5IDUzVjU3TTM1IDUzVjU3TTQ4IDUzVjU3IiBmaWxsPSJub25lIiBzdHJva2U9IiM1MTM1MWYiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik00MiAzNEw0OSAzOFY0M0g0Nkw0MyAzOVpNOSA1Nkg1N1Y1N0g5WiIgZmlsbD0iIzgwNmM1MCIvPgo8cGF0aCBkPSJNMTMgNDVMMTUgNDZWNDlIMTNaTTI2IDQzTDI4IDQ0VjQ5SDI2Wk00MiA0M0w0NCA0NFY0OUg0MlpNNTUgNDVMNTcgNDZWNDlINTVaIiBmaWxsPSIjMzUyNTFhIi8+CjxwYXRoIGQ9Ik0xMCAzMUwyOSAxNk0xNiAzNUwyNCAyOU04IDUxSDI2TTM3IDUxSDUzIiBmaWxsPSJub25lIiBzdHJva2U9IiNmM2RkYTAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTE2IDI5TDIwIDI2TTIyIDI1TDI2IDIyTTIyIDQ0TDIzIDQ2IiBmaWxsPSJub25lIiBzdHJva2U9IiNhNjdiNDgiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=",
+    temple: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5UZW1wbGUg4oCUIGZvdXItY29sdW1uIERvcmljIGZhY2FkZTwvdGl0bGU+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtdGVtcGxlLW1hcmJsZSIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjhlOSIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2Y3ZWNkMiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5YjQ4YyIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS10ZW1wbGUtc3RvbmUiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlMWQ5YzUiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNiOWIwOWEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM4MTdhNjgiLz48L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxwYXRoIGQ9Ik02IDIzTDMyIDZMNTggMjNWMjlINloiIGZpbGw9InVybCgjYS10ZW1wbGUtbWFyYmxlKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xNSAyMkwzMiAxMkw0OSAyMloiIGZpbGw9IiNjOWI0OGMiLz4KPHBhdGggZD0iTTE3IDIzSDQ3IiBmaWxsPSJub25lIiBzdHJva2U9IiNiNDljNzYiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik05IDI5SDU1VjQ5SDlaIiBmaWxsPSJ1cmwoI2EtdGVtcGxlLXN0b25lKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xOCAzMEgyMlY0OUgxOFpNMzAgMzBIMzRWNDlIMzBaTTQyIDMwSDQ2VjQ5SDQyWiIgZmlsbD0iIzNhMmExZSIvPgo8cGF0aCBkPSJNMTAgMzBIMThWNDlIMTBaTTIyIDMwSDMwVjQ5SDIyWk0zNCAzMEg0MlY0OUgzNFpNNDYgMzBINTRWNDlINDZaIiBmaWxsPSJ1cmwoI2EtdGVtcGxlLW1hcmJsZSkiLz4KPHBhdGggZD0iTTE2IDMyVjQ2TTI4IDMyVjQ2TTQwIDMyVjQ2TTUyIDMyVjQ2IiBmaWxsPSJub25lIiBzdHJva2U9IiNjOWI0OGMiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik05IDQ4SDU1VjUxSDU3VjU0SDU4VjU4SDZWNTRIN1Y1MUg5WiIgZmlsbD0idXJsKCNhLXRlbXBsZS1tYXJibGUpIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTEwIDUxSDU0TTggNTRINTZNOSAyNkg1NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYjQ5Yzc2IiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTIgMjRMMzEgMTEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZjhlOSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMzIgMTRMNDYgMjJINDBMMzIgMTdaTTcgMjdINTdWMjhIN1pNMTUgMzFIMTdWNDdIMTVaTTI3IDMxSDI5VjQ3SDI3Wk0zOSAzMUg0MVY0N0gzOVpNNTEgMzFINTNWNDdINTFaTTcgNTZINTdWNTdIN1oiIGZpbGw9IiNhNDhlNjkiLz4KPHBhdGggZD0iTTkgMjRMMzEgOU04IDI1SDI3TTExIDMxVjQ2TTIzIDMxVjQ2TTM1IDMxVjQ2TTQ3IDMxVjQ2TTEwIDQ5SDM1IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmY4ZTkiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTEyIDUyTDE3IDUyTTM5IDUwSDQ0TTI2IDIzSDMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNiNDljNzYiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=", granary: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5HcmFuYXJ5IOKAlCByb3VuZCBiZWVoaXZlIHN0b3JlPC90aXRsZT4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1ncmFuYXJ5LWNsYXkiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlNWEyNjgiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNjMDgyNDMiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM4YjRkMjgiLz48L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtZ3JhbmFyeS13b29kIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZWNkM2EwIi8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjYzE5YTYxIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjOGI2MzNiIi8+PC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJhLWdyYW5hcnktd2hlYXQiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmM2RkYTAiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNkOGJlNzMiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNhMDdiMzgiLz48L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxwYXRoIGQ9Ik02IDU4VjM3QzYgMjAgMTUgOSAyNyA3SDM3QzQ5IDkgNTggMjAgNTggMzdWNThaIiBmaWxsPSJ1cmwoI2EtZ3JhbmFyeS1jbGF5KSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zNyA4QzQ5IDExIDU3IDIzIDU3IDM4VjU3SDQ0VjM1QzQ0IDIzIDQxIDE0IDM3IDhaIiBmaWxsPSIjOGI0ZDI4Ii8+CjxwYXRoIGQ9Ik0xNyAxN1EzMiAyMCA0NyAxN00xMCAyN1EzMiAzMiA1NCAyN003IDM4UTMyIDQ0IDU3IDM4TTcgNDlIMjFNNDQgNDlINTciIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzk4NjIzOCIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTIxIDU4VjQ1UTIxIDM0IDMyIDM0UTQzIDM0IDQzIDQ1VjU4WiIgZmlsbD0idXJsKCNhLWdyYW5hcnktd29vZCkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjYgNThWNDZRMjYgNDAgMzIgNDBRMzggNDAgMzggNDZWNThaIiBmaWxsPSIjM2EyYTFlIi8+CjxwYXRoIGQ9Ik0zMiAxM0MyMiAyMCAyNCAyOCAzMiAzMUM0MCAyOCA0MiAyMCAzMiAxM1oiIGZpbGw9InVybCgjYS1ncmFuYXJ5LXdoZWF0KSIgc3Ryb2tlPSIjOGI0ZDI4IiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMzIgMTlWMzBNMjcgMjFMMzIgMjVMMzcgMjEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzk5NzAzNSIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTEzIDI4UTE0IDIyIDE4IDE4IiBmaWxsPSJub25lIiBzdHJva2U9IiNmM2RkYTAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik01MCAyMlE1NyAyOSA1NyA0MVY1N0g0N1Y1M0g1MlYzN1oiIGZpbGw9IiM2ODM3MWYiLz4KPHBhdGggZD0iTTM4IDQyUTQyIDQ0IDQyIDQ5VjU3SDM5VjQ1Wk0zMyAyOEwzNiAyNUwzNSAyOUwzMiAzMFoiIGZpbGw9IiM3OTUwMmUiLz4KPHBhdGggZD0iTTExIDMyUTExIDIzIDE4IDE2TTIxIDEyTDI3IDEwTTIzIDQ4VjQ0UTIzIDM5IDI3IDM4TTI4IDIwTDMwIDE3IiBmaWxsPSJub25lIiBzdHJva2U9IiNmNWQ0OWIiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTExIDQzSDE2TTE5IDI0TDIyIDI1TTQ2IDM0TDQ5IDMzIiBmaWxsPSJub25lIiBzdHJva2U9IiNhZjcwM2YiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yNyA1MkwyOCA0N00zNSA0NlY1MyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjA0NTJjIiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K",
+    luxury: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5MdXh1cnkg4oCUIHR3by1oYW5kbGVkIGFtcGhvcmE8L3RpdGxlPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJhLWx1eHVyeS1icm9uemUiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmMmQyOGEiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNjNDkyNDUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3OTUwMjUiLz48L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtbHV4dXJ5LWNsYXkiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlNWEyNjgiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNjMDgyNDMiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM4YjRkMjgiLz48L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxwYXRoIGQ9Ik0yMSAxN0M0IDggMyAzMSAxNSAzOUwyNCAzN1YyOUwxNyAzMUMxMCAyNSAxMiAxOSAyMCAyNVpNNDMgMTdDNjAgOCA2MSAzMSA0OSAzOUw0MCAzN1YyOUw0NyAzMUM1NCAyNSA1MiAxOSA0NCAyNVoiIGZpbGw9InVybCgjYS1sdXh1cnktYnJvbnplKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yMSA2SDQzVjE0SDM5VjIxQzUzIDI2IDUzIDQxIDQwIDUwTDM5IDUzTDQ0IDU4SDIwTDI1IDUzTDI0IDUwQzExIDQxIDExIDI2IDI1IDIxVjE0SDIxWiIgZmlsbD0idXJsKCNhLWx1eHVyeS1jbGF5KSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zNSAxNUgzOVYyMUM1MiAyNiA1MSA0MSAzOSA0OUwzOCA1NEgzMkM0MyA0MiA0NCAzMCAzNSAyNFoiIGZpbGw9IiM4YjRkMjgiLz4KPHBhdGggZD0iTTE3IDMxUTMyIDM2IDQ3IDMxTDQ2IDQwUTMyIDQ1IDE4IDM5WiIgZmlsbD0iIzNhMmExZSIvPgo8cGF0aCBkPSJNMjEgMzZIMjdWNDBIMzNWMzZIMzlWMzlINDMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VjZDNhMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+CjxwYXRoIGQ9Ik0yMyAxMEgzOU0yMiAyN0wyMCAzMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmMGIwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yNSA1MkgzOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODc1MjJlIiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDcgMjdRNTMgNDAgNDAgNDlMMzkgNTNIMzZMMzcgNDhRNDUgNDIgNDcgMjdaTTI1IDU1SDM5TDQxIDU3SDIyWiIgZmlsbD0iIzY4MzcxZiIvPgo8cGF0aCBkPSJNNTEgMThRNTcgMjEgNTEgMzFMNDkgMzBRNTMgMjIgNTEgMThaIiBmaWxsPSIjNjI0MTIzIi8+CjxwYXRoIGQ9Ik0yMyA4SDQwTTI3IDE1VjIxTTE4IDI4UTE3IDMwIDE4IDMyTTIxIDQzTDI0IDQ2TTEwIDIwUTkgMjUgMTIgMjkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Y5ZDY5YiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjcgNDhMMzEgNDlNMzEgMThWMjEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E3NjUzNSIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTIwIDI3TDIzIDI2TDIyIDI5TDIwIDMwWiIgZmlsbD0iI2ZmZjhlOSIvPgo8L3N2Zz4K", move: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5Nb3ZlIHBvcHVsYXRpb24g4oCUIHN0cmlkaW5nIHRyYXZlbGxlciB3aXRoIHN0YWZmIGFuZCBidW5kbGU8L3RpdGxlPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJhLW1vdmUtc2tpbiIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2VkYzM5MyIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2MzOGQ1ZSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzg5NTQzOCIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1tb3ZlLXdvb2QiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlY2QzYTAiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNjMTlhNjEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM4YjYzM2IiLz48L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtbW92ZS1saW5lbiIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjhlOSIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2UzZDRhZCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2FhOTU3MiIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1tb3ZlLWJhcmsiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNiZDhjNTUiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiM4ZjVlMzUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1MTM1MWYiLz48L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxwYXRoIGQ9Ik0yMyAzN0wzNCA0MUwyMyA1MUwxOCA1OEg2TDggNTJMMTYgNDhaIiBmaWxsPSJ1cmwoI2EtbW92ZS1za2luKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yNiA0M0wzMSA0MkwyMyA1MUwxOCA1N0gxMEwxOCA1MloiIGZpbGw9IiM4OTU0MzgiLz4KPHBhdGggZD0iTTI5IDM5TDM4IDM2TDQzIDQ3TDUwIDUyVjU4SDQwTDMzIDQ5TDI3IDQ1WiIgZmlsbD0idXJsKCNhLW1vdmUtc2tpbikiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMzcgNDJMNDEgNDhMNDcgNTNWNTdINDFMMzQgNDhaIiBmaWxsPSIjODk1NDM4Ii8+CjxwYXRoIGQ9Ik03IDU0TDE3IDUzTDE5IDU4SDZaTTQxIDUzSDQ5TDUxIDU4SDQwWiIgZmlsbD0iIzc5NTAyNSIvPgo8cGF0aCBkPSJNOSA1NUgxNU00MiA1NEg0NyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzE5YTYxIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik01NCAyMEg1OC41VjU4SDU0WiIgZmlsbD0idXJsKCNhLW1vdmUtd29vZCkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNTcgMjJINThWNTdINTZaIiBmaWxsPSIjNjI0MTIzIi8+CjxwYXRoIGQ9Ik01NSAyM1Y1MyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZWNkM2EwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yNyAyMkwzNSAyM0w0MyAzMEwzOSA0M1EyNyA0OCAxNCA0MkwxOCAyOVoiIGZpbGw9InVybCgjYS1tb3ZlLWxpbmVuKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zNCAyNkw0MiAzMEwzOCA0MkwyOSA0NEwzMyAzNVoiIGZpbGw9IiNhYTk1NzIiLz4KPHBhdGggZD0iTTM1IDMxTDM5IDMzTDM2IDQyTDMxIDQzWiIgZmlsbD0iIzgwNmM1MCIvPgo8cGF0aCBkPSJNMjAgMjlMMjYgMjVNMTggMzlMMjEgMzMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZjhlOSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjUgMzNMMjEgNDFNMjkgMzZMMjcgNDNNMzQgMzhMMzMgNDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2IwOWE3NCIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTMyIDE5SDM5TDM4IDI3TDMxIDI1WiIgZmlsbD0idXJsKCNhLW1vdmUtc2tpbikiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjggMTNDMjggOCAzMSA2IDM2IDZDNDEgNiA0NCA5IDQ0IDEzTDQ3IDE2TDQzIDE4UTQyIDIzIDM3IDIzUTMwIDIzIDI4IDE3WiIgZmlsbD0idXJsKCNhLW1vdmUtc2tpbikiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDAgOVE0NCAxMCA0MyAxNEw0NiAxNkw0MiAxOFE0MSAyMiAzNyAyMkwzOCAxN1oiIGZpbGw9IiM4OTU0MzgiLz4KPHBhdGggZD0iTTI5IDE0UTI3IDggMzQgNlE0MSA1IDQzIDEwTDM3IDlMMzMgMTJMMzIgMTZaIiBmaWxsPSIjNTEzNTFmIi8+CjxwYXRoIGQ9Ik0zMCAxMVEzMiA3IDM3IDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlmNzQ0OCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMzQgMTRRMzQgMTEgMzcgMTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Y0ZDJhYSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDEgMTRINDJNMzkgMjBINDEiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzcxNGMzNCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTEgMTdMMzAgMjJMMjkgMjZMMTAgMjFaIiBmaWxsPSJ1cmwoI2EtbW92ZS13b29kKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMyAxOEwyNyAyMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZWNkM2EwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMyAyMVE4IDIyIDcgMjhMNyAzNFExNCAzOSAyMyAzM0wyMiAyNkwxOCAyMloiIGZpbGw9InVybCgjYS1tb3ZlLWJhcmspIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTE5IDI1TDIyIDI3VjMyUTE3IDM2IDEyIDM1TDE2IDMyWiIgZmlsbD0iIzUxMzUxZiIvPgo8cGF0aCBkPSJNMTAgMjZRMTAgMjMgMTQgMjNNOSAyOVYzMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDViMDgwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xNyAyN0wxOCAzMU0xMiAzMkwxNSAzMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYWE3YjQ4IiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMzYgMjdMNDMgMzJMNTIgMjhRNTYgMjYgNTggMzBMNTcgMzRMNDMgNDBMMzEgMzNaIiBmaWxsPSJ1cmwoI2EtbW92ZS1za2luKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zNCAzM0w0MyAzN0w1NCAzMkw1NyAzMkw1NiAzNEw0MyAzOVoiIGZpbGw9IiM4OTU0MzgiLz4KPHBhdGggZD0iTTMwIDI1TDM4IDI4TDM0IDM1TDI3IDMxWiIgZmlsbD0idXJsKCNhLW1vdmUtbGluZW4pIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTMwIDI3TDM1IDI5TTQ0IDMzTDUxIDMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwY2YiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==",
+    riot: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5SaW90IOKAlCByYWlzZWQgZmlzdCBncmlwcGluZyBhIHRvcmNoPC90aXRsZT4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1yaW90LWZpcmUiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmYwYjAiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNlOGFkNTAiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiNTYwMjYiLz48L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtcmlvdC13b29kIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZWNkM2EwIi8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjYzE5YTYxIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjOGI2MzNiIi8+PC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJhLXJpb3Qtc2tpbiIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2VkYzM5MyIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2MzOGQ1ZSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzg5NTQzOCIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1yaW90LWxpbmVuIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmOGU5Ii8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjZTNkNGFkIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYWE5NTcyIi8+PC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8cGF0aCBkPSJNMzUgMjRDMjcgMjIgMjUgMTYgMzEgOEwzNSAxNEw0MyA2TDQ2IDE1TDU0IDEwQzYwIDIwIDU1IDI4IDQ2IDI4WiIgZmlsbD0idXJsKCNhLXJpb3QtZmlyZSkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDkgMThMNTQgMTNRNTkgMjIgNDkgMjZMNDQgMjZaIiBmaWxsPSIjYTk1NDIwIi8+CjxwYXRoIGQ9Ik0zNSAyMUwzNyAxNUw0MSAyMEw0NSAxMkw0NyAyMkw1MCAyMFE0OSAyNyA0MSAyNVoiIGZpbGw9IiNmZmYwYjAiLz4KPHBhdGggZD0iTTMwIDE2TDMxIDEzTTM5IDEzTDQyIDkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZjhlOSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDEgMjNMNDkgMjVMNDcgNThINDBaIiBmaWxsPSJ1cmwoI2EtcmlvdC13b29kKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik00NiAyNkg0OEw0NiA1N0g0M1oiIGZpbGw9IiM2MjQxMjMiLz4KPHBhdGggZD0iTTQyIDI3TDQxIDU0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlY2QzYTAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTQzIDQ5TDQ0IDU1IiBmaWxsPSJub25lIiBzdHJva2U9IiM5ODYyMzgiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xNCAzNlYzM1ExMyAyOSAxOCAyOVEyMiAyOCAyMyAzMlEyMyAyNyAyOCAyOFEzMiAyOCAzMiAzMlEzMiAyOCAzNyAyOVE0MSAyOSA0MSAzM1E0MiAzMCA0NiAzMlE0OSAzMyA0OSAzOEw0NyA0M0wzOCA0N0wzMyA1OEgxNEwxOSA0NEwxNSA0MVoiIGZpbGw9InVybCgjYS1yaW90LXNraW4pIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTQzIDM1TDQ4IDM2TDQ2IDQyTDM3IDQ2TDMyIDU3SDI1TDMwIDQzTDM5IDQwWiIgZmlsbD0iIzg5NTQzOCIvPgo8cGF0aCBkPSJNNDMgNDFMNDYgNDBMNDQgNDNMMzUgNDdMMzEgNTdIMjhMMzIgNDZaIiBmaWxsPSIjNjg0MzJkIi8+CjxwYXRoIGQ9Ik0xNyAzM1ExOCAzMSAyMCAzM00yNiAzMUgyOU0zNSAzMkgzOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjRkMmFhIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yMyAzM1YzN00zMiAzM1YzN000MSAzNFYzNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODk1NDM4IiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTUgMzZRMTggMzQgMjIgMzdMMjggNDBMMzkgMzZRNDQgMzUgNDUgMzlRNDUgNDIgNDAgNDNMMjggNDdMMjAgNDNMMTUgNDBaIiBmaWxsPSJ1cmwoI2EtcmlvdC1za2luKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xOSA0MEwyOCA0NEw0MCA0MEw0NCAzOVE0NCA0MiAzOSA0M0wyOCA0NkwyMSA0M1oiIGZpbGw9IiM4OTU0MzgiLz4KPHBhdGggZD0iTTE4IDM3TDI3IDQyTDM4IDM4IiBmaWxsPSJub25lIiBzdHJva2U9IiNmNGQyYWEiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTIyIDQ5TDE5IDU0TTI5IDQ5TDI3IDUyIiBmaWxsPSJub25lIiBzdHJva2U9IiNiMTdhNTAiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xNiA1M0wyNCA1NUwzNCA1MUwzMiA1OEgxNFoiIGZpbGw9InVybCgjYS1yaW90LWxpbmVuKSIvPgo8cGF0aCBkPSJNMjQgNTZMMzMgNTNMMzEgNTdIMjNaIiBmaWxsPSIjYWE5NTcyIi8+CjxwYXRoIGQ9Ik0xNyA1NEwyMyA1NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmOGU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=", laurel: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5WaWN0b3J5IOKAlCBvcGVuIGxhdXJlbCB3cmVhdGggd2l0aCByaWJib248L3RpdGxlPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJhLWxhdXJlbC1vbGl2ZSIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2E4Yjk3NiIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iIzdkOGY1MSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzQ4NTQyYyIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1sYXVyZWwtbGluZW4iIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmY4ZTkiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNlM2Q0YWQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNhYTk1NzIiLz48L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtbGF1cmVsLWJyb256ZSIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2YyZDI4YSIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2M0OTI0NSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzc5NTAyNSIvPjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPHBhdGggZD0iTTI5IDUzQzkgNTAgNCAzNSA2IDIxTDEyIDI0UTcgMTUgMTUgN0wyMSAxOFExOCAxMSAyNCA2UTMxIDE3IDIzIDI3TDIzIDM0TDI3IDQxTDMyIDQ2TDM3IDQxTDQxIDM0TDQxIDI3UTMzIDE3IDQwIDZRNDYgMTEgNDMgMThMNDkgN1E1NyAxNSA1MiAyNEw1OCAyMUM2MCAzNSA1NSA1MCAzNSA1M1oiIGZpbGw9InVybCgjYS1sYXVyZWwtb2xpdmUpIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTkgMjdMMTggMzRMMjEgNDJMMTMgMzZaTTE3IDE1TDIzIDI1TDE5IDMxTDE2IDI0Wk01NSAyN0w0NiAzNEw0MyA0Mkw1MSAzNlpNNDcgMTVMNDEgMjVMNDUgMzFMNDggMjRaIiBmaWxsPSIjNDg1NDJjIi8+CjxwYXRoIGQ9Ik0xNCAxNkMxMiAzNiAyMiA0NiAzMCA0OE01MCAxNkM1MiAzNiA0MiA0NiAzNCA0OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzZkMjhmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjcgNDhMMTggNDlMMTUgNThMMjUgNTZMMzIgNThMMzkgNTZMNDkgNThMNDYgNDlMMzcgNDhMMzIgNTFaIiBmaWxsPSJ1cmwoI2EtbGF1cmVsLWxpbmVuKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yOCA0OEgzNlY1NkgyOFoiIGZpbGw9InVybCgjYS1sYXVyZWwtYnJvbnplKSIgc3Ryb2tlPSIjNzk1MDI1IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik01MyAzMEw1NiAyN1E1NiA0MSA0MyA0OEwzOCA0OUw0MCA0NlE1MSA0MCA1MyAzMFpNMTAgMzRMMTYgNDFMMjMgNDVMMjYgNDlMMTkgNDZRMTMgNDIgMTAgMzRaIiBmaWxsPSIjMzQ0MzIxIi8+CjxwYXRoIGQ9Ik00MCA1MUw0NSA1MUw0NyA1Nkw0MCA1NEwzNyA1NkwzNiA1M1oiIGZpbGw9IiM4MDZjNTAiLz4KPHBhdGggZD0iTTMzIDQ5SDM1VjU1SDMyWiIgZmlsbD0iIzc5NTAyNSIvPgo8cGF0aCBkPSJNOCAyNUw5IDI5TTE0IDExTDE3IDE4TTI0IDEwTDI0IDE2TTQxIDEwTDQwIDE2TTQ5IDExTDUxIDE2TTE5IDUxTDI1IDUwIiBmaWxsPSJub25lIiBzdHJva2U9IiNkM2RiYTUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTE3IDMwTDIwIDMyTTQ1IDMyTDQ4IDMwTTIxIDQwTDI0IDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiM4MDkzNTIiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zMCA0OVY1MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmMGIwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=",
+    citizens: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5DaXRpemVucyDigJQgbGF1cmVsLWNyb3duZWQgYnVzdDwvdGl0bGU+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtY2l0aXplbnMtbGluZW4iIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmY4ZTkiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNlM2Q0YWQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNhYTk1NzIiLz48L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtY2l0aXplbnMtc2tpbiIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2VkYzM5MyIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2MzOGQ1ZSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzg5NTQzOCIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1jaXRpemVucy1vbGl2ZSIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2E4Yjk3NiIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iIzdkOGY1MSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzQ4NTQyYyIvPjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPHBhdGggZD0iTTIzIDM0SDQxTDQzIDQxUTU1IDQyIDU3IDU4SDdROSA0MiAyMSA0MVoiIGZpbGw9InVybCgjYS1jaXRpemVucy1saW5lbikiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjMgMzJINDFWNDJMMzIgNDlMMjMgNDJaIiBmaWxsPSJ1cmwoI2EtY2l0aXplbnMtc2tpbikiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTcgMTlRMTYgNyAzMiA3UTQ4IDcgNDcgMTlWMzBRNDQgNDAgMzIgNDJRMjAgNDAgMTcgMzBaIiBmaWxsPSJ1cmwoI2EtY2l0aXplbnMtc2tpbikiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMzUgMTRRNDUgMTQgNDUgMjNWMzBRNDIgMzcgMzQgNDBMMzcgMjlaIiBmaWxsPSIjODk1NDM4Ii8+CjxwYXRoIGQ9Ik0xNyAyMlYxN1ExNiA3IDMyIDdRNDcgNyA0NyAxOUwzOCAxNUwyOSAxN0wyNCAxNEwyMyAyM1oiIGZpbGw9IiM1MTM1MWYiLz4KPHBhdGggZD0iTTE4IDMzQzkgMjkgNiAyMCA2IDEzTDE1IDE3UTggOSAxMyA2UTIyIDggMjMgMTVMMTkgMjRMMjQgMjdaIiBmaWxsPSJ1cmwoI2EtY2l0aXplbnMtb2xpdmUpIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTQ2IDMzQzU1IDI5IDU4IDIwIDU4IDEzTDQ5IDE3UTU2IDkgNTEgNlE0MiA4IDQxIDE1TDQ1IDI0TDQwIDI3WiIgZmlsbD0idXJsKCNhLWNpdGl6ZW5zLW9saXZlKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMiAxNUwxOSAyOE01MiAxNUw0NSAyOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDNkYmE1IiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjYgMjVIMjlNMzYgMjVIMzlNMzIgMjVMMzAgMzJMMzQgMzJNMjggMzZIMzUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzcxNGMzNCIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTEzIDQ4TDIyIDQzTDMyIDQ5TDQzIDQyTDQ4IDQ1TDMyIDU1WiIgZmlsbD0iI2M5YjQ4YyIvPgo8cGF0aCBkPSJNMTcgNDlMMTQgNTZNMjUgNTFMMjQgNTdNNDIgNTBMNDcgNTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2FhOTU3MiIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTQwIDMxTDQ0IDI5UTQxIDM2IDM1IDM4TDM1IDM1Wk00MyA0Nkw0OSA0N1E1MyA1MSA1NSA1N0g0N0w0NSA1MloiIGZpbGw9IiM4MDZjNTAiLz4KPHBhdGggZD0iTTQ3IDIzTDUzIDE5UTUzIDI3IDQ2IDMwTDQ0IDI4Wk0xNyAyNUwxOSAyOEwxOCAzMUwxMyAyOFoiIGZpbGw9IiMzNDQzMjEiLz4KPHBhdGggZD0iTTEwIDE4TDEyIDIyTTEzIDlMMTcgMTJNNDQgMTRMNDggMTBNMjIgMjBMMjcgMTlNMTIgNTBRMTQgNDUgMjAgNDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U0ZGZiMyIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjUgMTBMMzEgOUwzNiAxMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOWY3NDQ4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMyAyM0wxNyAyM000NyAyMkw1MSAyMU0yOCA1NEwzMSA1NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjY3ODNlIiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjMgMjZMMjQgMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Y0ZDJhYSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K", slaves: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5TbGF2ZXMg4oCUIGJ1c3Qgd2l0aCBpcm9uIGNvbGxhciBhbmQgYnJvYWQgeW9rZTwvdGl0bGU+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtc2xhdmVzLWxpbmVuIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmOGU5Ii8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjZTNkNGFkIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYWE5NTcyIi8+PC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJhLXNsYXZlcy1za2luIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZWRjMzkzIi8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjYzM4ZDVlIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjODk1NDM4Ii8+PC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJhLXNsYXZlcy1iYXJrIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjYmQ4YzU1Ii8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjOGY1ZTM1Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNTEzNTFmIi8+PC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJhLXNsYXZlcy1pcm9uIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjYzBiOWE0Ii8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjOGU4YTdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNTE0ZTQ1Ii8+PC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8cGF0aCBkPSJNMjIgMzJINDJWNDFRNTIgNDQgNTUgNThIOVExMiA0NCAyMiA0MVoiIGZpbGw9InVybCgjYS1zbGF2ZXMtbGluZW4pIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTE5IDE4UTE5IDYgMzIgNlE0NSA2IDQ1IDE4VjI4TDQwIDM3SDI0TDE5IDI4WiIgZmlsbD0idXJsKCNhLXNsYXZlcy1za2luKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zNiAxM0w0MyAxN1YyOUwzOSAzNUgzM0wzNiAyOFoiIGZpbGw9IiM4OTU0MzgiLz4KPHBhdGggZD0iTTIwIDE4UTE5IDcgMzIgN1E0NCA3IDQ0IDE5TDM2IDE1TDI1IDE3WiIgZmlsbD0iIzUxMzUxZiIvPgo8cGF0aCBkPSJNNiAzNUg1OFY0N0g0MkwzOCA1MUgyNkwyMiA0N0g2WiIgZmlsbD0idXJsKCNhLXNsYXZlcy1iYXJrKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yMiAzMlEzMiAzNyA0MiAzMlY0MlEzMiA0OSAyMiA0MloiIGZpbGw9InVybCgjYS1zbGF2ZXMtaXJvbikiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjUgMzdRMzIgNDAgMzkgMzdNMTAgMzlIMThNNDYgMzlINTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2UxZDljNSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTI1IDI0SDI4TTM2IDI0SDM5TTMyIDI1TDMwIDI5TTI4IDMxSDM1IiBmaWxsPSJub25lIiBzdHJva2U9IiM3MTRjMzQiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xNyA1MUwxNCA1Nk00NSA1MUw0OSA1NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYWE5NTcyIiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDAgMjdMNDMgMjVMNDEgMzBMMzggMzRIMzVaTTQ3IDUxTDUwIDUyTDUzIDU3SDQ3WiIgZmlsbD0iIzgwNmM1MCIvPgo8cGF0aCBkPSJNNyA0M0gyMUwyNSA0OEwyMiA0Nkg3Wk00NCA0M0g1N1Y0Nkg0M0wzOCA1MEgyOEwyNyA0OEgzN1oiIGZpbGw9IiMzNTI1MWEiLz4KPHBhdGggZD0iTTM3IDQwTDQxIDM4VjQyUTMzIDQ3IDI1IDQyTDI1IDQwUTMyIDQzIDM3IDQwWiIgZmlsbD0iIzM2MzcyZiIvPgo8cGF0aCBkPSJNMjMgMjBMMjggMThNMjUgMTBMMzEgOUwzNiAxMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYjk4YjVhIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik04IDM3SDE5TTQ1IDM3SDU1TTI0IDM0UTI5IDM2IDM0IDM1TTE1IDUyTDE4IDUwIiBmaWxsPSJub25lIiBzdHJva2U9IiNlY2QzYTAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTkgNDFIMTVNNDcgNDFINTJNMjMgNTNMMjYgNTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzljNzQ0OCIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTI1IDM2TDI4IDM3VjM5TDI1IDM4WiIgZmlsbD0iI2ZmZjhlOSIvPgo8L3N2Zz4K",
+    wood: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5Xb29kIOKAlCB0aHJlZSBjdXQgbG9nczwvdGl0bGU+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtd29vZC1iYXJrIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjYmQ4YzU1Ii8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjOGY1ZTM1Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNTEzNTFmIi8+PC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJhLXdvb2Qtd29vZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2VjZDNhMCIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2MxOWE2MSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzhiNjMzYiIvPjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPHBhdGggZD0iTTE3IDdMNDggNkM1NiA3IDYwIDEzIDU3IDIwTDI2IDMxTDEyIDI1WiIgZmlsbD0idXJsKCNhLXdvb2QtYmFyaykiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTcgMjRMNDkgMTlDNTggMTkgNjEgMjggNTYgMzVMMjUgNDdMOSA0MFoiIGZpbGw9InVybCgjYS13b29kLWJhcmspIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTE2IDQwTDQ5IDMzQzU4IDMzIDYxIDQzIDU2IDQ5TDI1IDU4TDEwIDUzWiIgZmlsbD0idXJsKCNhLXdvb2QtYmFyaykiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8ZWxsaXBzZSBjeD0iMTciIGN5PSIxOSIgcng9IjExIiByeT0iMTIiIGZpbGw9InVybCgjYS13b29kLXdvb2QpIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+CjxlbGxpcHNlIGN4PSIxNi41IiBjeT0iMzYiIHJ4PSIxMSIgcnk9IjEyIiBmaWxsPSJ1cmwoI2Etd29vZC13b29kKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIvPgo8ZWxsaXBzZSBjeD0iMTciIGN5PSI0OCIgcng9IjExIiByeT0iMTAiIGZpbGw9InVybCgjYS13b29kLXdvb2QpIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+CjxwYXRoIGQ9Ik0zMyAxMkw0OSA5TTMyIDI5TDUyIDI0TTM0IDQ1TDUzIDM5IiBmaWxsPSJub25lIiBzdHJva2U9IiNjODljNjciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xNCAxMkMyMyAxMCAyNSAyNCAxNiAyNUMxMSAyNSA5IDE3IDE1IDE2QzIwIDE1IDIxIDIxIDE3IDIxTTEzIDMxQzIyIDI3IDI0IDQxIDE2IDQxTTEzIDQ1QzIxIDQwIDI1IDUxIDE3IDUzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4YjYzM2IiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cgo8cGF0aCBkPSJNMzAgMTdMNTUgMTNRNTggMTYgNTUgMTlMMzAgMjdaIE0yOSAzNUw1NiAyN1E1OCAzMCA1NSAzNEwyOSA0M1ogTTI5IDUwTDU3IDQxUTU4IDQ1IDU1IDQ4TDI4IDU2WiIgZmlsbD0iIzUxMzUxZiIvPgo8cGF0aCBkPSJNMzAgOUw0NyA4TTMxIDI1TDQ4IDIxTTMxIDQxTDQ3IDM2IiBmaWxsPSJub25lIiBzdHJva2U9IiNkZmI3ODAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTM0IDE0TDQyIDEyTTM0IDMxTDQ1IDI3TTM1IDQ3TDQ2IDQzIiBmaWxsPSJub25lIiBzdHJva2U9IiNhODc2NDMiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yMiAxMlEzMSAyMyAyMSAyOUwxNyAyOFEyNSAyNCAyMiAxMlpNMjIgMjhRMzEgMzggMjEgNDRMMTggNDNRMjUgMzggMjIgMjhaTTIzIDQzUTI5IDUyIDIxIDU2TDE4IDU1UTI1IDUxIDIzIDQzWiIgZmlsbD0iIzc5NTAyZSIvPgo8cGF0aCBkPSJNMTAgMTZRMTEgMTAgMTcgMTBNOSAzNFExMCAyOCAxNiAyN005IDQ4UTEwIDQyIDE2IDQxIiBmaWxsPSJub25lIiBzdHJva2U9IiNmNmRmYjAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==", stone: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5TdG9uZSDigJQgc3RhY2tlZCBhc2hsYXIgYmxvY2tzPC90aXRsZT4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1zdG9uZS1zdG9uZSIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2UxZDljNSIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2I5YjA5YSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzgxN2E2OCIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1zdG9uZS1tYXJibGUiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmY4ZTkiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNmN2VjZDIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNjOWI0OGMiLz48L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxwYXRoIGQ9Ik0xNCA3SDM5TDQ3IDE0VjMxSDE0WiIgZmlsbD0idXJsKCNhLXN0b25lLXN0b25lKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zOSA4TDQ2IDE0VjMwSDM5WiIgZmlsbD0iIzgxN2E2OCIvPgo8cGF0aCBkPSJNMTUgMTVIMzlMNDYgMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhlODI2YiIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTYgMzJMMTQgMjZIMzRWNThINloiIGZpbGw9InVybCgjYS1zdG9uZS1zdG9uZSkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNyAzM0gyNlY1N0g3WiIgZmlsbD0idXJsKCNhLXN0b25lLW1hcmJsZSkiLz4KPHBhdGggZD0iTTcgMzNIMjZMMzMgMjdNMjYgMzNWNTciIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhlODI2YiIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTM0IDI2SDUwTDU4IDMzVjU4SDI3VjMzWiIgZmlsbD0idXJsKCNhLXN0b25lLXN0b25lKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik01MCAyOEw1NyAzNFY1N0g0OVoiIGZpbGw9IiM4MTdhNjgiLz4KPHBhdGggZD0iTTI4IDM0SDQ5TDU3IDMzTTQ5IDM0VjU3IiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZTgyNmIiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xOCAxMEgzNU0xMCAzN0gyMk0zMiAzOEg0NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmOGU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik00MSAxN0w0NiAxNlYyNUg0MVpNOCA1M0gyNVY1N0g4Wk01MSAzNkw1NyAzNVY1N0gyOVY1NEg1MVoiIGZpbGw9IiM2NjVmNTAiLz4KPHBhdGggZD0iTTE2IDlIMzdNOCAzNFY0OU0yOSAzNUg0NyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmOGU5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xOCAyMEwyMyAxOU0xMyA0NUwxNyA0NE0zNCA0N0w0MCA0NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzViYWExIiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTggMjJMMjIgMjFNMzUgNDlIMzkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzkzODc2ZCIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==", food: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5Gb29kIOKAlCBib3VuZCB3aGVhdCBzaGVhZjwvdGl0bGU+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImEtZm9vZC13aGVhdCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2YzZGRhMCIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2Q4YmU3MyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2EwN2IzOCIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1mb29kLWxpbmVuIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmOGU5Ii8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjZTNkNGFkIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYWE5NTcyIi8+PC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8cGF0aCBkPSJNMTggMzFMNDQgMzBMNDEgNDFMNTEgNThIMTNMMjMgNDFaIiBmaWxsPSJ1cmwoI2EtZm9vZC13aGVhdCkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMzUgMzVMNDEgNDBMNDkgNTdIMzhaIiBmaWxsPSIjYTA3YjM4Ii8+CjxwYXRoIGQ9Ik0yNiAzOEMxMyAzNCA1IDI0IDYgMTJDMTggMTQgMjkgMjUgMzAgMzdaIiBmaWxsPSJ1cmwoI2EtZm9vZC13aGVhdCkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjkgMzdDMTggMjkgMTQgMTYgMTkgNkMzMCAxMSAzNiAyNCAzNCAzN1oiIGZpbGw9InVybCgjYS1mb29kLXdoZWF0KSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zMSAzN0MyNiAyNCAyNyAxMyAzMyA2QzQyIDEzIDQyIDI3IDM3IDM4WiIgZmlsbD0idXJsKCNhLWZvb2Qtd2hlYXQpIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTM2IDM3QzM0IDI1IDQwIDEzIDQ4IDlDNTQgMjAgNDggMzIgNDAgNDBaIiBmaWxsPSJ1cmwoI2EtZm9vZC13aGVhdCkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDAgMzlDNDMgMjYgNTAgMjEgNTggMjBDNTggMzEgNTIgMzkgNDMgNDJaIiBmaWxsPSJ1cmwoI2EtZm9vZC13aGVhdCkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTIgMjBMMjQgMzNNMjIgMTVMMzAgMzJNMzQgMTRWMzJNNDYgMThMNDAgMzNNNTIgMjdMNDYgMzYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2EwN2IzOCIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTI3IDQ1TDIyIDU1TTMyIDQ1VjU2TTM3IDQ1TDQzIDU1IiBmaWxsPSJub25lIiBzdHJva2U9IiNmM2RkYTAiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yMSAzN1EzMiA0MCA0MyAzN0w0MiA0NVEzMiA0OCAyMiA0NVoiIGZpbGw9InVybCgjYS1mb29kLWxpbmVuKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xNiAyMlEyMiAyNiAyNiAzNUwyMyAzM1pNMjMgMThRMjkgMjUgMzEgMzZMMjggMzJaTTM2IDE4UTQwIDI4IDM2IDM3TDMzIDM2Wk00OCAxN1E0OSAyOCA0MCAzN0wzOSAzNFpNNTQgMjdRNTQgMzUgNDUgMzlMNDQgMzdaIiBmaWxsPSIjODk2NjJlIi8+CjxwYXRoIGQ9Ik04IDE2UTEwIDI0IDE3IDI5TTE5IDEwUTE3IDE5IDIzIDI3TTMyIDEwUTI5IDIwIDMxIDI4TTQ2IDEzUTQxIDE5IDQwIDI2TTU0IDIzTDQ5IDI4IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYzAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTI0IDIyTDI3IDIxTTMzIDI0TDM2IDIyTTQ0IDI2TDQ3IDI3IiBmaWxsPSJub25lIiBzdHJva2U9IiNiMThkNDkiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0zNCA0OEwzOSA0N0w0NyA1N0g0M1pNMTUgNTZIMzdWNThIMTRaIiBmaWxsPSIjODk2NjJlIi8+CjxwYXRoIGQ9Ik0zNyA0MEw0MiAzOUw0MSA0NEwzNSA0NVoiIGZpbGw9IiM4Yzc3NTciLz4KPHBhdGggZD0iTTIzIDM5UTI4IDQxIDM0IDQxTTE5IDU0TDIzIDQ3IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmY4ZTkiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTI2IDQzTDMyIDQ0IiBmaWxsPSJub25lIiBzdHJva2U9IiNjMWFkODQiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=",
+    gold: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5Hb2xkIOKAlCBzdGFja2VkIGRyYWNobWFzPC90aXRsZT4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1nb2xkLWJyb256ZSIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2YyZDI4YSIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2M0OTI0NSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzc5NTAyNSIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1nb2xkLWdvbGQiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmYwYjAiLz48c3RvcCBvZmZzZXQ9IjAuNDgiIHN0b3AtY29sb3I9IiNkOGI0NWUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM5OTcwMzUiLz48L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxwYXRoIGQ9Ik0xMCAzNEg1OFY0NkM1OCA2MiAxMCA2MiAxMCA0NloiIGZpbGw9InVybCgjYS1nb2xkLWJyb256ZSkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTMgNDVDMjMgNTIgNDcgNTMgNTUgNDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzc5NTAyNSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTYgMjNINTRWMzdDNTQgNTEgNiA1MSA2IDM3WiIgZmlsbD0idXJsKCNhLWdvbGQtZ29sZCkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNOSAzNkMyMCA0MyA0MiA0MyA1MSAzNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTk3MDM1IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNiAyMUM2IDcgNTQgNyA1NCAyMVYyNkM1NCA0MSA2IDQxIDYgMjZaIiBmaWxsPSJ1cmwoI2EtZ29sZC1icm9uemUpIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPGVsbGlwc2UgY3g9IjMwIiBjeT0iMjEiIHJ4PSIyNCIgcnk9IjExIiBmaWxsPSJ1cmwoI2EtZ29sZC1nb2xkKSIgc3Ryb2tlPSIjMTgxMjEwIiBzdHJva2Utd2lkdGg9IjIuNSIvPgo8ZWxsaXBzZSBjeD0iMzAiIGN5PSIyMSIgcng9IjE4IiByeT0iNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYjA4YTQ0IiBzdHJva2Utd2lkdGg9IjEuNzUiLz4KPGVsbGlwc2UgY3g9IjMwIiBjeT0iMjEiIHJ4PSI2IiByeT0iNC41IiBmaWxsPSIjYjU4YTQwIiBzdHJva2U9IiM3OTUwMjUiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTI0IDIxSDM2TTMwIDE2LjVWMjUuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjVkNThhIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTIgMThDMTcgMTMgMjQgMTMgMjggMTMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZjhlOSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDggMzZMNTMgMzRWMzhMNDggNDFaTTUyIDQ4TDU3IDQ1VjQ4TDUyIDUyWiIgZmlsbD0iIzc5NTAyNSIvPgo8cGF0aCBkPSJNNDcgMjdMNTIgMjRWMjdRNTAgMzMgNDAgMzRMMzggMzJaTTQ2IDQwTDUyIDM3VjM5UTQ0IDQ2IDMxIDQ2VjQzWk01MCA1MUw1NyA0N1E1NSA1NiAzNSA1N0wzNSA1NFoiIGZpbGw9IiM2YjQ5MWYiLz4KPHBhdGggZD0iTTggMjJRMTAgMjggMjMgMjlNOCAzMVYzNFExMCAzOCAxNyAzOU0xMiA0NVExMyA1MCAyMyA1MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZlNmEwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xNCAzM0wxNCAzNU0yMCAzNVYzN00yNiAzNlYzOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYjc4ZDQ0IiBzdHJva2Utd2lkdGg9IjEuNzUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTMgMTZMMTcgMTVMMTggMTdMMTQgMThaIiBmaWxsPSIjZmZmOGU5Ii8+Cjwvc3ZnPgo=", influence: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5JbmZsdWVuY2Ug4oCUIHJpYmJvbmVkIHBoYWxlcmE8L3RpdGxlPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJhLWluZmx1ZW5jZS1saW5lbiIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjhlOSIvPjxzdG9wIG9mZnNldD0iMC40OCIgc3RvcC1jb2xvcj0iI2UzZDRhZCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2FhOTU3MiIvPjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iYS1pbmZsdWVuY2UtYnJvbnplIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjJkMjhhIi8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjYzQ5MjQ1Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNzk1MDI1Ii8+PC9saW5lYXJHcmFkaWVudD4KPGxpbmVhckdyYWRpZW50IGlkPSJhLWluZmx1ZW5jZS1nb2xkIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmMGIwIi8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjZDhiNDVlIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjOTk3MDM1Ii8+PC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8cGF0aCBkPSJNMTUgMjhMMzIgMzRMMjQgNThMMTUgNTFMNiA1NVoiIGZpbGw9InVybCgjYS1pbmZsdWVuY2UtbGluZW4pIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTMyIDM0TDQ5IDI4TDU4IDU1TDQ5IDUxTDQwIDU4WiIgZmlsbD0idXJsKCNhLWluZmx1ZW5jZS1saW5lbikiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjAgMzZMMjUgMzhMMjAgNTFMMTUgNDhaTTQwIDM3TDQ1IDM1TDUxIDQ5TDQ2IDQ3WiIgZmlsbD0idXJsKCNhLWluZmx1ZW5jZS1icm9uemUpIi8+CjxlbGxpcHNlIGN4PSIzMiIgY3k9IjI2LjUiIHJ4PSIyMSIgcnk9IjIxIiBmaWxsPSJ1cmwoI2EtaW5mbHVlbmNlLWJyb256ZSkiIHN0cm9rZT0iIzE4MTIxMCIgc3Ryb2tlLXdpZHRoPSIyLjUiLz4KPGVsbGlwc2UgY3g9IjMyIiBjeT0iMjYiIHJ4PSIxNiIgcnk9IjE2IiBmaWxsPSJ1cmwoI2EtaW5mbHVlbmNlLWdvbGQpIiBzdHJva2U9IiM3OTUwMjUiIHN0cm9rZS13aWR0aD0iMS43NSIvPgo8cGF0aCBkPSJNMzIgMTVMMzYgMjFMNDMgMjFMMzkgMjdMNDEgMzRMMzQgMzJMMjggMzdMMjYgMzBMMjAgMjZMMjcgMjNaIiBmaWxsPSIjYTQ3YTM2Ii8+CjxlbGxpcHNlIGN4PSIzMiIgY3k9IjI2IiByeD0iNiIgcnk9IjYiIGZpbGw9InVybCgjYS1pbmZsdWVuY2UtYnJvbnplKSIgc3Ryb2tlPSIjNzk1MDI1IiBzdHJva2Utd2lkdGg9IjEuNSIvPgo8cGF0aCBkPSJNMTggMjBDMjAgMTQgMjUgMTAgMzEgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZjBiMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDggMTlRNTYgMzggMzcgNDZMMzQgNDRRNDkgMzkgNDggMTlaIiBmaWxsPSIjNmI0OTFmIi8+CjxwYXRoIGQ9Ik00MiAzMFE0MCAzOSAzMSA0MEwyOSAzOFEzOCAzNiA0MiAzMFoiIGZpbGw9IiNiMThhNDAiLz4KPHBhdGggZD0iTTIzIDQ4TDIwIDUzTDI0IDU3TDI4IDQ2Wk00NiA0N0w1MCA0OUw1NiA1M0w1MyA0NFoiIGZpbGw9IiM4Yzc3NTciLz4KPHBhdGggZD0iTTExIDQ4TDE2IDM4TTQxIDQ5TDQ0IDUzTTE2IDE5UTE4IDEyIDI1IDEwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmY4ZTkiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTE0IDQ0TDE2IDQxTTQ1IDQ0TDQ3IDQ2IiBmaWxsPSJub25lIiBzdHJva2U9IiNjMWFkODQiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yMiAxNEwyNSAxMkwyNyAxM0wyMyAxNloiIGZpbGw9IiNmZmY4ZTkiLz4KPC9zdmc+Cg==", happiness: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+Cjx0aXRsZT5IYXBwaW5lc3Mg4oCUIHNtaWxpbmcgY29tZWR5IG1hc2s8L3RpdGxlPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJhLWhhcHBpbmVzcy1jbGF5IiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZTVhMjY4Ii8+PHN0b3Agb2Zmc2V0PSIwLjQ4IiBzdG9wLWNvbG9yPSIjYzA4MjQzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjOGI0ZDI4Ii8+PC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8cGF0aCBkPSJNMTAgMTNRMTIgNSAyMyA2TDMyIDlMNDEgNlE1MiA1IDU0IDEzTDU3IDI3TDUzIDM0UTUyIDQ5IDQwIDU2UTMyIDYxIDI0IDU2UTEyIDQ5IDExIDM0TDcgMjdaIiBmaWxsPSJ1cmwoI2EtaGFwcGluZXNzLWNsYXkpIiBzdHJva2U9IiMxODEyMTAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTQ4IDE1TDUzIDI4TDQ4IDM0UTQ4IDQ5IDM1IDU2UTUwIDU0IDUzIDM0TDU2IDI3TDUzIDE0WiIgZmlsbD0iIzhiNGQyOCIvPgo8cGF0aCBkPSJNMTcgMjJRMjMgMTUgMjkgMjJMMjggMjhRMjIgMjUgMTcgMjhaTTM1IDIyUTQxIDE1IDQ3IDIyVjI4UTQxIDI1IDM2IDI4WiIgZmlsbD0iIzNhMmExZSIvPgo8cGF0aCBkPSJNMTggMzZRMzIgNDMgNDYgMzZRNDMgNTMgMzIgNTNRMjEgNTMgMTggMzZaIiBmaWxsPSIjM2EyYTFlIi8+CjxwYXRoIGQ9Ik0yMCAzN1EzMiA0MyA0NCAzN0w0MSA0M1EzMiA0NyAyMyA0MloiIGZpbGw9IiNmZmY4ZTkiLz4KPHBhdGggZD0iTTMyIDI0TDI4IDM0TDM0IDM1TTE1IDE3TDIyIDE0TTQxIDE0TDQ5IDE3IiBmaWxsPSJub25lIiBzdHJva2U9IiM4NzUyMmUiIHN0cm9rZS13aWR0aD0iMS43NSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMyAyOUwxNSAzNE0xOCAxMkwyNSAxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmMGIwIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik00NyA0NFE0NCA1MyAzNCA1NkwzMCA1NlE0MSA1MyA0MyA0OFpNNDkgMjZMNTIgMjVMNTEgMzFMNDggMzNaIiBmaWxsPSIjNjgzNzFmIi8+CjxwYXRoIGQ9Ik0yMCAzMVEyMyAyOCAyNiAzMUwyNSAzM0wyMCAzNFpNMzYgMzJRMzkgMjkgNDQgMzFMNDMgMzNIMzdaIiBmaWxsPSIjZGU5YTVmIi8+CjxwYXRoIGQ9Ik0xMiAyMUwxMyAxNVExNSA5IDIxIDlNMTYgMzdRMTcgNDQgMjEgNDdNMjkgNTRIMzMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2YzYzA4MSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMjQgNDlMMjcgNTBNMzggNDZMNDAgNDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2EyNjMzNSIgc3Ryb2tlLXdpZHRoPSIxLjc1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTE0IDE3TDE2IDE1TDE4IDE2TDE2IDE5WiIgZmlsbD0iI2ZmZjBiMCIvPgo8L3N2Zz4K",
+  };
+  const SVG = {
+    big: '<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="47" rx="27" ry="10" fill="#b9b09a" stroke="#181210" stroke-width="2.5"/><path d="M19 42V29H45V42Z" fill="#f3e8cd" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 29L32 19L48 29Z" fill="#c08243" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/></svg>',
+    small: '<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="30" cy="47" rx="19" ry="7.5" fill="#8a6a48" stroke="#181210" stroke-width="2.5"/><path d="M20 42H38M22 37H36" stroke="#c19a61" stroke-width="5" stroke-linecap="round"/><circle cx="47" cy="22" r="4.5" fill="#c38d5e" stroke="#181210" stroke-width="2"/><path d="M47 27V40M40 31H54" stroke="#181210" stroke-width="2.5" stroke-linecap="round"/></svg>',
+    plot: '<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="44" rx="17" ry="7" fill="none" stroke="#c9b48c" stroke-width="3.5"/></svg>',
+    freeman: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M26 58V44M38 58V44" stroke="#c38d5e" stroke-width="5" stroke-linecap="round"/><path d="M20 46L24 26H40L44 46Z" fill="#e3d4ad" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/><circle cx="32" cy="18" r="7" fill="#c38d5e" stroke="#181210" stroke-width="2.5"/><path d="M24 14L32 2L40 14Z" fill="#c49245" stroke="#181210" stroke-width="2.5" stroke-linejoin="round"/></svg>',
+  };
+
+  // ---------- board-state rules: slots, yields, happiness ----------
+  // A settlement's slots: the tile's, split between colonies sharing it (the first founded takes the odd one).
+  // Each building takes a slot; slaves work open slots on tiles that make something; the rest stand idle.
+  function slotPlan(atTile, s) {
+    const here = atTile.get(s.tile.id), n = here.length, idx = here.indexOf(s);
+    const slots = n > 1 ? Math.floor(s.tile.slots / n) + (idx < s.tile.slots % n ? 1 : 0) : s.tile.slots;
+    const built = s.build.length, open = Math.max(0, slots - built);
+    const worked = s.tile.res ? Math.min(s.pops[2], open) : 0;
+    return { slots, built, worked, empty: open - worked, idle: s.pops[2] - worked, share: n > 1 ? `${slots} of the tile's ${s.tile.slots}` : null };
+  }
+  // What a settlement makes: worked slaves 1 each (2 with an Estate), freemen 1 gold (2 with a Marketplace),
+  // citizens 1 influence, a Granary 2 food.
+  function yieldsOf(s) {
+    const out = new Map(), add = (r, n) => { if (n) out.set(r, (out.get(r) || 0) + n); };
+    const has = (b) => s.build.includes(b);
+    if (s.tile.res) add(s.tile.res, s.plan.worked * (has("estate") ? 2 : 1));
+    add("gold", s.pops[1] * (has("marketplace") ? 2 : 1));
+    add("influence", s.pops[0]);
+    if (has("granary")) add("food", 2);
+    return [...out];
+  }
+  // Happiness is a level counted off the board: +1 per Temple, +2 per good held, −1 per two slaves, −1 per token.
+  function realmStats(sc, seat) {
+    const mine = sc.list.filter((s) => s.seat === seat);
+    const sum = (f) => mine.reduce((n, s) => n + f(s), 0);
+    const moving = sc.moves.filter((m) => m.seat === seat).reduce((n, m) => n + m.n, 0);
+    const slaves = sum((s) => s.pops[2]);
+    const temples = sum((s) => (s.build.includes("temple") ? 1 : 0));
+    const goods = [...sc.claims.values()].filter((v) => v === seat).length;
+    const tokens = sc.tokens[seat] || 0;
+    const level = temples + 2 * goods - Math.floor(slaves / 2) - tokens;
+    return {
+      seat, settlements: mine.length, cities: sum((s) => (s.kind === "colony" ? 0 : 1)), colonies: sum((s) => (s.kind === "colony" ? 1 : 0)),
+      tiles: new Set(mine.map((s) => s.tile.id)).size, pops: sum((s) => s.pops[0] + s.pops[1] + s.pops[2]) + moving, moving,
+      citizens: sum((s) => s.pops[0]), slaves, temples, goods, tokens, level,
+      tier: level <= -6 ? "revolt" : level <= -3 ? "riot" : level < 0 ? "uneasy" : "calm",
+    };
+  }
+  function expand(key) {
+    const s = SCENARIOS[key];
+    const list = s.settle.map(([seat, kind, name, tile, pops, build], order) => ({ seat, kind, name, tile: byId.get(tile), pops, build, order }));
+    const claims = new Map();
+    for (const st of list) {
+      if (!st.build.includes("port")) continue;
+      const good = GOODS.find((g) => g.tiles.includes(st.tile.id) && !claims.has(g.name));
+      if (good) { claims.set(good.name, st.seat); st.good = good; }
+    }
+    const atTile = new Map();
+    for (const st of list) { if (!atTile.has(st.tile.id)) atTile.set(st.tile.id, []); atTile.get(st.tile.id).push(st); }
+    for (const st of list) st.plan = slotPlan(atTile, st);
+    const byName = new Map(list.map((st) => [st.name, st]));
+    const moves = s.moves.map(([seat, from, to, n]) => ({ seat, from: byName.get(from), to: byName.get(to), n }));
+    const sc = { key, ...s, list, claims, atTile, byName, moves };
+    sc.realms = [0, 1, 2, 3].map((seat) => realmStats(sc, seat));
+    return sc;
+  }
+
+  // A rules check against the player guide, run with #check in the address.
+  function check(sc) {
+    const bad = [];
+    const total = (p) => p[0] + p[1] + p[2];
+    const cities = sc.list.filter((s) => s.kind !== "colony");
+    for (let i = 0; i < cities.length; i++) for (let j = i + 1; j < cities.length; j++) {
+      if (dist(cities[i].tile, cities[j].tile) <= 1) bad.push(`cities adjacent: ${cities[i].name} ${cities[j].name}`);
+    }
+    for (const [id, here] of sc.atTile) {
+      if (byId.get(id).terrain === "oracle") bad.push(`oracle settled: ${id}`);
+      if (here.length > 1 && (here.length > 2 || here.some((s) => s.kind !== "colony") || here[0].seat === here[1].seat)) bad.push(`illegal share at ${id}`);
+    }
+    for (const s of sc.list) {
+      const cap = s.kind === "colony" ? 4 : 8;
+      if (total(s.pops) > cap || total(s.pops) < 1) bad.push(`pops out of range: ${s.name}`);
+      if (s.kind === "colony" && s.build.some((b) => b !== "port")) bad.push(`colony with a building: ${s.name}`);
+      if (new Set(s.build).size !== s.build.length) bad.push(`duplicate building: ${s.name}`);
+      if (s.build.length > s.plan.slots) bad.push(`too many buildings: ${s.name}`);
+      if (s.build.includes("estate") && s.tile.terrain === "hill") bad.push(`estate on a hill: ${s.name}`);
+      if (s.build.includes("port") && (!s.tile.coastal || !s.good)) bad.push(`port without coast or good: ${s.name}`);
+      const own = sc.list.filter((o) => o.seat === s.seat && o !== s);
+      const founding = sc.list.find((o) => o.seat === s.seat && o.kind !== "capital") === s;
+      if (s.kind === "colony" && !own.some((o) => dist(o.tile, s.tile) === 1) && !(s.tile.coastal && (founding || own.some((o) => o.tile.coastal)))) bad.push(`colony unreachable: ${s.name}`);
+    }
+    for (let seat = 0; seat < 4; seat++) {
+      const mine = sc.list.filter((s) => s.seat === seat);
+      if (mine.filter((s) => s.kind === "capital").length !== 1) bad.push(`seat ${seat} capitals`);
+      if (mine.filter((s) => s.kind === "city").length > 3) bad.push(`seat ${seat} city pieces`);
+      if (mine.filter((s) => s.kind === "colony").length > 4) bad.push(`seat ${seat} colony pieces`);
+    }
+    for (const m of sc.moves) {
+      if (!m.from || !m.to || m.from.seat !== m.seat || m.to.seat !== m.seat) bad.push("move between foreign settlements");
+      else if (total(m.to.pops) + m.n > (m.to.kind === "colony" ? 4 : 8)) bad.push(`no room at ${m.to.name}`);
+    }
+    for (const r of sc.realms) {
+      const rioting = sc.riot && sc.riot.seat === r.seat;
+      if (rioting && !(r.level === sc.riot.level && r.tier === "riot")) bad.push(`riot level ${r.level}`);
+      if (!rioting && r.level <= -3) bad.push(`unlisted riot at seat ${r.seat}`);
+    }
+    if (sc.titles) {
+      const lead = (f, min) => { const v = sc.realms.map(f); const top = Math.max(...v); return v.filter((x) => x === top).length === 1 && top >= min ? v.indexOf(top) : -1; };
+      const want = { "Polis Builder": lead((r) => r.cities, 3), Demos: lead((r) => r.pops, 14), "Civic Elite": lead((r) => r.citizens, 5) };
+      for (const c of sc.titles.cards) if (want[c] !== sc.titles.seat) bad.push(`title ${c} not held`);
+    }
+    console[bad.length ? "warn" : "info"](`[map check] ${sc.key}: ${bad.length ? bad.join("; ") : "legal"}`);
+  }
+
+  // ---------- camera model ----------
+  let W = 0, H = 0, zFit = 0, zMin = 1, zMax = 1;
+  const cam = { tx: 0, ty: 0, z: 1, rot: 0 };
+  const goal = { tx: 0, ty: 0, z: 1, rot: 0, anchor: null };
+  let camDirty = true;
+  const detailAt = (z) => clamp(Math.log(z / zMin) / Math.log(zMax / zMin), 0, 1);
+  const tiltAt = (t) => (t <= T_FIT ? TILT_FIT * smooth(0, T_FIT, t) : TILT_FIT + (TILT_MAX - TILT_FIT) * smooth(T_FIT, 1, t));
+  function view() {
+    const t = detailAt(cam.z), phi = tiltAt(t), f = H / 2 / Math.tan(FOV / 2);
+    return { tx: cam.tx, ty: cam.ty, z: cam.z, rot: cam.rot, phi, f, d: f / cam.z, t, cx: W / 2, cy: H / 2,
+      c: Math.cos(cam.rot), s: Math.sin(cam.rot), cp: Math.cos(phi), sp: Math.sin(phi) };
+  }
+  function project(v, wx, wy, h) {
+    const dx = wx - v.tx, dy = wy - v.ty;
+    const x1 = v.c * dx - v.s * dy, y1 = v.s * dx + v.c * dy;
+    const k = v.f / (v.d - y1 * v.sp - h * v.cp);
+    return { x: v.cx + x1 * k, y: v.cy + (y1 * v.cp - h * v.sp) * k, k };
+  }
+  function unproject(v, sx, sy) {
+    const u = (sy - v.cy) / v.f;
+    const y1 = (u * v.d) / (v.cp + u * v.sp);
+    const x1 = ((sx - v.cx) * (v.d - y1 * v.sp)) / v.f;
+    return { x: v.tx + v.c * x1 + v.s * y1, y: v.ty - v.s * x1 + v.c * y1 };
+  }
+  const inFront = (v, k) => k > 0 && k < 3.5 * v.z;
+  function clampTarget(o) { const r = Math.hypot(o.tx, o.ty); if (r > PAN_R) { o.tx *= PAN_R / r; o.ty *= PAN_R / r; } }
+
+  // ---------- renderer, lights, materials ----------
+  let renderer;
+  try {
+    renderer = new T.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+  } catch (err) {
+    $("fallback").hidden = false; $("fallback").textContent = "WebGL is not available here, so the map cannot draw."; canvas.hidden = true; return;
+  }
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  renderer.setClearColor(0x17505c, 1);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = T.PCFSoftShadowMap;
+  const scene = new T.Scene();
+  const camera = new T.PerspectiveCamera(FOV / DEG, 1, 0.05, 300);
+  scene.add(new T.HemisphereLight(0xfff1d6, 0x2b5d66, 0.44));
+  // The icons are lit from the upper left; on the map that is the north-west, above.
+  const sun = new T.DirectionalLight(0xfff0d2, 0.52);
+  sun.position.set(-6, 10, -5);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -7.5, right: 7.5, top: 7.5, bottom: -7.5, near: 1, far: 30 });
+  sun.shadow.camera.updateProjectionMatrix();
+  sun.shadow.bias = -0.0006;
+  sun.shadow.normalBias = 0.015;
+  scene.add(sun);
+
+  // Three tone steps, like the icons' three-stop gradients.
+  const ramp = new T.DataTexture(new Uint8Array([100, 178, 255]), 3, 1, T.LuminanceFormat);
+  ramp.minFilter = ramp.magFilter = T.NearestFilter;
+  ramp.generateMipmaps = false;
+  ramp.needsUpdate = true;
+  const toon = (color) => new T.MeshToonMaterial({ color, gradientMap: ramp });
+  // Painted bronze materials at their middle stops, plus quiet ground tones for terrain.
+  const MAT = {
+    marble: toon(0xf3e8cd), stone: toon(0xb9b09a), rock: toon(0x9c8b6e), clay: toon(0xc08243), clayDark: toon(0x9a5a30),
+    bronze: toon(0xc49245), gold: toon(0xd8b45e), timber: toon(0xc19a61), bark: toon(0x8f5e35),
+    wheat: toon(0xd8be73), linen: toon(0xe3d4ad), leaf: toon(0x7d8f51), door: toon(0x3a2a1e), skin: toon(0xc38d5e),
+    earth: toon(0x8a6a48), quarry: toon(0xd2c9b3), stubble: toon(0xc2a96f), rule: toon(0xc9b48c),
+    leafSoft: toon(0x74844e), leafDark: toon(0x56663b), crag: toon(0xa49b86), fieldGreen: toon(0x9ea766),
+    owner: toon(0xffffff),
+    flame: new T.MeshBasicMaterial({ color: 0xe8ad50 }), flameCore: new T.MeshBasicMaterial({ color: 0xfff0b0 }),
+  };
+  // The vase-black keyline: back faces pushed out along smoothed normals.
+  const keyline = new T.MeshBasicMaterial({ color: 0x181210, side: T.BackSide });
+  keyline.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace("#include <begin_vertex>", "vec3 transformed = position + normal * 0.0065;"); };
+
+  // Every layer that fades owns clones of its materials, so one opacity drives the whole layer.
+  const LMAT = new Map(), LAYER_MATS = {};
+  function registerMat(m, layer) {
+    m.transparent = true;
+    m.userData.base = m.opacity;
+    (LAYER_MATS[layer] = LAYER_MATS[layer] || []).push(m);
+    return m;
+  }
+  function layerMat(name, layer) {
+    if (!layer) return MAT[name];
+    const key = `${name}|${layer}`;
+    if (!LMAT.has(key)) LMAT.set(key, registerMat(MAT[name].clone(), layer));
+    return LMAT.get(key);
+  }
+  function layerKeyline(layer) {
+    if (!layer) return keyline;
+    const key = `keyline|${layer}`;
+    if (!LMAT.has(key)) { const m = keyline.clone(); m.onBeforeCompile = keyline.onBeforeCompile; LMAT.set(key, registerMat(m, layer)); }
+    return LMAT.get(key);
+  }
+  const moveLineMat = registerMat(new T.LineDashedMaterial({ color: 0xfff8e7, dashSize: 0.1, gapSize: 0.08, opacity: 0.6 }), "moves");
+  const tradeLineMat = registerMat(new T.LineDashedMaterial({ color: 0xf2d28a, dashSize: 0.04, gapSize: 0.08, opacity: 0.8 }), "tradeRoutes");
+  const riotSmokeMat = registerMat(new T.MeshBasicMaterial({ color: 0x3f3832, opacity: 0.42, depthWrite: false }), "events");
+  const hearthMat = registerMat(new T.MeshBasicMaterial({ color: 0xe6ddcc, opacity: 0.3, depthWrite: false }), "lifeAmb");
+  const vapourMat = registerMat(new T.MeshBasicMaterial({ color: 0xf6f1e6, opacity: 0.2, depthWrite: false }), "landmarkVapour");
+  const smokeGeo = new T.SphereGeometry(1, 8, 6);
+
+  // ---------- sea: one shader, foam from a distance field of the coast ----------
+  const SDF_N = 256, SDF_HALF = 9;
+  const sdfData = new Uint8Array(SDF_N * SDF_N * 4);
+  (() => {
+    const apo = SQ3 / 2;
+    const coast = [];
+    for (const t of tiles) DIRS.forEach(([dq, dr], i) => {
+      if (byId.has(`${t.q + dq},${t.r + dr}`)) return;
+      const a0 = (60 * i - 30) * DEG, a1 = (60 * i + 30) * DEG;
+      coast.push([t.x + Math.cos(a0), t.y + Math.sin(a0), t.x + Math.cos(a1), t.y + Math.sin(a1)]);
+    });
+    const segDist = (px, py, [ax, ay, bx, by]) => {
+      const vx = bx - ax, vy = by - ay, u = clamp(((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy), 0, 1);
+      return Math.hypot(px - ax - u * vx, py - ay - u * vy);
+    };
+    for (let j = 0; j < SDF_N; j++) for (let i = 0; i < SDF_N; i++) {
+      const px = -SDF_HALF + ((i + 0.5) * 2 * SDF_HALF) / SDF_N, py = -SDF_HALF + ((j + 0.5) * 2 * SDF_HALF) / SDF_N;
+      let inside = false;
+      for (const t of tiles) {
+        const dx = px - t.x, dy = py - t.y;
+        if (dx * dx + dy * dy > 1.01) continue;
+        if (Math.max(Math.abs(dx), Math.abs(0.5 * dx + apo * dy), Math.abs(-0.5 * dx + apo * dy)) <= apo) { inside = true; break; }
+      }
+      let d = Infinity;
+      for (const s of coast) d = Math.min(d, segDist(px, py, s));
+      const v = clamp(((inside ? -d : d) + 0.5) / 3, 0, 1) * 255;
+      const o = (j * SDF_N + i) * 4;
+      sdfData[o] = sdfData[o + 1] = sdfData[o + 2] = v; sdfData[o + 3] = 255;
+    }
+  })();
+  const sdfTex = new T.DataTexture(sdfData, SDF_N, SDF_N, T.RGBAFormat);
+  sdfTex.minFilter = sdfTex.magFilter = T.LinearFilter;
+  sdfTex.needsUpdate = true;
+  const seaUniforms = {
+    uTime: { value: 0 }, uSdf: { value: sdfTex },
+    uLit: { value: new T.Color(0x2e8a9a) }, uSea: { value: new T.Color(0x206e7c) }, uDeep: { value: new T.Color(0x17505c) },
+    uShallow: { value: new T.Color(0x4aa3ac) }, uFoam: { value: new T.Color(0xf4ecd8) }, uGrout: { value: new T.Color(0x123b44) },
+  };
+  const sea = new T.Mesh(new T.PlaneGeometry(160, 160), new T.ShaderMaterial({
+    uniforms: seaUniforms,
+    vertexShader: `varying vec2 vW;
+      void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vW = wp.xz; gl_Position = projectionMatrix * viewMatrix * wp; }`,
+    fragmentShader: `uniform float uTime; uniform sampler2D uSdf;
+      uniform vec3 uLit; uniform vec3 uSea; uniform vec3 uDeep; uniform vec3 uShallow; uniform vec3 uFoam; uniform vec3 uGrout;
+      varying vec2 vW;
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float noise(vec2 p) { vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y); }
+      void main() {
+        vec2 uv = (vW + ${SDF_HALF.toFixed(1)}) / ${(2 * SDF_HALF).toFixed(1)};
+        float d = 2.5;
+        if (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) d = texture2D(uSdf, uv).r * 3.0 - 0.5;
+        if (d < -0.07) { gl_FragColor = vec4(uGrout, 1.0); return; }
+        float dw = max(d + 0.04, 0.0);
+        float r = length(vW);
+        vec3 col = mix(uLit, uSea, smoothstep(3.5, 8.0, r));
+        col = mix(col, uDeep, smoothstep(8.0, 22.0, r));
+        float n = noise(vW * 1.2 + vec2(uTime * 0.05, -uTime * 0.04));
+        float n2 = noise(vW * 3.3 - vec2(uTime * 0.12, uTime * 0.08));
+        col *= 0.95 + 0.08 * n + 0.04 * n2;
+        col = mix(col, uShallow, (1.0 - smoothstep(0.0, 1.1, dw)) * 0.5);
+        float wave = sin(dw * 12.0 + uTime * 1.8 + n * 3.0);
+        float bands = smoothstep(0.8, 0.97, wave) * (1.0 - smoothstep(0.1, 0.95, dw)) * (0.55 + 0.45 * n2);
+        float surge = 0.075 + 0.04 * sin(uTime * 1.3 + n2 * 6.0);
+        float contact = 1.0 - smoothstep(surge * 0.55, surge, dw);
+        float foam = clamp(max(contact * (0.8 + 0.2 * n2), bands * 0.8), 0.0, 1.0);
+        gl_FragColor = vec4(mix(col, uFoam, foam), 1.0);
+      }`,
+  }));
+  sea.rotation.x = -Math.PI / 2;
+  scene.add(sea);
+
+  // ---------- tiles: one instanced prism, coloured per tile ----------
+  const hexGeo = new T.CylinderGeometry(R_TOP, R_TOP, H_TILE + 0.08, 6, 1).translate(0, (H_TILE + 0.08) / 2 - 0.08, 0);
+  const tileMesh = new T.InstancedMesh(hexGeo, toon(0xffffff), tiles.length);
+  const m4 = new T.Matrix4(), q4 = new T.Quaternion(), e4 = new T.Euler(), eF = new T.Euler(0, 0, 0, "YXZ"), v3 = new T.Vector3(), s3 = new T.Vector3(1, 1, 1), col = new T.Color();
+  tiles.forEach((t, i) => { tileMesh.setMatrixAt(i, m4.makeTranslation(t.x, 0, t.y)); tileMesh.setColorAt(i, col.set(t.near)); });
+  tileMesh.receiveShadow = true;
+  tileMesh.castShadow = true;
+  tileMesh.frustumCulled = false;
+  scene.add(tileMesh);
+  const rulePts = [];
+  for (const t of tiles) for (let i = 0; i < 6; i++) {
+    const a0 = (60 * i - 30) * DEG, a1 = (60 * i + 30) * DEG;
+    rulePts.push(t.x + Math.cos(a0) * R_TOP, H_TILE + 0.003, t.y + Math.sin(a0) * R_TOP, t.x + Math.cos(a1) * R_TOP, H_TILE + 0.003, t.y + Math.sin(a1) * R_TOP);
+  }
+  const ruleGeo = new T.BufferGeometry();
+  ruleGeo.setAttribute("position", new T.Float32BufferAttribute(rulePts, 3));
+  scene.add(new T.LineSegments(ruleGeo, new T.LineBasicMaterial({ color: 0x241910, transparent: true, opacity: 0.35 })));
+  const ringGeo = (ri, ro) => new T.RingGeometry(ri, ro, 6, 1, Math.PI / 2).rotateX(-Math.PI / 2);
+  const selRing = new T.Mesh(ringGeo(R_TOP - 0.075, R_TOP), new T.MeshBasicMaterial({ color: 0x241910 }));
+  const focusRing = new T.Mesh(ringGeo(R_TOP - 0.075, R_TOP), new T.MeshBasicMaterial({ color: 0xd98a35 }));
+  selRing.visible = focusRing.visible = false;
+  scene.add(selRing, focusRing);
+
+  // ---------- model kit: parts per material, merged, then instanced ----------
+  const G = {
+    box: (w, h, d) => new T.BoxGeometry(w, h, d).translate(0, h / 2, 0),
+    cyl: (rt, rb, h, n = 8) => new T.CylinderGeometry(rt, rb, h, n).translate(0, h / 2, 0),
+    cone: (r, h, n = 8) => new T.ConeGeometry(r, h, n).translate(0, h / 2, 0),
+    ball: (r, w = 8, h = 6) => new T.SphereGeometry(r, w, h),
+    dome: (r) => new T.SphereGeometry(r, 12, 5, 0, Math.PI * 2, 0, Math.PI / 2),
+    bowl: (r) => new T.SphereGeometry(r, 12, 5, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
+    torus: (r, t) => new T.TorusGeometry(r, t, 6, 28),
+    log: (r, l) => new T.CylinderGeometry(r, r, l, 6).rotateZ(Math.PI / 2).translate(0, r, 0),
+  };
+  // Convex solids from triangles, each face turned outward from the centre.
+  function solid(tris) {
+    let cx = 0, cy = 0, cz = 0, n = 0;
+    for (const t of tris) for (const p of t) { cx += p[0]; cy += p[1]; cz += p[2]; n++; }
+    cx /= n; cy /= n; cz /= n;
+    const pos = [];
+    for (const [a, b, c] of tris) {
+      const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], wx = c[0] - a[0], wy = c[1] - a[1], wz = c[2] - a[2];
+      const nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
+      const mx = (a[0] + b[0] + c[0]) / 3 - cx, my = (a[1] + b[1] + c[1]) / 3 - cy, mz = (a[2] + b[2] + c[2]) / 3 - cz;
+      const flip = nx * mx + ny * my + nz * mz < 0;
+      pos.push(...a, ...(flip ? c : b), ...(flip ? b : c));
+    }
+    const g = new T.BufferGeometry();
+    g.setAttribute("position", new T.Float32BufferAttribute(pos, 3));
+    g.computeVertexNormals();
+    return g;
+  }
+  G.gable = (l, w, h) => {
+    const a = [-l / 2, 0, -w / 2], b = [-l / 2, 0, w / 2], c = [-l / 2, h, 0], A = [l / 2, 0, -w / 2], B = [l / 2, 0, w / 2], C = [l / 2, h, 0];
+    return solid([[a, b, c], [A, B, C], [a, c, C], [a, C, A], [b, B, C], [b, C, c], [a, A, B], [a, B, b]]);
+  };
+  G.pennant = (l, h, t = 0.008) => {
+    const p = [[0, 0, -t], [0, h, -t], [l, h / 2, -t], [0, 0, t], [0, h, t], [l, h / 2, t]];
+    return solid([[p[0], p[1], p[2]], [p[3], p[4], p[5]], [p[0], p[1], p[4]], [p[0], p[4], p[3]], [p[1], p[2], p[5]], [p[1], p[5], p[4]], [p[0], p[2], p[5]], [p[0], p[5], p[3]]]);
+  };
+  function bake(geo) {
+    const g = geo.index ? geo.toNonIndexed() : geo;
+    const out = new T.BufferGeometry();
+    out.setAttribute("position", g.attributes.position.clone());
+    out.setAttribute("normal", g.attributes.normal.clone());
+    return out;
+  }
+  function merge(list) {
+    let n = 0;
+    for (const g of list) n += g.attributes.position.count;
+    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3);
+    let o = 0;
+    for (const g of list) { pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); o += g.attributes.position.count; }
+    const out = new T.BufferGeometry();
+    out.setAttribute("position", new T.BufferAttribute(pos, 3));
+    out.setAttribute("normal", new T.BufferAttribute(nor, 3));
+    return out;
+  }
+  // Keyline hulls need one normal per corner, or the outline cracks at every edge.
+  function smoothed(geo) {
+    const p = geo.attributes.position.array, nrm = geo.attributes.normal.array, sum = new Map();
+    const key = (i) => `${Math.round(p[i] * 1e4)},${Math.round(p[i + 1] * 1e4)},${Math.round(p[i + 2] * 1e4)}`;
+    for (let i = 0; i < p.length; i += 3) {
+      const k = key(i), s = sum.get(k) || [0, 0, 0];
+      s[0] += nrm[i]; s[1] += nrm[i + 1]; s[2] += nrm[i + 2]; sum.set(k, s);
+    }
+    const out = new Float32Array(p.length);
+    for (let i = 0; i < p.length; i += 3) {
+      const s = sum.get(key(i)), l = Math.hypot(s[0], s[1], s[2]) || 1;
+      out[i] = s[0] / l; out[i + 1] = s[1] / l; out[i + 2] = s[2] / l;
+    }
+    geo.setAttribute("normal", new T.BufferAttribute(out, 3));
+    return geo;
+  }
+  function template(build) {
+    const parts = {}, lines = [];
+    const add = (mat, geo, x = 0, y = 0, z = 0, o = {}) => {
+      e4.set(o.rx || 0, o.ry || 0, o.rz || 0);
+      m4.compose(v3.set(x, y, z), q4.setFromEuler(e4), s3.set(o.sx || 1, o.sy || 1, o.sz || 1));
+      const g = bake(geo).applyMatrix4(m4);
+      (parts[mat] = parts[mat] || []).push(g);
+      if (o.line !== false) lines.push(g);
+    };
+    build(add);
+    s3.set(1, 1, 1);
+    return { meshes: Object.entries(parts).map(([mat, list]) => [mat, merge(list)]), outline: lines.length ? smoothed(merge(lines)) : null };
+  }
+
+  // ---------- the models ----------
+  function temple(add, x, y, z, k) {
+    add("stone", G.box(0.27 * k, 0.016 * k, 0.19 * k), x, y, z);
+    add("marble", G.box(0.24 * k, 0.028 * k, 0.16 * k), x, y + 0.016 * k, z);
+    add("stone", G.box(0.15 * k, 0.1 * k, 0.09 * k), x, y + 0.044 * k, z);
+    for (const cz of [-0.065, 0.065]) for (const cx of [-0.09, -0.03, 0.03, 0.09]) {
+      add("marble", G.cyl(0.011 * k, 0.013 * k, 0.1 * k, 6), x + cx * k, y + 0.044 * k, z + cz * k, { line: false });
+    }
+    add("marble", G.box(0.25 * k, 0.02 * k, 0.17 * k), x, y + 0.144 * k, z);
+    add("clay", G.gable(0.26 * k, 0.18 * k, 0.05 * k), x, y + 0.164 * k, z);
+  }
+  function house(add, x, z, ry, w, d, roof = "clay", y = 0) {
+    add("marble", G.box(w, w * 0.7, d), x, y, z, { ry });
+    add(roof, G.gable(w * 1.1, d * 1.18, w * 0.48), x, y + w * 0.7, z, { ry });
+  }
+  const quiet = { line: false };
+  const TPL = {
+    capital: template((add) => {
+      add("rock", G.cyl(0.43, 0.48, 0.07, 7), 0, 0, 0);
+      add("rock", G.cyl(0.27, 0.33, 0.09, 7), 0, 0.07, -0.02, { ry: 0.45 });
+      add("stone", G.box(0.1, 0.03, 0.06), 0, 0.07, 0.33);
+      add("stone", G.box(0.1, 0.03, 0.05), 0, 0.1, 0.29);
+      add("stone", G.box(0.1, 0.03, 0.04), 0, 0.13, 0.26);
+      temple(add, 0, 0.16, -0.03, 1.35);
+      house(add, -0.34, 0.2, 0.5, 0.07, 0.06, "clay", 0.07);
+      house(add, 0.34, 0.2, -0.5, 0.07, 0.06, "clay", 0.07);
+      house(add, -0.31, -0.24, 0.9, 0.065, 0.055, "clay", 0.07);
+      add("bronze", G.cyl(0.006, 0.007, 0.32, 5), 0.21, 0.16, 0.1, quiet);
+    }),
+    capitalFlag: template((add) => { add("owner", G.box(0.1, 0.055, 0.008).translate(0.05, 0, 0), 0.21, 0.42, 0.1); }),
+    city: template((add) => {
+      const R = 0.33;
+      for (let i = 0; i < 8; i++) {
+        const a = i * (Math.PI / 4) + Math.PI / 8;
+        add("stone", G.box(2 * R * Math.sin(Math.PI / 8) + 0.012, 0.09, 0.034), R * Math.cos(a), 0, R * Math.sin(a), { ry: -a - Math.PI / 2 });
+      }
+      for (let i = 0; i < 4; i++) {
+        const a = i * (Math.PI / 2);
+        add("marble", G.box(0.075, 0.16, 0.075), R * Math.cos(a), 0, R * Math.sin(a));
+        add("clay", G.cone(0.066, 0.06, 4), R * Math.cos(a), 0.16, R * Math.sin(a), { ry: Math.PI / 4 });
+      }
+      add("door", G.box(0.04, 0.07, 0.02), 0, 0, R + 0.035, quiet);
+      house(add, -0.15, -0.11, 0.25, 0.1, 0.08);
+      house(add, 0.14, -0.14, -0.3, 0.095, 0.08);
+      house(add, -0.16, 0.12, -0.2, 0.09, 0.075);
+      house(add, 0.15, 0.1, 0.35, 0.09, 0.075);
+      add("marble", G.box(0.12, 0.11, 0.1), 0, 0, -0.01);
+      add("clay", G.gable(0.13, 0.12, 0.055), 0, 0.11, -0.01);
+      add("bronze", G.cyl(0.005, 0.006, 0.13, 5), -R, 0.16, 0, quiet);
+    }),
+    cityFlag: template((add) => { add("owner", G.box(0.075, 0.042, 0.007).translate(0.0375, 0, 0), -0.33, 0.245, 0); }),
+    colony: template((add) => {
+      house(add, -0.05, -0.02, 0.25, 0.13, 0.1, "timber");
+      house(add, 0.1, 0.07, -0.5, 0.095, 0.08, "timber");
+      for (let i = 0; i < 9; i++) {
+        const a = Math.PI * (1.12 + (i / 8) * 0.78);
+        add("bark", G.cyl(0.011, 0.013, 0.085, 5), 0.22 * Math.cos(a), 0, -0.03 + 0.22 * Math.sin(a), quiet);
+      }
+      add("bark", G.cyl(0.007, 0.008, 0.3, 5), 0.13, 0, -0.12, quiet);
+    }),
+    colonyFlag: template((add) => { add("owner", G.pennant(0.1, 0.06), 0.137, 0.235, -0.12); }),
+    temple: template((add) => temple(add, 0, 0, 0, 1)),
+    granary: template((add) => {
+      add("clay", G.cyl(0.068, 0.074, 0.075, 12));
+      add("clayDark", G.dome(0.068), 0, 0.075, 0);
+      add("door", G.box(0.032, 0.045, 0.02), 0, 0, 0.066, quiet);
+      add("wheat", G.cone(0.022, 0.075, 6), 0.095, 0, 0.035);
+      add("wheat", G.cone(0.02, 0.065, 6), 0.1, 0, -0.035);
+    }),
+    marketplace: template((add) => {
+      add("stone", G.box(0.28, 0.015, 0.13));
+      add("stone", G.box(0.26, 0.075, 0.025), 0, 0.015, -0.045);
+      for (let i = 0; i < 5; i++) add("marble", G.cyl(0.009, 0.009, 0.075, 5), -0.12 + i * 0.06, 0.015, 0.045, quiet);
+      add("clay", G.box(0.29, 0.018, 0.13), 0, 0.09, 0);
+      add("linen", G.box(0.07, 0.006, 0.05), -0.07, 0.06, 0.1, { rx: 0.3 });
+      add("timber", G.box(0.035, 0.03, 0.03), 0.06, 0, 0.1);
+      add("clay", G.ball(0.02, 6, 5), 0.1, 0.02, 0.095);
+    }),
+    estate: template((add) => {
+      house(add, -0.06, -0.04, 0.2, 0.1, 0.08);
+      for (let i = 0; i < 3; i++) add("wheat", G.box(0.15, 0.012, 0.022), 0.03, 0, 0.055 + i * 0.035, quiet);
+      for (const [x, z] of [[0.09, -0.07], [0.13, -0.01]]) {
+        add("bark", G.cyl(0.008, 0.01, 0.05, 5), x, 0, z, quiet);
+        add("leaf", G.ball(0.034, 7, 5), x, 0.07, z);
+      }
+    }),
+    port: template((add) => {
+      add("stone", G.box(0.06, 0.12, 0.09), 0.0, -0.12, 0);
+      add("timber", G.box(0.5, 0.02, 0.085), 0.28, -0.115, 0);
+      for (const x of [0.16, 0.34, 0.5]) for (const z of [-0.04, 0.04]) add("bark", G.cyl(0.011, 0.011, 0.13, 5), x, -0.24, z, quiet);
+      add("bronze", G.cyl(0.012, 0.014, 0.03, 6), 0.49, -0.095, 0.028);
+      house(add, -0.13, 0, 0.0, 0.09, 0.075);
+    }),
+    boat: template((add) => {
+      add("timber", G.bowl(0.05), 0, 0.012, 0, { sx: 2.4, sy: 0.75, sz: 1.0 });
+      add("timber", G.box(0.2, 0.008, 0.07), 0, 0.006, 0);
+      add("bark", G.cyl(0.005, 0.006, 0.13, 5), 0.01, 0.01, 0, quiet);
+      add("linen", G.box(0.006, 0.07, 0.08), 0.016, 0.055, 0);
+    }),
+    ship: template((add) => {
+      add("timber", G.bowl(0.06), 0, 0.016, 0, { sx: 2.6, sy: 0.8, sz: 1.0 });
+      add("timber", G.box(0.27, 0.01, 0.09), 0, 0.01, 0);
+      add("bark", G.cyl(0.006, 0.007, 0.18, 5), 0.015, 0.015, 0, quiet);
+      add("linen", G.box(0.007, 0.1, 0.11), 0.022, 0.07, 0);
+    }),
+    shipBand: template((add) => { add("owner", G.box(0.009, 0.024, 0.112), 0.022, 0.12, 0, quiet); }),
+    good: template((add) => {
+      add("timber", G.box(0.17, 0.022, 0.12), 0, -0.008, 0);
+      for (const [x, z] of [[-0.04, -0.025], [0.02, 0.03], [0.05, -0.03]]) {
+        add("clay", G.ball(0.025, 8, 6), x, 0.038, z);
+        add("clay", G.cyl(0.008, 0.011, 0.03, 6), x, 0.055, z);
+      }
+      add("bark", G.cyl(0.007, 0.008, 0.17, 5), -0.072, 0, 0.045, quiet);
+    }),
+    goodFlag: template((add) => { add("owner", G.pennant(0.075, 0.045), -0.072, 0.12, 0.045); }),
+    torch: template((add) => {
+      add("bark", G.cyl(0.009, 0.012, 0.22, 5));
+      add("flame", G.cone(0.03, 0.08, 6), 0, 0.22, 0);
+      add("flameCore", G.cone(0.016, 0.05, 6), 0, 0.225, 0.01, quiet);
+    }),
+    laurel: template((add) => {
+      add("gold", G.torus(0.14, 0.011), 0, 0, 0, { rx: Math.PI / 2 });
+      for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 2;
+        add("leaf", G.ball(0.022, 6, 4), 0.14 * Math.cos(a), 0.012, 0.14 * Math.sin(a), { ry: -a + 0.6, sx: 0.45, sy: 0.35, sz: 1.1 });
+      }
+    }),
+    // Slots: a stone plinth carries a building; a smaller disc is a worked slot; a ring is an open one.
+    nodeBig: template((add) => { add("stone", G.cyl(0.14, 0.15, 0.018, 18)); }),
+    disc_forest: template((add) => { add("earth", G.cyl(0.085, 0.09, 0.012, 14)); }),
+    disc_mountain: template((add) => { add("quarry", G.cyl(0.085, 0.09, 0.012, 14)); }),
+    disc_plains: template((add) => { add("stubble", G.cyl(0.085, 0.09, 0.012, 14)); }),
+    plot: template((add) => { add("rule", G.torus(0.062, 0.0085), 0, 0.005, 0, { rx: Math.PI / 2, line: false }); }),
+    // What a worked slot shows: cut logs in forest, a quarry face on mountains, a stubble field on plains.
+    cut_forest: template((add) => {
+      for (const [x, z] of [[-0.045, -0.035], [0.04, -0.045], [-0.02, 0.05]]) add("bark", G.cyl(0.011, 0.013, 0.016, 6), x, 0, z, quiet);
+      add("timber", G.log(0.009, 0.075), 0.01, 0, 0.0, quiet);
+      add("timber", G.log(0.009, 0.075), 0.01, 0, 0.02, quiet);
+      add("timber", G.log(0.009, 0.07), 0.01, 0.016, 0.01, quiet);
+    }),
+    cut_mountain: template((add) => {
+      add("rock", G.box(0.09, 0.05, 0.025), 0, 0, -0.045);
+      add("stone", G.box(0.045, 0.03, 0.04), -0.025, 0, 0.01);
+      add("stone", G.box(0.035, 0.022, 0.03), 0.03, 0, 0.025);
+    }),
+    cut_plains: template((add) => {
+      add("wheat", G.box(0.1, 0.01, 0.06), 0, 0, -0.005, quiet);
+      add("wheat", G.cone(0.013, 0.04, 5), -0.05, 0, 0.04, quiet);
+      add("wheat", G.cone(0.012, 0.035, 5), 0.055, 0, 0.035, quiet);
+    }),
+    // Pops: silhouette tells the class, owner glaze only on a sash, a cap or a waistband.
+    citizen: template((add) => {
+      add("linen", G.cone(0.024, 0.078, 8), 0, 0, 0, quiet);
+      add("owner", G.cyl(0.0158, 0.0178, 0.009, 10).translate(0, -0.0045, 0), 0, 0.036, 0, { rz: 0.45, line: false });
+      add("skin", G.ball(0.012, 8, 6), 0, 0.085, 0, quiet);
+      add("leaf", G.torus(0.011, 0.0035), 0, 0.091, 0, { rx: Math.PI / 2, line: false });
+    }),
+    freeman: template((add) => {
+      add("skin", G.cyl(0.0042, 0.0042, 0.03, 4), -0.0065, 0, 0, quiet);
+      add("skin", G.cyl(0.0042, 0.0042, 0.03, 4), 0.0065, 0, 0, quiet);
+      add("linen", G.cyl(0.0135, 0.018, 0.038, 8), 0, 0.026, 0, quiet);
+      add("skin", G.ball(0.0115, 8, 6), 0, 0.075, 0, quiet);
+      add("owner", G.cone(0.0125, 0.02, 8), 0, 0.081, 0, quiet);
+    }),
+    slave: template((add) => {
+      add("skin", G.cyl(0.0042, 0.0042, 0.026, 4), -0.0065, 0, 0, quiet);
+      add("skin", G.cyl(0.0042, 0.0042, 0.026, 4), 0.0065, 0, 0, quiet);
+      add("owner", G.cyl(0.0145, 0.0155, 0.012, 8), 0, 0.022, 0, quiet);
+      add("skin", G.cyl(0.0115, 0.0135, 0.03, 8), 0, 0.034, 0, quiet);
+      add("skin", G.ball(0.011, 8, 6), 0, 0.074, 0, quiet);
+      add("timber", G.box(0.08, 0.005, 0.006), 0, 0.062, 0, quiet);
+      add("wheat", G.cyl(0.009, 0.007, 0.016, 6), -0.038, 0.042, 0, quiet);
+      add("wheat", G.cyl(0.009, 0.007, 0.016, 6), 0.038, 0.042, 0, quiet);
+    }),
+    // Terrain: low, unoutlined, muted, so seals and plates stay on top.
+    tree: template((add) => {
+      add("bark", G.cyl(0.006, 0.008, 0.032, 5), 0, 0, 0, quiet);
+      add("leafSoft", G.ball(0.04, 7, 5), 0, 0.062, 0, { sy: 0.85, line: false });
+    }),
+    cypress: template((add) => {
+      add("bark", G.cyl(0.005, 0.006, 0.016, 5), 0, 0, 0, quiet);
+      add("leafDark", G.cone(0.023, 0.105, 7), 0, 0.012, 0, quiet);
+    }),
+    rock: template((add) => { add("crag", new T.IcosahedronGeometry(1, 0), 0, 0.3, 0, quiet); }),
+    fieldRipe: template((add) => { add("wheat", G.box(1, 1, 1), 0, 0, 0, quiet); }),
+    fieldGreen: template((add) => { add("fieldGreen", G.box(1, 1, 1), 0, 0, 0, quiet); }),
+    scrub: template((add) => { add("leafDark", G.ball(1, 6, 4), 0, 0.2, 0, quiet); }),
+    // The Oracle (Delphi): a tholos on a stepped platform, always visible; omphalos, tripod over the cleft and laurel come in close.
+    oracleCore: template((add) => {
+      add("stone", G.cyl(0.34, 0.36, 0.025, 20), 0, 0, 0);
+      add("rock", G.cyl(0.29, 0.31, 0.025, 20), 0, 0.025, 0);
+      add("marble", G.cyl(0.24, 0.26, 0.025, 20), 0, 0.05, 0);
+      add("stone", G.cyl(0.11, 0.11, 0.13, 16), 0, 0.075, -0.02);
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2;
+        add("marble", G.cyl(0.011, 0.012, 0.13, 6), 0.165 * Math.cos(a), 0.075, -0.02 + 0.165 * Math.sin(a), quiet);
+      }
+      add("marble", G.cyl(0.185, 0.185, 0.022, 20), 0, 0.205, -0.02);
+      add("clay", G.cone(0.2, 0.075, 20), 0, 0.227, -0.02);
+      add("bronze", G.ball(0.012, 8, 6), 0, 0.31, -0.02);
+    }),
+    oracleDetail: template((add) => {
+      add("stone", G.cyl(0.035, 0.038, 0.012, 12), 0.17, 0.075, 0.12);
+      add("marble", G.dome(0.028), 0.17, 0.087, 0.12);
+      add("bronze", G.torus(0.024, 0.003), 0.17, 0.095, 0.12, { rx: Math.PI / 2, line: false });
+      add("door", G.box(0.13, 0.004, 0.022), -0.37, 0, 0.12, { ry: 0.5, line: false });
+      add("door", G.box(0.07, 0.004, 0.018), -0.42, 0, 0.16, { ry: -0.4, line: false });
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2;
+        // legs splay out at the foot and lean in under the cauldron
+        add("bronze", G.cyl(0.004, 0.004, 0.12, 5).rotateX(0.2).rotateY(Math.atan2(-Math.cos(a), -Math.sin(a))), -0.38 + 0.045 * Math.cos(a), 0, 0.13 + 0.045 * Math.sin(a), quiet);
+      }
+      add("bronze", G.bowl(0.034), -0.38, 0.13, 0.13);
+      add("bronze", G.torus(0.034, 0.004), -0.38, 0.13, 0.13, { rx: Math.PI / 2, line: false });
+      add("bark", G.cyl(0.008, 0.011, 0.07, 5), 0.33, 0, -0.2, { rz: 0.12, line: false });
+      add("leafDark", G.ball(0.045, 8, 6), 0.335, 0.1, -0.2, { sy: 0.85 });
+      add("leafDark", G.ball(0.034, 8, 6), 0.3, 0.085, -0.17);
+      add("leafDark", G.ball(0.032, 8, 6), 0.365, 0.08, -0.23);
+    }),
+    gull: template((add) => {
+      add("linen", G.box(0.046, 0.003, 0.014), -0.02, 0, 0, { rz: -0.35, line: false });
+      add("linen", G.box(0.046, 0.003, 0.014), 0.02, 0, 0, { rz: 0.35, line: false });
+      add("marble", G.ball(0.007, 6, 4), 0, 0, 0, { sz: 1.8, line: false });
+    }),
+  };
+
+  // ---------- terrain decor: a pure function of the tile, its settlements and the seed ----------
+  const LATTICE = [];
+  for (let j = -4; j <= 4; j++) for (let i = -4; i <= 4; i++) {
+    const x = (i + j / 2) * 0.22, z = j * 0.19;
+    if (Math.hypot(x, z) < 0.76) LATTICE.push([x, z]);
+  }
+  function decorFor(t) {
+    const r = rng(`decor:${t.id}`);
+    const spots = LATTICE.map(([x, z]) => [x + (r() - 0.5) * 0.09, z + (r() - 0.5) * 0.09]);
+    for (let i = spots.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
+    const take = (n) => spots.splice(0, n), items = [];
+    if (t.terrain === "forest") {
+      take(8 + Math.floor(r() * 4)).forEach(([x, z], i) => items.push({ type: r() < 0.4 ? "cypress" : "tree", x, z, s: 0.8 + r() * 0.45, ry: r() * 6.28, key: `${t.id}:t${i}` }));
+    } else if (t.terrain === "mountain") {
+      take(4 + Math.floor(r() * 2)).forEach(([x, z], i) => {
+        const k = 0.04 + r() * 0.035;
+        items.push({ type: "rock", x, z, sx: k * (1 + r() * 0.5), sy: k * (0.7 + r() * 0.5), sz: k, ry: r() * 6.28, key: `${t.id}:r${i}` });
+      });
+    } else if (t.terrain === "plains") {
+      take(2).forEach(([x, z], i) => {
+        const ry = r() * Math.PI;
+        for (let k = 0; k < 3; k++) {
+          const dz = (k - 1) * 0.055;
+          items.push({ type: k % 2 ? "fieldGreen" : "fieldRipe", x: x + dz * Math.sin(ry), z: z + dz * Math.cos(ry), cx: x, cz: z, sx: 0.22, sy: 0.008, sz: 0.045, ry, key: `${t.id}:f${i}` });
+        }
+      });
+    } else if (t.terrain === "hill") {
+      take(3).forEach(([x, z], i) => { const k = 0.03 + r() * 0.015; items.push({ type: "scrub", x, z, sx: k * 1.3, sy: k * 0.7, sz: k, ry: 0, key: `${t.id}:s${i}` }); });
+      take(2).forEach(([x, z], i) => { const k = 0.04 + r() * 0.02; items.push({ type: "rock", x, z, sx: k, sy: k * 0.7, sz: k * 1.2, ry: r() * 6.28, key: `${t.id}:b${i}` }); });
+    }
+    return items;
+  }
+  // A colony clears its centre and its slots; a city clears nearly everything, keeping a few at its edge.
+  function clears(item, t, here) {
+    if (!here || !here.length) return false;
+    const lx = item.cx === undefined ? item.x : item.cx, lz = item.cz === undefined ? item.z : item.cz;
+    const wx = t.x + lx, wz = t.y + lz;
+    for (const s of here) for (const n of s.nodes) if (Math.hypot(wx - n.x, wz - n.z) < (n.kind === "big" ? 0.21 : 0.14)) return true;
+    if (here.some((s) => s.kind !== "colony")) return !(Math.hypot(lx, lz) > 0.62 && hash01(`keep:${item.key}`) < 0.45);
+    for (const s of here) if (Math.hypot(wx - s.centre.x, wz - s.centre.z) < 0.34) return true;
+    return hash01(`thin:${item.key}`) > 0.8;
+  }
+
+  // ---------- slot nodes round each settlement; the name plate keeps the south side ----------
+  function layoutNodes(s, side) {
+    const t = s.tile, plan = s.plan;
+    const [a0, a1] = side < 0 ? [140, 268] : side > 0 ? [272, 400] : [135, 405];
+    const kinds = [
+      ...s.build.filter((b) => b !== "port").map((b) => ({ kind: "big", building: b })),
+      ...Array.from({ length: plan.worked }, () => ({ kind: "small" })),
+      ...Array.from({ length: plan.empty }, () => ({ kind: "plot" })),
+    ];
+    const port = s.good ? Math.atan2(s.good.sy - t.y, s.good.sx - t.x) : null;
+    const m = kinds.length + (port !== null ? 1 : 0);
+    const angles = Array.from({ length: m }, (_, i) => (a0 + ((i + 0.5) * (a1 - a0)) / m) * DEG);
+    if (port !== null) {
+      const off = (a) => Math.abs(Math.atan2(Math.sin(a - port), Math.cos(a - port)));
+      let k = 0;
+      angles.forEach((a, i) => { if (off(a) < off(angles[k])) k = i; });
+      angles.splice(k, 1);
+    }
+    const nodes = kinds.map((k, i) => ({ ...k, a: angles[i], x: t.x + NODE_R * Math.cos(angles[i]), z: t.y + NODE_R * Math.sin(angles[i]) }));
+    if (port !== null) nodes.push({ kind: "big", building: "port", port: true, a: port, x: t.x + Math.cos(port) * 0.67, z: t.y + Math.sin(port) * 0.67 });
+    return nodes;
+  }
+
+  // ---------- walking: each pop strolls its own tiles, crossing to a neighbour by the shared edge ----------
+  function pointOn(t, r, inner) {
+    const a = r() * Math.PI * 2, d = inner + r() * (0.7 - inner);
+    return { x: t.x + d * Math.cos(a), z: t.y + d * Math.sin(a) };
+  }
+  function walkPlan(key, home, near, inner) {
+    const r = rng(`walk:${key}`), pts = [];
+    let cur = home;
+    for (let k = 0; k < 6; k++) {
+      const go = near.length && k % 3 === 2 && r() < 0.75 ? near[Math.floor(r() * near.length)] : home;
+      if (go !== cur) pts.push({ x: (cur.x + go.x) / 2, z: (cur.y + go.y) / 2, pause: 0 });
+      pts.push({ ...pointOn(go, r, go === home ? inner : 0.3), pause: 0.6 + r() * 2.4 });
+      cur = go;
+    }
+    if (cur !== home) pts.push({ x: (cur.x + home.x) / 2, z: (cur.y + home.y) / 2, pause: 0 });
+    const legs = [];
+    let t0 = 0;
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i], b = pts[(i + 1) % pts.length], walk = Math.max(0.01, Math.hypot(b.x - a.x, b.z - a.z) / 0.09);
+      legs.push({ a, b, t0, walk, end: t0 + walk + b.pause });
+      t0 += walk + b.pause;
+    }
+    return { legs, period: t0, offset: r() * t0 };
+  }
+  function walkAt(plan, time) {
+    const u = (time + plan.offset) % plan.period;
+    for (const L of plan.legs) if (u < L.end) {
+      const k = Math.min(1, (u - L.t0) / L.walk);
+      return { x: L.a.x + (L.b.x - L.a.x) * k, z: L.a.z + (L.b.z - L.a.z) * k, dx: L.b.x - L.a.x, dz: L.b.z - L.a.z, moving: k < 1 };
+    }
+    const L = plan.legs[0];
+    return { x: L.a.x, z: L.a.z, dx: 1, dz: 0, moving: false };
+  }
+
+  // ---------- scenario build ----------
+  const world = new T.Group();
+  scene.add(world);
+  let current = null, dyn = [], layerSig = "", washSig = "";
+
+  function instance(tpl, places, opts = {}) {
+    const n = places.length, made = [], layer = opts.layer || null;
+    if (!n) return made;
+    const mats = places.map((p) => {
+      e4.set(p.rx || 0, p.ry || 0, p.rz || 0);
+      const k = p.s || 1;
+      return new T.Matrix4().compose(new T.Vector3(p.x || 0, p.y || 0, p.z || 0), new T.Quaternion().setFromEuler(e4), new T.Vector3(p.sx || k, p.sy || k, p.sz || k));
+    });
+    for (const [mat, geo] of tpl.meshes) {
+      const im = new T.InstancedMesh(geo, layerMat(mat, layer), n);
+      mats.forEach((m, i) => { im.setMatrixAt(i, m); if (mat === "owner") im.setColorAt(i, col.set(places[i].color)); });
+      im.castShadow = opts.shadow !== false && mat !== "flame" && mat !== "flameCore";
+      im.receiveShadow = true;
+      im.frustumCulled = false;
+      im.userData.layer = layer;
+      world.add(im);
+      made.push(im);
+    }
+    if (tpl.outline && opts.outline !== false) {
+      const ol = new T.InstancedMesh(tpl.outline, layerKeyline(layer), n);
+      mats.forEach((m, i) => ol.setMatrixAt(i, m));
+      ol.frustumCulled = false;
+      ol.userData.layer = layer;
+      world.add(ol);
+      made.push(ol);
+    }
+    return made;
+  }
+  function clearWorld() {
+    for (const child of [...world.children]) {
+      world.remove(child);
+      if (child.isInstancedMesh && child.dispose) child.dispose();
+      if (child.isLine) child.geometry.dispose();
+    }
+    dyn = [];
+  }
+  function shorePoint(t, out = 1.25) {
+    const l = Math.hypot(t.x, t.y) || 1;
+    return { x: t.x + (t.x / l) * out, y: t.y + (t.y / l) * out };
+  }
+  function routeFor(a, b) {
+    const p = shorePoint(a), q = shorePoint(b);
+    let a0 = Math.atan2(p.y, p.x), a1 = Math.atan2(q.y, q.x);
+    while (a1 - a0 > Math.PI) a1 -= 2 * Math.PI;
+    while (a0 - a1 > Math.PI) a1 += 2 * Math.PI;
+    const r0 = Math.hypot(p.x, p.y), r1 = Math.hypot(q.x, q.y);
+    const pts = [];
+    for (let i = 0; i <= 12; i++) {
+      const u = i / 12, a = a0 + (a1 - a0) * u, r = r0 + (r1 - r0) * u + 0.35 * Math.sin(Math.PI * u);
+      pts.push(new T.Vector3(r * Math.cos(a), 0.02, r * Math.sin(a)));
+    }
+    return new T.CatmullRomCurve3(pts);
+  }
+  function routeLine(curve, mat, layer) {
+    const line = new T.Line(new T.BufferGeometry().setFromPoints(curve.getPoints(80)), mat);
+    line.computeLineDistances();
+    line.userData.layer = layer;
+    world.add(line);
+  }
+
+  function buildScenario(key) {
+    clearWorld();
+    const sc = expand(key);
+    current = sc;
+    if (location.hash === "#check") check(sc);
+    const P = {}, put = (k, p) => (P[k] = P[k] || []).push(p);
+    const owner = new Map(), boats = [];
+    for (const [id, here] of sc.atTile) {
+      const t = byId.get(id);
+      owner.set(id, here.map((s) => s.seat));
+      const shared = here.length > 1;
+      here.forEach((s, k) => {
+        const side = shared ? (k ? 1 : -1) : 0;
+        s.centre = { x: t.x + side * 0.3, z: t.y + MAIN_Z };
+        const scale = shared ? 0.75 : s.kind === "capital" ? 0.86 : s.kind === "city" ? 0.92 : 1;
+        const base = { x: s.centre.x, y: H_TILE, z: s.centre.z, s: scale, color: SEATS[s.seat].color };
+        put(s.kind, base);
+        put(`${s.kind}Flag`, base);
+        s.nodes = layoutNodes(s, side);
+        for (const n of s.nodes) {
+          if (n.kind === "big") {
+            put("nodeBig", { x: n.x, y: H_TILE, z: n.z });
+            if (n.port) {
+              const ux = Math.cos(n.a), uy = Math.sin(n.a), ry = Math.atan2(-uy, ux), g = s.good;
+              put("port", { x: t.x + ux * 0.8, y: H_TILE, z: t.y + uy * 0.8, ry });
+              const away = (g.vx - t.x) * -uy + (g.vy - t.y) * ux > 0 ? -1 : 1;
+              boats.push({ x: t.x + ux * 1.2 - uy * 0.14 * away, y: 0, z: t.y + uy * 1.2 + ux * 0.14 * away, ry, s: 1.3, phase: boats.length * 1.7 });
+            } else put(n.building, { x: n.x, y: H_TILE + 0.018, z: n.z, s: 0.78 });
+          } else if (n.kind === "small") {
+            put(`disc_${t.terrain}`, { x: n.x, y: H_TILE, z: n.z });
+            put(`cut_${t.terrain}`, { x: n.x, y: H_TILE + 0.012, z: n.z, ry: -n.a });
+          } else put("plot", { x: n.x, y: H_TILE, z: n.z });
+        }
+      });
+    }
+    let riotSites = [];
+    if (sc.riot) {
+      riotSites = sc.list.filter((s) => s.seat === sc.riot.seat && s.kind !== "colony").map((s) => s.tile);
+      for (const t of riotSites) { put("torch", { x: t.x - 0.3, y: H_TILE, z: t.y + 0.2 }); put("torch", { x: t.x + 0.32, y: H_TILE, z: t.y + 0.16 }); }
+    }
+    const LAYER_OF = {
+      nodeBig: "slots", plot: "slots", disc_forest: "slots", disc_mountain: "slots", disc_plains: "slots",
+      cut_forest: "detail", cut_mountain: "detail", cut_plains: "detail", temple: "detail", granary: "detail", marketplace: "detail", estate: "detail",
+      port: "ports", torch: "events",
+    };
+    for (const k of Object.keys(P)) instance(TPL[k], P[k], { layer: LAYER_OF[k] || null });
+
+    // terrain decor, cleared by what stands on the tile
+    const D = {};
+    for (const t of tiles) for (const it of decorFor(t)) {
+      if (clears(it, t, sc.atTile.get(t.id))) continue;
+      (D[it.type] = D[it.type] || []).push({ x: t.x + it.x, y: H_TILE, z: t.y + it.z, s: it.s, sx: it.sx, sy: it.sy, sz: it.sz, ry: it.ry });
+    }
+    for (const k of Object.keys(D)) instance(TPL[k], D[k], { layer: "terrain", shadow: k === "tree" || k === "cypress" || k === "rock" });
+    sc.decor = Object.values(D).reduce((n, l) => n + l.length, 0);
+
+    // the Oracle: never settled, no slots, so no nodes; a fixed landmark in every band
+    const oracle = tiles.find((t) => t.terrain === "oracle");
+    const shrine = [{ x: oracle.x, y: H_TILE, z: oracle.y - 0.08 }];
+    instance(TPL.oracleCore, shrine);
+    instance(TPL.oracleDetail, shrine, { layer: "landmark" });
+    const vapour = Array.from({ length: 7 }, (_, i) => ({ ox: oracle.x - 0.38, oz: oracle.y - 0.08 + 0.13, i }));
+    const vm = new T.InstancedMesh(smokeGeo, vapourMat, vapour.length);
+    vm.frustumCulled = false; vm.userData.layer = "landmarkVapour"; world.add(vm);
+    dyn.push({ kind: "vapour", places: vapour, meshes: [vm] });
+
+    // owner rings: lead owner outside, a second colony's owner inside
+    const rings = [];
+    for (const [id, seats] of owner) { const t = byId.get(id); seats.forEach((seat, k) => rings.push({ x: t.x, z: t.y, s: k ? 0.86 : 1, color: SEATS[seat].color })); }
+    const ownerRings = new T.InstancedMesh(ringGeo(R_OWN - 0.03, R_OWN + 0.03), new T.MeshBasicMaterial({ color: 0xffffff }), rings.length);
+    rings.forEach((r, i) => { ownerRings.setMatrixAt(i, m4.compose(v3.set(r.x, H_TILE + 0.004, r.z), q4.identity(), s3.set(r.s, 1, r.s))); ownerRings.setColorAt(i, col.set(r.color)); });
+    s3.set(1, 1, 1);
+    ownerRings.frustumCulled = false;
+    world.add(ownerRings);
+
+    // moving pieces
+    dyn.push({ kind: "bob", places: boats, meshes: instance(TPL.boat, boats, { layer: "ports" }) });
+    const goods = [], flags = [];
+    for (const g of GOODS) {
+      const p = { x: g.x, y: 0.02, z: g.y, s: 1.35, ry: Math.atan2(-(g.y - g.vy), g.x - g.vx), phase: g.x * 2.1 + g.y };
+      goods.push(p);
+      if (sc.claims.has(g.name)) flags.push({ ...p, color: SEATS[sc.claims.get(g.name)].color });
+    }
+    dyn.push({ kind: "bob", places: goods, meshes: instance(TPL.good, goods) });
+    if (flags.length) dyn.push({ kind: "bob", places: flags, meshes: instance(TPL.goodFlag, flags) });
+    const ships = sc.moves.map((m, i) => ({ curve: routeFor(m.from.tile, m.to.tile), seat: m.seat, move: m, phase: i * 2.3, speed: 0.11, x: 0, y: 0.02, z: 0, ry: 0, s: 1.6, color: SEATS[m.seat].color }));
+    for (const sh of ships) routeLine(sh.curve, moveLineMat, "moves");
+    if (ships.length) dyn.push({ kind: "ship", places: ships, meshes: [...instance(TPL.ship, ships, { layer: "moves" }), ...instance(TPL.shipBand, ships, { layer: "moves" })] });
+    // sea life: a realm's Ports trade with its nearest other coastal settlement
+    const traders = [];
+    for (const s of sc.list) {
+      if (!s.good || traders.length >= 3) continue;
+      const dest = sc.list.filter((o) => o.seat === s.seat && o.tile !== s.tile && o.tile.coastal).sort((a, b) => dist(a.tile, s.tile) - dist(b.tile, s.tile))[0];
+      if (dest) traders.push({ curve: routeFor(s.tile, dest.tile), phase: 0.7 + traders.length * 1.9, speed: 0.07, x: 0, y: 0.02, z: 0, ry: 0, s: 1.25, color: SEATS[s.seat].color });
+    }
+    for (const tr of traders) routeLine(tr.curve, tradeLineMat, "tradeRoutes");
+    if (traders.length) dyn.push({ kind: "ship", places: traders, meshes: [...instance(TPL.ship, traders, { layer: "lifeShips" }), ...instance(TPL.shipBand, traders, { layer: "lifeShips" })] });
+    const fr = rng(`fish:${sc.key}`);
+    const fishers = Array.from({ length: 3 }, () => { const a = fr() * Math.PI * 2, R = 6.4 + fr() * 0.5; return { cx: R * Math.cos(a), cz: R * Math.sin(a), rad: 0.18 + fr() * 0.12, phase: fr() * 6.28, s: 1.1 }; });
+    dyn.push({ kind: "fish", places: fishers, meshes: instance(TPL.boat, fishers, { layer: "lifeAmb" }) });
+    const anchors = sc.list.filter((s) => s.good).slice(0, 2).map((s) => shorePoint(s.tile, 0.9));
+    if (!anchors.length) anchors.push(shorePoint(byId.get("-3,2"), 0.9), shorePoint(byId.get("3,-1"), 0.9));
+    const gulls = [];
+    anchors.forEach((p, j) => { for (let i = 0; i < 3; i++) gulls.push({ cx: p.x, cz: p.y, rad: 0.22 + i * 0.12, h: 0.62 + i * 0.12, phase: i * 2.1 + j * 1.3, speed: 0.45 + i * 0.12 }); });
+    dyn.push({ kind: "gull", places: gulls, meshes: instance(TPL.gull, gulls, { layer: "lifeAmb", shadow: false }) });
+    const hearths = [];
+    sc.list.filter((s) => s.kind !== "colony" && !riotSites.includes(s.tile)).forEach((s) => { for (let i = 0; i < 4; i++) hearths.push({ ox: s.centre.x + 0.13, oz: s.centre.z + 0.06, i }); });
+    if (hearths.length) {
+      const hm = new T.InstancedMesh(smokeGeo, hearthMat, hearths.length);
+      hm.frustumCulled = false; hm.userData.layer = "lifeAmb"; world.add(hm);
+      dyn.push({ kind: "hearth", places: hearths, meshes: [hm] });
+    }
+    if (sc.titles) {
+      const cap = sc.list.find((s) => s.seat === sc.titles.seat && s.kind === "capital").tile;
+      const crown = [{ x: cap.x, y: 0.66, z: cap.y + MAIN_Z, base: 0.66 }];
+      dyn.push({ kind: "laurel", places: crown, meshes: instance(TPL.laurel, crown, { layer: "events", shadow: false }) });
+    }
+    if (riotSites.length) {
+      const puffs = [];
+      riotSites.forEach((t) => { for (let i = 0; i < 12; i++) puffs.push({ ox: t.x + (i % 2 ? 0.32 : -0.3), oz: t.y + 0.18, i }); });
+      const sm = new T.InstancedMesh(smokeGeo, riotSmokeMat, puffs.length);
+      sm.frustumCulled = false; sm.userData.layer = "events"; world.add(sm);
+      dyn.push({ kind: "smoke", places: puffs, meshes: [sm] });
+    }
+
+    // pops: one figure per pop; working slaves stand at their slot, the rest walk their own tiles
+    const figs = { citizen: [], freeman: [], slave: [] }, riders = [];
+    for (const s of sc.list) {
+      const near = [...new Set(sc.list.filter((o) => o.seat === s.seat && dist(o.tile, s.tile) === 1).map((o) => o.tile))];
+      const inner = s.kind === "capital" ? 0.5 : s.kind === "city" ? 0.42 : 0.3;
+      const color = SEATS[s.seat].color;
+      const add = (cls, tag, extra) => figs[cls].push({ color, phase: hash01(`${s.name}:${tag}`) * 6.28, ...extra });
+      s.nodes.filter((n) => n.kind === "small").forEach((n, i) => add("slave", `w${i}`, { mode: "work", node: n, wx: n.x - 0.1 * Math.cos(n.a), wz: n.z - 0.1 * Math.sin(n.a) }));
+      for (let i = 0; i < s.plan.idle; i++) add("slave", `i${i}`, { mode: "walk", plan: walkPlan(`${s.name}:s${i}`, s.tile, near, inner) });
+      for (let i = 0; i < s.pops[1]; i++) add("freeman", `f${i}`, { mode: "walk", plan: walkPlan(`${s.name}:f${i}`, s.tile, near, inner) });
+      for (let i = 0; i < s.pops[0]; i++) add("citizen", `c${i}`, { mode: "walk", plan: walkPlan(`${s.name}:c${i}`, s.tile, near, inner) });
+    }
+    ships.forEach((sh) => { for (let i = 0; i < sh.move.n; i++) riders.push({ color: sh.color, mode: "ship", ship: sh, slot: i, phase: i }); });
+    for (const cls of Object.keys(figs)) if (figs[cls].length) dyn.push({ kind: "figures", places: figs[cls], meshes: instance(TPL[cls], figs[cls], { layer: "pops", shadow: false }) });
+    if (riders.length) dyn.push({ kind: "figures", places: riders, meshes: instance(TPL.freeman, riders, { layer: "passengers", shadow: false }) });
+    sc.figures = figs.citizen.length + figs.freeman.length + figs.slave.length + riders.length;
+    sc.ships = ships;
+    sc.riotSites = riotSites;
+
+    animate(clock, true);
+    buildOverlay(sc);
+    describeScenario(sc);
+    renderLegend();
+    tiles.forEach((t) => {
+      const here = sc.atTile.get(t.id) || [];
+      const extra = here.map((s) => `${title(s.name)}, ${SEATS[s.seat].name}'s ${s.kind}: ${s.plan.built} built, ${s.plan.worked} worked, ${s.plan.empty} open`).join("; ");
+      keyBtns[t.i].setAttribute("aria-label", tileName(t) + (extra ? `; ${extra}` : ""));
+    });
+    if (selected) select(selected, true);
+    layerSig = "";
+    washSig = "";
+    camDirty = true;
+    kick();
+  }
+
+  // Per-frame motion. Hidden layers are skipped.
+  const tmpM = new T.Matrix4();
+  function animate(time, all) {
+    for (const d of dyn) {
+      if (!d.meshes.length || (!all && !d.meshes[0].visible)) continue;
+      if (d.kind === "bob") {
+        d.places.forEach((p, i) => {
+          const y = (p.y || 0) + Math.sin(time * 1.4 + p.phase) * 0.012, k = p.s || 1;
+          e4.set(Math.sin(time * 1.1 + p.phase) * 0.06, p.ry || 0, Math.sin(time * 0.9 + p.phase * 1.3) * 0.04);
+          tmpM.compose(v3.set(p.x, y, p.z), q4.setFromEuler(e4), s3.set(k, k, k));
+          for (const im of d.meshes) im.setMatrixAt(i, tmpM);
+        });
+      } else if (d.kind === "ship") {
+        d.places.forEach((p, i) => {
+          const w = time * p.speed + p.phase, u = clamp(0.5 - 0.5 * Math.cos(w), 0, 1);
+          const pt = p.curve.getPointAt(u), tan = p.curve.getTangentAt(u), fwd = Math.sin(w) >= 0 ? 1 : -1;
+          p.x = pt.x; p.z = pt.z; p.ry = Math.atan2(-tan.z * fwd, tan.x * fwd);
+          e4.set(Math.sin(time * 1.3 + i) * 0.05, p.ry, Math.sin(time * 0.8 + i) * 0.03);
+          tmpM.compose(v3.set(pt.x, 0.02 + Math.sin(time * 1.6 + i) * 0.01, pt.z), q4.setFromEuler(e4), s3.set(p.s, p.s, p.s));
+          for (const im of d.meshes) im.setMatrixAt(i, tmpM);
+        });
+      } else if (d.kind === "fish") {
+        d.places.forEach((p, i) => {
+          const a = time * 0.12 + p.phase;
+          e4.set(0, Math.atan2(-Math.cos(a), -Math.sin(a)), Math.sin(time * 1.2 + p.phase) * 0.05);
+          tmpM.compose(v3.set(p.cx + p.rad * Math.cos(a), Math.sin(time * 1.5 + p.phase) * 0.008, p.cz + p.rad * Math.sin(a)), q4.setFromEuler(e4), s3.set(p.s, p.s, p.s));
+          for (const im of d.meshes) im.setMatrixAt(i, tmpM);
+        });
+      } else if (d.kind === "gull") {
+        d.places.forEach((p, i) => {
+          const a = time * p.speed + p.phase;
+          eF.set(0, Math.atan2(-Math.sin(a), Math.cos(a)), 0.35);
+          tmpM.compose(v3.set(p.cx + p.rad * Math.cos(a), p.h + 0.03 * Math.sin(time * 2 + p.phase), p.cz + p.rad * Math.sin(a)), q4.setFromEuler(eF), s3.set(1.2, 1.2 + 0.25 * Math.sin(time * 7 + p.phase), 1.2));
+          for (const im of d.meshes) im.setMatrixAt(i, tmpM);
+        });
+      } else if (d.kind === "figures") {
+        d.places.forEach((f, i) => {
+          let x, z, fx, fz, bend = 0, y = H_TILE;
+          if (f.mode === "work") {
+            x = f.wx; z = f.wz; fx = f.node.x - x; fz = f.node.z - z;
+            bend = 0.35 * Math.max(0, Math.sin(time * 2.4 + f.phase));
+          } else if (f.mode === "ship") {
+            const sh = f.ship, c = Math.cos(sh.ry), s = Math.sin(sh.ry), lx = f.slot * 0.05 - 0.06;
+            x = sh.x + lx * c; z = sh.z - lx * s; y = 0.035; fx = c; fz = -s;
+          } else {
+            const w = walkAt(f.plan, time);
+            x = w.x; z = w.z; fx = w.dx; fz = w.dz;
+            if (w.moving) y += Math.abs(Math.sin(time * 9 + f.phase)) * 0.004;
+          }
+          eF.set(bend, Math.atan2(fx, fz), 0);
+          tmpM.compose(v3.set(x, y, z), q4.setFromEuler(eF), s3.set(FIG_S, FIG_S, FIG_S));
+          for (const im of d.meshes) im.setMatrixAt(i, tmpM);
+        });
+      } else if (d.kind === "laurel") {
+        const p = d.places[0];
+        e4.set(0.25, time * 0.5, 0);
+        tmpM.compose(v3.set(p.x, p.base + Math.sin(time * 1.2) * 0.025, p.z), q4.setFromEuler(e4), s3.set(1, 1, 1));
+        for (const im of d.meshes) im.setMatrixAt(0, tmpM);
+      } else if (d.kind === "vapour") {
+        d.places.forEach((p, i) => {
+          const ph = (time * 0.09 + p.i / 7) % 1, r = 0.014 + ph * 0.04;
+          tmpM.compose(v3.set(p.ox + Math.sin(ph * 5 + p.i) * 0.025, H_TILE + 0.05 + ph * 0.42, p.oz - ph * 0.04), q4.identity(), s3.set(r, r * 1.3, r));
+          d.meshes[0].setMatrixAt(i, tmpM);
+        });
+      } else if (d.kind === "smoke" || d.kind === "hearth") {
+        const riot = d.kind === "smoke";
+        d.places.forEach((p, i) => {
+          const n = riot ? 12 : 4, ph = (time * (riot ? 0.22 : 0.12) + p.i / n) % 1;
+          const r = riot ? 0.04 + ph * 0.11 : 0.018 + ph * 0.035;
+          tmpM.compose(v3.set(p.ox + Math.sin(ph * 4 + p.i) * 0.04 + ph * (riot ? 0.14 : 0.08), H_TILE + (riot ? 0.3 : 0.16) + ph * (riot ? 0.8 : 0.45), p.oz - ph * 0.05), q4.identity(), s3.set(r, r * 0.85, r));
+          d.meshes[0].setMatrixAt(i, tmpM);
+        });
+      }
+      for (const im of d.meshes) im.instanceMatrix.needsUpdate = true;
+    }
+    s3.set(1, 1, 1);
+  }
+
+  // ---------- HTML layer: plates, chips and labels, upright at every angle ----------
+  let labels = [], cssA = {};
+  const img = (k) => '<img alt="" src="' + ICON[k] + '">';
+  const pipsHTML = (p) => '<i class="b"></i>'.repeat(p.built) + '<i class="w"></i>'.repeat(p.worked) + "<i></i>".repeat(p.empty);
+  function ecoHTML(here) {
+    return here.map((s) => {
+      const ys = yieldsOf(s).map(([r, n]) => `${img(r)}+${n}`).join(" ");
+      const bl = s.build.map((b) => (ICON[b] ? img(b) : `<i>${BUILD_NAME[b]}</i>`)).join("");
+      return `<span class="en">${esc(s.name)}</span><span class="pips">${pipsHTML(s.plan)}</span>${ys ? `<span class="row">${ys}</span>` : ""}${bl ? `<span class="row bl">${bl}</span>` : ""}`;
+    }).join("<hr>");
+  }
+  // The middle band's economy: just what the slots make, and the slots themselves.
+  function ecoCompactHTML(here) {
+    return here.map((s) => {
+      const y = s.tile.res ? `${img(s.tile.res)}+${s.plan.worked * (s.build.includes("estate") ? 2 : 1)}` : "<em>no yield</em>";
+      return `${y}<span class="pips">${pipsHTML(s.plan)}</span>`;
+    }).join("<u></u>");
+  }
+  function ecoEmptyHTML(t) {
+    if (t.terrain === "oracle") return '<span class="row"><em>Oracle · 0 slots, never settled</em></span>';
+    return `<span class="row">${t.res ? img(t.res) : ""}${t.slots} slots${t.res ? "" : " <em>no yield</em>"}</span>`;
+  }
+  function buildOverlay(sc) {
+    overlay.textContent = "";
+    labels = [];
+    const L = (cls, html, x, y, h, shift, a, extra = {}) => {
+      const d = document.createElement("div");
+      d.className = cls;
+      d.innerHTML = html;
+      overlay.appendChild(d);
+      labels.push({ d, x, y, h, shift, a, ...extra });
+    };
+    for (const [id, here] of sc.atTile) {
+      const t = byId.get(id), lead = here[0];
+      const pops = here.reduce((n, s) => n + s.pops[0] + s.pops[1] + s.pops[2], 0);
+      const names = here.map((s) => esc(s.name)).join("<i>|</i>");
+      const pips = here.map((s) => pipsHTML(s.plan)).join("<u></u>");
+      const a = lead.kind === "capital" ? ["plates"] : lead.kind === "city" ? ["plates", "cityplate"] : ["plates", "colony"];
+      L(`plate ${lead.kind}`, `<span class="pl-row"><span class="pl-name">${names}</span><span class="pips">${pips}</span></span><span class="pl-pops">${pops} ${pops === 1 ? "pop" : "pops"}</span>`, t.x, t.y + 0.42, H_TILE, "translate(-50%, 0)", a);
+      L("eco compact", ecoCompactHTML(here), t.x, t.y + 0.05, H_TILE, "translate(-50%, -50%)", ["ecoC"]);
+      L("eco full", ecoHTML(here), t.x, t.y - 0.02, H_TILE, "translate(-50%, -50%)", ["ecoF"]);
+    }
+    for (const t of tiles) {
+      if (sc.atTile.has(t.id)) continue;
+      const oracle = t.terrain === "oracle";
+      const label = oracle ? "Oracle · never settled" : t.res ? `${t.slots} ${t.res}` : `${t.slots} slots`;
+      const [ly, shift] = oracle ? [t.y + 0.42, "translate(-50%, 0)"] : [t.y + 0.05, "translate(-50%, -50%)"];
+      L(oracle ? "yield oracle" : "yield", esc(label), t.x, ly, H_TILE, shift, ["yield"]);
+      L("eco empty", ecoEmptyHTML(t), t.x, ly, H_TILE, shift, ["ecoE"]);
+    }
+    for (const g of GOODS) {
+      const o = sc.claims.has(g.name) ? SEATS[sc.claims.get(g.name)] : null;
+      L("moor", `<span class="m-name">${o ? `<b style="--own:${o.color}"></b>` : ""}<span>${esc(g.name)}${o ? "" : "<small>unclaimed</small>"}</span></span>`, g.x, g.y + 0.12, 0, "translate(-50%, 0)", ["goodname"]);
+    }
+    if (sc.titles) {
+      const cap = sc.list.find((s) => s.seat === sc.titles.seat && s.kind === "capital").tile;
+      L("chip event", `${img("laurel")}3 titles`, cap.x, cap.y + MAIN_Z, 0.92, "translate(-50%, -100%)", ["event"]);
+    }
+    for (const t of sc.riotSites) L("chip event", `${img("riot")}Riot ${minus(sc.riot.level)}`, t.x, t.y + MAIN_Z, 1.05, "translate(-50%, -100%)", ["event"]);
+    for (const sh of sc.ships) L("chip ship", `${sh.move.n} ${sh.move.n === 1 ? "pop" : "pops"} → ${esc(title(sh.move.to.name))}`, 0, 0, 0.3, "translate(-50%, -100%)", ["ship"], { ship: sh });
+    for (const r of sc.realms) {
+      const mine = sc.list.filter((s) => s.seat === r.seat), seat = SEATS[r.seat];
+      const cx = mine.reduce((n, s) => n + s.tile.x, 0) / mine.length, cy = mine.reduce((n, s) => n + s.tile.y, 0) / mine.length;
+      L("realm", `<b>${seat.name.toUpperCase()}</b><small>${seat.glaze} ${seat.blazon} · ${r.cities} ${r.cities === 1 ? "city" : "cities"}, ${r.colonies} ${r.colonies === 1 ? "colony" : "colonies"}</small>`, cx, cy, H_TILE, "translate(-50%, -50%)", ["realm"]);
+      const cap = mine.find((s) => s.kind === "capital");
+      const tierName = { calm: "calm", uneasy: "uneasy", riot: "riot", revolt: "revolt" }[r.tier];
+      L(`chip unrest ${r.tier}`, `${img(r.tier === "riot" || r.tier === "revolt" ? "riot" : "happiness")}${seat.name} ${minus(r.level)}<small>· ${tierName}${r.tokens ? ` · ${r.tokens} Unrest ${r.tokens === 1 ? "token" : "tokens"}` : ""}</small>`, cap.tile.x, cap.tile.y + MAIN_Z, 0.95, "translate(-50%, -100%)", ["unrest"]);
+    }
+    for (const s of sc.list) {
+      const pn = s.nodes.find((n) => n.port);
+      if (pn) L("chip portchip", `${img("luxury")}Port · ${esc(s.good.name)}`, pn.x, pn.z, H_TILE + 0.3, "translate(-50%, -100%)", ["port"]);
+    }
+  }
+  function placeLabels(v, shipsOnly) {
+    for (const L of labels) {
+      if (shipsOnly && !L.ship) continue;
+      const alpha = L.a.reduce((n, k) => n * (cssA[k] === undefined ? 1 : cssA[k]), 1);
+      if (alpha < 0.01) { L.d.hidden = true; continue; }
+      const x = L.ship ? L.ship.x : L.x, y = L.ship ? L.ship.z : L.y;
+      const q = project(v, x, y, L.h);
+      const on = inFront(v, q.k) && q.x > -90 && q.x < W + 90 && q.y > -40 && q.y < H + 60;
+      L.d.hidden = !on;
+      if (on) { L.d.style.transform = `translate(${q.x.toFixed(1)}px, ${q.y.toFixed(1)}px) ${L.shift}`; L.d.style.zIndex = String(Math.round(q.y)); }
+    }
+  }
+
+  // ---------- map modes and zoom bands ----------
+  let mode = "terrain";
+  const MODE_NOTE = {
+    terrain: "<b>Terrain.</b> The whole board. Far out: owner wash, seals and names. Middle: slots and yield chips. Close in: buildings, fields, trees, rocks and pops.",
+    political: "<b>Political.</b> Owner colour per tile and realm names; cosmetics hidden.",
+    economy: "<b>Economy.</b> What every tile makes from its slots, worked and open slots, and its buildings as icons; cosmetics dimmed.",
+    unrest: "<b>Unrest.</b> Each realm's happiness counted off the board, its riot or revolt tier, and its Unrest tokens.",
+    trade: "<b>Trade and sea.</b> Ports, claimed and unclaimed goods, ship routes and pops on the move.",
+  };
+  const TIER_COL = { calm: "#e3d8bd", uneasy: "#d9b48b", riot: "#c66a45", revolt: "#7a3218" };
+  function bandAlphas(t) {
+    const mid = smooth(E1 - BW, E1 + BW, t), close = smooth(E2 - BW, E2 + BW, t);
+    // Colony names wait one notch past the opening zoom: on a full late-game board they crowd the cities.
+    const names = smooth(T_FIT + 0.02, T_FIT + 0.1, t);
+    const layers = {
+      terrain: { landmark: close, landmarkVapour: close, slots: mid, detail: close, terrain: close, pops: close, passengers: mid, lifeShips: close, lifeAmb: close, ports: mid, moves: mid, events: 1, tradeRoutes: 0 },
+      political: { landmark: 0, landmarkVapour: 0, slots: 0, detail: 0, terrain: 0, pops: 0, passengers: 0, lifeShips: 0, lifeAmb: 0, ports: 0, moves: 0, events: 0, tradeRoutes: 0 },
+      economy: { landmark: close, landmarkVapour: close, slots: 1, detail: close, terrain: close * 0.3, pops: close * 0.3, passengers: 0, lifeShips: 0, lifeAmb: 0, ports: 1, moves: 0, events: 0, tradeRoutes: 0 },
+      unrest: { landmark: 0, landmarkVapour: 0, slots: 0, detail: 0, terrain: 0, pops: 0, passengers: 0, lifeShips: 0, lifeAmb: 0, ports: 0, moves: 0, events: 1, tradeRoutes: 0 },
+      trade: { landmark: 0, landmarkVapour: 0, slots: 0, detail: 0, terrain: 0, pops: 0, passengers: 1, lifeShips: 1, lifeAmb: 0, ports: 1, moves: 1, events: 0, tradeRoutes: 1 },
+    }[mode];
+    const html = {
+      terrain: { colony: names, cityplate: 1, pips: mid * (1 - close), yield: mid, ecoC: 0, ecoF: 0, ecoE: 0, goodname: mid, ship: mid, realm: 0, event: mid, unrest: 0, port: 0, popsline: close, plates: 1 },
+      political: { colony: 0, cityplate: 0, pips: 0, yield: 0, ecoC: 0, ecoF: 0, ecoE: 0, goodname: 0, ship: 0, realm: 1, event: 0, unrest: 0, port: 0, popsline: 0, plates: 0 },
+      economy: { colony: 0, cityplate: 0, pips: 0, yield: 0, ecoC: 1 - close, ecoF: close, ecoE: 1, goodname: mid, ship: 0, realm: 0, event: 0, unrest: 0, port: 0, popsline: 0, plates: 0 },
+      unrest: { colony: names, cityplate: 1, pips: 0, yield: 0, ecoC: 0, ecoF: 0, ecoE: 0, goodname: 0, ship: 0, realm: 0, event: 0, unrest: 1, port: 0, popsline: 0, plates: 1 },
+      trade: { colony: 0, cityplate: 1, pips: 0, yield: 0, ecoC: 0, ecoF: 0, ecoE: 0, goodname: 1, ship: 1, realm: 0, event: 0, unrest: 0, port: 1, popsline: 0, plates: 1 },
+    }[mode];
+    return { mid, close, layers, html };
+  }
+  function applyLayers(layers) {
+    const sig = mode + "|" + Object.keys(layers).map((k) => layers[k].toFixed(2)).join(",");
+    if (sig === layerSig) return;
+    layerSig = sig;
+    for (const layer in LAYER_MATS) {
+      const a = layers[layer] === undefined ? 1 : layers[layer];
+      for (const m of LAYER_MATS[layer]) m.opacity = m.userData.base * a;
+    }
+    for (const c of world.children) {
+      const L = c.userData.layer;
+      if (L) c.visible = (layers[L] === undefined ? 1 : layers[L]) > 0.01;
+    }
+  }
+  function tileColour(t, wash) {
+    if (t.terrain === "oracle") return t.near;
+    const here = current.atTile.get(t.id), seat = here ? here[0].seat : -1;
+    const political = here ? mix(BONE, SEATS[seat].color, 0.74) : t.terrain === "oracle" ? GLAZE.oracle : BONE;
+    if (mode === "political") return political;
+    if (mode === "economy") return t.near;
+    if (mode === "unrest") return here ? TIER_COL[current.realms[seat].tier] : mix(BONE, "#f6efe0", 0.4);
+    if (mode === "trade") return mix(t.near, BONE, 0.7);
+    return mix(t.near, political, wash);
+  }
+  function setMode(m) {
+    if (!MODE_NOTE[m]) return;
+    mode = m;
+    const radio = $(`mode-${m}`);
+    if (radio && !radio.checked) radio.checked = true;
+    $("modeNote").innerHTML = MODE_NOTE[m];
+    renderLegend();
+    layerSig = ""; washSig = ""; camDirty = true;
+    kick();
+  }
+
+  // ---------- the legend follows the mode ----------
+  function renderLegend() {
+    const sc = current;
+    if (!sc) return;
+    const li = (icon, name, text) => `<li>${icon}<b>${name}</b><span>${text}</span></li>`;
+    const sw = (c) => `<i class="sw2" style="background:${c}"></i>`;
+    let head = "", items = [];
+    if (mode === "terrain") {
+      head = "Models, slots and pops";
+      items = [
+        li(img("city"), "City", "Stone walls, marble towers, clay roofs. The capital is an acropolis with a temple."),
+        li(img("colony"), "Colony", "Timber-roofed houses, a bark palisade, the owner's pennant."),
+        li(SVG.big, "Big node", "A stone plinth: one slot holding one building."),
+        li(SVG.small, "Small node", "A worked slot and its slave: cut logs, a quarry face or a stubble field."),
+        li(SVG.plot, "Ring", "An open slot. Slaves without a slot stand idle off the nodes."),
+        li(img("temple"), "Temple", "Marble columns under a clay roof; Granary, Marketplace and Estate stand on nodes too."),
+        li(img("citizens"), "Citizen", "Long robe and leaf crown; owner sash."),
+        li(SVG.freeman, "Freeman", "Short tunic; owner cap."),
+        li(img("slaves"), "Slave", "Bare-chested under a yoke; owner waistband."),
+        li(img("luxury"), "Luxury good", "Amphorae on a moored raft; the owner's pennant once a Port claims it."),
+        li(img("move"), "Pops on the move", "A ship with an owner band on its sail, on a dashed route."),
+        li(img("riot"), "Riot", "Torches and smoke over the rioting realm."),
+        li(img("laurel"), "Title", "A gold laurel over a capital whose realm holds three titles."),
+      ];
+    } else if (mode === "political") {
+      head = "Realms";
+      items = sc.realms.map((r) => { const s = SEATS[r.seat]; return li(sw(s.color), `${s.blazon} ${s.name} · ${s.glaze}`, `${r.cities} ${r.cities === 1 ? "city" : "cities"} and ${r.colonies} ${r.colonies === 1 ? "colony" : "colonies"} on ${r.tiles} tiles; ${r.pops} pops.`); });
+    } else if (mode === "economy") {
+      head = "Yields, counted from the board";
+      const totals = sc.realms.map((r) => {
+        const sum = new Map();
+        for (const s of sc.list.filter((o) => o.seat === r.seat)) for (const [k, n] of yieldsOf(s)) sum.set(k, (sum.get(k) || 0) + n);
+        return li(sw(SEATS[r.seat].color), SEATS[r.seat].name, [...sum].map(([k, n]) => `+${n} ${k}`).join(", ") || "nothing yet");
+      });
+      items = [
+        li('<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="26" width="12" height="12" fill="#ece2ce"/><circle cx="32" cy="32" r="6" fill="#8f8473" stroke="#ece2ce" stroke-width="2.5"/><circle cx="51" cy="32" r="6" fill="none" stroke="#ece2ce" stroke-width="2.5"/></svg>', "Slots", "Square: a building. Filled circle: a slave works it. Ring: open."),
+        li(img("wood"), "Wood, stone, food", "A working slave makes 1 of the tile's resource; 2 with an Estate. Hills make nothing."),
+        li(img("gold"), "Gold", "Each freeman makes 1; 2 with a Marketplace."),
+        li(img("influence"), "Influence", "Each citizen makes 1."),
+        li(img("granary"), "Granary", "+2 food a turn. Marketplace, Estate and Port show as tags."),
+        ...totals,
+      ];
+    } else if (mode === "unrest") {
+      head = "Happiness, counted from the board";
+      items = [
+        li(sw(TIER_COL.calm), "Calm", "0 or higher."),
+        li(sw(TIER_COL.uneasy), "Uneasy", "−1 or −2."),
+        li(sw(TIER_COL.riot), "Riot", "−3 to −5: a riot at the end of the realm's turn."),
+        li(sw(TIER_COL.revolt), "Revolt", "−6 or lower: half the slaves leave."),
+        ...sc.realms.map((r) => li(img(r.tier === "riot" || r.tier === "revolt" ? "riot" : "happiness"), `${SEATS[r.seat].name} ${minus(r.level)}`,
+          `Temples +${r.temples}, goods +${2 * r.goods}, ${r.slaves} slaves ${minus(-Math.floor(r.slaves / 2))}${r.tokens ? `, Unrest tokens ${minus(-r.tokens)}` : ", no Unrest tokens"}.`)),
+      ];
+    } else {
+      head = "Goods, Ports and routes";
+      const port = new Map(sc.list.filter((s) => s.good).map((s) => [s.good.name, s]));
+      items = [
+        ...GOODS.map((g) => {
+          const s = port.get(g.name);
+          return li(s ? sw(SEATS[s.seat].color) : img("luxury"), g.name, s ? `${SEATS[s.seat].name}'s, by the Port at ${title(s.name)}: +2 happiness.` : `Unclaimed; a Port on hex ${g.tiles[0]} or ${g.tiles[1]} takes it.`);
+        }),
+        li(img("move"), "Dashed white", sc.moves.length ? sc.moves.map((m) => `${SEATS[m.seat].name} moves ${m.n} from ${title(m.from.name)} to ${title(m.to.name)}`).join("; ") + "." : "No pops at sea."),
+        li('<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M6 40Q32 18 58 40" fill="none" stroke="#f2d28a" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/></svg>', "Dotted bronze", "Trade runs between a realm's Ports and its coast; decoration only."),
+      ];
+    }
+    $("legendH").textContent = head;
+    $("legend").innerHTML = items.join("");
+  }
+  function describeScenario(sc) {
+    $("scnText").textContent = sc.text;
+    const tot = sc.list.reduce((a, s) => ({ b: a.b + s.plan.built, w: a.w + s.plan.worked, e: a.e + s.plan.empty, i: a.i + s.plan.idle }), { b: 0, w: 0, e: 0, i: 0 });
+    const chips = [
+      `<span>${tot.b} slots built · ${tot.w} worked · ${tot.e} open${tot.i ? ` · ${tot.i} idle slaves` : ""}</span>`,
+      `<span>${img("citizens")}${sc.figures} figures for ${sc.figures} pops</span>`,
+      `<span>${img("luxury")}${sc.claims.size} of 6 goods claimed</span>`,
+    ];
+    if (sc.moves.length) chips.push(`<span>${img("move")}${sc.moves.map((m) => `${SEATS[m.seat].name} moves ${m.n} by sea`).join(", ")}</span>`);
+    if (sc.riot) chips.push(`<span>${img("riot")}${SEATS[sc.riot.seat].name}'s realm riots at ${minus(sc.riot.level)}</span>`);
+    if (sc.titles) chips.push(`<span>${img("laurel")}${SEATS[sc.titles.seat].name} holds ${sc.titles.cards.join(", ")}</span>`);
+    $("scnChips").innerHTML = chips.join("");
+    const cities = sc.list.filter((s) => s.kind !== "colony").length;
+    $("topNote").textContent = `Year ${sc.year} of 14 · ${cities} cities, ${sc.list.length - cities} colonies`;
+  }
+
+  // ---------- selection and the hidden tile buttons ----------
+  let selected = null;
+  function tileName(t) {
+    const slots = t.terrain === "oracle" ? "the oracle: 0 slots, never settled, and colony chains route around it" : `${t.slots} ${t.slots === 1 ? "slot" : "slots"}${t.res ? ` for ${t.res}` : ", a slave makes nothing"}`;
+    return `Hex ${t.id}, ${t.terrain} tile, ${slots}`;
+  }
+  function describe(id) {
+    const t = byId.get(id);
+    const here = (current && current.atTile.get(id)) || [];
+    const who = here.map((s) => {
+      const seat = SEATS[s.seat], [c, f, sl] = s.pops, p = s.plan;
+      const b = s.build.map((x) => (x === "port" && s.good ? `Port holding ${s.good.name}` : BUILD_NAME[x])).join(", ");
+      const slots = `${p.share || p.slots} slots: ${p.built} built, ${p.worked} worked, ${p.empty} open${p.idle ? `, ${p.idle} idle ${p.idle === 1 ? "slave" : "slaves"}` : ""}`;
+      const y = yieldsOf(s).map(([r, n]) => `+${n} ${r}`).join(", ");
+      return `${title(s.name)}, ${seat.name}'s ${s.kind} (${seat.glaze} ${seat.blazon}): ${c + f + sl} pops (${c} citizens, ${f} freemen, ${sl} slaves); ${slots}${b ? `; ${b}` : ""}${y ? `; makes ${y}` : ""}`;
+    });
+    return `Selected: ${tileName(t)}${who.length ? ` · ${who.join(" · ")}` : ""}.`;
+  }
+  function select(id, quiet) {
+    selected = id;
+    const t = id && byId.get(id);
+    selRing.visible = Boolean(t);
+    if (t) selRing.position.set(t.x, H_TILE + 0.006, t.y);
+    if (!quiet || id) $("picked").textContent = id ? describe(id) : "Click a tile to select it.";
+    kick();
+  }
+  const keyBtns = tiles.map((t) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.tabIndex = t.id === "0,0" ? 0 : -1;
+    b.dataset.tileId = t.id;
+    b.setAttribute("aria-label", tileName(t));
+    keys.appendChild(b);
+    return b;
+  });
+  const screenOf = (t) => project(view(), t.x, t.y, H_TILE);
+  function rove(fromId, key) {
+    const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[key];
+    const o = screenOf(byId.get(fromId));
+    let best = null;
+    for (const t of tiles) {
+      if (t.id === fromId) continue;
+      const p = screenOf(t), dx = p.x - o.x, dy = p.y - o.y, dd = Math.hypot(dx, dy), al = (dx * dir[0] + dy * dir[1]) / dd;
+      if (al < 0.5) continue;
+      if (!best || dd / al < best.cost) best = { t, cost: dd / al };
+    }
+    return best && best.t;
+  }
+  function focusTile(t) {
+    keyBtns.forEach((b) => { b.tabIndex = b.dataset.tileId === t.id ? 0 : -1; });
+    keyBtns[t.i].focus({ preventScroll: true });
+    const p = screenOf(t);
+    if (p.x < W * 0.12 || p.x > W * 0.88 || p.y < H * 0.12 || p.y > H * 0.88) { goal.anchor = null; goal.tx = t.x; goal.ty = t.y; clampTarget(goal); kick(); }
+  }
+  keys.addEventListener("focusin", (e) => {
+    const id = e.target.dataset && e.target.dataset.tileId;
+    if (!id) return;
+    const t = byId.get(id);
+    focusRing.visible = e.target.matches(":focus-visible");
+    focusRing.position.set(t.x, H_TILE + 0.008, t.y);
+    kick();
+  });
+  keys.addEventListener("focusout", () => { focusRing.visible = false; kick(); });
+  keys.addEventListener("keydown", (e) => {
+    const id = e.target.dataset && e.target.dataset.tileId;
+    if (!id) return;
+    if (/^[1-5]$/.test(e.key)) return;
+    e.stopPropagation();
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(id); }
+    else if (e.key.startsWith("Arrow")) { e.preventDefault(); const next = rove(id, e.key); if (next) focusTile(next); }
+    else if (e.key === "Escape") stage.focus();
+  });
+  keys.addEventListener("click", (e) => { const id = e.target.dataset && e.target.dataset.tileId; if (id) select(id); });
+
+  // ---------- draw loop: one loop, running only while something moves ----------
+  let raf = 0, last = 0, clock = 0, pageVisible = !document.hidden, onScreen = true;
+  const stats = location.hash === "#check" ? [] : null;
+  if (stats) window.__mapStats = () => {
+    const s = stats.slice(-300).sort((a, b) => a - b);
+    return { frames: s.length, medianMs: s[s.length >> 1], p95Ms: s[Math.floor(s.length * 0.95)], drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles };
+  };
+  const ambient = () => !reduceMotion.matches && pageVisible && onScreen;
+  const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  function stepCamera() {
+    const a = reduceMotion.matches ? 1 : 0.24;
+    const lz = Math.log(cam.z), gz = Math.log(goal.z);
+    const before = [cam.tx, cam.ty, cam.z, cam.rot];
+    cam.z = Math.exp(lz + (gz - lz) * a);
+    cam.rot += (goal.rot - cam.rot) * a;
+    if (goal.anchor) {
+      const p = unproject(view(), goal.anchor.sx, goal.anchor.sy);
+      cam.tx += goal.anchor.wx - p.x; cam.ty += goal.anchor.wy - p.y;
+      clampTarget(cam);
+      goal.tx = cam.tx; goal.ty = cam.ty;
+    } else {
+      cam.tx += (goal.tx - cam.tx) * a; cam.ty += (goal.ty - cam.ty) * a;
+    }
+    const settled = Math.abs(gz - Math.log(cam.z)) < 1e-3 && Math.abs(goal.rot - cam.rot) < 1e-4 && Math.hypot(goal.tx - cam.tx, goal.ty - cam.ty) < 1e-3;
+    if (settled) { cam.z = goal.z; cam.rot = goal.rot; cam.tx = goal.tx; cam.ty = goal.ty; goal.anchor = null; }
+    if (before[0] !== cam.tx || before[1] !== cam.ty || before[2] !== cam.z || before[3] !== cam.rot) camDirty = true;
+    return !settled;
+  }
+  function frame(now) {
+    raf = 0;
+    if (!W || !H || !current) return;
+    const t0 = stats ? performance.now() : 0;
+    const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+    last = now;
+    const live = ambient();
+    if (live) clock += dt;
+    const moving = stepCamera();
+    const v = view();
+    if (camera.aspect !== W / H) { camera.aspect = W / H; camera.updateProjectionMatrix(); }
+    camera.position.set(v.tx + v.d * v.sp * v.s, v.d * v.cp, v.ty + v.d * v.sp * v.c);
+    camera.up.set(-v.s * v.cp, v.sp, -v.c * v.cp);
+    camera.lookAt(v.tx, 0, v.ty);
+    const B = bandAlphas(v.t);
+    // far out, owned tiles take their owner's glaze: Paradox's political map
+    const wash = Math.round((1 - B.mid) * 100) / 100;
+    const ws = `${mode}|${wash}`;
+    if (ws !== washSig) {
+      washSig = ws;
+      tiles.forEach((t) => tileMesh.setColorAt(t.i, col.set(tileColour(t, wash))));
+      tileMesh.instanceColor.needsUpdate = true;
+    }
+    if (camDirty) applyLayers(B.layers);
+    if (live) { seaUniforms.uTime.value = clock; animate(clock, false); }
+    if (camDirty) {
+      camDirty = false;
+      cssA = B.html;
+      for (const k in cssA) overlay.style.setProperty(`--a-${k}`, cssA[k].toFixed(3));
+      overlay.style.setProperty("--lab", `${(11 + 4 * v.t).toFixed(2)}px`);
+      overlay.classList.toggle("pips-on", cssA.pips > 0.01);
+      overlay.classList.toggle("pops-on", cssA.popsline > 0.01);
+      placeLabels(v, false);
+      tiles.forEach((t, i) => {
+        const p = project(v, t.x, t.y, H_TILE);
+        keyBtns[i].style.transform = `translate(${(p.x - 1).toFixed(0)}px, ${(p.y - 1).toFixed(0)}px)`;
+      });
+      compass.style.transform = `rotate(${v.rot.toFixed(4)}rad)`;
+      $("outZoom").textContent = `${(v.z / zFit).toFixed(1)}×`;
+      $("outTilt").textContent = `${Math.round(v.phi / DEG)}°`;
+      $("outTurn").textContent = `${Math.round(v.rot / DEG)}°`;
+      const band = v.t < E1 ? 0 : v.t < E2 ? 1 : 2;
+      [...$("outBands").children].forEach((el, i) => el.classList.toggle("on", i === band));
+    } else if (live) {
+      placeLabels(v, true);
+    }
+    renderer.render(scene, camera);
+    if (stats) { stats.push(performance.now() - t0); if (stats.length > 900) stats.splice(0, 450); }
+    if (moving || live) kick(); else last = 0;
+  }
+
+  // ---------- camera input ----------
+  function holdGoal() { Object.assign(goal, { tx: cam.tx, ty: cam.ty, z: cam.z, rot: cam.rot, anchor: null }); }
+  function zoomBy(factor, sx, sy) {
+    goal.z = clamp(goal.z * factor, zMin, zMax);
+    const p = unproject(view(), sx, sy);
+    goal.anchor = { sx, sy, wx: p.x, wy: p.y };
+    kick();
+  }
+  function turn(delta) { goal.rot = clamp(goal.rot + delta, -ROT_MAX, ROT_MAX); kick(); }
+  function panScreen(px, py) {
+    const v = view();
+    goal.anchor = null;
+    goal.tx += (px * v.c + py * v.s) / v.z;
+    goal.ty += (-px * v.s + py * v.c) / v.z;
+    clampTarget(goal);
+    kick();
+  }
+  function reset() { Object.assign(goal, { tx: 0, ty: 0, z: zFit, rot: 0, anchor: null }); kick(); }
+  const ray = new T.Raycaster(), ndc = new T.Vector2();
+  function pick(sx, sy) {
+    ndc.set((sx / W) * 2 - 1, -(sy / H) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObject(tileMesh, false)[0];
+    return hit && hit.instanceId !== undefined ? tiles[hit.instanceId].id : null;
+  }
+  const pointers = new Map();
+  let gesture = null;
+  const local = (p) => { const r = stage.getBoundingClientRect(); return { x: p.x - r.left, y: p.y - r.top }; };
+  function startGesture() {
+    const pts = [...pointers.values()].map(local);
+    const wasMoved = gesture ? gesture.moved : false;
+    if (pts.length === 1) {
+      const g = unproject(view(), pts[0].x, pts[0].y);
+      gesture = { kind: "drag", gx: g.x, gy: g.y, start: pts[0], moved: wasMoved };
+    } else if (pts.length >= 2) {
+      const [a, b] = pts;
+      const g = unproject(view(), (a.x + b.x) / 2, (a.y + b.y) / 2);
+      gesture = { kind: "pinch", gx: g.x, gy: g.y, moved: true, z: cam.z, rot: cam.rot, dist: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)), ang: Math.atan2(b.y - a.y, b.x - a.x) };
+    }
+  }
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    stage.focus({ preventScroll: true });
+    try { stage.setPointerCapture(e.pointerId); } catch (err) { /* optional */ }
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    holdGoal();
+    startGesture();
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (!gesture || !pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const pts = [...pointers.values()].map(local);
+    let anchor;
+    if (gesture.kind === "drag") {
+      const p = pts[0];
+      if (!gesture.moved && Math.hypot(p.x - gesture.start.x, p.y - gesture.start.y) < 5) return;
+      if (!gesture.moved) { gesture.moved = true; stage.classList.add("is-panning"); }
+      anchor = p;
+    } else {
+      const [a, b] = pts;
+      anchor = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      cam.z = clamp((gesture.z * Math.hypot(b.x - a.x, b.y - a.y)) / gesture.dist, zMin, zMax);
+      let da = Math.atan2(b.y - a.y, b.x - a.x) - gesture.ang;
+      da = Math.atan2(Math.sin(da), Math.cos(da));
+      cam.rot = clamp(gesture.rot + da, -ROT_MAX, ROT_MAX);
+    }
+    const q = unproject(view(), anchor.x, anchor.y);
+    cam.tx += gesture.gx - q.x; cam.ty += gesture.gy - q.y;
+    clampTarget(cam);
+    holdGoal();
+    camDirty = true;
+    kick();
+  });
+  function endPointer(e) {
+    if (!pointers.has(e.pointerId)) return;
+    const isClick = e.type === "pointerup" && gesture && gesture.kind === "drag" && !gesture.moved && pointers.size === 1;
+    pointers.delete(e.pointerId);
+    if (isClick) { const p = local({ x: e.clientX, y: e.clientY }); const id = pick(p.x, p.y); if (id) select(id); }
+    if (pointers.size === 0) { gesture = null; stage.classList.remove("is-panning"); } else startGesture();
+  }
+  stage.addEventListener("pointerup", endPointer);
+  stage.addEventListener("pointercancel", endPointer);
+  stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const p = local({ x: e.clientX, y: e.clientY });
+    const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    zoomBy(Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0018)), p.x, p.y);
+  }, { passive: false });
+  stage.addEventListener("keydown", (e) => {
+    if (e.altKey || e.metaKey || e.ctrlKey || e.target !== stage) return;
+    const step = 90;
+    switch (e.key) {
+      case "ArrowLeft": panScreen(-step, 0); break;
+      case "ArrowRight": panScreen(step, 0); break;
+      case "ArrowUp": panScreen(0, -step); break;
+      case "ArrowDown": panScreen(0, step); break;
+      case "+": case "=": zoomBy(1.4, W / 2, H / 2); break;
+      case "-": case "_": zoomBy(1 / 1.4, W / 2, H / 2); break;
+      case "q": case "Q": turn(-ROT_STEP); break;
+      case "e": case "E": turn(ROT_STEP); break;
+      case "0": case "Home": reset(); break;
+      default: return;
+    }
+    e.preventDefault();
+  });
+  // Map modes: keys 1 to 5 anywhere on the page, outside text fields.
+  const MODE_KEYS = { 1: "terrain", 2: "political", 3: "economy", 4: "unrest", 5: "trade" };
+  document.addEventListener("keydown", (e) => {
+    if (e.altKey || e.metaKey || e.ctrlKey || !MODE_KEYS[e.key]) return;
+    const el = e.target;
+    if (el && (el.isContentEditable || /^(TEXTAREA|SELECT)$/.test(el.tagName) || (el.tagName === "INPUT" && !/^(radio|checkbox|button)$/.test(el.type)))) return;
+    setMode(MODE_KEYS[e.key]);
+  });
+  document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => { if (r.checked) setMode(r.value); }));
+  $("zoomIn").addEventListener("click", () => zoomBy(1.4, W / 2, H / 2));
+  $("zoomOut").addEventListener("click", () => zoomBy(1 / 1.4, W / 2, H / 2));
+  $("turnL").addEventListener("click", () => turn(-ROT_STEP));
+  $("turnR").addEventListener("click", () => turn(ROT_STEP));
+  $("reset").addEventListener("click", reset);
+  document.querySelectorAll('input[name="scenario"]').forEach((r) => r.addEventListener("change", () => { if (r.checked) buildScenario(r.value); }));
+
+  // ---------- sizing, visibility ----------
+  function resize() {
+    const r = stage.getBoundingClientRect();
+    const nW = Math.round(r.width), nH = Math.round(r.height);
+    if (!nW || !nH || (nW === W && nH === H)) return;
+    const rel = zFit ? cam.z / zFit : 1, grel = zFit ? goal.z / zFit : 1;
+    W = nW; H = nH;
+    zFit = Math.min(W / WW, H / WH);
+    zMin = Z_MIN * zFit; zMax = Z_MAX * zFit;
+    cam.z = clamp(rel * zFit, zMin, zMax);
+    goal.z = clamp(grel * zFit, zMin, zMax);
+    renderer.setSize(W, H, false);
+    camDirty = true;
+    kick();
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener("resize", resize);
+  document.addEventListener("visibilitychange", () => { pageVisible = !document.hidden; kick(); });
+  if (window.IntersectionObserver) new IntersectionObserver((en) => { onScreen = en[0].isIntersecting; kick(); }).observe(stage);
+  if (reduceMotion.addEventListener) reduceMotion.addEventListener("change", kick);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { camDirty = true; kick(); });
+  $("outEdges").textContent = `far below ${zoomAt(E1).toFixed(1)}×, close above ${zoomAt(E2).toFixed(1)}×`;
+  $("modeNote").innerHTML = MODE_NOTE[mode];
+  resize();
+  buildScenario(document.querySelector('input[name="scenario"]:checked').value);
+})();
+</script>
+
+</body>
+</html>
