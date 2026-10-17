@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Cost down — gold with minus badge</title>
+<defs>
+<linearGradient id="a-cost-down-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-cost-down-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+<linearGradient id="a-cost-down-negative" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a83a1c"/><stop offset="0.48" stop-color="#8f2e13"/><stop offset="1" stop-color="#6e2410"/></linearGradient>
+</defs>
+<g transform="translate(0.25 0.25) scale(0.96)">
+<path d="M10 34H58V46C58 62 10 62 10 46Z" fill="url(#a-cost-down-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 45C23 52 47 53 55 45" fill="none" stroke="#795025" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 23H54V37C54 51 6 51 6 37Z" fill="url(#a-cost-down-gold)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 36C20 43 42 43 51 36" fill="none" stroke="#997035" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 21C6 7 54 7 54 21V26C54 41 6 41 6 26Z" fill="url(#a-cost-down-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="30" cy="21" rx="24" ry="11" fill="url(#a-cost-down-gold)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="30" cy="21" rx="18" ry="7" fill="none" stroke="#b08a44" stroke-width="1.75"/>
+<ellipse cx="30" cy="21" rx="6" ry="4.5" fill="#b58a40" stroke="#795025" stroke-width="1.5"/><path d="M24 21H36M30 16.5V25.5" fill="none" stroke="#f5d58a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 18C17 13 24 13 28 13" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 36L53 34V38L48 41ZM52 48L57 45V48L52 52Z" fill="#795025"/>
+<path d="M47 27L52 24V27Q50 33 40 34L38 32ZM46 40L52 37V39Q44 46 31 46V43ZM50 51L57 47Q55 56 35 57L35 54Z" fill="#6b491f"/>
+<path d="M8 22Q10 28 23 29M8 31V34Q10 38 17 39M12 45Q13 50 23 52" fill="none" stroke="#ffe6a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 33L14 35M20 35V37M26 36V38" fill="none" stroke="#b78d44" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 16L17 15L18 17L14 18Z" fill="#fff8e9"/>
+</g>
+<circle cx="50" cy="50" r="12" fill="url(#a-cost-down-negative)" stroke="#181210" stroke-width="3"/><path d="M43 47.5H57V52.5H43Z" fill="#fff8e9"/>
+<path d="M41 44Q44 39 49 39" fill="none" stroke="#e8846b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M56 58L59 54" fill="none" stroke="#4a160a" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

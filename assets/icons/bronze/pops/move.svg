@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Move population — striding traveller with staff and bundle</title>
+<defs>
+<linearGradient id="a-move-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+<linearGradient id="a-move-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-move-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-move-bark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8c55"/><stop offset="0.48" stop-color="#8f5e35"/><stop offset="1" stop-color="#51351f"/></linearGradient>
+</defs>
+<path d="M23 37L34 41L23 51L18 58H6L8 52L16 48Z" fill="url(#a-move-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M26 43L31 42L23 51L18 57H10L18 52Z" fill="#895438"/>
+<path d="M29 39L38 36L43 47L50 52V58H40L33 49L27 45Z" fill="url(#a-move-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M37 42L41 48L47 53V57H41L34 48Z" fill="#895438"/>
+<path d="M7 54L17 53L19 58H6ZM41 53H49L51 58H40Z" fill="#795025"/>
+<path d="M9 55H15M42 54H47" fill="none" stroke="#c19a61" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M54 20H58.5V58H54Z" fill="url(#a-move-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M57 22H58V57H56Z" fill="#624123"/>
+<path d="M55 23V53" fill="none" stroke="#ecd3a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M27 22L35 23L43 30L39 43Q27 48 14 42L18 29Z" fill="url(#a-move-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 26L42 30L38 42L29 44L33 35Z" fill="#aa9572"/>
+<path d="M35 31L39 33L36 42L31 43Z" fill="#806c50"/>
+<path d="M20 29L26 25M18 39L21 33" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M25 33L21 41M29 36L27 43M34 38L33 42" fill="none" stroke="#b09a74" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 19H39L38 27L31 25Z" fill="url(#a-move-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M28 13C28 8 31 6 36 6C41 6 44 9 44 13L47 16L43 18Q42 23 37 23Q30 23 28 17Z" fill="url(#a-move-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M40 9Q44 10 43 14L46 16L42 18Q41 22 37 22L38 17Z" fill="#895438"/>
+<path d="M29 14Q27 8 34 6Q41 5 43 10L37 9L33 12L32 16Z" fill="#51351f"/>
+<path d="M30 11Q32 7 37 8" fill="none" stroke="#9f7448" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 14Q34 11 37 12" fill="none" stroke="#f4d2aa" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M41 14H42M39 20H41" fill="none" stroke="#714c34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M11 17L30 22L29 26L10 21Z" fill="url(#a-move-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 18L27 22" fill="none" stroke="#ecd3a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 21Q8 22 7 28L7 34Q14 39 23 33L22 26L18 22Z" fill="url(#a-move-bark)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 25L22 27V32Q17 36 12 35L16 32Z" fill="#51351f"/>
+<path d="M10 26Q10 23 14 23M9 29V32" fill="none" stroke="#d5b080" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 27L18 31M12 32L15 33" fill="none" stroke="#aa7b48" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 27L43 32L52 28Q56 26 58 30L57 34L43 40L31 33Z" fill="url(#a-move-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 33L43 37L54 32L57 32L56 34L43 39Z" fill="#895438"/>
+<path d="M30 25L38 28L34 35L27 31Z" fill="url(#a-move-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M30 27L35 29M44 33L51 30" fill="none" stroke="#fff0cf" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

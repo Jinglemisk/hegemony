@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Wood — three cut logs</title>
+<defs>
+<linearGradient id="a-wood-bark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8c55"/><stop offset="0.48" stop-color="#8f5e35"/><stop offset="1" stop-color="#51351f"/></linearGradient>
+<linearGradient id="a-wood-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+</defs>
+<path d="M17 7L48 6C56 7 60 13 57 20L26 31L12 25Z" fill="url(#a-wood-bark)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 24L49 19C58 19 61 28 56 35L25 47L9 40Z" fill="url(#a-wood-bark)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 40L49 33C58 33 61 43 56 49L25 58L10 53Z" fill="url(#a-wood-bark)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="17" cy="19" rx="11" ry="12" fill="url(#a-wood-wood)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="16.5" cy="36" rx="11" ry="12" fill="url(#a-wood-wood)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="17" cy="48" rx="11" ry="10" fill="url(#a-wood-wood)" stroke="#181210" stroke-width="2.5"/>
+<path d="M33 12L49 9M32 29L52 24M34 45L53 39" fill="none" stroke="#c89c67" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 12C23 10 25 24 16 25C11 25 9 17 15 16C20 15 21 21 17 21M13 31C22 27 24 41 16 41M13 45C21 40 25 51 17 53" fill="none" stroke="#8b633b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+
+<path d="M30 17L55 13Q58 16 55 19L30 27Z M29 35L56 27Q58 30 55 34L29 43Z M29 50L57 41Q58 45 55 48L28 56Z" fill="#51351f"/>
+<path d="M30 9L47 8M31 25L48 21M31 41L47 36" fill="none" stroke="#dfb780" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 14L42 12M34 31L45 27M35 47L46 43" fill="none" stroke="#a87643" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 12Q31 23 21 29L17 28Q25 24 22 12ZM22 28Q31 38 21 44L18 43Q25 38 22 28ZM23 43Q29 52 21 56L18 55Q25 51 23 43Z" fill="#79502e"/>
+<path d="M10 16Q11 10 17 10M9 34Q10 28 16 27M9 48Q10 42 16 41" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

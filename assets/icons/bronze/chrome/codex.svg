@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Codex — open book with curved pages</title>
+<defs>
+<linearGradient id="a-codex-bark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8c55"/><stop offset="0.48" stop-color="#8f5e35"/><stop offset="1" stop-color="#51351f"/></linearGradient>
+<linearGradient id="a-codex-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-codex-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+</defs>
+<path d="M6 17Q20 14 32 20Q44 14 58 17V47Q44 45 32 51Q20 45 6 47Z" fill="url(#a-codex-bark)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 13Q20 11 32 19Q44 11 58 13V43Q45 41 32 48Q19 41 6 43Z" fill="url(#a-codex-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 19Q44 12 58 13V43Q45 41 32 48Z" fill="url(#a-codex-marble)"/>
+<path d="M28 17L32 20L36 17V44L32 47L28 44Z" fill="#c9b48c"/>
+<path d="M32 21V45" fill="none" stroke="#8e7958" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 21Q19 21 24 25M12 28Q19 28 24 32M12 35Q19 35 24 39M40 25Q45 21 52 21M40 32Q45 28 52 28M40 39Q45 35 52 35" fill="none" stroke="#b49c76" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 16Q18 15 25 19M39 19Q47 16 53 16" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M53 17L57 15V42Q45 41 34 47V44Q44 39 53 39ZM25 20L29 21V44L26 42Z" fill="#b49c76"/>
+<path d="M7 44Q20 43 31 49V50Q19 45 7 46ZM34 48Q46 43 57 45V46Q45 45 34 50Z" fill="#35251a"/>
+<path d="M8 16V39M10 15Q18 15 24 18M38 18Q46 15 54 15" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 40L15 40M45 41L51 40M20 24L23 26" fill="none" stroke="#d4c09a" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

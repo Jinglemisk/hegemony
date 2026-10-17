@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Stone — stacked ashlar blocks</title>
+<defs>
+<linearGradient id="a-stone-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1d9c5"/><stop offset="0.48" stop-color="#b9b09a"/><stop offset="1" stop-color="#817a68"/></linearGradient>
+<linearGradient id="a-stone-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+</defs>
+<path d="M14 7H39L47 14V31H14Z" fill="url(#a-stone-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M39 8L46 14V30H39Z" fill="#817a68"/>
+<path d="M15 15H39L46 14" fill="none" stroke="#8e826b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 32L14 26H34V58H6Z" fill="url(#a-stone-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 33H26V57H7Z" fill="url(#a-stone-marble)"/>
+<path d="M7 33H26L33 27M26 33V57" fill="none" stroke="#8e826b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 26H50L58 33V58H27V33Z" fill="url(#a-stone-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M50 28L57 34V57H49Z" fill="#817a68"/>
+<path d="M28 34H49L57 33M49 34V57" fill="none" stroke="#8e826b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 10H35M10 37H22M32 38H44" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M41 17L46 16V25H41ZM8 53H25V57H8ZM51 36L57 35V57H29V54H51Z" fill="#665f50"/>
+<path d="M16 9H37M8 34V49M29 35H47" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 20L23 19M13 45L17 44M34 47L40 46" fill="none" stroke="#c5baa1" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 22L22 21M35 49H39" fill="none" stroke="#93876d" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

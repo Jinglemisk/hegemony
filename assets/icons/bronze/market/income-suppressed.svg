@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Income suppressed — horn of plenty with minus badge</title>
+<defs>
+<linearGradient id="a-income-suppressed-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-income-suppressed-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+<linearGradient id="a-income-suppressed-negative" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a83a1c"/><stop offset="0.48" stop-color="#8f2e13"/><stop offset="1" stop-color="#6e2410"/></linearGradient>
+</defs>
+<g transform="translate(0.25 0.25) scale(0.96)">
+<path d="M7 9C6 23 14 32 23 28C25 19 29 12 36 10L54 30C51 44 41 54 27 54C12 54 6 43 6 31C5 22 6 14 7 9Z" fill="url(#a-income-suppressed-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 28C10 43 19 47 30 45Q43 42 48 30L53 31Q48 52 28 53C14 53 7 43 8 28Z" fill="#795025"/>
+<path d="M12 43Q24 55 42 43Q35 53 27 53Q18 53 12 43Z" fill="#624123"/>
+<path d="M12 28Q15 35 22 37M13 39Q19 44 25 44M24 28Q26 36 33 39" fill="none" stroke="#997035" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 18Q9 31 17 35M13 43Q18 48 23 49" fill="none" stroke="#f2d28a" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M32 12C39 5 51 13 56 25C62 38 52 45 42 38C33 32 26 19 32 12Z" fill="url(#a-income-suppressed-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M35 16C39 12 48 19 52 28C56 36 52 39 46 35C39 30 32 20 35 16Z" fill="#51351f"/>
+<path d="M46 21Q57 31 51 37L46 35Q51 33 46 21Z" fill="#35251a"/>
+<path d="M32 16Q30 21 37 30M35 12Q40 10 45 15" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 14L37 12L40 14L36 16Z" fill="#fff8e9"/>
+<ellipse cx="43" cy="30" rx="7" ry="6" fill="url(#a-income-suppressed-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M47 28Q53 35 43 35L41 34Q48 33 47 28Z" fill="#997035"/>
+<path d="M39 28L42 26" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="49" cy="42" rx="8" ry="7" fill="url(#a-income-suppressed-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M54 40Q58 47 49 48L46 47Q54 46 54 40Z" fill="#795025"/>
+<path d="M44 40Q46 37 49 37" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M29 50H47V54C47 59 29 59 29 54Z" fill="url(#a-income-suppressed-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="38" cy="50" rx="9" ry="5" fill="url(#a-income-suppressed-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M32 49L37 47M31 54L37 55" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="52" cy="53" rx="6" ry="5" fill="url(#a-income-suppressed-gold)" stroke="#181210" stroke-width="2.5"/>
+<path d="M56 51Q59 56 51 57L49 56Q55 55 56 51Z" fill="#795025"/>
+<path d="M49 51L52 50" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</g>
+<circle cx="50" cy="50" r="12" fill="url(#a-income-suppressed-negative)" stroke="#181210" stroke-width="3"/><path d="M43 47.5H57V52.5H43Z" fill="#fff8e9"/>
+<path d="M41 44Q44 39 49 39" fill="none" stroke="#e8846b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M56 58L59 54" fill="none" stroke="#4a160a" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
