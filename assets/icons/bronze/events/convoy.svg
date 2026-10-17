@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Convoy — amphora-laden ox cart</title>
+<defs>
+<linearGradient id="a-convoy-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-convoy-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5a268"/><stop offset="0.48" stop-color="#c08243"/><stop offset="1" stop-color="#8b4d28"/></linearGradient>
+<linearGradient id="a-convoy-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+</defs>
+<path d="M14 15Q5 11 7 22L14 28H24L31 22Q33 11 24 15V7H14Z" fill="url(#a-convoy-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 7H25V13H23V17Q32 22 28 30L23 35H15L10 30Q6 22 15 17V13H13Z" fill="url(#a-convoy-clay)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M23 18Q31 23 26 30L22 34H18Q26 27 23 18Z" fill="#8b4d28"/>
+<path d="M15 9H22M13 22L12 25" fill="none" stroke="#f9d69b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M11 28Q19 31 27 28" fill="none" stroke="#87522e" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 18Q27 14 29 25L36 31H46L53 25Q55 14 46 18V10H36Z" fill="url(#a-convoy-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M35 10H47V16H45V20Q54 25 50 33L45 38H37L32 33Q28 25 37 20V16H35Z" fill="url(#a-convoy-clay)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M45 21Q53 26 48 33L44 37H40Q48 30 45 21Z" fill="#8b4d28"/>
+<path d="M37 12H44M35 25L34 28" fill="none" stroke="#f9d69b" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M33 31Q41 34 49 31" fill="none" stroke="#87522e" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 30L58 30L55 43H11Z" fill="url(#a-convoy-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 37H57L54 42H12Z" fill="#8b633b"/>
+<path d="M11 34H53M17 31V39M31 31V39M46 31V39" fill="none" stroke="#a67b48" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M6 39H58V46H6Z" fill="url(#a-convoy-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="18" cy="47" rx="11" ry="11" fill="url(#a-convoy-bronze)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="18" cy="47" rx="7.5" ry="7.5" fill="#51351f" stroke="#795025" stroke-width="1.5"/>
+<path d="M18 40V54M12 43L24 51M24 43L12 51" fill="none" stroke="#c19a61" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="18" cy="47" rx="3" ry="3" fill="url(#a-convoy-bronze)" stroke="#181210" stroke-width="1.5"/>
+<path d="M10 45Q11 39 17 38" fill="none" stroke="#ffe6a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M25 41Q33 53 19 57L15 56Q27 54 25 41Z" fill="#795025"/>
+<ellipse cx="47" cy="47" rx="11" ry="11" fill="url(#a-convoy-bronze)" stroke="#181210" stroke-width="2.5"/>
+<ellipse cx="47" cy="47" rx="7.5" ry="7.5" fill="#51351f" stroke="#795025" stroke-width="1.5"/>
+<path d="M47 40V54M41 43L53 51M53 43L41 51" fill="none" stroke="#c19a61" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<ellipse cx="47" cy="47" rx="3" ry="3" fill="url(#a-convoy-bronze)" stroke="#181210" stroke-width="1.5"/>
+<path d="M39 45Q40 39 46 38" fill="none" stroke="#ffe6a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M54 41Q62 53 48 57L44 56Q56 54 54 41Z" fill="#795025"/>
+<path d="M9 32H27M9 41H24" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
