@@ -44,7 +44,8 @@ You keep track of five resources:
   Gold doubles as the **unit of account at the bank** (see The bank, below).
 - **Influence** — a political currency earned by your citizens. It stabilizes the
   province (civic calm), pays for demotions on the social ladder, buys food through
-  the Dole, buys riot insurance, and funds Assembly draws, repeals and bought votes.
+  the Dole, buys riot insurance and your second National Idea, and funds Assembly
+  draws, repeals and bought votes.
 
 **No stock goes below zero.** A charge or a loss takes what you hold and no more.
 Food is the one exception: income may take it below zero during your own turn (see
@@ -122,6 +123,7 @@ You hold three kinds of settlement:
   share a single tile; they **split its slots**, and the colony founded first takes
   the odd one.
 
+Every way to add a pop needs room, and there is no penalty for standing over the cap.
 Laws can change capacity, slots and building permission. A cut blocks new additions;
 existing pops and buildings stay, and committed transfers still arrive.
 
@@ -151,8 +153,8 @@ city, your metropolis included, can never be upgraded: only one founded on the o
 coast can become a city. (Some modes change the opening — _deathmatch_ places three
 colonies.)
 
-By default the island uses the classic authored layout; start the game with
-`?board=shuffled` in the address bar for a randomized (seeded) island.
+By default the island is shuffled from the game seed, so each game has its own layout;
+start the game with `?board=classic` in the address bar for the fixed authored layout.
 
 ## Taking a turn
 
@@ -184,7 +186,8 @@ before income. On your turn:
      of your next turn. **Pops on the move are still in your realm**: their slaves
      count against your happiness, and all of them count for Demos, Civic Elite and
      your votes. The same holds for the pop sent to found a colony.
-   - **Build** — raise a building in a city or capital that has a free slot.
+   - **Build** — raise a building in a city or capital that has a free slot, or a
+     Port in a coastal colony.
    - **Trade at the bank** — sell materials for gold or buy them with gold, as
      often as you like (see The bank).
    - **The Dole** — **3 influence buys 1 food**, as often as you can pay.
@@ -193,9 +196,12 @@ before income. On your turn:
      turn is the limit.
    - **The social ladder** (one move per turn) — promote a slave to freeman for
      **2 food**, or a freeman to citizen for **2 gold**. Demote one step for
-     **1 influence**. (During a riot, demotion is free — the mob forces it.)
+     **1 influence**. (A riot's concession demotes a citizen for free; see Happiness
+     and food.)
    - **Fund an expedition** (once per turn) — stake **2 gold** and roll
      on an expedition table (see Ventures).
+   - **Buy an Idea** (once per game) — your second National Idea for **6 influence**,
+     through Civic → Ideas (see National Ideas).
 4. **End your turn.** Two checks run before the turn passes, in this order.
    **Hunger:** if your food is below zero, one pop leaves per missing food and you
    choose which; holding End turn opens that card, and Go back returns you to your
@@ -207,9 +213,15 @@ before income. On your turn:
 A **year** is one turn for every seat. After all four have played, the next year
 begins and its card is revealed: the card turns over mid-screen and shows what it
 does to each realm. In an Assembly year its button convenes the Assembly. Closed, the
-card waits as the first disc of the alarms row until the year turns; click it to read
-it again. The **first player moves on one seat** each year. The game lasts at most
-**fourteen years**; the next year card stays hidden.
+card waits as a disc in the alarms row, after any title alarms, until the year turns;
+click it to read it again. The **first player moves on one seat** each year. The game
+lasts at most **fourteen years**; the next year card stays hidden.
+
+**The alarms row.** A row of discs beside the Chronicle lists what bears on your realm
+now: a seat holding three titles, a rival one title short, the year's card, your
+happiness while it is below zero, hunger, a General Strike or Isonomia aimed at you, an
+Assembly sitting next year, and a free luxury one of your settlements could claim with
+a Port. Each disc's tooltip says what it is and how long it lasts.
 
 **The turn notice.** When several people share one screen, a small card before each
 seat's turn and each seat's Assembly proposal says to pass the screen and names whose it
@@ -298,8 +310,8 @@ and if the board does not change, neither does the level. A level of −3 this t
 
 **Unrest tokens** are the one part that stays from turn to turn. Cards and
 Directives place them: any happiness loss a card names places one token, whatever
-its size, and any gain clears one. You cannot buy a token off. A riot or a revolt
-clears all of them.
+its size, and any gain clears one (Festival clears them all). You cannot buy a token
+off. A riot or a revolt clears all of them.
 
 Civic Pride adds one flat +1 happiness line. Manumission counts each slave three
 times in the existing slave term; its extra charge is a separate Law line. Neither
@@ -402,8 +414,9 @@ Pick the settlement for a pop card. If all your settlements are full, discard it
 without a reward. The card does not use the settlement's normal growth allowance;
 it never grants a citizen. Twelve of the forty copies are harmful.
 
-The top bar shows the year and its card. The **Codex** consult has the year deck,
-player deck, dice tables, bank rates and base costs.
+The top bar shows the year and the cards left; the year's card is a disc in the alarms
+row. The **Codex** consult has the year deck, player deck, dice tables, bank rates and
+base costs.
 
 ## The Assembly
 
@@ -431,9 +444,11 @@ At most **four Laws** stand. A new Law at the cap replaces the oldest automatica
 A Law survives its own sitting and the following one: a Law passed in Year 2 can
 first leave in Year 6. This protects it from repeal, replacement and The Stele Is
 Broken. At most **one price Law** stands; a new one replaces the previous price
-Law as well as the oldest if the cap requires it. A protected replacement blocks
-the proposal. Earlier votes can make a later item ineligible; then it has no effect
-or prize even if it wins a majority.
+Law as well as the oldest if the cap requires it. The price Laws are Sacred Fields,
+Manumission, Tenant Rights, Festival Calendar, Public Works, Colonial Charter and
+Harbour Dues. A protected replacement blocks the proposal, and a Law already standing
+cannot be proposed again. Earlier votes can make a later item ineligible; then it has
+no effect or prize even if it wins a majority.
 
 Laws apply to every realm. Cities include capitals. Capacity, slot and piece cuts
 leave existing holdings standing and block further additions. Each passing
@@ -459,7 +474,7 @@ each politician's Laws and monuments by seat, and Voice.
 | Perdiccas     | Master Builders   | Cities gain one slot; only three colony pieces may be placed. Existing fourth colonies stay.                              |
 | Kleistophenes | Homestead Act     | Colonies may hold one building, including a Port; cities lose one slot.                                                   |
 | Kleistophenes | Colonial Charter  | Found for 1 food and a pop; upgrade for 6 stone. Pieces and placement rules still apply.                                  |
-| Kleistophenes | Frontier Spirit   | Founding grants a free slave, without Unrest; colonies hold 3 pops.                                                       |
+| Kleistophenes | Frontier Spirit   | Founding adds a free slave to the new colony, with no Unrest token; colonies hold 3 pops.                                 |
 | Kleistophenes | Harbour Dues      | Ports cost 2 stone; Marketplaces cost 3 wood and 4 gold. A Port still needs a coast and an unclaimed good.                |
 | Kleistophenes | Rural Bloc        | +1 vote per colony, −1 per city; at least one base vote.                                                                  |
 
