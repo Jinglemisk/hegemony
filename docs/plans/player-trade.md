@@ -1,7 +1,7 @@
 ---
 status: ready
 phase: "post-v2"
-updated: 2026-10-18
+updated: 2026-10-19
 ---
 
 # Player trade
@@ -9,13 +9,15 @@ updated: 2026-10-18
 ## Outcome
 
 On their turn a player offers goods to the other seats, the table answers, and an agreed deal
-moves both sides' goods at once. A realm that grows more food than it eats sells it for the wood
-it lacks. While the Assembly prepares, the market opens to every seat. Bots trade the same way,
+moves both sides' goods at once. There is no bank: apart from the Dole's food, trade is the only
+way to turn one resource into another. A realm that grows more food than it eats sells it for the
+wood it lacks. While the Assembly prepares, the market opens to every seat. Bots trade the same way,
 so the sim shows who trades what, and Step 11 measures a game that has trade in it.
 
 ## Non-goals
 
-- Changing the bank. Its rates stay fixed and trade runs beside it.
+- The development deck. It replaces Ventures in its own [plan](development-deck.md); its cards
+  trade here as closed goods once it lands.
 - Bots that bargain well. They price deals with the scorer they have and model no rival.
 - Networked play. The commands carry over to a server in Phase 6; no timers or reconnects here.
 - Promises, loans or deals about later turns. A trade exchanges what is held now.
@@ -32,12 +34,16 @@ so the sim shows who trades what, and Step 11 measures a game that has trade in 
   offer, only in the opening preparation, until every seat presses Ready; citizens trade there
   too. No offer limit, and several offers can be open at once. One person can trade with bots.
   Offers are public. No gifts.
+- Owner, 2026-10-19: the bank is removed entirely, with no material swap in its place. Every
+  settlement makes 1 food on its own; nothing else gets a base yield. Development cards trade as
+  closed goods.
 
 ## Rules (proposed)
 
-**What trades.** Wood, stone, food, gold, influence, claimed luxury goods and pops of every
-class. Never votes, Ideas, Laws, settlements, buildings, pieces or Unrest tokens. Happiness is
-a level read off the board; a good carries its +2 to its new holder, and a slave its unrest.
+**What trades.** Wood, stone, food, gold, influence, claimed luxury goods, pops of every class and,
+once the [deck](development-deck.md) lands, development cards, offered closed. Never votes, Ideas,
+Laws, settlements, buildings, pieces or Unrest tokens. Happiness is a level read off the board; a
+good carries its +2 to its new holder, and a slave its unrest.
 
 **Pops.** The giver names the pops and the settlement they leave; like a move, a trade may empty
 a settlement. Each side names the settlement of its own that receives what it gets: a recipient
@@ -70,10 +76,14 @@ No limit on offers, and a declined offer may be made again. No Port is needed. A
 without its Port, which stays as a building, and every good counts +2 for whoever holds it, with
 no cap.
 
-**The bank's prices are the walls.** The bank pays 1 gold for 3 of a material and charges 2 gold
-for 1, so at the bank 6 wood buy 1 food. Any barter between 6 for 1 and 1 for 6, and any price
-between a third of a gold and 2 gold a unit, beats the bank for both sides. The engine enforces
-none of this; it is why a deal is worth taking.
+**No bank.** The bank and the Exchange disc go. No seat sells a material for gold or buys one
+with gold. Trade is the only conversion, apart from the Dole, which still turns influence into
+food, and the deck's cards. Nothing anchors a price: it is whatever two seats agree.
+
+**Base food.** Every settlement, colony, city or capital, makes 1 food at income on its own,
+before upkeep. In the rotated batch of 2026-10-19 the median realm eats 3 food in year 1, 4 to 5
+in years 2 to 8 and 7 in year 14; the base gives 2, 4 and 5, so growth and a surplus to sell
+still need plains.
 
 ## Hotseat now, network later
 
@@ -100,22 +110,24 @@ stocks are saving toward (Step 20), and the food and calm its forecast buys ahea
   turn's food shortfall and the materials missing for its best purchases (Step 20's list),
   including ones its land makes none of. Against that it sets what it holds beyond those
   purchases, and tries 1 for 1, 2 for 1, 1 for 2, and gold at 1 a unit. It keeps the deals its
-  search scores above its best turn without a trade; that search already uses the bank and the
-  Dole, so a deal worse than the bank never wins. The best goes to every rival, and the bot
+  search scores above its best turn without a trade; that search already uses the Dole, so a
+  deal worse than the Dole's food never wins. The best goes to every rival, and the bot
   settles with the acceptor holding the fewest titles, ties by seat order.
 - **Offering in the Assembly.** A bot short of the influence for a proposal it wants, or of the
-  gold or influence for the bank votes it plans to buy, offers for it in the preparation, then
+  gold or influence for the votes it plans to buy, offers for it in the preparation, then
   presses Ready. Otherwise it only answers.
 - **Pacing.** No rule limits offers, so the bots limit themselves: one offer on their turn, one
   per sitting, and never a declined offer again in the same turn or sitting. A bot's turn stays
   inside the sim's 30-action stop.
 - Bots offer materials, gold and influence, and answer any offer, pops and goods included. The
   `trader` personality predates player trade and gets no trade rule of its own.
+- With no bank, a bot short of food that finds no acceptor turns to the Dole, and loses pops if
+  that fails too. The batches count how often.
 
 ## The sim
 
 Telemetry per game, seat and personality: offers by outcome, trades settled, units given and
-received by kind (materials, gold, influence, pops by class), each price against the bank's,
+received by kind (materials, gold, influence, pops by class), each price by material,
 goods that changed hands, trades made in a sitting, and trades after which a title changed
 holder.
 
@@ -123,11 +135,12 @@ The headline is who exports what: for each material, the net units a game sent o
 whose land makes the most of it and by the seat whose land makes the least. Trade works when
 the first is positive and the second negative: the plains seat sells food, the forest seat wood.
 
-A ruleset switch turns trade off, so the same seeds run with and without it: four masters with
-no Ideas on seeds 1000 to 1039 (Q80's batch), then the rotated mixed table. Compare turns begun
-short of food (630 of 2,240 on Step 20's build), Dole uses (40.7 a game), bank sales and
-purchases, pops lost to hunger, realms that never cut wood (55 of 160), the influence stock by
-year, and wins and titles.
+Ruleset switches turn the new economy on piece by piece, so the same seeds run as today's game
+(bank, no trade, no base food), with trade and no bank, and with trade, no bank and base food:
+four masters with no Ideas on seeds 1000 to 1039 (Q80's batch), then the rotated mixed table.
+Compare turns begun short of food (630 of 2,240 on Step 20's build), Dole uses (40.7 a game),
+pops lost to hunger, the freeman share, gold income, realms that never cut wood (55 of 160),
+the influence stock by year, and wins and titles.
 
 Then, in order: slice 2's report adds a trade column to Q80's table and the owner answers Q80;
 Step 11 runs once every slice is in, by the decision rules below, its reach audit counting
@@ -157,16 +170,17 @@ linear influence pile passed, and no card could meet the draw rule.
 
 ## Three-axis parity
 
-| Axis             | Applies? | Required representation and proof                                                                                                                                                                       |
-| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine / backend | Yes      | An open offer on the match state; propose, answer, counter, settle and withdraw with derived legal options; one atomic settlement that rechecks holdings and room; pops as goods; ruleset values; tests |
-| Frontend         | Yes      | An Offer option on the Exchange disc, the Market page and the Assembly sheet; the public offer and answer card; counter terms beside the original; Chronicle line, toast, Codex chapter; browser test   |
-| Simulation & AI  | Yes      | Bots answer and offer through legal commands on their own projection; answers and Assembly offers routed to the acting seat; telemetry and reach counts; use and avoid fixtures; paired batches         |
+| Axis             | Applies? | Required representation and proof                                                                                                                                                                                                                 |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine / backend | Yes      | The bank removed and base food at income; an open offer on the match state; propose, answer, counter, settle and withdraw with derived legal options; one atomic settlement that rechecks holdings and room; pops as goods; ruleset values; tests |
+| Frontend         | Yes      | A Trade disc in place of the Exchange disc, an Offer option on the Market page and the Assembly sheet; the public offer and answer card; counter terms beside the original; Chronicle line, toast, Codex chapter; browser test                    |
+| Simulation & AI  | Yes      | Bots answer and offer through legal commands on their own projection; answers and Assembly offers routed to the acting seat; telemetry and reach counts; use and avoid fixtures; paired batches                                                   |
 
 ## Architecture impact
 
-- Ruleset values (trade on or off), version and schema bumps; older saves are rejected, as
-  today. Commands carry intent only; the engine derives holdings, room and legality.
+- Ruleset values (trade, the bank and base food, each on or off), version and schema bumps; older
+  saves are rejected, as today. Commands carry intent only; the engine derives holdings, room and
+  legality.
 - A trade workflow in the actor query. On a turn the offering seat settles or withdraws and each
   recipient still to answer may answer. In the Assembly's preparation any seat may open an offer
   until every seat is Ready; today the sitting only acts in seat order. The sim runner acts as
@@ -185,15 +199,17 @@ linear influence pile passed, and no card could meet the draw rule.
 
 All to `main`, after the v2 merge.
 
-1. **Offer, answer, settle.** Turn trades in materials, gold, influence and goods, without
-   counters, in the engine, the shell and the bots' answers, with Chronicle, toast and Codex.
-   Checked by engine tests (atomic settlement, conservation, no food from a short seat, a good
-   moving its +2 and Beloved, two open offers on the same goods), command parity, a browser test
-   of offer to settlement, and a bot batch with no illegal moves.
-2. **Bots offer; the sim reads trade.** The offer builder, partner choice, pacing, telemetry, the
-   off switch, and a dated report of the paired batches. Checked by fixtures: a wood-rich seat
-   short of food buys food from a food-rich seat that wants wood for a building; a bot refuses a
-   deal worse than the bank and one that hands a rival Treasurer.
+1. **Offer, answer, settle.** Turn trades in materials, gold, influence and goods, without counters,
+   with the bank still in place, since bots do not offer yet, in the engine, the shell and the bots'
+   answers, with Chronicle, toast and Codex. Checked by engine tests (atomic settlement,
+   conservation, no food from a short seat, a good moving its +2 and Beloved, two open offers on the
+   same goods), command parity, a browser test of offer to settlement, and a bot batch with no
+   illegal moves.
+2. **Bots offer; the bank goes; the sim reads trade.** The offer builder, partner choice, pacing,
+   telemetry, the bank and base-food switches, the bank's removal and base food, and a dated
+   report of the paired batches. Checked by fixtures: a wood-rich seat short of food buys food
+   from a food-rich seat that wants wood for a building; a bot refuses a deal worse than its best
+   turn without it, and one that hands a rival Treasurer.
 3. **Pops.** Pops as a good, delivered like a move. Checked by engine tests (no room, no deal; a
    slave's unrest and a citizen's food and vote go with it; a trade may empty a settlement) and a
    bot batch.
@@ -213,12 +229,14 @@ All to `main`, after the v2 merge.
 - The wood-for-food fixture trades, and the batches show that flow by material.
 - A settled trade moves exactly the named goods and pops; anything else changes nothing; trades
   replay.
+- The paired batches show what the bank's removal and base food did to food shortfalls, hunger,
+  the Dole, the freeman share and gold.
 - In a hotseat playtest the table trades without help, on turns and in a sitting, and finds the
   offer card clear.
 
 ## Owner decisions
 
-Answered by the owner on 2026-10-18.
+Answered by the owner on 2026-10-18 and 19.
 
 - **D1 · When does trade ship?** After the v2 merge; trade PRs go to `main`, and Step 11 runs
   from this plan.
@@ -231,9 +249,12 @@ Answered by the owner on 2026-10-18.
   seal, until every seat presses Ready.
 - **D8 · Can a citizen be traded in a sitting?** Yes, in the preparation, before any ballot; it
   votes for its new owner.
+- **D9 · The bank.** Removed entirely, with no material swap in its place.
+- **D10 · Base yields.** Every settlement makes 1 food. No base wood, stone or happiness for now.
 
 ## Retirement
 
-When slice 6 merges: add a Trade section to `rules.md` and drop its bank section's "a later
-phase" line; update the Codex, [AI](../reference/ai.md) and [simulation](../reference/simulation.md)
-references; move this plan to `docs/archive/plans/` with its PRs and the trade report.
+When slice 6 merges: add a Trade section to `rules.md`, replace its bank section with the no-bank
+rule and base food; update the Codex, [AI](../reference/ai.md) and
+[simulation](../reference/simulation.md) references; move this plan to `docs/archive/plans/` with
+its PRs and the trade report.

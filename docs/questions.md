@@ -4,7 +4,7 @@ Only unresolved owner decisions live here. Answer in chat or after `Answer:`; th
 answer is then incorporated into the affected plan and this entry is removed.
 Recommendations are defaults for discussion, not silent authorization.
 
-Last updated: 2026-10-18.
+Last updated: 2026-10-19.
 
 ## Q80 — What shape should Step 11 take?
 
@@ -81,5 +81,24 @@ batch.
   titles in 10, 28 and 2 games, 11 decided by the tiebreak, wins by seat 23 / 30 / 13 /
   35%. Polis Builder is held at the end of 17 games where it was 4. The other two
   columns have not been run again.
+
+**Answer:**
+
+## Q82 — May a riot take a development card instead of a pop?
+
+**Context:** Owner, 2026-10-19, an idea to weigh. A riot's roll can take 1 or 2 pops,
+slaves first (rules, Happiness and food). A riot held down by slaves comes back every turn
+until slaves are freed or lost, so losing slaves is what ends it. A pop outvalues a card: a
+slave makes 1 a turn for the rest of the game, while a common card is worth about one turn
+of it. See the [development deck plan](plans/development-deck.md).
+
+**Options:** A: no; riots take pops as today. B: for each pop a riot would take, you may
+discard one card picked at random from your hand instead; revolts are unchanged. C: as B,
+but you pick the card.
+
+**Recommendation:** B. Under C every seat would always pay the card, since a pop is worth
+more, and riots would stop costing the slave builds. A random card keeps it a gamble: the
+mob may take your best. Since the slaves stay, the riot returns next turn, so cards buy time
+but do not fix the level. Revolts keep their full cost (half your slaves).
 
 **Answer:**
