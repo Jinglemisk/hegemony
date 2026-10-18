@@ -5,22 +5,21 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-16.
+Last updated: 2026-10-18.
 
 ## Now
 
-**Current initiative:** the [v2 migration](plans/v2-migration.md): the shallow-economy rules
-in the Hybrid arc shell, built on `feat/v2` while `main` keeps today's game. Start every
-session with "continue the v2 migration" in the `hegemony-v2` worktree.
+**Current initiative:** [player trade](plans/player-trade.md), on `main`, in six slices.
+v2, the shallow-economy rules in the Hybrid arc shell, merged into `main` on 2026-10-18
+(#121); its [plan](archive/plans/v2-migration.md) is archived.
 
-**Owner blockers:** none. Step 15's owner playtest is next, then the owner's call on
-merging `feat/v2` into `main`.
+**Owner blockers:** none. Q80 waits for trade's slice 2 report.
 
-Steps 1 to 10, 13, 14 and 17 to 21 are merged into `feat/v2` (#79 to #90, #94, #95, #99
-to #104), and Step 15's pre-merge UI work with them (#105 to #113): the alarms row from one
-engine list, and Victory, the Chronicle, the Codex and the Agora as ledgers in two strips
-under the bar. Step 11, the sim gate, now runs after player trade (owner, 2026-10-14), and
-Q80 waits with it. The full-game browser test also waits.
+**Next:** the 3D living map, built from the
+[showcase](reference/design/showcases/living-map.html)'s build plan; v2's Step 16, the
+refactor, folds into it, and its plan is written when the track starts. Step 11, the sim
+gate, runs from the trade plan once every trade slice is in. The full-game browser test
+still waits.
 
 **Locked sequence:** V1 includes luxury goods, full Catan-style player trade, all twelve
 National Ideas, and the intended typed Resolution/Idea effects. The v1 mechanics freeze
@@ -28,15 +27,14 @@ precedes full multiplayer.
 
 ## Active plans
 
-| Plan                                                | Phase    | Status    | Position                                                                                                |
-| --------------------------------------------------- | -------- | --------- | ------------------------------------------------------------------------------------------------------- |
-| [v2 migration](plans/v2-migration.md)               | v2       | `active`  | Step 15: the owner's playtest is next; Step 11 runs after player trade; shipped to #113                 |
-| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze                        |
-| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged                                   |
-| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                                               |
-| [Player trade](plans/player-trade.md)               | post-v2  | `ready`   | All six decisions answered (2026-10-18); ships to `main` after the v2 merge; Step 11 and Q80 wait on it |
-| [National Ideas](plans/national-ideas.md)           | v2       | `active`  | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase                       |
-| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer                                     |
+| Plan                                                | Phase    | Status    | Position                                                                          |
+| --------------------------------------------------- | -------- | --------- | --------------------------------------------------------------------------------- |
+| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze  |
+| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged             |
+| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                         |
+| [Player trade](plans/player-trade.md)               | post-v2  | `ready`   | Slice 1 next on `main`; Step 11 and Q80 follow the slices                         |
+| [National Ideas](plans/national-ideas.md)           | v2       | `active`  | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
+| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer               |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature
 from [the plan template](plans/_template.md).

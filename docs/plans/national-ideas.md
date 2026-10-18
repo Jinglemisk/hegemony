@@ -19,7 +19,7 @@ weights. Step 13 replaced the secret pick with the open draft (owner ruling,
 
 ## Settled inputs
 
-- The migration's [Settled inputs](v2-migration.md#settled-inputs) override the
+- The migration's [Settled inputs](../archive/plans/v2-migration.md#settled-inputs) override the
   [direction paper](../reports/balance/2026-09-05-shallow-economy.md).
 - Setup is an open draft in turn order and each Idea is held by one seat (owner,
   2026-10-06). Two Ideas per seat total, as before. This replaced Step 9's one
@@ -51,7 +51,7 @@ Each row is the full player-facing sentence, also stored in the match content.
 
 ## Defaults and interactions
 
-The full Step 9 default block lives in the [migration plan](v2-migration.md#settled-inputs).
+The full Step 9 default block lives in the [migration plan](../archive/plans/v2-migration.md#settled-inputs).
 
 - Good Harvest and Civic Tradition are flat realm income; year cards zeroing class
   columns do not take them. General Strike suppresses them with the rest of income.
