@@ -1,4 +1,6 @@
+import { current, isDraft } from "immer";
 import type {
+  BuildingId,
   HegemonyState,
   PlayerId,
   PopType,
@@ -6,416 +8,209 @@ import type {
   Resources,
   SettlementKind,
 } from "../types";
-import { getTile } from "../core/query";
+import type { Ruleset } from "../ruleset";
 import { getResolutionCard } from "../content";
-import type { LawCostedAction, LawEffect, SettlementScope } from "./types";
+import { getTile, realmPops } from "../core/query";
+import type { LawCostedAction, LawEffect, LawRule, ResolutionCard } from "./types";
+import type { GameContent } from "../content";
+import type { ActiveLaw } from "./types";
+import type { NationalIdeaOwnership } from "../ideaTypes";
 
-/**
- * The standing-modifier layer — the one genuinely new engine seam the Assembly needs
- * (design §3, §6.2).
- *
- * Every other content system in this engine applies its effects ONCE, at the moment a
- * card resolves. A Law does not: it is a patch that hangs over the ruleset until it is
- * repealed, so the income, cost, bank and happiness pipelines must CONSULT it every
- * time they compute. This module is that consultation — it turns `G.activeLaws` into
- * the small set of questions those
- * pipelines actually ask, and nothing else in the engine needs to know Laws exist.
- *
- * A Law is table-wide. Every active Law applies to every player, including the seat
- * that never voted for it — that is what makes a vote worth having. Patronage is
- * descriptive only and never contributes an effect.
- */
-
-/** The scopes a settlement of each kind answers to. A capital IS a city for a Law's
- *  purposes, matching how `victoryMetricValue` already counts the "cities" metric. */
-function matchesScope(kind: SettlementKind, scope: SettlementScope): boolean {
-  if (scope === "all") {
-    return true;
-  }
-
-  return scope === "colony" ? kind === "colony" : kind !== "colony";
-}
-
-/**
- * A source-aware view of every table-wide Law currently standing.
- */
+export type RulesSource = Ruleset | HegemonyState;
 export type StandingEffectSource = {
-  kind: "law";
+  kind: "law" | "idea";
   id: string;
   label: string;
   effects: LawEffect[];
 };
+type StandingQueries = { sources: StandingEffectSource[]; effects: LawEffect[] };
+const standingQueries = new WeakMap<
+  GameContent,
+  WeakMap<ActiveLaw[], WeakMap<NationalIdeaOwnership[], StandingQueries>>
+>();
+function snapshot<T>(value: T): T {
+  return isDraft(value) ? current(value) : value;
+}
 
-/**
- * Source-aware standing effects for status displays, telemetry, and any future
- * rule consumer that needs to explain *why* a modifier exists. Keeping this next
- * to {@link getStandingEffects} prevents those consumers from reconstructing Law
- * and patron ownership independently.
- */
+/** Only immutable inputs are memoized. Mutable fixtures and changed drafts are
+ * derived afresh; no cache is written into game state. */
+function standingQuery(G: HegemonyState, playerID: PlayerId): StandingQueries {
+  const content = snapshot(G.definition.content);
+  const activeLaws = snapshot(G.activeLaws);
+  const nationalIdeas = snapshot(G.players[playerID].nationalIdeas);
+  const cached = standingQueries.get(content)?.get(activeLaws)?.get(nationalIdeas);
+  if (cached) return cached;
+  const laws: StandingEffectSource[] = activeLaws.flatMap((active) => {
+    const card = getResolutionCard(content, active.cardId);
+    return card?.kind === "law"
+      ? [{ kind: "law" as const, id: card.id, label: card.name, effects: card.effects }]
+      : [];
+  });
+  const ideas: StandingEffectSource[] = nationalIdeas.flatMap((owned) => {
+    const idea = content.nationalIdeas.find((i) => i.id === owned.id);
+    return idea ? [{ kind: "idea", id: idea.id, label: idea.name, effects: idea.effects }] : [];
+  });
+  const sources = [...laws, ...ideas];
+  const result = { sources, effects: sources.flatMap((source) => source.effects) };
+  if (
+    Object.isFrozen(content) &&
+    Object.isFrozen(content.resolutions) &&
+    Object.isFrozen(content.nationalIdeas) &&
+    Object.isFrozen(activeLaws) &&
+    activeLaws.every(Object.isFrozen) &&
+    Object.isFrozen(nationalIdeas) &&
+    nationalIdeas.every(Object.isFrozen)
+  ) {
+    let byLaws = standingQueries.get(content);
+    if (!byLaws) standingQueries.set(content, (byLaws = new WeakMap()));
+    let byIdeas = byLaws.get(activeLaws);
+    if (!byIdeas) byLaws.set(activeLaws, (byIdeas = new WeakMap()));
+    byIdeas.set(nationalIdeas, result);
+  }
+  return result;
+}
 export function getStandingEffectSources(
   G: HegemonyState,
-  _playerID: PlayerId,
+  playerID: PlayerId,
 ): StandingEffectSource[] {
-  const sources: StandingEffectSource[] = [];
-
-  for (const active of G.activeLaws) {
-    const card = getResolutionCard(G.definition.content, active.cardId);
-
-    if (card?.kind === "law") {
-      sources.push({
-        kind: "law",
-        id: card.id,
-        label: card.name,
-        effects: card.effects,
-      });
-    }
-  }
-
-  return sources;
+  // Keep query results caller-owned, as before memoization.
+  return standingQuery(G, playerID).sources.map((source) => ({ ...source }));
 }
-
 export function getStandingEffects(G: HegemonyState, playerID: PlayerId): LawEffect[] {
-  return getStandingEffectSources(G, playerID).flatMap((source) => source.effects);
+  return standingQuery(G, playerID).effects.slice();
 }
-
-/** How many of the player's settlements answer to a scope. */
-function countSettlementsInScope(
-  G: HegemonyState,
-  playerID: PlayerId,
-  scope: SettlementScope,
-): number {
-  let count = 0;
-
-  for (const tileId of G.players[playerID].settlements) {
-    const settlement = getTile(G, tileId)?.settlements.find(
-      (candidate) => candidate.owner === playerID,
-    );
-
-    if (settlement && matchesScope(settlement.kind, scope)) {
-      count += 1;
-    }
-  }
-
-  return count;
+export function hasLawRule(source: RulesSource | undefined, rule: LawRule): boolean {
+  return Boolean(
+    source &&
+    "activeLaws" in source &&
+    getStandingEffects(source, "0").some(
+      (effect) => effect.type === "rule" && effect.rule === rule,
+    ),
+  );
 }
-
-/** How many pops of a type the player holds across every settlement. */
-function countPops(G: HegemonyState, playerID: PlayerId, pop: PopType): number {
-  let count = 0;
-
-  for (const tileId of G.players[playerID].settlements) {
-    const settlement = getTile(G, tileId)?.settlements.find(
-      (candidate) => candidate.owner === playerID,
-    );
-
-    if (settlement) {
-      count += settlement.pops[pop];
-    }
+/** A derived ruleset; never written into the match definition or persisted. */
+export function effectiveRuleset(source: RulesSource, kind?: SettlementKind): Ruleset {
+  if (!("activeLaws" in source) || source.activeLaws.length === 0)
+    return "ruleset" in source ? source.ruleset : source;
+  const base = source.ruleset;
+  const rules: Ruleset = {
+    ...base,
+    settlements: { ...base.settlements, colony: { ...base.settlements.colony } },
+    popIncome: {
+      ...base.popIncome,
+      citizens: { ...base.popIncome.citizens, flat: { ...base.popIncome.citizens.flat } },
+      freemen: { ...base.popIncome.freemen, flat: { ...base.popIncome.freemen.flat } },
+    },
+  };
+  for (const effect of getStandingEffects(source, "0")) {
+    if (effect.type === "colonyCapacity") rules.settlements.colony.popCapacity = effect.amount;
   }
-
-  return count;
+  if (hasLawRule(source, "grainLevy")) rules.popIncome.freemen.flat.food = 0;
+  if (hasLawRule(source, "forumRites")) {
+    rules.popIncome.citizens.flat.influence = 2;
+    if (kind === "colony") rules.popIncome.freemen.flat.gold = 0;
+  }
+  return rules;
 }
-
-/** `amount` is paid once per `step` whole units — so step 1 is the plain per-unit case
- *  and step 3 is "+1 per 3 citizens", floored. */
-function scaled(count: number, amount: number, step: number | undefined): number {
-  const divisor = step && step > 1 ? step : 1;
-  return Math.floor(count / divisor) * amount;
+export function isPriceLaw(card: ResolutionCard): boolean {
+  return (
+    card.kind === "law" &&
+    card.effects.some((effect) => ["actionCost", "calmPayment"].includes(effect.type))
+  );
 }
-
-export type LawIncomeContribution = {
-  resource: Resource;
-  amount: number;
-  /** The Law that produced it — becomes the income breakdown's source. */
-  label: string;
-};
-
-/**
- * Every standing income / happiness modifier the player is under, as discrete
- * contributions the income breakdown can list line by line. `baseIncome` is the income
- * accumulated so far, which the surplus-conversion effect reads (a tariff on food can
- * only be assessed once the food income is known) — so this must be called AFTER the
- * settlement, building, seasonal and omen passes.
- */
-export function getLawIncomeContributions(
-  G: HegemonyState,
-  playerID: PlayerId,
-  baseIncome: Resources,
-): LawIncomeContribution[] {
-  const contributions: LawIncomeContribution[] = [];
-  const effects = getStandingEffects(G, playerID);
-
-  if (effects.length === 0) {
-    return contributions;
-  }
-
-  const label = (effect: LawEffect) => effectLabel(G, playerID, effect);
-
-  for (const effect of effects) {
-    switch (effect.type) {
-      case "settlementIncome": {
-        const count = countSettlementsInScope(G, playerID, effect.scope);
-        contributions.push({
-          resource: effect.resource,
-          amount: scaled(count, effect.amount, effect.step),
-          label: label(effect),
-        });
-        break;
-      }
-      case "popIncome": {
-        const count = countPops(G, playerID, effect.pop);
-        contributions.push({
-          resource: effect.resource,
-          amount: scaled(count, effect.amount, effect.step),
-          label: label(effect),
-        });
-        break;
-      }
-      case "popPrimaryIncome": {
-        // Paid into each settlement TILE's own material, so it must be assessed per
-        // settlement — and it is dead on a yield-less tile (hill / oracle), exactly
-        // like the base slave coefficient it patches.
-        for (const tileId of G.players[playerID].settlements) {
-          const tile = getTile(G, tileId);
-          const settlement = tile?.settlements.find((candidate) => candidate.owner === playerID);
-          const primary = tile?.resource?.type;
-
-          if (!tile || !settlement || !primary) {
-            continue;
-          }
-
-          contributions.push({
-            resource: primary,
-            amount: settlement.pops[effect.pop] * effect.amount,
-            label: label(effect),
-          });
-        }
-        break;
-      }
-      case "flatIncome":
-        contributions.push({
-          resource: effect.resource,
-          amount: effect.amount,
-          label: label(effect),
-        });
-        break;
-      case "thresholdHappiness": {
-        const held = G.players[playerID].resources[effect.resource];
-        contributions.push({
-          resource: "happiness",
-          amount: held >= effect.threshold ? effect.atOrAbove : effect.below,
-          label: label(effect),
-        });
-        break;
-      }
-      default:
-        break;
-    }
-  }
-
-  // Surplus conversion runs LAST and reads the income as it now stands, including the
-  // standing modifiers above — a tariff assessed on the harvest the Laws actually
-  // produce, not on the pre-Law figure.
-  const projected = { ...baseIncome };
-  for (const contribution of contributions) {
-    projected[contribution.resource] += contribution.amount;
-  }
-
-  for (const effect of effects) {
-    if (effect.type !== "surplusConversion") {
-      continue;
-    }
-
-    const surplus = projected[effect.from] - effect.above;
-
-    if (surplus > 0) {
-      contributions.push({
-        resource: effect.to,
-        amount: Math.floor(surplus / effect.per) * effect.amount,
-        label: effectLabel(G, playerID, effect),
-      });
-    }
-  }
-
-  return contributions;
-}
-
-/** Which Law an effect came from — for the income breakdown's source
- *  column, so a player can always trace a number back to the stele that caused it. */
-function effectLabel(G: HegemonyState, playerID: PlayerId, effect: LawEffect): string {
-  for (const active of G.activeLaws) {
-    const card = getResolutionCard(G.definition.content, active.cardId);
-
-    if (card?.kind === "law" && card.effects.includes(effect)) {
-      return card.name;
-    }
-  }
-
-  return "Standing law";
-}
-
-/**
- * A Law's repricing of an action, as a patch to apply over the base cost. The
- * multiplier lands first (so "half, then −3" is unambiguous), then the deltas, and the
- * caller clamps at zero — matching how event discounts already behave in `cost.ts`.
- */
 export function applyLawActionCost(
   G: HegemonyState,
   playerID: PlayerId,
   action: LawCostedAction,
   cost: Partial<Resources>,
-  context: { scope?: SettlementScope; pop?: PopType; buildingId?: string } = {},
+  context: { pop?: PopType; buildingId?: BuildingId } = {},
 ): Partial<Resources> {
-  const effects = getStandingEffects(G, playerID);
-
-  if (effects.length === 0) {
-    return cost;
-  }
-
-  const adjusted: Partial<Resources> = { ...cost };
-
-  for (const effect of effects) {
-    if (effect.type === "actionCostMultiplier" && effect.action === action) {
-      for (const [resource, amount] of Object.entries(adjusted) as Array<
-        [Resource, number | undefined]
-      >) {
-        adjusted[resource] = Math.ceil((amount ?? 0) * effect.multiplier);
-      }
-    }
-  }
-
-  for (const effect of effects) {
-    if (effect.type !== "actionCostDelta" || effect.action !== action) {
-      continue;
-    }
-
-    // A narrowed effect only bites when the caller's context matches it. An absent
-    // narrowing means "every case", so an unscoped Law applies everywhere.
-    if (effect.scope && context.scope && !scopeOverlaps(effect.scope, context.scope)) {
-      continue;
-    }
-
-    if (effect.pop && effect.pop !== context.pop) {
-      continue;
-    }
-
+  for (const effect of getStandingEffects(G, playerID)) {
     if (
-      effect.buildingIds &&
-      (!context.buildingId || !effect.buildingIds.includes(context.buildingId as never))
-    ) {
-      continue;
-    }
-
-    // A reduction against a resource this action does not cost is simply a no-op.
-    // Writing the clamped 0 in would put a phantom "0 food" line in the player's
-    // cost preview (Grain Dole discounts food; the freeman promotion costs gold).
-    // A positive delta may legitimately introduce a new cost (Tenant Rights adds
-    // gold to a food-priced grow), so only the negative case is skipped.
-    if (adjusted[effect.resource] === undefined && effect.amount < 0) {
-      continue;
-    }
-
-    adjusted[effect.resource] = Math.max(0, (adjusted[effect.resource] ?? 0) + effect.amount);
+      effect.type === "actionCost" &&
+      effect.action === action &&
+      (!effect.pop || effect.pop === context.pop) &&
+      (!effect.buildingIds ||
+        (context.buildingId !== undefined && effect.buildingIds.includes(context.buildingId)))
+    )
+      return { ...effect.cost };
   }
-
-  // A free-action coupon zeroes the named resources outright — checked, not consumed,
-  // here; `consumeLawFreeAction` spends it once the action actually commits.
-  if (hasLawFreeAction(G, playerID, action)) {
-    for (const resource of freeActionResources(effects, action)) {
-      adjusted[resource] = 0;
-    }
-  }
-
-  return adjusted;
+  return cost;
 }
-
-function scopeOverlaps(a: SettlementScope, b: SettlementScope): boolean {
-  return a === "all" || b === "all" || a === b;
-}
-
-function freeActionResources(effects: LawEffect[], action: LawCostedAction): Resource[] {
-  const resources: Resource[] = [];
-
-  for (const effect of effects) {
-    if (effect.type === "yearlyFreeAction" && effect.action === action) {
-      resources.push(...effect.resources);
-    }
-  }
-
-  return resources;
-}
-
-/** True when the player still holds an unspent free-action coupon for this action. */
-export function hasLawFreeAction(
+export function getLawIncomeContributions(
   G: HegemonyState,
   playerID: PlayerId,
-  action: LawCostedAction,
-): boolean {
-  if (G.players[playerID].lawFreeActionsUsedThisYear.includes(action)) {
-    return false;
-  }
-
-  return getStandingEffects(G, playerID).some(
-    (effect) => effect.type === "yearlyFreeAction" && effect.action === action,
+): Array<{ resource: Resource; amount: number; label: string; settlementId: string }> {
+  return getStandingEffectSources(G, playerID).flatMap((source) =>
+    source.effects.flatMap((effect) => {
+      if (effect.type !== "settlementIncome") return [];
+      return G.players[playerID].settlements.flatMap((tileId) => {
+        const settlement = getTile(G, tileId)?.settlements.find((s) => s.owner === playerID);
+        if (
+          !settlement ||
+          (effect.scope === "city" && settlement.kind === "colony") ||
+          (effect.scope === "colony" && settlement.kind !== "colony")
+        )
+          return [];
+        return [
+          {
+            resource: effect.resource,
+            amount: effect.amount,
+            label: source.label,
+            settlementId: settlement.id,
+          },
+        ];
+      });
+    }),
+  );
+}
+/** How many times a slave counts for unrest: three under Manumission. */
+export function slaveUnrestCount(source: RulesSource): number {
+  return hasLawRule(source, "manumission") ? 3 : 1;
+}
+/** One line per Law. Manumission changes the existing slave count, with its extra
+ * charge shown separately so the level's ledger still explains the total. */
+export function getLawHappinessContributions(
+  G: HegemonyState,
+  playerID: PlayerId,
+): Array<{ amount: number; label: string }> {
+  // The count the slave term uses: slaves on the move included.
+  const { slaves } = realmPops(G, playerID);
+  const per = G.ruleset.economy.slavesPerUnhappiness;
+  return getStandingEffectSources(G, playerID).flatMap((source) => {
+    let amount = 0;
+    let namesHappiness = false;
+    for (const effect of source.effects) {
+      if (effect.type === "happiness") {
+        amount += effect.amount;
+        namesHappiness = true;
+      }
+      if (effect.type === "rule" && effect.rule === "manumission") {
+        amount -=
+          per > 0 ? Math.floor((slaveUnrestCount(G) * slaves) / per) - Math.floor(slaves / per) : 0;
+        namesHappiness = true;
+      }
+    }
+    return namesHappiness ? [{ amount, label: source.label }] : [];
+  });
+}
+export function getFoundColonyRiders(G: HegemonyState, playerID: PlayerId) {
+  return getStandingEffectSources(G, playerID).flatMap((source) =>
+    source.effects.flatMap((effect) =>
+      effect.type === "onFoundColony"
+        ? [{ grantPop: effect.grantPop, amount: effect.amount ?? 1, label: source.label }]
+        : [],
+    ),
   );
 }
 
-/** Spend the year's free-action coupon. Called by the action AFTER it commits, so a
- *  refused move never burns the coupon. */
-export function consumeLawFreeAction(
-  G: HegemonyState,
-  playerID: PlayerId,
-  action: LawCostedAction,
-) {
-  if (hasLawFreeAction(G, playerID, action)) {
-    G.players[playerID].lawFreeActionsUsedThisYear.push(action);
-  }
-}
-
-/** A Law's shift to a bank rate, in whole steps in the trader's favour: a better sell
- *  rate needs FEWER materials per gold, a better buy rate needs fewer gold per material.
- *  Both clamp at 1 — no Law can make an exchange free. */
-export function applyLawBankRate(
-  G: HegemonyState,
-  playerID: PlayerId,
-  material: string,
-  rate: { sell: number; buy: number },
-): { sell: number; buy: number } {
-  let steps = 0;
-
-  for (const effect of getStandingEffects(G, playerID)) {
-    if (effect.type === "bankRateStep" && effect.material === material) {
-      steps += effect.steps;
-    }
-  }
-
-  if (steps === 0) {
-    return rate;
-  }
-
-  const sell = Math.max(1, rate.sell - steps);
-  const buy = Math.max(1, rate.buy - steps);
-
-  // The Bank's defining invariant is that a round trip destroys value. At a compact
-  // 2:2 rate, improving both sides to 1:1 would create a lossless buy/sell cycle (and
-  // an infinite legal-move loop for any optimizer). Preserve one unit of spread at
-  // the floor; the Law still improves the sell side from 2 to 1.
-  return sell === 1 && buy === 1 ? { sell, buy: 2 } : { sell, buy };
-}
-
-/** The riders a Law hangs on founding a colony (Frontier Spirit). */
-export function getFoundColonyRiders(G: HegemonyState, playerID: PlayerId) {
-  const riders: Array<{ grantPop?: PopType; happiness?: number; label: string }> = [];
-
-  for (const effect of getStandingEffects(G, playerID)) {
-    if (effect.type === "onFoundColony") {
-      riders.push({
-        grantPop: effect.grantPop,
-        happiness: effect.happiness,
-        label: effectLabel(G, playerID, effect),
-      });
-    }
-  }
-
-  return riders;
+/** The effective card supplies shared rule wording, including content overrides. */
+export function ruleLawText(rule: LawRule, content: import("../content").GameContent): string {
+  return (
+    content.resolutions.find(
+      (card) =>
+        card.kind === "law" &&
+        card.effects.some((effect) => effect.type === "rule" && effect.rule === rule),
+    )?.text ?? rule
+  );
 }

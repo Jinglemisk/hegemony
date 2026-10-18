@@ -3,26 +3,19 @@ import { describe, expect, it } from "vitest";
 import {
   BUILDINGS,
   EXPEDITION_TABLES,
-  OMEN_TABLE,
   PLAYER_EVENT_CARDS,
   RIOT_TABLE,
-  SEASONAL_EVENT_CARDS,
+  YEAR_CARDS,
 } from "../game/data";
 import { getCivicCalmStatus } from "../game/civic";
-import { POP_TYPES } from "../game/core/pops";
-import { getDiscountedGrowPopCost } from "../game/economy/cost";
+import { GROWABLE_POPS } from "../game/core/pops";
+import { getGrowPopCost } from "../game/economy/cost";
 import { calculateIncome, calculateIncomeBreakdown } from "../game/economy/income";
-import { drawSeasonalEvent, getEventEffectChoices } from "../game/events";
+import { revealYearCard } from "../game/year";
 import { owned, scenario } from "../game/testing/scenario";
-import type {
-  BuildingDefinition,
-  EventCard,
-  HegemonyState,
-  PlayerId,
-  Resources,
-} from "../game/types";
+import type { BuildingDefinition, HegemonyState, Resources } from "../game/types";
 import { getFundExpeditionStatus } from "../game/ventures";
-import { presentEventEffects, presentTableEffect } from "../ui/effects";
+import { presentEventEffects, presentTableEffect, presentYearCard } from "../ui/effects";
 import { getAuthoredGameContent } from "../game/content";
 import { createGameDefinition } from "../game/definition";
 import { enumerateLegalOptions, transition } from "../game/legalMoves";
@@ -38,91 +31,82 @@ import type { VerbContext } from "../components/board/command/verbs";
 import { buildingName } from "../ui/formatters";
 import { smartPolicy } from "../sim/policies";
 import { createSimRng } from "../sim/rng";
-
-function customSeasonalCard(
-  id: string,
-  timing: EventCard["timing"],
-  effects: EventCard["effects"],
-): EventCard {
-  return {
-    id,
-    deck: "seasonal",
-    name: id,
-    count: 1,
-    text: id,
-    timing,
-    effects,
-  };
-}
-
-function seasonalContribution(
-  G: HegemonyState,
-  playerID: PlayerId,
-  source: string,
-  resource: "gold" | "happiness",
-) {
-  return calculateIncomeBreakdown(G, playerID)
-    .filter((line) => line.source === source && line.resource === resource)
-    .reduce((total, line) => total + line.amount, 0);
-}
+import { endTurnWarning } from "../ui/frameSelectors";
 
 describe("backend-to-backend parity", () => {
-  it("binds immediate active-player seasonal effects to the seat that revealed them", () => {
+  it("applies a year card that acts once to every seat when it is revealed", () => {
     const G = scenario().build();
-    const card = customSeasonalCard("Active Windfall", "immediate", [
-      { type: "resourceDelta", scope: "activePlayer", resource: "gold", amount: 3 },
-    ]);
-    G.currentPlayer = "2";
-    G.seasonalDrawPile = [card];
-    const before = Object.fromEntries(
-      Object.entries(G.players).map(([playerID, player]) => [playerID, player.resources.gold]),
-    );
+    G.players["2"].unrestTokens = 2;
+    G.yearDrawPile = YEAR_CARDS.filter((card) => card.id === "year-plague");
 
-    drawSeasonalEvent(G);
+    revealYearCard(G);
 
-    expect(G.activeSeasonEvent?.playerID).toBe("2");
-    expect(G.players["2"].resources.gold).toBe(before["2"] + 3);
-    expect(G.players["0"].resources.gold).toBe(before["0"]);
-    expect(G.players["1"].resources.gold).toBe(before["1"]);
-    expect(G.players["3"].resources.gold).toBe(before["3"]);
+    expect(G.activeYearCard?.id).toBe("year-plague");
+    expect(Object.values(G.players).map((player) => player.unrestTokens)).toEqual([1, 1, 3, 1]);
   });
 
-  it("keeps season-long active-player income scoped to the revealing seat", () => {
-    const G = scenario().build();
-    const card = customSeasonalCard("Active Markets", "season", [
-      {
-        type: "incomeModifier",
-        scope: "activePlayer",
-        resource: "gold",
-        amount: 5,
-        duration: "season",
-      },
-    ]);
-    G.currentPlayer = "1";
-    G.seasonalDrawPile = [card];
+  it("takes a zeroed term from every seat that has yet to collect, and from no seat that has", () => {
+    const G = scenario().opening().build();
+    G.activeYearCard = null;
+    for (const player of Object.values(G.players)) player.collectedThisTurn = false;
+    for (const tile of G.board.tiles) {
+      for (const settlement of tile.settlements) {
+        settlement.pops = { citizens: 0, freemen: 2, slaves: 0 };
+      }
+    }
+    const printed = Object.keys(G.players).map((id) => calculateIncome(G, id as "0").gold);
+    expect(printed).toEqual([4, 4, 4, 4]);
 
-    drawSeasonalEvent(G);
+    G.yearDrawPile = YEAR_CARDS.filter((card) => card.id === "year-piracy");
+    revealYearCard(G);
+    G.players["3"].collectedThisTurn = true;
 
-    expect(seasonalContribution(G, "1", card.name, "gold")).toBe(5);
-    expect(seasonalContribution(G, "0", card.name, "gold")).toBe(0);
-    expect(seasonalContribution(G, "2", card.name, "gold")).toBe(0);
-    expect(seasonalContribution(G, "3", card.name, "gold")).toBe(0);
+    const taken = Object.keys(G.players).map((id) =>
+      calculateIncomeBreakdown(G, id as "0")
+        .filter((line) => line.detail.startsWith("Piracy"))
+        .reduce((total, line) => total + line.amount, 0),
+    );
+    expect(taken).toEqual([-4, -4, -4, 0]);
   });
 });
 
 describe("frontend-to-frontend parity", () => {
-  it("presents every event-card option through one non-empty effect vocabulary", () => {
-    for (const card of [...SEASONAL_EVENT_CARDS, ...PLAYER_EVENT_CARDS]) {
-      for (const effects of getEventEffectChoices(card)) {
-        const presentation = presentEventEffects(effects);
-        expect(presentation.text.trim(), card.id).not.toBe("");
-        expect(["positive", "negative", "muted", "neutral"], card.id).toContain(presentation.tone);
-      }
+  it("warns at the engine's turn-end thresholds and clears after buying calm", () => {
+    const G = scenario({
+      patch: { economy: { unrest: { riotThreshold: -2, revoltThreshold: -5 } } },
+    })
+      .opening()
+      .withHappiness("0", -2)
+      .build();
+    expect(endTurnWarning(G, "0")).toEqual({
+      label: "Starts riot",
+      message: "Ending now starts a riot at −2.",
+    });
+    G.players["0"].calmActive = true;
+    expect(endTurnWarning(G, "0")).toBeNull();
+    G.players["0"].calmActive = false;
+    G.players["0"].unrestTokens += 3;
+    expect(endTurnWarning(G, "0")).toEqual({
+      label: "Starts revolt",
+      message: "Ending now starts a revolt at −5.",
+    });
+  });
+
+  it("presents every event card through one non-empty effect vocabulary", () => {
+    for (const card of YEAR_CARDS) {
+      const presentation = presentYearCard(card);
+      expect(presentation.text.trim(), card.id).not.toBe("");
+      expect(["positive", "negative"], card.id).toContain(presentation.tone);
+    }
+    for (const card of PLAYER_EVENT_CARDS) {
+      const presentation = presentEventEffects(card.effects);
+      expect(presentation.text.trim(), card.id).not.toBe("");
+      expect(["positive", "negative", "muted", "neutral"], card.id).toContain(presentation.tone);
     }
   });
 
   it("presents every table effect through the same text-and-tone contract", () => {
-    const tables = [RIOT_TABLE, ...EXPEDITION_TABLES, OMEN_TABLE];
+    const tables = [RIOT_TABLE, ...EXPEDITION_TABLES];
 
     for (const table of tables) {
       for (const row of table.rows) {
@@ -196,42 +180,12 @@ describe("effective content and cost parity", () => {
     });
     const G = gameplayCity();
     pinBuildings(G, tuned);
-    G.activeSeasonEvent = {
-      card: {
-        id: "double-build-cost",
-        deck: "seasonal",
-        name: "Double Build Cost",
-        count: 1,
-        text: "Building costs double.",
-        timing: "season",
-        effects: [
-          {
-            type: "buildingCostMultiplier",
-            multiplier: 2,
-            duration: "season",
-            excludes: [],
-          },
-        ],
-      },
-      season: G.season,
-      playerID: "0",
-    };
-    G.players["0"].actionCostDiscounts.push({
-      id: "market-coupon",
-      sourceCardId: "market-coupon",
-      label: "Market coupon",
-      action: "buildBuilding",
-      buildingId: "marketplace",
-      resource: "wood",
-      amount: 3,
-      consume: "nextMatchingAction",
-    });
 
     const option = getBuildBuildingOptions(G, "0", "0,0").find(
       ({ building }) => building.id === "marketplace",
     );
     expect(option?.building.name).toBe("Agora Market");
-    expect(option?.status.cost).toEqual({ wood: 11, stone: 4 });
+    expect(option?.status.cost).toEqual({ wood: 7, stone: 2 });
     expect(buildingName("marketplace", G.definition.content)).toBe("Agora Market");
 
     const legalOption = enumerateLegalOptions(G, "0").find(
@@ -239,7 +193,7 @@ describe("effective content and cost parity", () => {
     );
     expect(legalOption).toMatchObject({
       command: { type: "buildBuilding", buildingId: "marketplace" },
-      cost: { wood: 11, stone: 4 },
+      cost: { wood: 7, stone: 2 },
     });
 
     const beforeResources = { ...G.players["0"].resources };
@@ -249,23 +203,14 @@ describe("effective content and cost parity", () => {
       : { ok: false as const, reasons: ["missing option"] };
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.state.players["0"].resources.wood).toBe(beforeResources.wood - 11);
-    expect(result.state.players["0"].resources.stone).toBe(beforeResources.stone - 4);
+    expect(result.state.players["0"].resources.wood).toBe(beforeResources.wood - 7);
+    expect(result.state.players["0"].resources.stone).toBe(beforeResources.stone - 2);
     expect(owned(result.state, "0,0", "0").buildings).toContain("marketplace");
     expect(calculateIncome(result.state, "0").gold - beforeIncome).toBe(9);
   });
 
   it("quotes every dock price off the engine, targets-dependent ones included", () => {
     const G = gameplayCity();
-    G.players["0"].actionCostDiscounts.push({
-      id: "found-coupon",
-      sourceCardId: "found-coupon",
-      label: "Found coupon",
-      action: "foundColony",
-      resource: "wood",
-      amount: 2,
-      consume: "nextMatchingAction",
-    });
     const context = commandContext(G);
     const found = VERBS.find((verb) => verb.id === "found");
     const upgrade = VERBS.find((verb) => verb.id === "upgrade");
@@ -282,12 +227,14 @@ describe("effective content and cost parity", () => {
     // The four verbs that used to print "varies" / "options" / "stakes". A dock
     // price has to be a figure the press would really charge, so each is checked
     // against the engine query that charges it rather than against a literal.
-    const growFood = POP_TYPES.map(
-      (pop) => getDiscountedGrowPopCost(G, "0", owned(G, "0,0", "0"), pop).food ?? 0,
-    );
+    const growFood = GROWABLE_POPS.map((pop) => getGrowPopCost(G, "0", pop).food ?? 0);
     expect(priceOf("grow")).toEqual([
       { span: { resource: "food", min: Math.min(...growFood), max: Math.max(...growFood) } },
     ]);
+
+    G.activeLaws.push({ cardId: "tenant-rights", author: "0", enactedYear: G.year, order: 0 });
+    expect(priceOf("grow")).toEqual([{ span: { resource: "gold", min: 2, max: 3 } }]);
+    G.activeLaws = [];
 
     const [floor] = priceOf("build");
     const cheapest = Math.min(
@@ -303,7 +250,7 @@ describe("effective content and cost parity", () => {
     expect(priceOf("venture")).toEqual([
       {
         lead: "stake",
-        amounts: getFundExpeditionStatus(G, "0", EXPEDITION_TABLES[0].id, "gold").cost,
+        amounts: getFundExpeditionStatus(G, "0", EXPEDITION_TABLES[0].id).cost,
       },
     ]);
   });

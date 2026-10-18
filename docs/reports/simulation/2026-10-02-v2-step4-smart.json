@@ -1,0 +1,4998 @@
+{
+  "meta": {
+    "games": 40,
+    "turns": 280,
+    "policy": "smart",
+    "mode": "standard",
+    "boardLayout": "classic",
+    "opening": "policy",
+    "seatPolicies": null,
+    "baseSeed": 1000,
+    "botSeedRule": "seed ^ 0x9e3779b9",
+    "rulesetPatch": null,
+    "definition": {
+      "id": "1:3336b2c9adf1896b/1:702fb963a349f226",
+      "rulesetVersion": "1",
+      "rulesetHash": "3336b2c9adf1896b",
+      "contentVersion": "1",
+      "contentHash": "702fb963a349f226"
+    },
+    "tunePatch": null,
+    "tunePatchHash": null,
+    "tuningPresetId": null,
+    "resolvedContentHash": "702fb963a349f226",
+    "generatedAt": "2026-10-01T23:33:54.187Z"
+  },
+  "perGame": [
+    {
+      "game": 0,
+      "seed": 1000,
+      "turnsPlayed": 80,
+      "finalSeason": 21,
+      "termination": "victoryRace",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 3,
+        "2": 0,
+        "3": 2
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 0,
+        "1": 2,
+        "2": 2,
+        "3": 3
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        }
+      },
+      "finalGold": {
+        "0": 29,
+        "1": 90,
+        "2": 10,
+        "3": -35
+      }
+    },
+    {
+      "game": 1,
+      "seed": 1001,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "2",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 1,
+        "2": 2,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 6,
+        "1": 4,
+        "2": 15,
+        "3": 8
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 38,
+        "1": 1,
+        "2": 121,
+        "3": 0
+      }
+    },
+    {
+      "game": 2,
+      "seed": 1002,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 2,
+        "1": 1,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 1,
+        "1": 4,
+        "2": 0,
+        "3": 6
+      },
+      "popsLostToHunger": {
+        "0": 6,
+        "1": 1,
+        "2": 13,
+        "3": 6
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 201,
+        "1": 66,
+        "2": 54,
+        "3": 36
+      }
+    },
+    {
+      "game": 3,
+      "seed": 1003,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 6,
+        "1": 7,
+        "2": 9,
+        "3": 2
+      },
+      "popsLostToHunger": {
+        "0": 5,
+        "1": 7,
+        "2": 6,
+        "3": 7
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 212,
+        "1": 70,
+        "2": 82,
+        "3": 105
+      }
+    },
+    {
+      "game": 4,
+      "seed": 1004,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 2,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 6,
+        "1": 4,
+        "2": 0,
+        "3": 9
+      },
+      "popsLostToHunger": {
+        "0": 10,
+        "1": 8,
+        "2": 11,
+        "3": 11
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 285,
+        "1": 192,
+        "2": 7,
+        "3": 20
+      }
+    },
+    {
+      "game": 5,
+      "seed": 1005,
+      "turnsPlayed": 120,
+      "finalSeason": 31,
+      "termination": "victoryRace",
+      "winner": "3",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 3
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 2,
+        "1": 2,
+        "2": 5,
+        "3": 1
+      },
+      "popsLostToHunger": {
+        "0": 14,
+        "1": 12,
+        "2": 10,
+        "3": 7
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 11,
+        "1": 10,
+        "2": 71,
+        "3": 55
+      }
+    },
+    {
+      "game": 6,
+      "seed": 1006,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "2",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 1,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 2
+      },
+      "popsLostToHunger": {
+        "0": 9,
+        "1": 5,
+        "2": 8,
+        "3": 8
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        }
+      },
+      "finalGold": {
+        "0": -59,
+        "1": -40,
+        "2": 10,
+        "3": -59
+      }
+    },
+    {
+      "game": 7,
+      "seed": 1007,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 4,
+        "1": 15,
+        "2": 12,
+        "3": 13
+      },
+      "popsLostToHunger": {
+        "0": 3,
+        "1": 4,
+        "2": 6,
+        "3": 6
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        },
+        "3": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        }
+      },
+      "finalGold": {
+        "0": 161,
+        "1": -4,
+        "2": 69,
+        "3": 1
+      }
+    },
+    {
+      "game": 8,
+      "seed": 1008,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 2,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 3,
+        "1": 12,
+        "2": 1,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 10,
+        "1": 2,
+        "2": 10,
+        "3": 8
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 30,
+        "1": 128,
+        "2": 21,
+        "3": 5
+      }
+    },
+    {
+      "game": 9,
+      "seed": 1009,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "3",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 9,
+        "1": 5,
+        "2": 9,
+        "3": 4
+      },
+      "popsLostToHunger": {
+        "0": 12,
+        "1": 11,
+        "2": 10,
+        "3": 12
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 187,
+        "1": 340,
+        "2": 303,
+        "3": 349
+      }
+    },
+    {
+      "game": 10,
+      "seed": 1010,
+      "turnsPlayed": 81,
+      "finalSeason": 21,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 3,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 5,
+        "1": 13,
+        "2": 5,
+        "3": 3
+      },
+      "popsLostToHunger": {
+        "0": 9,
+        "1": 4,
+        "2": 6,
+        "3": 7
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        }
+      },
+      "finalGold": {
+        "0": 24,
+        "1": 29,
+        "2": 61,
+        "3": 2
+      }
+    },
+    {
+      "game": 11,
+      "seed": 1011,
+      "turnsPlayed": 129,
+      "finalSeason": 33,
+      "termination": "victoryRace",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 2,
+        "1": 3,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 1
+      },
+      "popsLostToHunger": {
+        "0": 7,
+        "1": 1,
+        "2": 5,
+        "3": 14
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 49,
+        "1": 50,
+        "2": 21,
+        "3": -3
+      }
+    },
+    {
+      "game": 12,
+      "seed": 1012,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 2,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 2,
+        "1": 3,
+        "2": 0,
+        "3": 4
+      },
+      "popsLostToHunger": {
+        "0": 9,
+        "1": 4,
+        "2": 7,
+        "3": 8
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 282,
+        "1": 168,
+        "2": 82,
+        "3": 33
+      }
+    },
+    {
+      "game": 13,
+      "seed": 1013,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 1,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 10,
+        "1": 9,
+        "2": 5,
+        "3": 10
+      },
+      "popsLostToHunger": {
+        "0": 5,
+        "1": 8,
+        "2": 10,
+        "3": 5
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "3": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        }
+      },
+      "finalGold": {
+        "0": 217,
+        "1": 208,
+        "2": 99,
+        "3": 218
+      }
+    },
+    {
+      "game": 14,
+      "seed": 1014,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "3",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 6,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 10,
+        "1": 5,
+        "2": 6,
+        "3": 11
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": -8,
+        "1": 87,
+        "2": 28,
+        "3": -34
+      }
+    },
+    {
+      "game": 15,
+      "seed": 1015,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "3",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 1,
+        "1": 5,
+        "2": 5,
+        "3": 2
+      },
+      "popsLostToHunger": {
+        "0": 6,
+        "1": 5,
+        "2": 3,
+        "3": 4
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 8,
+        "1": 288,
+        "2": 105,
+        "3": 48
+      }
+    },
+    {
+      "game": 16,
+      "seed": 1016,
+      "turnsPlayed": 70,
+      "finalSeason": 18,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 3,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 1,
+        "1": 1,
+        "2": 4,
+        "3": 0
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        }
+      },
+      "finalGold": {
+        "0": 82,
+        "1": 46,
+        "2": 51,
+        "3": 28
+      }
+    },
+    {
+      "game": 17,
+      "seed": 1017,
+      "turnsPlayed": 127,
+      "finalSeason": 32,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 1,
+        "2": 3,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 6,
+        "1": 6,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 6,
+        "1": 4,
+        "2": 6,
+        "3": 5
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 48,
+        "1": 76,
+        "2": 130,
+        "3": 37
+      }
+    },
+    {
+      "game": 18,
+      "seed": 1018,
+      "turnsPlayed": 114,
+      "finalSeason": 29,
+      "termination": "victoryRace",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 3,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 10,
+        "1": 31,
+        "2": 12,
+        "3": 13
+      },
+      "popsLostToHunger": {
+        "0": 5,
+        "1": 6,
+        "2": 10,
+        "3": 4
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 8,
+        "1": 17,
+        "2": 76,
+        "3": 1
+      }
+    },
+    {
+      "game": 19,
+      "seed": 1019,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 2,
+        "1": 2,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 6,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 4,
+        "1": 10,
+        "2": 12,
+        "3": 9
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 240,
+        "1": 44,
+        "2": -17,
+        "3": 68
+      }
+    },
+    {
+      "game": 20,
+      "seed": 1020,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "2",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 1,
+        "2": 2,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 11,
+        "1": 12,
+        "2": 4,
+        "3": 12
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 231,
+        "1": 62,
+        "2": 300,
+        "3": 162
+      }
+    },
+    {
+      "game": 21,
+      "seed": 1021,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 1,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 7,
+        "1": 10,
+        "2": 5,
+        "3": 8
+      },
+      "popsLostToHunger": {
+        "0": 9,
+        "1": 7,
+        "2": 8,
+        "3": 7
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 18,
+        "1": 245,
+        "2": 73,
+        "3": 10
+      }
+    },
+    {
+      "game": 22,
+      "seed": 1022,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 2,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 6,
+        "1": 9,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 12,
+        "1": 10,
+        "2": 10,
+        "3": 8
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 229,
+        "1": 233,
+        "2": 147,
+        "3": 87
+      }
+    },
+    {
+      "game": 23,
+      "seed": 1023,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 2,
+        "1": 1,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 9,
+        "1": 0,
+        "2": 8,
+        "3": 7
+      },
+      "popsLostToHunger": {
+        "0": 10,
+        "1": 10,
+        "2": 9,
+        "3": 9
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 292,
+        "1": 67,
+        "2": 10,
+        "3": 14
+      }
+    },
+    {
+      "game": 24,
+      "seed": 1024,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 1,
+        "2": 1,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 3,
+        "1": 3,
+        "2": 0,
+        "3": 12
+      },
+      "popsLostToHunger": {
+        "0": 9,
+        "1": 8,
+        "2": 4,
+        "3": 3
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 0,
+        "1": 17,
+        "2": 1,
+        "3": 0
+      }
+    },
+    {
+      "game": 25,
+      "seed": 1025,
+      "turnsPlayed": 82,
+      "finalSeason": 21,
+      "termination": "victoryRace",
+      "winner": "3",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 1,
+        "2": 0,
+        "3": 3
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 6,
+        "1": 6,
+        "2": 7,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 3,
+        "1": 0,
+        "2": 5,
+        "3": 4
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        }
+      },
+      "finalGold": {
+        "0": 9,
+        "1": 4,
+        "2": 3,
+        "3": 70
+      }
+    },
+    {
+      "game": 26,
+      "seed": 1026,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 2,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 2,
+        "2": 3,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 9,
+        "1": 8,
+        "2": 10,
+        "3": 13
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": -30,
+        "1": 234,
+        "2": -21,
+        "3": -4
+      }
+    },
+    {
+      "game": 27,
+      "seed": 1027,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "3",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 2
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 13,
+        "2": 4,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 6,
+        "1": 4,
+        "2": 7,
+        "3": 8
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 39,
+        "1": 2,
+        "2": 38,
+        "3": 38
+      }
+    },
+    {
+      "game": 28,
+      "seed": 1028,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 2,
+        "1": 0,
+        "2": 1,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 7,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 3,
+        "1": 8,
+        "2": 12,
+        "3": 10
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 284,
+        "1": 69,
+        "2": 66,
+        "3": 1
+      }
+    },
+    {
+      "game": 29,
+      "seed": 1029,
+      "turnsPlayed": 106,
+      "finalSeason": 27,
+      "termination": "victoryRace",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 3,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 9,
+        "1": 5,
+        "2": 3,
+        "3": 7
+      },
+      "popsLostToHunger": {
+        "0": 3,
+        "1": 8,
+        "2": 8,
+        "3": 7
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 58,
+        "1": 0,
+        "2": 7,
+        "3": 34
+      }
+    },
+    {
+      "game": 30,
+      "seed": 1030,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 1,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 2,
+        "2": 4,
+        "3": 6
+      },
+      "popsLostToHunger": {
+        "0": 5,
+        "1": 8,
+        "2": 11,
+        "3": 2
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 157,
+        "1": 210,
+        "2": 102,
+        "3": 137
+      }
+    },
+    {
+      "game": 31,
+      "seed": 1031,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 2,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 6,
+        "1": 9,
+        "2": 2,
+        "3": 4
+      },
+      "popsLostToHunger": {
+        "0": 5,
+        "1": 3,
+        "2": 9,
+        "3": 9
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "2": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 130,
+        "1": 425,
+        "2": 145,
+        "3": 66
+      }
+    },
+    {
+      "game": 32,
+      "seed": 1032,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "2",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 1,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 10,
+        "1": 6,
+        "2": 10,
+        "3": 10
+      },
+      "popsLostToHunger": {
+        "0": 6,
+        "1": 4,
+        "2": 2,
+        "3": 4
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 37,
+        "1": 29,
+        "2": 146,
+        "3": 14
+      }
+    },
+    {
+      "game": 33,
+      "seed": 1033,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 2,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 9,
+        "1": 7,
+        "2": 12,
+        "3": 5
+      },
+      "popsLostToHunger": {
+        "0": 6,
+        "1": 10,
+        "2": 11,
+        "3": 12
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 419,
+        "1": 117,
+        "2": 179,
+        "3": 216
+      }
+    },
+    {
+      "game": 34,
+      "seed": 1034,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "0",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 2,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 1,
+        "1": 7,
+        "2": 0,
+        "3": 21
+      },
+      "popsLostToHunger": {
+        "0": 10,
+        "1": 13,
+        "2": 7,
+        "3": 11
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "2": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 651,
+        "1": 440,
+        "2": 212,
+        "3": 322
+      }
+    },
+    {
+      "game": 35,
+      "seed": 1035,
+      "turnsPlayed": 89,
+      "finalSeason": 23,
+      "termination": "victoryRace",
+      "winner": "2",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 3,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 7,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 1,
+        "1": 4,
+        "2": 1,
+        "3": 1
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 29,
+        "1": 23,
+        "2": 105,
+        "3": 35
+      }
+    },
+    {
+      "game": 36,
+      "seed": 1036,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "3",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 0,
+        "2": 1,
+        "3": 2
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 9,
+        "1": 1,
+        "2": 11,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 5,
+        "1": 5,
+        "2": 10,
+        "3": 9
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 230,
+        "1": 278,
+        "2": 196,
+        "3": 189
+      }
+    },
+    {
+      "game": 37,
+      "seed": 1037,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 2,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 6,
+        "1": 4,
+        "2": 3,
+        "3": 3
+      },
+      "popsLostToHunger": {
+        "0": 11,
+        "1": 5,
+        "2": 9,
+        "3": 7
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 3,
+          "goodsActive": 3,
+          "luxuryHappiness": 6
+        }
+      },
+      "finalGold": {
+        "0": 90,
+        "1": 68,
+        "2": 20,
+        "3": 50
+      }
+    },
+    {
+      "game": 38,
+      "seed": 1038,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "3",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 2
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 0,
+        "1": 10,
+        "2": 6,
+        "3": 2
+      },
+      "popsLostToHunger": {
+        "0": 19,
+        "1": 5,
+        "2": 10,
+        "3": 9
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "3": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        }
+      },
+      "finalGold": {
+        "0": 177,
+        "1": 256,
+        "2": 331,
+        "3": 373
+      }
+    },
+    {
+      "game": 39,
+      "seed": 1039,
+      "turnsPlayed": 131,
+      "finalSeason": 33,
+      "termination": "deckExhausted",
+      "winner": "1",
+      "leaderAtCap": null,
+      "finalCards": {
+        "0": 0,
+        "1": 2,
+        "2": 0,
+        "3": 1
+      },
+      "finalAuthoredPasses": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      },
+      "voiceHolder": null,
+      "popsLostToUnrest": {
+        "0": 10,
+        "1": 0,
+        "2": 1,
+        "3": 0
+      },
+      "popsLostToHunger": {
+        "0": 7,
+        "1": 10,
+        "2": 9,
+        "3": 9
+      },
+      "luxuries": {
+        "0": {
+          "goodsHeld": 0,
+          "goodsActive": 0,
+          "luxuryHappiness": 0
+        },
+        "1": {
+          "goodsHeld": 2,
+          "goodsActive": 2,
+          "luxuryHappiness": 4
+        },
+        "2": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        },
+        "3": {
+          "goodsHeld": 1,
+          "goodsActive": 1,
+          "luxuryHappiness": 2
+        }
+      },
+      "finalGold": {
+        "0": 35,
+        "1": 43,
+        "2": 99,
+        "3": 128
+      }
+    }
+  ],
+  "perSeason": [
+    {
+      "season": 1,
+      "seasonName": "spring",
+      "year": 1,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0,
+        "p10": 0,
+        "median": 0,
+        "p90": 0,
+        "min": 0,
+        "max": 0
+      },
+      "pops": {
+        "mean": 6.3125,
+        "p10": 6,
+        "median": 6,
+        "p90": 8,
+        "min": 4,
+        "max": 9
+      },
+      "food": {
+        "mean": 6.50625,
+        "p10": 2,
+        "median": 6,
+        "p90": 11,
+        "min": 0,
+        "max": 15
+      },
+      "happiness": {
+        "mean": 1.50625,
+        "p10": 0,
+        "median": 1,
+        "p90": 3,
+        "min": -2,
+        "max": 5
+      },
+      "unrestTierShares": {
+        "calm": 0.9999999999999974,
+        "discontent": 0,
+        "unrest": 0,
+        "revolt": 0
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.5187499999999992,
+        "timedHappiness": 0.06249999999999999,
+        "seasonalModifier": 0.10000000000000002,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 2,
+      "seasonName": "summer",
+      "year": 1,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.00625,
+        "p10": 0,
+        "median": 0,
+        "p90": 0,
+        "min": 0,
+        "max": 1
+      },
+      "pops": {
+        "mean": 6.825,
+        "p10": 6,
+        "median": 6,
+        "p90": 8,
+        "min": 4,
+        "max": 10
+      },
+      "food": {
+        "mean": 3.60625,
+        "p10": 1,
+        "median": 4,
+        "p90": 6,
+        "min": 0,
+        "max": 7
+      },
+      "happiness": {
+        "mean": 1.56875,
+        "p10": -1,
+        "median": 2,
+        "p90": 4,
+        "min": -2,
+        "max": 6
+      },
+      "unrestTierShares": {
+        "calm": 0.9812499999999975,
+        "discontent": 0.018750000000000003,
+        "unrest": 0,
+        "revolt": 0
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.2125000000000001,
+        "timedHappiness": 0.10000000000000002,
+        "seasonalModifier": 0.6999999999999985,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 3,
+      "seasonName": "autumn",
+      "year": 1,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.01875,
+        "p10": 0,
+        "median": 0,
+        "p90": 0,
+        "min": 0,
+        "max": 1
+      },
+      "pops": {
+        "mean": 6.96875,
+        "p10": 6,
+        "median": 7,
+        "p90": 9,
+        "min": 3,
+        "max": 11
+      },
+      "food": {
+        "mean": 2.48125,
+        "p10": 0,
+        "median": 2,
+        "p90": 6,
+        "min": 0,
+        "max": 9
+      },
+      "happiness": {
+        "mean": 0.99375,
+        "p10": -2,
+        "median": 1,
+        "p90": 4,
+        "min": -6,
+        "max": 7
+      },
+      "unrestTierShares": {
+        "calm": 0.9437499999999976,
+        "discontent": 0.056249999999999994,
+        "unrest": 0,
+        "revolt": 0
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.3687499999999997,
+        "timedHappiness": 0.2562500000000001,
+        "seasonalModifier": 0.5999999999999989,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 4,
+      "seasonName": "winter",
+      "year": 1,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.0625,
+        "p10": 0,
+        "median": 0,
+        "p90": 0,
+        "min": 0,
+        "max": 1
+      },
+      "pops": {
+        "mean": 6.9375,
+        "p10": 5,
+        "median": 7,
+        "p90": 9,
+        "min": 3,
+        "max": 13
+      },
+      "food": {
+        "mean": 1.4625,
+        "p10": 0,
+        "median": 1,
+        "p90": 5,
+        "min": 0,
+        "max": 7
+      },
+      "happiness": {
+        "mean": -0.475,
+        "p10": -5,
+        "median": 0,
+        "p90": 3,
+        "min": -10,
+        "max": 8
+      },
+      "unrestTierShares": {
+        "calm": 0.7874999999999982,
+        "discontent": 0.16875000000000007,
+        "unrest": 0.04375,
+        "revolt": 0
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.26875000000000004,
+        "timedHappiness": 0.3124999999999999,
+        "seasonalModifier": 0.6749999999999986,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 5,
+      "seasonName": "spring",
+      "year": 2,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.1,
+        "p10": 0,
+        "median": 0,
+        "p90": 0,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 7.0625,
+        "p10": 4,
+        "median": 7,
+        "p90": 9,
+        "min": 1,
+        "max": 13
+      },
+      "food": {
+        "mean": 1.49375,
+        "p10": 0,
+        "median": 1,
+        "p90": 5,
+        "min": 0,
+        "max": 10
+      },
+      "happiness": {
+        "mean": -0.8,
+        "p10": -6,
+        "median": -1,
+        "p90": 5,
+        "min": -12,
+        "max": 13
+      },
+      "unrestTierShares": {
+        "calm": 0.6937499999999985,
+        "discontent": 0.22500000000000012,
+        "unrest": 0.075,
+        "revolt": 0.00625
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.075,
+        "timedHappiness": 0.17500000000000007,
+        "seasonalModifier": 0.275,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.8999999999999978,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 6,
+      "seasonName": "summer",
+      "year": 2,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.1375,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 7.48125,
+        "p10": 5,
+        "median": 7,
+        "p90": 10,
+        "min": 2,
+        "max": 14
+      },
+      "food": {
+        "mean": 1.4625,
+        "p10": 0,
+        "median": 1,
+        "p90": 5,
+        "min": 0,
+        "max": 11
+      },
+      "happiness": {
+        "mean": -0.90625,
+        "p10": -7,
+        "median": -1,
+        "p90": 6,
+        "min": -15,
+        "max": 17
+      },
+      "unrestTierShares": {
+        "calm": 0.6874999999999986,
+        "discontent": 0.2125000000000001,
+        "unrest": 0.08125,
+        "revolt": 0.018750000000000003
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.04375,
+        "timedHappiness": 0.08750000000000001,
+        "seasonalModifier": 0.7249999999999984,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.8999999999999978,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 7,
+      "seasonName": "autumn",
+      "year": 2,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.15,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 7.43125,
+        "p10": 4,
+        "median": 7,
+        "p90": 11,
+        "min": 2,
+        "max": 13
+      },
+      "food": {
+        "mean": 0.8875,
+        "p10": 0,
+        "median": 0,
+        "p90": 3,
+        "min": 0,
+        "max": 6
+      },
+      "happiness": {
+        "mean": -0.84375,
+        "p10": -7,
+        "median": -2,
+        "p90": 5,
+        "min": -16,
+        "max": 23
+      },
+      "unrestTierShares": {
+        "calm": 0.6812499999999986,
+        "discontent": 0.1937500000000001,
+        "unrest": 0.11875000000000004,
+        "revolt": 0.00625
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.049999999999999996,
+        "timedHappiness": 0.13125000000000003,
+        "seasonalModifier": 0.7999999999999982,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.8999999999999978,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 8,
+      "seasonName": "winter",
+      "year": 2,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.15,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 7.30625,
+        "p10": 4,
+        "median": 7,
+        "p90": 11,
+        "min": 1,
+        "max": 14
+      },
+      "food": {
+        "mean": 1.0375,
+        "p10": 0,
+        "median": 0,
+        "p90": 4,
+        "min": 0,
+        "max": 10
+      },
+      "happiness": {
+        "mean": -1.48125,
+        "p10": -9,
+        "median": -2,
+        "p90": 6,
+        "min": -17,
+        "max": 28
+      },
+      "unrestTierShares": {
+        "calm": 0.5812499999999989,
+        "discontent": 0.2500000000000001,
+        "unrest": 0.13750000000000004,
+        "revolt": 0.03125
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.10625000000000002,
+        "timedHappiness": 0.24375000000000013,
+        "seasonalModifier": 0.7249999999999984,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.8999999999999978,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 9,
+      "seasonName": "spring",
+      "year": 3,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.18125,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 7.8125,
+        "p10": 4,
+        "median": 8,
+        "p90": 12,
+        "min": 1,
+        "max": 17
+      },
+      "food": {
+        "mean": 1.2875,
+        "p10": 0,
+        "median": 0,
+        "p90": 5,
+        "min": 0,
+        "max": 13
+      },
+      "happiness": {
+        "mean": -1.0125,
+        "p10": -9,
+        "median": -1,
+        "p90": 7,
+        "min": -17,
+        "max": 35
+      },
+      "unrestTierShares": {
+        "calm": 0.5999999999999989,
+        "discontent": 0.2062500000000001,
+        "unrest": 0.16875000000000007,
+        "revolt": 0.025
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.056249999999999994,
+        "timedHappiness": 0.2187500000000001,
+        "seasonalModifier": 0.2000000000000001,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9749999999999975,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 10,
+      "seasonName": "summer",
+      "year": 3,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.21875,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 8.20625,
+        "p10": 4,
+        "median": 8,
+        "p90": 12,
+        "min": 2,
+        "max": 19
+      },
+      "food": {
+        "mean": 1.225,
+        "p10": 0,
+        "median": 0,
+        "p90": 4,
+        "min": 0,
+        "max": 12
+      },
+      "happiness": {
+        "mean": -0.975,
+        "p10": -10,
+        "median": -2,
+        "p90": 7,
+        "min": -18,
+        "max": 42
+      },
+      "unrestTierShares": {
+        "calm": 0.5937499999999989,
+        "discontent": 0.1937500000000001,
+        "unrest": 0.16875000000000007,
+        "revolt": 0.04375
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.049999999999999996,
+        "timedHappiness": 0.10000000000000002,
+        "seasonalModifier": 0.6499999999999987,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9749999999999975,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 11,
+      "seasonName": "autumn",
+      "year": 3,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.23125,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 8.28125,
+        "p10": 4,
+        "median": 8,
+        "p90": 13,
+        "min": 0,
+        "max": 21
+      },
+      "food": {
+        "mean": 1.46875,
+        "p10": 0,
+        "median": 0,
+        "p90": 5,
+        "min": 0,
+        "max": 12
+      },
+      "happiness": {
+        "mean": -0.59375,
+        "p10": -10,
+        "median": -2,
+        "p90": 8,
+        "min": -16,
+        "max": 50
+      },
+      "unrestTierShares": {
+        "calm": 0.6124999999999988,
+        "discontent": 0.2187500000000001,
+        "unrest": 0.11250000000000003,
+        "revolt": 0.056249999999999994
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.08750000000000001,
+        "timedHappiness": 0.26250000000000007,
+        "seasonalModifier": 0.5999999999999989,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9749999999999975,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 12,
+      "seasonName": "winter",
+      "year": 3,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.2625,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 8.43125,
+        "p10": 3,
+        "median": 8,
+        "p90": 14,
+        "min": 0,
+        "max": 24
+      },
+      "food": {
+        "mean": 2.05625,
+        "p10": 0,
+        "median": 1,
+        "p90": 6,
+        "min": 0,
+        "max": 11
+      },
+      "happiness": {
+        "mean": -0.24375,
+        "p10": -9,
+        "median": -2,
+        "p90": 9,
+        "min": -15,
+        "max": 56
+      },
+      "unrestTierShares": {
+        "calm": 0.562499999999999,
+        "discontent": 0.29999999999999993,
+        "unrest": 0.11250000000000003,
+        "revolt": 0.025
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.13125000000000003,
+        "timedHappiness": 0.3437499999999998,
+        "seasonalModifier": 0.549999999999999,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9749999999999975,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 13,
+      "seasonName": "spring",
+      "year": 4,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.3,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 9.08125,
+        "p10": 4,
+        "median": 9,
+        "p90": 16,
+        "min": 0,
+        "max": 25
+      },
+      "food": {
+        "mean": 2.35625,
+        "p10": 0,
+        "median": 1,
+        "p90": 7,
+        "min": 0,
+        "max": 13
+      },
+      "happiness": {
+        "mean": 0.7625,
+        "p10": -9,
+        "median": -1,
+        "p90": 12,
+        "min": -16,
+        "max": 62
+      },
+      "unrestTierShares": {
+        "calm": 0.5812499999999989,
+        "discontent": 0.23750000000000013,
+        "unrest": 0.14375000000000004,
+        "revolt": 0.0375
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.12500000000000003,
+        "timedHappiness": 0.15000000000000005,
+        "seasonalModifier": 0.15000000000000005,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 14,
+      "seasonName": "summer",
+      "year": 4,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.39375,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 9.99375,
+        "p10": 4,
+        "median": 10,
+        "p90": 16,
+        "min": 1,
+        "max": 27
+      },
+      "food": {
+        "mean": 2.58125,
+        "p10": 0,
+        "median": 1,
+        "p90": 7,
+        "min": 0,
+        "max": 12
+      },
+      "happiness": {
+        "mean": 1.55,
+        "p10": -9,
+        "median": -1,
+        "p90": 14,
+        "min": -16,
+        "max": 66
+      },
+      "unrestTierShares": {
+        "calm": 0.6374999999999987,
+        "discontent": 0.2062500000000001,
+        "unrest": 0.13750000000000004,
+        "revolt": 0.018750000000000003
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.09375000000000001,
+        "timedHappiness": 0.11875000000000004,
+        "seasonalModifier": 0.7749999999999982,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 15,
+      "seasonName": "autumn",
+      "year": 4,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.39375,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 10.35,
+        "p10": 4,
+        "median": 10,
+        "p90": 17,
+        "min": 1,
+        "max": 27
+      },
+      "food": {
+        "mean": 2.425,
+        "p10": 0,
+        "median": 1,
+        "p90": 6,
+        "min": 0,
+        "max": 14
+      },
+      "happiness": {
+        "mean": 1.98125,
+        "p10": -9,
+        "median": -1,
+        "p90": 17,
+        "min": -17,
+        "max": 73
+      },
+      "unrestTierShares": {
+        "calm": 0.5999999999999989,
+        "discontent": 0.22500000000000012,
+        "unrest": 0.13125000000000003,
+        "revolt": 0.04375
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.14375000000000004,
+        "timedHappiness": 0.3124999999999999,
+        "seasonalModifier": 0.4999999999999992,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 16,
+      "seasonName": "winter",
+      "year": 4,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.44375,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 10.525,
+        "p10": 4,
+        "median": 10,
+        "p90": 17,
+        "min": 0,
+        "max": 28
+      },
+      "food": {
+        "mean": 1.8,
+        "p10": 0,
+        "median": 1,
+        "p90": 5,
+        "min": 0,
+        "max": 13
+      },
+      "happiness": {
+        "mean": 1.88125,
+        "p10": -10,
+        "median": -2,
+        "p90": 18,
+        "min": -16,
+        "max": 80
+      },
+      "unrestTierShares": {
+        "calm": 0.5937499999999989,
+        "discontent": 0.2125000000000001,
+        "unrest": 0.13750000000000004,
+        "revolt": 0.056249999999999994
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.18125000000000008,
+        "timedHappiness": 0.4499999999999994,
+        "seasonalModifier": 0.549999999999999,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 17,
+      "seasonName": "spring",
+      "year": 5,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.5,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 11.05625,
+        "p10": 4,
+        "median": 10,
+        "p90": 19,
+        "min": 0,
+        "max": 29
+      },
+      "food": {
+        "mean": 3.09375,
+        "p10": 0,
+        "median": 1,
+        "p90": 8,
+        "min": 0,
+        "max": 14
+      },
+      "happiness": {
+        "mean": 2.04375,
+        "p10": -10,
+        "median": -2,
+        "p90": 19,
+        "min": -14,
+        "max": 86
+      },
+      "unrestTierShares": {
+        "calm": 0.6187499999999988,
+        "discontent": 0.18750000000000008,
+        "unrest": 0.15000000000000005,
+        "revolt": 0.04375
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.2062500000000001,
+        "timedHappiness": 0.23750000000000013,
+        "seasonalModifier": 0.22500000000000012,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 18,
+      "seasonName": "summer",
+      "year": 5,
+      "games": 40,
+      "victoryCards": {
+        "mean": 0.525,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 11.65625,
+        "p10": 4,
+        "median": 11,
+        "p90": 19,
+        "min": 1,
+        "max": 31
+      },
+      "food": {
+        "mean": 2.84375,
+        "p10": 0,
+        "median": 1,
+        "p90": 8,
+        "min": 0,
+        "max": 14
+      },
+      "happiness": {
+        "mean": 2.39375,
+        "p10": -10,
+        "median": -2,
+        "p90": 17,
+        "min": -16,
+        "max": 96
+      },
+      "unrestTierShares": {
+        "calm": 0.6249999999999988,
+        "discontent": 0.22500000000000012,
+        "unrest": 0.11250000000000003,
+        "revolt": 0.0375
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.16875000000000007,
+        "timedHappiness": 0.08750000000000001,
+        "seasonalModifier": 0.7249999999999984,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 19,
+      "seasonName": "autumn",
+      "year": 5,
+      "games": 39,
+      "victoryCards": {
+        "mean": 0.5512820512820513,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 11.538461538461538,
+        "p10": 4,
+        "median": 11,
+        "p90": 19,
+        "min": 0,
+        "max": 30
+      },
+      "food": {
+        "mean": 1.9935897435897436,
+        "p10": 0,
+        "median": 1,
+        "p90": 7,
+        "min": 0,
+        "max": 12
+      },
+      "happiness": {
+        "mean": 2.448717948717949,
+        "p10": -10,
+        "median": -2,
+        "p90": 18,
+        "min": -17,
+        "max": 102
+      },
+      "unrestTierShares": {
+        "calm": 0.6089743589743578,
+        "discontent": 0.2307692307692309,
+        "unrest": 0.10256410256410259,
+        "revolt": 0.05769230769230768
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.2948717948717948,
+        "timedHappiness": 0.22435897435897448,
+        "seasonalModifier": 0.7692307692307675,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 20,
+      "seasonName": "winter",
+      "year": 5,
+      "games": 39,
+      "victoryCards": {
+        "mean": 0.5833333333333334,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 11.85897435897436,
+        "p10": 4,
+        "median": 11,
+        "p90": 19,
+        "min": 0,
+        "max": 29
+      },
+      "food": {
+        "mean": 3.3525641025641026,
+        "p10": 0,
+        "median": 2,
+        "p90": 9,
+        "min": 0,
+        "max": 22
+      },
+      "happiness": {
+        "mean": 1.9038461538461537,
+        "p10": -10,
+        "median": -3,
+        "p90": 19,
+        "min": -19,
+        "max": 107
+      },
+      "unrestTierShares": {
+        "calm": 0.5512820512820503,
+        "discontent": 0.22435897435897448,
+        "unrest": 0.16025641025641033,
+        "revolt": 0.0641025641025641
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.3076923076923076,
+        "timedHappiness": 0.3076923076923076,
+        "seasonalModifier": 0.5641025641025631,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 21,
+      "seasonName": "spring",
+      "year": 6,
+      "games": 39,
+      "victoryCards": {
+        "mean": 0.6282051282051282,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 12.320512820512821,
+        "p10": 4,
+        "median": 13,
+        "p90": 19,
+        "min": 0,
+        "max": 29
+      },
+      "food": {
+        "mean": 3.6153846153846154,
+        "p10": 0,
+        "median": 2,
+        "p90": 9,
+        "min": 0,
+        "max": 16
+      },
+      "happiness": {
+        "mean": 2.5833333333333335,
+        "p10": -11,
+        "median": -2,
+        "p90": 19,
+        "min": -17,
+        "max": 107
+      },
+      "unrestTierShares": {
+        "calm": 0.5833333333333323,
+        "discontent": 0.2307692307692309,
+        "unrest": 0.12179487179487183,
+        "revolt": 0.0641025641025641
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.2628205128205129,
+        "timedHappiness": 0.19871794871794882,
+        "seasonalModifier": 0.17948717948717957,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 22,
+      "seasonName": "summer",
+      "year": 6,
+      "games": 36,
+      "victoryCards": {
+        "mean": 0.6041666666666666,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 12.770833333333334,
+        "p10": 5,
+        "median": 13,
+        "p90": 20,
+        "min": 1,
+        "max": 30
+      },
+      "food": {
+        "mean": 2.6319444444444446,
+        "p10": 0,
+        "median": 1,
+        "p90": 8,
+        "min": 0,
+        "max": 16
+      },
+      "happiness": {
+        "mean": 1.6597222222222223,
+        "p10": -10,
+        "median": -1,
+        "p90": 17,
+        "min": -17,
+        "max": 56
+      },
+      "unrestTierShares": {
+        "calm": 0.5694444444444434,
+        "discontent": 0.28472222222222215,
+        "unrest": 0.08333333333333336,
+        "revolt": 0.06250000000000001
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.20138888888888895,
+        "timedHappiness": 0.06944444444444446,
+        "seasonalModifier": 0.694444444444443,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 23,
+      "seasonName": "autumn",
+      "year": 6,
+      "games": 36,
+      "victoryCards": {
+        "mean": 0.6527777777777778,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 12.88888888888889,
+        "p10": 5,
+        "median": 13,
+        "p90": 21,
+        "min": 0,
+        "max": 30
+      },
+      "food": {
+        "mean": 2.8055555555555554,
+        "p10": 0,
+        "median": 1,
+        "p90": 7,
+        "min": 0,
+        "max": 17
+      },
+      "happiness": {
+        "mean": 1.9097222222222223,
+        "p10": -9,
+        "median": -2,
+        "p90": 20,
+        "min": -18,
+        "max": 62
+      },
+      "unrestTierShares": {
+        "calm": 0.6319444444444432,
+        "discontent": 0.1944444444444445,
+        "unrest": 0.13194444444444448,
+        "revolt": 0.04166666666666667
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.27777777777777773,
+        "timedHappiness": 0.1944444444444445,
+        "seasonalModifier": 0.7499999999999983,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 24,
+      "seasonName": "winter",
+      "year": 6,
+      "games": 35,
+      "victoryCards": {
+        "mean": 0.6571428571428571,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 13.007142857142858,
+        "p10": 5,
+        "median": 12,
+        "p90": 21,
+        "min": 1,
+        "max": 30
+      },
+      "food": {
+        "mean": 2.7,
+        "p10": 0,
+        "median": 1,
+        "p90": 8,
+        "min": 0,
+        "max": 14
+      },
+      "happiness": {
+        "mean": 1.0785714285714285,
+        "p10": -11,
+        "median": -2,
+        "p90": 21,
+        "min": -22,
+        "max": 66
+      },
+      "unrestTierShares": {
+        "calm": 0.549999999999999,
+        "discontent": 0.22142857142857147,
+        "unrest": 0.1642857142857143,
+        "revolt": 0.0642857142857143
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.2785714285714285,
+        "timedHappiness": 0.33571428571428547,
+        "seasonalModifier": 0.6285714285714273,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 25,
+      "seasonName": "spring",
+      "year": 7,
+      "games": 35,
+      "victoryCards": {
+        "mean": 0.6357142857142857,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 13.257142857142858,
+        "p10": 5,
+        "median": 13,
+        "p90": 21,
+        "min": 2,
+        "max": 32
+      },
+      "food": {
+        "mean": 2.742857142857143,
+        "p10": 0,
+        "median": 1,
+        "p90": 8,
+        "min": 0,
+        "max": 18
+      },
+      "happiness": {
+        "mean": 1.1357142857142857,
+        "p10": -12,
+        "median": -3,
+        "p90": 20,
+        "min": -22,
+        "max": 72
+      },
+      "unrestTierShares": {
+        "calm": 0.5857142857142846,
+        "discontent": 0.1928571428571429,
+        "unrest": 0.10714285714285716,
+        "revolt": 0.11428571428571431
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.20714285714285718,
+        "timedHappiness": 0.23571428571428577,
+        "seasonalModifier": 0.20000000000000004,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 26,
+      "seasonName": "summer",
+      "year": 7,
+      "games": 35,
+      "victoryCards": {
+        "mean": 0.6785714285714286,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 13.835714285714285,
+        "p10": 4,
+        "median": 13,
+        "p90": 23,
+        "min": 0,
+        "max": 34
+      },
+      "food": {
+        "mean": 3.107142857142857,
+        "p10": 0,
+        "median": 2,
+        "p90": 8,
+        "min": 0,
+        "max": 17
+      },
+      "happiness": {
+        "mean": 1.35,
+        "p10": -11,
+        "median": -3,
+        "p90": 21,
+        "min": -19,
+        "max": 78
+      },
+      "unrestTierShares": {
+        "calm": 0.5999999999999989,
+        "discontent": 0.20000000000000004,
+        "unrest": 0.15000000000000002,
+        "revolt": 0.05
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.18571428571428575,
+        "timedHappiness": 0.11428571428571431,
+        "seasonalModifier": 0.5999999999999989,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 27,
+      "seasonName": "autumn",
+      "year": 7,
+      "games": 35,
+      "victoryCards": {
+        "mean": 0.6714285714285714,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 14.164285714285715,
+        "p10": 5,
+        "median": 13,
+        "p90": 23,
+        "min": 1,
+        "max": 35
+      },
+      "food": {
+        "mean": 2.7071428571428573,
+        "p10": 0,
+        "median": 2,
+        "p90": 7,
+        "min": 0,
+        "max": 13
+      },
+      "happiness": {
+        "mean": 1.1,
+        "p10": -11,
+        "median": -3,
+        "p90": 20,
+        "min": -20,
+        "max": 84
+      },
+      "unrestTierShares": {
+        "calm": 0.5571428571428562,
+        "discontent": 0.22857142857142862,
+        "unrest": 0.14285714285714288,
+        "revolt": 0.07142857142857144
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.23571428571428577,
+        "timedHappiness": 0.11428571428571431,
+        "seasonalModifier": 0.7428571428571412,
+        "yearlyOmen": 0.9999999999999974,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999974,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 28,
+      "seasonName": "winter",
+      "year": 7,
+      "games": 34,
+      "victoryCards": {
+        "mean": 0.6691176470588235,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 14.264705882352942,
+        "p10": 5,
+        "median": 13,
+        "p90": 23,
+        "min": 0,
+        "max": 37
+      },
+      "food": {
+        "mean": 1.8602941176470589,
+        "p10": 0,
+        "median": 0,
+        "p90": 6,
+        "min": 0,
+        "max": 11
+      },
+      "happiness": {
+        "mean": 0.27205882352941174,
+        "p10": -13,
+        "median": -4,
+        "p90": 18,
+        "min": -19,
+        "max": 89
+      },
+      "unrestTierShares": {
+        "calm": 0.5147058823529402,
+        "discontent": 0.22794117647058826,
+        "unrest": 0.16176470588235295,
+        "revolt": 0.09558823529411765
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.25,
+        "timedHappiness": 0.16176470588235295,
+        "seasonalModifier": 0.5882352941176459,
+        "yearlyOmen": 0.9999999999999973,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999973,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 29,
+      "seasonName": "spring",
+      "year": 8,
+      "games": 34,
+      "victoryCards": {
+        "mean": 0.6470588235294118,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 14.558823529411764,
+        "p10": 5,
+        "median": 14,
+        "p90": 23,
+        "min": 0,
+        "max": 40
+      },
+      "food": {
+        "mean": 2.9926470588235294,
+        "p10": 0,
+        "median": 1,
+        "p90": 8,
+        "min": 0,
+        "max": 15
+      },
+      "happiness": {
+        "mean": 0.3235294117647059,
+        "p10": -11,
+        "median": -4,
+        "p90": 18,
+        "min": -20,
+        "max": 91
+      },
+      "unrestTierShares": {
+        "calm": 0.49264705882352855,
+        "discontent": 0.23529411764705885,
+        "unrest": 0.2058823529411765,
+        "revolt": 0.0661764705882353
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.25735294117647056,
+        "timedHappiness": 0.14705882352941177,
+        "seasonalModifier": 0.23529411764705885,
+        "yearlyOmen": 0.9999999999999973,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999973,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 30,
+      "seasonName": "summer",
+      "year": 8,
+      "games": 33,
+      "victoryCards": {
+        "mean": 0.6818181818181818,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 2
+      },
+      "pops": {
+        "mean": 14.878787878787879,
+        "p10": 7,
+        "median": 15,
+        "p90": 24,
+        "min": 0,
+        "max": 40
+      },
+      "food": {
+        "mean": 2.6742424242424243,
+        "p10": 0,
+        "median": 1,
+        "p90": 7,
+        "min": 0,
+        "max": 13
+      },
+      "happiness": {
+        "mean": 0.3333333333333333,
+        "p10": -12,
+        "median": -4,
+        "p90": 19,
+        "min": -19,
+        "max": 89
+      },
+      "unrestTierShares": {
+        "calm": 0.4999999999999996,
+        "discontent": 0.2575757575757574,
+        "unrest": 0.16666666666666657,
+        "revolt": 0.07575757575757575
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.212121212121212,
+        "timedHappiness": 0.09848484848484845,
+        "seasonalModifier": 0.6363636363636359,
+        "yearlyOmen": 0.9999999999999992,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999992,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 31,
+      "seasonName": "autumn",
+      "year": 8,
+      "games": 33,
+      "victoryCards": {
+        "mean": 0.6818181818181818,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 14.742424242424242,
+        "p10": 7,
+        "median": 15,
+        "p90": 23,
+        "min": 0,
+        "max": 39
+      },
+      "food": {
+        "mean": 2.1742424242424243,
+        "p10": 0,
+        "median": 1,
+        "p90": 7,
+        "min": 0,
+        "max": 10
+      },
+      "happiness": {
+        "mean": -0.1590909090909091,
+        "p10": -12,
+        "median": -4,
+        "p90": 18,
+        "min": -19,
+        "max": 89
+      },
+      "unrestTierShares": {
+        "calm": 0.49242424242424204,
+        "discontent": 0.19696969696969685,
+        "unrest": 0.19696969696969685,
+        "revolt": 0.11363636363636359
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.27272727272727254,
+        "timedHappiness": 0.3787878787878785,
+        "seasonalModifier": 0.5151515151515148,
+        "yearlyOmen": 0.9999999999999992,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999992,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 32,
+      "seasonName": "winter",
+      "year": 8,
+      "games": 32,
+      "victoryCards": {
+        "mean": 0.65625,
+        "p10": 0,
+        "median": 1,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 15.2734375,
+        "p10": 7,
+        "median": 15,
+        "p90": 23,
+        "min": 0,
+        "max": 40
+      },
+      "food": {
+        "mean": 3.0078125,
+        "p10": 0,
+        "median": 2,
+        "p90": 8,
+        "min": 0,
+        "max": 16
+      },
+      "happiness": {
+        "mean": -2.2109375,
+        "p10": -14,
+        "median": -6,
+        "p90": 12,
+        "min": -21,
+        "max": 89
+      },
+      "unrestTierShares": {
+        "calm": 0.4296875,
+        "discontent": 0.15625,
+        "unrest": 0.2890625,
+        "revolt": 0.125
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.28125,
+        "timedHappiness": 0.484375,
+        "seasonalModifier": 0.75,
+        "yearlyOmen": 1,
+        "actionDiscount": 0,
+        "standingLaw": 1,
+        "nextAssembly": 0
+      }
+    },
+    {
+      "season": 33,
+      "seasonName": "spring",
+      "year": 9,
+      "games": 31,
+      "victoryCards": {
+        "mean": 0.6935483870967742,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "min": 0,
+        "max": 3
+      },
+      "pops": {
+        "mean": 15.82258064516129,
+        "p10": 7,
+        "median": 15,
+        "p90": 24,
+        "min": 0,
+        "max": 40
+      },
+      "food": {
+        "mean": 2.3225806451612905,
+        "p10": 0,
+        "median": 1,
+        "p90": 5,
+        "min": 0,
+        "max": 13
+      },
+      "happiness": {
+        "mean": -3.1774193548387095,
+        "p10": -15,
+        "median": -7,
+        "p90": 11,
+        "min": -26,
+        "max": 88
+      },
+      "unrestTierShares": {
+        "calm": 0.3548387096774191,
+        "discontent": 0.22580645161290308,
+        "unrest": 0.21774193548387083,
+        "revolt": 0.20161290322580633
+      },
+      "activeEffectShares": {
+        "incomeSuppression": 0,
+        "hunger": 0.20967741935483858,
+        "timedHappiness": 0.26612903225806434,
+        "seasonalModifier": 0.5806451612903222,
+        "yearlyOmen": 0.9999999999999992,
+        "actionDiscount": 0,
+        "standingLaw": 0.9999999999999992,
+        "nextAssembly": 0
+      }
+    }
+  ],
+  "perSeat": {
+    "0": {
+      "winRate": 0.275,
+      "capLeaderRate": 0,
+      "meanFinalCards": 0.75
+    },
+    "1": {
+      "winRate": 0.325,
+      "capLeaderRate": 0,
+      "meanFinalCards": 0.925
+    },
+    "2": {
+      "winRate": 0.2,
+      "capLeaderRate": 0,
+      "meanFinalCards": 0.575
+    },
+    "3": {
+      "winRate": 0.2,
+      "capLeaderRate": 0,
+      "meanFinalCards": 0.725
+    }
+  },
+  "hunger": {
+    "0": {
+      "hungerTurnsPerGame": 3.775,
+      "popsLostPerGame": 7.175,
+      "idleSlavesMean": 0.650974025974026,
+      "idleSlaveShare": 0.15691645470553708
+    },
+    "1": {
+      "hungerTurnsPerGame": 3.35,
+      "popsLostPerGame": 6.15,
+      "idleSlavesMean": 0.7871347402597403,
+      "idleSlaveShare": 0.18798158468621273
+    },
+    "2": {
+      "hungerTurnsPerGame": 4.625,
+      "popsLostPerGame": 7.9,
+      "idleSlavesMean": 0.9721996753246753,
+      "idleSlaveShare": 0.2224957042678679
+    },
+    "3": {
+      "hungerTurnsPerGame": 4.225,
+      "popsLostPerGame": 7.425,
+      "idleSlavesMean": 1.5097402597402598,
+      "idleSlaveShare": 0.3116099849220975
+    }
+  },
+  "riots": {
+    "perGame": 18.45,
+    "turnShare": 0.1497564935064935,
+    "bySeason": [
+      {
+        "season": 1,
+        "riots": 0,
+        "playerTurns": 120
+      },
+      {
+        "season": 2,
+        "riots": 0,
+        "playerTurns": 160
+      },
+      {
+        "season": 3,
+        "riots": 0,
+        "playerTurns": 160
+      },
+      {
+        "season": 4,
+        "riots": 1,
+        "playerTurns": 160
+      },
+      {
+        "season": 5,
+        "riots": 8,
+        "playerTurns": 160
+      },
+      {
+        "season": 6,
+        "riots": 11,
+        "playerTurns": 160
+      },
+      {
+        "season": 7,
+        "riots": 14,
+        "playerTurns": 160
+      },
+      {
+        "season": 8,
+        "riots": 17,
+        "playerTurns": 160
+      },
+      {
+        "season": 9,
+        "riots": 25,
+        "playerTurns": 160
+      },
+      {
+        "season": 10,
+        "riots": 23,
+        "playerTurns": 160
+      },
+      {
+        "season": 11,
+        "riots": 28,
+        "playerTurns": 160
+      },
+      {
+        "season": 12,
+        "riots": 24,
+        "playerTurns": 160
+      },
+      {
+        "season": 13,
+        "riots": 22,
+        "playerTurns": 160
+      },
+      {
+        "season": 14,
+        "riots": 27,
+        "playerTurns": 160
+      },
+      {
+        "season": 15,
+        "riots": 26,
+        "playerTurns": 160
+      },
+      {
+        "season": 16,
+        "riots": 24,
+        "playerTurns": 160
+      },
+      {
+        "season": 17,
+        "riots": 30,
+        "playerTurns": 160
+      },
+      {
+        "season": 18,
+        "riots": 27,
+        "playerTurns": 159
+      },
+      {
+        "season": 19,
+        "riots": 20,
+        "playerTurns": 156
+      },
+      {
+        "season": 20,
+        "riots": 23,
+        "playerTurns": 156
+      },
+      {
+        "season": 21,
+        "riots": 28,
+        "playerTurns": 150
+      },
+      {
+        "season": 22,
+        "riots": 24,
+        "playerTurns": 144
+      },
+      {
+        "season": 23,
+        "riots": 20,
+        "playerTurns": 142
+      },
+      {
+        "season": 24,
+        "riots": 26,
+        "playerTurns": 140
+      },
+      {
+        "season": 25,
+        "riots": 29,
+        "playerTurns": 140
+      },
+      {
+        "season": 26,
+        "riots": 26,
+        "playerTurns": 140
+      },
+      {
+        "season": 27,
+        "riots": 25,
+        "playerTurns": 139
+      },
+      {
+        "season": 28,
+        "riots": 26,
+        "playerTurns": 136
+      },
+      {
+        "season": 29,
+        "riots": 32,
+        "playerTurns": 135
+      },
+      {
+        "season": 30,
+        "riots": 32,
+        "playerTurns": 132
+      },
+      {
+        "season": 31,
+        "riots": 31,
+        "playerTurns": 129
+      },
+      {
+        "season": 32,
+        "riots": 38,
+        "playerTurns": 128
+      },
+      {
+        "season": 33,
+        "riots": 51,
+        "playerTurns": 122
+      }
+    ]
+  },
+  "buildings": {
+    "marketplace": {
+      "built": 211,
+      "perGame": 5.275
+    },
+    "estate": {
+      "built": 99,
+      "perGame": 2.475
+    },
+    "forum": {
+      "built": 0,
+      "perGame": 0
+    },
+    "temple": {
+      "built": 373,
+      "perGame": 9.325
+    },
+    "granary": {
+      "built": 281,
+      "perGame": 7.025
+    },
+    "port": {
+      "built": 207,
+      "perGame": 5.175
+    }
+  },
+  "luxuries": {
+    "claimedPerGame": 5.175,
+    "activePerGame": 5.175,
+    "happinessPerSeatMean": 2.5875,
+    "endGoldDistribution": {
+      "mean": 101.1125,
+      "p10": 0,
+      "median": 62,
+      "p90": 278,
+      "min": -59,
+      "max": 651
+    }
+  },
+  "movesByType": {
+    "placeCapital": {
+      "count": 160,
+      "perGame": 4
+    },
+    "placeCity": {
+      "count": 0,
+      "perGame": 0
+    },
+    "placeColony": {
+      "count": 160,
+      "perGame": 4
+    },
+    "foundColony": {
+      "count": 670,
+      "perGame": 16.75
+    },
+    "upgradeColonyToCity": {
+      "count": 200,
+      "perGame": 5
+    },
+    "buildBuilding": {
+      "count": 1171,
+      "perGame": 29.275
+    },
+    "growPop": {
+      "count": 2293,
+      "perGame": 57.325
+    },
+    "movePops": {
+      "count": 811,
+      "perGame": 20.275
+    },
+    "resolveEvent": {
+      "count": 4957,
+      "perGame": 123.925
+    },
+    "bankSell": {
+      "count": 1513,
+      "perGame": 37.825
+    },
+    "bankBuy": {
+      "count": 3072,
+      "perGame": 76.8
+    },
+    "dole": {
+      "count": 620,
+      "perGame": 15.5
+    },
+    "civicCalm": {
+      "count": 1074,
+      "perGame": 26.85
+    },
+    "promotePop": {
+      "count": 847,
+      "perGame": 21.175
+    },
+    "demotePop": {
+      "count": 481,
+      "perGame": 12.025
+    },
+    "fundExpedition": {
+      "count": 1805,
+      "perGame": 45.125
+    },
+    "buyRiotInsurance": {
+      "count": 650,
+      "perGame": 16.25
+    },
+    "resolveRiot": {
+      "count": 738,
+      "perGame": 18.45
+    },
+    "assemblyDraw": {
+      "count": 0,
+      "perGame": 0
+    },
+    "assemblyDiscardHeld": {
+      "count": 0,
+      "perGame": 0
+    },
+    "assemblyPropose": {
+      "count": 0,
+      "perGame": 0
+    },
+    "assemblyProposeRepeal": {
+      "count": 0,
+      "perGame": 0
+    },
+    "assemblyPass": {
+      "count": 1196,
+      "perGame": 29.9
+    },
+    "assemblyBribe": {
+      "count": 0,
+      "perGame": 0
+    },
+    "assemblyVote": {
+      "count": 1142,
+      "perGame": 28.55
+    },
+    "assemblyVeto": {
+      "count": 54,
+      "perGame": 1.35
+    },
+    "assemblyClose": {
+      "count": 299,
+      "perGame": 7.475
+    },
+    "endTurn": {
+      "count": 4958,
+      "perGame": 123.95
+    }
+  },
+  "activeEffects": {
+    "incomeSuppression": {
+      "observations": 0,
+      "perPlayerTurn": 0,
+      "playerTurnShare": 0
+    },
+    "hunger": {
+      "observations": 4819,
+      "perPlayerTurn": 0.2444703733766234,
+      "playerTurnShare": 0.2444703733766234
+    },
+    "timedHappiness": {
+      "observations": 4797,
+      "perPlayerTurn": 0.24335430194805194,
+      "playerTurnShare": 0.23001217532467533
+    },
+    "seasonalModifier": {
+      "observations": 10784,
+      "perPlayerTurn": 0.547077922077922,
+      "playerTurnShare": 0.547077922077922
+    },
+    "yearlyOmen": {
+      "observations": 19712,
+      "perPlayerTurn": 1,
+      "playerTurnShare": 1
+    },
+    "actionDiscount": {
+      "observations": 0,
+      "perPlayerTurn": 0,
+      "playerTurnShare": 0
+    },
+    "standingLaw": {
+      "observations": 51276,
+      "perPlayerTurn": 2.601258116883117,
+      "playerTurnShare": 0.862012987012987
+    },
+    "nextAssembly": {
+      "observations": 0,
+      "perPlayerTurn": 0,
+      "playerTurnShare": 0
+    }
+  },
+  "events": {
+    "player": {
+      "player-new-citizen": 258,
+      "player-free-settlers": 256,
+      "player-captured-laborers": 199,
+      "player-willing-hands": 241,
+      "player-slave-auction": 192,
+      "player-good-stores": 252,
+      "player-timber-windfall": 240,
+      "player-merchant-profit": 268,
+      "player-stone-shipment": 248,
+      "player-local-unrest": 238,
+      "player-public-calm": 241,
+      "player-civil-discord": 187,
+      "player-granary-rats": 312,
+      "player-banditry": 188,
+      "player-warehouse-fire": 264,
+      "player-quarry-collapse": 127,
+      "player-patronage-network": 187,
+      "player-emergency-labor": 176,
+      "player-granary-surplus": 192,
+      "player-civic-petition": 199,
+      "player-skilled-mason": 119,
+      "player-caravan-contacts": 119,
+      "player-forest-crews": 130,
+      "player-temple-donation": 65,
+      "player-market-day": 60
+    },
+    "seasonal": {
+      "season-drought": 152,
+      "season-bountiful-harvest": 152,
+      "season-timber-levies": 111,
+      "season-quarry-contracts": 110,
+      "season-grain-tithe": 117,
+      "season-civic-anxiety": 73,
+      "season-festival-games": 77,
+      "season-scarce-labor": 76,
+      "season-skilled-artisans": 75,
+      "season-open-markets": 75,
+      "season-plague": 76,
+      "season-spring-floods": 79,
+      "season-wildfire": 73
+    },
+    "choicePicks": {
+      "player-public-calm": [
+        247
+      ],
+      "player-free-settlers": [
+        255
+      ],
+      "player-willing-hands": [
+        247
+      ],
+      "player-slave-auction": [
+        186
+      ],
+      "player-timber-windfall": [
+        248
+      ],
+      "player-good-stores": [
+        252
+      ],
+      "player-granary-rats": [
+        309
+      ],
+      "player-skilled-mason": [
+        127
+      ],
+      "player-market-day": [
+        24,
+        34
+      ],
+      "player-emergency-labor": [
+        102,
+        81
+      ],
+      "player-merchant-profit": [
+        257
+      ],
+      "player-patronage-network": [
+        189
+      ],
+      "player-new-citizen": [
+        250
+      ],
+      "player-banditry": [
+        185
+      ],
+      "player-local-unrest": [
+        245
+      ],
+      "player-granary-surplus": [
+        140,
+        44
+      ],
+      "player-civil-discord": [
+        188
+      ],
+      "player-caravan-contacts": [
+        127
+      ],
+      "player-quarry-collapse": [
+        129
+      ],
+      "player-temple-donation": [
+        63,
+        2
+      ],
+      "player-captured-laborers": [
+        192
+      ],
+      "player-stone-shipment": [
+        253
+      ],
+      "player-warehouse-fire": [
+        259
+      ],
+      "player-civic-petition": [
+        101,
+        93
+      ],
+      "player-forest-crews": [
+        128
+      ]
+    }
+  },
+  "currencyVerbs": {
+    "bankSell": {
+      "count": 1513,
+      "perGame": 37.825
+    },
+    "bankBuy": {
+      "count": 3072,
+      "perGame": 76.8
+    },
+    "dole": {
+      "count": 620,
+      "perGame": 15.5
+    },
+    "civicCalm": {
+      "count": 1074,
+      "perGame": 26.85
+    },
+    "promotePop": {
+      "count": 847,
+      "perGame": 21.175
+    },
+    "demotePop": {
+      "count": 481,
+      "perGame": 12.025
+    },
+    "fundExpedition": {
+      "count": 1805,
+      "perGame": 45.125
+    },
+    "buyRiotInsurance": {
+      "count": 650,
+      "perGame": 16.25
+    },
+    "resolveRiot": {
+      "count": 738,
+      "perGame": 18.45
+    }
+  },
+  "assembly": {
+    "held": {
+      "count": 299,
+      "perGame": 7.475
+    },
+    "lawsEnacted": {
+      "count": 200,
+      "perGame": 5
+    },
+    "directivesPassed": {
+      "count": 0,
+      "perGame": 0
+    },
+    "authoredPassed": {
+      "count": 0,
+      "perGame": 0
+    },
+    "prizesGranted": {
+      "wood": 0,
+      "stone": 0,
+      "gold": 0,
+      "food": 0,
+      "influence": 0,
+      "happiness": 0
+    },
+    "directiveTargets": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    "voiceClaims": {
+      "count": 0,
+      "perGame": 0
+    },
+    "voiceTransfers": {
+      "count": 0,
+      "perGame": 0
+    },
+    "voiceHoldersAtEnd": {
+      "count": 0,
+      "perGame": 0
+    },
+    "voiceHolderWins": {
+      "count": 0,
+      "finishedGames": 40,
+      "rate": 0
+    },
+    "authoredPassLeadMargin": {
+      "mean": 0,
+      "p10": 0,
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+    },
+    "authoredPassLeaderShare": {
+      "mean": 0,
+      "p10": 0,
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+    },
+    "lawsRemoved": {
+      "count": 9,
+      "perGame": 0.225
+    },
+    "lawsStanding": 4.775,
+    "influenceSpent": {
+      "count": 270,
+      "perGame": 6.75
+    },
+    "verbs": {
+      "assemblyDraw": {
+        "count": 0,
+        "perGame": 0
+      },
+      "assemblyPropose": {
+        "count": 0,
+        "perGame": 0
+      },
+      "assemblyProposeRepeal": {
+        "count": 0,
+        "perGame": 0
+      },
+      "assemblyPass": {
+        "count": 1196,
+        "perGame": 29.9
+      },
+      "assemblyBribe": {
+        "count": 0,
+        "perGame": 0
+      },
+      "assemblyVote": {
+        "count": 1142,
+        "perGame": 28.55
+      },
+      "assemblyVeto": {
+        "count": 54,
+        "perGame": 1.35
+      }
+    }
+  },
+  "finalCardsDistribution": {
+    "mean": 0.74375,
+    "p10": 0,
+    "median": 0,
+    "p90": 2,
+    "min": 0,
+    "max": 3
+  },
+  "winsByPolicy": {},
+  "terminations": {
+    "victoryRace": 10,
+    "deckExhausted": 30,
+    "turnCap": 0
+  },
+  "forced": {
+    "actionCapHits": 0,
+    "forcedResolutions": 0,
+    "forcedEndTurns": 0,
+    "perGame": 0
+  },
+  "upgrades": {
+    "count": 200,
+    "perGame": 5
+  }
+}

@@ -1,11 +1,12 @@
 import type { PoliticianId } from "../game/assembly";
 import { transition } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
-import type { CivicCalmPayment, VentureStake } from "../game/rules";
+import type { CivicCalmPayment } from "../game/rules";
 import type {
   BuildingId,
   EventTableId,
   HegemonyState,
+  HungerLeave,
   PlayerId,
   PopType,
   Pops,
@@ -13,7 +14,11 @@ import type {
   TradableMaterial,
 } from "../game/types";
 
+import type { NationalIdeaId, IdeaPopChoice } from "../game/ideaTypes";
+
 export type GameMoves = {
+  pickIdea: (playerID: PlayerId, ideaId: NationalIdeaId, target?: IdeaPopChoice) => void;
+  buyIdea: (ideaId: NationalIdeaId, target?: IdeaPopChoice) => void;
   placeCapital: (tileId: string, pops: Pops) => void;
   placeCity: (tileId: string, pops: Pops) => void;
   placeColony: (tileId: string, pops: Pops) => void;
@@ -22,13 +27,15 @@ export type GameMoves = {
   buildBuilding: (tileId: string, buildingId: BuildingId, claimVertexId?: string) => void;
   growPop: (tileId: string, pop: PopType) => void;
   movePops: (sourceTileId: string, targetTileId: string, pops: Pops) => void;
-  resolvePendingPlayerEvent: (targetTileId?: string, choiceIndex?: number) => void;
+  resolvePendingPlayerEvent: (targetTileId?: string) => void;
+  resolveHunger: (leave: HungerLeave[]) => void;
   bankSell: (material: TradableMaterial) => void;
   bankBuy: (material: TradableMaterial) => void;
+  dole: () => void;
   civicCalm: (payment: CivicCalmPayment) => void;
   promotePop: (tileId: string, from: PopType) => void;
   demotePop: (tileId: string, from: PopType) => void;
-  fundExpedition: (expeditionId: EventTableId, stake: VentureStake) => void;
+  fundExpedition: (expeditionId: EventTableId) => void;
   buyRiotInsurance: (
     optionId: RiotInsuranceId,
     demoteTarget?: { tileId: string; from: PopType },
@@ -36,12 +43,11 @@ export type GameMoves = {
   resolveRiot: () => void;
   assemblyDraw: (playerID: PlayerId, politician: PoliticianId) => void;
   assemblyDiscardHeld: (playerID: PlayerId) => void;
-  assemblyPropose: (playerID: PlayerId, replaces?: string, target?: PlayerId) => void;
+  assemblyPropose: (playerID: PlayerId, target?: PlayerId) => void;
   assemblyProposeRepeal: (playerID: PlayerId, cardId: string) => void;
   assemblyPass: (playerID: PlayerId) => void;
-  assemblyBribe: (playerID: PlayerId) => void;
+  assemblyBribe: (playerID: PlayerId, payment: "gold" | "influence") => void;
   assemblyVote: (playerID: PlayerId, yea: boolean) => void;
-  assemblyVeto: (playerID: PlayerId) => void;
   assemblyClose: () => void;
 };
 
@@ -74,36 +80,33 @@ export function createCommandMoves(dispatch: DispatchGameCommand): GameMoves {
     growPop: (tileId, pop) => dispatch({ type: "growPop", tileId, pop }),
     movePops: (sourceTileId, targetTileId, pops) =>
       dispatch({ type: "movePops", sourceTileId, targetTileId, pops }),
-    resolvePendingPlayerEvent: (targetTileId, choiceIndex = 0) =>
-      dispatch({ type: "resolveEvent", choiceIndex, ...(targetTileId ? { targetTileId } : {}) }),
+    resolvePendingPlayerEvent: (targetTileId) =>
+      dispatch({ type: "resolveEvent", ...(targetTileId ? { targetTileId } : {}) }),
+    resolveHunger: (leave) => dispatch({ type: "resolveHunger", leave }),
     bankSell: (material) => dispatch({ type: "bankSell", material }),
     bankBuy: (material) => dispatch({ type: "bankBuy", material }),
+    dole: () => dispatch({ type: "dole" }),
+    pickIdea: (playerID, ideaId, target) =>
+      dispatch({ type: "pickIdea", ideaId, ...(target ? { target } : {}) }, playerID),
+    buyIdea: (ideaId, target) =>
+      dispatch({ type: "buyIdea", ideaId, ...(target ? { target } : {}) }),
     civicCalm: (payment) => dispatch({ type: "civicCalm", payment }),
     promotePop: (tileId, from) => dispatch({ type: "promotePop", tileId, from }),
     demotePop: (tileId, from) => dispatch({ type: "demotePop", tileId, from }),
-    fundExpedition: (expeditionId, stake) =>
-      dispatch({ type: "fundExpedition", expeditionId, stake }),
+    fundExpedition: (expeditionId) => dispatch({ type: "fundExpedition", expeditionId }),
     buyRiotInsurance: (optionId, demoteTarget) =>
       dispatch({ type: "buyRiotInsurance", optionId, ...(demoteTarget ? { demoteTarget } : {}) }),
     resolveRiot: () => dispatch({ type: "resolveRiot" }),
     assemblyDraw: (playerID, politician) =>
       dispatch({ type: "assemblyDraw", politician }, playerID),
     assemblyDiscardHeld: (playerID) => dispatch({ type: "assemblyDiscardHeld" }, playerID),
-    assemblyPropose: (playerID, replaces, target) =>
-      dispatch(
-        {
-          type: "assemblyPropose",
-          ...(replaces ? { replaces } : {}),
-          ...(target ? { target } : {}),
-        },
-        playerID,
-      ),
+    assemblyPropose: (playerID, target) =>
+      dispatch({ type: "assemblyPropose", ...(target ? { target } : {}) }, playerID),
     assemblyProposeRepeal: (playerID, cardId) =>
       dispatch({ type: "assemblyProposeRepeal", cardId }, playerID),
     assemblyPass: (playerID) => dispatch({ type: "assemblyPass" }, playerID),
-    assemblyBribe: (playerID) => dispatch({ type: "assemblyBribe" }, playerID),
+    assemblyBribe: (playerID, payment) => dispatch({ type: "assemblyBribe", payment }, playerID),
     assemblyVote: (playerID, yea) => dispatch({ type: "assemblyVote", yea }, playerID),
-    assemblyVeto: (playerID) => dispatch({ type: "assemblyVeto" }, playerID),
     assemblyClose: () => dispatch({ type: "assemblyClose" }),
   };
 }

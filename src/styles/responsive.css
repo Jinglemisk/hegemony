@@ -11,38 +11,13 @@
    holds at its 0.82 floor and the panels float over the (never-reflowed) sea. */
 
 @media (max-width: 760px) {
-  .resourceTooltip {
-    position: fixed;
-    top: 92px;
-    right: 12px;
-    left: 12px;
-    width: auto;
-    max-height: min(430px, calc(100vh - 116px));
-  }
-
-  .resourceGrid,
   .popChoiceGrid {
     grid-template-columns: 1fr;
-  }
-
-  .popBuildingMatrix {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 460px) {
-  .buildingButton {
-    grid-template-columns: 36px minmax(0, 1fr);
-  }
-
-  .buildingButtonIcon {
-    width: 34px;
-    height: 34px;
-  }
-
-  .popBuildingMatrix,
-  .growPopBenefitPanel,
-  .popSummary {
+  .growPopBenefitPanel {
     grid-template-columns: 1fr;
   }
 }

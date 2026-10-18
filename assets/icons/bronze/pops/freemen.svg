@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Freemen — plain bust wearing a conical felt pilos</title>
+<defs>
+<linearGradient id="a-freemen-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-freemen-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+</defs>
+<g transform="translate(3 0)">
+<path d="M19 31H36L39 39Q49 42 52 58H6Q7 43 18 39Z" fill="url(#a-freemen-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 31H36V40L28 46L19 40Z" fill="url(#a-freemen-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 22Q12 15 27 15Q43 15 42 22L41 29Q36 38 27 39Q18 37 14 29Z" fill="url(#a-freemen-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M31 14Q41 15 40 24L39 29L30 36L33 26Z" fill="#895438"/>
+
+<path d="M21 24H24M32 24H35M28 25L26 30M24 33H30" fill="none" stroke="#714c34" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 44L27 49L36 43M15 49L12 55" fill="none" stroke="#aa9572" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 27L40 25L38 29L32 34L31 32ZM32 49L38 44L39 51L33 57H28Z" fill="#806c50"/>
+
+<path d="M18 24L20 29M10 49Q12 44 17 43M18 46L26 51" fill="none" stroke="#f4d2aa" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 51L19 56M25 54L25 57" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 20L18 12Q22 6 27 6Q32 6 36 12L42 20Q28 23 13 20Z" fill="url(#a-freemen-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M29 8Q33 10 35 14L40 20L34 21L31 15Z" fill="#aa9572"/>
+<path d="M35 16L40 20L35 21L33 19Z" fill="#806c50"/>
+<path d="M16 18L21 11Q24 8 27 8" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 13L22 16M28 18L30 19" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</g>
+</svg>

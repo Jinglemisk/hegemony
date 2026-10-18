@@ -1,17 +1,11 @@
 import { describe, expect, it } from "vitest";
-import {
-  EXPEDITION_TABLES,
-  OMEN_TABLE,
-  PLAYER_EVENT_CARDS,
-  RIOT_TABLE,
-  SEASONAL_EVENT_CARDS,
-} from "../game/data";
+import { EXPEDITION_TABLES, PLAYER_EVENT_CARDS, RIOT_TABLE } from "../game/data";
 import type { EventEffect, TableEffect } from "../game/types";
-import { presentEventEffect, presentTableEffect } from "./effects";
+import { presentDirectiveEffect, presentEventEffect, presentTableEffect } from "./effects";
 
 /**
  * The presenter split (parity theme 4) added `magnitude` / `subject` /
- * `condition` / `turns` beside the flat `text`, so a ceremony can carve the
+ * `condition` beside the flat `text`, so a ceremony can carve the
  * number and demote the words around it.
  *
  * `text` is the contract with roughly a dozen existing callers — ledger rows,
@@ -21,79 +15,14 @@ import { presentEventEffect, presentTableEffect } from "./effects";
  */
 describe("the flat sentence survives the split", () => {
   const eventCases: Array<[EventEffect, string]> = [
-    [{ type: "resourceDelta", scope: "activePlayer", resource: "gold", amount: -3 }, "-3 Gold"],
+    [{ type: "resourceDelta", resource: "gold", amount: -2 }, "-2 Gold"],
+    [{ type: "unrestTokens", change: "placeOne" }, "+1 Unrest token placed on your realm"],
+    [{ type: "unrestTokens", change: "clearOne" }, "-1 Unrest token cleared from your realm"],
+    [{ type: "unrestTokens", change: "clearAll" }, "All Unrest tokens cleared from your realm"],
     [
-      {
-        type: "scaledResourceDelta",
-        scope: "activePlayer",
-        resource: "food",
-        amountPerPops: 2,
-        popStep: 3,
-        minimum: 1,
-      },
-      "+2 Food per 3 pops",
+      { type: "addPops", pop: "freemen", amount: 1, target: "ownedSettlementWithCapacity" },
+      "Add 1 freeman",
     ],
-    [{ type: "happinessDelta", scope: "activePlayer", amount: 2 }, "+2 Happiness"],
-    [
-      {
-        type: "scaledHappinessDelta",
-        scope: "allPlayers",
-        amountPerPops: -1,
-        popStep: 4,
-        minimumMagnitude: 1,
-      },
-      "-1 Happiness per 4 pops",
-    ],
-    [
-      { type: "timedHappinessDelta", scope: "activePlayer", amountPerTurn: -2, turns: 3 },
-      "-2 Happiness per turn for 3 turns",
-    ],
-    [
-      {
-        type: "incomeModifier",
-        scope: "activePlayer",
-        resource: "wood",
-        amount: 1,
-        duration: "season",
-      },
-      "+1 Wood income",
-    ],
-    [
-      { type: "buildingCostMultiplier", multiplier: 2, duration: "season", excludes: [] },
-      "Double building costs this season",
-    ],
-    [
-      { type: "addPops", pop: "citizens", amount: 1, target: "ownedSettlementWithCapacity" },
-      "Add 1 citizen",
-    ],
-    [
-      {
-        type: "actionCostDiscount",
-        action: "growPop",
-        pop: "citizens",
-        resource: "food",
-        amount: 5,
-        duration: "turn",
-        consume: "nextMatchingAction",
-      },
-      "Next citizen grown: -5 Food",
-    ],
-    [
-      { type: "resourceExchange", from: "wood", to: "gold", maxAmount: 4, ratio: 1 },
-      "Exchange up to 4 Wood for 4 Gold",
-    ],
-    [
-      {
-        type: "resourceDeltaPerPop",
-        scope: "activePlayer",
-        resource: "gold",
-        pop: "freemen",
-        amountPerPop: 1,
-        minimum: 2,
-      },
-      "+1 Gold per freeman, minimum 2",
-    ],
-    [{ type: "choice", options: [] }, "Choose one option"],
   ];
 
   const tableCases: Array<[TableEffect, string]> = [
@@ -108,7 +37,6 @@ describe("the flat sentence survives the split", () => {
     [{ type: "destroyBuilding", popLossFallback: 1 }, "-1 building"],
     [{ type: "gainResource", resource: "gold", amount: 9 }, "+9 Gold"],
     [{ type: "gainPop", pop: "slaves", foodFallback: 2 }, "+1 slave"],
-    [{ type: "yearIncomeModifier", resource: "food", amount: -1 }, "-1 Food income, all year"],
   ];
 
   it.each(eventCases)("presents %o as its unchanged sentence", (effect, text) => {
@@ -118,13 +46,17 @@ describe("the flat sentence survives the split", () => {
   it.each(tableCases)("presents %o as its unchanged sentence", (effect, text) => {
     expect(presentTableEffect(effect).text).toBe(text);
   });
+
+  it("aims a Directive's token effect at its target rather than the reader", () => {
+    expect(presentDirectiveEffect({ type: "unrestTokens", change: "placeOne" }).text).toBe(
+      "+1 Unrest token placed on the target's realm",
+    );
+  });
 });
 
 describe("the carved parts are drawn from that same sentence", () => {
-  const authoredEventEffects = flatten(
-    [...SEASONAL_EVENT_CARDS, ...PLAYER_EVENT_CARDS].flatMap((card) => card.effects),
-  );
-  const authoredTableEffects = [RIOT_TABLE, ...EXPEDITION_TABLES, OMEN_TABLE].flatMap((table) =>
+  const authoredEventEffects = PLAYER_EVENT_CARDS.flatMap((card) => card.effects);
+  const authoredTableEffects = [RIOT_TABLE, ...EXPEDITION_TABLES].flatMap((table) =>
     table.rows.flatMap((row) => row.effects),
   );
 
@@ -148,23 +80,4 @@ describe("the carved parts are drawn from that same sentence", () => {
       }
     }
   });
-
-  it("carries a turn count only where the effect is actually timed", () => {
-    for (const effect of authoredEventEffects) {
-      const turns = presentEventEffect(effect).turns;
-
-      if (effect.type === "timedHappinessDelta") {
-        expect(turns, effect.type).toBe(effect.turns);
-      } else {
-        expect(turns, effect.type).toBeUndefined();
-      }
-    }
-  });
 });
-
-/** `choice` nests options; the presenters see the flattened list everywhere else. */
-function flatten(effects: readonly EventEffect[]): EventEffect[] {
-  return effects.flatMap((effect) =>
-    effect.type === "choice" ? [effect, ...flatten(effect.options.flat())] : [effect],
-  );
-}

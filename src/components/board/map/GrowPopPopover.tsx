@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { POP_TYPES, getGrowPopStatus, previewGrowPopIncomeDelta } from "../../../game/rules";
+import { GROWABLE_POPS, getGrowPopStatus, previewGrowPopIncomeDelta } from "../../../game/rules";
 import type { PopType } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { MechanicsDetails } from "../../MechanicsDetails";
@@ -23,16 +23,19 @@ import { TilePopover } from "./TilePopover";
 export function GrowPopPopover({
   tileId,
   anchor,
+  initialPop = "slaves",
   onCancel,
   onConfirm,
 }: {
   tileId: string;
   anchor: DOMRect;
+  /** The pop the Grow fan picked, if it picked one. */
+  initialPop?: PopType;
   onCancel: () => void;
   onConfirm: (tileId: string, pop: PopType) => void;
 }) {
   const { G, viewerId: playerID, phase, isActive } = useGameUi();
-  const [pop, setPop] = useState<PopType>("citizens");
+  const [pop, setPop] = useState<PopType>(initialPop);
 
   const tile = G.board.tiles.find((candidate) => candidate.id === tileId);
   const status = getGrowPopStatus(G, playerID, tileId, pop);
@@ -64,7 +67,7 @@ export function GrowPopPopover({
         role="group"
         aria-label="Pop type to grow"
       >
-        {POP_TYPES.map((candidate) => {
+        {GROWABLE_POPS.map((candidate) => {
           const candidateStatus = getGrowPopStatus(G, playerID, tileId, candidate);
           const reason = actionRequirementText(candidateStatus, phase, isActive);
           const blocked = gameplayActionDisabled(candidateStatus, phase, isActive);

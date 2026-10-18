@@ -82,7 +82,7 @@ export function Icon({ glyph, size = "inline", className, label, src }: IconProp
  * A glyph's marks with no `<svg>` around them, on the raw 24-unit grid.
  *
  * For the one case `Icon` cannot serve: an icon drawn INSIDE another drawing,
- * where the caller already owns a coordinate system (the season dial's wedges).
+ * where the caller already owns a coordinate system (the map's geometry).
  * A nested `<svg>` sizes itself from geometry attributes rather than from the
  * `.icon` classes, so it arrives at 100% of its parent; the caller supplies its
  * own transform and stroke instead.

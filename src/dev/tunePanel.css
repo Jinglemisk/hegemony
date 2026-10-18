@@ -18,8 +18,14 @@
   background: #2b2622;
   border: 1px solid #7a4a2b;
   border-radius: 6px;
-  cursor: pointer;
+  cursor: grab;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  /* Dragged by pointer: no page scroll or text selection under the press. */
+  touch-action: none;
+  user-select: none;
+}
+.tune-fab:active {
+  cursor: grabbing;
 }
 .tune-fab:hover {
   background: #3a332c;

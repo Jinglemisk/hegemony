@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { HexMap } from "../../HexMap";
+import { Island } from "../../frame/island/Island";
 import { LuxuryVertexMarker } from "./LuxuryVertexMarker";
 import { createInitialState } from "../../../game/state";
 import { selectLuxuryVertices } from "../../../game/mapTopology";
@@ -19,13 +19,7 @@ describe("luxury moorings on the rendered map", () => {
 
   it("draws one marker per selected vertex, addressed by canonical id", () => {
     const markup = renderToStaticMarkup(
-      <HexMap
-        G={G}
-        confirmation={null}
-        onTileAction={() => undefined}
-        pendingTileId={null}
-        selectedTileId={null}
-      />,
+      <Island G={G} onTileAction={() => undefined} selectedTileId={null} />,
     );
     const expected = selectLuxuryVertices(G.board.tiles, {
       count: G.ruleset.economy.luxury.coastalGoods,

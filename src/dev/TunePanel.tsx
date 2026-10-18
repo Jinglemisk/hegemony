@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./tunePanel.css";
 import { getBuildings, getTerrainDeck } from "../game/content";
 import type { HegemonyState } from "../game/types";
 import { CHROME_PLACEHOLDERS } from "../ui/icons/placeholders";
-import { buildingSummary, describeBuildingEffect, terrainStats, terrainTotals } from "./aggregates";
+import { buildingSummary, describeBuildingEffect, terrainStats } from "./aggregates";
 import {
   defaultValueAt,
   effectiveValueAt,
@@ -31,6 +31,18 @@ import type { TuningPresetId } from "./tuningPresets";
  */
 
 const OPEN_KEY = "hegemony-dev-tune-open";
+/** Where the TUNE button was dragged to, so it stays off whatever it covered. */
+const FAB_KEY = "hegemony-dev-tune-fab";
+type FabSpot = { x: number; y: number };
+
+function loadFabSpot(): FabSpot | null {
+  try {
+    const spot = JSON.parse(window.localStorage.getItem(FAB_KEY) ?? "null");
+    return typeof spot?.x === "number" && typeof spot?.y === "number" ? spot : null;
+  } catch {
+    return null;
+  }
+}
 const fmt = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(1));
 
 export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame: () => void }) {
@@ -47,6 +59,11 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
   const [draft, setDraft] = useState<OverrideMap>(() => loadOverrides());
   const [startAtAssembly, setStartAtAssembly] = useState<boolean>(() => loadStartAtAssembly());
   const [presetId, setPresetId] = useState<TuningPresetId | null>(() => loadTuningPresetId());
+  const [fabSpot, setFabSpot] = useState<FabSpot | null>(() => loadFabSpot());
+  // A press that moves more than a few pixels is a drag, and its click must not open.
+  const drag = useRef<{ dx: number; dy: number; x0: number; y0: number; moved: boolean } | null>(
+    null,
+  );
 
   useEffect(() => {
     try {
@@ -55,6 +72,14 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
       // ignore
     }
   }, [open]);
+
+  useEffect(() => {
+    try {
+      if (fabSpot) window.localStorage.setItem(FAB_KEY, JSON.stringify(fabSpot));
+    } catch {
+      // ignore
+    }
+  }, [fabSpot]);
 
   // Backtick toggles the panel.
   useEffect(() => {
@@ -126,8 +151,39 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
     return (
       <button
         className="tune-fab"
-        onClick={() => setOpen(true)}
-        title="Open parameter dashboard ( ` )"
+        // A dev affordance, not player chrome: the design gate and auditors skip it.
+        data-audit-ignore
+        data-gate-skip
+        onClick={() => {
+          const dragged = drag.current?.moved;
+          drag.current = null;
+          if (!dragged) setOpen(true);
+        }}
+        onPointerDown={(event) => {
+          const box = event.currentTarget.getBoundingClientRect();
+          drag.current = {
+            dx: event.clientX - box.left,
+            dy: event.clientY - box.top,
+            x0: event.clientX,
+            y0: event.clientY,
+            moved: false,
+          };
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={(event) => {
+          const press = drag.current;
+          if (!press) return;
+          if (!press.moved && Math.hypot(event.clientX - press.x0, event.clientY - press.y0) < 4)
+            return;
+          press.moved = true;
+          const box = event.currentTarget.getBoundingClientRect();
+          setFabSpot({
+            x: Math.min(Math.max(event.clientX - press.dx, 0), window.innerWidth - box.width),
+            y: Math.min(Math.max(event.clientY - press.dy, 0), window.innerHeight - box.height),
+          });
+        }}
+        style={fabSpot ? { left: fabSpot.x, top: fabSpot.y } : undefined}
+        title="Open parameter dashboard ( ` ) · drag to move"
       >
         {CHROME_PLACEHOLDERS.settings ? (
           <img alt="" className="icon icon-inline" src={CHROME_PLACEHOLDERS.settings} />
@@ -143,7 +199,6 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
   const buildings = getBuildings(game.definition.content);
   const deck = getTerrainDeck(game.definition.content);
   const stats = terrainStats(deck);
-  const totals = terrainTotals(deck);
 
   return (
     <aside className="tune-panel">
@@ -182,7 +237,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
           onClick={toggleLowNumbers}
           title="Toggle the development-only low-number-core-v1 preset and restart this seed."
         >
-          {preset ? "✓ " : ""}Low Numbers · 20W / 12S / 16F
+          {preset ? "✓ " : ""}Low Numbers
         </button>
         <span className={`tune-badge${preset ? " on" : ""}`}>
           {preset ? "preset active" : "standard values"}
@@ -197,7 +252,7 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
         <button
           className={`tune-btn${startAtAssembly ? " primary" : ""}`}
           onClick={toggleStartAtAssembly}
-          title="Fast-forward every new game to the first Assembly — spring of Year 2, sixteen turns of seed-driven play already in. No more clicking End Turn to reach the rivalry layer."
+          title="Fast-forward every new game to the first Assembly — Year 2, four turns of seed-driven play already in. No more clicking End Turn to reach the rivalry layer."
         >
           {startAtAssembly ? "✓ " : ""}Start at Assembly
         </button>
@@ -218,7 +273,6 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
               <th>terrain</th>
               <th>tiles</th>
               <th>slots</th>
-              <th>Σ yield</th>
               <th>avg</th>
               <th>max</th>
             </tr>
@@ -229,16 +283,14 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
                 <td>{row.terrain}</td>
                 <td>{row.tiles}</td>
                 <td>{row.slots}</td>
-                <td>{row.totalYield || "—"}</td>
-                <td>{row.avgYield === undefined ? "—" : fmt(row.avgYield)}</td>
-                <td>{row.maxYield || "—"}</td>
+                <td>{fmt(row.slots / row.tiles)}</td>
+                <td>{row.maxSlots}</td>
               </tr>
             ))}
           </tbody>
         </table>
         <div className="tune-totals">
-          {totals.tiles} tiles · {totals.slots} slots · wood {totals.wood} · stone {totals.stone} ·
-          food {totals.food}
+          {deck.length} tiles · {stats.reduce((sum, row) => sum + row.slots, 0)} slots
         </div>
       </Section>
 
@@ -272,14 +324,6 @@ export function TunePanel({ game, resetGame }: { game: HegemonyState; resetGame:
                   onRevert={revert}
                 />
               ))}
-              <NumberField
-                label="max level"
-                path={`buildings.${building.id}.maxLevel`}
-                draft={draft}
-                presetId={presetId}
-                onChange={setValue}
-                onRevert={revert}
-              />
             </div>
             {buildingIndex < buildings.length - 1 && <hr className="tune-rule" />}
           </div>

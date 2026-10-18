@@ -1,6 +1,9 @@
+import { fork } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { availableParallelism } from "node:os";
 import { dirname } from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 import { createCliSeed } from "./seed";
 import {
@@ -19,6 +22,7 @@ import {
 } from "../game/legalMoves";
 import type { GameCommand } from "../game/legalMoves";
 import { getAuthoredGameContent } from "../game/content";
+import { createGameDefinition } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
 import { GAME_MODES } from "../game/ruleset";
 import type { GameModeId } from "../game/ruleset";
@@ -53,6 +57,7 @@ import { replayScript, scriptFromSave } from "./script";
 import type { ScriptFile } from "./script";
 import { buildNewGame } from "./setup";
 import { Aggregator, snapshotsToCsv } from "./telemetry";
+import type { BatchData } from "./telemetry";
 import { CURRENT_RECIPE_VERSIONS, SAVE_FORMAT_VERSION } from "../game/version";
 
 /**
@@ -69,7 +74,7 @@ process.stdout.on("error", (error: NodeJS.ErrnoException) => {
   throw error;
 });
 
-const BOOLEAN_FLAGS = new Set(["json", "quiet", "manual-setup", "help", "rotate"]);
+const BOOLEAN_FLAGS = new Set(["json", "quiet", "manual-setup", "help", "rotate", "worker"]);
 
 type Flags = Record<string, string | boolean>;
 
@@ -239,6 +244,18 @@ function rotateSeats<T>(base: Record<PlayerId, T>, r: number): Record<PlayerId, 
   return out;
 }
 
+/** The shifts of a seating that differ from one another. Four different seats give
+ *  four; four identical seats give one, since every rotation is the same game. */
+function distinctRotations(names: Record<PlayerId, string>): number[] {
+  const seen = new Set<string>();
+  return PLAYER_IDS.map((_, r) => r).filter((r) => {
+    const seating = Object.values(rotateSeats(names, r)).join(",");
+    if (seen.has(seating)) return false;
+    seen.add(seating);
+    return true;
+  });
+}
+
 function parsePatch(flags: Flags): RulesetPatch | null {
   if (typeof flags["ruleset-patch"] !== "string") {
     return null;
@@ -248,7 +265,7 @@ function parsePatch(flags: Flags): RulesetPatch | null {
 }
 
 /** `--tune-patch p.json` reads the dev tune-panel override map (dot-path → value),
- *  so a batch can A/B building content (Villa/Gymnasion strength, costs, level caps)
+ *  so a batch can A/B building content (costs and effect sizes)
  *  and ruleset scalars in the same shape the panel's "Copy patch" produces. */
 function parseTune(flags: Flags): OverrideMap | null {
   if (typeof flags["tune-patch"] !== "string") {
@@ -267,6 +284,26 @@ function parseTuningPreset(flags: Flags): TuningPresetId | null {
     );
   }
   return value;
+}
+
+/** `--without-ideas all|id,id` names the National Ideas a batch plays without. The draft
+ *  needs an Idea a seat, so what is left is either none or at least one each. */
+function parseWithoutIdeas(flags: Flags, ideas: { id: string }[]): string[] | null {
+  const value = flags["without-ideas"];
+  if (value === undefined) return null;
+  const known = ideas.map((idea) => idea.id);
+  const left = value === "all" ? known : String(value).split(",");
+  const unknown = left.filter((id) => !known.includes(id));
+  if (unknown.length > 0) {
+    fail(
+      `--without-ideas: unknown Idea ${unknown.join(", ")} (expected all, or: ${known.join(", ")})`,
+    );
+  }
+  const kept = known.length - new Set(left).size;
+  if (kept > 0 && kept < PLAYER_IDS.length) {
+    fail(`--without-ideas leaves ${kept} Ideas: the draft needs ${PLAYER_IDS.length}, or none`);
+  }
+  return known.filter((id) => left.includes(id));
 }
 
 function parseOpening(flags: Flags, allowed: OpeningKind[]): OpeningKind {
@@ -303,6 +340,8 @@ function cmdNew(flags: Flags, file: string) {
     opening,
     boardLayout,
     simRng,
+    policy: typeof flags.policy === "string" ? resolvePolicy(flags.policy) : undefined,
+    seatPolicies: parseSeats(flags)?.policies,
     onMove: (_G, player, command) => history.push({ player, command }),
   });
 
@@ -446,16 +485,11 @@ function cmdMove(positionals: string[], file: string) {
           tileId: requireTileId(args[0], "tile"),
           pops: parsePops(args[1]),
         };
-      case "resolve": {
-        // Accept "resolve", "resolve 1", "resolve -2,1", "resolve 1 -2,1".
-        if (args[0] !== undefined && TILE_ID.test(args[0])) {
-          return { type: "resolveEvent", choiceIndex: 0, targetTileId: args[0] };
-        }
-        const choiceIndex = args[0] !== undefined ? requireInt(args[0], "choice index") : 0;
-        const targetTileId =
-          args[1] !== undefined ? requireTileId(args[1], "target tile") : undefined;
-        return { type: "resolveEvent", choiceIndex, targetTileId };
-      }
+      case "resolve":
+        return {
+          type: "resolveEvent",
+          ...(args[0] !== undefined ? { targetTileId: requireTileId(args[0], "target tile") } : {}),
+        };
       case "bank-sell":
         return findLegal(
           save.state,
@@ -486,13 +520,15 @@ function cmdMove(positionals: string[], file: string) {
           "demote",
         );
       }
+      case "dole":
+        return findLegal(save.state, (move) => move.type === "dole", "the Dole");
       case "calm":
         return findLegal(save.state, (move) => move.type === "civicCalm", "civic calm");
       case "venture":
         return findLegal(
           save.state,
-          (move) => move.type === "fundExpedition" && move.stake === args[0],
-          `venture ${args[0] ?? "<gold|wood>"}`,
+          (move) => move.type === "fundExpedition" && move.expeditionId === args[0],
+          `venture ${args[0] ?? "<expeditionId>"}`,
         );
       case "insure":
         return findLegal(
@@ -641,14 +677,21 @@ function cmdAuto(flags: Flags, file: string) {
   const rng = createSimRng(botSeed);
   const quiet = Boolean(flags.quiet);
 
-  save.state = runTurns(save.state, policy, rng, turns, {
-    onMove: (_G, player, command) => {
-      save.history.push({ player, command });
-      if (!quiet) {
-        console.log(`player ${player}: ${describeCommand(command, _G.definition.content)}`);
-      }
+  save.state = runTurns(
+    save.state,
+    policy,
+    rng,
+    turns,
+    {
+      onMove: (_G, player, command) => {
+        save.history.push({ player, command });
+        if (!quiet) {
+          console.log(`player ${player}: ${describeCommand(command, _G.definition.content)}`);
+        }
+      },
     },
-  });
+    { seatPolicies: parseSeats(flags)?.policies },
+  );
 
   save.botRngState = rng.state();
   saveGame(file, save);
@@ -704,13 +747,19 @@ function writeJson(path: string, value: unknown) {
   writeFileSync(path, JSON.stringify(value, null, 2));
 }
 
+/** One game of a batch: its place in the serial order, its seed and its seating. */
+type BatchGame = { index: number; seed: number; rotation: number };
+
+/** One core is left for the parent process and the rest of the machine. */
+const MAX_JOBS = Math.max(1, availableParallelism() - 1);
+
 function cmdBatch(flags: Flags) {
   if (flags.games === undefined) {
     fail("batch needs --games <N>");
   }
 
   const games = requirePositiveInt(flags.games, "--games");
-  const turns = flags.turns !== undefined ? requirePositiveInt(flags.turns, "--turns") : 40;
+  const turns = flags.turns !== undefined ? requirePositiveInt(flags.turns, "--turns") : 56;
   const policy = resolvePolicy(typeof flags.policy === "string" ? flags.policy : "random");
   const seats = parseSeats(flags);
   const rotate = Boolean(flags.rotate);
@@ -729,68 +778,114 @@ function cmdBatch(flags: Flags) {
   const presetId = parseTuningPreset(flags);
   const resolved = resolveTuning(GAME_MODES[mode].ruleset, presetId, tune ?? {}, patch);
   const effectivePatch = resolved.rulesetPatch;
+  const withoutIdeas = parseWithoutIdeas(flags, resolved.content.nationalIdeas);
+  const definition = withoutIdeas
+    ? createGameDefinition({
+        ruleset: resolved.ruleset,
+        content: {
+          ...resolved.content,
+          nationalIdeas: resolved.content.nationalIdeas.filter(
+            (idea) => !withoutIdeas.includes(idea.id),
+          ),
+        },
+      })
+    : resolved.definition;
+  const asked = flags.jobs !== undefined ? requirePositiveInt(flags.jobs, "--jobs") : 1;
+
+  /** Plays one game into an Aggregator of its own. A game depends on nothing but its
+   *  seed and seating, so its data is the same whichever process plays it. */
+  const play = ({ index, seed, rotation }: BatchGame): BatchData => {
+    const aggregator = new Aggregator();
+    const seatPolicies = seats ? rotateSeats(seats.policies, rotation) : undefined;
+    const seatNames = seats ? rotateSeats(seats.names, rotation) : undefined;
+
+    const G = runGame({
+      seed,
+      mode,
+      patch: effectivePatch,
+      definition,
+      opening,
+      boardLayout,
+      policy,
+      seatPolicies,
+      turns,
+      trimLogTo: 200,
+      hooks: {
+        onGameStart: (state) =>
+          aggregator.beginGame(
+            index,
+            seed,
+            state,
+            seatNames ??
+              (Object.fromEntries(PLAYER_IDS.map((id) => [id, policy.name])) as Record<
+                PlayerId,
+                string
+              >),
+          ),
+        onMove: (state, player, move) => aggregator.onMove(state, player, move),
+        onTurnEnd: (state) => aggregator.onTurnEnd(state),
+        onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
+      },
+    });
+
+    aggregator.endGame(G);
+    return aggregator.data;
+  };
+
+  // A worker process, started below with the parent's own flags. It says it is ready,
+  // then plays each game it is sent and hands the data back. It prints nothing.
+  if (flags.worker) {
+    process.on("message", (game) => process.send!(play(game as BatchGame)));
+    process.send!(null);
+    return;
+  }
+
   const baseSeed = flags.seed !== undefined ? requireInt(flags.seed, "--seed") : createCliSeed();
   const reportPath = typeof flags.report === "string" ? flags.report : ".sim/report.json";
   const csvPath = typeof flags.csv === "string" ? flags.csv : undefined;
+  const logEvery = games <= 20 ? 1 : 10;
+  // Rotation reseats each policy through every seat on the SAME seed to cancel
+  // first-player advantage; without it, one game per base seed. A rotation that
+  // repeats a seating is the same game again, so only the distinct ones run.
+  const rotations = seats && rotate ? distinctRotations(seats.names) : [0];
+  if (rotate && rotations.length < PLAYER_IDS.length) {
+    console.log(
+      `--rotate: ${rotations.length} of ${PLAYER_IDS.length} seatings differ; each seed plays ${rotations.length === 1 ? "once" : `${rotations.length} games`}.`,
+    );
+  }
 
-  {
-    const aggregator = new Aggregator();
-    const logEvery = games <= 20 ? 1 : 10;
-    // Rotation reseats each policy through every seat on the SAME seed to cancel
-    // first-player advantage; without it, one game per base seed.
-    const rotations = seats && rotate ? PLAYER_IDS.length : 1;
-
-    let gameIndex = 0;
-    for (let base = 0; base < games; base += 1) {
-      const seed = (baseSeed + base) >>> 0;
-
-      for (let r = 0; r < rotations; r += 1) {
-        const seatPolicies = seats ? rotateSeats(seats.policies, r) : undefined;
-        const seatNames = seats ? rotateSeats(seats.names, r) : undefined;
-        const currentGame = gameIndex;
-
-        const G = runGame({
-          seed,
-          mode,
-          patch: effectivePatch,
-          definition: resolved.definition,
-          opening,
-          boardLayout,
-          policy,
-          seatPolicies,
-          turns,
-          trimLogTo: 200,
-          hooks: {
-            onGameStart: (state) => aggregator.beginGame(currentGame, seed, state, seatNames),
-            onMove: (state, player, move) => aggregator.onMove(state, player, move),
-            onTurnEnd: (state) => aggregator.onTurnEnd(state),
-            onForceEndTurn: (state, resolutions) => aggregator.onForceEndTurn(state, resolutions),
-          },
-        });
-
-        aggregator.endGame(G);
-        gameIndex += 1;
-      }
-
-      if ((base + 1) % logEvery === 0) {
-        console.log(
-          `seed ${base + 1}/${games} done (${rotations > 1 ? `${rotations} rotations, ` : ""}seed ${seed})`,
-        );
-      }
+  const queue: BatchGame[] = [];
+  for (let base = 0; base < games; base += 1) {
+    for (const rotation of rotations) {
+      queue.push({ index: queue.length, seed: (baseSeed + base) >>> 0, rotation });
     }
+  }
+
+  /** Each finished game's data, in the order the games finished. */
+  const played: BatchData[] = [];
+  const gamesLeft = Array.from({ length: games }, () => rotations.length);
+  let seedsDone = 0;
+
+  const writeReport = () => {
+    // `absorb` adds the games in game order, so the report is the same however they
+    // were shared out and whichever finished first.
+    const aggregator = new Aggregator();
+    aggregator.absorb(played);
 
     const report = aggregator.buildReport({
-      games: gameIndex,
+      games: queue.length,
       turns,
       policy: seats ? "mixed" : policy.name,
       mode,
       boardLayout,
       opening,
       seatPolicies: seats ? seats.names : null,
+      rotations: rotations.length,
       baseSeed,
       botSeedRule: "seed ^ 0x9e3779b9",
       rulesetPatch: effectivePatch,
-      definition: resolved.definition.identity,
+      definition: definition.identity,
+      withoutIdeas,
       tunePatch: tune ?? null,
       tunePatchHash: resolved.manualPatchHash,
       tuningPresetId: resolved.presetId,
@@ -803,11 +898,72 @@ function cmdBatch(flags: Flags) {
 
     if (csvPath) {
       mkdirSync(dirname(csvPath), { recursive: true });
-      writeFileSync(csvPath, snapshotsToCsv(aggregator.allSnapshots()));
+      writeFileSync(
+        csvPath,
+        snapshotsToCsv(aggregator.allSnapshots(), report.perGame, aggregator.finalSnapshots()),
+      );
       console.log(`Turn snapshots written to ${csvPath}.`);
     }
 
     console.log("\n" + renderBatchReport(report));
+  };
+
+  /** Files a finished game. Workers finish seeds out of order, so the progress line
+   *  counts the seeds done and names the one that finished last. */
+  const finished = (game: BatchGame, data: BatchData) => {
+    played.push(data);
+
+    const base = Math.floor(game.index / rotations.length);
+    gamesLeft[base] -= 1;
+    if (gamesLeft[base] > 0) return;
+
+    seedsDone += 1;
+    if (seedsDone % logEvery === 0) {
+      console.log(
+        `seed ${seedsDone}/${games} done (${rotations.length > 1 ? `${rotations.length} rotations, ` : ""}seed ${game.seed})`,
+      );
+    }
+    if (seedsDone === games) writeReport();
+  };
+
+  const jobs = Math.min(asked, MAX_JOBS, queue.length);
+  if (asked > MAX_JOBS) {
+    console.log(`--jobs ${asked}: capped at ${MAX_JOBS}, this machine's cores less one.`);
+  }
+
+  if (jobs === 1) {
+    for (const game of queue) finished(game, play(game));
+    return;
+  }
+
+  console.log(`Playing ${queue.length} games on ${jobs} worker processes.`);
+  let next = 0;
+  const workers = Array.from({ length: jobs }, () =>
+    fork(fileURLToPath(import.meta.url), [...process.argv.slice(2), "--worker"], {
+      serialization: "advanced",
+    }),
+  );
+  // However the parent ends, no worker is left playing a game nobody will read.
+  process.on("exit", () => workers.forEach((worker) => worker.kill()));
+
+  for (const worker of workers) {
+    let game: BatchGame | undefined;
+
+    // The first message says the worker is ready; each later one is the data of the
+    // game it was sent. A free worker takes the next game, so a slow core plays fewer.
+    worker.on("message", (data) => {
+      if (game) finished(game, data as BatchData);
+      game = queue[next];
+      next += 1;
+      if (game) worker.send(game);
+      else worker.disconnect();
+    });
+
+    worker.on("exit", (code, signal) => {
+      if (code !== 0) {
+        fail(`A batch worker stopped early (${signal ?? `exit code ${code}`}); no report written.`);
+      }
+    });
   }
 }
 
@@ -822,6 +978,7 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
 
   new        --seed N [--mode standard|fastStart|deathmatch] [--ruleset-patch p.json]
              [--manual-setup | --opening policy|random|fixed] [--bot-seed N] [--board classic|shuffled]
+             [--policy ${POLICY_IDS}] [--seats ${POLICY_IDS}×4]
   show       [--json] [--player 0..3]
   log        [--tail N]
   legal      [--json]                      list this player's legal moves, indexed
@@ -835,17 +992,20 @@ Save file defaults to ${DEFAULT_SAVE_PATH}.
              pops <srcTile> <dstTile> <popSpec>     popSpec: citizens=1,slaves=2 (or c=1,s=2)
              promote <tile> <pop> | demote <tile> <pop>
              bank-sell <material> | bank-buy <material>
-             calm | venture <gold|wood> | insure [optionId] | resolve-riot
+             calm | dole | venture <expeditionId> | insure [optionId] | resolve-riot
              place-capital <tile> <popSpec>
              place-colony <tile> <popSpec>
-             resolve [choiceIndex] [targetTile]
+             resolve [targetTile]
              index <N>                     apply the Nth move from \`legal\`
   end-turn
-  auto       [--turns N] [--policy ${POLICY_IDS}] [--record s.json] [--quiet]
+  auto       [--turns N] [--policy ${POLICY_IDS}] [--seats ${POLICY_IDS}×4] [--record s.json] [--quiet]
   batch      --games N [--turns N] [--policy ${POLICY_IDS}] [--seed N] [--board classic|shuffled]
              [--opening policy|random]
              [--ruleset-patch p.json] [--tune-preset low-number-core-v1] [--tune-patch p.json]
              [--seats ${POLICY_IDS}×4] [--rotate]
+             [--without-ideas all|id,id]   play without those National Ideas
+             [--jobs N]                    worker processes to play the games on: 1 by default,
+                                           at most the cores less one (${MAX_JOBS} here); same report
              [--report r.json] [--csv t.csv]
   replay     --script s.json [--out save.json]
 

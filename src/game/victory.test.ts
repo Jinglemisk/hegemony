@@ -1,19 +1,39 @@
+import { defaultHungerLeave, resolveHunger } from "./hunger";
 import { describe, expect, it } from "vitest";
 
-import { calculateIncome, createInitialState, startNewSeason } from "./rules";
+import { createInitialState, startNewYear } from "./rules";
 import { scenario } from "./testing/scenario";
-import { createGame, endTurn } from "./turn";
+import { createGame, endTurn, seatsBefore } from "./turn";
 import { DEFAULT_RULESET, deriveRuleset } from "./ruleset";
-import { checkVictoryAtTurnStart, victoryCardsHeld, victoryStandings } from "./victory";
-import type { HegemonyState } from "./types";
+import {
+  ageEndRanking,
+  checkVictoryAtTurnStart,
+  titleChanges,
+  titleHolders,
+  victoryCardsHeld,
+  victoryStandings,
+  victoryThreats,
+} from "./victory";
+import { resolveRiot } from "./riot";
+import type { HegemonyState, PlayerId } from "./types";
 
 const SEED = 0xc0ffee;
+
+/** Hand a player `count` unclaimed luxury goods: +2 happiness each. */
+function giveLuxuries(G: HegemonyState, playerID: PlayerId, count: number) {
+  G.board.luxuries
+    .filter((asset) => asset.owner === null)
+    .slice(0, count)
+    .forEach((asset) => {
+      asset.owner = playerID;
+    });
+}
 const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", true);
 
 /**
- * These turn-structure tests cycle whole years to assert the season/opener machine.
- * From spring of Year 2 the Assembly legitimately SUSPENDS that machine between the
- * season roll and the opener's turn, so running them under the default ruleset would
+ * These turn-structure tests cycle whole years to assert the year/opener machine.
+ * From Year 2 the Assembly legitimately SUSPENDS that machine between the
+ * year turning and the opener's turn, so running them under the default ruleset would
  * be measuring the agora, not the calendar. `firstYear: 0` disables the subsystem so
  * they keep testing exactly what they were written to test — the Assembly's own
  * cadence has its own suite in assembly/assembly.test.ts.
@@ -21,11 +41,20 @@ const preloadedGame = (seed: number) => createGame(seed, undefined, "classic", t
 const assemblyFreeGame = (seed: number) =>
   createGame(seed, deriveRuleset(DEFAULT_RULESET, { assembly: { firstYear: 0 } }), "classic", true);
 
-function clearPending(G: HegemonyState) {
+function advanceTurn(G: HegemonyState) {
   G.pendingPlayerEvent = null;
-  // These turn-structure tests cycle whole years; a bot-less player can riot along
-  // the way (D9) — dismiss it, the riot flow has its own suite (riot.test.ts).
-  G.pendingRiot = null;
+  // These turn-structure tests cycle whole years; a bot-less player can end short of
+  // food or riot along the way. Take the freemen-first default and complete the
+  // turn-end roll before counting the next turn.
+  let result = endTurn(G);
+  if (G.pendingHunger)
+    result = resolveHunger(
+      G,
+      G.currentPlayer,
+      defaultHungerLeave(G, G.currentPlayer, G.pendingHunger.unfed),
+    );
+  if (G.pendingRiot) return resolveRiot(G, G.currentPlayer);
+  return result;
 }
 
 describe("victory card standings", () => {
@@ -48,14 +77,18 @@ describe("victory card standings", () => {
   });
 
   it("leading below the minimum holds nothing", () => {
-    const G = scenario().opening().withHappiness("2", 9).build();
+    const G = scenario()
+      .opening()
+      .mutate((draft) => giveLuxuries(draft, "2", 3))
+      .withHappiness("2", 3)
+      .build();
 
-    // Player 2 leads happiness outright, but the minimum is +10.
+    // Player 2 leads happiness outright, but the minimum is +4.
     const happiness = victoryStandings(G).find((standing) => standing.card.metric === "happiness");
-    expect(happiness?.values["2"]).toBe(9);
+    expect(happiness?.values["2"]).toBe(3);
     expect(happiness?.holder).toBeNull();
 
-    G.players["2"].resources.happiness = 10;
+    G.players["2"].unrestTokens -= 1;
     const after = victoryStandings(G).find((standing) => standing.card.metric === "happiness");
     expect(after?.holder).toBe("2");
   });
@@ -74,10 +107,10 @@ describe("victory card standings", () => {
       .opening()
       .withSettlement("0", "0,0", "city", { citizens: 6, freemen: 4, slaves: 0 })
       .withSettlement("0", "1,-2", "city", { citizens: 0, freemen: 0, slaves: 0 })
-      .withHappiness("0", 12)
+      .mutate((draft) => giveLuxuries(draft, "0", 4))
       .build();
 
-    // Player 0: 3 cities (min 3) · 16 pops (min 16, sole lead) · happiness 12 (min 10).
+    // Player 0: 3 cities (min 3) · 16 pops (min 16, sole lead) · four luxuries (min 4).
     expect(victoryCardsHeld(G, "0")).toBeGreaterThanOrEqual(3);
 
     checkVictoryAtTurnStart(G);
@@ -85,6 +118,32 @@ describe("victory card standings", () => {
     expect(G.phase).toBe("gameOver");
     expect(G.winner).toBe("0");
     expect(G.gameOverReason).toBe("victoryRace");
+  });
+
+  it("names the threat, the title changes and who acts before the threat's turn", () => {
+    const before = scenario().opening().build();
+    const G = scenario()
+      .opening()
+      .withSettlement("0", "0,0", "city", { citizens: 6, freemen: 4, slaves: 0 })
+      .withSettlement("0", "1,-2", "city", { citizens: 0, freemen: 0, slaves: 0 })
+      .mutate((draft) => giveLuxuries(draft, "0", 4))
+      .build();
+
+    const changes = titleChanges(G, titleHolders(before));
+    expect(changes.length).toBe(victoryCardsHeld(G, "0"));
+    expect(changes.every((change) => change.from === null && change.to === "0")).toBe(true);
+
+    const [threat] = victoryThreats(G);
+    expect(threat.seat).toBe("0");
+    expect(threat.titles.map((title) => title.card.id)).toEqual(
+      victoryStandings(G)
+        .filter((standing) => standing.holder === "0")
+        .map((standing) => standing.card.id),
+    );
+    // Seat 0 is playing now; the other three play before its next turn starts.
+    expect(G.currentPlayer).toBe("0");
+    expect(seatsBefore(G, "0")).toEqual(["1", "2", "3"]);
+    expect(seatsBefore(G, "2")).toEqual(["0", "1"]);
   });
 
   it("does not end the game below three cards", () => {
@@ -95,34 +154,43 @@ describe("victory card standings", () => {
   });
 });
 
-describe("the seasonal deck is a finite clock", () => {
-  it("never reshuffles the seasonal discard back in", () => {
+describe("the year deck is a finite clock", () => {
+  it("never reshuffles the year discard back in", () => {
     const G = scenario().opening().build();
-    const total = G.seasonalDrawPile.length;
+    const total = G.yearDrawPile.length;
 
     for (let i = 0; i < 5; i += 1) {
-      startNewSeason(G);
+      startNewYear(G);
     }
 
-    expect(G.seasonalDrawPile.length).toBe(total - 5);
-    expect(G.seasonalDiscardPile.length).toBeGreaterThan(0);
+    expect(G.yearDrawPile.length).toBe(total - 5);
+    expect(G.yearDiscardPile.length).toBeGreaterThan(0);
   });
 
   it("resolves the exhaustion tally when the deck runs out: cards tie at zero, happiness decides", () => {
     // Nobody reaches a minimum from the opening, so cards tie at 0 and the tally
     // falls through to the happiness tiebreak.
-    const G = scenario().opening().withHappiness("3", 40).build();
-    G.seasonalDrawPile = [];
-    const seasonBefore = G.season;
+    const G = scenario()
+      .opening()
+      .mutate((draft) => {
+        for (const rival of ["0", "1", "2"] as const) {
+          draft.players[rival].unrestTokens = 5;
+        }
+      })
+      .build();
+    G.yearDrawPile = [];
+    const yearBefore = G.year;
 
-    startNewSeason(G);
+    startNewYear(G);
 
     expect(G.phase).toBe("gameOver");
     expect(G.gameOverReason).toBe("deckExhausted");
     expect(G.winner).toBe("3");
-    // The clock stops on the last season actually played — no phantom increment,
-    // which is what kept the sim's turn/season telemetry off by one.
-    expect(G.season).toBe(seasonBefore);
+    expect(ageEndRanking(G)).toMatchObject({ decidedBy: "happiness" });
+    expect(ageEndRanking(G).rows[0].seat).toBe("3");
+    // The clock stops on the last year actually played — no phantom increment,
+    // which is what kept the sim's turn and year telemetry off by one.
+    expect(G.year).toBe(yearBefore);
   });
 });
 
@@ -146,54 +214,50 @@ describe("phase-0 turn structure", () => {
     ]);
   });
 
-  it("rotates the season opener each new year", () => {
+  it("moves the opener on one seat each year", () => {
     const G = assemblyFreeGame(SEED);
-    expect(G.seasonOpener).toBe("0");
+    expect(G.yearOpener).toBe("0");
 
-    // Play through year 1 (4 seasons × 4 turns). Season 5 is spring of year 2.
-    for (let turn = 0; turn < 16; turn += 1) {
-      clearPending(G);
-      expect(endTurn(G).ok).toBe(true);
-      if (G.phase !== "gameplay") break;
+    for (let turn = 0; turn < 4; turn += 1) {
+      expect(advanceTurn(G).ok).toBe(true);
     }
 
-    expect(G.season).toBe(5);
-    expect(G.seasonOpener).toBe("1");
+    expect(G.year).toBe(2);
+    expect(G.yearOpener).toBe("1");
     expect(G.currentPlayer).toBe("1");
   });
 
-  it("keeps four turns per season across the rotation boundary", () => {
+  it("gives every seat one turn a year across the rotation", () => {
     const G = assemblyFreeGame(SEED);
-    const seasonTurns = new Map<number, number>();
-    seasonTurns.set(G.season, 1);
+    const seatsByYear = new Map<number, string[]>();
+    seatsByYear.set(G.year, [G.currentPlayer]);
 
     for (let turn = 0; turn < 24 && G.phase === "gameplay"; turn += 1) {
-      clearPending(G);
-      expect(endTurn(G).ok).toBe(true);
-      seasonTurns.set(G.season, (seasonTurns.get(G.season) ?? 0) + 1);
+      expect(advanceTurn(G).ok).toBe(true);
+      seatsByYear.set(G.year, [...(seatsByYear.get(G.year) ?? []), G.currentPlayer]);
     }
 
-    for (const [season, turns] of seasonTurns) {
-      if (season === [...seasonTurns.keys()].pop()) continue; // last season may be partial
-      expect(turns, `season ${season}`).toBe(4);
+    const lastYear = [...seatsByYear.keys()].pop();
+    for (const [year, seats] of seatsByYear) {
+      if (year === lastYear) continue; // the last year may be partial
+      expect([...seats].sort(), `year ${year}`).toEqual(["0", "1", "2", "3"]);
     }
   });
-});
 
-describe("stockpile happiness cap", () => {
-  it("caps the food-stockpile bonus at the ruleset cap", () => {
-    const G = scenario().opening().build();
-    G.players["1"].resources.food = 60; // uncapped would be +12
+  it("ends the game when the fourteen-card year deck is spent", () => {
+    const G = assemblyFreeGame(SEED);
+    expect(G.yearDrawPile.length + 1).toBe(14);
 
-    const income = calculateIncome(G, "1");
-    const uncappedPortion = Math.floor(60 / G.ruleset.economy.foodStockpileHappinessDivisor);
-    expect(uncappedPortion).toBeGreaterThan(G.ruleset.economy.foodStockpileHappinessCap);
+    // Nobody may win the race here: the clock alone must end it.
+    G.ruleset = { ...G.ruleset, victory: { ...G.ruleset.victory, cardsToWin: 99 } };
 
-    // The happiness income contains at most the cap from the stockpile; verify by
-    // comparing against the same position with a modest 10-food stockpile (= +2).
-    G.players["1"].resources.food = 10;
-    const modest = calculateIncome(G, "1");
-    expect(income.happiness).toBe(modest.happiness);
+    for (let turn = 0; turn < 14 * 4 && G.phase === "gameplay"; turn += 1) {
+      expect(advanceTurn(G).ok).toBe(true);
+    }
+
+    expect(G.phase).toBe("gameOver");
+    expect(G.gameOverReason).toBe("deckExhausted");
+    expect(G.year).toBe(14);
   });
 });
 

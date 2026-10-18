@@ -1,29 +1,37 @@
-import { collectIncome } from "./actions";
+import { finishTurn } from "./turn";
 import { demotePop } from "./civic";
 import { getAuthoredGameContent, getRiotTable } from "./content";
 import { addLog, getPlayerName } from "./core/query";
+import { happinessLevel } from "./happiness";
 import { canAfford, payCost } from "./core/resources";
 import { MOVE_OK, invalid } from "./core/results";
 import type { ActionStatus, MoveResult } from "./core/results";
 import { rollOnTable } from "./tables";
-import type { HegemonyState, PlayerId, PopType, RiotInsuranceId, RiotTier } from "./types";
+import type { HegemonyState, PlayerId, PopType, RiotInsuranceId } from "./types";
 
 /**
  * The riot flow (roadmap-appendix D9): the first event-table instance. When unrest
- * upkeep finds a riot threshold it parks a {@link PendingRiot} on the state instead
- * of removing pops — the turn BLOCKS (income deferred, endTurn illegal, the rulebook
- * removes pops before collection) until the player declares insurance and rolls.
+ * at turn end finds the level at the riot line it clears the realm's Unrest tokens
+ * and parks a {@link PendingRiot} on the state. Only insurance and the roll are
+ * legal until resolution passes the committed turn.
  *
  * All three insurance options may each be bought once per riot (max +3). Full
- * insurance makes a mild riot's pop losses impossible — deliberately: it converts
- * catastrophe into taxation. The severe tier (−2, pop losses doubled) still bites.
+ * insurance makes a riot's pop losses impossible — deliberately: it converts
+ * catastrophe into taxation. A revolt never comes here: it has no roll
+ * (game/unrest.ts).
  */
 
-export function startRiot(G: HegemonyState, playerID: PlayerId, tier: RiotTier) {
-  G.pendingRiot = { playerID, tier, boughtInsurance: [] };
+/** The one pop the concession may demote: a citizen. */
+export const CONCESSION_FROM: PopType = "citizens";
+
+export function startRiot(G: HegemonyState, playerID: PlayerId) {
+  // The riot spends the tokens that caused it, so unrest corrects itself.
+  const tokensCleared = G.players[playerID].unrestTokens;
+  G.players[playerID].unrestTokens = 0;
+  G.pendingRiot = { playerID, boughtInsurance: [], tokensCleared, concessionTileId: null };
   addLog(
     G,
-    `${getPlayerName(G, playerID)}'s province erupts — a ${tier === "revolt" ? "revolt" : "riot"} must be faced before income is collected.`,
+    `${getPlayerName(G, playerID)}'s province erupts at turn end — a riot must be faced before the turn passes. Its Unrest tokens clear.`,
     playerID,
   );
 }
@@ -51,8 +59,8 @@ export function getBuyRiotInsuranceStatus(
 
 /**
  * Declare one insurance option before the die (+1 to the roll each). The concession's
- * price is a demotion instead of resources — free, the mob forces it (D8); pass the
- * pop to sacrifice via `demoteTarget`.
+ * price is a demotion instead of resources — free, the mob forces it (D8), and it must
+ * be a citizen; pass the settlement via `demoteTarget`.
  */
 export function buyRiotInsurance(
   G: HegemonyState,
@@ -70,8 +78,8 @@ export function buyRiotInsurance(
   }
 
   if (option.demotesPop) {
-    if (!demoteTarget) {
-      return invalid("The concession demands a pop to demote.");
+    if (!demoteTarget || demoteTarget.from !== CONCESSION_FROM) {
+      return invalid("The concession demands a citizen to demote.");
     }
 
     const demoted = demotePop(G, playerID, demoteTarget.tileId, demoteTarget.from);
@@ -79,6 +87,8 @@ export function buyRiotInsurance(
     if (!demoted.ok) {
       return demoted;
     }
+
+    G.pendingRiot.concessionTileId = demoteTarget.tileId;
   } else {
     payCost(G.players[playerID].resources, option.cost);
   }
@@ -117,11 +127,22 @@ export function insuranceRollBonus(
   }, 0);
 }
 
+/** The rows a roll can land on with this modifier: the clamp keeps every roll on the
+ *  table, so insurance puts the lowest rows out of reach. */
+export function riotRollReach(
+  G: HegemonyState,
+  modifier: number,
+): { lowest: number; highest: number } {
+  const die = getRiotTable(G.definition.content).die ?? 6;
+  const clamp = (roll: number) => Math.min(die, Math.max(1, roll));
+  return { lowest: clamp(1 + modifier), highest: clamp(die + modifier) };
+}
+
 /**
- * Face the table: roll with insurance (+1 each) and the tier (revolt: −2, pop losses
- * doubled, happiness rebounds to the ruleset's severeRebound; a mild riot never
- * rebounds — it can re-fire, which is what civic calm is for). Resolving unblocks the
- * turn and runs the deferred income collection.
+ * Face the table: roll with insurance (+1 each). Pop losses take slaves first.
+ * Resolving completes the committed turn, without another unrest check or income.
+ * The roll's Chronicle line carries the riot as a moment, for the seat's result card
+ * and the other seats' toast.
  */
 export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
   const status = getResolveRiotStatus(G, playerID);
@@ -131,28 +152,28 @@ export function resolveRiot(G: HegemonyState, playerID: PlayerId): MoveResult {
     return invalid(...status.reasons);
   }
 
-  const severe = pending.tier === "revolt";
-  const unrest = G.ruleset.economy.unrest;
-  const { popsRemoved } = rollOnTable(G, playerID, getRiotTable(G.definition.content), {
-    modifier:
-      insuranceRollBonus(pending.boughtInsurance, G.definition.content) +
-      (severe ? unrest.severeRollModifier : 0),
-    popLossMultiplier: severe ? unrest.severePopLossMultiplier : 1,
-  });
+  const rollLine = G.log.length;
+  const { record, popsRemoved, left } = rollOnTable(
+    G,
+    playerID,
+    getRiotTable(G.definition.content),
+    { modifier: insuranceRollBonus(pending.boughtInsurance, G.definition.content) },
+  );
 
-  const player = G.players[playerID];
-  player.popsLostToUnrest += popsRemoved;
-
-  if (severe) {
-    player.resources.happiness = G.ruleset.economy.unrest.severeRebound;
-    addLog(
-      G,
-      `${getPlayerName(G, playerID)}'s happiness settles at ${G.ruleset.economy.unrest.severeRebound}.`,
-      playerID,
-    );
-  }
-
+  G.players[playerID].popsLostToUnrest += popsRemoved;
   G.pendingRiot = null;
-  collectIncome(G, playerID, "automatic");
-  return MOVE_OK;
+  G.log[rollLine].moment = {
+    kind: "riot",
+    roll: record.roll,
+    modifier: record.modifier,
+    modified: record.modified,
+    rowLabel: record.rowLabel,
+    outcomes: record.outcomes,
+    left,
+    insurance: pending.boughtInsurance,
+    concessionTileId: pending.concessionTileId,
+    tokensCleared: pending.tokensCleared,
+    level: happinessLevel(G, playerID),
+  };
+  return finishTurn(G);
 }

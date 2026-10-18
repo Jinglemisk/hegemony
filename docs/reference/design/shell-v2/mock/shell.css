@@ -1143,6 +1143,8 @@ img {
    The island
    ========================================================================== */
 #board {
+  touch-action: none;
+  cursor: grab;
   position: fixed;
   left: var(--board-x, 0);
   top: var(--board-y, 0);

@@ -1,17 +1,26 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  applyUnrestUpkeep,
-  calculateIncome,
+  applyUnrestTokenChange,
+  applyUnrestAtTurnEnd,
   drawPlayerEvent,
   getAddPopsEffect,
   getEventPopTargetTileIds,
+  happinessContributions,
+  happinessLevel,
+  movePops,
   resolvePendingPlayerEvent,
+  standingHappiness,
   totalPops,
+  turnEndUnrest,
+  unfedAtTurnEnd,
   unrestStatus,
 } from "./rules";
+import { baseVoteWeight } from "./assembly";
 import { PLAYER_EVENT_CARDS } from "./data";
-import { createGame } from "./turn";
+import { resolveHunger } from "./hunger";
+import { createGame, endTurn } from "./turn";
+import { victoryMetricValue } from "./victory";
 import type { HegemonyState, PlayerId, Pops, Settlement } from "./types";
 
 // Opt into the scripted 4-player two-city opening (dev preload, off by default), so
@@ -41,122 +50,236 @@ function setPops(G: HegemonyState, id: PlayerId, capital: Pops, colony: Pops) {
 
 const NONE: Pops = { citizens: 0, freemen: 0, slaves: 0 };
 
-describe("unrest upkeep", () => {
-  it("parks a mild riot at the -5 threshold instead of removing pops (D9)", () => {
+describe("the happiness level", () => {
+  it("is read off the board: Temples up, half the slaves and every token down", () => {
     const G = preloadedGame(SEED);
-    // Grace on -> the food-deficit path is skipped, isolating the threshold.
-    G.players["0"].hasCollectedGameplayIncome = false;
-    setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
-    G.players["0"].resources.happiness = -5;
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 2 });
+    ownedSettlements(G, "0")[0].buildings = ["temple"];
+    G.players["0"].unrestTokens = 1;
+
+    // +1 Temple, −2 for five slaves (the odd one is free), −1 token.
+    expect(happinessLevel(G, "0")).toBe(-2);
+    expect(happinessContributions(G, "0").map((term) => [term.id, term.amount])).toEqual([
+      ["temples", 1],
+      ["luxuries", 0],
+      ["slaves", -2],
+      ["tokens", -1],
+      ["calm", 0],
+    ]);
+  });
+
+  it("does not move on its own: the same board gives the same level next turn", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 4 }, NONE);
+
+    applyUnrestAtTurnEnd(G, "0");
+    applyUnrestAtTurnEnd(G, "0");
+
+    expect(happinessLevel(G, "0")).toBe(-2);
+    expect(G.pendingRiot).toBeNull();
+  });
+
+  it("counts calm for the year it was bought and leaves it out of Beloved", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 6 }, NONE);
+    G.players["0"].calmActive = true;
+
+    expect(happinessLevel(G, "0")).toBe(-1);
+    expect(standingHappiness(G, "0")).toBe(-3);
+
+    // Calm counts at turn end in the same year; the year boundary expires it.
+    applyUnrestAtTurnEnd(G, "0");
+    expect(G.pendingRiot).toBeNull();
+    expect(happinessLevel(G, "0")).toBe(-1);
+  });
+
+  it("places one token and clears one without going below zero", () => {
+    const G = preloadedGame(SEED);
+
+    applyUnrestTokenChange(G, "0", "placeOne");
+    applyUnrestTokenChange(G, "0", "placeOne");
+    expect(G.players["0"].unrestTokens).toBe(2);
+
+    applyUnrestTokenChange(G, "0", "clearOne");
+    expect(G.players["0"].unrestTokens).toBe(1);
+    applyUnrestTokenChange(G, "0", "clearOne");
+    applyUnrestTokenChange(G, "0", "clearOne");
+    expect(G.players["0"].unrestTokens).toBe(0);
+  });
+});
+
+describe("turn-end unrest", () => {
+  it("at −3 clears the tokens and parks a riot, removing nobody until the roll", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 3, freemen: 3, slaves: 0 }, NONE);
+    G.players["0"].unrestTokens = 3;
 
     const before = playerPopTotal(G, "0");
-    applyUnrestUpkeep(G, "0");
+    applyUnrestAtTurnEnd(G, "0");
 
-    // The riot table replaces the old flat removal: nothing is lost until the roll.
-    expect(G.pendingRiot).toMatchObject({ playerID: "0", tier: "unrest", boughtInsurance: [] });
+    expect(G.pendingRiot).toEqual({
+      playerID: "0",
+      boughtInsurance: [],
+      tokensCleared: 3,
+      concessionTileId: null,
+    });
     expect(playerPopTotal(G, "0")).toBe(before);
-    expect(G.players["0"].resources.happiness).toBe(-5);
+    expect(G.players["0"].unrestTokens).toBe(0);
+    expect(happinessLevel(G, "0")).toBe(0);
   });
 
-  it("parks a severe riot (revolt) at the -10 threshold — the rebound waits for the roll", () => {
+  it("at −6 revolts: half the slaves leave, the tokens clear, nothing is rolled", () => {
     const G = preloadedGame(SEED);
-    G.players["0"].hasCollectedGameplayIncome = false;
-    setPops(G, "0", { citizens: 3, freemen: 3, slaves: 3 }, { citizens: 0, freemen: 0, slaves: 3 });
-    G.players["0"].resources.happiness = -12;
+    setPops(G, "0", { citizens: 1, freemen: 1, slaves: 5 }, { citizens: 0, freemen: 0, slaves: 4 });
+    G.players["0"].unrestTokens = 2;
+    const rng = G.rng;
 
-    applyUnrestUpkeep(G, "0");
+    // −4 for nine slaves, −2 tokens.
+    expect(happinessLevel(G, "0")).toBe(-6);
+    applyUnrestAtTurnEnd(G, "0");
 
-    expect(G.pendingRiot).toMatchObject({ playerID: "0", tier: "revolt" });
-    expect(G.players["0"].resources.happiness).toBe(-12);
+    expect(G.pendingRiot).toBeNull();
+    expect(G.rng).toBe(rng);
+    expect(ownedSettlements(G, "0").map((settlement) => settlement.pops.slaves)).toEqual([2, 3]);
+    expect(G.players["0"]).toMatchObject({ unrestTokens: 0, popsLostToUnrest: 4, revolts: 1 });
+    expect(playerPopTotal(G, "0")).toBe(7);
+    // The Chronicle line carries the revolt for the seat's card and the rivals' toast.
+    const [capital, colony] = ownedSettlements(G, "0");
+    expect(G.log.at(-1)?.moment).toEqual({
+      kind: "revolt",
+      slaves: 9,
+      left: [
+        { tileId: capital.tileId, pop: "slaves" },
+        { tileId: capital.tileId, pop: "slaves" },
+        { tileId: colony.tileId, pop: "slaves" },
+        { tileId: capital.tileId, pop: "slaves" },
+      ],
+      tokensCleared: 2,
+      level: happinessLevel(G, "0"),
+    });
+  });
+});
+
+describe("pops on the move", () => {
+  it("still count for the level: moving a slave off the riot line avoids nothing", () => {
+    const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 5 }, { citizens: 0, freemen: 0, slaves: 1 });
+    G.pendingPlayerEvent = null;
+    G.players["0"].resources.food = 10;
+    const [capital, colony] = ownedSettlements(G, "0");
+
+    expect(happinessLevel(G, "0")).toBe(-3);
+    expect(movePops(G, "0", capital.tileId, colony.tileId, { ...NONE, slaves: 1 }).ok).toBe(true);
+
+    // Five stand and one is on the road: the realm still holds six.
+    expect(capital.pops.slaves + colony.pops.slaves).toBe(5);
+    expect(happinessContributions(G, "0").find((term) => term.id === "slaves")).toEqual({
+      id: "slaves",
+      amount: -3,
+      detail: "6 slaves (1 on the move)",
+    });
+    expect(endTurn(G).ok).toBe(true);
+    expect(G.pendingRiot).toMatchObject({ playerID: "0" });
   });
 
-  it("starves a pop after two consecutive food-deficit turns, then resets the counter", () => {
+  it("still count for the titles and the vote, but hunger cannot take them", () => {
     const G = preloadedGame(SEED);
-    // Grace off; huge citizen upkeep guarantees a deep food deficit regardless of tiles.
-    G.players["0"].hasCollectedGameplayIncome = true;
-    G.players["0"].resources.happiness = 0; // keep thresholds out of it
-    setPops(G, "0", { citizens: 8, freemen: 0, slaves: 0 }, NONE);
-    G.players["0"].consecutiveFoodDeficitTurns = 1;
-    expect(calculateIncome(G, "0").food).toBeLessThanOrEqual(-2);
+    setPops(G, "0", { citizens: 2, freemen: 1, slaves: 0 }, NONE);
+    G.pendingPlayerEvent = null;
+    G.players["0"].resources.food = 10;
+    const [capital, colony] = ownedSettlements(G, "0");
+    const before = {
+      pops: victoryMetricValue(G, "0", "pops"),
+      citizens: victoryMetricValue(G, "0", "citizens"),
+      votes: baseVoteWeight(G, "0"),
+    };
 
-    const before = playerPopTotal(G, "0");
-    applyUnrestUpkeep(G, "0");
+    expect(movePops(G, "0", capital.tileId, colony.tileId, { ...NONE, citizens: 1 }).ok).toBe(true);
+    expect({
+      pops: victoryMetricValue(G, "0", "pops"),
+      citizens: victoryMetricValue(G, "0", "citizens"),
+      votes: baseVoteWeight(G, "0"),
+    }).toEqual(before);
 
-    expect(playerPopTotal(G, "0")).toBe(before - 1);
-    expect(G.players["0"].consecutiveFoodDeficitTurns).toBe(0);
+    // Three food short with two mouths standing: two leave, and the turn can end.
+    G.players["0"].resources.food = -3;
+    expect(unfedAtTurnEnd(G, "0")).toBe(2);
+    expect(endTurn(G).ok).toBe(true);
+    expect(
+      resolveHunger(G, "0", [
+        { tileId: capital.tileId, pop: "freemen" },
+        { tileId: capital.tileId, pop: "citizens" },
+      ]).ok,
+    ).toBe(true);
+    expect(G.currentPlayer).toBe("1");
   });
 
-  it("resets the deficit counter on a non-deficit turn (no pop lost)", () => {
+  it("count toward a revolt's half, which is taken from the settlements", () => {
     const G = preloadedGame(SEED);
-    G.players["0"].hasCollectedGameplayIncome = true;
-    G.players["0"].resources.happiness = 0;
-    setPops(G, "0", { citizens: 0, freemen: 1, slaves: 0 }, NONE); // -1 food > -2 threshold
-    G.players["0"].consecutiveFoodDeficitTurns = 1;
-    expect(calculateIncome(G, "0").food).toBeGreaterThan(-2);
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 12 }, NONE);
+    G.pendingPlayerEvent = null;
+    G.players["0"].resources.food = 10;
+    const [capital, colony] = ownedSettlements(G, "0");
+    expect(movePops(G, "0", capital.tileId, colony.tileId, { ...NONE, slaves: 1 }).ok).toBe(true);
 
-    const before = playerPopTotal(G, "0");
-    applyUnrestUpkeep(G, "0");
-
-    expect(G.players["0"].consecutiveFoodDeficitTurns).toBe(0);
-    expect(playerPopTotal(G, "0")).toBe(before);
+    // Twelve slaves, one of them on the road: six leave the eleven that stand.
+    expect(turnEndUnrest(structuredClone(G), "0")).toMatchObject({
+      outcome: "revolt",
+      slaves: 12,
+      leaving: 6,
+    });
+    applyUnrestAtTurnEnd(G, "0");
+    expect(capital.pops.slaves).toBe(5);
+    expect(G.transfers).toHaveLength(1);
   });
+});
 
-  it("applies a timed happiness modifier each turn, then expires it", () => {
+describe("the end-turn confirm", () => {
+  it("names the outcome and offers only a calm that changes it", () => {
     const G = preloadedGame(SEED);
-    G.players["0"].hasCollectedGameplayIncome = false; // isolate from the food path
-    setPops(G, "0", { citizens: 3, freemen: 0, slaves: 0 }, NONE);
-    G.players["0"].resources.happiness = 0;
-    // -1/turn for 3 turns keeps happiness above the -5 threshold throughout.
-    G.players["0"].timedHappinessModifiers = [
-      {
-        amountPerTurn: -1,
-        turnsRemaining: 3,
-        sourceCardId: "player-civil-discord",
-        sourceName: "Civil Discord",
-        sourceDeck: "player",
-        sourceScope: "activePlayer",
-      },
-    ];
+    setPops(G, "0", { citizens: 1, freemen: 1, slaves: 0 }, NONE);
+    G.pendingPlayerEvent = null;
+    G.players["0"].resources.gold = 2;
+    G.players["0"].resources.influence = 0;
 
-    applyUnrestUpkeep(G, "0");
-    expect(G.players["0"].resources.happiness).toBe(-1);
-    applyUnrestUpkeep(G, "0");
-    expect(G.players["0"].resources.happiness).toBe(-2);
-    applyUnrestUpkeep(G, "0");
-    expect(G.players["0"].resources.happiness).toBe(-3);
-    expect(G.players["0"].timedHappinessModifiers).toHaveLength(0);
+    G.players["0"].unrestTokens = 2;
+    expect(turnEndUnrest(G, "0")).toBeNull();
 
-    // Expired: a fourth upkeep no longer moves happiness.
-    applyUnrestUpkeep(G, "0");
-    expect(G.players["0"].resources.happiness).toBe(-3);
-  });
+    // At −3, calm (+2) holds the line.
+    G.players["0"].unrestTokens = 3;
+    expect(turnEndUnrest(G, "0")).toMatchObject({
+      outcome: "riot",
+      level: -3,
+      calm: { payment: "gold", cost: { gold: 2 }, level: -1, outcome: "none" },
+    });
 
-  it("does not drift happiness toward zero on its own", () => {
-    const G = preloadedGame(SEED);
-    G.players["0"].hasCollectedGameplayIncome = false;
-    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 0 }, NONE);
-    G.players["0"].resources.happiness = -3; // above the -5 threshold, no active cause
+    // At −6 it lifts to −4: a riot instead of a revolt.
+    G.players["0"].unrestTokens = 6;
+    expect(turnEndUnrest(G, "0")).toMatchObject({
+      outcome: "revolt",
+      calm: { level: -4, outcome: "riot" },
+    });
 
-    applyUnrestUpkeep(G, "0");
-
-    expect(G.players["0"].resources.happiness).toBe(-3);
+    // At −8 calm changes nothing, so it is not offered.
+    G.players["0"].unrestTokens = 8;
+    expect(turnEndUnrest(G, "0")?.calm).toBeNull();
   });
 });
 
 describe("unrest status (ledger warning)", () => {
-  it("classifies the happiness tier and riot risk", () => {
+  it("classifies the level's tier and riot risk", () => {
     const G = preloadedGame(SEED);
+    setPops(G, "0", { citizens: 1, freemen: 0, slaves: 0 }, NONE);
 
-    G.players["0"].resources.happiness = 3;
     expect(unrestStatus(G, "0").tier).toBe("calm");
 
-    G.players["0"].resources.happiness = -2;
+    G.players["0"].unrestTokens = 2;
     expect(unrestStatus(G, "0")).toMatchObject({ tier: "discontent", riotAtRisk: false });
 
-    G.players["0"].resources.happiness = -5;
-    expect(unrestStatus(G, "0")).toMatchObject({ tier: "unrest", riotAtRisk: true });
+    G.players["0"].unrestTokens = 3;
+    expect(unrestStatus(G, "0")).toMatchObject({ tier: "unrest", riotAtRisk: true, tokens: 3 });
 
-    G.players["0"].resources.happiness = -10;
+    G.players["0"].unrestTokens = 6;
     expect(unrestStatus(G, "0")).toMatchObject({ tier: "revolt", riotAtRisk: true });
   });
 });

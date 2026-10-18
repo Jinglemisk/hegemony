@@ -1,6 +1,6 @@
 # Effective content and costs
 
-Last updated: 2026-08-04.
+Last updated: 2026-10-03.
 
 This is the living contract for values that can differ from authored defaults. It
 records the Phase 3.5 Step 1 inventory. Step 2's compile-time and behavioral
@@ -13,8 +13,8 @@ Step 3 presentation components consume both contracts.
 - **Effective content** is the complete `GameContent` package fixed before game
   creation and returned by the typed content accessors. With no development preset
   or override, it is authored content.
-- A **base cost** comes from the active ruleset or effective content before local,
-  seasonal, event, or standing-Law modifiers. Game modes and tuning patches are
+- A **base cost** comes from the active ruleset or effective content before
+  standing-Law modifiers. Game modes and tuning patches are
   already reflected in this value.
 - An **effective cost** is `ActionStatus.cost` from the authoritative `get*Status`
   query for the acting player and selected target/option.
@@ -24,13 +24,13 @@ must label them as base costs and explain that modifiers appear at the action.
 
 ## Effective-content inventory
 
-| Content     | Authoritative query                                                                                                        | Engine consumers                                                                                               | Frontend consumers                                                                                                  | Simulation consumers                                                                     |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Buildings   | `getBuildings(definition.content)`, `getBuilding(definition.content, id)`, and target-specific `getBuildBuildingOptions()` | Build legality/execution, income, settlement capacity/slots, growth and promotion discounts, table destruction | Board availability, map selection, Build popover, Cities/Buildings ledgers, Codex, building labels and benefit text | Legal-move enumeration and policy evaluation through the same engine income/status paths |
-| Terrain     | `getTerrainDeck(definition.content)`                                                                                       | Initial map/state creation and shuffle                                                                         | Codex terrain aggregates                                                                                            | Game setup and tuning runs through engine map creation                                   |
-| Events      | `getSeasonalEventCards(definition.content)` and `getPlayerEventCards(definition.content)`                                  | Deck creation, resolution, active effects and logs                                                             | Topbar, pending-event dialog and Codex                                                                              | Seeded decks, policy execution and zero-filled telemetry                                 |
-| Tables      | `getRiotTable(definition.content)`, `getExpeditionTables(definition.content)`, and `getOmenTable(definition.content)`      | Legal moves, insurance, ventures, rolls and yearly omen state                                                  | Riot/Venture modals, topbar, result rows and Codex                                                                  | Policy risk, execution and telemetry                                                     |
-| Resolutions | `getResolutionCards(definition.content)` and `getResolutionCard(definition.content, id)`                                   | Politician decks, Law modifiers, Directive resolution and logs                                                 | Assembly cards, target previews, ledgers and Codex                                                                  | Seeded decks, real-engine enactment evaluation and Assembly telemetry                    |
+| Content     | Authoritative query                                                                                                        | Engine consumers                                                                 | Frontend consumers                                                                                                  | Simulation consumers                                                                     |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Buildings   | `getBuildings(definition.content)`, `getBuilding(definition.content, id)`, and target-specific `getBuildBuildingOptions()` | Build legality/execution, income, settlement slots, happiness, table destruction | Board availability, map selection, Build popover, Cities/Buildings ledgers, Codex, building labels and benefit text | Legal-move enumeration and policy evaluation through the same engine income/status paths |
+| Terrain     | `getTerrainDeck(definition.content)`                                                                                       | Initial map/state creation and shuffle                                           | Codex terrain aggregates                                                                                            | Game setup and tuning runs through engine map creation                                   |
+| Events      | `getYearCards(definition.content)` and `getPlayerEventCards(definition.content)`                                           | Deck creation, resolution, active effects and logs                               | Topbar, pending-event dialog and Codex                                                                              | Seeded decks, policy execution and zero-filled telemetry                                 |
+| Tables      | `getRiotTable(definition.content)` and `getExpeditionTables(definition.content)`                                           | Legal moves, insurance, ventures, and rolls                                      | Riot/Venture modals, topbar, result rows and Codex                                                                  | Policy risk, execution and telemetry                                                     |
+| Resolutions | `getResolutionCards(definition.content)` and `getResolutionCard(definition.content, id)`                                   | Politician decks, Law modifiers, Directive resolution and logs                   | Assembly cards, target previews, ledgers and Codex                                                                  | Seeded decks, real-engine enactment evaluation and Assembly telemetry                    |
 
 Runtime consumers must not import authored content constants directly. Authored
 constants remain appropriate for definition construction, immutable comparison tests,
@@ -58,22 +58,23 @@ command transition.
 
 ## Effective-cost inventory
 
-| Action family          | Authoritative query                                                                           | Execution / simulation                                             | Action surfaces                                                                    | Reference surfaces                                                      |
-| ---------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Found colony           | `getFoundColonyStatus()`                                                                      | Execution and `LegalOption.cost` reuse the status                  | Command quote and Found popover reuse the status                                   | Codex labels the active-ruleset price as base cost                      |
-| Upgrade colony         | `getUpgradeColonyToCityStatus()`                                                              | Execution and `LegalOption.cost` reuse the status                  | Command quote and Upgrade modal reuse the status                                   | Codex labels the active-ruleset price as base cost                      |
-| Build building         | `getBuildBuildingOptions()` pairing each effective definition with `getBuildBuildingStatus()` | Execution, legal moves, and policy search reuse the paired status  | Build popover and ledger candidates show `status.cost`; building tooltips reuse it | Codex and roster headers label effective-definition prices as base cost |
-| Grow pop               | `getGrowPopStatus()`                                                                          | Execution and legal moves reuse the status                         | Target picker shows the selected status cost; the pre-target command says `varies` | Codex labels class prices as base costs                                 |
-| Promote / demote       | `getPromotePopStatus()` / `getDemotePopStatus()`                                              | Execution and legal moves reuse the status                         | Ladder target picker shows the status cost                                         | Codex labels ladder prices as base costs                                |
-| Bank buy / sell        | `getBankBuyStatus()` / `getBankSellStatus()`                                                  | Execution and legal moves reuse player-specific Law-adjusted rates | Market buttons render the status costs                                             | Codex labels board-derived rates as base rates                          |
-| Civic calm             | `getCivicCalmStatus()`                                                                        | Execution and legal moves reuse the selected payment status        | Calm payment choices render the status cost; pre-choice command says `options`     | Codex labels both payments as base costs                                |
-| Venture                | `getFundExpeditionStatus()`                                                                   | Execution and legal moves reuse the selected stake status          | Stake choices render the status cost; pre-choice command says `stakes`             | Codex labels both stakes as base stakes                                 |
-| Riot insurance         | `getBuyRiotInsuranceStatus()`                                                                 | Execution and legal moves reuse the table option status            | Riot choices use the same option/status                                            | Riot table is the base reference                                        |
-| Assembly participation | `nextDrawCost()` and the Assembly legal-option/status rules                                   | Execution, legal options, policy and telemetry share derived costs | Live Assembly controls read the same rules/session queries                         | Codex labels active-ruleset participation prices as base costs          |
+| Action family          | Authoritative query                                                                                            | Execution / simulation                                             | Action surfaces                                                                    | Reference surfaces                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Found colony           | `getFoundColonyStatus()`                                                                                       | Execution and `LegalOption.cost` reuse the status                  | Command quote and Found popover reuse the status                                   | Codex labels the active-ruleset price as base cost                      |
+| Upgrade colony         | `getUpgradeColonyToCityStatus()`                                                                               | Execution and `LegalOption.cost` reuse the status                  | Command quote and Upgrade modal reuse the status                                   | Codex labels the active-ruleset price as base cost                      |
+| Build building         | `getBuildBuildingOptions()` pairing each effective definition with `getBuildBuildingStatus()`                  | Execution, legal moves, and policy search reuse the paired status  | Build popover and ledger candidates show `status.cost`; building tooltips reuse it | Codex and roster headers label effective-definition prices as base cost |
+| Grow pop               | `getGrowPopStatus()`                                                                                           | Execution and legal moves reuse the status                         | Target picker shows the selected status cost; the pre-target command says `varies` | Codex labels class prices as base costs                                 |
+| Promote / demote       | `getPromotePopStatus()` / `getDemotePopStatus()`                                                               | Execution and legal moves reuse the status                         | Ladder target picker shows the status cost                                         | Codex labels ladder prices as base costs                                |
+| Bank buy / sell        | `getBankBuyStatus()` / `getBankSellStatus()`                                                                   | Execution and legal moves reuse fixed active-ruleset rates         | Market buttons render the status costs                                             | Codex labels board-derived rates as base rates                          |
+| Civic calm             | `getCivicCalmStatus()`                                                                                         | Execution and legal moves reuse the selected payment status        | Calm payment choices render the status cost; pre-choice command says `options`     | Codex labels both payments as base costs                                |
+| Venture                | `getFundExpeditionStatus()`                                                                                    | Execution and legal moves reuse the expedition status              | Venture modal and Civic fan show the single status cost                            | Codex labels the single venture cost                                    |
+| Riot insurance         | `getBuyRiotInsuranceStatus()`                                                                                  | Execution and legal moves reuse the table option status            | Riot choices use the same option/status                                            | Riot table is the base reference                                        |
+| Assembly participation | `getAssemblyDrawStatus()`, `getAssemblyRepealStatus()`, `getAssemblyBuyVoteStatus()` and `lawProposalReason()` | Execution, legal options, policy and telemetry share derived costs | Live Assembly controls read the same rules/session queries                         | Codex labels active-ruleset participation prices as base costs          |
 
 Pre-target command summaries only print a number when the engine can answer it
 without a target. Target-dependent or alternative-payment actions say `varies`,
-`options`, or `stakes`; their chooser shows the exact effective cost.
+or `options`; their chooser shows the exact effective cost. Ventures have one
+quoted cost and only choose the expedition.
 
 ## Step 3 integration status
 
@@ -93,8 +94,8 @@ part of its validation, while the real-device checklist remains an owner gate in
 
 ## Regression contract
 
-`src/parity/withinAxisParity.test.ts` applies a tuned building definition together
-with a seasonal multiplier and event coupon, then proves that the paired query,
+`src/parity/withinAxisParity.test.ts` applies a tuned building definition
+and proves that the paired query,
 frontend-facing label, legal move, execution payment, and resulting income agree.
 It also proves that the smart policy reverses a build decision when effective
 building economics reverse. Existing status, legal-move, preview, and parity suites
@@ -105,6 +106,19 @@ classification around these values. The [frontend presentation contract](fronten
 defines how the merged Step 3 layer renders them through Tooltip, Popover, and
 MechanicsDetails.
 
-The Step 4 Assembly revision extends the same contract to effective Resolution cards.
-`low-number-core-v1` transforms their effects and matching prose, while one-time author
-prizes remain ruleset values consumed by execution, UI, policy evaluation, and telemetry.
+The v2 Step 8 Assembly uses Appendix B under section 5.9's limits. Standing rules
+patch class columns before year cards; income, previews and AI pass the live state
+to settlement selectors. Happiness remains derived, with one line per Law that
+changes it. Whole Law prices replace base costs through action-status queries.
+Capacity, slot and colony-placement cuts keep existing holdings. The low-number
+preset leaves these resolutions, participation prices and prizes as authored.
+
+## National Ideas
+
+The match pins the twelve Idea definitions. Per-seat public ownership adds typed
+sources to `getStandingEffectSources`, alongside table-wide Laws. Slot usage counts
+occupied slots: Harbour Planning Ports occupy zero while remaining real buildings
+for Law building-count limits. Piece supply, Dole prices, yearly realm income and
+vote-purchase limits are engine selectors. Acquisition and founding/upgrade grants
+use the same capacity and transit-room checks. See [the player guide](../../rules.md#national-ideas)
+for the roster and [the plan](../plans/national-ideas.md) for the defaults.

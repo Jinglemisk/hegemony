@@ -1,26 +1,21 @@
 import { PLAYER_IDS, PLAYER_NAMES } from "../../../game/data";
-import { yearOf } from "../../../game/core/calendar";
-import { getResolutionCard, politicianStandings } from "../../../game/assembly";
+import { getResolutionCard, nextAssemblyYear, politicianStandings } from "../../../game/assembly";
+import type { PoliticianStanding } from "../../../game/assembly";
 import { victoryStandings } from "../../../game/victory";
-import type { HegemonyState } from "../../../game/types";
-import { POLITICIAN_GLYPHS } from "../../../ui/iconRegistry";
-import { Icon } from "../../../ui/icons/Icon";
-import { PLAYER_GLAZES, glazeOf } from "../../../ui/playerGlazes";
-import { StandingLaw } from "../assembly/StandingLaw";
-import { MechanicsDetails } from "../../MechanicsDetails";
+import type { HegemonyState, PlayerId } from "../../../game/types";
+import { yearLabel } from "../../../ui/formatters";
+import { AnnotatedText } from "../../AnnotatedText";
+import { Ico, SeatMark, Tip } from "../../frame/parts";
 import { Tooltip } from "../../overlays/Tooltip";
+import { TitleRow } from "./VictoryTab";
 
 /**
- * The Agora — what the Assembly left standing, readable at any time.
- *
- * The Assembly panel only exists while the house sits; its consequences last all
- * game. Between assemblies a player needs to know which Laws are biting and who
- * leads each orator's stack, and this page is that record — read from exactly the
- * same board-derived standings the panel uses, so the two can never disagree.
- *
- * A standing Law is drawn as an **aegean slab**, and it is the same component
- * the Assembly's colonnade uses. One law, three lives: a card at the bema, a
- * stele in the colonnade, a slab here.
+ * The Agora: what the Assembly left standing, readable at any time, as a ledger like
+ * Victory's. The Assembly panel only exists while the house sits; its consequences
+ * last all game. So this page says when the house sits next, which Laws stand, and
+ * how many stelae each seat has raised under each orator, and it ends on the Voice
+ * title those Laws decide. Every figure comes from the same engine standings the
+ * Assembly and the win check read, so the pages cannot disagree.
  */
 
 /** The empty stelae are counted in words, the way the floor announces them; past
@@ -31,159 +26,106 @@ function spell(count: number): string {
   return SPELLED[count] ?? String(count);
 }
 
-/** Stones bear names, but only Laws take a stele: Stratokles raises monuments. */
-function stoneWord(count: number, monuments: boolean): string {
-  if (monuments) {
-    return count === 1 ? "monument" : "monuments";
-  }
-  return count === 1 ? "stele" : "stelae";
-}
-
-export function AgoraTab({ G }: { G: HegemonyState }) {
+export function AgoraTab({ G, playerID }: { G: HegemonyState; playerID: PlayerId }) {
   const standings = politicianStandings(G);
   const voice = victoryStandings(G).find((standing) => standing.card.metric === "voice");
-  const voicePassed = voice ? Math.max(...PLAYER_IDS.map((id) => voice.values[id])) : 0;
-  const rules = G.ruleset.assembly;
-  const nextYear = Math.max(rules.firstYear, yearOf(G.season) + (G.assembly ? 1 : 0));
+  const lawCap = G.ruleset.assembly.lawCap;
+  const nextYear = nextAssemblyYear(G);
+  const laws = G.activeLaws.slice().sort((left, right) => left.order - right.order);
+  const empty = lawCap - laws.length;
 
   return (
-    <div className="agoraPage">
-      {/* The Voice plaque: the one standing thing that is a victory card. */}
-      <Tooltip
-        content={
-          <MechanicsDetails heading={voice?.card.name ?? "Voice"}>
-            <p className="mechanicsExplanation">
-              Claimed by the first player to author and pass {voice?.minimum} resolutions, and taken
-              only by a rival who strictly exceeds the holder. Repeal does not take them back.
-            </p>
-            <p className="mechanicsExplanation">
-              The house has sat {spell(G.assembliesHeld)}{" "}
-              {G.assembliesHeld === 1 ? "time" : "times"}.
-            </p>
-          </MechanicsDetails>
-        }
-        triggerClassName="voiceboxTrigger"
-      >
-        <div className="voicebox">
-          <Icon glyph="voice" size="rail" />
-          <span>
-            <b className="title">Voice</b>
-            {/* The same fact the Victory tab's Voice card prints, in the same words
-                and the same figures — the two pages read the same standing, so a
-                reader flipping between them must not find two answers. */}
-            <span className="caption">
-              {voice?.holder ? PLAYER_NAMES[voice.holder] : "unheld"} · {voicePassed}/
-              {voice?.minimum} passed
+    <div className="agoraPage roster" data-c="agora">
+      <p className="a-next caps">
+        {G.assembly
+          ? "The Assembly sits now"
+          : nextYear === null
+            ? "No Assembly is left"
+            : `Next Assembly ${yearLabel(nextYear)}`}
+      </p>
+
+      <div className="r-head a-head caps">
+        Standing laws · {laws.length} of {lawCap}
+      </div>
+      {laws.map((law) => {
+        const card = getResolutionCard(G.definition.content, law.cardId);
+        return card ? (
+          <div className="a-law" key={`${law.cardId}-${law.order}`}>
+            <span className="r-place">
+              <Ico path="assembly/law" size="chip" />
+              <b className="v-name">{card.name}</b>
             </span>
-          </span>
-          {voice?.holder ? (
-            <span className="voiceGlaze verb" style={{ background: glazeOf(voice.holder) }}>
-              {PLAYER_GLAZES[voice.holder].blazon}
-            </span>
-          ) : null}
-        </div>
-      </Tooltip>
-
-      <h3 className="pageSection label">
-        Standing laws · {G.activeLaws.length} of {rules.lawCap}
-      </h3>
-
-      {G.activeLaws
-        .slice()
-        .sort((left, right) => left.order - right.order)
-        .map((law) => (
-          <StandingLaw
-            content={G.definition.content}
-            key={`${law.cardId}-${law.order}`}
-            stele={law}
-          />
-        ))}
-
-      {/* The room left on the floor is a slab of its own, dashed, standing beside
-          the laws that already stand — how many more the house may pass is a fact
-          you want at four laws as much as at none. */}
-      {G.activeLaws.length < rules.lawCap ? (
-        <div className="lawslab lawslabEmpty body-em">
-          {spell(rules.lawCap - G.activeLaws.length)}{" "}
-          {rules.lawCap - G.activeLaws.length === 1 ? "stele stands" : "stelae stand"} empty
-        </div>
+            <p className="a-law-text">
+              <AnnotatedText linkContext={card.name} text={card.text} />
+            </p>
+            <p className="a-law-meta">
+              carried by {PLAYER_NAMES[law.author]} · {yearLabel(law.enactedYear)}
+            </p>
+          </div>
+        ) : null;
+      })}
+      {empty > 0 ? (
+        <p className="a-empty page-empty">
+          {spell(empty)} {empty === 1 ? "stele stands" : "stelae stand"} empty
+        </p>
       ) : null}
 
-      {/* Counted, not quoted: the roster is authored data, and a fifth politician
-          would otherwise leave this heading insisting there are four. */}
-      <h3 className="pageSection label">The {spell(standings.length)} orators</h3>
-
-      {standings.map((standing) => {
-        const isStratokles = standing.politician.id === "stratokles";
-        const stelae = isStratokles
-          ? G.tallyMonuments
-          : G.activeLaws.filter(
-              (law) =>
-                getResolutionCard(G.definition.content, law.cardId)?.politician ===
-                standing.politician.id,
-            );
-
-        return (
-          <Tooltip
-            content={
-              <MechanicsDetails heading={standing.politician.name}>
-                <p className="mechanicsExplanation">{standing.politician.creed}</p>
-                <p className="mechanicsExplanation">
-                  {standing.patron
-                    ? `${PLAYER_NAMES[standing.patron]} is descriptive patron of this stack.`
-                    : standing.power === 0
-                      ? "No stele bears his name."
-                      : "No patron — the stack is split."}
-                </p>
-              </MechanicsDetails>
-            }
-            key={standing.politician.id}
-            triggerClassName="polTrigger"
-          >
-            <section className="pol">
-              <span
-                className="polMedallion"
-                style={{ background: standing.patron ? glazeOf(standing.patron) : "var(--stone)" }}
-              >
-                <Icon glyph={POLITICIAN_GLYPHS[standing.politician.id]} size="rail" />
-              </span>
-              <span className="polWho">
-                <b className="title">{standing.politician.name}</b>
-                <span className="polEpithet label">{standing.politician.epithet}</span>
-                {/* Notches for the glance, a count for the fact. They sit under
-                    the epithet rather than at the row's end because a name like
-                    KLEISTOPHENES and six notches want 250px between them and the
-                    tablet gives 192 — hung on the right they ran 71px out through
-                    the frame.
-
-                    The track is the law cap, because that is how many stelae the
-                    house may keep standing. Stratokles's monuments take no slot
-                    and have no cap, so his track grows past six rather than
-                    filling up and reading as maxed at the seventh. */}
-                <span className="steleNotches">
-                  {Array.from({ length: Math.max(rules.lawCap, stelae.length) }, (_, index) => (
-                    <i className={index < stelae.length ? "notch notchWon" : "notch"} key={index} />
-                  ))}
-                  <em className="steleCount label">
-                    {stelae.length} {stoneWord(stelae.length, isStratokles)}
-                  </em>
-                </span>
-              </span>
-            </section>
-          </Tooltip>
-        );
-      })}
-
-      <div className="anchorRow">
-        <span className="anchorKey label">Next assembly</span>
-        <span className="anchorValue title">
-          {rules.firstYear === 0
-            ? "never"
-            : G.assembly
-              ? "sitting now"
-              : `spring, Year ${nextYear + (yearOf(G.season) >= rules.firstYear ? 1 : 0)}`}
-        </span>
+      <div className="r-grid v-grid r-head a-head">
+        <span className="caps">Orator</span>
+        {PLAYER_IDS.map((id) => (
+          <span className={id === playerID ? "is-you" : undefined} key={id}>
+            <SeatMark playerID={id} />
+          </span>
+        ))}
       </div>
+      {standings.map((standing) => (
+        <div
+          className="r-place-rows"
+          data-orator={standing.politician.id}
+          key={standing.politician.id}
+        >
+          <div className="r-grid v-grid r-a">
+            <span className="r-place">
+              <Ico path="assembly/politician" size="chip" />
+              <Tooltip
+                content={
+                  <Tip sub={standing.politician.epithet} title={standing.politician.name}>
+                    <p className="tip-body">{standing.politician.creed}</p>
+                  </Tip>
+                }
+                focusable
+                triggerClassName="v-name"
+              >
+                {standing.politician.name}
+              </Tooltip>
+            </span>
+            {PLAYER_IDS.map((id) => (
+              <span className={`cell${id === standing.patron ? " is-held" : ""}`} key={id}>
+                {standing.authored[id]}
+              </span>
+            ))}
+          </div>
+          <div className="r-b">
+            <span className="cap">{oratorLine(standing)}</span>
+          </div>
+        </div>
+      ))}
+
+      {voice ? (
+        <div className="a-voice">
+          <TitleRow G={G} standing={voice} />
+        </div>
+      ) : null}
     </div>
   );
+}
+
+/** Stratokles counts monuments, which never come down; the others count standing Laws. */
+function oratorLine({ politician, patron, power }: PoliticianStanding) {
+  const epithet = politician.epithet.toLowerCase();
+  if (power === 0) {
+    return `${epithet} · ${politician.id === "stratokles" ? "no monument yet" : "no stele"}`;
+  }
+  const standing = patron ? `patron ${PLAYER_NAMES[patron]}` : "split, no patron";
+  return `${epithet} · ${politician.id === "stratokles" ? "monuments, " : ""}${standing}`;
 }

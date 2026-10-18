@@ -9,18 +9,28 @@ import type {
   Resource,
   Resources,
   Settlement,
+  Terrain,
+  YearTerm,
 } from "../types";
-import { formatPopName, formatRuleNumber } from "../core/format";
-import { getTile } from "../core/query";
+import { formatPopName } from "../core/format";
+import { getTile, zeroedYearTerm } from "../core/query";
 import { applyResourceDelta } from "../core/resources";
 import {
-  scaledByPops,
+  countPlayerPopType,
+  settlementIdleSlaves,
   settlementIncomeSource,
-  settlementOverCapacity,
-  settlementTileYield,
+  settlementWorkingSlaves,
+  settlementSlaveResource,
 } from "../settlement";
 import type { Ruleset } from "../ruleset";
-import { getLawIncomeContributions } from "../assembly/laws";
+import {
+  getLawIncomeContributions,
+  effectiveRuleset,
+  getStandingEffects,
+  getStandingEffectSources,
+  hasLawRule,
+  type RulesSource,
+} from "../assembly/laws";
 
 export type IncomeContribution = {
   resource: Resource;
@@ -40,14 +50,16 @@ export type IncomeContribution = {
   settlementId?: string;
 };
 
-export type FoodShortageStatus = {
+/** Where the granary stands. Free pops eat at income, which may take food below zero.
+ *  Ending the turn short, one pop leaves per missing food and food returns to zero. */
+export type HungerStatus = {
+  /** Food held now. Below zero only during its owner's turn. */
   stockpile: number;
   income: number;
+  /** Food after the next income; below zero is a shortfall to cover on that turn. */
   projectedStockpile: number;
-  rawPressure: number;
-  appliedPressure: number;
-  gracePreventedPressure: number;
-  firstTurnGraceActive: boolean;
+  /** Pops that leave if the turn ended now. */
+  unfed: number;
 };
 
 /**
@@ -55,6 +67,9 @@ export type FoodShortageStatus = {
  * and over-capacity pressure. This is the ONE definition of the per-pop yield
  * formula, driven by {@link Ruleset.popIncome} and shared by {@link settlementNetYield}
  * and the UI's pop / grow-pop projections so the engine and UI can never drift.
+ *
+ * `working` is how many of the `count` hold a work slot: only they make the tile's
+ * resource. It matters for slaves, whose idle ones still count toward unrest.
  */
 /**
  * `ruleset` is REQUIRED. It used to default to DEFAULT_RULESET, which silently
@@ -67,6 +82,7 @@ export function popIncome(
   count: number,
   primaryResource: Resource | null,
   ruleset: Ruleset,
+  working: number = count,
 ): Resources {
   const income: Resources = { ...EMPTY_RESOURCES };
   const rule = ruleset.popIncome[pop];
@@ -74,41 +90,45 @@ export function popIncome(
   for (const [resource, perPop] of Object.entries(rule.flat) as Array<[Resource, number]>) {
     income[resource] += perPop * count;
   }
-  // Yield-less tiles (hills, oracle) have no primary resource — slaves are inert there
-  // (terrain-economy.md); citizens/freemen still produce (their primaryResource is 0).
+  // Hills have no resource, so slaves make nothing there; freemen and citizens
+  // produce wherever they live.
   if (primaryResource) {
-    income[primaryResource] += rule.primaryResource * count;
+    income[primaryResource] += rule.primaryResource * working;
   }
 
   return income;
 }
 
+/** The printed slave column on an unsettled tile, before buildings or a year card. */
+export function tileSlaveColumn(G: HegemonyState, tile: HexTile) {
+  const resource = settlementSlaveResource(tile, G);
+  const income = popIncome("slaves", 1, resource, effectiveRuleset(G));
+  return { resource, perPop: resource ? income[resource] : 0 };
+}
+
 /**
- * Net resource income produced by a single settlement: tile yield + pop yields +
- * building effects. Mirrors the per-settlement portion of {@link calculateIncomeBreakdown}
- * without the player-level seasonal / food-shortage adjustments. Used to render the
- * settlement summary card.
+ * Net resource income a settlement prints: pop yields + building effects, before
+ * the year's card. {@link settlementYieldThisYear} is what it pays this year.
  */
 /** `ruleset` is REQUIRED for the same reason as {@link popIncome}: a default here
  *  lets a caller silently read the wrong ruleset. */
 export function settlementNetYield(
   tile: HexTile,
   settlement: Settlement,
-  ruleset: Ruleset,
+  sourceRules: RulesSource,
   content: GameContent = getAuthoredGameContent(),
 ): Resources {
+  const ruleset = effectiveRuleset(sourceRules, settlement.kind);
   const income: Resources = { ...EMPTY_RESOURCES };
-  const primary = tile.resource?.type ?? null;
+  const primary = settlementSlaveResource(tile, sourceRules);
+  const workingSlaves = settlementWorkingSlaves(tile, settlement, sourceRules);
 
-  if (primary) {
-    income[primary] += settlementTileYield(tile, settlement, ruleset);
-  }
   applyResourceDelta(income, popIncome("citizens", settlement.pops.citizens, primary, ruleset));
   applyResourceDelta(income, popIncome("freemen", settlement.pops.freemen, primary, ruleset));
-  applyResourceDelta(income, popIncome("slaves", settlement.pops.slaves, primary, ruleset));
-  income.happiness -=
-    settlementOverCapacity(settlement, ruleset, content) *
-    ruleset.economy.overCapacityHappinessPerPop;
+  applyResourceDelta(
+    income,
+    popIncome("slaves", settlement.pops.slaves, primary, ruleset, workingSlaves),
+  );
 
   applyIncomeBuildingEffects(
     [],
@@ -116,10 +136,95 @@ export function settlementNetYield(
     settlement,
     settlementIncomeSource(tile, settlement),
     primary,
+    workingSlaves,
+    ruleset,
     content,
+    sourceRules,
   );
 
+  if ("activeLaws" in sourceRules) {
+    for (const entry of getLawIncomeContributions(sourceRules, settlement.owner)) {
+      if (entry.settlementId === settlement.id) income[entry.resource] += entry.amount;
+    }
+  }
+
   return income;
+}
+
+/** The class column each year card zeroes. A terrain card only bites on that terrain. */
+const YEAR_TERM_COLUMNS: Record<
+  Exclude<YearTerm, "luxuryHappiness">,
+  { pop: PopType; resource: Resource; terrain?: Terrain }
+> = {
+  plainsFood: { pop: "slaves", resource: "food", terrain: "plains" },
+  forestWood: { pop: "slaves", resource: "wood", terrain: "forest" },
+  mountainStone: { pop: "slaves", resource: "stone", terrain: "mountain" },
+  freemenGold: { pop: "freemen", resource: "gold" },
+  citizenInfluence: { pop: "citizens", resource: "influence" },
+};
+
+/**
+ * What this year's card takes from one settlement's next income: the whole of the
+ * class column it zeroes, the building's raise included. Null when the card zeroes
+ * nothing here, or when the owner has already collected this year: their next income
+ * falls under next year's card, which nobody has seen.
+ */
+export function yearCardLoss(
+  G: HegemonyState,
+  tile: HexTile,
+  settlement: Settlement,
+): { pop: PopType; resource: Resource; amount: number } | null {
+  const term = zeroedYearTerm(G);
+
+  if (!term || term === "luxuryHappiness" || G.players[settlement.owner].collectedThisTurn) {
+    return null;
+  }
+
+  const column = YEAR_TERM_COLUMNS[term];
+
+  if (column.terrain && tile.terrain !== column.terrain) {
+    return null;
+  }
+
+  if (column.pop === "slaves" && settlementSlaveResource(tile, G) !== column.resource) return null;
+  const amount = settlementClassColumn(tile, settlement, column.pop, G, G.definition.content)
+    .income[column.resource];
+
+  return amount > 0 ? { pop: column.pop, resource: column.resource, amount } : null;
+}
+
+/** What a settlement pays at its owner's next income: what it prints, less what the
+ *  year's card zeroes. */
+export function settlementNextYield(
+  G: HegemonyState,
+  tile: HexTile,
+  settlement: Settlement,
+): Resources {
+  const income = settlementNetYield(tile, settlement, G, G.definition.content);
+  const loss = yearCardLoss(G, tile, settlement);
+
+  if (loss) {
+    income[loss.resource] -= loss.amount;
+  }
+
+  return income;
+}
+
+/** A class column at the owner's next income, with the year card applied. */
+export function settlementNextClassColumn(
+  G: HegemonyState,
+  tile: HexTile,
+  settlement: Settlement,
+  pop: PopType,
+) {
+  const column = settlementClassColumn(tile, settlement, pop, G, G.definition.content);
+  const loss = yearCardLoss(G, tile, settlement);
+  const zeroed = loss?.pop === pop;
+  if (zeroed) {
+    column.income[loss.resource] = 0;
+    column.perPop = 0;
+  }
+  return { ...column, zeroed };
 }
 
 export function calculateIncome(G: HegemonyState, playerID: PlayerId): Resources {
@@ -132,8 +237,6 @@ export function calculateIncomeBreakdown(
 ): IncomeContribution[] {
   const contributions: IncomeContribution[] = [];
   const income = { ...EMPTY_RESOURCES };
-  const ruleset = G.ruleset;
-  const coeff = (pop: PopType, resource: Resource) => ruleset.popIncome[pop].flat[resource] ?? 0;
 
   for (const tileId of G.players[playerID].settlements) {
     const tile = getTile(G, tileId);
@@ -143,24 +246,12 @@ export function calculateIncomeBreakdown(
       continue;
     }
 
-    const share =
-      settlement.kind === "colony" && tile.settlements.length > 1
-        ? ruleset.economy.colonySharedTileYieldShare
-        : 1;
+    const ruleset = effectiveRuleset(G, settlement.kind);
+    const coeff = (pop: PopType, resource: Resource) => ruleset.popIncome[pop].flat[resource] ?? 0;
     const settlementLabel = settlementIncomeSource(tile, settlement);
-    const primary = tile.resource?.type ?? null;
-
-    // Yield-less tiles (hills, oracle) contribute no tile yield and no slave production —
-    // slaves are inert there; citizens/freemen produce regardless (terrain-economy.md).
-    if (primary) {
-      addIncomeContribution(contributions, income, {
-        resource: primary,
-        amount: settlementTileYield(tile, settlement, ruleset),
-        source: settlementLabel,
-        settlementId: settlement.id,
-        detail: `Tile yield${share < 1 ? " shared colony" : ""}`,
-      });
-    }
+    const primary = settlementSlaveResource(tile, G);
+    const workingSlaves = settlementWorkingSlaves(tile, settlement, G);
+    const idleSlaves = settlementIdleSlaves(tile, settlement, G);
 
     addIncomeContribution(contributions, income, {
       resource: "influence",
@@ -197,13 +288,16 @@ export function calculateIncomeBreakdown(
       settlementId: settlement.id,
       detail: `${settlement.pops.freemen} freeman pops upkeep`,
     });
+    // A slave makes the tile's resource only from an open slot; the rest are idle.
     if (primary) {
       addIncomeContribution(contributions, income, {
         resource: primary,
-        amount: settlement.pops.slaves * ruleset.popIncome.slaves.primaryResource,
+        amount: workingSlaves * ruleset.popIncome.slaves.primaryResource,
         source: settlementLabel,
         settlementId: settlement.id,
-        detail: `${settlement.pops.slaves} slave pops production`,
+        detail:
+          `${workingSlaves} working ${formatPopName("slaves", workingSlaves)}` +
+          (idleSlaves > 0 ? `, ${idleSlaves} idle` : ""),
       });
     }
     addIncomeContribution(contributions, income, {
@@ -213,22 +307,6 @@ export function calculateIncomeBreakdown(
       settlementId: settlement.id,
       detail: `${settlement.pops.slaves} slave pops upkeep`,
     });
-    addIncomeContribution(contributions, income, {
-      resource: "happiness",
-      amount: settlement.pops.slaves * coeff("slaves", "happiness"),
-      source: settlementLabel,
-      settlementId: settlement.id,
-      detail: `${settlement.pops.slaves} slave pops pressure`,
-    });
-    addIncomeContribution(contributions, income, {
-      resource: "happiness",
-      amount:
-        settlementOverCapacity(settlement, ruleset, G.definition.content) *
-        -ruleset.economy.overCapacityHappinessPerPop,
-      source: settlementLabel,
-      settlementId: settlement.id,
-      detail: "Over capacity pressure",
-    });
 
     applyIncomeBuildingEffects(
       contributions,
@@ -236,69 +314,73 @@ export function calculateIncomeBreakdown(
       settlement,
       settlementLabel,
       primary,
+      workingSlaves,
+      ruleset,
       G.definition.content,
+      G,
     );
+
+    // The year's card takes its whole term back as one line that names the card.
+    const loss = yearCardLoss(G, tile, settlement);
+    if (loss) {
+      addIncomeContribution(contributions, income, {
+        resource: loss.resource,
+        amount: -loss.amount,
+        source: settlementLabel,
+        settlementId: settlement.id,
+        detail: `${G.activeYearCard?.name}: ${G.activeYearCard?.text}`,
+      });
+    }
   }
 
-  applySeasonalIncomeEffects(G, playerID, contributions, income);
-  applyYearOmenIncomeEffects(G, contributions, income);
-  // Standing Laws land AFTER the settlement, building, seasonal and omen passes: a
+  // Standing Laws land AFTER the settlement, building and year-card passes: a
   // Law is a patch over the ruleset, and the surplus-conversion effect (a tariff on
   // the harvest) can only be assessed once the harvest is known.
   applyStandingLawIncomeEffects(G, playerID, contributions, income);
 
-  const foodShortage = getFoodShortageStatus(G, playerID, income.food);
-
-  if (foodShortage.appliedPressure < 0) {
-    addIncomeContribution(contributions, income, {
-      resource: "happiness",
-      amount: foodShortage.appliedPressure,
-      source: "Food shortage",
-      detail: `Projected food stockpile ${formatRuleNumber(foodShortage.projectedStockpile)}`,
-    });
+  for (const source of getStandingEffectSources(G, playerID)) {
+    for (const effect of source.effects)
+      if (effect.type === "realmIncome")
+        addIncomeContribution(contributions, income, {
+          resource: effect.resource,
+          amount: effect.amount,
+          source: source.label,
+          detail: "National Idea",
+        });
   }
-
-  const divisor = ruleset.economy.foodStockpileHappinessDivisor;
-  const cap = ruleset.economy.foodStockpileHappinessCap;
-  const uncapped = divisor > 0 ? Math.floor(G.players[playerID].resources.food / divisor) : 0;
-  // Capped so hoarded food can't buy unlimited calm (roadmap-appendix D4).
-  const foodStockpileHappiness = Math.min(uncapped, cap);
-
-  if (foodStockpileHappiness > 0) {
-    addIncomeContribution(contributions, income, {
-      resource: "happiness",
-      amount: foodStockpileHappiness,
-      source: "Food stockpile",
-      detail:
-        uncapped > cap
-          ? `Every ${divisor} stored food improves happiness (capped at +${cap})`
-          : `Every ${divisor} stored food improves happiness (up to +${cap})`,
-    });
-  }
-
   return contributions;
 }
 
-export function getFoodShortageStatus(
+/** Pops that leave if `playerID` ended the turn now: one per missing food. */
+export function unfedAtTurnEnd(G: HegemonyState, playerID: PlayerId): number {
+  // Only free pops eat, so only they can go unfed; a shortfall deeper than their
+  // number (a Law taking food) still ends at zero food. A pop on the move is not
+  // counted: the hunger pick takes pops from settlements, so counting one would ask
+  // for a pick the seat cannot make.
+  const mouths = (["freemen", "citizens"] as const).reduce(
+    (sum, pop) =>
+      sum +
+      ((effectiveRuleset(G).popIncome[pop].flat.food ?? 0) < 0
+        ? countPlayerPopType(G, playerID, pop)
+        : 0),
+    0,
+  );
+  return Math.min(mouths, Math.max(0, -G.players[playerID].resources.food));
+}
+
+export function getHungerStatus(
   G: HegemonyState,
   playerID: PlayerId,
   foodIncome: number,
-): FoodShortageStatus {
+): HungerStatus {
   const stockpile = G.players[playerID].resources.food;
-  const projectedStockpile = stockpile + foodIncome;
-  const rawPressure = projectedStockpile < 0 ? projectedStockpile : 0;
-  const firstTurnGraceActive =
-    G.ruleset.economy.firstIncomeFoodGrace && !G.players[playerID].hasCollectedGameplayIncome;
-  const appliedPressure = firstTurnGraceActive ? 0 : rawPressure;
 
   return {
     stockpile,
     income: foodIncome,
-    projectedStockpile,
-    rawPressure,
-    appliedPressure,
-    gracePreventedPressure: firstTurnGraceActive ? rawPressure : 0,
-    firstTurnGraceActive,
+    // A shortfall is settled at turn end, so the next income starts from zero at worst.
+    projectedStockpile: Math.max(0, stockpile) + foodIncome,
+    unfed: unfedAtTurnEnd(G, playerID),
   };
 }
 
@@ -313,86 +395,15 @@ function applyStandingLawIncomeEffects(
   contributions: IncomeContribution[],
   income: Resources,
 ) {
-  for (const contribution of getLawIncomeContributions(G, playerID, income)) {
+  for (const contribution of getLawIncomeContributions(G, playerID)) {
     addIncomeContribution(contributions, income, {
       resource: contribution.resource,
       amount: contribution.amount,
       source: contribution.label,
+      settlementId: contribution.settlementId,
       detail: "Standing law",
     });
   }
-}
-
-/** The standing yearly omen (always symmetric — every player collects under it). */
-function applyYearOmenIncomeEffects(
-  G: HegemonyState,
-  contributions: IncomeContribution[],
-  income: Resources,
-) {
-  for (const effect of G.yearOmen?.effects ?? []) {
-    if (effect.type === "yearIncomeModifier") {
-      addIncomeContribution(contributions, income, {
-        resource: effect.resource,
-        amount: effect.amount,
-        source: `Omen: ${G.yearOmen?.label}`,
-        detail: "Yearly omen",
-      });
-    }
-  }
-}
-
-function applySeasonalIncomeEffects(
-  G: HegemonyState,
-  playerID: PlayerId,
-  contributions: IncomeContribution[],
-  income: Resources,
-) {
-  const activeEvent = G.activeSeasonEvent;
-  const card = activeEvent?.card;
-
-  if (!card) {
-    return;
-  }
-
-  for (const effect of card.effects) {
-    if (
-      effect.type === "incomeModifier" &&
-      effect.duration === "season" &&
-      effectAppliesToPlayer(effect.scope, playerID, activeEvent.playerID)
-    ) {
-      addIncomeContribution(contributions, income, {
-        resource: effect.resource,
-        amount: effect.amount,
-        source: card.name,
-        detail: "Seasonal event",
-      });
-    } else if (
-      effect.type === "scaledHappinessDelta" &&
-      effect.duration === "season" &&
-      effectAppliesToPlayer(effect.scope, playerID, activeEvent.playerID)
-    ) {
-      addIncomeContribution(contributions, income, {
-        resource: "happiness",
-        amount: scaledByPops(
-          G,
-          playerID,
-          effect.amountPerPops,
-          effect.popStep,
-          effect.minimumMagnitude,
-        ),
-        source: card.name,
-        detail: "Seasonal event",
-      });
-    }
-  }
-}
-
-function effectAppliesToPlayer(
-  scope: "activePlayer" | "allPlayers",
-  playerID: PlayerId,
-  activePlayerID: PlayerId,
-) {
-  return scope === "allPlayers" || playerID === activePlayerID;
 }
 
 function applyIncomeBuildingEffects(
@@ -401,21 +412,33 @@ function applyIncomeBuildingEffects(
   settlement: Settlement,
   settlementLabel: string,
   primaryResource: Resource | null,
+  workingSlaves: number,
+  ruleset: Ruleset,
   content: GameContent,
+  sourceRules: RulesSource,
 ) {
-  const popBonusSupport = {
-    freemen: { supportedPops: 0, amount: 0 },
-    citizens: { supportedPops: 0, amount: 0 },
-    slaves: { supportedPops: 0, amount: 0 },
-  };
-  // The Villa's flat boost to the tile's own material — accumulated across copies
-  // (levels), paid only when the tile actually yields (dead on hills/oracle).
-  let tilePrimaryBonus = 0;
-
   for (const buildingId of settlement.buildings) {
+    if (buildingId === "marketplace" && hasLawRule(sourceRules, "grainLevy")) continue;
     const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
 
+    if ("activeLaws" in sourceRules) {
+      for (const effect of getStandingEffects(sourceRules, settlement.owner)) {
+        if (effect.type === "buildingFood" && effect.building === buildingId)
+          addIncomeContribution(contributions, income, {
+            resource: "food",
+            amount: effect.amount,
+            source: settlementLabel,
+            settlementId: settlement.id,
+            detail: "Sacred Fields: Temple food",
+          });
+      }
+    }
+
     for (const effect of building?.effects ?? []) {
+      // A Temple's happiness is a term of the level, not income (game/happiness.ts).
+      if (effect.type === "happiness") {
+        continue;
+      }
       if (effect.type === "income") {
         addIncomeContribution(contributions, income, {
           resource: effect.resource,
@@ -424,72 +447,87 @@ function applyIncomeBuildingEffects(
           settlementId: settlement.id,
           detail: building?.name ?? buildingId,
         });
-      } else if (effect.type === "happiness") {
+        continue;
+      }
+
+      // A class building raises its column's printed value: every pop of the class
+      // here makes `amount` instead of the base. For slaves that is the working
+      // ones, so an Estate pays nothing for idle slaves or on a hill.
+      const pops = effect.pop === "slaves" ? workingSlaves : settlement.pops[effect.pop];
+
+      for (const [resource, base] of classOutputs(effect.pop, primaryResource, ruleset)) {
         addIncomeContribution(contributions, income, {
-          resource: "happiness",
-          amount: effect.amount,
+          resource,
+          amount: pops * Math.max(0, effect.amount - base),
           source: settlementLabel,
           settlementId: settlement.id,
-          detail: building?.name ?? buildingId,
+          detail: `${building?.name ?? buildingId}: ${pops} ${formatPopName(effect.pop, pops)} make ${effect.amount}`,
         });
-      } else if (effect.type === "freemanGoldBonus") {
-        popBonusSupport.freemen.supportedPops += effect.supportedPops;
-        popBonusSupport.freemen.amount = effect.amount;
-      } else if (effect.type === "citizenInfluenceBonus") {
-        popBonusSupport.citizens.supportedPops += effect.supportedPops;
-        popBonusSupport.citizens.amount = effect.amount;
-      } else if (effect.type === "slavePrimaryResourceBonus") {
-        popBonusSupport.slaves.supportedPops += effect.supportedPops;
-        popBonusSupport.slaves.amount = effect.amount;
-      } else if (effect.type === "tilePrimaryResourceBonus") {
-        tilePrimaryBonus += effect.amount;
+      }
+    }
+  }
+}
+
+/** What one pop of a class makes before any building: the positive lines of its rule. */
+function classOutputs(
+  pop: PopType,
+  primaryResource: Resource | null,
+  ruleset: Ruleset,
+): Array<[Resource, number]> {
+  const rule = ruleset.popIncome[pop];
+
+  return [
+    ...(Object.entries(rule.flat) as Array<[Resource, number]>).filter(([, per]) => per > 0),
+    ...(primaryResource && rule.primaryResource > 0
+      ? ([[primaryResource, rule.primaryResource]] as Array<[Resource, number]>)
+      : []),
+  ];
+}
+
+/**
+ * One class column of a settlement: what each pop of the class makes here, the
+ * building that raised it, and the class's whole income with that raise in it. The
+ * settlement page prints its three columns from this.
+ */
+export function settlementClassColumn(
+  tile: HexTile,
+  settlement: Settlement,
+  pop: PopType,
+  sourceRules: RulesSource,
+  content: GameContent = getAuthoredGameContent(),
+): { perPop: number; raisedBy: string | null; income: Resources } {
+  const ruleset = effectiveRuleset(sourceRules, settlement.kind);
+  const primary = settlementSlaveResource(tile, sourceRules);
+  const working =
+    pop === "slaves"
+      ? settlementWorkingSlaves(tile, settlement, sourceRules)
+      : settlement.pops[pop];
+  const income = popIncome(pop, settlement.pops[pop], primary, ruleset, working);
+  const outputs = classOutputs(pop, primary, ruleset);
+  let perPop = outputs[0]?.[1] ?? 0;
+  let raisedBy: string | null = null;
+
+  for (const buildingId of settlement.buildings) {
+    if (buildingId === "marketplace" && hasLawRule(sourceRules, "grainLevy")) continue;
+    const building = getBuildings(content).find((candidate) => candidate.id === buildingId);
+
+    for (const effect of building?.effects ?? []) {
+      if (effect.type !== "classOutput" || effect.pop !== pop || outputs.length === 0) {
+        continue;
+      }
+
+      if (outputs.length === 0) continue;
+      for (const [resource, base] of outputs) {
+        income[resource] += working * Math.max(0, effect.amount - base);
+      }
+      if (effect.amount > perPop) {
+        perPop = effect.amount;
+        raisedBy = building?.name ?? buildingId;
       }
     }
   }
 
-  if (primaryResource && tilePrimaryBonus > 0) {
-    addIncomeContribution(contributions, income, {
-      resource: primaryResource,
-      amount: tilePrimaryBonus,
-      source: settlementLabel,
-      settlementId: settlement.id,
-      detail: "Villa",
-    });
-  }
-
-  const supportedFreemen = Math.min(settlement.pops.freemen, popBonusSupport.freemen.supportedPops);
-  addIncomeContribution(contributions, income, {
-    resource: "gold",
-    amount: supportedFreemen * popBonusSupport.freemen.amount,
-    source: settlementLabel,
-    settlementId: settlement.id,
-    detail: `Marketplace supports ${supportedFreemen} ${formatPopName("freemen", supportedFreemen)}`,
-  });
-
-  const supportedCitizens = Math.min(
-    settlement.pops.citizens,
-    popBonusSupport.citizens.supportedPops,
-  );
-  addIncomeContribution(contributions, income, {
-    resource: "influence",
-    amount: supportedCitizens * popBonusSupport.citizens.amount,
-    source: settlementLabel,
-    settlementId: settlement.id,
-    detail: `Temple supports ${supportedCitizens} ${formatPopName("citizens", supportedCitizens)}`,
-  });
-
-  // The Workshop's slave bonus pays into the tile's material — a no-op on a yield-less
-  // tile (nothing for the slaves to work), so it only lands where there's a resource.
-  if (primaryResource) {
-    const supportedSlaves = Math.min(settlement.pops.slaves, popBonusSupport.slaves.supportedPops);
-    addIncomeContribution(contributions, income, {
-      resource: primaryResource,
-      amount: supportedSlaves * popBonusSupport.slaves.amount,
-      source: settlementLabel,
-      settlementId: settlement.id,
-      detail: `Workshop supports ${supportedSlaves} ${formatPopName("slaves", supportedSlaves)}`,
-    });
-  }
+  return { perPop, raisedBy, income };
 }
 
 export function addIncomeContribution(

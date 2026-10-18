@@ -32,7 +32,7 @@ export function createInitialMap(
       q,
       r,
       terrain: terrain.terrain,
-      buildingSlots: terrain.buildingSlots,
+      slots: terrain.slots,
       resource: terrain.resource,
       settlements: [],
     };

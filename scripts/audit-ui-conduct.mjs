@@ -26,7 +26,7 @@ import { chromium } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { SURFACES, SIZES } from "./audit-ui-surfaces.mjs";
 
-const ROOT = "/Users/jinglemisk/Desktop/hegemony-ui-overhaul/.playwright-mcp/audit";
+const ROOT = `${process.cwd()}/.playwright-mcp/audit`;
 const onlyIndex = process.argv.indexOf("--only");
 const ONLY = onlyIndex === -1 ? null : process.argv[onlyIndex + 1];
 
@@ -294,6 +294,8 @@ const PROBE = () => {
  *   it. The seal now covers the control and its first few descendants, and
  *   carries SVG paint (stroke, stroke-width, fill) as well as CSS box paint,
  *   because on the board a stroke IS the ring.
+ * · The v2 board draws a focused tile's ring in a layer over all the tiles, not
+ *   inside the tile, so a tile's seal also carries that layer's focus ring.
  */
 const INSTALL_SEAL = () => {
   const props = (style) => [
@@ -316,6 +318,10 @@ const INSTALL_SEAL = () => {
     for (const child of [...el.querySelectorAll("*")].slice(0, 8)) {
       parts.push(...props(getComputedStyle(child)));
     }
+    const ring = el.classList.contains("tile-btn")
+      ? el.ownerSVGElement?.querySelector(".ring.is-focus")
+      : null;
+    if (ring) parts.push(...props(getComputedStyle(ring)));
     return parts.join("|");
   };
 };

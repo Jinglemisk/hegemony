@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Beloved of the people — ribboned kantharos</title>
+<defs>
+<linearGradient id="a-beloved-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-beloved-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.48" stop-color="#d8b45e"/><stop offset="1" stop-color="#997035"/></linearGradient>
+<linearGradient id="a-beloved-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+</defs>
+<path d="M18 21Q17 6 10 6Q4 7 6 19Q7 31 20 37L23 29Q14 27 13 17Q13 12 15 15L16 24ZM46 21Q47 6 54 6Q60 7 58 19Q57 31 44 37L41 29Q50 27 51 17Q51 12 49 15L48 24Z" fill="url(#a-beloved-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M55 11Q61 27 46 35L44 31Q54 25 55 11Z" fill="#624123"/>
+<path d="M25 39H39L37 48L49 53V58H15V53L27 48Z" fill="url(#a-beloved-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M33 42H38L36 49L47 54V57H35L32 50Z" fill="#795025"/>
+<path d="M14 21H50L47 35Q43 45 32 45Q21 45 17 35Z" fill="url(#a-beloved-gold)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M41 24H48L45 35Q41 43 31 44L25 41Q41 41 41 24Z" fill="#997035"/>
+<path d="M17 26H47" fill="none" stroke="#b08a44" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 29Q29 35 47 29L45 36Q31 42 19 36Z" fill="url(#a-beloved-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M20 34L28 36L24 50L17 46L12 49L15 38Z" fill="url(#a-beloved-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M23 38L27 37L23 48L18 45L15 47L17 42Z" fill="#aa9572"/>
+<path d="M18 38L20 40L17 45M30 36L38 35" fill="none" stroke="#aa9572" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 55H48V57H16Z" fill="#624123"/>
+<path d="M8 11Q8 8 10 9M18 23H43M20 54H33M19 32L27 34" fill="none" stroke="#fff0b0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M19 22H23L22 25H19Z" fill="#fff8e9"/>
+</svg>

@@ -1,20 +1,21 @@
+import { getNationalIdeas, ideaDraftOrder, takeNationalIdea } from "./ideas";
 import { GAME_CONFIG, TEST_OPENING_SETUP } from "./config";
 import { PLAYER_IDS } from "./data";
 import {
-  applyUnrestUpkeep,
+  applyUnrestAtTurnEnd,
   collectIncome,
   createInitialState,
   createInitialStateFromDefinition,
-  drawSeasonalEvent,
-  expireTurnEventModifiers,
+  revealYearCard,
   placeCapital,
   placeColony,
   resolveArrivingPops,
-  rollYearOmen,
-  startNewSeason,
+  startNewYear,
 } from "./rules";
 import type { MoveResult } from "./rules";
+import { unfedAtTurnEnd } from "./economy/income";
 import { checkVictoryAtTurnStart } from "./victory";
+import { tickLuxurySuppression } from "./luxury";
 import { openAssembly, shouldOpenAssembly } from "./assembly/assembly";
 import { GAME_MODES } from "./ruleset";
 import type { Ruleset } from "./ruleset";
@@ -64,6 +65,28 @@ export function nextPlayer(playerID: PlayerId): PlayerId {
   return PLAYER_IDS[(index + 1) % PLAYER_IDS.length];
 }
 
+/**
+ * The seats who act before `seat`'s next turn starts, in order: the seat playing now
+ * (unless it is `seat`), then each turn start after it. When the year turns the new
+ * opener follows the last seat, as {@link finishTurn} plays it.
+ */
+export function seatsBefore(G: HegemonyState, seat: PlayerId): PlayerId[] {
+  const seats: PlayerId[] = G.currentPlayer === seat ? [] : [G.currentPlayer];
+  let opener = G.yearOpener;
+  let at = G.currentPlayer;
+  for (let guard = 0; guard < PLAYER_IDS.length * 2; guard += 1) {
+    let next = nextPlayer(at);
+    if (next === opener) {
+      opener = nextPlayer(opener);
+      next = opener;
+    }
+    if (next === seat) break;
+    if (!seats.includes(next)) seats.push(next);
+    at = next;
+  }
+  return seats;
+}
+
 function setupPhaseFor(kind: SettlementKind): Phase {
   return kind === "capital" ? "setupCapital" : kind === "city" ? "setupCity" : "setupColony";
 }
@@ -72,8 +95,9 @@ function setupPhaseFor(kind: SettlementKind): Phase {
  * Advance the setup machine one placement. Setup runs in SNAKE order
  * (roadmap-appendix D3c): round 0 goes 0→3, round 1 goes 3→0, and so on — the
  * player who picks last in one round picks first in the next. Once every player
- * has placed everything the ruleset's setup list owes, gameplay begins with the
- * season opener.
+ * has placed everything the ruleset's setup list owes, the National Idea draft runs
+ * as the snake's next round; gameplay then begins with the year's opener. A game
+ * whose content has no Ideas (a sim batch can ask for one) has no draft.
  */
 export function advanceSetupTurn(G: HegemonyState) {
   G.turn += 1;
@@ -92,26 +116,26 @@ export function advanceSetupTurn(G: HegemonyState) {
     }
   }
 
-  G.phase = "gameplay";
-  G.currentPlayer = G.seasonOpener;
+  if (getNationalIdeas(G).length === 0) {
+    G.phase = "gameplay";
+    G.currentPlayer = G.yearOpener;
+    return;
+  }
+
+  G.phase = "setupIdeas";
+  G.currentPlayer = ideaDraftOrder(G)[0];
 }
 
-/** Start-of-turn automation for the current gameplay player: reveal a seasonal event,
- *  check the victory race, then upkeep + income. When the upkeep starts a riot the
- *  income is DEFERRED — resolveRiot collects it once the table has spoken. */
+/** Start-of-turn automation: reveal the year's card, check victory, expire luxury
+ *  suppression, then collect income (including the player-card draw). */
 export function beginGameplayTurn(G: HegemonyState) {
   if (G.phase !== "gameplay") {
     return;
   }
 
-  if (!G.activeSeasonEvent) {
-    drawSeasonalEvent(G);
-  }
-
-  // Year 1's omen: the game opens in spring, so the first opener takes the auspices
-  // the moment gameplay begins. Later years roll theirs in startNewSeason.
-  if (!G.yearOmen) {
-    rollYearOmen(G);
+  // Year 1's card: later years reveal theirs in startNewYear.
+  if (!G.activeYearCard) {
+    revealYearCard(G);
   }
 
   checkVictoryAtTurnStart(G);
@@ -120,41 +144,65 @@ export function beginGameplayTurn(G: HegemonyState) {
     return;
   }
 
-  applyUnrestUpkeep(G, G.currentPlayer);
-
-  if (!G.pendingRiot) {
-    collectIncome(G, G.currentPlayer, "automatic");
-  }
+  tickLuxurySuppression(G, G.currentPlayer);
+  collectIncome(G, G.currentPlayer, "automatic");
 }
 
 /**
- * End the current gameplay turn: expire discounts, roll the season when play returns
- * to the season opener (rotating the opener each new year), then begin the next turn —
- * arrivals, the victory-race check, unrest upkeep, income.
+ * Commit the current turn. A seat that ends short of food first chooses who leaves;
+ * {@link commitTurn} follows that choice, or runs at once when everyone is fed.
  */
 export function endTurn(G: HegemonyState): MoveResult {
-  if (G.phase !== "gameplay" || G.pendingPlayerEvent || G.pendingRiot || G.assembly) {
+  if (
+    G.phase !== "gameplay" ||
+    G.pendingPlayerEvent ||
+    G.pendingRiot ||
+    G.pendingHunger ||
+    G.assembly
+  ) {
     return { ok: false, reasons: [] };
   }
 
+  const unfed = unfedAtTurnEnd(G, G.currentPlayer);
+  if (unfed > 0) {
+    G.pendingHunger = { playerID: G.currentPlayer, unfed };
+    return { ok: true };
+  }
+
+  return commitTurn(G);
+}
+
+/**
+ * Hunger is settled: test unrest before the player, year or Assembly changes.
+ * A riot suspends the handoff until its insurance and roll have resolved.
+ */
+export function commitTurn(G: HegemonyState): MoveResult {
+  // No food debt leaves the turn, also when no free pop was there to pay for it.
+  const resources = G.players[G.currentPlayer].resources;
+  resources.food = Math.max(0, resources.food);
+
+  applyUnrestAtTurnEnd(G, G.currentPlayer);
+  return G.pendingRiot ? { ok: true } : finishTurn(G);
+}
+
+/** Pass a committed turn, after its riot or revolt. The unrest check must not run twice. */
+export function finishTurn(G: HegemonyState): MoveResult {
   const current = G.currentPlayer;
   let next = nextPlayer(current);
 
-  expireTurnEventModifiers(G, current);
-
-  if (next === G.seasonOpener) {
-    startNewSeason(G);
+  if (next === G.yearOpener) {
+    startNewYear(G);
 
     if (G.phase !== "gameplay") {
-      // The seasonal deck (the clock) ran out — the exhaustion tally ended the game.
+      // The year deck (the clock) ran out — the exhaustion tally ended the game.
       return { ok: true };
     }
 
-    // A new year rotates the opener (handled in startNewSeason); the new opener
-    // leads the season, and everyone still plays exactly once per season.
-    next = G.seasonOpener;
+    // A new year moves the opener on (handled in startNewYear); the new opener
+    // leads the year, and everyone still plays exactly once a year.
+    next = G.yearOpener;
 
-    // Spring of Year 2 onward, the Assembly sits BEFORE the opener plays (§1.1). It
+    // In a sitting year the Assembly sits BEFORE the opener plays (§1.1). It
     // suspends the turn machine rather than sharing it: we hand control to the agora
     // and remember whose turn we owe, and `closeAssembly` opens that turn for real.
     if (shouldOpenAssembly(G)) {
@@ -168,9 +216,9 @@ export function endTurn(G: HegemonyState): MoveResult {
 }
 
 /**
- * Open one player's turn: arrivals, the victory-race check, unrest upkeep, income.
+ * Open one player's turn: arrivals, victory, luxury expiry and income.
  * Extracted from {@link endTurn} because the Assembly suspends play *between* the
- * season roll and the opener's turn — so `closeAssembly` needs to run exactly this
+ * year turning and the opener's turn — so `closeAssembly` needs to run exactly this
  * sequence, and there must be only one copy of it.
  */
 export function beginTurnFor(G: HegemonyState, playerID: PlayerId) {
@@ -184,16 +232,13 @@ export function beginTurnFor(G: HegemonyState, playerID: PlayerId) {
     return;
   }
 
-  applyUnrestUpkeep(G, playerID);
-
-  if (!G.pendingRiot) {
-    collectIncome(G, playerID, "automatic");
-  }
+  tickLuxurySuppression(G, playerID);
+  collectIncome(G, playerID, "automatic");
 }
 
 /**
- * Dismiss the Assembly's closing recap and hand play back to the season opener. The
- * Voice and prizes resolve with each ballot item, so closing only resumes the turn.
+ * Dismiss the Assembly's closing recap and hand play back to the year's opener.
+ * Prizes resolve with each ballot item, so closing only resumes the turn.
  */
 export function closeAssembly(G: HegemonyState): MoveResult {
   const session = G.assembly;
@@ -209,6 +254,13 @@ export function closeAssembly(G: HegemonyState): MoveResult {
   return { ok: true };
 }
 
+const PRELOAD_IDEAS = [
+  "assembly-brokers",
+  "city-pioneers",
+  "harbour-planning",
+  "frontier-charter",
+] as const;
+
 /** Replay the scripted metropolis+colony opening through the real machine (dev preload). */
 function runPreloadOpeningSetup(G: HegemonyState) {
   // The scripted opening supplies one metropolis + one founding colony per player, so
@@ -219,7 +271,7 @@ function runPreloadOpeningSetup(G: HegemonyState) {
 
   let guard = 0;
 
-  while (G.phase !== "gameplay") {
+  while (G.phase !== "setupIdeas") {
     if (guard++ > 16) {
       throw new Error("Invalid test setup: setup did not converge.");
     }
@@ -244,5 +296,7 @@ function runPreloadOpeningSetup(G: HegemonyState) {
     advanceSetupTurn(G);
   }
 
+  // The draft is exclusive, so each seat takes a different low-impact Idea.
+  for (const ideaId of PRELOAD_IDEAS) takeNationalIdea(G, G.currentPlayer, ideaId);
   beginGameplayTurn(G);
 }

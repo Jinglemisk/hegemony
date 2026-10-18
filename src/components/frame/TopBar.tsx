@@ -1,0 +1,320 @@
+import { playerNationalIdeas } from "../../game/ideas";
+import type { CSSProperties } from "react";
+import { PLAYER_IDS } from "../../game/data";
+import { currentVoteWeight } from "../../game/assembly";
+import { victoryMetricValue, voiceHolder } from "../../game/victory";
+import { happinessLevel } from "../../game/happiness";
+import { yearDeckSize } from "../../game/year";
+import type { IncomeContribution } from "../../game/economy/income";
+import type { HegemonyState, PlayerId, Resource, Resources } from "../../game/types";
+import { RESOURCE_LABELS, toRoman } from "../../ui/formatters";
+import { gaugeStops, publicCensus } from "../../ui/frameSelectors";
+import type { HappinessDisplay } from "../../ui/frameSelectors";
+import { RESOURCE_ICON, sign, tone } from "../../ui/frameFormat";
+import { PLAYER_GLAZES } from "../../ui/playerGlazes";
+import { settlementNames } from "../../ui/settlementNames";
+import { Tooltip } from "../overlays/Tooltip";
+import { Ico, Tip, TipLedger, TipWarn } from "./parts";
+
+const PURSE: Resource[] = ["wood", "stone", "food", "gold", "influence"];
+
+/** Pips the gauge has room for; the tooltip prints the true count. */
+const MAX_TOKEN_PIPS = 6;
+
+/** The year and the cards left: the clock at the bar's left end. The year's card
+ *  itself leads the alarms row. */
+function Clock({ G }: { G: HegemonyState }) {
+  const year = G.year;
+  const left = G.yearDrawPile.length;
+  const totalYears = yearDeckSize(G);
+
+  return (
+    <div className="clock" data-c="clock">
+      <Tooltip
+        ariaLabel={`Year ${year} of ${totalYears}, ${left} ${left === 1 ? "card" : "cards"} left`}
+        content={
+          <Tip sub={`of ${toRoman(totalYears)}`} title={`Year ${toRoman(year)}`}>
+            <p className="tip-body">
+              A year is one turn for every seat. {left} {left === 1 ? "card is" : "cards are"} left
+              in the year deck and the next one is hidden. The game ends when the deck is spent.
+            </p>
+          </Tip>
+        }
+        focusable
+        triggerClassName="year"
+      >
+        <span className="year-n">Year {toRoman(year)}</span>
+        <span className="year-of">of {toRoman(totalYears)}</span>
+        <span className="year-left">
+          <Ico path="events/year" size="chip" />
+          {left} left
+        </span>
+      </Tooltip>
+    </div>
+  );
+}
+
+function ResourceCell({
+  resource,
+  value,
+  delta,
+  lines,
+}: {
+  resource: Resource;
+  value: number;
+  delta: number;
+  lines: Array<{ key: string; label: string; amount: number }>;
+}) {
+  // Only food goes below zero, and only until its owner's turn ends.
+  const owed = Math.max(0, -value);
+  const short = owed > 0 || value + delta < 0;
+  const label = RESOURCE_LABELS[resource];
+  const store = owed ? `${owed} short` : `${value} in store`;
+
+  return (
+    <Tooltip
+      ariaLabel={`${label} ${owed ? store : value}, ${sign(delta)} next turn${short && !owed ? ", short" : ""}`}
+      content={
+        <Tip sub={`${store} · ${sign(delta)} next turn`} title={label}>
+          {lines.length > 0 ? (
+            <TipLedger
+              rows={lines.map((line) => ({
+                key: line.key,
+                label: line.label,
+                value: sign(line.amount),
+              }))}
+            />
+          ) : (
+            <p className="tip-body">No income or expense.</p>
+          )}
+          {owed ? (
+            <TipWarn>
+              {owed} short: a pop leaves for each when you end your turn. Buy food first.
+            </TipWarn>
+          ) : short ? (
+            <TipWarn>Short next turn</TipWarn>
+          ) : null}
+        </Tip>
+      }
+      focusable
+      triggerClassName={`res${short ? " is-short" : ""}`}
+    >
+      <Ico path={RESOURCE_ICON[resource]} size="ui" />
+      <span className="res-val num">{owed ? sign(value) : value}</span>
+      <span className={`res-delta ${tone(delta)}`}>{sign(delta)}</span>
+    </Tooltip>
+  );
+}
+
+/**
+ * Happiness: the level, a gauge whose bands mark where riot and revolt start, and
+ * one pip above the gauge for each Unrest token on the realm.
+ */
+export function HappinessGauge({ display }: { display: HappinessDisplay }) {
+  const stops = gaugeStops(display);
+  const atRevolt = display.value <= display.revoltAt;
+  const atRiot = display.value <= display.riotAt;
+  const noun = "Happiness";
+  const tokens = `${display.tokens} Unrest ${display.tokens === 1 ? "token" : "tokens"}`;
+
+  return (
+    <Tooltip
+      ariaLabel={`${noun} ${sign(display.value)}, ${tokens}; riot at ${sign(display.riotAt)}, revolt at ${sign(display.revoltAt)}`}
+      content={
+        <Tip
+          sub={`Riot at ${sign(display.riotAt)} · revolt at ${sign(display.revoltAt)}`}
+          title={`${noun} ${sign(display.value)}`}
+        >
+          <TipLedger
+            rows={[
+              ...display.lines.map((line) => ({
+                key: line.label,
+                label: line.label,
+                value: sign(line.amount),
+              })),
+              { key: "total", label: noun, value: sign(display.value), total: true },
+            ]}
+          />
+          <p className="tip-body">
+            Read off the board each turn; nothing is saved up. Unrest tokens stay until a riot, a
+            revolt or a card clears them.
+          </p>
+          {atRevolt ? (
+            <TipWarn>Half your slaves leave if you end your turn at this level</TipWarn>
+          ) : atRiot ? (
+            <TipWarn>Ending your turn at this level starts a riot</TipWarn>
+          ) : null}
+        </Tip>
+      }
+      focusable
+      triggerClassName={`level${atRiot ? " is-riot" : ""}`}
+    >
+      <Ico path={RESOURCE_ICON.happiness} size="ui" />
+      <span className={`res-val num ${tone(display.value)}`}>{sign(display.value)}</span>
+      <span
+        className="gauge"
+        style={
+          {
+            "--g-value": stops.value,
+            "--g-riot": stops.riot,
+            "--g-revolt": stops.revolt,
+          } as CSSProperties
+        }
+      >
+        {display.tokens > 0 ? (
+          <span className="gauge-tokens" data-tokens={display.tokens}>
+            {Array.from({ length: Math.min(display.tokens, MAX_TOKEN_PIPS) }, (_, pip) => (
+              <i className="gauge-token" key={pip} />
+            ))}
+          </span>
+        ) : null}
+      </span>
+    </Tooltip>
+  );
+}
+
+function Rival({
+  G,
+  id,
+  acting,
+  viewing,
+  threat,
+  onSelect,
+}: {
+  G: HegemonyState;
+  id: PlayerId;
+  acting: boolean;
+  viewing: boolean;
+  /** Holds enough titles to win when its next turn starts. */
+  threat: boolean;
+  onSelect: (id: PlayerId) => void;
+}) {
+  const glaze = PLAYER_GLAZES[id];
+  const census = publicCensus(G, id);
+  const status = [acting ? "acting" : null, viewing ? "your seat" : null]
+    .filter(Boolean)
+    .join(", ");
+
+  return (
+    <Tooltip
+      content={
+        <Tip sub={`${glaze.glaze}${status ? ` · ${status}` : ""}`} title={glaze.name}>
+          <TipLedger
+            rows={[
+              { key: "s", label: "Slaves", value: census.slaves, icon: "pops/slaves" },
+              { key: "f", label: "Freemen", value: census.freemen, icon: "pops/freemen" },
+              { key: "c", label: "Citizens", value: census.citizens, icon: "pops/citizens" },
+              { key: "ci", label: "Cities", value: census.cities, icon: "settlements/city" },
+              { key: "co", label: "Colonies", value: census.colonies, icon: "settlements/colony" },
+              {
+                key: "hap",
+                label: "Happiness",
+                value: happinessLevel(G, id),
+                icon: "resources/happiness",
+              },
+              {
+                key: "laws",
+                label: "Authored Laws standing",
+                value: victoryMetricValue(G, id, "voice"),
+              },
+              { key: "votes", label: "Assembly votes", value: currentVoteWeight(G, id) },
+              { key: "voice", label: "Voice", value: voiceHolder(G) === id ? "held" : "unheld" },
+            ]}
+          />
+          {playerNationalIdeas(G, id).map((idea) => (
+            <p className="tip-body" key={idea.id}>
+              <strong>{idea.name}</strong> · {idea.text}
+            </p>
+          ))}
+        </Tip>
+      }
+      preferredPlacement="below"
+    >
+      <button
+        aria-label={`${glaze.name}${acting ? ", acting" : ""}${viewing ? ", your seat" : ", take this seat"}`}
+        aria-pressed={viewing}
+        className={`rival${acting ? " is-acting" : ""}${threat ? " is-threat" : ""}${viewing ? " is-viewing" : ""}`}
+        data-c="rival"
+        onClick={() => onSelect(id)}
+        style={{ "--owner": glaze.color } as CSSProperties}
+        type="button"
+      >
+        <span className={`rival-disc${id === "1" ? " ink-dark" : ""}`}>{glaze.blazon}</span>
+      </button>
+    </Tooltip>
+  );
+}
+
+/** Income lines for one resource, merged by where they come from. */
+function linesFor(
+  resource: Resource,
+  breakdown: readonly IncomeContribution[],
+  names: Map<string, string>,
+) {
+  const merged = new Map<string, number>();
+
+  for (const entry of breakdown) {
+    if (entry.resource !== resource || entry.amount === 0) continue;
+    const label = (entry.settlementId ? names.get(entry.settlementId) : null) ?? entry.source;
+    merged.set(label, (merged.get(label) ?? 0) + entry.amount);
+  }
+
+  return [...merged].map(([label, amount]) => ({ key: label, label, amount }));
+}
+
+export function TopBar({
+  G,
+  viewerId,
+  actingId,
+  income,
+  breakdown,
+  happiness,
+  threats,
+  onSeat,
+}: {
+  G: HegemonyState;
+  viewerId: PlayerId;
+  actingId: PlayerId;
+  income: Resources;
+  breakdown: readonly IncomeContribution[];
+  happiness: HappinessDisplay;
+  /** Seats one turn start from winning the race. */
+  threats: readonly PlayerId[];
+  onSeat: (id: PlayerId) => void;
+}) {
+  const store = G.players[viewerId].resources;
+  const names = settlementNames(G.board.tiles);
+
+  return (
+    <header className="topbar" data-c="topbar" data-exclude data-gate-flex>
+      <Clock G={G} />
+      <div className="purse" data-c="purse">
+        {PURSE.map((resource) => (
+          <ResourceCell
+            delta={income[resource]}
+            key={resource}
+            lines={linesFor(resource, breakdown, names)}
+            resource={resource}
+            value={store[resource]}
+          />
+        ))}
+        <HappinessGauge display={happiness} />
+      </div>
+      <div className="court" data-c="court">
+        <div aria-label="Rulers" className="rivals" data-c="rivals" role="group">
+          {PLAYER_IDS.map((id) => (
+            <Rival
+              G={G}
+              acting={id === actingId}
+              id={id}
+              key={id}
+              onSelect={onSeat}
+              threat={threats.includes(id)}
+              viewing={id === viewerId}
+            />
+          ))}
+        </div>
+      </div>
+    </header>
+  );
+}

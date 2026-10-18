@@ -2,15 +2,16 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-08-16
+updated: 2026-10-16
 ---
 
 # UI — what is genuinely left
 
-The triage run closed everything the two checkers can see: `ui:audit` reports **0**
-geometric defects across 19 surfaces at three widths, `ui:conduct` reports **5**,
-and every suite is green. [The defect ledger](../archive/plans/ui-triage.md) records how that was
-reached and what was found along the way.
+The triage run closed everything the two checkers can see. On 2026-10-16 `ui:audit`
+reports **0** geometric defects across 28 surfaces at three widths, `ui:conduct`
+reports **2**, both `DUP-1`, and every suite is green.
+[The defect ledger](../archive/plans/ui-triage.md) records how that was reached and
+what was found along the way.
 
 This file is the other half — the work that is **not** a defect. Some of it needs
 an owner decision, some of it is a feature the overhaul never built, and some of
@@ -32,9 +33,43 @@ when it ships or when the owner rules it closed.
 | ID       | needs      | what                                          |
 | -------- | ---------- | --------------------------------------------- |
 | `TYPE-1` | a decision | Two type sizes sit under spec, on purpose     |
-| `DUP-1`  | nothing    | Five repeated glossary words, judged and left |
+| `DUP-1`  | nothing    | Four repeated glossary words, judged and left |
+| `V2-3`   | nothing    | A shared tile's second seal has no name plate |
 
-### Shipped
+### v2 frame carry-overs (Steps 1–2, 2026-09-30 to 10-01)
+
+- **`V2-3`.** A rival colony sharing a tile draws as a small seal on the tile's
+  shoulder; its name is in the tile tooltip. Two plates side by side do not fit a hex.
+
+### Shipped or closed
+
+- **`V2-2` · the consult pages in the realm pages' style** (2026-10-15 and 16, #107 to
+  #113). The realm's pages are rebuilt to fit the sheet with nothing scrolling
+  (2026-10-01). Victory is a ledger too (2026-10-15): a row per title, a column per
+  seat. So is the Chronicle: a caps rule per year, a line per deed under its seat's
+  seal. The Codex keeps its book but takes the ledger's chrome: caps rules for
+  headings, ruled rows for its lists, word tabs for its sub-headings. The Agora is a
+  ledger as well (2026-10-16): the next sitting, the standing Laws, each orator's
+  stelae counted by seat, and the Voice title's row from Victory under them.
+  Owner, 2026-10-16: the two strips under the bar mirror each other. The Chronicle
+  drops from the ticker on the left, filterable and scrolling, and is no longer a
+  consult page; Codex, Victory and Agora drop from a matching strip on the right,
+  which replaced the bar's four page icons. The Codex opens on a contents page,
+  every chapter a large button with the search above them, and each chapter has a
+  way back to it; that replaced the chapter dropdown.
+- **`V2-4` · tiles print slots, not a yield** (Step 3, #82). The tile shows its slot
+  count beside the terrain emblem, and the fan rows `ui:audit` raised over the old
+  printed amount went with it.
+- **`V2-6` · the focus ring beside Nikos's glaze**, closed by the owner on 2026-10-16
+  with no change. A tile focused by keyboard gets an ochre ring (`--ochre`, 6px), and
+  Nikos's owner ring is Melichron (#dfa437, 5px), so on Nikos's tiles focus barely
+  changes the border. Only keyboard play sees it.
+- **`V2-5` · the alarms row from one engine list** (2026-10-15). `realmAlarms` returns
+  every disc as typed data, and the row adds three the owner asked for on 2026-10-01:
+  a rival one title short, the Assembly sitting next year, and a Port that could claim
+  a free luxury. The owner dropped "a riot last turn" on 2026-10-15, since the Unrest
+  disc already warns at the riot line. "A settlement over its walls" is left out: in v2
+  being over capacity only blocks new arrivals, so the disc would warn of nothing.
 
 **2026-08-19 — the cleanup pass (owner ask).** Six items, and one bug found under
 them:
@@ -249,7 +284,7 @@ every other surface does — today it is unreachable, locked inside a JPEG-ish P
 tests pinning exact CSS expression strings — a token _value_ change is free, a
 token _rename_ is not. And the plate currently supplies the map's contrast against
 the bone tablets; a flat texture may need the tablets' shadow doing more work.
-Check the Assembly too, whose full-bleed floor sits over this ground.
+Check the Assembly too, whose sheet shows this ground through a light scrim.
 
 ## ICON-1 — the fourth icon system · **shipped**
 
@@ -344,8 +379,8 @@ changing the scale rule, not by exempting one element.
 
 ## DUP-1 — five repeated glossary words
 
-`ui:conduct`'s five remaining rows: `Gold` five times in a venture's odds table,
-`Food` four times on the Assembly floor, and so on. Each links to the same
+`ui:conduct`'s remaining rows (two on 2026-10-15): `Gold` four times in a venture's
+odds table, on the pick and on the roll. Each links to the same
 rulebook chapter, and each is read **in its sentence**, which is what actually
 disambiguates it.
 

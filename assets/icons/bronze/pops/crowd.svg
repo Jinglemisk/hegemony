@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Population — three overlapping full-length figures</title>
+<defs>
+<linearGradient id="a-crowd-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-crowd-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#edc393"/><stop offset="0.48" stop-color="#c38d5e"/><stop offset="1" stop-color="#895438"/></linearGradient>
+</defs>
+<path d="M9 45H27V58H19V51H17V58H9Z" fill="url(#a-crowd-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M39 46H56V58H49V52H47V58H39Z" fill="url(#a-crowd-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 26H23Q30 29 31 44L28 49H6L7 34Z" fill="url(#a-crowd-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 28Q28 31 29 46H23L20 34Z" fill="#aa9572"/>
+<path d="M42 31H52Q57 34 58 49H37L36 42Z" fill="url(#a-crowd-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M51 33Q56 36 57 48H51L48 38Z" fill="#aa9572"/>
+<path d="M11 19Q10 11 18 11Q26 11 25 19V23Q23 29 18 29Q13 29 11 23Z" fill="url(#a-crowd-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M21 15L24 18V23Q22 27 18 28L19 23Z" fill="#895438"/>
+<path d="M12 19Q11 12 18 12Q25 12 24 18L19 16L14 20Z" fill="#51351f"/>
+<path d="M41 24Q41 17 48 17Q55 17 55 24V28Q53 33 48 33Q43 33 41 28Z" fill="url(#a-crowd-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M51 21L54 24V28Q52 31 48 32L49 27Z" fill="#895438"/>
+<path d="M42 24Q41 18 48 18Q54 18 54 23L49 22L44 25Z" fill="#51351f"/>
+<path d="M23 44H41V58H33V51H31V58H23Z" fill="url(#a-crowd-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M37 47H40V57H34V54H37ZM25 54H30V57H24Z" fill="#895438"/>
+<path d="M25 25H39Q43 28 45 45L42 50H20L18 44Q20 29 25 25Z" fill="url(#a-crowd-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 27Q42 28 44 44L41 49H34L36 40Z" fill="#aa9572"/>
+<path d="M40 36L43 44L40 49H36L38 43Z" fill="#806c50"/>
+<path d="M24 15Q23 6 32 6Q41 6 40 15V20Q37 27 32 27Q26 27 24 20Z" fill="url(#a-crowd-skin)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M35 10L39 14V20Q37 24 32 26L34 19Z" fill="#895438"/>
+<path d="M25 15Q24 7 32 7Q40 7 39 14L34 12L28 14L26 18Z" fill="#51351f"/>
+<path d="M27 18H29M35 18H37M30 23H33" fill="none" stroke="#714c34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M11 34L10 44M23 33L22 43M31 35L28 46M49 39L51 46" fill="none" stroke="#aa9572" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 15L16 13M43 22L46 20M27 11L30 9M21 32L24 29M8 36V42M40 38L41 41" fill="none" stroke="#fff0cf" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 46H17M27 42L26 45M45 46H48" fill="none" stroke="#c1ad84" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M10 55H16V58H9ZM24 55H30V58H23ZM34 55H41V58H34ZM50 55H56V58H50Z" fill="#51351f"/>
+</svg>

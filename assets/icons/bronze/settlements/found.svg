@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Found colony — planted spade beside a foundation stone</title>
+<defs>
+<linearGradient id="a-found-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd3a0"/><stop offset="0.48" stop-color="#c19a61"/><stop offset="1" stop-color="#8b633b"/></linearGradient>
+<linearGradient id="a-found-iron" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c0b9a4"/><stop offset="0.48" stop-color="#8e8a7a"/><stop offset="1" stop-color="#514e45"/></linearGradient>
+<linearGradient id="a-found-bark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8c55"/><stop offset="0.48" stop-color="#8f5e35"/><stop offset="1" stop-color="#51351f"/></linearGradient>
+<linearGradient id="a-found-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1d9c5"/><stop offset="0.48" stop-color="#b9b09a"/><stop offset="1" stop-color="#817a68"/></linearGradient>
+<linearGradient id="a-found-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+</defs>
+<path d="M6 47Q13 35 29 38Q45 36 58 49V58H6Z" fill="url(#a-found-bark)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 53Q24 45 40 48L57 53V57H7Z" fill="#51351f"/>
+<path d="M37 31L46 25L58 30V49H36Z" fill="url(#a-found-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M38 33H51V49H38Z" fill="url(#a-found-marble)"/>
+<path d="M52 33L57 31V48H52Z" fill="#817a68"/>
+<path d="M38 33H51L56 30M51 33V47" fill="none" stroke="#8e826b" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M40 35H47" fill="none" stroke="#fff8e9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 18H28V39H18Z" fill="url(#a-found-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M25 19H27V38H24Z" fill="#624123"/>
+<path d="M12 6H34V15Q34 24 23 24Q12 24 12 15ZM18 11V15Q18 19 23 19Q28 19 28 15V11Z" fill="url(#a-found-wood)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" fill-rule="evenodd"/>
+<path d="M15 8H28M20 26V35" fill="none" stroke="#f6dfb0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M12 34H34V44Q34 52 23 56Q12 52 12 44Z" fill="url(#a-found-iron)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M26 36H33V44Q32 51 23 55V50Q27 45 26 36Z" fill="#514e45"/>
+<path d="M15 37V44Q15 48 19 50" fill="none" stroke="#e1d9c5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M15 37H18V40L15 42Z" fill="#fff8e9"/>
+<path d="M21 38V43M43 42H47M20 30V32" fill="none" stroke="#8e8a7a" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 52L12 50M34 55Q44 50 52 53" fill="none" stroke="#c19a61" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

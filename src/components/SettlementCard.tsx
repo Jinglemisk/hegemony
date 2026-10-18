@@ -1,14 +1,12 @@
-import type { Ruleset } from "../game/ruleset";
-import type { GameContent } from "../game/content";
-import type { HexTile, Resources, Settlement } from "../game/types";
+import { occupiedBuildingSlots } from "../game/ideaRules";
+import type { HegemonyState, HexTile, Resources, Settlement } from "../game/types";
 import {
-  settlementBuildingSlots,
+  buildingGround,
   settlementOverCapacity,
   settlementCapacity,
-  settlementTileYield,
   totalPops,
 } from "../game/rules";
-import { RESOURCE_LABELS, formatResourceDelta, formatSignedNumber } from "../ui/formatters";
+import { RESOURCE_LABELS, formatResourceDelta } from "../ui/formatters";
 import { RESOURCE_ORDER, tileCssVars } from "../ui/resourceVisuals";
 import { BUILDING_GLYPHS, POP_GLYPHS, SETTLEMENT_GLYPHS, TERRAIN_GLYPHS } from "../ui/iconRegistry";
 import { TERRAIN_PLACEHOLDERS } from "../ui/icons/placeholders";
@@ -26,22 +24,19 @@ export function SettlementSummaryCard({
   tile,
   settlement,
   netYield,
-  ruleset,
-  content,
+  G,
 }: {
   tile: HexTile;
   settlement: Settlement;
   /** The place's name, from ui/settlementNames. */
   name: string;
   netYield: Resources;
-  ruleset: Ruleset;
-  content: GameContent;
+  G: HegemonyState;
 }) {
   const popTotal = totalPops(settlement.pops);
-  const capacity = settlementCapacity(settlement, ruleset, content);
-  const overCapacity = settlementOverCapacity(settlement, ruleset, content);
-  const slots = settlementBuildingSlots(tile, settlement, ruleset);
-  const tileYield = settlementTileYield(tile, settlement, ruleset);
+  const capacity = settlementCapacity(settlement, G);
+  const overCapacity = settlementOverCapacity(settlement, G);
+  const { slots } = buildingGround(G, settlement.owner, tile.id);
 
   return (
     <span className="holdingSummaryRows">
@@ -64,12 +59,12 @@ export function SettlementSummaryCard({
       <span className="holdingSummaryMetrics">
         <span
           className="cityMeter"
-          title={`Building slots ${settlement.buildings.length} of ${slots}`}
+          title={`Building slots ${occupiedBuildingSlots(G, settlement)} of ${slots}`}
         >
           <Icon glyph={BUILDING_GLYPHS.temple} size="rail" className="miniIcon" />
           <span className="cityMeterText">
             <strong>
-              {settlement.buildings.length}
+              {occupiedBuildingSlots(G, settlement)}
               <span className="meterSlash">/</span>
               {slots}
             </strong>
@@ -95,8 +90,8 @@ export function SettlementSummaryCard({
         style={tileCssVars(tile)}
         title={
           tile.resource
-            ? `${capitalize(tile.terrain)} tile yield ${formatSignedNumber(tileYield)} ${RESOURCE_LABELS[tile.resource.type]}`
-            : `${capitalize(tile.terrain)} — no tile yield`
+            ? `${capitalize(tile.terrain)}: ${tile.slots} slots, slaves make ${RESOURCE_LABELS[tile.resource.type]}`
+            : `${capitalize(tile.terrain)}: ${tile.slots} slots, slaves make nothing`
         }
       >
         <span className="summaryTerrain" aria-hidden="true">

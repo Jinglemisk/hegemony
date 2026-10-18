@@ -21,10 +21,12 @@ import { buildNewGame } from "./setup";
  * the turn cap remains as a ceiling for truncated experiments.
  */
 
+/** Actions a seat may take before it ends its turn. What follows an accepted endTurn
+ *  (the hunger pick, riot insurance and the roll) is not counted. */
 export const MAX_ACTIONS_PER_TURN = 30;
 
 /**
- * An Assembly runs entirely inside the season opener's turn (turn.ts): `endTurn` opens it
+ * An Assembly runs entirely inside the year opener's turn (turn.ts): `endTurn` opens it
  * and returns *before* `G.turn` advances, and `closeAssembly` does the increment — so all
  * four seats fish, propose and vote at one constant `G.turn`, inside a single {@link playTurn}.
  * A fully-engaged agora (draws, bribes, a vote on every ballot item × four seats) far
@@ -55,6 +57,8 @@ export type SimHooks = {
 export type PlayTurnOptions = {
   /** Safety cap before the turn is force-ended (tests shrink this). */
   maxActions?: number;
+  /** Select the acting seat on every action, including inside an Assembly. */
+  seatPolicies?: Partial<Record<PlayerId, Policy>>;
 };
 
 /** Simulator seam for the canonical command transition; exported for parity proof. */
@@ -83,7 +87,15 @@ export function playTurn(
 
   // While the agora is open the turn is really a bounded multi-seat sub-process, not one
   // seat's gameplay turn — give it room rather than force-ending (which is illegal mid-assembly).
-  for (let action = 0; action < (G.assembly ? MAX_ACTIONS_PER_ASSEMBLY : maxActions); action += 1) {
+  // The same room covers what follows an accepted endTurn: the hunger pick and the riot
+  // choices are the engine's and bounded, and the seat keeps them. A forced end is a
+  // turn that would not end by itself.
+  let ended = false;
+  for (
+    let action = 0;
+    action < (ended || G.assembly ? MAX_ACTIONS_PER_ASSEMBLY : maxActions);
+    action += 1
+  ) {
     const player = G.currentPlayer;
     const commands = enumerateLegalCommands(G, player);
 
@@ -91,7 +103,8 @@ export function playTurn(
       throw new SimDeadlockError(deadlockMessage(G, player));
     }
 
-    const command = policy.choose(projectForPlayer(G.definition, G, player), commands, rng);
+    const active = options.seatPolicies?.[player] ?? policy;
+    const command = active.choose(projectForPlayer(G.definition, G, player), commands, rng);
     const result = applySimCommand(G, player, command);
 
     if (!result.ok) {
@@ -101,6 +114,7 @@ export function playTurn(
     }
 
     G = result.state;
+    ended ||= command.type === "endTurn";
     hooks.onMove?.(G, player, command);
 
     if (G.phase === "gameOver" || G.turn !== startTurn) {
@@ -112,13 +126,18 @@ export function playTurn(
   return forceEndTurn(G, hooks);
 }
 
-/** Action cap hit: resolve any pending event (first option) or pending riot (roll,
- *  no more insurance), then end the turn. */
+/** Action cap hit: resolve the event, commit endTurn, then roll any resulting riot
+ *  without more insurance. A roll may itself complete the turn. */
 function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
   let G = initial;
   let forcedResolutions = 0;
+  const startTurn = G.turn;
 
-  for (let guard = 0; (G.pendingPlayerEvent || G.pendingRiot) && guard < 4; guard += 1) {
+  for (
+    let guard = 0;
+    guard < 6 && G.turn === startTurn && G.phase !== "gameOver" && !G.assembly;
+    guard += 1
+  ) {
     const player = G.currentPlayer;
     const resolutions = enumerateLegalCommands(G, player);
 
@@ -126,8 +145,12 @@ function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
       throw new SimDeadlockError(deadlockMessage(G, player));
     }
 
-    // Riot enumeration lists insurance first and the roll last — forced turns roll.
-    const forced = resolutions.find((move) => move.type === "resolveRiot") ?? resolutions[0];
+    const pending = G.pendingHunger || G.pendingPlayerEvent || G.pendingRiot;
+    // Resolve a pending choice, otherwise commit; committing may start a riot.
+    const forced = pending
+      ? (resolutions.find((move) => move.type === "resolveRiot") ?? resolutions[0])
+      : resolutions.find((move) => move.type === "endTurn");
+    if (!forced) throw new SimEnumerationError(`no forced endTurn on turn ${G.turn}`);
 
     const result = applySimCommand(G, player, forced);
     if (!result.ok) {
@@ -135,31 +158,18 @@ function forceEndTurn(initial: HegemonyState, hooks: SimHooks): HegemonyState {
     }
 
     G = result.state;
-    forcedResolutions += 1;
+    if (pending) forcedResolutions += 1;
     hooks.onMove?.(G, player, forced);
   }
 
-  const player = G.currentPlayer;
-  const endTurn: GameCommand = { type: "endTurn" };
-
-  const result = applySimCommand(G, player, endTurn);
-  if (!result.ok) {
-    throw new SimEnumerationError(`forced endTurn failed on turn ${G.turn} (phase ${G.phase})`);
-  }
-  G = result.state;
-
   hooks.onForceEndTurn?.(G, forcedResolutions);
-  hooks.onMove?.(G, player, endTurn);
-  hooks.onTurnEnd?.(G);
+  if (G.turn !== startTurn || G.phase === "gameOver") hooks.onTurnEnd?.(G);
   return G;
 }
 
 export type RunTurnsOptions = PlayTurnOptions & {
   /** Keep only the last N log entries after each turn (batch mode); omit to keep everything. */
   trimLogTo?: number;
-  /** Per-seat policy override for mixed-policy tables; the uniform `policy` arg is the
-   *  fallback for any seat not named here. */
-  seatPolicies?: Partial<Record<PlayerId, Policy>>;
 };
 
 export function runTurns(
@@ -174,9 +184,7 @@ export function runTurns(
   const stopAt = current.turn + turns;
 
   while (current.turn < stopAt && current.phase !== "gameOver") {
-    // A single playTurn is one seat's turn, so pick that seat's policy (mixed tables).
-    const active = options.seatPolicies?.[current.currentPlayer] ?? policy;
-    current = playTurn(current, active, rng, hooks, options);
+    current = playTurn(current, policy, rng, hooks, options);
 
     if (options.trimLogTo !== undefined && current.log.length > options.trimLogTo) {
       current = produce(current, (draft) => {
@@ -229,6 +237,8 @@ export function runGame({
     opening,
     boardLayout,
     simRng: rng,
+    policy,
+    seatPolicies,
     onMove: hooks.onMove,
   });
 

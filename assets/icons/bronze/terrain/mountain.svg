@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Mountain — two rocky peaks</title>
+<defs>
+<linearGradient id="a-mountain-stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e1d9c5"/><stop offset="0.48" stop-color="#b9b09a"/><stop offset="1" stop-color="#817a68"/></linearGradient>
+<linearGradient id="a-mountain-marble" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#f7ecd2"/><stop offset="1" stop-color="#c9b48c"/></linearGradient>
+</defs>
+<path d="M6 58L13 27L23 16L32 31L41 6L50 27L58 58Z" fill="url(#a-mountain-stone)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M41 7L50 28L57 57H39L43 32L36 27Z" fill="#817a68"/>
+<path d="M23 17L32 32L39 57H23L26 37L20 32Z" fill="#968c75"/>
+<path d="M32 31L41 7L49 27L42 23L38 30L35 25Z" fill="url(#a-mountain-marble)"/>
+<path d="M13 29L23 17L27 25L21 24L17 31Z" fill="#e1d9c5"/>
+<path d="M15 41L11 53M30 42L34 53M48 39L53 53" fill="none" stroke="#b9b09a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M7 55L17 49L26 54L36 50L43 55L56 52L58 58H6Z" fill="#a89d83"/>
+<path d="M46 31L49 29L55 51L48 49ZM27 36L31 36L35 50L29 48ZM39 54L43 56L55 54L57 57H37Z" fill="#615c50"/>
+<path d="M40 24L42 22L47 26L44 25L41 29Z" fill="#c9b48c"/>
+<path d="M38 17L41 10M14 28L22 19M12 35L9 48M25 34L26 39" fill="none" stroke="#efe5cd" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 37L19 35M44 37L47 42M19 51L22 52" fill="none" stroke="#948971" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

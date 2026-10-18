@@ -1,6 +1,4 @@
-import type { EmpireTab } from "../../components/board/types";
-import type { UnrestStatus } from "../../game/rules";
-import type { Terrain, TradableMaterial, VictoryMetric } from "../../game/types";
+import type { Terrain } from "../../game/types";
 import type { GlyphId } from "./glyphs";
 
 /**
@@ -15,6 +13,10 @@ import type { GlyphId } from "./glyphs";
  * it cover what the glyph set folds together on purpose (forest is the wood
  * tree; the Victory tab is the laurel; one mask for every unrest tier) and the
  * owner chose to tell apart; their call sites pass the result as `src`.
+ *
+ * Painted bronze (`assets/icons/bronze/`, SVG) is the owner's chosen house style
+ * (2026-10-16): a bronze icon at the same `family/concept` path wins over the
+ * placeholder, so the two sets mix until bronze covers everything.
  */
 const FILES = import.meta.glob("../../../assets/icons/placeholder/**/*.png", {
   eager: true,
@@ -22,9 +24,22 @@ const FILES = import.meta.glob("../../../assets/icons/placeholder/**/*.png", {
   import: "default",
 }) as Record<string, string>;
 
+const BRONZE = import.meta.glob("../../../assets/icons/bronze/**/*.svg", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
 function placeholder(path: string): string | undefined {
-  return FILES[`../../../assets/icons/placeholder/${path}.png`];
+  return (
+    BRONZE[`../../../assets/icons/bronze/${path}.svg`] ??
+    FILES[`../../../assets/icons/placeholder/${path}.png`]
+  );
 }
+
+/** A raster by its `family/name` path, for the v2 frame, whose icon slots name the
+ *  placeholder file directly (the mock's vocabulary) rather than a glyph. */
+export const rasterIcon = placeholder;
 
 const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
   wood: placeholder("resources/wood"),
@@ -35,6 +50,7 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
   happiness: placeholder("resources/happiness"),
   unhappiness: placeholder("resources/unhappiness"),
   stockpile: placeholder("resources/stockpile"),
+  luxury: placeholder("resources/luxury"),
 
   citizens: placeholder("pops/citizens"),
   freemen: placeholder("pops/freemen"),
@@ -44,7 +60,6 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
   crowd: placeholder("pops/crowd"),
   popGain: placeholder("pops/pop-gain"),
   popLoss: placeholder("pops/pop-loss"),
-  capacity: placeholder("pops/capacity"),
   // Grow adds a pop; the owner approved the one picture for both.
   grow: placeholder("pops/pop-gain"),
   move: placeholder("pops/move"),
@@ -57,13 +72,10 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
 
   marketplace: placeholder("buildings/marketplace"),
   temple: placeholder("buildings/temple"),
-  workshop: placeholder("buildings/workshop"),
   granary: placeholder("buildings/granary"),
   forum: placeholder("buildings/forum"),
-  aqueduct: placeholder("buildings/aqueduct"),
-  odeon: placeholder("buildings/odeon"),
-  villa: placeholder("buildings/villa"),
-  gymnasion: placeholder("buildings/gymnasion"),
+  estate: placeholder("buildings/estate"),
+  port: placeholder("buildings/port"),
   build: placeholder("buildings/build"),
   ruin: placeholder("buildings/ruin"),
 
@@ -83,10 +95,16 @@ const GLYPH_PLACEHOLDERS: Partial<Record<GlyphId, string | undefined>> = {
 
   law: placeholder("assembly/law"),
   repeal: placeholder("assembly/repeal"),
-  veto: placeholder("assembly/veto"),
   bribe: placeholder("assembly/bribe"),
   voice: placeholder("assembly/voice"),
   bema: placeholder("assembly/agora"),
+  directive: placeholder("assembly/directive"),
+  stele: placeholder("assembly/stele"),
+  // One Orator for every politician until each has a portrait.
+  demosthenes: placeholder("assembly/politician"),
+  kleistophenes: placeholder("assembly/politician"),
+  perdiccas: placeholder("assembly/politician"),
+  stratokles: placeholder("assembly/politician"),
 
   die: placeholder("events/die"),
   venture: placeholder("events/venture"),
@@ -110,55 +128,6 @@ export const TERRAIN_PLACEHOLDERS: Record<Terrain, string | undefined> = {
   hill: placeholder("terrain/hill"),
   oracle: placeholder("terrain/oracle"),
 };
-
-/** One picture per victory card, not the metric's own resource glyph. */
-export const VICTORY_PLACEHOLDERS: Record<VictoryMetric, string | undefined> = {
-  cities: placeholder("victory/polis-builder"),
-  pops: placeholder("victory/demos"),
-  citizens: placeholder("victory/civic-elite"),
-  stockpile: placeholder("victory/treasurer"),
-  happiness: placeholder("victory/beloved"),
-  voice: placeholder("victory/voice"),
-};
-
-/** The alarm's mask, per tier. Discontent has no icon of its own yet and wears
- *  the alarm's warning. */
-export const UNREST_TIER_PLACEHOLDERS: Record<UnrestStatus["tier"], string | undefined> = {
-  calm: placeholder("unrest/calm"),
-  discontent: placeholder("unrest/alarm"),
-  unrest: placeholder("unrest/unrest"),
-  revolt: placeholder("unrest/revolt"),
-};
-
-/** The bank's buttons: the material's own icon with a plus (buy) or minus (sell). */
-export const TRADE_PLACEHOLDERS: Record<
-  "buy" | "sell",
-  Record<TradableMaterial, string | undefined>
-> = {
-  buy: {
-    wood: placeholder("market/buy-wood"),
-    stone: placeholder("market/buy-stone"),
-    food: placeholder("market/buy-food"),
-  },
-  sell: {
-    wood: placeholder("market/sell-wood"),
-    stone: placeholder("market/sell-stone"),
-    food: placeholder("market/sell-food"),
-  },
-};
-
-/** Tabs whose raster is not the raster of the glyph they share with a noun. */
-export const TAB_PLACEHOLDERS: Partial<Record<EmpireTab, string | undefined>> = {
-  pops: placeholder("pops/crowd"),
-  buildings: placeholder("chrome/tab-build"),
-  market: placeholder("chrome/tab-market"),
-  victory: placeholder("chrome/tab-victory"),
-};
-
-export const ASSEMBLY_PLACEHOLDERS = {
-  propose: placeholder("assembly/propose"),
-  pass: placeholder("assembly/pass"),
-} as const;
 
 export const CHROME_PLACEHOLDERS = {
   settings: placeholder("chrome/settings"),

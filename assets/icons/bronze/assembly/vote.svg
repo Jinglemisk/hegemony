@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>Vote — upright broken clay ballot half-inserted into a bronze voting urn</title>
+<defs>
+<linearGradient id="a-vote-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-vote-olive" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8b976"/><stop offset="0.48" stop-color="#7d8f51"/><stop offset="1" stop-color="#48542c"/></linearGradient>
+<linearGradient id="a-vote-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0d8ad"/><stop offset="0.48" stop-color="#d7b47e"/><stop offset="1" stop-color="#a98253"/></linearGradient>
+</defs>
+<g stroke-linejoin="round" stroke-linecap="round">
+<path d="M23 27H41V34Q52 36 54 44Q57 56 43 58H21Q7 56 10 44Q12 36 23 34Z" fill="url(#a-vote-bronze)" stroke="#181210" stroke-width="2.5"/>
+<path d="M36 30H40V35Q53 37 53 46Q54 56 42 57H25Q44 55 44 46Q44 40 36 38Z" fill="#795025"/>
+<path d="M46 41Q53 43 52 49Q51 56 42 57H28V55Q45 53 46 41Z" fill="#624123"/>
+<path d="M22 34Q32 38 42 34M17 52Q29 56 40 53" fill="none" stroke="#a47a36" stroke-width="1.75"/>
+<ellipse cx="32" cy="28" rx="14" ry="5" fill="url(#a-vote-bronze)" stroke="#181210" stroke-width="2.5"/>
+<path d="M23 26.5Q32 24.5 41 26.5L40 29Q32 30.5 24 29Z" fill="#35251a"/>
+<path d="M23 27L22 15L26 6L32 9L38 6L42 13L39 18L40 28L33 31Z" fill="url(#a-vote-clay)" stroke="#181210" stroke-width="2.5"/>
+<path d="M26 6L32 9L38 6L42 13L39 18L40 28L37 28L36.5 17L39 13L37 9L32 12L27 9L25 15L25 27L23 27L22 15Z" fill="#ead3ad"/>
+<path d="M25 14L38 13L37 17L37.5 22L25.5 23Z" fill="url(#a-vote-olive)"/>
+<path d="M35 14L38 13L37 17L37.5 22L34 22.5Z" fill="#48542c"/>
+<path d="M26 15.5L35 15M25 11L27 8L31 10" fill="none" stroke="#fff0d5" stroke-width="1.5"/>
+<path d="M37.5 24L38 27M28 25L30 25.5" fill="none" stroke="#a98253" stroke-width="1.75"/>
+<path d="M26 17L28 16.5L28.5 19L26 19.5Z" fill="#fff8e9"/>
+<path d="M18 28Q32 33 46 28C46 31 40 33 32 33C24 33 18 31 18 28Z" fill="url(#a-vote-bronze)" stroke="#181210" stroke-width="2.5"/>
+<path d="M20 29Q30 32 39 30.5" fill="none" stroke="#ffe6a0" stroke-width="1.5"/>
+<path d="M20 28L23 26M16 40Q12 46 16 50M24 32L29 33" fill="none" stroke="#ffe6a0" stroke-width="1.5"/>
+<path d="M21 45L24 46M30 50H34" fill="none" stroke="#b78d44" stroke-width="1.75"/>
+<path d="M16 41L19 40L19 44L16 45Z" fill="#fff8e9"/>
+</g>
+</svg>

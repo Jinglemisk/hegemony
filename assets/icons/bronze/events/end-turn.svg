@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>End turn — bronze hourglass with running ochre sand</title>
+<defs>
+<linearGradient id="a-end-turn-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d28a"/><stop offset="0.48" stop-color="#c49245"/><stop offset="1" stop-color="#795025"/></linearGradient>
+<linearGradient id="a-end-turn-linen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e9"/><stop offset="0.48" stop-color="#e3d4ad"/><stop offset="1" stop-color="#aa9572"/></linearGradient>
+<linearGradient id="a-end-turn-wheat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dda0"/><stop offset="0.48" stop-color="#d8be73"/><stop offset="1" stop-color="#a07b38"/></linearGradient>
+</defs>
+<path d="M12 11H20V53H12ZM44 11H52V53H44Z" fill="url(#a-end-turn-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M17 13H19V52H16ZM49 13H51V52H48Z" fill="#795025"/>
+<path d="M20 13H44Q44 25 36 31V33Q44 39 44 52H20Q20 39 28 33V31Q20 25 20 13Z" fill="url(#a-end-turn-linen)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M38 15H43Q42 25 35 31V33Q42 40 43 51H37Q39 42 32 34V30Q40 24 38 15Z" fill="#aa9572"/>
+<path d="M22 19H42Q40 27 33 31H31Q24 27 22 19Z" fill="url(#a-end-turn-wheat)"/>
+<path d="M22 50Q24 43 32 39Q40 43 42 50Z" fill="url(#a-end-turn-wheat)"/>
+<path d="M32 31V40" fill="none" stroke="#a07b38" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M25 46L28 45M34 46L38 48M26 23L29 24" fill="none" stroke="#a07b38" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 6H55L58 11L55 16H9L6 11Z" fill="url(#a-end-turn-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 50H55L58 54V58H6V54Z" fill="url(#a-end-turn-bronze)" stroke="#181210" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M8 13H56L54 15H10ZM7 55H57V57H7Z" fill="#624123"/>
+<path d="M11 8H51M9 53H51M14 19V45M22 16Q22 23 26 27" fill="none" stroke="#ffe6a0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M13 8H18L17 11H13ZM12 52H17V54H12Z" fill="#fff8e9"/>
+</svg>

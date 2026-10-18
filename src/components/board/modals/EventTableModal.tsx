@@ -46,10 +46,16 @@ export function EventTableRows({
   result,
   register = "reference",
   blankLabel,
+  reach,
+  links = true,
 }: {
   table: EventTableDefinition;
   result: TableRollRecord | null;
   register?: "reference" | "ceremony";
+  /** The rows a roll can still land on; the others are struck (the riot's insurance). */
+  reach?: { lowest: number; highest: number };
+  /** Glossary links on the effects; off where a blocking ceremony leaves no codex. */
+  links?: boolean;
   /**
    * What a row that pays nothing says on this table — "Stake lost" on a venture.
    * Words, not a figure: the stake left the purse when the die was funded, so a
@@ -60,6 +66,8 @@ export function EventTableRows({
 }) {
   const ceremony = register === "ceremony";
   const landedRoll = result?.tableId === table.id ? result.modified : null;
+  const outOfReach = (roll: number) =>
+    reach ? roll < reach.lowest || roll > reach.highest : false;
 
   return (
     <ol className={ceremony ? "oddsRows" : "eventTableRows"}>
@@ -88,7 +96,12 @@ export function EventTableRows({
 
         return (
           <li
-            className={["oddsRow", landed ? "oddsRowHit" : null, passedOver ? "oddsRowPast" : null]
+            className={[
+              "oddsRow",
+              landed ? "oddsRowHit" : null,
+              passedOver ? "oddsRowPast" : null,
+              outOfReach(row.roll) ? "oddsRowOut" : null,
+            ]
               .filter(Boolean)
               .join(" ")}
             key={row.roll}
@@ -106,7 +119,7 @@ export function EventTableRows({
 
                   return (
                     <em className={`oddsEffect stat ${chip.tone}`} key={index}>
-                      <EffectLine effect={chip} />
+                      <EffectLine effect={chip} links={links} />
                     </em>
                   );
                 })

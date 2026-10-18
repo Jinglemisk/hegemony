@@ -40,7 +40,6 @@ export type GlyphShape =
     };
 
 const p = (d: string): GlyphShape => ({ kind: "path", d });
-const fill = (d: string): GlyphShape => ({ kind: "path", d, solid: true });
 const c = (cx: number, cy: number, r: number): GlyphShape => ({ kind: "circle", cx, cy, r });
 const dot = (cx: number, cy: number, r: number): GlyphShape => ({
   kind: "circle",
@@ -187,24 +186,14 @@ export const GLYPHS = {
 
   /* ── Buildings ─────────────────────────────────────────────────────────────
      Each is the building's own architecture, never a generic "structure" box:
-     the player learns nine rooflines, and the Build tab stops being a word list. */
+     the player learns six rooflines, and the Build tab stops being a word list. */
   marketplace: [p("M4 10h16M5 10V6h14v4M6 10v10h12V10m-9 4h6")],
   temple: [TEMPLE_FRONT],
-  workshop: [box(4, 12, 7, 8), box(13, 6, 7, 14), p("M7.5 12V8.5L11 6")],
   granary: [p("M5 20V9l7-5 7 5v11M9 20v-6h6v6M5 20h14")],
   /* The scales — the forum is where things are weighed and argued, and the same
      glyph carries the bank's exchange rate for exactly that reason. */
   forum: [p("M12 4v3m0 0L5 9m7-2 7 2M5 9l-2 5h6L7 9zm14 0-2 5h6l-2-5zM12 7v13m-4 0h8")],
-  aqueduct: [
-    p("M2 5h20M2 8h20M4 8v12M20 8v12M2 20h20"),
-    p("M7 20v-4.6a2.2 2.2 0 0 1 4.4 0V20M12.6 20v-4.6a2.2 2.2 0 0 1 4.4 0V20"),
-  ],
-  odeon: [p("M4 19c2-6 6-9 8-9s6 3 8 9M12 10V5m-3 2.5L12 5l3 2.5")],
-  villa: [p("M4 20h16M6 20v-8h12v8M4 12l8-5 8 5M9.5 20v-4h3.5v4")],
-  /* The peristyle court, in plan: a colonnade around an open yard, with the way
-     in at the bottom. The first draft was a running track and read as an eye,
-     which the omen already owns. */
-  gymnasion: [box(3.5, 3.5, 17, 17), box(8, 8, 8, 8), p("M10.5 20.5h3")],
+  estate: [p("M4 20h16M6 20v-8h12v8M4 12l8-5 8 5M9.5 20v-4h3.5v4")],
   /* The anchor — the Port's whole effect happens off-shore (it claims a moored
      luxury good), so its mark is the mooring, not another roofline. */
   port: [c(12, 5.5, 2.2), p("M12 7.7V19M8.5 10.5h7"), p("M5 14c0 4 3 6.5 7 6.5s7-2.5 7-6.5")],
@@ -217,33 +206,6 @@ export const GLYPHS = {
     ),
     p("M8.6 8.8c-1.5.3-2.4 1-2.7 2.1M15.4 8.8c1.5.3 2.4 1 2.7 2.1"),
     p("M9.5 21h5M12 18.5V21"),
-  ],
-
-  /* ── The four seasons ──────────────────────────────────────────────────────
-     Read as a set on the season wheel, so they share a weight and each is a
-     single unmistakable idea: a shoot, the sun, a leaf, a flake. */
-  /* A bud, not a shoot: the Grow verb already owns the two-leaf sprout, and the
-     season wheel sits a few hundred pixels from the verb rail. */
-  spring: [
-    p("M12 21v-8"),
-    p(
-      "M12 16c-2.8 0-4.6-1.9-4.6-4.7 2.8 0 4.6 1.9 4.6 4.7zm0 2.6c2.3 0 3.8-1.6 3.8-3.9-2.3 0-3.8 1.6-3.8 3.9z",
-    ),
-    c(12, 7, 3),
-  ],
-  summer: [
-    c(12, 12, 4.2),
-    p(
-      "M12 3v2.6M12 18.4V21M3 12h2.6M18.4 12H21M5.6 5.6l1.9 1.9M16.5 16.5l1.9 1.9M18.4 5.6l-1.9 1.9M7.5 16.5l-1.9 1.9",
-    ),
-  ],
-  autumn: [
-    p("M5 19C5 11 11 5 19 5c0 8-6 14-14 14z"),
-    p("M19 5 9.5 14.5M14 8.5l.9 3.6M11 11.5l.9 3.6"),
-  ],
-  winter: [
-    p("M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"),
-    p("M12 6.6 9.6 4.6M12 6.6l2.4-2M12 17.4l-2.4 2M12 17.4l2.4 2"),
   ],
 
   /* ── The Assembly ──────────────────────────────────────────────────────────
@@ -259,7 +221,6 @@ export const GLYPHS = {
   repeal: [STELE, p("M12.5 8.5 10.5 13.5l3 1-2 7")],
   ostrakon: [p("M6 8.5 11.5 4l7 3-1.2 8.5L11 20 5.5 15z")],
   bema: [p("M3 20h18M5.5 20v-3h13v3M7.5 17v-3h9v3M9.5 14v-3h5v3")],
-  veto: [c(12, 12, 8.5), p("M6 18 18 6")],
   bribe: [p("M6 8.5h12l1.5 11.5H4.5z"), p("M9 8.5V7a3 3 0 0 1 6 0v1.5"), p("M12 12.5v4")],
 
   /* ── The four orators ──────────────────────────────────────────────────────
@@ -274,7 +235,7 @@ export const GLYPHS = {
   kleistophenes: bust(p("M7 6.6c1.4-2.8 8.6-2.8 10 0M7 6.6 5.2 5.2M17 6.6l1.8-1.4")),
   stratokles: bust(p("M5.5 6.8h13M8.4 6.8c0-2.4 1.6-3.8 3.6-3.8s3.6 1.4 3.6 3.8")),
 
-  /* ── Tables and omens ──────────────────────────────────────────────────────── */
+  /* ── Tables ────────────────────────────────────────────────────────────────── */
   riot: [
     p(
       "M6 21v-8M6 13 3.5 9M6 13l2.5-4M12 21V11M12 11 9.2 6.6M12 11l2.8-4.4M18 21v-8M18 13l-2.5-4M18 13l2.5-4",
@@ -289,11 +250,6 @@ export const GLYPHS = {
       "M12 8.5c-1.8-1.8-3.8-2-5.2-.6 1.4 1.4 3.4 1.6 5.2.6zm0 0c1.8-1.8 3.8-2 5.2-.6-1.4 1.4-3.4 1.6-5.2.6z",
     ),
     p("M9.5 13c2.5 0 2.5 3 5 3M9.5 17c2.5 0 2.5 3 5 3"),
-  ],
-  omen: [
-    p("M2 12s4-6.5 10-6.5S22 12 22 12s-4 6.5-10 6.5S2 12 2 12z"),
-    c(12, 12, 3.2),
-    dot(12, 12, 1.3),
   ],
   /* Pips are drawn as rings, not filled dots: three solid masses would make the
      die the one glyph in the set that reads as a sticker, and at 14px a 1.6r ring
@@ -327,23 +283,9 @@ export const GLYPHS = {
   loss: [BOWL, p("M12 11V3m-3 3 3-3 3 3")],
   income: [CYCLE],
   suppress: [CYCLE, SLASH],
-  /* The year dial: a full turn with the four seasons ticked and a needle. */
-  yearCycle: [c(12, 12, 8), p("M12 4v2M20 12h-2M12 20v-2M4 12h2"), p("M12 12l4-4")],
-  freeGrant: [CYCLE, p("M11 9v6m-3-3h6")],
   costDown: [PLINTH, p("M12 3v9m-3.5-3.5L12 12l3.5-3.5")],
   costUp: [PLINTH, p("M12 12V3m-3.5 3.5L12 3l3.5 3.5")],
   cross: [p("M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5")],
-  exchange: [p("M4 9h13.5M14 5.5 17.5 9 14 12.5"), p("M20 15H6.5M10 11.5 6.5 15 10 18.5")],
-  convert: [p("M3.5 4h17l-6.5 7.5V20l-4-2.5v-6z")],
-  choice: [
-    p("M12 21v-7L6.5 8.5V4M12 14l5.5-5.5V4"),
-    p("M4.5 5.5 6.5 3.5 8.5 5.5M15.5 5.5 17.5 3.5 19.5 5.5"),
-  ],
-  /* Half the jar, taken. The one solid mass earns its place: the fraction IS the
-     filled part. */
-  fraction: [c(12, 12, 8.5), fill("M12 3.5a8.5 8.5 0 0 1 0 17z")],
-  threshold: [p("M3 13h18"), p("M6.5 20v-4m5.5 4V8m5.5 12v-9")],
-  capacity: [p("M6.5 4.5h11l-1.5 15h-8z"), p("M7.7 12.5h8.6")],
   starvation: [WHEAT, SLASH],
   crowd: [
     c(6, 10, 2.2),
@@ -353,20 +295,8 @@ export const GLYPHS = {
       "M3 20c0-2.6 1.4-4 3-4s3 1.4 3 4M9 20c0-3.2 1.4-5 3-5s3 1.8 3 5M15 20c0-2.6 1.4-4 3-4s3 1.4 3 4",
     ),
   ],
-  perPop: [c(8, 8, 3), p("M2.5 19c.6-3.4 2.6-5 5.5-5s4.9 1.6 5.5 5"), p("M16 20v-6h6v6z")],
-  moodCrowd: [
-    p("M8 3c1.2.6 2.6.9 4 .9s2.8-.3 4-.9v3.4c0 2.6-1.7 4.4-4 4.4S8 9 8 6.4z"),
-    c(5, 17, 2.2),
-    c(12, 17, 2.2),
-    c(19, 17, 2.2),
-  ],
   popGain: [c(10, 9, 3.4), p("M4 20c.7-3.8 3-5.6 6-5.6s5.3 1.8 6 5.6"), p("M19 4v6M16 7h6")],
   popLoss: [c(10, 9, 3.4), p("M4 20c.7-3.8 3-5.6 6-5.6s5.3 1.8 6 5.6"), p("M16 7h6")],
-  popIncome: [
-    c(8, 8, 3),
-    p("M2.5 19c.6-3.4 2.6-5 5.5-5s4.9 1.6 5.5 5"),
-    p("M19 7v8m-2.5-2.5L19 15l2.5-2.5"),
-  ],
   cityIncome: [
     p("M3 18h11M4.5 18v-7m8 7v-7M2.5 11 8.5 7l6 4z"),
     p("M19 6v9m-2.5-2.5L19 15l2.5-2.5"),

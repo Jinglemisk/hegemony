@@ -1,8 +1,9 @@
+import { getFundExpeditionStatus } from "../../../game/ventures";
+import { getExpeditionTables } from "../../../game/content";
 import type { Phase } from "../../../client/controller";
 import { getCivicCalmStatus } from "../../../game/civic";
 import { getBuildings } from "../../../game/content";
-import { POP_TYPES } from "../../../game/core/pops";
-import { getAdjustedActionCost, getDiscountedGrowPopCost } from "../../../game/economy/cost";
+import { getAdjustedActionCost, getGrowPopPriceSpans } from "../../../game/economy/cost";
 import { getFoundColonyStatus, getUpgradeColonyToCityStatus } from "../../../game/rules";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../../game/types";
 import type { MapSelectionMode } from "../map/mapSelection";
@@ -25,6 +26,8 @@ export type VerbContext = {
   phase: Phase;
   isActive: boolean;
   hasPendingPlayerEvent: boolean;
+  /** The Assembly sits: the shell reads, and nothing acts until it rises. */
+  inAssembly?: boolean;
   canGrowPops: boolean;
   canMovePops: boolean;
   canFoundColony: boolean;
@@ -97,32 +100,13 @@ export type VerbPriceClause = {
  *  query reads, so the dock can never quote a price the press does not charge. */
 export type VerbCost = (context: VerbContext) => VerbPriceClause[];
 
-/** The settlements a target-dependent price is a range over. */
-function ownedSettlements(G: HegemonyState, playerID: PlayerId) {
-  return G.board.tiles.flatMap((tile) =>
-    tile.settlements.filter((settlement) => settlement.owner === playerID),
-  );
-}
-
 const totalUnits = (cost: Partial<Resources>) =>
   Object.values(cost).reduce((sum: number, amount) => sum + (amount ?? 0), 0);
 
-/** Grow's food price across every settlement × pop type the player could grow.
- *  Building discounts, event coupons and Standing Laws are already inside the
- *  engine's own number — this only takes its ends. */
-function growFoodSpan(context: VerbContext): VerbPriceClause[] {
-  const { G, playerID } = context;
-  const settlements = ownedSettlements(G, playerID);
-  const foods =
-    settlements.length > 0
-      ? settlements.flatMap((settlement) =>
-          POP_TYPES.map((pop) => getDiscountedGrowPopCost(G, playerID, settlement, pop).food ?? 0),
-        )
-      : // Before the first settlement stands there is nothing to discount, so the
-        // ruleset's undiscounted mouths are the honest quote.
-        POP_TYPES.map((pop) => G.ruleset.growPopCosts[pop].food ?? 0);
-
-  return [{ span: { resource: "food", min: Math.min(...foods), max: Math.max(...foods) } }];
+/** Growth prices come from the same Law-aware engine query as the action. */
+function growCostSpan({ G, playerID }: VerbContext): VerbPriceClause[] {
+  const spans = getGrowPopPriceSpans(G, playerID);
+  return spans.length ? spans.map((span) => ({ span })) : [{ lead: "free" }];
 }
 
 /** The cheapest building on the roster, priced the way `getBuildBuildingStatus`
@@ -166,7 +150,7 @@ export const VERBS: VerbSpec[] = [
   {
     id: "grow",
     label: "Grow",
-    cost: growFoodSpan,
+    cost: growCostSpan,
     arms: true,
     // Stays clickable while armed so the same button cancels the map mode.
     available: ({ canGrowPops, armedVerb }) => canGrowPops || armedVerb === "grow",
@@ -179,11 +163,12 @@ export const VERBS: VerbSpec[] = [
   {
     id: "move",
     label: "Move",
-    cost: () => [{ lead: "free" }],
+    // A pop: the popover prices the travellers it is sent.
+    cost: ({ G }) => [{ lead: "a pop", amounts: G.ruleset.movePopCost }],
     arms: true,
     available: ({ canMovePops, armedVerb }) => canMovePops || armedVerb === "move",
-    hint: "Move pops between two owned settlements.",
-    blockedHint: "Requires at least two settlements.",
+    hint: "Move pops between two owned settlements, once a turn.",
+    blockedHint: "One move a turn, into a settlement with room, with food to pay for it.",
     select: (handlers) => handlers.onMovePopsRequest(),
   },
   {
@@ -193,7 +178,7 @@ export const VERBS: VerbSpec[] = [
     arms: true,
     available: ({ canFoundColony, armedVerb }) => canFoundColony || armedVerb === "found",
     hint: "Send a pop from an existing settlement to found a new colony.",
-    blockedHint: "Requires an open tile, a spare pop, and enough resources.",
+    blockedHint: "Requires a colony piece, an open tile, a spare pop, and enough resources.",
     select: (handlers) => handlers.onFoundColonyRequest(),
   },
   {
@@ -203,8 +188,8 @@ export const VERBS: VerbSpec[] = [
       { amounts: getUpgradeColonyToCityStatus(G, playerID, "").cost ?? {} },
     ],
     available: ({ canUpgradeCity }) => canUpgradeCity,
-    hint: "Upgrade one of your colonies into a city.",
-    blockedHint: "Requires an upgradeable colony and enough resources.",
+    hint: "Upgrade one of your colonies into a city. The colony piece comes back.",
+    blockedHint: "Requires a city piece, an upgradeable colony and enough resources.",
     select: (handlers) => handlers.onUpgradeCityRequest(),
   },
   {
@@ -228,7 +213,7 @@ export const VERBS: VerbSpec[] = [
       { amounts: getCivicCalmStatus(G, playerID, "gold").cost ?? {} },
     ],
     available: ({ calmUsed }) => !calmUsed,
-    hint: "Buy happiness: influence or gold, once per turn.",
+    hint: "Buy calm this year: influence or gold, once per turn.",
     blockedHint: "One civic-calm action per turn — already used.",
     select: (handlers) => handlers.onCalmRequest(),
   },
@@ -236,10 +221,19 @@ export const VERBS: VerbSpec[] = [
     id: "venture",
     label: "Venture",
     // Every expedition posts the same stake, so it is quotable before you pick
-    // one — `ruleset.ventureStakes` is the field `getFundExpeditionStatus` reads.
-    cost: ({ G }) => [{ lead: "stake", amounts: G.ruleset.ventureStakes.gold }],
+    // one — `ruleset.ventureCost` is the field `getFundExpeditionStatus` reads.
+    cost: ({ G, playerID }) => [
+      {
+        lead: "stake",
+        amounts: getFundExpeditionStatus(
+          G,
+          playerID,
+          getExpeditionTables(G.definition.content)[0].id,
+        ).cost,
+      },
+    ],
     available: ({ ventureUsed }) => !ventureUsed,
-    hint: "Fund an expedition: stake gold or wood, roll the table.",
+    hint: "Fund an expedition: post the stake, roll the table.",
     blockedHint: "One venture per turn — the ships are already out.",
     select: (handlers) => handlers.onVentureRequest(),
   },
@@ -254,11 +248,18 @@ export const VERBS: VerbSpec[] = [
  * VerbContext to ask "is it my move?" was how the same three conditions came to
  * be written twice.
  */
-export type TurnGate = Pick<VerbContext, "isActive" | "phase" | "hasPendingPlayerEvent">;
+export type TurnGate = Pick<
+  VerbContext,
+  "isActive" | "phase" | "hasPendingPlayerEvent" | "inAssembly"
+>;
 
 export function isTurnOpen(gate: TurnGate) {
-  return gate.isActive && gate.phase === "gameplay" && !gate.hasPendingPlayerEvent;
+  return (
+    gate.isActive && gate.phase === "gameplay" && !gate.hasPendingPlayerEvent && !gate.inAssembly
+  );
 }
+
+const IN_ASSEMBLY = "The Assembly is sitting: return to it to act.";
 
 /** The shared gate every verb sits behind, in one place. */
 export function isVerbEnabled(verb: VerbSpec, context: VerbContext) {
@@ -266,6 +267,7 @@ export function isVerbEnabled(verb: VerbSpec, context: VerbContext) {
 }
 
 export function verbTitle(verb: VerbSpec, context: VerbContext) {
+  if (context.inAssembly) return IN_ASSEMBLY;
   if (context.hasPendingPlayerEvent) {
     return "Resolve the pending player event first.";
   }
@@ -277,6 +279,7 @@ export function verbTitle(verb: VerbSpec, context: VerbContext) {
 
 /** The end-turn explanation, blocked or not, without a VerbContext to build. */
 export function turnCommitTitle(gate: TurnGate) {
+  if (gate.inAssembly) return IN_ASSEMBLY;
   if (gate.hasPendingPlayerEvent) {
     return "Resolve the pending player event first.";
   }

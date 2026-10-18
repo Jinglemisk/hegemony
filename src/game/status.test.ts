@@ -178,35 +178,23 @@ describe("getBuildBuildingStatus", () => {
     expect(status.reasons).toContain("Select a tile.");
   });
 
-  it("requires a city on the tile", () => {
+  it("requires a settlement on the tile", () => {
     const { G } = cityForBuild();
     // A tile the player owns nothing on.
     const status = getBuildBuildingStatus(G, "0", "0,0", "marketplace");
-    expect(status.reasons).toContain("Requires your city on this tile.");
+    expect(status.reasons).toContain("Requires your settlement on this tile.");
   });
 
-  it("refuses to exceed a single-level building's cap", () => {
+  it("refuses a second copy: one of each per settlement", () => {
     const probe = scenario().build();
     const id = materialTile(probe).id;
     const G = scenario()
       .withResources("0", "wealthy")
       .withSettlement("0", id, "city", pops(1, 1, 1))
       .build();
-    owned(G, id, "0").buildings = ["gymnasion"];
-    const status = getBuildBuildingStatus(G, "0", id, "gymnasion");
-    expect(status.reasons).toContain("Gymnasion is already built here.");
-  });
-
-  it("refuses to exceed a multi-level building's cap", () => {
-    const probe = scenario().build();
-    const id = materialTile(probe).id;
-    const G = scenario()
-      .withResources("0", "wealthy")
-      .withSettlement("0", id, "city", pops(1, 1, 1))
-      .build();
-    owned(G, id, "0").buildings = ["marketplace", "marketplace"];
-    const status = getBuildBuildingStatus(G, "0", id, "marketplace");
-    expect(status.reasons.some((reason) => reason.includes("maximum level"))).toBe(true);
+    owned(G, id, "0").buildings = ["temple"];
+    const status = getBuildBuildingStatus(G, "0", id, "temple");
+    expect(status.reasons).toContain("Temple is already built here.");
   });
 
   it("blocks a build the player cannot afford", () => {

@@ -4,7 +4,7 @@ import { allocateEntityId } from "./entity";
 import { selectLuxuryVertices } from "./mapTopology";
 import type { HegemonyState, HexTile, LuxuryAsset, PlayerId } from "./types";
 import type { Ruleset } from "./ruleset";
-import { addLog, getPlayerName } from "./core/query";
+import { addLog, getPlayerName, zeroedYearTerm } from "./core/query";
 import type { MoveResult } from "./core/results";
 import { MOVE_OK, invalid } from "./core/results";
 
@@ -46,43 +46,32 @@ export function createLuxuryAssets(
   }));
 }
 
+const assetIdOrder = new Intl.Collator(undefined, { numeric: true });
 /** Every asset the player owns, in stable asset-id order. */
 export function ownedClaims(G: HegemonyState, playerID: PlayerId): LuxuryAsset[] {
   return G.board.luxuries
     .filter((asset) => asset.owner === playerID)
-    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+    .sort((a, b) => assetIdOrder.compare(a.id, b.id));
 }
 
-/**
- * The player's ACTIVE goods: owned, unsuppressed, within the cap — taken in stable
- * asset-id (claim) order so the same state always yields the same active set.
- * Goods over the cap stay owned-but-inactive: trade assets, not dead weight.
- */
+/** The player's active goods: owned and unsuppressed. There is no cap on how many. */
 export function activeClaims(G: HegemonyState, playerID: PlayerId): LuxuryAsset[] {
-  return ownedClaims(G, playerID)
-    .filter((asset) => asset.suppressedTurns === 0)
-    .slice(0, Math.max(0, G.ruleset.economy.luxury.activeCapPerPlayer));
+  return ownedClaims(G, playerID).filter((asset) => asset.suppressedTurns === 0);
 }
 
-/** The standing effective-happiness offset (Q43). Never touches the stored bank. */
+/** The luxury term of the level: every active good adds `happinessPerGood`, and
+ *  none of them counts in a Blockade year. */
 export function luxuryHappinessBonus(G: HegemonyState, playerID: PlayerId): number {
-  return activeClaims(G, playerID).length * G.ruleset.economy.luxury.happinessPerGood;
-}
+  if (zeroedYearTerm(G) === "luxuryHappiness") {
+    return 0;
+  }
 
-/** stored happiness + the luxury offset — what the riot thresholds and (per Q44)
- *  the Beloved metric actually test. */
-export function effectiveHappiness(G: HegemonyState, playerID: PlayerId): number {
-  return G.players[playerID].resources.happiness + luxuryHappinessBonus(G, playerID);
+  return activeClaims(G, playerID).length * G.ruleset.economy.luxury.happinessPerGood;
 }
 
 /** The unclaimed goods a Port in a settlement on `tileId` could seize. */
 export function claimableLuxuriesAt(G: HegemonyState, tileId: string): LuxuryAsset[] {
   return G.board.luxuries.filter((asset) => asset.owner === null && asset.tileIds.includes(tileId));
-}
-
-/** Cap gate for building a new Port (luxury-goods.md §4.4). */
-export function underActiveCap(G: HegemonyState, playerID: PlayerId): boolean {
-  return activeClaims(G, playerID).length < G.ruleset.economy.luxury.activeCapPerPlayer;
 }
 
 /**
@@ -121,18 +110,4 @@ export function tickLuxurySuppression(G: HegemonyState, playerID: PlayerId) {
       }
     }
   }
-}
-
-/** Presentation triple for every surface that shows happiness (a hard requirement:
- *  raw, luxury bonus, and effective are always shown together). */
-export interface HappinessBreakdown {
-  stored: number;
-  luxuryBonus: number;
-  effective: number;
-}
-
-export function happinessBreakdown(G: HegemonyState, playerID: PlayerId): HappinessBreakdown {
-  const stored = G.players[playerID].resources.happiness;
-  const luxuryBonus = luxuryHappinessBonus(G, playerID);
-  return { stored, luxuryBonus, effective: stored + luxuryBonus };
 }

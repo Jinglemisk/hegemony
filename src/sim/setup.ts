@@ -9,7 +9,8 @@ import type { GameModeId } from "../game/ruleset";
 import { createInitialStateFromDefinition } from "../game/state";
 import type { BoardLayout, HegemonyState, PlayerId } from "../game/types";
 import type { OpeningKind, RulesetPatch } from "./io";
-import { choosePlacement } from "./policies";
+import { choosePlacement, type Policy } from "./policies";
+import { projectForPlayer } from "../game/projection";
 import type { SimRng } from "./rng";
 
 export type NewGameOptions = {
@@ -22,8 +23,10 @@ export type NewGameOptions = {
   /** Terrain layout. Defaults to "classic" so historical balance runs stay
    *  reproducible; realistic runs pass "shuffled" to match the live game. */
   boardLayout?: BoardLayout;
-  /** Breaks placement ties (policy) or draws placements (random); unused for fixed/manual. */
+  /** Breaks placement ties (policy) or draws placements (random); also scores fixed-opening Ideas; unused for manual. */
   simRng: SimRng;
+  policy?: Policy;
+  seatPolicies?: Partial<Record<PlayerId, Policy>>;
   /** Called once per applied setup move, for history recording. */
   onMove?: (G: HegemonyState, player: PlayerId, command: GameCommand) => void;
 };
@@ -42,6 +45,8 @@ export function buildNewGame({
   opening,
   boardLayout,
   simRng,
+  policy,
+  seatPolicies,
   onMove,
 }: NewGameOptions): HegemonyState {
   const base = GAME_MODES[mode].ruleset;
@@ -52,6 +57,17 @@ export function buildNewGame({
       content: getAuthoredGameContent(),
     });
   let G = createInitialStateFromDefinition(resolvedDefinition, seed, boardLayout);
+
+  const choose = (state: HegemonyState, commands: GameCommand[]) => {
+    const active = seatPolicies?.[state.currentPlayer] ?? policy;
+    return active
+      ? active.choose(
+          projectForPlayer(state.definition, state, state.currentPlayer),
+          commands,
+          simRng,
+        )
+      : choosePlacement(state, commands, simRng);
+  };
 
   if (opening === "manual") {
     return G;
@@ -69,6 +85,10 @@ export function buildNewGame({
         throw new Error(`fixed opening did not converge (mode ${mode})`);
       }
 
+      if (G.phase === "setupIdeas") {
+        G = applyRecorded(G, choose(G, enumerateLegalCommands(G, G.currentPlayer)), onMove);
+        continue;
+      }
       const placement = TEST_OPENING_SETUP.find(
         (candidate) => candidate.playerID === G.currentPlayer,
       );
@@ -102,8 +122,7 @@ export function buildNewGame({
       );
     }
 
-    const command =
-      opening === "policy" ? choosePlacement(G, commands, simRng) : simRng.pick(commands);
+    const command = opening === "policy" ? choose(G, commands) : simRng.pick(commands);
     G = applyRecorded(G, command, onMove);
   }
 

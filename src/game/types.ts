@@ -1,12 +1,6 @@
 import type { Ruleset } from "./ruleset";
 import type { GameDefinition } from "./definition";
-import type {
-  ActiveLaw,
-  AssemblySession,
-  LawCostedAction,
-  PoliticianId,
-  TallyMonument,
-} from "./assembly/types";
+import type { ActiveLaw, AssemblySession, PoliticianId, TallyMonument } from "./assembly/types";
 
 export type PlayerId = "0" | "1" | "2" | "3";
 
@@ -15,44 +9,37 @@ export type PlayerId = "0" | "1" | "2" | "3";
  *  that expansion must route around (Phase 2, terrain-economy.md). */
 export type Terrain = "mountain" | "hill" | "forest" | "plains" | "oracle";
 
-export type Resource = "wood" | "stone" | "gold" | "food" | "influence" | "happiness";
+/** What a player stockpiles. Happiness is not here: it is a level read off the board
+ *  each turn and never held (see game/happiness.ts). */
+export type Resource = "wood" | "stone" | "gold" | "food" | "influence";
 
-export type MaterialResource = Exclude<Resource, "influence" | "happiness">;
+/** A resource or happiness: what a Law, a card or an icon can name. */
+export type Stat = Resource | "happiness";
+
+export type MaterialResource = Exclude<Resource, "influence">;
 
 /** What the bank exchanges against gold (roadmap-appendix D6/Q14): the tile-yield
- *  materials. Gold is the unit of account, influence/happiness are civic — never traded. */
+ *  materials. Gold is the unit of account and influence is civic: neither is traded. */
 export type TradableMaterial = Exclude<MaterialResource, "gold">;
 
 export type PopType = "citizens" | "freemen" | "slaves";
 
 export type SettlementKind = "capital" | "city" | "colony";
 
-export type Phase = "setupCapital" | "setupCity" | "setupColony" | "gameplay" | "gameOver";
+export type Phase =
+  "setupIdeas" | "setupCapital" | "setupCity" | "setupColony" | "gameplay" | "gameOver";
 
 /** How the terrain deck is laid onto the board: the fixed authored layout, or a seeded shuffle. */
 export type BoardLayout = "classic" | "shuffled";
 
 /** The scoreboard metrics victory cards race on (see game/victory.ts). `voice` is the
- *  Assembly's permanent authored-and-passed ratchet. */
-export type VictoryMetric = "cities" | "pops" | "citizens" | "stockpile" | "happiness" | "voice";
+ *  count of standing Laws a player authored. */
+export type VictoryMetric = "cities" | "pops" | "citizens" | "gold" | "happiness" | "voice";
 
-/** Why the game ended: a player held enough victory cards or the seasonal deck ran out. */
+/** Why the game ended: a player held enough victory cards or the year deck ran out. */
 export type GameOverReason = "victoryRace" | "deckExhausted";
 
-/** The four seasons, in the order they cycle each year (a year always opens on spring). */
-export type SeasonName = "spring" | "summer" | "autumn" | "winter";
-
-export type BuildingId =
-  | "marketplace"
-  | "temple"
-  | "workshop"
-  | "granary"
-  | "forum"
-  | "aqueduct"
-  | "odeon"
-  | "villa"
-  | "gymnasion"
-  | "port";
+export type BuildingId = "marketplace" | "estate" | "forum" | "temple" | "granary" | "port";
 
 /** The six coastal luxury goods (docs/plans/luxury-goods.md §6, Q32). */
 export type LuxuryGoodId =
@@ -92,108 +79,18 @@ export interface LuxuryAsset {
 export type Resources = Record<Resource, number>;
 
 export type Pops = Record<PopType, number>;
+/** The pops Grow can add. Citizens come only by promotion. */
+export type GrowablePop = Exclude<PopType, "citizens">;
 
-export type EventDeckKind = "seasonal" | "player";
-
-export type EventTiming = "immediate" | "season" | "pendingChoice" | "turn";
-
-export type EventScope = "activePlayer" | "allPlayers";
-
-export type ActionCostDiscountTarget = "buildBuilding" | "foundColony" | "growPop";
+export type UnrestTokenChange = "placeOne" | "clearOne" | "clearAll";
 
 export type EventEffect =
-  | {
-      type: "resourceDelta";
-      scope: EventScope;
-      resource: Resource;
-      amount: number;
-    }
-  | {
-      type: "scaledResourceDelta";
-      scope: EventScope;
-      resource: Resource;
-      amountPerPops: number;
-      popStep: number;
-      minimum: number;
-    }
-  | {
-      type: "happinessDelta";
-      scope: EventScope;
-      amount: number;
-    }
-  | {
-      type: "scaledHappinessDelta";
-      scope: EventScope;
-      amountPerPops: number;
-      popStep: number;
-      minimumMagnitude: number;
-      duration?: "season";
-    }
-  | {
-      /**
-       * Unrest that bites for a fixed number of the affected player's turns: it
-       * pushes `amountPerTurn` onto happiness during each of that player's next
-       * `turns` upkeeps, then expires. Stored as a {@link TimedHappinessModifier}
-       * on the player and ticked in the unrest upkeep — see `game/unrest.ts`.
-       */
-      type: "timedHappinessDelta";
-      scope: EventScope;
-      amountPerTurn: number;
-      turns: number;
-    }
-  | {
-      type: "incomeModifier";
-      scope: EventScope;
-      resource: Resource;
-      amount: number;
-      duration: "season" | "turn";
-    }
-  | {
-      type: "buildingCostMultiplier";
-      multiplier: number;
-      duration: "season";
-      excludes: Array<"foundColony" | "upgradeColonyToCity">;
-    }
-  | {
-      type: "addPops";
-      pop: PopType;
-      amount: number;
-      target: "ownedSettlementWithCapacity";
-    }
-  | {
-      type: "actionCostDiscount";
-      action: ActionCostDiscountTarget;
-      buildingId?: BuildingId;
-      /** For `growPop` discounts: only grows of this pop type match (grow coupons). */
-      pop?: PopType;
-      resource: Resource;
-      amount: number;
-      duration: "turn";
-      consume: "nextMatchingAction";
-    }
-  | {
-      type: "resourceExchange";
-      from: Resource;
-      to: Resource;
-      maxAmount: number;
-      ratio: number;
-    }
-  | {
-      type: "resourceDeltaPerPop";
-      scope: EventScope;
-      resource: Resource;
-      pop: PopType;
-      amountPerPop: number;
-      minimum: number;
-    }
-  | {
-      type: "choice";
-      options: EventEffect[][];
-    };
+  | { type: "resourceDelta"; resource: Resource; amount: number }
+  | { type: "addPops"; pop: GrowablePop; amount: number; target: "ownedSettlementWithCapacity" }
+  | { type: "unrestTokens"; change: UnrestTokenChange };
 
 export interface EventCard {
   id: string;
-  deck: EventDeckKind;
   name: string;
   count: number;
   text: string;
@@ -207,24 +104,42 @@ export interface EventCard {
    * blanked. Authored in `data.ts`; see `PendingPlayerEventModal` for the slot.
    */
   flavor?: string;
-  timing: EventTiming;
   effects: EventEffect[];
-  /**
-   * Seasons this card may surface in (seasonal deck only). The seasonal draw
-   * prefers cards that suit the current season, so tagging weights the deck —
-   * e.g. tagging the harsh cards to winter makes winter draw *more* of them
-   * without ever guaranteeing them. Omitted / empty means "any season".
-   */
-  seasons?: SeasonName[];
 }
 
 export type EventDeck = EventCard[];
 
-export interface ActiveSeasonEvent {
-  card: EventCard;
-  season: number;
-  /** Seat whose turn revealed the card; authoritative for activePlayer-scoped effects. */
+/** The one term of income or happiness a year card zeroes for the whole table. */
+export type YearTerm =
+  | "plainsFood"
+  | "forestWood"
+  | "mountainStone"
+  | "freemenGold"
+  | "citizenInfluence"
+  | "luxuryHappiness";
+
+/** What a year card does: zero one term for the year, or move every realm's Unrest
+ *  tokens once when it is revealed. */
+export type YearCardEffect =
+  | { type: "zeroTerm"; term: YearTerm }
+  | { type: "unrestTokens"; change: Exclude<UnrestTokenChange, "clearOne"> };
+
+/** A card of the year deck, the game's clock. One is revealed as each year opens and
+ *  stands until the year turns. */
+export interface YearCard {
+  id: string;
+  name: string;
+  count: number;
+  /** The rule sentence: what the card does this year. */
+  text: string;
+  /** Presentation only, as on an {@link EventCard}. */
+  flavor?: string;
+  effect: YearCardEffect;
+}
+
+export interface PendingHunger {
   playerID: PlayerId;
+  unfed: number;
 }
 
 export interface PendingPlayerEvent {
@@ -232,30 +147,19 @@ export interface PendingPlayerEvent {
   playerID: PlayerId;
 }
 
-export interface ActiveActionCostDiscount {
-  id: string;
-  sourceCardId: string;
-  label: string;
-  action: ActionCostDiscountTarget;
-  buildingId?: BuildingId;
-  pop?: PopType;
-  resource: Resource;
-  amount: number;
-  consume: "nextMatchingAction";
-}
-
-export interface Yield {
+/** What a tile's working slaves make. The tile prints no amount: a slave on an open
+ *  slot makes 1 of it (v2 work slots). */
+export interface TileResource {
   type: MaterialResource;
-  amount: number;
 }
 
 // ── Event tables (roadmap-appendix D9/D10 · docs/archive/plans/event-tables.md) ─────────────
 //
 // Dice-and-table as one reusable, data-driven component: a table is content data,
 // `rollOnTable` (game/tables.ts) is the only engine seam, and every instance — riot,
-// the expeditions, future omens — shares the same UI modal.
+// the expeditions — shares the same UI modal.
 
-export type EventTableId = "riot" | "merchantConvoy" | "grandEmbassy" | "colonistsVoyage" | "omen";
+export type EventTableId = "riot" | "merchantConvoy" | "grandEmbassy" | "colonistsVoyage";
 
 /** The closed effect vocabulary a table row may apply. Each effect with an impossible
  *  happy path carries its explicit fallback (no building → pops, no room → food). */
@@ -265,9 +169,6 @@ export type TableEffect =
   | { type: "destroyBuilding"; popLossFallback: number }
   | { type: "gainResource"; resource: Resource; amount: number }
   | { type: "gainPop"; pop: PopType; foodFallback: number }
-  /** Year-long, table-wide income modifier — the omen's vocabulary. Applying the
-   *  effect is a no-op at roll time; the income engine reads it off G.yearOmen. */
-  | { type: "yearIncomeModifier"; resource: Resource; amount: number }
   | { type: "none" };
 
 export interface EventTableRow {
@@ -300,15 +201,15 @@ export interface EventTableDefinition {
   insurance?: TableInsuranceOption[];
 }
 
-/** Escalation tier of a pending riot — maps the unrest thresholds (≤ −5 / ≤ −10). */
-export type RiotTier = "unrest" | "revolt";
-
-/** A riot waiting on the table: blocks the turn (income deferred, endTurn illegal)
- *  until the player rolls. Insurance is declared here, before the die. */
+/** A riot at a committed turn end: blocks handoff until insurance and the roll
+ *  resolve. Ordinary actions and another endTurn are illegal. */
 export interface PendingRiot {
   playerID: PlayerId;
-  tier: RiotTier;
   boughtInsurance: RiotInsuranceId[];
+  /** The Unrest tokens the riot cleared when it started, for the riot sheet. */
+  tokensCleared: number;
+  /** Where the concession demoted its citizen, once declared. */
+  concessionTileId: string | null;
 }
 
 /** The last table roll, kept on state so the UI can show the outcome after the move
@@ -324,22 +225,12 @@ export interface TableRollRecord {
   rowLabel: string;
   /** Human-readable lines for each applied effect. */
   outcomes: string[];
-  season: number;
+  year: number;
 }
 
 /** Per-material bank rates: `sell` materials buy 1 gold; 1 material costs `buy` gold.
  *  Derived once at game creation (roadmap-appendix Q14) and static all game. */
 export type BankRates = Record<TradableMaterial, { sell: number; buy: number }>;
-
-/** The year's standing omen (PROVISIONAL, 2026-07-13): rolled publicly by the year's
- *  opener each spring, one modest symmetric modifier hanging over the whole table
- *  until the year turns. The record keeps the roll for the announcement modal. */
-export interface YearOmen {
-  record: TableRollRecord;
-  label: string;
-  year: number;
-  effects: TableEffect[];
-}
 
 export interface Settlement {
   /** Stable match-local identity used by persistence and future ownership transfers. */
@@ -352,21 +243,15 @@ export interface Settlement {
   pops: Pops;
 }
 
+/** A building either raises one class column's printed value in its settlement or
+ *  states one flat fact. The Port's fact is its luxury claim, so it has no effect row. */
 export type BuildingEffect =
   | {
-      type: "freemanGoldBonus";
+      /** Every pop of `pop` here makes `amount` instead of 1. For slaves that is the
+       *  working slaves, so it pays nothing on a hill. */
+      type: "classOutput";
+      pop: PopType;
       amount: number;
-      supportedPops: number;
-    }
-  | {
-      type: "citizenInfluenceBonus";
-      amount: number;
-      supportedPops: number;
-    }
-  | {
-      type: "slavePrimaryResourceBonus";
-      amount: number;
-      supportedPops: number;
     }
   | {
       type: "income";
@@ -376,38 +261,18 @@ export type BuildingEffect =
   | {
       type: "happiness";
       amount: number;
-    }
-  | {
-      type: "growPopFoodDiscount";
-      amount: number;
-    }
-  | {
-      /** Raises the settlement's pop capacity (the Aqueduct). */
-      type: "popCapacityBonus";
-      amount: number;
-    }
-  | {
-      /** Flat bonus to the settlement tile's own material income (the Villa). Null on a
-       *  yield-less tile — worthless on a hill/oracle, which is the intended divergence. */
-      type: "tilePrimaryResourceBonus";
-      amount: number;
-    }
-  | {
-      /** Cuts the cost of a social-ladder promotion made in this settlement (the
-       *  Gymnasion): −`amount` off whichever resource the promotion costs. */
-      type: "promoteCostReduction";
-      amount: number;
     };
 
+/** One of each per settlement. */
 export interface BuildingDefinition {
   id: BuildingId;
   name: string;
   cost: Partial<Resources>;
   effects: BuildingEffect[];
-  /** Cap on copies (levels) of this building in one settlement — every building is
-   *  capped (owner ruling 2026-07-15: "they cant scale forever"). Level = copies, each
-   *  eats a slot; a 4-slot hill must diversify rather than stack one flat effect. */
-  maxLevel: number;
+  /** A coastal colony may raise it. Every other building needs a city. */
+  colony?: true;
+  /** Needs a tile whose slaves make something, so it cannot stand on a hill. */
+  needsYield?: true;
 }
 
 export interface HexTile {
@@ -415,12 +280,12 @@ export interface HexTile {
   q: number;
   r: number;
   terrain: Terrain;
-  buildingSlots: number;
-  /** The land's first-order yield, or `null` for yield-less terrain (hills, oracle).
-   *  Null MUST mean no resource type — slave income multiplies `resource.type` by a
-   *  ruleset coefficient (not the amount), so `{ type, amount: 0 }` would leave slaves
-   *  productive and break the yield-less hill (terrain-economy.md precondition). */
-  resource: Yield | null;
+  /** One pool shared by buildings and working slaves (v2 work slots): each building
+   *  takes a slot, each open slot holds one working slave. */
+  slots: number;
+  /** What a working slave makes here, or `null` on terrain where slaves make nothing
+   *  (hills, oracle). */
+  resource: TileResource | null;
   settlements: Settlement[];
 }
 
@@ -431,46 +296,38 @@ export interface HegemonyBoard {
   luxuries: LuxuryAsset[];
 }
 
-/** A happiness penalty (or bonus) that applies for a fixed number of the owning
- *  player's turns, then expires. Created by the `timedHappinessDelta` event
- *  effect and ticked down in the unrest upkeep. */
-export interface TimedHappinessModifier {
-  amountPerTurn: number;
-  turnsRemaining: number;
-  sourceCardId: string;
-  sourceName: string;
-  sourceDeck: EventDeckKind;
-  sourceScope: EventScope;
-}
-
 export interface PlayerState {
+  nationalIdeas: import("./ideaTypes").NationalIdeaOwnership[];
   id: PlayerId;
   name: string;
   resources: Resources;
   /** Derived location index for board traversal; persistent references use Settlement.id. */
   settlements: string[];
+  /** Income collected this year. Cleared when the year turns, so it also says whose
+   *  next income still falls under this year's card. */
   collectedThisTurn: boolean;
-  hasCollectedGameplayIncome: boolean;
   grownSettlementsThisTurn: string[];
-  actionCostDiscounts: ActiveActionCostDiscount[];
-  /** Consecutive turns this player has collected income at or below the food-deficit
-   *  threshold; drives the starvation pop-loss in the unrest upkeep. */
-  consecutiveFoodDeficitTurns: number;
-  /** Active timed happiness penalties/bonuses, ticked down each of the player's turns. */
-  timedHappinessModifiers: TimedHappinessModifier[];
-  /** Running total of pops lost to unrest & starvation — surfaced in the ledger. */
+  /** Unrest tokens on this realm: the one part of happiness that is board state.
+   *  Cards, Laws and Directives place them; a riot, a revolt or a kind card clears
+   *  them. Each takes 1 from the level and none can be bought off. */
+  unrestTokens: number;
+  /** Running total of pops lost to riots and revolts — surfaced in the ledger. */
   popsLostToUnrest: number;
+  /** Running total of revolts this realm has been through. */
+  revolts: number;
+  /** Running total of pops that left unfed at turn end. */
+  popsLostToHunger: number;
   /** Running total of pops gained inorganically from event cards (the `addPops`
    *  effect) — the ledger's "Gained" stat, paired with deaths. */
   popsGainedFromEvents: number;
-  /** Once-per-turn throttles for the Phase 1 currency verbs (roadmap-appendix D7/D8/D10):
-   *  one civic-calm action, one ladder move, one venture. Reset with the turn flags. */
+  /** Once-per-turn throttles: one civic-calm action, one ladder move, one venture,
+   *  one paid pop move. Reset with the turn flags. */
   civicCalmUsedThisTurn: boolean;
   ladderUsedThisTurn: boolean;
   ventureUsedThisTurn: boolean;
-  /** Free-action coupons a standing Law grants once a year (Monumental Code, Land
-   *  Rush) that this player has already spent. Cleared when the year turns. */
-  lawFreeActionsUsedThisYear: LawCostedAction[];
+  moveUsedThisTurn: boolean;
+  /** Calm bought this year. It expires when the year turns and is never banked. */
+  calmActive: boolean;
   /** Turns of income Stratokles's General Strike has taken away. Decremented at the
    *  moment income would have been collected, so the strike costs exactly one turn. */
   incomeSuppressedTurns: number;
@@ -486,9 +343,51 @@ export interface PopulationTransfer {
   pops: Pops;
 }
 
+/** The classes hunger can send away: free pops that eat. Slaves eat nothing. */
+export type HungerPop = "freemen" | "citizens";
+
+/** One pop leaving one settlement. A hunger choice lists one entry per pop. */
+export type HungerLeave = { tileId: string; pop: HungerPop };
+
+/** One pop of any class leaving one settlement: a riot's or a revolt's loss. */
+export type PopLeave = { tileId: string; pop: PopType };
+
+/** Each seat's happiness level just before and just after a year card turned, and the
+ *  income its card takes from the seat's realm this year. */
+export type YearCardImpact = Record<
+  PlayerId,
+  { before: number; after: number; loss: Partial<Resources> }
+>;
+
+/**
+ * A public moment the shell shows a rival as a toast, beside the Chronicle line.
+ * Add a kind where the engine writes the line; the shell's toast lane names it.
+ */
+export type LogMoment =
+  | { kind: "hunger"; leave: HungerLeave[] }
+  | { kind: "ideaBought"; ideaId: import("./ideaTypes").NationalIdeaId }
+  | {
+      kind: "riot";
+      roll: number;
+      modifier: number;
+      modified: number;
+      rowLabel: string;
+      outcomes: string[];
+      left: PopLeave[];
+      insurance: RiotInsuranceId[];
+      concessionTileId: string | null;
+      tokensCleared: number;
+      /** The seat's happiness level once the riot resolved. */
+      level: number;
+    }
+  | { kind: "revolt"; slaves: number; left: PopLeave[]; tokensCleared: number; level: number }
+  /** The year's card, turned: no toast, read by the year card's face. */
+  | { kind: "yearCard"; cardId: string; impact: YearCardImpact };
+
 export interface LogEntry {
   id: string;
-  season: number;
+  /** The year the line was written in. */
+  year: number;
   message: string;
   /**
    * Which seat this line concerns.
@@ -507,6 +406,8 @@ export interface LogEntry {
    * Nothing in the rules reads it.
    */
   about?: PlayerId;
+  /** Set when the line is a moment the shell toasts to the other seats. */
+  moment?: LogMoment;
 }
 
 export interface HegemonyState {
@@ -521,8 +422,8 @@ export interface HegemonyState {
   turn: number;
   /** The seed this game was created from — shown in the UI, embedded in bug reports. */
   seed: number;
-  /** The player who opens the current season; rotates one seat every new year (spring). */
-  seasonOpener: PlayerId;
+  /** The player who opens the current year; the seat moves on one each year. */
+  yearOpener: PlayerId;
   /** Set when the game ends — the victor of the race, or the exhaustion tally. */
   winner: PlayerId | null;
   gameOverReason: GameOverReason | null;
@@ -537,33 +438,37 @@ export interface HegemonyState {
   board: HegemonyBoard;
   players: Record<PlayerId, PlayerState>;
   transfers: PopulationTransfer[];
-  seasonalDrawPile: EventDeck;
-  seasonalDiscardPile: EventDeck;
+  /** The year deck, the game's clock: fourteen cards dealt once and never reshuffled.
+   *  The order is hidden; an empty pile when the year turns ends the game. */
+  yearDrawPile: YearCard[];
+  yearDiscardPile: YearCard[];
   playerDrawPile: EventDeck;
   playerDiscardPile: EventDeck;
-  activeSeasonEvent: ActiveSeasonEvent | null;
+  /** This year's card, retained for the final tally. Null before gameplay starts. */
+  activeYearCard: YearCard | null;
   lastPlayerEvent: EventCard | null;
   pendingPlayerEvent: PendingPlayerEvent | null;
-  /** A riot blocking the current turn (income deferred until it resolves). */
+  /** A riot blocking the committed turn's handoff until it resolves. */
   pendingRiot: PendingRiot | null;
+  /** Hunger waiting on its seat: it ended its turn `unfed` food short, and chooses
+   *  which freemen or citizens leave before the riot check and the hand-off. */
+  pendingHunger: PendingHunger | null;
   /** The most recent event-table roll, for the UI's outcome display. */
   lastTableRoll: TableRollRecord | null;
-  /** The standing yearly omen — rolled each spring, cleared by the next roll. */
-  yearOmen: YearOmen | null;
   /** This game's bank rates — derived from the board at creation, static after. */
   bank: BankRates;
-  season: number;
+  /** The year being played, from 1. A year is one turn for every seat. */
+  year: number;
   /** Serialized mulberry32 PRNG state; advanced on each deck shuffle so draws are reproducible from the initial seed. */
   rng: number;
   log: LogEntry[];
 
   // ── The Assembly (Phase 3-B · docs/archive/plans/assembly-politicians.md) ────────────────
   //
-  // Politician power and descriptive patrons remain board-derived. Voice deliberately
-  // diverges: authored-and-passed progress is permanent after repeal or replacement.
+  // Politician power, descriptive patrons and Voice are all board-derived.
 
-  /** The Assembly in session. Non-null SUSPENDS the turn machine — the same
-   *  engine-state gate the yearly omen uses, so no click can open or dismiss it. */
+  /** The Assembly in session. Non-null SUSPENDS the turn machine, so no click can
+   *  open or dismiss it. */
   assembly: AssemblySession | null;
   /** Standing Laws — the stelae in the agora. Consulted by the income, cost, bank and
    *  happiness pipelines through `assembly/laws.ts`. */
@@ -577,10 +482,9 @@ export interface HegemonyState {
   /** Monotonic enactment counter, so "the most recently enacted Law" is exact even
    *  when two pass in the same assembly. */
   lawOrder: number;
-  /** Permanent authored-and-passed resolution count, including Directives. */
+  /** Authored resolutions passed, Directives included. For telemetry and the
+   *  Assembly's record; Voice reads the standing Laws instead. */
   assemblyPassedByPlayer: Record<PlayerId, number>;
-  /** First seat to reach the Voice minimum; changes only when strictly exceeded. */
-  voiceHolder: PlayerId | null;
   /** Rival targeted by a passed Isonomia; consumed when the next Assembly convenes. */
   pendingIsonomiaTarget: PlayerId | null;
   /** How many assemblies have convened — the panel's "Nth of the game" subtitle. */

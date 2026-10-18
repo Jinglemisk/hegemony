@@ -42,7 +42,7 @@ describe("shared tuning resolution", () => {
       "low-number-core-v1",
       {
         "ruleset.startingResources.wood": 11,
-        "buildings.villa.cost.wood": 8,
+        "buildings.estate.cost.wood": 8,
       },
       { startingResources: { wood: 10 }, civicCalm: { goldCost: 4 } },
     );
@@ -51,12 +51,13 @@ describe("shared tuning resolution", () => {
     expect(resolved.ruleset.civicCalm.goldCost).toBe(4);
     expect(resolved.ruleset.actionCosts.foundColony.wood).toBe(9);
     expect(resolved.ruleset.economy.stockpileFloors).toEqual({
+      food: 0,
       wood: 0,
       stone: 0,
       gold: 0,
       influence: 0,
     });
-    expect(resolved.content.buildings.find((building) => building.id === "villa")?.cost.wood).toBe(
+    expect(resolved.content.buildings.find((building) => building.id === "estate")?.cost.wood).toBe(
       8,
     );
     expect(resolved.presetId).toBe("low-number-core-v1");
@@ -73,9 +74,10 @@ describe("shared tuning resolution", () => {
   });
 
   it("uses the preset as the manual-edit default", () => {
-    expect(defaultValueAt("ruleset.actionCosts.foundColony.wood", null)).toBe(20);
+    expect(defaultValueAt("ruleset.actionCosts.foundColony.wood", null)).toBe(4);
     expect(defaultValueAt("ruleset.actionCosts.foundColony.wood", "low-number-core-v1")).toBe(9);
-    expect(defaultValueAt("buildings.villa.cost.wood", "low-number-core-v1")).toBe(6);
+    // The preset leaves the roster as authored.
+    expect(defaultValueAt("buildings.estate.cost.wood", "low-number-core-v1")).toBe(4);
   });
 });
 
