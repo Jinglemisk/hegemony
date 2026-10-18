@@ -1,6 +1,6 @@
 # Independent audit of the v2 migration plan
 
-Date: 2026-09-28. One independent agent, read-only on a clean checkout of `main` at 08ea043. Its recommendations and the owner's calls on them are folded into [the plan](../../plans/v2-migration.md).
+Date: 2026-09-28. One independent agent, read-only on a clean checkout of `main` at 08ea043. Its recommendations and the owner's calls on them are folded into [the plan](../../archive/plans/v2-migration.md).
 
 **1. Verdict**
 

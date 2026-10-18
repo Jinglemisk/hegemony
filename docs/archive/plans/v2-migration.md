@@ -1,10 +1,14 @@
 ---
-status: active
-phase: "v2"
-updated: 2026-10-16
+archive_status: shipped
+archived: 2026-10-18
+shipping_evidence: "Built on feat/v2 through PRs #79 to #120; the owner merged it into main on 2026-10-18 (#121)"
 ---
 
 # v2 migration: the shallow economy in the Hybrid arc shell
+
+> Archived 2026-10-18, when `feat/v2` merged into `main` (#121). Step 11, the sim gate, and
+> its decision rules moved to the [player trade plan](../../plans/player-trade.md). Step 16,
+> the refactor, folds into the living map work.
 
 ## Outcome
 
@@ -35,7 +39,7 @@ Every step:
 - Works on its own branch, `v2/step-NN-short-name`, cut from the latest `feat/v2`.
 - Builds the step and updates the shell panels it touches.
 - Passes `npm run check`, `npm run lint`, `npm run test:run`, `npm run test:parity`, and a
-  bot batch through `npm run sim` (commands in [simulation](../reference/simulation.md)).
+  bot batch through `npm run sim` (commands in [simulation](../../reference/simulation.md)).
 - Is built by a `codex exec` worker, which reviews its own diff; the session leads and verifies.
 - Opens a PR into `feat/v2`, titled like "(Feature) v2 step 3: pops and tiles", with a short
   body per the owner's PR style. Its last commit ticks the step's box here with the PR
@@ -64,7 +68,7 @@ Standing rules:
 
 ## Non-goals
 
-- Player trade. [Its plan](player-trade.md) stays blocked; the bank's gold corridor bridges
+- Player trade. [Its plan](../../plans/player-trade.md) stays blocked; the bank's gold corridor bridges
   until it ships.
 - Multiplayer and server work.
 - Final tuning. Every number in the paper is a placeholder: Step 11 settles structure and a
@@ -74,7 +78,7 @@ Standing rules:
 
 ## Settled inputs
 
-**Systems.** The [direction paper](../reports/balance/2026-09-05-shallow-economy.md) v0.2,
+**Systems.** The [direction paper](../../reports/balance/2026-09-05-shallow-economy.md) v0.2,
 with the owner's rulings in its section 8, plus these later rulings:
 
 - One Temple and one Granary per settlement, like every building (2026-09-25).
@@ -85,7 +89,7 @@ with the owner's rulings in its section 8, plus these later rulings:
   +2 if calm was bought this year. A level of −3 this turn is −3 next turn if nothing
   changes. Riot at −3 or below, revolt at −6 or below, per the paper's section 5.7. This
   replaces the bank-first ruling of 2026-09-06: Step 4's batch showed the bank slides
-  ([report](../reports/simulation/2026-10-02-v2-step4-bank-and-food.md)).
+  ([report](../../reports/simulation/2026-10-02-v2-step4-bank-and-food.md)).
 - Riots and revolts are checked at the end of the player's own turn, before it passes
   (owner ruling, 2026-10-03). The player can buy calm, build a Temple, or change their
   pops before the check. Ending at −3 or below starts a riot; at −6 or below, a revolt.
@@ -94,7 +98,7 @@ with the owner's rulings in its section 8, plus these later rulings:
   the start-of-turn check in Steps 5 and 6.
 - No `/code-review ultra` on this migration (owner, 2026-10-02). Each step's own
   medium-effort review is the review.
-- National Ideas follow [their plan](national-ideas.md): one picked at setup, one bought
+- National Ideas follow [their plan](../../plans/national-ideas.md): one picked at setup, one bought
   with influence.
 - Luxury goods as shipped on `main`: coastal only, claimed by a Port that is never free.
 
@@ -134,7 +138,7 @@ After the independent audit (2026-09-28):
   can cover it (bank, Dole, Granary) before ending the turn. Ending short, one pop of the
   player's choice leaves per missing food and food returns to zero. Settlements eating and
   food as a level were rejected on the
-  [Q79 note](../reports/balance/2026-10-06-q79-food.md)'s evidence. This supersedes
+  [Q79 note](../../reports/balance/2026-10-06-q79-food.md)'s evidence. This supersedes
   Step 3's hunger at income; Step 17 builds it.
 - Pops on the move count (owner, 2026-10-10). A pop in transit is still in its realm: its
   slaves count toward happiness and its pops toward the titles that count pops. Before, a
@@ -179,9 +183,9 @@ Work slots (2026-10-01, the answer to Q78, landmark tiles):
   printed food today, so the plains are re-numbered upward. Step 4's bot batch checks it.
 - Luxuries stay uncapped; Step 11 measures whether they decide Beloved.
 
-**Shell.** The [Hybrid arc mock](../reference/design/shell-v2/mock/index.html), picked by
-the owner on 2026-09-28 from seven candidates. Its [brief](../reference/design/shell-v2/BRIEF.md)
-and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
+**Shell.** The [Hybrid arc mock](../../reference/design/shell-v2/mock/index.html), picked by
+the owner on 2026-09-28 from seven candidates. Its [brief](../../reference/design/shell-v2/BRIEF.md)
+and [gate script](../../reference/design/shell-v2/gates.mjs) sit beside it.
 
 - Layout after Imperator: Rome. A quiet top bar carries resources, rival icons and consult
   icons. A large bottom-left realm panel has a curved top-right edge, the six verb discs
@@ -200,7 +204,7 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 - Verb names are written under every icon. Imperator raster icons are used throughout:
   `assets/icons/placeholder` plus the unrest set in `docs/reference/design/shell-v2/icons`.
 - The brandbook's visual language stays. The bar is fidelity and execution.
-- The two KYKLOS triage ledgers are archived; [ui-remaining](ui-remaining.md) is the one
+- The two KYKLOS triage ledgers are archived; [ui-remaining](../../plans/ui-remaining.md) is the one
   UI ledger.
 - Checks carried from the judges: an open fan never covers a city name; far fan options
   stay open while the pointer travels to them; Build may skip the class step when a class
@@ -551,7 +555,7 @@ and [gate script](../reference/design/shell-v2/gates.mjs) sit beside it.
 **Defaults picked in Step 10** (2026-10-03):
 
 - Keep one master search and political scorer. Slaver, civic and trader are the
-  weight vectors in the [AI reference](../reference/ai.md), applied to placements,
+  weight vectors in the [AI reference](../../reference/ai.md), applied to placements,
   setup Ideas, purchases and Assembly decisions as well as ordinary turns. Held
   cards remain 120; starvation costs 60 per projected lost pop for every personality.
   Every Assembly action uses its acting seat's policy; coalition prediction uses
@@ -1031,7 +1035,7 @@ present Step 4's bot batch (riots per game, share of turns on the riot table) an
       tile and split its slots; an upgrade evicts the other. Citizens come only by
       promotion. Record as defaults the re-numbered slot table, who takes the odd slot on a
       shared tile, and the starting food (12 today, unruled for v2).
-- [x] **Step 4 · Buildings and prices.** ([#83](https://github.com/Jinglemisk/hegemony/pull/83): a 40-game bot batch finishes with no illegal moves; the riot table opens on 15% of player-turns, 19% without the food-stockpile bonus and 5% with calm banked; hunger takes 6.2 to 7.9 pops a seat-game and is the bots' doing. [Report](../reports/simulation/2026-10-02-v2-step4-bank-and-food.md).) Marketplace, Estate and Forum raise their class
+- [x] **Step 4 · Buildings and prices.** ([#83](https://github.com/Jinglemisk/hegemony/pull/83): a 40-game bot batch finishes with no illegal moves; the riot table opens on 15% of player-turns, 19% without the food-stockpile bonus and 5% with calm banked; hunger takes 6.2 to 7.9 pops a seat-game and is the bots' doing. [Report](../../reports/simulation/2026-10-02-v2-step4-bank-and-food.md).) Marketplace, Estate and Forum raise their class
       column; Temple, Granary and Port state one fact each; one of each per settlement.
       Workshop and Villa merge into the Estate; Odeon, Aqueduct and Gymnasion are cut. One
       price per verb, per the paper's section 5.6, including the Dole and the paid pop move.
@@ -1052,7 +1056,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
       three luxuries go; calm is +2 for this year and luxuries are +2 each. A riot clears
       the tokens and then rolls; a revolt sends half the slaves away with no roll. Beloved
       reads the level without calm.
-- [x] **Step 6 · Years and the year deck.** ([#85](https://github.com/Jinglemisk/hegemony/pull/85): a 40-game bot batch finishes all fourteen years with no turn caps; 2 games end by the race and 38 by the deck; the riot table opens on 10.7% of player-turns after year 7. [Note](../reports/audits/2026-10-03-v2-step6-years.md).) Seasons and the omen retire. A 14-card year deck
+- [x] **Step 6 · Years and the year deck.** ([#85](https://github.com/Jinglemisk/hegemony/pull/85): a 40-game bot batch finishes all fourteen years with no turn caps; 2 games end by the race and 38 by the deck; the riot table opens on 10.7% of player-turns after year 7. [Note](../../reports/audits/2026-10-03-v2-step6-years.md).) Seasons and the omen retire. A 14-card year deck
       is the clock and the next card stays hidden. Victory is checked at the start of each
       player's own turn, as today, with the paper's minimums; Treasurer counts gold only; Voice is a level.
 - [x] **Step 7 · Cards.** ([#86](https://github.com/Jinglemisk/hegemony/pull/86): a 40-game bot batch finishes all fourteen years with no turn caps, all 40 by the deck; 4.1 riots a game and the riot table on 7.5% of player-turns after year 7; 7.5 ventures a game; the gate passes at 1280/1440/1920 and the conduct audit drops to 24 rows.) A player deck of twelve kinds in the four verbs. Ventures take one
@@ -1065,7 +1069,7 @@ unattended overnight. **Stop:** a summary of the commits and every default picke
       paper's Appendix B Laws and Directives, under its three global limits.
 - [x] **Step 9 · National Ideas.** ([#88](https://github.com/Jinglemisk/hegemony/pull/88): a 40-game bot batch finishes with no turn caps, 7 games by the race; bots pick two Ideas at setup and buy five, and four Ideas are never taken; riots 1.6 a game, 3.4% of player-turns after year 7; the gate passes on the map and the Assembly, and the setup picker, a page with no map, has no defects.) First rewrite the Ideas in v2 terms, since seasons, the
       veto, per-pop scaling and gold upkeep no longer exist; then build them per
-      [their plan](national-ideas.md).
+      [their plan](../../plans/national-ideas.md).
 - [x] **Step 10 · Bot personalities.** ([#90](https://github.com/Jinglemisk/hegemony/pull/90): a rotated batch of slaver, civic, trader and master, 10 seeds × 4 rotations, finishes with no turn caps; wins are slaver 33%, civic 35%, trader 13%, master 20%; riots 4.7 a game, 10.7% of player-turns after year 7; the batch takes 16 minutes on one core.) Slaver, civic and trader as weight vectors over the
       political scorer, with bank and venture moves inside the search, so each personality
       can actually pursue its build.
@@ -1078,7 +1082,7 @@ the other; Step 11 in one session, on the owner's go. **Stop:** the dated report
 proposed remedy for each failing rule; the owner decides.
 
 - [x] **Step 17 · Hunger at turn end.** ([#99](https://github.com/Jinglemisk/hegemony/pull/99): a rotated 40-game batch finishes with no turn caps, 3 by the race and 37 by the deck; pops lost to hunger fall from 3.3–3.7 to 0.5–0.8 a seat-game and hunger turns from 1.2–1.4 to 0.3–0.4, against Step 13's batch; riots 2.3 a game, the table on 4.1% of player-turns; wins slaver 33%, civic 20%, trader 15%, master 33%; three bot turns hit the 30-action limit, each a seat with about 100 gold buying 12 to 19 missing food one unit at a time; the hunger card and the short turn pass the gate at 1280/1440/1920 and ui:audit shows 0 defects.) The Q79 ruling in Settled inputs, per the
-      [Q79 note](../reports/balance/2026-10-06-q79-food.md)'s option E and its cost
+      [Q79 note](../../reports/balance/2026-10-06-q79-food.md)'s option E and its cost
       section. Engine: income stops applying hunger; food may sit below zero only during
       its owner's turn, and turn end settles it before the riot check. Losses at income
       never raise a negative stock. Shell: the food figure shows the shortfall, End turn
@@ -1086,7 +1090,7 @@ proposed remedy for each failing rule; the owner decides.
       turn end with a way back to buy food. Bots settle hunger at turn end in their
       projection. `rules.md` and the reference docs follow.
 - [x] **Step 18 · Sim parity, the bugs.** ([#100](https://github.com/Jinglemisk/hegemony/pull/100): a rotated 40-game batch finishes with no turn caps and no forced turns, 3 by the race and 37 by the deck; wins slaver 30%, civic 23%, trader 30%, master 18%, against Step 17's 33%, 20%, 15% and 33%; 19 of 37 deck games fall to the tiebreak, which the report now records; riots 2.4 a game, the table on 6.5% of turns from year 8; repeals filed rise from 125 to 227, since a leader's loss now counts in full; the trader loses 1.45 pops a seat-game to hunger while the forecast still buys no food; ui:audit shows 0 defects.) From the
-      [sim parity audit](../reports/simulation/2026-10-10-v2-sim-parity-audit.md). The two
+      [sim parity audit](../../reports/simulation/2026-10-10-v2-sim-parity-audit.md). The two
       rulings of 2026-10-10 in Settled inputs: pops on the move count, and no stock below
       zero. Every row the audit marks as a bug: the Assembly's double-counted gain, the food
       reserve, pops in transit in the projection, Public Dole, City Pioneers, the luxury
@@ -1097,7 +1101,7 @@ proposed remedy for each failing rule; the owner decides.
       Assembly figures, the CSV's personality and winner columns, and draw swings for pop
       and token cards. Stale comments and docs the audit lists.
 - [x] **Step 19 · Sim parity, the gaps.** ([#101](https://github.com/Jinglemisk/hegemony/pull/101): a rotated 40-game batch finishes with no turn caps, 3 by the race and 37 by the deck; wins slaver 40%, civic 23%, trader 15%, master 23%, against Step 18's 30%, 23%, 30% and 18%; riots 5.3 a game against 2.4, the table on 11.8% of turns from year 8 and on 27.4% of the slaver's, over Step 11's 10% limit; the trader loses 1.90 pops a seat-game to hunger against 1.45; idle slaves fall to 1 to 4%; repeals filed 194; seat 0 wins 45% of games against 25%, with Slave Colonies as its first Idea in 30 of 40, which Q80 follows up; 40 games on four workers take 332 s and write the serial run's report; ui:audit shows 0 defects.) From the
-      [sim parity audit](../reports/simulation/2026-10-10-v2-sim-parity-audit.md). Shipped:
+      [sim parity audit](../../reports/simulation/2026-10-10-v2-sim-parity-audit.md). Shipped:
       the projection buys food before pops leave and keeps a reserve for lean years; a riot
       is priced from the riot table, and insurance by what it saves; idle slaves move to
       open slots; batches run in parallel across cores and their reports merge. Dropped by
@@ -1125,7 +1129,7 @@ proposed remedy for each failing rule; the owner decides.
       content is used by some personality in a rotated batch, or a fixture proves the bot
       takes it when it is clearly best; bot bugs found are fixed before Step 11's batches.
       Run batches on the baseline seeds, compare with the
-      [2026-09-05 baseline](../reports/simulation/2026-09-05-shallow-economy-baseline.md),
+      [2026-09-05 baseline](../../reports/simulation/2026-09-05-shallow-economy-baseline.md),
       apply the decision rules below, and save a dated report. First commit the class and
       draw telemetry the baseline relied on, and rerun the v1 baseline with food floored at
       zero, so v2 is measured against that fix rather than credited with it. Run at least

@@ -130,10 +130,30 @@ purchases, pops lost to hunger, realms that never cut wood (55 of 160), the infl
 year, and wins and titles.
 
 Then, in order: slice 2's report adds a trade column to Q80's table and the owner answers Q80;
-Step 11 runs once every slice is in, by the v2 plan's decision rules, its reach audit counting
+Step 11 runs once every slice is in, by the decision rules below, its reach audit counting
 the trade commands and its build-viability rule testing whether missing trade was the gap;
 number tuning follows. Step 11's rule on the influence plateau now reads a stock that can be
 sold.
+
+## Step 11 decision rules
+
+Moved here from the [v2 migration plan](../archive/plans/v2-migration.md) on 2026-10-18.
+
+Proposed thresholds; the owner may change them before Step 11 runs.
+
+| Question                        | Rule                                                                                                                       | If it fails                                                               |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Do riots stay rare?             | The riot table is reached on at most 10% of turns after year 7                                                             | Retune the level's terms or the token cards                               |
+| Does influence plateau?         | Median influence stock grows by at most 5 a year from year 10 to year 14                                                   | Raise the propose and repeal prices first                                 |
+| Is every build viable?          | Each personality wins between 20% and 45% of games                                                                         | Rework the weakest build, and check whether missing trade is the real gap |
+| Does the leader run away?       | The round-5 income leader wins at most 40% of games, and the leader holds at most 2.5 times the laggard's stock at year 10 | Report, with a proposed catch-up rule                                     |
+| Do luxuries decide Beloved?     | Beloved's holder is also the luxury leader in at most 60% of the turns it is held                                          | Raise the Port price or cap what luxuries add                             |
+| Is it legible?                  | Recount the paper's section 5.11 reads per decision against the built game                                                 | Report only                                                               |
+| Do draws matter?                | The spread of draw swings against income is recorded                                                                       | Report only; cutting the deck is the owner's call                         |
+| How long, and how do games end? | Fourteen years; the share ending by the race is recorded                                                                   | Report only                                                               |
+
+The audit showed the first draft of these rules could not measure what they asked: a
+linear influence pile passed, and no card could meet the draw rule.
 
 ## Three-axis parity
 
@@ -201,7 +221,7 @@ All to `main`, after the v2 merge.
 Answered by the owner on 2026-10-18.
 
 - **D1 · When does trade ship?** After the v2 merge; trade PRs go to `main`, and Step 11 runs
-  from this plan once the v2 plan is archived.
+  from this plan.
 - **D2 · What can be traded?** Materials, gold, luxury goods, influence and pops. Never votes.
 - **D3 · How many offers a turn?** No limit, and several can be open at once.
 - **D4 · Can one person trade with bots?** Yes: slice 6 adds human seats to the bot table.

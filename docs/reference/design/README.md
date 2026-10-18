@@ -1,7 +1,7 @@
 # docs/design — the visual-identity decision record
 
 **Current (2026-09-28):** the chosen in-match layout is [`shell-v2/`](shell-v2/BRIEF.md), the Hybrid
-arc mock, built to the [v2 migration plan](../../plans/v2-migration.md). Everything below is the
+arc mock, built to the [v2 migration plan](../../archive/plans/v2-migration.md). Everything below is the
 July visual-identity record and earlier layouts, kept as history.
 
 **Since 2026-10-17:** icons are [Painted bronze](bronze-icons.md), and the board is headed for
