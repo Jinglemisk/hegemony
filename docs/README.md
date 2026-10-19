@@ -5,7 +5,7 @@ tree. The roadmap establishes sequence and exit gates; plans define unshipped
 work; references describe the game that exists; reports preserve dated evidence;
 and the archive is historical context, never current authority.
 
-Last updated: 2026-10-18.
+Last updated: 2026-10-19.
 
 ## Now
 
@@ -27,14 +27,15 @@ precedes full multiplayer.
 
 ## Active plans
 
-| Plan                                                | Phase    | Status    | Position                                                                          |
-| --------------------------------------------------- | -------- | --------- | --------------------------------------------------------------------------------- |
-| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`   | Observation/capability prerequisites first; advanced search waits for the freeze  |
-| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`  | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged             |
-| [UI — what is left](plans/ui-remaining.md)          | —        | `active`  | The one UI ledger; the KYKLOS triage ledgers are archived                         |
-| [Player trade](plans/player-trade.md)               | post-v2  | `ready`   | Slice 1 next on `main`; Step 11 and Q80 follow the slices                         |
-| [National Ideas](plans/national-ideas.md)           | v2       | `active`  | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
-| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked` | Final typed Resolution/Idea effects and evidence before multiplayer               |
+| Plan                                                | Phase    | Status     | Position                                                                          |
+| --------------------------------------------------- | -------- | ---------- | --------------------------------------------------------------------------------- |
+| [Outcome-driven AI](plans/outcome-driven-ai.md)     | 3.6/post | `ready`    | Observation/capability prerequisites first; advanced search waits for the freeze  |
+| [Luxury goods](plans/luxury-goods.md)               | 4        | `active`   | Slices 1–2 shipped on `main`; the v2 migration carries them unchanged             |
+| [UI — what is left](plans/ui-remaining.md)          | —        | `active`   | The one UI ledger; the KYKLOS triage ledgers are archived                         |
+| [Player trade](plans/player-trade.md)               | post-v2  | `ready`    | Slice 1 next on `main`; slice 2 removes the bank and adds base food               |
+| [Development deck](plans/development-deck.md)       | post-v2  | `proposed` | Replaces Ventures; follows trade slices 1–2                                       |
+| [National Ideas](plans/national-ideas.md)           | v2       | `active`   | Step 9 shipped (#88); twelve v2 rules, open setup draft (#95), influence purchase |
+| [V1 mechanics freeze](plans/v1-mechanics-freeze.md) | 5.5      | `blocked`  | Final typed Resolution/Idea effects and evidence before multiplayer               |
 
 Every file in `docs/plans/` must appear in this table. Start a substantial feature
 from [the plan template](plans/_template.md).

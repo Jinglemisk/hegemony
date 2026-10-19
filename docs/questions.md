@@ -4,7 +4,7 @@ Only unresolved owner decisions live here. Answer in chat or after `Answer:`; th
 answer is then incorporated into the affected plan and this entry is removed.
 Recommendations are defaults for discussion, not silent authorization.
 
-Last updated: 2026-10-18.
+Last updated: 2026-10-19.
 
 ## Q80 — What shape should Step 11 take?
 

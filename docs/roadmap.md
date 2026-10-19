@@ -5,7 +5,7 @@ before planning, implementing, or declaring work complete. Implementation detail
 belongs in linked plans; unresolved owner decisions belong only in
 [questions.md](questions.md).
 
-Last updated: 2026-10-18.
+Last updated: 2026-10-19.
 
 ## Mandatory three-axis parity contract
 
@@ -143,8 +143,9 @@ map.
 
 ## Current initiative — player trade, then the living map
 
-[Player trade](plans/player-trade.md) ships to `main` in six slices, and Step 11 and number
-tuning follow it. The 3D living map, in three.js after the
+[Player trade](plans/player-trade.md) ships to `main` in six slices; it removes the bank and
+gives every settlement 1 food. The [development deck](plans/development-deck.md) follows and
+replaces Ventures. Step 11 and number tuning follow both. The 3D living map, in three.js after the
 [showcase](reference/design/showcases/living-map.html), is the next track; its plan is
 written when it starts.
 
