@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { PLAYER_IDS } from "../../../game/data";
 import { assemblySittings, nextAssemblyYear } from "../../../game/assembly";
+import { unrestOutcome } from "../../../game/unrest";
 import { yearDeckSize } from "../../../game/year";
 import type { LogMoment, Resource, YearCard, YearTerm } from "../../../game/types";
-import { presentYearCard } from "../../../ui/effects";
+import { presentUnrestOutcome, presentYearCard } from "../../../ui/effects";
 import type { EffectPresentation } from "../../../ui/effects";
 import { ordinal, toRoman } from "../../../ui/formatters";
 import { sign, yearCardIcon } from "../../../ui/frameFormat";
@@ -111,7 +112,6 @@ export function YearCardModal({
         entry.moment?.kind === "yearCard" && entry.moment.cardId === card.id,
     )?.moment.impact;
   const blow = blowOf(card);
-  const { riotThreshold, revoltThreshold } = G.ruleset.economy.unrest;
   const final = G.year >= years;
   const opener = G.yearOpener === viewerId ? "You open" : `${G.players[G.yearOpener].name} opens`;
   const sits = G.assembly && G.assembly.year === G.year;
@@ -161,12 +161,10 @@ export function YearCardModal({
                   empty={<span className="yearImpact-lv num">0</span>}
                 />
               );
-              const warn =
-                movesLevel(card) && after <= revoltThreshold
-                  ? "at the revolt line"
-                  : movesLevel(card) && after <= riotThreshold
-                    ? "at the riot line"
-                    : null;
+              const unrestLine = movesLevel(card)
+                ? presentUnrestOutcome(G.ruleset, unrestOutcome(G, seat, after).tier).line
+                : null;
+              const warn = unrestLine ? `at ${unrestLine}` : null;
               return (
                 <li className={seat === viewerId ? "is-you" : undefined} key={seat}>
                   <SeatMark playerID={seat} />

@@ -189,9 +189,13 @@ export interface BallotVote {
   bribed: number;
 }
 
+/** What a ballot item came to: carried and took effect, fell on the vote, or carried
+ *  but could not take effect because an earlier item on the ballot made it illegal. */
+export type BallotOutcome = "carried" | "fell" | "blocked";
+
 export interface AssemblyResult {
   item: BallotItem;
-  passed: boolean;
+  outcome: BallotOutcome;
   yea: number;
   nay: number;
   votes: BallotVote[];

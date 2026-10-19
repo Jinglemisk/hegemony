@@ -24,11 +24,15 @@ import {
   restCanTurn,
   shouldOpenAssembly,
   voteOutlook,
+  wouldPass,
 } from "./assembly";
 import { projectForPlayer } from "../projection";
 
-function sitting(year = 2) {
-  const G = scenario().opening().withResources("0", { influence: 30 }).build();
+function sitting(year = 2, tiesPass = false) {
+  const G = scenario({ patch: { assembly: { tiesPass } } })
+    .opening()
+    .withResources("0", { influence: 30 })
+    .build();
   G.year = year;
   G.pendingPlayerEvent = null;
   G.pendingRiot = null;
@@ -102,7 +106,7 @@ describe("v2 Assembly", () => {
     expect(assemblyBribe(G, "1", "gold").ok).toBe(false);
     expect(assemblyVote(G, "0", true).ok).toBe(true);
     for (let i = 0; i < 3; i++) expect(assemblyVote(G, G.currentPlayer, false).ok).toBe(true);
-    expect(G.assembly!.results[0]).toMatchObject({ yea: 3, nay: 3, passed: false });
+    expect(G.assembly!.results[0]).toMatchObject({ yea: 3, nay: 3, outcome: "fell" });
     expect(G.activeLaws).toHaveLength(0);
     expect(G.assembly!.results[0].votes[0]).toMatchObject({ weight: 3, bribed: 2 });
     // Bought votes carry to the next ballot, while the sitting-wide cap remains spent.
@@ -137,7 +141,7 @@ describe("v2 Assembly", () => {
     pass(G);
     vote(G);
     expect(G.activeLaws.map((l) => l.cardId)).toEqual(["sacred-fields"]);
-    expect(G.assembly!.results.map((r) => r.passed)).toEqual([true, false]);
+    expect(G.assembly!.results.map((r) => r.outcome)).toEqual(["carried", "blocked"]);
     expect(G.assemblyPassedByPlayer["0"]).toBe(1);
     expect(G.assemblyPassedByPlayer["1"]).toBe(0);
     expect(G.politicianDiscards.demosthenes).toContain("festival-calendar");
@@ -201,10 +205,24 @@ describe("The vote as the seats read it", () => {
     });
     expect(outlook.rest.map((seat) => seat.playerID)).toEqual(["2", "3"]);
     // A tie fails: at 2 to 1 a single uncast vote can still sink it, at 3 to 1 it cannot.
-    expect(restCanTurn(2, 1, 1)).toBe(true);
-    expect(restCanTurn(3, 1, 1)).toBe(false);
-    expect(restCanTurn(1, 1, 1)).toBe(true);
-    expect(restCanTurn(1, 2, 1)).toBe(false);
+    expect(restCanTurn(G, 2, 1, 1)).toBe(true);
+    expect(restCanTurn(G, 3, 1, 1)).toBe(false);
+    expect(restCanTurn(G, 1, 1, 1)).toBe(true);
+    expect(restCanTurn(G, 1, 2, 1)).toBe(false);
+  });
+  it("carries a tie when the ruleset says ties pass", () => {
+    const G = sitting(2, true);
+    expect(wouldPass(G, 3, 3)).toBe(true);
+    expect(restCanTurn(G, 2, 1, 1)).toBe(false);
+    expect(restCanTurn(G, 1, 2, 1)).toBe(true);
+    propose(G, "guild-charter");
+    pass(G);
+    for (const id of PLAYER_IDS)
+      for (const tile of G.players[id].settlements) owned(G, tile, id).pops.citizens = 0;
+    for (const yea of [true, true, false, false])
+      expect(assemblyVote(G, G.currentPlayer, yea).ok).toBe(true);
+    expect(G.assembly!.results[0]).toMatchObject({ yea: 2, nay: 2, outcome: "carried" });
+    expect(G.activeLaws.map((law) => law.cardId)).toEqual(["guild-charter"]);
   });
   it("previews a Directive on a copy of the board", () => {
     const G = sitting();

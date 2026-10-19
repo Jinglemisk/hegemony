@@ -4,7 +4,7 @@ import { getLuxuryGood } from "../../game/content";
 import type { UnrestStatus } from "../../game/rules";
 import type { HegemonyState, PlayerId } from "../../game/types";
 import type { VictoryThreat } from "../../game/victory";
-import { presentActiveEffect } from "../../ui/effects";
+import { presentActiveEffect, presentUnrestOutcome } from "../../ui/effects";
 import type { EffectTone } from "../../ui/effects";
 import { RESOURCE_ICON } from "../../ui/frameFormat";
 import {
@@ -39,14 +39,6 @@ const UNREST_WORD: Record<Exclude<UnrestStatus["tier"], "calm">, string> = {
   unrest: "Unrest",
   revolt: "Revolt",
 };
-
-function consequenceOf(tier: Exclude<UnrestStatus["tier"], "calm">, riotThreshold: number) {
-  if (tier === "revolt")
-    return "Half your slaves leave if you end your turn at this level, and your Unrest tokens clear.";
-  if (tier === "unrest")
-    return "Ending your turn at this level clears your Unrest tokens and starts the riot table.";
-  return `A riot starts at ${formatNumber(riotThreshold)} happiness.`;
-}
 
 /** The resource a mechanic moves, as the disc's picture. */
 function iconOf(mechanic: ActiveEffectMechanic | undefined): string {
@@ -105,13 +97,7 @@ export function Alarms({
           case "yearCard":
             return <YearDisc G={G} key="year" onOpen={onOpenYear} />;
           case "unrest":
-            return (
-              <UnrestDisc
-                key="unrest"
-                riotThreshold={G.ruleset.economy.unrest.riotThreshold}
-                unrest={alarm.status}
-              />
-            );
+            return <UnrestDisc G={G} key="unrest" unrest={alarm.status} />;
           case "effect":
             return (
               <EffectDisc descriptor={alarm.effect} G={G} hunger={hunger} key={alarm.effect.id} />
@@ -126,20 +112,22 @@ export function Alarms({
   );
 }
 
-function UnrestDisc({ unrest, riotThreshold }: { unrest: UnrestStatus; riotThreshold: number }) {
+function UnrestDisc({ G, unrest }: { G: HegemonyState; unrest: UnrestStatus }) {
   const tier = unrest.tier as Exclude<UnrestStatus["tier"], "calm">;
+  const { tokens } = unrest.outcome;
+  const { warning } = presentUnrestOutcome(G.ruleset, unrest.outcome.tier);
   return (
     <li>
       <Tooltip
-        ariaLabel={`${UNREST_WORD[tier]}, happiness ${formatNumber(unrest.happiness)}. ${consequenceOf(tier, riotThreshold)}`}
+        ariaLabel={`${UNREST_WORD[tier]}, happiness ${formatNumber(unrest.happiness)}. ${warning}`}
         content={
           <Tip sub={`happiness ${formatNumber(unrest.happiness)}`} title={UNREST_WORD[tier]}>
-            <p className="tip-body">{consequenceOf(tier, riotThreshold)}</p>
-            {unrest.tokens !== 0 || unrest.calmBonus !== 0 ? (
+            <p className="tip-body">{warning}</p>
+            {tokens !== 0 || unrest.calmBonus !== 0 ? (
               <p className="tip-body">
                 {[
-                  unrest.tokens !== 0
-                    ? `${formatNumber(unrest.tokens)} Unrest ${unrest.tokens === 1 ? "token" : "tokens"}`
+                  tokens !== 0
+                    ? `${formatNumber(tokens)} Unrest ${tokens === 1 ? "token" : "tokens"}`
                     : null,
                   unrest.calmBonus !== 0
                     ? `${formatSignedNumber(unrest.calmBonus)} from calm this year`

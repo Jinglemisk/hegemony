@@ -192,10 +192,11 @@ npm run sim -- batch --games 50 [--turns 56] [--policy random|greedy|smart|beam|
                      [--report .sim/report.json] [--csv .sim/turns.csv]
 ```
 
-The default batch cap is **56 player-turns**, enough for all fourteen years. Shorter
-caps are for partial experiments. Endings record `finalYear` and `winningTitles`
-(the titles held by a race winner). Telemetry includes the opening player-turn and
-excludes a terminal victory check with no income. For a full-game gate:
+The default batch cap plays the whole year deck, one player-turn a seat a year: **56
+player-turns** for fourteen years and four seats. Shorter caps are for partial
+experiments. Endings record `finalYear` and `winningTitles` (the titles held by a race
+winner). Telemetry includes the opening player-turn and excludes a terminal victory
+check with no income. For a full-game gate:
 
 ```bash
 npm run sim -- batch --games 40 --turns 56 --policy smart --seed 1000
@@ -490,7 +491,7 @@ Replays are byte-identical to the original run.
 {
   "version": 2,
   "engineVersion": "0.1.0",
-  "stateSchemaVersion": 12,
+  "stateSchemaVersion": 13,
   "commandSchemaVersion": 6,
   "seed": 42, // game seed: decks, board draws, table rolls
   "mode": "standard",

@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { CivicCalmPayment } from "../../game/civic";
 import type { PlayerId } from "../../game/types";
+import type { Ruleset } from "../../game/ruleset";
 import type { TurnEndUnrest } from "../../game/unrest";
+import { presentUnrestOutcome } from "../../ui/effects";
 import { sign } from "../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
 import { Tooltip } from "../overlays/Tooltip";
@@ -70,6 +72,7 @@ export function EndTurn({
   title,
   warning,
   unrest,
+  ruleset,
   confirmOpen = false,
   waitingLabel,
   onEndTurn,
@@ -82,6 +85,7 @@ export function EndTurn({
   warning: { label: string; message: string } | null;
   /** What ending now sets off: a riot or a revolt, or null. */
   unrest: TurnEndUnrest | null;
+  ruleset: Ruleset;
   /** Open the confirm at once (a dev shortcut for the gate). */
   confirmOpen?: boolean;
   /** What the waiting seal says instead of the acting seat's name. */
@@ -130,6 +134,7 @@ export function EndTurn({
             setConfirming(false);
             onEndTurn();
           }}
+          ruleset={ruleset}
           unrest={unrest}
         />
       ) : null}
@@ -182,17 +187,20 @@ export function EndTurn({
 /** The confirm over the hourglass at the riot or revolt line. */
 function EndTurnConfirm({
   unrest,
+  ruleset,
   onCalmThenEnd,
   onEnd,
   onClose,
 }: {
   unrest: TurnEndUnrest;
+  ruleset: Ruleset;
   onCalmThenEnd: (payment: CivicCalmPayment) => void;
   onEnd: () => void;
   onClose: () => void;
 }) {
-  const revolt = unrest.outcome === "revolt";
+  const revolt = unrest.tier === "revolt";
   const { calm } = unrest;
+  const { line, share } = presentUnrestOutcome(ruleset, unrest.tier);
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -218,7 +226,7 @@ function EndTurnConfirm({
       role="dialog"
     >
       <span className="confirm-kicker">
-        Happiness {sign(unrest.level)} · the {revolt ? "revolt" : "riot"} line
+        Happiness {sign(unrest.level)} · {line}
       </span>
       <h2 className="confirm-title" id="endturn-confirm-title">
         {revolt ? "Ending your turn now means revolt" : "Ending your turn starts a riot"}
@@ -227,7 +235,7 @@ function EndTurnConfirm({
         {revolt ? (
           unrest.slaves ? (
             <>
-              Half your slaves walk away:{" "}
+              {share} your slaves walk away:{" "}
               <b>
                 {unrest.leaving} of {unrest.slaves}
               </b>
@@ -244,7 +252,7 @@ function EndTurnConfirm({
         <p className="confirm-calm">
           <Ico path="unrest/calm" size="ui" />
           <span>
-            {calm.outcome === "none"
+            {calm.tier === "none"
               ? `Calm gives ${sign(calm.level - unrest.level)} for this year and holds the line.`
               : `Calm (${sign(calm.level - unrest.level)}) lifts you to ${sign(calm.level)}: a riot instead.`}
           </span>

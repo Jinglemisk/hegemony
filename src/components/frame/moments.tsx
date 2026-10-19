@@ -11,6 +11,7 @@ import type {
 import { getOwnedSettlement } from "../../game/core/query";
 import { titleChanges, titleHolders } from "../../game/victory";
 import type { TitleChange, TitleHolders } from "../../game/victory";
+import { presentUnrestOutcome } from "../../ui/effects";
 import { settlementNameOf } from "../../ui/settlementNames";
 import { titleValue } from "../../ui/frameFormat";
 
@@ -136,7 +137,7 @@ function presentMoment(
         icon: "unrest/revolt",
         body: gone ? (
           <>
-            Half his slaves walked away:{" "}
+            {presentUnrestOutcome(G.ruleset, "revolt").share} his slaves walked away:{" "}
             <b>
               {gone} of {moment.slaves}
             </b>

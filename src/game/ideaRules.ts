@@ -1,11 +1,10 @@
 import { getStandingEffects, type RulesSource } from "./assembly/laws";
+import { isCapital } from "./core/query";
 import type { BuildingId, HegemonyState, PlayerId, Settlement } from "./types";
 
 export function ideaSlotBonus(source: RulesSource | undefined, settlement: Settlement) {
   if (!source || !("players" in source) || settlement.kind === "colony") return 0;
-  const capital =
-    source.ruleset.setup[0] !== "colony" &&
-    source.players[settlement.owner].settlements[0] === settlement.tileId;
+  const capital = isCapital(source, settlement.owner, settlement.tileId);
   return getStandingEffects(source, settlement.owner).reduce(
     (n, e) => n + (e.type === "extraSlots" && (e.scope === "city" || capital) ? e.amount : 0),
     0,

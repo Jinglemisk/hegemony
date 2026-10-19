@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { getPlayerBankRate } from "../game/bank";
 import { getTile } from "../game/core/query";
+import { PLAYER_IDS } from "../game/data";
 import { happinessLevel } from "../game/happiness";
 import { playerDole } from "../game/ideaRules";
 import { enumerateLegalCommands, transition, type GameCommand } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
 import { owned, scenario } from "../game/testing/scenario";
 import type { HegemonyState, Pops } from "../game/types";
+import { yearDeckSize } from "../game/year";
 import { ventureOutcomes } from "./chance";
 import { POLICIES, type PersonalityId } from "./policies";
 import { createSimRng } from "./rng";
@@ -364,7 +366,7 @@ describe("shared personality search", () => {
       // The last year: calm is the whole riot avoided. Earlier it only moves a riot
       // that six slaves bring every year, until the riots have taken one of them.
       const G = realm({ citizens: 0, freemen: 0, slaves: 6 });
-      G.year = 14;
+      G.year = yearDeckSize(G);
       Object.assign(G.players["0"].resources, {
         food: 0,
         wood: 0,
@@ -570,6 +572,7 @@ describe("shared personality search", () => {
     let caps = 0;
     // Turns a seat ended short of food while it could still pay for one.
     let shortWithMeans = 0;
+    const years = yearDeckSize(scenario().build());
     const G = runGame({
       seed: 1000,
       mode: "standard",
@@ -580,7 +583,7 @@ describe("shared personality search", () => {
         "2": POLICIES.trader,
         "3": POLICIES.master,
       },
-      turns: 56,
+      turns: years * PLAYER_IDS.length,
       hooks: {
         onForceEndTurn: () => caps++,
         onMove: (state, player, command) => {
@@ -597,7 +600,7 @@ describe("shared personality search", () => {
     expect(G.phase).toBe("gameOver");
     expect(caps).toBe(0);
     expect(shortWithMeans).toBe(0);
-    if (G.gameOverReason === "deckExhausted") expect(G.year).toBe(14);
+    if (G.gameOverReason === "deckExhausted") expect(G.year).toBe(years);
     else expect(G.gameOverReason).toBe("victoryRace");
   }, 300000);
 

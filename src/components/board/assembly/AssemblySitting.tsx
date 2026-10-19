@@ -20,7 +20,6 @@ import {
   voteWeightParts,
 } from "../../../game/assembly";
 import type {
-  AssemblyResult,
   AssemblySession,
   BallotItem,
   DirectiveCard,
@@ -30,6 +29,7 @@ import { happinessLevel } from "../../../game/happiness";
 import { votePurchaseLimit } from "../../../game/ideaRules";
 import { victoryMetricValue, voiceHolder } from "../../../game/victory";
 import type { HegemonyState, PlayerId, Resources } from "../../../game/types";
+import { tieRule } from "../../../ui/effects";
 import { RESOURCE_ICON, numberWord, sign } from "../../../ui/frameFormat";
 import { ordinal, toRoman } from "../../../ui/formatters";
 import { RESOURCE_ORDER } from "../../../ui/resourceVisuals";
@@ -39,7 +39,7 @@ import { useGameUi } from "../GameUiContext";
 import { ModalShell } from "../modals/ModalShell";
 import { ResolutionDetails } from "./AssemblyPresentation";
 import type { Sitting, SittingStage } from "./sitting";
-import { voteLine } from "./sitting";
+import { presentResult, seatName, voteLine } from "./sitting";
 
 /**
  * The Assembly sitting, a modal over the shell: the map, the top bar and the realm
@@ -677,7 +677,7 @@ function Vote({ G, session }: { G: HegemonyState; session: AssemblySession }) {
               <i className="is-nay" style={{ flexGrow: outlook.nay }} />
             </span>
             <span className="sit-note">
-              A tie fails. {house} votes in the house; {left} still to cast.
+              {cap(tieRule(G.ruleset))}. {house} votes in the house; {left} still to cast.
             </span>
           </span>
           <span className="sit-side is-nay">
@@ -806,16 +806,17 @@ function Result({
         : null;
   const card = law ? getResolutionCard(G.definition.content, law) : null;
   const voice = voiceHolder(G);
+  const words = presentResult(G, result, viewerId);
   const prize =
-    result.passed && result.item.kind === "enact"
+    result.outcome === "carried" && result.item.kind === "enact"
       ? G.ruleset.assembly.prizes[result.item.card.politician]
       : null;
 
   return (
     <>
       <div className="sit-body sit-result">
-        <span className={`sit-verdict ${verdictTone(result)}`}>{verdictWords(result)}</span>
-        <b className="sit-headline">{headline(G, result, viewerId)}</b>
+        <span className={`sit-verdict ${words.tone}`}>{words.verdict}</span>
+        <b className="sit-headline">{words.headline}</b>
         <ol className="sit-order is-row">
           {result.votes.map((vote) => (
             <li key={vote.playerID}>
@@ -827,7 +828,7 @@ function Result({
             </li>
           ))}
         </ol>
-        {card && result.passed ? (
+        {card && result.outcome === "carried" ? (
           <div className={`sit-law ${result.item.kind === "repeal" ? "is-gone" : "is-new"}`}>
             <b className="sit-name">{card.name}</b>
             <span className="sit-text">{card.text}</span>
@@ -841,7 +842,7 @@ function Result({
               <Chips amounts={prize} />
             </span>
           ) : null}
-          {result.yea > result.nay && !result.passed ? <span>{result.summary}</span> : null}
+          {result.outcome === "blocked" ? <span>{result.summary}</span> : null}
           <span>
             <Ico path="victory/voice" size="ui" />
             <b>Voice of the Assembly:</b>{" "}
@@ -863,43 +864,6 @@ function Result({
   );
 }
 
-function verdictWords(result: AssemblyResult) {
-  if (result.passed) return `Carried ${result.yea} to ${result.nay}`;
-  if (result.yea > result.nay) return `Carried ${result.yea} to ${result.nay}, without effect`;
-  if (result.yea === result.nay) return `Tied ${result.yea} to ${result.nay}: it fails`;
-  return `Fails ${result.yea} to ${result.nay}`;
-}
-
-const verdictTone = (result: AssemblyResult) => (result.passed ? "is-yea" : "is-nay");
-
-function headline(G: HegemonyState, result: AssemblyResult, viewer: PlayerId) {
-  const { item, passed } = result;
-  if (item.kind === "repeal") {
-    const name = getResolutionCard(G.definition.content, item.cardId)?.name ?? item.cardId;
-    return passed ? `${name} is struck from the record` : `${name} still stands`;
-  }
-  if (!passed)
-    return result.yea > result.nay
-      ? `${item.card.name} cannot take effect`
-      : `${item.card.name} is voted down`;
-  return item.card.kind === "law"
-    ? `${item.card.name} is enacted`
-    : `${item.card.name} carries against ${seatName(G, item.target!, viewer)}`;
-}
-
-/** The recap's line under an item's name: what became of it. */
-function outcomeWords(G: HegemonyState, result: AssemblyResult, viewer: PlayerId) {
-  const { item, passed } = result;
-  if (!passed) {
-    if (result.yea > result.nay) return "carried, but could not take effect";
-    return item.kind === "repeal" ? "the Law still stands" : "voted down";
-  }
-  if (item.kind === "repeal") return "struck from the record";
-  return item.card.kind === "law"
-    ? "enacted · a new stele stands"
-    : `carries against ${seatName(G, item.target!, viewer)}`;
-}
-
 // ── The house rises ─────────────────────────────────────────────────────────
 
 function Rises({ G, session }: { G: HegemonyState; session: AssemblySession }) {
@@ -913,27 +877,28 @@ function Rises({ G, session }: { G: HegemonyState; session: AssemblySession }) {
         <p className="sit-headline">The Assembly rises with nothing on the bema.</p>
       ) : (
         <ol className="sit-items">
-          {session.results.map((result, index) => (
-            <li className="sit-item" key={index}>
-              <span className="sit-no">{index + 1}</span>
-              <SeatMark playerID={result.item.proposer} />
-              <span className="sit-item-words">
-                <b className="sit-name">{ballotItemName(G, result.item)}</b>
-                <span className="sit-text">{outcomeWords(G, result, viewerId)}</span>
-              </span>
-              <span className="sit-item-side">
-                <span className={`sit-verdict ${verdictTone(result)}`}>
-                  {result.passed ? "Carried" : "Fails"} {result.yea}–{result.nay}
+          {session.results.map((result, index) => {
+            const words = presentResult(G, result, viewerId);
+            return (
+              <li className="sit-item" key={index}>
+                <span className="sit-no">{index + 1}</span>
+                <SeatMark playerID={result.item.proposer} />
+                <span className="sit-item-words">
+                  <b className="sit-name">{ballotItemName(G, result.item)}</b>
+                  <span className="sit-text">{words.line}</span>
                 </span>
-                {result.passed && result.item.kind === "enact" ? (
-                  <span>
-                    {seatName(G, result.item.proposer, viewerId, true)}{" "}
-                    <Chips amounts={G.ruleset.assembly.prizes[result.item.card.politician]} />
-                  </span>
-                ) : null}
-              </span>
-            </li>
-          ))}
+                <span className="sit-item-side">
+                  <span className={`sit-verdict ${words.tone}`}>{words.short}</span>
+                  {result.outcome === "carried" && result.item.kind === "enact" ? (
+                    <span>
+                      {seatName(G, result.item.proposer, viewerId, true)}{" "}
+                      <Chips amounts={G.ruleset.assembly.prizes[result.item.card.politician]} />
+                    </span>
+                  ) : null}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       )}
       <Laws G={G} year={session.year} />
@@ -1014,10 +979,6 @@ function movedBy(G: HegemonyState, item: BallotItem, viewer: PlayerId) {
   return law
     ? `${by} · authored by ${seatName(G, law.author, viewer)}, Year ${toRoman(law.enactedYear)}`
     : by;
-}
-
-function seatName(G: HegemonyState, id: PlayerId, viewer: PlayerId, capital = false) {
-  return id === viewer ? (capital ? "You" : "you") : G.players[id].name;
 }
 
 const cap = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);

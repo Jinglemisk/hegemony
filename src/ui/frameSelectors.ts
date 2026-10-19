@@ -3,9 +3,10 @@ import {
   getBankBuyStatus,
   happinessContributions,
   popsInTransit,
-  unrestStatus,
+  unrestOutcome,
 } from "../game/rules";
 import { playerDole } from "../game/ideaRules";
+import { presentUnrestOutcome } from "./effects";
 import { sign } from "./frameFormat";
 import type { HappinessContribution } from "../game/rules";
 import type { HegemonyState, PlayerId } from "../game/types";
@@ -14,7 +15,7 @@ import type { HegemonyState, PlayerId } from "../game/types";
  *  thresholds. Hunger is settled first, then the riot or revolt: the label names the
  *  riot when both wait, and the message names both. */
 export function endTurnWarning(G: HegemonyState, playerID: PlayerId) {
-  const status = unrestStatus(G, playerID);
+  const outcome = unrestOutcome(G, playerID);
   const hunger = hungerShortfall(G, playerID);
   const leaving = hunger
     ? `${hunger.unfed} ${hunger.unfed === 1 ? "pop leaves" : "pops leave"}`
@@ -22,11 +23,11 @@ export function endTurnWarning(G: HegemonyState, playerID: PlayerId) {
   const hungerMessage = hunger
     ? `Ending now, ${leaving}: you are ${hunger.short} food short.`
     : null;
-  if (status.riotAtRisk) {
-    const revolt = status.tier === "revolt";
-    const unrest = `Ending now starts a ${revolt ? "revolt" : "riot"} at ${sign(status.happiness)}.`;
+  if (outcome.tier !== "none") {
+    const { noun } = presentUnrestOutcome(G.ruleset, outcome.tier);
+    const unrest = `Ending now starts a ${noun} at ${sign(outcome.level)}.`;
     return {
-      label: revolt ? "Starts revolt" : "Starts riot",
+      label: `Starts ${noun}`,
       message: hungerMessage ? `${hungerMessage} ${unrest}` : unrest,
     };
   }

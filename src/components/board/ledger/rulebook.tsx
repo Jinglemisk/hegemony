@@ -1,4 +1,4 @@
-import { getNationalIdeas, IDEA_PURCHASE_COST } from "../../../game/ideas";
+import { getNationalIdeas } from "../../../game/ideas";
 /* This is the Codex's rules CONTENT module (a chapter registry), not a hot-reloadable
    component file — it deliberately exports data (RULEBOOK) alongside the small inline
    render helpers, so Fast Refresh's one-kind-of-export rule doesn't apply. */
@@ -29,7 +29,7 @@ import type {
   SettlementKind,
   Terrain,
 } from "../../../game/types";
-import { presentBuildingEffects } from "../../../ui/effects";
+import { presentBuildingEffects, presentUnrestOutcome, tieRule } from "../../../ui/effects";
 import { RESOURCE_LABELS, formatPopLabel, formatResourceCost } from "../../../ui/formatters";
 import { RESOURCE_ORDER, resourceCssVars } from "../../../ui/resourceVisuals";
 import { AnnotatedText } from "../../AnnotatedText";
@@ -305,7 +305,7 @@ const resources: RuleChapter = {
     "economy",
   ],
   entries: [{ id: anchor("resources", "six"), label: "The five" }],
-  Body: () => (
+  Body: ({ G }) => (
     <div className="compendiumStack">
       <Entry id={anchor("resources", "six")} title="The five">
         <Note>
@@ -332,7 +332,7 @@ const resources: RuleChapter = {
                   ? "Feeds freemen and citizens at income; end your turn short and one pop leaves for each missing food."
                   : resource === "gold"
                     ? "The coin of trade — earned by pops and events, the bank's only medium."
-                    : "Civic weight: spent on demotions, calm, the Dole, riot insurance and a second Idea; its great sink is the Assembly."}
+                    : `Civic weight: spent on demotions, calm, the Dole, riot insurance and ${G.ruleset.ideas.purchases === 1 ? "a second Idea" : "more Ideas"}; its great sink is the Assembly.`}
             </DefRow>
           ))}
         </DefList>
@@ -488,7 +488,7 @@ const turn: RuleChapter = {
     { id: anchor("turn", "flow"), label: "The flow" },
     { id: anchor("turn", "throttles"), label: "Per-turn limits" },
   ],
-  Body: () => (
+  Body: ({ G }) => (
     <div className="compendiumStack">
       <Entry id={anchor("turn", "flow")} title="The flow">
         <Note>
@@ -507,9 +507,11 @@ const turn: RuleChapter = {
       <Entry id={anchor("turn", "throttles")} title="Per-turn limits">
         <Note>
           Some actions are throttled so a turn can't do everything at once: one grow per settlement,
-          one ladder move, one pop move, one civic calm and one venture per turn. An Idea can be
-          bought once per game. Founding, upgrading and building are limited by what you can pay and
-          by your pieces.
+          one ladder move, one pop move, one civic calm and one venture per turn.{" "}
+          {G.ruleset.ideas.purchases === 1
+            ? "An Idea can be bought once per game."
+            : `${G.ruleset.ideas.purchases} Ideas can be bought per game.`}{" "}
+          Founding, upgrading and building are limited by what you can pay and by your pieces.
         </Note>
       </Entry>
     </div>
@@ -766,8 +768,9 @@ const unrest: RuleChapter = {
             At a level of {u.riotThreshold} or below when you end your turn, your Unrest tokens
             clear and a riot rolls before the turn passes. Declare insurance first (each once, +1 to
             the roll); the concession demotes a citizen. Pop losses take slaves first, then freemen,
-            then citizens. At {u.revoltThreshold} or below it is a revolt instead: half your slaves
-            leave, rounded down, your tokens clear, and nothing is rolled.
+            then citizens. At {u.revoltThreshold} or below it is a revolt instead:{" "}
+            {presentUnrestOutcome(G.ruleset, "revolt").share.toLowerCase()} your slaves leave,
+            rounded down, your tokens clear, and nothing is rolled.
           </Note>
           <p className="compendiumFlavor">{getRiotTable(G.definition.content).flavor}</p>
           <EventTableRows table={getRiotTable(G.definition.content)} result={null} />
@@ -1006,7 +1009,9 @@ const assembly: RuleChapter = {
               One seat vote plus one per <AnnotatedText text="citizen" />. Rural Bloc changes
               settlement votes. Isonomia fixes its target’s base at one.
             </DefRow>
-            <DefRow term="Majority">More yea than nay carries. A tie fails.</DefRow>
+            <DefRow term="Majority">
+              More yea than nay carries. {capitalize(tieRule(G.ruleset))}.
+            </DefRow>
             <DefRow term="Bribe">
               <strong>{rules.briberyCost}</strong> gold or influence buys one extra vote, up to{" "}
               <strong>{rules.briberyCap}</strong> per player per assembly, bought on your turn to
@@ -1119,9 +1124,13 @@ const ideas: RuleChapter = {
     <div className="ruleChapterBody">
       <p>
         After placement, the seats draft one Idea each, in turn, continuing the placement snake.
-        Each pick is public at once, and an Idea belongs to one seat only. Buy a second Idea from
-        the untaken ones during your turn through Civic → Ideas for{" "}
-        {formatResourceCost(IDEA_PURCHASE_COST)}. Ideas cannot be replaced.
+        Each pick is public at once, and an Idea belongs to one seat only. Buy{" "}
+        {G.ruleset.ideas.purchases === 1
+          ? "a second Idea"
+          : `up to ${G.ruleset.ideas.purchases} more Ideas`}{" "}
+        from the untaken ones during your turn through Civic → Ideas for{" "}
+        {formatResourceCost({ influence: G.ruleset.ideas.influenceCost })}. Ideas cannot be
+        replaced.
       </p>
       <Entry id={anchor("ideas", "roster")} title="The Ideas">
         <dl>

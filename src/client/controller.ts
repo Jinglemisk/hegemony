@@ -9,7 +9,7 @@ import { createGameFromDefinition, nextPlayer } from "../game/turn";
 import { happinessLevel } from "../game/happiness";
 import { ideaDraftOrder } from "../game/ideas";
 import { calculateIncome } from "../game/economy/income";
-import { getOwnedSettlement } from "../game/core/query";
+import { getOwnedSettlement, isCapital } from "../game/core/query";
 import { totalPops } from "../game/core/pops";
 import { settlementCapacity } from "../game/settlement";
 import type { GameCommand } from "../game/legalMoves";
@@ -317,7 +317,8 @@ function threaten(G: HegemonyState, seat: PlayerId): HegemonyState {
     const { minimums } = draft.ruleset.victory;
     const player = draft.players[seat];
     player.resources.gold = minimums.gold + 1;
-    const capital = getOwnedSettlement(draft, player.settlements[0], seat)!;
+    const capitalId = player.settlements.find((tileId) => isCapital(draft, seat, tileId))!;
+    const capital = getOwnedSettlement(draft, capitalId, seat)!;
     const pops = () =>
       player.settlements.reduce(
         (sum, tileId) => sum + totalPops(getOwnedSettlement(draft, tileId, seat)!.pops),
@@ -414,18 +415,21 @@ function endCurrentTurn(initial: HegemonyState): HegemonyState {
   return G;
 }
 
-/** Give a seat more mouths than its next income feeds, two short, with 6 influence
- *  to buy an Idea. */
+/** Give a seat more mouths than its next income feeds, two short, with the
+ *  influence to buy an Idea. */
 function starve(initial: HegemonyState, seat: PlayerId): HegemonyState {
   return produce(initial, (draft) => {
-    const capital = getOwnedSettlement(draft, draft.players[seat].settlements[0], seat)!;
+    const capitalId = draft.players[seat].settlements.find((tileId) =>
+      isCapital(draft, seat, tileId),
+    )!;
+    const capital = getOwnedSettlement(draft, capitalId, seat)!;
     while (
       calculateIncome(draft, seat).food > -2 &&
       totalPops(capital.pops) < settlementCapacity(capital, draft)
     )
       capital.pops.freemen += 1;
     draft.players[seat].resources.food = 0;
-    draft.players[seat].resources.influence = 6;
+    draft.players[seat].resources.influence = draft.ruleset.ideas.influenceCost;
   });
 }
 

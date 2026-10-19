@@ -127,8 +127,8 @@ function renderPlayer(G: HegemonyState, playerID: PlayerId): string {
       (projection.population.inTransit > 0
         ? ` (+${projection.population.inTransit} in transit)`
         : "") +
-      ` · happiness ${formatNumber(unrest.happiness)}, ${unrest.tokens} Unrest ${unrest.tokens === 1 ? "token" : "tokens"}` +
-      ` · ${unrest.tier}${unrest.riotAtRisk ? (unrest.tier === "revolt" ? " (revolt at turn end)" : " (riot table at turn end)") : ""}`,
+      ` · happiness ${formatNumber(unrest.happiness)}, ${unrest.outcome.tokens} Unrest ${unrest.outcome.tokens === 1 ? "token" : "tokens"}` +
+      ` · ${unrest.tier}${unrest.outcome.tier !== "none" ? (unrest.tier === "revolt" ? " (revolt at turn end)" : " (riot table at turn end)") : ""}`,
     `  resources: ${Object.entries(player.resources)
       .map(([resource, amount]) => `${resource} ${formatNumber(amount)}`)
       .join(" · ")}`,
@@ -219,17 +219,13 @@ function hasResourceDelta(resources: Resources): boolean {
   return Object.values(resources).some((amount) => amount !== 0);
 }
 
-/** Step 11's windows: riots are judged after year 7, influence from year 10. */
-const LATE_GAME_YEAR = 8;
-const INFLUENCE_FROM_YEAR = 10;
-
 function pct(share: number, digits = 0): string {
   return (share * 100).toFixed(digits) + "%";
 }
 
 /** Riots and revolts over the player-turns of the late years. */
-function lateRiots(byYear: BatchReport["riots"]["byYear"]): string {
-  const late = byYear.filter((row) => row.year >= LATE_GAME_YEAR);
+function lateRiots(byYear: BatchReport["riots"]["byYear"], from: number): string {
+  const late = byYear.filter((row) => row.year >= from);
   const sum = (pick: (row: (typeof late)[number]) => number) =>
     late.reduce((total, row) => total + (pick(row) ?? 0), 0);
   const turns = sum((row) => row.playerTurns);
@@ -237,8 +233,12 @@ function lateRiots(byYear: BatchReport["riots"]["byYear"]): string {
   return `riots ${riots}/${turns} turns (${pct(turns ? riots / turns : 0, 1)}), revolts ${sum((row) => row.revolts)}`;
 }
 
-/** Terminal digest of a batch report — the full data lives in the JSON. */
-export function renderBatchReport(report: BatchReport): string {
+/** Terminal digest of a batch report — the full data lives in the JSON. `years` is the
+ *  year deck's size, and Step 11's windows are read off it: riots are judged in the second
+ *  half (from year 8 of 14), influence over the last five years (from 10). */
+export function renderBatchReport(report: BatchReport, years: number): string {
+  const lateFrom = Math.floor(years / 2) + 1;
+  const influenceFrom = years - 4;
   const lines = [
     `Batch: ${report.meta.games} games × ${report.meta.turns} turns, ${report.meta.policy} policy, ${report.meta.mode} mode, ${report.meta.boardLayout} board (base seed ${report.meta.baseSeed})`,
     `Definition: ${report.meta.definition.id}`,
@@ -363,13 +363,13 @@ export function renderBatchReport(report: BatchReport): string {
       `Riots: ${formatNumber(report.riots.perGame)}/game · the riot table opens ` +
         `${(report.riots.turnShare * 100).toFixed(1)}% of player-turns · ` +
         `revolts ${formatNumber(report.riots.revoltsPerGame)}/game` +
-        ` · from year ${LATE_GAME_YEAR}: ${lateRiots(report.riots.byYear)}`,
+        ` · from year ${lateFrom}: ${lateRiots(report.riots.byYear, lateFrom)}`,
     );
     for (const [name, stats] of Object.entries(report.riots.perPolicy ?? {})) {
       lines.push(
         `  ${name}: riots ${stats.riotsPerSeatGame.toFixed(2)}/seat-game, ` +
           `revolts ${stats.revoltsPerSeatGame.toFixed(2)}/seat-game · ` +
-          `from year ${LATE_GAME_YEAR}: ${lateRiots(stats.byYear)}`,
+          `from year ${lateFrom}: ${lateRiots(stats.byYear, lateFrom)}`,
       );
     }
   }
@@ -384,9 +384,7 @@ export function renderBatchReport(report: BatchReport): string {
     }
   }
 
-  const influenceYears = report.perYear.filter(
-    (row) => row.influence && row.year >= INFLUENCE_FROM_YEAR,
-  );
+  const influenceYears = report.perYear.filter((row) => row.influence && row.year >= influenceFrom);
   if (influenceYears.length > 0) {
     const medians = (pick: (row: (typeof influenceYears)[number]) => number | undefined) =>
       influenceYears.map((row) => `y${row.year} ${formatNumber(pick(row) ?? 0)}`).join(" · ");

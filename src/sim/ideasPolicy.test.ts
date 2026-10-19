@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { scenario } from "../game/testing/scenario";
 import { enumerateLegalCommands } from "../game/legalMoves";
 import { projectForPlayer } from "../game/projection";
+import { yearDeckSize } from "../game/year";
 import type { NationalIdeaId } from "../game/ideaTypes";
 import { chooseIdea, evaluatePlacement, masterPolicy, PERSONALITY_WEIGHTS } from "./policies";
 import { createSimRng } from "./rng";
@@ -119,7 +120,9 @@ describe("scores setup Ideas and in-play purchases", () => {
     const toOther = score(["good-harvest"]) - score([]);
     expect(toOther).toBeGreaterThan(0);
     expect(toHolder).toBeCloseTo(toOther);
-    // The Idea still has a value of its own: two Doles a year, one influence saved each.
+    // The Idea still has a value of its own: two Doles a year, one influence saved
+    // each, at influence weight 2, over the bot's six-year income horizon. The
+    // horizon is shorter than the year deck, so the game length does not enter.
     expect(score(["public-dole"]) - score([])).toBe(24);
   });
   it("picks food for an unfed civic realm and influence for one that already feeds itself", () => {
@@ -142,7 +145,7 @@ describe("scores setup Ideas and in-play purchases", () => {
   it("buys a Treasury Grant to cross the gold title, and saves influence when it cannot help", () => {
     const G = board(30, 0, 0);
     G.phase = "gameplay";
-    G.year = 14;
+    G.year = yearDeckSize(G);
     G.players["0"].nationalIdeas = [{ id: "urban-planning", acquired: "setup", year: 1 }];
     G.players["0"].resources.gold = G.ruleset.victory.minimums.gold - 4;
     const moves = enumerateLegalCommands(G, "0").filter(

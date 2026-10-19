@@ -64,8 +64,9 @@ resource chips (shell, board, modals).
 ## Architecture impact
 
 - Definition: the ruleset gains the Idea price and post-setup purchase limit, the pass rule and
-  the revolt's slave share; Laws change shape to typed effects. Definition hash and ruleset
-  version change; older saves are rejected, as today.
+  the revolt's slave share; Laws change shape to typed effects. The definition hash and the
+  state schema version change (13 after PR 1; `RULESET_VERSION` has never moved); older saves
+  are rejected, as today.
 - Commands: unchanged.
 - Actors: the pending-decision gate derives from `currentWorkflow`, which trade slice 1 extends
   with its workflow.
@@ -83,7 +84,7 @@ resource chips (shell, board, modals).
 | Loose numbers         | Idea price 6, one-Idea limit, "ties fail", revolt "half" are literals; the 6 retyped in UI copy (E4, E8)            | Ruleset fields; refusal text and UI copy built from them; the tune panel reaches them                         |
 | Riot/revolt outcome   | Tier test 3× in the engine; copied in the bot forecast, top bar, alarms, end turn, moments, year card (E8, S1, F12) | One exported engine function returns the tier and what it takes; one presenter words it; all callers use both |
 | Pass rule             | "Tie fails" restated 5× in the sitting; "carried without effect" inferred (B9)                                      | Engine result carries an outcome kind and a `wouldPass` helper; one presenter words it                        |
-| Capital               | "First settlement" in ~6 places; an unused capital kind and row (E9)                                                | One `isCapital` query; the unused kind and row deleted                                                        |
+| Capital               | "First settlement" in ~6 places; an unused capital kind and row (E9)                                                | One `isCapital` query; the capital kind stays, as it also names the setup step (see E9)                       |
 | Game length           | 14 years and 56 turns hard-coded in bots, the batch cap, report format and tests (S3)                               | From the year deck size and seat count                                                                        |
 | Bots and the Assembly | Bribe affordability and vote tally copied; `>= 6` literal (S4)                                                      | Bots call `votesLeftToBuy`, `voteOutlook` and `briberyCost`                                                   |
 | Policy dispatch       | Six policies repeat the Assembly → setup → search branch; identity knobs and wrappers (S15, S12)                    | One policy factory; the knobs deleted                                                                         |

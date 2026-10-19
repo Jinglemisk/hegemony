@@ -36,6 +36,12 @@ export function getOwnedSettlement(G: HegemonyState, tileId: string, playerID: P
   return tile?.settlements.find((settlement) => settlement.owner === playerID);
 }
 
+/** The capital is the first settlement placed, when setup opens with one. Placing it makes a
+ *  city, so its kind does not tell it apart. */
+export function isCapital(G: HegemonyState, playerID: PlayerId, tileId: string) {
+  return G.ruleset.setup[0] !== "colony" && G.players[playerID].settlements[0] === tileId;
+}
+
 /** A realm's pops on the move, by class. They arrive at the start of its next turn. */
 export function popsInTransit(G: HegemonyState, playerID: PlayerId): Pops {
   const pops: Pops = { citizens: 0, freemen: 0, slaves: 0 };

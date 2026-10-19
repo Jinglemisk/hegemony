@@ -52,7 +52,7 @@ it("buys an affordable pivotal coalition, authors Voice and reports the seat's A
   }
   expect(choose()).toEqual({ type: "assemblyVote", yea: true });
   take("0", choose());
-  expect(G.assembly!.results[0]).toMatchObject({ passed: true, yea: 4, nay: 3 });
+  expect(G.assembly!.results[0]).toMatchObject({ outcome: "carried", yea: 4, nay: 3 });
   expect(voiceHolder(G)).toBe("0");
   aggregator.onTurnEnd(G);
   aggregator.endGame(G);

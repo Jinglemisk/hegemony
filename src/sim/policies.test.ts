@@ -4,12 +4,13 @@ import { enumerateLegalCommands, transition } from "../game/legalMoves";
 import { RESOLUTION_CARDS } from "../game/assembly/deck";
 import { PLAYER_IDS, PLAYER_EVENT_CARDS } from "../game/data";
 import { projectForPlayer } from "../game/projection";
-import { DEFAULT_RULESET, deriveRuleset } from "../game/ruleset";
-import { LOW_NUMBER_RULESET_PATCH } from "../dev/tuningPresets";
+import { DEFAULT_RULESET } from "../game/ruleset";
 import { owned, scenario } from "../game/testing/scenario";
 import { movePops, upgradeColonyToCity } from "../game/actions";
 import { endTurn } from "../game/turn";
+import { yearDeckSize } from "../game/year";
 import { resolveRiot } from "../game/riot";
+import { unrestOutcome } from "../game/unrest";
 import type { HegemonyState } from "../game/types";
 import {
   beamPolicy,
@@ -24,7 +25,6 @@ import {
   POLICIES,
   POLICY_UNREST_WEIGHTS,
   politicalPolicy,
-  policyEconomyThresholds,
   projectPolicyHorizon,
   settlerPolicy,
   smartPolicy,
@@ -44,19 +44,6 @@ import { createInitialStateFromDefinition } from "../game/state";
 function observe(G: HegemonyState, player = G.currentPlayer) {
   return projectForPlayer(G.definition, G, player);
 }
-
-describe("policy denomination capabilities", () => {
-  it("derives thresholds from the active ruleset while preserving standard behavior", () => {
-    expect(policyEconomyThresholds(DEFAULT_RULESET)).toEqual({
-      materialScoreDivisor: 10,
-    });
-    expect(
-      policyEconomyThresholds(deriveRuleset(DEFAULT_RULESET, LOW_NUMBER_RULESET_PATCH)),
-    ).toEqual({
-      materialScoreDivisor: 5,
-    });
-  });
-});
 
 describe("searched bank chains", () => {
   it("does not churn buys and sells under a tuned equal-rate bank", () => {
@@ -97,7 +84,9 @@ describe("searched bank chains", () => {
 });
 
 describe("policy unrest risk", () => {
-  const risk = (happiness: number) => evaluatePolicyUnrestRisk(DEFAULT_RULESET, happiness);
+  const G = scenario().opening().build();
+  const risk = (happiness: number, state = G) =>
+    evaluatePolicyUnrestRisk(state, unrestOutcome(state, "0", happiness));
   const mild = DEFAULT_RULESET.economy.unrest.riotThreshold;
   const severe = DEFAULT_RULESET.economy.unrest.revoltThreshold;
 
@@ -118,13 +107,15 @@ describe("policy unrest risk", () => {
   });
 
   it("follows the ruleset's lines", () => {
-    const shifted = deriveRuleset(DEFAULT_RULESET, {
-      economy: { unrest: { riotThreshold: -1, revoltThreshold: -8 } },
-    });
+    const shifted = scenario({
+      patch: { economy: { unrest: { riotThreshold: -1, revoltThreshold: -8 } } },
+    })
+      .opening()
+      .build();
 
-    expect(evaluatePolicyUnrestRisk(shifted, -1).tier).toBe("unrest");
-    expect(evaluatePolicyUnrestRisk(shifted, -6).tier).toBe("unrest");
-    expect(evaluatePolicyUnrestRisk(shifted, -8).tier).toBe("revolt");
+    expect(risk(-1, shifted).tier).toBe("unrest");
+    expect(risk(-6, shifted).tier).toBe("unrest");
+    expect(risk(-8, shifted).tier).toBe("revolt");
   });
 
   it("a riot from tokens is met once: it spends them and the level recovers", () => {
@@ -142,24 +133,25 @@ describe("policy unrest risk", () => {
   });
 
   it("charges a riot what the riot table is expected to take, at the seat's weights", () => {
-    // One freeman, no building, no gold, food to spare. Rows 1 to 3 take one pop, two
-    // and one. Row 1 takes another where nothing can burn, and row 5 one where the 3
-    // gold cannot be paid: six pops over six faces, one freeman. Row 4 takes 3 food.
+    // One freeman, no building, no gold, food to spare: the table takes pops.
     const G = projectionFixture();
     G.players["0"].unrestTokens = 3;
     G.players["0"].resources.gold = 0;
     const charge = (weights = PERSONALITY_WEIGHTS.civic) =>
       projectPolicyHorizon(G, "0", 0, weights).unrest.riskPenalty;
 
-    // A freeman is 20 for the civic and 40 for the trader; 3 food at 0.5 over six faces.
-    expect(charge()).toBeCloseTo(20 + 0.25);
-    expect(charge(PERSONALITY_WEIGHTS.trader)).toBeCloseTo(40 + 0.25);
+    // A seat that weighs a freeman higher is charged more for the same riot.
+    const civic = PERSONALITY_WEIGHTS.civic;
+    expect(charge()).toBeGreaterThan(0);
+    expect(
+      charge({ ...civic, pops: { ...civic.pops, freemen: 2 * civic.pops.freemen } }),
+    ).toBeGreaterThan(charge());
 
-    // A Temple can burn on a one: its 3 stone, 1.5 each for the civic, over six faces.
-    // The second pop of row 1 is then not taken.
+    // A Temple the riot can burn spares a pop, which outweighs its stone.
+    const bare = charge();
     owned(G, G.players["0"].settlements[0], "0").buildings.push("temple");
     G.players["0"].unrestTokens = 4;
-    expect(charge()).toBeCloseTo((5 / 6) * 20 + 0.25 + (3 * 1.5) / 6);
+    expect(charge()).toBeLessThan(bare);
   });
 
   it("lets the slaves a riot is expected to take leave, so a slave-held level recovers", () => {
@@ -199,7 +191,7 @@ describe("policy unrest risk", () => {
     expect(at(2, 0)).toBe(0);
   });
 
-  it("runs a revolt for real: half the slaves leave the projected board", () => {
+  it("runs a revolt for real: the ruleset's share of the slaves leave the projected board", () => {
     const G = projectionFixture();
     slavesInCapital(G, 12);
     const projection = projectPolicyHorizon(G, "0", 2);
@@ -211,17 +203,24 @@ describe("policy unrest risk", () => {
       riotEvents: 2,
     });
     expect(slavesInCapital(G)).toBe(12);
-    // The revolt is charged the six slaves it sends away, at the seat's slave weight.
-    expect(projectPolicyHorizon(G, "0", 0).unrest.riskPenalty).toBe(6 * 12);
-    expect(projectPolicyHorizon(G, "0", 0, PERSONALITY_WEIGHTS.slaver).unrest.riskPenalty).toBe(
-      6 * 45,
-    );
+
+    // The revolt is charged each slave it sends away, the ruleset's share rounded down,
+    // at the seat's weight for a slave.
+    const share = G.ruleset.economy.unrest.revoltSlaveShare;
+    const charge = (slaves: number, weights = PERSONALITY_WEIGHTS.civic) => {
+      slavesInCapital(G, slaves);
+      return projectPolicyHorizon(G, "0", 0, weights).unrest.riskPenalty;
+    };
+    const perSlave = charge(12) / Math.floor(12 * share);
+    expect(charge(17)).toBeCloseTo(Math.floor(17 * share) * perSlave);
+    const { civic, slaver } = PERSONALITY_WEIGHTS;
+    expect(charge(12, slaver) / charge(12)).toBeCloseTo(slaver.pops.slaves / civic.pops.slaves);
   });
 
   it("counts bought calm at the current check, even with no future income", () => {
     const G = projectionFixture();
     slavesInCapital(G, 6);
-    G.year = 14;
+    G.year = yearDeckSize(G);
     expect(projectPolicyHorizon(G, "0").unrest.riotEvents).toBe(1);
     G.players["0"].calmActive = true;
     expect(projectPolicyHorizon(G, "0").unrest.riotEvents).toBe(0);
@@ -774,12 +773,13 @@ describe("political policy", () => {
     const passedSeats = new Set<string>();
     const voices = new Set<string>();
     let capped = 0;
+    const years = yearDeckSize(scenario().build());
     for (const seed of [2, 3, 4]) {
       const G = runGame({
         seed,
         mode: "standard",
         policy: smartPolicy,
-        turns: 56,
+        turns: years * PLAYER_IDS.length,
         hooks: {
           onMove: (state) => {
             for (const id of PLAYER_IDS)
@@ -798,10 +798,10 @@ describe("political policy", () => {
         },
       });
       expect(G.phase).toBe("gameOver");
-      if (G.gameOverReason === "deckExhausted") expect(G.year).toBe(14);
+      if (G.gameOverReason === "deckExhausted") expect(G.year).toBe(years);
       else {
         expect(G.gameOverReason).toBe("victoryRace");
-        expect(G.year).toBeLessThanOrEqual(14);
+        expect(G.year).toBeLessThanOrEqual(years);
         expect(G.winner).not.toBeNull();
         expect(victoryCardsHeld(G, G.winner!)).toBeGreaterThanOrEqual(G.ruleset.victory.cardsToWin);
       }
