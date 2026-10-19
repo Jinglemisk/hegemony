@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ComponentProps } from "react";
 import { DEV_SHELL, privateMoment } from "../client/controller";
 import type { GameEvents, GameMoves, LocalContext } from "../client/controller";
 import {
@@ -19,6 +20,7 @@ import {
   turnEndUnrest,
   victoryThreats,
 } from "../game/rules";
+import { requiredDecision } from "../game/actors";
 import { realmAlarms } from "../game/alarms";
 import type { BuildingId, HegemonyState, PlayerId } from "../game/types";
 import { BuildPopover } from "./board/map/BuildPopover";
@@ -43,7 +45,7 @@ import { RevoltModal } from "./board/modals/RevoltModal";
 import { YearCardModal } from "./board/modals/YearCardModal";
 import { VentureModal } from "./board/modals/VentureModal";
 import { AssemblyDock, AssemblySitting } from "./board/assembly/AssemblySitting";
-import { useSitting } from "./board/assembly/sitting";
+import { useSitting, type Sitting } from "./board/assembly/sitting";
 import { GameUiProvider } from "./board/GameUiProvider";
 import type { GameUi } from "./board/GameUiContext";
 import { CodexLinkProvider } from "./codexLink";
@@ -83,17 +85,37 @@ const PLACEMENT_LABELS: Record<SetupPlacement, string> = {
 
 /**
  * Exactly one dialog owns the screen at a time — the union makes that a type
- * invariant instead of a rule six independent booleans could break. The
- * self-mounting dialogs are deliberately NOT here: riot, pending event, game
- * over mount off engine state (G.pendingRiot, G.pendingPlayerEvent,
- * ctx.phase), so they cannot be opened or closed by a click and must not be
- * modelled as UI intent.
+ * invariant instead of a rule six independent booleans could break. The forced
+ * moments are deliberately NOT here: they mount off engine state through
+ * {@link Moment}, so they must not be modelled as UI intent.
  */
 type ActiveModal =
   | { kind: "populationPrompt"; placement: SetupPlacement; tileId: string }
   | { kind: "upgradeCity" }
   | { kind: "venture" }
   | { kind: "ideas" };
+
+/**
+ * The decision host: the one forced moment that owns the screen, picked in the
+ * engine's order and mounted through one switch. Most come from engine state; the
+ * rest the screen holds itself (see {@link Held}).
+ */
+type Moment =
+  | { kind: "draft"; done: boolean }
+  | { kind: "riot" }
+  | { kind: "revolt"; entry: ComponentProps<typeof RevoltModal>["entry"] }
+  /** `reveal`: the card turning at the year; without it, the face from its alarm. */
+  | { kind: "yearCard"; reveal: boolean }
+  | { kind: "gameOver" }
+  | { kind: "turnNotice"; begins: string }
+  /** `asked`: from End turn, before the turn is committed. */
+  | { kind: "hunger"; unfed: number; asked: boolean }
+  | { kind: "event" }
+  | { kind: "assembly"; sitting: Sitting };
+
+/** A moment the screen keeps open by itself: the riot's result past its roll, the
+ *  draft read back, the year card's face from its alarm, the hunger card from End turn. */
+type Held = "riotResult" | "draftRead" | "yearFace" | "hungerAsk";
 
 export function HegemonyBoard({
   G,
@@ -110,31 +132,35 @@ export function HegemonyBoard({
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(
     DEV_SHELL.ideasOpen ? { kind: "ideas" } : null,
   );
-  const [gameOverDismissed, setGameOverDismissed] = useState(false);
-  // Keeps the riot modal mounted one beat past resolution so the outcome can be read.
-  const [riotResultOpen, setRiotResultOpen] = useState(DEV_SHELL.riotResult);
-  // The last year whose card has been read; a later year shows its card first. Bots
-  // never wait for it, and a game opened mid-year starts on it read.
-  const [yearRead, setYearRead] = useState(() =>
-    (G.phase !== "gameplay" && G.phase !== "gameOver") || DEV_SHELL.draftSummary
-      ? 0
-      : DEV_SHELL.yearReveal
-        ? G.year - 1
-        : G.year,
+  const [held, setHeld] = useState<Held | null>(
+    DEV_SHELL.riotResult
+      ? "riotResult"
+      : DEV_SHELL.draftSummary
+        ? "draftRead"
+        : DEV_SHELL.hungerAsk
+          ? "hungerAsk"
+          : null,
   );
-  const [yearFaceOpen, setYearFaceOpen] = useState(false);
-  // The private moment last begun (see `privateMoment`): a new one waits behind the
-  // turn notice. A game opened mid-turn starts begun.
-  const [hungerAsk, setHungerAsk] = useState(DEV_SHELL.hungerAsk);
-  const [handedOver, setHandedOver] = useState(() =>
-    DEV_SHELL.turnNotice || DEV_SHELL.viewer ? null : privateMoment(G),
-  );
+  // What the screen has already taken in. `year`: the last year whose card has been
+  // read; a later year shows its card first. Bots never wait for it, and a game opened
+  // mid-year starts on it read. `moment`: the private moment last begun (see
+  // `privateMoment`); a new one waits behind the turn notice, and a game opened
+  // mid-turn starts begun. `gameOver`: the end was put aside to inspect the board.
+  const [seen, setSeen] = useState(() => ({
+    year:
+      (G.phase !== "gameplay" && G.phase !== "gameOver") || DEV_SHELL.draftSummary
+        ? 0
+        : DEV_SHELL.yearReveal
+          ? G.year - 1
+          : G.year,
+    moment: DEV_SHELL.turnNotice || DEV_SHELL.viewer ? null : privateMoment(G),
+    gameOver: false,
+  }));
   // The draft is read back once its last pick lands, until the opener turns the year.
-  const [draftDone, setDraftDone] = useState(DEV_SHELL.draftSummary);
   const [seenPhase, setSeenPhase] = useState(ctx.phase);
   if (seenPhase !== ctx.phase) {
     setSeenPhase(ctx.phase);
-    if (seenPhase === "setupIdeas") setDraftDone(true);
+    if (seenPhase === "setupIdeas") setHeld("draftRead");
   }
   // The realm sheet's page, and the consult page open on the right (null: none).
   // The realm boots on its overview; picking a place on the map opens its page.
@@ -174,31 +200,31 @@ export function HegemonyBoard({
   const threats = useMemo(() => victoryThreats(G), [G]);
   const alarms = useMemo(() => realmAlarms(G, viewerId), [G, viewerId]);
 
-  // One moment owns the screen at a time, in the order the engine ran them: the last
-  // seat's riot or revolt, the year card, the game's end; then the turn notice
-  // before a private moment; behind it the Assembly and the fate card.
-  const riotShown = Boolean(G.pendingRiot) || riotResultOpen;
-  const revoltShown = !riotShown && Boolean(revolt.entry);
-  const yearShown =
-    hotseat &&
-    !riotShown &&
-    !revoltShown &&
-    !draftDone &&
-    G.phase !== "setupIdeas" &&
-    Boolean(G.activeYearCard) &&
-    G.year > yearRead;
-  const gameOverShown =
-    ctx.phase === "gameOver" && !gameOverDismissed && !riotShown && !revoltShown && !yearShown;
-  const moment = privateMoment(G);
-  const noticeShown =
-    hotseat &&
-    moment !== null &&
-    moment !== handedOver &&
-    !riotShown &&
-    !revoltShown &&
-    !yearShown &&
-    !draftDone;
-  const momentAhead = riotShown || revoltShown || yearShown || noticeShown || draftDone;
+  const decision = requiredDecision(G, viewerId);
+  // One moment owns the screen at a time, in the order the engine ran them: the Idea
+  // draft and its read-back; the last seat's riot or revolt, the year card, the game's
+  // end; then the turn notice before a private moment; behind it the seat's hunger and
+  // fate card, the Assembly, and last the year card reopened from its alarm.
+  const moment = ((): Moment | null => {
+    if (G.phase === "setupIdeas") return { kind: "draft", done: false };
+    if (held === "draftRead") return { kind: "draft", done: true };
+    if (decision?.source === "riotDecision" || held === "riotResult") return { kind: "riot" };
+    if (revolt.entry) return { kind: "revolt", entry: revolt.entry };
+    if (hotseat && G.activeYearCard && G.year > seen.year)
+      return { kind: "yearCard", reveal: true };
+    if (ctx.phase === "gameOver" && !seen.gameOver) return { kind: "gameOver" };
+    const begins = privateMoment(G);
+    if (hotseat && begins !== null && begins !== seen.moment) return { kind: "turnNotice", begins };
+    if (decision?.source === "hungerDecision")
+      return { kind: "hunger", unfed: decision.unfed, asked: false };
+    if (held === "hungerAsk" && turnOpen && shortfall)
+      return { kind: "hunger", unfed: shortfall.unfed, asked: true };
+    if (decision?.source === "eventDecision") return { kind: "event" };
+    if (sitting && !sitting.minimised) return { kind: "assembly", sitting };
+    if (held === "yearFace") return { kind: "yearCard", reveal: false };
+    return null;
+  })();
+  const drafting = moment?.kind === "draft";
   const gameUi = useMemo<GameUi>(
     () => ({
       G,
@@ -453,7 +479,7 @@ export function HegemonyBoard({
     <GameUiProvider value={gameUi}>
       <CodexLinkProvider value={codexLink}>
         <main className="frame">
-          {G.phase !== "setupIdeas" && !draftDone ? (
+          {!drafting ? (
             <>
               <Island
                 G={G}
@@ -508,7 +534,7 @@ export function HegemonyBoard({
                   alarms={alarms}
                   G={G}
                   hunger={shortfall}
-                  onOpenYear={() => setYearFaceOpen(true)}
+                  onOpenYear={() => setHeld("yearFace")}
                   threatOpen={Boolean(DEV_SHELL.titlesFrom)}
                   viewerId={viewerId}
                 />
@@ -564,7 +590,7 @@ export function HegemonyBoard({
                   canEndTurn={turnOpen}
                   confirmOpen={DEV_SHELL.endTurnConfirm}
                   onCalm={moves.civicCalm}
-                  onEndTurn={() => (shortfall ? setHungerAsk(true) : events.endTurn())}
+                  onEndTurn={() => (shortfall ? setHeld("hungerAsk") : events.endTurn())}
                   ruleset={G.ruleset}
                   title={turnCommitTitle(turnGate)}
                   waitingLabel={inAssembly ? "In Assembly" : undefined}
@@ -592,13 +618,7 @@ export function HegemonyBoard({
             </>
           ) : null}
 
-          {G.phase === "setupIdeas" ? (
-            <IdeasModal key={viewerId} />
-          ) : draftDone ? (
-            <IdeasModal draftDone onClose={() => setDraftDone(false)} />
-          ) : activeModal?.kind === "ideas" ? (
-            <IdeasModal onClose={closeModal} />
-          ) : null}
+          {activeModal?.kind === "ideas" && !drafting ? <IdeasModal onClose={closeModal} /> : null}
           {activeModal?.kind === "populationPrompt" ? (
             <PopulationPickerModal
               title={`Choose ${PLACEMENT_LABELS[activeModal.placement]} pops`}
@@ -735,68 +755,80 @@ export function HegemonyBoard({
             />
           ) : null}
           {activeModal?.kind === "venture" ? <VentureModal onClose={closeModal} /> : null}
-          {riotShown ? (
-            <RiotModal
-              onRolled={() => setRiotResultOpen(true)}
-              onDismissResult={() => setRiotResultOpen(false)}
-            />
-          ) : null}
-          {revoltShown && revolt.entry ? (
-            <RevoltModal entry={revolt.entry} onClose={revolt.dismiss} />
-          ) : null}
-          {yearShown ? (
-            <YearCardModal
-              holdBack={DEV_SHELL.yearBack}
-              onClose={() => setYearRead(G.year)}
-              reveal
-            />
-          ) : yearFaceOpen && !momentAhead ? (
-            <YearCardModal onClose={() => setYearFaceOpen(false)} reveal={false} />
-          ) : null}
-          {gameOverShown ? (
-            <GameOverModal
-              G={G}
-              onInspectBoard={() => setGameOverDismissed(true)}
-              viewerId={viewerId}
-            />
-          ) : null}
-          {/* Asked from End turn, the card ends the turn and names who leaves in one
-          go. A turn already committed (a restored game) only waits for the names. */}
-          {G.pendingHunger?.playerID === viewerId && !momentAhead ? (
-            <HungerModal
-              key={`pending-${ctx.turn}`}
-              onCommit={moves.resolveHunger}
-              unfed={G.pendingHunger.unfed}
-            />
-          ) : hungerAsk && turnOpen && shortfall ? (
-            <HungerModal
-              key={`ask-${ctx.turn}-${shortfall.unfed}`}
-              onBack={() => setHungerAsk(false)}
-              onCommit={(leave) => {
-                setHungerAsk(false);
-                events.endTurn();
-                moves.resolveHunger(leave);
-              }}
-              unfed={shortfall.unfed}
-            />
-          ) : null}
-          {G.pendingPlayerEvent && !momentAhead ? <PendingPlayerEventModal /> : null}
-          {/* The Assembly sits in a modal over the shell. It mounts off engine state;
-          minimised, it is the dock under the ticker. A proposal is private, and its
-          seat begins it at the turn notice. */}
-          {sitting && !sitting.minimised && !momentAhead ? (
-            <AssemblySitting sitting={sitting} />
-          ) : null}
-          {noticeShown ? (
-            <TurnNotice
-              onBegin={() => {
-                setHandedOver(moment);
-                onPlayerIDChange(currentPlayerId);
-              }}
-              proposal={G.assembly?.phase === "proposal"}
-              seat={currentPlayerId}
-            />
-          ) : null}
+          {(() => {
+            switch (moment?.kind) {
+              case "draft":
+                return moment.done ? (
+                  <IdeasModal draftDone onClose={() => setHeld(null)} />
+                ) : (
+                  <IdeasModal key={viewerId} />
+                );
+              case "riot":
+                return (
+                  <RiotModal
+                    onRolled={() => setHeld("riotResult")}
+                    onDismissResult={() => setHeld(null)}
+                  />
+                );
+              case "revolt":
+                return <RevoltModal entry={moment.entry} onClose={revolt.dismiss} />;
+              case "yearCard":
+                return moment.reveal ? (
+                  <YearCardModal
+                    holdBack={DEV_SHELL.yearBack}
+                    onClose={() => setSeen((current) => ({ ...current, year: G.year }))}
+                    reveal
+                  />
+                ) : (
+                  <YearCardModal onClose={() => setHeld(null)} reveal={false} />
+                );
+              case "gameOver":
+                return (
+                  <GameOverModal
+                    G={G}
+                    onInspectBoard={() => setSeen((current) => ({ ...current, gameOver: true }))}
+                    viewerId={viewerId}
+                  />
+                );
+              case "turnNotice":
+                return (
+                  <TurnNotice
+                    onBegin={() => {
+                      setSeen((current) => ({ ...current, moment: moment.begins }));
+                      onPlayerIDChange(currentPlayerId);
+                    }}
+                    proposal={G.assembly?.phase === "proposal"}
+                    seat={currentPlayerId}
+                  />
+                );
+              // Asked from End turn, the card ends the turn and names who leaves in one
+              // go. A turn already committed (a restored game) only waits for the names.
+              case "hunger":
+                return (
+                  <HungerModal
+                    key={moment.asked ? `ask-${ctx.turn}-${moment.unfed}` : `pending-${ctx.turn}`}
+                    onBack={moment.asked ? () => setHeld(null) : undefined}
+                    onCommit={(leave) => {
+                      if (moment.asked) {
+                        setHeld(null);
+                        events.endTurn();
+                      }
+                      moves.resolveHunger(leave);
+                    }}
+                    unfed={moment.unfed}
+                  />
+                );
+              case "event":
+                return <PendingPlayerEventModal />;
+              // The Assembly sits in a modal over the shell. It mounts off engine state;
+              // minimised, it is the dock under the ticker. A proposal is private, and
+              // its seat begins it at the turn notice.
+              case "assembly":
+                return <AssemblySitting sitting={moment.sitting} />;
+              default:
+                return null;
+            }
+          })()}
         </main>
       </CodexLinkProvider>
     </GameUiProvider>

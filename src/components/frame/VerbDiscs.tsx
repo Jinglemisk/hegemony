@@ -3,7 +3,7 @@ import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, MouseEvent } f
 import type { Resources } from "../../game/types";
 import { canPay } from "../../ui/frameFormat";
 import type { DiscGroup, DiscOption } from "./discs";
-import { Ico, Price } from "./parts";
+import { Chips, Ico } from "./parts";
 
 const token = (name: string, fallback: number) =>
   typeof document === "undefined"
@@ -24,13 +24,13 @@ function OptionPrice({ option, store }: { option: DiscOption; store: Resources }
       {option.prices.map((amounts, i) => (
         <span className="price-alt" key={i}>
           {i > 0 ? <span className="price-or">·</span> : null}
-          <Price amounts={amounts} short={!canPay(store, amounts)} />
+          <Chips amounts={amounts} short={!canPay(store, amounts)} />
         </span>
       ))}
       {option.gets ? (
         <>
           <span className="price-or">▸</span>
-          <Price amounts={option.gets} />
+          <Chips amounts={option.gets} />
         </>
       ) : null}
     </>

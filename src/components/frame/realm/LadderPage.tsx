@@ -3,12 +3,13 @@ import { POP_TYPES, getDemotePopStatus, getPromotePopStatus } from "../../../gam
 import type { HegemonyState, PlayerId, PopType, Resources } from "../../../game/types";
 import { formatPopLabel } from "../../../ui/formatters";
 import { settlementNames } from "../../../ui/settlementNames";
+import { ActionButton } from "../../ActionButton";
 import { useGameUi } from "../../board/GameUiContext";
-import { calculatePopEconomy, capitalize } from "../../board/helpers";
+import { actionRequirementText, calculatePopEconomy, capitalize } from "../../board/helpers";
 import type { OwnedHolding } from "../../board/types";
 import { CodexTermLink } from "../../codexLink";
 import { Tooltip } from "../../overlays/Tooltip";
-import { Chips, Ico, Price, Tip } from "../parts";
+import { Chips, Ico, Tip } from "../parts";
 import { PlaceSeal } from "./PlaceSeal";
 
 const POP_ICON: Record<PopType, string> = {
@@ -75,43 +76,36 @@ export function LadderPage({
 
   const step = (kind: "promote" | "demote", from: PopType, to: PopType) => {
     const status = kind === "promote" ? getPromotePopStatus : getDemotePopStatus;
-    const enabled =
-      isActive &&
-      phase === "gameplay" &&
-      holdings.some(({ tile }) => status(G, playerID, tile.id, from).can);
+    const statuses = holdings.map(({ tile }) => status(G, playerID, tile.id, from));
+    const enabled = isActive && phase === "gameplay" && statuses.some((each) => each.can);
     const verb = RUNG_VERBS[kind][from] ?? capitalize(kind);
     const cost = bestCost(G, playerID, holdings, kind, from);
     const what = `${verb} a ${formatPopLabel(from, 1)} to ${formatPopLabel(to, 1)}`;
 
     return (
-      <Tooltip
-        content={
-          <Tip sub="the cheapest settlement's price" title={what}>
-            <p className="tip-body">
-              Choose which settlement pays: a pop&rsquo;s worth depends on the ground it stands on.
-            </p>
-            {enabled ? null : (
-              <p className="tip-body">No legal move now; one ladder step a turn.</p>
-            )}
-          </Tip>
+      <ActionButton
+        aria-label={`${what}.`}
+        blockedReason={actionRequirementText(statuses[0] ?? null, phase, isActive)}
+        className="rung-btn"
+        effectiveCost={cost}
+        enabled={enabled}
+        explanation={
+          <p className="mechanicsExplanation">
+            Priced at the cheapest settlement. Choose which settlement pays: a pop&rsquo;s worth
+            depends on the ground it stands on.
+          </p>
         }
+        heading={what}
         key={`${kind}-${from}`}
+        onClick={() => onLadderRequest({ kind, from })}
       >
-        <button
-          aria-disabled={enabled ? undefined : true}
-          aria-label={`${what}.`}
-          className="rung-btn"
-          onClick={enabled ? () => onLadderRequest({ kind, from }) : undefined}
-          type="button"
-        >
-          <Ico path={kind === "promote" ? "pops/promote" : "pops/demote"} size="chip" />
-          <span className="rung-v">{verb}</span>
-          <span className="rung-t">
-            {formatPopLabel(from, 1)} {kind === "promote" ? "↑" : "↓"}
-          </span>
-          <Price amounts={cost} />
-        </button>
-      </Tooltip>
+        <Ico path={kind === "promote" ? "pops/promote" : "pops/demote"} size="chip" />
+        <span className="rung-v">{verb}</span>
+        <span className="rung-t">
+          {formatPopLabel(from, 1)} {kind === "promote" ? "↑" : "↓"}
+        </span>
+        <Chips amounts={cost} />
+      </ActionButton>
     );
   };
 
@@ -139,7 +133,11 @@ export function LadderPage({
                 </span>
                 <b className="tier-count num">{count(pop)}</b>
                 <span className="tier-makes">
-                  <Chips amounts={economy[pop]} empty={<span className="cap">no income</span>} />
+                  <Chips
+                    amounts={economy[pop]}
+                    signed
+                    empty={<span className="cap">no income</span>}
+                  />
                 </span>
               </Tooltip>
               {gap ? (
@@ -188,7 +186,7 @@ export function LadderPage({
         <div className="lad-line">
           <span className="caps">Net / turn</span>
           <span className="lad-net">
-            <Chips amounts={income} empty={<span className="cap">nothing moves</span>} />
+            <Chips amounts={income} signed empty={<span className="cap">nothing moves</span>} />
           </span>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Resources } from "../../../game/types";
-import { ResourceChips } from "../ResourceChips";
+import { Chips } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
 
 export function PlacementModalShell({
@@ -61,11 +61,8 @@ export function CostRow({ cost, note }: { cost: Partial<Resources>; note?: strin
   return (
     <div className="placementCostRow">
       <span className="placementSectionLabel">Cost</span>
-      <ResourceChips
-        resources={cost}
-        variant="cost"
-        className="placementCostChips"
-        chipClassName="placementCostChip"
+      <Chips
+        amounts={cost}
         empty={
           <span className="placementCostChips">
             <em>Free</em>

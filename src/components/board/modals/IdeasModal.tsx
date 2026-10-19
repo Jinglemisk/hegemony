@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { getNationalIdeas, ideaDraft, ideaHolders } from "../../../game/ideas";
+import { getNationalIdeas, getTakeIdeaStatus, ideaDraft, ideaHolders } from "../../../game/ideas";
 import type { NationalIdeaId, IdeaPopChoice } from "../../../game/ideaTypes";
 import { enumerateLegalOptions } from "../../../game/legalMoves";
 import type { HegemonyState } from "../../../game/types";
 import { IDEA_ICON } from "../../../ui/frameFormat";
 import { formatNumber } from "../../../ui/formatters";
 import { settlementNames } from "../../../ui/settlementNames";
+import { ActionButton } from "../../ActionButton";
 import { useGameUi } from "../GameUiContext";
 import { Chips, Ico, SeatMark } from "../../frame/parts";
 import { ModalShell } from "./ModalShell";
@@ -66,6 +67,9 @@ export function IdeasModal({
   const picked = draft.filter((seat) => seat.ideaId).length;
   const left = ideas.length - holders.size;
   const { influenceCost, purchases } = G.ruleset.ideas;
+  const take = getTakeIdeaStatus(G, viewerId, selected ?? undefined, target);
+  // The engine's reasons; with none, the button only waits for a pick.
+  const takeReason = take.reasons.join(" ") || "Choose an Idea.";
 
   const commit = () => {
     if (!choice || (choice.command.type !== "pickIdea" && choice.command.type !== "buyIdea"))
@@ -100,17 +104,23 @@ export function IdeasModal({
                   ? "Taken"
                   : null;
         return (
-          <button
+          <ActionButton
             aria-pressed={selected === idea.id}
+            blockedReason={
+              legal(idea.id) || draftDone
+                ? undefined
+                : getTakeIdeaStatus(G, viewerId, idea.id).reasons.join(" ")
+            }
             className={`idea-choice${taken ? " is-taken" : ""}${own ? " is-own" : ""}${idea.id === fresh ? " is-fresh" : ""}`}
             {...gate("idea-choice")}
-            disabled={!legal(idea.id) || draftDone}
+            enabled={legal(idea.id) && !draftDone}
+            heading={idea.name}
             key={idea.id}
             onClick={() => {
               setSelected(idea.id);
               setTarget(undefined);
             }}
-            type="button"
+            triggerClassName="idea-tip"
           >
             <Ico className="idea-icon" path={IDEA_ICON[idea.id]} size="tile" />
             <span className="idea-words">
@@ -130,7 +140,7 @@ export function IdeasModal({
                 </span>
               ) : null}
             </span>
-          </button>
+          </ActionButton>
         );
       })}
     </div>
@@ -194,16 +204,18 @@ export function IdeasModal({
               A holder&rsquo;s mark: plain for the draft, tagged with the year when bought.
             </span>
           )}
-          <button
+          <ActionButton
+            blockedReason={takeReason}
             className="primaryButton"
             data-idea-confirm
-            disabled={!choice}
+            effectiveCost={take.cost}
+            enabled={Boolean(choice)}
+            heading={selectedIdea ? `Buy ${selectedIdea.name}` : "Buy an Idea"}
             onClick={commit}
-            type="button"
           >
             {selectedIdea ? `Buy ${selectedIdea.name}` : "Buy an Idea"}
             {choice ? <Chips amounts={choice.cost ?? {}} /> : null}
-          </button>
+          </ActionButton>
         </footer>
       </ModalShell>
     );
@@ -253,15 +265,16 @@ export function IdeasModal({
                       {selectedIdea.name} · {selectedIdea.text}
                     </span>
                   ) : null)}
-                <button
+                <ActionButton
+                  blockedReason={takeReason}
                   className="primaryButton"
                   data-idea-confirm
-                  disabled={!choice}
+                  enabled={Boolean(choice)}
+                  heading={selectedIdea ? `Take ${selectedIdea.name}` : "Take an Idea"}
                   onClick={commit}
-                  type="button"
                 >
                   {selectedIdea ? `Take ${selectedIdea.name}` : "Take an Idea"}
-                </button>
+                </ActionButton>
               </>
             )}
           </footer>

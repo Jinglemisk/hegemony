@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
-import type { PlayerId, Resource, Resources } from "../../game/types";
+import type { PlayerId, Resources } from "../../game/types";
 import { RESOURCE_ICON, sign, tone } from "../../ui/frameFormat";
+import { RESOURCE_LABELS, formatNumber, formatSignedNumber } from "../../ui/formatters";
 import { RESOURCE_ORDER } from "../../ui/resourceVisuals";
 import { rasterIcon } from "../../ui/icons/placeholders";
 import { PLAYER_GLAZES } from "../../ui/playerGlazes";
@@ -46,46 +47,41 @@ export function SeatMark({ playerID, year }: { playerID: PlayerId; year?: number
   );
 }
 
-/** A price: number-and-icon pairs, no words. `short` marks one the store cannot pay. */
-export function Price({
-  amounts,
-  short = false,
-}: {
-  amounts: Partial<Resources>;
-  short?: boolean;
-}) {
-  const parts = (Object.entries(amounts) as Array<[Resource, number]>).filter(([, n]) => n > 0);
-
-  return (
-    <span className={`price${short ? " is-short" : ""}`}>
-      {parts.map(([resource, n]) => (
-        <span className="price-part" key={resource}>
-          <span>{n}</span>
-          <Ico path={RESOURCE_ICON[resource]} size="chip" />
-        </span>
-      ))}
-    </span>
-  );
-}
-
-/** What moves: one signed, toned number-and-icon per resource that is not zero. */
+/**
+ * Resource amounts as number-and-icon chips in `RESOURCE_ORDER`, each read aloud in
+ * words ("4 Wood"). A price shows what is paid, and `short` marks one the store cannot
+ * pay; `signed` shows what moves instead, signed and toned. `empty` stands in when
+ * there is nothing to show.
+ */
 export function Chips({
   amounts,
+  signed = false,
+  short = false,
   empty = null,
 }: {
   amounts: Partial<Resources>;
+  signed?: boolean;
+  short?: boolean;
   empty?: ReactNode;
 }) {
-  const moved = RESOURCE_ORDER.filter((resource) => (amounts[resource] ?? 0) !== 0);
-  if (moved.length === 0) return <>{empty}</>;
+  const shown = RESOURCE_ORDER.filter((resource) =>
+    signed ? (amounts[resource] ?? 0) !== 0 : (amounts[resource] ?? 0) > 0,
+  );
+  if (shown.length === 0) return <>{empty}</>;
   return (
-    <span className="chips">
-      {moved.map((resource) => (
-        <span className={`chip ${tone(amounts[resource] ?? 0)}`} key={resource}>
-          {sign(amounts[resource] ?? 0)}
-          <Ico path={RESOURCE_ICON[resource]} size="chip" />
-        </span>
-      ))}
+    <span className={signed ? "chips" : `price${short ? " is-short" : ""}`}>
+      {shown.map((resource) => {
+        const n = amounts[resource] ?? 0;
+        return (
+          <span className={signed ? `chip ${tone(n)}` : "price-part"} key={resource}>
+            <span aria-hidden="true">{signed ? sign(n) : n}</span>
+            <Ico path={RESOURCE_ICON[resource]} size="chip" />
+            <span className="visuallyHidden">
+              {`${signed ? formatSignedNumber(n) : formatNumber(n)} ${RESOURCE_LABELS[resource]}`}
+            </span>
+          </span>
+        );
+      })}
     </span>
   );
 }

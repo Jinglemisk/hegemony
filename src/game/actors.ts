@@ -71,6 +71,34 @@ export function eligibleActors(G: HegemonyState): PlayerId[] {
 }
 
 /**
+ * The decision the table waits on, as one seat's decision host reads it: the workflow
+ * that asks, the seat that answers, and what the pending state holds for the answer.
+ * Hunger and the fate card are the answering seat's alone; a riot is the table's to
+ * watch. The Assembly keeps its own sitting.
+ */
+export type RequiredDecision =
+  | { source: "hungerDecision"; actor: PlayerId; unfed: number }
+  | { source: "eventDecision"; actor: PlayerId }
+  | { source: "riotDecision"; actor: PlayerId };
+
+export function requiredDecision(G: HegemonyState, seat: PlayerId): RequiredDecision | null {
+  const workflow = currentWorkflow(G);
+  const [actor] = eligibleActors(G);
+  switch (workflow) {
+    case "hungerDecision":
+      return actor === seat && G.pendingHunger
+        ? { source: workflow, actor, unfed: G.pendingHunger.unfed }
+        : null;
+    case "eventDecision":
+      return actor === seat ? { source: workflow, actor } : null;
+    case "riotDecision":
+      return { source: workflow, actor };
+    default:
+      return null;
+  }
+}
+
+/**
  * Authoritative actor/workflow gate for one command. Individual domain validators still
  * own affordability and payload legality; this query owns who may speak, and which command
  * family the current workflow accepts.

@@ -289,28 +289,6 @@
   gap: 6px;
 }
 
-.placementCostChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border: 1px solid rgb(143 46 19 / 30%);
-  border-radius: 999px;
-  background: rgb(255 248 231 / 56%);
-  font-variant-numeric: tabular-nums;
-}
-
-.placementCostChip .miniResourceIcon {
-  width: 16px;
-  height: 16px;
-}
-
-.placementCostChip strong {
-  color: var(--fg);
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-}
-
 .placementCostNote {
   color: var(--muted);
   font-size: 0.72rem;
@@ -497,7 +475,7 @@
   text-transform: uppercase;
 }
 
-.growPopBenefitPanel > div > span:not(.resourceDeltaList) {
+.growPopBenefitPanel > div > span:not(.chips, .resourceDeltaList) {
   color: var(--muted);
   font-size: 0.82rem;
 }

@@ -9,7 +9,7 @@ export function App() {
 
   // A remount key for the board. `resetGame` re-rolls the SAME seed with new params for a
   // clean A/B (controller.ts), but `HegemonyBoard` lazily seeds UI state at mount only
-  // (`gameOverDismissed`). Without a key change the board does not remount, so that
+  // (`seen.gameOver`). Without a key change the board does not remount, so that
   // stale state leaks into the next game: the fresh game-over stays dismissed. Bumping the key
   // on every reset forces a remount and a clean re-seed. (post-sprint-debt §4.)
   const [resetKey, setResetKey] = useState(0);

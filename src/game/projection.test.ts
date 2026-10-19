@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { commandActorEligibility, currentWorkflow, eligibleActors } from "./actors";
+import {
+  commandActorEligibility,
+  currentWorkflow,
+  eligibleActors,
+  requiredDecision,
+} from "./actors";
 import { openAssembly } from "./assembly";
 import { getResolutionCard } from "./content";
 import { transition } from "./legalMoves";
@@ -47,6 +52,30 @@ describe("workflow actor eligibility", () => {
     G.assembly!.activePlayer = "3";
     expect(eligibleActors(G)).toEqual(["3"]);
     expect(commandActorEligibility(G, "3", { type: "assemblyClose" }).eligible).toBe(true);
+  });
+
+  it("shows hunger and the fate card to their seat alone and a riot to the table", () => {
+    const G = scenario().opening().build();
+    G.pendingPlayerEvent = null;
+    expect(requiredDecision(G, G.currentPlayer)).toBeNull();
+
+    G.pendingHunger = { playerID: "1", unfed: 2 };
+    expect(requiredDecision(G, "1")).toEqual({ source: "hungerDecision", actor: "1", unfed: 2 });
+    expect(requiredDecision(G, "2")).toBeNull();
+
+    G.pendingHunger = null;
+    G.pendingPlayerEvent = { playerID: "1", card: G.definition.content.playerEvents[0] };
+    expect(requiredDecision(G, "1")).toEqual({ source: "eventDecision", actor: "1" });
+    expect(requiredDecision(G, "2")).toBeNull();
+
+    G.pendingPlayerEvent = null;
+    G.pendingRiot = {
+      playerID: "1",
+      boughtInsurance: [],
+      tokensCleared: 0,
+      concessionTileId: null,
+    };
+    expect(requiredDecision(G, "2")).toEqual({ source: "riotDecision", actor: "1" });
   });
 });
 

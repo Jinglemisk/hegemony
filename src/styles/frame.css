@@ -2269,6 +2269,10 @@ button.link {
   grid-auto-rows: minmax(var(--idea-row-h), auto);
   column-gap: var(--s-6);
 }
+/* A row in its tooltip trigger still fills its cell. */
+.idea-tip > .idea-choice {
+  flex: 1;
+}
 .idea-choice {
   display: grid;
   grid-template-columns: var(--ic-tile) minmax(0, 1fr) auto;
@@ -2317,7 +2321,7 @@ button.link {
   color: var(--porphyra);
 }
 /* A taken Idea keeps its holder's mark at full strength; the rest of it dims. */
-.idea-choice.is-taken:disabled {
+.idea-choice.is-taken[aria-disabled="true"] {
   opacity: 1;
 }
 .idea-choice.is-taken .idea-icon,
@@ -2335,17 +2339,17 @@ button.link {
 .ideas-setup .idea-choice.is-fresh {
   background: var(--ivory);
 }
-.idea-choice:hover:not(:disabled) {
+.idea-choice:hover:not([aria-disabled="true"]) {
   color: var(--clay-ink);
 }
-.idea-choice:disabled {
+.idea-choice[aria-disabled="true"] {
   opacity: var(--dim);
 }
 /* Read back with no controls (a rival choosing, the finished draft), an untaken
    Idea is not unavailable: only the taken ones dim. */
-.idea-choice.is-fresh:disabled,
-.idea-choice.is-own:disabled,
-.ideas-list.is-view .idea-choice:disabled {
+.idea-choice.is-fresh[aria-disabled="true"],
+.idea-choice.is-own[aria-disabled="true"],
+.ideas-list.is-view .idea-choice[aria-disabled="true"] {
   opacity: 1;
 }
 .idea-choice:focus-visible {
@@ -2421,7 +2425,7 @@ button.link {
   color: var(--ivory);
   background: var(--clay);
 }
-.ideas-footer .primaryButton:hover:not(:disabled) {
+.ideas-footer .primaryButton:hover:not([aria-disabled="true"]) {
   background: var(--clay-deep);
   box-shadow: none;
   transform: none;

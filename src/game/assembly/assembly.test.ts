@@ -259,6 +259,7 @@ describe("Directives", () => {
   it("General Strike suppresses one income collection for its chosen rival", () => {
     const G = sitting();
     carry(G, "general-strike");
+    G.assembly = null;
     G.players["1"].collectedThisTurn = false;
     G.pendingPlayerEvent = null;
     const before = G.players["1"].resources.gold;

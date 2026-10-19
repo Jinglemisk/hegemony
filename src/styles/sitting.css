@@ -111,13 +111,17 @@
   background: var(--ivory);
   white-space: nowrap;
 }
-.sit-btn:not(:disabled):hover,
+.sit-btn:not([aria-disabled="true"]):hover,
 .sit-btn[aria-pressed="true"] {
   border-color: var(--clay);
   color: var(--clay-ink);
 }
-.sit-btn:disabled {
+.sit-btn[aria-disabled="true"] {
   opacity: var(--dim);
+}
+/* A button in its tooltip trigger still fills the column it stands in. */
+.sit-tip > .sit-btn {
+  flex: 1;
 }
 .sit-btn.is-primary,
 .sit-btn.is-nay {
@@ -125,8 +129,8 @@
   color: var(--ivory);
   background: var(--clay-ink);
 }
-.sit-btn.is-primary:not(:disabled):hover,
-.sit-btn.is-nay:not(:disabled):hover {
+.sit-btn.is-primary:not([aria-disabled="true"]):hover,
+.sit-btn.is-nay:not([aria-disabled="true"]):hover {
   color: var(--ivory);
   background: var(--clay-deep);
 }

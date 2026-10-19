@@ -1,13 +1,12 @@
 import type { Resources } from "../../game/types";
-import { ResourceChips } from "./ResourceChips";
+import { Chips } from "../frame/parts";
 
-/** Signed, labelled resource deltas — event outcomes and card effects. */
+/** Signed resource deltas, or a quiet line when nothing changes. */
 export function ResourceDeltaList({ resources }: { resources: Resources }) {
   return (
-    <ResourceChips
-      resources={resources}
-      variant="delta"
-      className="resourceDeltaList"
+    <Chips
+      amounts={resources}
+      signed
       empty={<span className="resourceDeltaList neutral">No direct change</span>}
     />
   );

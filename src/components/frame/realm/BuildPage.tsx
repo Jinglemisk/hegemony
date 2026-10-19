@@ -15,14 +15,14 @@ import { presentBuildingEffects } from "../../../ui/effects";
 import { BUILDING_ICON, canPay } from "../../../ui/frameFormat";
 import { formatResourceCost } from "../../../ui/formatters";
 import { settlementNames } from "../../../ui/settlementNames";
+import { ActionButton } from "../../ActionButton";
 import { AnnotatedText } from "../../AnnotatedText";
 import { useGameUi } from "../../board/GameUiContext";
 import { actionRequirementText, getBuildingBenefitText } from "../../board/helpers";
 import { buildRefusal, shortfallOf } from "../../board/ledger/buildRefusal";
 import { slotsOf } from "../../board/ledger/slots";
 import type { OwnedHolding } from "../../board/types";
-import { Tooltip } from "../../overlays/Tooltip";
-import { Ico, Price, Tip } from "../parts";
+import { Chips, Ico } from "../parts";
 
 /** What a building does in this place, short enough for one line of a cell. */
 function cellLine(
@@ -109,7 +109,7 @@ export function BuildPage({
               <div aria-disabled="true" className="bcell" key={building.id}>
                 <Ico path={BUILDING_ICON[building.id] ?? "buildings/build"} size="ui" />
                 <span className="bn">{building.name}</span>
-                <Price amounts={building.cost} short={!canPay(store, building.cost)} />
+                <Chips amounts={building.cost} short={!canPay(store, building.cost)} />
                 <span className="bx">no ground</span>
               </div>
             );
@@ -126,48 +126,44 @@ export function BuildPage({
           const line = refused ?? cellLine(G, playerID, holding.tile, building);
 
           return (
-            <Tooltip
-              content={
-                <Tip sub={name} title={building.name}>
-                  <p className="tip-body">{presentBuildingEffects(building.effects).text || "—"}</p>
-                  <p className="tip-body">
+            <ActionButton
+              aria-label={
+                refused
+                  ? `${building.name} in ${name}: ${refused}.`
+                  : `Raise ${building.name} in ${name}.`
+              }
+              blockedReason={actionRequirementText(status, phase, isActive)}
+              className="bcell"
+              effectiveCost={cost}
+              enabled={!refused}
+              explanation={
+                <>
+                  <p className="mechanicsExplanation">
+                    {presentBuildingEffects(building.effects).text || "—"}
+                  </p>
+                  <p className="mechanicsExplanation">
                     <AnnotatedText
                       links={false}
                       text={getBuildingBenefitText(G, playerID, holding.tile, building)}
                     />
                   </p>
-                  <p className="tip-body">
-                    Costs {formatResourceCost(cost)}; base {formatResourceCost(building.cost)}.
+                  <p className="mechanicsExplanation">
+                    Base cost {formatResourceCost(building.cost)}.
                   </p>
-                  {refused ? (
-                    <p className="tip-body">{actionRequirementText(status, phase, isActive)}</p>
-                  ) : null}
-                </Tip>
+                </>
               }
+              heading={`${building.name} in ${name}`}
               key={building.id}
+              onClick={() => onBuildBuildingRequest(holding.tile.id, building.id)}
               triggerClassName="bcell-trigger"
             >
-              <button
-                aria-disabled={refused ? true : undefined}
-                aria-label={
-                  refused
-                    ? `${building.name} in ${name}: ${refused}.`
-                    : `Raise ${building.name} in ${name}.`
-                }
-                className="bcell"
-                onClick={
-                  refused ? undefined : () => onBuildBuildingRequest(holding.tile.id, building.id)
-                }
-                type="button"
-              >
-                <Ico path={BUILDING_ICON[building.id] ?? "buildings/build"} size="ui" />
-                <span className="bn">{building.name}</span>
-                <Price amounts={cost} short={!canPay(store, cost)} />
-                <span className={`bx${refused ? " is-refused" : ""}`}>
-                  <AnnotatedText links={false} text={line} />
-                </span>
-              </button>
-            </Tooltip>
+              <Ico path={BUILDING_ICON[building.id] ?? "buildings/build"} size="ui" />
+              <span className="bn">{building.name}</span>
+              <Chips amounts={cost} short={!canPay(store, cost)} />
+              <span className={`bx${refused ? " is-refused" : ""}`}>
+                <AnnotatedText links={false} text={line} />
+              </span>
+            </ActionButton>
           );
         })}
       </div>

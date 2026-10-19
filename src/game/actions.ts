@@ -31,6 +31,7 @@ import {
   getGrowPopStatus,
   getMovePopsStatus,
   getUpgradeColonyToCityStatus,
+  pendingDecisionReasons,
 } from "./status";
 import { drawPlayerEvent } from "./events";
 import { ideaRoom } from "./ideas";
@@ -305,7 +306,7 @@ export function collectIncome(
   const player = G.players[playerID];
 
   // Income belongs to turn start; a committed turn awaiting its riot cannot collect.
-  if (player.collectedThisTurn || G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger) {
+  if (player.collectedThisTurn || pendingDecisionReasons(G).length > 0) {
     return invalid();
   }
 

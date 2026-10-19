@@ -1,5 +1,5 @@
 ---
-status: ready
+status: active
 phase: "post-v2"
 updated: 2026-10-19
 ---
@@ -156,8 +156,8 @@ the shared button.
 
 All to `main`, before player trade slice 1, in this order:
 
-1. **Single sources** (section 1).
-2. **Decision host and shared primitives** (section 2).
+1. **Single sources** (section 1). Merged, #125.
+2. **Decision host and shared primitives** (section 2). Merged.
 3. **Typed Laws, one income, one room** (section 3).
 4. **UI cleanup** (section 4).
 5. **CSS cleanup** (section 5).

@@ -1,5 +1,6 @@
 import { buildingSlotCost, occupiedBuildingSlots } from "./ideaRules";
 import { hasLawRule } from "./assembly/laws";
+import { currentWorkflow } from "./actors";
 import { getBuildings } from "./content";
 import type {
   BuildingDefinition,
@@ -52,7 +53,7 @@ export function getFoundColonyStatus(
     return status;
   }
 
-  addPendingEventReason(G, status);
+  status.reasons.push(...pendingDecisionReasons(G));
 
   status.reasons.push(...canPlaceColonyOnTile(G, playerID, tile).reasons);
 
@@ -99,7 +100,7 @@ export function getUpgradeColonyToCityStatus(
     return status;
   }
 
-  addPendingEventReason(G, status);
+  status.reasons.push(...pendingDecisionReasons(G));
 
   if (
     !tile.settlements.some(
@@ -164,7 +165,7 @@ export function getBuildBuildingStatus(
     return status;
   }
 
-  addPendingEventReason(G, status);
+  status.reasons.push(...pendingDecisionReasons(G));
   status.reasons.push(...buildSiteReasons(G, playerID, tile, building, claimVertexId));
 
   if (!canAfford(G.players[playerID].resources, status.cost ?? building.cost)) {
@@ -343,7 +344,7 @@ export function getGrowPopStatus(
     return status;
   }
 
-  addPendingEventReason(G, status);
+  status.reasons.push(...pendingDecisionReasons(G));
 
   if (!settlement) {
     status.reasons.push("Requires your settlement on this tile.");
@@ -399,7 +400,7 @@ export function getMovePopsStatus(
   const sourceSettlement = getOwnedSettlement(G, sourceTileId, playerID);
   const targetSettlement = getOwnedSettlement(G, targetTileId, playerID);
 
-  addPendingEventReason(G, status);
+  status.reasons.push(...pendingDecisionReasons(G));
 
   if (G.players[playerID].moveUsedThisTurn) {
     status.reasons.push("One move per turn.");
@@ -455,8 +456,11 @@ function scaleCost(cost: Partial<Resources>, times: number): Partial<Resources> 
   );
 }
 
-function addPendingEventReason(G: HegemonyState, status: ActionStatus) {
-  if (G.pendingPlayerEvent || G.pendingHunger) {
-    status.reasons.push("Resolve the pending player event first.");
-  }
+/**
+ * Why a turn action must wait: the table is in some workflow other than the turn
+ * itself, such as a pending event, hunger pick or riot, or a sitting Assembly. Every
+ * action status and the turn's own transitions read this one gate.
+ */
+export function pendingDecisionReasons(G: HegemonyState): string[] {
+  return currentWorkflow(G) === "turn" ? [] : ["Finish the pending decision first."];
 }

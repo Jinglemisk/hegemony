@@ -9,8 +9,10 @@ import type { HexTile, LuxuryAsset } from "../../../game/types";
 import { RESOURCE_ICON } from "../../../ui/frameFormat";
 import { PLAYER_GLAZES } from "../../../ui/playerGlazes";
 import { settlementNames } from "../../../ui/settlementNames";
+import { ActionButton } from "../../ActionButton";
 import { useGameUi } from "../../board/GameUiContext";
-import { Ico, Price } from "../parts";
+import { actionRequirementText } from "../../board/helpers";
+import { Chips, Ico } from "../parts";
 
 /** A tile as a place: its settlement's name if it has one, else its ground. */
 function placeName(tile: HexTile, names: Map<string, string>) {
@@ -80,16 +82,18 @@ export function TilePage({ tile, onFound }: { tile: HexTile; onFound: (tileId: s
         </li>
       </ul>
       <div className="act-line">
-        <button
-          aria-disabled={can ? undefined : true}
+        <ActionButton
+          blockedReason={actionRequirementText(found, phase, isActive)}
           className="act-btn"
-          onClick={can ? () => onFound(tile.id) : undefined}
-          type="button"
+          effectiveCost={found.cost}
+          enabled={can}
+          heading="Found a colony here"
+          onClick={() => onFound(tile.id)}
         >
           <Ico path="settlements/found" size="chip" />
           Found a colony here
-          {found.cost ? <Price amounts={found.cost} /> : null}
-        </button>
+          {found.cost ? <Chips amounts={found.cost} /> : null}
+        </ActionButton>
         {can ? null : (
           <span className="cap">
             {!isActive ? "not your turn" : (found.reasons[0] ?? "not in this phase")}
