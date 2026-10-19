@@ -51,10 +51,10 @@ deck runs out.
 you did not draw or receive this turn. It resolves at once and goes to the discards. The table
 sees a card when it is played, never before.
 
-**The free card.** At the end of your own turn, at the riot check, a level of +3 or higher
-without calm draws one card, playable from your next turn. In the rotated batch of 2026-10-19,
-1.1% of turns sat at +3 or higher, 22 of the 24 with a luxury. The reward bites only if realms
-keep fewer slaves to reach it.
+**The free card.** At the end of your own turn, at the riot check, a level of +3 or higher without
+calm draws one card, playable from your next turn. In the [rotated batch of
+2026-10-19](../reports/simulation/2026-10-19-v1-vs-v2.md), 1.1% of turns sat at +3 or higher, 22 of
+the 24 with a luxury. The reward bites only if realms keep fewer slaves to reach it.
 
 **Riots.** For each pop a riot would take, you may discard a card drawn at random from your
 hand instead. You choose per pop, before the draw. The slaves stay, so the riot comes back
@@ -92,11 +92,10 @@ private moment. Networked (later): hands are private to each seat and no handove
 
 ## The sim
 
-Telemetry per seat and personality: cards bought, drawn free, played, traded and lost to riots,
-by kind; gold spent on cards; turns at +3 or higher; slaves held. Paired batches on the same
-seeds: the deck against Ventures, then the free card on and off, read against the rotated batch
-of 2026-10-19
-(slaves 50% of pops, median level −2).
+Telemetry per seat and personality: cards bought, drawn free, played, traded and lost to riots, by
+kind; gold spent on cards; turns at +3 or higher; slaves held. Paired batches on the same seeds: the
+deck against Ventures, then the free card on and off, read against the [rotated batch of
+2026-10-19](../reports/simulation/2026-10-19-v1-vs-v2.md) (slaves 50% of pops, median level −2).
 
 ## Three-axis parity
 

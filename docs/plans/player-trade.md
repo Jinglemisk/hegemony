@@ -80,10 +80,10 @@ no cap.
 with gold. Trade is the only conversion, apart from the Dole, which still turns influence into
 food, and the deck's cards. Nothing anchors a price: it is whatever two seats agree.
 
-**Base food.** Every settlement, colony, city or capital, makes 1 food at income on its own,
-before upkeep. In the rotated batch of 2026-10-19 the median realm eats 3 food in year 1, 4 to 5
-in years 2 to 8 and 7 in year 14; the base gives 2, 4 and 5, so growth and a surplus to sell
-still need plains.
+**Base food.** Every settlement, colony, city or capital, makes 1 food at income on its own, before
+upkeep. In the [rotated batch of 2026-10-19](../reports/simulation/2026-10-19-v1-vs-v2.md) the
+median realm eats 3 food in year 1, 4 to 5 in years 2 to 8 and 7 in year 14; the base gives 2, 4 and
+5, so growth and a surplus to sell still need plains.
 
 ## Hotseat now, network later
 
