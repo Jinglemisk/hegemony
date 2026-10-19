@@ -1,7 +1,7 @@
 ---
 status: blocked
 phase: "5.5"
-updated: 2026-08-03
+updated: 2026-10-19
 ---
 
 # V1 mechanics and content freeze
@@ -77,7 +77,9 @@ The inventory extends the existing manifests; it does not create a prose-only du
 1. **Manifest closure:** enumerate the final v1 content and identify missing behavior,
    presentation, observation/value, telemetry, or fixtures.
 2. **Effect closure:** implement missing Resolution and National Idea effects as vertical slices,
-   grouped by shared typed mechanic rather than by content source.
+   grouped by shared typed mechanic rather than by content source. The eight v2 Laws that are
+   still `rule` flags become typed effects earlier, in the [code-health plan](code-health.md)'s
+   third PR, before player trade.
 3. **Full-game validation:** deterministic replay fixtures, targeted simulation campaigns,
    accessibility/browser flows, and human games covering luxury, trade, Ideas, and Assembly.
 4. **Freeze record:** publish final version/hash inventory, known balance caveats, deferred-v2
