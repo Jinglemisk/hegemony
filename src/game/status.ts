@@ -19,7 +19,7 @@ import {
   isValidPopSelection,
   totalPops,
 } from "./core/pops";
-import { getOwnedSettlement, getGrownSettlementsThisTurn, getTile } from "./core/query";
+import { getOwnedSettlement, getGrownSettlementsThisTurn, getTile, isCapital } from "./core/query";
 import { canAfford } from "./core/resources";
 import type { ActionStatus } from "./core/results";
 import {
@@ -354,12 +354,10 @@ export function getGrowPopStatus(
   status.cost = getGrowPopCost(G, playerID, pop);
 
   const grown = getGrownSettlementsThisTurn(G, playerID).filter((id) => id === tileId).length;
-  const isCapital =
-    G.ruleset.setup[0] !== "colony" && G.players[playerID].settlements[0] === tileId;
   const limit = hasLawRule(G, "guildCharter")
     ? settlement.kind === "colony"
       ? 0
-      : isCapital
+      : isCapital(G, playerID, tileId)
         ? 2
         : 1
     : 1;

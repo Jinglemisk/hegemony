@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buyRiotInsurance, resolveRiot, riotRollReach } from "./riot";
 import { beginTurnFor, endTurn } from "./turn";
 import { applyUnrestAtTurnEnd } from "./unrest";
+import { yearDeckSize } from "./year";
 import { happinessLevel } from "./happiness";
 import { civicCalm } from "./civic";
 import { buildBuilding } from "./actions";
@@ -110,7 +111,7 @@ describe("the riot blocks the turn-end handoff", () => {
     G.pendingPlayerEvent = null;
     owned(G, P0_CAPITAL, "0").pops = { citizens: 0, freemen: 0, slaves: 8 };
     owned(G, G.players["0"].settlements[1], "0").pops = { citizens: 0, freemen: 0, slaves: 4 };
-    G.year = 14;
+    G.year = yearDeckSize(G);
     G.yearOpener = "1"; // Seat 0 is last.
     G.yearDrawPile = [];
     expect(happinessLevel(G, "0")).toBe(-6);

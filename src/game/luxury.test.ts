@@ -262,7 +262,7 @@ describe("luxuries in the level", () => {
 
     const status = unrestStatus(G, "0");
     expect(status.luxuryBonus).toBe(2);
-    expect(status.tokens).toBe(tokens);
+    expect(status.outcome.tokens).toBe(tokens);
     expect(status.happiness).toBe(-2);
     // Without the good the level would sit below the riot line.
     expect(status.tier).toBe("discontent");

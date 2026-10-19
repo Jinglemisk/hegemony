@@ -131,6 +131,13 @@ deck against Ventures, then the free card on and off, read against the [rotated 
 Player trade slices 1 and 2 come first, since they remove the bank and add base food. Step 11
 runs after both plans.
 
+The [code-health plan](code-health.md) leaves the Venture code alone, so slice 1 deletes it
+whole: the Colonists' Voyage (and its room bug), the bots' `ventureOutcomes`, the venture verb,
+and `EventTableModal` if nothing else mounts it. Slice 2 builds on the single riot and revolt
+outcome function from code-health's first PR. It replaces the bots' hand-read riot table
+(`expectedRiot`) with the engine's table lookup, and the riot screen shows every effect of the
+row it lands on, reads the insurance modifier and the die from data, and shows insurance reasons.
+
 ## Acceptance and validation
 
 - The deck is conserved, hands never leak to another seat's projection, and the not-this-turn

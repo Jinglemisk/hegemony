@@ -2,7 +2,7 @@
 title: UI — what is genuinely left
 status: active
 phase: "—"
-updated: 2026-10-16
+updated: 2026-10-19
 ---
 
 # UI — what is genuinely left
@@ -19,6 +19,10 @@ it is a judged trade-off that should stay judged rather than quietly drift.
 
 Nothing here is a surprise, and nothing here is blocking. A row leaves this file
 when it ships or when the owner rules it closed.
+
+The v2 merge's UI and CSS duplicates (two verb tables, two icon registries, two
+resource chips, two token tables) are scheduled in the
+[code-health plan](code-health.md), sections 4 and 5, not here.
 
 ## Three-axis parity
 

@@ -10,7 +10,6 @@ import { settlementCapacity, popsInTransitTo } from "./settlement";
 
 export { NATIONAL_IDEAS } from "./nationalIdeas";
 
-export const IDEA_PURCHASE_COST = { influence: 6 };
 export function getNationalIdeas(G: HegemonyState) {
   return G.definition.content.nationalIdeas;
 }
@@ -81,16 +80,26 @@ export function getTakeIdeaStatus(
   target?: IdeaPopChoice,
 ) {
   const setup = G.phase === "setupIdeas";
+  const { influenceCost, purchases } = G.ruleset.ideas;
   const reasons: string[] = [];
-  const cost = setup ? {} : IDEA_PURCHASE_COST;
+  const cost = setup ? {} : { influence: influenceCost };
   const owns = G.players[playerID].nationalIdeas;
   if (setup ? owns.length > 0 || G.currentPlayer !== playerID : G.phase !== "gameplay")
-    reasons.push("Take one Idea in your turn of the draft, then buy one in play.");
-  if (!setup && (owns.length !== 1 || owns[0].acquired !== "setup"))
-    reasons.push("You may buy one Idea after your setup pick.");
+    reasons.push(
+      `Take one Idea in your turn of the draft, then buy ${purchases === 1 ? "one" : purchases} in play.`,
+    );
+  if (
+    !setup &&
+    (!owns.some((o) => o.acquired === "setup") ||
+      owns.filter((o) => o.acquired === "purchase").length >= purchases)
+  )
+    reasons.push(
+      `You may buy ${purchases === 1 ? "one Idea" : `${purchases} Ideas`} after your setup pick.`,
+    );
   if (G.assembly || G.pendingPlayerEvent || G.pendingRiot || G.pendingHunger)
     reasons.push("Finish the pending decision first.");
-  if (!canAfford(G.players[playerID].resources, cost)) reasons.push("An Idea costs 6 influence.");
+  if (!canAfford(G.players[playerID].resources, cost))
+    reasons.push(`An Idea costs ${influenceCost} influence.`);
   const idea = getNationalIdeas(G).find((idea) => idea.id === ideaId);
   if (ideaId !== undefined && !idea) reasons.push("Choose an Idea.");
   const holder = ideaId === undefined ? null : ideaHolder(G, ideaId);

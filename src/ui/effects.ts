@@ -3,6 +3,8 @@ import { ruleLawText } from "../game/assembly/laws";
 import type { DirectiveEffect, LawEffect } from "../game/assembly/types";
 import { getAuthoredGameContent } from "../game/content";
 import type { GameContent } from "../game/content";
+import type { Ruleset } from "../game/ruleset";
+import type { UnrestOutcome } from "../game/unrest";
 import type {
   BuildingEffect,
   EventEffect,
@@ -401,4 +403,47 @@ export function presentYearCard(card: YearCard): EffectPresentation {
   return card.effect.change === "placeOne"
     ? { text: "Everyone places an Unrest token", tone: "negative" }
     : { text: "Everyone clears their Unrest tokens", tone: "positive" };
+}
+
+/** The riot and revolt in words, from the engine's outcome (`unrestOutcome`) and the
+ *  ruleset: its name (`noun`), the line the level stands at, what ending the turn there
+ *  sets off, and the revolt's share of the slaves (`fraction` mid-sentence, `share` to
+ *  open one). Above both lines the warning says where a riot starts. */
+export function presentUnrestOutcome(ruleset: Ruleset, tier: UnrestOutcome["tier"]) {
+  const { riotThreshold, revoltSlaveShare } = ruleset.economy.unrest;
+  const fraction = revoltSlaveShare === 0.5 ? "half" : `${formatNumber(revoltSlaveShare * 100)}%`;
+  // Opens a sentence before "your slaves": "Half", or "60% of".
+  const share = fraction === "half" ? "Half" : `${fraction} of`;
+  switch (tier) {
+    case "revolt":
+      return {
+        noun: "revolt",
+        line: "the revolt line",
+        fraction,
+        share,
+        warning: `${share} your slaves leave if you end your turn at this level, and your Unrest tokens clear.`,
+      };
+    case "riot":
+      return {
+        noun: "riot",
+        line: "the riot line",
+        fraction,
+        share,
+        warning:
+          "Ending your turn at this level clears your Unrest tokens and starts the riot table.",
+      };
+    case "none":
+      return {
+        noun: null,
+        line: null,
+        fraction,
+        share,
+        warning: `A riot starts at ${formatNumber(riotThreshold)} happiness.`,
+      };
+  }
+}
+
+/** The pass rule's tie half in words, from the ruleset: "a tie fails" or "a tie carries". */
+export function tieRule(ruleset: Ruleset) {
+  return ruleset.assembly.tiesPass ? "a tie carries" : "a tie fails";
 }

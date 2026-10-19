@@ -8,6 +8,7 @@ import { PLAYER_IDS } from "../game/data";
 import { transition, type GameCommand } from "../game/legalMoves";
 import { resolveRiot } from "../game/riot";
 import { beginTurnFor, endTurn } from "../game/turn";
+import { yearDeckSize } from "../game/year";
 import { owned, scenario } from "../game/testing/scenario";
 import type { HegemonyState, PlayerId } from "../game/types";
 import { randomPolicy } from "./policies";
@@ -141,7 +142,7 @@ describe("Aggregator", () => {
       .opening()
       .withHappiness("0", -3)
       .mutate((state) => {
-        state.year = 14;
+        state.year = yearDeckSize(state);
         state.yearOpener = "1";
         state.yearDrawPile = [];
         state.pendingPlayerEvent = null;
@@ -177,7 +178,9 @@ describe("Aggregator", () => {
     expect(aggregator.allSnapshots()).toHaveLength(1);
     expect(report.hunger["0"].hungerTurnsPerGame).toBe(1);
     expect(Object.values(report.events.player).reduce((sum, count) => sum + count, 0)).toBe(1);
-    expect(report.riots.byYear).toEqual([{ year: 14, riots: 1, playerTurns: 1, revolts: 0 }]);
+    expect(report.riots.byYear).toEqual([
+      { year: yearDeckSize(G), riots: 1, playerTurns: 1, revolts: 0 },
+    ]);
   });
 
   it("attributes a last-seat riot to the old year and counts the next draw once", () => {

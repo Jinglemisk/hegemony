@@ -123,9 +123,9 @@ export function snapshotTurn(G: HegemonyState, game: number, seed: number): Turn
       resources: { ...player.resources },
       income,
       happiness: unrest.happiness,
-      unrestTokens: unrest.tokens,
+      unrestTokens: unrest.outcome.tokens,
       unrestTier: unrest.tier,
-      riotAtRisk: unrest.riotAtRisk ? 1 : 0,
+      riotAtRisk: unrest.outcome.tier !== "none" ? 1 : 0,
       ...slaveCounts(G, playerID),
       freemen: classCount(G, playerID, "freemen"),
       citizens: classCount(G, playerID, "citizens"),
@@ -952,10 +952,10 @@ export class Aggregator {
         const result = results[results.length - 1];
         if (result.item.kind === "repeal") {
           const seat = this.assemblySeats[result.item.proposer];
-          if (result.passed) seat.repealsPassed += 1;
+          if (result.outcome === "carried") seat.repealsPassed += 1;
           else seat.repealsFailed += 1;
         }
-        if (result.passed && result.item.kind === "enact" && result.item.proposer) {
+        if (result.outcome === "carried" && result.item.kind === "enact" && result.item.proposer) {
           this.countReach(result.item.proposer, [
             `${result.item.card.kind}:${result.item.card.id}`,
           ]);

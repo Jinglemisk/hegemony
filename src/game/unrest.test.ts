@@ -224,7 +224,7 @@ describe("pops on the move", () => {
 
     // Twelve slaves, one of them on the road: six leave the eleven that stand.
     expect(turnEndUnrest(structuredClone(G), "0")).toMatchObject({
-      outcome: "revolt",
+      tier: "revolt",
       slaves: 12,
       leaving: 6,
     });
@@ -248,16 +248,16 @@ describe("the end-turn confirm", () => {
     // At −3, calm (+2) holds the line.
     G.players["0"].unrestTokens = 3;
     expect(turnEndUnrest(G, "0")).toMatchObject({
-      outcome: "riot",
+      tier: "riot",
       level: -3,
-      calm: { payment: "gold", cost: { gold: 2 }, level: -1, outcome: "none" },
+      calm: { payment: "gold", cost: { gold: 2 }, level: -1, tier: "none" },
     });
 
     // At −6 it lifts to −4: a riot instead of a revolt.
     G.players["0"].unrestTokens = 6;
     expect(turnEndUnrest(G, "0")).toMatchObject({
-      outcome: "revolt",
-      calm: { level: -4, outcome: "riot" },
+      tier: "revolt",
+      calm: { level: -4, tier: "riot" },
     });
 
     // At −8 calm changes nothing, so it is not offered.
@@ -274,13 +274,16 @@ describe("unrest status (ledger warning)", () => {
     expect(unrestStatus(G, "0").tier).toBe("calm");
 
     G.players["0"].unrestTokens = 2;
-    expect(unrestStatus(G, "0")).toMatchObject({ tier: "discontent", riotAtRisk: false });
+    expect(unrestStatus(G, "0")).toMatchObject({ tier: "discontent", outcome: { tier: "none" } });
 
     G.players["0"].unrestTokens = 3;
-    expect(unrestStatus(G, "0")).toMatchObject({ tier: "unrest", riotAtRisk: true, tokens: 3 });
+    expect(unrestStatus(G, "0")).toMatchObject({
+      tier: "unrest",
+      outcome: { tier: "riot", tokens: 3 },
+    });
 
     G.players["0"].unrestTokens = 6;
-    expect(unrestStatus(G, "0")).toMatchObject({ tier: "revolt", riotAtRisk: true });
+    expect(unrestStatus(G, "0")).toMatchObject({ tier: "revolt", outcome: { tier: "revolt" } });
   });
 });
 

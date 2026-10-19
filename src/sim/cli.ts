@@ -25,6 +25,7 @@ import { getAuthoredGameContent } from "../game/content";
 import { createGameDefinition } from "../game/definition";
 import { PLAYER_IDS } from "../game/data";
 import { GAME_MODES } from "../game/ruleset";
+import { yearDeckSize } from "../game/year";
 import type { GameModeId } from "../game/ruleset";
 import { resolveTuning } from "../dev/tuning";
 import type { OverrideMap } from "../dev/tuning";
@@ -759,7 +760,6 @@ function cmdBatch(flags: Flags) {
   }
 
   const games = requirePositiveInt(flags.games, "--games");
-  const turns = flags.turns !== undefined ? requirePositiveInt(flags.turns, "--turns") : 56;
   const policy = resolvePolicy(typeof flags.policy === "string" ? flags.policy : "random");
   const seats = parseSeats(flags);
   const rotate = Boolean(flags.rotate);
@@ -790,6 +790,11 @@ function cmdBatch(flags: Flags) {
         },
       })
     : resolved.definition;
+  // The default cap plays the whole year deck: one turn a seat a year.
+  const turns =
+    flags.turns !== undefined
+      ? requirePositiveInt(flags.turns, "--turns")
+      : yearDeckSize({ definition }) * PLAYER_IDS.length;
   const asked = flags.jobs !== undefined ? requirePositiveInt(flags.jobs, "--jobs") : 1;
 
   /** Plays one game into an Aggregator of its own. A game depends on nothing but its
@@ -905,7 +910,7 @@ function cmdBatch(flags: Flags) {
       console.log(`Turn snapshots written to ${csvPath}.`);
     }
 
-    console.log("\n" + renderBatchReport(report));
+    console.log("\n" + renderBatchReport(report, yearDeckSize({ definition })));
   };
 
   /** Files a finished game. Workers finish seeds out of order, so the progress line

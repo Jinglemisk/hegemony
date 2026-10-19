@@ -17,6 +17,7 @@ import type {
   AssemblyResult,
   AssemblySession,
   BallotItem,
+  BallotOutcome,
   DirectiveCard,
   DirectiveEffect,
   PoliticianId,
@@ -528,7 +529,7 @@ export function votesLeftToBuy(G: HegemonyState, playerID: PlayerId): number {
 /**
  * The open vote on the current item, read off public numbers: the tally so far, the
  * caster's votes now, and every seat still to cast with its votes now and at most.
- * A tie fails, so a yea majority must be strictly larger.
+ * Whether a tally carries is {@link wouldPass}.
  */
 export function voteOutlook(G: HegemonyState) {
   const session = G.assembly;
@@ -543,9 +544,17 @@ export function voteOutlook(G: HegemonyState) {
   return { yea: tally(true), nay: tally(false), caster, rest };
 }
 
+/** The pass rule: more yea than nay carries, and a tie carries only when the ruleset
+ *  says ties pass. */
+export function wouldPass(G: HegemonyState, yea: number, nay: number): boolean {
+  return yea > nay || (yea === nay && G.ruleset.assembly.tiesPass);
+}
+
 /** Whether the seats still to cast could carry a ballot now at `yea` to `nay`, or sink it. */
-export function restCanTurn(yea: number, nay: number, restMost: number): boolean {
-  return yea > nay ? nay + restMost >= yea : yea + restMost > nay;
+export function restCanTurn(G: HegemonyState, yea: number, nay: number, restMost: number): boolean {
+  return wouldPass(G, yea, nay)
+    ? !wouldPass(G, yea, nay + restMost)
+    : wouldPass(G, yea + restMost, nay);
 }
 
 /**
@@ -637,28 +646,32 @@ function resolveBallotItem(G: HegemonyState) {
   const nay = session.votes
     .filter((vote) => !vote.yea)
     .reduce((total, vote) => total + vote.weight, 0);
-  // A tie fails. Earlier ballot items may make this proposal illegal.
+  // Earlier ballot items may make this proposal illegal.
   const blockedReason =
     item.kind === "repeal"
       ? lawCanBeRemoved(G, item.cardId)
         ? null
         : "The Law is absent or protected by minimum tenure."
       : lawProposalReason(G, item.card);
-  const passed = yea > nay && blockedReason === null;
+  const outcome: BallotOutcome = !wouldPass(G, yea, nay)
+    ? "fell"
+    : blockedReason
+      ? "blocked"
+      : "carried";
 
   const result: AssemblyResult = {
     item,
-    passed,
+    outcome,
     yea,
     nay,
     votes: [...session.votes],
     summary:
-      yea > nay && blockedReason
+      outcome === "blocked"
         ? `The proposal cannot take effect. ${blockedReason}`
-        : summarize(G, item, passed),
+        : summarize(G, item, outcome === "carried"),
   };
 
-  if (passed) {
+  if (outcome === "carried") {
     enact(G, item);
   } else {
     reject(G, item);
@@ -675,7 +688,7 @@ function resolveBallotItem(G: HegemonyState) {
     // The sitting's recap is one Chronicle entry, to be read again later.
     const verdicts = session.results.map(
       (done) =>
-        `${ballotItemName(G, done.item)} ${done.passed ? "carried" : "fell"} ${done.yea}–${done.nay}`,
+        `${ballotItemName(G, done.item)} ${done.outcome === "carried" ? "carried" : "fell"} ${done.yea}–${done.nay}`,
     );
     addLog(G, `The Assembly rises: ${verdicts.join("; ")}.`);
   }

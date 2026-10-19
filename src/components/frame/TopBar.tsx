@@ -4,9 +4,13 @@ import { PLAYER_IDS } from "../../game/data";
 import { currentVoteWeight } from "../../game/assembly";
 import { victoryMetricValue, voiceHolder } from "../../game/victory";
 import { happinessLevel } from "../../game/happiness";
+import { unrestOutcome } from "../../game/unrest";
+import type { UnrestOutcome } from "../../game/unrest";
 import { yearDeckSize } from "../../game/year";
 import type { IncomeContribution } from "../../game/economy/income";
+import type { Ruleset } from "../../game/ruleset";
 import type { HegemonyState, PlayerId, Resource, Resources } from "../../game/types";
+import { presentUnrestOutcome } from "../../ui/effects";
 import { RESOURCE_LABELS, toRoman } from "../../ui/formatters";
 import { gaugeStops, publicCensus } from "../../ui/frameSelectors";
 import type { HappinessDisplay } from "../../ui/frameSelectors";
@@ -110,10 +114,18 @@ function ResourceCell({
  * Happiness: the level, a gauge whose bands mark where riot and revolt start, and
  * one pip above the gauge for each Unrest token on the realm.
  */
-export function HappinessGauge({ display }: { display: HappinessDisplay }) {
+export function HappinessGauge({
+  display,
+  outcome,
+  ruleset,
+}: {
+  display: HappinessDisplay;
+  /** What ending the turn at this level sets off. */
+  outcome: UnrestOutcome;
+  ruleset: Ruleset;
+}) {
   const stops = gaugeStops(display);
-  const atRevolt = display.value <= display.revoltAt;
-  const atRiot = display.value <= display.riotAt;
+  const atRiot = outcome.tier !== "none";
   const noun = "Happiness";
   const tokens = `${display.tokens} Unrest ${display.tokens === 1 ? "token" : "tokens"}`;
 
@@ -139,11 +151,7 @@ export function HappinessGauge({ display }: { display: HappinessDisplay }) {
             Read off the board each turn; nothing is saved up. Unrest tokens stay until a riot, a
             revolt or a card clears them.
           </p>
-          {atRevolt ? (
-            <TipWarn>Half your slaves leave if you end your turn at this level</TipWarn>
-          ) : atRiot ? (
-            <TipWarn>Ending your turn at this level starts a riot</TipWarn>
-          ) : null}
+          {atRiot ? <TipWarn>{presentUnrestOutcome(ruleset, outcome.tier).warning}</TipWarn> : null}
         </Tip>
       }
       focusable
@@ -298,7 +306,11 @@ export function TopBar({
             value={store[resource]}
           />
         ))}
-        <HappinessGauge display={happiness} />
+        <HappinessGauge
+          display={happiness}
+          outcome={unrestOutcome(G, viewerId)}
+          ruleset={G.ruleset}
+        />
       </div>
       <div className="court" data-c="court">
         <div aria-label="Rulers" className="rivals" data-c="rivals" role="group">

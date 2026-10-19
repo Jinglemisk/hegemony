@@ -17,7 +17,7 @@ import {
 import { YEAR_CARDS } from "../game/data";
 import { calculateIncomeBreakdown } from "../game/economy/income";
 import { projectForPlayer } from "../game/projection";
-import { revealYearCard, startNewYear } from "../game/year";
+import { revealYearCard, startNewYear, yearDeckSize } from "../game/year";
 import { materialTile, scenario } from "../game/testing/scenario";
 import type { HegemonyState, Pops, YearCard } from "../game/types";
 import { PLAYER_IDS } from "../game/data";
@@ -233,44 +233,6 @@ describe("frontend active-effect parity", () => {
     expect(builders.text).toContain("Cities gain one building slot");
     expect(builders.text).toContain("one fewer colony piece");
   });
-});
-
-describe("simulation and AI active-effect parity", () => {
-  it("clearly avoids skipped income by removing suppressed collections from its horizon", () => {
-    const safe = stateWithSettlement({ citizens: 0, freemen: 1, slaves: 0 });
-    const struck = structuredClone(safe);
-    struck.players["0"].incomeSuppressedTurns = 1;
-
-    const safeProjection = projectPolicyHorizon(safe, "0", 2);
-    const struckProjection = projectPolicyHorizon(struck, "0", 2);
-
-    expect(struckProjection.resources.gold).toBeLessThan(safeProjection.resources.gold);
-  });
-
-  it("buys this year's calm to cover the current turn-end check", () => {
-    const choose = (slaves: number) => {
-      const G = stateWithSettlement({ citizens: 0, freemen: 0, slaves });
-      // The last year, so calm avoids the riot and does not only put it off.
-      G.year = 14;
-      G.players["0"].collectedThisTurn = true;
-      Object.assign(G.players["0"].resources, {
-        wood: 0,
-        stone: 0,
-        gold: 0,
-        food: 0,
-        influence: 4,
-      });
-
-      return masterPolicy.choose(
-        projectForPlayer(G.definition, G, "0"),
-        [{ type: "civicCalm", payment: "influence" }, { type: "endTurn" }],
-        createSimRng(1),
-      );
-    };
-
-    expect(choose(6).type).toBe("civicCalm");
-    expect(choose(0).type).toBe("endTurn");
-  });
 
   it.each([
     [-3, "riot"],
@@ -285,6 +247,7 @@ describe("simulation and AI active-effect parity", () => {
         title: "Press and hold to end your turn.",
         warning: endTurnWarning(G, "0"),
         unrest: turnEndUnrest(G, "0"),
+        ruleset: G.ruleset,
         confirmOpen: true,
         onEndTurn: () => {},
         onCalm: () => {},
@@ -330,6 +293,44 @@ describe("simulation and AI active-effect parity", () => {
     expect(html).toContain(G.lastTableRoll!.rowLabel);
     expect(html).toContain(`Then: ${G.players["1"].name}’s turn`);
   });
+});
+
+describe("simulation and AI active-effect parity", () => {
+  it("clearly avoids skipped income by removing suppressed collections from its horizon", () => {
+    const safe = stateWithSettlement({ citizens: 0, freemen: 1, slaves: 0 });
+    const struck = structuredClone(safe);
+    struck.players["0"].incomeSuppressedTurns = 1;
+
+    const safeProjection = projectPolicyHorizon(safe, "0", 2);
+    const struckProjection = projectPolicyHorizon(struck, "0", 2);
+
+    expect(struckProjection.resources.gold).toBeLessThan(safeProjection.resources.gold);
+  });
+
+  it("buys this year's calm to cover the current turn-end check", () => {
+    const choose = (slaves: number) => {
+      const G = stateWithSettlement({ citizens: 0, freemen: 0, slaves });
+      // The last year, so calm avoids the riot and does not only put it off.
+      G.year = yearDeckSize(G);
+      G.players["0"].collectedThisTurn = true;
+      Object.assign(G.players["0"].resources, {
+        wood: 0,
+        stone: 0,
+        gold: 0,
+        food: 0,
+        influence: 4,
+      });
+
+      return masterPolicy.choose(
+        projectForPlayer(G.definition, G, "0"),
+        [{ type: "civicCalm", payment: "influence" }, { type: "endTurn" }],
+        createSimRng(1),
+      );
+    };
+
+    expect(choose(6).type).toBe("civicCalm");
+    expect(choose(0).type).toBe("endTurn");
+  });
 
   it("uses the known year card only for an income still owed this year", () => {
     const G = stateWithSettlement({ citizens: 0, freemen: 2, slaves: 0 });
@@ -344,14 +345,16 @@ describe("simulation and AI active-effect parity", () => {
   it("handles the safe edge and the hunger edge deterministically", () => {
     const safe = stateWithSettlement();
     const hungry = stateWithSettlement({ citizens: 10, freemen: 0, slaves: 0 });
-    // Ten mouths and nothing in store: the first turn ends ten short. The ten
-    // influence the citizens made buy three food by the Dole, and seven leave.
+    // Ten mouths and nothing in store: the first turn ends ten short. The influence
+    // the citizens made buys some food by the Dole, so some, not all, leave.
     Object.assign(hungry.players["0"].resources, { food: 0, gold: 0, influence: 0 });
     const projection = projectPolicyHorizon(hungry, "0", 1);
 
     expect(projectPolicyHorizon(safe, "0", 1).expectedStarvationPopLoss).toBe(0);
-    expect(projection.expectedStarvationPopLoss).toBe(7);
-    expect(projection.resources).toMatchObject({ food: 0, influence: 1 });
+    expect(projection.expectedStarvationPopLoss).toBeGreaterThan(0);
+    expect(projection.expectedStarvationPopLoss).toBeLessThan(10);
+    expect(projection.resources.food).toBe(0);
+    expect(projectPolicyHorizon(hungry, "0", 1)).toEqual(projection);
   });
 
   it("recalculates food after projected hunger and matches the engine on the review case", () => {

@@ -15,7 +15,7 @@ const CLI = fileURLToPath(new URL("./cli.ts", import.meta.url));
 function batch(dir: string, jobs: number) {
   const reportPath = join(dir, `jobs-${jobs}.json`);
   const csvPath = join(dir, `jobs-${jobs}.csv`);
-  const args = `batch --games 2 --turns 56 --seats random,greedy,smart,political --rotate --seed 1000 --jobs ${jobs}`;
+  const args = `batch --games 2 --seats random,greedy,smart,political --rotate --seed 1000 --jobs ${jobs}`;
   // The limit is on the process: the test's own timeout cannot stop a call that blocks.
   // A run takes about 22 seconds on one job and 12 on two; the room is for slow machines.
   const stdout = execFileSync(

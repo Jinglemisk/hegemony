@@ -191,28 +191,32 @@ linear influence pile passed, and no card could meet the draw rule.
   seam the Port's claim uses (`transferLuxury`); and schedules pops as a transfer owned by the
   receiver, the seam a move uses. Tests prove each resource's table total and the pops survive
   a trade.
-- The answer card is a required decision in the shared decision host. The composer preview, the
+- The answer card is a required decision in the shared decision host, which the
+  [code-health plan](code-health.md)'s second PR builds before slice 1. The composer preview, the
   bots and settlement read one engine check of holdings; the Chronicle, toast and telemetry read
   one settled-trade event. The command parity map and `TRADE_WORKFLOW_PARITY` cover the commands.
 
 ## PR slices
 
-All to `main`, after the v2 merge.
+All to `main`, after the [code-health plan](code-health.md)'s five cleanup PRs.
 
 1. **Offer, answer, settle.** Turn trades in materials, gold, influence and goods, without counters,
    with the bank still in place, since bots do not offer yet, in the engine, the shell and the bots'
    answers, with Chronicle, toast and Codex. Checked by engine tests (atomic settlement,
    conservation, no food from a short seat, a good moving its +2 and Beloved, two open offers on the
    same goods), command parity, a browser test of offer to settlement, and a bot batch with no
-   illegal moves.
+   illegal moves. The answer card mounts in code-health's decision host, and the trade screens
+   use its shared action button and resource chip.
 2. **Bots offer; the bank goes; the sim reads trade.** The offer builder, partner choice, pacing,
    telemetry, the bank and base-food switches, the bank's removal and base food, and a dated
    report of the paired batches. Checked by fixtures: a wood-rich seat short of food buys food
    from a food-rich seat that wants wood for a building; a bot refuses a deal worse than its best
-   turn without it, and one that hands a rival Treasurer.
+   turn without it, and one that hands a rival Treasurer. Also carries code-health section 6: the
+   forecast's bank code goes, and its calm and Dole run through the engine; the telemetry report
+   becomes one cut function before trade's metrics are added.
 3. **Pops.** Pops as a good, delivered like a move. Checked by engine tests (no room, no deal; a
    slave's unrest and a citizen's food and vote go with it; a trade may empty a settlement) and a
-   bot batch.
+   bot batch. "No room" calls code-health's one room function, which counts pops on the move.
 4. **The Assembly market.** The preparation's Ready step, offers from any seat until every seat
    is Ready, the Offer button and Ready marks on the sitting sheet, the bots' Assembly offers,
    and the rules guide's Assembly section. Checked by engine tests (no offer once every seat is

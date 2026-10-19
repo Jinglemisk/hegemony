@@ -96,7 +96,8 @@ export function startNewYear(G: HegemonyState) {
   revealYearCard(G);
 }
 
-/** The clock's full deck size, including the card not yet revealed during setup. */
-export function yearDeckSize(G: HegemonyState): number {
+/** The clock's full deck size, including the card not yet revealed during setup. The
+ *  definition is enough, so the sim can size a game before it builds one. */
+export function yearDeckSize(G: Pick<HegemonyState, "definition">): number {
   return G.definition.content.yearCards.reduce((total, card) => total + card.count, 0);
 }

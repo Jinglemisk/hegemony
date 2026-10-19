@@ -93,11 +93,12 @@ export function collectInvariantViolations(
     add("ideas.exclusive", "players.*.nationalIdeas", "an Idea is held by one seat only");
   }
 
+  const { purchases } = G.ruleset.ideas;
   for (const playerID of PLAYER_IDS) {
     const ideas = G.players[playerID]?.nationalIdeas;
     if (
       !Array.isArray(ideas) ||
-      ideas.length > 2 ||
+      ideas.length > 1 + purchases ||
       new Set(ideas.map((i) => i.id)).size !== ideas.length ||
       ideas.some(
         (i) =>
@@ -108,12 +109,12 @@ export function collectInvariantViolations(
           i.year > G.year,
       ) ||
       ideas.filter((i) => i.acquired === "setup").length > 1 ||
-      ideas.filter((i) => i.acquired === "purchase").length > 1
+      ideas.filter((i) => i.acquired === "purchase").length > purchases
     ) {
       add(
         "ideas.ownership",
         `players.${playerID}.nationalIdeas`,
-        "requires at most one setup Idea and one distinct purchase from the pinned catalog",
+        `requires at most one setup Idea and ${purchases} distinct purchase${purchases === 1 ? "" : "s"} from the pinned catalog`,
       );
     }
     const indexed = G.players[playerID]?.settlements ?? [];

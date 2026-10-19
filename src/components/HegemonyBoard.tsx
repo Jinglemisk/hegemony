@@ -565,6 +565,7 @@ export function HegemonyBoard({
                   confirmOpen={DEV_SHELL.endTurnConfirm}
                   onCalm={moves.civicCalm}
                   onEndTurn={() => (shortfall ? setHungerAsk(true) : events.endTurn())}
+                  ruleset={G.ruleset}
                   title={turnCommitTitle(turnGate)}
                   waitingLabel={inAssembly ? "In Assembly" : undefined}
                   unrest={turnOpen ? turnEndUnrest(G, currentPlayerId) : null}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { IDEA_PURCHASE_COST, getNationalIdeas, ideaDraft, ideaHolders } from "../../../game/ideas";
+import { getNationalIdeas, ideaDraft, ideaHolders } from "../../../game/ideas";
 import type { NationalIdeaId, IdeaPopChoice } from "../../../game/ideaTypes";
 import { enumerateLegalOptions } from "../../../game/legalMoves";
 import type { HegemonyState } from "../../../game/types";
@@ -65,6 +65,7 @@ export function IdeasModal({
   const names = settlementNames(G.board.tiles);
   const picked = draft.filter((seat) => seat.ideaId).length;
   const left = ideas.length - holders.size;
+  const { influenceCost, purchases } = G.ruleset.ideas;
 
   const commit = () => {
     if (!choice || (choice.command.type !== "pickIdea" && choice.command.type !== "buyIdea"))
@@ -173,12 +174,13 @@ export function IdeasModal({
         <header className="ideas-head">
           <Ico path="assembly/national-idea" size="disc" />
           <div className="ideas-title">
-            <span className="ideas-kicker">Once per game</span>
+            <span className="ideas-kicker">
+              {purchases === 1 ? "Once" : `${formatNumber(purchases)} times`} per game
+            </span>
             <h2 id="ideas-heading">Buy a National Idea</h2>
             <p>
-              {formatNumber(IDEA_PURCHASE_COST.influence)} influence · you hold{" "}
-              {formatNumber(influence)} · {COUNT[left] ?? formatNumber(left)}{" "}
-              {left === 1 ? "Idea" : "Ideas"} left
+              {formatNumber(influenceCost)} influence · you hold {formatNumber(influence)} ·{" "}
+              {COUNT[left] ?? formatNumber(left)} {left === 1 ? "Idea" : "Ideas"} left
             </p>
           </div>
           <button className="ideas-close" onClick={onClose} type="button">
@@ -230,7 +232,7 @@ export function IdeasModal({
             </h2>
             <p>
               {draftDone
-                ? "The draft is done. The Ideas left can be bought in play for 6 influence."
+                ? `The draft is done. The Ideas left can be bought in play for ${formatNumber(influenceCost)} influence.`
                 : "Seats pick in turn. A taken Idea is gone for everyone else."}
             </p>
           </header>

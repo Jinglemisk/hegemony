@@ -57,6 +57,13 @@ export interface PieceRules {
   cities: number;
 }
 
+/** National Ideas bought in play. The setup draft's pick is free and comes first. */
+export interface IdeaRules {
+  influenceCost: number;
+  /** Ideas a seat may buy after its setup pick. */
+  purchases: number;
+}
+
 /** The Dole: influence buys food through the bank, at a worse rate than gold. */
 export interface DoleRules {
   influenceCost: number;
@@ -117,10 +124,12 @@ export interface LuxuryRules {
 }
 
 /** The level's two lines. At or below the first a riot rolls on the riot table
- *  (game/riot.ts); at or below the second a revolt sends half the slaves away. */
+ *  (game/riot.ts); at or below the second a revolt sends a share of the slaves away. */
 export interface UnrestRules {
   riotThreshold: number;
   revoltThreshold: number;
+  /** The share of a realm's slaves a revolt sends away, rounded down. */
+  revoltSlaveShare: number;
 }
 
 /** The victory race (roadmap-appendix D1): six public "Most X, minimum Y" cards; the
@@ -164,6 +173,8 @@ export interface AssemblyRules {
   /** Gold or influence per bought vote, and the per-player ceiling for one assembly. */
   briberyCost: number;
   briberyCap: number;
+  /** Whether a tied vote carries. The design's default is that ties fail. */
+  tiesPass: boolean;
 }
 
 export interface Ruleset {
@@ -189,6 +200,7 @@ export interface Ruleset {
   economy: EconomyRules;
   civicCalm: CivicCalmRules;
   ladder: LadderRules;
+  ideas: IdeaRules;
   /** One stake posts any expedition. */
   ventureCost: Partial<Resources>;
   /** The Assembly & Politicians layer (Phase 3-B). */
@@ -245,7 +257,7 @@ export const DEFAULT_RULESET: Ruleset = {
   },
   economy: {
     slavesPerUnhappiness: 2,
-    unrest: { riotThreshold: -3, revoltThreshold: -6 },
+    unrest: { riotThreshold: -3, revoltThreshold: -6, revoltSlaveShare: 0.5 },
     bank: {
       // One price per verb: every material sells 3 for 1 gold and costs 2 gold. The
       // scarcity classes stay as a knob for sims.
@@ -269,6 +281,7 @@ export const DEFAULT_RULESET: Ruleset = {
     promoteCosts: { slaves: { food: 2 }, freemen: { gold: 2 } },
     demoteCosts: { citizens: { influence: 1 }, freemen: { influence: 1 } },
   },
+  ideas: { influenceCost: 6, purchases: 1 },
   ventureCost: VENTURE_COST,
   assembly: {
     // Every other year from Year 2: up to seven sittings in a fourteen-year game.
@@ -286,6 +299,7 @@ export const DEFAULT_RULESET: Ruleset = {
     repealCost: 3,
     briberyCost: 2,
     briberyCap: 2,
+    tiesPass: false,
   },
   setup: ["capital", "colony"],
 };
