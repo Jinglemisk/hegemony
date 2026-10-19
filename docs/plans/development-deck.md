@@ -36,12 +36,10 @@ mirror of the riot at −3, so happiness pays above zero. The deck replaces Vent
     "hold luxuries, keep no slaves, farm free cards" the best plan.
   - At the end of your own turn, a level of +3 or higher, calm not counted, draws one free card.
   - No vote cards. No base happiness for now.
+  - A riot may take a random card in place of a pop ([Q82](../questions.md), B). Revolts are
+    unchanged.
 - The bank is removed and every settlement makes 1 food ([player trade](player-trade.md), D9 and
   D10).
-
-## Open owner questions
-
-- [Q82](../questions.md): may a riot take a card instead of a pop?
 
 ## Rules (proposed)
 
@@ -57,6 +55,10 @@ sees a card when it is played, never before.
 without calm draws one card, playable from your next turn. In the rotated batch of 2026-10-19,
 1.1% of turns sat at +3 or higher, 22 of the 24 with a luxury. The reward bites only if realms
 keep fewer slaves to reach it.
+
+**Riots.** For each pop a riot would take, you may discard a card drawn at random from your
+hand instead. You choose per pop, before the draw. The slaves stay, so the riot comes back
+next turn: cards buy time but do not fix the level. A revolt still costs half your slaves.
 
 **Trading.** Cards trade under the [player trade](player-trade.md) rules. An offer names a number
 of cards, not which. The giver picks at settlement; only giver and receiver see the cards.
@@ -81,6 +83,8 @@ private moment. Networked (later): hands are private to each seat and no handove
 - It buys when the average card outscores 2 gold and the buy does not delay the purchase it is
   saving toward (Step 20).
 - It plays its best card when that beats holding it.
+- In a riot it pays a card for a pop when the average card in its hand is worth less than the
+  pop.
 - The scorer adds the value of a free card a turn to being at +3 or higher, so a bot weighs a
   slave against the card. This is what should end riding the riot line at −2; the batches
   measure it.
@@ -88,9 +92,10 @@ private moment. Networked (later): hands are private to each seat and no handove
 
 ## The sim
 
-Telemetry per seat and personality: cards bought, drawn free, played and traded, by kind; gold
-spent on cards; turns at +3 or higher; slaves held. Paired batches on the same seeds: the deck
-against Ventures, then the free card on and off, read against the rotated batch of 2026-10-19
+Telemetry per seat and personality: cards bought, drawn free, played, traded and lost to riots,
+by kind; gold spent on cards; turns at +3 or higher; slaves held. Paired batches on the same
+seeds: the deck against Ventures, then the free card on and off, read against the rotated batch
+of 2026-10-19
 (slaves 50% of pops, median level −2).
 
 ## Three-axis parity
@@ -118,8 +123,8 @@ against Ventures, then the free card on and off, read against the rotated batch 
    owner first; buy, hold, play one a turn, never on the turn drawn; hidden hands in the
    projections; Chronicle and Codex; bots buy and play. Checked by engine tests (conservation,
    the not-this-turn rule, redaction), a browser test, and a batch against Ventures.
-2. **The free card at +3.** The check beside the riot check and the bots' value of being at +3,
-   with a dated report on slaves and happiness by personality.
+2. **Happiness and the hand.** The free card at +3, a riot taking a card in place of a pop,
+   and the bots' value of both, with a dated report on slaves and happiness by personality.
 3. **Card trading.** Closed cards in the trade composer, the giver's pick, not playable the turn
    received; bots trade cards. Needs player trade slice 1.
 4. **Close-out.** The rules guide, the Codex and the owner's hotseat playtest.
